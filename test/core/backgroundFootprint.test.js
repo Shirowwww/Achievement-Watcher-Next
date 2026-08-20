@@ -18,6 +18,8 @@ const appJs = read('app.js');
 const afterPackJs = read('build', 'afterPack.js');
 const builderYml = read('electron-builder.yml');
 const achievementsJs = read('parser', 'achievements.js');
+const projectRoot = path.join(appRoot, '..');
+const souvenirJs = fs.readFileSync(path.join(projectRoot, 'watchdog', 'notification', 'souvenir.js'), 'utf8');
 
 test('the main window is released after it has stayed hidden, not kept resident forever', () => {
   // Hiding to the tray left the renderer (~180 MB) and the GPU process it holds up (~140 MB)
@@ -107,7 +109,14 @@ test('afterPack never prunes koffi/src, the package entry point behind index.cjs
 test('the build fails loudly if pruning removes a file the runtime needs', () => {
   assert.match(afterPackJs, /const mustKeep = \[/);
   assert.match(afterPackJs, /pruning removed or missed required runtime file/);
-  for (const needed of ['regodit', 'koffi.node', '7za.exe']) {
+  for (const needed of [
+    'regodit',
+    'koffi.node',
+    '7za.exe',
+    'aw-next-hdr-screenshot.exe',
+    'windows-capture.LICENSE.txt',
+    'Achievements-HDR.LICENSE.txt',
+  ]) {
     assert.ok(afterPackJs.includes(needed), `mustKeep must cover ${needed}`);
   }
 });
@@ -134,4 +143,17 @@ test('the duplicated Media/ payload is gone from the repo and the package', () =
   // The folder playback actually resolves against must still ship unpacked.
   assert.match(builderYml, /- sounds\/\*\*/);
   assert.ok(fs.existsSync(path.join(appRoot, 'sounds')), 'app/sounds is the real sound store');
+});
+
+test('HDR screenshots add no resident capture process or Electron renderer work', () => {
+  const helper = path.join(projectRoot, 'watchdog', 'native', 'aw-next-hdr-screenshot.exe');
+  assert.ok(fs.existsSync(helper), 'the transient helper must ship with the Watchdog');
+  assert.ok(fs.statSync(helper).size < 1024 * 1024, 'the helper should remain a small one-shot executable');
+  assert.ok(fs.existsSync(path.join(projectRoot, 'watchdog', 'native', 'windows-capture.LICENSE.txt')));
+  assert.ok(fs.existsSync(path.join(projectRoot, 'watchdog', 'native', 'Achievements-HDR.LICENSE.txt')));
+
+  assert.match(souvenirJs, /if \(hdrMode === 'auto' && platform === 'win32'\)/);
+  assert.match(souvenirJs, /await hdr\(file\)/);
+  assert.doesNotMatch(initJs, /aw-next-hdr-screenshot|windows-capture/i, 'startup must not launch or initialize HDR capture');
+  assert.doesNotMatch(appJs, /aw-next-hdr-screenshot|windows-capture/i, 'the renderer must not own HDR capture');
 });

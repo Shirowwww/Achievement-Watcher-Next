@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const watch = require('node-watch');
+const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
@@ -31,6 +32,7 @@ const FILETIME_EPOCH_DIFF_MS = 11644473600000n; // 1601 -> 1970
 const DOTNET_EPOCH_DIFF_MS = 62135596800000n; // 0001 -> 1970
 
 let watchers = [];
+const changes = createChangeCoalescer();
 
 // ---- XDBF / GPD low-level parser (same logic as app/parser/xenia.js) ---------------------------
 
@@ -434,7 +436,7 @@ module.exports.start = async (ctx) => {
         if (evt !== 'update') return;
         // Only the title's own GPD matters - Xenia touching sibling files must not re-trigger.
         if (String(path.basename(name || '')).toLowerCase() !== wantedFile) return;
-        handleChange(target, ctx);
+        changes.run(target.titleId, () => handleChange(target, ctx));
       });
       watchers.push(w);
       debug.log(`[xenia] watching achievements for ${target.titleId}`);
@@ -445,6 +447,7 @@ module.exports.start = async (ctx) => {
 };
 
 module.exports.stop = () => {
+  changes.clear();
   for (const w of watchers) {
     try {
       w.close();

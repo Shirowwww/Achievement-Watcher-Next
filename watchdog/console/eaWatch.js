@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const watch = require('node-watch');
+const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
@@ -20,6 +21,7 @@ const EA_VERBOSE_BAK_NAME = 'EADesktopVerbose.bak';
 const EA_ICON_BASE = 'https://achievements.gameservices.ea.com/achievements/icons';
 
 let watchers = [];
+const changes = createChangeCoalescer();
 let cached = { key: '', parsed: null };
 
 function decodeXml(value) {
@@ -321,7 +323,7 @@ module.exports.start = async (ctx) => {
   try {
     const w = watch(EA_LOGS_ROOT, { recursive: false, filter: /EADesktopVerbose\.(log|bak)$/i }, (evt, name) => {
       if (evt !== 'update') return;
-      handleChange(name, ctx);
+      changes.run('ea-log', () => handleChange(name, ctx));
     });
     watchers.push(w);
     debug.log(`[ea] watching ${EA_LOGS_ROOT}`);
@@ -331,6 +333,7 @@ module.exports.start = async (ctx) => {
 };
 
 module.exports.stop = () => {
+  changes.clear();
   for (const w of watchers) {
     try {
       w.close();

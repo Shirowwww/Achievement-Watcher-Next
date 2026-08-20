@@ -3,7 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { binaryMatchesProcess, buildBinaryIndex } = require('../playtime/seed.js');
-const { getTrackableGameMatches } = require('../playtime/monitor.js');
+const { getTrackableGameMatches, isOfficialSteamLibraryGame, filterGamesByAchievementSources } = require('../playtime/monitor.js');
 
 function legacyTrackableMatches(gameIndex, process, isIgnored) {
   return gameIndex.filter(
@@ -67,5 +67,23 @@ test('indexed live matches remain equivalent to the legacy scan while filters ch
   assert.deepEqual(
     getTrackableGameMatches(binaryIndex, 'alpha.exe', isIgnored).map((game) => game.appid),
     legacyTrackableMatches(gameIndex, 'alpha.exe', isIgnored).map((game) => game.appid)
+  );
+});
+
+test('disabled official Steam games are excluded from the playtime index while emulator entries remain trackable', () => {
+  const games = [
+    { appid: '1812620', name: 'DSX', binary: 'DSX.exe', source: 'Steam (Shirow)' },
+    { appid: 'goldberg', name: 'Emulated game', binary: 'game.exe', source: 'Goldberg' },
+  ];
+
+  assert.equal(isOfficialSteamLibraryGame(games[0]), true);
+  assert.equal(isOfficialSteamLibraryGame(games[1]), false);
+  assert.deepEqual(
+    filterGamesByAchievementSources(games, { achievement_source: { legitSteam: 0 } }).map((game) => game.appid),
+    ['goldberg']
+  );
+  assert.deepEqual(
+    filterGamesByAchievementSources(games, { achievement_source: { legitSteam: 1 } }).map((game) => game.appid),
+    ['1812620', 'goldberg']
   );
 });

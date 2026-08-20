@@ -182,26 +182,26 @@ test('the single consent prompt persists Later and a downloaded update installs 
   when the last game exits, nothing ever said why. An explicitly requested update overrides it.
 */
 test('an update the user asked for installs even while a game is running', () => {
-  assert.strictEqual(gate.shouldHoldInstall({ gameRunning: true, acceptedManually: true }), false);
+  assert.strictEqual(gate.shouldHoldInstall({ gameRunning: true, acceptedByUser: true }), false);
 });
 
 test('an update that arrived on its own still waits for the game to end', () => {
-  assert.strictEqual(gate.shouldHoldInstall({ gameRunning: true, acceptedManually: false }), true);
+  assert.strictEqual(gate.shouldHoldInstall({ gameRunning: true, acceptedByUser: false }), true);
 });
 
 test('nothing is held back when no game is running, however it was accepted', () => {
-  assert.strictEqual(gate.shouldHoldInstall({ gameRunning: false, acceptedManually: false }), false);
-  assert.strictEqual(gate.shouldHoldInstall({ gameRunning: false, acceptedManually: true }), false);
+  assert.strictEqual(gate.shouldHoldInstall({ gameRunning: false, acceptedByUser: false }), false);
+  assert.strictEqual(gate.shouldHoldInstall({ gameRunning: false, acceptedByUser: true }), false);
   assert.strictEqual(gate.shouldHoldInstall({}), false, 'defaults must not hold an install');
 });
 
-test('the manual acceptance is carried from the prompt to the install step', () => {
+test('the explicit acceptance is carried from the prompt to the install step', () => {
   const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
   // The flag only means anything if the accept path records it and the install path reads it.
-  assert.match(init, /updateAcceptedManually = manual;/, 'the accepted download must record whether the check was manual');
+  assert.match(init, /updateAcceptedByUser = true;/, 'the accepted download must record the user consent');
   assert.match(
     init,
-    /shouldHoldInstall\(\{ gameRunning: isGameRunning\(\), acceptedManually: updateAcceptedManually \}\)/,
+    /shouldHoldInstall\(\{ gameRunning: isGameRunning\(\), acceptedByUser: updateAcceptedByUser \}\)/,
     'the install step must ask the gate, not isGameRunning() alone'
   );
   // A held-back install that says nothing is indistinguishable from a broken updater.

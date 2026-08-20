@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const watch = require('node-watch');
+const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
@@ -24,6 +25,7 @@ try {
 }
 
 let watchers = [];
+const changes = createChangeCoalescer();
 let lastDiscoveryError = '';
 
 function normalizeId(value) {
@@ -289,7 +291,7 @@ module.exports.start = async (ctx) => {
       // WAL mode: an unlock may only touch gameplay.db-wal, so watch every gameplay.db* sibling.
       const w = watch(target.gameplayDir, { recursive: false, filter: /gameplay\.db/i }, (evt, name) => {
         if (evt !== 'update') return;
-        handleChange(target, ctx);
+        changes.run(target.appid, () => handleChange(target, ctx));
       });
       watchers.push(w);
       debug.log(`[gog] watching achievements for ${target.name} (${target.appid})`);
@@ -300,6 +302,7 @@ module.exports.start = async (ctx) => {
 };
 
 module.exports.stop = () => {
+  changes.clear();
   for (const w of watchers) {
     try {
       w.close();

@@ -3038,36 +3038,38 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
     }
     const discoveryLookup = buildDiscoveryLookup(appidList);
     if (finalList.length > 0) {
-      let count = 0;
-      // Announce the real total before the first game resolves, so the UI can size its placeholders
-      // to what is actually coming instead of guessing from the previous session.
-      callbackProgress(0, finalList.length);
-      // Bounded concurrency. The old code fired every game at once (Promise.all over the whole list,
-      // staggered by 10ms): a burst of N parallel fetches, and the disk reads / sockets / file
-      // handles all spike together. A small worker pool caps how many games load in parallel while
-      // they still stream into the UI via onGame as each one resolves.
-      // The keyless schema path is plain HTTP now (official endpoint -> SteamHunters JSON ->
-      // SteamCommunity), so it no longer needs a reduced pool to protect the Puppeteer browser.
-      // Browser-only fallbacks (SteamDB covers, top-owners) already serialize on their own queues.
-      const CONCURRENCY = 8;
-      let cursor = 0;
-      const worker = async () => {
-        while (cursor < finalList.length) {
-          const appid = finalList[cursor++];
-          const startTime = Date.now();
-          debug.log(`[${appid.appid}] loading data...`);
-          let game;
-          try {
-            game = await withTimeout(
-              this.getSavedAchievementsForAppid(option, appid, appidList, discoveryLookup),
-              GAME_LOAD_TIMEOUT_MS,
-              `[${appid.appid}] timed out after ${GAME_LOAD_TIMEOUT_MS / 1000}s`
-            );
-          } catch (err) {
-            debug.error(`[${appid.appid}] load failed => ${err}`);
-          }
-          const endTime = Date.now();
-          if (!game) {
+      gameIndex.beginBatch();
+      try {
+        let count = 0;
+        // Announce the real total before the first game resolves, so the UI can size its placeholders
+        // to what is actually coming instead of guessing from the previous session.
+        callbackProgress(0, finalList.length);
+        // Bounded concurrency. The old code fired every game at once (Promise.all over the whole list,
+        // staggered by 10ms): a burst of N parallel fetches, and the disk reads / sockets / file
+        // handles all spike together. A small worker pool caps how many games load in parallel while
+        // they still stream into the UI via onGame as each one resolves.
+        // The keyless schema path is plain HTTP now (official endpoint -> SteamHunters JSON ->
+        // SteamCommunity), so it no longer needs a reduced pool to protect the Puppeteer browser.
+        // Browser-only fallbacks (SteamDB covers, top-owners) already serialize on their own queues.
+        const CONCURRENCY = 8;
+        let cursor = 0;
+        const worker = async () => {
+          while (cursor < finalList.length) {
+            const appid = finalList[cursor++];
+            const startTime = Date.now();
+            debug.log(`[${appid.appid}] loading data...`);
+            let game;
+            try {
+              game = await withTimeout(
+                this.getSavedAchievementsForAppid(option, appid, appidList, discoveryLookup),
+                GAME_LOAD_TIMEOUT_MS,
+                `[${appid.appid}] timed out after ${GAME_LOAD_TIMEOUT_MS / 1000}s`
+              );
+            } catch (err) {
+              debug.error(`[${appid.appid}] load failed => ${err}`);
+            }
+            const endTime = Date.now();
+            if (!game) {
             // Do NOT auto-blacklist on a failed load (issue #55): getGameData() swallows every
             // error (network hiccup, rate-limit, CDN down) and returns undefined,
             // so a single transient failure used to permanently hide a real game. Just skip it for
@@ -3079,29 +3081,32 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
             // library depend on network luck - each scan listed a different handful of games and a
             // missing card was indistinguishable from a game that was never installed (issue #33).
             game = buildProvisionalGame(appid);
-          }
-          // Keep a game if it has achievements, OR it's a genuine on-disk install even with none
+            }
+            // Keep a game if it has achievements, OR it's a genuine on-disk install even with none
           // (e.g. UNDERTALE has zero Steam achievements) - same rationale as unconfigured installs.
           // Non-installed 0-achievement entries (phantom cache imports) are still filtered out.
           // A provisional entry is admitted on its own terms: it stands for on-disk data that was
           // found but could not be decorated yet.
-          if (game && (game.provisional || game.unconfigured || game.installed || (game.achievement && game.achievement.total > 0))) {
-            result.push(game);
+            if (game && (game.provisional || game.unconfigured || game.installed || (game.achievement && game.achievement.total > 0))) {
+              result.push(game);
             /*
               Hand the game straight to the caller - never via requestAnimationFrame: rAF only fires for
               a VISIBLE document, and this tray window is usually hidden with backgroundThrottling, so
               deferred callbacks never run and a background scan would look empty, retriggering full
               refreshes every few minutes.
             */
-            onGame?.(game);
+              onGame?.(game);
 
-            debug.log(`[${game.appid}] ${game.name} took ${(endTime - startTime) / 1000} seconds.`);
+              debug.log(`[${game.appid}] ${game.name} took ${(endTime - startTime) / 1000} seconds.`);
+            }
+            count++;
+            callbackProgress(Math.floor((count / finalList.length) * 100), finalList.length);
           }
-          count++;
-          callbackProgress(Math.floor((count / finalList.length) * 100), finalList.length);
-        }
-      };
-      await Promise.all(Array.from({ length: Math.min(CONCURRENCY, finalList.length) }, () => worker()));
+        };
+        await Promise.all(Array.from({ length: Math.min(CONCURRENCY, finalList.length) }, () => worker()));
+      } finally {
+        gameIndex.endBatch();
+      }
     }
     debug.log(`makeList: ${result.length} game(s) in ${((Date.now() - scanStart) / 1000).toFixed(2)}s`);
     callbackProgress(100);

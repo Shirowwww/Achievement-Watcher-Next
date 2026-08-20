@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 const watch = require('node-watch');
+const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
@@ -24,6 +25,7 @@ const CONFIGURATIONS_PATH = process.env['LOCALAPPDATA']
   : '';
 
 let watchers = [];
+const changes = createChangeCoalescer();
 
 // ---- spool protobuf reader (subset of app/parser/ubisoftOfficial.js) ----------------------------
 
@@ -454,7 +456,7 @@ module.exports.start = async (ctx) => {
       const w = watch(target.spoolDir, { recursive: false, filter: /\.spool$/i }, (evt, name) => {
         if (evt !== 'update' || !name) return;
         const hit = dirTargets.find((t) => path.basename(String(name)).toLowerCase() === path.basename(t.spoolFilePath).toLowerCase());
-        if (hit) handleChange(hit, ctx);
+        if (hit) changes.run(hit.appid, () => handleChange(hit, ctx));
       });
       watchers.push(w);
       debug.log(`[ubisoft] watching ${dirTargets.length} spool(s) in ${target.spoolDir}`);
@@ -465,6 +467,7 @@ module.exports.start = async (ctx) => {
 };
 
 module.exports.stop = () => {
+  changes.clear();
   for (const w of watchers) {
     try {
       w.close();

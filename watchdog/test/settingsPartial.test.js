@@ -55,6 +55,7 @@ test('a partial options.ini is completed without replacing valid or unknown sect
   assert.equal(loaded.notification_transport.winRT, false);
   assert.equal(loaded.action.target, '', 'missing required sections receive only their defaults');
   assert.equal(loaded.controller.enabled, false);
+  assert.equal(loaded.souvenir.hdr, 'auto');
   assert.equal(loaded.custom_extension.keep, 'untouched');
   assert.equal(loaded.general.onboardingCompleted, true, 'a readable legacy config is an upgrade, not a fresh install');
   assert.equal(loaded.notification.playtime, false, 'legacy profiles do not silently opt into playtime');
@@ -63,6 +64,7 @@ test('a partial options.ini is completed without replacing valid or unknown sect
   assert.equal(persisted.achievement.lang, 'french');
   assert.equal(persisted.notification.notify, false);
   assert.equal(persisted.notification_transport.mode, 'both');
+  assert.equal(persisted.souvenir.hdr, 'auto');
   assert.equal(persisted.custom_extension.keep, 'untouched', 'unknown sections survive the repair write');
 
   const writesAfterRepair = writeCount;

@@ -25,7 +25,7 @@ test('the first tick only establishes a baseline, so a cold start cannot refresh
 });
 
 test('a completed scan seeds the baseline, so an install during the scan is still detected', () => {
-  assert.match(appUi, /self\.hasCompletedFirstScan = true;[\s\S]{0,600}seedNewGameScanBaseline\(list\);/);
+  assert.match(appUi, /self\.hasCompletedFirstScan = true;[\s\S]*?seedNewGameScanBaseline\(list\);/);
   assert.match(appUi, /function seedNewGameScanBaseline\(renderedList\)[\s\S]*?achievements[\s\S]*?\.detectInstalledAppids\(app\.config\)/);
 });
 

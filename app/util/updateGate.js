@@ -108,8 +108,8 @@ function shouldSuppressUpdatePrompt(general, offered, { manual = false, now = Da
   hold-back only retries when the last game exits, an event that never comes, nothing ever tells the
   user why the app keeps offering the same version.
 */
-function shouldHoldInstall({ gameRunning = false, acceptedManually = false } = {}) {
-  return Boolean(gameRunning) && !acceptedManually;
+function shouldHoldInstall({ gameRunning = false, acceptedByUser = false } = {}) {
+  return Boolean(gameRunning) && !acceptedByUser;
 }
 
 // The general-section patch that records a "Later".

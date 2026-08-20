@@ -12,6 +12,11 @@ This guide covers local development and Windows packaging. Use [docs/RELEASE_WOR
 
 Electron is installed with the app dependencies. The supported native packages ship prebuilt binaries, so a normal setup does not require Visual Studio, Python or a manual `node-gyp` build.
 
+The HDR screenshot helper is also checked in as a prebuilt x64 executable, so normal development and
+packaging do not require Rust. Install the stable x64 MSVC Rust toolchain only when changing that
+helper; its source, tests and reproducible copy command are in
+[`native/hdr-screenshot`](native/hdr-screenshot/README.md).
+
 ## Install dependencies
 
 The desktop app and background Watchdog are separate npm workspaces. Install both from the repository root:
@@ -55,6 +60,26 @@ Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
 That variable is used only for the Watchdog child process. Setting it globally makes Electron start as plain Node and prevents the desktop app from loading.
 
 It is not installed as a user or machine environment variable. The packaged desktop app never sets it for itself; only its private Watchdog child receives it.
+
+### Library performance diagnostics
+
+Development builds write three lightweight `[perf]` entries to the renderer log: time to paint the
+last complete local library, time to the first freshly scanned tile, and total fresh-scan time. The
+first value appears from the second launch onward when the library settings have not changed. These
+timings do not add polling or delay startup work.
+
+The local-state microbenchmark uses synthetic data and writes only below the system temporary
+directory:
+
+```powershell
+node tools/benchmark-library-state.js 500
+```
+
+On the Windows development machine used for the 2026-08 performance pass, the 500-row index path
+changed from 570 ms of repeated whole-file writes to 15 ms with one batched write. Five hundred name
+lookups changed from 255 ms to 18 ms through the shared in-process index. Restoring a deliberately
+heavy 500-game snapshot containing 50,000 achievement rows took 14 ms (3.95 MB). Treat the absolute
+numbers as machine-specific; the benchmark exists to catch regressions in the work shape.
 
 ### Driving the running app
 

@@ -12,6 +12,7 @@ const { loadSteamData } = require('../steam.js');
 const { buildBinaryIndex, buildSeededSessions, getBinaryMatches, snapshotActiveGames } = require('./seed.js');
 const { createPollingProcessMonitor } = require('./pollingProcessMonitor.js');
 const { userDataDir } = require('../util/userData.js');
+const watchdogSettings = require('../settings.js');
 
 const debug = new (require('../util/logger'))({
   console: true,
@@ -31,6 +32,7 @@ if (!Array.isArray(blacklist.ignore)) blacklist.ignore = [];
 if (!Array.isArray(blacklist.mute)) blacklist.mute = [];
 let gameIndex;
 let gameIndexByBinary;
+let disabledOfficialSteamAppids = new Set();
 let appidByDirCache;
 // A long-running daemon sees an unbounded number of distinct process directories, so the
 // directory -> appid memo is capped and evicts in insertion order. It only exists to avoid
@@ -129,6 +131,28 @@ function isIgnoredAppid(appid) {
   return key !== '' && getIgnoredAppids().has(key);
 }
 
+// Official Steam-library records are controlled by achievement_source.legitSteam. The renderer
+// already applies this setting to discovery, but the playtime monitor has its own game-index loader
+// and used to seed every Steam record regardless of that setting.
+function isOfficialSteamLibraryGame(game) {
+  return /^steam\s*\(/i.test(String((game && game.source) || '').trim());
+}
+
+function filterGamesByAchievementSources(games, options) {
+  const showOfficialSteam = Number(options && options.achievement_source && options.achievement_source.legitSteam) > 0;
+  return (Array.isArray(games) ? games : []).filter((game) => showOfficialSteam || !isOfficialSteamLibraryGame(game));
+}
+
+async function loadWatchdogOptions() {
+  try {
+    return await watchdogSettings.load(path.join(userDataDir(), 'cfg', 'options.ini'));
+  } catch (err) {
+    // The safe fallback is the default source setting: official Steam games are not tracked.
+    debug.warn(`[Playtime] could not load source settings; official Steam tracking disabled: ${err.message || err}`);
+    return { achievement_source: { legitSteam: 0 } };
+  }
+}
+
 function isWallpaperEngineProcess(process, filepath) {
   const proc = String(process || '').toLowerCase();
   const file = String(filepath || '').toLowerCase();
@@ -164,6 +188,13 @@ async function init() {
     if (next.length === 0 && gameIndex && gameIndex.length > 0) {
       debug.warn('[Playtime] gameIndex reload returned an empty index; keeping the current one');
       return gameIndex.length;
+    }
+    const filteredOutSessions = nowPlaying.filter((game) => disabledOfficialSteamAppids.has(normalizeAppid(game.appid)));
+    for (const playing of filteredOutSessions) {
+      const index = nowPlaying.indexOf(playing);
+      if (index !== -1) nowPlaying.splice(index, 1);
+      playing.timer.stop();
+      emitter.emit('source-disabled', playing);
     }
     gameIndex = next;
     gameIndexByBinary = buildBinaryIndex(next);
@@ -251,6 +282,10 @@ async function init() {
           debug.log(`Ignoring blacklisted appid ${appid} for "${process}"`);
           return;
         }
+        if (disabledOfficialSteamAppids.has(normalizeAppid(appid))) {
+          debug.log(`Ignoring disabled official Steam appid ${appid} for "${process}"`);
+          return;
+        }
         //double check that the appid is not on gameIndex:
         game = gameIndex.find((g) => g.appid === appid);
         if (!game) {
@@ -272,6 +307,10 @@ async function init() {
     if (!game) return;
     if (isIgnoredAppid(game.appid)) {
       debug.log(`Ignoring blacklisted appid ${game.appid} for "${process}"`);
+      return;
+    }
+    if (disabledOfficialSteamAppids.has(normalizeAppid(game.appid))) {
+      debug.log(`Ignoring disabled official Steam appid ${game.appid} for "${process}"`);
       return;
     }
     debug.log(`DB Hit for ${game.name}(${game.appid}) ["${filepath || process}"]`);
@@ -327,7 +366,7 @@ async function init() {
 }
 
 async function addToGameIndex(game) {
-  if (isIgnoredAppid(game.appid)) return;
+  if (isIgnoredAppid(game.appid) || disabledOfficialSteamAppids.has(normalizeAppid(game.appid))) return;
   let userOverride;
   try {
     userOverride = JSON.parse(fs.readFileSync(path.join(userDataDir(), 'cfg', 'gameIndex.json'), 'utf8'));
@@ -376,7 +415,22 @@ async function getGameIndex() {
 
   //Merge (assign) arrB in arrA using prop as unique key
   const mergeArrayOfObj = (arrA, arrB, prop) => arrA.filter((a) => !arrB.find((b) => a[prop] === b[prop])).concat(arrB);
-  return mergeArrayOfObj(gameIndex, userOverride, 'appid').filter((game) => !isIgnoredAppid(game.appid));
+  const merged = mergeArrayOfObj(gameIndex, userOverride, 'appid');
+  const options = await loadWatchdogOptions();
+  const sourceFiltered = filterGamesByAchievementSources(merged, options);
+  disabledOfficialSteamAppids = new Set(
+    merged
+      .filter((game) => isOfficialSteamLibraryGame(game) && !sourceFiltered.includes(game))
+      .map((game) => normalizeAppid(game.appid))
+  );
+  return sourceFiltered.filter((game) => !isIgnoredAppid(game.appid));
 }
 
-module.exports = { init, isMutedByPath, shouldMuteProcessPath, getTrackableGameMatches };
+module.exports = {
+  init,
+  isMutedByPath,
+  shouldMuteProcessPath,
+  getTrackableGameMatches,
+  isOfficialSteamLibraryGame,
+  filterGamesByAchievementSources,
+};

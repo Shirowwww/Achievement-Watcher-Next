@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const watch = require('node-watch');
+const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
@@ -20,6 +21,7 @@ const cacheDir = path.join(userDataDir(), 'steam_cache/console');
 const LANG_FILE = { japanese: '00', english: '01', french: '02', spanish: '03', german: '04', italian: '05', russian: '08', koreana: '09', schinese: '11', polish: '16', brazilian: '17', turkish: '19' };
 
 let watchers = [];
+const changes = createChangeCoalescer();
 
 function decodeXml(s) {
   return String(s || '')
@@ -258,7 +260,7 @@ module.exports.start = async (ctx) => {
     try {
       const w = watch(target.xmlDir, { recursive: false, filter: /trop(_\d{2})?\.xml$/i }, (evt, name) => {
         if (evt !== 'update') return;
-        handleChange(target, name, ctx);
+        changes.run(target.appid, () => handleChange(target, name, ctx));
       });
       watchers.push(w);
       debug.log(`[shadps4] watching trophies for ${target.appid}`);
@@ -269,6 +271,7 @@ module.exports.start = async (ctx) => {
 };
 
 module.exports.stop = () => {
+  changes.clear();
   for (const w of watchers) {
     try {
       w.close();

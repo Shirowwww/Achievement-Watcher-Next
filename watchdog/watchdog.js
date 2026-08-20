@@ -534,6 +534,14 @@ var app = {
     this.optionsReloadTimer = setTimeout(() => {
       this.optionsReloadTimer = null;
       this.closeWatchers();
+      if (playtimeMonitorEmitter && typeof playtimeMonitorEmitter.reloadGameIndex === 'function') {
+        playtimeMonitorEmitter.reloadGameIndex().catch((err) => {
+          debug.warn(`[Playtime] settings reload failed => ${err}`);
+        });
+      } else {
+        // The monitor may still be initializing; apply the source filter as soon as it is ready.
+        playtimeIndexReloadQueued = true;
+      }
       this.start();
     }, OPTIONS_RELOAD_DEBOUNCE_MS);
     if (typeof this.optionsReloadTimer.unref === 'function') this.optionsReloadTimer.unref();
@@ -1214,6 +1222,23 @@ var app = {
             SpawnOverlayNotification([`--wintype=overlay`, `--appid=0`, `--description=close`]);
             overlayControllerService?.notifyOverlayPresentationChanged(false, 'game-exited');
           }
+        });
+
+        monitor.on('source-disabled', (game) => {
+          const wasCurrentOverlayGame = runningAppid === game.appid;
+          const index = runningGames.findIndex((running) => running.appid === game.appid);
+          if (index !== -1) runningGames.splice(index, 1);
+          stopXboxPolling(game);
+          if (wasCurrentOverlayGame && runningGames.length === 0) {
+            runningAppid = null;
+            const wasOpen = overlayOpened;
+            overlayOpened = false;
+            if (wasOpen) {
+              SpawnOverlayNotification([`--wintype=overlay`, `--appid=0`, `--description=close`]);
+              overlayControllerService?.notifyOverlayPresentationChanged(false, 'source-disabled');
+            }
+          }
+          forwardGameActivity();
         });
 
         monitor.on('enable-overlay', (appid) => {

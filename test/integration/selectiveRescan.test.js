@@ -30,6 +30,6 @@ test('a selected rescan limits discovery while preserving unrelated tiles and ke
   assert.match(parser, /async function discover\(source, steamAccFilter, scope = null\)/);
   assert.match(parser, /scope: scanScope\.cacheValue\(scanScope\.normalizeScanScope\(option\.scanScope\)\)/);
   assert.match(parser, /if \(scope\) \{[\s\S]*scope\.libraryDirs[\s\S]*return roots;/);
-  assert.match(appUi, /const previousGames = activeScanScope \? gameList\.slice\(\) : \[\]/);
+  assert.match(appUi, /const previousGames = activeScanScope \|\| preserveExistingOnFailure \? gameList\.slice\(\) : \[\]/);
   assert.match(appUi, /!gameTouchesScanScope\(game, activeScanScope\)/);
 });
