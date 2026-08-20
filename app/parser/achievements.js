@@ -186,6 +186,13 @@ function resolveLocalGameName(appid) {
   const id = String((appid && appid.appid) || '').trim();
   const record = (appid && appid.data) || {};
 
+  // cfg/gameIndex.json survives cache clearing and is shared with the Watchdog/menu paths. Prefer
+  // its last resolved title while the disposable metadata caches are being rebuilt.
+  if (id) {
+    const indexed = gameIndex.getName(id);
+    if (indexed) return indexed;
+  }
+
   // A name the discovery record itself carried (launcher manifests, manual entries, GBE configs).
   const declared = String((appid && appid.name) || '').trim();
   if (declared && declared !== id) return declared;

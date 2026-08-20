@@ -17,19 +17,57 @@ function userFile() {
   return path.join(app.getPath('userData'), 'cfg/gameIndex.json');
 }
 
-function readList() {
+let cachedList = null;
+let cachedSignature = '';
+let batchDepth = 0;
+let batchDirty = false;
+
+function fileSignature(file) {
   try {
-    return JSON.parse(fs.readFileSync(userFile(), 'utf8'));
+    const stat = fs.statSync(file);
+    return `${stat.size}:${stat.mtimeMs}`;
   } catch (err) {
-    if (err.code === 'ENOENT') return [];
+    if (err.code === 'ENOENT') return 'missing';
     throw err;
   }
+}
+
+function loadList() {
+  const file = userFile();
+  const signature = fileSignature(file);
+  if (cachedList && (batchDepth > 0 || signature === cachedSignature)) return cachedList;
+  try {
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+    cachedList = Array.isArray(parsed) ? parsed : [];
+    cachedSignature = signature;
+    return cachedList;
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      cachedList = [];
+      cachedSignature = 'missing';
+      return cachedList;
+    }
+    throw err;
+  }
+}
+
+function writeList() {
+  if (!cachedList) return;
+  if (batchDepth > 0) {
+    batchDirty = true;
+    return;
+  }
+  const file = userFile();
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(cachedList, null, 2), 'utf8');
+  cachedSignature = fileSignature(file);
+  batchDirty = false;
 }
 
 // Return true if this appid already appears in the user override.
 module.exports.has = (appid) => {
   try {
-    return readList().some((g) => String(g.appid) === String(appid));
+    return loadList().some((g) => String(g.appid) === String(appid));
   } catch {
     return false;
   }
@@ -39,18 +77,37 @@ module.exports.has = (appid) => {
 // actually match this game on, which `has` alone cannot answer.
 module.exports.get = (appid) => {
   try {
-    return readList().find((g) => String(g.appid) === String(appid)) || null;
+    const entry = loadList().find((g) => String(g.appid) === String(appid));
+    return entry ? { ...entry } : null;
   } catch {
     return null;
   }
 };
+
+// The index is durable user state, unlike the schema/name caches. Library reconstruction uses this
+// title while fresh metadata is unavailable, so a cache clear or offline restart does not briefly
+// turn a known game back into its appid.
+module.exports.getName = (appid) => {
+  const entry = module.exports.get(appid);
+  const name = String((entry && entry.name) || '').trim();
+  return name && name !== String(appid) ? name : '';
+};
+
+function isWeakName(name, appid, binary) {
+  const value = String(name || '').trim();
+  if (!value || value === String(appid)) return true;
+  const executable = path.basename(String(binary || '')).trim();
+  const executableStem = executable.replace(/\.exe$/i, '');
+  const lower = value.toLowerCase();
+  return !!executable && (lower === executable.toLowerCase() || lower === executableStem.toLowerCase());
+}
 
 // Insert or update the entry for this appid. If it already exists, refresh binary/name/icon when the
 // detected binary changed (so re-detection after a reinstall/move is picked up); otherwise append.
 // Silently no-ops on any I/O error so a failure here never blocks the achievement scan.
 module.exports.upsert = (entry) => {
   try {
-    const list = readList();
+    const list = loadList();
     const appid = String(entry.appid);
     const next = {
       appid,
@@ -73,9 +130,11 @@ module.exports.upsert = (entry) => {
     if (existing) {
       // Metadata-only seeds (e.g. the Ubisoft Connect row that carries uplayId/steamappid) must
       // never wipe fields the generic exe-detection seed already filled.
+      const shouldUpdateName =
+        next.name && !(isWeakName(next.name, appid, next.binary) && !isWeakName(existing.name, appid, existing.binary));
       const changed =
         (next.binary && existing.binary !== next.binary) ||
-        (next.name && existing.name !== next.name) ||
+        (shouldUpdateName && existing.name !== next.name) ||
         (next.icon && existing.icon !== next.icon) ||
         (next.source && String(existing.source || '') !== next.source) ||
         (next.steamappid && String(existing.steamappid || '') !== next.steamappid) ||
@@ -85,7 +144,9 @@ module.exports.upsert = (entry) => {
         (next.portraitUrl && String(existing.portraitUrl || '') !== next.portraitUrl);
       if (!changed) return;
       if (next.binary) existing.binary = next.binary;
-      if (next.name) existing.name = next.name;
+      // A partial/offline rebuild may know only the appid or executable. Keep the last resolved
+      // title for every consumer of this shared index; real metadata can still enrich it later.
+      if (shouldUpdateName) existing.name = next.name;
       if (next.icon) existing.icon = next.icon;
       if (next.source) existing.source = next.source;
       if (next.steamappid) existing.steamappid = next.steamappid;
@@ -96,9 +157,7 @@ module.exports.upsert = (entry) => {
     } else {
       list.push(next);
     }
-    const file = userFile();
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, JSON.stringify(list, null, 2), 'utf8');
+    writeList();
   } catch {
     /* non-fatal - playtime seeding is best-effort */
   }
@@ -110,13 +169,12 @@ module.exports.add = module.exports.upsert;
 module.exports.remove = (appid) => {
   try {
     const key = String(appid);
-    const list = readList();
+    const list = loadList();
     const next = list.filter((g) => String(g.appid) !== key);
     const removed = list.length - next.length;
     if (removed === 0) return 0;
-    const file = userFile();
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, JSON.stringify(next, null, 2), 'utf8');
+    cachedList = next;
+    writeList();
     return removed;
   } catch {
     return 0;
@@ -130,7 +188,7 @@ module.exports.remove = (appid) => {
 module.exports.reconcile = (games) => {
   try {
     const exeDetect = require(path.join(__dirname, 'exeDetect.js'));
-    let list = readList();
+    let list = loadList();
     if (list.length < 2) return 0;
     const nameByAppid = new Map((games || []).map((g) => [String(g.appid), g.name]));
 
@@ -159,11 +217,32 @@ module.exports.reconcile = (games) => {
     }
     if (drop.size === 0) return 0;
     list = list.filter((e) => !drop.has(e));
-    const file = userFile();
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, JSON.stringify(list, null, 2), 'utf8');
+    cachedList = list;
+    writeList();
     return drop.size;
   } catch {
     return 0;
+  }
+};
+
+// A library scan can seed hundreds of rows. Keep those updates in memory and persist once when the
+// scan finishes, while one-off UI actions retain their immediate write-through behavior.
+module.exports.beginBatch = () => {
+  loadList();
+  batchDepth += 1;
+};
+
+module.exports.endBatch = () => {
+  if (batchDepth === 0) return;
+  batchDepth -= 1;
+  if (batchDepth === 0 && batchDirty) writeList();
+};
+
+module.exports.withBatch = async (operation) => {
+  module.exports.beginBatch();
+  try {
+    return await operation();
+  } finally {
+    module.exports.endBatch();
   }
 };
