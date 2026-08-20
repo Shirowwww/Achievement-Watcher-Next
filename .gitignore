@@ -8,6 +8,7 @@ dist/
 Achievement.Watcher.Setup.*.exe
 *.blockmap
 latest.yml
+native/**/target/
 
 # Logs
 logs/

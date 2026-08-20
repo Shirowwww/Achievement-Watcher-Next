@@ -127,18 +127,15 @@ Windows refuses as a folder name is handled rather than silently losing its scre
 
 ### Playing with Windows HDR on
 
-Screenshots are saved exactly as Windows hands them over, and Windows converts an HDR screen to SDR
-before any ordinary screenshot tool - AW Next, the Snipping Tool, Print Screen or OBS - ever sees it.
-Ordinary content comes through correctly, but anything brighter than SDR white is clipped to flat
-white, so a bright sky or a strong light source can lose its detail. That detail is not in the file
-to recover: the picture is 8 bits per colour by the time it arrives.
+**HDR screenshots** defaults to **Automatic**. At capture time, AW Next checks whether HDR is active
+on the primary display. If it is, a small one-shot helper captures an FP16 frame through Windows
+Graphics Capture and tone-maps its highlights into an ordinary SDR/sRGB PNG. The helper exits as
+soon as that one image is written; it does not keep a recorder, GPU session or Electron window alive.
 
-Two things help, both outside AW Next:
-
-- Lower **SDR content brightness** in Windows' HDR settings. On some systems this also fixes
-  screenshots that come out overall too bright.
-- For a shot where a blown highlight really matters, use **Win + G** (Xbox Game Bar), which captures
-  the HDR frame itself and saves a tone-mapped copy beside it.
+When Windows HDR is off, **Automatic** uses the same standard capture path as before. **Off** always
+uses that standard path. Missing Windows support, a blocked capture, a timeout or any other helper
+failure also falls back to the standard screenshot instead of losing the souvenir or interrupting
+the notification.
 
 On multi-monitor setups the souvenir captures the primary monitor, so play on it if you want your
 screenshots to match.

@@ -399,6 +399,10 @@ module.exports.load = async (cfg_file) => {
       options.souvenir.dir = '';
       fixFile = true;
     }
+    if (options.souvenir.hdr !== 'auto' && options.souvenir.hdr !== 'off') {
+      options.souvenir.hdr = 'auto';
+      fixFile = true;
+    }
     if ('combineNotif' in options.souvenir) {
       delete options.souvenir.combineNotif; // simplified: capture always includes whatever is on screen
       fixFile = true;
@@ -549,6 +553,7 @@ module.exports.load = async (cfg_file) => {
       souvenir: {
         screenshot: false,
         dir: '',
+        hdr: 'auto',
       },
       controller: {
         enabled: false,

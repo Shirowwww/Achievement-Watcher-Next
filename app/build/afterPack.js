@@ -119,6 +119,10 @@ exports.default = async function afterPack(context) {
       // koffi/index.cjs is a one-line require of this file, and it in turn loads the prebuilt .node.
       path.join(dest, 'koffi', 'src', 'koffi', 'index.cjs'),
       path.join(dest, '@koromix', `koffi-win32-${targetArch}`, `win32_${targetArch}`, 'koffi.node'),
+      // One-shot HDR screenshot helper and the notice required by its windows-capture dependency.
+      path.join(appOutDir, 'watchdog', 'native', 'aw-next-hdr-screenshot.exe'),
+      path.join(appOutDir, 'watchdog', 'native', 'windows-capture.LICENSE.txt'),
+      path.join(appOutDir, 'watchdog', 'native', 'Achievements-HDR.LICENSE.txt'),
       // The 7-Zip build node-7z resolves by process.arch.
       path.join(unpacked, '7zip-bin', 'win', targetArch, '7za.exe'),
     ];

@@ -194,7 +194,12 @@ module.exports = async (message, option = {}) => {
       if (options.souvenir && options.souvenir.screenshot && !message.silent && !message.progress) {
         setTimeout(() => {
           require('./souvenir.js')
-            .capture({ game: message.gameDisplayName, achievement: message.achievementDisplayName, dir: options.souvenir.dir })
+            .capture({
+              game: message.gameDisplayName,
+              achievement: message.achievementDisplayName,
+              dir: options.souvenir.dir,
+              hdr: options.souvenir.hdr,
+            })
             .catch(() => {});
         }, 800);
       }
