@@ -11,6 +11,16 @@ const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-uplayr2-'));
 const savedAppData = process.env.APPDATA;
 process.env.APPDATA = path.join(temp, 'AppData');
 
+function fakePe(arch, text = '') {
+  const buffer = Buffer.alloc(2048);
+  buffer.writeUInt16LE(0x5a4d, 0);
+  buffer.writeUInt32LE(0x80, 0x3c);
+  buffer.writeUInt32LE(0x00004550, 0x80);
+  buffer.writeUInt16LE(arch === 'x64' ? 0x8664 : 0x014c, 0x84);
+  Buffer.from(text, 'latin1').copy(buffer, 0x200);
+  return buffer;
+}
+
 (async () => {
   try {
     // derivePrefixedIds: a game whose Steam api-names all share one prefix+trailing-digits is supported.
@@ -67,6 +77,23 @@ process.env.APPDATA = path.join(temp, 'AppData');
     const byId = uplayR2.resolveSteamMapping({ appid: 'UPLAY4' });
     assert.strictEqual(byId.steam_appid, 33230);
     assert.strictEqual(byId.uplay_id, '4');
+    assert.strictEqual(uplayR2.resolveSteamMapping({ appid: 'uplay-4' }).steam_appid, 33230);
+
+    const automaticIdentity = uplayR2.resolveGameIdentity({
+      appid: '7654321',
+      steamappid: '7654321',
+      name: 'Catalog-resolved Ubisoft Game',
+      uplayR2: true,
+    });
+    assert.strictEqual(automaticIdentity.steamAppid, '7654321');
+    assert.strictEqual(automaticIdentity.mapping.steam_appid, 7654321);
+    assert.strictEqual(automaticIdentity.mapping.automatic, true);
+    assert.strictEqual(automaticIdentity.uplayId, '');
+    assert.strictEqual(
+      uplayR2.resolveGameIdentity({ appid: '4', steamappid: '4', name: 'Promoted Uplay R2', uplayR2: true }).steamAppid,
+      '4',
+      'a promoted numeric Steam AppID must not be reinterpreted as Ubisoft product 4'
+    );
 
     // Regression (issue #14): the Steam variant of Far Cry 4 registers as Ubisoft product 971.
     // It deliberately has NO direct row in uplay-steam.json - the app resolves it by the archive
@@ -94,6 +121,11 @@ process.env.APPDATA = path.join(temp, 'AppData');
     const byInstallState = uplayR2.resolveSteamMapping({ gameDir: renamedInstall, name: 'Wrong Folder Name' });
     assert.strictEqual(byInstallState.steam_appid, 3751950);
     assert.strictEqual(byInstallState.uplay_id, '65043');
+    assert.strictEqual(
+      uplayR2.resolveSteamMapping({ appid: 'UPLAY66088' }).steam_appid,
+      3751950,
+      'the second Black Flag Resynced product id from upstream issue #118 resolves without replacing the mapping file by hand'
+    );
 
     const officialIdentity = uplayR2.resolveGameIdentity({
       appid: 'uplay-65043',
@@ -109,8 +141,8 @@ process.env.APPDATA = path.join(temp, 'AppData');
     // detectEmulator: bounded shallow walk finds the loader dll in a nested Binaries folder.
     // The stub carries the ini key names a real loader binary embeds, because inspectLoader() reads
     // them to decide whether this build understands the achievement redirect at all.
-    const MODERN_LOADER = 'stub AchSavePath AchSaveType AchKeyPrefix Achievements';
-    const LEGACY_LOADER = 'stub Achievements SaveType SavePath'; // pre-redirect build
+    const MODERN_LOADER = fakePe('x64', 'stub AchSavePath AchSaveType AchKeyPrefix Achievements');
+    const LEGACY_LOADER = fakePe('x64', 'stub Achievements SaveType SavePath'); // pre-redirect build
     const gameDir = path.join(temp, 'My Ubisoft Game');
     const dllDir = path.join(gameDir, 'Binaries', 'Win64');
     fs.mkdirSync(dllDir, { recursive: true });
@@ -118,6 +150,7 @@ process.env.APPDATA = path.join(temp, 'AppData');
     const emu = uplayR2.detectEmulator(gameDir);
     assert.strictEqual(emu.type, 'uplayR2');
     assert.strictEqual(emu.dll.length, 1);
+    assert.strictEqual(uplayR2.hasEmulatorEvidence(gameDir), true, 'Goldberg-only config keys distinguish the emulator from an official loader basename');
     assert.strictEqual(uplayR2.detectEmulator(path.join(temp, 'nonexistent')).type, 'none');
     assert.strictEqual(uplayR2.isUbisoftInstall(gameDir), true, 'a loader-only install is Ubisoft');
 
@@ -125,6 +158,7 @@ process.env.APPDATA = path.join(temp, 'AppData');
     fs.mkdirSync(markerOnlyDir, { recursive: true });
     fs.writeFileSync(path.join(markerOnlyDir, 'uplay_install.manifest'), 'opaque');
     assert.strictEqual(uplayR2.isUbisoftInstall(markerOnlyDir), true, 'an unmapped marker-only install is still Ubisoft');
+    assert.strictEqual(uplayR2.hasEmulatorEvidence(markerOnlyDir), false, 'a launcher marker alone never authorizes emulator repair');
     assert.strictEqual(uplayR2.isUbisoftInstall(path.join(temp, 'nonexistent')), false, 'an ordinary folder is not Ubisoft');
 
     assert.strictEqual(uplayR2.isUbisoftGame({ source: 'Uplay R2' }), true);
@@ -132,6 +166,13 @@ process.env.APPDATA = path.join(temp, 'AppData');
     assert.strictEqual(uplayR2.isUbisoftGame({ uplayR2: true }), true);
     assert.strictEqual(uplayR2.isUbisoftGame({ appid: 'UPLAY65043' }), true);
     assert.strictEqual(uplayR2.isUbisoftGame({ source: 'GBE Fork', appid: '3751950' }), false);
+    assert.strictEqual(
+      uplayR2.isUplayR2Game({ appid: 'uplay-6100', source: 'Ubisoft Connect', system: 'uplay', data: { type: 'ubisoftOfficial' } }),
+      false,
+      'official namespaced Ubisoft games must not receive emulator repair'
+    );
+    assert.strictEqual(uplayR2.isUplayR2Game({ source: 'Uplay R2' }), true);
+    assert.strictEqual(uplayR2.isUplayR2Game({ uplayR2: true, appid: '3751950' }), true);
     console.log('PASS: Ubisoft classifier covers loaders, install markers, flags, system and legacy ids');
 
     const toolPaths = uplayR2.getGameToolPaths({
@@ -172,16 +213,19 @@ process.env.APPDATA = path.join(temp, 'AppData');
       prefix: 'Ach_Prologue_',
       accountName: 'Shiro',
       language: 'french',
+      logging: true,
     });
     assert.strictEqual(repair1.wroteSchema, true);
-    assert.strictEqual(repair1.backupDir, null, 'first repair has nothing to back up yet');
+    assert.ok(repair1.backupDir, 'first repair records newly created files so the operation can be undone');
+    const firstManifest = JSON.parse(fs.readFileSync(path.join(repair1.backupDir, uplayR2.BACKUP_MANIFEST), 'utf8'));
+    assert.ok(firstManifest.files.every((entry) => entry.existed === false), 'the first snapshot records that generated files were absent');
     assert.deepStrictEqual(
       JSON.parse(fs.readFileSync(path.join(dllDir, 'achievements_schema.json'), 'utf8')),
       { Ach_Prologue_1: { displayName: 'Prologue', description: 'Complete the Prologue', earned: 0 } }
     );
 
     const expectedSavePath = path.join(process.env.APPDATA, 'GSE Saves', '33230');
-    assert.ok(fs.existsSync(expectedSavePath), 'repair should pre-create the GSE Saves\\<steamAppid> folder');
+    assert.equal(fs.existsSync(expectedSavePath), false, 'repair leaves the external save tree to the runtime, keeping the setup fully reversible');
 
     for (const iniName of uplayR2.INI_NAMES) {
       const ini = fs.readFileSync(path.join(dllDir, iniName), 'utf8');
@@ -190,8 +234,12 @@ process.env.APPDATA = path.join(temp, 'AppData');
       assert.ok(/AchSaveType\s*=\s*1/.test(ini), `${iniName} should redirect AchSaveType`);
       assert.ok(ini.includes(expectedSavePath), `${iniName} should point AchSavePath at GSE Saves\\33230`);
       assert.ok(/Username\s*=\s*Shiro/.test(ini), `${iniName} should stamp the account name`);
+      assert.ok(/Language\s*=\s*fr-FR/.test(ini), `${iniName} should convert the Steam language to a loader locale`);
+      assert.ok(/Logging\s*=\s*1/.test(ini), `${iniName} should enable diagnostic logging when requested`);
       assert.ok(/\[DLC\]/.test(ini) && /\[Items\]/.test(ini) && /\[Chunks\]/.test(ini), `${iniName} should keep the DLC/Items/Chunks sections`);
     }
+    assert.strictEqual(uplayR2.normalizeLoaderLanguage('latam'), 'es-MX');
+    assert.strictEqual(uplayR2.normalizeLoaderLanguage('ukrainian'), 'en-US', 'unsupported loader locales fall back safely');
     console.log('PASS: repair writes achievements_schema.json + patches both ini variants');
 
     // A second repair must never overwrite the UserId already on disk (would orphan the runtime save),
@@ -204,7 +252,7 @@ process.env.APPDATA = path.join(temp, 'AppData');
       prefix: 'Ach_Prologue_',
     });
     assert.ok(repair2.backupDir, 'second repair should back up the previous schema/ini');
-    assert.ok(fs.existsSync(path.join(repair2.backupDir, 'achievements_schema.json')));
+    assert.ok(fs.existsSync(path.join(repair2.backupDir, 'files', 'achievements_schema.json')));
     const userIdAfter = fs.readFileSync(path.join(dllDir, 'uplay_r2.ini'), 'utf8').match(/UserId\s*=\s*(\S+)/)[1];
     assert.strictEqual(userIdAfter, savedUserId, 'repair must never overwrite an existing UserId');
     assert.strictEqual(Object.keys(repair2.achievementsSchemaJson).length, 2, 'repair should reflect the updated schema');
@@ -217,27 +265,17 @@ process.env.APPDATA = path.join(temp, 'AppData');
     assert.ok(goodReport.issues.some((i) => i.code === 'NO_SAVE_YET'), 'no unlocks written yet is expected, not an error');
     console.log('PASS: diagnose reports a fully configured Uplay R2 setup');
 
-    // uplayR2Installer: cache seeding + install with .bak backup.
+    // The package cache is validated, not trusted by filename. A non-PE or a 32-bit image wearing a
+    // 64-bit loader name is never eligible for installation.
     const cacheDir = path.join(temp, 'cache', 'uplayR2');
     let dlls = uplayR2Installer.ensureEmulatorDlls({ cacheDir });
     assert.strictEqual(dlls.seeded, false, 'an empty cache should report not seeded');
     fs.mkdirSync(cacheDir, { recursive: true });
-    fs.writeFileSync(path.join(cacheDir, 'uplay_r2_loader64.dll'), 'REAL DLL BYTES');
+    fs.writeFileSync(path.join(cacheDir, 'uplay_r2_loader64.dll'), fakePe('x86', 'Achievements'));
     dlls = uplayR2Installer.ensureEmulatorDlls({ cacheDir });
-    assert.strictEqual(dlls.seeded, true);
-
-    const installResult = uplayR2Installer.installDlls({ dllDirs: [dllDir], dlls });
-    assert.strictEqual(installResult.installed, 1);
-    assert.strictEqual(installResult.backedUp, 1, 'the cracked stub dll should be backed up once');
-    assert.strictEqual(fs.readFileSync(path.join(dllDir, 'uplay_r2_loader64.dll'), 'utf8'), 'REAL DLL BYTES');
-    assert.ok(fs.existsSync(path.join(dllDir, 'uplay_r2_loader64.dll.bak')));
-
-    // A second install must not re-backup (the .bak must always hold the ORIGINAL cracked stub).
-    fs.writeFileSync(path.join(cacheDir, 'uplay_r2_loader64.dll'), 'REAL DLL V2');
-    const installResult2 = uplayR2Installer.installDlls({ dllDirs: [dllDir], dlls: uplayR2Installer.ensureEmulatorDlls({ cacheDir }) });
-    assert.strictEqual(installResult2.backedUp, 0, 're-installing must not clobber the original .bak');
-    assert.strictEqual(fs.readFileSync(path.join(dllDir, 'uplay_r2_loader64.dll.bak'), 'utf8'), MODERN_LOADER, 'the .bak must remain the original cracked stub');
-    console.log('PASS: uplayR2Installer seeds from a user cache and installs with a one-time backup');
+    assert.strictEqual(dlls.seeded, false);
+    assert.strictEqual(dlls.invalid[0].error, 'ARCH_MISMATCH');
+    console.log('PASS: uplayR2Installer rejects misleading filenames and wrong-architecture DLLs');
 
     /*
       Legacy loader (no AchSaveType/AchSavePath/AchKeyPrefix support).

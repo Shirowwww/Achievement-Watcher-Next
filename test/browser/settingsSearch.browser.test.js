@@ -88,7 +88,17 @@ async function launchBrowser() {
 // is shimmed so the CommonJS module used by the app loads unchanged.
 function buildHarness() {
   const html = fs.readFileSync(path.join(appDir, 'view', 'app.html'), 'utf8');
-  const frenchHelp = JSON.parse(fs.readFileSync(path.join(appDir, 'locale', 'lang', 'french.json'), 'utf8')).settings.help;
+  const frenchSettings = JSON.parse(fs.readFileSync(path.join(appDir, 'locale', 'lang', 'french.json'), 'utf8')).settings;
+  const uplay = frenchSettings.emulator.uplay;
+  const frenchHelp = {
+    ...frenchSettings.help,
+    uplayTitle: uplay.title,
+    uplay: [
+      uplay.packageHelp,
+      [uplay.import, uplay.restore].filter(Boolean).join(' / '),
+      uplay.repairHelp,
+    ].filter(Boolean),
+  };
   const start = html.indexOf('<section id="settings">');
   const end = html.indexOf('</section>', html.indexOf('<div class="footer">', start)) + '</section>'.length;
   assert.ok(start > 0 && end > start, 'could not isolate the settings section from app.html');
@@ -211,8 +221,8 @@ test('the Help filter behaves correctly in a real DOM', { concurrency: 1, timeou
     const initial = await page.evaluate(() => {
       const titles = {
         quick: 'quickTitle',
-        config: 'configTitle',
         steam: 'steamTitle',
+        uplay: 'uplayTitle',
         emulators: 'emulatorTitle',
         sources: 'sourcesTitle',
         controller: 'controllerTitle',
@@ -232,23 +242,23 @@ test('the Help filter behaves correctly in a real DOM', { concurrency: 1, timeou
         open: document.querySelectorAll('.help-panel[open]').length,
       };
     });
-    assert.deepStrictEqual(initial, { panels: 11, open: 1 });
+    assert.deepStrictEqual(initial, { panels: 12, open: 1 });
 
     const broad = await page.evaluate(() => window.AchievementHelp.applyHelpSearch($, 'emulateur'));
-    assert.deepStrictEqual(broad, { matches: 4, total: 11 }, 'accent-free search must match French topic text');
+    assert.deepStrictEqual(broad, { matches: 4, total: 12 }, 'accent-free search must match French topic text');
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel:not([hidden])').length), 4);
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel[open]:not([hidden])').length), 0, 'multiple matches stay compact');
 
     const narrow = await page.evaluate(() => window.AchievementHelp.applyHelpSearch($, 'RPCS3'));
-    assert.deepStrictEqual(narrow, { matches: 1, total: 11 });
+    assert.deepStrictEqual(narrow, { matches: 1, total: 12 });
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel[open]:not([hidden])').length), 1, 'a single result opens immediately');
 
     const none = await page.evaluate(() => window.AchievementHelp.applyHelpSearch($, 'zzzz-no-topic'));
-    assert.deepStrictEqual(none, { matches: 0, total: 11 });
+    assert.deepStrictEqual(none, { matches: 0, total: 12 });
     assert.strictEqual(await page.evaluate(() => document.getElementById('help-no-results').hidden), false);
 
     const cleared = await page.evaluate(() => window.AchievementHelp.applyHelpSearch($, ''));
-    assert.deepStrictEqual(cleared, { matches: 11, total: 11 });
+    assert.deepStrictEqual(cleared, { matches: 12, total: 12 });
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel[hidden]').length), 0);
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel[open]').length), 1, 'clearing restores the original disclosure state');
   } finally {

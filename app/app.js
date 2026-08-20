@@ -85,6 +85,9 @@ const uninstall = require(path.join(appPath, 'util/uninstall.js'));
 const apiCheckBypass = require(path.join(appPath, 'parser/apiCheckBypass.js'));
 const { calculateLibraryStats } = require(path.join(appPath, 'util/libraryStats.js'));
 const { resolveGameRarityContext } = require(path.join(appPath, 'util/rarity.js'));
+const librarySnapshot = require(path.join(appPath, 'util/librarySnapshot.js'));
+const { createViewportWork } = require(path.join(appPath, 'util/viewportWork.js'));
+const libraryLayout = require(path.join(appPath, 'util/libraryLayout.js'));
 // `t` and `escapeHtml` come from ui/settings.js; classic scripts share their lexical scope.
 let debug = new (require(path.join(appPath, 'util/logger.js')))({
   console: isDev,
@@ -294,6 +297,445 @@ function clearGameBoxBusy($box) {
   if (!$box || !$box.length) return;
   $box.removeClass('wait');
   $box.find('.loading-overlay .content').first().html('<i class="fas fa-spinner fa-spin"></i>');
+}
+
+function applyLibraryLayout(value, legacyPortrait = false) {
+  const mode = libraryLayout.normalize(value, legacyPortrait);
+  $('#game-list')
+    .removeClass(libraryLayout.MODES.map((name) => `view-${name}`).join(' '))
+    .addClass(`view-${mode}`)
+    .attr('data-library-layout', mode);
+  $('#library-layout-select, #option_libraryLayout').val(mode);
+  return mode;
+}
+
+function libraryRelativeTime(timestamp) {
+  const seconds = Number(timestamp);
+  if (!Number.isFinite(seconds) || seconds <= 0) return '';
+  const value = moment.unix(seconds);
+  return `<time class="library-scroll-text" datetime="${value.toISOString()}" title="${escapeHtml(
+    value.format('LLLL')
+  )}"><span class="library-scroll-content">${escapeHtml(value.fromNow())}</span></time>`;
+}
+
+function startLibraryTextScroll(container) {
+  if (!container || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  const text = container.querySelector(':scope > .library-scroll-content');
+  if (!text) return;
+  const overflow = Math.max(0, Math.ceil(text.scrollWidth - container.clientWidth));
+  if (overflow <= 2) return;
+
+  container._scrollAnimation?.cancel();
+  container._scrollAnimation = text.animate(
+    [
+      { transform: 'translateX(0)', offset: 0 },
+      { transform: 'translateX(0)', offset: 0.14 },
+      { transform: `translateX(-${overflow}px)`, offset: 0.78 },
+      { transform: `translateX(-${overflow}px)`, offset: 1 },
+    ],
+    {
+      duration: Math.max(3200, overflow * 28),
+      iterations: Infinity,
+      direction: 'alternate',
+      easing: 'ease-in-out',
+    }
+  );
+}
+
+function stopLibraryTextScroll(container) {
+  container?._scrollAnimation?.cancel();
+  if (container) container._scrollAnimation = null;
+}
+
+function libraryPlaytime(seconds) {
+  const total = Number(seconds);
+  if (!Number.isFinite(total) || total <= 0) return '';
+  if (total < 60) return moment.duration(total, 'seconds').humanize();
+  return humanizeDuration(total * 1000, {
+    language: moment.locale(),
+    fallbacks: ['en'],
+    units: total >= 86400 ? ['d', 'h'] : ['h', 'm'],
+    round: true,
+    largest: 2,
+  });
+}
+
+async function ensureUplayR2Package({ interactive = true, forceImport = false } = {}) {
+  const cacheDir = path.join(getUserDataPath(), 'cache/uplayR2');
+  let bundledError = null;
+  if (!forceImport) {
+    try {
+      return await uplayR2Installer.ensureBundledEmulatorDlls({ cacheDir, log: debug });
+    } catch (err) {
+      bundledError = err;
+      debug.error(`[uplayR2] bundled package could not be imported => ${formatErr(err)}`);
+    }
+  }
+  let cache = uplayR2Installer.ensureEmulatorDlls({ cacheDir });
+  if (cache.seeded && !forceImport) return cache;
+  if (!interactive) {
+    const invalid = cache.invalid.map((entry) => `${entry.name || path.basename(entry.file)}: ${entry.error}`).join(', ');
+    throw new Error(`Uplay R2 package is not available${bundledError ? ` (${formatErr(bundledError)})` : invalid ? ` (${invalid})` : ''}`);
+  }
+
+  const choice = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+    type: 'warning',
+    title: t('uplay-r2-dll-not-seeded', 'Uplay R2 dll not seeded', 'DLL Uplay R2 manquantes'),
+    message: t('no-files-found-in-the-uplay-r2-cache', 'No files found in the Uplay R2 cache.', 'Aucun fichier trouvé dans le cache Uplay R2.'),
+    detail:
+      t(
+        'copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-',
+        'Select your Uplay R2 package once. AW Next will import only validated x86/x64 loader DLLs into:\n{dir}',
+        'Sélectionne une fois ton paquet Uplay R2. AW Next importera uniquement les DLL x86/x64 validées dans :\n{dir}',
+        { dir: cacheDir }
+      ) +
+      (cache.invalid.length ? `\n\n${cache.invalid.map((entry) => `${entry.name || path.basename(entry.file)}: ${entry.error}`).join('\n')}` : ''),
+    buttons: [t('cancel', 'Cancel', 'Annuler'), t('select-file', 'Select file…', 'Sélectionner le fichier…')],
+    defaultId: 1,
+    cancelId: 0,
+    noLink: true,
+  });
+  if (choice !== 1) return null;
+  const picked = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
+    title: t('select-file', 'Select file…', 'Sélectionner le fichier…'),
+    properties: ['openFile', 'multiSelections', 'dontAddToRecent'],
+    filters: [
+      { name: t('archives', 'Archives', 'Archives'), extensions: ['7z', 'zip'] },
+      { name: 'Uplay R2 DLL', extensions: ['dll'] },
+    ],
+  });
+  if (picked.canceled || !picked.filePaths || picked.filePaths.length === 0) return null;
+  for (const packagePath of picked.filePaths) {
+    await uplayR2Installer.importPackage({ packagePath, cacheDir, log: debug });
+  }
+  cache = await uplayR2Installer.ensureBundledEmulatorDlls({ cacheDir, log: debug });
+  if (!cache.seeded) throw new Error('The selected package contained no compatible Uplay R2 loader');
+  return cache;
+}
+
+async function detectedGameExe(game, gameDir) {
+  const configured = await exeList.get(game && game.appid);
+  const candidates = [(configured && configured.exe) || '', (game && game.exe) || ''];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const full = path.isAbsolute(candidate) ? candidate : path.join(gameDir, candidate);
+    if (fs.existsSync(full)) return full;
+  }
+  const detected = exeDetect.detect(gameDir, (game && game.name) || '', { dllPaths: uplayR2.detectEmulator(gameDir).dll });
+  return (detected && detected.full) || '';
+}
+
+function uplayR2IniOptions() {
+  const emulator = app.config?.emulator || {};
+  return {
+    accountName: String(emulator.uplayUsername || '').trim() || app.config?.general?.username,
+    language: emulator.uplayLanguage && emulator.uplayLanguage !== 'auto' ? emulator.uplayLanguage : app.config?.achievement?.lang,
+    logging: emulator.uplayLogging === true,
+  };
+}
+
+async function selectUplayR2SteamMapping({ game, gameDir, appid } = {}) {
+  const record = game && typeof game === 'object' ? game : {};
+  const identity = uplayR2.resolveGameIdentity(record, appid);
+  const ranked = await steamParser.findAppidCandidatesByName(record.name || path.basename(gameDir || ''), 6);
+  const hints = uplayR2.findSteamAppidHints(gameDir);
+  const candidates = [];
+  const add = (candidate, hinted = false) => {
+    const value = String(candidate && candidate.appid ? candidate.appid : '').trim();
+    if (!/^\d+$/.test(value) || candidates.some((entry) => entry.appid === value)) return;
+    candidates.push({
+      appid: value,
+      name: String((candidate && candidate.name) || `Steam AppID ${value}`),
+      hinted,
+    });
+  };
+  for (const hint of hints) {
+    const known = ranked.find((candidate) => String(candidate.appid) === String(hint.appid));
+    add(known || { appid: hint.appid, name: `Steam AppID ${hint.appid}` }, true);
+  }
+  for (const candidate of ranked) add(candidate);
+  if (candidates.length === 0) return null;
+
+  const labels = candidates.map((candidate) => `${candidate.name} (${candidate.appid})${candidate.hinted ? ' [steam_appid.txt]' : ''}`);
+  const skipped = labels.length;
+  const picked = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+    type: 'question',
+    title: t('identify-game-title', 'Identify the game (Steam AppID)', 'Identifier le jeu (AppID Steam)'),
+    message: t('which-game-is-x', 'Which game is "{name}"?', 'Quel jeu est « {name} » ?', {
+      name: record.name || path.basename(gameDir || ''),
+    }),
+    detail: t(
+      'uplay-no-steam-match',
+      'This Ubisoft game has no known match in uplay-steam.json.',
+      "Ce jeu Ubisoft n'a pas de correspondance connue dans uplay-steam.json."
+    ),
+    buttons: [...labels, t('skip', 'Skip', 'Ignorer')],
+    defaultId: 0,
+    cancelId: skipped,
+    noLink: true,
+  });
+  if (picked < 0 || picked >= candidates.length) return null;
+  const selected = candidates[picked];
+  return {
+    uplay_id: identity.uplayId,
+    steam_appid: Number(selected.appid),
+    steam_name: selected.name,
+    manual: true,
+    pendingOverride: true,
+  };
+}
+
+async function replaceUplayR2SteamMapping({ game, gameDir, appid, box = null } = {}) {
+  const mapping = await selectUplayR2SteamMapping({ game, gameDir, appid });
+  if (!mapping) return null;
+  setGameBoxBusy(box, t('fetching-the-steam-schema', 'Fetching the Steam schema…', 'Récupération du schéma Steam…'));
+  const schema = await steamParser.getGameData({
+    appID: mapping.steam_appid,
+    lang: app.config?.achievement?.lang || 'english',
+    showHidden: true,
+  });
+  if (!uplayR2.derivePrefixedIds((schema && schema.achievement && schema.achievement.list) || [])) {
+    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'warning',
+      title: t('unsupported-game', 'Unsupported game', 'Jeu non pris en charge'),
+      message: t(
+        'uplay-prefix-pattern-mismatch',
+        "This game's Steam achievement names don't follow the required <prefix><digits> pattern.",
+        'Les noms de succès Steam de ce jeu ne suivent pas le format <préfixe><chiffres> requis.'
+      ),
+      noLink: true,
+    });
+    return null;
+  }
+  const saved = uplayR2.saveSteamMappingOverride({
+    gameDir,
+    uplayId: mapping.uplay_id,
+    steamAppid: mapping.steam_appid,
+    steamName: (schema && schema.name) || mapping.steam_name,
+  });
+  remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+    type: 'info',
+    title: t('identify-game-title', 'Identify the game (Steam AppID)', 'Identifier le jeu (AppID Steam)'),
+    message: t('diagnosis-steam-appid', 'Steam AppID: {appid} ({name})', 'Steam AppID : {appid} ({name})', {
+      appid: saved.steam_appid,
+      name: saved.steam_name,
+    }),
+    noLink: true,
+  });
+  return saved;
+}
+
+/*
+  One renderer Uplay R2 repair entry point for the context menu, Game Health, and Fix all. The
+  background scanner calls the same installer transaction directly; validation is identical.
+*/
+async function applyUplayR2Repair({ game, gameDir, appid, box = null, interactive = true, showResult = true } = {}) {
+  if (!gameDir || !fs.existsSync(gameDir)) throw new Error(`Uplay R2 game folder not found: ${gameDir || '(missing)'}`);
+  const id = appid != null ? appid : game && game.appid;
+  const setBusy = (message) => setGameBoxBusy(box, message);
+  const record = game && typeof game === 'object' ? game : {};
+  const recordData = record.data && typeof record.data === 'object' ? record.data : {};
+  const recordedDir = record.gameDir || recordData.gameDir || '';
+  const persistedAtThisInstall =
+    !!(record.uplayR2 || recordData.uplayR2 || /uplay r2|goldberg uplay|lumaplay|^uplay$/i.test(String(record.source || ''))) &&
+    !!recordedDir &&
+    path.resolve(recordedDir).toLowerCase() === path.resolve(gameDir).toLowerCase();
+  const trustedInstall = persistedAtThisInstall || uplayR2.hasEmulatorEvidence(gameDir);
+  if (!trustedInstall) {
+    throw new Error('This folder is not proven to be a Goldberg Uplay R2 installation; refusing to replace an official Ubisoft loader');
+  }
+  setBusy(t('resolving-the-steam-equivalent', 'Resolving the Steam equivalent…', 'Résolution du jeu Steam…'));
+  const identity = uplayR2.resolveGameIdentity({ ...record, appid: id, gameDir }, id);
+  let mapping = identity.mapping;
+  if (!mapping && interactive) mapping = await selectUplayR2SteamMapping({ game, gameDir, appid: id });
+  if (!mapping) {
+    if (interactive) {
+      remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+        type: 'warning',
+        title: t('no-steam-equivalent-found', 'No Steam equivalent found', 'Jeu Steam introuvable'),
+        message: t('uplay-no-steam-match', 'This Ubisoft game has no known match in uplay-steam.json.', "Ce jeu Ubisoft n'a pas de correspondance connue dans uplay-steam.json."),
+        detail: t('the-uplay-r2-fix-needs-the-steam-version-of-the-game-to-fetch-th', 'The Uplay R2 fix needs the Steam version of the game to fetch the achievement schema.', 'Le fix Uplay R2 a besoin de la version Steam du jeu pour récupérer le schéma des succès.'),
+      });
+      return null;
+    }
+    throw new Error('No trusted Steam mapping for this Ubisoft game');
+  }
+
+  setBusy(t('fetching-the-steam-schema', 'Fetching the Steam schema…', 'Récupération du schéma Steam…'));
+  const schema = await steamParser.getGameData({
+    appID: mapping.steam_appid,
+    lang: app.config?.achievement?.lang || 'english',
+    showHidden: true,
+  });
+  const achievementList = (schema && schema.achievement && schema.achievement.list) || [];
+  const prefixInfo = uplayR2.derivePrefixedIds(achievementList);
+  if (!prefixInfo) {
+    if (interactive) {
+      remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+        type: 'warning',
+        title: t('unsupported-game', 'Unsupported game', 'Jeu non pris en charge'),
+        message: t('uplay-prefix-pattern-mismatch', "This game's Steam achievement names don't follow the required <prefix><digits> pattern.", 'Les noms de succès Steam de ce jeu ne suivent pas le format <préfixe><chiffres> requis.'),
+        detail: t('the-automatic-goldberg-uplay-r2-mapping-cannot-be-generated-for-', 'The automatic Goldberg Uplay R2 mapping cannot be generated for this game.', 'Le mappage automatique vers Goldberg Uplay R2 ne peut pas être généré pour ce jeu.'),
+      });
+      return null;
+    }
+    throw new Error('Steam achievement names cannot be mapped safely to Ubisoft objective IDs');
+  }
+
+  const emu = uplayR2.detectEmulator(gameDir);
+  const installed = uplayR2.inspectInstalledLoaders(emu.dll);
+  const existingRuntimeDirs = [...new Set(emu.dll.map((file) => path.dirname(file)))];
+  const existingSetupFiles = existingRuntimeDirs.flatMap((dir) =>
+    [uplayR2.ACH_SCHEMA_FILE, ...uplayR2.INI_NAMES]
+      .map((name) => path.join(dir, name))
+      .filter((file) => fs.existsSync(file))
+  );
+  const existingRepairFiles = [...new Set([...emu.dll, ...existingSetupFiles])];
+  const hasExistingUplayFix = emu.dll.length > 0;
+  let reapplyConfirmed = false;
+  if (interactive && hasExistingUplayFix) {
+    const proceed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'warning',
+      title: t('reapply-gbe-title', 'Re-apply the emulator fix?', 'Ré-appliquer le fix émulateur ?'),
+      message: t(
+        'reapply-gbe-message',
+        'This game already has a setup ({name}). Re-applying replaces it with a freshly generated one.',
+        'Ce jeu a déjà une configuration ({name}). La ré-appliquer la remplace par une configuration régénérée.',
+        { name: 'Uplay R2' }
+      ),
+      detail: `${existingRepairFiles.join('\n')}\n${t(
+        'reapply-gbe-detail',
+        'The current files are backed up first and can be restored from the repair controls.',
+        'Les fichiers actuels sont sauvegardés au préalable et peuvent être restaurés depuis les contrôles de réparation.'
+      )}`,
+      buttons: [t('cancel', 'Cancel', 'Annuler'), t('reapply-gbe-button', 'Re-apply', 'Ré-appliquer')],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+    });
+    if (proceed !== 1) return null;
+    reapplyConfirmed = true;
+  }
+  let installPlan = null;
+  let cache = null;
+  try {
+    cache = await uplayR2Installer.ensureBundledEmulatorDlls({ cacheDir: path.join(getUserDataPath(), 'cache/uplayR2'), log: debug });
+  } catch (err) {
+    debug.log(`[${id}] uplayR2: loader cache unavailable => ${formatErr(err)}`);
+  }
+  const customReplacementRequired = !!cache && cache.customNames.some((name) =>
+    emu.dll.some((file) => path.basename(file).toLowerCase() === name && !uplayR2Installer.sameFileBytes(file, cache.files[name]))
+  );
+  const loaderMustBeInstalled = emu.dll.length === 0 || !installed.supportsAchievements || !installed.architectureValid || customReplacementRequired;
+  if (loaderMustBeInstalled) {
+    cache = cache || (await ensureUplayR2Package({ interactive }));
+    if (!cache) return null;
+    installPlan = uplayR2Installer.planInstall({
+      gameDir,
+      dlls: cache,
+      loaderPaths: emu.dll,
+      exePath: await detectedGameExe(game, gameDir),
+      trustedInstall,
+    });
+    if (!installPlan.safe && interactive && installPlan.issues.some((issue) => issue.code === 'PACKAGE_MISSING_LOADER')) {
+      cache = await ensureUplayR2Package({ interactive, forceImport: true });
+      if (!cache) return null;
+      installPlan = uplayR2Installer.planInstall({ gameDir, dlls: cache, loaderPaths: emu.dll, exePath: await detectedGameExe(game, gameDir), trustedInstall });
+    }
+    if (!installPlan.safe) throw new Error(`No safe Uplay R2 loader target: ${installPlan.issues.map((issue) => issue.code).join(', ')}`);
+  } else if (!installed.supportsAchRedirect) {
+    try {
+      cache = await uplayR2Installer.ensureBundledEmulatorDlls({ cacheDir: path.join(getUserDataPath(), 'cache/uplayR2'), log: debug });
+      const candidate = uplayR2Installer.planInstall({ gameDir, dlls: cache, loaderPaths: emu.dll, exePath: await detectedGameExe(game, gameDir), trustedInstall });
+      const improvesEveryTarget = candidate.safe && candidate.targets.every((target) => uplayR2.inspectLoader(target.source).supportsAchRedirect);
+      if (interactive && improvesEveryTarget) {
+        const choice = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+          type: 'question',
+          title: t('update-the-uplay-r2-loader', 'Update the Uplay R2 loader?', 'Mettre à jour le loader Uplay R2 ?'),
+          message: t('uplay-r2-old-loader-message', 'This game uses a loader too old to redirect achievements.', 'Ce jeu utilise un loader trop ancien pour rediriger les succès.'),
+          detail: t('uplay-r2-old-loader-detail', "The fix works without updating: AW Next reads the emulator's own save folder.\n\nUpdating enables the redirect into GSE Saves, but replaces a DLL the game currently launches with (the original is kept in the repair backup).", "Le correctif fonctionne sans mise à jour : AW Next lit le dossier de sauvegarde de l'émulateur.\n\nMettre à jour le loader permet la redirection vers GSE Saves, mais remplace une DLL avec laquelle le jeu se lance actuellement (l'originale est conservée dans la sauvegarde de réparation)."),
+          buttons: [t('keep-current-loader', 'Keep the current loader', 'Garder le loader actuel'), t('update-loader', 'Update', 'Mettre à jour')],
+          defaultId: 0,
+          cancelId: 0,
+          noLink: true,
+        });
+        if (choice === 1) installPlan = candidate;
+      }
+    } catch (err) {
+      debug.log(`[${id}] uplayR2: optional loader update unavailable => ${formatErr(err)}`);
+    }
+  }
+
+  const runtimeDirs = installPlan
+    ? [...new Set(installPlan.targets.map((target) => target.dir))]
+    : [...new Set(emu.dll.map((file) => path.dirname(file)))];
+  if (interactive && !reapplyConfirmed) {
+    const detail = [
+      t('diagnosis-steam-appid', 'Steam AppID: {appid} ({name})', 'Steam AppID : {appid} ({name})', {
+        appid: mapping.steam_appid,
+        name: mapping.steam_name,
+      }),
+      ...((installPlan && installPlan.targets) || []).map((target) => `${target.name} (${target.arch}) → ${target.dir}`),
+      ...runtimeDirs.map((dir) => `${uplayR2.ACH_SCHEMA_FILE}, ${uplayR2.INI_NAMES.join(', ')} → ${dir}`),
+    ].join('\n');
+    const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'question',
+      title: t('apply-emulator-fix-uplay-r2', 'Apply emulator fix (Uplay R2)…', 'Appliquer le correctif émulateur (Uplay R2)…'),
+      message: t(
+        'apply-the-emulator-fix-to-x-detected-game-s-existing-files-are-b',
+        'Apply the emulator fix to {count} detected game(s)? Existing files are backed up before being overwritten.',
+        'Appliquer le fix émulateur à {count} jeu(x) détecté(s) ? Les fichiers existants sont sauvegardés avant d’être écrasés.',
+        { count: 1 }
+      ),
+      detail,
+      buttons: [t('cancel', 'Cancel', 'Annuler'), t('apply-emulator-fix-uplay-r2', 'Repair Uplay R2', 'Réparer Uplay R2')],
+      defaultId: 1,
+      cancelId: 0,
+      noLink: true,
+    });
+    if (confirmed !== 1) return null;
+  }
+
+  setBusy(t('configuring-achievements', 'Configuring (achievements)…', 'Configuration (succès)…'));
+  const iniOptions = uplayR2IniOptions();
+  const result = uplayR2Installer.repairInstallation({
+    gameDir,
+    installPlan,
+    loaderPaths: emu.dll,
+    steamAppid: mapping.steam_appid,
+    uplayId: mapping.uplay_id,
+    name: (game && game.name) || mapping.steam_name,
+    mapping,
+    schema,
+    prefix: prefixInfo.prefix,
+    ...iniOptions,
+    log: debug,
+  });
+  if (mapping.pendingOverride) {
+    mapping = uplayR2.saveSteamMappingOverride({
+      gameDir,
+      uplayId: mapping.uplay_id,
+      steamAppid: mapping.steam_appid,
+      steamName: mapping.steam_name,
+    });
+  }
+
+  if (interactive && showResult) {
+    const mapped = Math.max(0, ...result.repairs.map((repair) => Object.keys(repair.achievementsSchemaJson).length));
+    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'info',
+      title: t('uplay-r2-installed', 'Uplay R2 installed', 'Uplay R2 installé'),
+      message: t('uplay-r2-installed-message', '{installedLabel} - {mapped} achievement(s) mapped', '{installedLabel} - {mapped} succès mappé(s)', {
+        installedLabel: result.install.installed > 0
+          ? t('dllsInstalled', '{count} dll(s) installed', '{count} dll(s) installée(s)', { count: result.install.installed })
+          : t('emulator-fix-applied', 'Emulator fix applied', 'Fix émulateur appliqué'),
+        mapped,
+      }),
+      detail: `${runtimeDirs.join('\n')}${result.backupDir ? `\n${t('diagnosis-config-backed-up', 'Previous config backed up: {path}', 'Configuration précédente sauvegardée : {path}', { path: result.backupDir })}` : ''}`,
+      noLink: true,
+    });
+  }
+  return { ...result, mapping, schema, prefix: prefixInfo.prefix };
 }
 
 // Show a progress cursor while the interactive library scan runs.
@@ -5078,9 +5520,10 @@ async function collectGameHealthSignals(appid) {
   }
 
   let uplayReport = null;
-  if (isUbisoft && gameDirExists) {
+  if (uplayR2.isUplayR2Game(game, appid) && gameDirExists) {
     try {
-      uplayReport = uplayR2.diagnose({ gameDir, appid, name: game.name });
+      const identity = uplayR2.resolveGameIdentity({ ...game, appid, gameDir }, appid);
+      uplayReport = uplayR2.diagnose({ gameDir, appid, name: game.name, mapping: identity.mapping });
     } catch (err) {
       debug.log(`[health] uplay R2 diagnose failed for ${appid} => ${formatErr(err)}`);
     }
@@ -5151,7 +5594,7 @@ function gameHealthExplanation(report) {
     case 'emulator-runtime-missing':
       return t('gh-why-emulator-runtime-missing', 'The achievement data is in place, but the emulator file that reads it is missing from the game folder, so nothing will ever be recorded. AW Next can put it back.', "Les données de succès sont en place, mais le fichier d'émulateur qui les lit est absent du dossier du jeu : rien ne sera jamais enregistré. AW Next peut le remettre.");
     case 'uplay-broken':
-      return t('gh-why-uplay-broken', 'The Ubisoft emulator setup for this game is incomplete, so unlocks are not being recorded. Re-apply the Uplay R2 fix from the right-click menu.', "La configuration de l'émulateur Ubisoft de ce jeu est incomplète : les déblocages ne sont pas enregistrés. Réapplique le fix Uplay R2 depuis le menu clic droit.", p);
+      return t('gh-why-uplay-broken', 'The Ubisoft emulator setup for this game is incomplete, so unlocks are not being recorded. Use the Uplay R2 repair button below.', "La configuration de l'émulateur Ubisoft de ce jeu est incomplète : les déblocages ne sont pas enregistrés. Utilise le bouton de réparation Uplay R2 ci-dessous.", p);
     case 'achievement-data-incomplete':
       return t('gh-why-achievement-data-incomplete', "The achievement list AW Next has for this game doesn't match what the game will look for, so some unlocks would be missed. This can be rewritten from the official data.", "La liste de succès dont dispose AW Next ne correspond pas à ce que le jeu va chercher : certains déblocages seraient manqués. Elle peut être réécrite à partir des données officielles.", p);
     case 'no-progress-yet':
@@ -5361,11 +5804,20 @@ function gameHealthCheckValue(entry, simple) {
       if (p.total || p.found) return t('gh-value-achievements', '{total} achievements', '{total} succès', { total: p.total || p.found });
       return missing;
     case 'emulator':
-    case 'uplay':
       // Name what is wrong. A bare count ("1 point to review") gave the user no way to know what to
       // look at, which defeats the purpose of the row.
       if (p.topics && p.topics.length) return p.topics.map(gameHealthIssueTopicLabel).join(' · ');
       return gameHealthEmulatorLabel(p.emulator);
+    case 'uplay': {
+      const mapping = p.steamAppid
+        ? t('diagnosis-steam-appid', 'Steam AppID: {appid} ({name})', 'Steam AppID : {appid} ({name})', {
+            appid: p.steamAppid,
+            name: p.steamName || `Steam App ${p.steamAppid}`,
+          })
+        : '';
+      const problems = p.topics && p.topics.length ? p.topics.map(gameHealthIssueTopicLabel).join(' · ') : '';
+      return [mapping, problems].filter(Boolean).join(' · ') || gameHealthIssueTopicLabel('mapping');
+    }
     case 'progress':
       if (p.unlocked) return t('gh-value-unlocked', '{unlocked} unlocked', '{unlocked} débloqué(s)', p);
       return t('gh-value-none-yet', 'nothing recorded yet', 'rien d’enregistré pour l’instant');
@@ -5391,6 +5843,8 @@ function gameHealthActionLabel(action) {
       return t('gh-action-open-folder', 'Open the game folder', 'Ouvrir le dossier du jeu');
     case gameHealth.ACTION.REPAIR_DATA:
       return t('gh-action-repair-data', 'Rewrite the achievement data', 'Réécrire les données de succès');
+    case gameHealth.ACTION.REPAIR_UPLAY:
+      return t('apply-emulator-fix-uplay-r2', 'Repair Uplay R2 support', 'Réparer la prise en charge Uplay R2');
     case gameHealth.ACTION.INSTALL_RUNTIME:
       return t('gh-action-install-runtime', 'Restore the emulator file', 'Restaurer le fichier d’émulateur');
     case gameHealth.ACTION.START_TRACKING:
@@ -5671,6 +6125,23 @@ async function runGameHealthAction(appid, action, button) {
       image,
     });
     return false;
+  }
+
+  if (action === gameHealth.ACTION.REPAIR_UPLAY) {
+    if (!game.gameDir || !fs.existsSync(game.gameDir)) return false;
+    try {
+      const result = await applyUplayR2Repair({ game, gameDir: game.gameDir, appid, interactive: true, showResult: true });
+      return !!result;
+    } catch (err) {
+      debug.error(`[health] Uplay R2 repair failed for ${appid} => ${formatErr(err)}`);
+      remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+        type: 'error',
+        title: t('uplay-r2-install-failed', 'Uplay R2 repair failed', 'Échec de la réparation Uplay R2'),
+        message: t('could-not-install-or-configure-goldberg-uplay-r2', 'Could not install or configure Goldberg Uplay R2.', "Impossible d'installer ou de configurer Goldberg Uplay R2."),
+        detail: formatErr(err),
+      });
+      return false;
+    }
   }
 
   if (action === gameHealth.ACTION.REPAIR_DATA) {
@@ -6020,6 +6491,187 @@ async function runGameHealthAction(appid, action, button) {
         el.text(real).removeClass('masked-desc');
       });
 
+      // Settings → Ubisoft / Uplay R2: keep the bundled package and the targeted batch action
+      // visible without exposing loader filenames, architecture switches or INI details. The package
+      // verification is the same import/PE/capability gate used immediately before an installation.
+      let uplayPackageCheck = null;
+      let uplayBatchRunning = false;
+      const uplaySettingsText = (key, fallback, params = {}) => {
+        const localized = window.appLocale && window.appLocale.settings && window.appLocale.settings.emulator && window.appLocale.settings.emulator.uplay;
+        const value = (localized && localized[key]) || fallback;
+        return String(value).replace(/\{(\w+)\}/g, (match, name) =>
+          Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match
+        );
+      };
+      const setUplayPackageStatus = (state, text) => {
+        const status = $('#uplay-r2-package-status');
+        const icon = state === 'checking' ? 'fa-circle-notch fa-spin' : state === 'ready' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        status.attr('data-state', state).find('i').attr('class', `fas ${icon}`);
+        $('#uplay-r2-package-status-text').text(text);
+      };
+      const verifyUplayPackage = async ({ announce = false } = {}) => {
+        if (uplayPackageCheck) return uplayPackageCheck;
+        const button = $('#verify-uplay-r2-package');
+        setUplayPackageStatus('checking', uplaySettingsText('checking', 'Checking…'));
+        button.prop('disabled', true);
+        uplayPackageCheck = (async () => {
+          try {
+            const cache = await uplayR2Installer.ensureBundledEmulatorDlls({
+              cacheDir: path.join(getUserDataPath(), 'cache/uplayR2'),
+              log: debug,
+            });
+            if (!cache.complete) throw new Error('The integrated Uplay R2 repair package is incomplete');
+            setUplayPackageStatus(
+              'ready',
+              cache.customNames.length
+                ? uplaySettingsText('customReady', 'Custom DLLs ready')
+                : uplaySettingsText('ready', 'Ready')
+            );
+            if (announce) $('#uplay-r2-settings-result').text(uplaySettingsText('verifySuccess', 'The integrated repair package is valid and ready.'));
+            return cache;
+          } catch (err) {
+            debug.error(`[uplayR2 settings] package verification failed => ${formatErr(err)}`);
+            setUplayPackageStatus('error', uplaySettingsText('attention', 'Needs attention'));
+            $('#uplay-r2-settings-result').text(
+              uplaySettingsText('verifyFailure', 'The integrated repair package could not be verified. No game files were changed.')
+            );
+            return null;
+          } finally {
+            button.prop('disabled', false);
+            uplayPackageCheck = null;
+          }
+        })();
+        return uplayPackageCheck;
+      };
+
+      // Opening the tab prepares the private validated cache in the background. The explicit button
+      // deliberately runs the integrity check again and reports its result in the card.
+      $("#settingNav li[data-view='uplay']").on('click', function () {
+        if ($('#uplay-r2-package-status').attr('data-state') !== 'ready') verifyUplayPackage();
+      });
+      $('#verify-uplay-r2-package').on('click', function () {
+        verifyUplayPackage({ announce: true });
+      });
+      $('#import-uplay-r2-loaders').on('click', async function () {
+        const button = $(this);
+        const picked = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
+          title: uplaySettingsText('import', 'Import or replace DLLs'),
+          properties: ['openFile', 'multiSelections', 'dontAddToRecent'],
+          filters: [
+            { name: 'Uplay R2 DLL', extensions: ['dll'] },
+            { name: t('archives', 'Archives', 'Archives'), extensions: ['7z', 'zip'] },
+          ],
+        });
+        if (picked.canceled || !picked.filePaths || picked.filePaths.length === 0) return;
+        button.prop('disabled', true);
+        try {
+          const cacheDir = path.join(getUserDataPath(), 'cache/uplayR2');
+          for (const packagePath of picked.filePaths) {
+            await uplayR2Installer.importPackage({ packagePath, cacheDir, log: debug });
+          }
+          const cache = await uplayR2Installer.ensureBundledEmulatorDlls({ cacheDir, log: debug });
+          setUplayPackageStatus('ready', uplaySettingsText('customReady', 'Custom DLLs ready'));
+          $('#uplay-r2-settings-result').text(
+            uplaySettingsText('importSuccess', '{count} selected file(s) imported for the next repair.', { count: picked.filePaths.length })
+          );
+        } catch (err) {
+          debug.error(`[uplayR2 settings] loader import failed => ${formatErr(err)}`);
+          setUplayPackageStatus('error', uplaySettingsText('attention', 'Needs attention'));
+          $('#uplay-r2-settings-result').text(uplaySettingsText('importFailure', 'The selected DLL could not be imported.'));
+        } finally {
+          button.prop('disabled', false);
+        }
+      });
+      $('#restore-uplay-r2-loaders').on('click', async function () {
+        const button = $(this).prop('disabled', true);
+        try {
+          await uplayR2Installer.ensureBundledEmulatorDlls({
+            cacheDir: path.join(getUserDataPath(), 'cache/uplayR2'),
+            log: debug,
+            replaceExisting: true,
+          });
+          setUplayPackageStatus('ready', uplaySettingsText('ready', 'Ready'));
+          $('#uplay-r2-settings-result').text(uplaySettingsText('restoreSuccess', 'The integrated DLLs have been restored.'));
+        } catch (err) {
+          debug.error(`[uplayR2 settings] integrated loader restore failed => ${formatErr(err)}`);
+          setUplayPackageStatus('error', uplaySettingsText('attention', 'Needs attention'));
+          $('#uplay-r2-settings-result').text(uplaySettingsText('verifyFailure', 'The integrated repair package could not be verified. No game files were changed.'));
+        } finally {
+          button.prop('disabled', false);
+        }
+      });
+      $('#repair-all-uplay-r2').on('click', async function () {
+        if (uplayBatchRunning) return;
+        const button = $(this);
+        const result = $('#uplay-r2-settings-result');
+        const targets = gameList.filter(
+          (game) => game && game.gameDir && fs.existsSync(game.gameDir) && uplayR2.isUplayR2Game(game, game.appid)
+        );
+        if (targets.length === 0) {
+          result.text(uplaySettingsText('noGames', 'No detected Uplay R2 game has a known installation folder.'));
+          return;
+        }
+        const repairPackage = await verifyUplayPackage();
+        if (!repairPackage) return;
+        const confirmation = await remote.dialog.showMessageBox(remote.getCurrentWindow(), {
+          type: 'question',
+          buttons: [uplaySettingsText('repairConfirm', 'Repair games'), t('cancel', 'Cancel', 'Annuler')],
+          defaultId: 0,
+          cancelId: 1,
+          noLink: true,
+          title: uplaySettingsText('repairTitle', 'Repair detected Uplay R2 games'),
+          message: uplaySettingsText(
+            'repairConfirmMessage',
+            'Repair {count} detected Uplay R2 game(s)? Existing files are backed up and every result is validated.',
+            { count: targets.length }
+          ),
+        });
+        if (confirmation.response !== 0) return;
+
+        uplayBatchRunning = true;
+        button.prop('disabled', true);
+        let repaired = 0;
+        let unchanged = 0;
+        let failed = 0;
+        try {
+          for (let index = 0; index < targets.length; index++) {
+            const game = targets[index];
+            result.text(
+              uplaySettingsText('repairing', 'Repairing {current} / {total} — {game}', {
+                current: index + 1,
+                total: targets.length,
+                game: game.name || game.appid,
+              })
+            );
+            try {
+              const summary = await applyUplayR2Repair({
+                game,
+                gameDir: game.gameDir,
+                appid: game.appid,
+                interactive: false,
+                showResult: false,
+              });
+              if (!summary) throw new Error('Uplay R2 repair did not produce a validated result');
+              if (summary.changed) repaired++;
+              else unchanged++;
+            } catch (err) {
+              failed++;
+              debug.error(`[uplayR2 settings] ${game.appid} (${game.name}) failed => ${formatErr(err)}`);
+            }
+          }
+          result.text(
+            uplaySettingsText('repairResult', 'Done — {repaired} repaired, {unchanged} already healthy, {failed} failed.', {
+              repaired,
+              unchanged,
+              failed,
+            })
+          );
+        } finally {
+          button.prop('disabled', false);
+          uplayBatchRunning = false;
+        }
+      });
+
       // Settings → Advanced: "Fix all games". Runs the same emulator-fix chain the per-scan auto-apply
       // uses (achievements.autoApplyEmulatorFix) over every emulator-detected game that has a real
       // install folder. Sequential + per-game try/catch so one failure never aborts the batch.
@@ -6029,17 +6681,17 @@ async function runGameHealthAction(appid, action, button) {
         const result = $('#fix-all-result');
         // Only games with a live install dir, a usable appid/schema and an emulator signal -
         // never touch plain legit Steam installs.
-        const targets = gameList.filter(
-          (g) =>
-            g &&
-            g.gameDir &&
-            /^[0-9]+$/.test(String(g.appid)) &&
+        const targets = gameList.filter((g) => {
+          if (!g || !g.gameDir || !fs.existsSync(g.gameDir)) return false;
+          const isUplay = uplayR2.isUplayR2Game(g, g.appid);
+          const isSteamEmulator =
+            /^\d+$/.test(String(g.appid)) &&
             g.achievement &&
             Array.isArray(g.achievement.list) &&
             g.achievement.list.length > 0 &&
-            (g.hasSteamApiDll === true || !!g.steamSettings || g.source === 'GBE Fork' || g.source === 'Goldberg') &&
-            fs.existsSync(g.gameDir)
-        );
+            (g.hasSteamApiDll === true || !!g.steamSettings || g.source === 'GBE Fork' || g.source === 'Goldberg');
+          return isUplay || isSteamEmulator;
+        });
         if (targets.length === 0) {
           result.text(t('no-detected-game-with-a-known-install-folder-to-fix', 'No detected game with a known install folder to fix.', 'Aucun jeu détecté avec un dossier d’installation connu à réparer.'));
           return;
@@ -6068,6 +6720,21 @@ async function runGameHealthAction(appid, action, button) {
           const game = targets[i];
           result.text((t('fixing', 'Fixing', 'Réparation')) + ` ${i + 1} / ${targets.length} - ${game.name}`);
           try {
+            if (uplayR2.isUplayR2Game(game, game.appid)) {
+              const summary = await applyUplayR2Repair({
+                game,
+                gameDir: game.gameDir,
+                appid: game.appid,
+                interactive: false,
+                showResult: false,
+              });
+              if (!summary) throw new Error('Uplay R2 repair did not produce a validated result');
+              debug.log(
+                `[fix-all] ${game.appid} (${game.name}) Uplay R2 ${summary.changed ? 'repaired' : 'already valid'} in ${summary.runtimeDirs.join(', ')}`
+              );
+              fixed++;
+              continue;
+            }
             const detectedEmu = goldberg.detectEmulator(game.gameDir);
             const detectedExe = exeDetect.detect(game.gameDir, game.name || '', { dllPaths: detectedEmu.dll });
             createAutomaticGbeBackup({

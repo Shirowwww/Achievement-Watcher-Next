@@ -6,6 +6,8 @@
 const fs = require('fs');
 const path = require('path');
 const { parseIni, stringifyIni, getIniSection, readIniSectionValues, upsertIniSection, upsertIniKeys, sanitizeIniValue } = require(path.join(__dirname, '..', 'util', 'emuIni.js'));
+const pe = require(path.join(__dirname, '..', 'util', 'pe.js'));
+const { userDataDir } = require(path.join(__dirname, '..', 'util', 'userDataPath.js'));
 const fuzzyAppid = require(path.join(__dirname, '..', 'util', 'fuzzyAppid.js'));
 const goldberg = require(path.join(__dirname, 'goldberg.js'));
 
@@ -23,8 +25,35 @@ const UPLAY_GAME_SAVE_SUBDIR = 'saves';
 // reads next to the ini. Both names are hardcoded in every known loader build.
 const ACH_SAVE_FILE = 'achievements.json';
 const ACH_SCHEMA_FILE = 'achievements_schema.json';
+const MAPPING_OVERRIDES_FILE = 'uplay-r2-mappings.json';
+const UPLAY_LANGUAGE_CODES = Object.freeze({
+  arabic: 'ar-SA',
+  schinese: 'zh-CN',
+  tchinese: 'zh-TW',
+  danish: 'da-DK',
+  dutch: 'nl-NL',
+  english: 'en-US',
+  finnish: 'fi-FI',
+  french: 'fr-FR',
+  german: 'de-DE',
+  greek: 'el-GR',
+  italian: 'it-IT',
+  japanese: 'ja-JP',
+  koreana: 'ko-KR',
+  norwegian: 'no-NO',
+  polish: 'pl-PL',
+  portuguese: 'pt-PT',
+  brazilian: 'pt-BR',
+  romanian: 'ro-RO',
+  russian: 'ru-RU',
+  spanish: 'es-ES',
+  latam: 'es-MX',
+  swedish: 'sv-SE',
+  thai: 'th-TH',
+});
+const UPLAY_LANGUAGE_VALUES = new Map(Object.values(UPLAY_LANGUAGE_CODES).map((value) => [value.toLowerCase(), value]));
 
-// The demde build's own shipped default (captured from a real release) - used as the starting
+// The integrated loader's shipped default (captured from a real release) - used as the starting
 // document when a game has no ini yet, so repair() produces a fully faithful file (comments
 // included), the same spirit as GBE Fork's steam_settings.EXAMPLE in goldberg.js.
 const DEFAULT_INI_TEMPLATE = `[Settings]
@@ -85,6 +114,153 @@ function listShallow(dir) {
   }
 }
 
+let _userDataPath = '';
+function setUserDataPath(value) {
+  _userDataPath = value ? path.resolve(value) : '';
+}
+
+function mappingOverridesFile() {
+  const root = _userDataPath || userDataDir();
+  return root ? path.join(root, 'cfg', MAPPING_OVERRIDES_FILE) : '';
+}
+
+function mappingInstallKey(gameDir) {
+  if (!gameDir) return '';
+  try {
+    return path.resolve(gameDir).toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
+function readMappingOverrides() {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(mappingOverridesFile(), 'utf8'));
+    const entries = parsed && Array.isArray(parsed.mappings) ? parsed.mappings : [];
+    return entries.filter(
+      (entry) =>
+        entry &&
+        mappingInstallKey(entry.gameDir) &&
+        /^\d+$/.test(String(entry.steamAppid || '')) &&
+        (!entry.uplayId || /^\d+$/.test(String(entry.uplayId)))
+    );
+  } catch {
+    return [];
+  }
+}
+
+function mappingOverrideResult(entry) {
+  if (!entry) return null;
+  return {
+    uplay_id: String(entry.uplayId || ''),
+    steam_appid: Number(entry.steamAppid),
+    steam_name: String(entry.steamName || `Steam App ${entry.steamAppid}`),
+    manual: true,
+  };
+}
+
+function resolvedSteamMapping({ steamAppid, uplayId = '', steamName = '' } = {}) {
+  const catalogId = String(steamAppid || '').trim();
+  const nativeId = String(uplayId || '').trim();
+  if (!/^\d+$/.test(catalogId) || (nativeId && !/^\d+$/.test(nativeId))) return null;
+  return {
+    uplay_id: nativeId,
+    steam_appid: Number(catalogId),
+    steam_name: String(steamName || `Steam App ${catalogId}`),
+    automatic: true,
+  };
+}
+
+function getSteamMappingOverride(gameDir) {
+  const key = mappingInstallKey(gameDir);
+  if (!key) return null;
+  return readMappingOverrides().find((entry) => mappingInstallKey(entry.gameDir) === key) || null;
+}
+
+function findSteamMappingOverride({ gameDir, uplayId } = {}) {
+  const exact = getSteamMappingOverride(gameDir);
+  if (exact) return mappingOverrideResult(exact);
+
+  const id = String(uplayId || '').trim();
+  if (!/^\d+$/.test(id)) return null;
+  const matches = readMappingOverrides().filter((entry) => String(entry.uplayId || '') === id);
+  const appids = new Set(matches.map((entry) => String(entry.steamAppid)));
+  if (appids.size !== 1) return null;
+  matches.sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
+  return mappingOverrideResult(matches[0]);
+}
+
+function saveSteamMappingOverride({ gameDir, uplayId = '', steamAppid, steamName = '' } = {}) {
+  const key = mappingInstallKey(gameDir);
+  const nativeId = String(uplayId || '').trim();
+  const catalogId = String(steamAppid || '').trim();
+  if (!key) throw new Error('saveSteamMappingOverride: gameDir is required');
+  if (nativeId && !/^\d+$/.test(nativeId)) throw new Error('saveSteamMappingOverride: uplayId must be numeric');
+  if (!/^\d+$/.test(catalogId)) throw new Error('saveSteamMappingOverride: steamAppid must be numeric');
+
+  const entries = readMappingOverrides().filter((entry) => mappingInstallKey(entry.gameDir) !== key);
+  const stored = {
+    gameDir: path.resolve(gameDir),
+    uplayId: nativeId,
+    steamAppid: catalogId,
+    steamName: String(steamName || '').trim().slice(0, 300),
+    updatedAt: new Date().toISOString(),
+  };
+  entries.push(stored);
+  const file = mappingOverridesFile();
+  if (!file) throw new Error('saveSteamMappingOverride: user data path is unavailable');
+  writeFileAtomic(file, JSON.stringify({ format: 1, mappings: entries }, null, 2));
+  return mappingOverrideResult(stored);
+}
+
+function clearSteamMappingOverride(gameDir) {
+  const key = mappingInstallKey(gameDir);
+  if (!key) return false;
+  const previous = readMappingOverrides();
+  const entries = previous.filter((entry) => mappingInstallKey(entry.gameDir) !== key);
+  if (entries.length === previous.length) return false;
+  writeFileAtomic(mappingOverridesFile(), JSON.stringify({ format: 1, mappings: entries }, null, 2));
+  return true;
+}
+
+// A dual-layer repack can carry Steam's appid marker even though achievements flow through Uplay R2.
+// Treat it only as a candidate for the confirmation dialog, never as automatic identity evidence.
+function findSteamAppidHints(gameDir, { maxDepth = 4, maxDirectories = 600 } = {}) {
+  if (!gameDir || !fs.existsSync(gameDir)) return [];
+  const found = [];
+  const queue = [{ dir: path.resolve(gameDir), depth: 0 }];
+  let visited = 0;
+  while (queue.length > 0 && visited < maxDirectories) {
+    const { dir, depth } = queue.shift();
+    visited++;
+    let entries = [];
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    const marker = entries.find((entry) => entry.isFile() && entry.name.toLowerCase() === 'steam_appid.txt');
+    if (marker) {
+      try {
+        const appid = fs.readFileSync(path.join(dir, marker.name), 'utf8').trim();
+        if (/^\d+$/.test(appid) && !found.some((entry) => entry.appid === appid)) {
+          found.push({ appid, file: path.join(dir, marker.name) });
+        }
+      } catch {
+        /* an unreadable marker is not a candidate */
+      }
+    }
+    if (depth >= maxDepth) continue;
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const lower = entry.name.toLowerCase();
+      if (lower === BACKUP_DIR_NAME) continue;
+      queue.push({ dir: path.join(dir, entry.name), depth: depth + 1 });
+    }
+  }
+  return found;
+}
+
 // Find the Uplay R2 loader dll(s) shallow under a game root (same bounded walk as
 // goldberg.detectEmulator's findDll). Returns { type: 'uplayR2' | 'none', dll: [...] }.
 function detectEmulator(gameDir) {
@@ -102,6 +278,10 @@ function detectEmulator(gameDir) {
     for (const e of entries) {
       const lower = e.name.toLowerCase();
       if (e.isDirectory()) {
+        // Transaction snapshots can contain the original loader at the same relative path. It is
+        // history, not another runtime, and must never be diagnosed or configured as if the game
+        // loaded it.
+        if (lower === BACKUP_DIR_NAME) continue;
         findDll(path.join(dir, e.name), depth + 1);
       } else if (e.isFile() && EMU_DLL_NAMES.includes(lower)) {
         result.dll.push(path.join(dir, e.name));
@@ -117,12 +297,22 @@ function detectEmulator(gameDir) {
 /*
   Which optional [Settings] keys does THIS loader build understand? The redirect keys are recent
   additions; older builds silently ignore them, so probe the DLL's literal key names (exact, cheap,
-  no version numbers). A dll we can't read is assumed capable. Returns { path, exists,
-  supportsAchRedirect, supportsAchKeyPrefix }.
+  no version numbers). An unreadable or unrelated DLL is never assumed capable. Returns architecture
+  and achievement/config capabilities.
 */
 const _loaderCapabilities = new Map();
 function inspectLoader(dllPath) {
-  const fallback = { path: dllPath || '', exists: false, supportsAchRedirect: true, supportsAchKeyPrefix: true };
+  const name = path.basename(String(dllPath || '')).toLowerCase();
+  const expectedArch = name.endsWith('64.dll') ? 'x64' : EMU_DLL_NAMES.includes(name) ? 'x86' : null;
+  const fallback = {
+    path: dllPath || '',
+    exists: false,
+    arch: null,
+    expectedArch,
+    supportsAchievements: false,
+    supportsAchRedirect: false,
+    supportsAchKeyPrefix: false,
+  };
   if (!dllPath) return fallback;
 
   let stat;
@@ -142,6 +332,9 @@ function inspectLoader(dllPath) {
     result = {
       path: dllPath,
       exists: true,
+      arch: pe.exeArch(dllPath),
+      expectedArch,
+      supportsAchievements: has('Achievements'),
       supportsAchRedirect: has('AchSavePath') && has('AchSaveType'),
       supportsAchKeyPrefix: has('AchKeyPrefix'),
     };
@@ -160,9 +353,57 @@ function inspectInstalledLoaders(dllPaths) {
   const known = loaders.filter((l) => l.exists);
   return {
     loaders,
+    supportsAchievements: known.length > 0 && known.every((l) => l.supportsAchievements),
     supportsAchRedirect: known.length === 0 || known.every((l) => l.supportsAchRedirect),
     supportsAchKeyPrefix: known.length === 0 || known.every((l) => l.supportsAchKeyPrefix),
+    architectureValid: known.length > 0 && known.every((l) => l.arch && l.expectedArch === l.arch),
   };
+}
+
+/*
+  A Ubisoft DLL basename is not proof of emulation: official games ship the same uplay/upc R2
+  loader names. Require a Goldberg-only configuration signal before discovery, Fix all, or Game
+  Health classifies an install as repairable. This remains deliberately separate from detectEmulator,
+  which inventories candidate DLLs for an explicitly known Uplay R2 record.
+*/
+function hasEmulatorEvidence(gameDir, { maxDepth = 4, maxDirectories = 600 } = {}) {
+  if (!gameDir || !fs.existsSync(gameDir)) return false;
+  const loader = detectEmulator(gameDir);
+  for (const file of loader.dll) {
+    const caps = inspectLoader(file);
+    if (caps.supportsAchievements && (caps.supportsAchRedirect || caps.supportsAchKeyPrefix)) return true;
+  }
+
+  const queue = [{ dir: path.resolve(gameDir), depth: 0 }];
+  let visited = 0;
+  while (queue.length > 0 && visited < maxDirectories) {
+    const { dir, depth } = queue.shift();
+    visited++;
+    let entries = [];
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    if (entries.some((entry) => entry.isFile() && entry.name.toLowerCase() === ACH_SCHEMA_FILE)) return true;
+    for (const iniName of INI_NAMES) {
+      const entry = entries.find((candidate) => candidate.isFile() && candidate.name.toLowerCase() === iniName);
+      if (!entry) continue;
+      try {
+        const file = path.join(dir, entry.name);
+        if (fs.statSync(file).size <= 1024 * 1024 && /^\s*(?:Achievements|AchKeyPrefix|AchSaveType|AchSavePath)\s*=/im.test(fs.readFileSync(file, 'utf8'))) {
+          return true;
+        }
+      } catch {
+        /* unreadable config is not evidence */
+      }
+    }
+    if (depth >= maxDepth) continue;
+    for (const entry of entries) {
+      if (entry.isDirectory() && entry.name.toLowerCase() !== BACKUP_DIR_NAME) queue.push({ dir: path.join(dir, entry.name), depth: depth + 1 });
+    }
+  }
+  return false;
 }
 
 // The ini the loader will actually read: first existing name in INI_NAMES precedence order.
@@ -346,6 +587,23 @@ function isUbisoftGame(game, fallbackAppid) {
   );
 }
 
+// Narrower than isUbisoftGame(): official Ubisoft Connect records also use system="uplay", but they
+// must never be offered or batch-applied an emulator DLL. A persisted discovery flag, an explicit
+// legacy emulator source/id, or an actual loader on disk is required.
+function isUplayR2Game(game, fallbackAppid) {
+  const record = game && typeof game === 'object' ? game : {};
+  const data = record.data && typeof record.data === 'object' ? record.data : {};
+  const source = String(record.source || '');
+  const appid = record.appid != null ? record.appid : fallbackAppid;
+  const gameDir = record.gameDir || data.gameDir || '';
+  if (record.uplayR2 || data.uplayR2 || /uplay r2|goldberg uplay|lumaplay|^uplay$/i.test(source)) return true;
+  // Official records also use namespaced uplay-<id> identities. Source/type must veto that legacy
+  // heuristic or Fix all could put an emulator DLL into a legitimate Ubisoft Connect installation.
+  if (/^ubisoft connect$/i.test(source) || data.type === 'ubisoftOfficial') return false;
+  if (gameDir && hasEmulatorEvidence(gameDir)) return true;
+  return /^(?:UPLAY|uplay-)\d+$/i.test(String(appid || ''));
+}
+
 // Resolve the two ids a Ubisoft game can carry in the UI: the native Ubisoft product id and the
 // mapped Steam catalog id used for schema, cover and community links. Renderer records differ by
 // source (UPLAY65043, uplay-65043, or a promoted numeric Steam appid), so keep that normalization in
@@ -357,13 +615,20 @@ function resolveGameIdentity(game, fallbackAppid) {
   const data = record.data && typeof record.data === 'object' ? record.data : {};
   const embeddedMatch = appidText.match(/^(?:UPLAY|uplay-)(\d+)$/i);
   const explicitUplayId = record.ubisoftProductId || record.uplayId || data.uplayId || (embeddedMatch && embeddedMatch[1]) || '';
+  const explicitSteamAppid = record.steamappid != null ? String(record.steamappid).trim() : '';
+  const promotedSteamAppid = (record.uplayR2 || data.uplayR2) && /^\d+$/.test(appidText) ? appidText : '';
   const mapping = resolveSteamMapping({
-    appid: explicitUplayId ? `UPLAY${explicitUplayId}` : appid,
+    // A promoted Uplay R2 record uses its numeric Steam AppID as `appid`. Do not reinterpret that
+    // number as a Ubisoft product id; use an explicit native id when one is available.
+    appid: explicitUplayId ? `UPLAY${explicitUplayId}` : promotedSteamAppid ? undefined : appid,
     name: record.name,
     gameDir: record.gameDir || data.gameDir,
-  });
-  const explicitSteamAppid = record.steamappid != null ? String(record.steamappid).trim() : '';
-  const promotedSteamAppid = record.uplayR2 && /^\d+$/.test(appidText) ? appidText : '';
+  }) ||
+    resolvedSteamMapping({
+      steamAppid: explicitSteamAppid || promotedSteamAppid,
+      uplayId: explicitUplayId,
+      steamName: record.name,
+    });
   const steamAppid = explicitSteamAppid || (mapping && String(mapping.steam_appid)) || promotedSteamAppid;
   const uplayId = String(explicitUplayId || (mapping && mapping.uplay_id) || '');
 
@@ -447,13 +712,18 @@ function resolveMappingFromInstallState(gameDir, map) {
 // steam_appid, steam_name } | null.
 function resolveSteamMapping({ appid, name, gameDir } = {}) {
   const map = loadUplaySteamMap();
-  if (map.length === 0) return null;
+  const exactOverride = findSteamMappingOverride({ gameDir });
+  if (exactOverride) return exactOverride;
 
-  const rawId = appid != null ? String(appid).replace(/^UPLAY/i, '') : null;
+  const rawId = appid != null ? String(appid).replace(/^uplay-?/i, '') : null;
   if (rawId && /^\d+$/.test(rawId)) {
     const hit = map.find((e) => String(e.uplay_id) === rawId);
     if (hit) return mappingResult(hit);
+    const idOverride = findSteamMappingOverride({ uplayId: rawId });
+    if (idOverride) return idOverride;
   }
+
+  if (map.length === 0) return null;
 
   const installStateHit = resolveMappingFromInstallState(gameDir, map);
   if (installStateHit) return installStateHit;
@@ -490,7 +760,7 @@ function derivePrefixedIds(achievementList) {
 }
 
 /*
-  Build demde achievements_schema.json from the AW schema. keyed:true → real Steam api-names (loader
+  Build the Uplay R2 achievements_schema.json from the AW schema. keyed:true → real Steam api-names (loader
   with AchKeyPrefix); keyed:false → bare objective ids (older loader that would otherwise never match).
 */
 function buildAchievementsSchemaJson(schema, { keyed = true } = {}) {
@@ -520,25 +790,33 @@ function defaultSavePath(steamAppid) {
   return path.join(appdata, 'GSE Saves', String(steamAppid));
 }
 
+function normalizeLoaderLanguage(language) {
+  const value = String(language || '').trim();
+  if (!value) return '';
+  return UPLAY_LANGUAGE_CODES[value.toLowerCase()] || UPLAY_LANGUAGE_VALUES.get(value.toLowerCase()) || 'en-US';
+}
+
 /*
   Read-modify-write BOTH upc_r2.ini and uplay_r2.ini beside the loader dll, preserving every other key
   (UserId in particular) and section. Only keys the installed loader parses are written: redirect keys
   are left out on builds without support, or the ini would look configured while saves stay elsewhere.
 */
-function writeSettingsConfig({ dir, steamAppid, prefix, accountName, language, capabilities } = {}) {
+function planSettingsConfig({ dir, steamAppid, prefix, accountName, language, logging, capabilities } = {}) {
   if (!dir) throw new Error('writeSettingsConfig: dir is required');
   if (steamAppid == null) throw new Error('writeSettingsConfig: steamAppid is required');
-  fs.mkdirSync(dir, { recursive: true });
 
   const caps = capabilities || inspectInstalledLoaders(detectEmulator(dir).dll);
   const updates = { Achievements: '1' };
   if (caps.supportsAchKeyPrefix) updates.AchKeyPrefix = sanitizeIniValue(prefix || '');
   if (caps.supportsAchRedirect) {
+    const achievementSavePath = defaultSavePath(steamAppid);
+    if (!achievementSavePath) throw new Error('writeSettingsConfig: APPDATA is unavailable for the achievement save redirect');
     updates.AchSaveType = '1';
-    updates.AchSavePath = sanitizeIniValue(defaultSavePath(steamAppid));
+    updates.AchSavePath = sanitizeIniValue(achievementSavePath);
   }
   if (accountName && String(accountName).trim()) updates.Username = sanitizeIniValue(accountName);
-  if (language && String(language).trim()) updates.Language = sanitizeIniValue(language);
+  if (language && String(language).trim()) updates.Language = normalizeLoaderLanguage(language);
+  if (typeof logging === 'boolean') updates.Logging = logging ? '1' : '0';
 
   const written = [];
   for (const iniName of INI_NAMES) {
@@ -553,8 +831,7 @@ function writeSettingsConfig({ dir, steamAppid, prefix, accountName, language, c
     settings.body = upsertIniKeys(settings.body, updates);
     const next = stringifyIni(doc);
     const changed = previous !== next;
-    if (changed) fs.writeFileSync(file, next);
-    written.push({ file, changed });
+    written.push({ file, previous, next, changed });
   }
   return {
     files: written,
@@ -565,6 +842,30 @@ function writeSettingsConfig({ dir, steamAppid, prefix, accountName, language, c
   };
 }
 
+function writeFileAtomic(file, content) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const temporary = path.join(path.dirname(file), `.${path.basename(file)}.${process.pid}.${Date.now()}.tmp`);
+  try {
+    fs.writeFileSync(temporary, content);
+    fs.renameSync(temporary, file);
+  } finally {
+    try {
+      if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
+    } catch {
+      /* ignore cleanup failure */
+    }
+  }
+}
+
+function applySettingsConfigPlan(plan) {
+  for (const entry of plan.files) if (entry.changed) writeFileAtomic(entry.file, entry.next);
+  return plan;
+}
+
+function writeSettingsConfig(options = {}) {
+  return applySettingsConfigPlan(planSettingsConfig(options));
+}
+
 /*
   Diagnose a Ubisoft game's Goldberg Uplay R2 setup.
 
@@ -572,7 +873,7 @@ function writeSettingsConfig({ dir, steamAppid, prefix, accountName, language, c
   Returns a structured report; report.issues is an array of { level, code, message }, same shape as
   goldberg.diagnose so app.js's dialog-building code can be reused.
 */
-function diagnose({ gameDir, appid, name } = {}) {
+function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedMapping = null } = {}) {
   const report = {
     gameDir,
     dll: null,
@@ -588,7 +889,15 @@ function diagnose({ gameDir, appid, name } = {}) {
     return report;
   }
 
-  const emu = detectEmulator(gameDir);
+  const mapping = suppliedMapping || resolveSteamMapping({ appid, name, gameDir });
+  report.mapping = mapping;
+  if (!mapping) {
+    add('error', 'NO_STEAM_MAPPING', `No safe Steam equivalent has been resolved for this Ubisoft game (appid=${appid}, name=${name}).`);
+    return report;
+  }
+
+  const scopedLoaders = Array.isArray(loaderPaths) ? loaderPaths.filter((file) => fs.existsSync(file)) : null;
+  const emu = scopedLoaders ? { type: scopedLoaders.length > 0 ? 'uplayR2' : 'none', dll: scopedLoaders } : detectEmulator(gameDir);
   if (emu.type === 'none') {
     add('error', 'NO_UPLAY_R2_DLL', 'No uplay_r2_loader(64).dll / upc_r2_loader(64).dll found - Goldberg Uplay R2 is not installed here.');
     return report;
@@ -596,15 +905,18 @@ function diagnose({ gameDir, appid, name } = {}) {
   const dir = path.dirname(emu.dll[0]);
   report.dll = emu.dll;
 
-  const mapping = resolveSteamMapping({ appid, name, gameDir });
-  report.mapping = mapping;
-  if (!mapping) {
-    add('error', 'NO_STEAM_MAPPING', `No Steam equivalent found for this Ubisoft game in uplay-steam.json (appid=${appid}, name=${name}).`);
-    return report;
-  }
-
   const caps = inspectInstalledLoaders(emu.dll);
   report.loader = caps;
+  if (!caps.supportsAchievements) {
+    add('error', 'NOT_UPLAY_R2_LOADER', 'A matching Ubisoft loader filename exists, but the DLL does not expose Goldberg Uplay R2 achievement support.');
+  }
+  for (const loader of caps.loaders.filter((entry) => entry.exists && (!entry.arch || entry.arch !== entry.expectedArch))) {
+    add(
+      'error',
+      loader.arch ? 'LOADER_ARCH_MISMATCH' : 'LOADER_ARCH_UNKNOWN',
+      `${path.basename(loader.path)} is ${loader.arch || 'not a readable PE'}; this filename requires ${loader.expectedArch || 'a known architecture'}.`
+    );
+  }
   if (!caps.supportsAchRedirect) {
     add(
       'info',
@@ -687,7 +999,7 @@ function diagnose({ gameDir, appid, name } = {}) {
   Steam api-name keys. cfg: dir (loader folder), steamAppid, schema, prefix, accountName, language.
   Returns { dir, achievementsSchemaJson, ini, wroteSchema, backupDir }.
 */
-function repair({ dir, steamAppid, schema, prefix, accountName, language } = {}) {
+function repair({ dir, gameDir, steamAppid, schema, prefix, accountName, language, logging, capabilities = null, backup = true, backupDir = null } = {}) {
   if (!dir) throw new Error('repair: dir is required');
   if (steamAppid == null) throw new Error('repair: steamAppid is required');
   if (prefix == null) throw new Error('repair: prefix is required (derive it with derivePrefixedIds first)');
@@ -696,30 +1008,48 @@ function repair({ dir, steamAppid, schema, prefix, accountName, language } = {})
   // The schema's keys and the ini's redirect must both match what THIS loader build parses, so the
   // capability probe drives them together - a schema keyed one way and an ini written the other is
   // exactly the silent no-op this pair of checks exists to prevent.
-  const caps = inspectInstalledLoaders(detectEmulator(dir).dll);
+  const caps = capabilities || inspectInstalledLoaders(detectEmulator(dir).dll);
+  if (!caps.supportsAchievements) throw new Error('repair: no compatible Goldberg Uplay R2 loader found in the target folder');
+  if (!caps.architectureValid) throw new Error('repair: loader architecture does not match its filename');
   const achievementsSchemaJson = buildAchievementsSchemaJson(schema, { keyed: caps.supportsAchKeyPrefix });
-  const summary = { dir, achievementsSchemaJson, wroteSchema: false, backupDir: null, ini: null, loader: caps };
-
+  if (Object.keys(achievementsSchemaJson).length === 0) throw new Error('repair: achievement schema is empty');
+  const schemaText = JSON.stringify(achievementsSchemaJson, null, 2);
   const schemaFile = path.join(dir, ACH_SCHEMA_FILE);
-  const filesToBackup = [schemaFile, ...INI_NAMES.map((n) => path.join(dir, n))].filter((f) => fs.existsSync(f));
-  if (filesToBackup.length > 0) {
-    summary.backupDir = path.join(dir, '.aw-backups', backupTimestamp());
-    fs.mkdirSync(summary.backupDir, { recursive: true });
-    for (const file of filesToBackup) fs.copyFileSync(file, path.join(summary.backupDir, path.basename(file)));
-  }
-
-  fs.writeFileSync(schemaFile, JSON.stringify(achievementsSchemaJson, null, 2));
-  summary.wroteSchema = true;
-
-  summary.ini = writeSettingsConfig({ dir, steamAppid, prefix, accountName, language, capabilities: caps });
-
-  // Pre-create the runtime save folder so the game shows up immediately at 0%, same convention as
-  // the GBE Fork install action.
+  let previousSchema = null;
   try {
-    fs.mkdirSync(defaultSavePath(steamAppid), { recursive: true });
+    previousSchema = fs.readFileSync(schemaFile, 'utf8');
   } catch {
-    /* best-effort */
+    /* absent schema is part of the repair plan */
   }
+  const schemaChanged = previousSchema !== schemaText;
+  const iniPlan = planSettingsConfig({ dir, steamAppid, prefix, accountName, language, logging, capabilities: caps });
+  const changedFiles = [
+    ...(schemaChanged ? [schemaFile] : []),
+    ...iniPlan.files.filter((entry) => entry.changed).map((entry) => entry.file),
+  ];
+  const summary = {
+    dir,
+    achievementsSchemaJson,
+    wroteSchema: false,
+    changed: changedFiles.length > 0,
+    backupDir: null,
+    ini: null,
+    loader: caps,
+  };
+
+  if (changedFiles.length > 0 && backup) {
+    const snapshot = createSetupBackup({ gameDir: gameDir || dir, files: changedFiles, backupDir });
+    summary.backupDir = snapshot && snapshot.backupDir;
+  } else if (backupDir) {
+    summary.backupDir = backupDir;
+  }
+
+  if (schemaChanged) {
+    writeFileAtomic(schemaFile, schemaText);
+    summary.wroteSchema = true;
+  }
+
+  summary.ini = applySettingsConfigPlan(iniPlan);
 
   return summary;
 }
@@ -733,49 +1063,142 @@ function repair({ dir, steamAppid, schema, prefix, accountName, language } = {})
   Newest first, so the caller can offer "undo the last repair" without inspecting the layout.
 */
 const BACKUP_DIR_NAME = '.aw-backups';
+const BACKUP_MANIFEST = 'uplay-r2-backup.json';
+
+function pathInside(root, target) {
+  const relative = path.relative(path.resolve(root), path.resolve(target));
+  return relative && !relative.startsWith('..') && !path.isAbsolute(relative) ? relative : '';
+}
+
+function uniqueBackupDir(root) {
+  let candidate = path.join(root, backupTimestamp());
+  let suffix = 2;
+  while (fs.existsSync(candidate)) candidate = path.join(root, `${backupTimestamp()}-${suffix++}`);
+  return candidate;
+}
+
+/*
+  Snapshot every file a repair may change, including files that do not exist yet. Recording absence
+  is what makes a first-time install reversible: restore removes a loader/schema/ini that AW added
+  instead of pretending there was an original file to copy back.
+*/
+function createSetupBackup({ gameDir, files, backupDir } = {}) {
+  if (!gameDir || !fs.existsSync(gameDir)) throw new Error(`backup: game folder not found: ${gameDir}`);
+  const root = path.resolve(gameDir);
+  const uniqueFiles = [];
+  for (const file of files || []) {
+    const relative = pathInside(root, file);
+    if (!relative) throw new Error(`backup: path is outside the game folder: ${file}`);
+    if (!uniqueFiles.some((entry) => entry.relative.toLowerCase() === relative.toLowerCase())) {
+      uniqueFiles.push({ file: path.resolve(file), relative });
+    }
+  }
+  if (uniqueFiles.length === 0) return null;
+
+  const target = backupDir ? path.resolve(backupDir) : uniqueBackupDir(path.join(root, BACKUP_DIR_NAME));
+  fs.mkdirSync(target, { recursive: true });
+  const manifestFile = path.join(target, BACKUP_MANIFEST);
+  let manifest = { format: 2, type: 'uplay-r2', gameDir: root, createdAt: new Date().toISOString(), files: [] };
+  if (fs.existsSync(manifestFile)) {
+    manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+    if (manifest.type !== 'uplay-r2' || !Array.isArray(manifest.files)) throw new Error('backup: invalid Uplay R2 backup manifest');
+    if (path.resolve(manifest.gameDir) !== root) throw new Error('backup: manifest belongs to another game folder');
+  }
+
+  for (const entry of uniqueFiles) {
+    const portable = entry.relative.split(path.sep).join('/');
+    if (manifest.files.some((existing) => String(existing.path).toLowerCase() === portable.toLowerCase())) continue;
+    const existed = fs.existsSync(entry.file) && fs.statSync(entry.file).isFile();
+    manifest.files.push({ path: portable, existed });
+    if (existed) {
+      const destination = path.join(target, 'files', entry.relative);
+      fs.mkdirSync(path.dirname(destination), { recursive: true });
+      fs.copyFileSync(entry.file, destination);
+    }
+  }
+  writeFileAtomic(manifestFile, JSON.stringify(manifest, null, 2));
+  return { backupDir: target, manifest, files: manifest.files.map((entry) => entry.path) };
+}
 
 function listConfigBackups(dir) {
   if (!dir) return [];
-  const root = path.join(dir, BACKUP_DIR_NAME);
-  let entries;
-  try {
-    entries = fs.readdirSync(root, { withFileTypes: true });
-  } catch {
-    return []; // nothing has ever been repaired here
+  const gameDir = path.resolve(dir);
+  const roots = [path.join(gameDir, BACKUP_DIR_NAME)];
+  for (const loader of detectEmulator(gameDir).dll) {
+    const legacyRoot = path.join(path.dirname(loader), BACKUP_DIR_NAME);
+    if (!roots.some((root) => path.resolve(root).toLowerCase() === path.resolve(legacyRoot).toLowerCase())) roots.push(legacyRoot);
   }
-  return entries
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => {
+  const backups = [];
+  for (const root of roots) {
+    let entries = [];
+    try {
+      entries = fs.readdirSync(root, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries.filter((item) => item.isDirectory())) {
       const full = path.join(root, entry.name);
       let files = [];
       let createdAt = null;
+      let manifest = null;
       try {
-        files = fs.readdirSync(full).filter((name) => name === ACH_SCHEMA_FILE || INI_NAMES.includes(name));
-        createdAt = fs.statSync(full).mtime;
+        const manifestFile = path.join(full, BACKUP_MANIFEST);
+        if (fs.existsSync(manifestFile)) {
+          manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+          if (manifest.type !== 'uplay-r2' || !Array.isArray(manifest.files)) continue;
+          files = manifest.files.map((file) => file.path);
+          createdAt = manifest.createdAt ? new Date(manifest.createdAt) : fs.statSync(full).mtime;
+        } else {
+          files = fs.readdirSync(full).filter((name) => name === ACH_SCHEMA_FILE || INI_NAMES.includes(name));
+          createdAt = fs.statSync(full).mtime;
+        }
       } catch {
         /* unreadable snapshot - reported with no files so the caller can skip it */
       }
-      return { name: entry.name, dir: full, files, createdAt };
-    })
+      if (files.length > 0) backups.push({ name: entry.name, dir: full, files, createdAt, manifest });
+    }
+  }
+  return backups
     .filter((backup) => backup.files.length > 0)
-    .sort((a, b) => String(b.name).localeCompare(String(a.name)));
+    .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
 }
 
-// Copy one snapshot's files back over the live ones. Returns what was restored.
+// Restore a manifest snapshot exactly. Legacy config-only snapshots remain readable.
 function restoreConfigBackup({ dir, backup } = {}) {
   if (!dir) throw new Error('restoreConfigBackup: dir is required');
   const snapshot = backup || listConfigBackups(dir)[0];
   if (!snapshot) throw new Error('restoreConfigBackup: no backup available');
   const restored = [];
+  const removed = [];
+  if (snapshot.manifest) {
+    const targetRoot = path.resolve(dir);
+    for (const entry of snapshot.manifest.files) {
+      const relative = String(entry.path || '').split('/').join(path.sep);
+      const destination = path.resolve(targetRoot, relative);
+      if (!pathInside(targetRoot, destination)) throw new Error(`restore: manifest path is outside the game folder: ${entry.path}`);
+      if (entry.existed) {
+        const source = path.join(snapshot.dir, 'files', relative);
+        if (!fs.existsSync(source)) throw new Error(`restore: backup file is missing: ${entry.path}`);
+        writeFileAtomic(destination, fs.readFileSync(source));
+        restored.push(entry.path);
+      } else if (fs.existsSync(destination)) {
+        fs.unlinkSync(destination);
+        removed.push(entry.path);
+      }
+    }
+    return { dir: targetRoot, backup: snapshot.name, restored, removed };
+  }
   for (const name of snapshot.files) {
-    fs.copyFileSync(path.join(snapshot.dir, name), path.join(dir, name));
+    writeFileAtomic(path.join(dir, name), fs.readFileSync(path.join(snapshot.dir, name)));
     restored.push(name);
   }
-  return { dir, backup: snapshot.name, restored };
+  return { dir, backup: snapshot.name, restored, removed };
 }
 
 module.exports = {
   BACKUP_DIR_NAME,
+  BACKUP_MANIFEST,
+  createSetupBackup,
   listConfigBackups,
   restoreConfigBackup,
   EMU_DLL_NAMES,
@@ -784,9 +1207,19 @@ module.exports = {
   UPLAY_SAVE_ROOT_NAME,
   ACH_SAVE_FILE,
   ACH_SCHEMA_FILE,
+  MAPPING_OVERRIDES_FILE,
+  setUserDataPath,
+  mappingOverridesFile,
+  resolvedSteamMapping,
+  getSteamMappingOverride,
+  findSteamMappingOverride,
+  saveSteamMappingOverride,
+  clearSteamMappingOverride,
+  findSteamAppidHints,
   detectEmulator,
   inspectLoader,
   inspectInstalledLoaders,
+  hasEmulatorEvidence,
   activeIniFile,
   readIniSettings,
   resolveAchievementSaveDirs,
@@ -794,11 +1227,15 @@ module.exports = {
   mapSaveToSchemaKeys,
   isUbisoftInstall,
   isUbisoftGame,
+  isUplayR2Game,
   resolveGameIdentity,
   getGameToolPaths,
   resolveSteamMapping,
   derivePrefixedIds,
   buildAchievementsSchemaJson,
+  normalizeLoaderLanguage,
+  planSettingsConfig,
+  applySettingsConfigPlan,
   writeSettingsConfig,
   diagnose,
   repair,

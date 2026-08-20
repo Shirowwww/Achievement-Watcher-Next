@@ -47,7 +47,7 @@ live Windows notifications or an in-game overlay.
 - **Answers when something is wrong.** Each game has a **Game Health** panel that says whether it is
   tracked, why not, and offers only the repairs that genuinely apply.
 - **Repair tools for local setups.** Read-only diagnosis, `steam_settings` repair, matched GBE Fork
-  runtime install, Uplay R2 support, backups and restore.
+  runtime install, architecture-safe automatic Uplay R2 repair, transactional backups and restore.
 - **Yours to shape.** Simple and Advanced interface modes, built-in themes plus a custom one, full
   controller navigation, and 18 bundled interface languages.
 - **Local-first.** No Steam Web API key, no required account, its own data directory, and caches that

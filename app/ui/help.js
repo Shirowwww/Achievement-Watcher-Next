@@ -7,6 +7,7 @@ const HELP_LISTS = {
   'help-gamehealth-list': 'gameHealth',
   'help-sources-list': 'sources',
   'help-steam-list': 'steam',
+  'help-uplay-list': 'uplay',
   'help-emulator-list': 'emulators',
   'help-controller-list': 'controller',
   'help-overlay-list': 'overlay',
@@ -272,6 +273,21 @@ function renderPanelCounts($, help) {
   }
 }
 
+function withEmulatorRepairHelp(settingsLocale) {
+  const help = settingsLocale && settingsLocale.help;
+  if (!help) return help;
+  const uplay = settingsLocale.emulator && settingsLocale.emulator.uplay;
+  if (!uplay) return help;
+  return {
+    ...help,
+    uplay: [
+      uplay.packageHelp,
+      [uplay.import, uplay.restore].filter(Boolean).join(' / '),
+      uplay.repairHelp,
+    ].filter(Boolean),
+  };
+}
+
 function applyHelpSearch($, rawQuery) {
   const card = $('#settings .content[data-view="help"] .help-card');
   // Topics the interface mode is hiding are not part of the search: counting them would report
@@ -337,7 +353,7 @@ function bindSearch($) {
 
 function render($) {
   if (!$ || !window.appLocale || !window.appLocale.settings || !window.appLocale.settings.help) return;
-  const help = window.appLocale.settings.help;
+  const help = withEmulatorRepairHelp(window.appLocale.settings);
   const values = dynamicValues($);
   for (const [id, key] of Object.entries(HELP_LISTS)) {
     renderList($, id, help[key], key, values);
@@ -358,6 +374,7 @@ const helpApi = {
   parseSearchTerms,
   matchesHelpQuery,
   applyHelpSearch,
+  withEmulatorRepairHelp,
   HELP_LISTS,
   DEFAULT_TOGGLE,
   DEFAULT_UI_MODE,

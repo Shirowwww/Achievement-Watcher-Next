@@ -99,7 +99,8 @@ function applyInterfaceMode() {
     $(`#settingNav li[data-view='${view}']`).toggleClass(hidden, simple);
     $(`#settings .box section.content[data-view='${view}']`).toggleClass(hidden, simple);
   }
-  // The group header above the advanced tabs would otherwise be left labelling nothing.
+  // Group headers above hidden tabs would otherwise be left labelling nothing.
+  $('#nav-group-emulator').toggleClass(hidden, simple);
   $('#nav-group-advanced').toggleClass(hidden, simple);
   $(`#settings [${interfaceMode.ADVANCED_ATTRIBUTE}], #game-config [${interfaceMode.ADVANCED_ATTRIBUTE}]`).toggleClass(hidden, simple);
   applySourceVisibility(mode);
@@ -526,6 +527,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           $(`#option_${option}`).val(app.config.emulator[option].toString()).change();
         }
       }
+      $('#option_autoApplyNewGamesUplay').val(String(app.config.emulator.autoApplyNewGames === true));
       if (app.config.emulator) {
         $('#emulator-login-user').val(app.config.emulator.loginAccountName || '');
         $('#emulator-login-pass').val(app.config.emulator.loginPassword || '');
@@ -1462,6 +1464,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // Bind on the controls themselves as well as using a bubbling event above. This keeps the
     // dependency UI reliable for keyboard changes, programmatic population and the arrow buttons.
     $('#options-emulator select, #options-emulator2 select').on('change', updateEmulatorUi);
+    $('#option_autoApplyNewGames, #option_autoApplyNewGamesUplay').on('change', function () {
+      const value = $(this).val();
+      $('#option_autoApplyNewGames, #option_autoApplyNewGamesUplay').not(this).val(value);
+    });
 
     // ---- Custom theme editor (Settings > General > Custom…) -----------------
     const CUSTOM_LAYER_META = [

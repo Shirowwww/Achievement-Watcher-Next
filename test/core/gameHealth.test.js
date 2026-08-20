@@ -11,7 +11,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const test = require('node:test');
 
-const { deriveHealth, STATE, LEVEL, ACTION, REPAIRABLE_GOLDBERG_CODES } = require(path.join(__dirname, '..', '..', 'app', 'util', 'gameHealth.js'));
+const { deriveHealth, STATE, LEVEL, ACTION, REPAIRABLE_GOLDBERG_CODES, REPAIRABLE_UPLAY_CODES } = require(path.join(__dirname, '..', '..', 'app', 'util', 'gameHealth.js'));
 
 // A fully healthy Steam-emulated game. Each test below breaks exactly one thing.
 function healthyGame(overrides = {}) {
@@ -279,6 +279,10 @@ test('a Ubisoft game reports its own emulator diagnosis', () => {
   );
   assert.equal(report.state, STATE.NOT_TRACKING, 'an unmapped Ubisoft game cannot be followed');
   assert.equal(report.reason, 'uplay-broken');
+  assert.ok(
+    report.actions.includes(ACTION.REPAIR_UPLAY),
+    'Game Health exposes the automatic/manual mapping recovery instead of stranding an unmapped game'
+  );
 });
 
 test('a Ubisoft game whose mapping resolved is fixable rather than untracked', () => {
@@ -296,6 +300,26 @@ test('a Ubisoft game whose mapping resolved is fixable rather than untracked', (
     })
   );
   assert.equal(report.state, STATE.ATTENTION);
+  assert.ok(report.actions.includes(ACTION.REPAIR_UPLAY), 'a mapped Ubisoft setup offers the shared safe repair');
+  assert.equal(checkFor(report, 'uplay').params.steamAppid, '242050');
+});
+
+test('unsafe Ubisoft loader architecture is named and routed to the Uplay repair', () => {
+  const report = deriveHealth(
+    healthyGame({
+      emulated: false,
+      goldberg: null,
+      isUbisoft: true,
+      uplay: {
+        ok: false,
+        mapping: { steam_appid: '33230', uplay_id: '4' },
+        issues: [{ level: 'error', code: 'LOADER_ARCH_MISMATCH', message: '64-bit name contains an x86 PE' }],
+      },
+    })
+  );
+  const uplay = checkFor(report, 'uplay');
+  assert.deepEqual(uplay.params.topics, ['loader']);
+  assert.deepEqual(uplay.actions, [ACTION.REPAIR_UPLAY]);
 });
 
 test('every offered action is unique and led by the fix for the reported problem', () => {
@@ -551,6 +575,12 @@ test('a fabricated achievement list is offered the repair that rewrites it', () 
 test('the repairable-code list covers the account config the repair now always writes', () => {
   for (const code of ['NO_USER_CONFIG', 'BAD_USER_CONFIG', 'BLANK_NAMES', 'BLANK_DESCRIPTIONS']) {
     assert.ok(REPAIRABLE_GOLDBERG_CODES.has(code), `${code} must be answerable by the repair button`);
+  }
+});
+
+test('the Uplay repairable-code list covers runtime, schema and config failures', () => {
+  for (const code of ['NO_UPLAY_R2_DLL', 'LOADER_ARCH_MISMATCH', 'BAD_SCHEMA_JSON', 'ACHIEVEMENTS_DISABLED', 'BAD_SAVE_REDIRECT']) {
+    assert.ok(REPAIRABLE_UPLAY_CODES.has(code), `${code} must be answerable by the Uplay repair button`);
   }
 });
 

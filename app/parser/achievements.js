@@ -28,6 +28,7 @@ const blacklist = require(path.join(appPath, 'blacklist.js'));
 const watchdog = require(path.join(appPath, 'watchdog.js'));
 const goldberg = require(path.join(appPath, 'goldberg.js'));
 const uplayR2 = require(path.join(appPath, 'uplayR2.js'));
+const uplayR2Installer = require(path.join(appPath, 'uplayR2Installer.js'));
 const gbeInstaller = require(path.join(appPath, 'gbeInstaller.js'));
 const pe = require(path.join(appPath, '..', 'util', 'pe.js'));
 const crackLoaderDetect = require(path.join(appPath, '..', 'util', 'crackLoaderDetect.js'));
@@ -54,6 +55,7 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
     return;
   }
   _userDataPath = userDataPath;
+  uplayR2.setUserDataPath(userDataPath);
   userDir.setUserDataPath(userDataPath);
   libraryDirs.setUserDataPath(userDataPath);
   manualGames.setUserDataPath(userDataPath);
@@ -1400,14 +1402,30 @@ async function resolveUnconfiguredSteamAppid(u) {
   uplay-steam.json like the Uplay R2 fix does. Returns the Steam mapping or null (still surfaced so the
   app offers the Uplay R2 fix rather than GBE Fork).
 */
-function resolveUplayR2Mapping(u) {
+async function resolveUplayR2Mapping(u) {
   const byInstallState = uplayR2.resolveSteamMapping({ gameDir: u && u.data && u.data.gameDir });
   if (byInstallState) return { ...byInstallState, matchedName: 'uplay_install.state' };
   for (const name of unconfiguredNameCandidates(u)) {
     const mapping = uplayR2.resolveSteamMapping({ name });
     if (mapping) return { ...mapping, matchedName: name };
   }
-  return null;
+
+  // Reuse the same full-catalog name resolver that already identifies Steam counterparts for
+  // Ubisoft rarity percentages and unconfigured Steam-emulator installs. The static asset remains
+  // the deterministic first choice; this automatic result is validated again against the Steam
+  // achievement schema before any Uplay R2 repair writes files.
+  const automatic = await resolveUnconfiguredSteamAppid(u);
+  if (!automatic) return null;
+  const identity = uplayR2.resolveGameIdentity({
+    ...u,
+    gameDir: u && u.data && u.data.gameDir,
+    steamappid: automatic.appid,
+    uplayR2: true,
+  });
+  return {
+    ...(identity.mapping || uplayR2.resolvedSteamMapping({ steamAppid: automatic.appid, steamName: automatic.matchedName })),
+    matchedName: automatic.matchedName,
+  };
 }
 
 async function discover(source, steamAccFilter, scope = null) {
@@ -1709,18 +1727,19 @@ async function discover(source, steamAccFilter, scope = null) {
         let resolved = null;
 
         // Ubisoft/uPlay install (Goldberg Uplay R2 territory - no steam_api.dll to look at). Identify it
-        // against uplay-steam.json and promote it to its Steam appid, so the game gets its real title,
-        // art and achievement schema from the ordinary Steam pipeline and its unlocks are read from
-        // GSE Saves\<steamAppid> - the folder the Uplay R2 fix redirects the emulator's save into.
-        if (u.data && uplayR2.isUbisoftInstall(u.data.gameDir)) {
+        // against the deterministic map first, then the existing automatic Steam catalog resolver,
+        // and promote it to its Steam appid. The game then gets its title, art, achievement schema and
+        // global percentages from the ordinary Steam pipeline; unlocks are read from GSE
+        // Saves\<steamAppid>, where the Uplay R2 repair redirects them.
+        if (u.data && uplayR2.isUbisoftInstall(u.data.gameDir) && uplayR2.hasEmulatorEvidence(u.data.gameDir)) {
           u.source = 'Uplay R2';
           u.data.uplayR2 = true;
           u.data.system = 'uplay';
-          const mapping = resolveUplayR2Mapping(u);
+          const mapping = await resolveUplayR2Mapping(u);
           if (!mapping) {
             data.push(u); // keep it visible; the Uplay R2 fix can still be run on it manually
             added++;
-            debug.log(`[unconfigured-scan] Ubisoft install "${u.name}" has no uplay-steam.json match - left unconfigured`);
+            debug.log(`[unconfigured-scan] Ubisoft install "${u.name}" has no safe automatic Steam match - left unconfigured`);
             continue;
           }
           const known = data.find((g) => String(g.appid) === String(mapping.steam_appid));
@@ -2306,21 +2325,76 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       option.emulator.autoApplyNewGames !== false
     ) {
       try {
-        const report = uplayR2.diagnose({ gameDir: resolvedGameDir, appid: appid.appid, name: game.name });
-        const broken = report.issues.some((i) => i.code === 'NO_SCHEMA_JSON' || i.code === 'ACHIEVEMENTS_DISABLED' || i.code === 'BAD_SAVE_REDIRECT' || i.code === 'SCHEMA_KEYS_PREFIXED' || i.code === 'SCHEMA_KEYS_UNPREFIXED');
+        const repairIdentity = uplayR2.resolveGameIdentity(
+          { ...game, appid: appid.appid, data: appid.data, gameDir: resolvedGameDir, uplayR2: true },
+          appid.appid
+        );
+        const report = uplayR2.diagnose({
+          gameDir: resolvedGameDir,
+          appid: appid.appid,
+          name: game.name,
+          mapping: repairIdentity.mapping,
+        });
+        const repairableCodes = new Set([
+          'NO_UPLAY_R2_DLL',
+          'NOT_UPLAY_R2_LOADER',
+          'LOADER_ARCH_MISMATCH',
+          'LOADER_ARCH_UNKNOWN',
+          'NO_SCHEMA_JSON',
+          'BAD_SCHEMA_JSON',
+          'ACHIEVEMENTS_DISABLED',
+          'NO_INI',
+          'BAD_SAVE_REDIRECT',
+          'SCHEMA_KEYS_PREFIXED',
+          'SCHEMA_KEYS_UNPREFIXED',
+        ]);
+        const broken = report.issues.some((issue) => repairableCodes.has(issue.code));
         const prefixInfo = broken && report.mapping ? uplayR2.derivePrefixedIds(game.achievement.list) : null;
-        if (broken && prefixInfo && report.dll && report.dll.length > 0) {
-          const summary = uplayR2.repair({
-            dir: path.dirname(report.dll[0]),
+        if (broken && prefixInfo) {
+          const loaderPaths = report.dll || [];
+          const loader = report.loader || uplayR2.inspectInstalledLoaders(loaderPaths);
+          const needsLoader = loaderPaths.length === 0 || !loader.supportsAchievements || !loader.architectureValid;
+          let installPlan = null;
+          if (needsLoader) {
+            if (!_userDataPath) throw new Error('user data path unavailable for Uplay R2 package cache');
+            const cache = await uplayR2Installer.ensureBundledEmulatorDlls({
+              cacheDir: path.join(_userDataPath, 'cache/uplayR2'),
+              log: debug,
+            });
+            resolvedExe = resolvedExe || exeDetect.detect(resolvedGameDir, game.name || '', { dllPaths: loaderPaths });
+            installPlan = uplayR2Installer.planInstall({
+              gameDir: resolvedGameDir,
+              dlls: cache,
+              loaderPaths,
+              exePath: resolvedExe && resolvedExe.full,
+              trustedInstall: true, // appid.data.uplayR2 was persisted by emulator-evidence discovery
+            });
+            if (!installPlan.safe) {
+              throw new Error(`no architecture-safe loader target (${installPlan.issues.map((issue) => issue.code).join(', ')})`);
+            }
+          }
+          const summary = uplayR2Installer.repairInstallation({
+            gameDir: resolvedGameDir,
+            installPlan,
+            loaderPaths,
             steamAppid: report.mapping.steam_appid,
+            uplayId: report.mapping.uplay_id,
+            name: game.name,
+            mapping: report.mapping,
             schema: game,
             prefix: prefixInfo.prefix,
-            accountName: option.general && option.general.username,
-            language: option.achievement && option.achievement.lang,
+            accountName:
+              (option.emulator && String(option.emulator.uplayUsername || '').trim()) ||
+              (option.general && option.general.username),
+            language:
+              option.emulator && option.emulator.uplayLanguage && option.emulator.uplayLanguage !== 'auto'
+                ? option.emulator.uplayLanguage
+                : option.achievement && option.achievement.lang,
+            logging: !!(option.emulator && option.emulator.uplayLogging),
+            log: debug,
           });
           debug.log(
-            `[${appid.appid}] Uplay R2 setup was incomplete (${report.issues.map((i) => i.code).join(', ')}) - re-applied into ${summary.dir}` +
-              `${summary.loader && !summary.loader.supportsAchRedirect ? ' (legacy loader: unlocks read from the emulator save folder)' : ''}`
+            `[${appid.appid}] Uplay R2 setup was incomplete (${report.issues.map((i) => i.code).join(', ')}) - validated repair in ${summary.runtimeDirs.join(', ')}`
           );
         } else if (broken) {
           debug.log(`[${appid.appid}] Uplay R2 setup is incomplete but cannot be auto-repaired (${report.issues.map((i) => i.code).join(', ')})`);

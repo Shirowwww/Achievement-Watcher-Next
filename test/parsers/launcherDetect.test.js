@@ -41,15 +41,19 @@ function makeSteamLibrary(tmp, name) {
 test('official launcher installs are recognised by their markers', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-launcher-detect-'));
   try {
-    // Ubisoft Connect legit: launcher markers, no Uplay R2 loader.
+    // Ubisoft Connect legit: launcher markers, with or without the official same-named R2 loader.
     assert.equal(isOfficialLauncherInstall(makeGame(tmp, 'Ubi Legit', ['uplay_install.state', 'ACGame.exe'])), true);
     assert.equal(isOfficialLauncherInstall(makeGame(tmp, 'Ubi Manifest', ['uplay_install.manifest', 'Game.exe'])), true);
     assert.equal(isOfficialLauncherInstall(makeGame(tmp, 'Ubi UpcCfg', ['upc.cfg', 'Game.exe'])), true);
+    assert.equal(isOfficialLauncherInstall(makeGame(tmp, 'Ubi Official Loader', ['uplay_install.state', 'upc_r2_loader64.dll', 'Game.exe'])), true);
 
-    // Cracked Uplay R2: keeps the launcher markers AND ships the loader -> not official.
-    assert.equal(isOfficialLauncherInstall(makeGame(tmp, 'Ubi Crack Root', ['uplay_install.state', 'upc_r2_loader64.dll', 'Game.exe'])), false);
+    // Cracked Uplay R2: keeps the markers, but its loader/config contains emulator-only settings.
+    const crackedRoot = makeGame(tmp, 'Ubi Crack Root', ['uplay_install.state', 'upc_r2_loader64.dll', 'Game.exe']);
+    fs.writeFileSync(path.join(crackedRoot, 'upc_r2_loader64.dll'), Buffer.from('MZ...Achievements...AchSaveType...AchSavePath...'));
+    assert.equal(isOfficialLauncherInstall(crackedRoot), false);
     const nestedLoader = makeGame(tmp, 'Ubi Crack Nested', ['uplay_install.state', 'Game.exe'], ['Binaries', 'Binaries/Win64']);
-    fs.writeFileSync(path.join(nestedLoader, 'Binaries', 'Win64', 'uplay_r2_loader64.dll'), Buffer.alloc(16, 1));
+    fs.writeFileSync(path.join(nestedLoader, 'Binaries', 'Win64', 'uplay_r2.ini'), '[Settings]\nAchievements = 1\n');
+    fs.writeFileSync(path.join(nestedLoader, 'Binaries', 'Win64', 'uplay_r2_loader64.dll'), Buffer.from('MZ...Achievements...'));
     assert.equal(isOfficialLauncherInstall(nestedLoader), false);
 
     // GOG Galaxy legit.

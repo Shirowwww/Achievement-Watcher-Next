@@ -43,20 +43,30 @@ test('every bundled locale supplies the help interface labels', () => {
   }
 });
 
-test('all 11 Help topics are populated, rendered and localized', () => {
+test('all 12 Help topics are populated, rendered and localized', () => {
   const helpModule = require('../../app/ui/help.js');
-  assert.strictEqual(Object.keys(helpModule.HELP_LISTS).length, 11);
+  assert.strictEqual(Object.keys(helpModule.HELP_LISTS).length, 12);
   for (const [id, key] of Object.entries(helpModule.HELP_LISTS)) {
     assert.match(html, new RegExp(`id="${id}"`), `${key}: missing DOM list`);
-    assert.match(loader, new RegExp(`bindHelpList\\('${id}', help\\.${key}\\)`), `${key}: missing locale binding`);
     for (const file of fs.readdirSync(localeDir).filter((name) => name.endsWith('.json'))) {
       const locale = JSON.parse(fs.readFileSync(path.join(localeDir, file), 'utf8'));
-      assert.ok(Array.isArray(locale.settings.help[key]) && locale.settings.help[key].length >= 2, `${file}: incomplete help.${key}`);
+      if (key === 'uplay') {
+        assert.match(loader, /bindHelpList\(\s*'help-uplay-list',\s*uplayHelp\s*\?/s, 'uplay: missing derived locale binding');
+        const uplay = locale.settings.emulator && locale.settings.emulator.uplay;
+        assert.ok(
+          uplay && [uplay.packageHelp, [uplay.import, uplay.restore].filter(Boolean).join(' / '), uplay.repairHelp].filter(Boolean).length >= 2,
+          `${file}: incomplete settings.emulator.uplay help`
+        );
+      } else {
+        assert.match(loader, new RegExp(`bindHelpList\\('${id}', help\\.${key}\\)`), `${key}: missing locale binding`);
+        assert.ok(Array.isArray(locale.settings.help[key]) && locale.settings.help[key].length >= 2, `${file}: incomplete help.${key}`);
+      }
     }
   }
 });
 
 test('Help facts stay aligned with the current implementation', () => {
+  const helpModule = require('../../app/ui/help.js');
   const english = JSON.parse(fs.readFileSync(path.join(localeDir, 'english.json'), 'utf8'));
   const settingsDefaults = fs.readFileSync(path.join(root, 'app', 'settings.js'), 'utf8');
   const mainProcess = fs.readFileSync(path.join(root, 'app', 'electron', 'init.js'), 'utf8');
@@ -76,6 +86,10 @@ test('Help facts stay aligned with the current implementation', () => {
   assert.match(english.settings.help.shortcuts.join(' '), /Ctrl\+Alt\+Shift\+Arrows[\s\S]*Ctrl\+Alt\+Shift\+1–5[\s\S]*Ctrl\+Alt\+Shift\+C/);
   assert.match(english.settings.help.tips.join(' '), /within 3 days/);
   assert.match(english.settings.help.themes.join(' '), /<userData>\\themes/);
+  const emulatorHelp = helpModule.withEmulatorRepairHelp(english.settings);
+  assert.ok(!emulatorHelp.steam.includes(english.settings.emulator.uplay.packageHelp));
+  assert.ok(emulatorHelp.uplay.includes(english.settings.emulator.uplay.packageHelp));
+  assert.ok(emulatorHelp.uplay.includes(english.settings.emulator.uplay.repairHelp));
   assert.doesNotMatch(JSON.stringify(english.settings.help), /ColdClient|Launch\.bat|launch helpers/i);
   assert.doesNotMatch(html, /option_mode|option_createLaunchBat/);
 });

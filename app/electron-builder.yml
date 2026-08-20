@@ -26,6 +26,8 @@ afterPack: ./build/afterPack.js
 asarUnpack:
   - presets/**
   - sounds/**
+  # Keep the plain repair DLLs and their recovery archive accessible outside the virtual asar layer.
+  - resources/uplayR2/**
   # Shared schema mappers loaded by the standalone Watchdog (which runs from the install dir).
   - util/steamSchemaFetch.js
   - parser/achievementTranslations.js

@@ -4,7 +4,7 @@
   Where Game Health lives and how it is wired. The value of these is structural: Game Health has to
   stay inside the per-game tools panel rather than becoming a separate destination, its labels have
   to be bound by id (the panel's i18n has no positional selectors and must not grow any), and the
-  two repairs that change files have to stay behind a confirmation.
+  repairs that change files have to stay behind a confirmation.
 */
 
 const assert = require('node:assert/strict');
@@ -124,6 +124,37 @@ test('both file-changing repairs confirm before writing, and say where the backu
     assert.ok(block.includes(confirmKey), `${action} must show where the previous files are kept`);
     assert.match(block.slice(confirmAt), /confirmed !== 1\) return false/, `${action} must abort on cancel`);
   }
+});
+
+test('the Uplay health action delegates to the same confirmed transaction as the context menu', () => {
+  const runner = appSource.slice(appSource.indexOf('async function runGameHealthAction'));
+  const start = runner.indexOf('gameHealth.ACTION.REPAIR_UPLAY');
+  assert.ok(start > 0, 'Game Health must handle the Uplay repair action');
+  const block = runner.slice(start, runner.indexOf('\n  if (action ===', start + 1));
+  assert.match(block, /applyUplayR2Repair\(/);
+
+  const shared = appSource.slice(appSource.indexOf('async function applyUplayR2Repair'), appSource.indexOf('// Show a progress cursor'));
+  const confirmAt = shared.indexOf('showMessageBoxSync');
+  const writeAt = shared.indexOf('repairInstallation');
+  assert.ok(confirmAt >= 0 && writeAt > confirmAt, 'the shared Uplay transaction confirms before writing');
+  assert.match(shared.slice(confirmAt, writeAt), /backed up before being overwritten/);
+});
+
+test('Game Health shows the resolved Steam identity and keeps the fallback reachable', () => {
+  const valueRenderer = appSource.slice(
+    appSource.indexOf('function gameHealthCheckValue'),
+    appSource.indexOf('function gameHealthActionLabel')
+  );
+  assert.match(valueRenderer, /case 'uplay'/);
+  assert.match(valueRenderer, /p\.steamAppid/);
+  assert.match(valueRenderer, /diagnosis-steam-appid/);
+
+  const actionRunner = appSource.slice(appSource.indexOf('async function runGameHealthAction'));
+  const uplayAction = actionRunner.slice(
+    actionRunner.indexOf('gameHealth.ACTION.REPAIR_UPLAY'),
+    actionRunner.indexOf('gameHealth.ACTION.REPAIR_DATA')
+  );
+  assert.match(uplayAction, /applyUplayR2Repair\(/, 'the button reaches automatic resolution and then the manual fallback');
 });
 
 test('the repairs delegate to the parsers that own the backup behaviour', () => {

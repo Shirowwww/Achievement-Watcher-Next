@@ -13,10 +13,14 @@ control at the top of Settings if you do not see it. Nothing is lost by switchin
 
 | Tool | What it does |
 |---|---|
-| **Fix all detected games** | Runs the emulator fix (GBE Fork, achievements, DLCs) over every detected emulated game with a known install folder. This is what rebuilds games that already have a setup. |
+| **Fix all detected games** | Runs the appropriate repair (Steam/GBE Fork or Ubisoft/Uplay R2) over every compatible detected game with a known install folder. This is what rebuilds games that already have a setup. |
 | **Disable hardware acceleration** | Turns off GPU acceleration when the window or overlay misbehaves. Requires a restart. |
 | **Clear caches** | Deletes only re-downloadable caches: update files, the Steam/Ubisoft schema and icon cache, and downloaded emulator-fix tools. Settings, saves, backups and manually placed files are never touched. |
 | **Recheck achievement lists** | Checks Steam for achievements added by a game update since the last check. This runs automatically every 3 days; the button forces it now. |
+
+Source-specific repair settings are split under **Settings → Emulators**. **Ubisoft / Uplay R2**
+contains its package health, DLL import/restore controls, and targeted batch repair. Loader and INI
+details stay automatic.
 
 **Clear caches** is the first thing to try when an update keeps failing on the same downloaded file.
 

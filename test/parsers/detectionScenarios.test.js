@@ -167,6 +167,7 @@ test('a cracked Uplay R2 install (markers + loader) is promoted, not skipped as 
       fs.writeFileSync(path.join(dir, 'uplay_install.manifest'), '{}');
       fs.writeFileSync(path.join(dir, 'uplay_install.state'), "Assassin's Creed Black Flag Resynced");
       writeBytes(path.join(dir, 'upc_r2_loader64.dll'));
+      fs.writeFileSync(path.join(dir, 'upc_r2.ini'), '[Settings]\nAchievements = 0\n');
     },
   });
   assert.ok(found.includes('3751950'));

@@ -19,6 +19,7 @@ const ACTION = {
   CHOOSE_EXE: 'choose-exe', //    the panel's own executable picker
   OPEN_FOLDER: 'open-folder', //  shell.openPath(gameDir)
   REPAIR_DATA: 'repair-data', //  goldberg.repair() - writes schema + icons + configs, backs up first
+  REPAIR_UPLAY: 'repair-uplay', // shared Uplay R2 transaction - loader/schema/config + rollback
   INSTALL_RUNTIME: 'install-runtime', // gbeInstaller.installDlls() - backs up replaced dlls as .bak
   START_TRACKING: 'start-tracking', //  gameIndex.upsert() - the same seed the scan writes
   UNMUTE_PROGRESS: 'unmute-progress', // progressMute.toggle()
@@ -50,6 +51,21 @@ const REPAIRABLE_GOLDBERG_CODES = new Set([
   'BLANK_DESCRIPTIONS',
 ]);
 
+const REPAIRABLE_UPLAY_CODES = new Set([
+  'NO_UPLAY_R2_DLL',
+  'NOT_UPLAY_R2_LOADER',
+  'LOADER_ARCH_MISMATCH',
+  'LOADER_ARCH_UNKNOWN',
+  'NO_SCHEMA_JSON',
+  'BAD_SCHEMA_JSON',
+  'SCHEMA_KEYS_UNPREFIXED',
+  'SCHEMA_KEYS_PREFIXED',
+  'NO_INI',
+  'ACHIEVEMENTS_DISABLED',
+  'BAD_SAVE_REDIRECT',
+  'NO_STEAM_MAPPING',
+]);
+
 /*
   Which part of the setup each diagnosis code is about. "2 points to review" told the user a number
   and nothing else; grouping the codes lets the row name the actual subjects instead, while the
@@ -79,6 +95,10 @@ const ISSUE_TOPIC = {
   BAD_USER_CONFIG: 'account',
   CUSTOM_SAVE_PATH: 'savepath',
   LOADER_NO_ACH_REDIRECT: 'loader',
+  NO_UPLAY_R2_DLL: 'loader',
+  NOT_UPLAY_R2_LOADER: 'loader',
+  LOADER_ARCH_MISMATCH: 'loader',
+  LOADER_ARCH_UNKNOWN: 'loader',
   NO_STEAM_MAPPING: 'mapping',
 };
 
@@ -260,11 +280,31 @@ function emulatorCheck(signals) {
 function uplayCheck(signals) {
   const uplay = signals.uplay;
   if (!uplay) return null;
+  const mappingParams = uplay.mapping
+    ? {
+        steamAppid: String(uplay.mapping.steam_appid || ''),
+        steamName: String(uplay.mapping.steam_name || ''),
+        mappingMode: uplay.mapping.manual ? 'manual' : uplay.mapping.automatic ? 'automatic' : 'built-in',
+      }
+    : {};
   const errors = issuesAtLevel(uplay, 'error');
-  if (errors.length > 0) return check('uplay', LEVEL.FAIL, { params: { topics: issueTopics(errors) }, blocking: !uplay.mapping });
+  if (errors.length > 0) {
+    // NO_STEAM_MAPPING is repairable interactively: the shared transaction tries the automatic
+    // resolver first and then opens the validated manual picker. Game Health must not strand the
+    // user without the same recovery path available from the context menu.
+    const actions = errors.some((issue) => REPAIRABLE_UPLAY_CODES.has(issue.code)) ? [ACTION.REPAIR_UPLAY] : [];
+    return check('uplay', LEVEL.FAIL, {
+      params: { topics: issueTopics(errors), ...mappingParams },
+      blocking: !uplay.mapping,
+      actions,
+    });
+  }
   const warnings = issuesAtLevel(uplay, 'warning');
-  if (warnings.length > 0) return check('uplay', LEVEL.WARN, { params: { topics: issueTopics(warnings) } });
-  return check('uplay', LEVEL.OK, {});
+  if (warnings.length > 0) {
+    const actions = warnings.some((issue) => REPAIRABLE_UPLAY_CODES.has(issue.code)) ? [ACTION.REPAIR_UPLAY] : [];
+    return check('uplay', LEVEL.WARN, { params: { topics: issueTopics(warnings), ...mappingParams }, actions });
+  }
+  return check('uplay', LEVEL.OK, { params: mappingParams });
 }
 
 /*
@@ -447,8 +487,10 @@ function buildTechnical(signals) {
     uplay: uplay
       ? {
           dll: uplay.dll || null,
+          loader: uplay.loader || null,
           iniFile: uplay.iniFile || '',
           mapping: uplay.mapping || null,
+          saveDirs: uplay.saveDirs || [],
           save: uplay.save || null,
           issues: (uplay.issues || []).map((issue) => ({ level: issue.level, code: issue.code, message: issue.message })),
         }
@@ -478,4 +520,4 @@ function deriveHealth(signals = {}) {
   return { state, reason, params, checks, actions, technical: buildTechnical(signals) };
 }
 
-module.exports = { deriveHealth, issueTopics, STATE, LEVEL, ACTION, ISSUE_TOPIC, REPAIRABLE_GOLDBERG_CODES };
+module.exports = { deriveHealth, issueTopics, STATE, LEVEL, ACTION, ISSUE_TOPIC, REPAIRABLE_GOLDBERG_CODES, REPAIRABLE_UPLAY_CODES };

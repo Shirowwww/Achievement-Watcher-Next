@@ -3,8 +3,8 @@
 /*
   Recognise official launcher installs (Steam, Ubisoft Connect, GOG Galaxy, Epic, Microsoft Store) by
   their on-disk markers so the broad "Unconfigured" scan skips them - they are already listed by the
-  official sources. A cracked Uplay R2 install keeps launcher markers but also ships its loader DLL,
-  which is what tells the two apart; the Steam case uses the same idea with the steam_api dll.
+  official sources. A cracked Uplay R2 install keeps launcher markers and can share the official DLL
+  basename, so Goldberg-only capabilities/config distinguish it; Steam uses content markers too.
 */
 
 const fs = require('fs');
@@ -151,16 +151,15 @@ function isOfficialLauncherInstall(gameDir) {
   // cracked in place keeps the manifest but runs on a replaced steam_api dll, so keep that one.
   if (steamLibraryAppid(gameDir) && !hasEmulatedSteamApi(gameDir)) return true;
 
-  // Ubisoft Connect legit installs carry launcher markers but never the emulator's loader dlls.
-  // Only pay for the loader walk (bounded depth) when the markers are actually present.
+  // Official Ubisoft games can ship the same uplay/upc R2 DLL basenames as the emulator. Only
+  // Goldberg-specific loader/config capability evidence can override launcher ownership here.
   const hasUplayMarker =
     names.has('uplay_install.state') || names.has('uplay_install.manifest') || names.has('upc.cfg');
   if (hasUplayMarker) {
     try {
-      const loader = require('./uplayR2.js').detectEmulator(gameDir);
-      if (loader.dll.length > 0) return false; // real Uplay R2 emulated install - keep it
+      if (require('./uplayR2.js').hasEmulatorEvidence(gameDir)) return false;
     } catch {
-      /* if the loader detector fails, treat it as legit rather than risk a false positive */
+      /* if evidence detection fails, treat it as legit rather than risk a false positive */
     }
     return true;
   }

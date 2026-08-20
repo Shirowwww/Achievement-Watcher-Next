@@ -23,6 +23,7 @@ Module._load = function patchedLoad(request, parent, isMain) {
 
 const achievements = require('../../app/parser/achievements.js');
 const libraryDirs = require('../../app/parser/libraryDirs.js');
+const steam = require('../../app/parser/steam.js');
 
 test('Ubisoft install without Steam markers is promoted through the Uplay R2 mapping', async (t) => {
   const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-uplayr2-discovery-user-'));
@@ -49,17 +50,28 @@ test('Ubisoft install without Steam markers is promoted through the Uplay R2 map
     Buffer.concat([Buffer.from([0x0a, 0x24]), Buffer.from("Assassin's Creed Black Flag Resynced"), Buffer.from([0x10, 0x01])])
   );
   fs.writeFileSync(path.join(gameDir, 'upc_r2_loader64.dll'), Buffer.alloc(1024, 2));
+  fs.writeFileSync(path.join(gameDir, 'upc_r2.ini'), '[Settings]\nAchievements = 0\n');
 
   achievements.initDebug({ isDev: false, userDataPath: userData });
   await libraryDirs.save([root]);
   // Keep the scan isolated to the sandbox: the automatic smart-find (libraryDirs.find) would
   // otherwise merge the developer machine's real game libraries into this discovery run.
   const originalFind = libraryDirs.find;
+  const originalFindAppidByName = steam.findAppidByName;
   libraryDirs.find = async () => [];
+  steam.findAppidByName = async (name) => (name === 'Catalog Only Ubisoft Game' ? '7654321' : null);
+
+  const catalogGameDir = path.join(root, 'Catalog Only Ubisoft Game');
+  fs.mkdirSync(catalogGameDir, { recursive: true });
+  fs.writeFileSync(path.join(catalogGameDir, 'CatalogGame.exe'), Buffer.alloc(1024, 1));
+  fs.writeFileSync(path.join(catalogGameDir, 'uplay_install.manifest'), '{}');
+  fs.writeFileSync(path.join(catalogGameDir, 'upc_r2_loader64.dll'), Buffer.alloc(1024, 2));
+  fs.writeFileSync(path.join(catalogGameDir, 'upc_r2.ini'), '[Settings]\nAchievements = 0\n');
 
   t.after(() => {
     Module._load = originalLoad;
     libraryDirs.find = originalFind;
+    steam.findAppidByName = originalFindAppidByName;
     for (const [key, value] of Object.entries(oldEnv)) {
       if (value == null) delete process.env[key];
       else process.env[key] = value;
@@ -75,5 +87,6 @@ test('Ubisoft install without Steam markers is promoted through the Uplay R2 map
   });
 
   assert.ok(found.includes('3751950'), 'the renamed Ubisoft install should use its internal title and mapped Steam AppID');
+  assert.ok(found.includes('7654321'), 'a game absent from uplay-steam.json should reuse the existing automatic Steam catalog resolver');
   assert.ok(!found.some((appid) => appid.startsWith('local-')), 'the mapped install must not remain a local fallback entry');
 });

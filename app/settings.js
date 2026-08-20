@@ -322,6 +322,13 @@ module.exports.load = () => {
     if (typeof options.emulator.loginAccountName !== 'string') options.emulator.loginAccountName = '';
     if (typeof options.emulator.loginPassword !== 'string') options.emulator.loginPassword = '';
     if (typeof options.emulator.steamId !== 'string') options.emulator.steamId = '';
+    if (typeof options.emulator.uplayUsername !== 'string') options.emulator.uplayUsername = '';
+    const uplayLanguages = new Set([
+      'auto', 'en-US', 'fr-FR', 'de-DE', 'es-ES', 'es-MX', 'it-IT', 'pt-BR', 'pt-PT', 'pl-PL',
+      'ru-RU', 'ja-JP', 'zh-CN', 'zh-TW', 'ko-KR', 'th-TH',
+    ]);
+    if (!uplayLanguages.has(options.emulator.uplayLanguage)) options.emulator.uplayLanguage = 'auto';
+    if (typeof options.emulator.uplayLogging !== 'boolean') options.emulator.uplayLogging = false;
 
     //Notification
 
@@ -519,6 +526,9 @@ module.exports.load = () => {
         loginAccountName: '', // optional Steam login username (throwaway account)
         loginPassword: '', // optional Steam login password - AES-encrypted on disk
         steamId: '', // optional account_steamid override for configs.user.ini ('' = let GBE pick)
+        uplayUsername: '', // optional Uplay R2 Username override ('' = use the general username)
+        uplayLanguage: 'auto', // 'auto' follows the achievement language, otherwise a loader locale code
+        uplayLogging: false, // write the Uplay R2 diagnostic log setting during repair
       },
       notification: {
         notify: true,

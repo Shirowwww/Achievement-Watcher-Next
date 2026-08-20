@@ -179,7 +179,9 @@
                 <li class="nav-group" id="nav-group-library" data-nav-group="library"></li>
                 <li data-view="source"><i class="fas fa-file-import"></i> <span></span><b class="nav-count"></b></li>
                 <li data-view="folder"><i class="far fa-folder"></i> <span></span><b class="nav-count"></b></li>
-                <li data-view="emulator"><i class="fas fa-microchip"></i> <span id="emulator-nav-label">Steam emulator</span><b class="nav-count"></b></li>
+                <li class="nav-group" id="nav-group-emulator" data-nav-group="emulator"></li>
+                <li data-view="emulator"><i class="fab fa-steam"></i> <span id="emulator-nav-label">Steam / GBE Fork</span><b class="nav-count"></b></li>
+                <li data-view="uplay"><i class="fas fa-gamepad"></i> <span id="uplay-r2-nav-label">Ubisoft / Uplay R2</span><b class="nav-count"></b></li>
                 <li class="nav-group" id="nav-group-help" data-nav-group="help"></li>
                 <li data-view="help"><i class="fas fa-question-circle"></i> <span id="help-nav-label">Help</span><b class="nav-count"></b></li>
                 <li class="nav-group" id="nav-group-advanced" data-nav-group="advanced"></li>
@@ -357,6 +359,80 @@
 
             </section>
 
+            <section class="content emulator-settings" data-view="uplay">
+              <div class="emulator-hero">
+                <div class="emulator-hero-icon"><i class="fas fa-gamepad"></i></div>
+                <div>
+                  <div class="title" id="uplay-r2-options-title">Ubisoft / Uplay R2</div>
+                  <p id="uplay-r2-options-intro">Only compatible detected installations are changed. Existing files are backed up and the result is validated automatically.</p>
+                </div>
+              </div>
+
+              <div class="emulator-group">
+                <div class="emulator-group-title"><i class="fas fa-magic"></i> <span id="uplay-r2-auto-title">Emulator repair</span></div>
+                <ul id="options-uplay" class="arrow-list emulator-list">
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-magic"></i> <span>Automatically fix newly detected games</span></div>
+                    <div class="right">
+                      <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                      <select autocomplete="off" id="option_autoApplyNewGamesUplay">
+                        <option value="false" selected>Disabled</option>
+                        <option value="true">Enabled</option>
+                      </select>
+                      <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                    </div>
+                    <div class="help">Automatically repairs newly detected Uplay R2 games. Disabled by default.</div>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="emulator-group uplay-r2-settings" id="uplay-r2-settings">
+                <div class="emulator-group-title"><i class="fas fa-shield-alt"></i> <span id="uplay-r2-settings-title">Integrated repair package</span></div>
+                <ul class="arrow-list emulator-list uplay-r2-settings-body">
+                  <li class="hasHelper uplay-r2-package-row">
+                    <div class="left">
+                      <i class="fas fa-box-open"></i>
+                      <div class="uplay-r2-package-copy">
+                        <span id="uplay-r2-package-label">Integrated repair package</span>
+                        <span id="uplay-r2-package-status" class="uplay-r2-status" data-state="checking" role="status" aria-live="polite">
+                          <i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>
+                          <span id="uplay-r2-package-status-text">Checking…</span>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="right uplay-r2-package-controls">
+                      <button type="button" id="verify-uplay-r2-package" class="inline-action-btn secondary">
+                        <i class="fas fa-shield-alt" aria-hidden="true"></i>
+                        <span id="verify-uplay-r2-package-label">Verify repair package</span>
+                      </button>
+                      <button type="button" id="import-uplay-r2-loaders" class="inline-action-btn secondary">
+                        <i class="fas fa-file-import" aria-hidden="true"></i>
+                        <span id="import-uplay-r2-loaders-label">Import or replace DLLs</span>
+                      </button>
+                      <button type="button" id="restore-uplay-r2-loaders" class="inline-action-btn secondary">
+                        <i class="fas fa-undo" aria-hidden="true"></i>
+                        <span id="restore-uplay-r2-loaders-label">Restore integrated DLLs</span>
+                      </button>
+                    </div>
+                    <div class="help" id="uplay-r2-package-help">AW Next verifies its integrated repair files and automatically selects the architecture proved by each game.</div>
+                  </li>
+                  <li class="hasHelper uplay-r2-repair-row">
+                    <div class="left"><i class="fas fa-tools"></i> <span id="repair-all-uplay-r2-row-label">Repair detected Uplay R2 games</span></div>
+                    <div class="right action-right">
+                      <button type="button" id="repair-all-uplay-r2" class="inline-action-btn primary">
+                        <i class="fas fa-magic" aria-hidden="true"></i>
+                        <span id="repair-all-uplay-r2-label">Repair detected Uplay R2 games</span>
+                      </button>
+                    </div>
+                    <div id="repair-all-uplay-r2-help" class="help">Only compatible detected installations are changed. Existing files are backed up and the result is validated automatically.</div>
+                  </li>
+                  <li class="uplay-r2-result-row">
+                    <div id="uplay-r2-settings-result" class="diag-line" role="status" aria-live="polite"></div>
+                  </li>
+                </ul>
+              </div>
+            </section>
+
             <section class="content" data-view="help">
               <div class="help-card settings-card">
                 <div class="title"><i class="fas fa-question-circle"></i> <span id="help-title">Help &amp; tips</span></div>
@@ -405,6 +481,10 @@
                     <ul id="help-steam-list"></ul>
                   </details>
                   <details class="help-panel">
+                    <summary><i class="fas fa-gamepad"></i> <span id="help-uplay-title">Ubisoft / Uplay R2</span></summary>
+                    <ul id="help-uplay-list"></ul>
+                  </details>
+                  <details class="help-panel">
                     <summary><i class="fas fa-microchip"></i> <span id="help-emulator-title">Console emulators</span></summary>
                     <ul id="help-emulator-list"></ul>
                   </details>
@@ -442,7 +522,7 @@
                     <div class="right action-right">
                       <button type="button" id="fix-all-games" class="inline-action-btn"><i class="fas fa-magic"></i> <span id="fix-all-button">Fix all games</span></button>
                     </div>
-                    <div class="help" id="fix-all-help">Run the emulator fix (GBE Fork, achievements, DLCs) on every detected emulated game that has a known install folder.</div>
+                    <div class="help" id="fix-all-help">Run the matching Steam/GBE Fork or Ubisoft/Uplay R2 repair on every compatible detected game with a known install folder.</div>
                   </li>
                   <li>
                     <div id="fix-all-result" class="diag-line"></div>
@@ -2677,7 +2757,7 @@
                       <option value="true">Enabled</option>
                       <option value="false">Disabled</option>
                     </select>
-                    <small class="onboard-field-hint" id="onboard-auto-fix-hint"></small>
+                    <small class="onboard-field-hint" id="onboard-auto-fix-hint">Applies the matching GBE Fork or Uplay R2 repair to newly detected emulated games.</small>
                   </label>
                   <label>
                     <span id="onboard-hidden-label">Hidden achievements</span>
