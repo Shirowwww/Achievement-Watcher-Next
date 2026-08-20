@@ -121,6 +121,19 @@ window.addEventListener('error', (e) => {
 
 const gameElements = new Map();
 let gameList = [];
+let libraryArtwork = createViewportWork();
+const coverRecoveryCache = new Map();
+let artworkLoadGeneration = 0;
+
+ipcRenderer.on('artwork-caches-cleared', () => {
+  artworkLoadGeneration += 1;
+  coverRecoveryCache.clear();
+  reloadCoverOverrides();
+  document.querySelectorAll('#game-list .header').forEach((header) => {
+    header.style.background = 'none';
+    setLibraryArtworkFeedback($(header), 'clear');
+  });
+});
 let profileStatsAnimationTimer = null;
 
 function renderProfileStats(stats, { animate = false } = {}) {
@@ -1039,36 +1052,81 @@ function applyCoverBackground(appid, value) {
   }
 }
 
-// Fetch the preferred cover, then try its portrait/header alternative.
-function applyCoverWithFallback(game, headerEl, imgName, tried) {
+function setLibraryArtworkFeedback(headerEl, state, retry) {
+  const header = headerEl && headerEl[0];
+  if (!header) return;
+  let feedback = header.querySelector('.library-artwork-feedback');
+  if (!state || state === 'clear') {
+    header.classList.remove('artwork-error', 'artwork-missing');
+    feedback?.remove();
+    return;
+  }
+  if (!feedback) {
+    feedback = document.createElement('div');
+    feedback.className = 'library-artwork-feedback';
+    feedback.setAttribute('role', 'status');
+    feedback.setAttribute('aria-live', 'polite');
+    const icon = document.createElement('i');
+    icon.setAttribute('aria-hidden', 'true');
+    const message = document.createElement('span');
+    message.className = 'library-artwork-feedback-message';
+    const retryButton = document.createElement('button');
+    retryButton.type = 'button';
+    retryButton.className = 'library-artwork-retry';
+    feedback.append(icon, message, retryButton);
+    header.append(feedback);
+  }
+  const networkFailed = state === 'failed';
+  header.classList.toggle('artwork-error', networkFailed);
+  header.classList.toggle('artwork-missing', !networkFailed);
+  const icon = feedback.querySelector('i');
+  const message = feedback.querySelector('.library-artwork-feedback-message');
+  const retryButton = feedback.querySelector('.library-artwork-retry');
+  icon.className = networkFailed ? 'fas fa-exclamation-triangle' : 'fas fa-image';
+  message.textContent = networkFailed
+    ? t('artwork-fetch-failed', 'Could not fetch artwork', 'Impossible de récupérer le visuel')
+    : t('artwork-not-found', 'No artwork found', 'Aucun visuel trouvé');
+  retryButton.textContent = t('retry-artwork', 'Retry', 'Réessayer');
+  retryButton.title = t('retry-artwork', 'Retry', 'Réessayer');
+  retryButton.setAttribute('aria-label', t('retry-artwork', 'Retry', 'Réessayer'));
+  retryButton.onclick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    retry?.();
+  };
+}
+
+// Fetch the preferred cover, then walk every usable artwork source before accepting a blank tile.
+async function applyCoverWithFallback(game, headerEl, imgName, orientation = 'landscape', tried, generation = artworkLoadGeneration) {
   const img = (game && game.img) || {};
   const fallback = (current) => {
-    if (current === img.portrait && img.header) return img.header;
-    if (current === img.header && img.portrait) return img.portrait;
-    return null;
+    const candidates =
+      orientation === 'portrait'
+        ? [img.portrait, img.header, img.landscape, img.background, img.icon]
+        : [img.header, img.landscape, img.background, img.portrait, img.icon];
+    return candidates.find((candidate) => candidate && candidate !== current && !(tried && tried.has(candidate))) || null;
   };
   if (!imgName || (tried && tried.has(imgName))) {
+    if (generation !== artworkLoadGeneration) return { ok: false, reason: 'stale' };
     headerEl.css('background', 'none');
-    return;
+    return { ok: false, reason: 'missing' };
   }
   tried = tried || new Set();
   tried.add(imgName);
-  ipcRenderer
-    .invoke('fetch-icon', imgName, game.steamappid || game.appid)
-    .then((localPath) => {
-      if (localPath && localPath !== imgName) {
-        headerEl.css('background', cssUrl(localPath));
-      } else {
-        const alt = fallback(imgName);
-        if (alt) applyCoverWithFallback(game, headerEl, alt, tried);
-        else headerEl.css('background', 'none');
-      }
-    })
-    .catch(() => {
-      const alt = fallback(imgName);
-      if (alt) applyCoverWithFallback(game, headerEl, alt, tried);
-      else headerEl.css('background', 'none');
-    });
+  try {
+    const localPath = await ipcRenderer.invoke('fetch-icon', imgName, game.steamappid || game.appid);
+    if (generation !== artworkLoadGeneration) return { ok: false, reason: 'stale' };
+    const localExists = path.isAbsolute(String(localPath)) ? fs.existsSync(String(localPath)) : /^file:/i.test(String(localPath));
+    if (localPath && (localPath !== imgName || localExists)) {
+      headerEl.css('background', cssUrl(localPath));
+      return { ok: true, source: imgName, localPath };
+    }
+  } catch {}
+  const alt = fallback(imgName);
+  if (alt) return applyCoverWithFallback(game, headerEl, alt, orientation, tried, generation);
+  if (generation !== artworkLoadGeneration) return { ok: false, reason: 'stale' };
+  headerEl.css('background', 'none');
+  return { ok: false, reason: 'failed' };
 }
 
 // Show alternate SteamDB and SteamGridDB covers for a game.
@@ -1103,7 +1161,14 @@ function openCoverPicker(game, appid, coverCacheAppid) {
   const status = document.createElement('div');
   status.className = 'aw-cover-picker-status';
   status.setAttribute('aria-live', 'polite');
-  status.textContent = t('coverPickerLoading', 'Loading covers…', 'Chargement des jaquettes…');
+  const statusMessage = document.createElement('span');
+  statusMessage.textContent = t('coverPickerLoading', 'Loading covers…', 'Chargement des jaquettes…');
+  const retrySourcesButton = document.createElement('button');
+  retrySourcesButton.type = 'button';
+  retrySourcesButton.className = 'aw-prompt-button secondary aw-cover-picker-retry';
+  retrySourcesButton.textContent = t('retry-artwork', 'Retry', 'Réessayer');
+  retrySourcesButton.hidden = true;
+  status.append(statusMessage, retrySourcesButton);
   const grid = document.createElement('div');
   grid.className = 'aw-cover-picker-grid';
   const actions = document.createElement('div');
@@ -1135,6 +1200,33 @@ function openCoverPicker(game, appid, coverCacheAppid) {
   document.body.append(overlay);
 
   const seenUrls = new Set();
+  let providerTileCount = 0;
+  const previewReady = (value) => {
+    const preview = path.isAbsolute(String(value || '')) ? pathToFileURL(value).href : String(value || '');
+    if (!/^(?:https?|file|data):/i.test(preview) || typeof Image !== 'function') return Promise.resolve(false);
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = (ready) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(ready);
+      };
+      const timer = setTimeout(() => finish(false), 8000);
+      const image = new Image();
+      image.onload = () => finish(true);
+      image.onerror = () => finish(false);
+      image.src = preview;
+    });
+  };
+  const resolvePreview = async (url) => {
+    let preview = String(url || '').trim();
+    if (!/^(?:https?|file|data):/i.test(preview) && !path.isAbsolute(preview)) {
+      preview = await ipcRenderer.invoke('fetch-icon', preview, coverCacheAppid).catch(() => null);
+      if (!preview || preview === url) return null;
+    }
+    return (await previewReady(preview)) ? preview : null;
+  };
   const addTile = (url, source, previewUrl = url) => {
     const key = String(url || '').trim();
     if (!key || seenUrls.has(key)) return;
@@ -1159,10 +1251,12 @@ function openCoverPicker(game, appid, coverCacheAppid) {
           debug.warn(`[cover] picker download failed (${err.message || err}) - applying remote URL`);
           return null;
         });
-        const target = coverStore.persist(String(appid), local && local !== url ? local : url, getUserDataPath(), pickerOrientation);
+        // Persist the provider URL, not the disposable downloaded preview. The next render will
+        // populate steam_cache again, and a dead source can then fall through to the normal chain.
+        const target = coverStore.persist(String(appid), url, getUserDataPath(), pickerOrientation);
         if (!target) throw new Error('selected cover could not be persisted');
         reloadCoverOverrides();
-        applyCoverBackground(String(appid), target);
+        applyCoverBackground(String(appid), local && local !== url ? local : target);
       } catch (err) {
         debug.warn(`[cover] picker apply failed => ${err}`);
       }
@@ -1170,16 +1264,28 @@ function openCoverPicker(game, appid, coverCacheAppid) {
     };
     grid.append(tile);
   };
+  const addProviderTile = async (url, source, previewUrl = url) => {
+    try {
+      const key = String(url || '').trim();
+      if (!key) return false;
+      if (seenUrls.has(key)) return true;
+      if (!(await resolvePreview(previewUrl))) return false;
+      const before = seenUrls.size;
+      addTile(url, source, previewUrl);
+      if (seenUrls.size > before) providerTileCount += 1;
+      return seenUrls.size > before;
+    } catch (err) {
+      debug.warn(`[cover] picker preview failed (${source}) => ${err}`);
+      return false;
+    }
+  };
 
   // Render the current cover independently from the provider lookup. Schema values such as
   // "library_600x900.jpg" are fetch-icon tokens, not browser-ready URLs; resolve them first so the
   // "Current"/"Default" tiles never appear as an empty surface while SteamDB/SteamGridDB are loading.
   const addResolvedTile = async (url, source) => {
-    let preview = url;
-    if (!/^(?:https?|file|data):/i.test(String(preview)) && !path.isAbsolute(String(preview))) {
-      preview = (await ipcRenderer.invoke('fetch-icon', preview, coverCacheAppid).catch(() => null)) || url;
-    }
-    addTile(url, source, preview);
+    const preview = await resolvePreview(url);
+    if (preview) addTile(url, source, preview);
   };
   const currentTilePromise = currentUrl ? addResolvedTile(currentUrl, t('currentCover', 'Current', 'Actuelle')) : Promise.resolve();
   // Once an override is set, the schema-provided default drops out of currentUrl - without a
@@ -1193,58 +1299,101 @@ function openCoverPicker(game, appid, coverCacheAppid) {
     ? String(game.steamappid || game.appid)
     : '';
 
-  // Two lookups on purpose. The instant sources (Steam's CDN and SteamGridDB) paint the gallery in
-  // well under a second; the SteamDB scrape costs a browser launch, so its tiles are appended
-  // whenever it finishes instead of holding the whole dialog on "Loading covers".
-  const fastOptions = ipcRenderer.invoke('get-cover-options', {
-    name: game.name,
-    orientation: pickerOrientation,
-    // Only a real Steam release should hit the Steam CDN probe - a non-Steam numeric id (GOG/Xbox)
-    // would just answer 404 on every asset path.
-    steamAppid: steamCoverId,
-  });
-  const steamdbOptions = steamCoverId
-    ? ipcRenderer.invoke('get-cover-options-steamdb', { orientation: pickerOrientation, steamAppid: steamCoverId })
-    : Promise.resolve([]);
-
-  let pendingSources = 2;
+  let pendingSources = 0;
+  let failedSources = 0;
+  let sourceAttempt = 0;
   const refreshStatus = () => {
-    if (grid.children.length) {
+    if (providerTileCount > 0) {
       status.remove();
       return;
     }
-    if (pendingSources > 0) return;
-    status.textContent = t('noCoversFound', 'No alternative covers found.', 'Aucune jaquette alternative trouvée.');
     if (!status.isConnected) box.insertBefore(status, grid);
+    if (pendingSources > 0) {
+      statusMessage.textContent = t('coverPickerLoading', 'Loading covers…', 'Chargement des jaquettes…');
+      retrySourcesButton.hidden = true;
+      return;
+    }
+    statusMessage.textContent = failedSources
+      ? t(
+          'cover-picker-fetch-failed',
+          'Could not fetch alternative covers. Check your connection and retry.',
+          'Impossible de récupérer les jaquettes alternatives. Vérifiez votre connexion et réessayez.'
+        )
+      : t('noCoversFound', 'No alternative covers found.', 'Aucune jaquette alternative trouvée.');
+    retrySourcesButton.hidden = false;
   };
-  const sourceSettled = () => {
+  const sourceSettled = (attempt, failed) => {
+    if (attempt !== sourceAttempt) return;
     pendingSources -= 1;
+    if (failed) failedSources += 1;
     refreshStatus();
   };
+  const startSourceLoad = () => {
+    const attempt = ++sourceAttempt;
+    pendingSources = 2;
+    failedSources = 0;
+    refreshStatus();
 
-  fastOptions
-    .then(async (opts = {}) => {
-      await defaultTilePromise;
-      for (const url of Array.isArray(opts.steam) ? opts.steam : []) addTile(url, 'Steam');
-      // Tiles preview the SteamGridDB thumbnail; the full-size url is only downloaded on click.
-      for (const cover of Array.isArray(opts.grids) ? opts.grids : []) {
-        addTile(cover && cover.url, 'SteamGridDB', (cover && cover.thumb) || (cover && cover.url));
-      }
-    })
-    .catch((err) => {
-      debug.warn(`[cover] picker options failed => ${err}`);
-    })
-    .then(sourceSettled);
+    // Two lookups on purpose. The instant sources (Steam's CDN and SteamGridDB) paint the gallery in
+    // well under a second; the SteamDB scrape costs a browser launch, so its tiles are appended
+    // whenever it finishes instead of holding the whole dialog on "Loading covers".
+    const fastOptions = ipcRenderer.invoke('get-cover-options', {
+      name: game.name,
+      orientation: pickerOrientation,
+      // Only a real Steam release should hit the Steam CDN probe - a non-Steam numeric id (GOG/Xbox)
+      // would just answer 404 on every asset path.
+      steamAppid: steamCoverId,
+    });
 
-  steamdbOptions
-    .then(async (urls) => {
-      await defaultTilePromise;
-      for (const url of Array.isArray(urls) ? urls : []) addTile(url, 'SteamDB');
-    })
-    .catch((err) => {
-      debug.warn(`[cover] picker SteamDB options failed => ${err}`);
-    })
-    .then(sourceSettled);
+    let fastFailed = false;
+    let fastNetworkUnavailable = false;
+    fastOptions
+      .then(async (opts = {}) => {
+        fastNetworkUnavailable = opts.networkError === true;
+        fastFailed = fastNetworkUnavailable;
+        const steamUrls = Array.isArray(opts.steam) ? opts.steam : [];
+        const steamResults = await Promise.all(steamUrls.map((url) => addProviderTile(url, 'Steam')));
+        // Tiles preview the SteamGridDB thumbnail; the full-size url is only downloaded on click.
+        const gridCovers = Array.isArray(opts.grids) ? opts.grids : [];
+        const gridResults = await Promise.all(
+          gridCovers.map((cover) =>
+            addProviderTile(cover && cover.url, 'SteamGridDB', (cover && cover.thumb) || (cover && cover.url))
+          )
+        );
+        const candidates = steamUrls.length + gridCovers.length;
+        if (candidates > 0 && !steamResults.some(Boolean) && !gridResults.some(Boolean)) fastFailed = true;
+      })
+      .catch((err) => {
+        fastFailed = true;
+        fastNetworkUnavailable = true;
+        debug.warn(`[cover] picker options failed => ${err}`);
+      })
+      .then(() => {
+        sourceSettled(attempt, fastFailed);
+        // SteamDB launches a browser scrape. Do not start it at all when the fast providers already
+        // proved that the network is unavailable; this is what kept an offline clear-cache scan
+        // waiting behind a queue of 45-second SteamDB pages.
+        if (!steamCoverId || fastNetworkUnavailable) {
+          sourceSettled(attempt, true);
+          return null;
+        }
+        let steamdbFailed = false;
+        return ipcRenderer
+          .invoke('get-cover-options-steamdb', { orientation: pickerOrientation, steamAppid: steamCoverId })
+          .then(async (urls) => {
+            const candidates = Array.isArray(urls) ? urls : [];
+            const results = await Promise.all(candidates.map((url) => addProviderTile(url, 'SteamDB')));
+            if (candidates.length > 0 && !results.some(Boolean)) steamdbFailed = true;
+          })
+          .catch((err) => {
+            steamdbFailed = true;
+            debug.warn(`[cover] picker SteamDB options failed => ${err}`);
+          })
+          .then(() => sourceSettled(attempt, steamdbFailed));
+      });
+  };
+  retrySourcesButton.onclick = () => startSourceLoad();
+  startSourceLoad();
 }
 
 // Styled in-app text prompt (Electron disables window.prompt). Resolves to the trimmed value or null.
@@ -1320,6 +1469,190 @@ window.awPromptText = promptText;
 
 // These emulator sources already provide local artwork paths.
 const EMU_LOCAL_ICON_SOURCES = new Set(['RPCS3 Emulator', 'ShadPS4 Emulator', 'Xenia Emulator']);
+
+async function downloadLibraryCover(url, cacheAppid) {
+  if (!url) return { path: null, source: null, reason: 'missing' };
+  try {
+    const local = await ipcRenderer.invoke('fetch-icon', url, cacheAppid);
+    return local && local !== url ? { path: local, source: url, reason: null } : { path: null, source: url, reason: 'failed' };
+  } catch {
+    return { path: null, source: url, reason: 'failed' };
+  }
+}
+
+async function recoverLibraryCover(game, orientation, { force = false } = {}) {
+  const identity = String((game && (game.steamappid || game.appid)) || game?.name || '');
+  if (!identity) return { path: null, reason: 'missing' };
+  const key = `${orientation}:${identity}`;
+  if (force) coverRecoveryCache.delete(key);
+  if (!coverRecoveryCache.has(key)) {
+    const pending = (async () => {
+      const cacheAppid = game.steamappid || game.appid;
+      const steamAppid = /^\d+$/.test(String(cacheAppid || '')) ? String(cacheAppid) : '';
+      let failure = false;
+      let networkUnavailable = false;
+
+      // Steam is both authoritative and cheaper. A successful HEAD probe is not enough: only stop
+      // when fetch-icon has actually cached a usable file, otherwise continue to SteamGridDB.
+      if (steamAppid) {
+        const steamResult = await ipcRenderer
+          .invoke('get-steam-cdn-covers-status', steamAppid, orientation)
+          .catch(() => ({ urls: [], networkError: true }));
+        networkUnavailable = steamResult.networkError === true;
+        failure = failure || networkUnavailable;
+        const steamUrls = steamResult.urls;
+        for (const url of Array.isArray(steamUrls) ? steamUrls : []) {
+          const result = await downloadLibraryCover(url, cacheAppid);
+          if (result.path) return result;
+          failure = failure || result.reason === 'failed';
+        }
+      }
+
+      // SteamDB knows about hashed store assets that the guessable Steam CDN paths cannot derive.
+      // Keep it in the same ordered chain as the picker: only reach it after Steam's own candidates
+      // are absent or failed, and only continue to SteamGridDB when the SteamDB downloads also fail.
+      if (steamAppid && !networkUnavailable) {
+        const steamdbUrls = await ipcRenderer
+          .invoke('get-cover-options-steamdb', { orientation, steamAppid })
+          .catch(() => []);
+        for (const url of Array.isArray(steamdbUrls) ? steamdbUrls : []) {
+          const result = await downloadLibraryCover(url, cacheAppid);
+          if (result.path) return result;
+          failure = failure || result.reason === 'failed';
+        }
+      }
+
+      if (!networkUnavailable) {
+        const gridResult = await ipcRenderer
+          .invoke('get-steamgriddb-cover-status', game.name || '', steamAppid, orientation)
+          .catch(() => ({ url: null, networkError: true }));
+        failure = failure || gridResult.networkError === true;
+        const gridUrl = gridResult.url;
+        if (gridUrl) {
+          const result = await downloadLibraryCover(gridUrl, cacheAppid);
+          if (result.path) return result;
+          failure = failure || result.reason === 'failed';
+        }
+      }
+      return { path: null, source: null, reason: failure ? 'failed' : 'missing' };
+    })();
+    coverRecoveryCache.set(key, pending);
+  }
+  return coverRecoveryCache.get(key);
+}
+
+// All density modes share one tile. Only portrait changes the artwork orientation, so this helper
+// also lets the toolbar repaint covers without rescanning the whole library.
+function scheduleLibraryCover(game, headerEl, portrait) {
+  if (!game || !headerEl || !headerEl.length) return;
+  const image = game.img || {};
+  const isPortrait = portrait && image.portrait;
+  headerEl.toggleClass('glow', Boolean(isPortrait)).toggleClass('portrait-fallback', Boolean(portrait && !isPortrait));
+
+  const load = async (force = false) => {
+    if (!headerEl[0]?.isConnected) return;
+    const generation = artworkLoadGeneration;
+    const tileOrientation = portrait ? 'portrait' : 'landscape';
+    if (force) {
+      headerEl.css('background', 'none');
+      setLibraryArtworkFeedback(headerEl, 'clear');
+    }
+    const coverOverride = coverOverrideFor(game.appid, tileOrientation);
+    if (coverOverride) {
+      if (!/^https?:\/\//i.test(coverOverride)) {
+        headerEl.toggleClass('portrait-fallback', false).toggleClass('glow', portrait).css('background', cssUrl(coverOverride));
+        setLibraryArtworkFeedback(headerEl, 'clear');
+        return;
+      }
+      const local = await ipcRenderer.invoke('fetch-icon', coverOverride, game.steamappid || game.appid).catch(() => null);
+      if (generation !== artworkLoadGeneration) return;
+      if (!local || local === coverOverride) {
+        // A dead custom URL must not permanently mask the normal artwork chain. Remove only the
+        // override, then let Steam -> SteamDB -> SteamGridDB recover a usable replacement.
+        coverStore.remove(game.appid, tileOrientation);
+        reloadCoverOverrides();
+        debug.warn(`[cover] custom override failed for ${game.appid}; trying provider fallbacks`);
+      } else {
+        // Keep the source URL in covers.db; the downloaded file remains disposable steam_cache data.
+        const stored = coverStore.persist(game.appid, coverOverride, getUserDataPath(), tileOrientation);
+        if (!stored) {
+          setLibraryArtworkFeedback(headerEl, 'failed', () => load(true));
+          return;
+        }
+        reloadCoverOverrides();
+        headerEl
+          .toggleClass('portrait-fallback', false)
+          .toggleClass('glow', portrait)
+          .css('background', cssUrl(local));
+        setLibraryArtworkFeedback(headerEl, 'clear');
+        return;
+      }
+    }
+    if (EMU_LOCAL_ICON_SOURCES.has(game.source)) {
+      if (image.header) {
+        headerEl.css('background', cssUrl(image.header));
+        setLibraryArtworkFeedback(headerEl, 'clear');
+      } else {
+        headerEl.css('background', 'none');
+        setLibraryArtworkFeedback(headerEl, 'missing', () => load(true));
+      }
+      return;
+    }
+
+    const imgName = portrait
+      ? image.portrait || image.header || image.landscape || image.background || image.icon
+      : image.header || image.landscape || image.background || image.portrait || image.icon;
+    const applied = await applyCoverWithFallback(game, headerEl, imgName, tileOrientation, undefined, generation);
+    if (generation !== artworkLoadGeneration) return;
+    if (!headerEl[0]?.isConnected) return;
+    const currentModeIsPortrait = libraryLayout.isPortrait(app.config?.achievement?.libraryLayout);
+    if (portrait !== currentModeIsPortrait) return;
+    const preferred = portrait ? image.portrait : image.header || image.landscape;
+    if (applied.ok && preferred && applied.source === preferred) {
+      setLibraryArtworkFeedback(headerEl, 'clear');
+      return;
+    }
+    if (portrait) headerEl.removeClass('glow').addClass('portrait-fallback');
+    const recovered = await recoverLibraryCover(game, tileOrientation, { force });
+    if (generation !== artworkLoadGeneration) return;
+    if (!headerEl[0]?.isConnected) return;
+    if (portrait !== libraryLayout.isPortrait(app.config?.achievement?.libraryLayout)) return;
+    if (recovered.path) {
+      // Keep the provider URL in the in-memory schema too. The file is only a disposable preview
+      // under steam_cache and must not become the next scan's source after a cache clear.
+      if (portrait) image.portrait = recovered.source || recovered.path;
+      else image.header = recovered.source || recovered.path;
+      headerEl.toggleClass('portrait-fallback', false).toggleClass('glow', portrait).css('background', cssUrl(recovered.path));
+      setLibraryArtworkFeedback(headerEl, 'clear');
+      return;
+    }
+    if (applied.ok) {
+      // A usable fallback is already visible. Do not replace it with an error state just because
+      // the preferred orientation could not be recovered.
+      setLibraryArtworkFeedback(headerEl, 'clear');
+      return;
+    }
+    setLibraryArtworkFeedback(headerEl, recovered.reason === 'failed' || applied.reason === 'failed' ? 'failed' : 'missing', () => load(true));
+  };
+
+  libraryArtwork.schedule(headerEl[0], () =>
+    load(false).catch((err) => {
+      if (!headerEl[0]?.isConnected) return;
+      debug.warn(`[cover] artwork load failed for ${game.appid} => ${err.message || err}`);
+      setLibraryArtworkFeedback(headerEl, 'failed', () => load(true));
+    })
+  );
+}
+
+function refreshLibraryCovers(mode) {
+  libraryArtwork.disconnect();
+  libraryArtwork = createViewportWork();
+  const portrait = libraryLayout.isPortrait(mode);
+  for (const game of gameList) {
+    const element = gameElements.get(String(game && game.appid));
+    if (element) scheduleLibraryCover(game, $(element).find('.header').first(), portrait);
+  }
+}
 
 function gameHasAchievements(game) {
   return !!(game && game.achievement && Number(game.achievement.total) > 0);
@@ -1885,6 +2218,8 @@ var app = {
   onStart: function (options = {}) {
     let self = this;
     const activeScanScope = scanScope.normalizeScanScope(options && options.scanScope);
+    const scanStartedAt = performance.now();
+    let firstFreshTileAt = null;
 
     // Coalesce overlapping scans so streaming tiles are not duplicated.
     if (self.listLoadInFlight) {
@@ -1949,7 +2284,8 @@ var app = {
     $('#search-bar').fadeTo('fast', 1).css('pointer-events', 'initial');
     $('title-bar')[0].inSettings = false;
     // A scoped refresh replaces only entries under the selected roots.
-    const previousGames = activeScanScope ? gameList.slice() : [];
+    const preserveExistingOnFailure = options && options.preserveExistingOnFailure === true;
+    const previousGames = activeScanScope || preserveExistingOnFailure ? gameList.slice() : [];
     // First scan of the session: serve cached data immediately (no cover/description re-fetch per
     // game) so the library appears fast; details refresh themselves when opened.
     const fastStart = !self.hasCompletedFirstScan;
@@ -1958,6 +2294,7 @@ var app = {
     const scanConfig = activeScanScope
       ? { ...self.config, scanScope: activeScanScope, fastStart, forceAchievementRecheck }
       : { ...self.config, fastStart, forceAchievementRecheck };
+    const knownGames = fastStart && !activeScanScope ? librarySnapshot.read(getUserDataPath(), scanConfig) : [];
     // Read the manual-unlock sidecar once for this scan. Applying it in the streamed callback makes
     // tile percentages and profile counters survive an app restart without doing sync I/O per game.
     const manualUnlockMap = (() => {
@@ -1972,7 +2309,7 @@ var app = {
       return $(this).css('display') !== 'none';
     }).length;
     gameList = [];
-    const renderedAppids = new Set();
+    const freshRenderedAppids = new Set();
     // Reset the list and handlers so onStart() stays idempotent.
     $('#game-list ul').empty();
     addSkeletonTiles(
@@ -1981,86 +2318,126 @@ var app = {
         : DEFAULT_SKELETON_TILES
     );
     gameElements.clear();
+    libraryArtwork.disconnect();
+    libraryArtwork = createViewportWork();
+    applyLibraryLayout(
+      self.config.achievement.libraryLayout,
+      self.config.achievement.thumbnailPortrait === true
+    );
+    $('#library-layout-select')
+      .off('change.awLibraryLayout')
+      .on('change.awLibraryLayout', function () {
+        const previousMode = libraryLayout.normalize(
+          self.config.achievement.libraryLayout,
+          self.config.achievement.thumbnailPortrait === true
+        );
+        const nextMode = applyLibraryLayout($(this).val());
+        self.config.achievement.libraryLayout = nextMode;
+        self.config.achievement.thumbnailPortrait = libraryLayout.isPortrait(nextMode);
+        if (libraryLayout.isPortrait(previousMode) !== libraryLayout.isPortrait(nextMode)) refreshLibraryCovers(nextMode);
+        settings.save(self.config).catch((err) => debug.log(`library layout save failed: ${err}`));
+      });
     // Remove only handlers owned by this scan.
     $('#game-list').off('.awLibrary');
     $('#game-config').off('click', '.edit').off('click', '.unlink');
     $('#btn-game-config-save').off('click');
     $('#btn-game-config-cancel, #game-config .overlay').off('click');
-    let renderGame;
-    const listLoadPromise = achievements
-      .makeList(
-        scanConfig,
-        (percent, total) => {
-          loadingElem.progress.attr('data-percent', percent);
-          loadingElem.meter.css('width', percent + '%');
-          setSkeletonExpected(total);
-        },
-        (renderGame = (game) => {
+    const renderGame = (game, { fresh = true } = {}) => {
           manualUnlock.applyToGame(game, manualUnlockMap, game.appid, game.source);
           if (game.achievement.unlocked > 0 || self.config.achievement.hideZero == false) {
             const appidKey = String(game.appid);
-            if (renderedAppids.has(appidKey)) {
+            if (fresh && freshRenderedAppids.has(appidKey)) {
               debug.log(`[${game.appid}] duplicate streamed tile ignored`);
               return;
             }
-            renderedAppids.add(appidKey);
+            if (fresh) {
+              freshRenderedAppids.add(appidKey);
+              if (firstFreshTileAt === null) {
+                firstFreshTileAt = performance.now();
+                if (isDev) debug.log(`[perf] first fresh library tile in ${(firstFreshTileAt - scanStartedAt).toFixed(1)}ms`);
+              }
+            }
+            const existingIndex = gameList.findIndex((entry) => String(entry && entry.appid) === appidKey);
+            const listIndex = existingIndex >= 0 ? existingIndex : gameList.length;
+            const knownGame = existingIndex >= 0 ? gameList[existingIndex] : null;
+            if (fresh && game.provisional && knownGame && !knownGame.provisional) {
+              Object.assign(game, librarySnapshot.mergeKnownGame(game, knownGame));
+              manualUnlock.applyToGame(game, manualUnlockMap, game.appid, game.source);
+            }
             const hasAchievements = Number(game.achievement.total) > 0;
             let progress = hasAchievements ? Math.round((100 * game.achievement.unlocked) / game.achievement.total) : 0;
             const progressLabel = !hasAchievements
               ? t('achievements-not-available', 'No achievements', 'Pas de succès')
               : `${progress}%`;
 
-            let timeMostRecent = Math.max.apply(
-              Math,
-              game.achievement.list
-                .filter((ach) => ach.Achieved && ach.UnlockTime > 0)
-                .map((ach) => {
-                  return ach.UnlockTime;
-                })
-            );
+            const achievementList = Array.isArray(game.achievement.list) ? game.achievement.list : [];
+            const latestUnlock = achievementList.reduce((latest, achievement) => {
+              const unlockTime = Number(achievement && achievement.UnlockTime);
+              if (!achievement || !achievement.Achieved || !Number.isFinite(unlockTime) || unlockTime <= 0) return latest;
+              return !latest || unlockTime > Number(latest.UnlockTime) ? achievement : latest;
+            }, null);
+            const timeMostRecent = latestUnlock ? Number(latestUnlock.UnlockTime) : 0;
 
-            // Last-played timestamp (watchdog playtime tracking) - drives the "recently played" sort.
-            let lastPlayed = PlaytimeTracking.lastPlayedSync(game.appid);
+            // One registry read supplies both the activity row and the "recently played" sort.
+            const playtime = PlaytimeTracking.readSync(game.appid);
+            const lastPlayed = Number(playtime.lastplayed) || 0;
+            const totalPlaytime = Number(playtime.playtime) || 0;
 
-            let portrait = self.config.achievement.thumbnailPortrait;
-
-            portrait ? $('#game-list').addClass('view-portrait') : $('#game-list').removeClass('view-portrait');
-            let isPortrait = portrait && game.img.portrait;
-            let imgName = isPortrait ? game.img.portrait : game.img.header;
+            // Read the live value because a scan can still be streaming while the toolbar view is
+            // changed; newly arriving tiles must use the same orientation as those already shown.
+            const portrait = libraryLayout.isPortrait(self.config.achievement.libraryLayout);
+            const isPortrait = portrait && game.img.portrait;
             const sourceIcon = sourcePresentationFor(game);
             const dllIcon = typeof game.hasSteamApiDll === 'boolean' ? dllPresentationFor(game) : null;
             const hideSteamBadges = sourceIcon.kind === 'steam-hidden';
+            const locale = window.appLocale || {};
+            const sortLabels = locale.sort && locale.sort.tooltip ? locale.sort.tooltip : {};
+            const recentUnlockText = !hasAchievements
+              ? progressLabel
+              : latestUnlock
+                ? latestUnlock.displayName || locale.unlocked || 'Unlocked'
+                : locale.noneUnlocked || 'No achievement unlocked yet';
+            const recentUnlockTime = libraryRelativeTime(timeMostRecent);
+            const lastPlayedTime = libraryRelativeTime(lastPlayed);
+            const playtimeText = libraryPlaytime(totalPlaytime);
+            const neverPlayedText = locale.neverPlayed || 'Never launched or tracked';
+            const achievementSummaryText = hasAchievements
+              ? `${Number(game.achievement.unlocked) || 0} / ${Number(game.achievement.total) || 0}`
+              : progressLabel;
             // Accessible names for the three icon-only controls on a tile.
             const tileLabels = {
               play: t('launch-game', 'Launch game', 'Lancer le jeu'),
               achievements: (window.appLocale && window.appLocale.achievements) || 'Achievements',
               health: t('game-health-title', 'Game health', 'État du jeu'),
+              achievementDate: locale.latestAchievementEarned || 'Latest achievement earned',
+              lastPlayed: sortLabels.played || 'Last played',
+              playtime: locale.settings?.notification?.test?.playtime || 'Playtime',
             };
             let template = `
             <li>
-                <div class="game-box" data-index="${gameList.length}" data-appid="${game.appid}" data-installed="${
+                <div class="game-box" data-index="${listIndex}" data-appid="${game.appid}" data-progress="${hasAchievements ? progress : -1}" data-installed="${
               game.installed ? 1 : 0
             }" data-time="${timeMostRecent > 0 ? timeMostRecent : 0}" data-lastplayed="${lastPlayed}" ${
               game.system ? `data-system="${game.system}"` : ''
             }>
                   <div class="loading-overlay"><div class="content"><i class="fas fa-spinner fa-spin"></i></div></div>
-                  <div class="header ${isPortrait ? 'glow' : ''}" id="game-header-${game.appid}" style="background: ${cssUrl(
-              pathToFileURL(path.join(appPath, 'resources/img/loading.gif')).href
-            )};">
+                  <div class="header ${isPortrait ? 'glow' : ''}" id="game-header-${game.appid}">
                   <button type="button" class="play-button" aria-label="${escapeHtml(tileLabels.play)}"><i class="fas fa-play" aria-hidden="true"></i></button>
                   </div>
 
-                  <button type="button" class="achievement-button" aria-label="${escapeHtml(tileLabels.achievements)}">
+                  <button type="button" class="achievement-button" title="${escapeHtml(tileLabels.achievements)}" aria-label="${escapeHtml(tileLabels.achievements)}">
                     <i class="fas fa-trophy" aria-hidden="true"></i>
                   </button>
 
-                  <button type="button" class="config-button" aria-label="${escapeHtml(tileLabels.health)}">
+                  <button type="button" class="config-button" title="${escapeHtml(tileLabels.health)}" aria-label="${escapeHtml(tileLabels.health)}">
                     <i class="fas fa-tools" aria-hidden="true"></i>
                   </button>
 
                   <div class="info">
                     <div class="info-head">
-                      <div class="title" title="${escapeHtml(game.name)}"><span>${escapeHtml(game.name)}</span></div>
+                      <div class="title library-scroll-text" title="${escapeHtml(game.name)}"><span class="library-scroll-content">${escapeHtml(
+                        game.name
+                      )}</span></div>
                       <div class="game-meta">
                         ${
                           dllIcon && !hideSteamBadges
@@ -2078,7 +2455,32 @@ var app = {
                         }
                       </div>
                     </div>
-                    <div class="progressBar${!hasAchievements ? ' unavailable' : ''}" data-percent="${progress}"><span class="meter" style="width:${progress}%"></span><span class="progress-value">${escapeHtml(progressLabel)}</span></div>
+                    <div class="progressBar${!hasAchievements ? ' unavailable' : ''}" data-percent="${progress}"><span class="meter" style="width:${progress}%"></span><span class="progress-value library-scroll-text" title="${escapeHtml(
+                      progressLabel
+                    )}"><span class="library-scroll-content">${escapeHtml(
+                      progressLabel
+                    )}</span></span></div>
+                    <div class="library-details${hasAchievements ? '' : ' no-achievements'}">
+                      <span class="library-achievement-summary" data-label="${escapeHtml(tileLabels.achievements)}" title="${escapeHtml(tileLabels.achievements)}"><i class="fas fa-trophy" aria-hidden="true"></i><span class="library-scroll-text" title="${escapeHtml(
+                        achievementSummaryText
+                      )}"><span class="library-scroll-content">${escapeHtml(achievementSummaryText)}</span></span></span>
+                      <span class="library-recent-unlock${latestUnlock ? '' : ' is-empty'}" data-label="${escapeHtml(tileLabels.achievementDate)}" title="${escapeHtml(tileLabels.achievementDate)}"><i class="fas fa-medal" aria-hidden="true"></i><span class="library-recent-name library-scroll-text" title="${escapeHtml(
+                        recentUnlockText
+                      )}"><span class="library-scroll-content">${escapeHtml(
+                        recentUnlockText
+                      )}</span></span>${recentUnlockTime}</span>
+                      <span class="library-last-played${lastPlayedTime ? '' : ' is-empty'}" data-label="${escapeHtml(tileLabels.lastPlayed)}" title="${escapeHtml(tileLabels.lastPlayed)}"><i class="fas fa-gamepad" aria-hidden="true"></i>${
+                        lastPlayedTime ||
+                        `<span class="library-scroll-text" title="${escapeHtml(neverPlayedText)}"><span class="library-scroll-content">${escapeHtml(
+                          neverPlayedText
+                        )}</span></span>`
+                      }</span>
+                      <span class="library-playtime${playtimeText ? '' : ' is-empty'}" data-label="${escapeHtml(tileLabels.playtime)}" title="${escapeHtml(tileLabels.playtime)}"><i class="fas fa-hourglass-half" aria-hidden="true"></i><span class="library-scroll-text" title="${escapeHtml(
+                        playtimeText || '—'
+                      )}"><span class="library-scroll-content">${
+                        playtimeText ? escapeHtml(playtimeText) : '—'
+                      }</span></span></span>
+                    </div>
                     <!--${game.source ? `<div class="source">${game.source}</div>` : ''}-->
                   </div>
                 </div>
@@ -2086,48 +2488,38 @@ var app = {
             `;
 
             const item = $(template);
-            replaceSkeletonWith(item);
+            const existingElement = gameElements.get(appidKey);
+            if (existingElement && existingElement.closest('li')) $(existingElement.closest('li')).replaceWith(item);
+            else replaceSkeletonWith(item);
             const headerEl = item.find('.header').first();
-            gameList.push(game);
+            if (existingIndex >= 0) gameList[existingIndex] = game;
+            else gameList.push(game);
+            gameElements.set(appidKey, item.find('.game-box')[0]);
             refreshProfileStats();
 
-            setTimeout(() => {
-              // Keyed off the display setting, not `isPortrait` (which also depends on this game
-              // having portrait art) - a custom pick applies to the orientation the user chose it
-              // in, regardless of whether the default source has art for that shape.
-              const tileOrientation = portrait ? 'portrait' : 'landscape';
-              const coverOverride = coverOverrideFor(game.appid, tileOrientation);
-              if (coverOverride) {
-                // User-set cover (local image / alternate AppID) wins over every default source.
-                headerEl.css('background', cssUrl(coverOverride));
-                if (/^https?:\/\//i.test(coverOverride)) {
-                  // A download that previously failed, or a recovered SteamGridDB legacy URL, is
-                  // promoted to durable storage as soon as it is reachable again.
-                  ipcRenderer
-                    .invoke('fetch-icon', coverOverride, game.steamappid || game.appid)
-                    .then((local) => {
-                      if (!local) return;
-                      const durable = coverStore.persist(game.appid, local, getUserDataPath(), tileOrientation);
-                      if (!durable) return;
-                      reloadCoverOverrides();
-                      headerEl.css('background', cssUrl(durable));
-                    })
-                    .catch(() => {});
-                }
-                return;
-              }
-              if (EMU_LOCAL_ICON_SOURCES.has(game.source)) {
-                if (game.img && game.img.header) headerEl.css('background', cssUrl(game.img.header));
-                else headerEl.css('background', 'none');
-                return;
-              }
-              // No art: clear the loading.gif so the spinner doesn't run forever. Otherwise fetch
-              // with portrait<->header fallback, so a modern game whose portrait URL 404s (hashed
-              // CDN path) still shows its header, and vice-versa.
-              applyCoverWithFallback(game, headerEl, imgName);
-            }, 0);
+            scheduleLibraryCover(game, headerEl, portrait);
           }
-        })
+        };
+
+    if (knownGames.length > 0) {
+      for (const game of knownGames) renderGame(game, { fresh: false });
+      const knownPainted = gameElements.size;
+      if (knownPainted > 0) {
+        clearSkeletonTiles();
+        sort($('#game-list ul'), sortOptions());
+        if (isDev) debug.log(`[perf] painted ${knownPainted} known library game(s) in ${(performance.now() - scanStartedAt).toFixed(1)}ms`);
+      }
+    }
+
+    const listLoadPromise = achievements
+      .makeList(
+        scanConfig,
+        (percent, total) => {
+          loadingElem.progress.attr('data-percent', percent);
+          loadingElem.meter.css('width', percent + '%');
+          setSkeletonExpected(total);
+        },
+        (game) => renderGame(game)
       )
       .then((list) => {
         // Scan finished - release the re-entry guard. If a refresh was requested while this run was in
@@ -2147,6 +2539,27 @@ var app = {
           );
         }
         self.hasCompletedFirstScan = true;
+        // Clearing steam_cache deliberately forces a fresh schema lookup. If that lookup happens
+        // while offline, keep the last complete in-memory game instead of replacing it with a
+        // provisional 0-achievement card; the next successful recheck will replace it normally.
+        if (preserveExistingOnFailure && previousGames.length > 0 && Array.isArray(list)) {
+          const previousByAppid = new Map(previousGames.map((game) => [String(game && game.appid), game]));
+          if (list.length === 0) {
+            list.push(...previousGames);
+            for (const game of previousGames) renderGame(game, { fresh: false });
+          } else {
+            for (let index = 0; index < list.length; index += 1) {
+              const candidate = list[index];
+              const previous = previousByAppid.get(String(candidate && candidate.appid));
+              if (!previous || !candidate.provisional || previous.provisional) continue;
+              list[index] = previous;
+              // The provisional candidate was already streamed and registered as a fresh tile. Use
+              // the non-fresh path so the complete in-memory record replaces that tile instead of
+              // being discarded by the duplicate-stream guard.
+              renderGame(previous, { fresh: false });
+            }
+          }
+        }
         // Baseline for the background detector: the appids this scan was built from. Within the
         // discovery TTL this reuses the scan's own discovery rather than repeating it. Passing the
         // rendered list lets it also record which discovered appids produced no tile, so a phantom
@@ -2162,6 +2575,21 @@ var app = {
             renderGame(game);
           }
         }
+        const currentAppids = new Set(list.map((game) => String(game && game.appid)));
+        for (const [appid, element] of gameElements) {
+          if (currentAppids.has(appid)) continue;
+          element.closest('li')?.remove();
+          gameElements.delete(appid);
+        }
+        gameList = gameList.filter((game) => currentAppids.has(String(game && game.appid)));
+        if (!activeScanScope) {
+          try {
+            librarySnapshot.write(getUserDataPath(), scanConfig, list);
+          } catch (err) {
+            debug.log(`[library-snapshot] save failed: ${err.message || err}`);
+          }
+        }
+        if (isDev) debug.log(`[perf] fresh library scan finished in ${(performance.now() - scanStartedAt).toFixed(1)}ms`);
         loadingElem.elem.hide();
         $('#main-footer').addClass('done');
         setLibraryBusyCursor(false);
@@ -2235,31 +2663,11 @@ var app = {
         });
 
         $('#game-list')
-          .on('mouseenter.awLibrary', '.game-box .info .title', function () {
-            const text = this.querySelector('span');
-            if (!text) return;
-            const overflow = Math.max(0, Math.ceil(text.getBoundingClientRect().width - this.clientWidth));
-            if (overflow <= 2) return;
-
-            this._scrollAnimation?.cancel();
-            this._scrollAnimation = text.animate(
-              [
-                { transform: 'translateX(0)', offset: 0 },
-                { transform: 'translateX(0)', offset: 0.14 },
-                { transform: `translateX(-${overflow}px)`, offset: 0.78 },
-                { transform: `translateX(-${overflow}px)`, offset: 1 },
-              ],
-              {
-                duration: Math.max(3200, overflow * 28),
-                iterations: Infinity,
-                direction: 'alternate',
-                easing: 'ease-in-out',
-              }
-            );
+          .on('mouseenter.awLibrary', '.library-scroll-text', function () {
+            startLibraryTextScroll(this);
           })
-          .on('mouseleave.awLibrary', '.game-box .info .title', function () {
-            this._scrollAnimation?.cancel();
-            this._scrollAnimation = null;
+          .on('mouseleave.awLibrary', '.library-scroll-text', function () {
+            stopLibraryTextScroll(this);
           })
           .on('click.awLibrary', '.game-box', function () {
             // Achievement-less entries use the exact same detail-page flow as every other game.
@@ -2356,6 +2764,8 @@ var app = {
           const emulatorSourceForced = emulatorSourceOverride.get(appid);
           const isUbisoftSource =
             emulatorSourceForced === 'ubisoft' ? true : emulatorSourceForced === 'steam' ? false : uplayR2.isUbisoftGame(ctxGame, appid);
+          const isUplayR2Source =
+            emulatorSourceForced === 'ubisoft' ? true : emulatorSourceForced === 'steam' ? false : uplayR2.isUplayR2Game(ctxGame, appid);
           const initialGbeEligibility = emulatorFixEligibility.inspect({
             gameDir: ctxGame?.gameDir,
             source: gameSource,
@@ -3700,13 +4110,14 @@ var app = {
             // Ubisoft/uPlay counterpart of the GBE Fork block above: maps the game to its Steam
             // equivalent, writes a matching achievements_schema.json for the Uplay R2 loader, and
             // redirects its save path into %AppData%\GSE Saves\<steamAppid> - already read by AW.
-            if (isUbisoftSource) {
+            if (isUplayR2Source) {
               if (emulatorMenu.items.length) {
                 emulatorMenu.append(new MenuItem({ type: 'separator' }));
               }
 
               const diagnoseUplayR2Setup = async ({ game, gameDir, showDialog = true }) => {
-                const report = uplayR2.diagnose({ gameDir, appid, name: game?.name });
+                const identity = uplayR2.resolveGameIdentity({ ...(game || {}), appid, gameDir }, appid);
+                const report = uplayR2.diagnose({ gameDir, appid, name: game?.name, mapping: identity.mapping });
                 if (showDialog) {
                   const lines = [];
                   lines.push(
@@ -3752,143 +4163,7 @@ var app = {
                         gameDir = picked.filePaths[0];
                       }
 
-                      setGameBoxBusy(self, t('resolving-the-steam-equivalent', 'Resolving the Steam equivalent…', 'Résolution du jeu Steam…'));
-                      const mapping = uplayR2.resolveSteamMapping({ appid, name: game?.name, gameDir });
-                      if (!mapping) {
-                        remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
-                          type: 'warning',
-                          title: t('no-steam-equivalent-found', 'No Steam equivalent found', 'Jeu Steam introuvable'),
-                          message: t('uplay-no-steam-match', 'This Ubisoft game has no known match in uplay-steam.json.', "Ce jeu Ubisoft n'a pas de correspondance connue dans uplay-steam.json."),
-                          detail: t('the-uplay-r2-fix-needs-the-steam-version-of-the-game-to-fetch-th', 'The Uplay R2 fix needs the Steam version of the game to fetch the achievement schema.', 'Le fix Uplay R2 a besoin de la version Steam du jeu pour récupérer le schéma des succès.'),
-                        });
-                        return;
-                      }
-
-                      setGameBoxBusy(self, t('fetching-the-steam-schema', 'Fetching the Steam schema…', 'Récupération du schéma Steam…'));
-                      let schema = null;
-                      try {
-                        schema = await steamParser.getGameData({
-                          appID: mapping.steam_appid,
-                          lang: app.config?.achievement?.lang || 'english',
-                          showHidden: true,
-                        });
-                      } catch (e) {
-                        debug.log(`[${appid}] uplayR2: getGameData failed => ${formatErr(e)}`);
-                      }
-                      const achList = (schema && schema.achievement && schema.achievement.list) || [];
-                      const prefixInfo = uplayR2.derivePrefixedIds(achList);
-                      if (!prefixInfo) {
-                        remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
-                          type: 'warning',
-                          title: t('unsupported-game', 'Unsupported game', 'Jeu non pris en charge'),
-                          message: t('uplay-prefix-pattern-mismatch', "This game's Steam achievement names don't follow the required <prefix><digits> pattern.", 'Les noms de succès Steam de ce jeu ne suivent pas le format <préfixe><chiffres> requis.'),
-                          detail: t('the-automatic-goldberg-uplay-r2-mapping-cannot-be-generated-for-', 'The automatic Goldberg Uplay R2 mapping cannot be generated for this game.', 'Le mappage automatique vers Goldberg Uplay R2 ne peut pas être généré pour ce jeu.'),
-                        });
-                        return;
-                      }
-
-                      // Most Ubisoft repacks already ship the Goldberg Uplay R2 loader - they just never
-                      // configure its achievement half. Only fall back to the user-seeded dll cache when
-                      // the game has no loader at all, so a game that already has one is fixable with an
-                      // empty cache (all it needs is achievements_schema.json + the ini keys).
-                      const emu = uplayR2.detectEmulator(gameDir);
-                      const dllDirs = emu.dll.length > 0 ? [...new Set(emu.dll.map((f) => path.dirname(f)))] : [gameDir];
-                      let installResult = { installed: 0, backedUp: 0 };
-                      if (emu.dll.length === 0) {
-                        setGameBoxBusy(self, t('installing-the-dll', 'Installing the DLL…', 'Installation de la DLL…'));
-                        const cacheDir = path.join(getUserDataPath(), 'cache/uplayR2');
-                        const dlls = uplayR2Installer.ensureEmulatorDlls({ cacheDir });
-                        if (!dlls.seeded) {
-                          remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
-                            type: 'warning',
-                            title: t('uplay-r2-dll-not-seeded', 'Uplay R2 dll not seeded', 'DLL Uplay R2 manquantes'),
-                            message: t('no-files-found-in-the-uplay-r2-cache', 'No files found in the Uplay R2 cache.', 'Aucun fichier trouvé dans le cache Uplay R2.'),
-                            detail: t('copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-', 'Copy the uplay_r2_loader(64).dll / upc_r2_loader(64).dll files into (one-time setup):\n{dir}', 'Copie une fois les fichiers uplay_r2_loader(64).dll / upc_r2_loader(64).dll dans :\n{dir}', { dir: cacheDir }),
-                          });
-                          remote.shell.openPath(cacheDir);
-                          return;
-                        }
-                        installResult = uplayR2Installer.installDlls({ dllDirs, dlls, log: debug });
-                      } else if (!uplayR2.inspectInstalledLoaders(emu.dll).supportsAchRedirect) {
-                        // The game has a loader, but one too old to understand AchSaveType/AchSavePath.
-                        // Everything still works on such a build (AW reads the emulator's own save
-                        // folder), so this is an optional upgrade - and swapping a loader the game
-                        // currently launches with is not something to do behind the user's back.
-                        const cacheDir = path.join(getUserDataPath(), 'cache/uplayR2');
-                        let cached = { seeded: false, files: {} };
-                        try {
-                          cached = uplayR2Installer.ensureEmulatorDlls({ cacheDir });
-                        } catch (err) {
-                          debug.log(`[${appid}] uplayR2: could not read the loader cache => ${formatErr(err)}`);
-                        }
-                        const betterCached = Object.values(cached.files || {}).some(
-                          (file) => file && uplayR2.inspectLoader(file).supportsAchRedirect
-                        );
-                        if (betterCached) {
-                          const choice = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
-                            type: 'question',
-                            title: t('update-the-uplay-r2-loader', 'Update the Uplay R2 loader?', 'Mettre à jour le loader Uplay R2 ?'),
-                            message: t('uplay-r2-old-loader-message', 'This game uses a loader too old to redirect achievements.', 'Ce jeu utilise un loader trop ancien pour rediriger les succès.'),
-                            detail: t(
-                              'uplay-r2-old-loader-detail',
-                              "The fix works without updating: AW Next reads the emulator's own save folder.\n\nUpdating enables the redirect into GSE Saves, but replaces a DLL the game currently launches with (the original is kept as .bak).",
-                              "Le correctif fonctionne sans mise à jour : AW Next lit le dossier de sauvegarde de l'émulateur.\n\nMettre à jour le loader permet la redirection vers GSE Saves, mais remplace une DLL avec laquelle le jeu se lance actuellement (l'originale est conservée en .bak)."
-                            ),
-                            buttons: [t('keep-current-loader', 'Keep the current loader', 'Garder le loader actuel'), t('update-loader', 'Update', 'Mettre à jour')],
-                            defaultId: 0,
-                            cancelId: 0,
-                            noLink: true,
-                          });
-                          if (choice === 1) {
-                            setGameBoxBusy(self, t('updating-the-dll', 'Updating the DLL…', 'Mise à jour de la DLL…'));
-                            installResult = uplayR2Installer.installDlls({ dllDirs, dlls: cached, log: debug });
-                          }
-                        }
-                      }
-
-                      setGameBoxBusy(self, t('configuring-achievements', 'Configuring (achievements)…', 'Configuration (succès)…'));
-                      const targetDir = dllDirs[0];
-                      const summary = uplayR2.repair({
-                        dir: targetDir,
-                        steamAppid: mapping.steam_appid,
-                        schema,
-                        prefix: prefixInfo.prefix,
-                        accountName: app.config?.general?.username,
-                        language: app.config?.achievement?.lang,
-                      });
-
-                      const installedLabel =
-                        installResult.installed > 0
-                          ? t('dllsInstalled', '{count} dll(s) installed', '{count} dll(s) installée(s)', { count: installResult.installed })
-                          : t('loaderAlreadyPresent', 'loader already present', 'loader déjà présent');
-                      remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
-                        type: 'info',
-                        title: t('uplay-r2-installed', 'Uplay R2 installed', 'Uplay R2 installé'),
-                        message: t('uplay-r2-installed-message', '{installedLabel} - {mapped} achievement(s) mapped', '{installedLabel} - {mapped} succès mappé(s)', {
-                          installedLabel,
-                          mapped: Object.keys(summary.achievementsSchemaJson).length,
-                        }),
-                        detail:
-                          targetDir +
-                          '\n\n' +
-                          t('diagnosis-steam-appid', 'Steam AppID: {appid} ({name})', 'Steam AppID : {appid} ({name})', {
-                            appid: mapping.steam_appid,
-                            name: mapping.steam_name,
-                          }) +
-                          '\n' +
-                          t('diagnosis-ach-key-prefix', 'AchKeyPrefix: {prefix}', 'AchKeyPrefix : {prefix}', {
-                            prefix: prefixInfo.prefix || t('diagnosis-none-parenthesized', '(none)', '(aucun)'),
-                          }) +
-                          (installResult.backedUp > 0
-                            ? '\n' + t('diagnosis-dlls-backed-up', 'Existing dll(s) backed up as *.bak', 'Dll(s) existante(s) sauvegardée(s) en .bak')
-                            : '') +
-                          (summary.backupDir
-                            ? '\n' + t('diagnosis-config-backed-up', 'Previous config backed up: {path}', 'Configuration précédente sauvegardée : {path}', { path: summary.backupDir })
-                            : ''),
-                        noLink: true,
-                      });
-
-                      await diagnoseUplayR2Setup({ game, gameDir: targetDir, showDialog: false });
+                      await applyUplayR2Repair({ game, gameDir, appid, box: self, interactive: true, showResult: true });
                     } catch (err) {
                       remote.dialog.showMessageBoxSync({
                         type: 'error',
@@ -3925,6 +4200,41 @@ var app = {
                       await diagnoseUplayR2Setup({ game, gameDir });
                     } catch (err) {
                       remote.dialog.showMessageBoxSync({ type: 'error', title: t('diagnose-failed', 'Diagnose failed', 'Échec du diagnostic'), message: t('could-not-diagnose-the-uplay-r2-setup', 'Could not diagnose the Uplay R2 setup.', 'Impossible de diagnostiquer la configuration Uplay R2.'), detail: `${err}` });
+                    }
+                  },
+                })
+              );
+
+              emulatorMenu.append(
+                new MenuItem({
+                  icon: menuIcon('steam.png'),
+                  label: t('identify-game-title', 'Identify the game (Steam AppID)', 'Identifier le jeu (AppID Steam)'),
+                  async click() {
+                    try {
+                      const game = list.find((g) => g.appid == appid);
+                      let gameDir = game?.gameDir && fs.existsSync(game.gameDir) ? game.gameDir : null;
+                      if (!gameDir) {
+                        const picked = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
+                          title: t('select-game-install-folder', "Select the game's install folder", "Choisir le dossier d'installation du jeu"),
+                          properties: ['openDirectory', 'dontAddToRecent'],
+                        });
+                        if (picked.canceled || !picked.filePaths || picked.filePaths.length === 0) return;
+                        gameDir = picked.filePaths[0];
+                      }
+                      await replaceUplayR2SteamMapping({ game, gameDir, appid, box: self });
+                    } catch (err) {
+                      remote.dialog.showMessageBoxSync({
+                        type: 'error',
+                        title: t('identify-game-title', 'Identify the game (Steam AppID)', 'Identifier le jeu (AppID Steam)'),
+                        message: t(
+                          'the-uplay-r2-fix-needs-the-steam-version-of-the-game-to-fetch-th',
+                          'The Uplay R2 fix needs the Steam version of the game to fetch the achievement schema.',
+                          'Le fix Uplay R2 a besoin de la version Steam du jeu pour récupérer le schéma des succès.'
+                        ),
+                        detail: formatErr(err),
+                      });
+                    } finally {
+                      clearGameBoxBusy(self);
                     }
                   },
                 })
@@ -3967,7 +4277,7 @@ var app = {
                             type: 'info',
                             title: t('restore-uplay-r2-title', 'Restore Uplay R2 configuration', 'Restaurer la configuration Uplay R2'),
                             message: t('restore-uplay-r2-done', 'Configuration restored.', 'Configuration restaurée.'),
-                            detail: result.restored.join('\n'),
+                            detail: [...result.restored, ...result.removed.map((file) => `[-] ${file}`)].join('\n'),
                             noLink: true,
                           });
                         } catch (err) {
@@ -4521,9 +4831,12 @@ var app = {
                 applyCoverBackground(appid, (coverGame.img && coverGame.img.header) || 'none');
                 return;
               }
+              const headerEl = $(`#game-header-${appid}`).first();
               const url = defaultCoverUrl();
-              const local = url ? await ipcRenderer.invoke('fetch-icon', url, coverCacheAppid) : null;
-              applyCoverBackground(appid, local || 'none');
+              const applied = await applyCoverWithFallback(coverGame, headerEl, url, coverOrientation);
+              if (applied.ok) return;
+              const recovered = await recoverLibraryCover(coverGame, coverOrientation, { force: true });
+              applyCoverBackground(appid, recovered.path || 'none');
             };
 
             const coverMenu = new Menu();
@@ -4564,17 +4877,21 @@ var app = {
                     /^[0-9]+$/.test(coverCacheAppid) ? coverCacheAppid : ''
                   );
                   if (!alt || !/^[0-9]+$/.test(alt)) return;
-                  let local = await ipcRenderer.invoke('fetch-icon', `https://cdn.cloudflare.steamstatic.com/steam/apps/${alt}/header.jpg`, appid);
-                  if (!local)
-                    local = await ipcRenderer.invoke('fetch-icon', `https://cdn.cloudflare.steamstatic.com/steam/apps/${alt}/library_600x900.jpg`, appid);
-                  if (!local) {
+                  const alternate = {
+                    ...coverGame,
+                    appid: String(appid),
+                    steamappid: alt,
+                    img: {},
+                  };
+                  const recovered = await recoverLibraryCover(alternate, coverOrientation, { force: true });
+                  if (!recovered.path || !recovered.source) {
                     remote.dialog.showMessageBox({ type: 'warning', message: t('no-steam-cover-art-for-appid', 'No Steam cover art found for AppID {appid}.', 'Aucune jaquette Steam trouvée pour l\'AppID {appid}.', { appid: alt }) });
                     return;
                   }
-                  local = coverStore.persist(appid, local, getUserDataPath(), coverOrientation);
-                  if (!local) throw new Error('downloaded cover could not be persisted');
+                  const stored = coverStore.persist(appid, recovered.source, getUserDataPath(), coverOrientation);
+                  if (!stored) throw new Error('downloaded cover could not be persisted');
                   reloadCoverOverrides();
-                  applyCoverBackground(appid, local);
+                  applyCoverBackground(appid, recovered.path);
                 },
               })
             );

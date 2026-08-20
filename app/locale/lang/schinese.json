@@ -49,6 +49,8 @@
   "revealedOnceUnlocked": "每个成就的详情将在解锁后显示",
   "hiddenDescriptionPlaceholder": "隐藏 - 点击显示",
   "noneUnlocked": "尚未解锁任何成就",
+  "latestAchievementEarned": "最近解锁的成就",
+  "neverPlayed": "从未启动或跟踪",
   "noneUnlockedHint": "没有看到任何解锁？",
   "scrollUp": "向上滚动",
   "allGamesBackButton": "所有游戏",
@@ -145,11 +147,15 @@
         "description": "界面语言。在可用时，游戏数据将以此语言获取。"
       },
       "thumbnail": {
-        "name": "缩略图方向",
-        "description": "竖向显示纵向封面图；横向显示宽幅 Steam 头图。",
+        "name": "游戏库视图",
+        "description": "选择卡片布局。横向保留当前外观；紧凑网格、列表和详细信息视图侧重更高密度或更多活动信息。",
         "value": {
           "portrait": "竖向",
-          "landscape": "横向"
+          "landscape": "横向",
+          "compact": "紧凑横向",
+          "portraitCompact": "紧凑纵向",
+          "list": "列表",
+          "details": "详细信息"
         }
       },
       "hiddenAch": {
@@ -242,11 +248,11 @@
       }
     },
     "emulator": {
-      "nav": "Steam 模拟器",
+      "nav": "模拟器修复",
       "groupNav": "模拟器",
-      "sectionTitle": "模拟器设置 (GBE Fork)",
-      "intro": "右键「应用模拟器修复」操作所使用的默认值。选择如何绕过 Steam 以及获取多少游戏数据。",
-      "coreTitle": "核心配置",
+      "sectionTitle": "模拟器设置",
+      "intro": "安全、自动地修复受支持的 Steam/GBE Fork 游戏。",
+      "coreTitle": "Steam / GBE Fork",
       "advancedTitle": "高级选项",
       "loginTitle": "Steam 登录（仅限一次性账号）",
       "loginWarning": "一次性账号",
@@ -261,7 +267,7 @@
       "loginTestFailed": "Steam 登录失败",
       "autoApply": {
         "name": "自动修复新检测到的游戏",
-        "description": "对新检测到的、未配置的模拟游戏运行一次完整的「应用模拟器修复」流程：SteamStub 处理、GBE Fork、成就、DLC、身份/语言，以及启用时的高级数据。默认关闭。",
+        "description": "对新检测到的游戏运行一次安全的 Steam/GBE Fork 修复。默认关闭。",
         "value": {
           "false": "已禁用",
           "true": "已启用"
@@ -277,7 +283,7 @@
       },
       "login": {
         "name": "数据来源 (Advanced)",
-        "description": "Steam 登录可让 generate_emu_config 拉取完整的 DLC/仓库数据。请仅使用一次性账号 - 切勿使用主账号。",
+        "description": "匿名模式已经可以获取公开的 DLC/仓库数据。Steam 登录是可选的：它只会补充私有或被隐藏的数据（例如部分仓库、分支或语言）。请仅使用一次性账号，切勿使用主账号。",
         "value": {
           "anonymous": "匿名",
           "steam": "Steam 登录"
@@ -331,7 +337,33 @@
           "true": "已启用"
         }
       },
-      "loginPlaceholder": "一次性账号"
+      "loginPlaceholder": "一次性账号",
+      "uplay": {
+        "title": "Ubisoft / Uplay R2",
+        "iniTitle": "Loader 和 INI 选项",
+        "username": "显示名称",
+        "usernameHelp": "留空以使用通用配置文件名称。",
+        "language": { "name": "Loader 语言", "description": "将在下次修复时写入两个 Uplay R2 INI 文件。", "value": { "auto": "跟随应用语言" } },
+        "logging": { "name": "诊断日志", "description": "仅在排查问题时启用；loader 可能会在游戏旁创建日志文件。" },
+        "import": "导入或替换 DLL",
+        "restore": "恢复内置 DLL",
+        "customReady": "自定义 DLL 已就绪",
+        "importSuccess": "已为下次修复导入 {count} 个所选文件。",
+        "importFailure": "无法导入所选 DLL。",
+        "restoreSuccess": "已恢复内置 DLL。",
+        "packageLabel": "内置修复包",
+        "packageHelp": "AW Next 会验证内置修复文件，并自动选择每个游戏所证明的架构。",
+        "checking": "正在检查…", "ready": "已就绪", "attention": "需要注意",
+        "verify": "验证修复包", "verifySuccess": "内置修复包有效并已就绪。",
+        "verifyFailure": "无法验证内置修复包。未修改任何游戏文件。",
+        "repair": "修复检测到的 Uplay R2 游戏",
+        "repairHelp": "只会更改检测到的兼容安装。现有文件会先备份，并自动验证结果。",
+        "noGames": "检测到的 Uplay R2 游戏均没有已知安装文件夹。",
+        "repairConfirm": "修复游戏", "repairTitle": "修复检测到的 Uplay R2 游戏",
+        "repairConfirmMessage": "修复检测到的 {count} 个 Uplay R2 游戏？现有文件会先备份，并验证每个结果。",
+        "repairing": "正在修复 {current} / {total} — {game}",
+        "repairResult": "完成 — 已修复 {repaired}，已健康 {unchanged}，失败 {failed}。"
+      }
     },
     "notification": {
       "title": {
@@ -574,6 +606,10 @@
         "souvenirTitle": "纪念截图",
         "souvenirScreenshot": "解锁时截图",
         "souvenirScreenshotDesc": "在解锁成就时捕获屏幕。按游戏保存。",
+        "souvenirHdr": "HDR 截图",
+        "souvenirHdrDesc": "自动模式会在 Windows HDR 启用时校正颜色。如果不可用，则改为保存标准截图。",
+        "souvenirHdrAuto": "自动",
+        "souvenirHdrOff": "关闭",
         "souvenirDir": "保存文件夹",
         "souvenirDirHelp": "截图保存到 <文件夹>\\<游戏>\\<日期> - <成就>.png。留空 = 图片\\Achievement Watcher Next。",
         "souvenirOpenDir": "打开文件夹",
@@ -853,7 +889,7 @@
       "fixAll": {
         "name": "修复所有检测到的游戏",
         "button": "修复所有游戏",
-        "description": "对每个已知安装文件夹、检测到的模拟游戏运行模拟器修复（GBE Fork、成就、DLC）。",
+        "description": "对每个已知安装文件夹的兼容游戏，运行匹配的 Steam/GBE Fork 或 Ubisoft/Uplay R2 修复。",
         "confirm": "对每个已知安装文件夹的检测到的游戏应用模拟器修复？现有文件会在覆盖前被备份。",
         "running": "正在修复游戏…",
         "progress": "正在修复 %cur% / %total% - %name%",
@@ -958,7 +994,7 @@
     "sourceHint": "还列出了您的合法 Steam 游戏（需要公开个人资料）。",
     "notificationsHint": "解锁通知的显示位置。“自动”会为你在叠加层和 Windows 通知之间选择。",
     "playtimeHint": "自动跟踪检测到的游戏的游戏时间。",
-    "autoFixHint": "将模拟器修复（GBE Fork、成就、DLC）应用于新的模拟游戏。",
+    "autoFixHint": "对新检测到的模拟游戏应用匹配的 GBE Fork 或 Uplay R2 修复。",
     "hiddenHint": "在解锁之前显示隐藏的成就名称和描述。",
     "mergeHint": "将多个来源中找到的相同游戏合并到一个图块中。",
     "none": "无",
@@ -1254,10 +1290,10 @@
     "the-automatic-goldberg-uplay-r2-mapping-cannot-be-generated-for-": "无法为此游戏生成 Goldberg Uplay R2 自动映射。",
     "uplay-r2-dll-not-seeded": "Uplay R2 DLL 尚未注入",
     "no-files-found-in-the-uplay-r2-cache": "Uplay R2 缓存中未找到文件。",
-    "copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-": "将 uplay_r2_loader(64).dll / upc_r2_loader(64).dll 文件复制到这里（一次性设置）：\n{dir}",
+    "copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-": "选择一次 Uplay R2 包。AW Next 只会将经验证的 x86/x64 加载器 DLL 导入到：\n{dir}",
     "update-the-uplay-r2-loader": "更新 Uplay R2 加载器？",
     "uplay-r2-old-loader-message": "此游戏使用的加载器太旧，无法重定向成就。",
-    "uplay-r2-old-loader-detail": "不更新也能使用修复：AW Next 读取模拟器自身的存档文件夹。\n\n更新可启用重定向到 GSE Saves，但会替换游戏当前启动所用的 DLL（原文件保留为 .bak）。",
+    "uplay-r2-old-loader-detail": "不更新也能使用修复：AW Next 读取模拟器自身的存档文件夹。\n\n更新可启用重定向到 GSE Saves，但会替换游戏当前启动所用的 DLL（原文件保存在修复备份中）。",
     "keep-current-loader": "保留当前加载器",
     "update-loader": "更新",
     "updating-the-dll": "正在更新 DLL…",
@@ -1492,6 +1528,10 @@
     "chooseAnotherCoverTitle": "选择其他封面",
     "coverPickerLoading": "正在加载封面…",
     "noCoversFound": "未找到其他封面。",
+    "artwork-fetch-failed": "无法获取封面。请检查网络连接。",
+    "artwork-not-found": "未找到封面。",
+    "retry-artwork": "重试",
+    "cover-picker-fetch-failed": "无法获取其他封面。请检查网络连接后重试。",
     "currentCover": "当前封面",
     "defaultCover": "默认封面",
     "theme-layer-gradient": "渐变",
@@ -1611,7 +1651,7 @@
     "gh-why-no-achievement-data": "未找到此游戏的成就列表，因此暂时没有可跟踪的内容。完全没有成就的游戏属于正常情况。",
     "gh-why-emulator-missing": "此游戏需要 Steam 模拟器才能记录成就，但其文件夹中尚未配置。请使用游戏右键菜单中的模拟器修复。",
     "gh-why-emulator-runtime-missing": "成就数据已就位，但游戏文件夹中缺少读取它的模拟器文件，因此不会记录任何内容。AW Next 可以将其放回。",
-    "gh-why-uplay-broken": "此游戏的 Ubisoft 模拟器配置不完整，因此解锁没有被记录。请从右键菜单重新应用 Uplay R2 修复。",
+    "gh-why-uplay-broken": "此游戏的 Ubisoft 模拟器配置不完整，因此解锁没有被记录。请使用下方的 Uplay R2 修复按钮。",
     "gh-why-achievement-data-incomplete": "AW Next 记录的成就列表与游戏将要查找的内容不一致，部分解锁会被遗漏。可以根据官方数据重写。",
     "gh-why-no-progress-yet": "游戏已检测到且成就数据可用，但尚未找到任何成就进度。问题很可能出在游戏或模拟器配置上，而不是通知。",
     "gh-why-install-unknown": "AW Next 正在从存档文件读取此游戏的成就，但不知道游戏安装在哪里。请指定位置以启用游戏时长统计和修复功能。",

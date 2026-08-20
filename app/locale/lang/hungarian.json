@@ -49,6 +49,8 @@
   "revealedOnceUnlocked": "Az egyes teljesítmények részletei a feloldás után jelennek meg",
   "hiddenDescriptionPlaceholder": "Rejtett - kattints a megjelenítéshez",
   "noneUnlocked": "Még nincs feloldott teljesítmény",
+  "latestAchievementEarned": "Legutóbb feloldott teljesítmény",
+  "neverPlayed": "Még nem indították el vagy követték",
   "noneUnlockedHint": "Nem látsz feloldásokat?",
   "scrollUp": "Fel",
   "allGamesBackButton": "Összes játék",
@@ -145,11 +147,15 @@
         "description": "A felület nyelve. A játékadatok ezen a nyelven töltődnek le, ha elérhető."
       },
       "thumbnail": {
-        "name": "Bélyegképek tájolása",
-        "description": "Az Álló magas borítókat mutat; a Fekvő széles Steam fejlécképeket mutat.",
+        "name": "Könyvtárnézet",
+        "description": "Válassz kártyaelrendezést. A Fekvő megtartja a jelenlegi megjelenést; a Kompakt rács, Lista és Részletek sűrűbb vagy információgazdagabb nézetet ad.",
         "value": {
           "portrait": "Álló",
-          "landscape": "Fekvő"
+          "landscape": "Fekvő",
+          "compact": "Kompakt fekvő",
+          "portraitCompact": "Kompakt álló",
+          "list": "Lista",
+          "details": "Részletek"
         }
       },
       "hiddenAch": {
@@ -242,11 +248,11 @@
       }
     },
     "emulator": {
-      "nav": "Steam emulátor",
+      "nav": "Emulátorjavítás",
       "groupNav": "Emulátorok",
-      "sectionTitle": "Emulátor beállítása (GBE Fork)",
-      "intro": "A jobb gombos Emulátorjavítás alkalmazása művelet által használt alapértékek. Válaszd ki, hogyan kerüli meg a Steamet és mennyi játékadatot tölt le.",
-      "coreTitle": "Alapkonfiguráció",
+      "sectionTitle": "Emulátorok beállítása",
+      "intro": "Biztonságos, automatikus javítás a támogatott Steam/GBE Fork játékokhoz.",
+      "coreTitle": "Steam / GBE Fork",
       "advancedTitle": "Speciális beállítások",
       "loginTitle": "Steam bejelentkezés (csak eldobható fiók)",
       "loginWarning": "Eldobható fiók",
@@ -261,7 +267,7 @@
       "loginTestFailed": "Steam bejelentkezés sikertelen",
       "autoApply": {
         "name": "Újonnan észlelt játékok automatikus javítása",
-        "description": "Egyszer lefuttatja a teljes Emulátorjavítás alkalmazása láncot egy újonnan észlelt, beállítatlan emulált játékhoz: SteamStub kezelés, GBE Fork, teljesítmények, DLC-k, identitás/nyelv, és Speciális adatok, ha engedélyezve. Alapértelmezetten kikapcsolva.",
+        "description": "Egyszer lefuttatja a biztonságos Steam/GBE Fork javítást az újonnan észlelt játékhoz. Alapértelmezetten kikapcsolva.",
         "value": {
           "false": "Kikapcsolva",
           "true": "Bekapcsolva"
@@ -277,7 +283,7 @@
       },
       "login": {
         "name": "Adatforrás (Advanced)",
-        "description": "A Steam bejelentkezés lehetővé teszi a generate_emu_config számára a teljes DLC/depó adatok lekérését. CSAK eldobható fiókot használj - soha a fő fiókodat.",
+        "description": "Az anonim mód már lekéri a nyilvánosan elérhető DLC-/depóadatokat. A Steam-bejelentkezés opcionális: csak privát vagy rejtett adatokat ad hozzá (például egyes depókat, ágakat vagy nyelveket). CSAK eldobható fiókot használj - soha a fő fiókodat.",
         "value": {
           "anonymous": "Névtelen",
           "steam": "Steam bejelentkezés"
@@ -331,7 +337,33 @@
           "true": "Bekapcsolva"
         }
       },
-      "loginPlaceholder": "eldobható fiók"
+      "loginPlaceholder": "eldobható fiók",
+      "uplay": {
+        "title": "Ubisoft / Uplay R2",
+        "iniTitle": "Loader- és INI-beállítások",
+        "username": "Megjelenített név",
+        "usernameHelp": "Hagyd üresen az általános profilnév használatához.",
+        "language": { "name": "Loader nyelve", "description": "A következő javítás mindkét Uplay R2 INI-be beírja.", "value": { "auto": "Alkalmazás nyelvének követése" } },
+        "logging": { "name": "Diagnosztikai naplózás", "description": "Csak hibaelhárításhoz engedélyezd; a loader naplófájlokat hozhat létre a játék mellett." },
+        "import": "DLL-ek importálása vagy cseréje",
+        "restore": "Beépített DLL-ek visszaállítása",
+        "customReady": "Egyéni DLL-ek készen állnak",
+        "importSuccess": "{count} kijelölt fájl importálva a következő javításhoz.",
+        "importFailure": "A kijelölt DLL nem importálható.",
+        "restoreSuccess": "A beépített DLL-ek visszaálltak.",
+        "packageLabel": "Beépített javítócsomag",
+        "packageHelp": "Az AW Next ellenőrzi a beépített javítófájlokat, és automatikusan a játék által igazolt architektúrát választja.",
+        "checking": "Ellenőrzés…", "ready": "Kész", "attention": "Beavatkozást igényel",
+        "verify": "Javítócsomag ellenőrzése", "verifySuccess": "A beépített javítócsomag érvényes és használatra kész.",
+        "verifyFailure": "A beépített javítócsomag nem ellenőrizhető. Egyetlen játékfájl sem változott.",
+        "repair": "Észlelt Uplay R2 játékok javítása",
+        "repairHelp": "Csak az észlelt kompatibilis telepítések változnak. A meglévő fájlokról mentés készül, az eredmény ellenőrzése automatikus.",
+        "noGames": "Egyetlen észlelt Uplay R2 játéknak sincs ismert telepítési mappája.",
+        "repairConfirm": "Játékok javítása", "repairTitle": "Észlelt Uplay R2 játékok javítása",
+        "repairConfirmMessage": "Javítod a(z) {count} észlelt Uplay R2 játékot? A meglévő fájlokról mentés készül, és minden eredmény ellenőrzésre kerül.",
+        "repairing": "Javítás {current} / {total} — {game}",
+        "repairResult": "Kész — javítva: {repaired}, már megfelelő: {unchanged}, sikertelen: {failed}."
+      }
     },
     "notification": {
       "title": {
@@ -574,6 +606,10 @@
         "souvenirTitle": "Emlék képernyőkép",
         "souvenirScreenshot": "Képernyőkép feloldáskor",
         "souvenirScreenshotDesc": "Képernyőképet készít, amikor egy teljesítmény feloldódik. Játékonként mentve.",
+        "souvenirHdr": "HDR-képernyőképek",
+        "souvenirHdrDesc": "Az Automatikus mód kijavítja a színeket, amikor a Windows HDR aktív. Ha nem érhető el, a normál képernyőkép lesz mentve.",
+        "souvenirHdrAuto": "Automatikus",
+        "souvenirHdrOff": "Ki",
         "souvenirDir": "Mentési mappa",
         "souvenirDirHelp": "A képernyőképek ide mentődnek: <mappa>\\<játék>\\<dátum> - <teljesítmény>.png. Üres = Képek\\Achievement Watcher Next.",
         "souvenirOpenDir": "Mappa megnyitása",
@@ -853,7 +889,7 @@
       "fixAll": {
         "name": "Az összes észlelt játék javítása",
         "button": "Összes játék javítása",
-        "description": "Lefuttatja az emulátorjavítást (GBE Fork, teljesítmények, DLC-k) minden észlelt emulált játékon, amelynek ismert a telepítési mappája.",
+        "description": "Lefuttatja a megfelelő Steam/GBE Fork vagy Ubisoft/Uplay R2 javítást minden kompatibilis észlelt játékon, amelynek ismert a telepítési mappája.",
         "confirm": "Alkalmazod az emulátorjavítást minden észlelt játékra, amelynek ismert a telepítési mappája? A meglévő fájlokról biztonsági mentés készül a felülírás előtt.",
         "running": "Játékok javítása…",
         "progress": "Javítás %cur% / %total% - %name%",
@@ -958,7 +994,7 @@
     "sourceHint": "Felsorolja a legális Steam-játékaidat is (nyilvános profil szükséges).",
     "notificationsHint": "Hol jelennek meg a feloldások. Az Automatikus helyetted választ overlay és Windows-értesítés között.",
     "playtimeHint": "Automatikusan követi az észlelt játékok lejátszási idejét.",
-    "autoFixHint": "Alkalmazza az emulátorjavítást (GBE Fork, teljesítmények, DLC) az új emulált játékokra.",
+    "autoFixHint": "Alkalmazza a megfelelő GBE Fork vagy Uplay R2 javítást az újonnan észlelt emulált játékokra.",
     "hiddenHint": "Felfedi a rejtett jutalmak neveit és leírásait, mielőtt feloldaná őket.",
     "mergeHint": "Ugyanazt a játékot, amely több forrásból is megtalálható, egyetlen lapkává egyesíti.",
     "none": "Egyik sem",
@@ -1254,10 +1290,10 @@
     "the-automatic-goldberg-uplay-r2-mapping-cannot-be-generated-for-": "Az automatikus Goldberg Uplay R2 hozzárendelés nem generálható ehhez a játékhoz.",
     "uplay-r2-dll-not-seeded": "Uplay R2 DLL nincs beillesztve",
     "no-files-found-in-the-uplay-r2-cache": "Az Uplay R2 gyorsítótárban nem találhatók fájlok.",
-    "copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-": "Másold ide az uplay_r2_loader(64).dll / upc_r2_loader(64).dll fájlokat (egyszeri beállítás):\n{dir}",
+    "copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-": "Egyszer válaszd ki az Uplay R2 csomagot. Az AW Next csak ellenőrzött x86/x64 betöltő DLL-eket importál ide:\n{dir}",
     "update-the-uplay-r2-loader": "Frissítjük az Uplay R2 loadert?",
     "uplay-r2-old-loader-message": "Ez a játék túl régi loadert használ a teljesítmények átirányításához.",
-    "uplay-r2-old-loader-detail": "A fix frissítés nélkül is működik: az AW Next az emulátor saját mentési mappáját olvassa.\n\nA frissítés engedélyezi a GSE Saves felé irányítást, de lecserél egy DLL-t, amellyel a játék jelenleg indul (az eredeti .bak néven marad meg).",
+    "uplay-r2-old-loader-detail": "A fix frissítés nélkül is működik: az AW Next az emulátor saját mentési mappáját olvassa.\n\nA frissítés engedélyezi a GSE Saves felé irányítást, de lecserél egy DLL-t, amellyel a játék jelenleg indul (az eredeti a javítás biztonsági mentésében marad meg).",
     "keep-current-loader": "Aktuális loader megtartása",
     "update-loader": "Frissítés",
     "updating-the-dll": "DLL frissítése…",
@@ -1492,6 +1528,10 @@
     "chooseAnotherCoverTitle": "Másik borító választása",
     "coverPickerLoading": "Borítók betöltése…",
     "noCoversFound": "Nem található alternatív borító.",
+    "artwork-fetch-failed": "A borító nem tölthető le. Ellenőrizd a kapcsolatot.",
+    "artwork-not-found": "Nem található borító.",
+    "retry-artwork": "Újra",
+    "cover-picker-fetch-failed": "Az alternatív borítók nem tölthetők le. Ellenőrizd a kapcsolatot, majd próbáld újra.",
     "currentCover": "Jelenlegi",
     "defaultCover": "Alapértelmezett",
     "theme-layer-gradient": "Átmenet",
@@ -1611,7 +1651,7 @@
     "gh-why-no-achievement-data": "Ehhez a játékhoz nem található teljesítménylista, így egyelőre nincs mit követni. A teljesítmények nélküli játékok itt normálisak.",
     "gh-why-emulator-missing": "Ehhez a játékhoz Steam-emulátor kell a teljesítmények rögzítéséhez, és a mappájában nincs ilyen. Használd a játék jobb gombos menüjének emulátorjavítását.",
     "gh-why-emulator-runtime-missing": "A teljesítményadatok megvannak, de a játék mappájából hiányzik az azokat olvasó emulátorfájl, így soha nem rögzül semmi. Az AW Next vissza tudja tenni.",
-    "gh-why-uplay-broken": "A játék Ubisoft-emulátor beállítása hiányos, ezért a feloldások nem rögzülnek. Alkalmazd újra az Uplay R2 javítást a jobb gombos menüből.",
+    "gh-why-uplay-broken": "A játék Ubisoft-emulátor beállítása hiányos, ezért a feloldások nem rögzülnek. Használd az alábbi Uplay R2 javítás gombot.",
     "gh-why-achievement-data-incomplete": "Az AW Next teljesítménylistája nem egyezik azzal, amit a játék keresni fog, így néhány feloldás kimaradna. A hivatalos adatokból újraírható.",
     "gh-why-no-progress-yet": "A játék felismerve és a teljesítményadatok elérhetők, de még nem található haladás. A gond valószínűleg a játék vagy az emulátor beállítása, nem az értesítések.",
     "gh-why-install-unknown": "Az AW Next a játék teljesítményeit a mentésfájljaiból olvassa, de nem tudja, hol van telepítve. Keresd meg, hogy a játékidő és a javítások működjenek.",

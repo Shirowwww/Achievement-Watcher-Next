@@ -564,6 +564,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#option_overlayDuration').val(String(cfgOverlay.notificationDuration || 'auto')).change();
       const cfgSouvenir = app.config.souvenir || {};
       $('#option_souvenirScreenshot').val(String(cfgSouvenir.screenshot === true)).change();
+      $('#option_souvenirHdr').val(cfgSouvenir.hdr === 'off' ? 'off' : 'auto').change();
       const souvenirDir = cfgSouvenir.dir && cfgSouvenir.dir.trim() ? cfgSouvenir.dir : souvenirDefaultDir();
       $('#souvenir-dir-display').text(souvenirDir);
       $('#btn-souvenir-dir').attr('title', souvenirDir);
@@ -858,6 +859,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       try {
         const res = await ipcRenderer.invoke('clear-update-cache');
         const appCacheCount = (res && Array.isArray(res.clearedCaches) && res.clearedCaches.length) || 0;
+        const cacheCleared = !!(res && Array.isArray(res.clearedCaches) && res.clearedCaches.includes('steam_cache'));
         if (!res || !res.ok) {
           setTransientStatus(
             result,
@@ -882,6 +884,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           setTransientStatus(result, t('clear-update-cache-done', 'Update cache cleared: {folder}', 'Cache de mise à jour vidé : {folder}', { folder: res.updateFolder }));
         } else {
           setTransientStatus(result, t('clear-update-cache-done-apps', 'Cleared {count} cache folder(s).', 'Vidé {count} dossier(s) de cache.', { count: appCacheCount }));
+        }
+        if (cacheCleared) {
+          setTransientStatus(result, t('force-recheck-started', 'Checking achievement lists…', 'Recherche de nouveaux succès…'), { sticky: true });
+          await app.onStart({ forceAchievementRecheck: true, preserveExistingOnFailure: true });
+          setTransientStatus(result, t('force-recheck-done', 'Achievement lists checked.', 'Vérification des listes de succès terminée.'));
         }
       } catch (err) {
         debug.log(err);
@@ -1018,6 +1025,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
             debug.log('error while reading general settings ui');
           }
         });
+      app.config.achievement.thumbnailPortrait = app.config.achievement.libraryLayout === 'portrait';
       if (!app.config.general) app.config.general = {};
       app.config.general.disableHardwareAccel = $('#option_disableHardwareAccel').val() === 'true';
       app.config.general.closeToTray = $('#option_closeToTray').val() !== 'false';
@@ -4178,6 +4186,7 @@ function readNotificationSettings() {
   // Souvenir screenshot - dir is set by its own folder-picker button and preserved here.
   if (!app.config.souvenir) app.config.souvenir = {};
   app.config.souvenir.screenshot = $('#option_souvenirScreenshot').val() === 'true';
+  app.config.souvenir.hdr = $('#option_souvenirHdr').val() === 'off' ? 'off' : 'auto';
 }
 
 // Debounced auto-save for the Notifications tab. No-op until the form has finished populating.

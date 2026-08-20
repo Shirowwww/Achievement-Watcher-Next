@@ -49,6 +49,8 @@
   "revealedOnceUnlocked": "各実績の詳細は解除後に表示されます",
   "hiddenDescriptionPlaceholder": "隠し - クリックで表示",
   "noneUnlocked": "まだ解除した実績はありません",
+  "latestAchievementEarned": "最後に獲得した実績",
+  "neverPlayed": "未起動・未追跡",
   "noneUnlockedHint": "解除が表示されませんか？",
   "scrollUp": "上へスクロール",
   "allGamesBackButton": "すべてのゲーム",
@@ -145,11 +147,15 @@
         "description": "インターフェースの言語。可能な場合、ゲームデータはこの言語で取得されます。"
       },
       "thumbnail": {
-        "name": "サムネイルの向き",
-        "description": "縦向きは縦長のカバーアートを表示し、横向きは横長の Steam ヘッダー画像を表示します。",
+        "name": "ライブラリ表示",
+        "description": "カードの配置を選択します。横向きは現在の外観を維持し、コンパクトグリッド、リスト、詳細は密度やアクティビティ情報を重視します。",
         "value": {
           "portrait": "縦向き",
-          "landscape": "横向き"
+          "landscape": "横向き",
+          "compact": "コンパクト横長",
+          "portraitCompact": "コンパクト縦長",
+          "list": "リスト",
+          "details": "詳細"
         }
       },
       "hiddenAch": {
@@ -242,11 +248,11 @@
       }
     },
     "emulator": {
-      "nav": "Steam エミュレーター",
+      "nav": "エミュレーター修復",
       "groupNav": "エミュレーター",
-      "sectionTitle": "エミュレーター設定 (GBE Fork)",
-      "intro": "右クリックの「エミュレーター修正を適用」アクションで使用される既定値。Steam の回避方法と取得するゲームデータ量を選択します。",
-      "coreTitle": "基本設定",
+      "sectionTitle": "エミュレーター設定",
+      "intro": "対応する Steam/GBE Fork ゲームを安全に自動修復します。",
+      "coreTitle": "Steam / GBE Fork",
       "advancedTitle": "詳細オプション",
       "loginTitle": "Steam ログイン（使い捨てアカウントのみ）",
       "loginWarning": "使い捨てアカウント",
@@ -261,7 +267,7 @@
       "loginTestFailed": "Steam ログインに失敗しました",
       "autoApply": {
         "name": "新しく検出されたゲームを自動修正",
-        "description": "新しく検出された未設定のエミュレートゲームに対し、「エミュレーター修正を適用」の全工程を一度実行します：SteamStub 処理、GBE Fork、実績、DLC、ID／言語、有効な場合は詳細データ。既定で無効。",
+        "description": "新しく検出されたゲームに Steam/GBE Fork の安全な修復を1回実行します。既定では無効です。",
         "value": {
           "false": "無効",
           "true": "有効"
@@ -277,7 +283,7 @@
       },
       "login": {
         "name": "データソース (Advanced)",
-        "description": "Steam ログインにより generate_emu_config が完全な DLC／デポデータを取得できます。必ず使い捨てアカウントのみを使用してください - メインアカウントは絶対に使わないでください。",
+        "description": "匿名モードでも公開されているDLC／デポデータは取得できます。Steamログインは任意で、非公開またはSteamが隠しているデータ（追加のデポ、ブランチ、言語など）だけを補います。必ず使い捨てアカウントのみを使用し、メインアカウントは絶対に使わないでください。",
         "value": {
           "anonymous": "匿名",
           "steam": "Steam ログイン"
@@ -331,7 +337,33 @@
           "true": "有効"
         }
       },
-      "loginPlaceholder": "使い捨てアカウント"
+      "loginPlaceholder": "使い捨てアカウント",
+      "uplay": {
+        "title": "Ubisoft / Uplay R2",
+        "iniTitle": "Loader と INI のオプション",
+        "username": "表示名",
+        "usernameHelp": "空欄の場合は一般プロフィール名を使用します。",
+        "language": { "name": "Loader の言語", "description": "次回の修復時に両方の Uplay R2 INI に書き込みます。", "value": { "auto": "アプリの言語に合わせる" } },
+        "logging": { "name": "診断ログ", "description": "トラブルシューティング時のみ有効にしてください。loader がゲームの横にログを作成する場合があります。" },
+        "import": "DLL をインポートまたは置換",
+        "restore": "内蔵 DLL を復元",
+        "customReady": "カスタム DLL の準備完了",
+        "importSuccess": "次回の修復用に選択した {count} ファイルをインポートしました。",
+        "importFailure": "選択した DLL をインポートできませんでした。",
+        "restoreSuccess": "内蔵 DLL を復元しました。",
+        "packageLabel": "内蔵修復パッケージ",
+        "packageHelp": "AW Next は内蔵の修復ファイルを検証し、各ゲームで確認されたアーキテクチャを自動選択します。",
+        "checking": "確認中…", "ready": "準備完了", "attention": "確認が必要",
+        "verify": "修復パッケージを検証", "verifySuccess": "内蔵修復パッケージは有効で、使用できます。",
+        "verifyFailure": "内蔵修復パッケージを検証できませんでした。ゲームファイルは変更されていません。",
+        "repair": "検出された Uplay R2 ゲームを修復",
+        "repairHelp": "検出された互換性のあるインストールだけを変更します。既存ファイルをバックアップし、結果を自動検証します。",
+        "noGames": "既知のインストールフォルダーを持つ Uplay R2 ゲームは検出されませんでした。",
+        "repairConfirm": "ゲームを修復", "repairTitle": "検出された Uplay R2 ゲームを修復",
+        "repairConfirmMessage": "検出された {count} 件の Uplay R2 ゲームを修復しますか？既存ファイルをバックアップし、各結果を検証します。",
+        "repairing": "修復中 {current} / {total} — {game}",
+        "repairResult": "完了 — 修復 {repaired}、正常 {unchanged}、失敗 {failed}。"
+      }
     },
     "notification": {
       "title": {
@@ -574,6 +606,10 @@
         "souvenirTitle": "記念スクリーンショット",
         "souvenirScreenshot": "解除時にスクリーンショット",
         "souvenirScreenshotDesc": "実績解除時に画面をキャプチャします。ゲームごとに保存されます。",
+        "souvenirHdr": "HDR スクリーンショット",
+        "souvenirHdrDesc": "自動では Windows HDR が有効なときに色を補正します。利用できない場合は、標準のスクリーンショットを保存します。",
+        "souvenirHdrAuto": "自動",
+        "souvenirHdrOff": "オフ",
         "souvenirDir": "保存フォルダー",
         "souvenirDirHelp": "スクリーンショットは <フォルダー>\\<ゲーム>\\<日付> - <実績>.png に保存されます。空欄 = ピクチャ\\Achievement Watcher Next。",
         "souvenirOpenDir": "フォルダーを開く",
@@ -853,7 +889,7 @@
       "fixAll": {
         "name": "検出されたすべてのゲームを修正",
         "button": "すべてのゲームを修正",
-        "description": "インストールフォルダーが判明している、検出されたすべてのエミュレートゲームにエミュレーター修正（GBE Fork、実績、DLC）を実行します。",
+        "description": "インストールフォルダーが判明している検出済みの対応ゲームごとに、Steam/GBE Fork または Ubisoft/Uplay R2 の適切な修復を実行します。",
         "confirm": "インストールフォルダーが判明している検出済みの各ゲームにエミュレーター修正を適用しますか？ 既存のファイルは上書き前にバックアップされます。",
         "running": "ゲームを修正中…",
         "progress": "修正中 %cur% / %total% - %name%",
@@ -958,7 +994,7 @@
     "sourceHint": "正規の Steam ゲームもリストされます (パブリック プロファイルが必要)。",
     "notificationsHint": "解除通知の表示場所。「自動」がオーバーレイと Windows 通知を選び分けます。",
     "playtimeHint": "検出されたゲームのプレイ時間を自動的に追跡します。",
-    "autoFixHint": "エミュレータの修正 (GBE フォーク、アチーブメント、DLC) を新しいエミュレートされたゲームに適用します。",
+    "autoFixHint": "新しく検出されたエミュレートゲームに、適切な GBE Fork または Uplay R2 修復を適用します。",
     "hiddenHint": "ロックを解除する前に、隠された実績の名前と説明が表示されます。",
     "mergeHint": "複数のソースにある同じゲームを 1 つのタイルに結合します。",
     "none": "なし",
@@ -1254,10 +1290,10 @@
     "the-automatic-goldberg-uplay-r2-mapping-cannot-be-generated-for-": "このゲームの Goldberg Uplay R2 の自動マッピングを生成できません。",
     "uplay-r2-dll-not-seeded": "Uplay R2 DLL がシードされていません",
     "no-files-found-in-the-uplay-r2-cache": "Uplay R2 キャッシュにファイルが見つかりません。",
-    "copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-": "uplay_r2_loader(64).dll / upc_r2_loader(64).dll をここにコピーしてください（初回のみの設定）：\n{dir}",
+    "copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-": "Uplay R2 パッケージを1度選択してください。AW Next は検証済みの x86/x64 ローダー DLL のみを次にインポートします：\n{dir}",
     "update-the-uplay-r2-loader": "Uplay R2 ローダーを更新しますか？",
     "uplay-r2-old-loader-message": "このゲームは実績のリダイレクトには古すぎるローダーを使用しています。",
-    "uplay-r2-old-loader-detail": "修正は更新しなくても機能します：AW Next はエミュレータ自身のセーブフォルダを読み取ります。\n\n更新すると GSE Saves へのリダイレクトが有効になりますが、ゲームが現在起動に使用している DLL を置き換えます（元のファイルは .bak として保持）。",
+    "uplay-r2-old-loader-detail": "修正は更新しなくても機能します：AW Next はエミュレータ自身のセーブフォルダを読み取ります。\n\n更新すると GSE Saves へのリダイレクトが有効になりますが、ゲームが現在起動に使用している DLL を置き換えます（元のファイルは修復バックアップに保存されます）。",
     "keep-current-loader": "現在のローダーを維持",
     "update-loader": "更新",
     "updating-the-dll": "DLL を更新中…",
@@ -1492,6 +1528,10 @@
     "chooseAnotherCoverTitle": "別のカバーを選択",
     "coverPickerLoading": "カバーを読み込み中…",
     "noCoversFound": "代替カバーが見つかりませんでした。",
+    "artwork-fetch-failed": "アートワークを取得できません。接続を確認してください。",
+    "artwork-not-found": "アートワークが見つかりません。",
+    "retry-artwork": "再試行",
+    "cover-picker-fetch-failed": "代替カバーを取得できません。接続を確認して再試行してください。",
     "currentCover": "現在のカバー",
     "defaultCover": "デフォルトのカバー",
     "theme-layer-gradient": "グラデーション",
@@ -1611,7 +1651,7 @@
     "gh-why-no-achievement-data": "このゲームの実績リストが見つからないため、まだ追跡するものがありません。実績のないゲームであれば正常です。",
     "gh-why-emulator-missing": "このゲームが実績を記録するには Steam エミュレーターが必要ですが、フォルダー内に設定されていません。ゲームの右クリックメニューからエミュレーター修正を実行してください。",
     "gh-why-emulator-runtime-missing": "実績データは揃っていますが、それを読み取るエミュレーターのファイルがゲームフォルダーにないため、何も記録されません。AW Next が復元できます。",
-    "gh-why-uplay-broken": "このゲームの Ubisoft エミュレーター設定が不完全なため、解除が記録されていません。右クリックメニューから Uplay R2 修正を再適用してください。",
+    "gh-why-uplay-broken": "このゲームの Ubisoft エミュレーター設定が不完全なため、解除が記録されていません。下の Uplay R2 修復ボタンを使用してください。",
     "gh-why-achievement-data-incomplete": "AW Next が持つ実績リストがゲームの参照するものと一致しておらず、一部の解除が取りこぼされます。公式データから書き直せます。",
     "gh-why-no-progress-yet": "ゲームは検出され実績データも揃っていますが、実績の進捗はまだ見つかっていません。原因は通知ではなく、ゲームまたはエミュレーターの設定である可能性が高いです。",
     "gh-why-install-unknown": "AW Next はこのゲームの実績をセーブファイルから読み取っていますが、ゲーム本体の場所は分かっていません。プレイ時間と修復を有効にするには場所を指定してください。",

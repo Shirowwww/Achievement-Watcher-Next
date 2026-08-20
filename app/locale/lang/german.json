@@ -49,6 +49,8 @@
   "revealedOnceUnlocked": "Die Details jedes Erfolgs werden nach dem Freischalten angezeigt",
   "hiddenDescriptionPlaceholder": "Versteckt - zum Anzeigen klicken",
   "noneUnlocked": "Noch kein Erfolg freigeschaltet",
+  "latestAchievementEarned": "Zuletzt freigeschalteter Erfolg",
+  "neverPlayed": "Nie gestartet oder erfasst",
   "noneUnlockedHint": "Keine Freischaltungen sichtbar?",
   "scrollUp": "Nach oben",
   "allGamesBackButton": "Alle Spiele",
@@ -145,11 +147,15 @@
         "description": "Sprache der Oberfläche. Spieldaten werden in dieser Sprache abgerufen, sofern verfügbar."
       },
       "thumbnail": {
-        "name": "Vorschaubild-Ausrichtung",
-        "description": "Hochformat zeigt hohe Cover-Bilder; Querformat zeigt breite Steam-Header-Bilder.",
+        "name": "Bibliotheksansicht",
+        "description": "Wähle das Kartenlayout. Querformat behält die aktuelle Ansicht bei; Kompaktes Raster, Liste und Details setzen auf Dichte oder zusätzliche Aktivitätsdaten.",
         "value": {
           "portrait": "Hochformat",
-          "landscape": "Querformat"
+          "landscape": "Querformat",
+          "compact": "Kompakt Querformat",
+          "portraitCompact": "Kompakt Hochformat",
+          "list": "Liste",
+          "details": "Details"
         }
       },
       "hiddenAch": {
@@ -242,11 +248,11 @@
       }
     },
     "emulator": {
-      "nav": "Steam-Emulator",
+      "nav": "Emulator-Reparatur",
       "groupNav": "Emulatoren",
-      "sectionTitle": "Emulator-Einrichtung (GBE Fork)",
-      "intro": "Standardwerte für die Rechtsklick-Aktion „Emulator-Fix anwenden“. Lege fest, wie Steam umgangen wird und wie viele Spieldaten abgerufen werden.",
-      "coreTitle": "Grundkonfiguration",
+      "sectionTitle": "Emulator-Einrichtung",
+      "intro": "Sichere, automatische Reparatur für unterstützte Steam/GBE-Fork-Spiele.",
+      "coreTitle": "Steam / GBE Fork",
       "advancedTitle": "Erweiterte Optionen",
       "loginTitle": "Steam-Anmeldung (nur Wegwerf-Konto)",
       "loginWarning": "Wegwerf-Konto",
@@ -261,7 +267,7 @@
       "loginTestFailed": "Steam-Anmeldung fehlgeschlagen",
       "autoApply": {
         "name": "Neu erkannte Spiele automatisch reparieren",
-        "description": "Führt die komplette „Emulator-Fix anwenden“-Kette einmal für ein neu erkanntes, nicht konfiguriertes emuliertes Spiel aus: SteamStub-Behandlung, GBE Fork, Erfolge, DLCs, Identität/Sprache und erweiterte Daten, falls aktiviert. Standardmäßig deaktiviert.",
+        "description": "Führt einmal die sichere Steam/GBE-Fork-Reparatur für ein neu erkanntes Spiel aus. Standardmäßig deaktiviert.",
         "value": {
           "false": "Deaktiviert",
           "true": "Aktiviert"
@@ -277,7 +283,7 @@
       },
       "login": {
         "name": "Datenquelle (Advanced)",
-        "description": "Die Steam-Anmeldung erlaubt generate_emu_config, vollständige DLC-/Depot-Daten abzurufen. Verwende NUR ein Wegwerf-Konto - niemals dein Hauptkonto.",
+        "description": "Der anonyme Modus ruft bereits öffentlich verfügbare DLC-/Depot-Daten ab; die Steam-Anmeldung ist optional und ergänzt nur private oder verborgene Daten (z. B. weitere Depots, Branches oder Sprachen). Verwende NUR ein Wegwerf-Konto - niemals dein Hauptkonto.",
         "value": {
           "anonymous": "Anonym",
           "steam": "Steam-Anmeldung"
@@ -331,7 +337,37 @@
           "true": "Aktiviert"
         }
       },
-      "loginPlaceholder": "Wegwerf-Konto"
+      "loginPlaceholder": "Wegwerf-Konto",
+      "uplay": {
+        "title": "Ubisoft / Uplay R2",
+        "iniTitle": "Loader- und INI-Optionen",
+        "username": "Anzeigename",
+        "usernameHelp": "Leer lassen, um den allgemeinen Profilnamen zu verwenden.",
+        "language": { "name": "Loader-Sprache", "description": "Wird bei der nächsten Reparatur in beide Uplay-R2-INIs geschrieben.", "value": { "auto": "App-Sprache übernehmen" } },
+        "logging": { "name": "Diagnoseprotokoll", "description": "Nur zur Fehlersuche aktivieren; der Loader kann Protokolle neben dem Spiel erstellen." },
+        "import": "DLLs importieren oder ersetzen",
+        "restore": "Integrierte DLLs wiederherstellen",
+        "customReady": "Eigene DLLs bereit",
+        "importSuccess": "{count} ausgewählte Datei(en) für die nächste Reparatur importiert.",
+        "importFailure": "Die ausgewählte DLL konnte nicht importiert werden.",
+        "restoreSuccess": "Die integrierten DLLs wurden wiederhergestellt.",
+        "packageLabel": "Integriertes Reparaturpaket",
+        "packageHelp": "AW Next prüft die integrierten Reparaturdateien und wählt automatisch die vom jeweiligen Spiel belegte Architektur.",
+        "checking": "Wird geprüft…",
+        "ready": "Bereit",
+        "attention": "Aufmerksamkeit erforderlich",
+        "verify": "Reparaturpaket prüfen",
+        "verifySuccess": "Das integrierte Reparaturpaket ist gültig und bereit.",
+        "verifyFailure": "Das integrierte Reparaturpaket konnte nicht geprüft werden. Es wurden keine Spieldateien geändert.",
+        "repair": "Erkannte Uplay-R2-Spiele reparieren",
+        "repairHelp": "Nur erkannte kompatible Installationen werden geändert. Vorhandene Dateien werden gesichert und das Ergebnis automatisch geprüft.",
+        "noGames": "Kein erkanntes Uplay-R2-Spiel hat einen bekannten Installationsordner.",
+        "repairConfirm": "Spiele reparieren",
+        "repairTitle": "Erkannte Uplay-R2-Spiele reparieren",
+        "repairConfirmMessage": "{count} erkannte Uplay-R2-Spiel(e) reparieren? Vorhandene Dateien werden gesichert und jedes Ergebnis wird geprüft.",
+        "repairing": "Reparatur {current} / {total} — {game}",
+        "repairResult": "Fertig — {repaired} repariert, {unchanged} bereits fehlerfrei, {failed} fehlgeschlagen."
+      }
     },
     "notification": {
       "title": {
@@ -574,6 +610,10 @@
         "souvenirTitle": "Souvenir-Screenshot",
         "souvenirScreenshot": "Screenshot beim Freischalten",
         "souvenirScreenshotDesc": "Macht einen Screenshot, wenn ein Erfolg freigeschaltet wird. Pro Spiel gespeichert.",
+        "souvenirHdr": "HDR-Screenshots",
+        "souvenirHdrDesc": "Automatisch korrigiert die Farben, wenn Windows-HDR aktiv ist. Ist die Funktion nicht verfügbar, wird stattdessen der Standard-Screenshot gespeichert.",
+        "souvenirHdrAuto": "Automatisch",
+        "souvenirHdrOff": "Aus",
         "souvenirDir": "Speicherordner",
         "souvenirDirHelp": "Screenshots werden in <Ordner>\\<Spiel>\\<Datum> - <Erfolg>.png gespeichert. Leer = Bilder\\Achievement Watcher Next.",
         "souvenirOpenDir": "Ordner öffnen",
@@ -853,7 +893,7 @@
       "fixAll": {
         "name": "Alle erkannten Spiele reparieren",
         "button": "Alle Spiele reparieren",
-        "description": "Führt den Emulator-Fix (GBE Fork, Erfolge, DLCs) für jedes erkannte emulierte Spiel mit bekanntem Installationsordner aus.",
+        "description": "Führt die passende Steam/GBE-Fork- oder Ubisoft/Uplay-R2-Reparatur für jedes kompatible erkannte Spiel mit bekanntem Installationsordner aus.",
         "confirm": "Den Emulator-Fix auf jedes erkannte Spiel mit bekanntem Installationsordner anwenden? Vorhandene Dateien werden vor dem Überschreiben gesichert.",
         "running": "Spiele werden repariert…",
         "progress": "Repariere %cur% / %total% - %name%",
@@ -958,7 +998,7 @@
     "sourceHint": "Listet außerdem Ihre legitimen Steam-Spiele auf (öffentliches Profil erforderlich).",
     "notificationsHint": "Wo Freischaltungen erscheinen. Automatisch wählt für dich zwischen Overlay und Windows-Benachrichtigung.",
     "playtimeHint": "Verfolgt automatisch die Spielzeit für erkannte Spiele.",
-    "autoFixHint": "Wendet den Emulator-Fix (GBE Fork, Erfolge, DLC) auf neue emulierte Spiele an.",
+    "autoFixHint": "Wendet die passende GBE-Fork- oder Uplay-R2-Reparatur auf neu erkannte emulierte Spiele an.",
     "hiddenHint": "Zeigt versteckte Erfolgsnamen und Beschreibungen an, bevor Sie sie freischalten.",
     "mergeHint": "Kombiniert dasselbe Spiel aus mehreren Quellen in einer einzigen Kachel.",
     "none": "Keine",
@@ -1254,10 +1294,10 @@
     "the-automatic-goldberg-uplay-r2-mapping-cannot-be-generated-for-": "Die automatische Goldberg-Uplay-R2-Zuordnung kann für dieses Spiel nicht erzeugt werden.",
     "uplay-r2-dll-not-seeded": "Uplay-R2-DLL nicht eingebettet",
     "no-files-found-in-the-uplay-r2-cache": "Keine Dateien im Uplay-R2-Cache gefunden.",
-    "copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-": "Kopiere die Dateien uplay_r2_loader(64).dll / upc_r2_loader(64).dll hierher (einmalige Einrichtung):\n{dir}",
+    "copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-": "Wähle einmal dein Uplay-R2-Paket. AW Next importiert nur validierte x86/x64-Loader-DLLs nach:\n{dir}",
     "update-the-uplay-r2-loader": "Den Uplay-R2-Loader aktualisieren?",
     "uplay-r2-old-loader-message": "Dieses Spiel verwendet einen zu alten Loader, um Erfolge umzuleiten.",
-    "uplay-r2-old-loader-detail": "Der Fix funktioniert auch ohne Update: AW Next liest den eigenen Speicherordner des Emulators.\n\nDas Update aktiviert die Umleitung zu GSE Saves, ersetzt aber eine DLL, mit der das Spiel derzeit startet (das Original bleibt als .bak erhalten).",
+    "uplay-r2-old-loader-detail": "Der Fix funktioniert auch ohne Update: AW Next liest den eigenen Speicherordner des Emulators.\n\nDas Update aktiviert die Umleitung zu GSE Saves, ersetzt aber eine DLL, mit der das Spiel derzeit startet (das Original bleibt in der Reparatursicherung erhalten).",
     "keep-current-loader": "Aktuellen Loader behalten",
     "update-loader": "Aktualisieren",
     "updating-the-dll": "DLL wird aktualisiert…",
@@ -1492,6 +1532,10 @@
     "chooseAnotherCoverTitle": "Anderes Cover wählen",
     "coverPickerLoading": "Cover werden geladen…",
     "noCoversFound": "Keine alternativen Cover gefunden.",
+    "artwork-fetch-failed": "Artwork konnte nicht geladen werden. Prüfe deine Verbindung.",
+    "artwork-not-found": "Kein Artwork gefunden.",
+    "retry-artwork": "Erneut versuchen",
+    "cover-picker-fetch-failed": "Alternative Cover konnten nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.",
     "currentCover": "Aktuell",
     "defaultCover": "Standard",
     "theme-layer-gradient": "Verlauf",
@@ -1611,7 +1655,7 @@
     "gh-why-no-achievement-data": "Für dieses Spiel wurde keine Erfolgsliste gefunden, es gibt also noch nichts zu verfolgen. Spiele ganz ohne Erfolge sind hier normal.",
     "gh-why-emulator-missing": "Dieses Spiel benötigt einen Steam-Emulator, um Erfolge aufzuzeichnen, und in seinem Ordner ist keiner eingerichtet. Nutze den Emulator-Fix im Rechtsklickmenü des Spiels.",
     "gh-why-emulator-runtime-missing": "Die Erfolgsdaten liegen vor, aber die Emulator-Datei, die sie liest, fehlt im Spielordner - es wird also nie etwas aufgezeichnet. AW Next kann sie wiederherstellen.",
-    "gh-why-uplay-broken": "Die Ubisoft-Emulator-Einrichtung dieses Spiels ist unvollständig, Freischaltungen werden daher nicht aufgezeichnet. Wende den Uplay-R2-Fix im Rechtsklickmenü erneut an.",
+    "gh-why-uplay-broken": "Die Ubisoft-Emulator-Einrichtung dieses Spiels ist unvollständig, Freischaltungen werden daher nicht aufgezeichnet. Verwende die Uplay-R2-Reparaturschaltfläche unten.",
     "gh-why-achievement-data-incomplete": "Die Erfolgsliste, die AW Next für dieses Spiel hat, passt nicht zu dem, wonach das Spiel sucht - einige Freischaltungen gingen verloren. Sie kann aus den offiziellen Daten neu geschrieben werden.",
     "gh-why-no-progress-yet": "Das Spiel wird erkannt und Erfolgsdaten liegen vor, aber es wurde noch kein Erfolgsfortschritt gefunden. Die Ursache liegt wahrscheinlich bei der Spiel- oder Emulator-Konfiguration, nicht bei den Benachrichtigungen.",
     "gh-why-install-unknown": "AW Next liest die Erfolge dieses Spiels aus seinen Speicherdateien, weiß aber nicht, wo das Spiel installiert ist. Finde es, um Spielzeit und Reparaturen zu ermöglichen.",

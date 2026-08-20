@@ -9,6 +9,7 @@ const aes = require(path.join(appPath, 'util/aes.js'));
 const uiLanguages = require(path.join(appPath, 'locale/uiLanguages.js'));
 const controllerLabels = require(path.join(appPath, 'util/controllerLabels.js'));
 const themeLayers = require(path.join(appPath, 'util/themeLayers.js'));
+const libraryLayout = require(path.join(appPath, 'util/libraryLayout.js'));
 
 function normalizeControllerBindingSetting(value, allowedButtons, fallback) {
   const parsed = controllerLabels.normalizeControllerBinding(value, {
@@ -210,9 +211,12 @@ module.exports.load = () => {
       options.controller.debugLogging = false;
     }
 
-    if (typeof options.achievement.thumbnailPortrait !== 'boolean') {
-      options.achievement.thumbnailPortrait = false;
-    }
+    options.achievement.libraryLayout = libraryLayout.normalize(
+      options.achievement.libraryLayout,
+      options.achievement.thumbnailPortrait === true
+    );
+    // Keep the legacy flag synchronized for cover selection paths shared with older configs.
+    options.achievement.thumbnailPortrait = libraryLayout.isPortrait(options.achievement.libraryLayout);
 
     if (typeof options.achievement.showHidden !== 'boolean') {
       options.achievement.showHidden = false;
@@ -433,6 +437,7 @@ module.exports.load = () => {
     if (!options.souvenir || typeof options.souvenir !== 'object') options.souvenir = {};
     if (typeof options.souvenir.screenshot !== 'boolean') options.souvenir.screenshot = false;
     if (typeof options.souvenir.dir !== 'string') options.souvenir.dir = '';
+    if (options.souvenir.hdr !== 'auto' && options.souvenir.hdr !== 'off') options.souvenir.hdr = 'auto';
     delete options.souvenir.combineNotif; // simplified: capture always includes whatever is on screen
 
     //Action
@@ -487,6 +492,7 @@ module.exports.load = () => {
         notificationDuration: 'auto',
       },
       achievement: {
+        libraryLayout: 'default',
         thumbnailPortrait: false,
         showHidden: false,
         mergeDuplicate: true,
@@ -569,6 +575,7 @@ module.exports.load = () => {
       souvenir: {
         screenshot: false,
         dir: '',
+        hdr: 'auto',
       },
       action: {
         target: '',

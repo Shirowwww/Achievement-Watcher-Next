@@ -52,6 +52,18 @@
         </div>
 
         <div id="search-bar">
+          <label class="library-layout-control" for="library-layout-select" title="Library view">
+            <i class="fas fa-th-large" aria-hidden="true"></i>
+            <select autocomplete="off" id="library-layout-select" aria-label="Library view">
+              <option value="default" selected>Default</option>
+              <option value="portrait">Portrait</option>
+              <option value="compact">Compact</option>
+              <option value="portrait-compact">Compact portrait</option>
+              <option value="list">List</option>
+              <option value="details">Details</option>
+            </select>
+            <i class="fas fa-chevron-down dropdown-arrow" aria-hidden="true"></i>
+          </label>
           <button type="button" id="add-game-manually" class="library-add-button"><i class="fas fa-plus" aria-hidden="true"></i><span class="sr-only">Add game manually</span></button>
           <div class="wrapper">
             <i class="fas fa-search"></i>
@@ -194,15 +206,15 @@
               <div class="emulator-hero">
                 <div class="emulator-hero-icon"><i class="fas fa-microchip"></i></div>
                 <div>
-                  <div class="title" id="emulator-options-title">Emulator setup (GBE Fork)</div>
+                  <div class="title" id="emulator-options-title">Emulator setup</div>
                   <p id="emulator-options-intro">
-                    Defaults used by the right-click <code>Apply emulator fix</code> action. Choose how Steam is bypassed and how much game data is fetched.
+                    Safe, automatic repair for supported Steam/GBE Fork games.
                   </p>
                 </div>
               </div>
 
               <div class="emulator-group">
-                <div class="emulator-group-title"><i class="fas fa-sliders-h"></i> <span id="emulator-core-title">Core configuration</span></div>
+                <div class="emulator-group-title"><i class="fab fa-steam"></i> <span id="emulator-core-title">Steam / GBE Fork</span></div>
                 <ul id="options-emulator" class="arrow-list emulator-list">
                 <li class="hasHelper">
                   <div class="left"><i class="fas fa-magic"></i> <span>Automatically fix newly detected games</span></div>
@@ -214,7 +226,7 @@
                     </select>
                     <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
                   </div>
-                  <div class="help">Runs the full Apply emulator fix chain once for a newly detected, unconfigured emulated game: SteamStub handling, GBE Fork, achievements, DLCs, identity/language, and Advanced data when enabled. Disabled by default.</div>
+                  <div class="help">Runs the safe Steam/GBE Fork repair once for a newly detected game. Disabled by default.</div>
                 </li>
 
                 <li class="hasHelper">
@@ -240,7 +252,7 @@
                     </select>
                     <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
                   </div>
-                  <div class="help">Steam login lets generate_emu_config pull complete DLC/depot data. Use a THROWAWAY account only - never your main.</div>
+                  <div class="help">Anonymous mode already retrieves public DLC/depot data. Steam login is optional: it only adds private or hidden data (such as some depots, branches or languages). Use a THROWAWAY account only - never your main.</div>
                 </li>
                 </ul>
               </div>
@@ -1544,6 +1556,19 @@
                     </li>
 
                     <li class="hasHelper">
+                      <div class="left"><i class="fas fa-sun"></i> <span id="lbl-souvenirHdr"></span></div>
+                      <div class="right">
+                        <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                        <select autocomplete="off" class="dropdown" id="option_souvenirHdr">
+                          <option value="auto" selected></option>
+                          <option value="off"></option>
+                        </select>
+                        <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                      </div>
+                      <div class="help"></div>
+                    </li>
+
+                    <li class="hasHelper">
                       <div class="left"><i class="fas fa-folder-open"></i> <span id="lbl-souvenirDir"></span></div>
                       <div class="right action-right">
                         <button type="button" id="btn-souvenir-dir" class="inline-action-btn"><i class="fas fa-folder"></i> <span id="souvenir-dir-display"></span></button>
@@ -2083,14 +2108,18 @@
                   </li>
 
                   <li class="hasHelper">
-                    <div class="left"><i class="fas fa-portrait"></i> <span></span></div>
+                    <div class="left"><i class="fas fa-th-large"></i> <span></span></div>
                     <div class="right">
                       <div class="previous">
                         <span class="arrow"><i class="fas fa-chevron-left"></i></span>
                       </div>
-                      <select autocomplete="off" id="option_thumbnailPortrait">
-                        <option value="false" selected></option>
-                        <option value="true"></option>
+                      <select autocomplete="off" id="option_libraryLayout">
+                        <option value="default" selected></option>
+                        <option value="portrait"></option>
+                        <option value="compact"></option>
+                        <option value="portrait-compact"></option>
+                        <option value="list"></option>
+                        <option value="details"></option>
                       </select>
                       <div class="next">
                         <span class="arrow"><i class="fas fa-chevron-right"></i></span>

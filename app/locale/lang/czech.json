@@ -49,6 +49,8 @@
   "revealedOnceUnlocked": "Podrobnosti každého achievementu se zobrazí po jeho odemčení",
   "hiddenDescriptionPlaceholder": "Skryté - klikněte pro zobrazení",
   "noneUnlocked": "Zatím žádný odemčený achievement",
+  "latestAchievementEarned": "Poslední odemčený achievement",
+  "neverPlayed": "Nikdy nespuštěno ani nesledováno",
   "noneUnlockedHint": "Nevidíte žádná odemčení?",
   "scrollUp": "Nahoru",
   "allGamesBackButton": "Všechny hry",
@@ -145,11 +147,15 @@
         "description": "Jazyk rozhraní. Data her se načítají v tomto jazyce, pokud je k dispozici."
       },
       "thumbnail": {
-        "name": "Orientace miniatur",
-        "description": "Na výšku zobrazuje vysoké obaly; Na šířku zobrazuje široké hlavičkové obrázky Steamu.",
+        "name": "Zobrazení knihovny",
+        "description": "Vyberte rozložení karet. Na šířku zachová současný vzhled; Kompaktní mřížka, Seznam a Podrobnosti upřednostní hustotu nebo více informací o aktivitě.",
         "value": {
           "portrait": "Na výšku",
-          "landscape": "Na šířku"
+          "landscape": "Na šířku",
+          "compact": "Kompaktní na šířku",
+          "portraitCompact": "Kompaktní na výšku",
+          "list": "Seznam",
+          "details": "Podrobnosti"
         }
       },
       "hiddenAch": {
@@ -242,11 +248,11 @@
       }
     },
     "emulator": {
-      "nav": "Steam emulátor",
+      "nav": "Oprava emulátorů",
       "groupNav": "Emulátory",
-      "sectionTitle": "Nastavení emulátoru (GBE Fork)",
-      "intro": "Výchozí hodnoty používané akcí pravého tlačítka Použít opravu emulátoru. Zvolte, jak se obchází Steam a kolik dat hry se načítá.",
-      "coreTitle": "Základní konfigurace",
+      "sectionTitle": "Nastavení emulátorů",
+      "intro": "Bezpečná automatická oprava podporovaných her Steam/GBE Fork.",
+      "coreTitle": "Steam / GBE Fork",
       "advancedTitle": "Pokročilé možnosti",
       "loginTitle": "Přihlášení do Steamu (pouze jednorázový účet)",
       "loginWarning": "Jednorázový účet",
@@ -261,7 +267,7 @@
       "loginTestFailed": "Přihlášení do Steamu selhalo",
       "autoApply": {
         "name": "Automaticky opravovat nově zjištěné hry",
-        "description": "Jednorázově spustí celý řetězec Použít opravu emulátoru pro nově zjištěnou, nenakonfigurovanou emulovanou hru: zpracování SteamStub, GBE Fork, achievementy, DLC, identita/jazyk a pokročilá data, pokud jsou zapnutá. Ve výchozím nastavení vypnuto.",
+        "description": "Jednorázově spustí bezpečnou opravu Steam/GBE Fork pro nově zjištěnou hru. Ve výchozím nastavení vypnuto.",
         "value": {
           "false": "Vypnuto",
           "true": "Zapnuto"
@@ -277,7 +283,7 @@
       },
       "login": {
         "name": "Zdroj dat (Advanced)",
-        "description": "Přihlášení do Steamu umožní generate_emu_config stáhnout úplná data DLC/depotů. Používejte POUZE jednorázový účet - nikdy hlavní.",
+        "description": "Anonymní režim už získá veřejně dostupná data DLC/depotů. Přihlášení ke Steamu je volitelné a přidá jen soukromá nebo skrytá data (například další depoty, větve nebo jazyky). Používejte POUZE jednorázový účet - nikdy hlavní.",
         "value": {
           "anonymous": "Anonymně",
           "steam": "Přihlášení do Steamu"
@@ -331,7 +337,33 @@
           "true": "Zapnuto"
         }
       },
-      "loginPlaceholder": "účet na jedno použití"
+      "loginPlaceholder": "účet na jedno použití",
+      "uplay": {
+        "title": "Ubisoft / Uplay R2",
+        "iniTitle": "Možnosti loaderu a INI",
+        "username": "Zobrazované jméno",
+        "usernameHelp": "Ponechte prázdné pro použití obecného jména profilu.",
+        "language": { "name": "Jazyk loaderu", "description": "Při příští opravě se zapíše do obou INI Uplay R2.", "value": { "auto": "Použít jazyk aplikace" } },
+        "logging": { "name": "Diagnostický protokol", "description": "Zapněte jen při řešení potíží; loader může vytvářet protokoly vedle hry." },
+        "import": "Importovat nebo nahradit DLL",
+        "restore": "Obnovit integrované DLL",
+        "customReady": "Vlastní DLL jsou připravené",
+        "importSuccess": "Pro příští opravu bylo importováno {count} vybraných souborů.",
+        "importFailure": "Vybranou DLL se nepodařilo importovat.",
+        "restoreSuccess": "Integrované DLL byly obnoveny.",
+        "packageLabel": "Integrovaný opravný balíček",
+        "packageHelp": "AW Next ověří integrované opravné soubory a automaticky vybere architekturu prokázanou každou hrou.",
+        "checking": "Kontrola…", "ready": "Připraveno", "attention": "Vyžaduje pozornost",
+        "verify": "Ověřit opravný balíček", "verifySuccess": "Integrovaný opravný balíček je platný a připravený.",
+        "verifyFailure": "Integrovaný opravný balíček se nepodařilo ověřit. Žádné herní soubory nebyly změněny.",
+        "repair": "Opravit zjištěné hry Uplay R2",
+        "repairHelp": "Změní se jen zjištěné kompatibilní instalace. Existující soubory se zálohují a výsledek se automaticky ověří.",
+        "noGames": "Žádná zjištěná hra Uplay R2 nemá známou instalační složku.",
+        "repairConfirm": "Opravit hry", "repairTitle": "Opravit zjištěné hry Uplay R2",
+        "repairConfirmMessage": "Opravit {count} zjištěných her Uplay R2? Existující soubory se zálohují a každý výsledek se ověří.",
+        "repairing": "Oprava {current} / {total} — {game}",
+        "repairResult": "Hotovo — opraveno: {repaired}, již v pořádku: {unchanged}, selhalo: {failed}."
+      }
     },
     "notification": {
       "title": {
@@ -574,6 +606,10 @@
         "souvenirTitle": "Vzpomínkový snímek",
         "souvenirScreenshot": "Snímek při odemčení",
         "souvenirScreenshotDesc": "Pořídí snímek obrazovky při odemčení achievementu. Ukládá se podle hry.",
+        "souvenirHdr": "Snímky HDR",
+        "souvenirHdrDesc": "Automatický režim opraví barvy, když je ve Windows aktivní HDR. Pokud není dostupný, uloží se standardní snímek.",
+        "souvenirHdrAuto": "Automaticky",
+        "souvenirHdrOff": "Vypnuto",
         "souvenirDir": "Složka pro ukládání",
         "souvenirDirHelp": "Snímky se ukládají do <složka>\\<hra>\\<datum> - <úspěch>.png. Prázdné = Obrázky\\Achievement Watcher Next.",
         "souvenirOpenDir": "Otevřít složku",
@@ -853,7 +889,7 @@
       "fixAll": {
         "name": "Opravit všechny zjištěné hry",
         "button": "Opravit všechny hry",
-        "description": "Spustí opravu emulátoru (GBE Fork, achievementy, DLC) na každé zjištěné emulované hře se známou instalační složkou.",
+        "description": "Spustí odpovídající opravu Steam/GBE Fork nebo Ubisoft/Uplay R2 pro každou kompatibilní zjištěnou hru se známou instalační složkou.",
         "confirm": "Použít opravu emulátoru na každou zjištěnou hru se známou instalační složkou? Existující soubory se před přepsáním zálohují.",
         "running": "Opravování her…",
         "progress": "Opravování %cur% / %total% - %name%",
@@ -958,7 +994,7 @@
     "sourceHint": "Také uvádí vaše legitimní hry Steam (vyžaduje veřejný profil).",
     "notificationsHint": "Kde se zobrazují odemčení. Automaticky za vás zvolí overlay nebo oznámení Windows.",
     "playtimeHint": "Automaticky sleduje dobu hraní pro zjištěné hry.",
-    "autoFixHint": "Použije opravu emulátoru (GBE Fork, achievementy, DLC) na nové emulované hry.",
+    "autoFixHint": "Použije odpovídající opravu GBE Fork nebo Uplay R2 na nově zjištěné emulované hry.",
     "hiddenHint": "Odhalí skryté názvy a popisy úspěchů, než je odemknete.",
     "mergeHint": "Kombinuje stejnou hru z několika zdrojů do jedné dlaždice.",
     "none": "Žádné",
@@ -1254,10 +1290,10 @@
     "the-automatic-goldberg-uplay-r2-mapping-cannot-be-generated-for-": "Automatické mapování Goldberg Uplay R2 nelze pro tuto hru vygenerovat.",
     "uplay-r2-dll-not-seeded": "DLL Uplay R2 není vložena",
     "no-files-found-in-the-uplay-r2-cache": "V mezipaměti Uplay R2 nebyly nalezeny žádné soubory.",
-    "copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-": "Zkopírujte soubory uplay_r2_loader(64).dll / upc_r2_loader(64).dll sem (jednorázové nastavení):\n{dir}",
+    "copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-": "Jednou vyberte balíček Uplay R2. AW Next importuje pouze ověřené x86/x64 loader DLL do:\n{dir}",
     "update-the-uplay-r2-loader": "Aktualizovat loader Uplay R2?",
     "uplay-r2-old-loader-message": "Tato hra používá příliš starý loader pro přesměrování úspěchů.",
-    "uplay-r2-old-loader-detail": "Fix funguje i bez aktualizace: AW Next čte složku uložených pozic emulátoru.\n\nAktualizace zapne přesměrování do GSE Saves, ale nahradí DLL, se kterou se hra v současnosti spouští (originál zůstane jako .bak).",
+    "uplay-r2-old-loader-detail": "Fix funguje i bez aktualizace: AW Next čte složku uložených pozic emulátoru.\n\nAktualizace zapne přesměrování do GSE Saves, ale nahradí DLL, se kterou se hra v současnosti spouští (originál zůstane v záloze opravy).",
     "keep-current-loader": "Ponechat aktuální loader",
     "update-loader": "Aktualizovat",
     "updating-the-dll": "Aktualizace DLL…",
@@ -1492,6 +1528,10 @@
     "chooseAnotherCoverTitle": "Vybrat jiný obal",
     "coverPickerLoading": "Načítání obalů…",
     "noCoversFound": "Nenašly se žádné alternativní obaly.",
+    "artwork-fetch-failed": "Artwork se nepodařilo načíst. Zkontrolujte připojení.",
+    "artwork-not-found": "Artwork nebyl nalezen.",
+    "retry-artwork": "Zkusit znovu",
+    "cover-picker-fetch-failed": "Alternativní obaly se nepodařilo načíst. Zkontrolujte připojení a zkuste to znovu.",
     "currentCover": "Aktuální",
     "defaultCover": "Výchozí",
     "theme-layer-gradient": "Přechod",
@@ -1611,7 +1651,7 @@
     "gh-why-no-achievement-data": "Pro tuto hru nebyl nalezen žádný seznam úspěchů, takže zatím není co sledovat. Hry zcela bez úspěchů jsou zde běžné.",
     "gh-why-emulator-missing": "Tato hra potřebuje pro zaznamenávání úspěchů emulátor Steamu a v její složce žádný není. Použij opravu emulátoru z nabídky po pravém kliknutí na hru.",
     "gh-why-emulator-runtime-missing": "Data úspěchů jsou na místě, ale ve složce hry chybí soubor emulátoru, který je čte, takže se nikdy nic nezaznamená. AW Next jej dokáže vrátit.",
-    "gh-why-uplay-broken": "Nastavení emulátoru Ubisoft pro tuto hru není úplné, odemykání se proto nezaznamenává. Použij znovu opravu Uplay R2 z nabídky po pravém kliknutí.",
+    "gh-why-uplay-broken": "Nastavení emulátoru Ubisoft pro tuto hru není úplné, odemykání se proto nezaznamenává. Použij tlačítko opravy Uplay R2 níže.",
     "gh-why-achievement-data-incomplete": "Seznam úspěchů, který má AW Next pro tuto hru, neodpovídá tomu, co bude hra hledat, takže by některá odemčení unikla. Lze jej přepsat z oficiálních dat.",
     "gh-why-no-progress-yet": "Hra je rozpoznána a data úspěchů jsou k dispozici, ale zatím nebyl nalezen žádný postup. Příčinou bude spíše nastavení hry nebo emulátoru než oznámení.",
     "gh-why-install-unknown": "AW Next čte úspěchy této hry z jejích uložených pozic, ale neví, kde je hra nainstalována. Najdi ji, aby fungovala doba hraní a opravy.",

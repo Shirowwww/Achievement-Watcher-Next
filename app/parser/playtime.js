@@ -24,6 +24,18 @@ module.exports.lastPlayedSync = (appID) => {
   }
 };
 
+// One registry pass for library rows that show both total playtime and the last session.
+module.exports.readSync = (appID) => {
+  try {
+    return {
+      playtime: +readRegistryInteger('HKCU', PLAYTIME_KEY + appID, 'total') || 0,
+      lastplayed: +readRegistryInteger('HKCU', PLAYTIME_KEY + appID, 'last') || 0,
+    };
+  } catch {
+    return { playtime: 0, lastplayed: 0 };
+  }
+};
+
 module.exports.reset = async (appID) => {
   const path = `${PLAYTIME_KEY}${appID}`;
   await writeRegistryDword('HKCU', path, 'total', 0);

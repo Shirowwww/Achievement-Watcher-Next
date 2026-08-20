@@ -49,6 +49,8 @@
   "revealedOnceUnlocked": "Her başarımın ayrıntıları açıldığında gösterilecek",
   "hiddenDescriptionPlaceholder": "Gizli - göstermek için tıkla",
   "noneUnlocked": "Henüz açılmış başarım yok",
+  "latestAchievementEarned": "Son açılan başarım",
+  "neverPlayed": "Hiç başlatılmadı veya izlenmedi",
   "noneUnlockedHint": "Hiç açılan görmüyor musun?",
   "scrollUp": "Yukarı çık",
   "allGamesBackButton": "Tüm oyunlar",
@@ -145,11 +147,15 @@
         "description": "Arayüz dili. Oyun verileri, mevcut olduğunda bu dilde alınır."
       },
       "thumbnail": {
-        "name": "Küçük resim yönü",
-        "description": "Dikey, uzun kapak görsellerini gösterir; Yatay, geniş Steam başlık görsellerini gösterir.",
+        "name": "Kütüphane görünümü",
+        "description": "Kart düzenini seçin. Yatay mevcut görünümü korur; Kompakt ızgara, Liste ve Ayrıntılar yoğunluğu veya etkinlik bilgisini öne çıkarır.",
         "value": {
           "portrait": "Dikey",
-          "landscape": "Yatay"
+          "landscape": "Yatay",
+          "compact": "Kompakt yatay",
+          "portraitCompact": "Kompakt dikey",
+          "list": "Liste",
+          "details": "Ayrıntılar"
         }
       },
       "hiddenAch": {
@@ -242,11 +248,11 @@
       }
     },
     "emulator": {
-      "nav": "Steam emülatörü",
+      "nav": "Emülatör onarımı",
       "groupNav": "Emülatörler",
-      "sectionTitle": "Emülatör kurulumu (GBE Fork)",
-      "intro": "Sağ tık Emülatör düzeltmesini uygula eyleminin kullandığı varsayılanlar. Steam’in nasıl atlatılacağını ve ne kadar oyun verisinin alınacağını seç.",
-      "coreTitle": "Temel yapılandırma",
+      "sectionTitle": "Emülatör kurulumu",
+      "intro": "Desteklenen Steam/GBE Fork oyunları için güvenli, otomatik onarım.",
+      "coreTitle": "Steam / GBE Fork",
       "advancedTitle": "Gelişmiş seçenekler",
       "loginTitle": "Steam girişi (yalnızca tek kullanımlık hesap)",
       "loginWarning": "Tek kullanımlık hesap",
@@ -261,7 +267,7 @@
       "loginTestFailed": "Steam girişi başarısız",
       "autoApply": {
         "name": "Yeni algılanan oyunları otomatik düzelt",
-        "description": "Yeni algılanan, yapılandırılmamış bir emüle oyun için tüm Emülatör düzeltmesini uygula zincirini bir kez çalıştırır: SteamStub işleme, GBE Fork, başarımlar, DLC’ler, kimlik/dil ve etkinse Gelişmiş veriler. Varsayılan olarak devre dışı.",
+        "description": "Yeni algılanan bir oyun için güvenli Steam/GBE Fork onarımını bir kez çalıştırır. Varsayılan olarak devre dışı.",
         "value": {
           "false": "Devre dışı",
           "true": "Etkin"
@@ -277,7 +283,7 @@
       },
       "login": {
         "name": "Veri kaynağı (Advanced)",
-        "description": "Steam girişi, generate_emu_config’in tam DLC/depo verisini çekmesini sağlar. YALNIZCA tek kullanımlık bir hesap kullan - asla ana hesabını.",
+        "description": "Anonim mod zaten herkese açık DLC/depo verilerini alır. Steam girişi isteğe bağlıdır: yalnızca özel veya gizli verileri (ör. bazı depoları, dalları ya da dilleri) ekler. YALNIZCA tek kullanımlık hesap kullan; asla ana hesabını kullanma.",
         "value": {
           "anonymous": "Anonim",
           "steam": "Steam girişi"
@@ -331,7 +337,33 @@
           "true": "Etkin"
         }
       },
-      "loginPlaceholder": "tek kullanımlık hesap"
+      "loginPlaceholder": "tek kullanımlık hesap",
+      "uplay": {
+        "title": "Ubisoft / Uplay R2",
+        "iniTitle": "Loader ve INI seçenekleri",
+        "username": "Görünen ad",
+        "usernameHelp": "Genel profil adını kullanmak için boş bırakın.",
+        "language": { "name": "Loader dili", "description": "Sonraki onarımda iki Uplay R2 INI dosyasına da yazılır.", "value": { "auto": "Uygulama dilini kullan" } },
+        "logging": { "name": "Tanılama günlüğü", "description": "Yalnızca sorun giderirken etkinleştirin; loader oyun yanında günlük dosyaları oluşturabilir." },
+        "import": "DLL içe aktar veya değiştir",
+        "restore": "Tümleşik DLL dosyalarını geri yükle",
+        "customReady": "Özel DLL dosyaları hazır",
+        "importSuccess": "Sonraki onarım için seçilen {count} dosya içe aktarıldı.",
+        "importFailure": "Seçilen DLL içe aktarılamadı.",
+        "restoreSuccess": "Tümleşik DLL dosyaları geri yüklendi.",
+        "packageLabel": "Tümleşik onarım paketi",
+        "packageHelp": "AW Next tümleşik onarım dosyalarını doğrular ve her oyunun kanıtladığı mimariyi otomatik olarak seçer.",
+        "checking": "Denetleniyor…", "ready": "Hazır", "attention": "İlgi gerekiyor",
+        "verify": "Onarım paketini doğrula", "verifySuccess": "Tümleşik onarım paketi geçerli ve hazır.",
+        "verifyFailure": "Tümleşik onarım paketi doğrulanamadı. Hiçbir oyun dosyası değiştirilmedi.",
+        "repair": "Algılanan Uplay R2 oyunlarını onar",
+        "repairHelp": "Yalnızca algılanan uyumlu kurulumlar değiştirilir. Mevcut dosyalar yedeklenir ve sonuç otomatik doğrulanır.",
+        "noGames": "Algılanan hiçbir Uplay R2 oyununun bilinen bir kurulum klasörü yok.",
+        "repairConfirm": "Oyunları onar", "repairTitle": "Algılanan Uplay R2 oyunlarını onar",
+        "repairConfirmMessage": "Algılanan {count} Uplay R2 oyunu onarılsın mı? Mevcut dosyalar yedeklenecek ve her sonuç doğrulanacak.",
+        "repairing": "Onarılıyor {current} / {total} — {game}",
+        "repairResult": "Tamamlandı — {repaired} onarıldı, {unchanged} zaten sağlam, {failed} başarısız."
+      }
     },
     "notification": {
       "title": {
@@ -574,6 +606,10 @@
         "souvenirTitle": "Anı ekran görüntüsü",
         "souvenirScreenshot": "Açılışta ekran görüntüsü",
         "souvenirScreenshotDesc": "Bir başarım açıldığında ekranı yakalar. Oyun başına kaydedilir.",
+        "souvenirHdr": "HDR ekran görüntüleri",
+        "souvenirHdrDesc": "Otomatik mod, Windows HDR etkinken renkleri düzeltir. Kullanılamazsa standart ekran görüntüsü kaydedilir.",
+        "souvenirHdrAuto": "Otomatik",
+        "souvenirHdrOff": "Kapalı",
         "souvenirDir": "Kayıt klasörü",
         "souvenirDirHelp": "Ekran görüntüleri <klasör>\\<oyun>\\<tarih> - <başarım>.png içine kaydedilir. Boş = Resimler\\Achievement Watcher Next.",
         "souvenirOpenDir": "Klasörü aç",
@@ -853,7 +889,7 @@
       "fixAll": {
         "name": "Algılanan tüm oyunları düzelt",
         "button": "Tüm oyunları düzelt",
-        "description": "Kurulum klasörü bilinen, algılanan her emüle oyunda emülatör düzeltmesini (GBE Fork, başarımlar, DLC’ler) çalıştırır.",
+        "description": "Kurulum klasörü bilinen her uyumlu algılanmış oyunda uygun Steam/GBE Fork veya Ubisoft/Uplay R2 onarımını çalıştırır.",
         "confirm": "Kurulum klasörü bilinen, algılanan her oyuna emülatör düzeltmesi uygulansın mı? Mevcut dosyalar üzerine yazılmadan önce yedeklenir.",
         "running": "Oyunlar düzeltiliyor…",
         "progress": "Düzeltiliyor %cur% / %total% - %name%",
@@ -958,7 +994,7 @@
     "sourceHint": "Ayrıca meşru Steam oyunlarınızı da listeler (herkese açık profil gereklidir).",
     "notificationsHint": "Açılışların nerede görüneceği. Otomatik, yer paylaşımı ile Windows bildirimi arasında sizin için seçer.",
     "playtimeHint": "Algılanan oyunların oynatma süresini otomatik olarak izler.",
-    "autoFixHint": "Emülatör düzeltmesini (GBE Fork, başarılar, DLC) yeni taklit edilen oyunlara uygular.",
+    "autoFixHint": "Yeni algılanan emüle oyunlara uygun GBE Fork veya Uplay R2 onarımını uygular.",
     "hiddenHint": "Kilidini açmadan önce gizli başarı adlarını ve açıklamalarını ortaya çıkarır.",
     "mergeHint": "Çeşitli kaynaklarda bulunan aynı oyunu tek bir karoda birleştirir.",
     "none": "Hiçbiri",
@@ -1254,10 +1290,10 @@
     "the-automatic-goldberg-uplay-r2-mapping-cannot-be-generated-for-": "Bu oyun için otomatik Goldberg Uplay R2 eşlemesi oluşturulamıyor.",
     "uplay-r2-dll-not-seeded": "Uplay R2 DLL’si yerleştirilmedi",
     "no-files-found-in-the-uplay-r2-cache": "Uplay R2 önbelleğinde dosya bulunamadı.",
-    "copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-": "uplay_r2_loader(64).dll / upc_r2_loader(64).dll dosyalarını buraya kopyala (tek seferlik kurulum):\n{dir}",
+    "copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-": "Uplay R2 paketini bir kez seç. AW Next yalnızca doğrulanmış x86/x64 yükleyici DLL'lerini buraya aktarır:\n{dir}",
     "update-the-uplay-r2-loader": "Uplay R2 loader’ı güncellensin mi?",
     "uplay-r2-old-loader-message": "Bu oyun, başarımları yönlendirmek için çok eski bir loader kullanıyor.",
-    "uplay-r2-old-loader-detail": "Fix güncelleme yapmadan da çalışır: AW Next, emülatörün kendi kayıt klasörünü okur.\n\nGüncelleme, GSE Saves’e yönlendirmeyi etkinleştirir; ancak oyunun şu anda başlattığı DLL’yi değiştirir (orijinal .bak olarak korunur).",
+    "uplay-r2-old-loader-detail": "Fix güncelleme yapmadan da çalışır: AW Next, emülatörün kendi kayıt klasörünü okur.\n\nGüncelleme, GSE Saves’e yönlendirmeyi etkinleştirir; ancak oyunun şu anda başlattığı DLL’yi değiştirir (orijinal onarım yedeğinde korunur).",
     "keep-current-loader": "Geçerli loader’ı koru",
     "update-loader": "Güncelle",
     "updating-the-dll": "DLL güncelleniyor…",
@@ -1492,6 +1528,10 @@
     "chooseAnotherCoverTitle": "Başka bir kapak seç",
     "coverPickerLoading": "Kapaklar yükleniyor…",
     "noCoversFound": "Alternatif kapak bulunamadı.",
+    "artwork-fetch-failed": "Görsel alınamadı. Bağlantınızı kontrol edin.",
+    "artwork-not-found": "Görsel bulunamadı.",
+    "retry-artwork": "Tekrar dene",
+    "cover-picker-fetch-failed": "Alternatif kapaklar alınamadı. Bağlantınızı kontrol edip tekrar deneyin.",
     "currentCover": "Mevcut",
     "defaultCover": "Varsayılan",
     "theme-layer-gradient": "Degrade",
@@ -1611,7 +1651,7 @@
     "gh-why-no-achievement-data": "Bu oyun için başarım listesi bulunamadı, dolayısıyla henüz izlenecek bir şey yok. Hiç başarımı olmayan oyunlar burada normaldir.",
     "gh-why-emulator-missing": "Bu oyunun başarımları kaydetmesi için bir Steam emülatörü gerekiyor ve klasöründe hiç yok. Oyunun sağ tık menüsündeki emülatör düzeltmesini kullan.",
     "gh-why-emulator-runtime-missing": "Başarım verileri yerinde, ancak onları okuyan emülatör dosyası oyun klasöründe yok; bu yüzden hiçbir şey kaydedilmez. AW Next dosyayı geri koyabilir.",
-    "gh-why-uplay-broken": "Bu oyunun Ubisoft emülatör kurulumu eksik, bu yüzden açılışlar kaydedilmiyor. Sağ tık menüsünden Uplay R2 düzeltmesini yeniden uygula.",
+    "gh-why-uplay-broken": "Bu oyunun Ubisoft emülatör kurulumu eksik, bu yüzden açılışlar kaydedilmiyor. Aşağıdaki Uplay R2 onarım düğmesini kullan.",
     "gh-why-achievement-data-incomplete": "AW Next’in bu oyun için sahip olduğu başarım listesi, oyunun arayacağı listeyle eşleşmiyor; bu yüzden bazı açılışlar kaçırılır. Liste resmî verilerden yeniden yazılabilir.",
     "gh-why-no-progress-yet": "Oyun algılandı ve başarım verileri mevcut, ancak henüz hiçbir ilerleme bulunamadı. Sorun büyük olasılıkla bildirimler değil, oyun ya da emülatör yapılandırmasıdır.",
     "gh-why-install-unknown": "AW Next bu oyunun başarımlarını kayıt dosyalarından okuyor, ancak oyunun nereye kurulu olduğunu bilmiyor. Oynama süresi ve onarımlar için oyunun yerini göster.",

@@ -49,6 +49,8 @@
   "revealedOnceUnlocked": "Les détails de chaque succès seront révélés une fois débloqués",
   "hiddenDescriptionPlaceholder": "Masqué - cliquez pour révéler",
   "noneUnlocked": "Pas de succès débloqués",
+  "latestAchievementEarned": "Dernier succès obtenu",
+  "neverPlayed": "Jamais lancé ou suivi",
   "noneUnlockedHint": "Aucun succès ne se débloque ?",
   "scrollUp": "Vers le haut",
   "allGamesBackButton": "Tous les jeux",
@@ -129,11 +131,15 @@
         "description": "Langue de l’interface. Les données des jeux sont récupérées dans cette langue quand c’est possible."
       },
       "thumbnail": {
-        "name": "Orientation des vignettes",
-        "description": "Portrait affiche les jaquettes verticales ; Paysage affiche les bannières Steam horizontales.",
+        "name": "Affichage de la bibliothèque",
+        "description": "Choisis la disposition des cartes. Paysage conserve l’apparence actuelle ; les modes paysage et portrait compacts, Liste et Détails privilégient la densité ou les informations d’activité.",
         "value": {
           "portrait": "Portrait",
-          "landscape": "Paysage"
+          "landscape": "Paysage",
+          "compact": "Paysage compact",
+          "portraitCompact": "Portrait compact",
+          "list": "Liste",
+          "details": "Détails"
         }
       },
       "hiddenAch": {
@@ -226,11 +232,11 @@
       }
     },
     "emulator": {
-      "nav": "Émulateur Steam",
+      "nav": "Réparation émulateurs",
       "groupNav": "Émulateurs",
-      "sectionTitle": "Configuration émulateur (GBE Fork)",
-      "intro": "Valeurs par défaut utilisées par l’action clic-droit « Appliquer le fix émulateur ». Choisis comment Steam est contourné et la quantité de données récupérées.",
-      "coreTitle": "Configuration principale",
+      "sectionTitle": "Configuration des émulateurs",
+      "intro": "Réparation sûre et automatique des jeux Steam/GBE Fork compatibles.",
+      "coreTitle": "Steam / GBE Fork",
       "advancedTitle": "Options avancées",
       "loginTitle": "Login Steam (compte jetable uniquement)",
       "loginWarning": "Compte jetable",
@@ -245,7 +251,7 @@
       "loginTestFailed": "Échec de la connexion Steam",
       "autoApply": {
         "name": "Corriger automatiquement les nouveaux jeux détectés",
-        "description": "Exécute une fois toute la chaîne Appliquer le fix émulateur pour chaque nouveau jeu émulé non configuré : SteamStub, GBE Fork, succès, DLC, pseudo/langue et données avancées si activées. Désactivé par défaut.",
+        "description": "Exécute une fois la réparation Steam/GBE Fork adaptée à chaque nouveau jeu détecté. Désactivé par défaut.",
         "value": {
           "false": "Désactivé",
           "true": "Activé"
@@ -261,7 +267,7 @@
       },
       "login": {
         "name": "Source des données (Advanced)",
-        "description": "Le login Steam permet à generate_emu_config de récupérer les DLC/depots complets. Utilise un compte JETABLE uniquement - jamais ton compte principal.",
+        "description": "Le mode anonyme récupère déjà les DLC et depots publics. Le login Steam est facultatif : il ajoute seulement les données privées ou masquées par Steam (certains depots, branches ou langues). Utilise un compte JETABLE uniquement, jamais ton compte principal.",
         "value": {
           "anonymous": "Anonyme",
           "steam": "Login Steam"
@@ -315,7 +321,37 @@
           "true": "Activé"
         }
       },
-      "loginPlaceholder": "compte jetable"
+      "loginPlaceholder": "compte jetable",
+      "uplay": {
+        "title": "Ubisoft / Uplay R2",
+        "iniTitle": "Options du loader et des INI",
+        "username": "Nom affiché",
+        "usernameHelp": "Laisse vide pour utiliser le nom du profil général.",
+        "language": { "name": "Langue du loader", "description": "Écrite dans les deux INI Uplay R2 lors de la prochaine réparation.", "value": { "auto": "Suivre la langue de l’application" } },
+        "logging": { "name": "Journal de diagnostic", "description": "À activer seulement pour diagnostiquer un problème ; le loader peut créer des journaux près du jeu." },
+        "import": "Importer ou remplacer des DLL",
+        "restore": "Restaurer les DLL intégrées",
+        "customReady": "DLL personnalisées prêtes",
+        "importSuccess": "{count} fichier(s) sélectionné(s) importé(s) pour la prochaine réparation.",
+        "importFailure": "La DLL sélectionnée n’a pas pu être importée.",
+        "restoreSuccess": "Les DLL intégrées ont été restaurées.",
+        "packageLabel": "Paquet de réparation intégré",
+        "packageHelp": "AW Next vérifie ses fichiers de réparation intégrés et choisit automatiquement l’architecture prouvée par chaque jeu.",
+        "checking": "Vérification…",
+        "ready": "Prêt",
+        "attention": "Attention requise",
+        "verify": "Vérifier le paquet de réparation",
+        "verifySuccess": "Le paquet de réparation intégré est valide et prêt.",
+        "verifyFailure": "Le paquet de réparation intégré n’a pas pu être vérifié. Aucun fichier de jeu n’a été modifié.",
+        "repair": "Réparer les jeux Uplay R2 détectés",
+        "repairHelp": "Seules les installations compatibles détectées sont modifiées. Les fichiers existants sont sauvegardés et le résultat est validé automatiquement.",
+        "noGames": "Aucun jeu Uplay R2 détecté n’a de dossier d’installation connu.",
+        "repairConfirm": "Réparer les jeux",
+        "repairTitle": "Réparer les jeux Uplay R2 détectés",
+        "repairConfirmMessage": "Réparer {count} jeu(x) Uplay R2 détecté(s) ? Les fichiers existants sont sauvegardés et chaque résultat est validé.",
+        "repairing": "Réparation {current} / {total} — {game}",
+        "repairResult": "Terminé — {repaired} réparé(s), {unchanged} déjà sain(s), {failed} en échec."
+      }
     },
     "overlay": {
       "position": "Position des succès",
@@ -574,6 +610,10 @@
         "souvenirTitle": "Capture souvenir",
         "souvenirScreenshot": "Capture au déblocage",
         "souvenirScreenshotDesc": "Capture l’écran lorsqu’un succès se débloque. Rangée par jeu.",
+        "souvenirHdr": "Captures HDR",
+        "souvenirHdrDesc": "Le mode automatique corrige les couleurs lorsque le HDR de Windows est actif. En cas d’indisponibilité, la capture standard est enregistrée.",
+        "souvenirHdrAuto": "Automatique",
+        "souvenirHdrOff": "Désactivé",
         "souvenirDir": "Dossier d’enregistrement",
         "souvenirDirHelp": "Captures enregistrées dans <dossier>\\<jeu>\\<date> - <succès>.png. Vide = Images\\Achievement Watcher Next.",
         "souvenirOpenDir": "Ouvrir le dossier",
@@ -853,7 +893,7 @@
       "fixAll": {
         "name": "Réparer tous les jeux détectés",
         "button": "Réparer tous les jeux",
-        "description": "Lance le fix émulateur (GBE Fork, succès, DLC) sur chaque jeu émulé détecté dont le dossier d’installation est connu.",
+        "description": "Lance la réparation Steam/GBE Fork ou Ubisoft/Uplay R2 adaptée sur chaque jeu compatible détecté dont le dossier d’installation est connu.",
         "confirm": "Appliquer le fix émulateur à chaque jeu détecté dont le dossier d’installation est connu ? Les fichiers existants sont sauvegardés avant d’être écrasés.",
         "running": "Réparation des jeux…",
         "progress": "Réparation %cur% / %total% - %name%",
@@ -958,7 +998,7 @@
     "sourceHint": "Répertorie également vos jeux Steam légitimes (profil public requis).",
     "notificationsHint": "Où apparaissent les succès. Automatique choisit pour vous entre overlay et notification Windows.",
     "playtimeHint": "Suit automatiquement le temps de jeu pour les jeux détectés.",
-    "autoFixHint": "Applique le correctif de l’émulateur (GBE Fork, succès, DLC) aux nouveaux jeux émulés.",
+    "autoFixHint": "Applique la réparation GBE Fork ou Uplay R2 adaptée aux nouveaux jeux émulés détectés.",
     "hiddenHint": "Révèle les noms et descriptions cachés des succès avant de les débloquer.",
     "mergeHint": "Combine le même jeu trouvé dans plusieurs sources en une seule tuile.",
     "none": "Aucun",
@@ -1254,10 +1294,10 @@
     "the-automatic-goldberg-uplay-r2-mapping-cannot-be-generated-for-": "Le mappage automatique vers Goldberg Uplay R2 ne peut pas être généré pour ce jeu.",
     "uplay-r2-dll-not-seeded": "DLL Uplay R2 manquantes",
     "no-files-found-in-the-uplay-r2-cache": "Aucun fichier trouvé dans le cache Uplay R2.",
-    "copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-": "Copie une fois les fichiers uplay_r2_loader(64).dll / upc_r2_loader(64).dll dans :\n{dir}",
+    "copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-": "Sélectionne une fois ton paquet Uplay R2. AW Next importe uniquement les DLL x86/x64 validées dans :\n{dir}",
     "update-the-uplay-r2-loader": "Mettre à jour le loader Uplay R2 ?",
     "uplay-r2-old-loader-message": "Ce jeu utilise un loader trop ancien pour rediriger les succès.",
-    "uplay-r2-old-loader-detail": "Le correctif fonctionne sans mise à jour : AW Next lit le dossier de sauvegarde de l’émulateur.\n\nMettre à jour le loader permet la redirection vers GSE Saves, mais remplace une DLL avec laquelle le jeu se lance actuellement (l’originale est conservée en .bak).",
+    "uplay-r2-old-loader-detail": "Le correctif fonctionne sans mise à jour : AW Next lit le dossier de sauvegarde de l’émulateur.\n\nMettre à jour le loader permet la redirection vers GSE Saves, mais remplace une DLL avec laquelle le jeu se lance actuellement (l’originale est conservée dans la sauvegarde de réparation).",
     "keep-current-loader": "Garder le loader actuel",
     "update-loader": "Mettre à jour",
     "updating-the-dll": "Mise à jour de la DLL…",
@@ -1492,6 +1532,10 @@
     "chooseAnotherCoverTitle": "Choisir une autre jaquette",
     "coverPickerLoading": "Chargement des jaquettes…",
     "noCoversFound": "Aucune jaquette alternative trouvée.",
+    "artwork-fetch-failed": "Impossible de récupérer le visuel. Vérifiez votre connexion.",
+    "artwork-not-found": "Aucun visuel trouvé.",
+    "retry-artwork": "Réessayer",
+    "cover-picker-fetch-failed": "Impossible de récupérer les jaquettes alternatives. Vérifiez votre connexion et réessayez.",
     "currentCover": "Actuelle",
     "defaultCover": "Par défaut",
     "theme-layer-gradient": "Dégradé",
@@ -1611,7 +1655,7 @@
     "gh-why-no-achievement-data": "Aucune liste de succès n’a été trouvée pour ce jeu, il n’y a donc rien à suivre. C’est normal pour un jeu sans succès.",
     "gh-why-emulator-missing": "Ce jeu a besoin d’un émulateur Steam pour enregistrer les succès, et aucun n’est installé dans son dossier. Utilise le fix émulateur du menu clic droit du jeu.",
     "gh-why-emulator-runtime-missing": "Les données de succès sont en place, mais le fichier d’émulateur qui les lit est absent du dossier du jeu : rien ne sera jamais enregistré. AW Next peut le remettre.",
-    "gh-why-uplay-broken": "La configuration de l’émulateur Ubisoft de ce jeu est incomplète : les déblocages ne sont pas enregistrés. Réapplique le fix Uplay R2 depuis le menu clic droit.",
+    "gh-why-uplay-broken": "La configuration de l’émulateur Ubisoft de ce jeu est incomplète : les déblocages ne sont pas enregistrés. Utilise le bouton de réparation Uplay R2 ci-dessous.",
     "gh-why-achievement-data-incomplete": "La liste de succès dont dispose AW Next ne correspond pas à ce que le jeu va chercher : certains déblocages seraient manqués. Elle peut être réécrite à partir des données officielles.",
     "gh-why-no-progress-yet": "Le jeu est détecté et les données de succès sont disponibles, mais aucune progression n’a encore été trouvée. Le problème vient probablement de la configuration du jeu ou de l’émulateur, pas des notifications.",
     "gh-why-install-unknown": "AW Next lit les succès de ce jeu dans ses fichiers de sauvegarde, mais ne sait pas où le jeu est installé. Localise-le pour activer le temps de jeu et les réparations.",

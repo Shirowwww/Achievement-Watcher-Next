@@ -18,14 +18,7 @@ const SECTION_SELECTOR = '.arrow-list, .emulator-group, .settings-card, #epic-co
 */
 const HEADER_SELECTOR = '.title, .emulator-group-title, .emulator-login-heading';
 
-/*
-  Sections that start collapsed on a fresh profile.
-
-  Empty on purpose. The preset designer used to be listed here - a large authoring surface sitting
-  between the notification options and the souvenir settings - but it now has a tab of its own, where
-  it is the reason the user opened the tab. Nothing else in the panel is big enough to be worth
-  hiding from someone who has just arrived.
-*/
+// Sections that start collapsed on a fresh profile.
 const DEFAULT_COLLAPSED = [];
 
 // The header element of a section, or null when it has none (which makes it not a section).

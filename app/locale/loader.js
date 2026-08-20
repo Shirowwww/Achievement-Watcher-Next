@@ -173,10 +173,18 @@ function translateUI(lang, locale, template) {
   selector = $('#options-ui');
   selector.find('li:nth-child(1) .left span').text(clear(template.settings.general.language.name));
   selector.find('li:nth-child(1) .help span').text(clear(template.settings.general.language.description));
-  selector.find('li:nth-child(2) .left span').text(clear(template.settings.general.thumbnail.name));
-  selector.find("li:nth-child(2) .right select option[value='true']").text(clear(template.settings.general.thumbnail.value.portrait));
-  selector.find("li:nth-child(2) .right select option[value='false']").text(clear(template.settings.general.thumbnail.value.landscape));
-  if (template.settings.general.thumbnail.description) selector.find('li:nth-child(2) .help').text(clear(template.settings.general.thumbnail.description));
+  const libraryView = template.settings.general.thumbnail;
+  const libraryViewSelects = $('#option_libraryLayout, #library-layout-select');
+  selector.find('li:nth-child(2) .left span').text(clear(libraryView.name));
+  libraryViewSelects.find("option[value='default']").text(clear(libraryView.value.landscape));
+  libraryViewSelects.find("option[value='portrait']").text(clear(libraryView.value.portrait));
+  libraryViewSelects.find("option[value='compact']").text(clear(libraryView.value.compact));
+  libraryViewSelects.find("option[value='portrait-compact']").text(clear(libraryView.value.portraitCompact));
+  libraryViewSelects.find("option[value='list']").text(clear(libraryView.value.list));
+  libraryViewSelects.find("option[value='details']").text(clear(libraryView.value.details));
+  $('.library-layout-control').attr('title', clear(libraryView.description || libraryView.name));
+  $('#library-layout-select').attr('aria-label', clear(libraryView.name));
+  if (libraryView.description) selector.find('li:nth-child(2) .help').text(clear(libraryView.description));
   selector.find('li:nth-child(3) .left span').text(clear(template.settings.general.hiddenAch.name));
   selector.find("li:nth-child(3) .right select option[value='true']").text(clear(template.settings.common.show));
   selector.find("li:nth-child(3) .right select option[value='false']").text(clear(template.settings.common.hide));
@@ -275,7 +283,7 @@ function translateUI(lang, locale, template) {
   // Emulator setup section (own settings tab) - bound by stable id, not nth-child.
   if (template.settings.emulator) {
     const emu = template.settings.emulator;
-    if (emu.nav) $('#emulator-nav-label').text(clear(emu.nav));
+    if (emu.coreTitle) $('#emulator-nav-label').text(clear(emu.coreTitle));
     if (emu.sectionTitle) $('#emulator-options-title').text(clear(emu.sectionTitle));
     if (emu.intro) $('#emulator-options-intro').text(clear(emu.intro));
     if (emu.coreTitle) $('#emulator-core-title').text(clear(emu.coreTitle));
@@ -288,6 +296,21 @@ function translateUI(lang, locale, template) {
     if (emu.loginTest) $('#emulator-login-test-label').text(clear(emu.loginTest));
     if (emu.loginTestHint) $('#emulator-login-test-hint').text(clear(emu.loginTestHint));
     if (emu.loginPlaceholder) $('#emulator-login-user').attr('placeholder', clear(emu.loginPlaceholder));
+    if (emu.uplay) {
+      const uplay = emu.uplay;
+      if (uplay.title) $('#uplay-r2-nav-label, #uplay-r2-options-title').text(clear(uplay.title));
+      if (uplay.repairHelp) $('#uplay-r2-options-intro').text(clear(uplay.repairHelp));
+      if (emu.nav) $('#uplay-r2-auto-title').text(clear(emu.nav));
+      if (uplay.packageLabel) $('#uplay-r2-settings-title').text(clear(uplay.packageLabel));
+      if (uplay.packageLabel) $('#uplay-r2-package-label').text(clear(uplay.packageLabel));
+      if (uplay.packageHelp) $('#uplay-r2-package-help').text(clear(uplay.packageHelp));
+      if (uplay.checking) $('#uplay-r2-package-status-text').text(clear(uplay.checking));
+      if (uplay.verify) $('#verify-uplay-r2-package-label').text(clear(uplay.verify));
+      if (uplay.import) $('#import-uplay-r2-loaders-label').text(clear(uplay.import));
+      if (uplay.restore) $('#restore-uplay-r2-loaders-label').text(clear(uplay.restore));
+      if (uplay.repair) $('#repair-all-uplay-r2-row-label, #repair-all-uplay-r2-label').text(clear(uplay.repair));
+      if (uplay.repairHelp) $('#repair-all-uplay-r2-help').text(clear(uplay.repairHelp));
+    }
     const bindEmuRow = (id, t) => {
       if (!t) return;
       const li = $('#' + id).closest('li');
@@ -296,6 +319,10 @@ function translateUI(lang, locale, template) {
       if (t.value) for (const v in t.value) li.find("select option[value='" + v + "']").text(clear(t.value[v]));
     };
     bindEmuRow('option_autoApplyNewGames', emu.autoApply);
+    bindEmuRow('option_autoApplyNewGamesUplay', emu.autoApply);
+    if (emu.uplay && emu.uplay.repairHelp) {
+      $('#option_autoApplyNewGamesUplay').closest('li').find('.help').text(clear(emu.uplay.repairHelp));
+    }
     bindEmuRow('option_steamSettingsMode', emu.steamSettings);
     bindEmuRow('option_login', emu.login);
     bindEmuRow('option_steamlessAutoUnpack', emu.steamless);
@@ -333,7 +360,8 @@ function translateUI(lang, locale, template) {
     if (helpSearchClear) $('#help-search-clear').attr('title', helpSearchClear).attr('aria-label', helpSearchClear);
     bindHelpText('help-quick-title', help.quickTitle);
     bindHelpText('help-gamehealth-title', help.gameHealthTitle);
-    bindHelpText('help-steam-title', help.steamTitle);
+    bindHelpText('help-steam-title', (template.settings.emulator && template.settings.emulator.nav) || help.steamTitle);
+    bindHelpText('help-uplay-title', template.settings.emulator && template.settings.emulator.uplay && template.settings.emulator.uplay.title);
     bindHelpText('help-emulator-title', help.emulatorTitle);
     bindHelpText('help-sources-title', help.sourcesTitle);
     bindHelpText('help-controller-title', help.controllerTitle);
@@ -345,6 +373,17 @@ function translateUI(lang, locale, template) {
     bindHelpList('help-quick-list', help.quick);
     bindHelpList('help-gamehealth-list', help.gameHealth);
     bindHelpList('help-steam-list', help.steam);
+    const uplayHelp = template.settings.emulator && template.settings.emulator.uplay;
+    bindHelpList(
+      'help-uplay-list',
+      uplayHelp
+        ? [
+            uplayHelp.packageHelp,
+            [uplayHelp.import, uplayHelp.restore].filter(Boolean).join(' / '),
+            uplayHelp.repairHelp,
+          ].filter(Boolean)
+        : []
+    );
     bindHelpList('help-emulator-list', help.emulators);
     bindHelpList('help-sources-list', help.sources);
     bindHelpList('help-controller-list', help.controller);
@@ -454,6 +493,10 @@ function translateUI(lang, locale, template) {
     $('#lbl-souvenirScreenshot').closest('li').find('.help').text(clear(opt.souvenirScreenshotDesc));
     $("#option_souvenirScreenshot option[value='true']").text(clear(template.settings.common.enable));
     $("#option_souvenirScreenshot option[value='false']").text(clear(template.settings.common.disable));
+    $('#lbl-souvenirHdr').text(clear(opt.souvenirHdr));
+    $('#lbl-souvenirHdr').closest('li').find('.help').text(clear(opt.souvenirHdrDesc));
+    $("#option_souvenirHdr option[value='auto']").text(clear(opt.souvenirHdrAuto));
+    $("#option_souvenirHdr option[value='off']").text(clear(opt.souvenirHdrOff));
     $('#lbl-souvenirDir').text(clear(opt.souvenirDir));
     $('#souvenir-dir-help').text(clear(opt.souvenirDirHelp));
     $('#souvenir-open-label').text(clear(opt.souvenirOpenDir));
@@ -672,6 +715,7 @@ function translateUI(lang, locale, template) {
   $('#nav-group-general').text(clear(template.settings.sideMenu.general));
   $('#nav-group-notification').text(clear(template.settings.sideMenu.notification));
   $('#nav-group-library').text(clear(template.settings.source.title || template.settings.sideMenu.source));
+  $('#nav-group-emulator').text(clear(template.settings.emulator.groupNav));
   $('#nav-group-help').text(clear(template.settings.help.nav));
   $('#nav-group-advanced').text(clear(template.settings.sideMenu.advanced));
   $('#btn-settings-cancel').text(clear(template.settings.common.cancel));

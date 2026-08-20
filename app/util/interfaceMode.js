@@ -33,7 +33,7 @@ const ADVANCED_ATTRIBUTE = 'data-advanced';
   and picking a layout is an everyday choice, so the tab stays and only its three implementation
   rows (backend, overlay focus, Escape injection) carry ADVANCED_ATTRIBUTE.
 */
-const ADVANCED_VIEWS = ['emulator', 'advanced'];
+const ADVANCED_VIEWS = ['emulator', 'uplay', 'advanced'];
 
 // Tabs Simple mode always shows. Listed rather than derived so a new tab has to make a deliberate
 // choice instead of silently defaulting into the streamlined interface.

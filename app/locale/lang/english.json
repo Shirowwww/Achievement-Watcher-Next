@@ -49,6 +49,8 @@
   "revealedOnceUnlocked": "Details for each achievement will be revealed once unlocked",
   "hiddenDescriptionPlaceholder": "Hidden - click to reveal",
   "noneUnlocked": "No achievement unlocked yet",
+  "latestAchievementEarned": "Latest achievement earned",
+  "neverPlayed": "Never launched or tracked",
   "noneUnlockedHint": "Not seeing any unlocks?",
   "scrollUp": "Scroll up",
   "allGamesBackButton": "All Games",
@@ -145,11 +147,15 @@
         "description": "Interface language. Game data is fetched in this language when available."
       },
       "thumbnail": {
-        "name": "Thumbnail orientation",
-        "description": "Portrait shows tall box-art covers; Landscape shows wide Steam header images.",
+        "name": "Library view",
+        "description": "Choose the card layout. Landscape keeps the current look; compact landscape and portrait, List, and Details trade artwork size for density or richer activity.",
         "value": {
           "portrait": "Portrait",
-          "landscape": "Landscape"
+          "landscape": "Landscape",
+          "compact": "Compact landscape",
+          "portraitCompact": "Compact portrait",
+          "list": "List",
+          "details": "Details"
         }
       },
       "hiddenAch": {
@@ -242,11 +248,11 @@
       }
     },
     "emulator": {
-      "nav": "Steam emulator",
+      "nav": "Emulator repair",
       "groupNav": "Emulators",
-      "sectionTitle": "Emulator setup (GBE Fork)",
-      "intro": "Defaults used by the right-click Apply emulator fix action. Choose how Steam is bypassed and how much game data is fetched.",
-      "coreTitle": "Core configuration",
+      "sectionTitle": "Emulator setup",
+      "intro": "Safe, automatic repair for supported Steam/GBE Fork games.",
+      "coreTitle": "Steam / GBE Fork",
       "advancedTitle": "Advanced options",
       "loginTitle": "Steam login (throwaway account only)",
       "loginWarning": "Throwaway account",
@@ -261,7 +267,7 @@
       "loginTestFailed": "Steam login failed",
       "autoApply": {
         "name": "Automatically fix newly detected games",
-        "description": "Runs the full Apply emulator fix chain once for a newly detected, unconfigured emulated game: SteamStub handling, GBE Fork, achievements, DLCs, identity/language, and Advanced data when enabled. Disabled by default.",
+        "description": "Runs the safe Steam/GBE Fork repair once for a newly detected game. Disabled by default.",
         "value": {
           "false": "Disabled",
           "true": "Enabled"
@@ -277,7 +283,7 @@
       },
       "login": {
         "name": "Data source (Advanced)",
-        "description": "Steam login lets generate_emu_config pull complete DLC/depot data. Use a THROWAWAY account only - never your main.",
+        "description": "Anonymous mode already retrieves public DLC/depot data. Steam login is optional: it only adds private or hidden data (such as some depots, branches or languages). Use a THROWAWAY account only - never your main.",
         "value": {
           "anonymous": "Anonymous",
           "steam": "Steam login"
@@ -331,7 +337,37 @@
           "true": "Enabled"
         }
       },
-      "loginPlaceholder": "throwaway account"
+      "loginPlaceholder": "throwaway account",
+      "uplay": {
+        "title": "Ubisoft / Uplay R2",
+        "iniTitle": "Loader and INI options",
+        "username": "Display name",
+        "usernameHelp": "Leave empty to use the general profile name.",
+        "language": { "name": "Loader language", "description": "Written to both Uplay R2 INI files on the next repair.", "value": { "auto": "Follow app language" } },
+        "logging": { "name": "Diagnostic logging", "description": "Enable only while troubleshooting; it can create loader log files beside the game." },
+        "import": "Import or replace DLLs",
+        "restore": "Restore integrated DLLs",
+        "customReady": "Custom DLLs ready",
+        "importSuccess": "{count} selected file(s) imported for the next repair.",
+        "importFailure": "The selected DLL could not be imported.",
+        "restoreSuccess": "The integrated DLLs have been restored.",
+        "packageLabel": "Integrated repair package",
+        "packageHelp": "AW Next verifies its integrated repair files and automatically selects the architecture proved by each game.",
+        "checking": "Checking…",
+        "ready": "Ready",
+        "attention": "Needs attention",
+        "verify": "Verify repair package",
+        "verifySuccess": "The integrated repair package is valid and ready.",
+        "verifyFailure": "The integrated repair package could not be verified. No game files were changed.",
+        "repair": "Repair detected Uplay R2 games",
+        "repairHelp": "Only compatible detected installations are changed. Existing files are backed up and the result is validated automatically.",
+        "noGames": "No detected Uplay R2 game has a known installation folder.",
+        "repairConfirm": "Repair games",
+        "repairTitle": "Repair detected Uplay R2 games",
+        "repairConfirmMessage": "Repair {count} detected Uplay R2 game(s)? Existing files are backed up and every result is validated.",
+        "repairing": "Repairing {current} / {total} — {game}",
+        "repairResult": "Done — {repaired} repaired, {unchanged} already healthy, {failed} failed."
+      }
     },
     "notification": {
       "title": {
@@ -574,6 +610,10 @@
         "souvenirTitle": "Souvenir screenshot",
         "souvenirScreenshot": "Screenshot on unlock",
         "souvenirScreenshotDesc": "Capture the screen when an achievement unlocks. Saved per game.",
+        "souvenirHdr": "HDR screenshots",
+        "souvenirHdrDesc": "Automatic corrects colours when Windows HDR is active. If unavailable, the standard screenshot is saved instead.",
+        "souvenirHdrAuto": "Automatic",
+        "souvenirHdrOff": "Off",
         "souvenirDir": "Save folder",
         "souvenirDirHelp": "Screenshots are saved to <folder>\\<game>\\<date> - <achievement>.png. Empty = Pictures\\Achievement Watcher Next.",
         "souvenirOpenDir": "Open folder",
@@ -853,7 +893,7 @@
       "fixAll": {
         "name": "Fix all detected games",
         "button": "Fix all games",
-        "description": "Run the emulator fix (GBE Fork, achievements, DLCs) on every detected emulated game that has a known install folder.",
+        "description": "Run the matching Steam/GBE Fork or Ubisoft/Uplay R2 repair on every compatible detected game with a known install folder.",
         "confirm": "Apply the emulator fix to every detected game with a known install folder? Existing files are backed up before being overwritten.",
         "running": "Fixing games…",
         "progress": "Fixing %cur% / %total% - %name%",
@@ -958,7 +998,7 @@
     "sourceHint": "Also lists your legitimate Steam games (public profile required).",
     "notificationsHint": "Where unlocks appear. Automatic picks the overlay or a Windows notification for you.",
     "playtimeHint": "Automatically tracks playtime for detected games.",
-    "autoFixHint": "Applies the emulator fix (GBE Fork, achievements, DLC) to new emulated games.",
+    "autoFixHint": "Applies the matching GBE Fork or Uplay R2 repair to newly detected emulated games.",
     "hiddenHint": "Reveals hidden achievement names and descriptions before you unlock them.",
     "mergeHint": "Combines the same game found in several sources into a single tile.",
     "none": "None",
@@ -1254,10 +1294,10 @@
     "the-automatic-goldberg-uplay-r2-mapping-cannot-be-generated-for-": "The automatic Goldberg Uplay R2 mapping cannot be generated for this game.",
     "uplay-r2-dll-not-seeded": "Uplay R2 dll not seeded",
     "no-files-found-in-the-uplay-r2-cache": "No files found in the Uplay R2 cache.",
-    "copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-": "Copy the uplay_r2_loader(64).dll / upc_r2_loader(64).dll files into (one-time setup):\n{dir}",
+    "copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-": "Select your Uplay R2 package once. AW Next imports only validated x86/x64 loader DLLs into:\n{dir}",
     "update-the-uplay-r2-loader": "Update the Uplay R2 loader?",
     "uplay-r2-old-loader-message": "This game uses a loader too old to redirect achievements.",
-    "uplay-r2-old-loader-detail": "The fix works without updating: AW Next reads the emulator’s own save folder.\n\nUpdating enables the redirect into GSE Saves, but replaces a DLL the game currently launches with (the original is kept as .bak).",
+    "uplay-r2-old-loader-detail": "The fix works without updating: AW Next reads the emulator’s own save folder.\n\nUpdating enables the redirect into GSE Saves, but replaces a DLL the game currently launches with (the original is kept in the repair backup).",
     "keep-current-loader": "Keep the current loader",
     "update-loader": "Update",
     "updating-the-dll": "Updating the DLL…",
@@ -1492,6 +1532,10 @@
     "chooseAnotherCoverTitle": "Choose another cover",
     "coverPickerLoading": "Loading covers…",
     "noCoversFound": "No alternative covers found.",
+    "artwork-fetch-failed": "Could not fetch artwork. Check your connection.",
+    "artwork-not-found": "No artwork found.",
+    "retry-artwork": "Retry",
+    "cover-picker-fetch-failed": "Could not fetch alternative covers. Check your connection and retry.",
     "currentCover": "Current",
     "defaultCover": "Default",
     "theme-layer-gradient": "Gradient",
@@ -1611,7 +1655,7 @@
     "gh-why-no-achievement-data": "No achievement list could be found for this game, so there is nothing to track yet. Games with no achievements at all are normal here.",
     "gh-why-emulator-missing": "This game needs a Steam emulator to record achievements, and none is set up in its folder. Use the emulator fix from the game’s right-click menu to set one up.",
     "gh-why-emulator-runtime-missing": "The achievement data is in place, but the emulator file that reads it is missing from the game folder, so nothing will ever be recorded. AW Next can put it back.",
-    "gh-why-uplay-broken": "The Ubisoft emulator setup for this game is incomplete, so unlocks are not being recorded. Re-apply the Uplay R2 fix from the right-click menu.",
+    "gh-why-uplay-broken": "The Ubisoft emulator setup for this game is incomplete, so unlocks are not being recorded. Use the Uplay R2 repair button below.",
     "gh-why-achievement-data-incomplete": "The achievement list AW Next has for this game doesn’t match what the game will look for, so some unlocks would be missed. This can be rewritten from the official data.",
     "gh-why-no-progress-yet": "The game is detected and achievement data is available, but no achievement progress has been found yet. The likely issue is the game or emulator configuration rather than notifications.",
     "gh-why-install-unknown": "AW Next is reading this game’s achievements from its save files, but doesn’t know where the game itself is installed. Locate it to enable playtime tracking and repairs.",
