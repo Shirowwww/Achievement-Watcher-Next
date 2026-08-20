@@ -5,6 +5,90 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## Unreleased
 
+### Added
+
+- **The library now has six reusable views:** the existing landscape cards remain the default,
+  portrait covers remain available, and compact landscape, compact portrait, list, and details fit more games
+  or expose recent activity. A localized dropdown beside the Add game button switches and saves the
+  view instantly. List and details keep every row aligned, use localized relative times, identify
+  games never launched or tracked, and stay readable with no achievements or unlocks. List actions
+  sit in a compact cluster at the end of each row instead of covering the artwork, while Details
+  presents achievement count, latest unlock, last session and total playtime as a labeled information strip.
+  Games without achievements keep the same columns, and the latest-achievement block is clearly
+  labeled with a medal instead of being presented as a generic date.
+  Long localized library values scroll on hover instead of staying permanently truncated.
+  Missing portrait and landscape art is recovered on demand from Steam's CDN first, then
+  SteamGridDB, while every available local source remains visible as a temporary fallback.
+- **Screenshot souvenirs now handle Windows HDR automatically.** When HDR is active on the primary
+  display, a small one-shot Windows Graphics Capture helper reads an FP16 frame and tone-maps it to
+  a normal sRGB PNG. SDR, unsupported systems, timeouts, and capture failures keep the existing
+  screenshot path, and the helper never remains running between unlocks. A simple Automatic / Off
+  setting controls the behavior.
+- **Uplay R2 repair is now self-contained and mostly automatic.** Its four loader DLLs ship as plain
+  app resources, with a recovery archive beside them for antivirus-related loss. The private cache
+  can also accept newer user-selected DLLs without requiring a known hash, while still checking PE
+  architecture and achievement capability.
+- **Game Health can repair compatible Uplay R2 setups directly.** Its technical report includes the
+  resolved mapping, loader capabilities and architecture, configuration, save candidates, and exact
+  issue codes. The visible check names the resolved Steam AppID, and even an unmapped game receives
+  the shared repair action so automatic resolution or the validated manual fallback remains reachable.
+- **Settings now separates Steam / GBE Fork and Ubisoft / Uplay R2 under Emulators.** The compact
+  Uplay view keeps automatic repair, integrated package status, DLL import/restore controls, and one
+  confirmed repair action for detected installations. Loader/INI options and external redirect links
+  stay out of the app UI.
+- **Unmapped Uplay R2 games can now be linked to their Steam release interactively.** AW Next offers
+  the existing automatic Ubisoft→Steam catalog resolution first, feeding the resulting AppID into
+  the same achievement-schema and global-percentage pipeline. Ranked matches and any local
+  `steam_appid.txt` value remain confirmation-only fallbacks; a validated manual choice is remembered
+  for that install.
+
+### Changed
+
+- Steam game titles now fall back to the Store appdetails response when Steam product info omits its common metadata, so newer games no longer appear under their numeric AppIDs.
+- The library now paints its last complete local state before discovery, then replaces changed
+  games incrementally as the bounded fresh scan finishes. Development logs include first-paint,
+  first-fresh-tile and completed-scan timings.
+- Library cover downloads and decoding now begin only near the viewport. Game-index updates are
+  persisted once per scan instead of rewriting the whole file per game, and duplicate platform
+  watcher events are coalesced without adding polling.
+- Uplay R2 installation now requires deterministic evidence: Goldberg-only configuration/capability
+  markers (or a persisted discovery for that exact folder), plus either an existing loader whose PE
+  architecture agrees with its suffix or an exact loader import in a matching game executable.
+  Every bundled/imported DLL is independently checked for its PE machine and achievement capability;
+  there is no x64 default and contradictory evidence never causes a write.
+- Uplay R2 repairs are idempotent transactions. The loader, generated schema, and both INIs are
+  snapshotted together under the game folder, post-write diagnosis validates every runtime directory,
+  failures roll back automatically, and restoring a first install removes files that AW Next added.
+  Repeating an identical repair creates no new backup and rewrites nothing.
+- The existing **Automatically fix newly detected games** and **Fix all games** controls now include
+  compatible Uplay R2 games. Loader configuration, save paths, and architecture choices remain
+  automatic while the Uplay view exposes only package and repair actions.
+- The integrated x64 Uplay/UPC aliases now use the July 2026 loader build; x86 remains on the June
+  2026 build. The pinned resource hashes and recovery archive were updated together.
+
+### Fixed
+
+- Library tiles and the cover picker now distinguish missing artwork from a failed network fetch and
+  expose a localized Retry action.
+- Disabled official Steam games no longer enter the playtime tracker or block an update install.
+- Clearing caches no longer makes known games temporarily fall back to their AppID or executable
+  name in the library and notification/menu paths while metadata is rebuilt.
+- Uplay R2 no longer silently chooses a 64-bit loader when no installed DLL proved the required
+  architecture, and a DLL whose machine type contradicts its `*64.dll`/unsuffixed name is diagnosed
+  and refused.
+- Official Ubisoft Connect games are no longer confused with emulated installs merely because their
+  records use a `uplay-<id>` identity or they ship an official same-named Uplay/UPC R2 loader.
+- Uplay R2 INIs now receive supported locale codes (`fr-FR`, `es-MX`, and so on) instead of Steam
+  language identifiers such as `french` or `latam`.
+- Uplay R2 repairs now configure every detected runtime directory instead of only the first loader
+  folder, and their backups live at the game root so the existing Restore action can always find them.
+- Re-applying an existing Uplay R2 fix now asks for confirmation first, preserves the previous files
+  in the repair backup, interpolates the single-game count correctly, and reports the applied fix
+  instead of saying only that the loader was already present.
+- The Uplay package actions no longer overlap their help text, and Uplay repair information now has
+  its own Help topic instead of being mixed into the Steam emulator list. Sources remain documented
+  there without an external redirect button.
+
 ## 3.9.2 - 2026-08-20
 
 ### Added
