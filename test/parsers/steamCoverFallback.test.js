@@ -42,7 +42,7 @@ test('a game with no product-info cover falls through SteamDB to SteamGridDB', a
   const portrait = await steam.resolvePortrait({ appid: 893180, name: 'Catherine Classic', portrait: null, invoke });
 
   assert.equal(portrait, 'https://cdn2.steamgriddb.com/grid/abc.png');
-  assert.deepEqual(calls, ['get-steamdb-cover', 'get-steamgriddb-cover']);
+  assert.deepEqual(calls, ['get-steam-cdn-covers-status', 'get-steamdb-cover', 'get-steamgriddb-cover']);
 });
 
 test('SteamGridDB is not consulted when SteamDB already resolved the capsule', async () => {
@@ -51,7 +51,7 @@ test('SteamGridDB is not consulted when SteamDB already resolved the capsule', a
   const portrait = await steam.resolvePortrait({ appid: 787480, name: 'Phoenix Wright', portrait: null, invoke });
 
   assert.equal(portrait, 'https://cdn.st/library_600x900.jpg');
-  assert.deepEqual(calls, ['get-steamdb-cover']);
+  assert.deepEqual(calls, ['get-steam-cdn-covers-status', 'get-steamdb-cover']);
 });
 
 test('a product-info url that does not actually download is replaced, not trusted', async () => {
@@ -67,7 +67,7 @@ test('a product-info url that does not actually download is replaced, not truste
   const portrait = await steam.resolvePortrait({ appid: 1, name: 'Some Game', portrait: dead, invoke });
 
   assert.equal(portrait, 'https://cdn2.steamgriddb.com/grid/real.png');
-  assert.deepEqual(calls, ['fetch-icon', 'get-steamdb-cover', 'get-steamgriddb-cover']);
+  assert.deepEqual(calls, ['fetch-icon', 'get-steam-cdn-covers-status', 'get-steamdb-cover', 'get-steamgriddb-cover']);
 });
 
 test('a product-info url that does download is kept, and costs no extra lookup', async () => {
@@ -78,6 +78,29 @@ test('a product-info url that does download is kept, and costs no extra lookup',
 
   assert.equal(portrait, live);
   assert.deepEqual(calls, ['fetch-icon']);
+});
+
+test('the Steam CDN portrait fallback keeps the URL source instead of the disposable cache path', async () => {
+  const source = 'https://cdn.cloudflare.steamstatic.com/steam/apps/391540/library_600x900.jpg';
+  const { calls, invoke } = recorder({
+    'get-steam-cdn-covers-status': { urls: [source], networkError: false },
+    'fetch-icon': 'file:///user-data/steam_cache/icon/391540/library_600x900.jpg',
+  });
+
+  const portrait = await steam.resolvePortrait({ appid: 391540, name: 'Undertale', portrait: null, invoke });
+
+  assert.equal(portrait, source);
+  assert.deepEqual(calls, ['get-steam-cdn-covers-status', 'fetch-icon']);
+});
+
+test('a confirmed network outage stops portrait fallback before SteamDB or SteamGridDB', async () => {
+  const { calls, invoke } = recorder({
+    'get-steam-cdn-covers-status': { urls: [], networkError: true },
+    'get-steamdb-cover': 'https://cdn.st/should-not-be-requested.jpg',
+  });
+
+  assert.equal(await steam.resolvePortrait({ appid: 391540, name: 'Undertale', portrait: null, invoke }), null);
+  assert.deepEqual(calls, ['get-steam-cdn-covers-status']);
 });
 
 test('a non-http value is a fetch-icon token and is returned untouched', async () => {
@@ -108,6 +131,7 @@ test('the Steam appid is forwarded to SteamGridDB, which resolves by identity', 
   assert.equal(portrait, 'https://cdn2.steamgriddb.com/grid/by-id.png');
   const sgdb = seen.find(([channel]) => channel === 'get-steamgriddb-cover');
   assert.deepEqual(sgdb[1], ['Staffer Retro : A Supernatural Mystery Quest', 3837350], 'the appid must be passed alongside the name');
+  assert.deepEqual(seen.map(([channel]) => channel), ['get-steam-cdn-covers-status', 'get-steamdb-cover', 'get-steamgriddb-cover']);
 });
 
 test('a record with neither a name nor an appid asks nothing', async () => {
@@ -122,7 +146,7 @@ test('a nameless record can still be resolved from its appid alone', async () =>
   const { calls, invoke } = recorder({ 'get-steamdb-cover': 'https://cdn.st/library_600x900.jpg' });
 
   assert.equal(await steam.resolvePortrait({ appid: 1, name: '', portrait: null, invoke }), 'https://cdn.st/library_600x900.jpg');
-  assert.deepEqual(calls, ['get-steamdb-cover']);
+  assert.deepEqual(calls, ['get-steam-cdn-covers-status', 'get-steamdb-cover']);
 });
 
 test('the cached-schema repair path is wired to the same chain, on a retry stamp', () => {

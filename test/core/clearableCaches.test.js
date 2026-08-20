@@ -41,6 +41,20 @@ test('clearSafeCaches removes every allowlisted folder that exists and reports w
   }
 });
 
+test('clearSafeCaches removes normal downloaded artwork from steam_cache', async () => {
+  const root = makeUserDataDir();
+  try {
+    const normalArtwork = path.join(root, 'steam_cache', 'icon', '480', 'library_600x900.jpg');
+    seedFile(root, path.relative(root, normalArtwork));
+
+    await clearSafeCaches(root);
+
+    assert.equal(fs.existsSync(normalArtwork), false, 'normal downloaded artwork must be re-fetchable');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('clearSafeCaches never touches the user-seeded Uplay R2 loader cache', async () => {
   const root = makeUserDataDir();
   try {
@@ -105,6 +119,27 @@ test('clearSafeCaches promotes a custom cached cover before deleting steam_cache
     assert.equal(fs.existsSync(cached), false, 'the disposable cache should still be cleared');
     assert.equal(path.dirname(durable), path.join(root, 'covers'));
     assert.equal(fs.existsSync(durable), true, 'the selected cover must survive in durable storage');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('clearSafeCaches keeps a SteamGridDB selection as a URL and deletes its downloaded bytes', async () => {
+  const root = makeUserDataDir();
+  try {
+    const hash = '06f867ad5a8dd38502b33ec03d5abc47';
+    const cached = path.join(root, 'steam_cache', 'icon', '391540', `${hash}.png`);
+    seedFile(root, path.relative(root, cached));
+    const database = path.join(root, 'cfg', 'covers.db');
+    fs.mkdirSync(path.dirname(database), { recursive: true });
+    fs.writeFileSync(database, JSON.stringify({ 391540: pathToFileURL(cached).href }), 'utf8');
+    coverStore.setStoreFile(database);
+
+    await clearSafeCaches(root);
+
+    assert.equal(coverStore.get('391540'), `https://cdn2.steamgriddb.com/grid/${hash}.png`);
+    assert.equal(fs.existsSync(cached), false, 'the downloaded cache image must be deleted');
+    assert.equal(fs.existsSync(path.join(root, 'covers')), false, 'no durable duplicate is needed');
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

@@ -61,9 +61,9 @@ let updaterErrorNotified = false;
 let manualUpdateCheckPending = false; // Settings requested a check.
 let manualUpdateResult = null; // 'available' | 'uptodate' | 'error'
 let updateDownloading = false; // true from the accepted "Download && Install" until it lands or fails
-// Set when the download now running was accepted from an explicit Settings > Check for updates.
-// Carried through to the install step so a deliberate request is never held back by a game.
-let updateAcceptedManually = false;
+// Set when the user explicitly accepted "Download && Install". Carried through to the install step
+// so a deliberate request is never held back by a process that the monitor classifies as a game.
+let updateAcceptedByUser = false;
 let checksumRetryInFlight = false; // guards the one automatic retry after a cache-clearing recovery
 const UPDATE_RECHECK_MS = 60 * 60 * 1000; // silent hourly re-check while the app stays resident
 const UPDATE_RETRY_MS = 30 * 60 * 1000; // slower retry after a failed check
@@ -75,6 +75,7 @@ let promptDownloadedUpdate = null;
 let pendingInstallPrompt = null;
 
 const updateGate = require(path.join(__dirname, '../util/updateGate.js'));
+const { resolveSteamMetadata } = require(path.join(__dirname, '../util/steamMetadata.js'));
 const { isChecksumMismatchError } = require(path.join(__dirname, '../util/updateChecksum.js'));
 const { clearUpdaterCacheDir: clearCacheDirForHelper } = require(path.join(__dirname, '../util/updateCacheClear.js'));
 const { clearSafeCaches } = require(path.join(__dirname, '../util/clearableCaches.js'));
@@ -153,7 +154,7 @@ function notifyUpdateError(message) {
   debug.log(`[updater] ${message}`);
   clearUpdateDownloadProgress();
   updateDownloading = false;
-  updateAcceptedManually = false;
+  updateAcceptedByUser = false;
   manualUpdateResult = 'error';
   manualUpdateCheckPending = false;
   if (!updaterErrorNotified && tray) {
@@ -447,6 +448,39 @@ function fetchSteamIcon(url, appid) {
 const STEAM_FETCH_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 const STEAM_KEYLESS_TIMEOUT_MS = 10000;
+const STEAM_CLIENT_LOGIN_TIMEOUT_MS = 5000;
+const STEAM_TRANSPORT_FAILURE_LIMIT = 2;
+const STEAM_TRANSPORT_COOLDOWN_MS = 5 * 60 * 1000;
+let steamTransportFailures = 0;
+let steamTransportSkipUntil = 0;
+
+function isSteamTransportFailure(err) {
+  const text = String((err && (err.code || err.message)) || err || '').toLowerCase();
+  return /enotfound|name_not_found|eai_again|econnrefused|econnreset|etimedout|timeout|fetch failed|network|socket|dns/.test(text);
+}
+
+function steamTransportUnavailable() {
+  return Date.now() < steamTransportSkipUntil;
+}
+
+function recordSteamTransportFailure(err) {
+  if (!isSteamTransportFailure(err)) return;
+  steamTransportFailures += 1;
+  if (steamTransportFailures < STEAM_TRANSPORT_FAILURE_LIMIT) return;
+  steamTransportFailures = 0;
+  steamTransportSkipUntil = Date.now() + STEAM_TRANSPORT_COOLDOWN_MS;
+  debug.log(`[steam] network unavailable - skipping repeated Steam lookups for ${STEAM_TRANSPORT_COOLDOWN_MS / 60000} minutes`);
+}
+
+function recordSteamTransportSuccess() {
+  steamTransportFailures = 0;
+  steamTransportSkipUntil = 0;
+}
+
+function resetSteamTransportCircuit() {
+  steamTransportFailures = 0;
+  steamTransportSkipUntil = 0;
+}
 
 let client; //lazyload SteamUser
 let clientLoginPromise;
@@ -495,13 +529,37 @@ function clientLogOn() {
   if (!client) client = new SteamUser();
   if (client.steamID) return Promise.resolve();
   if (clientLoginPromise) return clientLoginPromise;
-  clientLoginPromise = new Promise((resolve) => {
-    client.logOn({ anonymous: true });
-    client.on('loggedOn', () => {
-      clientLoginPromise = null;
-      resolve();
-    });
+  const pending = new Promise((resolve, reject) => {
+    let timer;
+    let settled = false;
+    const finish = (err) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      client.removeListener('loggedOn', onLoggedOn);
+      client.removeListener('error', onError);
+      if (err) reject(err);
+      else resolve();
+    };
+    const onLoggedOn = () => finish();
+    const onError = (err) => finish(err || new Error('Steam anonymous login failed'));
+    client.once('loggedOn', onLoggedOn);
+    client.once('error', onError);
+    timer = setTimeout(() => finish(new Error('Steam anonymous login timed out')), STEAM_CLIENT_LOGIN_TIMEOUT_MS);
+    try {
+      client.logOn({ anonymous: true });
+    } catch (err) {
+      finish(err);
+    }
   });
+  clientLoginPromise = pending
+    .catch((err) => {
+      recordSteamTransportFailure(err);
+      throw err;
+    })
+    .finally(() => {
+      clientLoginPromise = null;
+    });
   return clientLoginPromise;
 }
 
@@ -611,6 +669,7 @@ async function fetchSteamCommunityAchievements(url) {
       description: row.description || null,
     }));
   } catch (err) {
+    recordSteamTransportFailure(err);
     debug.log(`steamcommunity fetch failed: ${err}`);
     return [];
   }
@@ -624,6 +683,7 @@ async function getSchemaFromWebAPI(appid, lang) {
   try {
     res = await fetch(url, { signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS) });
   } catch (err) {
+    recordSteamTransportFailure(err);
     debug.log(`[${appid}] GetGameAchievements network error: ${err.message}`);
     return null;
   }
@@ -631,6 +691,7 @@ async function getSchemaFromWebAPI(appid, lang) {
     debug.log(`[${appid}] GetGameAchievements HTTP ${res.status}`);
     return null; // let the caller decide to scrape
   }
+  recordSteamTransportSuccess();
   let json;
   try {
     json = await res.json();
@@ -652,6 +713,7 @@ async function fetchSteamHuntersJson(appid) {
     const json = await res.json();
     return Array.isArray(json) ? { ok: true, list: json } : { ok: false, list: [] };
   } catch (err) {
+    recordSteamTransportFailure(err);
     debug.log(`[${appid}] SteamHunters JSON fetch failed: ${err.message}`);
     return { ok: false, list: [] };
   }
@@ -718,6 +780,8 @@ async function getAchievementsKeyless(appid, lang) {
     return { achievements: official, source: 'official' };
   }
 
+  if (steamTransportUnavailable()) return { achievements: [], source: 'none', networkError: true };
+
   const sh = await fetchSteamHuntersJson(appid);
   if (sh.ok) {
     if (sh.list.length === 0) return { achievements: [], source: 'steamhunters' };
@@ -745,6 +809,8 @@ async function getAchievementsKeyless(appid, lang) {
     return { achievements: merged, source: 'steamhunters' };
   }
 
+  if (steamTransportUnavailable()) return { achievements: [], source: 'none', networkError: true };
+
   const language = (lang && (lang.api || lang)) || 'english';
   const rows = await fetchSteamCommunityAchievements(
     `https://steamcommunity.com/stats/${appid}/achievements?l=${language}`
@@ -771,6 +837,12 @@ async function getSteamData(request) {
     }
   }
   try {
+    // A cleared cache can fan out one lookup per game. Once two independent Steam transports have
+    // failed, do not make every AppID wait on the same dead host; the renderer will keep the game
+    // provisional and retry when the circuit is reset or its cooldown expires.
+    if (steamTransportUnavailable() && ['common', 'name', 'header', 'icon', 'portrait', 'user'].includes(type)) {
+      return { appid, networkError: true };
+    }
     if (type === 'user') {
       const url = `https://steamcommunity.com/profiles/${user}/stats/${appid}/?xml=1`;
       const res = await fetch(url);
@@ -844,9 +916,13 @@ async function getSteamData(request) {
 
     if (type === 'data' || type === 'steamhunters') {
       let info = { appid };
+      if (steamTransportUnavailable()) return { ...info, achievements: [], source: 'none', networkError: true };
       // Prefer the official endpoint - Steam serves this schema without a key. null means
       // transport/auth failure: fall through to the keyless chain, then to the browser scrape.
       const keyless = await getAchievementsKeyless(appid, request.lang);
+      if (keyless.networkError === true) {
+        return { ...info, achievements: [], source: 'none', networkError: true };
+      }
       if (keyless.source === 'none') {
         await scrapeWithPuppeteer(info, { steamhunters: true });
         if (type === 'data') {
@@ -906,54 +982,42 @@ async function getSteamData(request) {
       const offlineName = require('../util/gameNameCache.js').lookupSteamDbName(appid);
       if (offlineName) return offlineName;
     }
+    if (steamTransportUnavailable()) return { appid, networkError: true };
     await clientLogOn();
     const storeURL = `https://store.steampowered.com/api/appdetails?appids=${appid}&cc=us&l=en`;
-    const storeRes = await fetch(storeURL);
+    const storeRes = await fetch(storeURL, { signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS) });
     const json = await storeRes.json();
     const storeData = json[appid] && json[appid].data;
     const { apps, packages, unknownApps, unknownPackages } = await client.getProductInfo([appid], [], false);
     const appInfo = apps[appid]?.appinfo || apps[0]?.appinfo;
+    const metadata = resolveSteamMetadata({
+      appInfo,
+      storeData,
+      langApi: lang.api,
+      langKey: typeof lang === 'string' ? lang : lang.api,
+    });
 
     switch (type) {
       case 'name':
-        return appInfo?.common?.name;
+        return metadata.name;
 
       case 'header':
-        return (
-          appInfo.common.header_image?.[lang.api] ||
-          appInfo.common.library_assets_full?.library_header?.image[lang.api] ||
-          appInfo.common.header_image.english ||
-          appInfo.common.library_assets_full?.library_header?.image?.english
-        );
+        return metadata.header;
       case 'icon':
-        return appInfo.common.icon;
+        return metadata.icon;
       case 'portrait':
-        return (
-          appInfo.common.library_assets_full?.library_capsule?.image[lang] || appInfo.common.library_assets_full?.library_capsule?.image?.english
-        );
+        return metadata.portrait;
       default:
       case 'common':
-        return {
-          name: appInfo.common.name,
-          isGame: appInfo?.common?.type?.toLowerCase() === 'game',
-          translated: appInfo?.common?.languages?.[lang.api] || false,
-          icon: appInfo.common.icon,
-          header:
-            appInfo.common.header_image?.[lang.api] ||
-            appInfo.common.library_assets_full?.library_header?.image?.[lang.api] ||
-            appInfo.common.header_image?.english ||
-            appInfo.common.library_assets_full?.library_header?.image?.english ||
-            storeData?.header_image,
-          portrait:
-            appInfo.common.library_assets_full?.library_capsule?.image?.[lang.api] ||
-            appInfo.common.library_assets_full?.library_capsule?.image?.english,
-          background: storeData?.background?.replace(/(\?|&)t=\d+$/, ''),
-        };
+        recordSteamTransportSuccess();
+        return metadata;
     }
   } catch (err) {
+    recordSteamTransportFailure(err);
     debug.log(err);
+    return { appid, networkError: isSteamTransportFailure(err) };
   }
-  return {};
+  return { appid };
 }
 
 // Sources whose artwork and rarity come from local emulator data.
@@ -1409,7 +1473,7 @@ ipcMain.handle('check-for-updates', async () => {
 // (util/clearableCaches.js's explicit allowlist). Never touches settings, GBE restore-point
 // backups, notification presets, theme images, or the user-seeded Uplay R2 loader cache (no public
 // download source for that one - see the allowlist file for the full "never add" list).
-ipcMain.handle('clear-update-cache', async () => {
+ipcMain.handle('clear-update-cache', async (event) => {
   if (updateDownloading || checksumRetryInFlight) return { ok: false, error: 'download-in-progress' };
   const result = { ok: true, error: null, updateFolder: null, updateCleared: false, updateError: null, clearedCaches: [] };
   try {
@@ -1440,6 +1504,12 @@ ipcMain.handle('clear-update-cache', async () => {
     debug.log(`[cache] could not clear app caches: ${err.message || err}`);
     result.ok = false;
     result.error = err && err.message ? err.message : String(err);
+  }
+  resetArtworkLookupCaches();
+  try {
+    event.sender.send('artwork-caches-cleared');
+  } catch {
+    /* the renderer may have closed while the cache clear was finishing */
   }
   return result;
 });
@@ -2255,6 +2325,7 @@ async function blockHeavyResources(page, { keepImages = false } = {}) {
 const steamdbCoversDir = path.join(userData, 'steam_cache', 'steamdb_covers');
 const steamdbCoversInFlight = new Map();
 let steamdbCoversQueue = Promise.resolve();
+let artworkCacheGeneration = 0;
 
 function filterSteamDbCoversByOrientation(urls, orientation) {
   const list = Array.isArray(urls) ? urls : [];
@@ -2269,6 +2340,7 @@ function filterSteamDbCoversByOrientation(urls, orientation) {
 async function fetchSteamDbCovers(appid, orientation = 'portrait') {
   const id = String(appid || '').trim();
   if (!/^\d+$/.test(id)) return [];
+  const generation = artworkCacheGeneration;
   const cacheFile = path.join(steamdbCoversDir, `${id}.json`);
   const TTL = 30 * 24 * 60 * 60 * 1000;
   try {
@@ -2300,7 +2372,7 @@ async function fetchSteamDbCovers(appid, orientation = 'portrait') {
         return assets ? assets.outerHTML : document.documentElement.innerHTML;
       });
       const urls = steamdbCover.coversFromHtml(id, html);
-      if (urls.length) {
+      if (urls.length && generation === artworkCacheGeneration) {
         try {
           fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
           fs.writeFileSync(cacheFile, JSON.stringify({ appid: id, urls }, null, 2));
@@ -2351,9 +2423,9 @@ const STEAM_CDN_ASSETS = {
 const STEAM_CDN_PROBE_TIMEOUT_MS = 6000;
 const steamCdnCoversCache = new Map();
 
-async function fetchSteamCdnCovers(appid, orientation = 'portrait') {
+async function fetchSteamCdnCoversDetailed(appid, orientation = 'portrait') {
   const id = String(appid || '').trim();
-  if (!/^\d+$/.test(id)) return [];
+  if (!/^\d+$/.test(id)) return { urls: [], networkError: false };
   const orient = String(orientation || 'portrait').toLowerCase() === 'landscape' ? 'landscape' : 'portrait';
   const key = `${id}\0${orient}`;
   if (steamCdnCoversCache.has(key)) return steamCdnCoversCache.get(key);
@@ -2364,17 +2436,34 @@ async function fetchSteamCdnCovers(appid, orientation = 'portrait') {
         const url = `${STEAM_CDN_BASE}/${id}/${asset}`;
         try {
           const res = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(STEAM_CDN_PROBE_TIMEOUT_MS) });
-          return res.ok ? url : '';
+          return { url: res.ok ? url : '', networkError: false };
         } catch {
-          return '';
+          return { url: '', networkError: true };
         }
       })
     );
-    return probes.filter(Boolean);
+    return {
+      urls: probes.map((probe) => probe.url).filter(Boolean),
+      networkError: probes.some((probe) => probe.networkError),
+    };
   })();
   steamCdnCoversCache.set(key, pending);
   return pending;
 }
+
+async function fetchSteamCdnCovers(appid, orientation = 'portrait') {
+  return (await fetchSteamCdnCoversDetailed(appid, orientation)).urls;
+}
+
+// The library asks for this list only when its schema artwork is missing or unusable. Returning the
+// probed Steam assets separately lets the renderer try their actual download before falling back to
+// SteamGridDB, instead of paying for both providers for every visible tile.
+ipcMain.handle('get-steam-cdn-covers', async (event, appid, orientation) => {
+  return await fetchSteamCdnCovers(appid, orientation);
+});
+ipcMain.handle('get-steam-cdn-covers-status', async (event, appid, orientation) => {
+  return await fetchSteamCdnCoversDetailed(appid, orientation);
+});
 
 // SteamGridDB covers (bundled public API key): when neither the guessable CDN path nor SteamDB has
 // a portrait, the community grids usually do. Cached 30 days per game name and orientation.
@@ -2408,14 +2497,17 @@ const SGDB_COVERS_TTL = 30 * 24 * 60 * 60 * 1000;
 const steamgriddbIdDir = path.join(userData, 'steam_cache', 'steamgriddb_ids');
 const SGDB_ID_TTL = SGDB_COVERS_TTL;
 
-async function fetchSteamGridDbGameIdBySteamAppid(steamAppid) {
+async function fetchSteamGridDbGameIdBySteamAppid(steamAppid, options = {}) {
+  const withStatus = options && options.withStatus === true;
   const id = String(steamAppid || '').trim();
-  if (!/^\d+$/.test(id)) return null;
+  if (!/^\d+$/.test(id)) return withStatus ? { value: null, networkError: false } : null;
+  const generation = artworkCacheGeneration;
   const cacheFile = path.join(steamgriddbIdDir, `${id}.json`);
   try {
     if (fs.existsSync(cacheFile) && Date.now() - fs.statSync(cacheFile).mtimeMs < SGDB_ID_TTL) {
       const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-      return cached && cached.gameId ? cached : null;
+      const value = cached && cached.gameId ? cached : null;
+      return withStatus ? { value, networkError: false } : value;
     }
   } catch {
     /* stale/corrupt -> refetch */
@@ -2434,15 +2526,18 @@ async function fetchSteamGridDbGameIdBySteamAppid(steamAppid) {
   } catch (err) {
     // A network failure is not an answer - leave the cache alone so the next scan can retry.
     debug.log(`[steamgriddb] appid lookup failed for ${id}: ${err.message || err}`);
-    return null;
+    if (!withStatus) return null;
+    return { value: null, networkError: true };
   }
-  try {
-    fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
-    fs.writeFileSync(cacheFile, JSON.stringify(resolved || { gameId: 0 }, null, 2));
-  } catch {
-    /* cache write failure is non-fatal */
+  if (generation === artworkCacheGeneration) {
+    try {
+      fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
+      fs.writeFileSync(cacheFile, JSON.stringify(resolved || { gameId: 0 }, null, 2));
+    } catch {
+      /* cache write failure is non-fatal */
+    }
   }
-  return resolved;
+  return withStatus ? { value: resolved, networkError: false } : resolved;
 }
 
 // Prefer an exact title match, then a token-level match (all query words present, at most one extra
@@ -2490,19 +2585,27 @@ async function fetchSteamGridDbGrids(name, orientation, steamAppid = '') {
   const apiKey = getSteamGridDbApiKey();
   const sgdb = (url) =>
     fetch(url, { headers: { Authorization: `Bearer ${apiKey}` }, signal: AbortSignal.timeout(SGDB_FETCH_TIMEOUT_MS) });
+  let networkError = false;
 
   // Identity first: a Steam appid names the game outright, so no title has to be matched at all.
   let gameId = 0;
-  const byAppid = await fetchSteamGridDbGameIdBySteamAppid(steamAppid);
+  const byAppidResult = await fetchSteamGridDbGameIdBySteamAppid(steamAppid, { withStatus: true });
+  networkError = networkError || byAppidResult.networkError;
+  const byAppid = byAppidResult.value;
   if (byAppid && byAppid.gameId) gameId = byAppid.gameId;
 
   if (!gameId) {
-    if (!name) return [];
-    const searchRes = await sgdb(`${BASE_URL}/search/autocomplete/${encodeURIComponent(name)}`);
-    if (!searchRes.ok) return [];
-    const search = await searchRes.json();
-    const match = pickSteamGridDbGame(search.data, name);
-    if (!match || !match.id) return [];
+    if (!name) return { grids: [], networkError };
+    let searchRes;
+    try {
+      searchRes = await sgdb(`${BASE_URL}/search/autocomplete/${encodeURIComponent(name)}`);
+    } catch {
+      return { grids: [], networkError: true };
+    }
+    if (!searchRes.ok) return { grids: [], networkError };
+    const search = await searchRes.json().catch(() => null);
+    const match = pickSteamGridDbGame(search && search.data, name);
+    if (!match || !match.id) return { grids: [], networkError };
     gameId = match.id;
   }
   const game = { id: gameId };
@@ -2511,33 +2614,46 @@ async function fetchSteamGridDbGrids(name, orientation, steamAppid = '') {
   const pages = await Promise.all(
     Array.from({ length: SGDB_COVER_PAGES }, (unused, page) =>
       sgdb(`${BASE_URL}/grids/game/${game.id}?dimensions=${dimensions}&page=${page}`)
-        .then((res) => (res.ok ? res.json() : null))
-        .catch(() => null)
+        .then(async (res) => ({ body: res.ok ? await res.json().catch(() => null) : null, networkError: false }))
+        .catch(() => ({ body: null, networkError: true }))
     )
   );
-  let list = pages.flatMap((body) => (Array.isArray(body && body.data) ? body.data : [])).filter((grid) => grid && grid.url);
+  networkError = networkError || pages.some((page) => page.networkError);
+  let list = pages
+    .flatMap(({ body }) => (Array.isArray(body && body.data) ? body.data : []))
+    .filter((grid) => grid && grid.url);
   // A game whose artists only ever uploaded odd sizes comes back empty; take whatever exists.
   if (!list.length) {
-    const anyBody = await sgdb(`${BASE_URL}/grids/game/${game.id}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .catch(() => null);
+    let anyBody = null;
+    try {
+      const anyRes = await sgdb(`${BASE_URL}/grids/game/${game.id}`);
+      anyBody = anyRes.ok ? await anyRes.json().catch(() => null) : null;
+    } catch {
+      networkError = true;
+    }
     list = (Array.isArray(anyBody && anyBody.data) ? anyBody.data : []).filter((grid) => grid && grid.url);
   }
 
   const seen = new Set();
-  return list.filter((grid) => {
-    const url = String(grid.url);
-    if (seen.has(url)) return false;
-    seen.add(url);
-    return true;
-  });
+  return {
+    grids: list.filter((grid) => {
+      const url = String(grid.url);
+      if (seen.has(url)) return false;
+      seen.add(url);
+      return true;
+    }),
+    networkError,
+  };
 }
 
-async function fetchSteamGridDbCovers(gameName, limit = SGDB_COVER_LIMIT, orientation = 'portrait', steamAppid = '') {
+async function fetchSteamGridDbCovers(gameName, limit = SGDB_COVER_LIMIT, orientation = 'portrait', steamAppid = '', options = {}) {
+  const withStatus = options && options.withStatus === true;
+  const empty = (networkError = false) => (withStatus ? { covers: [], networkError } : []);
   const name = String(gameName || '').trim();
   const appid = /^\d+$/.test(String(steamAppid || '').trim()) ? String(steamAppid).trim() : '';
+  const generation = artworkCacheGeneration;
   // With an appid the name is decoration; without one it is the only handle there is.
-  if (!name && !appid) return [];
+  if (!name && !appid) return empty();
   const orient = String(orientation || 'portrait').toLowerCase() === 'landscape' ? 'landscape' : 'portrait';
   // The appid belongs in the key: the same title resolved by identity and by search can legitimately
   // land on different SteamGridDB games, and one must not serve the other's cached grids.
@@ -2546,19 +2662,24 @@ async function fetchSteamGridDbCovers(gameName, limit = SGDB_COVER_LIMIT, orient
   try {
     if (fs.existsSync(cacheFile) && Date.now() - fs.statSync(cacheFile).mtimeMs < SGDB_COVERS_TTL) {
       const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-      if (Array.isArray(cached.grids)) return rankSteamGridDbGrids(cached.grids, orient, limit);
+      if (Array.isArray(cached.grids)) {
+        const covers = rankSteamGridDbGrids(cached.grids, orient, limit);
+        return withStatus ? { covers, networkError: false } : covers;
+      }
     }
   } catch {
     /* stale/corrupt -> refetch */
   }
   if (steamgriddbCoversInFlight.has(key)) {
-    return rankSteamGridDbGrids(await steamgriddbCoversInFlight.get(key), orient, limit);
+    const result = await steamgriddbCoversInFlight.get(key);
+    return withStatus ? { covers: rankSteamGridDbGrids(result.grids, orient, limit), networkError: result.networkError } : rankSteamGridDbGrids(result.grids, orient, limit);
   }
 
   const pending = (async () => {
     try {
-      const grids = await fetchSteamGridDbGrids(name, orient, appid);
-      if (grids.length) {
+      const result = await fetchSteamGridDbGrids(name, orient, appid);
+      const grids = result.grids;
+      if (grids.length && generation === artworkCacheGeneration) {
         try {
           fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
           fs.writeFileSync(
@@ -2582,28 +2703,46 @@ async function fetchSteamGridDbCovers(gameName, limit = SGDB_COVER_LIMIT, orient
           /* cache write failure is non-fatal */
         }
       }
-      return grids;
+      return result;
     } catch (err) {
       debug.log(`[steamgriddb] cover list failed for "${name}": ${err.message || err}`);
-      return [];
+      return { grids: [], networkError: true };
     }
   })();
   steamgriddbCoversInFlight.set(key, pending);
   try {
-    return rankSteamGridDbGrids(await pending, orient, limit);
+    const result = await pending;
+    const covers = rankSteamGridDbGrids(result.grids, orient, limit);
+    return withStatus ? { covers, networkError: result.networkError } : covers;
   } finally {
     steamgriddbCoversInFlight.delete(key);
   }
 }
 
-async function fetchSteamGridDbCover(gameName, steamAppid = '') {
-  const covers = await fetchSteamGridDbCovers(gameName, 1, 'portrait', steamAppid);
+function resetArtworkLookupCaches() {
+  artworkCacheGeneration += 1;
+  // Clearing caches is also the user's explicit request to try again. Do not leave the transport
+  // circuit open from the previous offline scan, otherwise the first post-clear scan would skip
+  // every Steam lookup until the five-minute cooldown elapsed.
+  resetSteamTransportCircuit();
+  steamdbCoversInFlight.clear();
+  steamdbCoversQueue = Promise.resolve();
+  steamCdnCoversCache.clear();
+  steamgriddbCoversInFlight.clear();
+}
+
+async function fetchSteamGridDbCover(gameName, steamAppid = '', orientation = 'portrait') {
+  const covers = await fetchSteamGridDbCovers(gameName, 1, orientation, steamAppid);
   return (covers[0] && covers[0].url) || null;
 }
 
 // `steamAppid` is optional: the non-Steam callers (Ubisoft, GOG, Epic) still ask by name only.
-ipcMain.handle('get-steamgriddb-cover', async (event, gameName, steamAppid) => {
-  return await fetchSteamGridDbCover(gameName, steamAppid);
+ipcMain.handle('get-steamgriddb-cover', async (event, gameName, steamAppid, orientation) => {
+  return await fetchSteamGridDbCover(gameName, steamAppid, orientation);
+});
+ipcMain.handle('get-steamgriddb-cover-status', async (event, gameName, steamAppid, orientation) => {
+  const result = await fetchSteamGridDbCovers(gameName, 1, orientation, steamAppid, { withStatus: true });
+  return { url: (result.covers[0] && result.covers[0].url) || null, networkError: result.networkError === true };
 });
 
 // Cover picker options: the two instant sources only. Steam's CDN answers a HEAD probe and
@@ -2615,10 +2754,14 @@ ipcMain.handle('get-cover-options', async (event, { name, orientation, steamAppi
   const orient = String(orientation || 'portrait').toLowerCase() === 'landscape' ? 'landscape' : 'portrait';
   const id = /^\d+$/.test(String(steamAppid || '').trim()) ? String(steamAppid).trim() : '';
   const [steam, grids] = await Promise.all([
-    id ? fetchSteamCdnCovers(id, orient) : Promise.resolve([]),
-    gameName || id ? fetchSteamGridDbCovers(gameName, SGDB_COVER_LIMIT, orient, id) : Promise.resolve([]),
+    id ? fetchSteamCdnCoversDetailed(id, orient) : Promise.resolve({ urls: [], networkError: false }),
+    gameName || id ? fetchSteamGridDbCovers(gameName, SGDB_COVER_LIMIT, orient, id, { withStatus: true }) : Promise.resolve({ covers: [], networkError: false }),
   ]);
-  return { steam: Array.isArray(steam) ? steam : [], grids: Array.isArray(grids) ? grids : [] };
+  return {
+    steam: Array.isArray(steam.urls) ? steam.urls : [],
+    grids: Array.isArray(grids.covers) ? grids.covers : [],
+    networkError: steam.networkError === true || grids.networkError === true,
+  };
 });
 
 // The slow half of the picker, asked for separately so its tiles can be appended late. Only a real
@@ -4932,7 +5075,9 @@ try {
       if (response === 0) {
         debug.log(`[updater] user accepted download of ${info.version}${manual ? ' (manual check)' : ''}`);
         updateDownloading = true;
-        updateAcceptedManually = manual;
+        // The click is the explicit consent, regardless of whether the dialog came from the hourly
+        // check or Settings > Check for updates. A manual check alone must not silently install.
+        updateAcceptedByUser = true;
         autoUpdater.downloadUpdate().catch((err) => {
           // A checksum mismatch is handled entirely by the 'error' listener below, which clears
           // the cache and retries once instead of surfacing the raw failure immediately.
@@ -5020,7 +5165,7 @@ try {
   promptDownloadedUpdate = async function (info) {
     // "Download && Install" was already explicit consent. Once downloaded, run the NSIS upgrade
     // silently and relaunch AW; settings/user data live outside the install directory and survive.
-    if (updateGate.shouldHoldInstall({ gameRunning: isGameRunning(), acceptedManually: updateAcceptedManually })) {
+    if (updateGate.shouldHoldInstall({ gameRunning: isGameRunning(), acceptedByUser: updateAcceptedByUser })) {
       debug.log(`[updater] silent upgrade to ${info.version} held back: a game is running`);
       pendingInstallPrompt = info;
       // Saying nothing here is what made this look like a broken updater: the download completes,
@@ -5029,7 +5174,7 @@ try {
       return;
     }
     pendingInstallPrompt = null;
-    updateAcceptedManually = false;
+    updateAcceptedByUser = false;
     debug.log(`[updater] installing ${info.version} silently and restarting`);
     autoUpdater.quitAndInstall(true, true);
   };

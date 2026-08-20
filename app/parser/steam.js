@@ -36,6 +36,10 @@ const iconFetchInFlight = new Map();
 const workingLinkCache = new Map();
 const appSearchCache = new Map();
 const TENOKE_SCHEMA_FILE = 'tenoke.ini';
+// GetAppList is a bulk convenience lookup, not a reason to hold every game in the scan for the
+// generic 30-second game timeout. If it is unavailable, each appid still has independent name and
+// schema fallbacks below; fail this optional list quickly and only once per session.
+const STEAM_APP_LIST_TIMEOUT_MS = 8000;
 module.exports.setUserDataPath = (p) => {
   cacheRoot = p;
 };
@@ -381,6 +385,7 @@ module.exports.getGameData = async (cfg) => {
         debug.log(`[${cfg.appID}] empty-schema re-check could not run, keeping the cached entry: ${err.code || err}`);
         return staleEmpty;
       }
+      if (result && result.networkError === true && !staleEmpty) return null;
       // findInAppList() resolves the canonical store name (app-list dump, or the per-appid `name`
       // IPC when the dump is missing). It is an INDEPENDENT lookup from the product-info call
       // inside getSteamDataFromSRV, so when that one comes back nameless the name is very often
@@ -422,8 +427,11 @@ module.exports.getGameData = async (cfg) => {
     const DESC_RECHECK_MS = 3 * 24 * 60 * 60 * 1000;
     const triedRecently = !cfg.forceRecheck && result && result.descBackfilledAt && Date.now() - result.descBackfilledAt < DESC_RECHECK_MS;
     if ((!fastStart || cfg.forceRecheck) && result && result.achievement && Array.isArray(result.achievement.list) && !triedRecently) {
+      let recheckSucceeded = false;
       try {
-        const fresh = await getSchemaAchievements(cfg);
+        const freshResult = await getSchemaAchievements(cfg);
+        const fresh = Array.isArray(freshResult) ? freshResult : freshResult.achievements || [];
+        recheckSucceeded = !(freshResult && freshResult.networkError === true);
         const { addedCount } = module.exports.reconcileAchievementList(result.achievement.list, fresh);
         if (addedCount) {
           result.achievement.total = result.achievement.list.length;
@@ -432,8 +440,10 @@ module.exports.getGameData = async (cfg) => {
       } catch (err) {
         debug.log(`Could not refresh schema descriptions [${cfg.appID}]: ${err.code ? `${err.code} - ${err.message}` : err}`);
       }
-      result.descBackfilledAt = Date.now(); // remember the attempt even when nothing improved
-      needSaving = true;
+      if (recheckSucceeded) {
+        result.descBackfilledAt = Date.now();
+        needSaving = true;
+      }
     }
 
     needSaving = needSaving || (!fastStart && (await GetMissingData(result, cfg.showHidden, cfg.lang, cfg.steamSettings)));
@@ -893,6 +903,22 @@ async function resolvePortrait({ appid, name, portrait, invoke }) {
     }
   }
 
+  // Steam CDN is cheap and deterministic for the portrait path. Try it before SteamDB's browser
+  // scrape, and stop the chain immediately when its status says the network is unavailable. This
+  // keeps a cache-clear scan from launching one 45-second SteamDB page per game while offline.
+  if (!portrait) {
+    const cdn = await send('get-steam-cdn-covers-status', appid, 'portrait').catch(() => null);
+    if (cdn && cdn.networkError === true) return null;
+    for (const url of Array.isArray(cdn?.urls) ? cdn.urls : []) {
+      const local = await send('fetch-icon', url, appid).catch(() => null);
+      if (local && local !== url) {
+        // Keep the source URL in the schema. The downloaded file belongs to steam_cache and must be
+        // disposable when the user clears caches; the renderer can resolve this URL again later.
+        portrait = url;
+        break;
+      }
+    }
+  }
   if (!portrait) portrait = (await send('get-steamdb-cover', appid).catch(() => null)) || null;
   // The appid lets SteamGridDB answer by identity; the name is only the fallback handle for a game
   // that has no Steam appid at all.
@@ -912,6 +938,7 @@ async function getSteamDataFromSRV(appID, lang) {
     ipcRenderer.invoke('get-steam-data', { appid: appID, type: 'steamhunters', lang }),
   ]);
   const result = resultRaw || {};
+  const networkError = result.networkError === true && steamhunters && steamhunters.networkError === true;
 
   // The supplemental fetchers can legitimately come back empty (obscure title, scrape failed,
   // site unreachable). Default to [] instead of dereferencing `.achievements` on the result, or
@@ -949,7 +976,10 @@ async function getSteamDataFromSRV(appID, lang) {
 
   // Product info often carries no library capsule at all (brand-new appids above all). See
   // resolvePortrait for the recovery chain and why it is shared with the cached-schema repair.
-  const portrait = await resolvePortrait({ appid: appID, name: result.name, portrait: result.portrait });
+  // When both Steam transports already reported an outage, do not launch SteamDB/Puppeteer once per
+  // AppID just to confirm the same missing portrait. The caller will keep a provisional game and
+  // the next scan can retry after connectivity returns.
+  const portrait = networkError ? null : await resolvePortrait({ appid: appID, name: result.name, portrait: result.portrait });
 
   return {
     name: result.name,
@@ -968,6 +998,7 @@ async function getSteamDataFromSRV(appID, lang) {
       total: achievements.length,
       list: achievements,
     },
+    ...(networkError ? { networkError: true } : {}),
   };
 }
 
@@ -1001,6 +1032,7 @@ async function getSchemaAchievements(cfg) {
         type: 'steamhunters',
         lang: cfg.lang,
       });
+      if (result && result.networkError === true) return { achievements: [], networkError: true };
       return result && Array.isArray(result.achievements) ? result.achievements : [];
     }
   } catch {
@@ -1168,7 +1200,7 @@ async function findInAppList(appID) {
       if ((!Array.isArray(list) || list.length === 0) && !appListRefreshFailed) {
         try {
           const url = 'https://api.steampowered.com/ISteamApps/GetAppList/v2/?format=json';
-          const data = await request.getJson(url, { timeout: 40000 });
+          const data = await request.getJson(url, { timeout: STEAM_APP_LIST_TIMEOUT_MS });
           list = data.applist.apps;
           fs.mkdirSync(path.dirname(filepath), { recursive: true });
           fs.writeFileSync(filepath, JSON.stringify(list, null, 2));

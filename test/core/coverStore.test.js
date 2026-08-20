@@ -173,6 +173,33 @@ test('recoverRemote reconstructs an exact SteamGridDB selection from its legacy 
   );
 });
 
+test('persist stores a remote selection and removes its obsolete durable copy', () => {
+  const oldCover = path.join(tmpRoot, 'covers', '391540-deadbeef1234.png');
+  fs.mkdirSync(path.dirname(oldCover), { recursive: true });
+  fs.writeFileSync(oldCover, 'obsolete durable bytes');
+  coverStore.set('391540', pathToFileURL(oldCover).href, 'portrait');
+
+  const source = 'https://cdn2.steamgriddb.com/grid/06f867ad5a8dd38502b33ec03d5abc47.png';
+  const stored = coverStore.persist('391540', source, tmpRoot, 'portrait');
+
+  assert.strictEqual(stored, source);
+  assert.strictEqual(coverStore.get('391540', 'portrait'), source);
+  assert.strictEqual(fs.existsSync(oldCover), false, 'the old durable copy must be removed');
+});
+
+test('preserveCachedOverrides migrates a legacy SteamGridDB cache path back to its source URL', () => {
+  const cached = path.join(tmpRoot, 'steam_cache', 'icon', '391540', '06f867ad5a8dd38502b33ec03d5abc47.png');
+  fs.mkdirSync(path.dirname(cached), { recursive: true });
+  fs.writeFileSync(cached, 'legacy grid bytes');
+  coverStore.writeAll({ 391540: pathToFileURL(cached).href });
+
+  assert.deepStrictEqual(coverStore.preserveCachedOverrides(tmpRoot), ['391540']);
+  coverStore.setStoreFile(tmpFile);
+  const source = 'https://cdn2.steamgriddb.com/grid/06f867ad5a8dd38502b33ec03d5abc47.png';
+  assert.strictEqual(coverStore.get('391540'), source);
+  assert.strictEqual(fs.existsSync(path.join(tmpRoot, 'covers', '391540-06f867ad5a8dd38502b33ec03d5abc47.png')), false);
+});
+
 /*
   Before orientation-scoped entries, one override applied to a game no matter which shape was on
   screen - so picking a portrait cover and then switching to the landscape grid kept showing that

@@ -3,6 +3,8 @@
 // Per-appid cover-art overrides. A small JSON map { "<appid>": "<file:// or http(s) url>" } stored in
 // cfg/covers.db. When an entry exists it takes precedence over the normal Steam/emulator cover, so a
 // user can fix a mis-matched cracked game (wrong AppID), point at a local image, or force a redownload.
+// Downloaded selections are stored as their remote URL, not as a second permanent image copy: the
+// normal steam_cache remains disposable and the renderer re-downloads the source when it is needed.
 // Pure fs/JSON - no Electron - so it is usable from the renderer and unit-testable headless.
 
 const crypto = require('crypto');
@@ -206,10 +208,9 @@ function remove(appid, orientation) {
   writeAll(map);
 }
 
-// A selected cover is user state, even when its original bytes came from a downloadable cache.
-// Copy local/cache-backed selections into userData/covers before recording them so clearing
-// steam_cache cannot leave covers.db pointing at a deleted file. Remote URLs are safe to retain as
-// URLs when the download failed; they can be requested again by Chromium on the next render.
+// A selected cover is user state, but downloaded bytes are not. Store remote selections as the source
+// URL so clearing steam_cache removes the image and the next render can fetch it again. Local images
+// selected by the user remain in the durable covers/ folder; they are not re-downloadable cache data.
 function persist(appid, coverUrl, root = userDataDir(), orientation) {
   if (!appid || !coverUrl) return null;
   const value = String(coverUrl);
@@ -218,21 +219,30 @@ function persist(appid, coverUrl, root = userDataDir(), orientation) {
   let destination = null;
   if (source) {
     if (!fs.existsSync(source) || !fs.statSync(source).isFile()) return null;
-    const bytes = fs.readFileSync(source);
-    const digest = crypto.createHash('sha1').update(bytes).digest('hex').slice(0, 12);
-    const name = safeCoverName(appid, source, digest);
-    if (!name) return null;
-    destination = path.join(root, 'covers', name);
-    fs.mkdirSync(path.dirname(destination), { recursive: true });
-    if (path.resolve(source).toLowerCase() !== path.resolve(destination).toLowerCase() && !fs.existsSync(destination)) {
-      fs.writeFileSync(destination, bytes);
+    const cacheRoot = path.join(root, 'steam_cache');
+    const recovered = pathIsWithin(source, cacheRoot) ? recoverRemote(value) : null;
+    if (recovered) {
+      // Legacy SteamGridDB cache paths contain the content hash, so old selections can be converted
+      // to a source URL instead of being copied into durable storage during the next write.
+      stored = recovered;
+    } else {
+      const bytes = fs.readFileSync(source);
+      const digest = crypto.createHash('sha1').update(bytes).digest('hex').slice(0, 12);
+      const name = safeCoverName(appid, source, digest);
+      if (!name) return null;
+      destination = path.join(root, 'covers', name);
+      fs.mkdirSync(path.dirname(destination), { recursive: true });
+      if (path.resolve(source).toLowerCase() !== path.resolve(destination).toLowerCase() && !fs.existsSync(destination)) {
+        fs.writeFileSync(destination, bytes);
+      }
+      stored = pathToFileURL(destination).href;
     }
-    stored = pathToFileURL(destination).href;
   }
   set(appid, stored, orientation);
   // Record first, then tidy: the entry above is what makes the new file(s) the ones in use. Keep
-  // every orientation's current file, not just the one just written.
-  if (destination) pruneOldCovers(root, appid, keepPathsForEntry(readAll()[String(appid)]));
+  // every orientation's current file, not just the one just written. A remote selection therefore
+  // also removes a stale durable copy left by an older build.
+  pruneOldCovers(root, appid, keepPathsForEntry(readAll()[String(appid)]));
   return stored;
 }
 
@@ -322,14 +332,20 @@ function preserveCachedOverrides(root = userDataDir()) {
   const cacheRoot = path.join(root, 'steam_cache');
   const preserved = new Set();
 
-  // Copy one cache-backed value into durable storage, returning its new file:// URL, or null if
-  // this value doesn't need preserving. Named with a digest so a portrait and a landscape pick for
-  // the same appid never collide on the same destination filename.
+  // Convert a cache-backed value to its original source URL when the old filename carries a
+  // SteamGridDB content hash. Generic legacy filenames do not contain enough information to rebuild
+  // the link, so retain those bytes as a last-resort compatibility path instead of losing a user's
+  // selection during migration.
   const preserveValue = (appid, value) => {
     const source = localPathFromUrl(value);
     if (!source || !pathIsWithin(source, cacheRoot)) return null;
     try {
       if (!fs.statSync(source).isFile()) return null;
+      const recovered = recoverRemote(value);
+      if (recovered) {
+        preserved.add(String(appid));
+        return recovered;
+      }
       const bytes = fs.readFileSync(source);
       const digest = crypto.createHash('sha1').update(bytes).digest('hex').slice(0, 12);
       const name = safeCoverName(appid, source, digest);
