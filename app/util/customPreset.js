@@ -8,6 +8,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const schema = require('./presetSchema.js');
+const { cssUrl } = require('./cssUrl.js');
 const { PRESET_PROPERTIES, FONT_STACKS, MOTION_OFFSETS, EASINGS, normalizeOptions, cssValue } = schema;
 
 /*
@@ -282,7 +283,7 @@ const PREVIEW_HOLD_MS = 3600000;
 // What view/app.html must allow for the designer's preview frame to run at all.
 const PREVIEW_SCRIPT_HASHES = [inlineScriptHash(PRESET_PREVIEW_BRIDGE), inlineScriptHash(PRESET_ENGINE)];
 
-function buildPresetPreviewHtml(options, { hold = true } = {}) {
+function buildPresetPreviewHtml(options, { hold = true, assetUrl } = {}) {
   const values = normalizeOptions(options);
   return [
     '<!DOCTYPE html>',
@@ -290,7 +291,7 @@ function buildPresetPreviewHtml(options, { hold = true } = {}) {
     '<meta charset="UTF-8" />',
     `<meta name="duration" content="${hold ? PREVIEW_HOLD_MS : values.duration}" />`,
     '<style id="aw-preview-css">',
-    buildCustomPresetCss(values),
+    buildCustomPresetCss(values, { assetUrl }),
     '</style>',
     inlineScript(PRESET_PREVIEW_BRIDGE),
     '</head><body>',
@@ -310,7 +311,7 @@ const TITLE_COLOR = { accent: 'var(--accent)', text: 'var(--text)', custom: 'var
 
 // Every property that maps straight onto a CSS custom property, plus the values that are looked up
 // in a table (font stack, easing, motion offsets) rather than written by the user.
-function rootVariables(values) {
+function rootVariables(values, assetUrl) {
   const lines = [];
   for (const property of PRESET_PROPERTIES) {
     if (!property.css) continue;
@@ -331,11 +332,21 @@ function rootVariables(values) {
   // Set by the engine from the payload's artwork; `none` keeps the plain background when a
   // notification carries no image.
   lines.push('  --artwork: none;');
+  /*
+    The preset's own background picture, when it has one. It is a bare filename beside style.css, so
+    the plain relative url is what an installed preset needs; the designer previews from a srcdoc
+    document, where nothing is relative to the preset folder, and passes a resolver instead.
+  */
+  lines.push(`  --bg-image: ${values.bgImage ? cssUrl(assetUrl ? assetUrl(values.bgImage) : values.bgImage) : 'none'};`);
+  // Scales the glow the design asked for. Only the glow animation moves it, and only downwards, so
+  // the window presetBoxSize measured still fits the brightest frame.
+  lines.push('  --glow-pulse: 1;');
   lines.push('  --ach-hold: 5000ms;');
   return lines;
 }
 
-// The card's background, from the three modes the designer offers.
+// The card's background, from the four modes the designer offers. Both picture modes paint their
+// image in a layer below the text (see below) and keep a flat colour behind it.
 function backgroundRule(values) {
   if (values.bgMode === 'gradient') return '  background: linear-gradient(var(--bg-angle), var(--bg) 0%, var(--bg2) 100%);';
   return '  background: var(--bg);';
@@ -376,14 +387,30 @@ function iconRules(values) {
   return values.layout === 'text-only' ? ['.ach .icon { display: none; }'] : [];
 }
 
-function buildCustomPresetCss(options) {
+/*
+  The glow animation, as a multiplier the box-shadow reads.
+
+  A custom property can only be animated once it is registered, hence @property. It also has to be
+  registered as a number rather than left untyped, or the transition between keyframes is a discrete
+  swap instead of a fade. Both keyframes stay at or below 1, so the strongest frame is the glow the
+  design asked for and the window it was measured for still fits.
+*/
+const GLOW_ANIMATIONS = {
+  pulse: { name: 'aw_glow_pulse', css: '@keyframes aw_glow_pulse { 0%, 100% { --glow-pulse: 1; } 50% { --glow-pulse: 0.3; } }', duration: 2200 },
+  breathe: { name: 'aw_glow_breathe', css: '@keyframes aw_glow_breathe { 0%, 100% { --glow-pulse: 0.55; } 50% { --glow-pulse: 1; } }', duration: 4200 },
+};
+
+function buildCustomPresetCss(options, { assetUrl } = {}) {
   const values = normalizeOptions(options);
   const flexAlign = FLEX_ALIGN[values.align];
   const artwork = values.bgMode === 'artwork';
+  const picture = artwork || values.bgMode === 'image';
+  const glowAnimation = GLOW_ANIMATIONS[values.glowAnim] || null;
 
   const css = [
+    '@property --glow-pulse { syntax: "<number>"; inherits: false; initial-value: 1; }',
     ':root {',
-    ...rootVariables(values),
+    ...rootVariables(values, assetUrl),
     '}',
     'html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }',
     '.ach {',
@@ -396,6 +423,8 @@ function buildCustomPresetCss(options) {
     // One shadow behind every line, so text stays readable once it sits on artwork instead of a flat
     // colour. Costs nothing at 0, which is the default.
     '  text-shadow: 0 1px calc(var(--text-shadow) * 6px) rgba(0, 0, 0, var(--text-shadow));',
+    // Zero-width by default, so the declaration is always present and costs nothing until asked for.
+    '  -webkit-text-stroke: var(--text-stroke) var(--text-stroke-color);',
     '  opacity: 0;',
     // The state colour every accent-driven rule reads. The state classes below re-point it, which is
     // how one stylesheet paints a normal, a rare and a completion notification.
@@ -403,8 +432,8 @@ function buildCustomPresetCss(options) {
     backgroundRule(values),
     ...borderRules(values),
     ...layoutRules(values),
-    artwork ? '  overflow: hidden;' : '',
-    '  box-shadow: 0 4px 12px rgba(0, 0, 0, var(--shadow)), 0 0 calc(var(--glow-strength) * ' + GLOW_RADIUS_PX + 'px) color-mix(in srgb, var(--accent) 65%, transparent);',
+    picture ? '  overflow: hidden;' : '',
+    '  box-shadow: 0 4px 12px rgba(0, 0, 0, var(--shadow)), 0 0 calc(var(--glow-strength) * var(--glow-pulse) * ' + GLOW_RADIUS_PX + 'px) color-mix(in srgb, var(--accent) 65%, transparent);',
     '}',
     '.ach.state-rare { --accent: var(--rare-accent); --glow-strength: var(--rare-glow); }',
     '.ach.state-rare.tier-silver { --accent: var(--rare-silver); }',
@@ -412,11 +441,13 @@ function buildCustomPresetCss(options) {
     '.ach.state-platinum { --accent: var(--platinum-accent); --glow-strength: var(--platinum-glow); }',
   ];
 
-  if (artwork) {
+  if (picture) {
+    // A layer rather than a background-image on the card: the picture can be dimmed and blurred
+    // without touching the text drawn on top of it. `--artwork` is the game's, set by the engine on
+    // every payload; `--bg-image` is the preset's own and is fixed at generation time.
+    const source = artwork ? 'var(--artwork)' : 'var(--bg-image)';
     css.push(
-      // A layer rather than a background-image on the card: the artwork can be dimmed and blurred
-      // without touching the text drawn on top of it.
-      `.ach::before { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; background-image: var(--artwork); background-size: cover; background-position: center ${values.artworkPosition}; filter: blur(var(--artwork-blur)); opacity: calc(1 - var(--artwork-dim)); }`,
+      `.ach::before { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; background-image: ${source}; background-size: cover; background-position: center ${values.artworkPosition}; filter: blur(var(--artwork-blur)); opacity: calc(1 - var(--artwork-dim)); }`,
       '.ach > * { position: relative; z-index: 1; }'
     );
   }
@@ -443,7 +474,14 @@ function buildCustomPresetCss(options) {
     '@keyframes aw_in { from { transform: translate(calc(-50% + var(--in-dx)), calc(-50% + var(--in-dy))) scale(calc(var(--scale, 1) * var(--in-scale))); opacity: 0; } to { transform: translate(-50%, -50%) scale(var(--scale, 1)); opacity: var(--opacity); } }',
     '@keyframes aw_hold { from, to { transform: translate(-50%, -50%) scale(var(--scale, 1)); opacity: var(--opacity); } }',
     '@keyframes aw_out { from { transform: translate(-50%, -50%) scale(var(--scale, 1)); opacity: var(--opacity); } to { transform: translate(calc(-50% + var(--out-dx)), calc(-50% + var(--out-dy))) scale(calc(var(--scale, 1) * var(--out-scale))); opacity: 0; } }',
-    '.active { animation: aw_in var(--ach-in) var(--ease) forwards, aw_hold var(--ach-hold) forwards, aw_out var(--ach-out) ease-in forwards; animation-delay: 0s, var(--ach-in), calc(var(--ach-in) + var(--ach-hold)); }',
+    glowAnimation ? glowAnimation.css : '',
+    // The glow animation joins the entry/hold/exit list rather than replacing any of it: it only ever
+    // writes --glow-pulse, so the three that drive transform and opacity are untouched.
+    '.active { animation: aw_in var(--ach-in) var(--ease) forwards, aw_hold var(--ach-hold) forwards, aw_out var(--ach-out) ease-in forwards' +
+      (glowAnimation ? `, ${glowAnimation.name} ${glowAnimation.duration}ms ease-in-out infinite` : '') +
+      '; animation-delay: 0s, var(--ach-in), calc(var(--ach-in) + var(--ach-hold))' +
+      (glowAnimation ? ', 0s' : '') +
+      '; }',
     `.progress_line { display: ${values.showProgress ? 'flex' : 'none'}; align-items: center; justify-content: ${flexAlign}; gap: 8px; width: 100%; margin-top: 8px; min-width: 0; }`,
     '.progress_line[hidden] { display: none; }',
     '.progress_track { display: block; flex: 1 1 auto; min-width: 70px; height: var(--progress-height); overflow: hidden; border-radius: 999px; background: rgba(0, 0, 0, 0.45); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); }',

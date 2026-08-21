@@ -158,12 +158,12 @@ test('deleting a preset never moves the user onto an unrelated one', () => {
   assert.match(settings, /const DEFAULT_PRESET_NAME = 'AW Next';/);
 
   // Every rebuild of the menu goes through the helper, so the fallback cannot differ between them.
-  for (const handler of ['btn-delete-preset', 'btn-create-preset', 'btn-import-preset']) {
+  for (const handler of ['btn-delete-preset', 'btn-create-preset', 'btn-import-preset', 'btn-import-san']) {
     const block = new RegExp(`\\$\\('#${handler}'\\)\\.click\\([\\s\\S]*?\\n    \\}\\);`).exec(settings);
     assert.ok(block, `${handler} handler not found`);
     assert.doesNotMatch(block[0], /\$\('#option_overlayPreset'\)\.empty\(\)|sel\.empty\(\)/, `${handler} still rebuilds the menu by hand`);
   }
-  assert.equal((settings.match(/refreshOverlayPresetMenu\(/g) || []).length, 4, 'expected the definition plus three call sites');
+  assert.equal((settings.match(/refreshOverlayPresetMenu\(/g) || []).length, 5, 'expected the definition plus four call sites');
 });
 
 test('a refresh rebuilds the per-type preset menus, not just the main one', () => {

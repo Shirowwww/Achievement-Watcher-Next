@@ -9022,6 +9022,41 @@ body {
   font-size: 12px;
 }
 
+/* A property whose value is a file: the menu of what is available, with the button that brings a
+   new one in beside it. */
+/* A filename plus a button does not fit one grid column, and a name clipped to "backdro..." is
+   exactly the part of it that matters. */
+#settings .pd-field-asset {
+  grid-column: span 2;
+}
+
+#settings .pd-field .pd-asset {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+}
+
+#settings .pd-field .pd-asset select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#settings .pd-asset-btn {
+  flex: 0 0 auto;
+  min-width: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--set-control-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+#settings .pd-asset-btn:hover {
+  color: var(--accent);
+}
+
 /* Live readout for each slider. */
 #settings .pd-value {
   color: var(--text);

@@ -527,6 +527,8 @@ function translateUI(lang, locale, template) {
     $('#pd-name').attr('placeholder', clear(c.namePlaceholder));
     // The first entry of the preset's sound menu, rebuilt at runtime from the installed sounds.
     $('#pd-sound').attr('data-lang-app', clear(c.value.appSound));
+    // ...and of its background-picture menu, which is rebuilt the same way.
+    $('#pd-bgImage').attr('data-lang-none', clear(c.value.noImage));
     $('#pd-status')
       .attr('data-err', clear(c.errName))
       .attr('data-ok', clear(c.created))

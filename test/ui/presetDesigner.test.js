@@ -11,6 +11,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
+const { BUNDLED_LOCALE_COUNT } = require('../helpers/locales.js');
 
 const appRoot = path.join(__dirname, '..', '..', 'app');
 const { parse } = require(path.join(appRoot, 'node_modules', 'node-html-parser'));
@@ -161,7 +162,7 @@ test('dropdowns offer exactly the values the schema accepts', () => {
   }
 });
 
-test('every label in the designer resolves in all 18 locales', () => {
+test('every label in the designer resolves in every bundled locale', () => {
   const keys = designer.querySelectorAll('[data-lang]').map((node) => node.getAttribute('data-lang'));
   assert.ok(keys.length > 90, 'the designer should be fully labelled from the locale');
   // Every property, group and dropdown value is named.
@@ -171,7 +172,7 @@ test('every label in the designer resolves in all 18 locales', () => {
   for (const group of schema.PRESET_GROUPS) assert.ok(keys.includes(`group.${group}`), `group ${group} has no title`);
 
   const files = fs.readdirSync(localeDir).filter((file) => file.endsWith('.json'));
-  assert.equal(files.length, 18);
+  assert.equal(files.length, BUNDLED_LOCALE_COUNT);
   for (const file of files) {
     const locale = JSON.parse(fs.readFileSync(path.join(localeDir, file), 'utf8'));
     const block = locale.settings.notification.option.designer;
@@ -204,7 +205,8 @@ test('the designer reads and writes its controls from the schema rather than by 
 test('the live preview swaps only the stylesheet, and never reloads on every keystroke', () => {
   // Rebuilding the document on each input would restart the animation under the user's cursor and
   // make dragging a slider feel broken; the stylesheet is the only thing that has to change.
-  assert.match(settings, /styleEl\.textContent = presetGenerator\.buildCustomPresetCss\(values\);/);
+  assert.match(settings, /const previewCss = \(values\) => presetGenerator\.buildCustomPresetCss\(values, \{ assetUrl: presetAssetUrl \}\);/);
+  assert.match(settings, /styleEl\.textContent = previewCss\(values\);/);
   assert.match(settings, /getElementById\('aw-preview-css'\)/);
   assert.match(settings, /previewPending = setTimeout/, 'preview updates are not batched');
   // …and the preview is fed the same payload shape the notification window sends.
@@ -257,7 +259,7 @@ test('the three states can be compared side by side', () => {
   assert.match(settings, /function renderComparePreviews\(values\)/, 'the compare view is not rendered');
   // Editing has to reach the compare frames, and cheaply: the stylesheet is swapped, not reloaded.
   assert.match(settings, /if \(previewView === 'compare'\) renderComparePreviews\(values\);/);
-  assert.match(settings, /style\.textContent = presetGenerator\.buildCustomPresetCss\(values\)/);
+  assert.match(settings, /style\.textContent = previewCss\(values\)/);
 });
 
 test('scale and position are mirrored from the app settings, never duplicated', () => {
@@ -363,7 +365,7 @@ test('every #pd-status message the designer reads is bound by the locale loader'
 test('the template status strings exist and are translated in every locale', () => {
   const langDir = path.join(appRoot, 'locale', 'lang');
   const files = fs.readdirSync(langDir).filter((f) => f.endsWith('.json'));
-  assert.equal(files.length, 18, 'all bundled locales must be checked');
+  assert.equal(files.length, BUNDLED_LOCALE_COUNT, 'all bundled locales must be checked');
 
   for (const file of files) {
     const designerStrings = JSON.parse(fs.readFileSync(path.join(langDir, file), 'utf8')).settings.notification.option.designer;

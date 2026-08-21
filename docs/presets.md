@@ -70,14 +70,14 @@ CSS, no JSON and no file to edit.
 
 ### Starting points
 
-The first row holds eight complete designs - *Classic* (the look the old builder always produced),
-*Aurora*, *Neon*, *Cover*, *Minimal*, *Console*, *Terminal* and *Slate*. Each is an ordinary set of
-control values, so picking one is the same as having moved every control by hand: keep it, or use it
-as a base.
+The first row holds fourteen complete designs - *Classic* (the look the old builder always produced),
+*Aurora*, *Neon*, *Cover*, *Minimal*, *Console*, *Terminal*, *Slate*, *Paper* (the one light design),
+*Ember*, *Frost*, *Poster*, *Pixel* and *Ribbon*. Each is an ordinary set of control values, so
+picking one is the same as having moved every control by hand: keep it, or use it as a base.
 
 | Action | What it does |
 | --- | --- |
-| **Surprise me** | Builds a design you have not tried. One hue drives the accent and the background is built around it, so the result is a design rather than noise. |
+| **Surprise me** | Builds a design you have not tried. It picks a kind of card first - flat, gradient, neon, over artwork, glassy, terminal or light - and then rolls every control inside what that kind allows, so the result is a design rather than noise. One hue still drives the whole palette. |
 | **Duplicate** | Keeps the current design, frees the name and lets go of the picker - so the next **Create preset** adds a preset instead of replacing the one it came from. |
 
 Nothing is saved until you press **Create preset**.
@@ -105,11 +105,11 @@ group. In **Simple** interface mode the Advanced halves are not shown at all.
 | Group | What it covers |
 | --- | --- |
 | **Layout & size** | Icon on the left, right, above the text or not at all; text alignment; popup width, padding and spacing; and whether the **game's name** is printed above the achievement. |
-| **Text** | Font, title size, description size, how many lines the description may wrap onto, what colours the title, and - under Advanced - title weight, uppercase, letter spacing and a text shadow for reading over artwork. |
-| **Colours & background** | A solid colour, a two-colour gradient with an angle, or the **game's own artwork** dimmed, blurred and framed behind the text. Plus text colour, accent and opacity. |
+| **Text** | Font, title size, description size, how many lines the description may wrap onto, what colours the title, and - under Advanced - title weight, uppercase, letter spacing, and two ways to stay readable over a picture: a text shadow and an outline drawn around every glyph. |
+| **Colours & background** | A solid colour, a two-colour gradient with an angle, the **game's own artwork**, or **a picture of your own**, dimmed, blurred and framed behind the text. Plus text colour, accent and opacity. A picture you pick is copied into the preset, so it travels with it when you share it. |
 | **Icon** | Size, corner rounding (50% makes it a circle) and, under Advanced, a border and a glow in the accent colour. |
 | **Border & corners** | Corner radius, which edge carries the accent bar (or a full outline, or none) and its thickness; under Advanced, a border of your own colour. |
-| **Shadow & glow** | How deep the drop shadow is and how much the popup glows in its accent colour. |
+| **Shadow & glow** | How deep the drop shadow is, how much the popup glows in its accent colour, and whether that glow **pulses** or **breathes** while the popup is on screen. |
 | **Motion & timing** | Which edge the popup enters from and leaves to (or fade, or zoom), how long it stays on screen, and - under Advanced - how far it travels, entry and exit speed, and the easing. |
 | **Rare & completion** | The colour and glow for a rare unlock and for 100% completion, whether the progress bar shows, whether a **rarity badge** prints the unlock rate, and - under Advanced - the progress bar thickness and the silver and bronze tiers. |
 | **Sound** | A sound this preset plays instead of the one in the Notifications tab. Leave it on **App setting** for no opinion. |
@@ -136,6 +136,66 @@ presets and hand-written ones are never touched.
 > [!NOTE]
 > Presets you create are stored in `%APPDATA%\Achievement Watcher Next\presets\Users Presets`, not in
 > the installation folder. They survive app updates.
+
+## Import a theme from Steam Achievement Notifier
+
+If you used **Steam Achievement Notifier**, the themes you made there do not have to be rebuilt by
+hand. **Import SAN theme**, in the **Presets** tab, reads a `.san` file and turns it into an AW Next
+preset.
+
+It is a conversion, not a compatibility mode. What lands on disk is an ordinary generated preset:
+it opens in **Edit a preset**, every control shows the value it was converted to, and it exports as
+an `.awpreset` like anything else. AW Next never reads the SAN file again.
+
+Both shapes work: the `.san` file SAN exports, and the `usertheme.json` inside a theme SAN has
+already unpacked (in `%APPDATA%\steamachievementnotifier\userthemes\...`), in which case the
+pictures and sounds beside it come across too.
+
+### What comes across
+
+Colours and the gradient, corner rounding, opacity, font size and the description size beside it,
+text colour and a separate title colour, the outline, the glow with its colour and its animation,
+the rare/uncommon/scarce colours, the text shadow and text outline, the icon size, its rounding, its
+border and its glow, the display time, the direction the popup travels, the game name and the rarity
+figure, the background picture, and the sound. A font the theme named is matched to the closest of
+the five families AW Next uses.
+
+A theme set to play a **random sound from a folder** brings that folder's audio into your sound list
+too. Choosing at random is a setting of the Notifications tab rather than something a preset decides,
+so the preset itself keeps no opinion, but the sounds are there to point it at.
+
+### What does not, and why
+
+An import is never refused over something AW Next cannot draw. It converts what maps and then tells
+you, by name, what it left behind:
+
+| | |
+| --- | --- |
+| **Not drawn by an AW Next popup** | SAN's own logos, decorations, masks, hidden-achievement icons, percentage badges, icon-border artwork and the second set of options for its screenshot overlay. AW Next's popup is a card, not a composition of layers. |
+| **A setting of the app, not of a preset** | Notification scale, position and volume. They exist here, in the **Notification** tab, and they stay where you set them rather than being changed by an import. |
+| **Not recognised** | Anything a newer SAN added that this version has not been taught. It is listed rather than dropped in silence. |
+
+Two things keep that list about features rather than about identifiers. A property you never turned
+on is not listed at all, and a feature is named **once**: a theme using SAN's percentage badge sets
+six keys for it, and hearing "percentbadge" is the whole of what was lost.
+
+Everything the report says is also written to the app log, so it is still there after the dialog is
+gone.
+
+One difference is worth knowing before you look at the result. **SAN keeps four separate themes** -
+main, semi-rare, rare and 100% - and a `.san` file carries only one of them. **AW Next paints all
+four states from a single preset**, so the imported preset brings its own rare and completion
+colours (from SAN's rarity glow colours where the theme set them). Check them under **Rare &
+completion**.
+
+### What is checked before anything is installed
+
+The same rules as an `.awpreset`, and for the same reason: a theme file comes from somebody else's
+machine. Nothing inside one is ever run, required or evaluated - only its `usertheme.json` is read.
+Every path is checked against the package it came in, so a theme cannot point outside itself; the
+absolute paths SAN writes are read as filenames only, never opened. Only pictures and audio are
+taken out, by file type and under a size limit, and anything else is refused and listed in the
+report. An import that fails at any point leaves every preset you already have untouched.
 
 ## Share a preset
 

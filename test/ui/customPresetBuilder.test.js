@@ -73,6 +73,10 @@ const FULL = {
   titleColor: '#ff00ff',
   entryDistance: 60,
   artworkPosition: 'top',
+  textStroke: 1.5,
+  textStrokeColor: '#00ffcc',
+  glowAnim: 'breathe',
+  bgImage: 'backdrop.png',
   sound: 'Xbox.wav',
 };
 
@@ -112,6 +116,13 @@ test('every option is clamped to the range the designer offers', () => {
   assert.equal(nonsense.animIn, 'bottom');
   assert.equal(nonsense.sound, '');
   assert.equal(nonsense.showProgress, true);
+
+  // A preset's own picture is a bare filename, never a path, and never a document that can carry
+  // script: everything else falls back to no picture at all.
+  for (const hostile of ['../../../windows/system32/x.png', 'C:\\x.png', 'a/b.png', 'payload.svg', 'script.html', 'no-extension']) {
+    assert.equal(customPresetNumbers({ bgImage: hostile }).bgImage, '', `bgImage accepted ${hostile}`);
+  }
+  assert.equal(customPresetNumbers({ bgImage: 'my backdrop.jpg' }).bgImage, 'my backdrop.jpg');
 });
 
 test('the eight options that predate the designer still normalize to the same values', () => {

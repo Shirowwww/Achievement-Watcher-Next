@@ -98,10 +98,10 @@ const payloadFor = (state) => {
 };
 
 // Render one design in one state and report what the browser computed for it.
-async function renderPreset(page, options, state = 'normal') {
+async function renderPreset(page, options, state = 'normal', assetUrl = undefined) {
   const box = generator.presetBoxSize(options);
   await page.setViewport({ width: box.width, height: box.height });
-  await page.setContent(generator.buildPresetPreviewHtml(options), { waitUntil: 'load' });
+  await page.setContent(generator.buildPresetPreviewHtml(options, { assetUrl }), { waitUntil: 'load' });
   await page.evaluate((payload) => window.awPreviewApply(payload), payloadFor(state));
   // Let the entry animation finish, so opacity and transform are the resting values.
   await new Promise((resolve) => setTimeout(resolve, 800));
@@ -160,6 +160,10 @@ async function renderPreset(page, options, state = 'normal') {
       detailClamp: getComputedStyle(detail).webkitLineClamp,
       detailWhiteSpace: getComputedStyle(detail).whiteSpace,
       textShadow: cardStyle.textShadow,
+      textStrokeWidth: cardStyle.webkitTextStrokeWidth,
+      textStrokeColor: cardStyle.webkitTextStrokeColor,
+      animationNames: cardStyle.animationName,
+      glowPulse: cardStyle.getPropertyValue('--glow-pulse').trim(),
       iconShadow: getComputedStyle(icon).boxShadow,
       progressTrackHeight: getComputedStyle(document.querySelector('.progress_track')).height,
       textOverflow: getComputedStyle(document.querySelector('.text_wrap')).overflow,
@@ -331,6 +335,46 @@ test('a designed preset renders every property it was given', { concurrency: 1, 
 
       const bare = await renderPreset(page, { accentBar: 'none', borderWidth: 0 });
       assert.equal(bare.borderLeft, '0px', 'a preset with no bar and no border still draws one');
+    });
+
+    await t.test("a preset can paint its own picture, outline its text and animate its glow", async () => {
+      /*
+        The three properties added for imported themes. Each of them is a whole feature that renders
+        or does not: a picture layer that is never drawn is exactly what a SAN theme built around one
+        would lose in the conversion, silently.
+      */
+      const picture = await renderPreset(page, { bgMode: 'image', bgImage: 'backdrop.png', artworkDim: 30, artworkBlur: 4, artworkPosition: 'top' }, 'normal', () => SAMPLE_IMAGE);
+      assert.match(picture.artworkImage, /^url\("data:image\/png/, "the preset's own picture is not painted");
+      assert.equal(picture.artworkOpacity, '0.7');
+      assert.equal(picture.artworkFilter, 'blur(4px)');
+
+      // It is the PRESET's picture, not the game's: the payload's artwork must not overwrite it.
+      await page.evaluate(() => window.awPreviewApply({ displayName: 'x', description: 'y', imagePath: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=' }));
+      const kept = await page.evaluate(() => getComputedStyle(document.querySelector('.ach'), '::before').backgroundImage);
+      assert.match(kept, /^url\("data:image\/png/, "the game's artwork replaced the preset's own picture");
+
+      // A picture the preset names but cannot resolve leaves the flat background, never a hole.
+      const unresolved = await renderPreset(page, { bgMode: 'image', bgImage: 'missing.png', bg: '#123456' });
+      assert.equal(unresolved.background, 'none', 'a missing picture must not leave a broken layer on the card');
+
+      const stroked = await renderPreset(page, { textStroke: 1.5, textStrokeColor: '#00ffcc' });
+      assert.equal(stroked.textStrokeWidth, '1.5px');
+      assert.equal(stroked.textStrokeColor, 'rgb(0, 255, 204)');
+      const unstroked = await renderPreset(page, {});
+      assert.equal(unstroked.textStrokeWidth, '0px', 'the default design must draw no outline at all');
+
+      // The glow animation joins the entry/hold/exit list rather than replacing any of it.
+      const still = await renderPreset(page, { glow: 60 });
+      assert.equal(still.animationNames, 'aw_in, aw_hold, aw_out');
+      assert.equal(still.glowPulse, '1');
+      for (const glowAnim of ['pulse', 'breathe']) {
+        const moving = await renderPreset(page, { glow: 60, glowAnim });
+        assert.equal(moving.animationNames, `aw_in, aw_hold, aw_out, aw_glow_${glowAnim}`);
+        // Registered as a number, or the keyframes would step between values instead of fading.
+        assert.match(moving.glowPulse, /^[0-9.]+$/);
+        assert.ok(Number(moving.glowPulse) > 0 && Number(moving.glowPulse) <= 1, 'the animation must only ever dim the glow');
+        assert.match(moving.boxShadow, /rgb/, 'the glow is no longer painted while it animates');
+      }
     });
 
     await t.test('a title too long to fit is scrolled inside the card, never over it', async () => {

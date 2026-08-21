@@ -4421,6 +4421,7 @@ async function enqueueNotificationFromArgs(args) {
 
   const durSec = ov.notificationDuration === 'auto' || ov.notificationDuration == null ? 0 : Number(ov.notificationDuration) || 0;
   enqueueNotification({
+    appid: args.appid == null ? '' : String(args.appid),
     notifyId,
     preset,
     position: ov.notificationPosition || 'center-bottom',
@@ -4448,6 +4449,16 @@ async function enqueueNotificationFromArgs(args) {
 // A user file shadows a bundled file of the same name.
 function userSoundsDir() {
   return path.join(userData, 'sounds');
+}
+/*
+  Pictures a preset can use as its background, in one shared folder rather than per preset.
+
+  Same shape as the sounds folder above and for the same reason: the designer can only offer what it
+  can list. Writing a preset COPIES the chosen picture into the preset's own folder, so the preset
+  itself stays self-contained and an .awpreset carries the image with it.
+*/
+function userPresetImagesDir() {
+  return path.join(userData, 'presets', 'images');
 }
 function resolveNotificationSound(name) {
   if (!name) return '';
@@ -4486,6 +4497,8 @@ ipcMain.handle('list-presets', async () => {
 const customPreset = require(path.join(__dirname, '../util/customPreset.js'));
 const { customPresetNumbers, buildCustomPresetHtml, buildCustomPresetCss, sanitizePresetName } = customPreset;
 const presetPackage = require(path.join(__dirname, '../util/presetPackage.js'));
+const presetSchema = require(path.join(__dirname, '../util/presetSchema.js'));
+const sanImport = require(path.join(__dirname, '../util/sanImport.js'));
 
 /*
   Where a preset the builder generates is written: <userData>, never the app folder. Once packaged,
@@ -4509,10 +4522,31 @@ const bundledPresetRoots = () => [
 // never reads this file, and a preset that predates it simply cannot be re-opened.
 const { PRESET_OPTIONS_FILE } = customPreset;
 
+/*
+  Put the preset's background picture beside its stylesheet.
+
+  The generated CSS names it as a bare filename relative to style.css, so the file has to be there.
+  It is taken from the shared images folder, or left alone when the preset already carries it, which
+  is what lets an imported preset be re-saved without its background having to exist twice.
+*/
+function copyPresetImage(dir, name) {
+  if (!name) return;
+  const destination = path.join(dir, name);
+  try {
+    if (fs.existsSync(destination)) return;
+    const source = path.join(userPresetImagesDir(), name);
+    if (!fs.existsSync(source)) return;
+    fs.copyFileSync(source, destination);
+  } catch (err) {
+    debug.log('[custom-preset] background image not copied: ' + (err.message || err));
+  }
+}
+
 function writeCustomPreset(name, opts) {
   const dir = path.join(usersPresetsDir(), name);
   const values = customPresetNumbers(opts);
   fs.mkdirSync(dir, { recursive: true });
+  copyPresetImage(dir, values.bgImage);
   fs.writeFileSync(path.join(dir, 'index.html'), buildCustomPresetHtml(opts), 'utf8');
   fs.writeFileSync(path.join(dir, 'style.css'), buildCustomPresetCss(opts), 'utf8');
   fs.writeFileSync(path.join(dir, PRESET_OPTIONS_FILE), JSON.stringify({ name, ...values }, null, 2), 'utf8');
@@ -4733,6 +4767,62 @@ ipcMain.handle('import-preset', async (event, opts = {}) => {
     return { ...out, file };
   } catch (err) {
     debug.log('[preset-package] import failed: ' + (err.message || err));
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+
+/*
+  --- Importing a Steam Achievement Notifier theme -------------------------------------------------
+  A one-way conversion into an ordinary generated preset. The format, the mapping and every safety
+  rule live in util/sanImport.js; this side only drives the dialog and names the folders involved.
+  Nothing about SAN is consulted again once the preset exists.
+*/
+ipcMain.handle('import-san-theme', async (event, opts = {}) => {
+  try {
+    let file = typeof opts.file === 'string' ? opts.file : '';
+    if (!file) {
+      const res = await dialog.showOpenDialog({
+        title: t('import-san-title', 'Import a Steam Achievement Notifier theme', 'Importer un theme Steam Achievement Notifier'),
+        properties: ['openFile', 'dontAddToRecent'],
+        // A .san file, the plain zip it is, or the usertheme.json inside a theme SAN already imported.
+        filters: [{ name: t('san-theme', 'Steam Achievement Notifier theme', 'Theme Steam Achievement Notifier'), extensions: ['san', 'zip', 'json'] }],
+      });
+      if (res.canceled || !res.filePaths || !res.filePaths.length) return { ok: false, canceled: true };
+      file = res.filePaths[0];
+    }
+
+    const out = sanImport.installSanTheme({
+      file,
+      presetsDir: usersPresetsDir(),
+      soundsDir: userSoundsDir(),
+      imagesDir: userPresetImagesDir(),
+      appVersion: app.getVersion(),
+      duplicate: ['rename', 'replace'].includes(opts.duplicate) ? opts.duplicate : 'fail',
+      reservedNames: [PREVIEW_PRESET_NAME],
+      takenNames: bundledPresetRoots().flatMap((root) => {
+        try {
+          return fs.readdirSync(root).filter((name) => fs.existsSync(path.join(root, name, 'index.html')));
+        } catch {
+          return [];
+        }
+      }),
+    });
+    /*
+      The whole report, not just the outcome. A user asking why their theme looks different has one
+      dialog they may have clicked past; this is the only place the detail survives.
+    */
+    if (out.ok) {
+      const list = (entries, label) => (entries || []).map((entry) => `${entry[label] || '?'}=${entry.code}`).join(', ') || 'none';
+      debug.log(
+        `[san-import] ${path.basename(file)} -> ${out.name} (SAN ${out.report.sanVersion || '?'}, preset ${out.report.sanPreset || '?'}); ` +
+          `mapped ${(out.report.mapped || []).length}; skipped ${list(out.report.skipped, 'key')}; assets ${list(out.report.assets, 'name')}`
+      );
+    } else {
+      debug.log('[san-import] ' + path.basename(file) + ': ' + out.error);
+    }
+    return { ...out, file };
+  } catch (err) {
+    debug.log('[san-import] failed: ' + (err.message || err));
     return { ok: false, error: String(err.message || err) };
   }
 });

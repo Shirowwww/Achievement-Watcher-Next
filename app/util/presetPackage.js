@@ -114,6 +114,28 @@ function cleanText(value, max = LIMITS.textLength) {
   return value.replace(/[\x00-\x1f\x7f]/g, ' ').trim().slice(0, max);
 }
 
+/*
+  Where a preset came from, when it did not start life here.
+
+  Optional, and purely descriptive: nothing reads it to decide behaviour, and a preset carrying one
+  is an ordinary preset in every other way. It exists so a preset converted from another app can say
+  so once and keep saying it through an export and a re-import, instead of the origin being lost the
+  first time it is shared on.
+*/
+function cleanOrigin(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const app = cleanText(value.app, 60);
+  if (!app) return null;
+  const origin = { app };
+  const format = cleanText(value.format, 40);
+  const version = cleanText(value.version, 32);
+  const name = cleanText(value.name, 80);
+  if (format) origin.format = format;
+  if (version) origin.version = version;
+  if (name) origin.name = name;
+  return origin;
+}
+
 function cleanTags(value) {
   if (!Array.isArray(value)) return [];
   const out = [];
@@ -193,6 +215,7 @@ function validateManifest(raw, { appVersion = '' } = {}) {
       // Re-clamped through the builder's own ranges, so a hand-edited manifest cannot widen them.
       options: manifestOptions(raw.options, sound),
       sound,
+      origin: cleanOrigin(raw.origin),
     },
   };
 }
@@ -271,6 +294,7 @@ function exportPreset({ presetDir, name, destination, options = null, meta = {},
     },
     options: options ? customPresetNumbers(options) : null,
     sound: soundName,
+    origin: cleanOrigin(meta.origin),
   };
 
   const check = validateManifest(manifest, { appVersion });
@@ -390,15 +414,19 @@ function nextFreeName(presetsDir, name, taken) {
   return '';
 }
 
-// Copy a sound in without ever clobbering one the user already has: an identical file is reused,
-// a different file of the same name lands beside it.
-function installSound(soundsDir, name, data) {
-  fs.mkdirSync(soundsDir, { recursive: true });
+/*
+  Copy a file into one of the app's shared folders without ever clobbering what is already there: an
+  identical file is reused under its own name, a different file of the same name lands beside it as
+  "name (2)". Used for sounds and, by the SAN importer, for a preset's background picture - the
+  caller must follow the name it comes back with, or it ends up pointing at somebody else's file.
+*/
+function installSideFile(dir, name, data) {
+  fs.mkdirSync(dir, { recursive: true });
   const ext = path.extname(name);
   const stem = path.basename(name, ext);
   let base = name;
   for (let i = 2; i < 100; i += 1) {
-    const dest = path.join(soundsDir, base);
+    const dest = path.join(dir, base);
     if (!fs.existsSync(dest)) {
       fs.writeFileSync(dest, data);
       return { name: base, created: true };
@@ -408,7 +436,7 @@ function installSound(soundsDir, name, data) {
     } catch {}
     base = `${stem} (${i})${ext}`;
   }
-  throw new Error('sound-name-taken');
+  throw new Error('file-name-taken');
 }
 
 /*
@@ -476,7 +504,7 @@ function installPackage({ file, presetsDir, soundsDir, appVersion = '', duplicat
     const sounds = [];
     const installedAs = new Map();
     for (const { path: relative, entry } of soundFiles) {
-      const installed = installSound(soundsDir, relative, entry.getData());
+      const installed = installSideFile(soundsDir, relative, entry.getData());
       if (installed.created) createdSounds.push(path.join(soundsDir, installed.name));
       installedAs.set(relative, installed.name);
       sounds.push(installed.name);
@@ -537,6 +565,10 @@ function installPackage({ file, presetsDir, soundsDir, appVersion = '', duplicat
 
 module.exports = {
   PRESET_PACKAGE_EXTENSION,
+  // Shared with util/sanImport.js: one spelling of "this path is safe to write to" and one of the
+  // rule that an imported file never overwrites a different file the user already has.
+  isInside,
+  installSideFile,
   PRESET_PACKAGE_FILE,
   PRESET_PACKAGE_FORMAT,
   PRESET_PACKAGE_FORMAT_VERSION,

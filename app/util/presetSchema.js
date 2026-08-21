@@ -68,7 +68,7 @@ const MOTION_VALUES = Object.keys(MOTION_OFFSETS);
 /*
   A property is:
     key       what it is called in aw-preset.json and in an .awpreset manifest
-    type      color | number | select | toggle | sound
+    type      color | number | select | toggle | sound | asset
     def       the default, which must reproduce the pre-designer look (see the header)
     group     which section of the designer shows it
     advanced  folded behind the group's "Advanced" disclosure
@@ -112,17 +112,31 @@ const PRESET_PROPERTIES = [
   { key: 'letterSpacing', type: 'number', def: 0, min: -1, max: 4, step: 0.5, group: 'text', advanced: true, css: '--letter-spacing', unit: 'px' },
   // Text needs its own contrast once it sits on artwork rather than on a flat colour.
   { key: 'textShadow', type: 'number', def: 0, min: 0, max: 100, step: 5, group: 'text', advanced: true, css: '--text-shadow', scale: 100 },
+  /*
+    An outline drawn around every glyph, which is the other way to stay readable over artwork: a
+    shadow softens the edge, a stroke draws one. Zero is the default and costs nothing, so a preset
+    that predates it renders exactly as before.
+  */
+  { key: 'textStroke', type: 'number', def: 0, min: 0, max: 3, step: 0.5, group: 'text', advanced: true, css: '--text-stroke', unit: 'px' },
+  { key: 'textStrokeColor', type: 'color', def: '#000000', group: 'text', advanced: true, css: '--text-stroke-color' },
 
   // --- colours & background --------------------------------------------------------------------
-  { key: 'bgMode', type: 'select', def: 'solid', values: ['solid', 'gradient', 'artwork'], group: 'color' },
+  { key: 'bgMode', type: 'select', def: 'solid', values: ['solid', 'gradient', 'artwork', 'image'], group: 'color' },
   { key: 'bg', type: 'color', def: '#16181d', group: 'color', css: '--bg' },
   { key: 'bg2', type: 'color', def: '#2b3550', group: 'color', css: '--bg2', shownFor: { bgMode: ['gradient'] } },
   { key: 'bgAngle', type: 'number', def: 135, min: 0, max: 360, step: 5, group: 'color', advanced: true, css: '--bg-angle', unit: 'deg' },
-  { key: 'artworkDim', type: 'number', def: 55, min: 0, max: 100, step: 5, group: 'color', css: '--artwork-dim', scale: 100, shownFor: { bgMode: ['artwork'] } },
+  /*
+    A picture of the preset's own, rather than the game's. A bare filename: the file is copied into
+    the preset folder when the preset is written, so the stylesheet only ever names something that
+    sits beside it and a package carries the image with the design.
+  */
+  { key: 'bgImage', type: 'asset', def: '', group: 'color', shownFor: { bgMode: ['image'] } },
+  // Dimming, blur and framing treat both kinds of picture the same, so they are one set of controls.
+  { key: 'artworkDim', type: 'number', def: 55, min: 0, max: 100, step: 5, group: 'color', css: '--artwork-dim', scale: 100, shownFor: { bgMode: ['artwork', 'image'] } },
   { key: 'artworkBlur', type: 'number', def: 0, min: 0, max: 20, step: 1, group: 'color', advanced: true, css: '--artwork-blur', unit: 'px' },
   // Which part of the artwork the card shows. Game headers put their logo in a fixed place, so the
   // difference between the three is the difference between a readable card and one full of lettering.
-  { key: 'artworkPosition', type: 'select', def: 'center', values: ['top', 'center', 'bottom'], group: 'color', advanced: true, shownFor: { bgMode: ['artwork'] } },
+  { key: 'artworkPosition', type: 'select', def: 'center', values: ['top', 'center', 'bottom'], group: 'color', advanced: true, shownFor: { bgMode: ['artwork', 'image'] } },
   { key: 'text', type: 'color', def: '#ffffff', group: 'color', css: '--text' },
   { key: 'accent', type: 'color', def: '#4aa3ff', group: 'color', css: '--accent-base' },
   { key: 'opacity', type: 'number', def: 1, min: 0.2, max: 1, step: 0.01, group: 'color', css: '--opacity', percent: true },
@@ -143,6 +157,11 @@ const PRESET_PROPERTIES = [
   // --- shadow & glow ---------------------------------------------------------------------------
   { key: 'shadow', type: 'number', def: 45, min: 0, max: 100, step: 5, group: 'effect', css: '--shadow', scale: 100 },
   { key: 'glow', type: 'number', def: 0, min: 0, max: 100, step: 5, group: 'effect', css: '--glow', scale: 100 },
+  /*
+    A glow that moves. It only ever dims the glow the design already asked for and never brightens
+    past it, so the window a preset is measured for still fits the strongest frame of the animation.
+  */
+  { key: 'glowAnim', type: 'select', def: 'none', values: ['none', 'pulse', 'breathe'], group: 'effect' },
 
   // --- motion & timing -------------------------------------------------------------------------
   { key: 'animIn', type: 'select', def: 'bottom', values: MOTION_VALUES, group: 'motion' },
@@ -193,6 +212,12 @@ const COLOR_RE = /^(#[0-9a-f]{3,8}|rgba?\([^)]*\)|[a-z]+)$/i;
 
 // A sound is a bare filename in the app's or the user's sounds folder - never a path.
 const SOUND_RE = /^[^\\/:*?"<>|\x00-\x1f]+\.(?:wav|mp3|ogg|flac|m4a|aac)$/i;
+/*
+  An image a preset carries. Same shape as a sound and for the same reason: a bare filename, never a
+  path, so nothing a preset names can point outside the folder it was installed into. SVG is left out
+  on purpose - it is a document that can carry script, and a background is not worth that.
+*/
+const ASSET_RE = /^[^\/:*?"<>| -]+.(?:png|jpe?g|gif|webp|bmp)$/i;
 
 function clampNumber(value, property) {
   const number = Number(value);
@@ -218,6 +243,8 @@ function normalizeValue(raw, property) {
       return raw === true || raw === 'true' ? true : raw === false || raw === 'false' ? false : property.def;
     case 'sound':
       return typeof raw === 'string' && SOUND_RE.test(raw.trim()) ? raw.trim() : property.def;
+    case 'asset':
+      return typeof raw === 'string' && ASSET_RE.test(raw.trim()) ? raw.trim() : property.def;
     default:
       return property.def;
   }
@@ -254,6 +281,7 @@ module.exports = {
   EASINGS,
   COLOR_RE,
   SOUND_RE,
+  ASSET_RE,
   normalizeOptions,
   cssValue,
 };

@@ -3308,6 +3308,71 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       });
     }
 
+    /*
+      Pictures a preset can use as its background: the shared <userData>/presets/images folder, which
+      is what the designer can offer and what writing a preset copies from.
+
+      The preview needs them as data URIs rather than as filenames. A generated preset names its
+      picture relative to its own stylesheet, and the preview is a srcdoc document with no such
+      folder behind it, so `presetAssetUrl` is handed to the generator and resolves the name to the
+      bytes. Cached, because the stylesheet is rebuilt on every slider movement and a wallpaper is
+      not a small thing to base64 twice a second.
+    */
+    let presetImages = [];
+    const presetImageUris = new Map();
+
+    function refreshPresetImages(selected) {
+      return ipcRenderer
+        .invoke('list-preset-images')
+        .then((images) => {
+          presetImages = images || [];
+          const sel = $('#pd-bgImage');
+          if (!sel.length) return;
+          const keep = selected != null ? selected : sel.val() || '';
+          sel.empty();
+          sel.append($('<option>').attr('value', '').text(sel.attr('data-lang-none') || ''));
+          const names = presetImages.map((image) => image.name);
+          /*
+            A preset can name a picture that is no longer in the folder - an imported one whose file
+            was removed, say. Offering it anyway keeps the value in the controls, so re-saving the
+            preset does not silently drop its background.
+          */
+          if (keep && !names.includes(keep)) names.push(keep);
+          names.sort((a, b) => a.localeCompare(b));
+          names.forEach((name) => sel.append($('<option>').attr('value', name).text(name)));
+          sel.val(names.includes(keep) ? keep : '');
+          /*
+            The list arrives after the controls were written, so a preset whose picture was not yet
+            in the menu could not be selected when the design was applied - and the preview, rendered
+            in the same breath, painted the card without its background until something else moved.
+          */
+          if (sel.val()) updatePreviewStyles(readPresetOptions());
+        })
+        .catch((err) => debug.log(err));
+    }
+
+    function presetAssetUrl(name) {
+      if (!name) return '';
+      if (presetImageUris.has(name)) return presetImageUris.get(name);
+      const image = presetImages.find((entry) => entry.name === name);
+      const mime = /\.png$/i.test(name)
+        ? 'image/png'
+        : /\.gif$/i.test(name)
+          ? 'image/gif'
+          : /\.webp$/i.test(name)
+            ? 'image/webp'
+            : /\.bmp$/i.test(name)
+              ? 'image/bmp'
+              : 'image/jpeg';
+      const uri = image ? fileAsDataUri(image.file, mime) : '';
+      presetImageUris.set(name, uri);
+      return uri;
+    }
+
+    // The generated stylesheet as the PREVIEW needs it. The only difference from what is written to
+    // disk is how a preset's own picture is addressed; every other value is identical.
+    const previewCss = (values) => presetGenerator.buildCustomPresetCss(values, { assetUrl: presetAssetUrl });
+
     const previewFrame = () => document.getElementById('pd-frame');
 
     /*
@@ -3318,7 +3383,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     function renderPreviewDocument(values, { hold = true } = {}) {
       const frame = previewFrame();
       if (!frame) return;
-      frame.srcdoc = presetGenerator.buildPresetPreviewHtml(values, { hold });
+      frame.srcdoc = presetGenerator.buildPresetPreviewHtml(values, { hold, assetUrl: presetAssetUrl });
       frame.onload = () => {
         try {
           frame.contentWindow.awPreviewApply(previewPayload());
@@ -3342,7 +3407,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         renderPreviewDocument(values);
         return;
       }
-      styleEl.textContent = presetGenerator.buildCustomPresetCss(values);
+      styleEl.textContent = previewCss(values);
       if (previewView === 'compare') renderComparePreviews(values);
       layoutPreview(values);
     }
@@ -3459,6 +3524,30 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     });
     // The one property the card cannot show: play it when it is chosen, exactly as the Notifications
     // tab does for the app-wide sound, at the volume that setting is on.
+    /*
+      Bring a picture in. It is copied into the shared folder by the main process, which hands back
+      the name it ended up under, and that name is what the preset stores.
+    */
+    $('#btn-import-preset-image').click(async function (event) {
+      event.preventDefault();
+      const self = $(this);
+      self.css('pointer-events', 'none');
+      try {
+        const name = await ipcRenderer.invoke('import-preset-image');
+        if (name) {
+          presetImageUris.delete(name);
+          await refreshPresetImages(name);
+          // Picking a picture without switching to the mode that draws it would do nothing visible.
+          if ($('#pd-bgMode').val() !== 'image') $('#pd-bgMode').val('image');
+          updatePreviewStyles(refreshPresetControls());
+          replayPreview();
+        }
+      } catch (err) {
+        debug.log(err);
+      }
+      self.css('pointer-events', 'initial');
+    });
+
     $('#pd-sound').on('change', function () {
       const chosen = String($(this).val() || '');
       if (chosen) previewSoundAtVolume(chosen);
@@ -3507,7 +3596,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       // Each row shows a whole popup, so three of them share the stage the single card had.
       const labelRoom = 90;
       const zoom = Math.min(1, (stageWidth - labelRoom) / box.width);
-      const document_ = presetGenerator.buildPresetPreviewHtml(values);
+      const document_ = presetGenerator.buildPresetPreviewHtml(values, { assetUrl: presetAssetUrl });
       for (const row of rows) {
         const frame = row.querySelector('iframe');
         const wrap = row.querySelector('.pd-compare-frame');
@@ -3523,7 +3612,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         try {
           if (frame.contentWindow && frame.contentWindow.awPreviewApply) {
             const style = frame.contentDocument.getElementById('aw-preview-css');
-            if (style) style.textContent = presetGenerator.buildCustomPresetCss(values);
+            if (style) style.textContent = previewCss(values);
             frame.contentWindow.awPreviewApply(payload);
             continue;
           }
@@ -3782,7 +3871,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     */
     function applyDesignToControls(options) {
       writePresetOptions(options);
-      refreshPresetSounds(presetSchema.normalizeOptions(options).sound || '');
+      const values = presetSchema.normalizeOptions(options);
+      refreshPresetSounds(values.sound || '');
+      refreshPresetImages(values.bgImage || '');
       updatePreviewStyles(readPresetOptions());
       replayPreview();
     }
@@ -4079,9 +4170,145 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       self.css('pointer-events', 'initial');
     });
 
+    /*
+      What an imported SAN theme became, in the user's own words.
+
+      An import is never refused over a property AW Next cannot draw - SAN describes decorations,
+      logos, badges and screenshot variants that have no equivalent here - so the honest thing is to
+      convert what maps and say plainly what did not. The keys are printed as SAN spells them: they
+      are identifiers the user can find again in SAN's own customiser, and translating them would
+      make them unfindable.
+    */
+    function sanReportDetail(report) {
+      if (!report) return '';
+      const lines = [];
+      lines.push(t('import-san-carried', '{count} settings carried over.', '{count} reglages repris.', { count: (report.mapped || []).length }));
+
+      const byCode = new Map();
+      for (const entry of report.skipped || []) {
+        if (!byCode.has(entry.code)) byCode.set(entry.code, []);
+        byCode.get(entry.code).push(entry.key);
+      }
+      const missing = (report.assets || []).filter((entry) => entry.code === 'asset-missing').map((entry) => entry.name || '?');
+      const refused = (report.assets || []).filter((entry) => entry.code === 'asset-rejected').map((entry) => entry.name);
+
+      const sections = [
+        ['unsupported', t('import-san-unsupported', 'Not drawn by an AW Next popup: {keys}', 'Non dessine par une popup AW Next : {keys}')],
+        ['app-setting', t('import-san-app-setting', 'A setting of the app rather than part of a preset: {keys}', 'Un reglage de l’application, pas du preset : {keys}')],
+        ['unknown', t('import-san-unknown', 'Not recognised by this version: {keys}', 'Non reconnu par cette version : {keys}')],
+      ];
+      const skipped = [];
+      for (const [code, template] of sections) {
+        const keys = byCode.get(code);
+        if (keys && keys.length) skipped.push('  ' + template.replace('{keys}', keys.join(', ')));
+      }
+      if (missing.length) {
+        skipped.push('  ' + t('import-san-asset-missing', 'Missing from the theme file: {names}', 'Absent du fichier de theme : {names}').replace('{names}', missing.join(', ')));
+      }
+      if (refused.length) {
+        skipped.push('  ' + t('import-san-asset-rejected', 'Refused as an unsupported file: {names}', 'Refuse car le fichier n’est pas pris en charge : {names}').replace('{names}', refused.join(', ')));
+      }
+      if (skipped.length) {
+        lines.push('');
+        lines.push(t('import-san-skipped', 'Not carried over:', 'Non repris :'));
+        lines.push(...skipped);
+      }
+
+      if ((report.notes || []).includes('base-layout') && report.sanPreset) {
+        lines.push('');
+        lines.push(
+          t(
+            'import-san-base-layout',
+            'The theme was built on SAN\u2019s "{name}" card. AW Next draws its own, so the layout is not the one you had; the colours, motion and effects are.',
+            'Le thème était bâti sur la carte « {name} » de SAN. AW Next dessine la sienne : la disposition n’est donc pas celle que vous aviez, les couleurs, le mouvement et les effets si.',
+            { name: report.sanPreset }
+          )
+        );
+      }
+      if ((report.notes || []).includes('states-merged')) {
+        lines.push('');
+        lines.push(
+          t(
+            'import-san-states-merged',
+            'SAN keeps a separate theme for rare and 100% unlocks. AW Next paints both states from this one preset, so check its Rare & completion colours.',
+            'SAN garde un theme distinct pour les succes rares et le 100 %. AW Next peint ces deux etats avec ce seul preset : verifiez ses couleurs Rare et completion.'
+          )
+        );
+      }
+      lines.push('');
+      lines.push(
+        t(
+          'import-san-installed',
+          'It is now an ordinary preset: open it under "Edit a preset" to change anything.',
+          'C’est desormais un preset ordinaire : ouvrez-le sous « Modifier un preset » pour tout ajuster.'
+        )
+      );
+      return lines.join('\n');
+    }
+
+    $('#btn-import-san').click(async function () {
+      const self = $(this);
+      self.css('pointer-events', 'none');
+      try {
+        let res = await ipcRenderer.invoke('import-san-theme', {});
+        // Same two-step as an .awpreset import: a name clash changes nothing until the user picks.
+        if (res && !res.ok && res.error === 'duplicate') {
+          const choice = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+            type: 'question',
+            buttons: [
+              t('keep-both-presets', 'Keep both', 'Garder les deux'),
+              t('replace-preset', 'Replace', 'Remplacer'),
+              t('cancel', 'Cancel', 'Annuler'),
+            ],
+            defaultId: 0,
+            cancelId: 2,
+            title: t('import-preset-duplicate-title', 'Preset already exists', 'Ce preset existe déjà'),
+            message: t('import-preset-duplicate-message', 'A preset named "{name}" is already installed.', 'Un preset nommé « {name} » est déjà installé.', {
+              name: res.name || '',
+            }),
+            detail: t(
+              'import-preset-duplicate-detail',
+              'Keep both installs the imported preset under a new name. Replace overwrites the installed one.',
+              'Garder les deux installe le preset importé sous un nouveau nom. Remplacer écrase celui déjà installé.'
+            ),
+            noLink: true,
+          });
+          if (choice === 2) {
+            setPresetStatus('');
+            self.css('pointer-events', 'initial');
+            return;
+          }
+          res = await ipcRenderer.invoke('import-san-theme', { file: res.file, duplicate: choice === 1 ? 'replace' : 'rename' });
+        }
+
+        if (res && res.ok) {
+          await refreshOverlayPresetMenu(res.name);
+          await refreshGeneratedPresetList(res.name);
+          await loadPresetIntoBuilder(res.name);
+          setPresetStatus(`${$('#pd-status').attr('data-imported') || ''} ${res.name}`.trim(), 'ok');
+          remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+            type: 'info',
+            title: t('import-san-report-title', 'Theme imported', 'Theme importe'),
+            message: res.name,
+            detail: sanReportDetail(res.report),
+            noLink: true,
+          });
+        } else if (!res || !res.canceled) {
+          const error = String((res && res.error) || '');
+          const invalid = t('import-san-invalid', 'This file is not a Steam Achievement Notifier theme.', 'Ce fichier n’est pas un theme Steam Achievement Notifier.');
+          setPresetStatus(error ? `${invalid} (${error})` : invalid, 'error');
+        }
+      } catch (err) {
+        debug.log(err);
+        setPresetStatus((($('#pd-status').attr('data-fail') || '') + ': ' + err).trim(), 'error');
+      }
+      self.css('pointer-events', 'initial');
+    });
+
     buildTemplateChips();
     refreshGeneratedPresetList().catch((err) => debug.log(err));
     refreshPresetSounds('');
+    refreshPresetImages('');
     refreshPresetControls();
     renderPreviewDocument(readPresetOptions());
     refreshPresetAnchors();
@@ -4107,6 +4334,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     $(document).on('locale-labels-changed', function () {
       refreshGeneratedPresetList(String($('#pd-load').val() || '')).catch((err) => debug.log(err));
       refreshPresetSounds();
+      refreshPresetImages();
     });
 
     $('#option_mergeDuplicate')

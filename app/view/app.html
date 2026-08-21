@@ -1793,6 +1793,14 @@
                                 <span><span data-lang="field.textShadow"></span> <b class="pd-value" id="pd-val-textShadow"></b></span>
                                 <input type="range" id="pd-textShadow" min="0" max="100" step="5" value="0" />
                               </label>
+                              <label class="pd-field" data-key="textStroke">
+                                <span><span data-lang="field.textStroke"></span> <b class="pd-value" id="pd-val-textStroke"></b></span>
+                                <input type="range" id="pd-textStroke" min="0" max="3" step="0.5" value="0" />
+                              </label>
+                              <label class="pd-field" data-key="textStrokeColor">
+                                <span data-lang="field.textStrokeColor"></span>
+                                <input type="color" id="pd-textStrokeColor" value="#000000" />
+                              </label>
                             </div>
                           </div>
                         </section>
@@ -1809,6 +1817,7 @@
                                   <option value="solid" data-lang="value.solid"></option>
                                   <option value="gradient" data-lang="value.gradient"></option>
                                   <option value="artwork" data-lang="value.artwork"></option>
+                                  <option value="image" data-lang="value.image"></option>
                                 </select>
                               </label>
                               <label class="pd-field" data-key="bg">
@@ -1819,7 +1828,14 @@
                                 <span data-lang="field.bg2"></span>
                                 <input type="color" id="pd-bg2" value="#2b3550" />
                               </label>
-                              <label class="pd-field" data-key="artworkDim" data-shown-for="bgMode:artwork">
+                              <label class="pd-field pd-field-asset" data-key="bgImage" data-shown-for="bgMode:image">
+                                <span data-lang="field.bgImage"></span>
+                                <span class="pd-asset">
+                                  <select autocomplete="off" id="pd-bgImage" data-lang-none="value.noImage"></select>
+                                  <button type="button" id="btn-import-preset-image" class="pd-asset-btn"><i class="fas fa-folder-open"></i></button>
+                                </span>
+                              </label>
+                              <label class="pd-field" data-key="artworkDim" data-shown-for="bgMode:artwork,image">
                                 <span><span data-lang="field.artworkDim"></span> <b class="pd-value" id="pd-val-artworkDim"></b></span>
                                 <input type="range" id="pd-artworkDim" min="0" max="100" step="5" value="55" />
                               </label>
@@ -1846,7 +1862,7 @@
                                 <span><span data-lang="field.artworkBlur"></span> <b class="pd-value" id="pd-val-artworkBlur"></b></span>
                                 <input type="range" id="pd-artworkBlur" min="0" max="20" step="1" value="0" />
                               </label>
-                              <label class="pd-field" data-key="artworkPosition" data-shown-for="bgMode:artwork">
+                              <label class="pd-field" data-key="artworkPosition" data-shown-for="bgMode:artwork,image">
                                 <span data-lang="field.artworkPosition"></span>
                                 <select autocomplete="off" id="pd-artworkPosition">
                                   <option value="top" data-lang="value.top"></option>
@@ -1940,6 +1956,14 @@
                               <label class="pd-field" data-key="glow">
                                 <span><span data-lang="field.glow"></span> <b class="pd-value" id="pd-val-glow"></b></span>
                                 <input type="range" id="pd-glow" min="0" max="100" step="5" value="0" />
+                              </label>
+                              <label class="pd-field" data-key="glowAnim">
+                                <span data-lang="field.glowAnim"></span>
+                                <select autocomplete="off" id="pd-glowAnim">
+                                  <option value="none" data-lang="value.none"></option>
+                                  <option value="pulse" data-lang="value.pulse"></option>
+                                  <option value="breathe" data-lang="value.breathe"></option>
+                                </select>
                               </label>
                             </div>
                           </div>
@@ -2081,6 +2105,7 @@
                       <button type="button" id="btn-reset-preset" class="inline-action-btn secondary"><i class="fas fa-undo"></i> <span data-lang="reset"></span></button>
                       <button type="button" id="btn-delete-preset" class="inline-action-btn secondary" style="display: none"><i class="fas fa-trash"></i> <span data-lang="deleteLabel"></span></button>
                       <button type="button" id="btn-import-preset" class="inline-action-btn secondary"><i class="fas fa-file-import"></i> <span data-lang="importLabel"></span></button>
+                      <button type="button" id="btn-import-san" class="inline-action-btn secondary"><i class="fas fa-download"></i> <span data-lang="importSan"></span></button>
                       <button type="button" id="btn-export-preset" class="inline-action-btn secondary"><i class="fas fa-file-export"></i> <span data-lang="exportLabel"></span></button>
                       <span id="pd-status"></span>
                     </div>
