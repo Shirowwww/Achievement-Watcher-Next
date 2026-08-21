@@ -43,4 +43,23 @@ function t(key, english, french, params) {
   return interpolate(fallback || english || key, params);
 }
 
-module.exports = { t };
+/*
+  A label from anywhere in the locale tree, by dotted path ("sort.tooltip.played").
+
+  For the structural keys that live outside `dialogs`, which the loader already merges English under
+  as the base: a value is always present for a bundled locale, so there is nothing to fall back to
+  and no English literal has to sit in the renderer waiting to be forgotten. Returns '' when the
+  locale has not loaded yet, which renders as an empty label rather than as the wrong language.
+*/
+function localeText(dottedPath, params) {
+  const locale = (typeof window !== 'undefined' && window.appLocale) || null;
+  if (!locale) return '';
+  let value = locale;
+  for (const part of String(dottedPath).split('.')) {
+    if (!value || typeof value !== 'object') return '';
+    value = value[part];
+  }
+  return typeof value === 'string' ? interpolate(value, params) : '';
+}
+
+module.exports = { t, localeText };

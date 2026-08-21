@@ -55,6 +55,16 @@ const HUMANIZE_LOCALES = {
   thai: 'th',
   japanese: 'ja',
   schinese: 'zh_CN',
+  koreana: 'ko',
+  tchinese: 'zh_TW',
+  dutch: 'nl',
+  swedish: 'sv',
+  danish: 'da',
+  norwegian: 'no',
+  finnish: 'fi',
+  greek: 'el',
+  indonesian: 'id',
+  vietnamese: 'vi',
 };
 
 function humanizeLocale(lang) {

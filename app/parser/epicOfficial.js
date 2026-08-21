@@ -32,7 +32,8 @@ const EPIC_LOCALE_MAP = {
   portuguese: 'pt-PT', brazilian: 'pt-BR', russian: 'ru', polish: 'pl', japanese: 'ja',
   koreana: 'ko', schinese: 'zh-Hans', tchinese: 'zh-Hant', dutch: 'nl', danish: 'da',
   finnish: 'fi', swedish: 'sv', norwegian: 'no', czech: 'cs', hungarian: 'hu', romanian: 'ro',
-  turkish: 'tr', ukrainian: 'uk', greek: 'el', thai: 'th', vietnamese: 'vi', arabic: 'ar',
+  slovak: 'sk', turkish: 'tr', ukrainian: 'uk', greek: 'el', thai: 'th', vietnamese: 'vi',
+  indonesian: 'id', arabic: 'ar',
 };
 
 function firstNonEmpty(...values) {

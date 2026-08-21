@@ -37,11 +37,35 @@ git switch -c fix/short-description
   with `.cmd`/`.bat` files kept as CRLF. Before committing, `git diff --numstat` must match
   `git diff --numstat --ignore-cr-at-eol`.
 
-## Translations
+## Translations and user-visible text
 
-English is the reference locale. When a new UI key is added, add a meaningful translation to every bundled locale in the same change. Do not leave blank values or duplicate the English sentence as a placeholder in unrelated languages.
+English is the reference locale. When a new UI key is added, add a meaningful translation to every bundled locale in the same change. Do not leave blank values or duplicate the English sentence as a placeholder in unrelated languages. There is no English fallback at runtime, so a missing key ships as blank UI.
 
-Run the app test suite after locale changes; it verifies key parity and non-empty values. More details are in [app/locale/README.md](app/locale/README.md).
+Three rules are worth knowing before writing a user-visible string:
+
+- **Do not format values by hand.** Dates, relative times, played time, counts and percentages come
+  from `app/util/intlFormat.js`, which uses `Intl`. The locale files carry the sentence, `Intl`
+  carries the value: `"Achievements checked {when}"`, never one key per number of days.
+- **Do not write an Achievement Watcher address anywhere but `app/util/links.js`.** Markup names
+  the destination with `data-aw-link="troubleshooting"`; the registry holds the URL.
+- **Do not translate logs, thrown errors, file names, registry paths or source identifiers.** They
+  are addresses, not words, and a log in twenty-eight languages is a log nobody can search.
+
+Check locale work with the linter, then the suite:
+
+```powershell
+node tools/locale-lint.js
+```
+
+It reports missing and extra keys, empty values, placeholder and markup drift, English prose copied
+into another language, a `t()` slug with no entry, interface text hardcoded in JavaScript, and an
+address written outside the link registry. Every rule also runs in `npm test`.
+`node tools/locale-lint.js --pseudo` writes a pseudo-locale to `scratch/pseudo.json` for a visual
+pass: anything still in plain English on screen is a string the locale layer never reached.
+
+The full picture, including what is deliberately left in English and how the documentation site fits
+in, is in [docs/localization.md](docs/localization.md). Per-language credits and the procedure for
+correcting an existing translation are in [app/locale/README.md](app/locale/README.md).
 
 ## Tests
 

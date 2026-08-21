@@ -10,22 +10,32 @@ The current build includes:
 
 - Brazilian Portuguese
 - Chinese (Simplified)
+- Chinese (Traditional)
 - Czech
+- Danish
+- Dutch
 - English
+- Finnish
 - French
 - German
+- Greek
 - Hungarian
+- Indonesian
 - Italian
 - Japanese
+- Korean
 - Latin American Spanish
+- Norwegian
 - Polish
 - Portuguese
 - Russian
 - Slovak
 - Spanish
+- Swedish
 - Thai
 - Turkish
 - Ukrainian
+- Vietnamese
 
 `uiLanguages.js` exposes only languages that have a matching JSON file. Other entries in `steam.json` remain available as Steam language metadata but do not appear as interface choices.
 
@@ -47,6 +57,35 @@ Pop-Location
 The locale test compares recursive key paths and rejects missing or empty values. It also rejects
 Help-panel prose copied verbatim from English into another language. A top-level object count is not
 enough to prove parity or a completed translation.
+
+For a full report before running the suite, and for the rules the suite does not spell out one by
+one, use the linter:
+
+```powershell
+node tools/locale-lint.js
+```
+
+It adds placeholder and markup comparison against English, detection of English prose pasted into
+another language anywhere in the tree, interface text hardcoded in JavaScript, and Achievement
+Watcher addresses written outside `app/util/links.js`. Every rule also runs inside `npm test`.
+
+`node tools/locale-lint.js --pseudo` writes a pseudo-locale to `scratch/pseudo.json` - every English
+value accented and padded by 30%, placeholders and markup untouched. Copy it over `english.json` in a
+scratch checkout and run the app: anything still in plain English is a string the locale layer never
+reached, and anything clipped is a label that will break in a longer language.
+
+## Values that are not translated
+
+Dates, relative times, played time, counts and percentages are produced by `app/util/intlFormat.js`
+from `Intl`, not by a locale key. The locale files carry the sentence and `Intl` carries the value,
+so `dialogs.gh-verified-when` is `"Achievements checked {when}"` in every language and ICU supplies
+"3 days ago" with the right plural rule. Do not add per-number or per-unit keys.
+
+The addresses the app can open are the same idea: they live in `app/util/links.js`, and markup names
+them with `data-aw-link="<key>"` rather than spelling out a URL.
+
+The reasoning behind both, and what is deliberately left in English, is in
+[docs/localization.md](../../docs/localization.md).
 
 ## Layout overrides
 

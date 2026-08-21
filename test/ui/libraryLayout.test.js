@@ -97,17 +97,21 @@ test('all layouts reuse one game card and details handle missing unlocks', () =>
   assert.equal((appSource.match(/class="game-box"/g) || []).length, 1, 'real games should have one shared card template');
   assert.match(appSource, /class="library-details\$\{hasAchievements \? '' : ' no-achievements'\}"/);
   assert.match(appSource, /library-recent-unlock\$\{latestUnlock \? '' : ' is-empty'\}/);
-  assert.match(appSource, /achievementDate: locale\.latestAchievementEarned \|\| 'Latest achievement earned'/);
+  // Tile labels read straight from the locale tree: an English literal beside them would ship as
+  // English in all 28 languages the first time a key went missing.
+  assert.match(appSource, /achievementDate: localeText\('latestAchievementEarned'\)/);
   assert.match(appSource, /library-recent-unlock[\s\S]*?<i class="fas fa-medal"/);
-  assert.match(appSource, /locale\.noneUnlocked \|\| 'No achievement unlocked yet'/);
+  assert.match(appSource, /localeText\('noneUnlocked'\)/);
   assert.match(appSource, /const recentUnlockText = !hasAchievements[\s\S]*?\? progressLabel/);
-  assert.match(appSource, /locale\.neverPlayed \|\| 'Never launched or tracked'/);
+  assert.match(appSource, /const neverPlayedText = localeText\('neverPlayed'\)/);
   assert.match(appSource, /PlaytimeTracking\.readSync\(game\.appid\)/);
   assert.match(appSource, /class="library-playtime\$\{playtimeText/);
   assert.match(appSource, /library-last-played\$\{lastPlayedTime \? '' : ' is-empty'\}/);
   assert.match(appSource, /library-achievement-summary" data-label="\$\{escapeHtml\(tileLabels\.achievements\)\}/);
   assert.match(appSource, /library-last-played[\s\S]*?data-label="\$\{escapeHtml\(tileLabels\.lastPlayed\)\}/);
-  assert.match(appSource, /function libraryRelativeTime[\s\S]*?\.fromNow\(\)/);
+  // Relative times come from Intl.RelativeTimeFormat, which phrases and pluralizes them per
+  // language, so no wording for them lives in the locale files.
+  assert.match(appSource, /function libraryRelativeTime[\s\S]*?intlFormat\.formatRelativeTime\(seconds, lang\)/);
   assert.match(appSource, /function startLibraryTextScroll[\s\S]*?text\.scrollWidth - container\.clientWidth/);
   assert.match(appSource, /prefers-reduced-motion: reduce/);
   assert.match(appSource, /mouseenter\.awLibrary', '\.library-scroll-text'[\s\S]*?startLibraryTextScroll/);

@@ -4,6 +4,7 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const test = require('node:test');
+const { BUNDLED_LOCALE_COUNT } = require('../helpers/locales.js');
 
 const localeDir = path.join(__dirname, '..', '..', 'app', 'locale', 'lang');
 
@@ -71,7 +72,7 @@ test('all bundled locales have the complete English key set', () => {
     'watchdog.rare',
   ];
 
-  assert.strictEqual(files.length, 18);
+  assert.strictEqual(files.length, BUNDLED_LOCALE_COUNT);
   for (const file of files) {
     const locale = JSON.parse(fs.readFileSync(path.join(localeDir, file), 'utf8'));
     assert.deepStrictEqual(leafPaths(locale).sort(), expected, `${file} must match the English locale keys`);
@@ -105,8 +106,10 @@ test('the Help panel is translated instead of silently copying English prose', (
 
   for (const file of files) {
     const locale = JSON.parse(fs.readFileSync(path.join(localeDir, file), 'utf8'));
+    // Only prose proves nothing was translated. A single word or an acronym is legitimately the
+    // same in several languages ("Documentation", "FAQ"), so matching one is not evidence.
     const copied = stringLeaves(locale.settings.help)
-      .filter(([key, value]) => reference.get(key) === value)
+      .filter(([key, value]) => reference.get(key) === value && /\s/.test(value.trim()))
       .map(([key]) => key);
     assert.deepStrictEqual(copied, [], `${file}: Help text copied verbatim from English at ${copied.join(', ')}`);
   }

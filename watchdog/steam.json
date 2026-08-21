@@ -12,6 +12,7 @@
   { "iso": "de-DE", "displayName": "German", "api": "german", "webapi": "de", "native": "Deutsch" },
   { "iso": "el-GR", "displayName": "Greek", "api": "greek", "webapi": "el", "native": "Ελληνικά" },
   { "iso": "hu-HU", "displayName": "Hungarian", "api": "hungarian", "webapi": "hu", "native": "Magyar" },
+  { "iso": "id-ID", "displayName": "Indonesian", "api": "indonesian", "webapi": "id", "native": "Bahasa Indonesia" },
   { "iso": "it-IT", "displayName": "Italian", "api": "italian", "webapi": "it", "native": "Italiano" },
   { "iso": "ja-JP", "displayName": "Japanese", "api": "japanese", "webapi": "ja", "native": "日本語" },
   { "iso": "ko-KR", "displayName": "Korean", "api": "koreana", "webapi": "ko", "native": "한국어" },
@@ -21,11 +22,12 @@
   { "iso": "pt-BR", "displayName": "Portuguese - Brazil", "api": "brazilian", "webapi": "pt-BR", "native": "Português-Brasil" },
   { "iso": "ro-RO", "displayName": "Romanian", "api": "romanian", "webapi": "ro", "native": "Română" },
   { "iso": "ru-RU", "displayName": "Russian", "api": "russian", "webapi": "ru", "native": "Русский" },
+  { "iso": "sk-SK", "displayName": "Slovak", "api": "slovak", "webapi": "sk", "native": "Slovenčina" },
   { "iso": "es-ES", "displayName": "Spanish - Spain", "api": "spanish", "webapi": "es", "native": "Español-España" },
   { "iso": "es-419", "displayName": "Spanish - Latin America", "api": "latam", "webapi": "es-419", "native": "Español-Latinoamérica" },
   { "iso": "sv-SE", "displayName": "Swedish", "api": "swedish", "webapi": "sv", "native": "Svenska" },
   { "iso": "th-TH", "displayName": "Thai", "api": "thai", "webapi": "th", "native": "ไทย" },
   { "iso": "tr-TR", "displayName": "Turkish", "api": "turkish", "webapi": "tr", "native": "Türkçe" },
   { "iso": "uk-UA", "displayName": "Ukrainian", "api": "ukrainian", "webapi": "uk", "native": "Українська" },
-  { "iso": "vi-VN", "displayName": "Vietnamese", "api": "vietnamese", "webapi": "vn", "native": "Tiếng Việt" }
+  { "iso": "vi-VN", "displayName": "Vietnamese", "api": "vietnamese", "webapi": "vi", "native": "Tiếng Việt" }
 ]

@@ -11,6 +11,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
+const { BUNDLED_LOCALE_COUNT } = require('../helpers/locales.js');
 
 const appDir = path.join(__dirname, '..', '..', 'app');
 const htmlParser = require(path.join(appDir, 'node_modules', 'node-html-parser'));
@@ -197,7 +198,7 @@ test('no internal identifier is ever shown to the user as-is', () => {
 test('the transport labels the panel borrows exist in every bundled locale', () => {
   const localeDir = path.join(appDir, 'locale', 'lang');
   const files = fs.readdirSync(localeDir).filter((name) => name.endsWith('.json'));
-  assert.equal(files.length, 18);
+  assert.equal(files.length, BUNDLED_LOCALE_COUNT);
   for (const file of files) {
     const value = JSON.parse(fs.readFileSync(path.join(localeDir, file), 'utf8')).settings.notification.option.mode.value;
     for (const key of ['toast', 'overlay', 'both']) {

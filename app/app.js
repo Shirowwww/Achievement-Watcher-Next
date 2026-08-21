@@ -87,12 +87,22 @@ const { calculateLibraryStats } = require(path.join(appPath, 'util/libraryStats.
 const { resolveGameRarityContext } = require(path.join(appPath, 'util/rarity.js'));
 const librarySnapshot = require(path.join(appPath, 'util/librarySnapshot.js'));
 const { createViewportWork } = require(path.join(appPath, 'util/viewportWork.js'));
+const perfTrace = require(path.join(appPath, 'util/perfTrace.js'));
 const libraryLayout = require(path.join(appPath, 'util/libraryLayout.js'));
+const intlFormat = require(path.join(appPath, 'util/intlFormat.js'));
+const links = require(path.join(appPath, 'util/links.js'));
+const { localeText } = require(path.join(appPath, 'locale/t.js'));
 // `t` and `escapeHtml` come from ui/settings.js; classic scripts share their lexical scope.
 let debug = new (require(path.join(appPath, 'util/logger.js')))({
   console: isDev,
   file: path.join(userdatapath, `logs/${ipcRenderer.sendSync('get-app-name-sync')}.log`),
 });
+
+if (isDev)
+  debug.log(
+    `[perf] renderer modules loaded in ${(performance.now() - rendererScriptStartedAt).toFixed(0)}ms ` +
+      `(${rendererScriptStartedAt.toFixed(0)}ms of page time before app.js)`
+  );
 
 // Keep otherwise-silent renderer failures in the log.
 window.addEventListener('unhandledrejection', (e) => {
@@ -322,13 +332,52 @@ function applyLibraryLayout(value, legacyPortrait = false) {
   return mode;
 }
 
+// The interface language, for the Intl helpers. Read on each call: it changes without a reload.
+function uiLang() {
+  try {
+    return String((app.config && app.config.achievement && app.config.achievement.lang) || 'english');
+  } catch {
+    return 'english';
+  }
+}
+
+/*
+  Fill in every href the markup declares as data-aw-link="<key>", resolved against
+  app/util/links.js. Markup names the destination, the registry owns the address: a renamed
+  repository or a moved documentation page is then one edit, not a hunt through the views.
+*/
+function applyExternalLinks(root) {
+  $(root || document)
+    .find('[data-aw-link]')
+    .addBack('[data-aw-link]')
+    .each(function () {
+      const key = String($(this).attr('data-aw-link') || '');
+      const url = key.split('.').reduce((value, part) => (value && typeof value === 'object' ? value[part] : undefined), links);
+      if (typeof url === 'string' && url) $(this).attr('href', url);
+      else debug.warn(`[links] no address for data-aw-link="${key}"`);
+    });
+}
+
+// Grouped counts ("1,024" / "1 024"), for the achievement totals a large library shows.
+function formatCount(value) {
+  return intlFormat.formatNumber(Number(value) || 0, uiLang());
+}
+
+// A completion percentage already expressed in percent, with the language's own separator and sign.
+function formatPercentValue(value, digits = 0) {
+  return intlFormat.formatPercent(value, uiLang(), { maximumFractionDigits: digits });
+}
+
 function libraryRelativeTime(timestamp) {
   const seconds = Number(timestamp);
   if (!Number.isFinite(seconds) || seconds <= 0) return '';
-  const value = moment.unix(seconds);
-  return `<time class="library-scroll-text" datetime="${value.toISOString()}" title="${escapeHtml(
-    value.format('LLLL')
-  )}"><span class="library-scroll-content">${escapeHtml(value.fromNow())}</span></time>`;
+  const lang = uiLang();
+  const date = new Date(seconds * 1000);
+  const relative = intlFormat.formatRelativeTime(seconds, lang);
+  const exact = intlFormat.formatDateTime(seconds, lang, { dateStyle: 'full', timeStyle: 'short' });
+  return `<time class="library-scroll-text" datetime="${date.toISOString()}" title="${escapeHtml(
+    exact
+  )}"><span class="library-scroll-content">${escapeHtml(relative)}</span></time>`;
 }
 
 function startLibraryTextScroll(container) {
@@ -360,17 +409,23 @@ function stopLibraryTextScroll(container) {
   if (container) container._scrollAnimation = null;
 }
 
-function libraryPlaytime(seconds) {
+/*
+  A played-time label. Intl.DurationFormat knows all 28 bundled languages; humanize-duration is
+  kept only for a runtime that does not ship it, and its own language list does not cover every
+  locale AW Next bundles, so it stays the fallback rather than the first choice.
+*/
+function formatPlaytime(seconds, { units } = {}) {
   const total = Number(seconds);
   if (!Number.isFinite(total) || total <= 0) return '';
-  if (total < 60) return moment.duration(total, 'seconds').humanize();
-  return humanizeDuration(total * 1000, {
-    language: moment.locale(),
-    fallbacks: ['en'],
-    units: total >= 86400 ? ['d', 'h'] : ['h', 'm'],
-    round: true,
-    largest: 2,
-  });
+  const intlUnits = units || (total < 60 ? ['seconds'] : total >= 86400 ? ['days', 'hours'] : ['hours', 'minutes']);
+  const viaIntl = intlFormat.formatDuration(total, uiLang(), { units: intlUnits });
+  if (viaIntl) return viaIntl;
+  const shortUnits = intlUnits.map((unit) => unit[0]);
+  return humanizeDuration(total * 1000, { language: moment.locale(), fallbacks: ['en'], units: shortUnits, round: true, largest: 2 });
+}
+
+function libraryPlaytime(seconds) {
+  return formatPlaytime(seconds);
 }
 
 async function ensureUplayR2Package({ interactive = true, forceImport = false } = {}) {
@@ -1941,8 +1996,8 @@ function formatGbeBackupDetail(backup, game) {
   if (game?.gameDir) lines.push(`${t('game', 'Game', 'Jeu')}: ${game.gameDir}`);
   if (backup?.backupDir) lines.push(`${t('backup', 'Backup', 'Sauvegarde')}: ${backup.backupDir}`);
   if (backup?.createdAt) {
-    const created = moment(backup.createdAt);
-    if (created.isValid()) lines.push(`${t('created', 'Created', 'Créée')}: ${created.format('L LT')}`);
+    const created = intlFormat.formatDateTime(backup.createdAt, uiLang(), { dateStyle: 'short', timeStyle: 'short' });
+    if (created) lines.push(`${t('created', 'Created', 'Créée')}: ${created}`);
   }
   if (backup?.manifest?.gameDir && game?.gameDir && normalizePathKey(backup.manifest.gameDir) !== normalizePathKey(game.gameDir)) {
     lines.push(`${t('original-folder', 'Original folder', 'Dossier d’origine')}: ${backup.manifest.gameDir}`);
@@ -3332,7 +3387,7 @@ var app = {
               for (const backup of backups.slice(0, 10)) {
                 restoreMenu.append(
                   new MenuItem({
-                    label: `${backup.at ? new Date(backup.at).toLocaleString() : backup.id} - ${t('reset-ach-backup-files', '{count} file(s)', '{count} fichier(s)', {
+                    label: `${intlFormat.formatDateTime(backup.at, uiLang()) || backup.id} - ${t('reset-ach-backup-files', '{count} file(s)', '{count} fichier(s)', {
                       count: backup.files,
                     })}`,
                     async click() {
@@ -5064,29 +5119,15 @@ var app = {
         PlaytimeTracking(game.appid)
           .then(({ playtime, lastplayed }) => {
             if (playtime > 0) {
-              let humanized;
-              if (playtime < 60) {
-                humanized = moment.duration(playtime, 'seconds').humanize();
-              } else if (playtime >= 86400) {
-                humanized =
-                  humanizeDuration(playtime * 1000, { language: moment.locale(), fallbacks: ['en'], units: ['h', 'm'], round: true }) +
-                  ' (~ ' +
-                  moment.duration(playtime, 'seconds').humanize() +
-                  ')';
-              } else {
-                humanized = humanizeDuration(playtime * 1000, {
-                  language: moment.locale(),
-                  fallbacks: ['en'],
-                  units: ['h', 'm'],
-                  round: true,
-                });
-              }
-              $('#achievement .wrapper > .header .playtime span').text(`${humanized}`);
+              // Past a day the exact hours are still the useful number, with the rounded days beside it.
+              const exact = formatPlaytime(playtime, { units: playtime < 60 ? ['seconds'] : ['hours', 'minutes'] });
+              const rounded = playtime >= 86400 ? formatPlaytime(playtime, { units: ['days', 'hours'] }) : '';
+              $('#achievement .wrapper > .header .playtime span').text(rounded ? `${exact} (~ ${rounded})` : exact);
               $('#achievement .wrapper > .header .playtime').css('display', 'inline-block');
             }
 
             if (lastplayed > 0) {
-              $('#achievement .wrapper > .header .lastplayed span').text(`${moment.unix(lastplayed).format('ll')}`);
+              $('#achievement .wrapper > .header .lastplayed span').text(intlFormat.formatDate(lastplayed, uiLang()));
               $('#achievement .wrapper > .header .lastplayed').css('display', 'inline-block');
             }
           })
@@ -5119,10 +5160,12 @@ var app = {
       let i = 0;
       for (let achievement of game.achievement.list) {
         const iconId = achievementIconId(achievement.name);
-        const unlockMoment = moment.unix(achievement.UnlockTime);
+        const unlockLang = uiLang();
+        const unlockAt = intlFormat.formatDateTime(achievement.UnlockTime, unlockLang, { dateStyle: 'short', timeStyle: 'short' });
+        const unlockAgo = intlFormat.formatRelativeTime(achievement.UnlockTime, unlockLang);
         const progress = getAchievementProgressState(achievement);
         const progressMax = progress.hasProgress ? progress.max : 0;
-        const progressLabel = `${progress.current} / ${progress.max}`;
+        const progressLabel = `${formatCount(progress.current)} / ${formatCount(progress.max)}`;
 
         // Hidden + still locked + "show hidden" off => mask the description inline. The real text is
         // stashed in data-desc and revealed in place on click (delegated handler below), instead of
@@ -5474,7 +5517,7 @@ var app = {
       title: t('reset-ach-restore-title', 'Restore this achievement backup?', 'Restaurer cette sauvegarde de succès ?'),
       message: t('reset-ach-restore-message', 'The {count} file(s) saved on {date} go back to their original location, replacing what is there now.', 'Les {count} fichier(s) sauvegardés le {date} retournent à leur emplacement d’origine et remplacent ce qui s’y trouve.', {
         count: backup.files,
-        date: backup.at ? new Date(backup.at).toLocaleString() : backup.id,
+        date: intlFormat.formatDateTime(backup.at, uiLang()) || backup.id,
       }),
       detail: backup.path,
       buttons: [t('cancel', 'Cancel', 'Annuler'), t('restore', 'Restore', 'Restaurer')],
@@ -6235,10 +6278,10 @@ function paintGameHealth(report) {
 */
 function gameHealthVerifiedLabel(stampMs) {
   if (!stampMs) return t('gh-verified-never', 'Achievement list never checked', 'Liste des succès jamais vérifiée');
-  const days = Math.floor((Date.now() - stampMs) / 86400000);
-  if (days <= 0) return t('gh-verified-today', 'Achievements checked today', 'Succès vérifiés aujourd’hui');
-  if (days === 1) return t('gh-verified-yesterday', 'Achievements checked yesterday', 'Succès vérifiés hier');
-  return t('gh-verified-days', 'Achievements checked {days} days ago', 'Succès vérifiés il y a {days} jours', { days });
+  // Intl phrases the delay ("3 days ago", "yesterday") with the right plural and wording for the
+  // language; the locale files only carry the sentence it is dropped into.
+  const when = intlFormat.formatRelativeTime(stampMs, uiLang());
+  return t('gh-verified-when', 'Achievements checked {when}', 'Succès vérifiés {when}', { when });
 }
 
 function paintGameHealthVerified(root, report) {

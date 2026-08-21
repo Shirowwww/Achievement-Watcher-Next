@@ -2,7 +2,7 @@
 
 /*
   The row of notification test buttons, laid out with the app's real stylesheet and the real labels
-  of all eighteen locales.
+  of every bundled locale.
 
   It is a row of peers, so it should read as one: every button an equal share of the line, one gap
   between them all, nothing spilling out of a button. None of that is visible to a unit test - the
@@ -12,6 +12,7 @@
 */
 
 const { test } = require('node:test');
+const { BUNDLED_LOCALE_COUNT } = require('../helpers/locales.js');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -156,7 +157,7 @@ test('the notification test buttons share the line evenly, in every locale', { c
 
   try {
     const page = await browser.newPage();
-    assert.equal(locales.length, 18);
+    assert.equal(locales.length, BUNDLED_LOCALE_COUNT);
 
     // The width the row gets in the panel at the app's default window size.
     for (const { name, labels } of locales) {

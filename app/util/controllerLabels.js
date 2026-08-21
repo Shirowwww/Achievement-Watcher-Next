@@ -351,6 +351,122 @@ const LOCALIZED_BUTTON_LABELS = {
     },
     switch: { GUIDE: '主页' },
   },
+  koreana: {
+    xbox: { BACK: '보기', START: '메뉴', GUIDE: '가이드' },
+    playstation: {
+      BACK: '공유',
+      START: '옵션',
+      GUIDE: 'PS',
+      A: '크로스',
+      B: '서클',
+      X: '스퀘어',
+      Y: '트라이앵글',
+    },
+    switch: { GUIDE: '홈' },
+  },
+  tchinese: {
+    xbox: { BACK: '檢視', START: '功能表', GUIDE: 'Xbox 鍵' },
+    playstation: {
+      BACK: '分享',
+      START: '選項',
+      GUIDE: 'PS',
+      A: '叉',
+      B: '圈',
+      X: '方塊',
+      Y: '三角',
+    },
+  },
+  dutch: {
+    xbox: { BACK: 'Weergave', START: 'Menu' },
+    playstation: {
+      BACK: 'Create',
+      GUIDE: 'PS',
+      A: 'Kruis',
+      B: 'Cirkel',
+      X: 'Vierkant',
+      Y: 'Driehoek',
+    },
+  },
+  swedish: {
+    xbox: { BACK: 'Visa', START: 'Meny' },
+    playstation: {
+      BACK: 'Dela',
+      START: 'Alternativ',
+      GUIDE: 'PS',
+      A: 'Kryss',
+      B: 'Cirkel',
+      X: 'Fyrkant',
+      Y: 'Triangel',
+    },
+  },
+  danish: {
+    xbox: { BACK: 'Vis', START: 'Menu' },
+    playstation: {
+      BACK: 'Del',
+      GUIDE: 'PS',
+      A: 'Kryds',
+      B: 'Cirkel',
+      X: 'Firkant',
+      Y: 'Trekant',
+    },
+  },
+  norwegian: {
+    xbox: { BACK: 'Vis', START: 'Meny' },
+    playstation: {
+      BACK: 'Del',
+      START: 'Alternativer',
+      GUIDE: 'PS',
+      A: 'Kryss',
+      B: 'Sirkel',
+      X: 'Firkant',
+      Y: 'Trekant',
+    },
+  },
+  finnish: {
+    xbox: { BACK: 'Näytä', START: 'Valikko' },
+    playstation: {
+      BACK: 'Jaa',
+      GUIDE: 'PS',
+      A: 'Risti',
+      B: 'Ympyrä',
+      X: 'Neliö',
+      Y: 'Kolmio',
+    },
+  },
+  greek: {
+    xbox: { BACK: 'Προβολή', START: 'Μενού', GUIDE: 'Οδηγός' },
+    playstation: {
+      BACK: 'Κοινοποίηση',
+      START: 'Επιλογές',
+      GUIDE: 'PS',
+      A: 'Σταυρός',
+      B: 'Κύκλος',
+      X: 'Τετράγωνο',
+      Y: 'Τρίγωνο',
+    },
+  },
+  indonesian: {
+    xbox: { BACK: 'View', START: 'Menu' },
+    playstation: {
+      GUIDE: 'PS',
+      A: 'Silang',
+      B: 'Lingkaran',
+      X: 'Kotak',
+      Y: 'Segitiga',
+    },
+  },
+  vietnamese: {
+    xbox: { BACK: 'View', START: 'Menu' },
+    playstation: {
+      BACK: 'Chia sẻ',
+      START: 'Tùy chọn',
+      GUIDE: 'PS',
+      A: 'Chữ thập',
+      B: 'Tròn',
+      X: 'Vuông',
+      Y: 'Tam giác',
+    },
+  },
 };
 
 const LOCALE_ALIASES = {
@@ -369,6 +485,17 @@ const LOCALE_ALIASES = {
   th: 'thai',
   ja: 'japanese',
   zh: 'schinese',
+  ko: 'koreana',
+  zhtw: 'tchinese',
+  nl: 'dutch',
+  sv: 'swedish',
+  da: 'danish',
+  nb: 'norwegian',
+  no: 'norwegian',
+  fi: 'finnish',
+  el: 'greek',
+  id: 'indonesian',
+  vi: 'vietnamese',
 };
 
 // D-pad directions are platform-neutral, so they live in one per-language table
@@ -475,6 +602,66 @@ const LOCALIZED_COMMON_LABELS = {
     DPAD_DOWN: '下',
     DPAD_LEFT: '左',
     DPAD_RIGHT: '右',
+  },
+  koreana: {
+    DPAD_UP: '위',
+    DPAD_DOWN: '아래',
+    DPAD_LEFT: '왼쪽',
+    DPAD_RIGHT: '오른쪽',
+  },
+  tchinese: {
+    DPAD_UP: '上',
+    DPAD_DOWN: '下',
+    DPAD_LEFT: '左',
+    DPAD_RIGHT: '右',
+  },
+  dutch: {
+    DPAD_UP: 'Omhoog',
+    DPAD_DOWN: 'Omlaag',
+    DPAD_LEFT: 'Links',
+    DPAD_RIGHT: 'Rechts',
+  },
+  swedish: {
+    DPAD_UP: 'Upp',
+    DPAD_DOWN: 'Ner',
+    DPAD_LEFT: 'Vänster',
+    DPAD_RIGHT: 'Höger',
+  },
+  danish: {
+    DPAD_UP: 'Op',
+    DPAD_DOWN: 'Ned',
+    DPAD_LEFT: 'Venstre',
+    DPAD_RIGHT: 'Højre',
+  },
+  norwegian: {
+    DPAD_UP: 'Opp',
+    DPAD_DOWN: 'Ned',
+    DPAD_LEFT: 'Venstre',
+    DPAD_RIGHT: 'Høyre',
+  },
+  finnish: {
+    DPAD_UP: 'Ylös',
+    DPAD_DOWN: 'Alas',
+    DPAD_LEFT: 'Vasen',
+    DPAD_RIGHT: 'Oikea',
+  },
+  greek: {
+    DPAD_UP: 'Πάνω',
+    DPAD_DOWN: 'Κάτω',
+    DPAD_LEFT: 'Αριστερά',
+    DPAD_RIGHT: 'Δεξιά',
+  },
+  indonesian: {
+    DPAD_UP: 'Atas',
+    DPAD_DOWN: 'Bawah',
+    DPAD_LEFT: 'Kiri',
+    DPAD_RIGHT: 'Kanan',
+  },
+  vietnamese: {
+    DPAD_UP: 'Lên',
+    DPAD_DOWN: 'Xuống',
+    DPAD_LEFT: 'Trái',
+    DPAD_RIGHT: 'Phải',
   },
 };
 

@@ -58,6 +58,7 @@ const EXOPHASE_LANG_MAP = {
   portuguese: 'pt',
   romanian: 'ro',
   russian: 'ru',
+  slovak: 'sk',
   spanish: 'es',
   schinese: 'zh-CN',
   tchinese: 'zh-TW',

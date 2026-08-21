@@ -69,6 +69,9 @@ function buildHarness() {
     .readFileSync(path.join(appDir, 'ui', 'game.js'), 'utf8')
     .replace(/<\/script/gi, '<\\/script');
   const jquery = fs.readFileSync(path.join(appDir, 'ui', 'lib', 'jquery-3.7.1.min.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
+  // The real formatter, so the harness proves what a French user actually reads rather than an
+  // English-only stub. It attaches to window.IntlFormat when loaded as a plain browser script.
+  const intlScript = fs.readFileSync(path.join(appDir, 'util', 'intlFormat.js'), 'utf8').replace(/<\/script/gi, '<\/script');
   return `<!doctype html><html><head><meta charset="utf-8"></head><body>
     <section id="achievement">
       <div class="achievement-list">
@@ -83,12 +86,15 @@ function buildHarness() {
       </div>
     </section>
     <script>${jquery}<\/script>
+    <script>${intlScript}<\/script>
     <script>
       window.restoreCalls = 0;
+      window.app = { config: { achievement: { lang: 'french' } } };
       window.restoreAchievementSorts = () => { window.restoreCalls += 1; };
       window.require = (request) => {
         if (request === '@electron/remote') return { app: { getAppPath: () => '/app' } };
         if (request === 'path') return { join: (...parts) => parts.join('/') };
+        if (request === '/app/util/intlFormat.js') return window.IntlFormat;
         if (request === '/app/util/overlayUi.js') {
           return {
             rarityTier(percent) {
@@ -133,7 +139,10 @@ test('rarity renderer indexes rendered rows without selector injection or duplic
             return this.getAttribute('data-name') === name;
           })
           .map(function () {
-            return { text: $(this).find('.stats .community span.data').text(), classes: this.className };
+            const cell = $(this).find('.stats .community span.data');
+            // French inserts a narrow no-break space before the sign; compare on a normal space so
+            // the assertion is about the formatting, not about which space codepoint ICU chose.
+            return { text: cell.text().replace(/\s+/g, ' '), raw: cell.attr('data-percent'), classes: this.className };
           })
           .get();
       return {
@@ -146,16 +155,19 @@ test('rarity renderer indexes rendered rows without selector injection or duplic
       };
     });
 
-    assert.deepEqual(result.quote, [{ text: '3', classes: 'achievement rare rarity-silver' }]);
+    // The harness runs in French, so the figure carries that language's percent formatting while the
+    // raw value stays on the attribute for sorting to read.
+    assert.deepEqual(result.quote, [{ text: '3 %', raw: '3', classes: 'achievement rare rarity-silver' }]);
     assert.deepEqual(
       result.duplicates,
       [
-        { text: '100', classes: 'achievement' },
-        { text: '100', classes: 'achievement' },
+        { text: '100 %', raw: '100', classes: 'achievement' },
+        { text: '100 %', raw: '100', classes: 'achievement' },
       ],
       'every duplicate row must receive the same update'
     );
-    assert.deepEqual(result.bronze, [{ text: '6', classes: 'achievement rare rarity-bronze' }]);
+    assert.deepEqual(result.bronze, [{ text: '6 %', raw: '6', classes: 'achievement rare rarity-bronze' }]);
+    // An untouched row keeps its text and never gains the sorting attribute.
     assert.deepEqual(result.untouched, [{ text: 'keep', classes: 'achievement rare rarity-gold' }]);
     assert.equal(result.headerShown, true);
     assert.equal(result.restoreCalls, 1);

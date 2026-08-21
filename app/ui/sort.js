@@ -168,8 +168,14 @@ function applyAchievementSort(root, mode, direction) {
 
   li.detach().sort(function (a, b) {
     if (mode === 'percent') {
-      const aPercent = parseFloat($(a).find('.achievement .stats .community .data').text());
-      const bPercent = parseFloat($(b).find('.achievement .stats .community .data').text());
+      // The displayed text is localized ("84,5 %"), so the raw value is read from the attribute.
+      const rarityValue = (row) => {
+        const cell = $(row).find('.achievement .stats .community .data');
+        const raw = cell.attr('data-percent');
+        return raw === undefined ? parseFloat(cell.text()) : parseFloat(raw);
+      };
+      const aPercent = rarityValue(a);
+      const bPercent = rarityValue(b);
       if (Number.isFinite(aPercent) !== Number.isFinite(bPercent)) return Number.isFinite(aPercent) ? -1 : 1;
       const result = (aPercent - bPercent) * factor;
       if (result !== 0) return result;

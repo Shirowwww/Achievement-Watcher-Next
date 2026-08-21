@@ -1,6 +1,7 @@
 'use strict';
 
 const { test } = require('node:test');
+const { BUNDLED_LOCALE_COUNT } = require('../helpers/locales.js');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -106,7 +107,7 @@ test('settings keeps its two-column rows readable in every bundled locale', { co
     browser = await puppeteer.launch({ executablePath, headless: true, userDataDir, args: ['--no-sandbox', '--disable-gpu'] });
     const page = await browser.newPage();
     const locales = fs.readdirSync(localeDir).filter((file) => file.endsWith('.json')).sort();
-    assert.equal(locales.length, 18);
+    assert.equal(locales.length, BUNDLED_LOCALE_COUNT);
 
     for (const width of [900, 1068]) {
       await page.setViewport({ width, height: 900 });

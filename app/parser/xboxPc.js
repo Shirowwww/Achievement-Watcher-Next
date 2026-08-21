@@ -44,6 +44,7 @@ const XBOX_SCHEMA_LANGUAGE_LOCALES = Object.freeze({
   brazilian: 'pt-BR',
   romanian: 'ro-RO',
   russian: 'ru-RU',
+  slovak: 'sk-SK',
   spanish: 'es-ES',
   latam: 'es-MX',
   swedish: 'sv-SE',

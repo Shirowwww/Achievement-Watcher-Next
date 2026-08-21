@@ -6,11 +6,11 @@
 // window.OverlayUi instead of using require).
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
-    module.exports = factory();
+    module.exports = factory(require('./intlFormat.js'));
   } else {
-    root.OverlayUi = factory();
+    root.OverlayUi = factory(root.IntlFormat);
   }
-})(typeof self !== 'undefined' ? self : this, function () {
+})(typeof self !== 'undefined' ? self : this, function (intlFormat) {
   'use strict';
 
   const HIDDEN_FALLBACK = 'Hidden';
@@ -50,43 +50,12 @@
     return fallback;
   }
 
-  // App locale ids ("french", "brazilian", "schinese", ...) -> BCP-47 tags used
-  // by Intl date formatting. Unknown ids fall back to the browser default.
-  const BCP47 = {
-    english: 'en-US',
-    french: 'fr-FR',
-    german: 'de-DE',
-    spanish: 'es-ES',
-    latam: 'es-419',
-    italian: 'it-IT',
-    portuguese: 'pt-PT',
-    brazilian: 'pt-BR',
-    czech: 'cs-CZ',
-    slovak: 'sk-SK',
-    hungarian: 'hu-HU',
-    polish: 'pl-PL',
-    russian: 'ru-RU',
-    ukrainian: 'uk-UA',
-    turkish: 'tr-TR',
-    thai: 'th-TH',
-    japanese: 'ja-JP',
-    schinese: 'zh-CN',
-  };
-
   function toBcp47(lang) {
-    const id = String(lang || 'english').toLowerCase();
-    return BCP47[id] || (typeof Intl !== 'undefined' && Intl.DateTimeFormat ? undefined : 'en-US');
+    return intlFormat.toBcp47(lang);
   }
 
   function formatTimestamp(timestamp, lang, naLabel) {
-    if (!timestamp) return naLabel || NA_FALLBACK;
-    const date = new Date(timestamp * 1000);
-    if (Number.isNaN(date.getTime())) return naLabel || NA_FALLBACK;
-    try {
-      return date.toLocaleString(toBcp47(lang));
-    } catch {
-      return date.toLocaleString();
-    }
+    return intlFormat.formatDateTime(timestamp, lang) || naLabel || NA_FALLBACK;
   }
 
   // Normalized progress for an achievement. Progress is only considered real

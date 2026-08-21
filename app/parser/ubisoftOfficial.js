@@ -41,7 +41,8 @@ const UBISOFT_LOCALE_MAP = new Map([
   ['it-it', 'italian'], ['ja-jp', 'japanese'], ['ko-kr', 'koreana'], ['ko-ko', 'koreana'],
   ['ko', 'koreana'], ['nb-no', 'norwegian'], ['no-no', 'norwegian'], ['pl-pl', 'polish'],
   ['pt-pt', 'portuguese'], ['pt-br', 'brazilian'], ['ro-ro', 'romanian'], ['ru-ru', 'russian'],
-  ['es-es', 'spanish'], ['es-mx', 'latam'], ['es-419', 'latam'], ['sv-se', 'swedish'],
+  ['sk-sk', 'slovak'], ['es-es', 'spanish'], ['es-mx', 'latam'], ['es-419', 'latam'],
+  ['sv-se', 'swedish'],
   ['th-th', 'thai'], ['tr-tr', 'turkish'], ['uk-ua', 'ukrainian'], ['vi-vn', 'vietnamese'],
 ]);
 

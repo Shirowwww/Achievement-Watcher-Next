@@ -55,6 +55,29 @@ function scheduleRareGlowRefresh(delay = GLOW_SETTLE_MS) {
 }
 window.scheduleRareGlowRefresh = scheduleRareGlowRefresh;
 
+/*
+  The percent formatter, resolved once and allowed to be absent.
+
+  Rarity is an enrichment: if this module cannot be loaded the figure is still shown, as a plain
+  number. Folding it into the rarityTier lookup below would make a resolution failure silently turn
+  the whole rarity column off, which is a much worse outcome than an unlocalized separator.
+*/
+let rarityPercentFormat = null;
+
+function formatRarityPercent(percent, lang) {
+  if (rarityPercentFormat === null) {
+    try {
+      const remote = require('@electron/remote');
+      const path = require('path');
+      rarityPercentFormat = require(path.join(remote.app.getAppPath(), 'util/intlFormat.js'));
+    } catch {
+      rarityPercentFormat = false;
+    }
+  }
+  if (!rarityPercentFormat) return String(percent);
+  return rarityPercentFormat.formatPercent(percent, lang, { maximumFractionDigits: 1 }) || String(percent);
+}
+
 // Paint the global unlock % (rarity) onto the rendered achievement rows. `entries` is the normalized
 // [{name, percent}] shape produced by util/rarity.js, identical for Steam/Epic/GOG.
 function applyRarity(entries) {
@@ -68,12 +91,18 @@ function applyRarity(entries) {
     return; // rarity is a non-essential enrichment
   }
   const rowsByName = indexAchievementRows($);
+  const lang = String((window.app && window.app.config && window.app.config.achievement && window.app.config.achievement.lang) || 'english');
   for (const { name, percent: raw } of entries) {
     let percent = Math.round(raw * 10) / 10;
     if (percent > 100) percent = 100;
 
     const elem = $(rowsByName.get(String(name)) || []);
-    elem.find('.stats .community span.data').text(percent);
+    // Shown with the language's own decimal separator and percent placement; sorting reads the raw
+    // number from the attribute, because parseFloat cannot read "84,5".
+    elem
+      .find('.stats .community span.data')
+      .attr('data-percent', percent)
+      .text(formatRarityPercent(percent, lang));
 
     const tier = rarityTier(percent);
     if (tier) {
