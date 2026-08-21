@@ -361,8 +361,8 @@
         "noGames": "Žiadna zistená hra Uplay R2 nemá známu inštalačnú zložku.",
         "repairConfirm": "Opraviť hry", "repairTitle": "Opraviť zistené hry Uplay R2",
         "repairConfirmMessage": "Opraviť {count} zistených hier Uplay R2? Existujúce súbory sa zálohujú a každý výsledok sa overí.",
-        "repairing": "Oprava {current} / {total} — {game}",
-        "repairResult": "Hotovo — opravené: {repaired}, už v poriadku: {unchanged}, zlyhalo: {failed}."
+        "repairing": "Oprava {current} / {total} - {game}",
+        "repairResult": "Hotovo - opravené: {repaired}, už v poriadku: {unchanged}, zlyhalo: {failed}."
       }
     },
     "notification": {
@@ -865,7 +865,7 @@
       "shortcutsTitle": "Klávesové skratky",
       "shortcuts": [
         "Ctrl+Shift+K (predvolené): zobrazí alebo skryje herný overlay - nastaviteľné v Nastavenia > Všeobecné.",
-        "Ctrl+Alt+Shift+Šípky presúvajú overlay; Ctrl+Alt+Shift+1–5 ho prichytí na predvolenú pozíciu.",
+        "Ctrl+Alt+Shift+Šípky presúvajú overlay; Ctrl+Alt+Shift+1-5 ho prichytí na predvolenú pozíciu.",
         "Ctrl+Alt+Shift+C prepína prechádzanie kliknutí; Ctrl+F zameria vyhľadávanie v Nastaveniach."
       ],
       "themesTitle": "Vlastné motívy",
@@ -1253,7 +1253,7 @@
     "the-crakfiles-list-is-community-maintained-and-limited": "Zoznam CrakFiles spravuje komunita a je obmedzený.",
     "open-crakfiles": "Otvoriť CrakFiles",
     "fix-found-x": "Fix nájdený: {name}",
-    "crackfix-overwrite-warning": "⚠ Komunitný crack môže prepísať súbory hry (vrátane steam_api(64).dll). Detekcia úspechov prebieha cez emulátor – ak crack nahradí steam_api, spustite potom znova „Použiť fix emulátora“. Prepísané súbory sú zálohované.",
+    "crackfix-overwrite-warning": "⚠ Komunitný crack môže prepísať súbory hry (vrátane steam_api(64).dll). Detekcia úspechov prebieha cez emulátor - ak crack nahradí steam_api, spustite potom znova „Použiť fix emulátora“. Prepísané súbory sú zálohované.",
     "open-download-page": "Otvoriť stránku sťahovania",
     "open-source": "Otvoriť zdroj",
     "download-apply": "Stiahnuť && použiť",

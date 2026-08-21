@@ -361,8 +361,8 @@
         "noGames": "Egyetlen észlelt Uplay R2 játéknak sincs ismert telepítési mappája.",
         "repairConfirm": "Játékok javítása", "repairTitle": "Észlelt Uplay R2 játékok javítása",
         "repairConfirmMessage": "Javítod a(z) {count} észlelt Uplay R2 játékot? A meglévő fájlokról mentés készül, és minden eredmény ellenőrzésre kerül.",
-        "repairing": "Javítás {current} / {total} — {game}",
-        "repairResult": "Kész — javítva: {repaired}, már megfelelő: {unchanged}, sikertelen: {failed}."
+        "repairing": "Javítás {current} / {total} - {game}",
+        "repairResult": "Kész - javítva: {repaired}, már megfelelő: {unchanged}, sikertelen: {failed}."
       }
     },
     "notification": {
@@ -865,7 +865,7 @@
       "shortcutsTitle": "Billentyűparancsok",
       "shortcuts": [
         "Ctrl+Shift+K (alapértelmezett): a játékon belüli overlay be- vagy kikapcsolása - a Beállítások > Általános résznél módosítható.",
-        "A Ctrl+Alt+Shift+Nyílbillentyűk mozgatják az overlayt; a Ctrl+Alt+Shift+1–5 előre beállított helyre illeszti.",
+        "A Ctrl+Alt+Shift+Nyílbillentyűk mozgatják az overlayt; a Ctrl+Alt+Shift+1-5 előre beállított helyre illeszti.",
         "A Ctrl+Alt+Shift+C kapcsolja az átkattintást; a Ctrl+F a Beállítások keresőjére lép."
       ],
       "themesTitle": "Egyedi témák",
@@ -1253,7 +1253,7 @@
     "the-crakfiles-list-is-community-maintained-and-limited": "A CrakFiles-lista közösségi karbantartású és korlátozott.",
     "open-crakfiles": "CrakFiles megnyitása",
     "fix-found-x": "Fix található: {name}",
-    "crackfix-overwrite-warning": "⚠ Egy közösségi crack felülírhatja a játék fájljait (beleértve a steam_api(64).dll-t). A teljesítmények észlelése az emulátoron keresztül történik – ha a crack lecseréli a steam_api-t, utána futtasd újra az „Emulátor-fix alkalmazása” műveletet. A felülírt fájlokról biztonsági másolat készül.",
+    "crackfix-overwrite-warning": "⚠ Egy közösségi crack felülírhatja a játék fájljait (beleértve a steam_api(64).dll-t). A teljesítmények észlelése az emulátoron keresztül történik - ha a crack lecseréli a steam_api-t, utána futtasd újra az „Emulátor-fix alkalmazása” műveletet. A felülírt fájlokról biztonsági másolat készül.",
     "open-download-page": "Letöltési oldal megnyitása",
     "open-source": "Forrás megnyitása",
     "download-apply": "Letöltés && alkalmazás",

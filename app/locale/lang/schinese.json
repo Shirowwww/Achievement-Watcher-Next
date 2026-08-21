@@ -361,8 +361,8 @@
         "noGames": "检测到的 Uplay R2 游戏均没有已知安装文件夹。",
         "repairConfirm": "修复游戏", "repairTitle": "修复检测到的 Uplay R2 游戏",
         "repairConfirmMessage": "修复检测到的 {count} 个 Uplay R2 游戏？现有文件会先备份，并验证每个结果。",
-        "repairing": "正在修复 {current} / {total} — {game}",
-        "repairResult": "完成 — 已修复 {repaired}，已健康 {unchanged}，失败 {failed}。"
+        "repairing": "正在修复 {current} / {total} - {game}",
+        "repairResult": "完成 - 已修复 {repaired}，已健康 {unchanged}，失败 {failed}。"
       }
     },
     "notification": {
@@ -865,7 +865,7 @@
       "shortcutsTitle": "键盘快捷键",
       "shortcuts": [
         "Ctrl+Shift+K（默认）：切换游戏内悬浮窗；可在“设置 > 常规”中修改。",
-        "Ctrl+Alt+Shift+方向键移动悬浮窗；Ctrl+Alt+Shift+1–5 将其吸附到预设位置。",
+        "Ctrl+Alt+Shift+方向键移动悬浮窗；Ctrl+Alt+Shift+1-5 将其吸附到预设位置。",
         "Ctrl+Alt+Shift+C 切换点击穿透；Ctrl+F 聚焦“设置”搜索框。"
       ],
       "themesTitle": "自定义主题",

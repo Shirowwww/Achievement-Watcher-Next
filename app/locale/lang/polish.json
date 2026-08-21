@@ -361,8 +361,8 @@
         "noGames": "Żadna wykryta gra Uplay R2 nie ma znanego folderu instalacji.",
         "repairConfirm": "Napraw gry", "repairTitle": "Napraw wykryte gry Uplay R2",
         "repairConfirmMessage": "Naprawić {count} wykrytych gier Uplay R2? Istniejące pliki zostaną zarchiwizowane, a każdy wynik sprawdzony.",
-        "repairing": "Naprawianie {current} / {total} — {game}",
-        "repairResult": "Gotowe — naprawiono: {repaired}, już sprawne: {unchanged}, niepowodzenia: {failed}."
+        "repairing": "Naprawianie {current} / {total} - {game}",
+        "repairResult": "Gotowe - naprawiono: {repaired}, już sprawne: {unchanged}, niepowodzenia: {failed}."
       }
     },
     "notification": {
@@ -865,7 +865,7 @@
       "shortcutsTitle": "Skróty klawiszowe",
       "shortcuts": [
         "Ctrl+Shift+K (domyślnie): pokazuje lub ukrywa nakładkę w grze - do zmiany w Ustawienia > Ogólne.",
-        "Ctrl+Alt+Shift+Strzałki przesuwają nakładkę; Ctrl+Alt+Shift+1–5 przyciąga ją do wybranej pozycji.",
+        "Ctrl+Alt+Shift+Strzałki przesuwają nakładkę; Ctrl+Alt+Shift+1-5 przyciąga ją do wybranej pozycji.",
         "Ctrl+Alt+Shift+C przełącza przenikanie kliknięć; Ctrl+F przenosi fokus do wyszukiwania w Ustawieniach."
       ],
       "themesTitle": "Motywy niestandardowe",

@@ -200,7 +200,7 @@
         "description": "Farbschema des App-Fensters (sofortige Vorschau, Speicherung mit OK).",
         "customTitle": "Eigenes Theme",
         "customHint": "Vorschau pro Ebene",
-        "customDesc": "Wähle eine Farbe und optional ein Bild für jeden Block. Ein Bild erscheint über der Farbe (die für die Lesbarkeit zu einem hellen Schleier wird). Alles wird live vorgezeigt und mit OK gespeichert – das In-Game-Overlay folgt ebenfalls.",
+        "customDesc": "Wähle eine Farbe und optional ein Bild für jeden Block. Ein Bild erscheint über der Farbe (die für die Lesbarkeit zu einem hellen Schleier wird). Alles wird live vorgezeigt und mit OK gespeichert - das In-Game-Overlay folgt ebenfalls.",
         "resetAll": "Alles zurücksetzen"
       },
       "controller": {
@@ -365,8 +365,8 @@
         "repairConfirm": "Spiele reparieren",
         "repairTitle": "Erkannte Uplay-R2-Spiele reparieren",
         "repairConfirmMessage": "{count} erkannte Uplay-R2-Spiel(e) reparieren? Vorhandene Dateien werden gesichert und jedes Ergebnis wird geprüft.",
-        "repairing": "Reparatur {current} / {total} — {game}",
-        "repairResult": "Fertig — {repaired} repariert, {unchanged} bereits fehlerfrei, {failed} fehlgeschlagen."
+        "repairing": "Reparatur {current} / {total} - {game}",
+        "repairResult": "Fertig - {repaired} repariert, {unchanged} bereits fehlerfrei, {failed} fehlgeschlagen."
       }
     },
     "notification": {
@@ -869,7 +869,7 @@
       "shortcutsTitle": "Tastenkürzel",
       "shortcuts": [
         "Ctrl+Shift+K (Standard): In-Game-Overlay ein-/ausblenden - konfigurierbar unter Einstellungen > Allgemein.",
-        "Ctrl+Alt+Shift+Pfeiltasten verschieben das Overlay; Ctrl+Alt+Shift+1–5 rasten es an einer vorgegebenen Position ein.",
+        "Ctrl+Alt+Shift+Pfeiltasten verschieben das Overlay; Ctrl+Alt+Shift+1-5 rasten es an einer vorgegebenen Position ein.",
         "Ctrl+Alt+Shift+C schaltet den Klickdurchgriff um; Ctrl+F fokussiert die Einstellungssuche."
       ],
       "themesTitle": "Benutzerdefinierte Themes",
@@ -1257,7 +1257,7 @@
     "the-crakfiles-list-is-community-maintained-and-limited": "Die CrakFiles-Liste wird von der Community gepflegt und ist begrenzt.",
     "open-crakfiles": "CrakFiles öffnen",
     "fix-found-x": "Fix gefunden: {name}",
-    "crackfix-overwrite-warning": "⚠ Ein Community-Crack kann Spieldateien überschreiben (einschließlich steam_api(64).dll). Die Erfolgserkennung läuft über den Emulator – wenn der Crack steam_api ersetzt, führe danach „Emulator-Fix anwenden“ erneut aus. Überschriebene Dateien werden gesichert.",
+    "crackfix-overwrite-warning": "⚠ Ein Community-Crack kann Spieldateien überschreiben (einschließlich steam_api(64).dll). Die Erfolgserkennung läuft über den Emulator - wenn der Crack steam_api ersetzt, führe danach „Emulator-Fix anwenden“ erneut aus. Überschriebene Dateien werden gesichert.",
     "open-download-page": "Downloadseite öffnen",
     "open-source": "Quelle öffnen",
     "download-apply": "Herunterladen && anwenden",

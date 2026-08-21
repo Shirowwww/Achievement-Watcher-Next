@@ -361,8 +361,8 @@
         "noGames": "Žádná zjištěná hra Uplay R2 nemá známou instalační složku.",
         "repairConfirm": "Opravit hry", "repairTitle": "Opravit zjištěné hry Uplay R2",
         "repairConfirmMessage": "Opravit {count} zjištěných her Uplay R2? Existující soubory se zálohují a každý výsledek se ověří.",
-        "repairing": "Oprava {current} / {total} — {game}",
-        "repairResult": "Hotovo — opraveno: {repaired}, již v pořádku: {unchanged}, selhalo: {failed}."
+        "repairing": "Oprava {current} / {total} - {game}",
+        "repairResult": "Hotovo - opraveno: {repaired}, již v pořádku: {unchanged}, selhalo: {failed}."
       }
     },
     "notification": {
@@ -865,7 +865,7 @@
       "shortcutsTitle": "Klávesové zkratky",
       "shortcuts": [
         "Ctrl+Shift+K (výchozí): zobrazí nebo skryje herní překryv - lze změnit v Nastavení > Obecné.",
-        "Ctrl+Alt+Shift+Šipky přesouvají překryv; Ctrl+Alt+Shift+1–5 ho přichytí na předvolenou pozici.",
+        "Ctrl+Alt+Shift+Šipky přesouvají překryv; Ctrl+Alt+Shift+1-5 ho přichytí na předvolenou pozici.",
         "Ctrl+Alt+Shift+C přepíná propouštění kliknutí; Ctrl+F zaměří hledání v Nastavení."
       ],
       "themesTitle": "Vlastní motivy",
@@ -1253,7 +1253,7 @@
     "the-crakfiles-list-is-community-maintained-and-limited": "Seznam CrakFiles je spravován komunitou a je omezený.",
     "open-crakfiles": "Otevřít CrakFiles",
     "fix-found-x": "Fix nalezen: {name}",
-    "crackfix-overwrite-warning": "⚠ Komunitní crack může přepsat soubory hry (včetně steam_api(64).dll). Detekce úspěchů probíhá přes emulátor – pokud crack nahradí steam_api, spusťte poté znovu „Použít fix emulátoru“. Přepsané soubory jsou zálohovány.",
+    "crackfix-overwrite-warning": "⚠ Komunitní crack může přepsat soubory hry (včetně steam_api(64).dll). Detekce úspěchů probíhá přes emulátor - pokud crack nahradí steam_api, spusťte poté znovu „Použít fix emulátoru“. Přepsané soubory jsou zálohovány.",
     "open-download-page": "Otevřít stránku stahování",
     "open-source": "Otevřít zdroj",
     "download-apply": "Stáhnout && použít",

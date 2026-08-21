@@ -365,8 +365,8 @@
         "repairConfirm": "Repair games",
         "repairTitle": "Repair detected Uplay R2 games",
         "repairConfirmMessage": "Repair {count} detected Uplay R2 game(s)? Existing files are backed up and every result is validated.",
-        "repairing": "Repairing {current} / {total} — {game}",
-        "repairResult": "Done — {repaired} repaired, {unchanged} already healthy, {failed} failed."
+        "repairing": "Repairing {current} / {total} - {game}",
+        "repairResult": "Done - {repaired} repaired, {unchanged} already healthy, {failed} failed."
       }
     },
     "notification": {
@@ -869,7 +869,7 @@
       "shortcutsTitle": "Keyboard shortcuts",
       "shortcuts": [
         "Ctrl+Shift+K (default): toggle the in-game overlay - configurable in Settings > General.",
-        "Ctrl+Alt+Shift+Arrows move the overlay; Ctrl+Alt+Shift+1–5 snap it to a preset position.",
+        "Ctrl+Alt+Shift+Arrows move the overlay; Ctrl+Alt+Shift+1-5 snap it to a preset position.",
         "Ctrl+Alt+Shift+C toggles click-through; Ctrl+F focuses Settings search."
       ],
       "themesTitle": "Custom themes",

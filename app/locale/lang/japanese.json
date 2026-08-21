@@ -361,8 +361,8 @@
         "noGames": "既知のインストールフォルダーを持つ Uplay R2 ゲームは検出されませんでした。",
         "repairConfirm": "ゲームを修復", "repairTitle": "検出された Uplay R2 ゲームを修復",
         "repairConfirmMessage": "検出された {count} 件の Uplay R2 ゲームを修復しますか？既存ファイルをバックアップし、各結果を検証します。",
-        "repairing": "修復中 {current} / {total} — {game}",
-        "repairResult": "完了 — 修復 {repaired}、正常 {unchanged}、失敗 {failed}。"
+        "repairing": "修復中 {current} / {total} - {game}",
+        "repairResult": "完了 - 修復 {repaired}、正常 {unchanged}、失敗 {failed}。"
       }
     },
     "notification": {

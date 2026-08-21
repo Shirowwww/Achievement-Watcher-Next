@@ -365,8 +365,8 @@
         "repairConfirm": "Reparar juegos",
         "repairTitle": "Reparar juegos Uplay R2 detectados",
         "repairConfirmMessage": "¿Reparar {count} juego(s) Uplay R2 detectado(s)? Se respaldarán los archivos existentes y se validará cada resultado.",
-        "repairing": "Reparando {current} / {total} — {game}",
-        "repairResult": "Listo — {repaired} reparado(s), {unchanged} ya correcto(s), {failed} con errores."
+        "repairing": "Reparando {current} / {total} - {game}",
+        "repairResult": "Listo - {repaired} reparado(s), {unchanged} ya correcto(s), {failed} con errores."
       }
     },
     "notification": {
@@ -869,7 +869,7 @@
       "shortcutsTitle": "Atajos de teclado",
       "shortcuts": [
         "Ctrl+Shift+K (predeterminado): muestra u oculta el overlay en el juego - configurable en Configuración > General.",
-        "Ctrl+Alt+Shift+Flechas mueve el overlay; Ctrl+Alt+Shift+1–5 lo ajusta a una posición predefinida.",
+        "Ctrl+Alt+Shift+Flechas mueve el overlay; Ctrl+Alt+Shift+1-5 lo ajusta a una posición predefinida.",
         "Ctrl+Alt+Shift+C activa o desactiva el paso de clics; Ctrl+F enfoca la búsqueda de Configuración."
       ],
       "themesTitle": "Temas personalizados",

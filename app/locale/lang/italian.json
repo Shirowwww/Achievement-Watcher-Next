@@ -365,8 +365,8 @@
         "repairConfirm": "Ripara giochi",
         "repairTitle": "Ripara i giochi Uplay R2 rilevati",
         "repairConfirmMessage": "Riparare {count} giochi Uplay R2 rilevati? I file esistenti verranno salvati e ogni risultato verrà convalidato.",
-        "repairing": "Riparazione {current} / {total} — {game}",
-        "repairResult": "Completato — {repaired} riparati, {unchanged} già integri, {failed} non riusciti."
+        "repairing": "Riparazione {current} / {total} - {game}",
+        "repairResult": "Completato - {repaired} riparati, {unchanged} già integri, {failed} non riusciti."
       }
     },
     "notification": {
@@ -869,7 +869,7 @@
       "shortcutsTitle": "Scorciatoie da tastiera",
       "shortcuts": [
         "Ctrl+Shift+K (predefinito): mostra/nasconde l’overlay di gioco - configurabile in Impostazioni > Generali.",
-        "Ctrl+Alt+Shift+Frecce sposta l’overlay; Ctrl+Alt+Shift+1–5 lo aggancia a una posizione predefinita.",
+        "Ctrl+Alt+Shift+Frecce sposta l’overlay; Ctrl+Alt+Shift+1-5 lo aggancia a una posizione predefinita.",
         "Ctrl+Alt+Shift+C attiva/disattiva il passaggio dei clic; Ctrl+F attiva la ricerca nelle Impostazioni."
       ],
       "themesTitle": "Temi personalizzati",

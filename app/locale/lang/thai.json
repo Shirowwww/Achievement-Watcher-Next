@@ -361,8 +361,8 @@
         "noGames": "ไม่พบเกม Uplay R2 ที่มีโฟลเดอร์ติดตั้งที่ทราบ",
         "repairConfirm": "ซ่อมแซมเกม", "repairTitle": "ซ่อมแซมเกม Uplay R2 ที่ตรวจพบ",
         "repairConfirmMessage": "ซ่อมแซมเกม Uplay R2 ที่ตรวจพบ {count} เกมหรือไม่? ไฟล์เดิมจะถูกสำรองและตรวจสอบผลลัพธ์ทุกเกม",
-        "repairing": "กำลังซ่อมแซม {current} / {total} — {game}",
-        "repairResult": "เสร็จแล้ว — ซ่อมแซม {repaired}, ปกติอยู่แล้ว {unchanged}, ล้มเหลว {failed}"
+        "repairing": "กำลังซ่อมแซม {current} / {total} - {game}",
+        "repairResult": "เสร็จแล้ว - ซ่อมแซม {repaired}, ปกติอยู่แล้ว {unchanged}, ล้มเหลว {failed}"
       }
     },
     "notification": {
@@ -865,7 +865,7 @@
       "shortcutsTitle": "แป้นพิมพ์ลัด",
       "shortcuts": [
         "Ctrl+Shift+K (ค่าเริ่มต้น): เปิดหรือปิดโอเวอร์เลย์ในเกม - เปลี่ยนได้ที่ การตั้งค่า > ทั่วไป",
-        "Ctrl+Alt+Shift+ปุ่มลูกศร ใช้ย้ายโอเวอร์เลย์; Ctrl+Alt+Shift+1–5 ใช้จัดเข้าตำแหน่งที่ตั้งไว้",
+        "Ctrl+Alt+Shift+ปุ่มลูกศร ใช้ย้ายโอเวอร์เลย์; Ctrl+Alt+Shift+1-5 ใช้จัดเข้าตำแหน่งที่ตั้งไว้",
         "Ctrl+Alt+Shift+C ใช้เปิดหรือปิดการคลิกทะลุ; Ctrl+F โฟกัสช่องค้นหาในการตั้งค่า"
       ],
       "themesTitle": "ธีมแบบกำหนดเอง",

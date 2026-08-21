@@ -361,8 +361,8 @@
         "noGames": "Algılanan hiçbir Uplay R2 oyununun bilinen bir kurulum klasörü yok.",
         "repairConfirm": "Oyunları onar", "repairTitle": "Algılanan Uplay R2 oyunlarını onar",
         "repairConfirmMessage": "Algılanan {count} Uplay R2 oyunu onarılsın mı? Mevcut dosyalar yedeklenecek ve her sonuç doğrulanacak.",
-        "repairing": "Onarılıyor {current} / {total} — {game}",
-        "repairResult": "Tamamlandı — {repaired} onarıldı, {unchanged} zaten sağlam, {failed} başarısız."
+        "repairing": "Onarılıyor {current} / {total} - {game}",
+        "repairResult": "Tamamlandı - {repaired} onarıldı, {unchanged} zaten sağlam, {failed} başarısız."
       }
     },
     "notification": {
@@ -865,7 +865,7 @@
       "shortcutsTitle": "Klavye kısayolları",
       "shortcuts": [
         "Ctrl+Shift+K (varsayılan): oyun içi katmanı açıp kapatır; Ayarlar > Genel bölümünden değiştirilebilir.",
-        "Ctrl+Alt+Shift+Ok tuşları katmanı taşır; Ctrl+Alt+Shift+1–5 onu ön ayarlı bir konuma yaslar.",
+        "Ctrl+Alt+Shift+Ok tuşları katmanı taşır; Ctrl+Alt+Shift+1-5 onu ön ayarlı bir konuma yaslar.",
         "Ctrl+Alt+Shift+C tıklama geçişini açıp kapatır; Ctrl+F Ayarlar aramasına odaklanır."
       ],
       "themesTitle": "Özel temalar",
