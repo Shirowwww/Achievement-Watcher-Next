@@ -227,10 +227,11 @@ module.exports = async (message, option = {}) => {
       }
 
       // The toast's app-logo slot is square. Steam library art is portrait/landscape, so center-
-      // crop a high-res local copy for playtime cards; overlay/websocket keep the original art.
-      // Only local sources are cropped - forcing a download when the user disabled prefetch would
-      // add latency/offline failures for no benefit on the square requirement.
-      if (toastPossible && message.notificationType === 'playtime') {
+      // crop a high-res local copy for the cards that show the game rather than an achievement -
+      // playtime, and any source that ships no per-achievement icon. Overlay/websocket keep the
+      // original art. Only local sources are cropped - forcing a download when the user disabled
+      // prefetch would add latency/offline failures for no benefit on the square requirement.
+      if (toastPossible && (message.notificationType === 'playtime' || !message.icon)) {
         const squareSource = message.gameIcon || message.image;
         const isLocal =
           typeof squareSource === 'string' &&

@@ -49,9 +49,10 @@ test('every field the preview payload sets is one the notification window actual
     'soundPath',
     'notifyId',
     'volume', // read for the sound gain, outside the send() payload
-    // Pre-existing dead field: both enqueueNotificationFromArgs() and this preview set it, nothing
-    // reads it. Left in place rather than removed from one path only; listed so this test keeps
-    // catching NEW unread fields instead of failing on an old one.
+    // Read by enqueueNotification()'s square-logo pass, before the window exists: `appid` names the
+    // game to look a community logo up for, and `achievementIconPath` is how that pass tells an
+    // achievement icon (already square, left alone) from game artwork (reworked into a square).
+    'appid',
     'achievementIconPath',
   ]);
   const unread = [...returned.matchAll(/^\s{10}([A-Za-z][\w]*):/gm)]

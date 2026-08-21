@@ -67,7 +67,17 @@ const { resolvePowerShell } = require('./util/powershell.js');
 const { sendEscapeToFocusedWindow, addExcludedPid } = require('./util/sendKey.js');
 const toastIdentity = require('./util/toastIdentity.js');
 const { userDataDir } = require('./util/userData.js');
-const { steamHeaderImage, steamLibraryImage } = require('./util/steamArtwork.js');
+const { steamHeaderImage, steamLibraryImage, steamSquareLogo } = require('./util/steamArtwork.js');
+
+/*
+  The square slot of a notification card: a community logo when one has been resolved for this game,
+  the library poster otherwise. The poster still has to be cropped by whoever paints it, which is
+  what makes a real square logo worth asking for first.
+*/
+function notificationGameIcon(game) {
+  const id = game.steamappid || game.appid;
+  return steamSquareLogo(id, game.name) || steamLibraryImage(id);
+}
 const { resolvePlaytimeArtwork } = require('./util/playtimeArtwork.js');
 const { findIndexedSocialClubGame } = require('./util/socialClub.js');
 const notifyStrings = require('./util/notifyStrings.js');
@@ -338,6 +348,25 @@ function parseControllerBinding(value, fallback) {
 
 function controllerOptions() {
   return (app && app.options && app.options.controller) || {};
+}
+
+/*
+  Ask the app to resolve this game's square logo now that it is running.
+
+  The monitor never fetches artwork itself - it only reads what the app has already written to the
+  shared cache. Asking at launch means the answer is on disk long before the unlock or playtime card
+  needs it, which is what lets a Windows notification (no popup process, no lookup of its own) show
+  a real square logo instead of a cropped poster.
+*/
+function requestArtworkPrefetch(game) {
+  if (typeof process.send !== 'function' || !process.connected) return;
+  try {
+    process.send({
+      artworkPrefetch: { appid: String(game.steamappid || game.appid || ''), name: String(game.name || '') },
+    });
+  } catch (err) {
+    debug.error(`[artwork] prefetch request failed: ${err}`);
+  }
 }
 
 function forwardOverlayControl(action, payload) {
@@ -1255,6 +1284,7 @@ var app = {
           } else {
             runningGames.push(game);
             if (String(game.source || '') === 'Xbox PC') startXboxPolling(game);
+            requestArtworkPrefetch(game);
           }
           forwardGameActivity();
           if (app.options.notification.playtime) {

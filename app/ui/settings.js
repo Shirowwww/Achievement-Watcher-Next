@@ -2897,6 +2897,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           // deduplicated), so the tester can chain preset previews without waiting.
           test: true,
           preset,
+          // The previewed game, so the host resolves the same square logo a real notification for
+          // that game would get instead of framing whatever artwork the preview happened to carry.
+          appid: (game && game.appid) || '',
           // `image` is the alias createNotificationWindow() maps onto imagePath/headerPath, which is
           // what the Game Cover preset paints its background from.
           image: (game && game.image) || '',

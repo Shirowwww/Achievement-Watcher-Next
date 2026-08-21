@@ -112,6 +112,27 @@ function cachedSteamDbPortrait(appid, root) {
   return null;
 }
 
+/*
+  The square game logo the app resolved from SteamGridDB's icon set, if it has one for this game.
+
+  Notification thumbnails are painted in a square slot, and neither Steam artwork nor the 32x32
+  clienticon fits one. The app writes the answer (misses included) under steam_cache; this only
+  reads it, so a game nobody has looked up yet simply falls through to the artwork chain below.
+  The cache key must stay identical to the one init.js writes.
+*/
+function cachedSquareLogo(appid, gameName, root) {
+  const id = normalizedAppid(appid);
+  const name = String(gameName == null ? '' : gameName).trim();
+  if (!id && !name) return null;
+  const key = require('crypto').createHash('sha1').update(`${id}\0${name.toLowerCase()}`).digest('hex');
+  const cached = readJsonCached(path.join(root, 'steam_cache', 'steamgriddb_icons', `${key}.json`));
+  return cached && isImageUrl(cached.url) ? cached.url : null;
+}
+
+function steamSquareLogo(appid, gameName, options = {}) {
+  return cachedSquareLogo(appid, gameName, options.userDataRoot || userDataDir());
+}
+
 function normalizedAppid(appid) {
   const id = String(appid == null ? '' : appid).trim();
   return /^\d+$/.test(id) ? id : '';
@@ -157,4 +178,4 @@ function steamLibraryImage(appid, options = {}) {
   return `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_600x900.jpg`;
 }
 
-module.exports = { steamHeaderImage, steamLibraryImage };
+module.exports = { steamHeaderImage, steamLibraryImage, steamSquareLogo };

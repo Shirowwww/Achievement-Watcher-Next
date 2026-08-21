@@ -6,7 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
-const { steamHeaderImage, steamLibraryImage } = require('../util/steamArtwork.js');
+const { steamHeaderImage, steamLibraryImage, steamSquareLogo } = require('../util/steamArtwork.js');
 
 function fixture() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'aw-steam-artwork-'));
@@ -192,4 +192,36 @@ test('non-numeric appids never produce a broken Steam CDN URL', () => {
   assert.equal(steamLibraryImage('socialclub-smartsteamemu'), undefined);
   assert.equal(steamHeaderImage(''), undefined);
   assert.equal(steamLibraryImage(null), undefined);
+});
+
+test('a community square logo is read from the cache the app writes', () => {
+  const root = fixture();
+  try {
+    const key = require('node:crypto').createHash('sha1').update('292030\0the witcher 3: wild hunt').digest('hex');
+    writeJson(root, `steam_cache/steamgriddb_icons/${key}.json`, {
+      url: 'https://cdn2.steamgriddb.com/icon/abc.png',
+      width: 512,
+      height: 512,
+    });
+
+    assert.equal(
+      steamSquareLogo('292030', 'The Witcher 3: Wild Hunt', { userDataRoot: root }),
+      'https://cdn2.steamgriddb.com/icon/abc.png'
+    );
+    // A cached miss (the game has no community icon) must not be mistaken for one.
+    assert.equal(steamSquareLogo('292030', 'Another Game', { userDataRoot: root }), null);
+  } finally {
+    cleanup(root);
+  }
+});
+
+test('a cached icon miss stays a miss', () => {
+  const root = fixture();
+  try {
+    const key = require('node:crypto').createHash('sha1').update('480\0spacewar').digest('hex');
+    writeJson(root, `steam_cache/steamgriddb_icons/${key}.json`, {});
+    assert.equal(steamSquareLogo('480', 'Spacewar', { userDataRoot: root }), null);
+  } finally {
+    cleanup(root);
+  }
 });

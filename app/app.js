@@ -5067,21 +5067,35 @@ var app = {
         $('#achievement .wrapper > .header').removeAttr('data-system');
       }
 
-      // Steam doesn't set a "clienticon" for every app (notably brand-new releases - their store
-      // page/product info simply has no icon hash yet), which used to leave this box empty. Fall
-      // back to the header/portrait art so there's always something recognizable to show.
-      const headerIconSource = game.img.icon || game.img.header || game.img.portrait;
+      /*
+        The header box is square, and so is what belongs in it.
+
+        Steam's clienticon is 32x32 - a blurry stamp beside a crisp title - and plenty of games have
+        none at all, notably brand-new releases whose product info carries no icon hash yet, which
+        used to leave this box empty. Ask the host for the same square logo it gives a notification
+        for this game: the community icon set first, then the game's own artwork cut into a square.
+      */
+      // `background` is deliberately absent: Steam's storepagebackground is a blurred decorative
+      // wash, and cutting a square out of it produces a flat gradient - a box that looks empty
+      // while claiming to be the game's logo.
+      const headerIconSources = [game.img.icon, game.img.logo, game.img.portrait, game.img.header].filter(Boolean);
       const iconEl = $('#achievement .wrapper > .header .title .icon');
       // The icon element is shared across game pages. When this game has no artwork at all it must
       // be reset to the neutral CSS surface - otherwise the previous game's icon stays behind,
       // which reads as "this page belongs to another game" (issue #15).
       const resetIconToPlaceholder = () => iconEl.css('background', '');
-      if (headerIconSource) {
+      if (headerIconSources.length > 0) {
         iconEl.css('background', cssUrl(pathToFileURL(path.join(appPath, 'resources/img/loading.gif')).href));
-        ipcRenderer.invoke('fetch-icon', headerIconSource, game.steamappid || game.appid).then((localPath) => {
-          if (localPath) iconEl.css('background', cssUrl(localPath));
-          else resetIconToPlaceholder();
-        }).catch(() => resetIconToPlaceholder());
+        ipcRenderer
+          .invoke('resolve-square-logo', { appid: game.steamappid || game.appid, name: game.name || '', sources: headerIconSources })
+          .then((localPath) => {
+            // Another game's page can open while this resolves; the header carries the appid of the
+            // one on screen, so it is the freshness check here as well.
+            if (String($('#achievement .wrapper > .header').attr('data-appid')) !== String(game.appid)) return;
+            if (localPath) iconEl.css('background', cssUrl(localPath));
+            else resetIconToPlaceholder();
+          })
+          .catch(() => resetIconToPlaceholder());
       } else {
         resetIconToPlaceholder();
       }
@@ -6471,12 +6485,25 @@ async function runGameHealthAction(appid, action, button) {
         return '';
       }
     };
-    // The hero slot falls back to the square logo: a game with no header or background art would
-    // otherwise send nothing and the sample game's artwork would stand in for it.
-    const [icon, image] = await Promise.all([
-      resolveArt(art.icon || art.logo || art.header),
+    /*
+      The thumbnail goes through the host's square-logo resolver - the same one the notification
+      itself uses - so the preview is not resolving artwork a second way and cannot disagree with
+      what a real unlock in this game will show. The hero slot keeps the plain token resolution: it
+      wants the wide header, uncropped, and falls back to the logo so a game with no header or
+      background art does not end up borrowing the sample game's artwork.
+    */
+    const [square, image] = await Promise.all([
+      ipcRenderer
+        .invoke('resolve-square-logo', {
+          appid: artAppid,
+          name: game.name || '',
+          // No `background` here either: see the achievement header - it cuts into a flat wash.
+          sources: [art.icon, art.logo, art.portrait, art.header].filter(Boolean),
+        })
+        .catch(() => ''),
       resolveArt(art.header || art.background || art.icon || art.logo),
     ]);
+    const icon = square && square.startsWith('file://') ? require('url').fileURLToPath(square) : square || '';
 
     await window.testAchievementWatcherNotification(app.config?.notification_transport?.mode, button && button[0], null, {
       appid: artAppid,

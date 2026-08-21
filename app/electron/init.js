@@ -1813,8 +1813,33 @@ function handleMonitorMessage(msg) {
     if (msg && Array.isArray(msg.argv)) parseArgs(minimist(msg.argv));
     else if (msg && msg.overlayControl) handleOverlayControl(msg.overlayControl.action, msg.overlayControl.payload);
     else if (msg && msg.gameActivity) setGameActivity(msg.gameActivity.count);
+    else if (msg && msg.artworkPrefetch) prefetchSquareGameLogo(msg.artworkPrefetch);
   } catch (err) {
     debug.log(`[monitor] message handling failed: ${err.message || err}`);
+  }
+}
+
+/*
+  Resolve a game's square logo while it is starting, not while its notification is on screen.
+
+  The monitor says "this game just launched"; the answer (and the file itself) then sits in the same
+  cache both transports read from, so the unlock or playtime card minutes later paints it instantly.
+  This is also the only thing that gives a Windows-notification-only user a real square logo: the
+  monitor has no network lookups of its own, it only reads what the app has already resolved.
+*/
+const squareLogoPrefetched = new Set();
+async function prefetchSquareGameLogo(request) {
+  const appid = String((request && request.appid) || '').trim();
+  const name = String((request && request.name) || '').trim();
+  if (!appid && !name) return;
+  const key = `${appid}\0${name.toLowerCase()}`;
+  if (squareLogoPrefetched.has(key)) return;
+  squareLogoPrefetched.add(key);
+  try {
+    const icon = await fetchSteamGridDbIcon(name, appid);
+    if (icon && icon.url) await fetchSteamIcon(icon.url, appid);
+  } catch (err) {
+    debug.log(`[artwork] square logo prefetch failed for "${name || appid}": ${err.message || err}`);
   }
 }
 
@@ -2735,6 +2760,75 @@ async function fetchSteamGridDbCover(gameName, steamAppid = '', orientation = 'p
   const covers = await fetchSteamGridDbCovers(gameName, 1, orientation, steamAppid);
   return (covers[0] && covers[0].url) || null;
 }
+
+/*
+  SteamGridDB icons: the square logo a game actually has.
+
+  Notification cards paint their thumbnail in a square slot, and neither of the two artworks a Steam
+  game ships fits one - a library grid is 2:3, the clienticon is a 32x32 sprite. The community icon
+  set is the only source of a real square logo at a usable resolution, so it is asked for first and
+  everything else stays a fallback. Cached 30 days per game like the covers, misses included: a game
+  nobody has drawn an icon for does not grow one between two notifications.
+*/
+const steamgriddbIconsDir = path.join(userData, 'steam_cache', 'steamgriddb_icons');
+const SGDB_ICONS_TTL = SGDB_COVERS_TTL;
+// How long a notification waits on the icon lookup before painting with what it already has. A
+// cached answer returns instantly, so this only ever costs the very first card of a given game.
+const SGDB_ICON_WAIT_MS = 1200;
+// And how long its download may take once it answered. Both budgets are spent only once per game:
+// the file lands in the same icon cache every other artwork uses.
+const SGDB_ICON_DOWNLOAD_WAIT_MS = 2500;
+const { pickSquareIcon } = require('../util/squareLogo.js');
+
+async function fetchSteamGridDbIcon(gameName, steamAppid = '') {
+  const name = String(gameName || '').trim();
+  const appid = /^\d+$/.test(String(steamAppid || '').trim()) ? String(steamAppid).trim() : '';
+  if (!name && !appid) return null;
+  const generation = artworkCacheGeneration;
+  const key = require('crypto').createHash('sha1').update(`${appid}\0${name.toLowerCase()}`).digest('hex');
+  const cacheFile = path.join(steamgriddbIconsDir, `${key}.json`);
+  try {
+    if (fs.existsSync(cacheFile) && Date.now() - fs.statSync(cacheFile).mtimeMs < SGDB_ICONS_TTL) {
+      const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+      return cached && cached.url ? cached : null;
+    }
+  } catch {
+    /* stale/corrupt -> refetch */
+  }
+  if (steamGridDbUnavailable()) return null;
+
+  let icon = null;
+  try {
+    const resolved = await resolveSteamGridDbGameId(name, appid, 'icon');
+    if (!resolved.gameId) {
+      // A network failure is not an answer: leave the cache alone so the next notification retries.
+      if (resolved.networkError) return null;
+    } else {
+      const res = await steamGridDbFetch(`${BASE_URL}/icons/game/${resolved.gameId}?types=static`);
+      sgdbCircuit.recordSuccess();
+      const body = res.ok ? await res.json().catch(() => null) : null;
+      icon = pickSquareIcon(body && body.data);
+    }
+  } catch (err) {
+    if (!recordSteamGridDbFailure(err, `icon list "${name || appid}"`)) debug.log(`[steamgriddb] icon list failed for "${name || appid}": ${err.message || err}`);
+    return null;
+  }
+
+  if (generation === artworkCacheGeneration) {
+    try {
+      fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
+      fs.writeFileSync(cacheFile, JSON.stringify(icon || {}, null, 2));
+    } catch {
+      /* cache write failure is non-fatal */
+    }
+  }
+  return icon;
+}
+
+ipcMain.handle('get-steamgriddb-icon', async (event, gameName, steamAppid) => {
+  const icon = await fetchSteamGridDbIcon(gameName, steamAppid);
+  return (icon && icon.url) || null;
+});
 
 // `steamAppid` is optional: the non-Steam callers (Ubisoft, GOG, Epic) still ask by name only.
 ipcMain.handle('get-steamgriddb-cover', async (event, gameName, steamAppid, orientation) => {
@@ -4210,7 +4304,26 @@ function isDuplicateNotification(data) {
   }
 }
 
+/*
+  Every notification - unlock, playtime, progress, and every Settings preview - enters here, which
+  is why the square logo is resolved at this one point rather than per caller. A cached answer costs
+  nothing; the very first card of a game waits on a short, bounded lookup before it is queued.
+*/
+let squareLogoChain = Promise.resolve();
 function enqueueNotification(data) {
+  const payload = data || {};
+  // Chained rather than fired in parallel: two notifications arriving together must reach the queue
+  // in the order they were raised, and one of them having to look its logo up must not overtake the
+  // other. The popups are shown one at a time anyway, so the wait costs nothing on screen.
+  squareLogoChain = squareLogoChain
+    .then(() => withSquareGameLogo(payload).catch(() => payload))
+    .then(
+      (resolved) => enqueueResolvedNotification(resolved),
+      () => enqueueResolvedNotification(payload)
+    );
+}
+
+function enqueueResolvedNotification(data) {
   data = data || {};
   if (data.test !== true && MainWin && isDuplicateNotification(data)) {
     debug.log('[overlay-notif] duplicate suppressed (app open): ' + (data.displayName || ''));
@@ -4303,6 +4416,146 @@ function normalizeNotificationProgress(args) {
     ? Math.max(0, Math.min(100, Math.floor(percentArg)))
     : Math.max(0, Math.min(100, Math.floor((current / max) * 100)));
   return { current, max, percent };
+}
+
+/*
+  Whether a notification's thumbnail is the game's own artwork rather than an achievement icon.
+
+  Achievement icons are already square and already the right size; game artwork is neither, and is
+  the only case that has to be turned into a square logo before a preset paints it.
+*/
+function usesGameArtAsIcon(primaryIconPath, achievementIconPath) {
+  if (!primaryIconPath) return true;
+  return primaryIconPath !== achievementIconPath;
+}
+
+// A thumbnail a preset can actually paint: a local file that is still there. A remote URL that was
+// never downloaded, or a path to a deleted cover, renders as an empty box - which is what the
+// notification looked like for games whose artwork had gone missing.
+function paintableIconPath(candidate) {
+  const value = String(candidate || '');
+  if (!value || /^https?:\/\//i.test(value)) return '';
+  try {
+    return fs.existsSync(value) ? value : '';
+  } catch {
+    return '';
+  }
+}
+
+/*
+  A square logo for a card whose thumbnail is game artwork.
+
+  SteamGridDB's icon set is the only source of a real square logo, so it wins whenever it answers -
+  but a first-time lookup must not hold the popup back, so it is given a short window and left to
+  finish in the background (populating its cache for the next notification) if it misses it.
+
+  Everything the game already has is then tried in turn, because the first candidate is regularly
+  unusable on its own: Steam's 32x32 clienticon is too small to cut anything out of, and a cover the
+  user has since deleted is not there at all. Falling through to the poster or the header is what
+  keeps a card from ending up with an empty square.
+*/
+async function resolveSquareGameLogo(appid, gameName, candidates) {
+  const { makeSquareLogo } = require('../util/squareLogo.js');
+  const localSquare = (source) => {
+    try {
+      return makeSquareLogo(source, appid, { userDataRoot: userData }) || '';
+    } catch {
+      return '';
+    }
+  };
+
+  try {
+    const lookup = fetchSteamGridDbIcon(gameName, appid).catch(() => null);
+    const icon = await Promise.race([lookup, new Promise((resolve) => setTimeout(() => resolve(null), SGDB_ICON_WAIT_MS))]);
+    if (icon && icon.url) {
+      const local = await Promise.race([
+        fetchSteamIcon(icon.url, appid).catch(() => ''),
+        new Promise((resolve) => setTimeout(() => resolve(''), SGDB_ICON_DOWNLOAD_WAIT_MS)),
+      ]);
+      const square = local ? localSquare(local) : '';
+      if (square) return square;
+    }
+  } catch {
+    /* the community icon set is a bonus, never a requirement */
+  }
+
+  let firstPaintable = '';
+  for (const candidate of Array.isArray(candidates) ? candidates : [candidates]) {
+    const value = String(candidate || '');
+    if (!value) continue;
+    /*
+      A card cannot paint a URL, and it cannot paint a fetch-icon token either: `game.img.icon` is a
+      bare Steam content hash and `header` a fragment like "<hash>/header.jpg". Anything that is not
+      already a file on disk therefore goes through the same resolver every view uses, which turns
+      both shapes into a cached local file. Handing those over unresolved is what left an empty
+      square on games whose artwork had never been downloaded.
+    */
+    const local =
+      paintableIconPath(value) ||
+      paintableIconPath(
+        await Promise.race([
+          fetchSteamIcon(value, appid).catch(() => ''),
+          new Promise((resolve) => setTimeout(() => resolve(''), SGDB_ICON_DOWNLOAD_WAIT_MS)),
+        ])
+      );
+    if (!local) continue;
+    if (!firstPaintable) firstPaintable = local;
+    const square = localSquare(local);
+    if (square) return square;
+  }
+  // Nothing could be cut: keep the best artwork that at least exists, so the card shows the game
+  // rather than a hole. With nothing paintable at all this is '' and the preset hides its thumbnail.
+  return firstPaintable;
+}
+
+/*
+  The same square logo, for the views that paint a game in a square box.
+
+  The achievement page's header icon and the Health panel's notification test both used to resolve
+  their own artwork through fetch-icon and take whatever came back: Steam's 32x32 clienticon when
+  there was one (a blurry stamp beside a crisp title) and an empty box when there was not. They now
+  ask for the answer this module already computes for notifications, so all of them show the same
+  logo for a given game and none of them repeats the fallback logic.
+
+  Returns a file URL, exactly like the fetch-icon handler these callers came from, or '' when the
+  game has no usable artwork at all - which the caller must render as "no icon", not as a broken one.
+*/
+ipcMain.handle('resolve-square-logo', async (event, request) => {
+  const { appid, name, sources } = request || {};
+  try {
+    const square = await resolveSquareGameLogo(
+      appid == null ? '' : String(appid),
+      String(name || ''),
+      Array.isArray(sources) ? sources : [sources]
+    );
+    return (square && require('../util/iconUrl.js').iconResultToFileUrl(square)) || '';
+  } catch (err) {
+    debug.log(`[artwork] square logo lookup failed for "${name || appid}": ${err.message || err}`);
+    return '';
+  }
+});
+
+/*
+  Give any notification payload - a real unlock or a Settings preview - the square logo its preset
+  will paint. Both paths converge on enqueueNotification(), which is why the resolution lives here
+  rather than in the Watchdog-facing path alone: a preview that framed a raw 2:3 poster was showing
+  the user something no real notification would look like.
+*/
+async function withSquareGameLogo(data) {
+  const payload = data || {};
+  const achievementIcon = payload.achievementIconPath || '';
+  const primary = payload.iconPath || payload.icon || '';
+  // A real achievement icon is already square and already right; only game artwork is reworked.
+  if (primary && achievementIcon && primary === achievementIcon) return payload;
+
+  const candidates = [primary, payload.gameIconPath || payload.gameIcon || '', payload.imagePath || payload.image || ''];
+  const square = await resolveSquareGameLogo(
+    payload.appid == null ? '' : String(payload.appid),
+    String(payload.gameName || ''),
+    candidates
+  );
+  if (square === primary) return payload;
+  return Object.assign({}, payload, { iconPath: square, icon: square });
 }
 
 function resolvePrimaryNotificationIcon({ notificationType, iconPath, gameIconPath, imagePath, progress }) {
@@ -4867,11 +5120,68 @@ ipcMain.handle('notification-sample-art', async () => {
       : { appid: keys[Math.floor(Math.random() * keys.length)], name: '' };
     const appid = String(pick.appid);
     const cover = covers.get(appid);
-    // The wide header reads better as a preset background; the cover crops well as the icon.
+    // The wide header reads better as a preset background. The thumbnail goes through the shared
+    // square-logo resolver rather than handing the raw 2:3 cover over: this sample feeds BOTH the
+    // overlay preview and the Windows-notification test, so resolving it here is what keeps either
+    // of them from framing artwork no real notification would show.
     const header = path.join(userData, 'steam_cache', 'icon', appid, 'header.jpg');
-    return { appid, name: pick.name || '', icon: cover, image: fs.existsSync(header) ? header : cover };
+    const image = fs.existsSync(header) ? header : cover;
+    const icon = (await resolveSquareGameLogo(appid, pick.name || '', [cover, image]).catch(() => '')) || cover;
+    return { appid, name: pick.name || '', icon, image };
   } catch {
     return {};
+  }
+});
+
+/*
+  The pictures the designer can offer as a preset background. Absolute paths come back too: the
+  preview renders inside a srcdoc frame, where nothing resolves relative to a preset folder, so the
+  renderer inlines the file it picked as a data URI.
+*/
+ipcMain.handle('list-preset-images', async () => {
+  try {
+    return fs
+      .readdirSync(userPresetImagesDir())
+      .filter((name) => presetSchema.ASSET_RE.test(name))
+      .sort((a, b) => a.localeCompare(b))
+      .map((name) => ({ name, file: path.join(userPresetImagesDir(), name) }));
+  } catch {
+    return [];
+  }
+});
+
+// Copy a user-picked image into that folder and hand back the name the preset will use. Same
+// no-clobber rule as import-sound: a different file of the same name lands beside it.
+ipcMain.handle('import-preset-image', async () => {
+  try {
+    const res = await dialog.showOpenDialog({
+      title: t('choose-preset-image', 'Choose a background image', 'Choisir une image de fond'),
+      properties: ['openFile', 'dontAddToRecent'],
+      filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif'] }],
+    });
+    if (res.canceled || !res.filePaths || !res.filePaths.length) return null;
+    const src = res.filePaths[0];
+    const dir = userPresetImagesDir();
+    fs.mkdirSync(dir, { recursive: true });
+    const ext = path.extname(src);
+    const stem = path.basename(src, ext);
+    let base = stem + ext;
+    if (!presetSchema.ASSET_RE.test(base)) return null;
+    let dest = path.join(dir, base);
+    let i = 1;
+    while (fs.existsSync(dest)) {
+      try {
+        if (fs.readFileSync(dest).equals(fs.readFileSync(src))) return base;
+      } catch {}
+      base = `${stem} (${i++})${ext}`;
+      if (!presetSchema.ASSET_RE.test(base)) return null;
+      dest = path.join(dir, base);
+    }
+    fs.copyFileSync(src, dest);
+    return base;
+  } catch (err) {
+    debug.log('[preset-image] ' + (err.message || err));
+    return null;
   }
 });
 

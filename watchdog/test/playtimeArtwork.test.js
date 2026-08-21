@@ -62,3 +62,27 @@ test('artwork references reject relative schema tokens but accept URLs and absol
   assert.equal(usableArtwork('https://example.test/image.png'), 'https://example.test/image.png');
   assert.equal(usableArtwork('C:\\Games\\cover.png'), 'C:\\Games\\cover.png');
 });
+
+test('a community square logo outranks the poster for the card thumbnail', () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-playtime-artwork-'));
+  try {
+    const key = require('node:crypto').createHash('sha1').update('292030\0the witcher 3: wild hunt').digest('hex');
+    const file = path.join(root, 'steam_cache', 'steamgriddb_icons', `${key}.json`);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, JSON.stringify({ url: 'https://cdn2.steamgriddb.com/icon/abc.png', width: 512, height: 512 }));
+
+    const artwork = resolvePlaytimeArtwork(
+      { appid: '292030', name: 'The Witcher 3: Wild Hunt', icon: 'hash' },
+      { userDataRoot: root }
+    );
+    assert.equal(artwork.gameIcon, 'https://cdn2.steamgriddb.com/icon/abc.png');
+    assert.equal(artwork.icon, 'https://cdn2.steamgriddb.com/icon/abc.png');
+    // The hero image is still the wide header - only the square slot changes.
+    assert.match(artwork.image, /\/292030\/header\.jpg$/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
