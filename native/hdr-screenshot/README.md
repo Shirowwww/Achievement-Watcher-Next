@@ -4,6 +4,13 @@ This transient Windows helper captures the primary display with Windows Graphics
 `R16G16B16A16_FLOAT`, tone-maps HDR highlights to SDR sRGB, and writes an ordinary PNG. It exits
 without capturing when HDR is not active, allowing the Watchdog to keep its existing SDR path.
 
+Whether HDR is on is read from the display path of the primary monitor with
+`DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2`, not from DXGI: `IDXGIOutput6::GetDesc1` keeps reporting
+the SDR color space while the desktop composes in HDR, and the older `..._ADVANCED_COLOR_INFO`
+query cannot tell HDR apart from Windows 11 automatic colour management. The capture is divided by
+the SDR white level of that same path, so the desktop is not crushed when the "SDR content
+brightness" slider sits above its minimum.
+
 It is started only for an achievement screenshot when the HDR preference is `Automatic`. It does
 not run in the background and does not change Electron's renderer color mode.
 
