@@ -818,6 +818,13 @@
       "topicsTitle": "Explorar por tema",
       "searchPlaceholder": "Buscar en la ayuda…",
       "noResults": "Ningún tema de ayuda coincide con tu búsqueda.",
+      "links": {
+        "title": "Más ayuda en línea",
+        "documentation": "Documentación",
+        "faq": "Preguntas frecuentes",
+        "issues": "Informar de un problema",
+        "download": "Última versión"
+      },
       "quickTitle": "Primeros pasos",
       "quick": [
         "Añade las carpetas de guardado/configuración en Ajustes > Carpetas y activa la fuente correspondiente en Ajustes > Fuentes.",
@@ -1187,6 +1194,9 @@
     "watchdog-unresponsive-detail": "Está en ejecución, pero ha dejado de responder",
     "restart-watchdog": "Reiniciar el Watchdog",
     "unexpected-error": "Error inesperado",
+    "unexpected-error-message": "Se ha producido un error inesperado",
+    "lang-load-failed": "No se pudo cargar el idioma de la interfaz.",
+    "uplay-r2-dll-filter": "Cargador Uplay R2",
     "choose-the-game-executable": "Elegir el ejecutable del juego",
     "select": "Seleccionar",
     "goldberg-diagnosis-title": "Diagnóstico de Goldberg/GBE - {gameName}",

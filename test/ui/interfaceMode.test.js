@@ -185,8 +185,15 @@ test('the settings footer keeps only this app, and the upstream lineage moved to
   const lineage = document.querySelector('#advanced-lineage');
   assert.ok(lineage, 'the credits must not simply disappear');
   assert.equal(lineage.closest('section.content').getAttribute('data-view'), 'advanced', 'they belong with the technical credits');
-  for (const upstream of ['darktakayanagi/Achievement-Watcher', 'xan105/Achievement-Watcher']) {
-    assert.ok(lineage.outerHTML.includes(upstream), `${upstream} must still be credited`);
+  // The credits name their destination by registry key; app/util/links.js holds the addresses.
+  const links = require(path.join(appDir, 'util', 'links.js'));
+  for (const [key, upstream] of [
+    ['upstream.fork', 'darktakayanagi/Achievement-Watcher'],
+    ['upstream.original', 'xan105/Achievement-Watcher'],
+  ]) {
+    assert.ok(lineage.outerHTML.includes(`data-aw-link="${key}"`), `${upstream} must still be credited`);
+    const url = key.split('.').reduce((value, part) => value[part], links);
+    assert.ok(url.includes(upstream), `${key} must resolve to ${upstream}`);
   }
   // Both labels are now bound by id, so no positional selector survives their move.
   const loader = fs.readFileSync(path.join(appDir, 'locale', 'loader.js'), 'utf8');

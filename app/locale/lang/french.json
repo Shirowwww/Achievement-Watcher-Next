@@ -818,6 +818,13 @@
       "topicsTitle": "Parcourir les sujets",
       "searchPlaceholder": "Rechercher dans l’aide…",
       "noResults": "Aucun sujet d’aide ne correspond à ta recherche.",
+      "links": {
+        "title": "Plus d'aide en ligne",
+        "documentation": "Documentation",
+        "faq": "FAQ",
+        "issues": "Signaler un problème",
+        "download": "Dernière version"
+      },
       "quickTitle": "Premiers pas",
       "quick": [
         "Ajoutez vos dossiers de sauvegarde et de configuration dans Paramètres > Dossiers, puis activez la source correspondante dans Paramètres > Sources.",
@@ -1187,6 +1194,9 @@
     "watchdog-unresponsive-detail": "Il tourne mais ne répond plus",
     "restart-watchdog": "Redémarrer le Watchdog",
     "unexpected-error": "Erreur inattendue",
+    "unexpected-error-message": "Une erreur inattendue est survenue",
+    "lang-load-failed": "La langue de l’interface n’a pas pu être chargée.",
+    "uplay-r2-dll-filter": "Loader Uplay R2",
     "choose-the-game-executable": "Choisir l’exécutable du jeu",
     "select": "Sélectionner",
     "goldberg-diagnosis-title": "Diagnostic Goldberg/GBE - {gameName}",

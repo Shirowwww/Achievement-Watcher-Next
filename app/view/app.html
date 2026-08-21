@@ -457,6 +457,19 @@
                   </label>
                 </div>
 
+                <!-- The documentation site and the tracker, addressed through data-aw-link so the
+                     URLs stay in app/util/links.js - see applyExternalLinks() in app/app.js. -->
+                <section class="help-links" aria-labelledby="help-links-title">
+                  <h3 class="help-block-title"><i class="fas fa-external-link-alt" aria-hidden="true"></i> <span id="help-links-title">More help online</span></h3>
+                  <div class="help-link-row">
+                    <a class="help-link" data-aw-link="documentation" target="_blank"><i class="fas fa-book" aria-hidden="true"></i> <span id="help-link-docs">Documentation</span></a>
+                    <a class="help-link" data-aw-link="faq" target="_blank"><i class="fas fa-comments" aria-hidden="true"></i> <span id="help-link-faq">FAQ</span></a>
+                    <a class="help-link" data-aw-link="troubleshooting" target="_blank"><i class="fas fa-wrench" aria-hidden="true"></i> <span id="help-link-troubleshooting">Troubleshooting</span></a>
+                    <a class="help-link" data-aw-link="issues" target="_blank"><i class="fab fa-github" aria-hidden="true"></i> <span id="help-link-issues">Report an issue</span></a>
+                    <a class="help-link" data-aw-link="download" target="_blank"><i class="fas fa-download" aria-hidden="true"></i> <span id="help-link-download">Latest release</span></a>
+                  </div>
+                </section>
+
                 <section class="help-overview" aria-labelledby="help-setup-title">
                   <h3 class="help-block-title"><i class="fas fa-sliders-h" aria-hidden="true"></i> <span id="help-setup-title">Your current setup</span></h3>
                   <div class="help-setup" id="help-setup" aria-live="polite"></div>
@@ -668,13 +681,13 @@
                     <span class="lineage-entry">
                       <a id="lineage-fork-label">Fork</a>
                       <i class="fab fa-github"></i>
-                      <a href="https://github.com/darktakayanagi/Achievement-Watcher" target="_blank">darktakayanagi/achievement-watcher</a>
+                      <a data-aw-link="upstream.fork" target="_blank">darktakayanagi/achievement-watcher</a>
                     </span>
                     <span class="notice-sep">·</span>
                     <span class="lineage-entry">
                       <a id="lineage-original-label">Original v1.6.8</a>
                       <i class="fab fa-github"></i>
-                      <a href="https://github.com/xan105/Achievement-Watcher" target="_blank">xan105/achievement-watcher</a>
+                      <a data-aw-link="upstream.original" target="_blank">xan105/achievement-watcher</a>
                     </span>
                   </li>
                 </ul>
@@ -2489,7 +2502,7 @@
                 <span></span> <span></span>
                 <a>maintained by</a>
                 <i class="fab fa-github"></i>
-                <a href="https://github.com/Shirowwww/Achievement-Watcher-Next" target="_blank">Shirowwww</a>
+                <a data-aw-link="home" target="_blank">Shirowwww</a>
                 <button type="button" id="footer-check-updates" class="footer-update-btn" title="Check for updates" aria-label="Check for updates">
                   <i class="fas fa-sync"></i>
                 </button>

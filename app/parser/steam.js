@@ -142,6 +142,66 @@ module.exports.scan = async (additionalSearch = []) => {
   }
 };
 
+/*
+  Widen the legit-Steam list from "played" to "owned or installed", without letting the noise in.
+
+  `userID` is carried over from the stats entries because the achievement reader is keyed by it; a
+  game with no stats file simply reads back as nothing unlocked.
+*/
+async function addLocallyKnownSteamApps(
+  list,
+  {
+    steamPath,
+    listingType,
+    stats,
+    // Injected by the tests so they describe this function rather than the machine it runs on.
+    readInstalls = () => module.exports.scanLocalInstalls(),
+    readOwnedRegistry = () => listRegistryAllSubkeys('HKCU', 'Software/Valve/Steam/Apps'),
+  }
+) {
+  const appInfo = require('./steamAppInfo.js');
+  const catalogue = appInfo.load(steamPath);
+  if (!catalogue || catalogue.size === 0) return list;
+
+  const owners = [...new Set(stats.map((entry) => String(entry.userID)))];
+  if (owners.length === 0) return list;
+
+  const known = new Set(list.map((entry) => String(entry.appID)));
+  const candidates = new Map(); // appid -> is it on disk right now?
+  try {
+    for (const appid of (await readInstalls()).keys()) candidates.set(String(appid), true);
+  } catch {
+    /* no readable steamapps folder - the registry pass below may still find something */
+  }
+  if (listingType == 2) {
+    for (const appid of readOwnedRegistry() || []) {
+      if (/^\d+$/.test(String(appid)) && !candidates.has(String(appid))) candidates.set(String(appid), false);
+    }
+  }
+
+  const added = [];
+  const rejected = new Map();
+  for (const [appid, installed] of candidates) {
+    if (known.has(appid)) continue;
+    const entry = catalogue.get(appid);
+    // An app the client has never catalogued is not evidence of a game - except when there is an
+    // install manifest for it, because that folder IS the game sitting on this disk. Owned-only
+    // entries get no such benefit: that list is where DLC and tooling would come in unchecked.
+    const allowed = entry ? appInfo.LIBRARY_TYPES.has(entry.type) : installed;
+    if (!allowed) {
+      const reason = entry ? entry.type : 'unknown';
+      rejected.set(reason, (rejected.get(reason) || 0) + 1);
+      continue;
+    }
+    for (const userID of owners) added.push({ userID, appID: appid });
+  }
+  if (added.length || rejected.size) {
+    const skipped = [...rejected.entries()].map(([type, count]) => `${count} ${type}`).join(', ');
+    debug.log(`[steam] ${added.length} owned/installed game(s) added from the local Steam catalogue${skipped ? ` (skipped ${skipped})` : ''}`);
+  }
+  return list.concat(added);
+}
+
 module.exports.scanLegit = async (listingType = 0, steamAccFilter = '0') => {
   try {
     let data = [];
@@ -160,6 +220,20 @@ module.exports.scanLegit = async (listingType = 0, steamAccFilter = '0') => {
           appID: matches[1],
         };
       });
+
+      /*
+        A stats file only exists once a game has actually reported statistics, so on its own this
+        source lists what has been PLAYED, not what is owned or even installed. On one library that
+        left 59 appids Steam knows about locally invisible to the scan - DELTARUNE, Ready or Not,
+        R.E.P.O. and PUBG among them, some of them installed.
+
+        Two local sources close the gap: the app manifests (what is on disk right now) and, in
+        "owned" mode, Steam's own per-app registry keys. Both list DLC, demos, soundtracks, servers
+        and redistributables alongside real games, which is why they are gated on Steam's local app
+        catalogue - see steamAppInfo.js. When that catalogue cannot be read, the extra sources are
+        skipped entirely rather than guessed at: the original stats-only behaviour is the fallback.
+      */
+      list = await addLocallyKnownSteamApps(list, { steamPath, listingType, stats: list });
 
       for (let stats of list) {
         // Steam's own per-game registry flag: 1 when the game is on disk, missing/0 when it is
@@ -681,6 +755,13 @@ module.exports.getAchievementsFromAPI = async (cfg) => {
       if (Object.keys(local).length > 0) time.local = moment(local.mtime).valueOf();
     }
 
+    if (!fs.existsSync(cache.steam)) {
+      // Owned or installed, never played: Steam writes no stats file until the game first reports
+      // one. That is a complete answer - nothing is unlocked - and it must not throw, or every
+      // never-played game in the library would fail to load instead of showing 0%.
+      if (time.local > 0) return JSON.parse(fs.readFileSync(cache.local));
+      return [];
+    }
     let steamStats = fs.statSync(cache.steam);
     if (Object.keys(steamStats).length > 0) {
       time.steam = moment(steamStats.mtime).valueOf();
@@ -822,6 +903,36 @@ module.exports.scanLocalInstalls = async () => {
   return installs;
 };
 
+/*
+  Which local Steam accounts were confirmed public, remembered across runs.
+
+  Only a real answer is written here, so the file is a record of what Steam actually said - never a
+  guess made while offline. It is read only when the check could not run at all.
+*/
+function publicSteamUsersPath() {
+  return cacheRoot ? path.join(cacheRoot, 'steam_cache', 'steamUsers.json') : '';
+}
+
+function readPublicSteamUsers() {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(publicSteamUsersPath(), 'utf8'));
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writePublicSteamUsers(users) {
+  const file = publicSteamUsersPath();
+  if (!file) return;
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, JSON.stringify(users || [], null, 2));
+  } catch {
+    /* cache write failure is non-fatal */
+  }
+}
+
 const getSteamUsers = (module.exports.getSteamUsers = async (steamPath) => {
   let result = [];
 
@@ -830,6 +941,8 @@ const getSteamUsers = (module.exports.getSteamUsers = async (steamPath) => {
 
   if (users.length == 0) throw 'No Steam User ID found';
 
+  const remembered = readPublicSteamUsers();
+  let unreachable = false;
   result = await Promise.all(
     users.map(async (user) => {
       const id = steamID.to64(user);
@@ -842,15 +955,28 @@ const getSteamUsers = (module.exports.getSteamUsers = async (steamPath) => {
           name: data.steamID,
           profile: data,
         };
-      } else {
-        debug.log(`${user} - ${id} (${data.steamID}) is not public`);
+      }
+      if (data.networkError === true) {
+        // Not an answer about the account. A profile confirmed public on an earlier scan does not
+        // become private because the network is down, and treating it as private drops the entire
+        // legit-Steam source - the largest part of most libraries - from an offline scan.
+        unreachable = true;
+        const known = remembered.find((entry) => entry && String(entry.user) === String(user));
+        if (known) {
+          debug.log(`${user} - ${id} could not be checked (offline); reusing the profile confirmed public earlier`);
+          return known;
+        }
+        debug.log(`${user} - ${id} could not be checked (offline) and was never confirmed public`);
         return null;
       }
+      debug.log(`${user} - ${id} (${data.steamID}) is not public`);
+      return null;
     })
   );
   // filter out nulls
   result = result.filter(Boolean);
-  if (result.length === 0) throw 'Public profile: none.';
+  if (!unreachable) writePublicSteamUsers(result);
+  if (result.length === 0) throw unreachable ? 'Public profile: unknown (offline).' : 'Public profile: none.';
   return result;
 });
 
@@ -886,7 +1012,28 @@ async function getSteamUserStatsFromSRV(user, appID) {
   A truthy non-http value is a fetch-icon token the renderer resolves itself - it is returned
   untouched, never treated as a missing cover.
 */
-async function resolvePortrait({ appid, name, portrait, invoke }) {
+// How long a single game will hold its scan worker waiting for the shared SteamDB browser queue.
+const STEAMDB_COVER_WAIT_MS = 6000;
+
+// Resolve to null once the budget is spent, leaving the underlying request running. Rejections are
+// swallowed the same way the direct call already did.
+function waitBounded(promise, ms) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(null), ms);
+    Promise.resolve(promise).then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      () => {
+        clearTimeout(timer);
+        resolve(null);
+      }
+    );
+  });
+}
+
+async function resolvePortrait({ appid, name, portrait, invoke, steamdbWaitMs = STEAMDB_COVER_WAIT_MS }) {
   // ipcInvoke, not ipcRenderer: GetMissingData also runs from the main process, where ipcRenderer is
   // undefined and a direct call would throw out of this function instead of falling through.
   const send = invoke || ipcInvoke;
@@ -919,7 +1066,18 @@ async function resolvePortrait({ appid, name, portrait, invoke }) {
       }
     }
   }
-  if (!portrait) portrait = (await send('get-steamdb-cover', appid).catch(() => null)) || null;
+  /*
+    SteamDB is the only step in this chain that runs a browser, and every game in the library goes
+    through one global queue to reach it - so on a cold scan a game near the back waits out every
+    game in front of it. That wait is inside the 30s per-game load budget: a user log shows 37 games
+    failing to load at 30s while the queue ahead of them was still working through 8s-per-game cover
+    pages.
+
+    Bound the wait rather than the chain. The scrape is not cancelled - it finishes and writes its
+    cache entry, so the cover is there for the artwork-recovery pass and for the next scan - this
+    game just stops holding its worker for it and moves on to SteamGridDB.
+  */
+  if (!portrait) portrait = (await waitBounded(send('get-steamdb-cover', appid), steamdbWaitMs)) || null;
   // The appid lets SteamGridDB answer by identity; the name is only the fallback handle for a game
   // that has no Steam appid at all.
   if (!portrait) portrait = (await send('get-steamgriddb-cover', name, appid).catch(() => null)) || null;
@@ -1238,9 +1396,29 @@ async function findInAppList(appID) {
 
   const app = appidListMap.get(appID);
   if (app) return app.name;
+  /*
+    Steam retired GetAppList, so the map above is usually empty and the name used to depend entirely
+    on a network round trip - the one that is rate-limited or down at exactly the moment a cleared
+    cache needs it for every game at once. That is how a library ends up showing bare appids as
+    titles. The Steam client's own local catalogue answers the same question from disk.
+  */
+  const localName = await localSteamCatalogueName(appID);
+  if (localName) return localName;
   const name = await ipcRenderer.invoke('get-steam-data', { appid: appID, type: 'name' });
   return name;
-  throw 'ERR_NAME_NOT_FOUND';
+}
+
+// Steam's local appinfo cache. The registry lookup behind it is resolved once per session, and a
+// machine with no Steam install simply has no answer here - every caller keeps its own fallback.
+let steamCataloguePath = null;
+async function localSteamCatalogueName(appID) {
+  try {
+    if (steamCataloguePath === null) steamCataloguePath = (await getSteamPath().catch(() => '')) || '';
+    if (!steamCataloguePath) return '';
+    return require('./steamAppInfo.js').nameOf(steamCataloguePath, appID) || '';
+  } catch {
+    return '';
+  }
 }
 
 // Resolve an AppID back to its canonical store name (app-list cache first, then the store data
@@ -1728,7 +1906,20 @@ async function GetMissingData(data, showHidden, lang, steamSettings) {
   already fetched successfully through this exact fallback.
 */
 async function resolveWorkingIconUrl(appID, url) {
-  if (!url || typeof url !== 'string' || !url.startsWith('http')) return url;
+  if (!url || typeof url !== 'string') return url;
+  /*
+    Schemas do not always store a URL. `img.header` is regularly the bare "header.jpg",
+    `img.portrait` "library_600x900.jpg" and `img.icon` a naked content hash - the same token shapes
+    the Watchdog's prefetch has always resolved through the CDN list. Here they used to fall
+    straight through to a download of a relative path, which cannot succeed: the caller got its own
+    token back and read that as "this game has no artwork", even for games whose header and portrait
+    were both live on the CDN.
+  */
+  if (!url.startsWith('http')) {
+    if (path.isAbsolute(url) || fs.existsSync(url)) return url;
+    const working = await findWorkingLink(appID, url.split('/').pop().split('?')[0].replace(/\.[^.]+$/, ''));
+    return working || url;
+  }
   let isValid = false;
   try {
     new URL(url);
@@ -1808,3 +1999,7 @@ const fetchIcon = (module.exports.fetchIcon = async (url, appID) => {
     iconFetchInFlight.delete(inFlightKey);
   }
 });
+
+// Exposed for unit tests: the widened legit-Steam discovery is easier to describe directly than
+// through a scanLegit run that depends on the machine's registry and Steam install.
+module.exports._internal = Object.assign({}, module.exports._internal, { addLocallyKnownSteamApps });

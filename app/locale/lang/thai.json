@@ -814,6 +814,13 @@
       "topicsTitle": "เรียกดูตามหัวข้อ",
       "searchPlaceholder": "ค้นหาในวิธีใช้…",
       "noResults": "ไม่มีหัวข้อวิธีใช้ที่ตรงกับการค้นหา",
+      "links": {
+        "title": "ความช่วยเหลือเพิ่มเติมออนไลน์",
+        "documentation": "เอกสารประกอบ",
+        "faq": "คำถามที่พบบ่อย",
+        "issues": "รายงานปัญหา",
+        "download": "เวอร์ชันล่าสุด"
+      },
       "quickTitle": "เริ่มต้นใช้งาน",
       "quick": [
         "เพิ่มโฟลเดอร์เซฟ/การตั้งค่าที่ การตั้งค่า > โฟลเดอร์ แล้วเปิดใช้แหล่งข้อมูลที่ตรงกันใน การตั้งค่า > แหล่งข้อมูล",
@@ -1183,6 +1190,9 @@
     "watchdog-unresponsive-detail": "ยังทำงานอยู่แต่หยุดตอบสนอง",
     "restart-watchdog": "รีสตาร์ท Watchdog",
     "unexpected-error": "ข้อผิดพลาดที่ไม่คาดคิด",
+    "unexpected-error-message": "เกิดข้อผิดพลาดที่ไม่คาดคิด",
+    "lang-load-failed": "ไม่สามารถโหลดภาษาของอินเทอร์เฟซได้",
+    "uplay-r2-dll-filter": "ตัวโหลด Uplay R2",
     "choose-the-game-executable": "เลือกไฟล์เรียกใช้งานของเกม",
     "select": "เลือก",
     "goldberg-diagnosis-title": "การวินิจฉัย Goldberg/GBE - {gameName}",

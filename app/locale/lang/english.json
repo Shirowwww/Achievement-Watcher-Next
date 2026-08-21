@@ -818,6 +818,13 @@
       "topicsTitle": "Browse by topic",
       "searchPlaceholder": "Search help…",
       "noResults": "No help topic matches your search.",
+      "links": {
+        "title": "More help online",
+        "documentation": "Documentation",
+        "faq": "FAQ",
+        "issues": "Report an issue",
+        "download": "Latest release"
+      },
       "quickTitle": "First steps",
       "quick": [
         "Add save/config folders in Settings > Folders, then enable the matching source in Settings > Sources.",
@@ -1187,6 +1194,9 @@
     "watchdog-unresponsive-detail": "It is running but has stopped reporting",
     "restart-watchdog": "Restart Watchdog",
     "unexpected-error": "Unexpected Error",
+    "unexpected-error-message": "An unexpected error has occurred",
+    "lang-load-failed": "The interface language could not be loaded.",
+    "uplay-r2-dll-filter": "Uplay R2 loader",
     "choose-the-game-executable": "Choose the game executable",
     "select": "Select",
     "goldberg-diagnosis-title": "Goldberg/GBE diagnosis - {gameName}",

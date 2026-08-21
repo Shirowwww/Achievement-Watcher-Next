@@ -814,6 +814,13 @@
       "topicsTitle": "Перегляд за темами",
       "searchPlaceholder": "Пошук у довідці…",
       "noResults": "Жодна тема довідки не відповідає пошуку.",
+      "links": {
+        "title": "Більше довідки онлайн",
+        "documentation": "Документація",
+        "faq": "Часті запитання",
+        "issues": "Повідомити про проблему",
+        "download": "Остання версія"
+      },
       "quickTitle": "Перші кроки",
       "quick": [
         "Додайте папки збережень/конфігурації в Налаштування > Папки, а потім увімкніть відповідне джерело в Налаштування > Джерела.",
@@ -1183,6 +1190,9 @@
     "watchdog-unresponsive-detail": "Він працює, але перестав відповідати",
     "restart-watchdog": "Перезапустити Watchdog",
     "unexpected-error": "Неочікувана помилка",
+    "unexpected-error-message": "Сталася непередбачена помилка",
+    "lang-load-failed": "Не вдалося завантажити мову інтерфейсу.",
+    "uplay-r2-dll-filter": "Завантажувач Uplay R2",
     "choose-the-game-executable": "Виберіть виконуваний файл гри",
     "select": "Вибрати",
     "goldberg-diagnosis-title": "Діагностика Goldberg/GBE - {gameName}",

@@ -29,7 +29,7 @@ you can tell which one fits how you play.
 | Full controller navigation | ✅ App + overlay | ✅ App + overlay | ❌ Planned only |
 | Screenshot souvenirs | ✅ | ✅ | ✅ |
 | Multiple UI themes | ✅ Built-in + Custom | ✅ 8 | ❌ |
-| Interface languages | ✅ 18 bundled | ✅ 30 locales | ✅ 18 locales |
+| Interface languages | ✅ 28 bundled | ✅ 30 locales | ✅ 18 locales |
 | Xbox PC (Game Pass / Store) | ✅ Account import | ✅ Account import | ❌ |
 | Manual achievement unlock | ✅ | ✅ | ❌ |
 | Process trail for already-running games | ✅ | ✅ | ❌ |

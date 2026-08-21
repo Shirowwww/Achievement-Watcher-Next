@@ -47,6 +47,10 @@ const { applyLocalStatProgress } = require(path.join(appPath, 'statProgress.js')
 const scanScope = require(path.join(appPath, 'scanScope.js'));
 const manualGames = require(path.join(appPath, 'manualGames.js'));
 const gameNameCache = require(path.join(appPath, '..', 'util', 'gameNameCache.js'));
+const perfTrace = require(path.join(appPath, '..', 'util', 'perfTrace.js'));
+const dirCache = require(path.join(appPath, '..', 'util', 'dirCache.js'));
+const exeCandidateCache = require(path.join(appPath, '..', 'util', 'exeCandidateCache.js'));
+const dirFingerprint = require(path.join(appPath, '..', 'util', 'dirFingerprint.js'));
 let debug;
 let _userDataPath = null; // cache root for automatic emulator setup and downloaded tools
 
@@ -55,6 +59,8 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
     return;
   }
   _userDataPath = userDataPath;
+  perfTrace.enable(isDev);
+  exeCandidateCache.setUserDataPath(userDataPath);
   uplayR2.setUserDataPath(userDataPath);
   userDir.setUserDataPath(userDataPath);
   libraryDirs.setUserDataPath(userDataPath);
@@ -63,6 +69,7 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   gogOfficial.initDebug({ isDev, userDataPath });
   ubisoftOfficial.initDebug({ isDev, userDataPath });
   require(path.join(appPath, 'steamOfficial.js')).initDebug({ isDev, userDataPath });
+  require(path.join(appPath, 'steamAppInfo.js')).initDebug({ isDev, userDataPath });
   epic.initDebug({ isDev, userDataPath });
   epicOfficial.initDebug({ isDev, userDataPath });
   ea.initDebug({ isDev, userDataPath });
@@ -492,6 +499,9 @@ let _activeScanScope = null;
 // Cache discovery walks briefly; unlock state is always read fresh.
 let _discoverCache = null; // { key, time, appidList, folderIndex, claimedDirs }
 const DISCOVER_TTL_MS = 60000;
+// Timestamps of the folders the last full discovery walked, so the background poll can tell that
+// nothing on disk moved without walking them again.
+let _discoverFingerprint = null;
 const GAME_LOAD_TIMEOUT_MS = 30000;
 
 async function buildDiscoverCacheKey(option) {
@@ -525,7 +535,13 @@ async function discoverWithCache(option, steamAccFilter) {
   _folderIndex = null;
   _folderIndexPromise = null;
   _claimedDirs = new Set();
+  const discoverStarted = Date.now();
+  perfTrace.reset('discover:');
   const appidList = await discover(option.achievement_source, steamAccFilter, activeScope);
+  exeCandidateCache.flush();
+  // Only a full scan is a usable baseline for the background poll; a scoped one looked at a subset.
+  _discoverFingerprint = activeScope ? null : dirFingerprint.capture(dirCache.lastVisitedDirs());
+  if (perfTrace.isEnabled()) debug.log(`[perf] discover ${Date.now() - discoverStarted}ms - ${perfTrace.summary({ prefix: 'discover:' })}`);
   if (cacheKey) _discoverCache = { key: cacheKey, time: Date.now(), appidList, folderIndex: _folderIndex, claimedDirs: _claimedDirs };
   return appidList;
 }
@@ -929,6 +945,9 @@ function setEmulatorCache(gameDir, result) {
 }
 function refreshEmulatorCache(gameDir) {
   if (!gameDir) return goldberg.detectEmulator(gameDir);
+  // A repair just wrote into this folder, and it may have written below its root - which leaves the
+  // root's timestamp alone and would keep the memoized executable walk alive.
+  exeCandidateCache.forget(gameDir);
   return setEmulatorCache(gameDir, goldberg.detectEmulator(gameDir));
 }
 function detectEmulatorCached(gameDir) {
@@ -955,12 +974,8 @@ async function getFolderIndex() {
         index.push({ dir, name: path.basename(dir) });
       };
       for (const root of await goldbergScanRoots()) {
-        let entries;
-        try {
-          entries = fs.readdirSync(root, { withFileTypes: true });
-        } catch {
-          continue;
-        }
+        const entries = dirCache.readdir(root);
+        if (!entries) continue;
         for (const e of entries) {
           if (!e.isDirectory()) continue;
           const dir = path.join(root, e.name);
@@ -968,12 +983,8 @@ async function getFolderIndex() {
           // One safe extra level under Desktop: only descend into library-like subfolders
           // (Desktop\Jeux\<game>), never loose Desktop folders.
           if (desktopSet.has(root.toLowerCase()) && saveRoots.isLibraryLikeFolderName(e.name)) {
-            let children;
-            try {
-              children = fs.readdirSync(dir, { withFileTypes: true });
-            } catch {
-              continue;
-            }
+            const children = dirCache.readdir(dir);
+            if (!children) continue;
             for (const child of children) {
               if (child.isDirectory()) addDir(path.join(dir, child.name));
             }
@@ -1054,14 +1065,11 @@ function isKnownNonGameToolInstall(gameDir) {
   if (!gameDir) return false;
   const base = path.basename(gameDir).toLowerCase().replace(/[^a-z0-9]/g, '');
   if (['dolphin', 'dolphinx64', 'dolphinx86', 'dolphinmpn', 'dolphinemulator'].includes(base)) return true;
-  try {
-    const entries = fs.readdirSync(gameDir, { withFileTypes: true });
-    const names = new Set(entries.map((e) => e.name.toLowerCase()));
-    const dirs = new Set(entries.filter((e) => e.isDirectory()).map((e) => e.name.toLowerCase()));
-    if (names.has('dolphin.exe') && (names.has('dolphintool.exe') || dirs.has('sys') || dirs.has('qtplugins'))) return true;
-  } catch {
-    /* unreadable folder - let the normal scanner decide */
-  }
+  const entries = dirCache.readdir(gameDir); // null for an unreadable folder - let the normal scanner decide
+  if (!entries) return false;
+  const names = new Set(entries.map((e) => e.name.toLowerCase()));
+  const dirs = new Set(entries.filter((e) => e.isDirectory()).map((e) => e.name.toLowerCase()));
+  if (names.has('dolphin.exe') && (names.has('dolphintool.exe') || dirs.has('sys') || dirs.has('qtplugins'))) return true;
   return false;
 }
 
@@ -1264,13 +1272,7 @@ async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScop
     const d = dir.toLowerCase();
     return linked.some((p) => p === d || p.startsWith(d + path.sep) || p.startsWith(d + '/'));
   };
-  const readEntries = (dir) => {
-    try {
-      return fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
-      return null;
-    }
-  };
+  const readEntries = (dir) => dirCache.readdir(dir);
   const desktopSet = new Set(desktopRoots().map((p) => p.toLowerCase()));
   const roots = [];
   for (const dir of await goldbergScanRoots(scope)) {
@@ -1436,7 +1438,20 @@ async function resolveUplayR2Mapping(u) {
 }
 
 async function discover(source, steamAccFilter, scope = null) {
+  // One pass reads the same folders from several walkers; serve each directory listing once.
+  return dirCache.withScope(() => discoverInScope(source, steamAccFilter, scope));
+}
+
+async function discoverInScope(source, steamAccFilter, scope) {
   let data = [];
+  // Dev timings: each mark closes the phase above it (see util/perfTrace.js).
+  let phaseStart = Date.now();
+  const mark = (label) => {
+    if (!perfTrace.isEnabled()) return;
+    const now = Date.now();
+    perfTrace.record(`discover:${label}`, now - phaseStart);
+    phaseStart = now;
+  };
 
   //UserCustomDir
   let additionalSearch = [];
@@ -1482,6 +1497,8 @@ async function discover(source, steamAccFilter, scope = null) {
     debug.log(err);
   }
 
+  mark('userdir');
+
   //Goldberg SocialClub Emulator - %APPDATA%\Goldberg SocialClub Emu Saves is auto-scanned like the
   //other known emulator roots, even when the user never added it to Settings.
   if (!scope && source.socialClub) {
@@ -1498,6 +1515,8 @@ async function discover(source, steamAccFilter, scope = null) {
       debug.error(err);
     }
   }
+
+  mark('socialClub');
 
   //ShadPS4 stores trophies in %APPDATA%/shadPS4 regardless of where the .exe lives - auto-scan that
   //known location so the user doesn't have to add it as a watched folder. De-dupe against anything the
@@ -1516,6 +1535,7 @@ async function discover(source, steamAccFilter, scope = null) {
     }
   }
 
+  mark('shadps4');
   //Non-Legit Steam
   if (source.steamEmu) {
     try {
@@ -1525,6 +1545,8 @@ async function discover(source, steamAccFilter, scope = null) {
     }
   }
 
+  mark('steamEmu');
+
   //GreenLuma
   if (!scope && source.greenLuma) {
     try {
@@ -1533,6 +1555,8 @@ async function discover(source, steamAccFilter, scope = null) {
       debug.error(err);
     }
   }
+
+  mark('greenLuma');
 
   //Legit Steam
   if (!scope && source.legitSteam > 0) {
@@ -1580,9 +1604,15 @@ async function discover(source, steamAccFilter, scope = null) {
       // malfunction: the legit-Steam source simply contributes nothing. Keep it out of the error
       // channel so a genuine scan failure still stands out in the log.
       if (String(err) === 'Public profile: none.') debug.log('[steam] no public Steam profile - skipping the legit Steam source');
+      // Same for an offline scan on a machine that has never had a confirmed-public profile: nothing
+      // is wrong with the install, the question could just not be asked.
+      else if (String(err) === 'Public profile: unknown (offline).')
+        debug.log('[steam] could not check the Steam profile (offline) - the legit Steam source is skipped for this scan');
       else debug.error(err);
     }
   }
+
+  mark('legitSteam');
 
   if (!scope && source.lumaPlay) {
     //Lumaplay (emulated/cracked Ubisoft - the actual point of this source toggle)
@@ -1599,6 +1629,8 @@ async function discover(source, steamAccFilter, scope = null) {
     // Ubisoft Connect" toggle is for emulated saves only.
   }
 
+  mark('lumaPlay');
+
   if (!scope && source.gog) {
     try {
       data = data.concat(await gog.scan());
@@ -1606,6 +1638,8 @@ async function discover(source, steamAccFilter, scope = null) {
       debug.error(err);
     }
   }
+
+  mark('gog');
 
   //GOG Galaxy official (legit client data - schema, unlocks and rarity read from Galaxy's SQLite)
   if (!scope && source.gogOfficial) {
@@ -1615,6 +1649,8 @@ async function discover(source, steamAccFilter, scope = null) {
       debug.error(err);
     }
   }
+
+  mark('gogOfficial');
 
   //Ubisoft Connect official (legit client data - spool unlock state + cached achievements archive)
   if (!scope && source.ubisoftOfficial) {
@@ -1632,6 +1668,8 @@ async function discover(source, steamAccFilter, scope = null) {
     }
   }
 
+  mark('ubisoftOfficial');
+
   //Epic official (installed Epic games - public localized schema + rarity; unlocks when connected)
   if (!scope && source.epicOfficial) {
     try {
@@ -1641,6 +1679,8 @@ async function discover(source, steamAccFilter, scope = null) {
     }
   }
 
+  mark('epicOfficial');
+
   if (!scope && source.epic) {
     try {
       data = data.concat(await epic.scan());
@@ -1649,6 +1689,8 @@ async function discover(source, steamAccFilter, scope = null) {
     }
   }
 
+  mark('epic');
+
   if (!scope && source.ea) {
     try {
       data = data.concat(await ea.scan());
@@ -1656,6 +1698,8 @@ async function discover(source, steamAccFilter, scope = null) {
       debug.error(err);
     }
   }
+
+  mark('ea');
 
   //Xbox PC (Game Pass / Microsoft Store / Online-Fix) - local installs + imported Xbox Network cache.
   if (!scope && source.xboxPc) {
@@ -1697,6 +1741,8 @@ async function discover(source, steamAccFilter, scope = null) {
     }
   }
 
+  mark('xboxPc');
+
   if (!scope && source.importCache) {
     try {
       data = data.concat(await watchdog.scan());
@@ -1704,6 +1750,8 @@ async function discover(source, steamAccFilter, scope = null) {
       debug.error(err);
     }
   }
+
+  mark('importCache');
 
   //Installed Goldberg/GBE games never launched yet (no %APPDATA% save folder) - Objective 3.
   //Runs last so it can dedupe against every other source by appid.
@@ -1713,6 +1761,7 @@ async function discover(source, steamAccFilter, scope = null) {
     } catch (err) {
       debug.error(err);
     }
+    mark('goldbergInstalls');
 
     // Installed games with no usable appid (no steam_appid.txt/steam_settings): surface them anyway so
     // they show in the app and can be right-clicked (Install GBE Fork, etc.). Runs after the Goldberg
@@ -1726,6 +1775,7 @@ async function discover(source, steamAccFilter, scope = null) {
         /* no exeList yet */
       }
       const unconfigured = await scanUnconfiguredInstalls(linkedExes, scope);
+      mark('unconfiguredScan');
       // Resolve unconfigured entries before concurrent game loading so installed detection sees gameDir.
       let added = 0,
         merged = 0;
@@ -1838,6 +1888,8 @@ async function discover(source, steamAccFilter, scope = null) {
     }
   }
 
+  mark('unconfiguredResolve');
+
   if (!scope) {
     try {
       for (const entry of manualGames.list()) {
@@ -1861,9 +1913,15 @@ async function discover(source, steamAccFilter, scope = null) {
     }
   }
 
+  mark('manual');
+
   data = await dropSteamOwnedRecords(data, source.legitSteam > 0);
 
+  mark('dropSteamOwned');
+
   data = consolidateDiscoveryList(data);
+
+  mark('consolidate');
 
   //AppID Blacklisting
   try {
@@ -1874,6 +1932,8 @@ async function discover(source, steamAccFilter, scope = null) {
   } catch (err) {
     debug.error(err);
   }
+
+  mark('blacklist');
 
   return data;
 }
@@ -2963,6 +3023,22 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       game.achievement.total = game.achievement.list.length;
     }
 
+    /*
+      Does anything other than a cache entry say this game exists?
+
+      The library filter used to keep a game only when it had achievements or a verified install, so
+      an owned game with neither - ULTRAKILL, Lethal Company, R.E.P.O., VRChat, and twelve more on
+      one real library - was discovered on every scan and then silently dropped. Owning a game and
+      not having played it yet is not a reason to hide it.
+
+      The one entry that genuinely has nothing behind it is a watchdog cache import with no save
+      file and no install folder: a record of a game that was seen once on some machine, which is
+      what the filter was written for in the first place. Everything else was found by looking at
+      this PC - an account library, a save on disk, an install folder - and is real.
+    */
+    game.evidenceless =
+      dataType === 'cached' && !resolveAchievementDataPath(appid.data || {}) && !(appid.data && appid.data.gameDir);
+
     // Mark whether the game has a verified installation for the filter.
     game.installed = installState.isInstalled({
       dataType,
@@ -2980,6 +3056,23 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     // "[object Object]" and made the one error line in the log useless for finding the game.
     debug.error(`[${requestedAppid?.appid ?? requestedAppid}] Error parsing local achievements data => ${err} > SKIPPING`);
   }
+};
+
+/*
+  True when every folder the last full discovery read still has the timestamp it had then.
+
+  The background new-install poll uses this to skip a scan it does not need. It only sees the
+  filesystem sources, so a caller must still run a real discovery from time to time for the ones
+  that live in a database or the registry, and "no baseline yet" reports false so the first tick
+  always scans.
+*/
+module.exports.discoveryInputsUnchanged = () => dirFingerprint.matches(_discoverFingerprint);
+
+// Manual refresh: forget the memoized install-folder walks so a game patched in place is re-read.
+module.exports.forgetInstallScanCache = () => {
+  exeCandidateCache.forget();
+  exeCandidateCache.flush();
+  _discoverFingerprint = null;
 };
 
 // Lightweight discovery-only pass: runs the same folder/library walk makeList uses but skips the
@@ -3082,12 +3175,12 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
             // missing card was indistinguishable from a game that was never installed (issue #33).
             game = buildProvisionalGame(appid);
             }
-            // Keep a game if it has achievements, OR it's a genuine on-disk install even with none
-          // (e.g. UNDERTALE has zero Steam achievements) - same rationale as unconfigured installs.
-          // Non-installed 0-achievement entries (phantom cache imports) are still filtered out.
-          // A provisional entry is admitted on its own terms: it stands for on-disk data that was
-          // found but could not be decorated yet.
-            if (game && (game.provisional || game.unconfigured || game.installed || (game.achievement && game.achievement.total > 0))) {
+            // Everything a real source found on this PC belongs in the library, whether or not it
+            // has achievements and whether or not it is installed right now - a game with none
+            // renders as "No achievements", which is the truth about it. Only an evidenceless cache
+            // import is dropped (see game.evidenceless). A provisional entry is admitted on its own
+            // terms: it stands for on-disk data that was found but could not be decorated yet.
+            if (game && !game.evidenceless) {
               result.push(game);
             /*
               Hand the game straight to the caller - never via requestAnimationFrame: rAF only fires for

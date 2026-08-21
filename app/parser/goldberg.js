@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const exeDetect = require(path.join(__dirname, 'exeDetect.js'));
+const dirCache = require(path.join(__dirname, '..', 'util', 'dirCache.js'));
 const launcherDetect = require(path.join(__dirname, 'launcherDetect.js'));
 const { parseIni, stringifyIni, getIniSection, upsertIniSection, upsertIniKeys, sanitizeIniValue } = require(path.join(__dirname, '..', 'util', 'emuIni.js'));
 
@@ -98,7 +99,7 @@ function findSteamSettings(gameDir, maxDepth = 6) {
   const scoreSteamSettings = (dir, depth) => {
     let score = -depth;
     try {
-      const entries = fs.readdirSync(dir).map((e) => e.toLowerCase());
+      const entries = (dirCache.readdirNames(dir) || []).map((e) => e.toLowerCase());
       if (entries.includes('achievements.json')) score += 100;
       if (entries.some((e) => GBE_CONFIG_FILES.includes(e) || CLASSIC_CONFIG_FILES.includes(e))) score += 50;
       if (entries.includes('steam_appid.txt')) score += 20;
@@ -116,12 +117,8 @@ function findSteamSettings(gameDir, maxDepth = 6) {
   };
   const walk = (dir, depth) => {
     if (depth > maxDepth) return;
-    let entries;
-    try {
-      entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
+    const entries = dirCache.readdir(dir);
+    if (!entries) return;
     for (const e of entries) {
       if (!e.isDirectory()) continue;
       if (e.name.toLowerCase() === 'steam_settings') {
@@ -275,11 +272,7 @@ function restoreSetup({ backupDir, gameDir } = {}) {
 }
 
 function listShallow(dir) {
-  try {
-    return fs.readdirSync(dir);
-  } catch {
-    return [];
-  }
+  return dirCache.readdirNames(dir) || [];
 }
 
 // Identify which Steam emulator a game folder is set up with, by inspecting on-disk signatures.
@@ -295,12 +288,8 @@ function detectEmulator(gameDir) {
   // over a large game folder dominated detectEmulator's cost; this matches findSteamSettings/walk below.
   const findDll = (dir, depth) => {
     if (depth > 4) return;
-    let entries;
-    try {
-      entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
+    const entries = dirCache.readdir(dir);
+    if (!entries) return;
     for (const e of entries) {
       const lower = e.name.toLowerCase();
       if (e.isDirectory()) {
@@ -1235,12 +1224,8 @@ function findCompatibleGames(roots, { maxDepth = 5, onSkip = null } = {}) {
     const candidates = [];
     const walk = (dir, depth) => {
       if (depth > maxSearchDepth) return;
-      let entries;
-      try {
-        entries = fs.readdirSync(dir, { withFileTypes: true });
-      } catch {
-        return;
-      }
+      const entries = dirCache.readdir(dir);
+      if (!entries) return;
       for (const e of entries) {
         if (e.isFile() && APPID_CONFIG_FILES.has(e.name.toLowerCase())) {
           const full = path.join(dir, e.name);
@@ -1344,12 +1329,8 @@ function findCompatibleGames(roots, { maxDepth = 5, onSkip = null } = {}) {
 
   const walk = (dir, depth) => {
     if (depth > maxDepth) return;
-    let entries;
-    try {
-      entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
+    const entries = dirCache.readdir(dir);
+    if (!entries) return;
     const marker = gameRootMarker(dir, entries);
     if (marker) {
       // A game Steam installed is not an emulator install, however much it looks like one here: it

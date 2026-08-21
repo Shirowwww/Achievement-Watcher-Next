@@ -10,6 +10,17 @@
 <link rel="apple-touch-icon" href="{{ '/assets/favicon.png' | relative_url }}" />
 
 <!--
+  The site is published in one language (site.lang in _config.yml, which the theme layout also puts
+  on <html>). Declaring it here as well is what browser translation, screen readers and link
+  previews read, and it is the hook a second language would hang off: adding one means adding an
+  alternate hreflang beside this, not reworking the pages.
+  The localization strategy for the app and for this site is docs/localization.md.
+-->
+<meta http-equiv="content-language" content="{{ site.lang | default: 'en' }}" />
+<meta property="og:locale" content="{{ site.lang | default: 'en' | replace: '-', '_' }}" />
+<link rel="alternate" hreflang="{{ site.lang | default: 'en' }}" href="{{ page.url | absolute_url }}" />
+
+<!--
   Light/dark toggle for the documentation site.
 
   The theme's default layout includes this file inside <head>, which is what makes the first script
@@ -31,6 +42,22 @@
       /* private mode or blocked storage: fall back to the system preference */
     }
   })();
+
+  /*
+    Every word this file puts on screen, in one place.
+
+    The pages themselves are Markdown and are translated by translating the Markdown; these few
+    strings are built by script and would otherwise be the one part of the site a translator could
+    not reach. Keeping them here means a translated build is a copy of this object, not a hunt
+    through the code. See docs/localization.md.
+  */
+  var SITE_STRINGS = {
+    toLightTheme: 'Switch to the light theme',
+    toDarkTheme: 'Switch to the dark theme',
+    lightTheme: 'Light theme',
+    darkTheme: 'Dark theme',
+    alerts: { NOTE: 'Note', TIP: 'Tip', IMPORTANT: 'Important', WARNING: 'Warning', CAUTION: 'Caution' },
+  };
 
   document.addEventListener('DOMContentLoaded', function () {
     var root = document.documentElement;
@@ -56,8 +83,8 @@
       var dark = effectiveTheme() === 'dark';
       // The control offers the other mode, so it shows the icon of what it switches to.
       button.innerHTML = dark ? SUN : MOON;
-      button.setAttribute('aria-label', dark ? 'Switch to the light theme' : 'Switch to the dark theme');
-      button.setAttribute('title', dark ? 'Light theme' : 'Dark theme');
+      button.setAttribute('aria-label', dark ? SITE_STRINGS.toLightTheme : SITE_STRINGS.toDarkTheme);
+      button.setAttribute('title', dark ? SITE_STRINGS.lightTheme : SITE_STRINGS.darkTheme);
     }
 
     button.addEventListener('click', function () {
@@ -90,7 +117,7 @@
       where it is authored and on github.com - so the marker is turned into the same kind of box
       here instead.
     */
-    var ALERTS = { NOTE: 'Note', TIP: 'Tip', IMPORTANT: 'Important', WARNING: 'Warning', CAUTION: 'Caution' };
+    var ALERTS = SITE_STRINGS.alerts;
     var quotes = document.querySelectorAll('.markdown-body blockquote');
 
     Array.prototype.forEach.call(quotes, function (quote) {

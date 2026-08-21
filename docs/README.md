@@ -34,6 +34,7 @@ Read in order, or jump to what you need - every page ends with a link to the nex
 | [Goldberg / GBE setup](emulator-setup.md) | Diagnose or repair an emulated Steam game |
 | [Uplay R2 setup](uplay-r2.md) | The Ubisoft equivalent, for compatible titles |
 | [Comparison](comparison.md) | How AW Next differs from Achievement Watcher 2.x and Achievements |
+| [Localization](localization.md) | The 28 bundled languages, what is deliberately not translated, and why this site is English |
 
 The in-app **Settings → Help** tab is the quickest reference while you are using the app. It reflects
 your actual configuration - overlay hotkey, controller layout and bindings, notification mode, theme,
@@ -50,6 +51,7 @@ Lower-level documentation for contributors and for anyone building AW Next from 
 | App, renderer and Watchdog boundaries; the parser contract | [Architecture](architecture.md) |
 | Goldberg / GBE file formats, detection and repair invariants | [Goldberg / GBE reference](goldberg-gbe.md) |
 | Versioning, publishing, CI and auto-update validation | [Release workflow](RELEASE_WORKFLOW.md) |
+| Translation, Intl formatting, link routing and the locale linter | [Localization](localization.md) |
 | Locale files and the key-parity rules | [app/locale/README.md](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/app/locale/README.md) |
 
 ## Where your data lives

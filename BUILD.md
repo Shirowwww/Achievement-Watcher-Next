@@ -63,10 +63,13 @@ It is not installed as a user or machine environment variable. The packaged desk
 
 ### Library performance diagnostics
 
-Development builds write three lightweight `[perf]` entries to the renderer log: time to paint the
-last complete local library, time to the first freshly scanned tile, and total fresh-scan time. The
-first value appears from the second launch onward when the library settings have not changed. These
-timings do not add polling or delay startup work.
+Development builds write lightweight `[perf]` entries to the renderer log: renderer module load
+time, time to paint the last complete local library (with the per-tile breakdown), time to the first
+freshly scanned tile, and total fresh-scan time. The parser log adds one line per discovery with its
+per-source breakdown, and the main log reports how long the window took to become showable. The
+first paint value appears from the second launch onward when the library settings have not changed.
+These timings do not add polling or delay startup work; set `AW_PERF=1` to get them from a packaged
+build.
 
 The local-state microbenchmark uses synthetic data and writes only below the system temporary
 directory:
@@ -80,6 +83,20 @@ changed from 570 ms of repeated whole-file writes to 15 ms with one batched writ
 lookups changed from 255 ms to 18 ms through the shared in-process index. Restoring a deliberately
 heavy 500-game snapshot containing 50,000 achievement rows took 14 ms (3.95 MB). Treat the absolute
 numbers as machine-specific; the benchmark exists to catch regressions in the work shape.
+
+The discovery-walk benchmark runs against real install folders, so it takes the roots to scan as
+arguments and exits quietly when none of them exist:
+
+```powershell
+node tools/benchmark-discovery-walk.js C:\Games
+```
+
+It reports the same walk four ways - with no memo, memoized cold, memoized warm, and with the
+executable memo reloaded from disk the way the next launch sees it - and fails if any pass detects a
+different executable than the plain walk. On the same development machine, a library whose largest
+game folder holds ~33,000 directories went from 24,464 directory reads and 1.6 s to 4,167 reads and
+0.34 s once each folder is read at most once per scan and the executable search is remembered per
+install folder.
 
 ### Driving the running app
 
@@ -129,6 +146,20 @@ link/anchor checks. Its categories and focused-run commands are documented in
 helpers.
 
 The app suite includes real-DOM checks for the game list, rarity display, settings filter and sorting. They need a Chromium-family browser, try each installed candidate in turn (an installed browser is not always a launchable one), and skip - printing why - only when none will start. Point them at a specific binary with `PUPPETEER_EXECUTABLE_PATH`.
+
+After touching a user-visible string, a locale file or an external link, run the locale linter. It
+reports every finding at once, which is faster to act on than the assertion the suite stops at:
+
+```powershell
+node tools/locale-lint.js
+```
+
+It covers key parity, empty values, placeholder and markup drift against English, English prose
+copied into another language, a `t()` slug with no entry, interface text hardcoded in JavaScript,
+and Achievement Watcher addresses written outside `app/util/links.js`. Every rule also runs in
+`npm test`, so this is a convenience rather than an extra gate. `--pseudo` writes a pseudo-locale to
+`scratch/pseudo.json` for a visual pass; the full strategy is in
+[docs/localization.md](docs/localization.md).
 
 Before handing off a change, also run:
 

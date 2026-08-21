@@ -7,6 +7,26 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Help now links to the documentation site.** A row at the top of Settings > Help opens the
+  guides, the FAQ, the troubleshooting page, the issue tracker and the latest release. Its labels
+  are translated into every bundled language.
+- **Steam Achievement Notifier themes can be imported.** A new button in Settings > Presets reads a
+  `.san` theme (or the `usertheme.json` of one SAN already unpacked) and converts it into an ordinary
+  AW Next preset: colours, gradient, corners, opacity, font sizes and colours, outline, glow with its
+  colour and animation, rarity colours, text shadow and outline, icon size, rounding, border and glow,
+  display time, travel direction, game name, rarity figure, background picture and sound. The result
+  is a normal generated preset, editable in the designer and exportable as an `.awpreset`, and it
+  records where it came from. Nothing in a theme file is ever executed, paths cannot leave the package,
+  and only pictures and audio are extracted. Whatever could not be carried over is listed by name
+  after the import instead of being dropped in silence.
+- **A preset can use a picture of your own as its background.** A fourth background mode beside solid,
+  gradient and game artwork, sharing the same dimming, blur and framing controls. The picture is
+  copied into the preset, so it travels with it in an `.awpreset`.
+- **Two more ways to shape a preset:** an outline drawn around every glyph, for text sitting on a
+  bright picture, and a glow that pulses or breathes instead of staying still.
+- **Six more starting points in the preset designer** - Paper, Ember, Frost, Poster, Pixel and Ribbon,
+  including the first light design - and Surprise me now picks a kind of card first and rolls every
+  control inside what that kind allows, instead of varying a handful of them.
 - **The library now has six reusable views:** the existing landscape cards remain the default,
   portrait covers remain available, and compact landscape, compact portrait, list, and details fit more games
   or expose recent activity. A localized dropdown beside the Add game button switches and saves the
@@ -42,12 +62,88 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   `steam_appid.txt` value remain confirmation-only fallbacks; a validated manual choice is remembered
   for that install.
 
+- **Ten more interface languages, bringing the bundled set to 28.** Korean, Traditional Chinese,
+  Dutch, Swedish, Danish, Norwegian, Finnish, Greek, Indonesian and Vietnamese are translated in
+  full, with the same key parity, placeholder and markup rules as the existing languages, and each
+  one uses the vocabulary its own Steam client uses rather than a literal rendering of the English.
+  They come with their controller vocabulary for the overlay hint, their date, number and duration
+  formats, and their achievement metadata language for every official source. No right-to-left
+  language is included: the interface does not support RTL yet, and adding one would need that
+  work first.
+
+### Fixed
+
+- **Slovak users read English achievement titles from every official source.** Slovak was bundled as
+  an interface language but was missing from the language table of all five official sources
+  (Exophase, Epic, Xbox, and both Ubisoft readers), and from the copy of the Steam language list the
+  Watchdog reads. A missing entry there never failed, it just quietly served English. Every bundled
+  language is now checked against those tables by the locale linter.
+- **The Watchdog announced achievements with wording the app had abandoned.** Its copy of the
+  notification strings was maintained by hand and had drifted: Hungarian and Italian notifications
+  still said "Eredmeny" and "Risultato" long after the interface settled on "Teljesitmeny" and
+  "Obiettivo". The copy is generated from the locale files now, and the suite compares its content
+  rather than only its key set.
+- **The rarity colours in the preset designer were labelled upside down.** The tier is gold below
+  3%, silver below 6% and bronze above, so bronze is the least rare of the three, but bronze was
+  labelled "Scarce colour" and silver "Uncommon colour". The two labels are swapped, in English and
+  in every language.
+- Sixty em and en dashes had accumulated across the locale files, three of them in the English
+  reference every translation is made from. They are plain hyphens now, and the locale linter
+  rejects new ones.
+- Steam's language list was missing Indonesian and recorded the wrong Web API code for Vietnamese.
+- **Played time was shown in English to Simplified Chinese and Brazilian Portuguese users.** The
+  language tag the app derived for those two was not one the duration library recognised, and its
+  fallback setting turned that into English without reporting anything. Durations, dates, relative
+  times, counts and percentages are now produced by the platform's own `Intl` support, which covers
+  every bundled language.
+- Artwork stored as a schema token - "header.jpg", "library_600x900.jpg", a bare Steam content hash -
+  is now resolved through the CDN list instead of being handed to a download that cannot succeed.
+  Games whose schema holds tokens rather than URLs (most Goldberg entries) had their header, portrait
+  and icon all silently unavailable, which left the icon box either empty or filled with the blurred
+  store page background, the one absolute URL such a schema carries.
+
 ### Changed
 
+- **Dates, relative times, played time and numbers now follow the selected language rather than
+  being assembled from translated fragments.** "Achievements checked 3 days ago" is one sentence per
+  language with the delay supplied by the system, so the plural rules, separators and date order are
+  right in all 28 without three keys per language to keep in step.
+- **Every Achievement Watcher address the app can open now lives in one registry.** Interface markup
+  names a destination rather than a URL, so the documentation, download, issue and credit links
+  cannot drift apart or survive a repository rename. Tests check that each in-app documentation link
+  resolves to a page the site actually publishes.
+- Library tiles and the achievement page take their labels straight from the locale files instead of
+  carrying an English copy beside each one, which could ship as English in every language if a key
+  went missing.
+- Notification cards that show a game rather than an achievement (playtime, game progress, sources
+  with no achievement art) now use a real square logo. The community icon set is asked first, and
+  whatever artwork the game already has is cut into a high-resolution square otherwise, above its
+  title treatment instead of through it. The logo is resolved while the game is starting, so both
+  the popup and the Windows notification have it ready, and the Settings previews frame it exactly
+  like a real notification. A card whose artwork was missing or never downloaded no longer shows an
+  empty square: it falls through to the next available artwork, or hides the thumbnail.
+- **The achievement page header shows that same square logo.** It used to take Steam's 32x32
+  clienticon, which is a blurry stamp beside the game title, and left the box empty for the games
+  that have none - notably brand-new releases. The Game Health notification test and the borrowed
+  preview sample now ask for the logo the same way, so a game looks identical wherever it appears
+  and the fallback logic exists once.
 - Steam game titles now fall back to the Store appdetails response when Steam product info omits its common metadata, so newer games no longer appear under their numeric AppIDs.
 - The library now paints its last complete local state before discovery, then replaces changed
   games incrementally as the bounded fresh scan finishes. Development logs include first-paint,
   first-fresh-tile and completed-scan timings.
+- Library scans no longer walk the same folders several times over. Each directory is read once per
+  scan, and the executable search for an install folder is remembered until that folder changes, so
+  a rescan reuses it instead of re-reading a game tree that can hold tens of thousands of folders.
+- The background new-game check now compares folder timestamps first and only runs a real discovery
+  when something moved, with a full pass on a slower cadence for sources that live in a database or
+  the registry. An idle library no longer pays a full scan every few minutes.
+- With no working internet connection, a scan now stops after proving the Steam hosts unreachable
+  instead of retrying through the browser fallback for every game.
+- Painting the library from the saved snapshot no longer draws and discards a placeholder per game,
+  and the profile summary is refreshed once per batch rather than once per tile.
+- Controller navigation in the main window now starts polling when a controller reports itself
+  instead of running a frame loop for the whole session. An open, idle library no longer keeps the
+  renderer and the GPU process awake when the app is being used with mouse and keyboard.
 - Library cover downloads and decoding now begin only near the viewport. Game-index updates are
   persisted once per scan instead of rewriting the whole file per game, and duplicate platform
   watcher events are coalesced without adding polling.
@@ -68,6 +164,45 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **A game with no achievements, or one that is not installed, is no longer hidden.** The library
+  kept a game only when it had achievements or a verified installation, so fifteen owned games were
+  found on every scan and then dropped - ULTRAKILL, Lethal Company, R.E.P.O., VRChat and others.
+  They now appear like any other game, labelled "No achievements" where that is what they have. Only
+  a cache record with no save file and no install folder behind it is still left out.
+- **Owned and installed Steam games no longer have to be played to appear.** The Steam source read
+  only the client's per-game statistics files, which exist only once a game has actually reported
+  statistics - on one library that hid 59 apps Steam knew about locally, DELTARUNE, Ready or Not,
+  PUBG and Worms World Party among them. Installed games and, in "owned" mode, the account's own
+  Steam registry entries are now read as well, filtered against Steam's local app catalogue so DLC,
+  demos, soundtracks, dedicated servers, tools and redistributables stay out.
+- Library covers no longer appear in the wrong shape. A portrait grid painted a wide capsule (and
+  the landscape grid a tall cover) whenever the right artwork was not already on hand; the tile now
+  waits for art of its own shape and only falls back to the other one when no source has any.
+- "Could not fetch artwork. Check your connection." is now shown only when a source actually could
+  not be reached. A game that simply has no cover on the Steam CDN or SteamGridDB reports that
+  instead, which is most of the games that used to show the warning.
+- A cover that failed to download during a momentary outage is no longer remembered as missing for
+  the rest of the session, so the tile fills in on the next pass instead of staying blank until the
+  app is restarted.
+- Game titles resolve from the Steam client's own local catalogue before any request, so a rate
+  limit or an outage can no longer leave a game showing its numeric AppID as its name.
+- A scan started with an empty cache is much faster and far quieter. Games whose SteamDB page lists
+  no library cover are no longer looked up again on every scan, the Steam store lookup no longer
+  fails the whole metadata resolution when the store rate-limits it (which left games untitled and
+  their schema uncached, so the next scan downloaded everything again), and the same lookup is no
+  longer issued several times at once for one game.
+- With no connection, the library is the same as with one. Steam games no longer disappear because
+  the profile-visibility check could not run (an offline scan showed 51 of 207 games), the chosen
+  Steam account is no longer silently reset to None when the account list cannot be fetched, and
+  artwork lookups stop after the first few failures instead of costing every game its own timeout.
+  Clearing caches retries every source immediately.
+- Steam's product info can stop answering without ever failing, which held every scan worker until
+  the 30-second per-game deadline killed it - 24 installed games turned into placeholder tiles in a
+  single scan. It is now bounded, and skipped for a few minutes once it stops answering; the store
+  and the app list still resolve the game's name and artwork meanwhile.
+- A game no longer fails to load after 30 seconds because it was queued behind other games' cover
+  lookups. It falls through to the next artwork source, and the cover it was waiting for is still
+  picked up once available.
 - Library tiles and the cover picker now distinguish missing artwork from a failed network fetch and
   expose a localized Retry action.
 - Disabled official Steam games no longer enter the playtime tracker or block an update install.

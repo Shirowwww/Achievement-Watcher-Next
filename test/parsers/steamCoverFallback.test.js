@@ -157,3 +157,48 @@ test('the cached-schema repair path is wired to the same chain, on a retry stamp
   // Without a stamp a genuinely cover-less game would re-run both lookups on every single scan.
   assert.match(body, /portraitCheckedAt/, 'the attempt must be remembered so a miss is not retried every scan');
 });
+
+/*
+  SteamDB is the only step in this chain that runs a browser, and one global queue serializes every
+  game in the library through it. A cold scan therefore has games waiting on covers for games ahead
+  of them - inside the same 30s budget that decides whether the game loads at all. A user log shows
+  37 games failing at exactly 30s while that queue was still working through 8s-per-game pages.
+*/
+test('a slow SteamDB queue does not hold the game past its budget', async () => {
+  let steamdbSettled = false;
+  const { calls, invoke } = recorder({
+    // Still queued behind other games when this one's budget runs out.
+    'get-steamdb-cover': () =>
+      new Promise((resolve) => setTimeout(() => { steamdbSettled = true; resolve('https://cdn.st/late.jpg'); }, 200)),
+    'get-steamgriddb-cover': 'https://cdn2.steamgriddb.com/grid/abc.png',
+  });
+
+  const started = Date.now();
+  const portrait = await steam.resolvePortrait({ appid: 220, name: 'Half-Life 2', portrait: null, invoke, steamdbWaitMs: 20 });
+
+  assert.ok(Date.now() - started < 150, 'the wait is bounded, not the whole scrape');
+  assert.equal(steamdbSettled, false, 'and it really did give up before SteamDB answered');
+  assert.equal(portrait, 'https://cdn2.steamgriddb.com/grid/abc.png', 'the chain continues to the next source');
+  assert.deepEqual(calls, ['get-steam-cdn-covers-status', 'get-steamdb-cover', 'get-steamgriddb-cover']);
+});
+
+test('a SteamDB answer that arrives in time is still preferred', async () => {
+  const { calls, invoke } = recorder({
+    'get-steamdb-cover': () => new Promise((resolve) => setTimeout(() => resolve('https://cdn.st/library_600x900.jpg'), 5)),
+  });
+
+  const portrait = await steam.resolvePortrait({ appid: 787480, name: 'Phoenix Wright', portrait: null, invoke, steamdbWaitMs: 500 });
+
+  assert.equal(portrait, 'https://cdn.st/library_600x900.jpg');
+  assert.deepEqual(calls, ['get-steam-cdn-covers-status', 'get-steamdb-cover']);
+});
+
+test('a rejected SteamDB lookup falls through instead of failing the resolution', async () => {
+  const { invoke } = recorder({
+    'get-steamdb-cover': () => Promise.reject(new Error('Execution context was destroyed')),
+    'get-steamgriddb-cover': 'https://cdn2.steamgriddb.com/grid/xyz.png',
+  });
+
+  const portrait = await steam.resolvePortrait({ appid: 400, name: 'Portal', portrait: null, invoke });
+  assert.equal(portrait, 'https://cdn2.steamgriddb.com/grid/xyz.png');
+});

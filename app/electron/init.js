@@ -5,6 +5,8 @@ const { app } = require('electron');
 const { APP_DATA_DIR_NAME } = require('../util/userDataPath.js');
 const { migrateLegacyUserData, migrateAw3UserData, migrateSouvenirFolder, retargetBackupIndex } = require('../util/migrateUserData.js');
 const { deriveWatchdogState } = require('../util/watchdogState.js');
+const links = require('../util/links.js');
+const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
 app.setName('Achievement Watcher');
 // Keep 3.x data separate from the legacy folder; --user-data-dir still overrides it for tests.
 const cliUserDataDir = (() => {
@@ -54,7 +56,6 @@ autoUpdater.disableDifferentialDownload = true;
 // Accept the project's self-signed publisher through the tested verifier.
 autoUpdater.verifyUpdateCodeSignature = (publisherNames, tempUpdateFile) =>
   verifyUpdateCodeSignature(publisherNames, tempUpdateFile, (message) => debug.log(message));
-const UPDATE_RELEASES_URL = 'https://github.com/Shirowwww/Achievement-Watcher-Next/releases';
 let updateCheckTimer = null;
 let updatePromptOpen = false;
 let updaterErrorNotified = false;
@@ -227,7 +228,7 @@ async function notifyChecksumRecoveryFailed(message, cacheDir) {
       defaultId: 0,
       cancelId: 1,
     });
-    if (response === 0) shell.openExternal(UPDATE_RELEASES_URL).catch(() => {});
+    if (response === 0) shell.openExternal(links.releases).catch(() => {});
   } catch (err) {
     debug.log(`[updater] could not show the recovery-failed dialog: ${err.message || err}`);
   } finally {
@@ -412,6 +413,24 @@ const BASE_URL = 'https://www.steamgriddb.com/api/v2';
 const DEFAULT_API_KEY = '2a9d32ddd0bfe4e1191b4f6ff56fef60'; // bundled public fallback (rate-limited)
 // Bound artwork requests so a dead network cannot stall a scan for minutes.
 const SGDB_FETCH_TIMEOUT_MS = 8000;
+/*
+  Bounding each request is not enough on its own: artwork is requested per game, so an unreachable
+  SteamGridDB still costs the whole library one timeout each, in sequence (120 "fetch failed" lines
+  in one offline user log). Same breaker as the Steam hosts - a few consecutive transport failures
+  and the rest of the scan gets the same empty answer instantly, until any success closes it.
+*/
+const SGDB_COOLDOWN_MS = 5 * 60 * 1000;
+const sgdbCircuit = createNetworkCircuit({ failureLimit: 3, cooldownMs: SGDB_COOLDOWN_MS, shouldCount: isSteamTransportFailure });
+
+function steamGridDbUnavailable() {
+  return sgdbCircuit.unavailable();
+}
+
+function recordSteamGridDbFailure(err, context) {
+  if (!sgdbCircuit.recordFailure(err)) return false;
+  debug.log(`[steamgriddb] unreachable (${context}) - skipping artwork lookups for ${SGDB_COOLDOWN_MS / 60000} minutes`);
+  return true;
+}
 const startupArgs = normalizeWindowArgs(minimist(process.argv.slice(1)));
 const safeMode = startupArgs['safe-mode'] === true || startupArgs.safeMode === true || startupArgs['reset-window'] === true;
 
@@ -449,37 +468,112 @@ const STEAM_FETCH_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 const STEAM_KEYLESS_TIMEOUT_MS = 10000;
 const STEAM_CLIENT_LOGIN_TIMEOUT_MS = 5000;
-const STEAM_TRANSPORT_FAILURE_LIMIT = 2;
 const STEAM_TRANSPORT_COOLDOWN_MS = 5 * 60 * 1000;
-let steamTransportFailures = 0;
-let steamTransportSkipUntil = 0;
-
-function isSteamTransportFailure(err) {
-  const text = String((err && (err.code || err.message)) || err || '').toLowerCase();
-  return /enotfound|name_not_found|eai_again|econnrefused|econnreset|etimedout|timeout|fetch failed|network|socket|dns/.test(text);
-}
+const steamTransportCircuit = createNetworkCircuit({
+  failureLimit: 2,
+  cooldownMs: STEAM_TRANSPORT_COOLDOWN_MS,
+  shouldCount: isSteamTransportFailure,
+});
 
 function steamTransportUnavailable() {
-  return Date.now() < steamTransportSkipUntil;
+  return steamTransportCircuit.unavailable();
 }
 
 function recordSteamTransportFailure(err) {
-  if (!isSteamTransportFailure(err)) return;
-  steamTransportFailures += 1;
-  if (steamTransportFailures < STEAM_TRANSPORT_FAILURE_LIMIT) return;
-  steamTransportFailures = 0;
-  steamTransportSkipUntil = Date.now() + STEAM_TRANSPORT_COOLDOWN_MS;
+  if (!steamTransportCircuit.recordFailure(err)) return;
   debug.log(`[steam] network unavailable - skipping repeated Steam lookups for ${STEAM_TRANSPORT_COOLDOWN_MS / 60000} minutes`);
 }
 
 function recordSteamTransportSuccess() {
-  steamTransportFailures = 0;
-  steamTransportSkipUntil = 0;
+  steamTransportCircuit.recordSuccess();
 }
 
 function resetSteamTransportCircuit() {
-  steamTransportFailures = 0;
-  steamTransportSkipUntil = 0;
+  steamTransportCircuit.reset();
+  storeAppDetailsCircuit.reset();
+  productInfoCircuit.reset();
+}
+
+/*
+  store.steampowered.com/api/appdetails is rate-limited per IP (a few hundred calls per 5 minutes).
+  A cleared cache asks for it once per game, so a large library blows through the budget in seconds
+  and every remaining call comes back as an HTML block page or a bare `null` body. A user log shows
+  1066 "Unexpected token '<', "<HTML><HEA"" parse errors and 162 "Cannot read properties of null" in
+  one evening, all from this one fetch - and none of them are network errors, so the transport
+  breaker above never sees them.
+
+  The lookup is optional: resolveSteamMetadata prefers product info, and the store payload only
+  fills gaps. So once the endpoint starts refusing, stop asking for the rest of the scan instead of
+  paying a request and an exception per game.
+*/
+const STORE_APPDETAILS_COOLDOWN_MS = 5 * 60 * 1000;
+const storeAppDetailsCircuit = createNetworkCircuit({ failureLimit: 2, cooldownMs: STORE_APPDETAILS_COOLDOWN_MS });
+
+// Read the store payload defensively: an error page is not JSON, and a throttled call answers with
+// a literal `null` body under a 200. Neither is worth an exception.
+async function fetchStoreAppDetails(appid) {
+  if (storeAppDetailsCircuit.unavailable()) return null;
+  const url = `https://store.steampowered.com/api/appdetails?appids=${appid}&cc=us&l=en`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS) });
+  if (!res.ok || !/json/i.test(res.headers.get('content-type') || '')) {
+    if (storeAppDetailsCircuit.recordFailure()) {
+      debug.log(
+        `[store] appdetails refused (HTTP ${res.status}) - skipping the store lookup for ${
+          STORE_APPDETAILS_COOLDOWN_MS / 60000
+        } minutes; product info still resolves names and artwork`
+      );
+    }
+    return null;
+  }
+  const json = await res.json().catch(() => null);
+  if (!json) {
+    if (storeAppDetailsCircuit.recordFailure()) {
+      debug.log(`[store] appdetails returned an empty body (throttled) - skipping it for ${STORE_APPDETAILS_COOLDOWN_MS / 60000} minutes`);
+    }
+    return null;
+  }
+  storeAppDetailsCircuit.recordSuccess();
+  return (json[appid] && json[appid].data) || null;
+}
+
+/*
+  steam-user's product info runs over one connection and queues, and nothing on our side bounded it.
+  A cold scan shows what that costs: all eight scan workers block on it at the same instant and are
+  killed together by the 30s per-game budget - 24 games in one run, every one of them a real install
+  reduced to a provisional tile, retried (and stalled again) on the next scan.
+
+  Bound it, and stop asking once it has hung twice: product info is the preferred metadata source,
+  not the only one. The store payload and the app-list name still resolve a usable title, which is
+  what decides whether the schema can be cached at all.
+*/
+const STEAM_PRODUCT_INFO_TIMEOUT_MS = 12000;
+const STEAM_PRODUCT_INFO_COOLDOWN_MS = 5 * 60 * 1000;
+const productInfoCircuit = createNetworkCircuit({ failureLimit: 2, cooldownMs: STEAM_PRODUCT_INFO_COOLDOWN_MS });
+
+async function fetchSteamProductInfo(appid) {
+  if (productInfoCircuit.unavailable()) return null;
+  let timer;
+  try {
+    const answer = await Promise.race([
+      client.getProductInfo([appid], [], false),
+      new Promise((resolve, reject) => {
+        timer = setTimeout(() => reject(new Error(`product info timed out after ${STEAM_PRODUCT_INFO_TIMEOUT_MS / 1000}s`)), STEAM_PRODUCT_INFO_TIMEOUT_MS);
+      }),
+    ]);
+    productInfoCircuit.recordSuccess();
+    return answer;
+  } catch (err) {
+    if (productInfoCircuit.recordFailure()) {
+      debug.log(
+        `[steam] product info is not answering (${err.message || err}) - falling back to the store and the app list for ${
+          STEAM_PRODUCT_INFO_COOLDOWN_MS / 60000
+        } minutes`
+      );
+    }
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 let client; //lazyload SteamUser
@@ -501,26 +595,19 @@ const steamGroupsCache = new Map();
   Only transport failures count. An HTTP error is a real answer from a reachable host and leaves the
   breaker alone, and any success closes it immediately.
 */
-const STEAM_GROUPS_FAILURE_LIMIT = 3;
 const STEAM_GROUPS_COOLDOWN_MS = 5 * 60 * 1000;
-let steamGroupsFailures = 0;
-let steamGroupsSkipUntil = 0;
+const steamGroupsCircuit = createNetworkCircuit({ failureLimit: 3, cooldownMs: STEAM_GROUPS_COOLDOWN_MS });
 
 function steamGroupsUnavailable() {
-  return Date.now() < steamGroupsSkipUntil;
+  return steamGroupsCircuit.unavailable();
 }
 
 function recordSteamGroupsFailure() {
-  steamGroupsFailures++;
-  if (steamGroupsFailures < STEAM_GROUPS_FAILURE_LIMIT) return false;
-  steamGroupsSkipUntil = Date.now() + STEAM_GROUPS_COOLDOWN_MS;
-  steamGroupsFailures = 0;
-  return true;
+  return steamGroupsCircuit.recordFailure();
 }
 
 function recordSteamGroupsSuccess() {
-  steamGroupsFailures = 0;
-  steamGroupsSkipUntil = 0;
+  steamGroupsCircuit.recordSuccess();
 }
 const STEAM_GROUPS_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -823,7 +910,42 @@ async function getAchievementsKeyless(appid, lang) {
   return { achievements: [], source: 'none' };
 }
 
+/*
+  One appid is asked for the same thing several times at once: the notification path requests
+  'steamhunters' and 'common' together, the library requests metadata per tile, and a cold scan runs
+  eight games in parallel over shared sources. A user log shows 162 store lookups for 39 appids -
+  four network round trips each where one answer would have served every caller.
+
+  Coalescing is per (type, appid, language) and lasts only as long as the request is in flight; a
+  completed answer is cached by the callers themselves (steam_cache), not here. Each caller gets its
+  own copy, because several of them mutate what they receive.
+*/
+const COALESCED_STEAM_TYPES = new Set(['common', 'name', 'header', 'icon', 'portrait', 'data', 'steamhunters']);
+const steamDataInFlight = new Map();
+
+function copySteamData(value) {
+  if (value === null || typeof value !== 'object') return value;
+  try {
+    return structuredClone(value);
+  } catch {
+    return value; // non-cloneable payloads are handed back as-is rather than lost
+  }
+}
+
 async function getSteamData(request) {
+  const type = request.type;
+  if (!COALESCED_STEAM_TYPES.has(type)) return resolveSteamData(request);
+  const lang = request.lang || 'english';
+  const key = `${type}\0${request.appid}\0${typeof lang === 'string' ? lang : lang.api}`;
+  let pending = steamDataInFlight.get(key);
+  if (!pending) {
+    pending = resolveSteamData(request).finally(() => steamDataInFlight.delete(key));
+    steamDataInFlight.set(key, pending);
+  }
+  return copySteamData(await pending);
+}
+
+async function resolveSteamData(request) {
   const appid = request.appid;
   const type = request.type;
   let user = request.user;
@@ -984,11 +1106,8 @@ async function getSteamData(request) {
     }
     if (steamTransportUnavailable()) return { appid, networkError: true };
     await clientLogOn();
-    const storeURL = `https://store.steampowered.com/api/appdetails?appids=${appid}&cc=us&l=en`;
-    const storeRes = await fetch(storeURL, { signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS) });
-    const json = await storeRes.json();
-    const storeData = json[appid] && json[appid].data;
-    const { apps, packages, unknownApps, unknownPackages } = await client.getProductInfo([appid], [], false);
+    const storeData = await fetchStoreAppDetails(appid);
+    const apps = (await fetchSteamProductInfo(appid))?.apps || {};
     const appInfo = apps[appid]?.appinfo || apps[0]?.appinfo;
     const metadata = resolveSteamMetadata({
       appInfo,
@@ -1225,12 +1344,14 @@ async function resolveImagesForGame(arg) {
       if (cached && typeof cached === 'object') return cached;
     }
   } catch {}
+  if (steamGridDbUnavailable()) return null;
   const apiKey = getSteamGridDbApiKey();
   // Time-box artwork requests so network failures return quickly.
   const sgdb = (url) =>
     fetch(url, { headers: { Authorization: `Bearer ${apiKey}` }, signal: AbortSignal.timeout(SGDB_FETCH_TIMEOUT_MS) });
   try {
     const searchRes = await sgdb(`${BASE_URL}/search/autocomplete/${encodeURIComponent(gameName)}`);
+    sgdbCircuit.recordSuccess();
 
     const searchData = await searchRes.json();
     // Error payloads may omit data.
@@ -1273,6 +1394,7 @@ async function resolveImagesForGame(arg) {
     } catch {}
     return result;
   } catch (err) {
+    recordSteamGridDbFailure(err, 'artwork lookup');
     debug.log(`[get-images-for-game] ${gameName}: ${err.message}`);
     return null;
   }
@@ -2093,6 +2215,8 @@ function recordBackgroundScanMisses(discoveredIds, renderedList) {
   }
 }
 const BG_AUTOFIX_INTERVAL_MS = 15 * 60 * 1000;
+const BG_AUTOFIX_FULL_EVERY_TICKS = 4; // ~1 hour
+let bgAutoFixTicks = 0;
 
 function notifyEmulatorFixed(game) {
   try {
@@ -2125,6 +2249,10 @@ async function runBackgroundAutoFix(reason) {
     // Once a baseline exists, do a cheap discovery-only poll first and run the heavier full scan only
     // when a genuinely new install appears (mirrors the renderer's runNewGameScan).
     if (bgKnownAppids !== null) {
+      // Same cheap pre-check as the renderer's poll: stat the folders the last scan read instead of
+      // walking them again. A full pass still runs every few hours for the database/registry sources.
+      bgAutoFixTicks += 1;
+      if (bgAutoFixTicks % BG_AUTOFIX_FULL_EVERY_TICKS !== 0 && achievementsJS.discoveryInputsUnchanged?.()) return;
       const discovered = await achievementsJS.detectInstalledAppids(configJS);
       const fresh = discovered.filter(
         (id) => !bgKnownAppids.has(String(id)) && (bgUnrenderableAppids.get(String(id)) || 0) < BG_UNRENDERABLE_MISS_LIMIT
@@ -2251,6 +2379,13 @@ async function startPuppeteer(headless, strip) {
 }
 
 async function scrapeWithPuppeteer(info = { appid: 269770 }, alternate) {
+  // The browser fallback is the slowest path there is: launching Chromium and waiting out a failed
+  // navigation costs ~10s per game. When the plain-HTTP chain has already proven the host
+  // unreachable, there is nothing left for it to find.
+  if (steamTransportUnavailable()) {
+    debug.log(`[${info.appid}] skipping the browser fallback - Steam hosts are unreachable`);
+    return;
+  }
   return withScrapeLease(currentlyscraping, alternate, async () => {
     await startPuppeteer(alternate, alternate?.steamhunters);
     try {
@@ -2279,7 +2414,9 @@ async function scrapeWithPuppeteer(info = { appid: 269770 }, alternate) {
                 });
               });
               info.users = users;
+              recordSteamTransportSuccess();
             } catch (e) {
+              recordSteamTransportFailure(e);
               debug.log(e);
             }
             return;
@@ -2312,8 +2449,10 @@ async function scrapeWithPuppeteer(info = { appid: 269770 }, alternate) {
               });
             });
             info.achievements = results;
+            recordSteamTransportSuccess();
             debug.log(`[${info.appid}] steamhunters took ${(Date.now() - start) / 1000}s`);
           } catch (e) {
+            recordSteamTransportFailure(e);
             debug.log(e);
           }
           return;
@@ -2352,6 +2491,27 @@ const steamdbCoversInFlight = new Map();
 let steamdbCoversQueue = Promise.resolve();
 let artworkCacheGeneration = 0;
 
+/*
+  Two things make this the most expensive lookup in a cold scan, and both used to be unbounded.
+
+  A game whose SteamDB page lists no library asset costs the full waitForSelector timeout, and the
+  result was never written to disk - so the same games were re-scraped on every scan, forever. A
+  user log shows 8.1s per miss, strictly serialized (one queue), and the same fifteen appids paying
+  it again on each of nine scans in one evening: the whole library refresh was gated behind it.
+  A miss is an answer, so it is cached too - on a shorter TTL, since a game CAN gain a capsule.
+
+  And offline the scrape has no breaker of its own: every game still opened a page and waited for a
+  navigation that DNS had already refused (66 in the same log).
+*/
+const STEAMDB_COVERS_TTL = 30 * 24 * 60 * 60 * 1000;
+const STEAMDB_COVERS_MISS_TTL = 7 * 24 * 60 * 60 * 1000;
+const STEAMDB_COVERS_COOLDOWN_MS = 5 * 60 * 1000;
+const steamdbCoversCircuit = createNetworkCircuit({
+  failureLimit: 2,
+  cooldownMs: STEAMDB_COVERS_COOLDOWN_MS,
+  shouldCount: isSteamTransportFailure,
+});
+
 function filterSteamDbCoversByOrientation(urls, orientation) {
   const list = Array.isArray(urls) ? urls : [];
   if (String(orientation || '').toLowerCase() === 'landscape') {
@@ -2367,16 +2527,20 @@ async function fetchSteamDbCovers(appid, orientation = 'portrait') {
   if (!/^\d+$/.test(id)) return [];
   const generation = artworkCacheGeneration;
   const cacheFile = path.join(steamdbCoversDir, `${id}.json`);
-  const TTL = 30 * 24 * 60 * 60 * 1000;
   try {
-    if (fs.existsSync(cacheFile) && Date.now() - fs.statSync(cacheFile).mtimeMs < TTL) {
+    if (fs.existsSync(cacheFile)) {
       const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-      if (Array.isArray(cached.urls)) return filterSteamDbCoversByOrientation(cached.urls, orientation);
+      if (Array.isArray(cached.urls)) {
+        const ttl = cached.urls.length ? STEAMDB_COVERS_TTL : STEAMDB_COVERS_MISS_TTL;
+        if (Date.now() - fs.statSync(cacheFile).mtimeMs < ttl) return filterSteamDbCoversByOrientation(cached.urls, orientation);
+      }
     }
   } catch {
     /* stale/corrupt -> refetch */
   }
   if (steamdbCoversInFlight.has(id)) return steamdbCoversInFlight.get(id);
+  // The host proved itself unreachable moments ago; do not open a page per game to prove it again.
+  if (steamdbCoversCircuit.unavailable()) return [];
 
   const scrape = async () => {
     const steamdbCover = require(path.join(app.getAppPath(), 'parser/steamdbCover.js'));
@@ -2389,28 +2553,41 @@ async function fetchSteamDbCovers(appid, orientation = 'portrait') {
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121 Safari/537.36'
       );
       await page.goto(`https://steamdb.info/app/${id}/info/`, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      // The assets table is server-rendered, so a page that has it resolves this immediately. The
+      // timeout is only ever paid in full by a game that has none, once per miss now that misses
+      // are cached - it does not need to be generous.
       await page
-        .waitForSelector('a[href*="library_600x900.jpg"], a[href*="library_capsule"], #js-assets-table', { timeout: 8000 })
+        .waitForSelector('a[href*="library_600x900.jpg"], a[href*="library_capsule"], #js-assets-table', { timeout: 3000 })
         .catch(() => {});
       const html = await page.evaluate(() => {
         const assets = document.querySelector('#js-assets-table');
         return assets ? assets.outerHTML : document.documentElement.innerHTML;
       });
       const urls = steamdbCover.coversFromHtml(id, html);
-      if (urls.length && generation === artworkCacheGeneration) {
+      steamdbCoversCircuit.recordSuccess();
+      // A page that loaded and listed nothing is a real answer: cache it (shorter TTL) so the next
+      // scan reads it instead of re-opening the browser. Only a reached page may write a miss - a
+      // failed navigation lands in the catch below and leaves the cache alone.
+      if (generation === artworkCacheGeneration) {
         try {
           fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
           fs.writeFileSync(cacheFile, JSON.stringify({ appid: id, urls }, null, 2));
         } catch {
           /* cache write failure is non-fatal */
         }
-        debug.log(`[${id}] SteamDB covers: ${urls.length} asset(s)`);
-      } else {
-        debug.log(`[${id}] SteamDB covers: no library asset found`);
       }
+      debug.log(urls.length ? `[${id}] SteamDB covers: ${urls.length} asset(s)` : `[${id}] SteamDB covers: no library asset found`);
       return urls;
     } catch (err) {
-      debug.log(`[${id}] SteamDB covers fetch failed: ${err.message || err}`);
+      if (steamdbCoversCircuit.recordFailure(err)) {
+        debug.log(
+          `[${id}] SteamDB covers fetch failed: ${err.message || err} - skipping SteamDB covers for ${
+            STEAMDB_COVERS_COOLDOWN_MS / 60000
+          } minutes`
+        );
+      } else {
+        debug.log(`[${id}] SteamDB covers fetch failed: ${err.message || err}`);
+      }
       return [];
     } finally {
       if (page) await page.close().catch(() => {});
@@ -2537,12 +2714,15 @@ async function fetchSteamGridDbGameIdBySteamAppid(steamAppid, options = {}) {
   } catch {
     /* stale/corrupt -> refetch */
   }
+  // Host already proven unreachable: report it as the network error it is, without a fresh timeout.
+  if (steamGridDbUnavailable()) return withStatus ? { value: null, networkError: true } : null;
   let resolved = null;
   try {
     const res = await fetch(`${BASE_URL}/games/steam/${encodeURIComponent(id)}`, {
       headers: { Authorization: `Bearer ${getSteamGridDbApiKey()}` },
       signal: AbortSignal.timeout(SGDB_FETCH_TIMEOUT_MS),
     });
+    sgdbCircuit.recordSuccess();
     if (res.ok) {
       const body = await res.json().catch(() => null);
       const game = body && body.success && body.data;
@@ -2550,7 +2730,7 @@ async function fetchSteamGridDbGameIdBySteamAppid(steamAppid, options = {}) {
     }
   } catch (err) {
     // A network failure is not an answer - leave the cache alone so the next scan can retry.
-    debug.log(`[steamgriddb] appid lookup failed for ${id}: ${err.message || err}`);
+    if (!recordSteamGridDbFailure(err, `appid ${id}`)) debug.log(`[steamgriddb] appid lookup failed for ${id}: ${err.message || err}`);
     if (!withStatus) return null;
     return { value: null, networkError: true };
   }
@@ -2606,34 +2786,47 @@ function rankSteamGridDbGrids(grids, orientation, limit) {
     }));
 }
 
-async function fetchSteamGridDbGrids(name, orientation, steamAppid = '') {
-  const apiKey = getSteamGridDbApiKey();
-  const sgdb = (url) =>
-    fetch(url, { headers: { Authorization: `Bearer ${apiKey}` }, signal: AbortSignal.timeout(SGDB_FETCH_TIMEOUT_MS) });
-  let networkError = false;
+function steamGridDbFetch(url) {
+  return fetch(url, {
+    headers: { Authorization: `Bearer ${getSteamGridDbApiKey()}` },
+    signal: AbortSignal.timeout(SGDB_FETCH_TIMEOUT_MS),
+  });
+}
 
-  // Identity first: a Steam appid names the game outright, so no title has to be matched at all.
-  let gameId = 0;
+/*
+  The SteamGridDB game behind a title, for any of its asset lists.
+
+  Identity first: a Steam appid names the game outright, so no title has to be matched at all. Only
+  a game with no appid (Ubisoft, GOG, Epic, manual) falls back to the strict title matcher.
+*/
+async function resolveSteamGridDbGameId(name, steamAppid, context) {
   const byAppidResult = await fetchSteamGridDbGameIdBySteamAppid(steamAppid, { withStatus: true });
-  networkError = networkError || byAppidResult.networkError;
-  const byAppid = byAppidResult.value;
-  if (byAppid && byAppid.gameId) gameId = byAppid.gameId;
+  const networkError = byAppidResult.networkError;
+  if (byAppidResult.value && byAppidResult.value.gameId) return { gameId: byAppidResult.value.gameId, networkError };
 
-  if (!gameId) {
-    if (!name) return { grids: [], networkError };
-    let searchRes;
-    try {
-      searchRes = await sgdb(`${BASE_URL}/search/autocomplete/${encodeURIComponent(name)}`);
-    } catch {
-      return { grids: [], networkError: true };
-    }
-    if (!searchRes.ok) return { grids: [], networkError };
-    const search = await searchRes.json().catch(() => null);
-    const match = pickSteamGridDbGame(search && search.data, name);
-    if (!match || !match.id) return { grids: [], networkError };
-    gameId = match.id;
+  if (!name) return { gameId: 0, networkError };
+  if (steamGridDbUnavailable()) return { gameId: 0, networkError: true };
+  let searchRes;
+  try {
+    searchRes = await steamGridDbFetch(`${BASE_URL}/search/autocomplete/${encodeURIComponent(name)}`);
+    sgdbCircuit.recordSuccess();
+  } catch (err) {
+    recordSteamGridDbFailure(err, `${context} search "${name}"`);
+    return { gameId: 0, networkError: true };
   }
-  const game = { id: gameId };
+  if (!searchRes.ok) return { gameId: 0, networkError };
+  const search = await searchRes.json().catch(() => null);
+  const match = pickSteamGridDbGame(search && search.data, name);
+  return { gameId: match && match.id ? Number(match.id) : 0, networkError };
+}
+
+async function fetchSteamGridDbGrids(name, orientation, steamAppid = '') {
+  const sgdb = steamGridDbFetch;
+
+  const resolved = await resolveSteamGridDbGameId(name, steamAppid, 'cover');
+  let networkError = resolved.networkError;
+  if (!resolved.gameId) return { grids: [], networkError };
+  const game = { id: resolved.gameId };
 
   const dimensions = (SGDB_DIMENSIONS[orientation] || SGDB_DIMENSIONS.portrait).join(',');
   const pages = await Promise.all(
@@ -2730,7 +2923,7 @@ async function fetchSteamGridDbCovers(gameName, limit = SGDB_COVER_LIMIT, orient
       }
       return result;
     } catch (err) {
-      debug.log(`[steamgriddb] cover list failed for "${name}": ${err.message || err}`);
+      if (!recordSteamGridDbFailure(err, `cover list "${name}"`)) debug.log(`[steamgriddb] cover list failed for "${name}": ${err.message || err}`);
       return { grids: [], networkError: true };
     }
   })();
@@ -2750,6 +2943,8 @@ function resetArtworkLookupCaches() {
   // circuit open from the previous offline scan, otherwise the first post-clear scan would skip
   // every Steam lookup until the five-minute cooldown elapsed.
   resetSteamTransportCircuit();
+  sgdbCircuit.reset();
+  steamdbCoversCircuit.reset();
   steamdbCoversInFlight.clear();
   steamdbCoversQueue = Promise.resolve();
   steamCdnCoversCache.clear();
@@ -3238,7 +3433,7 @@ function createMainWindow() {
       v8CacheOptions: manifest.config.debug ? 'none' : 'code',
       // Tray daemon: the main UI window spends most of its life hidden/minimized. Let Chromium
       // throttle its background timers then (cuts idle CPU). Safe here because the only renderer
-      // timer is the 15-min new-game scan (far slower than the ~1/min throttle floor) and WebSocket
+      // timer is the periodic new-game scan (far slower than the ~1/min throttle floor) and WebSocket
       // message handling is unaffected by throttling. The hidden scrape window (searchForSteamAppId)
       // and the overlay/notification windows keep backgroundThrottling:false - they must run hidden.
       backgroundThrottling: true,
@@ -3260,6 +3455,7 @@ function createMainWindow() {
       delete options.icon;
     }
     //getSteamData({ appid: 2321470, type: 'user' });
+    const windowCreateStartedAt = Date.now();
     MainWin = new BrowserWindow(options);
     getRemoteMain().enable(MainWin.webContents);
     notifyWatchdogOfAppPid();
@@ -3392,7 +3588,9 @@ function createMainWindow() {
     const showMainWindow = (reason) => {
       if (mainWindowShown || !MainWin) return;
       mainWindowShown = true;
-      debug.log(`[MainWindow] showing (${reason})`);
+      debug.log(
+        `[MainWindow] showing (${reason}) - window ready in ${Date.now() - windowCreateStartedAt}ms, process up ${process.uptime().toFixed(1)}s`
+      );
       fitMainWindowInWorkArea();
       MainWin.show();
       MainWin.focus();
@@ -5098,7 +5296,11 @@ ipcMain.handle('notification-sample-art', async () => {
     try {
       for (const file of fs.readdirSync(coversDir)) {
         if (!/\.(?:png|jpe?g|webp)$/i.test(file)) continue;
-        covers.set(file.replace(/\.[^.]+$/, ''), path.join(coversDir, file));
+        // Covers are stored as `<appid>.<ext>` or, once a pick has been re-downloaded,
+        // `<appid>-<digest>.<ext>`. Keying on the whole basename made every digest-suffixed file
+        // invisible to this lookup, so a library full of covers could still answer "no artwork".
+        const appid = file.replace(/\.[^.]+$/, '').replace(/-[a-f0-9]+$/i, '');
+        if (!covers.has(appid)) covers.set(appid, path.join(coversDir, file));
       }
     } catch {}
     if (covers.size === 0) return {};

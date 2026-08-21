@@ -86,6 +86,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     // Electron's Page Visibility state stays "visible" for some hidden BrowserWindows. The main
     // process supplies the authoritative tray-window state once this renderer has loaded.
     let mainWindowVisible = false;
+    let padConnected = false;
 
     function isVisible(element) {
       if (!element || !element.isConnected || element.hidden || element.disabled) return false;
@@ -312,8 +313,17 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       schedulePoll();
     }
 
+    /*
+      The navigation loop is a requestAnimationFrame poll, so it must not exist while there is no pad
+      to read: on an idle library it was a 60fps main-thread callback plus the compositor work of
+      never letting the frame loop stop, measured at ~8% of a core for a window nobody was touching.
+
+      Chromium only reports a gamepad to a page once the user presses something on it, and that press
+      is also the gesture that starts controller navigation - so waiting for 'gamepadconnected' costs
+      nothing a user can feel, and every mouse-and-keyboard session runs no loop at all.
+    */
     function canPoll() {
-      return isAppControllerEnabled() && mainWindowVisible && document.visibilityState === 'visible';
+      return padConnected && isAppControllerEnabled() && mainWindowVisible && document.visibilityState === 'visible';
     }
 
     function isAppControllerEnabled() {
@@ -347,14 +357,23 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       leaveControllerMode();
     }
 
+    window.addEventListener('gamepadconnected', () => {
+      padConnected = true;
+      updatePollingState();
+    });
     window.addEventListener('gamepaddisconnected', () => {
+      padConnected = Array.from(navigator.getGamepads?.() || []).some(Boolean);
       held.clear();
       leaveControllerMode();
+      updatePollingState();
     });
     window.addEventListener('pointerdown', leaveControllerMode, { passive: true });
     window.addEventListener('keydown', leaveControllerMode, { passive: true });
     document.addEventListener('visibilitychange', updatePollingState);
     document.addEventListener('controller-settings-changed', updatePollingState);
+    // A pad already awake when the page loaded is reported straight away; otherwise the connect
+    // event above is what starts the loop.
+    padConnected = Array.from(navigator.getGamepads?.() || []).some(Boolean);
     require('electron').ipcRenderer.on('main-window-visibility', (_event, visible) => {
       mainWindowVisible = visible === true;
       if (!mainWindowVisible) {
@@ -366,6 +385,6 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       }
       updatePollingState();
     });
-    schedulePoll();
+    updatePollingState();
   })();
 }

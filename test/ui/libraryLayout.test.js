@@ -134,8 +134,24 @@ test('all layouts reuse one game card and details handle missing unlocks', () =>
 });
 
 test('library artwork recovers both orientations in view and falls back through every available image', () => {
-  assert.match(appSource, /\[img\.portrait, img\.header, img\.landscape, img\.background, img\.icon\]/);
-  assert.match(appSource, /\[img\.header, img\.landscape, img\.background, img\.portrait, img\.icon\]/);
+  /*
+    The shapes are not interchangeable: header/landscape are 460x215 and 920x430, portrait is
+    600x900. The old chain listed them in one flat order per orientation, so a portrait tile with no
+    600x900 art painted a wide capsule and a landscape tile could paint a tall one - reported as
+    covers showing "in landscape instead of portrait and the other way round".
+
+    The contract now has two passes: only the tile's own shape may be painted before the recovery
+    chain has run, and the other shape is reached only after it has failed.
+  */
+  assert.match(appSource, /const sameShape = orientation === 'portrait' \? \[img\.portrait\] : \[img\.header, img\.landscape\]/);
+  assert.match(appSource, /const candidates = sameShapeOnly \? sameShape : \[\.\.\.sameShape, \.\.\.otherShape\]/);
+  const scheduler = appSource.slice(appSource.indexOf('function scheduleLibraryCover'), appSource.indexOf('function refreshLibraryCovers'));
+  const firstPass = scheduler.indexOf('sameShapeOnly: true');
+  const recoveryCall = scheduler.indexOf('recoverLibraryCover(game, tileOrientation');
+  const crossShapePass = scheduler.indexOf('const crossShape =');
+  assert.ok(firstPass !== -1 && recoveryCall !== -1 && crossShapePass !== -1, 'all three passes must exist');
+  assert.ok(firstPass < recoveryCall, 'the tile paints its own shape before anything is fetched');
+  assert.ok(recoveryCall < crossShapePass, 'and only settles for the wrong shape once recovery has failed');
   const recovery = appSource.slice(appSource.indexOf('async function recoverLibraryCover'), appSource.indexOf('function scheduleLibraryCover'));
   assert.ok(recovery.indexOf('get-steam-cdn-covers') < recovery.indexOf('get-steamgriddb-cover'));
   assert.match(mainSource, /ipcMain\.handle\('get-steam-cdn-covers'/);

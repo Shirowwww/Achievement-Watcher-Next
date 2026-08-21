@@ -231,6 +231,18 @@ function readRegistryInteger(hive, key, valueName) {
   return Number(val.data);
 }
 
+// Several values from one key. Each read enumerates the whole key, and under the reg.exe fallback
+// that is a process spawn, so asking for them together matters on a path that runs per library tile.
+function readRegistryIntegers(hive, key, valueNames) {
+  const values = enumerateValuesCompat(hive, key);
+  const out = {};
+  for (const name of valueNames) {
+    const val = values.find((v) => v.name === name);
+    out[name] = !val || (val.type !== 'REG_DWORD' && val.type !== 'REG_QWORD') ? null : Number(val.data);
+  }
+  return out;
+}
+
 function readRegistryString(hive, key, valueName) {
   // Default value in registry-js is ''
   const name = valueName || '';
@@ -287,6 +299,7 @@ module.exports = {
   readRegistryString,
   readRegistryStringAndExpand,
   readRegistryInteger,
+  readRegistryIntegers,
   listRegistryAllSubkeys,
   ListRegistryAllValues,
   regKeyExists,

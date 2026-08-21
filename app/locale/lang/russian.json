@@ -814,6 +814,13 @@
       "topicsTitle": "Просмотр по темам",
       "searchPlaceholder": "Поиск по справке…",
       "noResults": "По вашему запросу ничего не найдено.",
+      "links": {
+        "title": "Больше помощи онлайн",
+        "documentation": "Документация",
+        "faq": "Частые вопросы",
+        "issues": "Сообщить о проблеме",
+        "download": "Последняя версия"
+      },
       "quickTitle": "Первые шаги",
       "quick": [
         "Добавьте папки сохранений/конфигурации в Настройки > Папки, затем включите соответствующий источник в Настройки > Источники.",
@@ -1183,6 +1190,9 @@
     "watchdog-unresponsive-detail": "Он работает, но перестал отвечать",
     "restart-watchdog": "Перезапустить Watchdog",
     "unexpected-error": "Непредвиденная ошибка",
+    "unexpected-error-message": "Произошла непредвиденная ошибка",
+    "lang-load-failed": "Не удалось загрузить язык интерфейса.",
+    "uplay-r2-dll-filter": "Загрузчик Uplay R2",
     "choose-the-game-executable": "Выберите исполняемый файл игры",
     "select": "Выбрать",
     "goldberg-diagnosis-title": "Диагностика Goldberg/GBE - {gameName}",

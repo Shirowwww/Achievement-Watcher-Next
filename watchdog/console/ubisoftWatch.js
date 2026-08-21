@@ -210,7 +210,7 @@ function loadSchema(appid, lang) {
   }
 
   // steam-api lang name → ubisoft locale prefix ("french" → fr)
-  const LANG_PREFIX = { english: 'en', french: 'fr', german: 'de', italian: 'it', spanish: 'es', portuguese: 'pt', brazilian: 'pt-br', russian: 'ru', polish: 'pl', japanese: 'ja', koreana: 'ko', schinese: 'zh-cn', tchinese: 'zh-tw', dutch: 'nl', danish: 'da', finnish: 'fi', swedish: 'sv', norwegian: 'nb', czech: 'cs', hungarian: 'hu', romanian: 'ro', turkish: 'tr', ukrainian: 'uk', greek: 'el', thai: 'th', vietnamese: 'vi', arabic: 'ar', bulgarian: 'bg', indonesian: 'id', latam: 'es-mx' };
+  const LANG_PREFIX = { english: 'en', french: 'fr', german: 'de', italian: 'it', spanish: 'es', portuguese: 'pt', brazilian: 'pt-br', russian: 'ru', polish: 'pl', japanese: 'ja', koreana: 'ko', schinese: 'zh-cn', tchinese: 'zh-tw', dutch: 'nl', danish: 'da', finnish: 'fi', swedish: 'sv', norwegian: 'nb', czech: 'cs', slovak: 'sk', hungarian: 'hu', romanian: 'ro', turkish: 'tr', ukrainian: 'uk', greek: 'el', thai: 'th', vietnamese: 'vi', arabic: 'ar', bulgarian: 'bg', indonesian: 'id', latam: 'es-mx' };
   const wantedPrefix = LANG_PREFIX[String(lang || '').toLowerCase()] || 'en';
   const locNames = Array.from(zip.entries.keys()).filter((n) => /_loc\.txt$/i.test(n));
   const pick =

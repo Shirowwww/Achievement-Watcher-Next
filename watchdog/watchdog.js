@@ -992,7 +992,7 @@ var app = {
                           achievementDescription: ach.description,
                           rarityPercent: isRare ? rounded : null,
                           icon: ach.icon,
-                          gameIcon: steamLibraryImage(game.steamappid || game.appid),
+                          gameIcon: notificationGameIcon(game),
                           image: steamHeaderImage(game.steamappid || game.appid),
                           time: achievements[i].UnlockTime,
                           delay: j,
@@ -1041,7 +1041,7 @@ var app = {
                           achievementDisplayName: ach.displayName,
                           achievementDescription: ach.description,
                           icon: ach.icongray,
-                          gameIcon: steamLibraryImage(game.steamappid || game.appid),
+                          gameIcon: notificationGameIcon(game),
                           image: steamHeaderImage(game.steamappid || game.appid),
                           progress: {
                             // Float stat counters (e.g. distance) can carry long tails
@@ -1113,7 +1113,7 @@ var app = {
                   achievementDisplayName: game.name,
                   achievementDescription: platinumDesc,
                   icon: platinumIcon || undefined,
-                  gameIcon: steamLibraryImage(game.steamappid || game.appid),
+                  gameIcon: notificationGameIcon(game),
                   image: steamHeaderImage(game.steamappid || game.appid),
                   time: moment().unix(),
                 },

@@ -358,6 +358,15 @@ function translateUI(lang, locale, template) {
     }
     const helpSearchClear = clear(template.settings.search && template.settings.search.clear);
     if (helpSearchClear) $('#help-search-clear').attr('title', helpSearchClear).attr('aria-label', helpSearchClear);
+    // The online-help row. Its addresses come from app/util/links.js; only the labels are here.
+    if (help.links) {
+      bindHelpText('help-links-title', help.links.title);
+      bindHelpText('help-link-docs', help.links.documentation);
+      bindHelpText('help-link-faq', help.links.faq);
+      bindHelpText('help-link-troubleshooting', help.troubleshootTitle);
+      bindHelpText('help-link-issues', help.links.issues);
+      bindHelpText('help-link-download', help.links.download);
+    }
     bindHelpText('help-quick-title', help.quickTitle);
     bindHelpText('help-gamehealth-title', help.gameHealthTitle);
     bindHelpText('help-steam-title', (template.settings.emulator && template.settings.emulator.nav) || help.steamTitle);

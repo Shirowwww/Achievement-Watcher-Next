@@ -120,10 +120,12 @@ test('the Settings About block is compact and matches what the locale loader bin
   assert.ok(lineageRow, 'the lineage must still be credited somewhere');
   const lineage = lineageRow.querySelectorAll('a');
   assert.equal(lineage.length, 4, 'it stays: Fork label, fork repo, Original label, original repo');
-  assert.ok(!lineage[0].getAttribute('href'), 'the localized "Fork" label slot');
-  assert.ok(lineage[1].getAttribute('href'), 'the fork link');
-  assert.ok(!lineage[2].getAttribute('href'), 'the localized "Original" label slot');
-  assert.ok(lineage[3].getAttribute('href'), 'the original project link');
+  // The two credit links now name their destination through data-aw-link and are filled in from
+  // app/util/links.js at startup, so the markup carries the key rather than the address.
+  assert.ok(!lineage[0].getAttribute('data-aw-link'), 'the localized "Fork" label slot');
+  assert.equal(lineage[1].getAttribute('data-aw-link'), 'upstream.fork', 'the fork link');
+  assert.ok(!lineage[2].getAttribute('data-aw-link'), 'the localized "Original" label slot');
+  assert.equal(lineage[3].getAttribute('data-aw-link'), 'upstream.original', 'the original project link');
 
   const loader = read('app', 'locale', 'loader.js');
   assert.match(loader, /#lineage-fork-label'\)\.text\(clear\(template\.settings\.common\.fork\)\)/, 'Fork is bound by id');
@@ -167,13 +169,17 @@ test('help links point at this project, not the upstream wiki', () => {
   const appJs = read('app', 'app.js');
   assert.doesNotMatch(appJs, /xan105\/Achievement-Watcher\/wiki/, 'the help link must not point at the upstream wiki');
   // The published site rather than the Markdown file on GitHub: readers get the rendered guide with
-  // its navigation instead of a raw document in a repository browser.
+  // its navigation instead of a raw document in a repository browser. The address itself lives in
+  // app/util/links.js now, so the notice is checked against the registry rather than against a
+  // literal that would have to be corrected in two places.
+  const links = require(path.join(__dirname, '..', '..', 'app', 'util', 'links.js'));
+  assert.match(appJs, /href="\$\{links\.troubleshooting\}"/, 'the notice must take its address from the link registry');
   assert.match(
-    appJs,
+    links.troubleshooting,
     /shirowwww\.github\.io\/Achievement-Watcher-Next\/troubleshooting\.html/,
     'it must point at this project’s published troubleshooting guide'
   );
-  assert.doesNotMatch(appJs, /Achievement-Watcher-Next\/blob\/main\/docs\//, 'in-app help must not link into the repository docs folder');
+  assert.doesNotMatch(links.troubleshooting, /\/blob\/main\/docs\//, 'in-app help must not link into the repository docs folder');
 
   // Its label is localized rather than the old hard-coded "Wiki".
   assert.match(appJs, /data\('lang-troubleshoot'\)/, 'the link label must come from the locale');
@@ -181,11 +187,17 @@ test('help links point at this project, not the upstream wiki', () => {
 
   // The sentence in front of the link has to stand on its own now: it used to run into the label
   // ("...section of the" + "Wiki"), which only read correctly because the label was a noun.
+  /*
+    Not every writing system asks a question with "?". Greek uses ";", which is the same character
+    as the Latin semicolon, and CJK uses the fullwidth form. Testing for the Latin mark alone failed
+    a correctly translated Greek hint, so the class covers the marks the bundled languages use.
+  */
+  const QUESTION_MARK = /[?？;]$/;
   const langDir = path.join(repoRoot, 'app', 'locale', 'lang');
   for (const file of fs.readdirSync(langDir).filter((f) => f.endsWith('.json'))) {
     const hint = JSON.parse(fs.readFileSync(path.join(langDir, file), 'utf8')).noneUnlockedHint || '';
     assert.ok(hint.trim(), `${file}: noneUnlockedHint must be translated`);
-    assert.match(hint.trim(), /[?？]$/, `${file}: the hint must end at its question, not run into the link label`);
+    assert.match(hint.trim(), QUESTION_MARK, `${file}: the hint must end at its question, not run into the link label`);
   }
 });
 

@@ -818,6 +818,13 @@
       "topicsTitle": "Explorar por tópico",
       "searchPlaceholder": "Pesquisar na ajuda…",
       "noResults": "Nenhum tópico de ajuda corresponde à pesquisa.",
+      "links": {
+        "title": "Mais ajuda online",
+        "documentation": "Documentação",
+        "faq": "FAQ",
+        "issues": "Comunicar um problema",
+        "download": "Versão mais recente"
+      },
       "quickTitle": "Primeiros passos",
       "quick": [
         "Adicione as pastas de gravação/configuração em Definições > Pastas e ative a fonte correspondente em Definições > Fontes.",
@@ -1187,6 +1194,9 @@
     "watchdog-unresponsive-detail": "Está em execução, mas deixou de responder",
     "restart-watchdog": "Reiniciar o Watchdog",
     "unexpected-error": "Erro inesperado",
+    "unexpected-error-message": "Ocorreu um erro inesperado",
+    "lang-load-failed": "Não foi possível carregar o idioma da interface.",
+    "uplay-r2-dll-filter": "Carregador Uplay R2",
     "choose-the-game-executable": "Escolher o executável do jogo",
     "select": "Selecionar",
     "goldberg-diagnosis-title": "Diagnóstico Goldberg/GBE - {gameName}",

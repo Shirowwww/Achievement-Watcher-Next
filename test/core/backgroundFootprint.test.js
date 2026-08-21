@@ -70,6 +70,20 @@ test('an appid that discovery keeps finding but never renders stops re-triggerin
   assert.match(forget, /unrenderableAppids\.clear\(\)/);
 });
 
+/*
+  The background poll runs on the renderer's thread, so a discovery it did not need is a stall the
+  user can feel. It compares folder timestamps first and only walks when something moved - with a
+  full pass on a slower cadence for the sources that do not live in the filesystem.
+*/
+test('the background new-game poll checks the cheap fingerprint before walking folders', () => {
+  const scan = appJs.slice(appJs.indexOf('async function runNewGameScan'));
+  const checkAt = scan.indexOf('achievements.discoveryInputsUnchanged()');
+  const discoverAt = scan.indexOf('achievements.detectInstalledAppids(');
+  assert.ok(checkAt !== -1 && discoverAt !== -1);
+  assert.ok(checkAt < discoverAt, 'the fingerprint must be consulted before the discovery');
+  assert.match(scan, /newGameScanTicks % FULL_DISCOVERY_EVERY_TICKS !== 0/, 'a full pass still runs periodically');
+});
+
 test('the main-process background scan applies the same suppression', () => {
   // Releasing the window hands polling back to this fallback for most of a session, so the loop
   // would simply move here otherwise.

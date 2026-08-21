@@ -16,7 +16,13 @@ test('renderer-side controller polling follows the main tray-window visibility s
   assert.match(init, /did-finish-load', \(\) => sendMainWindowVisibility\(MainWin\.isVisible\(\)\)/);
   assert.match(source, /let mainWindowVisible = false;/);
   assert.match(source, /main-window-visibility/);
-  assert.match(source, /return isAppControllerEnabled\(\) && mainWindowVisible && document\.visibilityState === 'visible';/);
+  assert.ok(
+    source.includes("return padConnected && isAppControllerEnabled() && mainWindowVisible && document.visibilityState === 'visible';"),
+    'polling stays gated on a connected pad, the tray-window signal and page visibility'
+  );
+  // No pad, no loop: the rAF poll is what the idle renderer was spending its frames on.
+  assert.ok(source.includes("window.addEventListener('gamepadconnected'"), 'the loop starts from the connect event');
+  assert.match(source, /let padConnected = false;/);
   assert.match(source, /isAppControllerEnabled\(\)/);
   assert.match(source, /controller-settings-changed/);
   assert.match(source, /appNavigation/);

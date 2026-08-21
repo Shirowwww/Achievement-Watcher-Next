@@ -44,6 +44,28 @@ Electron's bundled Node runtime runs both processes. The installed app does not 
 
 Startup must not replay existing unlocks as new events. Watchers should baseline current state before emitting notifications.
 
+### What a scan is allowed to cost
+
+The library paints from `cache/library_snapshot` before discovery starts, so nothing below is on the path
+to the first frame. What the scan itself may spend is bounded by three rules:
+
+- **Read a folder once per pass.** `app/util/dirCache.js` memoizes directory listings for the length of one
+  discovery, because the emulator walk, the nested-appid search and the executable search all cross
+  the same trees. The memo is only open during discovery; a repair must always see the real folder.
+- **Do not re-walk an install folder that has not changed.** `app/util/exeCandidateCache.js` remembers the
+  executable candidates of a game folder, keyed by that folder's own timestamps and stored under
+  `cache/discovery/`. Install trees are far larger than anything else a scan reads, and the answer only
+  changes when the game does.
+- **Prove the disk is unchanged before walking it again.** The background new-install poll compares
+  the timestamps of the folders the last discovery read (`app/util/dirFingerprint.js`) and skips the pass
+  when none moved. That cannot see database or registry sources, so a full pass still runs on a
+  slower cadence.
+
+Per-game metadata is loaded through a small worker pool, never a whole-library `Promise.all`, and a host
+that has proven itself unreachable is not asked again for the rest of the scan
+(`app/util/networkCircuit.js`) - including through the browser fallback, which is the most expensive
+path there is.
+
 ## Parser expectations
 
 Parsers normally expose a `scan` function and an `initDebug` hook. Their results are normalized by the aggregator rather than rendered directly.
@@ -67,6 +89,7 @@ Current integrations include Steam, Goldberg/GBE-compatible saves, Goldberg Soci
 | `app/parser/installState.js` | Evidence-based installed-state decisions |
 | `app/parser/gameIndex.js` | Persistent game identity and install metadata |
 | `app/parser/steam.js` | Steam schema, metadata and compatible-save parsing |
+| `app/parser/steamAppInfo.js` | Steam's local `appcache/appinfo.vdf`: per-appid name and type, read offline and keyless |
 | `app/parser/goldberg.js` | Goldberg/GBE detection, diagnosis, repair and backup |
 | `app/parser/uplayR2.js` | Ubisoft-to-Steam mapping and Uplay R2 schema setup |
 | `app/electron/init.js` | Main lifecycle, updater, browser helpers and overlay window |

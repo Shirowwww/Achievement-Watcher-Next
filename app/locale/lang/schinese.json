@@ -814,6 +814,13 @@
       "topicsTitle": "按主题浏览",
       "searchPlaceholder": "搜索帮助…",
       "noResults": "没有与搜索内容匹配的帮助主题。",
+      "links": {
+        "title": "更多在线帮助",
+        "documentation": "文档",
+        "faq": "常见问题",
+        "issues": "报告问题",
+        "download": "最新版本"
+      },
       "quickTitle": "快速上手",
       "quick": [
         "在“设置 > 文件夹”中添加存档/配置文件夹，然后在“设置 > 来源”中启用相应来源。",
@@ -1183,6 +1190,9 @@
     "watchdog-unresponsive-detail": "进程仍在运行，但已停止响应",
     "restart-watchdog": "重启 Watchdog",
     "unexpected-error": "意外错误",
+    "unexpected-error-message": "发生了意外错误",
+    "lang-load-failed": "无法加载界面语言。",
+    "uplay-r2-dll-filter": "Uplay R2 加载器",
     "choose-the-game-executable": "选择游戏的可执行文件",
     "select": "选择",
     "goldberg-diagnosis-title": "Goldberg/GBE 诊断 - {gameName}",

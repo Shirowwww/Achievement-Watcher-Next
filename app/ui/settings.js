@@ -4673,7 +4673,19 @@ function populateLegitUsers(selected) {
   defaultOption.prop('selected', selected === '0');
   selector.empty();
   selector.append(defaultOption);
-  if (!list || list.length === 0) return;
+  if (!list || list.length === 0) {
+    /*
+      The list is fetched over the network. Offline it comes back empty, which used to leave the
+      dropdown holding only "0" - and the next settings save read that back and overwrote the
+      account the user had picked, permanently. An empty list is not the user changing their mind:
+      keep their saved account selectable so nothing is lost while the check cannot run.
+    */
+    if (selected && selected !== '0') {
+      selector.append($('<option>').attr('value', selected).prop('selected', true).text(selected));
+      defaultOption.prop('selected', false);
+    }
+    return;
+  }
   for (let user of list)
     selector.append(
       $('<option>')

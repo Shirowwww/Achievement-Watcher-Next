@@ -83,10 +83,20 @@ test('a record with nothing on disk behind it is still not resurrected', () => {
 
 test('makeList admits the provisional entry and no longer silently skips a failed load', () => {
   assert.match(source, /game = buildProvisionalGame\(appid\);/, 'a failed load must fall back to the local entry');
+  /*
+    The keep-filter used to require achievements or a verified install, which dropped fifteen owned
+    games on one real library - ULTRAKILL, Lethal Company, R.E.P.O., VRChat among them - purely for
+    not having been played yet. Owning a game is not a reason to hide it; a game with none renders
+    as "No achievements", which is the truth about it.
+
+    What remains excluded is the record with nothing behind it at all: a watchdog cache import with
+    no save file and no install folder, which is what this filter was written for.
+  */
+  assert.match(source, /if \(game && !game\.evidenceless\)/, 'anything a real source found on this PC is kept');
   assert.match(
     source,
-    /if \(game && \(game\.provisional \|\| game\.unconfigured \|\| game\.installed \|\| \(game\.achievement && game\.achievement\.total > 0\)\)\)/,
-    'the keep-filter must admit a provisional entry on its own terms'
+    /game\.evidenceless =\s*\n?\s*dataType === 'cached' && !resolveAchievementDataPath\(appid\.data \|\| \{\}\) && !\(appid\.data && appid\.data\.gameDir\)/,
+    'and only an evidenceless cache import is dropped'
   );
 });
 

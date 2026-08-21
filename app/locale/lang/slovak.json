@@ -814,6 +814,13 @@
       "topicsTitle": "Prehľadávať podľa témy",
       "searchPlaceholder": "Hľadať v pomocníkovi…",
       "noResults": "Vyhľadávaniu nezodpovedá žiadna téma pomocníka.",
+      "links": {
+        "title": "Ďalšia pomoc online",
+        "documentation": "Dokumentácia",
+        "faq": "Časté otázky",
+        "issues": "Nahlásiť problém",
+        "download": "Najnovšia verzia"
+      },
       "quickTitle": "Prvé kroky",
       "quick": [
         "Pridajte priečinky s uloženými pozíciami/konfiguráciou v Nastavenia > Priečinky a potom zapnite zodpovedajúci zdroj v Nastavenia > Zdroje.",
@@ -1183,6 +1190,9 @@
     "watchdog-unresponsive-detail": "Beží, ale prestal odpovedať",
     "restart-watchdog": "Reštartovať Watchdog",
     "unexpected-error": "Neočakávaná chyba",
+    "unexpected-error-message": "Došlo k neočakávanej chybe",
+    "lang-load-failed": "Jazyk rozhrania sa nepodarilo načítať.",
+    "uplay-r2-dll-filter": "Loader Uplay R2",
     "choose-the-game-executable": "Vyberte spustiteľný súbor hry",
     "select": "Vybrať",
     "goldberg-diagnosis-title": "Diagnostika Goldberg/GBE - {gameName}",

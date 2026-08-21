@@ -9,7 +9,7 @@ const source = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'app.js')
 
 test('known local games paint before fresh discovery and are replaced by appid', () => {
   const knownRead = source.indexOf('const knownGames =');
-  const knownPaint = source.indexOf('for (const game of knownGames) renderGame(game, { fresh: false });');
+  const knownPaint = source.indexOf('for (const game of knownGames) renderGame(game, { fresh: false');
   const freshScan = source.indexOf('.makeList(', knownPaint);
   assert.ok(knownRead > 0 && knownPaint > knownRead && freshScan > knownPaint);
   assert.match(source.slice(knownRead, freshScan), /existingElement\.closest\('li'\).*replaceWith\(item\)/s);

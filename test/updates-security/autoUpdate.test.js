@@ -64,8 +64,11 @@ test('a sha512 checksum mismatch clears the update cache and retries the full do
   assert.match(init, /checksumRetryInFlight/);
   assert.match(init, /autoUpdater\.on\('error'/);
   assert.match(init, /async function notifyChecksumRecoveryFailed\(/);
-  assert.match(init, /UPDATE_RELEASES_URL/);
-  assert.match(init, /shell\.openExternal\(UPDATE_RELEASES_URL\)/);
+  // The release page comes from the central link registry, not from a literal in the updater.
+  assert.match(init, /shell\.openExternal\(links\.releases\)/);
+  assert.match(init, /require\('\.\.\/util\/links\.js'\)/);
+  const links = require(path.join(appRoot, 'util', 'links.js'));
+  assert.equal(links.releases, 'https://github.com/Shirowwww/Achievement-Watcher-Next/releases');
 
   // A manual "Clear update cache" action exists for Settings > Advanced and refuses to run
   // while a download is in flight, so it can never race the automatic recovery.

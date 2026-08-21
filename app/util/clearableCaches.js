@@ -23,6 +23,7 @@ const SAFE_CACHE_DIRS = [
   'cache/crackfiles', // downloaded crackfiles.json (KoriaPolis/CrakFiles)
   'cache/api_check_bypass', // downloaded Steam-API-Check-Bypass proxy dlls
   'cache/library_snapshot', // derived last-complete library used only for fast first paint
+  'cache/discovery', // memoized install-folder walks; rebuilt by the next scan
 ];
 
 // Removes every folder in the allowlist that exists under userDataDir. Returns the list of

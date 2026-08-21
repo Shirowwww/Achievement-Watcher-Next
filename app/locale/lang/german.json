@@ -818,6 +818,13 @@
       "topicsTitle": "Nach Thema durchsuchen",
       "searchPlaceholder": "Hilfe durchsuchen…",
       "noResults": "Kein Hilfethema entspricht deiner Suche.",
+      "links": {
+        "title": "Weitere Hilfe online",
+        "documentation": "Dokumentation",
+        "faq": "FAQ",
+        "issues": "Problem melden",
+        "download": "Neueste Version"
+      },
       "quickTitle": "Erste Schritte",
       "quick": [
         "Füge Speicher-/Konfigurationsordner unter Einstellungen > Ordner hinzu und aktiviere anschließend die passende Quelle unter Einstellungen > Quellen.",
@@ -1187,6 +1194,9 @@
     "watchdog-unresponsive-detail": "Er läuft, meldet sich aber nicht mehr",
     "restart-watchdog": "Watchdog neu starten",
     "unexpected-error": "Unerwarteter Fehler",
+    "unexpected-error-message": "Ein unerwarteter Fehler ist aufgetreten",
+    "lang-load-failed": "Die Sprache der Oberfläche konnte nicht geladen werden.",
+    "uplay-r2-dll-filter": "Uplay R2-Loader",
     "choose-the-game-executable": "Ausführbare Datei des Spiels auswählen",
     "select": "Auswählen",
     "goldberg-diagnosis-title": "Goldberg/GBE-Diagnose - {gameName}",

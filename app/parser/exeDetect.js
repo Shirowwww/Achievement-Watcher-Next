@@ -5,6 +5,8 @@
 
 const fs = require('fs');
 const path = require('path');
+const dirCache = require(path.join(__dirname, '..', 'util', 'dirCache.js'));
+const exeCandidateCache = require(path.join(__dirname, '..', 'util', 'exeCandidateCache.js'));
 
 // Hard-exclude: never a game executable (installers, redists, crash handlers, …).
 const EXE_EXCLUDE = [
@@ -166,12 +168,10 @@ function collectCandidates(gameDir) {
   const candidates = [];
   const walk = (dir, depth) => {
     if (depth > MAX_DEPTH) return;
-    let entries;
-    try {
-      entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
+    // Untracked: a game tree can hold tens of thousands of folders, and none of them decide whether
+    // a new game appeared (see dirCache.readdir).
+    const entries = dirCache.readdir(dir, { track: false });
+    if (!entries) return;
     for (const e of entries) {
       if (e.isDirectory()) {
         if (e.name.toLowerCase() === 'steam_settings') continue;
@@ -193,6 +193,15 @@ function collectCandidates(gameDir) {
   };
   walk(gameDir, 0);
   return candidates;
+}
+
+// Same list, read from the memo when the install folder has not changed since it was walked.
+function collectCandidatesCached(gameDir) {
+  const cached = exeCandidateCache.read(gameDir);
+  if (cached) return { candidates: cached, fromCache: true };
+  const candidates = collectCandidates(gameDir);
+  exeCandidateCache.write(gameDir, candidates);
+  return { candidates, fromCache: false };
 }
 
 // Decide whether `best` is safe to auto-assign. `candidates` is the sorted, filtered list from
@@ -268,7 +277,8 @@ function detect(gameDir, gameName, opts = {}) {
     }
   }
 
-  const candidates = collectCandidates(gameDir);
+  const collected = collectCandidatesCached(gameDir);
+  const candidates = collected.candidates;
   if (candidates.length === 0) return null;
 
   // Some repacks keep the real game's exe and steam_api64.dll at the install root, while helper
@@ -314,6 +324,12 @@ function detect(gameDir, gameName, opts = {}) {
 
   for (const c of candidates) {
     if (!taken.has(c.full.toLowerCase())) {
+      // The memo can outlive the file it names (a game patched without touching its root folder).
+      // Drop it and walk once, rather than handing back an executable that is no longer there.
+      if (collected.fromCache && !fs.existsSync(c.full)) {
+        exeCandidateCache.forget(gameDir);
+        return detect(gameDir, gameName, opts);
+      }
       const confidence = confidenceFor(c, candidates, gameDir, gameName, opts);
       return {
         name: c.name,
@@ -360,12 +376,8 @@ function bestFolderMatch(gameName, folders) {
 // whether a folder is a "game folder" when scanning for unconfigured installs (no recursion - the
 // recursive detect() is used afterwards to pick the actual exe of an emitted game).
 function shallowGameExe(dir) {
-  let entries;
-  try {
-    entries = fs.readdirSync(dir, { withFileTypes: true });
-  } catch {
-    return null;
-  }
+  const entries = dirCache.readdir(dir);
+  if (!entries) return null;
   for (const e of entries) {
     if (!e.isFile() || !e.name.toLowerCase().endsWith('.exe')) continue;
     if (EXE_EXCLUDE.some((r) => r.test(e.name))) continue;

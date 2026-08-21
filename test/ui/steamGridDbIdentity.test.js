@@ -22,12 +22,19 @@ const source = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'electron
 
 test('a Steam appid is resolved by identity, before any title is matched', () => {
   assert.match(source, /BASE_URL\}\/games\/steam\/\$\{encodeURIComponent\(id\)\}/, 'the by-appid endpoint must be used');
-  const grids = source.slice(source.indexOf('async function fetchSteamGridDbGrids'), source.indexOf('async function fetchSteamGridDbCovers'));
-  const identityAt = grids.indexOf('fetchSteamGridDbGameIdBySteamAppid');
-  const searchAt = grids.indexOf('search/autocomplete');
+  // One resolver serves every asset list (grids, icons); it is the only place the order matters.
+  const resolver = source.slice(source.indexOf('async function resolveSteamGridDbGameId'), source.indexOf('async function fetchSteamGridDbGrids'));
+  const identityAt = resolver.indexOf('fetchSteamGridDbGameIdBySteamAppid');
+  const searchAt = resolver.indexOf('search/autocomplete');
   assert.ok(identityAt !== -1 && searchAt !== -1);
   assert.ok(identityAt < searchAt, 'the appid lookup must come before the title search');
-  assert.match(grids, /if \(!gameId\) \{/, 'the title search must be the fallback, not the default');
+  assert.match(resolver, /if \(!name\) return \{ gameId: 0/, 'the title search must be the fallback, not the default');
+  // Both asset lists must go through it rather than matching titles on their own.
+  const grids = source.slice(source.indexOf('async function fetchSteamGridDbGrids'), source.indexOf('async function fetchSteamGridDbCovers'));
+  const icons = source.slice(source.indexOf('async function fetchSteamGridDbIcon'), source.indexOf("ipcMain.handle('get-steamgriddb-icon'"));
+  assert.match(grids, /resolveSteamGridDbGameId\(/);
+  assert.match(icons, /resolveSteamGridDbGameId\(/);
+  assert.doesNotMatch(grids + icons, /search\/autocomplete/, 'title matching belongs to the shared resolver only');
 });
 
 test('the strict title matcher is unchanged - no prefix or subset rule crept in', () => {
@@ -62,7 +69,7 @@ test('the covers cache is keyed on the appid as well as the title', () => {
 test('a dead SteamHunters groups endpoint is not re-proven once per game', () => {
   assert.match(source, /function steamGroupsUnavailable\(\)/);
   assert.match(source, /if \(steamGroupsUnavailable\(\)\) return \{ ok: false, groups: \[\] \};/);
-  assert.match(source, /STEAM_GROUPS_FAILURE_LIMIT = 3/);
+  assert.ok(source.includes('createNetworkCircuit({ failureLimit: 3'), 'the groups breaker still opens after three consecutive failures');
   // An HTTP status is a real answer from a live host and must clear the breaker.
   const handler = source.slice(source.indexOf("if (type === 'steamgroups')"));
   const successAt = handler.indexOf('recordSteamGroupsSuccess()');

@@ -7086,6 +7086,43 @@ body {
   text-align: center;
 }
 
+#settings .help-links {
+  margin-top: 16px;
+}
+
+#settings .help-link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#settings .help-link-row .help-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 11px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: 6px;
+  color: var(--text);
+  background: var(--set-panel);
+  font: 600 11.5px 'Open-Sans';
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+#settings .help-link-row .help-link > i {
+  color: var(--accent);
+}
+
+#settings .help-link-row .help-link:hover,
+#settings .help-link-row .help-link:focus-visible {
+  border-color: var(--set-account-border);
+  background: var(--set-row-hover);
+}
+
 #settings .help-topics {
   margin-top: 16px;
 }

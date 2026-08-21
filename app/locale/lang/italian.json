@@ -818,6 +818,13 @@
       "topicsTitle": "Sfoglia per argomento",
       "searchPlaceholder": "Cerca nella guida…",
       "noResults": "Nessun argomento della guida corrisponde alla ricerca.",
+      "links": {
+        "title": "Altro aiuto online",
+        "documentation": "Documentazione",
+        "faq": "FAQ",
+        "issues": "Segnala un problema",
+        "download": "Ultima versione"
+      },
       "quickTitle": "Primi passi",
       "quick": [
         "Aggiungi le cartelle di salvataggio/configurazione in Impostazioni > Cartelle, quindi abilita la sorgente corrispondente in Impostazioni > Sorgenti.",
@@ -1187,6 +1194,9 @@
     "watchdog-unresponsive-detail": "È in esecuzione ma ha smesso di rispondere",
     "restart-watchdog": "Riavvia il Watchdog",
     "unexpected-error": "Errore imprevisto",
+    "unexpected-error-message": "Si è verificato un errore imprevisto",
+    "lang-load-failed": "Impossibile caricare la lingua dell'interfaccia.",
+    "uplay-r2-dll-filter": "Loader Uplay R2",
     "choose-the-game-executable": "Scegli l’eseguibile del gioco",
     "select": "Seleziona",
     "goldberg-diagnosis-title": "Diagnosi Goldberg/GBE - {gameName}",

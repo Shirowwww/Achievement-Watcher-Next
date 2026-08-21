@@ -1,6 +1,6 @@
 'use strict';
 
-const { readRegistryInteger, writeRegistryDword } = require('../util/reg');
+const { readRegistryInteger, readRegistryIntegers, writeRegistryDword } = require('../util/reg');
 
 // Read side of the playtime counters the Watchdog writes in watchdog/playtime/track.js - the two
 // must name the same registry key. Counters recorded under the older "Achievement Watcher" and
@@ -27,10 +27,8 @@ module.exports.lastPlayedSync = (appID) => {
 // One registry pass for library rows that show both total playtime and the last session.
 module.exports.readSync = (appID) => {
   try {
-    return {
-      playtime: +readRegistryInteger('HKCU', PLAYTIME_KEY + appID, 'total') || 0,
-      lastplayed: +readRegistryInteger('HKCU', PLAYTIME_KEY + appID, 'last') || 0,
-    };
+    const values = readRegistryIntegers('HKCU', PLAYTIME_KEY + appID, ['total', 'last']);
+    return { playtime: +values.total || 0, lastplayed: +values.last || 0 };
   } catch {
     return { playtime: 0, lastplayed: 0 };
   }

@@ -49,7 +49,7 @@ live Windows notifications or an in-game overlay.
 - **Repair tools for local setups.** Read-only diagnosis, `steam_settings` repair, matched GBE Fork
   runtime install, architecture-safe automatic Uplay R2 repair, transactional backups and restore.
 - **Yours to shape.** Simple and Advanced interface modes, built-in themes plus a custom one, full
-  controller navigation, and 18 bundled interface languages.
+  controller navigation, and 28 bundled interface languages.
 - **Local-first.** No Steam Web API key, no required account, its own data directory, and caches that
   keep the library working offline.
 

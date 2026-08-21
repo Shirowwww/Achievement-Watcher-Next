@@ -814,6 +814,13 @@
       "topicsTitle": "トピックから探す",
       "searchPlaceholder": "ヘルプを検索…",
       "noResults": "検索に一致するヘルプトピックはありません。",
+      "links": {
+        "title": "オンラインのヘルプ",
+        "documentation": "ドキュメント",
+        "faq": "よくある質問",
+        "issues": "問題を報告",
+        "download": "最新リリース"
+      },
       "quickTitle": "最初の手順",
       "quick": [
         "［設定］>［フォルダー］でセーブ／設定フォルダーを追加し、［設定］>［ソース］で対応するソースを有効にします。",
@@ -1183,6 +1190,9 @@
     "watchdog-unresponsive-detail": "実行中ですが応答が途絶えています",
     "restart-watchdog": "Watchdog を再起動",
     "unexpected-error": "予期しないエラー",
+    "unexpected-error-message": "予期しないエラーが発生しました",
+    "lang-load-failed": "インターフェースの言語を読み込めませんでした。",
+    "uplay-r2-dll-filter": "Uplay R2 ローダー",
     "choose-the-game-executable": "ゲームの実行ファイルを選択",
     "select": "選択",
     "goldberg-diagnosis-title": "Goldberg/GBE 診断 - {gameName}",

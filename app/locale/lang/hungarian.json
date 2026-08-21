@@ -814,6 +814,13 @@
       "topicsTitle": "Böngészés témakör szerint",
       "searchPlaceholder": "Keresés a súgóban…",
       "noResults": "Egyetlen súgótéma sem felel meg a keresésnek.",
+      "links": {
+        "title": "További online segítség",
+        "documentation": "Dokumentáció",
+        "faq": "GYIK",
+        "issues": "Hiba jelentése",
+        "download": "Legújabb verzió"
+      },
       "quickTitle": "Első lépések",
       "quick": [
         "Adja hozzá a mentési/konfigurációs mappákat a Beállítások > Mappák résznél, majd engedélyezze a megfelelő forrást a Beállítások > Források résznél.",
@@ -1183,6 +1190,9 @@
     "watchdog-unresponsive-detail": "Fut, de már nem jelez vissza",
     "restart-watchdog": "Watchdog újraindítása",
     "unexpected-error": "Váratlan hiba",
+    "unexpected-error-message": "Váratlan hiba történt",
+    "lang-load-failed": "A felület nyelve nem tölthető be.",
+    "uplay-r2-dll-filter": "Uplay R2 betöltő",
     "choose-the-game-executable": "A játék futtatható fájljának kiválasztása",
     "select": "Kiválasztás",
     "goldberg-diagnosis-title": "Goldberg/GBE diagnosztika - {gameName}",

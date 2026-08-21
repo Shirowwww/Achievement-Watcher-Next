@@ -814,6 +814,13 @@
       "topicsTitle": "Przeglądaj według tematu",
       "searchPlaceholder": "Przeszukaj pomoc…",
       "noResults": "Żaden temat pomocy nie pasuje do wyszukiwania.",
+      "links": {
+        "title": "Więcej pomocy online",
+        "documentation": "Dokumentacja",
+        "faq": "FAQ",
+        "issues": "Zgłoś problem",
+        "download": "Najnowsza wersja"
+      },
       "quickTitle": "Pierwsze kroki",
       "quick": [
         "Dodaj foldery zapisów/konfiguracji w Ustawienia > Foldery, a następnie włącz odpowiednie źródło w Ustawienia > Źródła.",
@@ -1183,6 +1190,9 @@
     "watchdog-unresponsive-detail": "Działa, ale przestał odpowiadać",
     "restart-watchdog": "Uruchom ponownie Watchdoga",
     "unexpected-error": "Nieoczekiwany błąd",
+    "unexpected-error-message": "Wystąpił nieoczekiwany błąd",
+    "lang-load-failed": "Nie udało się wczytać języka interfejsu.",
+    "uplay-r2-dll-filter": "Loader Uplay R2",
     "choose-the-game-executable": "Wybierz plik wykonywalny gry",
     "select": "Wybierz",
     "goldberg-diagnosis-title": "Diagnoza Goldberg/GBE - {gameName}",

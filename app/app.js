@@ -1,4 +1,5 @@
 'use strict';
+const rendererScriptStartedAt = performance.now();
 const { ipcRenderer, clipboard } = require('electron');
 let userDataPath = null;
 function getUserDataPath() {
@@ -146,21 +147,40 @@ ipcRenderer.on('artwork-caches-cleared', () => {
 });
 let profileStatsAnimationTimer = null;
 
+/*
+  The profile summary is recomputed from the whole library and repainted for every game a scan
+  streams in, which made both halves quadratic on a large library. The markup is static (the locale
+  loader only rewrites the labels) so the lookup is kept, and a streamed repaint is throttled to
+  roughly one a frame. Explicit callers - the batch paint, the sort that ends a scan - are never
+  throttled, so the figures the user is left looking at are always the exact ones.
+*/
+const PROFILE_STATS_MIN_INTERVAL_MS = 120;
+let lastProfileStatsAt = 0;
+let profileStatsNodes = null;
+function profileStatsElements() {
+  if (profileStatsNodes && profileStatsNodes.stats.length && document.contains(profileStatsNodes.stats[0])) {
+    return profileStatsNodes;
+  }
+  const stats = $('#user-info .info .stats');
+  const dist = $('#user-info .completion-dist');
+  profileStatsNodes = { stats, data: stats.find('li span.data'), dist, distFill: dist.find('.fill') };
+  return profileStatsNodes;
+}
+
 function renderProfileStats(stats, { animate = false } = {}) {
   const values = [String(stats.totalUnlocked), `${stats.completed}/${stats.total}`, String(stats.average)];
-  const dataElements = $('#user-info .info .stats li span.data');
+  const nodes = profileStatsElements();
   let changed = false;
-  dataElements.each(function (index) {
-    if ($(this).text() === values[index]) return;
-    $(this).text(values[index]);
+  nodes.data.each(function (index) {
+    if (this.textContent === values[index]) return;
+    this.textContent = values[index];
     changed = true;
   });
 
-  const distEl = $('#user-info .completion-dist');
-  distEl.find('.fill').css('width', stats.average + '%');
-  distEl.attr('title', stats.average + '%');
+  nodes.distFill.css('width', stats.average + '%');
+  nodes.dist.attr('title', formatPercentValue(stats.average));
 
-  const statsEl = $('#user-info .info .stats');
+  const statsEl = nodes.stats;
   if (!animate || !changed || !statsEl.length) return;
   statsEl.removeClass('is-updating');
   void statsEl[0].offsetWidth;
@@ -214,6 +234,12 @@ function getAchievementProgressState(achievement) {
 
 // Periodically discover new installs without loading their full data.
 const NEW_GAME_SCAN_INTERVAL_MS = 3 * 60 * 1000; // 3 minutes
+// Most ticks have nothing to find, and a discovery is a few hundred milliseconds of synchronous
+// directory walking on this thread. A tick therefore compares the folders the last scan read and
+// stops there when none of them moved. That check cannot see the sources that live in a database or
+// the registry (Steam, GOG Galaxy, Ubisoft Connect), so a full pass still runs on a slower cadence.
+const FULL_DISCOVERY_EVERY_TICKS = 5; // ~15 minutes
+let newGameScanTicks = 0;
 let newGameScanTimer = null;
 let scanInFlight = false;
 
@@ -265,6 +291,17 @@ async function runNewGameScan() {
   if ($('title-bar')[0] && $('title-bar')[0].inSettings) return; // user is configuring - leave them be
   scanInFlight = true;
   try {
+    newGameScanTicks += 1;
+    if (newGameScanTicks % FULL_DISCOVERY_EVERY_TICKS !== 0) {
+      const checkStartedAt = performance.now();
+      if (achievements.discoveryInputsUnchanged()) {
+        if (isDev)
+          debug.log(
+            `[new-game-scan] nothing changed in the folders the last scan read (${(performance.now() - checkStartedAt).toFixed(0)}ms) - skipping this tick`
+          );
+        return;
+      }
+    }
     const discovered = (await achievements.detectInstalledAppids(app.config)).map(String);
     const previous = knownDiscoveredAppids;
     knownDiscoveredAppids = new Set(discovered);
@@ -287,6 +324,7 @@ function forgetScanCaches() {
   // previously failed to render.
   unrenderableAppids.clear();
   try {
+    achievements.forgetInstallScanCache();
     steamParser.forgetUnresolved();
     // Also drop remembered local-schema locations, so a schema added by hand since the last scan
     // is found now rather than whenever the miss memo happens to expire.
@@ -941,7 +979,7 @@ function refreshLibraryProgressFor(appid, games) {
     if (bar.length) {
       bar.attr('data-percent', percent);
       bar.find('.meter').css('width', percent + '%');
-      bar.find('.progress-value').text(percent + '%');
+      bar.find('.progress-value').text(formatPercentValue(percent));
     }
   }
 
@@ -1152,13 +1190,22 @@ function setLibraryArtworkFeedback(headerEl, state, retry) {
 }
 
 // Fetch the preferred cover, then walk every usable artwork source before accepting a blank tile.
-async function applyCoverWithFallback(game, headerEl, imgName, orientation = 'landscape', tried, generation = artworkLoadGeneration) {
+async function applyCoverWithFallback(game, headerEl, imgName, orientation = 'landscape', tried, generation = artworkLoadGeneration, { sameShapeOnly = false } = {}) {
   const img = (game && game.img) || {};
   const fallback = (current) => {
-    const candidates =
-      orientation === 'portrait'
-        ? [img.portrait, img.header, img.landscape, img.background, img.icon]
-        : [img.header, img.landscape, img.background, img.portrait, img.icon];
+    /*
+      The shapes are not interchangeable. `header` and `landscape` are 460x215 and 920x430; `portrait`
+      is 600x900. Substituting one for the other is why a portrait grid showed wide covers on some
+      tiles and the landscape grid showed tall ones - the tile paints whatever the chain handed back.
+
+      sameShapeOnly is the first pass: it accepts only art of the requested shape, so the tile stays
+      empty for a moment rather than settling on the wrong one while the recovery chain looks for a
+      real cover. The cross-shape candidates are still used afterwards, once recovery has failed and
+      the choice really is "wrong shape or nothing".
+    */
+    const sameShape = orientation === 'portrait' ? [img.portrait] : [img.header, img.landscape];
+    const otherShape = orientation === 'portrait' ? [img.header, img.landscape, img.background, img.icon] : [img.portrait, img.background, img.icon];
+    const candidates = sameShapeOnly ? sameShape : [...sameShape, ...otherShape];
     return candidates.find((candidate) => candidate && candidate !== current && !(tried && tried.has(candidate))) || null;
   };
   if (!imgName || (tried && tried.has(imgName))) {
@@ -1178,10 +1225,12 @@ async function applyCoverWithFallback(game, headerEl, imgName, orientation = 'la
     }
   } catch {}
   const alt = fallback(imgName);
-  if (alt) return applyCoverWithFallback(game, headerEl, alt, orientation, tried, generation);
+  if (alt) return applyCoverWithFallback(game, headerEl, alt, orientation, tried, generation, { sameShapeOnly });
   if (generation !== artworkLoadGeneration) return { ok: false, reason: 'stale' };
   headerEl.css('background', 'none');
-  return { ok: false, reason: 'failed' };
+  // A url that did not download is a missing image, not a diagnosis of the user's connection: only
+  // a source that reported networkError may claim that (see recoverLibraryCover).
+  return { ok: false, reason: 'missing' };
 }
 
 // Show alternate SteamDB and SteamGridDB covers for a game.
@@ -1559,7 +1608,9 @@ async function recoverLibraryCover(game, orientation, { force = false } = {}) {
         for (const url of Array.isArray(steamUrls) ? steamUrls : []) {
           const result = await downloadLibraryCover(url, cacheAppid);
           if (result.path) return result;
-          failure = failure || result.reason === 'failed';
+          // A candidate url that does not download is an absent asset. Most games have no 920x430
+          // grid and no hashed capsule, so counting those as failures told every second tile to
+          // tell the user to check a connection that was working perfectly.
         }
       }
 
@@ -1573,7 +1624,6 @@ async function recoverLibraryCover(game, orientation, { force = false } = {}) {
         for (const url of Array.isArray(steamdbUrls) ? steamdbUrls : []) {
           const result = await downloadLibraryCover(url, cacheAppid);
           if (result.path) return result;
-          failure = failure || result.reason === 'failed';
         }
       }
 
@@ -1586,12 +1636,22 @@ async function recoverLibraryCover(game, orientation, { force = false } = {}) {
         if (gridUrl) {
           const result = await downloadLibraryCover(gridUrl, cacheAppid);
           if (result.path) return result;
-          failure = failure || result.reason === 'failed';
         }
       }
       return { path: null, source: null, reason: failure ? 'failed' : 'missing' };
     })();
     coverRecoveryCache.set(key, pending);
+    /*
+      Only an answer is worth remembering. A recovery that failed because the network was down (or
+      a breaker was open) used to be memoised for the whole session, so a tile that lost its cover
+      during one bad minute stayed blank until the app was restarted - even after the connection
+      came back and the user pressed Retry. Drop those, and keep the ones that concluded something.
+    */
+    pending
+      .then((result) => {
+        if (result && !result.path && result.reason === 'failed') coverRecoveryCache.delete(key);
+      })
+      .catch(() => coverRecoveryCache.delete(key));
   }
   return coverRecoveryCache.get(key);
 }
@@ -1654,20 +1714,20 @@ function scheduleLibraryCover(game, headerEl, portrait) {
       return;
     }
 
-    const imgName = portrait
-      ? image.portrait || image.header || image.landscape || image.background || image.icon
-      : image.header || image.landscape || image.background || image.portrait || image.icon;
-    const applied = await applyCoverWithFallback(game, headerEl, imgName, tileOrientation, undefined, generation);
+    // First pass: only art of the tile's own shape. Anything else waits until recovery has had its
+    // turn, so a wide capsule never settles into a portrait tile while a real cover is one lookup
+    // away (and never the reverse in the landscape grid).
+    const imgName = portrait ? image.portrait : image.header || image.landscape;
+    const applied = await applyCoverWithFallback(game, headerEl, imgName, tileOrientation, undefined, generation, { sameShapeOnly: true });
     if (generation !== artworkLoadGeneration) return;
     if (!headerEl[0]?.isConnected) return;
     const currentModeIsPortrait = libraryLayout.isPortrait(app.config?.achievement?.libraryLayout);
     if (portrait !== currentModeIsPortrait) return;
-    const preferred = portrait ? image.portrait : image.header || image.landscape;
-    if (applied.ok && preferred && applied.source === preferred) {
+    if (applied.ok) {
+      headerEl.toggleClass('portrait-fallback', false).toggleClass('glow', portrait);
       setLibraryArtworkFeedback(headerEl, 'clear');
       return;
     }
-    if (portrait) headerEl.removeClass('glow').addClass('portrait-fallback');
     const recovered = await recoverLibraryCover(game, tileOrientation, { force });
     if (generation !== artworkLoadGeneration) return;
     if (!headerEl[0]?.isConnected) return;
@@ -1681,13 +1741,24 @@ function scheduleLibraryCover(game, headerEl, portrait) {
       setLibraryArtworkFeedback(headerEl, 'clear');
       return;
     }
-    if (applied.ok) {
-      // A usable fallback is already visible. Do not replace it with an error state just because
-      // the preferred orientation could not be recovered.
+    /*
+      Last resort. No art of the right shape exists anywhere, so the choice is now between the wrong
+      shape and an empty tile - and a recognisable cover, marked as a fallback so the grid styles it
+      rather than stretching it, beats a blank rectangle.
+    */
+    const crossShape = await applyCoverWithFallback(game, headerEl, imgName, tileOrientation, undefined, generation);
+    if (generation !== artworkLoadGeneration) return;
+    if (!headerEl[0]?.isConnected) return;
+    if (portrait !== libraryLayout.isPortrait(app.config?.achievement?.libraryLayout)) return;
+    if (crossShape.ok) {
+      if (portrait) headerEl.removeClass('glow').addClass('portrait-fallback');
       setLibraryArtworkFeedback(headerEl, 'clear');
       return;
     }
-    setLibraryArtworkFeedback(headerEl, recovered.reason === 'failed' || applied.reason === 'failed' ? 'failed' : 'missing', () => load(true));
+    // 'failed' now means exactly one thing: a source reported that it could not be reached. Anything
+    // else - no capsule on the CDN, no grid on SteamGridDB, a 404 on a guessed url - is "no artwork
+    // found", which is the truth and does not send the user to check a working connection.
+    setLibraryArtworkFeedback(headerEl, recovered.reason === 'failed' ? 'failed' : 'missing', () => load(true));
   };
 
   libraryArtwork.schedule(headerEl[0], () =>
@@ -2236,7 +2307,7 @@ function updateGameBox(appid, newProgress) {
   const value = progressBar.querySelector('.progress-value');
   meter.style.width = `${newProgress}%`;
   progressBar.dataset.percent = newProgress;
-  if (value) value.textContent = `${newProgress}%`;
+  if (value) value.textContent = formatPercentValue(newProgress);
 }
 
 // Auto-detect a launch executable from a known install folder.
@@ -2266,8 +2337,9 @@ async function takenExePaths(appid) {
 var app = {
   args: getArgs(remote.process.argv),
   config: settings.load(),
-  errorExit: function (err, message = 'An unexpected error has occured') {
-    remote.dialog.showMessageBoxSync({ type: 'error', title: t('unexpected-error', 'Unexpected Error', 'Erreur inattendue'), message: `${message}`, detail: `${err}` });
+  errorExit: function (err, message) {
+    const text = message || t('unexpected-error-message', 'An unexpected error has occurred', 'Une erreur inattendue est survenue');
+    remote.dialog.showMessageBoxSync({ type: 'error', title: t('unexpected-error', 'Unexpected Error', 'Erreur inattendue'), message: `${text}`, detail: `${err}` });
     remote.app.quit();
   },
   onStart: function (options = {}) {
@@ -2312,7 +2384,7 @@ var app = {
       })
       .catch((err) => {
         debug.log(err);
-        app.errorExit(err, 'Error loading lang.');
+        app.errorExit(err, t('lang-load-failed', 'The interface language could not be loaded.', 'La langue de l’interface n’a pas pu être chargée.'));
       });
 
     $('#user-info .info .name').text(self.config.general.username || os.userInfo().username || '');
@@ -2349,7 +2421,9 @@ var app = {
     const scanConfig = activeScanScope
       ? { ...self.config, scanScope: activeScanScope, fastStart, forceAchievementRecheck }
       : { ...self.config, fastStart, forceAchievementRecheck };
+    const snapshotReadStartedAt = performance.now();
     const knownGames = fastStart && !activeScanScope ? librarySnapshot.read(getUserDataPath(), scanConfig) : [];
+    const snapshotReadMs = performance.now() - snapshotReadStartedAt;
     // Read the manual-unlock sidecar once for this scan. Applying it in the streamed callback makes
     // tile percentages and profile counters survive an app restart without doing sync I/O per game.
     const manualUnlockMap = (() => {
@@ -2364,14 +2438,11 @@ var app = {
       return $(this).css('display') !== 'none';
     }).length;
     gameList = [];
+    const gameListIndex = new Map();
     const freshRenderedAppids = new Set();
     // Reset the list and handlers so onStart() stays idempotent.
     $('#game-list ul').empty();
-    addSkeletonTiles(
-      previousVisibleCount > 0
-        ? Math.min(MAX_SKELETON_TILES, previousVisibleCount + EXTRA_SKELETON_TILES)
-        : DEFAULT_SKELETON_TILES
-    );
+    clearSkeletonTiles();
     gameElements.clear();
     libraryArtwork.disconnect();
     libraryArtwork = createViewportWork();
@@ -2397,7 +2468,7 @@ var app = {
     $('#game-config').off('click', '.edit').off('click', '.unlink');
     $('#btn-game-config-save').off('click');
     $('#btn-game-config-cancel, #game-config .overlay').off('click');
-    const renderGame = (game, { fresh = true } = {}) => {
+    const renderGame = (game, { fresh = true, deferStats = false } = {}) => {
           manualUnlock.applyToGame(game, manualUnlockMap, game.appid, game.source);
           if (game.achievement.unlocked > 0 || self.config.achievement.hideZero == false) {
             const appidKey = String(game.appid);
@@ -2409,21 +2480,25 @@ var app = {
               freshRenderedAppids.add(appidKey);
               if (firstFreshTileAt === null) {
                 firstFreshTileAt = performance.now();
-                if (isDev) debug.log(`[perf] first fresh library tile in ${(firstFreshTileAt - scanStartedAt).toFixed(1)}ms`);
+                if (isDev)
+                  debug.log(
+                    `[perf] first fresh library tile in ${(firstFreshTileAt - scanStartedAt).toFixed(1)}ms (${firstFreshTileAt.toFixed(0)}ms after page start)`
+                  );
               }
             }
-            const existingIndex = gameList.findIndex((entry) => String(entry && entry.appid) === appidKey);
+            const existingIndex = gameListIndex.has(appidKey) ? gameListIndex.get(appidKey) : -1;
             const listIndex = existingIndex >= 0 ? existingIndex : gameList.length;
             const knownGame = existingIndex >= 0 ? gameList[existingIndex] : null;
             if (fresh && game.provisional && knownGame && !knownGame.provisional) {
               Object.assign(game, librarySnapshot.mergeKnownGame(game, knownGame));
               manualUnlock.applyToGame(game, manualUnlockMap, game.appid, game.source);
             }
+            const stopBuild = perfTrace.start('tile:build');
             const hasAchievements = Number(game.achievement.total) > 0;
             let progress = hasAchievements ? Math.round((100 * game.achievement.unlocked) / game.achievement.total) : 0;
             const progressLabel = !hasAchievements
               ? t('achievements-not-available', 'No achievements', 'Pas de succès')
-              : `${progress}%`;
+              : formatPercentValue(progress);
 
             const achievementList = Array.isArray(game.achievement.list) ? game.achievement.list : [];
             const latestUnlock = achievementList.reduce((latest, achievement) => {
@@ -2434,7 +2509,9 @@ var app = {
             const timeMostRecent = latestUnlock ? Number(latestUnlock.UnlockTime) : 0;
 
             // One registry read supplies both the activity row and the "recently played" sort.
+            const stopPlaytimeRead = perfTrace.start('tile:playtime');
             const playtime = PlaytimeTracking.readSync(game.appid);
+            stopPlaytimeRead();
             const lastPlayed = Number(playtime.lastplayed) || 0;
             const totalPlaytime = Number(playtime.playtime) || 0;
 
@@ -2445,28 +2522,26 @@ var app = {
             const sourceIcon = sourcePresentationFor(game);
             const dllIcon = typeof game.hasSteamApiDll === 'boolean' ? dllPresentationFor(game) : null;
             const hideSteamBadges = sourceIcon.kind === 'steam-hidden';
-            const locale = window.appLocale || {};
-            const sortLabels = locale.sort && locale.sort.tooltip ? locale.sort.tooltip : {};
             const recentUnlockText = !hasAchievements
               ? progressLabel
               : latestUnlock
-                ? latestUnlock.displayName || locale.unlocked || 'Unlocked'
-                : locale.noneUnlocked || 'No achievement unlocked yet';
+                ? latestUnlock.displayName || localeText('unlocked')
+                : localeText('noneUnlocked');
             const recentUnlockTime = libraryRelativeTime(timeMostRecent);
             const lastPlayedTime = libraryRelativeTime(lastPlayed);
             const playtimeText = libraryPlaytime(totalPlaytime);
-            const neverPlayedText = locale.neverPlayed || 'Never launched or tracked';
+            const neverPlayedText = localeText('neverPlayed');
             const achievementSummaryText = hasAchievements
-              ? `${Number(game.achievement.unlocked) || 0} / ${Number(game.achievement.total) || 0}`
+              ? `${formatCount(game.achievement.unlocked)} / ${formatCount(game.achievement.total)}`
               : progressLabel;
             // Accessible names for the three icon-only controls on a tile.
             const tileLabels = {
               play: t('launch-game', 'Launch game', 'Lancer le jeu'),
-              achievements: (window.appLocale && window.appLocale.achievements) || 'Achievements',
+              achievements: localeText('achievements'),
               health: t('game-health-title', 'Game health', 'État du jeu'),
-              achievementDate: locale.latestAchievementEarned || 'Latest achievement earned',
-              lastPlayed: sortLabels.played || 'Last played',
-              playtime: locale.settings?.notification?.test?.playtime || 'Playtime',
+              achievementDate: localeText('latestAchievementEarned'),
+              lastPlayed: localeText('sort.tooltip.played'),
+              playtime: localeText('settings.notification.test.playtime'),
             };
             let template = `
             <li>
@@ -2542,28 +2617,58 @@ var app = {
             </li>
             `;
 
+            stopBuild();
+            const stopParse = perfTrace.start('tile:parse');
             const item = $(template);
+            stopParse();
             const existingElement = gameElements.get(appidKey);
+            const stopInsert = perfTrace.start('tile:insert');
             if (existingElement && existingElement.closest('li')) $(existingElement.closest('li')).replaceWith(item);
             else replaceSkeletonWith(item);
+            stopInsert();
             const headerEl = item.find('.header').first();
-            if (existingIndex >= 0) gameList[existingIndex] = game;
-            else gameList.push(game);
+            if (existingIndex >= 0) {
+              gameList[existingIndex] = game;
+            } else {
+              gameListIndex.set(appidKey, gameList.length);
+              gameList.push(game);
+            }
             gameElements.set(appidKey, item.find('.game-box')[0]);
-            refreshProfileStats();
+            if (!deferStats) {
+              const now = performance.now();
+              if (now - lastProfileStatsAt >= PROFILE_STATS_MIN_INTERVAL_MS) {
+                lastProfileStatsAt = now;
+                refreshProfileStats();
+              }
+            }
 
             scheduleLibraryCover(game, headerEl, portrait);
           }
         };
 
     if (knownGames.length > 0) {
-      for (const game of knownGames) renderGame(game, { fresh: false });
+      perfTrace.reset('tile:');
+      for (const game of knownGames) renderGame(game, { fresh: false, deferStats: true });
+      refreshProfileStats();
       const knownPainted = gameElements.size;
       if (knownPainted > 0) {
-        clearSkeletonTiles();
         sort($('#game-list ul'), sortOptions());
-        if (isDev) debug.log(`[perf] painted ${knownPainted} known library game(s) in ${(performance.now() - scanStartedAt).toFixed(1)}ms`);
+        if (isDev)
+          debug.log(
+            `[perf] painted ${knownPainted} known library game(s) in ${(performance.now() - scanStartedAt).toFixed(1)}ms ` +
+              `(snapshot read ${snapshotReadMs.toFixed(1)}ms, ${performance.now().toFixed(0)}ms after page start) ` +
+              `[${perfTrace.summary({ prefix: 'tile:' })}]`
+          );
       }
+    }
+
+    // Nothing known to show: placeholders stand in until the first fresh tile arrives.
+    if (gameElements.size === 0) {
+      addSkeletonTiles(
+        previousVisibleCount > 0
+          ? Math.min(MAX_SKELETON_TILES, previousVisibleCount + EXTRA_SKELETON_TILES)
+          : DEFAULT_SKELETON_TILES
+      );
     }
 
     const listLoadPromise = achievements
@@ -2637,6 +2742,8 @@ var app = {
           gameElements.delete(appid);
         }
         gameList = gameList.filter((game) => currentAppids.has(String(game && game.appid)));
+        gameListIndex.clear();
+        gameList.forEach((game, index) => gameListIndex.set(String(game && game.appid), index));
         if (!activeScanScope) {
           try {
             librarySnapshot.write(getUserDataPath(), scanConfig, list);
@@ -5223,10 +5330,10 @@ var app = {
                             </div>
                             <div class="stats">
                               <div class="time" data-time="${achievement.UnlockTime}"><i class="fas fa-clock"></i>
-                                <span>${unlockMoment.format('L LT')}</span>
-                                <span>${unlockMoment.fromNow()}</span>
+                                <span>${escapeHtml(unlockAt)}</span>
+                                <span>${escapeHtml(unlockAgo)}</span>
                               </div>
-                              <div class="community"><i class="fab fa-steam"></i> <span class="data">--</span>% ${globalStatLabel}</div>
+                              <div class="community"><i class="fab fa-steam"></i> <span class="data">--</span> ${globalStatLabel}</div>
                             </div>
                         </div>
 
@@ -5312,7 +5419,7 @@ var app = {
               <li>
                 <div class="notice">
                   <p>${$('#unlock').data('lang-noneUnlocked')}</p>
-                  <p class="notice-aside">${$('#unlock').data('lang-noneUnlockedHint')} <a href="https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html" target="_blank">${$('#unlock').data('lang-troubleshoot')} ↗</a></p>
+                  <p class="notice-aside">${$('#unlock').data('lang-noneUnlockedHint')} <a href="${links.troubleshooting}" target="_blank">${$('#unlock').data('lang-troubleshoot')} ↗</a></p>
                   </div>
               </li>`;
         unlock.append(template);
@@ -6345,7 +6452,7 @@ function setGameHealthProgress(progress) {
     const percent = Math.max(0, Math.min(100, Math.round((Number(done) / Number(total)) * 100)));
     box.removeAttr('data-indeterminate');
     box.find('.gh-progress-fill').css('width', `${percent}%`);
-    box.find('.gh-progress-count').text(`${done} / ${total}`);
+    box.find('.gh-progress-count').text(`${formatCount(done)} / ${formatCount(total)}`);
     track.attr('aria-valuenow', String(percent));
   } else {
     box.attr('data-indeterminate', 'true');
@@ -6692,6 +6799,8 @@ async function runGameHealthAction(appid, action, button) {
 
 (function ($, window, document) {
   $(function () {
+    if (isDev) debug.log(`[perf] renderer scripts ready ${performance.now().toFixed(0)}ms after page start`);
+    applyExternalLinks();
     // Game Health: registered once, not per scan, because the panel outlives every list rebuild.
     $('#game-config-tabs').on('click', 'button', function () {
       setGameConfigView($(this).attr('data-gc-view'));
@@ -6945,7 +7054,7 @@ async function runGameHealthAction(appid, action, button) {
           title: uplaySettingsText('import', 'Import or replace DLLs'),
           properties: ['openFile', 'multiSelections', 'dontAddToRecent'],
           filters: [
-            { name: 'Uplay R2 DLL', extensions: ['dll'] },
+            { name: t('uplay-r2-dll-filter', 'Uplay R2 loader', 'Loader Uplay R2'), extensions: ['dll'] },
             { name: t('archives', 'Archives', 'Archives'), extensions: ['7z', 'zip'] },
           ],
         });

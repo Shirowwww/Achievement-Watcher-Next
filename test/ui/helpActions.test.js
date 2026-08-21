@@ -13,8 +13,16 @@ const localeDir = path.join(root, 'app', 'locale', 'lang');
 
 test('help stays focused instead of duplicating the settings sidebar', () => {
   assert.doesNotMatch(html, /data-help-view=|help-action-/);
-  assert.doesNotMatch(loader, /bindHelpAction|help-links-title/);
+  assert.doesNotMatch(loader, /bindHelpAction/);
   assert.doesNotMatch(settingsUi, /\$\('#settings \[data-help-view\]'\)/);
+  // The one row of links Help does carry leaves the app entirely - documentation, the tracker, the
+  // release page - so it duplicates no sidebar entry. Its addresses come from app/util/links.js.
+  assert.match(html, /id="help-links-title"/, 'the online-help row must exist');
+  assert.doesNotMatch(html, /class="help-link"[^>]*href="http/, 'a help link must not spell out its address');
+  for (const key of ['documentation', 'faq', 'troubleshooting', 'issues', 'download']) {
+    assert.match(html, new RegExp(`data-aw-link="${key}"`), `the ${key} link must name its registry key`);
+  }
+  assert.match(loader, /bindHelpText\('help-links-title', help\.links\.title\)/, 'its heading is localized');
   // Game health leads the topic list: it is the panel a player reaches for when a game misbehaves.
   assert.match(html, /id="help-gamehealth-list"/, 'the Game health panel must exist');
   assert.match(loader, /bindHelpList\('help-gamehealth-list', help\.gameHealth\)/);
@@ -83,7 +91,7 @@ test('Help facts stay aligned with the current implementation', () => {
   assert.match(userThemes, /path\.join\(String\(userDataPath \|\| ''\), 'themes'\)/);
 
   assert.match(english.settings.help.controller.join(' '), /Back \+ Start \+ LB[\s\S]*LB \+ X[\s\S]*LB \+ RB/);
-  assert.match(english.settings.help.shortcuts.join(' '), /Ctrl\+Alt\+Shift\+Arrows[\s\S]*Ctrl\+Alt\+Shift\+1–5[\s\S]*Ctrl\+Alt\+Shift\+C/);
+  assert.match(english.settings.help.shortcuts.join(' '), /Ctrl\+Alt\+Shift\+Arrows[\s\S]*Ctrl\+Alt\+Shift\+1-5[\s\S]*Ctrl\+Alt\+Shift\+C/);
   assert.match(english.settings.help.tips.join(' '), /within 3 days/);
   assert.match(english.settings.help.themes.join(' '), /<userData>\\themes/);
   const emulatorHelp = helpModule.withEmulatorRepairHelp(english.settings);

@@ -9,6 +9,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const dirCache = require(path.join(__dirname, '..', 'util', 'dirCache.js'));
 
 const GOG_GAME_FILE = /^goggame-\d+\.(?:info|id)$/i;
 const STEAM_API_DLL = /^steam_api(?:64)?\.dll$/i;
@@ -22,11 +23,7 @@ const EMULATED_DLL_MARKERS = ['steam_settings', 'Goldberg', 'GSE Saves', 'SmartS
 const MARKER_OVERLAP = Math.max(...EMULATED_DLL_MARKERS.map((m) => m.length)) - 1;
 
 function listEntries(dir) {
-  try {
-    return fs.readdirSync(dir, { withFileTypes: true });
-  } catch {
-    return null;
-  }
+  return dirCache.readdir(dir);
 }
 
 // Read the dll in chunks: a GSE build is over 10 MB and there is no reason to hold one in memory.

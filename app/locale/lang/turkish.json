@@ -814,6 +814,13 @@
       "topicsTitle": "Konuya göre göz at",
       "searchPlaceholder": "Yardımda ara…",
       "noResults": "Aramanızla eşleşen bir yardım konusu yok.",
+      "links": {
+        "title": "Çevrimiçi daha fazla yardım",
+        "documentation": "Belgeler",
+        "faq": "SSS",
+        "issues": "Sorun bildir",
+        "download": "En son sürüm"
+      },
       "quickTitle": "İlk adımlar",
       "quick": [
         "Ayarlar > Klasörler bölümüne kayıt/yapılandırma klasörlerini ekleyin, ardından Ayarlar > Kaynaklar bölümünde eşleşen kaynağı etkinleştirin.",
@@ -1183,6 +1190,9 @@
     "watchdog-unresponsive-detail": "Çalışıyor ama yanıt vermeyi bıraktı",
     "restart-watchdog": "Watchdog’u yeniden başlat",
     "unexpected-error": "Beklenmeyen hata",
+    "unexpected-error-message": "Beklenmeyen bir hata oluştu",
+    "lang-load-failed": "Arayüz dili yüklenemedi.",
+    "uplay-r2-dll-filter": "Uplay R2 yükleyici",
     "choose-the-game-executable": "Oyunun çalıştırılabilir dosyasını seç",
     "select": "Seç",
     "goldberg-diagnosis-title": "Goldberg/GBE teşhisi - {gameName}",
