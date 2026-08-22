@@ -159,6 +159,17 @@ gh release create "v$version" `
 
 4. Verify the release page exposes the installer, blockmap and `latest.yml`, and
    that the public manifest is downloadable.
+5. Refresh the version the website prints under its download buttons, and commit it:
+
+```powershell
+node tools/site/release-data.js
+git add docs/data/release.json
+git commit -m "docs: publish <version> on the site"
+```
+
+   The file is read from the site's own origin rather than from the GitHub API, so a visitor never
+   spends an unauthenticated rate limit to see a version number. Missing or stale, the pages fall
+   back to their own wording; they never show a wrong version.
 
 ## Identifiers that must not change
 

@@ -7,6 +7,62 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **A website, not just a documentation folder.** The project page at
+  <https://shirowwww.github.io/Achievement-Watcher-Next/> now opens on a home page with the download,
+  the features, every supported source, the presets and the guides, in the app's own palette and with
+  its own light and dark themes. The notification popups on it are live: they are the presets the app
+  ships, rendered by the page from the same files, and they can be switched between the normal, rare,
+  100% and progress states over a dark, bright or artwork backdrop. The guides keep their addresses,
+  gain a bar that links them back to the rest of the site, and are now reached at `README.html`.
+- **A community preset gallery.** <https://shirowwww.github.io/Achievement-Watcher-Next/gallery/>
+  lists notification presets made by other people, each as one `.awpreset` to download and import.
+  Submitting one is two files in a pull request - the package and a picture of the popup, named the
+  same - with nothing to fill in: the name, description, version, tags and required app version are
+  read from the package the app exported, and the listing is rebuilt automatically after the merge.
+  Every submission is validated by the app's own package reader, so anything listed is something the
+  app will accept. It ships with two presets written for it, Blueprint and Ticket. Themes from Steam
+  Achievement Notifier are deliberately not listed there: they are shared privately and not licensed
+  for redistribution, so AW Next converts yours instead.
+- **The preset designer is easier to get around, and can do more.** A filter above the controls
+  narrows sixty-odd of them to the ones you are looking for, searching labels, dropdown wording and
+  the property's own name; a chip per group jumps to it; and undo and redo, on the two arrows or on
+  Ctrl+Z and Ctrl+Y, step back through whole designs rather than through single slider moves. A
+  generated preset can now be renamed, and the notification settings that pointed at it follow.
+  Four new things to design with: a **texture** over the background - grid, dots, hatching or
+  speckle, drawn rather than stored; an **icon shape** - circle, squircle, hexagon or diamond
+  beside the rounded square; three more animation curves and an **exit curve** separate from the
+  entry one; and a **state tint** that washes the whole card in the rare or completion colour
+  instead of only its accents. Every one of them is off or unchanged by default, so a preset you
+  already made looks exactly as it did.
+- **The gallery server gives nothing away.** Errors never carry a file system path, a stack or an
+  internal code any more - what it meant to say is said, and the rest is one flat line with the
+  detail going to the log; request logs keep the path and drop the query string, where a submitter's
+  own words are. Every answer carries the headers that decide what a browser may do with it, the
+  moderation page runs under a policy that names its own inline blocks by hash rather than allowing
+  inline code at all, the admin token now survives being guessed at speed as well as being guessed a
+  character at a time, and a credit link that is not a plain web address is dropped instead of
+  published.
+- **The gallery shows how often a preset has been taken**, and can be sorted by it. The figure comes
+  from the gallery server, which counts successful downloads and records nothing about who asked; a
+  listing served from the repository simply carries no figure. The version number was dropped from
+  the card at the same time - it said `v1.0.0` on nearly every preset and meant nothing to a reader.
+- **The gallery takes submissions directly.** Drop an `.awpreset` on the panel at the bottom of the
+  gallery page and that is the whole submission: no picture to prepare, and nothing you have to fill
+  in. Three optional boxes beside it take a description, some tags and the name you want to be
+  credited under; leave them empty and what the package already carries is used. The name, version
+  and required app version are read from the package the app exported, the picture of the popup is
+  rendered from the preset itself at the size the gallery publishes, and the published name is
+  chosen server-side, so nothing a sender types reaches a file. Nothing typed reaches the listing
+  either without a maintainer having seen it. Every package is read by the app's own reader before it is accepted, and
+  nothing appears until a maintainer has approved it. The pull request route keeps working unchanged,
+  and the page falls back to the listing committed in the repository whenever the service cannot be
+  reached, so a server going down costs the submission panel and never the gallery. Running the
+  service is documented in [docs/gallery-server.md](docs/gallery-server.md).
+- **The site is available in six languages** beside English: French, German, Spanish, Portuguese
+  (Brazil), Russian and Simplified Chinese. English stays in the markup and a translation is applied
+  over it, so a page is complete before any script runs and an untranslated string falls back rather
+  than disappearing. Picking a language applies it immediately, without reloading and without losing
+  the preset, backdrop or filter you were looking at. The guides themselves remain English only.
 - **Help now links to the documentation site.** A row at the top of Settings > Help opens the
   guides, the FAQ, the troubleshooting page, the issue tracker and the latest release. Its labels
   are translated into every bundled language.

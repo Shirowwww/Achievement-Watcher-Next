@@ -13,7 +13,9 @@ live Windows notifications or an in-game overlay.
 [![License](https://img.shields.io/badge/license-LGPL--3.0-green?style=flat-square)](LICENSE)
 
 **[Download](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest)** ·
-[Documentation](https://shirowwww.github.io/Achievement-Watcher-Next/) ·
+[Website](https://shirowwww.github.io/Achievement-Watcher-Next/) ·
+[Documentation](https://shirowwww.github.io/Achievement-Watcher-Next/README.html) ·
+[Preset gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/) ·
 [Changelog](CHANGELOG.md) ·
 [Issues](https://github.com/Shirowwww/Achievement-Watcher-Next/issues)
 
@@ -41,7 +43,9 @@ live Windows notifications or an in-game overlay.
   arrives through the in-game overlay when it can be seen, and as a Windows notification when it
   cannot - never both.
 - **A popup you can actually design.** Nine bundled presets, a no-code **Preset Designer** that
-  previews the real popup, and one-file `.awpreset` sharing.
+  previews the real popup, one-file `.awpreset` sharing and a
+  [community gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/) to take one from
+  or add yours to.
 - **An in-game overlay list.** The running game's full achievement list on `Ctrl+Shift+K`, with
   search, filters and rarity badges - drivable entirely from a gamepad.
 - **Answers when something is wrong.** Each game has a **Game Health** panel that says whether it is
@@ -110,7 +114,7 @@ public endpoints and are cached locally.
 
 ## Documentation
 
-Start at the **[documentation site](https://shirowwww.github.io/Achievement-Watcher-Next/)**, which explains what each guide covers.
+Start at the **[documentation site](https://shirowwww.github.io/Achievement-Watcher-Next/README.html)**, which explains what each guide covers.
 
 [Getting started](https://shirowwww.github.io/Achievement-Watcher-Next/getting-started.html) ·
 [Sources](https://shirowwww.github.io/Achievement-Watcher-Next/sources.html) ·
