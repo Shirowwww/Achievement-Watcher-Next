@@ -1,0 +1,344 @@
+/*
+  Ticket - the light one, and a card that is not a rectangle of app colour.
+
+  The bundled set is dark by default, which is right over a game at night and wrong over a bright
+  one. This is the counter-example: warm paper, printed type, a perforated stub for the icon, and
+  colour spent only on the stamp. Written by hand, like Blueprint beside it.
+
+  The engine (index.html) owns the payload and the state classes; this file owns every pixel.
+*/
+
+:root {
+  --ach-in: 560ms;
+  --ach-out: 320ms;
+  --ease-in: cubic-bezier(0.2, 1.1, 0.35, 1);
+  --ease-out: cubic-bezier(0.7, 0, 0.84, 0);
+
+  --paper: #f8f2e6;
+  --paper-edge: #ece0c9;
+  --ink: #241d15;
+  --muted: #8a7a63;
+  --accent: #c1452f;
+  --stub: #f2e9d7;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.ach {
+  --stub-width: 96px;
+
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  width: 452px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--paper), var(--paper-edge));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 14px 30px rgba(28, 20, 10, 0.35);
+  color: var(--ink);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  opacity: 0;
+  overflow: hidden;
+  will-change: transform, opacity;
+  transform: translate(-50%, -50%) scale(var(--scale, 1));
+
+  /*
+    The two notches at the ends of the perforation are holes, not decoration: the card is masked
+    where they are, so the game shows through them the way it does around the card. Two masks
+    intersected, which is why the composite mode is stated in both spellings.
+  */
+  -webkit-mask-image: radial-gradient(circle 8px at var(--stub-width) 0, transparent 96%, #000 100%),
+    radial-gradient(circle 8px at var(--stub-width) 100%, transparent 96%, #000 100%);
+  mask-image: radial-gradient(circle 8px at var(--stub-width) 0, transparent 96%, #000 100%),
+    radial-gradient(circle 8px at var(--stub-width) 100%, transparent 96%, #000 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+/* --- stub ------------------------------------------------------------------------------------ */
+
+.ach .icon {
+  display: flex;
+  flex: 0 0 var(--stub-width, 96px);
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #f4ead4, #eadfc4);
+  border-right: 2px dashed rgba(28, 20, 10, 0.28);
+}
+
+.ach .icon img {
+  display: block;
+  box-sizing: border-box;
+  width: 54px;
+  height: 54px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #e6dac2;
+  box-shadow: 0 1px 3px rgba(28, 20, 10, 0.3);
+}
+
+/* --- text ------------------------------------------------------------------------------------ */
+
+.ach .text_wrap {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 0;
+  padding: 14px 18px;
+  overflow: hidden;
+}
+
+.ach .text_wrap:has(.marquee) {
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 22px), transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 22px), transparent 100%);
+}
+
+.ach .meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  margin-bottom: 6px;
+  line-height: 1;
+}
+
+.ach .meta[hidden] {
+  display: none;
+}
+
+.ach .game {
+  overflow: hidden;
+  color: var(--muted);
+  font-family: Consolas, 'Cascadia Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ach .game[hidden] {
+  display: none;
+}
+
+/* The stamp: the one saturated thing on the card. */
+.ach .rarity {
+  flex: 0 0 auto;
+  padding: 2px 7px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  color: var(--accent);
+  font-family: Consolas, 'Cascadia Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 13px;
+  transform: rotate(-3deg);
+}
+
+.ach .rarity[hidden] {
+  display: none;
+}
+
+.ach .title {
+  max-width: 100%;
+  margin: 0 0 3px;
+  color: var(--ink);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ach .detail {
+  max-width: 100%;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ach .title.marquee,
+.ach .detail.marquee {
+  display: inline-block;
+  overflow: visible;
+  text-overflow: clip;
+  will-change: transform;
+}
+
+/* --- progress -------------------------------------------------------------------------------- */
+
+.progress_line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  margin-top: 8px;
+}
+
+.progress_line[hidden] {
+  display: none;
+}
+
+.progress_track {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 60px;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(28, 20, 10, 0.14);
+}
+
+.progress_meter {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 0.35s ease;
+}
+
+.progress_label {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-family: Consolas, 'Cascadia Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* --- states ---------------------------------------------------------------------------------- */
+
+/* Rare: the paper is foiled rather than recoloured, so the type stays as readable as it was. */
+.ach.state-rare {
+  --accent: #9a6a12;
+  background: linear-gradient(180deg, #fdf6e3, #f2e3bd);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 0 0 1px rgba(154, 106, 18, 0.35),
+    0 14px 30px rgba(28, 20, 10, 0.35);
+}
+
+.ach.state-rare .icon {
+  background: linear-gradient(180deg, #f7edd2, #efe0b8);
+}
+
+.ach.state-rare.tier-silver {
+  --accent: #6d7784;
+  background: linear-gradient(180deg, #fbfbfb, #e7eaee);
+}
+
+.ach.state-rare.tier-bronze {
+  --accent: #a4592a;
+  background: linear-gradient(180deg, #fbf1e6, #f0ddc9);
+}
+
+/* 100%: the whole ticket is stamped, edge included. */
+.ach.state-platinum {
+  --accent: #14706b;
+  background: linear-gradient(180deg, #f2fbfa, #dcefec);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 0 0 2px rgba(20, 112, 107, 0.45),
+    0 14px 30px rgba(9, 40, 38, 0.35);
+}
+
+.ach.state-platinum .icon {
+  background: #e6f4f2;
+  border-right-color: rgba(20, 112, 107, 0.4);
+}
+
+.ach.state-platinum .title {
+  color: #0d4c48;
+}
+
+/* --- motion ---------------------------------------------------------------------------------- */
+
+@keyframes aw_in {
+  from {
+    transform: translate(-50%, calc(-50% + 26px)) scale(var(--scale, 1)) rotate(1.6deg);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(var(--scale, 1)) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes aw_hold {
+  from,
+  to {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+}
+
+@keyframes aw_out {
+  from {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, calc(-50% + 18px)) scale(var(--scale, 1));
+    opacity: 0;
+  }
+}
+
+@keyframes aw_stamp {
+  from {
+    transform: rotate(-3deg) scale(1.5);
+    opacity: 0;
+  }
+  60% {
+    transform: rotate(-3deg) scale(0.94);
+    opacity: 1;
+  }
+  to {
+    transform: rotate(-3deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes aw_rise {
+  from {
+    transform: translateY(5px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.ach.active {
+  animation: aw_in var(--ach-in) var(--ease-in) forwards, aw_hold var(--ach-hold, 5120ms) forwards,
+    aw_out var(--ach-out) var(--ease-out) forwards;
+  animation-delay: 0s, var(--ach-in), calc(var(--ach-in) + var(--ach-hold, 5120ms));
+}
+
+.ach.active .rarity {
+  animation: aw_stamp 420ms var(--ease-in) 320ms both;
+}
+
+/* Never .title / .detail: the engine cancels their animations when it measures the marquee. */
+.ach.active .text_wrap {
+  animation: aw_rise 300ms var(--ease-in) 140ms both;
+}

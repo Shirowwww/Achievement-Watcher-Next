@@ -1,0 +1,370 @@
+/*
+  Blueprint - a drafting sheet instead of a card.
+
+  Written by hand rather than generated, which is why it lives in tools/gallery/examples: it is the
+  worked example of what a preset file actually is, and the shape a submission takes when the
+  designer cannot produce it. The engine (index.html) owns the payload and the state classes; this
+  file owns every pixel.
+
+  The idea is a technical drawing: a dark sheet ruled in cyan, corner ticks instead of a border, and
+  one line sweeping across it as the card lands. A rare unlock switches the ink to amber and 100%
+  completion to white, so the state is legible from the ruling alone.
+*/
+
+:root {
+  /* Read by the engine to work out how long the card holds. */
+  --ach-in: 520ms;
+  --ach-out: 320ms;
+  --ease-in: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.7, 0, 0.84, 0);
+
+  --sheet-top: #0d1e30;
+  --sheet-bottom: #07121e;
+  --ink: #d7e8f6;
+  --muted: #7f9bb5;
+  --accent: #57c8ff;
+  --rule: rgba(87, 200, 255, 0.14);
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.ach {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 452px;
+  padding: 16px 20px;
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
+  border-radius: 4px;
+  /* The ruling is part of the surface, so it moves and fades with the card. */
+  background-color: var(--sheet-bottom);
+  background-image: repeating-linear-gradient(0deg, var(--rule) 0 1px, transparent 1px 14px),
+    repeating-linear-gradient(90deg, var(--rule) 0 1px, transparent 1px 14px),
+    linear-gradient(160deg, var(--sheet-top), var(--sheet-bottom));
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 40px rgba(87, 200, 255, 0.05);
+  color: var(--ink);
+  font-family: Consolas, 'Cascadia Mono', 'Courier New', monospace;
+  opacity: 0;
+  overflow: hidden;
+  will-change: transform, opacity;
+  transform: translate(-50%, -50%) scale(var(--scale, 1));
+}
+
+/* Corner ticks: two L shapes drawn with borders, one pseudo element each side. */
+.ach::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  width: 14px;
+  height: 14px;
+  border-left: 2px solid var(--accent);
+  border-top: 2px solid var(--accent);
+  opacity: 0.8;
+}
+
+.ach::after {
+  content: '';
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 14px;
+  height: 14px;
+  border-right: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
+  opacity: 0.8;
+}
+
+/* --- icon ------------------------------------------------------------------------------------ */
+
+.ach .icon {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 4px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  /* The arrival sweep is drawn inside this box and must stay in it. */
+  overflow: hidden;
+}
+
+.ach .icon img {
+  display: block;
+  box-sizing: border-box;
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  background: #061019;
+  filter: saturate(0.85);
+}
+
+/* --- text ------------------------------------------------------------------------------------ */
+
+.ach .text_wrap {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ach .text_wrap:has(.marquee) {
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 22px), transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 22px), transparent 100%);
+}
+
+.ach .meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  margin-bottom: 5px;
+  line-height: 1;
+}
+
+.ach .meta[hidden] {
+  display: none;
+}
+
+.ach .game {
+  overflow: hidden;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ach .game[hidden] {
+  display: none;
+}
+
+/* The unlock rate reads as a measurement on a drawing, so it is bracketed rather than badged. */
+.ach .rarity {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.ach .rarity[hidden] {
+  display: none;
+}
+
+.ach .rarity::before {
+  content: '[ ';
+}
+
+.ach .rarity::after {
+  content: ' ]';
+}
+
+.ach .title {
+  max-width: 100%;
+  margin: 0 0 3px;
+  color: var(--ink);
+  font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ach .detail {
+  max-width: 100%;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ach .title.marquee,
+.ach .detail.marquee {
+  display: inline-block;
+  overflow: visible;
+  text-overflow: clip;
+  will-change: transform;
+}
+
+/* --- progress -------------------------------------------------------------------------------- */
+
+.progress_line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  margin-top: 8px;
+}
+
+.progress_line[hidden] {
+  display: none;
+}
+
+/* A dashed rule is the measure; the meter is the part that has been drawn in. */
+.progress_track {
+  position: relative;
+  display: block;
+  flex: 1 1 auto;
+  min-width: 60px;
+  height: 6px;
+  border-bottom: 1px dashed color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.progress_meter {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-bottom: 2px solid var(--accent);
+  transition: width 0.35s ease;
+}
+
+.progress_label {
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+/* --- states ---------------------------------------------------------------------------------- */
+
+.ach.state-rare {
+  --accent: #ffbf5a;
+  --rule: rgba(255, 191, 90, 0.16);
+  --ink: #fff3dd;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 46px rgba(255, 191, 90, 0.1);
+}
+
+.ach.state-rare.tier-silver {
+  --accent: #cfe0f2;
+  --rule: rgba(207, 224, 242, 0.16);
+}
+
+.ach.state-rare.tier-bronze {
+  --accent: #d99459;
+  --rule: rgba(217, 148, 89, 0.16);
+}
+
+/* 100%: the sheet is finished, so the ruling brightens and the frame doubles. */
+.ach.state-platinum {
+  --accent: #ffffff;
+  --ink: #ffffff;
+  --rule: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.14), 0 10px 30px rgba(0, 0, 0, 0.5),
+    inset 0 0 46px rgba(255, 255, 255, 0.08);
+}
+
+.ach.state-platinum .detail {
+  color: #c9d8e6;
+}
+
+/* --- motion ---------------------------------------------------------------------------------- */
+
+@keyframes aw_in {
+  from {
+    transform: translate(-50%, calc(-50% + 18px)) scale(var(--scale, 1));
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+}
+
+@keyframes aw_hold {
+  from,
+  to {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+}
+
+@keyframes aw_out {
+  from {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, calc(-50% + 12px)) scale(var(--scale, 1));
+    opacity: 0;
+  }
+}
+
+/* One pass of the pen across the sheet, on arrival only. */
+@keyframes aw_sweep {
+  from {
+    transform: translateX(-110%);
+  }
+  to {
+    transform: translateX(110%);
+  }
+}
+
+@keyframes aw_ticks {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+}
+
+@keyframes aw_rise {
+  from {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.ach.active {
+  animation: aw_in var(--ach-in) var(--ease-in) forwards, aw_hold var(--ach-hold, 5160ms) forwards,
+    aw_out var(--ach-out) var(--ease-out) forwards;
+  animation-delay: 0s, var(--ach-in), calc(var(--ach-in) + var(--ach-hold, 5160ms));
+}
+
+.ach.active::before,
+.ach.active::after {
+  animation: aw_ticks 320ms var(--ease-in) 180ms both;
+}
+
+.ach.active .icon::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 40%, transparent), transparent);
+  animation: aw_sweep 700ms var(--ease-in) 160ms both;
+}
+
+/* Never .title / .detail: the engine cancels their animations when it measures the marquee. */
+.ach.active .text_wrap {
+  animation: aw_rise 320ms var(--ease-in) 120ms both;
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Blueprint",
+  "description": "A drafting sheet instead of a card: dark paper ruled in cyan, corner ticks, and one line sweeping across as the unlock lands. Rare unlocks switch the ink to amber, 100% to white.",
+  "author": "Achievement Watcher Next",
+  "version": "1.0.0",
+  "tags": ["dark", "technical", "monospace", "flat"],
+  "minAppVersion": "3.9.0"
+}
