@@ -111,13 +111,41 @@ test('every schema property has a control, in its own group, on the right side o
     assert.equal(advanced, Boolean(property.advanced), `${property.key} is on the wrong side of the Advanced disclosure`);
   }
 
-  // Nothing in the markup that the schema does not know about: a stray control would read and write
-  // nothing, since the designer only iterates the schema.
-  for (const field of designer.querySelectorAll('.pd-field')) {
+  /*
+    Nothing in the control panel that the schema does not know about: a stray control would read and
+    write nothing, since the designer only iterates the schema. Scoped to the panel because
+    `.pd-field` is also the styling of the export metadata block, which is not a design property.
+  */
+  for (const field of designer.querySelectorAll('.pd-controls .pd-field')) {
     const key = field.getAttribute('data-key');
     assert.ok(schema.PROPERTY_BY_KEY.has(key), `the designer shows a control for unknown property "${key}"`);
   }
-  assert.equal(designer.querySelectorAll('.pd-field').length, schema.PRESET_PROPERTIES.length);
+  assert.equal(designer.querySelectorAll('.pd-controls .pd-field').length, schema.PRESET_PROPERTIES.length);
+});
+
+/*
+  A control that only applies in one mode is declared twice: `shownFor` in the schema, which is what
+  a reader of the schema believes, and `data-shown-for` in the markup, which is what actually decides.
+  Nothing at runtime reads the first, so the two are compared here instead - a schema entry that
+  quietly stopped matching its control would be documentation that lies.
+*/
+test('a control that only applies in one mode says so in both places', () => {
+  for (const property of schema.PRESET_PROPERTIES) {
+    const field = designer.querySelector(`.pd-field[data-key='${property.key}']`);
+    const markup = field.getAttribute('data-shown-for');
+
+    if (!property.shownFor) {
+      assert.equal(markup, undefined, `${property.key}: the markup hides it in some modes, the schema does not say so`);
+      continue;
+    }
+
+    const [key, values] = Object.entries(property.shownFor)[0];
+    assert.equal(markup, `${key}:${values.join(',')}`, `${property.key}: the schema and the markup disagree about when it applies`);
+    // ...and the mode it depends on has to be a property that really offers those values.
+    const gate = schema.PROPERTY_BY_KEY.get(key);
+    assert.ok(gate, `${property.key} depends on "${key}", which is not a property`);
+    for (const value of values) assert.ok(gate.values.includes(value), `${property.key} waits for ${key}="${value}", which ${key} never takes`);
+  }
 });
 
 test('each group is a section the user can collapse, and only the everyday two start open', () => {
@@ -183,10 +211,110 @@ test('every label in the designer resolves in every bundled locale', () => {
       assert.ok(value.trim(), `${file}: designer.${key} must be translated`);
     }
     // The runtime-worded controls the loader parks on data attributes.
-    for (const key of ['create', 'update', 'editNew', 'namePlaceholder', 'errName', 'created', 'updated', 'loaded', 'deleted', 'imported', 'importedOnly', 'exported', 'resetDone', 'failed', 'value.appSound']) {
+    for (const key of ['create', 'update', 'editNew', 'namePlaceholder', 'errName', 'created', 'updated', 'loaded', 'deleted', 'renamed', 'imported', 'importedOnly', 'exported', 'resetDone', 'failed', 'value.appSound']) {
       assert.ok(String(valueAt(block, key) || '').trim(), `${file}: designer.${key} must be translated`);
     }
+    // ...and the two whose label is an attribute rather than the element's text.
+    for (const attribute of ['data-lang-placeholder', 'data-lang-title']) {
+      for (const node of designer.querySelectorAll(`[${attribute}]`)) {
+        const key = node.getAttribute(attribute);
+        assert.ok(String(valueAt(block, key) || '').trim(), `${file}: designer.${key} must be translated`);
+      }
+    }
   }
+});
+
+/*
+  The control panel is nine groups and sixty-odd properties, so it needs a way through it. What is
+  asserted here is the part that can silently rot: the controls exist, the loader labels them, and
+  the filter hides rather than moves - the designer is bound by id and by position, so a filter that
+  reordered anything would break the locale and the schema parity at once.
+*/
+test('the control panel can be searched, jumped through and stepped back', () => {
+  for (const id of ['pd-search', 'pd-jump', 'pd-no-match', 'btn-preset-undo', 'btn-preset-redo']) {
+    assert.ok(designer.querySelector(`#${id}`), `#${id} is missing from the designer`);
+  }
+  assert.ok(designer.querySelector('#btn-rename-preset'), 'the rename button is missing');
+
+  // The two icon-only buttons say what they are to a screen reader and on hover.
+  for (const id of ['btn-preset-undo', 'btn-preset-redo']) {
+    assert.ok(designer.querySelector(`#${id}`).getAttribute('data-lang-title'), `#${id} has no label`);
+  }
+  assert.equal(designer.querySelector('#pd-search').getAttribute('data-lang-placeholder'), 'search');
+
+  // Both mechanics live in one module, driven against this markup by the browser test rather than
+  // written inline where only a source match could check them.
+  assert.match(settings, /require\(path\.join\(appPath, 'util\/presetPanel\.js'\)\)/);
+  assert.match(settings, /presetPanel\.filterFields\(\$, '#options-notify-designer', query\)/);
+  assert.match(settings, /presetPanel\.createHistory\(/);
+  const panel = fs.readFileSync(path.join(appRoot, 'util', 'presetPanel.js'), 'utf8');
+  assert.match(panel, /field\.toggleClass\('pd-filtered', !hit\)/);
+  assert.doesNotMatch(panel, /\.(?:remove|detach|appendTo|insertBefore)\(/, 'the filter must never restructure the panel');
+  const css = fs.readFileSync(path.join(appRoot, 'resources', 'css', 'app.css'), 'utf8');
+  assert.match(css, /#settings \.pd-field\.pd-filtered,\s*\n#settings \.pd-group\.pd-filtered \{\s*\n\s*display: none;/);
+
+  // Undo starts again on a load, so a step can never carry across two designs.
+  assert.match(settings, /function resetPresetHistory\(/);
+  assert.match(settings, /resetPresetHistory\(\);/);
+  assert.match(settings, /\$\('#btn-preset-undo'\)\.click\(\(\) => stepPresetHistory\(true\)\)/);
+  assert.match(settings, /\$\('#btn-preset-redo'\)\.click\(\(\) => stepPresetHistory\(false\)\)/);
+});
+
+test('undo and redo step through whole designs rather than through edits', () => {
+  const { createHistory } = require(path.join(appRoot, 'util', 'presetPanel.js'));
+  const history = createHistory(3);
+
+  history.reset('a');
+  assert.equal(history.canUndo(), false, 'a fresh design has nothing behind it');
+  assert.equal(history.undo(), null);
+
+  assert.equal(history.record('b'), true);
+  assert.equal(history.record('b'), false, 'the same design twice is not a step');
+  history.record('c');
+  assert.equal(history.undo(), 'b');
+  assert.equal(history.undo(), 'a');
+  assert.equal(history.canUndo(), false);
+  assert.equal(history.redo(), 'b');
+  assert.equal(history.redo(), 'c');
+  assert.equal(history.canRedo(), false);
+
+  // A new step abandons the branch that was ahead, rather than leaving a redo into a design the
+  // user has just moved away from.
+  history.undo();
+  history.record('d');
+  assert.equal(history.canRedo(), false);
+  assert.equal(history.undo(), 'b');
+
+  // The stack is bounded: a long session cannot grow it without limit.
+  history.reset('0');
+  for (const state of ['1', '2', '3', '4', '5']) history.record(state);
+  assert.deepEqual(history.depth(), { past: 3, future: 0 });
+
+  // A load is a new history, not a step in the old one.
+  history.reset('x');
+  assert.equal(history.canUndo(), false);
+  assert.equal(history.canRedo(), false);
+});
+
+test('renaming a preset moves the folder and the settings that pointed at it', () => {
+  const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
+  const handler = init.slice(init.indexOf("ipcMain.handle('rename-custom-preset'"));
+  assert.ok(handler, 'there is no rename handler');
+  const body = handler.slice(0, handler.indexOf('\n});'));
+
+  // Exactly as narrow as deleting: inside the folder, one of ours, and never the scratch preset.
+  assert.match(body, /outside-users-presets/);
+  assert.match(body, /managedPresetMarker\(from\)/);
+  assert.match(body, /PREVIEW_PRESET_NAME/);
+  // ...plus the one rule a rename adds.
+  assert.match(body, /name-taken/);
+  assert.match(body, /fs\.renameSync\(source, target\)/);
+
+  // The renderer follows the menus over, or a renamed preset silently falls back to the default.
+  const rename = settings.slice(settings.indexOf("$('#btn-rename-preset').click("));
+  assert.match(rename, /invoke\('rename-custom-preset', \{ from, to \}\)/);
+  assert.match(rename, /refreshOverlayPresetMenu\(wasMain \? res\.name : undefined\)/);
+  assert.match(rename, /for \(const id of OVERLAY_PRESET_TYPE_IDS\)/);
 });
 
 test('the designer reads and writes its controls from the schema rather than by hand', () => {

@@ -522,11 +522,23 @@ function translateUI(lang, locale, template) {
     $("#settingNav li[data-view='presets'] span").text(clear(template.settings.sideMenu.presets));
     // The button on the preset row in the Notification tab, which opens this tab.
     $('#btn-open-presets').attr('title', clear(c.open));
-    $("#settings .content[data-view='presets'] [data-lang]").each(function () {
-      const value = String($(this).attr('data-lang'))
+    const designerText = (dotted) =>
+      String(dotted)
         .split('.')
         .reduce((node, key) => (node == null ? node : node[key]), c);
+    $("#settings .content[data-view='presets'] [data-lang]").each(function () {
+      const value = designerText($(this).attr('data-lang'));
       if (typeof value === 'string') $(this).text(clear(value));
+    });
+    // The same block, for the two controls whose label is an attribute rather than their text: the
+    // filter's placeholder and the tooltip on an icon-only button.
+    $("#settings .content[data-view='presets'] [data-lang-placeholder]").each(function () {
+      const value = designerText($(this).attr('data-lang-placeholder'));
+      if (typeof value === 'string') $(this).attr('placeholder', clear(value));
+    });
+    $("#settings .content[data-view='presets'] [data-lang-title]").each(function () {
+      const value = designerText($(this).attr('data-lang-title'));
+      if (typeof value === 'string') $(this).attr('title', clear(value)).attr('aria-label', clear(value));
     });
     // The create button and the preset picker swap their wording at runtime (create vs update,
     // "new preset" placeholder), so both spellings are parked on data attributes here and the
@@ -544,6 +556,7 @@ function translateUI(lang, locale, template) {
       .attr('data-updated', clear(c.updated))
       .attr('data-loaded', clear(c.loaded))
       .attr('data-deleted', clear(c.deleted))
+      .attr('data-renamed', clear(c.renamed))
       .attr('data-imported', clear(c.imported))
       .attr('data-imported-only', clear(c.importedOnly))
       .attr('data-exported', clear(c.exported))

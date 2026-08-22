@@ -5079,6 +5079,38 @@ ipcMain.handle('delete-custom-preset', async (event, name) => {
   }
 });
 
+/*
+  Rename a preset the app installed. Same narrowness as deleting - the folder must sit directly under
+  "Users Presets" and carry one of the app's own markers - plus the one thing a rename adds: the new
+  name must be free, so a rename can never merge two presets or overwrite one.
+
+  Only the folder moves. A preset's files never name the preset, so nothing inside has to be
+  rewritten; what does have to follow is whichever notification setting pointed at the old name, and
+  that is the renderer's job because it owns those menus.
+*/
+ipcMain.handle('rename-custom-preset', async (event, request = {}) => {
+  const from = sanitizePresetName(request.from);
+  const to = sanitizePresetName(request.to);
+  if (!from || !to || from === PREVIEW_PRESET_NAME || to === PREVIEW_PRESET_NAME) return { ok: false, error: 'invalid-name' };
+  if (from === to) return { ok: true, name: to };
+
+  const source = path.join(usersPresetsDir(), from);
+  const target = path.join(usersPresetsDir(), to);
+  try {
+    if (path.dirname(path.resolve(source)) !== path.resolve(usersPresetsDir())) return { ok: false, error: 'outside-users-presets' };
+    if (path.dirname(path.resolve(target)) !== path.resolve(usersPresetsDir())) return { ok: false, error: 'outside-users-presets' };
+    if (!managedPresetMarker(from)) return { ok: false, error: 'not-generated-here' };
+    // Case-insensitive on Windows, so "Slate" to "slate" is the same folder and is allowed through.
+    if (fs.existsSync(target) && target.toLowerCase() !== source.toLowerCase()) return { ok: false, error: 'name-taken' };
+    fs.renameSync(source, target);
+    debug.log('[custom-preset] renamed ' + source + ' -> ' + target);
+    return { ok: true, name: to, from };
+  } catch (err) {
+    debug.log('[custom-preset] rename failed: ' + (err.message || err));
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+
 // Render the design currently in the builder without saving it: write the scratch preset and hand
 // its reserved name back, so the caller fires an ordinary test notification through it. Previewing
 // used to require creating the preset first, which filled the preset list with throwaway attempts.

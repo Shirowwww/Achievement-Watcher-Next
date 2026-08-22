@@ -8964,6 +8964,180 @@ body {
   min-width: 0;
 }
 
+/* What a package carries beside the design: asked once, on the way out. */
+#settings .pd-meta {
+  margin-top: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: 10px;
+  background: var(--set-surface-sunken);
+}
+
+#settings .pd-meta[hidden] {
+  display: none;
+}
+
+#settings .pd-meta h4 {
+  margin: 0 0 4px;
+  font-family: 'Open-Sans';
+  font-size: 13px;
+}
+
+#settings .pd-meta-note {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+#settings .pd-meta-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px 14px;
+}
+
+#settings .pd-meta-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+#settings .pd-meta-fields input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: 8px;
+  background: var(--set-surface);
+  color: var(--text);
+  font-family: 'Open-Sans';
+  font-size: 12px;
+}
+
+#settings .pd-meta-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* --- navigating the control panel ------------------------------------------------------------- */
+
+#settings .pd-controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The accessible label of the filter field: read by screen readers, never painted over the input. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+#settings .pd-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#settings .pd-search .fa-search {
+  position: absolute;
+  left: 10px;
+  color: var(--text-muted);
+  font-size: 11px;
+  pointer-events: none;
+}
+
+#settings .pd-search input {
+  width: 100%;
+  padding: 7px 10px 7px 28px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: 8px;
+  background: var(--set-surface-sunken);
+  color: var(--text);
+  font-family: 'Open-Sans';
+  font-size: 12px;
+}
+
+#settings .pd-history {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+#settings .pd-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: 8px;
+  background: var(--set-surface-sunken);
+  color: var(--text);
+  cursor: pointer;
+}
+
+#settings .pd-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+#settings .pd-icon-btn:not(:disabled):hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+#settings .pd-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+#settings .pd-jump[hidden] {
+  display: none;
+}
+
+#settings .pd-jump-chip {
+  padding: 4px 9px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: 'Open-Sans';
+  font-size: 11px;
+  cursor: pointer;
+}
+
+#settings .pd-jump-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+#settings .pd-no-match {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* Filtering hides, it never moves: the locale binds these controls by id and by position. */
+#settings .pd-field.pd-filtered,
+#settings .pd-group.pd-filtered {
+  display: none;
+}
+
 #settings .pd-group {
   overflow: hidden;
   border: 1px solid var(--set-hairline-soft);

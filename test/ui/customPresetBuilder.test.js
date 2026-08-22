@@ -78,6 +78,11 @@ const FULL = {
   glowAnim: 'breathe',
   bgImage: 'backdrop.png',
   sound: 'Xbox.wav',
+  iconShape: 'hexagon',
+  bgPattern: 'grid',
+  bgPatternOpacity: 45,
+  easingOut: 'elastic',
+  stateTint: 30,
 };
 
 test('the reference design covers every property, so nothing new is silently untested', () => {
@@ -211,6 +216,89 @@ test('rare and completion notifications repaint the card from one accent variabl
   assert.match(css, /\.ach\.state-rare\.tier-silver \{ --accent: var\(--rare-silver\); \}/);
   assert.match(css, /\.ach\.state-rare\.tier-bronze \{ --accent: var\(--rare-bronze\); \}/);
   assert.match(css, /\.ach\.state-platinum \{ --accent: var\(--platinum-accent\); --glow-strength: var\(--platinum-glow\); \}/);
+});
+
+/*
+  The four properties added to the designer after the first release. Each one has to cost nothing at
+  its default - a preset saved before it existed must generate the same stylesheet it always did -
+  and each one has to actually reach the CSS when it is asked for.
+*/
+test('the later design properties cost nothing until a preset asks for them', () => {
+  const plain = buildCustomPresetCss({});
+  assert.doesNotMatch(plain, /\.ach::after/, 'the texture layer is built for a preset that has none');
+  assert.doesNotMatch(plain, /\.ach\.state-rare, \.ach\.state-platinum/, 'the state tint is emitted at zero');
+  assert.match(plain, /--ease-out: ease-in;/, 'the exit curve must default to the one presets always had');
+  assert.match(plain, /\.ach \.icon img \{[^}]*border-radius: var\(--icon-radius\)/, 'the default icon is still the rounded square');
+  assert.doesNotMatch(plain, /clip-path/, 'the default icon should not be clipped');
+});
+
+test('a texture is its own layer, above the background and below the text', () => {
+  const css = buildCustomPresetCss({ bgPattern: 'dots', bgPatternOpacity: 40 });
+  assert.match(css, /\.ach::after \{[^}]*background-image: radial-gradient/);
+  assert.match(css, /--pattern-opacity: 0\.4;/);
+  // Its ink is mixed from the card's own text colour, so a texture never needs a colour of its own.
+  assert.match(css, /--pattern-ink: color-mix\(in srgb, var\(--text\) calc\(var\(--pattern-opacity\) \* 100%\), transparent\);/);
+  // An absolutely positioned pseudo-element paints over ordinary content unless the content is
+  // given a position of its own; without this the texture is drawn on top of the title.
+  assert.match(css, /\.ach > \* \{ position: relative; z-index: 1; \}/);
+  assert.match(css, /\.ach \{[\s\S]*?overflow: hidden;[\s\S]*?\}/, 'a texture has to be clipped to the card');
+
+  // Every pattern the schema offers really builds one, and none of them is the same as another.
+  const drawn = new Set();
+  for (const name of Object.keys(schema.BG_PATTERNS)) {
+    const rule = buildCustomPresetCss({ bgPattern: name }).split('\n').find((line) => line.startsWith('.ach::after'));
+    if (name === 'none') {
+      assert.equal(rule, undefined, 'the "none" texture must emit nothing');
+      continue;
+    }
+    assert.ok(rule, `the "${name}" texture generates no layer`);
+    assert.ok(!drawn.has(rule), `the "${name}" texture is identical to another one`);
+    drawn.add(rule);
+  }
+});
+
+test('an icon shape replaces the border and the radius rather than fighting them', () => {
+  for (const [name, clip] of Object.entries(schema.ICON_SHAPES)) {
+    const css = buildCustomPresetCss({ iconShape: name, iconBorder: 4, iconGlow: 60 });
+    const rule = css.split('\n').find((line) => line.startsWith('.ach .icon img'));
+    assert.ok(rule, `${name}: no icon rule`);
+    if (!clip) {
+      assert.match(rule, /border: var\(--icon-border\)/, 'the rounded shape keeps its border');
+      assert.match(rule, /box-shadow: 0 0 calc\(var\(--icon-glow\)/, 'the rounded shape keeps its glow');
+      continue;
+    }
+    assert.ok(rule.includes(`clip-path: ${clip};`), `${name}: the shape does not reach the CSS`);
+    // A clipped element loses a box-shadow with the corners, so the glow becomes a drop-shadow.
+    assert.doesNotMatch(rule, /box-shadow/, `${name}: a box-shadow would be clipped away`);
+    assert.match(rule, /filter: drop-shadow\(0 0 calc\(var\(--icon-glow\)/, `${name}: the glow is lost`);
+    assert.doesNotMatch(rule, /border:/, `${name}: a border would be clipped away`);
+  }
+});
+
+test('a state can wash the card in its own colour, and the exit can leave on its own curve', () => {
+  const tinted = buildCustomPresetCss({ stateTint: 25 });
+  assert.match(tinted, /--state-tint: 0\.25;/);
+  // Mixed from --accent, which the state rules above have already re-pointed, so one rule covers
+  // rare, each of its tiers, and completion.
+  assert.match(
+    tinted,
+    /\.ach\.state-rare, \.ach\.state-platinum \{ --bg: color-mix\(in srgb, var\(--accent\) calc\(var\(--state-tint\) \* 100%\), var\(--bg-base\)\); \}/
+  );
+  const rules = tinted.split('\n');
+  assert.ok(
+    rules.findIndex((line) => line.startsWith('.ach.state-platinum {')) < rules.findIndex((line) => line.startsWith('.ach.state-rare, .ach.state-platinum')),
+    'the tint has to be written after the rules that set --accent'
+  );
+
+  // `same` is the exit every preset had before this existed, spelled out rather than left implicit.
+  assert.match(buildCustomPresetCss({ easingOut: 'same' }), /--ease-out: ease-in;/);
+  for (const name of Object.keys(schema.EASINGS)) {
+    assert.ok(
+      buildCustomPresetCss({ easingOut: name }).includes(`--ease-out: ${schema.EASINGS[name]};`),
+      `the ${name} exit curve does not reach the CSS`
+    );
+  }
+  assert.match(buildCustomPresetCss({}), /aw_out var\(--ach-out\) var\(--ease-out\) forwards/);
 });
 
 test('the artwork background is only built when a preset actually paints one', () => {

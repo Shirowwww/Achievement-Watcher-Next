@@ -57,10 +57,51 @@ const MOTION_OFFSETS = {
   zoom: { dx: '0%', dy: '0%', scale: 0.82 },
 };
 
+/*
+  The curve the entry and the exit follow. `smooth`, `linear` and `back` are the three the designer
+  has always had and keep their exact spelling; the rest are the shapes those three leave out - a
+  slow settle, a hard snap, and an overshoot big enough to read as a bounce.
+*/
 const EASINGS = {
   smooth: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
   linear: 'linear',
   back: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+  gentle: 'cubic-bezier(0.33, 0, 0.2, 1)',
+  snap: 'cubic-bezier(0.5, 0, 0.1, 1)',
+  elastic: 'cubic-bezier(0.16, 1.4, 0.3, 1)',
+};
+
+/*
+  The icon's outline. `rounded` is the shape the designer has always drawn - a square whose corner
+  radius is the `iconRadius` slider - so it stays the default and nothing already saved moves. The
+  others are clip paths, and they ignore the radius because their outline is their own.
+*/
+const ICON_SHAPES = {
+  rounded: '',
+  circle: 'circle(50% at 50% 50%)',
+  squircle: 'inset(0 0 0 0 round 32%)',
+  hexagon: 'polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0% 50%)',
+  diamond: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+};
+
+/*
+  A layer of texture over the card's background and under its text, drawn from gradients so a preset
+  carries no picture for it. `none` is the default and emits nothing at all.
+*/
+const BG_PATTERNS = {
+  none: '',
+  grid: 'linear-gradient(var(--pattern-ink) 1px, transparent 1px), linear-gradient(90deg, var(--pattern-ink) 1px, transparent 1px)',
+  dots: 'radial-gradient(var(--pattern-ink) 1.4px, transparent 1.5px)',
+  lines: 'repeating-linear-gradient(45deg, var(--pattern-ink) 0 1px, transparent 1px 9px)',
+  noise: 'radial-gradient(var(--pattern-ink) 0.6px, transparent 0.7px), radial-gradient(var(--pattern-ink) 0.5px, transparent 0.6px)',
+};
+
+// The tile each pattern repeats on, and the offset that keeps the two-layer ones from lining up.
+const BG_PATTERN_SIZES = {
+  grid: '22px 22px',
+  dots: '14px 14px',
+  lines: 'auto',
+  noise: '7px 7px, 11px 11px',
 };
 
 const MOTION_VALUES = Object.keys(MOTION_OFFSETS);
@@ -122,7 +163,7 @@ const PRESET_PROPERTIES = [
 
   // --- colours & background --------------------------------------------------------------------
   { key: 'bgMode', type: 'select', def: 'solid', values: ['solid', 'gradient', 'artwork', 'image'], group: 'color' },
-  { key: 'bg', type: 'color', def: '#16181d', group: 'color', css: '--bg' },
+  { key: 'bg', type: 'color', def: '#16181d', group: 'color', css: '--bg-base' },
   { key: 'bg2', type: 'color', def: '#2b3550', group: 'color', css: '--bg2', shownFor: { bgMode: ['gradient'] } },
   { key: 'bgAngle', type: 'number', def: 135, min: 0, max: 360, step: 5, group: 'color', advanced: true, css: '--bg-angle', unit: 'deg' },
   /*
@@ -137,13 +178,33 @@ const PRESET_PROPERTIES = [
   // Which part of the artwork the card shows. Game headers put their logo in a fixed place, so the
   // difference between the three is the difference between a readable card and one full of lettering.
   { key: 'artworkPosition', type: 'select', def: 'center', values: ['top', 'center', 'bottom'], group: 'color', advanced: true, shownFor: { bgMode: ['artwork', 'image'] } },
+  /*
+    A layer of texture between the background and the text. Drawn from gradients rather than a
+    picture, so it costs a preset nothing to carry and tints itself from the card's own colours.
+  */
+  { key: 'bgPattern', type: 'select', def: 'none', values: Object.keys(BG_PATTERNS), group: 'color', advanced: true },
+  {
+    key: 'bgPatternOpacity',
+    type: 'number',
+    def: 20,
+    min: 5,
+    max: 100,
+    step: 5,
+    group: 'color',
+    advanced: true,
+    css: '--pattern-opacity',
+    scale: 100,
+    shownFor: { bgPattern: ['grid', 'dots', 'lines', 'noise'] },
+  },
   { key: 'text', type: 'color', def: '#ffffff', group: 'color', css: '--text' },
   { key: 'accent', type: 'color', def: '#4aa3ff', group: 'color', css: '--accent-base' },
   { key: 'opacity', type: 'number', def: 1, min: 0.2, max: 1, step: 0.01, group: 'color', css: '--opacity', percent: true },
 
   // --- icon ------------------------------------------------------------------------------------
   { key: 'iconSize', type: 'number', def: 64, min: 24, max: 110, step: 1, group: 'icon', css: '--icon-size', unit: 'px' },
-  { key: 'iconRadius', type: 'number', def: 14, min: 0, max: 50, step: 1, group: 'icon', css: '--icon-radius', unit: '%' },
+  { key: 'iconShape', type: 'select', def: 'rounded', values: Object.keys(ICON_SHAPES), group: 'icon' },
+  // Only the rounded shape has a radius to set; the others carry their own outline.
+  { key: 'iconRadius', type: 'number', def: 14, min: 0, max: 50, step: 1, group: 'icon', css: '--icon-radius', unit: '%', shownFor: { iconShape: ['rounded'] } },
   { key: 'iconBorder', type: 'number', def: 0, min: 0, max: 6, step: 1, group: 'icon', advanced: true, css: '--icon-border', unit: 'px' },
   { key: 'iconGlow', type: 'number', def: 0, min: 0, max: 100, step: 5, group: 'icon', advanced: true, css: '--icon-glow', scale: 100 },
 
@@ -173,6 +234,12 @@ const PRESET_PROPERTIES = [
   { key: 'animInMs', type: 'number', def: 520, min: 120, max: 1500, step: 20, group: 'motion', advanced: true, css: '--ach-in', unit: 'ms' },
   { key: 'animOutMs', type: 'number', def: 380, min: 120, max: 1500, step: 20, group: 'motion', advanced: true, css: '--ach-out', unit: 'ms' },
   { key: 'easing', type: 'select', def: 'smooth', values: Object.keys(EASINGS), group: 'motion', advanced: true },
+  /*
+    The exit curve. It was always ease-in, written into the animation shorthand, and `same` keeps
+    exactly that - so a preset that never touches this renders as it always did, and one that does
+    can leave on a different curve from the one it arrived on.
+  */
+  { key: 'easingOut', type: 'select', def: 'same', values: ['same'].concat(Object.keys(EASINGS)), group: 'motion', advanced: true },
 
   /*
     --- states ------------------------------------------------------------------------------------
@@ -188,6 +255,11 @@ const PRESET_PROPERTIES = [
   { key: 'rareGlow', type: 'number', def: 55, min: 0, max: 100, step: 5, group: 'state', css: '--rare-glow', scale: 100 },
   { key: 'platinumAccent', type: 'color', def: '#cfe3ff', group: 'state', css: '--platinum-accent' },
   { key: 'platinumGlow', type: 'number', def: 70, min: 0, max: 100, step: 5, group: 'state', css: '--platinum-glow', scale: 100 },
+  /*
+    How much of the state's own colour washes into the card. Zero is the default and changes nothing,
+    which is what keeps a rare unlock on an existing preset looking exactly as it did.
+  */
+  { key: 'stateTint', type: 'number', def: 0, min: 0, max: 60, step: 5, group: 'state', css: '--state-tint', scale: 100 },
   { key: 'showProgress', type: 'toggle', def: true, group: 'state' },
   /*
     The rarity chip: the unlock rate the popup was told about, printed on the card. Off by default -
@@ -276,6 +348,9 @@ module.exports = {
   PRESET_PROPERTIES,
   PROPERTY_BY_KEY,
   FONT_STACKS,
+  ICON_SHAPES,
+  BG_PATTERNS,
+  BG_PATTERN_SIZES,
   MOTION_OFFSETS,
   MOTION_VALUES,
   EASINGS,

@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const schema = require('./presetSchema.js');
 const { cssUrl } = require('./cssUrl.js');
-const { PRESET_PROPERTIES, FONT_STACKS, MOTION_OFFSETS, EASINGS, normalizeOptions, cssValue } = schema;
+const { PRESET_PROPERTIES, FONT_STACKS, ICON_SHAPES, BG_PATTERNS, BG_PATTERN_SIZES, MOTION_OFFSETS, EASINGS, normalizeOptions, cssValue } = schema;
 
 /*
   The preset engine: the inline script every generated preset carries.
@@ -327,6 +327,9 @@ function rootVariables(values, assetUrl) {
   const motionOut = MOTION_OFFSETS[values.animOut];
   lines.push(`  --font: ${FONT_STACKS[values.fontFamily]};`);
   lines.push(`  --ease: ${EASINGS[values.easing]};`);
+  // `same` is the exit the preset always had, written out rather than left implicit so one variable
+  // drives the animation whichever way it is set.
+  lines.push(`  --ease-out: ${values.easingOut === 'same' ? 'ease-in' : EASINGS[values.easingOut]};`);
   lines.push(`  --in-dx: ${travel(motionIn.dx)}; --in-dy: ${travel(motionIn.dy)}; --in-scale: ${motionIn.scale};`);
   lines.push(`  --out-dx: ${travel(motionOut.dx)}; --out-dy: ${travel(motionOut.dy)}; --out-scale: ${motionOut.scale};`);
   // Set by the engine from the payload's artwork; `none` keeps the plain background when a
@@ -342,6 +345,14 @@ function rootVariables(values, assetUrl) {
   // the window presetBoxSize measured still fits the brightest frame.
   lines.push('  --glow-pulse: 1;');
   lines.push('  --ach-hold: 5000ms;');
+  /*
+    The card's own background colour. `--bg-base` is what the designer set; `--bg` is what the card
+    paints, and a state re-points it the way it re-points `--accent`, so one stylesheet can wash a
+    rare unlock in its own colour without a second background rule.
+  */
+  lines.push('  --bg: var(--bg-base);');
+  // The pattern's ink: the text colour, at the strength the design asked for.
+  lines.push('  --pattern-ink: color-mix(in srgb, var(--text) calc(var(--pattern-opacity) * 100%), transparent);');
   return lines;
 }
 
@@ -380,6 +391,22 @@ function layoutRules(values) {
   return rules;
 }
 
+/*
+  The icon itself. The rounded shape is the original declaration untouched; every other shape is a
+  clip path, which cuts the border and the radius off with it - so those are left out rather than
+  drawn round an outline that no longer exists. The glow sits on a wrapper instead, because a
+  box-shadow on a clipped element is clipped away with it.
+*/
+function iconImageRule(values) {
+  const base =
+    '.ach .icon img { display: block; box-sizing: border-box; width: var(--icon-size); height: var(--icon-size); object-fit: cover;';
+  const clip = ICON_SHAPES[values.iconShape];
+  if (!clip) {
+    return `${base} border: var(--icon-border) solid var(--accent); border-radius: var(--icon-radius); box-shadow: 0 0 calc(var(--icon-glow) * 26px) color-mix(in srgb, var(--accent) 70%, transparent); }`;
+  }
+  return `${base} clip-path: ${clip}; filter: drop-shadow(0 0 calc(var(--icon-glow) * 18px) color-mix(in srgb, var(--accent) 70%, transparent)); }`;
+}
+
 // A text-only card drops the icon entirely rather than rendering it at zero size: the gap and the
 // alignment are measured from the boxes that are actually there, and presetBoxSize measures the same
 // card, so the window it is given matches what it paints.
@@ -405,6 +432,7 @@ function buildCustomPresetCss(options, { assetUrl } = {}) {
   const flexAlign = FLEX_ALIGN[values.align];
   const artwork = values.bgMode === 'artwork';
   const picture = artwork || values.bgMode === 'image';
+  const pattern = Boolean(BG_PATTERNS[values.bgPattern]);
   const glowAnimation = GLOW_ANIMATIONS[values.glowAnim] || null;
 
   const css = [
@@ -432,7 +460,7 @@ function buildCustomPresetCss(options, { assetUrl } = {}) {
     backgroundRule(values),
     ...borderRules(values),
     ...layoutRules(values),
-    picture ? '  overflow: hidden;' : '',
+    picture || pattern ? '  overflow: hidden;' : '',
     '  box-shadow: 0 4px 12px rgba(0, 0, 0, var(--shadow)), 0 0 calc(var(--glow-strength) * var(--glow-pulse) * ' + GLOW_RADIUS_PX + 'px) color-mix(in srgb, var(--accent) 65%, transparent);',
     '}',
     '.ach.state-rare { --accent: var(--rare-accent); --glow-strength: var(--rare-glow); }',
@@ -441,21 +469,46 @@ function buildCustomPresetCss(options, { assetUrl } = {}) {
     '.ach.state-platinum { --accent: var(--platinum-accent); --glow-strength: var(--platinum-glow); }',
   ];
 
+  /*
+    A rare unlock and a completion wash the card in their own colour. Written after the state rules
+    above so it reads whichever `--accent` they landed on, and skipped entirely at zero so a preset
+    that does not ask for it generates exactly the stylesheet it did before.
+  */
+  if (values.stateTint > 0) {
+    css.push('.ach.state-rare, .ach.state-platinum { --bg: color-mix(in srgb, var(--accent) calc(var(--state-tint) * 100%), var(--bg-base)); }');
+  }
+
   if (picture) {
     // A layer rather than a background-image on the card: the picture can be dimmed and blurred
     // without touching the text drawn on top of it. `--artwork` is the game's, set by the engine on
     // every payload; `--bg-image` is the preset's own and is fixed at generation time.
     const source = artwork ? 'var(--artwork)' : 'var(--bg-image)';
     css.push(
-      `.ach::before { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; background-image: ${source}; background-size: cover; background-position: center ${values.artworkPosition}; filter: blur(var(--artwork-blur)); opacity: calc(1 - var(--artwork-dim)); }`,
-      '.ach > * { position: relative; z-index: 1; }'
+      `.ach::before { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; background-image: ${source}; background-size: cover; background-position: center ${values.artworkPosition}; filter: blur(var(--artwork-blur)); opacity: calc(1 - var(--artwork-dim)); }`
     );
   }
+
+  if (pattern) {
+    // Its own layer above the background and any picture, and below the text.
+    const size = BG_PATTERN_SIZES[values.bgPattern];
+    css.push(
+      `.ach::after { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; pointer-events: none; background-image: ${BG_PATTERNS[values.bgPattern]};` +
+        (size && size !== 'auto' ? ` background-size: ${size};` : '') +
+        ' }'
+    );
+  }
+
+  /*
+    An absolutely positioned pseudo-element paints above ordinary in-flow content, so as soon as the
+    card has a layer at all, the text has to be given a stacking position of its own or the picture
+    and the pattern are drawn over it.
+  */
+  if (picture || pattern) css.push('.ach > * { position: relative; z-index: 1; }');
 
   css.push(
     ...iconRules(values),
     '.ach .icon { flex: 0 0 auto; }',
-    '.ach .icon img { display: block; box-sizing: border-box; width: var(--icon-size); height: var(--icon-size); border: var(--icon-border) solid var(--accent); border-radius: var(--icon-radius); object-fit: cover; box-shadow: 0 0 calc(var(--icon-glow) * 26px) color-mix(in srgb, var(--accent) 70%, transparent); }',
+    iconImageRule(values),
     // `overflow: hidden` is what keeps a scrolling line inside the card: a title too long to fit is
     // animated past its own box, and with nothing clipping the column it was drawn over the icon and
     // out through the side of the popup.
@@ -477,7 +530,7 @@ function buildCustomPresetCss(options, { assetUrl } = {}) {
     glowAnimation ? glowAnimation.css : '',
     // The glow animation joins the entry/hold/exit list rather than replacing any of it: it only ever
     // writes --glow-pulse, so the three that drive transform and opacity are untouched.
-    '.active { animation: aw_in var(--ach-in) var(--ease) forwards, aw_hold var(--ach-hold) forwards, aw_out var(--ach-out) ease-in forwards' +
+    '.active { animation: aw_in var(--ach-in) var(--ease) forwards, aw_hold var(--ach-hold) forwards, aw_out var(--ach-out) var(--ease-out) forwards' +
       (glowAnimation ? `, ${glowAnimation.name} ${glowAnimation.duration}ms ease-in-out infinite` : '') +
       '; animation-delay: 0s, var(--ach-in), calc(var(--ach-in) + var(--ach-hold))' +
       (glowAnimation ? ', 0s' : '') +

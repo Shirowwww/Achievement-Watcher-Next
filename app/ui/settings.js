@@ -3130,6 +3130,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     const presetSchema = require(path.join(appPath, 'util/presetSchema.js'));
     const presetGenerator = require(path.join(appPath, 'util/customPreset.js'));
     const presetTemplates = require(path.join(appPath, 'util/presetTemplates.js'));
+    const presetPanel = require(path.join(appPath, 'util/presetPanel.js'));
 
     // Value formatting for the readout beside each slider. Purely cosmetic: the stored value is
     // always what the schema says.
@@ -3518,12 +3519,16 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       previewPending = setTimeout(() => {
         previewPending = null;
         updatePreviewStyles(refreshPresetControls());
+        // Changing a mode can bring a control back (the icon radius returns with the rounded shape),
+        // and a control that reappears while the panel is filtered has to be filtered too.
+        if (String($('#pd-search').val() || '')) filterDesigner($('#pd-search').val());
       }, 40);
     }
 
     $('#options-notify-designer').on('input change', 'input, select', function () {
-      if (this.id === 'pd-load' || this.id === 'pd-name' || this.id === 'pd-resolution') return;
+      if (this.id === 'pd-load' || this.id === 'pd-name' || this.id === 'pd-resolution' || this.id === 'pd-search') return;
       schedulePreview();
+      recordPresetHistory();
     });
     // The one property the card cannot show: play it when it is chosen, exactly as the Notifications
     // tab does for the app-wide sound, at the volume that setting is on.
@@ -3556,6 +3561,134 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       if (chosen) previewSoundAtVolume(chosen);
     });
     $('#pd-resolution').on('change', () => layoutPreview());
+
+    /* ---- navigating a long panel -----------------------------------------------------------------
+       Nine groups and sixty-odd properties. Two ways through them: a chip per group that opens it and
+       scrolls to it, and a filter over every label. Neither moves a control in the DOM - the same rule
+       the Settings search follows, and for the same reason: the locale binds by position and by id.
+    */
+    function buildGroupJump() {
+      const bar = $('#pd-jump');
+      if (!bar.length) return;
+      bar.empty();
+      $('#options-notify-designer .pd-group').each(function () {
+        const group = $(this);
+        const label = group.find('.pd-group-head span[data-lang]').first().text();
+        if (!label) return;
+        bar.append(
+          $('<button type="button" class="pd-jump-chip">')
+            .attr('data-jump', String(group.attr('data-group') || ''))
+            .text(label)
+        );
+      });
+    }
+    // The chips carry group titles, so they are rebuilt whenever the language changes.
+    $(document).on('locale-labels-changed', buildGroupJump);
+
+    $('#pd-jump').on('click', '.pd-jump-chip', function () {
+      const wanted = String($(this).attr('data-jump') || '');
+      const group = $(`#options-notify-designer .pd-group[data-group='${wanted}']`);
+      if (!group.length) return;
+      group.addClass('is-open');
+      const node = group.get(0);
+      if (node && node.scrollIntoView) node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+
+    /*
+      Filtering. The rule the panel lives by - hide, never move - is in util/presetPanel.js, tested
+      against this same markup in a real browser; here it is only wired to the box and the two lines
+      that answer for the whole panel.
+    */
+    function filterDesigner(query) {
+      const result = presetPanel.filterFields($, '#options-notify-designer', query);
+      $('#pd-no-match').prop('hidden', !result.filtering || result.total > 0);
+      $('#pd-jump').prop('hidden', result.filtering);
+      return result.total;
+    }
+
+    $('#pd-search').on('input', function () {
+      filterDesigner($(this).val());
+    });
+    // Escape clears the filter rather than leaving the panel half hidden with an empty-looking box.
+    $('#pd-search').on('keydown', function (event) {
+      if (event.key !== 'Escape') return;
+      if (!String($(this).val() || '')) return;
+      event.stopPropagation();
+      $(this).val('');
+      filterDesigner('');
+    });
+
+    /* ---- undo and redo ---------------------------------------------------------------------------
+       The stack itself is in util/presetPanel.js. What is here is what makes it a designer feature:
+       what counts as a state, when one settles, and how one is put back.
+    */
+    const presetHistory = presetPanel.createHistory(80);
+    let historyTimer = null;
+    let historyRestoring = false;
+
+    function updateHistoryButtons() {
+      $('#btn-preset-undo').prop('disabled', !presetHistory.canUndo());
+      $('#btn-preset-redo').prop('disabled', !presetHistory.canRedo());
+    }
+
+    // Dragging a slider is one gesture, not one step per pixel, so a state settles before it counts.
+    function recordPresetHistory() {
+      if (historyRestoring) return;
+      clearTimeout(historyTimer);
+      historyTimer = setTimeout(() => {
+        historyTimer = null;
+        if (presetHistory.record(JSON.stringify(readPresetOptions()))) updateHistoryButtons();
+      }, 400);
+    }
+
+    // Starting again from a saved preset, a template or a reset is a new history, not a step in the
+    // old one: undoing across a load would silently mix two designs.
+    function resetPresetHistory() {
+      clearTimeout(historyTimer);
+      historyTimer = null;
+      presetHistory.reset(JSON.stringify(readPresetOptions()));
+      updateHistoryButtons();
+    }
+
+    function stepPresetHistory(back) {
+      // A pending record would otherwise land on top of the step just taken.
+      clearTimeout(historyTimer);
+      historyTimer = null;
+      const state = back ? presetHistory.undo() : presetHistory.redo();
+      if (state == null) return;
+
+      historyRestoring = true;
+      try {
+        const values = JSON.parse(state);
+        writePresetOptions(values);
+        refreshPresetSounds(values.sound || '');
+        refreshPresetImages(values.bgImage || '');
+        updatePreviewStyles(readPresetOptions());
+        replayPreview();
+        filterDesigner($('#pd-search').val());
+      } finally {
+        historyRestoring = false;
+      }
+      updateHistoryButtons();
+    }
+
+    $('#btn-preset-undo').click(() => stepPresetHistory(true));
+    $('#btn-preset-redo').click(() => stepPresetHistory(false));
+
+    /*
+      The keyboard, but only while the designer is the tab on screen and the focus is not in a field
+      where the browser's own undo is what the user means.
+    */
+    $(document).on('keydown', function (event) {
+      if (!event.ctrlKey || event.altKey) return;
+      const key = String(event.key || '').toLowerCase();
+      if (key !== 'z' && key !== 'y') return;
+      if (!$("#settings .content[data-view='presets']").is(':visible')) return;
+      const focused = document.activeElement;
+      if (focused && /^(?:input|textarea)$/i.test(focused.tagName) && !/^(?:range|color|checkbox|radio)$/i.test(focused.type || '')) return;
+      event.preventDefault();
+      stepPresetHistory(key === 'z' && !event.shiftKey);
+    });
 
     // Collapsible groups, and the per-group Advanced disclosure.
     $('#options-notify-designer').on('click', '.pd-group-head', function () {
@@ -3777,11 +3910,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       updateDeleteButtonVisibility();
     }
 
-    // Deleting only ever applies to a preset the app installed, so the button appears once one is
-    // actually loaded - never next to a bundled preset or a half-typed new name.
+    // Deleting and renaming only ever apply to a preset the app installed, so the buttons appear once
+    // one is actually loaded - never next to a bundled preset or a half-typed new name.
     function updateDeleteButtonVisibility() {
       const loaded = String($('#pd-load').val() || '');
-      $('#btn-delete-preset').toggle(Boolean(loaded) && managedPresetNames().includes(loaded));
+      const managed = Boolean(loaded) && managedPresetNames().includes(loaded);
+      $('#btn-delete-preset').toggle(managed);
+      $('#btn-rename-preset').toggle(managed);
     }
 
     /*
@@ -3824,6 +3959,53 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
       return names;
     }
+
+    /*
+      Rename the loaded preset. The name field is where the new one is typed, because that is the
+      field that already says what the preset is called; renaming is what turns a typed name into a
+      move rather than into a second copy under a new name.
+
+      The settings that pointed at the old name are moved with it. A preset can be the app's main
+      choice, the overlay's, or one of the per-source overrides, and a rename that left any of them
+      pointing at a name that no longer exists would silently put that notification back on the
+      default the next time it fired.
+    */
+    $('#btn-rename-preset').click(async function () {
+      const from = String($('#pd-load').val() || '');
+      const to = ($('#pd-name').val() || '').trim();
+      if (!from) return;
+      if (!to || to === from) {
+        setPresetStatus($('#pd-status').attr('data-err') || '', 'error');
+        $('#pd-name').trigger('focus');
+        return;
+      }
+
+      const self = $(this);
+      self.css('pointer-events', 'none');
+      try {
+        const res = await ipcRenderer.invoke('rename-custom-preset', { from, to });
+        if (res && res.ok) {
+          // Which menus were on the old name, read before the lists are rebuilt under them.
+          const followed = [];
+          const wasMain = String($('#option_overlayPreset').val() || '') === from;
+          for (const id of OVERLAY_PRESET_TYPE_IDS) {
+            if (String($(id).val() || '') === from) followed.push(id);
+          }
+          await refreshOverlayPresetMenu(wasMain ? res.name : undefined);
+          for (const id of followed) $(id).val(res.name).change();
+          await refreshGeneratedPresetList(res.name);
+          $('#pd-name').val(res.name);
+          updateCreateButtonMode();
+          setPresetStatus(`${$('#pd-status').attr('data-renamed') || ''} ${res.name}`.trim(), 'ok');
+        } else {
+          setPresetStatus((($('#pd-status').attr('data-fail') || '') + (res && res.error ? ': ' + res.error : '')).trim(), 'error');
+        }
+      } catch (err) {
+        debug.log(err);
+        setPresetStatus((($('#pd-status').attr('data-fail') || '') + ': ' + err).trim(), 'error');
+      }
+      self.css('pointer-events', 'initial');
+    });
 
     $('#btn-delete-preset').click(async function () {
       const name = String($('#pd-load').val() || '');
@@ -3879,6 +4061,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       refreshPresetImages(values.bgImage || '');
       updatePreviewStyles(readPresetOptions());
       replayPreview();
+      // A load, a template or a reset starts a design rather than continuing one: undoing across it
+      // would step back into a different preset's values.
+      resetPresetHistory();
+      filterDesigner($('#pd-search').val());
     }
 
     function buildTemplateChips() {
@@ -4100,6 +4286,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     */
     $('#btn-export-preset').click(async function () {
       const loaded = String($('#pd-load').val() || '');
+      // An imported preset is exported as it stands; anything the designer can read is exported from
+      // the controls, so an unsaved draft packages what is on screen.
       const request =
         loaded && !isEditablePreset(loaded)
           ? { name: loaded }

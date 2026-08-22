@@ -474,7 +474,10 @@ test('an imported theme is an ordinary preset, complete and editable', (t) => {
   const css = fs.readFileSync(path.join(dir, 'style.css'), 'utf8');
   assert.match(html, /<link rel="stylesheet" href="style\.css" \/>/);
   assert.match(html, /<meta width="\d+" height="\d+" \/>/, 'the notification window sizes itself from this');
-  assert.match(css, /--bg: #141024;/);
+  // The colour the theme carried, on the variable the card paints from. It is `--bg-base` rather
+  // than `--bg` because a state re-points `--bg` to a tint of it, the way it re-points `--accent`.
+  assert.match(css, /--bg-base: #141024;/);
+  assert.match(css, /--bg: var\(--bg-base\);/);
   // The picture is named relative to the stylesheet it sits beside, so an installed preset resolves
   // it and a package carries it along.
   assert.match(css, /--bg-image: url\('backdrop\.png'\);/);

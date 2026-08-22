@@ -1693,6 +1693,29 @@
                       </div>
 
                       <div class="pd-controls">
+                        <!--
+                          The control panel is long: nine groups and sixty-odd properties. This is how
+                          it is navigated - a filter over every label, a chip per group, and the two
+                          buttons that take a change back. None of it moves a control in the DOM, so
+                          the positional bindings and the schema parity are untouched.
+                        -->
+                        <div class="pd-controls-bar">
+                          <label class="pd-search">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <span class="visually-hidden" data-lang="search"></span>
+                            <input type="search" id="pd-search" autocomplete="off" data-lang-placeholder="search" />
+                          </label>
+                          <div class="pd-history">
+                            <button type="button" id="btn-preset-undo" class="pd-icon-btn" disabled data-lang-title="undo">
+                              <i class="fas fa-undo" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" id="btn-preset-redo" class="pd-icon-btn" disabled data-lang-title="redo">
+                              <i class="fas fa-redo" aria-hidden="true"></i>
+                            </button>
+                          </div>
+                        </div>
+                        <div class="pd-jump" id="pd-jump"></div>
+                        <p class="pd-no-match" id="pd-no-match" hidden data-lang="searchNoMatch"></p>
                         <section class="pd-group is-open" data-group="layout">
                           <button type="button" class="pd-group-head">
                             <i class="fas fa-th-large"></i> <span data-lang="group.layout"></span>
@@ -1883,6 +1906,20 @@
                                   <option value="bottom" data-lang="value.bottom"></option>
                                 </select>
                               </label>
+                              <label class="pd-field" data-key="bgPattern">
+                                <span data-lang="field.bgPattern"></span>
+                                <select autocomplete="off" id="pd-bgPattern">
+                                  <option value="none" data-lang="value.none"></option>
+                                  <option value="grid" data-lang="value.grid"></option>
+                                  <option value="dots" data-lang="value.dots"></option>
+                                  <option value="lines" data-lang="value.lines"></option>
+                                  <option value="noise" data-lang="value.noise"></option>
+                                </select>
+                              </label>
+                              <label class="pd-field" data-key="bgPatternOpacity" data-shown-for="bgPattern:grid,dots,lines,noise">
+                                <span><span data-lang="field.bgPatternOpacity"></span> <b class="pd-value" id="pd-val-bgPatternOpacity"></b></span>
+                                <input type="range" id="pd-bgPatternOpacity" min="5" max="100" step="5" value="20" />
+                              </label>
                             </div>
                           </div>
                         </section>
@@ -1897,7 +1934,17 @@
                                 <span><span data-lang="field.iconSize"></span> <b class="pd-value" id="pd-val-iconSize"></b></span>
                                 <input type="range" id="pd-iconSize" min="24" max="110" step="1" value="64" />
                               </label>
-                              <label class="pd-field" data-key="iconRadius">
+                              <label class="pd-field" data-key="iconShape">
+                                <span data-lang="field.iconShape"></span>
+                                <select autocomplete="off" id="pd-iconShape">
+                                  <option value="rounded" data-lang="value.rounded"></option>
+                                  <option value="circle" data-lang="value.circle"></option>
+                                  <option value="squircle" data-lang="value.squircle"></option>
+                                  <option value="hexagon" data-lang="value.hexagon"></option>
+                                  <option value="diamond" data-lang="value.diamond"></option>
+                                </select>
+                              </label>
+                              <label class="pd-field" data-key="iconRadius" data-shown-for="iconShape:rounded">
                                 <span><span data-lang="field.iconRadius"></span> <b class="pd-value" id="pd-val-iconRadius"></b></span>
                                 <input type="range" id="pd-iconRadius" min="0" max="50" step="1" value="14" />
                               </label>
@@ -2035,6 +2082,21 @@
                                   <option value="smooth" data-lang="value.smooth"></option>
                                   <option value="linear" data-lang="value.linear"></option>
                                   <option value="back" data-lang="value.back"></option>
+                                  <option value="gentle" data-lang="value.gentle"></option>
+                                  <option value="snap" data-lang="value.snap"></option>
+                                  <option value="elastic" data-lang="value.elastic"></option>
+                                </select>
+                              </label>
+                              <label class="pd-field" data-key="easingOut">
+                                <span data-lang="field.easingOut"></span>
+                                <select autocomplete="off" id="pd-easingOut">
+                                  <option value="same" data-lang="value.sameCurve"></option>
+                                  <option value="smooth" data-lang="value.smooth"></option>
+                                  <option value="linear" data-lang="value.linear"></option>
+                                  <option value="back" data-lang="value.back"></option>
+                                  <option value="gentle" data-lang="value.gentle"></option>
+                                  <option value="snap" data-lang="value.snap"></option>
+                                  <option value="elastic" data-lang="value.elastic"></option>
                                 </select>
                               </label>
                             </div>
@@ -2062,6 +2124,10 @@
                               <label class="pd-field" data-key="platinumGlow">
                                 <span><span data-lang="field.platinumGlow"></span> <b class="pd-value" id="pd-val-platinumGlow"></b></span>
                                 <input type="range" id="pd-platinumGlow" min="0" max="100" step="5" value="70" />
+                              </label>
+                              <label class="pd-field" data-key="stateTint">
+                                <span><span data-lang="field.stateTint"></span> <b class="pd-value" id="pd-val-stateTint"></b></span>
+                                <input type="range" id="pd-stateTint" min="0" max="60" step="5" value="0" />
                               </label>
                               <label class="pd-field" data-key="showProgress">
                                 <span data-lang="field.showProgress"></span>
@@ -2116,6 +2182,7 @@
                       <button type="button" id="btn-create-preset" class="inline-action-btn"><i class="fas fa-plus"></i> <span id="pd-lbl-create"></span></button>
                       <button type="button" id="btn-preview-preset" class="inline-action-btn secondary"><i class="fas fa-desktop"></i> <span data-lang="previewOnScreen"></span></button>
                       <button type="button" id="btn-reset-preset" class="inline-action-btn secondary"><i class="fas fa-undo"></i> <span data-lang="reset"></span></button>
+                      <button type="button" id="btn-rename-preset" class="inline-action-btn secondary" style="display: none"><i class="fas fa-i-cursor"></i> <span data-lang="renameLabel"></span></button>
                       <button type="button" id="btn-delete-preset" class="inline-action-btn secondary" style="display: none"><i class="fas fa-trash"></i> <span data-lang="deleteLabel"></span></button>
                       <button type="button" id="btn-import-preset" class="inline-action-btn secondary"><i class="fas fa-file-import"></i> <span data-lang="importLabel"></span></button>
                       <button type="button" id="btn-import-san" class="inline-action-btn secondary"><i class="fas fa-download"></i> <span data-lang="importSan"></span></button>

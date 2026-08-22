@@ -97,6 +97,19 @@ popup uses in a game.
 | **Backdrop** | What the popup is judged against: transparency, a dark scene, a bright one, or artwork from your own library. A design that reads well on dark can vanish on a bright scene. |
 | **Position / Scale** | Both mirror the settings of the same name in the Notification tab. Changing them here changes that setting. A popup you placed by hand is drawn at the bottom centre and labelled, since only the app knows where you dragged it. |
 
+### Finding your way around
+
+Nine groups and sixty-odd controls, so there are three ways through them and one way back.
+
+| | What it does |
+| --- | --- |
+| **The filter** | Type in the box above the groups and only the matching controls stay. It searches labels, the words inside dropdowns and the property's own name, so both `corner` and `radius` find the same slider, and a name read out of an `.awpreset` finds its control. A match behind **Advanced** opens it; a group with nothing in it folds away. **Esc** clears the box. |
+| **The group chips** | One per group, under the filter. Opens that group and scrolls to it. |
+| **Undo / redo** | The two arrows beside the filter, or **Ctrl+Z** and **Ctrl+Y** (**Ctrl+Shift+Z** works too). They step through whole designs, so one drag of a slider is one step rather than one per pixel. Loading a preset, picking a starting point or pressing Reset starts a fresh history - undo never carries you back into a different design. |
+
+Nothing the filter does moves a control: they are all still there, in the same order, hidden or
+shown. Clearing the box brings the panel back exactly as it was.
+
 ### The controls
 
 Each group opens with its everyday settings; the less common ones sit behind **Advanced** inside the
@@ -106,12 +119,12 @@ group. In **Simple** interface mode the Advanced halves are not shown at all.
 | --- | --- |
 | **Layout & size** | Icon on the left, right, above the text or not at all; text alignment; popup width, padding and spacing; and whether the **game's name** is printed above the achievement. |
 | **Text** | Font, title size, description size, how many lines the description may wrap onto, what colours the title, and - under Advanced - title weight, uppercase, letter spacing, and two ways to stay readable over a picture: a text shadow and an outline drawn around every glyph. |
-| **Colours & background** | A solid colour, a two-colour gradient with an angle, the **game's own artwork**, or **a picture of your own**, dimmed, blurred and framed behind the text. Plus text colour, accent and opacity. A picture you pick is copied into the preset, so it travels with it when you share it. |
-| **Icon** | Size, corner rounding (50% makes it a circle) and, under Advanced, a border and a glow in the accent colour. |
+| **Colours & background** | A solid colour, a two-colour gradient with an angle, the **game's own artwork**, or **a picture of your own**, dimmed, blurred and framed behind the text. Plus text colour, accent and opacity. Under Advanced, a **texture** - grid, dots, hatching or speckle - drawn over whichever background you chose and under the text, at a strength you set; it is drawn rather than stored, so it costs the preset nothing to carry. A picture you pick is copied into the preset, so it travels with it when you share it. |
+| **Icon** | Size, **shape** - a rounded square, a circle, a squircle, a hexagon or a diamond - and, under Advanced, a border and a glow in the accent colour. The corner rounding applies to the rounded square; the other shapes carry their own outline, so they are drawn without a border. |
 | **Border & corners** | Corner radius, which edge carries the accent bar (or a full outline, or none) and its thickness; under Advanced, a border of your own colour. |
 | **Shadow & glow** | How deep the drop shadow is, how much the popup glows in its accent colour, and whether that glow **pulses** or **breathes** while the popup is on screen. |
-| **Motion & timing** | Which edge the popup enters from and leaves to (or fade, or zoom), how long it stays on screen, and - under Advanced - how far it travels, entry and exit speed, and the easing. |
-| **Rare & completion** | The colour and glow for a rare unlock and for 100% completion, whether the progress bar shows, whether a **rarity badge** prints the unlock rate, and - under Advanced - the progress bar thickness and the silver and bronze tiers. |
+| **Motion & timing** | Which edge the popup enters from and leaves to (or fade, or zoom), how long it stays on screen, and - under Advanced - how far it travels, entry and exit speed, the entry curve (smooth, linear, back, gentle, snap or elastic) and an **exit curve** of its own, which defaults to the one every preset always left on. |
+| **Rare & completion** | The colour and glow for a rare unlock and for 100% completion, a **state tint** that washes the whole card in that colour rather than only its accents, whether the progress bar shows, whether a **rarity badge** prints the unlock rate, and - under Advanced - the progress bar thickness and the silver and bronze tiers. |
 | **Sound** | A sound this preset plays instead of the one in the Notifications tab. Leave it on **App setting** for no opinion. |
 
 | Action | What it does |
@@ -121,6 +134,7 @@ group. In **Simple** interface mode the Advanced halves are not shown at all.
 | **Update preset** | The same button, once the name matches a preset the designer made - it replaces that preset instead of adding another. |
 | **Edit a preset** | Loads one of your generated presets back into the controls. Every value returns exactly as saved. |
 | **Reset** | Returns the controls to the default design. Nothing on disk changes. |
+| **Rename** | Appears once a generated preset is loaded. Type the new name in the name field and press it: the preset is renamed on disk, and whichever notification settings pointed at it follow. |
 | **Delete** | Appears once a generated preset is loaded, and removes it after a confirmation. |
 | **Export** / **Import** | Move a preset between machines - see below. |
 
@@ -201,6 +215,10 @@ report. An import that fails at any point leaves every preset you already have u
 
 **Export** and **Import** sit in the **Presets** tab and move a preset between machines as one
 `.awpreset` file - the style, every image and font it uses, its designer settings and its metadata.
+
+The [preset gallery](gallery/) is where those files are collected: browse what other people made,
+download one and import it, or add yours. What a submission has to be, and what is checked before it
+is listed, is in [The preset gallery](preset-gallery.md).
 
 **Export** writes what the card is showing, under the name in the **Name** field - the design in the
 controls, saved or not, so a preset in progress can be shared without creating it first. The one
