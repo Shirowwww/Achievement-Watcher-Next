@@ -14,9 +14,16 @@
 const REPO = 'https://github.com/Shirowwww/Achievement-Watcher-Next';
 const SITE = 'https://shirowwww.github.io/Achievement-Watcher-Next';
 
-// Slug -> the docs/<slug>.md that backs it. The home page is docs/README.md, served at the root.
+/*
+  Slug -> the docs/<slug>.md that backs it.
+
+  The root of the site is the project home page (docs/index.html), not a guide, so the hub of the
+  documentation is docs/README.md served at README.html - which is what `home` means here and where
+  the app's Documentation button goes. `docs/_config.yml` disables jekyll-readme-index for the same
+  reason.
+*/
 const DOCS = {
-  home: '',
+  home: 'README',
   gettingStarted: 'getting-started',
   sources: 'sources',
   notifications: 'notifications',
@@ -32,6 +39,7 @@ const DOCS = {
   uplayR2: 'uplay-r2',
   comparison: 'comparison',
   architecture: 'architecture',
+  presetGallery: 'preset-gallery',
 };
 
 // A page of the documentation site, by the keys above. Unknown names fall back to its home page
@@ -54,6 +62,9 @@ const links = {
   repoFile,
 
   home: REPO,
+  website: `${SITE}/`,
+  // The gallery is a folder with its own index.html, so it has no .md and is not a DOCS slug.
+  presetGallery: `${SITE}/gallery/`,
   releases: `${REPO}/releases`,
   download: `${REPO}/releases/latest`,
   issues: `${REPO}/issues`,
@@ -74,6 +85,7 @@ const links = {
   sources: docs('sources'),
   gameHealth: docs('gameHealth'),
   faq: docs('faq'),
+  presetGalleryGuide: docs('presetGallery'),
 
   // The projects AW Next descends from, shown in the About and Advanced panels.
   upstream: {

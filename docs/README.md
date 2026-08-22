@@ -4,7 +4,7 @@
 
 Practical guides for setup, daily use and maintenance.
 
-[Project home](https://github.com/Shirowwww/Achievement-Watcher-Next) · [Download](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest) · [Changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md) · [Security](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/SECURITY.md) · [Report an issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues)
+[Home](index.html) · [Download](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest) · [Preset gallery](gallery/) · [Changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md) · [Security](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/SECURITY.md) · [Report an issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues)
 
 <img src="screenshot/home.png" width="620" alt="The AW Next library">
 
@@ -34,6 +34,8 @@ Read in order, or jump to what you need - every page ends with a link to the nex
 | [Goldberg / GBE setup](emulator-setup.md) | Diagnose or repair an emulated Steam game |
 | [Uplay R2 setup](uplay-r2.md) | The Ubisoft equivalent, for compatible titles |
 | [Comparison](comparison.md) | How AW Next differs from Achievement Watcher 2.x and Achievements |
+| [Preset gallery](preset-gallery.md) | The community gallery: installing a preset from it, and submitting yours |
+| [Gallery server](gallery-server.md) | For a maintainer: running the service that takes submissions directly |
 | [Localization](localization.md) | The 28 bundled languages, what is deliberately not translated, and why this site is English |
 
 The in-app **Settings → Help** tab is the quickest reference while you are using the app. It reflects

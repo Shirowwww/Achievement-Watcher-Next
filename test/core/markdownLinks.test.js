@@ -87,7 +87,10 @@ test('all relative Markdown links and anchors resolve with exact casing', () => 
         errors.push(`${path.relative(repoRoot, markdown)}: malformed link ${raw}`);
         continue;
       }
-      const target = decodedPath ? path.resolve(path.dirname(markdown), decodedPath) : markdown;
+      let target = decodedPath ? path.resolve(path.dirname(markdown), decodedPath) : markdown;
+      // A link to a folder is a link to the page it serves, the way a browser resolves it. The
+      // preset gallery is addressed that way: docs/gallery/ is docs/gallery/index.html.
+      if (decodedPath.endsWith('/')) target = path.join(target, 'index.html');
       checked++;
       if (!fs.existsSync(target) || !fs.statSync(target).isFile()) {
         errors.push(`${path.relative(repoRoot, markdown)}: missing ${raw}`);

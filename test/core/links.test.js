@@ -41,7 +41,10 @@ test('the named destinations are the pages they claim to be', () => {
   assert.equal(links.releases, 'https://github.com/Shirowwww/Achievement-Watcher-Next/releases');
   assert.equal(links.download, 'https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest');
   assert.equal(links.issues, 'https://github.com/Shirowwww/Achievement-Watcher-Next/issues');
-  assert.equal(links.documentation, 'https://shirowwww.github.io/Achievement-Watcher-Next/');
+  // The root of the site is the project home page; the guides hub is README.html beside it.
+  assert.equal(links.documentation, 'https://shirowwww.github.io/Achievement-Watcher-Next/README.html');
+  assert.equal(links.website, 'https://shirowwww.github.io/Achievement-Watcher-Next/');
+  assert.equal(links.presetGallery, 'https://shirowwww.github.io/Achievement-Watcher-Next/gallery/');
   assert.equal(links.presets, 'https://shirowwww.github.io/Achievement-Watcher-Next/presets.html');
   assert.equal(links.troubleshooting, 'https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html');
   assert.equal(links.upstream.original, 'https://github.com/xan105/Achievement-Watcher');
@@ -57,10 +60,10 @@ test('the old repository name is never handed to a user', () => {
 test('every documentation slug resolves to a page the site publishes', () => {
   // GitHub Pages serves docs/ (docs/_config.yml), so docs/<slug>.md is what becomes <slug>.html.
   for (const [name, slug] of Object.entries(links.DOCS)) {
-    const file = slug ? path.join(root, 'docs', `${slug}.md`) : path.join(root, 'docs', 'README.md');
+    const file = path.join(root, 'docs', `${slug}.md`);
     assert.ok(fs.existsSync(file), `links.DOCS.${name} points at ${path.relative(root, file)}, which does not exist`);
   }
-  assert.equal(links.docs('home'), 'https://shirowwww.github.io/Achievement-Watcher-Next/');
+  assert.equal(links.docs('home'), 'https://shirowwww.github.io/Achievement-Watcher-Next/README.html');
   assert.equal(links.docs('gettingStarted'), 'https://shirowwww.github.io/Achievement-Watcher-Next/getting-started.html');
   // An unknown page is the home page, never a 404.
   assert.equal(links.docs('no-such-page'), links.docs('home'));
