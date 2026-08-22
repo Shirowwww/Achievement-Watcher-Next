@@ -1,0 +1,383 @@
+/*
+  Epic Games.
+
+  Neutral rather than blue: the Epic launcher is a near-black grey with white type and almost no
+  colour of its own, so this card carries no tint at all until a state brings one. That is also what
+  separates it from Steam, which sits two rows away in the same list - Steam is a blue plate with a
+  texture behind it, this is flat, square-shouldered and quiet, with the widest gutters in the set.
+
+  Epic's own achievements are tiered bronze / silver / gold / platinum, so the shared rarity system
+  is the tier system here, and the mark takes its colour.
+
+  Rendered by the shared preset engine (index.html); this file owns every pixel.
+*/
+
+:root {
+  --ach-in: 540ms;
+  --ach-out: 360ms;
+  --ease-in: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.7, 0, 0.84, 0);
+
+  --surface-top: #26262c;
+  --surface-bottom: #121216;
+  --text: #ffffff;
+  --muted: #a5a5b0;
+  --accent: #e8e8ef;
+  --accent-soft: #ffffff;
+  --rule: rgba(255, 255, 255, 0.9);
+  --mark-opacity: 0.5;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.ach {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 452px;
+  padding: 17px 48px 17px 22px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--surface-top) 0%, var(--surface-bottom) 100%);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+  opacity: 0;
+  will-change: transform, opacity;
+  transform: translate(-50%, -50%) scale(var(--scale, 1));
+}
+
+/* A single square rule down the left edge - Epic's UI marks a selection the same way. */
+.ach::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--rule);
+  transform: scaleY(0);
+  transform-origin: center top;
+}
+
+/* The mark. Masked rather than drawn, so it takes the tier colour with everything else. */
+.ach::after {
+  content: '';
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  background: var(--accent);
+  -webkit-mask: url('logo.svg') center / contain no-repeat;
+  mask: url('logo.svg') center / contain no-repeat;
+  opacity: var(--mark-opacity);
+}
+
+/* --- icon ------------------------------------------------------------------------------------ */
+
+.ach .icon {
+  flex: 0 0 auto;
+}
+
+.ach .icon img {
+  display: block;
+  box-sizing: border-box;
+  width: 64px;
+  height: 64px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* --- text ------------------------------------------------------------------------------------ */
+
+.ach .text_wrap {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ach .text_wrap:has(.marquee) {
+  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0, #000 10px, #000 calc(100% - 24px), transparent 100%);
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0, #000 10px, #000 calc(100% - 24px), transparent 100%);
+}
+
+.ach .meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 100%;
+  margin-bottom: 4px;
+  line-height: 1.1;
+}
+
+.ach .meta[hidden] {
+  display: none;
+}
+
+.ach .game {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ach .game[hidden] {
+  display: none;
+}
+
+.ach .rarity {
+  flex: 0 0 auto;
+  padding: 1px 7px;
+  border-radius: 2px;
+  background: var(--accent);
+  color: #131318;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.ach .rarity[hidden] {
+  display: none;
+}
+
+.ach .title {
+  max-width: 100%;
+  margin: 0;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ach .detail {
+  max-width: 100%;
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ach .title.marquee,
+.ach .detail.marquee {
+  display: inline-block;
+  overflow: visible;
+  text-overflow: clip;
+  will-change: transform;
+}
+
+/* --- progress -------------------------------------------------------------------------------- */
+
+.progress_line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+  min-width: 0;
+}
+
+.progress_line[hidden] {
+  display: none;
+}
+
+.progress_track {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 70px;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.progress_meter {
+  display: block;
+  width: 0%;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.35s ease;
+}
+
+.progress_label {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* --- states ---------------------------------------------------------------------------------- */
+
+.ach.state-rare {
+  --accent: #f2c14e;
+  --accent-soft: #ffe7ad;
+  --rule: #f2c14e;
+  --mark-opacity: 0.65;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent),
+    0 0 8px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.ach.state-rare.tier-silver {
+  --accent: #ccd6e2;
+  --accent-soft: #f3f7fb;
+  --rule: #ccd6e2;
+}
+
+.ach.state-rare.tier-bronze {
+  --accent: #d0894c;
+  --accent-soft: #efc298;
+  --rule: #d0894c;
+}
+
+/* 100%: the rule widens into a frame and the whole card lifts a stop. */
+.ach.state-platinum {
+  --accent: #9fe8ff;
+  --accent-soft: #e9fbff;
+  --rule: #9fe8ff;
+  --surface-top: #1d2c34;
+  --surface-bottom: #101619;
+  --mark-opacity: 0.85;
+  box-shadow:
+    0 2px 9px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent),
+    0 0 8px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.ach.state-platinum .title {
+  color: var(--accent-soft);
+}
+
+/* --- motion ---------------------------------------------------------------------------------- */
+
+@keyframes aw_in {
+  from {
+    transform: translate(-50%, calc(-50% + 18px)) scale(calc(var(--scale, 1) * 0.98));
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+}
+
+@keyframes aw_hold {
+  from,
+  to {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+}
+
+@keyframes aw_out {
+  from {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, calc(-50% + 14px)) scale(calc(var(--scale, 1) * 0.99));
+    opacity: 0;
+  }
+}
+
+@keyframes aw_rule {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes aw_rise {
+  from {
+    transform: translateX(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes aw_icon {
+  from {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes aw_mark {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: var(--mark-opacity);
+    transform: translateX(0);
+  }
+}
+
+.ach.active {
+  animation:
+    aw_in var(--ach-in) var(--ease-in) forwards,
+    aw_hold var(--ach-hold, 5100ms) forwards,
+    aw_out var(--ach-out) var(--ease-out) forwards;
+  animation-delay: 0s, var(--ach-in), calc(var(--ach-in) + var(--ach-hold, 5100ms));
+}
+
+.ach.active::before {
+  animation: aw_rule 520ms var(--ease-in) 130ms forwards;
+}
+
+.ach.active::after {
+  animation: aw_mark 560ms var(--ease-in) 300ms both;
+}
+
+.ach.active .icon img {
+  animation: aw_icon 500ms var(--ease-in) 120ms both;
+}
+
+/* Never .title / .detail: the engine cancels their animations when it measures the marquee. */
+.ach.active .text_wrap {
+  animation: aw_rise 480ms var(--ease-in) 190ms both;
+}

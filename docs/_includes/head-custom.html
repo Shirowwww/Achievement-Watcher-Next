@@ -57,6 +57,13 @@
     lightTheme: 'Light theme',
     darkTheme: 'Dark theme',
     alerts: { NOTE: 'Note', TIP: 'Tip', IMPORTANT: 'Important', WARNING: 'Warning', CAUTION: 'Caution' },
+    nav: {
+      label: 'Site',
+      home: 'Home',
+      guides: 'Guides',
+      gallery: 'Preset gallery',
+      download: 'Download',
+    },
   };
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -109,7 +116,53 @@
     }
 
     render();
-    document.body.appendChild(button);
+
+    /*
+      The bar that puts a guide back inside the site.
+
+      These pages are Markdown rendered by the theme, so they have no header of their own: without
+      this, the home page and the preset gallery are reachable only from whatever link the text
+      happens to carry. Built here rather than added to every file because it is navigation, not
+      content - the Markdown stays what GitHub shows when browsing the repository.
+
+      relative_url is what makes this work on a project page served from /<repo>/.
+    */
+    var SITE_ROOT = '{{ "/" | relative_url }}';
+    var REPO = 'https://github.com/Shirowwww/Achievement-Watcher-Next';
+
+    var bar = document.createElement('nav');
+    bar.className = 'aw-site-bar';
+    bar.setAttribute('aria-label', SITE_STRINGS.nav.label);
+
+    var inner = document.createElement('div');
+    inner.className = 'aw-site-bar-inner';
+
+    var brand = document.createElement('a');
+    brand.className = 'aw-site-brand';
+    brand.href = SITE_ROOT;
+    brand.innerHTML = '<span class="aw-site-mark" aria-hidden="true"></span><span>Achievement Watcher <em>Next</em></span>';
+    inner.appendChild(brand);
+
+    var links = document.createElement('div');
+    links.className = 'aw-site-links';
+    [
+      { href: SITE_ROOT, text: SITE_STRINGS.nav.home },
+      { href: SITE_ROOT + 'README.html', text: SITE_STRINGS.nav.guides },
+      { href: SITE_ROOT + 'gallery/', text: SITE_STRINGS.nav.gallery },
+      { href: REPO, text: 'GitHub' },
+      { href: REPO + '/releases/latest', text: SITE_STRINGS.nav.download, primary: true },
+    ].forEach(function (item) {
+      var link = document.createElement('a');
+      link.href = item.href;
+      link.textContent = item.text;
+      if (item.primary) link.className = 'aw-site-cta';
+      links.appendChild(link);
+    });
+
+    inner.appendChild(links);
+    inner.appendChild(button);
+    bar.appendChild(inner);
+    document.body.insertBefore(bar, document.body.firstChild);
 
     /*
       GitHub renders "> [!WARNING]" as an alert box; kramdown, which builds this site, does not and

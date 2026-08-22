@@ -1,0 +1,363 @@
+/*
+  Steam.
+
+  The panel behind the text is the preset: bg.jpg is a dark navy plate with the outlined Steam mark
+  sitting off to the right, and that - with the sharp corners, the hairline stroke, the 68px rounded
+  icon and the toast sliding up out of the bottom edge - is what makes it read as Steam rather than
+  as a blue card.
+
+  This is the preset that shipped before, kept as it was and given what it was missing: the game's
+  name, the unlock rate, a 100% completion state, and a progress line that is not squeezed into a
+  230px box.
+
+  Rendered by the shared preset engine (index.html); this file owns every pixel.
+*/
+
+:root {
+  --ach-in: 460ms;
+  --ach-out: 340ms;
+  --ease-in: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.7, 0, 0.84, 0);
+
+  --veil-top: #30302e;
+  --veil-bottom: #12161f;
+  --veil-opacity: 0.66;
+  --text: #ffffff;
+  --muted: #c3ccd6;
+  --accent: #66c0f4;
+  --accent-soft: #b8e0fb;
+  --stroke: rgba(255, 255, 255, 0.1);
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.ach {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 452px;
+  padding: 16px;
+  /* Sharp, like the toast it comes from. */
+  border-radius: 0;
+  overflow: hidden;
+  background: #12161f;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px var(--stroke);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  opacity: 0;
+  will-change: transform, opacity;
+  transform: translate(-50%, -50%) scale(var(--scale, 1));
+}
+
+/* The plate. Anchored right so the mark sits behind the text rather than behind the icon. */
+.ach::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: url('bg.jpg') right center / cover no-repeat;
+}
+
+/* The veil that keeps the type legible over it, and what a state recolours. */
+.ach::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, var(--veil-top), var(--veil-bottom));
+  opacity: var(--veil-opacity);
+}
+
+.ach > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* --- icon ------------------------------------------------------------------------------------ */
+
+.ach .icon {
+  flex: 0 0 auto;
+}
+
+.ach .icon img {
+  display: block;
+  box-sizing: border-box;
+  width: 68px;
+  height: 68px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #000000;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.75),
+    0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent),
+    0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* --- text ------------------------------------------------------------------------------------ */
+
+.ach .text_wrap {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  overflow: hidden;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
+.ach .text_wrap:has(.marquee) {
+  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0, #000 10px, #000 calc(100% - 24px), transparent 100%);
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0, #000 10px, #000 calc(100% - 24px), transparent 100%);
+}
+
+.ach .meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  margin-bottom: 2px;
+  line-height: 1.1;
+}
+
+.ach .meta[hidden] {
+  display: none;
+}
+
+.ach .game {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ach .game[hidden] {
+  display: none;
+}
+
+.ach .rarity {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 26%, transparent);
+  color: var(--accent-soft);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.ach .rarity[hidden] {
+  display: none;
+}
+
+.ach .title {
+  max-width: 100%;
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 19px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ach .detail {
+  max-width: 100%;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ach .title.marquee,
+.ach .detail.marquee {
+  display: inline-block;
+  overflow: visible;
+  text-overflow: clip;
+  will-change: transform;
+}
+
+/* --- progress -------------------------------------------------------------------------------- */
+
+.progress_line {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  margin-top: 6px;
+  min-width: 0;
+}
+
+.progress_line[hidden] {
+  display: none;
+}
+
+.progress_track {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 60px;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.progress_meter {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-soft) 100%);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 55%, transparent);
+  transition: width 0.35s ease;
+}
+
+.progress_label {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* --- states ---------------------------------------------------------------------------------- */
+
+/* The veil takes the colour, so the Steam plate behind it warms with the rest of the card. */
+.ach.state-rare {
+  --accent: #ffc53d;
+  --accent-soft: #ffe6a1;
+  --veil-top: #4a3a1c;
+  --veil-bottom: #17110a;
+  --stroke: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px var(--stroke),
+    0 0 8px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.ach.state-rare.tier-silver {
+  --accent: #c3d3e6;
+  --accent-soft: #eef4fb;
+  --veil-top: #333d4a;
+  --veil-bottom: #11151a;
+}
+
+.ach.state-rare.tier-bronze {
+  --accent: #d08a4a;
+  --accent-soft: #f0bd91;
+  --veil-top: #46301e;
+  --veil-bottom: #150e07;
+}
+
+/* 100%: the veil thins so the plate reads through, and the stroke becomes a full bright frame. */
+.ach.state-platinum {
+  --accent: #8ff0ff;
+  --accent-soft: #e6fbff;
+  --veil-top: #14425c;
+  --veil-bottom: #071722;
+  --veil-opacity: 0.62;
+  --stroke: color-mix(in srgb, var(--accent) 65%, transparent);
+  box-shadow:
+    0 2px 9px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2px var(--stroke),
+    0 0 8px color-mix(in srgb, var(--accent) 34%, transparent);
+}
+
+.ach.state-platinum .title {
+  color: var(--accent-soft);
+}
+
+/* --- motion ---------------------------------------------------------------------------------- */
+
+/* Slides up out of the bottom edge, the way the toast it comes from does. */
+@keyframes aw_in {
+  from {
+    transform: translate(-50%, calc(-50% + 34px)) scale(var(--scale, 1));
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+}
+
+@keyframes aw_hold {
+  from,
+  to {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+}
+
+@keyframes aw_out {
+  from {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, calc(-50% + 26px)) scale(var(--scale, 1));
+    opacity: 0;
+  }
+}
+
+@keyframes aw_rise {
+  from {
+    transform: translateY(7px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes aw_icon {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.ach.active {
+  animation:
+    aw_in var(--ach-in) var(--ease-in) forwards,
+    aw_hold var(--ach-hold, 5200ms) forwards,
+    aw_out var(--ach-out) var(--ease-out) forwards;
+  animation-delay: 0s, var(--ach-in), calc(var(--ach-in) + var(--ach-hold, 5200ms));
+}
+
+.ach.active .icon img {
+  animation: aw_icon 460ms var(--ease-in) 110ms both;
+}
+
+/* Never .title / .detail: the engine cancels their animations when it measures the marquee. */
+.ach.active .text_wrap {
+  animation: aw_rise 440ms var(--ease-in) 160ms both;
+}

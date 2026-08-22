@@ -1,0 +1,347 @@
+/*
+  Glass - the quiet one. A softly translucent slab, generous spacing, no accent bar and no glow
+  until a state asks for one.
+
+  The translucency is real: the notification window paints no background of its own, so a
+  semi-opaque surface shows the running game through the popup. That is also why there is no blur
+  here - a backdrop filter has nothing behind it to sample inside a transparent window, so it would
+  cost frames and change nothing. A dark base under a light sheen is what keeps white text legible
+  over a bright scene as well as a dark one.
+
+  Rendered by the shared preset engine (index.html); this file owns every pixel.
+*/
+
+:root {
+  --ach-in: 520ms;
+  --ach-out: 340ms;
+  --ease-in: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.7, 0, 0.84, 0);
+
+  /*
+    Opaque enough to win. Glass that lets too much through stops being readable the moment the game
+    behind it is a bright sky, and a notification that has to be squinted at has failed at the one
+    thing it does - so the surface keeps roughly three quarters of its own darkness and lets the
+    scene show in the remaining quarter.
+  */
+  --base: rgba(12, 15, 22, 0.74);
+  --sheen: rgba(255, 255, 255, 0.1);
+  --edge: rgba(255, 255, 255, 0.26);
+  --text: #ffffff;
+  --muted: rgba(255, 255, 255, 0.8);
+  --accent: #ffffff;
+  --accent-soft: #ffffff;
+  --glow: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.ach {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 452px;
+  padding: 16px 22px;
+  border-radius: 22px;
+  background:
+    linear-gradient(155deg, var(--sheen) 0%, transparent 55%),
+    var(--base);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 1px var(--edge),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 0 8px color-mix(in srgb, var(--accent) calc(var(--glow) * 40%), transparent);
+  color: var(--text);
+  font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  will-change: transform, opacity;
+  transform: translate(-50%, -50%) scale(var(--scale, 1));
+}
+
+/* --- icon ------------------------------------------------------------------------------------ */
+
+.ach .icon {
+  flex: 0 0 auto;
+}
+
+.ach .icon img {
+  display: block;
+  box-sizing: border-box;
+  width: 66px;
+  height: 66px;
+  border-radius: 18px;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.35),
+    0 0 0 5px color-mix(in srgb, var(--accent) calc(var(--glow) * 45%), transparent),
+    0 2px 9px rgba(0, 0, 0, 0.45);
+}
+
+/* --- text ------------------------------------------------------------------------------------ */
+
+.ach .text_wrap {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ach .text_wrap:has(.marquee) {
+  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0, #000 10px, #000 calc(100% - 24px), transparent 100%);
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0, #000 10px, #000 calc(100% - 24px), transparent 100%);
+}
+
+.ach .meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 100%;
+  margin-bottom: 3px;
+  line-height: 1.1;
+}
+
+.ach .meta[hidden] {
+  display: none;
+}
+
+.ach .game {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ach .game[hidden] {
+  display: none;
+}
+
+.ach .rarity {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, rgba(255, 255, 255, 0.3));
+  color: var(--text);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.ach .rarity[hidden] {
+  display: none;
+}
+
+.ach .title {
+  max-width: 100%;
+  margin: 0;
+  color: var(--text);
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ach .detail {
+  max-width: 100%;
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ach .title.marquee,
+.ach .detail.marquee {
+  display: inline-block;
+  overflow: visible;
+  text-overflow: clip;
+  will-change: transform;
+}
+
+/* --- progress -------------------------------------------------------------------------------- */
+
+.progress_line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 9px;
+  min-width: 0;
+}
+
+.progress_line[hidden] {
+  display: none;
+}
+
+.progress_track {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 70px;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.progress_meter {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 0.35s ease;
+}
+
+.progress_label {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* --- states ---------------------------------------------------------------------------------- */
+
+/* Colour arrives only when there is something to say: an ordinary unlock stays colourless glass. */
+.ach.state-rare {
+  --accent: #ffd76b;
+  --accent-soft: #fff3cf;
+  --base: rgba(28, 20, 6, 0.66);
+  --sheen: rgba(255, 215, 107, 0.16);
+  --edge: rgba(255, 215, 107, 0.5);
+  --glow: 0.8;
+}
+
+.ach.state-rare.tier-silver {
+  --accent: #dceaf8;
+  --accent-soft: #ffffff;
+  --base: rgba(14, 19, 27, 0.66);
+  --sheen: rgba(220, 234, 248, 0.16);
+  --edge: rgba(220, 234, 248, 0.5);
+}
+
+.ach.state-rare.tier-bronze {
+  --accent: #e5a068;
+  --accent-soft: #f8d4b4;
+  --base: rgba(28, 17, 8, 0.66);
+  --sheen: rgba(229, 160, 104, 0.16);
+  --edge: rgba(229, 160, 104, 0.5);
+}
+
+/* 100%: the glass turns cold and picks up a second, wider rim. */
+.ach.state-platinum {
+  --accent: #a8f0ff;
+  --accent-soft: #e9fdff;
+  --base: rgba(8, 26, 36, 0.7);
+  --sheen: rgba(168, 240, 255, 0.2);
+  --edge: rgba(168, 240, 255, 0.6);
+  --glow: 1;
+  box-shadow:
+    0 2px 9px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px var(--edge),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent),
+    0 0 8px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.ach.state-platinum .title {
+  color: var(--accent-soft);
+}
+
+/* --- motion ---------------------------------------------------------------------------------- */
+
+/* Soft and short - the point of this preset is that it does not demand attention. */
+@keyframes aw_in {
+  from {
+    transform: translate(-50%, calc(-50% + 14px)) scale(calc(var(--scale, 1) * 0.955));
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+}
+
+@keyframes aw_hold {
+  from,
+  to {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+}
+
+@keyframes aw_out {
+  from {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(calc(var(--scale, 1) * 0.975));
+    opacity: 0;
+  }
+}
+
+@keyframes aw_rise {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes aw_icon {
+  from {
+    transform: scale(0.88);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.ach.active {
+  animation:
+    aw_in var(--ach-in) var(--ease-in) forwards,
+    aw_hold var(--ach-hold, 5140ms) forwards,
+    aw_out var(--ach-out) var(--ease-out) forwards;
+  animation-delay: 0s, var(--ach-in), calc(var(--ach-in) + var(--ach-hold, 5140ms));
+}
+
+.ach.active .icon img {
+  animation: aw_icon 480ms var(--ease-in) 130ms both;
+}
+
+/* Never .title / .detail: the engine cancels their animations when it measures the marquee. */
+.ach.active .text_wrap {
+  animation: aw_rise 440ms var(--ease-in) 190ms both;
+}

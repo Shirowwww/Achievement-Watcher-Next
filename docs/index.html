@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<!--
+  The project home page.
+
+  A plain static file: GitHub Pages publishes this folder, and a file without front matter is copied
+  out untouched, so what is written here is what is served. The guides around it stay Markdown
+  rendered by the Primer theme; this page and the preset gallery are the two that are hand built,
+  and they share assets/css/site.css.
+
+  Every string a reader sees carries data-i18n. English lives in the markup, so the page works with
+  no script and search engines see real text; a translation is an overlay in assets/i18n/.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Achievement Watcher Next - every achievement, one experience</title>
+    <meta
+      name="description"
+      content="Windows app that tracks achievements, rarity and playtime across Steam, GOG, Epic, Ubisoft, EA, Xbox PC, local saves and emulators, with an in-game overlay or Windows notifications. Free and open source."
+    />
+    <link rel="canonical" href="https://shirowwww.github.io/Achievement-Watcher-Next/" />
+    <meta http-equiv="content-language" content="en" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Achievement Watcher Next" />
+    <meta property="og:title" content="Achievement Watcher Next" />
+    <meta
+      property="og:description"
+      content="Every achievement, one experience. Steam, GOG, Epic, Ubisoft, EA, Xbox PC, local saves and emulators in a single library."
+    />
+    <meta property="og:image" content="https://shirowwww.github.io/Achievement-Watcher-Next/assets/img/social.png" />
+    <meta property="og:url" content="https://shirowwww.github.io/Achievement-Watcher-Next/" />
+    <meta property="og:locale" content="en" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" href="assets/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" href="assets/favicon.png" sizes="256x256" />
+    <link rel="apple-touch-icon" href="assets/favicon.png" />
+
+    <link rel="preload" as="font" type="font/woff2" href="assets/font/raleway-bold.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="assets/font/opensans-regular.woff2" crossorigin />
+    <link rel="stylesheet" href="assets/css/site.css" />
+
+    <!-- Applied before the first paint, so a reader who chose dark never sees a white flash. -->
+    <script>
+      (function () {
+        try {
+          var stored = window.localStorage.getItem('aw-theme');
+          if (stored === 'light' || stored === 'dark') document.documentElement.setAttribute('data-theme', stored);
+        } catch (err) {
+          /* private mode: the system preference decides */
+        }
+      })();
+    </script>
+  </head>
+
+  <body data-root=".">
+    <a class="skip-link" href="#main" data-i18n="nav.skip">Skip to content</a>
+
+    <header class="site-head">
+      <div class="wrap">
+        <a class="brand" href="./" aria-label="Achievement Watcher Next">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-word">Achievement Watcher <em>Next</em></span>
+        </a>
+
+        <button
+          class="icon-btn nav-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="site-nav"
+          data-i18n-attr="aria-label:nav.menu"
+          aria-label="Menu"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z" /></svg>
+        </button>
+
+        <nav class="site-nav" id="site-nav" data-i18n-attr="aria-label:nav.primary" aria-label="Primary">
+          <a href="#features" data-i18n="nav.features">Features</a>
+          <a href="#sources" data-i18n="nav.sources">Sources</a>
+          <a href="#presets" data-i18n="nav.presets">Presets</a>
+          <a href="gallery/" data-i18n="nav.gallery">Gallery</a>
+          <a href="README.html" data-i18n="nav.docs">Docs</a>
+          <a href="https://github.com/Shirowwww/Achievement-Watcher-Next" data-i18n="nav.github">GitHub</a>
+          <!-- The header button is hidden on a narrow screen, so the menu carries it instead. -->
+          <a class="nav-download" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-i18n="nav.download">Download</a>
+        </nav>
+
+        <div class="head-actions">
+          <button class="icon-btn" type="button" data-theme-toggle aria-label="Switch theme"></button>
+          <a class="btn" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-i18n="nav.download">
+            Download
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- Hero ---------------------------------------------------------------------------- -->
+      <section class="hero">
+        <div class="wrap">
+          <div class="hero-copy">
+            <p class="eyebrow" data-i18n="hero.eyebrow">Windows 10 and 11</p>
+            <h1>
+              <span data-i18n="hero.title">Every achievement.</span>
+              <span class="grad" data-i18n="hero.titleAccent">One experience.</span>
+            </h1>
+            <p class="hero-sub" data-i18n="hero.sub">
+              Steam, GOG, Epic, Ubisoft, EA, Xbox PC, local emulator saves and RPCS3, ShadPS4 or Xenia end up in one
+              library, watched by one background service. When something unlocks you get an overlay popup over the game,
+              or a Windows notification if the overlay cannot be seen.
+            </p>
+
+            <div class="hero-cta">
+              <a class="btn btn-lg" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4a1 1 0 0 1 1-1zM5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1z" />
+                </svg>
+                <span data-i18n="hero.download">Download the installer</span>
+              </a>
+              <a class="btn btn-lg btn-ghost" href="getting-started.html" data-i18n="hero.start">Setup guide</a>
+            </div>
+
+            <p class="cta-note">
+              <span data-release-line data-i18n="hero.noteVersion">Latest release on GitHub</span>
+              <span class="dot-sep" data-i18n="hero.noteLicense">LGPL-3.0, no account, no API key</span>
+            </p>
+          </div>
+
+          <!--
+            The library, with the real popup on top of it. The frame loads the same index.html and
+            style.css the app installs, driven by a stand-in for the app's notification bridge.
+          -->
+          <div class="showcase">
+            <div class="shot">
+              <img
+                src="assets/shot/home.webp"
+                srcset="assets/shot/home-800.webp 800w, assets/shot/home.webp 1280w"
+                sizes="(max-width: 1180px) 100vw, 1132px"
+                width="1280"
+                height="788"
+                alt="The Achievement Watcher Next library showing game cards with completion percentages"
+                fetchpriority="high"
+              />
+            </div>
+
+            <div class="showcase-popup" data-preset-slot>
+              <iframe
+                class="popup-frame"
+                data-preset-frame
+                src="assets/preset/aw-next/index.html"
+                width="474"
+                height="136"
+                sandbox="allow-scripts"
+                scrolling="no"
+                title="Live preview of the AW Next notification preset"
+                data-i18n-attr="title:hero.popupTitle"
+              ></iframe>
+            </div>
+
+            <p class="showcase-caption">
+              <span data-i18n="hero.caption">That popup is not a picture. It is the preset the app ships, running here.</span>
+              <button class="btn-quiet" type="button" data-replay data-i18n="hero.replay">Replay</button>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Strip --------------------------------------------------------------------------- -->
+      <section class="strip" aria-label="At a glance" data-i18n-attr="aria-label:strip.label">
+        <div class="wrap">
+          <ul class="strip-list">
+            <li><b>8</b><span data-i18n="strip.sources">source families</span></li>
+            <li><b>28</b><span data-i18n="strip.languages">interface languages</span></li>
+            <li><b>9</b><span data-i18n="strip.presets">bundled presets</span></li>
+            <li><b>0</b><span data-i18n="strip.keys">API keys to enter</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Features ------------------------------------------------------------------------ -->
+      <section class="section" id="features">
+        <div class="wrap">
+          <div class="feature">
+            <div class="feature-text">
+              <h2 data-i18n="features.libraryTitle">One library</h2>
+              <p data-i18n="features.libraryBody">
+                Games from every enabled source in one list, with their unlock history, rarity tiers, progress
+                achievements and cover art. Six views, from large cards to a dense table with playtime and last session.
+              </p>
+              <ul class="feature-points">
+                <li data-i18n="features.libraryPoint1">Search and filter by source, completion or recent activity</li>
+                <li data-i18n="features.libraryPoint2">Missing artwork is fetched from Steam's CDN, then SteamGridDB</li>
+                <li data-i18n="features.libraryPoint3">Everything is cached, so the list still opens offline</li>
+              </ul>
+            </div>
+            <div class="shot">
+              <img
+                src="assets/shot/achievements.webp"
+                srcset="assets/shot/achievements-800.webp 800w, assets/shot/achievements.webp 1280w"
+                sizes="(max-width: 940px) 100vw, 600px"
+                width="1280"
+                height="788"
+                loading="lazy"
+                decoding="async"
+                alt="Achievement list for a game with rarity percentages and unlock dates"
+              />
+            </div>
+          </div>
+
+          <div class="feature">
+            <div class="feature-text">
+              <h2 data-i18n="features.notifyTitle">Two ways to be told</h2>
+              <p data-i18n="features.notifyBody">
+                On Automatic, each unlock takes the transport that can actually be seen: the overlay while you play, a
+                Windows notification in exclusive fullscreen or when the overlay reports a failure. Never both at once.
+              </p>
+              <table class="mini-table">
+                <tbody>
+                  <tr>
+                    <th data-i18n="features.notifyOverlay">Overlay popup</th>
+                    <td data-i18n="features.notifyOverlayBody">Drawn over the game. Styled by the preset you pick, with its own sound.</td>
+                  </tr>
+                  <tr>
+                    <th data-i18n="features.notifyToast">Windows notification</th>
+                    <td data-i18n="features.notifyToastBody">The system toast, with the game icon and the achievement art.</td>
+                  </tr>
+                  <tr>
+                    <th data-i18n="features.notifyAuto">Automatic</th>
+                    <td data-i18n="features.notifyAutoBody">Picks between them per unlock, and remembers what worked for that game.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="shot">
+              <img
+                src="assets/shot/notifications.webp"
+                srcset="assets/shot/notifications-800.webp 800w, assets/shot/notifications.webp 1280w"
+                sizes="(max-width: 940px) 100vw, 600px"
+                width="1280"
+                height="788"
+                loading="lazy"
+                decoding="async"
+                alt="The notification settings tab"
+              />
+            </div>
+          </div>
+
+          <div class="feature">
+            <div class="feature-text">
+              <h2 data-i18n="features.overlayTitle">The full list, in game</h2>
+              <p class="shortcut" aria-hidden="true"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>K</kbd></p>
+              <p data-i18n="features.overlayBody">
+                The running game's achievements come up over it: search, filters, rarity badges, hidden descriptions on
+                demand. A gamepad drives all of it, including the app itself.
+              </p>
+            </div>
+            <div class="shot">
+              <img
+                src="assets/shot/overlay.webp"
+                width="563"
+                height="724"
+                loading="lazy"
+                decoding="async"
+                alt="The in-game overlay listing achievements over a running game"
+              />
+            </div>
+          </div>
+
+          <div class="feature">
+            <div class="feature-text">
+              <h2 data-i18n="features.healthTitle">When a game is not tracked</h2>
+              <p data-i18n="features.healthBody">
+                Game Health says which source the game came from, what was found on disk, and what is missing. Where a
+                local setup is broken it offers the repair that applies to that case, and only that one: a
+                <code>steam_settings</code> fix, a matched GBE Fork runtime, an architecture-safe Uplay R2 repair. Every
+                write is confirmed first and backed up.
+              </p>
+            </div>
+            <div class="shot">
+              <img
+                src="assets/shot/game-health.webp"
+                srcset="assets/shot/game-health-800.webp 800w, assets/shot/game-health.webp 864w"
+                sizes="(max-width: 940px) 100vw, 600px"
+                width="864"
+                height="690"
+                loading="lazy"
+                decoding="async"
+                alt="The Game Health panel explaining why a game is or is not tracked"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sources ------------------------------------------------------------------------- -->
+      <section class="section section-alt" id="sources">
+        <div class="wrap">
+          <div class="section-head narrow">
+            <h2 data-i18n="sources.title">Sources</h2>
+            <p class="lead" data-i18n="sources.lead">
+              Each one is a switch in Settings. Achievement lists come from public endpoints and are cached on disk,
+              which is why there is no Steam Web API key to paste anywhere.
+            </p>
+          </div>
+
+          <div class="sources">
+            <div class="source">
+              <span class="source-mark" aria-hidden="true">St</span>
+              <b>Steam</b>
+              <span data-i18n="sources.steam">Local appcache state, public profile data, achievement lists with DLC tags</span>
+            </div>
+            <div class="source">
+              <span class="source-mark" aria-hidden="true">Sv</span>
+              <b data-i18n="sources.savesTitle">Steam compatible saves</b>
+              <span data-i18n="sources.saves">Goldberg, GBE Fork, GreenLuma, SmartSteamEmu, CreamAPI, Nemirtingas</span>
+            </div>
+            <div class="source">
+              <span class="source-mark" aria-hidden="true">GO</span>
+              <b>GOG Galaxy</b>
+              <span data-i18n="sources.gog">The local Galaxy databases, and compatible legacy saves</span>
+            </div>
+            <div class="source">
+              <span class="source-mark" aria-hidden="true">Ep</span>
+              <b>Epic Games</b>
+              <span data-i18n="sources.epic">Installed games, plus unlock state after an optional account connection</span>
+            </div>
+            <div class="source">
+              <span class="source-mark" aria-hidden="true">Ub</span>
+              <b>Ubisoft Connect</b>
+              <span data-i18n="sources.ubisoft">Local data, legacy Uplay formats, and compatible Uplay R2 setups</span>
+            </div>
+            <div class="source">
+              <span class="source-mark" aria-hidden="true">EA</span>
+              <b>EA Desktop</b>
+              <span data-i18n="sources.ea">The local achievement log, for installs outside EA's managed folders</span>
+            </div>
+            <div class="source">
+              <span class="source-mark" aria-hidden="true">Em</span>
+              <b data-i18n="sources.emulatorsTitle">Emulators</b>
+              <span data-i18n="sources.emulators">RPCS3, ShadPS4 and Xenia, watched live while the game runs</span>
+            </div>
+            <div class="source">
+              <span class="source-mark" aria-hidden="true">Xb</span>
+              <b>Xbox PC</b>
+              <span data-i18n="sources.xbox">Game Pass and Microsoft Store installs, plus imported Xbox Network state</span>
+            </div>
+          </div>
+
+          <div class="note" style="margin-top: 22px">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2 3 6v6c0 5 3.8 9.4 9 10 5.2-.6 9-5 9-10V6l-9-4Zm0 5a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0V8a1 1 0 0 1 1-1Zm0 9.2a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z" />
+            </svg>
+            <p data-i18n="sources.note">
+              Reading achievements never writes anything. The emulator repair tools do change game files, after a
+              confirmation and with a backup. Use them only with games you own.
+            </p>
+          </div>
+
+          <p style="margin-top: 22px">
+            <a class="card-more" href="sources.html" data-i18n="sources.more">What each source needs from you</a>
+          </p>
+        </div>
+      </section>
+
+      <!-- Presets ------------------------------------------------------------------------- -->
+      <section class="section" id="presets">
+        <div class="wrap">
+          <div class="section-head narrow">
+            <h2 data-i18n="presets.title">Presets</h2>
+            <p class="lead" data-i18n="presets.lead">
+              Nine designs ship with the app, and each one paints four states: a normal unlock, a rare one, 100%
+              completion and a progress step. Pick one below, they are all running.
+            </p>
+          </div>
+
+          <div class="preset-stage" data-stage data-backdrop="art">
+            <iframe
+              class="popup-frame"
+              data-preset-frame
+              data-stage-frame
+              src="assets/preset/aw-next/index.html"
+              width="474"
+              height="136"
+              sandbox="allow-scripts"
+              scrolling="no"
+              title="Live preset preview"
+              data-i18n-attr="title:presets.frameTitle"
+            ></iframe>
+          </div>
+
+          <div class="preset-strip" role="tablist" data-preset-tabs data-i18n-attr="aria-label:presets.pickerLabel" aria-label="Choose a preset">
+            <button class="chip" type="button" role="tab" aria-selected="true" data-preset="aw-next">AW Next</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" data-preset="steam">Steam</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" data-preset="epic-games">Epic Games</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" data-preset="playstation">PlayStation</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" data-preset="xbox">Xbox</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" data-preset="cover">Cover</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" data-preset="glass">Glass</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" data-preset="arcade">Arcade</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" data-preset="slim">Slim</button>
+          </div>
+
+          <div class="stage-controls">
+            <div class="control-group" data-state-tabs role="group" data-i18n-attr="aria-label:presets.stateLabel" aria-label="State">
+              <span class="control-label" data-i18n="presets.stateLabel">State</span>
+              <button class="chip" type="button" aria-pressed="true" data-state="normal" data-i18n="presets.stateNormal">Normal</button>
+              <button class="chip chip-gold" type="button" aria-pressed="false" data-state="rare" data-i18n="presets.stateRare">Rare</button>
+              <button class="chip" type="button" aria-pressed="false" data-state="platinum" data-i18n="presets.statePlatinum">100%</button>
+              <button class="chip" type="button" aria-pressed="false" data-state="progress" data-i18n="presets.stateProgress">Progress</button>
+            </div>
+            <div class="control-group" data-backdrop-tabs role="group" data-i18n-attr="aria-label:presets.backdropLabel" aria-label="Behind it">
+              <span class="control-label" data-i18n="presets.backdropLabel">Behind it</span>
+              <button class="chip" type="button" aria-pressed="true" data-backdrop="art" data-i18n="presets.backdropArt">Game</button>
+              <button class="chip" type="button" aria-pressed="false" data-backdrop="dark" data-i18n="presets.backdropDark">Dark</button>
+              <button class="chip" type="button" aria-pressed="false" data-backdrop="light" data-i18n="presets.backdropLight">Bright</button>
+            </div>
+            <button class="btn-quiet" type="button" data-replay data-i18n="presets.replay">Replay</button>
+          </div>
+
+          <p class="preset-note" data-preset-note data-i18n="presets.noteAwNext">
+            The default. The app's own palette, an accent rail down the left edge, a ringed icon and the game's name
+            above the achievement.
+          </p>
+
+          <!-- What each preset is, in one line. Read by the picker; hidden because the line above shows it. -->
+          <ul class="visually-hidden" data-preset-notes aria-hidden="true">
+            <li data-preset="aw-next" data-i18n="presets.noteAwNext">
+              The default. The app's own palette, an accent rail down the left edge, a ringed icon and the game's name
+              above the achievement.
+            </li>
+            <li data-preset="steam" data-i18n="presets.noteSteam">
+              Dark navy plate, the Steam mark behind the text, square corners, sliding up out of the bottom edge.
+            </li>
+            <li data-preset="epic-games" data-i18n="presets.noteEpic">
+              Flat and neutral, the widest gutters in the set, one rule down the left edge.
+            </li>
+            <li data-preset="playstation" data-i18n="presets.notePlayStation">
+              The console's type on a long grey to black panel, with the mark pulsing inside a ring on the right.
+            </li>
+            <li data-preset="xbox" data-i18n="presets.noteXbox">
+              A dark pill. A green arc sweeps once around the circular icon and settles into a steady ring.
+            </li>
+            <li data-preset="cover" data-i18n="presets.noteCover">
+              The game's own artwork as the background, drifting slowly, with a scrim under the largest type in the set.
+            </li>
+            <li data-preset="glass" data-i18n="presets.noteGlass">
+              Translucent and quiet. No accent bar and no colour until a rare or 100% unlock brings one.
+            </li>
+            <li data-preset="arcade" data-i18n="presets.noteArcade">
+              Phosphor green on black, monospaced, scanlines, a hard offset edge. A rare unlock turns amber.
+            </li>
+            <li data-preset="slim" data-i18n="presets.noteSlim">
+              Half the height of the others, on true black, for an OLED panel where an unlit card disappears.
+            </li>
+          </ul>
+
+          <div class="split" style="margin-top: 44px">
+            <div>
+              <h3 data-i18n="presets.designerTitle">Make your own</h3>
+              <p data-i18n="presets.designerBody">
+                Settings has a designer: layout, type, colours, motion, the rare and completion treatments, a per-preset
+                sound. No CSS and no JSON, and the preview is the real popup rather than an approximation of it. Fourteen
+                starting points, or roll one with Surprise me.
+              </p>
+              <p>
+                <a class="card-more" href="presets.html" data-i18n="presets.designerLink">How the designer works</a>
+              </p>
+            </div>
+            <div>
+              <h3 data-i18n="presets.shareTitle">Share it, or take one</h3>
+              <p data-i18n="presets.shareBody">
+                Export writes one <code>.awpreset</code> file with the style, the images, the fonts and the designer
+                settings, and nothing from your machine. The gallery is where people put theirs. Themes made in Steam
+                Achievement Notifier can be converted on import.
+              </p>
+              <p>
+                <a class="card-more" href="gallery/" data-i18n="presets.shareLink">Preset gallery</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Install and docs ---------------------------------------------------------------- -->
+      <section class="section section-alt" id="install">
+        <div class="wrap">
+          <div class="split">
+            <div>
+              <h2 data-i18n="install.title">Getting it running</h2>
+              <ol class="steps" style="margin-top: 24px">
+                <li>
+                  <b data-i18n="install.step1Title">Install it</b>
+                  <span class="muted" data-i18n="install.step1Body">
+                    <code>Achievement.Watcher.Setup.exe</code> from the releases page. Nowhere else publishes it.
+                  </span>
+                </li>
+                <li>
+                  <b data-i18n="install.step2Title">Run Smart Find</b>
+                  <span class="muted" data-i18n="install.step2Body">
+                    Settings, then Folders. Add any game or save folder it could not guess.
+                  </span>
+                </li>
+                <li>
+                  <b data-i18n="install.step3Title">Leave it in the tray</b>
+                  <span class="muted" data-i18n="install.step3Body">
+                    That is the watcher. Live notifications and playtime depend on it running.
+                  </span>
+                </li>
+              </ol>
+              <p class="small muted" style="margin-top: 20px" data-i18n="install.data">
+                Settings and data live in <code>%APPDATA%\Achievement Watcher Next</code>. An upgrade keeps them, and the
+                first launch imports an older Achievement Watcher folder without modifying it.
+              </p>
+              <div class="hero-cta">
+                <a class="btn" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-i18n="install.download">
+                  Download
+                </a>
+                <a class="btn btn-ghost" href="getting-started.html" data-i18n="install.guide">First run guide</a>
+              </div>
+            </div>
+
+            <div>
+              <h2 data-i18n="docs.title">Documentation</h2>
+              <p class="muted" data-i18n="docs.lead">
+                Written for the version that is out. The in-app Help tab is the same material, translated, and it reflects
+                your actual configuration.
+              </p>
+              <ul class="link-list">
+                <li><a href="getting-started.html" data-i18n="docs.start">Getting started</a></li>
+                <li><a href="sources.html" data-i18n="docs.sources">Compatible sources</a></li>
+                <li><a href="notifications.html" data-i18n="docs.notify">Notifications</a></li>
+                <li><a href="presets.html" data-i18n="docs.presets">Presets and the designer</a></li>
+                <li><a href="overlay.html" data-i18n="docs.overlay">Overlay</a></li>
+                <li><a href="controller.html" data-i18n="docs.controller">Controller</a></li>
+                <li><a href="game-health.html" data-i18n="docs.health">Game Health</a></li>
+                <li><a href="troubleshooting.html" data-i18n="docs.trouble">Troubleshooting</a></li>
+                <li><a href="faq.html" data-i18n="docs.faq">FAQ</a></li>
+                <li><a href="README.html" data-i18n="docs.all">All guides</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-foot">
+      <div class="wrap">
+        <div class="foot-grid">
+          <div class="foot-about">
+            <a class="brand" href="./" style="margin-bottom: 12px">
+              <span class="brand-mark" aria-hidden="true"></span>
+              <span class="brand-word">Achievement Watcher <em>Next</em></span>
+            </a>
+            <p data-i18n="foot.about">
+              Maintained by Shirowwww and contributors. It continues Xan105's Achievement Watcher and darktakayanagi's
+              2.x branch. Bug reports and ideas are welcome, and so are translations.
+            </p>
+          </div>
+
+          <div>
+            <h4 data-i18n="foot.product">Product</h4>
+            <ul>
+              <li><a href="#features" data-i18n="foot.features">Features</a></li>
+              <li><a href="#sources" data-i18n="foot.sources">Sources</a></li>
+              <li><a href="gallery/" data-i18n="foot.gallery">Preset gallery</a></li>
+              <li><a href="comparison.html" data-i18n="foot.comparison">Compared to 2.x</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 data-i18n="foot.docs">Documentation</h4>
+            <ul>
+              <li><a href="README.html" data-i18n="foot.allDocs">All guides</a></li>
+              <li><a href="getting-started.html" data-i18n="foot.start">Getting started</a></li>
+              <li><a href="troubleshooting.html" data-i18n="foot.trouble">Troubleshooting</a></li>
+              <li><a href="faq.html" data-i18n="foot.faq">FAQ</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 data-i18n="foot.project">Project</h4>
+            <ul>
+              <li><a href="https://github.com/Shirowwww/Achievement-Watcher-Next" data-i18n="foot.repo">Repository</a></li>
+              <li>
+                <a href="https://github.com/Shirowwww/Achievement-Watcher-Next/issues/new/choose" data-i18n="foot.issues">Report a problem</a>
+              </li>
+              <li>
+                <a href="https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md" data-i18n="foot.changelog">Changelog</a>
+              </li>
+              <li>
+                <a href="https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/SECURITY.md" data-i18n="foot.security">Security policy</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="foot-bottom">
+          <span data-i18n="foot.license">LGPL-3.0. Windows only.</span>
+          <span data-i18n="foot.affiliation">
+            Not affiliated with Valve, Sony, Microsoft, GOG, Epic Games, Electronic Arts or Ubisoft.
+          </span>
+        </div>
+      </div>
+    </footer>
+
+    <script src="assets/js/i18n.js" defer></script>
+    <script src="assets/js/site.js" defer></script>
+  </body>
+</html>

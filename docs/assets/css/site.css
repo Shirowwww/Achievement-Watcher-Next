@@ -1,0 +1,1825 @@
+/*
+  The Achievement Watcher Next website.
+
+  Two pages use this file - the home page (index.html) and the preset gallery (gallery/index.html).
+  The documentation pages keep the Primer theme and its skin in assets/css/style.scss; the tokens
+  below are the same palette, so moving between the two reads as one site.
+
+  Palette source: app/resources/css/app.css. Three theme states, exactly like the docs skin: no
+  attribute follows the system, data-theme="dark"/"light" is a choice the reader made and stored
+  under the shared `aw-theme` key.
+*/
+
+/* --- fonts ------------------------------------------------------------------------------------
+
+  The app's own two families, self-hosted from the same files it bundles. `swap` means the page is
+  readable before they arrive, and the fallbacks are close enough in metrics that the swap is not a
+  jump. */
+
+@font-face {
+  font-family: 'Raleway';
+  src: url('../font/raleway-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Raleway';
+  src: url('../font/raleway-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url('../font/opensans-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url('../font/opensans-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* --- tokens ----------------------------------------------------------------------------------- */
+
+:root {
+  --bg: #f2f5fa;
+  --bg-deep: #e7ecf5;
+  --panel: #ffffff;
+  --panel-2: #f7f9fc;
+  --border: #d4dceb;
+  --border-strong: #bcc8dd;
+  --text: #15202e;
+  --muted: #5a6a80;
+  --accent: #3a63b5;
+  --accent-ink: #ffffff;
+  --accent-soft: rgba(58, 99, 181, 0.12);
+  --gold: #b8801a;
+  --gold-soft: rgba(184, 128, 26, 0.14);
+  --good: #14804a;
+  --shadow-sm: 0 1px 2px rgba(16, 30, 54, 0.06), 0 4px 12px rgba(16, 30, 54, 0.06);
+  --shadow-md: 0 10px 30px rgba(16, 30, 54, 0.1);
+  --shadow-lg: 0 30px 70px rgba(16, 30, 54, 0.16);
+  --glow: transparent;
+  --grid-line: rgba(21, 32, 46, 0.05);
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 20px;
+  --nav-bg: rgba(242, 245, 250, 0.82);
+  --shot-frame: rgba(21, 32, 46, 0.12);
+  --backdrop: linear-gradient(135deg, #223055, #3d3363 55%, #6d3b58);
+  color-scheme: light;
+}
+
+/* System preference, unless the reader explicitly asked for light. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0c1322;
+    --bg-deep: #080e19;
+    --panel: #16223a;
+    --panel-2: #1b2942;
+    --border: #26344f;
+    --border-strong: #334565;
+    --text: #e7edf6;
+    --muted: #9bacc2;
+    --accent: #6c91ff;
+    --accent-ink: #0b1220;
+    --accent-soft: rgba(108, 145, 255, 0.16);
+    --gold: #e8b563;
+    --gold-soft: rgba(232, 181, 99, 0.16);
+    --good: #5fd49a;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 14px 34px rgba(0, 0, 0, 0.42);
+    --shadow-lg: 0 34px 90px rgba(0, 0, 0, 0.58);
+    --glow: rgba(108, 145, 255, 0.16);
+    --grid-line: rgba(231, 237, 246, 0.045);
+    --nav-bg: rgba(12, 19, 34, 0.78);
+    --shot-frame: rgba(231, 237, 246, 0.1);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #0c1322;
+  --bg-deep: #080e19;
+  --panel: #16223a;
+  --panel-2: #1b2942;
+  --border: #26344f;
+  --border-strong: #334565;
+  --text: #e7edf6;
+  --muted: #9bacc2;
+  --accent: #6c91ff;
+  --accent-ink: #0b1220;
+  --accent-soft: rgba(108, 145, 255, 0.16);
+  --gold: #e8b563;
+  --gold-soft: rgba(232, 181, 99, 0.16);
+  --good: #5fd49a;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 14px 34px rgba(0, 0, 0, 0.42);
+  --shadow-lg: 0 34px 90px rgba(0, 0, 0, 0.58);
+  --glow: rgba(108, 145, 255, 0.16);
+  --grid-line: rgba(231, 237, 246, 0.045);
+  --nav-bg: rgba(12, 19, 34, 0.78);
+  --shot-frame: rgba(231, 237, 246, 0.1);
+  color-scheme: dark;
+}
+
+/* --- base ------------------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/*
+  `hidden` is an attribute, and the browser implements it as `display: none` at the lowest possible
+  weight - so any class here that sets `display` beats it, and an element the script has hidden stays
+  on screen. Three did: the gallery grid, its status box and the submission panel, which meant the
+  "Loading" placeholder sat under the cards and the upload panel showed even when no server had
+  answered. This is the one place it is worth being blunt about.
+*/
+[hidden] {
+  display: none !important;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* The sticky header must not sit on top of a section that was just jumped to. */
+  scroll-padding-top: 88px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Open Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: 'Raleway', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.5em;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(2.4rem, 1.4rem + 3.4vw, 4rem);
+}
+
+h2 {
+  font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
+}
+
+h3 {
+  font-size: 1.2rem;
+}
+
+p {
+  margin: 0 0 1em;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+img,
+svg,
+iframe {
+  max-width: 100%;
+}
+
+hr {
+  height: 1px;
+  margin: 0;
+  border: 0;
+  background: var(--border);
+}
+
+code,
+kbd {
+  font-family: Consolas, 'Cascadia Mono', ui-monospace, monospace;
+  font-size: 0.88em;
+}
+
+kbd {
+  padding: 0.15em 0.45em;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  transition: top 0.15s ease;
+}
+
+.skip-link:focus {
+  top: 16px;
+  text-decoration: none;
+}
+
+/* Read by a screen reader, drawn for nobody. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.wrap {
+  width: min(1180px, 100% - 48px);
+  margin-inline: auto;
+}
+
+.narrow {
+  width: min(760px, 100%);
+}
+
+.section {
+  padding-block: clamp(64px, 8vw, 116px);
+}
+
+/* The header is sticky, so an in-page link would otherwise land with its heading underneath it. */
+.section[id],
+#main {
+  scroll-margin-top: 84px;
+}
+
+.section-alt {
+  background: var(--bg-deep);
+  border-block: 1px solid var(--border);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-family: 'Raleway', system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.eyebrow::before {
+  content: '';
+  width: 22px;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.lead {
+  font-size: 1.12rem;
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+.section-head {
+  margin-bottom: clamp(32px, 4vw, 56px);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: 0.92rem;
+}
+
+/* --- buttons ---------------------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 22px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: 'Raleway', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.btn:hover {
+  text-decoration: none;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px var(--accent-soft);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-lg {
+  padding: 16px 28px;
+  font-size: 1.06rem;
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: none;
+}
+
+.btn-quiet {
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+.btn-quiet:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: none;
+  transform: none;
+}
+
+.btn svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  fill: currentColor;
+}
+
+/* --- header ----------------------------------------------------------------------------------- */
+
+.site-head {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: saturate(1.4) blur(14px);
+  background: var(--nav-bg);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.site-head[data-stuck='true'] {
+  border-bottom-color: var(--border);
+}
+
+.site-head .wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 70px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  margin-right: auto;
+  color: var(--text);
+  font-family: 'Raleway', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.02rem;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.brand:hover {
+  text-decoration: none;
+}
+
+.brand-mark {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  background-color: var(--accent);
+  -webkit-mask: url('../img/brand-mark.png') center / contain no-repeat;
+  mask: url('../img/brand-mark.png') center / contain no-repeat;
+}
+
+.brand em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.site-nav a {
+  padding: 9px 12px;
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.site-nav a:hover,
+.site-nav a[aria-current='page'] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/*
+  The links are navigation and these are actions, so they read as two groups rather than as one long
+  row: a hairline between them and enough space either side of it to be a separation instead of a
+  gap that happens to be wider.
+*/
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 18px;
+  padding-left: 18px;
+  border-left: 1px solid var(--border);
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.icon-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.nav-toggle {
+  display: none;
+}
+
+/* The download link belongs to the menu only while the header button is hidden. */
+.site-nav .nav-download {
+  display: none;
+}
+
+/*
+  Dropdowns. A native select paints its own arrow and its own box, which is the one control on the
+  page that ignores the palette; the shell draws the arrow instead and the select keeps the shape
+  every other control in the header has. The icons are masks, so they take the colour around them
+  in both themes.
+*/
+.select-shell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted);
+}
+
+.select-shell::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  width: 11px;
+  height: 11px;
+  pointer-events: none;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* Only rendered when assets/i18n/languages.json lists a translation. */
+.lang-picker::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  width: 15px;
+  height: 15px;
+  pointer-events: none;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M3 12h18M12 3c2.6 2.8 2.6 15.2 0 18M12 3c-2.6 2.8-2.6 15.2 0 18'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M3 12h18M12 3c2.6 2.8 2.6 15.2 0 18M12 3c-2.6 2.8-2.6 15.2 0 18'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.site-select {
+  height: 38px;
+  padding: 0 32px 0 13px;
+  -webkit-appearance: none;
+  appearance: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.lang-picker .site-select {
+  max-width: 132px;
+  padding-left: 34px;
+  text-overflow: ellipsis;
+}
+
+.select-shell:hover {
+  color: var(--accent);
+}
+
+.select-shell:hover .site-select {
+  border-color: var(--accent);
+}
+
+/* --- hero ------------------------------------------------------------------------------------- */
+
+.hero {
+  position: relative;
+  padding-block: clamp(48px, 7vw, 96px) clamp(56px, 7vw, 104px);
+  overflow: hidden;
+}
+
+/* The app's own header glow, plus a faint grid so the section has structure without an image. */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: -40% 0 auto;
+  height: 90%;
+  background: radial-gradient(ellipse 60% 55% at 50% 50%, var(--glow), transparent 70%);
+  pointer-events: none;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000, transparent 75%);
+  pointer-events: none;
+}
+
+.hero > .wrap {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-copy {
+  max-width: 44rem;
+}
+
+.hero h1 {
+  margin-bottom: 0.35em;
+}
+
+/* Two lines, in every language: the second half is the one that carries the gradient. */
+.hero h1 span {
+  display: block;
+}
+
+.hero h1 .grad {
+  background: linear-gradient(100deg, var(--accent), var(--gold));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-sub {
+  font-size: clamp(1.05rem, 0.98rem + 0.4vw, 1.28rem);
+  color: var(--muted);
+  max-width: 58ch;
+}
+
+.hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.cta-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 14px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.cta-note b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* --- hero showcase ---------------------------------------------------------------------------- */
+
+.showcase {
+  position: relative;
+  margin-top: clamp(40px, 5vw, 64px);
+}
+
+.shot {
+  position: relative;
+  border: 1px solid var(--shot-frame);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--panel);
+  box-shadow: var(--shadow-lg);
+}
+
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.showcase .shot {
+  transform: perspective(1600px) rotateX(1.2deg);
+}
+
+/* The live popup, sitting on the library shot the way it does over a game. */
+.showcase-popup {
+  position: absolute;
+  right: clamp(12px, 3%, 42px);
+  bottom: clamp(12px, 4%, 46px);
+  z-index: 2;
+  filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.45));
+}
+
+/*
+  A preset declares its own pixel size and the frame is given exactly that, so the popup is never
+  reflowed into a shape it was not designed for. Narrow columns scale the whole frame down instead,
+  which is what the app does too when the notification scale is lowered.
+*/
+.popup-frame {
+  display: block;
+  position: relative;
+  z-index: 1;
+  /* The frame keeps the pixel size the preset declares and is scaled as a whole; the page-wide
+     max-width would instead reflow the popup inside it into a shape it was never designed for. */
+  max-width: none;
+  border: 0;
+  background: transparent;
+  color-scheme: normal;
+  transform: scale(var(--popup-scale, 1));
+  transform-origin: center center;
+  /* A scaled element still occupies its full size in the layout, which on a phone would push the
+     page sideways. The margins take back exactly what the scale removed visually. */
+  margin-inline: calc((var(--popup-scale, 1) - 1) * var(--popup-w, 474px) / 2);
+  margin-block: calc((var(--popup-scale, 1) - 1) * var(--popup-h, 136px) / 2);
+}
+
+.showcase-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 16px;
+  margin-top: 18px;
+  font-size: 0.9rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* A middle dot between items that already sit in a flex gap. */
+.dot-sep::before {
+  content: '\00B7';
+  margin-right: 8px;
+  color: var(--border-strong);
+  font-weight: 700;
+}
+
+/* --- trust strip ------------------------------------------------------------------------------ */
+
+.strip {
+  border-block: 1px solid var(--border);
+  background: var(--panel-2);
+}
+
+.strip-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.strip-list li {
+  position: relative;
+  padding: clamp(24px, 3vw, 34px) 16px;
+  text-align: center;
+}
+
+/* A short rule between the figures rather than a full height border: this is a row of facts, not
+   a table with cells. */
+.strip-list li + li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 1px;
+  height: 38px;
+  transform: translateY(-50%);
+  background: var(--border);
+}
+
+.strip-list b {
+  display: block;
+  font-family: 'Raleway', system-ui, sans-serif;
+  font-size: clamp(1.9rem, 2.6vw, 2.4rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--accent);
+}
+
+.strip-list span {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+
+/* --- feature rows ----------------------------------------------------------------------------- */
+
+.feature {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  align-items: center;
+  gap: clamp(28px, 5vw, 72px);
+  padding-block: clamp(36px, 5vw, 64px);
+}
+
+.feature + .feature {
+  border-top: 1px solid var(--border);
+}
+
+.feature:nth-child(even) .feature-text {
+  order: 2;
+}
+
+.feature h2 {
+  font-size: clamp(1.4rem, 1.15rem + 0.9vw, 1.9rem);
+}
+
+.feature .shortcut {
+  margin: -0.2em 0 0.8em;
+  letter-spacing: 0.02em;
+}
+
+.feature p {
+  color: var(--muted);
+  max-width: 46ch;
+}
+
+.feature-points {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.feature-points li {
+  position: relative;
+  padding-left: 26px;
+  font-size: 0.97rem;
+}
+
+.feature-points li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+/* A small two column table inside a feature, for a set of options that is a set, not a list. */
+.mini-table {
+  width: 100%;
+  margin-top: 18px;
+  border-collapse: collapse;
+  font-size: 0.96rem;
+}
+
+.mini-table th {
+  width: 38%;
+  padding: 10px 14px 10px 0;
+  border-top: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 650;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.mini-table td {
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  vertical-align: top;
+}
+
+/* Two columns of ordinary prose, stacking on a narrow screen. */
+.split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: clamp(28px, 5vw, 64px);
+  align-items: start;
+}
+
+.split h3 {
+  margin-bottom: 10px;
+}
+
+.split p {
+  color: var(--muted);
+  max-width: 52ch;
+}
+
+.link-list {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 2px 24px;
+}
+
+.link-list a {
+  display: block;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.97rem;
+}
+
+.link-list a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* --- cards ------------------------------------------------------------------------------------ */
+
+.grid {
+  display: grid;
+  gap: 18px;
+}
+
+.grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+}
+
+.grid-4 {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.card {
+  position: relative;
+  padding: 24px 24px 26px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* The accent rail is the preset's signature; it shows up here as the hover state. */
+.card::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 18px;
+  bottom: 18px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.card:hover::before,
+.card:focus-within::before {
+  opacity: 1;
+}
+
+a.card:hover,
+.card:focus-within {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  text-decoration: none;
+}
+
+.card h3 {
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.96rem;
+}
+
+.card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 16px;
+  border-radius: 11px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.card-icon svg {
+  width: 21px;
+  height: 21px;
+  fill: currentColor;
+}
+
+.card-more {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 0.93rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* --- source table ----------------------------------------------------------------------------- */
+
+.sources {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+  gap: 14px;
+}
+
+.source {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  /* Cards stretch to the tallest in their row; without this the spare height is shared out
+     between the two rows and the description drifts away from its title. */
+  align-content: start;
+  gap: 6px 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.source-mark {
+  grid-row: span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  font-family: 'Raleway', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--accent);
+}
+
+.source b {
+  font-size: 1rem;
+}
+
+.source span {
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+/* --- preset showcase -------------------------------------------------------------------------- */
+
+/*
+  The stage is sized from the popup standing in it - assets/js/site.js measures the frame and sets
+  --popup-height - so a short preset does not float in a field of backdrop and a tall one is not
+  cropped.
+*/
+.preset-stage {
+  --stage-pad: clamp(30px, 4vw, 54px);
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: calc(var(--popup-height, 140px) + 2 * var(--stage-pad));
+  padding: var(--stage-pad) clamp(16px, 3vw, 32px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background-image: var(--backdrop);
+  background-size: cover;
+  overflow: hidden;
+}
+
+/* A vignette, so the abstract scene behind the popup reads as a screen rather than a swatch. */
+.preset-stage[data-backdrop='art']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 45%, transparent 40%, rgba(4, 7, 14, 0.5) 100%);
+}
+
+.preset-stage[data-backdrop='light'] {
+  background-image: linear-gradient(135deg, #f4f6fb, #d9e2f2 60%, #cbd8ee);
+}
+
+.preset-stage[data-backdrop='dark'] {
+  background-image: linear-gradient(135deg, #05070c, #0d1424);
+}
+
+.stage-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 18px;
+}
+
+.control-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.control-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.preset-note {
+  max-width: 62ch;
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 0.97rem;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.chip:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.chip[aria-pressed='true'],
+.chip[aria-selected='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.chip-gold[aria-pressed='true'],
+.chip-gold[aria-selected='true'] {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #1a1206;
+}
+
+.preset-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: baseline;
+  margin-top: 18px;
+}
+
+.preset-meta h3 {
+  margin: 0;
+}
+
+.preset-strip {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  padding-bottom: 6px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+.preset-strip .chip {
+  scroll-snap-align: start;
+  white-space: nowrap;
+}
+
+/* --- gallery ---------------------------------------------------------------------------------- */
+
+.gallery-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.field {
+  position: relative;
+  flex: 1 1 240px;
+  max-width: 380px;
+}
+
+.field input {
+  width: 100%;
+  padding: 12px 14px 12px 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.98rem;
+}
+
+.field input::placeholder {
+  color: var(--muted);
+}
+
+.field svg {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  width: 17px;
+  height: 17px;
+  transform: translateY(-50%);
+  fill: var(--muted);
+  pointer-events: none;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 20px;
+}
+
+.preset-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.preset-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.preset-card figure {
+  position: relative;
+  margin: 0;
+  /* Close to the shape a rendered preview has, so the popup fills the card rather than floating
+     in a band of backdrop. */
+  aspect-ratio: 5 / 2;
+  background: var(--backdrop);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.preset-card figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 6px;
+}
+
+.preset-card .body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 8px;
+  padding: 18px 20px 20px;
+}
+
+.preset-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.preset-card .by {
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.preset-card .desc {
+  margin: 0;
+  font-size: 0.94rem;
+  color: var(--muted);
+  flex: 1;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag {
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-2);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  text-transform: lowercase;
+}
+
+.preset-card footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.preset-card footer .btn {
+  padding: 10px 16px;
+  font-size: 0.94rem;
+}
+
+.file-meta {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 40px 28px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  color: var(--muted);
+}
+
+/* An outline of a popup: the shape the page would be full of if there were anything to show. */
+.empty::before {
+  content: '';
+  width: 46px;
+  height: 22px;
+  margin-bottom: 10px;
+  border: 2px dashed var(--border-strong);
+  border-radius: 6px;
+}
+
+.empty h3 {
+  margin: 0;
+  color: var(--text);
+}
+
+.empty p {
+  max-width: 46ch;
+}
+
+/* The three optional fields beside the file button. */
+.submit-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px 16px;
+}
+
+.field-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.field-block input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+}
+
+.field-block input::placeholder {
+  color: var(--muted);
+  opacity: 0.75;
+}
+
+/* The download count on a card: a figure, so it should not wrap away from its arrow. */
+.file-meta .downloads {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  cursor: help;
+}
+
+/* Only drawn when a gallery server answered: with none, a submission is a pull request. */
+.submit-panel {
+  display: grid;
+  gap: 18px;
+  margin-top: 26px;
+  padding: 22px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+}
+
+/* Dropping the file on the panel is the shortest way to send one, so the panel says it is a target. */
+.submit-panel[data-drop='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/*
+  A submission takes a few seconds: the server draws the popup before it answers. The panel says so
+  rather than looking unresponsive, and refuses a second file until the first has landed.
+*/
+.submit-panel[data-busy='true'] {
+  pointer-events: none;
+}
+
+.submit-panel[data-busy='true'] .btn {
+  opacity: 0.55;
+}
+
+.submit-panel[data-busy='true'] [data-gallery-upload-status]::after {
+  content: '';
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  margin-left: 8px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -1px;
+  animation: aw-spin 0.9s linear infinite;
+}
+
+@keyframes aw-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.submit-panel h3 {
+  margin: 0 0 6px;
+}
+
+.submit-panel p {
+  margin: 0;
+  max-width: 68ch;
+}
+
+.submit-panel .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+}
+
+/* The real input is hidden inside the label, so the label needs the focus ring it would have had. */
+.submit-panel label:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.submit-panel .good {
+  color: var(--good);
+}
+
+.submit-panel .bad {
+  color: #b3261e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .submit-panel .bad {
+    color: #ff8f8f;
+  }
+}
+
+:root[data-theme='dark'] .submit-panel .bad {
+  color: #ff8f8f;
+}
+
+/* --- notes and callouts ----------------------------------------------------------------------- */
+
+.note {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--panel);
+}
+
+.note svg {
+  width: 20px;
+  height: 20px;
+  margin-top: 3px;
+  fill: var(--accent);
+}
+
+.note p:last-child {
+  margin-bottom: 0;
+}
+
+.steps {
+  counter-reset: step;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 16px;
+}
+
+.steps li {
+  position: relative;
+  padding-left: 46px;
+}
+
+.steps li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -1px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+  font-family: 'Raleway', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--accent);
+}
+
+.steps b {
+  display: block;
+}
+
+/* --- footer ----------------------------------------------------------------------------------- */
+
+.site-foot {
+  border-top: 1px solid var(--border);
+  background: var(--bg-deep);
+  padding-block: clamp(44px, 5vw, 72px) 32px;
+  font-size: 0.95rem;
+}
+
+.foot-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.4fr) repeat(auto-fit, minmax(150px, 1fr));
+  gap: 32px;
+}
+
+.foot-grid h4 {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.foot-grid ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 9px;
+}
+
+.foot-grid a {
+  color: var(--text);
+}
+
+.foot-grid a:hover {
+  color: var(--accent);
+}
+
+.foot-about p {
+  color: var(--muted);
+  max-width: 40ch;
+}
+
+.foot-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  margin-top: 40px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.foot-bottom a {
+  color: var(--muted);
+  text-decoration: underline;
+}
+
+/* --- responsive ------------------------------------------------------------------------------- */
+
+@media (max-width: 940px) {
+  .wrap {
+    width: min(1180px, 100% - 32px);
+  }
+
+  .feature {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .feature:nth-child(even) .feature-text {
+    order: 0;
+  }
+
+  .strip-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Two by two: the vertical rule would now sit between rows as well as columns. */
+  .strip-list li + li::before {
+    display: none;
+  }
+
+  .strip-list li {
+    border-top: 1px solid var(--border);
+  }
+
+  .strip-list li:first-child,
+  .strip-list li:nth-child(2) {
+    border-top: 0;
+  }
+
+  .strip-list li:nth-child(odd) {
+    border-right: 1px solid var(--border);
+  }
+}
+
+/*
+  Where the links move into the menu.
+
+  Higher than it looks like it should be: brand, six links, the language picker, the theme button and
+  the download button add up to about 1100px, so anything narrower than this was packing them edge to
+  edge and, below 1180, pushing the download button past the side of the page. A menu is better than
+  a bar with no air in it. assets/js/site.js watches the same width.
+*/
+@media (max-width: 1160px) {
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  .site-nav {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: 10px 16px 16px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+  }
+
+  .site-nav[hidden] {
+    display: none;
+  }
+
+  .site-nav a {
+    padding: 12px 14px;
+    font-size: 1rem;
+  }
+
+  .head-actions .btn {
+    display: none;
+  }
+
+  .site-nav .nav-download {
+    display: block;
+    color: var(--accent);
+  }
+
+  .showcase .shot {
+    transform: none;
+  }
+
+  .showcase-popup {
+    position: static;
+    display: flex;
+    justify-content: center;
+    margin-top: 18px;
+  }
+
+  /* The about column is prose; only the link lists are worth putting side by side. */
+  .foot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .foot-about {
+    grid-column: 1 / -1;
+  }
+}
+
+/*
+  A two column table of a label and a sentence needs about 520px to stay readable. Below that the
+  sentence column is four or five words wide and every row breaks differently, so the label goes
+  above its text instead.
+*/
+@media (max-width: 620px) {
+  .mini-table th,
+  .mini-table td {
+    display: block;
+    width: auto;
+    white-space: normal;
+  }
+
+  .mini-table th {
+    padding: 12px 0 2px;
+  }
+
+  .mini-table td {
+    padding: 0 0 12px;
+    border-top: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  body {
+    font-size: 16px;
+  }
+
+  /*
+    The brand mark, the menu, the theme and the language picker do not all fit beside a wordmark on
+    a phone. The mark keeps the identity and the link still carries the full name for a reader.
+  */
+  .site-head .brand-word {
+    display: none;
+  }
+
+  .lang-picker .site-select {
+    max-width: 150px;
+  }
+
+  /* The note wraps onto two lines here, and the separator would lead the second one. */
+  .dot-sep::before {
+    display: none;
+  }
+
+  .section {
+    padding-block: 56px;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  .preset-card footer {
+    flex-wrap: wrap;
+  }
+
+  .file-meta {
+    margin-left: 0;
+    text-align: left;
+  }
+}
+
+/* --- motion ----------------------------------------------------------------------------------- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

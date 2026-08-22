@@ -329,12 +329,101 @@ body {
   color: var(--aw-muted);
 }
 
-/* Theme toggle, injected by _includes/head-custom.html. */
-.aw-theme-toggle {
-  position: fixed;
-  top: 16px;
-  right: 16px;
+/*
+  The site bar, injected by _includes/head-custom.html.
+
+  A guide is a Markdown file with no header of its own, so this is what connects it to the home page
+  and the preset gallery. It is navigation rather than content, which is why it is not written into
+  every page: browsing the same files on github.com is unaffected.
+*/
+.aw-site-bar {
+  position: sticky;
+  top: 0;
   z-index: 20;
+  background: color-mix(in srgb, var(--aw-bg) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px);
+  border-bottom: 1px solid var(--aw-border);
+}
+
+.aw-site-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 880px;
+  min-height: 56px;
+  margin: 0 auto;
+  padding: 8px 16px;
+}
+
+.aw-site-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-right: auto;
+  color: var(--aw-text);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.aw-site-brand:hover {
+  text-decoration: none;
+}
+
+.aw-site-brand em {
+  font-style: normal;
+  color: var(--aw-accent);
+}
+
+.aw-site-mark {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  background-color: var(--aw-accent);
+  -webkit-mask: url("../img/brand-mark.png") center / contain no-repeat;
+  mask: url("../img/brand-mark.png") center / contain no-repeat;
+}
+
+.aw-site-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.aw-site-links a {
+  padding: 7px 10px;
+  border-radius: 8px;
+  color: var(--aw-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.aw-site-links a:hover {
+  background: var(--aw-accent-soft);
+  color: var(--aw-accent);
+  text-decoration: none;
+}
+
+.aw-site-links .aw-site-cta {
+  margin-left: 4px;
+  background: var(--aw-accent);
+  color: #ffffff;
+}
+
+.aw-site-links .aw-site-cta:hover {
+  background: var(--aw-accent);
+  color: #ffffff;
+  filter: brightness(1.08);
+}
+
+/* Theme toggle, injected by _includes/head-custom.html into the bar above. */
+.aw-theme-toggle {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -346,7 +435,6 @@ body {
   background: var(--aw-surface);
   color: var(--aw-muted);
   cursor: pointer;
-  box-shadow: 0 2px 10px var(--aw-shadow);
 }
 
 .aw-theme-toggle:hover {
@@ -371,9 +459,8 @@ body {
     font-size: 15px;
   }
 
-  .aw-theme-toggle {
-    top: 10px;
-    right: 10px;
+  .aw-site-bar-inner {
+    padding: 6px 12px;
   }
 
   .markdown-body h1 {

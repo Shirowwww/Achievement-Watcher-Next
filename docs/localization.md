@@ -13,7 +13,8 @@ How AW Next is translated, what is deliberately left in English, and what a cont
 | | |
 |---|---|
 | Application interface | **28 bundled languages**, full key parity, no English fallback at runtime |
-| Documentation site | **English only** today, with the language declared so browser translation works |
+| Website: the guides | **English only** today, with the language declared so browser translation works |
+| Website: home page and gallery | **6 languages** so far, as an overlay over the English markup |
 | Dates, times, durations, numbers | Not translated: `Intl` produces them from the selected language |
 | Logs, file names, protocol values, source ids | Not translated, on purpose |
 | Check everything | `node tools/locale-lint.js`, or just `cd app && npm test` |
@@ -94,15 +95,19 @@ checks that every documentation slug resolves to a page this site actually publi
 `tools/locale-lint.js` fails the build if an address is written by hand anywhere else. The
 repository has been renamed once already; the point is that the next rename is one edit.
 
-## The documentation site
+## The website
 
-This site is published in English only, and that is a decision rather than a gap.
+The site is two things, and they are localized differently.
+
+### The guides
+
+Published in English only, and that is a decision rather than a gap.
 
 The pages are the same Markdown files that GitHub renders when browsing the repository. There is no
-layout, no include and no Liquid template beyond a favicon and a theme toggle, which is what keeps
-the two renderings identical. Forking that into twenty-eight directories would mean twenty-eight copies of
-every guide drifting apart at different speeds, and a reader landing on a translation that is two
-releases behind is worse served than one reading current English.
+layout, no include and no Liquid template beyond a favicon, a theme toggle and the site bar, which is
+what keeps the two renderings identical. Forking that into twenty-eight directories would mean
+twenty-eight copies of every guide drifting apart at different speeds, and a reader landing on a
+translation that is two releases behind is worse served than one reading current English.
 
 What is done instead:
 
@@ -110,15 +115,38 @@ What is done instead:
   `hreflang` in `_includes/head-custom.html`), which is what browser translation and screen readers
   read. Machine translation of a page that declares itself is good; of one that does not, it is a
   guess.
-- The few strings the site builds in script rather than in Markdown - the theme toggle labels and
-  the alert box captions - are collected in one `SITE_STRINGS` object in that same file, so they
-  are not the one part of the site a translator cannot reach.
+- The few strings the site builds in script rather than in Markdown - the theme toggle labels, the
+  alert box captions and the site bar - are collected in one `SITE_STRINGS` object in that same file,
+  so they are not the one part of the site a translator cannot reach.
 - The **in-app Help tab is the localized documentation**. It is translated into all 28 languages,
   it reflects the reader's actual configuration, and it is what the app points at first. The links
   in that tab lead here for the long form.
 
 If a language ever gets a maintained translation of these guides, the shape to add is a sibling
 directory with its own `hreflang` beside the one already declared, not a rewrite.
+
+### The home page and the preset gallery
+
+These two are hand written pages rather than Markdown, and they are translated, one language at a
+time, without forking anything. Today: French, German, Spanish, Portuguese (Brazil), Russian and
+Simplified Chinese.
+
+English lives in the markup: every visible string is written in `docs/index.html` and
+`docs/gallery/index.html` and carries `data-i18n`, so the pages are complete and indexable before a
+script runs. A translation is an overlay - a flat JSON file of key to string in `docs/assets/i18n/` -
+applied over that markup after load. A missing key falls back to the English already on the page, so
+a partial translation degrades one string at a time.
+
+| | |
+|---|---|
+| Start a language | `node tools/site/extract-strings.js > docs/assets/i18n/fr.json` |
+| Make it appear | add `{ "code": "fr", "name": "Francais" }` to `docs/assets/i18n/languages.json` |
+| Check it | `node tools/site/extract-strings.js --check` |
+
+`extract-strings.js` reads the pages themselves plus the fallbacks the page scripts pass to
+`awI18n.t()`, so the key list is generated rather than maintained. `--check` fails on a key that no
+longer exists in the markup and reports the ones not translated yet. `test/site/pages.test.js`
+enforces the rule the overlay depends on: one key means one English string, wherever it appears.
 
 ## Adding or changing a string
 

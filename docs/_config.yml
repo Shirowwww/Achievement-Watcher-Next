@@ -4,13 +4,22 @@
 # screenshots are in docs/screenshot/, and links to files above it (README, BUILD, SECURITY,
 # CONTRIBUTING, CHANGELOG) are absolute GitHub URLs rather than ../ paths.
 #
-# No layout, include or Liquid template is added on purpose. The Markdown in this folder stays the
-# single source of truth: it is what GitHub renders when browsing the repository, and what Jekyll
-# renders here. The one addition is assets/css/style.scss, which imports this theme and applies the
-# app's palette on top - styling only, so browsing the same files on GitHub is unaffected.
-# Three plugins that ship with GitHub Pages do the rest without any configuration:
-#   jekyll-readme-index         README.md becomes the site index (/)
-#   jekyll-relative-links       [x](getting-started.md) resolves to the built page
+# The site is two things published side by side:
+#
+#   index.html and gallery/index.html   hand written pages, static files with no front matter, so
+#                                       Jekyll copies them out untouched. They share
+#                                       assets/css/site.css and are what a visitor lands on.
+#   every .md in this folder            the guides, rendered by the Primer theme. They stay the
+#                                       single source of truth: what GitHub shows when browsing the
+#                                       repository is what the site publishes.
+#
+# No layout or Liquid template is added to the Markdown on purpose. assets/css/style.scss imports
+# the theme and applies the app's palette, and _includes/head-custom.html adds the favicon, the
+# theme toggle and the bar that links the guides back to the rest of the site - styling and
+# navigation only, so browsing the same files on GitHub is unaffected.
+#
+# Two plugins that ship with GitHub Pages do the rest without any configuration:
+#   jekyll-relative-links         [x](getting-started.md) resolves to the built page
 #   jekyll-optional-front-matter  files without front matter are still rendered as pages
 
 theme: jekyll-theme-primer
@@ -18,6 +27,13 @@ theme: jekyll-theme-primer
 title: Achievement Watcher Next
 description: Setup, sources, notifications, presets and troubleshooting for AW Next.
 lang: en
+
+# jekyll-readme-index turns README.md into the site index when there is no index page. There is one
+# now - the home page - so the plugin is switched off rather than left to decide: with it enabled
+# the two would both claim "/", and the guides hub is published at README.html instead, which is
+# where app/util/links.js sends the app's Documentation button.
+readme_index:
+  enabled: false
 
 # GitHub re-enables Markdown after a blank line inside a block-level HTML element; kramdown, which
 # is what Jekyll uses here, does not unless it is told to. Every page centres its header, its
