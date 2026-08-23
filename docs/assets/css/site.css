@@ -597,6 +597,7 @@ kbd {
 
 /* The download link belongs to the menu only while the header button is hidden. */
 .site-nav .nav-download {
+  display: none;
   max-width: 132px;
   padding-left: 34px;
   text-overflow: ellipsis;

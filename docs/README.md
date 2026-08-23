@@ -1,3 +1,12 @@
+---
+permalink: /README.html
+---
+
+<!--
+  jekyll-readme-index still special-cases a file literally named README.md even with
+  readme_index.enabled: false in _config.yml, and drops it instead of rendering it - explicit front
+  matter with a permalink is what forces Jekyll to publish it at README.html like any other guide.
+-->
 <div align="center">
 
 # 📚 AW Next documentation

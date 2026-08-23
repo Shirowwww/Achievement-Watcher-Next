@@ -28,7 +28,7 @@ you can tell which one fits how you play.
 | Live RPCS3 / ShadPS4 / Xenia unlocks | ✅ | ✅ | ⚠️ RPCS3 only |
 | Full controller navigation | ✅ App + overlay | ✅ App + overlay | ❌ Planned only |
 | Screenshot souvenirs | ✅ | ✅ | ✅ |
-| Multiple UI themes | ✅ Built-in + Custom | ✅ 8 | ❌ |
+| Multiple UI themes | ✅ Built-in + Custom + shareable `.awtheme` | ✅ 8 | ❌ |
 | Interface languages | ✅ 28 bundled | ✅ 30 locales | ✅ 18 locales |
 | Xbox PC (Game Pass / Store) | ✅ Account import | ✅ Account import | ❌ |
 | Manual achievement unlock | ✅ | ✅ | ❌ |
