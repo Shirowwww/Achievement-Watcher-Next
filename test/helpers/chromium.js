@@ -1,13 +1,8 @@
 'use strict';
 
-/*
-  Finding and starting a Chromium family browser for the browser tests.
-
-  An installed browser is not necessarily a usable one, so every candidate is tried until one
-  actually starts - this repository has seen a working Chrome sitting right behind an Edge that
-  cannot start headless. When none of them starts the caller skips its test rather than failing it:
-  with no browser the test can say nothing about the behaviour it covers.
-*/
+// Tries each installed Chromium-family browser until one actually starts - a working Chrome has
+// been seen sitting right behind an Edge that won't launch headless. No browser means the caller
+// skips its test rather than failing it: it can say nothing about behaviour it never ran.
 
 const fs = require('node:fs');
 const os = require('node:os');

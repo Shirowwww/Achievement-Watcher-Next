@@ -1,13 +1,9 @@
 'use strict';
 
-/*
-  How Simple / Advanced is wired into the real UI: the onboarding choice, the Settings switch, what
-  each mode hides, and the two properties that must never break -
-
-    * nothing is REMOVED from the DOM, only classed, because the settings panel is translated
-      positionally (locale/loader.js binds `li:nth-child(n)`);
-    * no capability is deleted, disabled or reset by the display mode.
-*/
+// How Simple / Advanced is wired into the real UI: the onboarding choice, the Settings switch,
+// what each mode hides, and two properties that must never break - nothing is REMOVED from the DOM
+// (only classed, since the settings panel is translated positionally via `li:nth-child(n)`), and no
+// capability is deleted, disabled or reset by the display mode.
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -27,7 +23,7 @@ const appSource = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
 const settingsSource = fs.readFileSync(path.join(appDir, 'settings.js'), 'utf8');
 const english = JSON.parse(fs.readFileSync(path.join(appDir, 'locale', 'lang', 'english.json'), 'utf8'));
 
-/* ---- Onboarding: an explicit, unprompted choice ------------------------------------------- */
+// Onboarding: an explicit, unprompted choice
 
 test('onboarding asks for the mode with two cards and no preselected answer', () => {
   const choice = document.querySelector('.onboarding-mode-choice');
@@ -68,7 +64,7 @@ test('the guide still counts its steps correctly after gaining one', () => {
   assert.equal(english.onboarding.steps.length, steps.length, 'every step needs a localized label');
 });
 
-/* ---- Settings: switching later, without losing anything ------------------------------------ */
+// Settings: switching later, without losing anything
 
 test('the mode switch sits in the settings header, beside the title and outside every tab', () => {
   const header = document.querySelector('#settings .box .header');
@@ -345,7 +341,7 @@ test('advanced-only rows inside kept tabs are marked, and only ever inside kept 
   }
 });
 
-/* ---- Search must not fight the mode -------------------------------------------------------- */
+// Search must not fight the mode
 
 test('the search treats mode-hidden rows as absent and never clears their class', () => {
   assert.equal(settingsSearch.MODE_HIDDEN_CLASS, interfaceMode.HIDDEN_CLASS, 'one class, two modules');
@@ -355,7 +351,7 @@ test('the search treats mode-hidden rows as absent and never clears their class'
   assert.doesNotMatch(filter, /removeClass\(`?\$?\{?MODE_HIDDEN_CLASS/, 'the search owns search-hidden and nothing else');
 });
 
-/* ---- Config: persistence and a deliberate migration ---------------------------------------- */
+// Config: persistence and a deliberate migration
 
 test('an existing profile keeps everything on upgrade instead of being dropped into Simple', () => {
   const block = settingsSource.slice(settingsSource.indexOf("options.general.interfaceMode !== 'simple'"));
@@ -365,7 +361,7 @@ test('an existing profile keeps everything on upgrade instead of being dropped i
   assert.match(settingsSource, /interfaceMode: '',/, 'a fresh config starts unanswered');
 });
 
-/* ---- Game Health: same report, plainer words -------------------------------------------- */
+// Game Health: same report, plainer words
 
 test('Simple rewords the Game Health checks instead of computing a different report', () => {
   const health = fs.readFileSync(path.join(appDir, 'util', 'gameHealth.js'), 'utf8');
@@ -406,7 +402,7 @@ test('Simple hides the emulator context submenu without weakening the safe repai
   assert.doesNotMatch(runner, /interfaceIsSimple\(\)/, 'no repair is withheld by the display mode');
 });
 
-/* ---- Localization -------------------------------------------------------------------------- */
+// Localization
 
 test('the mode is fully translated in every bundled locale', () => {
   const localeDir = path.join(appDir, 'locale', 'lang');

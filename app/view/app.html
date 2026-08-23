@@ -11,7 +11,7 @@
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self' 'sha256-6hoK2v7NMQ9BztWRLpqwEtRRPqb93qf3AkDWdgjdGyg=' 'sha256-Je35Ely70/P1H6O6qWZNS9gTkodHCRiUd87eGa46sh0=' 'sha256-LCO+EOp+OIAnmlKsc+GauK//T1W7PPEuUXNywNLztwk='; style-src 'self' 'unsafe-inline' 'unsafe-eval';  font-src 'self'; media-src 'self'; img-src 'self' data: https://*; connect-src 'self' https://api.steampowered.com https://api.epicgames.dev ws://localhost:8082"
+      content="default-src 'none'; script-src 'self' 'sha256-6hoK2v7NMQ9BztWRLpqwEtRRPqb93qf3AkDWdgjdGyg=' 'sha256-Je35Ely70/P1H6O6qWZNS9gTkodHCRiUd87eGa46sh0=' 'sha256-d3+6Jc/Kl3q+KAXwGGBcokVE3WBKAAm63vth3tzo3IY='; style-src 'self' 'unsafe-inline' 'unsafe-eval';  font-src 'self'; media-src 'self'; img-src 'self' data: https://*; connect-src 'self' https://api.steampowered.com https://api.epicgames.dev ws://localhost:8082"
     />
     <link rel="stylesheet" href="../resources/css/normalize.css" type="text/css" />
     <link rel="stylesheet" href="../resources/css/fontawesome.css" type="text/css" />
@@ -24,50 +24,54 @@
 
     <main id="main">
       <section id="home">
-        <div id="user-info">
-          <user-avatar></user-avatar>
-          <div class="info">
-            <div class="name"></div>
-            <div class="stats">
-              <ul>
-                <li><i class="fas fa-trophy"></i> <span class="data">0</span> <span></span></li>
-                <li><i class="fas fa-gamepad"></i> <span class="data">0</span> <span></span></li>
-                <li><i class="fas fa-cookie-bite"></i> <span class="data">0</span>% <span></span></li>
-              </ul>
-            </div>
-            <div class="completion-dist" title="">
-              <div class="fill" style="width: 0%"></div>
+        <!-- Profile and library controls share one grid row. They used to be absolute overlays on
+             top of the profile band, so a narrow window slid them under the avatar. -->
+        <div id="home-header">
+          <div id="search-bar">
+            <label class="library-layout-control" for="library-layout-select" title="Library view">
+              <i class="fas fa-th-large" aria-hidden="true"></i>
+              <select autocomplete="off" id="library-layout-select" aria-label="Library view">
+                <option value="default" selected>Default</option>
+                <option value="portrait">Portrait</option>
+                <option value="compact">Compact</option>
+                <option value="portrait-compact">Compact portrait</option>
+                <option value="list">List</option>
+                <option value="details">Details</option>
+              </select>
+              <i class="fas fa-chevron-down dropdown-arrow" aria-hidden="true"></i>
+            </label>
+            <button type="button" id="add-game-manually" class="library-add-button"><i class="fas fa-plus" aria-hidden="true"></i><span class="sr-only">Add game manually</span></button>
+            <div class="wrapper">
+              <i class="fas fa-search"></i>
+              <input type="search" placeholder="" />
             </div>
           </div>
-        </div>
 
-        <div id="sort-box">
-          <div class="installed-filter"><i class="fas fa-hdd"></i></div>
-          <div class="sort-group">
-            <div class="alpha sort" title="Nom : A → Z"><i class="fas fa-font"></i><i class="fas fa-arrow-up sort-direction"></i></div>
-            <div class="percentage sort" title="Progression"><i class="fas fa-percent"></i><i class="fas fa-arrow-up sort-direction"></i></div>
-            <div class="time sort" title="Date du succès"><i class="far fa-clock"></i><i class="fas fa-arrow-up sort-direction"></i></div>
-            <div class="played sort" title="Dernière partie"><i class="fas fa-gamepad"></i><i class="fas fa-arrow-up sort-direction"></i></div>
+          <div id="user-info">
+            <user-avatar></user-avatar>
+            <div class="info">
+              <div class="name"></div>
+              <div class="stats">
+                <ul>
+                  <li><i class="fas fa-trophy"></i> <span class="data">0</span> <span></span></li>
+                  <li><i class="fas fa-gamepad"></i> <span class="data">0</span> <span></span></li>
+                  <li><i class="fas fa-cookie-bite"></i> <span class="data">0</span>% <span></span></li>
+                </ul>
+              </div>
+              <div class="completion-dist" title="">
+                <div class="fill" style="width: 0%"></div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div id="search-bar">
-          <label class="library-layout-control" for="library-layout-select" title="Library view">
-            <i class="fas fa-th-large" aria-hidden="true"></i>
-            <select autocomplete="off" id="library-layout-select" aria-label="Library view">
-              <option value="default" selected>Default</option>
-              <option value="portrait">Portrait</option>
-              <option value="compact">Compact</option>
-              <option value="portrait-compact">Compact portrait</option>
-              <option value="list">List</option>
-              <option value="details">Details</option>
-            </select>
-            <i class="fas fa-chevron-down dropdown-arrow" aria-hidden="true"></i>
-          </label>
-          <button type="button" id="add-game-manually" class="library-add-button"><i class="fas fa-plus" aria-hidden="true"></i><span class="sr-only">Add game manually</span></button>
-          <div class="wrapper">
-            <i class="fas fa-search"></i>
-            <input type="search" placeholder="" />
+          <div id="sort-box">
+            <div class="installed-filter"><i class="fas fa-hdd"></i></div>
+            <div class="sort-group">
+              <div class="alpha sort" title="Nom : A → Z"><i class="fas fa-font"></i><i class="fas fa-arrow-up sort-direction"></i></div>
+              <div class="percentage sort" title="Progression"><i class="fas fa-percent"></i><i class="fas fa-arrow-up sort-direction"></i></div>
+              <div class="time sort" title="Date du succès"><i class="far fa-clock"></i><i class="fas fa-arrow-up sort-direction"></i></div>
+              <div class="played sort" title="Dernière partie"><i class="fas fa-gamepad"></i><i class="fas fa-arrow-up sort-direction"></i></div>
+            </div>
           </div>
         </div>
 
@@ -2700,6 +2704,9 @@
               </button>
               <button type="button" data-gc-view="exe-config" role="tab" aria-selected="false">
                 <i class="fas fa-terminal"></i> <span id="game-config-tab-exe">Executable</span>
+              </button>
+              <button type="button" data-gc-view="notifications" role="tab" aria-selected="false">
+                <i class="fas fa-bell"></i> <span id="game-config-tab-notification">Notifications</span>
               </button>
             </div>
 

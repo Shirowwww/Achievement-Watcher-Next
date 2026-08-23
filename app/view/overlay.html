@@ -52,7 +52,7 @@
         zoom: var(--zoom);
       }
 
-      /* ---- Header ---- */
+      /* Header */
       .overlay-header {
         flex: 0 0 auto;
         border-bottom: 1px solid var(--border);
@@ -122,7 +122,7 @@
         color: #fff;
       }
 
-      /* ---- Search + filters ---- */
+      /* Search + filters */
       .overlay-tools {
         padding: 0 12px 8px;
         display: flex;
@@ -222,7 +222,7 @@
         background: rgba(var(--accent-rgb), 0.12);
       }
 
-      /* ---- Stats bar ---- */
+      /* Stats bar */
       .overlay-stats {
         padding: 0 12px 8px;
         -webkit-app-region: no-drag;
@@ -264,7 +264,7 @@
         transition: width 240ms ease;
       }
 
-      /* ---- Column headers ---- */
+      /* Column headers */
       .overlay-cols {
         display: grid;
         grid-template-columns: auto minmax(0, 1fr) auto auto auto;
@@ -328,7 +328,7 @@
         transform: translateY(3px);
       }
 
-      /* ---- Body ---- */
+      /* Body */
       .overlay-body {
         flex: 1 1 auto;
         overflow-y: auto;
@@ -521,7 +521,7 @@
         background: rgba(111, 120, 133, 0.08);
       }
 
-      /* ---- Empty state ---- */
+      /* Empty state */
       .overlay-empty {
         display: none;
         flex-direction: column;
@@ -546,7 +546,7 @@
         font-style: italic;
       }
 
-      /* ---- Settings popover ---- */
+      /* Settings popover */
       .overlay-settings {
         position: absolute;
         top: 44px;
@@ -797,7 +797,7 @@
         background: rgba(231, 76, 60, 0.08);
       }
 
-      /* ---- Density presets ---- */
+      /* Density presets */
       .density-compact {
         --row-pad: 5px 10px;
         --desc-lines: 1;
@@ -1430,7 +1430,7 @@
           if (window.customApi && window.customApi.closeOverlay) window.customApi.closeOverlay();
         }
 
-        // ---- Events ----
+        // Events
         $('overlay-settings-toggle').addEventListener('click', () => toggleSettings());
         $('settings-close').addEventListener('click', () => toggleSettings(false));
         $('overlay-close').addEventListener('click', closeOverlay);
@@ -1602,7 +1602,7 @@
           if (currentGame) renderRows();
         });
 
-        // ---- Native Gamepad API navigation ----
+        // Native Gamepad API navigation
         // The in-game overlay is a non-focused always-on-top window, so it polls the pad
         // directly (no document focus required). D-pad / left stick move the focus ring,
         // A activates, B cancels (close panel / clear search / blur), X focuses the search

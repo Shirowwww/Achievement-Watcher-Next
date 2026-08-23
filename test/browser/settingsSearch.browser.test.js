@@ -57,10 +57,9 @@ function killProcessesUsing(userDataDir) {
 }
 
 // An installed browser is not necessarily a usable one, so try each until one actually starts -
-// this machine has a working Chrome sitting right behind an Edge that cannot start headless, and
-// the first candidate failing used to fail the whole test. The explicit `timeout` matters just as
-// much: without it a browser that starts but never speaks CDP hangs this test, and the suite with
-// it, forever.
+// this machine has a working Chrome sitting right behind an Edge that cannot start headless. The
+// explicit `timeout` matters just as much: without it a browser that starts but never speaks CDP
+// hangs this test, and the suite with it, forever.
 async function launchBrowser() {
   const failures = [];
   for (const executablePath of findBrowsers()) {

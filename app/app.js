@@ -2650,7 +2650,9 @@ ipcRenderer.on('reset-watchdog-status', () => {
   whenever a language is applied, since the names come from the translated row labels.
 */
 window.refreshAccessibleNames = () => {
-  $('#search-bar input[type=search]').attr('aria-label', t('search-games', 'Search games…', 'Rechercher un jeu…'));
+  const searchLabel = t('search-games', 'Search games…', 'Rechercher un jeu…');
+  // The field collapses to its magnifier, so the name has to be reachable on hover too.
+  $('#search-bar input[type=search]').attr({ 'aria-label': searchLabel, title: searchLabel });
   $('#settings .arrow-list li').each(function () {
     const label = $(this).children('.left').text().trim();
     if (!label) return;

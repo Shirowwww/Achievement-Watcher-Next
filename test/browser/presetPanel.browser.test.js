@@ -1,15 +1,9 @@
 'use strict';
 
-/*
-  The preset designer's control filter, over the real panel in a real browser engine.
-
-  The panel is nine collapsible groups of sixty-odd controls, each bound to the locale by id and
-  counted by the schema parity test where it stands. So the promise the filter makes is not "it finds
-  things" but "it hides, and never moves": every control is still in the DOM, in the same order, with
-  the same ids, whatever is typed in the box. Only a real DOM can say that.
-
-  Skipped when no Chromium family browser is present.
-*/
+// The preset designer's filter, over the real panel in a real browser (skipped with no Chromium
+// browser present). The panel is nine collapsible groups of sixty-odd controls bound to the locale
+// by id, so the filter's promise is not "it finds things" but "it hides, and never moves" - every
+// control stays in the DOM, same order, same ids. Only a real DOM can prove that.
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');

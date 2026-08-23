@@ -1,14 +1,9 @@
 'use strict';
 
-/*
-  What a designed preset actually paints.
-
-  The rest of the preset tests read the generated stylesheet as text, which proves a property was
-  written but not that it renders - a variable can be declared and never read, a state class can be
-  added to an element no rule matches, and a card can overflow the window it was measured for. This
-  renders the real preset (markup, engine and generated stylesheet) in a Chromium-family browser and
-  reads back what the engine produced.
-*/
+// What a designed preset actually paints. The rest of the preset tests read the generated
+// stylesheet as text, which proves a property was written but not that it renders - a variable can
+// be declared and never read, a state class added to an element no rule matches, a card can
+// overflow the window it was measured for. This renders the real preset and reads back the engine's output.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -215,17 +210,10 @@ test('a designed preset renders every property it was given', { concurrency: 1, 
       assert.equal(gold.accent, '#ffd24e');
       assert.equal(gold.titleColor, 'rgb(255, 210, 78)', 'the title does not follow the rare colour');
       assert.equal(gold.borderLeftColor, 'rgb(255, 210, 78)', 'the accent bar does not follow the rare colour');
-      /*
-        The glow is a second shadow whose blur radius is the state's glow strength, so a rare card is
-        literally lit where a normal one is not: the same two shadows, an accent-coloured blur
-        against 0px. Reading the radius is the only way to tell them apart.
-
-        Asserted as "more than none", not as a number of pixels: the radius is the glow strength
-        times util/customPreset.js's GLOW_RADIUS_PX, and that constant is tuned for how close the
-        popup lands to the corner of the screen - every pixel of glow is a pixel of transparent
-        margin the window has to reserve. Pinning the product here made a placement decision fail as
-        if it were a rendering bug.
-      */
+      // The glow is a second shadow whose blur radius is the state's glow strength, so a rare card is
+      // lit where a normal one is not - same two shadows, an accent-coloured blur against 0px.
+      // Asserted as "more than none", not as a pixel count: the radius depends on GLOW_RADIUS_PX,
+      // tuned for how close the popup sits to the screen corner - pinning an exact value would fail on a placement change.
       const glowBlur = (shadow) => Number(/(?:\d+px\s+){2}([\d.]+)px[^,]*$/.exec(shadow.split('), ').pop())[1]);
       const normal = await renderPreset(page, design, 'normal');
       assert.equal(glowBlur(normal.boxShadow), 0, 'a normal card should not glow at the default strength');

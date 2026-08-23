@@ -134,15 +134,10 @@ test('all layouts reuse one game card and details handle missing unlocks', () =>
 });
 
 test('library artwork recovers both orientations in view and falls back through every available image', () => {
-  /*
-    The shapes are not interchangeable: header/landscape are 460x215 and 920x430, portrait is
-    600x900. The old chain listed them in one flat order per orientation, so a portrait tile with no
-    600x900 art painted a wide capsule and a landscape tile could paint a tall one - reported as
-    covers showing "in landscape instead of portrait and the other way round".
-
-    The contract now has two passes: only the tile's own shape may be painted before the recovery
-    chain has run, and the other shape is reached only after it has failed.
-  */
+  // The shapes are not interchangeable: header/landscape are 460x215 and 920x430, portrait is
+  // 600x900. The old chain listed them in one flat order per orientation, so a portrait tile with
+  // no 600x900 art painted a wide capsule (or the reverse) - the contract now has two passes: only
+  // the tile's own shape may paint before recovery runs, and the other shape is used only once that fails.
   assert.match(appSource, /const sameShape = orientation === 'portrait' \? \[img\.portrait\] : \[img\.header, img\.landscape\]/);
   assert.match(appSource, /const candidates = sameShapeOnly \? sameShape : \[\.\.\.sameShape, \.\.\.otherShape\]/);
   const scheduler = appSource.slice(appSource.indexOf('function scheduleLibraryCover'), appSource.indexOf('function refreshLibraryCovers'));
@@ -161,7 +156,7 @@ test('library artwork recovers both orientations in view and falls back through 
   assert.match(css, /\.header\.portrait-fallback[\s\S]*?background-size: cover/);
   assert.match(appSource, /function setLibraryArtworkFeedback/);
   assert.match(appSource, /artwork-caches-cleared/);
-  assert.match(appSource, /function previewReady|const previewReady/);
+  assert.match(appSource, /function imagePreviewReady/);
   assert.match(appSource, /Promise\.all\(steamUrls\.map/);
   assert.match(appSource, /get-cover-options-steamdb/);
   assert.match(appSource, /coverStore\.persist\(String\(appid\), url/);

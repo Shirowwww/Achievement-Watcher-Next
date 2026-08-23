@@ -1,15 +1,9 @@
 'use strict';
 
-/*
-  The row of notification test buttons, laid out with the app's real stylesheet and the real labels
-  of every bundled locale.
-
-  It is a row of peers, so it should read as one: every button an equal share of the line, one gap
-  between them all, nothing spilling out of a button. None of that is visible to a unit test - the
-  rule that broke it was a later `#settings` override turning the row back into content-width flex
-  items, which left a ragged gap at the end of the line - and the labels differ by more than twice in
-  length between languages, so the one that overflows first is never the one you are looking at.
-*/
+// The row of notification test buttons, laid out with the app's real stylesheet and every bundled
+// locale's real labels. It should read as one row of peers - equal shares, one gap, nothing
+// spilling - which a later `#settings` override broke by turning it back into content-width flex
+// items. Labels differ by more than twice in length between languages, so every locale is checked.
 
 const { test } = require('node:test');
 const { BUNDLED_LOCALE_COUNT } = require('../helpers/locales.js');

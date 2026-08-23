@@ -1,20 +1,9 @@
 'use strict';
 
-/*
-  Two pieces of window chrome, measured in a real engine because both are pure layout/paint and
-  neither is observable from the DOM alone:
-
-    - the title bar has to touch the top and both sides of the window. It did not: body carried a
-      1px layout border, so the bar - the first child - started one pixel in on three sides and the
-      body background showed through as a hairline frame around it.
-    - a pinned settings section header has to hide the row scrolling under it. It was translucent,
-      so the description passing behind printed straight through the heading.
-    - the strip ABOVE that header - the gap between the top of the panel and the next card's
-      heading - showed the previous card's last row sliced in half by the hard edge of the
-      scrollport. A sticky band blurs that strip, and where it pins is the whole trick: Chromium
-      measures a sticky child against the scroller's CONTENT box, so `top: 0` parks the band level
-      with the headers and leaves exactly the strip it exists for untouched.
-*/
+// Two pieces of window chrome, measured in a real engine because both are pure layout/paint and
+// unobservable from the DOM alone: the title bar reaching every window edge, and pinned settings
+// headers staying legible under scrolled rows via a blurred band above each one. The band pins
+// correctly because Chromium sizes a sticky child against the scroller's CONTENT box, not its edge.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -290,13 +279,10 @@ test('window chrome: the title bar reaches the window edges and pinned headers a
       await reduced.close().catch(() => {});
     }
 
-    /*
-      Every section header in Settings has to behave the same way under that band. The account and
-      custom-theme cards put their title inside an `.emulator-login-heading` row (it carries a status
-      badge beside the text), which sat one level deeper than the pinned-header selectors reached: on
-      those cards alone the header scrolled away and smeared under the blur while every other section
-      kept a crisp bar.
-    */
+    // Every section header in Settings must behave the same way under the band. The account and
+    // custom-theme cards put their title inside an `.emulator-login-heading` row (it carries a
+    // status badge), one level deeper than the pinned-header selectors reached - on those cards
+    // alone the header scrolled away and smeared under the blur while every other section stayed crisp.
     const parity = await page.evaluate(() => {
       const of = (selector) => {
         const el = document.querySelector(selector);

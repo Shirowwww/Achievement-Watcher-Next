@@ -62,17 +62,10 @@ async function launchBrowser() {
   return { browser: null, userDataDir: null, failures };
 }
 
-/*
-  A library grid built to the real tile geometry: two tiles side by side, each carrying the three
-  controls app.js paints on it - achievements top-left, health/config top-right, play centred and
-  resting at opacity 0 until its tile is hovered.
-
-  The tiles are LANDSCAPE here on purpose. That is the layout the bug actually bites in: the wider
-  the tile, the further away the neighbouring game's centre is, until the cross-axis penalty stops
-  covering the distance and a tile's own top-right button becomes the cheapest "move right" target.
-  A portrait grid happens to survive the same scoring, which is why this only reproduced for users
-  on landscape covers.
-*/
+// A library grid at real tile geometry: two tiles side by side, each carrying the three controls
+// app.js paints on it (achievements top-left, health/config top-right, play centred at opacity 0
+// until hovered). The tiles are LANDSCAPE on purpose: the wider the tile, the further the
+// neighbour's centre is, until a tile's own top-right button becomes the cheapest "move right" target.
 function buildHarness() {
   const controller = fs.readFileSync(path.join(appDir, 'ui', 'controller.js'), 'utf8').replace(/<\/script/gi, '<\/script');
   const tile = (appid, left) => `
