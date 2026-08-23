@@ -10,10 +10,12 @@ const appPath = remote.app.getAppPath();
 const { escapeHtml } = require(path.join(appPath, 'util/escapeHtml.js'));
 const userThemes = require(path.join(appPath, 'util/userThemes.js'));
 const themeLayers = require(path.join(appPath, 'util/themeLayers.js'));
+const themeMock = require(path.join(appPath, 'util/themeMock.js'));
 const DEFAULT_THEME_COLOR = themeLayers.BUILTIN_COLORS.default.bg;
 const scanScopeTools = require(path.join(appPath, 'parser/scanScope.js'));
 const emulatorFixEligibility = require(path.join(appPath, 'util/emulatorFixEligibility.js'));
 const { t } = require(path.join(appPath, 'locale/t.js'));
+const { renamedSound } = require(path.join(appPath, 'util/notificationSounds.js'));
 const interfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
 const { legacyPresetAlias } = require(path.join(appPath, 'util/notificationPreset.js'));
 const { describeFolderDiagnosis } = require(path.join(appPath, 'util/folderDiagnosis.js'));
@@ -150,11 +152,10 @@ function setInterfaceMode(mode) {
 
 window.applyInterfaceMode = applyInterfaceMode;
 
-// Apply a stored theme value: built-ins switch <html data-theme>, user themes and
-// the Custom theme inject their CSS through the shared user-theme <style> element.
+// Apply a stored theme value: built-ins switch <html data-theme>, while user themes, the Custom
+// theme and imported .awtheme files inject their CSS through the shared user-theme <style> element.
 function applyThemeValue(value) {
-  const user = userThemes.parseValue(value);
-  if (user || value === 'custom') {
+  if (userThemes.usesInjectedCss(value)) {
     document.documentElement.dataset.theme = 'default';
   } else {
     document.documentElement.dataset.theme = value || 'default';
@@ -209,7 +210,12 @@ function themeOption(value, label) {
   return $('<option>').attr('value', value).text(label);
 }
 
-// Populate the theme dropdown: the built-ins + Custom + any user theme in <userData>\themes.
+// Imported .awtheme entries, kept so the Delete button knows whether the selected theme is one the
+// app installed and may remove. Refreshed with the dropdown.
+let installedThemes = [];
+
+// Populate the theme dropdown: the built-ins + Custom + any imported .awtheme + any user theme in
+// <userData>\themes.
 function populateThemeSelect(preferred) {
   const sel = $('#option_theme');
   const wanted = preferred || (app.config.general && app.config.general.theme) || 'default';
@@ -230,9 +236,15 @@ function populateThemeSelect(preferred) {
       .text(themeListExpanded ? t('themeFewer', 'Fewer themes…', 'Moins de thèmes…') : t('themeMore', 'More themes…', 'Plus de thèmes…'))
   );
   sel.append($('<option>').attr('value', 'custom').text(t('themeCustom', 'Custom…', 'Personnalisé…')));
-  ipcRenderer
-    .invoke('list-user-themes')
-    .then((themes) => {
+  // Both lists in one round trip: an imported theme is an ordinary entry here, and a user
+  // stylesheet stays labelled as one, so the picker keeps reading in a single pass.
+  Promise.all([
+    ipcRenderer.invoke('list-installed-themes').catch(() => []),
+    ipcRenderer.invoke('list-user-themes').catch(() => []),
+  ])
+    .then(([imported, themes]) => {
+      installedThemes = Array.isArray(imported) ? imported : [];
+      installedThemes.forEach((theme) => sel.append(themeOption(theme.value, theme.name)));
       (themes || []).forEach((theme) =>
         sel.append($('<option>').attr('value', userThemes.valueFor(theme.name)).text(`${t('themeUserPrefix', 'User: ', 'Utilisateur : ')}${theme.name}`))
       );
@@ -2078,6 +2090,335 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       scheduleCustomThemeSave();
     });
 
+    /*
+      Portable themes (.awtheme).
+
+      Export writes the theme currently selected - a built-in palette, the Custom theme as the
+      editor holds it, or an imported theme as it stands. Import validates the package in the main
+      process, shows what it would look like, and only touches theme storage once the user agrees.
+      A user stylesheet has no model to write, so it is the one selection Export refuses.
+    */
+    function setThemeLibraryStatus(message, kind) {
+      $('#theme-library-status').text(message || '').removeClass('ok error').addClass(kind || '');
+    }
+
+    function installedTheme(value) {
+      const name = userThemes.parsePackValue(value);
+      return name ? installedThemes.find((theme) => theme.name === name) || null : null;
+    }
+
+    /*
+      The card belongs to the themes a person owns: the Custom theme they drew, and any theme they
+      imported. A built-in is not theirs to export or delete, so on one the card is not disabled,
+      it is simply not there. Export follows the selection and Delete only exists for a theme the
+      app installed.
+    */
+    function refreshThemeLibraryControls() {
+      const value = String($('#option_theme').val() || 'default');
+      const imported = installedTheme(value);
+      const shown = value === 'custom' || Boolean(imported);
+      $('#theme-library').toggle(shown);
+      $('#btn-export-theme').prop('disabled', userThemes.parseValue(value) !== null || value === MORE_THEMES_VALUE);
+      $('#btn-delete-theme').prop('hidden', !imported);
+      // Only on the way out: the picker settles asynchronously after an import, so clearing on
+      // every call would wipe the message the import had just written.
+      if (!shown) setThemeLibraryStatus('');
+    }
+
+    function themeErrorText(res) {
+      const error = String((res && res.error) || '');
+      if (error === 'app-too-old') {
+        return t('import-theme-app-too-old', 'This theme needs AW Next {version} or newer.', 'Ce theme nécessite AW Next {version} ou plus récent.', {
+          version: (res && res.requires) || '',
+        });
+      }
+      if (error === 'format-too-new') {
+        return t(
+          'import-theme-format-too-new',
+          'This theme file was made by a newer version of AW Next.',
+          'Ce fichier de theme a été créé par une version plus récente d’AW Next.'
+        );
+      }
+      if (error === 'css-theme-not-exportable') {
+        return t(
+          'export-theme-css-unsupported',
+          'A stylesheet theme cannot be exported. Share the .css file itself instead.',
+          'Un theme CSS ne peut pas être exporté. Partage plutôt le fichier .css lui-même.'
+        );
+      }
+      const invalid = t('import-theme-invalid', 'This file is not a valid theme package.', 'Ce fichier n’est pas un paquet de theme valide.');
+      return error ? `${invalid} (${error})` : invalid;
+    }
+
+    $('#btn-export-theme').on('click', async function () {
+      const value = String($('#option_theme').val() || 'default');
+      const self = $(this);
+      self.css('pointer-events', 'none');
+      try {
+        const known = installedTheme(value);
+        const res = await ipcRenderer.invoke('export-theme', {
+          value,
+          // An imported theme keeps its own name and credit through a re-export; anything else is
+          // named after the entry in the dropdown, which is what the user is looking at.
+          name: known ? known.name : $('#option_theme option:selected').text().replace(/…$/, '').trim(),
+        });
+        if (res && res.ok) {
+          setThemeLibraryStatus(t('export-theme-done', 'Theme exported: {name}', 'Theme exporté : {name}', { name: res.name }), 'ok');
+        } else if (!res || !res.canceled) {
+          setThemeLibraryStatus(themeErrorText(res), 'error');
+        }
+      } catch (err) {
+        debug.log(err);
+        setThemeLibraryStatus(themeErrorText({ error: String(err) }), 'error');
+      }
+      self.css('pointer-events', 'initial');
+    });
+
+    /*
+      The preview modal. `pendingThemeFile` is the package the frame is showing; the file is only
+      installed if the user presses the confirm button, and cancelling removes the unpacked copy the
+      preview was drawn from.
+    */
+    let pendingThemeFile = '';
+    let themePreviewResize = null;
+
+    /*
+      The frame lays the sample out at the size the gallery renders at and is then scaled to fit,
+      so the framing here is the framing a card promises. Letting it be its own width would re-flow
+      the sample and drop a library row the published picture shows.
+    */
+    function fitThemePreview() {
+      const wrap = document.querySelector('#theme-preview .theme-preview-frame');
+      if (!wrap) return;
+      const width = wrap.clientWidth;
+      if (!width) return;
+      wrap.style.setProperty('--theme-preview-w', String(themeMock.DESIGN.width));
+      wrap.style.setProperty('--theme-preview-h', String(themeMock.DESIGN.height));
+      wrap.style.setProperty('--theme-preview-scale', String(width / themeMock.DESIGN.width));
+    }
+
+    function closeThemePreview({ discard = true } = {}) {
+      pendingThemeFile = '';
+      $('#theme-preview').hide().attr('aria-hidden', 'true');
+      const frame = document.getElementById('theme-preview-frame');
+      if (frame) frame.srcdoc = '';
+      if (themePreviewResize) {
+        themePreviewResize.disconnect();
+        themePreviewResize = null;
+      }
+      if (discard) ipcRenderer.invoke('discard-theme-preview').catch(() => {});
+    }
+
+    function themePreviewRow(label, value) {
+      return `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`;
+    }
+
+    /*
+      The palette the theme will install, beside the picture of it. The same five layers the gallery
+      card shows, so a theme looks the same wherever it is being decided on - and it answers the one
+      question a photograph of a window does not: what the colours actually are.
+    */
+    function themePalette(theme) {
+      const chips = ['bg', 'header', 'panel', 'card', 'accent']
+        .map((id) => (theme && theme[id] ? themeLayers.colorWithoutAlpha(theme[id].color) : ''))
+        .filter(Boolean)
+        .map((color) => `<i style="background:${escapeHtml(color)}"></i>`)
+        .join('');
+      return chips ? `<span class="theme-preview-swatches">${chips}</span>` : '';
+    }
+
+    function showThemePreview(result) {
+      const manifest = result.manifest || {};
+      pendingThemeFile = result.file || '';
+
+      const images = (manifest.assets && manifest.assets.length) || 0;
+      const rows = [themePreviewRow(t('theme-preview-name', 'Name', 'Nom'), manifest.name || '')];
+      if (manifest.author) rows.push(themePreviewRow(t('theme-preview-author', 'By', 'Par'), manifest.author));
+      if (manifest.description) rows.push(themePreviewRow(t('theme-preview-description', 'Description', 'Description'), manifest.description));
+      if (manifest.version) rows.push(themePreviewRow(t('theme-preview-version', 'Version', 'Version'), manifest.version));
+      if (manifest.tags && manifest.tags.length) {
+        rows.push(themePreviewRow(t('theme-preview-tags', 'Tags', 'Étiquettes'), manifest.tags.join(', ')));
+      }
+      rows.push(
+        `<dt>${escapeHtml(t('theme-preview-palette', 'Palette', 'Palette'))}</dt><dd>${themePalette(result.theme)}</dd>`
+      );
+      // How much of the file is pictures, since that is the part a reader is trusting rather than
+      // reading: "3 images, 240 KB" says more than either number alone.
+      rows.push(
+        themePreviewRow(
+          t('theme-preview-images', 'Images', 'Images'),
+          images
+            ? `${images} (${Math.max(1, Math.round((result.bytes || 0) / 1024))} KB)`
+            : t('theme-preview-no-images', 'None, colours only', 'Aucune, couleurs seules')
+        )
+      );
+      rows.push(
+        themePreviewRow(
+          t('theme-preview-requires', 'Requires', 'Nécessite'),
+          (manifest.app && manifest.app.minVersion) || t('theme-preview-any-version', 'Any version', 'Toute version')
+        )
+      );
+      $('#theme-preview-meta').html(rows.join(''));
+      $('#theme-preview-note').text(
+        result.installed
+          ? t('theme-preview-replaces', 'A theme of this name is already installed.', 'Un theme de ce nom est déjà installé.')
+          : t('theme-preview-note', 'Nothing is installed until you confirm.', 'Rien n’est installé tant que tu ne confirmes pas.')
+      );
+
+      /*
+        The frame is a srcdoc document, so it inherits the page's policy: our own markup, no script
+        allowed to run, and the layer images addressed on disk exactly as the real window addresses
+        them. util/themeMock.js builds it from the theme model and nothing else.
+      */
+      const frame = document.getElementById('theme-preview-frame');
+      if (frame) {
+        frame.srcdoc = themeMock.buildThemeMock(result.theme, {
+          labels: {
+            library: t('theme-mock-library', 'Library', 'Bibliothèque'),
+            achievements: t('theme-mock-achievements', 'Achievements', 'Succès'),
+            settings: t('theme-mock-settings', 'Settings', 'Réglages'),
+            theme: t('theme-mock-theme', 'Theme', 'Thème'),
+            apply: t('theme-mock-apply', 'Apply', 'Appliquer'),
+            cancel: t('cancel', 'Cancel', 'Annuler'),
+            unlocked: t('theme-mock-unlocked', 'Unlocked', 'Débloqué'),
+            locked: t('theme-mock-locked', 'Locked', 'Verrouillé'),
+            rare: t('theme-mock-rare', 'Rare', 'Rare'),
+            games: t('theme-mock-games', 'games', 'jeux'),
+            earned: t('theme-mock-earned', 'achievements', 'succès'),
+            complete: t('theme-mock-complete', 'complete', 'terminé'),
+          },
+        });
+      }
+      $('#theme-preview').show().attr('aria-hidden', 'false');
+      // Shown first, then measured: the wrapper has no width while the modal is display:none.
+      fitThemePreview();
+      const wrap = document.querySelector('#theme-preview .theme-preview-frame');
+      if (wrap && typeof ResizeObserver === 'function') {
+        themePreviewResize = new ResizeObserver(fitThemePreview);
+        themePreviewResize.observe(wrap);
+      }
+    }
+
+    async function applyImportedTheme(file) {
+      let res = await ipcRenderer.invoke('import-theme', { file });
+      // A name clash changes nothing until the user picks: replace the theme, or keep both.
+      if (res && !res.ok && res.error === 'duplicate') {
+        const choice = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+          type: 'question',
+          buttons: [
+            t('keep-both-themes', 'Keep both', 'Garder les deux'),
+            t('replace-theme', 'Replace', 'Remplacer'),
+            t('cancel', 'Cancel', 'Annuler'),
+          ],
+          defaultId: 0,
+          cancelId: 2,
+          title: t('import-theme-duplicate-title', 'Theme already exists', 'Ce theme existe déjà'),
+          message: t('import-theme-duplicate-message', 'A theme named “{name}” is already installed.', 'Un theme nommé « {name} » est déjà installé.', {
+            name: res.name || '',
+          }),
+          detail: t(
+            'import-theme-duplicate-detail',
+            'Keep both installs the imported theme under a new name. Replace overwrites the installed one.',
+            'Garder les deux installe le theme importé sous un nouveau nom. Remplacer écrase celui déjà installé.'
+          ),
+          noLink: true,
+        });
+        if (choice === 2) return null;
+        res = await ipcRenderer.invoke('import-theme', { file, duplicate: choice === 1 ? 'replace' : 'rename' });
+      }
+      return res;
+    }
+
+    $('#btn-import-theme').on('click', async function () {
+      const self = $(this);
+      self.css('pointer-events', 'none');
+      try {
+        const res = await ipcRenderer.invoke('preview-theme', {});
+        if (res && res.ok) {
+          setThemeLibraryStatus('');
+          showThemePreview(res);
+        } else if (!res || !res.canceled) {
+          setThemeLibraryStatus(themeErrorText(res), 'error');
+        }
+      } catch (err) {
+        debug.log(err);
+        setThemeLibraryStatus(themeErrorText({ error: String(err) }), 'error');
+      }
+      self.css('pointer-events', 'initial');
+    });
+
+    $('#theme-preview-cancel').on('click', () => closeThemePreview());
+    $('#theme-preview .overlay').on('click', () => closeThemePreview());
+
+    $('#theme-preview-apply').on('click', async function () {
+      const file = pendingThemeFile;
+      if (!file) return closeThemePreview();
+      const self = $(this);
+      self.css('pointer-events', 'none');
+      try {
+        const res = await applyImportedTheme(file);
+        // The preview folder is dropped by the import itself; cancelling the clash dialog is the
+        // only path that still owns it.
+        closeThemePreview({ discard: !res || !res.ok });
+        if (res && res.ok) {
+          // Selecting it rebuilds the dropdown and fires the change handler, which applies it.
+          populateThemeSelect(res.value);
+          setThemeLibraryStatus(t('import-theme-done', 'Theme imported: {name}', 'Theme importé : {name}', { name: res.name }), 'ok');
+        } else if (res) {
+          setThemeLibraryStatus(themeErrorText(res), 'error');
+        }
+      } catch (err) {
+        debug.log(err);
+        closeThemePreview();
+        setThemeLibraryStatus(themeErrorText({ error: String(err) }), 'error');
+      }
+      self.css('pointer-events', 'initial');
+    });
+
+    $('#btn-delete-theme').on('click', async function () {
+      const value = String($('#option_theme').val() || '');
+      const known = installedTheme(value);
+      if (!known) return;
+      const choice = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+        type: 'warning',
+        buttons: [t('delete', 'Delete', 'Supprimer'), t('cancel', 'Cancel', 'Annuler')],
+        defaultId: 1,
+        cancelId: 1,
+        title: t('delete-theme-title', 'Delete theme', 'Supprimer le theme'),
+        message: t('delete-theme-message', 'Delete the theme “{name}”?', 'Supprimer le theme « {name} » ?', { name: known.name }),
+        detail: t(
+          'delete-theme-detail',
+          'The theme and the images it came with are removed from disk. This cannot be undone.',
+          'Le theme et les images qu’il contenait sont supprimés du disque. Cette action est irréversible.'
+        ),
+        noLink: true,
+      });
+      if (choice !== 0) return;
+      /*
+        Stop painting it first. The window holds every image the theme brought open for as long as
+        the stylesheet refers to them, and Windows will not delete a folder whose files are open -
+        which is the EPERM this used to report. Moving the selection also has to happen before the
+        folder goes, or the window is left painted by a stylesheet nothing can rebuild.
+      */
+      const wasSelected = String($('#option_theme').val() || '');
+      populateThemeSelect('default');
+      applyThemeValue('default');
+      try {
+        const res = await ipcRenderer.invoke('delete-installed-theme', known.name);
+        if (res && res.ok) {
+          setThemeLibraryStatus(t('delete-theme-done', 'Theme deleted: {name}', 'Theme supprimé : {name}', { name: res.name }), 'ok');
+        } else {
+          // Nothing was removed, so put the user back where they were.
+          populateThemeSelect(wasSelected);
+          applyThemeValue(wasSelected);
+          setThemeLibraryStatus(themeErrorText(res), 'error');
+        }
+      } catch (err) {
+        debug.log(err);
+        setThemeLibraryStatus(themeErrorText({ error: String(err) }), 'error');
+      }
+    });
+
     // Live theme preview: applying on change lets the user see the theme before committing with OK;
     // Cancel restores whatever is saved in the config.
     $('#option_theme').on('change', function () {
@@ -2102,6 +2443,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       applyThemeValue(value);
       if (value === 'custom') openCustomThemeEditor();
       else closeCustomThemeEditor();
+      refreshThemeLibraryControls();
       ipcRenderer.send('theme-changed', value);
     });
 

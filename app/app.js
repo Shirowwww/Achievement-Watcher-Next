@@ -7582,8 +7582,7 @@ async function runGameHealthAction(appid, action, button) {
     try {
       // Apply the saved app theme before anything renders (Settings > General > Theme).
       const savedTheme = app.config.general?.theme || 'default';
-      const isUserTheme = userThemes.parseValue(savedTheme) !== null;
-      document.documentElement.dataset.theme = isUserTheme || savedTheme === 'custom' ? 'default' : savedTheme;
+      document.documentElement.dataset.theme = userThemes.usesInjectedCss(savedTheme) ? 'default' : savedTheme;
       userThemes.applyCss('');
       ipcRenderer
         .invoke('get-theme-payload')

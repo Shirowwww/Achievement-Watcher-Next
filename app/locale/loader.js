@@ -270,6 +270,18 @@ function translateUI(lang, locale, template) {
     $('#theme-customizer-desc').text(clear(template.settings.general.theme.customDesc));
     $('#theme-customizer-reset span').text(clear(template.settings.general.theme.resetAll));
     // Theme names themselves are proper nouns and stay untranslated.
+    const library = template.settings.general.theme.library;
+    if (library) {
+      $('#theme-library-title').text(clear(library.title));
+      $('#theme-library-hint').text(clear(library.hint));
+      $('#theme-library-desc').text(clear(library.description));
+      $('#btn-import-theme span').text(clear(library.import));
+      $('#btn-export-theme span').text(clear(library.export));
+      $('#btn-delete-theme span').text(clear(library.delete));
+      $('#theme-preview-title').text(clear(library.previewTitle));
+      $('#theme-preview-cancel span').text(clear(library.previewCancel));
+      $('#theme-preview-apply span').text(clear(library.previewApply));
+    }
   }
   if (template.settings.general.uninstallMenu) {
     $('#uninstall-settings-label').text(clear(template.settings.general.uninstallMenu.name));

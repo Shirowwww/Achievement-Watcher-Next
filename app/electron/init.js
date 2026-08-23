@@ -323,6 +323,8 @@ const notificationSounds = require(path.join(__dirname, '../util/notificationSou
 const userThemes = require(path.join(__dirname, '../util/userThemes.js'));
 const themeLayers = require(path.join(__dirname, '../util/themeLayers.js'));
 const themeImages = require(path.join(__dirname, '../util/themeImages.js'));
+const themeBlur = require(path.join(__dirname, '../util/themeBlur.js'));
+const themePackage = require(path.join(__dirname, '../util/themePackage.js'));
 const overlayLocale = require(path.join(__dirname, '../util/overlayLocale.js'));
 const { resolveOverlayRequest } = require(path.join(__dirname, '../util/overlayRequest.js'));
 const { normalizeWindowArgs } = require(path.join(__dirname, '../util/windowArgs.js'));
@@ -406,7 +408,18 @@ function currentThemePayload(nameOverride) {
       if (matches.length > 0) userCss = userThemes.readThemeFile(matches[0].file);
     } catch {}
   }
-  return themeLayers.themePayload(userData, name, themeLayers.loadCustomTheme(userData), userCss);
+  // An imported .awtheme. Read only when one is actually selected, so nothing about theme storage
+  // is touched on a start that is not using one. A theme deleted behind the app's back resolves to
+  // null here and the window falls back to the built-in look rather than to no stylesheet at all.
+  let packTheme = null;
+  const pack = userThemes.parsePackValue(name);
+  if (pack) {
+    try {
+      const installed = themePackage.readInstalledTheme(userData, pack);
+      packTheme = installed ? installed.theme : null;
+    } catch {}
+  }
+  return themeLayers.themePayload(userData, name, themeLayers.loadCustomTheme(userData), userCss, packTheme);
 }
 
 const BASE_URL = 'https://www.steamgriddb.com/api/v2';
@@ -6043,45 +6056,11 @@ ipcMain.handle('get-theme-payload', (event, name) => currentThemePayload(name));
 
 // Persist the Custom theme (per-layer colors + optional images) and return the
 // fresh payload so the renderer can re-apply it live.
-async function prepareThemeBlurImages(theme) {
-  for (const id of themeLayers.IMAGE_LAYER_IDS) {
-    const layer = theme && theme[id];
-    if (!layer || !layer.effect || layer.effect.enabled !== true) continue;
-    if (!layer.image || !fs.existsSync(layer.image)) {
-      layer.effect.blurImage = '';
-      continue;
-    }
-    // The blur effect follows the user's intensity slider; the colored veil renders the
-    // image through a light, fixed frosted blur so tinted images look soft and premium.
-    const isBlurEffect = layer.effect.type === 'blur';
-    const sigma = isBlurEffect ? Math.max(0.3, Math.min(12, layer.effect.blur / 5)) : 1.2;
-    try {
-      const dir = themeLayers.themeImagesDir(userData);
-      fs.mkdirSync(dir, { recursive: true });
-      const ext = path.extname(layer.image).toLowerCase() || '.png';
-      const stem = path.basename(layer.image, ext).replace(/[^a-z0-9-_]/gi, '_').slice(0, 40) || 'image';
-      // Distinct suffix per effect so a blur copy and a veil copy never overwrite each other.
-      const suffix = isBlurEffect ? `blur-${layer.effect.blur}` : `veilblur-${sigma}`;
-      const dest = path.join(dir, `${id}-${stem}-${suffix}.png`);
-      // The editor autosaves on every change, so this re-blurred every layer (~250 ms each on a
-      // 7 MB image) for a file the suffix already says is correct.
-      if (themeImages.isDerivedUpToDate(layer.image, dest)) {
-        layer.effect.blurImage = dest;
-        continue;
-      }
-      const sharp = require('sharp');
-      await sharp(layer.image)
-        .resize({ width: 2560, withoutEnlargement: true })
-        .blur(sigma)
-        .png()
-        .toFile(dest);
-      layer.effect.blurImage = dest;
-    } catch (err) {
-      debug.log(`[theme-image] blur failed for ${id}: ${err.message || err}`);
-      layer.effect.blurImage = '';
-    }
-  }
-  return theme;
+// `intoDir` is where the generated copies are written; an imported theme keeps its own, inside its
+// own folder, so deleting the theme takes them with it and an export never sees them. The work is
+// in util/themeBlur.js because the gallery renderer has to produce exactly the same copies.
+function prepareThemeBlurImages(theme, intoDir) {
+  return themeBlur.prepareThemeBlurImages(theme, intoDir || themeLayers.themeImagesDir(userData), { log: (line) => debug.log(line) });
 }
 
 ipcMain.handle('save-custom-theme', async (event, theme) => {
@@ -6132,6 +6111,227 @@ ipcMain.handle('pick-theme-image', async (event, layer) => {
     return { ok: false, error: String(err.message || err) };
   }
 });
+
+/*
+  Portable application themes (.awtheme): export, preview, import, delete. The format lives in
+  util/themePackage.js; this side only resolves what "the current theme" means, drives the file
+  dialogs and generates the blur copies an imported theme needs on this machine.
+*/
+
+// Names an import may not take because the dropdown already offers them: every built-in, plus
+// whatever CSS themes are in <userData>\themes.
+function takenThemeNames() {
+  const names = Object.keys(themeLayers.BUILTIN_COLORS);
+  try {
+    for (const theme of userThemes.listUserThemes(userData)) names.push(theme.name);
+  } catch {}
+  return names;
+}
+
+// The layer model behind a stored theme value, or null when that value has no model - which is
+// only ever a `user:` stylesheet, the one kind of theme this format deliberately cannot carry.
+function themeModelFor(value) {
+  const name = String(value || 'default');
+  if (name === 'custom') return { theme: themeLayers.loadCustomTheme(userData), base: 'custom', meta: {} };
+  const pack = userThemes.parsePackValue(name);
+  if (pack) {
+    const installed = themePackage.readInstalledTheme(userData, pack);
+    if (!installed) return null;
+    const manifest = installed.manifest || {};
+    return {
+      theme: installed.theme,
+      base: manifest.base || '',
+      name: installed.name,
+      // Credit survives a round trip, so passing on a theme somebody shared keeps their name on it.
+      meta: { author: manifest.author, description: manifest.description, version: manifest.version, tags: manifest.tags },
+    };
+  }
+  if (userThemes.parseValue(name)) return null;
+  if (!Object.prototype.hasOwnProperty.call(themeLayers.BUILTIN_COLORS, name)) return null;
+  return { theme: themePackage.themeFromBuiltin(name), base: name, meta: {} };
+}
+
+/*
+  Export the theme a value names, under a name the caller gives. A built-in exports its palette, the
+  Custom theme exports what the editor holds, and an imported theme re-exports as it stands.
+
+  Nothing about this machine travels: util/themePackage.js copies each layer image in under a name
+  built from the layer, and the manifest carries only what the user typed plus the app version.
+*/
+ipcMain.handle('export-theme', async (event, request) => {
+  try {
+    const asked = typeof request === 'string' ? { value: request } : request || {};
+    const value = String(asked.value || (configJS && configJS.general && configJS.general.theme) || 'default');
+    const model = themeModelFor(value);
+    if (!model) {
+      return { ok: false, error: userThemes.parseValue(value) ? 'css-theme-not-exportable' : 'theme-not-found' };
+    }
+
+    const suggested = themePackage.sanitizeThemeName(asked.name || model.name || value.replace(/^pack:/i, '')) || 'Theme';
+    const res = await dialog.showSaveDialog({
+      title: t('export-theme-title', 'Export theme', 'Exporter le theme'),
+      defaultPath: suggested + themePackage.THEME_PACKAGE_EXTENSION,
+      filters: [{ name: t('theme-package', 'AW theme package', 'Paquet de theme AW'), extensions: ['awtheme'] }],
+    });
+    if (res.canceled || !res.filePath) return { ok: false, canceled: true };
+
+    const meta = { ...model.meta };
+    for (const field of ['author', 'description', 'version']) {
+      if (typeof asked[field] === 'string' && asked[field].trim()) meta[field] = asked[field];
+    }
+    if (Array.isArray(asked.tags) && asked.tags.length) meta.tags = asked.tags;
+
+    const out = themePackage.exportTheme({
+      theme: model.theme,
+      name: suggested,
+      destination: res.filePath,
+      meta,
+      base: model.base,
+      appVersion: app.getVersion(),
+    });
+    debug.log(`[theme-package] export ${suggested}: ` + (out.ok ? out.file : out.error));
+    return out;
+  } catch (err) {
+    debug.log('[theme-package] export failed: ' + (err.message || err));
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+
+/*
+  What a package would install, without installing it.
+
+  The assets are unpacked into a throwaway folder so the preview can paint the real images, and
+  that folder is the only thing an unapproved package ever writes: nothing reaches theme storage
+  until the user says apply. One preview exists at a time, and the previous one is removed when the
+  next starts, so a user clicking through several files cannot leave a pile behind.
+*/
+let themePreview = null;
+
+function discardThemePreview() {
+  if (!themePreview) return;
+  try {
+    fs.rmSync(themePreview.dir, { recursive: true, force: true });
+  } catch {}
+  themePreview = null;
+}
+
+ipcMain.handle('preview-theme', async (event, opts = {}) => {
+  try {
+    let file = typeof opts.file === 'string' ? opts.file : '';
+    if (!file) {
+      const res = await dialog.showOpenDialog({
+        title: t('import-theme-title', 'Import theme', 'Importer un theme'),
+        properties: ['openFile', 'dontAddToRecent'],
+        filters: [{ name: t('theme-package', 'AW theme package', 'Paquet de theme AW'), extensions: ['awtheme'] }],
+      });
+      if (res.canceled || !res.filePaths || !res.filePaths.length) return { ok: false, canceled: true };
+      file = res.filePaths[0];
+    }
+
+    const read = themePackage.readThemePackage(file, { appVersion: app.getVersion() });
+    if (!read.ok) {
+      debug.log('[theme-package] preview ' + path.basename(file) + ': ' + read.error);
+      return { ...read, file };
+    }
+
+    discardThemePreview();
+    const dir = fs.mkdtempSync(path.join(app.getPath('temp'), 'aw-theme-preview-'));
+    const assets = path.join(dir, themePackage.ASSETS_DIR);
+    fs.mkdirSync(assets, { recursive: true });
+    for (const asset of read.assets) fs.writeFileSync(path.join(assets, asset.name), asset.data);
+    themePreview = { dir, file };
+
+    /*
+      The blur and veil copies, in the throwaway folder. Without them a layer with an effect would
+      preview from its source image and the frame would show a sharp wallpaper for a theme the app
+      is about to blur heavily - which is the one thing a preview must not do.
+    */
+    const previewTheme = await prepareThemeBlurImages(
+      themePackage.resolveInstalled(read.theme, dir),
+      path.join(dir, themePackage.THEME_DERIVED_DIR)
+    );
+
+    return {
+      ok: true,
+      file,
+      manifest: read.manifest,
+      theme: previewTheme,
+      bytes: read.bytes,
+      installed: themePackage.listInstalledThemes(userData).some((t2) => t2.name.toLowerCase() === read.manifest.name.toLowerCase()),
+    };
+  } catch (err) {
+    debug.log('[theme-package] preview failed: ' + (err.message || err));
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+
+ipcMain.handle('discard-theme-preview', async () => {
+  discardThemePreview();
+  return { ok: true };
+});
+
+/*
+  Install a package. Called twice for a name clash: the first call reports `duplicate` and changes
+  nothing, then the renderer asks the user and calls back with the same `file` plus a policy - the
+  same two-step an .awpreset import uses.
+*/
+ipcMain.handle('import-theme', async (event, opts = {}) => {
+  try {
+    let file = typeof opts.file === 'string' ? opts.file : '';
+    if (!file) {
+      const res = await dialog.showOpenDialog({
+        title: t('import-theme-title', 'Import theme', 'Importer un theme'),
+        properties: ['openFile', 'dontAddToRecent'],
+        filters: [{ name: t('theme-package', 'AW theme package', 'Paquet de theme AW'), extensions: ['awtheme'] }],
+      });
+      if (res.canceled || !res.filePaths || !res.filePaths.length) return { ok: false, canceled: true };
+      file = res.filePaths[0];
+    }
+
+    const out = themePackage.installThemePackage({
+      file,
+      userDataPath: userData,
+      appVersion: app.getVersion(),
+      duplicate: ['rename', 'replace'].includes(opts.duplicate) ? opts.duplicate : 'fail',
+      takenNames: takenThemeNames(),
+    });
+    if (!out.ok) {
+      debug.log('[theme-package] import ' + path.basename(file) + ': ' + out.error);
+      return { ...out, file };
+    }
+
+    /*
+      The blur and veil copies a layer effect needs are generated here, once, from the image that
+      travelled - never shipped, since they depend on nothing else. They live inside the theme's own
+      folder, so removing the theme removes them too.
+    */
+    const dir = path.join(themePackage.themePackDir(userData), out.name);
+    const theme = await prepareThemeBlurImages(out.theme, path.join(dir, themePackage.THEME_DERIVED_DIR));
+    const stored = themePackage.saveInstalledTheme(userData, out.name, theme) || theme;
+
+    discardThemePreview();
+    debug.log(`[theme-package] import ${path.basename(file)}: ${out.name} (${out.assets} asset(s))`);
+    return { ...out, file, theme: stored, value: userThemes.packValue(out.name) };
+  } catch (err) {
+    debug.log('[theme-package] import failed: ' + (err.message || err));
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+
+// Every imported theme, for the Theme dropdown and the manage list.
+ipcMain.handle('list-installed-themes', async () =>
+  themePackage.listInstalledThemes(userData).map((theme) => ({ ...theme, value: userThemes.packValue(theme.name) }))
+);
+
+// Remove one, with its assets and its generated copies. The caller is responsible for moving the
+// selection off it first; a theme that is gone resolves to the built-in look, not to a blank window.
+ipcMain.handle('delete-installed-theme', async (event, name) => {
+  const out = themePackage.deleteInstalledTheme(userData, typeof name === 'string' ? name : (name && name.name) || '');
+  debug.log('[theme-package] delete ' + String(name) + ': ' + (out.ok ? 'removed' : out.error));
+  return out;
+});
+
+app.on('will-quit', discardThemePreview);
 
 // Forward a theme change (Settings > General, or the Custom theme editor) to an
 // already-open in-game overlay so it recolors without reopening.

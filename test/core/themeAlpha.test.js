@@ -56,12 +56,10 @@ test('a translucent layer color is stored and rendered as chosen', () => {
 });
 
 /*
-  The opacity slider has to be the only thing deciding how much of a layer you see.
-
-  app.css frosts the library panel, the game cards and the Settings modal with a backdrop blur, and
-  a blur outlives its own colour going transparent: taken to 0% the panel was still a blurred pane
-  of exactly its own shape, and the library behind the Settings modal stayed dimmed and washed out
-  no matter where the slider went. Which reads, correctly, as "the opacity does nothing".
+  The opacity slider has to be the only thing deciding how much of a layer you see. app.css frosts the
+  library panel, the game cards and the Settings modal with a backdrop blur, and a blur outlives its
+  own colour going transparent: at 0% the panel was still a blurred pane of exactly its own shape, and
+  the modal's backdrop stayed dimmed no matter where the slider went - "the opacity does nothing".
 */
 test('a translucent layer drops the frosted blur that would survive its own transparency', () => {
   const theme = themeLayers.defaultCustomTheme();

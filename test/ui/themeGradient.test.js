@@ -160,13 +160,10 @@ test('an image on a layer suppresses that layer gradient instead of covering the
   }
 });
 
-/*
-  The gradient's direction select is styled like the effect-type select, and for a while it also
-  carried that class. It renders EARLIER in the row than the effect panel, so every
-  `row.find('.theme-layer-effect-type')` in settings.js resolved to the angle instead: picking
-  "Blur" still offered a veil colour, and the choice was written back as "veil" because an angle is
-  never the string 'blur'. The two controls share a stylesheet rule, never a hook class.
-*/
+// The gradient's direction select is styled like the effect-type select, and for a while it also
+// carried that class. It renders EARLIER in the row, so every `row.find('.theme-layer-effect-type')`
+// in settings.js resolved to the angle instead: picking "Blur" still offered a veil colour, written
+// back as "veil" because an angle is never 'blur'. The two controls now share a stylesheet rule, never a hook class.
 test('the gradient direction select is styled like the effect type without answering for it', () => {
   const fs = require('node:fs');
   const nodePath = require('node:path');

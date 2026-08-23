@@ -4785,14 +4785,21 @@ main {
   display: inline-block;
 }
 
+/* The look a `.btn` has inside Settings. Listed per view rather than globally because `.btn` is
+   also the website's class and the notification designer's; the views named here are the ones whose
+   markup uses it. */
 #settings .folder-actions .btn,
 #settings .content[data-view='advanced'] .btn,
-#settings .content[data-view='debug'] .btn {
+#settings .content[data-view='debug'] .btn,
+#settings .content[data-view='appearance'] .btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 8px 13px;
   margin: 4px 8px 4px 0;
+  /* A <button> does not inherit colour: the user agent gives it `buttontext`, which is pure black
+     whatever the theme says. Every label in Settings has to state the theme's colour itself. */
+  color: var(--text);
   background: color-mix(in srgb, var(--set-surface) 88%, transparent);
   border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
   border-radius: 6px;
@@ -10163,6 +10170,222 @@ body {
 
   #theme-customizer .theme-layer-controls {
     flex-wrap: wrap;
+  }
+}
+
+/* Portable themes (.awtheme): the import/export row, and the frame that shows one before it is
+   installed. */
+
+/* Same treatment as the Custom theme editor's own description, so the two cards read as one pair
+   rather than as a card and a stranger. */
+#theme-library-desc {
+  color: var(--text-muted);
+  font-size: 11.5px;
+  line-height: 1.45;
+  margin: 0 0 10px;
+}
+
+/*
+  The heading chip. It reuses the emulator heading's layout, but not its colour: that class is the
+  warning amber, and "one portable file" is a statement of fact rather than something to worry
+  about. Stated in the theme's own muted colour instead, so it follows the palette like every other
+  label in the card.
+*/
+#theme-library .emulator-warning {
+  border-color: color-mix(in srgb, var(--border) 45%, transparent);
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--set-surface) 70%, transparent);
+}
+
+#theme-library .theme-library-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+#theme-library .theme-library-actions .btn {
+  min-height: 30px;
+  padding: 4px 14px;
+  border-radius: 7px;
+  font-size: 12.5px;
+}
+
+#theme-library .theme-library-status {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  min-height: 16px;
+}
+
+#theme-library .theme-library-status.ok {
+  color: var(--accent);
+}
+
+#theme-library .theme-library-status.error {
+  color: #ff7b72;
+}
+
+#theme-preview {
+  display: none;
+  position: fixed;
+  inset: 30px 0 0;
+  z-index: 40;
+}
+
+#theme-preview .overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  background: var(--set-scrim);
+}
+
+#theme-preview .box {
+  width: min(900px, calc(100vw - 64px));
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--set-hairline);
+  background: linear-gradient(180deg, var(--set-modal-top) 0%, var(--set-modal-bottom) 100%);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, calc(0.48 * var(--shadow-scale)));
+}
+
+#theme-preview .box .header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--set-hairline);
+}
+
+#theme-preview .box .container {
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+/*
+  The frame lays the sample out at exactly the size the gallery renders its pictures at, then scales
+  the whole thing down to fit - letting the frame use its own width would re-flow the sample at a
+  size nothing else uses, so what a user approves would not match what a card promises.
+  --theme-preview-scale is set by ui/settings.js from the real width.
+*/
+#theme-preview .theme-preview-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--theme-preview-w, 960) / var(--theme-preview-h, 600);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface-sunken, rgba(0, 0, 0, 0.2));
+}
+
+#theme-preview .theme-preview-frame iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(var(--theme-preview-w, 960) * 1px);
+  height: calc(var(--theme-preview-h, 600) * 1px);
+  border: 0;
+  transform: scale(var(--theme-preview-scale, 1));
+  transform-origin: top left;
+}
+
+#theme-preview .theme-preview-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 14px;
+  margin: 0;
+  font-size: 12.5px;
+}
+
+#theme-preview .theme-preview-meta dt {
+  color: var(--text-muted);
+}
+
+#theme-preview .theme-preview-meta dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+#theme-preview .theme-preview-swatches {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+#theme-preview .theme-preview-swatches i {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  /* A colour can be anything, including nothing: the ring keeps an unpainted chip visible rather
+     than leaving a hole in the strip. */
+  box-shadow: inset 0 0 0 1px rgba(127, 127, 127, 0.35);
+}
+
+#theme-preview .theme-preview-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+#theme-preview .theme-preview-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--set-hairline);
+}
+
+/* The modal is a sibling of #settings, not a child, so the Settings button rules do not reach it. */
+#theme-preview .theme-preview-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--border));
+  border-radius: 7px;
+  font-size: 12.5px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--set-surface) 84%, var(--accent) 10%);
+  cursor: pointer;
+}
+
+#theme-preview .theme-preview-actions .btn.secondary {
+  border-color: color-mix(in srgb, var(--border) 40%, transparent);
+  background: color-mix(in srgb, var(--set-surface) 88%, transparent);
+}
+
+#theme-preview .theme-preview-actions .btn:hover {
+  border-color: color-mix(in srgb, var(--accent) 58%, var(--border));
+  background: color-mix(in srgb, var(--set-surface) 74%, var(--accent) 16%);
+}
+
+#theme-preview .theme-preview-actions .btn.secondary:hover {
+  border-color: color-mix(in srgb, var(--border) 60%, transparent);
+  background: color-mix(in srgb, var(--set-surface) 96%, transparent);
+}
+
+#theme-preview .theme-preview-actions .btn i {
+  color: var(--accent);
+}
+
+#theme-preview .theme-preview-actions .btn.secondary i {
+  color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+  #theme-preview .theme-preview-meta {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -34,12 +34,9 @@ const DERIVED_NAME = /-(?:blur|veilblur)-[\d.]+\.png$/i;
 
 /*
   An already-stored file holding exactly the source's bytes, whatever layer first imported it.
-
-  Store paths were previously keyed "<layer>-<stem><ext>", so the same wallpaper picked for several
-  layers was copied once per layer, and the dedupe check only ever compared against the name the
-  current layer would use. One 7.3 MB image observed that way occupied 193 MB across layers and
-  re-imports. Nothing deletes from theme-images, so two layers can safely share one file.
-
+  Store paths were previously keyed "<layer>-<stem><ext>", so the same wallpaper picked for
+  several layers was copied once per layer - one 7.3 MB image occupied 193 MB across layers and
+  re-imports this way. Nothing deletes from theme-images, so two layers can safely share one file.
   Size is the cheap reject before any file is read.
 */
 function findByContent(dir, source) {

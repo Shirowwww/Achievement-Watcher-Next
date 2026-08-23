@@ -2485,6 +2485,40 @@
                 </ul>
               </div>
 
+              <!--
+                Portable themes. One .awtheme file holds the whole look - colours, gradients,
+                effects and any layer image - and an imported one becomes an ordinary entry in the
+                dropdown above. Bound by id, so nothing here shifts the nth-child bindings the
+                locale loader uses for the rows in the list.
+
+                Hidden until the picker is on a theme this card can act on: the Custom theme, or one
+                that was imported. A built-in is not somebody's work to export or delete, so the row
+                would only be three controls that do nothing useful. It starts hidden rather than
+                being hidden on load, so it never flashes before the picker has been read.
+              -->
+              <div id="theme-library" class="settings-card" style="display:none">
+                <div class="emulator-login-heading">
+                  <div class="title"><i class="fas fa-file-import"></i> <span id="theme-library-title">Theme files</span></div>
+                  <span class="emulator-warning"><i class="fas fa-info-circle"></i> <span id="theme-library-hint">One portable file</span></span>
+                </div>
+                <p id="theme-library-desc">
+                  Export the theme you are using as a single .awtheme file, or import one somebody sent you.
+                  An imported theme carries its own images and behaves exactly like a built-in one.
+                </p>
+                <div class="theme-library-actions">
+                  <button type="button" id="btn-import-theme" class="btn">
+                    <i class="fas fa-file-import"></i> <span>Import theme…</span>
+                  </button>
+                  <button type="button" id="btn-export-theme" class="btn secondary">
+                    <i class="fas fa-file-export"></i> <span>Export theme…</span>
+                  </button>
+                  <button type="button" id="btn-delete-theme" class="btn secondary" hidden>
+                    <i class="fas fa-trash"></i> <span>Delete theme</span>
+                  </button>
+                </div>
+                <p id="theme-library-status" class="theme-library-status" role="status" aria-live="polite"></p>
+              </div>
+
               <div id="theme-customizer" class="settings-card" style="display:none">
                 <div class="emulator-login-heading">
                   <div class="title"><i class="fas fa-palette"></i> <span id="theme-customizer-title">Custom theme</span></div>
@@ -3037,6 +3071,35 @@
               <button type="button" id="onboarding-prev" class="inline-action-btn secondary"><i class="fas fa-chevron-left"></i> <span>Back</span></button>
               <button type="button" id="onboarding-next" class="inline-action-btn primary"><span>Next</span> <i class="fas fa-chevron-right"></i></button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!--
+        What an imported theme looks like, before it is installed. The frame is a srcdoc document
+        built by util/themeMock.js from the theme model and the page CSP above: it carries no
+        script of its own, so a package being looked at cannot do anything except be drawn.
+      -->
+      <section id="theme-preview" aria-hidden="true">
+        <div class="overlay"></div>
+        <div class="box">
+          <div class="header">
+            <i class="fas fa-palette"></i> <span id="theme-preview-title">Imported theme</span><span></span>
+          </div>
+          <div class="container">
+            <div class="theme-preview-frame">
+              <iframe id="theme-preview-frame" tabindex="-1" scrolling="no" title="theme preview"></iframe>
+            </div>
+            <dl id="theme-preview-meta" class="theme-preview-meta"></dl>
+            <p id="theme-preview-note" class="theme-preview-note"></p>
+          </div>
+          <div class="theme-preview-actions">
+            <button type="button" id="theme-preview-cancel" class="btn secondary">
+              <i class="fas fa-times"></i> <span>Cancel</span>
+            </button>
+            <button type="button" id="theme-preview-apply" class="btn">
+              <i class="fas fa-check"></i> <span>Import and apply</span>
+            </button>
           </div>
         </div>
       </section>

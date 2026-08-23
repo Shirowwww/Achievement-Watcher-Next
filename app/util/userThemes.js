@@ -44,6 +44,28 @@ function parseValue(value) {
   return m ? m[1].trim() : null;
 }
 
+// Value stored in options.ini for an imported .awtheme (`pack:<name>`), so an imported theme sits
+// in the same dropdown as the built-ins and is selected the same way.
+function packValue(name) {
+  return `pack:${String(name || '').trim()}`;
+}
+
+// Extract the imported-theme name from a stored value; null for anything else.
+function parsePackValue(value) {
+  const m = /^pack:(.+)$/i.exec(String(value || '').trim());
+  return m ? m[1].trim() : null;
+}
+
+/*
+  Whether a theme is painted by injected CSS rather than by the <html data-theme> attribute.
+  Custom, user and imported themes all are, and must leave the attribute on 'default' so the
+  built-in blocks in app.css don't fight the injected rules.
+*/
+function usesInjectedCss(value) {
+  const raw = String(value || '').trim();
+  return raw === 'custom' || parseValue(raw) !== null || parsePackValue(raw) !== null;
+}
+
 // Inject/remove the user-theme <style> element (renderer only).
 function applyCss(css) {
   if (typeof document === 'undefined') return;
@@ -60,4 +82,4 @@ function applyCss(css) {
   el.textContent = css;
 }
 
-module.exports = { themesDir, listUserThemes, readThemeFile, valueFor, parseValue, applyCss };
+module.exports = { themesDir, listUserThemes, readThemeFile, valueFor, parseValue, packValue, parsePackValue, usesInjectedCss, applyCss };

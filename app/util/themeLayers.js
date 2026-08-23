@@ -881,17 +881,22 @@ function buildBuiltinOverlayCss(themeName) {
   return buildOverlayCss(BUILTIN_COLORS[themeName] || BUILTIN_COLORS.default, null);
 }
 
-// Main-process IPC helpers ---------------------------------------------------
-
-function themePayload(userDataPath, themeName, customTheme, userCss) {
+/*
+  `packTheme` is the layer model of an imported .awtheme, already resolved to this machine's paths
+  by util/themePackage.js. It's painted by exactly the same generator as the Custom theme, which is
+  why it behaves like one everywhere else - the window, overlay and editor all see one shape.
+*/
+function themePayload(userDataPath, themeName, customTheme, userCss, packTheme) {
   const isCustom = themeName === 'custom';
   const isUserCss = /^user:/.test(String(themeName || ''));
-  const theme = isCustom ? sanitizeCustomTheme(customTheme) : null;
+  const isPack = /^pack:/i.test(String(themeName || '')) && packTheme != null;
+  const theme = isCustom ? sanitizeCustomTheme(customTheme) : isPack ? sanitizeCustomTheme(packTheme) : null;
   return {
     name: themeName || 'default',
     custom: isCustom,
-    appCss: isCustom ? buildCustomAppCss(theme) : '',
-    overlayCss: isCustom ? buildCustomOverlayCss(theme) : buildBuiltinOverlayCss(themeName),
+    imported: isPack,
+    appCss: theme ? buildCustomAppCss(theme) : '',
+    overlayCss: theme ? buildCustomOverlayCss(theme) : buildBuiltinOverlayCss(themeName),
     userCss: isUserCss ? userCss || '' : '',
     customTheme: theme,
     builtinColors: BUILTIN_COLORS[themeName] || BUILTIN_COLORS.default,

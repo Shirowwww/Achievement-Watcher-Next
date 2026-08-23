@@ -6,13 +6,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const htmlParser = require(path.join(__dirname, '..', '..', 'app', 'node_modules', 'node-html-parser'));
 
-/*
-  The theme picker opens on a short primary set and keeps the rest behind "More themes…". The real
-  risk is silent loss: a built-in listed in neither array disappears from the UI while its palette
-  and its app.css block stay in the tree, so nothing else fails. These tests pin both arrays against
-  the theme engine itself, and pin the light theme's contrast because it is the one palette the
-  stylesheet's dark-base overlays were not written for.
-*/
+// The theme picker opens on a short primary set and keeps the rest behind "More themes…". The real
+// risk is silent loss: a built-in listed in neither array disappears from the UI while its palette
+// and app.css block stay in the tree, so nothing else fails. These tests pin both arrays against the
+// theme engine, and pin the light theme's contrast - the one palette the stylesheet's dark-base overlays were not written for.
 
 const appDir = path.join(__dirname, '..', '..', 'app');
 const themeLayers = require(path.join(appDir, 'util', 'themeLayers.js'));

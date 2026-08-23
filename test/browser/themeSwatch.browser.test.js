@@ -1,15 +1,9 @@
 'use strict';
 
-/*
-  The per-layer swatch in the custom-theme builder, measured in a real engine because it is pure
-  paint: nothing about the layer order is visible from the DOM.
-
-  Layer colours carry an alpha channel, so the swatch shows the colour over a checkerboard - that is
-  the only way "60% of this blue" reads as transparency rather than as a slightly different blue.
-  The checkerboard lived in a `::before` at z-index -1, which does NOT put it behind its parent's own
-  background: negative z-index only goes behind the parent's CONTENT. So it was painted over every
-  colour, and a layer at 100% opacity looked see-through.
-*/
+// The per-layer swatch in the custom-theme builder, measured in a real engine because it's pure
+// paint: layer colours carry alpha, so the swatch shows them over a checkerboard - the only way
+// "60% of this blue" reads as transparency rather than a different blue. A checkerboard at
+// z-index -1 does NOT go behind the parent's own background (only its CONTENT), so it painted over every colour.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
