@@ -2,22 +2,22 @@
 
 # 🏆 Achievement Watcher Next
 
-<p><strong>Every achievement. One experience.</strong></p>
+<p><strong>A unified achievement tracker for Windows.</strong></p>
 
-Track achievements, rarity and playtime across launchers, local saves and supported emulators - with
-live Windows notifications or an in-game overlay.
+AW Next brings achievements, rarity and playtime from launchers, local saves and supported emulators
+into one library, with live Windows notifications and an in-game overlay.
 
 [![Latest release](https://img.shields.io/github/v/release/Shirowwww/Achievement-Watcher-Next?display_name=tag&sort=semver&style=flat-square)](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/Shirowwww/Achievement-Watcher-Next/total?style=flat-square)](https://github.com/Shirowwww/Achievement-Watcher-Next/releases)
 ![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&style=flat-square)
 [![License](https://img.shields.io/badge/license-LGPL--3.0-green?style=flat-square)](LICENSE)
 
+**[Visit the website](https://shirowwww.github.io/Achievement-Watcher-Next/)** ·
 **[Download](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest)** ·
-[Website](https://shirowwww.github.io/Achievement-Watcher-Next/) ·
-[Documentation](https://shirowwww.github.io/Achievement-Watcher-Next/README.html) ·
-[Preset gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/) ·
-[Changelog](CHANGELOG.md) ·
-[Issues](https://github.com/Shirowwww/Achievement-Watcher-Next/issues)
+[Docs](https://shirowwww.github.io/Achievement-Watcher-Next/README.html) ·
+[Sources](https://shirowwww.github.io/Achievement-Watcher-Next/sources.html) ·
+[Presets](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/) ·
+[GitHub](https://github.com/Shirowwww/Achievement-Watcher-Next)
 
 <table>
 <tr>
@@ -28,32 +28,26 @@ live Windows notifications or an in-game overlay.
 
 </div>
 
-> **AW Next** is the next generation of Achievement Watcher. It continues
-> [Xan105's original](https://github.com/xan105/Achievement-Watcher) and
-> [darktakayanagi's 2.x branch](https://github.com/darktakayanagi/Achievement-Watcher) with a modern
-> runtime and a large compatibility, reliability and feature pass.
-
 ---
 
-## What it does
+## Highlights
 
-- **One library for every source.** Launcher data, Steam-compatible saves and console emulators in a
-  single list, with search, filters, rarity tiers, progress achievements and covers.
-- **Notifications that choose their own transport.** Leave delivery on **Automatic** and each unlock
-  arrives through the in-game overlay when it can be seen, and as a Windows notification when it
-  cannot - never both.
-- **A popup you can actually design.** Nine bundled presets, a no-code **Preset Designer** that
-  previews the real popup, one-file `.awpreset` sharing and a
-  [community gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/) to take one from
-  or add yours to.
-- **An in-game overlay list.** The running game's full achievement list on `Ctrl+Shift+K`, with
-  search, filters and rarity badges - drivable entirely from a gamepad.
-- **Answers when something is wrong.** Each game has a **Game Health** panel that says whether it is
-  tracked, why not, and offers only the repairs that genuinely apply.
-- **Repair tools for local setups.** Read-only diagnosis, `steam_settings` repair, matched GBE Fork
-  runtime install, architecture-safe automatic Uplay R2 repair, transactional backups and restore.
-- **Yours to shape.** Simple and Advanced interface modes, built-in themes plus a custom one, full
-  controller navigation, and 28 bundled interface languages.
+- **Unified library.** Launcher data, Steam-compatible saves and console emulators in a single list,
+  with search, filters, rarity tiers, progress achievements and covers.
+- **Automatic notification delivery.** With **Automatic** selected, each unlock arrives through the
+  in-game popup when it can be seen, and as a Windows notification when it cannot - never both.
+- **Preset Designer and sharing.** Nine bundled presets, a no-code designer that previews the real
+  popup, one-file `.awpreset` sharing, a converter for your own Steam Achievement Notifier `.san`
+  themes and a [community gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/).
+- **In-game overlay.** The running game's full achievement list on `Ctrl+Shift+K`, with search,
+  filters and rarity badges - drivable entirely from a gamepad.
+- **Game Health.** Each game has a health panel that says whether it is tracked, why not, and offers
+  only the repairs that genuinely apply.
+- **Guided repairs.** Read-only diagnosis, `steam_settings` repair, matched GBE Fork runtime install,
+  architecture-safe automatic Uplay R2 repair, transactional backups and restore.
+- **Flexible interface.** Simple and Advanced modes, full controller navigation, 28 bundled
+  interface languages, and portable `.awtheme` themes with their own
+  [gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/themes/).
 - **Local-first.** No Steam Web API key, no required account, its own data directory, and caches that
   keep the library working offline.
 
@@ -71,7 +65,7 @@ live Windows notifications or an in-game overlay.
 
 ---
 
-## Install
+## Quick start
 
 1. Download `Achievement.Watcher.Setup.<version>.exe` from the
    [latest release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest).
@@ -79,9 +73,9 @@ live Windows notifications or an in-game overlay.
 3. Run **Settings → Folders → Smart Find**, and add any custom game or save location.
 4. Leave the app in the system tray for live notifications and playtime tracking.
 
-Settings, caches, playtime and achievement data live in `%APPDATA%\Achievement Watcher Next`.
-Upgrading preserves them, and the first launch after an upgrade imports an older Achievement Watcher
-folder without ever modifying it.
+Settings, watched folders, caches, playtime, logs and user presets live in
+`%APPDATA%\Achievement Watcher Next`. Upgrading preserves them, and the first launch after an
+upgrade imports an older Achievement Watcher folder without modifying it.
 
 → [Getting started](https://shirowwww.github.io/Achievement-Watcher-Next/getting-started.html) for the full first-run, discovery and update guide.
 
@@ -91,16 +85,16 @@ folder without ever modifying it.
 
 | Source | Support |
 |---|---|
-| **Steam** | Local appcache state, public-profile data, achievement lists (including DLC/update tags) and cached product metadata |
-| **Steam-compatible saves** | Goldberg, GBE Fork, GreenLuma, SmartSteamEmu, CreamAPI, Nemirtingas and compatible layouts |
+| **Steam** | Local appcache state, public-profile data, achievement lists (including DLC/update tags) and cached product metadata; an optional account connection covers a private profile and Steam Family |
+| **Steam-compatible saves** | Goldberg, GBE Fork, GreenLuma, LumaPlay, SmartSteamEmu, CreamAPI, Nemirtingas and compatible layouts |
 | **GOG Galaxy** | Native local Galaxy databases and compatible legacy saves |
 | **Epic Games** | Local installations, and official achievement state after an optional account connection |
 | **Ubisoft Connect** | Native local data, legacy Uplay formats and compatible Uplay R2 setups |
-| **EA Desktop** | The local achievement log, for installs outside EA's managed folders |
+| **EA Desktop** | Achievement events from the local EA Desktop log, for games outside EA's managed folders |
 | **Console emulators** | RPCS3, ShadPS4 and Xenia, each watched live |
 | **Xbox PC** | Local Game Pass / Microsoft Store installs, plus imported Xbox Network state |
 
-Each source is an individual switch, and no Steam Web API key is used: achievement lists come from
+Sources are controlled individually, and no Steam Web API key is used: achievement lists come from
 public endpoints and are cached locally.
 
 → [Compatible sources](https://shirowwww.github.io/Achievement-Watcher-Next/sources.html) · [Goldberg / GBE setup](https://shirowwww.github.io/Achievement-Watcher-Next/emulator-setup.html) ·
@@ -116,33 +110,33 @@ public endpoints and are cached locally.
 
 Start at the **[documentation site](https://shirowwww.github.io/Achievement-Watcher-Next/README.html)**, which explains what each guide covers.
 
-[Getting started](https://shirowwww.github.io/Achievement-Watcher-Next/getting-started.html) ·
-[Sources](https://shirowwww.github.io/Achievement-Watcher-Next/sources.html) ·
-[Notifications](https://shirowwww.github.io/Achievement-Watcher-Next/notifications.html) ·
-[Presets](https://shirowwww.github.io/Achievement-Watcher-Next/presets.html) ·
-[Overlay](https://shirowwww.github.io/Achievement-Watcher-Next/overlay.html) ·
-[Controller](https://shirowwww.github.io/Achievement-Watcher-Next/controller.html) ·
-[Game Health](https://shirowwww.github.io/Achievement-Watcher-Next/game-health.html) ·
-[Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html) ·
-[FAQ](https://shirowwww.github.io/Achievement-Watcher-Next/faq.html) ·
-[Advanced tools](https://shirowwww.github.io/Achievement-Watcher-Next/advanced.html)
-
-For contributors: [Contributing](CONTRIBUTING.md) · [Build guide](BUILD.md) ·
-[Architecture](https://shirowwww.github.io/Achievement-Watcher-Next/architecture.html) ·
-[Release workflow](https://shirowwww.github.io/Achievement-Watcher-Next/RELEASE_WORKFLOW.html)
+- **Start:** [Getting started](https://shirowwww.github.io/Achievement-Watcher-Next/getting-started.html) ·
+  [Sources](https://shirowwww.github.io/Achievement-Watcher-Next/sources.html) ·
+  [Notifications](https://shirowwww.github.io/Achievement-Watcher-Next/notifications.html) ·
+  [Presets](https://shirowwww.github.io/Achievement-Watcher-Next/presets.html)
+- **Use:** [Overlay](https://shirowwww.github.io/Achievement-Watcher-Next/overlay.html) ·
+  [Controller](https://shirowwww.github.io/Achievement-Watcher-Next/controller.html) ·
+  [Game Health](https://shirowwww.github.io/Achievement-Watcher-Next/game-health.html) ·
+  [Advanced tools](https://shirowwww.github.io/Achievement-Watcher-Next/advanced.html)
+- **Fix a problem:**
+  [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html) ·
+  [FAQ](https://shirowwww.github.io/Achievement-Watcher-Next/faq.html) ·
+  [Issue tracker](https://github.com/Shirowwww/Achievement-Watcher-Next/issues)
+- **Contribute:** [Contributing](CONTRIBUTING.md) · [Build guide](BUILD.md) ·
+  [Architecture](https://shirowwww.github.io/Achievement-Watcher-Next/architecture.html) ·
+  [Release workflow](https://shirowwww.github.io/Achievement-Watcher-Next/RELEASE_WORKFLOW.html)
 
 ## Build from source
 
 Requires Windows and Node.js `22.22.2+` or `24.15+`. The app and the background Watchdog are separate
-npm workspaces; `npm run build` writes the installer and updater files to `app\dist`. See
+npm projects; `npm run build` writes the installer and updater files to `app\dist`. See
 [BUILD.md](BUILD.md) for setup, packaging details and known constraints.
 
 ## Security and support
 
-Found a problem, have an idea, or simply want something improved?
-[Open an issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues) - reports and
-suggestions are what help AW Next get better. For a vulnerability, use the private process in the
-[security policy](SECURITY.md) rather than a public issue.
+Found a problem or have an idea? [Open an issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues).
+For a vulnerability, use the private process in the [security policy](SECURITY.md) rather than a
+public issue.
 
 Download builds only from the
 [official releases page](https://github.com/Shirowwww/Achievement-Watcher-Next/releases); `latest.yml`

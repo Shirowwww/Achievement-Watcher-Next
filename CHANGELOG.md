@@ -7,6 +7,45 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **A theme is now one portable file.** Settings, Theme has an Import and an Export button: Export
+  writes the theme you are using - a built-in palette, the Custom theme as the editor holds it, or a
+  theme somebody sent you - into a single `.awtheme` carrying the colours, the gradients, the effect
+  settings and any background image you picked. Import shows the app drawn with that theme, with its
+  name, author, version and how many images it carries, and installs nothing until you confirm. An
+  imported theme then sits in the same dropdown as the built-ins, paints the same surfaces and
+  follows into the in-game overlay; Delete removes it with its images. The file contains no
+  stylesheet, no markup and no script, so an imported theme has nothing it could run and no way to
+  reach the network, and it never carries a path from the machine that exported it. A `*.css` theme
+  in the themes folder still works and is deliberately not exportable.
+- **A community theme gallery.** <https://shirowwww.github.io/Achievement-Watcher-Next/gallery/themes/>
+  lists themes made by other people, each as one `.awtheme` to download and import, with the palette
+  and the number of bundled images on the card. Sending one is the file and nothing else: the name,
+  description, version and tags are read out of the package, and the picture on the card is rendered
+  from the theme itself rather than sent, so it always shows the app as that theme really draws it.
+  It ships with two themes written for it, Slate Mint and Paper Ink.
+- **Each game can use its own notification appearance.** The existing per-game tools panel now
+  overrides the preset, popup position, sound and scale independently, with the global value as the
+  default for each field. It also offers the same achievement, rare, progress, playtime and
+  completion previews as the main notification settings. A game's custom position can be placed
+  directly with the draggable popup and stores an anchor for that game only. Removed presets or
+  sounds fall back cleanly, renamed user presets keep their assignments, and games with no override
+  behave exactly as before.
+- **An optional Steam account connection.** Settings, Sources has a Connect button that opens
+  Valve's own sign-in page in its own window: AW Next never sees the password and never touches the
+  installed Steam client's session, and only the resulting web token is kept, encrypted, on this PC.
+  Connecting reads the achievements of a private profile, marks games shared through Steam Family,
+  and seeds playtime clocked on other machines without ever lowering what AW measured here. It also
+  enables a new Advanced switch that hides games no longer in your Steam library; a game installed
+  on this PC or shared with you is never hidden, and with no ownership list readable, nothing is
+  hidden at all, so an outage or an expired token cannot empty the library. Everything works exactly
+  as before without an account.
+- **Artwork the game already has on disk is used before the network** (issue #38). A
+  Steam-emulated install ships its own achievement images under `steam_settings`, and AW asked the
+  Steam CDN for them anyway, which left a page of spinners on a machine that cannot reach it. Both
+  known image folder layouts are now indexed and preferred, for the achievement list, the
+  notification card and the overlay alike. The square game logo gained the same right-click menu the
+  cover has, and its picker offers the game's own artwork, the icon inside the game executable and
+  SteamGridDB's icon set, plus a file of your own.
 - **A website, not just a documentation folder.** The project page at
   <https://shirowwww.github.io/Achievement-Watcher-Next/> now opens on a home page with the download,
   the features, every supported source, the presets and the guides, in the app's own palette and with
@@ -16,9 +55,6 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   gain a bar that links them back to the rest of the site, and are now reached at `README.html`.
 - **A community preset gallery.** <https://shirowwww.github.io/Achievement-Watcher-Next/gallery/>
   lists notification presets made by other people, each as one `.awpreset` to download and import.
-  Submitting one is two files in a pull request - the package and a picture of the popup, named the
-  same - with nothing to fill in: the name, description, version, tags and required app version are
-  read from the package the app exported, and the listing is rebuilt automatically after the merge.
   Every submission is validated by the app's own package reader, so anything listed is something the
   app will accept. It ships with two presets written for it, Blueprint and Ticket. Themes from Steam
   Achievement Notifier are deliberately not listed there: they are shared privately and not licensed
@@ -54,10 +90,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   rendered from the preset itself at the size the gallery publishes, and the published name is
   chosen server-side, so nothing a sender types reaches a file. Nothing typed reaches the listing
   either without a maintainer having seen it. Every package is read by the app's own reader before it is accepted, and
-  nothing appears until a maintainer has approved it. The pull request route keeps working unchanged,
-  and the page falls back to the listing committed in the repository whenever the service cannot be
-  reached, so a server going down costs the submission panel and never the gallery. Running the
-  service is documented in [docs/gallery-server.md](docs/gallery-server.md).
+  nothing appears until a maintainer has approved it. The page falls back to a listing published
+  beside it whenever the service cannot be reached, so a server going down costs the submission
+  panel and never the gallery.
 - **The site is available in six languages** beside English: French, German, Spanish, Portuguese
   (Brazil), Russian and Simplified Chinese. English stays in the markup and a translation is applied
   over it, so a page is complete before any script runs and an untranslated string falls back rather
@@ -95,6 +130,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   Long localized library values scroll on hover instead of staying permanently truncated.
   Missing portrait and landscape art is recovered on demand from Steam's CDN first, then
   SteamGridDB, while every available local source remains visible as a temporary fallback.
+- **The Play button on game cards can now be hidden.** The new Show Play button setting is enabled
+  by default and applies to every library view without leaving a layout gap. Turning it off keeps
+  the existing right-click Launch game action and launch handling available.
 - **Screenshot souvenirs now handle Windows HDR automatically.** When HDR is active on the primary
   display, a small one-shot Windows Graphics Capture helper reads an FP16 frame and tone-maps it to
   a normal sRGB PNG. SDR, unsupported systems, timeouts, and capture failures keep the existing
@@ -127,7 +165,28 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   language is included: the interface does not support RTL yet, and adding one would need that
   work first.
 
+- **RPCS3 trophies now raise live notifications.** The documentation always said the three console
+  emulators were watched live, but RPCS3 unlocks only ever appeared on the next refresh. The
+  background tracker now watches each trophy set's own state file under the saved RPCS3 folders,
+  exactly like ShadPS4 and Xenia: schema and unlock state are read locally, a baseline keeps a
+  pre-existing profile from replaying its whole back-catalogue on startup, and the RPCS3 source
+  switch still turns all of it off.
+
+- **More Steam-compatible layouts are read, from evidence rather than guesswork.** RAZOR1911's
+  plain-text save (`%APPDATA%\.1911\<appid>\achievement`) is a new source, scanned and watched
+  live. EMPRESS saves stored flat under `%APPDATA%\EMPRESS\remote\<appid>` are found next to the
+  nested layout already supported. A GBE setup that renames its save root outright
+  (`saves_folder_name` in `configs.user.ini`) is followed to the renamed folder, and the live
+  watcher matches achievement file names case-insensitively, so a save is no longer ignored purely
+  because its folder was watched for the other spelling of `achievements.ini`.
+
 ### Fixed
+
+- **The preset designer's live preview drew an empty card.** The preview frame inherits the Settings
+  page's content policy, which pins the two scripts it may run by hash. One of those hashes had gone
+  stale, so the browser refused the preset engine and the frame rendered nothing - with no error
+  anywhere, since a refused script is silent by design. The nine bundled presets had drifted from
+  the same engine and now carry it again.
 
 - **Slovak users read English achievement titles from every official source.** Slovak was bundled as
   an interface language but was missing from the language table of all five official sources
@@ -157,68 +216,6 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   Games whose schema holds tokens rather than URLs (most Goldberg entries) had their header, portrait
   and icon all silently unavailable, which left the icon box either empty or filled with the blurred
   store page background, the one absolute URL such a schema carries.
-
-### Changed
-
-- **Dates, relative times, played time and numbers now follow the selected language rather than
-  being assembled from translated fragments.** "Achievements checked 3 days ago" is one sentence per
-  language with the delay supplied by the system, so the plural rules, separators and date order are
-  right in all 28 without three keys per language to keep in step.
-- **Every Achievement Watcher address the app can open now lives in one registry.** Interface markup
-  names a destination rather than a URL, so the documentation, download, issue and credit links
-  cannot drift apart or survive a repository rename. Tests check that each in-app documentation link
-  resolves to a page the site actually publishes.
-- Library tiles and the achievement page take their labels straight from the locale files instead of
-  carrying an English copy beside each one, which could ship as English in every language if a key
-  went missing.
-- Notification cards that show a game rather than an achievement (playtime, game progress, sources
-  with no achievement art) now use a real square logo. The community icon set is asked first, and
-  whatever artwork the game already has is cut into a high-resolution square otherwise, above its
-  title treatment instead of through it. The logo is resolved while the game is starting, so both
-  the popup and the Windows notification have it ready, and the Settings previews frame it exactly
-  like a real notification. A card whose artwork was missing or never downloaded no longer shows an
-  empty square: it falls through to the next available artwork, or hides the thumbnail.
-- **The achievement page header shows that same square logo.** It used to take Steam's 32x32
-  clienticon, which is a blurry stamp beside the game title, and left the box empty for the games
-  that have none - notably brand-new releases. The Game Health notification test and the borrowed
-  preview sample now ask for the logo the same way, so a game looks identical wherever it appears
-  and the fallback logic exists once.
-- Steam game titles now fall back to the Store appdetails response when Steam product info omits its common metadata, so newer games no longer appear under their numeric AppIDs.
-- The library now paints its last complete local state before discovery, then replaces changed
-  games incrementally as the bounded fresh scan finishes. Development logs include first-paint,
-  first-fresh-tile and completed-scan timings.
-- Library scans no longer walk the same folders several times over. Each directory is read once per
-  scan, and the executable search for an install folder is remembered until that folder changes, so
-  a rescan reuses it instead of re-reading a game tree that can hold tens of thousands of folders.
-- The background new-game check now compares folder timestamps first and only runs a real discovery
-  when something moved, with a full pass on a slower cadence for sources that live in a database or
-  the registry. An idle library no longer pays a full scan every few minutes.
-- With no working internet connection, a scan now stops after proving the Steam hosts unreachable
-  instead of retrying through the browser fallback for every game.
-- Painting the library from the saved snapshot no longer draws and discards a placeholder per game,
-  and the profile summary is refreshed once per batch rather than once per tile.
-- Controller navigation in the main window now starts polling when a controller reports itself
-  instead of running a frame loop for the whole session. An open, idle library no longer keeps the
-  renderer and the GPU process awake when the app is being used with mouse and keyboard.
-- Library cover downloads and decoding now begin only near the viewport. Game-index updates are
-  persisted once per scan instead of rewriting the whole file per game, and duplicate platform
-  watcher events are coalesced without adding polling.
-- Uplay R2 installation now requires deterministic evidence: Goldberg-only configuration/capability
-  markers (or a persisted discovery for that exact folder), plus either an existing loader whose PE
-  architecture agrees with its suffix or an exact loader import in a matching game executable.
-  Every bundled/imported DLL is independently checked for its PE machine and achievement capability;
-  there is no x64 default and contradictory evidence never causes a write.
-- Uplay R2 repairs are idempotent transactions. The loader, generated schema, and both INIs are
-  snapshotted together under the game folder, post-write diagnosis validates every runtime directory,
-  failures roll back automatically, and restoring a first install removes files that AW Next added.
-  Repeating an identical repair creates no new backup and rewrites nothing.
-- The existing **Automatically fix newly detected games** and **Fix all games** controls now include
-  compatible Uplay R2 games. Loader configuration, save paths, and architecture choices remain
-  automatic while the Uplay view exposes only package and repair actions.
-- The integrated x64 Uplay/UPC aliases now use the July 2026 loader build; x86 remains on the June
-  2026 build. The pinned resource hashes and recovery archive were updated together.
-
-### Fixed
 
 - **A game with no achievements, or one that is not installed, is no longer hidden.** The library
   kept a game only when it had achievements or a verified installation, so fifteen owned games were
@@ -279,6 +276,84 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - The Uplay package actions no longer overlap their help text, and Uplay repair information now has
   its own Help topic instead of being mixed into the Steam emulator list. Sources remain documented
   there without an external redirect button.
+- **Nemirtingas Epic and Galaxy saves were never watched live.** Their two watch entries carried a
+  literal `*/*/` glob in the path, which never exists on disk, so both were silently dropped at
+  startup; the Epic side additionally never mapped its ids to Steam. Both emulator roots are now
+  watched for real, and unlocks are attributed through the same GOG/Epic mappings the scan already
+  builds.
+- **A DARKSiDERS, Hoodlum or Skidrow game configured with `UserDataFolder=mydocs` broke its whole
+  folder scan.** That branch referenced a helper that was never imported, so reading such a folder
+  threw and the folder was reported as holding nothing at all - not just that one game.
+- **Live notifications decode the same save formats the library does.** The background watcher's
+  parser was missing three cases the scan already handled: the RLD! build that stores its unlock
+  time as a bare hex blob (the toast carried a bogus date), CreamAPI's truncated 7-digit
+  timestamps, and a comparison bug that read a locked entry whose time is written as the string
+  "0" as unlocked.
+- **The library scan no longer re-seeds and re-deletes the same playtime rows forever.** When two
+  games resolved to the same executable name, the loser's whole row was dropped from the shared
+  game index, so the next scan re-added and re-dropped it, rewriting the index every time. The
+  losing game now keeps its identity row (used by offline library rebuilds) and only the disputed
+  executable assignment is cleared, once.
+
+### Changed
+
+- **Dates, relative times, played time and numbers now follow the selected language rather than
+  being assembled from translated fragments.** "Achievements checked 3 days ago" is one sentence per
+  language with the delay supplied by the system, so the plural rules, separators and date order are
+  right in all 28 without three keys per language to keep in step.
+- **Every Achievement Watcher address the app can open now lives in one registry.** Interface markup
+  names a destination rather than a URL, so the documentation, download, issue and credit links
+  cannot drift apart or survive a repository rename. Tests check that each in-app documentation link
+  resolves to a page the site actually publishes.
+- Library tiles and the achievement page take their labels straight from the locale files instead of
+  carrying an English copy beside each one, which could ship as English in every language if a key
+  went missing.
+- Notification cards that show a game rather than an achievement (playtime, game progress, sources
+  with no achievement art) now use a real square logo. The community icon set is asked first, and
+  whatever artwork the game already has is cut into a high-resolution square otherwise, above its
+  title treatment instead of through it. The logo is resolved while the game is starting, so both
+  the popup and the Windows notification have it ready, and the Settings previews frame it exactly
+  like a real notification. A card whose artwork was missing or never downloaded no longer shows an
+  empty square: it falls through to the next available artwork, or hides the thumbnail.
+- **The achievement page header shows that same square logo.** It used to take Steam's 32x32
+  clienticon, which is a blurry stamp beside the game title, and left the box empty for the games
+  that have none - notably brand-new releases. The Game Health notification test and the borrowed
+  preview sample now ask for the logo the same way, so a game looks identical wherever it appears
+  and the fallback logic exists once.
+- Steam game titles now fall back to the Store appdetails response when Steam product info omits its common metadata, so newer games no longer appear under their numeric AppIDs.
+- The library now paints its last complete local state before discovery, then replaces changed
+  games incrementally as the bounded fresh scan finishes. Development logs include first-paint,
+  first-fresh-tile and completed-scan timings.
+- Library scans no longer walk the same folders several times over. Each directory is read once per
+  scan, and the executable search for an install folder is remembered until that folder changes, so
+  a rescan reuses it instead of re-reading a game tree that can hold tens of thousands of folders.
+- The background new-game check now compares folder timestamps first and only runs a real discovery
+  when something moved, with a full pass on a slower cadence for sources that live in a database or
+  the registry. An idle library no longer pays a full scan every few minutes.
+- With no working internet connection, a scan now stops after proving the Steam hosts unreachable
+  instead of retrying through the browser fallback for every game.
+- Painting the library from the saved snapshot no longer draws and discards a placeholder per game,
+  and the profile summary is refreshed once per batch rather than once per tile.
+- Controller navigation in the main window now starts polling when a controller reports itself
+  instead of running a frame loop for the whole session. An open, idle library no longer keeps the
+  renderer and the GPU process awake when the app is being used with mouse and keyboard.
+- Library cover downloads and decoding now begin only near the viewport. Game-index updates are
+  persisted once per scan instead of rewriting the whole file per game, and duplicate platform
+  watcher events are coalesced without adding polling.
+- Uplay R2 installation now requires deterministic evidence: Goldberg-only configuration/capability
+  markers (or a persisted discovery for that exact folder), plus either an existing loader whose PE
+  architecture agrees with its suffix or an exact loader import in a matching game executable.
+  Every bundled/imported DLL is independently checked for its PE machine and achievement capability;
+  there is no x64 default and contradictory evidence never causes a write.
+- Uplay R2 repairs are idempotent transactions. The loader, generated schema, and both INIs are
+  snapshotted together under the game folder, post-write diagnosis validates every runtime directory,
+  failures roll back automatically, and restoring a first install removes files that AW Next added.
+  Repeating an identical repair creates no new backup and rewrites nothing.
+- The existing **Automatically fix newly detected games** and **Fix all games** controls now include
+  compatible Uplay R2 games. Loader configuration, save paths, and architecture choices remain
+  automatic while the Uplay view exposes only package and repair actions.
+- The integrated x64 Uplay/UPC aliases now use the July 2026 loader build; x86 remains on the June
+  2026 build. The pinned resource hashes and recovery archive were updated together.
 
 ## 3.9.2 - 2026-08-20
 
