@@ -1,27 +1,21 @@
 'use strict';
 
 /*
-  Overlay notification preset resolution.
-  Priority: platform preset (Xenia/RPCS3/ShadPS4) > main preset.
-
-  There is deliberately no per-type preset here. A rare unlock and a 100% completion are STATES that
-  every preset paints itself - the engine adds `state-rare`/`tier-*`/`state-platinum` and the
-  stylesheet answers - so picking a second preset for them was a second way to express the same
-  thing, and the one that could disagree with itself (a rare popup in one design, an ordinary one in
-  another, for the same game).
+  Overlay notification preset resolution. Priority: per-game override > platform preset
+  (Xenia/RPCS3/ShadPS4) > main preset. Deliberately no per-type preset: a rare unlock or 100%
+  completion is a STATE every preset paints itself (`state-rare`/`tier-*`/`state-platinum`), so a
+  second preset for them would be a second way to express the same thing - one that could disagree
+  with itself.
 */
 
 // The preset a fresh install uses, and the one every fallback lands on.
 const DEFAULT_PRESET = 'AW Next';
 
 /*
-  Bundled presets that no longer ship, mapped to the redesigned preset that carries the same idea.
-
+  Bundled presets that no longer ship, mapped to the redesigned preset carrying the same idea.
   This is a FALLBACK, never a rewrite: resolvePresetFolder() looks the saved name up across every
-  preset root first, so a preset the user made or imported under one of these names keeps working
-  and keeps winning. Only a name that resolves to nothing - which is what a removed bundled preset
-  becomes - is looked up here, so an existing config keeps a notification that looks like the one it
-  asked for instead of silently falling back to the default.
+  preset root first, so a user preset under one of these names keeps winning. Only a name that
+  resolves to nothing (a removed bundled preset) lands here.
 */
 const LEGACY_PRESET_ALIASES = {
   // The former default, and the name it carried before that.
@@ -49,9 +43,8 @@ const LEGACY_PRESET_ALIASES = {
   'Neon Future': 'Arcade',
   LAZ0RBOX: 'Arcade',
   /*
-    The Xbox Series family. Its rare and 100% variants existed only to be picked in the per-type
-    preset settings, which no longer exist - a preset paints those states itself now - so they all
-    fold back into the one preset they were variations of.
+    The Xbox Series family: its rare/100% variants existed only for the per-type preset settings,
+    which no longer exist (a preset paints those states itself now), so they fold back into one.
   */
   'Xbox Series - Purple': 'Xbox Series',
   'Xbox Series Rare': 'Xbox Series',

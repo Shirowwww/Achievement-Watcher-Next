@@ -240,7 +240,6 @@ function readSchema(titleId) {
   }
 }
 
-// One poll cycle: fetch the current unlock state, diff against the previous snapshot, persist.
 async function pollOnce({ auth, titleId, previousSnapshot = {} }) {
   const rows = await fetchAchievements(auth, titleId);
   const snapshot = buildSnapshot(rows);

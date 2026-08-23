@@ -1,14 +1,9 @@
 /*
-  Blueprint - a drafting sheet instead of a card.
-
-  Written by hand rather than generated, which is why it lives in tools/gallery/examples: it is the
-  worked example of what a preset file actually is, and the shape a submission takes when the
-  designer cannot produce it. The engine (index.html) owns the payload and the state classes; this
-  file owns every pixel.
-
-  The idea is a technical drawing: a dark sheet ruled in cyan, corner ticks instead of a border, and
-  one line sweeping across it as the card lands. A rare unlock switches the ink to amber and 100%
-  completion to white, so the state is legible from the ruling alone.
+  Blueprint - a drafting sheet instead of a card. Written by hand rather than generated: it is the
+  worked example of what a preset file actually is, since the designer cannot produce this shape.
+  index.html owns the payload and state classes; this file owns every pixel. The idea is a
+  technical drawing - a dark sheet ruled in cyan, corner ticks, one pen-line sweeping across it on
+  arrival - with a rare unlock switching the ink to amber and 100% completion to white.
 */
 
 :root {
@@ -87,7 +82,7 @@ body {
   opacity: 0.8;
 }
 
-/* --- icon ------------------------------------------------------------------------------------ */
+/* Icon */
 
 .ach .icon {
   position: relative;
@@ -108,7 +103,7 @@ body {
   filter: saturate(0.85);
 }
 
-/* --- text ------------------------------------------------------------------------------------ */
+/* Text */
 
 .ach .text_wrap {
   display: flex;
@@ -205,7 +200,7 @@ body {
   will-change: transform;
 }
 
-/* --- progress -------------------------------------------------------------------------------- */
+/* Progress */
 
 .progress_line {
   display: flex;
@@ -248,7 +243,7 @@ body {
   line-height: 1;
 }
 
-/* --- states ---------------------------------------------------------------------------------- */
+/* States */
 
 .ach.state-rare {
   --accent: #ffbf5a;
@@ -281,7 +276,7 @@ body {
   color: #c9d8e6;
 }
 
-/* --- motion ---------------------------------------------------------------------------------- */
+/* Motion */
 
 @keyframes aw_in {
   from {

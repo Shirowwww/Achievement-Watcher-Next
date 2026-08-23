@@ -88,15 +88,9 @@ async function arePopupsSuppressed() {
   return POPUP_SUPPRESSED_STATES.includes(await queryUserNotificationState());
 }
 
-/*
-  Whether an always-on-top window would play where nobody can see it. Only exclusive full-screen
-  Direct3D qualifies: that app owns the display's swap chain, so the desktop compositor never puts
-  our popup on top of it. A borderless/windowed game reports one of the other busy states and the
-  overlay does appear over it, which is why this deliberately does not reuse FULLSCREEN_STATES.
-
-  Returns null when the state could not be read - the caller must treat that as "unknown", not as
-  "fine": tri-state is what keeps a failed query from silently selecting an invisible transport.
-*/
+// Only exclusive full-screen D3D hides an always-on-top window (it owns the swap chain); a
+// borderless/windowed game still shows the overlay, so this deliberately skips FULLSCREEN_STATES.
+// Returns null (not false) when the state can't be read, so callers don't treat "unknown" as "fine".
 async function isOverlayLikelyHidden() {
   const state = await queryUserNotificationState();
   if (!state) return null;

@@ -65,13 +65,8 @@ async function prefetchDesktopToastArtwork(message, aumid) {
   }
 }
 
-/*
-  Build the same payload used by real unlocks.
-
-  `game` optionally replaces the built-in Hollow Knight sample with a real library entry, so a test
-  fired from a game's own panel shows that game's name and artwork instead of an unrelated title.
-  Every field is optional and falls back to the sample.
-*/
+// Builds the same payload used by real unlocks. `game` optionally overrides the built-in Hollow
+// Knight sample so a test fired from a game's panel shows that game's own name and artwork.
 function testMessageAndOptions(kind, options, game = null) {
   const strings = notifyStrings.forLang(options.achievement.lang);
   const target = {
@@ -214,9 +209,8 @@ async function runTest(kind, { rumble = true, game = null } = {}) {
         });
       }
     } catch (err) {
-      // The balloon fallback made a failing toast look like a working one: the test resolved, the
-      // Settings dialog reported success, the pad still rumbled, and the only visible difference
-      // was that no toast appeared - which is precisely how issue #18 was reported. Say what broke.
+      // The balloon fallback can make a failing toast look like it worked (settings report success,
+      // the pad still rumbles) with no toast visible, so log what actually broke.
       require('./util/log.js').warn(`[Toast] failed, falling back to a tray balloon: ${err && (err.message || err)}`);
       if (options.notification_transport.balloon) {
         await balloon({

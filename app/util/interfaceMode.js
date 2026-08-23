@@ -1,16 +1,13 @@
 'use strict';
 
 /*
-  Simple / Advanced - how much of AW Next the interface shows.
+  Simple / Advanced - how much of AW Next the interface shows. A DISPLAY setting only: every
+  parser, the watchdog, the scan and the unlock pipeline behave identically in both modes, and
+  every capability stays one switch away.
 
-  This is a DISPLAY setting and nothing else. Every parser, the watchdog, the scan and the unlock
-  pipeline behave identically in both modes; the only thing that changes is which controls and which
-  wording the user is shown. Nothing is disabled by choosing Simple, and every capability stays one
-  switch away.
-
-  Kept pure (no DOM, no fs, no Electron, no i18n) so the whole policy - which tabs, which rows, which
-  Game Health checks - is one testable list instead of conditions scattered across the renderer.
-  app/ui/settings.js does the class toggling with these selectors; app/app.js reads the check policy.
+  Kept pure (no DOM/fs/Electron/i18n) so the whole policy is one testable list instead of
+  conditions scattered across the renderer. app/ui/settings.js does the class toggling with these
+  selectors; app/app.js reads the check policy.
 */
 
 const SIMPLE = 'simple';
@@ -26,12 +23,10 @@ const HIDDEN_CLASS = 'mode-hidden';
 const ADVANCED_ATTRIBUTE = 'data-advanced';
 
 /*
-  Settings tabs Simple mode does not show: the low-level setup surface (emulator runtime, Steamless,
-  API-check bypass, Uplay R2) and the diagnostics / bulk-repair tab.
-
-  Gating is per TAB only when the whole tab is technical. Controller is not: turning a gamepad on
-  and picking a layout is an everyday choice, so the tab stays and only its three implementation
-  rows (backend, overlay focus, Escape injection) carry ADVANCED_ATTRIBUTE.
+  Settings tabs Simple mode hides entirely: the low-level setup surface (emulator runtime,
+  Steamless, API-check bypass, Uplay R2) and diagnostics/bulk-repair. Gating is per-tab only when
+  the whole tab is technical - Controller stays visible (an everyday choice), with just its three
+  implementation rows carrying ADVANCED_ATTRIBUTE instead.
 */
 const ADVANCED_VIEWS = ['emulator', 'uplay', 'advanced'];
 
@@ -47,12 +42,9 @@ const SIMPLE_VIEWS = ['general', 'appearance', 'controller', 'notification', 'pr
 const SIMPLE_HIDDEN_CHECKS = ['identity'];
 
 /*
-  Niche source switches, keyed by their `[achievement_source]` setting, with the `source` values the
-  parsers stamp on the games each one produces.
-
-  These are the only rows in Sources that Simple may fold away, and it decides per row rather than
-  from this list alone - see hiddenOptionalSources(). Everything else in the tab (the official
-  launchers, the Steam emulator, the console emulators) is a name a player recognises, and shows.
+  Niche source switches, keyed by `[achievement_source]`, with the `source` values the parsers
+  stamp on their games. These are the only rows Simple may fold away, decided per row (see
+  hiddenOptionalSources()) - everything else in Sources is a name a player recognises, and shows.
 */
 const OPTIONAL_SOURCES = {
   greenLuma: ['GreenLuma Reborn', 'GreenLuma 2020', 'GreenLuma 2024', 'GreenLuma 2025'],
@@ -68,15 +60,9 @@ function sourceKey(value) {
 }
 
 /*
-  Which niche source rows Simple actually hides, given the current settings and what is in the
-  library. Two things keep a row on screen, and both exist so the mode never strands anyone:
-
-    * it is switched OFF - hiding it would take away the only control that could bring those games
-      back, and leave the library quietly missing them with nothing on screen to explain why;
-    * the library already contains games from it - if you use it, you get its switch, in any mode.
-
-  So Simple only folds away a niche source that is still at its default and is doing nothing for
-  you. Advanced hides nothing.
+  Which niche source rows Simple hides: only ones both switched OFF and absent from the library,
+  so the mode never strands anyone (an OFF-but-used source keeps its only control visible; a used
+  source keeps its switch in any mode). Advanced hides nothing.
 */
 function hiddenOptionalSources({ mode, enabled = {}, librarySources = [] } = {}) {
   if (!isSimple(mode)) return [];
@@ -92,10 +78,8 @@ function normalize(value) {
   return MODES.includes(mode) ? mode : '';
 }
 
-/*
-  The mode to render with. An unset or unreadable value resolves to Advanced on purpose: showing
-  everything is the safe failure, hiding controls from someone who never chose Simple is not.
-*/
+// The mode to render with. An unset/unreadable value resolves to Advanced on purpose: showing
+// everything is the safe failure, hiding controls from someone who never chose Simple is not.
 function resolve(config) {
   return normalize(config && config.general && config.general.interfaceMode) || ADVANCED;
 }

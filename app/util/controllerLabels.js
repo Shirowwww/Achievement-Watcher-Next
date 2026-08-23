@@ -1,13 +1,8 @@
 'use strict';
 
-/*
- * Shared controller vocabulary for the in-game overlay.
- *
- * One canonical button name (BACK, START, A, ...) maps to the label shown in the
- * Settings panel and in the overlay's controller hint, depending on the layout the
- * user picked: Xbox, PlayStation or Switch. "auto" uses the browser's Gamepad API
- * when it can identify the connected pad, otherwise it falls back to Xbox labels.
- */
+// Shared controller vocabulary for the in-game overlay: one canonical button name (BACK, START,
+// A, ...) maps to the label for the layout the user picked (Xbox, PlayStation, Switch). "auto"
+// uses the Gamepad API to detect the pad, falling back to Xbox labels when it can't.
 
 const CONTROLLER_LAYOUTS = ['auto', 'xbox', 'playstation', 'switch'];
 

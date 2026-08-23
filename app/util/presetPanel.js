@@ -2,15 +2,10 @@
 
 /*
   The two mechanics behind the preset designer's control panel: filtering it, and stepping back
-  through it.
-
-  They live here rather than in ui/settings.js for the same reason util/settingsSearch.js does - the
-  panel is a real DOM the designer is bound to by id and by position, so the rule that matters
-  ("hide, never move") is worth stating in one place and testing against the real markup rather than
-  asserting on source text.
-
-  Nothing here knows about presets. The filter is given a root and a query; the history is given
-  opaque strings and hands them back in order.
+  through it. They live here (not ui/settings.js) for the same reason util/settingsSearch.js
+  does - the panel is a real DOM bound by id and position, so "hide, never move" is worth testing
+  against the real markup. Nothing here knows about presets: the filter takes a root and a query,
+  the history takes opaque strings and hands them back in order.
 */
 
 // A field is matched on its label, on the words in its dropdown, and on the property key itself, so
@@ -21,14 +16,10 @@ function fieldHaystack($, field) {
 }
 
 /*
-  Show only the fields matching `query`.
-
-  Hidden with a class, never detached or reordered: the locale loader binds these controls by id and
-  the schema parity test counts them where they are. A field already hidden because its mode does not
-  apply stays hidden - revealing it would offer a control whose value the design is not using.
-
-  A group holding a match is opened, and if the match sits behind Advanced that is opened too. A
-  group holding none is hidden whole.
+  Shows only the fields matching `query`, hidden with a class (never detached/reordered - the
+  locale loader binds controls by id, and the schema parity test counts them where they are). A
+  field already hidden because its mode doesn't apply stays hidden. A group holding a match opens
+  (Advanced too, if the match is behind it); a group holding none is hidden whole.
 */
 function filterFields($, root, query) {
   const wanted = String(query || '').trim().toLowerCase();
@@ -70,11 +61,9 @@ function filterFields($, root, query) {
 }
 
 /*
-  Undo and redo over whole states rather than over edits.
-
-  A design is a small object, comparing two is exact and restoring one is the write path the designer
-  already has, so there is nothing to invert and no edit that can be replayed wrongly. Entries are
-  opaque to this: the caller decides what a state is and how to put one back.
+  Undo/redo over whole states rather than edits: a design is a small object, so comparing two is
+  exact and restoring one is the write path the designer already has - nothing to invert, no edit
+  that can replay wrongly. Entries are opaque here; the caller decides what a state is.
 */
 function createHistory(limit = 80) {
   const past = [];
@@ -88,10 +77,8 @@ function createHistory(limit = 80) {
       future.length = 0;
       current = state == null ? null : state;
     },
-    /*
-      A new state. Recording the same one twice is not a step - a slider dragged back to where it
-      started leaves nothing to undo - and a new step clears the redo branch.
-    */
+    // Recording the same state twice is not a step (a slider dragged back to where it started
+    // leaves nothing to undo), and a new step clears the redo branch.
     record(state) {
       if (state == null || state === current) return false;
       if (current !== null) {

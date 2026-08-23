@@ -1,25 +1,9 @@
 'use strict';
 
-/*
-  A scan with an empty cache asks the network for everything at once, and the log of one such
-  evening shows what that cost:
-
-    - 8.1s per game, strictly serialized, for a SteamDB cover page that listed no library asset -
-      and the same fifteen appids paying it again on each of nine scans, because only a HIT was ever
-      written to disk. That queue is what the 37 "timed out after 30s" per-game load failures were
-      waiting behind.
-    - 1066 "Unexpected token '<', "<HTML><HEA"" and 162 "Cannot read properties of null" from one
-      store.steampowered.com/api/appdetails call: the endpoint is rate-limited per IP, a large
-      library exhausts the budget in seconds, and the refusal (an HTML block page, or a bare `null`
-      body) was parsed as if it were the schema. The exception aborted the whole metadata lookup, so
-      the name never resolved, so the schema was never cached - and the next scan downloaded it all
-      again.
-    - 162 store lookups for 39 distinct appids: the same request in flight up to nine times over.
-    - offline, 120 SteamGridDB and 66 SteamDB failures, one timeout per game for hosts that had
-      already proven unreachable.
-
-  init.js cannot be required outside Electron, so these are assertions about its source.
-*/
+// A cold scan (empty cache) hits the network for everything at once - a real 215-game run showed
+// serialized SteamDB lookups re-paying an uncached miss every scan, a rate-limited store endpoint
+// whose refusals were parsed as schema and aborted resolution, and offline hosts retried with no
+// breaker. init.js cannot be required outside Electron, so these are assertions about its source.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');

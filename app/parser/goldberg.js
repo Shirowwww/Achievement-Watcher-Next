@@ -228,11 +228,10 @@ function backupSetup({ gameDir, destinationRoot, steamSettings } = {}) {
   return { backupDir, files, manifest };
 }
 
-// Restore a portable backup created by backupSetup back into a game folder. Reads the backup.json
-// manifest and copies each recorded relative path back over the live files (DLLs + steam_settings),
-// preserving the nested Unreal/Unity DLL locations the backup captured. Restores into the manifest's
-// recorded gameDir by default; pass `gameDir` to redirect to a relocated install. A tampered manifest
-// can't escape the target folder - the same containment guard as copyIntoBackup is applied per path.
+// Restore a portable backup created by backupSetup back into a game folder: reads backup.json and
+// copies each recorded relative path back over the live files (DLLs + steam_settings), preserving
+// nested Unreal/Unity DLL locations. Restores into the manifest's gameDir by default; pass `gameDir`
+// to redirect. A tampered manifest can't escape the target folder (same guard as copyIntoBackup).
 function restoreSetup({ backupDir, gameDir } = {}) {
   if (!backupDir || !fs.existsSync(backupDir) || !fs.statSync(backupDir).isDirectory()) {
     throw new Error(`restore: backup folder not found: ${backupDir}`);
@@ -336,17 +335,10 @@ function buildAchievementsJson(schema, imagePrefix = 'images') {
 }
 
 /*
-  Is the achievements.json already on disk worth keeping over a freshly generated one?
-
-  Only when it carries progress definitions AW cannot reproduce AND rewriting it would not be an
-  improvement. That second half is what makes "Repair the achievement data" honest: a file with
-  progress operands but blank entries used to be preserved unconditionally, so the repair wrote
-  nothing, the BLANK_NAMES / BLANK_DESCRIPTIONS warnings it was offered for survived it, and the
-  button could be pressed forever without changing anything.
-
-  A blank name is always a broken entry (GBE matches on it), so it always loses. A blank description
-  only loses to a schema that actually has one - plenty of Steam achievements, hidden ones above all,
-  genuinely have none, and throwing away real progress definitions over that would be a bad trade.
+  Is the achievements.json already on disk worth keeping over a freshly generated one? Only when it
+  carries progress definitions AW cannot reproduce AND rewriting it would not be an improvement - a
+  blank name always loses (GBE matches on it), but a blank description only loses to a schema that
+  actually has one, since many real Steam achievements (hidden ones especially) genuinely have none.
 */
 function hasRichProgressSchema(steamSettings, schema) {
   try {
@@ -387,15 +379,10 @@ function defaultSavesRoots() {
 }
 
 /*
-  The save path a setup redirects itself to, verbatim as configured.
-
-  Repacks routinely make a game portable by pointing the emulator's save folder back into the game
-  directory (`[user::saves] local_save_path` for GBE, `local_save.txt` for classic Goldberg). When
-  they do, nothing is ever written to %APPDATA%\GSE Saves - which is the only place the scan used to
-  look - so a game with a full shelf of unlocked achievements was read as a permanent 0%.
-
-  Returns '' when nothing is configured, and also for the placeholder value the GBE Fork template
-  ships with: "path/relative/to/dll" is documentation, not a folder.
+  The save path a setup redirects itself to, verbatim as configured. Repacks routinely make a game
+  portable by pointing the emulator's save folder back into the game directory instead of
+  %APPDATA%\GSE Saves (`[user::saves] local_save_path` for GBE, `local_save.txt` for classic
+  Goldberg). Returns '' when unconfigured, or for the GBE template's placeholder value.
 */
 function readConfiguredSavePath(steamSettings) {
   if (!steamSettings) return '';
@@ -428,13 +415,10 @@ function readConfiguredSavePath(steamSettings) {
 }
 
 /*
-  The folder a redirected setup actually keeps this game's unlock state in, or null.
-
-  A relative path is resolved against the folder holding the steam_api dll - steam_settings sits
-  beside it, so its parent is that folder. Goldberg appends the appid under its save root and GBE
-  Fork inherits that, but not every build does, so both shapes are probed and the one that has an
-  achievements.json wins; with neither written yet, the first existing folder is still returned so
-  the watcher has somewhere to watch.
+  The folder a redirected setup actually keeps this game's unlock state in, or null. A relative path
+  resolves against steam_settings' parent (where the steam_api dll sits). Not every build follows
+  Goldberg's appid-subfolder convention, so both shapes are probed and the one with an
+  achievements.json wins; with neither written yet, the first existing folder is returned instead.
 */
 function resolveLocalSaveDir({ steamSettings, appid } = {}) {
   const configured = readConfiguredSavePath(steamSettings);
@@ -659,10 +643,9 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
     }
     const savePathMatch = userConfig.match(/^\s*local_save_path\s*=\s*(.+?)\s*$/im);
     if (savePathMatch && savePathMatch[1] && savePathMatch[1].trim()) {
-      // A redirected save folder is only a problem when AW cannot find it. It usually can now
-      // (resolveLocalSaveDir resolves the configured path and report.save reads from it), and
-      // reporting a working setup as a fault is exactly the unfixable yellow warning this check
-      // used to leave standing on every portable repack.
+      // A redirected save folder is only a problem when AW cannot find it. resolveLocalSaveDir
+      // resolves the configured path and report.save reads from it, so a working redirect is
+      // reported as info, not as the unfixable warning it would otherwise be.
       if (localSaveDir) {
         add('info', 'CUSTOM_SAVE_PATH', `Saves are redirected by configs.user.ini to ${localSaveDir} - AW reads them there.`, { path: localSaveDir });
       } else {
@@ -792,10 +775,9 @@ function writeDlcConfig({ steamSettings, dlcs = [], unlockAll = true } = {}) {
 
 /*
   Write/merge steam_settings/configs.main.ini with the modern GBE switches needed by newer
-  Steamworks/PSPC titles. The values mirror the community-tested generate_emu_config `-token` setup:
-  use the newer auth ticket and embed a Game Coordinator token. Existing unrelated keys/comments are
-  preserved, and we deliberately leave achievements_bypass at the user's existing value because
-  forcing SetAchievement() true is a compatibility workaround, not the default.
+  Steamworks/PSPC titles, mirroring the community-tested generate_emu_config `-token` setup (newer
+  auth ticket + a Game Coordinator token). Existing keys/comments are preserved, and achievements_bypass
+  is deliberately left at the user's value - forcing SetAchievement() true is a workaround, not a default.
 */
 function writeMainConfig({ steamSettings } = {}) {
   if (!steamSettings) throw new Error('writeMainConfig: steamSettings path is required');
@@ -860,14 +842,10 @@ function neutralizePlaceholderSavePath(doc) {
 /*
   Write/merge configs.user.ini with the app's account_name and achievement language, preserving
   account_steamid and every other key (changing the steamid would orphan the save folder).
-*/
-/*
-  `fillDefaults` is what an explicit repair passes. Game Health lists NO_USER_CONFIG and
-  BAD_USER_CONFIG as repairable, but the repair only wrote configs.user.ini when the app had a name
-  or a language to stamp into it - so for anyone who never filled in a Steam username (the default),
-  "Repair the achievement data" left both warnings exactly where they were, run after run. With the
-  flag set, an absent account name or language falls back to the emulator's own defaults, which is
-  enough to satisfy the check and is what the emulator would have used anyway.
+
+  `fillDefaults` is what an explicit repair passes: an absent account name or language then falls back
+  to the emulator's own defaults, which is what the emulator would have used anyway and is enough to
+  clear the NO_USER_CONFIG/BAD_USER_CONFIG Game Health checks even when the app has nothing to stamp.
 */
 const DEFAULT_EMU_ACCOUNT_NAME = 'Player';
 const DEFAULT_EMU_LANGUAGE = 'english';
@@ -918,13 +896,10 @@ function writeUserConfig({ steamSettings, accountName, language, fillDefaults = 
   appid, schema, icon/image options, DLC and account/language values. Returns the write report.
 */
 /*
-  Written into images/ when a repair found that NONE of the schema's icon urls resolve.
-
-  diagnose() can only stat files, so without this it reports the same "N referenced icon files are
-  missing" whether the icons were never fetched or Steam simply has no artwork for this appid yet.
-  Only the first case is repairable; the second put a permanent warning and a repair button that
-  cannot work in front of the user. Any later download clears it, so the day Steam publishes the
-  art the game goes back to an ordinary repairable state on its own.
+  Written into images/ when a repair found that NONE of the schema's icon urls resolve. diagnose() can
+  only stat files, so without this it can't tell "never fetched" from "Steam has no artwork yet" - only
+  the first is repairable. Any later download clears the marker, so the game recovers on its own once
+  Steam publishes the art.
 */
 const ARTWORK_UNAVAILABLE_MARKER = '.aw-artwork-unavailable';
 
@@ -1034,18 +1009,11 @@ async function repair({
           continue;
         }
         /*
-          Never re-fetch an icon that is already sitting where achievements.json will point.
-
-          This is what made "Repair the achievement data" report every single icon as failed on
-          emulator installs. A game with no Steam data gets its schema from the emulator's own
-          achievements.json, and steam.getLocalAchievementSchema rebuilds each icon url from that
-          file's BASENAME. Whenever the emulator named its images after the achievement rather than
-          after the Steam content hash - repacks and hand-made schemas routinely do - the rebuilt url
-          is a 404, so the repair spent one dead request per icon and then declared failure over
-          images that were already complete on disk.
-
-          buildAchievementsJson derives the reference the same way, so matching on the basename here
-          is matching on the exact file the written schema is going to name.
+          Never re-fetch an icon that is already sitting where achievements.json will point. An
+          emulator-only schema (no Steam data) names its images after the achievement rather than the
+          Steam content hash, so re-deriving the url from that basename 404s even when the file is
+          already complete on disk. buildAchievementsJson derives the reference the same way, so
+          basename matching here lines up with what the written schema will name.
         */
         const basename = path.parse(String(url).split('?')[0]).base;
         if (basename && fs.existsSync(path.join(imgDir, basename))) {
@@ -1060,14 +1028,11 @@ async function repair({
     }
 
     /*
-      Fetch what is left with a bounded pool, and give up once it is clear the whole set is doomed.
-
-      Both halves are the same bug report: a brand-new appid whose achievement art is not on the
-      community CDN yet answers 404 for every icon it lists. Sequentially, at roughly a second per
-      dead request (a fresh TLS handshake each time), one 75-achievement game blocked a scan for
-      nearly three minutes. Steam serves a game's icons out of a single per-appid folder, so a long
-      opening run of failures with nothing downloaded means the remaining urls are dead too - there
-      is nothing to learn from spending another 140 requests on them.
+      Fetch what is left with a bounded pool, and give up once it is clear the whole set is doomed. A
+      brand-new appid with no achievement art on the community CDN 404s for every icon; sequentially,
+      at roughly a second per dead request, that stalled a scan for minutes. Steam serves a game's
+      icons from one per-appid folder, so an opening run of failures with nothing downloaded means the
+      rest are dead too.
     */
     const ICON_CONCURRENCY = 8;
     const ICON_FAILURE_ABORT = 12; // > ICON_CONCURRENCY, so one bad batch alone never trips it
@@ -1105,13 +1070,9 @@ async function repair({
 
     /*
       `abandoned` says we stopped early; `unavailable` says the whole referenced set is unobtainable.
-      They are not the same and only the second one may drive the marker: a small game never reaches
-      the abandon threshold, so keying the marker off `abandoned` would leave it unwritten and the
-      recheck would then fire on every single scan instead of every three days.
-
-      `skipped === 0` keeps this to the case it describes. An install with some icons already on
-      disk plainly does have artwork, so a miss there is an ordinary repairable gap, not Steam
-      having published nothing.
+      Only the second may drive the marker, or a small game that never reaches the abandon threshold
+      would fire the recheck on every scan instead of every three days. `skipped === 0` keeps this to
+      installs with no artwork at all - some icons already on disk means an ordinary repairable gap.
     */
     summary.icons.unavailable = summary.icons.downloaded === 0 && summary.icons.failed > 0 && summary.icons.skipped === 0;
 

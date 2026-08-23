@@ -1,11 +1,9 @@
 'use strict';
 
 /*
-  The external-address registry.
-
-  These are the addresses the app hands to a browser, so a wrong one is a dead end a user reaches
-  from a button, not a build failure. The repository has already been renamed once; the point of
-  these assertions is that a rename stays a single edit that the suite can prove landed everywhere.
+  The external-address registry: these are the addresses the app hands to a browser, so a wrong one
+  is a dead end a user reaches from a button, not a build failure. The repository has already been
+  renamed once; these assertions prove a rename stays a single edit that lands everywhere.
 */
 
 const assert = require('node:assert/strict');

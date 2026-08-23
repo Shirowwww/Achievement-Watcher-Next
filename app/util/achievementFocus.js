@@ -1,16 +1,8 @@
 'use strict';
 
-/*
-  Scroll a game's achievement list to one row and flash it.
-
-  A Windows toast carries the achievement in its activation URI, so clicking it should land on that
-  achievement rather than on the top of the game page. Everything here is DOM work the renderer
-  cannot do until the game view has rendered, and it is kept out of app.js so its edge cases (a name
-  that matches nothing, a collapsed list, a leftover search filter) can be exercised directly.
-
-  jQuery is passed in rather than required: this module is loaded by the renderer, where $ is a
-  page global.
-*/
+// Scrolls a game's achievement list to one row and flashes it, so a toast click (which carries
+// the achievement name) lands on that achievement instead of the top of the page. jQuery is
+// passed in as $ rather than required, since this runs in the renderer where $ is a page global.
 
 // The unlocked/locked lists slide open over 400ms. Measuring a row mid-slide yields a stale offset.
 const EXPAND_SETTLE_MS = 450;

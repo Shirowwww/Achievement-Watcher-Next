@@ -1,18 +1,10 @@
 'use strict';
 
 /*
-  Steam's local app catalogue (`appcache/appinfo.vdf`) is what lets the scan answer two questions
-  offline that previously needed the network - and got them wrong when the network was busy:
-
-  - "is this appid a game?"  The remote bogus list this used to rely on (api.xan105.com) no longer
-    resolves, leaving five hardcoded appids as the entire filter. Without a real answer, the
-    discovery sources that enumerate what Steam knows locally would fill the library with DLC,
-    demos, soundtracks, dedicated servers and redistributables.
-  - "what is this game called?"  ISteamApps/GetAppList is retired, so a name depended on a store
-    request - the one that is rate-limited exactly when a cleared cache asks for every game at once.
-    That is what put bare numeric appids in the library as titles.
-
-  These tests build the binary format by hand so they describe the parser, not the machine.
+  Steam's local appcache/appinfo.vdf answers two things offline that used to need the network and
+  got them wrong when it was busy: whether an appid is a game (the remote bogus list is dead, leaving
+  five hardcoded ids as the only filter) and what it is called (GetAppList is retired, so a name
+  depended on a rate-limited store request). These tests build the binary format by hand.
 */
 
 const { test } = require('node:test');
@@ -20,7 +12,7 @@ const assert = require('node:assert/strict');
 
 const appInfo = require('../../app/parser/steamAppInfo.js');
 
-// ---- minimal appinfo.vdf writer (v29: u32 key indexes into a trailing string table) -------------
+// Minimal appinfo.vdf writer (v29: u32 key indexes into a trailing string table).
 
 function buildAppInfo(apps, { magic = 0x07564429 } = {}) {
   const strings = [];

@@ -8,16 +8,10 @@ const path = require('node:path');
 const steam = require(path.join(__dirname, '..', '..', 'app', 'parser', 'steam.js'));
 
 /*
-  Library covers.
-
-  Three users reported tiles that stayed blank for games SteamGridDB clearly has artwork for. The
-  cause was not the lookup but WHERE it lived: the SteamDB -> SteamGridDB chain ran only inside
-  getSteamDataFromSRV, which is the cache-MISS path. Once a schema was cached - with `portrait:
-  null`, because product info happened to have no capsule that one time - every later scan went
-  through GetMissingData, which re-asked product info and stopped there. The tile could never
-  recover, on any number of rescans.
-
-  These tests pin the chain itself and the fact that the repair path is wired to it.
+  Library covers: tiles stayed blank for games SteamGridDB clearly has art for, because the SteamDB
+  -> SteamGridDB chain ran only inside the cache-MISS path (getSteamDataFromSRV). Once a schema was
+  cached with portrait: null, every later scan went through GetMissingData, which re-asked product
+  info and stopped there - the tile could never recover. These tests pin the chain and its repair wiring.
 */
 
 // Record the channels a resolution actually used, so ordering is asserted rather than assumed.
@@ -115,10 +109,9 @@ test('a non-http value is a fetch-icon token and is returned untouched', async (
 test('the Steam appid is forwarded to SteamGridDB, which resolves by identity', async () => {
   /*
     SteamGridDB can be asked for a game by Steam appid outright, and that is not a guess: it is why
-    "Staffer Retro : A Supernatural Mystery Quest" can reach artwork SteamGridDB files under the
-    shorter name "Staffer Retro". The alternative - loosening the title matcher to a prefix rule -
-    would equally have matched "LEGO Batman" to "LEGO Batman: Legacy of the Dark Knight", so the
-    appid has to reach the handler for the strict matcher to stay strict.
+    "Staffer Retro : A Supernatural Mystery Quest" reaches art filed under the shorter "Staffer Retro".
+    Loosening the title matcher to a prefix rule instead would equally match "LEGO Batman" to "LEGO
+    Batman: Legacy of the Dark Knight", so the appid must reach the handler for the matcher to stay strict.
   */
   const seen = [];
   const invoke = async (channel, ...args) => {

@@ -14,8 +14,6 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   });
 };
 
-// ---- binary KV reader ----------------------------------------------------------------------------
-
 function readCString(buf, off) {
   let i = off;
   while (i < buf.length && buf[i] !== 0x00) i++;
@@ -107,8 +105,6 @@ function parseKVBinary(buf) {
   return { rootName, data: rootObj };
 }
 
-// ---- user stats bin ------------------------------------------------------------------------------
-
 // {statId: {data_u32, data_value, data_type, times: {bit: unixSeconds}}}
 function extractUserStats(rootObj) {
   const stats = {};
@@ -142,8 +138,6 @@ function extractUserStats(rootObj) {
   walk(rootObj, ['root']);
   return stats;
 }
-
-// ---- schema bin ----------------------------------------------------------------------------------
 
 function toFiniteNumber(value) {
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
@@ -337,8 +331,6 @@ function extractGameName(rootObj) {
   return hit;
 }
 
-// ---- snapshot ------------------------------------------------------------------------------------
-
 // {api: {earned, earned_time(s), progress?, max_progress?}} from schema entries + user stats
 function buildSnapshotFromAppcache(schemaEntries, userStats) {
   const snap = {};
@@ -379,8 +371,6 @@ function buildSnapshotFromAppcache(schemaEntries, userStats) {
   return snap;
 }
 
-// ---- file discovery ------------------------------------------------------------------------------
-
 function parseUserBinName(filePath) {
   const match = path.basename(String(filePath || '')).match(/^UserGameStats_(\d+)_(\d+)\.bin$/i);
   if (!match) return null;
@@ -409,8 +399,6 @@ function listUserBins(statsDir, appid) {
     return [];
   }
 }
-
-// ---- composed helper for parser/steam.js ----------------------------------------------------------
 
 // Read a legit game's unlock state entirely from the local appcache. Returns the same array shape
 // as the network user-stats fetchers ([{apiname, achieved, unlocktime, progress?, max_progress?}]),

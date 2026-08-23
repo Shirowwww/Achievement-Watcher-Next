@@ -1,16 +1,11 @@
 'use strict';
 
 /*
-  Scan-scoped directory-listing memo.
-
-  One discovery pass walks the same folders several times over: goldberg's own walk, its nested
-  appid search, exeDetect's candidate collection and shallow exe probe, and detectEmulator's dll
-  search each call readdirSync on their own. On a library of 16 emulator installs that was 7618
-  readdirSync calls for 1544 distinct directories - five reads of every folder, all of them
-  identical, and all on the renderer's thread.
-
-  The memo is off unless a scope is open, so nothing outside discovery can serve a stale listing:
-  emulator repairs create files and must keep seeing the real folder.
+  Scan-scoped directory-listing memo. One discovery pass reads the same folders repeatedly
+  (goldberg's walk, appid search, exeDetect, detectEmulator's dll search each call readdirSync
+  separately) - on a 16-emulator library that was 7618 readdirSync calls for 1544 distinct
+  directories, all on the renderer's thread. Off unless a scope is open, so nothing outside
+  discovery ever serves a stale listing (emulator repairs must keep seeing the real folder).
 */
 
 const fs = require('fs');
@@ -50,12 +45,10 @@ function lastVisitedDirs() {
 }
 
 /*
-  Dirent[] for a readable directory, null otherwise - the callers distinguish "empty" from "gone".
-
-  `track: false` keeps a directory out of lastVisitedDirs() without keeping it out of the memo. The
-  executable search walks whole game trees, which is most of the directories a scan reads and none
-  of the ones that can tell it a new game appeared: a new install always shows up as an entry in a
-  library or save root, which the discovery walk visits itself.
+  Dirent[] for a readable directory, null otherwise (callers distinguish "empty" from "gone").
+  `track: false` excludes a dir from lastVisitedDirs() without skipping the memo: the executable
+  search walks whole game trees, which can't tell a new game appeared (that shows up in the
+  library/save root, which the discovery walk visits itself).
 */
 function readdir(dir, { track = true } = {}) {
   const key = String(dir).toLowerCase();

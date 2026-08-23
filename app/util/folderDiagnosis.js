@@ -1,16 +1,10 @@
 'use strict';
 
 /*
-  Turns a userDir.diagnose() verdict into the sentence shown when a folder the user picked is
-  refused.
-
-  The report behind issue #32 asked for exactly this: "an explicit reason surfaced in the app when a
-  game folder is examined and rejected, so it is possible to tell 'nothing found here' from 'not
-  looked at'". A single "invalid folder" message answers neither question - it reads as a dead end
-  whether AW searched the folder thoroughly or never understood the layout at all.
-
-  Kept out of the UI files so both the Settings panel and the first-run guide phrase it identically,
-  and so it can be tested without Electron. `translate` is locale/t.js's t(key, english, french).
+  Turns a userDir.diagnose() verdict into the sentence shown when a rejected folder is explained,
+  so "nothing found here" reads differently from "not looked at" instead of one generic "invalid
+  folder" message. Kept out of the UI files so Settings and the first-run guide phrase it
+  identically and it can be tested without Electron. `translate` is locale/t.js's t(key, en, fr).
 */
 
 function joinList(values, limit = 5) {

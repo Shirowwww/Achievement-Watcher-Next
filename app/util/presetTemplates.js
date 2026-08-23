@@ -1,13 +1,8 @@
 'use strict';
 
 /*
-  Starting points for the preset designer.
-
-  A template is an ordinary set of designer options - nothing here is a special case for the
-  generator, and a template applied to the controls is indistinguishable from having moved every
-  slider by hand. That is the whole point: they are a faster way to reach a design, never a second
-  kind of preset.
-
+  Starting points for the preset designer. A template is an ordinary set of designer options -
+  applying one is indistinguishable from moving every slider by hand, never a second kind of preset.
   Names are proper names, like the bundled presets, so they read the same in every language.
 */
 
@@ -419,7 +414,7 @@ function templateOptions(name) {
   return template ? normalizeOptions(template.options) : null;
 }
 
-// --- randomiser ---------------------------------------------------------------------------------
+// Randomiser helpers
 
 const pick = (random, list) => list[Math.min(list.length - 1, Math.floor(random() * list.length))];
 const between = (random, min, max, step = 1) => {
@@ -449,18 +444,10 @@ function hsl(hue, saturation, lightness) {
 }
 
 /*
-  A random design that is still a design.
-
-  Rolling every property independently produces noise, so the draw is made in two stages. First an
-  ARCHETYPE - the kind of card this is going to be - which fixes the handful of decisions that have to
-  agree with each other: whether the background is flat, a gradient or the game's artwork, whether the
-  card is dark or light, how loud the glow is allowed to be, and how the text is set. Then everything
-  else is rolled inside the range that archetype leaves open.
-
-  One hue still drives the whole palette. The background is built from a neighbouring hue at the
-  archetype's own lightness, so the accent always has something to sit against.
-
-  `random` is injectable so the result can be asserted.
+  A random design that is still a design. Rolling every property independently produces noise, so the
+  draw is made in two stages: first an ARCHETYPE fixes the decisions that have to agree with each other
+  (flat/gradient/artwork background, dark or light, glow level, text), then everything else is rolled
+  inside the range that archetype leaves open. `random` is injectable so the result can be asserted.
 */
 
 // What each archetype fixes. Anything it does not name is rolled below within the same bounds for

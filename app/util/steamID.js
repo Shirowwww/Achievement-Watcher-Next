@@ -18,10 +18,9 @@ module.exports = {
     return SteamID.fromIndividualAccountID(userID).getSteamID64();
   },
   /*
-    An empty answer used to mean two very different things: "that account does not exist" and "the
-    request never reached Steam". The caller reads a missing privacyState as "not public", so with no
-    connection every Steam account looked private and the whole legit-Steam source dropped out of the
-    library - 157 of 215 games in one offline scan. Say which of the two it was.
+    An empty answer used to mean two things: "the account doesn't exist" and "the request never
+    reached Steam" - the caller reads a missing privacyState as "not public", so offline every
+    Steam account looked private (157 of 215 games in one real scan). Say which of the two it was.
   */
   whoIs: async function (steamID64) {
     const url = `http://steamcommunity.com/profiles/${steamID64}/?xml=1`;

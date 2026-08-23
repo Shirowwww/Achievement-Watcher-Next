@@ -578,13 +578,8 @@ function hasGogGameplayDbs(root) {
   }
 }
 
-/*
- * scanRootOnce(rootPath, opts)
- *
- * Returns { platform, mode, entries, signals }.
- * entries are monitor-style watch entries:
- *   { dir, options: { recursive, filter, file, appid, emu, ... } }
- */
+// Returns { platform, mode, entries, signals }; entries are monitor-style watch entries:
+// { dir, options: { recursive, filter, file, appid, emu, ... } }.
 async function scanRootOnce(rootPath, opts = {}) {
   if (!rootPath || !fs.existsSync(rootPath)) {
     return { platform: null, mode: 'missing', entries: [], signals: [] };

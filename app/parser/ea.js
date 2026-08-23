@@ -29,8 +29,6 @@ const EA_VERBOSE_LOG_NAME = 'EADesktopVerbose.log';
 const EA_VERBOSE_LOG_BAK_NAME = 'EADesktopVerbose.bak';
 const EA_ICON_BASE = 'https://achievements.gameservices.ea.com/achievements/icons';
 
-// ---- pure helpers ------------------------------------------------------------------------------------
-
 function decodeXmlEntities(value) {
   return String(value || '')
     .replace(/&quot;/g, '"')
@@ -143,8 +141,6 @@ function mergeGameInfo(target, patch) {
     order: Number.isFinite(Number(patch.order)) && Number(patch.order) >= 0 ? Number(patch.order) : Number(target.order || 0),
   };
 }
-
-// ---- log discovery + parsing --------------------------------------------------------------------------
 
 let cachedVerboseLog = { cacheKey: '', parsed: null };
 
@@ -447,8 +443,6 @@ function resolveSetForAppid(appid, data = {}) {
   if (!best) return null;
   return { entry: best, snapshot: buildEaOfficialSnapshot(best, parsed) };
 }
-
-// ---- Achievement Watcher parser contract -----------------------------------------------------------
 
 // Scan EA Desktop's known logs root and return one entry per owned game (contentId) that has an
 // achievement set logged. EA Desktop logs to a fixed location, so (like ShadPS4) we auto-discover it

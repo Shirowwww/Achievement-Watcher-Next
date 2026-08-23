@@ -1,12 +1,10 @@
 'use strict';
 
 /*
-  Development timing marks for the scan and paint paths.
-
-  Off by default: every call is one boolean test until `enable()` is called (app.js and init.js do
-  that when the app runs in dev, and `AW_PERF=1` turns it on for a packaged build). Timings are
-  aggregated per label and reported as a single line per scan, because one log line per phase per
-  game is itself a measurable cost on a 200-game library.
+  Development timing marks for the scan and paint paths. Off by default: every call is one
+  boolean test until `enable()` is called (dev mode, or `AW_PERF=1` on a packaged build). Timings
+  are aggregated per label and reported as one line per scan, since a log line per phase per game
+  is itself a measurable cost on a 200-game library.
 */
 
 const { performance } = require('perf_hooks');

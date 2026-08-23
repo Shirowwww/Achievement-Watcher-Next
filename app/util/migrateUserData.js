@@ -151,10 +151,9 @@ function migratePlaytimeRegistry(fromRoot = LEGACY_PLAYTIME_ROOT) {
   }
 }
 
-// The new directory can already exist without ever having been migrated: the Watchdog and the
-// loggers create `<userData>\logs` as soon as they write their first line. So "already initialized"
-// has to mean "has AW configuration or a migration marker", never "is non-empty" - otherwise a
-// single stray log file would silently block the import forever.
+// The new directory can exist without ever having been migrated: the Watchdog and loggers create
+// `<userData>\logs` as soon as they write a line. So "already initialized" must mean "has AW
+// configuration or a migration marker", never "is non-empty", or a stray log file blocks the import.
 function isAlreadyInitialized(target) {
   return fs.existsSync(path.join(target, MARKER_REL)) || fs.existsSync(path.join(target, SETTINGS_REL));
 }
@@ -248,17 +247,13 @@ function migrateAw3UserData(newUserDataDir, options = {}) {
 }
 
 /**
- * Point the GBE restore-point index at the copies that now live in this data folder.
+ * Points the GBE restore-point index at the copies that now live in this data folder.
  *
- * `backups/` is migrated like everything else, so each restore point exists here - but the index
- * records an absolute `backupDir`, and importing a file does not rewrite what is inside it. Every
- * entry therefore kept naming the folder it came from. That reads as working, because the old
- * folder is still on disk: right up until it is not. The uninstaller removes
- * `%APPDATA%\Achievement Watcher 3.0` outright, and it is the obvious thing to delete by hand once
- * AW Next has taken over - either one silently turns every "restore backup" button into a dead path.
- *
- * Only entries whose backup is actually present here are rewritten, so an entry pointing somewhere
- * this cannot vouch for is left exactly as it was rather than repointed at nothing.
+ * `backups/` is migrated, but the index stores an absolute `backupDir` that importing a file
+ * doesn't rewrite - every entry still names the old folder, which works only until the 3.0 data
+ * is removed (by the uninstaller, or by hand once AW Next has taken over), turning "restore
+ * backup" into a dead path. Only entries whose backup is actually present here are rewritten;
+ * anything this can't vouch for is left as it was rather than repointed at nothing.
  */
 function retargetBackupIndex(userDataDir, options = {}) {
   const indexFile = path.join(userDataDir, 'cfg', 'gbe-backups.db');
@@ -308,12 +303,10 @@ function configuredSouvenirDir(userDataDir) {
 }
 
 /**
- * Point screenshot souvenirs at the AW Next default folder, carrying the existing shots across.
- *
- * Only the *default* location is ever touched. A user who chose their own souvenir folder keeps it
- * exactly where it is - that path is theirs, and silently relocating someone's screenshots would be
- * the one genuinely destructive thing this file could do. Shots are hard-linked, so both folders
- * show them and no disk space is used twice.
+ * Points screenshot souvenirs at the AW Next default folder, carrying existing shots across.
+ * Only the *default* location is touched - a user's own chosen folder is never relocated, since
+ * silently moving someone's screenshots would be the one genuinely destructive thing this file
+ * could do. Shots are hard-linked, so both folders show them with no disk space used twice.
  */
 function migrateSouvenirFolder(userDataDir, options = {}) {
   const home = options.homeDir || os.homedir();

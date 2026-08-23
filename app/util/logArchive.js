@@ -1,18 +1,14 @@
 'use strict';
 
 /*
-  Bundle the diagnostic logs into one .zip while the app is running.
+  Bundles the diagnostic logs into one .zip while the app is running. Copying files under
+  <userData>\logs by hand is unreliable here: the tray daemon, Watchdog monitor and notification
+  processes keep their streams open and appending, so Explorer/a compressor can race a file being
+  written mid-line. Reading each file once into memory sidesteps that - a consistent snapshot,
+  untouched running processes, one file to attach to an issue.
 
-  Copying a log out of <userData>\logs by hand is unreliable for the exact case the logs are wanted
-  for: the tray daemon, the Watchdog monitor and every transient notification process keep their
-  streams open and keep appending, so Explorer copies a file that is being written mid-line, a
-  compressor can fail on the size changing under it, and a user who closed only the window still has
-  the daemon holding the folder. Reading each file once into memory and writing the bytes into an
-  archive sidesteps all of it: the snapshot is consistent, the running processes are untouched, and
-  what comes out is a single file that can be attached to an issue.
-
-  Deliberately dependency-injected (`fs`, `Zip`): the whole thing is testable without Electron, a
-  real userData folder or a real archive.
+  Dependency-injected (`fs`, `Zip`) so it's testable without Electron, a real userData folder or a
+  real archive.
 */
 
 const nodeFs = require('fs');
@@ -52,10 +48,8 @@ function buildManifest({ appVersion = '', versions = {}, platform = '', release 
 }
 
 /*
-  Read every log in `logsDir` and write them into `destination` as a zip.
-
-  Returns { destination, files: [{ name, bytes }], skipped: [{ name, reason }] }. A file that cannot
-  be read is recorded in `skipped` rather than aborting the export - one unreadable log must never
+  Reads every log in `logsDir` and writes them into `destination` as a zip. A file that can't be
+  read is recorded in `skipped` rather than aborting the export - one unreadable log must never
   cost the user the other eleven.
 */
 function exportLogs({ logsDir, destination, Zip, fs = nodeFs, meta = {} } = {}) {

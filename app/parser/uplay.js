@@ -60,7 +60,7 @@ module.exports.getInstalledAppids = () => {
   if (_installedUplayAppids) return _installedUplayAppids;
   const installed = new Set();
   // A registry subkey alone is not proof of an install: Ubisoft Connect leaves entries
-  // behind after uninstalls (and for preloads/demos), so a stale key used to keep games
+  // behind after uninstalls (and for preloads/demos), so a stale key can keep games
   // like Assassin's Creed Mirage in the "installed" list forever. Only keep a product
   // when its InstallDir value still points at a folder that exists on disk.
   for (const hive of ['HKLM', 'HKCU']) {
@@ -91,7 +91,7 @@ module.exports.isInstalled = (appid) => {
 };
 
 module.exports.scanLegit = async (onlyInstalled = false) => {
-  //Uplay /*Unused function; As of writing there is no way to get legit user ach unlocked data*/
+  // Unused: legit Ubisoft Connect exposes no local achievement-unlock data to read.
   try {
     const uplayPath = readRegistryString('HKLM', 'Software/WOW6432Node/Ubisoft/Launcher', 'InstallDir');
     if (!uplayPath) throw 'Uplay Path not found';
@@ -173,11 +173,10 @@ module.exports.getGameData = async (appid, lang) => {
       fs.promises.writeFile(cacheFile, JSON.stringify(schema, null, 2)).catch((err) => {});
     }
 
-    //Lang Loading
     if (schema.achievement.list[`${lang}`]) {
-      schema.achievement.list = schema.achievement.list[`${lang}`]; //load only user lang
+      schema.achievement.list = schema.achievement.list[`${lang}`];
     } else {
-      schema.achievement.list = schema.achievement.list['english']; //default to english if the game has not that lang
+      schema.achievement.list = schema.achievement.list['english'];
     }
 
     return schema;
@@ -371,8 +370,6 @@ async function shareCache(schema) {
   }
 }
 
-/* =========================================== */
-
 let indexDB = {
   cache: null,
   make: async function (uplayPath) {
@@ -459,7 +456,7 @@ let indexDB = {
             }
           }
         }
-      } //loop
+      }
       debug.log(`end of Parsing\n==============`);
       return result;
     } catch (err) {

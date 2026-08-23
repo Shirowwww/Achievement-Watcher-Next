@@ -75,12 +75,9 @@ const CONTROLLER_MODE_ALLOWED = new Set([
 ]);
 
 function normalizeControllerBindingSetting(value, allowedButtons, fallback) {
-  // An unknown/disallowed button anywhere rejects the whole binding (strict=false -> fallback), but
-  // a repeated valid button is just deduplicated, not rejected - matching app/settings.js's
-  // normalizeControllerBindingSetting() (backed by controllerLabels.normalizeControllerBinding()).
-  // The two used to disagree here: the app would save "A+A" as the single-button binding "A", but
-  // the watchdog would reject that same on-disk value and silently fall back to the hardcoded
-  // default, so the setting shown as saved was not what the watchdog actually enforced.
+  // Dedupes a repeated valid button but rejects any unknown one, matching app/settings.js's
+  // normalizeControllerBindingSetting() exactly - the two used to disagree, so the watchdog would
+  // silently reject an on-disk value the app considered valid and fall back to the hardcoded default.
   const seen = new Set();
   const out = [];
   let strict = true;
@@ -322,10 +319,9 @@ module.exports.load = async (cfg_file) => {
 
     //Transport
 
-    // Drop legacy display-transport flags from old configs. NOTE: `mode` is intentionally kept -
-    // it is the (re-introduced) notification delivery mode (toast/overlay/both) and must persist
-    // across restarts; it is validated/defaulted a few lines below. Deleting it here used to reset
-    // the user's choice back to 'toast' on every watchdog settings load.
+    // Drops legacy display-transport flags from old configs. `mode` (toast/overlay/both) is
+    // intentionally kept and validated below - deleting it here used to silently reset the user's
+    // transport choice back to 'toast' on every load.
     if (
       options.notification_transport.chromium != null ||
       options.notification_transport.toast != null ||
@@ -408,7 +404,7 @@ module.exports.load = async (cfg_file) => {
       fixFile = true;
     }
 
-    //Controller (native → overlay control, Tier 4). Opt-in; the koffi/HID stack loads only when enabled.
+    //Controller (native → overlay control). Opt-in; the koffi/HID stack loads only when enabled.
     // Bindings are stored as "BUTTON+BUTTON+BUTTON" strings (one to three buttons).
     if (typeof options.controller.enabled !== 'boolean') {
       options.controller.enabled = false;

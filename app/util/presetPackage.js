@@ -1,22 +1,15 @@
 'use strict';
 
 /*
-  Portable notification presets: read and write the `.awpreset` package.
+  Portable notification presets: read and write the `.awpreset` package, a zip holding:
+    manifest.json      format metadata + the builder options that produced the preset
+    preset/index.html  required entry point
+    preset/**          style.css, images, fonts (relative paths only)
+    sounds/**          optional audio, installed into <userData>/sounds
 
-  A package is a plain zip holding a manifest and the preset's own files:
-
-    manifest.json           format metadata + the builder options that produced the preset
-    preset/index.html       required entry point
-    preset/**               style.css, images, fonts (relative paths only)
-    sounds/**               optional audio, installed into <userData>/sounds
-
-  Everything here is deliberately declarative: nothing inside a package is ever executed, required
-  or evaluated during import. The preset's HTML only runs later, in the same sandboxed notification
-  window that renders a bundled preset (contextIsolation, no node integration).
-
-  A future preset gallery can serve exactly these files: the manifest carries the listing metadata
-  and the compatibility floor, so a package validates identically whether it came from a friend or
-  from a server. Unknown manifest fields are ignored, which leaves room to add some.
+  Nothing inside is ever executed or evaluated during import - the HTML only runs later, in the
+  same sandboxed notification window as a bundled preset. Unknown manifest fields are ignored, so
+  a future preset gallery can serve the same files with added listing metadata.
 */
 
 const fs = require('fs');
@@ -39,11 +32,9 @@ const SOUNDS_DIR = 'sounds';
 const PRESET_ENTRY = 'index.html';
 
 /*
-  The installed manifest, kept beside the preset's files (the name lives in util/customPreset.js, so
-  the two modules that read it cannot disagree). It is what marks a preset as one the app installed -
-  and may therefore delete - which the builder's own options file cannot do: a preset written by hand
-  has no options, so without this marker an imported preset was installed but could never be listed
-  or removed again. It also carries the metadata through a re-export.
+  The installed manifest (PRESET_PACKAGE_FILE, from util/customPreset.js) marks a preset as one
+  the app installed - and may therefore delete - which a hand-written preset's own options file
+  cannot do. It also carries the metadata through a re-export.
 */
 
 // What a preset is allowed to consist of. No .js: a preset's behaviour belongs in the inline script
@@ -68,8 +59,6 @@ const LIMITS = {
   textLength: 400,
   tags: 12,
 };
-
-// --- paths ------------------------------------------------------------------------------------
 
 /*
   The only place a path from a package is trusted. Returns a clean forward-slash relative path, or
@@ -96,10 +85,9 @@ function safePackagePath(raw) {
 }
 
 /*
-  True when `target` resolves strictly below `root`. Used on every write destination, so a preset
-  name can never reach outside the preset storage even if it survived sanitizing. The `..` test is
-  on whole segments: a folder legitimately named "..neon" starts with two dots without escaping
-  anything.
+  True when `target` resolves strictly below `root`, checked on every write destination so a
+  preset name can never escape preset storage even if it survived sanitizing. The `..` test is on
+  whole segments: a folder legitimately named "..neon" starts with two dots without escaping.
 */
 function isInside(root, target) {
   const rel = path.relative(path.resolve(root), path.resolve(target));
@@ -107,20 +95,15 @@ function isInside(root, target) {
   return !rel.split(/[\\/]/).includes('..');
 }
 
-// --- manifest ---------------------------------------------------------------------------------
-
 function cleanText(value, max = LIMITS.textLength) {
   if (typeof value !== 'string') return '';
   return value.replace(/[\x00-\x1f\x7f]/g, ' ').trim().slice(0, max);
 }
 
 /*
-  Where a preset came from, when it did not start life here.
-
-  Optional, and purely descriptive: nothing reads it to decide behaviour, and a preset carrying one
-  is an ordinary preset in every other way. It exists so a preset converted from another app can say
-  so once and keep saying it through an export and a re-import, instead of the origin being lost the
-  first time it is shared on.
+  Where a preset came from, when it didn't start life here. Optional and purely descriptive -
+  nothing reads it to decide behaviour - so a preset converted from another app can say so once
+  and keep saying it through an export and a re-import, instead of losing its origin when shared.
 */
 function cleanOrigin(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
@@ -152,13 +135,10 @@ function fail(error, extra = {}) {
 }
 
 /*
-  The designer options a manifest carries, re-clamped.
-
-  The one subtlety is the sound. A package written before presets could name their own sound recorded
-  it in  alone, and that was the author's intent - so it becomes the preset's sound.
-  A package that DOES carry the field is respected exactly, including an empty value: that means "use
-  whatever the Notifications tab is set to", and inheriting the exporter's sound over it would pin a
-  sound onto a preset that deliberately had no opinion.
+  The designer options a manifest carries, re-clamped. The one subtlety is the sound: a package
+  from before presets could name their own sound recorded it only in the options, so that becomes
+  the preset's sound. A package that DOES carry the top-level field is respected exactly, even
+  empty - which means "use the Notifications tab setting" and must not be overridden.
 */
 function manifestOptions(raw, manifestSound) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
@@ -219,8 +199,6 @@ function validateManifest(raw, { appVersion = '' } = {}) {
     },
   };
 }
-
-// --- export -----------------------------------------------------------------------------------
 
 // Every shippable file in a preset folder, as relative forward-slash paths. Throws on an asset the
 // format does not carry, rather than dropping it and exporting a preset that renders wrong.
@@ -320,8 +298,6 @@ function exportPreset({ presetDir, name, destination, options = null, meta = {},
   return { ok: true, name: presetName, file: destination, files: files.length, sound: soundName };
 }
 
-// --- read -------------------------------------------------------------------------------------
-
 /*
   Parse and fully validate a package without touching the preset storage. Returns the manifest plus
   the entries that would be installed, so the caller can decide about duplicates before any write.
@@ -403,8 +379,6 @@ function readPackage(file, { appVersion = '' } = {}) {
   return { ok: true, manifest: check.manifest, presetFiles, soundFiles };
 }
 
-// --- install ----------------------------------------------------------------------------------
-
 // "Name", then "Name (2)", "Name (3)"… - the same shape the sound and theme-image importers use.
 function nextFreeName(presetsDir, name, taken) {
   for (let i = 2; i < 100; i += 1) {
@@ -415,10 +389,9 @@ function nextFreeName(presetsDir, name, taken) {
 }
 
 /*
-  Copy a file into one of the app's shared folders without ever clobbering what is already there: an
-  identical file is reused under its own name, a different file of the same name lands beside it as
-  "name (2)". Used for sounds and, by the SAN importer, for a preset's background picture - the
-  caller must follow the name it comes back with, or it ends up pointing at somebody else's file.
+  Copies a file into a shared folder without ever clobbering what's there: an identical file is
+  reused under its own name, a different one of the same name lands beside it as "name (2)". The
+  caller must follow the name returned, or it ends up pointing at somebody else's file.
 */
 function installSideFile(dir, name, data) {
   fs.mkdirSync(dir, { recursive: true });
@@ -440,18 +413,13 @@ function installSideFile(dir, name, data) {
 }
 
 /*
-  Install a package into the user's preset storage.
+  Installs a package into the user's preset storage. `duplicate` decides what an existing preset
+  of the same name means: 'fail' (report it, change nothing), 'rename' (install beside it) or
+  'replace'. `takenNames` are bundled-preset names outside this folder - without them, an import
+  would silently shadow a bundled preset instead of asking about the conflict.
 
-  `duplicate` decides what an existing preset of the same name means: 'fail' (report it and change
-  nothing, so the caller can ask), 'rename' (install beside it) or 'replace'.
-
-  `takenNames` are names already in use outside this folder - the presets bundled with the app. A
-  preset installed here wins over a bundled one of the same name, so without them an import would
-  silently hide a bundled preset instead of asking.
-
-  The preset is built in a staging folder next to its destination and moved in one rename at the
-  end, so a failure anywhere leaves the storage exactly as it was - including the preset being
-  replaced, which is only deleted once its replacement is in place.
+  Built in a staging folder and moved in one rename at the end, so a failure anywhere leaves
+  storage exactly as it was - a replaced preset is only deleted once its replacement is in place.
 */
 function installPackage({ file, presetsDir, soundsDir, appVersion = '', duplicate = 'fail', reservedNames = [], takenNames = [] }) {
   const read = readPackage(file, { appVersion });
@@ -497,9 +465,9 @@ function installPackage({ file, presetsDir, soundsDir, appVersion = '', duplicat
       fs.writeFileSync(target, data);
     }
     /*
-      Sounds first: they are separate files in a shared folder, so a failure here must still leave
-      the preset uninstalled rather than half-installed. A sound whose name was already taken by a
-      different file is installed beside it, so remember what each one ended up being called.
+      Sounds first: they're separate files in a shared folder, so a failure here must still leave
+      the preset uninstalled rather than half-installed. A name collision installs beside the
+      existing file, so remember what each sound ended up being called.
     */
     const sounds = [];
     const installedAs = new Map();
@@ -510,11 +478,8 @@ function installPackage({ file, presetsDir, soundsDir, appVersion = '', duplicat
       sounds.push(installed.name);
     }
 
-    /*
-      A sound has to follow the name it was actually installed under, or importing beside an existing
-      sound of the same name leaves the preset pointing at a file that is not the one in the package
-      - silently playing someone else's sound.
-    */
+    // A sound must follow the name it was actually installed under, or importing beside an
+    // existing sound of the same name leaves the preset silently playing someone else's file.
     const installedSound = (name) => (name && installedAs.has(name) ? installedAs.get(name) : name);
 
     // The marker that makes this preset manageable, and what a re-export reads its metadata from.

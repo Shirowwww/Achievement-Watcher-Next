@@ -27,7 +27,7 @@ const CONFIGURATIONS_PATH = process.env['LOCALAPPDATA']
 let watchers = [];
 const changes = createChangeCoalescer();
 
-// ---- spool protobuf reader (subset of app/parser/ubisoftOfficial.js) ----------------------------
+// Spool protobuf reader (subset of app/parser/ubisoftOfficial.js).
 
 function readVarint(buffer, offset, end = buffer.length) {
   let value = 0;
@@ -118,7 +118,7 @@ function readSpool(filePath) {
   return records;
 }
 
-// ---- schema archive reader (subset) --------------------------------------------------------------
+// Schema archive reader (subset).
 
 function readZipEntries(zipPath) {
   const buffer = fs.readFileSync(zipPath);
@@ -282,8 +282,7 @@ function readTitles(configurationsPath = CONFIGURATIONS_PATH) {
 }
 
 // The app records the resolved game name (and Steam release) in gameIndex with the Ubisoft product
-// id; prefer that over the raw configurations block when it exists (issue #7). Files injectable
-// for tests.
+// id; prefer that over the raw configurations block when it exists. Files injectable for tests.
 function indexedUplayName(uplayId, files = [
   path.join(userDataDir(), 'steam_cache', 'schema', 'gameIndex.json'),
   path.join(userDataDir(), 'cfg', 'gameIndex.json'),

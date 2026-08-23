@@ -5,10 +5,9 @@ const path = require('path');
 const { userDataDir } = require('./userData.js');
 
 // Achievement files the SocialClub parser can actually read (kept in sync with
-// ACHIEVEMENT_FILE_GLOB in app/parser/socialclub.js - the watchdog has its own module tree and
-// cannot require the app's parsers). Rockstar's own save blobs (SGTA*/SRDR*/cfg.dat) are
-// deliberately NOT here: nothing can decode them yet, so waking the watchdog on every autosave
-// would be pure churn during play.
+// ACHIEVEMENT_FILE_GLOB in app/parser/socialclub.js - the watchdog can't require the app's parsers).
+// Rockstar's own save blobs (SGTA*/SRDR*/cfg.dat) are deliberately NOT here: nothing can decode them
+// yet, so waking the watchdog on every autosave would be pure churn during play.
 const SOCIALCLUB_ACHIEVEMENT_FILES = [
   'achievements.ini',
   'achievements.json',

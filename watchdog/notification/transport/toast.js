@@ -48,7 +48,6 @@ function buildToastNotification(message, options) {
   );
   const type = String((message && message.notificationType) || '').toLowerCase();
 
-  // Keep the localized title and achievement details separate.
   let title = message.achievementDisplayName;
   let body = message.achievementDescription;
   if (type === 'platinum') {

@@ -394,7 +394,7 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
           title: 'AW Next',
           message: text().invalidFolder,
           // Which folder, and why it cannot be used - the guide is where a first-run user is most
-          // likely to point AW at a game folder that keeps nothing readable (issue #32).
+          // likely to point AW at a game folder that keeps nothing readable.
           detail: onboardingFolderDiagnosis(diagnosis, onboardingT),
         });
       }

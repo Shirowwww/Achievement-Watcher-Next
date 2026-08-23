@@ -4,18 +4,12 @@ const path = require('path');
 const { createRequire } = require('module');
 
 /*
-  Pure mapping/parsing helpers for the keyless Steam schema chain:
+  Pure mapping/parsing helpers for the keyless Steam schema chain: official GetGameAchievements
+  (no API key needed) -> SteamHunters public JSON API -> SteamCommunity achievements page (HTML).
+  No I/O; depends only on node-html-parser (loaded lazily so this file works where only the JSON
+  mappings are needed). Network orchestration lives in app/electron/init.js and watchdog/steam.js.
 
-    official GetGameAchievements (works without an API key)
-      -> SteamHunters public JSON API
-      -> SteamCommunity achievements page (plain HTML)
-
-  The module performs no I/O and depends on nothing but node-html-parser (loaded lazily so the
-  file stays require-able in environments that only need the JSON mappings). Network orchestration
-  lives in app/electron/init.js (main process) and watchdog/steam.js.
-
-  All mappers emit the achievement shape the rest of the app consumes:
-  { name, defaultvalue, displayName, hidden, description, icon, icongray, rarityPercent? }
+  All mappers emit: { name, defaultvalue, displayName, hidden, description, icon, icongray, rarityPercent? }
 */
 
 function toRarityPercent(value) {
@@ -147,11 +141,10 @@ function mapSteamCommunityRows(rows) {
   }));
 }
 
-// Merge SteamHunters JSON (apiName + descriptions, English) with SteamCommunity rows (icons +
-// hidden status). Titles are matched case-insensitively against the ENGLISH page (SteamHunters is
-// English-only); a same-position row is only used for the icon, never for hidden/description, so a
-// misordered page cannot mislabel an achievement. Localized text is applied separately by
-// achievementTranslations.mergeTranslatedAchievements, which matches by icon hash.
+// Merges SteamHunters JSON (apiName + English descriptions) with SteamCommunity rows (icons +
+// hidden status), matched case-insensitively by title. A same-position row is used only for the
+// icon, never hidden/description, so a misordered page can't mislabel an achievement. Localized
+// text comes separately from achievementTranslations.mergeTranslatedAchievements (matched by icon hash).
 function mergeSteamHuntersWithCommunity(shList, rows) {
   const mapped = mapSteamHuntersJson(shList);
   if (!Array.isArray(rows) || rows.length === 0) return mapped;

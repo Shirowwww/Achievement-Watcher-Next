@@ -1,28 +1,16 @@
 'use strict';
 
 /*
-  Every property the notification preset designer can edit, in one declarative list.
+  Every property the notification preset designer can edit, in one declarative list - the single
+  source of truth for the generator (util/customPreset.js), the designer UI (`#pd-<key>` in
+  ui/settings.js), validation (normalizeOptions) and the package format (util/presetPackage.js).
+  Add a property here, a control in view/app.html and a locale label - never a fifth place to clamp it.
 
-  This is the single source of truth for four things that used to be written out by hand, once each,
-  and drifted the moment a property was added:
-
-    * the generator      (util/customPreset.js turns these into CSS custom properties)
-    * the designer UI    (ui/settings.js reads/writes `#pd-<key>` from this list)
-    * validation         (normalizeOptions clamps everything the same way, wherever it came from)
-    * the package format (util/presetPackage.js re-clamps a manifest through the same normalizer)
-
-  Adding a property means adding one entry here, one control in view/app.html and one label in the
-  locales - never a fifth place where a value can be clamped differently.
-
-  Compatibility rules that must not be broken:
-
-    * every property has a default that reproduces what the builder rendered before it existed, so an
-      options file (or an .awpreset manifest) written by an older build still normalizes to the same
-      design. `rareGlow` / `platinumGlow` are the deliberate exception, see the `state` group.
-    * a preset already generated on disk is never regenerated: its index.html and style.css are read
-      as written. Defaults here only apply when the user opens a preset in the designer and saves it.
-    * nothing here reaches CSS unvalidated. Colours match a colour syntax, numbers are clamped,
-      selects must be one of their listed values, and a sound is a bare filename.
+  Compatibility rules: every default must reproduce the pre-existing look, so an old options file
+  or .awpreset manifest still normalizes the same way (`rareGlow`/`platinumGlow` are the deliberate
+  exception - see the `state` group). A preset already generated on disk is never regenerated; these
+  defaults apply only when the user reopens and saves it in the designer. Nothing reaches CSS
+  unvalidated: colours match a colour syntax, numbers are clamped, selects are one of their values.
 */
 
 // Groups, in the order the designer shows them. `advanced: true` on a property folds it away behind
@@ -41,12 +29,10 @@ const FONT_STACKS = {
 };
 
 /*
-  Where a notification enters from and leaves to, as a transform offset. Named by the side of the
-  screen rather than by direction of travel, so `bottom` means "the bottom edge" for both the entry
-  and the exit and one list can serve both.
-
-  The offsets are percentages of the card itself, large enough to sit outside the host window (which
-  is the card's box plus a small margin), so a preset is never half-visible before it animates in.
+  Where a notification enters/leaves, as a transform offset - named by screen side, not direction
+  of travel, so `bottom` means "the bottom edge" for both entry and exit and one list serves both.
+  Offsets are percentages of the card, large enough to clear the host window's margin, so a preset
+  is never half-visible before it animates in.
 */
 const MOTION_OFFSETS = {
   bottom: { dx: '0%', dy: '170%', scale: 1 },
@@ -118,7 +104,7 @@ const MOTION_VALUES = Object.keys(MOTION_OFFSETS);
     scale     value/scale before it reaches CSS (percent sliders that become 0-1 factors)
 */
 const PRESET_PROPERTIES = [
-  // --- layout & size ---------------------------------------------------------------------------
+  // layout & size
   { key: 'layout', type: 'select', def: 'icon-left', values: ['icon-left', 'icon-right', 'icon-top', 'text-only'], group: 'layout' },
   { key: 'align', type: 'select', def: 'left', values: ['left', 'center', 'right'], group: 'layout' },
   /*
@@ -131,7 +117,7 @@ const PRESET_PROPERTIES = [
   { key: 'padY', type: 'number', def: 12, min: 4, max: 40, step: 1, group: 'layout', css: '--pad-y', unit: 'px' },
   { key: 'gap', type: 'number', def: 12, min: 0, max: 36, step: 1, group: 'layout', css: '--gap', unit: 'px' },
 
-  // --- text ------------------------------------------------------------------------------------
+  // text
   { key: 'fontFamily', type: 'select', def: 'sans', values: Object.keys(FONT_STACKS), group: 'text' },
   { key: 'fontSize', type: 'number', def: 16, min: 10, max: 28, step: 1, group: 'text', css: '--font-size', unit: 'px' },
   { key: 'detailScale', type: 'number', def: 100, min: 60, max: 130, step: 5, group: 'text', css: '--detail-scale', scale: 100 },
@@ -161,7 +147,7 @@ const PRESET_PROPERTIES = [
   { key: 'textStroke', type: 'number', def: 0, min: 0, max: 3, step: 0.5, group: 'text', advanced: true, css: '--text-stroke', unit: 'px' },
   { key: 'textStrokeColor', type: 'color', def: '#000000', group: 'text', advanced: true, css: '--text-stroke-color' },
 
-  // --- colours & background --------------------------------------------------------------------
+  // colours & background
   { key: 'bgMode', type: 'select', def: 'solid', values: ['solid', 'gradient', 'artwork', 'image'], group: 'color' },
   { key: 'bg', type: 'color', def: '#16181d', group: 'color', css: '--bg-base' },
   { key: 'bg2', type: 'color', def: '#2b3550', group: 'color', css: '--bg2', shownFor: { bgMode: ['gradient'] } },
@@ -200,7 +186,7 @@ const PRESET_PROPERTIES = [
   { key: 'accent', type: 'color', def: '#4aa3ff', group: 'color', css: '--accent-base' },
   { key: 'opacity', type: 'number', def: 1, min: 0.2, max: 1, step: 0.01, group: 'color', css: '--opacity', percent: true },
 
-  // --- icon ------------------------------------------------------------------------------------
+  // icon
   { key: 'iconSize', type: 'number', def: 64, min: 24, max: 110, step: 1, group: 'icon', css: '--icon-size', unit: 'px' },
   { key: 'iconShape', type: 'select', def: 'rounded', values: Object.keys(ICON_SHAPES), group: 'icon' },
   // Only the rounded shape has a radius to set; the others carry their own outline.
@@ -208,14 +194,14 @@ const PRESET_PROPERTIES = [
   { key: 'iconBorder', type: 'number', def: 0, min: 0, max: 6, step: 1, group: 'icon', advanced: true, css: '--icon-border', unit: 'px' },
   { key: 'iconGlow', type: 'number', def: 0, min: 0, max: 100, step: 5, group: 'icon', advanced: true, css: '--icon-glow', scale: 100 },
 
-  // --- border & corners ------------------------------------------------------------------------
+  // border & corners
   { key: 'radius', type: 'number', def: 12, min: 0, max: 40, step: 1, group: 'border', css: '--radius', unit: 'px' },
   { key: 'accentBar', type: 'select', def: 'left', values: ['left', 'right', 'top', 'bottom', 'outline', 'none'], group: 'border' },
   { key: 'accentBarSize', type: 'number', def: 4, min: 1, max: 14, step: 1, group: 'border', css: '--bar-size', unit: 'px' },
   { key: 'borderWidth', type: 'number', def: 0, min: 0, max: 6, step: 1, group: 'border', advanced: true, css: '--border-width', unit: 'px' },
   { key: 'borderColor', type: 'color', def: '#ffffff', group: 'border', advanced: true, css: '--border-color' },
 
-  // --- shadow & glow ---------------------------------------------------------------------------
+  // shadow & glow
   { key: 'shadow', type: 'number', def: 45, min: 0, max: 100, step: 5, group: 'effect', css: '--shadow', scale: 100 },
   { key: 'glow', type: 'number', def: 0, min: 0, max: 100, step: 5, group: 'effect', css: '--glow', scale: 100 },
   /*
@@ -224,7 +210,7 @@ const PRESET_PROPERTIES = [
   */
   { key: 'glowAnim', type: 'select', def: 'none', values: ['none', 'pulse', 'breathe'], group: 'effect' },
 
-  // --- motion & timing -------------------------------------------------------------------------
+  // motion & timing
   { key: 'animIn', type: 'select', def: 'bottom', values: MOTION_VALUES, group: 'motion' },
   { key: 'animOut', type: 'select', def: 'bottom', values: MOTION_VALUES, group: 'motion' },
   { key: 'duration', type: 'number', def: 6000, min: 2000, max: 12000, step: 250, group: 'motion' },
@@ -242,14 +228,11 @@ const PRESET_PROPERTIES = [
   { key: 'easingOut', type: 'select', def: 'same', values: ['same'].concat(Object.keys(EASINGS)), group: 'motion', advanced: true },
 
   /*
-    --- states ------------------------------------------------------------------------------------
-    What a rare unlock and a 100% completion look like. The tier colours are the ones the builder has
-    always used for the progress meter (gold under 3%, silver under 6%, bronze up to 10%); they now
-    drive the whole card, which is what makes a rare unlock read as rare.
-
-    The two glow defaults are the one place a new default is not the old look: a state that changes
-    nothing visible is the gap this group exists to close, and a preset on disk keeps its own files,
-    so nothing already installed changes because of it.
+    states - what a rare unlock and 100% completion look like. Tier colours are the ones the
+    progress meter has always used (gold under 3%, silver under 6%, bronze up to 10%); they now
+    drive the whole card. The two glow defaults are the one place a new default isn't the old
+    look - a state that changed nothing visible was the gap this group closes - but a preset
+    already on disk keeps its own files, so nothing installed already changes because of it.
   */
   { key: 'rareAccent', type: 'color', def: '#ffd24e', group: 'state', css: '--rare-accent' },
   { key: 'rareGlow', type: 'number', def: 55, min: 0, max: 100, step: 5, group: 'state', css: '--rare-glow', scale: 100 },
@@ -270,7 +253,7 @@ const PRESET_PROPERTIES = [
   { key: 'rareSilver', type: 'color', def: '#9fb2cc', group: 'state', advanced: true, css: '--rare-silver' },
   { key: 'rareBronze', type: 'color', def: '#cd7f32', group: 'state', advanced: true, css: '--rare-bronze' },
 
-  // --- sound -----------------------------------------------------------------------------------
+  // sound
   // '' means "whatever the Notifications tab is set to"; a filename makes the sound part of the
   // preset, which is what lets a shared package sound the way its author intended.
   { key: 'sound', type: 'sound', def: '', group: 'sound' },

@@ -5,9 +5,8 @@
 const { contextBridge, ipcRenderer, webFrame } = require('electron');
 
 contextBridge.exposeInMainWorld('customApi', {
-  // Header × button. The overlay is a frameless always-on-top window, so it has no system
-  // title bar to close it with. (The old minimize/maximize/close bridge was dead code: the
-  // main process never registered handlers for those channels.)
+  // Header x button. The overlay is a frameless always-on-top window, so it has no system
+  // title bar to close it with.
   closeOverlay: () => ipcRenderer.send('overlay-close'),
 });
 

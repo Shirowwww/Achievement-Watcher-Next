@@ -15,11 +15,9 @@ function discoverTests(directory) {
     .sort((left, right) => left.localeCompare(right, 'en'));
 }
 
-// The Watchdog ships its own tests under watchdog/test/. They resolve their dependencies from
-// watchdog/node_modules (regodit, koffi), so they run as a second process with that cwd rather than
-// being folded into the app suite - a single run with cwd=app resolves the wrong node_modules.
-// Both are run here because `npm test` in app/ is the one command the release checklist calls: a
-// suite this runner cannot see is a suite nobody runs.
+// Watchdog tests resolve regodit/koffi from watchdog/node_modules, so they run as a second process
+// with that cwd - cwd=app would resolve the wrong node_modules. Both suites run here because `npm
+// test` in app/ is the one command the release checklist calls.
 const SUITES = [
   { name: 'app', dir: __dirname, cwd: path.join(__dirname, '..', 'app') },
   { name: 'watchdog', dir: path.join(__dirname, '..', 'watchdog', 'test'), cwd: path.join(__dirname, '..', 'watchdog') },

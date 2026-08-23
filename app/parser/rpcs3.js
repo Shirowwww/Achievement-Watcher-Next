@@ -39,18 +39,12 @@ module.exports.scan = async (dir) => {
                   path: path.join(dir, 'dev_hdd0/home', user, 'trophy', game),
                 },
               });
-            } catch (err) {
-              //Do nothing => try with next game
-            }
+            } catch {}
           }
-        } catch (err) {
-          //Do nothing => try with next user
-        }
+        } catch {}
       }
     }
-  } catch (err) {
-    //Do nothing
-  }
+  } catch {}
 
   return data;
 };

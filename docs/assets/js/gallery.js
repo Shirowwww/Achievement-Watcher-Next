@@ -1,20 +1,27 @@
 /*
-  The preset gallery.
+  The community gallery, for notification presets and for application themes.
 
-  There are two places the listing can come from, and they carry the same shape:
+  One script, two kinds. They are the same page in every way that matters - a listing, a card, a
+  file to download, a panel to send one in - and differ only in the addresses, the extension and
+  the handful of facts a card shows, so `data-gallery-kind` on the grid picks the kind and
+  everything below reads it from there.
 
-    gallery/index.json          committed beside this page, written by tools/gallery/build.js from
-                                the submissions in gallery/community/
-    <data-gallery-api>/api/presets   a server that also takes submissions, when one is deployed
+  There are two places a listing can come from, and they carry the same shape:
+
+    gallery/index.json                 committed beside this page, written by tools/gallery/build.js
+                                       from the submissions in gallery/community/
+    gallery/themes/index.json          the same, written by tools/gallery/build-themes.js
+    <data-gallery-api>/api/presets     a server that also takes submissions, when one is deployed
+    <data-gallery-api>/api/themes
 
   The API wins when the page names one, and the committed file is the fallback whenever it cannot be
   reached - a gallery server going down must not turn this page into an error. That is also why the
   static path is never removed: it is the floor, not a stage on the way somewhere.
 
-  What this deliberately does not do is render a preset. A community package is HTML and CSS from
+  What this deliberately does not do is render a submission. A community preset is HTML and CSS from
   somebody else's machine; the app runs it in its own sandboxed notification window after an import,
-  and this page shows a picture of the popup instead. Only the presets that ship with the app are
-  previewed live, on the home page, where the files are the ones the project publishes.
+  and this page shows a picture instead. A theme cannot run anything at all - it is colours, numbers
+  and pictures - but its card still shows a rendered photograph rather than reproducing the app here.
 */
 (function () {
   'use strict';
@@ -306,9 +313,9 @@
 
       /*
         The body is the file and only the file. What was typed travels in the query string, as a
-        suggestion for whoever moderates it: the package still says what the preset is, the picture
-        is still drawn from the preset, and the name it is published under is still chosen by the
-        server - so nothing typed here reaches a file path or the listing on its own.
+        suggestion for whoever moderates it: the package still says what it is, the picture is still
+        drawn from it, and the name it is published under is still chosen by the server - so nothing
+        typed here reaches a file path or the listing on its own.
       */
       var extra = new URLSearchParams();
       var typed = {

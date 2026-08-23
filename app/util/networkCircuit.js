@@ -1,12 +1,9 @@
 'use strict';
 
 /*
-  A host that has just proven itself unreachable is not worth asking again for every game.
-
-  Without this, one offline library scan pays the full timeout per game: a user log shows a 210s
-  scan where every appid spent ~10s failing to resolve steamhunters.com through the browser
-  fallback, then 30s hitting the per-game load timeout. The breaker turns that into one failure the
-  rest of the scan reads instead of repeating.
+  A host that just proved itself unreachable isn't worth asking again for every game: a user log
+  showed a 210s offline scan where every appid spent ~10s failing DNS then 30s hitting the
+  per-game load timeout. The breaker turns that into one failure the rest of the scan reads.
 */
 
 // Both plain fetch and Chromium report an unreachable host, each in its own spelling. Matching only

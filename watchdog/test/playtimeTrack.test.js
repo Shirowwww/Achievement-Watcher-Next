@@ -7,11 +7,9 @@ const path = require('node:path');
 const Timer = require('../playtime/timer.js');
 const TimeTrack = require('../playtime/track.js');
 
-// regoditSafety.test.js pins the *shape* of these calls (sync entry point, no `regodit/promises`).
-// What was never checked is the behaviour they exist for: that a finished session actually lands in
-// the registry, that a second session adds to the first rather than replacing it, and that `last`
-// is written at all - under the pinned koffi the async DWORD write segfaulted after storing `total`,
-// so `last` silently never arrived and only a live run would have shown it.
+// regoditSafety.test.js pins the call shape; this file pins the behaviour: a session lands in the
+// registry, accumulates instead of overwriting, and `last` is actually written - under the pinned
+// koffi the async write segfaulted right after `total`, so `last` silently never arrived.
 const APPID = '4294967000'; // outside the real Steam appid range, so it can never collide with user data
 const KEY = 'Software/Achievement Watcher Next/Playtime/Steam/' + APPID;
 const windowsOnly = process.platform !== 'win32' ? 'Windows-only' : false;

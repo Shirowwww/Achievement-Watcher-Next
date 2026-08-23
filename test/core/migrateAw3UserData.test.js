@@ -9,11 +9,10 @@ const path = require('node:path');
 const { migrateAw3UserData, migrateSouvenirFolder, retargetBackupIndex, configuredSouvenirDir, AW3_MARKER_REL, SOUVENIR_MARKER_REL } = require('../../app/util/migrateUserData.js');
 
 /*
-  The "Achievement Watcher 3.0" -> "Achievement Watcher Next" data hop. Everything here is about not
-  losing or clobbering user data: the import must carry real state across, must never overwrite what
-  is already in the destination, must survive a locked file, and must be a no-op on the second run.
-  The souvenir rule gets its own coverage because moving screenshots a user deliberately pointed
-  somewhere else is the one genuinely destructive mistake available in this file.
+  The "Achievement Watcher 3.0" -> "Achievement Watcher Next" data hop is about not losing or
+  clobbering user data: the import must carry real state across, never overwrite what is already in
+  the destination, survive a locked file, and be a no-op on the second run. The souvenir rule gets its
+  own coverage because moving screenshots a user deliberately relocated is the one destructive mistake here.
 */
 
 function tempRoot() {

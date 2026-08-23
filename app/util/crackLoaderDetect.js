@@ -1,10 +1,8 @@
 'use strict';
 
-/*
-  Detect folders already handled by a crack loader AW must not touch: loaders like OnlineFix hook the
-  existing steam_api(64).dll in place, so swapping in GBE Fork would break their handshake. Read-only,
-  top-level marker check, cheap enough for every auto-fix decision.
-*/
+// Detects folders already handled by a crack loader AW must not touch: loaders like OnlineFix
+// hook the existing steam_api(64).dll in place, so swapping in GBE Fork would break their
+// handshake. Read-only, top-level check, cheap enough to run on every auto-fix decision.
 
 const fs = require('fs');
 
@@ -22,12 +20,9 @@ const KNOWN_CRACK_LOADERS = [
   { name: 'ColdClient', markers: ['coldclientloader.ini', 'coldapi.ini'] },
 ];
 
-/*
-  Return { name } for the first known crack loader whose marker file(s) exist directly in `gameDir`, or
-  null if none match (including when gameDir is missing/unreadable). Only looks at the top level: a
-  marker nested in a Data/Plugins subfolder is not this loader's own drop point and would false-positive
-  on games that merely reference the string in an asset.
-*/
+// Returns { name } for the first known crack loader whose markers exist directly in `gameDir` (or
+// null). Top level only: a marker nested in a subfolder isn't the loader's own drop point and
+// would false-positive on a game that merely references the string in an asset.
 function detectWorkingCrackLoader(gameDir) {
   if (!gameDir) return null;
   let entries;

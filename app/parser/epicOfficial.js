@@ -44,8 +44,6 @@ function firstNonEmpty(...values) {
   return '';
 }
 
-// ---- local install discovery (from epic-local-installations.js) ---------------------------------
-
 function readJsonFile(filePath) {
   try {
     return JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -82,8 +80,6 @@ function buildEpicLocalInstallIndex(manifestsDir = EPIC_MANIFESTS_DIR) {
   }
   return entries;
 }
-
-// ---- Epic API (from epic-api.js, fetch-based) ---------------------------------------------------
 
 async function epicFetchJson(url, { method = 'GET', headers = {}, body, timeoutMs = 15000 } = {}) {
   const controller = new AbortController();
@@ -177,8 +173,6 @@ async function fetchEpicPlayerAchievements(epicAccountId, productId, accessToken
   return Array.isArray(inner?.playerAchievements) ? inner.playerAchievements : [];
 }
 
-// ---- schema cache ------------------------------------------------------------------------------
-
 function schemaCacheFile(sandboxId, locale) {
   return path.join(cacheRoot || '', 'steam_cache', 'epicOfficial', `${String(sandboxId).replace(/[^\w.-]/g, '_')}_${locale}.json`);
 }
@@ -214,14 +208,10 @@ async function resolveSchema(sandboxId, lang) {
   }
 
   /*
-    `answered` separates "Epic replied, this sandbox simply has no achievements" from "Epic could not
-    be reached". Only the first is a fact worth remembering.
-
-    Fortnite is the standing example: sandbox `fn` returns HTTP 200 with a record whose every field
-    is null, so there are no rows and nothing was ever cached - and every scan asked again, forever.
-    A network error must keep that retry (the next scan may well be online), but a real empty answer
-    is cached like any other result, on the same 24h TTL, so it costs one request a day instead of
-    one per scan.
+    `answered` separates "Epic replied, no achievements" from "Epic could not be reached" - only the
+    first is worth caching. Fortnite (sandbox `fn`) is the standing example: HTTP 200 with every field
+    null, so without this distinction every scan would retry forever instead of caching the empty
+    answer on the normal 24h TTL.
   */
   let record = null;
   let answered = false;
@@ -278,8 +268,6 @@ async function resolveSchema(sandboxId, lang) {
   writeSchemaCache(cacheFile, result);
   return result;
 }
-
-// ---- parser contract ----------------------------------------------------------------------------
 
 // One entry per installed Epic game that carries a sandbox (namespace). appid = namespace (stable,
 // used for the sandbox schema query and the rarity sidecar).

@@ -1,22 +1,13 @@
 'use strict';
 
 /*
-  What a per-game achievement reset is allowed to touch, and how.
+  What a per-game reset may touch, and how. Pure logic (no fs/Electron) so both "is this
+  resettable" and "what does this file need" can be tested without a game install.
 
-  Deliberately pure: no fs, no Electron. It answers two questions - "may this source be reset at
-  all?" and "what does this file need?" - so both can be tested without a game install, and so the
-  fs side (parser/achievementReset.js) never has to reason about formats.
-
-  Three kinds of file exist, and confusing them is how a reset destroys a library:
-
-    state only     the emulator rewrites it from scratch on the next unlock, so deleting it is the
-                   reset. Every Steam/Uplay/SocialClub emulator save works this way, as does RPCS3's
-                   TROPUSR.DAT (its schema lives beside it in TROPCONF.SFM).
-    state + schema ShadPS4's TROP*.XML and Xenia's .gpd carry the achievement list itself. Deleting
-                   one takes the game's achievements with it, so those are edited in place by their
-                   own parser (shadps4.clearTrophyXml / xenia.clearGpdBuffer).
-    schema only    TROPCONF.SFM, UserGameStatsSchema_*.bin, steam_settings/achievements.json. Never
-                   a target: they hold no unlock state, and rewriting one breaks the game's setup.
+  Confusing the three file kinds is how a reset destroys a library: most emulator saves (and
+  RPCS3's TROPUSR.DAT) are state-only, so deleting them IS the reset. ShadPS4's TROP*.XML and
+  Xenia's .gpd carry state AND schema, so those are edited in place instead. Schema-only files
+  (TROPCONF.SFM, achievements.json, etc.) are never a target: they hold no unlock state.
 */
 
 const ACTION = {
@@ -26,13 +17,10 @@ const ACTION = {
 };
 
 /*
-  Emulator save files, mirroring the list the Watchdog watches (watchdog/monitor.js `files.achievement`
-  plus the console/cascade entries). Matched case-insensitively because the same emulator ships both
-  spellings across builds.
-
-  The stats files are included on purpose: for progressive achievements ("travel 1000 km") the
-  counter IS the achievement progress, and leaving it at 100% either re-fires the unlock instantly or
-  makes it unreachable. Everything here is backed up before it is touched.
+  Emulator save files; mirrors the list watchdog/monitor.js watches (files.achievement plus the
+  console/cascade entries) - keep both in sync. Matched case-insensitively since builds vary.
+  Stats files are included on purpose: for progressive achievements the counter IS the progress,
+  so leaving it maxed would re-fire or block the unlock. Everything here is backed up first.
 */
 const SAVE_FILES = new Set(
   [
@@ -53,12 +41,9 @@ const SAVE_FILES = new Set(
 // Schema files that live in the same folders and must survive every reset.
 const PROTECTED_FILES = new Set(['tropconf.sfm', 'trophy.trp', 'appid.txt', 'steam_appid.txt']);
 
-/*
-  Libraries whose unlocks are held by the platform, not by a file on this PC. Steam, GOG Galaxy,
-  Ubisoft Connect, EA, Epic and Xbox all re-synchronise from the account, so there is nothing a reset
-  here could achieve - deleting a local cache would only make the next sync put it back. Saying so is
-  the honest answer; offering a button that appears to work would not be.
-*/
+// Steam/GOG Galaxy/Ubisoft Connect/EA/Epic/Xbox unlocks live on the platform account, not a
+// local file: a reset here would just get overwritten by the next sync. Saying so beats
+// offering a button that looks like it works but does not.
 const OFFICIAL_PLATFORM_SOURCES = /^(?:steam\s*\(|gog(?:\s|$)|gog galaxy|epic(?:-official)?$|ea$|ubisoft connect|xbox)/i;
 
 function isOfficialPlatformSource(source) {
@@ -70,11 +55,8 @@ function isManualSource(source) {
   return String(source || '').trim().toLowerCase() === 'manual';
 }
 
-/*
-  What this file needs for the game's achievements to be lockable again, or null when it is none of
-  the reset's business. `fileName` is a base name; the caller has already decided the folder belongs
-  to this game.
-*/
+// Returns the action needed to reset this file, or null if it's not part of the reset.
+// `fileName` is a base name; the caller has already matched the folder to this game.
 function resetActionFor(fileName) {
   const name = String(fileName || '').trim().toLowerCase();
   if (!name || PROTECTED_FILES.has(name)) return null;
@@ -85,12 +67,8 @@ function resetActionFor(fileName) {
   return null;
 }
 
-/*
-  Split a game's resolved achievement folders into the ones a reset can work on and the ones it
-  cannot, with the reason. `dataPaths` is what the scan recorded for the game
-  (util/achievementDataPath.js), so this follows exactly where the unlocks are really read from
-  rather than guessing from the source label.
-*/
+// Splits resolved achievement folders (util/achievementDataPath.js) into resettable vs blocked,
+// using where unlocks are actually read from rather than guessing from the source label.
 function classifySources(dataPaths = []) {
   const resettable = [];
   const blocked = [];

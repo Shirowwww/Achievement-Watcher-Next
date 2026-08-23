@@ -234,12 +234,10 @@ function confidenceFor(best, candidates, gameDir, gameName, opts = {}) {
 
   if (candidates.length === 1) return { confident: true, reason: 'single-candidate' };
 
-  // Dual-DRM repacks commonly ship a real game exe next to a loader/launcher stub whose job is only
-  // to patch the ownership check (e.g. a Goldberg-cracked Steam release wrapped with a second Uplay R2
-  // loader). The internal binary name is frequently a codename with zero lexical overlap with the
-  // storefront title ("AC4BFSP.exe" for "Assassin's Creed IV Black Flag"), so gameSim/folderSim can
-  // never clear a name-based threshold above - but once every soft-penalized candidate is filtered out,
-  // "best" being the only thing left is exactly as strong a signal as candidates.length === 1 above.
+  // Dual-DRM repacks ship a real game exe next to a loader stub that only patches the ownership check
+  // (e.g. Goldberg + a second Uplay R2 loader). The internal name is often a codename with no lexical
+  // overlap with the title ("AC4BFSP.exe" for "Assassin's Creed IV"), so name similarity alone can't
+  // clear the threshold - being the only non-soft-penalized candidate left is just as strong a signal.
   const nonUtility = candidates.filter((c) => !SOFT_PENALTY.some((r) => r.test(c.name)));
   if (nonUtility.length === 1 && nonUtility[0] === best) return { confident: true, reason: 'sole-non-utility-candidate' };
 
@@ -315,11 +313,10 @@ function detect(gameDir, gameName, opts = {}) {
     c._dllBonus = dllBonus;
     c._softHit = softHit;
   }
-  // A loader/launcher/helper is only ever picked when nothing else is available: a big DLL/size bonus
-  // could otherwise let it outscore the real game exe on raw score alone (e.g. a sizeable Ubisoft R2
-  // loader sitting right next to the emulator dll), silently seeding the wrong binary for playtime
-  // tracking or the launch panel's default guess. Non-utility candidates are always tried first; score
-  // only breaks ties within each tier.
+  // A loader/launcher/helper is only ever picked when nothing else is available: a size/DLL bonus could
+  // otherwise let it outscore the real game exe (e.g. a sizeable Ubisoft R2 loader next to the emulator
+  // dll), silently seeding the wrong binary for playtime tracking or the launch panel's default guess.
+  // Non-utility candidates are always tried first; score only breaks ties within each tier.
   candidates.sort((a, b) => a._softHit - b._softHit || b.score - a.score || a.depth - b.depth || b.size - a.size);
 
   for (const c of candidates) {

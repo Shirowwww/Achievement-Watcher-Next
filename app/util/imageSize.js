@@ -1,7 +1,7 @@
 'use strict';
 
-// Pixel dimensions of an image file, read from its header only - no decoding, no native module.
-// Enough for the cover formats the app stores (PNG, JPEG, GIF, BMP, WebP); anything else, or a
+// Pixel dimensions of an image, read from its header only - no decoding, no native module.
+// Enough for the formats the app stores (PNG, JPEG, GIF, BMP, WebP); anything else, or a
 // truncated file, returns null rather than a guess.
 
 const fs = require('fs');

@@ -7,18 +7,10 @@ const path = require('node:path');
 
 const source = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'electron', 'init.js'), 'utf8');
 
-/*
-  SteamGridDB lookups.
-
-  "Staffer Retro : A Supernatural Mystery Quest" had a permanently blank tile because SteamGridDB
-  files it under the shorter name "Staffer Retro", and the title matcher is deliberately strict -
-  loosening it to a prefix rule would equally match "LEGO Batman" to "LEGO Batman: Legacy of the
-  Dark Knight", and the in-code policy is that a wrong cover is worse than none.
-
-  The way out is to stop matching titles when there is no need to: /games/steam/<appid> is an
-  identity mapping. These tests pin that the identity path is preferred AND that the title matcher
-  kept every bit of its strictness for the sources that have no Steam appid (Ubisoft, GOG, Epic).
-*/
+// SteamGridDB lookups: "Staffer Retro : A Supernatural Mystery Quest" had a permanently blank tile
+// because SteamGridDB files it under the shorter "Staffer Retro", and the title matcher is
+// deliberately strict (a prefix rule would equally mismatch "LEGO Batman" to its sequel). The fix is
+// /games/steam/<appid> identity lookup, preferred where available; title matching stays just as strict elsewhere.
 
 test('a Steam appid is resolved by identity, before any title is matched', () => {
   assert.match(source, /BASE_URL\}\/games\/steam\/\$\{encodeURIComponent\(id\)\}/, 'the by-appid endpoint must be used');

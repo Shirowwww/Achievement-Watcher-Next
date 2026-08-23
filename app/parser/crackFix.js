@@ -37,8 +37,8 @@ function pixeldrainFileId(href) {
   return m ? m[1] : null;
 }
 
-// Convert a pixeldrain "view" link (pixeldrain.com/u/<id>) to its direct-download API URL. Other
-// hosts (cs.rin.ru, etc.) are returned as-is - they usually need a browser, so the UI opens them.
+// Convert a pixeldrain "view" link (pixeldrain.com/u/<id>) to its direct-download API URL, or null
+// for any other host - those need a browser, so the UI opens them instead.
 function pixeldrainDirectUrl(href) {
   const id = pixeldrainFileId(href);
   return id ? `https://pixeldrain.com/api/file/${id}?download` : null;
@@ -249,10 +249,9 @@ function findFixes(list, gameName, { limit = 5 } = {}) {
 }
 
 // The single best entry for AUTOMATIC use, or null. Unlike findFixes (which returns ranked candidates
-// for the user to confirm, accepting fuzzy hits), this only trusts a high-confidence match - an exact
-// normalized-name equality or a near-length token containment - exactly the bar fuzzyAppid uses before
-// it will auto-write a steam_appid. A fuzzy guess is never auto-cracked. Requires the entry to actually
-// carry at least one fix. Returns { entry, score, tier } or null.
+// for the user to confirm), this only trusts a high-confidence match - an exact normalized-name
+// equality or a near-length token containment, the same bar fuzzyAppid uses before auto-writing a
+// steam_appid. Requires the entry to carry at least one fix. Returns { entry, score, tier } or null.
 function findBestMatch(list, gameName) {
   if (!Array.isArray(list) || !gameName) return null;
   const apps = list.map((entry, i) => ({ appid: i, name: entry && entry.name }));
@@ -442,11 +441,10 @@ async function downloadAndApply({ fix, gameDir, cacheDir, entryName = '', proxyF
   .rar is routed through node-unrar-js (the same WASM lib apiCheckBypass already uses for RAR5); .zip/.7z/
   .tar/etc. go through node-7z + the bundled 7za. Throws on failure / empty archive.
 */
-// Run the node-unrar-js (WASM) RAR extraction directly, writing every entry to destDir with its nested
-// layout preserved. MUST run in a Node context (Electron main process or the watchdog) - NEVER the
-// Chromium renderer: node-unrar-js's Emscripten/Embind glue calls `new Function()`, which the renderer's
-// strict CSP forbids (and 'wasm-unsafe-eval' does NOT cover `new Function`). extractArchive() routes a
-// renderer call here over IPC instead. Throws on an empty/garbage archive.
+// Run the node-unrar-js (WASM) RAR extraction directly, writing every entry with its nested layout
+// preserved. MUST run in a Node context (main process or the watchdog), NEVER the renderer:
+// node-unrar-js's Emscripten/Embind glue calls `new Function()`, which the renderer's CSP forbids
+// ('wasm-unsafe-eval' does not cover it) - extractArchive() routes a renderer call here over IPC.
 async function extractRarToDir(archivePath, destDir, { log = noopLog } = {}) {
   fs.mkdirSync(destDir, { recursive: true });
   log.log(`[crackfix] extracting RAR via node-unrar-js → ${destDir}`);

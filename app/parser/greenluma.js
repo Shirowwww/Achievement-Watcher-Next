@@ -13,8 +13,7 @@ module.exports.scan = async () => {
       gl2025: { keyName: 'GL2025', name: 'GreenLuma 2025' },
     };
 
-    // keyList is an object map, so it must be iterated via its values - `for…of keyList` throws
-    // "not iterable", which made greenluma.scan() fail outright and silently return no games.
+    // keyList is a plain object map: `for...of keyList` would throw, so iterate Object.values() instead.
     for (let k of Object.values(keyList)) {
       const keys = listRegistryAllSubkeys('HKCU', `SOFTWARE/${k.keyName}/AppID`);
       if (!keys) continue;

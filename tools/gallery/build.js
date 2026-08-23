@@ -53,7 +53,7 @@ const LIMITS = {
 // Bumped only if the shape of index.json changes in a way the page has to know about.
 const INDEX_FORMAT = 2;
 
-// --- helpers --------------------------------------------------------------------------------------
+// Helpers
 
 function clean(value, max) {
   return String(value == null ? '' : value)
@@ -126,7 +126,7 @@ function committer(file) {
   }
 }
 
-// --- one preset -------------------------------------------------------------------------------------
+// One preset
 
 function validate(name, files) {
   const problems = [];
@@ -217,7 +217,7 @@ function validate(name, files) {
   };
 }
 
-// --- the whole folder --------------------------------------------------------------------------------
+// The whole folder
 
 function collect() {
   const problems = [];
@@ -278,9 +278,9 @@ function serialize(records) {
   )}\n`;
 }
 
-// --- review sheet ----------------------------------------------------------------------------------
+// Review sheet
 
-// A package is a zip, so a pull request shows it as a binary blob. This prints what is inside one.
+// A package is a zip, so a diff shows it as a binary blob. This prints what is inside one.
 function report(records) {
   const AdmZip = require(path.join(root, 'app', 'node_modules', 'adm-zip'));
   const only = (process.argv.find((arg) => arg.startsWith('--only=')) || '').slice('--only='.length).split(',').filter(Boolean);
@@ -319,7 +319,7 @@ function report(records) {
   console.log(lines.join('\n'));
 }
 
-// --- entry point ------------------------------------------------------------------------------------
+// Entry point
 
 function main() {
   const { records, problems } = collect();

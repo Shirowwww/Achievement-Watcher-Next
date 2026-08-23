@@ -1056,11 +1056,9 @@ function repair({ dir, gameDir, steamAppid, schema, prefix, accountName, languag
 
 /*
   Every repair() copies the schema and the ini files it is about to overwrite into
-  `<gameDir>/.aw-backups/<timestamp>/` first. Those snapshots were write-only until now: the Steam
-  side has had "restore a GBE backup" in its right-click menu from the start, while the Ubisoft side
-  could apply a fix with no way back short of editing the game folder by hand.
-
-  Newest first, so the caller can offer "undo the last repair" without inspecting the layout.
+  `<gameDir>/.aw-backups/<timestamp>/` first, mirroring the "restore a GBE backup" menu action the
+  Steam side already has. Newest first, so the caller can offer "undo the last repair" without
+  inspecting the layout.
 */
 const BACKUP_DIR_NAME = '.aw-backups';
 const BACKUP_MANIFEST = 'uplay-r2-backup.json';

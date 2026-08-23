@@ -1,16 +1,12 @@
 'use strict';
 
 /*
-  Invoke a main-process handler from code that does not know which process it is running in.
-
-  The parsers under app/parser are required from three places: the renderer, the main process
-  (electron/init.js and electron/ipc.js) and the background monitor. Only the first has an
-  `ipcRenderer`, so `require('electron').ipcRenderer.invoke(...)` throws a bare
-  "Cannot read properties of undefined (reading 'invoke')" in the other two - which is what a user's
-  parser.log was full of, once per game, for the SteamDB launch and artwork fallbacks.
-
-  Those call sites are optional enrichment, so the honest behaviour outside the renderer is to
-  return null rather than to throw or to log the same TypeError for every game in the library.
+  Invokes a main-process handler from code that doesn't know which process it's running in. The
+  parsers under app/parser are required from the renderer, the main process and the background
+  monitor - only the renderer has `ipcRenderer`, so calling it directly threw a bare "Cannot read
+  properties of undefined (reading 'invoke')" once per game in parser.log for the SteamDB
+  fallbacks. Those call sites are optional enrichment, so returning null outside the renderer is
+  the honest behaviour, not throwing or logging the same error for every game.
 */
 
 function getIpcRenderer() {

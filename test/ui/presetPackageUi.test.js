@@ -52,13 +52,10 @@ test('Export writes the design on screen, never some other preset', () => {
   const handler = /\$\('#btn-export-preset'\)\.click\([\s\S]*?\n    \}\);/.exec(settings);
   assert.ok(handler, 'the export handler is gone');
 
-  /*
-    Falling back to the ACTIVE notification preset when the picker sat on "New preset…" exported a
-    package named for the design in the builder whose contents were the user's current preset - a
-    "goat.awpreset" whose manifest said "Shirow", which then clashed with the bundled Shirow on
-    import and rendered as Shirow everywhere. Export now takes the controls, except for an imported
-    preset, whose look the controls cannot describe.
-  */
+  // Falling back to the ACTIVE notification preset when the picker sat on "New preset…" exported a
+  // package named for the builder design whose contents were the user's current preset - a
+  // "goat.awpreset" whose manifest said "Shirow", clashing with the bundled Shirow on import. Export
+  // now takes the controls, except for an imported preset, whose look the controls cannot describe.
   assert.doesNotMatch(handler[0], /#option_overlayPreset/, 'Export can still reach for the active preset');
   assert.match(handler[0], /loaded && !isEditablePreset\(loaded\)\s*\?\s*\{ name: loaded \}/, 'an imported preset is not exported from disk');
   assert.match(handler[0], /options: readPresetOptions\(\)/, 'a builder design is not exported from the controls');

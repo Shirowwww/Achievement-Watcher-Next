@@ -1,9 +1,7 @@
 'use strict';
 
-// Minimal preload for the overlay-notification window.
-// Intentionally requires ONLY electron (sandbox-safe): unlike overlayPreload.js, which pulls in
-// app modules (e.g. ./parser/achievements) that fail to load in this window's preload context and
-// take the whole bridge down with them. Presets only need this tiny notification API.
+// Sandbox-safe: requires only electron. Unlike overlayPreload.js, pulling in app modules here
+// (e.g. ./parser/achievements) fails to load and takes the whole bridge down.
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {

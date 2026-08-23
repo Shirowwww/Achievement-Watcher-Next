@@ -1694,10 +1694,10 @@
 
                       <div class="pd-controls">
                         <!--
-                          The control panel is long: nine groups and sixty-odd properties. This is how
-                          it is navigated - a filter over every label, a chip per group, and the two
-                          buttons that take a change back. None of it moves a control in the DOM, so
-                          the positional bindings and the schema parity are untouched.
+                          The control panel is long: nine groups and sixty-odd properties, navigated by
+                          a filter over every label, a chip per group, and the two buttons that take a
+                          change back. None of it moves a control in the DOM, so the positional
+                          bindings and the schema parity are untouched.
                         -->
                         <div class="pd-controls-bar">
                           <label class="pd-search">
@@ -2560,9 +2560,7 @@
             <!-- About / branding. The locale loader still binds this by position:
                  p:nth-child(1) span:eq(0|1) = "Version" + number, a:first = "maintained by".
                  The product name is a <strong> and the icons are <i>, so neither shifts those
-                 indices - see bindSettings() in app/locale/loader.js before reordering anything.
-                 The upstream lineage used to be a second paragraph here; it moved to the foot of
-                 the Advanced tab (#advanced-lineage), where it is bound by id instead. -->
+                 indices - see bindSettings() in app/locale/loader.js before reordering anything. -->
             <div class="notice">
               <p>
                 <strong class="notice-brand">Achievement Watcher Next</strong>

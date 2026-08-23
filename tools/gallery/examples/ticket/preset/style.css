@@ -1,11 +1,8 @@
 /*
-  Ticket - the light one, and a card that is not a rectangle of app colour.
-
-  The bundled set is dark by default, which is right over a game at night and wrong over a bright
-  one. This is the counter-example: warm paper, printed type, a perforated stub for the icon, and
-  colour spent only on the stamp. Written by hand, like Blueprint beside it.
-
-  The engine (index.html) owns the payload and the state classes; this file owns every pixel.
+  Ticket - the light one, and a card that is not a rectangle of app colour. The bundled set is dark
+  by default, which is right over a game at night and wrong over a bright one. This is the
+  counter-example: warm paper, printed type, a perforated stub for the icon, colour spent only on
+  the stamp. index.html owns the payload and state classes; this file owns every pixel.
 */
 
 :root {
@@ -66,7 +63,7 @@ body {
   mask-composite: intersect;
 }
 
-/* --- stub ------------------------------------------------------------------------------------ */
+/* Stub */
 
 .ach .icon {
   display: flex;
@@ -88,7 +85,7 @@ body {
   box-shadow: 0 1px 3px rgba(28, 20, 10, 0.3);
 }
 
-/* --- text ------------------------------------------------------------------------------------ */
+/* Text */
 
 .ach .text_wrap {
   display: flex;
@@ -185,7 +182,7 @@ body {
   will-change: transform;
 }
 
-/* --- progress -------------------------------------------------------------------------------- */
+/* Progress */
 
 .progress_line {
   display: flex;
@@ -229,7 +226,7 @@ body {
   line-height: 1;
 }
 
-/* --- states ---------------------------------------------------------------------------------- */
+/* States */
 
 /* Rare: the paper is foiled rather than recoloured, so the type stays as readable as it was. */
 .ach.state-rare {
@@ -270,7 +267,7 @@ body {
   color: #0d4c48;
 }
 
-/* --- motion ---------------------------------------------------------------------------------- */
+/* Motion */
 
 @keyframes aw_in {
   from {

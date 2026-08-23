@@ -1,21 +1,9 @@
 'use strict';
 
-/*
-  Overlay delivery acknowledgements.
-
-  An overlay popup is not drawn by this process: the args go over the IPC channel and the resident
-  app renders them. `process.send()` returning true only means the pipe accepted the bytes, so the
-  app reports back what it did with them (see init.js reportNotificationOutcome):
-
-    stage 'accepted'  the request was understood and a usable preset exists - ok:false here means the
-                      popup will definitely never appear
-    stage 'rendered'  the popup window loaded (ok:true) or failed to load (ok:false)
-
-  The delivery layer waits for the first stage only, and falls back to a toast solely on an explicit
-  ok:false. A missing answer resolves as 'unknown' and never produces a second notification for the
-  same event - it downgrades the transport for the NEXT one instead (transportPolicy cooldown), which
-  is the only way to react to silence without risking a duplicate.
-*/
+// An overlay popup isn't drawn here: the args go over IPC and the app reports back what happened
+// (see init.js reportNotificationOutcome) - 'accepted' (usable preset exists) then 'rendered'
+// (loaded or not). Delivery waits only for 'accepted' and falls back to toast solely on explicit
+// ok:false; a missing answer ('unknown') never retries - it just downgrades the NEXT event's transport.
 
 const RESULT = { ACCEPTED: 'accepted', REJECTED: 'rejected', UNKNOWN: 'unknown' };
 

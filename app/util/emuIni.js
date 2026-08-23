@@ -1,9 +1,9 @@
 'use strict';
 
 /*
-  Minimal, line-faithful INI section editor (GBE configs.*.ini and uplay_r2.ini): preserves unknown
-  sections, comments, blank lines and key order, unlike a full INI library. Not to be confused with
-  app/util/ini.js, which wraps the `ini` package for AW's own options.ini. A "doc" is
+  Minimal, line-faithful INI section editor (GBE configs.*.ini, uplay_r2.ini): preserves unknown
+  sections, comments, blank lines and key order, unlike a full INI library. Not app/util/ini.js
+  (which wraps the `ini` package for AW's own options.ini). A "doc" is
   { preamble, sections: [{ key, header, body }] }.
 */
 

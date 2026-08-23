@@ -1,10 +1,9 @@
 'use strict';
 
 // TENOKE's user_stats.ini carries both an [ACHIEVEMENTS] section (unlock flags, optionally inline
-// progress) and a sibling [STATS] section (raw stat values) in the SAME file. Tenoke ties an
-// achievement's progress to its own key name directly (no operand1-style indirection the way the
-// GBE/Goldberg schema does), so getAchievementsFromFile must cross-reference same-key STATS values
-// when an achievement has no inline progress.
+// progress) and a sibling [STATS] section (raw stat values) in the same file. Progress ties to the
+// achievement's own key name directly (no operand1-style indirection like GBE/Goldberg), so
+// getAchievementsFromFile must cross-reference same-key STATS values when there is no inline progress.
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');

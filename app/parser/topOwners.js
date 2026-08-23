@@ -4,7 +4,6 @@
 
 const PROFILE_HREF_RE = /\/profile\/(\d{17})\b/g;
 
-// Extract de-duplicated SteamID64s (17-digit) from SteamLadder profile links, in page order.
 function extractSteamIdsFromHtml(html = '', limit = 250) {
   const source = String(html || '');
   const cap = Math.max(1, Number(limit) || 250);

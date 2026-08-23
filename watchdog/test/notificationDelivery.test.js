@@ -2,9 +2,8 @@
 
 /*
   The delivery layer as a whole: one notification in, and exactly the transports the plan called for
-  out. These drive notification/toaster.js with stub transports, so what is asserted is how many
-  notifications a user would actually have seen - the property that matters for the fallback, since
-  a fallback that fires beside a working overlay is a duplicate rather than a rescue.
+  out. This drives notification/toaster.js with stub transports and counts what a user would have
+  seen - a fallback beside a working overlay would be a duplicate, not a rescue.
 */
 
 const os = require('node:os');
@@ -137,10 +136,9 @@ test('a reported overlay failure is rescued by exactly one Windows notification'
 });
 
 /*
-  Silence is not failure. The process cannot tell whether a popup appeared, so sending a toast anyway
-  would risk showing the same unlock twice; instead the overlay is marked unhealthy and the NEXT
-  notification changes transport. This is the rule that makes "never duplicate" and "never pretend it
-  worked" hold at the same time.
+  Silence is not failure: the process cannot tell whether a popup appeared, so a toast anyway risks
+  duplicating it. Instead the overlay is marked unhealthy and only the NEXT notification switches
+  transport - the rule that keeps "never duplicate" and "never pretend it worked" both true.
 */
 test('an unanswered overlay produces no second notification, and moves the next one to Windows', async () => {
   const first = loadToaster({ reply: REPLY.SILENCE });

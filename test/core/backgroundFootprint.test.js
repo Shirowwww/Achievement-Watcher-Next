@@ -1,10 +1,9 @@
 'use strict';
 
 // The app is a resident tray daemon, so almost all of its lifetime is spent with no one looking at
-// it. These guard the three things that used to make that idle state expensive: a renderer kept
-// alive for a window nobody can see, a discovery poll that re-scanned the whole library forever,
-// and per-achievement log spam. Source-level assertions, in the house style for init.js/app.js -
-// neither can be required outside Electron.
+// it. These guard the three things that used to make idle expensive: a renderer kept alive for a
+// hidden window, a discovery poll that re-scanned the whole library forever, and per-achievement log
+// spam. Source-level assertions, in the house style for init.js/app.js: neither loads outside Electron.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');

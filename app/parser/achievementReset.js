@@ -1,26 +1,10 @@
 'use strict';
 
 /*
-  Per-game achievement reset: put a game back to zero unlocks so it can earn them again, and be able
-  to undo it.
-
-  Nothing is ever destroyed in place without a copy. Every file the reset is about to touch - the
-  emulator save, AW Next's own unlock baseline, this game's manual overrides - is copied into
-  <userData>/backups/achievements/<appid>/<timestamp>/ with a manifest first; restore() copies them
-  back to the exact paths they came from.
-
-  Three things have to be cleared together, or the reset only looks like it worked:
-
-    the emulator save     what the game itself reads. Cleared per format (util/achievementResetTargets.js).
-    AW Next's baseline    steam_cache/data/<appid>.db, the Watchdog's record of what was already
-                          unlocked. Left in place, re-earning an achievement is diffed against a
-                          baseline that already has it, so nothing is ever notified again.
-    manual overrides      cfg/manual-unlocks.json, which would keep re-marking the same achievements
-                          as unlocked on the next render whatever the save says.
-
-  Which folders belong to a game comes from the scan (`game.dataPaths`), not from the source label -
-  the same reasoning Game Health uses, and the only thing that stays correct for a merged card whose
-  unlocks come from two different emulators.
+  Per-game achievement reset: backs up every touched file (emulator save, AW Next's baseline, manual
+  overrides) under backups/achievements/<appid>/<timestamp>/ before clearing it, so restore() can put
+  it back exactly. All three must clear together - a leftover baseline or override just re-marks the
+  same achievements unlocked on the next render. Uses `game.dataPaths`, not the source label.
 */
 
 const fs = require('fs');

@@ -12,8 +12,6 @@ const binary = ['xenia.exe', 'xenia_canary.exe'];
 
 const cacheRoot = path.join(userDataDir(), 'icon_cache', 'xenia');
 
-// ---- XDBF / GPD low-level parser -------------------------------------------------------------
-
 const XDBF_HEADER_SIZE = 0x18;
 const ENTRY_SIZE = 0x12;
 const FREE_ENTRY_SIZE = 0x08;
@@ -215,8 +213,6 @@ function validAchievements(parsed) {
   return [...byId.values()];
 }
 
-// ---- Achievement Watcher data model ----------------------------------------------------------
-
 const titleIdFromPath = (gpdPath) => path.basename(path.dirname(path.dirname(gpdPath))); // .../<titleID>/00000001/<file>.gpd
 
 module.exports.scan = async (dir) => {
@@ -325,16 +321,10 @@ module.exports.getAchievements = async (gpdPath) => {
 };
 
 /*
-  Relock every achievement in a GPD, in place.
-
-  A GPD holds the achievement definitions and their unlock state in the same file, so a reset cannot
-  simply delete it - that would take the game's whole achievement list with it. Instead each
-  achievement payload is edited where it lies: the earned bit in `flags` (0x10) is cleared and the
-  unlock timestamp (0x14) is zeroed. Nothing moves, no length changes, so the entry table, the free
-  table, the icons and the strings are all still valid afterwards.
-
-  Returns the edited buffer and how many achievements were actually earned before. A buffer that
-  parses to nothing comes back untouched with `cleared: 0`, never half-written.
+  Relock every achievement in a GPD in place: deleting the file would lose the whole achievement list
+  (same file holds both), so each payload is edited where it lies (flags bit 0x10 cleared, timestamp
+  zeroed) with no length change, keeping the entry/free tables and strings valid. Returns the buffer
+  and how many were earned before.
 */
 function clearGpdBuffer(raw) {
   if (!Buffer.isBuffer(raw)) return { buffer: raw, cleared: 0 };

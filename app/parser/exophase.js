@@ -180,8 +180,6 @@ function absoluteUrl(u, baseUrl) {
   }
 }
 
-// ---- Rarity (global unlock %) - Exophase serves it on every award card ----
-
 function normalizeExophaseRarityPct(value) {
   if (value === null || value === undefined) return null;
   if (typeof value === 'number') {
@@ -297,8 +295,6 @@ function extractGameTitleFromHtml(html) {
   return cleanText(h ? h.text : '');
 }
 
-// ---- page loaders ----------------------------------------------------------------------------
-
 async function loadPageStatic(url) {
   try {
     const { code, body } = await request(url, {
@@ -385,8 +381,6 @@ async function loadPageBrowser(page, url) {
   const html = await page.content();
   return { html, status: resp ? resp.status() : 0 };
 }
-
-// ---- public API --------------------------------------------------------------------------------
 
 // Download an achievement icon to disk (for emulator schema enrichment, where the schema must be
 // fully local). Returns true on success.
@@ -522,8 +516,6 @@ async function fetchExophaseAchievementsMultiLang(options = {}) {
     if (browser) await browser.close().catch(() => {});
   }
 }
-
-// ---- Rarity lookup for emulator platforms (Xenia/RPCS3/ShadPS4) ----
 
 function normalizeExophaseMatchText(value) {
   if (!value) return '';

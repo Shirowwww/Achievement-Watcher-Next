@@ -1,7 +1,5 @@
 'use strict';
 
-// Verifies the watchdog settings loader materializes the [controller] section (Tier 4) with sane
-// defaults, coerces bad values, and preserves valid user choices across a load → rewrite round-trip.
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const fs = require('node:fs');

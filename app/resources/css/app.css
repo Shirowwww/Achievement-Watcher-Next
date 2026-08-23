@@ -85,9 +85,6 @@
   --set-title: color-mix(in srgb, var(--text) 88%, white);
   --set-icon: color-mix(in srgb, var(--accent) 42%, var(--text-muted));
   --set-divider: color-mix(in srgb, var(--border) 20%, transparent);
-  /* Account cards (Steam login / Epic connect) share one caution surface, keyed off the theme's
-     own --warning hue so the cards recolour with the palette instead of staying Steam-blue amber
-     under every theme (the literal here is only the fallback for a theme that defines no warning). */
   /* Account cards (Steam login / Epic connect) read as part of the theme, not as a warning. They
      were a fixed amber, then a per-theme amber - still amber, still the odd one out in a blue or
      purple palette. They now use the accent like every other highlighted surface; the "throwaway
@@ -100,10 +97,8 @@
 
 /* App themes (Settings > General). Every theme but 'light' is a dark variant: the stylesheet's
    translucent white/black overlays were authored against a dark base, so they keep light text and
-   shift backgrounds/accents.
-   Each theme also carries the three semantic hues (--success / --warning / --danger) in its own
-   palette: they drive the account cards, the caution badges and the diagnostic lines, which used
-   to be pinned to one hardcoded amber/green and stayed Steam-blue-tinted under every theme. */
+   shift backgrounds/accents. Each theme also carries the three semantic hues (--success / --warning
+   / --danger) in its own palette, driving the account cards, caution badges and diagnostic lines. */
 
 /* The one light-base theme. Text and surfaces are inverted; the faint rgba(255,255,255,…) depth
    tints elsewhere in this file simply stop reading against a pale surface instead of inverting,
@@ -1937,15 +1932,10 @@ main {
 }
 
 /* A rare row runs two infinite rotate animations under its icon, and Blink composites neither, so
-   every rare row in the list repaints on the main thread every frame - the ones scrolled out of
-   view included. Bounding that to what is on screen is worth doing, but every per-element mechanism
-   the engine offers for it (`content-visibility: auto`, IntersectionObserver) charges a viewport
-   test for every row on every frame, and measured on a 400-row list that per-frame charge alone
-   drops the main thread from 60fps to ~48 (16.8ms -> 20.6ms per frame, 1 long frame -> 27).
-   Middle-button autoscroll advances once per main-thread frame, so those dropped frames are the
-   stutter of #35, while wheel scrolling - animated by the compositor - never shows it.
-   So the set is not measured while the scroll is moving: `glow-all` runs every halo, exactly as
-   before, and `refreshRareGlow` in ui/game.js narrows it back down once the scroll comes to rest. */
+   every rare row repaints on the main thread every frame, even off-screen. content-visibility and
+   IntersectionObserver both charge a per-frame viewport test that itself drops frames (measured:
+   400 rows, 60fps -> ~48fps), so nothing is measured while scrolling (`glow-all` runs every halo);
+   `refreshRareGlow` in ui/game.js narrows it back down once the scroll settles. */
 .achievement.rare .box .mask.ray,
 .achievement.rare .box .fx {
   animation-play-state: paused;
@@ -2439,11 +2429,9 @@ main {
   color: var(--accent);
 }
 
-/* ---- Settings search ------------------------------------------------------
-   The panel carries seven tabs and roughly a hundred rows, so finding one
-   option meant remembering which tab owns it. The field filters every row in
-   every tab at once and the nav counters say where the matches are, which is
-   the only navigation aid that scales as more options are added. */
+/* Settings search. The panel carries seven tabs and roughly a hundred rows, so finding one option
+   meant remembering which tab owns it. The field filters every row in every tab at once and the
+   nav counters say where the matches are - the only navigation aid that scales as options grow. */
 #settings .box .header {
   display: flex;
   align-items: center;
@@ -4071,10 +4059,9 @@ main {
   padding: 12px 20px;
 }
 
-/* ---- Game Health ----------------------------------------------------------
-   Two layers on purpose: the summary and the checks answer "is this game ready,
-   and why not" in plain words, while every exact path, count and emulator issue
-   code stays one disclosure away under Technical details. */
+/* Game Health: two layers on purpose. The summary and the checks answer "is this game ready,
+   and why not" in plain words, while every exact path, count and emulator issue code stays one
+   disclosure away under Technical details. */
 #game-config .box .container {
   flex-direction: column;
   gap: 10px;
@@ -5573,10 +5560,7 @@ main {
   font-size: 32px;
 }
 
-/* --------------------------------------------------------------------------
-   2026 interface pass
-   Shared polish for the library, game details and every settings view.
-   -------------------------------------------------------------------------- */
+/* Shared polish for the library, game details and every settings view. */
 
 body {
   border-color: color-mix(in srgb, var(--text-muted) 18%, transparent);
@@ -6521,9 +6505,9 @@ body {
   transform: none;
 }
 
-/* ---- Simple / Advanced interface mode ----------------------------------------------------
-   Rows and tabs Simple mode leaves out. Hidden with a class and never detached: the panel's i18n
-   is positional, so the DOM has to survive every switch (see app/util/interfaceMode.js). */
+/* Simple / Advanced interface mode. Rows and tabs Simple mode leaves out. Hidden with a class and
+   never detached: the panel's i18n is positional, so the DOM has to survive every switch (see
+   app/util/interfaceMode.js). */
 #settings .mode-hidden,
 #game-config .mode-hidden {
   display: none !important;
@@ -6766,9 +6750,9 @@ body {
 
 /*
   Souvenir save-folder row: two buttons share it, so it gets more room than the one-button rows and
-  a gap between them. "Open folder" keeps its natural width - translations of it run from "Ouvrir le
-  dossier" to "Otvoriť priečinok", and squeezing it into an equal share wraps the label onto two
-  lines - while the path button takes what is left and ellipsizes.
+  a gap between them. "Open folder" keeps its natural width - translations run from "Ouvrir le
+  dossier" to "Otvoriť priečinok", and an equal share would wrap the label onto two lines - while
+  the path button takes what is left and ellipsizes.
 */
 #settings #options-notify-souvenir li .right.action-right {
   width: auto;
@@ -7461,11 +7445,10 @@ body {
   overflow: clip;
 }
 /*
-  The account and custom-theme cards (Steam login, Epic, Xbox, the theme builder) wrap their title in
-  an `.emulator-login-heading` row so it can carry a status badge beside the text. That put the title
-  one level deeper than every selector here reached, so those cards were the only ones in Settings
-  whose header did not pin - the section name scrolled away and smeared under the top blur while
-  every other section kept a crisp bar. The row is the header, so the row is what pins.
+  The account and custom-theme cards (Steam login, Epic, Xbox, the theme builder) wrap their title
+  in an `.emulator-login-heading` row so it can carry a status badge beside the text - one level
+  deeper than every selector here reached, so those cards were the only ones whose header did not
+  pin. The row is the header, so the row is what pins.
 */
 #settings .box .content .arrow-list > .title,
 #settings .box .content .settings-card > .title,
@@ -7497,13 +7480,10 @@ body {
   position: static;
 }
 
-/* ── COLLAPSIBLE SECTIONS ──────────────────────────────────────────────────
-   Every section card folds under its own header. The header becomes the control
-   (pointer, hover tint, focus ring, chevron); the card's non-header children are
-   hidden by state, which is why this is one of the few justified `!important`s in
-   the file - it has to beat each child's own layout rule (grid/flex/block) without
-   restating them all. Nothing is wrapped or moved: the i18n loader binds labels
-   positionally, so the DOM has to stay exactly as authored. */
+/* Collapsible sections: every section card folds under its own header, which becomes the control
+   (pointer, hover tint, focus ring, chevron). The card's non-header children are hidden by state -
+   one of the few justified `!important`s in the file, since it must beat each child's own layout
+   rule without restating them. Nothing is wrapped or moved: the i18n loader binds labels positionally. */
 #settings .settings-section-header {
   cursor: pointer;
   user-select: none;
@@ -7586,11 +7566,9 @@ body {
   animation: none;
 }
 
-/* ── ONE SECTION MODEL FOR EVERY TAB ───────────────────────────────────────
-   A settings section is a single card: an uppercase header at the top, a hairline,
-   then its rows. Previously three different shapes coexisted (bare title + carded
-   list on General/Sources/Notifications, whole-section card on Advanced, filled
-   header bar on Emulator). Everything now uses the card-with-header form. */
+/* One section model for every tab: an uppercase header, a hairline, then rows. Previously three
+   different shapes coexisted (bare title + carded list, whole-section card, filled header bar);
+   everything now uses this card-with-header form. */
 #settings .arrow-list,
 #settings .emulator-group,
 #settings #epic-connect,
@@ -8565,13 +8543,10 @@ body {
   justify-content: center;
 }
 
-/* Preset designer. Everything the designer itself draws follows the app theme; the notification
-   being authored is rendered by the generated stylesheet inside #pd-frame, which is deliberately
-   NOT themed - it is the popup, painted from the user's own choices.
-
-   An ordinary settings row (`li.hasHelper`) is a two-column label|control grid with explicit row
-   placement. The designer is not that shape - it is a stack of full-width blocks - so its row opts
-   out of the grid entirely rather than fighting the column widths and pinned rows. */
+/* Preset designer. Everything the designer draws follows the app theme; the notification being
+   authored is rendered by the generated stylesheet inside #pd-frame, deliberately NOT themed - it
+   is the popup, painted from the user's own choices. An ordinary settings row is a two-column grid
+   with explicit placement; the designer opts out of it, since it is full-width blocks, not that shape. */
 #settings #options-notify-designer > li {
   display: block;
   padding: 18px 20px 20px;
@@ -8955,7 +8930,7 @@ body {
   font-size: 11.5px;
 }
 
-/* --- controls ------------------------------------------------------------------------------- */
+/* Controls */
 
 #settings .pd-controls {
   display: flex;
@@ -9021,7 +8996,7 @@ body {
   margin-top: 14px;
 }
 
-/* --- navigating the control panel ------------------------------------------------------------- */
+/* Navigating the control panel */
 
 #settings .pd-controls-bar {
   display: flex;
@@ -9649,13 +9624,9 @@ body {
 
 /*
   Layer colors carry an alpha channel, and a translucent swatch on a dark panel is indistinguishable
-  from a dark opaque one, so the classic checkerboard is what makes "60% of this blue" readable as
-  transparency rather than as a slightly different blue.
-
-  It has to be UNDER the color, which is why the swatch paints it itself and hands the color and any
-  artwork to ::after. In a `::before` at z-index -1 it was still painted above its parent's own
-  background - negative z-index only goes behind the parent's CONTENT - so the checkerboard tinted
-  every swatch and a layer at 100% opacity looked see-through.
+  from a dark opaque one, so a checkerboard is what makes "60% of this blue" read as transparency.
+  It has to be UNDER the color: in a `::before` at z-index -1 it still painted above the parent's
+  own background (negative z-index only goes behind the parent's CONTENT), so every swatch tinted.
 */
 #theme-customizer .theme-layer-preview {
   flex: 0 0 auto;

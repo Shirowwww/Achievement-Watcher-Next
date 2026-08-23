@@ -1,14 +1,10 @@
 'use strict';
 
 /*
-  Where the numeric titles came from (issue #34).
-
-  getGameData resolves a game through two INDEPENDENT lookups: findInAppList(), which answers with
-  the canonical store name, and getSteamDataFromSRV(), which fetches product info, artwork and the
-  achievement schema. The first one's answer was used as a boolean ("is this appid real?") and then
-  thrown away, so when the second came back without a name the entry kept no title at all - and the
-  layer above rendered the appid. Artwork still appeared, because Steam's CDN paths are built from
-  the appid alone, which is exactly the "artwork resolved, name did not" the report describes.
+  getGameData resolves a game through two independent lookups: findInAppList() (the canonical store
+  name) and getSteamDataFromSRV() (product info, artwork, schema). The first's answer was used only
+  as a boolean and thrown away, so a nameless second answer left no title at all, and the appid was
+  rendered instead - artwork still appeared, since CDN paths are built from the appid alone.
 */
 
 const assert = require('node:assert/strict');

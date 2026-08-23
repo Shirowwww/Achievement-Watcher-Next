@@ -5,8 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const crackFix = require(path.join(__dirname, '..', '..', 'app', 'parser', 'crackFix.js'));
 
-// ---- tiny soft-assert harness ------------------------------------------------------------------
-// Runs every check (so one failure doesn't hide the rest) and exits non-zero at the end if any failed.
+// Soft-assert harness: runs every check so one failure doesn't hide the rest, exits non-zero if any failed.
 let passed = 0;
 const failures = [];
 function ok(cond, msg) {
@@ -24,7 +23,6 @@ function tmp(prefix) {
   return d;
 }
 
-// ---- pixeldrainDirectUrl -----------------------------------------------------------------------
 eq(
   crackFix.pixeldrainDirectUrl('https://pixeldrain.com/u/WxSUtWay'),
   'https://pixeldrain.com/api/file/WxSUtWay?download',
@@ -46,14 +44,13 @@ eq(crackFix.pixeldrainDirectUrl(''), null, 'empty string → null');
 eq(crackFix.pixeldrainDirectUrl(null), null, 'null → null');
 eq(crackFix.pixeldrainDirectUrl(undefined), null, 'undefined → null');
 
-// ---- pixeldrainFileId --------------------------------------------------------------------------
 eq(crackFix.pixeldrainFileId('https://pixeldrain.com/u/6yVF7fST'), '6yVF7fST', 'extracts pixeldrain file id');
 eq(crackFix.pixeldrainFileId('http://pixeldrain.com/u/abc/extra'), 'abc', 'id only, ignores trailing path');
 eq(crackFix.pixeldrainFileId('https://cs.rin.ru/forum/x'), null, 'non-pixeldrain → null');
 eq(crackFix.pixeldrainFileId(''), null, 'empty → null');
 eq(crackFix.pixeldrainFileId(null), null, 'null → null');
 
-// ---- normalizeProxyBase (pixeldrain proxy list entries → base URL ending in "/") ----------------
+// normalizeProxyBase turns a pixeldrain proxy list entry into a base URL ending in "/".
 eq(crackFix.normalizeProxyBase('cdn.pixeldrain.eu.cc'), 'https://cdn.pixeldrain.eu.cc/', 'bare host → https + trailing slash');
 eq(crackFix.normalizeProxyBase('https://cdn.pixeldrain.eu.cc/'), 'https://cdn.pixeldrain.eu.cc/', 'already-normalized passes through');
 eq(crackFix.normalizeProxyBase('http://x.example'), 'http://x.example/', 'http scheme preserved, slash added');
@@ -62,7 +59,7 @@ eq(crackFix.normalizeProxyBase(''), null, 'empty → null');
 eq(crackFix.normalizeProxyBase(null), null, 'null → null');
 eq(crackFix.normalizeProxyBase(42), null, 'non-string → null');
 
-// ---- hostOf / isApplicableHost (multi-host support: pixeldrain + buzzheavier auto, rest browser) ---
+// hostOf / isApplicableHost: pixeldrain and buzzheavier are auto-applicable, everything else needs a browser.
 eq(crackFix.hostOf('https://pixeldrain.com/u/abc'), 'pixeldrain', 'pixeldrain host');
 eq(crackFix.hostOf('https://buzzheavier.com/abc123'), 'buzzheavier', 'buzzheavier host');
 eq(crackFix.hostOf('https://vikingfile.com/f/xyz'), 'vikingfile', 'vikingfile host');
@@ -81,7 +78,7 @@ eq(
   'a buzzheavier-only fix is not auto-applicable (browser host)'
 );
 
-// ---- findFixes (manual flow: ranked candidates, fuzzy allowed) ----------------------------------
+// findFixes is the manual flow: ranked candidates, fuzzy matches allowed.
 const list = [
   { buildid: '1', name: 'Dead Island 2', fixes: [{ href: 'https://pixeldrain.com/u/aaa', filename: 'di2.rar', badges: ['Crack'] }] },
   { buildid: '2', name: 'Dragon Quest I & II HD-2D Remake', fixes: [{ href: 'https://pixeldrain.com/u/bbb', filename: 'dq.rar' }] },
@@ -100,11 +97,9 @@ eq(crackFix.findFixes(list, 'Totally Unrelated Game Zzz').length, 0, 'no match f
 eq(crackFix.findFixes([], 'anything').length, 0, 'empty list → []');
 eq(crackFix.findFixes(list, '').length, 0, 'empty name → []');
 
-// ---- a shared franchise is not a match ---------------------------------------------------------
-// Ranking alone scores "Assassin's Creed: Mirage" ~0.57 against "Assassin's Creed Black Flag
-// Resynced" on the words the franchise shares - above the 0.5 floor, so an unrelated game was
-// offered as "fix found". A candidate that carries a distinguishing word the query never mentions
-// is rejected; the query is still free to add its own (repack tags, re-release words).
+// Regression: ranking alone scored "Assassin's Creed: Mirage" ~0.57 against "...Black Flag Resynced"
+// (shared franchise words, above the 0.5 floor) and offered it as a match. A candidate with a
+// distinguishing word the query never mentions is now rejected.
 const franchise = [
   { buildid: '10', name: "Assassin's Creed: Mirage", fixes: [{ href: 'https://pixeldrain.com/u/m', filename: 'm.rar' }] },
   { buildid: '11', name: "Assassin's Creed IV: Black Flag", fixes: [{ href: 'https://pixeldrain.com/u/bf', filename: 'bf.rar' }] },
@@ -126,7 +121,7 @@ const withNull = [{ name: null, fixes: [] }, { name: 'Cyberpunk 2077', fixes: [{
 const fnull = crackFix.findFixes(withNull, 'Cyberpunk 2077');
 ok(fnull.length >= 1 && fnull[0].name === 'Cyberpunk 2077', 'null-name entries are skipped, not crashed on');
 
-// ---- findBestMatch (automatic flow: confident only) ---------------------------------------------
+// findBestMatch is the automatic flow: only a confident match is returned.
 ok(crackFix.findBestMatch(list, 'Cyberpunk 2077'), 'exact name is a confident match');
 eq(crackFix.findBestMatch(list, 'Cyberpunk 2077').entry.name, 'Cyberpunk 2077', 'returns the matched entry');
 ok(crackFix.findBestMatch(list, 'Cyberpunk 2077').tier === 'exact', 'reports the exact tier');
@@ -145,7 +140,6 @@ ok(multiName && multiName.entry.name === 'Cyberpunk 2077', 'multi-name lookup tr
 eq(multiName && multiName.matchedName, 'Cyberpunk 2077', 'multi-name lookup reports the candidate that matched');
 eq(crackFix.findBestMatchForNames(list, ['Cyber', 'Totally Unrelated Zzz']), null, 'multi-name lookup still rejects weak candidates');
 
-// ---- pickBestFix --------------------------------------------------------------------------------
 const multi = {
   name: 'Some Game',
   fixes: [
@@ -194,7 +188,6 @@ eq(crackFix.pickBestFix(null), null, 'null entry → null');
 eq(crackFix.pickBestFix({ fixes: [] }), null, 'empty fixes → null');
 eq(crackFix.pickBestFix({}), null, 'missing fixes array → null');
 
-// ---- idempotency marker / isAlreadyApplied ------------------------------------------------------
 {
   const gd = tmp('aw-crackfix-marker-');
   const fixM = { filename: 'F.rar', href: 'https://pixeldrain.com/u/F' };
@@ -219,7 +212,7 @@ eq(crackFix.pickBestFix({}), null, 'missing fixes array → null');
   ok(!crackFix.isAlreadyApplied(gd, fixM), 'marker without an applied[] → not applied');
 }
 
-// ---- async: fetchList cache + applyBestFix reason paths -----------------------------------------
+// fetchList's on-disk cache, then applyBestFix's reason paths (needs async).
 (async () => {
   // fetchList returns a FRESH on-disk cache without touching the network (deterministic offline).
   {
@@ -334,7 +327,6 @@ eq(crackFix.pickBestFix({}), null, 'missing fixes array → null');
     }
   }
 
-  // ---- summary ----------------------------------------------------------------------------------
   for (const d of tmpDirs) {
     try {
       fs.rmSync(d, { recursive: true, force: true });

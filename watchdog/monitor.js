@@ -12,7 +12,7 @@ const { SOCIALCLUB_ACHIEVEMENT_FILES } = require('./util/socialClub.js');
 // A user-added folder belongs to the Goldberg SocialClub emulator when the SocialClub root is on
 // its path - the root itself, a <Game> folder, or a <Game>\<hex profile> folder. Guessing from the
 // folder's shape instead would be wrong: a plain numeric Steam AppID folder such as "1546990" is
-// also valid hexadecimal, and would be watched with the wrong parser (issue #9).
+// also valid hexadecimal, and would be watched with the wrong parser.
 const SOCIALCLUB_ROOT_RE = /^goldberg\s*social\s*club\s*emu\s*saves$/i;
 function isSocialClubWatchPath(dirPath) {
   return String(dirPath || '')
@@ -89,11 +89,10 @@ module.exports.getFolders = async (userDir_file) => {
       // game's save/achievement files; the game name is resolved back to the app's SocialClub entry
       // through the game index (watchdog.js handles options.socialClub).
       dir: path.join(process.env['APPDATA'], 'Goldberg SocialClub Emu Saves'),
-      // The directory layout is <GameName>\<hex profile>\…, so unlike the Steam emulator roots the
-      // filter must accept game-name folders as well as profile folders - a numeric-AppID filter
-      // would never match anything here. `file` is restricted to the achievement files the parser
-      // can actually read: Rockstar's own save blobs are written constantly during play and nothing
-      // can decode them, so watching them would only wake the monitor for nothing (issue #9).
+      // Unlike the Steam emulator roots, the filter must accept game-name folders as well as profile
+      // folders - a numeric-AppID filter would never match anything here. `file` is restricted to
+      // files the parser can actually read: Rockstar's own save blobs are written constantly during
+      // play and nothing can decode them, so watching them would only wake the monitor for nothing.
       options: { recursive: true, filter: () => true, file: SOCIALCLUB_ACHIEVEMENT_FILES, socialClub: true },
     },
     {
@@ -125,7 +124,6 @@ module.exports.getFolders = async (userDir_file) => {
         filter: /([0-9]+)\\stats/,
         file: [files.achievement[0]],
       },
-      //3DM doesn't need override (disableCheckIfProcessIsRunning,disableCheckTimestamp) ...
     },
     {
       dir: path.join(process.env['LOCALAPPDATA'], 'SKIDROW'),

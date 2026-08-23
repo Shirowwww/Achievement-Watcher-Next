@@ -81,15 +81,11 @@ function openLogStream(file, maxBytes) {
 }
 
 /*
-  A test run must never write into the user's real logs.
-
-  Every logger resolves its path from the live userData directory, so `npm test` was appending to
-  the installed app's parser.log and notification.log - hundreds of WARN lines per run, carrying
-  fixture appids and deliberately thrown errors ("offline", "api unavailable"). Those lines then
-  showed up in exported diagnostics as though the app had produced them, which is worse than merely
-  untidy: it sends anyone reading the log after a real fault chasing failures that never happened.
-
-  Console output is untouched, so the test runner still shows everything it did before.
+  A test run must never write into the user's real logs. Every logger resolves its path from the
+  live userData directory, so `npm test` was appending hundreds of fixture WARN lines
+  ("offline", "api unavailable") to the installed app's parser.log/notification.log - lines that
+  then showed up in exported diagnostics as though the app produced them, sending a real bug
+  report chasing failures that never happened. Console output is untouched.
 */
 function logFilesDisabled() {
   // NODE_TEST_CONTEXT is set by `node --test` in each test process; the explicit variable covers

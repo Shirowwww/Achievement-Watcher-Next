@@ -1,22 +1,16 @@
 'use strict';
 
 /*
-  Locale linter for app/locale/lang and the UI that consumes it.
-
-  The project has no ESLint and no i18n framework, so the rules a framework would enforce live
-  here, in plain Node with no dependency: key parity, empty values, placeholder and markup drift,
-  copied English prose, a t() slug with no `dialogs` entry, a UI string that never reached the
-  locale files at all, and an Achievement Watcher address written by hand instead of coming from
-  app/util/links.js.
-
-  Usage, from the repository root or from app/:
+  Locale linter for app/locale/lang and the UI that consumes it. The project has no ESLint and no
+  i18n framework, so the rules a framework would enforce live here: key parity, empty values,
+  placeholder/markup drift, copied English prose, an orphaned t() slug, a UI string that never
+  reached the locale files, and a hand-written address that should come from app/util/links.js.
 
     node tools/locale-lint.js            report every rule, exit 1 on a failure
     node tools/locale-lint.js --json     the same findings as JSON
     node tools/locale-lint.js --pseudo   write a pseudo-locale for a visual pass, then exit
 
-  test/core/localeLint.test.js runs the same rules, so `npm test` fails on a regression. Keep the
-  rule bodies here and the test a thin caller.
+  test/core/localeLint.test.js runs the same rules, so `npm test` fails on a regression.
 */
 
 const fs = require('fs');
@@ -40,8 +34,7 @@ const UI_SOURCES = [
 // Every file allowed to spell out an Achievement Watcher address.
 const LINK_OWNERS = new Set([path.join('app', 'util', 'links.js')]);
 
-// ---------------------------------------------------------------------------------------------
-// helpers
+// Helpers
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -197,8 +190,7 @@ function lineOf(source, index) {
   return source.slice(0, index).split('\n').length;
 }
 
-// ---------------------------------------------------------------------------------------------
-// rules
+// Rules
 
 function checkKeyParity(findings) {
   const english = new Map(leaves(readJson(path.join(LANG_DIR, REFERENCE))));
@@ -224,11 +216,9 @@ function checkEmptyValues(findings) {
 }
 
 /*
-  The repository writes a plain hyphen, never an em or en dash.
-
-  The edit hook enforces that on text as it is written, which says nothing about text already on
-  disk: sixty of them had accumulated across the locale tree, three in english.json itself, where
-  every translator faithfully carried the shape into their own language.
+  The repository writes a plain hyphen, never an em or en dash. The edit hook enforces that on
+  text as it is written, which says nothing about text already on disk: sixty of them had
+  accumulated across the locale tree, three in english.json itself.
 */
 const TYPOGRAPHIC_DASH = /[–—]/;
 
@@ -275,11 +265,10 @@ function checkPlaceholdersAndMarkup(findings) {
 }
 
 /*
-  Prose identical to English in another locale is untranslated text.
-
-  Being identical is not enough on its own: "Ubisoft / Uplay R2", "Steam / GBE Fork" and
-  "Name: A -> Z" are the same in every language and always will be. What separates a sentence from
-  a label is an English function word, so one has to be present before a match is reported.
+  Prose identical to English in another locale is untranslated text - but being identical is not
+  enough on its own: "Ubisoft / Uplay R2" or "Name: A -> Z" are the same in every language and
+  always will be. What separates a sentence from a label is an English function word, so one has
+  to be present before a match is reported.
 */
 const ENGLISH_FUNCTION_WORDS =
   /\b(?:the|an|is|are|was|were|be|been|to|of|and|or|not|no|with|for|from|your|you|this|that|these|those|it|its|will|can|could|when|while|if|only|use|used|uses|has|have|does|do|on|in|at|by|as|but|so|than|then|there|here|any|all|each|every|per|into|onto|about|after|before|until|unless)\b/i;
@@ -360,11 +349,9 @@ function looksLikeUiProse(value) {
 }
 
 /*
-  Statements whose result never reaches the interface.
-
-  An Error message counts as diagnostic: the app localizes the dialog it wraps an error in and
-  shows the raw message only as technical detail, so translating a throw site would put half a
-  sentence in the user's language and half in English.
+  Statements whose result never reaches the interface. An Error message counts as diagnostic: the
+  app localizes the dialog it wraps an error in and shows the raw message only as technical detail,
+  so translating a throw site would put half a sentence in the user's language and half in English.
 */
 const NON_UI_CONTEXT = /\b(?:debug|console)\s*\.\s*\w+\s*\(|\bnew\s+\w*Error\s*\(|\bthrow\s|\brequire\s*\(/;
 
@@ -451,17 +438,11 @@ function checkViewLinkKeys(findings) {
 }
 
 /*
-  Bundling a language is more than shipping its locale file.
-
-  Half a dozen tables elsewhere key off the same Steam language id: the achievement text an official
-  source is asked for, the controller vocabulary the overlay shows, the duration wording the
-  Watchdog formats. A language missing from one of them does not fail - it quietly serves English,
-  which reads like a translation gap rather than a wiring gap. Slovak sat in five of these tables'
-  blind spots for as long as it had been bundled.
-
-  Only tables whose contract really is "every interface language" belong here. The Uplay R2 loader
-  and the shadPS4 map cover the fixed set those emulators support and fall back on purpose, so a
-  missing id there is correct.
+  Bundling a language is more than shipping its locale file: half a dozen tables elsewhere key off
+  the same Steam language id (achievement text, controller vocabulary, duration wording), and a
+  language missing from one of them does not fail - it quietly serves English, reading like a
+  translation gap rather than a wiring gap. Only tables whose contract is "every interface
+  language" belong here; Uplay R2 and shadPS4 intentionally cover a fixed emulator-supported subset.
 */
 const LANGUAGE_MAPS = [
   { file: 'app/parser/exophase.js', map: 'EXOPHASE_LANG_MAP', side: 'key' },
@@ -593,8 +574,6 @@ function writePseudoLocale(target) {
   fs.writeFileSync(out, `${JSON.stringify(pseudoTree(english), null, 2)}\n`);
   return out;
 }
-
-// ---------------------------------------------------------------------------------------------
 
 function main() {
   const argv = process.argv.slice(2);

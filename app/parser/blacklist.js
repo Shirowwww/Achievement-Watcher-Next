@@ -35,16 +35,12 @@ module.exports.get = async () => {
     debug.log('blacklist from srv:');
     debug.log(srvExclusion);
     exclude = [...new Set([...exclude, ...srvExclusion])];
-  } catch (err) {
-    //Do nothing
-  }
+  } catch {}
 
   try {
     let userExclusion = JSON.parse(fs.readFileSync(exclusionFile, 'utf8'));
     exclude = [...new Set([...exclude, ...userExclusion])];
-  } catch (err) {
-    //Do nothing
-  }
+  } catch {}
 
   return exclude;
 };

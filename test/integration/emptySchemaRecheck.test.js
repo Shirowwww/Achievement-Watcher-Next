@@ -1,14 +1,9 @@
 'use strict';
 
-/*
-  A schema cached with a name but zero achievements used to be permanent: getCachedData has no TTL
-  and getGameData only tested `name`, so an entry written by a fetch that reached the store page but
-  not the schema stayed empty forever. Every scan then fell back to getLocalAchievementSchema, which
-  walks the whole install synchronously - that is what turned a 4s scan into 13-34s.
-
-  The re-check must never cost the entry itself: offline, the retry fails for EVERY appid, and
-  dropping the record there would empty the game list on a single offline scan.
-*/
+// A schema cached with a name but zero achievements used to be permanent: no TTL, and getGameData
+// only tested `name`, so a fetch that reached the store but not the schema stayed empty forever (a
+// 4s scan became 13-34s via the synchronous local-schema fallback). The re-check itself must never
+// drop the entry: offline, every appid fails the retry, which would empty the game list.
 
 const assert = require('node:assert/strict');
 const { test } = require('node:test');

@@ -55,9 +55,8 @@ function buildIndex(files, stamps, fs) {
       }
       for (const [key, game] of firstInFile) byAppid.set(key, game);
     } catch {
-      /* game index files are optional or may be transiently incomplete while written */
-      // A failed read of an existing file may only be an antivirus/locking race. Do not cache that
-      // failure forever just because its timestamp has not changed yet; retry on the next event.
+      // A failed read of an existing file may only be an antivirus/locking race, not a real deletion.
+      // Don't cache that failure forever just because the timestamp hasn't changed; retry next event.
       retry = true;
     }
   }

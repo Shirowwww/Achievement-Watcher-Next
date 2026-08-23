@@ -48,11 +48,10 @@ test('a second detection of the same folder reuses the walk and returns the same
     assert.deepEqual(second.result, first.result);
     assert.ok(first.calls > 1, 'the first detection walks the install tree');
     /*
-      The memo skips the tree, not the folder. Its signature reads the game folder's own listing
-      because timestamps alone cannot see a file written inside the same filesystem tick as the
-      capture - which made this memo hand back a stale candidate list, and made its own test fail
-      about one run in four. One non-recursive readdir is what that costs; the tree below it, which
-      is the expensive part (14789 directories on one real library), is still never touched.
+      The memo's signature reads the game folder's own listing, because timestamps alone can miss a
+      file written in the same filesystem tick as the capture - that flakiness made this test fail
+      about one run in four. Only that one non-recursive read is paid; the tree below it (14789
+      directories on one real library) is never touched again.
     */
     assert.deepEqual(second.dirs, [gameDir], 'exactly the signature read, and nothing below it');
   } finally {

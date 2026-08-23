@@ -1416,7 +1416,7 @@ a.card:hover,
   cursor: help;
 }
 
-/* Only drawn when a gallery server answered: with none, a submission is a pull request. */
+/* Only drawn when a gallery server answered: with none, there is nowhere to send a file. */
 .submit-panel {
   display: grid;
   gap: 18px;

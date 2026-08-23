@@ -11,8 +11,6 @@ function normalizeText(value) {
     .trim();
 }
 
-// A launch-option row map ({ Executable, Arguments, "Operating System", "Launch Type", ... }) →
-// normalized shape.
 function normalizeLaunchOption(raw = {}) {
   return {
     executable: normalizeText(raw.Executable || raw.executable),
@@ -119,7 +117,6 @@ function parseLaunchOptionsFromHtml(html) {
   return out;
 }
 
-// Full parse → metadata from a captured section HTML string.
 function launchMetadataFromHtml(appid, html) {
   return toLaunchMetadata(appid, parseLaunchOptionsFromHtml(html));
 }
@@ -139,7 +136,6 @@ function parseLaunchOptionsFromAppInfo(launchSection) {
     }));
 }
 
-// Full parse → metadata from an appinfo.config.launch section.
 function launchMetadataFromAppInfo(appid, launchSection) {
   return toLaunchMetadata(appid, parseLaunchOptionsFromAppInfo(launchSection));
 }

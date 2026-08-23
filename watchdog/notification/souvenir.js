@@ -32,14 +32,9 @@ function loadScreenshot() {
 // screenshots entirely.
 const RESERVED_NAME = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i;
 
-/*
-  Strip characters illegal in Windows file/folder names; keep spaces; cap the length.
-
-  Trailing dots and spaces matter as much as the illegal characters: Windows silently drops them
-  from the name it actually creates, so a title ending in one ("Mr. Do." or "Sam & Max ") would
-  have the write land somewhere other than the path returned here - and the caller checks that
-  path when picking a non-colliding name.
-*/
+// Strips characters illegal in Windows names, keeps spaces, caps length. Trailing dots/spaces matter
+// too: Windows silently drops them from the name it actually creates, so a title ending in one
+// ("Mr. Do.", "Sam & Max ") would have the write land somewhere other than the path returned here.
 function sanitize(s) {
   const cleaned = String(s || '')
     .replace(/[<>:"/\\|?*]/g, '')

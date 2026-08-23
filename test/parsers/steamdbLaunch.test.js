@@ -45,37 +45,36 @@ const FIXTURE = `
 </div>`;
 
 (() => {
-  // ---- parsing
   const opts = s.parseLaunchOptionsFromHtml(FIXTURE);
   assert.equal(opts.length, 4);
   assert.equal(opts[0].Executable, 'game_win64.exe');
   assert.equal(opts[0]['Operating System'], 'Windows');
 
-  // ---- scoring: a Windows Default (Launch) exe beats a Linux/option/DLC one
+  // Scoring: a Windows Default (Launch) exe beats a Linux/option/DLC one.
   const best = s.pickBestLaunchOption(opts);
   assert.equal(best.executable, 'game_win64.exe');
   assert.ok(s.scoreLaunchOption(s.normalizeLaunchOption(opts[0])) > s.scoreLaunchOption(s.normalizeLaunchOption(opts[1])));
 
-  // ---- candidates: Windows-preferred, DLC dropped
+  // Candidates: Windows-preferred, DLC dropped.
   const cands = s.getCandidateLaunchOptions(opts).map((o) => o.executable);
   assert.ok(cands.includes('game_win64.exe'));
   assert.ok(cands.some((e) => e.includes('game.exe')));
   assert.ok(!cands.some((e) => e.toLowerCase().includes('dlc')), 'DLC option excluded');
   assert.ok(!cands.some((e) => e.endsWith('.sh')), 'Linux option excluded when Windows present');
 
-  // ---- process names: basenames only, deduped, ';'-joined
+  // Process names: basenames only, deduped, ';'-joined.
   const meta = s.launchMetadataFromHtml('42', FIXTURE);
   assert.equal(meta.appid, '42');
   assert.equal(meta.best_process_name, 'game_win64.exe');
   assert.equal(meta.process_name, 'game_win64.exe;game.exe'); // bin/game.exe → game.exe basename
   assert.equal(meta.arguments, '-steam');
 
-  // ---- empty / no-exe input never throws
+  // Empty / no-exe input never throws.
   assert.equal(s.launchMetadataFromHtml('1', ''), null);
   assert.deepEqual(s.parseLaunchOptionsFromHtml('<div>nope</div>'), []);
   assert.equal(s.pickBestLaunchOption([]), null);
 
-  // ---- real captured SteamDB markup (Team Fortress 2, appid 440)
+  // Real captured SteamDB markup (Team Fortress 2, appid 440).
   const real = fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'steamdb-tf2.launch.html'), 'utf8');
   const realMeta = s.launchMetadataFromHtml('440', real);
   assert.ok(realMeta, 'real TF2 markup parsed');
@@ -96,28 +95,28 @@ const FIXTURE = `
     2: { executable: 'Sovereign Tower.app', config: { oslist: 'macos' } },
   };
 
-  // ---- mapping onto the shape the shared ranker already understands
+  // Mapping onto the shape the shared ranker already understands.
   const opts = s.parseLaunchOptionsFromAppInfo(APPINFO_LAUNCH);
   assert.equal(opts.length, 3);
   assert.equal(opts[0].executable, 'sovereign_tower_windows_build\\sovereign_tower.exe');
   assert.equal(opts[0].operatingSystem, 'windows');
   assert.equal(opts[0].launchType, 'default');
 
-  // ---- the watchdog matches one filename: nested path collapses, non-Windows entries lose
+  // The watchdog matches one filename: nested path collapses, non-Windows entries lose.
   const meta = s.launchMetadataFromAppInfo('4113940', APPINFO_LAUNCH);
   assert.equal(meta.appid, '4113940');
   assert.equal(meta.best_process_name, 'sovereign_tower.exe');
   assert.ok(!meta.process_name.includes('\\'), 'no path separator survives into a process name');
   assert.ok(!/x86_64|[.]app/.test(meta.process_name), 'non-Windows entries are not offered');
 
-  // ---- no launch section: must fall through to the SteamDB scrape, not invent a name
+  // No launch section: must fall through to the SteamDB scrape, not invent a name.
   // (verified live against appid 5, which has no config.launch)
   assert.equal(s.launchMetadataFromAppInfo('5', null), null);
   assert.equal(s.launchMetadataFromAppInfo('5', undefined), null);
   assert.equal(s.launchMetadataFromAppInfo('5', {}), null);
   assert.deepEqual(s.parseLaunchOptionsFromAppInfo(null), []);
 
-  // ---- malformed entries are skipped rather than thrown on
+  // Malformed entries are skipped rather than thrown on.
   const mixed = s.launchMetadataFromAppInfo('1', {
     0: null,
     1: 'garbage',

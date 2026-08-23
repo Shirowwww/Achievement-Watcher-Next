@@ -6,9 +6,8 @@ const path = require('path');
 const snapshot = require('../util/processSnapshot.js');
 const tasklist = require('../util/tasklist.js');
 
-// The ToolHelp snapshot replaces a `tasklist.exe` spawn on the playtime monitor's 3 s poll, so it
-// runs for the whole life of the tray daemon: these assert the shape the monitor relies on, not the
-// exact contents of a machine's process table.
+// The ToolHelp snapshot replaces spawning `tasklist.exe` on the playtime monitor's 3s poll: these
+// assert the shape the monitor relies on, not a specific machine's process table contents.
 
 test('the native snapshot is available and lists the current process', () => {
   assert.equal(snapshot.isAvailable(), true);

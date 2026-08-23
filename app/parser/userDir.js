@@ -68,14 +68,9 @@ function hasSceneSaveFile(dir) {
 }
 
 /*
-  Where a portable CODEX/RUNE release keeps its unlock state, for `appid`.
-
-  `dir` is the folder holding steam_emu.ini / cpy.ini. Every known layout is probed with the appid
-  folder appended and again without it, and a candidate only wins if it actually holds one of the
-  save files the Steam parser can read. `%PUBLIC%\Documents\Steam\<SOURCE>\<appid>` is checked last so
-  a normally-installed copy still resolves through this path.
-
-  Returns { path, source } for the folder found, or null.
+  Where a portable CODEX/RUNE release keeps its unlock state, for `appid`. Every known layout is
+  probed with the appid folder appended and again without it; a candidate only wins if it actually
+  holds a save file the Steam parser can read. Returns { path, source }, or null.
 */
 function findSceneSaveDir(dir, appid) {
   if (!dir || !appid) return null;
@@ -105,9 +100,9 @@ function findSceneSaveDir(dir, appid) {
 
 /*
   A portable release whose emulator config is missing, renamed or never shipped still keeps the save
-  tree next to the game. findSceneSaveDir() cannot help there because it needs the appid the config
-  would have carried, so the tree is read the other way round: walk the known portable layouts and
-  take the appid from the folder that actually holds a readable unlock file (issue #32).
+  tree next to the game. Since findSceneSaveDir() needs the appid the config would have carried, this
+  walks the known portable layouts instead and takes the appid from whichever folder actually holds a
+  readable unlock file.
 */
 function collectPortableSceneSaves(dir) {
   const found = [];
@@ -162,10 +157,9 @@ function collectPortableSceneSavesBelow(dir) {
 
 /*
   Markers of an EA app (EA Desktop / Origin) release. Such a game keeps no Steam-shaped anything in
-  its folder - no steam_api dll, no appid file, no emulator ini - and no unlock file either, because
-  the achievement state lives with the EA account rather than on disk. Without this, the folder is
-  rejected with the same "nothing found" as a random directory, which is precisely the "cannot tell
-  nothing-found from not-looked-at" the report asks to fix (issue #32).
+  its folder - no steam_api dll, no appid file, no emulator ini, no unlock file - because the
+  achievement state lives with the EA account rather than on disk. Without this, the folder is
+  rejected the same way as a random directory with nothing in it.
 */
 const EA_APP_MARKER_GLOBS = [
   '__Installer/installerdata.xml',
@@ -291,15 +285,10 @@ module.exports.findEntries = async () => {
 };
 
 /*
-  Why a folder was accepted or rejected, not just whether it was.
-
-  A boolean answer is what made issue #32 impossible to act on: a rejected folder and a folder that
-  was never examined produce the same silence, so a user cannot tell "AW looked here and there is
-  nothing" from "AW does not look at folders like this at all". Every branch below therefore names
-  itself, and the rejection branches say what WAS found instead.
-
-  Returns { accepted, code, evidence } where evidence carries the concrete paths/names behind the
-  verdict. The UI turns the code into a sentence; nothing here is user-visible text.
+  Why a folder was accepted or rejected, not just whether it was: a rejected folder and a folder that
+  was never examined must not look the same, so every branch below names itself and the rejection
+  branches say what WAS found instead. Returns { accepted, code, evidence }; the UI turns the code
+  into a sentence - nothing here is user-visible text.
 */
 module.exports.diagnose = async (dirpath) => {
   const accepted_files = steam_emu_cfg_file_supported.concat(['rpcs3.exe', 'shadPS4.exe', 'shadps4.exe', 'xenia.exe', 'xenia_canary.exe']);
@@ -314,7 +303,7 @@ module.exports.diagnose = async (dirpath) => {
 
   // Goldberg SocialClub Emu Saves keeps game folders named after the game (GTA V, RDR2, ...) with
   // hex profile subfolders - there is no numeric AppID and no emulator .ini to match. Accept the
-  // root, a game folder or a profile folder explicitly (issue #9).
+  // root, a game folder or a profile folder explicitly.
   const socialclub = require('./socialclub.js');
   if (socialclub.isSocialClubPath(dirpath)) return { accepted: true, code: 'socialclub', evidence };
 
@@ -342,10 +331,9 @@ module.exports.diagnose = async (dirpath) => {
   if (nestedConfigs.length > 0) return { accepted: true, code: 'emulator-config-nested', evidence: { ...evidence, config: nestedConfigs[0] } };
 
   /*
-    No config anywhere - which is where 3.9.1 stopped, because its portable probing was anchored on
-    the emulator ini. The save tree itself is the better anchor: it carries the appid in its folder
-    name and it is what the parser reads anyway, so a release that ships no ini (or whose ini the
-    user deleted) is still discoverable.
+    No config anywhere: the save tree itself is the better anchor than the emulator ini, since it
+    carries the appid in its folder name and is what the parser reads anyway. A release that ships
+    no ini (or whose ini the user deleted) is still discoverable this way.
   */
   const portable = collectPortableSceneSavesBelow(dirpath);
   if (portable.length > 0) {
@@ -412,26 +400,22 @@ module.exports.scan = async (dir) => {
     }
     /*
       No emulator config at the top of the selected folder. That is the ordinary case when the user
-      adds their games LIBRARY rather than one game folder - and check() accepts such a folder
-      precisely because of the configs sitting below it, so scan() has to look in the same place.
-      Returning empty here is what left a portable release with no library entry at all (issue #32):
-      the folder was accepted, then read as holding nothing.
+      adds their games LIBRARY rather than one game folder - check() accepts such a folder because of
+      the configs sitting below it, so scan() must look in the same place rather than return empty.
     */
     if (!info) {
       const below = await scanBelow(dir);
       /*
-        Still nothing: no config at the top and none below it either. A release can ship without an
-        emulator ini at all (or the user removed it), and 3.9.1 anchored every portable layout on
-        that file - so the save tree sitting right there went unread and the game stayed absent from
-        the library. Read the tree directly instead: the appid is in its folder name (issue #32).
+        Still nothing: no config at the top and none below it either. A release can ship with no
+        emulator ini at all (or the user removed it) - read the save tree directly instead of relying
+        on the ini, since the appid is right there in its folder name.
       */
       return below.length > 0 ? below : collectPortableSceneSavesBelow(dir);
     }
 
     /*
-      parentFind:
-        Most of the time the cfg/dll pair is next to the game binary and thus UserDataFolder folder should be there as well; 
-        Otherwise walk up parent directories and try to find the folder.
+      parentFind: usually the cfg/dll pair sits next to the game binary, so the UserDataFolder should
+      be right there too. Otherwise, walk up parent directories until it is found.
     */
 
     if ((file === 'ALI213.ini' || file === 'valve.ini' || file === 'SteamConfig.ini') && info.Settings) {
@@ -600,7 +584,7 @@ module.exports.scan = async (dir) => {
         if (!fs.existsSync(steamDataDir)) {
           // Unreal Engine titles keep tenoke.ini at the game root but the SteamData folder nested
           // deeper (e.g. <game>/<Name>/Binaries/Win64/SteamData) - locate it instead of assuming
-          // it sits next to the cfg (issue #12). Bounded depth keeps the search cheap.
+          // it sits next to the cfg. Bounded depth keeps the search cheap.
           const found = await glob('**/SteamData', { cwd: dir, onlyDirectories: true, absolute: true, deep: 6, suppressErrors: true });
           if (found.length > 0) steamDataDir = found[0];
         }
@@ -616,7 +600,7 @@ module.exports.scan = async (dir) => {
       /*
         CODEX / RUNE / CPY. Section and key casing vary between builds and between the releases of a
         single group, so the appid is read case-insensitively from whatever section carries it rather
-        than from one hard-coded path (issue #32).
+        than from one hard-coded path.
       */
       let appid = '';
       for (const section of Object.values(info || {})) {
@@ -652,7 +636,6 @@ module.exports.scan = async (dir) => {
     if (result.length === 0) result.push(...(await scanBelow(dir)));
     if (result.length === 0) result.push(...collectPortableSceneSavesBelow(dir));
   } catch (err) {
-    /*Do nothing*/
     console.warn(err);
   }
 

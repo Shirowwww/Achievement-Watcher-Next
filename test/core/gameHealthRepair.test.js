@@ -1,15 +1,11 @@
 'use strict';
 
 /*
-  Game Health repairs. Two things are being protected here:
-
-  1. the plan a repair announces has to match what it then writes, because that plan is the text the
-     user approves before anything is modified;
-  2. the repairs must keep delegating to the parsers that own the backup behaviour, instead of
-     growing their own write path that could skip it.
-
-  The second point is checked against the real goldberg.repair() on a temporary folder, so a change
-  that stopped backing files up would fail here rather than in someone's game install.
+  Game Health repairs protect two things: the plan a repair announces has to match what it then
+  writes, since that plan is the text the user approves before anything changes; and the repairs must
+  keep delegating to the parsers that own backup behaviour rather than growing their own write path
+  that could skip it. The second point runs against the real goldberg.repair() on a temp folder, so a
+  regression that stopped backing files up would fail here, not in someone's install.
 */
 
 const assert = require('node:assert/strict');

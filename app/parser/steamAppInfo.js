@@ -1,31 +1,10 @@
 'use strict';
 
 /*
-  Steam's own local app catalogue: `appcache/appinfo.vdf`.
-
-  Two questions had no offline answer before this, and both showed up as user-visible bugs:
-
-  - "is this appid a game?" was answered by a remote bogus list at api.xan105.com, whose host no
-    longer resolves. Without it the only filter left is five hardcoded appids, so any discovery
-    source that enumerates what Steam knows locally would drag in DLC, demos, soundtracks,
-    SteamVR and Steamworks redistributables.
-  - "what is this game called?" fell through to the GetAppList dump and the store, both of which
-    can be rate-limited or offline at the same moment - which is how a library ends up showing a
-    bare numeric appid as a title.
-
-  appinfo.vdf answers both from disk, instantly, with no key and no request. It is written by the
-  Steam client itself, so it covers everything the account has ever seen, not just what is
-  installed.
-
-  Format (magic 0x07564427/28/29):
-    magic u32, universe u32
-    v29 only: int64 absolute offset of the string table (u32 count, then that many C strings)
-    per app: appid u32, size u32 (bytes that follow for this app), infoState u32, lastUpdated u32,
-             picsToken u64, sha1 text[20], changeNumber u32, sha1 binary[20] (v28+), binary KV
-    terminated by appid 0
-
-  In v29 the KV keys are u32 indexes into the string table instead of inline C strings; everything
-  else is the same binary KV as the user-stats files.
+  Steam's own local app catalogue (appcache/appinfo.vdf). Answers "is this appid a game" and "what is
+  it called" fully offline - GetAppList and the store can both be rate-limited/offline at once, and
+  there is no reliable remote non-game filter. Binary KV format (magic 0x07564427/28/29); v29 adds a
+  string table and KV keys become indexes into it. Field layout is commented at each read below.
 */
 
 const fs = require('fs');
@@ -197,11 +176,9 @@ module.exports.lookup = (steamPath, appid) => {
 };
 
 /*
-  Steam's own type for an appid, or '' when it is not in the local cache.
-
-  'game' | 'dlc' | 'demo' | 'music' | 'tool' | 'application' | 'video' | 'config' | 'beta' ...
-  Callers must treat '' as "unknown", never as "not a game": the cache only covers apps this client
-  has actually seen.
+  Steam's own type for an appid ('game' | 'dlc' | 'demo' | 'music' | 'tool' | 'application' | 'video'
+  | 'config' | 'beta' ...), or '' when it is not in the local cache. Callers must treat '' as
+  "unknown", never as "not a game": the cache only covers apps this client has actually seen.
 */
 module.exports.typeOf = (steamPath, appid) => {
   const entry = module.exports.lookup(steamPath, appid);

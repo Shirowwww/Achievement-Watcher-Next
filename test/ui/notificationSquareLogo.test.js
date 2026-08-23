@@ -1,15 +1,9 @@
 'use strict';
 
-/*
-  The square thumbnail of a notification card.
-
-  Three cards showed what happens when this is left to the preset: a poster cropped through the
-  middle of its own logo, a 32x32 clienticon stretched into a 68px box, and an empty square where
-  the artwork had never been downloaded. All three reached the screen through the SAME entry point
-  the Settings preview uses, which is the point these tests pin: the resolution belongs to
-  enqueueNotification(), not to one of the two callers, or a preview keeps showing something no
-  real notification would look like.
-*/
+// The square thumbnail of a notification card. Three real cards showed what happens when this is
+// left to the preset: a poster cropped through its own logo, a 32x32 clienticon stretched into a
+// 68px box, an empty square where artwork was never downloaded - all reached the screen through the
+// SAME entry point the Settings preview uses, so resolution belongs to enqueueNotification(), not either caller.
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -133,13 +127,10 @@ test('the borrowed sample carries a square logo, for the toast test as much as t
 test('a schema token resolves to real artwork instead of falling through', () => {
   const steamParser = fs.readFileSync(path.join(appDir, 'parser', 'steam.js'), 'utf8');
   const fn = sliceFunction(steamParser, 'async function resolveWorkingIconUrl(appID, url) {');
-  /*
-    Schemas store "header.jpg", "library_600x900.jpg" and bare content hashes, not URLs. Downloading
-    those as-is cannot work, and the caller got its own token back - which read as "no artwork" and
-    sent the square-logo chain on to the only absolute URL such a schema has: the store page
-    background. That is why an appid with a perfectly good header and portrait ended up with a flat
-    blue gradient in its icon box.
-  */
+  // Schemas store "header.jpg", "library_600x900.jpg" and bare content hashes, not URLs. Downloading
+  // those as-is cannot work, and the caller got its own token back - read as "no artwork" - which
+  // sent the square-logo chain on to the only absolute URL such a schema has: the store page
+  // background. That's why an appid with a perfectly good header and portrait got a flat blue gradient.
   assert.match(fn, /if \(!url\.startsWith\('http'\)\) \{/);
   assert.match(fn, /findWorkingLink\(appID, url\.split\('\/'\)\.pop\(\)/);
   // A local file must never be turned into a CDN probe.

@@ -1,15 +1,9 @@
 'use strict';
 
-// Defer a module until something actually touches it.
-//
-// The Watchdog is a resident tray daemon: it can idle for days without ever unlocking an
-// achievement, fetching a schema or scraping a page. Requiring the modules those paths need at
-// startup costs RSS for the whole session, so they are wrapped here instead. The proxy is callable
-// and forwards property access, which covers both `request(url)` and `request.getJson(url)` without
-// the call sites having to know they are talking to a stub.
-//
-// Keep this for genuinely occasional dependencies only - a module used on every poll should be a
-// plain require, since the first access pays the full load cost inline.
+// Defers a module until something actually touches it - the Watchdog can idle for days without
+// unlocking an achievement or fetching a schema, so requiring those paths at startup costs RSS for
+// the whole session. The Proxy is callable and forwards property access, covering both
+// `request(url)` and `request.getJson(url)`. Use only for occasional dependencies, not ones hit every poll.
 function lazyRequire(id) {
   let loaded;
   const load = () => (loaded ||= require(id));

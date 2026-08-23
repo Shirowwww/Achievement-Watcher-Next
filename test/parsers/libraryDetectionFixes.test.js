@@ -1,14 +1,10 @@
 'use strict';
 
 /*
-  Three defects found on a real library, each with a different root cause:
-
-  1. "Call of Duty: Black Ops III" (SmartSteamEmu) was badged as an EA title, because the source
-     test was a substring match and "SmartSt(ea)mEmu" contains "ea".
-  2. Cyberpunk 2077 appeared twice - once from its GOG install, once from a leftover CODEX save -
-     because the dedupe resolved names from an english-only cache path on a French profile.
-  3. "The Jackbox Party Pack" (not installed) adopted the whole Jackbox collection folder as its
-     install directory and was handed another pack's executable.
+  Three defects found on a real library: SmartSteamEmu got the EA badge from an unanchored "ea"
+  substring match; Cyberpunk 2077 appeared twice because the dedupe resolved names from an
+  english-only cache path on a French profile; and an uninstalled Jackbox pack adopted the whole
+  collection folder and stole another pack's exe.
 */
 
 const assert = require('node:assert/strict');
@@ -25,7 +21,7 @@ function tempDir(prefix) {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 }
 
-// ---- 1. the EA badge -------------------------------------------------------------------------
+// 1. The EA badge.
 
 test('the EA badge is earned by the EA label alone, not by any label containing "ea"', () => {
   const { SOURCE_BADGE } = badgeTables();
@@ -152,7 +148,7 @@ test('the icon handler answers to both spellings too', () => {
   }
 });
 
-// ---- 2. the Cyberpunk duplicate --------------------------------------------------------------
+// 2. The Cyberpunk duplicate.
 
 test('an offline schema name is found whatever language the profile caches', () => {
   const userData = tempDir('aw-schema-name-');
@@ -204,7 +200,7 @@ test('the blacklist and the library dedupe share one implementation', () => {
   assert.match(blacklist, /gameNameCache\.js'\)\)\.lookupSchemaCacheName\(/, 'no second copy of the language walk');
 });
 
-// ---- 3. the Jackbox collection folder --------------------------------------------------------
+// 3. The Jackbox collection folder.
 
 test('a folder holding other games is not offered as a game folder', () => {
   const root = tempDir('aw-collection-');

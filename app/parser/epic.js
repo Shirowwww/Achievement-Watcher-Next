@@ -175,7 +175,6 @@ module.exports.getGameData = async (cfg) => {
   let list = [];
   let title;
 
-  // Resolve the artifact through egdata first, then reuse the official Epic schema path.
   let identity = null;
   try {
     identity = await epicIdentity.resolveEpicArtifactIdentity(cfg.appID);
@@ -197,7 +196,7 @@ module.exports.getGameData = async (cfg) => {
     try {
       if (!gameList) gameList = JSON.parse(await getEpicProductMapping());
       const gameSlug = gameList[cfg.appID];
-      if (!gameSlug) throw !gameSlug; //return result;
+      if (!gameSlug) throw !gameSlug;
       title = await getGameTitleFromMapping(gameSlug);
     } catch (err) {
       // The mapping may not contain new or custom ids; fall back to the store lookup.

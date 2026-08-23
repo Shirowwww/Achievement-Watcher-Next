@@ -75,13 +75,10 @@ exports.default = async function afterPack(context) {
     console.log(`[afterPack] Pruned ${removedLocales} Chromium locale .pak files (kept en-US)`);
   }
 
-  // Prune payloads that cannot load on a Windows x64 install.
-  //
-  // Each rule is listed explicitly so a dependency that changes its on-disk layout shows up as
-  // "already absent" in the build log instead of silently reclaiming nothing - which is exactly how
-  // the old koffi rule went stale: koffi 3.x moved its prebuilt binaries out of
-  // koffi/build/koffi/<platform>/ into the scoped @koromix/koffi-win32-<arch> package, so the rule
-  // kept running against a path that no longer existed and reported success for years.
+  // Prune payloads that cannot load on a Windows x64 install. Each rule is listed explicitly so a
+  // dependency that changes its on-disk layout shows up as "already absent" in the log instead of
+  // silently reclaiming nothing - the old koffi rule went stale exactly this way when koffi 3.x
+  // moved its prebuilt binaries into the scoped @koromix/koffi-win32-<arch> package.
   if (electronPlatformName === 'win32') {
     const unpacked = path.join(appOutDir, 'resources', 'app.asar.unpacked', 'node_modules');
     const targetArch = 'x64'; // win/x64 is the only Windows target this project publishes.

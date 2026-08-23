@@ -1,14 +1,10 @@
 'use strict';
 
-// Native process enumeration through the Win32 ToolHelp snapshot API (koffi), replacing a
-// `tasklist.exe` spawn. The playtime monitor polls the process list every 3 s for the whole life of
-// the tray daemon, and `win-tasklist` costs ~440 ms of wall time per call (a child process, a CSV
-// round trip and a regex over ~460 rows) - roughly 15 % of a core, permanently. The same snapshot
-// through CreateToolhelp32Snapshot costs ~6 ms and spawns nothing.
-//
-// koffi is already the Watchdog's single FFI backend (regodit / xinput-ffi), so this adds no
-// dependency. Everything is wrapped so a koffi load failure only disables the fast path:
-// util/tasklist.js falls back to win-tasklist.
+// Native process enumeration via the Win32 ToolHelp snapshot API (koffi), replacing a `tasklist.exe`
+// spawn. The playtime monitor polls every 3s for the daemon's whole life, and `win-tasklist` costs
+// ~440ms per call (child process, CSV round trip, regex over ~460 rows) - roughly 15% of a core,
+// permanently; CreateToolhelp32Snapshot costs ~6ms and spawns nothing. koffi is already the
+// Watchdog's FFI backend, so this adds no dependency; a load failure just falls back to win-tasklist.
 
 const MAX_PATH = 260;
 const TH32CS_SNAPPROCESS = 0x00000002;

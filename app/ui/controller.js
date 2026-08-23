@@ -30,14 +30,10 @@ function chooseDirectionalCandidate(current, candidates, horizontal, vertical) {
 }
 
 /*
-  In the library grid the TILE is the navigation unit, never the controls painted on top of it.
-
-  Each tile carries an achievements button (top-left), a health/config button (top-right) and a play
-  button (centre). They are ordinary <button>s, so the generic "button:not([disabled])" rule matched
-  them and directional scoring preferred them over the neighbouring tile every time - pressing right
-  from a tile landed on that same tile's own top-right button instead of moving across the library,
-  which is what made pad navigation unusable. Excluding them makes the grid move tile to tile; A on a
-  tile opens the game exactly as clicking it does, which is all the achievements button ever did.
+  In the library grid the TILE is the navigation unit, not the buttons painted on top of it
+  (achievements, health/config, play) - the generic "button:not([disabled])" rule was matching
+  those instead, so pressing right landed on the same tile's own button rather than moving across
+  the library. Excluding them makes A on a tile open the game directly, same as clicking it.
 */
 function isGameTileControl(element) {
   if (!element || typeof element.closest !== 'function') return false;
@@ -202,13 +198,10 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     }
 
     /*
-      The two tile controls the grid no longer selects directly.
-
-      Making the tile the navigation unit fixed directional movement, but it also took the play and
-      Game Health buttons out of reach: A on a tile opens the game, and every documented shortcut was
-      already spoken for. The triggers were not - LT and RT are the only face/shoulder inputs the app
-      never read - so nothing that was bound before changes meaning here. Both are no-ops unless a
-      library tile is selected, which is the only context in which they mean anything.
+      The two tile controls the grid no longer selects directly. Making the tile the navigation unit
+      fixed directional movement but took the play/Game Health buttons out of reach, and every
+      documented shortcut was already spoken for - except LT/RT, the only face/shoulder inputs the
+      app never read. Both are no-ops unless a library tile is selected.
     */
     function tileAction(controlSelector) {
       const tile = selected && selected.closest?.('#game-list .game-box');
@@ -315,12 +308,9 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
 
     /*
       The navigation loop is a requestAnimationFrame poll, so it must not exist while there is no pad
-      to read: on an idle library it was a 60fps main-thread callback plus the compositor work of
-      never letting the frame loop stop, measured at ~8% of a core for a window nobody was touching.
-
-      Chromium only reports a gamepad to a page once the user presses something on it, and that press
-      is also the gesture that starts controller navigation - so waiting for 'gamepadconnected' costs
-      nothing a user can feel, and every mouse-and-keyboard session runs no loop at all.
+      to read: on an idle library it was a 60fps main-thread callback measured at ~8% of a core for a
+      window nobody was touching. Chromium only reports a gamepad once the user presses something on
+      it - the same gesture that starts navigation - so waiting for 'gamepadconnected' costs nothing.
     */
     function canPoll() {
       return padConnected && isAppControllerEnabled() && mainWindowVisible && document.visibilityState === 'visible';

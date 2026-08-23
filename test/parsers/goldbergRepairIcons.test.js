@@ -9,14 +9,9 @@ const path = require('node:path');
 const goldberg = require(path.join(__dirname, '..', '..', 'app', 'parser', 'goldberg.js'));
 
 /*
-  "Repair the achievement data" reported every icon as FAILED on emulator installs.
-
-  A game with no Steam data takes its schema from the emulator's own achievements.json, and
-  steam.getLocalAchievementSchema rebuilds each icon url out of that file's basename. When the
-  emulator named its images after the achievement instead of after the Steam content hash - repacks
-  and hand-made schemas do - the rebuilt url points at an asset that does not exist, so the repair
-  fired one doomed request per icon and reported failure over an images/ folder that was already
-  complete.
+  "Repair the achievement data" reported every icon as FAILED on emulator installs: steam.js rebuilds
+  each icon url from the achievements.json basename, but repacks name images after the achievement,
+  not the Steam content hash, so the rebuilt url pointed at nothing even though images/ was complete.
 */
 
 function installWith(files) {

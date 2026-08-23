@@ -1,14 +1,11 @@
 'use strict';
 
 /*
-  The two file-changing repairs Game Health can run, and the plans that describe them before they
-  run. Both delegate to the existing parsers rather than writing files themselves, so the backup
-  behaviour those parsers already implement is the backup behaviour here:
-
-    goldberg.repair()        copies every file it is about to replace into steam_settings/.aw-backups/<timestamp>/
-    gbeInstaller.installDlls() copies each replaced steam_api dll to <name>.bak once
-
-  Dependencies are injected so this stays testable without Electron, a network or a game install.
+  The two file-changing repairs Game Health can run, and the plans describing them beforehand.
+  Both delegate to the existing parsers, so their backup behaviour is inherited: goldberg.repair()
+  copies replaced files into steam_settings/.aw-backups/<timestamp>/, and
+  gbeInstaller.installDlls() copies each replaced steam_api dll to <name>.bak once. Dependencies
+  are injected so this is testable without Electron, a network or a game install.
 */
 
 const path = require('path');
@@ -67,10 +64,9 @@ async function repairAchievementData({
 }
 
 /*
-  Install the supported GBE Fork runtime dll(s) into the planned directories. Used for the one case
-  Game Health diagnoses as a runtime fault: a complete steam_settings with no steam_api dll beside
-  it, so nothing will ever read the schema. steam_interfaces.txt is regenerated when the original
-  dll is still recoverable - a best-effort step that never fails the install.
+  Installs the supported GBE Fork runtime dll(s) into the planned directories - the fix for a
+  complete steam_settings with no steam_api dll beside it. steam_interfaces.txt is regenerated
+  when the original dll is still recoverable; that step is best-effort and never fails the install.
 */
 async function installEmulatorRuntime({ gbeInstaller, plan, cacheDir, steamSettings = null, log } = {}) {
   if (!plan || !Array.isArray(plan.dirs) || plan.dirs.length === 0) {

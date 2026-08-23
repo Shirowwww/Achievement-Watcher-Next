@@ -55,12 +55,11 @@ let settingsReady = false;
 let notifAutosaveTimer = null;
 const SETTINGS_SAVE_TIMEOUT_MS = 30000;
 
-/* ---- Simple / Advanced interface mode --------------------------------------------------------
-   Simple hides three settings tabs and a handful of rows inside the tabs it keeps. Everything is
-   hidden with a class and nothing is ever detached: the panel is translated positionally
-   (locale/loader.js binds `li:nth-child(n)`), so a mode switch that moved rows would silently
-   re-label the UI in every language. No setting is written, reset or ignored by switching - the
-   controls behind Advanced keep the values they already have.
+/*
+  Simple hides three settings tabs and a handful of rows inside the tabs it keeps. Everything is
+  hidden with a class, never detached: the panel is translated positionally (locale/loader.js
+  binds `li:nth-child(n)`), so moving rows would silently re-label the UI. No setting is written,
+  reset or ignored by switching - the controls behind Advanced keep the values they already have.
 */
 function currentInterfaceMode() {
   return interfaceMode.resolve(typeof app !== 'undefined' ? app.config : null);
@@ -633,13 +632,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
             try {
               if (await userDir.check(dir.path)) populateUserDirList({ ...dir, dir: dir.path, reverse: true });
             } catch (err) {
-              //Do nothing
               debug.log(err);
             }
           }
         })
         .catch((err) => {
-          //Do nothing
           debug.log(err);
         });
 
@@ -652,7 +649,6 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           }
         })
         .catch((err) => {
-          //Do nothing
           debug.log(err);
         });
 
@@ -719,7 +715,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       ipcRenderer.send('overlay-preview', String(previewAppid));
     });
 
-    // --- Debug tab: diagnostics shortcuts ---
+    // Debug tab: diagnostics shortcuts
     $('#open-logs').click(function () {
       try {
         const userDataPath = ipcRenderer.sendSync('get-user-data-path-sync');
@@ -729,11 +725,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     });
     /*
-      Bundle the logs into a .zip the user picks. This exists because copying them by hand while the
-      app runs does not reliably work: the tray daemon, the monitor and each transient notification
-      process keep appending to those files, so a copy catches half-written lines and some
-      compressors fail outright on the size changing under them. The main process reads each log once
-      and writes the bytes into an archive, so a report can be produced without closing anything.
+      Bundle the logs into a .zip the user picks. Copying them by hand while the app runs is
+      unreliable: the tray daemon, the monitor and each transient notification process keep
+      appending to those files, so a copy can catch half-written lines. The main process reads
+      each log once and writes the bytes into an archive instead.
     */
     $('#export-logs').click(async function () {
       const btn = $(this);
@@ -1477,7 +1472,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#option_autoApplyNewGames, #option_autoApplyNewGamesUplay').not(this).val(value);
     });
 
-    // ---- Custom theme editor (Settings > General > Custom…) -----------------
+    // Custom theme editor (Settings > General > Custom…)
     const CUSTOM_LAYER_META = [
       {
         id: 'bg',
@@ -2029,9 +2024,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     $('#settings').on('change.helpPreview', 'select', refreshHelpPreview);
 
-    /* ---- Collapsible sections ----------------------------------------------
-       Cards fold under their header; state is per section and persisted. Nothing is moved or
-       removed - the i18n loader binds labels positionally, so the DOM must survive untouched.
+    /*
+      Cards fold under their header; state is per section and persisted. Nothing is moved or
+      removed - the i18n loader binds labels positionally, so the DOM must survive untouched.
     */
     const sectionRules = require(path.join(appPath, 'util/settingsSections.js'));
     const SECTION_STATE_KEY = 'settingsCollapsedSections';
@@ -2116,10 +2111,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       toggleSection($(this).closest('.settings-section'));
     });
 
-    /* ---- Settings search ---------------------------------------------------
-       Typing filters every tab at once and nav counters show where the matches are. Search sees
-       through collapsed sections, and rows are hidden with a class, never removed - positional i18n
-       requires the DOM structure to survive. */
+    /*
+      Typing filters every tab at once and nav counters show where the matches are. Search sees
+      through collapsed sections; rows are hidden with a class, never removed - positional i18n
+      requires the DOM structure to survive.
+    */
     const searchRules = require(path.join(appPath, 'util/settingsSearch.js'));
 
     function clearSettingsSearch() {
@@ -2225,7 +2221,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
             reportFolderScan(dialog.filePaths[0]);
           } else {
             // Say why, not just no: a rejected folder and a folder AW never looked at used to be
-            // indistinguishable, which is what left issue #32 with nowhere to go.
+            // indistinguishable to the user.
             debug.log(`-> Invalid folder (${diagnosis.code}): ${JSON.stringify(diagnosis.evidence)}`);
             remote.dialog.showMessageBoxSync({
               type: 'warning',
@@ -2313,11 +2309,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         }
         const uniqueFound = [...new Map(found.map((game) => [path.resolve(game.gameDir).toLowerCase(), game])).values()];
         /*
-          Two groups, counted separately. This pass only ever configures games that have no setup at
-          all - it runs unattended during the scan, so it must never overwrite one. The games it
-          skips are not a dead end though: re-applying to them is exactly what Advanced > Fix all
-          games does (with a backup per game), and saying nothing about them left a user whose whole
-          library is already configured with "nothing to do" and no idea where the re-apply lives.
+          Two groups, counted separately. This pass only ever configures games with no setup at all
+          (it runs unattended during the scan, so it must never overwrite one). Skipped games are
+          not a dead end: re-applying to them is exactly what Advanced > Fix all games does, so the
+          message points there rather than leaving a fully-configured library looking like it has
+          nothing to report.
         */
         const inspected = uniqueFound.map((game) => ({ game, eligibility: emulatorFixEligibility.inspect({ gameDir: game.gameDir }) }));
         const eligible = inspected.filter((entry) => !entry.game.hasSchema && entry.eligibility.eligible);
@@ -3121,11 +3117,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     });
 
-    /* ---- Preset designer ------------------------------------------------------------------------
-       The controls, the live preview and the generator all work from util/presetSchema.js, so a
-       property can only exist in one shape. The preview is the REAL preset - the same markup, the
-       same engine and the same generated stylesheet the notification window loads - rendered in an
-       iframe, which is why it cannot drift from what an unlock actually looks like.
+    /*
+      The controls, the live preview and the generator all work from util/presetSchema.js, so a
+      property can only exist in one shape. The preview is the REAL preset - the same markup, the
+      same engine and the same generated stylesheet the notification window loads - rendered in an
+      iframe, which is why it cannot drift from what an unlock actually looks like.
     */
     const presetSchema = require(path.join(appPath, 'util/presetSchema.js'));
     const presetGenerator = require(path.join(appPath, 'util/customPreset.js'));
@@ -3189,12 +3185,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return values;
     }
 
-    /* ---- live preview ---------------------------------------------------------------------------
-       Sample payloads matching what createNotificationWindow() sends for each kind of notification,
-       so the states a preset has to look right in can all be checked without waiting for an unlock.
-
-       The artwork and icon are inlined as data URIs: the preview frame is a srcdoc document, and a
-       file:// image inside one is not reliably loadable.
+    /*
+      Sample payloads matching what createNotificationWindow() sends for each kind of notification,
+      so every state a preset must look right in can be checked without waiting for a real unlock.
+      Artwork and icon are inlined as data URIs: the preview frame is a srcdoc document, where a
+      file:// image is not reliably loadable.
     */
     let previewState = 'normal';
     let previewView = 'card';
@@ -3562,10 +3557,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     });
     $('#pd-resolution').on('change', () => layoutPreview());
 
-    /* ---- navigating a long panel -----------------------------------------------------------------
-       Nine groups and sixty-odd properties. Two ways through them: a chip per group that opens it and
-       scrolls to it, and a filter over every label. Neither moves a control in the DOM - the same rule
-       the Settings search follows, and for the same reason: the locale binds by position and by id.
+    /*
+      Nine groups and sixty-odd properties. Two ways through them: a chip per group that opens it and
+      scrolls to it, and a filter over every label. Neither moves a control in the DOM - the same rule
+      the Settings search follows, and for the same reason: the locale binds by position and by id.
     */
     function buildGroupJump() {
       const bar = $('#pd-jump');
@@ -3618,9 +3613,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       filterDesigner('');
     });
 
-    /* ---- undo and redo ---------------------------------------------------------------------------
-       The stack itself is in util/presetPanel.js. What is here is what makes it a designer feature:
-       what counts as a state, when one settles, and how one is put back.
+    /*
+      The stack itself is in util/presetPanel.js. What is here is what makes it a designer feature:
+      what counts as a state, when one settles, and how one is put back.
     */
     const presetHistory = presetPanel.createHistory(80);
     let historyTimer = null;
@@ -3921,14 +3916,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     /*
       Repopulate every notification-preset menu after the preset list changed - the main one AND the
-      five per-type overrides, which offer the same list plus "same as main".
-
-      Both halves matter. Keeping the current choice comes first; when it was the preset just
-      deleted, fall back to the app's own default rather than to whatever sorts first, or deleting a
-      preset silently moves the user onto an unrelated one (alphabetically "ArmsofGod") and looks
-      like the setting was not saved. And rebuilding only the main menu left a freshly imported
-      preset impossible to pick for rare/platinum/emulator notifications, so those kept rendering the
-      preset they were already pointing at.
+      five per-type overrides. Keep the current choice; if it was the preset just deleted, fall back
+      to the app's default rather than whatever sorts first alphabetically. Rebuild every menu, not
+      just the main one, or a freshly imported preset stays unpickable for rare/platinum/emulator
+      notifications.
     */
     const DEFAULT_PRESET_NAME = 'AW Next';
     const OVERLAY_PRESET_TYPE_IDS = [
@@ -4049,10 +4040,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       setPresetStatus($('#pd-status').attr('data-reset') || '', 'ok');
     });
 
-    /* ---- starting points ------------------------------------------------------------------------
-       A template is an ordinary set of options, so applying one is the same as having moved every
-       control by hand. The name field is deliberately left alone: a starting point is a look, not a
-       preset, and overwriting a name the user typed would lose their work.
+    /*
+      A template is an ordinary set of options, so applying one is the same as having moved every
+      control by hand. The name field is deliberately left alone: a starting point is a look, not a
+      preset, and overwriting a name the user typed would lose their work.
     */
     function applyDesignToControls(options) {
       writePresetOptions(options);
@@ -4246,10 +4237,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       self.css('pointer-events', 'initial');
     });
 
-    /* ---- Portable presets (.awpreset) ---------------------------------------------------------
-       Export writes the preset currently loaded in the designer, falling back to the active
-       notification preset so a bundled or hand-authored one can be shared too. Import validates the
-       package in the main process and only then touches the preset storage.
+    /*
+      Export writes the preset currently loaded in the designer, falling back to the active
+      notification preset so a bundled or hand-authored one can be shared too. Import validates the
+      package in the main process and only then touches the preset storage.
     */
     function importErrorText(res) {
       const error = String((res && res.error) || '');
@@ -4273,16 +4264,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     }
 
     /*
-      Export what the preview is showing, under the name in the Name field.
-
-      An imported preset is the one exception: its look lives in files the controls cannot describe,
-      so that one is exported from disk. Everything else is exported from the controls, which is what
-      the preview shows.
-
-      This used to fall back to the ACTIVE notification preset whenever the picker sat on "New
-      preset…", so exporting a design in progress silently wrote the user's current preset instead -
-      a file named "goat.awpreset" whose manifest said "Shirow", which then clashed with the bundled
-      Shirow on import and rendered as Shirow everywhere.
+      Export what the preview is showing, under the name in the Name field. An imported preset is
+      the exception: its look lives in files the controls cannot describe, so it exports from disk
+      instead. Never fall back to the ACTIVE preset when the picker sits on "New preset…" - that
+      used to export a design-in-progress under the current preset's identity, clashing with it on import.
     */
     $('#btn-export-preset').click(async function () {
       const loaded = String($('#pd-load').val() || '');

@@ -17,11 +17,9 @@ test('makeList hands each game to its caller without waiting for a frame', () =>
   const calls = [...achievements.matchAll(/onGame\?\.\(/g)];
   assert.ok(calls.length > 0, 'makeList must stream games to its caller');
 
-  // No onGame call may sit inside a requestAnimationFrame callback.
   const deferred = /requestAnimationFrame\(\s*\(\)\s*=>\s*onGame/.test(achievements);
   assert.equal(deferred, false, 'onGame must not be deferred to requestAnimationFrame: it never fires while the window is hidden');
 
-  // And nothing else in the file may schedule work through rAF either.
   const rafCalls = [...achievements.matchAll(/^\s*requestAnimationFrame\(/gm)];
   assert.equal(rafCalls.length, 0, `achievements.js must not depend on frame callbacks, found ${rafCalls.length}`);
 });

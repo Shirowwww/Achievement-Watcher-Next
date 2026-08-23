@@ -21,8 +21,8 @@ module.exports.load = async (lang = 'english') => {
       if (lang != 'english') {
         let requested = JSON.parse(await ffs.readFile(path.join(langDir, `${lang}.json`), 'utf8'));
         template = merge(english, requested, {
-          arrayMerge: (dest, src, options) => src, //Do not concatenate array
-          isEmpty: (a) => a === null || a === '', //Ignore empty or null value
+          arrayMerge: (dest, src, options) => src,
+          isEmpty: (a) => a === null || a === '',
         });
       } else {
         template = english;
@@ -41,10 +41,9 @@ module.exports.load = async (lang = 'english') => {
       window.appLocale = template;
       /*
         Views that write their own text instead of being reached by the DOM walk below: the Help
-        panel (built from locale + live settings), the title-bar Watchdog status (painted from an
-        IPC push) and the Settings account cards. Without this they keep the previous language -
-        the status bar until the next poll, the others until the panel is rebuilt. None of them may
-        break loading a language, so each is optional and its failure is contained.
+        panel (built from locale + live settings), the title-bar Watchdog status (from an IPC push)
+        and the Settings account cards. None of them may break loading a language, so each is
+        optional and its failure is contained.
       */
       const repaint = [
         () => window.AchievementHelp.render($),
@@ -515,9 +514,9 @@ function translateUI(lang, locale, template) {
     const c = template.settings.notification.option.designer;
     /*
       The preset designer is bound by `data-lang="<dotted path>"` rather than one selector per label:
-      it has a control for every editable property, and its labels - a group title, a property name,
-      the words in a dropdown - are all leaves of this same block. One pass keeps the markup and the
-      locale in step, and a control added to app.html cannot silently ship with a blank label.
+      it has a control for every editable property, and its labels (group title, property name,
+      dropdown words) are all leaves of this same block. One pass keeps markup and locale in step,
+      so a control added to app.html cannot silently ship with a blank label.
     */
     $("#settingNav li[data-view='presets'] span").text(clear(template.settings.sideMenu.presets));
     // The button on the preset row in the Notification tab, which opens this tab.

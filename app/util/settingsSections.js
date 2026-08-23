@@ -41,9 +41,9 @@ function sectionsIn($, scope) {
 }
 
 /*
-  A stable, language-independent key for remembering one section's open/closed state. Ids come
-  first because they survive re-ordering; the positional fallback only applies to a handful of
-  unnamed cards, where the worst case is that a section forgets its state after a layout change.
+  A stable, language-independent key for remembering a section's open/closed state. Ids come
+  first since they survive re-ordering; the positional fallback covers only a handful of unnamed
+  cards, where the worst case is a section forgetting its state after a layout change.
 */
 function sectionKey($, section, view, index) {
   const el = $(section);

@@ -62,7 +62,7 @@ function manifest(overrides = {}) {
   });
 }
 
-// --- round trip -------------------------------------------------------------------------------
+// Round trip.
 
 test('a preset survives an export/import round trip byte for byte', (t) => {
   const dirs = makeWorkspace(t);
@@ -157,7 +157,7 @@ test('a bundled sound is named in the manifest but not redistributed', (t) => {
   assert.deepEqual(installed.sounds, []);
 });
 
-// --- structure and metadata validation --------------------------------------------------------
+// Structure and metadata validation.
 
 test('a package that is not a package is refused before anything is written', (t) => {
   const dirs = makeWorkspace(t);
@@ -246,7 +246,7 @@ test('a preset folder without an entry point cannot be exported', (t) => {
   assert.equal(res.error, 'preset-not-found');
 });
 
-// --- path safety ------------------------------------------------------------------------------
+// Path safety.
 
 test('safePackagePath rejects every way out of the destination folder', () => {
   const unsafe = [
@@ -351,7 +351,7 @@ test('the reserved preview preset name cannot be claimed by an import', (t) => {
   assert.equal(res.error, 'reserved-name');
 });
 
-// --- version compatibility --------------------------------------------------------------------
+// Version compatibility.
 
 test('an incompatible package is refused with a reason, not a broken install', (t) => {
   const dirs = makeWorkspace(t);
@@ -407,7 +407,7 @@ test('a malformed version floor is a malformed manifest', (t) => {
   assert.equal(res.error, 'invalid-manifest');
 });
 
-// --- duplicates and failure recovery ----------------------------------------------------------
+// Duplicates and failure recovery.
 
 test('an installed preset is marked, so the app can list and delete it again', (t) => {
   const dirs = makeWorkspace(t);

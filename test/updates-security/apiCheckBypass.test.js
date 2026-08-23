@@ -16,7 +16,7 @@ function fakePE() {
   return buf;
 }
 
-// ---- buildBypassConfig (pure rules, mirrors SteamAutoCrack) ----
+// buildBypassConfig mirrors SteamAutoCrack's rules.
 const cfg = bypass.buildBypassConfig({
   exeName: 'game.exe',
   exeBackup: 'game.exe.steamstub.bak',
@@ -41,7 +41,6 @@ const cfgAll = bypass.buildBypassConfig({ exeName: 'g.exe', steamApiDlls: ['stea
 assert.ok(!('hook_times_mode' in cfgAll['steam_api.dll']), 'mode=all has no hook gating');
 assert.ok(!('g.exe' in cfgAll), 'no exe rule without a backup');
 
-// ---- apply + revert against a fake game folder ----
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-bypass-'));
 try {
   const gameDir = path.join(temp, 'game');
@@ -88,12 +87,9 @@ try {
   fs.rmSync(temp, { recursive: true, force: true });
 }
 
-/*
-  pickBypassDllEntries - the pure filter/rename step factored out of extractDllsFromRar so the RAR
-  extraction (moved behind the `apicheckbypass-extract-rar` IPC handler; see ipc.js / crackFix.js's
-  extractRarToDir for why node-unrar-js cannot run in the renderer) stays testable without a real RAR
-  fixture. node-unrar-js's own reading is unchanged by that move and needs no re-test here.
-*/
+// pickBypassDllEntries is the pure filter/rename step factored out of extractDllsFromRar so RAR
+// extraction (behind the apicheckbypass-extract-rar IPC handler - node-unrar-js cannot run in the
+// renderer, see crackFix.js's extractRarToDir) stays testable without a real RAR fixture.
 // node-unrar-js's extractor.extract({...}).files shape: [{ fileHeader: { name }, extraction }]
 function entry(name, extraction) {
   return { fileHeader: { name }, extraction };

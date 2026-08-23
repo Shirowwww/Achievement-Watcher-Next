@@ -12,7 +12,7 @@ const epicOfficial = require('../../app/parser/epicOfficial.js');
 
 (async () => {
   try {
-    // ---- epicAuth: encrypted token round-trip
+    // epicAuth: encrypted token round-trip.
     const token = { access_token: 'AT', refresh_token: 'RT', account_id: 'abcdef0123456789', displayName: 'Tester', expires_in: 3600 };
     const enc = epicAuth.encryptTokens(token, 'passphrase');
     const dec = epicAuth.decryptTokens(enc, 'passphrase');
@@ -21,7 +21,7 @@ const epicOfficial = require('../../app/parser/epicOfficial.js');
     // wrong secret fails closed (throws), never returns garbage
     assert.throws(() => epicAuth.decryptTokens(enc, 'wrong'));
 
-    // ---- epicAuth: config + login URL use the public launcher client by default
+    // epicAuth: config + login URL use the public launcher client by default.
     const cfg = epicAuth.getEpicAuthConfig();
     assert.equal(cfg.configured, true);
     assert.equal(cfg.source, 'epic');
@@ -30,7 +30,7 @@ const epicOfficial = require('../../app/parser/epicOfficial.js');
     const codeUrl = epicAuth.buildEpicAuthCodeUrl();
     assert.ok(codeUrl.includes('/id/api/redirect') && codeUrl.includes('responseType=code'));
 
-    // ---- epicAuth: save/load/status/clear against a sandbox file
+    // epicAuth: save/load/status/clear against a sandbox tokens file.
     const tokensFile = path.join(tmp, 'epic_tokens.enc');
     await epicAuth.saveEpicTokensEncrypted(tokensFile, token, 'passphrase');
     const status = await epicAuth.getEpicAuthStatus({ tokensFile, tokenSecret: 'passphrase' });
@@ -44,12 +44,11 @@ const epicOfficial = require('../../app/parser/epicOfficial.js');
     assert.equal(epicAuth.normalizeEpicAccountId('ABCDEF0123456789'), 'ABCDEF0123456789');
     assert.equal(epicAuth.normalizeEpicAccountId('nope!'), '');
 
-    // ---- locale mapping
     assert.equal(epicOfficial._internal.localeFor('french'), 'fr');
     assert.equal(epicOfficial._internal.localeFor('brazilian'), 'pt-BR');
     assert.equal(epicOfficial._internal.localeFor('klingon'), 'en');
 
-    // ---- local manifest discovery from synthetic .item files
+    // Local manifest discovery from synthetic .item files.
     const manifests = path.join(tmp, 'Manifests');
     fs.mkdirSync(manifests, { recursive: true });
     fs.writeFileSync(
@@ -67,7 +66,7 @@ const epicOfficial = require('../../app/parser/epicOfficial.js');
 
     console.log('PASS: epicOfficial auth + discovery (offline)');
 
-    // ---- live: public sandbox schema (no auth). Network-gated: warn instead of failing the suite.
+    // Live: public sandbox schema, no auth. Network-gated, so a failure here warns instead of failing the suite.
     epicOfficial.setUserDataPath(path.join(tmp, 'ud'));
     try {
       const schema = await epicOfficial._internal.resolveSchema('9773aa1aa54f4f7b80e44bef04986cea', 'french');

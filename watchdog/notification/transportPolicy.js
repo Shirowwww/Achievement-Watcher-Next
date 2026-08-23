@@ -1,27 +1,9 @@
 'use strict';
 
-/*
-  Single owner of "which transport delivers this notification".
-
-  Every notification source (save watcher, platinum, progress, playtime, Xbox poll, the five console
-  watchers) used to carry its own copy of the same three booleans, so a change had to be made ten
-  times and two of the copies had already drifted. They now pass the configured mode and this module
-  answers once, per notification, from signals the process can actually observe:
-
-    overlayHost   'ipc'   the resident app renders overlay popups and reports back what happened
-                  'spawn' no IPC channel (standalone/dev run): a popup can be spawned but its
-                          outcome cannot be observed at all
-    overlayHidden true    Windows reports an exclusive full-screen D3D app - an always-on-top
-                          window is not composited over one, so the popup would play invisibly
-                  false   nothing is covering the screen
-                  null    the state could not be read (see queryUserNotificationState.js)
-    remembered    the transport that last worked for this game, used only when the live signal is
-                  unknown - never as a substitute for one
-
-  Automatic never guesses in the optimistic direction: a signal it cannot read leaves the overlay
-  selected (the mode the user sees) and the delivery layer decides on the acknowledgement it gets
-  back, not on the send call returning.
-*/
+// Single owner of "which transport delivers this notification". Every source used to carry its own
+// copy of the same three booleans and they had already drifted - they now pass the mode plus what
+// this process can observe, and this module decides once. Automatic never guesses optimistically:
+// an unreadable signal still leaves the overlay selected, not toast.
 
 const MODES = ['auto', 'overlay', 'toast', 'both'];
 const DEFAULT_MODE = 'auto';
@@ -63,14 +45,10 @@ function isOverlayCoolingDown(now = Date.now()) {
   return overlayFailedAt > 0 && now - overlayFailedAt < OVERLAY_COOLDOWN_MS;
 }
 
-/*
-  `websocket` is the user's broadcast setting and is independent of the display transport: external
-  clients keep receiving unlocks whichever popup the user sees.
-
-  Returns { overlay, toast, websocket, fallbackToToast, reason }. `fallbackToToast` authorizes ONE
-  toast for this notification and only when the overlay reports a definite failure - the delivery
-  layer owns that decision so a fallback can never race the primary transport into a duplicate.
-*/
+// `websocket` is the user's broadcast setting, independent of the display transport - external
+// clients keep receiving unlocks whichever popup the user sees. Returns { overlay, toast, websocket,
+// fallbackToToast, reason }; `fallbackToToast` authorizes ONE toast, and only when the overlay
+// reports a definite failure, so a fallback can never race the primary transport into a duplicate.
 function planDelivery({ mode, websocket = false, signals = {}, now = Date.now() } = {}) {
   const chosen = normalizeMode(mode);
   const broadcast = websocket === true || chosen !== 'toast';

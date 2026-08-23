@@ -1,14 +1,9 @@
 'use strict';
 
-/*
-  What actually delivered the last notification of a game, kept next to options.ini
-  (<userData>/cfg/notificationHealth.json) so both processes can see it: the Watchdog writes it, the
-  app reads it for the Game Health "Notifications" row (app/parser/notificationHealth.js).
-
-  Deliberately a memory, not a compatibility database: one small record per game, pruned by age and
-  count, holding only what was observed on this machine. Automatic consults it solely as a
-  tie-breaker when the live full-screen signal cannot be read (see transportPolicy.js).
-*/
+// What actually delivered the last notification of a game, kept next to options.ini
+// (<userData>/cfg/notificationHealth.json): the Watchdog writes it, the app reads it for the Game
+// Health "Notifications" row. Deliberately a memory, not a compatibility database - one small,
+// pruned record per game that Automatic consults only as a tie-breaker (see transportPolicy.js).
 
 const fs = require('fs');
 const path = require('path');

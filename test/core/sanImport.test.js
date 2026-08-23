@@ -1,15 +1,11 @@
 'use strict';
 
 /*
-  Importing a Steam Achievement Notifier theme.
-
-  A `.san` file is untrusted data from an unknown machine, so half of this file is about what the
-  importer refuses to do with one: reach outside its own package, write anything that is not a
-  picture or a sound, or let a value through to the generated stylesheet unclamped. The other half
-  is the conversion itself - what a theme becomes, and what the user is told was left behind.
-
-  The fixture is written for these tests: invented colours, invented filenames and fictional Windows
-  paths. Nothing from SAN's own repository is copied here.
+  Importing a Steam Achievement Notifier theme: a `.san` file is untrusted data from an unknown
+  machine, so half of this file is about what the importer refuses to do with one - reach outside its
+  own package, write anything that is not a picture or a sound, or let a value through unclamped. The
+  other half is the conversion itself, what a theme becomes and what the user is told was left behind.
+  The fixture uses invented colours, filenames and paths - nothing from SAN's own repository.
 */
 
 const assert = require('node:assert/strict');
@@ -78,7 +74,7 @@ const install = (dirs, file, extra = {}) =>
     ...extra,
   });
 
-// --- the key table is the contract ---------------------------------------------------------------
+// The key table is the contract.
 
 /*
   Every property of SAN's own `Customisation`, as its public type declares it. A key that turns up in
@@ -131,7 +127,7 @@ test('every property a SAN theme can carry has a decided fate', () => {
   assert.equal(new Set(keys).size, keys.length);
 });
 
-// --- the conversion --------------------------------------------------------------------------------
+// The conversion.
 
 test('the fixture theme becomes the design it describes', () => {
   const { options } = sanImport.mapSanCustomisation(theme().customisation);
@@ -332,7 +328,7 @@ test('a font file is matched to a stack by name, never loaded', () => {
   }
 });
 
-// --- reading a package -------------------------------------------------------------------------------
+// Reading a package.
 
 test('a theme is refused whole when the package is not one', (t) => {
   const dirs = workspace(t);
@@ -461,7 +457,7 @@ test('an absolute path in the theme is read as a name, never as a path', (t) => 
   assert.equal(fs.existsSync(path.join(dirs.presets, out.name, 'backdrop.png')), false);
 });
 
-// --- installing -----------------------------------------------------------------------------------------
+// Installing.
 
 test('an imported theme is an ordinary preset, complete and editable', (t) => {
   const dirs = workspace(t);

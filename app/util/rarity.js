@@ -56,7 +56,7 @@ async function getJson(url, { timeoutMs = DEFAULT_TIMEOUT_MS, headers } = {}) {
   return res.json();
 }
 
-// ---- platform fetchers: each resolves to [{ name, percent }] keyed by the achievement apiname ----
+// Platform fetchers: each resolves to [{ name, percent }] keyed by the achievement apiname.
 
 async function fetchSteamGlobalAchievementPercentages(appid, options = {}) {
   const url = `https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid=${encodeURIComponent(
@@ -265,8 +265,6 @@ function resolveGameRarityContext(game, options = {}) {
 function sourceTag(source) {
   return RARITY_SOURCES[source] || RARITY_SOURCES.steam;
 }
-
-// ---- per-appid sidecar cache ----
 
 function cacheFilePath(appid) {
   return path.join(CACHE_DIR, `${appid}.json`);

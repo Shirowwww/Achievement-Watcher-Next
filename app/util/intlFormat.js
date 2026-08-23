@@ -1,16 +1,13 @@
 'use strict';
 
 /*
-  Locale-aware dates, relative times and numbers, built on the platform's Intl.
+  Locale-aware dates, relative times and numbers, built on the platform's Intl. Formats that are
+  pure ICU data (a date, "3 days ago", a grouped count, a percentage) don't need a 28-locale
+  translation - Intl already knows the separators, plural rules and calendar for every bundled
+  language. Only the sentence around a value belongs in app/locale/lang.
 
-  Formats that are pure ICU data - a date, "3 days ago", a grouped count, a percentage - are the
-  ones NOT to spend a 28-locale translation on: Intl already knows the separators, the plural
-  rules and the calendar for every language the app bundles. Only the sentence around a value
-  belongs in app/locale/lang.
-
-  Like overlayUi.js this is loaded both as a CommonJS module (app, tests) and as a plain browser
-  script (the sandboxed overlay window cannot require), so it attaches to window.IntlFormat too and
-  reads nothing from disk.
+  Like overlayUi.js this loads both as CommonJS (app, tests) and as a plain browser script (the
+  sandboxed overlay window cannot require), so it also attaches to window.IntlFormat.
 */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
@@ -157,12 +154,10 @@
   }
 
   /*
-    A played-time duration in the reader's language.
-
-    Intl covers every bundled locale, which a duration library's own language list does not: the
-    playtime label used to be built with a tag humanize-duration does not know for Simplified
-    Chinese and Brazilian Portuguese, and its `fallbacks` option turned that into silent English.
-    Returns null when the runtime has no Intl.DurationFormat, so the caller can keep its old path.
+    A played-time duration in the reader's language. Intl covers every bundled locale, unlike the
+    duration library this replaced: humanize-duration didn't know Simplified Chinese or Brazilian
+    Portuguese, and its `fallbacks` option turned that into silent English. Returns null when the
+    runtime has no Intl.DurationFormat, so the caller can keep its old path.
   */
   function splitDuration(totalSeconds, units) {
     const SECONDS = { days: 86400, hours: 3600, minutes: 60, seconds: 1 };

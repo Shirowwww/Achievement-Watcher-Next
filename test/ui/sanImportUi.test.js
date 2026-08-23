@@ -1,13 +1,9 @@
 'use strict';
 
-/*
-  The two halves of the SAN import that are not in util/sanImport.js: the button that starts one, and
-  the report that tells the user what it did.
-
-  The conversion itself is covered by test/core/sanImport.test.js. What matters here is that the
-  adapter cannot grow a new outcome the UI has no words for, that the import writes only into the
-  user's own preset storage, and that nothing about the button ships unlabelled.
-*/
+// The two halves of the SAN import that are not in util/sanImport.js: the button that starts one,
+// and the report that tells the user what it did (conversion itself is covered by
+// test/core/sanImport.test.js). What matters here: the adapter cannot grow an outcome the UI has no
+// words for, the import writes only into the user's own preset storage, and the button ships labelled.
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');

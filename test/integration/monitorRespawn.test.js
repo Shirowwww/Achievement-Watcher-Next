@@ -74,11 +74,10 @@ test('a manual restart during a pending respawn leaves the scheduler armed', () 
 });
 
 test('the main window renderer PID reaches the watchdog even when it does not exist yet at spawn time', () => {
-  // launchWatchdog() runs before createMainWindow() on a fresh launch (see the call sites in
-  // app.whenReady()), so AW_APP_PIDS alone can only ever carry the browser-process PID at that
-  // point. createMainWindow() must separately push the renderer PID over the IPC channel once it
-  // exists, or "send Escape to the game, never to AW" never protects the main window until the
-  // watchdog happens to respawn.
+  // launchWatchdog() runs before createMainWindow() on a fresh launch, so AW_APP_PIDS alone can only
+  // carry the browser-process PID at that point. createMainWindow() must separately push the
+  // renderer PID over IPC once it exists, or "send Escape to the game, never to AW" never protects
+  // the main window until the watchdog happens to respawn.
   assert.match(
     source,
     /AW_APP_PIDS:\s*\[String\(process\.pid\),\s*getRendererPid\(\)\]/,

@@ -1,10 +1,9 @@
 'use strict';
 
-// Process listing for the playtime monitor and the "is the game running?" notification guard.
-//
-// The native ToolHelp snapshot (util/processSnapshot.js) is the fast path: no child process, ~6 ms
-// against ~440 ms for a `tasklist.exe` round trip. `win-tasklist` stays as the fallback for any
-// machine where koffi cannot load kernel32 - it is only reached after the native path throws once.
+// Process listing for the playtime monitor and the "is the game running?" notification guard. The
+// native ToolHelp snapshot (util/processSnapshot.js) is the fast path: ~6 ms against ~440 ms for a
+// `tasklist.exe` round trip. `win-tasklist` is the fallback for machines where koffi can't load
+// kernel32 - reached only after the native path throws once.
 
 const snapshot = require('./processSnapshot.js');
 
@@ -28,16 +27,11 @@ async function list() {
   return tasklist();
 }
 
-// Name-or-pid membership test. The native path answers it from the same snapshot instead of
-// spawning a filtered `tasklist.exe`; this runs on every achievement unlock, per game binary.
-//
-// Membership, not liveness: win-tasklist's own isProcessRunning() filters on `STATUS eq RUNNING`,
-// and `tasklist.exe` reports the state as "Unknown" for ordinary console-session processes on at
-// least some Windows builds - so that call answers false for a process that is plainly running.
-// `watchdog.js` uses this to decide whether an unlock belongs to a game that is on screen, and a
-// false negative there silently drops the notification. Both paths below therefore ask only whether
-// the process exists, which is also the right answer for a game busy enough to stop pumping
-// messages ("Not Responding").
+// Name-or-pid membership test, answered from the same snapshot instead of spawning `tasklist.exe`
+// (runs on every achievement unlock). Deliberately membership, not liveness: win-tasklist's own
+// isProcessRunning() filters on `STATUS eq RUNNING`, but tasklist.exe reports "Unknown" for ordinary
+// console-session processes on some Windows builds - a false negative there would silently drop the
+// unlock notification. Existence is also the right answer for a "Not Responding" game.
 async function isProcessRunning(target, ...rest) {
   if (!nativeBroken && rest.length === 0) {
     try {

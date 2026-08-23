@@ -469,14 +469,10 @@ test('the starting points are a row of the designer card, not a card of their ow
   assert.match(settings, /\$\('#options-notify-designer'\)\.on\('click', '\.pd-template'/);
 });
 
-/*
-  The designer reports what it just did through one element, #pd-status, and reads each message off
-  a data attribute the locale loader is supposed to have put there. Nothing connects the two ends:
-  a message the loader never binds resolves to '' and the status still renders, so picking the
-  "Slate" template printed a bare green "Slate" with no indication of what had happened, and
-  "Surprise me" reported nothing at all. Assert every attribute the code reads is one the loader
-  writes, and that the strings behind them exist in every locale.
-*/
+// The designer reports what it just did through one element, #pd-status, reading each message off
+// a data attribute the locale loader is supposed to have put there. Nothing connects the two ends:
+// an unbound message resolves to '' and the status still renders - picking "Slate" once printed a
+// bare green "Slate" with no explanation, and "Surprise me" reported nothing at all.
 test('every #pd-status message the designer reads is bound by the locale loader', () => {
   const settingsJs = fs.readFileSync(path.join(appRoot, 'ui', 'settings.js'), 'utf8');
   const loaderJs = fs.readFileSync(path.join(appRoot, 'locale', 'loader.js'), 'utf8');

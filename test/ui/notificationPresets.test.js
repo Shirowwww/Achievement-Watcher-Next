@@ -41,18 +41,10 @@ test('bundled notification presets contain their assets and valid inline scripts
   }
 });
 
-/*
-  The default library renders through ONE engine.
-
-  Every preset under "Default Presets" carries util/customPreset.js's PRESET_ENGINE verbatim and the
-  markup that goes with it, so a preset differs from its neighbours only in its stylesheet. That is
-  what makes a fix to rare tiers, the 100% state, the progress line or the marquee land in all of
-  them at once - the previous library had seventeen near-copies of the same script, and the drift
-  between them is why none of them ever rendered a completion notification.
-
-  If this fails after an intentional engine change, regenerate the bundled index.html files rather
-  than letting one of them keep an older copy.
-*/
+// The default library renders through ONE engine: every preset under "Default Presets" carries
+// PRESET_ENGINE verbatim, so a preset differs from its neighbours only in its stylesheet - the
+// previous library had seventeen near-copies of the same script, and the drift between them is why
+// none of them ever rendered a completion notification. Regenerate the bundled files after an engine change.
 test('every bundled default preset renders through the shared preset engine', () => {
   const { PRESET_ENGINE, PRESET_MARKUP } = require('../../app/util/customPreset.js');
   const names = fs.readdirSync(defaultPresetsRoot).filter((name) => fs.statSync(path.join(defaultPresetsRoot, name)).isDirectory());
@@ -111,14 +103,10 @@ test('every bundled default preset declares a usable window box and duration', (
   }
 });
 
-/*
-  Cost. A notification is drawn over a running game, so the default library stays on properties the
-  compositor can handle on its own.
-
-  backdrop-filter is called out by name because it was in five of the presets this library replaced
-  and did nothing in any of them: the notification window is transparent and has no page content
-  behind the card to sample, so it only ever bought a blur pass per frame.
-*/
+// Cost: a notification is drawn over a running game, so the default library stays on properties
+// the compositor can handle on its own. backdrop-filter is called out by name because it was in
+// five of the presets this library replaced and did nothing in any of them - the notification
+// window is transparent with no page content behind the card to sample, so it only bought a blur pass per frame.
 test('no bundled default preset uses effects that cost frames over a game', () => {
   const names = fs.readdirSync(defaultPresetsRoot).filter((name) => fs.statSync(path.join(defaultPresetsRoot, name)).isDirectory());
 

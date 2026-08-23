@@ -1,11 +1,9 @@
 'use strict';
 
 /*
-  Manages the user-override game index (cfg/gameIndex.json) that the watchdog playtime monitor reads
-  at startup to match running processes to appids. Entry shape: { appid, name, binary, icon, source?,
-  steamappid?, uplayId?, iconUrl?, headerUrl?, portraitUrl? }. source drives per-platform presets;
-  steamappid/uplayId let the watchdog attribute namespaced SocialClub / Uplay R2 games to their
-  Steam data, while the resolved artwork fields keep synthetic/manual appids away from invalid
+  User-override game index (cfg/gameIndex.json), read by the watchdog playtime monitor at startup to
+  match running processes to appids. steamappid/uplayId let it attribute namespaced SocialClub/Uplay
+  R2 games to their Steam data; the resolved artwork fields keep synthetic/manual appids off invalid
   Steam-CDN URLs.
 */
 
@@ -64,7 +62,6 @@ function writeList() {
   batchDirty = false;
 }
 
-// Return true if this appid already appears in the user override.
 module.exports.has = (appid) => {
   try {
     return loadList().some((g) => String(g.appid) === String(appid));
@@ -181,10 +178,10 @@ module.exports.remove = (appid) => {
   }
 };
 
-// Resolve duplicate binary assignments: when two or more appids map to the SAME binary filename, keep
-// the entry whose game name best matches the binary and drop the rest. Clears stale cross-game seeds
-// (e.g. "Forza Horizon 5" and "Forza Horizon 6" both pointing at forzahorizon6.exe, which would make
-// the watchdog attribute playtime to the wrong game). Returns the number of entries removed.
+// When several appids claim the same binary filename (e.g. two Forza titles sharing an exe), keep
+// the assignment on the best name match and clear it from the rest. Losers keep their identity row -
+// dropping it instead made the next scan re-seed it, and the pair churned forever. Returns how many
+// assignments were cleared.
 module.exports.reconcile = (games) => {
   try {
     const exeDetect = require(path.join(__dirname, 'exeDetect.js'));

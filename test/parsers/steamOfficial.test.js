@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const so = require('../../app/parser/steamOfficial.js');
 
-// ---- tiny binary KV writer (inverse of parseKVBinary) ----
+// Tiny binary KV writer (inverse of parseKVBinary).
 function cstr(s) {
   return Buffer.concat([Buffer.from(String(s), 'utf8'), Buffer.from([0])]);
 }
@@ -104,7 +104,7 @@ function kvFloat(key, val) {
     const floatSnap = so.buildSnapshotFromAppcache(floatEntries, { 9: { data_u32: fbuf.readUInt32LE(0), data_type: 'int32', times: {} } });
     assert.equal(floatSnap.ACH_F.progress, 0.5);
 
-    // ---- end-to-end through files (the shape steam.js consumes)
+    // End-to-end through files (the shape steam.js consumes).
     fs.writeFileSync(path.join(tmp, 'UserGameStatsSchema_480.bin'), schemaBuf);
     fs.writeFileSync(path.join(tmp, 'UserGameStats_111_480.bin'), userBuf);
     const rows = so.readLocalUserStats({ statsDir: tmp, appid: '480', accountId: '111' });

@@ -46,8 +46,6 @@ const UBISOFT_LOCALE_MAP = new Map([
   ['th-th', 'thai'], ['tr-tr', 'turkish'], ['uk-ua', 'ukrainian'], ['vi-vn', 'vietnamese'],
 ]);
 
-// ---- uplay ↔ steam mapping asset ----------------------------------------------------------------
-
 let uplayToSteam = null;
 function getUplaySteamMapping() {
   if (uplayToSteam) return uplayToSteam;
@@ -63,8 +61,6 @@ function getUplaySteamMapping() {
   }
   return uplayToSteam;
 }
-
-// ---- spool protobuf reader ----------------------------------------------------------------------
 
 function readVarint(buffer, offset, end = buffer.length) {
   let value = 0;
@@ -207,8 +203,6 @@ function listSpoolEntries(spoolRoot = DEFAULT_SPOOL_ROOT) {
   return out;
 }
 
-// ---- configurations index (titles / process names) ----------------------------------------------
-
 let configurationsCache = { path: '', mtimeMs: 0, blocks: [] };
 
 function normalizeQuotedText(value) {
@@ -277,11 +271,10 @@ function cleanTitle(value) {
   return String(value || '').trim();
 }
 
-// Turn an Ubisoft achievements spec (e.g. "971_spec", "FarCry4", "ACShadows_fr") into readable
-// words that can be matched against the Steam catalog. Short spec ids ("fc4", "uplay") and pure
-// numbers are too ambiguous to use as name candidates; longer camelCase specs ("FarCry4") become
-// "far cry 4" and are only ever auto-committed through the same high-confidence Steam matcher as
-// every other name lookup.
+// Turn an Ubisoft achievements spec (e.g. "971_spec", "FarCry4", "ACShadows_fr") into readable words
+// that can be matched against the Steam catalog. Short spec ids ("fc4", "uplay") and pure numbers are
+// too ambiguous to use as name candidates; longer camelCase specs ("FarCry4") become "far cry 4" and
+// still go through the same high-confidence Steam matcher as every other name lookup.
 function specToWords(value) {
   const raw = String(value || '').trim().replace(/^['"]+|['"]+$/g, '').trim();
   if (!raw) return [];
@@ -337,9 +330,8 @@ function buildNameCandidates(block, archiveSpec = '') {
 
 // A title distributed on several stores gets SEVERAL configuration blocks sharing one achievements
 // spec: the real game block, plus one per storefront whose only name is the storefront itself
-// ("root: name: Steam"). Picking the first match is therefore a coin flip - that is how Far Cry 4
-// ended up in the library titled "Steam" with no cover (issue #7). Merge them instead and take the
-// first usable value for each field, so the storefront block can only ever fill gaps.
+// ("root: name: Steam"). Picking the first match is a coin flip; merge them instead and take the
+// first usable value per field, so a storefront-only block can only ever fill gaps.
 function mergeConfigBlocks(blocks) {
   const list = Array.isArray(blocks) ? blocks.filter(Boolean) : [];
   if (!list.length) return null;
@@ -421,14 +413,15 @@ function readConfigurationsIndex(configurationsPath = DEFAULT_CONFIGURATIONS_PAT
     // `root.name` is frequently a localization key ("l1", "NAME", "RELATED_GAMENAME_116") or the
     // storefront's own name, so it ranks below the installer's game_identifier and display_name.
     const rootName = normalizeQuotedText(block.match(/root:\s*[\s\S]*?\n\s+name:\s*([^\r\n]+)/m)?.[1] || '');
-    // sort_string is a shelf-ordering key ("Assassin's Creed 05.1"): a poor title, but a usable
-    // last-resort name candidate when every other field is a storefront name or a loc key.
+    // sort_string is a shelf-ordering key ("Assassin's Creed 05.1"); captured for completeness, but
+    // not used as a name candidate (buildNameCandidates deliberately excludes it - franchise stems
+    // like "Assassin's Creed" resolve to the wrong game).
     const sortString = normalizeQuotedText(block.match(/^\s*sort_string:\s*([^\r\n]+)/m)?.[1] || '');
     // The store the copy was actually bought from, stated by the block itself:
     //   third_party_platform:
     //     name: Steam
     // A Steam purchase that merely launches through Ubisoft Connect is still an owned Steam title,
-    // and the library filter for those has to be able to see it (issue #20).
+    // and the library filter for those has to be able to see it.
     const thirdPartyPlatform = normalizeQuotedText(block.match(/^\s*third_party_platform:\s*\r?\n\s*name:\s*([^\r\n]+)/m)?.[1] || '');
     const backgroundImage = normalizeQuotedText(block.match(/^\s*background_image:\s*([^\r\n]+)/m)?.[1] || '');
     const logoImage = normalizeQuotedText(block.match(/^\s*logo_image:\s*([^\r\n]+)/m)?.[1] || '');
@@ -451,8 +444,6 @@ function readConfigurationsIndex(configurationsPath = DEFAULT_CONFIGURATIONS_PAT
   configurationsCache = { path: filePath, mtimeMs: Number(stat.mtimeMs || 0), blocks };
   return blocks;
 }
-
-// ---- achievements archive (schema zip) -----------------------------------------------------------
 
 function resolveAchievementsArchive(appid, options = {}) {
   const safeAppId = String(appid || '').trim();
@@ -584,8 +575,6 @@ function collectSchemaData(archivePath) {
   };
 }
 
-// ---- rarity bridge (ubisoft numeric ids ↔ steam apinames) ---------------------------------------
-
 // Steam apinames for Ubisoft ports are usually "Ach_<id>"/"ACH_<id>" or "<something>_<id>"; strip
 // down to the trailing number so they can be matched to the archive's numeric ids. Single
 // implementation lives in util/rarity.js so the parser seed and the renderer bridge stay in sync.
@@ -606,12 +595,10 @@ async function seedRarityFromSteam(cacheId, steamAppId, ids) {
   }
 }
 
-// ---- generic product identity resolution ---------------------------------------------------------
-
 // Local Steam library scan (appmanifest_*.acf): a Steam purchase that launches Ubisoft Connect is
 // installed in the Steam library, so its ACF carries the REAL Steam appid and store name. Matching
 // the configurations candidates against those offline manifests resolves ANY future title with no
-// asset edit and no network (issue #7).
+// asset edit and no network.
 const { readRegistryString, listRegistryAllSubkeys } = require('../util/reg.js');
 
 function unescapeVdf(value) {
@@ -650,7 +637,7 @@ function normalizePathKey(value) {
 // Where Ubisoft Connect installed a product. For a Steam purchase that launches Ubisoft Connect,
 // this points straight inside the Steam library (…\steamapps\common\Far Cry 4), which identifies
 // the Steam release WITHOUT going through any name at all - no asset row, no fuzzy match, no
-// network. This is the resolution path that survives titles nobody has mapped yet (issue #7).
+// network. This is the resolution path that survives titles nobody has mapped yet.
 function ubisoftInstallDir(productId) {
   const id = String(productId || '').trim();
   if (!/^\d+$/.test(id)) return '';
@@ -767,10 +754,9 @@ async function scanLocalSteamLibrary(options = {}) {
 let identityCache = new Map();
 
 // Whether a Ubisoft product id is really on disk. Ubisoft Connect registers every product under
-// HKLM/HKCU Installs (32/64-bit views), but it also leaves stale subkeys behind after uninstalls,
-// so a bare registry key is NOT install proof (it kept owned-but-uninstalled titles such as
-// Assassin's Creed Mirage in the "installed" filter). Only a subkey whose InstallDir still exists
-// on disk counts. Memoized for the session - the launcher rarely changes mid-run.
+// HKLM/HKCU Installs (32/64-bit views), but leaves stale subkeys behind after uninstalls, so a bare
+// registry key is not install proof - only a subkey whose InstallDir still exists on disk counts.
+// Memoized for the session - the launcher rarely changes mid-run.
 let _installedUbisoftProducts = null;
 function isUbisoftProductInstalled(productId) {
   const id = String(productId || '').trim();
@@ -966,8 +952,6 @@ function resetIdentityCache() {
   identityCache = new Map();
 }
 
-// ---- parser contract ----------------------------------------------------------------------------
-
 // One entry per product that has BOTH a spool (unlock state) and a cached achievements archive
 // (schema). Multiple Ubisoft users: latest-written spool wins.
 module.exports.scan = () => {
@@ -1077,7 +1061,7 @@ module.exports.getGameData = async (appid, lang) => {
 
   // Resolve the real identity generically (configurations name → Steam catalog → name lookup) so a
   // Steam-launched Ubisoft title never shows up as "Steam"/"Ubisoft <id>" and future titles get
-  // cover art without a per-game asset patch (issue #7).
+  // cover art without a per-game asset patch.
   const identity = await resolveIdentity(appid);
   const uplayId = data.uplayId || appid.appid;
   const steamAppId = identity.steamAppId;
@@ -1176,8 +1160,8 @@ module.exports.getAchievements = (appid) => {
 };
 
 // True when the copy Ubisoft Connect launches was bought on Steam: the "official Steam games" filter
-// must govern it even though the data comes from Ubisoft (issue #20). Signals: configuration blocks
-// naming Steam, or an install registered inside a Steam library (steamapps\common).
+// must govern it even though the data comes from Ubisoft. Signals: configuration blocks naming Steam,
+// or an install registered inside a Steam library (steamapps\common).
 const STEAM_LIBRARY_DIR = /[\\/]steamapps[\\/]common[\\/]/i;
 module.exports.isSteamPurchase = (data) =>
   (Array.isArray(data?.storefronts) && data.storefronts.includes('steam')) || STEAM_LIBRARY_DIR.test(String(data?.gameDir || ''));

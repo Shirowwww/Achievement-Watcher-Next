@@ -8,8 +8,8 @@ const loadRegedit = () => regeditPromise || (regeditPromise = import('regodit'))
 module.exports = async (appID, time) => {
   const regedit = await loadRegedit();
   // AW Next uses its own registry namespace so neither predecessor's uninstaller can wipe playtime
-  // data (issue #6). Counters from the older namespaces are copied forward once, on first launch,
-  // by migratePlaytimeRegistry() in app/util/migrateUserData.js.
+  // data. Counters from the older namespaces are copied forward once, on first launch, by
+  // migratePlaytimeRegistry() in app/util/migrateUserData.js.
   const key = 'Software/Achievement Watcher Next/Playtime/Steam/' + appID;
 
   const current = +regedit.regQueryIntegerValue('HKCU', key, 'total') || 0;

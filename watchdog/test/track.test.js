@@ -199,11 +199,9 @@ test('the in-memory baseline is a snapshot, not a live reference to the caller a
 });
 
 /*
-  A game whose achievements the user reset. The app deletes the .db itself, but this process keeps
-  the same baseline in memory for as long as it runs - and that copy is what the next unlock is
-  diffed against. Without forget(), the re-earned achievement matches a baseline that still has it
-  and is reported as "already unlocked": the reset would silently cost the user every future
-  notification for that game until the monitor restarts.
+  The app deletes the .db itself on a reset, but this process keeps the same baseline in memory -
+  and that copy is what the next unlock diffs against. Without forget() clearing it too, a re-earned
+  achievement matches the stale baseline and is silently treated as already unlocked until restart.
 */
 test('forgetting a game drops its baseline from memory and from disk', async (t) => {
   const root = tempDir(t);

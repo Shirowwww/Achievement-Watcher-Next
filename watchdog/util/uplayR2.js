@@ -18,13 +18,9 @@ function gameIndexFiles() {
   ];
 }
 
-/*
-  Resolve a Ubisoft product id to the Steam AppID the app mapped it to.
-
-  Returns '' when the app has not scanned this game yet. The caller must treat that as "skip", never
-  as "use the Ubisoft id" - feeding a product id to the Steam pipeline is what used to stall the
-  library scan for 30s a game.
-*/
+// Resolves a Ubisoft product id to the Steam AppID the app mapped it to. Returns '' when the app
+// hasn't scanned this game yet - the caller must treat that as "skip", never "use the Ubisoft id":
+// feeding a product id into the Steam pipeline is what used to stall the library scan for 30s a game.
 function steamAppIdForUplayId(uplayId, { files = gameIndexFiles() } = {}) {
   const key = String(uplayId || '');
   if (!key) return '';
@@ -41,14 +37,10 @@ function steamAppIdForUplayId(uplayId, { files = gameIndexFiles() } = {}) {
   return '';
 }
 
-/*
-  Rewrite Uplay R2 objective ids onto the schema's Steam api-names, in place.
-
-  The api-name for a supported game always ends in the objective id (the app only maps games where
-  that holds for every achievement), so matching on the trailing digits is exact rather than a guess.
-  Entries that already match the schema are left untouched, which covers the prefixed keys a newer
-  loader writes. Returns the number of entries rewritten.
-*/
+// Rewrites Uplay R2 objective ids onto the schema's Steam api-names, in place. The api-name for a
+// supported game always ends in the objective id (the app only maps games where that holds for every
+// achievement), so matching on the trailing digits is exact, not a guess. Entries already matching
+// the schema are left untouched, covering the prefixed keys a newer loader writes.
 function remapObjectiveIds(achievements, schemaList) {
   const list = Array.isArray(schemaList) ? schemaList : [];
   const entries = Array.isArray(achievements) ? achievements : [];

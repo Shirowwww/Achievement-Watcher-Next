@@ -39,18 +39,10 @@ test('pickRandomSound returns an existing file and handles empty dirs', () => {
   assert.equal(sounds.pickRandomSound([makeDir([])]), '');
 });
 
-/*
-  "Random" is an entry in the sound list, not a switch beside it.
-
-  Two controls describing one outcome is how the sound dropdown could read "Steam Deck" while every
-  notification played something else, so the row is gone and the list carries the choice. That makes
-  four things load-bearing, and none of them is visible from the other three:
-
-    * the sentinel cannot look like a filename, or it could collide with a real sound;
-    * the list has to offer it, labelled from the locale;
-    * saving has to turn it back into the boolean the notification path actually reads;
-    * nothing may try to PLAY the sentinel as if it were a file.
-*/
+// "Random" is an entry in the sound list, not a switch beside it - two controls for one outcome
+// is how the dropdown could read "Steam Deck" while every notification played something else. Four
+// things are load-bearing here: the sentinel can't look like a filename, the list must offer and
+// label it, saving must convert it back to the boolean the notification path reads, and nothing may play it as a file.
 test('the random sound is chosen from the sound list, not from a row of its own', () => {
   const root = path.join(__dirname, '..', '..', 'app');
   const settings = fs.readFileSync(path.join(root, 'ui', 'settings.js'), 'utf8');

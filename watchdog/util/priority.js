@@ -2,14 +2,9 @@
 
 const os = require('os');
 
-/*
-  Set a process's scheduling priority.
-
-  Previously shelled out to `wmic process ... CALL setpriority`, but WMIC is deprecated and
-  removed from Windows 11 24H2+, where the call fails. Node's built-in os.setPriority() does
-  the same thing with no external process and works on every supported OS/version. The legacy
-  WMIC priority words are mapped to the equivalent Node nice values (os.constants.priority).
-*/
+// Previously shelled out to `wmic process ... CALL setpriority`, but WMIC is deprecated and removed
+// from Windows 11 24H2+, where the call fails. os.setPriority() does the same with no external
+// process; the legacy WMIC priority words are mapped to the equivalent Node nice values below.
 const niceByLevel = {
   idle: os.constants.priority.PRIORITY_LOW, // 19
   'below normal': os.constants.priority.PRIORITY_BELOW_NORMAL, // 10

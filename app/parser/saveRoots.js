@@ -128,11 +128,10 @@ function parseSteamLibraryFolders(steamPath) {
   return roots;
 }
 
-// A path is "Steam-ish" when its normalized name contains a Steam library/install segment
-// (steam, steamapps, steamlibrary, "steam library", "steam games"). Automatic detection must
-// never add these as library roots: legit Steam games are handled by the Steam source, not by
-// the emulator scans. A neutral folder like C:\Games that merely *contains* a steamapps
-// subtree stays eligible - the scans skip that subtree themselves.
+// A path is "Steam-ish" when its name contains a Steam library/install segment (steam, steamapps,
+// steamlibrary, ...) - these must never become emulator-scan library roots, since Steam games are
+// handled by the Steam source. A folder that merely *contains* a steamapps subtree stays eligible;
+// the scans skip that subtree themselves.
 function isSteamLikePath(p) {
   const value = String(p || '');
   if (!value) return false;
@@ -140,11 +139,10 @@ function isSteamLikePath(p) {
   return /(?:^|[\\/])(steam|steamapps|steamlibrary|steam library|steam games)(?:[\\/]|$)/i.test(normalized);
 }
 
-// Common game-library folder names in many languages, probed on every fixed drive by Smart Find
-// and used to recognise library-like subfolders (e.g. a "Jeux" folder on the Desktop). `Program
-// Files` variants are only added under their Games subfolder so the scanner never treats the whole
-// Windows install (Steam, Office, …) as a game library. Localised "games" words are included so a
-// user's own folder naming never hides installed games.
+// Common game-library folder names in many languages, probed on every fixed drive by Smart Find and
+// used to recognise library-like subfolders (e.g. a "Jeux" folder on the Desktop). `Program Files`
+// variants are scoped to their Games subfolder so the scanner never treats the whole Windows install
+// as a game library.
 const GAME_LIBRARY_FOLDER_NAMES = [
   // English / neutral
   'Games',

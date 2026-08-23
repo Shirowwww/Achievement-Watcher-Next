@@ -4,10 +4,9 @@ const path = require('path');
 
 // AW Next keeps its own data folder, distinct from both predecessors, so neither of their
 // uninstallers can remove it. Electron sets the path; tests and standalone scripts resolve the
-// same folder under %APPDATA%.
-//
-// The chain is  Achievement Watcher (1.6.8)  ->  Achievement Watcher 3.0  ->  Achievement Watcher Next
-// and migrateUserData.js imports forward along it, one hop at a time, without ever deleting a source.
+// same folder under %APPDATA%. The chain is Achievement Watcher (1.6.8) -> Achievement Watcher
+// 3.0 -> Achievement Watcher Next, and migrateUserData.js imports forward one hop at a time,
+// without ever deleting a source.
 const APP_DATA_DIR_NAME = 'Achievement Watcher Next';
 const AW3_DATA_DIR_NAME = 'Achievement Watcher 3.0';
 const LEGACY_DATA_DIR_NAME = 'Achievement Watcher';

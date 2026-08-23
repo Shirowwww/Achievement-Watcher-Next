@@ -37,7 +37,6 @@ async function findByReadingContentOfKnownConfigfilesIn(dirPath) {
       } else {
         const data = ini.parse(content);
 
-        //Node14: use ?.
         //Nb: order of if test is ~somewhat~ important
         if (data.SmartSteamEmu) appid = data.SmartSteamEmu.AppId;
         else if (data.Steam) appid = data.Steam.AppId;

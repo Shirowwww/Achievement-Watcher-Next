@@ -10,11 +10,10 @@ try {
 }
 
 // `registry-js` is a compiled addon: a build that never ran its install script ships without
-// `build/Release/registry.node`. That used to make every read here return null/[]/false, which is
-// indistinguishable from "the key is not there" - Steam accounts (and therefore Steam games), Uplay,
-// GreenLuma, playtime and the user avatar all went quiet with nothing in the log. Everything below
-// falls back to reg.exe, which is present on every Windows install, so a missing binary costs speed
-// instead of functionality.
+// `build/Release/registry.node`, which used to make every read return null/[]/false -
+// indistinguishable from "the key is not there" (Steam accounts/games, Uplay, GreenLuma, playtime
+// and the avatar all went quiet with nothing logged). Everything below falls back to reg.exe,
+// present on every Windows install, so a missing binary costs speed rather than functionality.
 let warnedAboutFallback = false;
 
 function usingFallback() {
@@ -34,8 +33,6 @@ function requireRegistry() {
   err.cause = registryLoadError;
   throw err;
 }
-
-// ---- reg.exe fallback ---------------------------------------------------------------------------
 
 // reg.exe accepts either spelling on input but always echoes the long one, and the output is what
 // subkey lines are matched against - so use the long form throughout.
@@ -62,7 +59,7 @@ function regExePath(hive, key) {
   return normalized ? `${hiveName}\\${normalized}` : hiveName;
 }
 
-// reg.exe writes in the console's OEM codepage, so a path like C:\Users\pipié comes back mangled
+// reg.exe writes in the console's OEM codepage, so a path like C:\Users\José comes back mangled
 // when it is decoded as UTF-8. `chcp 65001` in the same cmd invocation makes the output real UTF-8.
 function runRegExe(args) {
   try {
@@ -263,7 +260,6 @@ function readRegistryStringAndExpand(hive, key, valueName) {
 
   if (!val || (val.type !== 'REG_EXPAND_SZ' && val.type !== 'REG_SZ')) return null;
 
-  // Expand environment variables if REG_EXPAND_SZ
   if (val.type === 'REG_EXPAND_SZ') {
     return expandEnvVariables(val.data);
   } else {

@@ -45,7 +45,6 @@ function spoolRecord(achId, time) {
     const T1 = 1742423507; // 2025-03-19T22:31:47Z
     const T2 = 1742424320;
 
-    // ---- spool parsing
     const spoolDir = path.join(tmp, 'spool', 'user-guid-1');
     fs.mkdirSync(spoolDir, { recursive: true });
     const spoolFile = path.join(spoolDir, '8006.spool');
@@ -67,7 +66,7 @@ function spoolRecord(achId, time) {
     const ms = ubi._internal.buildUbisoftOfficialSnapshot([{ achievementId: 5, earned_time: T1 * 1000 }]);
     assert.equal(ms['5'].earned_time, T1);
 
-    // ---- achievements archive (schema zip without .zip extension)
+    // Achievements archive: a schema zip without a .zip extension.
     const achRoot = path.join(tmp, 'achievements-cache');
     fs.mkdirSync(achRoot, { recursive: true });
     const zip = new AdmZip();
@@ -88,7 +87,7 @@ function spoolRecord(achId, time) {
     assert.ok(schema.imageBuffers.has('1'));
     assert.ok(!schema.imageBuffers.has('2'));
 
-    // ---- full contract: getGameData localizes, extracts icons, borrows steam art via the asset.
+    // Full contract: getGameData localizes, extracts icons, borrows steam art via the asset.
     // appid is namespaced ("uplay-8006") to avoid colliding with Steam appid 8006; the raw id lives
     // in data.uplayId and is what the uplay-steam mapping is keyed by.
     ubi.setUserDataPath(path.join(tmp, 'Achievement Watcher Next'));
@@ -116,7 +115,7 @@ function spoolRecord(achId, time) {
     assert.equal(unlocks['32'].earned, true);
     assert.equal(unlocks['28'].earned_time, T2);
 
-    // ---- end-to-end generic identity (issue #7): a Steam purchase that launches Ubisoft Connect
+    // End-to-end generic identity (issue #7): a Steam purchase that launches Ubisoft Connect
     // has NO row in uplay-steam.json (product 999997 is deliberately absent) - the game is resolved
     // through the configurations block's own name via the same Steam lookup the app uses.
     const fc4SpoolDir = path.join(tmp, 'spool', 'user-guid-fc4');
@@ -157,7 +156,7 @@ function spoolRecord(achId, time) {
     assert.match(fc4Game.img.portrait, /298110.*library_600x900\.jpg/);
     assert.equal(fc4Game.achievement.list[0].displayName, 'A Worthy Opponent');
 
-    // ---- generic identity WITHOUT a configurations block (issue #14): only the archive spec names
+    // Generic identity without a configurations block (issue #14): only the archive spec names
     // the game ("971_FarCry4" → "far cry 4"). The app resolves it through the existing Steam
     // lookups and displays the canonical Steam title, with NO uplay-steam.json row for product 971.
     const fc4RawSpoolDir = path.join(tmp, 'spool', 'user-guid-fc4-raw');
@@ -179,7 +178,7 @@ function spoolRecord(achId, time) {
     assert.equal(fc4SpecGame.steamappid, '298110');
     assert.match(fc4SpecGame.img.portrait, /298110.*library_600x900\.jpg/);
 
-    // ---- storefront-variant product ids resolve to the same Steam release (AC Black Flag Resynced
+    // Storefront-variant product ids resolve to the same Steam release (AC Black Flag Resynced
     // ships as Ubisoft product 65043 native + 66088 Steam; both map to Steam 3751950).
     ubi._internal.resetIdentityCache();
     const bfIdentity = await ubi._internal.resolveIdentity(
@@ -233,7 +232,7 @@ function spoolRecord(achId, time) {
     assert.equal(bfGame.steamappid, '3751950');
     assert.match(bfGame.img.portrait, /3751950/);
 
-    // ---- watchdog live watcher uses the same title rules: launcher names are filtered, the
+    // Watchdog live watcher uses the same title rules: launcher names are filtered, the
     // game's own installer name wins, and the app's gameIndex identity is preferred.
     const localAppData = path.join(tmp, 'LocalAppData');
     const configurationsDir = path.join(localAppData, 'Ubisoft Game Launcher', 'cache', 'configuration');
@@ -273,12 +272,11 @@ function spoolRecord(achId, time) {
     assert.equal(ubiWatch._internal.indexedUplayName('971', [gameIndexFile]), 'Far Cry 4');
     assert.equal(ubiWatch._internal.indexedUplayName('9999', [gameIndexFile]), '');
 
-    // ---- steam apiname → numeric id bridge used by the rarity seeding
+    // Steam apiname -> numeric id bridge used by the rarity seeding.
     assert.equal(ubi._internal.normalizeSteamAchName('Ach_12'), '12');
     assert.equal(ubi._internal.normalizeSteamAchName('ACS_ACH_7'), '7');
     assert.equal(ubi._internal.normalizeSteamAchName('PlainName'), 'PlainName');
 
-    // ---- spool listing
     const entries = ubi._internal.listSpoolEntries(path.join(tmp, 'spool'));
     assert.equal(entries.length, 4);
     assert.ok(entries.some((e) => e.appid === '8006' && e.userId === 'user-guid-1'));
@@ -286,7 +284,7 @@ function spoolRecord(achId, time) {
     assert.ok(entries.some((e) => e.appid === '971' && e.userId === 'user-guid-fc4-raw'));
     assert.ok(entries.some((e) => e.appid === '66088' && e.userId === 'user-guid-bf'));
 
-    // ---- watchdog live-watcher readers share the same formats
+    // Watchdog live-watcher readers share the same formats.
     const wRecords = ubiWatch._internal.readSpool(spoolFile);
     assert.equal(wRecords.length, 2);
     assert.deepEqual(wRecords[0], { id: '32', time: T1 });

@@ -126,8 +126,6 @@ function stateCacheFile(titleId) {
   return path.join(cacheDir(titleId), 'state.json');
 }
 
-// ---- Auth (Microsoft OAuth -> Xbox Live XSTS session) ----
-
 function buildXboxDirectAuthorizeUrl(clientId, state = '') {
   const normalized = normalizeXboxClientId(clientId || XBOX_PC_CLIENT_ID);
   if (!normalized) throw new Error('xbox-pc-client-id-invalid');
@@ -436,8 +434,6 @@ function mergeXboxStateSnapshots(previous = {}, fresh = {}) {
   return merged;
 }
 
-// ---- Local install discovery ----
-
 function parseMicrosoftGameConfig(configPath) {
   const xml = fs.readFileSync(configPath, 'utf8');
   const pick = (names) => {
@@ -586,8 +582,6 @@ async function discoverXboxPcInstallations(options = {}) {
   return [...byTitleId.values(), ...withoutTitleId];
 }
 
-// ---- Title history / platform filtering ----
-
 function normalizeDeviceNames(title = {}) {
   const devices = [
     ...(Array.isArray(title?.devices) ? title.devices : []),
@@ -626,8 +620,6 @@ async function fetchXboxLocalizedTitleAchievements(xuid, titleId, lang, options 
   }
   return { achievements: rows, languages: [locale] };
 }
-
-// ---- Caches (schema + unlock state) ----
 
 function writeJson(file, value) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -757,8 +749,6 @@ async function importLibrary(options = {}) {
   }
   return result;
 }
-
-// ---- Reading for the library scan ----
 
 function listCachedTitles() {
   const root = path.join(getUserDataPath(), 'steam_cache', 'xbox');

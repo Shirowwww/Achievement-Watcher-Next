@@ -11,16 +11,10 @@ function indexAchievementRows($) {
   return rowsByName;
 }
 
-// The rare halo under an achievement icon is two infinite rotations that Blink cannot composite, so
-// every rare row repaints on the main thread every frame - including the rows scrolled out of view.
-// Pausing the off-screen ones is worth ~40% of the renderer's main-thread budget on a long list, but
-// it has to be done without asking the engine to test every row's position on every frame: both
-// `content-visibility: auto` and IntersectionObserver do exactly that, and the per-frame cost of the
-// test is itself enough to drop main-thread frames. Middle-button autoscroll advances once per
-// main-thread frame, so a dropped frame there is visible stutter (#35) while wheel scrolling, run by
-// the compositor, stays smooth either way.
-// Hence: while the scroll is moving nothing is measured and every halo runs (the `glow-all` class,
-// i.e. the behaviour that shipped before 3.9.1); the on-screen set is recomputed once it stops.
+// The rare halo under an achievement icon is two infinite CSS rotations Blink cannot composite,
+// so every rare row repaints on the main thread every frame, even off-screen - pausing those is
+// worth ~40% of main-thread budget. content-visibility/IntersectionObserver cost a per-frame test
+// that itself drops frames, so nothing is measured while scrolling; the set recomputes once it settles.
 const GLOW_MARGIN_PX = 400;
 const GLOW_SETTLE_MS = 150;
 let glowLive = [];
@@ -56,11 +50,9 @@ function scheduleRareGlowRefresh(delay = GLOW_SETTLE_MS) {
 window.scheduleRareGlowRefresh = scheduleRareGlowRefresh;
 
 /*
-  The percent formatter, resolved once and allowed to be absent.
-
-  Rarity is an enrichment: if this module cannot be loaded the figure is still shown, as a plain
-  number. Folding it into the rarityTier lookup below would make a resolution failure silently turn
-  the whole rarity column off, which is a much worse outcome than an unlocalized separator.
+  The percent formatter, resolved once and allowed to be absent. Rarity is an enrichment: if this
+  module cannot load, the figure still shows as a plain number. Folding it into the rarityTier
+  lookup below would make a resolution failure silently turn off the whole rarity column instead.
 */
 let rarityPercentFormat = null;
 

@@ -1,16 +1,10 @@
 'use strict';
 
 /*
-  getLocalAchievementSchema locates its input by walking the game install - synchronously, depth 6.
-  On a large install that is 0.3-2.1s, and because it blocks the renderer's event loop, makeList's
-  worker pool serializes behind it: every game in a batch ends up reporting the whole batch's time.
-
-  Two things keep that off the per-scan path, and both are pinned below:
-    - the known emulator locations are probed before any walk (tenoke.ini is the rare file, and
-      looking for it first used to force a full walk of every non-TENOKE install just to prove it
-      wasn't there);
-    - the walk's outcome is memoized, "not here" included - that is the answer that costs a walk.
-  The assertions count directory reads rather than time, so they mean the same thing on any machine.
+  getLocalAchievementSchema walks the install synchronously (depth 6, 0.3-2.1s on a large install)
+  and blocks the renderer, so makeList's worker pool serializes behind it. Known emulator locations
+  are probed before any walk, and a miss is memoized too, since "not here" is what costs a walk.
+  The assertions count directory reads, which mean the same thing on any machine.
 */
 
 const assert = require('node:assert/strict');
@@ -91,11 +85,10 @@ test('an install with no schema anywhere stops re-walking to find that out', () 
 
 test('a same-named save file no longer shadows the real schema', () => {
   /*
-    Real case, AC Black Flag Resynced: the install carries both steam_settings/achievements.json (the
-    49-entry schema) and saves/<id>/achievements.json (the unlock state, same filename, object shape).
-    The depth-first walk reached "saves" before "steam_settings" purely on alphabetical order and
-    handed back the save file, which parses to [] - so the game had no local schema at all. Probing
-    the emulator's own directory first settles it by layout instead of by directory ordering.
+    Real case, AC Black Flag Resynced: the depth-first walk reached saves/<id>/achievements.json (the
+    unlock state, same filename, object shape) before steam_settings/achievements.json purely on
+    alphabetical order, and returned [] - so the game appeared to have no local schema at all. Probing
+    the emulator's own directory first settles it by layout, not by directory ordering.
   */
   const dir = makeInstall();
   fs.mkdirSync(path.join(dir, 'saves', '65043'), { recursive: true });

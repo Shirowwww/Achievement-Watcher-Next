@@ -111,12 +111,9 @@ function steamManagedNames(steamapps) {
 }
 
 /*
-  The appid of the game Steam installed in this folder, or null.
-
-  A Steam install is not recognisable from its contents: every Steam game ships steam_api64.dll and
-  many (every Source game, for one) ship steam_appid.txt - exactly the two markers the emulator scan
-  keys on, which is why Garry's Mod turned up as a cracked install. The authority is Steam's own
-  appmanifest: it names the `steamapps/common` folder it owns.
+  The appid of the game Steam installed in this folder, or null. File contents cannot prove a real
+  install - every Steam game ships steam_api64.dll and many ship steam_appid.txt too, the same
+  markers the emulator scan keys on. The appmanifest is the authority: it names the folder it owns.
 */
 function steamLibraryAppid(gameDir) {
   let current = path.resolve(gameDir);

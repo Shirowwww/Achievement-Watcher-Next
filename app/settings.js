@@ -72,13 +72,9 @@ module.exports.load = () => {
       // profile; only the missing-file defaults below should launch first-run onboarding.
       options.general.onboardingCompleted = true;
     }
-    // Simple / Advanced interface mode (util/interfaceMode.js). Purely how much of the UI is shown -
-    // it changes no parser, no watchdog behaviour and no achievement tracking.
-    //
-    // Migration is deliberate: a profile that already finished onboarding predates this setting, and
-    // silently dropping it into Simple would hide the emulator, controller and diagnostics tabs from
-    // someone who has been using them. Those installs get Advanced - nothing disappears on upgrade.
-    // A profile still in onboarding gets '' and is asked to choose, with neither option preselected.
+    // interfaceMode controls UI scope only (util/interfaceMode.js), not parser/watchdog behaviour.
+    // Upgraded profiles default to 'advanced' so existing tabs don't vanish; profiles still
+    // onboarding get '' to force an explicit choice.
     if (options.general.interfaceMode !== 'simple' && options.general.interfaceMode !== 'advanced') {
       options.general.interfaceMode = options.general.onboardingCompleted === true ? 'advanced' : '';
     }
@@ -97,10 +93,9 @@ module.exports.load = () => {
     if (typeof options.general.uninstallContextMenu !== 'boolean') {
       options.general.uninstallContextMenu = true;
     }
-    // App color theme (Settings > General) - built-in variants applied via <html data-theme="...">,
-    // plus the layer-based Custom theme ("custom") and user themes from <userData>\themes
-    // (stored as "user:<name>"). The built-ins come from the theme engine rather than a second list:
-    // a copy here silently reset any theme it had not been told about ("light" shipped that way).
+    // Theme (Settings > General): built-ins come from the theme engine, plus 'custom' (layer-based)
+    // and user themes ('user:<name>' from <userData>\themes). Don't duplicate the built-in list
+    // here - a stale copy would silently reset a theme it wasn't told about.
     if (
       typeof options.general.theme !== 'string' ||
       (!Object.keys(themeLayers.BUILTIN_COLORS).includes(options.general.theme) &&
@@ -110,19 +105,16 @@ module.exports.load = () => {
       options.general.theme = 'default';
     }
 
-    // overlay = the in-game achievement overlay (Ctrl+Shift+K). Notifications are Windows toasts
-    // now, so the old per-notification look settings (position/preset/scale/duration) are gone.
-    // Legacy configs saved while the old buggy default was Ctrl+Shift+O are migrated back to K.
+    // overlay = the in-game achievement overlay (Ctrl+Shift+K). Configs saved under the old
+    // buggy default (Ctrl+Shift+O) are migrated back to K here.
     if (typeof options.overlay.hotkey !== 'string') {
       options.overlay.hotkey = 'Ctrl+Shift+K';
     } else if (options.overlay.hotkey === 'Ctrl+Shift+O') {
       options.overlay.hotkey = 'Ctrl+Shift+K';
     }
-    // Overlay (in-game) notification look - re-introduced as an OPTIONAL transport. The overlay
-    // is now the default delivery mode (with the AW Next preset).
-    // A saved name that no longer names a preset is NOT rewritten here: resolvePresetFolder() maps
-    // a removed bundled preset onto the one that replaced it only after failing to find the name
-    // itself, so a user preset of the same name still wins.
+    // Overlay notification preset (optional transport, now the default delivery mode). A saved
+    // name that no longer matches a preset is NOT rewritten here - resolvePresetFolder() only
+    // remaps a removed bundled preset after failing to find a same-named user preset first.
     if (typeof options.overlay.notificationPreset !== 'string') {
       options.overlay.notificationPreset = 'AW Next';
     }

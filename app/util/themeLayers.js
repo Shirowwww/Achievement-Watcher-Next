@@ -247,13 +247,11 @@ function normalizeColor(value, fallback) {
 }
 
 /*
-  Alpha support for the layer colors, so a layer can be made partly (or fully) see-through.
-
-  A color is stored the way CSS wants to read it - an 8-digit #rrggbbaa - but `<input type="color">`
-  only ever produces and accepts #rrggbb. These two split a stored color into the pair the editor
-  needs and put it back together, so the alpha survives a round trip through a control that has no
-  concept of it. Everything downstream (color-mix, the gradients, the overlay) already handles an
-  alpha channel, which is why nothing else needed to change.
+  Alpha support for layer colors, so a layer can be made partly (or fully) see-through. CSS wants
+  an 8-digit #rrggbbaa, but `<input type="color">` only produces/accepts #rrggbb - these two split
+  and rejoin a stored color so alpha survives a round trip through a control that has no concept
+  of it. Everything downstream (color-mix, gradients, overlay) already handles alpha, so nothing
+  else needed to change.
 */
 function colorAlpha(value) {
   const raw = String(value || '').trim();
@@ -428,11 +426,10 @@ function imageUrl(filePath) {
   }
 }
 
-// The image actually rendered for a layer: a pre-blurred copy when either the blur
-// or the colored-veil effect is active (the blur is baked into the asset so the
-// element's own text/content stay crisp), otherwise the source image. The veil uses
-// the same pipeline with a light fixed frosted blur, so images under a colored veil
-// look softer and more polished instead of flat/sharp.
+// The image actually rendered for a layer: a pre-blurred copy when the blur or colored-veil
+// effect is active (baked into the asset so the element's own text/content stay crisp), otherwise
+// the source image. The veil reuses the same pipeline with a light fixed blur, so images under a
+// colored veil look softer instead of flat.
 function effectiveImage(layer) {
   if (!layer) return '';
   if (layer.effect && layer.effect.enabled === true && layer.effect.blurImage) {
@@ -453,12 +450,10 @@ function veilLayer(layer) {
 }
 
 /*
-  Whether the layer's gradient is the thing actually painting it.
-
-  A gradient is listed BEFORE the image in `background-image`, so in CSS it sits on top of the art -
-  an opaque gradient simply hides the picture. An image therefore wins: the stored gradient is left
-  untouched (removing the image brings it back) but nothing is emitted for it, which is why the
-  editor hides the Gradient toggle for a layer that has one.
+  Whether the layer's gradient is the thing actually painting it. A gradient is listed BEFORE the
+  image in `background-image`, so it sits on top of the art and would hide the picture - an image
+  therefore wins: the stored gradient is left untouched (removing the image brings it back) but
+  nothing is emitted for it, which is why the editor hides the Gradient toggle for such a layer.
 */
 function gradientActive(layer) {
   return !!(layer && layer.gradient && layer.gradient.enabled === true && !layer.image);
@@ -479,29 +474,22 @@ function gradientEnabled(layer) {
 }
 
 /*
-  A layer the user made see-through with the editor's opacity slider (the alpha half of the stored
-  #rrggbbaa, since `<input type="color">` cannot express one).
-
-  That slider has to be the only thing deciding how much of a layer you see. app.css frosts these
-  surfaces with a backdrop blur, and a blur survives its own color going transparent: at 0% the
-  library panel was still a blurred pane of exactly its own shape rather than being gone, which
-  reads as "the opacity does nothing". A translucent layer therefore drops the blur.
+  A layer made see-through via the editor's opacity slider (the alpha half of #rrggbbaa, since
+  `<input type="color">` can't express one). That slider must be the only thing deciding how much
+  of a layer you see - app.css frosts surfaces with a backdrop blur that survives its own color
+  going transparent, so at 0% the panel was still a blurred silhouette instead of gone. A
+  translucent layer therefore drops the blur.
 */
 function layerIsTranslucent(layer) {
   return colorAlpha(layer && layer.color) < 100;
 }
 
 /*
-  The blur radius a layer asks for through Effect -> Blur, or 0.
-
-  This is the only thing that can put a blur back on a see-through layer, and it is deliberate: the
-  frost app.css paints automatically is removed the moment the opacity slider leaves 100%, because
-  an unasked-for blur is a second, invisible opacity control. Turning Blur on says "blur what is
-  behind this layer", which is what makes a transparent layer real frosted glass rather than plain
-  glass - and it keeps working all the way down to 0%, where there is nothing left BUT the blur.
-
-  On a layer that also has an image the effect already bakes a blurred copy of the artwork; the two
-  agree, and under an opaque image the backdrop blur is simply invisible.
+  The blur radius a layer asks for through Effect -> Blur, or 0 - the only thing that can put a
+  blur back on a see-through layer. app.css's automatic frost is removed the moment opacity leaves
+  100% (an unasked-for blur is a second, invisible opacity control), so turning Blur on says "blur
+  what's behind this layer" instead, working all the way to 0% where only the blur is left. On a
+  layer with an image the effect already bakes a blurred copy in, so the two agree.
 */
 function layerBlurRadius(layer) {
   const effect = layer && layer.effect;
@@ -561,19 +549,15 @@ function buildCustomAppCss(theme) {
   const panelGrad = gradientEnabled(clean.panel);
   const cardGrad = gradientEnabled(clean.card);
   const settingsGrad = gradientEnabled(clean.settings);
-  // title-bar is a shadow-DOM custom element: a light-DOM `title-bar { background-color: ... }`
-  // rule can never win against the shadow tree's own :host rule (:host always outranks a bare type
-  // selector on specificity), so the readability scrim/gradient overrides have to be handed in
-  // through a custom property that :host itself reads - see titlebar.css.
+  // title-bar is a shadow-DOM custom element: a light-DOM `title-bar { background-color }` rule
+  // can never beat the shadow tree's own :host rule on specificity, so the scrim/gradient
+  // overrides go through a custom property :host itself reads instead (see titlebar.css).
   //
-  // The plain-color 72% mix only reads as an elegant glow, not a washed-out bar, because --bg-glow
-  // feeds the SAME color into body's radial-gradient top stop, so what shows through the header is
-  // normally a close match for the header's own color. A Background image replaces that gradient
-  // outright (see the `body {}` override below), so the header would instead blend with someone
-  // else's unrelated, unevenly-lit artwork - a custom theme with a photo background is exactly what
-  // "half-transparent title bar" bug reports turned out to be. Once that assumption is gone, the
-  // header falls back to its own picked color at full strength (still honouring any alpha the user
-  // set on it) instead of an extra, unconditional 72% dampening on top.
+  // The 72% mix reads as a glow, not a washed-out bar, because --bg-glow feeds the same color into
+  // body's radial-gradient top stop - a close match for the header. A Background image replaces
+  // that gradient (see `body {}` below), so without this guard the header would blend with
+  // unrelated artwork instead: the "half-transparent title bar" bug reports were exactly this. The
+  // header now falls back to its own color at full strength once an image is set.
   const headerScrim = headerGrad
     ? 'transparent'
     : clean.header.image
@@ -696,10 +680,10 @@ function buildCustomAppCss(theme) {
   }
 
   /*
-    Crisp opacity. Whatever the slider leaves visible has to be the layer itself, never a frosted
-    copy of what sits behind it, so a translucent layer clears the backdrop blur app.css gives its
-    surface. At 0% the surface must also stop being traceable at all: the outline and the drop
-    shadow go too, otherwise an "invisible" panel still draws its own silhouette.
+    Crisp opacity: whatever the slider leaves visible must be the layer itself, never a frosted
+    copy of what's behind it, so a translucent layer clears app.css's backdrop blur. At 0% the
+    surface must stop being traceable entirely - outline and drop shadow go too, or an "invisible"
+    panel still draws its own silhouette.
   */
   const crisp = (selector, layer) => {
     const radius = layerBlurRadius(layer);
@@ -729,9 +713,9 @@ function buildCustomAppCss(theme) {
 #game-config .box`, clean.settings);
 
   /*
-    The scrim behind the Settings modal belongs to the same layer as the modal itself: dimmed and
-    blurred, it is what keeps the library panel behind it looking soft and washed out even with the
-    Settings layer taken all the way down to 0%. It fades with that layer instead.
+    The scrim behind the Settings modal belongs to the same layer as the modal: dimmed and
+    blurred, it keeps the library panel behind it looking soft even with the Settings layer at 0%
+    - so it fades with that layer instead.
   */
   if (layerIsTranslucent(clean.settings)) {
     rules.push(`#settings .overlay,

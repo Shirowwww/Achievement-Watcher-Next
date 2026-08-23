@@ -1,42 +1,22 @@
 'use strict';
 
 /*
-  Import a Steam Achievement Notifier theme and turn it into an ordinary AW Next preset.
+  Imports a Steam Achievement Notifier theme as an ordinary AW Next preset. A one-way ADAPTER, not
+  a compatibility layer: a `.san` theme is read once, mapped onto util/presetSchema.js, and written
+  out through the normal preset generator - AW Next never reads a SAN file again.
 
-  This is a one-way ADAPTER, not a compatibility layer. Nothing here runs afterwards: a `.san` theme
-  is read once, mapped onto util/presetSchema.js, and written out through the same generator the
-  preset designer uses. What lands on disk is a normal generated preset - index.html, style.css and
-  aw-preset.json - so it is editable in the designer, exportable as an .awpreset, and behaves
-  exactly like a preset built here. AW Next never reads a SAN file again, and removing this module
-  would not affect a single preset it produced.
+  Format (src/app/usertheme.ts): usertheme.json plus assets/** flattened to basenames. Every
+  `customisation` path value is absolute, from the machine that wrote the theme, so only the
+  BASENAME is ever used, looked up inside the package.
 
-  The format, as SAN writes it (src/app/usertheme.ts):
+  Trust model, since a theme is untrusted data from an unknown machine: nothing is executed or
+  evaluated (only JSON.parse, on one file); every zip entry is traversal-checked via
+  safePackagePath(); only images/audio are ever written, by extension and size limit (no SVG, since
+  it can carry script); every mapped value is re-clamped by normalizeOptions(); the preset is built
+  in a staging folder and moved in one rename, so a failure leaves storage untouched.
 
-    <name>.san            a plain zip under another extension
-    usertheme.json        { id, label, icon, customisation, enabled, version?, userthemedir? }
-    assets/**             every file the theme references, flattened to its basename
-                          (a `sounddir` becomes one folder of audio under assets/)
-
-  Inside `customisation`, every path-valued key holds an absolute path from the machine that wrote
-  the theme. Only the BASENAME is ever used here, looked up inside the package - an absolute path
-  from someone else's disk is not something to open.
-
-  Trust model. A theme is untrusted data from an unknown machine:
-
-    * nothing in a package is executed, required or evaluated. Only JSON.parse runs, on one file.
-    * every zip entry goes through safePackagePath(); anything that is not usertheme.json or a file
-      directly under assets/ is refused, and a path that does not clean up to exactly what the
-      package claimed is treated as a traversal attempt.
-    * only images and audio are ever written out, by extension AND under the size limits below.
-      SVG is not among them: it is a document that can carry script.
-    * every mapped value is re-clamped by normalizeOptions(), so a hand-edited theme cannot widen a
-      range, name a font, or put anything unquoted into the generated stylesheet.
-    * the preset is built in a staging folder and moved in one rename, so a failure anywhere leaves
-      the preset storage exactly as it was.
-
-  What could not be carried over is REPORTED rather than being a reason to fail: SAN describes a
-  card AW Next does not draw (its own decorations, logos, badges and screenshot variants), and a
-  theme that uses them is still worth importing for its colours, corners, motion and sound.
+  What can't be carried over is REPORTED rather than a reason to fail: SAN describes card elements
+  AW Next doesn't draw, and a theme using them is still worth importing for its colours and motion.
 */
 
 const fs = require('fs');
@@ -57,9 +37,9 @@ const SAN_ORIGIN_APP = 'Steam Achievement Notifier';
 const SAN_ORIGIN_FORMAT = 'san-usertheme';
 
 /*
-  Deliberately tighter than the .awpreset limits. A theme is a handful of small images and one
-  sound; anything approaching these numbers is not a theme, and the cost of refusing a legitimate
-  outlier is one message rather than an unbounded extraction.
+  Deliberately tighter than the .awpreset limits: a theme is a handful of small images and one
+  sound, so anything approaching these numbers isn't a theme - refusing a rare legitimate outlier
+  costs one message, not an unbounded extraction.
 */
 const SAN_LIMITS = {
   packageBytes: 96 * 1024 * 1024,
@@ -70,25 +50,20 @@ const SAN_LIMITS = {
   sounds: 24,
 };
 
-// --- what a SAN theme can say ------------------------------------------------------------------
-
 /*
-  Every key SAN's `Customisation` carries, and what becomes of it. This table is the contract:
-  a key missing from it is reported as unrecognised rather than silently dropped, and a test asserts
-  that the whole of SAN's own default object is accounted for here.
+  Every key SAN's `Customisation` carries, and what becomes of it. This table is the contract: a
+  key missing from it is reported as unrecognised rather than silently dropped (a test asserts
+  SAN's whole default object is accounted for here).
 
     mapped        turned into the AW Next property named by `to`
     app-setting   real in AW Next, but a setting of the app rather than part of a preset
     unsupported   describes something an AW Next popup does not draw
     internal      SAN bookkeeping, never a design decision - not worth reporting either way
 
-  `note` sends a key to the report as a sentence of its own instead of a name in the lost list. Only
-  for the one or two whose name would mislead: SAN's `preset` is the base card its own themes are
-  built on, and "preset" in AW Next means the thing the user has just created.
-
-  `gate` names the boolean that has to be on for the key to be doing anything. It keeps the report
-  about what the author actually used: a theme that never turned the mask on should not be told its
-  mask image was ignored.
+  `note` sends a key to the report as its own sentence instead of a name in the lost list, for the
+  one or two whose name would mislead (SAN's `preset` means its base card, not an AW Next preset).
+  `gate` names the boolean that has to be on for the key to matter, so a theme that never enabled a
+  feature isn't told one of its images was ignored.
 */
 const SAN_KEYS = [
   // --- carried over ----------------------------------------------------------------------------
@@ -239,12 +214,10 @@ const SAN_KEYS = [
 const SAN_KEY_BY_NAME = new Map(SAN_KEYS.map((entry) => [entry.key, entry]));
 
 /*
-  What SAN writes when the user has not touched a control. Only the plain values are here: the
-  defaults of the path-valued keys are absolute paths on the machine that built SAN, which this
-  side cannot know, so those keys are gated on their own boolean instead.
-
-  Nothing is decided from this table - it only keeps the "not carried over" list about what the
-  author actually chose, rather than reciting every option SAN has.
+  What SAN writes when a control is untouched. Only plain values are here - the path-valued keys'
+  defaults are absolute paths on the machine that built SAN, unknowable here, so those are gated on
+  their own boolean instead. Nothing is decided from this table; it only keeps the "not carried
+  over" list about what the author actually chose, rather than reciting every SAN option.
 */
 const SAN_DEFAULTS = {
   soundmode: 'file',
@@ -370,12 +343,10 @@ const SAN_NOTES = ['states-merged', 'base-layout'];
 // The notification type a theme was exported from, when SAN stamped it into the folder name.
 const SAN_TYPE_SUFFIX = /_(main|semi|rare|plat)$/;
 
-// --- value helpers -------------------------------------------------------------------------------
-
 /*
-  A value as text, whatever it turns out to be. JSON can only produce plain values, so this is only
-  ever load-bearing for a caller passing an object of its own - but mapping is a pure function that
-  should not be able to throw for any input at all, and one of these coercions runs on every key.
+  A value as text, whatever it turns out to be. JSON only produces plain values, so this only
+  matters for a caller passing an object of its own - but mapping must never throw for any input,
+  and this coercion runs on every key.
 */
 function text(value) {
   if (typeof value === 'string') return value;
@@ -429,15 +400,11 @@ function fontFamily(file) {
   return 'sans';
 }
 
-// --- mapping -------------------------------------------------------------------------------------
-
 /*
-  Turn one SAN `customisation` into a complete, validated set of designer options plus a report of
-  what happened to every key it carried.
-
-  Pure: no file is read and nothing is written, so the whole mapping is testable on a literal. The
-  two asset-valued results (`bgImage`, `sound`) come back as the basenames the theme asked for, in
-  `assets`; only the installer can say whether the package actually contains them.
+  Turns one SAN `customisation` into a validated set of designer options plus a report of what
+  happened to every key. Pure - no file read or written, so testable on a literal. The two
+  asset-valued results (`bgImage`, `sound`) come back as basenames in `assets`; only the installer
+  can say whether the package actually contains them.
 */
 function mapSanCustomisation(customisation) {
   const source = customisation && typeof customisation === 'object' && !Array.isArray(customisation) ? customisation : {};
@@ -448,7 +415,7 @@ function mapSanCustomisation(customisation) {
     if (value !== '' && value !== undefined && value !== null) options[key] = value;
   };
 
-  // --- size, spacing and text ---
+  // size, spacing and text
   set('duration', Math.round(number(source.displaytime, 6) * 1000));
   set('radius', Math.round(number(source.roundness, 25) / 4));
 
@@ -463,23 +430,20 @@ function mapSanCustomisation(customisation) {
 
   set('opacity', number(source.opacity, 100) / 100);
 
-  // --- background ---
+  // background
   const bgMode = SAN_BG_MODES[text(source.bgstyle)] || 'solid';
   set('bgMode', bgMode);
   set('bgAngle', Math.round(number(source.gradientangle, 90)));
   set('bg', color(source.primarycolor));
   set('bg2', color(source.secondarycolor));
-  /*
-    SAN dims a picture with a CSS brightness filter and AW Next by lowering the layer's opacity.
-    Neither is the other, but "how much of the picture is left" is the same question, and the two
-    read the same at the values people actually use.
-  */
+  // SAN dims a picture with a CSS brightness filter, AW Next by lowering the layer's opacity -
+  // neither is the other, but "how much of the picture is left" reads the same at typical values.
   if (bgMode === 'artwork') set('artworkDim', Math.max(0, Math.min(100, 100 - number(source.brightness, 100))));
   if (bgMode === 'image') set('artworkDim', Math.max(0, Math.min(100, 100 - number(source.bgimgbrightness, 100))));
   // SAN's slider becomes `blur / 50` px, so its whole range is two pixels.
   set('artworkBlur', Math.round(number(source.blur, 0) / 50));
 
-  // --- text colour ---
+  // text colour
   const customColors = on('usecustomfontcolors');
   const bodyColor = color(customColors ? source.descfontcolor : source.fontcolor) || color(source.fontcolor);
   set('text', bodyColor);
@@ -494,16 +458,16 @@ function mapSanCustomisation(customisation) {
   }
 
   /*
-    The accent, which AW Next uses for the bar, the title and the progress meter. SAN has no such
-    single colour: `tertiarycolor` is what its presets tint their own marks with, and it defaults to
-    plain white, so a glow colour the author did choose is the better answer when it exists.
+    The accent AW Next uses for the bar, title and progress meter. SAN has no equivalent single
+    colour: `tertiarycolor` is what its presets tint marks with and defaults to plain white, so a
+    glow colour the author did choose is the better answer when it exists.
   */
   const tertiary = color(source.tertiarycolor);
   const glowColor = on('glow') ? color(source.glowcolor) : '';
   const accent = tertiary && !/^#f{3,6}$/i.test(tertiary) ? tertiary : glowColor || tertiary;
   set('accent', accent);
 
-  // --- text effects ---
+  // text effects
   if (on('fontshadow')) set('textShadow', Math.max(0, Math.min(100, Math.round(number(source.fontshadowscale, 1.5) * 40))));
   else set('textShadow', 0);
   if (on('fontoutline')) {
@@ -513,7 +477,7 @@ function mapSanCustomisation(customisation) {
     options.textStroke = 0;
   }
 
-  // --- border, and the accent bar SAN does not have ---
+  // border, and the accent bar SAN does not have
   if (on('useoutline')) {
     set('borderWidth', Math.max(0, Math.min(6, Math.round(number(source.outlinewidth, 50) / 25))));
     set('borderColor', color(source.outlinecolor));
@@ -524,7 +488,7 @@ function mapSanCustomisation(customisation) {
   // be an edge the theme never had, so an imported design starts without one.
   options.accentBar = 'none';
 
-  // --- glow ---
+  // glow
   if (on('glow')) {
     // SAN's whole glow range is 0.6rem of blur; AW Next's is 22px. Matched by the pixels they draw
     // rather than by the number on the slider, which would be four times too strong.
@@ -540,22 +504,22 @@ function mapSanCustomisation(customisation) {
     set('rareBronze', color(source.glowcolorbronze));
   }
 
-  // --- icon ---
+  // icon
   set('iconBorder', on('showiconborder') ? 2 : 0);
   set('iconGlow', on('iconanim') ? 50 : 0);
 
-  // --- rows the popup prints ---
+  // rows the popup prints
   options.showGameName = on('usegametitle');
   options.showRarity = on('usepercent');
 
-  // --- motion ---
+  // motion
   const edge = SAN_ANIM_EDGE[text(source.animdir)] || '';
   if (edge) {
     options.animIn = edge;
     options.animOut = edge;
   }
 
-  // --- font ---
+  // font
   set('fontFamily', fontFamily(source.customfont));
 
   const assets = {
@@ -617,13 +581,11 @@ function mapSanCustomisation(customisation) {
   }
 
   /*
-    Collapse a feature to the switch that turns it on.
-
-    A theme using SAN's percentage badge sets six keys for it, and listing all six says nothing the
-    word "percentbadge" did not already say - it just buries the other features that were lost. So a
-    key whose own gate is already in the list is a detail of something the user has been told about,
-    and only the switch is named. Tested against the unfiltered list, so a chain of gates collapses
-    all the way to its root rather than one link at a time.
+    Collapses a feature to the switch that turns it on: a theme using SAN's percentage badge sets
+    six keys, and listing all six says nothing "percentbadge" didn't already say while burying
+    other lost features. A key whose own gate is already listed is a detail of something already
+    told, so only the switch is named - tested against the unfiltered list, so a chain of gates
+    collapses all the way to its root.
   */
   const named = new Set(skipped.map((entry) => entry.key));
   const collapsed = skipped.filter((entry) => {
@@ -648,19 +610,15 @@ function mapSanCustomisation(customisation) {
   };
 }
 
-// --- reading a package ----------------------------------------------------------------------------
-
 function fail(error, extra = {}) {
   return { ok: false, error, ...extra };
 }
 
 /*
-  A theme, as a manifest plus the assets that came with it.
-
-  Two shapes are accepted, because both are what a user actually has: the `.san` file SAN exports,
-  and the `usertheme.json` inside a theme SAN already imported (where the paths have been rewritten
-  to a real folder on this machine). The folder form is read strictly below the folder that was
-  picked, so it cannot be talked into opening anything else.
+  A theme, as a manifest plus the assets that came with it. Two shapes are accepted, since both
+  are what a user actually has: the `.san` file SAN exports, and the `usertheme.json` inside a
+  theme SAN already imported (paths rewritten to a real folder here). The folder form is read
+  strictly below the folder that was picked, so it can't be talked into opening anything else.
 */
 function readSanTheme(file) {
   let stat;
@@ -803,8 +761,6 @@ function readThemeFolder(manifestFile) {
   return { ok: true, theme: parsed.theme, assets, rejected, source: 'folder' };
 }
 
-// --- installing ------------------------------------------------------------------------------------
-
 function nextFreeName(presetsDir, name, taken) {
   for (let i = 2; i < 100; i += 1) {
     const candidate = sanitizePresetName(`${name} (${i})`);
@@ -830,9 +786,9 @@ function buildReport(read, mapping) {
   report.notifyType = suffix ? suffix[1] : '';
 
   /*
-    The one structural difference worth stating outright: SAN keeps four separate themes and AW Next
-    paints those states from one preset, so a `.san` file only ever carries one of the four and the
-    other three are the imported preset's own rare and completion colours.
+    The one structural difference worth stating outright: SAN keeps four separate themes, AW Next
+    paints those states from one preset - a `.san` file only ever carries one of the four, and the
+    other three become the imported preset's own rare/completion colours.
   */
   if (!report.notes.includes('states-merged')) report.notes.push('states-merged');
   for (const entry of read.rejected || []) report.assets.push(entry);
@@ -840,12 +796,10 @@ function buildReport(read, mapping) {
 }
 
 /*
-  Install a theme as an AW Next preset.
-
-  Mirrors installPackage(): built in a staging folder and moved in one rename, `duplicate` decides
-  what an existing name means, and `takenNames` are the bundled presets an install here would
-  otherwise hide. Nothing outside the preset storage, the sounds folder and the shared preset-images
-  folder is ever written.
+  Installs a theme as an AW Next preset. Mirrors installPackage(): built in a staging folder and
+  moved in one rename, `duplicate` decides what an existing name means, `takenNames` are the
+  bundled presets an install here would otherwise hide. Nothing outside the preset storage, sounds
+  folder and shared preset-images folder is ever written.
 */
 function installSanTheme({
   file,
@@ -895,7 +849,7 @@ function installSanTheme({
   try {
     fs.mkdirSync(stagedPreset, { recursive: true });
 
-    // --- the background picture, if the theme brought one ---
+    // the background picture, if the theme brought one
     if (mapping.assets.bgImage) {
       const asset = read.assets.get(mapping.assets.bgImage.toLowerCase());
       if (asset && ASSET_RE.test(asset.name)) {
@@ -903,14 +857,11 @@ function installSanTheme({
         // The header of a zip entry can lie about the size; the data itself cannot.
         if (data.length > SAN_LIMITS.fileBytes) throw new Error('asset-too-large');
         /*
-          The picture goes into the shared preset-images folder first, because that is what decides
-          its NAME: two themes both shipping a "backdrop.png" must not end up sharing one file. The
-          preset's own copy and the stored option then follow that name, so the designer's preview
-          (which resolves through the shared folder) and the installed preset (which reads the copy
-          beside its stylesheet) can never be showing two different pictures.
-
-          The shared copy is also what lets an imported preset be re-saved with its own background:
-          the designer only offers pictures it can list.
+          The picture goes into the shared preset-images folder first, since that decides its
+          NAME: two themes both shipping "backdrop.png" must not share one file. The preset's own
+          copy and stored option then follow that name, so the designer's preview and the
+          installed preset can never show two different pictures - and the shared copy is what
+          lets an imported preset later be re-saved with its own background.
         */
         let name = asset.name;
         if (imagesDir) {
@@ -935,7 +886,7 @@ function installSanTheme({
       report.assets.push({ name: '', kind: 'image', code: 'asset-missing' });
     }
 
-    // --- the sound ---
+    // the sound
     if (mapping.assets.sound) {
       const asset = read.assets.get(mapping.assets.sound.toLowerCase());
       if (asset && SOUND_EXT_RE.test(asset.name)) {
@@ -950,10 +901,10 @@ function installSanTheme({
       }
     } else if (mapping.playsRandomSound) {
       /*
-        A theme set to play a random sound from a folder travels with that whole folder. AW Next has
-        the same idea as an app setting rather than a preset one, so the preset keeps no opinion -
-        but the audio itself is worth having, or the user is told a folder was ignored and left with
-        nothing to point the Notifications tab at.
+        A theme set to play a random sound from a folder travels with that whole folder. AW Next
+        treats this as an app setting rather than a preset one, so the preset keeps no opinion -
+        but the audio is still worth having, or the user is told a folder was ignored and left
+        with nothing to point the Notifications tab at.
       */
       let added = 0;
       for (const asset of read.assets.values()) {

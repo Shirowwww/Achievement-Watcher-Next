@@ -1,12 +1,9 @@
 'use strict';
 
-// RLD! writes achievements.ini values as 5-byte hex blobs (little-endian uint32 + a discarded
-// trailing byte) and carries NO achieved flag: a locked achievement is written with Time=0, an
-// unlocked one with a real timestamp. Builds that omit the State key entirely used to reach the
-// normalizer with Time still raw hex, so every one of their achievements read as locked.
-//
-// The decode is deliberately conservative: an all-digit blob is ambiguous ("1712253396" is both
-// valid hex and a real unix timestamp) and is left alone rather than guessed at.
+// RLD! writes achievements.ini Time as a 5-byte hex blob (little-endian uint32 + a discarded byte)
+// and carries no achieved flag, so a locked entry has Time=0 and an unlocked one a real timestamp.
+// The decode is conservative: an all-digit blob is ambiguous (both valid hex and a real unix
+// timestamp) and is left alone rather than guessed at.
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');

@@ -98,11 +98,9 @@ test('unknown action or empty name is a no-op', () => {
 });
 
 /*
-  Clearing a manual unlock has to take the unlock back, or the library keeps counting it.
-
-  applyToGame used to only drop the `manual` marker and leave Achieved true, so the achievement
-  stayed unlocked (and the game's percentage stayed up) until the next full rescan re-read the real
-  save. It must still never undo an unlock the save itself reported.
+  Clearing a manual unlock has to take the unlock back, or the library keeps counting it. applyToGame
+  used to only drop the `manual` marker and leave Achieved true, so the achievement stayed counted
+  until the next full rescan - and it must still never undo a real unlock the save itself reported.
 */
 test('clearing a manual unlock lowers the count, but never undoes a real unlock', () => {
   const game = {

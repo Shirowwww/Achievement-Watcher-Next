@@ -1486,14 +1486,10 @@ ipcMain.on('fetch-source-img', async (event, arg) => {
   }
 });
 
-// Manually-added Windows programs are launched through ShellExecute (Start-Process) with their own
-// working directory. A detached Node child has no valid console handle; .NET GUI programs such as
-// Ryujinx still touch Console.Title during startup and otherwise terminate immediately.
-//
-// The same route is the fallback for ANY game whose spawn() failed with EACCES: an executable whose
-// manifest requires administrator cannot be started with CreateProcess at all, while ShellExecute
-// elevates it through the normal UAC prompt. `elevate` forces that prompt for the executables that
-// need administrator rights without declaring it in their manifest.
+// ShellExecute (Start-Process), not spawn(): a detached Node child has no console handle, and
+// .NET GUI programs (e.g. Ryujinx) touch Console.Title on startup and terminate without one.
+// Also the fallback when spawn() fails with EACCES: ShellExecute elevates through the normal
+// UAC prompt for executables that need admin rights without declaring it in their manifest.
 ipcMain.handle('launch-game-via-shell', async (event, { executable, args = '', workingDirectory = '', elevate = false } = {}) => {
   try {
     if (process.platform !== 'win32') {
@@ -1588,13 +1584,10 @@ ipcMain.handle('check-for-updates', async () => {
   }
 });
 
-// Settings > Advanced: one action that clears every disposable cache the app knows about - the
-// updater's own download cache (the same corrupted-cache scenario the automatic checksum-mismatch
-// recovery handles on its own, offered here pre-emptively or after the "still failed" dialog above)
-// plus the re-fetchable Steam/Ubisoft schema, icon and emulator-tool caches under userData
-// (util/clearableCaches.js's explicit allowlist). Never touches settings, GBE restore-point
-// backups, notification presets, theme images, or the user-seeded Uplay R2 loader cache (no public
-// download source for that one - see the allowlist file for the full "never add" list).
+// Settings > Advanced: clears every disposable cache the app knows (updater download cache, plus
+// the re-fetchable Steam/Ubisoft schema, icon and emulator-tool caches - see the explicit allowlist
+// in util/clearableCaches.js). Never touches settings, GBE backups, notification presets, theme
+// images, or the Uplay R2 loader cache (no public source to re-download it from).
 ipcMain.handle('clear-update-cache', async (event) => {
   if (updateDownloading || checksumRetryInFlight) return { ok: false, error: 'download-in-progress' };
   const result = { ok: true, error: null, updateFolder: null, updateCleared: false, updateError: null, clearedCaches: [] };
@@ -2033,11 +2026,9 @@ function notifyWatchdogOfAppPid() {
 }
 
 function launchWatchdog() {
-  // Clearing the handle is not enough: scheduleMonitorRespawn() treats a non-null monitorRespawnTimer
-  // as "a respawn is already pending" and returns early. A manual restart (tray/Settings) landing
-  // while a respawn was pending used to leave the stale, already-cleared handle in place, which
-  // silently disabled supervised respawn for the rest of the session - the next monitor crash then
-  // killed notifications and playtime tracking with no way back short of restarting the app.
+  // Must clearTimeout AND null the handle: scheduleMonitorRespawn() treats a non-null
+  // monitorRespawnTimer as "already pending" and bails. A manual restart landing mid-pending used
+  // to leave a stale handle, silently disabling respawn until the app was restarted.
   clearTimeout(monitorRespawnTimer);
   monitorRespawnTimer = null;
   if (monitorProc && monitorProc.exitCode === null && !monitorProc.killed) {
@@ -2192,9 +2183,8 @@ ipcMain.handle('watchdog-reload-playtime-index', () => {
   }
 });
 
-// --- Background emulator auto-fix (daemon) -----------------------------------
-// While the window is closed, periodically apply the same one-shot emulator fix the UI scan does,
-// gated by emulator.autoApplyNewGames, and toast each game actually fixed.
+// Background emulator auto-fix: while the window is closed, periodically apply the same one-shot
+// fix the UI scan does (gated by emulator.autoApplyNewGames), toasting each game actually fixed.
 let bgAutoFixTimer = null;
 let bgAutoFixInFlight = false;
 let bgKnownAppids = null; // baseline of discovered appids; null until the first full pass seeds it
@@ -3260,7 +3250,7 @@ async function searchForGameName(info = { appid: '' }) {
     return;
   }
 
-  let locale = 'en-US'; // use AW's languague in the future? does it even make a difference in this context?
+  let locale = 'en-US';
   let startIndex = 0;
   let matchResult;
   await startPuppeteer(true, false);
@@ -3351,26 +3341,21 @@ function searchForSteamAppId(info = { name: '' }) {
   // Inject JS *before* the page starts executing its own scripts
   win.webContents.on('dom-ready', async () => {
     await win.webContents.executeJavaScript(`
-      // Override navigator.userAgent
       Object.defineProperty(navigator, 'userAgent', {
         get: () => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'
       });
 
-      // Override platform
       Object.defineProperty(navigator, 'platform', {
         get: () => 'Win32'
       });
 
-      // Override vendor
       Object.defineProperty(navigator, 'vendor', {
         get: () => 'Google Inc.'
       });
 
-      // Fake Chrome object
       window.chrome = { runtime: {} };
     `);
   });
-  //win.loadURL(`https://steamdb.info/search/?a=app&q=${info.name}&type=1&category=0`);
   win.loadURL(`https://store.steampowered.com/search/?term=${info.name}&category1=998&ndl=1`);
   win.webContents.on('did-finish-load', async () => {
     let games = undefined;
@@ -3454,7 +3439,6 @@ function createMainWindow() {
     } catch {
       delete options.icon;
     }
-    //getSteamData({ appid: 2321470, type: 'user' });
     const windowCreateStartedAt = Date.now();
     MainWin = new BrowserWindow(options);
     getRemoteMain().enable(MainWin.webContents);
@@ -3485,10 +3469,8 @@ function createMainWindow() {
     });
     MainWin.webContents.on('did-finish-load', () => sendMainWindowVisibility(MainWin.isVisible()));
 
-    //Frameless
     if (options.frame === false) MainWin.isFrameless = true;
 
-    //Debug tool
     if (manifest.config.debug) {
       if (openDevTools) MainWin.webContents.openDevTools({ mode: 'undocked' });
       MainWin.isDev = true;
@@ -3508,7 +3490,6 @@ function createMainWindow() {
       });
     }
 
-    //User agent
     MainWin.webContents.userAgent = manifest.config['user-agent'];
     session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
       details.requestHeaders['User-Agent'] = manifest.config['user-agent'];
@@ -3630,7 +3611,7 @@ function createMainWindow() {
         MainWin.once('ready-to-show', () => {
           debug.log('[MainWindow] ready-to-show');
           return resolve();
-        }); //Window is loaded and ready to be drawn
+        });
       }),
       new Promise(function (resolve) {
         // Clear any handler left behind by a window that was closed before its renderer reported in:
@@ -3640,7 +3621,7 @@ function createMainWindow() {
         ipcMain.handleOnce('components-loaded', () => {
           debug.log('[MainWindow] components-loaded');
           return resolve();
-        }); //Wait for custom event
+        });
       }),
     ];
 
@@ -3679,7 +3660,7 @@ function createMainWindow() {
       watchdogStatusInterval = null;
       // Closing the window mid-scrape would otherwise leave an orphaned headless Chromium resident
       // (the renderer fires 'close-puppeteer' only once the game list finishes). Tear it down here so
-      // a key-less scrape can't leak ~100-200 MB into the background tray state (cf. #32).
+      // a key-less scrape can't leak ~100-200 MB into the background tray state.
       closePuppeteer().catch(() => {});
     });
   } catch (e) {
@@ -3688,11 +3669,10 @@ function createMainWindow() {
   }
 }
 
-// --- In-game overlay manipulation: nudge / snap / click-through toggle + position persistence -------
-// The overlay (overlay.html) is already drag-movable via -webkit-app-region on its header. These add
-// keyboard fine-positioning and a click-through toggle (so it can pass clicks to the game), registered
-// as global shortcuts only while the overlay is open. Bounds persist to <userData>/cfg/overlayBounds.json
-// (a tiny standalone store, like progressMute.json) and are restored next time the overlay opens.
+// In-game overlay manipulation: nudge / snap / click-through toggle + position persistence.
+// overlay.html is already drag-movable via -webkit-app-region; these add keyboard fine-positioning
+// and a click-through toggle, active only while the overlay is open. Bounds persist to
+// <userData>/cfg/overlayBounds.json (like progressMute.json) and restore on next open.
 function overlayBoundsFile() {
   return path.join(userData, 'cfg', 'overlayBounds.json');
 }
@@ -3745,9 +3725,8 @@ function toggleOverlayClickThrough() {
   overlayWindow.setIgnoreMouseEvents(overlayClickThrough, { forward: true });
 }
 
-// --- Controller-driven overlay control (Tier 4) ----------------------------------------------------
-// The Watchdog forwards { overlayControl: { action, payload } } over IPC when a controller drives the
-// overlay (see handleMonitorMessage). These reuse the same window ops as the keyboard shortcuts.
+// Controller-driven overlay control: the Watchdog forwards { overlayControl: { action, payload } }
+// over IPC when a controller drives the overlay (see handleMonitorMessage); reuses the keyboard ops.
 let overlaySnapIndex = 0;
 function moveOverlayRelative(dx, dy) {
   const x = Number(dx) || 0;
@@ -3924,9 +3903,6 @@ function showOverlayAfterLoad(info) {
   notifyMonitorOverlayState(true);
 }
 
-/**
- * @param {{appid: string, action:string}} info
- */
 async function createOverlayWindow(info) {
   try {
     if (!info.action) info.action = 'open';
@@ -4027,7 +4003,6 @@ async function createOverlayWindow(info) {
       });
     }
 
-    //User agent
     overlayWindow.webContents.userAgent = manifest.config['user-agent'];
     session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
       details.requestHeaders['User-Agent'] = manifest.config['user-agent'];
@@ -4085,11 +4060,9 @@ async function createOverlayWindow(info) {
 }
 
 function shouldQuitApp() {
-  // Resident tray daemon: the app stays alive in the system tray with no window. Closing the main
-  // window (or finishing notifications/overlay) must NEVER quit the process - the monitor keeps
-  // running in the background. The app quits only via the tray "Quit" item (which sets app.isQuiting
-  // and calls app.quit() directly). All the historical `if (shouldQuitApp()) app.quit()` call sites
-  // therefore become no-ops.
+  // Resident tray daemon: the app stays alive in the tray with no window. Closing the main window
+  // (or finishing notifications/overlay) must NEVER quit the process - only the tray "Quit" item
+  // does (it sets app.isQuiting then calls app.quit()).
   return false;
 }
 
@@ -4100,9 +4073,8 @@ function parseArgs(args) {
   let source = args['source'] || 'steam'; // source: steam, epic, gog, luma
   let description = args['description']; // text
   // What was ASKED for, not what will happen: an overlay request carries an action (open/close/
-  // refresh) and createOverlayWindow may well decide to do nothing with it. Logging "opening
-  // overlay window" for an incoming close - which is what this said before - made issue #19 look
-  // like it was still happening in the logs long after it was fixed.
+  // refresh) and createOverlayWindow may well decide to do nothing with it. The old log line said
+  // "opening overlay window" even for a close request, which read as a lingering bug in the logs.
   debug.log(`${windowType} window request` + (description ? ` (${description})` : ''));
   switch (windowType) {
     case 'overlay':
@@ -5125,9 +5097,8 @@ ipcMain.handle('preview-custom-preset', async (event, opts = {}) => {
 });
 
 /*
-  --- Portable presets (.awpreset) -----------------------------------------------------------------
-  Export and import a preset as a single self-contained package. The format itself lives in
-  util/presetPackage.js; this side only resolves the folders involved and drives the file dialogs.
+  Portable presets (.awpreset): export/import as a single self-contained package. The format lives
+  in util/presetPackage.js; this side only resolves folders and drives the file dialogs.
 */
 
 // Strict lookup for export: the preset folder must exist under that exact name. resolvePresetFolder
@@ -5255,10 +5226,9 @@ ipcMain.handle('import-preset', async (event, opts = {}) => {
 });
 
 /*
-  --- Importing a Steam Achievement Notifier theme -------------------------------------------------
-  A one-way conversion into an ordinary generated preset. The format, the mapping and every safety
-  rule live in util/sanImport.js; this side only drives the dialog and names the folders involved.
-  Nothing about SAN is consulted again once the preset exists.
+  Importing a Steam Achievement Notifier theme: a one-way conversion into an ordinary generated
+  preset (format/mapping/safety rules in util/sanImport.js). This side only drives the dialog and
+  names the folders; nothing about SAN is consulted again once the preset exists.
 */
 ipcMain.handle('import-san-theme', async (event, opts = {}) => {
   try {
@@ -5870,7 +5840,7 @@ try {
       const startupToast = parseToastActivation(process.argv);
       if (startupToast) startupArgs.hidden = false; // clicking a toast must surface the window
       parseArgs(startupArgs); // opens the window unless launched with --hidden
-      openGameFromLaunchArgs(startupToast || startupArgs); // toast activation on a cold start (issue #8)
+      openGameFromLaunchArgs(startupToast || startupArgs); // toast activation on a cold start
     })
     .on('window-all-closed', function () {
       // Resident tray daemon: do NOT quit when the window closes - the tray + background monitor stay

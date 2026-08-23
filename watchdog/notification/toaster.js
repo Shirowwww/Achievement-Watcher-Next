@@ -226,11 +226,10 @@ module.exports = async (message, option = {}) => {
         }
       }
 
-      // The toast's app-logo slot is square. Steam library art is portrait/landscape, so center-
-      // crop a high-res local copy for the cards that show the game rather than an achievement -
-      // playtime, and any source that ships no per-achievement icon. Overlay/websocket keep the
-      // original art. Only local sources are cropped - forcing a download when the user disabled
-      // prefetch would add latency/offline failures for no benefit on the square requirement.
+      // The toast's app-logo slot is square; Steam library art is portrait/landscape, so center-crop a
+      // high-res local copy for cards that show the game rather than an achievement (playtime, and any
+      // source with no per-achievement icon). Overlay/websocket keep the original art, and only local
+      // sources are cropped - downloading just for this would cost latency/offline failures for no benefit.
       if (toastPossible && (message.notificationType === 'playtime' || !message.icon)) {
         const squareSource = message.gameIcon || message.image;
         const isLocal =
@@ -242,16 +241,11 @@ module.exports = async (message, option = {}) => {
         }
       }
 
-      /*
-        The fallback decision, made once, in the only place that knows whether a notification has
-        already gone out. `overlayAckId` exists only when a fallback was authorized at planning time,
-        so this can add a toast to an overlay that reported failure but can never add one beside an
-        overlay that worked, and never beside a toast that was already planned.
-
-        A missing answer is deliberately NOT a fallback: it means this process cannot tell whether a
-        popup appeared, and showing a second notification on a guess is exactly the duplicate the
-        user would see. It is recorded against the overlay so the NEXT notification changes transport.
-      */
+      // The fallback decision, made once, in the only place that knows whether a notification already
+      // went out. `overlayAckId` exists only when a fallback was authorized at planning time, so this can
+      // add a toast beside a failed overlay but never beside one that worked or a toast already planned.
+      // A missing answer is deliberately NOT a fallback: showing a second notification on a guess is
+      // exactly the duplicate the user would see, so it's recorded against the overlay for the NEXT one.
       let deliverToast = plan.toast;
       // An overlay this process cannot get a report about (no IPC channel) is recorded as such
       // rather than as a success it has no way of knowing about.

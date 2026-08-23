@@ -1,12 +1,10 @@
 'use strict';
 
 /*
-  Uninstall helpers shared by the game-list right-click menu.
-
-  Pure/dependency-free on purpose (only Node core) so the detection rules and URI
-  helpers can be unit-tested without Electron. The Windows registry helpers are
-  loaded lazily: on machines where the native `registry-js` module is unavailable
-  the helpers return null instead of throwing.
+  Uninstall helpers shared by the game-list right-click menu. Pure/dependency-free on purpose
+  (only Node core) so the detection rules and URI helpers are unit-testable without Electron. The
+  Windows registry helpers are loaded lazily: where the native `registry-js` module is
+  unavailable, they return null instead of throwing.
 */
 
 const path = require('path');

@@ -27,8 +27,6 @@ const DEFAULT_APPLICATIONS_ROOT = path.join(process.env['LOCALAPPDATA'] || '', '
 const GAMEPLAY_DB_NAME = 'gameplay.db';
 const IMAGES_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-// ---- SQLite helpers ----------------------------------------------------------------------------
-
 // node:sqlite ships with the runtime but only from Node 22.5; keep the require guarded so merely
 // loading this parser can never crash an unexpected runtime - sources just come back empty.
 let DatabaseSync = null;
@@ -78,8 +76,6 @@ async function withRetry(fn, { label = 'database', attempts = 3, delayMs = 500 }
   }
   throw lastErr;
 }
-
-// ---- galaxy-2.0.db (product catalog) -----------------------------------------------------------
 
 function normalizeId(value) {
   const raw = String(value ?? '').trim();
@@ -206,8 +202,6 @@ function readGogGalaxyProducts(options = {}) {
   }
 }
 
-// ---- gameplay.db (per-game achievements) -------------------------------------------------------
-
 function parseUnlockTimeSeconds(value) {
   const raw = String(value || '').trim();
   if (!raw) return 0;
@@ -296,8 +290,6 @@ function resolveInstalledExe(executablePath, installationPath) {
   return fs.existsSync(abs) ? abs : '';
 }
 
-// ---- images (GOG public API, disk-cached) ------------------------------------------------------
-
 function absoluteUrl(u) {
   const raw = String(u || '').trim();
   if (!raw) return null;
@@ -352,8 +344,6 @@ async function resolveGogImages(productId) {
   }
   return img;
 }
-
-// ---- parser contract ----------------------------------------------------------------------------
 
 // One entry per installed-and-played GOG game. When several Galaxy users have gameplay data for the
 // same product, the most recently written gameplay.db wins (one tile per game).

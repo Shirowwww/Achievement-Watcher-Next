@@ -9,13 +9,9 @@ const path = require('node:path');
 const epicOfficial = require('../../app/parser/epicOfficial.js');
 
 /*
-  Fortnite (sandbox "fn") was re-queried on every single scan, forever.
-
-  Epic answers that sandbox with HTTP 200 and a record whose every field is null: no achievements,
-  no error. The resolver only ever cached a non-empty schema, so an empty answer wrote nothing and
-  the next scan asked again. The distinction that fixes it is already available at the call site -
-  whether Epic answered at all - so an answered-but-empty result is now cached like any other, while
-  a transport failure still retries.
+  Fortnite (sandbox "fn") answers HTTP 200 with every field null: no achievements, no error. The
+  resolver used to cache only non-empty schemas, so the empty answer was requeried every scan. Now
+  an answered-but-empty result is cached like any other; only a transport failure still retries.
 */
 
 function sandboxResponse(record) {

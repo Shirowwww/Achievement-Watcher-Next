@@ -56,11 +56,10 @@ test('achievement toast payload carries the intended AUMID under the key powerto
   assert.ok(!('onClick' in notification), 'the dead onClick option must not be sent to powertoast');
 });
 
-// powertoast accepts `group` only when both fields are non-empty STRINGS. Given anything else its
-// option parser stores a null group and then dereferences it, throwing
-// "Cannot read properties of null (reading 'activation')" before the toast is ever shown - and both
-// callers fall back to a tray balloon, so the failure looked like a delivered notification that
-// simply never appeared (issue #18). A numeric appid alone was enough to trigger it.
+// powertoast accepts `group` only when both fields are non-empty STRINGS; anything else makes its
+// option parser store a null group and crash before the toast ever shows. Both callers then fall
+// back to a tray balloon, so the failure looked like a delivered notification (issue #18) - a
+// numeric appid alone was enough to trigger it.
 test('a grouped toast never hands powertoast a group it will reject', async () => {
   const numeric = buildToastNotification(
     { appid: 367520, achievementName: 'TOAST_TEST', achievementDisplayName: 'X', achievementDescription: 'y', gameDisplayName: 'Hollow Knight' },

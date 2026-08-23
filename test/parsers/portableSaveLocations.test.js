@@ -1,13 +1,10 @@
 'use strict';
 
 /*
-  Two ways a game keeps its unlock state somewhere other than the well-known %APPDATA% / %PUBLIC%
-  roots, both of which used to read as a permanent 0% (or as no library entry at all):
-
-    - a GBE/Goldberg setup whose configs.user.ini redirects local_save_path into the game folder,
-      which is how a repack makes itself portable;
-    - a CODEX/RUNE portable release, which keeps the Steam\<SOURCE>\<appid> tree it would otherwise
-      write under %PUBLIC%\Documents inside the game folder (issue #32).
+  Two ways a game's unlock state lands outside %APPDATA%/%PUBLIC% and used to read as a permanent 0%:
+  a GBE/Goldberg setup whose configs.user.ini redirects local_save_path into the game folder (how a
+  repack makes itself portable), and a CODEX/RUNE portable release that keeps its Steam\<SOURCE>\<appid>
+  tree inside the game folder instead of under %PUBLIC%\Documents.
 */
 
 const test = require('node:test');
@@ -316,7 +313,7 @@ test('a save-shaped folder holding nothing readable is not turned into a game', 
   }
 });
 
-// --- issue #32: why a folder was refused ---------------------------------------------------------
+// Why a folder was refused.
 
 test('an EA app release is named as such instead of being refused as an empty folder', async () => {
   const gameDir = tempGame('ea-app');

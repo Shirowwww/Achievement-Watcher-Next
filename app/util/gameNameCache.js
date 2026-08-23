@@ -87,13 +87,10 @@ function lookupSteamDbName(appid, opts = {}) {
 }
 
 /*
-  Name from the per-game Steam schema caches the app writes for every game it displays
-  (steam_cache/schema/<lang>/<appid>.db, shaped { name, appid, … }).
-
-  Every language folder is tried, because the app only ever writes the one matching the user's
-  setting: hard-coding "english" made this silently return nothing for every non-English profile -
-  which is how a GOG game and its cracked Steam twin both stayed in the library instead of merging.
-  Unlike the 250k-row appList dump, this cache exists as soon as a game has been listed once.
+  Name from the per-game Steam schema cache (steam_cache/schema/<lang>/<appid>.db). Every language
+  folder is tried, since the app only writes the one matching the user's setting - hard-coding
+  "english" silently returned nothing for non-English profiles, letting a GOG game and its cracked
+  Steam twin stay unmerged. Exists as soon as a game has been listed once, unlike the 250k-row dump.
 */
 function lookupSchemaCacheName(userDataPath, appid) {
   const id = String(appid ?? '').trim();

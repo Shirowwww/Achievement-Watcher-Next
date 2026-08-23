@@ -34,7 +34,7 @@ const DOTNET_EPOCH_DIFF_MS = 62135596800000n; // 0001 -> 1970
 let watchers = [];
 const changes = createChangeCoalescer();
 
-// ---- XDBF / GPD low-level parser (same logic as app/parser/xenia.js) ---------------------------
+// XDBF / GPD low-level parser (same logic as app/parser/xenia.js).
 
 function readUInt64LE(buf, offset) {
   return (BigInt(buf.readUInt32LE(offset + 4)) << 32n) | BigInt(buf.readUInt32LE(offset));

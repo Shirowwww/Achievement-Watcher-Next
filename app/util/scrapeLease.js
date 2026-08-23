@@ -1,9 +1,8 @@
 'use strict';
 
 /*
-  Serialise the shared Puppeteer page by scrape type while making the lifecycle
-  of its flags exception-safe. The operation owns only the flags it claims:
-  an unrelated scrape type can keep running, and a browser-launch failure can
+  Serialises the shared Puppeteer page by scrape type, exception-safe: the operation owns only
+  the flags it claims, so an unrelated scrape type keeps running and a browser-launch failure can
   never leave a future request waiting forever.
 */
 function requestedScrapeKinds(alternate) {

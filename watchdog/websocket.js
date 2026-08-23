@@ -17,7 +17,6 @@ const test = require('./notification-test.js');
 let WebSocket;
 
 module.exports = (option = {}) => {
-  //Default values
   const options = {
     port: Number.isInteger(option.port) ? option.port : 8082,
     host: option.host || null,
@@ -37,7 +36,7 @@ module.exports = (option = {}) => {
   } else {
     server = http.createServer();
   }
-  server.listen({ port: options.port, host: options.host, ipv6Only: options.ipv6Only }); //Start http(s) server
+  server.listen({ port: options.port, host: options.host, ipv6Only: options.ipv6Only });
   test.prepare().catch((err) => debug.warn(`[Toast] background preparation failed: ${err && (err.message || err)}`));
 
   WebSocket = new ws.Server({ noServer: true }); //WebSocket server detached from the http(s) server
@@ -54,10 +53,8 @@ module.exports = (option = {}) => {
     debug.error(`Websocket server error: ${err}`);
   });
 
-  //Handle client authentication in the upgrade event (http->ws) of the http(s) server
   server.on('upgrade', function upgrade(request, socket, head) {
     if (options.auth) {
-      //Client authentication
       debug.log('Basic http auth is enabled > authenticating ...');
 
       const login = Buffer.from((request.headers.authorization || '').split(' ')[1] || '', 'base64').toString();
@@ -74,7 +71,6 @@ module.exports = (option = {}) => {
     }
 
     WebSocket.handleUpgrade(request, socket, head, function done(_ws) {
-      //http->ws upgrade
       WebSocket.emit('connection', _ws, request);
     });
   });
@@ -82,7 +78,6 @@ module.exports = (option = {}) => {
   const emitter = new EventEmitter();
 
   WebSocket.on('connection', (client, req) => {
-    //client identification
     client.id = req.headers['sec-websocket-key'];
     client.ip = req.connection.remoteAddress;
     debug.log(`[${client.id}](${client.ip}) client connected`);
@@ -93,7 +88,6 @@ module.exports = (option = {}) => {
       this.isAlive = true;
     });
 
-    //client.on('message', function(message){ emitter.emit('message', [this, message]) });
     client.on('message', incoming);
     client.on('close', function (code, reason) {
       debug.log(`[${this.id}](${this.ip}) connection close (${code}) ${reason}`);
@@ -116,7 +110,7 @@ module.exports = (option = {}) => {
         return client.terminate();
       }
       client.isAlive = false;
-      client.ping(() => {}); //noop
+      client.ping(() => {});
     });
   }, options.timeout);
 

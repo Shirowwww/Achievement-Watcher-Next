@@ -245,7 +245,6 @@ async function init() {
 
   processMonitor.on('creation', async ([process, pid, filepath]) => {
     const games = getTrackableGameMatches(gameIndexByBinary, process);
-    // Apply path and process filters.
     if (isWallpaperEngineProcess(process, filepath)) return;
     if (filepath && shouldMuteProcessPath(filepath, filter.mute.dir, games)) return;
     if (filter.mute.file.some((bin) => bin.toLowerCase() === process.toLowerCase())) return;
@@ -253,7 +252,6 @@ async function init() {
     let game;
 
     if (games.length === 1) {
-      //single hit
       game = games[0];
     } else {
       // More than one entry is always worth logging; an unmatched process is expected (most running
@@ -350,7 +348,7 @@ async function init() {
     let index = nowPlaying.indexOf(game);
     if (index !== -1) {
       nowPlaying.splice(index, 1);
-    } //remove from nowPlaying
+    }
 
     debug.log('playtime: ' + Math.floor(playedtime / 60) + 'min');
 
@@ -382,8 +380,7 @@ async function addToGameIndex(game) {
 }
 
 async function getGameIndex() {
-  //Temporary esm in cjs load | REPLACE ME when using ESM !
-  //Warning @xan105/is targets >= node16 but should be fine.
+  // @xan105/is is ESM-only; load it lazily via dynamic import from this CommonJS module.
   const { shouldArrayOfObjWithProperties } = (await import('@xan105/is')).assert;
 
   const filePath = {
@@ -406,7 +403,6 @@ async function getGameIndex() {
 
   try {
     userOverride = JSON.parse(fs.readFileSync(filePath.user, 'utf8'));
-    //shouldArrayOfObjWithProperties(userOverride, ['appid', 'name', 'binary', 'icon']);
     debug.log(`[Playtime] user gameIndex loaded ! ${userOverride.length} override(s)`);
   } catch (err) {
     if (err) if (err.code !== 'ENOENT') debug.error(err);

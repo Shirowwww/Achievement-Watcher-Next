@@ -50,7 +50,7 @@ for (const r of rows) {
 }
 console.log(fail === 0 ? '\nPASS: no collisions, no parasite exes.' : `\n${fail} failure(s).`);
 
-// --- Collision tie-break: who keeps 007FirstLight.exe when several appids claim it? ---
+// Collision tie-break: who keeps 007FirstLight.exe when several appids claim it?
 const simFor007 = exeDetect.nameSimilarity('007 First Light', '007FirstLight');
 const simForForza = exeDetect.nameSimilarity('Forza Horizon 6', '007FirstLight');
 console.log(`\nTie-break for 007FirstLight.exe: 007=${simFor007.toFixed(2)} forza=${simForForza.toFixed(2)}`);
@@ -59,7 +59,7 @@ if (!(simFor007 > simForForza)) {
   fail++;
 }
 
-// --- Anti-collision: if forzahorizon6.exe is already taken, Forza must NOT return it again ---
+// Anti-collision: if forzahorizon6.exe is already taken, Forza must not return it again.
 const forza = found.find((g) => /forza/i.test(g.gameDir));
 if (forza) {
   const emu = goldberg.detectEmulator(forza.gameDir);
@@ -73,9 +73,8 @@ if (forza) {
   if (!ok) fail++;
 }
 
-// --- Name-based fallback for non-emulator installs, EXCLUDING folders already claimed by appid ---
-// Folders that findCompatibleGames already linked (steam_api dll / steam_appid.txt) must be removed
-// from the name-match pool so a similarly-named game can't steal them (the Forza 5 -> Forza 6 bug).
+// Name-based fallback for non-emulator installs excludes folders findCompatibleGames already
+// claimed by appid, so a similarly-named game can't steal them (the Forza 5 -> Forza 6 bug).
 const claimed = new Set(found.map((g) => g.gameDir.toLowerCase()));
 const folders = fs
   .readdirSync(ROOT, { withFileTypes: true })
@@ -83,17 +82,14 @@ const folders = fs
   .map((e) => ({ dir: path.join(ROOT, e.name), name: e.name }))
   .filter((f) => !claimed.has(f.dir.toLowerCase()));
 
-// Note: games with a steam_appid.txt / steam_settings (Liar's Bar, DELTARUNE, Fast Food Simulator)
-// are found authoritatively by findCompatibleGames, so they're claimed and intentionally excluded
-// from this name-based pool. Only true GOG/standalone installs (no steam markers) rely on it.
+// Games with steam markers (Liar's Bar, DELTARUNE, Fast Food Simulator) are already claimed by
+// findCompatibleGames and excluded here; only true GOG/standalone installs rely on this name pool.
 const nameCases = [{ game: 'LEGO Batman - Legacy of the Dark Knight', expectExe: /legobatman/i }];
 console.log('\nName-based folder resolution (claimed folders excluded):');
 for (const c of nameCases) {
   const onDisk = fs.existsSync(path.join(ROOT, c.game));
   const isClaimed = claimed.has(path.join(ROOT, c.game).toLowerCase());
-  // Name-based resolution is the fallback ONLY for non-Steam installs. If the folder isn't installed,
-  // or it carries steam markers (steam_api dll / steam_appid.txt) - so findCompatibleGames already
-  // claimed it and resolves it by appid - the name pool legitimately excludes it: SKIP, don't FAIL.
+  // Not installed, or already claimed via steam markers: SKIP, not FAIL.
   if (!onDisk) {
     console.log(`  ${c.game.padEnd(42)} -> not installed -> SKIP`);
     continue;
@@ -128,18 +124,16 @@ for (const want of [
   if (!ok) fail++;
 }
 
-// --- Forza 5 must NOT grab the (claimed) Forza 6 folder ---
+// Forza 5 must not grab the claimed Forza 6 folder.
 const f5 = exeDetect.bestFolderMatch('Forza Horizon 5', folders);
 const f5ok = !f5 || !/forza horizon 6/i.test(path.basename(f5));
 console.log(`Forza 5 does not steal Forza 6 folder -> ${f5 ? path.basename(f5) : '(none)'} ${f5ok ? 'OK' : 'FAIL'}`);
 if (!f5ok) fail++;
 
-// --- No false positive on an unrelated name ---
 const bogus = exeDetect.bestFolderMatch('Totally Unrelated Game 9000', folders);
 console.log(`No-false-match for bogus name -> ${bogus || '(none)'} ${bogus ? 'FAIL' : 'OK'}`);
 if (bogus) fail++;
 
-// --- Known non-game executables are never treated as game exes ---
 for (const name of ['firefox.exe', 'chrome.exe', 'msedge.exe', 'notepad.exe', 'winword.exe', 'Docker Desktop.exe', 'Cheat Engine.exe', 'epicgameslauncher.exe', 'R.exe', 'streaming_client.exe', 'DiskSpd64.exe', 'dolphin.exe']) {
   const ok = exeDetect.isKnownNonGameExe(name);
   console.log(`known non-game exe ${name} -> ${ok ? 'OK' : 'FAIL'}`);

@@ -112,14 +112,10 @@ function cachedSteamDbPortrait(appid, root) {
   return null;
 }
 
-/*
-  The square game logo the app resolved from SteamGridDB's icon set, if it has one for this game.
-
-  Notification thumbnails are painted in a square slot, and neither Steam artwork nor the 32x32
-  clienticon fits one. The app writes the answer (misses included) under steam_cache; this only
-  reads it, so a game nobody has looked up yet simply falls through to the artwork chain below.
-  The cache key must stay identical to the one init.js writes.
-*/
+// The square game logo the app resolved from SteamGridDB's icon set, if it has one for this game.
+// Notification thumbnails need a square slot that neither Steam artwork nor the 32x32 clienticon
+// fits. The app writes the answer (misses included) under steam_cache; this only reads it, so an
+// unlooked-up game falls through to the artwork chain below. The cache key must match init.js's exactly.
 function cachedSquareLogo(appid, gameName, root) {
   const id = normalizedAppid(appid);
   const name = String(gameName == null ? '' : gameName).trim();

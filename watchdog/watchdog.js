@@ -2,7 +2,7 @@
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught exception:', err);
-  debug?.error?.(`Uncaught exception: ${err && err.stack ? err.stack : err}`); // safe optional chaining if debug isn’t loaded yet
+  debug?.error?.(`Uncaught exception: ${err && err.stack ? err.stack : err}`); // debug may not be assigned yet if this fires during startup
   // The main process supervises and restarts the monitor.
   process.exit(1);
 });
@@ -195,14 +195,10 @@ const overlayHotkey = new GlobalHotkey({ debug });
 let runningGames = [];
 const localProgressSchemaCache = new Map();
 
-/*
-  Heartbeat. The app supervises this process over the same IPC channel, but a live channel only
-  proves the process still EXISTS - a monitor whose event loop is wedged (a blocking native call, a
-  runaway sync loop) keeps its channel and its named pipe open while tracking nothing. A
-  timer-driven ping is the one signal that distinguishes the two, because a blocked loop stops
-  firing it. The app turns a missing beat into the "not responding" state (see getWatchdogState in
-  app/electron/init.js).
-*/
+// A live IPC channel only proves the process exists, not that its event loop is responsive - a
+// wedged monitor (blocking native call, runaway sync loop) keeps the channel open while doing
+// nothing. This timer-driven ping is what the app treats as "responsive" (see getWatchdogState in
+// app/electron/init.js); a missed beat means wedged, not just quiet.
 const HEARTBEAT_INTERVAL_MS = 5000;
 
 function sendHeartbeat() {
@@ -448,7 +444,7 @@ function SpawnOverlayNotification(args) {
   }
   debug.log('Spawning achievement notification...');
   if (isDev) {
-    const electronPath = require(path.join(appRoot, '../app/node_modules/electron')); // assumes 'electron' is installed in node_modules
+    const electronPath = require(path.join(appRoot, '../app/node_modules/electron'));
     spawnDetached(
       spawn,
       electronPath,
@@ -461,7 +457,7 @@ function SpawnOverlayNotification(args) {
       (err) => debug.error(`[overlay] Failed to start Electron: ${err && err.message ? err.message : err}`)
     );
   } else {
-    const execPath = path.join(appRoot, 'Achievement Watcher.exe'); // adjust for build path
+    const execPath = path.join(appRoot, 'Achievement Watcher.exe');
     spawnDetached(
       spawn,
       execPath,
@@ -477,11 +473,10 @@ function SpawnOverlayNotification(args) {
 }
 module.exports = { SpawnOverlayNotification };
 
-// The app reports every overlay window that opens or closes, from the window's own lifecycle events
-// rather than from any one button, so `overlayOpened` cannot drift out of sync with what is on
-// screen - a stale "open" would make the next hotkey press send a close for a window that is
-// already gone (and a stale "closed" would ask to open one that is already up). Transitions we
-// caused ourselves arrive here too and are dropped by the equality check below.
+// The app reports every overlay window's actual open/close lifecycle event (not just button presses),
+// so `overlayOpened` can't drift from what's on screen - a stale value would send a close to an
+// already-gone window, or an open to one already up. Self-caused transitions land here too and are
+// dropped by the equality check below.
 process.on('message', (msg) => {
   if (!msg || typeof msg !== 'object') return;
   if (msg.appPid !== undefined) {
@@ -549,11 +544,9 @@ var app = {
   starting: false,
   restartPending: false,
   optionsReloadTimer: null,
-  // Settings tabs autosave on every keystroke/slider step, so one user gesture can rewrite
-  // options.ini a dozen times a second. Each write used to trigger a full watchdog restart, which
-  // tears every achievement watcher down and back up - a burst left the save folders unwatched
-  // repeatedly, so an unlock landing in one of those gaps was missed. Coalesce a burst of writes
-  // into a single restart on the trailing edge.
+  // Settings autosave on every keystroke, so one gesture can rewrite options.ini a dozen times a
+  // second. Restarting on every write used to tear watchers down and back up each time, leaving a
+  // gap where an unlock could land unwatched - coalesce the burst into one trailing-edge restart.
   scheduleOptionsReload: function () {
     if (this.optionsReloadTimer) {
       clearTimeout(this.optionsReloadTimer);
@@ -613,7 +606,7 @@ var app = {
       debug.log('Loading Options ...');
       self.options = await settings.load(cfg_file.option);
       // Windows toasts resolve their sound from the same overlay settings as the in-game
-      // overlay (Son / Son aléatoire / Volume); refresh on every settings reload too.
+      // overlay (Sound / Random Sound / Volume); refresh on every settings reload too.
       notify.setOverlayOptions(self.options.overlay || {});
     // Whether an unlock may be marked urgent, i.e. allowed on screen while Do Not Disturb is on.
     // Refreshed on every settings reload, like the sound options above.
@@ -628,9 +621,8 @@ var app = {
         debug.log('[Toast] will use WinRT');
       } else {
         debug.warn('[Toast] will use PowerShell (WinRT unavailable or disabled)');
-        // #46: when WinRT isn't used, powertoast shells out to PowerShell - if PowerShell isn't on
-        // PATH (a reported cause of silently-missing toasts) nothing appears. Probe it and surface a
-        // clear, actionable error instead of failing silently.
+        // When WinRT isn't used, powertoast shells out to PowerShell - if PowerShell isn't on PATH,
+        // toasts silently fail with nothing shown. Probe it here and surface a clear error instead.
         execFile(resolvePowerShell(), ['-NoProfile', '-NonInteractive', '-Command', 'exit 0'], { windowsHide: true }, (err) => {
           if (err)
             debug.error(
@@ -750,10 +742,10 @@ var app = {
 
         let appID;
         if (options.socialClub) {
-          // Goldberg SocialClub folders are named after the GAME, not an AppID, so the only link
-          // back to a library entry is the game index the app writes. That entry also carries the
-          // Steam release the title resolved to, which is what actually has a schema and store art
-          // - the namespaced "socialclub-<slug>" id would fail every Steam lookup (issue #9).
+          // Goldberg SocialClub folders are named after the GAME, not an AppID, so the only link back
+          // to a library entry is the game index the app writes. That entry also carries the Steam
+          // release the title resolved to - the namespaced "socialclub-<slug>" id would fail every
+          // Steam lookup on its own.
           const indexed = findIndexedSocialClubGame(dir, filePath.dir);
           if (!indexed) {
             throw 'Unable to find Goldberg SocialClub game for this save folder - run a library refresh so AW Next can map it';
@@ -797,11 +789,10 @@ var app = {
           isRunning = true;
         } else if (self.options.notification_advanced.checkIfProcessIsRunning) {
           if (runningGames.some((g) => String(g.appid) === appID)) {
-            // The playtime monitor already detected this appid as running, via a robust
-            // appid-based match that tolerates a process name differing from the index
-            // binary (e.g. tlou-ii.exe vs the stored tlou-ii-l.exe). Trust it instead of
-            // re-checking a possibly-wrong binary with tasklist, which would otherwise
-            // wrongly suppress the unlock notification for those games.
+            // The playtime monitor already matched this appid via a robust appid-based check that
+            // tolerates a process name differing from the index binary (e.g. tlou-ii.exe vs
+            // tlou-ii-l.exe) - trust it instead of re-checking with tasklist, which would wrongly
+            // suppress the notification here.
             isRunning = true;
             debug.log('Game already tracked as running by the playtime monitor. Assuming process is running');
           } else if (await isFullscreenAppRunning()) {
@@ -1244,7 +1235,7 @@ var app = {
         monitor.on('disable-overlay', () => {
           runningAppid = null;
           // Only ask for a close when an overlay is actually up - an unsolicited close reaching the
-          // app with nothing open made it open the overlay on the desktop instead (issue #19).
+          // app with nothing open made it open the overlay on the desktop instead.
           const wasOpen = overlayOpened;
           overlayOpened = false;
           if (wasOpen) {

@@ -14,13 +14,8 @@ function isSafeExternalUrl(url) {
   }
 }
 
-/**
- * Open `url` externally when it is safe to do so.
- * @param {object} shell        Electron's shell (or remote.shell in the renderer).
- * @param {string} url          Candidate URL, possibly from a remote catalog.
- * @param {function} [onReject] Called with the rejected URL instead of opening it.
- * @returns {boolean} whether the URL was forwarded to the OS.
- */
+// Opens `url` externally only when it passes isSafeExternalUrl(); onReject is called with the
+// rejected URL otherwise instead of being silently dropped.
 function openExternalSafe(shell, url, onReject) {
   if (!isSafeExternalUrl(url)) {
     if (typeof onReject === 'function') onReject(url);

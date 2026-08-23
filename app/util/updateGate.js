@@ -11,10 +11,9 @@ const semver = require('semver');
 const POSTPONE_MS = 24 * 60 * 60 * 1000;
 
 /*
-  When the next check runs. The update dialog is modal and parentless, so it lands on top of
-  whatever is on screen - including a fullscreen game. While one is running the check is skipped
-  entirely (no dialog, no network), and the moment the session ends the app looks again shortly
-  after, which is the polite time to offer an update.
+  When the next check runs. The update dialog is modal and parentless, so it can land on top of
+  anything, including a fullscreen game - while one is running the check is skipped entirely (no
+  dialog, no network), then the app looks again shortly after the session ends.
 */
 const INTERVALS = {
   recheck: 60 * 60 * 1000, // healthy silent re-check while the app stays resident
@@ -44,18 +43,13 @@ function covers(remembered, offered) {
 }
 
 /*
-  Is the offered version actually an upgrade?
-
-  `latest.yml` has to be fetched to answer "am I up to date?" at all - it is the manifest that
-  carries the published version, so there is no way to skip reading it and still know. What can be
-  guaranteed is what happens afterwards: a manifest naming the version already installed, or an
-  older one (a rolled-back release, a stale CDN copy, a local build ahead of the published tag),
-  must never turn into a prompt or a download. electron-updater applies its own semver gate before
-  emitting update-available; this is the app's own check, so a surprise there cannot cost the user a
-  pointless installer download or a dialog offering them what they are already running.
-
-  An unparseable version on either side returns false: that is electron-updater's call to make, and
-  suppressing on a version string this cannot read would hide real updates.
+  Is the offered version actually an upgrade? `latest.yml` must be fetched to know at all, but
+  what happens after is guaranteed: a manifest naming the current version, or an older one (a
+  rollback, a stale CDN copy, a local build ahead of the tag), must never turn into a prompt or
+  download. This is the app's own check on top of electron-updater's own semver gate, so a
+  surprise there cannot cost a pointless download or an offer to install what's already running.
+  An unparseable version returns false - that's electron-updater's call, and suppressing on an
+  unreadable string would hide real updates.
 */
 function isNotAnUpgrade(offered, currentVersion) {
   const a = coerce(offered);
@@ -78,10 +72,9 @@ function isUpdatePostponed(general, offered, now = Date.now()) {
 }
 
 /*
-  The single decision the updater asks before showing anything.
-  `manual` is an explicit "Check for updates" from Settings: the user asked, so a postpone they set
-  earlier no longer applies - but an explicit "skip this version" still does.
-  Returns { suppress, reason }.
+  The single decision the updater asks before showing anything. `manual` is an explicit "Check
+  for updates" from Settings: a postpone the user set earlier no longer applies, but an explicit
+  "skip this version" still does.
 */
 function shouldSuppressUpdatePrompt(general, offered, { manual = false, now = Date.now(), currentVersion = '' } = {}) {
   // First, and ahead of `manual`: an explicit "Check for updates" overrules a postpone the user set,
@@ -93,20 +86,16 @@ function shouldSuppressUpdatePrompt(general, offered, { manual = false, now = Da
 }
 
 /*
-  Whether a finished download has to wait before installing itself.
+  Whether a finished download has to wait before installing itself. quitAndInstall() closes AW,
+  runs the NSIS upgrade and relaunches it, putting installer windows on screen - rude underneath a
+  running game, so an unsolicited update waits for the session to end.
 
-  quitAndInstall() closes AW, runs the NSIS upgrade and relaunches it, which puts installer windows
-  on screen. Doing that underneath a running game is rude, so an update that arrived on its own
-  waits for the session to end and `setGameActivity` offers it again.
-
-  An update the user asked for is a different thing. They opened Settings, clicked "Check for
-  updates", then clicked "Download && Install" - three deliberate actions - and nothing after that
-  point should quietly decide they did not mean it. That distinction is not hypothetical: a
-  permanently resident Steam app (a controller utility, an overlay tool, a launcher companion) is a
-  running game by every signal AW has, for as long as the machine is switched on. Without this
-  exception such a machine downloads every update and installs none of them, and because the
-  hold-back only retries when the last game exits, an event that never comes, nothing ever tells the
-  user why the app keeps offering the same version.
+  A user-requested update is different: three deliberate actions (Settings, Check, Download &&
+  Install) should never be quietly overridden. This matters concretely because a permanently
+  resident Steam app (a controller utility, overlay tool, launcher companion) looks like a running
+  game to AW for as long as the machine is on - without this exception such a machine downloads
+  every update and installs none, silently, since the hold-back only retries when the last game
+  exits, an event that never comes.
 */
 function shouldHoldInstall({ gameRunning = false, acceptedByUser = false } = {}) {
   return Boolean(gameRunning) && !acceptedByUser;

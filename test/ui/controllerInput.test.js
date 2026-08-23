@@ -17,13 +17,10 @@ const {
   DEFAULT_OVERLAY_CONTROLLER_UI_MODE_BINDING,
 } = require('../../watchdog/console/controller/controller-input-manager.js');
 
-// The renderer (app/util/controllerLabels.js) and the watchdog (controller-input-manager.js) each
-// keep their own hand-written copy of the canonical button vocabulary - app/ ships to the browser
-// via a <script> tag and watchdog/ is a separate npm package with its own node_modules, packaged
-// standalone (electron-builder copies ../watchdog beside the app.asar rather than into it), so a
-// plain require() across the two at runtime would work in dev but break the installed build. Until
-// that's worth a real build-time sharing mechanism, this test is the tripwire for the two vocabularies
-// silently drifting apart.
+// The renderer (controllerLabels.js) and the watchdog (controller-input-manager.js) each keep
+// their own hand-written copy of the button vocabulary - app/ ships to the browser via <script>,
+// watchdog/ is a separate packaged npm module, so a plain require() across the two would work in
+// dev but break the installed build. This test is the tripwire for the two vocabularies drifting apart.
 const controllerLabels = require('../../app/util/controllerLabels.js');
 
 test('normalizeControllerButtonName accepts known names case-insensitively and rejects junk', () => {

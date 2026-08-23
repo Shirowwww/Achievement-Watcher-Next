@@ -61,7 +61,7 @@ function slugify(name) {
   return String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-// --- sources ----------------------------------------------------------------------------------
+// Sources
 
 // Every source file the outputs are derived from, with the output paths it produces. The manifest
 // stores this shape, so --check is a comparison rather than a rebuild.
@@ -111,7 +111,7 @@ function plan() {
   return entries;
 }
 
-// --- build ------------------------------------------------------------------------------------
+// Build
 
 async function buildShot(entry) {
   const sharp = require(path.join(root, 'app', 'node_modules', 'sharp'));
@@ -189,7 +189,7 @@ async function build(entries) {
   console.log(`site assets: ${shots} screenshots, ${presets.length} presets`);
 }
 
-// --- check ------------------------------------------------------------------------------------
+// Check
 
 function check(entries) {
   const problems = [];
@@ -216,7 +216,7 @@ function check(entries) {
   return problems;
 }
 
-// --- entry point ------------------------------------------------------------------------------
+// Entry point
 
 async function main() {
   const entries = plan();

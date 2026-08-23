@@ -1,14 +1,9 @@
 'use strict';
 
-/*
-  A notification test fired from a game's Health panel must preview THAT game.
-
-  The trap this guards: the overlay has two entry points with different payload shapes.
-  enqueueNotificationFromArgs() (the Watchdog CLI path, used by real unlocks) accepts
-  `gameDisplayName` and normalises it; enqueueNotification() (the object path the renderer's test
-  uses) does not - createNotificationWindow() forwards a fixed field list. Setting a field the
-  window never reads produces a preview that silently ignores it, which is exactly what happened.
-*/
+// A notification test fired from a game's Health panel must preview THAT game. The trap: the
+// overlay has two entry points with different payload shapes - enqueueNotificationFromArgs() (the
+// Watchdog CLI path) normalises `gameDisplayName`, but enqueueNotification() (the renderer's test
+// path) does not, since the window forwards a fixed field list - an unread field is silently ignored.
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');

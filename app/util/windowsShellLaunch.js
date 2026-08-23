@@ -5,19 +5,17 @@ const path = require('path');
 const { execFile } = require('child_process');
 
 /*
-  Start-Process is ShellExecute, which is what makes this useful beyond spawn():
+  Start-Process is ShellExecute, useful beyond spawn(): a GUI/.NET program gets a normal Windows
+  launch environment (Ryujinx crashes in Console.Title as a detached child with ignored stdio),
+  and an executable whose manifest asks for administrator is ELEVATED instead of failing outright
+  with EACCES like CreateProcess/spawn.
 
-    - a GUI/.NET program gets a normal Windows launch environment (Ryujinx crashes in Console.Title
-      when started as a detached child with ignored stdio handles);
-    - an executable whose manifest asks for administrator is ELEVATED instead of failing. CreateProcess
-      (spawn) refuses those outright with EACCES, which is the whole reason the caller falls back here.
+  `-Verb RunAs` is the explicit form for an executable that needs admin rights without saying so
+  in its manifest; it always prompts, so it's only used when asked for.
 
-  `-Verb RunAs` is the explicit form, for an executable that needs administrator rights without saying
-  so in its manifest. It always prompts, so it is only used when asked for.
-
-  Start-Process reports a bad path or a declined UAC prompt as a non-terminating error, which leaves
-  powershell's exit code at 0 and made every failure look like a success. -ErrorAction Stop + the
-  try/catch below turn it into a non-zero exit with the message on stderr, so execFile's callback sees it.
+  Start-Process reports a bad path or a declined UAC prompt as a non-terminating error, leaving
+  powershell's exit code at 0 (every failure looked like success) - -ErrorAction Stop + the
+  try/catch below turn it into a real non-zero exit with the message on stderr.
 */
 const START_PROCESS_SCRIPT = [
   '$gameExe = $env:AW_GAME_LAUNCH_EXE',
@@ -74,9 +72,9 @@ function launchViaWindowsShell(
 }
 
 /*
-  Windows refuses a CreateProcess (spawn) launch of an executable that requires elevation with
-  ERROR_ELEVATION_REQUIRED, which libuv reports as EACCES - indistinguishable by code alone from a
-  genuine permission problem, so both are answered the same way: retry through ShellExecute.
+  Windows refuses a CreateProcess (spawn) launch needing elevation with ERROR_ELEVATION_REQUIRED,
+  which libuv reports as EACCES - indistinguishable by code alone from a genuine permission
+  problem, so both are answered the same way: retry through ShellExecute.
 */
 function isElevationLikeError(error) {
   if (!error) return false;

@@ -5,11 +5,10 @@
 // preset is loaded, so an edge choice remains an edge choice for every theme.
 const DEFAULT_MARGIN = 2;
 
-// How much of a custom-positioned window must stay on its display for the saved anchor to be used
-// as-is. A preset's window is its <meta> box, usually a little larger than the pixels it paints
-// (glow and shadow room), so a popup only looks flush against a screen edge when that transparent
-// padding may hang past it. Below this ratio the anchor is treated as stale - a monitor that is no
-// longer connected - and clamped back into view instead.
+// How much of a custom-positioned window must stay on its display to use the saved anchor as-is.
+// A preset's window (its <meta> box) is usually larger than the pixels it paints (glow/shadow
+// room), so a popup looks flush against an edge only when that padding hangs past it. Below this
+// ratio the anchor is treated as stale (a disconnected monitor) and clamped back into view.
 const MIN_VISIBLE_RATIO = 0.5;
 
 function number(value, fallback = 0) {

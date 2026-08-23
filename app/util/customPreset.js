@@ -12,23 +12,9 @@ const { cssUrl } = require('./cssUrl.js');
 const { PRESET_PROPERTIES, FONT_STACKS, ICON_SHAPES, BG_PATTERNS, BG_PATTERN_SIZES, MOTION_OFFSETS, EASINGS, normalizeOptions, cssValue } = schema;
 
 /*
-  The preset engine: the inline script every generated preset carries.
-
-  It is the only JavaScript in a generated preset and it is identical in all of them - the design
-  lives entirely in the generated stylesheet. That split is what lets the designer preview a draft by
-  rendering this same markup and this same engine with a different stylesheet, instead of a second
-  renderer that would drift from the real one.
-
-  What it does with the payload createNotificationWindow() sends:
-    displayName / description   the two lines of text
-    gameName                    the game the unlock came from, on its own line when asked for
-    iconPath                    the icon, hidden when there is none
-    imagePath / headerPath      artwork, published as --artwork for presets painting a background
-    rarityPercent               <= 10% adds the rare state, tiered gold / silver / bronze; also the
-                                number printed on the rarity chip
-    notificationType/isPlatinum the completion (100%) state
-    progress                    the progress line
-    scale                       kept neutral: the host zooms the page, presets must not scale twice
+  The one inline script every generated preset carries, identical in all of them - the design is
+  entirely in the generated stylesheet. This lets the designer preview a draft with this same
+  markup/engine and a different stylesheet, instead of a second renderer that could drift.
 */
 const PRESET_ENGINE = [
   "window.addEventListener('DOMContentLoaded', function () {",
@@ -106,9 +92,8 @@ const PRESET_ENGINE = [
   '    }',
   '  }',
   '  /*',
-  '    The line above the title: the game the unlock came from, and how rare it was. Each half is',
-  '    hidden when the payload has nothing to put in it, and the row itself disappears with both, so',
-  '    a preset that asks for them never reserves an empty line for a notification that has neither.',
+  '    The line above the title (game name + rarity). Each half hides when the payload lacks it,',
+  '    and the whole row disappears when both do, so it never reserves an empty line.',
   '  */',
   '  function applyMeta(data) {',
   "    var row = document.querySelector('.meta');",
@@ -161,12 +146,9 @@ const PRESET_ENGINE = [
 ].join('\n');
 
 /*
-  One spelling for an inline script, and the CSP hash that matches it.
-
-  The designer previews a draft in an iframe inside the Settings page, and a srcdoc document inherits
-  the embedder's Content-Security-Policy - so the preview's scripts only run because view/app.html
-  lists these hashes. Pinning them is deliberately strict: change the engine by one character and the
-  preview stops running until the policy is updated, which is what the test enforcing this checks.
+  One spelling for an inline script, and the CSP hash that matches it. A srcdoc preview inherits
+  the embedder's CSP, so it only runs because view/app.html lists these hashes - change the engine
+  by one character and the preview breaks until the policy is updated (a test enforces this).
 */
 function inlineScript(source) {
   return `<script>\n${source}\n</script>`;
@@ -187,14 +169,10 @@ const PRESET_MARKUP = [
 ].join('');
 
 /*
-  Slack around the card inside its host window. The window is sized from the meta box below, so
-  anything painted outside the card's own rectangle - the drop shadow, and the accent glow a rare or
-  completion state adds - is clipped unless the box allows for it.
-
-  It is also, exactly, the gap the user sees between the popup and the corner of their screen: the
-  host places the WINDOW against the edge, so every pixel reserved here pushes the visible card
-  further in. That is why the shadow and the glow are deliberately tight - a softer, wider shadow
-  looks better in isolation and costs twice this margin on all four sides.
+  Slack around the card inside its host window, sized from the meta box below - anything painted
+  outside the card (drop shadow, state glow) is clipped without it. It also IS the visible gap to
+  the screen corner, since the host places the window against the edge: a wider shadow would cost
+  twice this margin on all four sides, which is why both are kept deliberately tight.
 */
 const CUSTOM_PRESET_WINDOW_MARGIN = 22;
 const CUSTOM_PRESET_VERTICAL_MARGIN = 40;
@@ -202,10 +180,9 @@ const GLOW_RADIUS_PX = 22;
 const MAX_PRESET_HEIGHT = 460;
 
 /*
-  Extra room the strongest glow of any state needs, per side, beyond the slack the base margin
-  already leaves. The card is centred in its window, so half of each margin sits on either side and
-  a modest glow costs nothing - only a design that glows harder than that widens the box, which
-  keeps the popup anchored where it has always been for the presets that do not.
+  Extra room the strongest glow needs, beyond the base margin. The card is centred, so a modest
+  glow costs nothing extra; only a design that glows harder than that widens the box, keeping
+  existing presets anchored exactly where they were.
 */
 function glowRoom(values, margin) {
   const strongest = Math.max(values.glow, values.rareGlow, values.platinumGlow) / 100;
@@ -213,12 +190,10 @@ function glowRoom(values, margin) {
 }
 
 /*
-  The host window's size, written into the preset as `<meta width height>`.
-
-  createNotificationWindow() reads that tag and gives the popup exactly that box, so a card taller
-  than the box is cropped on screen. It used to be a fixed 150px, which was only ever right for the
-  one layout the builder could produce; the designer can stack the icon above the text, so the height
-  has to be derived from the same options that generate the stylesheet.
+  The host window's size, written as `<meta width height>`; createNotificationWindow() gives the
+  popup exactly this box, so a taller card is cropped. Used to be a fixed 150px, which only fit
+  the one layout the old builder produced - the designer's icon-top layout needs it derived from
+  the same options that generate the stylesheet.
 */
 function presetBoxSize(options = {}) {
   const values = normalizeOptions(options);
@@ -261,12 +236,10 @@ function buildCustomPresetHtml(options) {
 }
 
 /*
-  The same preset, rendered as a standalone document the designer can drop into an iframe: the real
-  markup, the real engine and the real stylesheet, with a stub of the notification bridge in front of
-  it so a draft can be fed a sample payload.
-
-  `hold` keeps the card on screen instead of playing out and closing, which is what a live preview
-  needs; the designer rebuilds the document without it to play the full entry/exit once.
+  The same preset as a standalone document for the designer's iframe: real markup/engine/
+  stylesheet, plus a stub notification bridge so a draft can be fed a sample payload. `hold` keeps
+  the card on screen instead of auto-closing; the designer rebuilds without it to preview the
+  entry/exit once.
 */
 const PRESET_PREVIEW_BRIDGE = [
   'window.api = {',
@@ -301,8 +274,6 @@ function buildPresetPreviewHtml(options, { hold = true, assetUrl } = {}) {
   ].join('\n');
 }
 
-// --- stylesheet ---------------------------------------------------------------------------------
-
 const FLEX_ALIGN = { left: 'flex-start', center: 'center', right: 'flex-end' };
 
 // What the title takes its colour from. `accent` follows the state, so a rare or completion
@@ -336,9 +307,9 @@ function rootVariables(values, assetUrl) {
   // notification carries no image.
   lines.push('  --artwork: none;');
   /*
-    The preset's own background picture, when it has one. It is a bare filename beside style.css, so
-    the plain relative url is what an installed preset needs; the designer previews from a srcdoc
-    document, where nothing is relative to the preset folder, and passes a resolver instead.
+    The preset's own background picture: a bare filename beside style.css, so a relative url()
+    works once installed. The designer's srcdoc preview has nothing relative to the preset folder,
+    so it passes a resolver instead.
   */
   lines.push(`  --bg-image: ${values.bgImage ? cssUrl(assetUrl ? assetUrl(values.bgImage) : values.bgImage) : 'none'};`);
   // Scales the glow the design asked for. Only the glow animation moves it, and only downwards, so
@@ -346,9 +317,9 @@ function rootVariables(values, assetUrl) {
   lines.push('  --glow-pulse: 1;');
   lines.push('  --ach-hold: 5000ms;');
   /*
-    The card's own background colour. `--bg-base` is what the designer set; `--bg` is what the card
-    paints, and a state re-points it the way it re-points `--accent`, so one stylesheet can wash a
-    rare unlock in its own colour without a second background rule.
+    `--bg-base` is what the designer set; `--bg` is what the card actually paints. A state
+    re-points `--bg` the same way it re-points `--accent`, so one stylesheet can wash a rare
+    unlock in its own colour without a second background rule.
   */
   lines.push('  --bg: var(--bg-base);');
   // The pattern's ink: the text colour, at the strength the design asked for.
@@ -373,11 +344,8 @@ function borderRules(values) {
   return rules;
 }
 
-/*
-  The description line. One line is the original behaviour - clipped with an ellipsis, and scrolled
-  by the engine when it does not fit. Asking for more lets it wrap and clamps it instead, which is
-  what a wide card wants and what the marquee cannot do.
-*/
+// The description line: one line (original behaviour) clips with an ellipsis and scrolls via the
+// engine when it overflows. More than one line wraps and clamps instead, which the marquee can't do.
 function detailRule(values) {
   const base = '.ach .detail { max-width: 100%; margin: 0; opacity: 0.9; font-size: calc(var(--font-size) * var(--detail-scale));';
   if (values.descriptionLines <= 1) return `${base} white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }`;
@@ -392,10 +360,9 @@ function layoutRules(values) {
 }
 
 /*
-  The icon itself. The rounded shape is the original declaration untouched; every other shape is a
-  clip path, which cuts the border and the radius off with it - so those are left out rather than
-  drawn round an outline that no longer exists. The glow sits on a wrapper instead, because a
-  box-shadow on a clipped element is clipped away with it.
+  The rounded icon shape is the original declaration; every other shape uses a clip path, which
+  would cut off a border/radius drawn round it, so those are left out instead. The glow sits on a
+  wrapper, since a box-shadow on a clipped element gets clipped away with it.
 */
 function iconImageRule(values) {
   const base =
@@ -415,12 +382,9 @@ function iconRules(values) {
 }
 
 /*
-  The glow animation, as a multiplier the box-shadow reads.
-
-  A custom property can only be animated once it is registered, hence @property. It also has to be
-  registered as a number rather than left untyped, or the transition between keyframes is a discrete
-  swap instead of a fade. Both keyframes stay at or below 1, so the strongest frame is the glow the
-  design asked for and the window it was measured for still fits.
+  The glow as a multiplier the box-shadow reads. A custom property must be @property-registered
+  (and typed as a number, not left untyped) to animate smoothly instead of swapping discretely.
+  Both keyframes stay at or below 1, so the window measured for the design's glow still fits.
 */
 const GLOW_ANIMATIONS = {
   pulse: { name: 'aw_glow_pulse', css: '@keyframes aw_glow_pulse { 0%, 100% { --glow-pulse: 1; } 50% { --glow-pulse: 0.3; } }', duration: 2200 },
@@ -469,11 +433,8 @@ function buildCustomPresetCss(options, { assetUrl } = {}) {
     '.ach.state-platinum { --accent: var(--platinum-accent); --glow-strength: var(--platinum-glow); }',
   ];
 
-  /*
-    A rare unlock and a completion wash the card in their own colour. Written after the state rules
-    above so it reads whichever `--accent` they landed on, and skipped entirely at zero so a preset
-    that does not ask for it generates exactly the stylesheet it did before.
-  */
+  // A rare unlock/completion washes the card in its own colour. Written after the state rules so
+  // it reads whichever `--accent` they set, and skipped at zero so older presets are unaffected.
   if (values.stateTint > 0) {
     css.push('.ach.state-rare, .ach.state-platinum { --bg: color-mix(in srgb, var(--accent) calc(var(--state-tint) * 100%), var(--bg-base)); }');
   }
@@ -498,11 +459,8 @@ function buildCustomPresetCss(options, { assetUrl } = {}) {
     );
   }
 
-  /*
-    An absolutely positioned pseudo-element paints above ordinary in-flow content, so as soon as the
-    card has a layer at all, the text has to be given a stacking position of its own or the picture
-    and the pattern are drawn over it.
-  */
+  // An absolutely positioned pseudo-element paints above in-flow content, so once the card has a
+  // layer, the text needs its own stacking position or the picture/pattern draw over it.
   if (picture || pattern) css.push('.ach > * { position: relative; z-index: 1; }');
 
   css.push(
@@ -547,12 +505,9 @@ function buildCustomPresetCss(options, { assetUrl } = {}) {
 }
 
 /*
-  Where generated presets are written. Under <userData>, never under the app folder: once packaged,
-  app/presets sits inside app.asar, and a mkdir below a file fails with ENOTDIR - which silently
-  broke Preview and Save on every installed build while a dev run, where the same path is a real
-  directory, worked. Keeping them in userData also means they survive an update.
-
-  Exported (and tested) rather than inlined in init.js so the rule cannot drift back.
+  Written under <userData>, never under the app folder: packaged, app/presets sits inside
+  app.asar, and mkdir below a file fails with ENOTDIR - silently breaking Preview/Save on every
+  installed build while dev (a real directory) worked. Exported and tested so this can't drift back.
 */
 const GENERATED_PRESETS_SUBPATH = ['presets', 'Users Presets'];
 
@@ -571,24 +526,16 @@ const PRESET_OPTIONS_FILE = 'aw-preset.json';
 const PRESET_PACKAGE_FILE = 'aw-package.json';
 
 /*
-  The sound a preset asks for, or '' when it does not ask for one.
-
-  A preset that names a sound plays that sound instead of the one picked in the Notifications tab, so
-  a shared package sounds the way its author intended. Reading it from the folder means an imported
-  preset gets the same treatment as one built here - its manifest options land in the same file.
-
-  Deliberately tolerant: an unreadable or sound-less preset returns '', which means "use the app's
-  setting", so this can never be the reason a notification goes silent.
+  The sound a preset asks for, or '' to mean "use the app's Notifications setting" - so a shared
+  package sounds as its author intended, and an unreadable or sound-less preset can never be the
+  reason a notification goes silent.
 */
 function presetSound(presetDir) {
   if (!presetDir) return '';
   /*
-    The designer's own options are authoritative wherever they exist - including an empty sound,
-    which is a preset saying it has no opinion rather than one that never had the chance to say so.
-    Only a preset without them (hand-authored, installed from a package) falls back to the manifest,
-    which is the one place such a preset can name a sound at all.
-
-    Both are re-validated, so a hand-edited file cannot turn either into a path.
+    The designer's own options win whenever present, even an empty sound (an explicit "no opinion"
+    vs. never having had the chance to say). Only a preset without them falls back to the manifest.
+    Both are re-validated, so a hand-edited file can't smuggle in a path.
   */
   try {
     return normalizeOptions(JSON.parse(fs.readFileSync(path.join(presetDir, PRESET_OPTIONS_FILE), 'utf8'))).sound;

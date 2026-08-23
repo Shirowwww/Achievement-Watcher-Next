@@ -5,7 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const crackLoaderDetect = require(path.join(__dirname, '..', '..', 'app', 'util', 'crackLoaderDetect.js'));
 
-// ---- tiny soft-assert harness (mirrors test/parsers/crackFix.test.js) --------------------------
+// Soft-assert harness, mirrors crackFix.test.js.
 let passed = 0;
 const failures = [];
 function ok(cond, msg) {
@@ -23,7 +23,6 @@ function tmp(prefix) {
   return d;
 }
 
-// ---- no loader present ---------------------------------------------------------------------------
 {
   const dir = tmp('aw-crackloader-none-');
   fs.writeFileSync(path.join(dir, 'game.exe'), 'stub');
@@ -32,7 +31,6 @@ function tmp(prefix) {
   eq(crackLoaderDetect.hasWorkingCrackLoader(dir), false, 'hasWorkingCrackLoader mirrors detectWorkingCrackLoader');
 }
 
-// ---- OnlineFix64.dll marker ------------------------------------------------------------------
 {
   const dir = tmp('aw-crackloader-onlinefix64-');
   fs.writeFileSync(path.join(dir, 'game.exe'), 'stub');
@@ -42,7 +40,6 @@ function tmp(prefix) {
   eq(crackLoaderDetect.hasWorkingCrackLoader(dir), true, 'hasWorkingCrackLoader true for OnlineFix64.dll');
 }
 
-// ---- OnlineFix.ini marker (case-insensitive) --------------------------------------------------
 {
   const dir = tmp('aw-crackloader-onlinefixini-');
   fs.writeFileSync(path.join(dir, 'ONLINEFIX.INI'), 'stub');
@@ -50,7 +47,6 @@ function tmp(prefix) {
   ok(hit && hit.name === 'OnlineFix', 'OnlineFix.ini is matched case-insensitively');
 }
 
-// ---- OnlineFix32.dll marker --------------------------------------------------------------------
 {
   const dir = tmp('aw-crackloader-onlinefix32-');
   fs.writeFileSync(path.join(dir, 'OnlineFix32.dll'), 'stub');
@@ -58,7 +54,7 @@ function tmp(prefix) {
   ok(hit && hit.name === 'OnlineFix', 'OnlineFix32.dll (x86 build) is also recognised');
 }
 
-// ---- Other installed emulator families are protected by the same automatic-write gate --------
+// Other installed emulator families are protected by the same automatic-write gate.
 for (const [name, marker] of [
   ['TENOKE', 'tenoke.ini'],
   ['ALI213', 'ALI213.ini'],
@@ -72,7 +68,6 @@ for (const [name, marker] of [
   ok(hit && hit.name === name, `${marker} is recognised as an existing ${name} setup`);
 }
 
-// ---- nested marker does NOT count (top-level only) -------------------------------------------
 {
   const dir = tmp('aw-crackloader-nested-');
   fs.mkdirSync(path.join(dir, 'Game_Data', 'Plugins'), { recursive: true });
@@ -80,7 +75,6 @@ for (const [name, marker] of [
   eq(crackLoaderDetect.detectWorkingCrackLoader(dir), null, 'a marker buried in a subfolder is not the loader\'s own drop point');
 }
 
-// ---- missing / unreadable folder never throws --------------------------------------------------
 {
   eq(crackLoaderDetect.detectWorkingCrackLoader(path.join(os.tmpdir(), 'aw-crackloader-does-not-exist-xyz')), null, 'missing folder => null, no throw');
   eq(crackLoaderDetect.detectWorkingCrackLoader(null), null, 'null gameDir => null, no throw');
@@ -88,7 +82,6 @@ for (const [name, marker] of [
   eq(crackLoaderDetect.detectWorkingCrackLoader(undefined), null, 'undefined gameDir => null, no throw');
 }
 
-// ---- summary ----------------------------------------------------------------------------------
 for (const d of tmpDirs) {
   try {
     fs.rmSync(d, { recursive: true, force: true });

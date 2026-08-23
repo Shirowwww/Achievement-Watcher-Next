@@ -6,9 +6,8 @@ const startApps = require('../util/startApps.js');
 
 test('isValidAUMID accepts both packaged and desktop app ids', () => {
   assert.equal(startApps.isValidAUMID('Microsoft.XboxGamingOverlay_8wekyb3d8bbwe!App'), true);
-  // Achievement Watcher's own identity, carried by the installer's Start Menu shortcut. The old
-  // check required the packaged "family!app" shape and rejected it, so the app's real app id was
-  // reported as invalid on every start (issue #8).
+  // AW's own identity: the old check required the packaged "family!app" shape and rejected
+  // this desktop-style id on every start (issue #8).
   assert.equal(startApps.isValidAUMID('io.github.shirowwww.achievement.watcher'), true);
 });
 

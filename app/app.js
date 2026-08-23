@@ -112,13 +112,10 @@ window.addEventListener('unhandledrejection', (e) => {
   } catch {}
 });
 /*
-  "ResizeObserver loop completed with undelivered notifications" is not an error.
-
-  Chromium raises it whenever an observer callback resizes something and the browser postpones the
-  remaining notifications to the next frame - which is ordinary behaviour for a responsive grid, and
-  the layout is already correct by then. It reaches window.onerror with no Error object and no stack,
-  so it was landing in the log at ERROR level and was the only thing in a user's exported log that
-  looked like a fault. Everything else is still reported unchanged.
+  "ResizeObserver loop completed with undelivered notifications" is benign: Chromium raises it when
+  an observer callback resizes something and defers the rest to next frame (ordinary for a
+  responsive grid). It reaches window.onerror with no Error/stack, so it was the only thing landing
+  at ERROR level in an otherwise-clean exported log.
 */
 const BENIGN_WINDOW_ERRORS = [/^ResizeObserver loop /i];
 
@@ -249,15 +246,10 @@ let scanInFlight = false;
 let knownDiscoveredAppids = null;
 
 /*
-  Appids a completed scan discovered but deliberately did not render - no achievements and not
-  installed, merged into another source, filtered out by the current view. Discovery is not stable
-  for these: a phantom save folder can drop out of one poll and reappear in the next, and every
-  reappearance read as "a new game was installed" and triggered a full library refresh. One appid
-  did that 89 times in a single log, each time costing a 2-13s rescan plus its network traffic.
-
-  Counting the misses and ignoring an appid once it has failed to render twice breaks the loop while
-  still letting a genuinely new game through: a transient first-load failure costs one extra scan
-  rather than permanent suppression. A manual refresh clears the memory.
+  Appids a completed scan discovered but deliberately did not render (no achievements, not
+  installed, merged elsewhere, filtered out). Discovery is not stable for these, so a phantom
+  reappearing read as "new game installed" and triggered a full refresh - counting misses and
+  ignoring an appid after two failures breaks that loop while still letting a real new game through.
 */
 const UNRENDERABLE_MISS_LIMIT = 2;
 const unrenderableAppids = new Map();
@@ -1097,7 +1089,7 @@ function getSourceImg(source) {
   return img;
 }
 
-// ---- Cover-art overrides (per-appid; cfg/covers.db) ------------------------------------------
+// Cover-art overrides (per-appid; cfg/covers.db)
 // One-time: covers picked before they were stored per orientation are bound to the shape their own
 // image has, so switching the grid between portrait and landscape stops reusing the other shape's
 // picture. Runs before the snapshot below so the first render already sees the split entries.
@@ -1194,14 +1186,10 @@ async function applyCoverWithFallback(game, headerEl, imgName, orientation = 'la
   const img = (game && game.img) || {};
   const fallback = (current) => {
     /*
-      The shapes are not interchangeable. `header` and `landscape` are 460x215 and 920x430; `portrait`
-      is 600x900. Substituting one for the other is why a portrait grid showed wide covers on some
-      tiles and the landscape grid showed tall ones - the tile paints whatever the chain handed back.
-
-      sameShapeOnly is the first pass: it accepts only art of the requested shape, so the tile stays
-      empty for a moment rather than settling on the wrong one while the recovery chain looks for a
-      real cover. The cross-shape candidates are still used afterwards, once recovery has failed and
-      the choice really is "wrong shape or nothing".
+      Shapes are not interchangeable: header/landscape are 460x215/920x430, portrait is 600x900.
+      sameShapeOnly is the first pass - it accepts only the requested shape, leaving the tile empty
+      rather than settling on the wrong one while recovery looks for a real cover. Cross-shape
+      candidates are only used afterwards, once recovery has failed.
     */
     const sameShape = orientation === 'portrait' ? [img.portrait] : [img.header, img.landscape];
     const otherShape = orientation === 'portrait' ? [img.header, img.landscape, img.background, img.icon] : [img.portrait, img.background, img.icon];
@@ -1790,18 +1778,10 @@ function isLegitSteamLibraryGame(game) {
 }
 
 /*
-  Which badge a source label earns. ONE table, because this decision is silently forgiving: an
-  unrecognised label does not raise anything, it just falls through to the Steam badge at the end of
-  sourcePresentationFor(). Both directions of a sloppy test therefore ship a plausible wrong badge -
-  too narrow (`=== 'gog'` missing 'GOG Galaxy') mislabelled every official GOG game as Steam, and
-  too loose (`includes('ea')` catching 'SmartSteamEmu') mislabelled every cracked Steam game as EA.
-
-  Patterns are anchored and matched against the lowercased label. Ubisoft is deliberately absent:
-  uplayR2.isUbisoftGame() decides it from more than the label (game.uplayR2, system, appid prefix).
-
-  Every `source:` literal in app/parser/*.js must be accounted for either here or in
-  STEAM_BADGE_SOURCES below; test/parsers/libraryDetectionFixes.test.js re-derives that list from
-  the parsers and fails on any label that is neither, so a new source cannot be added silently.
+  ONE table: an unrecognised label falls through silently to the Steam badge, so a too-narrow or
+  too-loose pattern ships a wrong badge unnoticed. Ubisoft is absent on purpose (isUbisoftGame()
+  decides it separately). Every `source:` literal in app/parser/*.js must appear here or in
+  STEAM_BADGE_SOURCES below - test/parsers/libraryDetectionFixes.test.js enforces it.
 */
 const SOURCE_BADGE = {
   playstation: /^(?:rpcs3 emulator|shadps4 emulator)$/,
@@ -2162,15 +2142,10 @@ new MutationObserver((records) => {
 }).observe(document.documentElement, { childList: true, subtree: true });
 
 /*
-  The four states the main process can report, and what each one looks like.
-
-  'unresponsive' is the one the old up/down probe could not see: the monitor process is alive and
-  its named pipe still accepts connections, but its event loop has stopped turning, so nothing is
-  actually being tracked. It offers a restart rather than a start, because a wedged child has to be
-  killed before a new one can take over (see restartWatchdog in electron/init.js).
-
-  Colours reuse the three palette tokens the title bar already has: the pulse - not a fourth colour -
-  is what separates the transient 'starting' from the steady 'unresponsive'.
+  The four states the main process can report. 'unresponsive' is the one the old up/down probe
+  could not see: the process is alive but its event loop stopped, so it offers a restart (a wedged
+  child must be killed first, see restartWatchdog in electron/init.js) rather than a start. Colours
+  reuse the title bar's three palette tokens; the pulse alone separates 'starting' from 'unresponsive'.
 */
 function watchdogPresentation(state) {
   switch (state) {
@@ -3043,7 +3018,6 @@ var app = {
                       if (src) openCatalogLink(src);
                       return;
                     }
-                    // Download & apply
                     gameDir = game.gameDir && fs.existsSync(game.gameDir) ? game.gameDir : null;
                     if (!gameDir) {
                       const picked = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
@@ -3466,10 +3440,9 @@ var app = {
 
           /*
             Reset the game's achievements so they can be earned again. Deliberately outside every
-            source/emulator gate above: a console emulator, a manually added game and a Steam
-            emulator all keep unlocks somewhere AW Next can put back to zero, and the plan itself
-            reports the one case it cannot touch (a platform that owns the unlocks server-side).
-            Restore is offered beside it, listing the backups this game already has.
+            source/emulator gate above: every source AW tracks except a platform-owned unlock
+            (server-side) keeps its unlocks somewhere AW can zero. Restore is offered beside it,
+            listing existing backups.
           */
           gameMenu.append(new MenuItem({ type: 'separator' }));
           gameMenu.append(
@@ -3525,7 +3498,6 @@ var app = {
           // Fork tools) instead of hiding both toolsets.
           if (!isConsoleSystem) {
             if (!isUbisoftSource) {
-            // Steam/GBE only
             if (!isManualGame) {
               gameMenu.append(
                 new MenuItem({
@@ -3781,15 +3753,11 @@ var app = {
             }
 
             /*
-              Ubisoft installs use Uplay R2 instead of the Steam GBE fix.
-
-              A game that already has a setup ('existing-fix') is offered a RE-APPLY rather than
-              nothing at all. The eligibility gate stays conservative where it has to be - the
-              automatic scan and the bulk "fix all found games" pass still refuse those games, so
-              nothing is ever rewritten behind the user's back - but from this menu the absence of
-              any entry was itself the bug: a repack update that wipes steam_settings, or a setup
-              that was applied for the wrong appid, leaves a game that can only be fixed by
-              re-applying, and the item silently disappeared exactly then.
+              Ubisoft installs use Uplay R2 instead of the Steam GBE fix. A game with an existing
+              setup gets a RE-APPLY option rather than nothing: the automatic/bulk scan stays
+              conservative and still refuses those games, but from this menu, no entry at all was
+              itself the bug - a repack update or a wrong-appid setup left a game fixable only by
+              re-applying, with the item silently missing exactly then.
             */
             const gbeExistingFix = initialGbeEligibility.reason === 'existing-fix' ? initialGbeEligibility.existingFix : null;
             if (!isLegitSteamOwned && !isNativeLauncher && !isUbisoftSource && (initialGbeEligibility.eligible || gbeExistingFix)) {
@@ -4058,7 +4026,7 @@ var app = {
                       }
 
                       {
-                        // ── Standalone (replace steam_api dll) - the only emulator-apply path ──
+                        // Standalone (replace steam_api dll) - the only emulator-apply path
                         setGameBoxBusy(self, t('installing-the-dll', 'Installing the DLL…', 'Installation de la DLL…'));
                         const pe = require(path.join(appPath, 'util/pe.js'));
                         const missingArch = detectedRuntimeExe && detectedRuntimeExe.full ? pe.exeArch(detectedRuntimeExe.full) : 'x64';
@@ -4080,16 +4048,12 @@ var app = {
                         }
                         /*
                           Optional, opt-in: SteamAutoCrack's Steam API ownership-check bypass (proxy DLL).
-
-                          Its only job is redirecting steam_api64.dll back to the pre-swap original
-                          (steam_api64.dll.bak) on the exe's FIRST access to that file - so a SteamStub
-                          integrity re-check, which runs before the game's own functional Steam init,
-                          sees the untouched DLL and passes. Windows loads a DLL once per process, so
-                          without a SteamStub re-check to absorb that "first access", the redirect lands
-                          on the game's actual runtime load instead: the real DLL initializes, Steam
-                          shows its own "no license" prompt, and the GBE Fork DLL just installed is
-                          never reached - achievements silently stop working (issue: Sovereign Tower).
-                          hasSteamStub is exactly the signal for whether that re-check exists at all.
+                          It redirects steam_api64.dll back to the pre-swap original on the exe's
+                          FIRST access, so a SteamStub integrity re-check (which runs before the
+                          game's own Steam init) sees the untouched DLL and passes. Windows loads a
+                          DLL once per process: without a re-check to absorb that first access, the
+                          redirect lands on the real runtime load instead and the GBE Fork DLL is
+                          never reached.
                         */
                         if (emuCfg.apiCheckBypass && hasSteamStub && detectedRuntimeExe && detectedRuntimeExe.full) {
                           try {
@@ -4756,7 +4720,7 @@ var app = {
             }
           }
 
-          // ---- Uninstall (opt-in via Settings > General) ----
+          // Uninstall (opt-in via Settings > General)
           // Manual entries use the same guarded discovery as detected games: Steam only when the
           // client confirms the AppID, otherwise a real local uninstaller or recoverable Recycle
           // Bin removal. Removing the AW library entry remains a separate, non-destructive action.
@@ -4977,7 +4941,7 @@ var app = {
           if (folderMenu.items.length) menu.append(new MenuItem({ label: groupLabel('data-ctx-group-folders'), submenu: folderMenu }));
           if (linkMenu.items.length) menu.append(new MenuItem({ label: groupLabel('data-ctx-group-links'), submenu: linkMenu }));
 
-          // ---- Cover art management (re-download / alternate AppID / local image) ----
+          // Cover art management (re-download / alternate AppID / local image)
           const coverGame = list.find((g) => g.appid == appid);
           if (coverGame) {
             const coverCacheAppid = catalogAppid || String(coverGame.steamappid || appid);
@@ -5510,12 +5474,10 @@ var app = {
     }
   },
   /*
-    Reset a game's achievements so they can be earned - and announced - again.
-
-    Everything is backed up before a single byte is written (parser/achievementReset.js), the user
-    approves the actual file list rather than a promise, and the Watchdog is told to drop its
-    in-memory unlock baseline: without that last step the game re-earns its achievements against a
-    baseline that still has them and never notifies again.
+    Reset a game's achievements so they can be earned - and announced - again. Everything is
+    backed up first (parser/achievementReset.js) and the user approves the actual file list. The
+    Watchdog is told to drop its in-memory unlock baseline too - otherwise the game re-earns
+    against a baseline that still has them and never notifies again.
   */
   resetAchievementsAction: async function (appid) {
     const game = gameList.find((g) => g && String(g.appid) === String(appid));
@@ -5746,12 +5708,10 @@ var app = {
         });
       /*
         spawn() is CreateProcess, which cannot start an executable whose manifest requires
-        administrator: Windows fails it with ERROR_ELEVATION_REQUIRED, reported here as EACCES, and
-        the user just saw "Could not start the game" on a game that runs fine from Explorer.
-        ShellExecute (Start-Process) does honour the manifest and raises the normal UAC prompt, so an
-        EACCES is retried through it before anything is reported as broken. If even that is refused -
-        a launcher that needs administrator without declaring it - the elevated retry is offered
-        explicitly rather than performed silently, because it is a prompt the user has to consent to.
+        administrator: Windows fails it with ERROR_ELEVATION_REQUIRED (reported as EACCES) even
+        though the game runs fine from Explorer. ShellExecute honours the manifest and raises the
+        UAC prompt, so an EACCES retries through it; a refusal there is offered as an explicit
+        elevated retry, not performed silently.
       */
       const recoverFromLaunchDenied = async (error) => {
         if (process.platform !== 'win32' || !windowsShellLaunch.isElevationLikeError(error)) {
@@ -5907,7 +5867,6 @@ var app = {
   },
 };
 
-// ---- Game Health -----------------------------------------------------------------------------
 // The per-game report behind the tools button. Signal collection lives here because it needs the
 // renderer's game list, user config and userData paths; every state / explanation / action decision
 // is in util/gameHealth.js so it can be tested without a window or a game install.
@@ -5938,12 +5897,10 @@ function setGameConfigView(view) {
   $('#game-config .content').each(function () {
     $(this).toggleClass('active', $(this).attr('data-view') === view);
   });
-  // Save belongs to the executable form. Left visible on the health view it is the most prominent
-  // button on screen while doing nothing the report is about, outranking the actual repair.
+  // Save belongs to the executable form. The other views either report state or auto-save.
   const editing = view === 'exe-config';
   $('#btn-game-config-save').toggle(editing);
-  // With no Save beside it there is nothing to cancel: the health view is a report, so its one
-  // button closes it.
+  // With no Save beside it there is nothing to cancel, so the single button closes the panel.
   $('#btn-game-config-cancel').text(editing ? t('cancel', 'Cancel', 'Annuler') : t('close', 'Close', 'Fermer'));
 }
 
@@ -6389,13 +6346,10 @@ function paintGameHealth(report) {
 }
 
 /*
-  "Achievements checked N days ago", bottom right of the panel, linking to the control that forces
-  the check now.
-
-  Steam announces nothing when a game update adds achievements, so the list is re-read on a 3-day
-  cadence (steam.js, descBackfilledAt) and that stamp is the only honest answer to "is what I am
-  looking at current?". Advanced only: the cadence is machinery, and a Simple user is not being
-  asked to manage it.
+  "Achievements checked N days ago", linking to the control that forces a recheck now. Steam
+  announces nothing when a game update adds achievements, so the list is re-read on a 3-day cadence
+  (steam.js, descBackfilledAt) - the only honest answer to "is this current?". Advanced only: the
+  cadence is machinery a Simple user isn't asked to manage.
 */
 function gameHealthVerifiedLabel(stampMs) {
   if (!stampMs) return t('gh-verified-never', 'Achievement list never checked', 'Liste des succès jamais vérifiée');
@@ -6418,12 +6372,10 @@ function paintGameHealthVerified(root, report) {
 }
 
 /*
-  Drive the Game Health repair progress bar.
-
-  "Repair the achievement data" downloads two icons per achievement, so on a large game it can sit
-  for a minute with the panel frozen and no sign it is doing anything - which reads as a hang. The
-  phases that have a countable unit of work (the icons) fill the bar; the ones that do not (backup,
-  schema and config writes) switch it to an indeterminate sweep rather than inventing a percentage.
+  Drive the Game Health repair progress bar. "Repair the achievement data" downloads two icons per
+  achievement, so a large game can sit for a minute looking frozen/hung. Phases with a countable
+  unit of work (the icons) fill the bar; phases without one (backup, schema/config writes) switch
+  it to an indeterminate sweep instead of inventing a percentage.
 */
 const GAME_HEALTH_PROGRESS_LABEL = {
   backup: () => t('gh-progress-backup', 'Backing up the current files…', 'Sauvegarde des fichiers actuels…'),
@@ -6640,14 +6592,10 @@ async function runGameHealthAction(appid, action, button) {
 
   if (action === gameHealth.ACTION.REPAIR_DATA) {
     /*
-      Repair the folder the diagnosis actually read, not a guess.
-
-      `game.steamSettings` is absent for plenty of games, and the fallback is <gameDir>/steam_settings
-      - which is the wrong folder whenever the emulator lives in a nested engine directory (Unreal's
-      <Name>/Binaries/Win64 is the common one). The repair then created a brand new steam_settings
-      the emulator never reads: it reported success, nothing changed, and every warning came straight
-      back on the next report. The report's own `steamSettings` is the path diagnose() resolved, so it
-      is the one that gets repaired.
+      Repair the folder the diagnosis actually read, not a guess: `game.steamSettings` is absent for
+      many games, and the naive fallback (<gameDir>/steam_settings) is wrong when the emulator lives
+      in a nested engine directory (e.g. Unreal's Binaries/Win64) - it used to create an empty
+      steam_settings the emulator never reads. Repair the report's own resolved path instead.
     */
     const diagnosed = $('#game-health').data('report');
     const diagnosedSettings = (diagnosed && diagnosed.technical && diagnosed.technical.goldberg && diagnosed.technical.goldberg.steamSettings) || '';
@@ -6676,14 +6624,10 @@ async function runGameHealthAction(appid, action, button) {
 
     const request = require('request-zero');
     /*
-      Coalesce the per-icon updates: a big game reports several hundred of them, and re-laying out
-      the panel that many times is the one thing that would actually make the repair feel slower.
-
-      Throttled on a timestamp rather than requestAnimationFrame on purpose. rAF callbacks are not
-      dependable in this app's windows - Chromium's backgroundThrottling stops delivering them when
-      the window is not being composited, and a progress bar that silently stops updating is worse
-      than one that updates a little coarsely. A phase change always paints, so the label never lags
-      behind what the repair is really doing.
+      Coalesce the per-icon updates: a big game reports hundreds of them, and re-laying out the
+      panel that often would make the repair feel slower. Throttled on a timestamp, not
+      requestAnimationFrame: rAF is undependable here since backgroundThrottling stops delivering it
+      when the window isn't composited. A phase change always paints, so the label never lags behind.
     */
     const PROGRESS_PAINT_MS = 80;
     let lastProgressPaint = 0;
@@ -6814,12 +6758,10 @@ async function runGameHealthAction(appid, action, button) {
     });
 
     /*
-      The last-check stamp navigates to the control that forces the check; it does not run it.
-
-      Running a full-library rescan from a per-game panel would be a surprising amount of work to
-      start from a line of small print, and the setting it points at already explains the cadence
-      and reports its own progress. Closing the game panel first is what makes the jump visible:
-      #game-config sits above #settings, so leaving it open would hide the row we just flashed.
+      The last-check stamp navigates to the control that forces the check; it does not run it - a
+      full-library rescan is a lot of surprising work to start from a line of small print, and the
+      setting it points at already explains the cadence. Closing the game panel first makes the jump
+      visible: #game-config sits above #settings and would otherwise hide the row we just flashed.
     */
     $('#game-health').on('click', '.gh-verified', function () {
       $('#btn-game-config-cancel').trigger('click');

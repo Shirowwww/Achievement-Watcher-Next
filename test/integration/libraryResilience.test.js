@@ -1,16 +1,9 @@
 'use strict';
 
-/*
-  The library must be a function of what is on disk, not of how the network behaved during the scan.
-
-  Two field reports, one root cause (issues #33 and #34): per-game metadata resolution is allowed to
-  fail, and both of its failure paths were wrong. A game whose lookup timed out was dropped from the
-  library entirely - so the same disk produced a different handful of games on every scan - while a
-  game whose lookup returned without a name survived wearing its numeric appid as a title. The
-  timeouts themselves were self-inflicted: a SteamDB launch-metadata scrape (headless browser,
-  serialized in the main process, 5-20s per game) was awaited inside the per-game load, under a 30s
-  budget, purely to decorate the watchdog's playtime index.
-*/
+// The library must be a function of what's on disk, not of how the network behaved during the scan.
+// Per-game metadata resolution is allowed to fail, but both failure paths were wrong: a timed-out
+// lookup dropped the game entirely (a different handful of games every scan), while a nameless
+// lookup survived showing its numeric appid as a title - self-inflicted by an awaited SteamDB scrape.
 
 const assert = require('node:assert/strict');
 const Module = require('node:module');
@@ -37,10 +30,7 @@ function tempDir(label) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `aw-${label}-`));
 }
 
-// ---------------------------------------------------------------------------------------------
 // issue #33 - a failed lookup must not delete the game
-// ---------------------------------------------------------------------------------------------
-
 test('a game whose metadata lookup fails still gets a library entry', () => {
   const saveDir = tempDir('rune-save');
   fs.writeFileSync(path.join(saveDir, 'achievements.ini'), '[SOME_ACH]\nAchieved=1\n');
@@ -83,15 +73,10 @@ test('a record with nothing on disk behind it is still not resurrected', () => {
 
 test('makeList admits the provisional entry and no longer silently skips a failed load', () => {
   assert.match(source, /game = buildProvisionalGame\(appid\);/, 'a failed load must fall back to the local entry');
-  /*
-    The keep-filter used to require achievements or a verified install, which dropped fifteen owned
-    games on one real library - ULTRAKILL, Lethal Company, R.E.P.O., VRChat among them - purely for
-    not having been played yet. Owning a game is not a reason to hide it; a game with none renders
-    as "No achievements", which is the truth about it.
-
-    What remains excluded is the record with nothing behind it at all: a watchdog cache import with
-    no save file and no install folder, which is what this filter was written for.
-  */
+  // The keep-filter used to require achievements or a verified install, which dropped fifteen owned
+  // games (ULTRAKILL, Lethal Company, R.E.P.O., VRChat among others) purely for not having been
+  // played yet - owning a game is reason enough to show it. What remains excluded is a watchdog
+  // cache import with no save file and no install folder: nothing on this PC backs the entry at all.
   assert.match(source, /if \(game && !game\.evidenceless\)/, 'anything a real source found on this PC is kept');
   assert.match(
     source,
@@ -100,10 +85,7 @@ test('makeList admits the provisional entry and no longer silently skips a faile
   );
 });
 
-// ---------------------------------------------------------------------------------------------
 // issue #33 - the decoration that caused the timeouts must not block the load
-// ---------------------------------------------------------------------------------------------
-
 test('the SteamDB launch lookup is never awaited on the game-load path', () => {
   assert.match(source, /function seedPlaytimeFromSteamDb\(appid, apply\)/, 'it must run through the detached helper');
   // The only await left is the one inside that helper, which nothing waits on. It goes through
@@ -125,10 +107,7 @@ test('a rescan started while a lookup is still running does not queue it twice',
   assert.match(source, /_steamDbLaunchInFlight\.delete\(id\)/, 'and release the id when it settles');
 });
 
-// ---------------------------------------------------------------------------------------------
 // issue #34 - the bare appid is a last resort, not the first fallback
-// ---------------------------------------------------------------------------------------------
-
 test('a title known locally is preferred over the appid, most authoritative first', () => {
   const userData = tempDir('names');
   const schemaDir = path.join(userData, 'steam_cache', 'schema', 'french');

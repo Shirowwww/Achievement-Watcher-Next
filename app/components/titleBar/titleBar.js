@@ -119,12 +119,10 @@ export default class titleBar extends HTMLElement {
 
   /* Custom method */
   close() {
-    //this.dispatchEvent(new CustomEvent('close'));
     ipcRenderer.invoke('win-close');
   }
 
   maximize() {
-    //this.dispatchEvent(new CustomEvent('maximize'));
     ipcRenderer.invoke('win-maximize');
   }
 
@@ -133,7 +131,6 @@ export default class titleBar extends HTMLElement {
   }
 
   minimize() {
-    //this.dispatchEvent(new CustomEvent('minimize'));
     ipcRenderer.invoke('win-minimize');
   }
 

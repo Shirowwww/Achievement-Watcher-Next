@@ -1,14 +1,12 @@
 'use strict';
 
 /*
-  Turns the per-game signals AW Next already collects (install folder, executable, achievement
-  schema, emulator diagnosis, runtime save, watchdog index, notification settings) into one overall
-  state, one plain-language explanation, a list of checks and the repair actions that genuinely
-  exist for this game.
+  Turns the per-game signals AW Next already collects (install, exe, schema, emulator diagnosis,
+  save, watchdog index, notifications) into one overall state, a plain-language explanation, check
+  rows and available repair actions.
 
-  Deliberately pure: no fs, no Electron, no i18n. Signals come in as plain data and everything user
-  visible comes out as an ID the renderer resolves through t(). That keeps every branch below
-  testable without a window, a game install or a locale bundle.
+  Deliberately pure: no fs/Electron/i18n. Everything user-visible comes out as an ID the renderer
+  resolves through t(), so every branch is testable without a window, install or locale bundle.
 */
 
 const STATE = { READY: 'ready', ATTENTION: 'attention', NOT_TRACKING: 'not-tracking' };
@@ -67,9 +65,9 @@ const REPAIRABLE_UPLAY_CODES = new Set([
 ]);
 
 /*
-  Which part of the setup each diagnosis code is about. "2 points to review" told the user a number
-  and nothing else; grouping the codes lets the row name the actual subjects instead, while the
-  individual codes and messages stay available under Technical details.
+  Which part of the setup each diagnosis code is about, so the row can name actual subjects
+  ("2 points to review" told the user a number and nothing else) - the individual codes and
+  messages still show under Technical details.
 */
 const ISSUE_TOPIC = {
   NO_ACHIEVEMENTS_JSON: 'schema',
@@ -123,10 +121,9 @@ function issuesAtLevel(report, level) {
 }
 
 /*
-  The appid the emulator will announce disagrees with the one AW Next resolved. It is the one
-  diagnosis whose fix is a single known value written to a single file, so it gets its own action
-  instead of being folded into "rewrite the achievement data" - which deliberately never overwrites
-  an existing steam_appid.txt, and would therefore have left this exact warning standing.
+  The appid the emulator announces disagrees with the one AW Next resolved. It gets its own action
+  (rather than folding into "rewrite achievement data") because that repair deliberately never
+  overwrites an existing steam_appid.txt, so it would leave this exact warning standing.
 */
 function appidMismatch(report) {
   const issue = (report && Array.isArray(report.issues) ? report.issues : []).find(
@@ -135,11 +132,9 @@ function appidMismatch(report) {
   return issue ? issue.data : null;
 }
 
-/*
-  One check row. `blocking` marks the failures that mean AW Next cannot observe this game at all -
-  those are what separate "Not tracking" from "Needs attention", so a merely incomplete setup never
-  gets reported as untracked.
-*/
+// One check row. `blocking` marks failures that mean AW Next cannot observe this game at all -
+// that's what separates "Not tracking" from "Needs attention", so an incomplete setup isn't
+// reported as untracked.
 function check(id, level, { params = {}, blocking = false, actions = [] } = {}) {
   return { id, level, params, blocking, actions };
 }
@@ -225,14 +220,11 @@ function achievementDataCheck(signals) {
 }
 
 /*
-  Goldberg/GBE setup, for the games whose unlocks can only come from one. Split from the achievement
-  data check because "the schema is fine but nothing will ever write to it" is a different problem
-  with a different fix.
-
-  `emulated` means specifically "Goldberg/GBE is this game's achievement mechanism", proven on disk
-  by the caller. It must never be inferred from the source label: CODEX, RUNE, OnlineFix,
-  SmartSteamEmu, TENOKE and Goldberg SocialClub are all emulators that keep their unlocks somewhere
-  else entirely, and demanding a steam_settings folder from them reported working games as broken.
+  Goldberg/GBE setup, split from the achievement-data check because "the schema is fine but
+  nothing will ever write to it" is a different problem. `emulated` means specifically "Goldberg/
+  GBE is this game's mechanism", proven on disk - never inferred from the source label, since
+  CODEX/RUNE/OnlineFix/SmartSteamEmu/TENOKE/Goldberg SocialClub keep unlocks elsewhere entirely,
+  and demanding steam_settings from them reported working games as broken.
 */
 function emulatorCheck(signals) {
   const goldberg = signals.goldberg;
@@ -307,10 +299,8 @@ function uplayCheck(signals) {
   return check('uplay', LEVEL.OK, { params: mappingParams });
 }
 
-/*
-  Has anything actually been unlocked or recorded yet. The distinction that matters is "AW Next has
-  progress data" vs "AW Next has nowhere to read progress from" - a genuine 0% game is not a fault.
-*/
+// Has anything actually been unlocked or recorded yet: "has progress data" vs "has nowhere to
+// read progress from" is the distinction that matters - a genuine 0% game is not a fault.
 function progressCheck(signals) {
   const unlocked = num(signals.achievements && signals.achievements.unlocked);
   const save = signals.goldberg && signals.goldberg.save;
@@ -326,11 +316,9 @@ function progressCheck(signals) {
   return check('progress', LEVEL.INFO, {});
 }
 
-/*
-  Live tracking means the watchdog's process monitor matching a running binary. Console emulators
-  and the official platform libraries are followed by their own watchers instead, so for them the
-  absence of a gameIndex entry is normal and reporting it would be a false alarm.
-*/
+// Live tracking means the watchdog's process monitor matching a running binary. Console
+// emulators and official platform libraries use their own watchers, so a missing gameIndex
+// entry there is normal, not a fault.
 function trackingCheck(signals) {
   if (signals.processTracking === false) return null;
   const tracking = signals.tracking || {};
@@ -340,10 +328,9 @@ function trackingCheck(signals) {
 }
 
 /*
-  What is configured, and - when the Watchdog has actually delivered something for this game - what
-  carried it. `effective` is an observation, not a setting: the transport that ran, why it was
-  chosen and how it ended ('delivered' | 'fallback' | 'unknown' | 'failed'). It is what lets the row
-  say "working, through the Windows fallback" instead of naming a mode that was overridden.
+  What is configured, and - once the Watchdog has delivered something - what actually carried it.
+  `effective` is an observation, not a setting (transport, reason, outcome), letting the row say
+  "working, through the Windows fallback" instead of naming an overridden mode.
 */
 function notificationCheck(signals) {
   const notifications = signals.notifications || {};
@@ -414,10 +401,9 @@ function explain(state, checks, signals) {
   if (uplay && uplay.level === LEVEL.FAIL) return { reason: 'uplay-broken', params: uplay.params };
   if (data && data.level === LEVEL.FAIL) return { reason: 'achievement-data-incomplete', params: data.params };
   /*
-    A wrong appid outranks the "nothing unlocked yet" sentence below, because it is the reason there
-    is nothing: the emulator announces one game and AW Next is watching another. Naming the topic
-    ("game ID file") told the user which file was involved and nothing about what was wrong with it,
-    which is exactly the dead end this branch exists to remove.
+    A wrong appid outranks "nothing unlocked yet" below, since it's the actual reason: the emulator
+    announces one game and AW Next watches another. Naming just the topic ("game ID file") named
+    the file but not what was wrong with it - the dead end this branch removes.
   */
   if (emulator && emulator.params && emulator.params.appidExpected) return { reason: 'appid-mismatch', params: emulator.params };
   // The signature case: everything needed is present, nothing has been recorded yet. Say where the

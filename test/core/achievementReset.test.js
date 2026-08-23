@@ -31,7 +31,7 @@ function write(file, content) {
   return file;
 }
 
-// ---- what may be touched ----------------------------------------------------------------------
+// What may be touched.
 
 test('emulator saves are reset by deletion, because that is what every emulator rebuilds', () => {
   for (const name of ['achievements.json', 'achievements.ini', 'ACHIEVEMENTS.INI', 'stats.bin', 'achieve.dat', 'user_stats.ini', 'TROPUSR.DAT']) {
@@ -71,7 +71,7 @@ test('platform-owned libraries are refused with a reason instead of pretending',
   assert.ok(blocked.every((entry) => entry.reason === 'official-platform'));
 });
 
-// ---- the transforms ---------------------------------------------------------------------------
+// The transforms.
 
 test('relocking a ShadPS4 trophy file keeps every trophy and its wording', () => {
   const source = [
@@ -101,7 +101,7 @@ test('an already locked ShadPS4 file is left exactly as it was', () => {
   assert.equal(text, source);
 });
 
-// ---- the whole operation ----------------------------------------------------------------------
+// The whole operation.
 
 function goldbergGame(profile) {
   const saveDir = path.join(profile, 'GSE Saves', '480');
@@ -232,7 +232,7 @@ test('nothing is deleted when its backup could not be written', (t) => {
   assert.equal(fs.existsSync(path.join(profile, 'GSE Saves', '480', 'achievements.json')), false);
 });
 
-// ---- Xenia -------------------------------------------------------------------------------------
+// Xenia.
 
 /*
   A minimal but real GPD: an XDBF header, one entry table slot per achievement and the achievement

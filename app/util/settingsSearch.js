@@ -1,20 +1,17 @@
 'use strict';
 
 /*
-  Pure matching rules behind the Settings search box (driven by app/ui/settings.js).
-
-  Kept DOM-free on purpose. The settings panel is translated positionally - locale/loader.js binds
-  most labels with `li:nth-child(n)` - so the filter must hide rows rather than move or remove them,
-  and the selectors it walks are as much a part of the contract as the matching itself. Both live
-  here so test/ui/settingsSearch.test.js can exercise them against the real app.html without a browser.
+  Pure matching rules behind the Settings search box (driven by app/ui/settings.js), kept DOM-free
+  on purpose. The panel is translated positionally - locale/loader.js binds labels with
+  `li:nth-child(n)` - so the filter must hide rows, never move or remove them; the selectors are as
+  much the contract as the matching. Both live here so test/ui/settingsSearch.test.js can run
+  against the real app.html without a browser.
 */
 
 /*
-  Rows a search can hide. Only the OUTERMOST match inside a tab counts as a row: settings rows are
-  never nested in one another, so anything matching this inside another match is part of that row -
-  a folder entry's edit/unlink buttons are `<li>`s inside the path row, and a guide panel's bullets
-  are `<li>`s inside the help panel. Filtering them independently would strip a visible row of its
-  controls and leave containers standing empty.
+  Rows a search can hide. Only the OUTERMOST match inside a tab counts as a row: a folder entry's
+  edit/unlink buttons and a guide panel's bullets are also `<li>`s, nested inside their own row/
+  panel - filtering them independently would strip a visible row of its controls.
 */
 const ROW_SELECTOR = 'li, .emulator-login, .emulator-hero, .help-panel';
 
@@ -47,9 +44,9 @@ function matches(haystack, terms) {
 }
 
 /*
-  Everything a row can reasonably be found by: its visible text (label, help, option values) plus
-  the option ids it contains. The ids matter because they are the only stable, language-independent
-  handle on a setting - searching "hideZero" works in a Japanese UI too.
+  Everything a row can be found by: its visible text plus the option ids it contains. The ids
+  matter because they're the only stable, language-independent handle on a setting - searching
+  "hideZero" works in a Japanese UI too.
 */
 function buildHaystack({ text = '', ids = [], placeholders = [] } = {}) {
   return normalize([text, ...ids.map((id) => String(id).replace(/^option_/, '')), ...placeholders].join(' '));

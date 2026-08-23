@@ -70,12 +70,10 @@ test('a file-less logger has no stream', () => {
 });
 
 /*
-  A test run must not append to the user's real logs.
-
-  Every production logger resolves its path from the live userData directory, so `npm test` used to
-  append hundreds of WARN lines to the installed app's parser.log and notification.log - fixture
-  appids and deliberately thrown errors ("offline", "api unavailable") that then showed up in
-  exported diagnostics as if the app had produced them.
+  A test run must not append to the user's real logs. Every production logger resolves its path from
+  the live userData directory, so `npm test` used to append hundreds of WARN lines to the installed
+  app's parser.log and notification.log - fixture appids and deliberately thrown errors that then
+  showed up in exported diagnostics as if the app had produced them.
 */
 test('a production logger writes no file during a test run', () => {
   const dir = tmpdir();

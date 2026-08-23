@@ -7,16 +7,11 @@ const path = require('node:path');
 const htmlParser = require(path.join(__dirname, '..', '..', 'app', 'node_modules', 'node-html-parser'));
 
 /*
-  The product name changed everywhere a user reads it - including the executable's FileDescription,
-  which is the label Task Manager shows. What did not change is every string Windows keys an
-  existing install on: the AppUserModelID, the executable filename, the install directory, the
-  uninstaller filename and the update artifact. `executableName` is what keeps those pinned while
-  `productName` carries the branding, and the split matters: the "Start with Windows" entry stores
-  the full path of the executable, so a renamed binary silently kills autostart and leaves a dead
-  registry value pointing at a file that no longer exists.
-
-  Both directions are pinned here: the new name where it must appear, the old identifiers where
-  they must not move.
+  The product name changed everywhere a user reads it, but every string Windows keys an existing
+  install on stayed put: AppUserModelID, executable filename, install directory, uninstaller filename,
+  update artifact. `executableName` pins those while `productName` carries the branding - the split
+  matters because "Start with Windows" stores the executable's full path, so a renamed binary would
+  silently kill autostart and leave a dead registry value. Both directions are pinned below.
 */
 
 const repoRoot = path.join(__dirname, '..', '..');

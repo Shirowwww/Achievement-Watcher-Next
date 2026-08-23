@@ -1,26 +1,19 @@
 'use strict';
 
 /*
-  Every Achievement Watcher Next address the app can send a user to, in one place.
-
-  Scattered literals drift: the repository was renamed once already, and a link buried in a
-  template string is not something a rename sweep finds. `test/core/links.test.js` asserts that no
-  UI file builds one of these by hand and that every docs slug below is a real page under docs/.
-
-  The site is GitHub Pages serving docs/ (see docs/_config.yml), so a docs page is its Markdown
-  file name with .html - keep DOCS in step with the files in that folder.
+  Every Achievement Watcher Next address the app can send a user to, in one place - scattered
+  literals drift, and the repo has already been renamed once. `test/core/links.test.js` asserts no
+  UI file builds one by hand and every docs slug below is a real page under docs/ (GitHub Pages
+  serving docs/, so a slug is its Markdown file name with .html - keep DOCS in step with that folder).
 */
 
 const REPO = 'https://github.com/Shirowwww/Achievement-Watcher-Next';
 const SITE = 'https://shirowwww.github.io/Achievement-Watcher-Next';
 
 /*
-  Slug -> the docs/<slug>.md that backs it.
-
-  The root of the site is the project home page (docs/index.html), not a guide, so the hub of the
-  documentation is docs/README.md served at README.html - which is what `home` means here and where
-  the app's Documentation button goes. `docs/_config.yml` disables jekyll-readme-index for the same
-  reason.
+  Slug -> the docs/<slug>.md that backs it. The site root is the project home page
+  (docs/index.html), not a guide, so `home` means docs/README.md served at README.html - where the
+  app's Documentation button goes. `docs/_config.yml` disables jekyll-readme-index for the same reason.
 */
 const DOCS = {
   home: 'README',

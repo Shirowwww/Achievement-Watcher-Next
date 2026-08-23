@@ -4,9 +4,6 @@ const { app } = process.type === 'browser' ? require('electron') : require('@ele
 const path = require('path');
 const fs = require('fs');
 
-// This module was never wired to the app logger, yet the code referenced a free `debug` identifier.
-// Reading an undeclared variable throws a ReferenceError, which silently broke add()/get()/save().
-// A self-contained no-op sink keeps the original log calls harmless.
 let debug = { log() {}, error() {}, warn() {} };
 
 const file = path.join(app.getPath('userData'), 'cfg/exeList.db');
@@ -50,7 +47,7 @@ module.exports.add = async (app) => {
   try {
     debug.log(`Adding ${app.appid} to exeList ...`);
     let currentList = await getCurrentList();
-    // Note: no collision guard here on purpose - `add` also serves the manual file-picker, and the
+    // No collision guard here on purpose - `add` also serves the manual file-picker, and the
     // user is allowed to choose any exe. Auto-detection avoids duplicates by passing `taken` to
     // exeDetect, and reconcile() repairs duplicates left over from corrupt/old data at scan time.
     let existingEntry = currentList.find((ap) => String(ap.appid) === String(app.appid));

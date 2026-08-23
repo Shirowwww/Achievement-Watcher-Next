@@ -1,13 +1,8 @@
 'use strict';
 
-/*
-  The two hand written pages of the website.
-
-  They are static files: nothing builds them, so nothing would notice a link to a page that was
-  renamed, a screenshot that was regenerated under another name, or a preset the picker offers that
-  the site does not actually carry. That is what this checks, plus the one rule the translation
-  overlay depends on - a key means one English string, wherever it appears.
-*/
+// These two pages are static files, so nothing would notice a broken link, a renamed screenshot,
+// or a preset the picker offers that the site doesn't actually carry. That's what this checks,
+// plus the one rule the translation overlay depends on - a key always means the same English string.
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -201,17 +196,9 @@ test('every translation matches the keys the pages actually have', () => {
   }
 });
 
-/*
-  A submission is one file and nothing else: the package already carries the name, the description,
-  the version, the tags and the version it needs, and the server draws the picture of the popup from
-  the preset itself. A field asking the sender for any of that would be a second source for something
-  the package already states, and the two could disagree.
-*/
-/*
-  What the panel may ask for: the file, and the three things the package cannot know - how the
-  sender would describe it, how it should be found, and the name they want on the card. Nothing
-  else, and none of it required: a submission with all three left empty has to work.
-*/
+// A submission is one file: the package already carries the name, description, version and tags,
+// so the panel only offers the three things it cannot know - how the sender would describe it, how
+// it should be found, and the name for the card - and none of them are required.
 test('sending a preset asks for the file, and for three optional words about it', () => {
   const document = documentOf(PAGES[1]);
   const panel = document.querySelector('[data-gallery-upload]');
