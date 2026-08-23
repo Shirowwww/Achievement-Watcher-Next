@@ -45,8 +45,8 @@ from the **Interface** control at the top of **Settings**.
 
 - **Simple** shows the everyday tabs: General, Theme, Controller, Notification, Presets, Sources,
   Folders and Help.
-- **Advanced** adds the Steam emulator and Advanced tabs, plus the deeper options inside the
-  tabs Simple already shows.
+- **Advanced** adds the **Steam / GBE Fork**, **Ubisoft / Uplay R2** and **Advanced** tabs, plus
+  the deeper options inside the tabs Simple already shows.
 
 **Simple hides controls, it never turns anything off.** Tracking, scanning and notifications work
 the same either way, and every value you set is still there when you switch back.
@@ -63,7 +63,48 @@ library; only libraries detected on the current PC are displayed. Simple mode fo
 rows while they are unused, and brings them straight back the moment they matter. Every source and
 what it needs is listed in [Compatible sources](sources.md).
 
+The selector between the library search and the `+` button switches between six library views -
+large cards, portrait covers, their two compact variants, a list, and a dense details table with
+playtime and last session. The choice is saved, and every view keeps the same cards, filters and
+context menu.
+
+<div align="center">
+<img src="screenshot/library-views.png" width="620" alt="The Details library view"><br>
+<sub>The Details view: latest achievement, last session and playtime for every game at a glance</sub>
+</div>
+
 The search field at the top of **Settings** filters every tab at once, and the side menu shows how many options each tab matches - useful when you remember what an option does but not where it lives. It matches labels, descriptions, the values an option offers and its internal name, so `hideZero` finds the same row in any interface language. Press `Ctrl+F` to jump to it and `Esc` to clear it.
+
+## Themes
+
+**Settings → Theme** paints the whole app and the in-game overlay. There is a set of built-in
+palettes, and **Custom…** opens an editor with one row per layer: window background, top bar,
+library panel, cards and rows, the settings window, text, muted text, borders and the accent. Each
+layer takes a colour with an opacity, optionally a gradient, and the five surface layers optionally
+a background image with a fit and either a coloured veil or a blur. Everything previews live and is
+kept when you press **OK**.
+
+Below the picker, **Theme files** turns whatever you are using into one portable file:
+
+- **Export theme…** writes an `.awtheme`: the palette, the gradients, the effect settings and any
+  image you used, in a single file. It carries nothing about your machine - an image travels as
+  bytes under a name built from its layer, never as a path out of your pictures folder.
+- **Import theme…** reads one. Before anything is installed it shows the app drawn with that theme,
+  with the name, the author, the version and how many images it carries, and only installs it when
+  you confirm. An imported theme then behaves exactly like a built-in: it sits in the same dropdown,
+  paints the same surfaces and follows into the overlay.
+- **Delete theme** removes an imported one, with its images and its generated copies.
+
+An `.awtheme` contains no stylesheet, no markup and no script - it is colours, numbers and pictures,
+and the app builds its own stylesheet from them - so an imported theme has nothing it could run and
+no way to reach the network. The details are in [the format reference](awtheme-format.md).
+
+Themes other people have made are in the [theme gallery](gallery/themes/); sending yours is
+[one file](theme-gallery.md).
+
+A plain `*.css` dropped into `%APPDATA%\Achievement Watcher 3.0\themes` still appears in the picker
+as a user theme and is injected over the built-in stylesheet. That kind cannot be exported: sharing
+somebody else's stylesheet is exactly what the portable format is designed not to do.
 
 ## Help & tips adapts to your setup
 

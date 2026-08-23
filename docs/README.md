@@ -35,7 +35,7 @@ Read in order, or jump to what you need - every page ends with a link to the nex
 | [Uplay R2 setup](uplay-r2.md) | The Ubisoft equivalent, for compatible titles |
 | [Comparison](comparison.md) | How AW Next differs from Achievement Watcher 2.x and Achievements |
 | [Preset gallery](preset-gallery.md) | The community gallery: installing a preset from it, and submitting yours |
-| [Gallery server](gallery-server.md) | For a maintainer: running the service that takes submissions directly |
+| [Theme gallery](theme-gallery.md) | The same for whole-app themes: downloading one, and sending yours |
 | [Localization](localization.md) | The 28 bundled languages, what is deliberately not translated, and why this site is English |
 
 The in-app **Settings → Help** tab is the quickest reference while you are using the app. It reflects
@@ -55,6 +55,7 @@ Lower-level documentation for contributors and for anyone building AW Next from 
 | Versioning, publishing, CI and auto-update validation | [Release workflow](RELEASE_WORKFLOW.md) |
 | Translation, Intl formatting, link routing and the locale linter | [Localization](localization.md) |
 | Locale files and the key-parity rules | [app/locale/README.md](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/app/locale/README.md) |
+| The portable theme file, its limits and its versioning rules | [.awtheme format](awtheme-format.md) |
 
 ## Where your data lives
 
@@ -63,6 +64,7 @@ Lower-level documentation for contributors and for anyone building AW Next from 
 | Settings, cache and user assets | `%APPDATA%\Achievement Watcher Next` |
 | Logs | `%APPDATA%\Achievement Watcher Next\logs` |
 | Presets you created or imported | `%APPDATA%\Achievement Watcher Next\presets\Users Presets` |
+| Themes you imported | `%APPDATA%\Achievement Watcher Next\theme-packs` |
 | Achievement backups | `%APPDATA%\Achievement Watcher Next\backups\achievements` |
 | Screenshot souvenirs | `Pictures\Achievement Watcher Next` |
 | GBE Fork saves | `%APPDATA%\GSE Saves` |

@@ -107,7 +107,7 @@ everything else by a reset.
 ## Emulator and repair tools
 
 Diagnosis and repair for Goldberg / GBE Fork setups, the GBE runtime installer, Steamless and the
-opt-in API-check bypass live in **Settings → Steam emulator** and in each game's **Emulator & tools**
+opt-in API-check bypass live in **Settings → Emulators** and in each game's **Emulator & tools**
 submenu. They have their own guides:
 
 - [Goldberg / GBE setup](emulator-setup.md) - diagnose and repair an emulated Steam game

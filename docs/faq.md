@@ -82,8 +82,9 @@ list you open with `Ctrl+Shift+K` while a game runs - see the [Overlay guide](ov
 ## Safety and data
 
 **Does AW Next modify my games?**
-Only when you ask it to. Reading achievements is read-only. The emulator repair tools under
-**Emulator & tools** do write to a game folder, always after a confirmation and always with a backup.
+Only when you ask it to. Reading achievements is read-only. The emulator repair tools - in a game's
+right-click **Emulator & tools** submenu and under **Settings → Emulators** - do write to a game
+folder, always after a confirmation and always with a backup.
 Use them only with games you own.
 
 **Windows SmartScreen warns about the installer.**

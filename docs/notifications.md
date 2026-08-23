@@ -19,6 +19,15 @@ both. Choose how under **Settings → Notification**.
 
 The main library window may stay closed in every mode: the background tracker handles delivery.
 
+<div align="center">
+<img src="screenshot/notification-popup.png" width="440" alt="An unlock popup"><br>
+<sub>The overlay popup, drawn by the selected preset with the game's own artwork</sub>
+</div>
+
+Independently of the mode, **Websocket @localhost:8082** broadcasts every notification event as JSON
+on a local websocket, for stream overlays and other external tooling. It is on by default, only
+listens on the local machine, and adds no visible notification of its own.
+
 > [!TIP]
 > Use the built-in test buttons after changing the mode. A successful test confirms the display path;
 > a real unlock still depends on the relevant game source being watched correctly.
@@ -106,6 +115,15 @@ see the [Overlay guide](overlay.md#keyboard-shortcuts-overlay-open) - plus optio
 covered in the [Controller guide](controller.md).
 
 ## Per-game behavior
+
+Open a game's tools panel and choose **Notification** to give that game a different popup preset,
+position, sound or scale. Every field inherits the global notification setting by default, and only
+the values changed for that game are stored. Sound also offers explicit silence and random choices.
+Use the crosshair beside Position to drag a custom-position preview where that particular game's
+popup should appear; its coordinates do not change the global position or another game. The five test
+buttons below the controls preview that game, its artwork and every selection currently shown without
+changing achievement progress. If an assigned preset or sound is removed, the game falls back to the
+applicable global value; renaming a user preset in the designer keeps its game assignments attached.
 
 Right-click a game to mute its progress notifications without disabling achievement unlocks or
 completion notifications. A duplicate guard also prevents the same unlock from appearing twice when a

@@ -52,6 +52,11 @@ That covers **Goldberg** and **GBE Fork** (the two AW Next can also install and 
 scene releases writing a compatible layout. A game whose files are in a custom location can be added
 under **Settings → Folders**.
 
+<div align="center">
+<img src="screenshot/folders.png" width="620" alt="Settings - Folders"><br>
+<sub>The folders AW Next checks on its own, and the ones you add - per-game saves or whole libraries</sub>
+</div>
+
 Portable releases are covered too, and they are the case worth knowing about. A CODEX/RUNE/CPY
 release normally writes to `%PUBLIC%\Documents\Steam\<SOURCE>\<appid>`, but a portable copy keeps
 that same tree inside the game folder, where nothing is looking for it. Adding the game's own folder
@@ -72,10 +77,12 @@ account, and AW reads them through the EA source rather than through a watched f
 you add can make such a game appear. The message also names how many layouts were probed, so
 "nothing found here" is distinguishable from "not looked at".
 
-Two of these have their own switch because they are a different shape:
+Two of these are a different shape and are handled separately:
 
-- **Goldberg SocialClub** - the Rockstar / Social Club variant.
-- **Uplay R2** - the Ubisoft equivalent of the Goldberg path, for compatible titles. See
+- **Goldberg SocialClub** - the Rockstar / Social Club variant, with its own source switch.
+- **Uplay R2** - the Ubisoft equivalent of the Goldberg path, for compatible titles. It has no
+  source switch of its own: the saves flow through the Steam emulator source, and its repair and
+  loader tools live in **Settings → Emulators → Ubisoft / Uplay R2**. See
   [Uplay R2 setup](uplay-r2.md).
 
 If a game using one of these shows no achievements, its **Game Health** panel names the missing

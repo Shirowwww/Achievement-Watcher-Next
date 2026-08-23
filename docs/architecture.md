@@ -79,7 +79,7 @@ When adding a source:
 - make missing optional files a normal empty state;
 - keep watcher and parser rules aligned so the library and live notifications observe the same files.
 
-Current integrations include Steam, Goldberg/GBE-compatible saves, Goldberg SocialClub, GOG, Epic, Ubisoft, EA Desktop, Xbox PC, GreenLuma, RPCS3, ShadPS4 and Xenia. Some platforms have both a legacy mapped-save parser and a newer official/local parser.
+Current integrations include Steam (legit client and emulator saves), Goldberg/GBE-compatible saves, Goldberg SocialClub, Uplay R2, GOG, Epic, Ubisoft, EA Desktop, Xbox PC, GreenLuma, LumaPlay, SmartSteamEmu, RPCS3, ShadPS4 and Xenia. Some platforms have both a legacy mapped-save parser and a newer official/local parser.
 
 ## Important components
 

@@ -54,6 +54,7 @@ Only the repairs that can fix the game in front of you are shown.
 | **Locate the game** | Opens a picker so you can choose the executable to watch. |
 | **Open the game folder** | Opens the install folder in Explorer. |
 | **Rewrite the achievement data** | Writes the achievement list, icons and emulator settings. Existing files are copied to a backup first. |
+| **Repair Uplay R2 support** | For a compatible Ubisoft game, rewrites the loader configuration, schema and save redirection in one transaction, with every touched file backed up - see [Uplay R2 setup](uplay-r2.md). |
 | **Restore the emulator file** | Downloads the supported emulator build and installs it into the game folder, keeping any existing file as a backup. |
 | **Correct the game ID file** | Rewrites `steam_appid.txt` when the emulator announces one game and AW Next matched another. Both values are shown, and the previous file is kept. |
 | **Watch this game** | Adds the game to the background tracker so playtime and live unlocks are recorded. |

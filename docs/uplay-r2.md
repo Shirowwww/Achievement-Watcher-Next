@@ -22,6 +22,11 @@ loader with a similar filename from being replaced.
 
 Open **Settings → Emulators → Ubisoft / Uplay R2**. The main controls are:
 
+<div align="center">
+<img src="screenshot/uplay-r2.png" width="620" alt="Settings - Ubisoft / Uplay R2"><br>
+<sub>The integrated repair package is verified before any game is touched</sub>
+</div>
+
 - **Automatically fix newly detected games**;
 - **Repair detected Uplay R2 games**, for one confirmed batch;
 - **Import or replace DLLs**, for a newer local loader;

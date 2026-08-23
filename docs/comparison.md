@@ -12,7 +12,7 @@ you can tell which one fits how you play.
 | Unified dashboard, game and achievement search | ✅ Both | ✅ Both | ✅ Both |
 | Installed-games-only filter and game actions | ✅ Filter · uninstall · restore | ❌ | ❌ |
 | Automatic folder discovery/configuration | ✅ Auto-config & Smart Find | ✅ Auto-config | ✅ Smart Find |
-| Official and local platform readers | ✅ Steam · GOG · Ubisoft · Epic · Xbox PC | ✅ Steam · GOG · Ubisoft · Epic · EA | ⚠️ Steam · GOG · Epic · Uplay (legacy) |
+| Official and local platform readers | ✅ Steam · GOG · Ubisoft · Epic · EA · Xbox PC | ✅ Steam · GOG · Ubisoft · Epic · EA | ⚠️ Steam · GOG · Epic · Uplay (legacy) |
 | Steam-emulator tracking | ✅ | ✅ | ✅ |
 | Goldberg SocialClub (Rockstar/GTA) source | ✅ | ❌ | ❌ |
 | Goldberg Uplay R2 support | ✅ Loader-version aware | ❌ | ❌ |

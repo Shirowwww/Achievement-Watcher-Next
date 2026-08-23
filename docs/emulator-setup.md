@@ -28,7 +28,12 @@ A schema file does not prove that anything has unlocked. A runtime save that con
 6. Use **Apply emulator fix (GBE Fork)** only when the game needs a matching runtime DLL as well.
 7. Launch the game and unlock an achievement, then refresh AW Next if needed.
 
-Automatic setup for newly discovered games is opt-in under **Settings → Steam emulator**. When disabled, scanning does not perform the full runtime installation in the background.
+Automatic setup for newly discovered games is opt-in under **Settings → Emulators → Steam / GBE Fork**. When disabled, scanning does not perform the full runtime installation in the background.
+
+<div align="center">
+<img src="screenshot/steam-gbe.png" width="620" alt="Settings - Steam / GBE Fork"><br>
+<sub>The Steam / GBE Fork tab: automatic repair, schema data mode and the opt-in SteamStub unpacker</sub>
+</div>
 
 ## Context-menu actions
 
