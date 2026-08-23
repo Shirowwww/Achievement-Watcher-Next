@@ -1,13 +1,8 @@
 'use strict';
 
-/*
-  The bundled-language list, in one place.
-
-  Several suites assert "and all of them were checked" by comparing a directory listing against a
-  literal count. Eight copies of that literal meant adding a language was eight unrelated edits,
-  and a suite that quietly stopped covering the newest locale looked exactly like one that passed.
-  BUNDLED_LOCALE_COUNT is the only number now; everything else asks for the list.
-*/
+// Single source for the bundled-language list. Suites used to each hardcode the count; a suite
+// that silently stopped covering the newest locale looked just like one that passed.
+// BUNDLED_LOCALE_COUNT is the only number now, everything else asks for the list.
 
 const fs = require('node:fs');
 const path = require('node:path');

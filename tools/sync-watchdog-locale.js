@@ -1,14 +1,10 @@
 'use strict';
 
 /*
-  Regenerate watchdog/locale.json from app/locale/lang.
-
-  The Watchdog runs as its own process and cannot load the renderer's locale files, so the small
-  `watchdog` section of every bundled locale is mirrored next to it. That mirror used to be copied
-  by hand, which is why watchdog/steam.json had silently lost Slovak: a hand-maintained duplicate
-  drifts the first time somebody adds a language and forgets the second file.
-
-  Usage, from the repository root or from app/:
+  Regenerate watchdog/locale.json from app/locale/lang. The Watchdog runs as its own process and
+  cannot load the renderer's locale files, so the small `watchdog` section of every bundled locale
+  is mirrored next to it - a hand-maintained copy drifts the moment someone adds a language and
+  forgets the second file.
 
     node tools/sync-watchdog-locale.js           rewrite watchdog/locale.json
     node tools/sync-watchdog-locale.js --check   report drift and exit 1, write nothing

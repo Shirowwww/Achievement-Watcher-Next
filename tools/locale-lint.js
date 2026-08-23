@@ -535,11 +535,8 @@ function lint() {
   return findings;
 }
 
-// ---------------------------------------------------------------------------------------------
-// pseudo-locale
-
 /*
-  A pseudo-locale turns every English value into text that is still readable but obviously not
+  Pseudo-locale: turns every English value into text that is still readable but obviously not
   English, padded by 30% so a label that will overflow in German does so here too. Anything left in
   plain English on screen is a string the locale layer never reached. Written outside app/locale so
   it can never be picked up as a twenty-ninth bundled language.
