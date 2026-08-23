@@ -38,3 +38,26 @@ test('legacy settings dumps are redacted without deleting surrounding diagnostic
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('a Steam web session token is redacted like the other secrets', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-log-privacy-steam-'));
+  const file = path.join(dir, 'notification.log');
+  try {
+    const source = [
+      '===== session 2026-08-23T08:00:00.000Z pid=123 =====',
+      '[2026-08-23T08:00:00.001Z INFO] Loading Options ...',
+      "[2026-08-23T08:00:00.002Z INFO] { steam: { webapi_token: 'secret-steam' } }",
+      '[2026-08-23T08:00:00.003Z INFO] Watchdog started',
+      '',
+    ].join('\n');
+    fs.writeFileSync(file, source);
+
+    assert.strictEqual(Logger.redactLegacySettingsDumps(file), 1);
+    const redacted = fs.readFileSync(file, 'utf8');
+    assert.doesNotMatch(redacted, /secret-steam|webapi_token/);
+    assert.match(redacted, /Loading Options/);
+    assert.match(redacted, /Watchdog started/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});

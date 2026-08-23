@@ -594,6 +594,31 @@
                 </ul>
               </div>
 
+              <!-- Ghost-game filter. Its own card because it is meaningless without a connected
+                   Steam account: settings.js hides the whole block when none is connected, and the
+                   Advanced view is localized by id, so nothing here shifts an nth-child binding. -->
+              <div class="arrow-list" id="steam-stale-card" style="display:none">
+                <div class="title"><i class="fab fa-steam"></i> <span id="steam-stale-title">Steam library</span></div>
+                <ul>
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-eye-slash"></i> <span id="steam-stale-label">Hide games no longer in your Steam library</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="steam-hide-stale">
+                        <option value="true" selected>Enabled</option>
+                        <option value="false">Disabled</option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="steam-stale-help">Requires a connected Steam account.</div>
+                  </li>
+                </ul>
+              </div>
+
               <div class="arrow-list">
                 <div class="title"><i class="fas fa-ban"></i> <span id="advanced-blacklist-title"></span></div>
                 <ul>
@@ -1004,6 +1029,31 @@
                     <span class="emulator-test-copy"><strong id="epic-disconnect-btn-label">Disconnect</strong></span>
                   </button>
                   <span id="epic-connect-status" aria-live="polite"></span>
+                </div>
+              </div>
+
+              <!-- Steam account connect (standalone card, same shape as the Epic one, so it never
+                   disturbs the nth-child i18n bindings above). Connecting gives AW the real owned
+                   and Steam Family library, which is what the ghost-game filter reads. -->
+              <div id="steam-connect" class="settings-card">
+                <div class="emulator-login-heading">
+                  <div class="title"><i class="fab fa-steam"></i> <span id="steam-connect-title">Steam account</span></div>
+                  <span class="emulator-warning is-success" id="steam-connect-badge" style="display:none"><i class="fas fa-check-circle"></i> <span id="steam-connect-badge-label">Connected</span></span>
+                </div>
+                <p id="steam-connect-desc">Optional. Connect your Steam account so AW Next knows which games are really in your library today, including Steam Family shared games, and can hide the ones you no longer own. It also reads your unlocked Steam achievements when your profile is private. Your Steam password is never seen by AW Next: the sign-in page is Valve's own. The session token is stored encrypted on this PC.</p>
+                <div class="emulator-login-actions">
+                  <button type="button" id="steam-connect-btn" class="btn">
+                    <span class="emulator-test-icon"><i class="fas fa-sign-in-alt"></i></span>
+                    <span class="emulator-test-copy">
+                      <strong id="steam-connect-btn-label">Connect Steam account</strong>
+                      <small id="steam-connect-btn-hint">opens the Steam sign-in window</small>
+                    </span>
+                    <i class="fas fa-chevron-right emulator-test-arrow"></i>
+                  </button>
+                  <button type="button" id="steam-disconnect-btn" class="btn secondary" style="display:none">
+                    <span class="emulator-test-copy"><strong id="steam-disconnect-btn-label">Disconnect</strong></span>
+                  </button>
+                  <span id="steam-connect-status" aria-live="polite"></span>
                 </div>
               </div>
 

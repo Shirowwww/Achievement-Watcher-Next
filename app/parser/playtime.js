@@ -39,3 +39,28 @@ module.exports.reset = async (appID) => {
   await writeRegistryDword('HKCU', path, 'total', 0);
   await writeRegistryDword('HKCU', path, 'last', 0);
 };
+
+// Neither Steam nor the local counter is authoritative (Steam sees other machines, AW sees
+// non-Steam play), so each field keeps its larger value; null means nothing to write.
+function mergeSteamPlaytime(local, steam) {
+  const steamSeconds = Number(steam && steam.seconds) || 0;
+  const steamLast = Number(steam && steam.lastPlayed) || 0;
+  if (steamSeconds <= 0 && steamLast <= 0) return null;
+
+  const localSeconds = Number(local && local.playtime) || 0;
+  const localLast = Number(local && local.lastplayed) || 0;
+  const total = Math.max(localSeconds, steamSeconds);
+  const last = Math.max(localLast, steamLast);
+  return total === localSeconds && last === localLast ? null : { total, last };
+}
+module.exports.mergeSteamPlaytime = mergeSteamPlaytime;
+
+// Copies Steam playtime into the local counter when it advances it; returns whether a write happened.
+module.exports.seedFromSteam = async (appID, steam) => {
+  const merged = mergeSteamPlaytime(module.exports.readSync(appID), steam);
+  if (!merged) return false;
+  const path = `${PLAYTIME_KEY}${appID}`;
+  await writeRegistryDword('HKCU', path, 'total', merged.total);
+  await writeRegistryDword('HKCU', path, 'last', merged.last);
+  return true;
+};

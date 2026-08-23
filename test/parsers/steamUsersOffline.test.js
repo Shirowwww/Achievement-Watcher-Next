@@ -1,12 +1,10 @@
 'use strict';
 
 /*
-  The legit-Steam source is gated on "is this local Steam account's profile public?", and that
-  question is answered over the network. `whoIs` used to swallow every failure into `{}`, which the
-  caller reads as "not public" - so with no connection every account looked private and the source
-  threw itself out of the scan. Measured on a real offline run: 58 of 215 games survived.
-
-  A profile confirmed public on an earlier scan does not become private because the network is down.
+  The legit-Steam source is gated on whether the local account's profile is public, answered over the
+  network. `whoIs` used to swallow every failure into `{}`, read as "not public" - so offline every
+  account looked private and the source threw itself out (58 of 215 games survived on one real run).
+  A profile confirmed public earlier must not become private just because the network is down.
 */
 
 const { test } = require('node:test');

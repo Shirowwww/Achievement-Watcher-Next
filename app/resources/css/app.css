@@ -945,14 +945,22 @@ main {
   transform: rotate(180deg);
 }
 
-/* Installed-only filter: hide game tiles flagged as not really installed (phantoms). */
+/* Installed-only filter: hide game tiles flagged as not really installed (phantoms).
+   !important because #game-list.view-list/.view-details ul > li set display:flex at the same
+   specificity and are declared later in this file, so without it list/detail view mode ignores
+   this filter entirely. */
 #game-list ul.installed-only li:has(.game-box[data-installed='0']) {
-  display: none;
+  display: none !important;
+}
+/* Filtre des jeux fantomes: compose avec installed-only et le filtre de recherche, qui masquent
+   tous les trois par display:none, donc une tuile ne s'affiche que si elle passe les trois. */
+#game-list ul.hide-stale li:has(.game-box[data-ownership='stale']) {
+  display: none !important;
 }
 /* Search filter: class-based so it composes with installed-only above (both hide via display:none,
    so a tile shows only when it matches the search AND passes the installed-only filter). */
 #game-list ul li.search-hidden {
-  display: none;
+  display: none !important;
 }
 
 #main-footer {
@@ -1437,6 +1445,24 @@ main {
 
 #game-list .game-box .info .dll-badge.missing {
   background: var(--danger);
+}
+
+/* Pastille d'ownership Steam, sur le meme modele que .dll-badge: une icone nue dans .game-meta,
+   jamais un calque absolu qui recouvrirait la jaquette. Le titre porte l'explication. */
+#game-list .game-box .info .ownership-badge {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+#game-list .game-box .info .ownership-badge.stale {
+  background: var(--warning);
+}
+
+#game-list .game-box .info .ownership-badge.family {
+  background: var(--accent);
 }
 
 /* A local DLL health signal only makes sense once the game is confirmed on this PC. The badge

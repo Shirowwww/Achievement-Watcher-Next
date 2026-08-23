@@ -22,7 +22,7 @@ function redactLegacySettingsDumps(file) {
     let match;
     while ((match = eventPattern.exec(source))) {
       const event = match[2];
-      if (!/\b(?:loginPassword|apiKey)\s*:/i.test(event)) continue;
+      if (!/\b(?:loginPassword|apiKey|webapi_token|steamLoginSecure)\s*:/i.test(event)) continue;
       const offset = Buffer.byteLength(source.slice(0, match.index + match[1].length), 'utf8');
       matches.push({ event, offset });
     }

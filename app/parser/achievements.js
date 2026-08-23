@@ -2992,6 +2992,14 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         (dataType === 'ubisoftOfficial' && appid.data && appid.data.uplayId ? uplay.isInstalled(appid.data.uplayId) : false),
     });
 
+    // The renderer never receives appid.data, but it needs to know an entry came from the legitimate
+    // Steam account to offer a client install instead of a file picker.
+    game.steamOfficial = dataType === 'steamAPI';
+
+    // With no Steam connection, the Map is empty and everything stays owned: today's behavior.
+    game.ownership = game.steamOfficial ? _steamOwnership.get(String(appid.appid)) || 'owned' : '';
+    game.familyOwners = game.ownership === 'family' ? _steamFamilyOwners.get(String(appid.appid)) || [] : [];
+
     return game;
   } catch (err) {
     // `requestedAppid` is a discovery RECORD ({appid, data}), not an id - interpolating it printed
@@ -3030,6 +3038,70 @@ module.exports.detectInstalledAppids = async (option) => {
     return [];
   }
 };
+
+// Steam ownership for the current refresh. Empty by default: with no Steam connection the Map stays
+// empty, classify() reports nothing, and every entry keeps today's behavior.
+let _steamOwnership = new Map();
+let _steamFamilyOwners = new Map();
+
+// One read per refresh: steamAccount's 6-hour cache absorbs closely-spaced scans, and classify()
+// marks nothing stale when the list comes back empty. The token comes from the main process, which
+// owns the encrypted session; outside the renderer ipcInvoke returns null and this step is just skipped.
+// Steam playtime copied into the local counter. A game played on another machine, or played for years
+// before AW was installed, used to show an empty time even though Steam knew about it. The local
+// counter stays authoritative afterward: the watchdog keeps incrementing from this value, and
+// seedFromSteam only writes when it advances, so a scan that learns nothing never touches the registry.
+async function seedPlaytimeFromSteamLibrary(steamPlaytime) {
+  if (!steamPlaytime || steamPlaytime.size === 0) return;
+  const playtime = require('./playtime.js');
+  let seeded = 0;
+  for (const [appid, value] of steamPlaytime) {
+    try {
+      if (await playtime.seedFromSteam(appid, value)) seeded++;
+    } catch (err) {
+      debug.log(`[steam] playtime seed failed for ${appid}: ${err && err.message ? err.message : err}`);
+    }
+  }
+  if (seeded > 0) debug.log(`[steam] playtime: ${seeded} counter(s) advanced from the Steam library`);
+}
+
+async function refreshSteamOwnership(appidList) {
+  _steamOwnership = new Map();
+  _steamFamilyOwners = new Map();
+  try {
+    const steamRecords = (appidList || []).filter((rec) => rec && rec.data && rec.data.type === 'steamAPI');
+    if (steamRecords.length === 0) return;
+
+    const { token, steamid } = (await ipcInvoke('steam:ensure-token')) || {};
+    if (!token || !steamid) return;
+
+    const steamAccount = require('./steamAccount.js');
+    const cacheDir = path.join(_userDataPath || userDataDir(), 'steam_cache');
+    await fs.promises.mkdir(cacheDir, { recursive: true });
+    const library = await steamAccount.loadLibrary({
+      cacheFile: path.join(cacheDir, 'library.json'),
+      token,
+      steamid,
+      log: (message) => debug.log(message),
+    });
+
+    _steamOwnership = steamAccount.classify({
+      owned: library.owned,
+      family: library.family,
+      installed: steamRecords.filter((rec) => rec.data.installed === true).map((rec) => rec.appid),
+      listed: steamRecords.map((rec) => rec.appid),
+    });
+    _steamFamilyOwners = library.owners;
+
+    let stale = 0;
+    for (const state of _steamOwnership.values()) if (state === 'stale') stale++;
+    debug.log(`[steam] ownership: ${_steamOwnership.size} listed, ${library.owned.length} owned, ${library.family.length} family, ${stale} stale`);
+
+    await seedPlaytimeFromSteamLibrary(library.playtime);
+  } catch (err) {
+    debug.log(`[steam] ownership check skipped: ${err}`);
+  }
+}
 
 module.exports.makeList = async (option, callbackProgress, onGame = () => {}) => {
   try {

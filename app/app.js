@@ -129,6 +129,23 @@ window.addEventListener('error', (e) => {
   } catch {}
 });
 
+/*
+  Opens the Steam target in the client if it is running, otherwise the web page in the browser. The
+  question is asked fresh on every click and never cached: Steam can start or quit while the app is
+  open, and answering from the startup state could send a steam:// link to a client that is no
+  longer there.
+*/
+async function openSteamTarget(build, appid) {
+  let running = false;
+  try {
+    running = !!(await ipcRenderer.invoke('steam:is-running'));
+  } catch {
+    // Without a response, fall back to the browser: a web page always opens, a steam:// link does not.
+  }
+  const url = build(appid, { clientRunning: running });
+  if (url) remote.shell.openExternal(url);
+}
+
 const gameElements = new Map();
 let gameList = [];
 let libraryArtwork = createViewportWork();
@@ -3013,16 +3030,22 @@ var app = {
               achievementDate: localeText('latestAchievementEarned'),
               lastPlayed: localeText('sort.tooltip.played'),
               playtime: localeText('settings.notification.test.playtime'),
+              staleOwnership: t('steam-stale-badge', 'No longer in your Steam library', 'Plus dans ta bibliothèque Steam'),
+              familyOwnership: t('steam-family-badge', 'Shared with you through Steam Family', 'Partagé avec toi via la famille Steam'),
             };
+            const ownershipLabel =
+              game.ownership === 'stale' ? tileLabels.staleOwnership : game.ownership === 'family' ? tileLabels.familyOwnership : '';
             let template = `
             <li>
                 <div class="game-box" data-index="${listIndex}" data-appid="${game.appid}" data-progress="${hasAchievements ? progress : -1}" data-installed="${
               game.installed ? 1 : 0
-            }" data-time="${timeMostRecent > 0 ? timeMostRecent : 0}" data-lastplayed="${lastPlayed}" ${
+            }" data-ownership="${escapeHtml(game.ownership || '')}" data-time="${
+              timeMostRecent > 0 ? timeMostRecent : 0
+            }" data-lastplayed="${lastPlayed}" ${
               game.system ? `data-system="${game.system}"` : ''
             }>
                   <div class="loading-overlay"><div class="content"><i class="fas fa-spinner fa-spin"></i></div></div>
-                  <div class="header ${isPortrait ? 'glow' : ''}" id="game-header-${game.appid}">
+                  <div class="header ${hasOwnShapeCover(game.img, portrait) ? 'glow' : ''}" id="game-header-${game.appid}">
                   <button type="button" class="play-button" aria-label="${escapeHtml(tileLabels.play)}"><i class="fas fa-play" aria-hidden="true"></i></button>
                   </div>
 
@@ -3045,6 +3068,13 @@ var app = {
                             ? `<span class="dll-badge ${dllIcon.present ? 'present' : 'missing'}" title="${escapeHtml(
                                 dllIcon.label
                               )}" role="img" aria-label="${escapeHtml(dllIcon.label)}"></span>`
+                            : ''
+                        }
+                        ${
+                          ownershipLabel
+                            ? `<span class="ownership-badge ${game.ownership}" title="${escapeHtml(
+                                ownershipLabel
+                              )}" role="img" aria-label="${escapeHtml(ownershipLabel)}"></span>`
                             : ''
                         }
                         ${
@@ -5059,7 +5089,7 @@ var app = {
                   icon: menuIcon('globe.png'),
                   label: 'Steam',
                   click() {
-                    remote.shell.openExternal(`https://store.steampowered.com/app/${catalogAppid}/`);
+                    openSteamTarget(steamClientLinks.steamStoreUrl, catalogAppid);
                   },
                 })
               );
@@ -5095,7 +5125,7 @@ var app = {
                   icon: menuIcon('globe.png'),
                   label: 'Steam Community',
                   click() {
-                    remote.shell.openExternal(`https://steamcommunity.com/app/${catalogAppid}/guides/`);
+                    openSteamTarget(steamClientLinks.steamGameHubUrl, catalogAppid);
                   },
                 })
               );
@@ -6139,6 +6169,23 @@ var app = {
   onPlayButtonClick: async function (self) {
     let appid = self.closest('.game-box').data('appid');
     const gameRecord = gameList.find((game) => String(game.appid) === String(appid));
+    if (steamClientLinks.shouldOfferSteamInstall(gameRecord)) {
+      const answer = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+        type: 'question',
+        title: t('steam-install-title', 'Game not installed', 'Jeu non installé'),
+        message: t(
+          'steam-install-message',
+          'This Steam game is not installed on this PC. Install it through Steam?',
+          'Ce jeu Steam n’est pas installé sur ce PC. L’installer via Steam ?'
+        ),
+        buttons: [t('cancel', 'Cancel', 'Annuler'), t('steam-install-confirm', 'Install via Steam', 'Installer via Steam')],
+        defaultId: 1,
+        cancelId: 0,
+        noLink: true,
+      });
+      if (answer === 1) remote.shell.openExternal(steamClientLinks.steamInstallUrl(gameRecord.appid));
+      return;
+    }
     let cfg = await exeList.get(appid);
     if (!cfg?.exe || cfg.exe === '' || !fs.existsSync(cfg.exe)) {
       const game = gameList.find((g) => g.appid == appid);

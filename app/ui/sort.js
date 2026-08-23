@@ -255,13 +255,30 @@ function applyInstalledFilter({ animateStats = false } = {}) {
   updateInstalledEmptyState();
   window.refreshProfileStats?.({ animate: animateStats });
 }
+// Ghost entries are hidden by default: an entry the Steam account no longer knows about shouldn't
+// occupy the grid until the user asks to see it.
+function hideStaleEnabled() {
+  if (typeof localStorage.showStaleSteamGames === 'undefined') return true;
+  return localStorage.showStaleSteamGames !== 'true';
+}
+
+// This toggle lives in Settings > Advanced, not the sort bar: it only makes sense with a connected
+// Steam account, and the sort bar has no way to display that condition.
+function applyStaleFilter() {
+  $('#game-list ul').toggleClass('hide-stale', hideStaleEnabled());
+  updateInstalledEmptyState();
+}
+
 // Exposed so app.js can re-apply after it flips data-installed (exeList signal, post-reconcile).
 window.applyInstalledFilter = applyInstalledFilter;
 window.installedOnlyEnabled = installedOnlyEnabled;
+window.applyStaleFilter = applyStaleFilter;
+window.hideStaleEnabled = hideStaleEnabled;
 
 (function ($, window, document) {
   $(function () {
     applyInstalledFilter();
+    applyStaleFilter();
 
     $('#sort-box .installed-filter').click(function () {
       const button = $(this);

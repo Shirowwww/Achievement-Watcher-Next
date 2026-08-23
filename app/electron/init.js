@@ -1658,7 +1658,28 @@ ipcMain.handle('clear-update-cache', async (event) => {
   return result;
 });
 
-// ---- Epic account connection ---------------------------------------------------------------
+// Is the Steam client running right now? A steam:// link is only sent to the client in that case;
+// otherwise the user gets the web page instead of a client launch. Steam writes its pid to
+// ActiveProcess and clears it on exit, so this only costs a registry read; the pid is confirmed
+// with a liveness check (signal 0) since it can survive a crash, and EPERM still counts as alive.
+// Never cached: Steam can start and stop while the app stays open.
+ipcMain.handle('steam:is-running', () => {
+  try {
+    const { readRegistryInteger } = require(path.join(app.getAppPath(), 'util/reg.js'));
+    const pid = Number(readRegistryInteger('HKCU', 'Software/Valve/Steam/ActiveProcess', 'pid')) || 0;
+    if (pid <= 0) return false;
+    try {
+      process.kill(pid, 0);
+      return true;
+    } catch (err) {
+      return err && err.code === 'EPERM';
+    }
+  } catch {
+    return false;
+  }
+});
+
+// Epic account connection
 ipcMain.handle('epic:auth-status', async () => {
   try {
     return await require(path.join(app.getAppPath(), 'util/epicAuth.js')).getEpicAuthStatus({ userDataDir: userData });
@@ -1759,7 +1780,161 @@ ipcMain.handle('epic:login', async () => {
   });
 });
 
-// ---- Xbox PC connection and library import -------------------------------------------------
+// Optional Steam connection
+function steamAuthOptions() {
+  const steamAuth = require(path.join(app.getAppPath(), 'util/steamAuth.js'));
+  return { steamAuth, sessionFile: steamAuth.resolveSteamSessionFile(userData), tokenSecret: steamAuth.DEFAULT_TOKEN_SECRET };
+}
+
+// One attempt per run at naming an account the sign-in could not name. Steam being quiet is a
+// perfectly ordinary answer, and asking it again on every Settings open would not change it.
+let steamPersonaRetried = false;
+
+ipcMain.handle('steam:auth-status', async () => {
+  try {
+    const { steamAuth, sessionFile, tokenSecret } = steamAuthOptions();
+    const status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret });
+    if (status.connected && !status.persona && !status.needsReconnect && !steamPersonaRetried) {
+      steamPersonaRetried = true;
+      const persona = await steamAuth.refreshPersona({
+        sessionFile,
+        tokenSecret,
+        session: session.fromPartition(steamAuth.STEAM_SESSION_PARTITION),
+      });
+      if (persona) status.persona = persona;
+    }
+    return status;
+  } catch (err) {
+    return {
+      connected: false,
+      steamid: '',
+      persona: '',
+      expiresAt: 0,
+      needsReconnect: false,
+      error: String(err && err.message ? err.message : err),
+    };
+  }
+});
+
+ipcMain.handle('steam:logout', async () => {
+  try {
+    const { steamAuth, sessionFile } = steamAuthOptions();
+    await steamAuth.clearSteamSession({ sessionFile });
+    await session.fromPartition(steamAuth.STEAM_SESSION_PARTITION).clearStorageData();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: String(err && err.message ? err.message : err) };
+  }
+});
+
+// The token AND the steamid: GetOwnedGames needs both, the token alone only says who is calling.
+// Returning the token alone forced a second status call that was easy to forget, emptying libraries.
+ipcMain.handle('steam:ensure-token', async () => {
+  try {
+    const { steamAuth, sessionFile, tokenSecret } = steamAuthOptions();
+    const token = await steamAuth.ensureSteamToken({
+      sessionFile,
+      tokenSecret,
+      session: session.fromPartition(steamAuth.STEAM_SESSION_PARTITION),
+    });
+    if (!token) return { token: '', steamid: '' };
+    const status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret });
+    // Without the steamid the library call is refused, so ownership and playtime would both stop
+    // for an account that is otherwise perfectly connected. The cookie still knows who it is.
+    const steamid =
+      status.steamid ||
+      (await steamAuth.recoverSteamId({
+        sessionFile,
+        tokenSecret,
+        session: session.fromPartition(steamAuth.STEAM_SESSION_PARTITION),
+      }));
+    return { token, steamid: steamid || '' };
+  } catch {
+    return { token: '', steamid: '' };
+  }
+});
+
+let steamLoginWindow = null;
+ipcMain.handle('steam:login', async () => {
+  const { steamAuth, sessionFile, tokenSecret } = steamAuthOptions();
+  if (steamLoginWindow && !steamLoginWindow.isDestroyed()) {
+    steamLoginWindow.focus();
+    return { ok: false, error: 'login-already-open' };
+  }
+  const steamSession = session.fromPartition(steamAuth.STEAM_SESSION_PARTITION);
+  return await new Promise((resolve) => {
+    let settled = false;
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      try {
+        if (steamLoginWindow && !steamLoginWindow.isDestroyed()) steamLoginWindow.close();
+      } catch {
+        /* window already gone */
+      }
+      resolve(result);
+    };
+
+    steamLoginWindow = new BrowserWindow({
+      width: 900,
+      height: 800,
+      title: t('connect-steam-account', 'Connect Steam account', 'Connecter le compte Steam'),
+      parent: MainWin && !MainWin.isDestroyed() ? MainWin : undefined,
+      autoHideMenuBar: true,
+      webPreferences: {
+        session: steamSession,
+        nodeIntegration: false,
+        contextIsolation: true,
+      },
+    });
+    steamLoginWindow.on('closed', () => {
+      steamLoginWindow = null;
+      finish({ ok: false, error: 'login-cancelled' });
+    });
+
+    // The login page is Valve's own: AW injects no script and reads no form. The only signal is the
+    // session cookie appearing, then a readable webapi_token. The two are not simultaneous: the
+    // cookie appears right after password validation, before Steam Guard and before the session is
+    // authenticated on store.steampowered.com, so closing the window at that point used to abandon
+    // an in-progress login (reported as "steam-token-missing"). We wait for the token instead of
+    // ever failing on our own; only the user closing the window counts as cancellation.
+    let capturing = false;
+    const tryCapture = async () => {
+      if (settled || capturing) return;
+      capturing = true;
+      try {
+        const cookies = await steamSession.cookies.get({ name: steamAuth.STEAM_LOGIN_COOKIE });
+        const steamid = steamAuth.steamIdFromLoginCookie(cookies[0] && cookies[0].value);
+        if (!steamid) return;
+        const token = await steamAuth.fetchWebApiToken(steamSession);
+        const persona = await steamAuth.fetchPersona(token, steamid);
+        await steamAuth.saveSessionEncrypted(
+          sessionFile,
+          { webapi_token: token, steamid, persona, expiresAt: steamAuth.parseJwtExpiry(token) },
+          tokenSecret
+        );
+        debug.log('[steam] account connected');
+        finish({ ok: true, steamid });
+      } catch (err) {
+        // Not ready yet: the next navigation or tick will retry.
+        debug.log(`[steam] sign-in not complete yet: ${err && err.message ? err.message : err}`);
+      } finally {
+        capturing = false;
+      }
+    };
+
+    // The final step of Steam login is often an internal redirect that emits no navigation event
+    // any more, so a plain timer backs up the events instead of relying on them.
+    const poll = setInterval(tryCapture, 2000);
+    steamLoginWindow.on('closed', () => clearInterval(poll));
+
+    steamLoginWindow.webContents.on('did-navigate', tryCapture);
+    steamLoginWindow.webContents.on('did-navigate-in-page', tryCapture);
+    steamLoginWindow.loadURL(steamAuth.STEAM_LOGIN_URL);
+  });
+});
+
+// Xbox PC connection and library import
 let xboxLoginWindow = null;
 ipcMain.handle('xbox-pc:status', async () => {
   try {

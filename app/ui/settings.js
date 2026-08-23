@@ -1347,6 +1347,119 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       refresh();
     })();
 
+    // Steam account connect: gives AW the real owned and Steam Family library, which is what the
+    // ghost-game filter reads. The Valve sign-in window and the encrypted session live in the main
+    // process (init.js steam:* IPC); nothing here ever sees the password.
+    (function wireSteamConnect() {
+      const T = () => ({
+        connectedAs: (n) => t('steam-connected-as', 'Connected{suffix}', 'Connecté{suffix}', { suffix: n ? ': ' + n : '' }),
+        notConnected: t('steam-not-connected', 'Not connected', 'Non connecté'),
+        connecting: t('steam-connecting', 'Opening the Steam sign-in window…', 'Ouverture de la fenêtre de connexion Steam…'),
+        connected: t('steam-connected', 'Steam account connected.', 'Compte Steam connecté.'),
+        cancelled: t('steam-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'),
+        failed: t('steam-failed', 'Steam sign-in failed', 'Échec de la connexion Steam'),
+        disconnected: t('steam-disconnected', 'Steam account disconnected.', 'Compte Steam déconnecté.'),
+        needsReconnect: t('steam-needs-reconnect', 'Session expired, reconnect needed.', 'Session expirée, reconnexion nécessaire.'),
+      });
+      const status = $('#steam-connect-status');
+      const badge = $('#steam-connect-badge');
+      const connectBtn = $('#steam-connect-btn');
+      const disconnectBtn = $('#steam-disconnect-btn');
+      const setStatus = (text, cls = '') => status.removeClass('success error running').addClass(cls).text(text || '');
+
+      registerLocaleRefresh(function applySteamLabels() {
+        $('#steam-connect-title').text(t('steam-title', 'Steam account', 'Compte Steam'));
+        $('#steam-connect-desc').text(
+          t(
+            'steam-desc',
+            'Optional. Connect your Steam account so AW Next knows which games are really in your library today, including Steam Family shared games, and can hide the ones you no longer own. It also reads your unlocked Steam achievements when your profile is private. Your Steam password is never seen by AW Next: the sign-in page is Valve’s own. The session token is stored encrypted on this PC.',
+            'Optionnel. La connexion donne à AW Next la vraie liste des jeux présents dans ta bibliothèque aujourd’hui, jeux partagés en famille Steam compris, et lui permet de masquer ceux que tu ne possèdes plus. Elle lit aussi tes succès Steam débloqués quand ton profil est privé. AW Next ne voit jamais ton mot de passe Steam : la page de connexion est celle de Valve. Le jeton de session est stocké chiffré sur ce PC.'
+          )
+        );
+        $('#steam-connect-btn-hint').text(t('steam-btn-hint', 'opens the Steam sign-in window', 'ouvre la fenêtre de connexion Steam'));
+        $('#steam-connect-badge-label').text(t('connected', 'Connected', 'Connecté'));
+        $('#steam-disconnect-btn-label').text(t('disconnect', 'Disconnect', 'Déconnecter'));
+        $('#steam-stale-title').text(t('steam-title', 'Steam account', 'Compte Steam'));
+        $('#steam-stale-label').text(
+          t('steam-hide-stale', 'Hide games no longer in your Steam library', 'Masquer les jeux qui ne sont plus dans ta bibliothèque Steam')
+        );
+        $('#steam-stale-help').text(
+          t(
+            'steam-hide-stale-help',
+            'Requires a connected Steam account. Games installed on this PC and games shared through Steam Family are never hidden.',
+            'Nécessite un compte Steam connecté. Les jeux installés sur ce PC et ceux partagés via la famille Steam ne sont jamais masqués.'
+          )
+        );
+        // These two select labels are the same Enabled/Disabled ones loader.js sets on every other
+        // select; reading them back avoids two more translations saying the same thing.
+        const common = (window.appLocale && window.appLocale.settings && window.appLocale.settings.common) || {};
+        $('#steam-hide-stale option[value="true"]').text(common.enable || 'Enabled');
+        $('#steam-hide-stale option[value="false"]').text(common.disable || 'Disabled');
+      });
+
+      // Hiding ghost games is on by default; hideStaleEnabled() carries that default, this select
+      // only reflects and then writes it.
+      const staleSelect = $('#steam-hide-stale');
+      // Read from localStorage rather than window.hideStaleEnabled: sort.js may not be loaded yet
+      // here, and a select left at its default would look uninitialized.
+      staleSelect.val(localStorage.showStaleSteamGames === 'true' ? 'false' : 'true');
+      staleSelect.off('change').on('change', function () {
+        localStorage.showStaleSteamGames = $(this).val() === 'true' ? 'false' : 'true';
+        window.applyStaleFilter?.();
+        window.refreshProfileStats?.({ animate: true });
+      });
+
+      async function refresh() {
+        let s = {};
+        try {
+          s = (await ipcRenderer.invoke('steam:auth-status')) || {};
+        } catch {}
+        // With no account connected nothing can be a ghost entry, so the row would promise nothing.
+        $('#steam-stale-card').toggle(!!s.connected);
+        if (s.connected) {
+          badge.toggle(!s.needsReconnect);
+          disconnectBtn.show();
+          $('#steam-connect-btn-label').text(t('steam-reconnect', 'Reconnect', 'Reconnecter'));
+          if (s.needsReconnect) setStatus(T().needsReconnect, 'error');
+          else setStatus(T().connectedAs(s.persona || s.steamid), 'success');
+        } else {
+          badge.hide();
+          disconnectBtn.hide();
+          $('#steam-connect-btn-label').text(t('steam-connect', 'Connect Steam account', 'Connecter le compte Steam'));
+          if (!status.hasClass('error')) setStatus(T().notConnected);
+        }
+      }
+
+      connectBtn.off('click').on('click', async function () {
+        if (connectBtn.hasClass('disabled')) return;
+        connectBtn.addClass('disabled').css('pointer-events', 'none');
+        setStatus(T().connecting, 'running');
+        try {
+          const res = (await ipcRenderer.invoke('steam:login')) || {};
+          if (res.ok) setStatus(T().connected, 'success');
+          else if (res.error === 'login-cancelled') setStatus(T().cancelled, 'error');
+          else setStatus(`${T().failed}${res.error ? ': ' + res.error : ''}`, 'error');
+        } catch (err) {
+          setStatus(`${T().failed}: ${err.message || err}`, 'error');
+        } finally {
+          connectBtn.removeClass('disabled').css('pointer-events', '');
+          refresh();
+        }
+      });
+
+      disconnectBtn.off('click').on('click', async function () {
+        try {
+          await ipcRenderer.invoke('steam:logout');
+          setStatus(T().disconnected);
+        } catch (err) {
+          setStatus(`${err.message || err}`, 'error');
+        }
+        refresh();
+      });
+
+      refresh();
+    })();
+
     // Xbox PC account card (Settings > Sources): connect Microsoft/Xbox Network, then import the
     // library. Import progress arrives as `xbox-pc:import-progress` IPC events.
     (function () {

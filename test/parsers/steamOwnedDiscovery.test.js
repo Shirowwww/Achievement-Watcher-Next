@@ -1,15 +1,10 @@
 'use strict';
 
 /*
-  The legit-Steam source enumerated `appcache/stats/UserGameStats_<user>_<appid>.bin`, and Steam only
-  writes one of those once a game has actually reported statistics. So the source listed what had
-  been PLAYED, not what was owned or even installed.
-
-  Measured against one real machine: 59 appids Steam knew about locally never reached the scan.
-  DELTARUNE and FragPunk were installed; Ready or Not, R.E.P.O. and PUBG: BATTLEGROUNDS were owned.
-  The same 59 also contained 29 DLC, 6 tools, a demo and the Steam Input config app - which is why
-  the widened source is gated on Steam's own type for each appid rather than on "the client has
-  heard of it".
+  The legit-Steam source enumerated UserGameStats_<user>_<appid>.bin, which Steam only writes once a
+  game has reported statistics - so it listed what had been played, not owned or installed. Measured
+  on one real machine, 59 known-locally appids never reached the scan (games included), and 29 of
+  those were DLC - which is why the widened source is gated on Steam's own type per appid.
 */
 
 const { test } = require('node:test');
