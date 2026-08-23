@@ -22,6 +22,8 @@ temp/
 watchdog/_wip_/
 watchdog/playtime/filter.json
 *.bak
+# Packages built from the worked examples; the published copies live in docs/gallery/community/.
+tools/gallery/examples/*/preset.awpreset
 
 # Environment / secrets
 .env
