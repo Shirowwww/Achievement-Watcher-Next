@@ -216,6 +216,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   Games whose schema holds tokens rather than URLs (most Goldberg entries) had their header, portrait
   and icon all silently unavailable, which left the icon box either empty or filled with the blurred
   store page background, the one absolute URL such a schema carries.
+- **Artwork behind a hashed `store_item_assets` path now resolves too.** Product info increasingly
+  hands out a token that carries its own directory, such as `<hash>/library_capsule.jpg`, and
+  flattening it to a bare basename (the fix above) probed a path that can never answer - every appid
+  onboarded since Steam's migration to hashed paths kept a blank tile even with the CDN fallback in
+  place. The hash directory is now kept and probed directly.
 
 - **A game with no achievements, or one that is not installed, is no longer hidden.** The library
   kept a game only when it had achievements or a verified installation, so fifteen owned games were

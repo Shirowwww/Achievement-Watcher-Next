@@ -138,13 +138,16 @@ test('the borrowed sample carries a square logo, for the toast test as much as t
 
 test('a schema token resolves to real artwork instead of falling through', () => {
   const steamParser = fs.readFileSync(path.join(appDir, 'parser', 'steam.js'), 'utf8');
-  const fn = sliceFunction(steamParser, 'async function resolveWorkingIconUrl(appID, url) {');
-  // Schemas store "header.jpg", "library_600x900.jpg" and bare content hashes, not URLs. Downloading
-  // those as-is cannot work, and the caller got its own token back - read as "no artwork" - which
-  // sent the square-logo chain on to the only absolute URL such a schema has: the store page
-  // background. That's why an appid with a perfectly good header and portrait got a flat blue gradient.
+  const fn = sliceFunction(steamParser, 'async function resolveWorkingIconUrl(appID, url, { probe = probeUrl } = {}) {');
+  // Schemas store "header.jpg", a hashed "<hash>/library_capsule.jpg" and bare content hashes, not
+  // URLs. Downloading those as-is cannot work, and the caller got its own token back - read as "no
+  // artwork" - which sent the square-logo chain on to the only absolute URL such a schema has: the
+  // store page background. That's why an appid with a perfectly good header and portrait got a flat
+  // blue gradient.
   assert.match(fn, /if \(!url\.startsWith\('http'\)\) \{/);
-  assert.match(fn, /findWorkingLink\(appID, url\.split\('\/'\)\.pop\(\)/);
+  assert.match(fn, /findWorkingLink\(appID, basenameOf\(url\), probe\)/);
+  // A hashed store_item_assets token must keep its directory, or it probes a path that cannot answer.
+  assert.match(fn, /findWorkingAssetPath\(appID, relative, probe\)/);
   // A local file must never be turned into a CDN probe.
   assert.match(fn, /if \(path\.isAbsolute\(url\) \|\| fs\.existsSync\(url\)\) return url;/);
 });

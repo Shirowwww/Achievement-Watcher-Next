@@ -20,6 +20,7 @@ const fs = require('fs');
 const saveRoots = require(path.join(appPath, 'parser/saveRoots.js'));
 const uplayR2 = require(path.join(appPath, 'parser/uplayR2.js'));
 const emuIni = require(path.join(appPath, 'util/emuIni.js'));
+const steamAssets = require(path.join(appPath, 'util/steamAssets.js'));
 const { userDataDir } = require(path.join(appPath, 'util/userDataPath.js'));
 const { mergeTranslatedAchievements } = require('./achievementTranslations.js');
 const steamSchemaFetch = require(path.join(appPath, 'util/steamSchemaFetch.js'));
@@ -1730,22 +1731,45 @@ const cdnProviders = [
   'https://steamcdn-a.akamaihd.net/steam/apps/',
   'https://media.steampowered.com/steam/apps/',
 ];
-async function findWorkingLink(appid, basename) {
+// A HEAD that answers 200 with a content type. Injectable so the CDN walk can be unit-tested.
+async function probeUrl(url) {
+  try {
+    const res = await request(url, { method: 'HEAD' });
+    return res.code === 200 && !!res.headers['content-type'];
+  } catch {
+    return false;
+  }
+}
+
+async function findWorkingLink(appid, basename, probe = probeUrl) {
   const key = `${appid}:${basename}`;
   if (workingLinkCache.has(key)) return workingLinkCache.get(key);
   for (const ext of ['.jpg', '.png']) {
     for (const cdn of cdnProviders) {
       const url = `${cdn}${appid}/${basename}${ext}`;
-      try {
-        const res = await request(url, { method: 'HEAD' });
-        if (res.code === 200) {
-          const contentType = res.headers['content-type'];
-          if (contentType) {
-            workingLinkCache.set(key, url);
-            return url;
-          }
-        }
-      } catch (e) {}
+      if (await probe(url)) {
+        workingLinkCache.set(key, url);
+        return url;
+      }
+    }
+  }
+  workingLinkCache.set(key, null);
+  return null;
+}
+
+/*
+  Steam's library artwork moved to hashed store_item_assets directories, so product info hands out a
+  token that carries one ("<hash>/library_capsule.jpg"). Keeping that directory is not optional:
+  every appid onboarded since the migration has no flat /steam/apps/<id>/library_600x900.jpg to fall
+  back on, so flattening the token to its basename probes a path that can never answer.
+*/
+async function findWorkingAssetPath(appid, relativePath, probe = probeUrl) {
+  const key = `${appid}:/${relativePath}`;
+  if (workingLinkCache.has(key)) return workingLinkCache.get(key);
+  for (const url of steamAssets.buildSteamAssetUrls(appid, [relativePath])) {
+    if (await probe(url)) {
+      workingLinkCache.set(key, url);
+      return url;
     }
   }
   workingLinkCache.set(key, null);
@@ -1878,34 +1902,28 @@ async function GetMissingData(data, showHidden, lang, steamSettings) {
   are - the schema URL 404s for days. Shared here so both fetchIcon() (AW's icon cache) and
   goldberg.repair()'s downloader use the same findWorkingLink() CDN fallback instead of failing on the raw URL.
 */
-async function resolveWorkingIconUrl(appID, url) {
+async function resolveWorkingIconUrl(appID, url, { probe = probeUrl } = {}) {
   if (!url || typeof url !== 'string') return url;
+  const basenameOf = (value) => value.split('/').pop().split('?')[0].replace(/\.[^.]+$/, '');
   /*
     Schemas do not always store a URL. `img.header` is regularly the bare "header.jpg", `img.portrait`
-    "library_600x900.jpg" and `img.icon` a naked content hash - the same token shapes the Watchdog's
-    prefetch resolves through the CDN list. Route them through findWorkingLink() too, or a relative
-    path download fails and reads back as "this game has no artwork" even when the CDN has it live.
+    a hashed "<hash>/library_capsule.jpg" and `img.icon` a naked content hash - the same token shapes
+    the Watchdog's prefetch resolves through the CDN list. Route them through the CDN walk too, or a
+    relative path download fails and reads back as "this game has no artwork" even when the CDN has
+    it live. A token with a directory keeps it: see findWorkingAssetPath.
   */
   if (!url.startsWith('http')) {
     if (path.isAbsolute(url) || fs.existsSync(url)) return url;
-    const working = await findWorkingLink(appID, url.split('/').pop().split('?')[0].replace(/\.[^.]+$/, ''));
+    const relative = url.split('?')[0];
+    if (relative.includes('/')) {
+      const hashed = await findWorkingAssetPath(appID, relative, probe);
+      if (hashed) return hashed;
+    }
+    const working = await findWorkingLink(appID, basenameOf(url), probe);
     return working || url;
   }
-  let isValid = false;
-  try {
-    new URL(url);
-    const res = await request(url, { method: 'HEAD' });
-    isValid = res.code === 200 && !!res.headers['content-type'];
-  } catch (e) {}
-  if (isValid) return url;
-  const working = await findWorkingLink(
-    appID,
-    url
-      .split('/')
-      .pop()
-      .split('?')[0]
-      .replace(/\.[^.]+$/, '')
-  );
+  if (await probe(url)) return url;
+  const working = await findWorkingLink(appID, basenameOf(url), probe);
   return working || url;
 }
 module.exports.resolveWorkingIconUrl = resolveWorkingIconUrl;
