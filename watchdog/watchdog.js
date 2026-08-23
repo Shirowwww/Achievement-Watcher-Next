@@ -54,6 +54,7 @@ const { describeActiveGames } = require('./playtime/seed.js');
 const xboxPc = require('./xboxPc.js');
 const notify = require('./notification/toaster.js');
 const shadps4Watch = require('./console/shadps4Watch.js');
+const rpcs3Watch = require('./console/rpcs3Watch.js');
 const xeniaWatch = require('./console/xeniaWatch.js');
 const eaWatch = require('./console/eaWatch.js');
 const gogWatch = require('./console/gogWatch.js');
@@ -665,6 +666,13 @@ var app = {
         await shadps4Watch.start({ options: self.options, getToastID: () => self.toastID, notify });
       } catch (err) {
         debug.error(`[shadps4] ${err}`);
+      }
+
+      // RPCS3 (PS3 emulator) live trophy toasts, same baseline-diff shape as ShadPS4 above.
+      try {
+        await rpcs3Watch.start({ options: self.options, getToastID: () => self.toastID, notify });
+      } catch (err) {
+        debug.error(`[rpcs3] ${err}`);
       }
 
       // EA Desktop live achievement toasts: parse EA's rotating verbose log and diff against a local
