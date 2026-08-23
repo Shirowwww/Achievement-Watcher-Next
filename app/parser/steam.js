@@ -112,7 +112,11 @@ module.exports.scan = async (additionalSearch = []) => {
         }
       } else if (dirKeyLower.includes('empress')) {
         game.source = 'Goldberg (EMPRESS)';
-        game.data.path = path.join(game.data.path, 'remote', game.appid);
+        // Two shapes exist: <root>\<appid>\remote\<appid> (Public Documents) and
+        // %APPDATA%\EMPRESS\remote\<appid>, where the matched folder already is the save folder.
+        if (!/\/remote\/[0-9]+$/.test(dirKeyLower)) game.data.path = path.join(game.data.path, 'remote', game.appid);
+      } else if (dirKeyLower.includes('.1911')) {
+        game.source = 'Razor1911';
       } else if (dirKeyLower.includes('skidrow')) {
         game.source = 'Skidrow';
       } else if (dirKeyLower.includes('smartsteamemu')) {
@@ -543,7 +547,18 @@ function decodeRldBlob(value) {
   return new DataView(new Uint8Array(Buffer.from(String(value), 'hex')).buffer).getUint32(0, true);
 }
 
-module.exports._internal = Object.assign({}, module.exports._internal, { isUnambiguousRldBlob, decodeRldBlob });
+// RAZOR1911 (%APPDATA%\.1911\<appid>\achievement): plain text, one line per achievement,
+// "<apiname> <0|1> <epoch seconds>". Lines that do not match are ignored.
+function parseRazorAchievementFile(text) {
+  const result = {};
+  for (const line of String(text).split(/\r?\n/)) {
+    const m = /^(\S+)\s+([01])\s+(\d+)\s*$/.exec(line.trim());
+    if (m) result[m[1]] = { Achieved: m[2], UnlockTime: Number(m[3]) };
+  }
+  return result;
+}
+
+module.exports._internal = Object.assign({}, module.exports._internal, { isUnambiguousRldBlob, decodeRldBlob, parseRazorAchievementFile });
 
 module.exports.getAchievementsFromFile = async (filePath) => {
   try {
@@ -561,6 +576,7 @@ module.exports.getAchievementsFromFile = async (filePath) => {
       'stats/CreamAPI.Achievements.cfg',
       'SteamEmu/UserStats/achiev.ini',
       'user_stats.ini',
+      'achievement',
     ];
 
     const filter = ['SteamAchievements', 'Steam64', 'Steam'];
@@ -573,6 +589,8 @@ module.exports.getAchievementsFromFile = async (filePath) => {
           local = JSON.parse(fs.readFileSync(path.join(filePath, file), 'utf8'));
         } else if (file === 'stats.bin') {
           local = sse.parse(fs.readFileSync(path.join(filePath, file)));
+        } else if (file === 'achievement') {
+          local = parseRazorAchievementFile(fs.readFileSync(path.join(filePath, file), 'utf8'));
         } else {
           local = ini.parse(fs.readFileSync(path.join(filePath, file), 'utf8'));
         }

@@ -30,6 +30,12 @@ test('built-in watch roots include the RLD! and CreamAPI emulator saves', async 
     true,
     'AppData CreamAPI root must be watched',
   );
+  assert.equal(has(path.join(process.env.APPDATA, '.1911')), true, 'AppData .1911 (RAZOR1911) root must be watched');
+  // These two used to carry a literal '*/*/' suffix that never exists on disk, so they were
+  // silently dropped by the existsSync gate and Nemirtingas saves were never watched.
+  assert.equal(has(path.join(process.env.APPDATA, 'NemirtingasEpicEmu')), true, 'Nemirtingas Epic root must be watched without a glob');
+  assert.equal(has(path.join(process.env.APPDATA, 'NemirtingasGalaxyEmu')), true, 'Nemirtingas Galaxy root must be watched without a glob');
+  assert.equal(dirs.some((dir) => dir.includes('*')), false, 'no watch root may contain a glob character');
 });
 
 test('a configured folder that repeats a built-in root is watched once, on the built-in options', async (t) => {

@@ -115,6 +115,30 @@ test('weak refresh names cannot replace a known title, but later metadata enrich
   assert.equal(gameIndex.getName('730'), 'Counter-Strike 2 - Anniversary Edition');
 });
 
+test('reconcile clears the losing duplicate binary but keeps its identity row', () => {
+  gameIndex.upsert({ appid: '1551360', name: 'Forza Horizon 5', binary: 'forzahorizon6.exe' });
+  gameIndex.upsert({ appid: '2440510', name: 'Forza Horizon 6', binary: 'forzahorizon6.exe' });
+
+  const cleared = gameIndex.reconcile([
+    { appid: '1551360', name: 'Forza Horizon 5' },
+    { appid: '2440510', name: 'Forza Horizon 6' },
+  ]);
+  assert.equal(cleared, 1);
+
+  const winner = readRows().find((g) => g.appid === '2440510');
+  const loser = readRows().find((g) => g.appid === '1551360');
+  assert.equal(winner.binary, 'forzahorizon6.exe');
+  assert.equal(loser.binary, '', 'the losing claim is cleared, not the entry');
+  assert.equal(gameIndex.getName('1551360'), 'Forza Horizon 5', 'identity survives for offline rebuilds');
+  assert.equal(gameIndex.reconcile([]), 0, 'a second pass has nothing left to clear');
+});
+
+test('a losing binary claim is refused at seed time instead of churning through reconcile', () => {
+  assert.equal(gameIndex.binaryClaimedByBetterMatch('1551360', 'Forza Horizon 5', 'forzahorizon6.exe'), true);
+  assert.equal(gameIndex.binaryClaimedByBetterMatch('2440510', 'Forza Horizon 6', 'forzahorizon6.exe'), false, 'the current claimant keeps its own binary');
+  assert.equal(gameIndex.binaryClaimedByBetterMatch('999', 'Some Game', 'unclaimed.exe'), false);
+});
+
 test('a scan batch persists many changed rows with one whole-index write', () => {
   const originalWrite = fs.writeFileSync;
   let indexWrites = 0;

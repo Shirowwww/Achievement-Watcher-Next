@@ -346,19 +346,21 @@ function controllerOptions() {
   return (app && app.options && app.options.controller) || {};
 }
 
-/*
-  Ask the app to resolve this game's square logo now that it is running.
-
-  The monitor never fetches artwork itself - it only reads what the app has already written to the
-  shared cache. Asking at launch means the answer is on disk long before the unlock or playtime card
-  needs it, which is what lets a Windows notification (no popup process, no lookup of its own) show
-  a real square logo instead of a cropped poster.
-*/
+// Asks the app to resolve this game's square logo now that it's running. The monitor never fetches
+// artwork itself, only reads what the app already cached - doing this at launch means the answer is
+// on disk before the unlock/playtime card needs it, letting a toast (no lookup of its own) show a
+// real logo instead of a cropped poster.
 function requestArtworkPrefetch(game) {
   if (typeof process.send !== 'function' || !process.connected) return;
   try {
     process.send({
-      artworkPrefetch: { appid: String(game.steamappid || game.appid || ''), name: String(game.name || '') },
+      // Both ids: artwork is cached under the Steam appid, while the executable this game was
+      // linked to is recorded under the library one - which for a namespaced game is not the same.
+      artworkPrefetch: {
+        appid: String(game.steamappid || game.appid || ''),
+        libraryAppid: String(game.appid || ''),
+        name: String(game.name || ''),
+      },
     });
   } catch (err) {
     debug.error(`[artwork] prefetch request failed: ${err}`);
@@ -733,7 +735,10 @@ var app = {
         if (currentTime - fileLastModified > 1000) return;
 
         let filePath = path.parse(name);
-        if (options.file && !options.file.some((file) => file == filePath.base)) return;
+        // NTFS is case-insensitive, so the on-disk casing path.parse() reports is not the casing
+        // the root declared: the list carries both "achievements.ini" and "Achievements.ini" and
+        // most roots declare only one, which dropped every event for the other spelling.
+        if (options.file && !options.file.some((file) => file.toLowerCase() == filePath.base.toLowerCase())) return;
 
         debug.log('achievement file change detected');
 
@@ -756,6 +761,9 @@ var app = {
           }
           debug.log(`[socialclub] save folder -> ${indexed.name} (${indexed.appid} -> Steam ${steamAppId})`);
           appID = steamAppId;
+        } else if (dir.includes('NemirtingasEpicEmu')) {
+          // <user>\<epicid>\achievements.json - epic ids can be non-numeric, take the folder name.
+          appID = path.basename(filePath.dir);
         } else {
           try {
             appID = options.appid
@@ -768,6 +776,10 @@ var app = {
 
         if (dir.includes('NemirtingasGalaxyEmu')) {
           appID = await self.steamAppIdForGogId(appID);
+        } else if (dir.includes('NemirtingasEpicEmu')) {
+          const mapped = await self.steamAppIdForEpicId(appID);
+          if (!mapped) throw `Unknown Epic id ${appID} - run a library refresh so AW Next can map it`;
+          appID = mapped;
         }
 
         if (options.uplayR2) {
@@ -982,7 +994,7 @@ var app = {
                           achievementDisplayName: ach.displayName,
                           achievementDescription: ach.description,
                           rarityPercent: isRare ? rounded : null,
-                          icon: ach.icon,
+                          icon: notificationAchievementIcon(game, ach, true),
                           gameIcon: notificationGameIcon(game),
                           image: steamHeaderImage(game.steamappid || game.appid),
                           time: achievements[i].UnlockTime,
@@ -1013,7 +1025,7 @@ var app = {
 
                       j += 1;
                       platinumNewUnlock = true;
-                      platinumIcon = ach.icon;
+                      platinumIcon = notificationAchievementIcon(game, ach, true);
                     } else {
                       debug.warn('Outatime:' + ach.displayName);
                     }
@@ -1031,7 +1043,7 @@ var app = {
                           achievementName: ach.name,
                           achievementDisplayName: ach.displayName,
                           achievementDescription: ach.description,
-                          icon: ach.icongray,
+                          icon: notificationAchievementIcon(game, ach, false),
                           gameIcon: notificationGameIcon(game),
                           image: steamHeaderImage(game.steamappid || game.appid),
                           progress: {
@@ -1183,7 +1195,7 @@ var app = {
       if (fs.existsSync(cacheFile)) {
         cache = JSON.parse(fs.readFileSync(cacheFile, { encoding: 'utf8' }));
       }
-      let cached = cache.find((g) => g.gogid === appID);
+      let cached = cache.find((g) => String(g.gogid) === String(appID));
       if (cached) return cached.steamid;
       const url = `https://gamesdb.gog.com/platforms/gog/external_releases/${appID}`;
       let gameinfo = await request.getJson(url);
@@ -1203,7 +1215,7 @@ var app = {
       if (fs.existsSync(cacheFile)) {
         cache = JSON.parse(fs.readFileSync(cacheFile, { encoding: 'utf8' }));
       }
-      let cached = cache.find((g) => g.gogid === appID);
+      let cached = cache.find((g) => String(g.epicid) === String(appID));
       if (cached) return cached.steamid;
     } catch (err) {
       throw err;

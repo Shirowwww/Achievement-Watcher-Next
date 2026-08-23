@@ -56,6 +56,10 @@ function defaultSteamEmuSaveRoots({ existingOnly = false, expandProgramDataSteam
     envPath('APPDATA', 'Goldberg SocialClub Emu Saves'),
     envPath('APPDATA', 'GSE Saves'),
     envPath('APPDATA', 'EMPRESS'),
+    // EMPRESS also writes %APPDATA%\EMPRESS\remote\<appid> with no appid level above it.
+    envPath('APPDATA', 'EMPRESS', 'remote'),
+    // RAZOR1911 (post-2023 releases): plain-text `achievement` file per appid.
+    envPath('APPDATA', '.1911'),
     envPath('APPDATA', 'Steam', 'CODEX'),
     envPath('APPDATA', 'Steam', 'RLD!'),
     envPath('APPDATA', 'SmartSteamEmu'),

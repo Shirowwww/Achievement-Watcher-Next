@@ -391,6 +391,13 @@ function readConfiguredSavePath(steamSettings) {
     const text = fs.readFileSync(path.join(steamSettings, 'configs.user.ini'), 'utf8');
     const match = text.match(/^\s*local_save_path\s*=\s*(.+?)\s*$/im);
     if (match) value = match[1].trim();
+    if (!value) {
+      // GBE can also rename its %APPDATA% save root ([user::saves] saves_folder_name=...): the
+      // folder replaces "GSE Saves" while keeping the <appid>/achievements.json shape below it.
+      const renamed = text.match(/^\s*saves_folder_name\s*=\s*(.+?)\s*$/im);
+      const name = renamed ? renamed[1].trim() : '';
+      if (name && process.env['APPDATA']) value = path.join(process.env['APPDATA'], name);
+    }
   } catch {
     /* no configs.user.ini - fall through to the classic Goldberg marker file */
   }

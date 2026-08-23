@@ -94,9 +94,7 @@ async function installedGames(dir) {
         const raw = await ffs.readFile(sfo);
         const match = raw.toString('latin1').match(/CUSA\d{5}/i);
         if (match) games.set(match[0].toUpperCase(), gameDir);
-      } catch {
-        // Try the next configured game.
-      }
+      } catch {}
     }
   }
   return games;
@@ -134,14 +132,10 @@ module.exports.scan = async (dir) => {
             seen.add(cusa);
             break; // one trophy set per game
           }
-        } catch {
-          // try next game
-        }
+        } catch {}
       }
     }
-  } catch {
-    // Do nothing
-  }
+  } catch {}
 
   return data;
 };

@@ -7,7 +7,7 @@ const path = require('node:path');
 const steam = require(path.join(__dirname, '..', '..', 'app', 'parser', 'steam.js'));
 
 /*
-  The negative cache stops a non-existent appid from costing a full 11–30s Steam lookup on every
+  The negative cache stops a non-existent appid from costing a full 11-30s Steam lookup on every
   scan. Its danger is that "no data came back" and "this is not a Steam app" are indistinguishable at
   the call site - and offline they are the same thing for EVERY appid, so a single offline scan could
   blacklist the whole library for the cache's lifetime. The rule below is what prevents that.

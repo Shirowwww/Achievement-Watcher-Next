@@ -551,7 +551,7 @@ module.exports.scan = async (dir) => {
             source: file === 'ds.ini' ? 'DARKSiDERS' : file === 'hlm.ini' ? 'Hoodlum' : 'Skidrow',
             data: {
               type: 'file',
-              path: (await ffs.exists(path.join(dirpath, 'UserStats'))) ? path.join(dirpath, 'UserStats') : dirpath,
+              path: fs.existsSync(path.join(dirpath, 'UserStats')) ? path.join(dirpath, 'UserStats') : dirpath,
             },
           });
         }

@@ -2695,16 +2695,20 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       // notification - they only appear after a manual refresh.
       const seedUplayId = (appid.data && appid.data.uplayId) || (appid.data && appid.data.uplayR2 ? uplayR2.resolveGameIdentity({ appid: appid.appid, name: game.name, gameDir: resolvedGameDir }).uplayId : '');
       const seed = (binary, how) => {
+        // A binary another game claims with a better-matching name stays there; writing the losing
+        // claim only made reconcile() clear it again after every scan. The identity row still seeds.
+        const claimable = !gameIndex.binaryClaimedByBetterMatch(appid.appid, game.name, binary);
         gameIndex.upsert({
           appid: appid.appid,
           name: game.name,
-          binary,
+          binary: claimable ? binary : '',
           ...gameIndexArtwork(game),
           source: appid.source,
           steamappid: game.steamappid || undefined,
           uplayId: seedUplayId,
         });
-        debug.log(`[${appid.appid}] auto-seeded playtime tracking${how}: binary="${binary}"`);
+        if (claimable) debug.log(`[${appid.appid}] auto-seeded playtime tracking${how}: binary="${binary}"`);
+        else debug.log(`[${appid.appid}] playtime seed kept without binary: "${binary}" belongs to another game`);
       };
 
       try {
@@ -3068,6 +3072,7 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
       finalList = result;
     }
     const discoveryLookup = buildDiscoveryLookup(appidList);
+    await refreshSteamOwnership(appidList);
     if (finalList.length > 0) {
       gameIndex.beginBatch();
       try {

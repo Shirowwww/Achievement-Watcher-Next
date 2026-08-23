@@ -196,7 +196,7 @@ module.exports.reconcile = (games) => {
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(e);
     }
-    const drop = new Set();
+    const losers = new Set();
     for (const [, entries] of groups) {
       if (entries.length < 2) continue;
       const base = String(entries[0].binary).replace(/\.exe$/i, '');
@@ -210,15 +210,31 @@ module.exports.reconcile = (games) => {
           best = e;
         }
       }
-      for (const e of entries) if (e !== best) drop.add(e);
+      for (const e of entries) if (e !== best) losers.add(e);
     }
-    if (drop.size === 0) return 0;
-    list = list.filter((e) => !drop.has(e));
+    if (losers.size === 0) return 0;
+    for (const e of losers) e.binary = '';
     cachedList = list;
     writeList();
-    return drop.size;
+    return losers.size;
   } catch {
     return 0;
+  }
+};
+
+// True when another appid already claims this binary and matches its name at least as well, so the
+// scan never writes a losing claim for reconcile() to clear again.
+module.exports.binaryClaimedByBetterMatch = (appid, name, binary) => {
+  try {
+    const key = String(binary || '').toLowerCase();
+    if (!key) return false;
+    const rival = loadList().find((g) => String(g.appid) !== String(appid) && String(g.binary || '').toLowerCase() === key);
+    if (!rival) return false;
+    const exeDetect = require(path.join(__dirname, 'exeDetect.js'));
+    const base = String(binary).replace(/\.exe$/i, '');
+    return exeDetect.nameSimilarity(rival.name || '', base) >= exeDetect.nameSimilarity(String(name || ''), base);
+  } catch {
+    return false;
   }
 };
 

@@ -27,6 +27,17 @@ function isSocialClubWatchPath(dirPath) {
 let regeditPromise = null;
 const loadRegedit = () => regeditPromise || (regeditPromise = import('regodit'));
 
+// RLD! hex blobs: exactly 10 hex digits including at least one a-f, so an all-digit unix timestamp
+// is never misread (same rule as app/parser/steam.js).
+const RLD_BLOB = /^[0-9a-fA-F]{10}$/;
+function isUnambiguousRldBlob(value) {
+  const s = String(value);
+  return RLD_BLOB.test(s) && /[a-fA-F]/.test(s);
+}
+function decodeRldBlob(value) {
+  return new DataView(new Uint8Array(Buffer.from(String(value), 'hex')).buffer).getUint32(0, true);
+}
+
 const files = {
   achievement: [
       'achievements.ini',
@@ -105,7 +116,8 @@ module.exports.getFolders = async (userDir_file) => {
     },
     {
       dir: path.join(process.env['APPDATA'], 'EMPRESS'),
-      options: { recursive: true, filter: /([0-9]+)\\remote\\([0-9]+)/, file: [files.achievement[1]] },
+      // Matches both shapes: <appid>\remote\<appid> and the flat remote\<appid>.
+      options: { recursive: true, filter: /remote\\([0-9]+)/, file: [files.achievement[1]] },
     },
     {
       dir: path.join(process.env['APPDATA'], 'CreamAPI'),
@@ -113,7 +125,7 @@ module.exports.getFolders = async (userDir_file) => {
     },
     {
       dir: path.join(process.env['Public'], 'Documents/EMPRESS'),
-      options: { recursive: true, filter: /([0-9]+)\\remote\\([0-9]+)/, file: [files.achievement[1]] },
+      options: { recursive: true, filter: /remote\\([0-9]+)/, file: [files.achievement[1]] },
     },
     {
       dir: path.join(process.env['PROGRAMDATA'], 'Steam'),
@@ -134,12 +146,20 @@ module.exports.getFolders = async (userDir_file) => {
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[7]] },
     },
     {
-      dir: path.join(process.env['APPDATA'], 'NemirtingasEpicEmu', '*/*/'),
+      // No path filter: epic ids can be non-numeric (<user>\<epicid>\achievements.json), and a
+      // regex filter only vets the emitted path. Both Nemirtingas roots used to carry a '*/*/'
+      // glob that never exists on disk, so neither was ever watched.
+      dir: path.join(process.env['APPDATA'], 'NemirtingasEpicEmu'),
+      options: { recursive: true, file: [files.achievement[1]] },
+    },
+    {
+      dir: path.join(process.env['APPDATA'], 'NemirtingasGalaxyEmu'),
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1]] },
     },
     {
-      dir: path.join(process.env['APPDATA'], 'NemirtingasGalaxyEmu', '*/*/'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1]] },
+      // RAZOR1911: plain-text `achievement` file, "<apiname> <0|1> <epoch>" per line.
+      dir: path.join(process.env['APPDATA'], '.1911'),
+      options: { recursive: true, filter: /([0-9]+)/, file: ['achievement'] },
     },
     {
       dir: path.join(process.env['LOCALAPPDATA'], 'anadius', 'LSX emu', 'achievement_watcher'),
@@ -380,10 +400,21 @@ module.exports.parse = async (filePath) => {
 
     let local;
     let file = path.parse(filePath);
-    if (file.ext == '.json') {
+    // NTFS is case-insensitive and the watcher's filename filter is too, so the casing that arrives
+    // here is the one on disk, not the one a root declared. Matching exactly sent Stats.bin and
+    // Achievement to ini.parse, which reads them as nothing at all.
+    const base = file.base.toLowerCase();
+    if (file.ext.toLowerCase() == '.json') {
       local = JSON.parse(await fs.readFile(filePath, 'utf8'));
-    } else if (file.base == 'stats.bin') {
+    } else if (base == 'stats.bin') {
       local = sse.parse(await fs.readFile(filePath));
+    } else if (base == 'achievement') {
+      //RAZOR1911: plain text, "<apiname> <0|1> <epoch seconds>" per line
+      local = {};
+      for (const line of (await fs.readFile(filePath, 'utf8')).split(/\r?\n/)) {
+        const m = /^(\S+)\s+([01])\s+(\d+)\s*$/.exec(line.trim());
+        if (m) local[m[1]] = { Achieved: m[2], UnlockTime: Number(m[3]) };
+      }
     } else {
       local = ini.parse(await fs.readFile(filePath, 'utf8'));
     }
@@ -455,6 +486,15 @@ module.exports.parse = async (filePath) => {
               new Uint8Array(Buffer.from(local[achievement].MaxProgress.toString(), 'hex')).buffer
             ).getUint32(0, true);
             local[achievement].Time = new DataView(new Uint8Array(Buffer.from(local[achievement].Time.toString(), 'hex')).buffer).getUint32(0, true);
+          } else if (isUnambiguousRldBlob(local[achievement].Time)) {
+            //RLD! build that writes no State key: the unlock is carried by Time alone. Without
+            //decoding, the raw hex reached the toast as a bogus unlock date (app side: steam.js).
+            local[achievement].Time = decodeRldBlob(local[achievement].Time);
+            if (isUnambiguousRldBlob(local[achievement].CurProgress)) local[achievement].CurProgress = decodeRldBlob(local[achievement].CurProgress);
+            if (isUnambiguousRldBlob(local[achievement].MaxProgress)) local[achievement].MaxProgress = decodeRldBlob(local[achievement].MaxProgress);
+          } else if (local[achievement].unlocktime && local[achievement].unlocktime.length === 7) {
+            //CreamAPI writes truncated 7-digit timestamps (cf. steam.js) - scale to epoch millis.
+            local[achievement].unlocktime = +local[achievement].unlocktime * 1000;
           }
 
           let result = {
@@ -485,9 +525,10 @@ module.exports.parse = async (filePath) => {
 
           if (
             (!result.Achieved && result.MaxProgress != 0 && result.CurProgress != 0 && result.MaxProgress == result.CurProgress) ||
-            (result.UnlockTime && +result.UnlockTime !== '0')
+            // `+x !== '0'` compared a number to a string (always true), so a locked entry whose
+            // save writes Time as the string "0" read as unlocked.
+            Number(result.UnlockTime) > 0
           ) {
-            //CODEX Gears5 (09/2019)  && Gears tactics (05/2020) && Nemirtingas Galaxy/Epic Emu
             result.Achieved = true;
           }
 

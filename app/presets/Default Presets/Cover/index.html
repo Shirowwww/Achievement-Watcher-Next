@@ -83,9 +83,8 @@ window.addEventListener('DOMContentLoaded', function () {
     }
   }
   /*
-    The line above the title: the game the unlock came from, and how rare it was. Each half is
-    hidden when the payload has nothing to put in it, and the row itself disappears with both, so
-    a preset that asks for them never reserves an empty line for a notification that has neither.
+    The line above the title (game name + rarity). Each half hides when the payload lacks it,
+    and the whole row disappears when both do, so it never reserves an empty line.
   */
   function applyMeta(data) {
     var row = document.querySelector('.meta');

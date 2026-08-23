@@ -26,8 +26,6 @@ async function test(name, fn) {
 
 const mkTmp = (name) => fs.mkdtempSync(path.join(os.tmpdir(), `aw-${name}-`));
 
-// ---- ShadPS4 fixtures --------------------------------------------------------------------------
-
 function makeShadPs4Game() {
   const root = mkTmp('shadps4');
   const trophyDir = path.join(root, 'game_data', 'CUSA12345', 'TrophyFiles', 'trophy00');
@@ -45,8 +43,7 @@ function makeShadPs4Game() {
   return { root, trophyDir };
 }
 
-// ---- Xenia GPD (XDBF) fixture builder ----------------------------------------------------------
-
+// Xenia GPD (XDBF) fixture builder.
 function utf16be(str, terminate = true) {
   const le = Buffer.from(str, 'utf16le');
   const be = Buffer.alloc(le.length);
@@ -102,7 +99,7 @@ function makeGpdBuffer() {
 }
 
 (async () => {
-  // ---- ShadPS4 ----
+  // ShadPS4 tests.
   await test('shadps4.scan finds the CUSA game under game_data', async () => {
     const { root } = makeShadPs4Game();
     const found = await shadps4.scan(root);
@@ -153,7 +150,7 @@ function makeGpdBuffer() {
     assert.strictEqual(zero.achieved, false);
   });
 
-  // ---- Xenia ----
+  // Xenia tests.
   await test('xenia parseGpdBuffer decodes title + achievement from XDBF', async () => {
     const buf = makeGpdBuffer();
     const parsed = xenia._internal.parseGpdBuffer(buf, 'TEST.gpd');

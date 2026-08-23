@@ -145,7 +145,33 @@ test('a redirect AW cannot resolve stays a warning', () => {
   }
 });
 
-// --- issue #32: portable CODEX/RUNE ---------------------------------------------------------------
+// GBE can rename its %APPDATA% save root outright ([user::saves] saves_folder_name=...) instead of
+// redirecting it: the folder replaces "GSE Saves" while the <appid>/achievements.json shape stays.
+test('a renamed GBE save root (saves_folder_name) is resolved under %APPDATA%', () => {
+  const gameDir = tempGame('saves-folder-name');
+  const fakeAppData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-appdata-'));
+  const previousAppData = process.env['APPDATA'];
+  try {
+    process.env['APPDATA'] = fakeAppData;
+    const steamSettings = path.join(gameDir, 'steam_settings');
+    fs.mkdirSync(steamSettings, { recursive: true });
+    fs.writeFileSync(
+      path.join(steamSettings, 'configs.user.ini'),
+      '[user::general]\naccount_name=Player\n\n[user::saves]\nsaves_folder_name=My Custom Saves\n'
+    );
+    const saveDir = path.join(fakeAppData, 'My Custom Saves', '480');
+    fs.mkdirSync(saveDir, { recursive: true });
+    fs.writeFileSync(path.join(saveDir, 'achievements.json'), JSON.stringify({ A: { earned: true, earned_time: 5 } }));
+
+    assert.equal(goldberg.resolveLocalSaveDir({ steamSettings, appid: '480' }), saveDir);
+  } finally {
+    process.env['APPDATA'] = previousAppData;
+    fs.rmSync(gameDir, { recursive: true, force: true });
+    fs.rmSync(fakeAppData, { recursive: true, force: true });
+  }
+});
+
+// Portable CODEX/RUNE.
 
 test('a portable RUNE release is accepted as an achievement folder and read from its own tree', async () => {
   const gameDir = tempGame('rune-portable');

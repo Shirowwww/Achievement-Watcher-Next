@@ -1798,7 +1798,7 @@ const SOURCE_BADGE = {
   "falls through to Steam" would swallow genuinely unclassified labels too.
 */
 const STEAM_BADGE_SOURCES =
-  /^(?:achievement watcher : watchdog|ali213|codex|empress|gbe fork|goldberg(?: steamemu)?|greenluma|hoodlum|manual|onlinefix|rld!|rune|smartsteamemu|tenoke|unconfigured|universelan)$/;
+  /^(?:achievement watcher : watchdog|ali213|codex|creamapi|empress|gbe fork|goldberg(?: steamemu| \(empress\))?|greenluma|hoodlum|manual|onlinefix|razor1911|reloaded - 3dm|rld!|rune|skidrow|smartsteamemu|steam|steam-emulator|tenoke|unconfigured|universelan)$/;
 
 function sourcePresentationFor(game) {
   const source = game && game.source;
@@ -2493,7 +2493,6 @@ var app = {
             // Read the live value because a scan can still be streaming while the toolbar view is
             // changed; newly arriving tiles must use the same orientation as those already shown.
             const portrait = libraryLayout.isPortrait(self.config.achievement.libraryLayout);
-            const isPortrait = portrait && game.img.portrait;
             const sourceIcon = sourcePresentationFor(game);
             const dllIcon = typeof game.hasSteamApiDll === 'boolean' ? dllPresentationFor(game) : null;
             const hideSteamBadges = sourceIcon.kind === 'steam-hidden';
@@ -2744,10 +2743,10 @@ var app = {
         clearSkeletonTiles();
         sort($('#game-list ul'), sortOptions());
 
-        // Remove duplicate executable assignments before playtime tracking.
+        // Clear duplicate executable assignments before playtime tracking.
         try {
-          const removed = gameIndex.reconcile(gameList);
-          if (removed > 0) debug.log(`[gameIndex] reconcile removed ${removed} duplicate binary entr${removed === 1 ? 'y' : 'ies'}`);
+          const cleared = gameIndex.reconcile(gameList);
+          if (cleared > 0) debug.log(`[gameIndex] reconcile cleared ${cleared} duplicate binary assignment${cleared === 1 ? '' : 's'}`);
         } catch (err) {
           debug.log(err);
         }
@@ -5139,37 +5138,16 @@ var app = {
       }
 
       /*
-        The header box is square, and so is what belongs in it.
-
-        Steam's clienticon is 32x32 - a blurry stamp beside a crisp title - and plenty of games have
-        none at all, notably brand-new releases whose product info carries no icon hash yet, which
-        used to leave this box empty. Ask the host for the same square logo it gives a notification
-        for this game: the community icon set first, then the game's own artwork cut into a square.
+        The header box is square, and so is what belongs in it. Steam's clienticon is 32x32
+        (blurry beside a crisp title) and many games - notably brand-new releases - have none at
+        all. Ask the host for the same square logo a notification uses: the community icon set
+        first, then the game's own artwork cut into a square.
       */
       // `background` is deliberately absent: Steam's storepagebackground is a blurred decorative
       // wash, and cutting a square out of it produces a flat gradient - a box that looks empty
       // while claiming to be the game's logo.
-      const headerIconSources = [game.img.icon, game.img.logo, game.img.portrait, game.img.header].filter(Boolean);
-      const iconEl = $('#achievement .wrapper > .header .title .icon');
-      // The icon element is shared across game pages. When this game has no artwork at all it must
-      // be reset to the neutral CSS surface - otherwise the previous game's icon stays behind,
-      // which reads as "this page belongs to another game" (issue #15).
-      const resetIconToPlaceholder = () => iconEl.css('background', '');
-      if (headerIconSources.length > 0) {
-        iconEl.css('background', cssUrl(pathToFileURL(path.join(appPath, 'resources/img/loading.gif')).href));
-        ipcRenderer
-          .invoke('resolve-square-logo', { appid: game.steamappid || game.appid, name: game.name || '', sources: headerIconSources })
-          .then((localPath) => {
-            // Another game's page can open while this resolves; the header carries the appid of the
-            // one on screen, so it is the freshness check here as well.
-            if (String($('#achievement .wrapper > .header').attr('data-appid')) !== String(game.appid)) return;
-            if (localPath) iconEl.css('background', cssUrl(localPath));
-            else resetIconToPlaceholder();
-          })
-          .catch(() => resetIconToPlaceholder());
-      } else {
-        resetIconToPlaceholder();
-      }
+      paintGameHeaderIcon(game);
+      bindGameHeaderIconMenu(game);
 
       $('#achievement .wrapper > .header .title span').text(game.name);
       // Never let the denominator fall below what's actually displayed: a desynced schema could leave
@@ -7254,9 +7232,7 @@ async function runGameHealthAction(appid, action, button) {
         fixAllRunning = false;
       });
 
-      remote.app.on('second-instance', (event, argv, cwd) => {
-        // ignore, focus on achievement if one is unlocked via toast?
-      });
+      remote.app.on('second-instance', (event, argv, cwd) => {});
     } catch (err) {
       debug.log(err);
       app.errorExit(err);
