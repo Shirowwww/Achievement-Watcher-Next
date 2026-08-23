@@ -30,16 +30,18 @@ test('Game Health lives inside the per-game tools panel, not in a new destinatio
 
 test('the panel tabs are labelled by id, so the panel keeps no positional i18n', () => {
   const tabs = document.querySelectorAll('#game-config-tabs button');
-  assert.equal(tabs.length, 2);
+  assert.equal(tabs.length, 3);
   assert.deepEqual(
     tabs.map((tab) => tab.getAttribute('data-gc-view')),
-    ['health', 'exe-config'],
+    ['health', 'exe-config', 'notifications'],
     'health is the first tab'
   );
   for (const id of ['game-config-tab-health', 'game-config-tab-exe']) {
     assert.ok(document.querySelector(`#${id}`), `${id} must be addressable by id`);
     assert.match(appSource, new RegExp(`\\$\\('#${id}'\\)\\.text\\(t\\(`), `${id} must be translated through t()`);
   }
+  assert.ok(document.querySelector('#game-config-tab-notification'));
+  assert.match(appSource, /#game-config-tab-notification'\)\.text\(localeText\(/);
 });
 
 test('the report shows a state, an explanation, checks and repair actions', () => {
@@ -176,8 +178,10 @@ test('a repair that changed something refreshes the report', () => {
 
 test('the notification test reuses the shared transport-aware path', () => {
   const runner = appSource.slice(appSource.indexOf('async function runGameHealthAction'));
-  assert.match(runner, /window\.testAchievementWatcherNotification\(/, 'no second notification-test implementation');
-  assert.match(runner, /app\.config\?\.notification_transport\?\.mode/, 'it must exercise the configured transport');
+  assert.match(runner, /testGameNotification\(appid, 'toast'/, 'the health action delegates to the game preview helper');
+  const preview = appSource.slice(appSource.indexOf('async function testGameNotification'));
+  assert.match(preview, /window\.testAchievementWatcherNotification\(/, 'no second notification-test implementation');
+  assert.match(preview, /app\.config\?\.notification_transport\?\.mode/, 'it must exercise the configured transport');
 });
 
 test('no internal identifier is ever shown to the user as-is', () => {

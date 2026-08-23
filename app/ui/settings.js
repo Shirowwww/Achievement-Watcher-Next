@@ -23,6 +23,9 @@ const { describeFolderDiagnosis } = require(path.join(appPath, 'util/folderDiagn
   collide with one: util/presetSchema.js's SOUND_RE requires an extension, and this has none.
 */
 const RANDOM_SOUND_VALUE = '__random__';
+// The global dropdown uses '' for silence, but a per-game blank means "inherit". This distinct
+// value lets one game explicitly mute its popup while every other game keeps the global sound.
+const NO_SOUND_VALUE = '__none__';
 
 /*
   Cards whose labels are written imperatively rather than by locale/loader.js's DOM walk. They run
@@ -2952,12 +2955,63 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return Math.round((tier.min + Math.random() * (tier.max - tier.min)) * 10) / 10;
     }
     // Build a notification test payload using the current overlay settings.
-    function overlayTestData(kind, presetOverride, label, game) {
+    function overlayTestData(kind, notificationOverrides, label, game) {
       // One preset renders every kind of notification: a rare unlock and a 100% completion are
       // states the preset itself paints, not separate presets to pick.
-      const preset = presetOverride || $('#option_overlayPreset').val() || 'AW Next';
+      const overrides =
+        typeof notificationOverrides === 'string'
+          ? { preset: notificationOverrides }
+          : notificationOverrides && typeof notificationOverrides === 'object'
+            ? notificationOverrides
+            : {};
+      const gameScoped = Boolean(
+        notificationOverrides && typeof notificationOverrides === 'object' && !Array.isArray(notificationOverrides)
+      );
+      /*
+        The Settings form is populated lazily, only when it has been opened. A preview launched
+        straight from a game's panel therefore cannot treat its still-empty preset/sound controls
+        (or their HTML defaults for position/scale) as the global configuration. Read the saved
+        in-memory config until that form is ready; afterwards its controls win so a Settings test
+        still previews the value the user is currently editing.
+      */
+      const cfgOverlay = (app.config && app.config.overlay) || {};
+      const globalPreset = settingsReady
+        ? $('#option_overlayPreset').val() || cfgOverlay.notificationPreset || 'AW Next'
+        : cfgOverlay.notificationPreset || 'AW Next';
+      const globalSound = settingsReady
+        ? $('#option_overlaySound').val() || ''
+        : cfgOverlay.randomSound === true
+          ? RANDOM_SOUND_VALUE
+          : cfgOverlay.notificationSound || '';
+      const globalPosition = settingsReady
+        ? $('#option_overlayPosition').val() || cfgOverlay.notificationPosition || 'center-bottom'
+        : cfgOverlay.notificationPosition || 'center-bottom';
+      const globalScale = settingsReady
+        ? parseFloat($('#option_overlayScale').val()) || Number(cfgOverlay.notificationScale) || 1
+        : Number(cfgOverlay.notificationScale) || 1;
+      const controlVolume = Number($('#option_overlayVolume').val());
+      const configuredVolume = Number(cfgOverlay.notificationVolume);
+      const globalVolume = Math.max(
+        0,
+        Math.min(
+          200,
+          settingsReady && Number.isFinite(controlVolume)
+            ? controlVolume
+            : Number.isFinite(configuredVolume)
+              ? configuredVolume
+              : 100
+        )
+      );
+      const preset = overrides.preset || globalPreset;
       const presetLabel = label || preset;
-      const sound = soundForPreview($('#option_overlaySound').val() || '');
+      const soundChoice = Object.prototype.hasOwnProperty.call(overrides, 'sound')
+        ? overrides.sound
+        : globalSound;
+      const sound = soundForPreview(soundChoice);
+      const position = overrides.position || globalPosition;
+      const overrideScale = Number(overrides.scale);
+      const scale =
+        Number.isFinite(overrideScale) && overrideScale > 0 ? overrideScale : globalScale;
       const rarePct = kind === 'rare' ? randomRareRarity() : null;
       const texts = {
         toast: {
@@ -2981,19 +3035,15 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           description: t('test-platinum-desc', '100% completed', '100 % complété'),
         },
       };
-      const volRaw = parseInt($('#option_overlayVolume').val(), 10);
       const durRaw = $('#option_overlayDuration').val();
       const durSec = durRaw === 'auto' || !durRaw ? 0 : parseInt(durRaw, 10) || 0;
       const achievementIcon = path.join(appPath, 'resources/img/achievement.svg');
       /*
         A game-scoped preview shows that game's own artwork; the generic tester keeps the app icon
-        and the neutral sample wording.
-
-        The overlay window has no game-name field of its own - createNotificationWindow() forwards
-        only `displayName`, which carries the ACHIEVEMENT title, so a real unlock never prints the
-        game's name either. Naming the game in the description is therefore the only place a preview
-        can say which game it is previewing, and playtime keeps its own convention of putting the
-        game in the title.
+        and neutral sample wording. The overlay has no game-name field of its own - only
+        `displayName` (the achievement title) is forwarded - so naming the game in the description
+        is the only place a preview can say which game it is (playtime instead puts the game in the
+        title).
       */
       const gameIcon = (game && game.icon) || path.join(appPath, 'resources/icon/icon.png');
       if (game && game.name) {
@@ -3009,6 +3059,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           // The previewed game, so the host resolves the same square logo a real notification for
           // that game would get instead of framing whatever artwork the preview happened to carry.
           appid: (game && game.appid) || '',
+          // Only a preview launched from a game's own panel may consult that game's custom anchor.
+          // Generic Settings/designer previews also borrow game artwork, but must stay at the global
+          // custom position rather than accidentally inheriting the borrowed game's override.
+          gamePositionAppid: gameScoped && game ? String(game.libraryAppid || game.appid || '') : '',
+          customPosition: gameScoped && overrides.position === 'custom' ? overrides.customPosition || null : null,
           // `image` is the alias createNotificationWindow() maps onto imagePath/headerPath, which is
           // what the Game Cover preset paints its background from.
           image: (game && game.image) || '',
@@ -3018,9 +3073,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           // A rare unlock is a normal achievement notification carrying a rarityPercent.
           notificationType: kind === 'toast' || kind === 'rare' ? 'achievement' : kind,
           rarityPercent: rarePct,
-          position: $('#option_overlayPosition').val() || 'center-bottom',
-          scale: parseFloat($('#option_overlayScale').val()) || 1,
-          volume: Number.isFinite(volRaw) ? volRaw : 100,
+          position,
+          scale,
+          volume: globalVolume,
           durationMs: durSec > 0 ? durSec * 1000 : undefined,
           // The primary icon. A preview has no per-achievement art, so a game-scoped one shows the
           // game's icon rather than the generic placeholder badge.
@@ -3037,7 +3092,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // Route a test through whichever transport(s) the user picked (toast / overlay / both).
     // `game` is optional: a test fired from a game's own panel previews that game's name and
     // artwork, so what the user sees is what an unlock in THAT game will look like.
-    async function fireNotificationTest(kind, btn, modeOverride, presetOverride, game) {
+    async function fireNotificationTest(kind, btn, modeOverride, notificationOverrides, game) {
       const mode = modeOverride || $('#option_notifMode').val() || 'auto';
       if ($(btn).hasClass('is-running')) return;
       setNotificationTestBusy(btn, true);
@@ -3057,7 +3112,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         // Windows transport remains directly testable by selecting Windows notification.
         if (mode === 'toast') await runNotificationTest(kind + '-test', btn, game);
         else {
-          ipcRenderer.send('spawn-overlay-notification', overlayTestData(kind, presetOverride, null, game));
+          ipcRenderer.send('spawn-overlay-notification', overlayTestData(kind, notificationOverrides, null, game));
           await new Promise((resolve) => setTimeout(resolve, 900));
         }
       } catch (err) {
@@ -3069,11 +3124,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // The first-run guide and the per-game health panel share the exact same test path, supplying
     // their still-unsaved transport choice and (for the panel) the game to preview. Keep the
     // rendering and Watchdog protocol in one place.
-    window.testAchievementWatcherNotification = function (mode, button, preset, game) {
+    window.testAchievementWatcherNotification = function (mode, button, notificationOverrides, game, kind = 'toast') {
       // 'auto' previews the overlay: with the app in the foreground and no game covering the screen,
       // that is exactly what Automatic selects at this moment, so the preview stays truthful.
       const transport = ['auto', 'toast', 'overlay', 'both'].includes(mode) ? mode : 'auto';
-      return fireNotificationTest('toast', button, transport, preset, game);
+      const notificationKind = ['toast', 'rare', 'progress', 'playtime', 'platinum'].includes(kind) ? kind : 'toast';
+      return fireNotificationTest(notificationKind, button, transport, notificationOverrides, game);
     };
     $('#notify_test').click(function () {
       fireNotificationTest('toast', this);
@@ -3094,20 +3150,19 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // (Audio.volume caps at 1.0) - mirrors how the real notification window plays it (init.js).
     let previewAudioCtx = null;
     /*
-      A real file for whatever the sound dropdown is showing.
-
-      Random has to answer with an actual sound here, not with silence: it is a choice like any
-      other in that list, so previewing it and dragging the volume under it have to make a noise -
-      and a different one each time, which is the whole point of it.
+      A real file for whatever the sound dropdown is showing. Random must answer with an actual
+      sound, not silence - it is a choice like any other, so previewing it and dragging the volume
+      under it have to make a (different, each time) noise.
     */
     function soundForPreview(name) {
+      if (name === NO_SOUND_VALUE) return '';
       if (name !== RANDOM_SOUND_VALUE) return name;
       const pool = $('#option_overlaySound option')
         .map(function () {
           return $(this).attr('value');
         })
         .get()
-        .filter((value) => value && value !== RANDOM_SOUND_VALUE);
+        .filter((value) => value && value !== RANDOM_SOUND_VALUE && value !== NO_SOUND_VALUE);
       return pool.length ? pool[Math.floor(Math.random() * pool.length)] : '';
     }
     function previewSoundAtVolume(name) {

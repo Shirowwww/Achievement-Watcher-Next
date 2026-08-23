@@ -11,12 +11,15 @@ const os = require('os');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
 const args_split = require('argv-split');
-const { cssUrl } = require(path.join(appPath, 'util/cssUrl.js'));
+const { cssUrl, cssUrlValue } = require(path.join(appPath, 'util/cssUrl.js'));
 const { focusAchievementRow } = require(path.join(appPath, 'util/achievementFocus.js'));
 const { splitLaunchArgs } = require(path.join(appPath, 'util/launchArgs.js'));
 const windowsShellLaunch = require(path.join(appPath, 'util/windowsShellLaunch.js'));
 const { openExternalSafe } = require(path.join(appPath, 'util/externalLink.js'));
+const steamClientLinks = require(path.join(appPath, 'util/steamClientLinks.js'));
 const gameHealthInterfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
+const notificationPreset = require(path.join(appPath, 'util/notificationPreset.js'));
+const gameNotificationPreset = require(path.join(appPath, 'util/gamePreset.js'));
 
 // The DOM id carried by an achievement row icon. It is built in two places - the row markup and
 // the icon preload pass - and the two must stay byte-identical, so the derivation lives here
@@ -164,11 +167,27 @@ ipcRenderer.on('artwork-caches-cleared', () => {
 let profileStatsAnimationTimer = null;
 
 /*
-  The profile summary is recomputed from the whole library and repainted for every game a scan
-  streams in, which made both halves quadratic on a large library. The markup is static (the locale
-  loader only rewrites the labels) so the lookup is kept, and a streamed repaint is throttled to
-  roughly one a frame. Explicit callers - the batch paint, the sort that ends a scan - are never
-  throttled, so the figures the user is left looking at are always the exact ones.
+  A live window resize snaps the library grid straight to its new column count - a per-card
+  reposition animation was tried and cost too much for 200+ tiles. This is the cheap version: dip
+  the whole panel's opacity while the window is actively resizing, then let it ease back once it
+  settles, so the eye reads "the panel is adjusting" instead of catching the hard jump.
+*/
+let resizeSettleTimer = null;
+window.addEventListener(
+  'resize',
+  () => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    document.body.classList.add('is-resizing');
+    clearTimeout(resizeSettleTimer);
+    resizeSettleTimer = setTimeout(() => document.body.classList.remove('is-resizing'), 160);
+  },
+  { passive: true }
+);
+
+/*
+  Recomputing the profile summary for every streamed game made both halves quadratic on a large
+  library. Streamed repaints are throttled to roughly one a frame; explicit callers (batch paint,
+  end-of-scan sort) are never throttled, so the final figures the user sees are always exact.
 */
 const PROFILE_STATS_MIN_INTERVAL_MS = 120;
 let lastProfileStatsAt = 0;
@@ -6340,21 +6359,19 @@ var app = {
     $('#game-config').show();
     $('#game-config .box').fadeIn();
     $('#game-config .header').attr('title', appid);
-    // The panel covers two tabs now, so it is titled after the game rather than after one of them.
+    // The panel covers several tabs now, so it is titled after the game rather than after one of them.
     const named = gameList.find((g) => g.appid == appid);
     $('#game-config-title').text(named?.name || t('game-config-title', 'Executable configuration', "Configuration de l'exécutable"));
     applyGameConfigTabLabels();
     // Health opens first: it answers "is this game ready" without the user knowing which tab to
     // look in. The executable configuration is one click away and still loads below either way.
     setGameConfigView('health');
+    loadGameNotificationSettings(appid);
 
     /*
-      Resolve (and persist) the executable BEFORE the report is collected.
-
-      renderGameHealth() reads the same exeList this block writes to. Started first - it used to be
-      fired un-awaited right here - it raced the auto-detection below and almost always won, so the
-      report was built from the pre-detection state and announced "no executable" for a game whose
-      Executable tab showed a perfectly good detected path one click away.
+      Resolve (and persist) the executable BEFORE the report is collected. renderGameHealth() reads
+      the same exeList this block writes to; fired un-awaited, it used to race the auto-detection
+      below and almost always win, reporting "no executable" for a game one click from a detected path.
     */
     let cfg = await exeList.get(appid);
     if (!cfg?.exe || cfg.exe === '' || !fs.existsSync(cfg.exe)) {
@@ -6425,6 +6442,128 @@ function isOfficialPlatformSource(source) {
 function applyGameConfigTabLabels() {
   $('#game-config-tab-health').text(t('game-config-tab-health', 'Health', 'État'));
   $('#game-config-tab-exe').text(t('game-config-tab-exe', 'Executable', 'Exécutable'));
+  $('#game-config-tab-notification').text(localeText('settings.sideMenu.notification'));
+  $('#game-notification-preset-label').text(localeText('dialogs.game-notification-preset-title'));
+  $('#game-notification-use-global').text(localeText('dialogs.game-notification-use-global'));
+  $('#game-notification-position-label').text(localeText('settings.notification.option.overlayPosition'));
+  $('#game-notification-sound-label').text(localeText('settings.notification.option.overlaySound'));
+  $('#game-notification-scale-label').text(localeText('settings.notification.option.overlayScale'));
+  $('#game-notification-position option[value=""], #game-notification-sound option[value=""], #game-notification-scale option[value=""]').text(
+    localeText('settings.notification.option.presetSameAsMain')
+  );
+  $('#game-notification-sound option[value="__none__"]').text(localeText('settings.notification.option.soundNone'));
+  $('#game-notification-sound option[value="__random__"]').text(localeText('settings.notification.option.overlayRandomSound'));
+  const repositionLabel = localeText('settings.notification.option.reposition');
+  $('#game-notification-reposition').attr({ title: repositionLabel, 'aria-label': repositionLabel });
+  $('#game-notification-test-title').text(localeText('settings.notification.title.test'));
+  const labels = {
+    toast: localeText('settings.notification.test.achievement'),
+    rare: localeText('settings.notification.test.rare'),
+    progress: localeText('settings.notification.test.progress'),
+    playtime: localeText('settings.notification.test.playtime'),
+    platinum: localeText('settings.notification.test.platinum'),
+  };
+  $('#game-notification-tests [data-notification-kind]').each(function () {
+    $(this).find('span').text(labels[$(this).attr('data-notification-kind')] || '');
+  });
+}
+
+function gameNotificationSettingsFromPanel() {
+  const root = $('#game-notifications');
+  const settings = {
+    preset: $('#game-notification-preset').val() || '',
+    position: $('#game-notification-position').val() || '',
+    sound: $('#game-notification-sound').val() || '',
+    scale: $('#game-notification-scale').val() || '',
+  };
+  if (settings.position === 'custom') {
+    try {
+      settings.customPosition = JSON.parse(root.attr('data-custom-position') || 'null');
+    } catch {}
+  }
+  return gameNotificationPreset.normalizeSettings(settings);
+}
+
+function applyGameNotificationPanelSettings(value) {
+  const settings = gameNotificationPreset.normalizeSettings(value);
+  $('#game-notifications').attr(
+    'data-custom-position',
+    settings.customPosition ? JSON.stringify(settings.customPosition) : ''
+  );
+  $('#game-notification-preset').val(settings.preset || '');
+  $('#game-notification-position').val(settings.position || '');
+  $('#game-notification-sound').val(settings.sound || '');
+  $('#game-notification-scale').val(settings.scale == null ? '' : String(settings.scale));
+}
+
+async function loadGameNotificationSettings(appid) {
+  const root = $('#game-notifications');
+  const controls = root.find('select');
+  const reposition = $('#game-notification-reposition');
+  root
+    .attr('data-appid', String(appid))
+    .attr('data-loaded', 'false')
+    .attr('data-saved-settings', '{}')
+    .attr('data-custom-position', '');
+  controls.val('').prop('disabled', true);
+  reposition.prop('disabled', true);
+  try {
+    const [listed, sounds, saved] = await Promise.all([
+      ipcRenderer.invoke('list-presets'),
+      ipcRenderer.invoke('list-sounds'),
+      ipcRenderer.invoke('game-preset:get', String(appid)),
+    ]);
+    if (String($('#game-config .header').attr('title')) !== String(appid)) return;
+    const sameAsMain = localeText('settings.notification.option.presetSameAsMain');
+
+    const names = [...new Set((Array.isArray(listed) ? listed : []).map(String).filter(Boolean))];
+    const select = $('#game-notification-preset');
+    select.find('option:not([value=""])').remove();
+    names.forEach((name) => select.append($('<option>').attr('value', name).text(name)));
+
+    const position = $('#game-notification-position').empty().append($('<option>').attr('value', '').text(sameAsMain));
+    $('#option_overlayPosition option').each(function () {
+      position.append($('<option>').attr('value', $(this).attr('value')).text($(this).text()));
+    });
+    const scale = $('#game-notification-scale').empty().append($('<option>').attr('value', '').text(sameAsMain));
+    $('#option_overlayScale option').each(function () {
+      scale.append($('<option>').attr('value', $(this).attr('value')).text($(this).text()));
+    });
+    const sound = $('#game-notification-sound').empty().append($('<option>').attr('value', '').text(sameAsMain));
+    sound.append(
+      $('<option>').attr('value', gameNotificationPreset.SOUND_NONE).text(localeText('settings.notification.option.soundNone')),
+      $('<option>').attr('value', gameNotificationPreset.SOUND_RANDOM).text(localeText('settings.notification.option.overlayRandomSound'))
+    );
+    (Array.isArray(sounds) ? sounds : []).forEach((name) =>
+      sound.append($('<option>').attr('value', name).text(String(name).replace(/\.[^.]+$/, '')))
+    );
+
+    const stored = gameNotificationPreset.normalizeSettings(saved);
+    const raw = stored.preset || '';
+    const alias = notificationPreset.legacyPresetAlias(raw);
+    stored.preset = names.includes(raw) ? raw : alias && names.includes(alias) ? alias : '';
+    const hasOption = (element, value) =>
+      element
+        .find('option')
+        .toArray()
+        .some((option) => String(option.value) === String(value));
+    if (!hasOption(position, stored.position || '')) delete stored.position;
+    if (!hasOption(scale, stored.scale == null ? '' : stored.scale)) delete stored.scale;
+    if (!hasOption(sound, stored.sound || '')) delete stored.sound;
+    applyGameNotificationPanelSettings(stored);
+    const shown = gameNotificationSettingsFromPanel();
+    root.attr('data-saved-settings', JSON.stringify(shown)).attr('data-loaded', 'true');
+    controls.prop('disabled', false);
+    reposition.prop('disabled', false);
+  } catch (err) {
+    debug.log(`[game-preset] could not load ${appid} => ${formatErr(err)}`);
+    if (String($('#game-config .header').attr('title')) === String(appid)) {
+      applyGameNotificationPanelSettings({});
+      root.attr('data-saved-settings', '{}').attr('data-loaded', 'true');
+      controls.prop('disabled', false);
+      reposition.prop('disabled', false);
+    }
+  }
 }
 
 function setGameConfigView(view) {
@@ -6977,6 +7116,59 @@ async function renderGameHealth(appid) {
   }
 }
 
+async function notificationPreviewGame(appid) {
+  const game = gameList.find((entry) => entry.appid == appid) || {};
+  const art = game.img || {};
+  const artAppid = game.steamappid || appid;
+  const resolveArt = async (token) => {
+    if (!token) return '';
+    try {
+      const resolved = await ipcRenderer.invoke('fetch-icon', token, artAppid);
+      if (!resolved) return '';
+      return resolved.startsWith('file://') ? require('url').fileURLToPath(resolved) : resolved;
+    } catch (err) {
+      debug.log(`[notification-preview] could not resolve artwork "${token}" for ${appid} => ${formatErr(err)}`);
+      return '';
+    }
+  };
+
+  const [square, image] = await Promise.all([
+    ipcRenderer
+      .invoke('resolve-square-logo', {
+        appid: artAppid,
+        libraryAppid: String(appid),
+        name: game.name || '',
+        sources: [art.icon, art.logo, art.portrait, art.header].filter(Boolean),
+      })
+      .catch(() => ''),
+    resolveArt(art.header || art.background || art.icon || art.logo),
+  ]);
+  const icon = square && square.startsWith('file://') ? require('url').fileURLToPath(square) : square || '';
+  // `appid` is the id artwork is cached under; `libraryAppid` is the one the game's own settings
+  // (its notification preset, its custom position) are keyed on. For a namespaced game they differ.
+  return { appid: artAppid, libraryAppid: String(appid), name: game.name || '', icon, image };
+}
+
+async function testGameNotification(appid, kind, button) {
+  const root = $('#game-notifications');
+  let settings = {};
+  if (String(root.attr('data-appid')) === String(appid) && root.attr('data-loaded') === 'true') {
+    settings = gameNotificationSettingsFromPanel();
+  } else {
+    settings = gameNotificationPreset.normalizeSettings(
+      (await ipcRenderer.invoke('game-preset:get', String(appid)).catch(() => ({}))) || {}
+    );
+  }
+  const game = await notificationPreviewGame(appid);
+  await window.testAchievementWatcherNotification(
+    app.config?.notification_transport?.mode,
+    button,
+    settings,
+    game,
+    kind
+  );
+}
+
 /*
   Run one repair. The two that write files describe exactly what they are about to change and where
   the previous version is kept before the first byte is written; both delegate the writing to the
@@ -7059,55 +7251,7 @@ async function runGameHealthAction(appid, action, button) {
   }
 
   if (action === gameHealth.ACTION.TEST_NOTIFICATION) {
-    // The same path the Settings and first-run tests use, so it exercises the transport the user
-    // actually configured and reports its own failure the same way they already know - but carrying
-    // THIS game, so the preview shows what an unlock in it will actually look like.
-    const art = game.img || {};
-    const artAppid = game.steamappid || appid;
-    /*
-      game.img holds fetch-icon TOKENS, not usable URLs: `icon` is a bare Steam content hash and
-      `header` a fragment like "header.jpg" or "<hash>/header.jpg". Handing those straight to a
-      notification showed no artwork at all. Resolve them the way every other view does, then hand
-      over a plain local path - the overlay's iconPath is a filesystem path, and the Watchdog's
-      prefetch returns an existing local file untouched.
-    */
-    const resolveArt = async (token) => {
-      if (!token) return '';
-      try {
-        const resolved = await ipcRenderer.invoke('fetch-icon', token, artAppid);
-        if (!resolved) return '';
-        return resolved.startsWith('file://') ? require('url').fileURLToPath(resolved) : resolved;
-      } catch (err) {
-        debug.log(`[health] could not resolve artwork "${token}" for ${appid} => ${formatErr(err)}`);
-        return '';
-      }
-    };
-    /*
-      The thumbnail goes through the host's square-logo resolver - the same one the notification
-      itself uses - so the preview is not resolving artwork a second way and cannot disagree with
-      what a real unlock in this game will show. The hero slot keeps the plain token resolution: it
-      wants the wide header, uncropped, and falls back to the logo so a game with no header or
-      background art does not end up borrowing the sample game's artwork.
-    */
-    const [square, image] = await Promise.all([
-      ipcRenderer
-        .invoke('resolve-square-logo', {
-          appid: artAppid,
-          name: game.name || '',
-          // No `background` here either: see the achievement header - it cuts into a flat wash.
-          sources: [art.icon, art.logo, art.portrait, art.header].filter(Boolean),
-        })
-        .catch(() => ''),
-      resolveArt(art.header || art.background || art.icon || art.logo),
-    ]);
-    const icon = square && square.startsWith('file://') ? require('url').fileURLToPath(square) : square || '';
-
-    await window.testAchievementWatcherNotification(app.config?.notification_transport?.mode, button && button[0], null, {
-      appid: artAppid,
-      name: game.name || '',
-      icon,
-      image,
-    });
+    await testGameNotification(appid, 'toast', button && button[0]);
     return false;
   }
 
@@ -7286,6 +7430,95 @@ async function runGameHealthAction(appid, action, button) {
     // Game Health: registered once, not per scan, because the panel outlives every list rebuild.
     $('#game-config-tabs').on('click', 'button', function () {
       setGameConfigView($(this).attr('data-gc-view'));
+    });
+
+    $('#game-notifications').on('change', 'select', async function () {
+      const root = $('#game-notifications');
+      const controls = root.find('select');
+      const reposition = $('#game-notification-reposition');
+      const appid = String(root.attr('data-appid') || '');
+      if (!appid || root.attr('data-loaded') !== 'true') return;
+      let previous = {};
+      try {
+        previous = JSON.parse(root.attr('data-saved-settings') || '{}');
+      } catch {}
+      const settings = gameNotificationSettingsFromPanel();
+      controls.prop('disabled', true);
+      reposition.prop('disabled', true);
+      try {
+        const result = await ipcRenderer.invoke('game-preset:set', { appid, settings });
+        if (!result || !result.ok) throw new Error('preset-save-failed');
+        if (String(root.attr('data-appid')) === appid) {
+          const saved = gameNotificationPreset.normalizeSettings(result.settings || {});
+          applyGameNotificationPanelSettings(saved);
+          root.attr('data-saved-settings', JSON.stringify(saved));
+          controls.prop('disabled', false);
+          reposition.prop('disabled', false);
+        }
+      } catch (err) {
+        debug.log(`[game-preset] could not save ${appid} => ${formatErr(err)}`);
+        if (String(root.attr('data-appid')) === appid) {
+          applyGameNotificationPanelSettings(previous);
+          controls.prop('disabled', false);
+          reposition.prop('disabled', false);
+        }
+      }
+    });
+
+    $('#game-notification-reposition').on('click', async function () {
+      const root = $('#game-notifications');
+      const controls = root.find('select');
+      const appid = String(root.attr('data-appid') || '');
+      if (!appid || root.attr('data-loaded') !== 'true') return;
+      let previous = {};
+      try {
+        previous = JSON.parse(root.attr('data-saved-settings') || '{}');
+      } catch {}
+      $('#game-notification-position').val('custom');
+      const settings = gameNotificationSettingsFromPanel();
+      controls.prop('disabled', true);
+      $(this).prop('disabled', true);
+      try {
+        const result = await ipcRenderer.invoke('game-preset:set', { appid, settings });
+        if (!result || !result.ok) throw new Error('custom-position-save-failed');
+        const saved = gameNotificationPreset.normalizeSettings(result.settings || {});
+        if (String(root.attr('data-appid')) !== appid) return;
+        applyGameNotificationPanelSettings(saved);
+        root.attr('data-saved-settings', JSON.stringify(saved));
+        const game = await notificationPreviewGame(appid);
+        window.repositionAchievementWatcherNotification(saved, game, appid);
+      } catch (err) {
+        debug.log(`[game-preset] could not start custom positioning for ${appid} => ${formatErr(err)}`);
+        if (String(root.attr('data-appid')) === appid) applyGameNotificationPanelSettings(previous);
+      } finally {
+        if (String(root.attr('data-appid')) === appid) {
+          controls.prop('disabled', false);
+          $(this).prop('disabled', false);
+        }
+      }
+    });
+
+    ipcRenderer.on('game-preset:custom-position', (event, payload = {}) => {
+      const root = $('#game-notifications');
+      if (String(root.attr('data-appid') || '') !== String(payload.appid || '')) return;
+      const customPosition = gameNotificationPreset.normalizeCustomPosition(payload.customPosition);
+      if (!customPosition) return;
+      const settings = gameNotificationSettingsFromPanel();
+      settings.position = 'custom';
+      settings.customPosition = customPosition;
+      const saved = gameNotificationPreset.normalizeSettings(settings);
+      applyGameNotificationPanelSettings(saved);
+      root.attr('data-saved-settings', JSON.stringify(saved));
+    });
+
+    $('#game-notification-tests').on('click', '[data-notification-kind]', async function () {
+      const appid = String($('#game-config .header').attr('title') || '');
+      if (!appid) return;
+      try {
+        await testGameNotification(appid, String($(this).attr('data-notification-kind') || 'toast'), this);
+      } catch (err) {
+        debug.log(`[game-preset] notification test failed for ${appid} => ${formatErr(err)}`);
+      }
     });
 
     $('#game-health').on('click', '.gh-copy', function () {

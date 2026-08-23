@@ -2702,6 +2702,54 @@
                 <input type="search" id="launch-args" />
               </div>
             </section>
+
+            <section class="content" data-view="notifications">
+              <div id="game-notifications" class="game-notifications">
+                <div class="game-notification-fields">
+                  <label class="game-notification-field game-notification-preset-field" for="game-notification-preset">
+                    <span id="game-notification-preset-label"></span>
+                    <select id="game-notification-preset" autocomplete="off" disabled>
+                      <option id="game-notification-use-global" value=""></option>
+                    </select>
+                  </label>
+                  <div class="game-notification-field">
+                    <div class="game-notification-label-row">
+                      <label for="game-notification-position"><span id="game-notification-position-label"></span></label>
+                      <button type="button" id="game-notification-reposition" class="inline-action-btn" disabled>
+                        <i class="fas fa-crosshairs" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                    <select id="game-notification-position" autocomplete="off" disabled>
+                      <option value=""></option>
+                    </select>
+                  </div>
+                  <label class="game-notification-field" for="game-notification-sound">
+                    <span id="game-notification-sound-label"></span>
+                    <select id="game-notification-sound" autocomplete="off" disabled>
+                      <option value=""></option>
+                      <option value="__none__"></option>
+                      <option value="__random__"></option>
+                    </select>
+                  </label>
+                  <label class="game-notification-field" for="game-notification-scale">
+                    <span id="game-notification-scale-label"></span>
+                    <select id="game-notification-scale" autocomplete="off" disabled>
+                      <option value=""></option>
+                    </select>
+                  </label>
+                </div>
+                <div class="game-notification-preview">
+                  <div id="game-notification-test-title" class="game-notification-test-title"></div>
+                  <div id="game-notification-tests">
+                    <button type="button" class="btn" data-notification-kind="toast"><i class="fas fa-trophy" aria-hidden="true"></i> <span></span></button>
+                    <button type="button" class="btn" data-notification-kind="rare"><i class="fas fa-gem" aria-hidden="true"></i> <span></span></button>
+                    <button type="button" class="btn" data-notification-kind="progress"><i class="fas fa-tachometer-alt" aria-hidden="true"></i> <span></span></button>
+                    <button type="button" class="btn" data-notification-kind="playtime"><i class="fas fa-stopwatch" aria-hidden="true"></i> <span></span></button>
+                    <button type="button" class="btn" data-notification-kind="platinum"><i class="fas fa-medal" aria-hidden="true"></i> <span></span></button>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
           <div class="footer">
             <div class="notice">

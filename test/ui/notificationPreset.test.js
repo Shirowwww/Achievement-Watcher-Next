@@ -2,7 +2,13 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { sourcePlatform, resolvePreset, legacyPresetAlias, DEFAULT_PRESET } = require('../../app/util/notificationPreset.js');
+const {
+  sourcePlatform,
+  resolvePreset,
+  resolveAvailablePreset,
+  legacyPresetAlias,
+  DEFAULT_PRESET,
+} = require('../../app/util/notificationPreset.js');
 
 const presets = {
   main: 'Default',
@@ -39,6 +45,42 @@ test('the platform preset applies whatever kind of notification it is', () => {
 test('missing platform override falls back to main', () => {
   assert.equal(resolvePreset({ presets: { main: 'Default' }, source: 'Xenia Emulator' }), 'Default');
   assert.equal(resolvePreset({}), DEFAULT_PRESET);
+});
+
+test('a per-game override wins over platform and global presets', () => {
+  assert.equal(
+    resolvePreset({ presets: { ...presets, game: 'Cover' }, source: 'RPCS3 Emulator' }),
+    'Cover'
+  );
+});
+
+test('a deleted per-game preset falls through to platform and then global', () => {
+  const available = new Set(['RPCS3', 'Default']);
+  assert.equal(
+    resolveAvailablePreset(
+      { presets: { ...presets, game: 'Deleted preset' }, source: 'RPCS3 Emulator' },
+      (name) => available.has(name)
+    ),
+    'RPCS3'
+  );
+  available.delete('RPCS3');
+  assert.equal(
+    resolveAvailablePreset(
+      { presets: { ...presets, game: 'Deleted preset' }, source: 'RPCS3 Emulator' },
+      (name) => available.has(name)
+    ),
+    'Default'
+  );
+});
+
+test('a removed bundled name resolves through its replacement before falling back', () => {
+  assert.equal(
+    resolveAvailablePreset(
+      { presets: { game: 'Shirow', main: 'Default' } },
+      (name) => name === DEFAULT_PRESET || name === 'Default'
+    ),
+    DEFAULT_PRESET
+  );
 });
 
 /*

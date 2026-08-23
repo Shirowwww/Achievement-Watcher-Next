@@ -49,6 +49,10 @@ test('every field the preview payload sets is one the notification window actual
     // achievement icon (already square, left alone) from game artwork (reworked into a square).
     'appid',
     'achievementIconPath',
+    // Read where the popup is placed, not where it is drawn: gamePositionAppid names the game whose
+    // saved anchor applies, customPosition is the anchor a preview is being dragged to.
+    'gamePositionAppid',
+    'customPosition',
   ]);
   const unread = [...returned.matchAll(/^\s{10}([A-Za-z][\w]*):/gm)]
     .map((m) => m[1])
@@ -79,11 +83,13 @@ test('both transports receive the game, and the Health panel supplies it', () =>
   assert.match(settingsUi, /function runNotificationTest\(cmd, btn, game\)/);
   assert.match(settingsUi, /ws\.send\(JSON\.stringify\(game \? \{ cmd, game \} : \{ cmd \}\)\)/, 'the toast test carries the game');
   // Overlay: through the payload builder.
-  assert.match(settingsUi, /overlayTestData\(kind, presetOverride, null, game\)/, 'the overlay test carries the game');
+  assert.match(settingsUi, /overlayTestData\(kind, notificationOverrides, null, game\)/, 'the overlay test carries the game');
   // And the shared entry point threads it from the Health panel.
-  assert.match(settingsUi, /window\.testAchievementWatcherNotification = function \(mode, button, preset, game\)/);
-  const runner = appSource.slice(appSource.indexOf('async function runGameHealthAction'));
-  assert.match(runner, /testAchievementWatcherNotification\([\s\S]{0,220}name: game\.name/, 'the panel passes the selected game');
+  assert.match(settingsUi, /window\.testAchievementWatcherNotification = function \(mode, button, notificationOverrides, game, kind = 'toast'\)/);
+  // The Health panel button, the per-game Notifications tab and the Settings rows all go through
+  // testGameNotification(), so the game reaches the payload from one place.
+  assert.match(appSource, /async function testGameNotification\(appid, kind, button\)/);
+  assert.match(appSource, /const game = await notificationPreviewGame\(appid\);[\s\S]{0,200}testAchievementWatcherNotification\(/, 'the shared entry point passes the resolved game');
 });
 
 test('the artwork is resolved before it is sent, never passed as a raw token', () => {
@@ -93,18 +99,18 @@ test('the artwork is resolved before it is sent, never passed as a raw token', (
     a notification produces no artwork at all - the failure is silent, the popup simply shows the
     placeholder. Every other view in the app resolves them through the fetch-icon IPC first.
   */
-  const runner = appSource.slice(appSource.indexOf('async function runGameHealthAction'));
-  const branch = runner.slice(runner.indexOf('gameHealth.ACTION.TEST_NOTIFICATION'));
-  const body = branch.slice(0, branch.indexOf('\n  if (action ==='));
+  const start = appSource.indexOf('async function notificationPreviewGame(appid) {');
+  assert.notEqual(start, -1, 'the shared preview builder must exist');
+  const body = appSource.slice(start, appSource.indexOf('\n}', start));
 
   assert.match(body, /invoke\('fetch-icon', token, artAppid\)/, 'tokens must go through fetch-icon');
   assert.match(body, /fileURLToPath\(resolved\)/, 'the overlay needs a filesystem path, not a file:// URL');
 
-  // The payload must carry the RESOLVED values, not the raw img fields.
-  const payload = body.slice(body.indexOf('testAchievementWatcherNotification('));
-  assert.match(payload, /icon,/, 'the resolved icon is sent');
-  assert.match(payload, /image,/, 'the resolved header is sent');
-  assert.doesNotMatch(payload, /art\.icon|art\.header|art\.background|art\.logo/, 'no raw token may reach the payload');
+  // What it hands back must be the RESOLVED values, not the raw img fields.
+  const returned = body.slice(body.indexOf('return {'));
+  assert.match(returned, /icon,/, 'the resolved icon is sent');
+  assert.match(returned, /image };/, 'the resolved header is sent');
+  assert.doesNotMatch(returned, /art\.icon|art\.header|art\.background|art\.logo/, 'no raw token may reach the payload');
 
   // A failed resolution must degrade to the built-in sample rather than sending a broken path.
   assert.match(body, /return ''/, 'an unresolved token becomes empty, letting the sample stand in');

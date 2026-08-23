@@ -4576,28 +4576,66 @@ function openGameFromLaunchArgs(args) {
   tryOpen();
 }
 
-// --- Overlay notification (optional transport) -----------------------------------
-// Spawns a frameless click-through window rendering a preset via window.api; toasts remain the
-// default transport. Resolves presets from the bundled library, falling back to the default preset.
-const { DEFAULT_PRESET, legacyPresetAlias, resolvePreset } = require(path.join(__dirname, '../util/notificationPreset.js'));
+// Overlay notification (optional transport): spawns a frameless click-through window rendering a
+// preset via window.api. Resolves presets from the bundled library, falling back to the default.
+const { DEFAULT_PRESET, presetPriority, resolveAvailablePresetName } = require(path.join(__dirname, '../util/notificationPreset.js'));
+const gamePreset = require(path.join(__dirname, '../util/gamePreset.js'));
+gamePreset.setUserDataPath(userData);
+
+ipcMain.handle('game-preset:get', (event, appid) => gamePreset.getSettings(appid));
+ipcMain.handle('game-preset:set', (event, request = {}) => {
+  const requested = request.settings && typeof request.settings === 'object' ? request.settings : request;
+  const settings = { ...requested };
+  // A select change made while the draggable witness is open may arrive before its latest move
+  // event reaches the renderer. Preserve the main-process anchor in that narrow race; switching to
+  // any non-custom position still removes it normally.
+  if (String(settings.position || '') === 'custom' && !gamePreset.normalizeCustomPosition(settings.customPosition)) {
+    const current = gamePreset.getSettings(request.appid);
+    if (current.position === 'custom' && current.customPosition) settings.customPosition = current.customPosition;
+  }
+  const ok = gamePreset.setSettings(request.appid, settings);
+  const saved = ok ? gamePreset.getSettings(request.appid) : {};
+  return { ok, settings: saved, preset: saved.preset || '' };
+});
+
+/*
+  Preset folders change only when the designer/importer changes them or when a settings panel asks
+  for a fresh list. Index them once between those events: resolving a live unlock then costs map
+  lookups, including the per-game fallback, and no filesystem reads.
+*/
+let notificationPresetFolders = null;
+function refreshNotificationPresetFolders() {
+  const folders = new Map();
+  const roots = [usersPresetsDir(), ...bundledPresetRoots(), path.join(__dirname, '../presets')];
+  for (const root of roots) {
+    try {
+      for (const name of fs.readdirSync(root)) {
+        if (folders.has(name)) continue;
+        const folder = path.join(root, name);
+        if (fs.existsSync(path.join(folder, 'index.html'))) folders.set(name, folder);
+      }
+    } catch {}
+  }
+  notificationPresetFolders = folders;
+  return folders;
+}
+
+function invalidateNotificationPresetFolders() {
+  notificationPresetFolders = null;
+}
+
+function findNotificationPresetFolder(name) {
+  const folders = notificationPresetFolders || refreshNotificationPresetFolders();
+  return folders.get(String(name || '')) || null;
+}
+
+function resolveNotificationPreset(names) {
+  const name = resolveAvailablePresetName(names, (candidate) => Boolean(findNotificationPresetFolder(candidate)));
+  return { name, folder: findNotificationPresetFolder(name) };
+}
 
 function resolvePresetFolder(presetName) {
-  // Generated presets (<userData>) first, then the bundled libraries, then the flat legacy folder.
-  const roots = [usersPresetsDir(), ...bundledPresetRoots(), path.join(__dirname, '../presets')];
-  const find = (name) => {
-    if (!name) return null;
-    for (const root of roots) {
-      const f = path.join(root, name);
-      if (fs.existsSync(path.join(f, 'index.html'))) return f;
-    }
-    return null;
-  };
-  /*
-    The saved name is tried as written before anything else, so a preset the user made or imported
-    under the name of a bundled one that has since been redesigned away still wins. Only a name that
-    resolves to nothing falls through to the preset that replaced it, and then to the default.
-  */
-  return find(String(presetName || DEFAULT_PRESET)) || find(legacyPresetAlias(presetName)) || find(DEFAULT_PRESET);
+  return resolveNotificationPreset([String(presetName || DEFAULT_PRESET), DEFAULT_PRESET]).folder;
 }
 
 // Read the preset's window size from its <meta width="" height=""> tag (reference convention).
@@ -4688,9 +4726,17 @@ function createNotificationWindow(data = {}) {
 
   const scaleRaw = Number(data.scale);
   const requestedScale = Number.isFinite(scaleRaw) && scaleRaw > 0 ? scaleRaw : 1;
+  const volumeRaw = Number(data.volume);
+  const volumePercent = Number.isFinite(volumeRaw) ? Math.max(0, Math.min(200, volumeRaw)) : 100;
   const { width: baseW, height: baseH } = getPresetDimensions(presetFolder);
   const position = data.position || 'center-bottom';
-  const customAnchor = position === 'custom' ? readOverlayBounds().notif : null;
+  let customAnchor = null;
+  if (position === 'custom') {
+    const requestedAnchor = gamePreset.normalizeCustomPosition(data.customPosition);
+    const gamePositionAppid = String(data.gamePositionAppid || '');
+    const savedGameAnchor = gamePositionAppid ? gamePreset.getSettings(gamePositionAppid).customPosition : null;
+    customAnchor = requestedAnchor || savedGameAnchor || readOverlayBounds().notif || null;
+  }
   const workArea = notificationPlacementArea(customAnchor);
   // Scale the host window in both directions, then cap the effective scale to the current work
   // area. This keeps small themes tightly anchored and large themes visible instead of clipping.
@@ -4710,8 +4756,24 @@ function createNotificationWindow(data = {}) {
   );
   const scale = geometry.scale;
 
-  debug.log('[overlay-notif] preset=' + path.basename(presetFolder) + ' pos=' + position + ' scale=' + requestedScale + '→' + scale + ' size=' + w + 'x' + h);
+  debug.log(
+    '[overlay-notif] preset=' +
+      path.basename(presetFolder) +
+      ' pos=' +
+      position +
+      ' scale=' +
+      requestedScale +
+      '→' +
+      scale +
+      ' volume=' +
+      volumePercent +
+      '% size=' +
+      w +
+      'x' +
+      h
+  );
 
+  const reposition = data.reposition === true;
   const notif = new BrowserWindow({
     width: w,
     height: h,
@@ -4722,7 +4784,9 @@ function createNotificationWindow(data = {}) {
     alwaysOnTop: true,
     skipTaskbar: true,
     resizable: false,
-    focusable: false,
+    // Reposition witnesses must be focusable on Windows or their draggable region can let the
+    // mouse gesture fall through to the main window behind them. Real notifications stay inert.
+    focusable: reposition,
     hasShadow: false,
     fullscreenable: false,
     webPreferences: {
@@ -4739,7 +4803,7 @@ function createNotificationWindow(data = {}) {
 
   notif.setAlwaysOnTop(true, 'screen-saver');
   notif.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  const lockedCustomBounds = position === 'custom' && !data.reposition ? { x, y, width: w, height: h } : null;
+  const lockedCustomBounds = position === 'custom' && !reposition ? { x, y, width: w, height: h } : null;
   if (lockedCustomBounds) {
     // A real custom-position notification is click-through and must never be nudged by a preset,
     // focus/workspace transition or accidental native move. Reassert its exact saved bounds both
@@ -4760,7 +4824,14 @@ function createNotificationWindow(data = {}) {
     });
   }
   // Real notifications are click-through; the reposition witness stays interactive so it can be dragged.
-  if (!data.reposition) notif.setIgnoreMouseEvents(true, { forward: true });
+  if (reposition) {
+    // Be explicit instead of relying on BrowserWindow's default: this window may be created after
+    // a click-through notification and Windows otherwise keeps routing the drag to what is behind it.
+    notif.setIgnoreMouseEvents(false);
+    notif.setFocusable(true);
+  } else {
+    notif.setIgnoreMouseEvents(true, { forward: true });
+  }
   notif.loadFile(presetHtml);
 
   // Localized fallback labels for presets that render a placeholder when the payload has no
@@ -4828,10 +4899,21 @@ function createNotificationWindow(data = {}) {
     }
     // Reposition mode: overlay a full-window drag region so the user can place the popup, and persist
     // the chosen top-left as the 'custom' anchor. executeJavaScript is privileged (bypasses preset CSP).
-    if (data.reposition) {
+    if (reposition) {
+      // The presets have different CSPs. Electron's inserted CSS is not blocked by their
+      // `style-src`, unlike assigning `style.cssText` to a dynamically-created element.
       notif.webContents
-        .executeJavaScript(
-          "(function(){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;-webkit-app-region:drag;cursor:move;z-index:2147483647';document.documentElement.appendChild(d);})();"
+        .insertCSS(
+          '#aw-notification-reposition-drag {' +
+            'position: fixed !important; inset: 0 !important; z-index: 2147483647 !important;' +
+            '-webkit-app-region: drag !important; cursor: move !important;' +
+            'background: rgba(0, 0, 0, 0.001) !important;' +
+          '}'
+        )
+        .then(() =>
+          notif.webContents.executeJavaScript(
+            "(function(){var d=document.getElementById('aw-notification-reposition-drag');if(!d){d=document.createElement('div');d.id='aw-notification-reposition-drag';document.documentElement.appendChild(d);}})();"
+          )
         )
         .catch(() => {});
     }
@@ -4840,7 +4922,7 @@ function createNotificationWindow(data = {}) {
     // the hold (an interval catches the exit animation), and the close is deferred (see ipc.js, via
     // awFrozenUntil) so a preset's own self-close can't cut the hold short. 'auto' = no freeze.
     const holdMs = Number.isFinite(Number(data.durationMs)) && Number(data.durationMs) > 0 ? Number(data.durationMs) : 0;
-    if (holdMs > 0 && !data.reposition) {
+    if (holdMs > 0 && !reposition) {
       const FREEZE_AFTER = 3000;
       notif.awFrozenUntil = Date.now() + FREEZE_AFTER + holdMs + 1200; // +tail so the exit can finish
       notif.webContents
@@ -4857,12 +4939,27 @@ function createNotificationWindow(data = {}) {
     }
   });
 
-  if (data.reposition) {
+  if (reposition) {
     let persistPositionTimer = null;
     const persistNotificationPosition = () => {
       if (notif.isDestroyed()) return;
       const bounds = notif.getBounds();
-      writeOverlayBounds({ notif: { x: bounds.x, y: bounds.y } });
+      const customPosition = { x: bounds.x, y: bounds.y };
+      const gameAppid = String(data.repositionGameAppid || '');
+      if (!gameAppid) {
+        writeOverlayBounds({ notif: customPosition });
+        return;
+      }
+      const settings = gamePreset.getSettings(gameAppid);
+      settings.position = 'custom';
+      settings.customPosition = customPosition;
+      if (!gamePreset.setSettings(gameAppid, settings)) {
+        debug.log(`[game-preset] could not save custom position for ${gameAppid}`);
+        return;
+      }
+      if (MainWin && !MainWin.isDestroyed()) {
+        MainWin.webContents.send('game-preset:custom-position', { appid: gameAppid, customPosition });
+      }
     };
     // `move` is the cross-platform BrowserWindow event and fires on Windows while dragging.
     // `moved` is macOS-specific, so listening only to it silently lost the chosen position here.
@@ -4881,7 +4978,7 @@ function createNotificationWindow(data = {}) {
   // must outlast 3s + hold + exit (never cut it short - the close defer in ipc.js targets ~3s+hold+1.2s).
   // 'auto' keeps the 20s catch-all; the reposition witness stays up much longer so there's time to place it.
   const customMs = Number(data.durationMs);
-  const closeAfter = data.reposition ? 120000 : Number.isFinite(customMs) && customMs > 0 ? 3000 + customMs + 4000 : 20000;
+  const closeAfter = reposition ? 120000 : Number.isFinite(customMs) && customMs > 0 ? 3000 + customMs + 4000 : 20000;
   const safety = setTimeout(() => {
     if (!notif.isDestroyed()) notif.close();
   }, closeAfter);
@@ -5283,14 +5380,17 @@ async function enqueueNotificationFromArgs(args) {
     }
   }
   const ov = (cfg && cfg.overlay) || {};
+  const gameSettings = gamePreset.getSettings(args.appid);
   const notifyId = args.notifyId ? String(args.notifyId) : '';
 
   const progress = normalizeNotificationProgress(args);
   const notificationType = String(args.notificationType || (progress ? 'progress' : '') || '').toLowerCase();
   // Per-emulator preset overrides ('' = main preset): the source lets Xenia/RPCS3/ShadPS4
   // notifications use their own preset. Rare and 100% are states the chosen preset paints itself.
-  const preset = resolvePreset({
+  const candidates = presetPriority({
     presets: {
+      // Set in the game's own panel and read from memory, so an unlock costs no disk read for it.
+      game: gameSettings.preset,
       main: ov.notificationPreset || DEFAULT_PRESET,
       xenia: ov.notificationPresetXenia || '',
       rpcs3: ov.notificationPresetRpcs3 || '',
@@ -5305,9 +5405,9 @@ async function enqueueNotificationFromArgs(args) {
     toast instead - a report sent after the downloads, or after this popup waited its turn in the
     queue, would arrive far too late to be the difference between one notification and none.
   */
-  const presetFolder = resolvePresetFolder(preset);
+  const { name: preset, folder: presetFolder } = resolveNotificationPreset(candidates);
   if (!presetFolder) {
-    debug.log(`[overlay-notif] no usable preset folder for "${preset}" - telling the monitor this notification cannot be shown`);
+    debug.log(`[overlay-notif] no usable preset folder for "${candidates.join('", "')}" - telling the monitor this notification cannot be shown`);
     reportNotificationOutcome(notifyId, 'accepted', false, 'no-preset');
     return;
   }
@@ -5357,13 +5457,22 @@ async function enqueueNotificationFromArgs(args) {
     Random sound still overrides everything - it is an explicit "surprise me" for every popup.
   */
   const presetOwnSound = customPreset.presetSound(presetFolder);
-  const chosenSound = silent
-    ? ''
-    : randomSound
+  const globalSound = () =>
+    randomSound
       ? notificationSounds.pickRandomSound([path.join(__dirname, '../sounds'), userSoundsDir()]) ||
         resolveNotificationSound(ov.notificationSound)
       : resolveNotificationSound(presetOwnSound || ov.notificationSound);
-  if (presetOwnSound && !silent && !randomSound) debug.log(`[overlay-notif] preset "${preset}" brings its own sound: ${presetOwnSound}`);
+  let chosenSound = '';
+  if (!silent) {
+    if (gameSettings.sound === gamePreset.SOUND_NONE) chosenSound = '';
+    else if (gameSettings.sound === gamePreset.SOUND_RANDOM) {
+      chosenSound =
+        notificationSounds.pickRandomSound([path.join(__dirname, '../sounds'), userSoundsDir()]) || globalSound();
+    } else if (gameSettings.sound) chosenSound = resolveNotificationSound(gameSettings.sound) || globalSound();
+    else chosenSound = globalSound();
+  }
+  if (!gameSettings.sound && presetOwnSound && !silent && !randomSound)
+    debug.log(`[overlay-notif] preset "${preset}" brings its own sound: ${presetOwnSound}`);
   const displayName =
     (args.displayName != null && String(args.displayName).trim()) ||
     (args.gameDisplayName != null && String(args.gameDisplayName).trim()) ||
@@ -5374,8 +5483,9 @@ async function enqueueNotificationFromArgs(args) {
     appid: args.appid == null ? '' : String(args.appid),
     notifyId,
     preset,
-    position: ov.notificationPosition || 'center-bottom',
-    scale: ov.notificationScale || 1,
+    position: gameSettings.position || ov.notificationPosition || 'center-bottom',
+    scale: gameSettings.scale || ov.notificationScale || 1,
+    customPosition: gameSettings.customPosition || null,
     volume: Number.isFinite(Number(ov.notificationVolume)) ? Number(ov.notificationVolume) : 100,
     durationMs: durSec > 0 ? durSec * 1000 : undefined,
     // Playtime notifications pass the game name in both fields. Keeping the dedicated game-name
@@ -5431,23 +5541,13 @@ const PREVIEW_PRESET_NAME = '__aw-preview__';
 
 // List available preset names (Default Presets + Users Presets) for the settings dropdown.
 ipcMain.handle('list-presets', async () => {
-  const out = [];
-  const roots = [...bundledPresetRoots(), usersPresetsDir()];
-  for (const root of roots) {
-    try {
-      for (const name of fs.readdirSync(root)) {
-        if (name === PREVIEW_PRESET_NAME) continue;
-        if (fs.existsSync(path.join(root, name, 'index.html')) && !out.includes(name)) out.push(name);
-      }
-    } catch {}
-  }
+  const out = [...refreshNotificationPresetFolders().keys()].filter((name) => name !== PREVIEW_PRESET_NAME);
   out.sort((a, b) => a.localeCompare(b));
   return out;
 });
 
-// --- Preset designer ---------------------------------------------------------------------------
-// The schema lives in util/presetSchema.js and the generator in util/customPreset.js (pure string
-// work, unit-tested); this file owns where the generated files land and which names are reserved.
+// Preset designer: the schema lives in util/presetSchema.js and the generator in
+// util/customPreset.js (pure string work, unit-tested); this file owns file placement and naming.
 const customPreset = require(path.join(__dirname, '../util/customPreset.js'));
 const { customPresetNumbers, buildCustomPresetHtml, buildCustomPresetCss, sanitizePresetName } = customPreset;
 const presetPackage = require(path.join(__dirname, '../util/presetPackage.js'));
@@ -5504,6 +5604,7 @@ function writeCustomPreset(name, opts) {
   fs.writeFileSync(path.join(dir, 'index.html'), buildCustomPresetHtml(opts), 'utf8');
   fs.writeFileSync(path.join(dir, 'style.css'), buildCustomPresetCss(opts), 'utf8');
   fs.writeFileSync(path.join(dir, PRESET_OPTIONS_FILE), JSON.stringify({ name, ...values }, null, 2), 'utf8');
+  invalidateNotificationPresetFolders();
   return dir;
 }
 
@@ -5574,6 +5675,8 @@ ipcMain.handle('delete-custom-preset', async (event, name) => {
     if (path.dirname(path.resolve(dir)) !== path.resolve(usersPresetsDir())) return { ok: false, error: 'outside-users-presets' };
     if (!managedPresetMarker(safe)) return { ok: false, error: 'not-generated-here' };
     fs.rmSync(dir, { recursive: true, force: true });
+    gamePreset.removePreset(safe);
+    invalidateNotificationPresetFolders();
     debug.log('[custom-preset] deleted ' + dir);
     return { ok: true, name: safe };
   } catch (err) {
@@ -5606,6 +5709,8 @@ ipcMain.handle('rename-custom-preset', async (event, request = {}) => {
     // Case-insensitive on Windows, so "Slate" to "slate" is the same folder and is allowed through.
     if (fs.existsSync(target) && target.toLowerCase() !== source.toLowerCase()) return { ok: false, error: 'name-taken' };
     fs.renameSync(source, target);
+    gamePreset.renamePreset(from, to);
+    invalidateNotificationPresetFolders();
     debug.log('[custom-preset] renamed ' + source + ' -> ' + target);
     return { ok: true, name: to, from };
   } catch (err) {
@@ -5748,6 +5853,7 @@ ipcMain.handle('import-preset', async (event, opts = {}) => {
         }
       }),
     });
+    if (out.ok) invalidateNotificationPresetFolders();
     debug.log('[preset-package] import ' + path.basename(file) + ': ' + (out.ok ? out.name : out.error));
     return { ...out, file };
   } catch (err) {
@@ -5791,6 +5897,7 @@ ipcMain.handle('import-san-theme', async (event, opts = {}) => {
         }
       }),
     });
+    if (out.ok) invalidateNotificationPresetFolders();
     /*
       The whole report, not just the outcome. A user asking why their theme looks different has one
       dialog they may have clicked past; this is the only place the detail survives.

@@ -79,13 +79,52 @@ function sourcePlatform(source) {
   return null;
 }
 
-function resolvePreset({ presets = {}, source = '' } = {}) {
-  const main = presets.main || DEFAULT_PRESET;
+/*
+  Every preset this notification may use, most specific first.
 
+  A caller that can check whether a name still resolves to a folder walks the list and takes the
+  first that does, so a per-game override naming a preset that was since deleted or renamed falls
+  back to the platform/global choice instead of jumping straight to the default.
+*/
+function presetPriority({ presets = {}, source = '' } = {}) {
   const platform = sourcePlatform(source);
-  if (platform && presets[platform]) return presets[platform];
-
-  return main;
+  return [
+    // One game, chosen in its own panel: more specific than anything else, so it wins.
+    presets.game || '',
+    platform ? presets[platform] || '' : '',
+    presets.main || DEFAULT_PRESET,
+  ].filter(Boolean);
 }
 
-module.exports = { DEFAULT_PRESET, LEGACY_PRESET_ALIASES, legacyPresetAlias, sourcePlatform, resolvePreset };
+function resolvePreset(args) {
+  return presetPriority(args)[0] || DEFAULT_PRESET;
+}
+
+/*
+  First candidate that still exists in the shared preset catalog. Each saved name wins over its
+  legacy alias, so a user-created preset that reused an old bundled name remains authoritative.
+*/
+function resolveAvailablePresetName(names, isAvailable) {
+  const available = typeof isAvailable === 'function' ? isAvailable : () => true;
+  for (const name of Array.isArray(names) ? names : []) {
+    if (available(name)) return name;
+    const alias = legacyPresetAlias(name);
+    if (alias && available(alias)) return alias;
+  }
+  return DEFAULT_PRESET;
+}
+
+function resolveAvailablePreset(args, isAvailable) {
+  return resolveAvailablePresetName(presetPriority(args), isAvailable);
+}
+
+module.exports = {
+  DEFAULT_PRESET,
+  LEGACY_PRESET_ALIASES,
+  legacyPresetAlias,
+  sourcePlatform,
+  presetPriority,
+  resolvePreset,
+  resolveAvailablePresetName,
+  resolveAvailablePreset,
+};

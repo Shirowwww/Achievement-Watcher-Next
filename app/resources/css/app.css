@@ -4124,6 +4124,129 @@ main {
   color: var(--accent);
 }
 
+.game-notifications {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px;
+  font-family: 'Open-Sans';
+}
+
+.game-notification-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.game-notification-preset-field {
+  grid-column: 1 / -1;
+}
+
+.game-notification-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.game-notification-field > span,
+.game-notification-label-row {
+  display: flex;
+  align-items: center;
+  height: 20px;
+  min-height: 20px;
+  line-height: 20px;
+}
+
+.game-notification-label-row {
+  justify-content: space-between;
+}
+
+.game-notification-label-row label {
+  min-width: 0;
+}
+
+#game-notification-reposition {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  padding: 0;
+  border-radius: 6px;
+  border-color: var(--set-control-border);
+  color: var(--set-icon);
+  background: var(--set-control-bg);
+}
+
+#game-notification-reposition:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.game-notification-field select {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid var(--set-control-border);
+  border-radius: 8px;
+  outline: none;
+  color: var(--text);
+  background: color-mix(in srgb, var(--set-surface-sunken) 72%, transparent);
+  font: 12.5px 'Open-Sans';
+}
+
+.game-notification-field select:focus {
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.game-notification-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.game-notification-test-title {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+#game-notification-tests {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#game-notification-tests .btn {
+  flex: 1 1 110px;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid var(--set-control-border);
+  border-radius: 9px;
+  color: var(--text);
+  background: linear-gradient(180deg, var(--set-btn-top), var(--set-btn-bottom));
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--set-surface-sunken) 58%, transparent);
+  font: 12px 'Open-Sans';
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+#game-notification-tests .btn:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, var(--set-surface-elevated), var(--set-btn-top));
+}
+
+#game-notification-tests .btn i {
+  margin-right: 5px;
+  color: var(--accent);
+}
+
+#game-notification-tests .btn.is-running {
+  opacity: 0.72;
+  pointer-events: none;
+}
+
 .game-health {
   display: flex;
   flex-direction: column;

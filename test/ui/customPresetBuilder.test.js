@@ -435,7 +435,7 @@ test('init.js reserves the preview preset name and hides it from the preset list
   const reserved = /const PREVIEW_PRESET_NAME = '([^']+)';/.exec(init);
   assert.ok(reserved, 'no reserved preview preset name');
   // The scratch preset the Preview button writes must never be offered as a real preset...
-  assert.match(init, /if \(name === PREVIEW_PRESET_NAME\) continue;/, 'list-presets does not skip the preview preset');
+  assert.match(init, /filter\(\(name\) => name !== PREVIEW_PRESET_NAME\)/, 'list-presets does not skip the preview preset');
   assert.match(init, /name !== PREVIEW_PRESET_NAME/, 'list-custom-presets does not skip the preview preset');
   // ...nor be creatable by hand under that name.
   assert.match(init, /if \(name === PREVIEW_PRESET_NAME\) return \{ ok: false, error: 'reserved-name' \};/);
@@ -477,5 +477,5 @@ test('init.js resolves generated presets from userData and reads the bundled lib
   assert.doesNotMatch(write[0], /__dirname/, 'writeCustomPreset still targets the app folder');
   // ...and the notification lookup still finds both the generated and the bundled presets.
   assert.match(init, /const roots = \[usersPresetsDir\(\), \.\.\.bundledPresetRoots\(\)/);
-  assert.match(init, /const roots = \[\.\.\.bundledPresetRoots\(\), usersPresetsDir\(\)\]/);
+  assert.match(init, /refreshNotificationPresetFolders\(\)\.keys\(\)/, 'the preset menu is built from the same generated and bundled index');
 });
