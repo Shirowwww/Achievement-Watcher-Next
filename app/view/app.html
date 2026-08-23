@@ -2417,6 +2417,26 @@
                     </div>
                   </li>
 
+                  <!-- Bound by id below the seven positionally localized rows. -->
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-play"></i> <span id="play-button-settings-label">Show Play button</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_showPlayButton">
+                        <option value="true" selected>Show</option>
+                        <option value="false">Hide</option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="play-button-settings-help">
+                      Show the Play button on game tiles. Turn it off if you launch your games from another program. The right-click Launch game entry stays available.
+                    </div>
+                  </li>
+
                   <!-- The setup guide is an everyday action (its locale keys already live under
                        settings.general.onboarding), so it belongs here rather than behind the
                        Advanced tab, where Simple mode would never reach it. Appended LAST: the

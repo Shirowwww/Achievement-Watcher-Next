@@ -1277,6 +1277,11 @@ main {
   display: none;
 }
 
+/* The absolutely positioned control leaves no card-layout gap when hidden. */
+#game-list.hide-play-button .play-button {
+  display: none;
+}
+
 #game-list .library-artwork-feedback {
   position: absolute;
   inset: 0;

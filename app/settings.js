@@ -225,6 +225,10 @@ module.exports.load = () => {
     if (typeof options.achievement.hideZero !== 'boolean') {
       options.achievement.hideZero = false;
     }
+    // Hiding the tile control does not disable other launch entry points.
+    if (typeof options.achievement.showPlayButton !== 'boolean') {
+      options.achievement.showPlayButton = true;
+    }
 
     if (typeof options.achievement.goldbergDownloadIcons !== 'boolean') {
       options.achievement.goldbergDownloadIcons = false;
@@ -490,6 +494,7 @@ module.exports.load = () => {
         mergeDuplicate: true,
         timeMergeRecentFirst: false,
         hideZero: false,
+        showPlayButton: true,
         goldbergDownloadIcons: false,
       },
       achievement_source: {

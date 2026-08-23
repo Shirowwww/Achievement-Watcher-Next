@@ -277,6 +277,12 @@ function translateUI(lang, locale, template) {
     $("#option_uninstallContextMenu option[value='true']").text(clear(template.settings.common.enable));
     $("#option_uninstallContextMenu option[value='false']").text(clear(template.settings.common.disable));
   }
+  if (template.settings.general.playButton) {
+    $('#play-button-settings-label').text(clear(template.settings.general.playButton.name));
+    $('#play-button-settings-help').text(clear(template.settings.general.playButton.description));
+    $("#option_showPlayButton option[value='true']").text(clear(template.settings.common.show));
+    $("#option_showPlayButton option[value='false']").text(clear(template.settings.common.hide));
+  }
   $('#general-options-title').text(clear(template.settings.general.sectionTitle));
 
   // Emulator setup section (own settings tab) - bound by stable id, not nth-child.

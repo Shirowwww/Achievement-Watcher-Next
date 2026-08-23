@@ -400,6 +400,13 @@ function applyLibraryLayout(value, legacyPortrait = false) {
   return mode;
 }
 
+// Keep the control in the DOM so the other launch entry points can reuse its handler.
+function applyPlayButtonVisibility(value) {
+  const visible = value !== false;
+  $('#game-list').toggleClass('hide-play-button', !visible);
+  return visible;
+}
+
 // The interface language, for the Intl helpers. Read on each call: it changes without a reload.
 function uiLang() {
   try {
@@ -2958,6 +2965,7 @@ var app = {
       self.config.achievement.libraryLayout,
       self.config.achievement.thumbnailPortrait === true
     );
+    applyPlayButtonVisibility(self.config.achievement.showPlayButton);
     $('#library-layout-select')
       .off('change.awLibraryLayout')
       .on('change.awLibraryLayout', function () {
