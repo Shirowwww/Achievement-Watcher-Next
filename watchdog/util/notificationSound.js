@@ -34,14 +34,28 @@ function userSoundsDir() {
   return path.join(userDataDir(), 'sounds');
 }
 
+/*
+  Bundled sounds renamed in 3.9.3 for a consistent dropdown. Mirrors RENAMED_SOUNDS in
+  app/util/notificationSounds.js: a settings file written before the rename still names the old file.
+*/
+const RENAMED_SOUNDS = {
+  'Playstation.wav': 'PlayStation.wav',
+  'Playstation5.wav': 'PlayStation 5.wav',
+  'Playstation5 Platinum.wav': 'PlayStation 5 Platinum.wav',
+  'Xbox.v1.wav': 'Xbox Classic.wav',
+};
+
 function resolveSoundFile(name) {
   if (!name) return '';
-  for (const dir of [userSoundsDir(), bundledSoundsDir()]) {
-    try {
-      const file = path.join(dir, name);
-      if (fs.existsSync(file)) return file;
-    } catch {
-      /* try the next location */
+  for (const candidate of [name, RENAMED_SOUNDS[String(name)]]) {
+    if (!candidate) continue;
+    for (const dir of [userSoundsDir(), bundledSoundsDir()]) {
+      try {
+        const file = path.join(dir, candidate);
+        if (fs.existsSync(file)) return file;
+      } catch {
+        /* try the next location */
+      }
     }
   }
   return '';

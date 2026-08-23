@@ -9,6 +9,23 @@ const path = require('path');
 const SOUND_EXTENSIONS = ['.wav', '.mp3', '.ogg', '.flac', '.m4a', '.aac'];
 const SOUND_EXT_RE = /\.(?:wav|mp3|ogg|flac|m4a|aac)$/i;
 
+/*
+  Bundled sounds renamed in 3.9.3 for a consistent dropdown ("Playstation5" -> "PlayStation 5",
+  "Xbox.v1" -> "Xbox Classic"). A settings file written before that still names the old file, so the
+  old name has to keep resolving or every one of those users silently loses their sound.
+*/
+const RENAMED_SOUNDS = {
+  'Playstation.wav': 'PlayStation.wav',
+  'Playstation5.wav': 'PlayStation 5.wav',
+  'Playstation5 Platinum.wav': 'PlayStation 5 Platinum.wav',
+  'Xbox.v1.wav': 'Xbox Classic.wav',
+};
+
+// Current name for a sound the user may have picked under an older name; '' when it was not renamed.
+function renamedSound(name) {
+  return RENAMED_SOUNDS[String(name || '')] || '';
+}
+
 // List sound files across the given directories. User-imported dirs listed AFTER bundled dirs shadow
 // same-named bundled files (callers pass [bundledSoundsDir, userSoundsDir]).
 function listSoundFiles(dirs) {
@@ -38,4 +55,4 @@ function pickRandomSound(dirs) {
   return list[Math.floor(Math.random() * list.length)].file;
 }
 
-module.exports = { SOUND_EXTENSIONS, SOUND_EXT_RE, listSoundFiles, pickRandomSound };
+module.exports = { SOUND_EXTENSIONS, SOUND_EXT_RE, RENAMED_SOUNDS, renamedSound, listSoundFiles, pickRandomSound };
