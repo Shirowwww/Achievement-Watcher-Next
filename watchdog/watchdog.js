@@ -68,16 +68,69 @@ const { resolvePowerShell } = require('./util/powershell.js');
 const { sendEscapeToFocusedWindow, addExcludedPid } = require('./util/sendKey.js');
 const toastIdentity = require('./util/toastIdentity.js');
 const { userDataDir } = require('./util/userData.js');
-const { steamHeaderImage, steamLibraryImage, steamSquareLogo } = require('./util/steamArtwork.js');
+const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon } = require('./util/steamArtwork.js');
+const { sharedAppModulePath } = require('./util/sharedAppModule.js');
+const localIcons = require(sharedAppModulePath('util/localIcons.js'));
 
 /*
-  The square slot of a notification card: a community logo when one has been resolved for this game,
-  the library poster otherwise. The poster still has to be cropped by whoever paints it, which is
-  what makes a real square logo worth asking for first.
+  The executable the library resolved for a game (cfg/exeList.db), which is what points localIcons
+  at the install folder. The Watchdog's own game index only stores a binary NAME, so this file is
+  the only place a full path lives outside the renderer.
+*/
+function configuredExecutable(appid) {
+  const id = String(appid == null ? '' : appid).trim();
+  if (!id) return '';
+  try {
+    const list = JSON.parse(fs.readFileSync(path.join(userDataDir(), 'cfg', 'exeList.db'), 'utf8'));
+    const entry = Array.isArray(list) ? list.find((row) => row && String(row.appid) === id) : null;
+    return entry && entry.exe ? String(entry.exe) : '';
+  } catch {
+    return '';
+  }
+}
+
+/*
+  The square slot of a notification card, best first, and in the same order the app resolves it in:
+  the icon the user picked for this game, a community logo when one has been resolved for it, the
+  game's own executable icon, the library poster, and finally whatever square artwork the install
+  folder itself holds.
+
+  Everything from the executable icon down needs no network - without those a player who cannot
+  reach Steam's CDN gets a card with a broken thumbnail (issue #38) - and the poster comes after the
+  executable icon because it is not icon-shaped: whoever paints it has to cut a square out of a 2:3
+  grid, where the exe carries a real icon, regularly at 256x256.
 */
 function notificationGameIcon(game) {
   const id = game.steamappid || game.appid;
-  return steamSquareLogo(id, game.name) || steamLibraryImage(id);
+  return (
+    customGameIcon(game.appid) ||
+    customGameIcon(id) ||
+    steamSquareLogo(id, game.name) ||
+    executableIcon(id) ||
+    executableIcon(game.appid) ||
+    steamLibraryImage(id) ||
+    localIcons.gameIconCandidates({ gameDir: game.gameDir, binary: configuredExecutable(game.appid) })[0]
+  );
+}
+
+/*
+  The image an achievement's own card should paint. The schema value is a Steam CDN url; an emulated
+  install ships the very same pictures next to the game, so a local copy is preferred whenever one
+  exists - it costs no request and keeps working with no connection at all.
+*/
+function notificationAchievementIcon(game, achievement, achieved) {
+  const schemaValue = achieved ? achievement.icon : achievement.icongray;
+  try {
+    const local = localIcons.achievementIconFor(
+      { gameDir: game.gameDir, steamSettings: game.steamSettings, binary: configuredExecutable(game.appid) },
+      achievement,
+      achieved
+    );
+    if (local) return local;
+  } catch (err) {
+    debug.log(`[artwork] local achievement icon lookup failed: ${err.message || err}`);
+  }
+  return schemaValue;
 }
 const { resolvePlaytimeArtwork } = require('./util/playtimeArtwork.js');
 const { findIndexedSocialClubGame } = require('./util/socialClub.js');

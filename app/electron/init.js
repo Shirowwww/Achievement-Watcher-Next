@@ -1171,6 +1171,35 @@ function attachOverlayRarity(game) {
   }
 }
 
+/*
+  Point each row at the picture the game itself ships, when it has one.
+
+  The overlay is on screen over a running game, which is the worst possible moment to be waiting on
+  a download - and for the player in issue #38 that download never arrives at all. An emulated
+  install holds every achievement image next to the game, so the paths are attached here and the
+  page prefers them; a game without them is untouched and keeps the normal fetch.
+*/
+function attachOverlayLocalIcons(game) {
+  try {
+    if (!game || !game.achievement || !Array.isArray(game.achievement.list)) return;
+    const index = localIcons.readIndex({
+      gameDir: game.gameDir,
+      steamSettings: game.steamSettings,
+      binary: configuredExecutable(game.appid),
+    });
+    if (index.byName.size === 0 && index.byToken.size === 0) return;
+    for (const achievement of game.achievement.list) {
+      if (!achievement) continue;
+      const unlocked = localIcons.achievementIcon(index, achievement, true);
+      const locked = localIcons.achievementIcon(index, achievement, false);
+      if (unlocked) achievement.iconLocal = unlocked;
+      if (locked) achievement.icongrayLocal = locked;
+    }
+  } catch (err) {
+    debug.log(`[overlay] local icon attach failed: ${err.message || err}`);
+  }
+}
+
 async function closePuppeteer() {
   currentlyscraping.steamcommunity = false;
   currentlyscraping.steamhunters = false;
@@ -1945,6 +1974,7 @@ function handleMonitorMessage(msg) {
 const squareLogoPrefetched = new Set();
 async function prefetchSquareGameLogo(request) {
   const appid = String((request && request.appid) || '').trim();
+  const libraryAppid = String((request && request.libraryAppid) || '').trim();
   const name = String((request && request.name) || '').trim();
   if (!appid && !name) return;
   const key = `${appid}\0${name.toLowerCase()}`;
@@ -1955,6 +1985,17 @@ async function prefetchSquareGameLogo(request) {
     if (icon && icon.url) await fetchSteamIcon(icon.url, appid);
   } catch (err) {
     debug.log(`[artwork] square logo prefetch failed for "${name || appid}": ${err.message || err}`);
+  }
+  /*
+    And extract the executable's own icon while the game is starting, for the same reason: the
+    Watchdog has no PE reader and paints Windows toasts on its own, so the file has to be sitting in
+    the shared cache before the first card is due.
+  */
+  try {
+    const executable = configuredExecutable(libraryAppid, appid);
+    if (executable) await fetchExecutableIcon(executable, appid);
+  } catch (err) {
+    debug.log(`[artwork] executable icon prefetch failed for "${name || appid}": ${err.message || err}`);
   }
 }
 
@@ -2512,17 +2553,28 @@ function filterSteamDbCoversByOrientation(urls, orientation) {
   return tall.length ? tall : list;
 }
 
-async function fetchSteamDbCovers(appid, orientation = 'portrait') {
+/*
+  Everything one SteamDB info page has to say about a game's artwork: `urls` (library covers) and
+  `icons` (the square community image). One scrape answers both, because the visit itself - a
+  stealth-browser launch and a page load - is the whole cost.
+
+  `needIcons` only decides whether a cached entry from a build that recorded covers alone is worth
+  re-scraping for; a cover caller must never pay for that.
+*/
+async function fetchSteamDbAssets(appid, { needIcons = false } = {}) {
+  const empty = { urls: [], icons: [] };
   const id = String(appid || '').trim();
-  if (!/^\d+$/.test(id)) return [];
+  if (!/^\d+$/.test(id)) return empty;
   const generation = artworkCacheGeneration;
   const cacheFile = path.join(steamdbCoversDir, `${id}.json`);
   try {
     if (fs.existsSync(cacheFile)) {
       const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-      if (Array.isArray(cached.urls)) {
+      if (Array.isArray(cached.urls) && (!needIcons || Array.isArray(cached.icons))) {
         const ttl = cached.urls.length ? STEAMDB_COVERS_TTL : STEAMDB_COVERS_MISS_TTL;
-        if (Date.now() - fs.statSync(cacheFile).mtimeMs < ttl) return filterSteamDbCoversByOrientation(cached.urls, orientation);
+        if (Date.now() - fs.statSync(cacheFile).mtimeMs < ttl) {
+          return { urls: cached.urls, icons: Array.isArray(cached.icons) ? cached.icons : [] };
+        }
       }
     }
   } catch {
@@ -2549,11 +2601,15 @@ async function fetchSteamDbCovers(appid, orientation = 'portrait') {
       await page
         .waitForSelector('a[href*="library_600x900.jpg"], a[href*="library_capsule"], #js-assets-table', { timeout: 3000 })
         .catch(() => {});
-      const html = await page.evaluate(() => {
-        const assets = document.querySelector('#js-assets-table');
-        return assets ? assets.outerHTML : document.documentElement.innerHTML;
+      // Two reads of the same page: the assets table holds the library covers, while the icon
+      // hashes sit in the appinfo table and in the page's own avatar. Scraping SteamDB costs a
+      // browser launch, so the one visit answers both questions.
+      const { assets, full } = await page.evaluate(() => {
+        const table = document.querySelector('#js-assets-table');
+        return { assets: table ? table.outerHTML : '', full: document.documentElement.innerHTML };
       });
-      const urls = steamdbCover.coversFromHtml(id, html);
+      const urls = steamdbCover.coversFromHtml(id, assets || full);
+      const icons = steamdbCover.iconsFromHtml(id, full);
       steamdbCoversCircuit.recordSuccess();
       // A page that loaded and listed nothing is a real answer: cache it (shorter TTL) so the next
       // scan reads it instead of re-opening the browser. Only a reached page may write a miss - a
@@ -2561,13 +2617,14 @@ async function fetchSteamDbCovers(appid, orientation = 'portrait') {
       if (generation === artworkCacheGeneration) {
         try {
           fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
-          fs.writeFileSync(cacheFile, JSON.stringify({ appid: id, urls }, null, 2));
+          fs.writeFileSync(cacheFile, JSON.stringify({ appid: id, urls, icons }, null, 2));
         } catch {
           /* cache write failure is non-fatal */
         }
       }
       debug.log(urls.length ? `[${id}] SteamDB covers: ${urls.length} asset(s)` : `[${id}] SteamDB covers: no library asset found`);
-      return urls;
+      debug.log(`[${id}] SteamDB icons: ${icons.length} candidate(s)`);
+      return { urls, icons };
     } catch (err) {
       if (steamdbCoversCircuit.recordFailure(err)) {
         debug.log(
@@ -2578,7 +2635,7 @@ async function fetchSteamDbCovers(appid, orientation = 'portrait') {
       } else {
         debug.log(`[${id}] SteamDB covers fetch failed: ${err.message || err}`);
       }
-      return [];
+      return { urls: [], icons: [] };
     } finally {
       if (page) await page.close().catch(() => {});
     }
@@ -2587,10 +2644,20 @@ async function fetchSteamDbCovers(appid, orientation = 'portrait') {
   steamdbCoversQueue = pending.catch(() => {});
   steamdbCoversInFlight.set(id, pending);
   try {
-    return filterSteamDbCoversByOrientation(await pending, orientation);
+    return await pending;
   } finally {
     steamdbCoversInFlight.delete(id);
   }
+}
+
+async function fetchSteamDbCovers(appid, orientation = 'portrait') {
+  const { urls } = await fetchSteamDbAssets(appid);
+  return filterSteamDbCoversByOrientation(urls, orientation);
+}
+
+async function fetchSteamDbIcons(appid) {
+  const { icons } = await fetchSteamDbAssets(appid, { needIcons: true });
+  return icons;
 }
 
 async function fetchSteamDbCover(appid) {
@@ -3013,6 +3080,205 @@ async function fetchSteamGridDbIcon(gameName, steamAppid = '') {
 ipcMain.handle('get-steamgriddb-icon', async (event, gameName, steamAppid) => {
   const icon = await fetchSteamGridDbIcon(gameName, steamAppid);
   return (icon && icon.url) || null;
+});
+
+// How many community icons the picker offers. The list is a gallery, not an automatic choice, so
+// it keeps everything usable rather than the single best one fetchSteamGridDbIcon() picks.
+const SGDB_ICON_PICKER_LIMIT = 36;
+
+/*
+  The whole icon list for a game, largest first, for the icon picker. Deliberately not cached: it is
+  only ever asked for by a user who opened the dialog, and reusing the single-icon cache file would
+  overwrite the answer every notification depends on with a different shape.
+*/
+async function fetchSteamGridDbIcons(gameName, steamAppid = '') {
+  const name = String(gameName || '').trim();
+  const appid = /^\d+$/.test(String(steamAppid || '').trim()) ? String(steamAppid).trim() : '';
+  if (!name && !appid) return { icons: [], networkError: false };
+  if (steamGridDbUnavailable()) return { icons: [], networkError: true };
+  try {
+    const resolved = await resolveSteamGridDbGameId(name, appid, 'icon picker');
+    if (!resolved.gameId) return { icons: [], networkError: resolved.networkError === true };
+    const res = await steamGridDbFetch(`${BASE_URL}/icons/game/${resolved.gameId}?types=static`);
+    sgdbCircuit.recordSuccess();
+    const body = res.ok ? await res.json().catch(() => null) : null;
+    const list = Array.isArray(body && body.data) ? body.data : [];
+    const icons = list
+      // .ico and animated .webp are read by neither the picker's preview nor the preset that would
+      // have to paint the result, so they are dropped rather than offered as a dead tile.
+      .filter((asset) => asset && asset.url && /\.(?:png|jpe?g)(?:$|[?#])/i.test(String(asset.url)))
+      .sort((a, b) => (Number(b.width) || 0) - (Number(a.width) || 0))
+      .slice(0, SGDB_ICON_PICKER_LIMIT)
+      .map((asset) => ({ url: String(asset.url), thumb: String(asset.thumb || asset.url) }));
+    return { icons, networkError: false };
+  } catch (err) {
+    if (!recordSteamGridDbFailure(err, `icon picker "${name || appid}"`)) {
+      debug.log(`[steamgriddb] icon picker list failed for "${name || appid}": ${err.message || err}`);
+    }
+    return { icons: [], networkError: true };
+  }
+}
+
+/*
+  The executable's own icon, as a file the picker can paint.
+
+  Windows keeps a game's real logo in its exe, and for a cracked or brand-new title that is
+  regularly the only artwork that exists anywhere. This does NOT go through app.getFileIcon(): the
+  shell answers with the generic "application" glyph rather than nothing for a file that has no icon
+  of its own, so every game was offered the same blue window picture. util/exeIcon.js reads the PE's
+  own resources instead, and an executable without an RT_GROUP_ICON simply gets no tile.
+*/
+// The name is fixed so every reader - this process, the picker, the Watchdog - looks in one place.
+const EXECUTABLE_ICON_NAME = 'executable-icon.png';
+/*
+  Below this an executable icon has nothing on the artwork chain: a 32x32 entry blown up into a 68px
+  notification slot is the blurry stamp the square logo exists to avoid. Small icons are still
+  offered in the picker, they just do not win the automatic pick.
+*/
+const MIN_EXECUTABLE_ICON_SIDE = 64;
+
+async function fetchExecutableIcon(exePath, appid) {
+  const source = String(exePath || '');
+  if (!source || !/\.exe$/i.test(source)) return null;
+  try {
+    const dir = path.join(userData, 'steam_cache', 'icon', String(appid || 'unknown'));
+    const target = path.join(dir, EXECUTABLE_ICON_NAME);
+    /*
+      Reuse what was extracted last time. This runs on the default path now, so it is asked for on
+      every notification and every page open; re-reading a 100 MB executable's resource section each
+      time would be a real cost for an answer that only changes when the game is patched.
+    */
+    try {
+      const [cached, exe] = [fs.statSync(target), fs.statSync(source)];
+      if (cached.mtimeMs >= exe.mtimeMs) {
+        const size = require('../util/imageSize.js').imageSize(target);
+        return { path: target, width: (size && size.width) || 0, height: (size && size.height) || 0 };
+      }
+    } catch {
+      /* nothing cached yet, or the executable is newer: extract it again */
+    }
+
+    const { extractIcon } = require('../util/exeIcon.js');
+    const icon = extractIcon(source);
+    if (!icon) return null;
+    fs.mkdirSync(dir, { recursive: true });
+    // A 256x256 entry is already a PNG; smaller ones are DIBs wrapped in a one-image .ico, which
+    // nativeImage decodes from disk (it cannot from a buffer) and re-encodes as a paintable PNG.
+    if (icon.format === 'png') {
+      fs.writeFileSync(target, icon.data);
+      return { path: target, width: icon.width, height: icon.height };
+    }
+    const icoFile = path.join(dir, 'executable-icon.ico');
+    fs.writeFileSync(icoFile, icon.data);
+    const image = require('electron').nativeImage.createFromPath(icoFile);
+    if (!image || image.isEmpty()) return null;
+    const png = image.toPNG();
+    if (!png || !png.length) return null;
+    fs.writeFileSync(target, png);
+    return { path: target, width: icon.width, height: icon.height };
+  } catch (err) {
+    debug.log(`[artwork] executable icon failed for "${source}": ${err.message || err}`);
+    return null;
+  }
+}
+
+/*
+  The game's own Steam artwork, as squares.
+
+  Only the clienticon is square to begin with; a header is 2:1 and a library grid 2:3, and offering
+  those unchanged filled the gallery with covers - which is not what the box beside the title paints
+  anyway. Everything is put through the same square cut the header itself uses, so a tile is exactly
+  the picture that will be applied. A clienticon is kept as it is: it is under makeSquareLogo's
+  minimum side, but it is also the game's real icon and there is nothing to cut.
+*/
+async function squareIconCandidates(appid, sources) {
+  const { makeSquareLogo, isSquareRatio } = require('../util/squareLogo.js');
+  const { imageSize } = require('../util/imageSize.js');
+  const out = [];
+  for (const candidate of Array.isArray(sources) ? sources : [sources]) {
+    const value = String(candidate || '');
+    if (!value) continue;
+    const local =
+      paintableIconPath(value) ||
+      paintableIconPath(
+        await Promise.race([
+          fetchSteamIcon(value, appid).catch(() => ''),
+          new Promise((resolve) => setTimeout(() => resolve(''), SGDB_ICON_DOWNLOAD_WAIT_MS)),
+        ])
+      );
+    if (!local) continue;
+    let square = '';
+    try {
+      square = makeSquareLogo(local, appid, { userDataRoot: userData }) || '';
+      if (!square) {
+        const size = imageSize(local);
+        if (size && isSquareRatio(size.width, size.height)) square = local;
+      }
+    } catch {
+      /* an unreadable candidate is simply not offered */
+    }
+    if (square && !out.includes(square)) out.push(square);
+  }
+  return out;
+}
+
+/*
+  Icon picker options: everything that needs the main process. The game's Steam artwork has to be
+  downloaded and cut here, the community icon set is a network call, and the executable's icon is a
+  PE read. The renderer adds what is already on its side (the current pick, the game folder).
+*/
+ipcMain.handle('get-icon-options', async (event, { name, steamAppid, cacheAppid, sources, exe } = {}) => {
+  const id = /^\d+$/.test(String(steamAppid || '').trim()) ? String(steamAppid).trim() : '';
+  // A game with no Steam appid still needs its own icon folder: sharing one named "unknown" made
+  // the mtime reuse check hand one game's executable icon to the next, and left it out of reach of
+  // forget-square-logo. Key it on whatever the rest of the artwork chain keys this game on.
+  const iconCacheId = id || String(cacheAppid || steamAppid || '').trim() || 'unknown';
+  const toFileUrl = require('../util/iconUrl.js').iconResultToFileUrl;
+  const [grids, exeIcon, steam] = await Promise.all([
+    fetchSteamGridDbIcons(String(name || ''), id),
+    fetchExecutableIcon(exe, iconCacheId),
+    squareIconCandidates(id || String(steamAppid || ''), sources),
+  ]);
+  return {
+    grids: grids.icons,
+    steam: steam.map(toFileUrl).filter(Boolean),
+    exe: (exeIcon && toFileUrl(exeIcon.path)) || '',
+    networkError: grids.networkError === true,
+  };
+});
+
+// The slow half, asked for separately so its tiles can be appended late: SteamDB costs a stealth
+// browser launch. Only a real Steam release is queried - any other id scrapes a page with no assets.
+ipcMain.handle('get-icon-options-steamdb', async (event, { steamAppid } = {}) => {
+  const id = /^\d+$/.test(String(steamAppid || '').trim()) ? String(steamAppid).trim() : '';
+  if (!id) return [];
+  const icons = await fetchSteamDbIcons(id);
+  return Array.isArray(icons) ? icons : [];
+});
+
+/*
+  Forget everything cached about a game's square logo, so "Re-download icon" actually looks it up
+  again instead of handing back the same file. Both halves have to go: the SteamGridDB answer (a
+  miss is cached too, for 30 days) and the squares already cut from local artwork.
+*/
+ipcMain.handle('forget-square-logo', async (event, { appid, name } = {}) => {
+  const id = String(appid == null ? '' : appid).trim();
+  const title = String(name || '').trim();
+  try {
+    const key = require('crypto').createHash('sha1').update(`${/^\d+$/.test(id) ? id : ''}\0${title.toLowerCase()}`).digest('hex');
+    fs.rmSync(path.join(steamgriddbIconsDir, `${key}.json`), { force: true });
+  } catch {
+    /* nothing cached is the normal case */
+  }
+  try {
+    const iconDir = path.join(userData, 'steam_cache', 'icon', id);
+    for (const entry of fs.readdirSync(iconDir)) {
+      if (/-logo\.png$/i.test(entry) || entry.toLowerCase() === 'executable-icon.png') fs.rmSync(path.join(iconDir, entry), { force: true });
+    }
+  } catch {
+    /* no per-appid icon folder yet */
+  }
+  return true;
 });
 
 // `steamAppid` is optional: the non-Steam callers (Ubisoft, GOG, Epic) still ask by name only.
@@ -3937,6 +4203,7 @@ async function createOverlayWindow(info) {
     await getCachedData(info);
     info.game = await achievementsJS.getSavedAchievementsForAppid(configJS, { appid: info.appid });
     attachOverlayRarity(info.game);
+    attachOverlayLocalIcons(info.game);
 
     // Fast path: the window already exists (hidden) from a previous open. Swap the data and show.
     if (overlayWindow && !overlayWindow.isDestroyed()) {
@@ -4375,7 +4642,7 @@ function createNotificationWindow(data = {}) {
       // In packaged builds the sound lives under app.asar.unpacked (see electron-builder asarUnpack).
       const u = String(data.soundPath).replace(/\\/g, '/').replace('app.asar/', 'app.asar.unpacked/');
       const src = u.startsWith('file://') ? u : 'file:///' + u;
-      const gain = Math.max(0, Math.min(2, (Number(data.volume) != null && Number.isFinite(Number(data.volume)) ? Number(data.volume) : 100) / 100));
+      const gain = volumePercent / 100;
       notif.webContents
         .executeJavaScript(
           '(function(){try{var a=new Audio(' + JSON.stringify(src) + ');var g=' + gain + ';' +
@@ -4612,6 +4879,35 @@ function paintableIconPath(candidate) {
   }
 }
 
+const localIcons = require('../util/localIcons.js');
+
+/*
+  The executable the library resolved for a game, straight from cfg/exeList.db.
+
+  The main process has no game object - a notification carries an appid and a name - but it does
+  have the same file the Play button launches from, and that path is what points localIcons at the
+  install folder. Read on demand rather than cached: the file changes whenever a scan re-links a
+  game, and this runs at most once per notification.
+
+  Several ids are accepted because callers here hold the Steam appid while exeList.db is keyed on
+  the library one, and for a namespaced game (SocialClub, Uplay R2) those are not the same value.
+*/
+function configuredExecutable(...appids) {
+  const ids = appids.map((value) => String(value == null ? '' : value).trim()).filter(Boolean);
+  if (ids.length === 0) return '';
+  try {
+    const list = JSON.parse(fs.readFileSync(path.join(userData, 'cfg', 'exeList.db'), 'utf8'));
+    if (!Array.isArray(list)) return '';
+    for (const id of ids) {
+      const entry = list.find((row) => row && String(row.appid) === id);
+      if (entry && entry.exe && fs.existsSync(entry.exe)) return String(entry.exe);
+    }
+    return '';
+  } catch {
+    return '';
+  }
+}
+
 /*
   A square logo for a card whose thumbnail is game artwork.
 
@@ -4624,7 +4920,7 @@ function paintableIconPath(candidate) {
   user has since deleted is not there at all. Falling through to the poster or the header is what
   keeps a card from ending up with an empty square.
 */
-async function resolveSquareGameLogo(appid, gameName, candidates) {
+async function resolveSquareGameLogo(appid, gameName, candidates, { ignoreOverride = false, libraryAppid = '', exe = '' } = {}) {
   const { makeSquareLogo } = require('../util/squareLogo.js');
   const localSquare = (source) => {
     try {
@@ -4633,6 +4929,33 @@ async function resolveSquareGameLogo(appid, gameName, candidates) {
       return '';
     }
   };
+
+  /*
+    A user's own pick outranks every lookup below, and it is resolved here rather than only in the
+    page that offers it: this function is what the notification card and the overlay ask, so making
+    it the one gate is what keeps a chosen icon the same icon everywhere.
+
+    `ignoreOverride` is how the icon picker shows what "Default" would restore: the same answer,
+    minus the decision, so the tile previews the icon rather than describing it.
+  */
+  if (!ignoreOverride) {
+    try {
+      const gameIconStore = require('../util/gameIconStore.js');
+      // The page stores a pick under the LIBRARY appid, which for a namespaced game (SocialClub,
+      // Uplay R2, GOG/Epic) is not the Steam one this function is called with. Both are tried, the
+      // same way the Watchdog does it, or the chosen icon is silently ignored for those games.
+      const override = gameIconStore.get(appid) || (libraryAppid ? gameIconStore.get(libraryAppid) : null);
+      if (override && gameIconStore.isUsable(override)) {
+        const asFile = /^file:/i.test(override) ? require('url').fileURLToPath(override) : override;
+        const local = paintableIconPath(asFile);
+        if (local) return local;
+        const downloaded = paintableIconPath(await fetchSteamIcon(override, appid).catch(() => ''));
+        if (downloaded) return downloaded;
+      }
+    } catch (err) {
+      debug.log(`[artwork] custom icon lookup failed for "${gameName || appid}": ${err.message || err}`);
+    }
+  }
 
   try {
     const lookup = fetchSteamGridDbIcon(gameName, appid).catch(() => null);
@@ -4647,6 +4970,26 @@ async function resolveSquareGameLogo(appid, gameName, candidates) {
     }
   } catch {
     /* the community icon set is a bonus, never a requirement */
+  }
+
+  /*
+    The game's own executable icon, before any of its store artwork.
+
+    That artwork is not icon-shaped: the clienticon is a 32x32 sprite, and everything else is a
+    header or a library grid that has to be CUT into a square - which lands on whatever part of a
+    poster happens to sit in the middle. The icon inside the exe is the picture the game is
+    recognised by on the desktop and in the taskbar, it is regularly a 256x256 entry, and it needs
+    no network at all. Under MIN_EXECUTABLE_ICON_SIDE it loses that argument and the chain goes on.
+  */
+  try {
+    const executable = String(exe || '') || configuredExecutable(appid, libraryAppid);
+    const icon = executable ? await fetchExecutableIcon(executable, appid) : null;
+    if (icon && Math.min(icon.width, icon.height) >= MIN_EXECUTABLE_ICON_SIDE) {
+      const paintable = paintableIconPath(icon.path);
+      if (paintable) return paintable;
+    }
+  } catch (err) {
+    debug.log(`[artwork] executable icon lookup failed for "${gameName || appid}": ${err.message || err}`);
   }
 
   let firstPaintable = '';
@@ -4673,6 +5016,14 @@ async function resolveSquareGameLogo(appid, gameName, candidates) {
     const square = localSquare(local);
     if (square) return square;
   }
+  if (firstPaintable) return firstPaintable;
+  /*
+    Last resort, and the only one that costs no network at all: artwork the game itself ships. A
+    player whose connection cannot reach Steam's CDN has nothing above this line - which is exactly
+    the state issue #38 describes - and the install folder usually holds a usable logo.
+  */
+  const shipped = localIcons.gameIconCandidates({ binary: configuredExecutable(appid, libraryAppid) })[0] || '';
+  if (shipped) return localSquare(shipped) || shipped;
   // Nothing could be cut: keep the best artwork that at least exists, so the card shows the game
   // rather than a hole. With nothing paintable at all this is '' and the preset hides its thumbnail.
   return firstPaintable;
@@ -4691,12 +5042,13 @@ async function resolveSquareGameLogo(appid, gameName, candidates) {
   game has no usable artwork at all - which the caller must render as "no icon", not as a broken one.
 */
 ipcMain.handle('resolve-square-logo', async (event, request) => {
-  const { appid, name, sources } = request || {};
+  const { appid, libraryAppid, name, sources, ignoreOverride, exe } = request || {};
   try {
     const square = await resolveSquareGameLogo(
       appid == null ? '' : String(appid),
       String(name || ''),
-      Array.isArray(sources) ? sources : [sources]
+      Array.isArray(sources) ? sources : [sources],
+      { ignoreOverride: ignoreOverride === true, libraryAppid: libraryAppid == null ? '' : String(libraryAppid), exe: String(exe || '') }
     );
     return (square && require('../util/iconUrl.js').iconResultToFileUrl(square)) || '';
   } catch (err) {
@@ -4885,10 +5237,14 @@ function userPresetImagesDir() {
 }
 function resolveNotificationSound(name) {
   if (!name) return '';
-  for (const p of [path.join(userSoundsDir(), name), path.join(__dirname, '../sounds', name)]) {
-    try {
-      if (fs.existsSync(p)) return p;
-    } catch {}
+  // A settings file written before the bundled sounds were renamed still names the old file.
+  for (const candidate of [name, notificationSounds.renamedSound(name)]) {
+    if (!candidate) continue;
+    for (const p of [path.join(userSoundsDir(), candidate), path.join(__dirname, '../sounds', candidate)]) {
+      try {
+        if (fs.existsSync(p)) return p;
+      } catch {}
+    }
   }
   return '';
 }

@@ -73,3 +73,57 @@ test('coversFromHtml returns an empty list when nothing matches', () => {
   assert.deepEqual(cover.coversFromHtml('999', '<html><body><p>nothing</p></body></html>'), []);
   assert.deepEqual(cover.coversFromHtml('999', ''), []);
 });
+
+/*
+  Icons, which are a different asset family entirely: a library cover is a store asset, while the
+  icon a game is recognised by is a community image keyed by a content hash. SteamDB carries the
+  hash in its appinfo table even for games whose image tag is long gone, so both are read.
+*/
+
+test('iconsFromHtml rebuilds an icon URL from the appinfo hash, clienticon first', () => {
+  const html = [
+    '<tr><td>icon</td><td>0e8598876c1fbb0b525b50d03fdcdaaca3c845ba</td></tr>',
+    '<tr><td>clienticon</td><td>aa11bb22cc33dd44ee55ff66aa77bb88cc99dd00</td></tr>',
+    '<tr><td>name</td><td>Sovereign Tower</td></tr>',
+  ].join('');
+  const icons = cover.iconsFromHtml('4113940', html);
+  // clienticon is the square image Windows and the Steam client show; `icon` is the smaller sprite.
+  assert.equal(icons[0], 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/4113940/aa11bb22cc33dd44ee55ff66aa77bb88cc99dd00.jpg');
+  assert.equal(icons[1], 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/4113940/0e8598876c1fbb0b525b50d03fdcdaaca3c845ba.jpg');
+});
+
+test('iconsFromHtml also takes the images the page itself shows, deduplicated', () => {
+  const html = [
+    '<img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/620/abcdef0123456789.jpg">',
+    '<a href="/steamcommunity/public/images/apps/620/abcdef0123456789.ico">ico</a>',
+    '<img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/620/abcdef0123456789.jpg">',
+  ].join('');
+  const icons = cover.iconsFromHtml('620', html);
+  assert.deepEqual(icons, [
+    'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/620/abcdef0123456789.jpg',
+    'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/620/abcdef0123456789.ico',
+  ]);
+});
+
+test('iconsFromHtml ignores a library cover and any other forty-hex value on the page', () => {
+  const html = [
+    '<a href="store_item_assets/steam/apps/620/c0ffee/library_600x900.jpg">portrait</a>',
+    '<tr><td>build_id</td><td>1111111111111111111111111111111111111111</td></tr>',
+  ].join('');
+  assert.deepEqual(cover.iconsFromHtml('620', html), []);
+  assert.deepEqual(cover.iconsFromHtml('620', ''), []);
+});
+
+test('normalizeSteamDbIconUrl accepts a hash, a rooted path and a full URL, and nothing else', () => {
+  assert.equal(
+    cover.normalizeSteamDbIconUrl('480', 'abcdef0123456789abcdef0123456789abcdef01'),
+    'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/480/abcdef0123456789abcdef0123456789abcdef01.jpg'
+  );
+  assert.equal(
+    cover.normalizeSteamDbIconUrl('480', '/steamcommunity/public/images/apps/480/deadbeef.png'),
+    'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/480/deadbeef.png'
+  );
+  assert.equal(cover.normalizeSteamDbIconUrl('480', 'https://example.test/x.png'), 'https://example.test/x.png');
+  assert.equal(cover.normalizeSteamDbIconUrl('480', 'not-a-hash'), '');
+  assert.equal(cover.normalizeSteamDbIconUrl('480', ''), '');
+});

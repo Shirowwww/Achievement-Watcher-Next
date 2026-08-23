@@ -1395,15 +1395,20 @@
               : `<span class="status-pill locked">${ui.escapeHtml(overlayStrings.locked)}</span>`;
 
             row.innerHTML =
-              `<div class="overlay-icon"><img alt="${ui.escapeHtml(overlayStrings.icon)}" onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/11455/11455431.png';" /></div>` +
+              // The placeholder is bundled, not fetched: this overlay is on screen over a running
+              // game, and the case it exists for is precisely the one where no image downloaded.
+              `<div class="overlay-icon"><img alt="${ui.escapeHtml(overlayStrings.icon)}" onerror="this.onerror=null; this.src='../resources/img/achievement.svg';" /></div>` +
               `<div class="overlay-info"><div class="overlay-name" title="${displayName}">${displayName}</div>` +
               `<div class="overlay-desc" title="${description}">${description}</div>${progressHtml}${rarityHtml}</div>` +
               `<div class="overlay-status">${statusHtml}</div>`;
 
             container.appendChild(row);
 
-            const iconGray = achievement.icon_gray || achievement.icongray;
-            const icon = achievement.icon || iconGray;
+            // The *Local fields are absolute paths to images the game itself ships, attached by the
+            // host when the install has them. Preferring them is what lets the overlay draw its
+            // icons with no network at all, exactly as the achievement page does.
+            const iconGray = achievement.icongrayLocal || achievement.icon_gray || achievement.icongray;
+            const icon = achievement.iconLocal || achievement.icon || iconGray;
             const img = row.querySelector('img');
             window.api
               .fetchIcon(achieved ? icon : iconGray, currentGame.appid)

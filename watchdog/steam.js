@@ -11,15 +11,9 @@ const steamLang = require('./steam.json');
 const htmlParser = lazyRequire('node-html-parser');
 const { userDataDir } = require('./util/userData.js');
 
-// The shared schema mappers live in the app folder. In a packaged build the app code is inside
-// resources/app.asar and the unpacked copies are at resources/app.asar.unpacked (see
-// electron-builder.yml asarUnpack); in dev the plain app folder is next to the watchdog.
-function sharedAppModulePath(rel) {
-  const resources = process.resourcesPath;
-  const unpacked = resources ? path.join(resources, 'app.asar.unpacked', rel) : '';
-  if (unpacked && fs.existsSync(unpacked)) return unpacked;
-  return path.join(__dirname, '..', 'app', rel);
-}
+// The shared schema mappers live in the app folder; sharedAppModule.js knows where that is in a
+// packaged build and in a dev checkout.
+const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 
 const steamSchemaFetch = require(sharedAppModulePath('util/steamSchemaFetch.js'));
 const { mergeTranslatedAchievements } = require(sharedAppModulePath('parser/achievementTranslations.js'));

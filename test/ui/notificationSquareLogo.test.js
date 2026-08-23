@@ -40,7 +40,7 @@ test('an achievement icon is left alone, game artwork is not', () => {
 });
 
 test('the fallback walks every candidate instead of giving up on the first', () => {
-  const fn = sliceFunction(init, 'async function resolveSquareGameLogo(appid, gameName, candidates) {');
+  const fn = sliceFunction(init, 'async function resolveSquareGameLogo(appid, gameName, candidates,');
   // Garry's Mod: the first candidate is a 32x32 clienticon, which cannot be cut into anything -
   // the loop has to continue to the poster rather than keeping it.
   assert.match(fn, /for \(const candidate of Array\.isArray\(candidates\) \? candidates : \[candidates\]\)/);
@@ -74,7 +74,11 @@ test('the monitor asks for the logo when the game starts, not when the card is d
   // artwork itself, it only reads what the app has already written to the shared cache.
   assert.match(watchdog, /requestArtworkPrefetch\(game\);/);
   const request = sliceFunction(watchdog, 'function requestArtworkPrefetch(game) {');
-  assert.match(request, /artworkPrefetch: \{ appid: String\(game\.steamappid \|\| game\.appid \|\| ''\), name: String\(game\.name \|\| ''\) \}/);
+  assert.match(request, /appid: String\(game\.steamappid \|\| game\.appid \|\| ''\)/);
+  // The library appid rides along because the executable this game was linked to is recorded under
+  // it, and the exe icon is part of what gets prefetched.
+  assert.match(request, /libraryAppid: String\(game\.appid \|\| ''\)/);
+  assert.match(request, /name: String\(game\.name \|\| ''\)/);
   assert.match(init, /else if \(msg && msg\.artworkPrefetch\) prefetchSquareGameLogo\(msg\.artworkPrefetch\);/);
   const prefetch = sliceFunction(init, 'async function prefetchSquareGameLogo(request) {');
   assert.match(prefetch, /fetchSteamGridDbIcon\(name, appid\)/);
@@ -92,19 +96,27 @@ test('notifications keep the order they were raised in', () => {
 
 test('the achievement page header asks for the same logo instead of taking the clienticon', () => {
   const appSource = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
-  const header = appSource.slice(appSource.indexOf('const headerIconSources ='), appSource.indexOf("$('#achievement .wrapper > .header .title span').text(game.name)"));
+  const header = sliceFunction(appSource, 'async function paintGameHeaderIcon(game) {', '\n}\n');
   assert.match(header, /invoke\('resolve-square-logo'/, 'the header must go through the shared resolver');
-  assert.doesNotMatch(header, /invoke\('fetch-icon'/, 'resolving artwork a second way is what made the two disagree');
   // Every artwork the game has is offered, so a game with no clienticon still gets a logo.
-  assert.match(header, /\[game\.img\.icon, game\.img\.logo, game\.img\.portrait, game\.img\.header\]/);
+  assert.match(appSource, /\[img\.icon, img\.logo, img\.portrait, img\.header\]\.filter\(Boolean\)/);
   // A slow lookup must not paint the icon of a page the user has already left.
-  assert.match(header, /data-appid'\)\) !== String\(game\.appid\)\) return;/);
+  assert.match(header, /data-appid'\)\) === String\(game\.appid\)/);
+  /*
+    The game's artwork is still resolved exactly once, by the shared resolver. The single fetch-icon
+    call in here is a different question: it downloads the icon the USER picked, which no resolver
+    knows about. Resolving the artwork a second way is what made the header and the notification
+    disagree, and this is what keeps that from creeping back.
+  */
+  assert.equal((header.match(/invoke\('fetch-icon'/g) || []).length, 1);
+  assert.match(header, /const override = gameIconOverrideFor\(game\.appid\)/);
 });
 
-test('the Health panel test reuses the resolver rather than resolving artwork its own way', () => {
+test('every notification preview reuses the resolver rather than resolving artwork its own way', () => {
   const appSource = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
-  const branch = appSource.slice(appSource.indexOf('gameHealth.ACTION.TEST_NOTIFICATION'));
-  const body = branch.slice(0, branch.indexOf('\n  if (action ==='));
+  // One builder behind every preview - the Health panel button, the per-game Notifications tab and
+  // the Settings test rows - so none of them can grow artwork resolution of its own.
+  const body = sliceFunction(appSource, 'async function notificationPreviewGame(appid) {');
   assert.match(body, /invoke\('resolve-square-logo'/, 'the preview thumbnail comes from the shared resolver');
   // The hero slot is a different question - a wide, uncropped header - and keeps its own resolution.
   assert.match(body, /resolveArt\(art\.header \|\| art\.background/);

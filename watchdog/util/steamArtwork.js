@@ -129,6 +129,52 @@ function steamSquareLogo(appid, gameName, options = {}) {
   return cachedSquareLogo(appid, gameName, options.userDataRoot || userDataDir());
 }
 
+/*
+  The icon the game's own executable carries, extracted by the app into the shared icon cache.
+
+  The Watchdog has no PE reader and paints Windows toasts without going through the app's resolver,
+  so it reads the file the app wrote rather than growing a second copy of that logic. The app
+  extracts it when the game starts (see prefetchSquareGameLogo), which is well before the first card
+  is due; a game that has never been seen running simply has no file here and falls through.
+*/
+function executableIcon(appid, options = {}) {
+  const id = String(appid == null ? '' : appid).trim();
+  if (!id) return null;
+  const root = options.userDataRoot || userDataDir();
+  const file = path.join(root, 'steam_cache', 'icon', id, 'executable-icon.png');
+  try {
+    return fs.statSync(file).isFile() ? file : null;
+  } catch {
+    return null;
+  }
+}
+
+/*
+  The icon the user picked for this game on its achievement page (cfg/gameIcons.db, written by
+  app/util/gameIconStore.js). It outranks every lookup here for the same reason it does in the app:
+  it is the only source that is a decision rather than a guess.
+
+  Read straight from the file - the Watchdog has no Electron and no renderer state - and only a
+  value that still resolves is returned, so a deleted picture falls through to the artwork chain
+  instead of turning the card's thumbnail into an empty box.
+*/
+function customGameIcon(appid, options = {}) {
+  const id = String(appid == null ? '' : appid).trim();
+  if (!id) return null;
+  const root = options.userDataRoot || userDataDir();
+  const map = readJsonCached(path.join(root, 'cfg', 'gameIcons.db'));
+  const value = map && typeof map === 'object' ? map[id] : null;
+  if (!value || typeof value !== 'string') return null;
+  if (isImageUrl(value)) return value;
+  if (!/^file:/i.test(value)) return null;
+  try {
+    const file = require('url').fileURLToPath(value);
+    return fs.existsSync(file) ? file : null;
+  } catch {
+    return null;
+  }
+}
+
 function normalizedAppid(appid) {
   const id = String(appid == null ? '' : appid).trim();
   return /^\d+$/.test(id) ? id : '';
@@ -174,4 +220,4 @@ function steamLibraryImage(appid, options = {}) {
   return `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_600x900.jpg`;
 }
 
-module.exports = { steamHeaderImage, steamLibraryImage, steamSquareLogo };
+module.exports = { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon };

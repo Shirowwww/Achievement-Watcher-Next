@@ -28,8 +28,10 @@ asarUnpack:
   - sounds/**
   # Keep the plain repair DLLs and their recovery archive accessible outside the virtual asar layer.
   - resources/uplayR2/**
-  # Shared schema mappers loaded by the standalone Watchdog (which runs from the install dir).
+  # Shared modules loaded by the standalone Watchdog (which runs from the install dir) through
+  # watchdog/util/sharedAppModule.js - anything required that way must be listed here.
   - util/steamSchemaFetch.js
+  - util/localIcons.js
   - parser/achievementTranslations.js
 
 publish:

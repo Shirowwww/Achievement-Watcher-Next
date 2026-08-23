@@ -82,6 +82,8 @@ const emulatorSourceOverride = require(path.join(appPath, 'parser/emulatorSource
 emulatorSourceOverride.setUserDataPath(getUserDataPath());
 const l10n = require(path.join(appPath, 'locale/loader.js'));
 const coverStore = require(path.join(appPath, 'util/coverStore.js'));
+const gameIconStore = require(path.join(appPath, 'util/gameIconStore.js'));
+const localIcons = require(path.join(appPath, 'util/localIcons.js'));
 const uninstall = require(path.join(appPath, 'util/uninstall.js'));
 const apiCheckBypass = require(path.join(appPath, 'parser/apiCheckBypass.js'));
 const { calculateLibraryStats } = require(path.join(appPath, 'util/libraryStats.js'));
@@ -1128,6 +1130,24 @@ function coverOverrideFor(appid, orientation) {
   }
   return override;
 }
+// Square game-logo overrides (per-appid; cfg/gameIcons.db). Same lifecycle as the cover overrides
+// above: an in-memory snapshot so a render never reads the disk, and a broken reference is dropped
+// rather than left to paint an empty box.
+let gameIconOverrides = gameIconStore.readAll();
+function reloadGameIconOverrides() {
+  gameIconOverrides = gameIconStore.readAll();
+}
+function gameIconOverrideFor(appid) {
+  const id = String(appid);
+  const override = gameIconOverrides[id] || null;
+  if (!override) return null;
+  if (gameIconStore.isUsable(override)) return override;
+  gameIconStore.remove(id);
+  reloadGameIconOverrides();
+  debug.warn(`[icon] removed missing game-icon override for ${id}`);
+  return null;
+}
+
 function applyCoverBackground(appid, value) {
   const el = $(`#game-header-${appid}`);
   if (!value || value === 'none') {
@@ -1135,6 +1155,98 @@ function applyCoverBackground(appid, value) {
   } else {
     el.css({ backgroundImage: cssUrl(value), backgroundSize: 'cover', backgroundPosition: 'center center', backgroundRepeat: 'no-repeat' });
   }
+}
+
+// A value the browser can paint: schema tokens stay as they are (their caller resolves them first),
+// but an absolute Windows path has to become a file URL or Chromium reads it as a relative one.
+function imageDisplayUrl(value) {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  return path.isAbsolute(text) ? pathToFileURL(text).href : text;
+}
+
+const HEADER_ICON_SELECTOR = '#achievement .wrapper > .header .title .icon';
+
+// The artwork the square logo can be cut from, best first.
+function headerIconSourcesFor(game) {
+  const img = (game && game.img) || {};
+  return [img.icon, img.logo, img.portrait, img.header].filter(Boolean);
+}
+
+// The first square-ish image the game itself ships, as a file URL. Offline last resort for the
+// header icon, and the "Game folder" tiles of the icon picker.
+function localGameIconUrls(game) {
+  try {
+    return localIcons.gameIconCandidates(game).map((file) => pathToFileURL(file).href);
+  } catch (err) {
+    debug.warn(`[icon] local game icon lookup failed => ${err.message || err}`);
+    return [];
+  }
+}
+
+/*
+  Paint the square logo beside the game title, in the order a user would expect:
+    1. their own pick (right-click -> Game icon), remote picks going through the icon cache;
+    2. the square logo the host resolves for notifications - the community icon set, then the
+       game's own artwork cut square, so every surface shows the same logo for a game;
+    3. artwork shipped inside the game folder, which is the only source that still works with no
+       network at all.
+  Repaintable on demand: the context menu calls it again after changing the selection.
+*/
+async function paintGameHeaderIcon(game) {
+  const iconEl = $(HEADER_ICON_SELECTOR);
+  // The element is shared across game pages. Another page can open while this resolves, and the
+  // header carries the appid of the one on screen - so it is the freshness check for every branch.
+  const stillOnScreen = () => String($('#achievement .wrapper > .header').attr('data-appid')) === String(game.appid);
+  // With no artwork at all the box must go back to the neutral CSS surface, or the previous game's
+  // icon stays behind and reads as if this page belonged to another game.
+  const paint = (value) => {
+    if (!stillOnScreen()) return;
+    iconEl.css('background', value ? cssUrl(value) : '');
+  };
+  const paintLocal = () => paint(localGameIconUrls(game)[0] || '');
+  const cacheAppid = game.steamappid || game.appid;
+
+  const override = gameIconOverrideFor(game.appid);
+  if (override) {
+    if (!/^https?:/i.test(override)) {
+      paint(imageDisplayUrl(override));
+      return;
+    }
+    const local = await ipcRenderer.invoke('fetch-icon', override, cacheAppid).catch(() => null);
+    if (local && local !== override) {
+      paint(imageDisplayUrl(local));
+      return;
+    }
+    // A remote pick that cannot be downloaded is not a reason to show nothing: fall through to the
+    // normal chain, exactly like a cover override whose source went away.
+    debug.warn(`[icon] custom game icon for ${game.appid} could not be downloaded`);
+  }
+
+  const sources = headerIconSourcesFor(game);
+  if (sources.length === 0) {
+    paintLocal();
+    return;
+  }
+
+  paint(pathToFileURL(path.join(appPath, 'resources/img/loading.gif')).href);
+  try {
+    // The library appid too: artwork is cached under the Steam one, but the executable this game
+    // was linked to is recorded under the library one, and the host needs it to read the exe icon.
+    const resolved = await ipcRenderer.invoke('resolve-square-logo', {
+      appid: cacheAppid,
+      libraryAppid: game.appid,
+      name: game.name || '',
+      sources,
+    });
+    if (resolved) {
+      paint(imageDisplayUrl(resolved));
+      return;
+    }
+  } catch (err) {
+    debug.warn(`[icon] square logo lookup failed => ${err.message || err}`);
+  }
+  paintLocal();
 }
 
 function setLibraryArtworkFeedback(headerEl, state, retry) {
@@ -1486,6 +1598,364 @@ function openCoverPicker(game, appid, coverCacheAppid) {
   };
   retrySourcesButton.onclick = () => startSourceLoad();
   startSourceLoad();
+}
+
+/*
+  Pick the square logo shown beside the game title - the icon counterpart of the cover picker, and
+  deliberately the same dialog: same chrome, same tiles, same "click a tile to apply it", only the
+  tiles are square and the sources are icon sources.
+
+  Four of them, in the order they are appended: what is on screen now, the community icon set
+  (SteamGridDB), the game's own Steam artwork, and images found inside the install folder. The last
+  one is the only source that works with no usable network, and it is also where a player who
+  already has the right picture on disk will look for it.
+*/
+function openIconPicker(game, appid, iconCacheAppid, exePath) {
+  const overlay = document.createElement('div');
+  overlay.className = 'aw-prompt-overlay aw-cover-picker-overlay';
+  const box = document.createElement('div');
+  box.className = 'aw-prompt aw-cover-picker aw-icon-picker';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  const title = t('chooseAnotherIconTitle', 'Choose another icon', "Choisir une autre icône");
+  box.setAttribute('aria-label', title);
+  const head = document.createElement('div');
+  head.className = 'aw-prompt-heading';
+  const icon = document.createElement('div');
+  icon.className = 'aw-prompt-icon';
+  icon.innerHTML = '<i class="fas fa-icons"></i>';
+  const titleWrap = document.createElement('div');
+  titleWrap.className = 'aw-prompt-title';
+  titleWrap.textContent = title;
+  head.append(icon, titleWrap);
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'aw-prompt-button secondary aw-cover-picker-close';
+  closeBtn.textContent = '×';
+  closeBtn.title = t('cancel', 'Cancel', 'Annuler');
+  head.append(closeBtn);
+  const status = document.createElement('div');
+  status.className = 'aw-cover-picker-status';
+  status.setAttribute('aria-live', 'polite');
+  const statusMessage = document.createElement('span');
+  statusMessage.textContent = t('iconPickerLoading', 'Loading icons…', 'Chargement des icônes…');
+  const retryButton = document.createElement('button');
+  retryButton.type = 'button';
+  retryButton.className = 'aw-prompt-button secondary aw-cover-picker-retry';
+  retryButton.textContent = t('retry-artwork', 'Retry', 'Réessayer');
+  retryButton.hidden = true;
+  status.append(statusMessage, retryButton);
+  const grid = document.createElement('div');
+  grid.className = 'aw-cover-picker-grid';
+  const actions = document.createElement('div');
+  actions.className = 'aw-prompt-actions';
+  // The manual route lives inside the gallery as well as in the context menu: a user who opened
+  // this dialog and found nothing usable should not have to close it and right-click again.
+  const browseBtn = document.createElement('button');
+  browseBtn.className = 'aw-prompt-button secondary';
+  browseBtn.textContent = t('choose-local-image', 'Choose local image…', 'Choisir une image locale…');
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'aw-prompt-button secondary';
+  cancelBtn.textContent = t('cancel', 'Cancel', 'Annuler');
+  actions.append(browseBtn, cancelBtn);
+  box.append(head, status, grid, actions);
+  overlay.append(box);
+
+  const done = () => {
+    overlay.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  const onKey = (e) => {
+    if (e.key === 'Escape') done();
+  };
+  closeBtn.onclick = done;
+  cancelBtn.onclick = done;
+  overlay.onmousedown = (ev) => {
+    if (ev.target === overlay) done();
+  };
+  document.addEventListener('keydown', onKey);
+  document.body.append(overlay);
+
+  browseBtn.onclick = () => {
+    if (chooseLocalGameIcon(game, appid)) done();
+  };
+
+  const seenUrls = new Set();
+  let providerTileCount = 0;
+  const addTile = (key, source, previewUrl, onPick) => {
+    if (!key || seenUrls.has(key)) return false;
+    seenUrls.add(key);
+    const tile = document.createElement('div');
+    tile.className = 'aw-cover-picker-tile aw-square';
+    tile.style.backgroundImage = cssUrl(imageDisplayUrl(previewUrl));
+    tile.title = key;
+    const tag = document.createElement('span');
+    tag.className = 'aw-cover-picker-source';
+    tag.textContent = source;
+    tile.append(tag);
+    tile.onclick = () => {
+      onPick();
+      done();
+    };
+    grid.append(tile);
+    return true;
+  };
+  const addProviderTile = async (url, source, previewUrl = url) => {
+    try {
+      const key = String(url || '').trim();
+      if (!key) return false;
+      if (seenUrls.has(key)) return true;
+      const preview = await resolvePickerPreview(previewUrl, iconCacheAppid);
+      if (!preview) return false;
+      /*
+        What gets stored is not always what was listed. A remote URL is kept as the source, so the
+        bytes stay disposable cache; a schema token ("library_600x900.jpg", a bare content hash) is
+        meaningless outside fetch-icon, so the file it resolved to is stored instead.
+      */
+      const applyValue = /^https?:/i.test(key) ? key : preview;
+      if (addTile(key, source, preview, () => applyGameIconSelection(game, appid, applyValue))) providerTileCount += 1;
+      return true;
+    } catch (err) {
+      debug.warn(`[icon] picker preview failed (${source}) => ${err}`);
+      return false;
+    }
+  };
+
+  let attempt = 0;
+  const refreshStatus = (pending, failed) => {
+    if (providerTileCount > 0) {
+      status.remove();
+      return;
+    }
+    if (!status.isConnected) box.insertBefore(status, grid);
+    if (pending) {
+      statusMessage.textContent = t('iconPickerLoading', 'Loading icons…', 'Chargement des icônes…');
+      retryButton.hidden = true;
+      return;
+    }
+    statusMessage.textContent = failed
+      ? t(
+          'icon-picker-fetch-failed',
+          'Could not fetch alternative icons. Check your connection and retry.',
+          'Impossible de récupérer les icônes alternatives. Vérifie ta connexion et réessaie.'
+        )
+      : t('noIconsFound', 'No alternative icon found.', 'Aucune icône alternative trouvée.');
+    retryButton.hidden = false;
+  };
+
+  /*
+    The icon this game would have with no pick at all, as the first tile.
+
+    Undoing a choice was reachable only from the context menu, which meant leaving the gallery to
+    find out what the original even looked like. Here it is a tile like any other, showing the
+    picture it restores; clicking it clears the override rather than storing one, so the game goes
+    back to following its own artwork instead of being pinned to a copy of it.
+  */
+  const addDefaultTile = async (run) => {
+    let resolved = '';
+    try {
+      resolved = await ipcRenderer.invoke('resolve-square-logo', {
+        appid: iconCacheAppid,
+        libraryAppid: appid,
+        name: game.name || '',
+        sources: headerIconSourcesFor(game),
+        exe: exePath || '',
+        ignoreOverride: true,
+      });
+    } catch (err) {
+      debug.warn(`[icon] default icon lookup failed => ${err}`);
+    }
+    if (run !== attempt || !resolved) return;
+    const preview = await resolvePickerPreview(resolved, iconCacheAppid);
+    if (run !== attempt || !preview) return;
+    const overridden = !!gameIconOverrideFor(appid);
+    // With nothing overridden the default IS what is on screen, so it is labelled for what it is
+    // rather than offering to restore something that is already there.
+    const label = overridden ? t('defaultCover', 'Default', 'Par défaut') : t('currentCover', 'Current', 'Actuelle');
+    if (addTile(resolved, label, preview, () => resetGameIcon(game, appid))) providerTileCount += 1;
+  };
+
+  const startSourceLoad = async () => {
+    const run = ++attempt;
+    refreshStatus(true, false);
+
+    // The local sources cost a readdir and always answer, so they are painted before anything is
+    // asked of the network: with no connection at all the gallery is still usable.
+    await addDefaultTile(run);
+    if (run !== attempt) return;
+    const currentUrl = gameIconOverrideFor(appid) || '';
+    if (currentUrl) await addProviderTile(currentUrl, t('currentCover', 'Current', 'Actuelle'));
+    for (const localUrl of localGameIconUrls(game)) {
+      if (run !== attempt) return;
+      await addProviderTile(localUrl, t('iconSourceGameFolder', 'Game folder', 'Dossier du jeu'));
+    }
+    if (run !== attempt) return;
+    refreshStatus(true, false);
+
+    const steamAppid = /^\d+$/.test(String(iconCacheAppid || '')) ? String(iconCacheAppid) : '';
+    let failed = false;
+    try {
+      /*
+        The game's own Steam artwork is cut into squares by the host before it gets here. Offering
+        the raw tokens filled the gallery with library covers instead - a 2:3 grid and a 2:1 header
+        are not icons, and neither is what the box beside the title ends up painting.
+      */
+      const options = await ipcRenderer.invoke('get-icon-options', {
+        name: game.name || '',
+        steamAppid,
+        // The id every other artwork lookup for this game uses, so a game with no Steam appid still
+        // caches its executable icon under a folder of its own.
+        cacheAppid: String(iconCacheAppid || ''),
+        sources: headerIconSourcesFor(game),
+        exe: exePath || '',
+      });
+      if (run !== attempt) return;
+      const opts = options || {};
+      if (opts.exe) await addProviderTile(opts.exe, t('iconSourceExecutable', 'Executable', 'Exécutable'));
+      for (const url of Array.isArray(opts.steam) ? opts.steam : []) {
+        if (run !== attempt) return;
+        await addProviderTile(url, 'Steam');
+      }
+      for (const asset of Array.isArray(opts.grids) ? opts.grids : []) {
+        if (run !== attempt) return;
+        await addProviderTile(asset && asset.url, 'SteamGridDB', (asset && asset.thumb) || (asset && asset.url));
+      }
+      failed = opts.networkError === true && providerTileCount === 0;
+    } catch (err) {
+      failed = true;
+      debug.warn(`[icon] picker options failed => ${err}`);
+    }
+    if (run !== attempt) return;
+    refreshStatus(false, failed);
+
+    // SteamDB last, and appended whenever it finishes: it costs a browser launch, so holding the
+    // gallery on "Loading" for it would undo the point of painting everything else immediately.
+    if (!steamAppid) return;
+    try {
+      const urls = await ipcRenderer.invoke('get-icon-options-steamdb', { steamAppid });
+      if (run !== attempt) return;
+      for (const url of Array.isArray(urls) ? urls : []) {
+        if (run !== attempt) return;
+        await addProviderTile(url, 'SteamDB');
+      }
+    } catch (err) {
+      debug.warn(`[icon] picker SteamDB options failed => ${err}`);
+    }
+    if (run !== attempt) return;
+    refreshStatus(false, failed);
+  };
+  retryButton.onclick = () => startSourceLoad();
+  startSourceLoad();
+}
+
+// Record a picked icon and repaint the header with it. Remote picks are stored as their source URL
+// (the bytes stay disposable cache), exactly like a picked cover.
+function applyGameIconSelection(game, appid, url) {
+  try {
+    const stored = gameIconStore.persist(String(appid), url, getUserDataPath(), undefined);
+    if (!stored) throw new Error('selected icon could not be persisted');
+    reloadGameIconOverrides();
+    // paintGameHeaderIcon downloads a remote pick through the icon cache itself, so this single
+    // call both stores the selection and puts it on screen.
+    paintGameHeaderIcon(game);
+    return true;
+  } catch (err) {
+    debug.warn(`[icon] apply failed => ${err}`);
+    remote.dialog.showMessageBox({
+      type: 'error',
+      message: t('could-not-set-icon', 'Could not set icon: {error}', "Impossible de définir l'icône : {error}", { error: err.message || err }),
+    });
+    return false;
+  }
+}
+
+// Drop the pick and go back to the icon the game resolves to on its own. Shared by the context
+// menu and the picker's "Default" tile, so both undo a choice exactly the same way.
+async function resetGameIcon(game, appid) {
+  gameIconStore.remove(String(appid));
+  reloadGameIconOverrides();
+  await paintGameHeaderIcon(game);
+}
+
+// The manual route, shared by the context menu and the picker's own button.
+function chooseLocalGameIcon(game, appid) {
+  const files = remote.dialog.showOpenDialogSync({
+    title: t('choose-icon-image', 'Choose icon image', "Choisir une image d'icône"),
+    properties: ['openFile'],
+    filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif'] }],
+  });
+  if (!files || !files[0]) return false;
+  return applyGameIconSelection(game, appid, pathToFileURL(files[0]).href);
+}
+
+/*
+  Right-click the square logo on a game's page to change it - the same four actions the cover
+  submenu offers, on the icon instead of the tile. Bound per page render (namespaced, so the
+  previous game's handler goes with it) because the element is shared across every game page and
+  the menu has to act on the one currently on screen.
+*/
+function bindGameHeaderIconMenu(game) {
+  const appid = String(game.appid);
+  const iconCacheAppid = String(game.steamappid || game.appid);
+  $(HEADER_ICON_SELECTOR)
+    .attr('title', t('rightClickToChangeIcon', 'Right-click to change this icon', "Clic droit pour changer cette icône"))
+    .off('contextmenu.awGameIcon')
+    .on('contextmenu.awGameIcon', async function (event) {
+      event.preventDefault();
+      const { Menu, MenuItem } = remote;
+      const menu = new Menu();
+      let exePath = '';
+      try {
+        exePath = (await exeList.get(appid))?.exe || '';
+      } catch {
+        /* no configured executable is normal; the picker simply skips that source */
+      }
+
+      menu.append(
+        new MenuItem({
+          label: t('chooseAnotherIcon', 'Choose another icon…', "Choisir une autre icône…"),
+          click() {
+            openIconPicker(game, appid, iconCacheAppid, exePath);
+          },
+        })
+      );
+      menu.append(
+        new MenuItem({
+          label: t('choose-local-image', 'Choose local image…', 'Choisir une image locale…'),
+          click() {
+            chooseLocalGameIcon(game, appid);
+          },
+        })
+      );
+      menu.append(
+        new MenuItem({
+          label: t('re-download-icon', 'Re-download icon', "Retélécharger l'icône"),
+          async click() {
+            try {
+              gameIconStore.remove(appid);
+              reloadGameIconOverrides();
+              // Forget the cached answer as well as the selection, or the same picture comes
+              // straight back out of steam_cache instead of being looked up again.
+              await ipcRenderer.invoke('forget-square-logo', { appid: iconCacheAppid, name: game.name || '' }).catch(() => null);
+              await paintGameHeaderIcon(game);
+            } catch (err) {
+              debug.warn(`[icon] redownload failed => ${err}`);
+            }
+          },
+        })
+      );
+      if (gameIconOverrideFor(appid)) {
+        menu.append(new MenuItem({ type: 'separator' }));
+        menu.append(
+          new MenuItem({
+            label: t('reset-icon-to-default', 'Reset icon to default', "Réinitialiser l'icône"),
+            click() {
+              resetGameIcon(game, appid);
+            },
+          })
+        );
+      }
+      menu.popup({ window: remote.getCurrentWindow() });
+    });
 }
 
 // Styled in-app text prompt (Electron disables window.prompt). Resolves to the trimmed value or null.
@@ -5295,33 +5765,49 @@ var app = {
       if (unlockRows.length) unlock.append(unlockRows.join(''));
       if (lockRows.length) lock.append(lockRows.join(''));
 
-      function setAchievementImage(selector, imagePath) {
-        return new Promise((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => {
-            $(selector).css('background', cssUrl(imagePath));
-            resolve();
+      // Paint the first candidate that actually decodes, and report whether one did. A row is left
+      // on its placeholder rather than painted with a broken image, so the caller can try the next
+      // source instead of showing an empty square.
+      function setAchievementImage(selector, candidates) {
+        const list = (Array.isArray(candidates) ? candidates : [candidates]).map(imageDisplayUrl).filter(Boolean);
+        return new Promise((resolve) => {
+          const attempt = (index) => {
+            if (index >= list.length) return resolve(false);
+            const img = new Image();
+            img.onload = () => {
+              $(selector).css('background', cssUrl(list[index]));
+              resolve(true);
+            };
+            img.onerror = () => attempt(index + 1);
+            img.src = list[index];
           };
-          img.onerror = () => {
-            resolve();
-          };
-          img.src = imagePath;
+          attempt(0);
         });
       }
+      /*
+        A Steam-emulated install already holds every achievement image - that is what the emulator
+        paints in game. Reading them costs one readdir and works with no network at all: a player
+        whose connection cannot reach the Steam CDN was left with a page of spinners while the same
+        pictures sat in the game's own achievement_images folder.
+      */
+      const localIconIndex = localIcons.readIndex(game);
       const imageCache = new Map(); // hash -> promise
+      const cachedIcon = (hash) => {
+        if (!imageCache.has(hash)) imageCache.set(hash, ipcRenderer.invoke('fetch-icon', hash, game.steamappid || game.appid));
+        return imageCache.get(hash);
+      };
       const preloadPromises = game.achievement.list.map(async (achievement) => {
+        const selector = `#achievement-${achievementIconId(achievement.name)}`;
         const hash = achievement.Achieved ? achievement.icon : achievement.icongray;
-        let localPathPromise;
-        if (!EMU_LOCAL_ICON_SOURCES.has(game.source)) {
-          if (imageCache.has(hash)) {
-            localPathPromise = imageCache.get(hash);
-          } else {
-            localPathPromise = ipcRenderer.invoke('fetch-icon', hash, game.steamappid || game.appid);
-            imageCache.set(hash, localPathPromise);
-          }
+        const local = localIcons.achievementIcon(localIconIndex, achievement, !!achievement.Achieved);
+        // These emulator sources already store a local path in the schema: nothing to download.
+        if (EMU_LOCAL_ICON_SOURCES.has(game.source)) {
+          await setAchievementImage(selector, [hash, local]);
+          return;
         }
-        const localPath = EMU_LOCAL_ICON_SOURCES.has(game.source) ? hash : await localPathPromise;
-        await setAchievementImage(`#achievement-${achievementIconId(achievement.name)}`, localPath);
+        if (local && (await setAchievementImage(selector, [local]))) return;
+        const downloaded = await cachedIcon(hash).catch(() => null);
+        await setAchievementImage(selector, [downloaded, local]);
       });
 
       if (typeof window.restoreAchievementSorts === 'function') window.restoreAchievementSorts();

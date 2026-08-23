@@ -24,6 +24,7 @@ const MIGRATION_PLAN = [
   { rel: 'themes', mode: 'copy' },
   { rel: 'sounds', mode: 'copy' },
   { rel: 'covers', mode: 'copy' }, // user-selected cover artwork; not reproducible cache data
+  { rel: 'gameIcons', mode: 'copy' }, // ...and the square logos picked the same way
   { rel: 'steam_cache', mode: 'link' },
   { rel: 'uplay_cache', mode: 'link' },
   { rel: 'backups', mode: 'link' }, // GBE restore points, indexed by cfg/gbe-backups.db
@@ -43,22 +44,19 @@ const MIGRATION_FILES = [
   { rel: '.updaterId', mode: 'copy' },
 ];
 
-// The 3.0 -> AW Next hop reads a folder AW itself wrote, so it carries everything the 1.6.8 plan
-// does plus the directories that only ever existed in 3.x. Chromium's own profile (Local State,
-// Network, GPUCache, blob_storage, Code Cache, DIPS, Dawn*, Session/Local Storage, Shared*) is
-// deliberately left behind: it is regenerated on first launch and copying it moves stale absolute
-// paths into the new profile. Media/, Source/ and view/ are app resources that checkResources()
-// restores by itself.
-//
-// `theme-images` and `backups` are the reason the big ones are linked rather than copied: together
-// they run to hundreds of megabytes on a real install, and both are write-once, so hard links make
-// the import instant and free while leaving the 3.0 folder fully intact.
+// The 3.0 -> AW Next hop carries everything the 1.6.8 plan does plus AW 3.x-only directories.
+// Chromium's own profile (Local State, Network, GPUCache, blob_storage, Code Cache, DIPS, Dawn*,
+// Session/Local Storage, Shared*) is left behind on purpose: it regenerates on first launch, and
+// copying it would move stale absolute paths into the new profile. Media/, Source/ and view/ are
+// restored by checkResources() itself. `theme-images`/`backups` are hundreds of MB and write-once,
+// so they're hard-linked instead of copied: the import is instant and the 3.0 folder stays intact.
 const AW3_MIGRATION_PLAN = [
   { rel: 'cfg', mode: 'copy' },
   { rel: 'themes', mode: 'copy' },
   { rel: 'sounds', mode: 'copy' },
   { rel: 'presets', mode: 'copy' }, // includes the user's own presets under "Users Presets"
   { rel: 'covers', mode: 'copy' },
+  { rel: 'gameIcons', mode: 'copy' },
   { rel: 'theme-images', mode: 'link' }, // custom-theme source images; not reproducible
   { rel: 'steam_cache', mode: 'link' },
   { rel: 'uplay_cache', mode: 'link' },

@@ -5526,6 +5526,21 @@ main {
 .aw-cover-picker-tile.aw-landscape {
   aspect-ratio: 16 / 9;
 }
+/* Icon tiles are square and must show the whole logo: an icon cropped to fill its tile is no
+   longer the picture that would end up beside the title. */
+.aw-cover-picker-tile.aw-square {
+  aspect-ratio: 1 / 1;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+/* Icons carry far less detail than a cover, so more of them fit on a row before a tile stops
+   being readable. */
+.aw-icon-picker {
+  width: min(760px, calc(100vw - 48px));
+}
+.aw-icon-picker .aw-cover-picker-grid {
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+}
 .aw-cover-picker-source {
   position: absolute;
   left: 6px;

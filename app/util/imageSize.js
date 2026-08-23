@@ -80,15 +80,40 @@ function webpSize(b) {
   return null;
 }
 
-// { width, height } or null.
-function imageSize(file) {
-  const header = readHeader(file);
-  if (!header) return null;
-  for (const read of [pngSize, jpegSize, gifSize, bmpSize, webpSize]) {
-    const size = read(header);
-    if (size && size.width > 0 && size.height > 0) return size;
+const READERS = [
+  ['png', pngSize],
+  ['jpeg', jpegSize],
+  ['gif', gifSize],
+  ['bmp', bmpSize],
+  ['webp', webpSize],
+];
+
+/*
+  What an image really is, from its own bytes: `{ type, width, height }` or null. The extension is
+  a claim whoever sent the file made; this is the fact, which is why every path taking an image
+  from somewhere else goes through here before the bytes are stored or handed to a decoder.
+*/
+function imageInfo(buffer) {
+  if (!Buffer.isBuffer(buffer) || !buffer.length) return null;
+  for (const [type, read] of READERS) {
+    let size = null;
+    try {
+      size = read(buffer);
+    } catch {
+      // A header that runs off the end of a truncated file is not an image, not a crash.
+      size = null;
+    }
+    if (size && size.width > 0 && size.height > 0) return { type, width: size.width, height: size.height };
   }
   return null;
 }
 
-module.exports = { imageSize };
+// { width, height } or null.
+function imageSize(file) {
+  const header = readHeader(file);
+  if (!header) return null;
+  const info = imageInfo(header);
+  return info ? { width: info.width, height: info.height } : null;
+}
+
+module.exports = { imageSize, imageInfo };

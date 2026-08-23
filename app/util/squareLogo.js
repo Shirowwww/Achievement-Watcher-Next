@@ -1,21 +1,14 @@
 'use strict';
 
 /*
-  Square game logos for notification cards.
+  Square game logos for notification cards: every preset paints its thumbnail in a square slot,
+  but a library grid is 2:3, a header 2:1, and Steam's clienticon is a 32x32 sprite that turns to
+  mush past 68px - handing any of those over unchanged sliced posters through their own logo.
 
-  Every preset paints its thumbnail in a square slot, but the art a game ships is not square: a
-  library grid is 2:3, a header 2:1, and Steam's clienticon is a 32x32 sprite that turns to mush the
-  moment a preset scales it to 68px. Handing any of those over unchanged is what produced the cards
-  this module exists to fix - a poster sliced through the middle of its own logo, and a blurry stamp
-  beside a crisp title.
-
-  Two steps, in order:
-    1. Ask for a real square logo (SteamGridDB icons), which is what a game's own square art is.
-    2. Failing that, cut one out of the best art on disk, at a resolution the slot can use.
-
-  The cut is deliberately not a plain center crop for portraits: library grids put their key art in
-  the upper half and their logo across the bottom, so a centered square lands on the seam between
-  the two and keeps neither. Biasing the window upwards keeps the art whole.
+  Two steps: ask for a real square logo (SteamGridDB icons) first, then cut one from the best art
+  on disk. The cut is not a plain center crop for portraits: library grids put key art in the upper
+  half and the logo across the bottom, so centering lands on the seam and keeps neither - biasing
+  the window upwards keeps the art whole.
 */
 
 const fs = require('fs');
@@ -37,10 +30,9 @@ function isSquareRatio(width, height) {
 }
 
 /*
-  The square window to cut out of a `width` x `height` image.
-
-  Horizontally always centered. Vertically centered for landscape art (a header's subject sits in
-  the middle) and raised for portrait art, where the bottom strip is the title treatment.
+  The square window to cut out of a `width` x `height` image: horizontally always centered,
+  vertically centered for landscape art (subject sits in the middle) and raised for portrait art
+  (the bottom strip is the title treatment).
 */
 function squareCrop(width, height) {
   const w = Math.max(0, Math.floor(Number(width) || 0));
@@ -73,10 +65,8 @@ function loadNativeImage() {
 }
 
 /*
-  Turn one local image into a cached square PNG.
-
-  Returns the square's path, the source itself when it is already square and large enough, or null
-  when there is nothing worth cutting (missing file, unreadable header, too small to matter).
+  Turns one local image into a cached square PNG. Returns the square's path, the source itself
+  when it's already square and large enough, or null when there's nothing worth cutting.
 */
 function makeSquareLogo(sourcePath, appid, options = {}) {
   const source = String(sourcePath || '');
@@ -117,9 +107,9 @@ const COMMUNITY_ICON_MIN_SIDE = 128;
 const COMMUNITY_ICON_IDEAL_SIDE = 512;
 
 /*
-  The best square icon in a SteamGridDB icon list: the largest one up to 512, else the smallest one
-  above it. Only PNG and JPEG are taken - an .ico or an animated .webp is read by neither the image
-  header reader above nor the preset that has to paint it.
+  The best square icon in a SteamGridDB list: the largest up to 512, else the smallest above it.
+  Only PNG/JPEG are taken - an .ico or animated .webp is read by neither the header reader above
+  nor the preset that has to paint it.
 */
 function pickSquareIcon(icons) {
   const square = (Array.isArray(icons) ? icons : [])

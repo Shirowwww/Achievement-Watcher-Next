@@ -2,18 +2,15 @@
 
 const path = require('path');
 const fs = require('fs');
-const { preserveCachedOverrides } = require('./coverStore.js');
+const coverStore = require('./coverStore.js');
+const gameIconStore = require('./gameIconStore.js');
 
-// Explicit allowlist of userData-relative folders that hold nothing but re-fetchable/re-downloadable
-// content: every one of them is rebuilt automatically (from Steam/GOG/Epic/SteamDB/SteamGridDB APIs,
-// or a GitHub release download) the next time it is needed. Mirrors the safety classification already
-// used by util/migrateUserData.js (MIGRATION_PLAN), which is the authoritative source of truth for
-// which userData folders are disposable caches versus irreplaceable local state.
+// userData folders holding only re-fetchable content (Steam/GOG/Epic/SteamDB/SteamGridDB APIs,
+// GitHub downloads). Mirrors the disposable-cache classification in util/migrateUserData.js
+// (MIGRATION_PLAN) - re-check that file before adding an entry here.
 //
-// Deliberately NOT here, and never add without re-reading migrateUserData.js first:
-//   cache/uplayR2   - user-seeded Uplay R2 loader dll; no public download source, cannot be refetched
-//   backups         - GBE restore points; local safety net, not derived from anything external
-//   cfg, covers, presets, theme-images, epic_tokens.enc, lockfile - settings and user-authored content
+// Never add: cache/uplayR2 (user-seeded dll, no download source), backups (GBE restore points),
+// or cfg/covers/gameIcons/presets/theme-images/epic_tokens.enc/lockfile (user settings/content).
 const SAFE_CACHE_DIRS = [
   'steam_cache', // Steam/GOG/Epic/SteamDB/SteamGridDB schema, icon, cover and rarity cache
   'uplay_cache', // Ubisoft Connect schema + icon cache
@@ -26,15 +23,14 @@ const SAFE_CACHE_DIRS = [
   'cache/discovery', // memoized install-folder walks; rebuilt by the next scan
 ];
 
-// Removes every folder in the allowlist that exists under userDataDir. Returns the list of
-// userData-relative paths that actually existed and were removed (an empty list means there was
-// nothing to clear). A missing individual folder is not an error - most users have never touched
-// every source, so most of this list is normally absent.
+// A missing folder isn't an error - most users have touched only some of these sources.
 async function clearSafeCaches(userDataDir) {
-  // Older builds stored downloaded custom-cover selections inside steam_cache while covers.db kept
-  // a permanent reference to them. Promote those files to the durable covers/ folder before the
-  // cache is removed. If a copy unexpectedly fails, abort before deleting any app cache.
-  preserveCachedOverrides(userDataDir);
+  // Older builds cached custom covers under steam_cache while covers.db kept a permanent
+  // reference; promote them to covers/ before this cache is wiped, so a failed copy aborts
+  // before anything is deleted. A picked game icon can sit in that same cache (the picker's
+  // SteamGridDB tiles download there), so it gets the same promotion.
+  coverStore.preserveCachedOverrides(userDataDir);
+  gameIconStore.preserveCachedOverrides(userDataDir);
   const cleared = [];
   for (const rel of SAFE_CACHE_DIRS) {
     const full = path.join(userDataDir, rel);

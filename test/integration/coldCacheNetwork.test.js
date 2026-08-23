@@ -21,7 +21,7 @@ function sliceFunction(name, source = initSource) {
 }
 
 test('a SteamDB cover page that lists nothing is cached as the answer it is', () => {
-  const covers = sliceFunction('async function fetchSteamDbCovers');
+  const covers = sliceFunction('async function fetchSteamDbAssets');
   const write = covers.indexOf('fs.writeFileSync(cacheFile');
   assert.ok(write !== -1, 'the scrape must persist its result');
   const guard = covers.slice(covers.lastIndexOf('if (', write), write);
@@ -34,7 +34,7 @@ test('a SteamDB cover page that lists nothing is cached as the answer it is', ()
 
 test('a cached miss expires sooner than a cached hit', () => {
   assert.ok(initSource.includes('STEAMDB_COVERS_MISS_TTL'), 'misses need their own TTL');
-  const covers = sliceFunction('async function fetchSteamDbCovers');
+  const covers = sliceFunction('async function fetchSteamDbAssets');
   assert.ok(
     covers.includes('cached.urls.length ? STEAMDB_COVERS_TTL : STEAMDB_COVERS_MISS_TTL'),
     'a game can gain a capsule later, so a miss must be re-checked before a hit is'
@@ -42,7 +42,7 @@ test('a cached miss expires sooner than a cached hit', () => {
 });
 
 test('the SteamDB cover scrape has its own breaker and only a reached page writes a miss', () => {
-  const covers = sliceFunction('async function fetchSteamDbCovers');
+  const covers = sliceFunction('async function fetchSteamDbAssets');
   const guardAt = covers.indexOf('steamdbCoversCircuit.unavailable()');
   const scrapeAt = covers.indexOf('const scrape =');
   assert.ok(guardAt !== -1 && guardAt < scrapeAt, 'an unreachable host must be answered from the breaker, not by opening a page per game');
