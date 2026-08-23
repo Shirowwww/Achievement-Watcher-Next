@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## Unreleased
 
+## 3.10.0 - 2026-08-23
+
 ### Added
 
 - **A theme is now one portable file.** Settings, Theme has an Import and an Export button: Export

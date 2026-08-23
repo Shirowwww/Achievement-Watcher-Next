@@ -115,6 +115,14 @@ async function renderThemePreview(options) {
         // A ceiling on what one render may allocate, so a hostile picture cannot take the service
         // down with it.
         '--js-flags=--max-old-space-size=192',
+        // One local file, no navigation, no script: site isolation and its extra renderer processes
+        // buy nothing here and cost real memory on a constrained CI runner, where two sequential
+        // renders in one test previously pushed the outer Node process itself into an OOM crash.
+        '--disable-features=site-per-process,IsolateOrigins',
+        '--renderer-process-limit=1',
+        '--disable-dev-shm-usage',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
       ].concat(options.args || []),
     });
 

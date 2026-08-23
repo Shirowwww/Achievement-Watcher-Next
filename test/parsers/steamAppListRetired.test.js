@@ -7,6 +7,16 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
+/*
+  getSteamPath() reads the real Windows registry and only resolves once it finds a folder that
+  really holds steam.exe, so a machine with no Steam install throws 'Steam Path not found' and the
+  module-level catalogue path caches as '' - short-circuiting localSteamCatalogueName() before it
+  ever calls appInfo.nameOf() below. A fake registry answer plus a real (empty) steam.exe on disk
+  makes that resolve the same way on a CI runner as on a developer's own machine.
+*/
+const fakeSteamDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-fake-steam-'));
+fs.writeFileSync(path.join(fakeSteamDir, 'steam.exe'), '');
+
 let steamDataCalls = 0;
 const originalLoad = Module._load;
 Module._load = function patchedLoad(request, parent, isMain) {
@@ -22,6 +32,15 @@ Module._load = function patchedLoad(request, parent, isMain) {
     };
   }
   if (request === '@electron/remote' || request.startsWith('@electron/remote/')) return {};
+  if (request === '../util/reg') {
+    return {
+      readRegistryString: () => fakeSteamDir,
+      readRegistryStringAndExpand: () => fakeSteamDir,
+      regKeyExists: () => true,
+      readRegistryInteger: () => 0,
+      listRegistryAllSubkeys: () => [],
+    };
+  }
   return originalLoad.call(this, request, parent, isMain);
 };
 

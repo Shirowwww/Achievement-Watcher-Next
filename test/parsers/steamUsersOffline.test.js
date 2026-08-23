@@ -17,9 +17,22 @@ const Module = require('node:module');
 const steamIdPath = path.join(__dirname, '..', '..', 'app', 'util', 'steamID.js');
 const steamID = require(steamIdPath);
 
+// getSteamUsers() enumerates real local accounts from HKCU/Software/Valve/Steam/Users before it ever
+// reaches steamID.whoIs() below - on a developer's machine with Steam installed that answers with
+// whatever accounts are really configured there, on a CI runner it answers with none at all, so
+// "No Steam User ID found" that the fixture below (account '274782616') never gets a chance to match.
 const originalLoad = Module._load;
 Module._load = function patchedLoad(request, parent, isMain) {
   if (request === 'electron') return { ipcRenderer: { sendSync: () => false, invoke: async () => null } };
+  if (request === '../util/reg') {
+    return {
+      readRegistryString: () => '',
+      readRegistryStringAndExpand: () => '',
+      regKeyExists: () => true,
+      readRegistryInteger: () => 0,
+      listRegistryAllSubkeys: () => ['274782616'],
+    };
+  }
   return originalLoad.apply(this, arguments);
 };
 const steam = require(path.join(__dirname, '..', '..', 'app', 'parser', 'steam.js'));

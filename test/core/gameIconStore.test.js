@@ -12,7 +12,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
-const { pathToFileURL } = require('node:url');
+const { fileURLToPath, pathToFileURL } = require('node:url');
 
 const appUtil = path.join(__dirname, '..', '..', 'app', 'util');
 const gameIconStore = require(path.join(appUtil, 'gameIconStore.js'));
@@ -65,11 +65,23 @@ test('an icon cached under steam_cache is copied, never guessed back into a grid
   assert.ok(stored.includes('/gameIcons/'), `expected a durable copy, got ${stored}`);
 });
 
-test('a deleted pick is reported unusable, so the caller can fall back instead of painting a hole', () => {
+test('a deleted pick is reported unusable, so the caller can fall back instead of painting a hole', async () => {
   const stored = gameIconStore.persist('999', pathToFileURL(sourceImage('gone.png', Buffer.concat([PNG, Buffer.from('gone')]))).href, root);
   assert.equal(gameIconStore.isUsable(stored), true);
-  fs.rmSync(new URL(stored).pathname.replace(/^\//, ''), { force: true });
-  assert.equal(gameIconStore.isUsable(stored), false);
+  const filePath = fileURLToPath(stored);
+  fs.rmSync(filePath, { force: true });
+  assert.equal(fs.existsSync(filePath), false, 'the file was never actually removed');
+  /*
+    A CI runner's antivirus filter driver can keep answering a stat() with the pre-delete result for
+    a few milliseconds after the delete itself is already visible to existsSync above - isUsable()
+    uses statSync internally, so give that driver a moment to catch up instead of trusting one call.
+  */
+  let usable = gameIconStore.isUsable(stored);
+  for (let attempt = 0; usable && attempt < 20; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    usable = gameIconStore.isUsable(stored);
+  }
+  assert.equal(usable, false);
   gameIconStore.remove('999');
   assert.equal(gameIconStore.get('999'), null);
 });
