@@ -1333,6 +1333,44 @@ async function applyCoverWithFallback(game, headerEl, imgName, orientation = 'la
   return { ok: false, reason: 'missing' };
 }
 
+/*
+  Does this image actually load? A gallery tile that paints an empty box is worse than no tile:
+  the provider listed art the CDN no longer serves, so it is dropped rather than offered. Bounded,
+  because a stalled request would otherwise hold "Loading…" open for the whole dialog.
+*/
+function imagePreviewReady(value) {
+  const preview = imageDisplayUrl(value);
+  if (!/^(?:https?|file|data):/i.test(preview) || typeof Image !== 'function') return Promise.resolve(false);
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (ready) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(ready);
+    };
+    const timer = setTimeout(() => finish(false), 8000);
+    const image = new Image();
+    image.onload = () => finish(true);
+    image.onerror = () => finish(false);
+    image.src = preview;
+  });
+}
+
+/*
+  A gallery-ready URL for one candidate, or null. Schema values such as "library_600x900.jpg" or a
+  bare content hash are fetch-icon tokens, not browser-ready URLs; resolve those through the icon
+  cache first. Shared by the cover picker and the icon picker.
+*/
+async function resolvePickerPreview(url, cacheAppid) {
+  let preview = String(url || '').trim();
+  if (!/^(?:https?|file|data):/i.test(preview) && !path.isAbsolute(preview)) {
+    preview = await ipcRenderer.invoke('fetch-icon', preview, cacheAppid).catch(() => null);
+    if (!preview || preview === url) return null;
+  }
+  return (await imagePreviewReady(preview)) ? imageDisplayUrl(preview) : null;
+}
+
 // Show alternate SteamDB and SteamGridDB covers for a game.
 function openCoverPicker(game, appid, coverCacheAppid) {
   const portraitView = !!(app.config && app.config.achievement && app.config.achievement.thumbnailPortrait);
@@ -1405,32 +1443,7 @@ function openCoverPicker(game, appid, coverCacheAppid) {
 
   const seenUrls = new Set();
   let providerTileCount = 0;
-  const previewReady = (value) => {
-    const preview = path.isAbsolute(String(value || '')) ? pathToFileURL(value).href : String(value || '');
-    if (!/^(?:https?|file|data):/i.test(preview) || typeof Image !== 'function') return Promise.resolve(false);
-    return new Promise((resolve) => {
-      let settled = false;
-      const finish = (ready) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        resolve(ready);
-      };
-      const timer = setTimeout(() => finish(false), 8000);
-      const image = new Image();
-      image.onload = () => finish(true);
-      image.onerror = () => finish(false);
-      image.src = preview;
-    });
-  };
-  const resolvePreview = async (url) => {
-    let preview = String(url || '').trim();
-    if (!/^(?:https?|file|data):/i.test(preview) && !path.isAbsolute(preview)) {
-      preview = await ipcRenderer.invoke('fetch-icon', preview, coverCacheAppid).catch(() => null);
-      if (!preview || preview === url) return null;
-    }
-    return (await previewReady(preview)) ? preview : null;
-  };
+  const resolvePreview = (url) => resolvePickerPreview(url, coverCacheAppid);
   const addTile = (url, source, previewUrl = url) => {
     const key = String(url || '').trim();
     if (!key || seenUrls.has(key)) return;
@@ -1487,8 +1500,14 @@ function openCoverPicker(game, appid, coverCacheAppid) {
   // Render the current cover independently from the provider lookup. Schema values such as
   // "library_600x900.jpg" are fetch-icon tokens, not browser-ready URLs; resolve them first so the
   // "Current"/"Default" tiles never appear as an empty surface while SteamDB/SteamGridDB are loading.
+  /*
+    What the library tile is painted with right now. Current and Default are the way back to the
+    cover the game already has, so they must be offered even when their value no longer resolves -
+    a token the CDN stopped answering, or no network at all. The picture is on screen either way.
+  */
+  const paintedCover = () => cssUrlValue($(`#game-header-${appid}`).first().css('background-image'));
   const addResolvedTile = async (url, source) => {
-    const preview = await resolvePreview(url);
+    const preview = (await resolvePreview(url)) || paintedCover();
     if (preview) addTile(url, source, preview);
   };
   const currentTilePromise = currentUrl ? addResolvedTile(currentUrl, t('currentCover', 'Current', 'Actuelle')) : Promise.resolve();
@@ -2114,13 +2133,20 @@ async function recoverLibraryCover(game, orientation, { force = false } = {}) {
   return coverRecoveryCache.get(key);
 }
 
+// The glossy sweep belongs on a cover of the tile's own shape only: stretched over a cross-shape
+// fallback it reads as a smear instead of a highlight.
+function hasOwnShapeCover(image, portrait) {
+  if (!image) return false;
+  return Boolean(portrait ? image.portrait : image.header || image.landscape);
+}
+
 // All density modes share one tile. Only portrait changes the artwork orientation, so this helper
 // also lets the toolbar repaint covers without rescanning the whole library.
 function scheduleLibraryCover(game, headerEl, portrait) {
   if (!game || !headerEl || !headerEl.length) return;
   const image = game.img || {};
   const isPortrait = portrait && image.portrait;
-  headerEl.toggleClass('glow', Boolean(isPortrait)).toggleClass('portrait-fallback', Boolean(portrait && !isPortrait));
+  headerEl.toggleClass('glow', hasOwnShapeCover(image, portrait)).toggleClass('portrait-fallback', Boolean(portrait && !isPortrait));
 
   const load = async (force = false) => {
     if (!headerEl[0]?.isConnected) return;
@@ -2133,7 +2159,7 @@ function scheduleLibraryCover(game, headerEl, portrait) {
     const coverOverride = coverOverrideFor(game.appid, tileOrientation);
     if (coverOverride) {
       if (!/^https?:\/\//i.test(coverOverride)) {
-        headerEl.toggleClass('portrait-fallback', false).toggleClass('glow', portrait).css('background', cssUrl(coverOverride));
+        headerEl.toggleClass('portrait-fallback', false).addClass('glow').css('background', cssUrl(coverOverride));
         setLibraryArtworkFeedback(headerEl, 'clear');
         return;
       }
@@ -2155,7 +2181,7 @@ function scheduleLibraryCover(game, headerEl, portrait) {
         reloadCoverOverrides();
         headerEl
           .toggleClass('portrait-fallback', false)
-          .toggleClass('glow', portrait)
+          .addClass('glow')
           .css('background', cssUrl(local));
         setLibraryArtworkFeedback(headerEl, 'clear');
         return;
@@ -2163,10 +2189,10 @@ function scheduleLibraryCover(game, headerEl, portrait) {
     }
     if (EMU_LOCAL_ICON_SOURCES.has(game.source)) {
       if (image.header) {
-        headerEl.css('background', cssUrl(image.header));
+        headerEl.toggleClass('glow', !portrait).css('background', cssUrl(image.header));
         setLibraryArtworkFeedback(headerEl, 'clear');
       } else {
-        headerEl.css('background', 'none');
+        headerEl.removeClass('glow').css('background', 'none');
         setLibraryArtworkFeedback(headerEl, 'missing', () => load(true));
       }
       return;
@@ -2182,7 +2208,7 @@ function scheduleLibraryCover(game, headerEl, portrait) {
     const currentModeIsPortrait = libraryLayout.isPortrait(app.config?.achievement?.libraryLayout);
     if (portrait !== currentModeIsPortrait) return;
     if (applied.ok) {
-      headerEl.toggleClass('portrait-fallback', false).toggleClass('glow', portrait);
+      headerEl.toggleClass('portrait-fallback', false).addClass('glow');
       setLibraryArtworkFeedback(headerEl, 'clear');
       return;
     }
@@ -2195,7 +2221,7 @@ function scheduleLibraryCover(game, headerEl, portrait) {
       // under steam_cache and must not become the next scan's source after a cache clear.
       if (portrait) image.portrait = recovered.source || recovered.path;
       else image.header = recovered.source || recovered.path;
-      headerEl.toggleClass('portrait-fallback', false).toggleClass('glow', portrait).css('background', cssUrl(recovered.path));
+      headerEl.toggleClass('portrait-fallback', false).addClass('glow').css('background', cssUrl(recovered.path));
       setLibraryArtworkFeedback(headerEl, 'clear');
       return;
     }
@@ -2209,7 +2235,8 @@ function scheduleLibraryCover(game, headerEl, portrait) {
     if (!headerEl[0]?.isConnected) return;
     if (portrait !== libraryLayout.isPortrait(app.config?.achievement?.libraryLayout)) return;
     if (crossShape.ok) {
-      if (portrait) headerEl.removeClass('glow').addClass('portrait-fallback');
+      headerEl.removeClass('glow');
+      if (portrait) headerEl.addClass('portrait-fallback');
       setLibraryArtworkFeedback(headerEl, 'clear');
       return;
     }

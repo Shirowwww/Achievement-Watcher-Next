@@ -4896,36 +4896,8 @@ main {
   background-size: cover !important;
   position: relative;
 }
-#game-list.view-portrait ul > li .game-box .header.glow:after {
-  content: '';
-  opacity: 0.15;
-  cursor: pointer;
-  width: 220%;
-  height: 100%;
-  background: linear-gradient(
-    to bottom,
-    rgba(235, 245, 255, 0) 0%,
-    rgba(235, 245, 255, 0.85) 12px,
-    rgba(235, 245, 255, 0.75) 20%,
-    rgba(210, 210, 210, 0) 60%,
-    rgba(10, 10, 10, 0) 85%,
-    rgba(10, 10, 10, 0.8) 100%
-  );
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  pointer-events: none;
-  transform: rotateZ(212deg) translateX(12%) translateY(59%);
-  z-index: 10;
-  transition-property: transform, opacity;
-  transition-duration: 0.6s;
-  transition-timing-function: cubic-bezier(0, 0.73, 0.48, 1);
-}
 #game-list.view-portrait ul > li .game-box:hover .header {
   opacity: 1;
-}
-#game-list.view-portrait ul > li .game-box:hover .header.glow:after {
-  transform: rotateZ(200deg) translateX(20%) translateY(50%);
 }
 #game-list.view-portrait ul > li .game-box .info {
   max-width: 172px;
@@ -5667,6 +5639,67 @@ body {
   overflow: hidden;
   position: relative;
   border-radius: 12px 12px 9px 9px;
+}
+
+/*
+  The glossy sweep over a cover: a light band whose crisp edge crosses the artwork on a diagonal and
+  slides down over it on hover. One pseudo-element painting one static gradient - hover only re-runs
+  a transform, so it composites and never repaints the artwork under it, and off-screen tiles skip
+  it entirely (the card is content-visibility: auto). A tile with no usable artwork is excluded:
+  over the empty-cover placeholder the sweep reads as a smear rather than a highlight.
+
+  What the eye reads as the edge of the band is the pseudo-element's own top edge, not a colour
+  stop, so its angle is fixed by the rotation and its position by translateY. The rotation stays
+  absolute, so the band keeps its angle whatever the tile - but the offset that lays it across a
+  172x258 portrait only clips the top-right corner of a 250x117 landscape header, which is a band
+  nobody can see. The tokens below carry the landscape values and the portrait views override them.
+  Within each family every size shares one aspect ratio (172x258 and 138x207; 250x117, 166x78 and
+  140x65.5) and the box is sized in percentages of the header, so one pair of values holds across
+  the sizes of that family.
+*/
+#game-list {
+  --gloss-height: 220%;
+  --gloss-crest: 5%;
+  --gloss-offset: 48.5%;
+  --gloss-offset-hover: 58%;
+}
+
+#game-list.view-portrait,
+#game-list.view-portrait-compact {
+  --gloss-height: 100%;
+  --gloss-crest: 12px;
+  --gloss-offset: 59%;
+  --gloss-offset-hover: 50%;
+}
+
+#game-list .game-box .header.glow:not(.artwork-error):not(.artwork-missing):after {
+  content: '';
+  opacity: 0.15;
+  cursor: pointer;
+  width: 220%;
+  height: var(--gloss-height);
+  background: linear-gradient(
+    to bottom,
+    rgba(235, 245, 255, 0) 0%,
+    rgba(235, 245, 255, 0.85) var(--gloss-crest),
+    rgba(235, 245, 255, 0.75) 20%,
+    rgba(210, 210, 210, 0) 60%,
+    rgba(10, 10, 10, 0) 85%,
+    rgba(10, 10, 10, 0.8) 100%
+  );
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  pointer-events: none;
+  transform: rotateZ(212deg) translateX(12%) translateY(var(--gloss-offset));
+  z-index: 10;
+  transition-property: transform, opacity;
+  transition-duration: 0.6s;
+  transition-timing-function: cubic-bezier(0, 0.73, 0.48, 1);
+}
+
+#game-list .game-box:hover .header.glow:not(.artwork-error):not(.artwork-missing):after {
+  transform: rotateZ(200deg) translateX(20%) translateY(var(--gloss-offset-hover));
 }
 
 #game-list .game-box .info {

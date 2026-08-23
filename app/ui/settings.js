@@ -3244,8 +3244,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       try {
         const userData = ipcRenderer.sendSync('get-user-data-path-sync');
         const candidates = [];
+        // covers/ only exists once a custom cover was picked; its absence is not worth a stack trace.
         const covers = path.join(userData, 'covers');
-        for (const name of settingsFs.readdirSync(covers)) {
+        const names = settingsFs.existsSync(covers) ? settingsFs.readdirSync(covers) : [];
+        for (const name of names) {
           if (/\.(png|jpe?g|webp)$/i.test(name)) candidates.push(path.join(covers, name));
         }
         // Landscape first: a header fills the card, where a portrait cover is cropped to a sliver of

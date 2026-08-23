@@ -53,11 +53,24 @@ test('the alternate-cover picker resolves and shows the actual current cover', (
   assert.match(app, /const overrideUrl = coverOverrideFor\(appid, pickerOrientation\);/);
   assert.match(app, /const currentUrl = overrideUrl \|\| defaultUrl;/);
   assert.match(app, /const currentTilePromise = currentUrl/);
-  assert.match(app, /ipcRenderer\.invoke\('fetch-icon', preview, coverCacheAppid\)/);
+  // The resolution itself is shared with the icon picker, so both galleries treat a schema token
+  // the same way instead of one of them drawing it raw.
+  assert.match(app, /const resolvePreview = \(url\) => resolvePickerPreview\(url, coverCacheAppid\);/);
+  assert.match(app, /ipcRenderer\.invoke\('fetch-icon', preview, cacheAppid\)/);
   assert.match(app, /game\.steamappid \|\| game\.appid/);
   // Resolved rather than drawn straight: a schema token such as "library_600x900.jpg" is not a
   // browser-ready URL, and the Current tile used to sit empty while the providers loaded.
   assert.match(app, /addResolvedTile\(currentUrl, t\('currentCover'/);
+
+  /*
+    A provider tile whose picture will not load is dropped - an empty box promises art that is not
+    there. Current and Default are not a provider listing though: they are the cover on screen, and
+    their value is usually a fetch-icon token, so offline (or once the CDN stops answering that
+    token) dropping them left no way back to the cover the game already had. The picture the library
+    tile is painted with stands in instead.
+  */
+  assert.match(app, /const preview = \(await resolvePreview\(url\)\) \|\| paintedCover\(\);/);
+  assert.match(app, /const paintedCover = \(\) => cssUrlValue\(/, 'reading a painted background belongs beside cssUrl(), not open-coded here');
 });
 
 test('streaming scans retain a skeleton tail until the list actually completes', () => {

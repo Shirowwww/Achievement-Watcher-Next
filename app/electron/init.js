@@ -2582,7 +2582,7 @@ async function fetchSteamDbAssets(appid, { needIcons = false } = {}) {
   }
   if (steamdbCoversInFlight.has(id)) return steamdbCoversInFlight.get(id);
   // The host proved itself unreachable moments ago; do not open a page per game to prove it again.
-  if (steamdbCoversCircuit.unavailable()) return [];
+  if (steamdbCoversCircuit.unavailable()) return empty;
 
   const scrape = async () => {
     const steamdbCover = require(path.join(app.getAppPath(), 'parser/steamdbCover.js'));

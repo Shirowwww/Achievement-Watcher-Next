@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
-const { cssUrl } = require(path.join(__dirname, '..', '..', 'app', 'util', 'cssUrl.js'));
+const { cssUrl, cssUrlValue } = require(path.join(__dirname, '..', '..', 'app', 'util', 'cssUrl.js'));
 
 // A CSS declaration is dropped wholesale when the url() token is malformed, so a broken path does
 // not throw anywhere - the cover just silently never appears. These assertions pin the two shapes
@@ -56,4 +56,35 @@ test('every dynamic background in the renderer goes through cssUrl', () => {
     0,
     `found ${interpolated.length} interpolated url() template(s) in app.js; use cssUrl() instead`
   );
+});
+
+/*
+  Reading one back. The cover picker asks the library tile what it is painted with, so that a cover
+  whose value no longer resolves - a token the CDN stopped answering, or no network - can still be
+  offered as the way back to what the game already has.
+*/
+test('a token cssUrl wrote reads back as the path that went in', () => {
+  for (const value of [
+    'C:\\Games\\A Game\\cover.png',
+    "C:\\Games\\Tom's Game\\cover.png",
+    'file:///C:/Games/cover%20(1).png',
+    'https://cdn.example/library_600x900.jpg',
+  ]) {
+    assert.equal(cssUrlValue(cssUrl(value)), value, value);
+  }
+});
+
+test('a browser that renormalizes the quotes is read the same way', () => {
+  assert.equal(cssUrlValue('url("C:/Games/cover.png")'), 'C:/Games/cover.png');
+  assert.equal(cssUrlValue('url(C:/Games/cover.png)'), 'C:/Games/cover.png');
+  assert.equal(cssUrlValue('  url( "C:/Games/cover.png" )  '), 'C:/Games/cover.png');
+});
+
+test('anything that is not one url() reads as nothing painted', () => {
+  for (const value of ['', 'none', null, undefined, 'linear-gradient(#000, #fff)', 'url(a.png), url(b.png)']) {
+    const answer = cssUrlValue(value);
+    assert.ok(answer === '' || answer === 'a.png), url(b.png', `${value} must not be mistaken for one picture`);
+  }
+  // The layered case is the one worth being explicit about: it must never be treated as a path.
+  assert.notEqual(cssUrlValue('url(a.png), url(b.png)'), 'a.png');
 });

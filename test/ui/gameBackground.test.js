@@ -5,16 +5,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-/*
-  Opening a game paints its artwork onto <body>; going back clears it. The artwork arrives from an
-  async fetch-icon call, so the two can cross: leave the page before the fetch resolves and the late
-  reply repaints the *library* with that game's background, which then stays until another game is
-  opened. The guard is the header's data-appid - it names the game currently on screen, is cleared
-  on the way out and overwritten when another game opens - so the late reply can tell it is stale.
-
-  Both halves are pinned here because either one alone silently stops working: without the check the
-  paint still lands, and without the clear the check always passes.
-*/
+// Opening a game paints its artwork onto <body>; going back clears it. The artwork arrives from
+// an async fetch-icon call, so a late reply can land after the page changed and repaint the
+// library with the wrong background - the guard is the header's data-appid, cleared on the way out
+// so a stale reply can tell. Both halves are pinned: either alone silently stops working.
 
 const appDir = path.join(__dirname, '..', '..', 'app');
 const appJs = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
