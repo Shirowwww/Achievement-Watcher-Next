@@ -1908,6 +1908,11 @@
     "steam-desc": "Optionnel. La connexion donne à AW Next la vraie liste des jeux présents dans ta bibliothèque aujourd’hui, jeux partagés en famille Steam compris, et lui permet de masquer ceux que tu ne possèdes plus. Elle lit aussi tes succès Steam débloqués quand ton profil est privé. AW Next ne voit jamais ton mot de passe Steam : la page de connexion est celle de Valve. Le jeton de session est stocké chiffré sur ce PC.",
     "steam-stale-badge": "Plus dans ta bibliothèque Steam",
     "steam-family-badge": "Partagé avec toi via la famille Steam",
+    "purchased-badge-steam": "Jeu Steam acheté",
+    "purchased-badge-gog": "Jeu GOG acheté",
+    "purchased-badge-ubisoft": "Jeu Ubisoft acheté",
+    "purchased-badge-epic": "Jeu Epic Games acheté",
+    "purchased-badge-ea": "Jeu EA acheté",
     "steam-hide-stale": "Masquer les jeux qui ne sont plus dans ta bibliothèque Steam",
     "steam-hide-stale-help": "Nécessite un compte Steam connecté. Les jeux installés sur ce PC et ceux partagés via la famille Steam ne sont jamais masqués."
   },

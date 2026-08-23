@@ -1908,6 +1908,11 @@
     "steam-desc": "Voliteľné. Pripojte svoj účet Steam, aby AW Next vedel, ktoré hry sú dnes vo vašej knižnici naozaj, vrátane hier zdieľaných cez Steam Family, a mohol skryť tie, ktoré už nevlastníte. Keď je váš profil súkromný, načíta aj vaše odomknuté úspechy zo Steamu. AW Next nikdy nevidí vaše heslo k Steamu: prihlasovacia stránka patrí samotnej Valve. Token relácie je v tomto počítači uložený zašifrovaný.",
     "steam-stale-badge": "Už nie je vo vašej knižnici Steam",
     "steam-family-badge": "Zdieľané s vami cez Steam Family",
+    "purchased-badge-steam": "Zakúpená hra Steam",
+    "purchased-badge-gog": "Zakúpená hra GOG",
+    "purchased-badge-ubisoft": "Zakúpená hra Ubisoft",
+    "purchased-badge-epic": "Zakúpená hra Epic Games",
+    "purchased-badge-ea": "Zakúpená hra EA",
     "steam-hide-stale": "Skryť hry, ktoré už nie sú vo vašej knižnici Steam",
     "steam-hide-stale-help": "Vyžaduje pripojený účet Steam. Hry nainštalované v tomto počítači a hry zdieľané cez Steam Family sa nikdy neskrývajú."
   },

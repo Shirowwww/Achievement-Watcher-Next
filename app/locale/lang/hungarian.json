@@ -1908,6 +1908,11 @@
     "steam-desc": "Választható. Csatlakoztasd a Steam-fiókodat, hogy az AW Next tudja, mely játékok vannak ma valóban a könyvtáradban, beleértve a Steam Family révén megosztottakat is, és el tudja rejteni azokat, amelyek már nem a tieid. Ha a profilod privát, a feloldott Steam-teljesítményeidet is beolvassa. Az AW Next soha nem látja a Steam-jelszavadat: a bejelentkezési oldal magának a Valve-nak az oldala. A munkamenet-token titkosítva marad ezen a gépen.",
     "steam-stale-badge": "Már nincs a Steam-könyvtáradban",
     "steam-family-badge": "Megosztva veled a Steam Family révén",
+    "purchased-badge-steam": "Megvásárolt Steam játék",
+    "purchased-badge-gog": "Megvásárolt GOG játék",
+    "purchased-badge-ubisoft": "Megvásárolt Ubisoft játék",
+    "purchased-badge-epic": "Megvásárolt Epic Games játék",
+    "purchased-badge-ea": "Megvásárolt EA játék",
     "steam-hide-stale": "A Steam-könyvtáradban már nem szereplő játékok elrejtése",
     "steam-hide-stale-help": "Csatlakoztatott Steam-fiókot igényel. Az ezen a gépen telepített és a Steam Family révén megosztott játékok soha nem lesznek elrejtve."
   },

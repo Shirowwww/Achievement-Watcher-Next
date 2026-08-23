@@ -1908,6 +1908,11 @@
     "steam-desc": "İsteğe bağlı. Steam hesabını bağla ki AW Next bugün kütüphanende gerçekten hangi oyunların bulunduğunu, Steam Ailesi ile paylaşılanlar dahil, bilsin ve artık sahip olmadıklarını gizleyebilsin. Profilin gizliyken açtığın Steam başarımlarını da okur. AW Next Steam parolanı asla görmez: giriş sayfası Valve'ın kendi sayfasıdır. Oturum anahtarı bu bilgisayarda şifrelenmiş olarak saklanır.",
     "steam-stale-badge": "Artık Steam kütüphanende yok",
     "steam-family-badge": "Steam Ailesi üzerinden seninle paylaşıldı",
+    "purchased-badge-steam": "Satın alınmış Steam oyunu",
+    "purchased-badge-gog": "Satın alınmış GOG oyunu",
+    "purchased-badge-ubisoft": "Satın alınmış Ubisoft oyunu",
+    "purchased-badge-epic": "Satın alınmış Epic Games oyunu",
+    "purchased-badge-ea": "Satın alınmış EA oyunu",
     "steam-hide-stale": "Steam kütüphanende artık bulunmayan oyunları gizle",
     "steam-hide-stale-help": "Bağlı bir Steam hesabı gerektirir. Bu bilgisayarda yüklü oyunlar ve Steam Ailesi üzerinden paylaşılan oyunlar asla gizlenmez."
   },

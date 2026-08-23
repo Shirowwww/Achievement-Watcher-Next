@@ -1908,6 +1908,11 @@
     "steam-desc": "Optional. Connect your Steam account so AW Next knows which games are really in your library today, including Steam Family shared games, and can hide the ones you no longer own. It also reads your unlocked Steam achievements when your profile is private. Your Steam password is never seen by AW Next: the sign-in page is Valve’s own. The session token is stored encrypted on this PC.",
     "steam-stale-badge": "No longer in your Steam library",
     "steam-family-badge": "Shared with you through Steam Family",
+    "purchased-badge-steam": "Purchased Steam game",
+    "purchased-badge-gog": "Purchased GOG game",
+    "purchased-badge-ubisoft": "Purchased Ubisoft game",
+    "purchased-badge-epic": "Purchased Epic Games game",
+    "purchased-badge-ea": "Purchased EA game",
     "steam-hide-stale": "Hide games no longer in your Steam library",
     "steam-hide-stale-help": "Requires a connected Steam account. Games installed on this PC and games shared through Steam Family are never hidden."
   },

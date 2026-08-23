@@ -1908,6 +1908,11 @@
     "steam-desc": "Valinnainen. Yhdistä Steam-tilisi, jotta AW Next tietää, mitkä pelit kirjastossasi todella ovat tänään, mukaan lukien Steam Family -jaetut pelit, ja voi piilottaa ne, joita et enää omista. Se lukee myös avaamasi Steam-saavutukset, kun profiilisi on yksityinen. AW Next ei koskaan näe Steam-salasanaasi: kirjautumissivu on Valven oma. Istuntotunnus säilytetään salattuna tällä tietokoneella.",
     "steam-stale-badge": "Ei enää Steam-kirjastossasi",
     "steam-family-badge": "Jaettu kanssasi Steam Familyn kautta",
+    "purchased-badge-steam": "Ostettu Steam-peli",
+    "purchased-badge-gog": "Ostettu GOG-peli",
+    "purchased-badge-ubisoft": "Ostettu Ubisoft-peli",
+    "purchased-badge-epic": "Ostettu Epic Games-peli",
+    "purchased-badge-ea": "Ostettu EA-peli",
     "steam-hide-stale": "Piilota pelit, joita ei enää ole Steam-kirjastossasi",
     "steam-hide-stale-help": "Vaatii yhdistetyn Steam-tilin. Tälle tietokoneelle asennettuja pelejä ja Steam Familyn kautta jaettuja pelejä ei piiloteta koskaan."
   },

@@ -1908,6 +1908,11 @@
     "steam-desc": "Valfritt. Anslut ditt Steam-konto så att AW Next vet vilka spel som verkligen finns i ditt bibliotek i dag, inklusive spel som delas via Steam Family, och kan dölja dem du inte längre äger. Det läser även dina upplåsta Steam-prestationer när din profil är privat. AW Next ser aldrig ditt Steam-lösenord: inloggningssidan är Valves egen. Sessionstoken lagras krypterad på den här datorn.",
     "steam-stale-badge": "Finns inte längre i ditt Steam-bibliotek",
     "steam-family-badge": "Delas med dig via Steam Family",
+    "purchased-badge-steam": "Köpt Steam-spel",
+    "purchased-badge-gog": "Köpt GOG-spel",
+    "purchased-badge-ubisoft": "Köpt Ubisoft-spel",
+    "purchased-badge-epic": "Köpt Epic Games-spel",
+    "purchased-badge-ea": "Köpt EA-spel",
     "steam-hide-stale": "Dölj spel som inte längre finns i ditt Steam-bibliotek",
     "steam-hide-stale-help": "Kräver ett anslutet Steam-konto. Spel som är installerade på den här datorn och spel som delas via Steam Family döljs aldrig."
   },

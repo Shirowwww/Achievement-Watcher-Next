@@ -1908,6 +1908,11 @@
     "steam-desc": "Facoltativo. Collega il tuo account Steam così AW Next sa quali giochi sono davvero nella tua libreria oggi, compresi quelli condivisi tramite Steam Family, e può nascondere quelli che non possiedi più. Legge anche i tuoi obiettivi Steam sbloccati quando il profilo è privato. AW Next non vede mai la tua password Steam: la pagina di accesso è quella di Valve. Il token di sessione viene conservato cifrato su questo PC.",
     "steam-stale-badge": "Non è più nella tua libreria Steam",
     "steam-family-badge": "Condiviso con te tramite Steam Family",
+    "purchased-badge-steam": "Gioco Steam acquistato",
+    "purchased-badge-gog": "Gioco GOG acquistato",
+    "purchased-badge-ubisoft": "Gioco Ubisoft acquistato",
+    "purchased-badge-epic": "Gioco Epic Games acquistato",
+    "purchased-badge-ea": "Gioco EA acquistato",
     "steam-hide-stale": "Nascondi i giochi che non sono più nella tua libreria Steam",
     "steam-hide-stale-help": "Richiede un account Steam collegato. I giochi installati su questo PC e quelli condivisi tramite Steam Family non vengono mai nascosti."
   },

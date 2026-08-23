@@ -180,6 +180,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   watcher matches achievement file names case-insensitively, so a save is no longer ignored purely
   because its folder was watched for the other spelling of `achievements.ini`.
 
+- **A game confirmed bought on an official store carries a small badge**, the same dot the Steam
+  Family badge uses. It recognises a Steam game that is owned or verified in a legitimate local
+  library, a GOG Galaxy, Ubisoft Connect/Uplay, Epic Games or EA install. A stale or Steam Family
+  game keeps its own badge instead, and an emulated or unverified install shows none.
+
 ### Fixed
 
 - **The preset designer's live preview drew an empty card.** The preview frame inherits the Settings

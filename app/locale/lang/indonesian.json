@@ -1908,6 +1908,11 @@
     "steam-desc": "Opsional. Hubungkan akun Steam-mu agar AW Next tahu gim mana yang benar-benar ada di pustakamu hari ini, termasuk gim yang dibagikan lewat Steam Family, dan bisa menyembunyikan yang tidak lagi kamu miliki. Ia juga membaca pencapaian Steam yang sudah kamu buka saat profilmu privat. AW Next tidak pernah melihat kata sandi Steam-mu: halaman masuk adalah milik Valve sendiri. Token sesi disimpan terenkripsi di PC ini.",
     "steam-stale-badge": "Tidak lagi ada di pustaka Steam-mu",
     "steam-family-badge": "Dibagikan denganmu lewat Steam Family",
+    "purchased-badge-steam": "Game Steam yang dibeli",
+    "purchased-badge-gog": "Game GOG yang dibeli",
+    "purchased-badge-ubisoft": "Game Ubisoft yang dibeli",
+    "purchased-badge-epic": "Game Epic Games yang dibeli",
+    "purchased-badge-ea": "Game EA yang dibeli",
     "steam-hide-stale": "Sembunyikan gim yang tidak lagi ada di pustaka Steam-mu",
     "steam-hide-stale-help": "Membutuhkan akun Steam yang terhubung. Gim yang terpasang di PC ini dan gim yang dibagikan lewat Steam Family tidak pernah disembunyikan."
   },

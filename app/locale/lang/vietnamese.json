@@ -1908,6 +1908,11 @@
     "steam-desc": "Tùy chọn. Kết nối tài khoản Steam của bạn để AW Next biết những trò chơi nào thực sự có trong thư viện của bạn hôm nay, kể cả trò chơi được chia sẻ qua Steam Family, và có thể ẩn những trò chơi bạn không còn sở hữu. Nó cũng đọc các thành tựu Steam bạn đã mở khóa khi hồ sơ của bạn ở chế độ riêng tư. AW Next không bao giờ nhìn thấy mật khẩu Steam của bạn: trang đăng nhập là của chính Valve. Mã phiên được lưu trữ ở dạng mã hóa trên PC này.",
     "steam-stale-badge": "Không còn trong thư viện Steam của bạn",
     "steam-family-badge": "Được chia sẻ với bạn qua Steam Family",
+    "purchased-badge-steam": "Trò chơi Steam đã mua",
+    "purchased-badge-gog": "Trò chơi GOG đã mua",
+    "purchased-badge-ubisoft": "Trò chơi Ubisoft đã mua",
+    "purchased-badge-epic": "Trò chơi Epic Games đã mua",
+    "purchased-badge-ea": "Trò chơi EA đã mua",
     "steam-hide-stale": "Ẩn các trò chơi không còn trong thư viện Steam của bạn",
     "steam-hide-stale-help": "Yêu cầu tài khoản Steam đã kết nối. Các trò chơi được cài đặt trên PC này và trò chơi chia sẻ qua Steam Family không bao giờ bị ẩn."
   },

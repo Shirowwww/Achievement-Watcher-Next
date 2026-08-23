@@ -1908,6 +1908,11 @@
     "steam-desc": "可选。连接你的 Steam 账户后，AW Next 就能知道你的库中今天真正拥有哪些游戏，包括通过 Steam 家庭共享的游戏，并可以隐藏你不再拥有的游戏。当你的个人资料设为私密时，它还会读取你已解锁的 Steam 成就。AW Next 绝不会看到你的 Steam 密码：登录页面是 Valve 自己的页面。会话令牌以加密形式保存在这台电脑上。",
     "steam-stale-badge": "已不在你的 Steam 库中",
     "steam-family-badge": "通过 Steam 家庭共享给你",
+    "purchased-badge-steam": "已购买的Steam游戏",
+    "purchased-badge-gog": "已购买的GOG游戏",
+    "purchased-badge-ubisoft": "已购买的Ubisoft游戏",
+    "purchased-badge-epic": "已购买的Epic Games游戏",
+    "purchased-badge-ea": "已购买的EA游戏",
     "steam-hide-stale": "隐藏已不在你的 Steam 库中的游戏",
     "steam-hide-stale-help": "需要已连接的 Steam 账户。安装在这台电脑上的游戏以及通过 Steam 家庭共享的游戏永远不会被隐藏。"
   },

@@ -1908,6 +1908,11 @@
     "steam-desc": "Optional. Verbinde dein Steam-Konto, damit AW Next weiß, welche Spiele heute wirklich in deiner Bibliothek sind, einschließlich der über Steam Family geteilten Spiele, und die ausblenden kann, die dir nicht mehr gehören. Es liest außerdem deine freigeschalteten Steam-Erfolge, wenn dein Profil privat ist. AW Next sieht dein Steam-Passwort nie: Die Anmeldeseite ist die von Valve selbst. Das Sitzungstoken wird verschlüsselt auf diesem PC gespeichert.",
     "steam-stale-badge": "Nicht mehr in deiner Steam-Bibliothek",
     "steam-family-badge": "Über Steam Family mit dir geteilt",
+    "purchased-badge-steam": "Gekauftes Steam-Spiel",
+    "purchased-badge-gog": "Gekauftes GOG-Spiel",
+    "purchased-badge-ubisoft": "Gekauftes Ubisoft-Spiel",
+    "purchased-badge-epic": "Gekauftes Epic Games-Spiel",
+    "purchased-badge-ea": "Gekauftes EA-Spiel",
     "steam-hide-stale": "Spiele ausblenden, die nicht mehr in deiner Steam-Bibliothek sind",
     "steam-hide-stale-help": "Erfordert ein verbundenes Steam-Konto. Auf diesem PC installierte Spiele und über Steam Family geteilte Spiele werden nie ausgeblendet."
   },

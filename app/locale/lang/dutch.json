@@ -1908,6 +1908,11 @@
     "steam-desc": "Optioneel. Verbind je Steam-account zodat AW Next weet welke spellen vandaag echt in je bibliotheek staan, inclusief spellen die via Steam Family gedeeld worden, en de spellen kan verbergen die je niet meer bezit. Het leest ook je ontgrendelde Steam-prestaties wanneer je profiel privé is. AW Next ziet je Steam-wachtwoord nooit: de inlogpagina is die van Valve zelf. Het sessietoken wordt versleuteld op deze pc bewaard.",
     "steam-stale-badge": "Niet meer in je Steam-bibliotheek",
     "steam-family-badge": "Met je gedeeld via Steam Family",
+    "purchased-badge-steam": "Gekocht Steam-spel",
+    "purchased-badge-gog": "Gekocht GOG-spel",
+    "purchased-badge-ubisoft": "Gekocht Ubisoft-spel",
+    "purchased-badge-epic": "Gekocht Epic Games-spel",
+    "purchased-badge-ea": "Gekocht EA-spel",
     "steam-hide-stale": "Verberg spellen die niet meer in je Steam-bibliotheek staan",
     "steam-hide-stale-help": "Vereist een verbonden Steam-account. Spellen die op deze pc geïnstalleerd zijn en spellen die via Steam Family gedeeld worden, worden nooit verborgen."
   },

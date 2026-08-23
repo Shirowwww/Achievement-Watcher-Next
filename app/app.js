@@ -2340,6 +2340,25 @@ const SOURCE_BADGE = {
 const STEAM_BADGE_SOURCES =
   /^(?:achievement watcher : watchdog|ali213|codex|creamapi|empress|gbe fork|goldberg(?: steamemu| \(empress\))?|greenluma|hoodlum|manual|onlinefix|razor1911|reloaded - 3dm|rld!|rune|skidrow|smartsteamemu|steam|steam-emulator|tenoke|unconfigured|universelan)$/;
 
+/*
+  The "legitimately owned" badge: the same small dot as the Steam Family one, but for a game that
+  came from an official store install rather than an emulator save. Only sources produced by an
+  official parser count here - the Nemirtingas ('gog', 'epic') and crack labels must never match.
+*/
+const PURCHASED_SOURCE = {
+  steam: /^steam \(/,
+  gog: /^gog galaxy$/,
+  ubisoft: /^(?:ubisoft connect|uplay)$/,
+  epic: /^epic-official$/,
+  ea: /^ea$/,
+};
+
+function purchasedPlatformFor(game) {
+  const source = String((game && game.source) || '').toLowerCase();
+  if (isLegitSteamLibraryGame(game) || (game && game.ownership === 'owned')) return 'steam';
+  return Object.keys(PURCHASED_SOURCE).find((name) => PURCHASED_SOURCE[name].test(source)) || '';
+}
+
 function sourcePresentationFor(game) {
   const source = game && game.source;
   const sourceLower = String(source || '').toLowerCase();
@@ -3061,9 +3080,20 @@ var app = {
               playtime: localeText('settings.notification.test.playtime'),
               staleOwnership: t('steam-stale-badge', 'No longer in your Steam library', 'Plus dans ta bibliothèque Steam'),
               familyOwnership: t('steam-family-badge', 'Shared with you through Steam Family', 'Partagé avec toi via la famille Steam'),
+              purchasedSteam: t('purchased-badge-steam', 'Purchased Steam game', 'Jeu Steam acheté'),
+              purchasedGog: t('purchased-badge-gog', 'Purchased GOG game', 'Jeu GOG acheté'),
+              purchasedUbisoft: t('purchased-badge-ubisoft', 'Purchased Ubisoft game', 'Jeu Ubisoft acheté'),
+              purchasedEpic: t('purchased-badge-epic', 'Purchased Epic Games game', 'Jeu Epic Games acheté'),
+              purchasedEa: t('purchased-badge-ea', 'Purchased EA game', 'Jeu EA acheté'),
             };
+            const purchasedPlatform = game.ownership === 'stale' || game.ownership === 'family' ? '' : purchasedPlatformFor(game);
+            const purchasedLabel = purchasedPlatform
+              ? tileLabels[`purchased${purchasedPlatform.charAt(0).toUpperCase()}${purchasedPlatform.slice(1)}`] || ''
+              : '';
+            const ownershipBadgeClass =
+              game.ownership === 'stale' ? 'stale' : game.ownership === 'family' ? 'family' : purchasedLabel ? 'purchased' : '';
             const ownershipLabel =
-              game.ownership === 'stale' ? tileLabels.staleOwnership : game.ownership === 'family' ? tileLabels.familyOwnership : '';
+              game.ownership === 'stale' ? tileLabels.staleOwnership : game.ownership === 'family' ? tileLabels.familyOwnership : purchasedLabel;
             let template = `
             <li>
                 <div class="game-box" data-index="${listIndex}" data-appid="${game.appid}" data-progress="${hasAchievements ? progress : -1}" data-installed="${
@@ -3101,7 +3131,7 @@ var app = {
                         }
                         ${
                           ownershipLabel
-                            ? `<span class="ownership-badge ${game.ownership}" title="${escapeHtml(
+                            ? `<span class="ownership-badge ${ownershipBadgeClass}" title="${escapeHtml(
                                 ownershipLabel
                               )}" role="img" aria-label="${escapeHtml(ownershipLabel)}"></span>`
                             : ''
