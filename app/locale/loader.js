@@ -479,6 +479,9 @@ function translateUI(lang, locale, template) {
   if (template.settings.notification.option.overlaySoundImport) {
     $('#btn-import-sound').attr('title', clear(template.settings.notification.option.overlaySoundImport));
   }
+  if (template.settings.notification.option.overlaySoundDelete) {
+    $('#btn-delete-sound').attr('title', clear(template.settings.notification.option.overlaySoundDelete));
+  }
   // Per-option descriptions for the in-game overlay rows (bound to each row's .help via its label).
   $('#lbl-notifMode').closest('li').find('.help').text(clear(template.settings.notification.option.mode.description));
   $('#lbl-overlayPreset').closest('li').find('.help').text(clear(template.settings.notification.option.overlayPresetDesc));

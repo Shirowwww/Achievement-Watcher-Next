@@ -6178,6 +6178,34 @@ ipcMain.handle('import-sound', async () => {
   }
 });
 
+// Only the sounds the user imported, so Settings can offer to delete the one it is on: a bundled
+// sound comes back with the app, a user one is the only file a delete would really destroy.
+ipcMain.handle('list-user-sounds', async () => {
+  try {
+    return fs
+      .readdirSync(userSoundsDir())
+      .filter((name) => notificationSounds.SOUND_EXT_RE.test(name))
+      .sort((a, b) => a.localeCompare(b));
+  } catch {
+    return []; // no sounds folder yet: nothing was ever imported
+  }
+});
+
+// Delete one imported sound. The name is a bare filename inside <userData>/sounds and nothing else:
+// a bundled sound, a path or a traversal must not resolve, or Settings becomes a file deleter.
+ipcMain.handle('delete-sound', async (event, name) => {
+  const base = typeof name === 'string' ? name : '';
+  if (!base || base !== path.basename(base) || !notificationSounds.SOUND_EXT_RE.test(base)) return { ok: false };
+  try {
+    fs.unlinkSync(path.join(userSoundsDir(), base));
+    debug.log('[delete-sound] removed ' + base);
+    return { ok: true, name: base };
+  } catch (err) {
+    debug.log('[delete-sound] ' + (err.message || err));
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+
 // NOTE: overlay notifications are no longer rendered from an app-side WebSocket bridge. The Watchdog
 // now spawns a `--wintype=notification` process for each overlay notification (see watchdog
 // notification/toaster.js), so they appear with the main app closed; when the app is open the

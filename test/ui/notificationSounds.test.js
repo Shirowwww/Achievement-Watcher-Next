@@ -76,16 +76,14 @@ test('the random sound is chosen from the sound list, not from a row of its own'
   // Loading puts the selection back on Random.
   assert.match(settings, /cfgOverlay\.randomSound === true \? RANDOM_SOUND_VALUE :/, 'a saved Random choice does not come back selected');
 
-  /*
-    And the sentinel is never played as if it were a file - it is resolved to a real one first.
-
-    Silencing it instead would have been the easy answer and the wrong one: Random is an entry in
-    the list like any other, so previewing it, dragging the volume under it and firing a test with
-    it all have to make a noise.
-  */
+  // The sentinel is never played as if it were a file - it is resolved to a real one first. Silencing
+  // it instead would have been the easy answer and the wrong one: Random is an entry in the list
+  // like any other, so previewing it, dragging the volume under it and firing a test with it all have to make a noise.
   assert.match(settings, /function soundForPreview\(name\) \{[\s\S]*?if \(name !== RANDOM_SOUND_VALUE\) return name;/, 'the sentinel is not resolved to a real sound');
   assert.match(settings, /const file = resolveSoundFile\(soundForPreview\(name\)\);/, 'the sound preview does not resolve the sentinel');
-  assert.match(settings, /const sound = soundForPreview\(\$\('#option_overlaySound'\)\.val\(\) \|\| ''\);/, 'a test notification does not resolve the sentinel');
+  // The test row now reads a per-game override first, falling back to the global dropdown, but the
+  // sentinel still has to be resolved on the way through rather than played as a filename.
+  assert.match(settings, /const sound = soundForPreview\(soundChoice\);/, 'a test notification does not resolve the sentinel');
   assert.match(settings, /previewSoundAtVolume\(\$\('#option_overlaySound'\)\.val\(\)\);/, 'the volume slider no longer previews the selected sound');
 });
 
@@ -98,4 +96,37 @@ test('the bundled sound list carries only sounds that ship on purpose', () => {
   const files = fs.readdirSync(dir).filter((name) => /\.(?:wav|mp3|ogg|flac|m4a|aac)$/i.test(name));
   assert.ok(files.length > 0, 'the bundled sound folder is empty');
   assert.ok(!files.includes('Indiana.wav'), 'Indiana.wav was removed from the bundled sounds');
+});
+
+/*
+  A bundled sound comes back with the app, so only an imported one can really be deleted: the button
+  has to follow the selection rather than sit there permanently offering something it cannot do.
+*/
+test('the sound row can delete an imported sound and only an imported one', () => {
+  const root = path.join(__dirname, '..', '..', 'app');
+  const settings = fs.readFileSync(path.join(root, 'ui', 'settings.js'), 'utf8');
+  const html = fs.readFileSync(path.join(root, 'view', 'app.html'), 'utf8');
+  const init = fs.readFileSync(path.join(root, 'electron', 'init.js'), 'utf8');
+  const css = fs.readFileSync(path.join(root, 'resources', 'css', 'app.css'), 'utf8');
+
+  assert.match(html, /id="btn-delete-sound"[^>]*hidden/, 'the delete button must start hidden');
+  // .inline-action-btn sets display, which beats the browser's own [hidden] rule.
+  assert.match(css, /\.inline-action-btn\[hidden\] \{\s*display: none;/, 'a hidden inline action button would still paint');
+
+  assert.match(
+    settings,
+    /\$\('#btn-delete-sound'\)\.prop\('hidden', !userSounds\.has\(/,
+    'the button is shown for a sound that was not imported'
+  );
+  assert.match(settings, /if \(!userSounds\.has\(name\)\) return;/, 'the delete handler does not re-check what it is deleting');
+  assert.match(settings, /invoke\('delete-sound', name\)/, 'the renderer never asks for the deletion');
+
+  // The main process is the only guard that matters: a bare filename inside <userData>/sounds.
+  assert.match(init, /ipcMain\.handle\('delete-sound'/, 'no delete-sound handler');
+  assert.match(init, /base !== path\.basename\(base\)/, 'delete-sound accepts a path, so it can delete outside the sounds folder');
+  assert.match(init, /ipcMain\.handle\('list-user-sounds'/, 'the renderer cannot tell imported sounds apart');
+
+  // Every rebuild of the dropdown goes through one helper, so none of them can drop "Random sound".
+  assert.match(settings, /function fillSoundDropdown\(sounds, selected\)/, 'the dropdown is still rebuilt by hand in several places');
+  assert.equal(settings.match(/data-lang-random/g).length, 1, 'the Random entry is appended from more than one place');
 });

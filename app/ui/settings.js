@@ -612,17 +612,17 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const soundsReady = ipcRenderer
         .invoke('list-sounds')
         .then((sounds) => {
-          const sel = $('#option_overlaySound');
-          sel.empty();
-          sel.append($('<option>').attr('value', '').text(sel.attr('data-lang-none') || ''));
           /*
             "Random" is a sound you pick, not a switch beside the list. It used to be its own row,
             which meant the sound dropdown could read "Steam.wav" while every notification played
             something else - two controls describing one outcome, and the wrong one on top.
           */
-          sel.append($('<option>').attr('value', RANDOM_SOUND_VALUE).text(sel.attr('data-lang-random') || ''));
-          (sounds || []).forEach((name) => sel.append($('<option>').attr('value', name).text(name.replace(/\.[^.]+$/, ''))));
-          sel.val(cfgOverlay.randomSound === true ? RANDOM_SOUND_VALUE : cfgOverlay.notificationSound || '');
+          // A settings file written before the bundled sounds were renamed still names the old file:
+          // without this the dropdown would read "None" while the old name kept playing.
+          const picked = cfgOverlay.notificationSound || '';
+          const shown = sounds && sounds.includes(picked) ? picked : renamedSound(picked) || picked;
+          fillSoundDropdown(sounds, cfgOverlay.randomSound === true ? RANDOM_SOUND_VALUE : shown);
+          refreshUserSounds();
         })
         .catch(() => {});
 
@@ -3192,6 +3192,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     }
     // Preview the overlay sound when the dropdown is changed by the user.
     $('#option_overlaySound').on('change', function () {
+      updateDeleteSoundButton();
       const v = $(this).val();
       if (!v) return;
       previewSoundAtVolume(v);
@@ -3223,6 +3224,36 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       volumeWheelCommit = setTimeout(() => $(el).trigger('change'), 350);
     });
 
+    /*
+      Only a sound the user imported can be deleted - a bundled one comes back with the app, so
+      offering to remove it would be a lie. The delete button therefore follows the selection: it
+      appears on an imported sound and nowhere else.
+    */
+    let userSounds = new Set();
+    async function refreshUserSounds() {
+      try {
+        userSounds = new Set((await ipcRenderer.invoke('list-user-sounds')) || []);
+      } catch (e) {
+        debug.log(e);
+        userSounds = new Set();
+      }
+      updateDeleteSoundButton();
+    }
+    function updateDeleteSoundButton() {
+      $('#btn-delete-sound').prop('hidden', !userSounds.has(String($('#option_overlaySound').val() || '')));
+    }
+    // The sound dropdown is rebuilt from several places (first paint, import, delete); they must all
+    // produce the same list, or one of them silently drops the "Random sound" entry.
+    function fillSoundDropdown(sounds, selected) {
+      const sel = $('#option_overlaySound');
+      sel.empty();
+      sel.append($('<option>').attr('value', '').text(sel.attr('data-lang-none') || ''));
+      sel.append($('<option>').attr('value', RANDOM_SOUND_VALUE).text(sel.attr('data-lang-random') || ''));
+      (sounds || []).forEach((n) => sel.append($('<option>').attr('value', n).text(n.replace(/\.[^.]+$/, ''))));
+      if (selected != null) sel.val(selected);
+      updateDeleteSoundButton();
+    }
+
     // Import a custom notification sound: copy it into <userData>/sounds, then refresh the dropdown and
     // select it (the change triggers a preview + the Notifications-tab auto-save).
     $('#btn-import-sound').click(async function () {
@@ -3231,12 +3262,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       try {
         const name = await ipcRenderer.invoke('import-sound');
         if (name) {
-          const sounds = await ipcRenderer.invoke('list-sounds');
-          const sel = $('#option_overlaySound');
-          sel.empty();
-          sel.append($('<option>').attr('value', '').text(sel.attr('data-lang-none') || ''));
-          (sounds || []).forEach((n) => sel.append($('<option>').attr('value', n).text(n.replace(/\.[^.]+$/, ''))));
-          sel.val(name).change();
+          fillSoundDropdown(await ipcRenderer.invoke('list-sounds'), name);
+          await refreshUserSounds();
+          $('#option_overlaySound').change();
         }
       } catch (e) {
         debug.log(e);
@@ -3244,15 +3272,58 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       self.css('pointer-events', 'initial');
     });
 
-    // Reposition the overlay notification popup: spawn a draggable witness using the current preset;
-    // dragging it persists the 'custom' position used when Position = Custom.
-    $('#btn-overlay-reposition').click(function () {
-      const data = overlayTestData('toast');
+    // Delete the imported sound the dropdown is on, then fall back to "None" so no setting is left
+    // naming a file that no longer exists.
+    $('#btn-delete-sound').click(async function () {
+      const name = String($('#option_overlaySound').val() || '');
+      if (!userSounds.has(name)) return;
+      const choice = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+        type: 'warning',
+        buttons: [t('delete', 'Delete', 'Supprimer'), t('cancel', 'Cancel', 'Annuler')],
+        defaultId: 1,
+        cancelId: 1,
+        title: t('delete-sound-title', 'Delete sound', 'Supprimer le son'),
+        message: t('delete-sound-message', 'Delete the sound “{name}”?', 'Supprimer le son « {name} » ?', { name }),
+        detail: t(
+          'delete-sound-detail',
+          'The imported sound file is removed from disk. This cannot be undone.',
+          'Le fichier son importé sera supprimé du disque. Cette action est irréversible.'
+        ),
+        noLink: true,
+      });
+      if (choice !== 0) return;
+      const self = $(this);
+      self.css('pointer-events', 'none');
+      try {
+        const res = await ipcRenderer.invoke('delete-sound', name);
+        if (res && res.ok) {
+          fillSoundDropdown(await ipcRenderer.invoke('list-sounds'), '');
+          await refreshUserSounds();
+          $('#option_overlaySound').change();
+        }
+      } catch (e) {
+        debug.log(e);
+      }
+      self.css('pointer-events', 'initial');
+    });
+
+    // Reposition the overlay notification popup through the same draggable witness for global and
+    // per-game placement. The main process chooses the storage destination from repositionGameAppid.
+    function spawnNotificationReposition(notificationOverrides, game, gameAppid = '') {
+      const data = overlayTestData('toast', notificationOverrides, null, game);
       data.position = 'custom';
       data.reposition = true;
+      data.repositionGameAppid = String(gameAppid || '');
+      data.gamePositionAppid = String(gameAppid || '');
       data.durationMs = undefined;
       data.soundPath = '';
       ipcRenderer.send('spawn-overlay-notification', data);
+    }
+    window.repositionAchievementWatcherNotification = function (notificationOverrides, game, gameAppid) {
+      spawnNotificationReposition(notificationOverrides, game, gameAppid);
+    };
+    $('#btn-overlay-reposition').click(function () {
+      spawnNotificationReposition();
       // Make sure the dropdown reflects that custom positioning is now in use.
       $('#option_overlayPosition').val('custom').change();
     });

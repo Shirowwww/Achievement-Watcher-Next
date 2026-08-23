@@ -3252,6 +3252,12 @@ main {
   line-height: 1;
 }
 
+/* `display: inline-flex` above beats the browser's own `[hidden] { display: none }`, so the delete
+   button would stay on screen for a bundled sound without this. */
+.inline-action-btn[hidden] {
+  display: none;
+}
+
 .inline-action-btn.secondary {
   background: color-mix(in srgb, var(--surface) 58%, transparent);
 }
