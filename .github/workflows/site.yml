@@ -1,8 +1,8 @@
 name: Site
 
 # GitHub Pages serves docs/ exactly as it is checked in, so the parts of the site that are generated
-# have to be committed. This validates them on a pull request and regenerates the preset listing
-# after a merge, so submitting a preset is two files and nothing else.
+# have to be committed. This validates them on a pull request and rebuilds the preset and theme
+# listings after a merge, so the copy the site falls back to always matches the files beside it.
 
 on:
   push:
@@ -12,6 +12,8 @@ on:
       - 'tools/site/**'
       - 'tools/gallery/**'
       - 'app/util/presetPackage.js'
+      - 'app/util/themePackage.js'
+      - 'app/util/themeMock.js'
       - 'app/presets/**'
       - '.github/workflows/site.yml'
   pull_request:
@@ -20,6 +22,8 @@ on:
       - 'tools/site/**'
       - 'tools/gallery/**'
       - 'app/util/presetPackage.js'
+      - 'app/util/themePackage.js'
+      - 'app/util/themeMock.js'
       - 'app/presets/**'
       - '.github/workflows/site.yml'
   workflow_dispatch:
@@ -41,10 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      # A submission is credited to whoever committed it, which needs the history.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -61,6 +62,9 @@ jobs:
       - name: Validate the preset gallery
         run: node tools/gallery/build.js --check
 
+      - name: Validate the theme gallery
+        run: node tools/gallery/build-themes.js --check
+
       - name: Check the generated site assets
         run: node tools/site/build-assets.js --check
 
@@ -70,27 +74,14 @@ jobs:
       - name: Check the release data
         run: node tools/site/release-data.js --check
 
-      - name: Check the pages and the listing
+      - name: Check the pages and the listings
         working-directory: app
-        run: node --test ../test/site/gallery.test.js ../test/site/pages.test.js
+        run: node --test ../test/site/gallery.test.js ../test/site/themeGallery.test.js ../test/site/pages.test.js
 
-      # A package is a zip: unreadable in a pull request diff. This prints what is inside the ones
-      # this change touches, so a submission can be reviewed without downloading anything.
-      - name: Review sheet for submitted presets
-        if: github.event_name == 'pull_request'
-        run: |
-          changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" -- docs/gallery/community \
-            | xargs -r -n1 basename | sed 's/\.[^.]*$//' | sort -u | paste -sd, -)
-          if [ -n "$changed" ]; then
-            node tools/gallery/build.js --report --only="$changed" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "No preset submission in this change." >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-  # Only after a merge, and only over code that is already on main: the listing is rebuilt from the
-  # files in the repository and committed, so nobody has to run a command to submit a preset.
+  # Only after a merge, and only over code that is already on main: the listings are rebuilt from
+  # the files in the repository and committed, so nobody has to run a command to publish one.
   listing:
-    name: Rebuild the listing
+    name: Rebuild the listings
     needs: check
     if: github.event_name == 'push' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
@@ -112,19 +103,21 @@ jobs:
         working-directory: app
         run: npm ci --ignore-scripts
 
-      - name: Rebuild docs/gallery/index.json
-        run: node tools/gallery/build.js
+      - name: Rebuild the two listings
+        run: |
+          node tools/gallery/build.js
+          node tools/gallery/build-themes.js
 
       # The machine commits as the machine: a generated file is not the maintainer's work, and the
       # repository's own identity rule is about commits people write.
       - name: Commit it if it changed
         run: |
-          if git diff --quiet -- docs/gallery/index.json; then
-            echo "The listing was already up to date."
+          if git diff --quiet -- docs/gallery/index.json docs/gallery/themes/index.json; then
+            echo "Both listings were already up to date."
             exit 0
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add docs/gallery/index.json
-          git commit -m 'chore: rebuild the preset gallery listing'
+          git add docs/gallery/index.json docs/gallery/themes/index.json
+          git commit -m 'chore: rebuild the gallery listings'
           git push

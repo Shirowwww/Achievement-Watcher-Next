@@ -23,7 +23,11 @@ const { parse } = require(path.join(__dirname, '..', '..', 'app', 'node_modules'
 const root = path.join(__dirname, '..', '..');
 const I18N_DIR = path.join(root, 'docs', 'assets', 'i18n');
 
-const PAGES = [path.join(root, 'docs', 'index.html'), path.join(root, 'docs', 'gallery', 'index.html')];
+const PAGES = [
+  path.join(root, 'docs', 'index.html'),
+  path.join(root, 'docs', 'gallery', 'index.html'),
+  path.join(root, 'docs', 'gallery', 'themes', 'index.html'),
+];
 const SCRIPTS = [path.join(root, 'docs', 'assets', 'js', 'site.js'), path.join(root, 'docs', 'assets', 'js', 'gallery.js')];
 
 // Inline tags a translated value may reuse; anything else in the source is flattened to its text so

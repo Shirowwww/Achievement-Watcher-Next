@@ -35,7 +35,85 @@
   var sortSelect = document.querySelector('[data-gallery-sort]');
   var countLabel = document.querySelector('[data-gallery-count]');
 
-  var presets = [];
+  // What the two kinds do not share. Everything else in this file is written once.
+  var KINDS = {
+    presets: {
+      items: 'presets',
+      api: '/api/presets',
+      extension: '.awpreset',
+      accept: /\.awpreset$/i,
+      maxUpload: 4 * 1024 * 1024,
+      wrongFile: function () {
+        return t('gallery.uploadWrongFile', 'That is not an .awpreset file. Export one from Settings, Presets.');
+      },
+      tooBig: function () {
+        return t('gallery.uploadTooBig', 'That package is over 4 MB, which is more than the gallery serves.');
+      },
+      previewAlt: function () {
+        return t('gallery.previewAlt', 'The popup drawn by this preset');
+      },
+      emptyTitle: function () {
+        return t('gallery.emptyTitle', 'No community preset yet');
+      },
+      emptyBody: function () {
+        return t('gallery.emptyBody', 'This is where submitted presets appear. Yours can be the first one.');
+      },
+      extras: function () {
+        return null;
+      },
+    },
+    themes: {
+      items: 'themes',
+      api: '/api/themes',
+      extension: '.awtheme',
+      accept: /\.awtheme$/i,
+      maxUpload: 8 * 1024 * 1024,
+      wrongFile: function () {
+        return t('themes.uploadWrongFile', 'That is not an .awtheme file. Export one from Settings, Theme.');
+      },
+      tooBig: function () {
+        return t('themes.uploadTooBig', 'That theme is over 8 MB, which is more than the gallery serves.');
+      },
+      previewAlt: function () {
+        return t('themes.previewAlt', 'The app drawn with this theme');
+      },
+      emptyTitle: function () {
+        return t('themes.emptyTitle', 'No community theme yet');
+      },
+      emptyBody: function () {
+        return t('themes.emptyBody', 'This is where submitted themes appear. Yours can be the first one.');
+      },
+      /*
+        The palette and how many pictures a theme carries. Both are read out of the package rather
+        than typed, so they are facts about what will be installed - which is the one thing a
+        photograph of a window does not tell you at a glance.
+      */
+      extras: function (entry) {
+        var row = element('div', 'theme-facts');
+        var swatches = entry.swatches || [];
+        if (swatches.length) {
+          var strip = element('div', 'swatches');
+          strip.setAttribute('role', 'img');
+          strip.setAttribute('aria-label', t('themes.paletteAlt', 'The colours this theme uses'));
+          swatches.slice(0, 6).forEach(function (color) {
+            var chip = element('span', 'swatch');
+            // A colour out of a listing is still a value from somewhere else: only a plain hex or
+            // rgb() is ever written into a style, and anything else simply is not painted.
+            if (/^#[0-9a-f]{3,8}$/i.test(color) || /^rgba?\([\d\s,.]+\)$/i.test(color)) chip.style.background = color;
+            strip.appendChild(chip);
+          });
+          row.appendChild(strip);
+        }
+        var images = Number(entry.images) || 0;
+        row.appendChild(element('span', 'small muted', images ? t('themes.withImages', 'with images') : t('themes.coloursOnly', 'colours only')));
+        return row;
+      },
+    },
+  };
+
+  var kind = KINDS[grid.getAttribute('data-gallery-kind') === 'themes' ? 'themes' : 'presets'];
+
+  var entries = [];
   var activeTag = '';
   // What the page is currently showing, so a language switch can draw it again in the new language
   // instead of only refreshing the cards.
@@ -64,57 +142,116 @@
     }
   }
 
-  function card(preset) {
+  /*
+    A preview is a real screenshot at the size the popup or the window actually has, and a card shows
+    it at a fraction of that, so it is worth opening. A modal dialog brings Escape, the backdrop and
+    the focus handling with it instead of them being made by hand here.
+  */
+  var lightbox = null;
+
+  function buildLightbox() {
+    var frame = element('dialog', 'lightbox');
+    var picture = element('img');
+    var caption = element('p', 'lightbox-caption');
+    var close = element('button', 'lightbox-close', '\u00d7');
+    close.type = 'button';
+
+    close.addEventListener('click', function () {
+      frame.close();
+    });
+    // The dialog is only the frame around the picture, so a click on it is a click beside the
+    // picture, which is the one gesture everybody tries first.
+    frame.addEventListener('click', function (event) {
+      if (event.target === frame) frame.close();
+    });
+
+    frame.appendChild(close);
+    frame.appendChild(picture);
+    frame.appendChild(caption);
+    document.body.appendChild(frame);
+    return { frame: frame, picture: picture, caption: caption, close: close };
+  }
+
+  function enlarge(entry) {
+    if (!lightbox) lightbox = buildLightbox();
+    lightbox.picture.src = entry.preview.file;
+    lightbox.picture.alt = kind.previewAlt();
+    lightbox.caption.textContent = entry.name;
+    lightbox.close.setAttribute('aria-label', t('gallery.zoomClose', 'Close'));
+    lightbox.frame.setAttribute('aria-label', entry.name);
+    lightbox.frame.showModal();
+  }
+
+  function card(entry) {
     var article = element('article', 'preset-card');
 
     var figure = element('figure');
     var image = element('img');
-    image.src = preset.preview.file;
-    image.width = preset.preview.width;
-    image.height = preset.preview.height;
+    image.src = entry.preview.file;
+    image.width = entry.preview.width;
+    image.height = entry.preview.height;
     image.loading = 'lazy';
     image.decoding = 'async';
-    image.alt = t('gallery.previewAlt', 'The popup drawn by this preset');
-    figure.appendChild(image);
+    image.alt = kind.previewAlt();
+
+    /*
+      The frame is a link to the picture rather than a button: a plain click opens it here, and a
+      middle click, a right click or a browser with no dialog element still lead to the image
+      itself instead of to nothing at all.
+    */
+    var zoom = element('a', 'preview-zoom');
+    zoom.href = entry.preview.file;
+    zoom.setAttribute('aria-label', t('gallery.zoom', 'See this preview in full size'));
+    zoom.appendChild(image);
+    zoom.addEventListener('click', function (event) {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (typeof zoom.ownerDocument.createElement('dialog').showModal !== 'function') return;
+      event.preventDefault();
+      enlarge(entry);
+    });
+
+    figure.appendChild(zoom);
     article.appendChild(figure);
 
     var body = element('div', 'body');
-    body.appendChild(element('h3', null, preset.name));
+    body.appendChild(element('h3', null, entry.name));
 
-    if (preset.by) {
+    if (entry.by) {
       var by = element('p', 'by');
       by.appendChild(document.createTextNode(t('gallery.by', 'by') + ' '));
-      if (preset.link) {
-        var link = element('a', null, preset.by);
-        link.href = preset.link;
+      if (entry.link) {
+        var link = element('a', null, entry.by);
+        link.href = entry.link;
         link.rel = 'noopener nofollow';
         by.appendChild(link);
       } else {
-        by.appendChild(document.createTextNode(preset.by));
+        by.appendChild(document.createTextNode(entry.by));
       }
       body.appendChild(by);
     }
 
-    body.appendChild(element('p', 'desc', preset.summary));
+    body.appendChild(element('p', 'desc', entry.summary));
 
-    if (preset.tags.length) {
+    var extras = kind.extras(entry);
+    if (extras) body.appendChild(extras);
+
+    if (entry.tags.length) {
       var tags = element('ul', 'tags');
-      preset.tags.slice(0, 6).forEach(function (tag) {
-        var item = element('li', 'tag', tag);
-        tags.appendChild(item);
+      entry.tags.slice(0, 6).forEach(function (tag) {
+        tags.appendChild(element('li', 'tag', tag));
       });
       body.appendChild(tags);
     }
 
     var footer = element('footer');
     var download = element('a', 'btn');
-    download.href = preset.file.path;
-    download.setAttribute('download', preset.slug + '.awpreset');
+    download.href = entry.file.path;
+    download.setAttribute('download', entry.slug + kind.extension);
     download.textContent = t('gallery.download', 'Download');
     footer.appendChild(download);
 
     var meta = element('div', 'file-meta');
-    var size = element('div', null, kilobytes(preset.file.bytes));
+    var size = element('div', null, kilobytes(entry.file.bytes));
     /*
       How many people have taken it, when the listing comes from a server that counts; a listing
       served from the repository carries no figure, and the line is then the size on its own.
@@ -123,7 +260,7 @@
       differently in every language the site is translated into, and Russian needs three forms of it.
       The word belongs on the tooltip, where it is a label rather than a count.
     */
-    var downloads = Number(preset.downloads);
+    var downloads = Number(entry.downloads);
     if (isFinite(downloads) && downloads > 0) {
       var taken = element('span', 'downloads', '↓ ' + downloads);
       taken.title = t('gallery.downloads', 'Downloads');
@@ -131,9 +268,9 @@
       size.appendChild(taken);
     }
     meta.appendChild(size);
-    var needs = preset.minAppVersion ? t('gallery.needs', 'Needs AW Next') + ' ' + preset.minAppVersion : formatDate(preset.added);
+    var needs = entry.minAppVersion ? t('gallery.needs', 'Needs AW Next') + ' ' + entry.minAppVersion : formatDate(entry.added);
     meta.appendChild(element('div', null, needs));
-    meta.title = t('gallery.checksum', 'SHA-256') + ': ' + preset.file.sha256;
+    meta.title = t('gallery.checksum', 'SHA-256') + ': ' + entry.file.sha256;
     footer.appendChild(meta);
 
     body.appendChild(footer);
@@ -141,10 +278,10 @@
     return article;
   }
 
-  function matches(preset, query) {
-    if (activeTag && preset.tags.indexOf(activeTag) === -1) return false;
+  function matches(entry, query) {
+    if (activeTag && entry.tags.indexOf(activeTag) === -1) return false;
     if (!query) return true;
-    var haystack = [preset.name, preset.by, preset.summary, preset.tags.join(' ')].join(' ').toLowerCase();
+    var haystack = [entry.name, entry.by, entry.summary, entry.tags.join(' ')].join(' ').toLowerCase();
     return query.split(/\s+/).every(function (word) {
       return haystack.indexOf(word) > -1;
     });
@@ -152,8 +289,8 @@
 
   function render() {
     var query = (search && search.value ? search.value : '').trim().toLowerCase();
-    var shown = presets.filter(function (preset) {
-      return matches(preset, query);
+    var shown = entries.filter(function (entry) {
+      return matches(entry, query);
     });
 
     var order = sortSelect ? String(sortSelect.value || '') : '';
@@ -169,8 +306,8 @@
     }
 
     grid.textContent = '';
-    shown.forEach(function (preset) {
-      grid.appendChild(card(preset));
+    shown.forEach(function (entry) {
+      grid.appendChild(card(entry));
     });
 
     grid.hidden = shown.length === 0;
@@ -183,17 +320,15 @@
       }
     }
     if (countLabel) {
-      countLabel.textContent = shown.length === presets.length
-        ? String(presets.length)
-        : shown.length + ' / ' + presets.length;
+      countLabel.textContent = shown.length === entries.length ? String(entries.length) : shown.length + ' / ' + entries.length;
     }
   }
 
   function buildTags() {
     if (!tagBar) return;
     var counts = {};
-    presets.forEach(function (preset) {
-      preset.tags.forEach(function (tag) {
+    entries.forEach(function (entry) {
+      entry.tags.forEach(function (tag) {
         counts[tag] = (counts[tag] || 0) + 1;
       });
     });
@@ -230,7 +365,7 @@
   }
 
   function empty() {
-    message(t('gallery.emptyTitle', 'No community preset yet'), t('gallery.emptyBody', 'This is where submitted presets appear. Yours can be the first one.'));
+    message(kind.emptyTitle(), kind.emptyBody());
     if (countLabel) countLabel.textContent = '0';
   }
 
@@ -245,18 +380,17 @@
     A submission is the file and nothing else.
 
     The app wrote the name, the description, the version, the tags and the version it needs into the
-    package on export, and the server draws the picture of the popup from the preset itself, at the
-    size it publishes. So there is nothing to fill in, nothing to resize and nothing to attach: drop
-    the .awpreset, and the next thing that happens is a maintainer looking at it.
+    package on export, and the server draws the picture from the submission itself, at the size it
+    publishes. So there is nothing to fill in, nothing to resize and nothing to attach: drop the
+    file, and the next thing that happens is a maintainer looking at it.
 
     The request body IS the file. No multipart, no JSON, no fields - which is also why nothing a
     sender types can reach a file name or a listing entry.
 
     The panel only exists when a server answered, so with none there is nothing here to explain.
   */
-  var MAX_UPLOAD = 4 * 1024 * 1024;
-  // Drawing the popup starts a browser, and renders are serialised, so a submission can sit behind
-  // another one. Far longer than a page usually waits, and deliberately.
+  // Drawing the picture starts a browser, and renders are serialised, so a submission can sit
+  // behind another one. Far longer than a page usually waits, and deliberately.
   var UPLOAD_TIMEOUT_MS = 120000;
 
   function setupUpload() {
@@ -268,15 +402,15 @@
 
     var busy = false;
 
-    function say(message, kind) {
+    function tell(message, kindOfMessage) {
       if (!note) return;
       note.textContent = message;
-      note.className = 'small' + (kind ? ' ' + kind : '');
+      note.className = 'small' + (kindOfMessage ? ' ' + kindOfMessage : '');
     }
 
     function field(selector) {
-      var input = panel.querySelector(selector);
-      return input ? String(input.value || '').trim() : '';
+      var box = panel.querySelector(selector);
+      return box ? String(box.value || '').trim() : '';
     }
 
     // "in 12 minutes", in the reader's language, from the seconds the server asked us to wait. Built
@@ -295,16 +429,12 @@
     function send(file) {
       if (busy) return;
 
-      if (!/\.awpreset$/i.test(file.name)) {
-        return say(t('gallery.uploadWrongFile', 'That is not an .awpreset file. Export one from Settings, Presets.'), 'bad');
-      }
-      if (file.size > MAX_UPLOAD) {
-        return say(t('gallery.uploadTooBig', 'That package is over 4 MB, which is more than the gallery serves.'), 'bad');
-      }
+      if (!kind.accept.test(file.name)) return tell(kind.wrongFile(), 'bad');
+      if (file.size > kind.maxUpload) return tell(kind.tooBig(), 'bad');
 
       busy = true;
       panel.setAttribute('data-busy', 'true');
-      say(t('gallery.uploadSending', 'Sending, and drawing the popup...'));
+      tell(t('gallery.uploadSending', 'Sending, and drawing the popup...'));
 
       var abort = window.AbortController ? new AbortController() : null;
       var timer = window.setTimeout(function () {
@@ -328,7 +458,7 @@
       });
       var query = extra.toString();
 
-      fetch(api + '/api/presets' + (query ? '?' + query : ''), {
+      fetch(api + kind.api + (query ? '?' + query : ''), {
         method: 'POST',
         body: file,
         headers: { 'content-type': 'application/zip' },
@@ -357,22 +487,22 @@
               var again = when(result.response.headers.get('retry-after'));
               if (again) message += ' (' + again + ')';
             }
-            return say(message, 'bad');
+            return tell(message, 'bad');
           }
 
-          if (data.status === 'published') return say(t('gallery.uploadPublished', 'That preset is already in the gallery.'));
-          if (data.status === 'rejected') return say(t('gallery.uploadRejected', 'That file has already been looked at and was not listed.'));
+          if (data.status === 'published') return tell(t('gallery.uploadPublished', 'That preset is already in the gallery.'));
+          if (data.status === 'rejected') return tell(t('gallery.uploadRejected', 'That file has already been looked at and was not listed.'));
           if (data.status === 'pending' && result.response.status === 200) {
-            return say(t('gallery.uploadPending', 'That one is already waiting to be looked at.'));
+            return tell(t('gallery.uploadPending', 'That one is already waiting to be looked at.'));
           }
-          // Sent: empty the boxes, so a second preset does not inherit the first one's words.
-          panel.querySelectorAll('input[type="text"]').forEach(function (input) {
-            input.value = '';
+          // Sent: empty the boxes, so a second submission does not inherit the first one's words.
+          panel.querySelectorAll('input[type="text"]').forEach(function (box) {
+            box.value = '';
           });
-          say(t('gallery.uploadQueued', 'Sent. A maintainer looks at it before it appears here.'), 'good');
+          tell(t('gallery.uploadQueued', 'Sent. A maintainer looks at it before it appears here.'), 'good');
         })
         .catch(function (err) {
-          say(t('gallery.uploadFailed', 'It could not be sent:') + ' ' + (err && err.message ? err.message : err), 'bad');
+          tell(t('gallery.uploadFailed', 'It could not be sent:') + ' ' + (err && err.message ? err.message : err), 'bad');
         })
         .then(function () {
           window.clearTimeout(timer);
@@ -419,8 +549,8 @@
   }
 
   function show(index) {
-    presets = (index && Array.isArray(index.presets) && index.presets) || [];
-    if (!presets.length) {
+    entries = (index && Array.isArray(index[kind.items]) && index[kind.items]) || [];
+    if (!entries.length) {
       repaint = empty;
       empty();
       return;
@@ -433,7 +563,7 @@
   function load() {
     if (!api) return listing('index.json').then(show);
 
-    return listing(api + '/api/presets')
+    return listing(api + kind.api)
       .then(function (index) {
         show(index);
         setupUpload();

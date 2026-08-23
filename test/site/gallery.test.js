@@ -1,13 +1,9 @@
 'use strict';
 
-/*
-  The preset gallery.
-
-  A submission is a file somebody else wrote, listed on a public page and handed to everybody who
-  clicks it. The package itself is validated by app/util/presetPackage.js and is covered by
-  test/core/presetPackage.test.js; what is checked here is the layer the gallery adds - the file
-  naming, the preview really being an image, and the listing matching what is on disk.
-*/
+// A submission is a file somebody else wrote, listed publicly and handed to everybody who clicks
+// it. app/util/presetPackage.js validates the package itself (test/core/presetPackage.test.js);
+// this covers the layer the gallery adds - file naming, the preview really being an image, and the
+// listing matching what is on disk.
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -19,8 +15,6 @@ const { collect, imageInfo, serialize, LIMITS, NAME_RE } = require(path.join(roo
 
 const COMMUNITY = path.join(root, 'docs', 'gallery', 'community');
 const INDEX = path.join(root, 'docs', 'gallery', 'index.json');
-
-// --- image headers ------------------------------------------------------------------------------
 
 function pngHeader(width, height) {
   const buffer = Buffer.alloc(64);
@@ -68,8 +62,6 @@ test('a preset file is named so it can be a URL', () => {
     assert.ok(!NAME_RE.test(name), `${name} must be refused`);
   }
 });
-
-// --- what is committed ----------------------------------------------------------------------------
 
 test('the gallery folder holds only presets, pictures and their notes', () => {
   for (const entry of fs.readdirSync(COMMUNITY, { withFileTypes: true })) {

@@ -457,10 +457,16 @@ kbd {
   color: var(--accent);
 }
 
+/*
+  The name and the first link sit next to each other as soon as the window stops being wide, and
+  they read as one run when they do. The margin only shows then: on a wide screen the brand's auto
+  margin has already taken the free space.
+*/
 .site-nav {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
+  margin-left: 10px;
 }
 
 .site-nav a {
@@ -523,11 +529,6 @@ kbd {
   display: none;
 }
 
-/* The download link belongs to the menu only while the header button is hidden. */
-.site-nav .nav-download {
-  display: none;
-}
-
 /*
   Dropdowns. A native select paints its own arrow and its own box, which is the one control on the
   page that ignores the palette; the shell draws the arrow instead and the select keeps the shape
@@ -583,6 +584,19 @@ kbd {
 }
 
 .lang-picker .site-select {
+  padding-left: 34px;
+}
+
+.select-shell:hover {
+  color: var(--accent);
+}
+
+.select-shell:hover .site-select {
+  border-color: var(--accent);
+}
+
+/* The download link belongs to the menu only while the header button is hidden. */
+.site-nav .nav-download {
   max-width: 132px;
   padding-left: 34px;
   text-overflow: ellipsis;
@@ -1278,6 +1292,81 @@ a.card:hover,
   height: 100%;
   object-fit: contain;
   padding: 6px;
+  transition: transform 0.18s ease;
+}
+
+/*
+  The preview is drawn at the size the popup or the window really has and the card shows it much
+  smaller, so the frame opens it. It is a link to the picture, which is what a middle click follows.
+*/
+.preset-card figure .preview-zoom {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: zoom-in;
+}
+
+.preset-card figure .preview-zoom:hover img {
+  transform: scale(1.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preset-card figure .preview-zoom:hover img {
+    transform: none;
+  }
+}
+
+/* The picture at its own size, over everything else. Escape and the backdrop come with dialog. */
+.lightbox {
+  max-width: min(96vw, 1280px);
+  max-height: 92vh;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.lightbox::backdrop {
+  background: rgba(8, 12, 22, 0.72);
+}
+
+.lightbox img {
+  display: block;
+  max-width: min(94vw, 1272px);
+  max-height: 78vh;
+  margin: 0 auto;
+  background: var(--backdrop);
+}
+
+.lightbox-caption {
+  margin: 0;
+  padding: 12px 16px 14px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightbox-close:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .preset-card .body {
@@ -1324,6 +1413,32 @@ a.card:hover,
   letter-spacing: 0.02em;
   color: var(--muted);
   text-transform: lowercase;
+}
+
+/* A theme card says what the picture cannot: the palette that will be installed, and whether the
+   file carries images or is colours only. Both are read out of the package. */
+.theme-facts {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.swatches {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-2);
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  /* A colour out of a listing may be anything, including nothing: the ring keeps an unpainted
+     chip visible instead of leaving a hole in the strip. */
+  box-shadow: inset 0 0 0 1px rgba(127, 127, 127, 0.35);
 }
 
 .preset-card footer {
@@ -1375,6 +1490,56 @@ a.card:hover,
 
 .empty p {
   max-width: 46ch;
+}
+
+/* Only drawn when a gallery server answered: with none, a submission is a pull request. */
+.submit-panel {
+  display: grid;
+  gap: 18px;
+  margin-top: 26px;
+  padding: 22px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+}
+
+.submit-panel h3 {
+  margin: 0 0 6px;
+}
+
+.submit-panel p {
+  margin: 0;
+  max-width: 68ch;
+}
+
+.submit-panel .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+}
+
+/*
+  The file button hides its real input inside the label, so the label needs the focus ring it would
+  have had. Only that one: the three text fields are focused directly and already take the global
+  ring on the input itself, and a ring here drew a second box around the first.
+*/
+.submit-panel label.btn:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.submit-panel .good {
+  color: var(--good);
+}
+
+.submit-panel .bad {
+  color: #b3261e;
+}
+
+:root[data-theme='dark'] .submit-panel .bad,
+:root:not([data-theme='light']) .submit-panel .bad {
+  color: #ff8f8f;
 }
 
 /* The three optional fields beside the file button. */
@@ -1684,6 +1849,8 @@ a.card:hover,
     flex-direction: column;
     align-items: stretch;
     gap: 2px;
+    /* The bar's breathing space beside the name: here the nav is the full width of the page. */
+    margin-left: 0;
     padding: 10px 16px 16px;
     background: var(--bg);
     border-bottom: 1px solid var(--border);
@@ -1755,6 +1922,18 @@ a.card:hover,
 @media (max-width: 560px) {
   body {
     font-size: 16px;
+  }
+
+  /*
+    The brand mark, the menu, the theme and the language picker do not all fit beside a wordmark on
+    a phone. The mark keeps the identity and the link still carries the full name for a reader.
+  */
+  .brand-word {
+    display: none;
+  }
+
+  .lang-picker .site-select {
+    max-width: 150px;
   }
 
   /*

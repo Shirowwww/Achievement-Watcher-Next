@@ -228,7 +228,7 @@ test('sending a preset asks for the file, and for three optional words about it'
   assert.match(gallery, /method: 'POST',\s*\n\s*body: file,/);
   assert.doesNotMatch(gallery, /FormData/, 'a submission is the file itself, not a form');
   assert.match(gallery, /new URLSearchParams\(\)/);
-  assert.match(gallery, /api \+ '\/api\/presets' \+ \(query \? '\?' \+ query : ''\)/, 'nothing is sent when nothing was typed');
+  assert.match(gallery, /api \+ kind\.api \+ \(query \? '\?' \+ query : ''\)/, 'nothing is sent when nothing was typed');
   // Drawing the popup starts a browser on the server, so the page waits far longer than usual.
   assert.match(gallery, /UPLOAD_TIMEOUT_MS = 12\d{4}/);
   // A refusal is the server's own wording, written for the person sending.
@@ -246,13 +246,24 @@ test('the gallery reads a server when one is named, and the committed listing wh
   assert.ok(fs.existsSync(path.join(DOCS, 'gallery', 'index.json')));
 
   const gallery = fs.readFileSync(path.join(DOCS, 'assets', 'js', 'gallery.js'), 'utf8');
-  assert.match(gallery, /listing\(api \+ '\/api\/presets'\)/);
+  assert.match(gallery, /listing\(api \+ kind\.api\)/);
   assert.match(gallery, /\.catch\(function \(\) \{[\s\S]{0,400}listing\('index\.json'\)\.then\(show\)/, 'the fallback is gone');
   // The listing already carries addresses; rebuilding them would break the moment the server moves.
-  assert.match(gallery, /image\.src = preset\.preview\.file;/);
-  assert.match(gallery, /download\.href = preset\.file\.path;/);
+  assert.match(gallery, /image\.src = entry\.preview\.file;/);
+  assert.match(gallery, /download\.href = entry\.file\.path;/);
 });
 
+/*
+  A submission is one file and nothing else: the package already carries the name, the description,
+  the version, the tags and the version it needs, and the server draws the picture of the popup from
+  the preset itself. A field asking the sender for any of that would be a second source for something
+  the package already states, and the two could disagree.
+*/
+/*
+  What the panel may ask for: the file, and the three things the package cannot know - how the
+  sender would describe it, how it should be found, and the name they want on the card. Nothing
+  else, and none of it required: a submission with all three left empty has to work.
+*/
 test('the pages declare where they are, so a link preview is not blank', () => {
   for (const page of PAGES) {
     const document = documentOf(page);

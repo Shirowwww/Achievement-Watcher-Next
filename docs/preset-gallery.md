@@ -22,22 +22,12 @@ At most 4 MB per package, and five submissions an hour from one address.
 
 ## When the panel is not there
 
-That means no gallery server is answering and the page is showing the listing committed in this
-repository. The original route still works, and always will:
+That means no gallery server is answering, and the page is listing a copy published beside it.
+Everything already in the gallery is still there to download; only sending something new has to wait,
+so try again a little later.
 
-```text
-docs/gallery/community/neon-rail.awpreset    the file Settings -> Presets -> Export writes
-docs/gallery/community/neon-rail.png         a picture of the popup (webp and jpg work too)
-```
-
-Two files, named the same, in one pull request - the picture at most 500 KB and at least 320x90, a
-transparent PNG being what looks best since the gallery draws its own backdrop behind it. The file
-name is what the download link uses: lower case letters, digits and dashes. You can do it entirely
-in the browser with
-[Add file -> Upload files](https://github.com/Shirowwww/Achievement-Watcher-Next/upload/main/docs/gallery/community),
-and the listing is rebuilt automatically once it is merged.
-
-Running the service that makes the panel appear is [Gallery server](gallery-server.md).
+The service that makes the panel appear is run by the project and is not part of this repository, so
+there is nothing to install for it.
 
 ## Credit and licence
 
@@ -45,19 +35,8 @@ The name on a card is the one you typed in the **Credit** box when you sent it. 
 the card carries whatever the package says, or nothing at all; a maintainer can add a link to your
 profile when approving it.
 
-Through a pull request the credit falls back to whoever committed the file, so opening it is enough.
-To use a different name there, add a link, or write your own one-line summary, add a third file
-beside the other two:
-
-```json
-{
-  "by": "Your name",
-  "summary": "One line for the card.",
-  "link": "https://github.com/you"
-}
-```
-
-Every field is optional, and those three are the only ones there are.
+To use a different name, add a link, or write your own one-line summary, fill in the boxes beside
+the file button when you send it.
 
 **Presets listed in the gallery are published under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).**
 Submitting one means you are happy with that. It has to be your own work, and anything inside it - a
@@ -85,9 +64,6 @@ Nothing in a package is executed, unpacked or rendered while it is being checked
 never renders one either: a card shows the picture you submitted. The preset itself only runs in the
 app, in the same sandboxed notification window a bundled preset uses.
 
-The pull request check prints the file list inside your package and its HTML and CSS in full, so the
-submission can be read without anybody unzipping it.
-
 ## Not accepted
 
 - Someone else's design, unless they said yes and you credit them.
@@ -97,12 +73,11 @@ submission can be read without anybody unzipping it.
 
 ## Updating or removing yours
 
-Open a pull request against your own files. Raise the version inside the package when the look
-changes. To remove it, delete both files: the listing is rebuilt from what is there.
-
-If you need an entry taken down and cannot open a pull request,
+Send the newer file the same way, with the version inside the package raised, and say in the
+description that it replaces an earlier card so a maintainer can take that one down. To have an
+entry removed altogether,
 [open an issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues/new/choose) and say
-which file it is.
+which card it is.
 
 ## Themes from Steam Achievement Notifier
 

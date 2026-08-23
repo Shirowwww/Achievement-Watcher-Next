@@ -1,22 +1,16 @@
 'use strict';
 
-/*
-  Switching the website's language in a real browser.
-
-  The overlay used to reload the page, so there was nothing to get wrong. It now edits the live
-  document, which puts three promises on docs/assets/js/i18n.js that only a DOM can check: the page
-  is not reloaded, the translation really lands on every key the language has, and going back to
-  English gives back exactly the markup that was served rather than something the overlay
-  reassembled.
-
-  Skipped when no Chromium family browser is present.
-*/
+// Switching the website's language in a real browser (skipped with no Chromium browser present).
+// The overlay used to reload the page; it now edits the live document, which puts three promises
+// on docs/assets/js/i18n.js only a DOM can check: no reload, every key actually translated, and
+// going back to English restores exactly the markup that was served.
 
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const path = require('node:path');
 
 const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium');
+const { serveOnOpenPort } = require('../helpers/openPort');
 const { start } = require(path.join(__dirname, '..', '..', 'tools', 'site', 'serve.js'));
 
 // Every [data-i18n] node as key plus the markup inside it. Equality of two signatures is the
@@ -81,7 +75,7 @@ test('the website changes language without reloading', { concurrency: 1, timeout
     return;
   }
 
-  const site = await start({ port: 0 });
+  const site = await serveOnOpenPort(start, { port: 0 });
 
   try {
     const page = await browser.newPage();

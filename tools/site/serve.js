@@ -80,7 +80,13 @@ function start(options) {
       resolveStart({
         server,
         url: 'http://127.0.0.1:' + server.address().port,
-        close: () => new Promise((done) => server.close(done)),
+        // closeAllConnections() first: a browser keeps its sockets alive, and server.close()
+        // alone would wait for them to idle out (a minute and a half) before it answered.
+        close: () =>
+          new Promise((done) => {
+            server.closeAllConnections();
+            server.close(done);
+          }),
       });
     });
   });
