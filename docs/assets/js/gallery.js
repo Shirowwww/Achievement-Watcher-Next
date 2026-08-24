@@ -52,6 +52,21 @@
       previewAlt: function () {
         return t('gallery.previewAlt', 'The popup drawn by this preset');
       },
+      alreadyPublished: function () {
+        return t('gallery.uploadPublished', 'That preset is already in the gallery.');
+      },
+      /*
+        What the enlarged picture is, said on the picture itself. A reader who opens it is entitled
+        to know whether they are looking at a photograph somebody took of their own machine or at
+        something this project generated, because only one of the two is a promise about what they
+        will get.
+      */
+      zoomNote: function () {
+        return t(
+          'gallery.zoomNote',
+          'A generated picture, not a photograph: the popup this preset draws, rendered from the submitted file at the size the app shows it.'
+        );
+      },
       emptyTitle: function () {
         return t('gallery.emptyTitle', 'No community preset yet');
       },
@@ -76,6 +91,21 @@
       },
       previewAlt: function () {
         return t('themes.previewAlt', 'The app drawn with this theme');
+      },
+      alreadyPublished: function () {
+        return t('themes.uploadPublished', 'That theme is already in the gallery.');
+      },
+      /*
+        A theme is data, so there is nothing to photograph: what a card shows is a fixed sample of
+        the app painted with the theme. Worth saying plainly on the enlarged picture, because the
+        window, the library, the achievement rows and the settings surface in it are the point - it
+        is one picture standing in for every screen the theme touches.
+      */
+      zoomNote: function () {
+        return t(
+          'themes.zoomNote',
+          'A generated representation, not a screenshot. The same sample window every time, painted with this theme, so one picture shows the title bar, the library, the achievement list and the settings surface at once. It sits on a fixed backdrop so a see-through theme can be judged the way it will actually look.'
+        );
       },
       emptyTitle: function () {
         return t('themes.emptyTitle', 'No community theme yet');
@@ -153,6 +183,7 @@
     var frame = element('dialog', 'lightbox');
     var picture = element('img');
     var caption = element('p', 'lightbox-caption');
+    var explain = element('p', 'lightbox-note');
     var close = element('button', 'lightbox-close', '\u00d7');
     close.type = 'button';
 
@@ -168,8 +199,9 @@
     frame.appendChild(close);
     frame.appendChild(picture);
     frame.appendChild(caption);
+    frame.appendChild(explain);
     document.body.appendChild(frame);
-    return { frame: frame, picture: picture, caption: caption, close: close };
+    return { frame: frame, picture: picture, caption: caption, note: explain, close: close };
   }
 
   function enlarge(entry) {
@@ -177,6 +209,7 @@
     lightbox.picture.src = entry.preview.file;
     lightbox.picture.alt = kind.previewAlt();
     lightbox.caption.textContent = entry.name;
+    lightbox.note.textContent = kind.zoomNote();
     lightbox.close.setAttribute('aria-label', t('gallery.zoomClose', 'Close'));
     lightbox.frame.setAttribute('aria-label', entry.name);
     lightbox.frame.showModal();
@@ -377,30 +410,222 @@
   // --- sending one in -------------------------------------------------------------------------
 
   /*
-    A submission is the file and nothing else.
+    A submission is the file, plus four things the file cannot know.
 
     The app wrote the name, the description, the version, the tags and the version it needs into the
     package on export, and the server draws the picture from the submission itself, at the size it
-    publishes. So there is nothing to fill in, nothing to resize and nothing to attach: drop the
-    file, and the next thing that happens is a maintainer looking at it.
+    publishes. What it cannot know is how somebody would describe their work, what they want it
+    called on a card, how it should be found and who to credit - so the panel asks for those four,
+    all optional, all suggestions a maintainer sees beside the rendered picture before anything is
+    published.
 
-    The request body IS the file. No multipart, no JSON, no fields - which is also why nothing a
-    sender types can reach a file name or a listing entry.
+    Nothing leaves the browser until Publish is pressed. Choosing a file used to be the submission,
+    which meant the boxes above it were only filled in by whoever happened to fill them in first:
+    the file is now held, the form is completed, and one deliberate press sends both.
+
+    The request body IS the file. No multipart, no JSON - the four suggestions travel in the query
+    string, clamped by the server with the same cleaners it clamps a manifest with, and none of them
+    reaches a file path on its own.
 
     The panel only exists when a server answered, so with none there is nothing here to explain.
   */
   // Drawing the picture starts a browser, and renders are serialised, so a submission can sit
   // behind another one. Far longer than a page usually waits, and deliberately.
   var UPLOAD_TIMEOUT_MS = 120000;
+  // A tag is a search term, not a sentence. The server clamps the list again; this is what stops a
+  // paragraph becoming one chip on the way there.
+  var TAG_MAX_LENGTH = 24;
+  var TAG_MAX_COUNT = 8;
+
+  /*
+    Tags, entered one at a time.
+
+    A comma separated box asks the sender to guess the separator and gives no sign that anything was
+    understood. Here a word becomes a chip on Enter (or on a comma, or when focus leaves the box),
+    a chip is removed by clicking it, and Backspace in an empty box takes the last one back - which
+    is the behaviour every other tag field on the web has, so nothing has to be learnt.
+  */
+  function setupTags(panel) {
+    var shell = panel.querySelector('[data-tag-input]');
+    var list = panel.querySelector('[data-tag-list]');
+    var box = panel.querySelector('[data-upload-tags]');
+    var tags = [];
+
+    if (!shell || !list || !box) {
+      return {
+        value: function () {
+          return box ? String(box.value || '').trim() : '';
+        },
+        clear: function () {
+          if (box) box.value = '';
+        },
+      };
+    }
+
+    function draw() {
+      list.textContent = '';
+      tags.forEach(function (tag, index) {
+        var item = element('li');
+        var chip = element('button', 'tag-chip');
+        chip.type = 'button';
+        chip.appendChild(document.createTextNode(tag));
+        // The cross is decoration; the label is what a screen reader announces the button as.
+        chip.appendChild(element('span', 'tag-chip-x', '×'));
+        chip.setAttribute('aria-label', t('gallery.uploadTagRemove', 'Remove this tag') + ': ' + tag);
+        chip.addEventListener('click', function () {
+          tags.splice(index, 1);
+          draw();
+          box.focus();
+        });
+        item.appendChild(chip);
+        list.appendChild(item);
+      });
+      box.disabled = tags.length >= TAG_MAX_COUNT;
+    }
+
+    function add(raw) {
+      String(raw || '')
+        .split(',')
+        .forEach(function (part) {
+          var tag = part.trim().toLowerCase().slice(0, TAG_MAX_LENGTH);
+          if (!tag || tags.indexOf(tag) > -1 || tags.length >= TAG_MAX_COUNT) return;
+          tags.push(tag);
+        });
+      box.value = '';
+      draw();
+    }
+
+    box.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' || event.key === ',') {
+        // Enter inside a form would submit it, and a comma would only ever be a separator here.
+        event.preventDefault();
+        add(box.value);
+        return;
+      }
+      if (event.key === 'Backspace' && !box.value && tags.length) {
+        tags.pop();
+        draw();
+      }
+    });
+    // Typed and then clicked away: keeping the word is what the sender meant, and losing it
+    // silently on Publish is the one thing this control must not do.
+    box.addEventListener('blur', function () {
+      add(box.value);
+    });
+    // Clicking the padding around the chips is a click on the field.
+    shell.addEventListener('click', function (event) {
+      if (event.target === shell || event.target === list) box.focus();
+    });
+
+    return {
+      value: function () {
+        var pending = String(box.value || '').trim();
+        return tags.concat(pending ? [pending] : []).join(', ');
+      },
+      clear: function () {
+        tags = [];
+        box.value = '';
+        draw();
+      },
+      fill: function (value) {
+        if (tags.length) return;
+        add(value);
+      },
+    };
+  }
+
+  /*
+    What the package already says about itself.
+
+    Both formats are a zip carrying a `manifest.json`, and the app writes the name, the description,
+    the tags and - when the maker chose to be credited - the author into it on export. The form
+    above should therefore start from those rather than from four empty boxes: the credit in
+    particular is meant to be the name recorded in the application, not something retyped from
+    memory each time.
+
+    Read here rather than fetched, because the file has not been sent yet and must not be. It is
+    read for one JSON file and nothing else: no asset is touched, nothing is executed, and every
+    failure is silent, since this only fills in boxes a person can still change. The server reads
+    the package properly with the app's own reader whatever this does.
+  */
+  var MANIFEST_NAME = 'manifest.json';
+
+  function readManifest(file) {
+    if (!file || !file.arrayBuffer || !window.DataView) return Promise.resolve(null);
+
+    return file
+      .arrayBuffer()
+      .then(function (buffer) {
+        var view = new DataView(buffer);
+        var bytes = new Uint8Array(buffer);
+
+        // The end of central directory record, which is the only place the layout can be found
+        // from. It is at the very end unless the file carries a comment, which these do not.
+        var end = -1;
+        var floor = Math.max(0, bytes.length - 66000);
+        for (var at = bytes.length - 22; at >= floor; at -= 1) {
+          if (view.getUint32(at, true) === 0x06054b50) {
+            end = at;
+            break;
+          }
+        }
+        if (end < 0) return null;
+
+        var entries = view.getUint16(end + 10, true);
+        var walk = view.getUint32(end + 16, true);
+
+        for (var index = 0; index < entries; index += 1) {
+          if (walk + 46 > bytes.length || view.getUint32(walk, true) !== 0x02014b50) return null;
+          var method = view.getUint16(walk + 10, true);
+          var packed = view.getUint32(walk + 20, true);
+          var nameLength = view.getUint16(walk + 28, true);
+          var extraLength = view.getUint16(walk + 30, true);
+          var commentLength = view.getUint16(walk + 32, true);
+          var localAt = view.getUint32(walk + 42, true);
+          var name = '';
+          for (var letter = 0; letter < nameLength; letter += 1) name += String.fromCharCode(bytes[walk + 46 + letter]);
+
+          if (name === MANIFEST_NAME) {
+            if (view.getUint32(localAt, true) !== 0x04034b50) return null;
+            var dataAt = localAt + 30 + view.getUint16(localAt + 26, true) + view.getUint16(localAt + 28, true);
+            var data = bytes.subarray(dataAt, dataAt + packed);
+            // Stored, or deflated by the only two writers there are. Anything else is left alone.
+            if (method === 0) return new Response(data).text();
+            if (method === 8 && window.DecompressionStream) {
+              return new Response(new Response(data).body.pipeThrough(new DecompressionStream('deflate-raw'))).text();
+            }
+            return null;
+          }
+
+          walk += 46 + nameLength + extraLength + commentLength;
+        }
+        return null;
+      })
+      .then(function (text) {
+        if (!text) return null;
+        var manifest = JSON.parse(text);
+        return manifest && typeof manifest === 'object' ? manifest : null;
+      })
+      .catch(function () {
+        // A package this cannot read is still a package the server can. Nothing is filled in.
+        return null;
+      });
+  }
 
   function setupUpload() {
     var panel = document.querySelector('[data-gallery-upload]');
     var input = document.querySelector('[data-gallery-file]');
     var note = document.querySelector('[data-gallery-upload-status]');
+    var chosenLine = panel && panel.querySelector('[data-upload-chosen]');
+    var clearButton = panel && panel.querySelector('[data-upload-clear]');
+    var sendButton = panel && panel.querySelector('[data-upload-send]');
     if (!panel || !input || !api) return;
     panel.hidden = false;
 
+    var tagField = setupTags(panel);
     var busy = false;
+    // The file waiting to be sent. Held rather than sent, so the form below can be finished first.
+    var pending = null;
 
     function tell(message, kindOfMessage) {
       if (!note) return;
@@ -411,6 +636,78 @@
     function field(selector) {
       var box = panel.querySelector(selector);
       return box ? String(box.value || '').trim() : '';
+    }
+
+    /*
+      The name is the one box that has to be filled in.
+
+      Everything else a card carries can fall back to the package or to nothing at all, but a name
+      cannot: it is the heading of the card and the address the file is published under, and one
+      chosen for somebody rather than by them is the thing a moderator ends up rewriting. So Publish
+      stays inert until there is one - and the box is filled in from the package first, so in the
+      normal case the requirement is already met before it is noticed.
+    */
+    function wantedName() {
+      return field('[data-upload-name]');
+    }
+
+    // What the panel shows about the file it is holding, and whether Publish can do anything.
+    function drawPending() {
+      if (chosenLine) {
+        chosenLine.textContent = pending ? pending.name + ' · ' + kilobytes(pending.size) : t('gallery.uploadNoFile', 'No file chosen yet.');
+        chosenLine.className = pending ? 'small' : 'small muted';
+      }
+      if (clearButton) clearButton.hidden = !pending;
+      if (sendButton) sendButton.disabled = !pending || busy || !wantedName();
+      panel.setAttribute('data-has-file', pending ? 'true' : 'false');
+    }
+
+    /*
+      What the package says about itself, into the boxes that are still empty.
+
+      Only empty ones: a sender who has already typed something meant it, and a second file chosen
+      after a change of mind must not quietly undo their words. The credit is the point of this -
+      it is the name the application recorded when the package was exported, which is the name the
+      person actually goes by, rather than one retyped into a web form.
+    */
+    function prefill(file) {
+      readManifest(file).then(function (manifest) {
+        if (!manifest || pending !== file) return;
+
+        var boxes = [
+          ['[data-upload-name]', manifest.name],
+          ['[data-upload-description]', manifest.description],
+          ['[data-upload-credit]', manifest.author],
+        ];
+        boxes.forEach(function (entry) {
+          var box = panel.querySelector(entry[0]);
+          var value = typeof entry[1] === 'string' ? entry[1].trim() : '';
+          if (!box || box.value.trim() || !value) return;
+          box.value = value.slice(0, Number(box.getAttribute('maxlength')) || 200);
+        });
+
+        if (Array.isArray(manifest.tags)) tagField.fill(manifest.tags.join(','));
+        drawPending();
+      });
+    }
+
+    // The same two refusals the server applies, applied the moment a file is picked rather than
+    // after a form has been filled in for nothing.
+    function hold(file) {
+      if (!kind.accept.test(file.name)) {
+        pending = null;
+        drawPending();
+        return tell(kind.wrongFile(), 'bad');
+      }
+      if (file.size > kind.maxUpload) {
+        pending = null;
+        drawPending();
+        return tell(kind.tooBig(), 'bad');
+      }
+      pending = file;
+      drawPending();
+      prefill(file);
+      tell(t('gallery.uploadReady', 'Ready. Check what the card should say, then press Publish.'));
     }
 
     // "in 12 minutes", in the reader's language, from the seconds the server asked us to wait. Built
@@ -426,15 +723,23 @@
       }
     }
 
-    function send(file) {
+    function send() {
       if (busy) return;
-
+      var file = pending;
+      if (!file) return tell(t('gallery.uploadNoFileYet', 'Choose a file first.'), 'bad');
+      if (!wantedName()) {
+        var nameBox = panel.querySelector('[data-upload-name]');
+        if (nameBox) nameBox.focus();
+        return tell(t('gallery.uploadNeedsName', 'It needs a name. That is the heading of the card.'), 'bad');
+      }
+      // Checked again here: the file has been sitting in the page while a form was filled in.
       if (!kind.accept.test(file.name)) return tell(kind.wrongFile(), 'bad');
       if (file.size > kind.maxUpload) return tell(kind.tooBig(), 'bad');
 
       busy = true;
       panel.setAttribute('data-busy', 'true');
-      tell(t('gallery.uploadSending', 'Sending, and drawing the popup...'));
+      drawPending();
+      tell(t('gallery.uploadSending', 'Sending, and drawing the picture...'));
 
       var abort = window.AbortController ? new AbortController() : null;
       var timer = window.setTimeout(function () {
@@ -444,13 +749,14 @@
       /*
         The body is the file and only the file. What was typed travels in the query string, as a
         suggestion for whoever moderates it: the package still says what it is, the picture is still
-        drawn from it, and the name it is published under is still chosen by the server - so nothing
-        typed here reaches a file path or the listing on its own.
+        drawn from it, and what is published is still decided by a person - so nothing typed here
+        reaches a file path or the listing on its own.
       */
       var extra = new URLSearchParams();
       var typed = {
+        name: field('[data-upload-name]'),
         description: field('[data-upload-description]'),
-        tags: field('[data-upload-tags]'),
+        tags: tagField.value(),
         by: field('[data-upload-credit]'),
       };
       Object.keys(typed).forEach(function (name) {
@@ -490,15 +796,19 @@
             return tell(message, 'bad');
           }
 
-          if (data.status === 'published') return tell(t('gallery.uploadPublished', 'That preset is already in the gallery.'));
+          if (data.status === 'published') return tell(kind.alreadyPublished());
           if (data.status === 'rejected') return tell(t('gallery.uploadRejected', 'That file has already been looked at and was not listed.'));
           if (data.status === 'pending' && result.response.status === 200) {
             return tell(t('gallery.uploadPending', 'That one is already waiting to be looked at.'));
           }
-          // Sent: empty the boxes, so a second submission does not inherit the first one's words.
+          // Sent: empty the form and let the file go, so a second submission does not inherit the
+          // first one's words or send the same package twice.
           panel.querySelectorAll('input[type="text"]').forEach(function (box) {
             box.value = '';
           });
+          tagField.clear();
+          pending = null;
+          input.value = '';
           tell(t('gallery.uploadQueued', 'Sent. A maintainer looks at it before it appears here.'), 'good');
         })
         .catch(function (err) {
@@ -508,17 +818,32 @@
           window.clearTimeout(timer);
           busy = false;
           panel.removeAttribute('data-busy');
+          drawPending();
         });
     }
 
     input.addEventListener('change', function () {
       var file = input.files && input.files[0];
-      input.value = '';
-      if (file) send(file);
+      if (file) hold(file);
     });
 
-    // Dropping the file on the panel is the same thing as picking it, because for one file it is
-    // the shorter gesture. The page still has the button for everyone else.
+    if (clearButton) {
+      clearButton.addEventListener('click', function () {
+        pending = null;
+        input.value = '';
+        drawPending();
+        tell('');
+      });
+    }
+
+    if (sendButton) sendButton.addEventListener('click', send);
+
+    // Publish depends on the name, so it has to be re-decided as the name is typed.
+    var nameField = panel.querySelector('[data-upload-name]');
+    if (nameField) nameField.addEventListener('input', drawPending);
+
+    // Dropping the file on the panel is the same thing as picking it - it chooses the file, and
+    // Publish is still what sends it.
     ['dragenter', 'dragover'].forEach(function (name) {
       panel.addEventListener(name, function (event) {
         event.preventDefault();
@@ -533,10 +858,11 @@
     panel.addEventListener('drop', function (event) {
       event.preventDefault();
       var file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
-      if (file) send(file);
+      if (file) hold(file);
     });
-  }
 
+    drawPending();
+  }
   // --- where the listing comes from ---------------------------------------------------------
 
   var api = (grid.getAttribute('data-gallery-api') || '').replace(/\/$/, '');

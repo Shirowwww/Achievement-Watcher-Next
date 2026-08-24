@@ -149,22 +149,55 @@
             <p data-i18n="gallery.loadingBody">One moment.</p>
           </div>
 
-          <div class="submit-panel" data-gallery-upload hidden>
+          <div class="submit-panel" data-gallery-upload data-has-file="false" hidden>
             <div>
               <h3 data-i18n="gallery.uploadTitle">Send yours straight from here</h3>
               <p class="muted" data-i18n="gallery.uploadBody">
-                Export your preset in Settings, Presets, Export, then drop the <code>.awpreset</code> here. The picture
-                is drawn from the preset itself and everything else is read from the file, so the three boxes below are
-                only for what it cannot know. A maintainer looks at it before it appears.
+                Export your preset in Settings, Presets, Export, then choose the <code>.awpreset</code> here. Choosing
+                it sends nothing: the picture is drawn from the preset itself, the boxes below are filled in from the
+                file, and nothing leaves your browser until you press Publish. A maintainer looks at it before it
+                appears.
               </p>
             </div>
+
             <!--
-              The three things the package cannot know: how you would describe it, how it should be
-              found, and the name you want on the card. All optional, all only suggestions - a
-              maintainer sees them beside the rendered popup and decides. The published name and the
-              file itself are never taken from anything typed here.
+              The file is picked first and held. Publish below is what sends it, so the boxes in
+              between are filled in on a submission that has not left the browser yet.
+            -->
+            <div class="submit-file">
+              <label class="btn btn-ghost">
+                <span data-i18n="gallery.uploadButton">Choose a preset file</span>
+                <input type="file" accept=".awpreset,application/zip" data-gallery-file class="visually-hidden" />
+              </label>
+              <p class="small muted" data-upload-chosen role="status" aria-live="polite" data-i18n="gallery.uploadNoFile">
+                No file chosen yet.
+              </p>
+              <button class="btn-quiet" type="button" data-upload-clear hidden data-i18n="gallery.uploadClear">Remove</button>
+            </div>
+
+            <!--
+              The four things the package cannot know: what you would call it, how you would describe
+              it, how it should be found, and the name you want on the card. All optional, all only
+              suggestions - a maintainer sees them beside the rendered popup and decides. Nothing
+              typed here becomes a file name or a listing entry on its own.
             -->
             <div class="submit-fields">
+              <!--
+                The one box that has to be filled in: it is the heading of the card and the address
+                the file is published under. It is filled in from the package as soon as a file is
+                chosen, so in the normal case it is already answered.
+              -->
+              <label class="field-block is-required">
+                <span data-i18n="gallery.uploadName">Name</span>
+                <input
+                  type="text"
+                  maxlength="80"
+                  required
+                  data-upload-name
+                  placeholder="What it should be called"
+                  data-i18n-attr="placeholder:gallery.uploadNameHint"
+                />
+              </label>
               <label class="field-block">
                 <span data-i18n="gallery.uploadDescription">Description</span>
                 <input
@@ -175,32 +208,44 @@
                   data-i18n-attr="placeholder:gallery.uploadDescriptionHint"
                 />
               </label>
-              <label class="field-block">
-                <span data-i18n="gallery.uploadTags">Tags</span>
-                <input
-                  type="text"
-                  maxlength="160"
-                  data-upload-tags
-                  placeholder="dark, minimal, arcade"
-                  data-i18n-attr="placeholder:gallery.uploadTagsHint"
-                />
-              </label>
+              <!--
+                The name the application recorded when the package was exported, not one retyped
+                here: it is filled in from the file, and is only empty when the maker chose not to
+                be credited.
+              -->
               <label class="field-block">
                 <span data-i18n="gallery.uploadCredit">Credit</span>
                 <input
                   type="text"
                   maxlength="80"
                   data-upload-credit
-                  placeholder="The name on the card"
+                  placeholder="Your name, as the app recorded it"
                   data-i18n-attr="placeholder:gallery.uploadCreditHint"
                 />
               </label>
             </div>
+
+            <div class="field-block field-tags">
+              <span id="upload-tags-label" data-i18n="gallery.uploadTags">Tags</span>
+              <div class="tag-input" data-tag-input>
+                <ul class="tag-chips" data-tag-list></ul>
+                <input
+                  type="text"
+                  maxlength="24"
+                  data-upload-tags
+                  aria-labelledby="upload-tags-label"
+                  aria-describedby="upload-tags-hint"
+                  placeholder="dark"
+                  data-i18n-attr="placeholder:gallery.uploadTagsHint"
+                />
+              </div>
+              <span class="small muted" id="upload-tags-hint" data-i18n="gallery.uploadTagsHelp">
+                Type a word and press Enter to add it. Click a tag to take it off. Eight at most.
+              </span>
+            </div>
+
             <div class="row">
-              <label class="btn">
-                <span data-i18n="gallery.uploadButton">Choose a preset file</span>
-                <input type="file" accept=".awpreset,application/zip" data-gallery-file class="visually-hidden" />
-              </label>
+              <button class="btn" type="button" data-upload-send disabled data-i18n="gallery.uploadSend">Publish</button>
               <p class="small" data-gallery-upload-status role="status" aria-live="polite"></p>
             </div>
           </div>
@@ -278,8 +323,8 @@
 
               <h3 style="margin-top: 28px" data-i18n="gallery.creditTitle">Credit</h3>
               <p class="muted" data-i18n="gallery.creditBodyFile">
-                The name on a card is the one you typed in the Credit box when you sent it. Leave it empty and the
-                card simply carries none.
+                The name on a card is the one you typed in the Credit box when you sent it, or the author the package
+                carries. Leave both empty and the card simply carries none.
               </p>
 
               <h3 style="margin-top: 28px" data-i18n="gallery.pausedTitle">No panel above?</h3>

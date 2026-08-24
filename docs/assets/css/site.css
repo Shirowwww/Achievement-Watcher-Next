@@ -1344,9 +1344,24 @@ a.card:hover,
 
 .lightbox-caption {
   margin: 0;
-  padding: 12px 16px 14px;
+  padding: 12px 16px 4px;
   text-align: center;
   font-weight: 600;
+}
+
+/*
+  What the picture is. A card is small enough that a reader takes it as decoration; opened, it is
+  the size of a screenshot and reads as one, so this is where it has to be said that it was
+  generated - and, for a theme, what it is showing at once.
+*/
+.lightbox-note {
+  margin: 0 auto;
+  padding: 0 20px 16px;
+  max-width: 76ch;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.86rem;
+  line-height: 1.5;
 }
 
 .lightbox-close {
@@ -1573,6 +1588,131 @@ a.card:hover,
 .field-block input::placeholder {
   color: var(--muted);
   opacity: 0.75;
+}
+
+/*
+  The one field that has to be filled in. The `required` attribute is what says so to a screen
+  reader and to the browser; this is the mark everybody else reads, so it is decoration and is not
+  translated.
+*/
+.field-block.is-required > span::after {
+  content: ' *';
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/*
+  The file, held rather than sent.
+
+  Choosing a file used to be the submission, so the boxes above it were filled in by whoever thought
+  to fill them in first. It is now picked here, named on this line, and one press of Publish sends
+  it - which is what makes the form worth having at all.
+*/
+.submit-file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 14px;
+}
+
+.submit-file [data-upload-chosen] {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The panel says which of the two states it is in, so the file line reads as a fact once there is
+   one and as an instruction while there is not. */
+.submit-panel[data-has-file='true'] .submit-file [data-upload-chosen] {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/*
+  Tags, one at a time.
+
+  A chip is a button rather than a list item with a cross beside it: removing one is the only thing
+  it does, so making the whole chip the target is both the larger hit area and one tab stop instead
+  of two.
+*/
+.field-tags {
+  max-width: 640px;
+}
+
+.tag-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  cursor: text;
+}
+
+.tag-input:focus-within {
+  border-color: var(--accent);
+}
+
+.tag-chips {
+  display: contents;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.tag-chip:hover,
+.tag-chip:focus-visible {
+  border-color: var(--accent);
+}
+
+.tag-chip-x {
+  font-size: 1rem;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+/* The box grows into whatever the chips leave, and never shrinks below a word. */
+.tag-input input {
+  flex: 1 1 8ch;
+  min-width: 8ch;
+  padding: 4px 4px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+}
+
+.tag-input input:focus {
+  outline: none;
+}
+
+.tag-input input:disabled::placeholder {
+  opacity: 0;
+}
+
+/* Publish is inert until there is something to publish, and says so rather than failing on click. */
+.submit-panel .btn[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 /* The download count on a card: a figure, so it should not wrap away from its arrow. */

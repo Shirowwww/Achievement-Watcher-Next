@@ -16,6 +16,7 @@ const DOCS = path.join(root, 'docs');
 const PAGES = [
   { file: path.join(DOCS, 'index.html'), dir: DOCS },
   { file: path.join(DOCS, 'gallery', 'index.html'), dir: path.join(DOCS, 'gallery') },
+  { file: path.join(DOCS, 'gallery', 'themes', 'index.html'), dir: path.join(DOCS, 'gallery', 'themes') },
 ];
 
 function documentOf(page) {
@@ -196,40 +197,95 @@ test('every translation matches the keys the pages actually have', () => {
   }
 });
 
-// A submission is one file: the package already carries the name, description, version and tags,
-// so the panel only offers the three things it cannot know - how the sender would describe it, how
-// it should be found, and the name for the card - and none of them are required.
-test('sending a preset asks for the file, and for three optional words about it', () => {
-  const document = documentOf(PAGES[1]);
-  const panel = document.querySelector('[data-gallery-upload]');
-  assert.ok(panel, 'the gallery has no submission panel');
+/*
+  A submission is one file plus four words about it: what it should be called, how the sender would
+  describe it, how it should be found and who to credit. All four are read out of the package the
+  moment a file is chosen, so the form starts answered - and the name, which becomes the heading of
+  the card and the address the file is published under, is the one that has to end up filled in.
 
-  const inputs = panel.querySelectorAll('input, textarea, select');
-  const file = inputs.filter((input) => input.getAttribute('type') === 'file');
-  assert.equal(file.length, 1, 'there must be exactly one file input');
-  assert.match(file[0].getAttribute('accept'), /\.awpreset/);
+  None of it may be sent by the act of choosing a file, which is the point of the Publish button.
+*/
+const SUBMIT_FIELDS = ['data-upload-name', 'data-upload-description', 'data-upload-tags', 'data-upload-credit'];
 
-  const typed = inputs.filter((input) => input.getAttribute('type') !== 'file');
-  assert.deepEqual(
-    typed.map((input) => ['data-upload-description', 'data-upload-tags', 'data-upload-credit'].find((name) => input.hasAttribute(name))).sort(),
-    ['data-upload-credit', 'data-upload-description', 'data-upload-tags'],
-    'the panel asks for something other than the three optional fields'
-  );
-  for (const input of typed) {
-    assert.ok(!input.hasAttribute('required'), 'none of the three may be required');
-    assert.ok(Number(input.getAttribute('maxlength')) > 0, 'a free text field needs a length limit');
-  }
+for (const [label, page, extension] of [
+  ['preset', 1, '.awpreset'],
+  ['theme', 2, '.awtheme'],
+]) {
+  test(`sending a ${label} asks for the file, then for four words about it`, () => {
+    const document = documentOf(PAGES[page]);
+    const panel = document.querySelector('[data-gallery-upload]');
+    assert.ok(panel, 'the gallery has no submission panel');
 
-  // It stays out of the way until a server has answered, so the page is honest with none deployed.
-  assert.ok(panel.hasAttribute('hidden'), 'the panel must start hidden');
+    const inputs = panel.querySelectorAll('input, textarea, select');
+    const file = inputs.filter((input) => input.getAttribute('type') === 'file');
+    assert.equal(file.length, 1, 'there must be exactly one file input');
+    assert.ok(file[0].getAttribute('accept').includes(extension));
 
+    const typed = inputs.filter((input) => input.getAttribute('type') !== 'file');
+    assert.deepEqual(
+      typed.map((input) => SUBMIT_FIELDS.find((name) => input.hasAttribute(name))).sort(),
+      [...SUBMIT_FIELDS].sort(),
+      'the panel asks for something other than the four optional fields'
+    );
+    for (const input of typed) {
+      assert.ok(Number(input.getAttribute('maxlength')) > 0, 'a free text field needs a length limit');
+      // A card with no heading is the one thing moderation cannot fix by trimming; the rest may be
+      // empty, and an empty box only means the card carries nothing there.
+      const required = input.hasAttribute('data-upload-name');
+      assert.equal(input.hasAttribute('required'), required, 'the name is the only required field');
+    }
+    const nameLabel = panel.querySelector('[data-upload-name]').parentNode;
+    assert.ok(nameLabel.classList.contains('is-required'), 'the required field is not marked as one');
+
+    // Choosing a file must not be the submission: there has to be a button that sends, and it has
+    // to start unable to, since at that point there is nothing to send.
+    const send = panel.querySelector('[data-upload-send]');
+    assert.ok(send, 'the panel has no Publish button');
+    assert.ok(send.hasAttribute('disabled'), 'Publish must start disabled, with no file chosen');
+    assert.ok(panel.querySelector('[data-upload-chosen]'), 'the panel must say which file it is holding');
+
+    // Tags are entered one at a time, so the field is a shell with a list of chips inside it.
+    assert.ok(panel.querySelector('[data-tag-input] [data-tag-list]'), 'tags need a chip list');
+    const tags = panel.querySelector('[data-upload-tags]');
+    assert.ok(tags.getAttribute('aria-describedby'), 'the tag field must point at the line explaining it');
+    assert.ok(document.getElementById(tags.getAttribute('aria-describedby')), 'that line does not exist');
+
+    // It stays out of the way until a server has answered, so the page is honest with none deployed.
+    assert.ok(panel.hasAttribute('hidden'), 'the panel must start hidden');
+  });
+}
+
+test('a submission is the file itself, and leaves only when Publish is pressed', () => {
   const gallery = fs.readFileSync(path.join(DOCS, 'assets', 'js', 'gallery.js'), 'utf8');
-  // The body IS the file: no multipart, no JSON envelope. The three words ride in the query string.
+  // The body IS the file: no multipart, no JSON envelope. The four words ride in the query string.
   assert.match(gallery, /method: 'POST',\s*\n\s*body: file,/);
   assert.doesNotMatch(gallery, /FormData/, 'a submission is the file itself, not a form');
   assert.match(gallery, /new URLSearchParams\(\)/);
   assert.match(gallery, /api \+ kind\.api \+ \(query \? '\?' \+ query : ''\)/, 'nothing is sent when nothing was typed');
-  // Drawing the popup starts a browser on the server, so the page waits far longer than usual.
+  for (const field of ['name', 'description', 'tags', 'by']) {
+    assert.match(gallery, new RegExp(`\\b${field}:`), `the ${field} suggestion is never built`);
+  }
+  // Picking a file holds it; the button is what sends. If change ever calls send() again, the
+  // deliberate flow is gone and every box above it is decoration.
+  assert.match(gallery, /input\.addEventListener\('change', function \(\) \{[\s\S]{0,200}?hold\(file\)/);
+  assert.doesNotMatch(gallery, /input\.addEventListener\('change', function \(\) \{[\s\S]{0,200}?send\(file\)/);
+  assert.match(gallery, /sendButton\.addEventListener\('click', send\)/);
+  // Publish is inert without a name, both before the click and at the click.
+  assert.match(gallery, /sendButton\.disabled = !pending \|\| busy \|\| !wantedName\(\)/);
+  assert.match(gallery, /if \(!wantedName\(\)\) \{/);
+
+  /*
+    The boxes start from the package rather than from nothing: the credit in particular is meant to
+    be the name the application recorded, not one retyped here. It is read in the browser, from the
+    one file in the package that carries it, and only into boxes still empty - a second file chosen
+    after a change of mind must not undo what somebody typed.
+  */
+  assert.match(gallery, /var MANIFEST_NAME = 'manifest\.json';/);
+  assert.match(gallery, /manifest\.author/, 'the credit is never taken from the package');
+  assert.match(gallery, /if \(!box \|\| box\.value\.trim\(\) \|\| !value\) return;/, 'a filled box may be overwritten');
+  // Read, never sent: the file still only leaves in the one fetch below.
+  assert.equal(gallery.match(/fetch\(/g).length, 2, 'the page makes a request it did not before');
+  // Drawing the picture starts a browser on the server, so the page waits far longer than usual.
   assert.match(gallery, /UPLOAD_TIMEOUT_MS = 12\d{4}/);
   // A refusal is the server's own wording, written for the person sending.
   assert.match(gallery, /data\.error \|\|/);
