@@ -3,6 +3,11 @@
 const path = require('path');
 const fs = require('fs');
 const saveRoots = require(path.join(__dirname, 'saveRoots.js'));
+const launcherLibraries = require(path.join(__dirname, 'launcherLibraries.js'));
+const listDrive = require(path.join(__dirname, '..', 'util', 'listDrive.js'));
+// The same key the scan scope compares folders with, so a trailing separator or a drive-letter case
+// difference never turns one folder into two entries here either.
+const { directoryKey } = require(path.join(__dirname, 'scanScope.js'));
 
 // Library roots (e.g. C:\Jeux, D:\Games, E:\SteamLibrary): folders that hold many game install
 // dirs, used by achievements.js as scan roots for Goldberg/GBE/unconfigured install detection.
@@ -18,7 +23,7 @@ function normalizeEntries(data, fallbackOrigin = 'manual') {
     if (!entry.path) continue;
     if (!['manual', 'auto'].includes(entry.origin)) entry.origin = fallbackOrigin;
     if (typeof entry.enabled !== 'boolean') entry.enabled = true;
-    if (out.some((item) => path.normalize(item.path).toLowerCase() === path.normalize(entry.path).toLowerCase())) continue;
+    if (out.some((item) => directoryKey(item.path) === directoryKey(entry.path))) continue;
     out.push(entry);
   }
   return out;
@@ -71,16 +76,49 @@ module.exports.getEntries = async () => {
 };
 
 module.exports.find = async () => {
-  return saveRoots.discoverLibraryRoots();
+  return (await module.exports.findEntries()).map((entry) => entry.path);
 };
 
+/*
+  Every automatically detected library root, from two independent routes so neither one's blind spot
+  is the user's problem:
+
+    - saveRoots.discoverLibraryRoots() recognises folders by NAME ("Games", "Jeux", "Repacks", ...)
+      on every fixed drive, the user profile and the Desktop.
+    - launcherLibraries reads the folders a LAUNCHER already recorded (Epic manifests, the GOG and
+      Ubisoft registry indexes, the .GamingRoot pointer), which is how a library named after a
+      storefront - "D:\Epic Games", "D:\XboxGames" - is found without scanning anything.
+
+  The name route wins a tie, since its detector label is the more specific one for a folder the user
+  named themselves. Nothing here is added silently: Smart Find presents every hit for approval.
+*/
 module.exports.findEntries = async () => {
-  return (await saveRoots.discoverLibraryRoots()).map((dir) => ({
-    path: dir,
-    origin: 'auto',
-    enabled: true,
-    detector: 'Known games folder',
-  }));
+  const entries = [];
+  const seen = new Set();
+  const add = (dir, detector) => {
+    if (!dir) return;
+    const key = directoryKey(dir);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    entries.push({ path: dir, origin: 'auto', enabled: true, detector });
+  };
+
+  for (const dir of await saveRoots.discoverLibraryRoots()) add(dir, 'Known games folder');
+
+  let drives = [];
+  try {
+    drives = await listDrive({ ignoreSystemDrive: false });
+  } catch {
+    drives = [];
+  }
+  try {
+    for (const entry of launcherLibraries.discoverLauncherLibraryRoots({ drives })) add(entry.path, entry.detector);
+  } catch (err) {
+    // A launcher whose configuration cannot be read must not take the name-based route down with it.
+    console.warn(`[libraryDirs] launcher-derived roots unavailable: ${err.message || err}`);
+  }
+
+  return entries;
 };
 
 module.exports.save = async (data) => {
