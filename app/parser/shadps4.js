@@ -37,14 +37,88 @@ const ttype = (t) => {
   return c || 'B';
 };
 
-async function gameDataRoots(dir) {
-  // Accept a watched folder that either contains the emulator binary or is itself a data root.
-  const roots = new Set();
-  for (const sub of ['game_data', 'user/game_data']) {
-    const p = path.join(dir, sub);
-    if (await ffs.exists(p)) roots.add(p);
+/*
+  The folder names that are part of shadPS4's own trophy tree. Standing on one of them means the
+  watched folder is INSIDE that tree, so walking up from it lands on the tree's root. Standing on
+  anything else (`log`, `savedata`, `shader`, a game folder that merely sits beside an emulator)
+  means it is not, and walking up from there would answer with somebody else's trophies.
+*/
+const SHADPS4_TREE_SEGMENT = /^(game_data|user|TrophyFiles|CUSA\d{5}|trophy\d+|Xml|Icons)$/i;
+
+/*
+  Folders that could hold a shadPS4 game_data tree, for one watched folder, most specific first.
+
+  shadPS4 has moved its user data around (beside the binary, then under `user/`, then under
+  %APPDATA%\shadPS4), and people add whichever level they happened to be looking at - the emulator
+  folder, `user`, `game_data`, or the CUSA folder they were just reading a guide about. Climbing
+  back out of the tree costs a handful of stats and removes the whole class of "I added the right
+  folder and nothing appeared", while the segment allowlist above keeps the climb from turning any
+  folder near an emulator into a trophy source. Path-only, so the ordering is testable without a disk.
+*/
+function gameDataRootCandidates(dir) {
+  const base = path.resolve(String(dir || ''));
+  const levels = [base];
+  let current = base;
+  // Four is the depth of the deepest layout (game_data/CUSA/TrophyFiles/trophyNN plus Xml|Icons).
+  for (let depth = 0; depth < 5; depth++) {
+    if (!SHADPS4_TREE_SEGMENT.test(path.basename(current))) break;
+    const parent = path.dirname(current);
+    if (!parent || parent === current) break;
+    levels.push(parent);
+    current = parent;
   }
-  return [...roots];
+
+  const candidates = [];
+  const seen = new Set();
+  const push = (candidate) => {
+    const key = candidate.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    candidates.push(candidate);
+  };
+  // The folder itself, when the user added `.../user/game_data` directly.
+  if (path.basename(base).toLowerCase() === 'game_data') push(base);
+  for (const level of levels) {
+    push(path.join(level, 'game_data'));
+    push(path.join(level, 'user', 'game_data'));
+  }
+  return candidates;
+}
+
+async function gameDataRoots(dir) {
+  const roots = [];
+  for (const candidate of gameDataRootCandidates(dir)) {
+    if (await ffs.exists(candidate)) roots.push(candidate);
+  }
+  return roots;
+}
+
+/*
+  config.toml sits beside the binary in a portable install and under `user/` in an %APPDATA% one.
+  Climbed the same way as the trophy tree, and for the same reason: from inside the tree the config
+  is a couple of levels up, but a folder that is not part of the tree must not borrow the config of
+  whatever happens to be above it.
+*/
+function configFileCandidates(dir) {
+  const base = path.resolve(String(dir || ''));
+  const files = [];
+  const seen = new Set();
+  const push = (file) => {
+    const key = file.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    files.push(file);
+  };
+  let level = base;
+  for (let depth = 0; depth < 5; depth++) {
+    push(path.join(level, 'config.toml'));
+    push(path.join(level, 'user', 'config.toml'));
+    if (!SHADPS4_TREE_SEGMENT.test(path.basename(level))) break;
+    const parent = path.dirname(level);
+    if (!parent || parent === level) break;
+    level = parent;
+  }
+  return files;
 }
 
 function configArray(config, key) {
@@ -64,11 +138,15 @@ function configArray(config, key) {
 async function installedGames(dir) {
   const games = new Map();
   let config;
-  try {
-    config = await ffs.readFile(path.join(dir, 'config.toml'), 'utf-8');
-  } catch {
-    return games;
+  for (const file of configFileCandidates(dir)) {
+    try {
+      config = await ffs.readFile(file, 'utf-8');
+      break;
+    } catch {
+      /* try the next level */
+    }
   }
+  if (config === undefined) return games;
 
   const installDirs = configArray(config, 'installDirs');
   const enabled = configArray(config, 'installDirsEnabled');
@@ -140,7 +218,7 @@ module.exports.scan = async (dir) => {
   return data;
 };
 
-module.exports._internal = { configArray, installedGames };
+module.exports._internal = { configArray, configFileCandidates, gameDataRootCandidates, installedGames };
 
 async function listXml(xmlDir) {
   const files = await glob('TROP*.{XML,xml}', { cwd: xmlDir, onlyFiles: true });

@@ -61,6 +61,7 @@ function defaultSteamEmuSaveRoots({ existingOnly = false, expandProgramDataSteam
     // RAZOR1911 (post-2023 releases): plain-text `achievement` file per appid.
     envPath('APPDATA', '.1911'),
     envPath('APPDATA', 'Steam', 'CODEX'),
+    envPath('APPDATA', 'Steam', 'RUNE'),
     envPath('APPDATA', 'Steam', 'RLD!'),
     envPath('APPDATA', 'SmartSteamEmu'),
     envPath('APPDATA', 'CreamAPI'),
@@ -69,7 +70,12 @@ function defaultSteamEmuSaveRoots({ existingOnly = false, expandProgramDataSteam
   ].forEach((p) => addUnique(roots, p));
 
   const docs = documentsPath();
-  if (docs) addUnique(roots, path.join(docs, 'SkidRow'));
+  if (docs) {
+    addUnique(roots, path.join(docs, 'SkidRow'));
+    // DARKSiDERS writes its per-appid tree under Documents rather than beside the game whenever the
+    // release is not portable; the emulator ini in the game folder points here (see userDir.scan).
+    addUnique(roots, path.join(docs, 'DARKSiDERS'));
+  }
 
   const programDataSteam = envPath('PROGRAMDATA', 'Steam');
   if (programDataSteam) {
@@ -335,12 +341,67 @@ async function discoverLibraryRoots() {
   return results.filter(Boolean);
 }
 
+/*
+  Folder names people keep their console emulators in. A portable RPCS3/shadPS4/Xenia is not a game
+  and therefore never sits in a "Games" folder, so the game-library allowlist above cannot find one:
+  the binary search in userDir.findEntries() only ever looked inside game libraries and missed the
+  dedicated "Emulators" folder that is the single most common place for it.
+*/
+const EMULATOR_LIBRARY_FOLDER_NAMES = [
+  'Emulators',
+  'Emulator',
+  'Emulation',
+  'Emus',
+  'Emulateurs',
+  'Émulateurs',
+  'Emuladores',
+  'Emulatori',
+  'Emulatoren',
+  'Emulatory',
+  'Эмуляторы',
+  'エミュレータ',
+  '模拟器',
+];
+
+// The same shape as discoverLibraryRoots(), for emulator folders: every fixed drive and the user
+// profile, one stat per candidate, no recursion.
+async function discoverEmulatorRoots() {
+  let drives = [];
+  try {
+    drives = await listDrive({ ignoreSystemDrive: false });
+  } catch {
+    drives = [];
+  }
+
+  const candidates = [];
+  for (const drive of drives) {
+    for (const name of EMULATOR_LIBRARY_FOLDER_NAMES) candidates.push(path.join(`${drive}\\`, name));
+  }
+  for (const base of [process.env['USERPROFILE'], envPath('USERPROFILE', 'Desktop'), process.env['LOCALAPPDATA']]) {
+    if (!base) continue;
+    for (const name of EMULATOR_LIBRARY_FOLDER_NAMES) candidates.push(path.join(base, name));
+  }
+
+  const results = await Promise.all(
+    candidates.map(async (p) => {
+      try {
+        return (await fs.promises.stat(p)).isDirectory() ? p : null;
+      } catch {
+        return null;
+      }
+    })
+  );
+  return results.filter(Boolean);
+}
+
 module.exports = {
   defaultSteamEmuSaveRoots,
   defaultSteamScanRoots,
+  discoverEmulatorRoots,
   discoverLibraryRoots,
   expandKnownSteamSourceRoots,
   isSteamLikePath,
+  EMULATOR_LIBRARY_FOLDER_NAMES,
   GAME_LIBRARY_FOLDER_NAMES,
   isLibraryLikeFolderName,
   profileLibraryRoots,

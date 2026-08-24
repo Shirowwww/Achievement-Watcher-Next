@@ -179,6 +179,71 @@ async function detectEaAppMarkers(dirpath) {
   }
 }
 
+// The console emulators AW can read achievement data from, by executable name.
+const EMULATOR_BINARIES = ['rpcs3.exe', 'shadPS4.exe', 'shadps4.exe', 'xenia.exe', 'xenia_canary.exe'];
+
+/*
+  Emulator folders Windows already knows about, with no file system search at all.
+
+  "App Paths" is the key an installer writes so `start rpcs3` works, and the uninstall index carries
+  an InstallLocation for anything that shipped an installer. Both are a handful of registry reads and
+  they cover the case no folder-name heuristic can: an emulator installed under a name nobody would
+  think to probe. Read-only and failure-tolerant - a machine with neither key simply contributes
+  nothing, and the folder-based search below still runs.
+*/
+function emulatorRootsFromRegistry(registry = require('../util/reg.js')) {
+  const roots = [];
+  const seen = new Set();
+  const add = (value) => {
+    const dir = String(value || '').trim().replace(/^"+|"+$/g, '');
+    if (!dir) return;
+    // App Paths stores the executable; the uninstall index stores the folder.
+    const normalized = /\.exe$/i.test(dir) ? path.dirname(dir) : dir.replace(/[\\/]+$/, '');
+    const key = path.normalize(normalized).toLowerCase();
+    if (!normalized || seen.has(key)) return;
+    seen.add(key);
+    roots.push(normalized);
+  };
+
+  const APP_PATHS = 'Software/Microsoft/Windows/CurrentVersion/App Paths';
+  for (const hive of ['HKCU', 'HKLM']) {
+    for (const binary of EMULATOR_BINARIES) {
+      try {
+        add(registry.readRegistryStringAndExpand(hive, `${APP_PATHS}/${binary}`, ''));
+      } catch {
+        /* a missing key is the normal case */
+      }
+    }
+  }
+
+  const UNINSTALL_ROOTS = [
+    ['HKLM', 'Software/Microsoft/Windows/CurrentVersion/Uninstall'],
+    ['HKLM', 'Software/WOW6432Node/Microsoft/Windows/CurrentVersion/Uninstall'],
+    ['HKCU', 'Software/Microsoft/Windows/CurrentVersion/Uninstall'],
+  ];
+  const EMULATOR_NAME = /^(rpcs3|shadps4|xenia)\b/i;
+  for (const [hive, root] of UNINSTALL_ROOTS) {
+    let keys = [];
+    try {
+      keys = registry.listRegistryAllSubkeys(hive, root) || [];
+    } catch {
+      continue;
+    }
+    for (const key of keys) {
+      // Match on the key name first: reading DisplayName for every installed program would be
+      // hundreds of registry enumerations on an ordinary machine.
+      if (!EMULATOR_NAME.test(key)) continue;
+      try {
+        add(registry.readRegistryStringAndExpand(hive, `${root}/${key}`, 'InstallLocation'));
+      } catch {
+        /* skip one unreadable entry */
+      }
+    }
+  }
+
+  return roots;
+}
+
 function isProbableAppIdFolderName(name) {
   const value = String(name || '').trim();
   if (!/^[0-9a-fA-F]+$/.test(value)) return false;
@@ -260,21 +325,48 @@ module.exports.findEntries = async () => {
       addDetected(dir, 'Known achievement-data location');
     }
 
-    // Console-emulator data has a few stable per-user locations. Portable emulator binaries are
-    // searched only inside already recognised game libraries, never across an entire drive.
+    // Console-emulator data has a few stable per-user locations. RPCS3 additionally honours its own
+    // RPCS3_CONFIG_DIR, which is the only pointer to a configuration root kept outside both the
+    // emulator folder and AppData.
     for (const dir of [
       process.env.APPDATA && path.join(process.env.APPDATA, 'rpcs3'),
+      process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'rpcs3'),
+      process.env.RPCS3_CONFIG_DIR,
       process.env.APPDATA && path.join(process.env.APPDATA, 'shadPS4'),
+      process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'shadPS4'),
       process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'xenia'),
+      process.env.APPDATA && path.join(process.env.APPDATA, 'xenia'),
     ]) {
       try {
         if (dir && fs.statSync(dir).isDirectory()) addDetected(dir, 'Known emulator data location');
       } catch {}
     }
-    const search = ['rpcs3.exe', 'shadPS4.exe', 'shadps4.exe', 'xenia.exe', 'xenia_canary.exe'].map((name) => `**/${name}`);
-    for (const root of await saveRoots.discoverLibraryRoots()) {
+
+    /*
+      Where a portable emulator binary is actually looked for. Never a whole-drive walk: three
+      bounded sources, in increasing cost.
+
+        - the registry Windows itself keeps for installed programs (App Paths and the uninstall
+          index): no file system work at all, and it is the only route that finds an emulator
+          installed somewhere nobody would think to name;
+        - dedicated emulator folders ("D:\Emulators", "~/Desktop/Emulation", ...), which is where a
+          portable build normally lives and which the game-library allowlist by definition misses;
+        - the detected game libraries, as before.
+    */
+    for (const dir of emulatorRootsFromRegistry()) {
+      try {
+        if (fs.statSync(dir).isDirectory()) addDetected(dir, 'Installed emulator (registry)');
+      } catch {}
+    }
+
+    const search = EMULATOR_BINARIES.map((name) => `**/${name}`);
+    const searchRoots = [
+      ...(await saveRoots.discoverEmulatorRoots()).map((root) => ({ root, detector: 'Supported emulator in detected folder' })),
+      ...(await saveRoots.discoverLibraryRoots()).map((root) => ({ root, detector: 'Supported emulator in detected library' })),
+    ];
+    for (const { root, detector } of searchRoots) {
       for (const filepath of await glob(search, { cwd: root, deep: 3, onlyFiles: true, absolute: true, suppressErrors: true })) {
-        addDetected(path.parse(filepath).dir, 'Supported emulator in detected library');
+        addDetected(path.parse(filepath).dir, detector);
       }
     }
 
@@ -291,7 +383,7 @@ module.exports.findEntries = async () => {
   into a sentence - nothing here is user-visible text.
 */
 module.exports.diagnose = async (dirpath) => {
-  const accepted_files = steam_emu_cfg_file_supported.concat(['rpcs3.exe', 'shadPS4.exe', 'shadps4.exe', 'xenia.exe', 'xenia_canary.exe']);
+  const accepted_files = steam_emu_cfg_file_supported.concat(EMULATOR_BINARIES);
   const evidence = { layouts: PORTABLE_SCENE_SAVE_DIRS.length };
 
   let entries;
@@ -323,6 +415,35 @@ module.exports.diagnose = async (dirpath) => {
   const topLevel = await glob('*.{ini,exe}', { cwd: dirpath, onlyFiles: true, suppressErrors: true });
   const config = topLevel.find((name) => accepted_files.some((filename) => filename === name));
   if (config) return { accepted: true, code: 'emulator-config', evidence: { ...evidence, config } };
+
+  /*
+    A console emulator's DATA folder, with no binary in it. RPCS3 can relocate its virtual disk
+    (vfs.yml) and shadPS4 keeps its trophies under %APPDATA%, so the folder that actually holds the
+    achievements is routinely not the folder that holds the executable - and adding it by hand used
+    to be refused. The emulator readers own the layout rules; this only asks them.
+  */
+  try {
+    const rpcs3Roots = require('./rpcs3.js').trophyRoots(dirpath);
+    if (rpcs3Roots.length > 0) {
+      return { accepted: true, code: 'emulator-data', evidence: { ...evidence, emulator: 'rpcs3', roots: rpcs3Roots.map((r) => r.path) } };
+    }
+  } catch {
+    /* layout probing must never turn into a rejection reason of its own */
+  }
+  try {
+    // A CUSA folder inside, not merely a folder named game_data: a game_data sibling belonging to
+    // another emulator install must not make an unrelated game folder look watchable.
+    const shadRoots = require('./shadps4.js')._internal.gameDataRootCandidates(dirpath).filter((candidate) => {
+      try {
+        return fs.readdirSync(candidate, { withFileTypes: true }).some((entry) => entry.isDirectory() && /^CUSA\d{5}$/i.test(entry.name));
+      } catch {
+        return false;
+      }
+    });
+    if (shadRoots.length > 0) return { accepted: true, code: 'emulator-data', evidence: { ...evidence, emulator: 'shadps4', roots: shadRoots } };
+  } catch {
+    /* same */
+  }
 
   // Some GOG/UniverseLAN and repack layouts keep the config below the selected game root
   // (for example <Game>/Engine/Binaries/.../UniverseLAN.ini). Accept that root, then scan()
@@ -648,3 +769,5 @@ module.exports.findSceneSaveDir = findSceneSaveDir;
 // Exposed for the same reason, for a release that carries no emulator config to anchor on.
 module.exports.collectPortableSceneSaves = collectPortableSceneSaves;
 module.exports.collectPortableSceneSavesBelow = collectPortableSceneSavesBelow;
+// Exposed for unit testing the registry route, which cannot be exercised against a real machine.
+module.exports._internal = { EMULATOR_BINARIES, emulatorRootsFromRegistry };

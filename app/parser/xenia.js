@@ -215,6 +215,47 @@ function validAchievements(parsed) {
 
 const titleIdFromPath = (gpdPath) => path.basename(path.dirname(path.dirname(gpdPath))); // .../<titleID>/00000001/<file>.gpd
 
+/*
+  Xenia writes its config beside the binary and lets the user move the profile/content tree with
+  `storage_root` / `content_root`. Reading those two keys is what makes a relocated tree findable:
+  the old assumption of <dir>/content was simply wrong for anyone who set them, and the scan came
+  back empty with nothing to explain why. Values are read from any xenia*.config.toml in the folder,
+  since the stable and canary builds use different file names.
+*/
+function tomlString(text, key) {
+  const match = new RegExp(`^\\s*${key}\\s*=\\s*(".*?"|'.*?')\\s*$`, 'm').exec(String(text || ''));
+  if (!match) return '';
+  const raw = match[1].slice(1, -1).trim();
+  // The TOML basic string escapes a Windows separator; a literal string does not.
+  return match[1][0] === '"' ? raw.replace(/\\\\/g, '\\') : raw;
+}
+
+async function configuredStorageRoots(dir) {
+  let names;
+  try {
+    names = (await fsp.readdir(dir)).filter((name) => /^xenia.*\.config\.toml$/i.test(name));
+  } catch {
+    return [];
+  }
+  const roots = [];
+  for (const name of names) {
+    let text;
+    try {
+      text = await fsp.readFile(path.join(dir, name), 'utf8');
+    } catch {
+      continue;
+    }
+    for (const key of ['content_root', 'storage_root']) {
+      const value = tomlString(text, key);
+      if (!value) continue;
+      // storage_root holds the whole profile tree; the GPDs live in its content/ subfolder.
+      const resolved = path.resolve(dir, value);
+      roots.push(key === 'storage_root' ? path.join(resolved, 'content') : resolved);
+    }
+  }
+  return roots;
+}
+
 module.exports.scan = async (dir) => {
   // Lazy-require fast-glob to keep parity with the other parsers (already a dependency).
   const glob = require('fast-glob');
@@ -222,8 +263,15 @@ module.exports.scan = async (dir) => {
   const seen = new Set();
 
   const contentRoots = [];
-  if (await exists(path.join(dir, 'content'))) contentRoots.push(path.join(dir, 'content'));
-  if (path.basename(dir).toLowerCase() === 'content') contentRoots.push(dir);
+  const pushRoot = (root) => {
+    if (!root || contentRoots.some((existing) => existing.toLowerCase() === root.toLowerCase())) return;
+    contentRoots.push(root);
+  };
+  for (const root of await configuredStorageRoots(dir)) {
+    if (await exists(root)) pushRoot(root);
+  }
+  if (await exists(path.join(dir, 'content'))) pushRoot(path.join(dir, 'content'));
+  if (path.basename(dir).toLowerCase() === 'content') pushRoot(dir);
   if (contentRoots.length === 0) return data;
 
   for (const content of contentRoots) {
@@ -352,4 +400,12 @@ function clearGpdBuffer(raw) {
 module.exports.clearGpdBuffer = clearGpdBuffer;
 
 // Exposed for unit testing the pure binary parser.
-module.exports._internal = { parseGpdBuffer, validAchievements, normalizeUnlockTime, parseXdbfEntries, ACHIEVEMENT_EARNED_FLAG };
+module.exports._internal = {
+  parseGpdBuffer,
+  validAchievements,
+  normalizeUnlockTime,
+  parseXdbfEntries,
+  configuredStorageRoots,
+  tomlString,
+  ACHIEVEMENT_EARNED_FLAG,
+};

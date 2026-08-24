@@ -17,37 +17,52 @@ const files = {
 };
 
 const binary = 'rpcs3.exe';
+const layout = require('./rpcs3Layout.js');
 
+/*
+  Trophies for one folder the user watches. The folder may be the emulator install (the usual case)
+  or the virtual disk itself - a user who relocated dev_hdd0 and then added THAT folder was reading
+  a completely valid layout that the old rpcs3.exe-only gate rejected outright.
+
+  Where dev_hdd0 lives is resolved through rpcs3Layout.js (portable mode, RPCS3_CONFIG_DIR, the
+  vfs.yml remap) rather than assumed, so a relocated virtual disk is found instead of silently
+  producing an empty scan.
+*/
 module.exports.scan = async (dir) => {
-  let data = [];
+  const data = [];
 
   try {
-    if (await ffs.exists(path.join(dir, binary))) {
-      let users = await glob('([0-9])+', { cwd: path.join(dir, 'dev_hdd0/home'), onlyDirectories: true, absolute: false });
+    const hasBinary = await ffs.exists(path.join(dir, binary));
+    const roots = layout.trophyRoots(dir);
+    // A folder that is neither an RPCS3 install nor an RPCS3 virtual disk must stay untouched: the
+    // same folder is offered to every other parser.
+    if (!hasBinary && roots.length === 0) return data;
 
-      for (let user of users) {
-        try {
-          let games = await glob('*', { cwd: path.join(dir, 'dev_hdd0/home', user, 'trophy'), onlyDirectories: true, absolute: false });
-
-          for (let game of games) {
-            try {
-              data.push({
-                appid: game,
-                source: 'RPCS3 Emulator',
-                data: {
-                  type: 'rpcs3',
-                  path: path.join(dir, 'dev_hdd0/home', user, 'trophy', game),
-                },
-              });
-            } catch {}
-          }
-        } catch {}
+    for (const root of roots) {
+      let games;
+      try {
+        games = await glob('*', { cwd: root.path, onlyDirectories: true, absolute: false });
+      } catch {
+        continue;
+      }
+      for (const game of games) {
+        data.push({
+          appid: game,
+          source: 'RPCS3 Emulator',
+          data: {
+            type: 'rpcs3',
+            path: path.join(root.path, game),
+          },
+        });
       }
     }
   } catch {}
 
   return data;
 };
+
+// Exposed so folder validation can accept a relocated virtual disk without duplicating the rules.
+module.exports.trophyRoots = (dir) => layout.trophyRoots(dir);
 
 module.exports.getGameData = async (dir) => {
   try {
