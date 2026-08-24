@@ -72,6 +72,47 @@ const BASE_TOKENS = `
 }
 `;
 
+/*
+  The scene the window sits in.
+
+  A theme may be see-through: the editor's opacity slider is on every layer, and a theme built
+  around a wallpaper usually leaves the window itself partly transparent. Photographed against the
+  browser's blank page, such a theme reads as a pale, washed-out design that nobody would install -
+  the picture shows what is behind the window, and behind the window there was nothing.
+
+  So the document paints something behind it. Not a screenshot and not artwork: a fixed CSS scene,
+  the same four gradients every time, so two renders of one theme are still the same picture and the
+  gallery's cache by checksum still holds. It carries a bright band and a dark one, which is what
+  makes a see-through theme legible whether it is a light one or a dark one, and it puts the window
+  on a surface the way the app is actually seen - over a game or a desktop, never over white.
+*/
+const SCENE = `
+html {
+  height: 100%;
+  padding: 30px 38px 40px;
+  background-color: #0d1119;
+  background-image:
+    radial-gradient(120% 70% at 50% 118%, rgba(6, 9, 14, 0.92) 0%, rgba(6, 9, 14, 0) 62%),
+    radial-gradient(38% 30% at 74% 26%, rgba(255, 196, 138, 0.30) 0%, rgba(255, 196, 138, 0) 70%),
+    linear-gradient(196deg, #131a2b 0%, #1d2740 42%, #3b3350 70%, #5b3f4b 100%),
+    linear-gradient(#0d1119, #0d1119);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+
+/*
+  The window. The generated theme stylesheet paints the body element, so the body IS the window and
+  the frame around it is drawn here: the rounded corner, the hairline and the cast shadow the app has
+  on a desktop. Clipped, so a theme's own background stops at the corner rather than squaring it off.
+*/
+body {
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.62), 0 2px 10px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+`;
+
 const LAYOUT = `
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
@@ -398,7 +439,7 @@ function buildThemeMock(theme, options = {}) {
     fontCss ? `<style>${fontCss}</style>` : '',
     `<style>${BASE_TOKENS}</style>`,
     `<style>${buildCustomAppCss(clean)}</style>`,
-    `<style>:root { ${veilHeader} }${LAYOUT}</style>`,
+    `<style>:root { ${veilHeader} }${SCENE}${LAYOUT}</style>`,
     '</head>',
     '<body>',
     '<div class="mock">',
@@ -465,7 +506,16 @@ function buildThemeMock(theme, options = {}) {
   The size the sample is laid out for. Anything showing the mock renders it at exactly this and
   scales the result, rather than letting it re-flow: a frame of its own width would drop a library
   row here that the published picture shows, and then the preview would not be the promise.
-*/
-const DESIGN = { width: 960, height: 600 };
 
-module.exports = { buildThemeMock, DESIGN, SAMPLE, DEFAULT_LABELS };
+  It is the window plus the scene around it. The window keeps the 960x600 it always had - so the
+  library still shows the same eight tiles and nothing re-flowed when the scene arrived - and the
+  padding in SCENE is what the rest is.
+*/
+const WINDOW = { width: 960, height: 600 };
+const SCENE_INSET = { x: 38, top: 30, bottom: 40 };
+const DESIGN = {
+  width: WINDOW.width + SCENE_INSET.x * 2,
+  height: WINDOW.height + SCENE_INSET.top + SCENE_INSET.bottom,
+};
+
+module.exports = { buildThemeMock, DESIGN, WINDOW, SAMPLE, DEFAULT_LABELS };

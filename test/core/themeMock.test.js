@@ -13,7 +13,7 @@ const path = require('node:path');
 const test = require('node:test');
 
 const appRoot = path.join(__dirname, '..', '..', 'app');
-const { buildThemeMock, SAMPLE, DEFAULT_LABELS } = require(path.join(appRoot, 'util', 'themeMock.js'));
+const { buildThemeMock, DESIGN, WINDOW, SAMPLE, DEFAULT_LABELS } = require(path.join(appRoot, 'util', 'themeMock.js'));
 const themeLayers = require(path.join(appRoot, 'util', 'themeLayers.js'));
 
 function theme(overrides = {}) {
@@ -163,4 +163,38 @@ test('a model the editor would not produce is clamped before it is drawn', () =>
   assert.ok(html.includes('#00ff00') || html.includes('#0f0'), 'a short hex is still a colour');
   assert.ok(!html.includes('9999px'), 'an out of range blur reached the document');
   assert.ok(!html.includes('nonsense'));
+});
+
+/*
+  A theme may be see-through, and photographed against a blank page such a theme reads as a washed
+  out design nobody would install. So the document paints a scene behind the window - and the scene
+  has to be a constant, because the gallery caches a rendered picture by the checksum of the file it
+  came from and two renders of one theme have to be the same picture.
+*/
+test('the window is drawn on a fixed scene, not on a blank page', () => {
+  const one = buildThemeMock(theme({ bg: { color: '#10182080' } }));
+  const two = buildThemeMock(theme({ bg: { color: '#10182080' } }));
+  assert.equal(one, two, 'the scene is not deterministic');
+
+  // Whatever the theme is, the scene is the same, so it can never be mistaken for part of it.
+  const other = buildThemeMock(theme({ bg: { color: '#ffffff' }, accent: { color: '#ff0000' } }));
+  for (const document of [one, other]) {
+    assert.match(document, /html \{[^}]*background-color: #0d1119/, 'the scene is missing behind the window');
+    assert.match(document, /html \{[^}]*padding:/, 'the window is not inset from the edge of the picture');
+    // The frame the app has on a desktop: a rounded, clipped, shadowed window rather than a page.
+    assert.match(document, /border-radius: 14px/);
+    assert.match(document, /box-shadow: 0 26px 60px/);
+  }
+
+  // The scene is drawn, not fetched: nothing here may reach a file or the network.
+  const scene = one.slice(one.indexOf('html {'), one.indexOf('.mock-header'));
+  assert.ok(!/url\(/i.test(scene), 'the scene loads something instead of drawing itself');
+});
+
+// The window keeps the size it always had, so the library still shows the same tiles and the
+// in-app preview and a gallery card are still the same picture at different scales.
+test('the scene is added around the window, not taken out of it', () => {
+  assert.deepEqual(WINDOW, { width: 960, height: 600 });
+  assert.ok(DESIGN.width > WINDOW.width && DESIGN.height > WINDOW.height, 'the design frame did not grow with the scene');
+  assert.equal((DESIGN.width - WINDOW.width) % 2, 0, 'the window is not centred horizontally');
 });
