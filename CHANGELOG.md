@@ -41,6 +41,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- **A screenshot souvenir is saved about three times faster.** Writing the PNG cost more than the
+  capture and the colour work put together. The file no longer carries an alpha channel, which a
+  screenshot never uses, and the compression level was picked by measuring rather than left at the
+  library default. A 1440p souvenir now takes roughly 570 ms instead of 920, and the file is no
+  larger for it.
 - **Screenshot souvenirs taken with Windows HDR on no longer blow out.** Everything brighter than
   ordinary white was squeezed into the last few shades the file can hold, and local detail was then
   added back on top of that, which undid the squeezing for exactly the pixels it was meant to

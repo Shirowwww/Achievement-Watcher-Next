@@ -48,3 +48,26 @@ content, so it cannot spend that.
 Both the compression and the highlight blend depend only on the brightest channel, which is one of
 the 31744 finite non-negative f16 patterns, so both are resolved once into a lookup table and cost
 a single lookup per pixel. The tables hold exactly what the curve would return - no interpolation.
+
+## Encoding
+
+The PNG is written as RGB, not RGBA: a screenshot is opaque, so the alpha channel only ever held
+255 and cost a quarter of the file. DEFLATE runs at level 3 rather than the crate default of 6,
+which was measured at about a fifth of the time for a file a few percent *smaller* than the RGBA
+one it replaces. Level 1 and `FdeflateUltraFast` are faster still but give up 10 to 20 percent of
+the size, and level 6 costs four times level 3 for another 4 percent - the curve is flat past 3.
+Encoding is nonetheless still the largest single cost of a capture.
+
+Build and copy the x64 release binary from the repository root:
+
+```powershell
+cargo build --release --locked --manifest-path native/hdr-screenshot/Cargo.toml
+Copy-Item native/hdr-screenshot/target/release/aw-next-hdr-screenshot.exe `
+  watchdog/native/aw-next-hdr-screenshot.exe -Force
+```
+
+`--status` prints `hdr-active` or `sdr`. `--force <output.png>` is available for development-time
+capture testing on an SDR desktop. End users do not need Rust or the Windows SDK.
+
+The helper depends on the MIT-licensed `windows-capture` crate. Its license is shipped beside the
+executable, together with the license for the HDR capture implementation.
