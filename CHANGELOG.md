@@ -5,6 +5,110 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## Unreleased
 
+### Added
+
+- **Every theme can be edited, and saved as your own.** The per-layer editor is no longer reserved
+  for the Custom theme: select any theme - a built-in palette, one you saved, one somebody sent you -
+  and it opens on that theme's colours. Editing previews live and writes nothing; **Save theme**,
+  beside the name field, is what turns it into a theme of your own. Leave the name as it opened to
+  keep that theme up to date, or type another and you get a second theme with the first left exactly
+  as it was. A saved theme then behaves like any other: it sits in the picker, exports as an
+  `.awtheme` and can be deleted. A name that is already taken is reported before anything is written.
+  **Custom…** stays where it was, as the scratch slot that is always there and always editable.
+
+### Removed
+
+- **Five built-in palettes.** Cyberpunk, Ember, Hacker, Burgundy and Champagne are gone: three had
+  muted text that was barely readable on their own background, and the other two were near-duplicates
+  of palettes that do it better. Thirteen built-ins remain. If you were using one of the five, the
+  app falls back to Steam Blue - and since every theme is now editable and savable, the look can be
+  rebuilt and kept.
+
+### Changed
+
+- **The preset designer keeps the popup on screen.** The preview is pinned to the top of the panel,
+  so it is still there when you reach the slider at the bottom of the list - the whole tab is "change
+  this, look at that", and until now what you were changing scrolled away from what you were looking
+  at.
+- **The designer is one column, and much quieter for it.** The workspace was two columns inside a
+  card that is about 690px however wide the window is, so each got roughly 330px: the preview toolbar
+  broke onto three lines, every control sat in a cramped cell, and the space below the preview was
+  empty. On the full width the controls lay out five across, the toolbar fits on one line and the
+  preview is big enough to judge a design by. Eight fine-tuning properties (exact paddings, the gap,
+  the second line's size, wallpaper dimming, glow motion and the two rarity glows) moved behind the
+  **Advanced** disclosure their group already offered - nothing was removed. The row of jump chips
+  is gone: it was a third way to reach the same nine sections, sitting on top of the nine headings it
+  scrolled to. Where the popup lands and how big it is now appear only in the Screen view, which is
+  the only view they change.
+- **Compare shows every state, two by two, and follows the one you picked.** Progress was the state
+  the comparison left out, which is odd for the view whose whole job is "does this state look
+  different?" - and it differs most. Four popups stacked gave each a quarter of the height while the
+  stage sat two thirds empty across, so they are now a two-by-two grid: a popup is wider than it is
+  tall, and halving both directions is about twice the scale. The Normal/Rare/100%/Progress switch
+  also means something here at last: it draws the state it names at full strength and lets the others
+  sit back, where before it did nothing at all in this view.
+- **A built-in theme can be exported, once you have given it a name of your own.** The file card used
+  to be absent on a built-in, so Export was simply unreachable - which was how "a built-in keeps its
+  name" was enforced, and it enforced it by leaving no way out of a theme you had just spent ten
+  minutes editing. The card is there now, and exporting one under its own name is refused in words
+  instead: the file would install as "Nord" on somebody else's machine and shadow the Nord they
+  already have.
+- **Reset in the theme editor puts back the theme you are editing.** Now that every theme is editable
+  it reads the model back, so a built-in returns its own palette and a saved or imported theme
+  returns what is on disk. The Custom slot has nothing else to go back to, so it still resets to the
+  default palette.
+- **The Settings window uses a little more of a big screen.** It was pinned at 1040x590 whatever the
+  display, so a 1440p or 4K screen got the same panel a 1280x800 one did while its own rows wrapped
+  inside it. Both sizes now grow with the window and stop, a quarter wider and a third taller than
+  before. Nothing changes below roughly a 1530x830 window, so every size that was already tuned by
+  hand behaves exactly as it did.
+- **Two decorative chips left the Theme tab.** "One portable file" and "Per-layer preview" restated
+  the heading beside them and the sentence under them, in the shape of a warning.
+- **The Presets tab reads as two steps rather than one wall of buttons.** The starting points now
+  have a heading and their explanation across the width of the card instead of folded into a column,
+  and the actions are two groups: what you do to the design, then what you do with a file. Import
+  and Export sit side by side as equal halves, with Import SAN theme underneath as the quieter way
+  in. Nothing was removed, and the layout holds at the smallest window in every bundled language.
+- **The theme settings say what each layer paints, in full.** Window background, Top bar, Library
+  panel, Cards and rows and the rest keep their explanation on a line of its own instead of having
+  it cut off with an ellipsis, and a long layer name wraps between words rather than through them.
+- **The theme import window fits the smallest window the app allows.** The sample is scaled to the
+  height available, the detail scrolls, and Cancel and Import stay where they can be reached. The
+  sample is also drawn in the application's own typefaces now, so it looks like this app wearing the
+  theme rather than another program.
+
+### Fixed
+
+- **The preset designer would not scroll with the pointer over the bottom of the card.** The wheel
+  handler that steps a setting between its two arrows was claiming the wheel for every row that
+  carried the layout class, and the designer's action rows carry it - so the panel simply refused to
+  move whenever the pointer sat over the buttons. It now only claims the wheel where there are arrows
+  to step, and the previews no longer take the pointer either.
+- **The preview was cut off with a tall design, and in Compare.** The zoom that fits the popup to the
+  stage only measured width, which was harmless while the stage grew to whatever height it needed and
+  wrong once it was pinned and capped: a tall template like Poster showed its top third, and Compare
+  showed one and a half of its three popups. Both now fit in height as well. The stage also takes the
+  height of what it is actually showing rather than a fixed share of the panel - a short wide design
+  gives the controls their room back, and a tall one is drawn at a size you can judge instead of the
+  29% Poster was reduced to - while still leaving enough of the panel below it to work in, which is
+  what the pinned preview costs.
+- **Poster's text was hard to read.** White type over a photograph was carrying a 1px black outline
+  and only a light dim, so every letter was furred and the picture was still busy enough underneath to
+  break up the words. The picture gives way instead - darker and softer - and the type keeps a plain
+  drop shadow.
+- Deleting an imported theme needed two clicks. The first one asked Windows to remove a folder whose
+  images the window had not finished releasing, which failed; it now waits for the window to stop
+  painting the theme, so the first click removes it.
+- **Deleting a theme left it in the list.** The picker is rebuilt before the folder goes, so the
+  window stops painting the theme whose images are about to be removed - but nothing read theme
+  storage again afterwards, so the list came back still holding the theme that was then deleted.
+  Selecting it painted nothing and Delete had to be pressed a second time. The theme had gone the
+  first time; only the list had not caught up.
+- **An imported theme never survived a restart.** The check that validates the saved settings knew
+  about built-in palettes, the Custom theme and stylesheet themes, but not about imported ones, so
+  every start quietly rewrote the choice back to Steam Blue. Importing a theme, applying it and
+  finding it gone the next morning was the whole of the bug.
+
 ## 3.10.0 - 2026-08-23
 
 ### Added

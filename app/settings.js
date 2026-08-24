@@ -93,14 +93,24 @@ module.exports.load = () => {
     if (typeof options.general.uninstallContextMenu !== 'boolean') {
       options.general.uninstallContextMenu = true;
     }
-    // Theme (Settings > General): built-ins come from the theme engine, plus 'custom' (layer-based)
-    // and user themes ('user:<name>' from <userData>\themes). Don't duplicate the built-in list
-    // here - a stale copy would silently reset a theme it wasn't told about.
+    /*
+      Theme (Settings > Theme): built-ins come from the theme engine, plus 'custom' (layer-based),
+      user stylesheets ('user:<name>' from <userData>\themes) and themes the user saved or imported
+      ('pack:<name>' in <userData>\theme-packs). Don't duplicate the built-in list here - a stale
+      copy would silently reset a theme it wasn't told about.
+
+      `pack:` was missing, so every read of options.ini rewrote an imported theme back to Steam Blue
+      and no imported theme ever survived a restart. The folder is not checked here on purpose: this
+      runs on every load, and walking theme storage to validate a string would put a disk read on
+      every start for the sake of a value the theme layer already falls back on when it resolves to
+      nothing.
+    */
     if (
       typeof options.general.theme !== 'string' ||
       (!Object.keys(themeLayers.BUILTIN_COLORS).includes(options.general.theme) &&
         options.general.theme !== 'custom' &&
-        !/^user:.+$/i.test(options.general.theme))
+        !/^user:.+$/i.test(options.general.theme) &&
+        !/^pack:.+$/i.test(options.general.theme))
     ) {
       options.general.theme = 'default';
     }

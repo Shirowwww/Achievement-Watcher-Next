@@ -84,6 +84,10 @@ layer takes a colour with an opacity, optionally a gradient, and the five surfac
 a background image with a fit and either a coloured veil or a blur. Everything previews live and is
 kept when you press **OK**.
 
+The editor asks for a **name** first, and that one name is the only one the theme has: the picker
+above reads it instead of "Custom…", and it is what the exported file is called. Exporting a theme
+you have not named yet says so and takes you back to the field.
+
 Below the picker, **Theme files** turns whatever you are using into one portable file:
 
 - **Export theme…** writes an `.awtheme`: the palette, the gradients, the effect settings and any

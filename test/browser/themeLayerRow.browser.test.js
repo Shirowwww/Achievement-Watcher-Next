@@ -20,7 +20,12 @@ const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium
 const root = path.join(__dirname, '..', '..');
 const css = fs.readFileSync(path.join(root, 'app', 'resources', 'css', 'app.css'), 'utf8');
 
-// The real row, as ui/settings.js builds it: an icon, the name and its hint, then the controls.
+/*
+  The real row, as ui/settings.js builds it: an icon and the name, then the controls, then the hint
+  on a line of its own underneath. The hint used to live inside the label; it was moved out because
+  the label column is only about a hundred pixels wide, and a sentence wrapped in there became a
+  five-line ribbon. Keep this fixture in step with renderCustomThemeLayers().
+*/
 function row(name, hint) {
   return `
     <div class="theme-layer-row" data-layer="test">
@@ -29,7 +34,6 @@ function row(name, hint) {
         <i class="fas fa-desktop"></i>
         <div class="theme-layer-label-text">
           <div class="theme-layer-name">${name}</div>
-          <div class="theme-layer-hint">${hint}</div>
         </div>
       </div>
       <div class="theme-layer-controls">
@@ -46,6 +50,7 @@ function row(name, hint) {
           <input type="checkbox" /><span>Effet</span>
         </label>
       </div>
+      <div class="theme-layer-hint">${hint}</div>
     </div>`;
 }
 
@@ -139,6 +144,55 @@ test('a name with no room left still wraps rather than widening the row', async 
   assert.equal(first.wrapped, false, 'the controls stay beside a name that does not fit');
   assert.ok(first.lines >= 2, 'the name is what takes the extra line');
   assert.ok(first.rowWidth <= 620, 'and the row itself never grows past its panel');
+
+  await page.close();
+});
+
+/*
+  What a layer paints, said in full.
+
+  The hint was cropped to one line with an ellipsis, in a column the controls leave about a hundred
+  pixels of - so "Tuiles de jeux, lignes de succès, dialogues" was read as "Tuiles de jeux, lig...".
+  These are the two halves of the fix: the sentence is complete, and it is complete because it has
+  the width of the row rather than the width of the label.
+*/
+test('every layer hint is shown in full, on the width of the row', async (t) => {
+  const { browser, userDataDir, failures } = await launchBrowser();
+  if (!browser) return t.skip(skipReason(failures));
+  t.after(() => closeBrowser(browser, userDataDir));
+
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1100, height: 900 });
+  await page.setContent(PAGE, { waitUntil: 'domcontentloaded' });
+
+  const measured = await page.evaluate(() =>
+    Array.prototype.map.call(document.querySelectorAll('.theme-layer-row'), (element) => {
+      const hint = element.querySelector('.theme-layer-hint');
+      const label = element.querySelector('.theme-layer-label');
+      const style = getComputedStyle(hint);
+      return {
+        text: hint.textContent,
+        clipped: hint.scrollWidth > hint.clientWidth + 1,
+        ellipsis: style.textOverflow === 'ellipsis' && style.overflow !== 'visible',
+        nowrap: style.whiteSpace === 'nowrap',
+        width: Math.round(hint.getBoundingClientRect().width),
+        labelWidth: Math.round(label.getBoundingClientRect().width),
+        below: hint.getBoundingClientRect().top >= label.getBoundingClientRect().bottom,
+        lines: Math.round(hint.getBoundingClientRect().height / parseFloat(style.lineHeight)),
+      };
+    })
+  );
+
+  assert.equal(measured.length, 5, 'all five rows must render');
+  for (const line of measured) {
+    assert.equal(line.nowrap, false, `"${line.text}" is still held on one line`);
+    assert.equal(line.ellipsis, false, `"${line.text}" is still truncated with an ellipsis`);
+    assert.equal(line.clipped, false, `"${line.text}" does not fit the box that draws it`);
+    assert.equal(line.below, true, `"${line.text}" must sit under the name, not beside it`);
+    assert.ok(line.width > line.labelWidth, `"${line.text}" is still confined to the label column`);
+    // Two lines is a wrap; five is the ribbon this replaced.
+    assert.ok(line.lines <= 2, `"${line.text}" wrapped onto ${line.lines} lines`);
+  }
 
   await page.close();
 });

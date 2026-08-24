@@ -153,28 +153,6 @@ const BUILTIN_COLORS = {
     border: '#4a555b',
     accent: '#a7c080',
   },
-  cyberpunk: {
-    bg: '#0d0d1a',
-    header: '#191936',
-    panel: '#101020',
-    card: '#1e1e3d',
-    settings: '#151530',
-    text: '#e8e8ff',
-    muted: '#9494c8',
-    border: '#34346e',
-    accent: '#ff2a6d',
-  },
-  ember: {
-    bg: '#20160f',
-    header: '#2e2016',
-    panel: '#19110c',
-    card: '#332316',
-    settings: '#261a11',
-    text: '#f5e6d3',
-    muted: '#b8a08a',
-    border: '#5a4634',
-    accent: '#ff9e3d',
-  },
   ocean: {
     bg: '#0b1e26',
     header: '#12323d',
@@ -185,39 +163,6 @@ const BUILTIN_COLORS = {
     muted: '#8fb4bd',
     border: '#2e5a66',
     accent: '#35d0ba',
-  },
-  hacker: {
-    bg: '#0a0f0a',
-    header: '#101a10',
-    panel: '#070c07',
-    card: '#122012',
-    settings: '#0c130c',
-    text: '#c8ffc8',
-    muted: '#5f8f5f',
-    border: '#1f3a1f',
-    accent: '#33ff66',
-  },
-  burgundy: {
-    bg: '#1a0d12',
-    header: '#2a1420',
-    panel: '#140a0e',
-    card: '#311a24',
-    settings: '#221017',
-    text: '#f2dce2',
-    muted: '#b58b98',
-    border: '#553040',
-    accent: '#e0527a',
-  },
-  champagne: {
-    bg: '#0d1526',
-    header: '#182338',
-    panel: '#0a101d',
-    card: '#1c2942',
-    settings: '#121c30',
-    text: '#ece9dd',
-    muted: '#97a0b3',
-    border: '#33405c',
-    accent: '#f0c96b',
   },
 };
 
@@ -382,6 +327,44 @@ function sanitizeCustomTheme(raw) {
   return theme;
 }
 
+/*
+  The name the user gives their own theme.
+
+  Same rules as util/themePackage.js `sanitizeThemeName`, deliberately repeated rather than imported:
+  themePackage requires this file, so reaching back would be a cycle, and this half has to load in
+  the overlay where the package reader never does. test/core/themeAlpha.test.js pins the two
+  against each other so they cannot drift apart.
+
+  What the rules buy is that one string can be all three things at once - what the picker shows, what
+  the folder of an installed copy is called, and what the .awtheme file is named - so a person never
+  has to notice that a theme has more than one name.
+*/
+function sanitizeCustomThemeName(raw) {
+  return String(raw == null ? '' : raw)
+    .trim()
+    .replace(/[<>:"/\\|?*\x00-\x1f]/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/[. ]+$/, '')
+    .trim()
+    .slice(0, 48)
+    .trim();
+}
+
+/*
+  The name is stored beside the layer model in the same file rather than inside it: sanitizeCustomTheme
+  keeps describing exactly the nine layers and nothing else, so every reader of a theme model - the
+  CSS builder, the package writer, the mock - is untouched by this. A file written before the field
+  existed simply has no name, which is what an unnamed Custom theme is.
+*/
+function loadCustomThemeName(userDataPath) {
+  try {
+    const raw = JSON.parse(fs.readFileSync(customThemeFile(userDataPath), 'utf8'));
+    return sanitizeCustomThemeName(raw && raw.name);
+  } catch {
+    return '';
+  }
+}
+
 function loadCustomTheme(userDataPath) {
   try {
     const raw = JSON.parse(fs.readFileSync(customThemeFile(userDataPath), 'utf8'));
@@ -391,10 +374,16 @@ function loadCustomTheme(userDataPath) {
   }
 }
 
-function saveCustomTheme(userDataPath, theme) {
+/*
+  `name` is optional: passing one renames the theme, leaving it out keeps whatever name is on disk.
+  The save path runs twice per edit (once to store the draft, once to record the generated blur
+  copies), and only the first call knows the name - so the second must not erase it.
+*/
+function saveCustomTheme(userDataPath, theme, name) {
   const clean = sanitizeCustomTheme(theme);
+  const themeName = name === undefined ? loadCustomThemeName(userDataPath) : sanitizeCustomThemeName(name);
   fs.mkdirSync(path.dirname(customThemeFile(userDataPath)), { recursive: true });
-  fs.writeFileSync(customThemeFile(userDataPath), JSON.stringify(clean, null, 2), 'utf8');
+  fs.writeFileSync(customThemeFile(userDataPath), JSON.stringify({ name: themeName, ...clean }, null, 2), 'utf8');
   return clean;
 }
 
@@ -916,7 +905,9 @@ module.exports = {
   themeImagesDir,
   defaultCustomTheme,
   sanitizeCustomTheme,
+  sanitizeCustomThemeName,
   loadCustomTheme,
+  loadCustomThemeName,
   saveCustomTheme,
   hexToRgbTriplet,
   buildCustomAppCss,

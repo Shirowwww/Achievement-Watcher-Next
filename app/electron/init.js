@@ -6063,11 +6063,37 @@ function prepareThemeBlurImages(theme, intoDir) {
   return themeBlur.prepareThemeBlurImages(theme, intoDir || themeLayers.themeImagesDir(userData), { log: (line) => debug.log(line) });
 }
 
-ipcMain.handle('save-custom-theme', async (event, theme) => {
-  const clean = themeLayers.saveCustomTheme(userData, theme);
+/*
+  `request` is either the bare layer model (what older callers sent) or `{ theme, name }`. The name
+  is what the picker shows and what an export is called, so it travels with the model rather than
+  through a channel of its own; leaving it out keeps whatever name is already on disk.
+*/
+ipcMain.handle('save-custom-theme', async (event, request) => {
+  const asked = request && typeof request === 'object' && request.theme ? request : { theme: request };
+  const clean = themeLayers.saveCustomTheme(userData, asked.theme, asked.name);
   await prepareThemeBlurImages(clean);
-  themeLayers.saveCustomTheme(userData, clean); // persist generated blur paths
-  return themeLayers.themePayload(userData, 'custom', clean, '');
+  themeLayers.saveCustomTheme(userData, clean); // persist generated blur paths, keeping the name
+  return { ...themeLayers.themePayload(userData, 'custom', clean, ''), customName: themeLayers.loadCustomThemeName(userData) };
+});
+
+// What the Custom theme is called, so the editor's name field opens on it.
+ipcMain.handle('get-custom-theme-name', async () => themeLayers.loadCustomThemeName(userData));
+
+/*
+  The stylesheet for a theme that is being edited but not saved.
+
+  Every theme is editable now, so the editor needs to show a draft over a built-in or over somebody
+  else's theme without writing anything - this builds exactly what `save-custom-theme` would return
+  and stores nothing. The blur and veil copies ARE generated, because they are derived from the
+  image and the effect settings rather than from the theme: without them a layer set to blur would
+  preview a sharp picture and the draft would lie about what saving it would look like. They land in
+  the shared image folder, keyed by content, so a draft that is abandoned leaves a file the next
+  theme using that picture reuses rather than a file nothing can account for.
+*/
+ipcMain.handle('preview-theme-model', async (event, theme) => {
+  const clean = themeLayers.sanitizeCustomTheme(theme);
+  const prepared = await prepareThemeBlurImages(clean);
+  return themeLayers.themePayload(userData, 'custom', prepared, '');
 });
 
 // Pick a background image for one Custom-theme layer: copy the file into
@@ -6132,7 +6158,11 @@ function takenThemeNames() {
 // only ever a `user:` stylesheet, the one kind of theme this format deliberately cannot carry.
 function themeModelFor(value) {
   const name = String(value || 'default');
-  if (name === 'custom') return { theme: themeLayers.loadCustomTheme(userData), base: 'custom', meta: {} };
+  if (name === 'custom') {
+    // The name the user gave it, so an export is called what the picker calls it rather than the
+    // word "Custom" every custom theme would otherwise share.
+    return { theme: themeLayers.loadCustomTheme(userData), base: 'custom', name: themeLayers.loadCustomThemeName(userData), meta: {} };
+  }
   const pack = userThemes.parsePackValue(name);
   if (pack) {
     const installed = themePackage.readInstalledTheme(userData, pack);
@@ -6167,7 +6197,23 @@ ipcMain.handle('export-theme', async (event, request) => {
       return { ok: false, error: userThemes.parseValue(value) ? 'css-theme-not-exportable' : 'theme-not-found' };
     }
 
-    const suggested = themePackage.sanitizeThemeName(asked.name || model.name || value.replace(/^pack:/i, '')) || 'Theme';
+    /*
+      The theme's own name comes first, and the caller's fallback second: the Custom theme is called
+      what the user typed into the editor, an imported one keeps the name it travelled under, and a
+      built-in is named after its row in the picker. A custom theme with no name is not exported at
+      all - the file would be called "Custom", which is every custom theme anyone has ever made.
+    */
+    const suggested = themePackage.sanitizeThemeName(model.name || asked.name || value.replace(/^pack:/i, ''));
+    if (!suggested) return { ok: false, error: value === 'custom' ? 'theme-name-required' : 'invalid-name' };
+    /*
+      A theme may not travel under a name the picker already means something else by. It matters
+      most for a built-in exported as itself: the file would install as "Nord" on somebody else's
+      machine and shadow the Nord they already have. Renaming it is also the moment it stops being
+      the built-in and becomes the exporter's own theme, which is what the manifest then says.
+    */
+    if (!userThemes.parsePackValue(value) && takenThemeNames().some((name) => name.toLowerCase() === suggested.toLowerCase())) {
+      return { ok: false, error: 'reserved-name', name: suggested };
+    }
     const res = await dialog.showSaveDialog({
       title: t('export-theme-title', 'Export theme', 'Exporter le theme'),
       defaultPath: suggested + themePackage.THEME_PACKAGE_EXTENSION,
@@ -6318,6 +6364,57 @@ ipcMain.handle('import-theme', async (event, opts = {}) => {
   }
 });
 
+/*
+  The layer model behind any theme the picker offers, so the editor can open on the one that is
+  selected rather than only on the Custom slot. A `user:` stylesheet is the one kind with no model -
+  it is CSS somebody wrote, not colours - and answers null, which is how the editor knows to stay shut.
+*/
+ipcMain.handle('get-theme-model', async (event, value) => {
+  const model = themeModelFor(String(value || 'default'));
+  if (!model) return null;
+  return { theme: model.theme, name: model.name || '', base: model.base || '', meta: model.meta || {} };
+});
+
+/*
+  Save what the editor is holding as a theme of the user's own.
+
+  It lands in the same storage an imported .awtheme installs into, so a saved theme is listed,
+  selected, exported and deleted by the code that already does those things. Called twice for a name
+  that is taken: the first call reports `duplicate` and writes nothing, then the renderer asks and
+  calls back with `overwrite` - the same two-step as an import, and the reason saving under a new
+  name leaves the theme you started from untouched.
+*/
+ipcMain.handle('save-theme-as', async (event, request = {}) => {
+  try {
+    const out = themePackage.saveThemeAs({
+      userDataPath: userData,
+      name: request.name,
+      theme: request.theme,
+      base: request.base,
+      meta: request.meta,
+      overwrite: request.overwrite === true,
+      appVersion: app.getVersion(),
+      // A saved theme may not take a name the picker already means something else by.
+      reservedNames: takenThemeNames(),
+    });
+    if (!out.ok) {
+      debug.log(`[theme-package] save ${request.name}: ${out.error}`);
+      return out;
+    }
+
+    // The blur and veil copies live inside the theme's own folder, so removing it removes them too.
+    const dir = path.join(themePackage.themePackDir(userData), out.name);
+    const theme = await prepareThemeBlurImages(out.theme, path.join(dir, themePackage.THEME_DERIVED_DIR));
+    const stored = themePackage.saveInstalledTheme(userData, out.name, theme) || theme;
+
+    debug.log(`[theme-package] save ${out.name}: ${out.replaced ? 'replaced' : 'created'} (${out.assets} asset(s))`);
+    return { ...out, theme: stored, value: userThemes.packValue(out.name) };
+  } catch (err) {
+    debug.log('[theme-package] save failed: ' + (err.message || err));
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+
 // Every imported theme, for the Theme dropdown and the manage list.
 ipcMain.handle('list-installed-themes', async () =>
   themePackage.listInstalledThemes(userData).map((theme) => ({ ...theme, value: userThemes.packValue(theme.name) }))
@@ -6341,6 +6438,22 @@ ipcMain.on('theme-changed', (event, name) => {
     overlayWindow.webContents.send('overlay-theme', currentThemePayload(name));
   } catch (err) {
     debug.log(`[overlay-theme] broadcast failed: ${err.message || err}`);
+  }
+});
+
+/*
+  The same, for a theme being edited but not saved. `theme-changed` names a theme the main process
+  can look up; a draft exists only in the editor, so the renderer hands over the payload it was just
+  given rather than a name nothing would resolve. Nothing here reads it back or stores it: it is one
+  hop to the overlay so the window being designed and the popup over the game agree.
+*/
+ipcMain.on('theme-preview', (event, payload) => {
+  if (!overlayVisible || !overlayWindow || overlayWindow.isDestroyed() || overlayWindow.webContents.isDestroyed()) return;
+  if (!payload || typeof payload !== 'object' || typeof payload.overlayCss !== 'string') return;
+  try {
+    overlayWindow.webContents.send('overlay-theme', payload);
+  } catch (err) {
+    debug.log(`[overlay-theme] preview failed: ${err.message || err}`);
   }
 });
 

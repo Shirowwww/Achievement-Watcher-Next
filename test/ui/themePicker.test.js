@@ -149,3 +149,44 @@ test('a theme the picker offers survives being saved', () => {
   assert.match(validator, /options\.general\.theme !== 'custom'/, 'the Custom theme must stay valid');
   assert.match(validator, /\^user:/, 'user themes from <userData>\\themes must stay valid');
 });
+
+/*
+  A theme the user saved, or one somebody sent them, has to survive a restart too.
+
+  `pack:` was missing from the validator, so every read of options.ini rewrote an imported theme back
+  to Steam Blue - an imported theme was applied, saved with OK, and gone the next time the app
+  started. Saved themes live in the same value space, so this is now load-bearing for both.
+*/
+test('a saved or imported theme survives being saved', () => {
+  const validator = fs.readFileSync(path.join(appDir, 'settings.js'), 'utf8');
+  assert.match(validator, /\^pack:/, 'themes in <userData>\theme-packs must stay valid');
+
+  // The validator is a string check on purpose: it runs on every load, so it must not walk storage.
+  const block = validator.slice(validator.indexOf('options.general.theme !== \'custom\''));
+  const body = block.slice(0, block.indexOf('\n    }'));
+  assert.ok(!/readdirSync|existsSync|listInstalledThemes/.test(body), 'validating a theme name must not touch the disk');
+});
+
+/*
+  Five palettes were removed. Each lived in three places that have to agree - the table, the token
+  block that paints the window, and the list the picker offers - so a half-done removal would leave
+  a row that paints nothing, or a palette nothing can reach.
+*/
+test('a removed palette is gone from every place that knew it', () => {
+  const removed = ['cyberpunk', 'ember', 'hacker', 'burgundy', 'champagne'];
+  const css = fs.readFileSync(path.join(appDir, 'resources', 'css', 'app.css'), 'utf8');
+
+  for (const name of removed) {
+    assert.equal(themeLayers.BUILTIN_COLORS[name], undefined, `${name} is still a palette`);
+    assert.ok(!css.includes(`[data-theme='${name}']`), `${name} still has a token block in app.css`);
+    assert.ok(!primary.includes(name), `${name} is still offered by the picker`);
+    assert.ok(!more.includes(name), `${name} is still offered behind More themes`);
+  }
+
+  // Nothing else went with them: the palettes that remain are still whole.
+  for (const [name, colors] of Object.entries(themeLayers.BUILTIN_COLORS)) {
+    for (const layer of ['bg', 'header', 'panel', 'card', 'settings', 'text', 'muted', 'border', 'accent']) {
+      assert.match(String(colors[layer] || ''), /^#[0-9a-f]{6}$/i, `${name}.${layer} is not a colour`);
+    }
+  }
+});

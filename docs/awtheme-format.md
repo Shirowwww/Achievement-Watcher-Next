@@ -52,7 +52,7 @@ this format is designed not to become. Share the `.css` itself if you want to pa
 |---|---|
 | `format` | Always `aw-theme`. Anything else is not a theme package. |
 | `formatVersion` | The layout version. A reader refuses a **higher** number outright rather than guessing. |
-| `name` | The name the theme installs under. Sanitised the same way a preset name is. |
+| `name` | The name the theme installs under, and the name the file is offered as. For a Custom theme it is the name you gave it in the editor; for an imported one it is the name it travelled with. Sanitised the same way a preset name is, so one string can be all three at once. |
 | `description`, `author`, `version`, `tags` | What the theme says about itself. All optional, all clamped. |
 | `createdAt` | When it was exported, ISO 8601. |
 | `app.createdWith` | The AW Next version that wrote it. Descriptive only. |

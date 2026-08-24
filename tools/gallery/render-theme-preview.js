@@ -25,6 +25,7 @@ const appNodeModules = path.join(root, 'app', 'node_modules');
 
 const { readThemePackage, resolveInstalled, ASSETS_DIR, THEME_DERIVED_DIR } = require(path.join(root, 'app', 'util', 'themePackage.js'));
 const { buildThemeMock, DESIGN } = require(path.join(root, 'app', 'util', 'themeMock.js'));
+const { themeMockFontCss } = require(path.join(root, 'app', 'util', 'themeFonts.js'));
 const { prepareThemeBlurImages } = require(path.join(root, 'app', 'util', 'themeBlur.js'));
 const { findBrowser } = require(path.join(__dirname, 'render-preview.js'));
 const appVersion = require(path.join(root, 'app', 'package.json')).version;
@@ -68,7 +69,10 @@ async function unpack(file) {
   const theme = await prepareThemeBlurImages(resolveInstalled(read.theme, dir), path.join(dir, THEME_DERIVED_DIR));
 
   const document = path.join(dir, 'mock.html');
-  fs.writeFileSync(document, buildThemeMock(theme), 'utf8');
+  // The typefaces travel inside the document. Only a `data:` URL and this folder are allowed to
+  // load below, so a card rendered here is set in the same lettering as the in-app preview - and a
+  // checkout without the font files simply falls back, rather than failing to render.
+  fs.writeFileSync(document, buildThemeMock(theme, { fontCss: themeMockFontCss() }), 'utf8');
   return { dir, document, manifest: read.manifest };
 }
 

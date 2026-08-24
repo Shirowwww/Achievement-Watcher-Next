@@ -315,42 +315,6 @@
   --warning: #dbbc7f;
   --danger: #e67e80;
 }
-:root[data-theme='cyberpunk'] {
-  --bg-base: #0d0d1a;
-  --bg-glow: #191936;
-  --bg-panel: #101020;
-  --bg-panel-translucent: #101020b5;
-  --surface: #1e1e3d;
-  --set-surface: #151530;
-  --border: #34346e;
-  --text: #e8e8ff;
-  --text-muted: #9494c8;
-  --accent: #ff2a6d;
-  --accent-soft: rgba(255, 42, 109, 0.18);
-  --surface-elevated: #262650;
-  --surface-sunken: #090914;
-  --success: #00ff9f;
-  --warning: #ffd60a;
-  --danger: #ff3860;
-}
-:root[data-theme='ember'] {
-  --bg-base: #20160f;
-  --bg-glow: #2e2016;
-  --bg-panel: #19110c;
-  --bg-panel-translucent: #19110cb5;
-  --surface: #332316;
-  --set-surface: #261a11;
-  --border: #5a4634;
-  --text: #f5e6d3;
-  --text-muted: #b8a08a;
-  --accent: #ff9e3d;
-  --accent-soft: rgba(255, 158, 61, 0.18);
-  --surface-elevated: #3d2b1c;
-  --surface-sunken: #150e09;
-  --success: #a7c080;
-  --warning: #ffd166;
-  --danger: #e06c5a;
-}
 :root[data-theme='ocean'] {
   --bg-base: #0b1e26;
   --bg-glow: #12323d;
@@ -368,60 +332,6 @@
   --success: #7fbbb3;
   --warning: #e6b450;
   --danger: #e67e80;
-}
-:root[data-theme='hacker'] {
-  --bg-base: #0a0f0a;
-  --bg-glow: #101a10;
-  --bg-panel: #070c07;
-  --bg-panel-translucent: #070c07b5;
-  --surface: #122012;
-  --set-surface: #0c130c;
-  --border: #1f3a1f;
-  --text: #c8ffc8;
-  --text-muted: #5f8f5f;
-  --accent: #33ff66;
-  --accent-soft: rgba(51, 255, 102, 0.18);
-  --surface-elevated: #172917;
-  --surface-sunken: #040804;
-  --success: #33ff66;
-  --warning: #ffd60a;
-  --danger: #ff3860;
-}
-:root[data-theme='burgundy'] {
-  --bg-base: #1a0d12;
-  --bg-glow: #2a1420;
-  --bg-panel: #140a0e;
-  --bg-panel-translucent: #140a0eb5;
-  --surface: #311a24;
-  --set-surface: #221017;
-  --border: #553040;
-  --text: #f2dce2;
-  --text-muted: #b58b98;
-  --accent: #e0527a;
-  --accent-soft: rgba(224, 82, 122, 0.18);
-  --surface-elevated: #3a2230;
-  --surface-sunken: #10070b;
-  --success: #a7c080;
-  --warning: #f0b429;
-  --danger: #ff5470;
-}
-:root[data-theme='champagne'] {
-  --bg-base: #0d1526;
-  --bg-glow: #182338;
-  --bg-panel: #0a101d;
-  --bg-panel-translucent: #0a101db5;
-  --surface: #1c2942;
-  --set-surface: #121c30;
-  --border: #33405c;
-  --text: #ece9dd;
-  --text-muted: #97a0b3;
-  --accent: #f0c96b;
-  --accent-soft: rgba(240, 201, 107, 0.18);
-  --surface-elevated: #233252;
-  --surface-sunken: #070c16;
-  --success: #9ece6a;
-  --warning: #f0c96b;
-  --danger: #e06c75;
 }
 
 html,
@@ -2469,6 +2379,32 @@ body.is-resizing #game-list {
 
 #settings,
 #game-config {
+  /*
+    How tall the scrolling pane of the modal is. Written here rather than repeated, because the
+    preset designer pins its preview to the top of that pane and has to leave something to
+    scroll under it - a size in viewport units cannot know that, and got it wrong on a short
+    window where the pane is barely half the screen.
+  */
+  /*
+    How tall the scrolling pane of the modal is, named once because the preset designer pins its
+    preview to the top of that pane and has to leave something to scroll under it - a size in
+    viewport units cannot know that, and got it wrong on a short window where the pane is barely
+    half the screen.
+
+    560px was a ceiling as well as a floor, so a tall screen got the same short pane a 800px one
+    did. It now grows to 760 and stops there.
+  */
+  /*
+    Grows with the window and stops at 820px, where it used to be pinned at 590 - so a 1440p
+    screen got the same short pane a 1280x800 one did. Below roughly an 830px window the last
+    term decides, which is every height that was already tuned by hand.
+
+    The rule that reads it is further down the file (there are two #settings .box .content
+    blocks and the later one wins), and the preset designer sizes its pinned preview from it: the
+    preview comes out of the controls below it, so it has to be a share of the pane rather than of
+    the window - on a 900x600 window the pane is barely half the screen.
+  */
+  --set-pane-height: min(max(590px, 64vh), 820px, calc(100vh - 250px));
   display: none;
   /* Reserve the custom title bar's 30px so the centered box isn't clipped under it
      (matches #onboarding's inset, which already gets this right) on short windows. */
@@ -2653,7 +2589,7 @@ body.is-resizing #game-list {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  height: min(560px, calc(100vh - 270px));
+  height: var(--set-pane-height);
   color: var(--text-muted);
   text-align: center;
 }
@@ -2736,7 +2672,7 @@ body.is-resizing #game-list {
 #settings .box .content,
 #game-config .box .content {
   width: 100%;
-  height: min(560px, calc(100vh - 270px));
+  height: var(--set-pane-height);
   margin: 0;
   background: var(--set-content-bg);
   padding: 18px 24px;
@@ -6714,7 +6650,7 @@ body {
      screens and drags the whole modal off-screen with it, since .container stretches to fit
      its tallest child. The 30px it runs taller than `.box .content` below is deliberate margin,
      not a mismatch - don't "align" the two. */
-  height: min(590px, calc(100vh - 250px));
+  height: var(--set-pane-height);
   /* The column follows its labels rather than cropping them: `max-content` sizes it to the longest
      one in whatever language is loaded, `min-width` keeps it from looking cramped in the short ones,
      and `max-width` stops a long translation from eating the panel beside it. Only a label past that
@@ -6925,9 +6861,9 @@ body {
   }
 }
 
-
 #settings .box .content {
-  height: min(590px, calc(100vh - 250px));
+  /* The same formula as #settingNav above, which is deliberately kept in step with it. */
+  height: var(--set-pane-height);
   padding: 22px 24px 30px;
   border-radius: var(--radius-md);
   border-color: var(--set-hairline-soft);
@@ -9243,8 +9179,18 @@ body {
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 190px;
-  padding: 14px;
+  /*
+    Pinned, so whatever height this takes is taken from the controls for good - which is why it is
+    a share of the PANE and not of the window (on a 900x600 window the pane is about 330px, and a
+    stage sized against the screen left nothing under it to scroll).
+
+    The ceiling is generous because ui/settings.js sets the height to what the popup needs and no
+    more: a short design gives the controls their room back on its own, so the cap only has to be
+    high enough that a tall one is not squashed to fit it.
+  */
+  min-height: 96px;
+  max-height: min(240px, calc(var(--set-pane-height, 560px) * 0.34));
+  padding: 12px;
   box-sizing: border-box;
   overflow: hidden;
   border: 1px solid var(--set-hairline-soft);
@@ -10213,6 +10159,116 @@ body {
   margin: 0 0 10px;
 }
 
+/*
+  The theme's name. A required field at the top of the card rather than something asked for at
+  export time: a theme without a name has nothing to be called in the picker either, so the moment
+  to ask is while it is being made.
+*/
+#theme-customizer .theme-name-field {
+  display: grid;
+  gap: 5px;
+  margin: 0 0 12px;
+}
+
+#theme-customizer .theme-name-label {
+  color: var(--text-muted);
+  font-size: 11.5px;
+}
+
+#theme-customizer .theme-name-label::after {
+  content: ' *';
+  color: var(--accent);
+}
+
+/* The name and the button that uses it, on one line: they are one action, and reading them apart
+   would leave the field looking like a setting that applies itself. */
+#theme-customizer .theme-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+#theme-customizer #btn-save-theme {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 4px 14px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  border-color: transparent;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+#theme-customizer #btn-save-theme i {
+  color: inherit;
+}
+
+#theme-customizer #btn-save-theme:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 82%, white);
+}
+
+/* Nothing to save without a name, and the field beside it says why. */
+#theme-customizer #btn-save-theme:disabled {
+  background: color-mix(in srgb, var(--set-surface) 80%, transparent);
+  border-color: color-mix(in srgb, var(--border) 45%, transparent);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+#theme-customizer .theme-save-status {
+  margin: 6px 0 0;
+  min-height: 15px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+#theme-customizer .theme-save-status.ok {
+  color: var(--accent);
+}
+
+#theme-customizer .theme-save-status.error {
+  color: #ff7b72;
+}
+
+#theme-customizer .theme-save-status:empty {
+  display: none;
+}
+
+#theme-customizer #theme-customizer-name {
+  flex: 1 1 200px;
+  width: auto;
+  max-width: 320px;
+  box-sizing: border-box;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--set-control-border);
+  border-radius: 8px;
+  background: var(--set-control-bg);
+  color: var(--text);
+  font-family: 'Open-Sans';
+  font-size: 12.5px;
+}
+
+#theme-customizer #theme-customizer-name.is-missing {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--set-control-border));
+}
+
+#theme-customizer .theme-name-hint {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+/* The hint only has something to say while the field is empty; once it is named, the sentence would
+   be a permanent reminder of a problem that no longer exists. Keyed off the block rather than off
+   the input beside it: the input has the Save button next to it now, so the two are no longer
+   siblings and an adjacent selector would silently never match again. */
+#theme-customizer .theme-name-field:not(.is-missing) .theme-name-hint {
+  display: none;
+}
+
 #theme-customizer-layers {
   display: grid;
   gap: 8px;
@@ -10305,18 +10361,36 @@ body {
   color: var(--text);
   font-size: 13px;
   line-height: 1.25;
-  /* The name is the one thing here that may take a second line; a word longer than the column
-     breaks rather than widening the row. */
-  overflow-wrap: anywhere;
+  /*
+    The name may take a second line, and wraps between words. Not `anywhere`: that makes the column's
+    min-content width one character, so the label shrank to whatever the controls left and split
+    "bibliothèque" across two lines mid-word. `break-word` keeps the longest word intact unless it
+    genuinely cannot fit, which is the difference between a name that wraps and a name that breaks.
+  */
+  overflow-wrap: break-word;
 }
 
+/*
+  The sentence that says what a layer paints, on a line of its own under the name and the controls.
+
+  It used to be cropped to one line with an ellipsis, which hid the end of "Game tiles, achievement
+  rows, dialogs" in English and rather more in the languages that need more words - the row only
+  explained itself to whoever already knew. Wrapping it where it stood was no better: the controls
+  cannot be narrowed, so the label column is around eighty pixels and the sentence became a
+  five-line ribbon. Given the full width of the row it wraps the way a sentence does.
+
+  The indent lines it up under the layer's name: the swatch, the gap and the icon column.
+*/
 #theme-customizer .theme-layer-hint {
+  flex: 1 1 100%;
+  margin: 3px 0 0 var(--theme-hint-indent, 94px);
   color: var(--text-muted);
   font-size: 11px;
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.35;
+}
+
+#theme-customizer .theme-layer-hint:empty {
+  display: none;
 }
 
 #theme-customizer .theme-layer-controls {
@@ -10578,6 +10652,16 @@ body {
   #theme-customizer .theme-layer-controls {
     flex-wrap: wrap;
   }
+
+  /* Stacked: there is no swatch column to the left any more, so the hint starts at the edge, and
+     its basis stops being a width - on a column the main axis is the height. */
+  #theme-customizer .theme-layer-row {
+    --theme-hint-indent: 0px;
+  }
+
+  #theme-customizer .theme-layer-hint {
+    flex: 0 0 auto;
+  }
 }
 
 /* Portable themes (.awtheme): the import/export row, and the frame that shows one before it is
@@ -10590,18 +10674,6 @@ body {
   font-size: 11.5px;
   line-height: 1.45;
   margin: 0 0 10px;
-}
-
-/*
-  The heading chip. It reuses the emulator heading's layout, but not its colour: that class is the
-  warning amber, and "one portable file" is a statement of fact rather than something to worry
-  about. Stated in the theme's own muted colour instead, so it follows the palette like every other
-  label in the card.
-*/
-#theme-library .emulator-warning {
-  border-color: color-mix(in srgb, var(--border) 45%, transparent);
-  color: var(--text-muted);
-  background: color-mix(in srgb, var(--set-surface) 70%, transparent);
 }
 
 #theme-library .theme-library-actions {
@@ -10647,8 +10719,17 @@ body {
   background: var(--set-scrim);
 }
 
+/*
+  The window is allowed to be 900x600 (app/package.json), and the modal has to be usable there: a
+  box sized only by its content was taller than the window it sat in, so the sample, the palette and
+  the two buttons that decide the import were all below the bottom edge. Header and actions are
+  pinned, and only the middle scrolls, so the decision is always reachable.
+*/
 #theme-preview .box {
-  width: min(900px, calc(100vw - 64px));
+  width: min(900px, calc(100vw - 48px));
+  max-height: calc(100% - 24px);
+  display: flex;
+  flex-direction: column;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -10659,6 +10740,11 @@ body {
   border: 1px solid var(--set-hairline);
   background: linear-gradient(180deg, var(--set-modal-top) 0%, var(--set-modal-bottom) 100%);
   box-shadow: 0 28px 70px rgba(0, 0, 0, calc(0.48 * var(--shadow-scale)));
+}
+
+#theme-preview .box .header,
+#theme-preview .theme-preview-actions {
+  flex: 0 0 auto;
 }
 
 #theme-preview .box .header {
@@ -10674,6 +10760,10 @@ body {
   padding: 16px;
   display: grid;
   gap: 12px;
+  align-content: start;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /*
@@ -10684,7 +10774,14 @@ body {
 */
 #theme-preview .theme-preview-frame {
   position: relative;
-  width: 100%;
+  /*
+    Width first, height derived - but capped by how tall the window actually is, so a short window
+    gets a smaller picture of the same sample rather than one that runs off the bottom. Multiplying
+    the height cap by the sample's own ratio (set from themeMock.DESIGN alongside the two custom
+    properties below) keeps the framing exactly the one a gallery card promises at every size.
+  */
+  width: min(100%, calc(var(--theme-preview-maxh, 46vh) * var(--theme-preview-ratio, 1.6)));
+  margin: 0 auto;
   aspect-ratio: var(--theme-preview-w, 960) / var(--theme-preview-h, 600);
   border-radius: 10px;
   overflow: hidden;
@@ -10705,7 +10802,9 @@ body {
 
 #theme-preview .theme-preview-meta {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  /* `max-content` on the label column let a long translated label ("Nécessite", "Beschreibung")
+     push the values off the right edge; the cap keeps the pair readable and wraps instead. */
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
   gap: 4px 14px;
   margin: 0;
   font-size: 12.5px;
@@ -10796,7 +10895,26 @@ body {
   }
 }
 
-@media (max-width: 760px) {
+/*
+  How much of a short window the sample may take. The app's minimum is 900x600, and at that height a
+  picture sized only by the modal's width left the palette, the note and the two buttons below the
+  bottom edge. Shrinking the picture is the right trade: it is the same framing either way, and what
+  it costs is detail in a preview, where what it buys is being able to say yes or no at all.
+*/
+#theme-preview {
+  --theme-preview-maxh: 42vh;
+}
+
+@media (max-height: 760px) {
+  #theme-preview {
+    --theme-preview-maxh: 30vh;
+  }
+}
+
+/* The app's own minimum window width (900px, app/package.json) never lets #settings reach a
+   760px viewport, so this never fired at any real window size. 1050px is the threshold that
+   actually engages, matching the other #settings narrow-width rules below. */
+@media (max-width: 1050px) {
   #settings .uplay-r2-settings-body > li.hasHelper,
   #settings #options-uplay > li.hasHelper,
   #settings .uplay-r2-package-row {

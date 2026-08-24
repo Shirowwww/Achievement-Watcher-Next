@@ -75,10 +75,35 @@ const BASE_TOKENS = `
 const LAYOUT = `
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
+/*
+  The application's own typography, name for name with app.css: Raleway is what the app sets on the
+  whole window, and Open Sans is what the parts of it that carry real text - the title bar, the game
+  tiles, the achievement rows, the settings surface - are set in. The faces themselves are optional
+  (see util/themeFonts.js); the stack behind each one is what a document without them falls back to.
+*/
 body {
-  font-family: 'Segoe UI', 'Open Sans', system-ui, sans-serif;
+  font-family: 'Raleway', 'Segoe UI', system-ui, sans-serif;
   color: var(--text);
   overflow: hidden;
+}
+.mock-header,
+.mock-tools,
+#game-list .game-box .info,
+#achievement .achievement-list,
+#settings .box .row,
+#settings .box .foot {
+  font-family: 'Open-Sans', 'Segoe UI', system-ui, sans-serif;
+}
+.mock-header .name,
+.mock-profile .who > strong,
+.mock-profile .pill b,
+#game-list .game-box .info .title,
+#achievement .achievement-list .ach-name,
+#settings .box .head {
+  font-family: 'Open-Sans-Bold', 'Open-Sans', 'Segoe UI', system-ui, sans-serif;
+}
+.section-label {
+  font-family: 'Raleway-Bold', 'Raleway', 'Segoe UI', system-ui, sans-serif;
 }
 .mock { display: grid; grid-template-rows: auto 1fr; height: 100%; }
 
@@ -347,6 +372,13 @@ function buildThemeMock(theme, options = {}) {
   const clean = sanitizeCustomTheme(theme);
   const labels = { ...DEFAULT_LABELS, ...(options.labels && typeof options.labels === 'object' ? options.labels : {}) };
   const title = text(options.title, SAMPLE.title);
+  /*
+    `options.fontCss` is the app's typefaces as `@font-face` rules over `data:` URLs, built by
+    util/themeFonts.js. Passed in rather than read here, so this file still touches no disk and the
+    document is still a pure function of the model it was given. Anything else is refused: the one
+    thing this page must never carry is a stylesheet somebody else wrote.
+  */
+  const fontCss = typeof options.fontCss === 'string' && options.fontCss.trim().startsWith('@font-face') ? options.fontCss : '';
 
   // The veil the generated stylesheet computes for the header, as a layer this markup can paint.
   const veilHeader = '--aw-veil-header-layer: linear-gradient(var(--aw-veil-header, transparent), var(--aw-veil-header, transparent));';
@@ -356,10 +388,14 @@ function buildThemeMock(theme, options = {}) {
     '<html lang="en">',
     '<head>',
     '<meta charset="utf-8" />',
-    // Nothing on this page loads anything: no script, no font, no network. Stated rather than
-    // assumed, because this document is also opened by a browser on the gallery server.
-    `<meta http-equiv="content-security-policy" content="default-src 'none'; img-src file: data:; style-src 'unsafe-inline'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'" />`,
+    // Nothing on this page loads anything from anywhere: no script, no network, and the only fonts
+    // it may use are the ones it carries itself. Stated rather than assumed, because this document
+    // is also opened by a browser on the gallery server.
+    `<meta http-equiv="content-security-policy" content="default-src 'none'; img-src file: data:; font-src data:; style-src 'unsafe-inline'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'" />`,
     `<title>${title}</title>`,
+    // The typefaces first: a face declared after the rule that asks for it still applies, but
+    // declaring it here keeps the document readable in the order it is built.
+    fontCss ? `<style>${fontCss}</style>` : '',
     `<style>${BASE_TOKENS}</style>`,
     `<style>${buildCustomAppCss(clean)}</style>`,
     `<style>:root { ${veilHeader} }${LAYOUT}</style>`,

@@ -12,7 +12,9 @@ submission. There is no form: the name, the description, the version, the tags, 
 AW Next version it needs are read out of the package, the picture is rendered from the theme itself,
 and the name it is published under is chosen for you.
 
-1. **Export the theme.** Settings, Theme, Export. One file, and nothing to fill in there.
+1. **Export the theme.** Settings, Theme, Export. The only thing it needs is the theme's own name,
+   which you gave it in the editor: it becomes the file name and the name the gallery publishes it
+   under. Nothing else to fill in there.
 2. **Drop it on the panel.** Beside the file button there are three optional boxes: a description,
    some tags, and the name you want to be credited under. Leave them empty and whatever the package
    carries is used instead. It then takes a few seconds, because the app is really drawn with your

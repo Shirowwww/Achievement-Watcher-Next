@@ -11,6 +11,7 @@ const { escapeHtml } = require(path.join(appPath, 'util/escapeHtml.js'));
 const userThemes = require(path.join(appPath, 'util/userThemes.js'));
 const themeLayers = require(path.join(appPath, 'util/themeLayers.js'));
 const themeMock = require(path.join(appPath, 'util/themeMock.js'));
+const themeFonts = require(path.join(appPath, 'util/themeFonts.js'));
 const DEFAULT_THEME_COLOR = themeLayers.BUILTIN_COLORS.default.bg;
 const scanScopeTools = require(path.join(appPath, 'parser/scanScope.js'));
 const emulatorFixEligibility = require(path.join(appPath, 'util/emulatorFixEligibility.js'));
@@ -154,13 +155,16 @@ window.applyInterfaceMode = applyInterfaceMode;
 
 // Apply a stored theme value: built-ins switch <html data-theme>, while user themes, the Custom
 // theme and imported .awtheme files inject their CSS through the shared user-theme <style> element.
+// Returns a promise that settles once the new stylesheet is actually on the page. Callers that only
+// want the window repainted can ignore it; deleting a theme cannot, because the window holds every
+// image the old stylesheet names open until the moment it is replaced.
 function applyThemeValue(value) {
   if (userThemes.usesInjectedCss(value)) {
     document.documentElement.dataset.theme = 'default';
   } else {
     document.documentElement.dataset.theme = value || 'default';
   }
-  ipcRenderer
+  return ipcRenderer
     .invoke('get-theme-payload', value || 'default')
     .then((payload) => {
       const css = [payload && payload.appCss ? payload.appCss : '', payload && payload.userCss ? payload.userCss : ''].join('\n');
@@ -188,12 +192,7 @@ const MORE_THEMES = [
   ['rosepine', 'Rosé Pine'],
   ['synthwave', "Synthwave '84"],
   ['everforest', 'Everforest'],
-  ['cyberpunk', 'Cyberpunk'],
-  ['ember', 'Ember'],
   ['ocean', 'Ocean'],
-  ['hacker', 'Hacker'],
-  ['burgundy', 'Burgundy'],
-  ['champagne', 'Champagne'],
 ];
 // One sentinel toggles the list both ways; only its label changes.
 const MORE_THEMES_VALUE = '__more-themes__';
@@ -213,6 +212,18 @@ function themeOption(value, label) {
 // Imported .awtheme entries, kept so the Delete button knows whether the selected theme is one the
 // app installed and may remove. Refreshed with the dropdown.
 let installedThemes = [];
+
+/*
+  "Custom…" is a permanent row, and never the name of a theme.
+
+  It is the scratch slot: always there, always editable, and what it holds survives between visits.
+  Naming happens through Save in the editor, which writes a theme of its own and leaves this row
+  free for the next idea - so the row keeps its invitation wording however many themes are saved
+  from it.
+*/
+function customThemeLabel() {
+  return t('themeCustom', 'Custom…', 'Personnalisé…');
+}
 
 // Populate the theme dropdown: the built-ins + Custom + any imported .awtheme + any user theme in
 // <userData>\themes.
@@ -235,13 +246,11 @@ function populateThemeSelect(preferred) {
       .attr('value', MORE_THEMES_VALUE)
       .text(themeListExpanded ? t('themeFewer', 'Fewer themes…', 'Moins de thèmes…') : t('themeMore', 'More themes…', 'Plus de thèmes…'))
   );
-  sel.append($('<option>').attr('value', 'custom').text(t('themeCustom', 'Custom…', 'Personnalisé…')));
-  // Both lists in one round trip: an imported theme is an ordinary entry here, and a user
-  // stylesheet stays labelled as one, so the picker keeps reading in a single pass.
-  Promise.all([
-    ipcRenderer.invoke('list-installed-themes').catch(() => []),
-    ipcRenderer.invoke('list-user-themes').catch(() => []),
-  ])
+  sel.append($('<option>').attr('value', 'custom').text(customThemeLabel()));
+  // Both lists in one round trip: a theme the user saved, and one somebody sent them, are the same
+  // kind of entry here, and a user stylesheet stays labelled as one - so the picker keeps reading in
+  // a single pass.
+  Promise.all([ipcRenderer.invoke('list-installed-themes').catch(() => []), ipcRenderer.invoke('list-user-themes').catch(() => [])])
     .then(([imported, themes]) => {
       installedThemes = Array.isArray(imported) ? imported : [];
       installedThemes.forEach((theme) => sel.append(themeOption(theme.value, theme.name)));
@@ -993,7 +1002,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         // The Custom theme editor saves live; restore the snapshot taken when it opened.
         if (customThemeSnapshot) {
           ipcRenderer
-            .invoke('save-custom-theme', customThemeSnapshot)
+            // Colours only, and deliberately no name: the slot's name is not something the editor
+            // changes any more, so a restore that carried one would be inventing a change to undo.
+            .invoke('save-custom-theme', { theme: customThemeSnapshot })
             .then((payload) => {
               if (payload && payload.appCss) userThemes.applyCss(payload.appCss);
               ipcRenderer.send('theme-changed', 'custom');
@@ -1157,7 +1168,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       withSettingsTimeout(Promise.all([userDir.save(userDirList), libraryDirs.save(libraryDirList), applyStartup]), 'Saving folders/startup')
         .then(() => withSettingsTimeout(settings.save(app.config), 'Writing options.ini'))
         .then(() => {
-          closeCustomThemeEditor();
+          closeThemeEditor();
           ipcRenderer.send('theme-changed', $('#option_theme').val() || 'default');
           $('#settings .box').fadeOut(() => {
             self.css('pointer-events', 'initial');
@@ -1674,6 +1685,20 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     let customThemeDraft = null;
     let customThemeSnapshot = null;
     let customThemeSaveTimer = null;
+    /*
+      Which theme the editor is showing, and which built-in palette it descends from.
+
+      `editingValue` is what decides whether an edit is written or only previewed - see
+      scheduleCustomThemeSave. `editingBase` is recorded in a saved theme's manifest so a theme built
+      on Nord can say so, and travels through an export unchanged.
+    */
+    let editingValue = '';
+    let editingBase = '';
+
+    // What the picker currently calls the selected theme, with the "…" of an invitation trimmed off.
+    function selectedThemeLabel() {
+      return $('#option_theme option:selected').text().replace(/…$/, '').trim();
+    }
 
     function customThemeFromDom() {
       const draft = {};
@@ -1743,13 +1768,17 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         // Remember the resolved preview image (source or blur copy) so the live gradient
         // refresh can rebuild the swatch exactly like the real renderer does.
         row.data('previewImage', previewImage);
+        /*
+          The name sits beside the controls; the sentence that says what the layer paints gets a line
+          of its own under both. The controls cannot be narrowed, so the label column is about eighty
+          pixels wide - which is why the hint used to be cut off with an ellipsis, and why wrapping it
+          in place would have broken it into a five-line ribbon instead. On its own line it has the
+          whole row and reads as a sentence.
+        */
         const label = $('<div>')
           .addClass('theme-layer-label')
-          .html(
-            `<i class="fas ${meta.icon}"></i><div class="theme-layer-label-text">` +
-              `<div class="theme-layer-name">${escapeHtml(meta.label)}</div>` +
-              `<div class="theme-layer-hint">${escapeHtml(meta.hint || '')}</div></div>`
-          );
+          .html(`<i class="fas ${meta.icon}"></i><div class="theme-layer-label-text">` + `<div class="theme-layer-name">${escapeHtml(meta.label)}</div></div>`);
+        const hint = $('<div>').addClass('theme-layer-hint').text(meta.hint || '');
         const controls = $('<div>').addClass('theme-layer-controls');
         const layerAlpha = themeLayers.colorAlpha(layer.color);
         // The picker only understands #rrggbb: feeding it the stored #rrggbbaa makes Chromium reject
@@ -1875,7 +1904,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           controls.append(effectToggle);
           row.data('effectPanel', effectPanel);
         }
-        row.append(preview, label, controls);
+        row.append(preview, label, controls, hint);
         const gradientPanelEl = row.data('gradientPanel');
         if (gradientPanelEl) row.append(gradientPanelEl);
         const effectPanelEl = row.data('effectPanel');
@@ -1902,11 +1931,47 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     }
 
+    /*
+      The name the Save button will use. Sanitized with exactly the rules util/themeLayers.js applies
+      on the way to disk, so what the field shows after a save is what it said before it - a trailing
+      space or a `?` vanishing on its own would read as the app refusing the name rather than
+      tidying it.
+    */
+    function themeNameFromDom() {
+      return themeLayers.sanitizeCustomThemeName($('#theme-customizer-name').val());
+    }
+
+    // Save has nothing to write without a name, so it says so rather than inventing one.
+    function refreshThemeNameState() {
+      const named = Boolean(themeNameFromDom());
+      $('#theme-customizer-name').toggleClass('is-missing', !named).attr('aria-invalid', named ? 'false' : 'true');
+      // The block carries it too: the hint is no longer a sibling of the input, so the stylesheet
+      // has to read the state from something that contains both.
+      $('.theme-name-field').toggleClass('is-missing', !named);
+      $('#btn-save-theme').prop('disabled', !named);
+      $('#theme-customizer-name-hint').text(
+        t('theme-name-required', 'Name your theme to show it in the list and export it.', 'Nomme ton thème pour l’afficher dans la liste et l’exporter.')
+      );
+      return named;
+    }
+
+    /*
+      Show the draft, and persist it only where persisting is what the user asked for.
+
+      Every theme is editable now, so an edit means two different things depending on what is
+      selected. On the Custom slot it is the slot's own content: it is written straight away, the way
+      a scratchpad works, and is still there next time. On anything else - a built-in, or a theme
+      that was saved or imported - it is a draft over somebody's finished theme, so nothing is
+      written and Save is what turns it into a theme of its own. That is what keeps a built-in being
+      the built-in, and what makes "save under another name" keep both.
+    */
     function scheduleCustomThemeSave() {
       clearTimeout(customThemeSaveTimer);
       customThemeSaveTimer = setTimeout(async () => {
+        const draft = customThemeFromDom();
         try {
-          const payload = await ipcRenderer.invoke('save-custom-theme', customThemeFromDom());
+          const channel = editingValue === 'custom' ? 'save-custom-theme' : 'preview-theme-model';
+          const payload = await ipcRenderer.invoke(channel, editingValue === 'custom' ? { theme: draft } : draft);
           if (payload && payload.appCss) userThemes.applyCss(payload.appCss);
           if (payload && payload.customTheme && customThemeDraft) {
             // Keep the generated blur paths without re-rendering (avoids losing focus mid-drag).
@@ -1915,12 +1980,19 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
               if (next && next.effect && customThemeDraft[id]) customThemeDraft[id].effect.blurImage = next.effect.blurImage;
             }
           }
-          ipcRenderer.send('theme-changed', 'custom');
+          // The overlay follows the draft too, so what is being designed is what would be shown.
+          if (payload && payload.overlayCss) ipcRenderer.send('theme-preview', payload);
         } catch (err) {
-          debug.log(`custom theme save failed: ${err}`);
+          debug.log(`theme draft failed: ${err}`);
         }
       }, 250);
     }
+
+    $('#theme-customizer-name').on('input', refreshThemeNameState);
+
+    // The hint under the field comes from the locale, and the language can change with the editor
+    // open, so it is re-read whenever the loader publishes new labels.
+    $(document).on('locale-labels-changed', refreshThemeNameState);
 
     function updateEffectPanel(row) {
       const enabled = row.find('.theme-layer-effect-enabled').is(':checked');
@@ -1930,22 +2002,52 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       row.find('.blur-group').toggle(enabled && isBlur);
     }
 
-    function openCustomThemeEditor() {
+    /*
+      Open the editor on whichever theme is selected.
+
+      The layer model comes from the main process, which knows how to produce one for a built-in
+      palette, for the Custom slot and for a theme on disk alike - so the editor does not need to
+      know which kind it is looking at, only that there is a model. A `user:` stylesheet is the one
+      kind with none: it is CSS somebody wrote rather than colours, so the editor stays shut for it.
+    */
+    function openThemeEditor(value) {
+      const opening = String(value || 'custom');
+      editingValue = opening;
       $('#theme-customizer').show();
+      // What the last save reported was about the theme being left, not the one being opened.
+      setThemeSaveStatus('');
       ipcRenderer
-        .invoke('get-theme-payload', 'custom')
-        .then((payload) => {
-          const theme = payload && payload.customTheme ? payload.customTheme : themeLayers.defaultCustomTheme();
-          customThemeSnapshot = theme;
+        .invoke('get-theme-model', opening)
+        .then((model) => {
+          /*
+            Still the theme being edited? Two selections close together settle in whatever order the
+            main process answers, and a late answer painting its layers under a newer editingValue
+            would leave the editor showing one theme while believing it holds another - which, with
+            the Custom slot selected, means the next edit writes the wrong colours into it.
+          */
+          if (editingValue !== opening) return;
+          if (!model) return closeThemeEditor();
+          const theme = model.theme || themeLayers.defaultCustomTheme();
+          customThemeSnapshot = opening === 'custom' ? theme : null;
+          editingBase = model.base || (Object.prototype.hasOwnProperty.call(themeLayers.BUILTIN_COLORS, opening) ? opening : '');
           renderCustomThemeLayers(theme);
+          /*
+            The field opens on what this theme is called, so Save with the name untouched means
+            "keep this one up to date" and Save after changing it means "make me a second one".
+            A built-in is named after its row in the picker, which is what the user is looking at.
+          */
+          $('#theme-customizer-name').val(model.name || selectedThemeLabel());
+          refreshThemeNameState();
         })
-        .catch((err) => debug.log(`custom theme load failed: ${err}`));
+        .catch((err) => debug.log(`theme load failed: ${err}`));
     }
 
-    function closeCustomThemeEditor() {
+    function closeThemeEditor() {
       $('#theme-customizer').hide();
       clearTimeout(customThemeSaveTimer);
       customThemeSnapshot = null;
+      editingValue = '';
+      editingBase = '';
     }
 
     $('#theme-customizer-layers').on('input change', '.theme-layer-color, .theme-layer-fit', () => scheduleCustomThemeSave());
@@ -2084,9 +2186,99 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     });
 
-    $('#theme-customizer-reset').on('click', function () {
-      renderCustomThemeLayers(themeLayers.defaultCustomTheme());
+    /*
+      Reset puts back the theme the editor was opened on, not a generic default.
+
+      Every theme is editable now, so "reset" has an obvious meaning it did not have before: undo
+      what I changed about THIS theme. Reading the model back from the main process is what makes
+      that exact - a built-in returns its own palette, a saved or imported theme returns what is on
+      disk. The Custom slot is the one with nothing to go back to, since what is stored is what you
+      are editing, so there it stays the default palette.
+    */
+    $('#theme-customizer-reset').on('click', async function () {
+      if (!editingValue || editingValue === 'custom') {
+        renderCustomThemeLayers(themeLayers.defaultCustomTheme());
+        scheduleCustomThemeSave();
+        return;
+      }
+      try {
+        const model = await ipcRenderer.invoke('get-theme-model', editingValue);
+        renderCustomThemeLayers((model && model.theme) || themeLayers.defaultCustomTheme());
+      } catch (err) {
+        debug.log(`theme reset failed: ${err}`);
+        renderCustomThemeLayers(themeLayers.defaultCustomTheme());
+      }
       scheduleCustomThemeSave();
+    });
+
+    function setThemeSaveStatus(message, kind) {
+      $('#theme-save-status').text(message || '').removeClass('ok error').addClass(kind || '');
+    }
+
+    /*
+      Save what the editor is holding as a theme of the user's own.
+
+      The name decides everything: unchanged it updates the theme it was opened on, changed it makes
+      a second theme and leaves the first alone. A name that is already taken is never overwritten
+      silently - the first call reports the clash and writes nothing, and only an explicit Replace
+      calls back with a policy, the same two-step an import uses.
+
+      Saving from the Custom slot leaves the slot itself untouched. That is the point of it: the
+      scratchpad keeps whatever is in it, and the saved theme goes on to live its own life in the
+      picker beside the built-ins.
+    */
+    $('#btn-save-theme').on('click', async function () {
+      const name = themeNameFromDom();
+      if (!name) {
+        refreshThemeNameState();
+        $('#theme-customizer-name').trigger('focus');
+        return;
+      }
+      const self = $(this);
+      self.prop('disabled', true);
+      try {
+        const request = { name, theme: customThemeFromDom(), base: editingBase };
+        let res = await ipcRenderer.invoke('save-theme-as', request);
+
+        if (res && !res.ok && res.error === 'duplicate') {
+          const choice = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+            type: 'question',
+            buttons: [t('replace-theme', 'Replace', 'Remplacer'), t('cancel', 'Cancel', 'Annuler')],
+            defaultId: 1,
+            cancelId: 1,
+            title: t('save-theme-duplicate-title', 'Theme already exists', 'Ce theme existe déjà'),
+            message: t('import-theme-duplicate-message', 'A theme named “{name}” is already installed.', 'Un theme nommé « {name} » est déjà installé.', {
+              name: res.name || name,
+            }),
+            detail: t(
+              'save-theme-duplicate-detail',
+              'Replacing overwrites it with what the editor is showing. To keep both, give this one another name.',
+              'Remplacer l’écrase par ce que montre l’éditeur. Pour garder les deux, donne un autre nom à celui-ci.'
+            ),
+            noLink: true,
+          });
+          if (choice !== 0) {
+            setThemeSaveStatus('');
+            self.prop('disabled', false);
+            return;
+          }
+          res = await ipcRenderer.invoke('save-theme-as', { ...request, overwrite: true });
+        }
+
+        if (res && res.ok) {
+          // Selecting it rebuilds the picker and fires the change handler, which applies it and
+          // reopens the editor on the theme that now exists rather than on the draft.
+          populateThemeSelect(res.value);
+          setThemeSaveStatus(t('save-theme-done', 'Theme saved: {name}', 'Theme enregistré : {name}', { name: res.name }), 'ok');
+        } else {
+          setThemeSaveStatus(themeErrorText(res), 'error');
+        }
+      } catch (err) {
+        debug.log(err);
+        setThemeSaveStatus(themeErrorText({ error: String(err) }), 'error');
+      }
+      self.prop('disabled', false);
+      refreshThemeNameState();
     });
 
     /*
@@ -2115,9 +2307,15 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     function refreshThemeLibraryControls() {
       const value = String($('#option_theme').val() || 'default');
       const imported = installedTheme(value);
-      const shown = value === 'custom' || Boolean(imported);
+      /*
+        The card is there for every theme the app can write out, which is every theme except a
+        user stylesheet - a built-in included. Hiding it on a built-in was how "a built-in keeps
+        its name" used to be enforced, and it enforced it by leaving no way out of a theme you had
+        just spent ten minutes editing. The export refuses and says why instead.
+      */
+      const shown = value !== MORE_THEMES_VALUE && userThemes.parseValue(value) === null;
       $('#theme-library').toggle(shown);
-      $('#btn-export-theme').prop('disabled', userThemes.parseValue(value) !== null || value === MORE_THEMES_VALUE);
+      $('#btn-export-theme').prop('disabled', !shown);
       $('#btn-delete-theme').prop('hidden', !imported);
       // Only on the way out: the picker settles asynchronously after an import, so clearing on
       // every call would wipe the message the import had just written.
@@ -2145,6 +2343,23 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           'Un theme CSS ne peut pas être exporté. Partage plutôt le fichier .css lui-même.'
         );
       }
+      // The one refusal the user can act on immediately, so it says what to do rather than what
+      // went wrong.
+      if (error === 'theme-name-required') {
+        return t('theme-name-required', 'Name your theme to show it in the list and export it.', 'Nomme ton thème pour l’afficher dans la liste et l’exporter.');
+      }
+      /*
+        A built-in under its own name. The file would install as "Nord" on somebody else's machine
+        and shadow the Nord they already have, so the name has to become yours first - which is
+        also the moment it stops being the built-in and starts being your theme.
+      */
+      if (error === 'reserved-name') {
+        return t(
+          'export-theme-reserved-name',
+          'A built-in theme keeps its name. Give this one a name of your own in the editor below, then export it.',
+          'Un thème intégré garde son nom. Donne-lui un nom à toi dans l’éditeur ci-dessous, puis exporte-le.'
+        );
+      }
       const invalid = t('import-theme-invalid', 'This file is not a valid theme package.', 'Ce fichier n’est pas un paquet de theme valide.');
       return error ? `${invalid} (${error})` : invalid;
     }
@@ -2152,14 +2367,27 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     $('#btn-export-theme').on('click', async function () {
       const value = String($('#option_theme').val() || 'default');
       const self = $(this);
+      /*
+        An unnamed Custom theme is stopped here rather than in the file dialog: the user is looking
+        at the field that fixes it, so put them in it. The main process refuses the same case anyway,
+        for a caller that never saw this card.
+      */
+      if (value === 'custom' && !refreshCustomThemeNameState()) {
+        setThemeLibraryStatus(themeErrorText({ error: 'theme-name-required' }), 'error');
+        $('#theme-customizer-name').trigger('focus');
+        return;
+      }
       self.css('pointer-events', 'none');
       try {
         const known = installedTheme(value);
         const res = await ipcRenderer.invoke('export-theme', {
           value,
-          // An imported theme keeps its own name and credit through a re-export; anything else is
-          // named after the entry in the dropdown, which is what the user is looking at.
-          name: known ? known.name : $('#option_theme option:selected').text().replace(/…$/, '').trim(),
+          /*
+            An imported theme keeps its own name and credit through a re-export. Anything else is
+            named from the editor field, which is where the user would have renamed it - falling
+            back to the row in the picker, which is what a built-in is still called.
+          */
+          name: known ? known.name : themeNameFromDom() || selectedThemeLabel(),
         });
         if (res && res.ok) {
           setThemeLibraryStatus(t('export-theme-done', 'Theme exported: {name}', 'Theme exporté : {name}', { name: res.name }), 'ok');
@@ -2189,10 +2417,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     function fitThemePreview() {
       const wrap = document.querySelector('#theme-preview .theme-preview-frame');
       if (!wrap) return;
-      const width = wrap.clientWidth;
-      if (!width) return;
+      // The sample's own proportions, so the stylesheet can cap the picture by the window's height
+      // and still hand back a box of exactly this shape.
       wrap.style.setProperty('--theme-preview-w', String(themeMock.DESIGN.width));
       wrap.style.setProperty('--theme-preview-h', String(themeMock.DESIGN.height));
+      wrap.style.setProperty('--theme-preview-ratio', String(themeMock.DESIGN.width / themeMock.DESIGN.height));
+      const width = wrap.clientWidth;
+      if (!width) return;
       wrap.style.setProperty('--theme-preview-scale', String(width / themeMock.DESIGN.width));
     }
 
@@ -2272,6 +2503,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const frame = document.getElementById('theme-preview-frame');
       if (frame) {
         frame.srcdoc = themeMock.buildThemeMock(result.theme, {
+          // The app's own typefaces, carried inside the document: the frame runs under
+          // `default-src 'none'`, so a font it does not bring with it is a font it cannot have - and
+          // a sample of this window set in the machine's default sans is a sample of another program.
+          fontCss: themeFonts.themeMockFontCss(),
           labels: {
             library: t('theme-mock-library', 'Library', 'Bibliothèque'),
             achievements: t('theme-mock-achievements', 'Achievements', 'Succès'),
@@ -2394,17 +2629,33 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       });
       if (choice !== 0) return;
       /*
-        Stop painting it first. The window holds every image the theme brought open for as long as
-        the stylesheet refers to them, and Windows will not delete a folder whose files are open -
-        which is the EPERM this used to report. Moving the selection also has to happen before the
-        folder goes, or the window is left painted by a stylesheet nothing can rebuild.
+        Stop painting it first, and WAIT for that to have happened. The window holds every image the
+        theme brought open for as long as the stylesheet refers to them, and Windows will not delete
+        a folder whose files are open - which is the EPERM this used to report. Moving the selection
+        also has to happen before the folder goes, or the window is left painted by a stylesheet
+        nothing can rebuild.
+
+        Ordering the two calls was not enough on its own: applying a theme is a round trip to the
+        main process, so without the await the delete raced the swap it was supposed to follow, lost,
+        and reported failure. The theme was then no longer painted, so a second click on Delete
+        worked - which is exactly what a deleted imported theme needing two clicks looked like.
       */
       const wasSelected = String($('#option_theme').val() || '');
       populateThemeSelect('default');
-      applyThemeValue('default');
+      await applyThemeValue('default');
       try {
         const res = await ipcRenderer.invoke('delete-installed-theme', known.name);
         if (res && res.ok) {
+          /*
+            Rebuild the picker AFTER the folder is gone, not only before.
+
+            The list is read from theme storage, and the rebuild above ran while the theme was still
+            on disk - so it came back listing the theme that was about to be deleted, and nothing
+            re-read it afterwards. The row stayed, selecting it painted nothing (its folder had gone),
+            and Delete had to be pressed a second time to clear it: the theme was deleted the first
+            time, only the list had not caught up.
+          */
+          populateThemeSelect('default');
           setThemeLibraryStatus(t('delete-theme-done', 'Theme deleted: {name}', 'Theme supprimé : {name}', { name: res.name }), 'ok');
         } else {
           // Nothing was removed, so put the user back where they were.
@@ -2440,18 +2691,31 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
       themeSelection = value;
       applyThemeValue(value);
-      if (value === 'custom') openCustomThemeEditor();
-      else closeCustomThemeEditor();
+      /*
+        Every theme is editable, so the editor follows the picker instead of belonging to one row.
+        The only exception is a user stylesheet: it is CSS somebody wrote, not a set of colours, so
+        there is no model to put in front of the controls.
+      */
+      if (userThemes.parseValue(value)) closeThemeEditor();
+      else openThemeEditor(value);
       refreshThemeLibraryControls();
       ipcRenderer.send('theme-changed', value);
     });
 
-    // Let the mouse wheel cycle the value displayed between the arrows. This is
-    // especially useful for long lists while keeping the compact control aligned.
+    /*
+      Let the mouse wheel cycle the value displayed between the arrows. Useful for long lists, and it
+      keeps the compact control aligned.
+
+      Only where there are arrows to step, though. `.right` is a layout class as much as a kind of
+      row, and the preset designer's action rows carry it - so swallowing the wheel over anything
+      wearing it made the panel refuse to scroll wherever those rows happened to be, which on the
+      Presets tab is the whole bottom of the card.
+    */
     $('#settings .arrow-list .right').on('wheel', function (event) {
+      const stepper = $(this).find(event.originalEvent.deltaY > 0 ? '.next' : '.previous');
+      if (!stepper.length) return;
       event.preventDefault();
-      const direction = event.originalEvent.deltaY > 0 ? '.next' : '.previous';
-      $(this).find(direction).trigger('click');
+      stepper.trigger('click');
     });
 
     $('#option_lang').mouseover(function () {

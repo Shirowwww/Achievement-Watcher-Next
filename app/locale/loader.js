@@ -266,14 +266,17 @@ function translateUI(lang, locale, template) {
     $('#theme-settings-help').text(clear(template.settings.general.theme.description));
     $('#appearance-title').text(clear(template.settings.general.theme.name));
     $('#theme-customizer-title').text(clear(template.settings.general.theme.customTitle));
-    $('#theme-customizer-hint').text(clear(template.settings.general.theme.customHint));
     $('#theme-customizer-desc').text(clear(template.settings.general.theme.customDesc));
     $('#theme-customizer-reset span').text(clear(template.settings.general.theme.resetAll));
+    // The name the user gives their own theme. The hint under the field is a `dialogs` slug, since
+    // the same sentence is what an export refuses with; ui/settings.js writes it.
+    $('#theme-customizer-name-label').text(clear(template.settings.general.theme.customName));
+    $('#theme-customizer-name').attr('placeholder', clear(template.settings.general.theme.customNamePlaceholder));
+    $('#btn-save-theme span').text(clear(template.settings.general.theme.saveTheme));
     // Theme names themselves are proper nouns and stay untranslated.
     const library = template.settings.general.theme.library;
     if (library) {
       $('#theme-library-title').text(clear(library.title));
-      $('#theme-library-hint').text(clear(library.hint));
       $('#theme-library-desc').text(clear(library.description));
       $('#btn-import-theme span').text(clear(library.import));
       $('#btn-export-theme span').text(clear(library.export));

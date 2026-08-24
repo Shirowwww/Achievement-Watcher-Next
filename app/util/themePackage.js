@@ -670,6 +670,147 @@ function installThemePackage({ file, userDataPath, appVersion = '', duplicate = 
   }
 }
 
+/*
+  Save a layer model as a theme of the user's own, under a name they chose.
+
+  This is what the Save button in the theme editor writes, and it deliberately lands in the same
+  storage an imported `.awtheme` installs into: a theme somebody saved and a theme somebody sent
+  them are the same kind of thing afterwards, so they are listed, selected, exported and deleted by
+  one set of code rather than two.
+
+  The images come with it. A layer picture lives in the shared `theme-images` folder while it is
+  being edited, so a saved theme that pointed back at it would break the moment another theme reused
+  that slot or the file was cleaned up - `packagedTheme` copies each one in under a name built from
+  its layer, exactly as an export does, which is also why deleting the theme takes its pictures.
+
+  `overwrite` decides what an existing name means: false refuses, true replaces. Saving under a name
+  nothing uses is how you keep both the theme you started from and the one you just made.
+*/
+function saveThemeAs({ userDataPath, name, theme, meta = {}, appVersion = '', base = '', overwrite = false, reservedNames = [] }) {
+  const themeName = sanitizeThemeName(name);
+  if (!themeName) return fail('invalid-name');
+  if (reservedNames.map((n) => String(n).toLowerCase()).includes(themeName.toLowerCase())) {
+    return fail('reserved-name', { name: themeName });
+  }
+
+  const root = themePackDir(userDataPath);
+  const destination = path.join(root, themeName);
+  if (!isInside(root, destination)) return fail('outside-theme-storage');
+
+  const existed = fs.existsSync(destination);
+  if (existed && !overwrite) return fail('duplicate', { name: themeName });
+
+  // The bytes of every layer image, keyed by the name they will travel under. Same reader the
+  // export path uses, so a picture this refuses is a picture an export would have refused too.
+  const assets = new Map();
+  const used = new Set();
+  let total = 0;
+  const assetFor = (file, layerId) => {
+    const known = assets.get(file);
+    if (known) return known.name;
+
+    let data;
+    try {
+      const stat = fs.statSync(file);
+      if (!stat.isFile()) throw new Error('missing-asset');
+      if (stat.size > LIMITS.fileBytes) throw new Error('asset-too-large');
+      data = fs.readFileSync(file);
+    } catch (err) {
+      throw new Error(err.message === 'asset-too-large' ? 'asset-too-large' : 'missing-asset');
+    }
+
+    const info = imageInfo(data);
+    if (!info) throw new Error('not-an-image');
+    if (info.width > LIMITS.imageDimension || info.height > LIMITS.imageDimension || info.width * info.height > LIMITS.imagePixels) {
+      throw new Error('image-too-large');
+    }
+    if (assets.size >= LIMITS.assets) throw new Error('too-many-files');
+    total += data.length;
+    if (total > LIMITS.totalBytes) throw new Error('package-too-large');
+
+    const extension = EXT_FOR_TYPE[info.type] || '.png';
+    let asset = `${layerId}${extension}`;
+    for (let i = 2; used.has(asset); i += 1) asset = `${layerId}-${i}${extension}`;
+    used.add(asset);
+    assets.set(file, { name: asset, data });
+    return asset;
+  };
+
+  let packaged;
+  try {
+    packaged = packagedTheme(theme, assetFor);
+  } catch (err) {
+    return fail(String(err.message || err));
+  }
+  if (!packaged) return fail('missing-asset');
+
+  const manifest = {
+    format: THEME_PACKAGE_FORMAT,
+    formatVersion: THEME_PACKAGE_FORMAT_VERSION,
+    name: themeName,
+    description: cleanText(meta.description),
+    author: cleanText(meta.author, 80),
+    version: cleanText(meta.version, 32) || '1.0.0',
+    tags: cleanTags(meta.tags),
+    createdAt: new Date().toISOString(),
+    app: { createdWith: cleanText(appVersion, 32), minVersion: cleanText(meta.minAppVersion, 32) },
+    base: cleanBase(base),
+    assets: [...assets.values()].map((asset) => asset.name).sort((a, b) => a.localeCompare(b)),
+  };
+
+  const check = validateManifest(manifest, { appVersion });
+  if (!check.ok) return check;
+
+  // Built somewhere else and moved in one rename, like an install: a failure anywhere leaves the
+  // theme that was already there exactly as it was.
+  fs.mkdirSync(root, { recursive: true });
+  const staging = fs.mkdtempSync(path.join(root, '.awtheme-'));
+  const staged = path.join(staging, 'theme');
+  const backup = `${destination}.awtheme-old`;
+  let backedUp = false;
+
+  try {
+    fs.mkdirSync(path.join(staged, ASSETS_DIR), { recursive: true });
+    for (const asset of assets.values()) {
+      const target = path.join(staged, ASSETS_DIR, asset.name);
+      if (!isInside(staged, target)) throw new Error('unsafe-path');
+      fs.writeFileSync(target, asset.data);
+    }
+    fs.writeFileSync(path.join(staged, THEME_NAME), JSON.stringify(packaged, null, 2), 'utf8');
+    fs.writeFileSync(path.join(staged, THEME_INSTALLED_FILE), JSON.stringify(manifest, null, 2), 'utf8');
+
+    if (existed) {
+      fs.renameSync(destination, backup);
+      backedUp = true;
+    }
+    try {
+      fs.renameSync(staged, destination);
+    } catch (err) {
+      if (backedUp) {
+        fs.renameSync(backup, destination);
+        backedUp = false;
+      }
+      throw err;
+    }
+    if (backedUp) {
+      fs.rmSync(backup, { recursive: true, force: true });
+      backedUp = false;
+    }
+
+    return { ok: true, name: themeName, replaced: existed, assets: assets.size, theme: resolveInstalled(packaged, destination) };
+  } catch (err) {
+    if (backedUp) {
+      try {
+        fs.rmSync(destination, { recursive: true, force: true });
+        fs.renameSync(backup, destination);
+      } catch {}
+    }
+    return fail(String(err.message || err));
+  } finally {
+    fs.rmSync(staging, { recursive: true, force: true });
+  }
+}
+
 module.exports = {
   THEME_PACKAGE_EXTENSION,
   THEME_PACKAGE_FORMAT,
@@ -678,6 +819,7 @@ module.exports = {
   THEME_DERIVED_DIR,
   ASSETS_DIR,
   LIMITS,
+  saveThemeAs,
   sanitizeThemeName,
   safeAssetName,
   validateManifest,
