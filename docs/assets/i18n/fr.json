@@ -264,5 +264,5 @@
   "themes.uploadTooBig": "Ce thème dépasse 8 Mo, plus que ce que la galerie diffuse.",
   "themes.uploadWrongFile": "Ce n’est pas un fichier .awtheme. Exportez-en un depuis Réglages, Thème.",
   "themes.withImages": "avec images",
-  "themes.zoomNote": "Une représentation générée, pas une capture d'écran. Toujours la même fenêtre témoin, peinte avec ce thème, pour qu'une seule image montre à la fois la barre de titre, la bibliothèque, la liste des succès et la surface des réglages. Elle repose sur un fond fixe, afin qu'un thème translucide puisse être jugé tel qu'il apparaîtra vraiment."
+  "themes.zoomNote": "Une image générée, pas une capture : une fenêtre témoin peinte avec ce thème, montrant d'un coup la barre de titre, la bibliothèque, les succès et les réglages. Le fond est fixe, pour qu'un thème translucide reste lisible."
 }

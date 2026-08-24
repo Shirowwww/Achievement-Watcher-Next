@@ -264,5 +264,5 @@
   "themes.uploadTooBig": "Dieses Design ist über 8 MB, mehr als die Galerie ausliefert.",
   "themes.uploadWrongFile": "Das ist keine .awtheme-Datei. Exportiere eine unter Einstellungen, Design.",
   "themes.withImages": "mit Bildern",
-  "themes.zoomNote": "Eine erzeugte Darstellung, keine Bildschirmaufnahme. Jedes Mal dasselbe Musterfenster, mit diesem Design gezeichnet, sodass ein Bild zugleich die Titelleiste, die Bibliothek, die Erfolgsliste und die Einstellungsfläche zeigt. Es liegt auf einem festen Hintergrund, damit ein durchscheinendes Design so beurteilt werden kann, wie es tatsächlich aussehen wird."
+  "themes.zoomNote": "Ein erzeugtes Bild, keine Aufnahme: ein Musterfenster mit diesem Design, das Titelleiste, Bibliothek, Erfolge und Einstellungen auf einmal zeigt. Der Hintergrund ist fest, damit ein durchscheinendes Design lesbar bleibt."
 }

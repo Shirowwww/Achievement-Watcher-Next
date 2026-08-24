@@ -1647,7 +1647,7 @@ a.card:hover,
 .lightbox-note {
   margin: 0 auto;
   padding: 0 20px 16px;
-  max-width: 76ch;
+  max-width: 104ch;
   color: var(--muted);
   text-align: center;
   font-size: 0.86rem;

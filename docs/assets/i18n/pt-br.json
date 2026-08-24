@@ -264,5 +264,5 @@
   "themes.uploadTooBig": "Esse tema passa de 8 MB, mais do que a galeria serve.",
   "themes.uploadWrongFile": "Isso não é um arquivo .awtheme. Exporte um em Configurações, Tema.",
   "themes.withImages": "com imagens",
-  "themes.zoomNote": "Uma representação gerada, não uma captura de tela. Sempre a mesma janela de amostra, pintada com este tema, de modo que uma única imagem mostra ao mesmo tempo a barra de título, a biblioteca, a lista de conquistas e a superfície das configurações. Ela fica sobre um fundo fixo, para que um tema translúcido possa ser julgado do jeito que vai realmente aparecer."
+  "themes.zoomNote": "Uma imagem gerada, não uma captura: uma janela de amostra com este tema, mostrando de uma vez a barra de título, a biblioteca, as conquistas e as configurações. O fundo é fixo, para um tema translúcido continuar legível."
 }

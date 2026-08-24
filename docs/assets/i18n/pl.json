@@ -264,5 +264,5 @@
   "themes.uploadTooBig": "Ten motyw przekracza 8 MB, czyli więcej, niż galeria udostępnia.",
   "themes.uploadWrongFile": "To nie jest plik .awtheme. Wyeksportuj go w Ustawieniach, Motyw.",
   "themes.withImages": "z obrazami",
-  "themes.zoomNote": "Wygenerowane przedstawienie, a nie zrzut ekranu. Za każdym razem to samo przykładowe okno, pomalowane tym motywem, żeby jeden obraz pokazywał naraz pasek tytułu, bibliotekę, listę osiągnięć i powierzchnię ustawień. Stoi na stałym tle, żeby półprzezroczysty motyw dało się ocenić tak, jak naprawdę będzie wyglądał."
+  "themes.zoomNote": "Obraz wygenerowany, nie zrzut ekranu: przykładowe okno w tym motywie, pokazujące naraz pasek tytułu, bibliotekę, osiągnięcia i ustawienia. Tło jest stałe, żeby półprzezroczysty motyw pozostał czytelny."
 }

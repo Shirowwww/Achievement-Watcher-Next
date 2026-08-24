@@ -104,7 +104,7 @@
       zoomNote: function () {
         return t(
           'themes.zoomNote',
-          'A generated representation, not a screenshot. The same sample window every time, painted with this theme, so one picture shows the title bar, the library, the achievement list and the settings surface at once. It sits on a fixed backdrop so a see-through theme can be judged the way it will actually look.'
+          'A generated picture, not a screenshot: one sample window painted with this theme, showing the title bar, library, achievements and settings at once. The backdrop is fixed, so a see-through theme still reads.'
         );
       },
       emptyTitle: function () {
