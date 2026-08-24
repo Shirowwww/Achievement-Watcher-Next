@@ -307,7 +307,7 @@ fn estimate_scene_peak(raw: &[u8], white_scale: f32) -> f32 {
     1.0
 }
 
-const KNEE: f32 = 0.80;
+const KNEE: f32 = 0.85;
 
 fn tone_map_signal(value: f32, scene_peak: f32) -> f32 {
     let value = value.max(0.0);
@@ -382,6 +382,100 @@ fn desaturate_highlight(rgb: [f32; 3], pixel_peak: f32, scene_peak: f32) -> [f32
     ]
 }
 
+// Base/detail split (Durand/Reinhard style): only the tile-averaged brightness is compressed by
+// the global curve, so local shading near an unrelated bright peak keeps its own contrast.
+const LOCAL_TILE: usize = 64;
+const LOCAL_BLUR_RADIUS: usize = 1;
+const LOCAL_BLUR_PASSES: usize = 2;
+const LOG_EPS: f32 = 1e-4;
+
+fn build_local_base(
+    raw: &[u8],
+    width: u32,
+    copy_width: u32,
+    copy_height: u32,
+    white_scale: f32,
+) -> (Vec<f32>, usize, usize) {
+    let grid_w = ((copy_width as usize) + LOCAL_TILE - 1) / LOCAL_TILE;
+    let grid_h = ((copy_height as usize) + LOCAL_TILE - 1) / LOCAL_TILE;
+    let mut sum = vec![0f32; grid_w * grid_h];
+    let mut count = vec![0f32; grid_w * grid_h];
+
+    for y in 0..copy_height {
+        for x in 0..copy_width {
+            let source = ((y * width + x) * 8) as usize;
+            let peak = read_half(raw, source)
+                .max(read_half(raw, source + 2))
+                .max(read_half(raw, source + 4))
+                / white_scale;
+            let log_peak = (peak + LOG_EPS).ln();
+            let tile = (y as usize / LOCAL_TILE) * grid_w + (x as usize / LOCAL_TILE);
+            sum[tile] += log_peak;
+            count[tile] += 1.0;
+        }
+    }
+
+    let mut grid: Vec<f32> = sum
+        .iter()
+        .zip(count.iter())
+        .map(|(&s, &c)| if c > 0.0 { s / c } else { 0.0 })
+        .collect();
+    for _ in 0..LOCAL_BLUR_PASSES {
+        grid = blur_grid(&grid, grid_w, grid_h, LOCAL_BLUR_RADIUS);
+    }
+    (grid, grid_w, grid_h)
+}
+
+fn blur_grid(grid: &[f32], grid_w: usize, grid_h: usize, radius: usize) -> Vec<f32> {
+    if grid_w == 0 || grid_h == 0 {
+        return grid.to_vec();
+    }
+    let mut out = vec![0f32; grid.len()];
+    for gy in 0..grid_h {
+        let y0 = gy.saturating_sub(radius);
+        let y1 = (gy + radius).min(grid_h - 1);
+        for gx in 0..grid_w {
+            let x0 = gx.saturating_sub(radius);
+            let x1 = (gx + radius).min(grid_w - 1);
+            let mut sum = 0f32;
+            let mut n = 0f32;
+            for yy in y0..=y1 {
+                for xx in x0..=x1 {
+                    sum += grid[yy * grid_w + xx];
+                    n += 1.0;
+                }
+            }
+            out[gy * grid_w + gx] = sum / n;
+        }
+    }
+    out
+}
+
+// Bilinear sample of the tile grid at a pixel position, so the base layer changes smoothly across
+// tile boundaries instead of stair-stepping.
+fn sample_local_base(grid: &[f32], grid_w: usize, grid_h: usize, x: u32, y: u32) -> f32 {
+    let tile = LOCAL_TILE as f32;
+    let gx = (x as f32 + 0.5) / tile - 0.5;
+    let gy = (y as f32 + 0.5) / tile - 0.5;
+    let gx0f = gx.floor();
+    let gy0f = gy.floor();
+    let fx = gx - gx0f;
+    let fy = gy - gy0f;
+    let clamp_x = |v: f32| (v as i64).clamp(0, grid_w as i64 - 1) as usize;
+    let clamp_y = |v: f32| (v as i64).clamp(0, grid_h as i64 - 1) as usize;
+    let x0 = clamp_x(gx0f);
+    let x1 = clamp_x(gx0f + 1.0);
+    let y0 = clamp_y(gy0f);
+    let y1 = clamp_y(gy0f + 1.0);
+    let v00 = grid[y0 * grid_w + x0];
+    let v10 = grid[y0 * grid_w + x1];
+    let v01 = grid[y1 * grid_w + x0];
+    let v11 = grid[y1 * grid_w + x1];
+    let top = v00 + (v10 - v00) * fx;
+    let bottom = v01 + (v11 - v01) * fx;
+    top + (bottom - top) * fy
+}
+
 fn tone_map_frame(
     raw: &[u8],
     width: u32,
@@ -400,6 +494,9 @@ fn tone_map_frame(
 
     let copy_width = width.min(canvas.width);
     let copy_height = height.min(canvas.height);
+    let (base_grid, grid_w, grid_h) =
+        build_local_base(raw, width, copy_width, copy_height, white_scale);
+
     for y in 0..copy_height {
         for x in 0..copy_width {
             let source = ((y * width + x) * 8) as usize;
@@ -410,7 +507,13 @@ fn tone_map_frame(
                 read_half(raw, source + 4) / white_scale,
             ];
             let pixel_peak = rgb[0].max(rgb[1]).max(rgb[2]);
-            let mapped_peak = tone_map_signal(pixel_peak, scene_peak);
+            let log_peak = (pixel_peak + LOG_EPS).ln();
+            let base_log = sample_local_base(&base_grid, grid_w, grid_h, x, y);
+            let detail = log_peak - base_log;
+            let base_val = (base_log.exp() - LOG_EPS).max(0.0);
+            let mapped_base = tone_map_signal(base_val, scene_peak);
+            let mapped_peak = ((mapped_base + LOG_EPS).ln() + detail).exp() - LOG_EPS;
+            let mapped_peak = mapped_peak.max(0.0);
             let scale = if pixel_peak > 0.0 {
                 mapped_peak / pixel_peak
             } else {

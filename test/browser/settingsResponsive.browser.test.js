@@ -13,6 +13,23 @@ const localeDir = path.join(appDir, 'locale', 'lang');
 const localeOverrides = fs.readFileSync(path.join(appDir, 'locale', 'override.css'), 'utf8');
 const puppeteer = require(path.join(appDir, 'node_modules', 'puppeteer-core'));
 
+/*
+  The width below which the Uplay package row stops being a two-column row.
+
+  Its "control" is a pair of buttons rather than one 212px picker, so under a threshold the stylesheet
+  deliberately gives it the whole width: label, then the buttons across the row, then the description.
+  Read out of the stylesheet rather than repeated here, so moving the threshold moves this test with
+  it instead of turning the row's designed narrow form into a failure.
+*/
+const STACKS_BELOW = (() => {
+  const css = fs.readFileSync(path.join(appDir, 'resources', 'css', 'app.css'), 'utf8');
+  // The @media block that reshapes the row, and the width it opens on.
+  const blocks = [...css.matchAll(/@media \(max-width: (\d+)px\) \{([\s\S]*?)\n\}/g)];
+  const owner = blocks.find(([, , body]) => body.includes('.uplay-r2-package-row'));
+  assert.ok(owner, 'no width query reshapes the Uplay package row any more - has its layout changed?');
+  return Number(owner[1]);
+})();
+
 function browserPath() {
   return [
     process.env.PUPPETEER_EXECUTABLE_PATH,
@@ -131,6 +148,11 @@ test('settings keeps its two-column rows readable in every bundled locale', { co
                 overflow: row.scrollWidth > row.clientWidth + 1,
                 controlBesideLabel: control.top <= label.bottom + 1,
                 helpBelowRow: help.top >= Math.max(label.bottom, control.bottom) - 1,
+                // A row whose control is a pair of buttons rather than one 212px picker has a
+                // deliberate stacked form below the threshold; see STACKS_BELOW.
+                stacksByDesign: row.classList.contains('uplay-r2-package-row'),
+                controlFillsRow: Math.abs(control.width - label.width) <= 2,
+                controlBelowLabel: control.top >= label.bottom - 1,
               };
             }),
           };
@@ -139,10 +161,33 @@ test('settings keeps its two-column rows readable in every bundled locale', { co
         assert.equal(layout.boxOverflow, false, `${width}px ${file}: the modal overflows horizontally`);
         assert.equal(layout.headerOverflow, false, `${width}px ${file}: the header overflows horizontally`);
         assert.equal(layout.navOverflow, false, `${width}px ${file}: the navigation overflows horizontally`);
+        /*
+          Exactly one row is allowed the stacked form. Without this the exemption could widen by
+          accident - a class landing on more rows, or a selector loosened - and every row would then
+          skip the two-column check silently, which is the one way this test could stop testing.
+        */
+        assert.equal(
+          layout.rows.filter((row) => row.stacksByDesign).length,
+          1,
+          `${width}px ${file}: the stacked form must stay the exception, not the rule`
+        );
         for (const [index, row] of layout.rows.entries()) {
-          assert.equal(row.overflow, false, `${width}px ${file}: row ${index + 1} overflows horizontally`);
-          assert.equal(row.controlBesideLabel, true, `${width}px ${file}: row ${index + 1} drops its control below the label`);
-          assert.equal(row.helpBelowRow, true, `${width}px ${file}: row ${index + 1} overlaps its description`);
+          const where = `${width}px ${file}: row ${index + 1}`;
+          assert.equal(row.overflow, false, `${where} overflows horizontally`);
+          assert.equal(row.helpBelowRow, true, `${where} overlaps its description`);
+
+          if (row.stacksByDesign && width <= STACKS_BELOW) {
+            /*
+              The designed narrow form, not a row that failed to fit: label, then the controls across
+              the full width, then the description. Asserted rather than skipped, so this row is still
+              checked - just against the shape it is supposed to have at this width.
+            */
+            assert.equal(row.controlBelowLabel, true, `${where} should stack its controls under the label below ${STACKS_BELOW}px`);
+            assert.equal(row.controlFillsRow, true, `${where} stacks but does not take the width that buys it`);
+            continue;
+          }
+
+          assert.equal(row.controlBesideLabel, true, `${where} drops its control below the label`);
         }
       }
     }

@@ -1514,26 +1514,26 @@ body.is-resizing #game-list {
   background: var(--danger);
 }
 
-/* Pastille d'ownership Steam, sur le meme modele que .dll-badge: une icone nue dans .game-meta,
-   jamais un calque absolu qui recouvrirait la jaquette. Le titre porte l'explication. */
+/* Ownership indicator in .game-meta, never an absolute layer over the cover. A bare colour dot
+   read as decoration; an info glyph reads as "hover me", same as the other fa-info-circle hints
+   in this app. Same three states and colours as before (warning for stale, accent for
+   family/purchased) - only the shape changed. The title carries the explanation. */
 #game-list .game-box .info .ownership-badge {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
   flex-shrink: 0;
+  font-size: 11px;
+  line-height: 1;
+  cursor: help;
 }
 
 #game-list .game-box .info .ownership-badge.stale {
-  background: var(--warning);
+  color: var(--warning);
 }
 
-#game-list .game-box .info .ownership-badge.family {
-  background: var(--accent);
-}
-
+#game-list .game-box .info .ownership-badge.family,
 #game-list .game-box .info .ownership-badge.purchased {
-  background: var(--accent);
+  color: var(--accent);
 }
 
 /* A local DLL health signal only makes sense once the game is confirmed on this PC. The badge
@@ -2799,6 +2799,26 @@ body.is-resizing #game-list {
   to {
     opacity: 1;
   }
+}
+
+/* Mirrors the band above: whatever card sits just past the bottom edge shows its top sliver as
+   soon as the pane is taller than one screen, and without a mask that sliver can land mid-badge -
+   e.g. a connected account's green pill reduced to a stray dash with no card around it. Unlike the
+   top band this one does not need to fade in with scroll position: there is always more list below
+   whenever the pane can scroll at all, so it can just stay on. */
+#settings .box .content::after {
+  content: '';
+  display: block;
+  position: sticky;
+  bottom: -20px;
+  z-index: 1;
+  height: 30px;
+  margin: -22px -18px -20px;
+  pointer-events: none;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  -webkit-mask-image: linear-gradient(0deg, #000 0%, #000 38%, transparent 100%);
+  mask-image: linear-gradient(0deg, #000 0%, #000 38%, transparent 100%);
 }
 
 #settings .box .content::-webkit-scrollbar {
@@ -5384,10 +5404,6 @@ body.is-resizing #game-list {
   border-radius: 12px;
   background: var(--set-account-bg);
 }
-/* The Epic connect card sits under the Sources arrow-list - give it breathing room above. */
-#settings #epic-connect {
-  margin-top: 16px;
-}
 #settings .emulator-login.is-visible {
   display: block;
 }
@@ -5456,12 +5472,20 @@ body.is-resizing #game-list {
   border-color: color-mix(in srgb, var(--accent) 62%, transparent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 11%, transparent);
 }
+/* Flex instead of a fixed two-column grid: the connect and disconnect buttons (each a 230px
+   floor) plus the status text are three items competing for the row, and a narrow card - the
+   Settings window's own 900px floor included - needs them free to wrap rather than overflow. */
 #settings .emulator-login-actions {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   margin-top: 12px;
+}
+#settings .emulator-login-actions > [aria-live] {
+  min-width: 0;
+  flex: 1 1 140px;
+  overflow-wrap: anywhere;
 }
 #settings .emulator-login-actions .btn {
   display: grid;
@@ -7345,6 +7369,7 @@ body {
 
 #settings .help-overview {
   min-width: 0;
+  margin-top: 16px;
   padding: 11px 12px 12px;
   border: 1px solid var(--set-hairline-soft);
   border-radius: 9px;
@@ -7737,7 +7762,6 @@ body {
    scrollport, which cancels sticky positioning outright. `clip` still clips to the rounded corners. */
 #settings .box .content .arrow-list,
 #settings .box .content .emulator-group,
-#settings .box .content #epic-connect,
 #settings .box .content .emulator-login,
 #settings .box .content .settings-card {
   overflow: clip;
@@ -7750,7 +7774,6 @@ body {
 */
 #settings .box .content .arrow-list > .title,
 #settings .box .content .settings-card > .title,
-#settings .box .content #epic-connect > .title,
 #settings .box .content .settings-card > .emulator-login-heading,
 #settings .box .content .emulator-login > .emulator-login-heading,
 #settings .box .content .emulator-group > .emulator-group-title {
@@ -7836,9 +7859,14 @@ body {
   padding-bottom: 0;
 }
 
+/* The pinned-header shadow (below, "floating over the list") exists to separate the header from
+   content scrolling under it. A collapsed section has no such content, but nothing else reset the
+   shadow, so it painted as a stray line along the bottom of the collapsed bar - most visible on
+   cards like Epic's whose header is the nested `.emulator-login-heading` shape. */
 #settings:not(.searching) .settings-section.is-collapsed > .settings-section-header {
   margin-bottom: 0;
   border-bottom: 0;
+  box-shadow: none;
 }
 
 /* Opening a section reveals content that was not in the layout a frame ago; a short fade keeps
@@ -7869,7 +7897,6 @@ body {
    everything now uses this card-with-header form. */
 #settings .arrow-list,
 #settings .emulator-group,
-#settings #epic-connect,
 #settings .settings-card {
   margin: 12px 0 0;
   padding: 0 14px 6px;
@@ -7881,6 +7908,19 @@ body {
 }
 #settings .content > *:first-child {
   margin-top: 0;
+}
+
+/* The ghost-game toggle lives inside the Steam account card so both share one heading; without
+   this it would double-box as a card nested in a card (border/background/margin on top of its
+   parent's). A hairline stands in for the border it gave up. */
+#settings #steam-connect .arrow-list {
+  margin: 10px 0 0;
+  padding: 10px 0 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  border-top: 1px solid var(--set-hairline-soft);
 }
 
 /* Switching tabs animates one panel as a unit instead of re-running an animation on every card. */
@@ -8508,10 +8548,11 @@ body {
   display: block;
 }
 
-/* Account cards (Steam login, Epic connect) are the SAME card - identical geometry AND the same
-   amber account surface, so the two account windows read as one component. */
-#settings .emulator-login,
-#settings #epic-connect {
+/* The emulator login card keeps the amber account surface. #epic-connect deliberately does NOT:
+   it is one of three sibling account cards (Epic / Steam / Xbox) sitting together in Sources, and
+   giving only Epic its own padding, border and background made it read as taller and differently
+   framed than the two beside it. All three now take the plain `.settings-card` geometry. */
+#settings .emulator-login {
   padding: 0 14px 12px;
   border-color: var(--set-account-border);
   background: var(--set-account-bg);

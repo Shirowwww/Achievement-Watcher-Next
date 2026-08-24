@@ -598,31 +598,6 @@
                 </ul>
               </div>
 
-              <!-- Ghost-game filter. Its own card because it is meaningless without a connected
-                   Steam account: settings.js hides the whole block when none is connected, and the
-                   Advanced view is localized by id, so nothing here shifts an nth-child binding. -->
-              <div class="arrow-list" id="steam-stale-card" style="display:none">
-                <div class="title"><i class="fab fa-steam"></i> <span id="steam-stale-title">Steam library</span></div>
-                <ul>
-                  <li class="hasHelper">
-                    <div class="left"><i class="fas fa-eye-slash"></i> <span id="steam-stale-label">Hide games no longer in your Steam library</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="steam-hide-stale">
-                        <option value="true" selected>Enabled</option>
-                        <option value="false">Disabled</option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="steam-stale-help">Requires a connected Steam account.</div>
-                  </li>
-                </ul>
-              </div>
-
               <div class="arrow-list">
                 <div class="title"><i class="fas fa-ban"></i> <span id="advanced-blacklist-title"></span></div>
                 <ul>
@@ -1058,6 +1033,30 @@
                     <span class="emulator-test-copy"><strong id="steam-disconnect-btn-label">Disconnect</strong></span>
                   </button>
                   <span id="steam-connect-status" aria-live="polite"></span>
+                </div>
+
+                <!-- Ghost-game filter, folded into the Steam account card so it shares its heading
+                     instead of duplicating "Steam account" in a card of its own. Meaningless
+                     without a connected account: settings.js hides it when none is connected. -->
+                <div class="arrow-list" id="steam-stale-card" style="display:none">
+                  <ul>
+                    <li class="hasHelper">
+                      <div class="left"><i class="fas fa-eye-slash"></i> <span id="steam-stale-label">Hide games no longer in your Steam library</span></div>
+                      <div class="right">
+                        <div class="previous">
+                          <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                        </div>
+                        <select autocomplete="off" id="steam-hide-stale">
+                          <option value="true" selected>Enabled</option>
+                          <option value="false">Disabled</option>
+                        </select>
+                        <div class="next">
+                          <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                        </div>
+                      </div>
+                      <div class="help" id="steam-stale-help">Requires a connected Steam account.</div>
+                    </li>
+                  </ul>
                 </div>
               </div>
 

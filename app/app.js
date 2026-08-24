@@ -2425,7 +2425,7 @@ function sourcePresentationFor(game) {
       break;
   }
 
-  return { img: getSourceImg(source), label: t('steam-achievements', 'Steam achievements', 'Succès Steam'), kind: 'steam' };
+  return { img: getSourceImg(source), label: t('steam-achievements', 'Steam achievements via emulator', 'Succès Steam via émulateur'), kind: 'steam' };
 }
 
 function dllPresentationFor(game) {
@@ -3080,11 +3080,11 @@ var app = {
               playtime: localeText('settings.notification.test.playtime'),
               staleOwnership: t('steam-stale-badge', 'No longer in your Steam library', 'Plus dans ta bibliothèque Steam'),
               familyOwnership: t('steam-family-badge', 'Shared with you through Steam Family', 'Partagé avec toi via la famille Steam'),
-              purchasedSteam: t('purchased-badge-steam', 'Purchased Steam game', 'Jeu Steam acheté'),
-              purchasedGog: t('purchased-badge-gog', 'Purchased GOG game', 'Jeu GOG acheté'),
-              purchasedUbisoft: t('purchased-badge-ubisoft', 'Purchased Ubisoft game', 'Jeu Ubisoft acheté'),
-              purchasedEpic: t('purchased-badge-epic', 'Purchased Epic Games game', 'Jeu Epic Games acheté'),
-              purchasedEa: t('purchased-badge-ea', 'Purchased EA game', 'Jeu EA acheté'),
+              purchasedSteam: t('purchased-badge-steam', 'Steam game in your library', 'Jeu Steam dans ta bibliothèque'),
+              purchasedGog: t('purchased-badge-gog', 'GOG game in your library', 'Jeu GOG dans ta bibliothèque'),
+              purchasedUbisoft: t('purchased-badge-ubisoft', 'Ubisoft game in your library', 'Jeu Ubisoft dans ta bibliothèque'),
+              purchasedEpic: t('purchased-badge-epic', 'Epic Games title in your library', 'Jeu Epic Games dans ta bibliothèque'),
+              purchasedEa: t('purchased-badge-ea', 'EA game in your library', 'Jeu EA dans ta bibliothèque'),
             };
             const purchasedPlatform = game.ownership === 'stale' || game.ownership === 'family' ? '' : purchasedPlatformFor(game);
             const purchasedLabel = purchasedPlatform
@@ -3133,7 +3133,7 @@ var app = {
                           ownershipLabel
                             ? `<span class="ownership-badge ${ownershipBadgeClass}" title="${escapeHtml(
                                 ownershipLabel
-                              )}" role="img" aria-label="${escapeHtml(ownershipLabel)}"></span>`
+                              )}" role="img" aria-label="${escapeHtml(ownershipLabel)}"><i class="fas fa-info-circle" aria-hidden="true"></i></span>`
                             : ''
                         }
                         ${

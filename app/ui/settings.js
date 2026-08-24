@@ -1387,14 +1387,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         $('#steam-connect-desc').text(
           t(
             'steam-desc',
-            'Optional. Connect your Steam account so AW Next knows which games are really in your library today, including Steam Family shared games, and can hide the ones you no longer own. It also reads your unlocked Steam achievements when your profile is private. Your Steam password is never seen by AW Next: the sign-in page is Valve’s own. The session token is stored encrypted on this PC.',
-            'Optionnel. La connexion donne à AW Next la vraie liste des jeux présents dans ta bibliothèque aujourd’hui, jeux partagés en famille Steam compris, et lui permet de masquer ceux que tu ne possèdes plus. Elle lit aussi tes succès Steam débloqués quand ton profil est privé. AW Next ne voit jamais ton mot de passe Steam : la page de connexion est celle de Valve. Le jeton de session est stocké chiffré sur ce PC.'
+            'Optional. Connect your Steam account to see your real library (Steam Family included) and hide games you no longer own. Sign-in happens on Valve’s own page; the session stays encrypted on this PC.',
+            'Optionnel. Connecte ton compte Steam pour voir ta vraie bibliothèque (famille Steam comprise) et masquer les jeux que tu ne possèdes plus. La connexion se fait sur la page de Valve ; la session reste chiffrée sur ce PC.'
           )
         );
         $('#steam-connect-btn-hint').text(t('steam-btn-hint', 'opens the Steam sign-in window', 'ouvre la fenêtre de connexion Steam'));
         $('#steam-connect-badge-label').text(t('connected', 'Connected', 'Connecté'));
         $('#steam-disconnect-btn-label').text(t('disconnect', 'Disconnect', 'Déconnecter'));
-        $('#steam-stale-title').text(t('steam-title', 'Steam account', 'Compte Steam'));
         $('#steam-stale-label').text(
           t('steam-hide-stale', 'Hide games no longer in your Steam library', 'Masquer les jeux qui ne sont plus dans ta bibliothèque Steam')
         );

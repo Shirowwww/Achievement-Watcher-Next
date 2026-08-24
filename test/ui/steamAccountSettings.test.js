@@ -23,12 +23,15 @@ const settings = fs.readFileSync(path.join(appDir, 'ui', 'settings.js'), 'utf8')
 const appSource = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
 const achievements = fs.readFileSync(path.join(appDir, 'parser', 'achievements.js'), 'utf8');
 
-test('the ghost-game switch is an Advanced setting, on by default', () => {
-  const advanced = document.querySelector('section[data-view="advanced"]');
-  assert.ok(advanced, 'the Advanced section is gone');
+test('the ghost-game switch lives inside the Steam account card, on by default', () => {
+  const source = document.querySelector('section[data-view="source"]');
+  assert.ok(source, 'the Sources section is gone');
 
-  const card = advanced.querySelector('#steam-stale-card');
-  assert.ok(card, 'the ghost-game card must live in Advanced: it is not an everyday choice');
+  const connect = source.querySelector('#steam-connect');
+  assert.ok(connect, 'the Steam account card is gone');
+
+  const card = connect.querySelector('#steam-stale-card');
+  assert.ok(card, 'the ghost-game toggle must be folded into the Steam account card, not a card of its own');
   assert.match(card.getAttribute('style') || '', /display\s*:\s*none/, 'it starts hidden, before the account is known');
 
   const select = card.querySelector('#steam-hide-stale');
