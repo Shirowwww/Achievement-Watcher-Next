@@ -293,12 +293,12 @@
         "name": "steam_settings データ",
         "description": "Simple は AW Next 独自の取得（匿名）を使用します。Advanced はデポ／言語対応のため generate_emu_config を実行します。",
         "value": {
-          "simple": "Simple",
-          "advanced": "Advanced"
+          "simple": "シンプル",
+          "advanced": "詳細"
         }
       },
       "login": {
-        "name": "データソース (Advanced)",
+        "name": "データソース (詳細)",
         "description": "匿名モードでも公開されているDLC／デポデータは取得できます。Steamログインは任意で、非公開またはSteamが隠しているデータ（追加のデポ、ブランチ、言語など）だけを補います。必ず使い捨てアカウントのみを使用し、メインアカウントは絶対に使わないでください。",
         "value": {
           "anonymous": "匿名",
@@ -541,7 +541,7 @@
             "rareAccent": "レアの色",
             "rareBronze": "アンコモンの色",
             "rareGlow": "レアのグロー",
-            "rareSilver": "スカースの色",
+            "rareSilver": "希少の色",
             "shadow": "影",
             "showGameName": "ゲーム名",
             "showProgress": "進捗バー",
@@ -1004,12 +1004,12 @@
     }
   },
   "onboarding": {
-    "settingsLabel": "初回版ガイド",
-    "settingsButton": "オープンガイド",
+    "settingsLabel": "初回起動ガイド",
+    "settingsButton": "ガイドを開く",
     "settingsHelp": "プロフィール、フォルダー、ソース、通知のセットアップガイドを再度開きます。",
     "navLabel": "セットアップの手順",
     "eyebrow": "最初のセットアップ",
-    "close": "近い",
+    "close": "閉じる",
     "steps": [
       "言語",
       "仕組み",
@@ -1039,8 +1039,8 @@
     "avatarPick": "写真を選択してください",
     "avatarDefault": "デフォルト",
     "avatarHint": "オプション。この PC にローカルに保存されます。",
-    "foldersTitle": "ディスクにゲームを追加する",
-    "foldersCopy": "特定のエミュレーターの保存/構成フォルダーと、インストールされている多くのゲームを含むライブラリ ルートを追加します。",
+    "foldersTitle": "ディスク上のゲームを追加",
+    "foldersCopy": "スマート検索を使うと、保存/設定フォルダーとゲームライブラリを自動で検出できます。フォルダーの種類ごとに手動で追加することもできます。",
     "addSave": "保存フォルダーを追加",
     "smartFind": "スマート検索",
     "addLibrary": "ライブラリフォルダーを追加",
@@ -1059,8 +1059,8 @@
     "autoFix": "エミュレートされたゲームを自動修正する",
     "hidden": "隠された実績",
     "merge": "重複を結合する",
-    "show": "見せる",
-    "hide": "隠れる",
+    "show": "表示",
+    "hide": "非表示",
     "sourceHint": "正規の Steam ゲームもリストされます (パブリック プロファイルが必要)。",
     "notificationsHint": "解除通知の表示場所。「自動」がオーバーレイと Windows 通知を選び分けます。",
     "playtimeHint": "検出されたゲームのプレイ時間を自動的に追跡します。",

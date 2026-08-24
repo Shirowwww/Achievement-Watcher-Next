@@ -86,7 +86,7 @@ async function run() {
   assert.equal(french.strings.settingsShowRarity, 'Rareté');
   assert.equal(french.strings.settingsShowDescriptions, 'Descriptions');
   assert.equal(french.strings.settingsReset, 'Réinitialiser');
-  assert.equal(french.strings.noResults, 'Aucun succès ne correspond à votre recherche.');
+  assert.equal(french.strings.noResults, 'Aucun succès ne correspond à ta recherche.');
   assert.equal(french.strings.settingsUseTheme, 'Utiliser le thème de l’application');
   assert.equal(french.strings.clear, 'Effacer');
   assert.equal(french.strings.close, 'Fermer');

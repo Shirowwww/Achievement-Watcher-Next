@@ -293,12 +293,12 @@
         "name": "steam_settings adatok",
         "description": "A Simple az AW Next saját letöltését használja (névtelen). Az Advanced lefuttatja a generate_emu_config-ot a depó/nyelvi lefedettséghez.",
         "value": {
-          "simple": "Simple",
-          "advanced": "Advanced"
+          "simple": "Egyszerű",
+          "advanced": "Speciális"
         }
       },
       "login": {
-        "name": "Adatforrás (Advanced)",
+        "name": "Adatforrás (Speciális)",
         "description": "Az anonim mód már lekéri a nyilvánosan elérhető DLC-/depóadatokat. A Steam-bejelentkezés opcionális: csak privát vagy rejtett adatokat ad hozzá (például egyes depókat, ágakat vagy nyelveket). CSAK eldobható fiókot használj - soha a fő fiókodat.",
         "value": {
           "anonymous": "Névtelen",
@@ -1004,8 +1004,8 @@
     }
   },
   "onboarding": {
-    "settingsLabel": "Első futtatási útmutató",
-    "settingsButton": "Nyissa meg az útmutatót",
+    "settingsLabel": "Első indítási útmutató",
+    "settingsButton": "Útmutató megnyitása",
     "settingsHelp": "Nyissa meg újra a beállítási útmutatót a profilhoz, mappákhoz, forrásokhoz és értesítésekhez.",
     "navLabel": "Beállítás lépései",
     "eyebrow": "Első beállítás",
@@ -1014,7 +1014,7 @@
       "Nyelv",
       "Hogyan működik",
       "Felület",
-      "fiók",
+      "Fiók",
       "Játékok",
       "Beállítások"
     ],
@@ -1040,7 +1040,7 @@
     "avatarDefault": "Alapértelmezett",
     "avatarHint": "Választható. Helyileg ezen a számítógépen tárolva.",
     "foldersTitle": "Játékok hozzáadása a lemezen",
-    "foldersCopy": "Adjon hozzá mentési/beállítási mappákat bizonyos emulátorokhoz és könyvtárgyökerekhez, amelyek sok telepített játékot tartalmaznak.",
+    "foldersCopy": "Használd az Okos keresést a mentés-/beállításmappák és a játékkönyvtárak automatikus felismeréséhez. Vagy add hozzá őket kézzel, mappatípus szerint.",
     "addSave": "Mentésmappa hozzáadása",
     "smartFind": "Okos keresés",
     "addLibrary": "Könyvtári mappa hozzáadása",

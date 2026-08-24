@@ -121,7 +121,7 @@
     "rareDescription": "Seulement {percent} % des joueurs l’ont débloqué.",
     "testAchievement": "Succès de test",
     "testDescription": "Ceci est une notification de test depuis AW Next.",
-    "playedFor": "Vous avez joué pendant {duration}",
+    "playedFor": "Tu as joué pendant {duration}",
     "trackingPlaytime": "Suivi du temps de jeu en cours",
     "playtime": "Temps de jeu"
   },
@@ -360,7 +360,7 @@
     "playtime": "游戏时间"
   },
   "slovak": {
-    "rare": "Vzácný {percent}%",
+    "rare": "Vzácny {percent}%",
     "platinumTitle": "Platina",
     "platinumDesc": "Platina odomknutá - 100 % dokončené!",
     "eaAchievement": "Úspech EA",
@@ -369,7 +369,7 @@
     "unknownOperation": "Neznáma operácia",
     "unknownReward": "Neznáma odmena",
     "trophy": "Trofej",
-    "rareAchievement": "Vzácný úspech",
+    "rareAchievement": "Vzácny úspech",
     "rareDescription": "Odomkol ho iba {percent}% hráčov.",
     "testAchievement": "Testovací úspech",
     "testDescription": "Toto je testovacie upozornenie z AW Next.",

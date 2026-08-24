@@ -97,7 +97,7 @@
     },
     "common": {
       "show": "Anzeigen",
-      "hide": "Verbergen",
+      "hide": "Ausblenden",
       "enable": "Aktiviert",
       "disable": "Deaktiviert",
       "cancel": "Abbrechen",
@@ -185,7 +185,7 @@
       "onboarding": {
         "name": "Erststart-Assistent",
         "button": "Assistent öffnen",
-        "description": "Öffnen Sie den Einrichtungsassistenten erneut für Profil, Ordner, Quellen und Benachrichtigungen."
+        "description": "Öffne den Einrichtungsassistenten erneut für Profil, Ordner, Quellen und Benachrichtigungen."
       },
       "hardwareAccel": {
         "name": "Hardwarebeschleunigung deaktivieren",
@@ -198,11 +198,11 @@
       "theme": {
         "name": "Design",
         "description": "Farbschema des App-Fensters (sofortige Vorschau, Speicherung mit OK).",
-        "customTitle": "Eigenes Theme",
-        "customDesc": "Jedes Theme lässt sich hier bearbeiten: Wähle für jeden Block eine Farbe und optional ein Bild. Ein Bild liegt über der Farbe (die zu einem leichten Schleier für die Lesbarkeit wird). Speichern behält deine Gestaltung als eigenes Theme unter dem Namen daneben; ein noch freier Name gibt dir ein zweites Theme und lässt das erste unberührt.",
-        "customName": "Name des Themes",
-        "customNamePlaceholder": "Mein Theme",
-        "saveTheme": "Theme speichern",
+        "customTitle": "Eigenes Design",
+        "customDesc": "Jedes Design lässt sich hier bearbeiten: Wähle für jeden Block eine Farbe und optional ein Bild. Ein Bild liegt über der Farbe (die zu einem leichten Schleier für die Lesbarkeit wird). Speichern behält deine Gestaltung als eigenes Design unter dem Namen daneben; ein noch freier Name gibt dir ein zweites Design und lässt das erste unberührt.",
+        "customName": "Name des Designs",
+        "customNamePlaceholder": "Mein Design",
+        "saveTheme": "Design speichern",
         "resetAll": "Alles zurücksetzen",
         "library": {
           "title": "Designdateien",
@@ -293,12 +293,12 @@
         "name": "steam_settings-Daten",
         "description": "Simple nutzt den eigenen Abruf von AW Next (anonym). Advanced führt generate_emu_config für Depot-/Sprachabdeckung aus.",
         "value": {
-          "simple": "Simple",
-          "advanced": "Advanced"
+          "simple": "Einfach",
+          "advanced": "Erweitert"
         }
       },
       "login": {
-        "name": "Datenquelle (Advanced)",
+        "name": "Datenquelle (Erweitert)",
         "description": "Der anonyme Modus ruft bereits öffentlich verfügbare DLC-/Depot-Daten ab; die Steam-Anmeldung ist optional und ergänzt nur private oder verborgene Daten (z. B. weitere Depots, Branches oder Sprachen). Verwende NUR ein Wegwerf-Konto - niemals dein Hauptkonto.",
         "value": {
           "anonymous": "Anonym",
@@ -862,7 +862,7 @@
     "help": {
       "nav": "Hilfe",
       "title": "Hilfe & Tipps",
-      "intro": "Alles Wissenswerte - Erkennung, Benachrichtigungen, Controller, Overlay, Themes und Fehlerbehebung.",
+      "intro": "Alles Wissenswerte - Erkennung, Benachrichtigungen, Controller, Overlay, Designs und Fehlerbehebung.",
       "setupTitle": "Deine aktuelle Einrichtung",
       "topicsTitle": "Nach Thema durchsuchen",
       "searchPlaceholder": "Hilfe durchsuchen…",
@@ -879,7 +879,7 @@
         "Füge Speicher-/Konfigurationsordner unter Einstellungen > Ordner hinzu und aktiviere anschließend die passende Quelle unter Einstellungen > Quellen.",
         "Der Watchdog läuft im Hintergrund - er muss aktiv sein, damit Live-Benachrichtigungen und Spielzeit funktionieren.",
         "Alles (Einstellungen, Caches, Protokolle und benutzerdefinierte Designs) befindet sich in %APPDATA%\\Achievement Watcher Next.",
-        "Jeder Einstellungsbereich lässt sich über seine Kopfzeile einklappen - der Pfeil zeigt nach unten, wenn er offen ist, zur Seite, wenn er zu ist. Ihre Auswahl wird gemerkt."
+        "Jeder Einstellungsbereich lässt sich über seine Kopfzeile einklappen - der Pfeil zeigt nach unten, wenn er offen ist, zur Seite, wenn er zu ist. Deine Auswahl wird gemerkt."
       ],
       "gameHealthTitle": "Spielzustand",
       "gameHealth": [
@@ -893,7 +893,7 @@
         "Wenn ein Spiel fehlt: Ordner hinzufügen, erneut scannen und anschließend Quellenschalter sowie Sperrliste prüfen.",
         "Wenn keine Benachrichtigungen erscheinen: Windows-Fokusassistent prüfen und die App mit denselben Rechten wie die Spiele ausführen.",
         "Erweitert > Diagnose öffnet Protokoll- und Datenordner; füge sie einer Fehlermeldung bei.",
-        "Protokolle werden angehängt, ein Absturz übersteht also den nächsten Start. Jeder Lauf beginnt mit einer Sitzungsmarke und einem [diag]-Block (Versionen, Pfade, Bildschirme) - fügen Sie ihn dem Ticket bei."
+        "Protokolle werden angehängt, ein Absturz übersteht also den nächsten Start. Jeder Lauf beginnt mit einer Sitzungsmarke und einem [diag]-Block (Versionen, Pfade, Bildschirme) - füge ihn dem Ticket bei."
       ],
       "sourcesTitle": "Launcher & Quellen",
       "sources": [
@@ -917,7 +917,7 @@
       ],
       "controllerTitle": "Controller (Gamepad)",
       "controller": [
-        "Aktivieren Sie zuerst Einstellungen > Controller; danach öffnet Back + Start + LB das In-Game-Overlay.",
+        "Aktiviere zuerst Einstellungen > Controller; danach öffnet Back + Start + LB das In-Game-Overlay.",
         "LB + X schaltet die Navigation im Overlay ein oder aus.",
         "Navigationsmodus: Steuerkreuz/linker Stick verschieben den Fokus, A bestätigt, B bricht ab, X sucht und Y öffnet die Optionen.",
         "Halte LB + RB gedrückt, um das Overlay mit dem linken Stick zu verschieben und mit dem rechten Stick zu scrollen.",
@@ -925,10 +925,10 @@
       ],
       "overlayTitle": "In-Game-Overlay",
       "overlay": [
-        "Öffnen Sie es mit dem Overlay-Tastenkürzel (standardmäßig Ctrl+Shift+K) oder mit Back + Start + LB auf einem Controller.",
+        "Öffne es mit dem Overlay-Tastenkürzel (standardmäßig Ctrl+Shift+K) oder mit Back + Start + LB auf einem Controller.",
         "Sortiere jeweils nach einer Spalte: Seltenheit, Datum oder Status (aufsteigend / absteigend / keine Sortierung).",
         "Drücke /, um die Suche zu fokussieren, und Esc, um sie zu leeren oder das Optionsfeld zu schließen.",
-        "Im Zahnradmenü lassen sich Akzent, Dichte, Zoom, Deckkraft und sichtbare Zeilen ändern; „App-Theme verwenden“ folgt dem aktiven Theme.",
+        "Im Zahnradmenü lassen sich Akzent, Dichte, Zoom, Deckkraft und sichtbare Zeilen ändern; „App-Design verwenden“ folgt dem aktiven Design.",
         "Jeder Erfolg mit bekannter Quote zeigt seine Seltenheit: Grau für häufige, Gold/Silber/Bronze für seltene."
       ],
       "shortcutsTitle": "Tastenkürzel",
@@ -937,11 +937,11 @@
         "Ctrl+Alt+Shift+Pfeiltasten verschieben das Overlay; Ctrl+Alt+Shift+1-5 rasten es an einer vorgegebenen Position ein.",
         "Ctrl+Alt+Shift+C schaltet den Klickdurchgriff um; Ctrl+F fokussiert die Einstellungssuche."
       ],
-      "themesTitle": "Benutzerdefinierte Themes",
+      "themesTitle": "Benutzerdefinierte Designs",
       "themes": [
         "Benutzerdefiniert startet mit Steam Blue; jede Ebene (Hintergrund, Kopfzeile, Felder, Karten, Einstellungen, Text, Ränder, Akzent) ist bearbeitbar.",
         "Ebenenbilder liegen unter einem farbigen Schleier mit leichtem Milchglas-Effekt; die Effekte werden pro Ebene eingestellt.",
-        "Lege ein CSS-Theme in <userData>\\themes ab, damit es in der Theme-Auswahl erscheint.",
+        "Lege ein CSS-Design in <userData>\\themes ab, damit es in der Design-Auswahl erscheint.",
         "Der Vorlagen-Editor kann ein Design vor dem Speichern als echtes Pop-up zeigen, eine gespeicherte Vorlage zum Ändern erneut öffnen und nicht benötigte löschen.",
         "Exportiere das genutzte Design als eine .awtheme-Datei oder importiere eines, das dir jemand geschickt hat: es wird vor der Installation gezeigt und verhält sich danach wie ein eingebautes."
       ],
@@ -989,7 +989,7 @@
       "clearUpdateCache": {
         "name": "Caches leeren",
         "button": "Caches leeren",
-        "description": "Löscht neu herunterladbare Caches: Update-Dateien, Steam/Ubisoft-Schema- und Icon-Cache sowie heruntergeladene Emulator-Fix-Tools. Berührt niemals Ihre Einstellungen, Spielstände, Backups oder manuell platzierten Dateien."
+        "description": "Löscht neu herunterladbare Caches: Update-Dateien, Steam/Ubisoft-Schema- und Icon-Cache sowie heruntergeladene Emulator-Fix-Tools. Berührt niemals deine Einstellungen, Spielstände, Backups oder manuell platzierten Dateien."
       },
       "forceAchievementRecheck": {
         "name": "Erfolgslisten erneut prüfen",
@@ -1004,9 +1004,9 @@
     }
   },
   "onboarding": {
-    "settingsLabel": "Leitfaden zum ersten Mal",
-    "settingsButton": "Anleitung öffnen",
-    "settingsHelp": "Öffnen Sie den Einrichtungsassistenten erneut für Profil, Ordner, Quellen und Benachrichtigungen.",
+    "settingsLabel": "Erststart-Assistent",
+    "settingsButton": "Assistent öffnen",
+    "settingsHelp": "Öffne den Einrichtungsassistenten erneut für Profil, Ordner, Quellen und Benachrichtigungen.",
     "navLabel": "Einrichtungsschritte",
     "eyebrow": "Erste Einrichtung",
     "close": "Schließen",
@@ -1020,8 +1020,8 @@
     ],
     "languageTitle": "Sprache wählen",
     "languageCopy": "Spiele, Metadaten, Erfolge und Steam-Caches werden von Anfang an in dieser Sprache geladen.",
-    "language": "Spiel- und Schnittstellensprache",
-    "languagePlaceholder": "Wählen Sie eine Sprache…",
+    "language": "Spiel- und Oberflächensprache",
+    "languagePlaceholder": "Wähle eine Sprache…",
     "languageHint": "Der erste Bibliotheksladevorgang beginnt erst nach dieser Auswahl.",
     "introTitle": "Wie es funktioniert",
     "scanTitle": "Scannen",
@@ -1033,21 +1033,21 @@
     "overlayTitle": "In-Game-Overlay",
     "overlayCopy": "Ein kleines Erfolgsfenster, das du per Tastenkürzel über das Spiel legst - standardmäßig Strg+Shift+K.",
     "profileTitle": "Profil",
-    "profileCopy": "Wählen Sie den in der Kopfzeile angezeigten Namen und legen Sie optional einen lokalen Avatar fest.",
+    "profileCopy": "Wähle den in der Kopfzeile angezeigten Namen und lege optional einen lokalen Avatar fest.",
     "username": "Anzeigename",
     "mainSteam": "Haupt-Steam-Konto",
     "avatarPick": "Foto auswählen",
     "avatarDefault": "Standard",
     "avatarHint": "Optional. Lokal auf diesem PC gespeichert.",
     "foldersTitle": "Spiele auf der Festplatte hinzufügen",
-    "foldersCopy": "Fügen Sie Save/Config-Ordner für bestimmte Emulatoren und Bibliotheksstämme hinzu, die viele installierte Spiele enthalten.",
+    "foldersCopy": "Nutze die Intelligente Suche, um Spielstand-/Konfigurationsordner und Spielbibliotheken automatisch zu finden. Oder füge sie manuell nach Ordnertyp hinzu.",
     "addSave": "Speicherordner hinzufügen",
     "smartFind": "Intelligente Suche",
     "addLibrary": "Bibliotheksordner hinzufügen",
-    "smartFindHint": "Saves + Bibliotheken",
+    "smartFindHint": "Spielstände + Bibliotheken",
     "addSaveHint": "ein Emulator/eine Quelle",
     "addLibraryHint": "viele installierte Spiele",
-    "saveList": "Save/config-Ordner",
+    "saveList": "Spielstand-/Konfigurationsordner",
     "libraryList": "Bibliotheksordner",
     "emptyList": "In dieser Sitzung wurde nichts hinzugefügt.",
     "settingsTitle": "Empfohlene Einstellungen",
@@ -1059,13 +1059,13 @@
     "autoFix": "Emulierte Spiele automatisch reparieren",
     "hidden": "Versteckte Erfolge",
     "merge": "Duplikate zusammenführen",
-    "show": "Zeigen",
-    "hide": "Verstecken",
-    "sourceHint": "Listet außerdem Ihre legitimen Steam-Spiele auf (öffentliches Profil erforderlich).",
+    "show": "Anzeigen",
+    "hide": "Ausblenden",
+    "sourceHint": "Listet außerdem deine legitimen Steam-Spiele auf (öffentliches Profil erforderlich).",
     "notificationsHint": "Wo Freischaltungen erscheinen. Automatisch wählt für dich zwischen Overlay und Windows-Benachrichtigung.",
     "playtimeHint": "Verfolgt automatisch die Spielzeit für erkannte Spiele.",
     "autoFixHint": "Wendet die passende GBE-Fork- oder Uplay-R2-Reparatur auf neu erkannte emulierte Spiele an.",
-    "hiddenHint": "Zeigt versteckte Erfolgsnamen und Beschreibungen an, bevor Sie sie freischalten.",
+    "hiddenHint": "Zeigt versteckte Erfolgsnamen und Beschreibungen an, bevor du sie freischaltest.",
     "mergeHint": "Kombiniert dasselbe Spiel aus mehreren Quellen in einer einzigen Kachel.",
     "none": "Keine",
     "installed": "Installiert",
@@ -1081,7 +1081,7 @@
     "skip": "Überspringen",
     "saving": "Wird gespeichert…",
     "saved": "Setup gespeichert.",
-    "languageRequired": "Wählen Sie eine Sprache, um fortzufahren.",
+    "languageRequired": "Wähle eine Sprache, um fortzufahren.",
     "invalidFolder": "Dieser Ordner sieht nicht wie ein unterstützter Erfolgsordner aus. Erwartet werden: GSE Saves / Goldberg SteamEmu Saves, CODEX-/RUNE-Spielstände, AppID-Unterordner (z. B. 1091500) oder ein Spielordner mit steam_settings bzw. einer Emulator-.ini.",
     "smartRunning": "Suche…",
     "smartDone": "Suche abgeschlossen.",
@@ -1132,7 +1132,7 @@
     "settingsShowDescriptions": "Beschreibungen",
     "settingsReset": "Zurücksetzen",
     "noResults": "Keine Erfolge entsprechen Ihrer Suche.",
-    "settingsUseTheme": "App-Theme verwenden",
+    "settingsUseTheme": "App-Design verwenden",
     "clear": "Leeren",
     "close": "Schließen",
     "closeOverlay": "Overlay schließen",
@@ -1456,11 +1456,11 @@
     "import-theme-app-too-old": "Dieses Design benötigt AW Next {version} oder neuer.",
     "import-theme-format-too-new": "Diese Designdatei wurde mit einer neueren Version von AW Next erstellt.",
     "import-theme-invalid": "Diese Datei ist kein gültiges Designpaket.",
-    "save-theme-done": "Theme gespeichert: {name}",
-    "save-theme-duplicate-title": "Dieses Theme gibt es bereits",
+    "save-theme-done": "Design gespeichert: {name}",
+    "save-theme-duplicate-title": "Dieses Design gibt es bereits",
     "save-theme-duplicate-detail": "Ersetzen überschreibt es mit dem, was der Editor zeigt. Vergib einen anderen Namen, um beide zu behalten.",
-    "theme-name-required": "Gib deinem Theme einen Namen, damit es in der Liste erscheint und exportiert werden kann.",
-    "export-theme-reserved-name": "Ein mitgeliefertes Theme behält seinen Namen. Gib diesem im Editor unten einen eigenen Namen und exportiere es dann.",
+    "theme-name-required": "Gib deinem Design einen Namen, damit es in der Liste erscheint und exportiert werden kann.",
+    "export-theme-reserved-name": "Ein mitgeliefertes Design behält seinen Namen. Gib diesem im Editor unten einen eigenen Namen und exportiere es dann.",
     "export-theme-css-unsupported": "Ein Stylesheet-Design lässt sich nicht exportieren. Gib stattdessen die .css-Datei selbst weiter.",
     "export-theme-done": "Design exportiert: {name}",
     "import-theme-done": "Design importiert: {name}",
@@ -1694,7 +1694,7 @@
     "diagnosis-no-problems": "Keine Probleme erkannt.",
     "diagnosis-auto-repair-wrote": "Autoreparatur hat {count} Erfolge nach {path} geschrieben",
     "diagnosis-icons-summary": "Symbole: {downloaded} heruntergeladen, {failed} fehlgeschlagen, {skipped} übersprungen",
-    "diagnosis-icons-unavailable": "Steam hat für dieses Spiel noch keine Erfolgsbilder, daher konnte kein Symbol heruntergeladen werden. Die Erfolgsliste selbst ist vollständig; führen Sie die Reparatur erneut aus, sobald die Bilder veröffentlicht sind.",
+    "diagnosis-icons-unavailable": "Steam hat für dieses Spiel noch keine Erfolgsbilder, daher konnte kein Symbol heruntergeladen werden. Die Erfolgsliste selbst ist vollständig; führe die Reparatur erneut aus, sobald die Bilder veröffentlicht sind.",
     "diagnosis-steam-appid-created": "steam_appid.txt erstellt",
     "diagnosis-configs-main-updated": "configs.main.ini aktualisiert (new_app_ticket + gc_token)",
     "diagnosis-configs-app-updated": "configs.app.ini aktualisiert ({count} DLC-Einträge, unlock_all={unlockAll})",
@@ -1721,11 +1721,11 @@
     "diagnosis-advanced-data-failed": "Erweiterte Daten: {error}",
     "achievements-overlay-title": "Erfolge-Overlay",
     "update-retry-failed-message": "Das Update ist auch nach dem Leeren der zwischengespeicherten Dateien in {folder} fehlgeschlagen.",
-    "update-retry-failed-detail": "Dies ist wahrscheinlich ein Netzwerk- oder Release-Problem, das durch Leeren des Caches nicht behoben werden kann. Sie können das Update manuell von der Release-Seite herunterladen und installieren.",
+    "update-retry-failed-detail": "Dies ist wahrscheinlich ein Netzwerk- oder Release-Problem, das durch Leeren des Caches nicht behoben werden kann. Du kannst das Update manuell von der Release-Seite herunterladen und installieren.",
     "open-release-page": "Release-Seite öffnen",
     "clear-cache": "Caches leeren",
     "clear-update-cache-label": "Caches leeren",
-    "clear-update-cache-confirm": "Alle neu herunterladbaren Caches löschen (Update-Dateien, Steam/Ubisoft-Schema- und Icon-Cache, heruntergeladene Emulator-Fix-Tools)? Ihre Einstellungen, Spielstände, Backups und manuell platzierten Dateien werden niemals berührt - alles, was hier geleert wird, wird bei Bedarf einfach automatisch erneut heruntergeladen.",
+    "clear-update-cache-confirm": "Alle neu herunterladbaren Caches löschen (Update-Dateien, Steam/Ubisoft-Schema- und Icon-Cache, heruntergeladene Emulator-Fix-Tools)? Deine Einstellungen, Spielstände, Backups und manuell platzierten Dateien werden niemals berührt - alles, was hier geleert wird, wird bei Bedarf einfach automatisch erneut heruntergeladen.",
     "clear-update-cache-failed": "Der Update-Cache konnte nicht geleert werden.",
     "clear-update-cache-empty": "Nichts zu leeren - keine zwischengespeicherten Update-Dateien gefunden.",
     "clear-update-cache-done": "Update-Cache geleert: {folder}",

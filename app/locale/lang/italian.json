@@ -293,12 +293,12 @@
         "name": "Dati steam_settings",
         "description": "Simple usa il recupero proprio di AW Next (anonimo). Advanced esegue generate_emu_config per la copertura depot/lingue.",
         "value": {
-          "simple": "Simple",
-          "advanced": "Advanced"
+          "simple": "Semplice",
+          "advanced": "Avanzata"
         }
       },
       "login": {
-        "name": "Sorgente dati (Advanced)",
+        "name": "Sorgente dati (Avanzata)",
         "description": "La modalità anonima recupera già i dati pubblici su DLC/depot. Il login Steam è facoltativo: aggiunge solo dati privati o nascosti (ad esempio alcuni depot, rami o lingue). Usa SOLO un account usa e getta, mai quello principale.",
         "value": {
           "anonymous": "Anonimo",
@@ -1004,12 +1004,12 @@
     }
   },
   "onboarding": {
-    "settingsLabel": "Guida di prima esecuzione",
+    "settingsLabel": "Guida al primo avvio",
     "settingsButton": "Apri la guida",
     "settingsHelp": "Riapri la guida di configurazione per profilo, cartelle, sorgenti e notifiche.",
     "navLabel": "Passaggi di configurazione",
     "eyebrow": "Prima configurazione",
-    "close": "Vicino",
+    "close": "Chiudi",
     "steps": [
       "Lingua",
       "Come funziona",
@@ -1020,7 +1020,7 @@
     ],
     "languageTitle": "Scegli la lingua",
     "languageCopy": "Giochi, metadati, obiettivi e cache di Steam verranno caricati in questa lingua fin dall’inizio.",
-    "language": "Linguaggio del gioco e dell’interfaccia",
+    "language": "Lingua del gioco e dell’interfaccia",
     "languagePlaceholder": "Scegli una lingua…",
     "languageHint": "Il primo caricamento della libreria inizierà solo dopo questa scelta.",
     "introTitle": "Come funziona",
@@ -1034,13 +1034,13 @@
     "overlayCopy": "Un piccolo pannello degli obiettivi che richiami sopra il gioco con una scorciatoia: Ctrl+Shift+K per impostazione predefinita.",
     "profileTitle": "Profilo",
     "profileCopy": "Scegli il nome mostrato nell’intestazione e, facoltativamente, imposta un avatar locale.",
-    "username": "Nome da visualizzare",
+    "username": "Nome visualizzato",
     "mainSteam": "Account Steam principale",
     "avatarPick": "Scegli la foto",
     "avatarDefault": "Predefinito",
     "avatarHint": "Opzionale. Memorizzato localmente su questo PC.",
     "foldersTitle": "Aggiungi giochi su disco",
-    "foldersCopy": "Aggiungi cartelle di salvataggio/config per emulatori specifici e root di libreria che contengono molti giochi installati.",
+    "foldersCopy": "Usa la Ricerca smart per rilevare automaticamente le cartelle di salvataggio/configurazione e le librerie di giochi. Oppure aggiungile a mano per tipo di cartella.",
     "addSave": "Aggiungi cartella di salvataggio",
     "smartFind": "Ricerca smart",
     "addLibrary": "Aggiungi la cartella della libreria",
@@ -1048,8 +1048,8 @@
     "addSaveHint": "un emulatore/fonte",
     "addLibraryHint": "molti giochi installati",
     "saveList": "Cartelle di salvataggio/configurazione",
-    "libraryList": "Cartelle della biblioteca",
-    "emptyList": "Niente ha aggiunto questa sessione.",
+    "libraryList": "Librerie di giochi",
+    "emptyList": "Niente aggiunto in questa sessione.",
     "settingsTitle": "Impostazioni consigliate",
     "settingsCopy": "L’essenziale per la libreria, l’aspetto e le notifiche. Tutto resta modificabile in seguito.",
     "source": "Visualizza i giochi Steam",
@@ -1059,8 +1059,8 @@
     "autoFix": "Correzione automatica dei giochi emulati",
     "hidden": "Obiettivi nascosti",
     "merge": "Unisci duplicati",
-    "show": "Spettacolo",
-    "hide": "Nascondere",
+    "show": "Mostra",
+    "hide": "Nascondi",
     "sourceHint": "Elenca anche i tuoi giochi Steam legittimi (è richiesto un profilo pubblico).",
     "notificationsHint": "Dove appaiono gli sblocchi. Automatico sceglie per te tra overlay e notifica di Windows.",
     "playtimeHint": "Tiene traccia automaticamente del tempo di gioco per i giochi rilevati.",

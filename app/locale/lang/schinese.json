@@ -293,12 +293,12 @@
         "name": "steam_settings 数据",
         "description": "Simple 使用 AW Next 自身的获取（匿名）。Advanced 运行 generate_emu_config 以覆盖仓库/语言。",
         "value": {
-          "simple": "Simple",
-          "advanced": "Advanced"
+          "simple": "简易",
+          "advanced": "高级"
         }
       },
       "login": {
-        "name": "数据来源 (Advanced)",
+        "name": "数据来源 (高级)",
         "description": "匿名模式已经可以获取公开的 DLC/仓库数据。Steam 登录是可选的：它只会补充私有或被隐藏的数据（例如部分仓库、分支或语言）。请仅使用一次性账号，切勿使用主账号。",
         "value": {
           "anonymous": "匿名",
@@ -1004,8 +1004,8 @@
     }
   },
   "onboarding": {
-    "settingsLabel": "首次运行指南",
-    "settingsButton": "打开指南",
+    "settingsLabel": "首次运行向导",
+    "settingsButton": "打开向导",
     "settingsHelp": "重新打开设置指南，了解个人资料、文件夹、来源和通知。",
     "navLabel": "设置步骤",
     "eyebrow": "首次设置",
@@ -1032,15 +1032,15 @@
     "fixCopy": "对于模拟的 Steam 游戏，右键修复会安装 GBE Fork 并写入成就架构和 DLC 数据。",
     "overlayTitle": "游戏内叠加层",
     "overlayCopy": "用快捷键在游戏上方唤出的小型成就面板，默认为 Ctrl+Shift+K。",
-    "profileTitle": "轮廓",
+    "profileTitle": "个人资料",
     "profileCopy": "选择标题中显示的名称，并可以选择设置本地头像。",
     "username": "显示名称",
     "mainSteam": "主 Steam 帐户",
     "avatarPick": "选择照片",
     "avatarDefault": "默认",
     "avatarHint": "选修的。本地存储在此 PC 上。",
-    "foldersTitle": "在磁盘上添加游戏",
-    "foldersCopy": "为特定模拟器添加保存/配置文件夹，以及包含许多已安装游戏的库根目录。",
+    "foldersTitle": "添加磁盘上的游戏",
+    "foldersCopy": "使用智能查找自动检测存档/配置文件夹和游戏库，也可以按文件夹类型手动添加。",
     "addSave": "添加保存文件夹",
     "smartFind": "智能查找",
     "addLibrary": "添加库文件夹",
@@ -1048,8 +1048,8 @@
     "addSaveHint": "一个模拟器/来源",
     "addLibraryHint": "多个已安装游戏",
     "saveList": "保存/配置文件夹",
-    "libraryList": "图书馆文件夹",
-    "emptyList": "本次会议没有添加任何内容。",
+    "libraryList": "游戏库",
+    "emptyList": "本次未添加任何内容。",
     "settingsTitle": "推荐设置",
     "settingsCopy": "库、外观和通知的要点。之后都可以随时更改。",
     "source": "显示 Steam 游戏",
@@ -1059,7 +1059,7 @@
     "autoFix": "自动修复模拟游戏",
     "hidden": "隐藏成就",
     "merge": "合并重复项",
-    "show": "展示",
+    "show": "显示",
     "hide": "隐藏",
     "sourceHint": "还列出了您的合法 Steam 游戏（需要公开个人资料）。",
     "notificationsHint": "解锁通知的显示位置。“自动”会为你在叠加层和 Windows 通知之间选择。",

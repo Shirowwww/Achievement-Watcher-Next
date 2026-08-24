@@ -3,14 +3,14 @@
   "perfectGame": "Dokončené hry",
   "completionRate": "Priem. miera dokončenia",
   "emptyList": "Žiadne hry",
-  "emptyListHint": "Zatiaľ neboli nájdené žiadne achievementy. Pridajte priečinok, kam vaše hry ukladajú súbory achievementov, a potom obnovte (F5).",
+  "emptyListHint": "Zatiaľ neboli nájdené žiadne úspechy. Pridajte priečinok, kam vaše hry ukladajú súbory úspechov, a potom obnovte (F5).",
   "emptyListAction": "Otvoriť nastavenia priečinkov",
   "installedOnly": "Zobraziť iba nainštalované hry",
   "sort": {
     "tooltip": {
       "alpha": "Názov: A → Z",
       "percent": "Postup",
-      "time": "Dátum achievementu",
+      "time": "Dátum úspechu",
       "played": "Naposledy hrané"
     },
     "label": {
@@ -45,17 +45,17 @@
   "locked": "Zamknuté",
   "globalStat": "hráčov to má",
   "achievementSearchPlaceholder": "Hľadať úspechy…",
-  "hiddenRemain": "skrytých achievementov zostáva",
-  "revealedOnceUnlocked": "Podrobnosti každého achievementu sa zobrazia po jeho odomknutí",
+  "hiddenRemain": "skrytých úspechov zostáva",
+  "revealedOnceUnlocked": "Podrobnosti každého úspechu sa zobrazia po jeho odomknutí",
   "hiddenDescriptionPlaceholder": "Skryté - kliknite pre zobrazenie",
-  "noneUnlocked": "Zatiaľ žiadny odomknutý achievement",
-  "latestAchievementEarned": "Posledný odomknutý achievement",
+  "noneUnlocked": "Zatiaľ žiadny odomknutý úspech",
+  "latestAchievementEarned": "Posledný odomknutý úspech",
   "neverPlayed": "Nikdy nespustené ani nesledované",
   "noneUnlockedHint": "Nevidíte žiadne odomknutia?",
   "scrollUp": "Nahor",
   "allGamesBackButton": "Všetky hry",
   "removeFromList": "Odstrániť zo zoznamu",
-  "buildIconPrefetchCache": "Uložiť ikony achievementov do vyrovnávacej pamäte",
+  "buildIconPrefetchCache": "Uložiť ikony úspechov do vyrovnávacej pamäte",
   "contextMenu": {
     "resetPlaytime": "Resetovať čas hrania",
     "muteProgress": "Stlmiť upozornenia na postup",
@@ -125,7 +125,7 @@
       }
     },
     "overlay": {
-      "position": "Pozícia achievementu",
+      "position": "Pozícia úspechu",
       "progressPosition": "Pozícia postupu",
       "playtimePosition": "Pozícia času hrania",
       "preset": {
@@ -134,7 +134,7 @@
       },
       "hotkey": {
         "name": "Klávesová skratka overlayu v hre",
-        "description": "Stlačte túto skratku, keď je hra spustená, na zobrazenie overlayu achievementov v hre. Kliknutím na ceruzku ju zmeníte, kliknutím na oko zobrazíte náhľad overlayu bez spustenia hry.",
+        "description": "Stlačte túto skratku, keď je hra spustená, na zobrazenie overlayu úspechov v hre. Kliknutím na ceruzku ju zmeníte, kliknutím na oko zobrazíte náhľad overlayu bez spustenia hry.",
         "preview": "Náhľad overlayu"
       },
       "scale": "Veľkosť upozornenia",
@@ -159,8 +159,8 @@
         }
       },
       "hiddenAch": {
-        "name": "Skryté achievementy",
-        "description": "Zobraziť názov a popis skrytých achievementov ešte pred ich odomknutím."
+        "name": "Skryté úspechy",
+        "description": "Zobraziť názov a popis skrytých úspechov ešte pred ich odomknutím."
       },
       "mergeDuplicates": {
         "name": "Zlúčiť duplicity",
@@ -176,7 +176,7 @@
       },
       "hideZero": {
         "name": "Skryť hry s 0 %",
-        "description": "Skryje hry, v ktorých ste zatiaľ neodomkli žiadny achievement."
+        "description": "Skryje hry, v ktorých ste zatiaľ neodomkli žiadny úspech."
       },
       "startup": {
         "name": "Spustiť pri štarte",
@@ -199,7 +199,7 @@
         "name": "Motív",
         "description": "Farebný motív okna aplikácie (okamžitá ukážka, uloženie tlačidlom OK).",
         "customTitle": "Vlastný motív",
-        "customDesc": "Každý motív sa dá upraviť tu: vyber farbu a prípadne obrázok pre každý blok. Obrázok leží nad farbou (tá sa stane ľahkým závojom kvôli čitateľnosti). Uložiť ponechá tvoju prácu ako vlastný motív pod menom vedľa; zatiaľ nepoužité meno ti dá druhý motív a prvý nechá tak.",
+        "customDesc": "Každý motív sa dá upraviť tu: vyberte farbu a prípadne obrázok pre každý blok. Obrázok leží nad farbou (tá sa stane ľahkým závojom kvôli čitateľnosti). Uložiť ponechá vašu prácu ako vlastný motív pod menom vedľa; zatiaľ nepoužité meno vám dá druhý motív a prvý nechá tak.",
         "customName": "Názov motívu",
         "customNamePlaceholder": "Môj motív",
         "saveTheme": "Uložiť motív",
@@ -235,7 +235,7 @@
         "layout": {
           "auto": "Automaticky",
           "name": "Rozloženie ovládača",
-          "description": "Vyber názvy tlačidiel zobrazované pri skratkách ovládača. Auto sleduje pripojený ovládač, keď ho možno rozpoznať."
+          "description": "Vyberte názvy tlačidiel zobrazované pri skratkách ovládača. Auto sleduje pripojený ovládač, keď ho možno rozpoznať."
         },
         "bindings": {
           "toggle": "Otvoriť/zavrieť overlay",
@@ -293,12 +293,12 @@
         "name": "Dáta steam_settings",
         "description": "Simple používa vlastné načítavanie AW Next (anonymne). Advanced spustí generate_emu_config pre pokrytie depotov/jazykov.",
         "value": {
-          "simple": "Simple",
-          "advanced": "Advanced"
+          "simple": "Jednoduché",
+          "advanced": "Pokročilé"
         }
       },
       "login": {
-        "name": "Zdroj dát (Advanced)",
+        "name": "Zdroj dát (Pokročilé)",
         "description": "Anonymný režim už získava verejne dostupné údaje DLC/depotov. Prihlásenie do Steamu je voliteľné: pridá len súkromné alebo skryté údaje (napríklad niektoré depoty, vetvy alebo jazyky). Používajte IBA jednorazový účet - nikdy hlavný.",
         "value": {
           "anonymous": "Anonymne",
@@ -410,7 +410,7 @@
       },
       "test": {
         "achievement": "Úspech",
-        "rare": "Zriedkavé",
+        "rare": "Vzácne",
         "progress": "Postup",
         "playtime": "Čas hrania",
         "toast": "Oznámenie Windows",
@@ -429,15 +429,15 @@
         },
         "notification": {
           "name": "Upozornenie",
-          "description": "Upozorniť pri odomknutí achievementu, ak je to možné"
+          "description": "Upozorniť pri odomknutí úspechu, ak je to možné"
         },
         "rumble": {
           "name": "Vibrácie ovládača",
-          "description": "Pri odomknutí achievementu rozvibruje prvý ovládač"
+          "description": "Pri odomknutí úspechu rozvibruje prvý ovládač"
         },
         "notifyOnProgress": {
           "name": "Oznámenia o postupe",
-          "description": "Upozorniť na postup achievementu, ak je to možné"
+          "description": "Upozorniť na postup úspechu, ak je to možné"
         },
         "playtime": {
           "name": "Sledovanie času hrania",
@@ -667,7 +667,7 @@
         },
         "souvenirTitle": "Spomienkový snímok",
         "souvenirScreenshot": "Snímok pri odomknutí",
-        "souvenirScreenshotDesc": "Zhotoví snímku obrazovky pri odomknutí achievementu. Ukladá sa podľa hry.",
+        "souvenirScreenshotDesc": "Zhotoví snímku obrazovky pri odomknutí úspechu. Ukladá sa podľa hry.",
         "souvenirHdr": "Snímky HDR",
         "souvenirHdrDesc": "Automatický režim opraví farby, keď je vo Windowse aktívne HDR. Ak nie je dostupný, uloží sa štandardná snímka.",
         "souvenirHdrAuto": "Automaticky",
@@ -725,7 +725,7 @@
           "description": "Pri zlyhaní oznámenia Windows prejsť na bublinovú nápovedu"
         },
         "useWS": {
-          "description": "Vysielať achievement všetkým pripojeným klientom"
+          "description": "Vysielať úspech všetkým pripojeným klientom"
         },
         "useChromium": {
           "name": "Upozornenie Chromium",
@@ -741,11 +741,11 @@
       "option": {
         "screenshot": {
           "name": "Spomienka",
-          "description": "Zhotoviť snímku obrazovky pri odomknutí achievementu"
+          "description": "Zhotoviť snímku obrazovky pri odomknutí úspechu"
         },
         "video": {
           "name": "Video spomienka",
-          "description": "Nahrať krátke video pri odomknutí achievementu pomocou hardvérového kodéra vašej GPU"
+          "description": "Nahrať krátke video pri odomknutí úspechu pomocou hardvérového kodéra vašej GPU"
         },
         "overwrite": {
           "name": "Prepísať, ak súbor existuje"
@@ -773,11 +773,11 @@
       }
     },
     "folder": {
-      "headline": "Kde hľadať súbory achievementov :",
+      "headline": "Kde hľadať súbory úspechov :",
       "default": "Automaticky kontrolované priečinky",
-      "custom": "Tvoje priečinky",
+      "custom": "Vaše priečinky",
       "addInfo": [
-        "Vyber priečinok, do ktorého hra alebo emulátor ukladá súbory úspechov.",
+        "Vyberte priečinok, do ktorého hra alebo emulátor ukladá súbory úspechov.",
         "Pre ALI213, Hoodlum, TENOKE, UniverseLAN, RPCS3 vyberte priečinok, v ktorom sa nachádza súbor",
         "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini, UniverseLAN.ini alebo RPCS3.exe."
       ],
@@ -787,7 +787,7 @@
       "library": "Priečinky knižnice",
       "libraryInfo": [
         "Vyberte priečinok obsahujúci veľa inštalačných priečinkov hier (napr. D:\\Games, E:\\SteamLibrary).",
-        "Všetky hry vnútri budú prehľadané na achievementy Goldberg/GBE, aj keď nikdy neboli spustené."
+        "Všetky hry vnútri budú prehľadané na úspechy Goldberg/GBE, aj keď nikdy neboli spustené."
       ],
       "addLibrary": "Pridať priečinok knižnice",
       "generateConfigs": "Generovať konfigurácie",
@@ -810,7 +810,7 @@
       },
       "steamEmu": {
         "name": "Emulátor Steam",
-        "description": "Číta achievementy zapísané emulátormi Goldberg / GBE Fork a podobnými emulátormi Steam."
+        "description": "Číta úspechy zapísané emulátormi Goldberg / GBE Fork a podobnými emulátormi Steam."
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 a Reborn"
@@ -831,7 +831,7 @@
       },
       "importCache": {
         "name": "Importovať vyrovnávaciu pamäť upozornení",
-        "description": "Importovať vyrovnávaciu pamäť Watchdogu ako ďalší zdroj achievementov"
+        "description": "Importovať vyrovnávaciu pamäť Watchdogu ako ďalší zdroj úspechov"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",
@@ -883,7 +883,7 @@
       ],
       "gameHealthTitle": "Stav hry",
       "gameHealth": [
-        "Otvor pri hre tlačidlo nástrojov (vpravo hore na dlaždici) a uvidíš, či je Pripravená, Vyžaduje pozornosť alebo Nesledovaná.",
+        "Otvorte pri hre tlačidlo nástrojov (vpravo hore na dlaždici) a uvidíte, či je Pripravená, Vyžaduje pozornosť alebo Nesledovaná.",
         "Veta pod stavom vysvetlí príčinu zrozumiteľne; kontroly nižšie ukážu, ktorá časť zlyháva.",
         "Tlačidlá opráv sa objavia len vtedy, keď AW Next hru naozaj vie opraviť - každé povie, čo zmení a kde zostanú predchádzajúce súbory.",
         "Technické podrobnosti obsahujú presné cesty, počty a kódy emulátora; skopíruj ich do hlásenia chyby."
@@ -983,7 +983,7 @@
       "mainSteam": {
         "title": "Hlavný účet Steam",
         "name": "Filtrovať podľa používateľa",
-        "description": "Zobraziť achievementy Steam iba vybraného účtu"
+        "description": "Zobraziť úspechy Steam iba vybraného účtu"
       },
       "checkUpdates": "Skontrolovať aktualizácie",
       "clearUpdateCache": {
@@ -992,9 +992,9 @@
         "description": "Odstráni znovu stiahnuteľné vyrovnávacie pamäte: súbory aktualizácie, vyrovnávaciu pamäť schém a ikon Steam/Ubisoft a stiahnuté nástroje na opravu emulátora. Nikdy sa nedotkne vašich nastavení, uložených pozícií, záloh ani ručne umiestnených súborov."
       },
       "forceAchievementRecheck": {
-        "name": "Znova skontrolovať zoznamy achievementov",
+        "name": "Znova skontrolovať zoznamy úspechov",
         "button": "Skontrolovať teraz",
-        "description": "Skontroluje u Steamu, či aktualizácia hry nepridala achievementy od poslednej kontroly. Prebieha automaticky každé 3 dni; toto ju vynúti hneď."
+        "description": "Skontroluje u Steamu, či aktualizácia hry nepridala úspechy od poslednej kontroly. Prebieha automaticky každé 3 dni; toto ju vynúti hneď."
       }
     },
     "interfaceMode": {
@@ -1005,7 +1005,7 @@
   },
   "onboarding": {
     "settingsLabel": "Sprievodca prvým spustením",
-    "settingsButton": "Otvorte sprievodcu",
+    "settingsButton": "Otvoriť sprievodcu",
     "settingsHelp": "Znovu otvorte sprievodcu nastavením pre profil, priečinky, zdroje a oznámenia.",
     "navLabel": "Kroky nastavenia",
     "eyebrow": "Prvé nastavenie",
@@ -1019,19 +1019,19 @@
       "Nastavenia"
     ],
     "languageTitle": "Vyberte jazyk",
-    "languageCopy": "Hry, metadáta, achievementy aj vyrovnávacie pamäte Steamu sa od začiatku načítajú v tomto jazyku.",
+    "languageCopy": "Hry, metadáta, úspechy aj vyrovnávacie pamäte Steamu sa od začiatku načítajú v tomto jazyku.",
     "language": "Jazyk hry a rozhrania",
     "languagePlaceholder": "Vyberte jazyk…",
     "languageHint": "Prvé načítanie knižnice sa spustí až po tejto voľbe.",
     "introTitle": "Ako to funguje",
     "scanTitle": "Skenovať",
-    "scanCopy": "Umiestnenia launcherov, emulátorov a súborov s achievementami sa rozpoznajú automaticky - každé pred prvým skenom potvrdíte.",
+    "scanCopy": "Umiestnenia launcherov, emulátorov a súborov s úspechmi sa rozpoznajú automaticky - každé pred prvým skenom potvrdíte.",
     "watchTitle": "Sledovať",
-    "watchCopy": "Watchdog na pozadí rozpozná hru pri spustení, meria odohraný čas a stráži jej súbory s achievementami.",
+    "watchCopy": "Watchdog na pozadí rozpozná hru pri spustení, meria odohraný čas a stráži jej súbory s úspechmi.",
     "fixTitle": "Opraviť",
-    "fixCopy": "Pri emulovaných hrách zo Steamu oprava z pravého tlačidla nainštaluje GBE Fork a zapíše schému achievementov a dáta DLC.",
+    "fixCopy": "Pri emulovaných hrách zo Steamu oprava z pravého tlačidla nainštaluje GBE Fork a zapíše schému úspechov a dáta DLC.",
     "overlayTitle": "Overlay v hre",
-    "overlayCopy": "Malý panel achievementov, ktorý nad hrou vyvoláte klávesovou skratkou - predvolene Ctrl+Shift+K.",
+    "overlayCopy": "Malý panel úspechov, ktorý nad hrou vyvoláte klávesovou skratkou - predvolene Ctrl+Shift+K.",
     "profileTitle": "Profil",
     "profileCopy": "Vyberte meno zobrazené v hlavičke a voliteľne nastavte miestneho avatara.",
     "username": "Zobrazovaný názov",
@@ -1039,15 +1039,15 @@
     "avatarPick": "Vyberte fotografiu",
     "avatarDefault": "Predvolené",
     "avatarHint": "Voliteľné. Uložené lokálne v tomto počítači.",
-    "foldersTitle": "Pridajte hry na disk",
-    "foldersCopy": "Pridajte priečinky na uloženie/konfiguráciu pre konkrétne emulátory a koreňové adresáre knižníc, ktoré obsahujú veľa nainštalovaných hier.",
+    "foldersTitle": "Pridajte hry z disku",
+    "foldersCopy": "Použite Inteligentné hľadanie na automatické nájdenie priečinkov so savmi/konfiguráciou a herných knižníc. Alebo ich pridajte ručne podľa typu priečinka.",
     "addSave": "Pridať priečinok na uloženie",
     "smartFind": "Inteligentné hľadanie",
     "addLibrary": "Pridať priečinok knižnice",
     "smartFindHint": "saves + knižnice",
     "addSaveHint": "jeden emulátor/zdroj",
     "addLibraryHint": "veľa nainštalovaných hier",
-    "saveList": "Uložiť/konfigurovať priečinky",
+    "saveList": "Priečinky so savmi/konfiguráciou",
     "libraryList": "Priečinky knižnice",
     "emptyList": "Do tejto relácie nebolo pridané nič.",
     "settingsTitle": "Odporúčané nastavenia",
@@ -1055,7 +1055,7 @@
     "source": "Zobraziť hry Steam",
     "notifications": "Upozornenia",
     "notificationTest": "Otestovať upozornenie",
-    "playtime": "Sledovanie času prehrávania",
+    "playtime": "Sledovanie času hrania",
     "autoFix": "Automatická oprava emulovaných hier",
     "hidden": "Skryté úspechy",
     "merge": "Zlúčiť duplikáty",
@@ -1086,14 +1086,14 @@
     "smartRunning": "Hľadá sa…",
     "smartDone": "Vyhľadávanie je dokončené.",
     "saveError": "Nastavenie sa nepodarilo uložiť.",
-    "modeTitle": "Vyber si rozhranie",
+    "modeTitle": "Vyberte si rozhranie",
     "modeCopy": "Obe varianty sledujú úspechy úplne rovnako. Rozhoduješ len o tom, koľko z AW Next je vidieť.",
     "modeSimple": "Jednoduché",
     "modeSimpleCopy": "Prehľadné rozhranie zamerané na každodenné používanie: knižnica, oznámenia, vzhľad a zdroje.",
     "modeAdvanced": "Pokročilé",
     "modeAdvancedCopy": "Celý AW Next: nastavenie emulátora, ovládanie gamepadom, diagnostika, nástroje na opravu a experimentálne voľby.",
     "modeHint": "Ani v jednom prípade sa nič nevypína - Jednoduché len zobrazuje menej a kedykoľvek to zmeníš v Nastaveniach.",
-    "modeRequired": "Na pokračovanie vyber Jednoduché alebo Pokročilé."
+    "modeRequired": "Na pokračovanie vyberte Jednoduché alebo Pokročilé."
   },
   "overlay": {
     "icon": "Ikona",
@@ -1237,7 +1237,7 @@
     "watchdog-stopped-detail": "Žiadny overlay v hre ani upozornenia",
     "start-watchdog": "Spustiť Watchdog",
     "watchdog-running": "Watchdog aktívny",
-    "watchdog-running-detail": "Sledovanie hier a achievementov funguje",
+    "watchdog-running-detail": "Sledovanie hier a úspechov funguje",
     "watchdog-starting": "Watchdog sa spúšťa…",
     "watchdog-starting-detail": "Sledovanie sa o chvíľu začne",
     "watchdog-unresponsive": "Watchdog neodpovedá",
@@ -1558,7 +1558,7 @@
     "epic-failed": "Prihlásenie do Epic sa nepodarilo",
     "epic-disconnected": "Účet Epic odpojený.",
     "epic-title": "Účet Epic Games",
-    "epic-desc": "Voliteľné. Pripojenie ukáže, ktoré achievementy si už odomkol v nainštalovaných hrách Epic; názvy, popisy a vzácnosť fungujú aj bez neho. Tvoj token je na tomto PC uložený šifrovane.",
+    "epic-desc": "Voliteľné. Pripojenie ukáže, ktoré úspechy ste už odomkli v nainštalovaných hrách Epic; názvy, popisy a vzácnosť fungujú aj bez neho. Váš token je na tomto PC uložený šifrovane.",
     "epic-btn-hint": "otvorí okno prihlásenia Epic",
     "connected": "Pripojené",
     "disconnect": "Odpojiť",
@@ -1575,7 +1575,7 @@
     "xbox-imported": "Import dokončený: {created} vytvorených, {updated} aktualizovaných, {failed} zlyhalo.",
     "xbox-import-failed": "Import knižnice Xbox sa nepodaril",
     "xbox-title": "Účet Xbox PC",
-    "xbox-desc": "Voliteľné. Naimportuje tvoju knižnicu Xbox PC (Game Pass a Microsoft Store): achievementy, stav odomknutia a vzácnosť pochádzajú z Xbox Network a ukladajú sa lokálne. Token relácie je na tomto PC uložený šifrovane.",
+    "xbox-desc": "Voliteľné. Naimportuje vašu knižnicu Xbox PC (Game Pass a Microsoft Store): úspechy, stav odomknutia a vzácnosť pochádzajú z Xbox Network a ukladajú sa lokálne. Token relácie je na tomto PC uložený šifrovane.",
     "xbox-btn-hint": "otvorí okno prihlásenia Microsoft",
     "xbox-import-btn-label": "Importovať knižnicu Xbox PC",
     "xbox-import-btn-hint": "získať úspechy z Xbox Network",
@@ -1621,7 +1621,7 @@
     "rescan-started": "Znova sa skenuje {count} vybraných priečinkov…",
     "rescan-complete": "Vybrané priečinky boli znova prehľadané.",
     "rescan-failed": "Sken vybraných priečinkov zlyhal: {error}",
-    "force-recheck-started": "Hľadajú sa nové achievementy…",
+    "force-recheck-started": "Hľadajú sa nové úspechy…",
     "force-recheck-done": "Kontrola dokončená.",
     "force-recheck-failed": "Kontrola zlyhala: {error}",
     "no-game-found": "Nenašla sa žiadna hra.",
@@ -1644,8 +1644,8 @@
     "error-in-connection-establishment-net-err-connection-refused-nis": "Chyba pri nadväzovaní pripojenia: net::ERR_CONNECTION_REFUSED\nBeží Watchdog?",
     "test-toast-name": "Úspech odomknutý",
     "test-toast-desc": "Test upozornenia - preset {preset}",
-    "test-rare-name": "Vzácný úspech",
-    "test-rare-desc": "Vzácný · {percent}% hráčov",
+    "test-rare-name": "Vzácny úspech",
+    "test-rare-desc": "Vzácny · {percent}% hráčov",
     "test-progress-name": "Priebeh",
     "test-progress-desc": "3 / 10",
     "test-playtime-name": "Hollow Knight",
@@ -1694,7 +1694,7 @@
     "diagnosis-no-problems": "Nezistili sa žiadne problémy.",
     "diagnosis-auto-repair-wrote": "Automatická oprava zapísala {count} úspechov do {path}",
     "diagnosis-icons-summary": "ikony: {downloaded} stiahnuté, {failed} zlyhalo, {skipped} preskočené",
-    "diagnosis-icons-unavailable": "Steam pre túto hru zatiaľ nemá obrázky achievementov, takže sa nepodarilo stiahnuť žiadnu ikonu. Samotný zoznam achievementov je úplný; opravu spustite znova, keď budú obrázky zverejnené.",
+    "diagnosis-icons-unavailable": "Steam pre túto hru zatiaľ nemá obrázky úspechov, takže sa nepodarilo stiahnuť žiadnu ikonu. Samotný zoznam úspechov je úplný; opravu spustite znova, keď budú obrázky zverejnené.",
     "diagnosis-steam-appid-created": "steam_appid.txt vytvorený",
     "diagnosis-configs-main-updated": "configs.main.ini aktualizovaný (new_app_ticket + gc_token)",
     "diagnosis-configs-app-updated": "configs.app.ini aktualizovaný ({count} záznamov DLC, unlock_all={unlockAll})",
@@ -1769,9 +1769,9 @@
     "gh-progress-config": "Zapisovanie nastavení emulátora…",
     "gh-loading": "Kontrola…",
     "gh-technical": "Technické podrobnosti",
-    "gh-verified-when": "Achievementy skontrolované {when}",
-    "gh-verified-never": "Zoznam achievementov nebol nikdy skontrolovaný",
-    "gh-verified-hint": "Otvoriť nastavenie, ktoré znova kontroluje zoznamy achievementov",
+    "gh-verified-when": "Úspechy skontrolované {when}",
+    "gh-verified-never": "Zoznam úspechov nebol nikdy skontrolovaný",
+    "gh-verified-hint": "Otvoriť nastavenie, ktoré znova kontroluje zoznamy úspechov",
     "gh-copy": "Kopírovať",
     "gh-action-failed": "Opravu sa nepodarilo dokončiť.",
     "gh-issue-schema": "zoznam úspechov",
@@ -1785,7 +1785,7 @@
     "gh-issue-mapping": "zodpovedajúce vydanie na Steame",
     "gh-why-ready": "Táto hra je rozpoznaná, dáta úspechov sú k dispozícii a AW Next sleduje jej odomykanie.",
     "gh-why-attention": "Hra funguje, ale časť nastavenia nie je úplná. Kontroly nižšie ukazujú ktorá.",
-    "gh-why-not-installed": "Táto hra nie je na tomto PC nainštalovaná, alebo AW Next nevie, kde je. Vyber jej spustiteľný súbor, aby ju bolo možné sledovať.",
+    "gh-why-not-installed": "Táto hra nie je na tomto PC nainštalovaná, alebo AW Next nevie, kde je. Vyberte jej spustiteľný súbor, aby ju bolo možné sledovať.",
     "gh-why-install-gone": "Priečinok hry, ktorý AW Next poznal, zmizol - bol presunutý, odinštalovaný alebo je na nepripojenom disku. Ukáž AW Next hru znovu.",
     "gh-why-no-achievement-data": "Pre túto hru sa nenašiel žiadny zoznam úspechov, takže zatiaľ nie je čo sledovať. Hry úplne bez úspechov sú tu bežné.",
     "gh-why-emulator-missing": "Táto hra potrebuje na zaznamenávanie úspechov emulátor Steamu a v jej priečinku žiadny nie je. Použi opravu emulátora z ponuky po pravom kliknutí na hru.",
@@ -1925,7 +1925,7 @@
     "steam-hide-stale-help": "Vyžaduje pripojený účet Steam. Hry nainštalované v tomto počítači a hry zdieľané cez Steam Family sa nikdy neskrývajú."
   },
   "watchdog": {
-    "rare": "Vzácný {percent}%",
+    "rare": "Vzácny {percent}%",
     "platinumTitle": "Platina",
     "platinumDesc": "Platina odomknutá - 100 % dokončené!",
     "eaAchievement": "Úspech EA",
@@ -1934,7 +1934,7 @@
     "unknownOperation": "Neznáma operácia",
     "unknownReward": "Neznáma odmena",
     "trophy": "Trofej",
-    "rareAchievement": "Vzácný úspech",
+    "rareAchievement": "Vzácny úspech",
     "rareDescription": "Odomkol ho iba {percent}% hráčov.",
     "testAchievement": "Testovací úspech",
     "testDescription": "Toto je testovacie upozornenie z AW Next.",

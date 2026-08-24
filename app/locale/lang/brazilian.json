@@ -293,12 +293,12 @@
         "name": "Dados de steam_settings",
         "description": "Simple usa a obtenção própria do AW Next (anônima). Advanced executa o generate_emu_config para cobertura de depots/idiomas.",
         "value": {
-          "simple": "Simple",
-          "advanced": "Advanced"
+          "simple": "Simples",
+          "advanced": "Avançado"
         }
       },
       "login": {
-        "name": "Fonte de dados (Advanced)",
+        "name": "Fonte de dados (Avançado)",
         "description": "O modo anônimo já obtém os dados públicos de DLC/depots. O login da Steam é opcional: só acrescenta dados privados ou ocultos (como alguns depots, branches ou idiomas). Use APENAS uma conta descartável, nunca a principal.",
         "value": {
           "anonymous": "Anônimo",
@@ -1004,8 +1004,8 @@
     }
   },
   "onboarding": {
-    "settingsLabel": "Guia de primeira execução",
-    "settingsButton": "Guia aberto",
+    "settingsLabel": "Guia da primeira execução",
+    "settingsButton": "Abrir o guia",
     "settingsHelp": "Reabra o guia de configuração para perfil, pastas, fontes e notificações.",
     "navLabel": "Etapas de configuração",
     "eyebrow": "Primeira configuração",
@@ -1020,7 +1020,7 @@
     ],
     "languageTitle": "Escolha o idioma",
     "languageCopy": "Os jogos, os metadados, as conquistas e os caches da Steam serão carregados neste idioma desde o início.",
-    "language": "Linguagem do jogo e da interface",
+    "language": "Idioma do jogo e da interface",
     "languagePlaceholder": "Escolha um idioma…",
     "languageHint": "O primeiro carregamento da biblioteca inicia somente após esta escolha.",
     "introTitle": "Como funciona",
@@ -1040,16 +1040,16 @@
     "avatarDefault": "Padrão",
     "avatarHint": "Opcional. Armazenado localmente neste PC.",
     "foldersTitle": "Adicione jogos no disco",
-    "foldersCopy": "Adicione pastas de salvamento/configuração para emuladores específicos e raízes de biblioteca que contenham muitos jogos instalados.",
-    "addSave": "Adicionar pasta salva",
+    "foldersCopy": "Use a Busca inteligente para detectar automaticamente pastas de saves/configuração e bibliotecas de jogos. Ou adicione-as manualmente por tipo de pasta.",
+    "addSave": "Pasta de saves/configuração",
     "smartFind": "Busca inteligente",
     "addLibrary": "Adicionar pasta da biblioteca",
     "smartFindHint": "saves + bibliotecas",
     "addSaveHint": "um emulador/fonte",
     "addLibraryHint": "muitos jogos instalados",
-    "saveList": "Salvar/configurar pastas",
+    "saveList": "Pastas de saves/configuração",
     "libraryList": "Pastas da biblioteca",
-    "emptyList": "Nada adicionou esta sessão.",
+    "emptyList": "Nada foi adicionado nesta sessão.",
     "settingsTitle": "Configurações recomendadas",
     "settingsCopy": "O essencial para a sua biblioteca, a aparência e as notificações. Tudo continua editável depois.",
     "source": "Exibir jogos Steam",
@@ -1060,7 +1060,7 @@
     "hidden": "Conquistas ocultas",
     "merge": "Mesclar duplicatas",
     "show": "Mostrar",
-    "hide": "Esconder",
+    "hide": "Ocultar",
     "sourceHint": "Também lista seus jogos legítimos do Steam (é necessário perfil público).",
     "notificationsHint": "Onde os desbloqueios aparecem. Automático escolhe para você entre overlay e notificação do Windows.",
     "playtimeHint": "Rastreia automaticamente o tempo de jogo dos jogos detectados.",

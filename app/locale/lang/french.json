@@ -3,7 +3,7 @@
   "perfectGame": "Jeux terminés",
   "completionRate": "Moyenne des succès",
   "emptyList": "Pas de jeux",
-  "emptyListHint": "Aucun succès trouvé pour le moment. Ajoutez le dossier où vos jeux enregistrent leurs fichiers de succès, puis actualisez (F5).",
+  "emptyListHint": "Aucun succès trouvé pour le moment. Ajoute le dossier où tes jeux enregistrent leurs fichiers de succès, puis actualise (F5).",
   "emptyListAction": "Ouvrir les dossiers",
   "installedOnly": "Afficher uniquement les jeux installés",
   "sort": {
@@ -96,12 +96,12 @@
       "advanced": "Avancé"
     },
     "common": {
-      "show": "Montrer",
-      "hide": "Cacher",
+      "show": "Afficher",
+      "hide": "Masquer",
       "enable": "Activé",
       "disable": "Désactivé",
       "cancel": "Annuler",
-      "save": "OK",
+      "save": "Enregistrer",
       "version": "Version",
       "maintainedBy": "maintenue par",
       "fork": "Dérivé de",
@@ -110,7 +110,7 @@
     },
     "search": {
       "placeholder": "Rechercher un réglage…",
-      "empty": "Aucun réglage ne correspond à votre recherche.",
+      "empty": "Aucun réglage ne correspond à ta recherche.",
       "ariaLabel": "Rechercher dans les paramètres",
       "clear": "Effacer"
     },
@@ -167,7 +167,7 @@
         "description": "Lance AW Next automatiquement avec Windows, caché dans la zone de notification."
       },
       "onboarding": {
-        "name": "Guide de démarrage",
+        "name": "Guide de première utilisation",
         "button": "Ouvrir le guide",
         "description": "Rouvrez le guide de configuration pour le profil, les dossiers, les sources et les notifications."
       },
@@ -278,11 +278,11 @@
         "description": "Simple utilise la récupération d’AW Next (anonyme). Advanced lance generate_emu_config pour la couverture depots/langues.",
         "value": {
           "simple": "Simple",
-          "advanced": "Advanced"
+          "advanced": "Avancé"
         }
       },
       "login": {
-        "name": "Source des données (Advanced)",
+        "name": "Source des données (Avancé)",
         "description": "Le mode anonyme récupère déjà les DLC et depots publics. Le login Steam est facultatif : il ajoute seulement les données privées ou masquées par Steam (certains depots, branches ou langues). Utilise un compte JETABLE uniquement, jamais ton compte principal.",
         "value": {
           "anonymous": "Anonyme",
@@ -449,7 +449,7 @@
         },
         "mode": {
           "name": "Type de notification",
-          "description": "Automatique utilise l’overlay en jeu quand il peut s’afficher, et une notification Windows sinon. Les autres choix utilisent toujours celui que vous désignez.",
+          "description": "Automatique utilise l’overlay en jeu quand il peut s’afficher, et une notification Windows sinon. Les autres choix utilisent toujours celui que tu désignes.",
           "value": {
             "auto": "Automatique (recommandé)",
             "toast": "Notification Windows",
@@ -605,7 +605,7 @@
             "duplicated": "Copie prête à créer :",
             "intro": "Choisissez un point de départ, puis personnalisez-le. Rien n’est enregistré tant que le preset n’est pas créé.",
             "random": "Surprends-moi",
-            "randomized": "Un design que vous n’aviez pas essayé",
+            "randomized": "Un design que tu n’avais pas essayé",
             "title": "Partir de"
           },
           "title": "Concepteur de preset",
@@ -635,7 +635,7 @@
             "iconLeft": "Icône à gauche",
             "iconRight": "Icône à droite",
             "iconTop": "Icône au-dessus",
-            "image": "Votre image",
+            "image": "Ton image",
             "left": "Gauche",
             "light": "Clair",
             "linear": "Linéaire",
@@ -687,7 +687,7 @@
           "middleRight": "Milieu droite",
           "custom": "Personnalisée"
         },
-        "reposition": "Repositionner le popup (glissez-le où vous voulez)",
+        "reposition": "Repositionner le popup (glisse-le où tu veux)",
         "customToastAudio": {
           "name": "Son de la notification Windows",
           "description": "Spécifie le son à jouer lorsqu’une notification Windows est affichée",
@@ -741,11 +741,11 @@
       "option": {
         "screenshot": {
           "name": "Souvenir",
-          "description": "Prendre une capture d’écran lorsque vous débloquez un succès"
+          "description": "Prendre une capture d’écran lorsque tu débloques un succès"
         },
         "video": {
           "name": "Souvenir vidéo",
-          "description": "Enregistrez une courte vidéo lorsque vous débloquez un succès à l’aide de l’encodeur matériel de votre GPU"
+          "description": "Enregistre une courte vidéo lorsque tu débloques un succès, avec l’encodeur matériel de ton GPU"
         },
         "overwrite": {
           "name": "Écraser si fichier existant"
@@ -775,7 +775,7 @@
     "folder": {
       "headline": "Où chercher les données des succès:",
       "default": "Dossiers vérifiés automatiquement",
-      "custom": "Vos dossiers",
+      "custom": "Tes dossiers",
       "addInfo": [
         "Choisissez le dossier où un jeu ou un émulateur garde ses fichiers de succès.",
         "Pour ALI213, Hoodlum, TENOKE, UniverseLAN et RPCS3, sélectionnez le dossier qui contient",
@@ -801,7 +801,7 @@
       },
       "legitSteam": {
         "name": "Afficher les jeux Steam",
-        "description": "Steam doit être installé et votre profil Steam doit être public.",
+        "description": "Steam doit être installé et ton profil Steam doit être public.",
         "value": {
           "none": "Aucun",
           "installed": "Installé(s)",
@@ -863,7 +863,7 @@
       "nav": "Aide",
       "title": "Aide et astuces",
       "intro": "L’essentiel sur la détection, les notifications, la manette, l’overlay, les thèmes et le dépannage.",
-      "setupTitle": "Votre configuration actuelle",
+      "setupTitle": "Ta configuration actuelle",
       "topicsTitle": "Parcourir les sujets",
       "searchPlaceholder": "Rechercher dans l’aide…",
       "noResults": "Aucun sujet d’aide ne correspond à ta recherche.",
@@ -876,10 +876,10 @@
       },
       "quickTitle": "Premiers pas",
       "quick": [
-        "Ajoutez vos dossiers de sauvegarde et de configuration dans Paramètres > Dossiers, puis activez la source correspondante dans Paramètres > Sources.",
+        "Ajoute tes dossiers de sauvegarde et de configuration dans Paramètres > Dossiers, puis active la source correspondante dans Paramètres > Sources.",
         "Le Watchdog fonctionne en arrière-plan : il doit rester actif pour les notifications en direct et le suivi du temps de jeu.",
-        "Vos réglages, caches, journaux et thèmes personnalisés se trouvent dans %APPDATA%\\Achievement Watcher Next.",
-        "Chaque bloc de réglages se replie avec son chevron et mémorise son état."
+        "Tes réglages, caches, journaux et thèmes personnalisés se trouvent dans %APPDATA%\\Achievement Watcher Next.",
+        "Chaque section des réglages se replie depuis son en-tête : le chevron pointe vers le bas quand elle est ouverte, sur le côté quand elle est fermée. Tes choix sont mémorisés."
       ],
       "gameHealthTitle": "État des jeux",
       "gameHealth": [
@@ -891,8 +891,8 @@
       "troubleshootTitle": "Dépannage",
       "troubleshoot": [
         "Si un jeu manque : ajoutez les dossiers, relancez un scan, puis vérifiez l’interrupteur de source et la liste noire.",
-        "Si les notifications n’apparaissent pas : vérifiez Ne pas déranger / Assistant de concentration dans Windows et lancez l’app avec les mêmes droits que vos jeux.",
-        "Avancé > Diagnostics ouvre les logs et les dossiers de données ; joignez-les quand vous signalez un problème.",
+        "Si les notifications n’apparaissent pas : vérifie Ne pas déranger / Assistant de concentration dans Windows et lance l’app avec les mêmes droits que tes jeux.",
+        "Avancé > Diagnostics ouvre les logs et les dossiers de données ; joins-les quand tu signales un problème.",
         "Les journaux sont conservés d’un lancement à l’autre. Chaque exécution commence par un marqueur de session et un bloc [diag] (versions, chemins, écrans) à joindre au ticket."
       ],
       "sourcesTitle": "Lanceurs et sources",
@@ -942,7 +942,7 @@
         "Le thème personnalisé part de Steam Blue ; chaque couche (fond, en-tête, panneaux, cartes, réglages, texte, bordures, accent) est modifiable.",
         "Les images de couche passent sous un voile coloré avec un léger flou dépoli ; les effets sont par couche.",
         "Déposez un thème CSS dans <userData>\\themes et il apparaît dans la liste des thèmes.",
-        "Le créateur de preset affiche un aperçu réel avant l’enregistrement, puis permet de modifier ou supprimer vos presets.",
+        "Le créateur de preset affiche un aperçu réel avant l’enregistrement, puis permet de modifier ou supprimer tes presets.",
         "Exporte le thème que tu utilises dans un seul fichier .awtheme, ou importe celui qu'on t'a envoyé : il est prévisualisé avant l'installation puis se comporte comme un thème intégré."
       ],
       "tipsTitle": "Astuces",
@@ -989,7 +989,7 @@
       "clearUpdateCache": {
         "name": "Vider les caches",
         "button": "Vider les caches",
-        "description": "Supprime les caches retéléchargeables : fichiers de mise à jour, cache des schémas et icônes Steam/Ubisoft, et outils de correction d’émulateur téléchargés. Ne touche jamais à vos réglages, sauvegardes, backups ou fichiers placés manuellement."
+        "description": "Supprime les caches retéléchargeables : fichiers de mise à jour, cache des schémas et icônes Steam/Ubisoft, et outils de correction d’émulateur téléchargés. Ne touche jamais à tes réglages, sauvegardes, backups ou fichiers placés manuellement."
       },
       "forceAchievementRecheck": {
         "name": "Revérifier les listes de succès",
@@ -1021,19 +1021,19 @@
     "languageTitle": "Choisir la langue",
     "languageCopy": "Les jeux, les métadonnées, les succès et les caches Steam se chargeront dans cette langue dès le départ.",
     "language": "Langue des jeux et de l’interface",
-    "languagePlaceholder": "Choisissez une langue…",
+    "languagePlaceholder": "Choisis une langue…",
     "languageHint": "Le premier chargement de la bibliothèque ne démarre qu’après ce choix.",
     "introTitle": "Comment ça marche",
     "scanTitle": "Scanner",
-    "scanCopy": "Les emplacements des launchers, des émulateurs et des fichiers de succès sont détectés automatiquement - vous validez chacun d’eux avant le premier scan.",
+    "scanCopy": "Les emplacements des launchers, des émulateurs et des fichiers de succès sont détectés automatiquement - tu valides chacun d’eux avant le premier scan.",
     "watchTitle": "Surveiller",
     "watchCopy": "Le Watchdog en arrière-plan repère le jeu à son lancement, suit le temps de jeu et surveille ses fichiers de succès.",
     "fixTitle": "Réparer",
     "fixCopy": "Pour les jeux Steam émulés, le correctif du clic droit installe GBE Fork et écrit le schéma des succès et les données DLC.",
     "overlayTitle": "Overlay en jeu",
-    "overlayCopy": "Un petit panneau de succès que vous affichez par-dessus le jeu avec un raccourci - Ctrl+Shift+K par défaut.",
+    "overlayCopy": "Un petit panneau de succès que tu affiches par-dessus le jeu avec un raccourci - Ctrl+Shift+K par défaut.",
     "profileTitle": "Profil",
-    "profileCopy": "Choisissez le nom affiché dans l’en-tête et définissez éventuellement un avatar local.",
+    "profileCopy": "Choisis le nom affiché dans l’en-tête et, si tu veux, un avatar local.",
     "username": "Nom d’affichage",
     "mainSteam": "Compte Steam principal",
     "avatarPick": "Choisir une photo",
@@ -1051,7 +1051,7 @@
     "libraryList": "Bibliothèques de jeux",
     "emptyList": "Rien n’a été ajouté à cette session.",
     "settingsTitle": "Paramètres recommandés",
-    "settingsCopy": "L’essentiel pour votre bibliothèque, l’apparence et les notifications. Tout reste modifiable ensuite.",
+    "settingsCopy": "L’essentiel pour ta bibliothèque, l’apparence et les notifications. Tout reste modifiable ensuite.",
     "source": "Afficher les jeux Steam",
     "notifications": "Notifications",
     "notificationTest": "Tester la notification",
@@ -1061,8 +1061,8 @@
     "merge": "Fusionner les doublons",
     "show": "Afficher",
     "hide": "Masquer",
-    "sourceHint": "Répertorie également vos jeux Steam légitimes (profil public requis).",
-    "notificationsHint": "Où apparaissent les succès. Automatique choisit pour vous entre overlay et notification Windows.",
+    "sourceHint": "Répertorie également tes jeux Steam légitimes (profil public requis).",
+    "notificationsHint": "Où apparaissent les succès. Automatique choisit pour toi entre overlay et notification Windows.",
     "playtimeHint": "Suit automatiquement le temps de jeu pour les jeux détectés.",
     "autoFixHint": "Applique la réparation GBE Fork ou Uplay R2 adaptée aux nouveaux jeux émulés détectés.",
     "hiddenHint": "Révèle les noms et descriptions cachés des succès avant de les débloquer.",
@@ -1131,7 +1131,7 @@
     "settingsShowRarity": "Rareté",
     "settingsShowDescriptions": "Descriptions",
     "settingsReset": "Réinitialiser",
-    "noResults": "Aucun succès ne correspond à votre recherche.",
+    "noResults": "Aucun succès ne correspond à ta recherche.",
     "settingsUseTheme": "Utiliser le thème de l’application",
     "clear": "Effacer",
     "close": "Fermer",
@@ -1162,7 +1162,7 @@
     "import-san-app-setting": "Un réglage de l’application, pas du preset : {keys}",
     "import-san-asset-missing": "Absent du fichier de thème : {names}",
     "import-san-asset-rejected": "Refusé car le fichier n’est pas pris en charge : {names}",
-    "import-san-base-layout": "Le thème était bâti sur la carte « {name} » de SAN. AW Next dessine la sienne : la disposition n’est donc pas celle que vous aviez, les couleurs, le mouvement et les effets si.",
+    "import-san-base-layout": "Le thème était bâti sur la carte « {name} » de SAN. AW Next dessine la sienne : la disposition n’est donc pas celle que tu avais, les couleurs, le mouvement et les effets si.",
     "import-san-carried": "{count} réglages repris.",
     "import-san-installed": "C’est désormais un preset ordinaire : ouvrez-le sous « Modifier un preset » pour tout ajuster.",
     "import-san-invalid": "Ce fichier n’est pas un thème Steam Achievement Notifier.",
@@ -1531,10 +1531,10 @@
     "download-install": "Télécharger && installer",
     "later": "Plus tard",
     "skip-this-version": "Ignorer cette version",
-    "up-to-date": "Vous utilisez déjà la dernière version ({version}).",
+    "up-to-date": "Tu utilises déjà la dernière version ({version}).",
     "update-ready": "Mise à jour prête",
     "update-ready-message": "Une nouvelle version ({version}) a été téléchargée.",
-    "update-ready-detail": "Voulez-vous l’installer maintenant ?",
+    "update-ready-detail": "Veux-tu l’installer maintenant ?",
     "downloading-update": "téléchargement de la mise à jour {percent} %",
     "yes": "Oui",
     "select-a-game-library-folder-to-scan": "Sélectionnez un dossier de bibliothèque de jeux à analyser",
@@ -1558,7 +1558,7 @@
     "epic-failed": "Échec de la connexion Epic",
     "epic-disconnected": "Compte Epic déconnecté.",
     "epic-title": "Compte Epic Games",
-    "epic-desc": "Optionnel. La connexion affiche les succès que vous avez déjà débloqués dans les jeux Epic installés ; les noms, descriptions et la rareté fonctionnent sans elle. Votre jeton est stocké chiffré sur ce PC.",
+    "epic-desc": "Optionnel. La connexion affiche les succès que tu as déjà débloqués dans les jeux Epic installés ; les noms, descriptions et la rareté fonctionnent sans elle. Ton jeton est stocké chiffré sur ce PC.",
     "epic-btn-hint": "ouvre la fenêtre de connexion Epic",
     "connected": "Connecté",
     "disconnect": "Déconnecter",
@@ -1575,7 +1575,7 @@
     "xbox-imported": "Importation terminée : {created} créé(s), {updated} mis à jour, {failed} échec(s).",
     "xbox-import-failed": "Échec de l’importation Xbox",
     "xbox-title": "Compte Xbox PC",
-    "xbox-desc": "Optionnel. Importe votre bibliothèque Xbox PC (Game Pass et Microsoft Store) : succès, état de déblocage et rareté viennent de Xbox Network et sont mis en cache localement. Votre jeton est stocké chiffré sur ce PC.",
+    "xbox-desc": "Optionnel. Importe ta bibliothèque Xbox PC (Game Pass et Microsoft Store) : succès, état de déblocage et rareté viennent de Xbox Network et sont mis en cache localement. Ton jeton est stocké chiffré sur ce PC.",
     "xbox-btn-hint": "ouvre la fenêtre de connexion Microsoft",
     "xbox-import-btn-label": "Importer la bibliothèque Xbox PC",
     "xbox-import-btn-hint": "récupère les succès depuis Xbox Network",
@@ -1649,7 +1649,7 @@
     "test-progress-name": "Progression",
     "test-progress-desc": "3 / 10",
     "test-playtime-name": "Hollow Knight",
-    "test-playtime-desc": "Vous avez joué pendant 42 minutes",
+    "test-playtime-desc": "Tu as joué pendant 42 minutes",
     "test-platinum-name": "Trophée Platine",
     "test-platinum-desc": "100 % complété",
     "error-editing-custom-folder": "Erreur lors de la modification du dossier personnalisé",
@@ -1665,10 +1665,10 @@
     "chooseAnotherCoverTitle": "Choisir une autre jaquette",
     "coverPickerLoading": "Chargement des jaquettes…",
     "noCoversFound": "Aucune jaquette alternative trouvée.",
-    "artwork-fetch-failed": "Impossible de récupérer le visuel. Vérifiez votre connexion.",
+    "artwork-fetch-failed": "Impossible de récupérer le visuel. Vérifie ta connexion.",
     "artwork-not-found": "Aucun visuel trouvé.",
     "retry-artwork": "Réessayer",
-    "cover-picker-fetch-failed": "Impossible de récupérer les jaquettes alternatives. Vérifiez votre connexion et réessayez.",
+    "cover-picker-fetch-failed": "Impossible de récupérer les jaquettes alternatives. Vérifie ta connexion et réessaie.",
     "currentCover": "Actuelle",
     "defaultCover": "Par défaut",
     "theme-layer-gradient": "Dégradé",
@@ -1721,11 +1721,11 @@
     "diagnosis-advanced-data-failed": "Données avancées : {error}",
     "achievements-overlay-title": "Overlay de succès",
     "update-retry-failed-message": "La mise à jour a encore échoué après avoir vidé les fichiers en cache dans {folder}.",
-    "update-retry-failed-detail": "Il s’agit probablement d’un problème réseau ou lié à la publication, que vider le cache ne peut pas résoudre. Vous pouvez télécharger et installer la mise à jour manuellement depuis la page de version.",
+    "update-retry-failed-detail": "Il s’agit probablement d’un problème réseau ou lié à la publication, que vider le cache ne peut pas résoudre. Tu peux télécharger et installer la mise à jour manuellement depuis la page de version.",
     "open-release-page": "Ouvrir la page de version",
     "clear-cache": "Vider les caches",
     "clear-update-cache-label": "Vider les caches",
-    "clear-update-cache-confirm": "Supprimer tous les caches retéléchargeables (fichiers de mise à jour, cache des schémas et icônes Steam/Ubisoft, outils de correction d’émulateur téléchargés) ? Vos réglages, sauvegardes, backups et fichiers placés manuellement ne sont jamais touchés - tout ce qui est vidé ici est simplement retéléchargé automatiquement en cas de besoin.",
+    "clear-update-cache-confirm": "Supprimer tous les caches retéléchargeables (fichiers de mise à jour, cache des schémas et icônes Steam/Ubisoft, outils de correction d’émulateur téléchargés) ? Tes réglages, sauvegardes, backups et fichiers placés manuellement ne sont jamais touchés - tout ce qui est vidé ici est simplement retéléchargé automatiquement en cas de besoin.",
     "clear-update-cache-failed": "Impossible de vider le cache de mise à jour.",
     "clear-update-cache-empty": "Rien à vider - aucun fichier de mise à jour en cache.",
     "clear-update-cache-done": "Cache de mise à jour vidé : {folder}",
@@ -1877,7 +1877,7 @@
     "preset-sample-detail": "Exemple de description de succès",
     "preset-sample-game": "Jeu d’exemple",
     "launch-needs-admin": "Windows a refusé de démarrer ce jeu sans les droits administrateur.",
-    "launch-needs-admin-detail": "Réessayer en tant qu’administrateur ? Windows vous demandera de confirmer. AW Next reste sans élévation : seul le jeu est démarré avec les droits administrateur.",
+    "launch-needs-admin-detail": "Réessayer en tant qu’administrateur ? Windows te demandera de confirmer. AW Next reste sans élévation : seul le jeu est démarré avec les droits administrateur.",
     "launch-as-admin": "Exécuter en tant qu’administrateur",
     "export-logs": "Exporter les journaux",
     "export-logs-running": "Collecte des journaux…",
@@ -1888,7 +1888,7 @@
     "chooseAnotherIconTitle": "Choisir une autre icône",
     "chooseAnotherIcon": "Choisir une autre icône…",
     "iconPickerLoading": "Chargement des icônes…",
-    "icon-picker-fetch-failed": "Impossible de récupérer les icônes alternatives. Vérifiez votre connexion et réessayez.",
+    "icon-picker-fetch-failed": "Impossible de récupérer les icônes alternatives. Vérifie ta connexion et réessaie.",
     "noIconsFound": "Aucune icône alternative trouvée.",
     "iconSourceGameFolder": "Dossier du jeu",
     "iconSourceExecutable": "Exécutable",
@@ -1938,7 +1938,7 @@
     "rareDescription": "Seulement {percent} % des joueurs l’ont débloqué.",
     "testAchievement": "Succès de test",
     "testDescription": "Ceci est une notification de test depuis AW Next.",
-    "playedFor": "Vous avez joué pendant {duration}",
+    "playedFor": "Tu as joué pendant {duration}",
     "trackingPlaytime": "Suivi du temps de jeu en cours",
     "playtime": "Temps de jeu"
   }

@@ -293,12 +293,12 @@
         "name": "Dane steam_settings",
         "description": "Simple używa własnego pobierania AW Next (anonimowo). Advanced uruchamia generate_emu_config dla pokrycia depotów/języków.",
         "value": {
-          "simple": "Simple",
-          "advanced": "Advanced"
+          "simple": "Prosty",
+          "advanced": "Zaawansowany"
         }
       },
       "login": {
-        "name": "Źródło danych (Advanced)",
+        "name": "Źródło danych (Zaawansowany)",
         "description": "Tryb anonimowy już pobiera publicznie dostępne dane DLC/depotów. Logowanie do Steam jest opcjonalne: dodaje tylko prywatne lub ukryte dane (np. niektóre depoty, gałęzie lub języki). Używaj WYŁĄCZNIE konta jednorazowego - nigdy głównego.",
         "value": {
           "anonymous": "Anonimowo",
@@ -1004,7 +1004,7 @@
     }
   },
   "onboarding": {
-    "settingsLabel": "Przewodnik po pierwszym uruchomieniu",
+    "settingsLabel": "Przewodnik pierwszego uruchomienia",
     "settingsButton": "Otwórz przewodnik",
     "settingsHelp": "Otwórz ponownie przewodnik konfiguracji dla profilu, folderów, źródeł i powiadomień.",
     "navLabel": "Kroki konfiguracji",
@@ -1040,14 +1040,14 @@
     "avatarDefault": "Domyślne",
     "avatarHint": "Opcjonalne. Przechowywane lokalnie na tym komputerze.",
     "foldersTitle": "Dodaj gry na dysku",
-    "foldersCopy": "Dodaj foldery zapisu/konfiguracji dla określonych emulatorów i katalogi główne bibliotek zawierające wiele zainstalowanych gier.",
+    "foldersCopy": "Użyj Inteligentnego wyszukiwania, aby automatycznie wykryć foldery zapisów/konfiguracji i biblioteki gier. Albo dodaj je ręcznie według typu folderu.",
     "addSave": "Dodaj folder zapisu",
     "smartFind": "Inteligentne wyszukiwanie",
     "addLibrary": "Dodaj folder biblioteki",
     "smartFindHint": "zapisy + biblioteki",
     "addSaveHint": "jeden emulator/źródło",
     "addLibraryHint": "wiele zainstalowanych gier",
-    "saveList": "Zapisz/konfiguruj foldery",
+    "saveList": "Foldery zapisów/konfiguracji",
     "libraryList": "Foldery biblioteczne",
     "emptyList": "Nie dodano nic w tej sesji.",
     "settingsTitle": "Zalecane ustawienia",
