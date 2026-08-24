@@ -41,6 +41,56 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- **The Sources grid shows each platform's own mark.** It was eight two-letter abbreviations - St,
+  Sv, GO, Ep, Ub, EA, Em, Xb - which nobody reads as a logo. The six storefronts now carry the marks
+  the application already uses for the source badge on a library tile, so the site and the app
+  identify a platform with the same artwork. They are drawn as masks in the accent colour rather
+  than in their own: eight brand palettes fight each other in one grid, and several of them would
+  disappear entirely against one of the two themes. The two rows that are not a storefront - the
+  Steam-compatible save readers and the emulators - keep a glyph of ours, because no one mark can
+  stand in for Goldberg, GBE Fork and the rest, or for RPCS3, ShadPS4 and Xenia.
+- **A submission starts from the package instead of from four empty boxes.** Choosing a file now
+  reads its manifest in the page and fills the form in: the name, the description, the tags and -
+  the point of it - the credit, which is the author the application recorded when you exported
+  rather than something retyped into a web form. Only boxes still empty are touched, so a second
+  file chosen after a change of mind cannot undo what you wrote. The reading happens in your
+  browser and goes no further; the file itself still only leaves when you press Publish.
+- **The name is now required, and nothing else is.** It is the heading of the card and the address
+  the file is published under, and one chosen for somebody rather than by them is what a moderator
+  ended up rewriting. Publish stays inert until there is a name - which, filled in from the package,
+  it usually already has.
+- **Sending a preset or a theme to a gallery is now a form you finish, not a file you drop.** Picking
+  a file used to be the submission, which meant the boxes above it were only filled in by whoever
+  thought to fill them in first. The file is now held in the page: it is named on the panel, you fill
+  in what the package cannot know, and one press of **Publish** sends both. There is a fourth box
+  beside description and credit - the **name** you want on the card - and tags are entered one at a
+  time: type a word, press Enter, and it becomes a chip you can click to take off again. All four
+  stay suggestions a maintainer sees beside the rendered picture, and what the package says still
+  wins wherever a box is left empty.
+- **A theme is photographed on a scene, not on a blank page.** A theme may be see-through - the
+  opacity slider is on every layer - and the sample window over nothing came out as a washed-out
+  design nobody would install, because the picture was showing what is behind the window and behind
+  the window there was nothing. The sample now sits on a fixed backdrop, in a rounded window with the
+  shadow the app has on a desktop. The backdrop is a handful of gradients defined in the source: no
+  artwork, no network, and identical between two renders, so the gallery still caches a picture by
+  the checksum of the file it came from. Both the preview in Settings and the card in the gallery
+  changed together, because they were always the same picture at different scales.
+- **Opening a preview says what it is.** A card is small enough to read as decoration; at full size
+  it reads as a screenshot, so the enlarged picture now carries a line saying it was generated - and,
+  for a theme, that the one image is showing the title bar, the library, the achievement list and the
+  settings surface at once.
+- **The site has a Themes section, and three more languages.** The home page now shows what a theme
+  paints, with the thirteen built-in palettes drawn live on a schematic of the window, and the two
+  paths out of it: making your own, and the gallery. The site is now fully translated into Italian,
+  Polish and Japanese as well as French, German, Spanish, Portuguese (Brazil), Russian and Simplified
+  Chinese - navigation, both galleries, the submission forms and everything they say back to a
+  sender.
+- **The documentation lost a page and gained an accurate one.** The preset gallery and theme gallery
+  guides said the same thing twice and are now one page,
+  [The community galleries](https://shirowwww.github.io/Achievement-Watcher-Next/community-galleries.html).
+  "Where your data lives" was rewritten against what the app actually writes, and the guides bar
+  carries the same links, in the same order, split the same way as the header on the rest of the
+  site.
 - **Installing an update no longer looks like a crash.** The old hand-over ran the installer with no
   window at all: AW Next closed, nothing replaced it, and for several seconds the only thing on
   screen was the desktop. The app now says it is installing before it closes - in the title bar, in
@@ -110,6 +160,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **A focused field on a gallery submission form drew two boxes.** The panel was styled twice, and
+  the older of the two blocks outlined every field label as well as the input inside it. The
+  duplicate is gone, which also fixes the refusal message being painted in the pale red meant for a
+  dark background when the reader was on a light one.
+- **The Download button in the mobile menu was a squeezed pill off to one side.** It was still
+  carrying the width and the indent of the state it is never drawn in - hidden beside the wide
+  header - instead of standing in for the header button. It is now the full-width primary action the
+  menu needs.
 - **The preset designer would not scroll with the pointer over the bottom of the card.** The wheel
   handler that steps a setting between its two arrows was claiming the wheel for every row that
   carried the layout class, and the designer's action rows carry it - so the panel simply refused to
