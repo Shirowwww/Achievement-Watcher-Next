@@ -1684,6 +1684,8 @@
     "avatar-import-from-steam-user": "Importovat Steam avatara uživatele {name}",
     "update-check-failed-detail": "Kontrola aktualizací selhala: {message}",
     "update-ready-after-game": "Verze {version} je připravena a nainstaluje se po zavření spuštěné hry.",
+    "update-installing-short": "Instalace aktualizace…",
+    "update-installing-detail": "Instaluje se verze {version}. AW Next se sám zavře a znovu otevře, trvá to pár sekund.",
     "diagnosis-emulator": "Emulátor: {emulator}",
     "diagnosis-emulator-none": "žádný nenalezen",
     "diagnosis-steam-settings": "steam_settings: {path}",

@@ -205,6 +205,109 @@ ul#window-controls {
   }
 }
 
+/* Update chip. Shares the Watchdog row rather than floating over it: the title bar is 30px tall and
+   an absolutely positioned badge here would sit on top of the window controls at narrow widths. It
+   is present in the markup from the first paint but hidden until the updater has something to say,
+   so it costs nothing while the app is idle. */
+#update-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: 10px;
+  padding: 0 8px;
+  height: 20px;
+  border-radius: 5px;
+  font-family: 'Open-Sans', sans-serif;
+  font-size: 12px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+  white-space: nowrap;
+  min-width: 0;
+}
+
+#update-status[hidden] {
+  display: none;
+}
+
+#update-status > i {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+#update-status .update-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The bar is only drawn for a phase that has a real percentage to show. An indeterminate phase
+   (checking, installing) keeps the label alone rather than animating a bar that means nothing. */
+#update-status .update-track {
+  display: none;
+  width: 68px;
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--text-muted) 30%, transparent);
+}
+
+#update-status[data-phase='downloading'] .update-track {
+  display: inline-block;
+}
+
+#update-status .update-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+  transition: width 0.25s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #update-status .update-fill {
+    transition: none;
+  }
+}
+
+#update-status[data-phase='error'] {
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 34%, transparent);
+}
+
+/* Cancel exists only while there is a transfer to stop; every other phase hides it rather than
+   showing a control that would do nothing. */
+#update-cancel {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.7;
+  -webkit-app-region: no-drag;
+}
+
+#update-status[data-cancellable='true'] #update-cancel {
+  display: inline-flex;
+}
+
+#update-cancel:hover,
+#update-cancel:focus-visible {
+  opacity: 1;
+  background: color-mix(in srgb, var(--text) 14%, transparent);
+}
+
+/* The chip is the widest optional thing in the row; drop its bar before it can push the Watchdog
+   label out of view. */
+@media (max-width: 720px) {
+  #update-status .update-track {
+    display: none !important;
+  }
+}
+
 ul > li {
   display: inline-flex;
   align-items: center;

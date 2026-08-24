@@ -13,6 +13,7 @@ const { pathToFileURL } = require('url');
 const args_split = require('argv-split');
 const { cssUrl, cssUrlValue } = require(path.join(appPath, 'util/cssUrl.js'));
 const { focusAchievementRow } = require(path.join(appPath, 'util/achievementFocus.js'));
+const { applyUpdateChip } = require(path.join(appPath, 'util/updateChipView.js'));
 const { splitLaunchArgs } = require(path.join(appPath, 'util/launchArgs.js'));
 const windowsShellLaunch = require(path.join(appPath, 'util/windowsShellLaunch.js'));
 const { openExternalSafe } = require(path.join(appPath, 'util/externalLink.js'));
@@ -2768,9 +2769,116 @@ ipcRenderer.on('watchdog-status', (event, state) => {
   renderWatchdogStatus(lastWatchdogState);
 });
 
+/*
+  The update chip, in the same title-bar row as the Watchdog indicator.
+
+  Before this, an update downloading in the background was visible in exactly one place: a label on
+  the Settings page, which nobody has open while it happens. Everywhere else the app looked idle for
+  the whole download and then simply vanished to install. The chip is the always-on-screen surface
+  that says which of those is going on, and it is the only place a download can be cancelled from.
+
+  It is driven purely by the main process's broadcast - no polling, no timer while idle - and every
+  phase maps to one label so an unknown phase renders as nothing rather than as an empty box.
+*/
+function updateChipPresentation(state) {
+  if (!state) return null;
+  const percent = Math.round(Math.max(0, Number(state.percent) || 0));
+  switch (state.phase) {
+    case 'checking':
+      return { icon: 'fa-arrows-rotate', label: t('checking-for-updates', 'Checking…', 'Vérification…') };
+    case 'available':
+      return { icon: 'fa-circle-down', label: t('update-available-short', 'Update available', 'Mise à jour disponible') };
+    case 'downloading':
+      return {
+        icon: 'fa-circle-down',
+        label: t('downloading-update', 'downloading update {percent}%', 'téléchargement de la mise à jour {percent} %', { percent }),
+      };
+    case 'ready':
+      return { icon: 'fa-circle-check', label: t('update-ready', 'Update Ready', 'Mise à jour prête') };
+    case 'held':
+      return {
+        icon: 'fa-circle-check',
+        label: t('update-ready', 'Update Ready', 'Mise à jour prête'),
+        title: t(
+          'update-ready-after-game',
+          'Version {version} is ready and will be installed once the running game is closed.',
+          'La version {version} est prête et sera installée une fois le jeu en cours fermé.',
+          { version: state.version }
+        ),
+      };
+    case 'installing':
+      return {
+        icon: 'fa-gear',
+        label: t('update-installing-short', 'Installing update…', 'Installation de la mise à jour…'),
+        title: t(
+          'update-installing-detail',
+          'Installing version {version}. AW Next closes and reopens on its own - this takes a few seconds.',
+          'Installation de la version {version}. AW Next se ferme et se rouvre tout seul, cela prend quelques secondes.',
+          { version: state.version }
+        ),
+      };
+    case 'error':
+      return {
+        icon: 'fa-triangle-exclamation',
+        label: t('update-check-failed', 'Check failed', 'Échec de la vérification'),
+        title: state.error || '',
+      };
+    default:
+      return null;
+  }
+}
+
+// A failure would otherwise sit in the title bar until the next check, which can be half an hour
+// away. The tray balloon already delivered it; the chip only has to be visible long enough to read.
+const UPDATE_ERROR_VISIBLE_MS = 20000;
+let updateErrorHideTimer = null;
+let lastUpdateStatus = null;
+
+// The markup half lives in util/updateChipView.js so a real browser engine can drive it; only the
+// translated view is decided here, where the locale linter can see the keys.
+function renderUpdateStatus(state) {
+  const shadow = titleBarShadow();
+  if (!shadow) return;
+  const chip = shadow.querySelector('#update-status');
+  if (!chip) return;
+
+  const view = updateChipPresentation(state);
+  applyUpdateChip(chip, view ? state : null, view, t('cancel', 'Cancel', 'Annuler'));
+  if (!view) return;
+
+  clearTimeout(updateErrorHideTimer);
+  if (state.phase === 'error') {
+    updateErrorHideTimer = setTimeout(() => {
+      lastUpdateStatus = null;
+      renderUpdateStatus(null);
+    }, UPDATE_ERROR_VISIBLE_MS);
+  }
+}
+
+ipcRenderer.on('update-status', (event, state) => {
+  lastUpdateStatus = state;
+  renderUpdateStatus(state);
+});
+
+/*
+  A download that started while the app sat in the tray is already running by the time a window
+  exists, and the broadcast for it is long gone. Asking once on load is what makes the chip correct
+  for the case it matters most in.
+*/
+ipcRenderer
+  .invoke('get-update-status')
+  .then((state) => {
+    lastUpdateStatus = state;
+    renderUpdateStatus(state);
+  })
+  .catch(() => {
+    /* an older main process without the channel simply leaves the chip hidden */
+  });
+
 // Repaint the title-bar status in the language that was just applied.
 window.refreshWatchdogStatusText = () => {
   if (lastWatchdogState !== null) renderWatchdogStatus(lastWatchdogState);
+  if (lastUpdateStatus !== null) renderUpdateStatus(lastUpdateStatus);
 };
 
 ipcRenderer.on('achievement-unlock', (event, { appid, ach_data }) => {

@@ -1684,6 +1684,8 @@
     "avatar-import-from-steam-user": "Impor avatar Steam milik {name}",
     "update-check-failed-detail": "Pemeriksaan pembaruan gagal: {message}",
     "update-ready-after-game": "Versi {version} sudah siap dan akan dipasang setelah game yang berjalan ditutup.",
+    "update-installing-short": "Memasang pembaruan…",
+    "update-installing-detail": "Memasang versi {version}. AW Next akan menutup dan membuka kembali dengan sendirinya, ini memakan waktu beberapa detik.",
     "diagnosis-emulator": "Emulator: {emulator}",
     "diagnosis-emulator-none": "tidak terdeteksi",
     "diagnosis-steam-settings": "steam_settings: {path}",

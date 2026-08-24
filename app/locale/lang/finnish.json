@@ -1684,6 +1684,8 @@
     "avatar-import-from-steam-user": "Tuo Steam-profiilikuva käyttäjältä {name}",
     "update-check-failed-detail": "Päivitysten tarkistus epäonnistui: {message}",
     "update-ready-after-game": "Versio {version} on valmiina ja asennetaan, kun käynnissä oleva peli suljetaan.",
+    "update-installing-short": "Asennetaan päivitystä…",
+    "update-installing-detail": "Asennetaan versiota {version}. AW Next sulkeutuu ja avautuu uudelleen itsestään, tämä kestää muutaman sekunnin.",
     "diagnosis-emulator": "Emulaattori: {emulator}",
     "diagnosis-emulator-none": "ei havaittu",
     "diagnosis-steam-settings": "steam_settings: {path}",

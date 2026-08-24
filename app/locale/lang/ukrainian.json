@@ -1684,6 +1684,8 @@
     "avatar-import-from-steam-user": "Імпортувати Steam-аватар користувача {name}",
     "update-check-failed-detail": "Не вдалося перевірити оновлення: {message}",
     "update-ready-after-game": "Версія {version} готова та буде встановлена після закриття запущеної гри.",
+    "update-installing-short": "Встановлення оновлення…",
+    "update-installing-detail": "Встановлюється версія {version}. AW Next закриється та відкриється сам, це триває кілька секунд.",
     "diagnosis-emulator": "Емулятор: {emulator}",
     "diagnosis-emulator-none": "не виявлено",
     "diagnosis-steam-settings": "steam_settings: {path}",

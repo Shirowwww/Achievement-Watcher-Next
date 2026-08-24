@@ -166,13 +166,15 @@ test('the download prompt claims the dialog before its first await', () => {
   }
 });
 
-test('the single consent prompt persists Later and a downloaded update installs silently', () => {
+test('the single consent prompt persists Later and a downloaded update installs without asking again', () => {
   const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
   // A fire-and-forget save can be lost if the app quits right after the click.
   assert.ok(!/(?<!await )settingsJS\.save\(configJS\)/.test(init), 'settings must be awaited when recording an update answer');
   assert.match(init, /await postponeUpdate\(info\.version\)/);
   assert.strictEqual((init.match(/await postponeUpdate\(info\.version\)/g) || []).length, 1, 'the download prompt must record "Later"');
-  assert.match(init, /autoUpdater\.quitAndInstall\(true, true\)/);
+  // One consent covers download and install; the install step never opens a second dialog.
+  assert.match(init, /await startUpdateInstall\(info\)/);
+  assert.match(init, /autoUpdater\.quitAndInstall\(silent, true\)/);
 });
 
 /*

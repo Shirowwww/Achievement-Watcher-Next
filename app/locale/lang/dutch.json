@@ -1684,6 +1684,8 @@
     "avatar-import-from-steam-user": "Steam-avatar van {name} importeren",
     "update-check-failed-detail": "Controle op updates mislukt: {message}",
     "update-ready-after-game": "Versie {version} staat klaar en wordt geïnstalleerd zodra de draaiende game wordt afgesloten.",
+    "update-installing-short": "Update installeren…",
+    "update-installing-detail": "Versie {version} wordt geïnstalleerd. AW Next sluit en opent zichzelf opnieuw, dit duurt een paar seconden.",
     "diagnosis-emulator": "Emulator: {emulator}",
     "diagnosis-emulator-none": "geen gevonden",
     "diagnosis-steam-settings": "steam_settings: {path}",

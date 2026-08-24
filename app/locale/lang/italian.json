@@ -1684,6 +1684,8 @@
     "avatar-import-from-steam-user": "Importa l’avatar Steam di {name}",
     "update-check-failed-detail": "Controllo aggiornamenti non riuscito: {message}",
     "update-ready-after-game": "La versione {version} è pronta e verrà installata alla chiusura del gioco in esecuzione.",
+    "update-installing-short": "Installazione dell’aggiornamento…",
+    "update-installing-detail": "Installazione della versione {version}. AW Next si chiude e si riapre da solo, richiede qualche secondo.",
     "diagnosis-emulator": "Emulatore: {emulator}",
     "diagnosis-emulator-none": "nessuno rilevato",
     "diagnosis-steam-settings": "steam_settings: {path}",

@@ -1684,6 +1684,8 @@
     "avatar-import-from-steam-user": "{name} Steam avatarını içe aktar",
     "update-check-failed-detail": "Güncelleme kontrolü başarısız: {message}",
     "update-ready-after-game": "{version} sürümü hazır ve çalışan oyun kapatıldığında yüklenecek.",
+    "update-installing-short": "Güncelleme yükleniyor…",
+    "update-installing-detail": "{version} sürümü yükleniyor. AW Next kendiliğinden kapanıp yeniden açılır, bu birkaç saniye sürer.",
     "diagnosis-emulator": "Öykünücü: {emulator}",
     "diagnosis-emulator-none": "hiçbiri algılanmadı",
     "diagnosis-steam-settings": "steam_settings: {path}",

@@ -1684,6 +1684,8 @@
     "avatar-import-from-steam-user": "Εισαγωγή του εικονιδίου Steam του {name}",
     "update-check-failed-detail": "Ο έλεγχος ενημερώσεων απέτυχε: {message}",
     "update-ready-after-game": "Η έκδοση {version} είναι έτοιμη και θα εγκατασταθεί μόλις κλείσει το παιχνίδι που εκτελείται.",
+    "update-installing-short": "Εγκατάσταση ενημέρωσης…",
+    "update-installing-detail": "Γίνεται εγκατάσταση της έκδοσης {version}. Το AW Next κλείνει και ανοίγει ξανά μόνο του, αυτό διαρκεί λίγα δευτερόλεπτα.",
     "diagnosis-emulator": "Εξομοιωτής: {emulator}",
     "diagnosis-emulator-none": "δεν εντοπίστηκε κανένας",
     "diagnosis-steam-settings": "steam_settings: {path}",

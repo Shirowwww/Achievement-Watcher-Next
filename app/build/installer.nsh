@@ -113,6 +113,66 @@ Var unDeleteAppData
   LangString AW_UNINSTALL_DELETING ${LANG_SIMPCHINESE} "正在删除设置和缓存…"
 !macroend
 
+; ---------------------------------------------------------------------------
+; Auto-update run (`--updated`, started by electron-updater after the app quits)
+;
+; The app used to hand over with /S, so the installer had no window at all: AW Next disappeared and
+; nothing replaced it for several seconds, which reads as a crash. Running the installer with its
+; UI instead gives that window back - and NSIS already draws the progress, so nothing has to be
+; reimplemented - but only if no page stops to ask a question nobody is present to answer.
+;
+; electron-builder's own template already skips the license and directory pages for an --updated
+; run. The two below are the ones it leaves, and they are the whole reason a visible update install
+; was not possible before. A first-time install is untouched: both macros are inert unless
+; ${isUpdated}.
+; ---------------------------------------------------------------------------
+
+!macro customInstallMode
+  ; Reuse the mode the existing installation already uses (read from the registry by initMultiUser)
+  ; rather than asking or forcing one: picking the wrong one would install a second copy beside the
+  ; one the user actually runs.
+  ${if} ${isUpdated}
+    ${if} $hasPerMachineInstallation == "1"
+      StrCpy $isForceMachineInstall "1"
+    ${else}
+      StrCpy $isForceCurrentInstall "1"
+    ${endIf}
+  ${endIf}
+!macroend
+
+!macro customFinishPage
+  ; Starting the app is normally the finish page's "run when done" checkbox. On an --updated run
+  ; there is nobody to tick it, so start it here and close - the same end state the silent path
+  ; produced, reached after a visible progress page instead of after nothing at all.
+  ;
+  ; This is deliberately NOT `!insertmacro StartApp`: that macro declares $startAppArgs, and
+  ; installSection.nsh already inserts it, so a second insertion fails to compile. The body is the
+  ; template's own StartApp function, kept identical.
+  Function AwStartApp
+    ${if} ${isUpdated}
+      StrCpy $1 "--updated"
+    ${else}
+      StrCpy $1 ""
+    ${endif}
+    ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "$1"
+  FunctionEnd
+
+  Function AwFinishPagePre
+    ${if} ${isUpdated}
+      HideWindow
+      Call AwStartApp
+      !insertmacro quitSuccess
+    ${endIf}
+  FunctionEnd
+
+  !define MUI_PAGE_CUSTOMFUNCTION_PRE AwFinishPagePre
+  !ifndef HIDE_RUN_AFTER_FINISH
+    !define MUI_FINISHPAGE_RUN
+    !define MUI_FINISHPAGE_RUN_FUNCTION "AwStartApp"
+  !endif
+  !insertmacro MUI_PAGE_FINISH
+!macroend
+
 !macro customUnWelcomePage
   ; Ask once, before anything is removed: delete the AppData folders too?
   ; Default stays off — settings, cache and saves survive an uninstall unless

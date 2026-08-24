@@ -31,6 +31,9 @@ const RENDERERS = [
   app('ui', 'game.js'),
   app('ui', 'onboarding.js'),
   app('ui', 'sort.js'),
+  // The title bar is a renderer too: its shadow DOM owns the window controls and the update chip's
+  // Cancel, and a dead channel behind either of those is silent at runtime.
+  app('components', 'titleBar', 'titleBar.js'),
 ];
 
 /*

@@ -1684,6 +1684,8 @@
     "avatar-import-from-steam-user": "{name} Steam-avatárjának importálása",
     "update-check-failed-detail": "Frissítés-ellenőrzés sikertelen: {message}",
     "update-ready-after-game": "A(z) {version} verzió készen áll, és a futó játék bezárása után lesz telepítve.",
+    "update-installing-short": "Frissítés telepítése…",
+    "update-installing-detail": "A(z) {version} verzió telepítése folyik. Az AW Next magától bezárul és újra megnyílik, ez néhány másodpercet vesz igénybe.",
     "diagnosis-emulator": "Emulátor: {emulator}",
     "diagnosis-emulator-none": "nincs észlelve",
     "diagnosis-steam-settings": "steam_settings: {path}",

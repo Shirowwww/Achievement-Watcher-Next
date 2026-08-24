@@ -1684,6 +1684,8 @@
     "avatar-import-from-steam-user": "Importer Steam-profilbildet til {name}",
     "update-check-failed-detail": "Oppdateringssjekken mislyktes: {message}",
     "update-ready-after-game": "Versjon {version} er klar og blir installert når spillet som kjører, avsluttes.",
+    "update-installing-short": "Installerer oppdatering…",
+    "update-installing-detail": "Installerer versjon {version}. AW Next lukker og åpner seg selv igjen, dette tar noen sekunder.",
     "diagnosis-emulator": "Emulator: {emulator}",
     "diagnosis-emulator-none": "ingen funnet",
     "diagnosis-steam-settings": "steam_settings: {path}",

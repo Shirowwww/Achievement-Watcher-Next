@@ -1684,6 +1684,8 @@
     "avatar-import-from-steam-user": "{name}의 Steam 아바타 가져오기",
     "update-check-failed-detail": "업데이트 확인 실패: {message}",
     "update-ready-after-game": "{version} 버전이 준비되었으며 실행 중인 게임을 닫으면 설치됩니다.",
+    "update-installing-short": "업데이트 설치 중…",
+    "update-installing-detail": "버전 {version}을(를) 설치하는 중입니다. AW Next가 스스로 종료되었다가 다시 열립니다. 몇 초 정도 걸립니다.",
     "diagnosis-emulator": "에뮬레이터: {emulator}",
     "diagnosis-emulator-none": "감지되지 않음",
     "diagnosis-steam-settings": "steam_settings: {path}",

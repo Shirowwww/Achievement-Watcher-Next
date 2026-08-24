@@ -20,9 +20,11 @@ test('packaged builds ask before downloading, then silently upgrade and restart'
   assert.match(init, /if \(app\.isPackaged\)/);
   assert.match(init, /autoUpdater\s*\.\s*checkForUpdates\(\)/);
   assert.match(init, /autoUpdater\.on\('update-available'/);
-  assert.match(init, /autoUpdater\.downloadUpdate\(\)/);
+  assert.match(init, /autoUpdater\.downloadUpdate\(token\)/);
   assert.match(init, /autoUpdater\.on\('update-downloaded'/);
-  assert.match(init, /autoUpdater\.quitAndInstall\(true, true\)/);
+  // The install is no longer hard-coded to silent: it runs the installer's own progress window
+  // unless the user asked for the windowless behaviour (see updateInstall.test.js).
+  assert.match(init, /autoUpdater\.quitAndInstall\(silent, true\)/);
 
   // The updater stays supervised while the app is resident: a failed check retries after a delay,
   // a successful one re-checks hourly, and errors surface in the tray instead of being silently

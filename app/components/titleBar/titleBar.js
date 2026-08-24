@@ -10,7 +10,7 @@ const template = `
     <link rel="stylesheet" href="../resources/css/titlebar.css" type="text/css" />
 
     <div class="sf-indicator">
-    <ul id="watchdog-status" class="sf-indicator"><span class="status-dot status-orange status-pulse"></span><span class="status-text"></span> <span id="start-watchdog"></span></ul>
+    <ul id="watchdog-status" class="sf-indicator"><span class="status-dot status-orange status-pulse"></span><span class="status-text"></span> <span id="start-watchdog"></span><span id="update-status" hidden><i class="fas fa-circle-down" aria-hidden="true"></i><span class="update-text"></span><span class="update-track"><span class="update-fill"></span></span><span id="update-cancel" role="button" tabindex="0"><i class="fas fa-xmark" aria-hidden="true"></i></span></span></ul>
     </div>
     <ul id="window-controls">
       <li id="btn-close"><i class="fas fa-times"></i></li>
@@ -31,11 +31,18 @@ export default class titleBar extends HTMLElement {
     this.settingsBtn = this.shadowRoot.querySelector('#btn-settings');
     this.minimizeBtn = this.shadowRoot.querySelector('#btn-minimize');
     this.watchdogBtn = this.shadowRoot.querySelector('#start-watchdog');
+    this.updateCancelBtn = this.shadowRoot.querySelector('#update-cancel');
     this.onClose = () => this.close();
     this.onMaximize = () => this.maximize();
     this.onSettings = () => this.settings();
     this.onMinimize = () => this.minimize();
     this.onStartWatchdog = () => this.start_watchdog();
+    this.onCancelUpdate = (event) => {
+      // Keyboard reachable: the chip is the only place a download in flight can be stopped from.
+      if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      this.cancel_update();
+    };
   }
 
   /* Life Cycle */
@@ -45,6 +52,8 @@ export default class titleBar extends HTMLElement {
     this.settingsBtn.addEventListener('click', this.onSettings);
     this.minimizeBtn.addEventListener('click', this.onMinimize);
     this.watchdogBtn.addEventListener('click', this.onStartWatchdog);
+    this.updateCancelBtn.addEventListener('click', this.onCancelUpdate);
+    this.updateCancelBtn.addEventListener('keydown', this.onCancelUpdate);
 
     const defaults = [ipcRenderer.invoke('win-isMinimizable'), ipcRenderer.invoke('win-isMaximizable')];
     Promise.allSettled(defaults).then(([isMinimizable, isMaximizable]) => {
@@ -60,6 +69,8 @@ export default class titleBar extends HTMLElement {
     this.settingsBtn.removeEventListener('click', this.onSettings);
     this.minimizeBtn.removeEventListener('click', this.onMinimize);
     this.watchdogBtn.removeEventListener('click', this.onStartWatchdog);
+    this.updateCancelBtn.removeEventListener('click', this.onCancelUpdate);
+    this.updateCancelBtn.removeEventListener('keydown', this.onCancelUpdate);
   }
 
   /* Update */
@@ -136,5 +147,11 @@ export default class titleBar extends HTMLElement {
 
   start_watchdog() {
     ipcRenderer.invoke('start-watchdog');
+  }
+
+  // The main process answers by broadcasting the new state, so the chip is never updated from a
+  // guess here - if the download had already finished, the chip simply moves on to "ready".
+  cancel_update() {
+    ipcRenderer.invoke('cancel-update-download').catch(() => {});
   }
 }

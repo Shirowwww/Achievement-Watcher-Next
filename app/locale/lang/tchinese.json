@@ -1684,6 +1684,8 @@
     "avatar-import-from-steam-user": "匯入 {name} 的 Steam 頭像",
     "update-check-failed-detail": "檢查更新失敗：{message}",
     "update-ready-after-game": "{version} 版本已就緒，會在目前執行的遊戲關閉後安裝。",
+    "update-installing-short": "正在安裝更新…",
+    "update-installing-detail": "正在安裝版本 {version}。AW Next 會自動關閉並重新開啟，這需要幾秒鐘。",
     "diagnosis-emulator": "模擬器：{emulator}",
     "diagnosis-emulator-none": "未偵測到",
     "diagnosis-steam-settings": "steam_settings：{path}",

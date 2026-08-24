@@ -844,12 +844,33 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     $('#footer-check-updates').click(function () {
       runUpdateCheck($(this), $('#footer-update-status'));
     });
-    // The download runs in the background regardless of which button (if any) started it, so both
-    // status labels track it live - this is the only in-app feedback while it's in progress.
-    ipcRenderer.on('update-download-progress', (event, percent) => {
-      const text = t('downloading-update', 'downloading update {percent}%', 'téléchargement de la mise à jour {percent} %', { percent: Math.round(percent) });
-      $('#check-for-updates-label, #footer-update-status').removeClass('update-ok update-error').addClass('update-info').text(text);
-    });
+    /*
+      The download runs in the background regardless of which button (if any) started it, so both
+      status labels track it live. Driven by the shared updater state rather than a raw percentage,
+      so the labels also report the install step - the moment the app is about to close - instead of
+      stopping at 100% and leaving the user with no idea what happens next. The title bar shows the
+      same state (see renderUpdateStatus in app.js); this is Settings' copy of it.
+    */
+    function renderSettingsUpdateStatus(state) {
+      const labels = $('#check-for-updates-label, #footer-update-status');
+      if (!state) return;
+      if (state.phase === 'downloading') {
+        labels
+          .removeClass('update-ok update-error')
+          .addClass('update-info')
+          .text(t('downloading-update', 'downloading update {percent}%', 'téléchargement de la mise à jour {percent} %', { percent: Math.round(state.percent) }));
+      } else if (state.phase === 'installing') {
+        labels
+          .removeClass('update-ok update-error')
+          .addClass('update-info')
+          .text(t('update-installing-short', 'Installing update…', 'Installation de la mise à jour…'));
+      } else if (state.phase === 'ready' || state.phase === 'held') {
+        labels.removeClass('update-info update-error').addClass('update-ok').text(t('update-ready', 'Update Ready', 'Mise à jour prête'));
+      }
+    }
+    ipcRenderer.on('update-status', (event, state) => renderSettingsUpdateStatus(state));
+    // Opening Settings mid-download must show the download, not an idle button.
+    ipcRenderer.invoke('get-update-status').then(renderSettingsUpdateStatus).catch(() => {});
 
     // Settings > Advanced: clears every disposable cache the app knows about (updater cache +
     // Steam/Ubisoft schema, icon and downloaded emulator-tool caches - see

@@ -1684,6 +1684,8 @@
     "avatar-import-from-steam-user": "นำเข้าอวตาร Steam ของ {name}",
     "update-check-failed-detail": "ตรวจสอบอัปเดตล้มเหลว: {message}",
     "update-ready-after-game": "เวอร์ชัน {version} พร้อมแล้ว และจะติดตั้งเมื่อปิดเกมที่กำลังทำงานอยู่",
+    "update-installing-short": "กำลังติดตั้งการอัปเดต…",
+    "update-installing-detail": "กำลังติดตั้งเวอร์ชัน {version} AW Next จะปิดและเปิดขึ้นใหม่เอง ใช้เวลาสองสามวินาที",
     "diagnosis-emulator": "อีมูเลเตอร์: {emulator}",
     "diagnosis-emulator-none": "ไม่พบ",
     "diagnosis-steam-settings": "steam_settings: {path}",

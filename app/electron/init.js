@@ -40,7 +40,7 @@ for (const sw of ['disable-extensions', 'disable-component-extensions-with-backg
 app.commandLine.appendSwitch('js-flags', '--max-old-space-size=192');
 const { BrowserWindow, dialog, session, shell, ipcMain, globalShortcut, Tray, Menu, nativeImage, Notification } = require('electron');
 const os = require('os');
-const { autoUpdater } = require('electron-updater');
+const { autoUpdater, CancellationToken } = require('electron-updater');
   const { verifyUpdateCodeSignature } = require('../util/updateSignature.js');
   const { withScrapeLease } = require('../util/scrapeLease.js');
   const steamSchemaFetch = require(path.join(__dirname, '../util/steamSchemaFetch.js'));
@@ -68,6 +68,9 @@ let updateAcceptedByUser = false;
 let checksumRetryInFlight = false; // guards the one automatic retry after a cache-clearing recovery
 const UPDATE_RECHECK_MS = 60 * 60 * 1000; // silent hourly re-check while the app stays resident
 const UPDATE_RETRY_MS = 30 * 60 * 1000; // slower retry after a failed check
+// How long the "installing" state stays on screen before the windows close. Covers one paint plus
+// the tray balloon; anything shorter and the app disappears before it has finished saying why.
+const INSTALL_HANDOVER_MS = 1200;
 // Number of games currently reported by the monitor.
 let gamesRunning = 0;
 const isGameRunning = () => gamesRunning > 0;
@@ -119,41 +122,123 @@ function shouldSuppressUpdatePrompt(version, { manual = false } = {}) {
   return suppress;
 }
 
-// Keep download progress for both the taskbar and tray tooltip. -1 clears it.
-let updateDownloadFraction = -1;
+/*
+  One updater state, published to every window and mirrored on the taskbar and the tray tooltip.
+
+  The state itself and every transition live in util/updateStatus.js so they can be tested without a
+  release; this half is only the plumbing. Nothing here runs while the updater is idle: the state
+  changes only on an updater event, and each change is published at most once per whole percent.
+*/
+const updateStatus = require(path.join(__dirname, '../util/updateStatus.js'));
+let currentUpdateStatus = updateStatus.initialState();
+let publishedUpdateStatus = null;
 let updateProgressLogged = -1;
+// Set for the length of one download so the user can stop it; cleared as soon as it ends.
+let updateDownloadCancellation = null;
+
+// Taskbar: a fraction for a real download, 2 for the indeterminate bar while the installer runs
+// (there is no byte counter to follow once the installer owns the work), -1 for nothing.
+function taskbarProgressFor(state) {
+  if (state.phase === 'downloading') return Math.max(0, state.percent) / 100;
+  if (state.phase === 'installing') return 2;
+  return -1;
+}
 
 function applyUpdateProgressToWindow(win) {
   if (!win || win.isDestroyed()) return;
   try {
-    win.setProgressBar(updateDownloadFraction);
+    win.setProgressBar(taskbarProgressFor(currentUpdateStatus));
   } catch (err) {
     debug.log(`[updater] could not set the taskbar progress: ${err.message || err}`);
   }
 }
 
-function setUpdateDownloadProgress(fraction) {
-  updateDownloadFraction = fraction;
+function trayTooltipFor(state) {
+  if (state.phase === 'downloading') {
+    return `Achievement Watcher Next - ${t('downloading-update', 'downloading update {percent}%', 'téléchargement de la mise à jour {percent} %', { percent: Math.round(state.percent) })}`;
+  }
+  if (state.phase === 'installing') {
+    return `Achievement Watcher Next - ${t('update-installing-short', 'Installing update…', 'Installation de la mise à jour…')}`;
+  }
+  return 'Achievement Watcher Next';
+}
+
+/*
+  The main window is the only renderer that listens - the title bar and Settings both live in it -
+  so the overlay and the transient notification windows are deliberately left alone rather than
+  woken once per percent for a message they would drop.
+
+  A window that does not exist yet is not a missed update: the renderer asks for the current state
+  on load through get-update-status.
+*/
+function publishUpdateStatus() {
+  publishedUpdateStatus = currentUpdateStatus;
   applyUpdateProgressToWindow(MainWin);
-  if (!tray) return;
+  if (tray) {
+    try {
+      tray.setToolTip(trayTooltipFor(currentUpdateStatus));
+    } catch {}
+  }
+  if (!MainWin || MainWin.isDestroyed()) return;
   try {
-    tray.setToolTip(
-      fraction >= 0
-        ? `Achievement Watcher Next - ${t('downloading-update', 'downloading update {percent}%', 'téléchargement de la mise à jour {percent} %', { percent: Math.round(fraction * 100) })}`
-        : 'Achievement Watcher Next',
-    );
-  } catch {}
+    MainWin.webContents.send('update-status', currentUpdateStatus);
+  } catch {
+    /* a window torn down mid-broadcast is not an error */
+  }
+}
+
+function setUpdateStatus(event) {
+  currentUpdateStatus = updateStatus.reduce(currentUpdateStatus, event);
+  if (updateStatus.shouldPublish(publishedUpdateStatus, currentUpdateStatus)) publishUpdateStatus();
 }
 
 function clearUpdateDownloadProgress() {
-  if (updateDownloadFraction < 0) return;
   updateProgressLogged = -1;
-  setUpdateDownloadProgress(-1);
+  updateDownloadCancellation = null;
+  if (currentUpdateStatus.phase === 'idle') return;
+  setUpdateStatus({ type: 'reset' });
+}
+
+/*
+  Start (or restart) the installer download, holding on to its cancellation token.
+
+  electron-updater accepts a token and aborts the transfer cleanly when it is cancelled, which is
+  what makes an in-app Cancel possible at all: without one, a download started by mistake on a
+  metered connection could only be escaped by quitting the app.
+*/
+function startUpdateDownload(version) {
+  updateProgressLogged = -1;
+  setUpdateStatus({ type: 'download-started', version });
+  const token = new CancellationToken();
+  updateDownloadCancellation = token;
+  return autoUpdater.downloadUpdate(token).catch((err) => {
+    // A cancellation is not a failure; the 'update-cancelled' listener already cleared the state.
+    if (token.cancelled) return;
+    // A checksum mismatch is handled entirely by the 'error' listener, which clears the cache and
+    // retries once instead of surfacing the raw failure immediately.
+    if (!isChecksumMismatchError(err)) notifyUpdateError(`download failed: ${err.message || err}`);
+  });
+}
+
+// True when there was a download to stop. The state itself is cleared by 'update-cancelled'.
+function cancelUpdateDownload() {
+  const token = updateDownloadCancellation;
+  if (!token || token.cancelled) return false;
+  debug.log('[updater] cancelling the download at the user request');
+  try {
+    token.cancel();
+  } catch (err) {
+    debug.log(`[updater] could not cancel the download: ${err.message || err}`);
+    return false;
+  }
+  return true;
 }
 
 function notifyUpdateError(message) {
   debug.log(`[updater] ${message}`);
-  clearUpdateDownloadProgress();
+  updateProgressLogged = -1;
+  updateDownloadCancellation = null;
+  setUpdateStatus({ type: 'error', message });
   updateDownloading = false;
   updateAcceptedByUser = false;
   manualUpdateResult = 'error';
@@ -1625,6 +1710,17 @@ ipcMain.handle('check-for-updates', async () => {
     return { ok: false, error: err && err.message ? err.message : String(err) };
   }
 });
+
+/*
+  The current updater state, for a window that has just loaded. The broadcast on its own is not
+  enough: a download started while the app sat in the tray finishes long before anyone opens the
+  window, and a renderer that only listens would show nothing at all for the whole download.
+*/
+ipcMain.handle('get-update-status', () => currentUpdateStatus);
+
+// Stop a download in flight. Answers whether there was one, so the UI can drop a Cancel button that
+// raced the download finishing instead of leaving it there doing nothing.
+ipcMain.handle('cancel-update-download', () => ({ ok: cancelUpdateDownload() }));
 
 // Settings > Advanced: clears every disposable cache the app knows (updater download cache, plus
 // the re-fetchable Steam/Ubisoft schema, icon and emulator-tool caches - see the explicit allowlist
@@ -3899,8 +3995,9 @@ function createMainWindow() {
     notifyWatchdogOfAppPid();
 
     // A download started while the app was tray-only has no taskbar button to draw on. Opening the
-    // window creates one, so hand it the progress that is already running.
-    if (updateDownloadFraction >= 0) applyUpdateProgressToWindow(MainWin);
+    // window creates one, so hand it the progress that is already running. The renderer picks the
+    // same state up through get-update-status once it has loaded.
+    if (currentUpdateStatus.phase !== 'idle') applyUpdateProgressToWindow(MainWin);
 
     // BrowserWindow.hide() does not reliably update document.visibilityState on every Electron
     // version. Tell the renderer directly so its optional controller polling can stop while the
@@ -6609,7 +6706,10 @@ try {
   if (!gotSingleInstanceLock) {
     app.quit();
   } else {
-  autoUpdater.on('checking-for-update', () => debug.log('[updater] checking for updates'));
+  autoUpdater.on('checking-for-update', () => {
+    debug.log('[updater] checking for updates');
+    setUpdateStatus({ type: 'checking' });
+  });
   autoUpdater.on('update-available', async (info) => {
     // A manifest that names the running version, or an older one, is not an update however it got
     // here - answer it as "up to date" before anything reports an update or downloads an installer.
@@ -6617,10 +6717,12 @@ try {
       debug.log(`[updater] ignoring ${info.version}: not newer than the installed ${app.getVersion()}`);
       manualUpdateResult = 'uptodate';
       manualUpdateCheckPending = false;
+      setUpdateStatus({ type: 'not-available' });
       return;
     }
     debug.log(`[updater] update available: ${info.version}`);
     manualUpdateResult = 'available';
+    setUpdateStatus({ type: 'available', version: info.version });
     const manual = manualUpdateCheckPending;
     manualUpdateCheckPending = false; // the dialog below already answers a manual check
     // Claim the prompt BEFORE the first await. Checking here and setting the flag after
@@ -6661,18 +6763,16 @@ try {
         // The click is the explicit consent, regardless of whether the dialog came from the hourly
         // check or Settings > Check for updates. A manual check alone must not silently install.
         updateAcceptedByUser = true;
-        autoUpdater.downloadUpdate().catch((err) => {
-          // A checksum mismatch is handled entirely by the 'error' listener below, which clears
-          // the cache and retries once instead of surfacing the raw failure immediately.
-          if (!isChecksumMismatchError(err)) notifyUpdateError(`download failed: ${err.message || err}`);
-        });
+        startUpdateDownload(info.version);
       } else if (response === 2) {
         configJS.general.skippedVersion = info.version;
         await settingsJS.save(configJS);
         debug.log(`[updater] version ${info.version} skipped by user`);
+        setUpdateStatus({ type: 'reset' });
       } else {
         // "Later" (and the dialog's cancel path, which maps to it).
         await postponeUpdate(info.version);
+        setUpdateStatus({ type: 'reset' });
       }
     } finally {
       updatePromptOpen = false;
@@ -6693,14 +6793,18 @@ try {
     }
   });
   // The download can take minutes on a slow line and gives no sign of life otherwise: the window is
-  // usually closed (tray daemon) and the app never says it is busy. Drive the taskbar progress bar
-  // from the updater's own byte counter.
+  // usually closed (tray daemon) and the app never says it is busy. Every surface that can show it -
+  // the taskbar bar, the tray tooltip, the title-bar chip and Settings - is driven from the updater's
+  // own byte counter through the shared status, which throttles the broadcast to whole percents.
   autoUpdater.on('download-progress', (progress) => {
     const percent = Math.max(0, Math.min(100, Number(progress && progress.percent) || 0));
-    setUpdateDownloadProgress(percent / 100);
-    try {
-      if (MainWin && !MainWin.isDestroyed()) MainWin.webContents.send('update-download-progress', percent);
-    } catch {}
+    setUpdateStatus({
+      type: 'progress',
+      percent,
+      bytesPerSecond: Number(progress && progress.bytesPerSecond) || 0,
+      transferred: Number(progress && progress.transferred) || 0,
+      total: Number(progress && progress.total) || 0,
+    });
     // One line per 10% rather than per chunk, so the log stays readable.
     const step = Math.floor(percent / 10);
     if (step !== updateProgressLogged) {
@@ -6708,6 +6812,13 @@ try {
       const speed = Math.round((Number(progress && progress.bytesPerSecond) || 0) / 1024);
       debug.log(`[updater] downloading: ${percent.toFixed(0)}% (${speed} KB/s)`);
     }
+  });
+  // A download the user stopped is not a failure: leave no error on screen and no half state behind.
+  autoUpdater.on('update-cancelled', (info) => {
+    debug.log(`[updater] download of ${info && info.version} cancelled by the user`);
+    updateDownloading = false;
+    updateAcceptedByUser = false;
+    clearUpdateDownloadProgress();
   });
   autoUpdater.on('error', (err) => {
     const message = err && err.message ? err.message : String(err);
@@ -6728,9 +6839,14 @@ try {
           debug.log(`[updater] could not clear the update cache: ${clearErr.message || clearErr}`);
         }
         try {
-          await autoUpdater.downloadUpdate();
+          const token = new CancellationToken();
+          updateDownloadCancellation = token;
+          updateProgressLogged = -1;
+          setUpdateStatus({ type: 'download-started', version: currentUpdateStatus.version });
+          await autoUpdater.downloadUpdate(token);
           updaterErrorNotified = false; // the retry succeeded; let a future failure notify again
         } catch (retryErr) {
+          if (updateDownloadCancellation && updateDownloadCancellation.cancelled) return;
           await notifyChecksumRecoveryFailed(retryErr && retryErr.message ? retryErr.message : String(retryErr), cacheDir);
         } finally {
           checksumRetryInFlight = false;
@@ -6742,15 +6858,18 @@ try {
   });
   autoUpdater.on('update-downloaded', (info) => {
     updateDownloading = false;
-    clearUpdateDownloadProgress();
+    updateProgressLogged = -1;
+    updateDownloadCancellation = null;
+    setUpdateStatus({ type: 'downloaded', version: info.version });
     promptDownloadedUpdate(info);
   });
   promptDownloadedUpdate = async function (info) {
-    // "Download && Install" was already explicit consent. Once downloaded, run the NSIS upgrade
-    // silently and relaunch AW; settings/user data live outside the install directory and survive.
+    // "Download && Install" was already explicit consent. Once downloaded, run the NSIS upgrade and
+    // relaunch AW; settings/user data live outside the install directory and survive.
     if (updateGate.shouldHoldInstall({ gameRunning: isGameRunning(), acceptedByUser: updateAcceptedByUser })) {
-      debug.log(`[updater] silent upgrade to ${info.version} held back: a game is running`);
+      debug.log(`[updater] upgrade to ${info.version} held back: a game is running`);
       pendingInstallPrompt = info;
+      setUpdateStatus({ type: 'held', version: info.version });
       // Saying nothing here is what made this look like a broken updater: the download completes,
       // the install never happens, and the next check offers the same version again.
       notifyUpdateHeldBack(info.version);
@@ -6758,9 +6877,55 @@ try {
     }
     pendingInstallPrompt = null;
     updateAcceptedByUser = false;
-    debug.log(`[updater] installing ${info.version} silently and restarting`);
-    autoUpdater.quitAndInstall(true, true);
+    await startUpdateInstall(info);
   };
+
+  /*
+    Hand over to the installer without the app simply vanishing.
+
+    quitAndInstall() closes every window and spawns the NSIS installer. Run silently (/S) that
+    installer has no window at all, so for several seconds the machine shows nothing: AW is gone,
+    nothing has replaced it, and the honest reading is that it crashed. Two things fix that, and
+    both are needed:
+
+      - the installer runs with its own progress page (build/installer.nsh skips the license,
+        directory, install-mode and finish pages for an --updated run), so a real window appears and
+        stays until the new version is launched. This is NSIS's own UI, not a reimplementation of it;
+      - before quitting, the app says what is about to happen on every surface it still owns (the
+        title-bar chip, the tray balloon, the taskbar's indeterminate bar) and waits long enough for
+        that to be seen, so the gap between the last AW frame and the first installer frame is
+        explained rather than blank.
+
+    `general.silentUpdateInstall` restores the old windowless behaviour for anyone who wants it.
+  */
+  async function startUpdateInstall(info) {
+    const silent = !!(configJS && configJS.general && configJS.general.silentUpdateInstall);
+    setUpdateStatus({ type: 'installing', version: info.version });
+    debug.log(`[updater] installing ${info.version} (${silent ? 'silent' : 'with the installer progress window'}) and restarting`);
+    if (tray) {
+      try {
+        tray.displayBalloon({
+          iconType: 'info',
+          title: t('achievement-watcher', 'AW Next'),
+          content: t(
+            'update-installing-detail',
+            'Installing version {version}. AW Next closes and reopens on its own - this takes a few seconds.',
+            'Installation de la version {version}. AW Next se ferme et se rouvre tout seul, cela prend quelques secondes.',
+            { version: info.version }
+          ),
+        });
+      } catch {}
+    }
+    // Long enough for the chip and the balloon to paint before the windows go away, short enough
+    // that nobody experiences it as a hang. A failure to wait must never block the install.
+    await new Promise((resolve) => setTimeout(resolve, INSTALL_HANDOVER_MS));
+    try {
+      autoUpdater.quitAndInstall(silent, true);
+    } catch (err) {
+      // The installer could not be started at all: say so rather than sitting on "installing".
+      notifyUpdateError(`could not start the installer: ${err.message || err}`);
+    }
+  }
 
   app
     .on('ready', async function () {

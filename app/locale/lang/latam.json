@@ -1684,6 +1684,8 @@
     "avatar-import-from-steam-user": "Importar el avatar de Steam de {name}",
     "update-check-failed-detail": "Error al comprobar actualizaciones: {message}",
     "update-ready-after-game": "La versión {version} está lista y se instalará cuando se cierre el juego en ejecución.",
+    "update-installing-short": "Instalando actualización…",
+    "update-installing-detail": "Instalando la versión {version}. AW Next se cierra y se vuelve a abrir solo, esto tarda unos segundos.",
     "diagnosis-emulator": "Emulador: {emulator}",
     "diagnosis-emulator-none": "ninguno detectado",
     "diagnosis-steam-settings": "steam_settings: {path}",

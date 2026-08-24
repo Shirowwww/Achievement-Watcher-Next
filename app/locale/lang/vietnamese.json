@@ -1684,6 +1684,8 @@
     "avatar-import-from-steam-user": "Nhập ảnh đại diện Steam của {name}",
     "update-check-failed-detail": "Kiểm tra cập nhật thất bại: {message}",
     "update-ready-after-game": "Phiên bản {version} đã sẵn sàng và sẽ được cài sau khi đóng trò chơi đang chạy.",
+    "update-installing-short": "Đang cài đặt bản cập nhật…",
+    "update-installing-detail": "Đang cài đặt phiên bản {version}. AW Next sẽ tự đóng và mở lại, việc này mất vài giây.",
     "diagnosis-emulator": "Trình giả lập: {emulator}",
     "diagnosis-emulator-none": "không phát hiện được",
     "diagnosis-steam-settings": "steam_settings: {path}",
