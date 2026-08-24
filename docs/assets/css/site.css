@@ -598,9 +598,6 @@ kbd {
 /* The download link belongs to the menu only while the header button is hidden. */
 .site-nav .nav-download {
   display: none;
-  max-width: 132px;
-  padding-left: 34px;
-  text-overflow: ellipsis;
 }
 
 .select-shell:hover {
@@ -1846,9 +1843,14 @@ a.card:hover,
   color: #b3261e;
 }
 
-:root[data-theme='dark'] .submit-panel .bad,
-:root:not([data-theme='light']) .submit-panel .bad {
+:root[data-theme='dark'] .submit-panel .bad {
   color: #ff8f8f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .submit-panel .bad {
+    color: #ff8f8f;
+  }
 }
 
 /* The three optional fields beside the file button. */
@@ -2015,17 +2017,6 @@ a.card:hover,
   cursor: help;
 }
 
-/* Only drawn when a gallery server answered: with none, there is nowhere to send a file. */
-.submit-panel {
-  display: grid;
-  gap: 18px;
-  margin-top: 26px;
-  padding: 22px 24px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--panel);
-}
-
 /* Dropping the file on the panel is the shortest way to send one, so the panel says it is a target. */
 .submit-panel[data-drop='true'] {
   border-color: var(--accent);
@@ -2061,46 +2052,6 @@ a.card:hover,
   to {
     transform: rotate(360deg);
   }
-}
-
-.submit-panel h3 {
-  margin: 0 0 6px;
-}
-
-.submit-panel p {
-  margin: 0;
-  max-width: 68ch;
-}
-
-.submit-panel .row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  align-items: center;
-}
-
-/* The real input is hidden inside the label, so the label needs the focus ring it would have had. */
-.submit-panel label:focus-within {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-
-.submit-panel .good {
-  color: var(--good);
-}
-
-.submit-panel .bad {
-  color: #b3261e;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .submit-panel .bad {
-    color: #ff8f8f;
-  }
-}
-
-:root[data-theme='dark'] .submit-panel .bad {
-  color: #ff8f8f;
 }
 
 /* --- notes and callouts ----------------------------------------------------------------------- */
@@ -2304,9 +2255,20 @@ a.card:hover,
     display: none;
   }
 
+  /* It stands in for the header button, so it is drawn like it rather than like a menu row. */
   .site-nav .nav-download {
     display: block;
-    color: var(--accent);
+    margin-top: 8px;
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: var(--accent-ink);
+    text-align: center;
+  }
+
+  .site-nav .nav-download:hover {
+    background: var(--accent);
+    color: var(--accent-ink);
+    filter: brightness(1.08);
   }
 
   .showcase .shot {
