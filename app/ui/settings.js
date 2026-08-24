@@ -4306,6 +4306,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       further down re-run the layout once the panel is on screen.
     */
     function measuredStageWidth() {
+      // Screen view narrows the stage to its mock display, so the previous layout's width would be
+      // measured here and the display would shrink a little further on every pass. Ask for the room
+      // available, not the room last taken.
+      const node = document.querySelector('#options-notify-designer .pd-stage');
+      if (node) node.style.width = '';
       const measured = $('#options-notify-designer .pd-stage').width();
       return measured > 80 ? measured - 28 : 360;
     }
@@ -4323,11 +4328,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     */
     const STAGE_PADDING = 12; // .pd-stage padding, both sides
 
-    function stageCeiling() {
+    function stageCeiling(padding = STAGE_PADDING) {
       const node = document.querySelector('#options-notify-designer .pd-stage');
       if (!node) return 170;
       const cap = parseFloat(getComputedStyle(node).maxHeight);
-      return Number.isFinite(cap) && cap > 60 ? cap - STAGE_PADDING * 2 : 170;
+      return Number.isFinite(cap) && cap > 60 ? cap - padding * 2 : 170;
     }
 
     /*
@@ -4339,13 +4344,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       empty horizontally). Sizing to the content gives the controls their room back on a short design
       and the tall ones a size you can judge.
     */
-    function fitStageTo(contentHeight) {
+    function fitStageTo(contentHeight, padding = STAGE_PADDING) {
       const node = document.querySelector('#options-notify-designer .pd-stage');
       if (!node) return;
       const style = getComputedStyle(node);
       const floor = parseFloat(style.minHeight) || 96;
       const cap = parseFloat(style.maxHeight) || 300;
-      const wanted = Math.ceil(contentHeight) + STAGE_PADDING * 2;
+      const wanted = Math.ceil(contentHeight) + padding * 2;
       node.style.height = Math.round(Math.max(floor, Math.min(cap, wanted))) + 'px';
     }
 
@@ -4365,6 +4370,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       if (previewView === 'compare') {
         // The compare rows own the stage; the single card is hidden by the stylesheet.
         screen.classList.remove('is-screen');
+        screen.style.width = '';
         $('#pd-resolution').prop('hidden', true);
         $('#pd-placement').prop('hidden', true);
         $('#pd-size-note').text(`${box.width}×${box.height}`);
@@ -4372,13 +4378,26 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
       if (previewView === 'screen') {
         screen.classList.add('is-screen');
-        // A mock display, not a card: it wants every pixel the ceiling allows.
-        fitStageTo(stageCeiling());
+        /*
+          The whole mock display, not as much of it as the width allows. A 16:9 box as wide as the
+          stage is far taller than the stage can be, and the stage clips what it centres: the top and
+          bottom edges - the ones the position picker exists for - were cut off, so a popup anchored
+          top or bottom simply did not appear. Fit the display to the shorter of the two instead, and
+          take the stage in with it: a 16:9 box in a stage twice its width is a screen adrift in a
+          band of backdrop, and the height that band costs is height the controls under it lose.
+        */
+        // The stage has no padding in this view, so it is the display and nothing else.
+        const displayWidth = Math.max(120, Math.min(stageWidth, Math.floor((stageCeiling(0) * 16) / 9)));
+        screen.style.width = displayWidth + 'px';
+        const stageNode = document.querySelector('#options-notify-designer .pd-stage');
+        if (stageNode) stageNode.style.width = displayWidth + 'px';
+        fitStageTo((displayWidth * 9) / 16, 0);
         const resolution = parseInt($('#pd-resolution').val(), 10) || 1920;
         const userScale = parseFloat($('#option_overlayScale').val()) || 1;
-        zoom = (stageWidth / resolution) * userScale;
+        zoom = (displayWidth / resolution) * userScale;
       } else {
         screen.classList.remove('is-screen');
+        screen.style.width = '';
         // Never larger than life, and never taller than the stage will let it be.
         zoom = Math.min(1, stageWidth / box.width, stageCeiling() / box.height);
         fitStageTo(box.height * zoom);

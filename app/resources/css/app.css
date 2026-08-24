@@ -9246,8 +9246,19 @@ body {
   max-width: 100%;
 }
 
+/* Screen view sizes the stage to the mock display itself (ui/settings.js sets both widths), so it is
+   centred rather than left-aligned in a band of empty backdrop - and it drops the padding with it,
+   because a strip of transparency checker around a mock display is a frame around a screen, not a
+   thing the popup is being judged against. */
+#settings .pd-stage[data-view='screen'] {
+  margin-inline: auto;
+  padding: 0;
+}
+
 /* Screen view: a mock display at the chosen resolution, with the popup at its true relative size in
-   the corner it will actually appear in. */
+   the corner it will actually appear in. Its width is set by ui/settings.js so the whole 16:9 box
+   fits the stage - at the full stage width the box was taller than the stage, and the top and
+   bottom edges the position picker is about were clipped away. */
 #settings .pd-screen.is-screen {
   width: 100%;
   aspect-ratio: 16 / 9;
