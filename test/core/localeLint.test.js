@@ -27,6 +27,9 @@ test('every documented rule is registered', () => {
     'checkDashes',
     'checkPlaceholdersAndMarkup',
     'checkCopiedProse',
+    'checkUntranslatedValues',
+    'checkMixedScript',
+    'checkLanguageMetadata',
     'checkDialogSlugs',
     'checkHardcodedUiStrings',
     'checkLinkCentralization',
@@ -58,6 +61,60 @@ test('the copied-prose heuristic separates a sentence from a product label', () 
   assert.ok(!isSentence('Steam / GBE Fork'));
   assert.ok(!isSentence('Name: A -> Z'));
   assert.ok(!isSentence('Steam AppID: {appid} ({name})'));
+});
+
+test('a locale that both translates a word and keeps it in English is reported', () => {
+  const english = [
+    ['settings.interfaceMode.advanced', 'Advanced'],
+    ['settings.emulator.steamSettings.value.advanced', 'Advanced'],
+    ['settings.sideMenu.presets', 'Presets'],
+    ['settings.notification.title.presets', 'Presets'],
+  ];
+  const shared = lint.sharedEnglishValues(english);
+
+  // The bug this rule exists for: "Advanced" translated in one place, English two settings away.
+  const mixed = lint.untranslatedContradictions(
+    shared,
+    new Map([
+      ['settings.interfaceMode.advanced', '詳細'],
+      ['settings.emulator.steamSettings.value.advanced', 'Advanced'],
+      ['settings.sideMenu.presets', 'プリセット'],
+      ['settings.notification.title.presets', 'プリセット'],
+    ])
+  );
+  assert.deepEqual(
+    mixed.map((hit) => hit.key),
+    ['settings.emulator.steamSettings.value.advanced']
+  );
+
+  // A word a language deliberately keeps everywhere is a loanword, not an oversight.
+  const kept = lint.untranslatedContradictions(
+    shared,
+    new Map([
+      ['settings.interfaceMode.advanced', 'Advanced'],
+      ['settings.emulator.steamSettings.value.advanced', 'Advanced'],
+      ['settings.sideMenu.presets', 'Presets'],
+      ['settings.notification.title.presets', 'Presets'],
+    ])
+  );
+  assert.deepEqual(kept, []);
+});
+
+test('the Latin-prose rule separates an English phrase from a product or file name', () => {
+  assert.ok(lint.looksLikeLatinProse('Save/config folders'));
+  assert.ok(lint.looksLikeLatinProse('Nothing added this session.'));
+  assert.ok(!lint.looksLikeLatinProse('Steam / GBE Fork'));
+  assert.ok(!lint.looksLikeLatinProse('Ubisoft / Uplay R2'));
+  assert.ok(!lint.looksLikeLatinProse('steam_settings: {path}'));
+  assert.ok(!lint.looksLikeLatinProse('AchKeyPrefix: {prefix}'));
+  assert.ok(!lint.looksLikeLatinProse('Goldberg SocialClub'));
+});
+
+test('every script the mixed-script rule guards belongs to a bundled locale', () => {
+  const bundled = new Set(lint.leaves(require(path.join(__dirname, '..', '..', 'app', 'locale', 'steam.json'))).map(([, value]) => value));
+  for (const id of Object.keys(lint.NATIVE_SCRIPT)) {
+    assert.ok(bundled.has(id), `${id} must be a real Steam language id`);
+  }
 });
 
 test('the hardcoded-string scanner accepts interface prose and rejects machine values', () => {

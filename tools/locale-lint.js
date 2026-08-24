@@ -47,6 +47,19 @@ function localeFiles() {
     .sort();
 }
 
+/*
+  Markup and placeholders can hide one inside another, so a single sweep can leave a bracket behind:
+  strip until the value stops changing rather than trusting one pass.
+*/
+function stripRepeatedly(value, pattern, replacement) {
+  let out = String(value);
+  for (;;) {
+    const next = out.replace(pattern, replacement);
+    if (next === out) return out;
+    out = next;
+  }
+}
+
 // Every leaf as [dotted.path, value]; array items keep their index so order changes are visible.
 function leaves(value, prefix = '', out = []) {
   if (Array.isArray(value)) {
@@ -282,7 +295,7 @@ function checkCopiedProse(findings) {
       if (typeof reference !== 'string' || typeof value !== 'string') continue;
       if (reference !== value) continue;
       // Placeholders and markup are the same everywhere, so judge the words around them.
-      const prose = value.replace(/\{[^}]*\}|<[^>]*>/g, ' ').trim();
+      const prose = stripRepeatedly(value, /\{[^}]*\}|<[^>]*>/g, ' ').trim();
       if (prose.split(/\s+/).filter(Boolean).length < 3) continue;
       if (!ENGLISH_FUNCTION_WORDS.test(prose)) continue;
       findings.push({ rule: 'copied-from-english', file: `app/locale/lang/${file}`, key, detail: value.slice(0, 70) });
@@ -515,12 +528,145 @@ function checkSourceLanguageMaps(findings) {
   }
 }
 
+/*
+  One English word translated in one place and left in English in another, inside the same file.
+
+  checkCopiedProse only fires on a sentence, so single words slipped past it for months: "Simple"
+  and "Advanced" were still the English words in seventeen of the twenty-eight files, including
+  Japanese and Simplified Chinese, while the very same words were translated two settings away.
+  Counting how many languages left a word alone proves nothing - "Preset", "Zoom", "Auto" and "FAQ"
+  legitimately stay English in a dozen of them. What does prove it is the file contradicting itself:
+  if this locale has a word for "Advanced" under one key, the key that kept "Advanced" is an
+  oversight, not a loanword.
+*/
+/*
+  English words this app uses in two different senses, so one key translating it and another
+  keeping it is not a contradiction: "Cover" is both the box art and an image fit, "Accent" is both
+  the accent colour and typographic accentuation, "Auto" is a value in one list and a mode in
+  another, and "In-game overlay" is a loan phrase Dutch keeps except where it takes an article.
+*/
+const UNTRANSLATED_ALLOWED = new Set(['Auto', 'Accent', 'Cover', 'In-game overlay']);
+
+// English values that appear under more than one key, as value -> keys.
+function sharedEnglishValues(englishLeaves) {
+  const keysByValue = new Map();
+  for (const [key, value] of englishLeaves) {
+    if (typeof value !== 'string') continue;
+    const word = value.trim();
+    if (!/[A-Za-z]{3}/.test(word)) continue;
+    if (UNTRANSLATED_ALLOWED.has(word)) continue;
+    if (!keysByValue.has(word)) keysByValue.set(word, []);
+    keysByValue.get(word).push(key);
+  }
+  for (const [word, keys] of keysByValue) if (keys.length < 2) keysByValue.delete(word);
+  return keysByValue;
+}
+
+// Where one locale both translates an English value and keeps it verbatim.
+function untranslatedContradictions(keysByValue, locale) {
+  const out = [];
+  for (const [word, keys] of keysByValue) {
+    const kept = keys.filter((key) => locale.get(key) === word);
+    if (!kept.length || kept.length === keys.length) continue;
+    const translated = keys.find((key) => locale.get(key) !== word);
+    for (const key of kept) out.push({ key, word, translated, translation: locale.get(translated) });
+  }
+  return out;
+}
+
+function checkUntranslatedValues(findings) {
+  const keysByValue = sharedEnglishValues(leaves(readJson(path.join(LANG_DIR, REFERENCE))));
+  for (const file of localeFiles()) {
+    if (file === REFERENCE) continue;
+    const locale = new Map(leaves(readJson(path.join(LANG_DIR, file))));
+    for (const hit of untranslatedContradictions(keysByValue, locale)) {
+      findings.push({
+        rule: 'untranslated-value',
+        file: `app/locale/lang/${file}`,
+        key: hit.key,
+        detail: `"${hit.word}" is left in English here but is "${hit.translation}" under ${hit.translated}`,
+      });
+    }
+  }
+}
+
+/*
+  English prose sitting in a locale that does not use the Latin alphabet. Product names, file names,
+  registry keys and protocol values legitimately stay in Latin script, so a single token proves
+  nothing; two lower-case English words in a row do, because that is a phrase rather than a name -
+  which is what "Save/config folder" and "Nothing added this session" looked like in Japanese,
+  Chinese, Russian, Ukrainian, Greek, Korean and Thai.
+*/
+const NATIVE_SCRIPT = {
+  japanese: /[぀-ヿ一-鿿]/,
+  koreana: /[가-힯]/,
+  schinese: /[一-鿿]/,
+  tchinese: /[一-鿿]/,
+  russian: /[Ѐ-ӿ]/,
+  ukrainian: /[Ѐ-ӿ]/,
+  greek: /[Ͱ-Ͽ]/,
+  thai: /[฀-๿]/,
+};
+
+/*
+  Strip what is an address rather than a word, then read "a/b" as two words, before looking for a
+  phrase: "Save/config folders" is prose, "steam_settings: {path}" is not.
+*/
+function looksLikeLatinProse(value) {
+  const stripped = stripRepeatedly(
+    value,
+    /\{[^}]*\}|<[^>]*>|%[A-Za-z]+%|\S*\\\S*|\b[\w-]+\.[a-z]{2,4}\b|\b\w*_\w+\b/g,
+    ' '
+  );
+  const prose = stripped.replace(/\//g, ' ');
+  return /\b[a-z]{2,}\s+[a-z]{2,}\b/.test(prose);
+}
+
+function checkMixedScript(findings) {
+  for (const [id, script] of Object.entries(NATIVE_SCRIPT)) {
+    const file = `${id}.json`;
+    if (!fs.existsSync(path.join(LANG_DIR, file))) continue;
+    for (const [key, value] of leaves(readJson(path.join(LANG_DIR, file)))) {
+      if (typeof value !== 'string' || !value.trim()) continue;
+      if (script.test(value)) continue;
+      if (!looksLikeLatinProse(value)) continue;
+      findings.push({ rule: 'latin-only-value', file: `app/locale/lang/${file}`, key, detail: value.trim().slice(0, 60) });
+    }
+  }
+}
+
+/*
+  A bundled language the app cannot offer. uiLanguages.js lists a locale only when steam.json
+  describes it, so a lang file whose id is absent there ships as dead weight: the file is complete,
+  key parity passes, and the language never appears in the picker.
+*/
+function checkLanguageMetadata(findings) {
+  const steam = require(path.join(LANG_DIR, '..', 'steam.json'));
+  const known = new Map(steam.map((entry) => [entry.api, entry]));
+  for (const file of localeFiles()) {
+    const id = file.replace(/\.json$/, '');
+    const entry = known.get(id);
+    if (!entry) {
+      findings.push({ rule: 'language-not-listed', file: 'app/locale/steam.json', key: id, detail: 'no entry, so the language never reaches the picker' });
+      continue;
+    }
+    for (const field of ['api', 'displayName', 'native', 'webapi']) {
+      if (!String(entry[field] || '').trim()) {
+        findings.push({ rule: 'language-metadata-incomplete', file: 'app/locale/steam.json', key: `${id}.${field}`, detail: 'empty' });
+      }
+    }
+  }
+}
+
 const RULES = [
   checkKeyParity,
   checkEmptyValues,
   checkDashes,
   checkPlaceholdersAndMarkup,
   checkCopiedProse,
+  checkUntranslatedValues,
+  checkMixedScript,
+  checkLanguageMetadata,
   checkDialogSlugs,
   checkHardcodedUiStrings,
   checkLinkCentralization,
@@ -549,7 +695,7 @@ function pseudoValue(value) {
   const accented = parts
     .map((part, index) => (index % 2 ? part : part.replace(/[aeiouAEIOUcnsyNS]/g, (ch) => PSEUDO_MAP[ch] || ch)))
     .join('');
-  const padding = '·'.repeat(Math.ceil(accented.replace(/\{[^}]*\}|<[^>]*>/g, '').length * 0.3));
+  const padding = '·'.repeat(Math.ceil(stripRepeatedly(accented, /\{[^}]*\}|<[^>]*>/g, '').length * 0.3));
   return `⟦${accented}${padding}⟧`;
 }
 
@@ -625,6 +771,11 @@ module.exports = {
   markupTags,
   TYPOGRAPHIC_DASH,
   looksLikeUiProse,
+  looksLikeLatinProse,
+  sharedEnglishValues,
+  untranslatedContradictions,
+  UNTRANSLATED_ALLOWED,
+  NATIVE_SCRIPT,
   leaves,
   ENGLISH_FUNCTION_WORDS,
   NON_UI_CONTEXT,
