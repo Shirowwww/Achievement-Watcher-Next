@@ -5,7 +5,10 @@ It is the one place that says whether AW Next can see the game, read its achieve
 its unlocks - and it offers only the repairs that can genuinely fix *that* game.
 
 Open it from the **tools** button in the top-right corner of a game tile, or from the game's
-right-click menu.
+right-click menu. The same panel carries two more tabs: **Executable**, which sets the program to
+watch while you play, and **Notifications**, where that one game can take its own popup preset,
+position, sound and scale - see
+[Per-game behavior](notifications.md#per-game-behavior).
 
 <div align="center">
 <img src="screenshot/game-health.png" width="620" alt="Game Health panel showing a Ready state"><br>

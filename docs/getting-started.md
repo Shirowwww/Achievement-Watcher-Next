@@ -77,22 +77,31 @@ The search field at the top of **Settings** filters every tab at once, and the s
 
 ## Themes
 
-**Settings → Theme** paints the whole app and the in-game overlay. There is a set of built-in
-palettes, and **Custom…** opens an editor with one row per layer: window background, top bar,
-library panel, cards and rows, the settings window, text, muted text, borders and the accent. Each
-layer takes a colour with an opacity, optionally a gradient, and the five surface layers optionally
-a background image with a fit and either a coloured veil or a blur. Everything previews live and is
-kept when you press **OK**.
+**Settings → Theme** paints the whole app and the in-game overlay. Thirteen palettes are built in,
+and **every one of them can be edited**: pick a theme and the editor below opens on its own colours.
+There is one row per layer - window background, top bar, library panel, cards and rows, the settings
+window, text, muted text, borders and the accent. Each layer takes a colour with an opacity,
+optionally a gradient, and the five surface layers optionally a background image with a fit and
+either a coloured veil or a blur.
 
-The editor asks for a **name** first, and that one name is the only one the theme has: the picker
-above reads it instead of "Custom…", and it is what the exported file is called. Exporting a theme
-you have not named yet says so and takes you back to the field.
+Editing previews live and writes nothing. **Save theme**, beside the name field, is what turns it
+into a theme of your own:
+
+- Leave the name as it opened and you are offered to replace that theme with what the editor shows.
+- Type another name and you get a second theme, with the first left exactly as it was.
+- A saved theme sits in the picker like any built-in, exports as an `.awtheme` and can be deleted.
+
+**Custom…** is the scratch slot: always there, always editable, and never overwritten by a save made
+from it. **Reset all** puts back the theme you are editing - a built-in returns its own palette, a
+saved or imported theme returns what is on disk, and the Custom slot returns to the default palette.
 
 Below the picker, **Theme files** turns whatever you are using into one portable file:
 
 - **Export theme…** writes an `.awtheme`: the palette, the gradients, the effect settings and any
   image you used, in a single file. It carries nothing about your machine - an image travels as
-  bytes under a name built from its layer, never as a path out of your pictures folder.
+  bytes under a name built from its layer, never as a path out of your pictures folder. A built-in
+  keeps its name, so exporting one is refused until you save it under a name of your own: the file
+  would otherwise install as "Nord" on somebody else's machine and shadow the Nord they have.
 - **Import theme…** reads one. Before anything is installed it shows the app drawn with that theme,
   with the name, the author, the version and how many images it carries, and only installs it when
   you confirm. An imported theme then behaves exactly like a built-in: it sits in the same dropdown,
@@ -140,7 +149,14 @@ lookup chain, the DLC and update tags, and the 3-day recheck.
 
 Open **Settings → Folders** and choose one of these paths:
 
-- **Smart Find** checks common launcher, emulator, save and game-library locations.
+- **Smart Find** finds folders two ways, and offers everything it finds for approval before adding
+  anything. It recognises library folders by name ("Games", "Jeux", "Repacks" and their equivalents
+  in twenty-odd languages, plus "Emulators" and "Emulation") on every drive, **and** it reads what
+  the launchers themselves recorded - the Epic manifests, the GOG Galaxy and Ubisoft Connect registry
+  entries, and the pointer Windows writes for the drive you chose for Xbox games. That second route
+  is how a library named after a storefront (`D:\Epic Games`, `D:\XboxGames`) is found without
+  scanning anything. Games the launcher owns keep their own source; what this adds is everything else
+  sitting in the same folder, which is usually where a repack or a Goldberg build ends up.
 - **Add a Folder** watches a location you select.
 - **Generate configs** performs a fuller scan and can apply enabled emulator setup options.
 
@@ -185,6 +201,16 @@ Starting with Windows and closing to the tray can be changed under **Settings �
 ## Updates and existing data
 
 Installed releases check the project's GitHub release feed for a newer version. When one is found, the app asks first whether you want to download and install it - nothing is downloaded without your OK. Once the download finishes, it asks again before restarting to apply the update.
+
+A chip beside the Watchdog indicator in the title bar follows the whole thing: *Update available*,
+then the percentage as it downloads, then *Update Ready*, then *Installing update…*. While the file
+is downloading the chip carries a **Cancel**, which is the way to stop a download you started by
+mistake without quitting the app. Open the window halfway through a background download and the chip
+is already showing it. If a game is running when the update is ready, the chip says so and the
+install waits until the game closes.
+
+The installer itself runs with its own progress window and asks nothing along the way, so there is
+something to watch from the moment AW Next closes until it comes back.
 
 Installing a newer build over an older one replaces program files but preserves user data in:
 

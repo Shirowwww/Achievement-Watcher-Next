@@ -489,6 +489,15 @@ body {
     border-left: 0;
   }
 
+  /*
+    The brand word is the widest thing on the bar and the least load-bearing: the mark on its own
+    still says where "back to the site" is, and giving its ~170px to the links means five of them
+    fit on a phone instead of two and a scrollbar.
+  */
+  .aw-site-brand-word {
+    display: none;
+  }
+
   .markdown-body h1 {
     font-size: 1.7em;
   }

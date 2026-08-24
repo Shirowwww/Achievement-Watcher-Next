@@ -6,17 +6,18 @@ properly.
 ## Getting set up
 
 **Do I need a Steam Web API key, or to sign in to Steam?**
-No. Achievement lists are fetched with a keyless chain of public endpoints, and no Steam account is
-connected. For your *own* Steam unlocks, Steam requires your profile and **Game details** to be
-public - see [Compatible sources](sources.md#official-platform-libraries).
+No. Achievement lists are fetched with a keyless chain of public endpoints, and nothing requires an
+account. For your *own* Steam unlocks, Steam requires your profile and **Game details** to be public;
+connecting a Steam account is the optional alternative, and covers Steam Family too - see
+[Connected accounts](sources.md#connected-accounts).
 
 **Which platforms does it run on?**
 Windows 10 and Windows 11 only. Packaged releases include their own runtime; Node.js is needed only
 to build from source.
 
 **Do I have to connect any account?**
-No. Epic and Xbox PC can *optionally* be connected to import achievement state their local files do
-not carry; the token is encrypted before it is stored on this PC. Everything else works without an
+No. Steam, Epic and Xbox PC can each be connected *optionally*, to read what the local files do not
+carry; every token is encrypted before it is stored on this PC. Everything else works without an
 account.
 
 **Does it work offline?**

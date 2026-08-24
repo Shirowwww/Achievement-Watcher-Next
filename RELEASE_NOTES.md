@@ -13,7 +13,8 @@ account connection, per-game notification appearance, and a long list of fixes g
 - **A real website**, not just a documentation folder:
   <https://shirowwww.github.io/Achievement-Watcher-Next/> now has a home page, the
   [preset gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/) and the theme
-  gallery above, live notification previews, and guides in six languages besides English.
+  gallery above, and live notification previews. The home page and both galleries are translated into
+  six languages besides English; the guides themselves stay English.
 - **An optional Steam account connection.** AW Next never sees your password - the sign-in page is
   Valve's own. Connecting reads achievements from a private profile, marks games shared through
   Steam Family, and can hide games no longer in your library, never a game installed here or shared
@@ -29,9 +30,9 @@ account connection, per-game notification appearance, and a long list of fixes g
   and details - and a game confirmed bought on an official store now carries its own small badge.
 - **Screenshot souvenirs handle Windows HDR automatically**, tone-mapping to a normal PNG instead of
   a washed-out capture.
-- Slovak, Dutch, Swedish, Danish, Norwegian, Finnish, Greek, Indonesian and Vietnamese join the
-  bundled interface languages, and RPCS3 trophies now raise live notifications like the other
-  console emulators.
+- Korean, Traditional Chinese, Dutch, Swedish, Danish, Norwegian, Finnish, Greek, Indonesian and
+  Vietnamese join the bundled interface languages, bringing them to 28, and RPCS3 trophies now raise
+  live notifications like the other console emulators.
 
 See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3100---2026-08-23)
 for the complete list, including the many smaller fixes gathered since 3.9.2.

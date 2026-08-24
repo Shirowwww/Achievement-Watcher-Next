@@ -25,8 +25,9 @@ The main library window may stay closed in every mode: the background tracker ha
 </div>
 
 Independently of the mode, **Websocket @localhost:8082** broadcasts every notification event as JSON
-on a local websocket, for stream overlays and other external tooling. It is on by default, only
-listens on the local machine, and adds no visible notification of its own.
+on a local websocket, for stream overlays and other external tooling. It is on by default, listens on
+`127.0.0.1` only - so nothing on the network can read it - and adds no visible notification of its
+own. Turn the row off if you do not use it.
 
 > [!TIP]
 > Use the built-in test buttons after changing the mode. A successful test confirms the display path;

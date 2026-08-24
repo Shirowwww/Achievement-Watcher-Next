@@ -17,6 +17,7 @@ into one library, with live Windows notifications and an in-game overlay.
 [Docs](https://shirowwww.github.io/Achievement-Watcher-Next/README.html) ·
 [Sources](https://shirowwww.github.io/Achievement-Watcher-Next/sources.html) ·
 [Presets](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/) ·
+[Themes](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/themes/) ·
 [GitHub](https://github.com/Shirowwww/Achievement-Watcher-Next)
 
 <table>
@@ -46,7 +47,8 @@ into one library, with live Windows notifications and an in-game overlay.
 - **Guided repairs.** Read-only diagnosis, `steam_settings` repair, matched GBE Fork runtime install,
   architecture-safe automatic Uplay R2 repair, transactional backups and restore.
 - **Flexible interface.** Simple and Advanced modes, full controller navigation, 28 bundled
-  interface languages, and portable `.awtheme` themes with their own
+  interface languages, and thirteen built-in palettes - every one of them editable per layer, savable
+  as your own and shareable as a portable `.awtheme` with its own
   [gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/themes/).
 - **Local-first.** No Steam Web API key, no required account, its own data directory, and caches that
   keep the library working offline.
@@ -117,6 +119,7 @@ Start at the **[documentation site](https://shirowwww.github.io/Achievement-Watc
 - **Use:** [Overlay](https://shirowwww.github.io/Achievement-Watcher-Next/overlay.html) ·
   [Controller](https://shirowwww.github.io/Achievement-Watcher-Next/controller.html) ·
   [Game Health](https://shirowwww.github.io/Achievement-Watcher-Next/game-health.html) ·
+  [Community galleries](https://shirowwww.github.io/Achievement-Watcher-Next/community-galleries.html) ·
   [Advanced tools](https://shirowwww.github.io/Achievement-Watcher-Next/advanced.html)
 - **Fix a problem:**
   [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html) ·

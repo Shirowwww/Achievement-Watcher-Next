@@ -17,7 +17,7 @@ These read the launcher's own local data. They are marked with a shield in Setti
 
 | Source | What AW Next reads | What it needs |
 |---|---|---|
-| **Steam** | Local appcache state, public-profile data, achievement schemas and cached product metadata | Steam installed, and your Steam profile set to public |
+| **Steam** | Local appcache state, public-profile data, achievement schemas and cached product metadata | Steam installed, and your Steam profile set to public; connecting an account is optional |
 | **GOG Galaxy** | The Galaxy client's local databases, plus compatible legacy saves | GOG Galaxy installed |
 | **Ubisoft Connect** | Native local data and legacy Uplay formats | Ubisoft Connect installed |
 | **Epic Games** | Local installations, plus official achievement state once you connect an account | Epic Games launcher; account connection is optional |
@@ -37,9 +37,19 @@ PC) or **Owned** (your whole Steam library).
 
 ### Connected accounts
 
-Epic and Xbox PC can optionally be connected from Settings to import achievement state the local
-files do not carry. The token is encrypted before it is stored on this PC. Everything else works
-without any account.
+Steam, Epic and Xbox PC can each optionally be connected from Settings, to read what the local files
+do not carry. Every token is encrypted before it is stored on this PC, and everything else works
+without any account at all.
+
+| Account | What connecting adds |
+|---|---|
+| **Steam** | Your real library, Steam Family titles included, so a private profile still lists the right games. **Hide games no longer in your Steam library** then removes the leftovers; a game installed on this PC or shared through Steam Family is never hidden. Sign-in happens on Valve's own page. |
+| **Epic Games** | Which achievements you have already unlocked in installed Epic games. Names, descriptions and rarity work without it. |
+| **Xbox PC** | Your Xbox PC library: unlock state and rarity from Xbox Network, cached locally afterwards. |
+
+A tile carries a small badge for what the connection established - bought on that store, shared
+through Steam Family, or no longer in your library - so the library says where a game came from
+rather than leaving you to guess.
 
 ## Steam-compatible saves
 
@@ -97,6 +107,18 @@ piece - see [Game Health](game-health.md) and [Goldberg / GBE setup](emulator-se
 | **Xenia** | Xbox 360 | `.gpd`, which likewise holds both |
 
 Each one is watched live, so an unlock in the emulator raises a notification like any other.
+
+All three let you move their data off the default path, and AW Next reads the same settings the
+emulator reads rather than assuming the default:
+
+- **RPCS3** - the trophy folder follows `vfs.yml` (including a `$(EmulatorDir)`-relative remap), a
+  `portable` folder beside the executable, and `RPCS3_CONFIG_DIR`.
+- **ShadPS4** - recognised whether you point at the emulator, its `user` folder or `game_data`
+  itself, and `config.toml` is read from either of the two places shadPS4 has kept it.
+- **Xenia** - follows the `storage_root` and `content_root` in its config.
+
+So a relocated RPCS3 virtual disk or a ShadPS4 data folder can be added under **Settings → Folders**
+directly, with no emulator executable anywhere near it.
 
 ## Other sources
 

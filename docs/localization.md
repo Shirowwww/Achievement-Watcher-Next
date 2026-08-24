@@ -14,7 +14,7 @@ How AW Next is translated, what is deliberately left in English, and what a cont
 |---|---|
 | Application interface | **28 bundled languages**, full key parity, no English fallback at runtime |
 | Website: the guides | **English only** today, with the language declared so browser translation works |
-| Website: home page and gallery | **6 languages** so far, as an overlay over the English markup |
+| Website: home page and the two galleries | **9 languages**, as an overlay over the English markup |
 | Dates, times, durations, numbers | Not translated: `Intl` produces them from the selected language |
 | Logs, file names, protocol values, source ids | Not translated, on purpose |
 | Check everything | `node tools/locale-lint.js`, or just `cd app && npm test` |
