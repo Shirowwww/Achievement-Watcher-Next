@@ -4,7 +4,8 @@ The home page and the preset gallery are written in English in their own markup,
 is an overlay applied on top of it. Nothing here is required: with this folder empty the site is
 still complete.
 
-Installed: `fr`, `de`, `es`, `pt-br`, `ru`, `zh-cn`.
+Installed: `fr`, `de`, `es`, `it`, `pt-br`, `pl`, `ru`, `ja`, `zh-cn`. Every one of them is complete: the
+check below reports nothing falling back to English.
 
 The documentation guides are a separate decision and stay English only. The reasoning is in
 [localization.md](../../localization.md).

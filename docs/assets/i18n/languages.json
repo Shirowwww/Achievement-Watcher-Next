@@ -2,7 +2,10 @@
   { "code": "fr", "name": "Français" },
   { "code": "de", "name": "Deutsch" },
   { "code": "es", "name": "Español" },
+  { "code": "it", "name": "Italiano" },
   { "code": "pt-br", "name": "Português (BR)" },
+  { "code": "pl", "name": "Polski" },
   { "code": "ru", "name": "Русский" },
+  { "code": "ja", "name": "日本語" },
   { "code": "zh-cn", "name": "简体中文" }
 ]
