@@ -41,6 +41,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- **Screenshot souvenirs taken with Windows HDR on no longer blow out.** Everything brighter than
+  ordinary white was squeezed into the last few shades the file can hold, and local detail was then
+  added back on top of that, which undid the squeezing for exactly the pixels it was meant to
+  protect. On a real HDR capture about a tenth of the picture came out as flat white: sunlit stone,
+  a lit window, a face, all reduced to one shade. The roll-off now happens where the eye measures
+  brightness instead of in linear light, it begins just below ordinary white so the desktop and
+  every piece of game UI pass through untouched, and how bright the scene is judged to be no longer
+  hangs on a handful of stray sparkles. The same captures now come out with a tenth of a percent of
+  pure white instead of ten percent, and what sits above white keeps fourteen distinguishable
+  levels where it had one.
 - **The Sources grid shows each platform's own mark.** It was eight two-letter abbreviations - St,
   Sv, GO, Ep, Ub, EA, Em, Xb - which nobody reads as a logo. The six storefronts now carry the marks
   the application already uses for the source badge on a library tile, so the site and the app

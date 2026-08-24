@@ -102,7 +102,7 @@ impl GraphicsCaptureApiHandler for SnapshotCapture {
         let mut unpadded = Vec::new();
         let raw = frame_buffer.as_nopadding_buffer(&mut unpadded);
         let white_scale = self.flags.white_scale;
-        let scene_peak = estimate_scene_peak(raw, white_scale);
+        let scene_peak = estimate_scene_peak(raw, width, height, white_scale);
         let mut canvas = self
             .flags
             .canvas
@@ -275,54 +275,176 @@ fn read_half(raw: &[u8], offset: usize) -> f32 {
     }
 }
 
-fn estimate_scene_peak(raw: &[u8], white_scale: f32) -> f32 {
-    const BINS: usize = 4096;
-    const MAX_SIGNAL: f32 = 16.0;
-    let mut histogram = [0_u32; BINS];
-    let mut samples = 0_u64;
+// The f16 bit patterns of the finite non-negative values sort exactly like the values do, so the
+// brightest channel of a pixel can be picked without decoding anything. A sign bit (colour outside
+// the sRGB gamut, which scRGB stores as a negative channel) or an all-ones exponent (infinity, NaN)
+// puts a pattern above HALF_INFINITY, and those never count as the peak.
+const HALF_INFINITY: u16 = 0x7c00;
 
-    for pixel in raw.chunks_exact(8).step_by(4) {
-        let peak = (read_half(pixel, 0)
-            .max(read_half(pixel, 2))
-            .max(read_half(pixel, 4))
-            / white_scale)
-            .min(MAX_SIGNAL);
-        let bin = ((peak / MAX_SIGNAL) * (BINS - 1) as f32).round() as usize;
-        histogram[bin] = histogram[bin].saturating_add(1);
-        samples += 1;
+fn pixel_peak_bits(pixel: &[u8]) -> u16 {
+    let mut best = 0_u16;
+    for channel in 0..3 {
+        let bits = u16::from_le_bytes([pixel[channel * 2], pixel[channel * 2 + 1]]);
+        if bits < HALF_INFINITY && bits > best {
+            best = bits;
+        }
+    }
+    best
+}
+
+// PQ (SMPTE ST 2084). The roll-off is computed in this perceptually uniform domain rather than in
+// linear light, so it spends its handful of remaining output codes where the eye can still tell two
+// highlights apart.
+const PQ_M1: f32 = 2610.0 / 16384.0;
+const PQ_M2: f32 = 2523.0 / 32.0;
+const PQ_C1: f32 = 3424.0 / 4096.0;
+const PQ_C2: f32 = 2413.0 / 128.0;
+const PQ_C3: f32 = 2392.0 / 128.0;
+
+// BT.2408 reference white. The capture is already divided by the desktop's own SDR white level, so
+// 1.0 means diffuse white wherever the "SDR content brightness" slider sits; anchoring that at a
+// fixed 203 cd/m2 keeps the curve a function of the peak-to-white ratio alone, and therefore keeps
+// two captures of the same scene identical whatever the user later does to the slider.
+const REF_WHITE_NITS: f32 = 203.0;
+
+fn pq_from_rel(value: f32) -> f32 {
+    let y = (value * (REF_WHITE_NITS / 10000.0)).clamp(0.0, 1.0);
+    let ym = y.powf(PQ_M1);
+    ((PQ_C1 + PQ_C2 * ym) / (1.0 + PQ_C3 * ym)).powf(PQ_M2)
+}
+
+fn rel_from_pq(value: f32) -> f32 {
+    let e = value.clamp(0.0, 1.0).powf(1.0 / PQ_M2);
+    let numerator = (e - PQ_C1).max(0.0);
+    let denominator = PQ_C2 - PQ_C3 * e;
+    if denominator <= 0.0 {
+        return 0.0;
+    }
+    (numerator / denominator).powf(1.0 / PQ_M1) * (10000.0 / REF_WHITE_NITS)
+}
+
+// A percentile rather than the raw maximum, and taken over the second brightest pixel of every 2x2
+// block rather than over every pixel: a lone specular sample loses to its own neighbours, so a
+// handful of fireflies can no longer decide how dark the rest of the screenshot comes out, while a
+// real window or sunlit wall keeps its value. The histogram is indexed by the f16 pattern itself,
+// which makes the percentile exact and keeps the scan free of any decoding.
+const PEAK_PERCENTILE: f64 = 0.9999;
+
+fn second_largest(a: u16, b: u16, c: u16, d: u16) -> u16 {
+    let (hi1, lo1) = if a >= b { (a, b) } else { (b, a) };
+    let (hi2, lo2) = if c >= d { (c, d) } else { (d, c) };
+    if hi1 >= hi2 {
+        hi2.max(lo1)
+    } else {
+        hi1.max(lo2)
+    }
+}
+
+fn estimate_scene_peak(raw: &[u8], width: u32, height: u32, white_scale: f32) -> f32 {
+    let mut histogram = vec![0_u32; HALF_INFINITY as usize];
+    let mut samples = 0_u64;
+    let stride = width as usize * 8;
+    let (columns, rows) = (width as usize, height as usize);
+
+    if columns >= 2 && rows >= 2 {
+        for y in (0..rows - 1).step_by(2) {
+            let (top, bottom) = (y * stride, (y + 1) * stride);
+            for x in (0..columns - 1).step_by(2) {
+                let (left, right) = (x * 8, (x + 1) * 8);
+                let bits = second_largest(
+                    pixel_peak_bits(&raw[top + left..]),
+                    pixel_peak_bits(&raw[top + right..]),
+                    pixel_peak_bits(&raw[bottom + left..]),
+                    pixel_peak_bits(&raw[bottom + right..]),
+                );
+                if bits != 0 {
+                    histogram[bits as usize] += 1;
+                    samples += 1;
+                }
+            }
+        }
     }
 
     if samples == 0 {
         return 1.0;
     }
 
-    let target = ((samples as f64) * 0.999).ceil() as u64;
+    let target = ((samples as f64) * PEAK_PERCENTILE).ceil() as u64;
     let mut seen = 0_u64;
-    for (index, count) in histogram.into_iter().enumerate() {
+    for (bits, count) in histogram.into_iter().enumerate() {
         seen += u64::from(count);
         if seen >= target {
-            return (((index as f32) / (BINS - 1) as f32) * MAX_SIGNAL).max(1.0);
+            let value = f16::from_bits(bits as u16).to_f32() / white_scale;
+            return value.max(1.0).min(rel_from_pq(1.0));
         }
     }
     1.0
 }
 
-const KNEE: f32 = 0.85;
+// Knee-anchored roll-off. Below the knee the capture passes through untouched, so ordinary SDR
+// content, the desktop and every piece of game UI come out of an HDR capture exactly as they would
+// out of an SDR one. Above it an extended Reinhard shoulder reaches the scene peak with a slope
+// that is small but never zero, which is what keeps the brightest highlights separated instead of
+// collapsing them into one flat white.
+//
+// SHOULDER is the width of that shoulder in normalised PQ, and it is the whole trade: the drop at
+// diffuse white is close to SHOULDER/2, while everything above white has to fit inside it. At 0.035
+// diffuse white lands within about 18 of 255 codes of where an SDR capture would put it - below the
+// threshold of noticing on a screenshot - and the highlights still resolve into a dozen or more
+// distinct levels.
+const SHOULDER: f32 = 0.035;
 
-fn tone_map_signal(value: f32, scene_peak: f32) -> f32 {
-    let value = value.max(0.0);
-    if scene_peak <= 1.05 {
-        return value.min(1.0);
+#[derive(Clone, Copy)]
+struct ToneCurve {
+    pq_peak: f32,
+    knee: f32,
+    width: f32,
+    reach: f32,
+    passthrough: bool,
+}
+
+impl ToneCurve {
+    fn new(scene_peak: f32) -> Self {
+        let pq_peak = pq_from_rel(scene_peak);
+        let white = pq_from_rel(1.0);
+        if scene_peak <= 1.0 + 1e-4 || pq_peak <= white {
+            return Self {
+                pq_peak,
+                knee: 1.0,
+                width: 0.0,
+                reach: 1.0,
+                passthrough: true,
+            };
+        }
+        let max_lum = white / pq_peak;
+        // Never spend more of the SDR range on the shoulder than there is headroom above white to
+        // absorb: as the scene peak approaches diffuse white the curve becomes the identity.
+        let width = SHOULDER.min(1.0 - max_lum).min(0.98 * max_lum);
+        Self {
+            pq_peak,
+            knee: max_lum - width,
+            width,
+            reach: (1.0 - (max_lum - width)) / width,
+            passthrough: false,
+        }
     }
 
-    if value <= KNEE {
-        return value;
+    fn map(&self, value: f32) -> f32 {
+        let value = value.max(0.0);
+        if self.passthrough {
+            return value.min(1.0);
+        }
+        let normalised = (pq_from_rel(value) / self.pq_peak).clamp(0.0, 1.0);
+        if normalised < self.knee {
+            return value;
+        }
+        // Reinhard with a white point, in shoulder units: T(0) = 0, T'(0) = 1 and T(L) = 1, so the
+        // curve leaves the knee at slope 1 and lands exactly on the scene peak.
+        let t = (normalised - self.knee) / self.width;
+        let shaped = t * (1.0 + t / (self.reach * self.reach)) / (1.0 + t);
+        let mapped = (self.knee + self.width * shaped).clamp(0.0, 1.0);
+        rel_from_pq(mapped * self.pq_peak).min(1.0)
     }
-
-    let peak = scene_peak.max(KNEE + 0.001);
-    let numerator = (1.0 + 20.0 * (value.min(peak) - KNEE)).ln();
-    let denominator = (1.0 + 20.0 * (peak - KNEE)).ln();
-    (KNEE + (1.0 - KNEE) * numerator / denominator).clamp(0.0, 1.0)
 }
 
 // 8x8 ordered dither. Compressing several stops of highlight into the top few sRGB codes leaves
@@ -359,21 +481,25 @@ fn linear_to_srgb(value: f32) -> u8 {
     linear_to_srgb_dithered(value, 0.0)
 }
 
-// A light source far above diffuse white reads as white to the eye, not as a saturated colour.
-// Keeping the hue untouched turns bright coloured highlights into flat poster-like patches, so
-// they are blended towards their own luminance as they approach the scene peak.
-fn desaturate_highlight(rgb: [f32; 3], pixel_peak: f32, scene_peak: f32) -> [f32; 3] {
-    const DESATURATION: f32 = 0.6;
-    // Only what sits above diffuse white is a highlight; SDR content keeps its colour exactly.
+// A light source far above diffuse white reads as white to the eye, not as a saturated colour, and
+// scaling every channel by the same factor cannot brighten a channel that is already at its
+// maximum: without this a red lamp at twice diffuse white and the same lamp at twelve times come
+// out as the very same flat red. Blending towards the pixel's own brightest channel washes it out
+// with rising intensity instead of dimming it, and nothing at or below diffuse white is touched.
+const WASH: f32 = 0.6;
+
+fn highlight_wash(pixel_peak: f32, scene_peak: f32) -> f32 {
     if scene_peak <= 1.05 || pixel_peak <= 1.0 {
+        return 0.0;
+    }
+    let position = ((pixel_peak - 1.0) / (scene_peak - 1.0)).clamp(0.0, 1.0);
+    position * position * WASH
+}
+
+fn desaturate_highlight(rgb: [f32; 3], blend: f32) -> [f32; 3] {
+    if blend <= 0.0 {
         return rgb;
     }
-    let blend = ((pixel_peak - 1.0) / (scene_peak - 1.0))
-        .clamp(0.0, 1.0)
-        .powi(2)
-        * DESATURATION;
-    // Blend towards the pixel's own brightest channel, so a highlight washes out to white instead
-    // of losing intensity the way a blend towards luminance would.
     let white = rgb[0].max(rgb[1]).max(rgb[2]);
     [
         rgb[0] + (white - rgb[0]) * blend,
@@ -382,98 +508,35 @@ fn desaturate_highlight(rgb: [f32; 3], pixel_peak: f32, scene_peak: f32) -> [f32
     ]
 }
 
-// Base/detail split (Durand/Reinhard style): only the tile-averaged brightness is compressed by
-// the global curve, so local shading near an unrelated bright peak keeps its own contrast.
-const LOCAL_TILE: usize = 64;
-const LOCAL_BLUR_RADIUS: usize = 1;
-const LOCAL_BLUR_PASSES: usize = 2;
-const LOG_EPS: f32 = 1e-4;
-
-fn build_local_base(
-    raw: &[u8],
-    width: u32,
-    copy_width: u32,
-    copy_height: u32,
-    white_scale: f32,
-) -> (Vec<f32>, usize, usize) {
-    let grid_w = ((copy_width as usize) + LOCAL_TILE - 1) / LOCAL_TILE;
-    let grid_h = ((copy_height as usize) + LOCAL_TILE - 1) / LOCAL_TILE;
-    let mut sum = vec![0f32; grid_w * grid_h];
-    let mut count = vec![0f32; grid_w * grid_h];
-
-    for y in 0..copy_height {
-        for x in 0..copy_width {
-            let source = ((y * width + x) * 8) as usize;
-            let peak = read_half(raw, source)
-                .max(read_half(raw, source + 2))
-                .max(read_half(raw, source + 4))
-                / white_scale;
-            let log_peak = (peak + LOG_EPS).ln();
-            let tile = (y as usize / LOCAL_TILE) * grid_w + (x as usize / LOCAL_TILE);
-            sum[tile] += log_peak;
-            count[tile] += 1.0;
-        }
-    }
-
-    let mut grid: Vec<f32> = sum
-        .iter()
-        .zip(count.iter())
-        .map(|(&s, &c)| if c > 0.0 { s / c } else { 0.0 })
-        .collect();
-    for _ in 0..LOCAL_BLUR_PASSES {
-        grid = blur_grid(&grid, grid_w, grid_h, LOCAL_BLUR_RADIUS);
-    }
-    (grid, grid_w, grid_h)
+// The whole per-pixel decision depends only on the brightest channel, and that channel is one of
+// the 31744 finite non-negative f16 patterns, so both the compression and the highlight wash are
+// resolved once into a table and cost a single lookup per pixel afterwards. No interpolation and no
+// approximation: the table holds the exact value the curve would return.
+struct PixelTables {
+    scale: Vec<f32>,
+    blend: Vec<f32>,
 }
 
-fn blur_grid(grid: &[f32], grid_w: usize, grid_h: usize, radius: usize) -> Vec<f32> {
-    if grid_w == 0 || grid_h == 0 {
-        return grid.to_vec();
-    }
-    let mut out = vec![0f32; grid.len()];
-    for gy in 0..grid_h {
-        let y0 = gy.saturating_sub(radius);
-        let y1 = (gy + radius).min(grid_h - 1);
-        for gx in 0..grid_w {
-            let x0 = gx.saturating_sub(radius);
-            let x1 = (gx + radius).min(grid_w - 1);
-            let mut sum = 0f32;
-            let mut n = 0f32;
-            for yy in y0..=y1 {
-                for xx in x0..=x1 {
-                    sum += grid[yy * grid_w + xx];
-                    n += 1.0;
-                }
-            }
-            out[gy * grid_w + gx] = sum / n;
+impl PixelTables {
+    fn new(scene_peak: f32, white_scale: f32) -> Self {
+        let curve = ToneCurve::new(scene_peak);
+        let mut scale = vec![0.0_f32; HALF_INFINITY as usize];
+        let mut blend = vec![0.0_f32; HALF_INFINITY as usize];
+        for bits in 0..HALF_INFINITY {
+            let raw = f16::from_bits(bits).to_f32();
+            let peak = raw / white_scale;
+            let index = bits as usize;
+            // The SDR white division is folded into the table, so a channel goes straight from its
+            // captured value to its tone-mapped one with a single multiply.
+            scale[index] = if raw > 0.0 {
+                curve.map(peak) / raw
+            } else {
+                0.0
+            };
+            blend[index] = highlight_wash(peak, scene_peak);
         }
+        Self { scale, blend }
     }
-    out
-}
-
-// Bilinear sample of the tile grid at a pixel position, so the base layer changes smoothly across
-// tile boundaries instead of stair-stepping.
-fn sample_local_base(grid: &[f32], grid_w: usize, grid_h: usize, x: u32, y: u32) -> f32 {
-    let tile = LOCAL_TILE as f32;
-    let gx = (x as f32 + 0.5) / tile - 0.5;
-    let gy = (y as f32 + 0.5) / tile - 0.5;
-    let gx0f = gx.floor();
-    let gy0f = gy.floor();
-    let fx = gx - gx0f;
-    let fy = gy - gy0f;
-    let clamp_x = |v: f32| (v as i64).clamp(0, grid_w as i64 - 1) as usize;
-    let clamp_y = |v: f32| (v as i64).clamp(0, grid_h as i64 - 1) as usize;
-    let x0 = clamp_x(gx0f);
-    let x1 = clamp_x(gx0f + 1.0);
-    let y0 = clamp_y(gy0f);
-    let y1 = clamp_y(gy0f + 1.0);
-    let v00 = grid[y0 * grid_w + x0];
-    let v10 = grid[y0 * grid_w + x1];
-    let v01 = grid[y1 * grid_w + x0];
-    let v11 = grid[y1 * grid_w + x1];
-    let top = v00 + (v10 - v00) * fx;
-    let bottom = v01 + (v11 - v01) * fx;
-    top + (bottom - top) * fy
 }
 
 fn tone_map_frame(
@@ -494,35 +557,21 @@ fn tone_map_frame(
 
     let copy_width = width.min(canvas.width);
     let copy_height = height.min(canvas.height);
-    let (base_grid, grid_w, grid_h) =
-        build_local_base(raw, width, copy_width, copy_height, white_scale);
+    let tables = PixelTables::new(scene_peak, white_scale);
 
     for y in 0..copy_height {
         for x in 0..copy_width {
             let source = ((y * width + x) * 8) as usize;
             let destination = ((y * canvas.width + x) * 4) as usize;
-            let rgb = [
-                read_half(raw, source) / white_scale,
-                read_half(raw, source + 2) / white_scale,
-                read_half(raw, source + 4) / white_scale,
-            ];
-            let pixel_peak = rgb[0].max(rgb[1]).max(rgb[2]);
-            let log_peak = (pixel_peak + LOG_EPS).ln();
-            let base_log = sample_local_base(&base_grid, grid_w, grid_h, x, y);
-            let detail = log_peak - base_log;
-            let base_val = (base_log.exp() - LOG_EPS).max(0.0);
-            let mapped_base = tone_map_signal(base_val, scene_peak);
-            let mapped_peak = ((mapped_base + LOG_EPS).ln() + detail).exp() - LOG_EPS;
-            let mapped_peak = mapped_peak.max(0.0);
-            let scale = if pixel_peak > 0.0 {
-                mapped_peak / pixel_peak
-            } else {
-                0.0
-            };
+            let bits = pixel_peak_bits(&raw[source..]) as usize;
+            let scale = tables.scale[bits];
             let mapped = desaturate_highlight(
-                [rgb[0] * scale, rgb[1] * scale, rgb[2] * scale],
-                pixel_peak,
-                scene_peak,
+                [
+                    read_half(raw, source) * scale,
+                    read_half(raw, source + 2) * scale,
+                    read_half(raw, source + 4) * scale,
+                ],
+                tables.blend[bits],
             );
             let dither = dither_offset(x, y);
 
@@ -644,19 +693,182 @@ mod tests {
             .collect()
     }
 
-    #[test]
-    fn sdr_values_are_not_tone_mapped() {
-        assert!((tone_map_signal(0.5, 1.0) - 0.5).abs() < f32::EPSILON);
-        assert!((tone_map_signal(1.0, 1.0) - 1.0).abs() < f32::EPSILON);
+    fn encoded_code(value: f32) -> f32 {
+        let value = value.clamp(0.0, 1.0);
+        let encoded = if value <= 0.003_130_8 {
+            value * 12.92
+        } else {
+            1.055 * value.powf(1.0 / 2.4) - 0.055
+        };
+        encoded * 255.0
+    }
+
+    fn frame(pixels: &[[f32; 3]]) -> Vec<u8> {
+        pixels
+            .iter()
+            .flat_map(|rgb| fp16_pixel(rgb[0], rgb[1], rgb[2]))
+            .collect()
     }
 
     #[test]
-    fn hdr_highlights_roll_into_sdr_without_clipping_early() {
-        let low = tone_map_signal(1.0, 8.0);
-        let high = tone_map_signal(4.0, 8.0);
-        assert!(low > 0.80 && low < high);
-        assert!(high < 1.0);
-        assert_eq!(tone_map_signal(8.0, 8.0), 1.0);
+    fn pq_round_trips_over_the_whole_encodable_range() {
+        for step in 0..=200 {
+            let value = (step as f32 / 200.0) * rel_from_pq(1.0);
+            let back = rel_from_pq(pq_from_rel(value));
+            assert!(
+                (back - value).abs() <= 1e-3 * value.max(1.0),
+                "{value} round tripped to {back}"
+            );
+        }
+        assert!((pq_from_rel(1.0) - 0.580_690).abs() < 1e-5);
+        // PQ does not evaluate to exactly zero at zero, but to well under a 12 bit code of it.
+        assert!(pq_from_rel(0.0) < 1e-5);
+        assert_eq!(rel_from_pq(pq_from_rel(0.0)), 0.0);
+    }
+
+    #[test]
+    fn an_sdr_scene_passes_through_untouched() {
+        let curve = ToneCurve::new(1.0);
+        for step in 0..=100 {
+            let value = step as f32 / 100.0;
+            assert!((curve.map(value) - value).abs() < 1e-6);
+        }
+        assert_eq!(curve.map(4.0), 1.0);
+    }
+
+    #[test]
+    fn the_curve_is_monotone_continuous_and_lands_on_the_peak() {
+        for peak in [1.05_f32, 1.5, 2.0, 4.0, 8.0, 16.0, 49.0] {
+            let curve = ToneCurve::new(peak);
+            // Measured where it matters, in output codes: the knee must not show as a step and
+            // the curve must never expand what it is supposed to compress.
+            let mut previous = 0.0_f32;
+            let mut previous_code = 0.0_f32;
+            let mut previous_source = 0.0_f32;
+            for step in 0..=20000 {
+                let value = (step as f32 / 20000.0) * peak;
+                let mapped = curve.map(value);
+                let (code, source) = (encoded_code(mapped), encoded_code(value.min(1.0)));
+                // Monotone to within the noise of the PQ round trip, which stays two orders of
+                // magnitude below one output code.
+                assert!(
+                    mapped >= previous - 1e-4 && code >= previous_code - 0.05,
+                    "peak {peak}: {value} mapped below its predecessor"
+                );
+                // The curve only ever compresses, so no interval of the input may come out
+                // stretched - which is also what a step at the knee would look like. Above
+                // diffuse white the input has no code of its own to compare against, so the
+                // requirement there is simply that no step is visible.
+                let allowed = if value <= 1.0 {
+                    source - previous_source + 0.05
+                } else {
+                    1.0
+                };
+                assert!(
+                    code - previous_code <= allowed,
+                    "peak {peak}: a step at {value}"
+                );
+                assert!(mapped <= value + 1e-4, "peak {peak}: {value} was expanded");
+                previous = mapped;
+                previous_code = code;
+                previous_source = source;
+            }
+            assert!(
+                (curve.map(peak) - 1.0).abs() < 2e-3,
+                "peak {peak} did not land on white"
+            );
+            assert_eq!(curve.map(peak * 4.0), 1.0);
+        }
+    }
+
+    #[test]
+    fn ordinary_sdr_content_survives_an_hdr_capture() {
+        // Every SDR code, through the curve of a scene four times brighter than diffuse white.
+        let curve = ToneCurve::new(4.0);
+        let mut worst = 0;
+        for code in 0..=255_u8 {
+            let value = code as f32 / 255.0;
+            let linear = if value <= 0.04045 {
+                value / 12.92
+            } else {
+                ((value + 0.055) / 1.055).powf(2.4)
+            };
+            let back = linear_to_srgb_dithered(curve.map(linear), 0.0);
+            worst = worst.max((back as i32 - code as i32).abs());
+        }
+        assert!(worst <= 16, "SDR content drifted by {worst} codes");
+    }
+
+    #[test]
+    fn the_knee_keeps_midtones_exact() {
+        let curve = ToneCurve::new(16.0);
+        for value in [0.05_f32, 0.18, 0.35, 0.5] {
+            assert!(
+                (curve.map(value) - value).abs() < 1e-6,
+                "{value} was altered"
+            );
+        }
+        assert!(
+            curve.map(1.0) < 1.0,
+            "diffuse white must leave room above it"
+        );
+        assert!(curve.map(1.0) > 0.8, "diffuse white must stay bright");
+    }
+
+    #[test]
+    fn highlights_stay_separated_instead_of_collapsing_to_white() {
+        let curve = ToneCurve::new(16.0);
+        let steps: Vec<f32> = [1.5_f32, 2.0, 3.0, 4.0, 6.0, 8.0, 12.0]
+            .into_iter()
+            .map(|value| curve.map(value))
+            .collect();
+        for pair in steps.windows(2) {
+            assert!(pair[1] > pair[0], "two highlight levels collapsed together");
+        }
+        assert!(*steps.last().unwrap() < 1.0);
+    }
+
+    #[test]
+    fn a_lone_firefly_does_not_decide_the_scene_peak() {
+        // A 4x4 frame of diffuse white with one very bright isolated pixel.
+        let mut pixels = vec![[1.0_f32, 1.0, 1.0]; 16];
+        pixels[5] = [60.0, 60.0, 60.0];
+        assert!((estimate_scene_peak(&frame(&pixels), 4, 4, 1.0) - 1.0).abs() < 1e-3);
+
+        // The same brightness spread over a 2x2 block is real content, and is kept.
+        let mut pixels = vec![[1.0_f32, 1.0, 1.0]; 16];
+        for index in [0, 1, 4, 5] {
+            pixels[index] = [60.0, 60.0, 60.0];
+        }
+        assert!(estimate_scene_peak(&frame(&pixels), 4, 4, 1.0) > 40.0);
+    }
+
+    #[test]
+    fn scene_peak_survives_degenerate_frames() {
+        assert_eq!(estimate_scene_peak(&[], 0, 0, 1.0), 1.0);
+        assert_eq!(
+            estimate_scene_peak(&fp16_pixel(4.0, 4.0, 4.0), 1, 1, 1.0),
+            1.0
+        );
+        let black = frame(&vec![[0.0_f32, 0.0, 0.0]; 16]);
+        assert_eq!(estimate_scene_peak(&black, 4, 4, 1.0), 1.0);
+        // Never beyond what PQ can encode, whatever the capture contains.
+        let huge = frame(&vec![[60000.0_f32, 60000.0, 60000.0]; 16]);
+        assert!(estimate_scene_peak(&huge, 4, 4, 1.0) <= rel_from_pq(1.0) + 1e-3);
+    }
+
+    #[test]
+    fn infinities_negatives_and_nan_are_ignored() {
+        let mut raw = fp16_pixel(0.5, 0.5, 0.5);
+        let half = f16::from_f32(0.5).to_bits();
+        raw[0..2].copy_from_slice(&f16::INFINITY.to_bits().to_le_bytes());
+        assert_eq!(pixel_peak_bits(&raw), half);
+        raw[0..2].copy_from_slice(&f16::NAN.to_bits().to_le_bytes());
+        assert_eq!(pixel_peak_bits(&raw), half);
+        // A negative channel carries colour outside the sRGB gamut; it is never the peak.
+        raw[0..2].copy_from_slice(&f16::from_f32(-2.0).to_bits().to_le_bytes());
+        assert_eq!(pixel_peak_bits(&raw), half);
+        assert_eq!(read_half(&raw, 0), 0.0);
     }
 
     #[test]
@@ -672,22 +884,18 @@ mod tests {
     #[test]
     fn bright_coloured_highlights_move_towards_white() {
         // A saturated red at the scene peak: it must gain the other channels, without inverting.
-        let desaturated = desaturate_highlight([1.0, 0.0, 0.0], 8.0, 8.0);
+        let desaturated = desaturate_highlight([1.0, 0.0, 0.0], highlight_wash(8.0, 8.0));
         assert!(desaturated[1] > 0.0 && desaturated[2] > 0.0);
         assert!(desaturated[0] > desaturated[1]);
         assert_eq!(desaturated[1], desaturated[2]);
         // The highlight washes out without dimming.
         assert_eq!(desaturated[0], 1.0);
+        // The wash rises with intensity, so two levels of one colour stay distinguishable.
+        assert!(highlight_wash(4.0, 8.0) > highlight_wash(2.0, 8.0));
 
         // Diffuse white and below is not a highlight, and an SDR scene is never touched.
-        assert_eq!(
-            desaturate_highlight([1.0, 0.0, 0.0], 1.0, 8.0),
-            [1.0, 0.0, 0.0]
-        );
-        assert_eq!(
-            desaturate_highlight([1.0, 0.0, 0.0], 1.0, 1.0),
-            [1.0, 0.0, 0.0]
-        );
+        assert_eq!(highlight_wash(1.0, 8.0), 0.0);
+        assert_eq!(highlight_wash(4.0, 1.0), 0.0);
     }
 
     #[test]
@@ -716,12 +924,11 @@ mod tests {
     fn sdr_white_level_keeps_desktop_white_at_full_scale() {
         // 200 nits of SDR white: the desktop sits at 2.5 in scRGB and must still come out white.
         let white_scale = 2.5;
-        let raw = fp16_pixel(2.5, 2.5, 2.5);
-        // Within one histogram bin of 1.0, so the tone mapper leaves the frame alone.
-        assert!((estimate_scene_peak(&raw, white_scale) - 1.0).abs() < 0.01);
+        let raw = frame(&vec![[2.5_f32, 2.5, 2.5]; 16]);
+        assert!((estimate_scene_peak(&raw, 4, 4, white_scale) - 1.0).abs() < 0.01);
 
-        let mut canvas = Canvas::new(1, 1).unwrap();
-        tone_map_frame(&raw, 1, 1, 1.0, white_scale, &mut canvas).unwrap();
+        let mut canvas = Canvas::new(4, 4).unwrap();
+        tone_map_frame(&raw, 4, 4, 1.0, white_scale, &mut canvas).unwrap();
         assert_eq!(canvas.rgba[0], 255);
         assert_eq!(canvas.rgba[1], 255);
         assert_eq!(canvas.rgba[2], 255);
@@ -737,5 +944,22 @@ mod tests {
         assert!((canvas.rgba[0] as i32 - 137).abs() <= 2);
         assert!((canvas.rgba[1] as i32 - 188).abs() <= 2);
         assert_eq!(canvas.rgba[2], 255);
+    }
+
+    #[test]
+    fn the_lookup_table_agrees_with_the_curve_it_replaces() {
+        let scene_peak = 12.0;
+        let white_scale = 1.75;
+        let tables = PixelTables::new(scene_peak, white_scale);
+        let curve = ToneCurve::new(scene_peak);
+        for bits in (0..HALF_INFINITY).step_by(37) {
+            let raw = f16::from_bits(bits).to_f32();
+            if raw <= 0.0 {
+                continue;
+            }
+            let expected = curve.map(raw / white_scale);
+            let got = raw * tables.scale[bits as usize];
+            assert!((got - expected).abs() < 1e-5, "table drifted at {raw}");
+        }
     }
 }
