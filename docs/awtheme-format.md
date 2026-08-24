@@ -4,7 +4,7 @@ An application theme travels as one file. `.awtheme` is a zip with a fixed layou
 by [`app/util/themePackage.js`](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/app/util/themePackage.js),
 which is the only code that ever unpacks one.
 
-This page is the format itself. How to send one to the gallery is [Theme gallery](theme-gallery.md);
+This page is the format itself. How to send one to the gallery is [The community galleries](community-galleries.md);
 what the themes are and how the editor works is [Advanced](advanced.md).
 
 ## What is in the file
@@ -23,10 +23,10 @@ A theme is **data**: colours, numbers, and pictures. The format has no place for
 place for markup and no place for a script, and the reader refuses any entry that is not one of the
 three things above. So an imported theme has nothing it could run, no URL it could fetch and no way
 to reach the network. AW Next builds the stylesheet itself from the values in `theme.json`, exactly
-as it does for the Custom theme you draw in Settings.
+as it does for any theme you edit in Settings.
 
 This is also why a **user stylesheet theme cannot be exported**. Any `*.css` you drop into
-`%APPDATA%\Achievement Watcher 3.0\themes` still works and still appears in the picker, but Export
+`%APPDATA%\Achievement Watcher Next\themes` still works and still appears in the picker, but Export
 refuses it: putting somebody else's stylesheet into a file made to be passed around is exactly what
 this format is designed not to become. Share the `.css` itself if you want to pass one on.
 
@@ -101,6 +101,32 @@ The same nine-layer model the Custom theme editor writes:
 Every value is re-clamped through the editor's own ranges when the package is read, so a hand-edited
 `theme.json` cannot widen a limit.
 
+## The picture a theme is judged by
+
+A theme is data, so there is nothing to photograph. Everything that has to show one - the preview in
+Settings before an import, and the card in the
+[theme gallery](community-galleries.md) - draws the same fixed sample of the application with the
+theme applied, built by
+[`app/util/themeMock.js`](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/app/util/themeMock.js)
+from the sanitized theme model and nothing else. One picture therefore carries the title bar, the
+profile row, the library, the recently-unlocked list and the settings surface: every layer the
+format has appears at least once.
+
+Two details are worth knowing, because they are what make the picture a promise rather than a
+flattering portrait:
+
+- **It is the same sample every time**, at the same size, whichever machine draws it. That is what
+  lets the gallery cache a rendered picture by the checksum of the file it came from, and what makes
+  what Settings shows and what a card shows the same image at different scales.
+- **The window sits on a fixed scene**, not on a blank page. A theme may be see-through - the
+  opacity slider is on every layer - and a see-through theme photographed over nothing reads as a
+  washed-out design nobody would install, because the picture would be showing what is behind the
+  window, and behind the window there was nothing. The scene is a handful of CSS gradients defined
+  in that same file: no artwork, no network, and identical between two renders.
+
+The sample text is a constant in the source, so a picture can never carry a library, an account, a
+path or a game from the machine that drew it.
+
 ## What never travels
 
 Nothing about the machine that exported the theme:
@@ -157,7 +183,7 @@ rename, so a failure anywhere leaves theme storage exactly as it was.
 ## Where an imported theme lives
 
 ```text
-%APPDATA%\Achievement Watcher 3.0\theme-packs\<name>\
+%APPDATA%\Achievement Watcher Next\theme-packs\<name>\
   theme.json      the model, with image fields as bare names
   aw-theme.json   the manifest it arrived with, which is what a re-export reads
   assets\         the images that travelled

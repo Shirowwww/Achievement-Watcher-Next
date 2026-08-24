@@ -43,8 +43,7 @@ Read in order, or jump to what you need - every page ends with a link to the nex
 | [Goldberg / GBE setup](emulator-setup.md) | Diagnose or repair an emulated Steam game |
 | [Uplay R2 setup](uplay-r2.md) | The Ubisoft equivalent, for compatible titles |
 | [Comparison](comparison.md) | How AW Next differs from Achievement Watcher 2.x and Achievements |
-| [Preset gallery](preset-gallery.md) | The community gallery: installing a preset from it, and submitting yours |
-| [Theme gallery](theme-gallery.md) | The same for whole-app themes: downloading one, and sending yours |
+| [Community galleries](community-galleries.md) | Presets and themes made by other people: taking one, and sending yours |
 | [Localization](localization.md) | The 28 bundled languages, what is deliberately not translated, and why this site is English |
 
 The in-app **Settings → Help** tab is the quickest reference while you are using the app. It reflects
@@ -68,16 +67,32 @@ Lower-level documentation for contributors and for anyone building AW Next from 
 
 ## Where your data lives
 
-| Data | Default path |
+Everything AW Next writes is under one folder, **`%APPDATA%\Achievement Watcher Next`**, and the
+paths below are relative to it unless they say otherwise. An upgrade keeps all of it; the first
+launch imports an older Achievement Watcher folder without modifying it.
+
+| What | Where |
 |---|---|
-| Settings, cache and user assets | `%APPDATA%\Achievement Watcher Next` |
-| Logs | `%APPDATA%\Achievement Watcher Next\logs` |
-| Presets you created or imported | `%APPDATA%\Achievement Watcher Next\presets\Users Presets` |
-| Themes you imported | `%APPDATA%\Achievement Watcher Next\theme-packs` |
-| Achievement backups | `%APPDATA%\Achievement Watcher Next\backups\achievements` |
-| Screenshot souvenirs | `Pictures\Achievement Watcher Next` |
-| GBE Fork saves | `%APPDATA%\GSE Saves` |
-| Classic Goldberg saves | `%APPDATA%\Goldberg SteamEmu Saves` |
+| Settings, and every index and database the app keeps | `cfg\` (`options.ini` is the settings file itself) |
+| Logs | `logs\` |
+| Presets you created or imported | `presets\Users Presets\` |
+| Pictures a preset uses as its background | `presets\images\` |
+| Sounds you added | `sounds\` |
+| Themes you imported | `theme-packs\` |
+| Images used by the Custom theme | `theme-images\` |
+| Achievement backups, and the ones taken before a GBE repair | `backups\achievements\`, `backups\gbe\` |
+| Cover art and game icons | `covers\`, `gameIcons\` |
+| Schemas, icons and rarity fetched from a platform | `steam_cache\`, `uplay_cache\` |
+| Downloaded tools and the memoised folder scans | `cache\` (except `cache\uplayR2`, which holds a DLL you supplied) |
+| Screenshot souvenirs | `Pictures\Achievement Watcher Next` (or the folder you chose in Settings) |
+| Signed-in platform accounts | `steam_session.enc`, `epic_tokens.enc`, `cfg\xbox-auth.json` |
+| GBE Fork saves *(not ours: the emulator writes these)* | `%APPDATA%\GSE Saves` |
+| Classic Goldberg saves *(the same)* | `%APPDATA%\Goldberg SteamEmu Saves` |
+
+**Settings → Advanced → Clear caches** empties the last two rows and nothing else: everything there
+can be fetched again. Nothing under `cfg\`, `presets\`, `theme-packs\`, `theme-images\`, `sounds\`,
+`covers\`, `gameIcons\` or `backups\` is ever regenerated, so those are the folders worth copying
+before a reinstall.
 
 Before reporting a problem, use **Settings → Advanced → Diagnostics**, reproduce it once, then remove
 private data from the relevant logs.

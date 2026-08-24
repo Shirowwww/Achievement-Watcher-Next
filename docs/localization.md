@@ -125,15 +125,18 @@ What is done instead:
 If a language ever gets a maintained translation of these guides, the shape to add is a sibling
 directory with its own `hreflang` beside the one already declared, not a rewrite.
 
-### The home page and the preset gallery
+### The home page and the two galleries
 
-These two are hand written pages rather than Markdown, and they are translated, one language at a
-time, without forking anything. Today: French, German, Spanish, Portuguese (Brazil), Russian and
-Simplified Chinese.
+These three are hand written pages rather than Markdown, and they are translated, one language at a
+time, without forking anything. Today, and all of them complete: French, German, Spanish, Italian,
+Portuguese (Brazil), Polish, Russian, Japanese and Simplified Chinese - every one of them a language
+the application itself is already translated into, which is what keeps a site translation reviewable
+by somebody who also reads the app.
 
-English lives in the markup: every visible string is written in `docs/index.html` and
-`docs/gallery/index.html` and carries `data-i18n`, so the pages are complete and indexable before a
-script runs. A translation is an overlay - a flat JSON file of key to string in `docs/assets/i18n/` -
+English lives in the markup: every visible string is written in `docs/index.html`,
+`docs/gallery/index.html` and `docs/gallery/themes/index.html` and carries `data-i18n`, so the pages
+are complete and indexable before a script runs. That covers the navigation, both galleries, the
+submission forms and everything their scripts say back to a sender, including validation refusals. A translation is an overlay - a flat JSON file of key to string in `docs/assets/i18n/` -
 applied over that markup after load. A missing key falls back to the English already on the page, so
 a partial translation degrades one string at a time.
 
@@ -151,7 +154,7 @@ enforces the rule the overlay depends on: one key means one English string, wher
 ## Adding or changing a string
 
 1. Add the key to `app/locale/lang/english.json` - it is the structural reference.
-2. Add a **real translation** to the other 17 files. A missing key ships as blank UI; there is no
+2. Add a **real translation** to the other 27 files. A missing key ships as blank UI; there is no
    English fallback at runtime.
 3. If it is a `t()` slug, it belongs under `dialogs`. Keep the placeholder set identical to English.
 4. If it is markup with a position in a list, update the `nth-child` selector in

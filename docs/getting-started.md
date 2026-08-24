@@ -104,9 +104,9 @@ and the app builds its own stylesheet from them - so an imported theme has nothi
 no way to reach the network. The details are in [the format reference](awtheme-format.md).
 
 Themes other people have made are in the [theme gallery](gallery/themes/); sending yours is
-[one file](theme-gallery.md).
+[one file](community-galleries.md).
 
-A plain `*.css` dropped into `%APPDATA%\Achievement Watcher 3.0\themes` still appears in the picker
+A plain `*.css` dropped into `%APPDATA%\Achievement Watcher Next\themes` still appears in the picker
 as a user theme and is injected over the built-in stylesheet. That kind cannot be exported: sharing
 somebody else's stylesheet is exactly what the portable format is designed not to do.
 

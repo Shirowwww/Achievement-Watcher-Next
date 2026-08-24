@@ -90,22 +90,29 @@ popup uses in a game.
 | Control | What it shows |
 | --- | --- |
 | **Card** | The popup at its own size, for judging the design close up. The pixel size and preview zoom are printed under it. |
-| **Compare** | The normal, rare and 100% notifications at once. Switching states shows what a rare unlock looks like; seeing them together shows whether it looks *different*. |
+| **Compare** | All four notifications at once, two by two. Switching states shows what a rare unlock looks like; seeing them together shows whether it looks *different*. |
 | **Screen** | The popup on a mock display at **720p**, **1080p**, **1440p** or **4K**, at its true relative size and in the corner notifications are set to appear. |
-| **Normal / Rare / 100% / Progress** | The four notifications a preset has to look right in. |
+| **Normal / Rare / 100% / Progress** | The four notifications a preset has to look right in. In **Compare**, where all four are already on screen, the one you pick is drawn at full strength and the others sit back. |
 | **Play** | Plays the whole thing once - entry, hold and exit - at the preset's own timings. |
 | **Backdrop** | What the popup is judged against: transparency, a dark scene, a bright one, or artwork from your own library. A design that reads well on dark can vanish on a bright scene. |
-| **Position / Scale** | Both mirror the settings of the same name in the Notification tab. Changing them here changes that setting. A popup you placed by hand is drawn at the bottom centre and labelled, since only the app knows where you dragged it. |
+| **Position / Scale** | Both mirror the settings of the same name in the Notification tab. Changing them here changes that setting. They appear in the **Screen** view only, which is the one view where they change the picture. A popup you placed by hand is drawn at the bottom centre and labelled, since only the app knows where you dragged it. |
+
+The preview stays pinned to the top of the panel while the controls scroll under it, so a slider at
+the bottom of the list still shows you what it is doing. It takes the height the popup actually
+needs, which is why a short wide design leaves more room for the controls than a tall one does.
 
 ### Finding your way around
 
-Nine groups and sixty-odd controls, so there are three ways through them and one way back.
+Nine groups and sixty-odd controls, so there is one way through them and one way back.
 
 | | What it does |
 | --- | --- |
 | **The filter** | Type in the box above the groups and only the matching controls stay. It searches labels, the words inside dropdowns and the property's own name, so both `corner` and `radius` find the same slider, and a name read out of an `.awpreset` finds its control. A match behind **Advanced** opens it; a group with nothing in it folds away. **Esc** clears the box. |
-| **The group chips** | One per group, under the filter. Opens that group and scrolls to it. |
 | **Undo / redo** | The two arrows beside the filter, or **Ctrl+Z** and **Ctrl+Y** (**Ctrl+Shift+Z** works too). They step through whole designs, so one drag of a slider is one step rather than one per pixel. Loading a preset, picking a starting point or pressing Reset starts a fresh history - undo never carries you back into a different design. |
+
+The nine group headings are the other way around: they are all on screen at once, and each opens on
+a click. The everyday two - **Layout & size** and **Colours & background** - start open, and inside
+most groups an **Advanced** disclosure holds the fine-tuning nobody sets twice.
 
 Nothing the filter does moves a control: they are all still there, in the same order, hidden or
 shown. Clearing the box brings the panel back exactly as it was.
@@ -218,7 +225,7 @@ report. An import that fails at any point leaves every preset you already have u
 
 The [preset gallery](gallery/) is where those files are collected: browse what other people made,
 download one and import it, or add yours. What a submission has to be, and what is checked before it
-is listed, is in [The preset gallery](preset-gallery.md).
+is listed, is in [The community galleries](community-galleries.md).
 
 **Export** writes what the card is showing, under the name in the **Name** field - the design in the
 controls, saved or not, so a preset in progress can be shared without creating it first. The one

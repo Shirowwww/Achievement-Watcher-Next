@@ -253,7 +253,7 @@ function main() {
   if (problems.length) {
     console.error('The theme gallery has submissions that cannot be listed:\n');
     for (const problem of problems) console.error(`  - ${problem}`);
-    console.error('\nWhat a submission is: docs/theme-gallery.md');
+    console.error('\nWhat a submission is: docs/community-galleries.md');
     process.exitCode = 1;
     return;
   }

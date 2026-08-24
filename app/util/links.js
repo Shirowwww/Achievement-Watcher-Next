@@ -32,7 +32,7 @@ const DOCS = {
   uplayR2: 'uplay-r2',
   comparison: 'comparison',
   architecture: 'architecture',
-  presetGallery: 'preset-gallery',
+  communityGalleries: 'community-galleries',
 };
 
 // A page of the documentation site, by the keys above. Unknown names fall back to its home page
@@ -78,7 +78,7 @@ const links = {
   sources: docs('sources'),
   gameHealth: docs('gameHealth'),
   faq: docs('faq'),
-  presetGalleryGuide: docs('presetGallery'),
+  presetGalleryGuide: docs('communityGalleries'),
 
   // The projects AW Next descends from, shown in the About and Advanced panels.
   upstream: {
