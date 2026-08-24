@@ -4781,6 +4781,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     });
     $('#option_overlayPosition, #option_overlayScale').on('change', refreshPresetAnchors);
 
+    /*
+      Three tones, and only one of them is green. Green says a preset was written, renamed, deleted
+      or exported - something that outlived the panel. A message that only describes what the
+      controls now show ("Based on Poster", "a design you had not tried") is 'info' and stays in the
+      muted text colour: reported in green it read as "saved", which is exactly what had not
+      happened yet.
+    */
     function setPresetStatus(message, state) {
       $('#pd-status')
         .text(message || '')
@@ -4973,7 +4980,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // gone wrong is otherwise only recoverable by reloading a saved preset.
     $('#btn-reset-preset').click(function () {
       applyDesignToControls({});
-      setPresetStatus($('#pd-status').attr('data-reset') || '', 'ok');
+      setPresetStatus($('#pd-status').attr('data-reset') || '', 'info');
     });
 
     /*
@@ -5021,7 +5028,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#options-notify-designer .pd-template').removeClass('is-on');
       $(this).addClass('is-on');
       applyDesignToControls(options);
-      setPresetStatus(`${$('#pd-status').attr('data-template') || ''} ${name}`.trim(), 'ok');
+      setPresetStatus(`${$('#pd-status').attr('data-template') || ''} ${name}`.trim(), 'info');
     });
 
     // A design nobody would have thought to try. Constrained rather than uniform-random: one hue
@@ -5029,7 +5036,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     $('#btn-random-preset').click(function () {
       $('#options-notify-designer .pd-template').removeClass('is-on');
       applyDesignToControls(presetTemplates.randomPresetOptions());
-      setPresetStatus($('#pd-status').attr('data-randomized') || '', 'ok');
+      setPresetStatus($('#pd-status').attr('data-randomized') || '', 'info');
     });
 
     /*
@@ -5051,7 +5058,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#pd-name').val(candidate.slice(0, 48));
       updateCreateButtonMode();
       updateDeleteButtonVisibility();
-      setPresetStatus(`${$('#pd-status').attr('data-duplicated') || ''} ${$('#pd-name').val()}`.trim(), 'ok');
+      setPresetStatus(`${$('#pd-status').attr('data-duplicated') || ''} ${$('#pd-name').val()}`.trim(), 'info');
     });
 
     /*
@@ -5094,8 +5101,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       try {
         const outcome = await loadPresetIntoBuilder(name);
         if (outcome === 'failed') setPresetStatus($('#pd-status').attr('data-fail') || '', 'error');
-        else if (outcome === 'imported') setPresetStatus($('#pd-status').attr('data-imported-only') || '', 'ok');
-        else setPresetStatus(`${$('#pd-status').attr('data-loaded') || ''} ${name}`.trim(), 'ok');
+        else if (outcome === 'imported') setPresetStatus($('#pd-status').attr('data-imported-only') || '', 'info');
+        else setPresetStatus(`${$('#pd-status').attr('data-loaded') || ''} ${name}`.trim(), 'info');
       } catch (err) {
         debug.log(err);
         setPresetStatus($('#pd-status').attr('data-fail') || '', 'error');
