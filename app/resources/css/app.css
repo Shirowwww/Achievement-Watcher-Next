@@ -2742,25 +2742,14 @@ body.is-resizing #game-list {
   }
 }
 
-/* Mirrors the band above: whatever card sits just past the bottom edge shows its top sliver as
-   soon as the pane is taller than one screen, and without a mask that sliver can land mid-badge -
-   e.g. a connected account's green pill reduced to a stray dash with no card around it. Unlike the
-   top band this one does not need to fade in with scroll position: there is always more list below
-   whenever the pane can scroll at all, so it can just stay on. */
-#settings .box .content::after {
-  content: '';
-  display: block;
-  position: sticky;
-  bottom: -20px;
-  z-index: 1;
-  height: 30px;
-  margin: -22px -18px -20px;
-  pointer-events: none;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  -webkit-mask-image: linear-gradient(0deg, #000 0%, #000 38%, transparent 100%);
-  mask-image: linear-gradient(0deg, #000 0%, #000 38%, transparent 100%);
-}
+/* No band at the bottom edge.
+
+   There was one, mirroring the band above: it blurred whatever card sat just past the bottom so a
+   sliver could not land mid-badge. In practice it read as the last line of the pane being out of
+   focus for no reason - the version line under Diagnostics, the last row of a settings card - and
+   that is a worse trade than the sliver it was hiding. The top band stays: there the content
+   genuinely passes under the pinned headers.
+*/
 
 #settings .box .content::-webkit-scrollbar {
   width: 11px;
@@ -9826,6 +9815,9 @@ body {
 #settings #options-notify-designer #pd-actions {
   align-items: flex-start;
   gap: 14px 20px;
+  /* The last control group closes right above it, and with no room of its own the Create button read
+     as part of that group rather than as what the whole card leads to. */
+  margin-top: 18px;
 }
 
 #settings .pd-actions-primary {
