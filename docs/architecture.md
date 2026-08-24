@@ -92,7 +92,11 @@ Current integrations include Steam (legit client and emulator saves), Goldberg/G
 | `app/parser/steamAppInfo.js` | Steam's local `appcache/appinfo.vdf`: per-appid name and type, read offline and keyless |
 | `app/parser/goldberg.js` | Goldberg/GBE detection, diagnosis, repair and backup |
 | `app/parser/uplayR2.js` | Ubisoft-to-Steam mapping and Uplay R2 schema setup |
+| `app/parser/saveRoots.js` | Known achievement-data and game-library folder names, probed per drive and profile |
+| `app/parser/launcherLibraries.js` | Library roots read from launcher configuration already on disk (Epic manifests, GOG/Ubisoft registry, `.GamingRoot`) |
+| `app/parser/rpcs3Layout.js` | RPCS3 configuration root and `vfs.yml` `dev_hdd0` resolution |
 | `app/electron/init.js` | Main lifecycle, updater, browser helpers and overlay window |
+| `app/util/updateStatus.js` | Updater state machine shared by the main process, the title bar and Settings |
 | `watchdog/watchdog.js` | Background entry point and service coordination |
 | `watchdog/monitor.js` | Process and filesystem monitoring |
 | `watchdog/notification/toaster.js` | Notification delivery: one plan per event, single owner of the fallback |

@@ -15,6 +15,21 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   as it was. A saved theme then behaves like any other: it sits in the picker, exports as an
   `.awtheme` and can be deleted. A name that is already taken is reported before anything is written.
   **Custom…** stays where it was, as the scratch slot that is always there and always editable.
+- **Smart Find reads your launchers.** Until now it recognised folders by name: "Games", "Jeux",
+  "Repacks" and their equivalents in twenty-odd languages, on every drive. That misses the folder
+  most people actually use, because they named it after the storefront that created it. Smart Find
+  now also reads what the launchers themselves recorded - the Epic manifests, the GOG Galaxy and
+  Ubisoft Connect registry entries, and the pointer Windows writes for a drive you chose for Xbox
+  games - and offers the folder those installs sit in. Games the launcher owns are still left to
+  their own source; what this finds is everything else in the same folder, which is usually where a
+  repack or a Goldberg build ends up. It reads configuration files that are already on disk: no
+  extra scanning, and nothing is added without you approving it.
+- **Update progress in the title bar, with a Cancel.** A download used to be visible in exactly one
+  place, a small label on the Settings page, which is not where anyone is while it happens. There is
+  now a chip beside the Watchdog indicator that shows the percentage as it goes, then says the update
+  is ready, then says it is being installed. While the file is downloading it also carries a Cancel,
+  which is the first time a download started by mistake could be stopped without quitting the app.
+  Open the window halfway through a background download and the chip is already showing it.
 
 ### Removed
 
@@ -26,6 +41,22 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- **Installing an update no longer looks like a crash.** The old hand-over ran the installer with no
+  window at all: AW Next closed, nothing replaced it, and for several seconds the only thing on
+  screen was the desktop. The app now says it is installing before it closes - in the title bar, in
+  the tray and on the taskbar - and the installer runs with its own progress window, so there is
+  something to watch from the moment AW Next goes away until it comes back. Nothing is asked along
+  the way: the installer skips every page it would otherwise stop on, because an update starts after
+  the app has already quit and there is nobody there to click.
+- **RPCS3, shadPS4 and Xenia are found where you actually put them.** All three let you move their
+  data, and AW Next used to assume the default: RPCS3 trophies had to be in `dev_hdd0` beside the
+  executable, so a `vfs.yml` pointing at another drive, a portable install, or `RPCS3_CONFIG_DIR`
+  meant the folder simply came up empty. It now reads the same settings the emulator reads. shadPS4
+  is recognised whether you point at the emulator, its `user` folder or `game_data` itself, and Xenia
+  follows the `storage_root` / `content_root` in its config. A relocated RPCS3 virtual disk or a
+  shadPS4 data folder can now be added directly, with no emulator executable anywhere near it. Smart
+  Find also looks in dedicated emulator folders ("Emulators", "Emulation" and their translations) and
+  asks Windows where an installed emulator lives, instead of only searching game libraries.
 - **The preset designer keeps the popup on screen.** The preview is pinned to the top of the panel,
   so it is still there when you reach the slider at the bottom of the list - the whole tab is "change
   this, look at that", and until now what you were changing scrolled away from what you were looking
