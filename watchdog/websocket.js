@@ -16,15 +16,32 @@ const test = require('./notification-test.js');
 
 let WebSocket;
 
-module.exports = (option = {}) => {
-  const options = {
+/*
+  The loopback address, and not an omitted host.
+
+  `server.listen({ host: null })` is the same as omitting it: Node binds the unspecified address, so
+  the broadcast was reachable from the whole network with no authentication - while the Settings row
+  calls it "Websocket @localhost:8082" and the documentation promised the local machine. The feed
+  carries game and achievement names, and everything that consumes it (a stream overlay, a bot) runs
+  on this PC, so loopback is what was meant. A caller that genuinely wants to serve the network can
+  still pass an explicit host, and should pair it with `auth`.
+*/
+const LOOPBACK = '127.0.0.1';
+
+// Split out so the default can be asserted without starting a server (watchdog/test/websocketBind).
+function resolveOptions(option = {}) {
+  return {
     port: Number.isInteger(option.port) ? option.port : 8082,
-    host: option.host || null,
+    host: option.host || LOOPBACK,
     ipv6Only: option.ipv6Only || false,
     timeout: Number.isInteger(option.timeout) ? option.timeout : 30000, //30sec
     ssl: option.ssl || false,
     auth: option.auth || null, //username:password
   };
+}
+
+module.exports = (option = {}) => {
+  const options = resolveOptions(option);
 
   //Creating a http server by ourself so we can use basic auth http and https with websocket
   let server;
@@ -41,7 +58,7 @@ module.exports = (option = {}) => {
 
   WebSocket = new ws.Server({ noServer: true }); //WebSocket server detached from the http(s) server
 
-  debug.log(`Websocket listening on port ${options.port}...`);
+  debug.log(`Websocket listening on ${options.host}:${options.port}...`);
 
   // A busy port (another app, or an orphaned Watchdog holding 8082) must not crash-loop the
   // whole monitor: websocket broadcast is an optional transport, so log and keep running.
@@ -116,6 +133,9 @@ module.exports = (option = {}) => {
 
   return emitter;
 };
+
+module.exports.resolveOptions = resolveOptions;
+module.exports.LOOPBACK = LOOPBACK;
 
 module.exports.broadcast = (message) => {
   try {
