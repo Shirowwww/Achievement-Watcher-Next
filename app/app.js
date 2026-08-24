@@ -2429,14 +2429,67 @@ function sourcePresentationFor(game) {
   return { img: getSourceImg(source), label: t('steam-achievements', 'Steam achievements via emulator', 'Succès Steam via émulateur'), kind: 'steam' };
 }
 
-function dllPresentationFor(game) {
-  const present = !!(game && game.hasSteamApiDll);
+/*
+  The dot beside an emulated game's name.
+
+  It used to answer "is steam_api(64).dll on disk?" - a fact about one file, and not the question
+  anyone reads a coloured dot for. It reports the Game Health state instead, in the same three
+  colours the panel's own chip uses, and its tooltip names the button that opens that panel.
+
+  Two sources, in that order: the state of the last full report for this game, and - until the panel
+  has been opened once - what the scan already knows. The scan answer is deliberately coarse, because
+  a library is hundreds of tiles and the real report walks the install folder: it can see a missing
+  emulator dll and an absent achievement list, and everything finer is what opening the panel is for.
+*/
+const healthStateByAppid = new Map();
+
+function scannedHealthState(game) {
+  if (!game.hasSteamApiDll) return gameHealth.STATE.NOT_TRACKING;
+  const total = Number(game.achievement && game.achievement.total) || 0;
+  if (game.unconfigured || total <= 0) return gameHealth.STATE.ATTENTION;
+  return gameHealth.STATE.READY;
+}
+
+function healthDotFor(game) {
+  const state = healthStateByAppid.get(String(game.appid)) || scannedHealthState(game);
+  if (state === gameHealth.STATE.READY) {
+    return { state, label: t('health-dot-ok', 'Achievements are healthy', 'Succès sains') };
+  }
+  if (state === gameHealth.STATE.NOT_TRACKING) {
+    return {
+      state,
+      label: t(
+        'health-dot-problem',
+        'Achievements are not being tracked: open Game health with the game settings button',
+        'Succès non suivis : ouvre État du jeu avec le bouton réglages du jeu'
+      ),
+    };
+  }
   return {
-    present,
-    label: present
-      ? t('steam-api-64-dll-detected', 'steam_api(64).dll detected', 'steam_api(64).dll détecté')
-      : t('steam-api-64-dll-not-found', 'steam_api(64).dll not found', 'steam_api(64).dll introuvable'),
+    state,
+    label: t(
+      'health-dot-check',
+      'Worth a check: open Game health with the game settings button',
+      'À vérifier : ouvre État du jeu avec le bouton réglages du jeu'
+    ),
   };
+}
+
+// A full report is the better answer, so it replaces the scanned guess on the tile that is already
+// on screen rather than waiting for the next scan to redraw it.
+function rememberGameHealthState(appid, state) {
+  healthStateByAppid.set(String(appid), state);
+  const game = gameList.find((entry) => String(entry.appid) === String(appid));
+  if (!game || typeof game.hasSteamApiDll !== 'boolean') return;
+  const dot = healthDotFor(game);
+  $('#game-list .game-box')
+    .filter(function () {
+      return String($(this).attr('data-appid')) === String(appid);
+    })
+    .find('.health-badge')
+    .attr('class', `health-badge ${dot.state}`)
+    .attr('title', dot.label)
+    .attr('aria-label', dot.label);
 }
 
 function normalizePathKey(value) {
@@ -3164,7 +3217,7 @@ var app = {
             // changed; newly arriving tiles must use the same orientation as those already shown.
             const portrait = libraryLayout.isPortrait(self.config.achievement.libraryLayout);
             const sourceIcon = sourcePresentationFor(game);
-            const dllIcon = typeof game.hasSteamApiDll === 'boolean' ? dllPresentationFor(game) : null;
+            const healthDot = typeof game.hasSteamApiDll === 'boolean' ? healthDotFor(game) : null;
             const hideSteamBadges = sourceIcon.kind === 'steam-hidden';
             const recentUnlockText = !hasAchievements
               ? progressLabel
@@ -3231,10 +3284,10 @@ var app = {
                       )}</span></div>
                       <div class="game-meta">
                         ${
-                          dllIcon && !hideSteamBadges
-                            ? `<span class="dll-badge ${dllIcon.present ? 'present' : 'missing'}" title="${escapeHtml(
-                                dllIcon.label
-                              )}" role="img" aria-label="${escapeHtml(dllIcon.label)}"></span>`
+                          healthDot && !hideSteamBadges
+                            ? `<span class="health-badge ${healthDot.state}" title="${escapeHtml(
+                                healthDot.label
+                              )}" role="img" aria-label="${escapeHtml(healthDot.label)}"></span>`
                             : ''
                         }
                         ${
@@ -7134,6 +7187,9 @@ function paintGameHealth(report) {
   chip.find('i').attr('class', `fas ${GAME_HEALTH_STATE_ICON[report.state] || GAME_HEALTH_ICON.info}`);
   chip.find('.gh-state-label').text(gameHealthStateLabel(report.state));
   root.find('.gh-explanation').text(gameHealthExplanation(report));
+  // The library dot shows this same state, so the tile behind the panel is corrected as it is drawn.
+  const reportAppid = String(root.attr('data-appid') || '');
+  if (reportAppid) rememberGameHealthState(reportAppid, report.state);
 
   const simple = interfaceIsSimple();
   const mode = simple ? gameHealthInterfaceMode.SIMPLE : gameHealthInterfaceMode.ADVANCED;

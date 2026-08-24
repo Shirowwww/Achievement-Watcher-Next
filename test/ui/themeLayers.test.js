@@ -50,8 +50,9 @@ test('the default palette has one source in CSS and matches the theme engine', (
 
 test('semantic UI states follow theme tokens', () => {
   const css = fs.readFileSync(path.join(__dirname, '../../app/resources/css/app.css'), 'utf8');
-  assert.match(css, /\.dll-badge\.present\s*\{[^}]*var\(--success\)/);
-  assert.match(css, /\.dll-badge\.missing\s*\{[^}]*var\(--danger\)/);
+  assert.match(css, /\.health-badge\.ready\s*\{[^}]*var\(--success\)/);
+  assert.match(css, /\.health-badge\.attention\s*\{[^}]*var\(--warning\)/);
+  assert.match(css, /\.health-badge\.not-tracking\s*\{[^}]*var\(--danger\)/);
   assert.match(css, /\.onboarding-warning\s*\{[^}]*var\(--warning\)/);
   assert.match(css, /#emulator-login-test-status\.success\s*\{[^}]*var\(--success\)/);
   assert.match(css, /#emulator-login-test-status\.error\s*\{[^}]*var\(--danger\)/);

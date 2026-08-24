@@ -1407,7 +1407,9 @@ body.is-resizing #game-list {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
 }
 
-#game-list .game-box .info .dll-badge {
+/* The three states of the Game Health panel, in the same colours its own chip uses: ready, worth a
+   look, and not tracking at all. */
+#game-list .game-box .info .health-badge {
   display: inline-block;
   width: 7px;
   height: 7px;
@@ -1415,11 +1417,15 @@ body.is-resizing #game-list {
   flex-shrink: 0;
 }
 
-#game-list .game-box .info .dll-badge.present {
+#game-list .game-box .info .health-badge.ready {
   background: var(--success);
 }
 
-#game-list .game-box .info .dll-badge.missing {
+#game-list .game-box .info .health-badge.attention {
+  background: var(--warning);
+}
+
+#game-list .game-box .info .health-badge.not-tracking {
   background: var(--danger);
 }
 
@@ -1445,9 +1451,9 @@ body.is-resizing #game-list {
   color: var(--accent);
 }
 
-/* A local DLL health signal only makes sense once the game is confirmed on this PC. The badge
-   stays in the DOM so it appears automatically if exe-list reconciliation upgrades installed state. */
-#game-list .game-box[data-installed='0'] .info .dll-badge {
+/* A local health signal only makes sense once the game is confirmed on this PC. The badge stays in
+   the DOM so it appears automatically if exe-list reconciliation upgrades installed state. */
+#game-list .game-box[data-installed='0'] .info .health-badge {
   display: none;
 }
 
@@ -5977,7 +5983,7 @@ body {
   display: none;
 }
 
-#game-list .game-box .info .dll-badge {
+#game-list .game-box .info .health-badge {
   display: block;
   width: 8px;
   height: 8px;
@@ -5988,7 +5994,7 @@ body {
   transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
 }
 
-#game-list .game-box .info .dll-badge:hover {
+#game-list .game-box .info .health-badge:hover {
   transform: translateY(-1px);
   filter: brightness(1.08);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 0 7px rgba(255, 255, 255, 0.12);
