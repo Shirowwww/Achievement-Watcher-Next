@@ -305,44 +305,50 @@
             </p>
           </div>
 
+          <!--
+            Each tile carries the platform's own mark, drawn as a mask in the accent colour rather
+            than as the logo in its own colours: eight brand palettes in one grid fight each other
+            and half of them disappear against one theme or the other. The files are the ones the
+            application itself uses for its library badges - see assets/img/source/README.md.
+          -->
           <div class="sources">
             <div class="source">
-              <span class="source-mark" aria-hidden="true">St</span>
+              <span class="source-mark" data-mark="steam" aria-hidden="true"></span>
               <b>Steam</b>
               <span data-i18n="sources.steam">Local appcache state, public profile data, achievement lists with DLC tags</span>
             </div>
             <div class="source">
-              <span class="source-mark" aria-hidden="true">Sv</span>
+              <span class="source-mark" data-mark="saves" aria-hidden="true"></span>
               <b data-i18n="sources.savesTitle">Steam compatible saves</b>
               <span data-i18n="sources.saves">Goldberg, GBE Fork, GreenLuma, SmartSteamEmu, CreamAPI, Nemirtingas</span>
             </div>
             <div class="source">
-              <span class="source-mark" aria-hidden="true">GO</span>
+              <span class="source-mark" data-mark="gog" aria-hidden="true"></span>
               <b>GOG Galaxy</b>
               <span data-i18n="sources.gog">The local Galaxy databases, and compatible legacy saves</span>
             </div>
             <div class="source">
-              <span class="source-mark" aria-hidden="true">Ep</span>
+              <span class="source-mark" data-mark="epic" aria-hidden="true"></span>
               <b>Epic Games</b>
               <span data-i18n="sources.epic">Installed games, plus unlock state after an optional account connection</span>
             </div>
             <div class="source">
-              <span class="source-mark" aria-hidden="true">Ub</span>
+              <span class="source-mark" data-mark="ubisoft" aria-hidden="true"></span>
               <b>Ubisoft Connect</b>
               <span data-i18n="sources.ubisoft">Local data, legacy Uplay formats, and compatible Uplay R2 setups</span>
             </div>
             <div class="source">
-              <span class="source-mark" aria-hidden="true">EA</span>
+              <span class="source-mark" data-mark="ea" aria-hidden="true"></span>
               <b>EA Desktop</b>
               <span data-i18n="sources.ea">The local achievement log, for installs outside EA's managed folders</span>
             </div>
             <div class="source">
-              <span class="source-mark" aria-hidden="true">Em</span>
+              <span class="source-mark" data-mark="emulators" aria-hidden="true"></span>
               <b data-i18n="sources.emulatorsTitle">Emulators</b>
               <span data-i18n="sources.emulators">RPCS3, ShadPS4 and Xenia, watched live while the game runs</span>
             </div>
             <div class="source">
-              <span class="source-mark" aria-hidden="true">Xb</span>
+              <span class="source-mark" data-mark="xbox" aria-hidden="true"></span>
               <b>Xbox PC</b>
               <span data-i18n="sources.xbox">Game Pass and Microsoft Store installs, plus imported Xbox Network state</span>
             </div>

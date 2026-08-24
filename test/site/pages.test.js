@@ -333,3 +333,34 @@ test('the pages declare where they are, so a link preview is not blank', () => {
     assert.ok(document.querySelector('meta[name="description"]').getAttribute('content').length > 60);
   }
 });
+
+/*
+  The Sources grid identifies each platform with its own mark. They are masks rather than pictures,
+  so they are reached from the stylesheet and not from a `src` the link test above would follow -
+  which is exactly how one could go missing without anything failing.
+*/
+test('every source tile has a mark, and every mark is a file', () => {
+  const document = documentOf(PAGES[0]);
+  const css = fs.readFileSync(path.join(DOCS, 'assets', 'css', 'site.css'), 'utf8');
+  const tiles = document.querySelectorAll('.source-mark');
+
+  assert.equal(tiles.length, document.querySelectorAll('.source').length, 'a source tile has no mark');
+  assert.ok(tiles.length >= 8, 'the sources grid lost a tile');
+
+  for (const tile of tiles) {
+    const mark = tile.getAttribute('data-mark');
+    assert.ok(mark, 'a mark tile names no mark');
+    // The abbreviations these replaced were text; a mark is decoration with the name beside it.
+    assert.equal(tile.text.trim(), '', `the ${mark} tile still carries text`);
+    assert.equal(tile.getAttribute('aria-hidden'), 'true');
+
+    const rule = new RegExp("data-mark='" + mark + "'[^{]*[{][^}]*--mark:[^;]*url[(]'([^']+)'");
+    const declared = rule.exec(css);
+    assert.ok(declared, `no stylesheet rule draws the ${mark} mark`);
+    const file = path.join(DOCS, 'assets', 'css', declared[1]);
+    assert.ok(fs.existsSync(file), `${declared[1]} is named by the stylesheet and is not there`);
+  }
+
+  // Provenance and the trademark position are written down, because these are other people's marks.
+  assert.ok(fs.existsSync(path.join(DOCS, 'assets', 'img', 'source', 'README.md')), 'the marks carry no provenance');
+});

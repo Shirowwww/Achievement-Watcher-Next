@@ -1,0 +1,5 @@
+<!-- Not a brand either: RPCS3, ShadPS4 and Xenia are three programs, so the row is drawn with a
+     controller rather than with one of their marks standing in for the other two. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <path d="M7.5 6h9a5.5 5.5 0 0 1 5.4 4.5l1 5.4A2.9 2.9 0 0 1 20 19.3a2.9 2.9 0 0 1-2.3-1.1L16.2 16H7.8l-1.5 2.2A2.9 2.9 0 0 1 4 19.3a2.9 2.9 0 0 1-2.9-3.4l1-5.4A5.5 5.5 0 0 1 7.5 6Zm-1 3a1 1 0 0 0-1 1v1h-1a1 1 0 1 0 0 2h1v1a1 1 0 1 0 2 0v-1h1a1 1 0 1 0 0-2h-1v-1a1 1 0 0 0-1-1Zm10 0a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm-2.5 3a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm5 0a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Z"/>
+</svg>

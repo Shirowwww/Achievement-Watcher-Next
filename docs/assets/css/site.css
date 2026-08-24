@@ -1054,20 +1054,69 @@ a.card:hover,
   background: var(--panel);
 }
 
+/*
+  The platform's own mark, in a tile.
+
+  Drawn as a mask rather than as the logo in its own colours: the eight palettes fight each other in
+  one grid, and several of them - GOG's near-black, Ubisoft's white - disappear entirely against one
+  of the two themes. A mask reads only the alpha of the file, so every mark is the accent colour, in
+  both themes, from the artwork the application already ships.
+*/
 .source-mark {
   grid-row: span 2;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   border-radius: 10px;
   background: var(--panel-2);
   border: 1px solid var(--border);
-  font-family: 'Raleway', system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--accent);
+}
+
+.source-mark::before {
+  content: '';
+  /* A wordmark lockup (GOG, Epic) carries far more detail than a symbol, so the box is sized for
+     the busiest of them rather than for the simplest. */
+  width: 26px;
+  height: 26px;
+  background-color: var(--accent);
+  -webkit-mask: var(--mark) center / contain no-repeat;
+  mask: var(--mark) center / contain no-repeat;
+}
+
+.source-mark[data-mark='steam']::before {
+  --mark: url('../img/source/steam.svg');
+}
+
+.source-mark[data-mark='saves']::before {
+  --mark: url('../img/source/saves.svg');
+}
+
+.source-mark[data-mark='gog']::before {
+  --mark: url('../img/source/gog.svg');
+}
+
+/* The one raster mark: Epic's is a two-tone lockup, so the wordmark had to be knocked back out of
+   the shield rather than left solid. assets/img/source/README.md says how it was made. */
+.source-mark[data-mark='epic']::before {
+  --mark: url('../img/source/epic.png');
+}
+
+.source-mark[data-mark='ubisoft']::before {
+  --mark: url('../img/source/ubisoft.svg');
+}
+
+.source-mark[data-mark='ea']::before {
+  --mark: url('../img/source/ea.svg');
+}
+
+.source-mark[data-mark='emulators']::before {
+  --mark: url('../img/source/emulators.svg');
+}
+
+.source-mark[data-mark='xbox']::before {
+  --mark: url('../img/source/xbox.svg');
 }
 
 .source b {
