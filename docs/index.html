@@ -483,6 +483,245 @@
         </div>
       </section>
 
+      <!-- Themes -------------------------------------------------------------------------- -->
+      <!--
+        A preset is the popup; a theme is everything else. The section is built like the one above
+        it on purpose - pick one, it is drawn here - but where a preset is a real document in a
+        frame, a theme is only colours and numbers, so the sample below is painted directly by the
+        page from the palette on the chip that was pressed. Nothing is fetched and nothing runs.
+      -->
+      <section class="section section-alt" id="themes">
+        <div class="wrap">
+          <div class="section-head narrow">
+            <h2 data-i18n="homeThemes.title">Themes</h2>
+            <p class="lead" data-i18n="homeThemes.lead">
+              A preset paints the popup. A theme paints the rest: the window, the title bar, the library, the
+              achievement lists, the settings surface and the in-game overlay. Thirteen ship with the app. Pick one and
+              the sample below is repainted with it.
+            </p>
+          </div>
+
+          <div class="theme-stage" data-theme-stage>
+            <!--
+              A schematic of the home screen, not a screenshot: the same regions the theme colours,
+              small enough to read at a glance. Every colour on it comes from a custom property the
+              picker below sets, so switching a theme is nine values changing.
+            -->
+            <div class="theme-window" aria-hidden="true">
+              <div class="tw-head">
+                <span class="tw-live"></span>
+                <span class="tw-title"></span>
+                <span class="tw-grow"></span>
+                <span class="tw-btns"><i></i><i></i><i></i></span>
+              </div>
+              <div class="tw-body">
+                <div class="tw-profile">
+                  <span class="tw-avatar"></span>
+                  <span class="tw-pills"><i></i><i></i><i></i></span>
+                </div>
+                <div class="tw-panel">
+                  <div class="tw-grid">
+                    <span class="tw-tile" style="--fill: 68%"></span>
+                    <span class="tw-tile" style="--fill: 100%"></span>
+                    <span class="tw-tile" style="--fill: 24%"></span>
+                    <span class="tw-tile" style="--fill: 46%"></span>
+                    <span class="tw-tile" style="--fill: 89%"></span>
+                    <span class="tw-tile" style="--fill: 12%"></span>
+                  </div>
+                </div>
+                <div class="tw-rows">
+                  <span class="tw-row"><i class="tw-icon"></i><b></b><em></em></span>
+                  <span class="tw-row is-rare"><i class="tw-icon"></i><b></b><em></em></span>
+                </div>
+              </div>
+            </div>
+            <p class="theme-swatches" data-theme-swatches data-i18n-attr="aria-label:homeThemes.paletteLabel" aria-label="The colours of this theme" role="img"></p>
+          </div>
+
+          <!--
+            The palette travels on the chip that selects it, so the page needs no table of its own
+            and a colour is stated once. These are the app's built-in themes, values for value.
+          -->
+          <div
+            class="preset-strip"
+            role="tablist"
+            data-theme-tabs
+            data-i18n-attr="aria-label:homeThemes.pickerLabel"
+            aria-label="Choose a theme"
+          >
+            <button
+              class="chip"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              data-theme="default"
+              data-colors="#142236,#26384c,#192a40,#263b55,#e7edf6,#94a5ba,#3e5065,#6c91ff"
+            >
+              Steam Blue
+            </button>
+            <button
+              class="chip"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-theme="light"
+              data-colors="#e6ebf3,#f6f9fc,#eef2f8,#ffffff,#16202e,#5b6b80,#c5cfdd,#3a63b5"
+            >
+              Light
+            </button>
+            <button
+              class="chip"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-theme="oled"
+              data-colors="#000000,#101014,#060608,#141419,#e8ecf2,#9aa3b2,#2c2c34,#4da3ff"
+            >
+              OLED Black
+            </button>
+            <button
+              class="chip"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-theme="graphite"
+              data-colors="#1d1f22,#2a2d31,#17181b,#292c30,#e3e6ea,#a4aab2,#45494f,#6fbf73"
+            >
+              Graphite
+            </button>
+            <button
+              class="chip"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-theme="nord"
+              data-colors="#2e3440,#3b4252,#242933,#3b4252,#eceff4,#9099ab,#4c566a,#88c0d0"
+            >
+              Nord
+            </button>
+            <button
+              class="chip"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-theme="dracula"
+              data-colors="#282a36,#343747,#1e1f29,#343746,#f8f8f2,#9ba3c7,#4b4e63,#bd93f9"
+            >
+              Dracula
+            </button>
+            <button
+              class="chip"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-theme="gruvbox"
+              data-colors="#282828,#3c3836,#1d2021,#3c3836,#ebdbb2,#a89984,#504945,#fe8019"
+            >
+              Gruvbox
+            </button>
+            <button
+              class="chip"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-theme="tokyonight"
+              data-colors="#1a1b26,#24283b,#16161e,#24283b,#c0caf5,#565f89,#3b4261,#7dcfff"
+            >
+              Tokyo Night
+            </button>
+            <button
+              class="chip"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-theme="catppuccin"
+              data-colors="#1e1e2e,#313244,#181825,#313244,#cdd6f4,#a6adc8,#45475a,#89b4fa"
+            >
+              Catppuccin
+            </button>
+            <button
+              class="chip"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-theme="everforest"
+              data-colors="#232a2e,#2d353b,#1c2226,#343f44,#d3c6aa,#859289,#4a555b,#a7c080"
+            >
+              Everforest
+            </button>
+          </div>
+
+          <p class="preset-note" data-theme-note data-i18n="homeThemes.noteDefault">
+            The default. The app's own blue, a lighter title bar and a library panel a shade darker than the window
+            behind it.
+          </p>
+
+          <!-- What each theme is, in one line. Read by the picker; hidden because the line above shows it. -->
+          <ul class="visually-hidden" data-theme-notes aria-hidden="true">
+            <li data-theme="default" data-i18n="homeThemes.noteDefault">
+              The default. The app's own blue, a lighter title bar and a library panel a shade darker than the window
+              behind it.
+            </li>
+            <li data-theme="light" data-i18n="homeThemes.noteLight">
+              The only light base. Cards are white, the panel a cool grey, and the accent is dark enough to read on
+              both.
+            </li>
+            <li data-theme="oled" data-i18n="homeThemes.noteOled">
+              True black, so an unlit pixel stays unlit. Made for an OLED panel; on an LCD it reads as very high
+              contrast.
+            </li>
+            <li data-theme="graphite" data-i18n="homeThemes.noteGraphite">
+              Neutral grey with no colour cast at all, and a green accent as the only hue on screen.
+            </li>
+            <li data-theme="nord" data-i18n="homeThemes.noteNord">
+              The Nord palette, ported with its own values: cool slate blues and a pale arctic accent.
+            </li>
+            <li data-theme="dracula" data-i18n="homeThemes.noteDracula">
+              Dracula, ported the same way. Warm dark purple with a violet accent.
+            </li>
+            <li data-theme="gruvbox" data-i18n="homeThemes.noteGruvbox">
+              Gruvbox: warm browns, cream text and an orange accent. The only built-in with no blue in it.
+            </li>
+            <li data-theme="tokyonight" data-i18n="homeThemes.noteTokyo">
+              Tokyo Night. Deep indigo, low contrast between the surfaces, and a bright cyan accent over it.
+            </li>
+            <li data-theme="catppuccin" data-i18n="homeThemes.noteCatppuccin">
+              Catppuccin Mocha. Soft, slightly purple darks with a lavender blue accent.
+            </li>
+            <li data-theme="everforest" data-i18n="homeThemes.noteEverforest">
+              Everforest. Muted green greys and a sage accent, the least saturated set here.
+            </li>
+          </ul>
+
+          <div class="split" style="margin-top: 44px">
+            <div>
+              <h3 data-i18n="homeThemes.designerTitle">Make your own</h3>
+              <p data-i18n="homeThemes.designerBody">
+                Settings, Theme, Custom opens an editor over nine layers: window, title bar, library panel, cards,
+                settings surface, text, muted text, borders and the accent. Each takes a colour, an opacity, a gradient
+                and a background image with its own fit, blur or veil. The window repaints as you drag, so what you are
+                looking at is the app and not a preview of it.
+              </p>
+              <p>
+                <a class="card-more" href="awtheme-format.html" data-i18n="homeThemes.designerLink">What a theme file holds</a>
+              </p>
+            </div>
+            <div>
+              <h3 data-i18n="homeThemes.shareTitle">Share one, or take one</h3>
+              <p data-i18n="homeThemes.shareBody">
+                Export writes one <code>.awtheme</code> file: the colours, the numbers and any image you used, and
+                nothing about your machine. It carries no stylesheet and no script, so an imported theme has nothing it
+                could run. The gallery is where people put theirs, and every card there shows the app drawn with that
+                theme rather than a screenshot somebody took.
+              </p>
+              <p>
+                <a class="card-more" href="gallery/themes/" data-i18n="homeThemes.shareLink">Theme gallery</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Install and docs ---------------------------------------------------------------- -->
       <section class="section section-alt" id="install">
         <div class="wrap">

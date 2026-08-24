@@ -338,6 +338,93 @@
     });
   }
 
+  // --- theme sampler --------------------------------------------------------------------------
+
+  /*
+    The built-in themes, drawn on a schematic of the home screen.
+
+    A theme is only colours and numbers, so unlike a preset there is nothing to run and nothing to
+    load: the palette rides on the chip that selects it, and choosing one sets eight custom
+    properties on the sample. That is the whole feature - no frame, no fetch, no second stylesheet -
+    which is also why it costs the page nothing when nobody scrolls this far.
+  */
+  function setupThemes() {
+    var tabs = document.querySelector('[data-theme-tabs]');
+    var stage = document.querySelector('[data-theme-stage]');
+    if (!tabs || !stage) return;
+
+    var swatches = stage.querySelector('[data-theme-swatches]');
+    var note = document.querySelector('[data-theme-note]');
+    var notes = document.querySelector('[data-theme-notes]');
+    // The order the palette is written in on the chip, and the property each colour lands on.
+    var SLOTS = ['bg', 'header', 'panel', 'card', 'text', 'muted', 'border', 'accent'];
+    var described = '';
+
+    function describe(slug) {
+      if (!note || !notes) return;
+      var source = notes.querySelector('[data-theme="' + slug + '"]');
+      if (!source) return;
+      described = slug;
+      // The note carries the key of the line it is showing, so a language switch rewrites the
+      // selected theme's description rather than the one the markup started on.
+      var key = source.getAttribute('data-i18n');
+      if (key) note.setAttribute('data-i18n', key);
+      note.textContent = source.textContent.trim();
+    }
+
+    function paint(chip) {
+      var colors = String(chip.getAttribute('data-colors') || '').split(',');
+      SLOTS.forEach(function (slot, index) {
+        var color = (colors[index] || '').trim();
+        // A value only ever reaches a style as a plain hex. Everything here is written in the
+        // markup rather than sent by anybody, and it stays that way by being checked anyway.
+        if (/^#[0-9a-f]{6}$/i.test(color)) stage.style.setProperty('--th-' + slot, color);
+      });
+
+      if (swatches) {
+        swatches.textContent = '';
+        colors.forEach(function (color) {
+          var value = String(color).trim();
+          if (!/^#[0-9a-f]{6}$/i.test(value)) return;
+          var dot = document.createElement('span');
+          dot.className = 'theme-swatch';
+          dot.style.background = value;
+          swatches.appendChild(dot);
+        });
+      }
+
+      describe(chip.getAttribute('data-theme'));
+    }
+
+    tabs.addEventListener('click', function (event) {
+      var chip = event.target.closest('[data-theme]');
+      if (!chip) return;
+      tabs.querySelectorAll('[data-theme]').forEach(function (other) {
+        other.setAttribute('aria-selected', String(other === chip));
+      });
+      paint(chip);
+    });
+
+    // Left and right arrows move through the themes, as a tablist should.
+    tabs.addEventListener('keydown', function (event) {
+      if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+      var chips = Array.prototype.slice.call(tabs.querySelectorAll('[data-theme]'));
+      var index = chips.indexOf(document.activeElement);
+      if (index < 0) return;
+      event.preventDefault();
+      var next = chips[(index + (event.key === 'ArrowRight' ? 1 : chips.length - 1)) % chips.length];
+      next.focus();
+      next.click();
+    });
+
+    document.addEventListener('aw-i18n-applied', function () {
+      if (described) describe(described);
+    });
+
+    var first = tabs.querySelector('[aria-selected="true"][data-theme]') || tabs.querySelector('[data-theme]');
+    if (first) paint(first);
+  }
+
   // --- release line ---------------------------------------------------------------------------
 
   /*
@@ -392,5 +479,6 @@
   setupHeader();
   setupReveal();
   setupPresets();
+  setupThemes();
   setupRelease();
 })();

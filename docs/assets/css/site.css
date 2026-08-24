@@ -1211,6 +1211,250 @@ a.card:hover,
   white-space: nowrap;
 }
 
+/* --- theme sampler ---------------------------------------------------------------------------- */
+
+/*
+  The built-in themes, on a schematic of the home screen.
+
+  Every colour below is a custom property assets/js/site.js sets from the chip that was pressed, so
+  the whole sampler is eight values changing. The window sits on the same abstract scene the popup
+  stage uses, and for the same reason: a theme is judged over something, never over a blank field.
+  The values here are only a first paint for a reader with no scripting - the markup's own selected
+  chip carries the same palette.
+*/
+.theme-stage {
+  --th-bg: #142236;
+  --th-header: #26384c;
+  --th-panel: #192a40;
+  --th-card: #263b55;
+  --th-text: #e7edf6;
+  --th-muted: #94a5ba;
+  --th-border: #3e5065;
+  --th-accent: #6c91ff;
+
+  position: relative;
+  padding: clamp(22px, 3.4vw, 40px) clamp(16px, 3vw, 40px) clamp(16px, 2.4vw, 26px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background-image: linear-gradient(150deg, #0f1626 0%, #1b2540 44%, #3a3350 72%, #56404c 100%);
+  overflow: hidden;
+}
+
+.theme-window {
+  max-width: 860px;
+  margin: 0 auto;
+  border: 1px solid color-mix(in srgb, var(--th-border) 80%, transparent);
+  border-radius: 12px;
+  background: var(--th-bg);
+  box-shadow: 0 22px 46px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  /* Repainting a theme should read as the window changing, not as the page redrawing. */
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-window,
+  .theme-window * {
+    transition: none;
+  }
+}
+
+.tw-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+  padding: 0 8px 0 11px;
+  background: var(--th-header);
+  border-bottom: 1px solid color-mix(in srgb, var(--th-border) 60%, transparent);
+}
+
+.tw-live {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--th-accent);
+}
+
+.tw-title {
+  width: 108px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--th-text);
+  opacity: 0.85;
+}
+
+.tw-grow {
+  flex: 1;
+}
+
+.tw-btns {
+  display: flex;
+  gap: 9px;
+}
+
+.tw-btns i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--th-muted);
+  opacity: 0.7;
+}
+
+.tw-body {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px 16px;
+}
+
+.tw-profile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.tw-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--th-border);
+  background: color-mix(in srgb, var(--th-card) 80%, transparent);
+}
+
+.tw-pills {
+  display: flex;
+  gap: 7px;
+}
+
+.tw-pills i {
+  width: 54px;
+  height: 15px;
+  border-radius: 999px;
+  border: 1px solid var(--th-border);
+  background: color-mix(in srgb, var(--th-card) 62%, transparent);
+}
+
+.tw-panel {
+  padding: 11px;
+  border: 1px solid var(--th-border);
+  border-radius: 10px;
+  background: var(--th-panel);
+}
+
+.tw-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 9px;
+}
+
+/* A tile: cover art drawn from the accent, and the completion bar under it. */
+.tw-tile {
+  display: block;
+  height: 54px;
+  position: relative;
+  border: 1px solid var(--th-border);
+  border-radius: 7px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--th-accent) 42%, var(--th-card)), var(--th-card) 72%);
+  overflow: hidden;
+}
+
+.tw-tile::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 17px;
+  background: var(--th-card);
+  border-top: 1px solid color-mix(in srgb, var(--th-border) 70%, transparent);
+}
+
+.tw-tile::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  width: calc((100% - 12px) * var(--fill, 50%) / 100%);
+  height: 4px;
+  border-radius: 999px;
+  background: var(--th-accent);
+}
+
+.tw-rows {
+  display: grid;
+  gap: 7px;
+}
+
+.tw-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border: 1px solid var(--th-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--th-card) 70%, transparent);
+}
+
+.tw-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: 5px;
+  border: 1px solid var(--th-border);
+  background: color-mix(in srgb, var(--th-accent) 20%, transparent);
+}
+
+.tw-row b {
+  width: 116px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--th-text);
+  opacity: 0.82;
+}
+
+.tw-row em {
+  width: 74px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--th-muted);
+  opacity: 0.7;
+}
+
+/* The rarity treatment is the one thing on a row that is not a shade of the palette. */
+.tw-row.is-rare em {
+  background: var(--th-accent);
+  opacity: 1;
+}
+
+/* The palette itself, under the window: the eight values the theme actually installs. */
+.theme-swatches {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin: 16px 0 0;
+}
+
+.theme-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 720px) {
+  /* Six tiles across is a row of slivers on a phone; three keeps a tile readable as a tile. */
+  .tw-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tw-pills i {
+    width: 38px;
+  }
+}
+
 /* --- gallery ---------------------------------------------------------------------------------- */
 
 .gallery-toolbar {
