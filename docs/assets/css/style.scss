@@ -409,15 +409,34 @@ body {
   text-decoration: none;
 }
 
-.aw-site-links .aw-site-cta {
-  margin-left: 4px;
-  background: var(--aw-accent);
-  color: #ffffff;
+/*
+  Navigation on the left, actions on the right, a hairline between them: the same split the home
+  page's header uses, so the bar reads as the same bar on both sides of the site.
+*/
+.aw-site-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  margin-left: 14px;
+  padding-left: 14px;
+  border-left: 1px solid var(--aw-border);
 }
 
-.aw-site-links .aw-site-cta:hover {
+.aw-site-actions .aw-site-cta {
+  padding: 7px 14px;
+  border-radius: 8px;
   background: var(--aw-accent);
   color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.aw-site-actions .aw-site-cta:hover {
+  color: #ffffff;
+  text-decoration: none;
   filter: brightness(1.08);
 }
 
@@ -461,6 +480,13 @@ body {
 
   .aw-site-bar-inner {
     padding: 6px 12px;
+  }
+
+  /* No room for a hairline and its gutters beside a scrolling row of links on a phone. */
+  .aw-site-actions {
+    margin-left: 8px;
+    padding-left: 0;
+    border-left: 0;
   }
 
   .markdown-body h1 {

@@ -144,6 +144,12 @@
     brand.innerHTML = '<span class="aw-site-mark" aria-hidden="true"></span><span>Achievement Watcher <em>Next</em></span>';
     inner.appendChild(brand);
 
+    /*
+      The same links in the same order as the home page's own header, and split the same way: the
+      guides are navigation, Download and the light/dark control are actions, and a hairline between
+      the two says so. A reader moving between a guide and the rest of the site should not have to
+      re-find anything.
+    */
     var links = document.createElement('div');
     links.className = 'aw-site-links';
     [
@@ -152,17 +158,27 @@
       { href: SITE_ROOT + 'gallery/', text: SITE_STRINGS.nav.gallery },
       { href: SITE_ROOT + 'gallery/themes/', text: SITE_STRINGS.nav.themes },
       { href: REPO, text: 'GitHub' },
-      { href: REPO + '/releases/latest', text: SITE_STRINGS.nav.download, primary: true },
     ].forEach(function (item) {
       var link = document.createElement('a');
       link.href = item.href;
       link.textContent = item.text;
-      if (item.primary) link.className = 'aw-site-cta';
       links.appendChild(link);
     });
 
+    // Toggle first, then Download: the same order the home page puts them in, so the primary button
+    // stays the last thing on the bar on every page of the site.
+    var actions = document.createElement('div');
+    actions.className = 'aw-site-actions';
+    actions.appendChild(button);
+
+    var download = document.createElement('a');
+    download.className = 'aw-site-cta';
+    download.href = REPO + '/releases/latest';
+    download.textContent = SITE_STRINGS.nav.download;
+    actions.appendChild(download);
+
     inner.appendChild(links);
-    inner.appendChild(button);
+    inner.appendChild(actions);
     bar.appendChild(inner);
     document.body.insertBefore(bar, document.body.firstChild);
 
