@@ -65,7 +65,7 @@ CSS, no JSON and no file to edit.
 
 <div align="center">
 <img src="screenshot/notification-preset.png" width="620" alt="The Preset Designer"><br>
-<sub>Start from a complete design, then shape it beside a live preview of the real popup</sub>
+<sub>Start from a complete design, then shape it under a live preview of the real popup, which stays on screen while the controls scroll</sub>
 </div>
 
 ### Starting points

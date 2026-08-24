@@ -1176,7 +1176,6 @@ body.is-resizing #game-list {
   text-align: center;
 }
 
-
 .loading .progressBar {
   position: relative;
   width: 75%;       /* 50% of footer */
@@ -4039,7 +4038,6 @@ body.is-resizing #game-list {
   gap: 9px;
 }
 
-
 @media (max-width: 900px) {
   .onboarding-body {
     grid-template-columns: 1fr;
@@ -6634,7 +6632,16 @@ body {
 
 #settings .box,
 #game-config .box {
-  width: min(1040px, calc(100vw - 64px));
+  /*
+    A little more of a big screen. It was pinned at 1040px, so a 1440p or 4K display got the same
+    panel a 1280px one did while its own rows wrapped inside it. It now grows with the window and
+    stops at 1280 - a settings panel that fills the screen is not easier to read, only further to
+    move the mouse to.
+
+    Below roughly a 1530px window the third term decides, so every width that was already tuned by
+    hand behaves exactly as it did.
+  */
+  width: min(max(1040px, 68vw), 1280px, calc(100vw - 64px));
   border-radius: var(--radius-lg);
   border-color: var(--set-hairline);
   background: linear-gradient(180deg, var(--set-modal-top) 0%, var(--set-modal-bottom) 100%);
@@ -8915,41 +8922,119 @@ body {
   border-bottom: 1px solid var(--set-hairline-soft);
 }
 
+/*
+  The heading of that row: the icon and, beside it, the step's name with the two shortcuts, then the
+  sentence explaining it underneath across the whole card.
+
+  A grid rather than one flex line, because the sentence has to start under the name and run the
+  full width. As a flex line it sat beside the buttons and wrapped at whatever width they left,
+  which is what made it read as a squeezed column instead of a paragraph. The top line is its own
+  flex row so a long translation drops the shortcuts under the name rather than crushing either -
+  no width query decides that, so it holds for any language at any panel width.
+*/
+#settings #options-notify-designer > li > .left.pd-start-head {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start;
+  column-gap: 10px;
+  row-gap: 6px;
+  /* `#settings .content li .left` caps a settings label at 360px so a long row label wraps into a
+     column beside its control. The designer's rows are full-width blocks with no control beside
+     them, so the cap only ever cut this paragraph in half. */
+  max-width: none;
+}
+
+#settings .pd-start-head > i {
+  color: var(--set-icon);
+  line-height: 22px;
+  text-align: center;
+}
+
+#settings .pd-start-topline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  min-width: 0;
+  min-height: 22px;
+}
+
+#settings .pd-start-title {
+  min-width: 0;
+  color: var(--text);
+  font-family: 'Raleway-bold';
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
+/* Supporting copy, not a second label: muted and a size down, so the heading above it and the
+   swatches below it are what the eye lands on. */
+#settings .pd-start-intro {
+  grid-column: 2;
+  min-width: 0;
+  margin: 0;
+  color: var(--text-muted);
+  font-family: 'Open-Sans';
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Two classes on purpose: the shared `.pd-actions` rule below pins the row to the full width of the
+   card, and here the shortcuts are a group inside the heading line instead. */
+#settings #options-notify-designer .pd-actions.pd-start-actions {
+  width: auto;
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 #settings .pd-templates {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
-  padding: 12px 0 4px;
+  padding: 10px 0 2px;
 }
 
+/*
+  A swatch and a word, kept small on purpose. There are fourteen of these and they are a first step:
+  you pick one, once, and then spend the rest of the visit below them. At the old size they took
+  three rows and read as the loudest thing on the page, which is backwards - so the chip is tighter
+  and the swatch smaller, and the same fourteen sit in two rows without losing what they are.
+*/
 #settings .pd-template {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px 6px 7px;
+  gap: 6px;
+  padding: 4px 10px 4px 5px;
   border: 1px solid var(--set-control-border);
   border-radius: 999px;
   background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
-  color: var(--text);
+  color: var(--text-muted);
   font-family: 'Open-Sans';
-  font-size: 12.5px;
+  font-size: 12px;
+  line-height: 1.3;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
 #settings .pd-template:hover {
   border-color: var(--accent);
+  color: var(--text);
 }
 
 #settings .pd-template.is-on {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--text);
 }
 
 #settings .pd-template-swatch {
-  width: 20px;
-  height: 20px;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
   border: 2px solid transparent;
   border-radius: 50%;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
@@ -9017,32 +9102,79 @@ body {
 }
 
 /* Preview beside the controls, folding to one column when the window is too narrow for both. */
-#settings .pd-workspace {
-  display: grid;
-  grid-template-columns: minmax(300px, 1.15fr) minmax(280px, 1fr);
-  gap: 16px;
-  width: 100%;
-  padding: 6px 0 10px;
-}
+/*
+  One column: the preview on top, the controls under it.
 
-/* Below this the two columns would both be too narrow to be useful: the preview goes above the
-   controls instead, still sticky, so it stays visible while the controls scroll under it. */
-@media (max-width: 1180px) {
-  #settings .pd-workspace {
-    grid-template-columns: 1fr;
-  }
+  This was two columns, and the two-column form could never work here. The Settings panel is
+  `min(940px, 100vw - 96px)` minus a 192px navigation, so the card is about 690px however wide the
+  window is - two columns of roughly 330px each. In that space the preview toolbar broke onto three
+  lines, every control sat in a 150px cell with its label wrapping above it, and the whole left
+  column below the preview was empty because the controls are five times taller than it.
+
+  Given the full width the same controls lay out five across instead of two, the toolbar fits on one
+  line, and the preview is big enough to judge a design by. Nothing was removed to get there.
+*/
+/*
+  No box of its own.
+
+  A sticky element stops at the bottom of its containing block, so while the preview lived inside
+  this wrapper it let go the moment you scrolled past the last control - just as you reached the
+  buttons. display: contents puts the preview and the controls directly in the card, so the
+  containing block is the whole row and the popup is still there when you press Create.
+
+  (It was a two-column grid before that. At the width the card had then - about 690px - each
+  column got roughly 330px: the preview toolbar broke onto three lines, every control sat in a
+  150px cell, and the area below the preview was empty, because the controls are five times
+  taller than the preview beside them. The card is wider now on a large screen, and one column
+  is still the right answer: a second column would put the preview and the controls side by
+  side, and a preview only as tall as its own column is a preview you scroll away from.)
+*/
+#settings .pd-workspace {
+  display: contents;
 }
 
 /* The preview follows the controls down the page: a slider at the bottom of the stack is useless if
    its effect is scrolled off screen. */
+/*
+  The popup stays on screen while the controls scroll under it.
+
+  Sixty properties is more than a screenful, so a slider at the bottom of the stack is useless if
+  what it changes has scrolled away - the whole panel is "change this, look at that". It sticks to
+  the top of the Settings pane rather than to the viewport, because that pane is the scrollport it
+  lives in; the cards above use overflow: clip rather than hidden precisely so this keeps working.
+
+  A grid row is its own containing block, so sticky inside one cannot outlive its row - which is
+  why the workspace above is blocks in normal flow rather than a one-column grid.
+
+  It needs an opaque background of its own, or the controls passing underneath would be read
+  through the stage.
+*/
 #settings .pd-preview {
   position: sticky;
-  top: 4px;
-  align-self: start;
+  /* Under the card title, which is pinned at 0 itself: at the same offset the two would be drawn
+     on top of each other. 34px is that title, measured rather than guessed. */
+  top: 34px;
+  z-index: 3;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
+  margin-bottom: 12px;
+  padding: 8px 14px 10px;
+  /* Pulled back out to the card edges, so the frosted band below covers the full width. */
+  margin-left: -14px;
+  margin-right: -14px;
+  /*
+    Frosted rather than filled. Every surface token in this stylesheet is a color-mix towards
+    transparent, and a custom theme can make its own layers translucent on top of that, so there
+    is no colour here that is opaque in every theme - a filled bar would have the controls reading
+    through it. Blurring what passes underneath works whatever the palette, and is the same band
+    the Settings pane already draws at its own edges.
+  */
+  background: var(--set-panel);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: 0 10px 16px -14px rgba(0, 0, 0, 0.8);
 }
 
 #settings .pd-toolbar {
@@ -9182,10 +9314,19 @@ body {
 
 /* Compare: the three notifications a preset has to look right in, at once. Nothing else answers
    "does my rare unlock actually look rare?" in one glance. */
+/*
+  Two by two, not four stacked.
+
+  Every state the preset draws is compared here, and stacking four whole popups gave each one a
+  quarter of the height while the stage stayed two thirds empty across. In two columns each cell
+  gets half the width and half the height, which for a popup wider than it is tall - all of them -
+  is about twice the scale. Which is the point: you are here to see whether the states look
+  different, and at a quarter height they all looked the same.
+*/
 #settings .pd-compare {
   display: none;
-  flex-direction: column;
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
   width: 100%;
 }
 
@@ -9194,27 +9335,75 @@ body {
 }
 
 #settings .pd-stage[data-view='compare'] .pd-compare {
-  display: flex;
+  display: grid;
 }
 
+/*
+  Compare stacks three whole popups where the card view shows one, so it gets more of the panel.
+  The stage is pinned above the controls and its height comes out of them, which is the right
+  trade for one card and the wrong one for three: at the card view height each of the three was a
+  third of it, and a tall design like Poster came out too small to compare anything by. It is a
+  mode you switch into deliberately, and while you are in it comparing is the work.
+*/
+#settings .pd-stage[data-view='compare'] {
+  /* More than the card view, because it is four popups instead of one - but not so much that the
+     controls under it stop being reachable. Pinned, every pixel here is a pixel they lose. */
+  max-height: min(280px, calc(var(--set-pane-height, 560px) * 0.38));
+}
+
+/* The label goes above its popup rather than beside it: half the width is not enough to spend
+   68px of it on a word. */
 #settings .pd-compare-row {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 4px;
   min-width: 0;
 }
 
+/*
+  Compare shows every state at once, and the state switch above still means something while it
+  is open: the row it names is the one drawn at full strength, the others sit back. Without
+  this the four buttons did nothing at all in this view.
+*/
+#settings .pd-compare-row {
+  /* Held back, not hidden: the other three are still what you are comparing against, so they stay
+     readable and the selected one simply reads first. */
+  opacity: 0.78;
+  transition: opacity 0.15s ease;
+}
+
+#settings .pd-compare-row.is-current {
+  opacity: 1;
+}
+
+#settings .pd-compare-row.is-current .pd-compare-label {
+  color: var(--accent);
+}
+
 #settings .pd-compare-label {
-  flex: 0 0 68px;
+  flex: 0 0 auto;
   color: var(--text-muted);
-  font-size: 11px;
-  text-align: right;
+  font-size: 10.5px;
+  text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 #settings .pd-compare-frame {
   overflow: hidden;
+}
+
+/*
+  The previews are pictures, not controls: nothing in them is clickable, and they are out of the
+  tab order already. Taking them out of hit testing too means the wheel reaches the panel behind
+  them - an iframe under the pointer swallows a scroll even with scrolling="no", and the preview is
+  pinned across the top of the panel now, so it is the easiest thing in the tab to be hovering.
+*/
+#settings #pd-frame,
+#settings .pd-compare iframe {
+  pointer-events: none;
 }
 
 #settings .pd-compare iframe {
@@ -9428,32 +9617,6 @@ body {
 }
 
 #settings .pd-icon-btn:not(:disabled):hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-#settings .pd-jump {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-#settings .pd-jump[hidden] {
-  display: none;
-}
-
-#settings .pd-jump-chip {
-  padding: 4px 9px;
-  border: 1px solid var(--set-hairline-soft);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 11px;
-  cursor: pointer;
-}
-
-#settings .pd-jump-chip:hover {
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -9691,17 +9854,111 @@ body {
   color: var(--danger);
 }
 
-/* Import and Export are file actions, not design actions: a little air separates the two groups. */
-#settings #options-notify-designer .pd-actions #btn-import-preset {
-  margin-left: 6px;
-  border-left-width: 1px;
+/*
+  The two halves of the action row. What you do to the design is on the left and takes the slack;
+  what you do with a file is a block of its own on the right, kept together by a rule rather than by
+  the gap that used to separate them - eight buttons on one wrapping line gave no reading order at
+  all, and where the break fell depended on how long the labels happened to be in that language.
+*/
+#settings #options-notify-designer #pd-actions {
+  align-items: flex-start;
+  gap: 14px 20px;
 }
 
+#settings .pd-actions-primary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+/*
+  Its own row under the design actions, never a column beside them.
+
+  A column beside them was tried and taken out. At the card width of the time it could not even
+  happen: two groups plus the gap needed more room than there was, so the group wrapped by itself
+  at every real size while the hairline meant to separate two columns still pointed left, at
+  nothing. The card is wider on a large screen now, so the two WOULD fit side by side - and they
+  still should not, because then the file actions would sit level with the primary one and read
+  as its equals. One arrangement at every size is also one arrangement to get right.
+*/
+#settings .pd-actions-files {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /*
+    A full-width basis is what puts it on its own line, so nothing may clamp it here: a max-width
+    on a flex item is applied to the hypothetical size the browser breaks lines by, so capping the
+    block at 420px let it sit back beside the design actions as soon as the card was wide enough
+    for both. The cap belongs on what is inside it instead.
+  */
+  flex: 1 1 100%;
+  min-width: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--set-hairline-soft);
+}
+
+/* Import and Export are the same kind of thing done in opposite directions, so they are two equal
+   halves of one control rather than two buttons that happen to be adjacent. Equal columns, one gap:
+   a longer label in another language grows both of them and wraps inside them, never past them. */
+#settings .pd-file-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  /* Two buttons, not two banners: the row is full width, what sits in it is not. */
+  max-width: 420px;
+}
+
+#settings #options-notify-designer .pd-file-pair .inline-action-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 0 10px;
+  white-space: normal;
+  text-align: center;
+}
+
+/*
+  The SAN converter. It reads somebody else's format, which almost nobody needs and nobody needs
+  twice, so it sits under the pair as a quieter row: no filled surface, and the border only appears
+  when it is pointed at.
+*/
+#settings #options-notify-designer .pd-actions .pd-quiet-btn {
+  width: 100%;
+  max-width: 420px;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.85em;
+  white-space: normal;
+  text-align: center;
+}
+
+#settings #options-notify-designer .pd-actions .pd-quiet-btn i {
+  color: inherit;
+}
+
+#settings #options-notify-designer .pd-actions .pd-quiet-btn:hover {
+  border-color: color-mix(in srgb, var(--border) 60%, transparent);
+  background: color-mix(in srgb, var(--set-surface) 70%, transparent);
+  color: var(--text);
+}
+
+/* Its own line, always: as a flex sibling of the buttons a long message used to shorten the group
+   beside it, so which buttons shared a line depended on what the designer had just reported. */
 #settings #pd-status {
-  flex: 1 1 auto;
+  flex: 1 0 100%;
   min-width: 0;
   color: var(--text-muted);
   font-size: 0.85em;
+}
+
+#settings #pd-status:empty {
+  display: none;
 }
 
 #settings #pd-status.is-ok {
@@ -9899,7 +10156,6 @@ body {
     gap: 12px;
   }
 }
-
 
 @media (max-height: 700px) {
   #settings .box .header,

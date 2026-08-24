@@ -113,20 +113,20 @@ const PRESET_PROPERTIES = [
   */
   { key: 'showGameName', type: 'toggle', def: false, group: 'layout' },
   { key: 'width', type: 'number', def: 420, min: 280, max: 620, step: 10, group: 'layout', css: '--width', unit: 'px' },
-  { key: 'padX', type: 'number', def: 18, min: 4, max: 48, step: 1, group: 'layout', css: '--pad-x', unit: 'px' },
-  { key: 'padY', type: 'number', def: 12, min: 4, max: 40, step: 1, group: 'layout', css: '--pad-y', unit: 'px' },
-  { key: 'gap', type: 'number', def: 12, min: 0, max: 36, step: 1, group: 'layout', css: '--gap', unit: 'px' },
+  { key: 'padX', type: 'number', def: 18, min: 4, max: 48, step: 1, group: 'layout', css: '--pad-x', unit: 'px', advanced: true },
+  { key: 'padY', type: 'number', def: 12, min: 4, max: 40, step: 1, group: 'layout', css: '--pad-y', unit: 'px', advanced: true },
+  { key: 'gap', type: 'number', def: 12, min: 0, max: 36, step: 1, group: 'layout', css: '--gap', unit: 'px', advanced: true },
 
   // text
   { key: 'fontFamily', type: 'select', def: 'sans', values: Object.keys(FONT_STACKS), group: 'text' },
   { key: 'fontSize', type: 'number', def: 16, min: 10, max: 28, step: 1, group: 'text', css: '--font-size', unit: 'px' },
-  { key: 'detailScale', type: 'number', def: 100, min: 60, max: 130, step: 5, group: 'text', css: '--detail-scale', scale: 100 },
+  { key: 'detailScale', type: 'number', def: 100, min: 60, max: 130, step: 5, group: 'text', css: '--detail-scale', scale: 100, advanced: true },
   /*
     How many lines the description may use. One keeps the single-line look the builder always had -
     too long a line is scrolled instead. Two or three wrap it, which is what a card wide enough to
     read a full sentence wants.
   */
-  { key: 'descriptionLines', type: 'number', def: 1, min: 1, max: 3, step: 1, group: 'text', css: '--detail-lines' },
+  { key: 'descriptionLines', type: 'number', def: 1, min: 1, max: 3, step: 1, group: 'text', css: '--detail-lines', advanced: true },
   /*
     What colours the title. It has always followed the accent - including the accent a rare or a
     completion notification swaps in - so that stays the default; the other two are for designs where
@@ -159,7 +159,7 @@ const PRESET_PROPERTIES = [
   */
   { key: 'bgImage', type: 'asset', def: '', group: 'color', shownFor: { bgMode: ['image'] } },
   // Dimming, blur and framing treat both kinds of picture the same, so they are one set of controls.
-  { key: 'artworkDim', type: 'number', def: 55, min: 0, max: 100, step: 5, group: 'color', css: '--artwork-dim', scale: 100, shownFor: { bgMode: ['artwork', 'image'] } },
+  { key: 'artworkDim', type: 'number', def: 55, min: 0, max: 100, step: 5, group: 'color', css: '--artwork-dim', scale: 100, shownFor: { bgMode: ['artwork', 'image'] }, advanced: true },
   { key: 'artworkBlur', type: 'number', def: 0, min: 0, max: 20, step: 1, group: 'color', advanced: true, css: '--artwork-blur', unit: 'px' },
   // Which part of the artwork the card shows. Game headers put their logo in a fixed place, so the
   // difference between the three is the difference between a readable card and one full of lettering.
@@ -208,7 +208,7 @@ const PRESET_PROPERTIES = [
     A glow that moves. It only ever dims the glow the design already asked for and never brightens
     past it, so the window a preset is measured for still fits the strongest frame of the animation.
   */
-  { key: 'glowAnim', type: 'select', def: 'none', values: ['none', 'pulse', 'breathe'], group: 'effect' },
+  { key: 'glowAnim', type: 'select', def: 'none', values: ['none', 'pulse', 'breathe'], group: 'effect', advanced: true },
 
   // motion & timing
   { key: 'animIn', type: 'select', def: 'bottom', values: MOTION_VALUES, group: 'motion' },
@@ -235,9 +235,9 @@ const PRESET_PROPERTIES = [
     already on disk keeps its own files, so nothing installed already changes because of it.
   */
   { key: 'rareAccent', type: 'color', def: '#ffd24e', group: 'state', css: '--rare-accent' },
-  { key: 'rareGlow', type: 'number', def: 55, min: 0, max: 100, step: 5, group: 'state', css: '--rare-glow', scale: 100 },
+  { key: 'rareGlow', type: 'number', def: 55, min: 0, max: 100, step: 5, group: 'state', css: '--rare-glow', scale: 100, advanced: true },
   { key: 'platinumAccent', type: 'color', def: '#cfe3ff', group: 'state', css: '--platinum-accent' },
-  { key: 'platinumGlow', type: 'number', def: 70, min: 0, max: 100, step: 5, group: 'state', css: '--platinum-glow', scale: 100 },
+  { key: 'platinumGlow', type: 'number', def: 70, min: 0, max: 100, step: 5, group: 'state', css: '--platinum-glow', scale: 100, advanced: true },
   /*
     How much of the state's own colour washes into the card. Zero is the default and changes nothing,
     which is what keeps a rare unlock on an existing preset looking exactly as it did.

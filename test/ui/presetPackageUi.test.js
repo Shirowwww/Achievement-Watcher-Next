@@ -241,3 +241,71 @@ test('export resolves the named preset exactly, never the Default fallback', () 
   // Nothing about the machine or the Windows account is written into a shareable file.
   assert.doesNotMatch(handler[0], /os\.userInfo|username/i);
 });
+
+/*
+  The shape of the action row.
+
+  It used to be eight buttons of equal weight on one wrapping line, so where the line broke depended
+  on how long the labels ran in that language and nothing said which of them belonged together. It
+  is now two groups: what you do to the design, and what you do with a file. Import and Export are
+  one pair inside the file group, and the SAN converter is a quieter row under them.
+*/
+test('the action row is two groups, with the file actions kept together', () => {
+  const document = htmlParser.parse(read('view', 'app.html'));
+  const actions = document.querySelector('#options-notify-designer #pd-actions');
+
+  const primary = actions.querySelector('.pd-actions-primary');
+  const files = actions.querySelector('.pd-actions-files');
+  assert.ok(primary, 'the design actions have no group of their own');
+  assert.ok(files, 'the file actions have no group of their own');
+
+  for (const id of ['btn-create-preset', 'btn-preview-preset', 'btn-reset-preset', 'btn-rename-preset', 'btn-delete-preset']) {
+    assert.ok(primary.querySelector(`#${id}`), `${id} must be a design action`);
+    assert.ok(!files.querySelector(`#${id}`), `${id} must not be a file action`);
+  }
+
+  // Import and Export are two halves of one control, so they are siblings inside the pair and
+  // nothing else is.
+  const pair = files.querySelector('.pd-file-pair');
+  assert.ok(pair, 'Import and Export are not a pair');
+  const inPair = pair.querySelectorAll('button').map((node) => node.getAttribute('id'));
+  assert.deepEqual(inPair, ['btn-import-preset', 'btn-export-preset'], 'the pair holds exactly Import then Export');
+
+  // The SAN import stays available, in the file group, but outside the pair and marked as quieter.
+  const san = files.querySelector('#btn-import-san');
+  assert.ok(san, 'the SAN import left the file actions');
+  assert.equal(pair.querySelector('#btn-import-san'), null, 'it must not be a third half of the pair');
+  assert.match(san.getAttribute('class') || '', /\bpd-quiet-btn\b/, 'it must be marked as the secondary action it is');
+
+  // One report line, still the last thing in the row.
+  assert.ok(actions.querySelector('#pd-status'), '#pd-status is gone');
+});
+
+/*
+  The starting points read as a step with a name, a sentence and a set of swatches. The sentence is a
+  paragraph across the card rather than a label beside a control, which is what `#settings .content
+  li .left` and its 360px cap had turned it into.
+*/
+test('the starting points have a heading, and the sentence under it', () => {
+  const document = htmlParser.parse(read('view', 'app.html'));
+  const head = document.querySelector('#pd-templates-row .pd-start-head');
+  assert.ok(head, 'the starting-points heading is gone');
+
+  const title = head.querySelector('.pd-start-title');
+  const intro = head.querySelector('.pd-start-intro');
+  assert.equal(title.getAttribute('data-lang'), 'templates.title', 'the heading is not bound to the locale');
+  assert.equal(intro.getAttribute('data-lang'), 'templates.intro', 'the sentence is not bound to the locale');
+  assert.equal(intro.tagName, 'P', 'the sentence is a paragraph, not another label');
+
+  // Both are already translated everywhere, so no row goes out in English.
+  const localeDir = path.join(appRoot, 'locale', 'lang');
+  for (const file of fs.readdirSync(localeDir).filter((name) => name.endsWith('.json'))) {
+    const templates = JSON.parse(fs.readFileSync(path.join(localeDir, file), 'utf8')).settings.notification.option.designer.templates;
+    assert.ok(String(templates.title || '').trim(), `${file}: the heading has no words`);
+    assert.ok(String(templates.intro || '').trim(), `${file}: the sentence has no words`);
+  }
+
+  // The stylesheet cap that squeezed it is lifted for the designer's own rows, and only for those.
+  const css = read('resources', 'css', 'app.css');
+  assert.match(css, /#settings #options-notify-designer > li > \.left\.pd-start-head \{[^}]*max-width: none/s);
+});

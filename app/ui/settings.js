@@ -4025,6 +4025,45 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return measured > 80 ? measured - 28 : 360;
     }
 
+    /*
+      The other half of "does it fit".
+
+      The stage is pinned above the controls, so every pixel it takes is a pixel they lose - it has
+      a ceiling, and a popup fitted on width alone overflowed it and was cut off, which looks
+      exactly like being zoomed in. This is the room inside that ceiling.
+
+      Read from the stylesheet rather than from the box, because the box is about to be resized to
+      whatever this decides: asking the element how tall it is would be asking it what it was last
+      time, and each layout would inherit the previous one.
+    */
+    const STAGE_PADDING = 12; // .pd-stage padding, both sides
+
+    function stageCeiling() {
+      const node = document.querySelector('#options-notify-designer .pd-stage');
+      if (!node) return 170;
+      const cap = parseFloat(getComputedStyle(node).maxHeight);
+      return Number.isFinite(cap) && cap > 60 ? cap - STAGE_PADDING * 2 : 170;
+    }
+
+    /*
+      And the height it actually takes: what the popup needs at the zoom that fits, never more.
+
+      A flat share of the panel was the wrong shape in both directions - a short wide design left
+      most of the stage empty while the controls went without the room, and a tall one was shrunk to
+      fit a cap that had nothing to do with it (Poster came out at 29% inside a stage two thirds
+      empty horizontally). Sizing to the content gives the controls their room back on a short design
+      and the tall ones a size you can judge.
+    */
+    function fitStageTo(contentHeight) {
+      const node = document.querySelector('#options-notify-designer .pd-stage');
+      if (!node) return;
+      const style = getComputedStyle(node);
+      const floor = parseFloat(style.minHeight) || 96;
+      const cap = parseFloat(style.maxHeight) || 300;
+      const wanted = Math.ceil(contentHeight) + STAGE_PADDING * 2;
+      node.style.height = Math.round(Math.max(floor, Math.min(cap, wanted))) + 'px';
+    }
+
     function layoutPreview(values) {
       const frame = previewFrame();
       const wrap = document.getElementById('pd-frame-wrap');
@@ -4042,22 +4081,30 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         // The compare rows own the stage; the single card is hidden by the stylesheet.
         screen.classList.remove('is-screen');
         $('#pd-resolution').prop('hidden', true);
+        $('#pd-placement').prop('hidden', true);
         $('#pd-size-note').text(`${box.width}×${box.height}`);
         return;
       }
       if (previewView === 'screen') {
         screen.classList.add('is-screen');
+        // A mock display, not a card: it wants every pixel the ceiling allows.
+        fitStageTo(stageCeiling());
         const resolution = parseInt($('#pd-resolution').val(), 10) || 1920;
         const userScale = parseFloat($('#option_overlayScale').val()) || 1;
         zoom = (stageWidth / resolution) * userScale;
       } else {
         screen.classList.remove('is-screen');
-        zoom = Math.min(1, stageWidth / box.width);
+        // Never larger than life, and never taller than the stage will let it be.
+        zoom = Math.min(1, stageWidth / box.width, stageCeiling() / box.height);
+        fitStageTo(box.height * zoom);
       }
       frame.style.transform = `scale(${zoom})`;
       wrap.style.width = Math.round(box.width * zoom) + 'px';
       wrap.style.height = Math.round(box.height * zoom) + 'px';
       $('#pd-resolution').prop('hidden', previewView !== 'screen');
+      // Where the popup lands and how big it is only change the picture in the Screen view; the card
+      // view draws it alone at whatever zoom fits the stage.
+      $('#pd-placement').prop('hidden', previewView !== 'screen');
       if (previewView === 'screen') placePreviewInScreen(wrap, screen);
       else {
         wrap.style.left = '';
@@ -4140,37 +4187,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     $('#pd-resolution').on('change', () => layoutPreview());
 
     /*
-      Nine groups and sixty-odd properties. Two ways through them: a chip per group that opens it and
-      scrolls to it, and a filter over every label. Neither moves a control in the DOM - the same rule
-      the Settings search follows, and for the same reason: the locale binds by position and by id.
+      Nine groups and sixty-odd properties, navigated by a filter over every label. The filter does
+      not move a control in the DOM - the same rule the Settings search follows, and for the same
+      reason: the locale binds by position and by id.
     */
-    function buildGroupJump() {
-      const bar = $('#pd-jump');
-      if (!bar.length) return;
-      bar.empty();
-      $('#options-notify-designer .pd-group').each(function () {
-        const group = $(this);
-        const label = group.find('.pd-group-head span[data-lang]').first().text();
-        if (!label) return;
-        bar.append(
-          $('<button type="button" class="pd-jump-chip">')
-            .attr('data-jump', String(group.attr('data-group') || ''))
-            .text(label)
-        );
-      });
-    }
-    // The chips carry group titles, so they are rebuilt whenever the language changes.
-    $(document).on('locale-labels-changed', buildGroupJump);
-
-    $('#pd-jump').on('click', '.pd-jump-chip', function () {
-      const wanted = String($(this).attr('data-jump') || '');
-      const group = $(`#options-notify-designer .pd-group[data-group='${wanted}']`);
-      if (!group.length) return;
-      group.addClass('is-open');
-      const node = group.get(0);
-      if (node && node.scrollIntoView) node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    });
-
     /*
       Filtering. The rule the panel lives by - hide, never move - is in util/presetPanel.js, tested
       against this same markup in a real browser; here it is only wired to the box and the two lines
@@ -4179,7 +4199,6 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     function filterDesigner(query) {
       const result = presetPanel.filterFields($, '#options-notify-designer', query);
       $('#pd-no-match').prop('hidden', !result.filtering || result.total > 0);
-      $('#pd-jump').prop('hidden', result.filtering);
       return result.total;
     }
 
@@ -4301,14 +4320,42 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return payload;
     }
 
+    /*
+      Which of the compared rows the state switch is pointing at. Compare shows them all, so the
+      switch would otherwise do nothing at all while this view is open - here it decides which one
+      is drawn at full strength and which sit back.
+    */
+    function markCurrentCompareRow() {
+      $('#pd-compare .pd-compare-row').each(function () {
+        $(this).toggleClass('is-current', String($(this).attr('data-state') || '') === previewState);
+      });
+    }
+
     function renderComparePreviews(values) {
       const rows = document.querySelectorAll('#pd-compare .pd-compare-row');
       if (!rows.length) return;
+      markCurrentCompareRow();
       const box = presetGenerator.presetBoxSize(values);
       const stageWidth = measuredStageWidth();
-      // Each row shows a whole popup, so three of them share the stage the single card had.
-      const labelRoom = 90;
-      const zoom = Math.min(1, (stageWidth - labelRoom) / box.width);
+      /*
+        Every state shares the stage one card had, in height as well as in width - fitted on width
+        alone, popups tall enough to matter ran off the bottom and the last was never seen at all.
+
+        Two columns, which is what makes the cells worth looking at: a popup is wider than it is tall,
+        so four of them stacked wasted the width and starved the height. Halving both instead is about
+        twice the scale for the same stage. The numbers below have to agree with .pd-compare in the
+        stylesheet, which is the only place the grid itself is described.
+      */
+      const COLUMNS = 2;
+      const COL_GAP = 14;
+      const ROW_GAP = 10;
+      const LABEL_ROOM = 18; // the state name now sits above its popup rather than beside it
+      const count = rows.length;
+      const gridRows = Math.ceil(count / COLUMNS);
+      const cellWidth = (stageWidth - COL_GAP * (COLUMNS - 1)) / COLUMNS;
+      const cellHeight = Math.max(24, (stageCeiling() - ROW_GAP * (gridRows - 1)) / gridRows - LABEL_ROOM);
+      const zoom = Math.min(1, cellWidth / box.width, cellHeight / box.height);
+      fitStageTo((Math.ceil(box.height * zoom) + LABEL_ROOM) * gridRows + ROW_GAP * (gridRows - 1));
       const document_ = presetGenerator.buildPresetPreviewHtml(values, { assetUrl: presetAssetUrl });
       for (const row of rows) {
         const frame = row.querySelector('iframe');
@@ -4369,6 +4416,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       if (previewState === 'rare' || previewState === 'completion' || previewState === 'progress') {
         $("#options-notify-designer .pd-group[data-group='state']").addClass('is-open');
       }
+      // In Compare every state is on screen at once, so asking for one marks it rather than
+      // swapping to it - the switch keeps meaning something in a view that shows them all.
+      if (previewView === 'compare') markCurrentCompareRow();
       replayPreview();
     });
 

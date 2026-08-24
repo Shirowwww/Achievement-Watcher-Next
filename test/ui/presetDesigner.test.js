@@ -229,9 +229,14 @@ test('every label in the designer resolves in every bundled locale', () => {
   asserted here is the part that can silently rot: the controls exist, the loader labels them, and
   the filter hides rather than moves - the designer is bound by id and by position, so a filter that
   reordered anything would break the locale and the schema parity at once.
+
+  There used to be a chip per group above the group headers as well. It was a third route to the
+  same nine sections, sitting directly on top of the nine headers it scrolled to, and every one of
+  those is on screen already; the filter is the only navigation here that does something the headers
+  cannot, so it is the only one left.
 */
-test('the control panel can be searched, jumped through and stepped back', () => {
-  for (const id of ['pd-search', 'pd-jump', 'pd-no-match', 'btn-preset-undo', 'btn-preset-redo']) {
+test('the control panel can be searched and stepped back', () => {
+  for (const id of ['pd-search', 'pd-no-match', 'btn-preset-undo', 'btn-preset-redo']) {
     assert.ok(designer.querySelector(`#${id}`), `#${id} is missing from the designer`);
   }
   assert.ok(designer.querySelector('#btn-rename-preset'), 'the rename button is missing');
@@ -372,14 +377,20 @@ test('the Advanced disclosure actually hides something', () => {
   }
 });
 
-test('the three states can be compared side by side', () => {
+test('every state can be compared side by side', () => {
   // Switching states one at a time shows what a rare unlock looks like; only seeing them together
   // shows whether it looks DIFFERENT, which is the question a rare colour is actually asking.
   const views = designer.querySelectorAll('#pd-view button').map((button) => button.getAttribute('data-view'));
   assert.deepEqual(views, ['card', 'compare', 'screen']);
 
+  /*
+    Every state the switch above offers has a row here. Progress used to be the exception: the
+    switch could show it one at a time and the comparison left it out, so the one view meant for
+    "does this state look different?" could not answer it for the state that differs most.
+  */
+  const states = designer.querySelectorAll('#pd-state button').map((button) => button.getAttribute('data-state'));
   const rows = designer.querySelectorAll('#pd-compare .pd-compare-row');
-  assert.deepEqual(rows.map((row) => row.getAttribute('data-state')), ['normal', 'rare', 'completion']);
+  assert.deepEqual(rows.map((row) => row.getAttribute('data-state')), states);
   for (const row of rows) {
     assert.ok(row.querySelector('iframe'), 'a compare row has nothing to render into');
     assert.ok(row.querySelector('.pd-compare-label[data-lang]'), 'a compare row is unlabelled');
@@ -388,6 +399,15 @@ test('the three states can be compared side by side', () => {
   // Editing has to reach the compare frames, and cheaply: the stylesheet is swapped, not reloaded.
   assert.match(settings, /if \(previewView === 'compare'\) renderComparePreviews\(values\);/);
   assert.match(settings, /style\.textContent = previewCss\(values\)/);
+
+  /*
+    And the state switch keeps meaning something while Compare is open: it marks the row it names
+    rather than swapping the whole view to it, which is what it does in the other two views.
+  */
+  assert.match(settings, /function markCurrentCompareRow\(\)/, 'nothing marks the selected row');
+  assert.match(settings, /if \(previewView === 'compare'\) markCurrentCompareRow\(\);/);
+  const compareCss = fs.readFileSync(path.join(appRoot, 'resources', 'css', 'app.css'), 'utf8');
+  assert.match(compareCss, /#settings \.pd-compare-row\.is-current \{/, 'the marked row looks no different');
 });
 
 test('scale and position are mirrored from the app settings, never duplicated', () => {

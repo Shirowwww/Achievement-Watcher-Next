@@ -1654,13 +1654,24 @@
               <div class="arrow-list">
                 <div class="title"><span data-lang="title">Preset designer</span></div>
                 <ul id="options-notify-designer">
+                  <!--
+                    The starting points. The heading names the step, the sentence under it explains
+                    it across the full width of the card, and the two shortcuts sit on the heading
+                    line so the swatches below are read as one uninterrupted row.
+                  -->
                   <li class="pd-row" id="pd-templates-row">
-                    <div class="left"><i class="fas fa-swatchbook"></i> <span data-lang="templates.intro"></span></div>
-                    <div class="pd-templates" id="pd-templates"></div>
-                    <div class="right action-right pd-actions">
-                      <button type="button" id="btn-random-preset" class="inline-action-btn secondary"><i class="fas fa-dice"></i> <span data-lang="templates.random"></span></button>
-                      <button type="button" id="btn-duplicate-preset" class="inline-action-btn secondary"><i class="fas fa-clone"></i> <span data-lang="templates.duplicate"></span></button>
+                    <div class="left pd-start-head">
+                      <i class="fas fa-swatchbook"></i>
+                      <div class="pd-start-topline">
+                        <span class="pd-start-title" data-lang="templates.title"></span>
+                        <div class="right action-right pd-actions pd-start-actions">
+                          <button type="button" id="btn-random-preset" class="inline-action-btn secondary"><i class="fas fa-dice"></i> <span data-lang="templates.random"></span></button>
+                          <button type="button" id="btn-duplicate-preset" class="inline-action-btn secondary"><i class="fas fa-clone"></i> <span data-lang="templates.duplicate"></span></button>
+                        </div>
+                      </div>
+                      <p class="pd-start-intro" data-lang="templates.intro"></p>
                     </div>
+                    <div class="pd-templates" id="pd-templates"></div>
                   </li>
                   <li class="pd-row">
                     <div class="pd-bar">
@@ -1709,8 +1720,21 @@
                               <span class="pd-compare-label" data-lang="preview.completion"></span>
                               <div class="pd-compare-frame"><iframe tabindex="-1" scrolling="no" title="completion"></iframe></div>
                             </div>
+                            <!-- Progress is a state the preset draws too, and the one row the
+                                 comparison used to leave out entirely. -->
+                            <div class="pd-compare-row" data-state="progress">
+                              <span class="pd-compare-label" data-lang="preview.progress"></span>
+                              <div class="pd-compare-frame"><iframe tabindex="-1" scrolling="no" title="progress"></iframe></div>
+                            </div>
                           </div>
                         </div>
+                        <!--
+                          One line under the stage: what the popup sits on, and - only where it means
+                          anything - where on the screen it lands and how big. Position and scale change
+                          the preview in the "Screen" view alone (layoutPreview applies the user scale
+                          there and nowhere else), so outside it they are hidden the same way the
+                          resolution picker beside them already is, rather than sitting there inert.
+                        -->
                         <div class="pd-foot">
                           <span class="pd-foot-label" data-lang="preview.backdrop"></span>
                           <div class="pd-seg pd-backdrops" id="pd-backdrop">
@@ -1719,29 +1743,29 @@
                             <button type="button" data-backdrop="light" data-lang="value.light"></button>
                             <button type="button" data-backdrop="artwork" data-lang="value.artwork"></button>
                           </div>
-                        </div>
-                        <div class="pd-foot">
-                          <span class="pd-foot-label" data-lang="preview.position"></span>
-                          <div class="pd-anchors" id="pd-anchors">
-                            <button type="button" data-pos="top-left"></button>
-                            <button type="button" data-pos="center-top"></button>
-                            <button type="button" data-pos="top-right"></button>
-                            <button type="button" data-pos="middle-left"></button>
-                            <span class="pd-anchor-hole"></span>
-                            <button type="button" data-pos="middle-right"></button>
-                            <button type="button" data-pos="bottom-left"></button>
-                            <button type="button" data-pos="center-bottom"></button>
-                            <button type="button" data-pos="bottom-right"></button>
-                          </div>
-                          <label class="pd-foot-label" for="pd-scale" data-lang="preview.scale"></label>
-                          <select autocomplete="off" id="pd-scale">
-                            <option value="0.5">50%</option>
-                            <option value="0.75">75%</option>
-                            <option value="1" selected>100%</option>
-                            <option value="1.25">125%</option>
-                            <option value="1.5">150%</option>
-                            <option value="2">200%</option>
-                          </select>
+                          <span class="pd-foot-group" id="pd-placement" hidden>
+                            <span class="pd-foot-label" data-lang="preview.position"></span>
+                            <div class="pd-anchors" id="pd-anchors">
+                              <button type="button" data-pos="top-left"></button>
+                              <button type="button" data-pos="center-top"></button>
+                              <button type="button" data-pos="top-right"></button>
+                              <button type="button" data-pos="middle-left"></button>
+                              <span class="pd-anchor-hole"></span>
+                              <button type="button" data-pos="middle-right"></button>
+                              <button type="button" data-pos="bottom-left"></button>
+                              <button type="button" data-pos="center-bottom"></button>
+                              <button type="button" data-pos="bottom-right"></button>
+                            </div>
+                            <label class="pd-foot-label" for="pd-scale" data-lang="preview.scale"></label>
+                            <select autocomplete="off" id="pd-scale">
+                              <option value="0.5">50%</option>
+                              <option value="0.75">75%</option>
+                              <option value="1" selected>100%</option>
+                              <option value="1.25">125%</option>
+                              <option value="1.5">150%</option>
+                              <option value="2">200%</option>
+                            </select>
+                          </span>
                           <span class="pd-foot-note" id="pd-size-note"></span>
                         </div>
                       </div>
@@ -1768,7 +1792,6 @@
                             </button>
                           </div>
                         </div>
-                        <div class="pd-jump" id="pd-jump"></div>
                         <p class="pd-no-match" id="pd-no-match" hidden data-lang="searchNoMatch"></p>
                         <section class="pd-group is-open" data-group="layout">
                           <button type="button" class="pd-group-head">
@@ -1805,18 +1828,21 @@
                                 <span><span data-lang="field.width"></span> <b class="pd-value" id="pd-val-width"></b></span>
                                 <input type="range" id="pd-width" min="280" max="620" step="10" value="420" />
                               </label>
-                              <label class="pd-field" data-key="padX">
-                                <span><span data-lang="field.padX"></span> <b class="pd-value" id="pd-val-padX"></b></span>
-                                <input type="range" id="pd-padX" min="4" max="48" step="1" value="18" />
-                              </label>
-                              <label class="pd-field" data-key="padY">
-                                <span><span data-lang="field.padY"></span> <b class="pd-value" id="pd-val-padY"></b></span>
-                                <input type="range" id="pd-padY" min="4" max="40" step="1" value="12" />
-                              </label>
-                              <label class="pd-field" data-key="gap">
-                                <span><span data-lang="field.gap"></span> <b class="pd-value" id="pd-val-gap"></b></span>
-                                <input type="range" id="pd-gap" min="0" max="36" step="1" value="12" />
-                              </label>
+                            </div>
+                            <button type="button" class="pd-more" data-advanced="1"><i class="fas fa-sliders-h"></i> <span data-lang="advanced"></span></button>
+                            <div class="pd-fields pd-adv" data-advanced="1" hidden>
+                                <label class="pd-field" data-key="gap">
+                                  <span><span data-lang="field.gap"></span> <b class="pd-value" id="pd-val-gap"></b></span>
+                                  <input type="range" id="pd-gap" min="0" max="36" step="1" value="12" />
+                                </label>
+                                <label class="pd-field" data-key="padY">
+                                  <span><span data-lang="field.padY"></span> <b class="pd-value" id="pd-val-padY"></b></span>
+                                  <input type="range" id="pd-padY" min="4" max="40" step="1" value="12" />
+                                </label>
+                                <label class="pd-field" data-key="padX">
+                                  <span><span data-lang="field.padX"></span> <b class="pd-value" id="pd-val-padX"></b></span>
+                                  <input type="range" id="pd-padX" min="4" max="48" step="1" value="18" />
+                                </label>
                             </div>
                           </div>
                         </section>
@@ -1841,14 +1867,6 @@
                                 <span><span data-lang="field.fontSize"></span> <b class="pd-value" id="pd-val-fontSize"></b></span>
                                 <input type="range" id="pd-fontSize" min="10" max="28" step="1" value="16" />
                               </label>
-                              <label class="pd-field" data-key="detailScale">
-                                <span><span data-lang="field.detailScale"></span> <b class="pd-value" id="pd-val-detailScale"></b></span>
-                                <input type="range" id="pd-detailScale" min="60" max="130" step="5" value="100" />
-                              </label>
-                              <label class="pd-field" data-key="descriptionLines">
-                                <span><span data-lang="field.descriptionLines"></span> <b class="pd-value" id="pd-val-descriptionLines"></b></span>
-                                <input type="range" id="pd-descriptionLines" min="1" max="3" step="1" value="1" />
-                              </label>
                               <label class="pd-field" data-key="titleColorMode">
                                 <span data-lang="field.titleColorMode"></span>
                                 <select autocomplete="off" id="pd-titleColorMode">
@@ -1864,6 +1882,14 @@
                             </div>
                             <button type="button" class="pd-more" data-advanced="1"><i class="fas fa-sliders-h"></i> <span data-lang="advanced"></span></button>
                             <div class="pd-fields pd-adv" data-advanced="1" hidden>
+                                <label class="pd-field" data-key="descriptionLines">
+                                  <span><span data-lang="field.descriptionLines"></span> <b class="pd-value" id="pd-val-descriptionLines"></b></span>
+                                  <input type="range" id="pd-descriptionLines" min="1" max="3" step="1" value="1" />
+                                </label>
+                                <label class="pd-field" data-key="detailScale">
+                                  <span><span data-lang="field.detailScale"></span> <b class="pd-value" id="pd-val-detailScale"></b></span>
+                                  <input type="range" id="pd-detailScale" min="60" max="130" step="5" value="100" />
+                                </label>
                               <label class="pd-field" data-key="titleWeight">
                                 <span><span data-lang="field.titleWeight"></span> <b class="pd-value" id="pd-val-titleWeight"></b></span>
                                 <input type="range" id="pd-titleWeight" min="400" max="900" step="100" value="700" />
@@ -1925,10 +1951,6 @@
                                   <button type="button" id="btn-import-preset-image" class="pd-asset-btn"><i class="fas fa-folder-open"></i></button>
                                 </span>
                               </label>
-                              <label class="pd-field" data-key="artworkDim" data-shown-for="bgMode:artwork,image">
-                                <span><span data-lang="field.artworkDim"></span> <b class="pd-value" id="pd-val-artworkDim"></b></span>
-                                <input type="range" id="pd-artworkDim" min="0" max="100" step="5" value="55" />
-                              </label>
                               <label class="pd-field" data-key="text">
                                 <span data-lang="field.text"></span>
                                 <input type="color" id="pd-text" value="#ffffff" />
@@ -1944,6 +1966,10 @@
                             </div>
                             <button type="button" class="pd-more" data-advanced="1"><i class="fas fa-sliders-h"></i> <span data-lang="advanced"></span></button>
                             <div class="pd-fields pd-adv" data-advanced="1" hidden>
+                                <label class="pd-field" data-key="artworkDim" data-shown-for="bgMode:artwork,image">
+                                  <span><span data-lang="field.artworkDim"></span> <b class="pd-value" id="pd-val-artworkDim"></b></span>
+                                  <input type="range" id="pd-artworkDim" min="0" max="100" step="5" value="55" />
+                                </label>
                               <label class="pd-field" data-key="bgAngle">
                                 <span><span data-lang="field.bgAngle"></span> <b class="pd-value" id="pd-val-bgAngle"></b></span>
                                 <input type="range" id="pd-bgAngle" min="0" max="360" step="5" value="135" />
@@ -2071,14 +2097,17 @@
                                 <span><span data-lang="field.glow"></span> <b class="pd-value" id="pd-val-glow"></b></span>
                                 <input type="range" id="pd-glow" min="0" max="100" step="5" value="0" />
                               </label>
-                              <label class="pd-field" data-key="glowAnim">
-                                <span data-lang="field.glowAnim"></span>
-                                <select autocomplete="off" id="pd-glowAnim">
-                                  <option value="none" data-lang="value.none"></option>
-                                  <option value="pulse" data-lang="value.pulse"></option>
-                                  <option value="breathe" data-lang="value.breathe"></option>
-                                </select>
-                              </label>
+                            </div>
+                            <button type="button" class="pd-more" data-advanced="1"><i class="fas fa-sliders-h"></i> <span data-lang="advanced"></span></button>
+                            <div class="pd-fields pd-adv" data-advanced="1" hidden>
+                                <label class="pd-field" data-key="glowAnim">
+                                  <span data-lang="field.glowAnim"></span>
+                                  <select autocomplete="off" id="pd-glowAnim">
+                                    <option value="none" data-lang="value.none"></option>
+                                    <option value="pulse" data-lang="value.pulse"></option>
+                                    <option value="breathe" data-lang="value.breathe"></option>
+                                  </select>
+                                </label>
                             </div>
                           </div>
                         </section>
@@ -2167,17 +2196,9 @@
                                 <span data-lang="field.rareAccent"></span>
                                 <input type="color" id="pd-rareAccent" value="#ffd24e" />
                               </label>
-                              <label class="pd-field" data-key="rareGlow">
-                                <span><span data-lang="field.rareGlow"></span> <b class="pd-value" id="pd-val-rareGlow"></b></span>
-                                <input type="range" id="pd-rareGlow" min="0" max="100" step="5" value="55" />
-                              </label>
                               <label class="pd-field" data-key="platinumAccent">
                                 <span data-lang="field.platinumAccent"></span>
                                 <input type="color" id="pd-platinumAccent" value="#cfe3ff" />
-                              </label>
-                              <label class="pd-field" data-key="platinumGlow">
-                                <span><span data-lang="field.platinumGlow"></span> <b class="pd-value" id="pd-val-platinumGlow"></b></span>
-                                <input type="range" id="pd-platinumGlow" min="0" max="100" step="5" value="70" />
                               </label>
                               <label class="pd-field" data-key="stateTint">
                                 <span><span data-lang="field.stateTint"></span> <b class="pd-value" id="pd-val-stateTint"></b></span>
@@ -2200,6 +2221,14 @@
                             </div>
                             <button type="button" class="pd-more" data-advanced="1"><i class="fas fa-sliders-h"></i> <span data-lang="advanced"></span></button>
                             <div class="pd-fields pd-adv" data-advanced="1" hidden>
+                                <label class="pd-field" data-key="platinumGlow">
+                                  <span><span data-lang="field.platinumGlow"></span> <b class="pd-value" id="pd-val-platinumGlow"></b></span>
+                                  <input type="range" id="pd-platinumGlow" min="0" max="100" step="5" value="70" />
+                                </label>
+                                <label class="pd-field" data-key="rareGlow">
+                                  <span><span data-lang="field.rareGlow"></span> <b class="pd-value" id="pd-val-rareGlow"></b></span>
+                                  <input type="range" id="pd-rareGlow" min="0" max="100" step="5" value="55" />
+                                </label>
                               <label class="pd-field" data-key="progressHeight">
                                 <span><span data-lang="field.progressHeight"></span> <b class="pd-value" id="pd-val-progressHeight"></b></span>
                                 <input type="range" id="pd-progressHeight" min="3" max="20" step="1" value="8" />
@@ -2232,15 +2261,27 @@
                       </div>
                     </div>
 
+                    <!--
+                      Two groups, not one row of nine equals: what you do to the design on the left,
+                      what you do with a file on the right. Import and Export are one pair of equal
+                      halves, and the SAN converter sits under them because it is the rarer way in.
+                      Every button keeps its id, so the handlers and the locale pass are untouched.
+                    -->
                     <div class="right action-right pd-actions" id="pd-actions">
-                      <button type="button" id="btn-create-preset" class="inline-action-btn"><i class="fas fa-plus"></i> <span id="pd-lbl-create"></span></button>
-                      <button type="button" id="btn-preview-preset" class="inline-action-btn secondary"><i class="fas fa-desktop"></i> <span data-lang="previewOnScreen"></span></button>
-                      <button type="button" id="btn-reset-preset" class="inline-action-btn secondary"><i class="fas fa-undo"></i> <span data-lang="reset"></span></button>
-                      <button type="button" id="btn-rename-preset" class="inline-action-btn secondary" style="display: none"><i class="fas fa-i-cursor"></i> <span data-lang="renameLabel"></span></button>
-                      <button type="button" id="btn-delete-preset" class="inline-action-btn secondary" style="display: none"><i class="fas fa-trash"></i> <span data-lang="deleteLabel"></span></button>
-                      <button type="button" id="btn-import-preset" class="inline-action-btn secondary"><i class="fas fa-file-import"></i> <span data-lang="importLabel"></span></button>
-                      <button type="button" id="btn-import-san" class="inline-action-btn secondary"><i class="fas fa-download"></i> <span data-lang="importSan"></span></button>
-                      <button type="button" id="btn-export-preset" class="inline-action-btn secondary"><i class="fas fa-file-export"></i> <span data-lang="exportLabel"></span></button>
+                      <div class="pd-actions-primary">
+                        <button type="button" id="btn-create-preset" class="inline-action-btn"><i class="fas fa-plus"></i> <span id="pd-lbl-create"></span></button>
+                        <button type="button" id="btn-preview-preset" class="inline-action-btn secondary"><i class="fas fa-desktop"></i> <span data-lang="previewOnScreen"></span></button>
+                        <button type="button" id="btn-reset-preset" class="inline-action-btn secondary"><i class="fas fa-undo"></i> <span data-lang="reset"></span></button>
+                        <button type="button" id="btn-rename-preset" class="inline-action-btn secondary" style="display: none"><i class="fas fa-i-cursor"></i> <span data-lang="renameLabel"></span></button>
+                        <button type="button" id="btn-delete-preset" class="inline-action-btn secondary" style="display: none"><i class="fas fa-trash"></i> <span data-lang="deleteLabel"></span></button>
+                      </div>
+                      <div class="pd-actions-files">
+                        <div class="pd-file-pair">
+                          <button type="button" id="btn-import-preset" class="inline-action-btn secondary"><i class="fas fa-file-import"></i> <span data-lang="importLabel"></span></button>
+                          <button type="button" id="btn-export-preset" class="inline-action-btn secondary"><i class="fas fa-file-export"></i> <span data-lang="exportLabel"></span></button>
+                        </div>
+                        <button type="button" id="btn-import-san" class="inline-action-btn pd-quiet-btn"><i class="fas fa-download"></i> <span data-lang="importSan"></span></button>
+                      </div>
                       <span id="pd-status"></span>
                     </div>
                   </li>

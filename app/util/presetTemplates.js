@@ -53,7 +53,8 @@ const PRESET_TEMPLATES = [
       fontFamily: 'condensed',
       fontSize: 19,
       titleCase: 'uppercase',
-      letterSpacing: 1,
+      letterSpacing: 2,
+      titleWeight: 800,
       iconRadius: 20,
       iconBorder: 2,
       iconGlow: 60,
@@ -301,14 +302,20 @@ const PRESET_TEMPLATES = [
     name: 'Poster',
     options: {
       bgMode: 'artwork',
-      artworkDim: 40,
-      artworkBlur: 2,
+      /*
+        White type over a photograph, so the picture has to give way rather than the letters fight
+        it. A 1px black outline plus a light dim was the wrong pair: the outline furred every edge
+        and the artwork was still busy enough underneath to break up the words. Darkening and
+        softening the picture does the same job cleanly, and then a plain drop shadow is enough.
+      */
+      artworkDim: 65,
+      artworkBlur: 5,
       artworkPosition: 'top',
       bg: '#000000',
       accent: '#ffffff',
       text: '#ffffff',
-      textShadow: 40,
-      textStroke: 1,
+      textShadow: 60,
+      textStroke: 0,
       textStrokeColor: '#000000',
       layout: 'icon-top',
       align: 'center',
