@@ -7,7 +7,7 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
-## Unreleased
+## 3.10.1 - 2026-08-25
 
 ### Added
 
@@ -88,6 +88,8 @@ renamed in 3.9.0 and the history is kept under one file.
   no host at all, which in Node means every interface - so the feed was readable, unauthenticated,
   by anything on the network that Windows Firewall let through. It carries game and achievement
   names.
+- The installer no longer carries the repository's own development helpers - the patch-package
+  sources, the one-line launcher and the local agent tooling were all being packed into `app.asar`.
 - **HDR souvenirs no longer blow out.** Roll-off now happens in perceptual space and starts just
   below ordinary white, so the desktop and game UI pass through untouched; a real HDR capture goes
   from about 10% pure white to 0.1%, keeping fourteen distinguishable levels above white where it
@@ -101,7 +103,7 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Website & Docs
 
-- The home page has a **Themes** section with the thirteen built-in palettes drawn live, and the
+- The home page has a **Themes** section that repaints a live sample in ten of the built-in palettes, and the
   site is now fully translated into nine languages - Italian, Polish and Japanese joining French,
   German, Spanish, Portuguese (Brazil), Russian and Simplified Chinese.
 - The Sources grid shows each platform's own mark, drawn as a mask in the accent colour, instead of
@@ -128,6 +130,7 @@ renamed in 3.9.0 and the history is kept under one file.
 - The locale linter gained three rules: a word translated under one key and left in English under
   another, English prose in a locale that does not use the Latin alphabet, and a bundled language
   missing from `steam.json`. The guides bar drops its brand word on a phone so its five links fit.
+
 ## 3.10.0 - 2026-08-23
 
 ### Added
