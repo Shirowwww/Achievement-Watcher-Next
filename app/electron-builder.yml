@@ -111,7 +111,14 @@ files:
   - '!**/*.pfx'
   - '!**/*.cer'
   - '!**/.password'
-  - '!buildme.cmd'
+  # Dev-only helpers that live beside the sources: the one-line launcher, the patch-package sources
+  # (patch-package is a devDependency and never runs from an installed build) and the local agent
+  # tooling, which is gitignored and has no business in a user's install directory.
+  - '!runme.cmd'
+  - '!patches/**'
+  - '!.agents/**'
+  - '!.claude/**'
+  - '!skills-lock.json'
   - '!watchdog/_wip_/**'
   - '!watchdog/patches/**'
   # Dev-only electron-updater config; packaged builds get their own generated app-update.yml.
