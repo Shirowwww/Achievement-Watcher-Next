@@ -22,6 +22,15 @@ const { start } = require(path.join(__dirname, '..', '..', 'tools', 'site', 'ser
 
 const API_HOST = 'aw-gallery.shirow.dedyn.io';
 
+// The host, not a substring: a URL can carry the gallery name in its path and still point elsewhere.
+function hostOf(url) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return '';
+  }
+}
+
 async function openGallery(browser, url) {
   const page = await browser.newPage();
   const errors = [];
@@ -33,7 +42,7 @@ async function openGallery(browser, url) {
 
   await page.setRequestInterception(true);
   page.on('request', (request) => {
-    if (request.url().includes(API_HOST)) request.abort('failed');
+    if (hostOf(request.url()) === API_HOST) request.abort('failed');
     else request.continue();
   });
 

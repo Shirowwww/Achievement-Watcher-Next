@@ -251,8 +251,14 @@
 
     var described = '';
 
+    // A preset is a folder name under assets/preset, so anything else is not one: checking the
+    // shape here keeps the selector below and the frame address below that out of reach of any
+    // attribute the page did not write itself.
+    var PRESET_SLUG = /^[a-z0-9-]+$/;
+
     function describe(slug) {
       if (!note || !notes) return;
+      if (!PRESET_SLUG.test(slug)) return;
       var source = notes.querySelector('[data-preset="' + slug + '"]');
       if (!source) return;
       described = slug;
@@ -274,8 +280,10 @@
         tabs.querySelectorAll('[data-preset]').forEach(function (other) {
           other.setAttribute('aria-selected', String(other === chip));
         });
-        describe(chip.getAttribute('data-preset'));
-        stageFrame.src = base('assets/preset/' + chip.getAttribute('data-preset') + '/index.html');
+        var slug = chip.getAttribute('data-preset');
+        if (!PRESET_SLUG.test(slug)) return;
+        describe(slug);
+        stageFrame.src = base('assets/preset/' + slug + '/index.html');
         // The new document plays its normal state on load; put it back into the chosen one.
         stageFrame.addEventListener(
           'load',
