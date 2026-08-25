@@ -27,9 +27,9 @@
     "@xboxreplay/xboxlive-auth": "^5.1.0",
     "crc": "^4.3.2",
     "fast-glob": "^3.2.5",
-    "humanize-duration": "^3.25.1",
+    "humanize-duration": "^3.34.1",
     "ini": "^7.0.0",
-    "koffi": "3.1.4",
+    "koffi": "3.1.6",
     "lodash.omit": "^4.5.0",
     "moment": "^2.29.1",
     "node-html-parser": "^9.0.1",
@@ -47,6 +47,6 @@
     "xinput-ffi": "^4.0.2"
   },
   "overrides": {
-    "koffi": "3.1.4"
+    "koffi": "3.1.6"
   }
 }

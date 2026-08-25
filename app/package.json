@@ -20,7 +20,7 @@
   },
   "license": "LGPL-3.0-only",
   "devDependencies": {
-    "electron": "^43.4.0",
+    "electron": "^43.4.1",
     "electron-builder": "^26.15.3",
     "electron-context-menu": "^4.1.2",
     "patch-package": "^8.0.1"
@@ -37,8 +37,8 @@
     "deepmerge": "^4.2.2",
     "electron-updater": "^6.8.9",
     "fast-glob": "^3.3.3",
-    "fast-xml-parser": "^5.3.0",
-    "humanize-duration": "^3.34.0",
+    "fast-xml-parser": "^5.11.0",
+    "humanize-duration": "^3.34.1",
     "ini": "^7.0.0",
     "js-yaml": "^5.3.0",
     "lodash.omit": "^4.5.0",
@@ -48,7 +48,7 @@
     "node-html-parser": "^9.0.1",
     "node-unrar-js": "^2.0.2",
     "normalize-path": "^3.0.0",
-    "puppeteer-core": "^25.7.0",
+    "puppeteer-core": "^25.8.0",
     "puppeteer-extra": "^3.3.4",
     "puppeteer-extra-plugin-stealth": "^2.11.1",
     "registry-js": "^1.16.1",
