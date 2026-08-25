@@ -61,10 +61,18 @@ Encoding is nonetheless still the largest single cost of a capture.
 Build and copy the x64 release binary from the repository root:
 
 ```powershell
+$env:RUSTFLAGS = "--remap-path-prefix=$env:USERPROFILE\.cargo=.cargo --remap-path-prefix=$PWD=."
 cargo build --release --locked --manifest-path native/hdr-screenshot/Cargo.toml
 Copy-Item native/hdr-screenshot/target/release/aw-next-hdr-screenshot.exe `
   watchdog/native/aw-next-hdr-screenshot.exe -Force
 ```
+
+The `RUSTFLAGS` line is not optional. `strip = "symbols"` drops the symbol table but not the
+panic locations, so without it the committed executable carries the absolute source path of every
+dependency and publishes the account name of whoever built it. Cargo's own `trim-paths` profile
+setting would replace it, but it is still unstable as of Cargo 1.97. Check a rebuilt binary with
+`Select-String -Path watchdog/native/aw-next-hdr-screenshot.exe -Pattern 'C:\\Users' -Encoding ascii`,
+which must find nothing.
 
 `--status` prints `hdr-active` or `sdr`. `--force <output.png>` is available for development-time
 capture testing on an SDR desktop. End users do not need Rust or the Windows SDK.
