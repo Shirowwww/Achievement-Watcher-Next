@@ -1,12 +1,9 @@
 'use strict';
 
 /*
-  The websocket broadcast must stay on the loopback interface.
-
-  `server.listen({ host: null })` is the same as omitting the host, so the feed used to be reachable
-  from the whole network with no authentication - while the Settings row is labelled
-  "Websocket @localhost:8082" and the documentation promised the local machine. Two halves are
-  checked here: the default the module resolves, and what Node actually binds when given it.
+  The websocket broadcast must stay on loopback: `server.listen({ host: null })` behaves like
+  omitting the host, which used to leave the feed reachable from the whole network with no
+  authentication despite the Settings row and docs promising "localhost only".
 */
 
 const assert = require('node:assert/strict');

@@ -1,17 +1,9 @@
 'use strict';
 
 /*
-  The single description of "what the updater is doing right now", shared by the main process, the
-  title bar and the Settings page.
-
-  It exists because the answer used to live in four half-states scattered across electron/init.js
-  (updateDownloading, updateAcceptedByUser, pendingInstallPrompt, a raw percent) and only ever
-  reached the screen as a percentage in Settings. A window opened mid-download showed nothing, and
-  the app quitting to install showed nothing at all - which is exactly the moment a user needs to be
-  told something, since the window disappears for several seconds.
-
-  Pure data and pure transitions, so every state the UI can be in is reachable in a test without
-  Electron, a network or a release.
+  Single shared update state: it replaces four half-states that used to be scattered across
+  electron/init.js, which left mid-download and quit-to-install windows showing nothing.
+  Pure data and transitions, so every UI state is testable without Electron, a network or a release.
 */
 
 // One phase at a time, in the order a successful update passes through them.
@@ -26,8 +18,7 @@ function initialState() {
     transferred: 0,
     total: 0,
     error: '',
-    // Only a download in flight can be stopped; everything else is either instant or past the
-    // point of no return, and offering a dead Cancel button is worse than offering none.
+    // Only an in-flight download can be cancelled; a dead Cancel button is worse than none.
     cancellable: false,
   };
 }
@@ -47,11 +38,8 @@ function version(state, event) {
   return String((event && event.version) || state.version || '');
 }
 
-/*
-  The next state for one updater event. Unknown events return the state unchanged rather than
-  throwing: this runs on the updater's own event listeners, where a throw would take the download
-  down with it.
-*/
+// Unknown events return the state unchanged rather than throwing: this runs on the updater's own
+// event listeners, where a throw would take the download down with it.
 function reduce(state, event) {
   const current = state && typeof state === 'object' ? state : initialState();
   const type = event && event.type;
@@ -94,12 +82,8 @@ function reduce(state, event) {
   }
 }
 
-/*
-  Whether a state change is worth sending to the renderers. download-progress fires per network
-  chunk - dozens of times a second on a fast line - and every send wakes a renderer that is usually
-  hidden in the tray. Whole percentage points are the finest granularity a progress bar can show,
-  so anything finer is pure cost.
-*/
+// download-progress fires dozens of times a second and wakes a hidden tray renderer on every send;
+// whole percentage points are the finest a progress bar shows, so anything finer is pure cost.
 function shouldPublish(previous, next) {
   if (!previous) return true;
   if (previous.phase !== next.phase) return true;

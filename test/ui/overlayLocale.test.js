@@ -10,7 +10,6 @@ const { loadOverlayLocale } = require('../../app/util/overlayLocale.js');
 const repoLocaleDir = path.join(__dirname, '..', '..', 'app', 'locale', 'lang');
 
 async function run() {
-  // English is the base payload the overlay starts from.
   const english = loadOverlayLocale({ localeDir: repoLocaleDir, lang: 'english' });
   assert.equal(english.lang, 'english');
   assert.equal(english.strings.icon, 'Icon');
@@ -51,7 +50,6 @@ async function run() {
   assert.equal(english.strings.close, 'Close');
   assert.equal(english.strings.accentCustom, 'Custom');
 
-  // A real locale overrides the overlay strings used by the in-game list.
   const french = loadOverlayLocale({ localeDir: repoLocaleDir, lang: 'french' });
   assert.equal(french.lang, 'french');
   assert.equal(french.strings.icon, 'Icône');

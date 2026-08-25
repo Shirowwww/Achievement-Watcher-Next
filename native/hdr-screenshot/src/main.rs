@@ -277,10 +277,9 @@ fn read_half(raw: &[u8], offset: usize) -> f32 {
     }
 }
 
-// The f16 bit patterns of the finite non-negative values sort exactly like the values do, so the
-// brightest channel of a pixel can be picked without decoding anything. A sign bit (colour outside
-// the sRGB gamut, which scRGB stores as a negative channel) or an all-ones exponent (infinity, NaN)
-// puts a pattern above HALF_INFINITY, and those never count as the peak.
+// Finite non-negative f16 bit patterns sort like their values, so the brightest channel can be
+// picked without decoding. Negative (out-of-gamut) or infinity/NaN patterns sit above HALF_INFINITY
+// and never count as the peak.
 const HALF_INFINITY: u16 = 0x7c00;
 
 fn pixel_peak_bits(pixel: &[u8]) -> u16 {
@@ -294,19 +293,17 @@ fn pixel_peak_bits(pixel: &[u8]) -> u16 {
     best
 }
 
-// PQ (SMPTE ST 2084). The roll-off is computed in this perceptually uniform domain rather than in
-// linear light, so it spends its handful of remaining output codes where the eye can still tell two
-// highlights apart.
+// PQ (SMPTE ST 2084): the roll-off is computed in this perceptually uniform domain, not linear
+// light, so its remaining output codes go where the eye can still tell two highlights apart.
 const PQ_M1: f32 = 2610.0 / 16384.0;
 const PQ_M2: f32 = 2523.0 / 32.0;
 const PQ_C1: f32 = 3424.0 / 4096.0;
 const PQ_C2: f32 = 2413.0 / 128.0;
 const PQ_C3: f32 = 2392.0 / 128.0;
 
-// BT.2408 reference white. The capture is already divided by the desktop's own SDR white level, so
-// 1.0 means diffuse white wherever the "SDR content brightness" slider sits; anchoring that at a
-// fixed 203 cd/m2 keeps the curve a function of the peak-to-white ratio alone, and therefore keeps
-// two captures of the same scene identical whatever the user later does to the slider.
+// BT.2408 reference white. The capture is already divided by the SDR white level, so anchoring
+// diffuse white at a fixed 203 cd/m2 makes the curve depend only on the peak-to-white ratio, not on
+// the user's "SDR content brightness" slider.
 const REF_WHITE_NITS: f32 = 203.0;
 
 fn pq_from_rel(value: f32) -> f32 {
@@ -325,11 +322,8 @@ fn rel_from_pq(value: f32) -> f32 {
     (numerator / denominator).powf(1.0 / PQ_M1) * (10000.0 / REF_WHITE_NITS)
 }
 
-// A percentile rather than the raw maximum, and taken over the second brightest pixel of every 2x2
-// block rather than over every pixel: a lone specular sample loses to its own neighbours, so a
-// handful of fireflies can no longer decide how dark the rest of the screenshot comes out, while a
-// real window or sunlit wall keeps its value. The histogram is indexed by the f16 pattern itself,
-// which makes the percentile exact and keeps the scan free of any decoding.
+// Percentile of the second-brightest pixel in each 2x2 block, not the raw max: a lone firefly loses
+// to its neighbours and cannot darken the whole capture, while a real bright surface still counts.
 const PEAK_PERCENTILE: f64 = 0.9999;
 
 fn second_largest(a: u16, b: u16, c: u16, d: u16) -> u16 {
@@ -383,17 +377,10 @@ fn estimate_scene_peak(raw: &[u8], width: u32, height: u32, white_scale: f32) ->
     1.0
 }
 
-// Knee-anchored roll-off. Below the knee the capture passes through untouched, so ordinary SDR
-// content, the desktop and every piece of game UI come out of an HDR capture exactly as they would
-// out of an SDR one. Above it an extended Reinhard shoulder reaches the scene peak with a slope
-// that is small but never zero, which is what keeps the brightest highlights separated instead of
-// collapsing them into one flat white.
-//
-// SHOULDER is the width of that shoulder in normalised PQ, and it is the whole trade: the drop at
-// diffuse white is close to SHOULDER/2, while everything above white has to fit inside it. At 0.035
-// diffuse white lands within about 18 of 255 codes of where an SDR capture would put it - below the
-// threshold of noticing on a screenshot - and the highlights still resolve into a dozen or more
-// distinct levels.
+// Knee-anchored roll-off: content below the knee passes through untouched (SDR content and UI
+// look the same as an SDR capture), and an extended Reinhard shoulder above it reaches the scene
+// peak without collapsing highlights to flat white. SHOULDER=0.035 keeps the drop at diffuse white
+// under a noticeable threshold while still resolving a dozen or so highlight levels.
 const SHOULDER: f32 = 0.035;
 
 #[derive(Clone, Copy)]
@@ -483,11 +470,9 @@ fn linear_to_srgb(value: f32) -> u8 {
     linear_to_srgb_dithered(value, 0.0)
 }
 
-// A light source far above diffuse white reads as white to the eye, not as a saturated colour, and
-// scaling every channel by the same factor cannot brighten a channel that is already at its
-// maximum: without this a red lamp at twice diffuse white and the same lamp at twelve times come
-// out as the very same flat red. Blending towards the pixel's own brightest channel washes it out
-// with rising intensity instead of dimming it, and nothing at or below diffuse white is touched.
+// A light source far above diffuse white reads as white, not as a saturated colour, and scaling
+// every channel equally cannot brighten one already at its maximum. Blending each channel towards
+// the pixel's brightest one washes highlights out with rising intensity instead of dimming them.
 const WASH: f32 = 0.6;
 
 fn highlight_wash(pixel_peak: f32, scene_peak: f32) -> f32 {
@@ -510,10 +495,8 @@ fn desaturate_highlight(rgb: [f32; 3], blend: f32) -> [f32; 3] {
     ]
 }
 
-// The whole per-pixel decision depends only on the brightest channel, and that channel is one of
-// the 31744 finite non-negative f16 patterns, so both the compression and the highlight wash are
-// resolved once into a table and cost a single lookup per pixel afterwards. No interpolation and no
-// approximation: the table holds the exact value the curve would return.
+// The per-pixel decision depends only on the brightest channel, one of 31744 finite non-negative f16
+// patterns, so compression and highlight wash are precomputed into an exact lookup table.
 struct PixelTables {
     scale: Vec<f32>,
     blend: Vec<f32>,
@@ -602,10 +585,8 @@ fn write_png(output: &Path, canvas: &Canvas) -> Result<(), AnyError> {
     encoder.set_color(ColorType::Rgb);
     encoder.set_depth(BitDepth::Eight);
     encoder.set_source_srgb(SrgbRenderingIntent::Perceptual);
-    // The default level spends about 750 ms on a 1440p screenshot and the two levels below it
-    // spend a fifth of that for a file that is actually a few percent smaller than the RGBA one
-    // this replaces. Beyond level 3 the curve flattens: level 6 costs four times as much again
-    // for another 4 percent.
+    // Level 3 spends a fifth of the default level's ~750ms on a 1440p screenshot for a file still
+    // smaller than the RGBA one this replaces; level 6 costs 4x more for another 4 percent.
     encoder.set_deflate_compression(DeflateCompression::Level(3));
     let mut writer = encoder.write_header()?;
     writer.write_image_data(&canvas.rgb)?;
@@ -761,10 +742,9 @@ mod tests {
                     mapped >= previous - 1e-4 && code >= previous_code - 0.05,
                     "peak {peak}: {value} mapped below its predecessor"
                 );
-                // The curve only ever compresses, so no interval of the input may come out
-                // stretched - which is also what a step at the knee would look like. Above
-                // diffuse white the input has no code of its own to compare against, so the
-                // requirement there is simply that no step is visible.
+                // The curve only compresses, so no input interval may come out stretched (also what
+                // a knee step would look like); above diffuse white there is no source code to
+                // compare against.
                 let allowed = if value <= 1.0 {
                     source - previous_source + 0.05
                 } else {
@@ -836,7 +816,6 @@ mod tests {
 
     #[test]
     fn a_lone_firefly_does_not_decide_the_scene_peak() {
-        // A 4x4 frame of diffuse white with one very bright isolated pixel.
         let mut pixels = vec![[1.0_f32, 1.0, 1.0]; 16];
         pixels[5] = [60.0, 60.0, 60.0];
         assert!((estimate_scene_peak(&frame(&pixels), 4, 4, 1.0) - 1.0).abs() < 1e-3);
@@ -894,7 +873,6 @@ mod tests {
         assert!(desaturated[1] > 0.0 && desaturated[2] > 0.0);
         assert!(desaturated[0] > desaturated[1]);
         assert_eq!(desaturated[1], desaturated[2]);
-        // The highlight washes out without dimming.
         assert_eq!(desaturated[0], 1.0);
         // The wash rises with intensity, so two levels of one colour stay distinguishable.
         assert!(highlight_wash(4.0, 8.0) > highlight_wash(2.0, 8.0));

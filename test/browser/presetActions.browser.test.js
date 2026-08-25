@@ -1,16 +1,9 @@
 'use strict';
 
 /*
-  The Presets tab, laid out by a real browser (skipped with no Chromium browser present).
-
-  Two things about it could only ever be measured. The explanation over the starting points was cut
-  to about a third of the card by `#settings .content li .left`, a 360px cap meant for a settings
-  label sitting beside its control - the designer's rows have no control beside them, so all it did
-  was fold a sentence into a column. And the action row was eight buttons of equal weight on one
-  wrapping line, where the break fell wherever that language's labels happened to run out of room.
-
-  These pin the shape that replaced it: the sentence gets the card, and the row is two groups with
-  Import and Export as one pair of equal halves and the SAN converter quieter, underneath.
+  Runs the Presets tab in a real browser: a 360px label-width cap meant for settings rows with a
+  control beside them was folding the intro into a column, and the buttons wrapped wherever a
+  language ran out of room. These tests pin the fixed layout that replaced both.
 */
 
 const assert = require('node:assert/strict');
@@ -25,9 +18,8 @@ const appDir = path.join(root, 'app');
 const css = fs.readFileSync(path.join(appDir, 'resources', 'css', 'app.css'), 'utf8');
 const html = fs.readFileSync(path.join(appDir, 'view', 'app.html'), 'utf8');
 
-// The two rows of the designer card, taken out of app.html rather than rewritten here, so a change
-// to the markup is measured rather than missed. The preview workspace is left out: it is a scaled
-// iframe with a ResizeObserver behind it, and nothing here is about that.
+// Taken from app.html rather than rewritten here, so a markup change is measured, not missed.
+// The preview workspace (a scaled iframe with its own ResizeObserver) is left out.
 function designerMarkup() {
   const start = html.indexOf('<li class="pd-row" id="pd-templates-row">');
   assert.ok(start > -1, 'the starting-points row is gone from app.html');
@@ -77,12 +69,11 @@ function page(language) {
   return `<!doctype html><html><head><meta charset="utf-8"><style>
   ${css}
   body { margin: 0; }
-  /* The Settings modal, opened on the Presets tab: the panel and its navigation at the widths the
-     real window gives them, so the card is measured at the width it actually gets. */
+  /* Panel and nav kept at real window widths, so the card is measured at the width it actually gets. */
   #settings { display: block !important; position: static; }
   #settings .box { display: block !important; position: static; transform: none; margin: 0 auto; }
   #settings .box .content { display: block !important; height: auto !important; overflow: visible !important; }
-  /* The preview workspace is a scaled iframe driven by a ResizeObserver; nothing here is about it. */
+  /* The preview workspace is a scaled iframe with its own ResizeObserver; not part of this test. */
   .pd-workspace { display: none !important; }
   </style></head><body>
   <section id="settings"><div class="box"><div class="container">
@@ -146,24 +137,20 @@ test('the explanation over the starting points gets the width of the card', asyn
 
   for (const [language, viewport] of [['en', WIDE], ['de', WIDE], ['de', NARROW]]) {
     const m = await measure(browser, language, viewport);
-    // The old cap left it at 360px of a card around twice that. Two thirds is the claim: it is a
-    // paragraph across the card, not a column beside something.
+    // The old cap left it at 360px of a card twice that size; two thirds means a paragraph across
+    // the card, not a column beside something.
     assert.ok(
       m.intro.width > m.card.width * 0.66,
       `${language} at ${viewport.width}: the sentence has ${Math.round(m.intro.width)}px of a ${Math.round(m.card.width)}px card`
     );
     assert.ok(m.introLines <= 3, `${language} at ${viewport.width}: the sentence folded onto ${m.introLines} lines`);
-    // And it reads as supporting copy under a heading, rather than as a second label.
     assert.notEqual(m.introColor, m.titleColor, 'the heading and the sentence are the same colour');
     assert.ok(m.title.bottom <= m.intro.top + 1, 'the heading must sit above the sentence');
     assert.ok(m.intro.bottom <= m.chips.top + 1, 'and the sentence above the swatches');
   }
 });
 
-/*
-  Import and Export are the same thing done in opposite directions, so they are one pair of equal
-  halves: same width, same height, side by side, one gap between them.
-*/
+/* Import and Export are the same action in opposite directions, so they are one equal pair. */
 test('Import and Export are one pair of equal halves', async (t) => {
   const { browser, userDataDir, failures } = await launchBrowser();
   if (!browser) return t.skip(skipReason(failures));
@@ -185,8 +172,8 @@ test('Import and Export are one pair of equal halves', async (t) => {
 });
 
 /*
-  The SAN converter reads somebody else's format. It stays available, but under the pair and
-  quieter: no filled surface of its own, and smaller text than the buttons above it.
+  The SAN converter reads someone else's format: kept available but quieter, no filled surface
+  and smaller text than the buttons above it.
 */
 test('the SAN import is a secondary action under the pair', async (t) => {
   const { browser, userDataDir, failures } = await launchBrowser();
@@ -228,14 +215,9 @@ test('the SAN import is a secondary action under the pair', async (t) => {
 });
 
 /*
-  Two groups, one under the other, at every width.
-
-  This deliberately pins ONE arrangement rather than accepting "side by side or stacked". The first
-  version of this rule put the file group in a column beside the design actions below a viewport
-  query that could never fire at the card width of the time, so the group wrapped by itself while
-  the hairline meant to separate two columns still pointed left, at nothing - and a test that
-  allowed both arrangements had nothing to say about it. The card is wider now on a large screen,
-  which is exactly why the single arrangement has to be asserted rather than inferred.
+  Pins one arrangement (file actions under design actions) rather than "side by side or stacked":
+  an earlier version used a viewport query that never fired at the card's actual width, leaving a
+  column layout's leftover hairline pointing at nothing while a looser test allowed either shape.
 */
 test('the file actions are their own row under the design actions', async (t) => {
   const { browser, userDataDir, failures } = await launchBrowser();
@@ -257,8 +239,8 @@ test('the file actions are their own row under the design actions', async (t) =>
 });
 
 /*
-  The widest the card gets. It grows with the window now, so "there is not room for two columns"
-  is no longer what keeps the row in one shape - only this does.
+  The card now grows with the window, so "no room for two columns" no longer guarantees the row's
+  shape at the widest size; only this test does.
 */
 test('the action row keeps its shape on the widest window there is', async (t) => {
   const { browser, userDataDir, failures } = await launchBrowser();

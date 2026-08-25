@@ -34,8 +34,6 @@ const UI_SOURCES = [
 // Every file allowed to spell out an Achievement Watcher address.
 const LINK_OWNERS = new Set([path.join('app', 'util', 'links.js')]);
 
-// Helpers
-
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
@@ -162,11 +160,8 @@ function stripComments(source) {
   return out;
 }
 
-/*
-  Blank every call to a translation helper. Their English and French arguments are the documented
-  safety net for a catastrophic locale failure, not strings waiting to be translated, so a scan for
-  hardcoded UI text has to look past them.
-*/
+// Blanks translation-helper calls: their English/French args are a documented safety net for a
+// locale failure, not text to scan, so the hardcoded-string check has to skip them.
 const TRANSLATION_HELPERS = /(?<![\w$.])(?:t|localeText|uplaySettingsText|helpText|overlayText)\s*\(/g;
 
 function stripTranslationCalls(source) {
@@ -202,8 +197,6 @@ function stripTranslationCalls(source) {
 function lineOf(source, index) {
   return source.slice(0, index).split('\n').length;
 }
-
-// Rules
 
 function checkKeyParity(findings) {
   const english = new Map(leaves(readJson(path.join(LANG_DIR, REFERENCE))));
@@ -331,7 +324,7 @@ function checkDialogSlugs(findings) {
 /*
   English prose sitting in a JavaScript string that no translation helper wraps: a label that will
   read English in all 28 languages. Deliberate exceptions - product names, protocol values, log
-  lines - are listed in ALLOWED_UI_STRINGS rather than being silently skipped.
+  lines - are listed in UI_STRING_ALLOWLIST rather than being silently skipped.
 */
 const UI_STRING_ALLOWLIST = new Set([
   // Windows and Steam paths, brand names and other values that are not interface text.
@@ -451,11 +444,10 @@ function checkViewLinkKeys(findings) {
 }
 
 /*
-  Bundling a language is more than shipping its locale file: half a dozen tables elsewhere key off
-  the same Steam language id (achievement text, controller vocabulary, duration wording), and a
-  language missing from one of them does not fail - it quietly serves English, reading like a
-  translation gap rather than a wiring gap. Only tables whose contract is "every interface
-  language" belong here; Uplay R2 and shadPS4 intentionally cover a fixed emulator-supported subset.
+  Bundling a language also means updating tables elsewhere keyed on the same Steam language id
+  (achievement text, controller vocabulary, duration wording); a language missing there silently
+  falls back to English instead of failing. Uplay R2 and shadPS4 intentionally cover a fixed
+  emulator-supported subset, so they are excluded here.
 */
 const LANGUAGE_MAPS = [
   { file: 'app/parser/exophase.js', map: 'EXOPHASE_LANG_MAP', side: 'key' },
@@ -529,21 +521,12 @@ function checkSourceLanguageMaps(findings) {
 }
 
 /*
-  One English word translated in one place and left in English in another, inside the same file.
-
-  checkCopiedProse only fires on a sentence, so single words slipped past it for months: "Simple"
-  and "Advanced" were still the English words in seventeen of the twenty-eight files, including
-  Japanese and Simplified Chinese, while the very same words were translated two settings away.
-  Counting how many languages left a word alone proves nothing - "Preset", "Zoom", "Auto" and "FAQ"
-  legitimately stay English in a dozen of them. What does prove it is the file contradicting itself:
-  if this locale has a word for "Advanced" under one key, the key that kept "Advanced" is an
-  oversight, not a loanword.
-*/
-/*
-  English words this app uses in two different senses, so one key translating it and another
-  keeping it is not a contradiction: "Cover" is both the box art and an image fit, "Accent" is both
-  the accent colour and typographic accentuation, "Auto" is a value in one list and a mode in
-  another, and "In-game overlay" is a loan phrase Dutch keeps except where it takes an article.
+  checkCopiedProse only catches full sentences, so a lone untranslated word only counts as a bug
+  when the same locale translates it elsewhere (a contradiction), not when many locales simply keep
+  it as a loanword. These words are legitimately used in two different senses ("Cover" is box art
+  and an image fit, "Accent" is a colour and typographic accentuation, "Auto" is a list value and a
+  mode, "In-game overlay" is a Dutch loan phrase except where it takes an article), so keeping one
+  sense untranslated is not a contradiction.
 */
 const UNTRANSLATED_ALLOWED = new Set(['Auto', 'Accent', 'Cover', 'In-game overlay']);
 
@@ -591,11 +574,9 @@ function checkUntranslatedValues(findings) {
 }
 
 /*
-  English prose sitting in a locale that does not use the Latin alphabet. Product names, file names,
-  registry keys and protocol values legitimately stay in Latin script, so a single token proves
-  nothing; two lower-case English words in a row do, because that is a phrase rather than a name -
-  which is what "Save/config folder" and "Nothing added this session" looked like in Japanese,
-  Chinese, Russian, Ukrainian, Greek, Korean and Thai.
+  English prose in a locale that is not Latin-script. A single Latin token is usually a product name,
+  file name, registry key or protocol value, but two lowercase English words in a row form a phrase,
+  not a name, and count as untranslated text.
 */
 const NATIVE_SCRIPT = {
   japanese: /[぀-ヿ一-鿿]/,

@@ -1664,14 +1664,9 @@ function openCoverPicker(game, appid, coverCacheAppid) {
 }
 
 /*
-  Pick the square logo shown beside the game title - the icon counterpart of the cover picker, and
-  deliberately the same dialog: same chrome, same tiles, same "click a tile to apply it", only the
-  tiles are square and the sources are icon sources.
-
-  Four of them, in the order they are appended: what is on screen now, the community icon set
-  (SteamGridDB), the game's own Steam artwork, and images found inside the install folder. The last
-  one is the only source that works with no usable network, and it is also where a player who
-  already has the right picture on disk will look for it.
+  The icon counterpart of the cover picker, deliberately the same dialog. Sources are appended in
+  order (current, SteamGridDB, Steam artwork, install-folder images) so the last one, which needs no
+  network, still lands where a player with the right picture on disk would look for it.
 */
 function openIconPicker(game, appid, iconCacheAppid, exePath) {
   const overlay = document.createElement('div');
@@ -1806,12 +1801,10 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
   };
 
   /*
-    The icon this game would have with no pick at all, as the first tile.
-
-    Undoing a choice was reachable only from the context menu, which meant leaving the gallery to
-    find out what the original even looked like. Here it is a tile like any other, showing the
-    picture it restores; clicking it clears the override rather than storing one, so the game goes
-    back to following its own artwork instead of being pinned to a copy of it.
+    The icon this game would have with no pick at all, as the first tile: undoing a choice used to
+    mean leaving the gallery for the context menu just to see what the original looked like.
+    Clicking it clears the override rather than storing one, so the game follows its own artwork
+    again instead of being pinned to a copy of it.
   */
   const addDefaultTile = async (run) => {
     let resolved = '';
@@ -2430,16 +2423,10 @@ function sourcePresentationFor(game) {
 }
 
 /*
-  The dot beside an emulated game's name.
-
-  It used to answer "is steam_api(64).dll on disk?" - a fact about one file, and not the question
-  anyone reads a coloured dot for. It reports the Game Health state instead, in the same three
-  colours the panel's own chip uses, and its tooltip names the button that opens that panel.
-
-  Two sources, in that order: the state of the last full report for this game, and - until the panel
-  has been opened once - what the scan already knows. The scan answer is deliberately coarse, because
-  a library is hundreds of tiles and the real report walks the install folder: it can see a missing
-  emulator dll and an absent achievement list, and everything finer is what opening the panel is for.
+  The dot beside an emulated game's name reports the Game Health state (same three colours as the
+  panel's chip) rather than just "is steam_api(64).dll on disk?". Until the panel has been opened
+  once it falls back to the scan's own coarse answer, since walking every install folder for hundreds
+  of tiles is what the real report is for.
 */
 const healthStateByAppid = new Map();
 
@@ -2823,15 +2810,10 @@ ipcRenderer.on('watchdog-status', (event, state) => {
 });
 
 /*
-  The update chip, in the same title-bar row as the Watchdog indicator.
-
-  Before this, an update downloading in the background was visible in exactly one place: a label on
-  the Settings page, which nobody has open while it happens. Everywhere else the app looked idle for
-  the whole download and then simply vanished to install. The chip is the always-on-screen surface
-  that says which of those is going on, and it is the only place a download can be cancelled from.
-
-  It is driven purely by the main process's broadcast - no polling, no timer while idle - and every
-  phase maps to one label so an unknown phase renders as nothing rather than as an empty box.
+  The update chip, in the same title-bar row as the Watchdog indicator. A background download used
+  to be visible only on the closed Settings page, so the app looked idle for the whole download then
+  vanished to install; the chip is the always-on-screen surface for that, and the only place a
+  download can be cancelled from. Driven purely by the main process's broadcast, no polling.
 */
 function updateChipPresentation(state) {
   if (!state) return null;
@@ -6091,7 +6073,7 @@ var app = {
 
       let count_unlocked = game.achievement.list.filter(
         (elem) => elem.Achieved
-      ).length; /*can replace by value on header which were calculated parse etc already*/
+      ).length;
       let count_locked = game.achievement.list.length - count_unlocked;
 
       $('#unlock .header .title').attr('data-count', count_unlocked);

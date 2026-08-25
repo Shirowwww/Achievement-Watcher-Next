@@ -1,10 +1,9 @@
 'use strict';
 
 /*
-  The locale linter, run as part of the suite, needs two halves or either alone would be misleading:
-  the rules have to come back clean over the real tree, and the judgement calls they rest on have to
-  be shown to fire on a known-bad value. A checker that only ever passes proves nothing about what it
-  would catch.
+  The locale linter needs two kinds of tests or either alone would be misleading: the rules must
+  pass clean over the real tree, and the judgement calls behind them must be shown to catch a
+  known-bad value.
 */
 
 const assert = require('node:assert/strict');

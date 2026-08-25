@@ -214,12 +214,9 @@ function themeOption(value, label) {
 let installedThemes = [];
 
 /*
-  "Custom…" is a permanent row, and never the name of a theme.
-
-  It is the scratch slot: always there, always editable, and what it holds survives between visits.
-  Naming happens through Save in the editor, which writes a theme of its own and leaves this row
-  free for the next idea - so the row keeps its invitation wording however many themes are saved
-  from it.
+  "Custom…" is a permanent scratch slot, never the name of a theme: always there, always editable,
+  and what it holds survives between visits. Naming happens through Save, which writes a theme of
+  its own and leaves this row free for the next idea.
 */
 function customThemeLabel() {
   return t('themeCustom', 'Custom…', 'Personnalisé…');
@@ -1707,11 +1704,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     let customThemeSnapshot = null;
     let customThemeSaveTimer = null;
     /*
-      Which theme the editor is showing, and which built-in palette it descends from.
-
-      `editingValue` is what decides whether an edit is written or only previewed - see
-      scheduleCustomThemeSave. `editingBase` is recorded in a saved theme's manifest so a theme built
-      on Nord can say so, and travels through an export unchanged.
+      Which theme the editor is showing, and which built-in palette it descends from. `editingValue`
+      decides whether an edit is written or only previewed (see scheduleCustomThemeSave);
+      `editingBase` is recorded in a saved theme's manifest and travels through an export unchanged.
     */
     let editingValue = '';
     let editingBase = '';
@@ -1977,14 +1972,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     }
 
     /*
-      Show the draft, and persist it only where persisting is what the user asked for.
-
-      Every theme is editable now, so an edit means two different things depending on what is
-      selected. On the Custom slot it is the slot's own content: it is written straight away, the way
-      a scratchpad works, and is still there next time. On anything else - a built-in, or a theme
-      that was saved or imported - it is a draft over somebody's finished theme, so nothing is
-      written and Save is what turns it into a theme of its own. That is what keeps a built-in being
-      the built-in, and what makes "save under another name" keep both.
+      Show the draft, and persist it only where persisting is what the user asked for. On the Custom
+      slot an edit is the slot's own content and is written straight away; on anything else it is a
+      draft over somebody's finished theme, so nothing is written until Save turns it into a theme
+      of its own. That is what keeps a built-in being the built-in.
     */
     function scheduleCustomThemeSave() {
       clearTimeout(customThemeSaveTimer);
@@ -2024,12 +2015,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     }
 
     /*
-      Open the editor on whichever theme is selected.
-
-      The layer model comes from the main process, which knows how to produce one for a built-in
-      palette, for the Custom slot and for a theme on disk alike - so the editor does not need to
-      know which kind it is looking at, only that there is a model. A `user:` stylesheet is the one
-      kind with none: it is CSS somebody wrote rather than colours, so the editor stays shut for it.
+      Open the editor on whichever theme is selected. The layer model comes from the main process,
+      which knows how to build one for a built-in, the Custom slot or a theme on disk alike, so the
+      editor never needs to know which kind it is looking at. A `user:` stylesheet is CSS someone
+      wrote rather than colours, so it is the one kind with no model, and the editor stays shut.
     */
     function openThemeEditor(value) {
       const opening = String(value || 'custom');
@@ -2208,13 +2197,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     });
 
     /*
-      Reset puts back the theme the editor was opened on, not a generic default.
-
-      Every theme is editable now, so "reset" has an obvious meaning it did not have before: undo
-      what I changed about THIS theme. Reading the model back from the main process is what makes
-      that exact - a built-in returns its own palette, a saved or imported theme returns what is on
-      disk. The Custom slot is the one with nothing to go back to, since what is stored is what you
-      are editing, so there it stays the default palette.
+      Reset puts back the theme the editor was opened on, not a generic default: undo what changed
+      about THIS theme, read back from the main process (own palette for a built-in, disk contents
+      for a saved/imported theme). The Custom slot has nothing to go back to, so it stays default.
     */
     $('#theme-customizer-reset').on('click', async function () {
       if (!editingValue || editingValue === 'custom') {
@@ -2237,16 +2222,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     }
 
     /*
-      Save what the editor is holding as a theme of the user's own.
-
-      The name decides everything: unchanged it updates the theme it was opened on, changed it makes
-      a second theme and leaves the first alone. A name that is already taken is never overwritten
-      silently - the first call reports the clash and writes nothing, and only an explicit Replace
-      calls back with a policy, the same two-step an import uses.
-
-      Saving from the Custom slot leaves the slot itself untouched. That is the point of it: the
-      scratchpad keeps whatever is in it, and the saved theme goes on to live its own life in the
-      picker beside the built-ins.
+      Save what the editor is holding as a theme of the user's own. The name decides everything:
+      unchanged it updates the theme it was opened on, changed it makes a second theme. A clash is
+      never overwritten silently, only an explicit Replace does that, the same two-step an import
+      uses. Saving from the Custom slot leaves the scratch slot itself untouched.
     */
     $('#btn-save-theme').on('click', async function () {
       const name = themeNameFromDom();
@@ -2303,12 +2282,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     });
 
     /*
-      Portable themes (.awtheme).
-
-      Export writes the theme currently selected - a built-in palette, the Custom theme as the
-      editor holds it, or an imported theme as it stands. Import validates the package in the main
-      process, shows what it would look like, and only touches theme storage once the user agrees.
-      A user stylesheet has no model to write, so it is the one selection Export refuses.
+      Portable themes (.awtheme). Export writes the theme currently selected; Import validates the
+      package in the main process and only touches theme storage once the user agrees. A user
+      stylesheet has no model to write, so it is the one selection Export refuses.
     */
     function setThemeLibraryStatus(message, kind) {
       $('#theme-library-status').text(message || '').removeClass('ok error').addClass(kind || '');
@@ -2650,16 +2626,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       });
       if (choice !== 0) return;
       /*
-        Stop painting it first, and WAIT for that to have happened. The window holds every image the
-        theme brought open for as long as the stylesheet refers to them, and Windows will not delete
-        a folder whose files are open - which is the EPERM this used to report. Moving the selection
-        also has to happen before the folder goes, or the window is left painted by a stylesheet
-        nothing can rebuild.
-
-        Ordering the two calls was not enough on its own: applying a theme is a round trip to the
-        main process, so without the await the delete raced the swap it was supposed to follow, lost,
-        and reported failure. The theme was then no longer painted, so a second click on Delete
-        worked - which is exactly what a deleted imported theme needing two clicks looked like.
+        Stop painting the theme and WAIT for that swap before deleting its folder: Windows refuses to
+        delete a folder whose images are still open by the window (the EPERM this used to report).
+        The await matters because applying a theme is a round trip to the main process; without it
+        the delete used to race the swap and fail, which looked like Delete needing two clicks.
       */
       const wasSelected = String($('#option_theme').val() || '');
       populateThemeSelect('default');
@@ -2668,13 +2638,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         const res = await ipcRenderer.invoke('delete-installed-theme', known.name);
         if (res && res.ok) {
           /*
-            Rebuild the picker AFTER the folder is gone, not only before.
-
-            The list is read from theme storage, and the rebuild above ran while the theme was still
-            on disk - so it came back listing the theme that was about to be deleted, and nothing
-            re-read it afterwards. The row stayed, selecting it painted nothing (its folder had gone),
-            and Delete had to be pressed a second time to clear it: the theme was deleted the first
-            time, only the list had not caught up.
+            Rebuild the picker AFTER the folder is gone, not only before: the earlier rebuild ran
+            while the theme was still on disk, so its row stayed listed and Delete looked like it
+            needed a second click when the list had simply not caught up.
           */
           populateThemeSelect('default');
           setThemeLibraryStatus(t('delete-theme-done', 'Theme deleted: {name}', 'Theme supprimé : {name}', { name: res.name }), 'ok');
@@ -2724,13 +2690,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     });
 
     /*
-      Let the mouse wheel cycle the value displayed between the arrows. Useful for long lists, and it
-      keeps the compact control aligned.
-
-      Only where there are arrows to step, though. `.right` is a layout class as much as a kind of
-      row, and the preset designer's action rows carry it - so swallowing the wheel over anything
-      wearing it made the panel refuse to scroll wherever those rows happened to be, which on the
-      Presets tab is the whole bottom of the card.
+      Let the mouse wheel cycle the value between the arrows, but only where arrows exist to step:
+      `.right` is also a layout class the preset designer's action rows carry, and swallowing the
+      wheel there made the panel refuse to scroll across the whole bottom of the Presets tab.
     */
     $('#settings .arrow-list .right').on('wheel', function (event) {
       const stepper = $(this).find(event.originalEvent.deltaY > 0 ? '.next' : '.previous');
@@ -4068,12 +4030,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     let previewIcon = '';
     let previewArt = null;
     /*
-      Artwork for the preview: one of the user's own game headers, because that is what a notification
-      is actually seen over. The app already keeps landscape art for the games in the library, so the
-      designer borrows one rather than shipping a picture - and nothing copyrighted lives in the repo.
-
-      With an empty library there is nothing to borrow, so the backdrop falls back to a painted scene
-      rather than the app's own logo, which told the user nothing about contrast.
+      Artwork for the preview: one of the user's own game headers, since that is what a notification
+      is actually seen over, and nothing copyrighted lives in the repo. An empty library falls back
+      to a painted scene rather than the app's own logo, which told the user nothing about contrast.
     */
     /*
       Width and height straight from a PNG or JPEG header. Both are a handful of bytes at a known
@@ -4175,14 +4134,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     }
 
     /*
-      Pictures a preset can use as its background: the shared <userData>/presets/images folder, which
-      is what the designer can offer and what writing a preset copies from.
-
-      The preview needs them as data URIs rather than as filenames. A generated preset names its
-      picture relative to its own stylesheet, and the preview is a srcdoc document with no such
-      folder behind it, so `presetAssetUrl` is handed to the generator and resolves the name to the
-      bytes. Cached, because the stylesheet is rebuilt on every slider movement and a wallpaper is
-      not a small thing to base64 twice a second.
+      Pictures a preset can use as its background, from the shared <userData>/presets/images folder.
+      The preview needs them as data URIs, not filenames, since it is a srcdoc document with no such
+      folder behind it; `presetAssetUrl` resolves the name to bytes and caches them, because the
+      stylesheet rebuilds on every slider movement and a wallpaper is not cheap to base64 twice a second.
     */
     let presetImages = [];
     const presetImageUris = new Map();
@@ -4293,12 +4248,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     }
 
     /*
-      Size and place the frame.
-
-      Card view shows the popup at its own size, shrunk only if the stage is narrower than the popup.
-      Screen view shows it at its true size relative to a display of the chosen resolution, in the
-      corner the Notifications tab is set to - the popup's window box includes its transparent
-      margin, so what the stage shows is what the screen edge will look like.
+      Size and place the frame. Card view shows the popup at its own size, shrunk only if the stage
+      is narrower. Screen view shows its true size relative to a display of the chosen resolution, in
+      the set corner; the popup's window box includes its transparent margin, so the stage matches
+      what the screen edge will actually look like.
     */
     /*
       The stage has no width until the tab has actually been laid out, and a popup scaled to a
@@ -4316,15 +4269,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     }
 
     /*
-      The other half of "does it fit".
-
-      The stage is pinned above the controls, so every pixel it takes is a pixel they lose - it has
-      a ceiling, and a popup fitted on width alone overflowed it and was cut off, which looks
-      exactly like being zoomed in. This is the room inside that ceiling.
-
-      Read from the stylesheet rather than from the box, because the box is about to be resized to
-      whatever this decides: asking the element how tall it is would be asking it what it was last
-      time, and each layout would inherit the previous one.
+      The other half of "does it fit": the stage is pinned above the controls and has a ceiling, so a
+      popup fitted on width alone overflowed it and looked cut off like a zoom bug. Read the ceiling
+      from the stylesheet rather than the box, since the box is about to be resized to what this
+      decides, and asking it directly would just echo the previous layout.
     */
     const STAGE_PADDING = 12; // .pd-stage padding, both sides
 
@@ -4336,13 +4284,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     }
 
     /*
-      And the height it actually takes: what the popup needs at the zoom that fits, never more.
-
-      A flat share of the panel was the wrong shape in both directions - a short wide design left
-      most of the stage empty while the controls went without the room, and a tall one was shrunk to
-      fit a cap that had nothing to do with it (Poster came out at 29% inside a stage two thirds
-      empty horizontally). Sizing to the content gives the controls their room back on a short design
-      and the tall ones a size you can judge.
+      And the height it actually takes: what the popup needs at the zoom that fits, never a flat
+      share of the panel. That flat share was the wrong shape either way, wasting stage space on a
+      short wide design and over-shrinking a tall one against an unrelated cap.
     */
     function fitStageTo(contentHeight, padding = STAGE_PADDING) {
       const node = document.querySelector('#options-notify-designer .pd-stage');
@@ -4610,11 +4554,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     });
 
     /*
-      The three notifications side by side.
-
-      Switching states one at a time answers "what does a rare unlock look like?"; only seeing them
-      together answers "does a rare unlock look DIFFERENT?" - which is the question a preset with a
-      rare colour is actually asking, and the one a single card cannot show.
+      The three notifications side by side: switching states one at a time only answers "what does a
+      rare unlock look like?", while seeing them together answers "does it look DIFFERENT?", the
+      actual question a preset with a rare colour is asking.
     */
     function comparePayload(state) {
       const kept = previewState;
@@ -4642,13 +4584,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const box = presetGenerator.presetBoxSize(values);
       const stageWidth = measuredStageWidth();
       /*
-        Every state shares the stage one card had, in height as well as in width - fitted on width
-        alone, popups tall enough to matter ran off the bottom and the last was never seen at all.
-
-        Two columns, which is what makes the cells worth looking at: a popup is wider than it is tall,
-        so four of them stacked wasted the width and starved the height. Halving both instead is about
-        twice the scale for the same stage. The numbers below have to agree with .pd-compare in the
-        stylesheet, which is the only place the grid itself is described.
+        Every state shares the stage one card had, in height as well as width, since fitting on width
+        alone ran tall popups off the bottom. Two columns instead of a stack of four keeps the cells
+        readable, since a popup is wider than it is tall. These numbers must agree with .pd-compare
+        in the stylesheet, the only other place the grid is described.
       */
       const COLUMNS = 2;
       const COL_GAP = 14;
@@ -4895,14 +4834,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     }
 
     /*
-      Rename the loaded preset. The name field is where the new one is typed, because that is the
-      field that already says what the preset is called; renaming is what turns a typed name into a
-      move rather than into a second copy under a new name.
-
-      The settings that pointed at the old name are moved with it. A preset can be the app's main
-      choice, the overlay's, or one of the per-source overrides, and a rename that left any of them
-      pointing at a name that no longer exists would silently put that notification back on the
-      default the next time it fired.
+      Rename the loaded preset, moving with it every setting that pointed at the old name (the app's
+      main choice, the overlay's, any per-source override). Left behind, a pointer to a name that no
+      longer exists would silently fall back to the default preset the next time it fired.
     */
     $('#btn-rename-preset').click(async function () {
       const from = String($('#pd-load').val() || '');
@@ -5063,10 +4997,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     /*
       Put a managed preset into the designer's controls. Returns 'editable', 'imported' or 'failed'.
-
-      Shared by the picker and by Import: selecting a preset in the picker fires this through the
-      change event, but an import selects the preset in code, where no event fires - so importing a
-      preset the designer can edit used to leave the controls showing the previous draft.
+      Shared by the picker and by Import, since a programmatic selection fires no change event, and
+      importing a preset used to leave the controls showing the previous draft without this call.
     */
     async function loadPresetIntoBuilder(name) {
       const opts = await ipcRenderer.invoke('read-custom-preset', name);
@@ -5290,13 +5222,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     });
 
     /*
-      What an imported SAN theme became, in the user's own words.
-
-      An import is never refused over a property AW Next cannot draw - SAN describes decorations,
-      logos, badges and screenshot variants that have no equivalent here - so the honest thing is to
-      convert what maps and say plainly what did not. The keys are printed as SAN spells them: they
-      are identifiers the user can find again in SAN's own customiser, and translating them would
-      make them unfindable.
+      What an imported SAN theme became. An import is never refused over a property AW Next cannot
+      draw, it converts what maps and says plainly what did not. Keys are printed as SAN spells them,
+      since they are identifiers the user can find again in SAN's own customiser.
     */
     function sanReportDetail(report) {
       if (!report) return '';

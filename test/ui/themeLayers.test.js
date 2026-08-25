@@ -82,7 +82,6 @@ test('custom themes sanitize colors, images and fit values', () => {
     blur: 8,
     blurImage: '',
   });
-  // Invalid colors fall back to the layer default.
   assert.equal(clean.text.color, themeLayers.BUILTIN_COLORS.default.text);
   assert.equal(clean.accent.color, 'rgb(10, 20, 30)');
   // Non-image layers never get image/fit keys.

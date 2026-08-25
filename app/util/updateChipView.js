@@ -1,17 +1,9 @@
 'use strict';
 
 /*
-  The DOM half of the title-bar update chip: which attributes and text the chip carries for one
-  updater state.
-
-  Split out of app.js so it can be driven in a real browser engine (see
-  test/browser/updateChip.browser.test.js). Everything the chip's appearance depends on is a CSS rule
-  keyed on `data-phase` / `data-cancellable`, and neither those rules nor the width of the progress
-  fill can be checked by reading source - the chip sits in a 30px bar next to the window controls,
-  where "it renders" and "it fits" are different questions.
-
-  Deliberately free of translation: the caller passes an already-resolved view, so every user-facing
-  string stays in app.js where the locale linter can see it.
+  Split out of app.js so it can be driven in a real browser engine (test/browser/updateChip.browser.test.js).
+  Deliberately free of translation: the caller passes an already-resolved view, so locale strings stay
+  in app.js where the linter can see them.
 */
 
 function clampPercent(value) {
@@ -20,10 +12,7 @@ function clampPercent(value) {
   return Math.max(0, Math.min(100, percent));
 }
 
-/*
-  Paint `chip` for `state` using `view` ({ icon, label, title }), or hide it when there is nothing to
-  say. Returns whether the chip is visible, so a caller can skip work that only matters when it is.
-*/
+// Returns whether the chip is visible, so callers can skip work that only matters then.
 function applyUpdateChip(chip, state, view, cancelLabel) {
   if (!chip) return false;
   if (!state || !view) {

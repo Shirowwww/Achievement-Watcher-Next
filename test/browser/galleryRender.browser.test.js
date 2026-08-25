@@ -1,15 +1,10 @@
 'use strict';
 
 /*
-  The two galleries drawn by a real browser (skipped with no Chromium browser present).
-
-  docs/assets/js/gallery.js serves both pages from one script, and everything that differs between
-  them - the listing it reads, the extension it offers, the strings it uses, the two extra facts a
-  theme card carries - is decided at runtime from `data-gallery-kind`. None of that is visible to a
-  test that only reads the source, which is why this one opens the pages instead.
-
-  The gallery server is deliberately made unreachable here: the committed listing beside each page
-  is the floor the site must never fall through, so it is the interesting path to exercise.
+  Runs gallery.js in a real browser (skipped with no Chromium present): the two pages share one
+  script, and what differs between them is decided at runtime from data-gallery-kind, which a
+  source-only test cannot see. The gallery server is deliberately blocked here, since the committed
+  listing beside each page is the floor the site must never fall below.
 */
 
 const assert = require('node:assert/strict');
@@ -62,7 +57,6 @@ test('both galleries paint their own listing, with the facts their kind carries'
     await closeBrowser(browser, userDataDir);
   });
 
-  // Presets: the plain card, and a download named after the package the app exports.
   {
     const { page, errors } = await openGallery(browser, `${server.url}/gallery/`);
     const cards = await page.evaluate(() => {
@@ -88,7 +82,6 @@ test('both galleries paint their own listing, with the facts their kind carries'
     await page.close();
   }
 
-  // Themes: the same code, the theme listing, and the two facts a screenshot cannot carry.
   {
     const { page, errors } = await openGallery(browser, `${server.url}/gallery/themes/`);
     const cards = await page.evaluate(() => {

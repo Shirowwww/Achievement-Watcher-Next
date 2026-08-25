@@ -17,14 +17,10 @@ const test = require('./notification-test.js');
 let WebSocket;
 
 /*
-  The loopback address, and not an omitted host.
-
-  `server.listen({ host: null })` is the same as omitting it: Node binds the unspecified address, so
-  the broadcast was reachable from the whole network with no authentication - while the Settings row
-  calls it "Websocket @localhost:8082" and the documentation promised the local machine. The feed
-  carries game and achievement names, and everything that consumes it (a stream overlay, a bot) runs
-  on this PC, so loopback is what was meant. A caller that genuinely wants to serve the network can
-  still pass an explicit host, and should pair it with `auth`.
+  Explicit loopback, not an omitted host: `host: null` binds the unspecified address, making the
+  broadcast reachable from the whole network with no authentication, though Settings promises
+  localhost. A caller that genuinely wants to serve the network can still pass an explicit host,
+  paired with `auth`.
 */
 const LOOPBACK = '127.0.0.1';
 
@@ -34,7 +30,7 @@ function resolveOptions(option = {}) {
     port: Number.isInteger(option.port) ? option.port : 8082,
     host: option.host || LOOPBACK,
     ipv6Only: option.ipv6Only || false,
-    timeout: Number.isInteger(option.timeout) ? option.timeout : 30000, //30sec
+    timeout: Number.isInteger(option.timeout) ? option.timeout : 30000,
     ssl: option.ssl || false,
     auth: option.auth || null, //username:password
   };
@@ -43,7 +39,7 @@ function resolveOptions(option = {}) {
 module.exports = (option = {}) => {
   const options = resolveOptions(option);
 
-  //Creating a http server by ourself so we can use basic auth http and https with websocket
+  // A custom http(s) server, so basic auth can wrap both the http/https layer and the websocket upgrade.
   let server;
   if (options.ssl) {
     server = https.createServer({
@@ -56,7 +52,7 @@ module.exports = (option = {}) => {
   server.listen({ port: options.port, host: options.host, ipv6Only: options.ipv6Only });
   test.prepare().catch((err) => debug.warn(`[Toast] background preparation failed: ${err && (err.message || err)}`));
 
-  WebSocket = new ws.Server({ noServer: true }); //WebSocket server detached from the http(s) server
+  WebSocket = new ws.Server({ noServer: true });
 
   debug.log(`Websocket listening on ${options.host}:${options.port}...`);
 
