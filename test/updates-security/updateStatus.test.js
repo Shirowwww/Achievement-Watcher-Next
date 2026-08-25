@@ -21,7 +21,6 @@ test('a fresh state says nothing is happening', () => {
   assert.equal(state.phase, 'idle');
   assert.equal(state.percent, -1);
   assert.equal(state.cancellable, false);
-  assert.equal(updateStatus.isBusy(state), false);
 });
 
 test('the happy path walks check to install', () => {
@@ -49,7 +48,6 @@ test('the happy path walks check to install', () => {
 
   state = updateStatus.reduce(state, { type: 'installing', version: '3.10.1' });
   assert.equal(state.phase, 'installing');
-  assert.equal(updateStatus.isBusy(state), true);
 });
 
 test('a download held back for a running game is its own phase, not silence', () => {
@@ -110,14 +108,6 @@ test('the broadcast throttle fires on whole percents and on every phase change',
   assert.equal(updateStatus.shouldPublish(a, b), false, 'sub-percent chunks must not wake the renderers');
   assert.equal(updateStatus.shouldPublish(a, c), true);
   assert.equal(updateStatus.shouldPublish(a, updateStatus.reduce(a, { type: 'downloaded' })), true);
-});
-
-test('the estimate is only offered when there is something to base it on', () => {
-  const downloading = run([{ type: 'download-started', version: '3.10.1' }]);
-  assert.equal(updateStatus.etaSeconds(downloading), -1, 'no rate yet');
-  const measured = updateStatus.reduce(downloading, { type: 'progress', percent: 50, bytesPerSecond: 100, transferred: 500, total: 1000 });
-  assert.equal(updateStatus.etaSeconds(measured), 5);
-  assert.equal(updateStatus.etaSeconds(updateStatus.initialState()), -1);
 });
 
 test('every phase the reducer can produce is one the UI knows about', () => {

@@ -215,7 +215,6 @@ test('the SAN import is a secondary action under the pair', async (t) => {
   });
   await tab.close();
 
-  if (process.env.AW_DEBUG_LAYOUT) console.log(JSON.stringify(weights, null, 1));
   const invisible = (color) => /rgba\(0, 0, 0, 0\)|^transparent$|\/ 0\)/.test(color);
 
   assert.ok(weights.san.top >= weights.imp.bottom, 'the SAN import must sit under the pair, not beside it');

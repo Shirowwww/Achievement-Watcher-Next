@@ -59,4 +59,4 @@ function applyUpdateChip(chip, state, view, cancelLabel) {
   return true;
 }
 
-module.exports = { applyUpdateChip, clampPercent };
+module.exports = { applyUpdateChip };

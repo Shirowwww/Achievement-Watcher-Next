@@ -109,18 +109,4 @@ function shouldPublish(previous, next) {
   return Math.round(previous.percent) !== Math.round(next.percent);
 }
 
-// Seconds left at the current rate, or -1 when there is nothing to base an estimate on.
-function etaSeconds(state) {
-  if (!state || state.phase !== 'downloading') return -1;
-  if (!(state.bytesPerSecond > 0) || !(state.total > 0)) return -1;
-  const remaining = state.total - state.transferred;
-  if (!(remaining > 0)) return 0;
-  return Math.round(remaining / state.bytesPerSecond);
-}
-
-// True while the app is busy enough that a second update action would collide with the first.
-function isBusy(state) {
-  return !!state && (state.phase === 'downloading' || state.phase === 'installing');
-}
-
-module.exports = { PHASES, etaSeconds, initialState, isBusy, reduce, shouldPublish };
+module.exports = { PHASES, initialState, reduce, shouldPublish };
