@@ -1,9 +1,6 @@
 'use strict';
 
-// installDlls() is the offline half of the GBE Fork installer (no network): it replaces the
-// emulator DLLs already present in a folder, keeps a one-time .bak of the originals, handles both
-// 32- and 64-bit, and seeds a fresh folder with writeIfMissing. ensureEmulatorDlls() is the network
-// half and isn't exercised here.
+// ensureEmulatorDlls(), the network half of the GBE Fork installer, isn't exercised here.
 
 const assert = require('assert');
 const fs = require('fs');
@@ -13,7 +10,6 @@ const gbe = require(path.join(__dirname, '..', '..', 'app', 'parser', 'gbeInstal
 
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gbe-install-'));
 try {
-  // Fake cached GBE build with distinct content per arch.
   const cacheTag = path.join(temp, 'cache', 'release-1.0');
   fs.mkdirSync(cacheTag, { recursive: true });
   fs.writeFileSync(path.join(cacheTag, 'steam_api64.dll'), 'GBE-x64');
@@ -32,7 +28,6 @@ try {
 
   const res = gbe.installDlls({ dllDirs: [dir64, dir32, dirBoth, dirEmpty], dlls, writeIfMissing: 'x64' });
 
-  // Existing DLLs replaced by the matching arch, originals preserved as .bak.
   assert.strictEqual(fs.readFileSync(path.join(dir64, 'steam_api64.dll'), 'utf8'), 'GBE-x64');
   assert.strictEqual(fs.readFileSync(path.join(dir64, 'steam_api64.dll.bak'), 'utf8'), 'orig-x64');
   assert.strictEqual(fs.readFileSync(path.join(dir32, 'steam_api.dll'), 'utf8'), 'GBE-x86');
@@ -40,7 +35,6 @@ try {
   assert.strictEqual(fs.readFileSync(path.join(dirBoth, 'steam_api64.dll'), 'utf8'), 'GBE-x64');
   assert.strictEqual(fs.readFileSync(path.join(dirBoth, 'steam_api.dll'), 'utf8'), 'GBE-x86');
 
-  // An empty folder is seeded with the writeIfMissing arch only (no spurious .bak).
   assert.strictEqual(fs.readFileSync(path.join(dirEmpty, 'steam_api64.dll'), 'utf8'), 'GBE-x64');
   assert.ok(!fs.existsSync(path.join(dirEmpty, 'steam_api.dll')), 'writeIfMissing should write one arch only');
   assert.ok(!fs.existsSync(path.join(dirEmpty, 'steam_api64.dll.bak')), 'a fresh write needs no backup');
@@ -48,7 +42,6 @@ try {
   assert.strictEqual(res.installed, 5, 'should install x64+x86 in dirBoth and one each elsewhere');
   assert.strictEqual(res.backedUp, 4, 'should back up the 4 pre-existing DLLs');
 
-  // Idempotent: a second pass overwrites the DLL again but never clobbers the original .bak.
   gbe.installDlls({ dllDirs: [dir64], dlls, writeIfMissing: 'x64' });
   assert.strictEqual(fs.readFileSync(path.join(dir64, 'steam_api64.dll.bak'), 'utf8'), 'orig-x64', '.bak must keep the genuine original');
 
@@ -80,4 +73,19 @@ try {
   console.log('PASS: GBE installer replaces both arches, preserves one-time .bak, and seeds missing exe arch');
 } finally {
   fs.rmSync(temp, { recursive: true, force: true });
+}
+
+/*
+  Steam emulators are flagged by most antivirus engines, so the package can be quarantined between
+  being written to disk and being read back. node-7z reports the archive path as its error message
+  and keeps 7za's own words in stderr, so what reached the user was a temp path and nothing else.
+*/
+{
+  const source = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'gbeInstaller.js'), 'utf8');
+  assert.ok(/GBE_DOWNLOAD_BLOCKED/.test(source), 'the cause needs a code callers can branch on');
+  assert.ok(/err && err\.stderr/.test(source), "7za's own words are the only place the cause appears");
+  assert.ok(/quarantined by security software/.test(source), 'and the message has to say it in words');
+  // The generic path must still surface untouched: not every extraction failure is an antivirus.
+  assert.ok(/reject\(err\);/.test(source), 'any other failure is reported as itself');
+  console.log('PASS: a package the antivirus quarantined says so, instead of naming a temp file');
 }

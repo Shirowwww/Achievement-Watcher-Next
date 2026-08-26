@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "Steam 尚未发布图标",
     "gh-value-issues": "{count} 项需要检查",
     "gh-value-watching": "正在监视 {binary}",
+    "gh-value-served-by": "由 {emulator} 接管",
     "gh-action-choose-exe": "定位游戏",
     "gh-action-open-folder": "打开游戏文件夹",
     "gh-action-repair-data": "重写成就数据",

@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "ikon belum diterbitkan oleh Steam",
     "gh-value-issues": "{count} hal perlu ditinjau",
     "gh-value-watching": "memantau {binary}",
+    "gh-value-served-by": "ditangani oleh {emulator}",
     "gh-action-choose-exe": "Temukan game ini",
     "gh-action-open-folder": "Buka folder game",
     "gh-action-repair-data": "Tulis ulang data pencapaian",

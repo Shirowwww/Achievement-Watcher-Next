@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "ícones ainda não publicados pela Steam",
     "gh-value-issues": "{count} ponto(s) a rever",
     "gh-value-watching": "a monitorizar {binary}",
+    "gh-value-served-by": "gerido por {emulator}",
     "gh-action-choose-exe": "Localizar o jogo",
     "gh-action-open-folder": "Abrir a pasta do jogo",
     "gh-action-repair-data": "Reescrever os dados de proezas",

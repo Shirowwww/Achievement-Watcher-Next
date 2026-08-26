@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "Steam이 아직 아이콘을 공개하지 않음",
     "gh-value-issues": "확인할 항목 {count}개",
     "gh-value-watching": "{binary} 감시 중",
+    "gh-value-served-by": "{emulator}이(가) 처리",
     "gh-action-choose-exe": "게임 위치 찾기",
     "gh-action-open-folder": "게임 폴더 열기",
     "gh-action-repair-data": "도전 과제 데이터 다시 기록",

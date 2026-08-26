@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "піктограми ще не опубліковані у Steam",
     "gh-value-issues": "пунктів для перевірки: {count}",
     "gh-value-watching": "відстежує {binary}",
+    "gh-value-served-by": "обслуговується {emulator}",
     "gh-action-choose-exe": "Вказати гру",
     "gh-action-open-folder": "Відкрити теку гри",
     "gh-action-repair-data": "Перезаписати дані досягнень",

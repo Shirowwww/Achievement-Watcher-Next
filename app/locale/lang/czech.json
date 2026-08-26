@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "ikony zatím nezveřejněné na Steamu",
     "gh-value-issues": "{count} bod(ů) ke kontrole",
     "gh-value-watching": "sleduje {binary}",
+    "gh-value-served-by": "obsluhuje {emulator}",
     "gh-action-choose-exe": "Najít hru",
     "gh-action-open-folder": "Otevřít složku hry",
     "gh-action-repair-data": "Přepsat data úspěchů",

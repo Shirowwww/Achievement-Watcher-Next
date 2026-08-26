@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "アイコンは Steam でまだ公開されていません",
     "gh-value-issues": "確認すべき点 {count} 件",
     "gh-value-watching": "{binary} を監視中",
+    "gh-value-served-by": "{emulator} が処理",
     "gh-action-choose-exe": "ゲームの場所を指定",
     "gh-action-open-folder": "ゲームフォルダーを開く",
     "gh-action-repair-data": "実績データを書き直す",

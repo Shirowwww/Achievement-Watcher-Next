@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "Steam chưa đăng biểu tượng",
     "gh-value-issues": "{count} điểm cần xem lại",
     "gh-value-watching": "đang theo dõi {binary}",
+    "gh-value-served-by": "do {emulator} đảm nhiệm",
     "gh-action-choose-exe": "Tìm vị trí trò chơi",
     "gh-action-open-folder": "Mở thư mục trò chơi",
     "gh-action-repair-data": "Ghi lại dữ liệu thành tựu",

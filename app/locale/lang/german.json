@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "Symbole von Steam noch nicht veröffentlicht",
     "gh-value-issues": "{count} Punkt(e) zu prüfen",
     "gh-value-watching": "überwacht {binary}",
+    "gh-value-served-by": "wird von {emulator} bedient",
     "gh-action-choose-exe": "Spiel suchen",
     "gh-action-open-folder": "Spielordner öffnen",
     "gh-action-repair-data": "Erfolgsdaten neu schreiben",

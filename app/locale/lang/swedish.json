@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "ikonerna är inte publicerade av Steam än",
     "gh-value-issues": "{count} punkter att gå igenom",
     "gh-value-watching": "bevakar {binary}",
+    "gh-value-served-by": "hanteras av {emulator}",
     "gh-action-choose-exe": "Hitta spelet",
     "gh-action-open-folder": "Öppna spelmappen",
     "gh-action-repair-data": "Skriv om prestationsdatan",

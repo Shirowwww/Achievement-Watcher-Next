@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "Steam 尚未公開圖示",
     "gh-value-issues": "有 {count} 個項目需要檢查",
     "gh-value-watching": "監看中 {binary}",
+    "gh-value-served-by": "由 {emulator} 接管",
     "gh-action-choose-exe": "指出遊戲的位置",
     "gh-action-open-folder": "開啟遊戲資料夾",
     "gh-action-repair-data": "重寫成就資料",

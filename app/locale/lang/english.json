@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "icons not published by Steam yet",
     "gh-value-issues": "{count} point(s) to review",
     "gh-value-watching": "watching {binary}",
+    "gh-value-served-by": "served by {emulator}",
     "gh-action-choose-exe": "Locate the game",
     "gh-action-open-folder": "Open the game folder",
     "gh-action-repair-data": "Rewrite the achievement data",

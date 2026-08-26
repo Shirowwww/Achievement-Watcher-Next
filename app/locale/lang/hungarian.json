@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "a Steam még nem tette közzé az ikonokat",
     "gh-value-issues": "{count} ellenőrzendő pont",
     "gh-value-watching": "{binary} figyelése",
+    "gh-value-served-by": "kezeli: {emulator}",
     "gh-action-choose-exe": "Játék megkeresése",
     "gh-action-open-folder": "Játékmappa megnyitása",
     "gh-action-repair-data": "Teljesítményadatok újraírása",

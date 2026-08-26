@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "ikony zatiaľ nezverejnené na Steame",
     "gh-value-issues": "{count} bod(ov) na kontrolu",
     "gh-value-watching": "sleduje {binary}",
+    "gh-value-served-by": "obsluhuje {emulator}",
     "gh-action-choose-exe": "Nájsť hru",
     "gh-action-open-folder": "Otvoriť priečinok hry",
     "gh-action-repair-data": "Prepísať dáta úspechov",

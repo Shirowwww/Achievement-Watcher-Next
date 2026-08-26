@@ -137,7 +137,14 @@ function findByBasename(extractDir, basename, preferDir) {
 // Download the latest release .7z and extract both arch DLLs into cacheDir/<tag>/. Returns the same
 // shape as cachedDlls(). Throws only on a genuine failure with no cached fallback available.
 async function downloadAndCache(cacheDir, tag, assetUrl, log) {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gbe-'));
+  /*
+    Downloaded INSIDE the cache folder, not into a random temp directory. A Steam emulator is flagged
+    by most antivirus engines, so the one thing that makes the failure fixable is being able to name
+    a single folder the user can allow - and it has to be the same folder the DLLs then live in, or
+    an exclusion would cover the download and not what it produced.
+  */
+  fs.mkdirSync(cacheDir, { recursive: true });
+  const tmpDir = fs.mkdtempSync(path.join(cacheDir, '.download-'));
   try {
     const dl = await request.download(assetUrl, tmpDir);
     if (!dl || !dl.path) throw new Error('download produced no file');
@@ -149,7 +156,26 @@ async function downloadAndCache(cacheDir, tag, assetUrl, log) {
     await new Promise((resolve, reject) => {
       const stream = Seven.extractFull(dl.path, extractDir, { $bin: sevenBin });
       stream.on('end', resolve);
-      stream.on('error', reject);
+      /*
+        node-7z reports the archive path as the error message and keeps 7za's own words in stderr,
+        which is where the actual cause lives. The cause worth naming is the common one: a Steam
+        emulator is flagged by most antivirus engines, so the download is quarantined between being
+        written and being read, and the user sees a temp path with no explanation.
+      */
+      stream.on('error', (err) => {
+        const stderr = String((err && err.stderr) || '');
+        if (/virus|malware|potentially unwanted|indésirable|unerwünschte|Operation did not complete/i.test(stderr)) {
+          const blocked = new Error(
+            'the emulator package was quarantined by security software before it could be read. ' +
+              'Steam emulators are flagged by most antivirus engines; allow this download, or install the DLLs by hand.'
+          );
+          blocked.code = 'GBE_DOWNLOAD_BLOCKED';
+          blocked.stderr = stderr;
+          blocked.folder = cacheDir;
+          return reject(blocked);
+        }
+        reject(err);
+      });
     });
 
     const destDir = path.join(cacheDir, tag);
@@ -340,10 +366,8 @@ async function ensureEmulatorDlls({ cacheDir, force = false, log = noopLog } = {
   const fresh = Date.now() - lastCheck < RECHECK_TTL_MS;
   const cached = cachedDlls(cacheDir, cachedTag);
 
-  // Reuse the cached build without touching the network when it's recent enough.
   if (cached && cached.interfaces && fresh && !force) return cached;
 
-  // Otherwise ask GitHub for the latest tag; fall back to whatever is cached on any failure.
   let release;
   try {
     release = await request.getJson(RELEASE_API, { headers: { 'User-Agent': USER_AGENT }, timeout: 30000 });

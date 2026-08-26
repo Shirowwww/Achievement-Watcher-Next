@@ -47,6 +47,11 @@ renamed in 3.9.0 and the history is kept under one file.
   and names the numbers in the second case. The two loader generations word that line differently,
   and both are now read. A log whose unlock lines were cut off still gives the verdict, because a
   game that asked while the save records nothing asked for a key the schema does not carry.
+- **A game already served by another emulator is no longer offered a Uplay repair either.** A Ubisoft
+  game sold on Steam ships both layers, so a Uplay loader lying in the folder does not mean the Uplay
+  layer is what serves its achievements. Where a crack loader is already doing that, the Uplay setup
+  is not broken, it is unused, and Game health said "achievement list missing" and offered to install
+  a loader over a game that already worked. It now says which emulator is serving the game instead.
 - **A game already served by another emulator is left completely alone.** AW Next declines to replace
   ALI213, OnlineFix, TENOKE, SmartSteamEmu and the rest, but still wrote Goldberg settings beside
   them, and the empty achievement list among those files then read as a fault against the game (seen
@@ -108,6 +113,16 @@ renamed in 3.9.0 and the history is kept under one file.
   list also survived rule changes, so a shipped fix did nothing for an already scanned folder, and a
   leftover entry for an unnamed folder could keep the executable away from the game that was
   identified.
+- **A game sitting directly in a library folder is no longer anchored on that folder.** When the only
+  thing identifying it was an emulator config beside its steam_api dll, AW Next walked up one level
+  looking for the real game root, and the check for "does this look like a game folder" searches
+  below the folder it is given: asked about the library, it answered with the first other game's
+  executable. The game was then pinned to the whole library, and every folder-based repair aimed at
+  whichever game came first in it, offering to rewrite a different game's files. Seen on ZOMBI.
+  The same question was what the walk up from an engine folder rested on, so a game whose emulator
+  sits in Binaries/Win64 while another architecture next door ships the executable was anchored on
+  the engine folder rather than on itself. Both now climb by folder name instead, and Unity's
+  "<Game>_Data" counts as engine internals like the rest.
 - **A game identified only by its emulator's own config no longer appears twice.** A folder is skipped
   as unidentified when something in it names a Steam ID, and taking back the settings folder above
   removed that marker. The crack loader's own config states the ID it stands in for, which identifies

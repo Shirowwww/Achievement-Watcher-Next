@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "Steam ei ole vielä julkaissut kuvakkeita",
     "gh-value-issues": "{count} tarkistettavaa kohtaa",
     "gh-value-watching": "seurataan: {binary}",
+    "gh-value-served-by": "hoitaa {emulator}",
     "gh-action-choose-exe": "Paikanna peli",
     "gh-action-open-folder": "Avaa pelikansio",
     "gh-action-repair-data": "Kirjoita saavutustiedot uudelleen",

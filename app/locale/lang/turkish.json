@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "simgeler Steam'de henüz yayınlanmadı",
     "gh-value-issues": "gözden geçirilecek {count} nokta",
     "gh-value-watching": "{binary} izleniyor",
+    "gh-value-served-by": "{emulator} tarafından sağlanıyor",
     "gh-action-choose-exe": "Oyunu bul",
     "gh-action-open-folder": "Oyun klasörünü aç",
     "gh-action-repair-data": "Başarım verilerini yeniden yaz",

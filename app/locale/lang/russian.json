@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "значки ещё не опубликованы в Steam",
     "gh-value-issues": "пунктов на проверку: {count}",
     "gh-value-watching": "отслеживает {binary}",
+    "gh-value-served-by": "обслуживается {emulator}",
     "gh-action-choose-exe": "Указать игру",
     "gh-action-open-folder": "Открыть папку игры",
     "gh-action-repair-data": "Перезаписать данные достижений",

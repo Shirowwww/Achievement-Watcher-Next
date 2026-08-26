@@ -7008,6 +7008,9 @@ async function collectGameHealthSignals(appid) {
     saveSources,
     goldberg: goldbergReport,
     uplay: uplayReport,
+    // Which crack loader is already serving this game, if any: it decides whether a Uplay setup in
+    // the same folder is broken or simply unused.
+    crackLoader: foreignLoader ? { name: foreignLoader.name } : null,
     // Console emulators (RPCS3/ShadPS4/Xenia) and the official platform libraries are followed by
     // their own watchers, not by the process monitor, so a missing gameIndex entry means nothing
     // for them and must not be reported as a fault.
@@ -7133,6 +7136,7 @@ function gameHealthSimpleCheckValue(entry) {
         : t('gh-simple-data-partial', 'Achievement data is incomplete', 'Données de succès incomplètes');
     case 'emulator':
     case 'uplay':
+      if (p.servedBy) return t('gh-simple-emulator-ok', 'Achievement support is set up', 'Prise en charge des succès configurée');
       if (ok) return t('gh-simple-emulator-ok', 'Achievement support is set up', 'Prise en charge des succès configurée');
       return entry.level === gameHealth.LEVEL.FAIL
         ? t('gh-simple-emulator-missing', 'Achievement support is missing', 'Prise en charge des succès absente')
@@ -7260,6 +7264,9 @@ function gameHealthCheckValue(entry, simple) {
       if (p.topics && p.topics.length) return p.topics.map(gameHealthIssueTopicLabel).join(' · ');
       return gameHealthEmulatorLabel(p.emulator);
     case 'uplay': {
+      if (p.servedBy) {
+        return t('gh-value-served-by', 'served by {emulator}', 'pris en charge par {emulator}', { emulator: p.servedBy });
+      }
       const mapping = p.steamAppid
         ? t('diagnosis-steam-appid', 'Steam AppID: {appid} ({name})', 'Steam AppID : {appid} ({name})', {
             appid: p.steamAppid,

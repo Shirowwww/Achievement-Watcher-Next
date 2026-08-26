@@ -1221,17 +1221,32 @@ function findCompatibleGames(roots, { maxDepth = 5, onSkip = null } = {}) {
     return candidates[0];
   };
 
+  const NESTED_ENGINE_DIR = /^(x86|x64|x86_64|win32|win64|binaries|bin|plugins)$/i;
+  // Unity's "<Game>_Data" and friends are engine internals too, and exeDetect already knows them by
+  // name. A walk that stopped there anchored a repack on its data folder instead of on the game.
+  const isEngineInternals = (dir) => {
+    const name = path.basename(dir);
+    return NESTED_ENGINE_DIR.test(name) || exeDetect.ENGINE_DATA_DIRS.test(name);
+  };
+
+  /*
+    Walk up from an engine subfolder (Binaries/Win64, x64, plugins) to the folder the game itself
+    lives in, by climbing while the folder is engine internals and stopping at the first one that is
+    not.
+
+    It used to ask exeDetect.detect() whether each ancestor "looks like a game folder", which cannot
+    answer that question: it searches BELOW the folder it is given, so the exe under Win64 makes
+    Binaries look like a game folder and the walk stopped one level short. Worse, a game sitting
+    directly in a library root made the LIBRARY look like a game folder, because the answer was a
+    sibling game's executable, and the game was then anchored on the whole library.
+  */
   const parentGameRootFor = (markerDir) => {
     let current = markerDir;
     for (let i = 0; i < 3; i++) {
       const parent = path.dirname(current);
       if (!parent || parent === current) break;
-      try {
-        if (exeDetect.detect(parent, path.basename(parent), {})) return parent;
-      } catch {
-        /* keep walking */
-      }
       current = parent;
+      if (!isEngineInternals(current)) return current;
     }
     return markerDir;
   };
@@ -1271,8 +1286,7 @@ function findCompatibleGames(roots, { maxDepth = 5, onSkip = null } = {}) {
   // Anchor gameDir on identity files (steam_settings / steam_appid.txt), not the dll: the dll often
   // lives in a nested engine folder and would mis-anchor the root. Nested markers are walked up only
   // when the marker folder looks like engine internals AND has no plausible exe of its own.
-  const NESTED_ENGINE_DIR = /^(x86|x64|x86_64|win32|win64|binaries|bin|plugins)$/i;
-  const anchorDir = (dir) => (NESTED_ENGINE_DIR.test(path.basename(dir)) && !exeDetect.shallowGameExe(dir) ? parentGameRootFor(dir) : dir);
+  const anchorDir = (dir) => (isEngineInternals(dir) && !exeDetect.shallowGameExe(dir) ? parentGameRootFor(dir) : dir);
   const gameRootMarker = (dir, entries) => {
     for (const e of entries) {
       if (e.isFile() && e.name.toLowerCase() === 'steam_appid.txt') return { gameDir: anchorDir(dir), appidFile: path.join(dir, e.name) };
@@ -1283,7 +1297,12 @@ function findCompatibleGames(roots, { maxDepth = 5, onSkip = null } = {}) {
     if (hasSteamApi && appidConfig) {
       const appidFile = path.join(dir, appidConfig.name);
       const appid = parseAppidFromConfig(appidFile);
-      if (appid) return { gameDir: parentGameRootFor(dir), appid, appidFile };
+      // anchorDir, not parentGameRootFor: this walks up unconditionally, and exeDetect.detect()
+      // searches below the folder it is given, so the parent of a game that sits directly in a
+      // library root answers with a SIBLING game's executable and passes for a game folder. The
+      // game was then anchored on the library root and every folder-based repair below aimed at
+      // whichever game came first in it. Walk up only from what looks like engine internals.
+      if (appid) return { gameDir: anchorDir(dir), appid, appidFile };
     }
     if (exeDetect.shallowGameExe(dir)) {
       const nestedAppid = findNestedAppid(dir, path.basename(dir));

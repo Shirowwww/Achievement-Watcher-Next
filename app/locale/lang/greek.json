@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "τα εικονίδια δεν έχουν δημοσιευτεί ακόμη από το Steam",
     "gh-value-issues": "{count} σημεία προς έλεγχο",
     "gh-value-watching": "παρακολούθηση του {binary}",
+    "gh-value-served-by": "εξυπηρετείται από {emulator}",
     "gh-action-choose-exe": "Εντοπίστε το παιχνίδι",
     "gh-action-open-folder": "Άνοιγμα του φακέλου του παιχνιδιού",
     "gh-action-repair-data": "Νέα εγγραφή των δεδομένων επιτευγμάτων",

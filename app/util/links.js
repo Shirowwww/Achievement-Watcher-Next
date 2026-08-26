@@ -80,10 +80,14 @@ const links = {
   faq: docs('faq'),
   presetGalleryGuide: docs('communityGalleries'),
 
-  // The projects AW Next descends from, shown in the About and Advanced panels.
+  // Other people's projects. Everything else here belongs to this one.
   upstream: {
+    // The projects AW Next descends from, shown in the About and Advanced panels.
     fork: 'https://github.com/darktakayanagi/Achievement-Watcher',
     original: 'https://github.com/xan105/Achievement-Watcher',
+    // The emulator AW Next downloads and installs. Shown when an antivirus blocks its package, so
+    // somebody can see for themselves where the file comes from before allowing it.
+    gseFork: 'https://github.com/Detanup01/gbe_fork',
   },
 };
 

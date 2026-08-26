@@ -47,10 +47,28 @@ ipcMain.handle('startup:set-start-with-windows', async (_event, enabled) => {
   return setStartWithWindows(enabled === true);
 });
 
-// RAR extraction for the CrakFiles community-fix apply. node-unrar-js is WASM+Embind and uses
-// `new Function`, which the renderer's strict CSP forbids - so the renderer delegates the extraction to
-// here (main process, no CSP). Writes the archive's contents into destDir; the renderer then installs
-// them into the game folder. Returns { ok } or { error } (never throws across the IPC boundary).
+// Adding the exclusion needs administrator rights; Windows shows its own prompt, and declining it
+// is reported as an answer, not an error.
+const defender = require(path.join(__dirname, '../util/defender.js'));
+
+ipcMain.handle('defender:is-active', async () => {
+  try {
+    return await defender.isActive();
+  } catch {
+    return false;
+  }
+});
+
+ipcMain.handle('defender:add-exclusion', async (_event, folder) => {
+  try {
+    return await defender.addExclusion(folder);
+  } catch (err) {
+    return { ok: false, reason: 'failed', error: err && err.message ? err.message : String(err) };
+  }
+});
+
+// node-unrar-js is WASM+Embind and uses `new Function`, which the renderer's strict CSP forbids,
+// so extraction happens here in the main process instead.
 const crackFixJS = require(path.join(__dirname, '../parser/crackFix.js'));
 ipcMain.handle('crackfix-extract-rar', async (_event, { archivePath, destDir } = {}) => {
   try {
@@ -61,7 +79,7 @@ ipcMain.handle('crackfix-extract-rar', async (_event, { archivePath, destDir } =
   }
 });
 
-// Same CSP problem, same fix, for the Steam API Check Bypass proxy DLLs (also shipped in a RAR5).
+// Same CSP problem, same fix, for the Steam API Check Bypass proxy DLLs.
 const apiCheckBypassJS = require(path.join(__dirname, '../parser/apiCheckBypass.js'));
 ipcMain.handle('apicheckbypass-extract-rar', async (_event, { rarPath, destDir } = {}) => {
   try {
@@ -72,7 +90,6 @@ ipcMain.handle('apicheckbypass-extract-rar', async (_event, { rarPath, destDir }
   }
 });
 
-// Handler for renderer process
 ipcMain.handle('get-app-name', () => {
   return app.getName();
 });
@@ -124,11 +141,11 @@ async function doCloseNotificationWindow(win) {
 ipcMain.on('close-notification-window', async (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   if (!win || win.isDestroyed()) return;
-  // Custom-duration freeze-hold (set in createNotificationWindow): if the preset asks to close while the
-  // notification is still in its hold window, defer the close so it stays on screen for the chosen time.
+  // win.awFrozenUntil is set in createNotificationWindow: if a preset's hold window hasn't elapsed
+  // yet, defer the close instead of cutting the notification short.
   const remaining = (win.awFrozenUntil || 0) - Date.now();
   if (remaining > 0) {
-    win.awFrozenUntil = 0; // defer only once
+    win.awFrozenUntil = 0;
     setTimeout(() => doCloseNotificationWindow(win), remaining);
     return;
   }
@@ -165,8 +182,6 @@ module.exports.window = () => {
     const win = BrowserWindow.fromWebContents(event.sender);
     return win.isFrameless;
   });
-
-  //Sync
 
   ipcMain.on('win-isDev', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);

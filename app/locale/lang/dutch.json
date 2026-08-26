@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "pictogrammen nog niet door Steam gepubliceerd",
     "gh-value-issues": "{count} punt(en) om na te kijken",
     "gh-value-watching": "{binary} wordt bewaakt",
+    "gh-value-served-by": "verzorgd door {emulator}",
     "gh-action-choose-exe": "De game opzoeken",
     "gh-action-open-folder": "De gamemap openen",
     "gh-action-repair-data": "De prestatiegegevens opnieuw schrijven",

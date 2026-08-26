@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "Steam ยังไม่ได้เผยแพร่ไอคอน",
     "gh-value-issues": "มี {count} จุดที่ต้องตรวจสอบ",
     "gh-value-watching": "กำลังเฝ้าดู {binary}",
+    "gh-value-served-by": "จัดการโดย {emulator}",
     "gh-action-choose-exe": "ระบุตำแหน่งเกม",
     "gh-action-open-folder": "เปิดโฟลเดอร์เกม",
     "gh-action-repair-data": "เขียนข้อมูลความสำเร็จใหม่",

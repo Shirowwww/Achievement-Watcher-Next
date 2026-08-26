@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "icone non ancora pubblicate da Steam",
     "gh-value-issues": "{count} punto/i da rivedere",
     "gh-value-watching": "monitora {binary}",
+    "gh-value-served-by": "gestito da {emulator}",
     "gh-action-choose-exe": "Individua il gioco",
     "gh-action-open-folder": "Apri la cartella del gioco",
     "gh-action-repair-data": "Riscrivi i dati degli obiettivi",

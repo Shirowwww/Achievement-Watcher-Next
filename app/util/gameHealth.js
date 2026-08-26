@@ -273,6 +273,19 @@ function emulatorCheck(signals) {
 function uplayCheck(signals) {
   const uplay = signals.uplay;
   if (!uplay) return null;
+  /*
+    A Ubisoft game sold on Steam ships both layers, so a Uplay loader in the folder does not mean the
+    Uplay layer is the one serving its achievements. When a crack loader (ALI213, OnlineFix, TENOKE,
+    SmartSteamEmu, ...) is already doing that, the Uplay setup is not broken, it is unused: reporting
+    it as an error sent the user after a repair that would replace a working setup with another one.
+
+    Seen on ZOMBI, served by ALI213, whose leftover R1 loader is too old to redirect anything and
+    said so in the same report that offered to install it.
+  */
+  const servedBy = signals.crackLoader && signals.crackLoader.name;
+  if (servedBy) {
+    return check('uplay', LEVEL.INFO, { params: { servedBy, ...(uplay.mapping ? { steamAppid: String(uplay.mapping.steam_appid || ''), steamName: String(uplay.mapping.steam_name || '') } : {}) } });
+  }
   const mappingParams = uplay.mapping
     ? {
         steamAppid: String(uplay.mapping.steam_appid || ''),

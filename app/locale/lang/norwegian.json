@@ -1767,6 +1767,7 @@
     "gh-value-icons-unavailable": "ikonene er ennå ikke publisert av Steam",
     "gh-value-issues": "{count} punkt(er) å se på",
     "gh-value-watching": "følger med på {binary}",
+    "gh-value-served-by": "håndteres av {emulator}",
     "gh-action-choose-exe": "Finn spillet",
     "gh-action-open-folder": "Åpne spillmappen",
     "gh-action-repair-data": "Skriv prestasjonsdataene på nytt",
