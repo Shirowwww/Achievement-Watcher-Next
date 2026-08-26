@@ -12,11 +12,11 @@ const path = require('path');
 
 let debug = { log() {}, warn() {}, error() {} };
 
-module.exports.initDebug = ({ isDev, userDataPath }) => {
-  debug = new (require('../util/logger'))({
-    console: isDev || false,
-    file: path.join(userDataPath, 'logs/parser.log'),
-  });
+// Logger handed in, not required here: the Watchdog loads this file from outside the asar
+// (watchdog/util/sharedAppModule.js), where a relative require can't reach into it, so a shared
+// module carries no siblings (enforced by test/core/sharedAppModules.test.js). No logger means silent.
+module.exports.initDebug = ({ logger }) => {
+  if (logger) debug = logger;
 };
 
 const MAGIC_V27 = 0x07564427;
@@ -166,6 +166,13 @@ function load(steamPath) {
     return cache.byAppid;
   }
 }
+
+// Drop the parsed catalogue: the app keeps it for a whole scan where every game consults it (the
+// 7 MB pays for itself), but the Watchdog is a resident daemon asking about one appid at a time, so
+// it hands the memory straight back instead of holding it all session.
+module.exports.releaseCache = () => {
+  cache = {};
+};
 
 module.exports.load = load;
 module.exports.parseAppInfo = parseAppInfo;

@@ -13,6 +13,7 @@ const { buildBinaryIndex, buildSeededSessions, getBinaryMatches, snapshotActiveG
 const { createPollingProcessMonitor } = require('./pollingProcessMonitor.js');
 const { userDataDir } = require('../util/userData.js');
 const watchdogSettings = require('../settings.js');
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 
 const debug = new (require('../util/logger'))({
   console: true,
@@ -126,9 +127,61 @@ function getIgnoredAppids() {
   return ignored;
 }
 
+// Steam sells apps/tools beside games (DSX, Lossless Scaling, Wallpaper Engine, SteamVR); running one
+// reads as a game starting and inflates playtime. appcache/appinfo.vdf's common.type is Steam's own
+// local, offline verdict, so only a definite 'application'/'tool' excludes - an unknown appid
+// (cracked, non-Steam, newer than the cache) must stay trackable, hence isLibraryGame returning null,
+// never false, there. Catalogue released right after each answer; the parsed records cost ~7 MB idle.
+const steamCatalogue = { path: '', resolved: false };
+const nonGameVerdicts = new Map();
+
+async function resolveSteamCataloguePath() {
+  if (steamCatalogue.resolved) return steamCatalogue.path;
+  steamCatalogue.resolved = true;
+  try {
+    const regedit = await import('regodit');
+    // Same two hives, in the same order, as app/parser/steam.js getSteamPath(): some emulators
+    // rewrite the HKCU value to the game's own folder, and the WOW6432Node install path is the
+    // fallback the Steam client repairs on startup.
+    for (const [root, key, name] of [
+      ['HKCU', 'Software/Valve/Steam', 'SteamPath'],
+      ['HKLM', 'Software/WOW6432Node/Valve/Steam', 'InstallPath'],
+    ]) {
+      const value = String(regedit.regQueryStringValue(root, key, name) || '').trim();
+      if (value && fs.existsSync(path.join(value, 'appcache', 'appinfo.vdf'))) {
+        steamCatalogue.path = value;
+        break;
+      }
+    }
+    debug.log(steamCatalogue.path ? `[Playtime] Steam catalogue at "${steamCatalogue.path}"` : '[Playtime] no local Steam catalogue - type filtering is off');
+  } catch (err) {
+    debug.warn(`[Playtime] could not locate the Steam catalogue: ${err.message || err}`);
+  }
+  return steamCatalogue.path;
+}
+
+function isNonGameSteamApp(appid) {
+  const key = normalizeAppid(appid);
+  if (!key || !steamCatalogue.path) return false;
+  if (nonGameVerdicts.has(key)) return nonGameVerdicts.get(key);
+  let verdict = false;
+  try {
+    const appInfo = require(sharedAppModulePath('parser/steamAppInfo.js'));
+    // Only a definite "not a game" excludes; null means the catalogue has no record of it.
+    verdict = appInfo.isLibraryGame(steamCatalogue.path, key) === false;
+    appInfo.releaseCache();
+    if (verdict) debug.log(`[Playtime] ${key} is a Steam application/tool, not a game - not tracked`);
+  } catch (err) {
+    debug.warn(`[Playtime] Steam type lookup failed for ${key}: ${err.message || err}`);
+  }
+  nonGameVerdicts.set(key, verdict);
+  return verdict;
+}
+
 function isIgnoredAppid(appid) {
   const key = normalizeAppid(appid);
-  return key !== '' && getIgnoredAppids().has(key);
+  if (key === '') return false;
+  return getIgnoredAppids().has(key) || isNonGameSteamApp(key);
 }
 
 // Official Steam-library records are controlled by achievement_source.legitSteam. The renderer
@@ -175,6 +228,8 @@ function shouldMuteProcessPath(filepath, dirs, indexedMatches) {
 
 async function init() {
   const emitter = new EventEmitter();
+  // Resolved once, before the first process event, so the synchronous filter above has an answer.
+  await resolveSteamCataloguePath();
 
   let nowPlaying = [];
   // Expose startup sessions without replaying launch notifications.
@@ -429,4 +484,8 @@ module.exports = {
   getTrackableGameMatches,
   isOfficialSteamLibraryGame,
   filterGamesByAchievementSources,
+  // Exported for the test suite: the Steam type filter is invisible when it works, so it needs to be
+  // exercised directly against the real local catalogue rather than inferred from a quiet log.
+  resolveSteamCataloguePath,
+  isNonGameSteamApp,
 };

@@ -56,6 +56,10 @@ to the first frame. What the scan itself may spend is bounded by three rules:
   executable candidates of a game folder, keyed by that folder's own timestamps and stored under
   `cache/discovery/`. Install trees are far larger than anything else a scan reads, and the answer only
   changes when the game does.
+- **Do not scan at all while a game is running.** The background pass loads the achievement engine
+  into the tray process and walks the library, which is worth nothing to a user who is playing: it
+  holds until the game exits and then runs, rather than waiting out the rest of its own cadence. A
+  ceiling on held passes keeps a background process mistaken for a game from suspending it silently.
 - **Prove the disk is unchanged before walking it again.** The background new-install poll compares
   the timestamps of the folders the last discovery read (`app/util/dirFingerprint.js`) and skips the pass
   when none moved. That cannot see database or registry sources, so a full pass still runs on a

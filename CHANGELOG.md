@@ -132,6 +132,24 @@ renamed in 3.9.0 and the history is kept under one file.
   as unidentified when something in it names a Steam ID, and taking back the settings folder above
   removed that marker. The crack loader's own config states the ID it stands in for, which identifies
   the folder just as well.
+- **A Steam application or tool is no longer counted as a game.** DSX, Lossless Scaling, Wallpaper
+  Engine and SteamVR sit in the library like any game you own, so starting one recorded playtime it
+  never earned and left AW Next believing a game was running all session. AW Next now asks Steam's
+  own local catalogue what an appid actually is.
+
+### Performance
+
+- **AW Next costs less while it sits in the tray.** Hiding the window left 211 MB of pages resident
+  across this app, the GPU process and the network service until something else on the machine needed
+  the RAM badly enough for Windows to take it; those working sets are now emptied on the way into
+  idle, once per transition and never on a timer. The overlay hotkey no longer keeps a PowerShell host
+  alive for the whole session either, since the app registers the shortcut itself, and the Steam
+  achievement-group cache keeps its 300 most recent games instead of growing all session.
+- **The background library scan waits for you to stop playing.** It loads the whole achievement engine
+  into the tray process and walks every library folder, and it fired mid-game every fifteen minutes
+  for work nobody was waiting for. It now holds while a game is running and resumes shortly after the
+  game exits, with a ceiling of about two hours so a background process mistaken for a game cannot
+  suspend discovery silently.
 
 ### Website & Docs
 

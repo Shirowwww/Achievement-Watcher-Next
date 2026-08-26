@@ -221,7 +221,15 @@ test('the wheel scrolls the panel wherever the pointer is', async (t) => {
 
   // And the previews are out of hit testing, so a wheel over them reaches the panel.
   const measured = await session.tab.evaluate(() => {
-    const frame = document.querySelector('#pd-frame');
+    // The panel builds this frame on first use, so build it the same way here: what is under test is
+    // the stylesheet that takes it out of hit testing, not who created it.
+    const wrap = document.querySelector('#pd-frame-wrap');
+    let frame = wrap.querySelector('iframe');
+    if (!frame) {
+      frame = document.createElement('iframe');
+      frame.id = 'pd-frame';
+      wrap.appendChild(frame);
+    }
     const actions = document.querySelector('#pd-actions');
     return {
       framePointer: getComputedStyle(frame).pointerEvents,

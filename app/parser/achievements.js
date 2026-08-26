@@ -73,7 +73,13 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   gogOfficial.initDebug({ isDev, userDataPath });
   ubisoftOfficial.initDebug({ isDev, userDataPath });
   require(path.join(appPath, 'steamOfficial.js')).initDebug({ isDev, userDataPath });
-  require(path.join(appPath, 'steamAppInfo.js')).initDebug({ isDev, userDataPath });
+  // Shared with the Watchdog, so it cannot require a logger of its own - see steamAppInfo.js.
+  require(path.join(appPath, 'steamAppInfo.js')).initDebug({
+    logger: new (require('../util/logger'))({
+      console: isDev || false,
+      file: path.join(userDataPath, 'logs/parser.log'),
+    }),
+  });
   epic.initDebug({ isDev, userDataPath });
   epicOfficial.initDebug({ isDev, userDataPath });
   ea.initDebug({ isDev, userDataPath });

@@ -7,6 +7,7 @@ const { migrateLegacyUserData, migrateAw3UserData, migrateSouvenirFolder, retarg
 const { deriveWatchdogState } = require('../util/watchdogState.js');
 const links = require('../util/links.js');
 const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
+const { toAccelerator } = require('../util/hotkeyAccelerator.js');
 app.setName('Achievement Watcher');
 // Keep 3.x data separate from the legacy folder; --user-data-dir still overrides it for tests.
 const cliUserDataDir = (() => {
@@ -388,7 +389,18 @@ function setGameActivity(count) {
   gamesRunning = Math.max(0, Number(count) || 0);
   debug.log(`[game-activity] ${gamesRunning} game(s) running`);
   if (wasRunning === isGameRunning()) return;
-  if (isGameRunning() || !app.isPackaged) return;
+  if (isGameRunning()) {
+    // A game just started: whatever the daemon was holding in memory for its own housekeeping is
+    // memory the game could use. Hand it back now rather than waiting for Windows to take it.
+    scheduleIdleTrim('game-started');
+    return;
+  }
+  // The last game just exited: run the scan held back during play now instead of waiting out its
+  // fifteen-minute tick. Placed above the isPackaged gate on purpose - that gate is only for update
+  // checks, and scheduleBackgroundAutoFix() itself is not gated either.
+  bgAutoFixHeldTicks = 0;
+  if (!MainWin) setTimeout(() => runBackgroundAutoFix('after-game'), 20 * 1000);
+  if (!app.isPackaged) return;
 
   // Reopen a completed download prompt after the game ends.
   if (pendingInstallPrompt && typeof promptDownloadedUpdate === 'function') {
@@ -679,6 +691,17 @@ let clientLoginPromise;
 // SteamHunters DLC/update groups rarely change; one lookup per appid per session (memory) plus a
 // 30-day disk cache (steam_cache, so "Clear caches" wipes it too) is enough.
 const steamGroupsCache = new Map();
+// Resident daemon, so an unbounded Map grows all session; eviction is cheap since every entry is
+// also cached to disk for 30 days. Cap is far above a normal session's distinct-appid count.
+const STEAM_GROUPS_MEMORY_CAP = 300;
+function rememberSteamGroups(cacheKey, groups) {
+  // Re-inserting moves the key to the end, so the eviction below is least-recently-used.
+  steamGroupsCache.delete(cacheKey);
+  steamGroupsCache.set(cacheKey, groups);
+  while (steamGroupsCache.size > STEAM_GROUPS_MEMORY_CAP) {
+    steamGroupsCache.delete(steamGroupsCache.keys().next().value);
+  }
+}
 
 /*
   Circuit breaker for the SteamHunters achievement-groups endpoint.
@@ -814,6 +837,8 @@ function scheduleMainWindowRelease() {
     // destroy() fires 'closed' (not 'close'), so it bypasses the close-to-tray interception and runs
     // the existing teardown: MainWin = null, status poller cleared, Puppeteer closed.
     MainWin.destroy();
+    // The renderer is gone but its pages are still resident in the processes that outlive it.
+    scheduleIdleTrim('window-released');
   }, MAIN_WINDOW_IDLE_RELEASE_MS);
   // Never let this timer alone hold the process awake.
   if (typeof mainWindowReleaseTimer.unref === 'function') mainWindowReleaseTimer.unref();
@@ -1162,10 +1187,14 @@ async function resolveSteamData(request) {
     }
     if (type === 'steamgroups') {
       const cacheKey = String(appid);
-      if (steamGroupsCache.has(cacheKey)) return { ok: true, groups: steamGroupsCache.get(cacheKey) };
+      if (steamGroupsCache.has(cacheKey)) {
+        const groups = steamGroupsCache.get(cacheKey);
+        rememberSteamGroups(cacheKey, groups);
+        return { ok: true, groups };
+      }
       const cachedGroups = loadSteamGroupsCache(appid);
       if (cachedGroups) {
-        steamGroupsCache.set(cacheKey, cachedGroups);
+        rememberSteamGroups(cacheKey, cachedGroups);
         return { ok: true, groups: cachedGroups };
       }
       // The host was unreachable moments ago; do not spend another timeout proving it per game.
@@ -1180,7 +1209,7 @@ async function resolveSteamData(request) {
         if (!res.ok) return { ok: false, groups: [] };
         const json = await res.json();
         const groups = Array.isArray(json && json.groups) ? json.groups : [];
-        steamGroupsCache.set(cacheKey, groups);
+        rememberSteamGroups(cacheKey, groups);
         // Persist non-empty answers only: a transient empty response must not hide future groups.
         if (groups.length) saveSteamGroupsCache(appid, groups);
         return { ok: true, groups };
@@ -2240,6 +2269,7 @@ function handleMonitorMessage(msg) {
     }
     if (msg && Array.isArray(msg.argv)) parseArgs(minimist(msg.argv));
     else if (msg && msg.overlayControl) handleOverlayControl(msg.overlayControl.action, msg.overlayControl.payload);
+    else if (msg && msg.registerOverlayHotkey) registerOverlayHotkey(msg.registerOverlayHotkey.hotkey);
     else if (msg && msg.gameActivity) setGameActivity(msg.gameActivity.count);
     else if (msg && msg.artworkPrefetch) prefetchSquareGameLogo(msg.artworkPrefetch);
   } catch (err) {
@@ -2308,6 +2338,47 @@ function notifyMonitorOverlayState(opened) {
     monitorProc.send({ overlayState: { opened: opened === true } });
   } catch (err) {
     debug.log(`[monitor] overlay state sync failed: ${err.message || err}`);
+  }
+}
+
+// Frees the resident working set (GPU/network processes included) that idle Chromium keeps until
+// Windows is under memory pressure - measured at 211 MB - so a game starting next gets it back
+// sooner. Not on a timer: repeated trims thrash (pages fault straight back in), so this fires once
+// per idle transition with a cooldown, absorbing bursts like window-release then overlay-release.
+const IDLE_TRIM_DELAY_MS = 5000;
+const IDLE_TRIM_MIN_INTERVAL_MS = 2 * 60 * 1000;
+let idleTrimTimer = null;
+let lastIdleTrimAt = 0;
+
+function scheduleIdleTrim(reason) {
+  if (idleTrimTimer) return;
+  if (Date.now() - lastIdleTrimAt < IDLE_TRIM_MIN_INTERVAL_MS) return;
+  idleTrimTimer = setTimeout(() => {
+    idleTrimTimer = null;
+    // Anything back on screen means the pages are in use again; leave them alone.
+    if (MainWin || overlayVisible) return;
+    if (!monitorProc || monitorProc.exitCode !== null || monitorProc.killed || !monitorProc.connected) return;
+    lastIdleTrimAt = Date.now();
+    try {
+      // getAppMetrics is the only complete list of this app's Chromium processes (GPU, network,
+      // utility); the Watchdog is this process's child and knows its own pid.
+      const pids = app.getAppMetrics().map((metric) => metric.pid);
+      monitorProc.send({ trimWorkingSets: { pids, reason } });
+    } catch (err) {
+      debug.log(`[memory] idle trim request failed: ${err.message || err}`);
+    }
+  }, IDLE_TRIM_DELAY_MS);
+  if (typeof idleTrimTimer.unref === 'function') idleTrimTimer.unref();
+}
+
+// The overlay hotkey was pressed. The Watchdog decides what it means (which game is running, whether
+// the overlay is already up), so this only reports the press.
+function notifyMonitorOverlayHotkey() {
+  if (!monitorProc || monitorProc.exitCode !== null || monitorProc.killed || !monitorProc.connected) return;
+  try {
+    monitorProc.send({ overlayHotkeyPressed: true });
+  } catch (err) {
+    debug.log(`[monitor] overlay hotkey press could not be delivered: ${err.message || err}`);
   }
 }
 
@@ -2426,6 +2497,7 @@ function launchWatchdog() {
       // stay dead for the whole session.
       debug.log(`[monitor] spawn error: ${err.message}`);
       if (monitorProc === child) monitorProc = null;
+      unregisterOverlayHotkey();
       // Only the monitor can tell us a game ended. If it dies mid-session the count would stay
       // above zero forever and updates would never be offered again.
       setGameActivity(0);
@@ -2436,6 +2508,9 @@ function launchWatchdog() {
       const wasCurrent = monitorProc === child;
       if (wasCurrent) monitorProc = null; // only clear if still the current child
       if (wasCurrent) setGameActivity(0); // see the spawn-error handler above
+      // Nothing is left to act on the overlay shortcut, and a combination this app holds is one no
+      // other application can use. The respawned monitor asks for it again on its settings load.
+      if (wasCurrent) unregisterOverlayHotkey();
       if (wasCurrent) scheduleMonitorRespawn(); // manual restarts take over their own relaunch
     });
     // Backoff reset: if this child survives 30s the crash loop is likely over.
@@ -2532,6 +2607,11 @@ function recordBackgroundScanMisses(discoveredIds, renderedList) {
 const BG_AUTOFIX_INTERVAL_MS = 15 * 60 * 1000;
 const BG_AUTOFIX_FULL_EVERY_TICKS = 4; // ~1 hour
 let bgAutoFixTicks = 0;
+// Safety valve: "game running" comes from the monitor and can be a background Steam app mistaken
+// for one (DSX, Wallpaper Engine, etc.) until blacklisted, which would otherwise suspend the scan
+// forever. Eight ticks (~2h) outlasts any real session but caps a false positive's cost.
+const BG_AUTOFIX_MAX_HELD_TICKS = 8;
+let bgAutoFixHeldTicks = 0;
 
 function notifyEmulatorFixed(game) {
   try {
@@ -2551,6 +2631,18 @@ function notifyEmulatorFixed(game) {
 
 async function runBackgroundAutoFix(reason) {
   if (MainWin) return; // window open → the renderer's own new-game scan handles fixes
+  // Not while playing: this is the heaviest background task (loads the achievement engine, and
+  // every fourth tick walks library + db/registry sources), and the game owns the frame budget.
+  // Update checks already hold off for the same reason; this one did not.
+  if (isGameRunning() && bgAutoFixHeldTicks < BG_AUTOFIX_MAX_HELD_TICKS) {
+    bgAutoFixHeldTicks += 1;
+    debug.log(`[bg-autofix] a game is running - holding the ${reason} scan (${bgAutoFixHeldTicks}/${BG_AUTOFIX_MAX_HELD_TICKS})`);
+    return;
+  }
+  if (bgAutoFixHeldTicks >= BG_AUTOFIX_MAX_HELD_TICKS) {
+    debug.log(`[bg-autofix] held for ${bgAutoFixHeldTicks} ticks - scanning anyway`);
+  }
+  bgAutoFixHeldTicks = 0;
   if (bgAutoFixInFlight) return;
   try {
     await startEngines(); // loads configJS + achievementsJS
@@ -4372,6 +4464,52 @@ function unregisterOverlayShortcuts() {
   }
 }
 
+// Held here, not the Watchdog: Electron already registers global shortcuts for free, while the
+// Watchdog is plain Node and had to keep a PowerShell host alive all session for RegisterHotKey. It
+// re-asks on every settings load, so this must be idempotent - no drop-and-add that could lose the
+// shortcut to another app in between.
+let overlayHotkeyAccelerator = null;
+let overlayHotkeyPressedAt = 0;
+// RegisterHotKey was asked for MOD_NOREPEAT; Electron has no equivalent, so a held shortcut would
+// toggle the overlay on every key repeat. Ignoring repeats inside one human keypress restores it.
+const OVERLAY_HOTKEY_REPEAT_MS = 250;
+
+function registerOverlayHotkey(value) {
+  let accelerator;
+  try {
+    accelerator = toAccelerator(value);
+  } catch (err) {
+    debug.log(`[hotkey] ${err.message || err}`);
+    return;
+  }
+  if (accelerator === overlayHotkeyAccelerator && globalShortcut.isRegistered(accelerator)) return;
+  unregisterOverlayHotkey();
+  try {
+    const ok = globalShortcut.register(accelerator, () => {
+      const now = Date.now();
+      if (now - overlayHotkeyPressedAt < OVERLAY_HOTKEY_REPEAT_MS) return;
+      overlayHotkeyPressedAt = now;
+      notifyMonitorOverlayHotkey();
+    });
+    if (!ok) {
+      debug.log(`[hotkey] ${accelerator} is already registered by another application`);
+      return;
+    }
+    overlayHotkeyAccelerator = accelerator;
+    debug.log(`[hotkey] Registered ${accelerator}`);
+  } catch (err) {
+    debug.log(`[hotkey] could not register ${accelerator}: ${err.message || err}`);
+  }
+}
+
+function unregisterOverlayHotkey() {
+  if (!overlayHotkeyAccelerator) return;
+  try {
+    globalShortcut.unregister(overlayHotkeyAccelerator);
+  } catch {}
+  overlayHotkeyAccelerator = null;
+}
+
 // When the overlay hotkey is pressed with no game running, the Watchdog sends
 // appid=0 + description=open. Resolve the game currently open in the app window
 // (or the first library tile) so the overlay still has something to show.
@@ -4419,6 +4557,7 @@ function hideOverlayWindow(reason = 'close') {
     if (!overlayVisible && overlayWindow && !overlayWindow.isDestroyed()) {
       debug.log('[overlay] warm window released after idle');
       overlayWindow.destroy();
+      scheduleIdleTrim('overlay-released');
     }
   }, OVERLAY_WARMUP_KEEP_MS);
   if (typeof overlayWarmupTimer.unref === 'function') overlayWarmupTimer.unref();
@@ -7013,6 +7152,9 @@ try {
       // instead of leaking a background process. app.isQuiting also disables the respawn supervisor.
       app.isQuiting = true;
       clearTimeout(monitorRespawnTimer);
+      // Hand the overlay shortcut back to the system: nothing is left to act on it, and holding it
+      // would deny the combination to whatever the user opens next.
+      unregisterOverlayHotkey();
       if (monitorProc) {
         debug.log('[monitor] terminating monitor child on quit');
         try {

@@ -118,13 +118,12 @@ covered in the [Controller guide](controller.md).
 ## Per-game behavior
 
 Open a game's tools panel and choose **Notification** to give that game a different popup preset,
-position, sound or scale. Every field inherits the global notification setting by default, and only
-the values changed for that game are stored. Sound also offers explicit silence and random choices.
-Use the crosshair beside Position to drag a custom-position preview where that particular game's
-popup should appear; its coordinates do not change the global position or another game. The five test
-buttons below the controls preview that game, its artwork and every selection currently shown without
-changing achievement progress. If an assigned preset or sound is removed, the game falls back to the
-applicable global value; renaming a user preset in the designer keeps its game assignments attached.
+position, sound or scale. Every field inherits the global setting by default, and only the values you
+change for that game are stored; sound also offers explicit silence and random choices. The crosshair
+beside Position drags a preview where that game's popup should appear, without moving the global
+position or another game's. The five test buttons preview that game, its artwork and every selection
+currently shown, without changing achievement progress. A preset or sound that is removed falls back
+to the global value, and renaming a user preset in the designer keeps its game assignments.
 
 Right-click a game to mute its progress notifications without disabling achievement unlocks or
 completion notifications. A duplicate guard also prevents the same unlock from appearing twice when a

@@ -61,7 +61,6 @@ const gogWatch = require('./console/gogWatch.js');
 const ubisoftWatch = require('./console/ubisoftWatch.js');
 const { isWinRTAvailable } = require('./util/powertoast');
 const { isFullscreenAppRunning } = require('./queryUserNotificationState.js');
-const GlobalHotkey = require('./util/globalHotkey.js');
 const { createOverlayControllerService } = require('./console/controller/overlay-controller-service.js');
 const humanizeDuration = require('humanize-duration');
 const { resolvePowerShell } = require('./util/powershell.js');
@@ -245,7 +244,6 @@ function stopXboxPolling(exitedGame) {
   }
   xboxPollState = null;
 }
-const overlayHotkey = new GlobalHotkey({ debug });
 let runningGames = [];
 const localProgressSchemaCache = new Map();
 
@@ -353,10 +351,19 @@ function mergeIndexedGameMetadata(game, appID) {
   return game;
 }
 
+// The app's main process owns this shortcut via Electron's globalShortcut (free there); this process
+// only asks for it and reacts to the press over IPC, instead of keeping a ~90 MB PowerShell host
+// resident all session just to reach RegisterHotKey.
 function RegisterOverlayHotkey(hotkey) {
-  overlayHotkey.register(hotkey, () => {
-    toggleOverlayForRunningGame();
-  });
+  if (typeof process.send !== 'function' || !process.connected) {
+    debug.warn('[hotkey] no channel to the app - the overlay shortcut stays unregistered');
+    return;
+  }
+  try {
+    process.send({ registerOverlayHotkey: { hotkey } });
+  } catch (err) {
+    debug.error(`[hotkey] could not ask the app for ${hotkey}: ${err.message || err}`);
+  }
 }
 
 // Shared open/close path for the overlay of the currently running game - used by both the keyboard
@@ -557,6 +564,20 @@ process.on('message', (msg) => {
       .forget(appid)
       .then(() => debug.log(`[reset] achievement baseline dropped for ${appid}`))
       .catch((err) => debug.warn(`[reset] could not drop the baseline for ${appid}: ${err.message || err}`));
+    return;
+  }
+  // The app holds the overlay shortcut; this is the press coming back.
+  if (msg.overlayHotkeyPressed === true) {
+    toggleOverlayForRunningGame();
+    return;
+  }
+  // The app went idle in the tray (or a game started) and wants resident memory handed back to
+  // Windows. The native call lives here because this process already carries koffi; the app decides
+  // when, and passes its own child pids along with the request.
+  if (msg.trimWorkingSets) {
+    const pids = Array.isArray(msg.trimWorkingSets.pids) ? msg.trimWorkingSets.pids : [];
+    const trimmed = require('./util/workingSet.js').trim(pids);
+    debug.log(`[memory] working set released for ${trimmed} process(es) (${msg.trimWorkingSets.reason || 'idle'})`);
     return;
   }
   if (msg.reloadPlaytimeIndex === true) {

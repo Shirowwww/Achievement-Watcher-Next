@@ -714,12 +714,8 @@ async function applyUplayR2Repair({ game, gameDir, appid, box = null, interactiv
     showHidden: true,
   });
   const achievementList = (schema && schema.achievement && schema.achievement.list) || [];
-  /*
-    A game whose Steam achievement names carry no objective number can only be keyed from Ubisoft's
-    own achievement data, and the launcher downloads that only once its achievements page has been
-    opened. Ubisoft serves the same file publicly, so fetch it rather than asking for that step.
-    Best effort: the keying below simply reports the game unsupported when nothing can be had.
-  */
+  // Objective keying needs Ubisoft's own achievement data, which the launcher only downloads once
+  // its achievements page has been opened; fetch the same file from Ubisoft's public endpoint instead.
   await ubisoftOfficial.ensureAchievementsArchive(mapping.uplay_id).catch(() => '');
   const prefixInfo = uplayR2.resolveObjectiveKeying({ achievementList, uplayId: mapping.uplay_id });
   if (!prefixInfo) {
@@ -2197,7 +2193,13 @@ function scheduleLibraryCover(game, headerEl, portrait) {
   if (!game || !headerEl || !headerEl.length) return;
   const image = game.img || {};
   const isPortrait = portrait && image.portrait;
-  headerEl.toggleClass('glow', hasOwnShapeCover(image, portrait)).toggleClass('portrait-fallback', Boolean(portrait && !isPortrait));
+  // Glow only once artwork is actually painted, not just "has a cover": art loads lazily via the
+  // viewport observer, so the old check painted the band over an empty placeholder until it loaded.
+  // Every branch below re-adds the class once it sets a background, so nothing else is lost here.
+  const alreadyPainted = /url\(/i.test(headerEl[0].style.backgroundImage || '');
+  headerEl
+    .toggleClass('glow', alreadyPainted && hasOwnShapeCover(image, portrait))
+    .toggleClass('portrait-fallback', Boolean(portrait && !isPortrait));
 
   const load = async (force = false) => {
     if (!headerEl[0]?.isConnected) return;
@@ -2443,17 +2445,9 @@ function sourcePresentationFor(game) {
   of tiles is what the real report is for.
 */
 /*
-  The emulator package was removed by security software before it could be read.
-
-  Steam emulators are flagged by nearly every antivirus engine, because replacing a game's steam_api
-  DLL is the shape of thing detection looks for. So this is not a rare edge: it is the normal outcome
-  on a machine with default settings, and without an explanation the user gets a virus alert from
-  their antivirus and, here, a failure that names a temporary file.
-
-  It matters most for somebody who only turned the automatic repair on and is not otherwise doing
-  anything: the alert would arrive out of nowhere. Both the manual repair and the automatic one come
-  here, and it is shown once per session so a library scan cannot stack it.
-
+  Steam emulators trip nearly every antivirus engine by design, since replacing steam_api is exactly
+  what detection looks for - a blocked download is the normal case here, not a rare edge, and deserves
+  an explanation rather than a bare error. Shown once per session so a library scan cannot stack it.
   Returns true when it handled the error, false when the caller should report it its own way.
 */
 let emulatorPackageBlockedShown = false;
@@ -2520,9 +2514,8 @@ async function reportEmulatorPackageBlocked(err, { retry = null } = {}) {
   } else if (picked === 'exclude') {
     const result = await ipcRenderer.invoke('defender:add-exclusion', folder).catch(() => ({ ok: false, reason: 'failed' }));
     if (result && result.ok) {
-      // An exclusion only helps the next attempt, so offer that attempt rather than leaving the
-      // user to find the same entry again. The automatic repair has no single entry to re-run, so
-      // there the answer is when it will happen by itself.
+      // Offer the retry the exclusion just enabled; the automatic repair has no single entry to
+      // re-run, so there the answer is when it will happen by itself.
       emulatorPackageBlockedShown = false;
       if (retry) {
         retry();
@@ -3376,7 +3369,7 @@ var app = {
               game.system ? `data-system="${game.system}"` : ''
             }>
                   <div class="loading-overlay"><div class="content"><i class="fas fa-spinner fa-spin"></i></div></div>
-                  <div class="header ${hasOwnShapeCover(game.img, portrait) ? 'glow' : ''}" id="game-header-${game.appid}">
+                  <div class="header" id="game-header-${game.appid}">
                   <button type="button" class="play-button" aria-label="${escapeHtml(tileLabels.play)}"><i class="fas fa-play" aria-hidden="true"></i></button>
                   </div>
 
@@ -6938,22 +6931,12 @@ async function collectGameHealthSignals(appid) {
     .map((entry) => ({ source: entry.source || source, path: entry.path }));
   const readsGoldbergSave = saveSources.some((entry) => /[\\/](gse saves|goldberg steamemu saves)[\\/]/i.test(entry.path));
 
-  /*
-    A repaired Uplay R1/R2 game is told to write its unlocks to GSE Saves\<steamAppid> - AW Next
-    chooses that folder itself, so for those games a GSE save is its own redirect target and proves
-    nothing about Goldberg. Reading it as Goldberg evidence is what made a perfectly configured Uplay
-    game report "no emulator here" (blocking) with the Uplay check sitting right beside it at OK.
-    A dual-layer repack (Goldberg steam_api AND a Uplay loader) still has real evidence on disk and
-    is still diagnosed on both.
-  */
+  // A repaired Uplay R1/R2 game writes unlocks to a GSE Saves folder AW Next picked itself, so that
+  // save alone proves nothing about Goldberg unless a dual-layer repack has real evidence of its own.
   const usesUplayLayer = uplayR2.isUplayR2Game(game, appid);
 
-  /*
-    A folder served by a known crack loader (ALI213, OnlineFix, TENOKE, SmartSteamEmu, ...) supplies
-    its own Steam emulation and never reads a Goldberg steam_settings folder, so measuring it against
-    one reported "no achievement list" for a game whose unlocks come from elsewhere. Same treatment
-    those loaders already get everywhere else: AW Next reads their saves and leaves their setup alone.
-  */
+  // A folder served by a known crack loader (ALI213, OnlineFix, TENOKE, SmartSteamEmu, ...) supplies
+  // its own Steam emulation, so measuring it against Goldberg would misreport "no achievement list".
   const foreignLoader = gameDirExists ? crackLoaderDetect.detectWorkingCrackLoader(gameDir) : null;
 
   // Only diagnose a Goldberg/GBE setup when one is actually there: a steam_settings folder or a

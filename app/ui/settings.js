@@ -30,6 +30,22 @@ const RANDOM_SOUND_VALUE = '__random__';
 // value lets one game explicitly mute its popup while every other game keeps the global sound.
 const NO_SOUND_VALUE = '__none__';
 
+// Frames are created on first use, not shipped in the page: an empty iframe is still a live
+// document, and the six of these (designer card, its four comparison rows, imported-theme sample)
+// measured 4.6 MB of renderer memory for panels most users never open.
+function ensureFrame(wrap, { id = '', title = '' } = {}) {
+  if (!wrap) return null;
+  const existing = wrap.querySelector('iframe');
+  if (existing) return existing;
+  const frame = document.createElement('iframe');
+  if (id) frame.id = id;
+  if (title) frame.title = title;
+  frame.tabIndex = -1;
+  frame.setAttribute('scrolling', 'no');
+  wrap.appendChild(frame);
+  return frame;
+}
+
 /*
   Cards whose labels are written imperatively rather than by locale/loader.js's DOM walk. They run
   once while the panel is wired, so without this they would keep the language that was active then -
@@ -2432,8 +2448,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     function closeThemePreview({ discard = true } = {}) {
       pendingThemeFile = '';
       $('#theme-preview').hide().attr('aria-hidden', 'true');
+      // Removed rather than blanked: this modal is opened once per import, and a blank frame still
+      // holds a document for the rest of the session.
       const frame = document.getElementById('theme-preview-frame');
-      if (frame) frame.srcdoc = '';
+      if (frame) frame.remove();
       if (themePreviewResize) {
         themePreviewResize.disconnect();
         themePreviewResize = null;
@@ -2502,7 +2520,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         allowed to run, and the layer images addressed on disk exactly as the real window addresses
         them. util/themeMock.js builds it from the theme model and nothing else.
       */
-      const frame = document.getElementById('theme-preview-frame');
+      const frame = ensureFrame(document.querySelector('#theme-preview .theme-preview-frame'), {
+        id: 'theme-preview-frame',
+        title: 'theme preview',
+      });
       if (frame) {
         frame.srcdoc = themeMock.buildThemeMock(result.theme, {
           // The app's own typefaces, carried inside the document: the frame runs under
@@ -4199,7 +4220,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // disk is how a preset's own picture is addressed; every other value is identical.
     const previewCss = (values) => presetGenerator.buildCustomPresetCss(values, { assetUrl: presetAssetUrl });
 
-    const previewFrame = () => document.getElementById('pd-frame');
+    const previewFrame = () => ensureFrame(document.getElementById('pd-frame-wrap'), { id: 'pd-frame', title: 'preview' });
 
     /*
       Rebuild the preview document. Only needed when the frame has to be re-created - switching to a
@@ -4606,8 +4627,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       fitStageTo((Math.ceil(box.height * zoom) + LABEL_ROOM) * gridRows + ROW_GAP * (gridRows - 1));
       const document_ = presetGenerator.buildPresetPreviewHtml(values, { assetUrl: presetAssetUrl });
       for (const row of rows) {
-        const frame = row.querySelector('iframe');
         const wrap = row.querySelector('.pd-compare-frame');
+        const frame = ensureFrame(wrap, { title: String(row.getAttribute('data-state') || 'normal') });
+        if (!frame) continue;
         frame.width = box.width;
         frame.height = box.height;
         frame.style.width = box.width + 'px';

@@ -103,13 +103,24 @@ test('the preview frame is a document, not a place a theme can run something', (
   assert.ok(preview, 'the preview modal is missing');
   assert.equal(preview.getAttribute('aria-hidden'), 'true', 'it must start hidden from assistive tech');
 
-  const frame = preview.querySelector('#theme-preview-frame');
-  assert.ok(frame, 'the preview frame is missing');
-  assert.equal(frame.tagName.toLowerCase(), 'iframe');
-  assert.equal(frame.getAttribute('src'), undefined, 'the frame is filled with srcdoc, never pointed at a file');
+  // The frame is created when a theme is actually previewed, so the markup carries its wrapper and
+  // the panel builds the iframe into it. It is never given a src: srcdoc is the only way in.
+  const wrap = preview.querySelector('.theme-preview-frame');
+  assert.ok(wrap, 'the preview frame wrapper is missing');
+  assert.ok(!wrap.querySelector('iframe'), 'the frame must not be built before a theme is previewed');
+  assert.match(
+    settings,
+    /const frame = ensureFrame\(document\.querySelector\('#theme-preview \.theme-preview-frame'\)/,
+    'nothing creates the preview frame'
+  );
 
   // srcdoc inherits the page policy, and the page policy pins every script that may run by hash.
   assert.match(settings, /frame\.srcdoc = themeMock\.buildThemeMock\(/, 'the frame must be filled by the shared mock builder');
+  // Non-vacuous version of the old "the frame has no src attribute" check: the element is built in
+  // JS now, so the thing to pin is that its builder never gives it one and nothing assigns one later.
+  const builder = settings.slice(settings.indexOf('function ensureFrame('), settings.indexOf('const localeRefreshers'));
+  assert.ok(!/\.src\s*=/.test(builder), 'the frame builder must never point a frame at a file');
+  assert.ok(!/theme-preview-frame'\)\.src\s*=|frame\.src\s*=/.test(settings), 'nothing may set a src on the preview frame');
   const csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
   assert.match(csp, /script-src 'self'/, "the page still pins what may run");
   assert.ok(!/unsafe-inline/.test(csp.split('script-src')[1].split(';')[0]), 'inline script must not be allowed');

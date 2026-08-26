@@ -48,14 +48,12 @@ Presets named after a platform reference its visual language and carry its mark;
 palettes and the state system are AW Next's own.
 
 > [!NOTE]
-> Presets shipped under earlier names still resolve. `Shirow`, `Default`, `Midnight` and `xqjan`
-> become **AW Next**; `PS4` and `PS5 enhanced` become **PlayStation**; `Xbox 360` and `Xbox One`
-> become **Xbox**; `Game Cover` and `Sunset` become **Cover**; `Clean`, `Modern` and `Smooth Pop`
-> become **Glass**; `Neon Future` and `LAZ0RBOX` become **Arcade**. Among the community presets,
-> `ArmsofGod`, `Epic Preset`, `TigerDX Award` and `mudoss` were renamed **Pantheon**, **Onyx**,
-> **Hexagon** and **Outline**, and the Xbox Series rare/platinum variants fold back into
-> **Xbox Series**. A preset of your own carrying one of those names is always used ahead of the
-> replacement.
+> Presets shipped under earlier names still resolve: `Shirow`/`Default`/`Midnight`/`xqjan` to
+> **AW Next**, `PS4`/`PS5 enhanced` to **PlayStation**, `Xbox 360`/`Xbox One` to **Xbox**,
+> `Game Cover`/`Sunset` to **Cover**, `Clean`/`Modern`/`Smooth Pop` to **Glass**,
+> `Neon Future`/`LAZ0RBOX` to **Arcade**, and the community `ArmsofGod`, `Epic Preset`,
+> `TigerDX Award` and `mudoss` to **Pantheon**, **Onyx**, **Hexagon** and **Outline**. A preset of
+> your own carrying one of those names is always used ahead of the replacement.
 
 ## Design your own
 
@@ -98,8 +96,7 @@ popup uses in a game.
 | **Position / Scale** | Both mirror the settings of the same name in the Notification tab. Changing them here changes that setting. They appear in the **Screen** view only, which is the one view where they change the picture. A popup you placed by hand is drawn at the bottom centre and labelled, since only the app knows where you dragged it. |
 
 The preview stays pinned to the top of the panel while the controls scroll under it, so a slider at
-the bottom of the list still shows you what it is doing. It takes the height the popup actually
-needs, which is why a short wide design leaves more room for the controls than a tall one does.
+the bottom of the list still shows what it is doing, and it takes only the height the popup needs.
 
 ### Finding your way around
 
@@ -110,12 +107,10 @@ Nine groups and sixty-odd controls, so there is one way through them and one way
 | **The filter** | Type in the box above the groups and only the matching controls stay. It searches labels, the words inside dropdowns and the property's own name, so both `corner` and `radius` find the same slider, and a name read out of an `.awpreset` finds its control. A match behind **Advanced** opens it; a group with nothing in it folds away. **Esc** clears the box. |
 | **Undo / redo** | The two arrows beside the filter, or **Ctrl+Z** and **Ctrl+Y** (**Ctrl+Shift+Z** works too). They step through whole designs, so one drag of a slider is one step rather than one per pixel. Loading a preset, picking a starting point or pressing Reset starts a fresh history - undo never carries you back into a different design. |
 
-The nine group headings are the other way around: they are all on screen at once, and each opens on
-a click. The everyday two - **Layout & size** and **Colours & background** - start open, and inside
-most groups an **Advanced** disclosure holds the fine-tuning nobody sets twice.
-
-Nothing the filter does moves a control: they are all still there, in the same order, hidden or
-shown. Clearing the box brings the panel back exactly as it was.
+The nine group headings are all on screen at once and each opens on a click. The everyday two -
+**Layout & size** and **Colours & background** - start open, and inside most groups an **Advanced**
+disclosure holds the fine-tuning nobody sets twice. Filtering only hides controls, never reorders
+them, so clearing the box brings the panel back exactly as it was.
 
 ### The controls
 
@@ -196,12 +191,9 @@ you, by name, what it left behind:
 | **A setting of the app, not of a preset** | Notification scale, position and volume. They exist here, in the **Notification** tab, and they stay where you set them rather than being changed by an import. |
 | **Not recognised** | Anything a newer SAN added that this version has not been taught. It is listed rather than dropped in silence. |
 
-Two things keep that list about features rather than about identifiers. A property you never turned
-on is not listed at all, and a feature is named **once**: a theme using SAN's percentage badge sets
-six keys for it, and hearing "percentbadge" is the whole of what was lost.
-
-Everything the report says is also written to the app log, so it is still there after the dialog is
-gone.
+The list stays about features rather than identifiers: a property you never turned on is not listed,
+and a feature is named once even when the theme sets six keys for it. Everything the report says is
+also written to the app log, so it survives the dialog.
 
 One difference is worth knowing before you look at the result. **SAN keeps four separate themes** -
 main, semi-rare, rare and 100% - and a `.san` file carries only one of them. **AW Next paints all

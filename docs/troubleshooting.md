@@ -6,9 +6,10 @@ If the problem concerns **one game**, open that game's **[Game Health](game-heal
 It states whether AW Next can see the game, read its achievements and announce its unlocks, and it
 offers only the repairs that genuinely apply. Most single-game problems end there.
 
-Use the rest of this page for problems that affect the app as a whole. If one remains, include the
-app version, Windows version, source involved, exact reproduction steps and relevant logs in the bug
-report.
+Use the rest of this page for problems that affect the app as a whole. **Settings → Help** carries
+the same checks in short form, under its *Something is wrong* group, with your own hotkey, bindings
+and enabled sources filled in. If a problem remains, include the app version, Windows version, source
+involved, exact reproduction steps and relevant logs in the bug report.
 
 ## Open logs and local data
 
@@ -40,7 +41,7 @@ Logs are appended, never truncated, so a crash survives the next launch. Each ru
 ===== session 2026-08-11T00:53:31.890Z pid=19276 =====
 ```
 
-Right after it, a `[diag]` block records everything a bug report needs and nobody should have to collect by hand - versions, install and data paths, how the app was started, the active language and theme, and the geometry of every display:
+Right after it, a `[diag]` block records what a bug report needs - versions, install and data paths, how the app was started, the active language and theme, and the geometry of every display:
 
 ```text
 [diag] app: Achievement Watcher 3.10.0 (packaged)
@@ -130,17 +131,15 @@ If the library updates but no notification appears, the source watcher works and
 
 ## A game will not start from the Play button
 
-Some games require administrator rights, either because their own manifest asks for it or because
-their launcher expects it. Windows refuses to start those the way AW Next normally starts a game and
-reports it as `EACCES`, which used to surface as a bare "Could not start the game" on a title that
-runs perfectly from Explorer.
+Some games require administrator rights, either because their manifest asks for it or because their
+launcher expects it. Windows refuses to start those the way AW Next normally starts a game and
+reports `EACCES`.
 
-AW Next now retries through the Windows shell when that happens, which is the route that raises the
-ordinary UAC prompt, so a game whose manifest declares it needs administrator simply starts after
-you confirm. If even that is refused - a launcher that needs administrator without declaring it -
-AW Next offers to retry as administrator explicitly. Only the game is elevated; AW Next itself keeps
-running without elevated rights, which is deliberate: an elevated AW Next would create its files
-with permissions your normal account cannot rewrite.
+AW Next then retries through the Windows shell, the route that raises the ordinary UAC prompt, so
+such a game starts once you confirm. If even that is refused - a launcher needing administrator
+without declaring it - AW Next offers to retry as administrator explicitly. Only the game is
+elevated: an elevated AW Next would create its files with permissions your normal account cannot
+rewrite.
 
 Dismissing the UAC prompt is treated as a decision, not a failure, so nothing is reported.
 

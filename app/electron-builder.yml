@@ -34,6 +34,7 @@ asarUnpack:
   - util/steamSchemaFetch.js
   - util/localIcons.js
   - parser/achievementTranslations.js
+  - parser/steamAppInfo.js
 
 publish:
   provider: github

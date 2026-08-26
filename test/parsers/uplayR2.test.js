@@ -741,13 +741,6 @@ function fakePe(arch, text = '') {
     assert.deepStrictEqual(known.filter((i) => i.code === 'LOADER_LOG_UNKNOWN_OBJECTIVE'), [], 'an id the schema carries is not a problem');
     assert.deepStrictEqual(known.filter((i) => i.code === 'LOADER_LOG_NO_ACH_CALL'), []);
     /*
-      The R2 loader logs the unlock call and NOT the objective it names, so an id list is something
-      only an R1 build can produce (checked against upc_r2_loader64.dll: its unlock handler logs the
-      function name alone, while every argument-carrying entry point there uses a "{} -> arg ({})"
-      format). The verdict still has to be reached, because that is exactly the case a Ubisoft game
-      sitting at 0% with a valid setup lands in.
-    */
-    /*
       The R2 loader words its unlock line differently from R1, and builds the format on the stack
       rather than holding it whole, so it is easy to conclude from a scan of the binary that it never
       names the objective at all:

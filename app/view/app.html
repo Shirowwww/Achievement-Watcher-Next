@@ -1740,28 +1740,27 @@
                         </div>
                         <div class="pd-stage" id="pd-stage" data-backdrop="checker" data-view="card">
                           <div class="pd-screen" id="pd-screen">
-                            <div class="pd-frame-wrap" id="pd-frame-wrap">
-                              <iframe id="pd-frame" tabindex="-1" scrolling="no" title="preview"></iframe>
-                            </div>
+                            <!-- The frame itself is created on first use (ui/settings.js). -->
+                            <div class="pd-frame-wrap" id="pd-frame-wrap"></div>
                           </div>
                           <div class="pd-compare" id="pd-compare">
                             <div class="pd-compare-row" data-state="normal">
                               <span class="pd-compare-label" data-lang="preview.normal"></span>
-                              <div class="pd-compare-frame"><iframe tabindex="-1" scrolling="no" title="normal"></iframe></div>
+                              <div class="pd-compare-frame"></div>
                             </div>
                             <div class="pd-compare-row" data-state="rare">
                               <span class="pd-compare-label" data-lang="preview.rare"></span>
-                              <div class="pd-compare-frame"><iframe tabindex="-1" scrolling="no" title="rare"></iframe></div>
+                              <div class="pd-compare-frame"></div>
                             </div>
                             <div class="pd-compare-row" data-state="completion">
                               <span class="pd-compare-label" data-lang="preview.completion"></span>
-                              <div class="pd-compare-frame"><iframe tabindex="-1" scrolling="no" title="completion"></iframe></div>
+                              <div class="pd-compare-frame"></div>
                             </div>
                             <!-- Progress is a state the preset draws too, and the one row the
                                  comparison used to leave out entirely. -->
                             <div class="pd-compare-row" data-state="progress">
                               <span class="pd-compare-label" data-lang="preview.progress"></span>
-                              <div class="pd-compare-frame"><iframe tabindex="-1" scrolling="no" title="progress"></iframe></div>
+                              <div class="pd-compare-frame"></div>
                             </div>
                           </div>
                         </div>
@@ -3186,9 +3185,7 @@
             <i class="fas fa-palette"></i> <span id="theme-preview-title">Imported theme</span><span></span>
           </div>
           <div class="container">
-            <div class="theme-preview-frame">
-              <iframe id="theme-preview-frame" tabindex="-1" scrolling="no" title="theme preview"></iframe>
-            </div>
+            <div class="theme-preview-frame"></div>
             <dl id="theme-preview-meta" class="theme-preview-meta"></dl>
             <p id="theme-preview-note" class="theme-preview-note"></p>
           </div>

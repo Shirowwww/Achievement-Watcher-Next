@@ -67,25 +67,22 @@ under **Settings → Folders**.
 <sub>The folders AW Next checks on its own, and the ones you add - per-game saves or whole libraries</sub>
 </div>
 
-Portable releases are covered too, and they are the case worth knowing about. A CODEX/RUNE/CPY
-release normally writes to `%PUBLIC%\Documents\Steam\<SOURCE>\<appid>`, but a portable copy keeps
-that same tree inside the game folder, where nothing is looking for it. Adding the game's own folder
-under **Settings → Folders** is enough: its `steam_emu.ini` (or `cpy.ini`) names the AppID, and the
-matching save tree is looked for beside it before the shared location is tried. If no save has been
-written yet the game is still added, at 0% - a missing card would be indistinguishable from a game
-that was never installed, and would say nothing about what went wrong.
+Portable releases are the case worth knowing about. A CODEX/RUNE/CPY release normally writes to
+`%PUBLIC%\Documents\Steam\<SOURCE>\<appid>`, but a portable copy keeps that same tree inside the game
+folder, where nothing is looking for it. Adding the game's own folder under **Settings → Folders** is
+enough: its `steam_emu.ini` (or `cpy.ini`) names the AppID, and the save tree is looked for beside it
+before the shared location. A game with no save written yet is still added, at 0%.
 
-A release that ships **no emulator config at all**, or whose ini you deleted, is covered as well:
-the save tree itself is read, since `Steam\RUNE\<appid>` carries the AppID in its folder name.
-The same layouts are probed one level below the folder you add, so pointing AW at your games
-library works as well as pointing it at one game.
+A release that ships **no emulator config at all**, or whose ini you deleted, works too: the save
+tree itself is read, since `Steam\RUNE\<appid>` carries the AppID in its folder name. The same
+layouts are probed one level below the folder you add, so pointing AW at your games library works as
+well as pointing it at one game.
 
-When a folder cannot be used, AW says why rather than only that it is invalid: whether it holds a
-game but no readable unlock file, whether it holds nothing achievement related at all, or whether
-it is an **EA app** release. That last one never keeps achievements on disk - they live on the EA
-account, and AW reads them through the EA source rather than through a watched folder, so no folder
-you add can make such a game appear. The message also names how many layouts were probed, so
-"nothing found here" is distinguishable from "not looked at".
+When a folder cannot be used, AW says why: it holds a game but no readable unlock file, it holds
+nothing achievement related, or it is an **EA app** release. That last one never keeps achievements
+on disk - they live on the EA account and are read through the EA source - so no folder you add can
+make such a game appear. The message also names how many layouts were probed, so "nothing found
+here" is distinguishable from "not looked at".
 
 Two of these are a different shape and are handled separately:
 
@@ -149,11 +146,9 @@ DLC and update achievements are tagged with the group that owns them (for exampl
 In **Simple** interface mode the Sources list folds away six niche rows - GreenLuma, LumaPlay, the
 two Nemirtingas emulators (the GOG and Epic save readers), Goldberg SocialClub and the
 notification-cache import - but only while a row is still enabled *and* no game in your library came
-from it. Switch one off, or own a game it detected, and its row comes straight back. **Advanced**
-always lists every source.
-
-That rule exists so the interface mode can never hide the one control that would explain a missing
-game.
+from it. Switch one off, or own a game it detected, and its row comes straight back, so the
+interface mode can never hide the one control that would explain a missing game. **Advanced** always
+lists every source.
 
 ---
 

@@ -392,10 +392,17 @@ test('every state can be compared side by side', () => {
   const rows = designer.querySelectorAll('#pd-compare .pd-compare-row');
   assert.deepEqual(rows.map((row) => row.getAttribute('data-state')), states);
   for (const row of rows) {
-    assert.ok(row.querySelector('iframe'), 'a compare row has nothing to render into');
+    // The frame itself is created on first use, so what the markup has to carry is the wrapper it
+    // is created into (the assertion on settings.js below covers the other half).
+    assert.ok(row.querySelector('.pd-compare-frame'), 'a compare row has nothing to render into');
     assert.ok(row.querySelector('.pd-compare-label[data-lang]'), 'a compare row is unlabelled');
   }
   assert.match(settings, /function renderComparePreviews\(values\)/, 'the compare view is not rendered');
+  assert.match(
+    settings,
+    /const frame = ensureFrame\(wrap, \{ title: String\(row\.getAttribute\('data-state'\)/,
+    'a compare row never gets a frame to render into'
+  );
   // Editing has to reach the compare frames, and cheaply: the stylesheet is swapped, not reloaded.
   assert.match(settings, /if \(previewView === 'compare'\) renderComparePreviews\(values\);/);
   assert.match(settings, /style\.textContent = previewCss\(values\)/);
@@ -484,7 +491,7 @@ test('the starting points are a row of the designer card, not a card of their ow
   assert.equal(rows.length, 2);
   assert.equal(rows[0].getAttribute('id'), 'pd-templates-row', 'the starting points must come first');
   assert.ok(rows[0].querySelector('#pd-templates'), 'the template gallery is gone');
-  assert.ok(rows[1].querySelector('#pd-frame'), 'the designer is gone');
+  assert.ok(rows[1].querySelector('#pd-frame-wrap'), 'the designer is gone');
   // The gallery is wired through the card that now holds it.
   assert.match(settings, /\$\('#options-notify-designer'\)\.on\('click', '\.pd-template'/);
 });

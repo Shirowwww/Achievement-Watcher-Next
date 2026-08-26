@@ -192,6 +192,8 @@ which backs everything up first.
 
 Closing the main window normally keeps AW Next in the system tray. The background tracker continues watching supported files and processes for playtime and unlocks.
 
+With no window open, AW Next hands the memory it was using back to Windows instead of holding it for the rest of the session, and the periodic library scan waits while a game is running rather than competing with it. A game installed mid-session is picked up shortly after you stop playing.
+
 Starting with Windows and closing to the tray can be changed under **Settings → General**. To exit fully, use the tray menu.
 
 ## Updates and existing data

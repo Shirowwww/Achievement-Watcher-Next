@@ -34,7 +34,7 @@ part is at fault, and any repair button acts on exactly that.
 | **Executable** | Which program should be watched while you play? |
 | **Game identity** | Which AppID and platform was this game matched to? |
 | **Achievement data** | Is there an achievement list, and is it complete? |
-| **Emulator setup** | Does a game that needs a Steam emulator have one? |
+| **Emulator setup** | Does a game that needs a Steam emulator have one, and which one is serving it? |
 | **Progress** | Has any unlock or save been found yet? |
 | **Live tracking** | Is the background tracker watching this game's process? |
 | **Notifications** | Which transport delivered the last notification for this game, and why? |
@@ -84,6 +84,7 @@ without a backup, and no repair runs without a confirmation.
 | *AW Next isn't watching this game while it runs* | **Watch this game** adds it to the tracker. |
 | *The last notification could not be sent* | Send a test notification, then see [Notifications](notifications.md#if-a-test-or-unlock-does-not-appear). |
 | *Working - Windows fallback active* | Not a fault. Automatic delivery chose a Windows notification for this game; see [how Automatic decides](notifications.md#how-automatic-decides). |
+| *Served by ALI213, OnlineFix, GBE Fork…* | The emulator actually reading that game, named from its own files. A Ubisoft game already served this way is not offered a Uplay repair: its Uplay layer is unused, not broken. |
 
 ---
 
