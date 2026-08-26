@@ -12,7 +12,6 @@ const epicOfficial = require('../../app/parser/epicOfficial.js');
 
 (async () => {
   try {
-    // epicAuth: encrypted token round-trip.
     const token = { access_token: 'AT', refresh_token: 'RT', account_id: 'abcdef0123456789', displayName: 'Tester', expires_in: 3600 };
     const enc = epicAuth.encryptTokens(token, 'passphrase');
     const dec = epicAuth.decryptTokens(enc, 'passphrase');
@@ -30,7 +29,6 @@ const epicOfficial = require('../../app/parser/epicOfficial.js');
     const codeUrl = epicAuth.buildEpicAuthCodeUrl();
     assert.ok(codeUrl.includes('/id/api/redirect') && codeUrl.includes('responseType=code'));
 
-    // epicAuth: save/load/status/clear against a sandbox tokens file.
     const tokensFile = path.join(tmp, 'epic_tokens.enc');
     await epicAuth.saveEpicTokensEncrypted(tokensFile, token, 'passphrase');
     const status = await epicAuth.getEpicAuthStatus({ tokensFile, tokenSecret: 'passphrase' });
@@ -40,13 +38,18 @@ const epicOfficial = require('../../app/parser/epicOfficial.js');
     await epicAuth.clearEpicTokens({ tokensFile });
     assert.equal((await epicAuth.getEpicAuthStatus({ tokensFile, tokenSecret: 'passphrase' })).connected, false);
 
-    // account id validation
     assert.equal(epicAuth.normalizeEpicAccountId('ABCDEF0123456789'), 'ABCDEF0123456789');
     assert.equal(epicAuth.normalizeEpicAccountId('nope!'), '');
 
     assert.equal(epicOfficial._internal.localeFor('french'), 'fr');
     assert.equal(epicOfficial._internal.localeFor('brazilian'), 'pt-BR');
     assert.equal(epicOfficial._internal.localeFor('klingon'), 'en');
+
+    // parser/epic.js's direct REST fallback asks for the locale through the public export, so it has
+    // to stay reachable outside _internal or that path silently pins itself back to English.
+    assert.equal(typeof epicOfficial.localeFor, 'function');
+    assert.equal(epicOfficial.localeFor('german'), 'de');
+    assert.equal(epicOfficial.localeFor(undefined), 'en');
 
     // Local manifest discovery from synthetic .item files.
     const manifests = path.join(tmp, 'Manifests');

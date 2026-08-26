@@ -359,6 +359,9 @@ function forgetScanCaches() {
   try {
     achievements.forgetInstallScanCache();
     steamParser.forgetUnresolved();
+    // Same idea for the remembered title searches: a game released since the last scan resolves to
+    // an appid now, and the stored "no such title" would otherwise hide it until its TTL ran out.
+    steamParser.forgetAppSearches();
     // Also drop remembered local-schema locations, so a schema added by hand since the last scan
     // is found now rather than whenever the miss memo happens to expire.
     steamParser.forgetLocalSchemaLocations();
@@ -714,8 +717,8 @@ async function applyUplayR2Repair({ game, gameDir, appid, box = null, interactiv
     showHidden: true,
   });
   const achievementList = (schema && schema.achievement && schema.achievement.list) || [];
-  // Objective keying needs Ubisoft's own achievement data, which the launcher only downloads once
-  // its achievements page has been opened; fetch the same file from Ubisoft's public endpoint instead.
+  // Objective keying needs Ubisoft's own achievement data (the launcher only downloads it once its
+  // achievements page has been opened); fetch it from Ubisoft's public endpoint instead.
   await ubisoftOfficial.ensureAchievementsArchive(mapping.uplay_id).catch(() => '');
   const prefixInfo = uplayR2.resolveObjectiveKeying({ achievementList, uplayId: mapping.uplay_id });
   if (!prefixInfo) {
@@ -733,8 +736,8 @@ async function applyUplayR2Repair({ game, gameDir, appid, box = null, interactiv
 
   const emu = uplayR2.detectEmulator(gameDir);
   const installed = uplayR2.inspectInstalledLoaders(emu.dll);
-  // A game loads only the emulator generation its executable imports, so the package to seed is
-  // decided by the install, never assumed.
+  // A game loads only the emulator generation its exe imports, so the install decides which
+  // package to seed - never assumed.
   const detectedExe = await detectedGameExe(game, gameDir);
   const flavour = uplayR2Installer.detectInstallFlavour({ gameDir, loaderPaths: emu.dll, exePath: detectedExe }) || 'r2';
   const loaderCacheDir = path.join(getUserDataPath(), `cache/${uplayR2Installer.packageFor(flavour).cacheName}`);
@@ -1035,10 +1038,9 @@ function refreshLibraryProgressFor(appid, games) {
 }
 
 /*
-  The Watchdog keeps each game's unlock baseline in memory, so deleting the .db file is only half of
-  a reset: the running monitor would still diff the re-earned achievement against a baseline that
-  has it and report "already unlocked", costing the user every future notification for that game.
-  Best effort - a monitor that is not running has no memory to clear, and starts from the file.
+  The Watchdog keeps each game's unlock baseline in memory, so deleting the .db file is only half a
+  reset - the running monitor would still diff a re-earned achievement against it and report
+  "already unlocked". Best effort: a monitor that isn't running has no memory to clear.
 */
 async function forgetWatchdogBaseline(appid) {
   try {
@@ -1211,8 +1213,8 @@ function applyCoverBackground(appid, value) {
   }
 }
 
-// A value the browser can paint: schema tokens stay as they are (their caller resolves them first),
-// but an absolute Windows path has to become a file URL or Chromium reads it as a relative one.
+// A value the browser can paint: schema tokens pass through (caller resolves them first), but an
+// absolute Windows path becomes a file URL or Chromium reads it as relative.
 function imageDisplayUrl(value) {
   const text = String(value || '').trim();
   if (!text) return '';
@@ -1228,7 +1230,7 @@ function headerIconSourcesFor(game) {
 }
 
 // The first square-ish image the game itself ships, as a file URL. Offline last resort for the
-// header icon, and the "Game folder" tiles of the icon picker.
+// header icon and the icon picker's "Game folder" tiles.
 function localGameIconUrls(game) {
   try {
     return localIcons.gameIconCandidates(game).map((file) => pathToFileURL(file).href);
@@ -1239,21 +1241,18 @@ function localGameIconUrls(game) {
 }
 
 /*
-  Paint the square logo beside the game title, in the order a user would expect:
-    1. their own pick (right-click -> Game icon), remote picks going through the icon cache;
-    2. the square logo the host resolves for notifications - the community icon set, then the
-       game's own artwork cut square, so every surface shows the same logo for a game;
-    3. artwork shipped inside the game folder, which is the only source that still works with no
-       network at all.
-  Repaintable on demand: the context menu calls it again after changing the selection.
+  Paint the square logo beside the game title, in order: 1) the user's own pick (right-click ->
+  Game icon, remote picks via the icon cache), 2) the host's notification square logo (community
+  icon set, else the game's artwork cut square), 3) artwork shipped in the game folder - the only
+  source that works fully offline. Repaintable on demand after the selection changes.
 */
 async function paintGameHeaderIcon(game) {
   const iconEl = $(HEADER_ICON_SELECTOR);
-  // The element is shared across game pages. Another page can open while this resolves, and the
-  // header carries the appid of the one on screen - so it is the freshness check for every branch.
+  // The element is shared across game pages; another can open while this resolves, so the header's
+  // own appid is the freshness check for every branch.
   const stillOnScreen = () => String($('#achievement .wrapper > .header').attr('data-appid')) === String(game.appid);
-  // With no artwork at all the box must go back to the neutral CSS surface, or the previous game's
-  // icon stays behind and reads as if this page belonged to another game.
+  // With no artwork at all, go back to the neutral CSS surface, or the previous game's icon stays
+  // behind and reads as if this page belonged to another game.
   const paint = (value) => {
     if (!stillOnScreen()) return;
     iconEl.css('background', value ? cssUrl(value) : '');
@@ -1285,8 +1284,8 @@ async function paintGameHeaderIcon(game) {
 
   paint(pathToFileURL(path.join(appPath, 'resources/img/loading.gif')).href);
   try {
-    // The library appid too: artwork is cached under the Steam one, but the executable this game
-    // was linked to is recorded under the library one, and the host needs it to read the exe icon.
+    // Also the library appid: artwork is cached under the Steam one, but the linked executable is
+    // recorded under the library one, which the host needs to read the exe icon.
     const resolved = await ipcRenderer.invoke('resolve-square-logo', {
       appid: cacheAppid,
       libraryAppid: game.appid,
@@ -1352,10 +1351,9 @@ async function applyCoverWithFallback(game, headerEl, imgName, orientation = 'la
   const img = (game && game.img) || {};
   const fallback = (current) => {
     /*
-      Shapes are not interchangeable: header/landscape are 460x215/920x430, portrait is 600x900.
-      sameShapeOnly is the first pass - it accepts only the requested shape, leaving the tile empty
-      rather than settling on the wrong one while recovery looks for a real cover. Cross-shape
-      candidates are only used afterwards, once recovery has failed.
+      Shapes aren't interchangeable (header/landscape 460x215/920x430, portrait 600x900).
+      sameShapeOnly is the first pass: only the requested shape, tile left empty rather than
+      settling on the wrong one; cross-shape candidates are used only after recovery has failed.
     */
     const sameShape = orientation === 'portrait' ? [img.portrait] : [img.header, img.landscape];
     const otherShape = orientation === 'portrait' ? [img.header, img.landscape, img.background, img.icon] : [img.portrait, img.background, img.icon];
@@ -1382,15 +1380,15 @@ async function applyCoverWithFallback(game, headerEl, imgName, orientation = 'la
   if (alt) return applyCoverWithFallback(game, headerEl, alt, orientation, tried, generation, { sameShapeOnly });
   if (generation !== artworkLoadGeneration) return { ok: false, reason: 'stale' };
   headerEl.css('background', 'none');
-  // A url that did not download is a missing image, not a diagnosis of the user's connection: only
-  // a source that reported networkError may claim that (see recoverLibraryCover).
+  // A url that failed to download is a missing image, not a network diagnosis: only a source that
+  // reported networkError may claim that (see recoverLibraryCover).
   return { ok: false, reason: 'missing' };
 }
 
 /*
-  Does this image actually load? A gallery tile that paints an empty box is worse than no tile:
-  the provider listed art the CDN no longer serves, so it is dropped rather than offered. Bounded,
-  because a stalled request would otherwise hold "Loading…" open for the whole dialog.
+  Does this image actually load? A gallery tile painting an empty box is worse than no tile - the
+  provider listed art the CDN no longer serves, so drop it. Bounded so a stalled request can't hold
+  "Loading..." open for the whole dialog.
 */
 function imagePreviewReady(value) {
   const preview = imageDisplayUrl(value);
@@ -1412,9 +1410,9 @@ function imagePreviewReady(value) {
 }
 
 /*
-  A gallery-ready URL for one candidate, or null. Schema values such as "library_600x900.jpg" or a
-  bare content hash are fetch-icon tokens, not browser-ready URLs; resolve those through the icon
-  cache first. Shared by the cover picker and the icon picker.
+  A gallery-ready URL for one candidate, or null. Schema values like "library_600x900.jpg" or a bare
+  content hash are fetch-icon tokens, not browser-ready URLs; resolve via the icon cache first.
+  Shared by the cover and icon pickers.
 */
 async function resolvePickerPreview(url, cacheAppid) {
   let preview = String(url || '').trim();
@@ -1522,8 +1520,8 @@ function openCoverPicker(game, appid, coverCacheAppid) {
           debug.warn(`[cover] picker download failed (${err.message || err}) - applying remote URL`);
           return null;
         });
-        // Persist the provider URL, not the disposable downloaded preview. The next render will
-        // populate steam_cache again, and a dead source can then fall through to the normal chain.
+        // Persist the provider URL, not the disposable downloaded preview: the next render
+        // repopulates steam_cache, and a dead source can then fall through to the normal chain.
         const target = coverStore.persist(String(appid), url, getUserDataPath(), pickerOrientation);
         if (!target) throw new Error('selected cover could not be persisted');
         reloadCoverOverrides();
@@ -1551,13 +1549,13 @@ function openCoverPicker(game, appid, coverCacheAppid) {
     }
   };
 
-  // Render the current cover independently from the provider lookup. Schema values such as
-  // "library_600x900.jpg" are fetch-icon tokens, not browser-ready URLs; resolve them first so the
-  // "Current"/"Default" tiles never appear as an empty surface while SteamDB/SteamGridDB are loading.
+  // Render the current cover independently from the provider lookup: schema values like
+  // "library_600x900.jpg" are fetch-icon tokens, not browser-ready URLs, so resolve them first or
+  // "Current"/"Default" appear as an empty surface while SteamDB/SteamGridDB load.
   /*
-    What the library tile is painted with right now. Current and Default are the way back to the
-    cover the game already has, so they must be offered even when their value no longer resolves -
-    a token the CDN stopped answering, or no network at all. The picture is on screen either way.
+    What the library tile is painted with right now. Current and Default must be offered even when
+    their value no longer resolves (CDN stopped answering, no network) - the picture is on screen
+    either way.
   */
   const paintedCover = () => cssUrlValue($(`#game-header-${appid}`).first().css('background-image'));
   const addResolvedTile = async (url, source) => {
@@ -1565,8 +1563,8 @@ function openCoverPicker(game, appid, coverCacheAppid) {
     if (preview) addTile(url, source, preview);
   };
   const currentTilePromise = currentUrl ? addResolvedTile(currentUrl, t('currentCover', 'Current', 'Actuelle')) : Promise.resolve();
-  // Once an override is set, the schema-provided default drops out of currentUrl - without a
-  // dedicated tile it would only reappear via "Reset cover to default" in the context menu.
+  // Once an override is set, the schema default drops out of currentUrl - without a dedicated tile
+  // it would only reappear via "Reset cover to default" in the context menu.
   const defaultTilePromise =
     overrideUrl && defaultUrl && defaultUrl !== overrideUrl
       ? currentTilePromise.then(() => addResolvedTile(defaultUrl, t('defaultCover', 'Default', 'Par défaut')))
@@ -1611,14 +1609,14 @@ function openCoverPicker(game, appid, coverCacheAppid) {
     failedSources = 0;
     refreshStatus();
 
-    // Two lookups on purpose. The instant sources (Steam's CDN and SteamGridDB) paint the gallery in
-    // well under a second; the SteamDB scrape costs a browser launch, so its tiles are appended
-    // whenever it finishes instead of holding the whole dialog on "Loading covers".
+    // Two lookups on purpose: the instant sources (Steam's CDN, SteamGridDB) paint the gallery in
+    // under a second, while the SteamDB scrape (browser launch) appends its tiles when it finishes
+    // instead of holding the dialog on "Loading covers".
     const fastOptions = ipcRenderer.invoke('get-cover-options', {
       name: game.name,
       orientation: pickerOrientation,
-      // Only a real Steam release should hit the Steam CDN probe - a non-Steam numeric id (GOG/Xbox)
-      // would just answer 404 on every asset path.
+      // Only a real Steam release should hit the CDN probe - a non-Steam numeric id (GOG/Xbox)
+      // would just 404 on every asset path.
       steamAppid: steamCoverId,
     });
 
@@ -1647,9 +1645,8 @@ function openCoverPicker(game, appid, coverCacheAppid) {
       })
       .then(() => {
         sourceSettled(attempt, fastFailed);
-        // SteamDB launches a browser scrape. Do not start it at all when the fast providers already
-        // proved that the network is unavailable; this is what kept an offline clear-cache scan
-        // waiting behind a queue of 45-second SteamDB pages.
+        // SteamDB launches a browser scrape - skip it entirely once the fast providers proved the
+        // network unavailable (used to queue offline scans behind 45s SteamDB pages).
         if (!steamCoverId || fastNetworkUnavailable) {
           sourceSettled(attempt, true);
           return null;
@@ -1674,9 +1671,9 @@ function openCoverPicker(game, appid, coverCacheAppid) {
 }
 
 /*
-  The icon counterpart of the cover picker, deliberately the same dialog. Sources are appended in
-  order (current, SteamGridDB, Steam artwork, install-folder images) so the last one, which needs no
-  network, still lands where a player with the right picture on disk would look for it.
+  The icon counterpart of the cover picker, deliberately the same dialog. Sources append in order
+  (current, SteamGridDB, Steam artwork, install-folder images), so the network-free last one still
+  lands where a player with the right picture on disk would look for it.
 */
 function openIconPicker(game, appid, iconCacheAppid, exePath) {
   const overlay = document.createElement('div');
@@ -1716,8 +1713,8 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
   grid.className = 'aw-cover-picker-grid';
   const actions = document.createElement('div');
   actions.className = 'aw-prompt-actions';
-  // The manual route lives inside the gallery as well as in the context menu: a user who opened
-  // this dialog and found nothing usable should not have to close it and right-click again.
+  // The manual route also lives inside the gallery: no need to close and right-click again if
+  // nothing here is usable.
   const browseBtn = document.createElement('button');
   browseBtn.className = 'aw-prompt-button secondary';
   browseBtn.textContent = t('choose-local-image', 'Choose local image…', 'Choisir une image locale…');
@@ -1775,9 +1772,9 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
       const preview = await resolvePickerPreview(previewUrl, iconCacheAppid);
       if (!preview) return false;
       /*
-        What gets stored is not always what was listed. A remote URL is kept as the source, so the
-        bytes stay disposable cache; a schema token ("library_600x900.jpg", a bare content hash) is
-        meaningless outside fetch-icon, so the file it resolved to is stored instead.
+        What's stored isn't always what was listed: a remote URL is kept as the source (bytes stay
+        disposable cache), but a schema token is meaningless outside fetch-icon, so its resolved
+        file is stored instead.
       */
       const applyValue = /^https?:/i.test(key) ? key : preview;
       if (addTile(key, source, preview, () => applyGameIconSelection(game, appid, applyValue))) providerTileCount += 1;
@@ -1811,10 +1808,9 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
   };
 
   /*
-    The icon this game would have with no pick at all, as the first tile: undoing a choice used to
-    mean leaving the gallery for the context menu just to see what the original looked like.
-    Clicking it clears the override rather than storing one, so the game follows its own artwork
-    again instead of being pinned to a copy of it.
+    The icon this game would have with no pick at all, as the first tile - undoing a choice used to
+    mean leaving the gallery for the context menu. Clicking it clears the override instead of
+    storing one, so the game follows its own artwork again.
   */
   const addDefaultTile = async (run) => {
     let resolved = '';
@@ -1834,8 +1830,8 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
     const preview = await resolvePickerPreview(resolved, iconCacheAppid);
     if (run !== attempt || !preview) return;
     const overridden = !!gameIconOverrideFor(appid);
-    // With nothing overridden the default IS what is on screen, so it is labelled for what it is
-    // rather than offering to restore something that is already there.
+    // With nothing overridden, the default IS what's on screen, so label it that way instead of
+    // offering to restore something already there.
     const label = overridden ? t('defaultCover', 'Default', 'Par défaut') : t('currentCover', 'Current', 'Actuelle');
     if (addTile(resolved, label, preview, () => resetGameIcon(game, appid))) providerTileCount += 1;
   };
@@ -1844,8 +1840,8 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
     const run = ++attempt;
     refreshStatus(true, false);
 
-    // The local sources cost a readdir and always answer, so they are painted before anything is
-    // asked of the network: with no connection at all the gallery is still usable.
+    // Local sources cost a readdir and always answer, so paint them before the network is asked
+    // anything: the gallery stays usable with no connection at all.
     await addDefaultTile(run);
     if (run !== attempt) return;
     const currentUrl = gameIconOverrideFor(appid) || '';
@@ -1861,15 +1857,15 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
     let failed = false;
     try {
       /*
-        The game's own Steam artwork is cut into squares by the host before it gets here. Offering
-        the raw tokens filled the gallery with library covers instead - a 2:3 grid and a 2:1 header
-        are not icons, and neither is what the box beside the title ends up painting.
+        The host cuts the game's own Steam artwork into squares before it gets here. Offering the
+        raw tokens filled the gallery with library covers instead - a 2:3 grid or 2:1 header is not
+        an icon.
       */
       const options = await ipcRenderer.invoke('get-icon-options', {
         name: game.name || '',
         steamAppid,
-        // The id every other artwork lookup for this game uses, so a game with no Steam appid still
-        // caches its executable icon under a folder of its own.
+        // Same id every other artwork lookup for this game uses, so a Steam-appid-less game still
+        // caches its executable icon under its own folder.
         cacheAppid: String(iconCacheAppid || ''),
         sources: headerIconSourcesFor(game),
         exe: exePath || '',
@@ -1893,8 +1889,8 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
     if (run !== attempt) return;
     refreshStatus(false, failed);
 
-    // SteamDB last, and appended whenever it finishes: it costs a browser launch, so holding the
-    // gallery on "Loading" for it would undo the point of painting everything else immediately.
+    // SteamDB last, appended when it finishes: it costs a browser launch, and holding the gallery
+    // on "Loading" for it would undo painting everything else immediately.
     if (!steamAppid) return;
     try {
       const urls = await ipcRenderer.invoke('get-icon-options-steamdb', { steamAppid });
@@ -1913,15 +1909,15 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
   startSourceLoad();
 }
 
-// Record a picked icon and repaint the header with it. Remote picks are stored as their source URL
-// (the bytes stay disposable cache), exactly like a picked cover.
+// Record a picked icon and repaint the header. Remote picks are stored as their source URL (bytes
+// stay disposable cache), exactly like a picked cover.
 function applyGameIconSelection(game, appid, url) {
   try {
     const stored = gameIconStore.persist(String(appid), url, getUserDataPath(), undefined);
     if (!stored) throw new Error('selected icon could not be persisted');
     reloadGameIconOverrides();
-    // paintGameHeaderIcon downloads a remote pick through the icon cache itself, so this single
-    // call both stores the selection and puts it on screen.
+    // paintGameHeaderIcon downloads a remote pick via the icon cache itself, so this one call both
+    // stores the selection and puts it on screen.
     paintGameHeaderIcon(game);
     return true;
   } catch (err) {
@@ -1934,8 +1930,8 @@ function applyGameIconSelection(game, appid, url) {
   }
 }
 
-// Drop the pick and go back to the icon the game resolves to on its own. Shared by the context
-// menu and the picker's "Default" tile, so both undo a choice exactly the same way.
+// Drop the pick and go back to the game's own resolved icon. Shared by the context menu and the
+// picker's "Default" tile, so both undo a choice the same way.
 async function resetGameIcon(game, appid) {
   gameIconStore.remove(String(appid));
   reloadGameIconOverrides();
@@ -1954,10 +1950,9 @@ function chooseLocalGameIcon(game, appid) {
 }
 
 /*
-  Right-click the square logo on a game's page to change it - the same four actions the cover
-  submenu offers, on the icon instead of the tile. Bound per page render (namespaced, so the
-  previous game's handler goes with it) because the element is shared across every game page and
-  the menu has to act on the one currently on screen.
+  Right-click the square logo on a game's page to change it - same four actions as the cover
+  submenu, on the icon instead. Bound per page render (namespaced, so the previous handler goes
+  with it) because the element is shared across every game page.
 */
 function bindGameHeaderIconMenu(game) {
   const appid = String(game.appid);
@@ -1999,8 +1994,8 @@ function bindGameHeaderIconMenu(game) {
             try {
               gameIconStore.remove(appid);
               reloadGameIconOverrides();
-              // Forget the cached answer as well as the selection, or the same picture comes
-              // straight back out of steam_cache instead of being looked up again.
+              // Forget the cached answer too, or the same picture comes straight back out of
+              // steam_cache instead of being looked up again.
               await ipcRenderer.invoke('forget-square-logo', { appid: iconCacheAppid, name: game.name || '' }).catch(() => null);
               await paintGameHeaderIcon(game);
             } catch (err) {
@@ -2096,7 +2091,7 @@ function promptText(message, defaultValue = '', type = 'text') {
 window.awPromptText = promptText;
 
 // These emulator sources already provide local artwork paths.
-const EMU_LOCAL_ICON_SOURCES = new Set(['RPCS3 Emulator', 'ShadPS4 Emulator', 'Xenia Emulator']);
+const EMU_LOCAL_ICON_SOURCES = new Set(['RPCS3 Emulator', 'ShadPS4 Emulator', 'Xenia Emulator', 'XLiveLessNess']);
 
 async function downloadLibraryCover(url, cacheAppid) {
   if (!url) return { path: null, source: null, reason: 'missing' };
@@ -2120,8 +2115,8 @@ async function recoverLibraryCover(game, orientation, { force = false } = {}) {
       let failure = false;
       let networkUnavailable = false;
 
-      // Steam is both authoritative and cheaper. A successful HEAD probe is not enough: only stop
-      // when fetch-icon has actually cached a usable file, otherwise continue to SteamGridDB.
+      // Steam is authoritative and cheaper, but a HEAD probe isn't enough: only stop once fetch-icon
+      // actually cached a usable file, else continue to SteamGridDB.
       if (steamAppid) {
         const steamResult = await ipcRenderer
           .invoke('get-steam-cdn-covers-status', steamAppid, orientation)
@@ -2132,15 +2127,14 @@ async function recoverLibraryCover(game, orientation, { force = false } = {}) {
         for (const url of Array.isArray(steamUrls) ? steamUrls : []) {
           const result = await downloadLibraryCover(url, cacheAppid);
           if (result.path) return result;
-          // A candidate url that does not download is an absent asset. Most games have no 920x430
-          // grid and no hashed capsule, so counting those as failures told every second tile to
-          // tell the user to check a connection that was working perfectly.
+          // A candidate url that fails to download is just an absent asset (most games have no
+          // 920x430 grid or hashed capsule), not a real connection failure.
         }
       }
 
-      // SteamDB knows about hashed store assets that the guessable Steam CDN paths cannot derive.
-      // Keep it in the same ordered chain as the picker: only reach it after Steam's own candidates
-      // are absent or failed, and only continue to SteamGridDB when the SteamDB downloads also fail.
+      // SteamDB knows hashed store assets the guessable Steam CDN paths can't derive. Same ordered
+      // chain as the picker: reach it only after Steam's candidates fail, fall to SteamGridDB only
+      // if SteamDB also fails.
       if (steamAppid && !networkUnavailable) {
         const steamdbUrls = await ipcRenderer
           .invoke('get-cover-options-steamdb', { orientation, steamAppid })
@@ -2166,10 +2160,9 @@ async function recoverLibraryCover(game, orientation, { force = false } = {}) {
     })();
     coverRecoveryCache.set(key, pending);
     /*
-      Only an answer is worth remembering. A recovery that failed because the network was down (or
-      a breaker was open) used to be memoised for the whole session, so a tile that lost its cover
-      during one bad minute stayed blank until the app was restarted - even after the connection
-      came back and the user pressed Retry. Drop those, and keep the ones that concluded something.
+      Only an answer is worth remembering. A failure caused by network-down used to be memoised for
+      the whole session, so a tile that lost its cover for one bad minute stayed blank until restart
+      even after Retry. Drop those, keep results that concluded something.
     */
     pending
       .then((result) => {
@@ -2181,21 +2174,21 @@ async function recoverLibraryCover(game, orientation, { force = false } = {}) {
 }
 
 // The glossy sweep belongs on a cover of the tile's own shape only: stretched over a cross-shape
-// fallback it reads as a smear instead of a highlight.
+// fallback it reads as a smear, not a highlight.
 function hasOwnShapeCover(image, portrait) {
   if (!image) return false;
   return Boolean(portrait ? image.portrait : image.header || image.landscape);
 }
 
-// All density modes share one tile. Only portrait changes the artwork orientation, so this helper
-// also lets the toolbar repaint covers without rescanning the whole library.
+// All density modes share one tile; only portrait changes orientation, so this also lets the
+// toolbar repaint covers without rescanning the whole library.
 function scheduleLibraryCover(game, headerEl, portrait) {
   if (!game || !headerEl || !headerEl.length) return;
   const image = game.img || {};
   const isPortrait = portrait && image.portrait;
   // Glow only once artwork is actually painted, not just "has a cover": art loads lazily via the
-  // viewport observer, so the old check painted the band over an empty placeholder until it loaded.
-  // Every branch below re-adds the class once it sets a background, so nothing else is lost here.
+  // viewport observer, so the old check painted the band over an empty placeholder. Every branch
+  // below re-adds the class once it sets a background.
   const alreadyPainted = /url\(/i.test(headerEl[0].style.backgroundImage || '');
   headerEl
     .toggleClass('glow', alreadyPainted && hasOwnShapeCover(image, portrait))
@@ -2219,8 +2212,8 @@ function scheduleLibraryCover(game, headerEl, portrait) {
       const local = await ipcRenderer.invoke('fetch-icon', coverOverride, game.steamappid || game.appid).catch(() => null);
       if (generation !== artworkLoadGeneration) return;
       if (!local || local === coverOverride) {
-        // A dead custom URL must not permanently mask the normal artwork chain. Remove only the
-        // override, then let Steam -> SteamDB -> SteamGridDB recover a usable replacement.
+        // A dead custom URL must not permanently mask the normal chain: remove the override, let
+        // Steam -> SteamDB -> SteamGridDB recover a usable replacement.
         coverStore.remove(game.appid, tileOrientation);
         reloadCoverOverrides();
         debug.warn(`[cover] custom override failed for ${game.appid}; trying provider fallbacks`);
@@ -2251,9 +2244,8 @@ function scheduleLibraryCover(game, headerEl, portrait) {
       return;
     }
 
-    // First pass: only art of the tile's own shape. Anything else waits until recovery has had its
-    // turn, so a wide capsule never settles into a portrait tile while a real cover is one lookup
-    // away (and never the reverse in the landscape grid).
+    // First pass: only art of the tile's own shape, so a wide capsule never settles into a portrait
+    // tile while a real cover is one lookup away (and never the reverse in the landscape grid).
     const imgName = portrait ? image.portrait : image.header || image.landscape;
     const applied = await applyCoverWithFallback(game, headerEl, imgName, tileOrientation, undefined, generation, { sameShapeOnly: true });
     if (generation !== artworkLoadGeneration) return;
@@ -2270,8 +2262,8 @@ function scheduleLibraryCover(game, headerEl, portrait) {
     if (!headerEl[0]?.isConnected) return;
     if (portrait !== libraryLayout.isPortrait(app.config?.achievement?.libraryLayout)) return;
     if (recovered.path) {
-      // Keep the provider URL in the in-memory schema too. The file is only a disposable preview
-      // under steam_cache and must not become the next scan's source after a cache clear.
+      // Keep the provider URL in the in-memory schema too: the file is only a disposable preview
+      // under steam_cache, and must not become the next scan's source after a cache clear.
       if (portrait) image.portrait = recovered.source || recovered.path;
       else image.header = recovered.source || recovered.path;
       headerEl.toggleClass('portrait-fallback', false).addClass('glow').css('background', cssUrl(recovered.path));
@@ -2279,9 +2271,9 @@ function scheduleLibraryCover(game, headerEl, portrait) {
       return;
     }
     /*
-      Last resort. No art of the right shape exists anywhere, so the choice is now between the wrong
-      shape and an empty tile - and a recognisable cover, marked as a fallback so the grid styles it
-      rather than stretching it, beats a blank rectangle.
+      Last resort: no art of the right shape exists, so it's the wrong shape vs. an empty tile - a
+      recognisable cover, marked as a fallback so the grid styles rather than stretches it, beats a
+      blank rectangle.
     */
     const crossShape = await applyCoverWithFallback(game, headerEl, imgName, tileOrientation, undefined, generation);
     if (generation !== artworkLoadGeneration) return;
@@ -2293,9 +2285,8 @@ function scheduleLibraryCover(game, headerEl, portrait) {
       setLibraryArtworkFeedback(headerEl, 'clear');
       return;
     }
-    // 'failed' now means exactly one thing: a source reported that it could not be reached. Anything
-    // else - no capsule on the CDN, no grid on SteamGridDB, a 404 on a guessed url - is "no artwork
-    // found", which is the truth and does not send the user to check a working connection.
+    // 'failed' means only a source reported that it could not be reached. Anything else (no CDN
+    // capsule, no SteamGridDB grid, a 404) is "no artwork found" - true, and not a connection issue.
     setLibraryArtworkFeedback(headerEl, recovered.reason === 'failed' ? 'failed' : 'missing', () => load(true));
   };
 
@@ -2329,13 +2320,13 @@ function isLegitSteamLibraryGame(game) {
 
 /*
   ONE table: an unrecognised label falls through silently to the Steam badge, so a too-narrow or
-  too-loose pattern ships a wrong badge unnoticed. Ubisoft is absent on purpose (isUbisoftGame()
-  decides it separately). Every `source:` literal in app/parser/*.js must appear here or in
+  loose pattern ships a wrong badge unnoticed. Ubisoft is absent on purpose (isUbisoftGame() decides
+  it separately). Every `source:` literal in app/parser/*.js must appear here or in
   STEAM_BADGE_SOURCES below - test/parsers/libraryDetectionFixes.test.js enforces it.
 */
 const SOURCE_BADGE = {
   playstation: /^(?:rpcs3 emulator|shadps4 emulator)$/,
-  xbox: /^xenia emulator$/,
+  xbox: /^(?:xenia emulator|xlivelessness)$/,
   epic: /^epic(?:-official)?$/,
   gog: /^(?:gog|gog galaxy)$/,
   socialclub: /^goldberg socialclub$/,
@@ -2343,17 +2334,17 @@ const SOURCE_BADGE = {
 };
 
 /*
-  Labels that legitimately end on the Steam badge: Steam games seen through an emulator or crack,
-  and the placeholder records. Listing them is what makes the coverage test meaningful - without it
-  "falls through to Steam" would swallow genuinely unclassified labels too.
+  Labels that legitimately end on the Steam badge: Steam games via emulator/crack, plus placeholder
+  records. Listing them makes the coverage test meaningful - else "falls through to Steam" would
+  swallow genuinely unclassified labels too.
 */
 const STEAM_BADGE_SOURCES =
-  /^(?:achievement watcher : watchdog|ali213|codex|creamapi|empress|gbe fork|goldberg(?: steamemu| \(empress\))?|greenluma|hoodlum|manual|onlinefix|razor1911|reloaded - 3dm|rld!|rune|skidrow|smartsteamemu|steam|steam-emulator|tenoke|unconfigured|universelan)$/;
+  /^(?:achievement watcher : watchdog|ali213|codex|creamapi|empress|gbe fork|ff7 \(2013\)|goldberg(?: steamemu| \(empress\))?|greenluma|hoodlum|manual|onlinefix|razor1911|reloaded - 3dm|rld!|rune|skidrow|smartsteamemu|steam|steam-emulator|tenoke|unconfigured|universelan)$/;
 
 /*
-  The "legitimately owned" badge: the same small dot as the Steam Family one, but for a game that
-  came from an official store install rather than an emulator save. Only sources produced by an
-  official parser count here - the Nemirtingas ('gog', 'epic') and crack labels must never match.
+  The "legitimately owned" badge: same small dot as Steam Family, but for a game from an official
+  store install rather than an emulator save. Only official-parser sources count here - Nemirtingas
+  ('gog', 'epic') and crack labels must never match.
 */
 const PURCHASED_SOURCE = {
   steam: /^steam \(/,
@@ -2440,15 +2431,15 @@ function sourcePresentationFor(game) {
 
 /*
   The dot beside an emulated game's name reports the Game Health state (same three colours as the
-  panel's chip) rather than just "is steam_api(64).dll on disk?". Until the panel has been opened
-  once it falls back to the scan's own coarse answer, since walking every install folder for hundreds
-  of tiles is what the real report is for.
+  panel's chip), not just "is steam_api(64).dll on disk?". Until the panel has been opened once it
+  falls back to the scan's coarse answer - walking every install folder for hundreds of tiles is
+  what the real report is for.
 */
 /*
-  Steam emulators trip nearly every antivirus engine by design, since replacing steam_api is exactly
-  what detection looks for - a blocked download is the normal case here, not a rare edge, and deserves
-  an explanation rather than a bare error. Shown once per session so a library scan cannot stack it.
-  Returns true when it handled the error, false when the caller should report it its own way.
+  Steam emulators trip nearly every antivirus by design, since replacing steam_api is exactly what
+  detection looks for - a blocked download is the normal case, not a rare edge, and deserves an
+  explanation rather than a bare error. Shown once per session. Returns true when it handled the
+  error, false when the caller should report it its own way.
 */
 let emulatorPackageBlockedShown = false;
 
@@ -2462,7 +2453,7 @@ async function reportEmulatorPackageBlocked(err, { retry = null } = {}) {
   try {
     defenderActive = await ipcRenderer.invoke('defender:is-active');
   } catch (e) {
-    // An unanswered probe only means the exclusion button is not offered; the rest still helps.
+    // An unanswered probe just means the exclusion button isn't offered; the rest still helps.
     debug.warn(`[gbe] could not tell whether Windows Defender is the antivirus => ${e}`);
   }
 
@@ -2514,8 +2505,8 @@ async function reportEmulatorPackageBlocked(err, { retry = null } = {}) {
   } else if (picked === 'exclude') {
     const result = await ipcRenderer.invoke('defender:add-exclusion', folder).catch(() => ({ ok: false, reason: 'failed' }));
     if (result && result.ok) {
-      // Offer the retry the exclusion just enabled; the automatic repair has no single entry to
-      // re-run, so there the answer is when it will happen by itself.
+      // Offer the retry the exclusion just enabled; the automatic repair has no single entry point,
+      // so there the answer is "it happens on its own".
       emulatorPackageBlockedShown = false;
       if (retry) {
         retry();
@@ -2550,8 +2541,8 @@ async function reportEmulatorPackageBlocked(err, { retry = null } = {}) {
   return true;
 }
 
-// The automatic repair has no dialog of its own, so it hands the one failure a user can act on back
-// to the window rather than leaving it in a log next to an unexplained virus alert.
+// The automatic repair has no dialog of its own, so it hands this one actionable failure back to
+// the window instead of leaving it in a log next to an unexplained virus alert.
 achievements.onEmulatorPackageBlocked((err) => {
   reportEmulatorPackageBlocked(err);
 });
@@ -2587,8 +2578,8 @@ function healthDotFor(game) {
   };
 }
 
-// A full report is the better answer, so it replaces the scanned guess on the tile that is already
-// on screen rather than waiting for the next scan to redraw it.
+// A full report is the better answer, so it replaces the scanned guess on the tile already on
+// screen rather than waiting for the next scan to redraw it.
 function rememberGameHealthState(appid, state) {
   healthStateByAppid.set(String(appid), state);
   const game = gameList.find((entry) => String(entry.appid) === String(appid));
@@ -3197,6 +3188,11 @@ var app = {
     };
     // Reuse the loading footer during refreshes.
     $('#main-footer').removeClass('done');
+    // Reset it as well, and mark it indeterminate: discovery and the Steam ownership call both run
+    // before makeList can report a first percentage, so the bar used to sit on the previous scan's
+    // "100%" (or a cold start's "0%") for that entire silent phase and read as a frozen app.
+    loadingElem.progress.attr('data-percent', 0).addClass('indeterminate');
+    loadingElem.meter.css('width', '0%');
     loadingElem.elem.show();
     // Show activity across the whole window while scanning.
     setLibraryBusyCursor(true);
@@ -3500,7 +3496,7 @@ var app = {
       .makeList(
         scanConfig,
         (percent, total) => {
-          loadingElem.progress.attr('data-percent', percent);
+          loadingElem.progress.removeClass('indeterminate').attr('data-percent', percent);
           loadingElem.meter.css('width', percent + '%');
           setSkeletonExpected(total);
         },
@@ -3590,7 +3586,6 @@ var app = {
         ipcRenderer.send('close-puppeteer');
         debug.log('Populating game list ...');
 
-        // Sort once after all tiles have loaded.
         clearSkeletonTiles();
         sort($('#game-list ul'), sortOptions());
 
@@ -3605,7 +3600,6 @@ var app = {
         // non-Steam games are tracked without waiting for a Watchdog restart.
         ipcRenderer.invoke('watchdog-reload-playtime-index').catch((err) => debug.log(err));
 
-        // Reconcile launch paths with the installed games.
         exeList
           .reconcile(gameList)
           .then(async (n) => {
@@ -3944,7 +3938,6 @@ var app = {
                         });
                         if (after.response !== 1) return;
                       }
-                      // Pick + apply the locally-downloaded archive.
                       const picked = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
                         title: t('select-the-downloaded-crack', 'Select the downloaded crack', 'Sélectionne le crack téléchargé'),
                         properties: ['openFile', 'dontAddToRecent'],
@@ -4809,6 +4802,7 @@ var app = {
                           try {
                             fs.rmSync(res.workDir, { recursive: true, force: true });
                           } catch {}
+                          debug.log(`[${appid}] Advanced data: merged ${added} file(s) from generate_emu_config ${tool.tag || ''}`);
                           return (
                             '\n' +
                             t('diagnosis-advanced-data-merged', 'Advanced data: merged {count} extra file(s) (generate_emu_config {tag})', 'Données avancées : {count} fichier(s) supplémentaire(s) fusionné(s) (generate_emu_config {tag})', {
@@ -4817,6 +4811,9 @@ var app = {
                             })
                           );
                         } catch (e) {
+                          // The note below reaches the diagnosis dialog, but nothing else recorded why
+                          // the step ended - a timed-out run left the log showing only the launch line.
+                          debug.log(`[${appid}] Advanced data failed => ${formatErr(e)}`);
                           return '\n' + t('diagnosis-advanced-data-failed', 'Advanced data: {error}', 'Données avancées : {error}', { error: e.message || e });
                         }
                       };

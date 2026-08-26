@@ -108,26 +108,21 @@ function isTruthyFlag(v) {
 }
 
 // Reduce one raw save-file entry to {Achieved, CurProgress, MaxProgress?, UnlockTime}. Every local
-// save format - Goldberg/GSE, RLD!, RUNE/Codex, 3DM, TENOKE, CreamAPI, UniverseLAN - funnels through
-// here, which is why the key aliases are so long: each emulator picked its own spelling for the same
-// two facts. Pure, and exported through _internal, so a format's quirks can be pinned by a test.
+// save format (Goldberg/GSE, RLD!, RUNE/Codex, 3DM, TENOKE, CreamAPI, UniverseLAN) funnels through
+// here, hence the long key aliases - each emulator picked its own spelling for the same two facts. Pure, exported through _internal so a format's quirks can be pinned by a test.
 function normalizeSaveEntry(entry, source) {
-  // Does this entry carry an explicit unlocked/locked flag? Newer emu save formats
-  // (e.g. UniverseLAN for GOG) write every achievement with Unlocked=true/false, so we
-  // must trust that flag rather than assume "present == unlocked".
+  // Does this entry carry an explicit unlocked/locked flag? Newer emu save formats (e.g. UniverseLAN
+  // for GOG) write every achievement with Unlocked=true/false, so trust that flag rather than assume "present == unlocked".
   const hasExplicitState =
     entry != null &&
     typeof entry === 'object' &&
     ['Achieved', 'achieved', 'State', 'HaveAchieved', 'Unlocked', 'unlocked', 'earned'].some((k) => k in entry);
 
-  // A non-object entry (e.g. the bare '1' some saves write) has no fields to read; guard the
-  // property access rather than special-casing it in every alias chain below.
+  // A non-object entry (e.g. the bare '1' some saves write) has no fields to read; guard the property access rather than special-case it in every alias chain below.
   const fields = entry != null && typeof entry === 'object' ? entry : {};
 
-  // Leave MaxProgress unset (rather than defaulting to 0) when the save file itself doesn't
-  // carry one: Object.assign at the call site would otherwise stamp achievement.MaxProgress = 0 and
-  // permanently hide the schema's own max_progress (app.js reads `MaxProgress ?? max_progress`,
-  // and 0 is not nullish, so the schema fallback never kicks in once a 0 is written).
+  // Leave MaxProgress unset (not defaulted to 0) when the save file has none: Object.assign at the
+  // call site would otherwise stamp achievement.MaxProgress = 0 and permanently hide the schema's own max_progress (app.js reads `MaxProgress ?? max_progress`, and 0 isn't nullish, so the fallback never kicks in once a 0 is written).
   const rawMaxProgress = fields.MaxProgress || fields.max_progress;
   const parsed = {
     Achieved:
@@ -161,17 +156,14 @@ function normalizeSaveEntry(entry, source) {
     parsed.Achieved = true;
   }
 
-  //RLD! writes no achieved flag of any kind: an entry carries only its timestamps, and a locked
-  //achievement is written with Time=0. Without this, every achievement from such a save reads as
-  //locked. Restricted to entries with no explicit flag at all, so a format that does say
-  //Unlocked=false is never overridden by a stray timestamp.
+  //RLD! writes no achieved flag: an entry carries only timestamps, and a locked achievement has
+  //Time=0 - without this every achievement from such a save reads as locked. Restricted to entries with no explicit flag, so a format saying Unlocked=false is never overridden by a stray timestamp.
   if (!parsed.Achieved && !hasExplicitState && Number(parsed.UnlockTime) > 0) {
     parsed.Achieved = true;
   }
 
-  //Legacy GOG/Epic emu saves list ONLY unlocked achievements with no explicit flag, so a
-  //bare entry means "unlocked". But formats that DO carry an explicit Unlocked=true/false
-  //(e.g. UniverseLAN) must be trusted instead of blanket-unlocking everything.
+  //Legacy GOG/Epic emu saves list ONLY unlocked achievements with no explicit flag, so a bare entry
+  //means "unlocked" - but formats that DO carry an explicit Unlocked=true/false (e.g. UniverseLAN) must be trusted instead of blanket-unlocking everything.
   if ((source === 'gog' || source === 'epic') && !hasExplicitState) {
     parsed.Achieved = true;
   }
@@ -193,16 +185,15 @@ function normalizeGameName(name, appid) {
 
 /*
   Everything the machine already knows about this appid's title, without touching the network. The
-  bare appid is a legitimate LAST resort: a single nameless product-info response should not title a
-  card "2012840" when the same name sits in the schema cache, the appList dump, or the install
-  folder's own name. Ordered most authoritative first; returns '' when nothing local knows the title.
+  bare appid is a legitimate LAST resort - a nameless product-info response shouldn't title a card
+  "2012840" when the name sits in the schema cache, appList dump, or install folder's own name.
+  Ordered most authoritative first; returns '' when nothing local knows the title.
 */
 function resolveLocalGameName(appid) {
   const id = String((appid && appid.appid) || '').trim();
   const record = (appid && appid.data) || {};
 
-  // cfg/gameIndex.json survives cache clearing and is shared with the Watchdog/menu paths. Prefer
-  // its last resolved title while the disposable metadata caches are being rebuilt.
+  // cfg/gameIndex.json survives cache clearing and is shared with the Watchdog/menu paths; prefer its last resolved title while the disposable metadata caches rebuild.
   if (id) {
     const indexed = gameIndex.getName(id);
     if (indexed) return indexed;
@@ -229,8 +220,7 @@ function resolveLocalGameName(appid) {
     }
   }
 
-  // Last local resort: the folder the game actually lives in. Never the save folder, which is
-  // named after the appid and would just hand the appid back.
+  // Last local resort: the folder the game actually lives in - never the save folder, which is named after the appid and would just hand the appid back.
   const dir = String(record.gameDir || '').trim();
   if (dir) {
     const base = path.basename(dir);
@@ -239,9 +229,8 @@ function resolveLocalGameName(appid) {
   return '';
 }
 
-// The watchdog cannot derive artwork from synthetic/manual appids. Persist the already-resolved
-// scan assets alongside the legacy Steam icon hash so playtime cards use the same cached cascade as
-// the library. Empty fields are ignored by gameIndex.upsert, preserving a previously good asset.
+// The watchdog cannot derive artwork from synthetic/manual appids: persist the already-resolved scan
+// assets alongside the legacy Steam icon hash so playtime cards use the same cached cascade as the library. Empty fields are ignored by gameIndex.upsert, preserving a previously good asset.
 function gameIndexArtwork(game) {
   const img = (game && game.img) || {};
   const iconSource = img.icon || img.logo || '';
@@ -460,8 +449,7 @@ function isPathWithin(candidate, parent) {
   return relative === '' || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative));
 }
 
-// Collect the roots shown in Settings. Smart Find persists automatic detections there first, so a
-// scan never reaches into an invisible Desktop or drive location.
+// Collect the roots shown in Settings; Smart Find persists automatic detections there first, so a scan never reaches into an invisible Desktop or drive location.
 async function goldbergScanRoots(scope = _activeScanScope) {
   const roots = [];
   const add = (p) => {
@@ -498,8 +486,7 @@ let _activeScanScope = null;
 // Cache discovery walks briefly; unlock state is always read fresh.
 let _discoverCache = null; // { key, time, appidList, folderIndex, claimedDirs }
 const DISCOVER_TTL_MS = 60000;
-// Timestamps of the folders the last full discovery walked, so the background poll can tell that
-// nothing on disk moved without walking them again.
+// Timestamps of the folders the last full discovery walked, so the background poll can tell nothing on disk moved without walking them again.
 let _discoverFingerprint = null;
 const GAME_LOAD_TIMEOUT_MS = 30000;
 
@@ -548,30 +535,26 @@ async function discoverWithCache(option, steamAccFilter) {
 // Track background emulator fixes so repeated scans do not launch the same fix twice.
 let _emuFixInFlight = new Set();
 
-// Same idea for the SteamDB launch-metadata lookup: it now runs detached from the game load, so a
-// second scan starting while the first is still fetching must not queue the same page again.
+// Same idea for the SteamDB launch-metadata lookup: it runs detached from the game load, so a second scan starting while the first fetches must not queue the same page again.
 const _steamDbLaunchInFlight = new Set();
 
 /*
   A library entry for a game whose metadata lookup failed or timed out. Discovery found real
   achievement data on disk - that's what makes the game exist; the Steam lookup only decorates it
-  with a title and artwork, so a failed lookup must not remove the game from the library. The name and
-  artwork here are all local/free (existing caches, appid-derived URLs). `provisional` marks the entry
-  as "known to exist, not yet described" - never cached, so the next scan replaces it once the lookup succeeds.
+  with a title and artwork, so a failed lookup must never remove it. Name/artwork here are all
+  local/free (existing caches, appid-derived URLs). `provisional` marks it "known to exist, not yet described" - never cached, so the next scan replaces it once the lookup succeeds.
 */
 function buildProvisionalGame(appid) {
   if (!appid || !appid.appid) return null;
   const id = String(appid.appid);
   const record = (appid && appid.data) || {};
-  // Only for entries backed by something on disk. A record with no achievement data and no install
-  // folder is exactly the phantom cache import the keep-filter below exists to drop.
+  // Only for entries backed by something on disk; a record with no achievement data and no install folder is exactly the phantom cache import the keep-filter below exists to drop.
   const dataPath = resolveAchievementDataPath(record);
   const gameDir = record.gameDir || '';
   if (!dataPath && !gameDir) return null;
 
   const name = resolveLocalGameName(appid);
-  // Steam's CDN builds these from the appid, so a numeric appid still gets its real artwork even
-  // under a numeric title.
+  // Steam's CDN builds these from the appid, so a numeric appid still gets its real artwork even under a numeric title.
   const img = /^[0-9]+$/.test(id)
     ? {
         header: `https://cdn.akamai.steamstatic.com/steam/apps/${id}/header.jpg`,
@@ -582,8 +565,7 @@ function buildProvisionalGame(appid) {
     : { header: '', background: '', portrait: '', icon: '' };
 
   /*
-    A Ubisoft product with no Steam release has no Steam CDN to borrow from, so its card would be a
-    blank rectangle. Ubisoft publishes boxart for it, on its own CDN and under this very id.
+    A Ubisoft product with no Steam release has no Steam CDN to borrow from, so its card would be a blank rectangle - Ubisoft publishes boxart for it, on its own CDN, under this very id.
   */
   const productId = String(record.uplayId || '') || (id.startsWith('uplay-') ? id.slice('uplay-'.length) : '');
   if (!img.portrait && /^[0-9]+$/.test(productId)) {
@@ -610,8 +592,7 @@ function buildProvisionalGame(appid) {
 /*
   Fetch a game's main executable from SteamDB and hand it to `apply`, off the critical path. The
   lookup goes through the main process's stealth browser (SteamDB 403s plain requests) and is
-  serialized there, so it costs seconds per game. It only decorates the watchdog's gameIndex - the
-  library entry does not depend on it - so it must never be awaited by a game load.
+  serialized there, costing seconds per game. It only decorates the watchdog's gameIndex - the library entry doesn't depend on it - so it must never be awaited by a game load.
 */
 function seedPlaytimeFromSteamDb(appid, apply) {
   const id = String(appid || '');
@@ -630,10 +611,9 @@ function seedPlaytimeFromSteamDb(appid, apply) {
 }
 
 /*
-  An empty achievement file is a stable fact about a game that has simply never been played, and it is
-  re-read on every scan. Logged unconditionally it dominates parser.log with repeats for the same
-  handful of games, burying entries that describe something that actually changed. Reported once per
-  file per session; the next launch reports it again, so nothing is permanently hidden.
+  An empty achievement file is a stable fact (game never played), re-read every scan; logged
+  unconditionally it would dominate parser.log with repeats for the same handful of games, burying
+  what actually changed. Reported once per file per session - the next launch reports it again, so nothing stays permanently hidden.
 */
 const _emptyAchievementFilesWarned = new Set();
 
@@ -665,14 +645,12 @@ function withTimeout(promise, ms, message) {
 /*
   A repaired Uplay R1/R2 game is told to write its unlocks to GSE Saves\<steamAppid>, so discovery
   finds it through the Steam-emulator walker and the record reaches here with no Uplay marking at
-  all. Everything Uplay-specific downstream is gated on that marking - the objective-id remap that
-  turns the emulator's numeric keys back into Steam api-names, the self-heal that re-applies the fix
-  after a repack update, the uplayId the Watchdog needs to attribute a live unlock - so all three
-  were silently skipped and the game showed 0 unlocked forever (issue seen on AC Origins: 67 saved
-  achievements "not found in the game schema").
+  all. Everything Uplay-specific downstream is gated on that marking (objective-id remap turning the
+  emulator's numeric keys back into Steam api-names, the self-heal after a repack update, the uplayId
+  the Watchdog needs for a live unlock) - so all three were silently skipped and the game showed 0
+  unlocked forever (seen on AC Origins: 67 saved achievements "not found in the game schema").
 
-  Marks the record in place; safe to call for every game. Ordered cheapest-first: an in-memory
-  catalogue lookup, then one readdir, and only then the recursive evidence walk.
+  Marks the record in place; safe to call for every game. Ordered cheapest-first: in-memory catalogue lookup, then one readdir, only then the recursive evidence walk.
 */
 function promoteUplayRecord(appid, game, gameDir) {
   if (!gameDir || !appid || !appid.data) return false;
@@ -680,13 +658,10 @@ function promoteUplayRecord(appid, game, gameDir) {
   try {
     if (!uplayR2.looksLikeUplayInstall(gameDir)) return false;
     const mapping = uplayR2.resolveSteamMapping({ name: game.name, gameDir });
-    // The name match must land on THIS game: a fuzzy hit on a different Ubisoft title would attach
-    // the wrong product id, and the product id is what every save folder is named after.
+    // The name match must land on THIS game: a fuzzy hit on a different Ubisoft title would attach the wrong product id, and the product id is what every save folder is named after.
     const catalogued = mapping && String(mapping.steam_appid) === String(appid.appid) ? String(mapping.uplay_id) : '';
     /*
-      What the install itself says, which is the only answer available for a game no shipped table
-      lists - and the better answer when the two disagree, because the shipped row can be stale or
-      name a different regional SKU while the loader log is this copy's own startup value.
+      What the install itself says - the only answer for a game no shipped table lists, and the better answer when the two disagree, since the shipped row can be stale or name a different regional SKU while the loader log is this copy's own startup value.
     */
     const declared = uplayR2.readInstalledProductId(gameDir);
     const uplayId = declared || catalogued;
@@ -1081,8 +1056,10 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
         preferredTag: dlls.tag || null,
         log: debug,
       });
-      // Cap unattended generation so one stalled game cannot block a batch repair.
-      const generated = await genEmuConfig.generate({ tool, appid, login: null, timeout: 90000, log: debug });
+      // Cap unattended generation so one stalled game cannot block a batch repair. The short idle
+      // budget matters more than the hard one here: an anonymous run that hangs after reaching a
+      // Steam CM says nothing at all, and this path runs per game inside the scan.
+      const generated = await genEmuConfig.generate({ tool, appid, login: null, timeout: 90000, idleTimeout: 20000, log: debug });
       try {
         for (const dir of new Set(steamSettingsDirs)) genEmuConfig.mergeIntoGame(generated.steamSettings, dir);
       } finally {
@@ -3381,6 +3358,10 @@ module.exports.detectInstalledAppids = async (option) => {
 
 // Steam ownership for the current refresh. Empty by default: with no Steam connection the Map stays
 // empty, classify() reports nothing, and every entry keeps today's behavior.
+// The whole step blocks the scan, and none of the calls under it carries its own deadline: a Steam
+// endpoint that accepts the connection and then never answers used to hold the game list forever.
+// Ownership only decorates entries, so giving up on it is always better than not listing the games.
+const STEAM_OWNERSHIP_TIMEOUT_MS = 15000;
 let _steamOwnership = new Map();
 let _steamFamilyOwners = new Map();
 
@@ -3412,18 +3393,23 @@ async function refreshSteamOwnership(appidList) {
     const steamRecords = (appidList || []).filter((rec) => rec && rec.data && rec.data.type === 'steamAPI');
     if (steamRecords.length === 0) return;
 
-    const { token, steamid } = (await ipcInvoke('steam:ensure-token')) || {};
+    const { token, steamid } =
+      (await withTimeout(ipcInvoke('steam:ensure-token'), STEAM_OWNERSHIP_TIMEOUT_MS, 'steam:ensure-token timed out')) || {};
     if (!token || !steamid) return;
 
     const steamAccount = require('./steamAccount.js');
     const cacheDir = path.join(_userDataPath || userDataDir(), 'steam_cache');
     await fs.promises.mkdir(cacheDir, { recursive: true });
-    const library = await steamAccount.loadLibrary({
-      cacheFile: path.join(cacheDir, 'library.json'),
-      token,
-      steamid,
-      log: (message) => debug.log(message),
-    });
+    const library = await withTimeout(
+      steamAccount.loadLibrary({
+        cacheFile: path.join(cacheDir, 'library.json'),
+        token,
+        steamid,
+        log: (message) => debug.log(message),
+      }),
+      STEAM_OWNERSHIP_TIMEOUT_MS,
+      'steam library fetch timed out'
+    );
 
     _steamOwnership = steamAccount.classify({
       owned: library.owned,
@@ -3477,7 +3463,13 @@ async function learnUplayProductMappings() {
       debug.log(`[uplay-automap] ${id} could not be resolved => ${err}`);
     }
   }
-  if (learned > 0) debug.log(`[uplay-automap] learned ${learned} Ubisoft product mapping(s) of ${ids.length} unknown - they apply from the next scan`);
+  if (learned > 0) {
+    // A learned pairing is read synchronously by the next discovery, so the cached one - which
+    // dropped those very save folders for having no Steam equivalent - must not be served again.
+    // Without this the game stayed missing until the cache aged out or the app was restarted.
+    _discoverCache = null;
+    debug.log(`[uplay-automap] learned ${learned} Ubisoft product mapping(s) of ${ids.length} unknown - they apply from the next scan`);
+  }
   return learned;
 }
 
@@ -3524,14 +3516,16 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
       finalList = result;
     }
     const discoveryLookup = buildDiscoveryLookup(appidList);
+    // Announce the real total before the first game resolves, so the UI can size its placeholders to
+    // what is actually coming instead of guessing from the previous session. Reported before the
+    // ownership call, not after: that call is network-bound, and until it returned the progress bar
+    // had nothing to show but the previous scan's percentage.
+    if (finalList.length > 0) callbackProgress(0, finalList.length);
     await refreshSteamOwnership(appidList);
     if (finalList.length > 0) {
       gameIndex.beginBatch();
       try {
         let count = 0;
-        // Announce the real total before the first game resolves, so the UI can size its placeholders
-        // to what is actually coming instead of guessing from the previous session.
-        callbackProgress(0, finalList.length);
         // Bounded concurrency: firing every game at once would spike disk reads/sockets/file handles
         // all together. A small worker pool caps how many games load in parallel while they still
         // stream into the UI via onGame as each one resolves. The keyless schema path is plain HTTP

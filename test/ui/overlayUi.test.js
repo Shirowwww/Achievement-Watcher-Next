@@ -10,7 +10,6 @@ async function run() {
   assert.equal(ui.escapeHtml(null), '');
   assert.equal(ui.escapeHtml(0), '0');
 
-  // Localized text: plain strings, per-language objects, English fallback, hidden fallback.
   assert.equal(ui.safeLocalizedText('  Hello  ', 'french', 'Hidden'), 'Hello');
   assert.equal(ui.safeLocalizedText({ french: 'Bonjour', english: 'Hello' }, 'french', 'Hidden'), 'Bonjour');
   assert.equal(ui.safeLocalizedText({ english: 'Hello' }, 'french', 'Hidden'), 'Hello');
@@ -22,7 +21,6 @@ async function run() {
   assert.equal(ui.toBcp47('brazilian'), 'pt-BR');
   assert.equal(ui.toBcp47('schinese'), 'zh-CN');
 
-  // Timestamps: unix seconds, localized output, N/A fallback.
   assert.equal(ui.formatTimestamp(0, 'english', 'N/A'), 'N/A');
   assert.match(ui.formatTimestamp(1700000000, 'english', 'N/A'), /2023/);
   assert.equal(ui.formatTimestamp('garbage', 'english', 'N/A'), 'N/A');
@@ -31,11 +29,15 @@ async function run() {
   // locked row is a schema artifact and must not render a misleading "0 / 1".
   assert.deepEqual(ui.progressInfo({}), { hasProgress: false, current: 0, max: 0, percent: 0 });
   assert.deepEqual(ui.progressInfo({ MaxProgress: 1 }), { hasProgress: false, current: 0, max: 1, percent: 0 });
+  // A max of 1 is the locked/unlocked state, never a counter, whatever the row claims alongside it.
+  // Schemas shipped with min_val and max_val both at 1 make the emulator write 1/1 on rows that were
+  // never earned; those must not read as a completed bar here when the list view already refuses them.
+  assert.deepEqual(ui.progressInfo({ MaxProgress: 1, CurProgress: 1 }), { hasProgress: false, current: 0, max: 1, percent: 0 });
+  assert.deepEqual(ui.progressInfo({ MaxProgress: 1, CurProgress: 0, Achieved: true }), { hasProgress: false, current: 0, max: 1, percent: 0 });
   assert.deepEqual(ui.progressInfo({ MaxProgress: 10, CurProgress: 3 }), { hasProgress: true, current: 3, max: 10, percent: 30 });
   assert.deepEqual(ui.progressInfo({ MaxProgress: 10, CurProgress: 3, Achieved: true }), { hasProgress: true, current: 10, max: 10, percent: 100 });
   assert.deepEqual(ui.progressInfo({ MaxProgress: 5, CurProgress: 99 }), { hasProgress: true, current: 5, max: 5, percent: 100 });
 
-  // Rarity: number, decimal-string, object and null shapes.
   assert.equal(ui.rarityPercent({ rarityPercent: 12.5 }), 12.5);
   assert.equal(ui.rarityPercent({ globalPercent: '6,2' }), 6.2);
   assert.equal(ui.rarityPercent({ rarity: { percent: 3 } }), 3);
@@ -76,7 +78,6 @@ async function run() {
     ['a', 'c', 'b']
   );
 
-  // Stats: total/unlocked/locked/in-progress/percent.
   const stats = ui.buildStats([
     { Achieved: true },
     { Achieved: false },

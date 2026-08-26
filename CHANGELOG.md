@@ -82,6 +82,18 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **A whole game no longer shows as 100% complete on its first launch.** Some shipped schemas declare
+  a minimum and a maximum of 1 on every row, so the emulator writes "1 / 1" for achievements nobody
+  earned. The overlay painted those as full bars; it now reads a maximum of 1 as the plain
+  locked/unlocked state, which is what the list and the toast already did.
+- **Epic fallback schemas are described, and in your language.** When the namespace lookup finds
+  nothing, the direct Epic request asked for English and read only the locked texts, leaving titles
+  that ship the unlocked half with blank descriptions. It now asks for the language AW Next is set to
+  and takes whichever half the game actually filled.
+- **The emulator data generator can no longer hang a scan.** A run that reached Steam and then went
+  silent held its whole budget with nothing to show; a second budget now ends a run that has said
+  nothing at all, killing the process tree rather than the launcher in front of it, and the tool is
+  only ever run from the folder AW Next unpacked it into.
 - **A connected Steam account stays connected.** The token Steam hands out lasts a day, so Settings
   reported the account disconnected every morning and asked for the password again. AW Next now keeps
   the long-lived refresh token the Steam website itself uses and mints a new access token silently,
@@ -155,6 +167,13 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Performance
 
+- **The first scan after a launch is as fast as the ones after it.** Two answers were remembered in
+  memory only and paid for again on every start: where a game's schema sits on disk (a walk of the
+  install folder, up to three seconds per game) and which AppID a title name resolves to (a network
+  search per unconfigured game, five to twelve seconds of the scan). Both are now kept on disk, an
+  oversized install can no longer hold the walk, and a manual refresh still forgets them. The progress
+  bar sweeps instead of showing the previous scan's percentage while the Steam ownership call runs,
+  and that call now gives up after fifteen seconds rather than holding the library forever.
 - **AW Next costs less while it sits in the tray.** Hiding the window left 211 MB of pages resident
   across this app, the GPU process and the network service until something else on the machine needed
   the RAM badly enough for Windows to take it; those working sets are now emptied on the way into

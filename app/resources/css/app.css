@@ -1109,6 +1109,23 @@ body.is-resizing #game-list {
   box-sizing: border-box;
 }
 
+/* Discovery and the Steam ownership call run before the first percentage exists. There is nothing
+   truthful to print during that phase, so the bar sweeps and drops the number instead. */
+.loading .progressBar.indeterminate .meter {
+  width: 35%;
+  transition: none;
+  animation: loading-sweep 1.1s ease-in-out infinite;
+}
+
+@keyframes loading-sweep {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(285%); }
+}
+
+.loading .progressBar.indeterminate:before {
+  content: '';
+}
+
 /* Percent text overlay */
 .loading .progressBar:before {
   content: attr(data-percent) '%';

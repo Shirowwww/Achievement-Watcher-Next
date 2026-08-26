@@ -1451,11 +1451,75 @@ function appListUsable() {
   return appidListMap.size > 0;
 }
 
+/*
+  Since GetAppList was retired this search is the only way a title resolves to an AppID, and its memo
+  lived in this process only. Every launch therefore re-searched every unconfigured install over the
+  network, one candidate name at a time, before a single tile could be drawn: the 5.6s to 11.6s
+  `unconfiguredResolve` phase in the scan timings. The answers change about as often as Steam's
+  catalogue does, so they belong on disk.
+
+  Only a completed request is stored, empty results included - "Steam knows no such title" is a real
+  answer worth keeping. A failed request throws instead, and is cached nowhere: an outage must never
+  be remembered as an answer.
+*/
+const APP_SEARCH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+let _appSearchDisk = null;
+
+function appSearchCacheFile() {
+  return cacheRoot ? path.join(cacheRoot, 'steam_cache', 'appsearch.json') : '';
+}
+
+function loadAppSearchCache() {
+  if (_appSearchDisk) return _appSearchDisk;
+  _appSearchDisk = new Map();
+  try {
+    const file = appSearchCacheFile();
+    if (file && fs.existsSync(file)) {
+      for (const [key, entry] of Object.entries(JSON.parse(fs.readFileSync(file, 'utf8')) || {})) {
+        if (entry && Array.isArray(entry.apps) && Date.now() - Number(entry.at) < APP_SEARCH_TTL_MS) _appSearchDisk.set(key, entry);
+      }
+    }
+  } catch {
+    /* A corrupt cache is equivalent to an empty cache. */
+  }
+  return _appSearchDisk;
+}
+
+function rememberAppSearch(key, apps) {
+  const cache = loadAppSearchCache();
+  cache.set(key, { at: Date.now(), apps });
+  try {
+    const file = appSearchCacheFile();
+    if (!file) return;
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, JSON.stringify(Object.fromEntries(cache)));
+  } catch {
+    /* The in-memory copy remains usable. */
+  }
+}
+
+// Manual refresh means "look again properly", so the remembered searches must not survive it.
+module.exports.forgetAppSearches = () => {
+  appSearchCache.clear();
+  _appSearchDisk = new Map();
+  try {
+    const file = appSearchCacheFile();
+    if (file && fs.existsSync(file)) fs.rmSync(file, { force: true });
+  } catch {
+    /* Best effort. */
+  }
+};
+
 async function searchAppsByName(name) {
   const term = String(name || '').trim();
   if (!term) return [];
   const key = term.toLowerCase();
   if (appSearchCache.has(key)) return appSearchCache.get(key);
+  const stored = loadAppSearchCache().get(key);
+  if (stored) {
+    appSearchCache.set(key, Promise.resolve(stored.apps));
+    return stored.apps;
+  }
 
   const pending = (async () => {
     const url = `https://steamcommunity.com/actions/SearchApps/${encodeURIComponent(term)}`;
@@ -1473,7 +1537,9 @@ async function searchAppsByName(name) {
 
   appSearchCache.set(key, pending);
   try {
-    return await pending;
+    const apps = await pending;
+    rememberAppSearch(key, apps);
+    return apps;
   } catch (err) {
     if (debug) debug.log(`Steam app search failed for "${term}" (${err.code || err})`);
     appSearchCache.delete(key);
@@ -1532,9 +1598,66 @@ function localizedTenokeValue(local, key, lang) {
   Two guards keep that cost off the per-scan path: probe the handful of places emulators actually drop
   these files before walking anything, and memoize the outcome (including "not here", the expensive one).
 */
-const LOCATE_MISS_TTL_MS = 10 * 60 * 1000;
+/*
+  The memo used to live in this process only, and that is what made the first scan after a launch so
+  much slower than every scan after it: 62 games at around 3 seconds each, versus the same 62 in about
+  a second once the walks were remembered. Two walks per install, synchronous, on the renderer's own
+  thread, so the eight-worker pool could not overlap them either - the whole list waited.
+
+  Nothing about "this install has no schema in it" expires on its own, so it is written to disk and
+  read back on the next launch. A remembered hit is revalidated by a single stat; a remembered miss
+  expires on the TTL, and every place that writes a schema calls forgetLocalSchemaLocations() so a
+  file the app just created is never hidden behind one.
+*/
+const LOCATE_MISS_TTL_MS = 24 * 60 * 60 * 1000;
+// A walk cut short by the budget below proved nothing, so it keeps the old short-lived memo.
+const LOCATE_PARTIAL_TTL_MS = 10 * 60 * 1000;
 const SCHEMA_WALK_MAX_DEPTH = 6;
+// A depth-6 walk of a large install visits tens of thousands of entries. The probe above already
+// covers the places an emulator actually writes to, so cap the long shot rather than let one
+// oversized install hold the scan.
+const SCHEMA_WALK_MAX_DIRS = 4000;
 const _locateCache = new Map();
+let _locateCacheLoaded = false;
+let _locateFlushPending = false;
+
+function locateCacheFile() {
+  return cacheRoot ? path.join(cacheRoot, 'steam_cache', 'schemaLocations.json') : '';
+}
+
+function loadLocateCache() {
+  if (_locateCacheLoaded) return;
+  _locateCacheLoaded = true;
+  try {
+    const file = locateCacheFile();
+    if (!file || !fs.existsSync(file)) return;
+    for (const [key, entry] of Object.entries(JSON.parse(fs.readFileSync(file, 'utf8')) || {})) {
+      if (entry && Number.isFinite(Number(entry.at))) _locateCache.set(key, { path: entry.path || null, at: Number(entry.at), partial: false });
+    }
+  } catch {
+    /* A corrupt cache is equivalent to an empty cache. */
+  }
+}
+
+// Coalesced: a cold scan fills this map a few hundred times in a burst, and the walks it saves are
+// worth far more than writing the file each time. Losing the last entries to an abrupt exit only
+// costs one more walk on the next launch.
+function scheduleLocateFlush() {
+  if (_locateFlushPending) return;
+  _locateFlushPending = true;
+  setTimeout(() => {
+    _locateFlushPending = false;
+    try {
+      const file = locateCacheFile();
+      if (!file) return;
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      const durable = [..._locateCache].filter(([, entry]) => entry && !entry.partial).map(([key, entry]) => [key, { path: entry.path, at: entry.at }]);
+      fs.writeFileSync(file, JSON.stringify(Object.fromEntries(durable)));
+    } catch {
+      /* The in-memory copy remains usable. */
+    }
+  }, 1000);
+}
 
 // The directories an emulator actually drops a schema in, nearest first.
 function schemaCandidateDirs(dir) {
@@ -1575,18 +1698,22 @@ function probeFileByName(dir, filename, candidates) {
 // Drop remembered locations (misses included) so a schema the app just wrote, or a manual refresh,
 // is picked up at once instead of waiting out LOCATE_MISS_TTL_MS.
 module.exports.forgetLocalSchemaLocations = (dir) => {
+  loadLocateCache();
   if (dir == null) {
     _locateCache.clear();
+    scheduleLocateFlush();
     return;
   }
   const prefix = `${dir}\u0000`;
   for (const key of _locateCache.keys()) if (key.startsWith(prefix)) _locateCache.delete(key);
+  scheduleLocateFlush();
 };
 
 // `probed` is the caller's own probeFileByName result, so the probe is not repeated here; pass
 // `undefined` when the caller has not probed at all.
 function findFileByName(dir, filename, probed) {
   if (!dir || !fs.existsSync(dir)) return null;
+  loadLocateCache();
   const key = `${dir}\u0000${filename}`;
   const memo = _locateCache.get(key);
   if (memo) {
@@ -1594,14 +1721,15 @@ function findFileByName(dir, filename, probed) {
     // appears later is still found - just not at the price of a walk on every scan in between.
     if (memo.path) {
       if (fs.existsSync(memo.path)) return memo.path;
-    } else if (Date.now() - memo.at < LOCATE_MISS_TTL_MS) {
+    } else if (Date.now() - memo.at < (memo.partial ? LOCATE_PARTIAL_TTL_MS : LOCATE_MISS_TTL_MS)) {
       return null;
     }
     _locateCache.delete(key);
   }
   const wanted = filename.toLowerCase();
+  let budget = SCHEMA_WALK_MAX_DIRS;
   const walk = (current, depth) => {
-    if (depth > SCHEMA_WALK_MAX_DEPTH) return null;
+    if (depth > SCHEMA_WALK_MAX_DEPTH || budget-- <= 0) return null;
     let entries;
     try {
       entries = fs.readdirSync(current, { withFileTypes: true });
@@ -1621,9 +1749,15 @@ function findFileByName(dir, filename, probed) {
   };
 
   const found = (probed === undefined ? probeFileByName(dir, filename) : probed) || walk(dir, 0);
-  _locateCache.set(key, { path: found, at: Date.now() });
+  // A walk that ran out of budget did not prove anything: the file may still be deeper in. Remember
+  // it only long enough to keep this scan cheap, and never persist it as a definitive answer.
+  const partial = !found && budget <= 0;
+  _locateCache.set(key, { path: found, at: Date.now(), partial });
+  if (!partial) scheduleLocateFlush();
   return found;
 }
+
+module.exports._internal = Object.assign({}, module.exports._internal, { findFileByName });
 
 function getTenokeSchemaFromFile(file, appid, lang = 'english') {
   let local;

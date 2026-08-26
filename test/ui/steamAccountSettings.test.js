@@ -67,8 +67,11 @@ test('the playtime Steam knows about reaches the local counter on every refresh'
   // ...seeded before the rows are built, or the value would only appear on the next scan...
   const refresh = achievements.slice(achievements.indexOf('async function refreshSteamOwnership'));
   assert.match(refresh.slice(0, refresh.indexOf('\n}')), /await seedPlaytimeFromSteamLibrary\(library\.playtime\)/);
+  // Anchored on the batch that builds the rows, not on the progress call: the total is now announced
+  // before the ownership step, so that the bar stops showing the previous scan's percentage while a
+  // network call runs. Only the row building has to come after the seeding.
   const seedAt = achievements.indexOf('await refreshSteamOwnership(appidList)');
-  const buildAt = achievements.indexOf('callbackProgress(0, finalList.length)');
+  const buildAt = achievements.indexOf('gameIndex.beginBatch()');
   assert.ok(seedAt > -1 && buildAt > -1 && seedAt < buildAt, 'seeding must happen before the list is built');
 
   // ...and only ever upwards, so a machine that played more than Steam saw keeps its own figure.

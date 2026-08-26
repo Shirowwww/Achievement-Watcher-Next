@@ -10,6 +10,7 @@ const pe = require(path.join(__dirname, '..', 'util', 'pe.js'));
 const { userDataDir } = require(path.join(__dirname, '..', 'util', 'userDataPath.js'));
 const fuzzyAppid = require(path.join(__dirname, '..', 'util', 'fuzzyAppid.js'));
 const goldberg = require(path.join(__dirname, 'goldberg.js'));
+const uplaySteamTable = require(path.join(__dirname, 'uplaySteamTable.js'));
 
 /*
   Two generations of the same emulator. Ubisoft games call either the R2 API (roughly 2019 onward) or
@@ -1008,15 +1009,10 @@ function getGameToolPaths(game, fallbackAppid) {
   };
 }
 
-let _uplaySteamMap = null;
+// The table is shared with ubisoftOfficial.js and re-read whenever the asset changes on disk, so a
+// product added to it resolves without a restart.
 function loadUplaySteamMap() {
-  if (_uplaySteamMap) return _uplaySteamMap;
-  try {
-    _uplaySteamMap = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'assets', 'uplay-steam.json'), 'utf8'));
-  } catch {
-    _uplaySteamMap = [];
-  }
-  return _uplaySteamMap;
+  return uplaySteamTable.rows();
 }
 
 function mappingResult(hit) {

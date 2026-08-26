@@ -398,6 +398,10 @@ module.exports.getAchievements = async (appid) => {
 // (and often mis-targeted) achievements-by-id lookup.
 module.exports.getSchemaByNamespace = resolveSchema;
 
+// The steam-api language name to Epic locale mapping, so parser/epic.js's direct REST fallback asks
+// for the same locale this module would rather than being pinned to English.
+module.exports.localeFor = localeFor;
+
 // Exposed for unit tests.
 module.exports._internal = {
   buildEpicLocalInstallIndex,

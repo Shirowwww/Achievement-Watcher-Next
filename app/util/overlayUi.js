@@ -59,15 +59,24 @@
   }
 
   // Normalized progress for an achievement. Progress is only considered real
-  // when the schema declares a max AND the achievement is unlocked or already
-  // carries a numeric current value (some schemas set MaxProgress=1 for every
-  // row, which would otherwise render a misleading "0 / 1").
+  // when the schema declares a counter (max above 1) AND the achievement is
+  // unlocked or already carries a numeric current value.
+  // A max of 1 is not a counter, it is the plain locked/unlocked state, and some
+  // schemas set it on every row: shipped schemas exist that declare min_val and
+  // max_val both at 1, so the emulator writes 1/1 for achievements that were
+  // never earned. Rendering those as a full bar is what makes a whole game look
+  // 100% complete on first launch. The list view and the toast already refuse a
+  // max of 1 (getAchievementProgressState, normalizeProgress); this is the same
+  // rule, so all three surfaces agree.
   function progressInfo(achievement) {
     const a = achievement || {};
     if (!Number.isFinite(Number(a.MaxProgress)) || Number(a.MaxProgress) <= 0) {
       return { hasProgress: false, current: 0, max: 0, percent: 0 };
     }
     const max = Number(a.MaxProgress);
+    if (max <= 1) {
+      return { hasProgress: false, current: 0, max, percent: 0 };
+    }
     const raw = Number(a.CurProgress);
     const hasCurrent = Number.isFinite(raw);
     if (!hasCurrent && !a.Achieved) {

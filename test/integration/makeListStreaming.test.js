@@ -38,3 +38,37 @@ test('the renderer builds its game list from that callback', () => {
   // previous discovery instead (see integration/newGameScanBaseline.test.js).
   assert.match(app, /refreshProfileStats\(\)/, 'the profile counters follow the streamed list');
 });
+
+/*
+  The percentage in the loading footer only starts existing at the first callbackProgress. Everything
+  before it - discovery, then the Steam ownership call - is silent, and the bar simply kept whatever
+  the previous scan left on it: "100%" on a refresh, "0%" on a cold start, for as long as the network
+  took. That is the whole of the "it sits at 100% or 0% for ages when I launch it" report.
+*/
+test('the total is announced before the ownership call, which cannot hold the scan', () => {
+  const announceAt = achievements.indexOf('callbackProgress(0, finalList.length)');
+  const ownershipAt = achievements.indexOf('await refreshSteamOwnership(appidList)');
+  assert.ok(announceAt > -1 && ownershipAt > -1, 'both steps must still be there');
+  assert.ok(announceAt < ownershipAt, 'the bar must be sized before a network call, not after it');
+
+  const refresh = achievements.slice(achievements.indexOf('async function refreshSteamOwnership'));
+  const body = refresh.slice(0, refresh.indexOf('\n}'));
+  assert.match(body, /withTimeout\(\s*ipcInvoke\('steam:ensure-token'\)/, 'the token call needs a deadline');
+  assert.match(body, /withTimeout\(\s*steamAccount\.loadLibrary\(/, 'so does the library call');
+  assert.match(achievements, /const STEAM_OWNERSHIP_TIMEOUT_MS = \d+/);
+});
+
+test('the renderer clears the previous percentage before it scans again', () => {
+  const app = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'app.js'), 'utf8');
+  const start = app.indexOf("$('#main-footer').removeClass('done')");
+  assert.ok(start > -1, 'the loading footer is still reused between scans');
+  const setup = app.slice(start, start + 500);
+  assert.match(setup, /addClass\('indeterminate'\)/, 'no percentage exists yet, so the bar must sweep instead');
+  assert.match(setup, /meter\.css\('width', '0%'\)/, 'and it must not keep the previous scan width');
+
+  assert.match(app, /removeClass\('indeterminate'\)\.attr\('data-percent', percent\)/, 'the first real report ends the sweep');
+
+  const css = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'resources', 'css', 'app.css'), 'utf8');
+  assert.match(css, /\.loading \.progressBar\.indeterminate \.meter/, 'the sweeping state needs to exist in CSS');
+  assert.match(css, /\.loading \.progressBar\.indeterminate:before\s*\{\s*content: '';/, 'and it must not print a fake percentage');
+});

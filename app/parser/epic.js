@@ -207,21 +207,39 @@ module.exports.getGameData = async (cfg) => {
 
   if (list.length === 0) {
     try {
+      // Ask for the user's language, not English: this path only runs when the namespace lookup
+      // above found nothing, and it used to pin every fallback schema to en-us regardless of cfg.lang.
+      let locale = 'en';
+      try {
+        locale = require('./epicOfficial.js').localeFor(cfg.lang);
+      } catch {
+        /* mapping unavailable - the default locale below still answers */
+      }
       const achievements = await request.getJson(
-        `https://api.epicgames.dev/epic/achievements/v1/public/achievements/product/${cfg.appID}/locale/en-us?includeAchievements=true`
+        `https://api.epicgames.dev/epic/achievements/v1/public/achievements/product/${cfg.appID}/locale/${encodeURIComponent(
+          locale
+        )}?includeAchievements=true`
       );
+      // Epic fills either the locked or the unlocked half depending on the title, so each field takes
+      // the other as its fallback. Reading lockedDescription alone left descriptions blank on every
+      // game that only ships the unlocked texts.
+      const firstText = (...values) => {
+        for (const value of values) {
+          const text = value == null ? '' : String(value).trim();
+          if (text) return text;
+        }
+        return '';
+      };
       for (let achievement of achievements.achievements) {
+        const a = achievement.achievement;
         list.push({
-          name: achievement.achievement.name,
+          name: a.name,
           default_value: 0,
-          displayName:
-            achievement.achievement.lockedDisplayName.length === 0
-              ? achievement.achievement.unlockedDisplayName
-              : achievement.achievement.lockedDisplayName,
-          hidden: achievement.achievement.hidden ? 1 : 0,
-          description: achievement.achievement.lockedDescription,
-          icon: achievement.achievement.unlockedIconLink,
-          icongray: achievement.achievement.lockedIconLink,
+          displayName: firstText(a.lockedDisplayName, a.unlockedDisplayName, a.name),
+          hidden: a.hidden ? 1 : 0,
+          description: firstText(a.lockedDescription, a.unlockedDescription),
+          icon: firstText(a.unlockedIconLink, a.lockedIconLink),
+          icongray: firstText(a.lockedIconLink, a.unlockedIconLink),
         });
       }
     } catch (err) {

@@ -72,7 +72,7 @@ const DEFAULT_ACHIEVEMENTS_ROOTS = () => {
   achievementsRootsCache = roots;
   return roots;
 };
-const UPLAY_STEAM_ASSET = path.join(__dirname, '..', 'assets', 'uplay-steam.json');
+const uplaySteamTable = require(path.join(__dirname, 'uplaySteamTable.js'));
 
 // Ubisoft locale file names (en-US_loc.txt …) → the Steam API language names used app-wide.
 const UBISOFT_LOCALE_MAP = new Map([
@@ -88,20 +88,10 @@ const UBISOFT_LOCALE_MAP = new Map([
   ['th-th', 'thai'], ['tr-tr', 'turkish'], ['uk-ua', 'ukrainian'], ['vi-vn', 'vietnamese'],
 ]);
 
-let uplayToSteam = null;
+// Shared with uplayR2.js, and re-read whenever the asset changes: a product added to the table is
+// resolvable straight away instead of only after the next start.
 function getUplaySteamMapping() {
-  if (uplayToSteam) return uplayToSteam;
-  uplayToSteam = new Map();
-  try {
-    const rows = JSON.parse(fs.readFileSync(UPLAY_STEAM_ASSET, 'utf8'));
-    for (const row of Array.isArray(rows) ? rows : []) {
-      if (row?.uplay_id == null) continue;
-      uplayToSteam.set(String(row.uplay_id).trim(), row);
-    }
-  } catch (err) {
-    debug.log(`uplay-steam mapping asset unavailable => ${err}`);
-  }
-  return uplayToSteam;
+  return uplaySteamTable.byId();
 }
 
 function readVarint(buffer, offset, end = buffer.length) {
@@ -488,13 +478,11 @@ function readConfigurationsIndex(configurationsPath = DEFAULT_CONFIGURATIONS_PAT
 }
 
 /*
-  Ubisoft product id -> the md5 that names its achievement archive.
-
-  readConfigurationsIndex() above decodes the file as text, which is what the title and image fields
-  need and which destroys the binary framing the product id lives in. This is the same file read the
-  other way: each record is a length-prefixed protobuf message whose field 1 is the product id and
-  whose field 3 is the YAML the text pass reads. Pairing the two is what lets an archive be fetched
-  for a product whose achievements page has never been opened.
+  Ubisoft product id -> the md5 naming its achievement archive. readConfigurationsIndex() above reads
+  the file as text (for the title/image fields), which destroys the binary framing the product id
+  lives in; this reads the same file the other way, as a length-prefixed protobuf (field 1 = product
+  id, field 3 = the YAML the text pass reads). Pairing the two lets an archive be fetched for a
+  product whose achievements page has never been opened.
 */
 let productSpecCache = { path: '', mtimeMs: 0, specs: new Map() };
 
@@ -550,14 +538,11 @@ function readProductAchievementSpecs(configurationsPath = DEFAULT_CONFIGURATIONS
 }
 
 /*
-  Ubisoft serves those archives from its own CDN, content-addressed by the md5 above, with no
-  authentication and no headers. The launcher only downloads one once its achievements page has been
-  displayed, which is why a product the user owns but has never browsed had no achievement data at
-  all. Fetching it directly removes that step.
-
-  Written into AW Next's own cache, never into the launcher's folders, and only when the payload
-  hashes to the md5 that was asked for - a content-addressed URL that returns something else is not
-  this game's archive.
+  Ubisoft serves archives from its own CDN, content-addressed by the md5 above, with no auth and no
+  headers; the launcher only downloads one once its achievements page has been displayed, which is
+  why a product the user owns but never browsed had no achievement data - fetching it directly
+  removes that step. Written into AW Next's own cache, never the launcher's folders, and only when
+  the payload hashes to the requested md5 (a content-addressed URL returning something else is not this game's archive).
 */
 const UBISOFT_ASSET_CDN = 'https://static3.cdn.ubi.com/orbit/uplay_launcher_3_0/assets/';
 const MAX_ARCHIVE_BYTES = 32 * 1024 * 1024;
