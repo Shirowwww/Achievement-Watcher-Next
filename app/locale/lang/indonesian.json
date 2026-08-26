@@ -865,6 +865,12 @@
       "intro": "Semua yang perlu diketahui - deteksi, notifikasi, kontroler, overlay, tema, dan penanganan masalah.",
       "setupTitle": "Penyiapan Anda saat ini",
       "topicsTitle": "Telusuri menurut topik",
+      "groups": {
+        "start": "Langkah pertama",
+        "problems": "Ada yang tidak berfungsi",
+        "emulators": "Game emulasi",
+        "personalize": "Kustomisasi"
+      },
       "searchPlaceholder": "Cari bantuan…",
       "noResults": "Tidak ada topik bantuan yang cocok dengan pencarian Anda.",
       "links": {
@@ -880,6 +886,12 @@
         "Watchdog berjalan di latar belakang - ia harus aktif agar notifikasi langsung dan waktu bermain berfungsi.",
         "Semuanya (pengaturan, cache, log, tema kustom) berada di %APPDATA%\\Achievement Watcher Next.",
         "Setiap bagian pengaturan dapat dilipat lewat judulnya sendiri - tanda panah menghadap ke bawah saat terbuka dan ke samping saat tertutup. Pilihan Anda diingat."
+      ],
+      "notifications": [
+        "Otomatis adalah bawaan: pop-up dalam game saat game bisa menampilkannya, dan notifikasi Windows saat tidak bisa, tidak pernah keduanya.",
+        "Pengaturan > Notifikasi memuat preset, suara, volume, posisi, dan skala; tombol uji menampilkan pop-up sungguhan.",
+        "Klik kanan sebuah game > Notifikasi untuk memberi game itu saja preset, posisi, suara, atau skala sendiri.",
+        "Tangkapan layar saat terbuka menyimpan gambar momen itu di Pictures\\Achievement Watcher Next."
       ],
       "gameHealthTitle": "Kesehatan game",
       "gameHealth": [

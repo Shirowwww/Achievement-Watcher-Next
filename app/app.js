@@ -4015,11 +4015,14 @@ var app = {
           const diagnosisRepairCodes = [...gameHealth.REPAIRABLE_GOLDBERG_CODES];
           const canRepairGoldbergReport = (report) => report.issues.some((i) => diagnosisRepairCodes.includes(i.code));
           const buildGoldbergDiagnosisLines = (report) => {
-            const emuLabel = {
-              gbe: 'GBE Fork',
-              goldberg: 'Goldberg (classic)',
-              none: t('diagnosis-emulator-none', 'none detected', 'aucun détecté'),
-            }[report.emulator] || report.emulator;
+            const emuLabel =
+              report.loader ||
+              {
+                gbe: 'GBE Fork',
+                goldberg: 'Goldberg (classic)',
+                none: t('diagnosis-emulator-none', 'none detected', 'aucun détecté'),
+              }[report.emulator] ||
+              report.emulator;
             const lines = [];
             lines.push(t('diagnosis-emulator', 'Emulator: {emulator}', 'Émulateur : {emulator}', { emulator: emuLabel }));
             lines.push(
@@ -7173,7 +7176,10 @@ function gameHealthSimpleCheckValue(entry) {
   product names are brands that stay identical in every language, while "no emulator" is a real
   sentence and uses the translation the right-click diagnosis already ships.
 */
-function gameHealthEmulatorLabel(emulator) {
+function gameHealthEmulatorLabel(emulator, loader) {
+  // The emulator that actually supplied the dll, when it could be named: "goldberg" is the shape of
+  // an unconfigured setup, not a claim about who wrote it.
+  if (loader) return String(loader);
   if (emulator === 'gbe') return 'GBE Fork';
   if (emulator === 'goldberg') return 'Goldberg';
   if (!emulator || emulator === 'none') return t('diagnosis-emulator-none', 'none detected', 'aucun détecté');
@@ -7262,7 +7268,7 @@ function gameHealthCheckValue(entry, simple) {
       // Name what is wrong. A bare count ("1 point to review") gave the user no way to know what to
       // look at, which defeats the purpose of the row.
       if (p.topics && p.topics.length) return p.topics.map(gameHealthIssueTopicLabel).join(' · ');
-      return gameHealthEmulatorLabel(p.emulator);
+      return gameHealthEmulatorLabel(p.emulator, p.loader);
     case 'uplay': {
       if (p.servedBy) {
         return t('gh-value-served-by', 'served by {emulator}', 'pris en charge par {emulator}', { emulator: p.servedBy });

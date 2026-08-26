@@ -241,23 +241,23 @@ test('the Help filter behaves correctly in a real DOM', { concurrency: 1, timeou
         open: document.querySelectorAll('.help-panel[open]').length,
       };
     });
-    assert.deepStrictEqual(initial, { panels: 12, open: 1 });
+    assert.deepStrictEqual(initial, { panels: 13, open: 1 });
 
     const broad = await page.evaluate(() => window.AchievementHelp.applyHelpSearch($, 'emulateur'));
-    assert.deepStrictEqual(broad, { matches: 4, total: 12 }, 'accent-free search must match French topic text');
+    assert.deepStrictEqual(broad, { matches: 4, total: 13 }, 'accent-free search must match French topic text');
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel:not([hidden])').length), 4);
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel[open]:not([hidden])').length), 0, 'multiple matches stay compact');
 
     const narrow = await page.evaluate(() => window.AchievementHelp.applyHelpSearch($, 'RPCS3'));
-    assert.deepStrictEqual(narrow, { matches: 1, total: 12 });
+    assert.deepStrictEqual(narrow, { matches: 1, total: 13 });
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel[open]:not([hidden])').length), 1, 'a single result opens immediately');
 
     const none = await page.evaluate(() => window.AchievementHelp.applyHelpSearch($, 'zzzz-no-topic'));
-    assert.deepStrictEqual(none, { matches: 0, total: 12 });
+    assert.deepStrictEqual(none, { matches: 0, total: 13 });
     assert.strictEqual(await page.evaluate(() => document.getElementById('help-no-results').hidden), false);
 
     const cleared = await page.evaluate(() => window.AchievementHelp.applyHelpSearch($, ''));
-    assert.deepStrictEqual(cleared, { matches: 12, total: 12 });
+    assert.deepStrictEqual(cleared, { matches: 13, total: 13 });
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel[hidden]').length), 0);
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel[open]').length), 1, 'clearing restores the original disclosure state');
   } finally {

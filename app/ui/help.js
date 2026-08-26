@@ -4,6 +4,7 @@
 
 const HELP_LISTS = {
   'help-quick-list': 'quick',
+  'help-notif-list': 'notifications',
   'help-gamehealth-list': 'gameHealth',
   'help-sources-list': 'sources',
   'help-steam-list': 'steam',
@@ -294,10 +295,17 @@ function applyHelpSearch($, rawQuery) {
   // matches the user cannot see, and `panel.hidden = false` would never bring them back anyway.
   // 'mode-hidden' is interfaceMode.HIDDEN_CLASS; this file has no require(), hence the literal.
   const panels = card.find('.help-panel').not('.mode-hidden').toArray();
+  const groups = card.find('.help-group').toArray();
   const terms = parseSearchTerms(rawQuery);
   const clearButton = $('#help-search-clear');
   const noResults = $('#help-no-results');
   const matchCount = $('#help-match-count');
+  // A heading with nothing under it reads as an empty section, so a group follows its topics.
+  const syncGroups = () => {
+    for (const group of groups) {
+      group.hidden = !group.querySelector('.help-panel:not([hidden]):not(.mode-hidden)');
+    }
+  };
 
   clearButton.prop('hidden', terms.length === 0);
   if (terms.length === 0) {
@@ -308,6 +316,7 @@ function applyHelpSearch($, rawQuery) {
         delete panel.dataset.helpOpenBeforeSearch;
       }
     }
+    syncGroups();
     card.removeClass('is-searching');
     noResults.prop('hidden', true);
     matchCount.text('');
@@ -326,6 +335,7 @@ function applyHelpSearch($, rawQuery) {
 
   const matches = matchedPanels.length;
   for (const panel of matchedPanels) panel.open = matches === 1;
+  syncGroups();
   noResults.prop('hidden', matches !== 0);
   matchCount.text(`${matches}/${panels.length}`);
   card.closest('.content').scrollTop(0);

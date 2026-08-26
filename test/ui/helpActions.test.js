@@ -51,9 +51,9 @@ test('every bundled locale supplies the help interface labels', () => {
   }
 });
 
-test('all 12 Help topics are populated, rendered and localized', () => {
+test('all 13 Help topics are populated, rendered and localized', () => {
   const helpModule = require('../../app/ui/help.js');
-  assert.strictEqual(Object.keys(helpModule.HELP_LISTS).length, 12);
+  assert.strictEqual(Object.keys(helpModule.HELP_LISTS).length, 13);
   for (const [id, key] of Object.entries(helpModule.HELP_LISTS)) {
     assert.match(html, new RegExp(`id="${id}"`), `${key}: missing DOM list`);
     for (const file of fs.readdirSync(localeDir).filter((name) => name.endsWith('.json'))) {
@@ -69,6 +69,28 @@ test('all 12 Help topics are populated, rendered and localized', () => {
         assert.match(loader, new RegExp(`bindHelpList\\('${id}', help\\.${key}\\)`), `${key}: missing locale binding`);
         assert.ok(Array.isArray(locale.settings.help[key]) && locale.settings.help[key].length >= 2, `${file}: incomplete help.${key}`);
       }
+    }
+  }
+});
+
+test('every topic sits in one localized group', () => {
+  const helpModule = require('../../app/ui/help.js');
+  const groups = ['start', 'problems', 'emulators', 'personalize'];
+  for (const group of groups) {
+    assert.match(html, new RegExp(`data-help-group="${group}"`), `${group}: missing group section`);
+    assert.match(loader, new RegExp(`bindHelpText\\('help-group-${group}', help\\.groups\\.${group}\\)`), `${group}: missing heading binding`);
+  }
+  // No topic may fall outside a group, or it would render above every heading with no context.
+  const grouped = html.split('data-help-group=').slice(1).join('');
+  for (const id of Object.keys(helpModule.HELP_LISTS)) {
+    assert.ok(grouped.includes(`id="${id}"`), `${id}: topic is not inside a group`);
+  }
+  // The notification topic reuses the settings tab's own label rather than a title of its own.
+  assert.match(loader, /bindHelpText\('help-notif-title', template\.settings\.sideMenu && template\.settings\.sideMenu\.notification\)/);
+  for (const file of fs.readdirSync(localeDir).filter((name) => name.endsWith('.json'))) {
+    const locale = JSON.parse(fs.readFileSync(path.join(localeDir, file), 'utf8'));
+    for (const group of groups) {
+      assert.ok(String(locale.settings.help.groups?.[group] || '').trim(), `${file}: missing help.groups.${group}`);
     }
   }
 });

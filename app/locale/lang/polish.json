@@ -865,6 +865,12 @@
       "intro": "Wszystko, co warto wiedzieć - wykrywanie, powiadomienia, kontroler, nakładka, motywy i rozwiązywanie problemów.",
       "setupTitle": "Twoja bieżąca konfiguracja",
       "topicsTitle": "Przeglądaj według tematu",
+      "groups": {
+        "start": "Pierwsze kroki",
+        "problems": "Coś nie działa",
+        "emulators": "Gry emulowane",
+        "personalize": "Personalizacja"
+      },
       "searchPlaceholder": "Przeszukaj pomoc…",
       "noResults": "Żaden temat pomocy nie pasuje do wyszukiwania.",
       "links": {
@@ -880,6 +886,12 @@
         "Watchdog działa w tle - musi być uruchomiony, aby działały powiadomienia na żywo i pomiar czasu gry.",
         "Wszystko (ustawienia, pamięci podręczne, dzienniki i motywy użytkownika) znajduje się w %APPDATA%\\Achievement Watcher Next.",
         "Każdą sekcję ustawień można zwinąć pod jej nagłówkiem - strzałka w dół oznacza otwartą, w bok zamkniętą. Twoje wybory są zapamiętywane."
+      ],
+      "notifications": [
+        "Automatyczny to tryb domyślny: powiadomienie w grze, gdy gra może je pokazać, i powiadomienie Windows, gdy nie może, nigdy oba naraz.",
+        "W Ustawienia > Powiadomienia znajdziesz preset, dźwięk, głośność, pozycję i skalę; przyciski testu pokazują prawdziwe powiadomienie.",
+        "Kliknij grę prawym przyciskiem > Powiadomienia, aby nadać tej jednej grze własny preset, pozycję, dźwięk lub skalę.",
+        "Zrzut ekranu przy odblokowaniu zapisuje obraz tej chwili w Obrazy\\Achievement Watcher Next."
       ],
       "gameHealthTitle": "Stan gry",
       "gameHealth": [

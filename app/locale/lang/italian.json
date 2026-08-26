@@ -865,6 +865,12 @@
       "intro": "Tutto quello che serve sapere: rilevamento, notifiche, controller, overlay, temi e risoluzione dei problemi.",
       "setupTitle": "La tua configurazione attuale",
       "topicsTitle": "Sfoglia per argomento",
+      "groups": {
+        "start": "Primi passi",
+        "problems": "Qualcosa non funziona",
+        "emulators": "Giochi emulati",
+        "personalize": "Personalizzazione"
+      },
       "searchPlaceholder": "Cerca nella guida…",
       "noResults": "Nessun argomento della guida corrisponde alla ricerca.",
       "links": {
@@ -880,6 +886,12 @@
         "Il Watchdog viene eseguito in background - deve essere attivo per le notifiche in tempo reale e il tempo di gioco.",
         "Tutto (impostazioni, cache, registri e temi personalizzati) si trova in %APPDATA%\\Achievement Watcher Next.",
         "Ogni sezione delle impostazioni si richiude sotto la propria intestazione: la freccia punta in basso quando è aperta, di lato quando è chiusa. Le tue scelte vengono ricordate."
+      ],
+      "notifications": [
+        "Automatico è la modalità predefinita: il popup nel gioco quando il gioco può mostrarlo e una notifica di Windows quando non può, mai entrambi.",
+        "In Impostazioni > Notifiche trovi preset, suono, volume, posizione e scala; i pulsanti di prova mostrano un popup reale.",
+        "Fai clic destro su un gioco > Notifiche per dare a quel gioco preset, posizione, suono o scala propri.",
+        "La cattura allo sblocco salva un’immagine del momento in Immagini\\Achievement Watcher Next."
       ],
       "gameHealthTitle": "Stato dei giochi",
       "gameHealth": [

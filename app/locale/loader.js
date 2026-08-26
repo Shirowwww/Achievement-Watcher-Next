@@ -392,7 +392,15 @@ function translateUI(lang, locale, template) {
       bindHelpText('help-link-issues', help.links.issues);
       bindHelpText('help-link-download', help.links.download);
     }
+    if (help.groups) {
+      bindHelpText('help-group-start', help.groups.start);
+      bindHelpText('help-group-problems', help.groups.problems);
+      bindHelpText('help-group-emulators', help.groups.emulators);
+      bindHelpText('help-group-personalize', help.groups.personalize);
+    }
     bindHelpText('help-quick-title', help.quickTitle);
+    // The notification topic borrows the settings tab's own name, so both say the same word.
+    bindHelpText('help-notif-title', template.settings.sideMenu && template.settings.sideMenu.notification);
     bindHelpText('help-gamehealth-title', help.gameHealthTitle);
     bindHelpText('help-steam-title', (template.settings.emulator && template.settings.emulator.nav) || help.steamTitle);
     bindHelpText('help-uplay-title', template.settings.emulator && template.settings.emulator.uplay && template.settings.emulator.uplay.title);
@@ -405,6 +413,7 @@ function translateUI(lang, locale, template) {
     bindHelpText('help-tips-title', help.tipsTitle);
     bindHelpText('help-troubleshoot-title', help.troubleshootTitle);
     bindHelpList('help-quick-list', help.quick);
+    bindHelpList('help-notif-list', help.notifications);
     bindHelpList('help-gamehealth-list', help.gameHealth);
     bindHelpList('help-steam-list', help.steam);
     const uplayHelp = template.settings.emulator && template.settings.emulator.uplay;

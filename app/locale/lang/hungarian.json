@@ -865,6 +865,12 @@
       "intro": "Minden hasznos tudnivaló - észlelés, értesítések, kontroller, overlay, témák és hibaelhárítás.",
       "setupTitle": "Jelenlegi beállításaid",
       "topicsTitle": "Böngészés témakör szerint",
+      "groups": {
+        "start": "Első lépések",
+        "problems": "Valami nem működik",
+        "emulators": "Emulált játékok",
+        "personalize": "Testreszabás"
+      },
       "searchPlaceholder": "Keresés a súgóban…",
       "noResults": "Egyetlen súgótéma sem felel meg a keresésnek.",
       "links": {
@@ -880,6 +886,12 @@
         "A Watchdog a háttérben fut - az élő értesítésekhez és a játékidő méréséhez futnia kell.",
         "Minden (beállítások, gyorsítótárak, naplók és egyéni témák) a %APPDATA%\\Achievement Watcher Next mappában található.",
         "Minden beállítási szakasz összecsukható a saját fejlécével - a nyíl lefelé mutat, ha nyitva van, oldalra, ha zárva. A választásai megmaradnak."
+      ],
+      "notifications": [
+        "Az Automatikus az alapértelmezés: a játékon belüli buborék, ha a játék meg tudja jeleníteni, és Windows-értesítés, ha nem, soha nem mindkettő.",
+        "A Beállítások > Értesítés részben található az előbeállítás, a hang, a hangerő, a pozíció és a méret; a tesztgombok valódi buborékot mutatnak.",
+        "Kattintson jobb gombbal egy játékra > Értesítés, és adjon éppen ennek a játéknak saját előbeállítást, pozíciót, hangot vagy méretet.",
+        "A feloldáskor készített képernyőkép a pillanat képét a Képek\\Achievement Watcher Next mappába menti."
       ],
       "gameHealthTitle": "Játék állapota",
       "gameHealth": [

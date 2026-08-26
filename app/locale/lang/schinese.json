@@ -865,6 +865,12 @@
       "intro": "一切有用的信息 - 检测、通知、控制器、悬浮窗、主题和故障排除。",
       "setupTitle": "当前设置",
       "topicsTitle": "按主题浏览",
+      "groups": {
+        "start": "快速上手",
+        "problems": "出现问题时",
+        "emulators": "模拟器游戏",
+        "personalize": "个性化"
+      },
       "searchPlaceholder": "搜索帮助…",
       "noResults": "没有与搜索内容匹配的帮助主题。",
       "links": {
@@ -880,6 +886,12 @@
         "Watchdog 在后台运行；要接收实时通知并记录游戏时间，必须保持其运行。",
         "所有数据（设置、缓存、日志和自定义主题）都位于 %APPDATA%\\Achievement Watcher Next。",
         "每个设置分区都可以在其标题下折叠--展开时箭头朝下，折叠时朝向侧面。你的选择会被记住。"
+      ],
+      "notifications": [
+        "默认是“自动”：游戏能显示时使用游戏内弹窗，不能显示时改用 Windows 通知，绝不会两者同时出现。",
+        "“设置 > 通知”中包含预设、声音、音量、位置和缩放，测试按钮会弹出真实的通知。",
+        "右键单击游戏并选择“通知”，即可只为该游戏设置专属的预设、位置、声音或缩放。",
+        "解锁时截图会把那一刻的画面保存到 图片\\Achievement Watcher Next。"
       ],
       "gameHealthTitle": "游戏状态",
       "gameHealth": [

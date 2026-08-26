@@ -865,6 +865,12 @@
       "intro": "L’essentiel sur la détection, les notifications, la manette, l’overlay, les thèmes et le dépannage.",
       "setupTitle": "Ta configuration actuelle",
       "topicsTitle": "Parcourir les sujets",
+      "groups": {
+        "start": "Premiers pas",
+        "problems": "Quelque chose ne va pas",
+        "emulators": "Jeux émulés",
+        "personalize": "Personnalisation"
+      },
       "searchPlaceholder": "Rechercher dans l’aide…",
       "noResults": "Aucun sujet d’aide ne correspond à ta recherche.",
       "links": {
@@ -880,6 +886,12 @@
         "Le Watchdog fonctionne en arrière-plan : il doit rester actif pour les notifications en direct et le suivi du temps de jeu.",
         "Tes réglages, caches, journaux et thèmes personnalisés se trouvent dans %APPDATA%\\Achievement Watcher Next.",
         "Chaque section des réglages se replie depuis son en-tête : le chevron pointe vers le bas quand elle est ouverte, sur le côté quand elle est fermée. Tes choix sont mémorisés."
+      ],
+      "notifications": [
+        "Automatique est le mode par défaut : le popup en jeu quand le jeu peut l’afficher, une notification Windows sinon, jamais les deux.",
+        "Paramètres > Notification regroupe le preset, le son, le volume, la position et l’échelle ; les boutons de test déclenchent un vrai popup.",
+        "Clic droit sur un jeu > Notification donne à ce jeu son propre preset, sa position, son son ou son échelle.",
+        "La capture au déblocage garde une image du moment dans Images\\Achievement Watcher Next."
       ],
       "gameHealthTitle": "État des jeux",
       "gameHealth": [

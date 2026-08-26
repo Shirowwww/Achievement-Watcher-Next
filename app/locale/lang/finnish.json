@@ -865,6 +865,12 @@
       "intro": "Kaikki oleellinen tunnistuksesta, ilmoituksista, ohjaimesta, peittokuvasta, teemoista ja vianetsinnästä.",
       "setupTitle": "Nykyiset asetuksesi",
       "topicsTitle": "Selaa aiheittain",
+      "groups": {
+        "start": "Ensiaskeleet",
+        "problems": "Jokin ei toimi",
+        "emulators": "Emuloidut pelit",
+        "personalize": "Muokkaus"
+      },
       "searchPlaceholder": "Hae ohjeista…",
       "noResults": "Yksikään ohjeaihe ei vastaa hakuasi.",
       "links": {
@@ -880,6 +886,12 @@
         "Watchdog toimii taustalla - sen on oltava käynnissä, jotta ilmoitukset ja peliajan seuranta toimivat.",
         "Kaikki (asetukset, välimuistit, lokit ja omat teemat) sijaitsee kansiossa %APPDATA%\\Achievement Watcher Next.",
         "Jokainen asetusosio taittuu kokoon oman otsikkonsa alle - nuoli osoittaa alas, kun osio on auki, ja sivulle, kun se on kiinni. Valintasi muistetaan."
+      ],
+      "notifications": [
+        "Automaattinen on oletus: pelin sisäinen ponnahdus, kun peli voi näyttää sen, ja Windows-ilmoitus, kun ei voi, ei koskaan molempia.",
+        "Asetukset > Ilmoitukset sisältää esiasetuksen, äänen, äänenvoimakkuuden, sijainnin ja koon; testipainikkeet näyttävät aidon ponnahduksen.",
+        "Napsauta peliä hiiren kakkospainikkeella > Ilmoitukset ja anna juuri tälle pelille oma esiasetus, sijainti, ääni tai koko.",
+        "Kuvakaappaus avauksen yhteydessä tallentaa hetken kuvan kansioon Kuvat\\Achievement Watcher Next."
       ],
       "gameHealthTitle": "Pelin kunto",
       "gameHealth": [

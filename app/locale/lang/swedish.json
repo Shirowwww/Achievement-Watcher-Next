@@ -865,6 +865,12 @@
       "intro": "Allt som är bra att veta - identifiering, aviseringar, handkontroll, overlay, teman och felsökning.",
       "setupTitle": "Din nuvarande uppsättning",
       "topicsTitle": "Bläddra efter ämne",
+      "groups": {
+        "start": "Första stegen",
+        "problems": "Något fungerar inte",
+        "emulators": "Emulerade spel",
+        "personalize": "Gör det till ditt"
+      },
       "searchPlaceholder": "Sök i hjälpen…",
       "noResults": "Inget hjälpavsnitt matchar din sökning.",
       "links": {
@@ -880,6 +886,12 @@
         "Watchdog körs i bakgrunden - den måste vara igång för aviseringar i realtid och för speltid.",
         "Allt (inställningar, cacheminnen, loggar, egna teman) ligger i %APPDATA%\\Achievement Watcher Next.",
         "Varje inställningsavsnitt kan fällas ihop under sin egen rubrik - pilen pekar nedåt när avsnittet är öppet och åt sidan när det är stängt. Dina val kommer ihåg."
+      ],
+      "notifications": [
+        "Automatiskt är standard: popup-fönstret i spelet när spelet kan visa det och en Windows-avisering när det inte går, aldrig båda.",
+        "Under Inställningar > Aviseringar finns förinställning, ljud, volym, placering och skala; testknapparna visar en riktig popup.",
+        "Högerklicka på ett spel > Aviseringar för att ge just det spelet egen förinställning, placering, ljud eller skala.",
+        "Skärmbild vid upplåsning sparar en bild av ögonblicket i Bilder\\Achievement Watcher Next."
       ],
       "gameHealthTitle": "Spelets hälsa",
       "gameHealth": [

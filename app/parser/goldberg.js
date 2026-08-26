@@ -8,6 +8,7 @@ const path = require('path');
 const exeDetect = require(path.join(__dirname, 'exeDetect.js'));
 const dirCache = require(path.join(__dirname, '..', 'util', 'dirCache.js'));
 const launcherDetect = require(path.join(__dirname, 'launcherDetect.js'));
+const crackLoaderDetect = require(path.join(__dirname, '..', 'util', 'crackLoaderDetect.js'));
 const { parseIni, stringifyIni, getIniSection, upsertIniSection, upsertIniKeys, sanitizeIniValue } = require(path.join(__dirname, '..', 'util', 'emuIni.js'));
 
 const APPID_CONFIG_FILES = new Set([
@@ -279,7 +280,10 @@ function listShallow(dir) {
 // 'gbe' = GBE Fork (configs.*.ini present), 'goldberg' = classic Goldberg (steam_settings but only
 // the legacy loose-file config style), 'none' = no recognizable emulator setup.
 function detectEmulator(gameDir) {
-  const result = { type: 'none', steamSettings: null, dll: [], configs: [] };
+  // `type` says which SHAPE of setup is on disk, and only two shapes are read differently: a GBE
+  // Fork one and a classic Goldberg one, which keep their saves in different folders. `loader` is a
+  // separate question - WHICH emulator supplied the dll - and it is the one worth showing somebody.
+  const result = { type: 'none', steamSettings: null, dll: [], configs: [], loader: null };
   if (!gameDir || !fs.existsSync(gameDir)) return result;
 
   // Replaced steam_api dll(s) anywhere shallow under the game root (the dll sits next to the binary).
@@ -303,8 +307,18 @@ function detectEmulator(gameDir) {
   const steamSettings = findSteamSettings(gameDir);
   result.steamSettings = steamSettings;
   if (!steamSettings) {
-    // No steam_settings but a replaced dll still means an emulator is present (just unconfigured).
-    if (result.dll.length) result.type = 'goldberg';
+    /*
+      A replaced dll with no steam_settings still means an emulator is present, just unconfigured, and
+      "goldberg" is what that shape has always been called here. It is not a name though: ALI213,
+      OnlineFix, SmartSteamEmu and CODEX all land in it, and ZOMBI (whose steam_api.dll says ALI213
+      in its own strings) was reported as Goldberg because of it. Ask what actually supplied the dll
+      and record that separately, leaving the shape - and everything keyed on it - alone.
+    */
+    if (result.dll.length) {
+      result.type = 'goldberg';
+      const loader = crackLoaderDetect.detectWorkingCrackLoader(gameDir);
+      if (loader) result.loader = loader.name;
+    }
     return result;
   }
 
@@ -561,7 +575,8 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
     gameDir,
     appid: appid != null ? String(appid) : null,
     steamSettings: null,
-    emulator: 'none', // 'gbe' | 'goldberg' | 'none'
+    emulator: 'none', // 'gbe' | 'goldberg' | 'none' - the SHAPE on disk, not a product name
+    loader: null, // which emulator supplied the dll, when it can be named (ALI213, OnlineFix, ...)
     save: null, // runtime unlock-state summary (from inspectSaveState)
     localSaveDir: null, // set when configs.user.ini / local_save.txt redirects the save folder
     ok: false,
@@ -590,6 +605,7 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
 
   const emu = detectEmulator(gameDir);
   report.emulator = emu.type;
+  report.loader = emu.loader;
   const steamSettings = emu.steamSettings || findSteamSettings(gameDir);
   report.steamSettings = steamSettings;
   if (!steamSettings) {
@@ -1280,7 +1296,7 @@ function findCompatibleGames(roots, { maxDepth = 5, onSkip = null } = {}) {
         }
       }
     }
-    found.push({ gameDir: resolvedGameDir, steamSettings, appid, emulator: emu.type, hasSchema, schemaCount });
+    found.push({ gameDir: resolvedGameDir, steamSettings, appid, emulator: emu.type, loader: emu.loader, hasSchema, schemaCount });
   };
 
   // Anchor gameDir on identity files (steam_settings / steam_appid.txt), not the dll: the dll often

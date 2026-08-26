@@ -45,9 +45,10 @@ Read in order, or jump to what you need - every page ends with a link to the nex
 | [Comparison](comparison.md) | How AW Next differs from Achievement Watcher 2.x and Achievements |
 | [Community galleries](community-galleries.md) | Presets and themes made by other people: taking one, and sending yours |
 
-The in-app **Settings → Help** tab is the quickest reference while you are using the app. It reflects
+The in-app **Settings → Help** tab is the quickest reference while you are using the app. Its topics
+are grouped as *Get started*, *Something is wrong*, *Emulated games* and *Make it yours*, it reflects
 your actual configuration - overlay hotkey, controller layout and bindings, notification mode, theme,
-enabled sources - and filters its topic cards as you type.
+enabled sources - and it filters its topic cards as you type.
 
 ## Developer reference
 

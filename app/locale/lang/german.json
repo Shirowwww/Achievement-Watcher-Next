@@ -865,6 +865,12 @@
       "intro": "Alles Wissenswerte - Erkennung, Benachrichtigungen, Controller, Overlay, Designs und Fehlerbehebung.",
       "setupTitle": "Deine aktuelle Einrichtung",
       "topicsTitle": "Nach Thema durchsuchen",
+      "groups": {
+        "start": "Erste Schritte",
+        "problems": "Etwas funktioniert nicht",
+        "emulators": "Emulierte Spiele",
+        "personalize": "Anpassen"
+      },
       "searchPlaceholder": "Hilfe durchsuchen…",
       "noResults": "Kein Hilfethema entspricht deiner Suche.",
       "links": {
@@ -880,6 +886,12 @@
         "Der Watchdog läuft im Hintergrund - er muss aktiv sein, damit Live-Benachrichtigungen und Spielzeit funktionieren.",
         "Alles (Einstellungen, Caches, Protokolle und benutzerdefinierte Designs) befindet sich in %APPDATA%\\Achievement Watcher Next.",
         "Jeder Einstellungsbereich lässt sich über seine Kopfzeile einklappen - der Pfeil zeigt nach unten, wenn er offen ist, zur Seite, wenn er zu ist. Deine Auswahl wird gemerkt."
+      ],
+      "notifications": [
+        "Automatisch ist die Voreinstellung: das Pop-up im Spiel, wenn das Spiel es zeigen kann, sonst eine Windows-Benachrichtigung, nie beides.",
+        "Unter Einstellungen > Benachrichtigung stehen Preset, Ton, Lautstärke, Position und Größe; die Testschaltflächen zeigen ein echtes Pop-up.",
+        "Rechtsklick auf ein Spiel > Benachrichtigung gibt genau diesem Spiel ein eigenes Preset, eine eigene Position, einen eigenen Ton oder eine eigene Größe.",
+        "Screenshot beim Freischalten legt ein Bild des Moments in Bilder\\Achievement Watcher Next ab."
       ],
       "gameHealthTitle": "Spielzustand",
       "gameHealth": [

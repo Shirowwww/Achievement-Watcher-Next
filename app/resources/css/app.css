@@ -7406,6 +7406,25 @@ body {
   display: none;
 }
 
+#settings .help-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#settings .help-group[hidden] {
+  display: none;
+}
+
+#settings .help-group-title {
+  margin: 0 0 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 #settings .help-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

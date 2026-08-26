@@ -865,6 +865,12 @@
       "intro": "Všetko užitočné, čo treba vedieť - detekcia, upozornenia, ovládač, overlay, motívy a riešenie problémov.",
       "setupTitle": "Vaše aktuálne nastavenie",
       "topicsTitle": "Prehľadávať podľa témy",
+      "groups": {
+        "start": "Prvé kroky",
+        "problems": "Niečo nefunguje",
+        "emulators": "Emulované hry",
+        "personalize": "Prispôsobenie"
+      },
       "searchPlaceholder": "Hľadať v pomocníkovi…",
       "noResults": "Vyhľadávaniu nezodpovedá žiadna téma pomocníka.",
       "links": {
@@ -880,6 +886,12 @@
         "Watchdog beží na pozadí - pre živé upozornenia a meranie času hrania musí byť spustený.",
         "Všetko (nastavenia, vyrovnávacie pamäte, záznamy a vlastné motívy) je uložené v %APPDATA%\\Achievement Watcher Next.",
         "Každú sekciu nastavení možno zbaliť pod jej záhlavie - šípka nadol znamená otvorené, nabok zatvorené. Vaše voľby sa pamätajú."
+      ],
+      "notifications": [
+        "Automatický režim je predvolený: upozornenie v hre, keď ho hra dokáže zobraziť, a upozornenie Windows, keď nie, nikdy oboje.",
+        "V Nastavenia > Upozornenia nájdete predvoľbu vzhľadu, zvuk, hlasitosť, umiestnenie a veľkosť; tlačidlá testu ukážu skutočné upozornenie.",
+        "Kliknite na hru pravým tlačidlom > Upozornenia a dajte práve tejto hre vlastnú predvoľbu, umiestnenie, zvuk alebo veľkosť.",
+        "Snímka obrazovky pri odomknutí uloží obrázok okamihu do priečinka Obrázky\\Achievement Watcher Next."
       ],
       "gameHealthTitle": "Stav hry",
       "gameHealth": [

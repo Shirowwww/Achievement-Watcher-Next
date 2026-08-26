@@ -47,6 +47,11 @@ renamed in 3.9.0 and the history is kept under one file.
   and names the numbers in the second case. The two loader generations word that line differently,
   and both are now read. A log whose unlock lines were cut off still gives the verdict, because a
   game that asked while the save records nothing asked for a key the schema does not carry.
+- **A game served by ALI213, OnlineFix or the like is named after it, instead of "Goldberg".** That
+  word was the name of a shape on disk, a replaced steam_api dll with nothing configured beside it,
+  and every emulator producing that shape was reported under it: ZOMBI was shown as GBE Fork while
+  its own dll says ALI213 in its strings. The shape still decides where saves are read from and is
+  unchanged; the emulator's name is now carried alongside it and is what the reports show.
 - **A game already served by another emulator is no longer offered a Uplay repair either.** A Ubisoft
   game sold on Steam ships both layers, so a Uplay loader lying in the folder does not mean the Uplay
   layer is what serves its achievements. Where a crack loader is already doing that, the Uplay setup

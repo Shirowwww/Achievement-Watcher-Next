@@ -73,7 +73,10 @@ context menu.
 <sub>The Details view: latest achievement, last session and playtime for every game at a glance</sub>
 </div>
 
-The search field at the top of **Settings** filters every tab at once, and the side menu shows how many options each tab matches - useful when you remember what an option does but not where it lives. It matches labels, descriptions, the values an option offers and its internal name, so `hideZero` finds the same row in any interface language. Press `Ctrl+F` to jump to it and `Esc` to clear it.
+The search field at the top of **Settings** filters every tab at once, and the side menu shows how
+many options each tab matches - for when you remember what an option does but not where it lives. It
+matches labels, descriptions, the values an option offers and its internal name, so `hideZero` finds
+the same row in any interface language. `Ctrl+F` jumps to it, `Esc` clears it.
 
 ## Themes
 
@@ -85,11 +88,9 @@ optionally a gradient, and the five surface layers optionally a background image
 either a coloured veil or a blur.
 
 Editing previews live and writes nothing. **Save theme**, beside the name field, is what turns it
-into a theme of your own:
-
-- Leave the name as it opened and you are offered to replace that theme with what the editor shows.
-- Type another name and you get a second theme, with the first left exactly as it was.
-- A saved theme sits in the picker like any built-in, exports as an `.awtheme` and can be deleted.
+into a theme of your own: keep the name it opened with to replace that theme, or type another name
+to get a second one and leave the first untouched. A saved theme sits in the picker like any
+built-in, exports as an `.awtheme` and can be deleted.
 
 **Custom…** is the scratch slot: always there, always editable, and never overwritten by a save made
 from it. **Reset all** puts back the theme you are editing - a built-in returns its own palette, a
@@ -97,20 +98,17 @@ saved or imported theme returns what is on disk, and the Custom slot returns to 
 
 Below the picker, **Theme files** turns whatever you are using into one portable file:
 
-- **Export theme…** writes an `.awtheme`: the palette, the gradients, the effect settings and any
-  image you used, in a single file. It carries nothing about your machine - an image travels as
-  bytes under a name built from its layer, never as a path out of your pictures folder. A built-in
-  keeps its name, so exporting one is refused until you save it under a name of your own: the file
-  would otherwise install as "Nord" on somebody else's machine and shadow the Nord they have.
-- **Import theme…** reads one. Before anything is installed it shows the app drawn with that theme,
-  with the name, the author, the version and how many images it carries, and only installs it when
-  you confirm. An imported theme then behaves exactly like a built-in: it sits in the same dropdown,
-  paints the same surfaces and follows into the overlay.
+- **Export theme…** writes an `.awtheme` - palette, gradients, effect settings and any image you
+  used - and carries nothing about your machine: an image travels as bytes, never as a path out of
+  your pictures folder. Exporting a built-in is refused until you save it under a name of your own,
+  since the file would otherwise install as "Nord" elsewhere and shadow the Nord already there.
+- **Import theme…** shows the app drawn with that theme first, with its name, author, version and
+  image count, and installs only when you confirm. An imported theme then behaves like a built-in.
 - **Delete theme** removes an imported one, with its images and its generated copies.
 
-An `.awtheme` contains no stylesheet, no markup and no script - it is colours, numbers and pictures,
-and the app builds its own stylesheet from them - so an imported theme has nothing it could run and
-no way to reach the network. The details are in [the format reference](awtheme-format.md).
+An `.awtheme` contains no stylesheet, no markup and no script - only colours, numbers and pictures,
+from which the app builds its own stylesheet - so it has nothing it could run and no way to reach
+the network. The details are in [the format reference](awtheme-format.md).
 
 Themes other people have made are in the [theme gallery](gallery/themes/); sending yours is
 [one file](community-galleries.md).
@@ -121,22 +119,20 @@ somebody else's stylesheet is exactly what the portable format is designed not t
 
 ## Help & tips adapts to your setup
 
-The **Settings → Help** tab is a live reference, not a static page:
+The **Settings → Help** tab is a live reference, not a static page. Its topics are grouped the way a
+question arrives - **Get started**, **Something is wrong**, **Emulated games**, **Make it yours** -
+and the strip above them shows your current theme, notification mode, controller state, overlay
+hotkey and how many sources are enabled.
 
-- The strip at the top shows your current theme, notification mode, controller
-  state, overlay hotkey and how many sources are enabled.
-- Controller instructions follow the selected layout (**Xbox**, **PlayStation**
-  or **Switch**) and show your real bindings, including the three-button
-  open/close combo.
-- Keyboard-shortcut entries show the hotkey actually saved instead of a
-  hard-coded default.
-- The topic search ignores case and accents. Several matches stay as a compact
-  list; a single match opens immediately.
-- Every topic is available in both interface modes: reading about a feature
-  never requires switching modes first.
+- Controller instructions follow the selected layout (**Xbox**, **PlayStation** or **Switch**) and
+  show your real bindings, including the three-button open/close combo.
+- Keyboard-shortcut entries show the hotkey actually saved instead of a hard-coded default.
+- The topic search ignores case and accents, and hides a group once none of its topics match. A
+  single match opens immediately.
+- Every topic is available in both interface modes: reading about a feature never requires switching
+  modes first.
 
-The panel refreshes immediately as you change settings, so it doubles as a
-preview before you press **Save**.
+The panel refreshes as you change settings, so it doubles as a preview before you press **Save**.
 
 ## Steam metadata, keyless by design
 
@@ -149,14 +145,14 @@ lookup chain, the DLC and update tags, and the 3-day recheck.
 
 Open **Settings → Folders** and choose one of these paths:
 
-- **Smart Find** finds folders two ways, and offers everything it finds for approval before adding
-  anything. It recognises library folders by name ("Games", "Jeux", "Repacks" and their equivalents
-  in twenty-odd languages, plus "Emulators" and "Emulation") on every drive, **and** it reads what
-  the launchers themselves recorded - the Epic manifests, the GOG Galaxy and Ubisoft Connect registry
+- **Smart Find** looks two ways and offers everything it finds for approval before adding anything.
+  It recognises library folders by name ("Games", "Jeux", "Repacks" and their equivalents in
+  twenty-odd languages, plus "Emulators" and "Emulation") on every drive, **and** it reads what the
+  launchers recorded themselves - the Epic manifests, the GOG Galaxy and Ubisoft Connect registry
   entries, and the pointer Windows writes for the drive you chose for Xbox games. That second route
-  is how a library named after a storefront (`D:\Epic Games`, `D:\XboxGames`) is found without
-  scanning anything. Games the launcher owns keep their own source; what this adds is everything else
-  sitting in the same folder, which is usually where a repack or a Goldberg build ends up.
+  finds a library named after a storefront (`D:\Epic Games`, `D:\XboxGames`) without scanning
+  anything. Games the launcher owns keep their own source; what this adds is everything else in the
+  same folder, which is usually where a repack or a Goldberg build ends up.
 - **Add a Folder** watches a location you select.
 - **Generate configs** performs a fuller scan and can apply enabled emulator setup options.
 
@@ -203,14 +199,10 @@ Starting with Windows and closing to the tray can be changed under **Settings �
 Installed releases check the project's GitHub release feed for a newer version. When one is found, the app asks first whether you want to download and install it - nothing is downloaded without your OK. Once the download finishes, it asks again before restarting to apply the update.
 
 A chip beside the Watchdog indicator in the title bar follows the whole thing: *Update available*,
-then the percentage as it downloads, then *Update Ready*, then *Installing update…*. While the file
-is downloading the chip carries a **Cancel**, which is the way to stop a download you started by
-mistake without quitting the app. Open the window halfway through a background download and the chip
-is already showing it. If a game is running when the update is ready, the chip says so and the
-install waits until the game closes.
-
-The installer itself runs with its own progress window and asks nothing along the way, so there is
-something to watch from the moment AW Next closes until it comes back.
+the percentage as it downloads, *Update Ready*, then *Installing update…*. While the file downloads
+the chip carries a **Cancel**, so a download started by mistake can be stopped without quitting the
+app. If a game is running when the update is ready, the chip says so and the install waits until the
+game closes. The installer then runs with its own progress window and asks nothing along the way.
 
 Installing a newer build over an older one replaces program files but preserves user data in:
 

@@ -865,6 +865,12 @@
       "intro": "Todo lo que necesitas saber: detección, notificaciones, mando, overlay, temas y solución de problemas.",
       "setupTitle": "Tu configuración actual",
       "topicsTitle": "Explorar por tema",
+      "groups": {
+        "start": "Primeros pasos",
+        "problems": "Algo no funciona",
+        "emulators": "Juegos emulados",
+        "personalize": "Personalización"
+      },
       "searchPlaceholder": "Buscar en la ayuda…",
       "noResults": "Ningún tema de ayuda coincide con tu búsqueda.",
       "links": {
@@ -880,6 +886,12 @@
         "El Watchdog se ejecuta en segundo plano - debe estar activo para las notificaciones en directo y el tiempo de juego.",
         "Todo (ajustes, cachés, registros y temas personalizados) se guarda en %APPDATA%\\Achievement Watcher Next.",
         "Cada sección de ajustes se pliega bajo su encabezado: el signo apunta hacia abajo cuando está abierta y hacia el lado cuando está cerrada. Tus elecciones se recuerdan."
+      ],
+      "notifications": [
+        "Automático es el modo predeterminado: el aviso dentro del juego cuando el juego puede mostrarlo y una notificación de Windows cuando no, nunca los dos.",
+        "En Ajustes > Notificación están el preajuste, el sonido, el volumen, la posición y la escala; los botones de prueba lanzan un aviso real.",
+        "Haz clic derecho en un juego > Notificación para darle a ese juego su propio preajuste, posición, sonido o escala.",
+        "La captura al desbloquear guarda una imagen del momento en Imágenes\\Achievement Watcher Next."
       ],
       "gameHealthTitle": "Estado del juego",
       "gameHealth": [

@@ -865,6 +865,12 @@
       "intro": "Mọi điều hữu ích cần biết - phát hiện trò chơi, thông báo, tay cầm, lớp phủ, chủ đề và khắc phục sự cố.",
       "setupTitle": "Thiết lập hiện tại của bạn",
       "topicsTitle": "Xem theo chủ đề",
+      "groups": {
+        "start": "Bước đầu",
+        "problems": "Có gì đó không hoạt động",
+        "emulators": "Trò chơi giả lập",
+        "personalize": "Cá nhân hóa"
+      },
       "searchPlaceholder": "Tìm trong trợ giúp…",
       "noResults": "Không có mục trợ giúp nào khớp với tìm kiếm của bạn.",
       "links": {
@@ -880,6 +886,12 @@
         "Watchdog chạy nền - nó phải đang chạy thì mới có thông báo tức thời và theo dõi thời gian chơi.",
         "Mọi thứ (cài đặt, bộ nhớ đệm, nhật ký, chủ đề tùy chỉnh) nằm trong %APPDATA%\\Achievement Watcher Next.",
         "Mỗi phần cài đặt đều có thể gập lại dưới tiêu đề riêng - mũi tên chỉ xuống khi đang mở, chỉ ngang khi đã đóng. Lựa chọn của bạn được ghi nhớ."
+      ],
+      "notifications": [
+        "Tự động là chế độ mặc định: khung thông báo trong trò chơi khi trò chơi hiển thị được, và thông báo Windows khi không, không bao giờ cả hai.",
+        "Cài đặt > Thông báo chứa preset, âm thanh, âm lượng, vị trí và tỷ lệ; các nút thử nghiệm bật một khung thông báo thật.",
+        "Nhấn chuột phải vào một trò chơi > Thông báo để riêng trò chơi đó có preset, vị trí, âm thanh hoặc tỷ lệ riêng.",
+        "Chụp màn hình khi mở khóa lưu lại hình ảnh khoảnh khắc đó trong Pictures\\Achievement Watcher Next."
       ],
       "gameHealthTitle": "Tình trạng trò chơi",
       "gameHealth": [

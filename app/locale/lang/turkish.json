@@ -865,6 +865,12 @@
       "intro": "Bilmeniz gereken her şey - algılama, bildirimler, kumanda, overlay, temalar ve sorun giderme.",
       "setupTitle": "Geçerli ayarlarınız",
       "topicsTitle": "Konuya göre göz at",
+      "groups": {
+        "start": "İlk adımlar",
+        "problems": "Bir şey çalışmıyor",
+        "emulators": "Emüle edilen oyunlar",
+        "personalize": "Kişiselleştirme"
+      },
       "searchPlaceholder": "Yardımda ara…",
       "noResults": "Aramanızla eşleşen bir yardım konusu yok.",
       "links": {
@@ -880,6 +886,12 @@
         "Watchdog arka planda çalışır; canlı bildirimler ve oyun süresi için çalışıyor olması gerekir.",
         "Her şey (ayarlar, önbellekler, günlükler ve özel temalar) %APPDATA%\\Achievement Watcher Next konumunda bulunur.",
         "Her ayar bölümü kendi başlığı altında katlanır - açıkken ok aşağıyı, kapalıyken yana bakar. Seçimleriniz hatırlanır."
+      ],
+      "notifications": [
+        "Otomatik varsayılandır: oyun gösterebiliyorsa oyun içi bildirim, gösteremiyorsa Windows bildirimi kullanılır, ikisi birden asla gönderilmez.",
+        "Ayarlar > Bildirim bölümünde hazır ayar, ses, ses düzeyi, konum ve ölçek bulunur; test düğmeleri gerçek bir bildirim gösterir.",
+        "Bir oyuna sağ tıklayıp Bildirim seçeneğiyle yalnızca o oyuna kendi hazır ayarını, konumunu, sesini veya ölçeğini verebilirsiniz.",
+        "Kilit açıldığında ekran görüntüsü, o anın resmini Resimler\\Achievement Watcher Next klasörüne kaydeder."
       ],
       "gameHealthTitle": "Oyun durumu",
       "gameHealth": [

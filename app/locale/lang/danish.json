@@ -865,6 +865,12 @@
       "intro": "Alt det, der er værd at vide - registrering, notifikationer, controller, overlay, temaer og fejlfinding.",
       "setupTitle": "Din nuværende opsætning",
       "topicsTitle": "Gennemse efter emne",
+      "groups": {
+        "start": "Første trin",
+        "problems": "Noget virker ikke",
+        "emulators": "Emulerede spil",
+        "personalize": "Gør det til dit"
+      },
       "searchPlaceholder": "Søg i hjælpen…",
       "noResults": "Intet hjælpeemne matcher din søgning.",
       "links": {
@@ -880,6 +886,12 @@
         "Watchdog kører i baggrunden - den skal køre, for at du kan få notifikationer og spilletid i realtid.",
         "Alt (indstillinger, cacher, logfiler, egne temaer) ligger i %APPDATA%\\Achievement Watcher Next.",
         "Hvert afsnit i indstillingerne kan foldes sammen under sin egen overskrift - pilen peger nedad, når afsnittet er åbent, og til siden, når det er lukket. Dine valg huskes."
+      ],
+      "notifications": [
+        "Automatisk er standard: pop op-vinduet i spillet, når spillet kan vise det, og en Windows-notifikation, når det ikke kan, aldrig begge dele.",
+        "Under Indstillinger > Notifikation finder du forudindstilling, lyd, lydstyrke, placering og størrelse; testknapperne viser en rigtig pop op.",
+        "Højreklik på et spil > Notifikation for at give netop det spil sin egen forudindstilling, placering, lyd eller størrelse.",
+        "Skærmbillede ved oplåsning gemmer et billede af øjeblikket i Billeder\\Achievement Watcher Next."
       ],
       "gameHealthTitle": "Spillets tilstand",
       "gameHealth": [

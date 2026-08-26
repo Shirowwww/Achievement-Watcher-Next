@@ -27,9 +27,12 @@ Use **Settings → Advanced → Diagnostics** to open the log or data directory.
 %APPDATA%\Achievement Watcher Next\logs
 ```
 
-The most useful files are usually `Achievement Watcher.log`, `renderer.log`, `parser.log` and the Watchdog logs created for the affected source. A failure that crosses scanning, UI and notification behavior needs several of them, so **Export logs (.zip)** in the same Diagnostics card writes all of them into one archive you choose the location of.
-
-Use that button rather than copying the files by hand. The tray daemon, the Watchdog monitor and every transient notification process keep their log streams open and keep appending, so a manual copy can catch a half-written line and some compressors refuse a file whose size changes under them. The export reads each file once and writes the bytes into the archive, which is why it works while the app is running - there is no need to quit first. The archive also carries an `about.txt` with the app, Electron, Node and Chrome versions the logs were produced by.
+The most useful files are usually `Achievement Watcher.log`, `renderer.log`, `parser.log` and the
+Watchdog logs of the affected source. A failure that crosses scanning, UI and notification behavior
+needs several of them, so use **Export logs (.zip)** in the same Diagnostics card rather than copying
+files by hand: the processes writing those logs never stop appending, so a manual copy can catch a
+half-written line. The export works with the app running and adds an `about.txt` with the app,
+Electron, Node and Chrome versions the logs came from.
 
 Logs are appended, never truncated, so a crash survives the next launch. Each run starts with a marker, which is how you tell one launch from the next:
 

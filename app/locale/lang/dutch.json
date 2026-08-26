@@ -865,6 +865,12 @@
       "intro": "Alles wat handig is om te weten - detectie, meldingen, controller, overlay, thema's en probleemoplossing.",
       "setupTitle": "Je huidige configuratie",
       "topicsTitle": "Bladeren per onderwerp",
+      "groups": {
+        "start": "Eerste stappen",
+        "problems": "Er gaat iets mis",
+        "emulators": "Geëmuleerde games",
+        "personalize": "Persoonlijk maken"
+      },
       "searchPlaceholder": "Help doorzoeken…",
       "noResults": "Geen enkel helponderwerp komt overeen met je zoekopdracht.",
       "links": {
@@ -880,6 +886,12 @@
         "De Watchdog draait op de achtergrond - hij moet actief zijn voor live meldingen en speeltijd.",
         "Alles (instellingen, caches, logboeken, eigen thema's) staat in %APPDATA%\\Achievement Watcher Next.",
         "Elke sectie met instellingen klapt dicht onder zijn eigen kop - het pijltje wijst omlaag als de sectie open staat en opzij als hij dicht is. Je keuzes worden onthouden."
+      ],
+      "notifications": [
+        "Automatisch is de standaard: de pop-up in de game als de game die kan tonen, anders een Windows-melding, nooit allebei.",
+        "Bij Instellingen > Meldingen staan preset, geluid, volume, positie en schaal; de testknoppen tonen een echte pop-up.",
+        "Klik met rechts op een game > Meldingen om die ene game een eigen preset, positie, geluid of schaal te geven.",
+        "Schermafbeelding bij ontgrendeling bewaart een beeld van het moment in Afbeeldingen\\Achievement Watcher Next."
       ],
       "gameHealthTitle": "Gamestatus",
       "gameHealth": [

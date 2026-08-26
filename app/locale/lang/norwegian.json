@@ -865,6 +865,12 @@
       "intro": "Alt som er verdt å vite om gjenkjenning, varsler, kontroller, overlay, temaer og feilsøking.",
       "setupTitle": "Oppsettet ditt nå",
       "topicsTitle": "Bla etter emne",
+      "groups": {
+        "start": "Første steg",
+        "problems": "Noe virker ikke",
+        "emulators": "Emulerte spill",
+        "personalize": "Gjør det til ditt"
+      },
       "searchPlaceholder": "Søk i hjelpen…",
       "noResults": "Ingen hjelpeemner passer med søket ditt.",
       "links": {
@@ -880,6 +886,12 @@
         "Watchdog kjører i bakgrunnen - den må kjøre for at du skal få varsler i sanntid og spilletid.",
         "Alt (innstillinger, buffere, logger, egne temaer) ligger i %APPDATA%\\Achievement Watcher Next.",
         "Hver del av innstillingene kan felles sammen under sin egen overskrift - pilen peker ned når den er åpen og til siden når den er lukket. Valgene dine huskes."
+      ],
+      "notifications": [
+        "Automatisk er standard: sprettoppvarselet i spillet når spillet kan vise det, og et Windows-varsel når det ikke kan, aldri begge.",
+        "Under Innstillinger > Varsler finner du forhåndsinnstilling, lyd, volum, plassering og størrelse; testknappene viser et ekte varsel.",
+        "Høyreklikk på et spill > Varsler for å gi akkurat det spillet egen forhåndsinnstilling, plassering, lyd eller størrelse.",
+        "Skjermbilde ved opplåsing lagrer et bilde av øyeblikket i Bilder\\Achievement Watcher Next."
       ],
       "gameHealthTitle": "Spilltilstand",
       "gameHealth": [

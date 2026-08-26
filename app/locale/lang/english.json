@@ -865,6 +865,12 @@
       "intro": "Everything useful to know - detection, notifications, controller, overlay, themes and troubleshooting.",
       "setupTitle": "Your current setup",
       "topicsTitle": "Browse by topic",
+      "groups": {
+        "start": "Get started",
+        "problems": "Something is wrong",
+        "emulators": "Emulated games",
+        "personalize": "Make it yours"
+      },
       "searchPlaceholder": "Search help…",
       "noResults": "No help topic matches your search.",
       "links": {
@@ -880,6 +886,12 @@
         "The Watchdog runs in the background - it must be running for live notifications and playtime.",
         "Everything (settings, caches, logs, custom themes) lives in %APPDATA%\\Achievement Watcher Next.",
         "Every settings section folds away under its own header - the chevron points down when open, sideways when closed. Your choices are remembered."
+      ],
+      "notifications": [
+        "Automatic is the default: the in-game popup when the game can show it, a Windows notification when it cannot, never both.",
+        "Settings > Notification holds the preset, sound, volume, position and scale, and its test buttons fire a real popup.",
+        "Right-click a game > Notification gives that one game its own preset, position, sound or scale.",
+        "Screenshot on unlock keeps a picture of the moment in Pictures\\Achievement Watcher Next."
       ],
       "gameHealthTitle": "Game health",
       "gameHealth": [
