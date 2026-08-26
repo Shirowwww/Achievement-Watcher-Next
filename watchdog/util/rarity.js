@@ -62,11 +62,14 @@ function writeCache(appid, entries) {
   }
 }
 
-async function fetchSteamGlobal(appid) {
-  const url = `https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid=${encodeURIComponent(
+function steamGlobalUrl(appid, explicitFormat) {
+  const base = `https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid=${encodeURIComponent(
     appid
-  )}&format=json`;
-  const data = await request.getJson(url, { timeout: 8000 });
+  )}`;
+  return explicitFormat ? `${base}&format=json` : base;
+}
+
+function steamGlobalRows(data) {
   const rows =
     data && data.achievementpercentages && Array.isArray(data.achievementpercentages.achievements)
       ? data.achievementpercentages.achievements
@@ -78,6 +81,15 @@ async function fetchSteamGlobal(appid) {
     if (name && percent !== null) out.push({ name, percent });
   }
   return out;
+}
+
+// Same Valve quirk the renderer copy documents (app/util/rarity.js): `format=json` intermittently
+// returns an empty achievement list where the parameterless request returns the data. An empty first
+// answer is retried once without the parameter before it is believed.
+async function fetchSteamGlobal(appid) {
+  const first = steamGlobalRows(await request.getJson(steamGlobalUrl(appid, true), { timeout: 8000 }));
+  if (first.length > 0) return first;
+  return steamGlobalRows(await request.getJson(steamGlobalUrl(appid, false), { timeout: 8000 }));
 }
 
 // Return a Map<achievementName, percent>. Hits the network only when the sidecar is missing or older

@@ -16,6 +16,9 @@ const STEAM_LOGIN_URL = 'https://store.steampowered.com/login/';
 const STEAM_TOKEN_URL = 'https://store.steampowered.com/pointssummary/ajaxgetasyncconfig';
 const STEAM_SESSION_PARTITION = 'persist:aw-steam';
 const STEAM_LOGIN_COOKIE = 'steamLoginSecure';
+const STEAM_REFRESH_COOKIE = 'steamRefresh_steam';
+const STEAM_LOGIN_DOMAIN = 'https://login.steampowered.com';
+const STEAM_RENEW_URL = 'https://api.steampowered.com/IAuthenticationService/GenerateAccessTokenForApp/v1/';
 
 function resolveSteamSessionFile(userDataDir = '', explicitPath = '') {
   const fromFlag = String(explicitPath || '').trim();
@@ -187,22 +190,88 @@ function webApiTokenFromBody(body) {
 }
 
 /*
-  A valid token, or an empty string. Never triggers any UI: if the session is dead, the caller
-  shows a state and waits for a click.
+  Steam issues the refresh cookie in the same "<steamid64>||<jwt>" shape as the login cookie. It is
+  the only long-lived part of a web session: the login cookie dies after a day, this one lasts
+  months, which is why the Steam website itself never asks for a password every morning.
 */
-async function ensureSteamToken({ sessionFile, tokenSecret, session } = {}) {
+function refreshSessionFromCookie(value) {
+  const raw = decodeURIComponent(String(value || ''));
+  const parts = raw.split('||');
+  return { refreshToken: parts.length > 1 ? parts[1].trim() : '', steamid: steamIdFromLoginCookie(value) };
+}
+
+// The refresh cookie is HttpOnly, which only hides it from page scripts: the main-process cookie
+// store hands it over. `session` is an Electron Session.
+async function readRefreshSession(session) {
+  try {
+    if (!session || !session.cookies || typeof session.cookies.get !== 'function') return { refreshToken: '', steamid: '' };
+    const cookies = await session.cookies.get({ url: STEAM_LOGIN_DOMAIN, name: STEAM_REFRESH_COOKIE });
+    return refreshSessionFromCookie(cookies && cookies[0] && cookies[0].value);
+  } catch {
+    return { refreshToken: '', steamid: '' };
+  }
+}
+
+/*
+  Mints a fresh webapi_token from the refresh token, with no cookies and no window. This is the
+  call the Steam website makes for itself when its day-old access token dies; without it AW
+  declared the account disconnected every morning even though Steam still trusted it.
+*/
+async function renewWebApiToken(refreshToken, steamid, fetchImpl = globalThis.fetch) {
+  const refresh = String(refreshToken || '').trim();
+  if (!refresh) throw new Error('steam-renew-no-refresh-token');
+  const body = new URLSearchParams({ refresh_token: refresh, steamid: String(steamid || '') });
+  const response = await fetchImpl(STEAM_RENEW_URL, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: body.toString(),
+  });
+  if (!response || !response.ok) throw new Error(`steam-renew-http-${response ? response.status : 'no-response'}`);
+  const payload = await response.json();
+  const access = String((payload && payload.response && payload.response.access_token) || '').trim();
+  // An empty access_token means Steam refused the refresh token, not that it handed out a blank
+  // one: the caller must fall back to a real sign-in rather than cache nothing.
+  if (!access) throw new Error('steam-renew-missing');
+  return access;
+}
+
+/*
+  A valid token, or an empty string. Never triggers any UI: if the session is dead, the caller
+  shows a state and waits for a click. Two ways back from an expired token, tried in that order:
+  re-read it from the page while the login cookie is alive, then mint one from the refresh token,
+  which outlives that cookie by months.
+*/
+async function ensureSteamToken({ sessionFile, tokenSecret, session, fetchImpl = globalThis.fetch } = {}) {
   const cached = await loadSession({ sessionFile, tokenSecret });
   if (cached && cached.webapi_token && Number(cached.expiresAt) > Date.now() + 60 * 1000) {
     return cached.webapi_token;
   }
-  if (!session) return '';
-  try {
-    const token = await fetchWebApiToken(session);
-    await saveSessionEncrypted(
+
+  const store = async (token, extra) =>
+    saveSessionEncrypted(
       sessionFile,
-      { ...(cached || {}), webapi_token: token, expiresAt: parseJwtExpiry(token) },
+      { ...(cached || {}), ...(extra || {}), webapi_token: token, expiresAt: parseJwtExpiry(token) },
       tokenSecret
     );
+
+  if (session) {
+    try {
+      const token = await fetchWebApiToken(session);
+      await store(token);
+      return token;
+    } catch {
+      // The login cookie has expired; the refresh token below is the way back in.
+    }
+  }
+
+  // A session connected before AW knew about refresh tokens has none stored, so the cookie jar is
+  // read as well: it usually still holds one.
+  const fromCookie = await readRefreshSession(session);
+  const refreshToken = String((cached && cached.refresh_token) || '') || fromCookie.refreshToken;
+  const steamid = String((cached && cached.steamid) || '') || fromCookie.steamid;
+  try {
+    const token = await renewWebApiToken(refreshToken, steamid, fetchImpl);
+    await store(token, { refresh_token: refreshToken, steamid });
     return token;
   } catch {
     return '';
@@ -258,6 +327,8 @@ module.exports = {
   STEAM_TOKEN_URL,
   STEAM_SESSION_PARTITION,
   STEAM_LOGIN_COOKIE,
+  STEAM_REFRESH_COOKIE,
+  STEAM_RENEW_URL,
   resolveSteamSessionFile,
   steamIdFromLoginCookie,
   parseJwtExpiry,
@@ -269,6 +340,9 @@ module.exports = {
   clearSteamSession,
   fetchWebApiToken,
   webApiTokenFromBody,
+  refreshSessionFromCookie,
+  readRefreshSession,
+  renewWebApiToken,
   ensureSteamToken,
   fetchPersona,
   refreshPersona,

@@ -198,3 +198,52 @@ test('resolveGameRarityContext reconciles every source to the right rarity path'
   assert.equal(rarity.resolveGameRarityContext(null), null);
   assert.equal(rarity.resolveGameRarityContext({ appid: '440', source: 'Steam' }), null);
 });
+
+test('an empty format=json answer is retried without the parameter', async () => {
+  const calls = [];
+  await withFetchStub(async (url) => {
+    calls.push(String(url));
+    const hasFormat = String(url).includes('format=json');
+    return {
+      ok: true,
+      json: async () => ({
+        achievementpercentages: {
+          achievements: hasFormat ? [] : [{ name: 'ACH_1', percent: 7.5 }],
+        },
+      }),
+    };
+  }, async () => {
+    const entries = await rarity.fetchSteamGlobalAchievementPercentages('440');
+    assert.deepEqual(entries, [{ name: 'ACH_1', percent: 7.5 }]);
+  });
+  assert.equal(calls.length, 2, 'the empty answer must be retried exactly once');
+  assert.ok(calls[0].includes('format=json'), 'the first attempt keeps the documented parameter');
+  assert.ok(!calls[1].includes('format='), 'the retry drops the format parameter entirely');
+});
+
+test('a populated first answer costs a single request', async () => {
+  let calls = 0;
+  await withFetchStub(async () => {
+    calls += 1;
+    return {
+      ok: true,
+      json: async () => ({ achievementpercentages: { achievements: [{ name: 'ACH_1', percent: 1 }] } }),
+    };
+  }, async () => {
+    const entries = await rarity.fetchSteamGlobalAchievementPercentages('440');
+    assert.deepEqual(entries, [{ name: 'ACH_1', percent: 1 }]);
+  });
+  assert.equal(calls, 1, 'nothing may be retried when the first answer carries rows');
+});
+
+test('an app with genuinely no achievements still resolves to an empty list', async () => {
+  let calls = 0;
+  await withFetchStub(async () => {
+    calls += 1;
+    return { ok: true, json: async () => ({ achievementpercentages: { achievements: [] } }) };
+  }, async () => {
+    const entries = await rarity.fetchSteamGlobalAchievementPercentages('999999');
+    assert.deepEqual(entries, []);
+  });
+  assert.equal(calls, 2, 'both spellings are attempted before an empty result is believed');
+});

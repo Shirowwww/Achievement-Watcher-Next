@@ -1931,7 +1931,17 @@ let steamPersonaRetried = false;
 ipcMain.handle('steam:auth-status', async () => {
   try {
     const { steamAuth, sessionFile, tokenSecret } = steamAuthOptions();
-    const status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret });
+    let status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret });
+    // The webapi_token only lives a day. Reporting that as a dead account made Settings ask for a
+    // sign-in every morning, so renew silently first and only call it disconnected if Steam says no.
+    if (status.connected && status.needsReconnect) {
+      const renewed = await steamAuth.ensureSteamToken({
+        sessionFile,
+        tokenSecret,
+        session: session.fromPartition(steamAuth.STEAM_SESSION_PARTITION),
+      });
+      if (renewed) status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret });
+    }
     if (status.connected && !status.persona && !status.needsReconnect && !steamPersonaRetried) {
       steamPersonaRetried = true;
       const persona = await steamAuth.refreshPersona({
@@ -2046,9 +2056,12 @@ ipcMain.handle('steam:login', async () => {
         if (!steamid) return;
         const token = await steamAuth.fetchWebApiToken(steamSession);
         const persona = await steamAuth.fetchPersona(token, steamid);
+        // Stored alongside the token because it is what keeps the account connected past the day:
+        // Steam gives the refresh token months, the sign-in cookie a single day.
+        const { refreshToken } = await steamAuth.readRefreshSession(steamSession);
         await steamAuth.saveSessionEncrypted(
           sessionFile,
-          { webapi_token: token, steamid, persona, expiresAt: steamAuth.parseJwtExpiry(token) },
+          { webapi_token: token, steamid, persona, refresh_token: refreshToken, expiresAt: steamAuth.parseJwtExpiry(token) },
           tokenSecret
         );
         debug.log('[steam] account connected');

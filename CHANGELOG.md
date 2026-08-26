@@ -82,6 +82,13 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **A connected Steam account stays connected.** The token Steam hands out lasts a day, so Settings
+  reported the account disconnected every morning and asked for the password again. AW Next now keeps
+  the long-lived refresh token the Steam website itself uses and mints a new access token silently,
+  with no window and no sign-in; only a refusal from Steam still counts as disconnected.
+- **Global rarity percentages come back.** Valve's percentage endpoint intermittently answers with an
+  empty achievement list, and the toast and the game page then had no rarity to show at all. The
+  request is retried in the spelling that does answer before an empty reply is believed.
 - **Ubisoft games whose Steam achievements are numbered `001`, `002`, ... now record their unlocks.**
   The Uplay loader rebuilds every key from the objective number with no leading zeros, so a schema
   written as `001` named a key the game could never reach: the setup sat at 0% forever while

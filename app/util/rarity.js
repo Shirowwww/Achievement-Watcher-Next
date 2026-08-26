@@ -58,11 +58,14 @@ async function getJson(url, { timeoutMs = DEFAULT_TIMEOUT_MS, headers } = {}) {
 
 // Platform fetchers: each resolves to [{ name, percent }] keyed by the achievement apiname.
 
-async function fetchSteamGlobalAchievementPercentages(appid, options = {}) {
-  const url = `https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid=${encodeURIComponent(
+function steamGlobalPercentagesUrl(appid, { explicitFormat = true } = {}) {
+  const base = `https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid=${encodeURIComponent(
     appid
-  )}&format=json`;
-  const data = await getJson(url, options);
+  )}`;
+  return explicitFormat ? `${base}&format=json` : base;
+}
+
+function steamPercentageRows(data) {
   const rows = Array.isArray(data?.achievementpercentages?.achievements) ? data.achievementpercentages.achievements : [];
   const out = [];
   for (const row of rows) {
@@ -71,6 +74,17 @@ async function fetchSteamGlobalAchievementPercentages(appid, options = {}) {
     if (name && percent !== null) out.push({ name, percent });
   }
   return out;
+}
+
+// Valve intermittently answers this endpoint with an empty `achievements` array when `format=json`
+// is passed, while the very same request without the parameter returns the data (the default
+// response is JSON anyway). It is region- and time-dependent, so neither spelling can be the only
+// one attempted: an empty first answer is retried once without the parameter before it is believed.
+// A genuinely achievement-less app costs one extra request and still resolves to [].
+async function fetchSteamGlobalAchievementPercentages(appid, options = {}) {
+  const first = steamPercentageRows(await getJson(steamGlobalPercentagesUrl(appid), options));
+  if (first.length > 0) return first;
+  return steamPercentageRows(await getJson(steamGlobalPercentagesUrl(appid, { explicitFormat: false }), options));
 }
 
 async function fetchEpicGlobalAchievementPercentages(productId, options = {}) {

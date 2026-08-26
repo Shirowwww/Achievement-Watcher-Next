@@ -263,3 +263,114 @@ test('no cookie means a real disconnection, and nothing is invented', async () =
   assert.equal(await steamAuth.recoverSteamId({ sessionFile, tokenSecret: 'secret', session: { cookies: { get: async () => [] } } }), '');
   assert.equal(await steamAuth.recoverSteamId({ sessionFile, tokenSecret: 'secret', session: null }), '');
 });
+
+/*
+  The sign-in cookie is only valid for a day, so a token read from the page dies overnight. Steam
+  keeps a separate refresh cookie for months, and this is the whole reason AW no longer asks for a
+  sign-in every morning.
+*/
+test('the refresh cookie yields both the refresh token and the steamid', () => {
+  assert.deepEqual(steamAuth.refreshSessionFromCookie('76561198235048344%7C%7CREFRESH'), {
+    refreshToken: 'REFRESH',
+    steamid: '76561198235048344',
+  });
+  assert.deepEqual(steamAuth.refreshSessionFromCookie('76561198235048344||REFRESH'), {
+    refreshToken: 'REFRESH',
+    steamid: '76561198235048344',
+  });
+  assert.deepEqual(steamAuth.refreshSessionFromCookie(''), { refreshToken: '', steamid: '' });
+});
+
+test('the renewal reads access_token under response, the shape Steam returns', async () => {
+  let seen = null;
+  const fetchImpl = async (url, init) => {
+    seen = { url, body: String(init.body) };
+    return { ok: true, json: async () => ({ response: { access_token: 'RENEWED' } }) };
+  };
+  assert.equal(await steamAuth.renewWebApiToken('REFRESH', '76561198235048344', fetchImpl), 'RENEWED');
+  assert.equal(seen.url, steamAuth.STEAM_RENEW_URL);
+  assert.ok(seen.body.includes('refresh_token=REFRESH'));
+  assert.ok(seen.body.includes('steamid=76561198235048344'));
+});
+
+test('a renewal Steam refuses is an error, never an empty token', async () => {
+  const refused = async () => ({ ok: false, status: 401, json: async () => ({}) });
+  await assert.rejects(() => steamAuth.renewWebApiToken('REFRESH', '765', refused), /steam-renew-http-401/);
+
+  const blank = async () => ({ ok: true, json: async () => ({ response: {} }) });
+  await assert.rejects(() => steamAuth.renewWebApiToken('REFRESH', '765', blank), /steam-renew-missing/);
+
+  await assert.rejects(() => steamAuth.renewWebApiToken('', '765', blank), /steam-renew-no-refresh-token/);
+});
+
+test('an expired sign-in cookie is renewed from the stored refresh token', async () => {
+  const sessionFile = path.join(tmp, 'renew-stored.enc');
+  await steamAuth.saveSessionEncrypted(
+    sessionFile,
+    {
+      webapi_token: 'OLD',
+      steamid: '76561198235048344',
+      refresh_token: 'REFRESH',
+      expiresAt: Date.now() - 1000,
+    },
+    'passphrase'
+  );
+
+  const fresh = fakeJwt({ exp: Math.floor(Date.now() / 1000) + 3600 });
+  // The page read is what fails after a day; the refresh token is the way back in.
+  const session = { fetch: async () => ({ ok: false, status: 401, json: async () => ({}) }) };
+  const fetchImpl = async () => ({ ok: true, json: async () => ({ response: { access_token: fresh } }) });
+
+  assert.equal(await steamAuth.ensureSteamToken({ sessionFile, tokenSecret: 'passphrase', session, fetchImpl }), fresh);
+
+  const status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret: 'passphrase' });
+  assert.equal(status.needsReconnect, false);
+  assert.equal(status.steamid, '76561198235048344');
+});
+
+/*
+  An account connected before AW stored refresh tokens has none in its session file. The cookie jar
+  still holds one, so those sessions heal on their own instead of asking for a sign-in.
+*/
+test('a session file with no refresh token falls back to the cookie jar, then stores it', async () => {
+  const sessionFile = path.join(tmp, 'renew-cookie.enc');
+  await steamAuth.saveSessionEncrypted(
+    sessionFile,
+    { webapi_token: 'OLD', steamid: '', expiresAt: Date.now() - 1000 },
+    'passphrase'
+  );
+
+  const fresh = fakeJwt({ exp: Math.floor(Date.now() / 1000) + 3600 });
+  const session = {
+    fetch: async () => ({ ok: false, status: 401, json: async () => ({}) }),
+    cookies: { get: async () => [{ value: '76561198235048344%7C%7CDEPUISCOOKIE' }] },
+  };
+  let sentRefresh = '';
+  const fetchImpl = async (url, init) => {
+    sentRefresh = new URLSearchParams(String(init.body)).get('refresh_token');
+    return { ok: true, json: async () => ({ response: { access_token: fresh } }) };
+  };
+
+  assert.equal(await steamAuth.ensureSteamToken({ sessionFile, tokenSecret: 'passphrase', session, fetchImpl }), fresh);
+  assert.equal(sentRefresh, 'DEPUISCOOKIE');
+
+  const stored = await steamAuth.loadSession({ sessionFile, tokenSecret: 'passphrase' });
+  assert.equal(stored.refresh_token, 'DEPUISCOOKIE', 'the next renewal must not depend on the cookie jar again');
+  assert.equal(stored.steamid, '76561198235048344');
+});
+
+test('a refresh token Steam no longer accepts leaves the account needing a real sign-in', async () => {
+  const sessionFile = path.join(tmp, 'renew-refused.enc');
+  await steamAuth.saveSessionEncrypted(
+    sessionFile,
+    { webapi_token: 'OLD', steamid: '76561198235048344', refresh_token: 'PERIME', expiresAt: Date.now() - 1000 },
+    'passphrase'
+  );
+
+  const session = { fetch: async () => ({ ok: false, status: 401, json: async () => ({}) }) };
+  const fetchImpl = async () => ({ ok: false, status: 401, json: async () => ({}) });
+
+  assert.equal(await steamAuth.ensureSteamToken({ sessionFile, tokenSecret: 'passphrase', session, fetchImpl }), '');
+  const status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret: 'passphrase' });
+  assert.equal(status.needsReconnect, true);
+});
