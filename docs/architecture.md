@@ -83,7 +83,7 @@ When adding a source:
 - make missing optional files a normal empty state;
 - keep watcher and parser rules aligned so the library and live notifications observe the same files.
 
-Current integrations include Steam (legit client and emulator saves), Goldberg/GBE-compatible saves, Goldberg SocialClub, Uplay R2, GOG, Epic, Ubisoft, EA Desktop, Xbox PC, GreenLuma, LumaPlay, SmartSteamEmu, RPCS3, ShadPS4 and Xenia. Some platforms have both a legacy mapped-save parser and a newer official/local parser.
+Current integrations include Steam (legit client and emulator saves), Goldberg/GBE-compatible saves, Goldberg SocialClub, Uplay R2, GOG, Epic, Ubisoft, EA Desktop, Xbox PC, GreenLuma, LumaPlay, SmartSteamEmu, RPCS3, ShadPS4, Xenia, XLiveLessNess (Games for Windows LIVE) and FINAL FANTASY VII (2013). Some platforms have both a legacy mapped-save parser and a newer official/local parser.
 
 ## Important components
 
@@ -99,6 +99,8 @@ Current integrations include Steam (legit client and emulator saves), Goldberg/G
 | `app/parser/saveRoots.js` | Known achievement-data and game-library folder names, probed per drive and profile |
 | `app/parser/launcherLibraries.js` | Library roots read from launcher configuration already on disk (Epic manifests, GOG/Ubisoft registry, `.GamingRoot`) |
 | `app/parser/rpcs3Layout.js` | RPCS3 configuration root and `vfs.yml` `dev_hdd0` resolution |
+| `app/parser/xlln.js` | XLiveLessNess installs: discovery, per-profile unlock records and the schema read from the game's own executable (`xllnSpa.js` parses its SPAFILE resource) |
+| `app/parser/ff7.js` | FINAL FANTASY VII (2013): the 8-byte `achievement.dat` bitfield, paired with Steam api-names |
 | `app/electron/init.js` | Main lifecycle, updater, browser helpers and overlay window |
 | `app/util/updateStatus.js` | Updater state machine shared by the main process, the title bar and Settings |
 | `watchdog/watchdog.js` | Background entry point and service coordination |

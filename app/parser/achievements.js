@@ -21,6 +21,8 @@ const xenia = require(path.join(appPath, 'xenia.js'));
 const greenluma = require(path.join(appPath, 'greenluma.js'));
 const userDir = require(path.join(appPath, 'userDir.js'));
 const socialclub = require(path.join(appPath, 'socialclub.js'));
+const ff7 = require(path.join(appPath, 'ff7.js'));
+const xlln = require(path.join(appPath, 'xlln.js'));
 const libraryDirs = require(path.join(appPath, 'libraryDirs.js'));
 const saveRoots = require(path.join(appPath, 'saveRoots.js'));
 const launcherDetect = require(path.join(appPath, 'launcherDetect.js'));
@@ -87,6 +89,8 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   exophase.initDebug({ isDev, userDataPath });
   uplay.initDebug({ isDev, userDataPath });
   socialclub.initDebug({ isDev, userDataPath });
+  ff7.initDebug({ isDev, userDataPath });
+  xlln.initDebug({ isDev, userDataPath });
   blacklist.initDebug({ isDev, userDataPath });
   debug = new (require('../util/logger'))({
     console: isDev || false,
@@ -1683,6 +1687,12 @@ async function discoverInScope(source, steamAccFilter, scope) {
         scanned = await xenia.scan(dir.path);
         if (scanned.length > 0) debug.log('-> Xenia data added');
       }
+      if (scanned.length === 0 && source.xlln) {
+        // Games for Windows LIVE installs running XLiveLessNess. Like the console emulators these
+        // are game folders, so they are resolved before the appid-named save scan below.
+        scanned = xlln.scan(dir.path);
+        if (scanned.length > 0) debug.log('-> XLiveLessNess data added');
+      }
       if (scanned.length > 0) {
         data = data.concat(scanned);
         debug.log('-> emulator data added');
@@ -1694,13 +1704,21 @@ async function discoverInScope(source, steamAccFilter, scope) {
           debug.log('-> Goldberg SocialClub data added');
         }
       } else if (source.steamEmu) {
-        scanned = await userDir.scan(dir.path);
+        // FINAL FANTASY VII (2013) first: it is a game folder, not an appid-named save folder, so
+        // the generic emulator scan can never recognise it.
+        scanned = ff7.scan(dir.path);
         if (scanned.length > 0) {
           data = data.concat(scanned);
-          debug.log('-> Steam emu data added');
+          debug.log('-> FINAL FANTASY VII (2013) data added');
         } else {
-          additionalSearch.push(dir.path);
-          debug.log('-> will be scanned for appid folder(s)');
+          scanned = await userDir.scan(dir.path);
+          if (scanned.length > 0) {
+            data = data.concat(scanned);
+            debug.log('-> Steam emu data added');
+          } else {
+            additionalSearch.push(dir.path);
+            debug.log('-> will be scanned for appid folder(s)');
+          }
         }
       }
     }
@@ -1728,6 +1746,25 @@ async function discoverInScope(source, steamAccFilter, scope) {
   }
 
   mark('socialClub');
+
+  //FINAL FANTASY VII (2013) writes achievement.dat beside its saves in Documents\FINAL FANTASY VII.
+  //That folder is auto-scanned like the other known locations, so nobody has to add it by hand.
+  if (!scope && source.steamEmu) {
+    try {
+      const have = new Set(data.map((g) => `${g.source}:${g.appid}`));
+      for (const root of ff7.defaultRoots()) {
+        const extra = ff7.scan(root).filter((g) => !have.has(`${g.source}:${g.appid}`));
+        if (extra.length === 0) continue;
+        extra.forEach((g) => have.add(`${g.source}:${g.appid}`));
+        data = data.concat(extra);
+        debug.log('-> FINAL FANTASY VII (2013) (Documents) data added');
+      }
+    } catch (err) {
+      debug.log(err);
+    }
+  }
+
+  mark('ff7');
 
   //ShadPS4 stores trophies in %APPDATA%/shadPS4 regardless of where the .exe lives - auto-scan that
   //known location so the user doesn't have to add it as a watched folder. De-dupe against anything the
@@ -2307,6 +2344,8 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       game = await rpcs3.getGameData(appid.data.path);
     } else if (appid.data.type === 'shadps4') {
       game = await shadps4.getGameData(appid.data.path, option.achievement.lang);
+    } else if (appid.data.type === 'xlln') {
+      game = await xlln.getGameData(appid.data, option.achievement.lang);
     } else if (appid.data.type === 'xenia') {
       game = await xenia.getGameData(appid.data.path);
     } else if (appid.data.type === 'socialclub') {
@@ -3134,6 +3173,8 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           root = await rpcs3.getAchievements(appid.data.path, game.achievement.total);
         } else if (dataType === 'shadps4') {
           root = await shadps4.getAchievements(appid.data.path);
+        } else if (dataType === 'xlln') {
+          root = xlln.getAchievements(appid.data);
         } else if (dataType === 'xenia') {
           root = await xenia.getAchievements(appid.data.path);
         } else if (dataType === 'socialclub') {

@@ -82,7 +82,7 @@ test('id-bound source rows have a help element and a description in every locale
   const keys = (loaderJs.match(/for \(const key of \[([^\]]+)\]\)/) || [])[1];
   assert.ok(keys, 'loader.js must list the id-bound source keys');
   const list = keys.split(',').map((k) => k.trim().replace(/^'|'$/g, '')).filter(Boolean);
-  assert.deepStrictEqual(list, ['ubisoftOfficial', 'gogOfficial', 'epicOfficial', 'gog', 'epic', 'shadps4', 'xenia']);
+  assert.deepStrictEqual(list, ['ubisoftOfficial', 'gogOfficial', 'epicOfficial', 'gog', 'epic', 'shadps4', 'xenia', 'xlln']);
 
   const rows = new Map(sourceListItems().map((item) => [item.key, item.html]));
   for (const key of list) {

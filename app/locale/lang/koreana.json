@@ -857,6 +857,9 @@
       },
       "xenia": {
         "description": "Xbox 360 에뮬레이터"
+      },
+      "xlln": {
+        "description": "XLiveLessNess를 통한 Games for Windows LIVE"
       }
     },
     "help": {

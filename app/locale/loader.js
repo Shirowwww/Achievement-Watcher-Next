@@ -682,7 +682,7 @@ function translateUI(lang, locale, template) {
   // Sources whose row carries a proper name (shadPS4, Ubisoft Connect, ...) only need their help
   // text translated. Bound by id rather than by position: the nth-child bindings above break the
   // moment a row is inserted anywhere but the end, which is why these are kept out of that scheme.
-  for (const key of ['ubisoftOfficial', 'gogOfficial', 'epicOfficial', 'gog', 'epic', 'shadps4', 'xenia']) {
+  for (const key of ['ubisoftOfficial', 'gogOfficial', 'epicOfficial', 'gog', 'epic', 'shadps4', 'xenia', 'xlln']) {
     const source = template.settings.source[key];
     if (source && source.description) $(`#source-help-${key}`).text(clear(source.description));
     $(`#option_${key} option[value='true']`).text(clear(template.settings.common.enable));

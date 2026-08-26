@@ -15,6 +15,7 @@ const fuzzyAppid = require(path.join(appPath, 'util/fuzzyAppid.js'));
 const { ipcInvoke } = require(path.join(appPath, 'util/ipcInvoke.js'));
 const steamLanguages = require(path.join(appPath, 'locale/steam.json'));
 const sse = require(path.join(appPath, 'parser/sse.js'));
+const ff7 = require(path.join(appPath, 'parser/ff7.js'));
 const htmlParser = require('node-html-parser');
 const fs = require('fs');
 const saveRoots = require(path.join(appPath, 'parser/saveRoots.js'));
@@ -584,6 +585,14 @@ module.exports._internal = Object.assign({}, module.exports._internal, { isUnamb
 
 module.exports.getAchievementsFromFile = async (filePath) => {
   try {
+    /*
+      FINAL FANTASY VII (2013) keeps an 8-byte bitfield in achievement.dat. It is checked before the
+      list below, and only for a folder that proves it is that game: the file name is generic enough
+      that another emulator's save of the same length would otherwise be decoded as 36 FF7 unlocks.
+    */
+    const ff7State = ff7.getAchievementsFromFile(filePath);
+    if (ff7State) return ff7State;
+
     const files = [
       'achievements.ini',
       'achievements.json',

@@ -857,6 +857,9 @@
       },
       "xenia": {
         "description": "Εξομοιωτής Xbox 360"
+      },
+      "xlln": {
+        "description": "Games for Windows LIVE μέσω XLiveLessNess"
       }
     },
     "help": {

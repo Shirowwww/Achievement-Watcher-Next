@@ -857,6 +857,9 @@
       },
       "xenia": {
         "description": "Xbox 360 öykünücüsü"
+      },
+      "xlln": {
+        "description": "XLiveLessNess üzerinden Games for Windows LIVE"
       }
     },
     "help": {

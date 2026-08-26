@@ -272,6 +272,10 @@ module.exports.load = () => {
       options.achievement_source.xenia = true;
     }
 
+    if (typeof options.achievement_source.xlln !== 'boolean') {
+      options.achievement_source.xlln = true;
+    }
+
     if (typeof options.achievement_source.lumaPlay !== 'boolean') {
       options.achievement_source.lumaPlay = true;
     }
@@ -504,6 +508,7 @@ module.exports.load = () => {
         rpcs3: true,
         shadps4: true,
         xenia: true,
+        xlln: true,
         lumaPlay: true,
         gog: true,
         gogOfficial: true,

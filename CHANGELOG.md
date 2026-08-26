@@ -25,6 +25,15 @@ renamed in 3.9.0 and the history is kept under one file.
   the real objective numbers from Ubisoft's own achievement data and matches them by title, fetching
   that data publicly rather than waiting for Ubisoft Connect to cache it. Where both sources existed
   they agreed on all 166 objectives. Those games raise live notifications like any other.
+- **Games for Windows LIVE games report their achievements.** A GFWL title running XLiveLessNess kept
+  its unlocks in a profile AW Next could not read, so the whole era - the Windows LIVE ports of the
+  late 2000s and early 2010s - was invisible. AW Next now finds those installs, reads each profile's
+  unlock records, and takes the achievement list, its texts and its icons out of the game's own
+  executable, so a title needs nothing downloaded to be described. The Watchdog watches the same
+  profiles and raises live notifications as they pop.
+- **FINAL FANTASY VII (2013) is read.** That re-release predates Steamworks achievements and keeps its
+  36 unlocks in an 8-byte bitfield beside its saves. AW Next reads it, pairs each bit with the Steam
+  achievement it stands for, and finds the file in Documents without anyone adding the folder by hand.
 
 ### Improved
 

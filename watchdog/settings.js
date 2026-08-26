@@ -163,7 +163,6 @@ module.exports.load = async (cfg_file) => {
       fixFile = true;
     }
 
-    // Apply overlay defaults used by hotkeys and notification sounds.
     if (typeof options.overlay.hotkey !== 'string' || !options.overlay.hotkey) {
       options.overlay.hotkey = 'Ctrl+Shift+K';
       fixFile = true;
@@ -217,6 +216,11 @@ module.exports.load = async (cfg_file) => {
 
     if (typeof options.achievement_source.xenia !== 'boolean') {
       options.achievement_source.xenia = true;
+      fixFile = true;
+    }
+
+    if (typeof options.achievement_source.xlln !== 'boolean') {
+      options.achievement_source.xlln = true;
       fixFile = true;
     }
 
@@ -512,6 +516,7 @@ module.exports.load = async (cfg_file) => {
         rpcs3: true,
         shadps4: true,
         xenia: true,
+        xlln: true,
         lumaPlay: true,
         gog: true,
         gogOfficial: true,

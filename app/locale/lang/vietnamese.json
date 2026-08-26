@@ -857,6 +857,9 @@
       },
       "xenia": {
         "description": "Trình giả lập Xbox 360"
+      },
+      "xlln": {
+        "description": "Games for Windows LIVE thông qua XLiveLessNess"
       }
     },
     "help": {

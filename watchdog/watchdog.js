@@ -56,6 +56,7 @@ const notify = require('./notification/toaster.js');
 const shadps4Watch = require('./console/shadps4Watch.js');
 const rpcs3Watch = require('./console/rpcs3Watch.js');
 const xeniaWatch = require('./console/xeniaWatch.js');
+const xllnWatch = require('./console/xllnWatch.js');
 const eaWatch = require('./console/eaWatch.js');
 const gogWatch = require('./console/gogWatch.js');
 const ubisoftWatch = require('./console/ubisoftWatch.js');
@@ -158,7 +159,6 @@ let playtimeIndexReloadQueued = false;
 let xboxPollState = null;
 const XBOX_POLL_INTERVAL_MS = 30000;
 
-// Poll Xbox PC achievements while a matching title runs.
 function startXboxPolling(game) {
   stopXboxPolling();
   const auth = xboxPc.loadAuth();
@@ -656,7 +656,6 @@ var app = {
     try {
       let self = this;
       self.cache = [];
-      // Rebuild the watcher list after closing the previous one.
       self.watcher = [];
 
       debug.log('Achievement Watchdog starting ...');
@@ -763,6 +762,14 @@ var app = {
         await xeniaWatch.start({ options: self.options, getToastID: () => self.toastID, notify });
       } catch (err) {
         debug.error(`[xenia] ${err}`);
+      }
+
+      // XLiveLessNess (Games for Windows LIVE) live achievement toasts - watches each title's own
+      // profile state under the user's saved folders and diffs against a baseline, like xeniaWatch.
+      try {
+        await xllnWatch.start({ options: self.options, getToastID: () => self.toastID, notify });
+      } catch (err) {
+        debug.error(`[xlln] ${err}`);
       }
 
       // GOG Galaxy official live achievement toasts - watches each game's gameplay.db (SQLite,

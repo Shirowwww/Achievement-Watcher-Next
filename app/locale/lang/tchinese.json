@@ -857,6 +857,9 @@
       },
       "xenia": {
         "description": "Xbox 360 模擬器"
+      },
+      "xlln": {
+        "description": "透過 XLiveLessNess 執行的 Games for Windows LIVE"
       }
     },
     "help": {

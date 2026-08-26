@@ -857,6 +857,9 @@
       },
       "xenia": {
         "description": "Xbox 360 -emulaattori"
+      },
+      "xlln": {
+        "description": "Games for Windows LIVE XLiveLessNessin kautta"
       }
     },
     "help": {

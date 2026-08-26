@@ -8,6 +8,10 @@ const fs = require('./util/fsAsync');
 const sse = require('./sse.js');
 const { scanRootOnce } = require('./util/rootCascade.js');
 const { SOCIALCLUB_ACHIEVEMENT_FILES } = require('./util/socialClub.js');
+const { sharedAppModulePath } = require('./util/sharedAppModule.js');
+// Shared with the app so the bit-to-api-name table lives in exactly one place (see the asarUnpack
+// list in app/electron-builder.yml). Only its pure readers are used here.
+const ff7 = require(sharedAppModulePath('parser/ff7.js'));
 
 // A user-added folder belongs to the Goldberg SocialClub emulator when the SocialClub root is on
 // its path - the root itself, a <Game> folder, or a <Game>\<hex profile> folder. Guessing from the
@@ -196,6 +200,16 @@ module.exports.getFolders = async (userDir_file) => {
           options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[5]] },
         },
       ]);
+
+      // FINAL FANTASY VII (2013) rewrites achievement.dat beside its saves. The folder is watched
+      // only once it proves it is that game, since an 8-byte achievement.dat is far too generic.
+      const ff7Root = path.join(mydocs, 'FINAL FANTASY VII');
+      if (ff7.detect(ff7Root).detected) {
+        steamEmu.push({
+          dir: ff7Root,
+          options: { appid: ff7.APPID, recursive: false, file: [ff7.STATE_FILE] },
+        });
+      }
     }
 
     for (let dir of configuredDirs) {
@@ -357,6 +371,11 @@ module.exports.getFolders = async (userDir_file) => {
                 options: { appid: info.GameSettings.AppID, recursive: false, file: [files.achievement[6]] },
               });
             }
+          } else if (ff7.detect(dir.path).detected) {
+            steamEmu.push({
+              dir: path.resolve(dir.path),
+              options: { appid: ff7.APPID, recursive: false, file: [ff7.STATE_FILE] },
+            });
           } else if (isSocialClubWatchPath(dir.path)) {
             steamEmu.push({
               dir: dir.path,
@@ -423,6 +442,11 @@ module.exports.parse = async (filePath) => {
       local = JSON.parse(await fs.readFile(filePath, 'utf8'));
     } else if (base == 'stats.bin') {
       local = sse.parse(await fs.readFile(filePath));
+    } else if (base == ff7.STATE_FILE) {
+      //FINAL FANTASY VII (2013): an 8-byte bitfield, only read for a folder that identifies itself
+      //as that game. Nothing else about it says which achievements it holds.
+      local = ff7.getAchievementsFromFile(file.dir);
+      if (!local) throw `'${filePath}' is not FINAL FANTASY VII (2013) achievement data`;
     } else if (base == 'achievement') {
       //RAZOR1911: plain text, "<apiname> <0|1> <epoch seconds>" per line
       local = {};

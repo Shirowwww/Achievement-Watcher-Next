@@ -52,6 +52,7 @@ const OPTIONAL_SOURCES = {
   gog: ['gog'],
   epic: ['epic'],
   socialClub: ['Goldberg SocialClub'],
+  xlln: ['XLiveLessNess'],
   importCache: ['Achievement Watcher : Watchdog'],
 };
 

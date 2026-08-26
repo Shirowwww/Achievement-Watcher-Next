@@ -26,13 +26,14 @@ not.
 | Goldberg Uplay R2 (Ubisoft) | ✅ Loader-version aware | ❌ | ❌ |
 | Goldberg SocialClub (Rockstar / GTA) | ✅ | ❌ | ❌ |
 | Console emulators | ✅ RPCS3 · ShadPS4 · Xenia | ✅ RPCS3 · ShadPS4 · Xenia | ⚠️ RPCS3 only |
+| Games for Windows LIVE | ✅ XLiveLessNess, schema and icons read from the game | ✅ XLiveLessNess | ❌ |
 | RetroAchievements | ❌ | ✅ | ❌ Planned |
-| Niche patches (XLiveLessNess, MarkerPatch, MadnessPatch, FF7 legacy) | ❌ | ✅ | ❌ |
+| Niche patches | ✅ FINAL FANTASY VII (2013) | ✅ MarkerPatch · MadnessPatch · FINAL FANTASY VII (2013) | ❌ |
 | Folder discovery | ✅ Auto-config & Smart Find | ✅ Auto-config | ✅ Smart Find |
 | Custom folders and manual games | ✅ Per game or whole library | ✅ Per game | ⚠️ Manual config |
 
-Achievements reaches further into niche and retro sources; AW Next reaches further into the emulated
-PC layouts, and is the only one of the three that reads Uplay R2 and SocialClub saves.
+Achievements reaches further into retro sources; AW Next reaches further into the emulated PC
+layouts, and is the only one of the three that can fix Uplay R2 and SocialClub saves.
 
 ## When a game does not report
 

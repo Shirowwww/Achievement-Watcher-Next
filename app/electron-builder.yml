@@ -35,6 +35,10 @@ asarUnpack:
   - util/localIcons.js
   - parser/achievementTranslations.js
   - parser/steamAppInfo.js
+  - parser/ff7.js
+  - assets/ff7-achievements.json
+  - parser/xlln.js
+  - parser/xllnSpa.js
 
 publish:
   provider: github

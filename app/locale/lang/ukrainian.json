@@ -857,6 +857,9 @@
       },
       "xenia": {
         "description": "Емулятор Xbox 360"
+      },
+      "xlln": {
+        "description": "Games for Windows LIVE через XLiveLessNess"
       }
     },
     "help": {
