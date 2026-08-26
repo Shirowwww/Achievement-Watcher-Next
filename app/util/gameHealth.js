@@ -56,8 +56,7 @@ const REPAIRABLE_UPLAY_CODES = new Set([
   'LOADER_ARCH_UNKNOWN',
   'NO_SCHEMA_JSON',
   'BAD_SCHEMA_JSON',
-  'SCHEMA_KEYS_UNPREFIXED',
-  'SCHEMA_KEYS_PREFIXED',
+  'SCHEMA_KEYS_NOT_CANONICAL',
   'NO_INI',
   'ACHIEVEMENTS_DISABLED',
   'BAD_SAVE_REDIRECT',
@@ -78,8 +77,10 @@ const ISSUE_TOPIC = {
   BLANK_DESCRIPTIONS: 'schema',
   NO_SCHEMA_JSON: 'schema',
   BAD_SCHEMA_JSON: 'schema',
-  SCHEMA_KEYS_UNPREFIXED: 'schema',
-  SCHEMA_KEYS_PREFIXED: 'schema',
+  SCHEMA_KEYS_NOT_CANONICAL: 'schema',
+  LOADER_LOG_UNKNOWN_OBJECTIVE: 'schema',
+  LOADER_LOG_NO_ACH_CALL: 'schema',
+  NO_LOADER_LOG: 'schema',
   MISSING_ICONS: 'icons',
   NO_APPID_TXT: 'appid',
   APPID_MISMATCH: 'appid',
@@ -506,4 +507,47 @@ function deriveHealth(signals = {}) {
   return { state, reason, params, checks, actions, technical: buildTechnical(signals) };
 }
 
-module.exports = { deriveHealth, issueTopics, STATE, LEVEL, ACTION, ISSUE_TOPIC, REPAIRABLE_GOLDBERG_CODES, REPAIRABLE_UPLAY_CODES };
+/*
+  The tile dot, answered from what a library scan already knows - the panel's full report is what
+  replaces it once someone opens it. Lives here rather than in the renderer so both halves of "what
+  colour is this game" are stated in one tested place.
+
+  A game only gets a dot when its unlocks come through an emulator AW Next set up or can set up.
+  hasSteamApiDll is a boolean only for Steam-emulator records; a Uplay R1/R2 game has no steam_api
+  dll at all by design, so it has to be recognised by its own marking or it silently gets no dot.
+*/
+function hasDot(game) {
+  const record = game && typeof game === 'object' ? game : {};
+  return typeof record.hasSteamApiDll === 'boolean' || !!record.uplayR2 || record.system === 'uplay';
+}
+
+function scannedState(game) {
+  const record = game && typeof game === 'object' ? game : {};
+  const total = num(record.achievement && record.achievement.total);
+  if (record.uplayR2 || record.system === 'uplay') {
+    /*
+      uplayHealthy is set by the scan only after it has actually diagnosed the loader and its config.
+      Absent means "not looked at", which is not the same answer as "broken" - reporting those as
+      untracked is exactly what the steam_api-only rule used to do to every Uplay game.
+    */
+    if (record.uplayHealthy === false) return STATE.NOT_TRACKING;
+    if (record.uplayHealthy === true && total > 0) return STATE.READY;
+    return STATE.ATTENTION;
+  }
+  if (!record.hasSteamApiDll) return STATE.NOT_TRACKING;
+  if (record.unconfigured || total <= 0) return STATE.ATTENTION;
+  return STATE.READY;
+}
+
+module.exports = {
+  deriveHealth,
+  issueTopics,
+  hasDot,
+  scannedState,
+  STATE,
+  LEVEL,
+  ACTION,
+  ISSUE_TOPIC,
+  REPAIRABLE_GOLDBERG_CODES,
+  REPAIRABLE_UPLAY_CODES,
+};

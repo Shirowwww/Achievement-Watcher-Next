@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 const { officialAppId } = require('../util/platformId.js');
+const uplayCatalogue = require('./uplayCatalogue.js');
 
 let cacheRoot;
 let debug = { log() {}, warn() {}, error() {} };
@@ -21,15 +22,56 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
 
 module.exports.setUserDataPath = (p) => {
   cacheRoot = p;
+  // The roots are memoised and one of them is derived from this path.
+  achievementsRootsCache = null;
 };
 
 const DEFAULT_SPOOL_ROOT = process.env['LOCALAPPDATA'] ? path.join(process.env['LOCALAPPDATA'], 'Ubisoft Game Launcher', 'spool') : '';
 const DEFAULT_CONFIGURATIONS_PATH = process.env['LOCALAPPDATA']
   ? path.join(process.env['LOCALAPPDATA'], 'Ubisoft Game Launcher', 'cache', 'configuration', 'configurations')
   : '';
-const DEFAULT_ACHIEVEMENTS_ROOT = process.env['ProgramData']
-  ? path.join(process.env['ProgramData'], 'Ubisoft', 'Ubisoft Game Launcher', 'cache', 'achievements')
-  : '';
+/*
+  Ubisoft Connect keeps the achievement archives under its OWN install folder, which the user chooses
+  at install time - not under %ProgramData%, where only `cache\statistics` lives. Reading one fixed
+  path made every archive invisible on a default install ("no cached achievements archive" for a
+  product whose archive was on disk), so resolve the launcher from the registry first and keep the
+  other known locations as fallbacks.
+*/
+let achievementsRootsCache = null;
+const DEFAULT_ACHIEVEMENTS_ROOTS = () => {
+  // The registry lookup can fall back to spawning reg.exe, and a scan asks for one product after
+  // another; the launcher does not move mid-session.
+  if (achievementsRootsCache) return achievementsRootsCache;
+  const roots = [];
+  const add = (dir) => {
+    if (!dir) return;
+    const full = path.join(String(dir).trim(), 'cache', 'achievements');
+    if (!roots.some((entry) => entry.toLowerCase() === full.toLowerCase())) roots.push(full);
+  };
+  for (const [hive, key] of [
+    ['HKLM', 'Software/WOW6432Node/Ubisoft/Launcher'],
+    ['HKLM', 'Software/Ubisoft/Launcher'],
+    ['HKCU', 'Software/WOW6432Node/Ubisoft/Launcher'],
+    ['HKCU', 'Software/Ubisoft/Launcher'],
+  ]) {
+    try {
+      add(readRegistryString(hive, key, 'InstallDir'));
+    } catch {
+      /* key absent on this hive/bitness - try the next one */
+    }
+  }
+  if (process.env['ProgramData']) add(path.join(process.env['ProgramData'], 'Ubisoft', 'Ubisoft Game Launcher'));
+  for (const programFiles of [process.env['ProgramFiles(x86)'], process.env['ProgramFiles']]) {
+    if (programFiles) add(path.join(programFiles, 'Ubisoft', 'Ubisoft Game Launcher'));
+  }
+  // Archives AW Next fetched itself live here, and are searched like any other root.
+  if (cacheRoot) {
+    const own = path.join(cacheRoot, 'cache', 'ubisoftAchievements');
+    if (!roots.some((entry) => entry.toLowerCase() === own.toLowerCase())) roots.push(own);
+  }
+  achievementsRootsCache = roots;
+  return roots;
+};
 const UPLAY_STEAM_ASSET = path.join(__dirname, '..', 'assets', 'uplay-steam.json');
 
 // Ubisoft locale file names (en-US_loc.txt …) → the Steam API language names used app-wide.
@@ -445,20 +487,148 @@ function readConfigurationsIndex(configurationsPath = DEFAULT_CONFIGURATIONS_PAT
   return blocks;
 }
 
+/*
+  Ubisoft product id -> the md5 that names its achievement archive.
+
+  readConfigurationsIndex() above decodes the file as text, which is what the title and image fields
+  need and which destroys the binary framing the product id lives in. This is the same file read the
+  other way: each record is a length-prefixed protobuf message whose field 1 is the product id and
+  whose field 3 is the YAML the text pass reads. Pairing the two is what lets an archive be fetched
+  for a product whose achievements page has never been opened.
+*/
+let productSpecCache = { path: '', mtimeMs: 0, specs: new Map() };
+
+function readProductAchievementSpecs(configurationsPath = DEFAULT_CONFIGURATIONS_PATH) {
+  const filePath = String(configurationsPath || '').trim();
+  if (!filePath || !fs.existsSync(filePath)) return new Map();
+  let stat;
+  try {
+    stat = fs.statSync(filePath);
+  } catch {
+    return new Map();
+  }
+  if (productSpecCache.path === filePath && productSpecCache.mtimeMs === Number(stat.mtimeMs || 0)) return productSpecCache.specs;
+
+  const specs = new Map();
+  try {
+    const buffer = fs.readFileSync(filePath);
+    let offset = 0;
+    while (offset < buffer.length) {
+      let header;
+      try {
+        header = readVarint(buffer, offset);
+      } catch {
+        break;
+      }
+      const end = header.nextOffset + header.value;
+      // A record starts with field 1 as a varint (tag 0x08). Anything else is framing this pass does
+      // not understand, so step one byte and resynchronise rather than give up on the whole file.
+      if (header.value <= 0 || end > buffer.length || buffer[header.nextOffset] !== 0x08) {
+        offset += 1;
+        continue;
+      }
+      let record;
+      try {
+        record = readVarint(buffer, header.nextOffset + 1, end);
+      } catch {
+        offset += 1;
+        continue;
+      }
+      const productId = String(record.value);
+      const yaml = buffer.toString('utf8', record.nextOffset, end);
+      const spec = normalizeAchievementsSpec(normalizeQuotedText(yaml.match(/^\s*achievements:\s*([^\r\n]+)/m)?.[1] || ''));
+      if (/^[0-9]+$/.test(productId) && /^[0-9a-f]{32}$/.test(spec) && !specs.has(productId)) specs.set(productId, spec);
+      offset = end;
+    }
+  } catch (err) {
+    debug.log(`[ubisoft] could not read the product/achievements index => ${err}`);
+    return new Map();
+  }
+
+  productSpecCache = { path: filePath, mtimeMs: Number(stat.mtimeMs || 0), specs };
+  return specs;
+}
+
+/*
+  Ubisoft serves those archives from its own CDN, content-addressed by the md5 above, with no
+  authentication and no headers. The launcher only downloads one once its achievements page has been
+  displayed, which is why a product the user owns but has never browsed had no achievement data at
+  all. Fetching it directly removes that step.
+
+  Written into AW Next's own cache, never into the launcher's folders, and only when the payload
+  hashes to the md5 that was asked for - a content-addressed URL that returns something else is not
+  this game's archive.
+*/
+const UBISOFT_ASSET_CDN = 'https://static3.cdn.ubi.com/orbit/uplay_launcher_3_0/assets/';
+const MAX_ARCHIVE_BYTES = 32 * 1024 * 1024;
+
+function downloadedArchivesRoot() {
+  return cacheRoot ? path.join(cacheRoot, 'cache', 'ubisoftAchievements') : '';
+}
+
+async function ensureAchievementsArchive(uplayId, options = {}) {
+  const id = String(uplayId || '').trim();
+  if (!/^[0-9]+$/.test(id)) return '';
+  try {
+    return resolveAchievementsArchive(id, options).archivePath; // already on disk
+  } catch {
+    /* nothing cached for this product yet - that is what the rest of this is for */
+  }
+
+  const root = downloadedArchivesRoot();
+  const spec = readProductAchievementSpecs(options.configurationsPath).get(id);
+  if (!root || !spec) return '';
+
+  const target = path.join(root, `${id}_${spec}`);
+  if (fs.existsSync(target)) return target;
+
+  // Downloaded to a scratch name first: the file is only this game's archive once it hashes to the
+  // md5 that was asked for, and a half-written or wrong payload must never be left where the
+  // synchronous resolver would find it.
+  const pending = `${target}.part`;
+  try {
+    fs.mkdirSync(root, { recursive: true });
+    const request = require('request-zero');
+    // request.download streams to disk. Reading the body as a string instead corrupts it: the
+    // archive is a zip, and request-zero decodes a response body as UTF-8.
+    await request.download(`${UBISOFT_ASSET_CDN}${spec}`, root, { filename: path.basename(pending), timeout: 30000 });
+
+    const size = fs.statSync(pending).size;
+    if (size === 0 || size > MAX_ARCHIVE_BYTES) throw new Error(`archive is ${size} byte(s)`);
+    const digest = require('crypto').createHash('md5').update(fs.readFileSync(pending)).digest('hex');
+    if (digest !== spec) throw new Error(`hashes to ${digest}, expected ${spec}`);
+
+    fs.renameSync(pending, target);
+    debug.log(`[ubisoft] ${id}: fetched its achievement archive from Ubisoft (${size} bytes)`);
+    return target;
+  } catch (err) {
+    try {
+      fs.rmSync(pending, { force: true });
+    } catch {
+      /* nothing to clean up */
+    }
+    debug.log(`[ubisoft] ${id}: achievement archive download failed => ${err && (err.code || err.message) ? err.code || err.message : err}`);
+    return '';
+  }
+}
+
 function resolveAchievementsArchive(appid, options = {}) {
   const safeAppId = String(appid || '').trim();
-  const achievementsRoot = String(options.achievementsRoot || DEFAULT_ACHIEVEMENTS_ROOT).trim();
-  if (!achievementsRoot || !fs.existsSync(achievementsRoot)) throw 'ubisoft-official: achievements cache missing';
+  const roots = (options.achievementsRoot ? [String(options.achievementsRoot).trim()] : DEFAULT_ACHIEVEMENTS_ROOTS()).filter(
+    (root) => root && fs.existsSync(root)
+  );
+  if (!roots.length) throw 'ubisoft-official: achievements cache missing';
 
   const prefix = `${safeAppId}_`;
-  let candidateFiles = [];
-  try {
-    candidateFiles = fs
-      .readdirSync(achievementsRoot, { withFileTypes: true })
-      .filter((entry) => entry.isFile() && entry.name.startsWith(prefix))
-      .map((entry) => path.join(achievementsRoot, entry.name));
-  } catch {
-    candidateFiles = [];
+  const candidateFiles = [];
+  for (const root of roots) {
+    try {
+      for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+        if (entry.isFile() && entry.name.startsWith(prefix)) candidateFiles.push(path.join(root, entry.name));
+      }
+    } catch {
+      /* an unreadable root must not hide the others */
+    }
   }
   if (!candidateFiles.length) throw 'ubisoft-official: archive missing';
 
@@ -1123,6 +1293,20 @@ module.exports.getGameData = async (appid, lang) => {
     } catch (err) {
       debug.log(`[${appid.appid}] local Ubisoft cover extraction failed => ${err}`);
     }
+    /*
+      Ubisoft's own catalogue publishes boxart per product id, on its public CDN and under the same
+      id the save folder is named with. For a Ubisoft game with no Steam release it is the only
+      artwork that is actually OF this game - SteamGridDB below has to be asked by title, which is
+      what it falls back to when Ubisoft lists no image.
+    */
+    if (!img.portrait) {
+      const official = uplayCatalogue.artworkFor(uplayId);
+      if (official && official.cover) {
+        img.portrait = official.cover;
+        if (!img.background && official.background) img.background = official.background;
+        debug.log(`[${appid.appid}] cover from Ubisoft's own catalogue`);
+      }
+    }
     if (!img.portrait && displayTitle) {
       try {
         const { ipcRenderer } = require('electron');
@@ -1180,8 +1364,13 @@ module.exports.partitionBySteamFilter = (entries, showOfficialSteam) => {
 };
 
 // Exposed for unit tests (and a future watchdog live watcher).
+module.exports.ensureAchievementsArchive = ensureAchievementsArchive;
+
 module.exports._internal = {
   readUbisoftSpoolFile,
+  readProductAchievementSpecs,
+  ensureAchievementsArchive,
+  downloadedArchivesRoot,
   buildUbisoftOfficialSnapshot,
   listSpoolEntries,
   readConfigurationsIndex,

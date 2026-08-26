@@ -99,9 +99,8 @@ function isWeakName(name, appid, binary) {
   return !!executable && (lower === executable.toLowerCase() || lower === executableStem.toLowerCase());
 }
 
-// Insert or update the entry for this appid. If it already exists, refresh binary/name/icon when the
-// detected binary changed (so re-detection after a reinstall/move is picked up); otherwise append.
-// Silently no-ops on any I/O error so a failure here never blocks the achievement scan.
+// Refreshes binary/name/icon so re-detection after a reinstall/move is picked up. Silently no-ops on
+// any I/O error so a failure here never blocks the achievement scan.
 module.exports.upsert = (entry) => {
   try {
     const list = loadList();
@@ -204,7 +203,14 @@ module.exports.reconcile = (games) => {
       let bestScore = -1;
       for (const e of entries) {
         const nm = nameByAppid.get(String(e.appid)) || e.name || '';
-        const s = exeDetect.nameSimilarity(nm, base);
+        /*
+          A synthetic "local-…" row is the placeholder an earlier scan wrote for a folder it could
+          not identify. When the same install now has a real Steam AppID, the two carry the same
+          title and name similarity alone is a tie - which the placeholder used to win by being
+          first, leaving the identified game with no binary to match a running process against.
+        */
+        const placeholder = /^local-/i.test(String(e.appid || '')) || String(e.source || '').toLowerCase() === 'unconfigured';
+        const s = exeDetect.nameSimilarity(nm, base) + (placeholder ? -1 : 0);
         if (s > bestScore) {
           bestScore = s;
           best = e;
@@ -230,6 +236,15 @@ module.exports.binaryClaimedByBetterMatch = (appid, name, binary) => {
     if (!key) return false;
     const rival = loadList().find((g) => String(g.appid) !== String(appid) && String(g.binary || '').toLowerCase() === key);
     if (!rival) return false;
+    /*
+      A synthetic "local-…" row is what an earlier scan wrote when it could not identify the folder
+      at all. Once the same install resolves to a real Steam AppID, that placeholder is the same game
+      under a worse name - it must hand the binary over instead of holding it on an equal name score,
+      which is what left an identified game with no binary and therefore no playtime and no live
+      process match (seen on ZOMBI, held by a "local-…" row of the identical name).
+    */
+    const placeholderRival = /^local-/i.test(String(rival.appid || '')) || String(rival.source || '').toLowerCase() === 'unconfigured';
+    if (placeholderRival && /^\d+$/.test(String(appid))) return false;
     const exeDetect = require(path.join(__dirname, 'exeDetect.js'));
     const base = String(binary).replace(/\.exe$/i, '');
     return exeDetect.nameSimilarity(rival.name || '', base) >= exeDetect.nameSimilarity(String(name || ''), base);

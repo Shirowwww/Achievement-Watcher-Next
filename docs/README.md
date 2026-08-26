@@ -41,7 +41,7 @@ Read in order, or jump to what you need - every page ends with a link to the nex
 | [FAQ](faq.md) | Short answers to the questions that come up most |
 | [Advanced tools](advanced.md) | Maintenance, cache clearing, resets, manual games, diagnostics |
 | [Goldberg / GBE setup](emulator-setup.md) | Diagnose or repair an emulated Steam game |
-| [Uplay R2 setup](uplay-r2.md) | The Ubisoft equivalent, for compatible titles |
+| [Uplay setup, R1 and R2](uplay-r2.md) | The Ubisoft equivalent, for compatible titles |
 | [Comparison](comparison.md) | How AW Next differs from Achievement Watcher 2.x and Achievements |
 | [Community galleries](community-galleries.md) | Presets and themes made by other people: taking one, and sending yours |
 

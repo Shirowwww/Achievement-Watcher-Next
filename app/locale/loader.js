@@ -343,6 +343,11 @@ function translateUI(lang, locale, template) {
     if (emu.uplay && emu.uplay.repairHelp) {
       $('#option_autoApplyNewGamesUplay').closest('li').find('.help').text(clear(emu.uplay.repairHelp));
     }
+    // The loader's own diagnostic log. It is the only record of which objective a game asked to
+    // unlock, which is what Diagnose reads to explain a setup that records nothing.
+    bindEmuRow('option_uplayLogging', emu.uplay && emu.uplay.logging);
+    $("#option_uplayLogging option[value='true']").text(clear(template.settings.common.enable));
+    $("#option_uplayLogging option[value='false']").text(clear(template.settings.common.disable));
     bindEmuRow('option_steamSettingsMode', emu.steamSettings);
     bindEmuRow('option_login', emu.login);
     bindEmuRow('option_steamlessAutoUnpack', emu.steamless);
@@ -446,7 +451,6 @@ function translateUI(lang, locale, template) {
   selector.find("li:nth-child(5) .right select option[value='true']").text(clear(template.settings.common.enable));
   selector.find("li:nth-child(5) .right select option[value='false']").text(clear(template.settings.common.disable));
   selector.find('li:nth-child(5) .help').text(clear(template.settings.notification.option.platinum.description));
-  // Group-by-game now lives in the common group (its own "Toast" sub-section was removed).
   selector.find('li:nth-child(6) .left span').text(clear(template.settings.notification.option.groupToast.name));
   selector.find("li:nth-child(6) .right select option[value='true']").text(clear(template.settings.common.enable));
   selector.find("li:nth-child(6) .right select option[value='false']").text(clear(template.settings.common.disable));
@@ -503,7 +507,6 @@ function translateUI(lang, locale, template) {
   if (template.settings.notification.option.overlaySoundDelete) {
     $('#btn-delete-sound').attr('title', clear(template.settings.notification.option.overlaySoundDelete));
   }
-  // Per-option descriptions for the in-game overlay rows (bound to each row's .help via its label).
   $('#lbl-notifMode').closest('li').find('.help').text(clear(template.settings.notification.option.mode.description));
   $('#lbl-overlayPreset').closest('li').find('.help').text(clear(template.settings.notification.option.overlayPresetDesc));
   $('#lbl-overlayPresetXenia').text(clear(template.settings.notification.option.overlayPresetXenia));
@@ -536,12 +539,8 @@ function translateUI(lang, locale, template) {
   }
   if (template.settings.notification.option.designer) {
     const c = template.settings.notification.option.designer;
-    /*
-      The preset designer is bound by `data-lang="<dotted path>"` rather than one selector per label:
-      it has a control for every editable property, and its labels (group title, property name,
-      dropdown words) are all leaves of this same block. One pass keeps markup and locale in step,
-      so a control added to app.html cannot silently ship with a blank label.
-    */
+    // Bound by `data-lang="<dotted path>"` rather than one selector per label, so a control added
+    // to app.html cannot silently ship with a blank label.
     $("#settingNav li[data-view='presets'] span").text(clear(template.settings.sideMenu.presets));
     // The button on the preset row in the Notification tab, which opens this tab.
     $('#btn-open-presets').attr('title', clear(c.open));
@@ -585,15 +584,12 @@ function translateUI(lang, locale, template) {
       .attr('data-exported', clear(c.exported))
       .attr('data-reset', clear(c.resetDone))
       .attr('data-fail', clear(c.failed))
-      // The three template actions read these back off the element the same way the ones above do.
-      // They were never bound, so picking a starting point printed its bare name - "Slate" on its
-      // own, in green, with nothing saying what had happened - and "Surprise me" said nothing at all.
+      // Without these, picking a template printed only its bare name with nothing saying what happened.
       .attr('data-template', clear(c.templates.applied))
       .attr('data-randomized', clear(c.templates.randomized))
       .attr('data-duplicated', clear(c.templates.duplicated));
     $(document).trigger('locale-labels-changed');
   }
-  // Localize the 8 overlay position options + expose the dynamic "None" sound label as a data attr.
   $("#option_overlayPosition option[value='center-bottom']").text(clear(template.settings.notification.option.position.centerBottom));
   $("#option_overlayPosition option[value='center-top']").text(clear(template.settings.notification.option.position.centerTop));
   $("#option_overlayPosition option[value='top-left']").text(clear(template.settings.notification.option.position.topLeft));

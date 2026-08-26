@@ -129,3 +129,45 @@ test('a loader never outranks a real exe in raw selection, even with a large siz
   assert.ok(res);
   assert.strictEqual(res.name, 'AC4BFSP.exe', 'the loader must never be picked over a genuine candidate');
 });
+
+test("a repack's patched copy of the same exe is one program, not a rival candidate", () => {
+  // "Crack" / "NoDVD" / "Таблетка" folders hold a byte-different copy under the SAME filename.
+  // Counting it as a second candidate left unmistakable installs ambiguous, so no launch exe was
+  // ever offered for them (AC Origins: ACOrigins.exe at the root and again under Таблетка\).
+  const gameDir = tmpGame('repack-duplicate-exe');
+  writeBytes(path.join(gameDir, 'ACOrigins.exe'), 80 * 1024);
+  const crack = path.join(gameDir, 'Таблетка');
+  fs.mkdirSync(crack, { recursive: true });
+  writeBytes(path.join(crack, 'ACOrigins.exe'), 80 * 1024);
+  const res = exeDetect.detect(gameDir, "Assassin's Creed Origins");
+  assert.ok(res);
+  assert.strictEqual(res.name, 'ACOrigins.exe');
+  assert.strictEqual(path.dirname(res.full), gameDir, 'the copy at the install root is the one the game runs');
+  assert.strictEqual(res.confident, true);
+  assert.strictEqual(res.confidence, 'sole-non-utility-name');
+});
+
+test('a bundled installer or redistributable never competes with the game', () => {
+  // Both names are anchored differently from /^install/ and /^vcredist/, so they used to survive
+  // every filter and keep the real exe ambiguous - Avatar shipped both.
+  const gameDir = tmpGame('bundled-installers');
+  writeBytes(path.join(gameDir, 'afop.exe'), 300 * 1024);
+  writeBytes(path.join(gameDir, 'UbisoftConnectInstaller.exe'), 40 * 1024);
+  const tools = path.join(gameDir, 'Tools', 'vc_redist');
+  fs.mkdirSync(tools, { recursive: true });
+  writeBytes(path.join(tools, 'VC_redist.x64.exe'), 25 * 1024);
+  const res = exeDetect.detect(gameDir, 'Avatar: Frontiers of Pandora');
+  assert.ok(res);
+  assert.strictEqual(res.name, 'afop.exe');
+  assert.strictEqual(res.confident, true, 'nothing plausible is left to be ambiguous against');
+});
+
+test("a repack's bundled 7za.exe is excluded", () => {
+  // The rule was written /^7za?$/ and is matched against the full filename, so it matched nothing.
+  const gameDir = tmpGame('bundled-7za');
+  writeBytes(path.join(gameDir, 'SomeGame.exe'), 90 * 1024);
+  writeBytes(path.join(gameDir, '7za.exe'), 1024 * 1024);
+  const res = exeDetect.detect(gameDir, 'Totally Unrelated Title');
+  assert.ok(res);
+  assert.strictEqual(res.name, 'SomeGame.exe');
+});

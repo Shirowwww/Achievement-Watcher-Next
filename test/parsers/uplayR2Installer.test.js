@@ -97,18 +97,26 @@ test('package import keeps only validated loader binaries and is idempotent', as
 test('plain bundled loaders and the recovery archive seed every validated alias', async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-uplay-bundled-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
-  assert.equal(fs.existsSync(installer.BUNDLED_LOADERS_DIR), true);
-  assert.equal(fs.existsSync(installer.BUNDLED_RECOVERY_ARCHIVE), true);
-  for (const name of Object.keys(installer.LOADER)) {
-    assert.equal(fs.existsSync(path.join(installer.BUNDLED_LOADERS_DIR, name)), true, `${name} is stored as a plain app resource`);
-  }
-  const cache = await installer.ensureBundledEmulatorDlls({ cacheDir: path.join(root, 'cache') });
-  assert.equal(cache.complete, true);
-  for (const [name, spec] of Object.entries(installer.LOADER)) {
-    assert.equal(installer.inspectPackageDll(cache.files[name], name).arch, spec.arch);
+  // One package per emulator generation: a game loads only the generation its executable imports, so
+  // each ships, caches and validates on its own.
+  for (const bundle of Object.values(installer.PACKAGES)) {
+    assert.equal(fs.existsSync(bundle.dir), true, `${bundle.id} resources are shipped`);
+    assert.equal(fs.existsSync(path.join(bundle.dir, bundle.archive)), true, `${bundle.id} recovery archive is shipped`);
+    const names = installer.loaderNamesFor(bundle.id);
+    assert.equal(names.length, 4, `${bundle.id} declares its four aliases`);
+    for (const name of names) {
+      assert.equal(fs.existsSync(path.join(bundle.dir, name)), true, `${name} is stored as a plain app resource`);
+    }
+    const cache = await installer.ensureBundledEmulatorDlls({ cacheDir: path.join(root, `cache-${bundle.id}`), flavour: bundle.id });
+    assert.equal(cache.complete, true, `${bundle.id} cache is complete`);
+    assert.equal(cache.integrated, true, `${bundle.id} seeds from the integrated files, not a custom import`);
+    for (const name of names) {
+      assert.equal(installer.inspectPackageDll(cache.files[name], name).arch, installer.LOADER[name].arch);
+    }
   }
   const builderConfig = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'electron-builder.yml'), 'utf8');
   assert.match(builderConfig, /resources\/uplayR2\/\*\*/i, 'plain DLLs and the recovery archive must stay outside app.asar');
+  assert.match(builderConfig, /resources\/uplayR1\/\*\*/i, 'the R1 package must stay outside app.asar too');
 });
 
 test('a manually selected equivalent DLL needs capability and architecture, not a known hash', async (t) => {
@@ -118,6 +126,45 @@ test('a manually selected equivalent DLL needs capability and architecture, not 
   const imported = await installer.importPackage({ packagePath: selected, cacheDir: path.join(root, 'cache') });
   assert.deepEqual(imported.imported, ['uplay_r2_loader64.dll']);
   assert.notEqual(fs.readFileSync(selected).length, 0);
+});
+
+test('a game that resolves its loader at runtime is still placed correctly', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-uplay-dynamic-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  // Two of four real installs checked name no loader in their import table: they LoadLibrary it. The
+  // executable still carries the API it speaks, and the generations use disjoint entry points.
+  const dynamicR2 = writePe(path.join(root, 'r2', 'game.exe'), 'x64', 'UPC_AchievementUnlock UPC_AchievementListGet upc_r2_loader64.dll');
+  const dynamicR1 = writePe(path.join(root, 'r1', 'game.exe'), 'x64', 'UPLAY_ACH_EarnAchievement UPLAY_ACH_GetAchievements uplay_r1_loader64.dll');
+  assert.equal(installer.flavourFromExecutableStrings(dynamicR2), 'r2');
+  assert.equal(installer.flavourFromExecutableStrings(dynamicR1), 'r1');
+  assert.equal(installer.detectInstallFlavour({ gameDir: path.dirname(dynamicR2) }), 'r2');
+  assert.equal(installer.detectInstallFlavour({ gameDir: path.dirname(dynamicR1) }), 'r1');
+
+  // An executable naming both APIs proves nothing, and one naming neither falls back to the
+  // basename it will ask for.
+  const ambiguous = writePe(path.join(root, 'both', 'game.exe'), 'x64', 'UPC_AchievementUnlock UPLAY_ACH_EarnAchievement');
+  assert.equal(installer.flavourFromExecutableStrings(ambiguous), '');
+  // A basename alone identifies the generation but never authorizes a write: planInstall below
+  // requires an achievement entry point, which a stray mention of a filename does not carry.
+  const nameOnly = writePe(path.join(root, 'name', 'game.exe'), 'x64', 'loads upc_r1_loader64.dll at runtime');
+  assert.equal(installer.flavourFromExecutableStrings(nameOnly), 'r1', 'the loader basename identifies the generation');
+  assert.deepEqual(installer.loaderNamesFromExecutableStrings(nameOnly, 'r1'), [], 'but it places nothing on its own');
+  assert.deepEqual(
+    installer.loaderNamesFromExecutableStrings(dynamicR1, 'r1'),
+    ['uplay_r1_loader64.dll'],
+    'an executable naming the API and the basename places exactly that alias'
+  );
+  const nothing = writePe(path.join(root, 'none', 'game.exe'), 'x64', 'no ubisoft anything here');
+  assert.equal(installer.flavourFromExecutableStrings(nothing), '');
+  assert.equal(installer.detectInstallFlavour({ gameDir: path.dirname(nothing) }), '');
+
+  // The literal scan reads in overlapping chunks, so a match spanning a chunk boundary is still found.
+  const big = path.join(root, 'big.bin');
+  const padding = Buffer.alloc(8 * 1024 * 1024 - 5, 0x41);
+  fs.writeFileSync(big, Buffer.concat([padding, Buffer.from('UPC_AchievementUnlock', 'ascii'), Buffer.alloc(64)]));
+  assert.deepEqual([...installer.scanFileForLiterals(big, ['UPC_AchievementUnlock'])], ['UPC_AchievementUnlock']);
+  assert.deepEqual([...installer.scanFileForLiterals(path.join(root, 'missing.bin'), ['x'])], [], 'an unreadable file is not evidence');
 });
 
 test('recovery archives reject traversal, absolute paths, links, and NTFS streams', () => {

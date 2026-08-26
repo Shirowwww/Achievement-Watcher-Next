@@ -904,8 +904,12 @@ var app = {
               debug.warn(`Achievement parse attempt ${attempt + 1} failed for "${name}": ${err.message || err}`);
             },
           });
-          if (options.uplayR2) {
-            const remapped = uplayR2.remapObjectiveIds(achievements, game.achievement && game.achievement.list);
+          // A repaired setup redirects into GSE Saves, watched without the uplayR2 flag, so the ids
+          // have to be re-keyed there too or a Ubisoft unlock is dropped as ACH_NOT_FOUND_IN_SCHEMA.
+          if (options.uplayR2 || uplayR2.isUplayR2SteamAppId(appID)) {
+            const remapped = uplayR2.remapObjectiveIds(achievements, game.achievement && game.achievement.list, {
+              objectiveIds: uplayR2.objectiveMapFor(appID),
+            });
             if (remapped > 0) debug.log(`[uplay-r2] mapped ${remapped} objective id(s) onto the game's achievement names`);
           }
           const progressSchema = findLocalProgressSchema(appID, game);

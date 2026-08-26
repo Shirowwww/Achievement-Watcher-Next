@@ -11,7 +11,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const test = require('node:test');
 
-const { deriveHealth, STATE, LEVEL, ACTION, REPAIRABLE_GOLDBERG_CODES, REPAIRABLE_UPLAY_CODES } = require(path.join(__dirname, '..', '..', 'app', 'util', 'gameHealth.js'));
+const { deriveHealth, hasDot, scannedState, STATE, LEVEL, ACTION, REPAIRABLE_GOLDBERG_CODES, REPAIRABLE_UPLAY_CODES } = require(path.join(__dirname, '..', '..', 'app', 'util', 'gameHealth.js'));
 
 // A fully healthy Steam-emulated game. Each test below breaks exactly one thing.
 function healthyGame(overrides = {}) {
@@ -602,4 +602,44 @@ test('artwork Steam has not published is a statement, not a repair the user can 
   const repairable = checkFor(deriveHealth(iconsMissing(false)), 'achievement-data');
   assert.equal(repairable.level, LEVEL.WARN);
   assert.ok((repairable.actions || []).includes(ACTION.REPAIR_DATA));
+});
+
+/*
+  The tile dot. Its whole job is to be right BEFORE anyone opens the panel, so the two questions it
+  answers - does this game get a dot at all, and what colour - are settled from scan data alone.
+*/
+
+test('a Uplay game gets a dot even though it has no steam_api dll', () => {
+  // The dll is the Steam emulator's marker. A Uplay R1/R2 game routes its unlocks through the Uplay
+  // loader and never has one, so requiring it left every Ubisoft game with no dot at all.
+  assert.equal(hasDot({ appid: '2840770', uplayR2: true }), true);
+  assert.equal(hasDot({ appid: '2840770', system: 'uplay' }), true);
+  assert.equal(hasDot({ appid: '480', hasSteamApiDll: false }), true, 'a known-false answer is still an answer');
+  assert.equal(hasDot({ appid: '730' }), false, 'a plain Steam game is not emulated and gets none');
+});
+
+test('a configured Uplay game reads as ready, not as untracked', () => {
+  const game = { uplayR2: true, uplayHealthy: true, achievement: { total: 52 } };
+  assert.equal(scannedState(game), STATE.READY);
+});
+
+test('a Uplay game the scan has not diagnosed is "worth a check", never "not tracked"', () => {
+  // Absent is "not looked at". Reporting it as untracked is what the steam_api-only rule did to
+  // every Uplay game, panel-open or not.
+  assert.equal(scannedState({ uplayR2: true, achievement: { total: 52 } }), STATE.ATTENTION);
+  assert.equal(scannedState({ uplayR2: true, uplayHealthy: true, achievement: { total: 0 } }), STATE.ATTENTION);
+});
+
+test('a broken Uplay setup reads as not tracked', () => {
+  assert.equal(
+    scannedState({ uplayR2: true, uplayHealthy: false, achievement: { total: 52 } }),
+    STATE.NOT_TRACKING
+  );
+});
+
+test('the Steam-emulator answers are unchanged', () => {
+  assert.equal(scannedState({ hasSteamApiDll: false }), STATE.NOT_TRACKING);
+  assert.equal(scannedState({ hasSteamApiDll: true, achievement: { total: 0 } }), STATE.ATTENTION);
+  assert.equal(scannedState({ hasSteamApiDll: true, unconfigured: true, achievement: { total: 12 } }), STATE.ATTENTION);
+  assert.equal(scannedState({ hasSteamApiDll: true, achievement: { total: 12 } }), STATE.READY);
 });

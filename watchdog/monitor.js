@@ -54,6 +54,14 @@ const files = {
   steamEmu: ['ALI213.ini', 'valve.ini', 'hlm.ini', 'ds.ini', 'steam_api.ini', 'SteamConfig.ini', 'tenoke.ini', 'UniverseLAN.ini'],
 };
 
+/*
+  ALI213 and the emulators built on it write their unlock state as either "Achievements.Bin" or
+  "Achievements.ini" depending on the build. The reader accepts both (see app/parser/steam.js), but
+  the watchers listed only the first, so a game running a build that writes the .ini spelling was
+  watched and never once fired: its unlocks only appeared on the next library refresh.
+*/
+const ALI213_ACHIEVEMENT_FILES = [files.achievement[4], files.achievement[6]];
+
 module.exports.getFolders = async (userDir_file) => {
   let configuredDirs = [];
   try {
@@ -112,6 +120,13 @@ module.exports.getFolders = async (userDir_file) => {
       // re-keys the objective ids onto the schema's api-names. Without this entry a Ubisoft unlock
       // never fired a live notification at all - it only showed up on the next manual refresh.
       dir: path.join(process.env['APPDATA'], 'Goldberg UplayEmu Saves'),
+      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1]], uplayR2: true },
+    },
+    {
+      // The same emulator, R1 generation: same folder-per-Ubisoft-product layout, same
+      // achievements.json, its own default root. Ubisoft titles from before the R2 API never load an
+      // R2 loader, so without this entry their unlocks only appeared on the next manual refresh.
+      dir: path.join(process.env['APPDATA'], 'R1 UplayEmu Saves'),
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1]], uplayR2: true },
     },
     {
@@ -208,13 +223,13 @@ module.exports.getFolders = async (userDir_file) => {
                 if (dirpath)
                   steamEmu.push({
                     dir: path.join(dirpath, `Profile/${info.Settings.PlayerName}/Stats`),
-                    options: { appid: info.Settings.AppID, recursive: false, file: [files.achievement[4]] },
+                    options: { appid: info.Settings.AppID, recursive: false, file: ALI213_ACHIEVEMENT_FILES },
                   });
               } else if (info.Settings.AppID && info.Settings.PlayerName && info.Settings.SaveType == 1) {
                 if (mydocs)
                   steamEmu.push({
                     dir: path.join(mydocs, `VALVE/${info.Settings.AppID}/${info.Settings.PlayerName}/Stats`),
-                    options: { appid: info.Settings.AppID, recursive: false, file: [files.achievement[4]] },
+                    options: { appid: info.Settings.AppID, recursive: false, file: ALI213_ACHIEVEMENT_FILES },
                   });
               } else if (info.Settings.AppID && !info.Settings.SaveType) {
                 let dirpath = await parentFind(
@@ -228,7 +243,7 @@ module.exports.getFolders = async (userDir_file) => {
                 if (dirpath)
                   steamEmu.push({
                     dir: path.join(dirpath, 'Profile/Stats'),
-                    options: { appid: info.Settings.AppID, recursive: false, file: [files.achievement[4]] },
+                    options: { appid: info.Settings.AppID, recursive: false, file: ALI213_ACHIEVEMENT_FILES },
                   });
               }
             } else if ((file === files.steamEmu[3] || file === files.steamEmu[2] || file === files.steamEmu[4]) && info.GameSettings) {
@@ -284,7 +299,7 @@ module.exports.getFolders = async (userDir_file) => {
                           disableCheckIfProcessIsRunning: true,
                           disableCheckTimestamp: true,
                           recursive: false,
-                          file: [files.achievement[4]],
+                          file: ALI213_ACHIEVEMENT_FILES,
                         },
                       });
                     }

@@ -12,28 +12,77 @@ const os = require('os');
 const path = require('path');
 const pe = require('../util/pe.js');
 const uplayR2 = require('./uplayR2.js');
+const { readRegistryString, listRegistryAllSubkeys } = require('../util/reg.js');
 
 const noopLog = { log() {}, error() {} };
 const PACKAGE_MANIFEST = 'package-import.json';
-const BUNDLED_LOADERS_DIR = path.join(__dirname, '..', 'resources', 'uplayR2');
-const BUNDLED_RECOVERY_ARCHIVE = path.join(BUNDLED_LOADERS_DIR, 'GoldbergUplayR2-11-07-2026.7z');
-const BUNDLED_RECOVERY_SHA256 = '655edfd05ab61c87b35dd24d9e96e2f4263672f9a6651014e52a2b0649155c34';
-const BUNDLED_LOADER_SHA256 = Object.freeze({
-  'uplay_r2_loader.dll': '01c016c11b029f4e029018074233ae0c695cddbdf3b719ff4e60dfd14509c131',
-  'uplay_r2_loader64.dll': 'fb93763842016cfa992f5f17f96209213c943248e0f00b9bbc2edeb0f83e7105',
-  'upc_r2_loader.dll': '01c016c11b029f4e029018074233ae0c695cddbdf3b719ff4e60dfd14509c131',
-  'upc_r2_loader64.dll': 'fb93763842016cfa992f5f17f96209213c943248e0f00b9bbc2edeb0f83e7105',
+/*
+  One bundled package per emulator generation. A game loads only the generation its executable
+  imports, so the two are never interchangeable and each keeps its own resources, hashes and cache.
+*/
+const R2_SHA = Object.freeze({
+  x86: '01c016c11b029f4e029018074233ae0c695cddbdf3b719ff4e60dfd14509c131',
+  x64: 'fb93763842016cfa992f5f17f96209213c943248e0f00b9bbc2edeb0f83e7105',
 });
+const R1_SHA = Object.freeze({
+  x86: '912ceb30ccb667f8fab8f5131db95b012010f0e35a035137f97440721d9a4743',
+  x64: '2baa49dcc090276aafb84847844f502978bfc043a0a02ed453226f12a9d30d15',
+});
+const PACKAGES = Object.freeze({
+  r2: Object.freeze({
+    id: 'r2',
+    dir: path.join(__dirname, '..', 'resources', 'uplayR2'),
+    archive: 'GoldbergUplayR2-11-07-2026.7z',
+    archiveSha256: '655edfd05ab61c87b35dd24d9e96e2f4263672f9a6651014e52a2b0649155c34',
+    cacheName: 'uplayR2',
+    sha256: Object.freeze({
+      'uplay_r2_loader.dll': R2_SHA.x86,
+      'uplay_r2_loader64.dll': R2_SHA.x64,
+      'upc_r2_loader.dll': R2_SHA.x86,
+      'upc_r2_loader64.dll': R2_SHA.x64,
+    }),
+  }),
+  r1: Object.freeze({
+    id: 'r1',
+    dir: path.join(__dirname, '..', 'resources', 'uplayR1'),
+    archive: 'UplayR1-08-19-2026.7z',
+    archiveSha256: 'f48c6e18c55939b697f7a4fb4e73c6d7aeca240cf97db9f5f6533622deb9b335',
+    cacheName: 'uplayR1',
+    sha256: Object.freeze({
+      'uplay_r1_loader.dll': R1_SHA.x86,
+      'uplay_r1_loader64.dll': R1_SHA.x64,
+      'upc_r1_loader.dll': R1_SHA.x86,
+      'upc_r1_loader64.dll': R1_SHA.x64,
+    }),
+  }),
+});
+function packageFor(flavour) {
+  return PACKAGES[String((flavour && flavour.id) || flavour || 'r2').toLowerCase()] || PACKAGES.r2;
+}
+// Kept for callers that name a single generation: they all mean R2.
+const BUNDLED_LOADERS_DIR = PACKAGES.r2.dir;
+const BUNDLED_RECOVERY_ARCHIVE = path.join(PACKAGES.r2.dir, PACKAGES.r2.archive);
+const BUNDLED_RECOVERY_SHA256 = PACKAGES.r2.archiveSha256;
+const BUNDLED_LOADER_SHA256 = PACKAGES.r2.sha256;
 const MAX_SCAN_FILES = 4096;
 const MAX_ARCHIVE_BYTES = 256 * 1024 * 1024;
-const POST_REPAIR_WARNING_FAILURES = new Set(['NO_INI', 'BAD_SAVE_REDIRECT', 'SCHEMA_KEYS_PREFIXED', 'SCHEMA_KEYS_UNPREFIXED']);
+const POST_REPAIR_WARNING_FAILURES = new Set(['NO_INI', 'BAD_SAVE_REDIRECT', 'SCHEMA_KEYS_NOT_CANONICAL']);
 
 const LOADER = Object.freeze({
-  'uplay_r2_loader.dll': Object.freeze({ arch: 'x86', family: 'uplay' }),
-  'uplay_r2_loader64.dll': Object.freeze({ arch: 'x64', family: 'uplay' }),
-  'upc_r2_loader.dll': Object.freeze({ arch: 'x86', family: 'upc' }),
-  'upc_r2_loader64.dll': Object.freeze({ arch: 'x64', family: 'upc' }),
+  'uplay_r2_loader.dll': Object.freeze({ arch: 'x86', family: 'uplay', flavour: 'r2' }),
+  'uplay_r2_loader64.dll': Object.freeze({ arch: 'x64', family: 'uplay', flavour: 'r2' }),
+  'upc_r2_loader.dll': Object.freeze({ arch: 'x86', family: 'upc', flavour: 'r2' }),
+  'upc_r2_loader64.dll': Object.freeze({ arch: 'x64', family: 'upc', flavour: 'r2' }),
+  'uplay_r1_loader.dll': Object.freeze({ arch: 'x86', family: 'uplay', flavour: 'r1' }),
+  'uplay_r1_loader64.dll': Object.freeze({ arch: 'x64', family: 'uplay', flavour: 'r1' }),
+  'upc_r1_loader.dll': Object.freeze({ arch: 'x86', family: 'upc', flavour: 'r1' }),
+  'upc_r1_loader64.dll': Object.freeze({ arch: 'x64', family: 'upc', flavour: 'r1' }),
 });
+// The four names of one generation. A cache, an import and an install plan only ever mix one set.
+function loaderNamesFor(flavour) {
+  const id = packageFor(flavour).id;
+  return Object.keys(LOADER).filter((name) => LOADER[name].flavour === id);
+}
 
 function resolveUnpackedBinary(binPath) {
   const unpacked = String(binPath).replace(`${path.sep}app.asar${path.sep}`, `${path.sep}app.asar.unpacked${path.sep}`);
@@ -207,7 +256,7 @@ async function extractPackage(archivePath, destDir, { log = noopLog } = {}) {
   copied. Every accepted file must be a real PE with the architecture its public basename promises
   and must contain the Uplay R2 achievement setting understood by the repair path.
 */
-async function importPackage({ packagePath, cacheDir, log = noopLog, preserveValidExisting = false } = {}) {
+async function importPackage({ packagePath, cacheDir, flavour = 'r2', log = noopLog, preserveValidExisting = false } = {}) {
   if (!packagePath || !fs.existsSync(packagePath)) throw new Error(`Uplay R2 package not found: ${packagePath}`);
   if (!cacheDir) throw new Error('importPackage: cacheDir is required');
 
@@ -263,7 +312,7 @@ async function importPackage({ packagePath, cacheDir, log = noopLog, preserveVal
       result.imported.push(entry.name);
     }
 
-    const cache = ensureEmulatorDlls({ cacheDir });
+    const cache = ensureEmulatorDlls({ cacheDir, flavour });
     const manifest = {
       format: 1,
       importedAt: new Date().toISOString(),
@@ -297,13 +346,16 @@ async function importPackage({ packagePath, cacheDir, log = noopLog, preserveVal
   architecture and hash checks as a user-selected loader. A valid custom cache wins unless the user
   explicitly restores the integrated files.
 */
-async function ensureBundledEmulatorDlls({ cacheDir, packagePath = BUNDLED_LOADERS_DIR, log = noopLog, replaceExisting = false } = {}) {
-  let cache = ensureEmulatorDlls({ cacheDir });
-  let source = resolveUnpackedBinary(packagePath);
-  if (!fs.existsSync(source)) throw new Error(`Bundled Uplay R2 loader folder not found: ${source}`);
-  if (path.resolve(packagePath) === path.resolve(BUNDLED_LOADERS_DIR)) {
+async function ensureBundledEmulatorDlls({ cacheDir, flavour = 'r2', packagePath = '', log = noopLog, replaceExisting = false } = {}) {
+  const bundle = packageFor(flavour);
+  const defaultDir = bundle.dir;
+  const requested = packagePath || defaultDir;
+  let cache = ensureEmulatorDlls({ cacheDir, flavour: bundle.id });
+  let source = resolveUnpackedBinary(requested);
+  if (!fs.existsSync(source)) throw new Error(`Bundled ${bundle.id.toUpperCase()} loader folder not found: ${source}`);
+  if (path.resolve(requested) === path.resolve(defaultDir)) {
     let directFilesValid = true;
-    for (const [name, expectedHash] of Object.entries(BUNDLED_LOADER_SHA256)) {
+    for (const [name, expectedHash] of Object.entries(bundle.sha256)) {
       const file = path.join(source, name);
       if (!fs.existsSync(file) || !inspectPackageDll(file, name).valid || sha256(file) !== expectedHash) {
         directFilesValid = false;
@@ -311,9 +363,9 @@ async function ensureBundledEmulatorDlls({ cacheDir, packagePath = BUNDLED_LOADE
       }
     }
     if (!directFilesValid) {
-      const archive = resolveUnpackedBinary(BUNDLED_RECOVERY_ARCHIVE);
-      if (!fs.existsSync(archive) || sha256(archive) !== BUNDLED_RECOVERY_SHA256) {
-        throw new Error('Bundled Uplay R2 loaders and recovery archive are unavailable');
+      const archive = resolveUnpackedBinary(path.join(defaultDir, bundle.archive));
+      if (!fs.existsSync(archive) || sha256(archive) !== bundle.archiveSha256) {
+        throw new Error(`Bundled ${bundle.id.toUpperCase()} loaders and recovery archive are unavailable`);
       }
       source = archive;
     }
@@ -323,28 +375,29 @@ async function ensureBundledEmulatorDlls({ cacheDir, packagePath = BUNDLED_LOADE
     bundledImport = await importPackage({
       packagePath: source,
       cacheDir,
+      flavour: bundle.id,
       log,
       preserveValidExisting: !replaceExisting,
     });
     cache = bundledImport.cache;
   }
-  if (!cache.complete) throw new Error('Bundled Uplay R2 package did not provide all x86/x64 loader aliases');
+  if (!cache.complete) throw new Error(`Bundled ${bundle.id.toUpperCase()} package did not provide all x86/x64 loader aliases`);
   const customNames = Object.entries(cache.files)
-    .filter(([name, file]) => file && sha256(file) !== BUNDLED_LOADER_SHA256[name])
+    .filter(([name, file]) => file && sha256(file) !== bundle.sha256[name])
     .map(([name]) => name);
   return { ...cache, bundledImport, customNames, integrated: customNames.length === 0 };
 }
 
-// Read and validate the private package cache. A misleading filename or arbitrary DLL never becomes
-// eligible merely because it was copied into the folder by hand.
-function ensureEmulatorDlls({ cacheDir } = {}) {
+// A misleading filename or arbitrary DLL never becomes eligible merely because it was copied into
+// the folder by hand.
+function ensureEmulatorDlls({ cacheDir, flavour = 'r2' } = {}) {
   if (!cacheDir) throw new Error('ensureEmulatorDlls: cacheDir is required');
   fs.mkdirSync(cacheDir, { recursive: true });
 
   const files = {};
   const details = {};
   const invalid = [];
-  for (const name of Object.keys(LOADER)) {
+  for (const name of loaderNamesFor(flavour)) {
     const file = path.join(cacheDir, name);
     if (!fs.existsSync(file)) {
       files[name] = null;
@@ -360,6 +413,7 @@ function ensureEmulatorDlls({ cacheDir } = {}) {
   }
   return {
     dir: cacheDir,
+    flavour: packageFor(flavour).id,
     seeded: Object.values(files).some(Boolean),
     complete: Object.values(files).every(Boolean),
     files,
@@ -456,6 +510,89 @@ function importedLoaderNames(file) {
   }
 }
 
+/*
+  A game that resolves its loader with LoadLibrary has no import table entry to read, and that is the
+  common case: of four real installs checked, only two named the loader statically. The executable
+  still carries the API it speaks, and the two generations use disjoint achievement entry points, so
+  a bounded literal scan settles which loader belongs in the folder. The loader basenames are the
+  fallback for a title that never calls achievements at all.
+*/
+const FLAVOUR_API_MARKERS = Object.freeze([
+  Object.freeze({ flavour: 'r2', literals: Object.freeze(['UPC_AchievementUnlock', 'UPC_AchievementListGet']) }),
+  Object.freeze({ flavour: 'r1', literals: Object.freeze(['UPLAY_ACH_EarnAchievement', 'UPLAY_ACH_GetAchievements']) }),
+]);
+const MAX_SCANNED_EXECUTABLES = 8;
+const MAX_SCANNED_BYTES = 512 * 1024 * 1024;
+
+// Chunked literal search: a game executable can be hundreds of MB, so never hold one in memory.
+// Chunks overlap by the longest needle so a match cannot fall between two reads.
+function scanFileForLiterals(file, literals) {
+  const found = new Set();
+  const needles = literals.map((literal) => ({ literal, buffer: Buffer.from(literal, 'ascii') }));
+  if (needles.length === 0) return found;
+  const overlap = Math.max(...needles.map((entry) => entry.buffer.length));
+  const chunk = 8 * 1024 * 1024;
+  const buffer = Buffer.alloc(chunk + overlap);
+  let fd;
+  try {
+    fd = fs.openSync(file, 'r');
+  } catch {
+    return found;
+  }
+  try {
+    const size = Math.min(fs.fstatSync(fd).size, MAX_SCANNED_BYTES);
+    let position = 0;
+    let carry = 0;
+    while (position < size) {
+      const wanted = Math.min(chunk, size - position);
+      const read = fs.readSync(fd, buffer, carry, wanted, position);
+      if (read <= 0) break;
+      const view = buffer.subarray(0, carry + read);
+      for (const entry of needles) {
+        if (!found.has(entry.literal) && view.indexOf(entry.buffer) !== -1) found.add(entry.literal);
+      }
+      if (found.size === needles.length) break;
+      view.copy(buffer, 0, view.length - overlap);
+      carry = overlap;
+      position += read;
+    }
+  } catch {
+    /* an unreadable executable is simply not evidence */
+  } finally {
+    try {
+      fs.closeSync(fd);
+    } catch {
+      /* ignore */
+    }
+  }
+  return found;
+}
+
+// The generation an executable speaks, or '' when it names both or neither.
+function flavourFromExecutableStrings(exe) {
+  const api = scanFileForLiterals(exe, FLAVOUR_API_MARKERS.flatMap((marker) => [...marker.literals]));
+  const spoken = FLAVOUR_API_MARKERS.filter((marker) => marker.literals.some((literal) => api.has(literal)));
+  if (spoken.length === 1) return spoken[0].flavour;
+  if (spoken.length > 1) return '';
+  const names = scanFileForLiterals(exe, Object.keys(LOADER));
+  const flavours = new Set([...names].map((name) => LOADER[name].flavour));
+  return flavours.size === 1 ? [...flavours][0] : '';
+}
+
+/*
+  The loader basenames this executable will hand to LoadLibrary, for placement rather than detection.
+  A basename on its own is NOT authorization - a readme or a log line can mention one - so an
+  achievement entry point of the same generation must be present too. That name is a GetProcAddress
+  argument: an executable carrying it intends to call that API, which a stray mention never does.
+*/
+function loaderNamesFromExecutableStrings(exe, flavour) {
+  const marker = FLAVOUR_API_MARKERS.find((entry) => entry.flavour === packageFor(flavour).id);
+  if (!marker) return [];
+  const found = scanFileForLiterals(exe, [...marker.literals, ...loaderNamesFor(flavour)]);
+  if (!marker.literals.some((literal) => found.has(literal))) return [];
+  return loaderNamesFor(flavour).filter((name) => found.has(name));
+}
+
 function executableCandidates(gameDir, exePath) {
   const files = [];
   const add = (file) => {
@@ -469,6 +606,83 @@ function executableCandidates(gameDir, exePath) {
     add(file);
   }
   return files;
+}
+
+/*
+  Ubisoft Connect records every product it installed under Software\Ubisoft\Launcher\Installs\<id>
+  with its InstallDir. A folder inside one of those is the single case where the loader beside the
+  executable is Ubisoft's own file and must never be replaced.
+*/
+function isRegisteredUbisoftInstall(gameDir) {
+  if (!gameDir) return false;
+  let target;
+  try {
+    target = path.resolve(gameDir).toLowerCase();
+  } catch {
+    return false;
+  }
+  for (const hive of ['HKLM', 'HKCU']) {
+    for (const root of ['Software/WOW6432Node/Ubisoft/Launcher/Installs', 'Software/Ubisoft/Launcher/Installs']) {
+      let subs = [];
+      try {
+        subs = listRegistryAllSubkeys(hive, root) || [];
+      } catch {
+        continue;
+      }
+      for (const sub of subs) {
+        let dir = '';
+        try {
+          dir = readRegistryString(hive, `${root}/${sub}`, 'InstallDir') || '';
+        } catch {
+          continue;
+        }
+        if (!dir) continue;
+        let installed;
+        try {
+          installed = path.resolve(dir).toLowerCase();
+        } catch {
+          continue;
+        }
+        if (target === installed || target.startsWith(installed.endsWith(path.sep) ? installed : installed + path.sep)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/*
+  May the emulator be installed into this folder? Either it already carries a Goldberg configuration,
+  or its executable proves which loader name and architecture it links against while Ubisoft Connect
+  does not claim the folder as an installed product. The second branch is what lets a repack shipping
+  no config at all be adopted; the repair itself stays explicit, confirmed and fully backed up.
+*/
+function canAdoptInstall({ gameDir, loaderPaths = [], exePath = '' } = {}) {
+  if (!gameDir) return false;
+  if (uplayR2.hasEmulatorEvidence(gameDir)) return true;
+  if (isRegisteredUbisoftInstall(gameDir)) return false;
+  return !!detectInstallFlavour({ gameDir, loaderPaths, exePath });
+}
+
+/*
+  Which emulator generation this install needs: the one it already runs, else the one its executables
+  import. A game only ever loads the generation it was linked against, so installing the other one
+  would drop a DLL nothing opens - which is exactly how an R1 title ends up looking "repaired" while
+  recording nothing. Returns '' when neither signal names a loader.
+*/
+function detectInstallFlavour({ gameDir, loaderPaths = [], exePath = '' } = {}) {
+  const existing = (loaderPaths.length ? loaderPaths : uplayR2.detectEmulator(gameDir).dll).map((file) => loaderName(file)).filter(Boolean);
+  if (existing.length > 0) return LOADER[existing[0]].flavour;
+  const exes = executableCandidates(gameDir, exePath);
+  // A named import is the strongest signal and stays first: an executable can carry the other
+  // generation's basename as a leftover string while importing only the one it really loads.
+  for (const exe of exes) {
+    for (const name of importedLoaderNames(exe)) return LOADER[name].flavour;
+  }
+  for (const exe of exes.slice(0, MAX_SCANNED_EXECUTABLES)) {
+    const flavour = flavourFromExecutableStrings(exe);
+    if (flavour) return flavour;
+  }
+  return '';
 }
 
 /*
@@ -548,7 +762,8 @@ function planInstall({ gameDir, dlls, loaderPaths = [], exePath = '', trustedIns
       }
     }
   } else {
-    for (const exe of executableCandidates(gameDir, exePath)) {
+    const exes = executableCandidates(gameDir, exePath);
+    for (const exe of exes) {
       const arch = pe.exeArch(exe);
       for (const name of importedLoaderNames(exe)) {
         const expected = LOADER[name].arch;
@@ -561,6 +776,26 @@ function planInstall({ gameDir, dlls, loaderPaths = [], exePath = '', trustedIns
           continue;
         }
         addTarget({ dir: path.dirname(exe), name, exe, evidence: 'pe-import' });
+      }
+    }
+    /*
+      Nothing imported a loader by name, which does not mean the game has none: it may resolve one
+      with LoadLibrary. The basename it will ask for is still in the executable, and the generation
+      is settled separately, so place only that generation's alias and only when the executable's own
+      architecture agrees - the same proof the import path requires.
+    */
+    if (targets.length === 0 && issues.length === 0) {
+      const flavour = detectInstallFlavour({ gameDir, loaderPaths: [], exePath });
+      if (flavour) {
+        for (const exe of exes.slice(0, MAX_SCANNED_EXECUTABLES)) {
+          const arch = pe.exeArch(exe);
+          if (!arch) continue;
+          for (const name of loaderNamesFromExecutableStrings(exe, flavour)) {
+            if (LOADER[name].arch !== arch) continue;
+            addTarget({ dir: path.dirname(exe), name, exe, evidence: 'pe-string' });
+          }
+          if (targets.length > 0) break;
+        }
       }
     }
   }
@@ -641,6 +876,7 @@ function repairInstallation({
   mapping = null,
   schema,
   prefix,
+  objectiveIds = null,
   accountName,
   language,
   logging,
@@ -670,11 +906,15 @@ function repairInstallation({
   for (const dir of targetDirs) {
     const plannedSources = installTargets.filter((target) => path.resolve(target.dir).toLowerCase() === path.resolve(dir).toLowerCase()).map((target) => target.source);
     const currentInDir = currentLoaders.filter((loader) => path.resolve(path.dirname(loader)).toLowerCase() === path.resolve(dir).toLowerCase());
-    const caps = uplayR2.inspectInstalledLoaders(plannedSources.length ? plannedSources : currentInDir);
+    // Only the generation being repaired counts: the other one's DLL is dead weight the game never
+    // loads, and averaging it in would strip a redirect the active loader supports.
+    const dirFlavour = uplayR2.resolveFlavour((plannedSources[0] || currentInDir[0]) || 'r2').id;
+    const activeInDir = currentInDir.filter((loader) => (uplayR2.flavourForDll(loader) || { id: 'r2' }).id === dirFlavour);
+    const caps = uplayR2.inspectInstalledLoaders(plannedSources.length ? plannedSources : activeInDir.length ? activeInDir : currentInDir);
     if (!caps.supportsAchievements) throw new Error(`repairInstallation: ${dir} has no compatible Uplay R2 achievement loader`);
     if (!caps.architectureValid) throw new Error(`repairInstallation: ${dir} has a loader whose architecture does not match its filename`);
 
-    const schemaJson = uplayR2.buildAchievementsSchemaJson(schema, { keyed: caps.supportsAchKeyPrefix });
+    const schemaJson = uplayR2.buildAchievementsSchemaJson(schema, { keyed: caps.supportsAchKeyPrefix, prefix, objectiveIds });
     if (Object.keys(schemaJson).length === 0) throw new Error('repairInstallation: achievement schema is empty');
     const schemaFile = path.join(dir, uplayR2.ACH_SCHEMA_FILE);
     const schemaText = JSON.stringify(schemaJson, null, 2);
@@ -688,7 +928,7 @@ function repairInstallation({
 
     const ini = uplayR2.planSettingsConfig({ dir, steamAppid, prefix, accountName, language, logging, capabilities: caps });
     for (const entry of ini.files) if (entry.changed) touched.push(entry.file);
-    repairPlans.push({ dir, capabilities: caps });
+    repairPlans.push({ dir, capabilities: caps, flavour: dirFlavour });
   }
 
   const snapshot = touched.length > 0 ? uplayR2.createSetupBackup({ gameDir, files: touched }) : null;
@@ -701,6 +941,7 @@ function repairInstallation({
         steamAppid,
         schema,
         prefix,
+        objectiveIds,
         accountName,
         language,
         logging,
@@ -720,6 +961,7 @@ function repairInstallation({
         name,
         loaderPaths: runtimeLoaders,
         mapping,
+        flavour: repairPlans.find((entry) => entry.dir === dir)?.flavour,
       });
       const failures = report.issues.filter(
         (issue) => issue.level === 'error' || (issue.level === 'warning' && POST_REPAIR_WARNING_FAILURES.has(issue.code))
@@ -752,6 +994,15 @@ function repairInstallation({
 
 module.exports = {
   LOADER,
+  loaderNamesFromExecutableStrings,
+  flavourFromExecutableStrings,
+  scanFileForLiterals,
+  isRegisteredUbisoftInstall,
+  canAdoptInstall,
+  detectInstallFlavour,
+  PACKAGES,
+  packageFor,
+  loaderNamesFor,
   PACKAGE_MANIFEST,
   BUNDLED_LOADERS_DIR,
   BUNDLED_LOADER_SHA256,

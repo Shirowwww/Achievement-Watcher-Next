@@ -179,8 +179,17 @@ async function detectEaAppMarkers(dirpath) {
   }
 }
 
-// The console emulators AW can read achievement data from, by executable name.
 const EMULATOR_BINARIES = ['rpcs3.exe', 'shadPS4.exe', 'shadps4.exe', 'xenia.exe', 'xenia_canary.exe'];
+
+/*
+  Steam emulators that keep a game's unlocks INSIDE the game folder rather than under %APPDATA%.
+  Their %APPDATA% cousins are found by defaultSteamEmuSaveRoots() above; these are not, because the
+  data lives wherever the game was installed - so unless the game's own folder is a watched folder,
+  the Watchdog never looks at it and the game's unlocks only surface on the next library refresh.
+  The Watchdog re-reads each config itself and decides where the save actually is; all this has to do
+  is put the folder in front of it.
+*/
+const IN_FOLDER_EMULATOR_CONFIGS = ['ALI213.ini', 'valve.ini', 'SteamConfig.ini', 'hlm.ini', 'ds.ini', 'steam_api.ini', 'steam_emu.ini'];
 
 /*
   Emulator folders Windows already knows about, with no file system search at all.
@@ -360,13 +369,28 @@ module.exports.findEntries = async () => {
     }
 
     const search = EMULATOR_BINARIES.map((name) => `**/${name}`);
+    const libraryRoots = await saveRoots.discoverLibraryRoots();
     const searchRoots = [
       ...(await saveRoots.discoverEmulatorRoots()).map((root) => ({ root, detector: 'Supported emulator in detected folder' })),
-      ...(await saveRoots.discoverLibraryRoots()).map((root) => ({ root, detector: 'Supported emulator in detected library' })),
+      ...libraryRoots.map((root) => ({ root, detector: 'Supported emulator in detected library' })),
     ];
     for (const { root, detector } of searchRoots) {
       for (const filepath of await glob(search, { cwd: root, deep: 3, onlyFiles: true, absolute: true, suppressErrors: true })) {
         addDetected(path.parse(filepath).dir, detector);
+      }
+    }
+
+    // A game whose emulator writes its unlocks beside it. Same bounded walk as above, over the game
+    // libraries only: the config has to name an AppID, or the folder is not a game this can follow.
+    const inFolderSearch = IN_FOLDER_EMULATOR_CONFIGS.map((name) => `**/${name}`);
+    for (const root of libraryRoots) {
+      for (const filepath of await glob(inFolderSearch, { cwd: root, deep: 3, onlyFiles: true, absolute: true, suppressErrors: true })) {
+        try {
+          if (!/^\s*App(?:ID|Id)\s*=\s*[0-9]+\s*$/im.test(fs.readFileSync(filepath, 'utf8'))) continue;
+        } catch {
+          continue; // unreadable config names nothing
+        }
+        addDetected(path.parse(filepath).dir, 'Emulator saving inside the game folder');
       }
     }
 
@@ -399,7 +423,7 @@ module.exports.diagnose = async (dirpath) => {
   const socialclub = require('./socialclub.js');
   if (socialclub.isSocialClubPath(dirpath)) return { accepted: true, code: 'socialclub', evidence };
 
-  //check for appID folder(s). Some emulators use hex ids; reject obvious user-id/noise folders.
+  // Some emulators use hex ids; isProbableAppIdFolderName rejects obvious user-id/noise folders.
   const appidFolders = entries.filter(isProbableAppIdFolderName);
   if (appidFolders.length > 0) return { accepted: true, code: 'appid-folders', evidence: { ...evidence, appidFolders } };
 

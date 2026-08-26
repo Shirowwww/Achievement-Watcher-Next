@@ -23,6 +23,10 @@ const JUNK_TOKENS = new Set([
 function cleanGameName(raw) {
   let s = String(raw || '').toLowerCase();
   s = s.replace(/[[({][^\])}]*[\])}]/g, ' '); // [..] (..) {..} tags
+  // Release-site domains ride along in repack folder names ("... v1.52 RexaGames.com"). Left in,
+  // they push a title out of the exact/token tiers and into a fuzzy score that is never
+  // auto-committed, so the game is simply not identified. Strip before separators are flattened.
+  s = s.replace(/\b[a-z0-9][a-z0-9-]*\.(com|net|org|ru|to|io|cc|info|xyz|me|site|online|club|pw)\b/g, ' ');
   s = s.replace(/\bv?\d+(\.\d+){1,}[a-z]?\b/g, ' '); // dotted versions: v1.2.3 / 1.0.0.0 (before separators are flattened)
   s = s.replace(/\bmulti\d*\b/g, ' ');
   s = s.replace(/[._\-]+/g, ' '); // flatten separators so "update.5" / "update_5" become "update 5"
@@ -116,4 +120,86 @@ function bestConfidentAppid(query, apps) {
   return hit ? hit.appid : null;
 }
 
-module.exports = { cleanGameName, normAlnum, diceCoefficient, rankAppidCandidates, bestConfidentAppid };
+/*
+  Words that never distinguish one game from another: grammar, packaging, and the platform tag a
+  Ubisoft SKU name carries. Ignored on BOTH sides of the comparison below, so "Anno 1404" and
+  "Anno 1404 - History Edition" are the same title while "Far Cry" and "Far Cry Primal" are not.
+*/
+const TITLE_FILLER = new Set([
+  'the', 'a', 'an', 'of', 'and', 'for', 'to', 'in', 'on', 'at', 'de', 'le', 'la', 'les',
+  'edition', 'editions', 'gold', 'deluxe', 'standard', 'complete', 'ultimate', 'premium', 'history',
+  'definitive', 'special', 'collectors', 'collector', 'anniversary', 'goty', 'game', 'year', 'pack',
+  'bundle', 'uplay', 'ubisoft', 'connect', 'steam', 'version', 'pc',
+]);
+
+const ROMAN_NUMERALS = { i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8, ix: 9, x: 10, xi: 11, xii: 12 };
+
+// "III" and "3" name the same entry in a series, and a title's number is the one token that must
+// never be treated loosely: Assassin's Creed and Assassin's Creed II are different games.
+function titleNumbers(tokens) {
+  const out = new Set();
+  for (const token of tokens) {
+    if (/^\d+$/.test(token)) out.add(Number(token));
+    else if (/^\d+(st|nd|rd|th)$/.test(token)) out.add(Number(token.replace(/\D+$/, '')));
+    else if (ROMAN_NUMERALS[token] != null) out.add(ROMAN_NUMERALS[token]);
+  }
+  return out;
+}
+
+function significantTokens(raw) {
+  return cleanGameName(raw)
+    .tokens.map((t) => t.replace(/[^a-z0-9]/g, ''))
+    .filter((t) => t && !TITLE_FILLER.has(t));
+}
+
+// Is `token` the same word as one of `others`, allowing the kind of slip a catalogue really contains
+// ("Frontier" for "Frontiers")? Deliberately not a general fuzzy match: a shared prefix alone is not
+// enough, or "Primal" would be covered by "Pri…" and the whole guard would leak.
+function tokenCovered(token, others) {
+  for (const other of others) {
+    if (token === other) return true;
+    if (token.length >= 4 && other.length >= 4 && (token.startsWith(other) || other.startsWith(token))) {
+      // One word being a prefix of the other is only a typo when they are nearly the same length
+      // ("frontier"/"frontiers"), never when it is a longer, different word.
+      if (Math.abs(token.length - other.length) <= 2) return true;
+    }
+    if (token.length >= 5 && other.length >= 5 && diceCoefficient(token, other) >= 0.8) return true;
+  }
+  return false;
+}
+
+/*
+  Does `name` title the SAME game as `query`, rather than a relative of it?
+
+  Every significant word has to be accounted for in both directions, and the series numbers have to
+  be identical. This is what separates a spelling slip from a different product:
+
+    "Avatar: Frontier of Pandora"  vs "Avatar: Frontiers of Pandora"   -> same  (a typo)
+    "Anno 1404"                    vs "Anno 1404 - History Edition"    -> same  (packaging)
+    "Silent Hunter 3"              vs "Silent Hunter III"              -> same  (numeral spelling)
+    "Assassin's Creed III"         vs "Assassin's Creed III Remastered"-> DIFFERENT
+    "Far Cry"                      vs "Far Cry Primal"                 -> DIFFERENT
+    "Tom Clancy's Rainbow Six"     vs "Tom Clancy's Rainbow Six Siege" -> DIFFERENT
+    "Assassin's Creed"             vs "Assassin's Creed II"            -> DIFFERENT
+
+  It refuses some correct pairs too ("Starlink" vs "Starlink: Battle for Atlas"). That is the trade
+  this is for: a refusal costs a game its automatic mapping, a wrong answer writes another game's
+  achievements into it.
+*/
+function sameTitle(query, name) {
+  const q = significantTokens(query);
+  const n = significantTokens(name);
+  if (q.length === 0 || n.length === 0) return false;
+
+  const qNumbers = titleNumbers(q);
+  const nNumbers = titleNumbers(n);
+  if (qNumbers.size !== nNumbers.size) return false;
+  for (const value of qNumbers) if (!nNumbers.has(value)) return false;
+
+  const words = (tokens) => tokens.filter((t) => !/^\d+$/.test(t) && ROMAN_NUMERALS[t] == null);
+  const qWords = words(q);
+  const nWords = words(n);
+  return qWords.every((t) => tokenCovered(t, nWords)) && nWords.every((t) => tokenCovered(t, qWords));
+}
+
+module.exports = { cleanGameName, normAlnum, diceCoefficient, rankAppidCandidates, bestConfidentAppid, sameTitle, TITLE_FILLER };

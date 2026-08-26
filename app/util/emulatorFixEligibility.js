@@ -79,9 +79,19 @@ function inspect({ gameDir, source = '', system = '', isUbisoft = false, manual 
   if (/^Steam\s*\(/i.test(normalizedSource) || launcherDetect.isOfficialLauncherInstall(gameDir)) {
     return { eligible: false, reason: 'official-launcher' };
   }
-  if (uplayR2.detectEmulator(gameDir).type !== 'none') return { eligible: false, reason: 'uplay-r2' };
+  /*
+    Order matters here, because the reason is shown to somebody. A Ubisoft game sold on Steam ships
+    BOTH layers - the Uplay one for the entitlement check, a Steam one for its achievements - so a
+    Uplay loader in the folder is not on its own the reason such a game is left alone. When another
+    emulator is already serving it, that is the reason, and saying "this is a Uplay game" instead
+    sent anyone reading it after a fix that does not apply (seen on ZOMBI, served by ALI213).
+
+    The refusals themselves are unchanged: a folder with a Uplay loader is still never rewritten by
+    the GBE fix.
+  */
   const existingFix = findExistingFix(gameDir);
   if (existingFix) return { eligible: false, reason: 'existing-fix', existingFix };
+  if (uplayR2.detectEmulator(gameDir).type !== 'none') return { eligible: false, reason: 'uplay-r2' };
   return { eligible: true, reason: 'unconfigured' };
 }
 

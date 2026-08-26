@@ -53,6 +53,10 @@ function defaultSteamEmuSaveRoots({ existingOnly = false, expandProgramDataSteam
     envPath('PUBLIC', 'Documents', 'EMPRESS'),
     envPath('APPDATA', 'Goldberg SteamEmu Saves'),
     envPath('APPDATA', 'Goldberg UplayEmu Saves'),
+    // The R1 loader's own default root. Its R2 sibling was listed here from the start; leaving this
+    // one out meant an unredirected R1 install was invisible to discovery even though the Watchdog
+    // watched the folder live.
+    envPath('APPDATA', 'R1 UplayEmu Saves'),
     envPath('APPDATA', 'Goldberg SocialClub Emu Saves'),
     envPath('APPDATA', 'GSE Saves'),
     envPath('APPDATA', 'EMPRESS'),

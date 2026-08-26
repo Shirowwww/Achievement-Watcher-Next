@@ -1097,11 +1097,16 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           }
         });
 
-      $('#options-emulator .right, #options-emulator2 .right')
+      // #options-uplay carries the Uplay loader's own settings and was never collected here, so a
+      // change to one was read back on the next open and silently reverted.
+      $('#options-emulator .right, #options-emulator2 .right, #options-uplay .right')
         .children('select')
         .each(function () {
           try {
             if ($(this)[0].id === 'option_goldbergDownloadIcons') return;
+            // A mirror of option_autoApplyNewGames, kept in step by its own change handler. Reading
+            // it here would invent an emulator.autoApplyNewGamesUplay key that nothing consumes.
+            if ($(this)[0].id === 'option_autoApplyNewGamesUplay') return;
             if ($(this)[0].id !== '' && $(this).val() !== '') {
               app.config.emulator[$(this)[0].id.replace('option_', '')] =
                 $(this).val() === 'true' ? true : $(this).val() === 'false' ? false : $(this).val();

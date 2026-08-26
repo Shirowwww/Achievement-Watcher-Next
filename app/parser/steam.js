@@ -19,6 +19,7 @@ const htmlParser = require('node-html-parser');
 const fs = require('fs');
 const saveRoots = require(path.join(appPath, 'parser/saveRoots.js'));
 const uplayR2 = require(path.join(appPath, 'parser/uplayR2.js'));
+const uplayCatalogue = require(path.join(appPath, 'parser/uplayCatalogue.js'));
 const emuIni = require(path.join(appPath, 'util/emuIni.js'));
 const steamAssets = require(path.join(appPath, 'util/steamAssets.js'));
 const { userDataDir } = require(path.join(appPath, 'util/userDataPath.js'));
@@ -79,23 +80,43 @@ module.exports.scan = async (additionalSearch = []) => {
         game.source = 'Rune';
       } else if (dirKeyLower.includes('onlinefix')) {
         game.source = 'OnlineFix';
-      } else if (dirKeyLower.includes('goldberg uplayemu')) {
-        // "Goldberg UplayEmu Saves" folders are named with the Ubisoft product id, not a Steam AppID -
-        // asking Steam about them burned a 30s timeout per game and re-triggered full refreshes.
-        // Translate the id via uplay-steam.json and skip folders with no Steam counterpart.
-        const mapping = uplayR2.resolveSteamMapping({ appid: `UPLAY${game.appid}` });
+      } else if (dirKeyLower.includes('goldberg uplayemu') || dirKeyLower.includes('r1 uplayemu')) {
+        // "Goldberg UplayEmu Saves" (R2) and "R1 UplayEmu Saves" (R1) folders are named with the
+        // Ubisoft product id, not a Steam AppID - asking Steam about them burned a 30s timeout per
+        // game and re-triggered full refreshes. Translate the id and skip ids with no Steam
+        // counterpart. Both generations key their save folders identically, so one branch serves both.
+        const productId = String(game.appid);
+        const mapping = uplayR2.resolveSteamMapping({ appid: `UPLAY${productId}` });
         if (!mapping) {
+          // Nothing known about this product yet. Record the id so the automatic resolver can try it
+          // after the scan; discovery itself stays synchronous and drops the folder as before.
+          uplayR2.noteUnresolvedProduct(productId);
           // scan() can run before initDebug() (the watchdog seeds its index straight from it).
-          if (debug) debug.log(`[uplay-r2] ignoring save folder '${dir}' - no Steam equivalent for Ubisoft product id ${game.appid}`);
+          if (debug) debug.log(`[uplay-r2] ignoring save folder '${dir}' - no Steam equivalent for Ubisoft product id ${productId}`);
           continue;
         }
         game.data.type = 'uplayR2';
-        game.data.uplayId = String(game.appid);
+        game.data.uplayId = productId;
         game.data.uplayR2 = true;
         game.data.system = 'uplay';
-        game.appid = String(mapping.steam_appid);
-        game.name = mapping.steam_name;
+        /*
+          A known product can deliberately have NO Steam release: Rayman 3, the Settlers History
+          Editions, Might & Magic VIII/IX, Prince of Persia, the Discovery Tours. The row exists and
+          says so with an empty AppID, which is not the same as an unknown product - and reading it as
+          one produced a card whose appid was the string "null" and whose name was nothing at all.
+          Keep it under its own Ubisoft identity instead, the same namespaced form the Ubisoft Connect
+          source already uses, so the game appears with its real title rather than disappearing.
+        */
+        const steamAppid = /^[0-9]+$/.test(String(mapping.steam_appid || '')) ? String(mapping.steam_appid) : '';
         game.source = 'Goldberg Uplay';
+        if (steamAppid) {
+          game.appid = steamAppid;
+          game.name = mapping.steam_name;
+        } else {
+          game.appid = `uplay-${productId}`;
+          game.name = mapping.uplay_name || uplayCatalogue.nameFor(productId) || '';
+          if (debug) debug.log(`[uplay-r2] '${dir}': Ubisoft product ${productId} has no Steam release - kept as ${game.appid}`);
+        }
       } else if (dirKeyLower.includes('goldberg') || dirKeyLower.includes('gse')) {
         game.source = 'Goldberg';
         /*
@@ -1459,7 +1480,13 @@ async function loadAppListBestEffort() {
   }
 }
 
-// Resolve a messy install name to a confident Steam appid without guessing.
+/*
+  The raw candidate list behind findAppidByName, for callers that must apply their own (stricter)
+  rule than "best confident match" - the Uplay product mapping refuses anything but a single exact
+  title, because a wrong AppID there generates another game's achievement schema.
+*/
+module.exports.searchAppsByName = (name) => searchAppsByName(name);
+
 module.exports.findAppidByName = async (name) => {
   if (!name) return null;
   await loadAppListBestEffort();

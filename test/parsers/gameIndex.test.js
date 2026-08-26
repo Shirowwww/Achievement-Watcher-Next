@@ -160,3 +160,30 @@ test('a scan batch persists many changed rows with one whole-index write', () =>
   assert.equal(indexWrites, 1);
   assert.equal(gameIndex.getName('batch-99'), 'Batch Game 99');
 });
+
+/*
+  A "local-…" row is the placeholder an earlier scan wrote for an install it could not identify. Once
+  the same folder resolves to a real Steam AppID the two carry the same title, so name similarity is
+  a tie - and a tie used to leave the binary with the placeholder, which is how an identified game
+  ended up with no binary at all and therefore no playtime and no live process match.
+*/
+test('an identified game takes its binary back from an unidentified placeholder', () => {
+  gameIndex.upsert({ appid: 'local-53306f63', name: 'ZOMBI', binary: 'ZOMBI.exe', source: 'Unconfigured' });
+  gameIndex.upsert({ appid: '339230', name: 'ZOMBI', binary: '', source: 'GBE Fork' });
+
+  assert.equal(
+    gameIndex.binaryClaimedByBetterMatch('339230', 'ZOMBI', 'ZOMBI.exe'),
+    false,
+    'the real AppID may claim the binary despite the identical name score'
+  );
+
+  gameIndex.upsert({ appid: '339230', name: 'ZOMBI', binary: 'ZOMBI.exe', source: 'GBE Fork' });
+  const cleared = gameIndex.reconcile([
+    { appid: '339230', name: 'ZOMBI' },
+    { appid: 'local-53306f63', name: 'ZOMBI' },
+  ]);
+  assert.equal(cleared, 1);
+  const rows = readRows();
+  assert.equal(rows.find((r) => r.appid === '339230').binary, 'ZOMBI.exe');
+  assert.equal(rows.find((r) => r.appid === 'local-53306f63').binary, '', 'the placeholder keeps its row, not the binary');
+});

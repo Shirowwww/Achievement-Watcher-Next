@@ -35,4 +35,24 @@ assert.strictEqual(fuzzy.rankAppidCandidates('zzzzz qqqqq wwwww', apps).length, 
 // An ambiguous short-name subset ("Portal" ⊂ "Portal Knights", a game not in the list) stays out of auto.
 assert.strictEqual(fuzzy.bestConfidentAppid('Portal Knights', apps), null, 'short-name subset is too ambiguous to auto-commit');
 
+/*
+  Release-site domains ride along in repack folder names. Left in, they push a title out of the exact
+  tier into a fuzzy score, which is never auto-committed - so the game is not identified at all, shows
+  its folder name and has no artwork. All three names below are real folders taken from a disk.
+*/
+assert.strictEqual(fuzzy.cleanGameName('Assassins Creed Origins v1.52 RexaGames.com').clean, 'assassins creed origins');
+assert.strictEqual(fuzzy.cleanGameName('South.Park.The.Fractured.but.Whole.ZeiGames.com').clean, 'south park the fractured but whole');
+assert.strictEqual(fuzzy.cleanGameName('Some Game [site.to]').clean, 'some game');
+
+const ubisoft = [
+  { appid: 582160, name: "Assassin's Creed® Origins" },
+  { appid: 488790, name: 'South Park™: The Fractured But Whole™' },
+];
+assert.strictEqual(fuzzy.bestConfidentAppid('Assassins Creed Origins v1.52 RexaGames.com', ubisoft), 582160);
+assert.strictEqual(fuzzy.bestConfidentAppid('South.Park.The.Fractured.but.Whole.ZeiGames.com', ubisoft), 488790);
+
+// The rule must not reach into a real title: no dotted word here ends in a known TLD.
+assert.strictEqual(fuzzy.cleanGameName('S.T.A.L.K.E.R. Shadow of Chernobyl').clean, 's t a l k e r shadow of chernobyl');
+assert.strictEqual(fuzzy.bestConfidentAppid('Portal 2', [{ appid: 620, name: 'Portal 2' }]), 620);
+
 console.log('PASS: fuzzy AppID resolution (clean + 3-tier, confident-only auto-commit)');

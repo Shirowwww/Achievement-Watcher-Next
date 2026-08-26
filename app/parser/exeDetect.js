@@ -1,8 +1,5 @@
 'use strict';
 
-// Find the game executable in an install folder.
-// Candidates are scored by name, size, emulator markers and known utility penalties.
-
 const fs = require('fs');
 const path = require('path');
 const dirCache = require(path.join(__dirname, '..', 'util', 'dirCache.js'));
@@ -17,13 +14,20 @@ const EXE_EXCLUDE = [
   /^setup/i,
   /setup\.exe$/i, // room/wizard-style setup helpers (steamvr_room_setup.exe, game_setup.exe, …)
   /^install/i,
+  // A bundled installer/redistributable ships beside the game in most repacks and Ubisoft installs
+  // (UbisoftConnectInstaller.exe, VC_redist.x64.exe). The anchored rules above miss them because the
+  // telling word is not at the start, and every one of them left the real game exe "ambiguous".
+  /installer/i,
+  /redist/i,
   /^vcredist/i,
   /^ue[0-9]_?prereq/i,
   /^dxsetup/i,
   /^directx/i,
   /^dotnet/i,
   /^oalinst/i,
-  /^7za?$/i,
+  // Anchored on the full filename like every other rule here, so it has to allow the extension -
+  // written as /^7za?$/i it matched nothing at all and repacks kept offering their bundled 7za.exe.
+  /^7za?\.exe$/i,
   /^update(r)?\.exe$/i, // Updater.exe / Update.exe - companion tools, never the game itself
   /media.?player\.exe$/i, // steamvr_media_player.exe & co - helper players, never the game
   /saveconverter/i, // Jackbox per-pack save tool
@@ -105,6 +109,27 @@ const META_DIRS = /^(_?CommonRedist|_?Redist|redist|DirectX|dx|dotnet|prerequisi
 const ENGINE_DATA_DIRS = /^(?:data_.+_(?:windows|win|linux|linuxbsd|macos|osx|web)_.*|MonoBleedingEdge|.+_Data)$/i;
 
 const MAX_DEPTH = 5;
+
+/*
+  What the candidate memo has to invalidate on. collectCandidates() applies every filter below before
+  the list is stored, so editing one of them must expire the stored answer - otherwise a shipped fix
+  reaches only folders the user happens to touch afterwards. Derived from the rules themselves rather
+  than a hand-bumped number, which nobody remembers to bump.
+*/
+exeCandidateCache.setRulesSalt(
+  require('crc')
+    .crc32(
+      JSON.stringify([
+        EXE_EXCLUDE.map(String),
+        SOFT_PENALTY.map(String),
+        String(META_DIRS),
+        String(ENGINE_DATA_DIRS),
+        [...KNOWN_NON_GAME_EXE].sort(),
+        MAX_DEPTH,
+      ])
+    )
+    .toString(16)
+);
 
 // Scoring weights - name match dominates size so a strong name beats a bigger unrelated exe,
 // while size still breaks ties between similarly-named candidates.
@@ -195,7 +220,6 @@ function collectCandidates(gameDir) {
   return candidates;
 }
 
-// Same list, read from the memo when the install folder has not changed since it was walked.
 function collectCandidatesCached(gameDir) {
   const cached = exeCandidateCache.read(gameDir);
   if (cached) return { candidates: cached, fromCache: true };
@@ -241,7 +265,15 @@ function confidenceFor(best, candidates, gameDir, gameName, opts = {}) {
   const nonUtility = candidates.filter((c) => !SOFT_PENALTY.some((r) => r.test(c.name)));
   if (nonUtility.length === 1 && nonUtility[0] === best) return { confident: true, reason: 'sole-non-utility-candidate' };
 
-  const second = candidates.filter((c) => c !== best)[0] || null;
+  /*
+    A repack keeps its patched copy of the game in a side folder ("Crack", "Таблетка", "NoDVD") under
+    the exact same filename. Those are one program, not two candidates, so counting them separately is
+    what left an unmistakable install ambiguous. The sort already put the shallowest first.
+  */
+  const sameName = (c) => c.name.toLowerCase() === best.name.toLowerCase();
+  if (nonUtility.every((c) => c === best || sameName(c))) return { confident: true, reason: 'sole-non-utility-name' };
+
+  const second = candidates.filter((c) => c !== best && !sameName(c))[0] || null;
   const margin = second ? best.score - second.score : Infinity;
   if (
     margin >= CONFIDENCE.CLEAR_WINNER_MARGIN &&
@@ -379,7 +411,7 @@ function shallowGameExe(dir) {
     if (!e.isFile() || !e.name.toLowerCase().endsWith('.exe')) continue;
     if (EXE_EXCLUDE.some((r) => r.test(e.name))) continue;
     if (isKnownNonGameExe(e.name)) continue;
-    if (SOFT_PENALTY.some((r) => r.test(e.name))) continue; // skip launcher/loader-style exes
+    if (SOFT_PENALTY.some((r) => r.test(e.name))) continue;
     return e.name;
   }
   return null;

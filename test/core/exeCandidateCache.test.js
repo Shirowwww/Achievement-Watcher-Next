@@ -104,3 +104,28 @@ test('the store stays bounded, keeping the folders seen most recently', () => {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('the memo expires when the filter rules that produced it change', () => {
+  /*
+    The stored list is ALREADY filtered, so it is a function of the install tree and of the rules
+    exeDetect applied. Without the rules in the key, shipping a fix to those rules changed nothing
+    for any folder a user had already scanned - the stale answer was served until the folder itself
+    was touched, which for an installed game is never.
+  */
+  const { root, userData, gameDir } = scratch();
+  try {
+    exeCandidateCache.setUserDataPath(userData);
+    exeCandidateCache.setRulesSalt('rules-v1');
+    exeCandidateCache.write(gameDir, CANDIDATES);
+    assert.deepEqual(exeCandidateCache.read(gameDir), CANDIDATES, 'served while the rules are the same');
+
+    exeCandidateCache.setRulesSalt('rules-v2');
+    assert.equal(exeCandidateCache.read(gameDir), null, 'a rules change invalidates the stored list');
+
+    exeCandidateCache.setRulesSalt('rules-v1');
+    assert.deepEqual(exeCandidateCache.read(gameDir), CANDIDATES, 'and the old entry is still keyed by the old rules');
+  } finally {
+    exeCandidateCache.setRulesSalt('');
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

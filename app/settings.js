@@ -244,8 +244,6 @@ module.exports.load = () => {
       options.achievement.goldbergDownloadIcons = false;
     }
 
-    //Source
-
     if (options.achievement_source.legitSteam != 0 && options.achievement_source.legitSteam != 1 && options.achievement_source.legitSteam != 2) {
       options.achievement_source.legitSteam = 0;
     }
@@ -338,9 +336,7 @@ module.exports.load = () => {
       'ru-RU', 'ja-JP', 'zh-CN', 'zh-TW', 'ko-KR', 'th-TH',
     ]);
     if (!uplayLanguages.has(options.emulator.uplayLanguage)) options.emulator.uplayLanguage = 'auto';
-    if (typeof options.emulator.uplayLogging !== 'boolean') options.emulator.uplayLogging = false;
-
-    //Notification
+    if (typeof options.emulator.uplayLogging !== 'boolean') options.emulator.uplayLogging = true;
 
     if (typeof options.notification.notify !== 'boolean') {
       options.notification.notify = true;
@@ -363,8 +359,6 @@ module.exports.load = () => {
       options.notification.platinum = true;
     }
 
-    //Toast
-
     if (
       options.notification_toast.customToastAudio != '0' &&
       options.notification_toast.customToastAudio != '1' &&
@@ -381,8 +375,6 @@ module.exports.load = () => {
     if (typeof options.notification_toast.urgent !== 'boolean') {
       options.notification_toast.urgent = false;
     }
-
-    //Transport
 
     // Drop legacy display-transport flags so the file stays clean. NOTE: `mode` is intentionally
     // NOT dropped here - it is the (re-introduced) notification delivery mode and must persist
@@ -415,8 +407,6 @@ module.exports.load = () => {
     }
     delete options.notification_transport.overlay;
 
-    //Advanced
-
     if (isNaN(options.notification_advanced.timeTreshold)) {
       options.notification_advanced.timeTreshold = 10;
     }
@@ -446,7 +436,6 @@ module.exports.load = () => {
     if (options.souvenir.hdr !== 'auto' && options.souvenir.hdr !== 'off') options.souvenir.hdr = 'auto';
     delete options.souvenir.combineNotif; // simplified: capture always includes whatever is on screen
 
-    //Action
     if (typeof options.action.target !== 'string') {
       options.action.target = '';
     }
@@ -541,7 +530,10 @@ module.exports.load = () => {
         steamId: '', // optional account_steamid override for configs.user.ini ('' = let GBE pick)
         uplayUsername: '', // optional Uplay R2 Username override ('' = use the general username)
         uplayLanguage: 'auto', // 'auto' follows the achievement language, otherwise a loader locale code
-        uplayLogging: false, // write the Uplay R2 diagnostic log setting during repair
+        // On by default: the loader's own log is the only record of which objective a game asked to
+        // unlock, and it is what Diagnose reads to tell a wrong mapping apart from a game that never
+        // asks. It costs one text file beside the loader.
+        uplayLogging: true,
       },
       notification: {
         notify: true,

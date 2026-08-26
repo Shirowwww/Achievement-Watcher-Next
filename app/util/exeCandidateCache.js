@@ -35,6 +35,17 @@ function cacheFile() {
   tick as the capture leaves the folder looking untouched. The directory listing settles that with
   no ambiguity, and it's one cheap non-recursive readdir versus the RECURSIVE walk this memo skips.
 */
+/*
+  The memo holds an ALREADY FILTERED candidate list, so it is a function of the install tree AND of
+  the filter rules that produced it. Without the caller's rules fingerprint in the key, shipping a
+  fix to those rules changed nothing for any folder a user had already scanned - the old answer was
+  served until the folder itself changed. exeDetect.js passes a fingerprint of its own filters.
+*/
+let rulesSalt = '';
+function setRulesSalt(value) {
+  rulesSalt = String(value || '');
+}
+
 function signature(gameDir) {
   try {
     const stat = fs.statSync(gameDir);
@@ -47,7 +58,7 @@ function signature(gameDir) {
     } catch {
       listing = 'unreadable';
     }
-    return `${Math.round(stat.mtimeMs)}:${Math.round(stat.ctimeMs)}:${listing}`;
+    return `${rulesSalt}:${Math.round(stat.mtimeMs)}:${Math.round(stat.ctimeMs)}:${listing}`;
   } catch {
     return null;
   }
@@ -118,4 +129,4 @@ function flush() {
   }
 }
 
-module.exports = { setUserDataPath, read, write, forget, flush, signature, MAX_ENTRIES };
+module.exports = { setUserDataPath, setRulesSalt, read, write, forget, flush, signature, MAX_ENTRIES };

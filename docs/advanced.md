@@ -111,7 +111,7 @@ opt-in API-check bypass live in **Settings → Emulators** and in each game's **
 submenu. They have their own guides:
 
 - [Goldberg / GBE setup](emulator-setup.md) - diagnose and repair an emulated Steam game
-- [Uplay R2 setup](uplay-r2.md) - the Ubisoft equivalent
+- [Uplay setup, R1 and R2](uplay-r2.md) - the Ubisoft equivalent
 - [Goldberg / GBE reference](goldberg-gbe.md) - file formats and detection rules
 
 > [!WARNING]

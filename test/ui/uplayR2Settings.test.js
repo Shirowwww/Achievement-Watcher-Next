@@ -35,12 +35,20 @@ test('Uplay R2 has its own focused emulator settings view', () => {
   assert.doesNotMatch(steamView.textContent, /Uplay R2/i, 'Steam / GBE Fork keeps its own terminology');
 });
 
-test('Uplay settings expose repair controls without loader or INI options', () => {
+test('Uplay settings expose repair controls and the diagnostic log, and no emulator internals', () => {
   const card = document.querySelector('#uplay-r2-settings');
   const view = document.querySelector('#settings .content[data-view="uplay"]');
   const selects = view.querySelectorAll('select');
+  /*
+    Two, and only two. The repair toggle, and the loader's diagnostic log - the log is the only
+    record of which objective a game asked to unlock, which is what Diagnose reads to explain a setup
+    that validates and still records nothing, so it is a switch a user needs. Everything else about
+    the loader stays out: save paths, key prefixes, INI names and architectures are decisions AW Next
+    makes from the install, never questions to put to somebody.
+  */
   assert.deepEqual(selects.map((select) => select.getAttribute('id')), [
     'option_autoApplyNewGamesUplay',
+    'option_uplayLogging',
   ]);
   assert.equal(view.querySelector('#uplay-r2-advanced'), null);
   assert.equal(view.querySelector('#options-uplay-ini'), null);
@@ -48,13 +56,17 @@ test('Uplay settings expose repair controls without loader or INI options', () =
   assert.equal(view.querySelector('.uplay-r2-source-row'), null);
   assert.equal(view.querySelector('#open-uplay-r2-source'), null);
   assert.equal(view.querySelector('#open-uplay-r2-code'), null);
-  assert.doesNotMatch(view.textContent, /Steam|loader|INI/i);
+  assert.doesNotMatch(view.textContent, /Steam|INI/i);
   assert.doesNotMatch(appSource, /open-uplay-r2-(?:source|code)/);
   assert.doesNotMatch(card.textContent, /AchSave|AchKey|upc_r2\.ini|uplay_r2\.ini|x86|x64/i);
   assert.match(settingsSource, /#option_autoApplyNewGames, #option_autoApplyNewGamesUplay/);
   assert.match(settingsSource, /\.not\(this\)\.val\(value\)/, 'both views stay synchronized');
   assert.match(loaderSource, /bindEmuRow\('option_autoApplyNewGamesUplay', emu\.autoApply\)/);
   assert.match(loaderSource, /option_autoApplyNewGamesUplay.*closest\('li'\)/s, 'the Uplay help uses Uplay-specific copy');
+  // The log switch has to be locale-bound and has to be saved, or it reverts on the next open.
+  assert.match(loaderSource, /bindEmuRow\('option_uplayLogging', emu\.uplay && emu\.uplay\.logging\)/);
+  assert.match(settingsSource, /#options-uplay \.right/, 'the Uplay list must be collected when settings are saved');
+  assert.match(settingsSource, /option_autoApplyNewGamesUplay'\) return;/, 'the mirrored select must not invent a config key');
 });
 
 test('Uplay-specific styling follows theme and semantic variables', () => {

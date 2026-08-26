@@ -105,7 +105,7 @@ Some games do not report achievements through Steamworks at all, even when sold 
 
 ---
 
-**Next:** [Uplay R2 setup](uplay-r2.md) - the Ubisoft equivalent, for games that do
+**Next:** [Uplay setup, R1 and R2](uplay-r2.md) - the Ubisoft equivalent, for games that do
 not load `steam_api.dll`.
 
 *Going deeper: [Goldberg/GBE technical reference](goldberg-gbe.md) for file formats

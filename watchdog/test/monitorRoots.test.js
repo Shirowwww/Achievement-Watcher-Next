@@ -72,3 +72,35 @@ test('a disabled configured folder is excluded from Watchdog roots', async () =>
     fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+/*
+  ALI213 and the emulators built on it write their unlock state as either "Achievements.Bin" or
+  "Achievements.ini", depending on the build. app/parser/steam.js reads both, but the watcher listed
+  only the first - so a game running a build that writes the .ini spelling was watched, changed, and
+  never once fired. Its unlocks turned up on the next library refresh instead of as a notification.
+*/
+test('an ALI213 game is watched for both spellings of its achievement file', async (t) => {
+  if (process.platform !== 'win32') return t.skip('Windows-only watch roots');
+
+  const game = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-ali213-'));
+  const stats = path.join(game, 'Profile', 'Player', 'Stats');
+  fs.mkdirSync(stats, { recursive: true });
+  const ini = ['[Settings]', 'AppID = 339230', 'PlayerName = Player', 'SaveType = 0'];
+  fs.writeFileSync(path.join(game, 'ALI213.ini'), ini.join('\n') + '\n');
+
+  const userDir = path.join(game, 'userdir.db');
+  fs.writeFileSync(userDir, JSON.stringify([{ path: game, notify: true, enabled: true }]));
+
+  try {
+    const folders = await monitor.getFolders(userDir);
+    const watched = folders.find((entry) => String(entry.dir || '').toLowerCase() === stats.toLowerCase());
+    assert.ok(watched, "the game's own stats folder must be watched");
+    assert.equal(String(watched.options.appid), '339230', 'the AppID the emulator declares is what the unlock is attributed to');
+
+    const names = (watched.options.file || []).map((name) => String(name).toLowerCase());
+    assert.ok(names.includes('achievements.bin'), 'the binary spelling stays watched');
+    assert.ok(names.includes('achievements.ini'), 'the ini spelling must be watched too');
+  } finally {
+    fs.rmSync(game, { recursive: true, force: true });
+  }
+});
