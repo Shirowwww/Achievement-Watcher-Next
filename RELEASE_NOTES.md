@@ -1,64 +1,46 @@
-# Achievement Watcher Next 3.10.1
+# Achievement Watcher Next 3.10.2
 
-Ubisoft games from before 2019 are supported at last, Games for Windows LIVE titles report their
-achievements, the first scan after a launch is as fast as the ones after it, and the websocket
-broadcast listens on the local machine again.
+A follow-up to 3.10.1: the square game logos are back, Ubisoft games that silently never asked for
+their achievements can be unblocked, and the repair path no longer claims fixes it did not make.
 
 ## Highlights
 
-- **Many more Ubisoft games can be set up.** Titles from before 2019 call the older Uplay R1 API and
-  can never load an R2 loader, so Assassin's Creed Origins, Odyssey, Unity, Rogue and Black Flag, the
-  Far Cry and Watch Dogs entries of that era and the South Park games could not be repaired at all.
-  AW Next now reads which generation a game asks for, ships the matching loader and watches its save
-  folder. Titles whose achievement names carry no objective number - Brawlhalla, The Crew 2, ZOMBI,
-  Champions of Anteria, Roller Champions and the Ubisoft-published indies - are matched by title
-  against Ubisoft's own public achievement data instead of being refused outright.
-- **Games for Windows LIVE games report their achievements.** A GFWL title running XLiveLessNess kept
-  its unlocks in a profile AW Next could not read, so the whole era was invisible. Those profiles are
-  now read, and the achievement list, its texts and its icons come out of the game's own executable,
-  so nothing has to be downloaded. FINAL FANTASY VII (2013), which predates Steamworks achievements
-  and keeps its 36 unlocks in a bitfield beside its saves, is read too.
-- **The first scan after a launch is as fast as the ones after it.** Where a game's schema sits on
-  disk and which AppID a title resolves to were remembered in memory only and paid for again on every
-  start; both are now kept on disk. The Steam ownership call gives up after fifteen seconds rather
-  than holding the library forever.
-- **AW Next costs less while it sits in the tray.** Working sets are emptied on the way into idle, the
-  overlay hotkey no longer keeps a PowerShell host alive for the session, and the background library
-  scan holds while a game is running.
-- **A connected Steam account stays connected.** The access token Steam hands out lasts a day, so
-  Settings reported the account disconnected every morning and asked for the password again. A new
-  token is now minted silently from the refresh token, with no window and no sign-in.
-- **The websocket broadcast is back on `127.0.0.1`.** The Settings row is labelled
-  `Websocket @localhost:8082` and the guides promised the local machine, but the listener was given
-  no host at all - which in Node means every interface. Anything on the same network that Windows
-  Firewall let through could read the feed, unauthenticated, and it carries game and achievement
-  names. If you deliberately served it to another machine, that now needs an explicit host.
-- **Every theme is editable.** Selecting any theme - a built-in palette, one you saved, one somebody
-  sent you - opens the editor on its colours. **Save theme** beside the name field keeps it: the same
-  name updates that theme, a new one creates a second and leaves the first alone. An imported theme
-  also survives a restart now.
-- **Updating no longer looks like a crash.** A chip beside the Watchdog indicator shows the download
-  percentage - with a Cancel while the file is downloading - then that the update is ready, then that
-  it is installing. The installer runs with its own progress window instead of nothing at all.
-- **Smart Find reads your launchers**, and emulator data folders are resolved instead of assumed:
-  RPCS3 follows `vfs.yml`, ShadPS4 its `user` folder, Xenia its `storage_root`. **HDR souvenirs no
-  longer blow out**, and are written about 1.6x faster.
-- **Translation fixes across nineteen languages**, and the site is fully translated into nine -
-  Italian, Polish and Japanese joining the six it already had.
+- **Game logos came back empty.** A lint pass left a block comment open, which turned the two
+  declarations below it into prose. Every square logo went with them: the page header, the
+  notification card, the overlay and the test notification.
+- **Ubisoft games that never ask for their achievements can be unblocked.** The loader answers the
+  game's session request from an ini key it leaves empty, and several titles read that emptiness as
+  "signed out" and stop calling the achievement API at all, so the setup looks perfect and records
+  nothing. AW Next now offers a placeholder session, only when the loader log shows the game asked
+  for nothing, and offers to take it back out if that did not change anything.
+- **A game's own icon is used when it is a good one.** An executable carrying a real 256px icon now
+  provides the game's logo ahead of anything looked up, including for games with no store artwork at
+  all.
+- **The offline achievements fix is honest about what it did.** It was offered on older Ubisoft
+  loaders that have no such setting, which were then blamed for a line that did nothing; that line is
+  taken back out on sight. A repair also refreshes the copy of the achievement list the loader seeds
+  once and never rereads, so a rewritten list reaches the game.
+- **An antivirus is named as an antivirus.** Windows Defender takes these loaders as a whole; that
+  now gets the explanation, an offer to allow the folder in Defender and a button to put the files
+  back, instead of a file picker asking for a package you never had.
+- **Two silent bugs found by the new lint pass.** Both SSE parsers reversed a four-byte slice, which
+  is a view over the same bytes, so a second parse read every CRC and unlock time byte-swapped, and
+  four Watchdog listeners bound to a callback parameter instead of the monitor module.
+- **The Steam parser threw whenever it ran outside the window**, once per game.
 
-See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3101---2026-08-27)
+See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3102---2026-08-27)
 for the complete list.
 
 ## Install
 
-Download `Achievement.Watcher.Setup.3.10.1.exe` from the
-[v3.10.1 release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/tag/v3.10.1), or let
+Download `Achievement.Watcher.Setup.3.10.2.exe` from the
+[v3.10.2 release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/tag/v3.10.2), or let
 the app update itself.
 
 The `.blockmap` and `latest.yml` assets are used by automatic updates.
 
 ---
 
-[Full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3101---2026-08-27) ·
+[Full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3102---2026-08-27) ·
 [Documentation](https://shirowwww.github.io/Achievement-Watcher-Next/) ·
 [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html)
