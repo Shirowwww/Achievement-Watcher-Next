@@ -18,6 +18,7 @@ const ACTION = {
   OPEN_FOLDER: 'open-folder', //  shell.openPath(gameDir)
   REPAIR_DATA: 'repair-data', //  goldberg.repair() - writes schema + icons + configs, backs up first
   REPAIR_UPLAY: 'repair-uplay', // shared Uplay R2 transaction - loader/schema/config + rollback
+  REPAIR_UPLAY_TICKET: 'repair-uplay-ticket', // uplayR2.setSessionTicket - one ini key, on or off
   INSTALL_RUNTIME: 'install-runtime', // gbeInstaller.installDlls() - backs up replaced dlls as .bak
   START_TRACKING: 'start-tracking', //  gameIndex.upsert() - the same seed the scan writes
   UNMUTE_PROGRESS: 'unmute-progress', // progressMute.toggle()
@@ -94,6 +95,7 @@ const ISSUE_TOPIC = {
   BAD_USER_CONFIG: 'account',
   CUSTOM_SAVE_PATH: 'savepath',
   LOADER_NO_ACH_REDIRECT: 'loader',
+  NO_SESSION_TICKET: 'session',
   NO_UPLAY_R2_DLL: 'loader',
   NOT_UPLAY_R2_LOADER: 'loader',
   LOADER_ARCH_MISMATCH: 'loader',
@@ -293,12 +295,20 @@ function uplayCheck(signals) {
         mappingMode: uplay.mapping.manual ? 'manual' : uplay.mapping.automatic ? 'automatic' : 'built-in',
       }
     : {};
+  /*
+    A game that asks the loader for nothing at all is not a broken setup, so this action sits beside
+    the general repair rather than inside REPAIRABLE_UPLAY_CODES: it writes one ini key and can be
+    taken back, and offering it unconditionally would put a button on games that never needed it.
+  */
+  const withTicketFix = (actions) =>
+    (uplay.issues || []).some((issue) => issue.code === 'NO_SESSION_TICKET') ? [...actions, ACTION.REPAIR_UPLAY_TICKET] : actions;
+
   const errors = issuesAtLevel(uplay, 'error');
   if (errors.length > 0) {
     // NO_STEAM_MAPPING is repairable interactively: the shared transaction tries the automatic
     // resolver first and then opens the validated manual picker. Game Health must not strand the
     // user without the same recovery path available from the context menu.
-    const actions = errors.some((issue) => REPAIRABLE_UPLAY_CODES.has(issue.code)) ? [ACTION.REPAIR_UPLAY] : [];
+    const actions = withTicketFix(errors.some((issue) => REPAIRABLE_UPLAY_CODES.has(issue.code)) ? [ACTION.REPAIR_UPLAY] : []);
     return check('uplay', LEVEL.FAIL, {
       params: { topics: issueTopics(errors), ...mappingParams },
       blocking: !uplay.mapping,
@@ -307,7 +317,7 @@ function uplayCheck(signals) {
   }
   const warnings = issuesAtLevel(uplay, 'warning');
   if (warnings.length > 0) {
-    const actions = warnings.some((issue) => REPAIRABLE_UPLAY_CODES.has(issue.code)) ? [ACTION.REPAIR_UPLAY] : [];
+    const actions = withTicketFix(warnings.some((issue) => REPAIRABLE_UPLAY_CODES.has(issue.code)) ? [ACTION.REPAIR_UPLAY] : []);
     return check('uplay', LEVEL.WARN, { params: { topics: issueTopics(warnings), ...mappingParams }, actions });
   }
   return check('uplay', LEVEL.OK, { params: mappingParams });

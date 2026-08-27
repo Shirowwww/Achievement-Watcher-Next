@@ -529,6 +529,7 @@ function inspectLoader(dllPath) {
     supportsAchievements: false,
     supportsAchRedirect: false,
     supportsAchKeyPrefix: false,
+    supportsTicket: false,
   };
   if (!dllPath) return fallback;
 
@@ -554,6 +555,7 @@ function inspectLoader(dllPath) {
       supportsAchievements: has('Achievements'),
       supportsAchRedirect: has('AchSavePath') && has('AchSaveType'),
       supportsAchKeyPrefix: has('AchKeyPrefix'),
+      supportsTicket: has('Ticket'),
     };
   } catch {
     result = { ...fallback, exists: true };
@@ -573,6 +575,7 @@ function inspectInstalledLoaders(dllPaths) {
     supportsAchievements: known.length > 0 && known.every((l) => l.supportsAchievements),
     supportsAchRedirect: known.length === 0 || known.every((l) => l.supportsAchRedirect),
     supportsAchKeyPrefix: known.length === 0 || known.every((l) => l.supportsAchKeyPrefix),
+    supportsTicket: known.length > 0 && known.every((l) => l.supportsTicket),
     architectureValid: known.length > 0 && known.every((l) => l.arch && l.expectedArch === l.arch),
   };
 }
@@ -1312,6 +1315,71 @@ function planSettingsConfig({ dir, steamAppid, prefix, accountName, language, lo
   };
 }
 
+/*
+  A game asks the loader for its Ubisoft session ticket through UPC_TicketGet, and the loader answers
+  with whatever `[Settings] Ticket` holds - defaulting to the empty string. Several titles read that
+  emptiness as "no session" and never enable achievements at all: they call nothing, so nothing is
+  missed, nothing is mis-keyed, and the setup looks perfect while recording zero. Avatar: Frontiers of
+  Pandora is one, measured here: no achievement call whatsoever across a 47 minute session with the
+  triggering quest completed, then a list query 7 seconds after launch and a real unlock once this
+  value was present.
+
+  What this is: a syntactically well-formed JWE, five base64url segments, whose header matches the
+  shape a real Ubisoft session provides. What it is not: a credential. Nothing here is signed,
+  decryptable or issued by anyone - it only lets a game that checks whether a token EXISTS, or looks
+  like one, get past that check. A game that genuinely validates the signature is unaffected by it.
+
+  Fixed rather than generated, because it carries no secret and a constant keeps a repair
+  reproducible: two machines with the same game end up with byte-identical files.
+*/
+const SESSION_TICKET =
+  'eyJlbmMiOiJBMTI4Q0JDIiwiZW52aXJvbm1lbnQiOiJwcm9kIiwiaW50IjoiSFMyNTYiLCJpdiI6IkV6eG96NkRxZ2xKcS0xYjF3NVVSUU9IIiwidHlwIjoiSldFIn0.aFdyN0xxNVpjM0ZuVWtwbWJHOTFhM0J4Y21WMFlXbHVaWEo0WTJKcg.WkdWbVlYVnNkR2xrWlc1MGFYUjU.c2Vzc2lvbi1wbGFjZWhvbGRlci1ub3QtYS1yZWFsLXViaXNvZnQtdGlja2V0LWlzc3VlZC1ieS1hdy1uZXh0.dW5zaWduZWQtcGxhY2Vob2xkZXI';
+
+/*
+  Write (or remove) that one key, and nothing else.
+
+  Deliberately not part of planSettingsConfig: that rewrites Achievements, AchKeyPrefix, AchSaveType,
+  AchSavePath, Username and Language, and needs a Steam appid to do so. Flipping a single setting must
+  not be able to disturb a setup that already works. The reverse holds too - upsertIniKeys only
+  touches the keys it is handed, so a Ticket written here survives a later full re-apply untouched.
+*/
+function setSessionTicket({ dir, flavour = null, enabled = true } = {}) {
+  const target = String(dir || '').trim();
+  if (!target) throw 'uplay: no folder to configure';
+  const kind = resolveFlavour(flavour || flavourForDir(target) || DEFAULT_FLAVOUR);
+
+  const written = [];
+  for (const iniName of kind.iniNames) {
+    const file = path.join(target, iniName);
+    // Only files that are already there: this never creates an ini from a template, because a folder
+    // with no configuration has nothing to unblock yet.
+    if (!fs.existsSync(file)) continue;
+    const previous = fs.readFileSync(file, 'utf8');
+    const doc = parseIni(previous);
+    const settings = getIniSection(doc, kind.section);
+    if (!settings) continue;
+
+    if (enabled) {
+      settings.body = upsertIniKeys(settings.body, { Ticket: SESSION_TICKET });
+    } else {
+      settings.body = settings.body.filter((line) => !/^\s*Ticket\s*=/i.test(line));
+    }
+
+    const next = stringifyIni(doc);
+    const changed = previous !== next;
+    if (changed) writeFileAtomic(file, next);
+    written.push({ file, changed });
+  }
+  return { flavour: kind.id, enabled, files: written };
+}
+
+// True when this folder's active ini already carries a non-empty Ticket.
+function hasSessionTicket(dir, flavour = null) {
+  const iniFile = activeIniFile(dir, flavour);
+  if (!iniFile) return false;
+  return String(readIniSettings(iniFile, flavour).ticket || '').trim().length > 0;
+}
+
 function writeFileAtomic(file, content) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const temporary = path.join(path.dirname(file), `.${path.basename(file)}.${process.pid}.${Date.now()}.tmp`);
@@ -1356,6 +1424,30 @@ function removeStaleRuntimeSave(saveDir, schemaJson) {
     return true;
   } catch {
     return false; // absent, unreadable or half-written: leave it to the runtime
+  }
+}
+
+/*
+  The loader appends a line per call and never rotates, so a game that polls for its asynchronous
+  operations grows this without bound - 61 MB per hour of play on one measured title, 97% of it the
+  same repeated line. Past the point where readLoaderLog would still read the whole file, the excess
+  is noise nobody can act on, so it goes rather than sitting in somebody's game folder forever.
+
+  Deleted, not truncated: the loader holds the file open while a game runs, and a truncation it does
+  not know about leaves it writing at its old offset, producing a file padded with NUL bytes.
+*/
+const MAX_LOADER_LOG_BYTES = 25 * 1024 * 1024;
+
+function pruneLoaderLog(dir, flavour = null, maxBytes = MAX_LOADER_LOG_BYTES) {
+  const kind = resolveFlavour(flavour || flavourForDir(dir) || DEFAULT_FLAVOUR);
+  const file = path.join(String(dir || ''), kind.logFile);
+  try {
+    if (fs.statSync(file).size <= maxBytes) return false;
+    fs.unlinkSync(file);
+    return true;
+  } catch {
+    // Absent, or held open by a running game: either way there is nothing to do about it here.
+    return false;
   }
 }
 
@@ -1643,11 +1735,32 @@ function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedM
             `achievement names most likely do not carry its Ubisoft objective ids: re-apply the fix to key the schema from Ubisoft's own data.`
         );
       } else if (!log.touchedAchievementApi) {
-        add(
-          'info',
-          'LOADER_LOG_NO_ACH_CALL',
-          `${flavour.logFile} records no achievement call at all, so nothing was missed by this setup: the game did not ask the loader to unlock anything.`
-        );
+        /*
+          The game ran and asked for nothing at all. That used to be reported as reassurance - the
+          setup missed nothing - which is wrong in the case it fires most often: a title that only
+          enables achievements once it believes it has a Ubisoft session. The loader answers
+          UPC_TicketGet from `[Settings] Ticket`, defaulting to empty, and an empty answer reads as
+          "offline". Avatar: Frontiers of Pandora sat silent through a 47 minute session with the
+          triggering quest completed, and queried its list 7 seconds after launch once a ticket was
+          there.
+
+          Only said where it can be acted on: the loader has to read the key at all, and a ticket
+          must not already be configured.
+        */
+        if (caps.supportsTicket && !String(settings.ticket || '').trim()) {
+          add(
+            'warning',
+            'NO_SESSION_TICKET',
+            `${flavour.logFile} records no achievement call at all: the game never asked to unlock anything. Titles that only report achievements while signed in to ` +
+              `Ubisoft behave exactly like this, because the loader answers with an empty session ticket. Adding one usually unblocks them.`
+          );
+        } else {
+          add(
+            'info',
+            'LOADER_LOG_NO_ACH_CALL',
+            `${flavour.logFile} records no achievement call at all, so nothing was missed by this setup: the game did not ask the loader to unlock anything.`
+          );
+        }
       }
     }
   }
@@ -1684,6 +1797,9 @@ function repair({ dir, gameDir, steamAppid, schema, prefix, objectiveIds = null,
     /* absent schema is part of the repair plan */
   }
   const schemaChanged = previousSchema !== schemaText;
+  // A repair is the moment the folder is being set up anyway, and the only one where the game is
+  // reliably not running, so it is where an overgrown log gets cleared.
+  pruneLoaderLog(dir, flavour);
   const iniPlan = planSettingsConfig({ dir, steamAppid, prefix, accountName, language, logging, capabilities: caps, flavour: flavour || flavourForDir(dir) });
   const changedFiles = [
     ...(schemaChanged ? [schemaFile] : []),
@@ -1923,6 +2039,11 @@ module.exports = {
   planSettingsConfig,
   applySettingsConfigPlan,
   writeSettingsConfig,
+  pruneLoaderLog,
+  MAX_LOADER_LOG_BYTES,
+  setSessionTicket,
+  hasSessionTicket,
+  SESSION_TICKET,
   removeStaleRuntimeSave,
   diagnose,
   repair,

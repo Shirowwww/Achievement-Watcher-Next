@@ -53,3 +53,42 @@ test('with no other emulator in the folder the repair is still offered', () => {
   assert.equal(alone.level, gameHealth.LEVEL.FAIL);
   assert.equal(alone.params.servedBy, undefined);
 });
+
+/*
+  The session-ticket offer. A Ubisoft game that ran and asked the loader for nothing behaves exactly
+  like a title that thinks it is signed out, and the loader answers UPC_TicketGet from one ini key it
+  otherwise leaves empty. The action is offered only for that, never as part of the general repair
+  set: writing a token some games reject must not ride along with an unrelated fix.
+*/
+const ticketSignals = (issues) => ({
+  appid: 2840770,
+  name: 'Avatar: Frontiers of Pandora',
+  gameDir: 'C:\\Jeux\\Avatar Frontiers of Pandora',
+  gameDirExists: true,
+  installed: true,
+  exe: 'C:\\Jeux\\Avatar Frontiers of Pandora\\afop.exe',
+  exeExists: true,
+  uplay: { mapping: { steam_appid: 2840770, steam_name: 'Avatar' }, issues },
+  crackLoader: null,
+});
+
+test('a game that never asked the loader anything is offered a session', () => {
+  const row = uplayRow(ticketSignals([{ level: 'warning', code: 'NO_SESSION_TICKET', message: 'no achievement call at all' }]));
+  assert.ok(row.actions.includes(gameHealth.ACTION.REPAIR_UPLAY_TICKET), 'the one thing that unblocks this must be reachable');
+  assert.equal(row.level, gameHealth.LEVEL.WARN, 'the setup is not broken, so this is not a failure');
+  assert.deepEqual(row.params.topics, ['session'], 'the row has to say what it is about');
+});
+
+test('the offer never rides along with an unrelated repair', () => {
+  const row = uplayRow(ticketSignals([{ level: 'error', code: 'NO_SCHEMA_JSON', message: 'achievements_schema.json is missing' }]));
+  assert.ok(row.actions.includes(gameHealth.ACTION.REPAIR_UPLAY), 'a genuinely broken setup keeps its repair');
+  assert.ok(!row.actions.includes(gameHealth.ACTION.REPAIR_UPLAY_TICKET), 'and gains nothing it did not ask for');
+});
+
+test('a game another emulator serves is offered neither', () => {
+  const row = uplayRow({
+    ...ticketSignals([{ level: 'warning', code: 'NO_SESSION_TICKET', message: 'no achievement call at all' }]),
+    crackLoader: { name: 'ALI213' },
+  });
+  assert.deepEqual(row.actions, [], 'its achievements come from somewhere else entirely');
+});
