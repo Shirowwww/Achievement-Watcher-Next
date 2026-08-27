@@ -7,6 +7,30 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
+## 3.10.3 - 2026-08-28
+
+### Improved
+
+- **The antivirus alert is announced before it happens, not explained after.** Automatic repair
+  writes emulator files into game folders during a scan, so the alert that follows arrives with
+  nothing on screen to connect it to a setting switched on days earlier. Turning the setting on now
+  says exactly that first, and offers to allow the folder in Windows Defender before anything is
+  written. If it was already on, the same thing is said once, the first time it is about to act,
+  with the exclusion and the off switch beside it. A quarantine hit during an automatic repair is
+  also reported now: only the downloaded Goldberg package used to be, so a blocked Ubisoft loader
+  failed in silence.
+- **Nothing is written, or announced, behind a hidden window.** AW Next spends most of its life in
+  the tray, where a dialog is one nobody can see and an answer that never comes. Automatic repair now
+  waits for the window to be open before it says anything or writes anything, rather than stalling on
+  a modal nobody can answer, or repairing games unannounced.
+
+### Website & Docs
+
+- **The antivirus false positive is explained where people look for it.** The README, the FAQ and
+  Troubleshooting now say plainly what gets flagged and why, what triggers it, that nothing is
+  written unless you asked, what an exclusion does and does not cover, and how to check the files
+  yourself.
+
 ## 3.10.2 - 2026-08-27
 
 ### Added
