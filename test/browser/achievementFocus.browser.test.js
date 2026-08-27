@@ -104,7 +104,7 @@ function buildHarness() {
         <ul style="display:none">${row('collapsed')}</ul>
       </div>
     </section>
-    <script>${jquery}<\/script>
+    <script>${jquery}</script>
     <script>
       const focusExports = { exports: {} };
       (function (module) { ${focusModule} })(focusExports);
@@ -125,7 +125,7 @@ function buildHarness() {
         );
         return { found, missing };
       };
-    <\/script>
+    </script>
   </body></html>`;
 }
 

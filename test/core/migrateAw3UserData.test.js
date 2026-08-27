@@ -206,9 +206,9 @@ test('migrated restore points are repointed at the folder that now holds them', 
     write(
       path.join(userData, 'cfg', 'gbe-backups.db'),
       JSON.stringify([
-        { appid: '1', gameDir: 'C:\Jeux\A', backupDir: path.join(oldRoot, 'Game A - GBE backup - 2026-06-29T11-44-23-679Z') },
-        { appid: '2', gameDir: 'C:\Jeux\B', backupDir: path.join(oldRoot, 'Game B - GBE backup - 2026-07-01T09-00-00-000Z') },
-        { appid: '3', gameDir: 'C:\Jeux\C', backupDir: orphan },
+        { appid: '1', gameDir: 'C:JeuxA', backupDir: path.join(oldRoot, 'Game A - GBE backup - 2026-06-29T11-44-23-679Z') },
+        { appid: '2', gameDir: 'C:JeuxB', backupDir: path.join(oldRoot, 'Game B - GBE backup - 2026-07-01T09-00-00-000Z') },
+        { appid: '3', gameDir: 'C:JeuxC', backupDir: orphan },
       ])
     );
 

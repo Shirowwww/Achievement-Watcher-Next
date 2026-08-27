@@ -72,7 +72,7 @@ function buildHarness() {
   </style></head><body>
     <div id="sort-box"><button class="sort alpha"></button><button class="sort percentage"></button><button class="sort time"></button><button class="sort played"></button><button class="installed-filter"></button></div>
     <div id="game-list"><ul id="games"></ul><div class="isEmpty"></div></div>
-    <script>${jquery}<\/script>
+    <script>${jquery}</script>
     <script>
       localStorage.showInstalledOnly = 'false';
       window.profileStatsRefreshes = [];
@@ -97,7 +97,7 @@ function buildHarness() {
         window.sort($('#games'), options);
         return $('#games > li').map(function () { return this.dataset.id; }).get();
       };
-    <\/script>
+    </script>
   </body></html>`;
 }
 

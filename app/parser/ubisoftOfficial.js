@@ -1376,5 +1376,4 @@ module.exports._internal = {
   mergeConfigBlocks,
   ubisoftInstallDir,
   matchSteamInstall,
-  readConfigurationsIndex,
 };

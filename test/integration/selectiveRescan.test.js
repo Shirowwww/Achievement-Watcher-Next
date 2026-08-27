@@ -21,8 +21,8 @@ test('folder settings expose an explicit selected-folder rescan with reversible 
 
 test('selected-folder list uses a compact theme-aware scrollbar', () => {
   const css = fs.readFileSync(path.join(root, 'app', 'resources', 'css', 'app.css'), 'utf8');
-  assert.match(css, /#settings #folder-rescan-list::\-webkit-scrollbar\s*\{[\s\S]*?width:\s*6px/);
-  assert.match(css, /#settings #folder-rescan-list::\-webkit-scrollbar-thumb\s*\{[\s\S]*?var\(--set-icon\)/);
+  assert.match(css, /#settings #folder-rescan-list::-webkit-scrollbar\s*\{[\s\S]*?width:\s*6px/);
+  assert.match(css, /#settings #folder-rescan-list::-webkit-scrollbar-thumb\s*\{[\s\S]*?var\(--set-icon\)/);
   assert.match(css, /#settings #folder-rescan-list\s*\{[\s\S]*?scrollbar-width:\s*thin/);
 });
 

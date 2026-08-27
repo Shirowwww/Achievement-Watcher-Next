@@ -23,7 +23,7 @@ const { performance } = require('node:perf_hooks');
 
 const roots = process.argv.slice(2).filter((dir) => fs.existsSync(dir));
 if (roots.length === 0) {
-  console.log('benchmark-discovery-walk: pass one or more existing library roots, e.g. node tools/benchmark-discovery-walk.js C:\Games');
+  console.log('benchmark-discovery-walk: pass one or more existing library roots, e.g. node tools/benchmark-discovery-walk.js C:Games');
   process.exit(0);
 }
 

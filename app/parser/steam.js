@@ -1262,7 +1262,7 @@ async function getDataFromSteamStore(appID) {
       name: html.querySelector('.apphub_AppName').innerHTML,
       icon: html
         .querySelector('.apphub_AppIcon img')
-        .attributes.src.match(/([^\\\/\:\*\?\"\<\>\|])+$/)[0]
+        .attributes.src.match(/([^\\/:*?"<>|])+$/)[0]
         .replace('.jpg', ''),
       header:
         html.querySelector('meta[property="og:image"]')?.attributes.content.split('?')[0] ||

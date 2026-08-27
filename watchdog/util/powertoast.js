@@ -7,7 +7,7 @@ const load = () => modulePromise || (modulePromise = import('powertoast'));
 // falling back to the Microsoft Store identity). Every call site is fixed now; this normalizer
 // guarantees a future `appID` slip can never silently break toasts again.
 function normalizeToastOptions(options) {
-  const normalized = { ...(options || {}) };
+  const normalized = { ...options };
   if (normalized.aumid == null && normalized.appID != null) {
     normalized.aumid = normalized.appID;
     delete normalized.appID;

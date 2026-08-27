@@ -28,7 +28,7 @@ const gameNotificationPreset = require(path.join(appPath, 'util/gamePreset.js'))
 function achievementIconId(name) {
   return String(name)
     .replace(/\s+/g, '_')
-    .replace(/[^\w\-]/g, '');
+    .replace(/[^\w-]/g, '');
 }
 
 /*
@@ -5098,7 +5098,7 @@ var app = {
               }
 
               const diagnoseUplayR2Setup = async ({ game, gameDir, showDialog = true }) => {
-                const identity = uplayR2.resolveGameIdentity({ ...(game || {}), appid, gameDir }, appid);
+                const identity = uplayR2.resolveGameIdentity({ ...game, appid, gameDir }, appid);
                 const report = uplayR2.diagnose({ gameDir, appid, name: game?.name, mapping: identity.mapping });
                 if (showDialog) {
                   const lines = [];

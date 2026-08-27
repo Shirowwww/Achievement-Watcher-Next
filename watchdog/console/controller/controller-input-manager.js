@@ -1148,7 +1148,7 @@ function createGameInputSystemGuideMonitor(logger, options = {}) {
       ) {
         latest = {
           deviceKey,
-          ...(snapshot || {}),
+          ...snapshot,
         };
       }
     }
@@ -1806,7 +1806,7 @@ function createModernGameInputPollingBackend(logger, api = null, options = {}) {
     ) {
       return {
         deviceKey: preferredDeviceKey,
-        ...(systemButtonsByDeviceKey.get(preferredDeviceKey) || {}),
+        ...systemButtonsByDeviceKey.get(preferredDeviceKey),
       };
     }
 
@@ -1818,7 +1818,7 @@ function createModernGameInputPollingBackend(logger, api = null, options = {}) {
       if (soleEntry) {
         return {
           deviceKey: soleEntry[0],
-          ...(soleEntry[1] || {}),
+          ...soleEntry[1],
         };
       }
     }
@@ -1832,7 +1832,7 @@ function createModernGameInputPollingBackend(logger, api = null, options = {}) {
       ) {
         latest = {
           deviceKey,
-          ...(snapshot || {}),
+          ...snapshot,
         };
       }
     }

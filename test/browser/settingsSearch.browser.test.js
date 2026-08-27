@@ -104,19 +104,19 @@ function buildHarness() {
 
   return `<!doctype html><html><head><meta charset="utf-8"></head><body>
     ${html.slice(start, end)}
-    <script>${fs.readFileSync(path.join(appDir, 'ui', 'lib', 'jquery-3.7.1.min.js'), 'utf8')}<\/script>
+    <script>${fs.readFileSync(path.join(appDir, 'ui', 'lib', 'jquery-3.7.1.min.js'), 'utf8')}</script>
     <script>
       const module = { exports: {} };
       ${fs.readFileSync(path.join(appDir, 'util', 'settingsSearch.js'), 'utf8')}
       window.searchRules = module.exports;
-    <\/script>
+    </script>
     <script>
       window.frenchHelp = ${JSON.stringify(frenchHelp).replace(/</g, '\\u003c')};
       {
         const module = { exports: {} };
         ${fs.readFileSync(path.join(appDir, 'ui', 'help.js'), 'utf8')}
       }
-    <\/script>
+    </script>
   </body></html>`;
 }
 

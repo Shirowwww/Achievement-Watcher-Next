@@ -877,7 +877,7 @@ function buildBuiltinOverlayCss(themeName) {
 */
 function themePayload(userDataPath, themeName, customTheme, userCss, packTheme) {
   const isCustom = themeName === 'custom';
-  const isUserCss = /^user:/.test(String(themeName || ''));
+  const isUserCss = String(themeName || '').startsWith('user:');
   const isPack = /^pack:/i.test(String(themeName || '')) && packTheme != null;
   const theme = isCustom ? sanitizeCustomTheme(customTheme) : isPack ? sanitizeCustomTheme(packTheme) : null;
   return {

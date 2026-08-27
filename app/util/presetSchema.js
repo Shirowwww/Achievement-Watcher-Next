@@ -272,7 +272,7 @@ const SOUND_RE = /^[^\\/:*?"<>|\x00-\x1f]+\.(?:wav|mp3|ogg|flac|m4a|aac)$/i;
   path, so nothing a preset names can point outside the folder it was installed into. SVG is left out
   on purpose - it is a document that can carry script, and a background is not worth that.
 */
-const ASSET_RE = /^[^\/:*?"<>| -]+.(?:png|jpe?g|gif|webp|bmp)$/i;
+const ASSET_RE = /^[^/:*?"<>| -]+.(?:png|jpe?g|gif|webp|bmp)$/i;
 
 function clampNumber(value, property) {
   const number = Number(value);

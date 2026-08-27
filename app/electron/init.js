@@ -947,7 +947,7 @@ function rememberApiNameIndex(appid, achievements) {
   try {
     const fresh = steamSchemaFetch.buildApiNameIndex(achievements);
     if (Object.keys(fresh).length === 0) return;
-    const merged = { ...(loadApiNameIndex(appid) || {}), ...fresh };
+    const merged = { ...loadApiNameIndex(appid), ...fresh };
     const file = apiNameIndexPath(appid);
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, JSON.stringify(merged));
@@ -1263,7 +1263,6 @@ async function resolveSteamData(request) {
     debug.log(err);
     return { appid, networkError: isSteamTransportFailure(err) };
   }
-  return { appid };
 }
 
 // Sources whose artwork and rarity come from local emulator data.
@@ -1436,7 +1435,7 @@ async function resolveSteamAppidFromTitle(arg) {
       .replace(/[\u2018\u2019\u201A\u201B\u2039\u203A']/g, '') // single quotes
       .replace(/[\u201C\u201D\u201E\u201F\u00AB\u00BB"]/g, '') // double quotes
       .replace(/[™®©]/g, '') // trademark symbols
-      .replace(/[:.,!?()\\[\\]{}\-]/g, '') // punctuation + hyphens
+      .replace(/[:.,!?()\\[\\]{}-]/g, '') // punctuation + hyphens
       .replace(/\s+/g, ' ') // collapse spaces
       .trim();
   }
@@ -2822,6 +2821,7 @@ async function scrapeWithPuppeteer(info = { appid: 269770 }, alternate) {
               await page.evaluate(() => {
                 const scripts = Array.from(document.querySelectorAll('script'));
                 const target = scripts.find((s) => s.textContent.includes('var sh'));
+                // oxlint-disable-next-line no-eval -- runs in the scraped page, not in Node: the payload is the page own inline script.
                 eval(target.textContent);
               });
               const users = (await page.evaluate(() => sh.model.listData.pagedList.items)) || [];
@@ -2852,6 +2852,7 @@ async function scrapeWithPuppeteer(info = { appid: 269770 }, alternate) {
             await page.evaluate(() => {
               const scripts = Array.from(document.querySelectorAll('script'));
               const target = scripts.find((s) => s.textContent.includes('var sh'));
+              // oxlint-disable-next-line no-eval -- runs in the scraped page, not in Node: the payload is the page own inline script.
               eval(target.textContent);
             });
             const achievements = (await page.evaluate(() => sh.model.listData.pagedList.items)) || [];
@@ -6933,6 +6934,9 @@ try {
   autoUpdater.on('update-not-available', (info) => {
     debug.log(`[updater] current version is up to date (${info.version})`);
     manualUpdateResult = 'uptodate';
+    // Without this the state machine stays on 'checking' and the title-bar chip shows "Checking..."
+    // forever, since being up to date is the one outcome no other event follows.
+    setUpdateStatus({ type: 'not-available' });
     if (manualUpdateCheckPending && tray) {
       manualUpdateCheckPending = false;
       try {

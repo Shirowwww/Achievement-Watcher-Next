@@ -548,15 +548,15 @@ test('the appid repair is offered beside the schema repair, not instead of it', 
 test('a fabricated achievement list is offered the repair that rewrites it', () => {
   const report = deriveHealth({
     appid: '480',
-    gameDir: 'C:\Games\X',
+    gameDir: 'C:GamesX',
     gameDirExists: true,
-    exe: 'C:\Games\X\game.exe',
+    exe: 'C:GamesXgame.exe',
     exeExists: true,
     emulated: true,
     achievements: { total: 3, unlocked: 1 },
     goldberg: {
       emulator: 'gbe',
-      steamSettings: 'C:\Games\X\steam_settings',
+      steamSettings: 'C:GamesXsteam_settings',
       dllCount: 1,
       achievements: { expected: 3, found: 3, missing: [], missingIcons: [] },
       issues: [

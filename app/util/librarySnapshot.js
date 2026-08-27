@@ -71,7 +71,7 @@ function mergeKnownGame(fresh, known) {
     ...known,
     ...fresh,
     name: fresh.nameUnresolved ? known.name : fresh.name,
-    img: { ...(known.img || {}), ...freshImages },
+    img: { ...known.img, ...freshImages },
     achievement: known.achievement,
     provisional: true,
   };

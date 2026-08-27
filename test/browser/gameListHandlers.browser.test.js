@@ -71,8 +71,8 @@ function buildHarness() {
     <input id="achievement-search-input" value="stale filter">
     <section id="achievement"><div class="achievement-list"><ul><li class="search-hidden">stale row</li></ul></div></section>
     <section id="game-list"><div class="game-box" data-appid="480"></div></section>
-    <script>${jquery}<\/script>
-    <script>${gameScript}<\/script>
+    <script>${jquery}</script>
+    <script>${gameScript}</script>
   </body></html>`;
 }
 

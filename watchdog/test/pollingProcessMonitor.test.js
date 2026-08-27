@@ -123,7 +123,7 @@ test('resolves an image path for new processes only, never for the whole snapsho
     initialProcesses: [{ pid: 1, process: 'already-open.exe' }],
     resolvePath: (pid) => {
       resolved.push(pid);
-      return 'D:\Games\new-game.exe';
+      return 'D:Games\new-game.exe';
     },
     ...timers,
   });
@@ -134,7 +134,7 @@ test('resolves an image path for new processes only, never for the whole snapsho
   await monitor.poll();
   monitor.close();
 
-  assert.deepEqual(created, [['new-game.exe', 2, 'D:\Games\new-game.exe']]);
+  assert.deepEqual(created, [['new-game.exe', 2, 'D:Games\new-game.exe']]);
   // Only the process that appeared, and only on the poll it appeared in.
   assert.deepEqual(resolved, [2]);
 });

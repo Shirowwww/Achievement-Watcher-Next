@@ -250,7 +250,7 @@ async function ensureSteamToken({ sessionFile, tokenSecret, session, fetchImpl =
   const store = async (token, extra) =>
     saveSessionEncrypted(
       sessionFile,
-      { ...(cached || {}), ...(extra || {}), webapi_token: token, expiresAt: parseJwtExpiry(token) },
+      { ...cached, ...extra, webapi_token: token, expiresAt: parseJwtExpiry(token) },
       tokenSecret
     );
 

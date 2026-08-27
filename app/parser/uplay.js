@@ -385,7 +385,7 @@ let indexDB = {
       const filter = [
         /[^\u0020-\u007E\n\r\t]/g, // remove (most) unwanted char
         /^.*#.*$/gm, // remove bad formated comment #
-        /^(?!.*(\:)).*$/gm, // remove yaml line without descriptor pair ( xxx : yyy )
+        /^(?!.*(:)).*$/gm, // remove yaml line without descriptor pair ( xxx : yyy )
       ];
 
       let raw = fs.readFileSync(file, 'utf8');

@@ -29,7 +29,7 @@ function cleanGameName(raw) {
   s = s.replace(/\b[a-z0-9][a-z0-9-]*\.(com|net|org|ru|to|io|cc|info|xyz|me|site|online|club|pw)\b/g, ' ');
   s = s.replace(/\bv?\d+(\.\d+){1,}[a-z]?\b/g, ' '); // dotted versions: v1.2.3 / 1.0.0.0 (before separators are flattened)
   s = s.replace(/\bmulti\d*\b/g, ' ');
-  s = s.replace(/[._\-]+/g, ' '); // flatten separators so "update.5" / "update_5" become "update 5"
+  s = s.replace(/[._-]+/g, ' '); // flatten separators so "update.5" / "update_5" become "update 5"
   s = s.replace(/\b(build|update|hotfix|patch)\s*\d+\b/g, ' ');
   const tokens = s.split(/\s+/).filter((t) => t && !JUNK_TOKENS.has(t));
   return { clean: tokens.join(' ').trim(), tokens };
@@ -74,7 +74,7 @@ function scoreName(queryClean, queryTokens, queryNorm, longTok, name) {
   if (!queryNorm || !nNorm) return { score: 0, tier: null };
   if (queryNorm === nNorm) return { score: 1, tier: 'exact' };
 
-  const nameTokens = String(name).toLowerCase().replace(/[._\-]+/g, ' ').split(/\s+/).filter(Boolean);
+  const nameTokens = String(name).toLowerCase().replace(/[._-]+/g, ' ').split(/\s+/).filter(Boolean);
   const nameJoined = ' ' + nameTokens.join(' ') + ' ';
   const allQueryInName = queryTokens.length > 0 && queryTokens.every((t) => nameJoined.includes(` ${t} `) || nNorm.includes(normAlnum(t)));
   const allNameInQuery = nameTokens.length > 0 && nameTokens.every((t) => queryTokens.includes(t));

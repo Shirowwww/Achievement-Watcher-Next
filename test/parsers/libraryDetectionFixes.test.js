@@ -58,6 +58,7 @@ function badgeTables() {
   const literal = (name, opener) => {
     const from = source.slice(source.indexOf(`const ${name} =`));
     const body = from.slice(from.indexOf(opener), from.indexOf(opener === '{' ? '};' : ';') + 1);
+    // oxlint-disable-next-line no-eval -- the point is to evaluate the shipped literal from app.js rather than copy it here.
     return eval(`(${opener === '{' ? body : body.replace(/;$/, '')})`);
   };
   return { SOURCE_BADGE: literal('SOURCE_BADGE', '{'), STEAM_BADGE_SOURCES: literal('STEAM_BADGE_SOURCES', '/') };

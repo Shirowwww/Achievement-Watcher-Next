@@ -88,7 +88,8 @@ async function epicFetchJson(url, { method = 'GET', headers = {}, body, timeoutM
     const res = await fetch(url, {
       method,
       headers: { Accept: 'application/json', 'User-Agent': 'EpicGamesLauncher', ...headers },
-      body,
+      // A GET carries no body, and passing the key at all is what some fetch implementations reject.
+      ...(body === undefined ? {} : { body }),
       signal: controller.signal,
     });
     const data = await res.json().catch(() => ({}));

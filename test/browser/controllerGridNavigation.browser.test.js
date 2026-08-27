@@ -67,7 +67,7 @@ async function launchBrowser() {
 // until hovered). The tiles are LANDSCAPE on purpose: the wider the tile, the further the
 // neighbour's centre is, until a tile's own top-right button becomes the cheapest "move right" target.
 function buildHarness() {
-  const controller = fs.readFileSync(path.join(appDir, 'ui', 'controller.js'), 'utf8').replace(/<\/script/gi, '<\/script');
+  const controller = fs.readFileSync(path.join(appDir, 'ui', 'controller.js'), 'utf8').replace(/<\/script/gi, '</script');
   const tile = (appid, left) => `
     <div class="game-box" data-appid="${appid}" style="position:absolute;left:${left}px;top:0;width:400px;height:190px;">
       <div class="header" style="position:absolute;inset:0;">
@@ -81,8 +81,8 @@ function buildHarness() {
     <script>
       window.module = { exports: {} };
       window.require = () => ({ ipcRenderer: { on() {} }, webFrame: { clearCache() {} } });
-    <\/script>
-    <script>${controller}<\/script>
+    </script>
+    <script>${controller}</script>
   </body></html>`;
 }
 

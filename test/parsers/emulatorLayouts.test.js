@@ -116,7 +116,7 @@ test('an emulator recorded by Windows is found without touching the disk', () =>
   const registry = {
     readRegistryStringAndExpand(hive, key, valueName) {
       if (hive === 'HKLM' && key.endsWith('App Paths/rpcs3.exe') && valueName === '') return 'D:\\Tools\\PS3\\rpcs3.exe';
-      if (hive === 'HKLM' && /Uninstall\/shadPS4$/.test(key) && valueName === 'InstallLocation') return 'C:\\PS4\\shadPS4\\';
+      if (hive === 'HKLM' && key.endsWith('Uninstall/shadPS4') && valueName === 'InstallLocation') return 'C:\\PS4\\shadPS4\\';
       return null;
     },
     listRegistryAllSubkeys(hive, key) {

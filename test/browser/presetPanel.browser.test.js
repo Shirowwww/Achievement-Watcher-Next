@@ -31,12 +31,12 @@ function buildHarness() {
       .pd-fields[hidden] { display: none; }
     </style></head><body>
     ${html.slice(start, end)}
-    <script>${fs.readFileSync(path.join(appDir, 'ui', 'lib', 'jquery-3.7.1.min.js'), 'utf8')}<\/script>
+    <script>${fs.readFileSync(path.join(appDir, 'ui', 'lib', 'jquery-3.7.1.min.js'), 'utf8')}</script>
     <script>
       const module = { exports: {} };
       ${fs.readFileSync(path.join(appDir, 'util', 'presetPanel.js'), 'utf8')}
       window.panel = module.exports;
-    <\/script>
+    </script>
   </body></html>`;
 }
 

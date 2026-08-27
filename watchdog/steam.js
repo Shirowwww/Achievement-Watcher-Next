@@ -160,7 +160,7 @@ function rememberApiNameIndex(appID, achievements) {
   try {
     const fresh = steamSchemaFetch.buildApiNameIndex(achievements);
     if (Object.keys(fresh).length === 0) return;
-    const merged = { ...(loadApiNameIndex(appID) || {}), ...fresh };
+    const merged = { ...loadApiNameIndex(appID), ...fresh };
     const file = apiNameIndexPath(appID);
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, JSON.stringify(merged));
@@ -270,7 +270,7 @@ async function getDataFromSteamStore(appID) {
       name: html.querySelector('.apphub_AppName').innerHTML,
       icon: html
         .querySelector('.apphub_AppIcon img')
-        .attributes.src.match(/([^\\\/\:\*\?\"\<\>\|])+$/)[0]
+        .attributes.src.match(/([^\\/:*?"<>|])+$/)[0]
         .replace('.jpg', ''),
     };
 

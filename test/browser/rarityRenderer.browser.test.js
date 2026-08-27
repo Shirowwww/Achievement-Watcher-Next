@@ -71,7 +71,7 @@ function buildHarness() {
   const jquery = fs.readFileSync(path.join(appDir, 'ui', 'lib', 'jquery-3.7.1.min.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
   // The real formatter, so the harness proves what a French user actually reads rather than an
   // English-only stub. It attaches to window.IntlFormat when loaded as a plain browser script.
-  const intlScript = fs.readFileSync(path.join(appDir, 'util', 'intlFormat.js'), 'utf8').replace(/<\/script/gi, '<\/script');
+  const intlScript = fs.readFileSync(path.join(appDir, 'util', 'intlFormat.js'), 'utf8').replace(/<\/script/gi, '</script');
   return `<!doctype html><html><head><meta charset="utf-8"></head><body>
     <section id="achievement">
       <div class="achievement-list">
@@ -85,8 +85,8 @@ function buildHarness() {
         </ul>
       </div>
     </section>
-    <script>${jquery}<\/script>
-    <script>${intlScript}<\/script>
+    <script>${jquery}</script>
+    <script>${intlScript}</script>
     <script>
       window.restoreCalls = 0;
       window.app = { config: { achievement: { lang: 'french' } } };
@@ -108,7 +108,7 @@ function buildHarness() {
         throw new Error('unexpected require: ' + request);
       };
       ${gameScript}
-    <\/script>
+    </script>
   </body></html>`;
 }
 
