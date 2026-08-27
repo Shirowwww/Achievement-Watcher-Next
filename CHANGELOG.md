@@ -9,38 +9,56 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Added
+
+- **Ubisoft games that never ask for their achievements can be unblocked.** The loader answers the
+  game's session request from an ini key it leaves empty, and several titles read that emptiness as
+  "signed out" and stop calling the achievement API at all, so the setup looks perfect and records
+  nothing. AW Next now offers a placeholder session, only when the loader log shows the game asked
+  for nothing, and offers to take it back out if that did not change anything.
+- **A game's own icon is used when it is a good one.** An executable carrying a real 256px icon, the
+  picture Windows paints for it on the desktop, now provides the game's logo ahead of anything looked
+  up. It also works for games with no store artwork at all, which used to be exactly the ones left
+  with an empty square.
+
 ### Fixed
 
-- **Game logos came back empty.** A lint pass had removed a function together with the closing marker
-  of its comment, which silently turned the two declarations below it into prose. Every square game
-  logo went with them: the page header, the notification card, the overlay and the test notification.
-- **The offline achievements fix was offered on games that cannot use it.** The check for the setting
-  matched a name the loader exports rather than the setting itself, so it said yes for every Ubisoft
-  loader, including the older generation that has no such setting at all. Those games had a line
-  written into their configuration that did nothing, and were then reported forever as a fix that had
-  changed nothing. The line is now taken back out on sight.
-- **The button did not follow what it had just done.** After switching offline achievements on it
-  still read *Enable achievements offline*, and pressing it again opened a dialog about removing it.
-  It now says which way it goes, the confirmation matches, and the row reads *Offline achievements
-  on, launch the game once* until the game has actually run.
-- **A repair no longer stopped at the emulator's door.** The loader reads the achievement list only
-  once, to create its own copy; every later launch skips it. A repair could therefore rewrite that
-  list - a language change, a blank-name fix, achievements added by a game update - and the game
-  would go on showing the old one. The copy is now brought in line, keeping every unlock.
+- **Game logos came back empty.** A lint pass left a block comment open, which turned the two
+  declarations below it into prose. Every square logo went with them: the page header, the
+  notification card, the overlay and the test notification.
 - **The Steam parser threw whenever it ran outside the window.** Five lookups reached for a channel
   that only exists in the renderer, so from anywhere else they failed with an unreadable type error,
   once per game.
+- **The offline achievements fix was offered on games that cannot use it.** The check matched a name
+  the loader exports rather than the setting itself, so older Ubisoft loaders, which have no such
+  setting, were given a line that did nothing and were then blamed for it forever. The line is now
+  taken back out on sight.
+- **A repair stopped at the emulator's door.** The loader reads the achievement list once, to create
+  its own copy, and skips it on every later launch. A repair could rewrite that list, a language
+  change or achievements added by a game update, and the game would go on showing the old one. The
+  copy is now brought in line, keeping every unlock.
+- **Reading a save file rewrote it in memory.** Both SSE parsers reversed a four-byte slice, which is
+  a view over the same bytes, so a second parse of the same buffer read every CRC and unlock time
+  byte-swapped.
+- **Four Watchdog listeners bound to nothing.** A callback parameter in `watchdog.js` shadowed the
+  monitor module it shares a name with.
 
 ### Improved
 
 - **An antivirus is named as an antivirus.** These loaders replace a game's store library, which is
-  what detection engines look for, and Windows Defender takes every copy at once. That was reported
-  as a failure of the repair; it now gets the explanation, an offer to allow the folder in Defender,
-  and a button to put the files back - instead of a file picker asking for a package you never had.
-- **A game's own icon is used when it is a good one.** An executable carrying a real 256px icon - the
-  picture Windows paints for it on the desktop - now provides the game's logo ahead of anything
-  looked up, in the app and in notifications. It also works for games with no store artwork at all,
-  which used to be exactly the ones left with an empty square.
+  what detection engines look for, and Windows Defender takes every copy at once. That now gets the
+  explanation, an offer to allow the folder in Defender and a button to put the files back, instead
+  of a file picker asking for a package you never had.
+- **The health buttons say what they do.** "Uplay R1/R2" named a loader generation and meant nothing
+  to whoever was reading it; the generation stays in Technical details. The offline achievements row
+  offers enable or disable from what is actually on disk, and reads "launch the game once" rather
+  than judging a fix that has not run yet.
+- **The loader log setting says what turning it off costs.** It names the two things that stop
+  working without it and states that the file is capped, so nobody switches it off over its size.
+  The loader appends to that file without ever rotating it; AW Next now caps it.
+- **oxlint runs on every push and after every edit.** It was installed and nothing ran it. The
+  curated rules found the two save-file and Watchdog bugs above, an uncleared timer in the hotkey
+  recorder, and dead code across the app; every silenced rule now carries the reason it is off.
 
 ## 3.10.1 - 2026-08-27
 
