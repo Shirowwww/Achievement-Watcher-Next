@@ -13,7 +13,9 @@
     "clean": "npm prune --omit=dev --ignore-scripts",
     "prepare": "patch-package",
     "prepare:watchdog": "cd ../watchdog && npm prune --omit=dev --ignore-scripts",
-    "build": "npm run prepare:watchdog && node build/build.js"
+    "build": "npm run prepare:watchdog && node build/build.js",
+    "lint": "cd .. && oxlint app watchdog test tools",
+    "lint:fix": "cd .. && oxlint --fix app watchdog test tools"
   },
   "author": {
     "name": "Shirow"
@@ -23,6 +25,7 @@
     "electron": "^43.4.1",
     "electron-builder": "^26.15.3",
     "electron-context-menu": "^4.1.2",
+    "oxlint": "^1.80.0",
     "patch-package": "^8.0.1"
   },
   "dependencies": {

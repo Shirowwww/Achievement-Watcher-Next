@@ -1,0 +1,36 @@
+{
+  "$schema": "./app/node_modules/oxlint/configuration_schema.json",
+  "env": {
+    "builtin": true,
+    "browser": true,
+    "node": true
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "app/dist/**",
+    "app/Source/**",
+    "dist/**",
+    "docs/**",
+    "native/**/target/**"
+  ],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "no-unused-vars": [
+      "warn",
+      {
+        "args": "after-used",
+        "argsIgnorePattern": "^_",
+        "caughtErrors": "none",
+        "varsIgnorePattern": "^_"
+      }
+    ],
+    "no-useless-catch": "warn",
+    "no-unused-expressions": "warn",
+    "no-control-regex": "off",
+    "unicorn/no-new-array": "warn",
+    "unicorn/no-useless-spread": "warn",
+    "unicorn/no-useless-length-check": "warn"
+  }
+}
