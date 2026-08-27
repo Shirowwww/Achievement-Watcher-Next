@@ -311,6 +311,9 @@ module.exports.load = () => {
     if (typeof options.emulator.steamlessAutoUnpack !== 'boolean') options.emulator.steamlessAutoUnpack = false;
     if (typeof options.emulator.steamlessExperimental !== 'boolean') options.emulator.steamlessExperimental = false;
     if (typeof options.emulator.autoApplyCrackFix !== 'boolean') options.emulator.autoApplyCrackFix = false;
+    // Whether the antivirus notice for automatic repair has been given. Absent means it has not:
+    // configs that turned the setting on before the notice existed get it once, from the scan.
+    if (typeof options.emulator.autoApplyNotice !== 'boolean') options.emulator.autoApplyNotice = false;
     if (options.emulator.steamSettingsMode !== 'simple' && options.emulator.steamSettingsMode !== 'advanced') options.emulator.steamSettingsMode = 'simple';
     if (typeof options.emulator.createLaunchBat !== 'boolean') options.emulator.createLaunchBat = true;
     if (typeof options.emulator.apiCheckBypass !== 'boolean') options.emulator.apiCheckBypass = false;
@@ -507,6 +510,7 @@ module.exports.load = () => {
         steamlessAutoUnpack: false, // run Steamless on the game exe before patching
         steamlessExperimental: false, // pass --realign for heavily-protected exes
         autoApplyCrackFix: false, // opt-in: try a confident CrakFiles community-crack match (confident name only, backed-up, idempotent) - off by default since it downloads/overwrites game files
+        autoApplyNotice: false, // whether the antivirus notice for automatic repair has been given
         steamSettingsMode: 'simple', // 'simple' (AW fetch: DLC + achievements) | 'advanced' (generate_emu_config: + depots/languages)
         createLaunchBat: true, // legacy, unused (ColdClient removed) - kept so saved configs round-trip
         apiCheckBypass: false, // opt-in: drop SteamAutoCrack's Steam API ownership-check bypass proxy (winmm.dll) for games that re-check the original DLL/exe after the swap

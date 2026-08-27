@@ -115,14 +115,20 @@ test('every path that installs the emulator explains a blocked package', () => {
   assert.match(app, /async function reportEmulatorPackageBlocked\(/, 'one dialog, shared by every path');
   assert.match(app, /achievements\.onEmulatorPackageBlocked\(/, 'the automatic repair reaches the window');
   assert.match(achievements, /module\.exports\.onEmulatorPackageBlocked/, 'and has a way to reach it');
-  assert.match(achievements, /err\.code !== 'GBE_DOWNLOAD_BLOCKED'/, 'only this one failure is handed over');
+  // Two packages reach this: the Goldberg emulator that is downloaded, and the Uplay loaders that
+  // ship with the app. Only the first used to be handed over, so a quarantined Ubisoft loader during
+  // an automatic repair said nothing at all - the one case nobody can connect on their own, because
+  // it happens during a scan with no dialog on screen.
+  assert.match(achievements, /code !== 'GBE_DOWNLOAD_BLOCKED' && code !== 'EMULATOR_PACKAGE_BLOCKED'/, 'both packages are handed over');
+  assert.match(achievements, /Uplay R2 auto-repair failed[\s\S]{0,300}?reportEmulatorPackageBlocked\(err\)/, 'including from the Uplay automatic repair');
+  assert.match(app, /function isEmulatorPackageBlocked\(err\)/, 'and the window recognises both');
 
-  // The three call sites: the per-game menu entry, the bulk pass, the automatic repair.
+  // The call sites: the per-game menu entry, the bulk pass, the automatic repair, Game Health.
   const calls = app.match(/reportEmulatorPackageBlocked\(err/g) || [];
   assert.ok(calls.length >= 3, `every install path should route here, found ${calls.length}`);
 
   // A blocked package fails every remaining game the same way, so the bulk pass stops.
-  assert.match(app, /GBE_DOWNLOAD_BLOCKED'\) \{\n\s+await reportEmulatorPackageBlocked\(err\);\n\s+break;/);
+  assert.match(app, /isEmulatorPackageBlocked\(err\)\) \{\n\s+await reportEmulatorPackageBlocked\(err\);\n\s+break;/);
 
   assert.match(ipc, /ipcMain\.handle\('defender:is-active'/, 'the renderer cannot probe Defender itself');
   assert.match(ipc, /ipcMain\.handle\('defender:add-exclusion'/, 'nor add an exclusion itself');
@@ -148,4 +154,87 @@ test('the dialog says it is safe, where the file comes from, and what to do', ()
   assert.match(app, /if \(defenderActive && folder\) \{/, 'no Defender, no Defender button');
   // A library scan can hit this once per game; the explanation is shown once.
   assert.match(app, /if \(emulatorPackageBlockedShown\) return true;/);
+});
+
+/*
+  The warning belongs where the decision is made, not where the files are written.
+
+  Once automatic repair is on, the writing happens during a scan: no dialog, nothing on screen, and
+  an antivirus alert nobody connects back to a setting they changed days earlier. The alert itself
+  cannot be prevented - it fires on write, whether the file was downloaded or shipped with the app -
+  so the only honest place to say it is the moment the setting is switched on.
+*/
+test('turning automatic repair on says what to expect from the antivirus first', () => {
+  const settings = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'ui', 'settings.js'), 'utf8');
+  const english = require('../../app/locale/lang/english.json').dialogs;
+
+  assert.match(settings, /async function confirmAutomaticEmulatorFix\(\)/);
+  assert.match(settings, /if \(!\(await confirmAutomaticEmulatorFix\(\)\)\) \{/, 'and declining has to leave the setting off');
+  // Only a real click: this handler also fires while the panel is being filled in, and warning
+  // somebody about a setting they are merely being shown is noise.
+  assert.match(settings, /if \(!event\.originalEvent \|\| value !== 'true'\) return;/);
+  // The exclusion is offered before anything is written, which is the whole point of asking here.
+  assert.match(settings, /t\('av-allow-in-defender'/);
+
+  assert.match(english['autofix-confirm-message'], /during a scan/i, 'it has to say when the writing happens');
+  assert.match(english['autofix-confirm-detail'], /antivirus/i, 'and name what will happen');
+  assert.match(english['autofix-confirm-detail'], /safe|nothing is sent/i, 'and why it is not something to fear');
+  // Honest about what the exclusion does not cover: the copy inside the game folder is still fair game.
+  assert.match(english['autofix-exclusion-added'], /game folder can still be flagged/i);
+});
+
+/*
+  The people most exposed are the ones who turned automatic repair on before any of this existed:
+  they never see the confirmation, and the alert keeps arriving mid-scan with no explanation.
+
+  They get the same warning once, at the moment the setting is actually about to write into a game,
+  and the answer is recorded so it is never asked twice. Not a gate - they asked for this, possibly
+  long ago - but the exclusion and the off switch are one press away.
+*/
+test('a setting that was already on gets the warning once, when it acts', () => {
+  const app = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'app.js'), 'utf8');
+  const achievements = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'achievements.js'), 'utf8');
+  const settingsJs = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'settings.js'), 'utf8');
+  const settingsUi = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'ui', 'settings.js'), 'utf8');
+
+  // The scan has no dialog, so it asks the window - and only ever once per session.
+  assert.match(achievements, /module\.exports\.onAutomaticEmulatorFixStarting/);
+  assert.match(achievements, /if \(automaticFixNoticeAsked \|\| !automaticFixNoticeHandler\) return automaticFixAllowed;/);
+  // Both automatic paths announce, and both obey the answer: saying "turn it off" has to stop the
+  // game being repaired right now, not only the next one - the scan read the setting before asking.
+  const announced = achievements.match(/!\(await announceAutomaticEmulatorFix\(\)\)/g) || [];
+  assert.equal(announced.length, 2, 'both automatic repair paths must announce and obey');
+  // And nothing is copied first: the announcement comes before the loader cache is even filled.
+  assert.ok(
+    achievements.indexOf('announceAutomaticEmulatorFix()') < achievements.indexOf('ensureBundledEmulatorDlls'),
+    'the notice has to come before anything is written, including into the loader cache'
+  );
+
+  assert.match(app, /achievements\.onAutomaticEmulatorFixStarting\(/);
+  assert.match(app, /app\.config\.emulator\.autoApplyNotice === true\) return true;/, 'never a second time, and the repair still runs');
+  assert.match(app, /if \(!keepOn\) app\.config\.emulator\.autoApplyNewGames = false;/, 'turning it off has to stick');
+  assert.match(app, /await settings\.save\(app\.config\)/, 'and the answer has to be written down');
+
+  // Absent means "not yet told", which is exactly the state an older config is in.
+  assert.match(settingsJs, /typeof options\.emulator\.autoApplyNotice !== 'boolean'\) options\.emulator\.autoApplyNotice = false;/);
+  // Somebody who just answered the Settings confirmation must not be told again by the scan.
+  assert.match(settingsUi, /app\.config\.emulator\.autoApplyNotice = true;/);
+});
+
+/*
+  Most scans run with the app in the tray and its window hidden, which is where a modal dialog is at
+  its worst: nobody can see it, and the scan waits for an answer that is never coming. Writing anyway
+  is not the alternative - files landing in game folders and an antivirus alert firing with the app
+  not even on screen is the exact thing the notice exists to prevent.
+*/
+test('nothing is announced, or written, while the window is hidden in the tray', () => {
+  const app = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'app.js'), 'utf8');
+  const achievements = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'achievements.js'), 'utf8');
+
+  assert.match(app, /function windowCanShowDialog\(\)/, 'one answer to "can anyone see a dialog right now"');
+  assert.equal((app.match(/if \(!windowCanShowDialog\(\)\)/g) || []).length, 2, 'the notice and the blocked-package report both check');
+  assert.match(app, /return 'defer';/, 'a hidden window defers rather than answering for the user');
+
+  // Deferring must not burn the one-time flag, or the notice would be lost for good.
+  assert.match(achievements, /if \(answer === 'defer'\) return false;\n\s+automaticFixNoticeAsked = true;/);
 });

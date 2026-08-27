@@ -857,7 +857,10 @@ function onEmulatorPackageBlocked(handler) {
 }
 
 function reportEmulatorPackageBlocked(err) {
-  if (!err || err.code !== 'GBE_DOWNLOAD_BLOCKED' || !emulatorPackageBlockedHandler) return;
+  const code = err && err.code;
+  // Both packages, for the same reason: the Goldberg emulator this downloads and the Uplay loaders
+  // it ships with. Only the first was passed on, so a quarantined Ubisoft loader was silent here.
+  if ((code !== 'GBE_DOWNLOAD_BLOCKED' && code !== 'EMULATOR_PACKAGE_BLOCKED') || !emulatorPackageBlockedHandler) return;
   try {
     emulatorPackageBlockedHandler(err);
   } catch (handlerErr) {
@@ -866,6 +869,60 @@ function reportEmulatorPackageBlocked(err) {
 }
 
 module.exports.onEmulatorPackageBlocked = onEmulatorPackageBlocked;
+
+/*
+  Anyone who switched automatic repair on before it started saying what to expect has never been
+  told. The scan is where the setting acts and it has no dialog of its own, so it asks the window to
+  say it once, the first time the setting is actually about to touch a game.
+
+  Once per session at most, and the window only shows it once ever - it records that it did.
+*/
+let automaticFixNoticeHandler = null;
+let automaticFixNoticeAsked = false;
+let automaticFixAllowed = true;
+
+function onAutomaticEmulatorFixStarting(handler) {
+  automaticFixNoticeHandler = typeof handler === 'function' ? handler : null;
+}
+
+/*
+  Returns whether to go ahead. Answering "turn it off" has to stop THIS game too, not only the next
+  one: the scan read the setting before asking, so without this the very write the notice was about
+  would happen anyway. The answer is remembered for the rest of the scan, where the same stale value
+  would otherwise be read once per game.
+
+  The handler answers 'defer' when it cannot be seen - the app sits in the tray with its window
+  hidden, which is most of the time. Nothing is written then: a dialog nobody can see would stall the
+  scan on an answer that is never coming, and writing anyway is the exact thing the notice exists to
+  prevent - files landing in game folders, and an antivirus alert, with the app not even on screen.
+  It stays unasked, so the next scan with the window open gives the notice and the repair runs.
+*/
+let automaticFixNoticeInFlight = null;
+
+async function announceAutomaticEmulatorFix() {
+  if (automaticFixNoticeAsked || !automaticFixNoticeHandler) return automaticFixAllowed;
+  // Games are repaired concurrently, so several can reach this while the dialog is still open. They
+  // wait on the one answer instead of stacking a modal each.
+  if (!automaticFixNoticeInFlight) {
+    automaticFixNoticeInFlight = (async () => {
+      let answer = true;
+      try {
+        answer = await automaticFixNoticeHandler();
+      } catch (err) {
+        debug.log(`could not announce the automatic emulator fix => ${err}`);
+      }
+      if (answer === 'defer') return false;
+      automaticFixNoticeAsked = true;
+      automaticFixAllowed = answer !== false;
+      return automaticFixAllowed;
+    })().finally(() => {
+      automaticFixNoticeInFlight = null;
+    });
+  }
+  return automaticFixNoticeInFlight;
+}
+
+module.exports.onAutomaticEmulatorFixStarting = onAutomaticEmulatorFixStarting;
 
 module.exports.autoApplyEmulatorFix = autoApplyEmulatorFix;
 async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, option, detectedEmu = null, detectedExe = null, skipAdvanced = false, schema = null, requireGameExecutable = false, onlyIfUnconfigured = false } = {}) {
@@ -2574,7 +2631,11 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           broken && report.mapping
             ? uplayR2.resolveObjectiveKeying({ achievementList: game.achievement.list, uplayId: report.mapping.uplay_id })
             : null;
-        if (broken && prefixInfo) {
+        // Files are about to be written into a game folder with nothing on screen. Said once, before
+        // anything is copied - including into AW Next's own loader cache - and it can answer no.
+        if (broken && prefixInfo && !(await announceAutomaticEmulatorFix())) {
+          debug.log(`[${appid.appid}] automatic Uplay repair stopped: automatic repair was switched off`);
+        } else if (broken && prefixInfo) {
           const loaderPaths = report.dll || [];
           const loader = report.loader || uplayR2.inspectInstalledLoaders(loaderPaths);
           const needsLoader = loaderPaths.length === 0 || !loader.supportsAchievements || !loader.architectureValid;
@@ -2634,6 +2695,9 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         }
       } catch (err) {
         debug.log(`[${appid.appid}] Uplay R2 auto-repair failed => ${err}`);
+        // Nobody connects an antivirus alert during a scan to a setting they switched on days ago,
+        // and the scan has no dialog of its own - so this failure is handed to the window.
+        reportEmulatorPackageBlocked(err);
       }
     }
 
@@ -2736,7 +2800,11 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         (async () => {
           let fixedSteamSettingsDirs = [];
           let fixApplied = false;
-          if (canAutoApply) {
+          // Same gate as the Uplay path: nothing is downloaded or written before the notice, and
+          // "turn it off" stops this game rather than only the next one.
+          if (canAutoApply && !(await announceAutomaticEmulatorFix())) {
+            debug.log(`[${bgAppid}] automatic emulator fix stopped: automatic repair was switched off or not announced yet`);
+          } else if (canAutoApply) {
             try {
               const setup = await autoApplyEmulatorFix({
                 gameDir: bgGameDir,

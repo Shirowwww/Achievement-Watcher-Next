@@ -2403,6 +2403,77 @@ function sourcePresentationFor(game) {
 // instead of a bare error, shown once per session. Returns whether it handled the error.
 let emulatorPackageBlockedShown = false;
 
+/*
+  Shown once to somebody who already had automatic repair on. Returns whether they want to keep it.
+
+  Deliberately not a confirmation: the setting is theirs and predates this notice. It exists so the
+  antivirus alert that follows is expected rather than alarming, and so the exclusion and the off
+  switch are one press away at the moment it matters.
+*/
+async function noticeAutomaticEmulatorFix() {
+  let defenderActive = false;
+  try {
+    defenderActive = await ipcRenderer.invoke('defender:is-active');
+  } catch (err) {
+    debug.warn(`[emulator] could not tell whether Windows Defender is the antivirus => ${formatErr(err)}`);
+  }
+
+  const buttons = [t('autofix-disable', 'Turn it off', 'Désactiver')];
+  const actions = ['disable'];
+  if (defenderActive) {
+    buttons.push(t('av-allow-in-defender', 'Allow in Windows Defender', 'Autoriser dans Windows Defender'));
+    actions.push('exclude');
+  }
+  buttons.push(t('autofix-keep', 'Keep it on', 'Garder activé'));
+  actions.push('keep');
+
+  const answer = await remote.dialog.showMessageBox(remote.getCurrentWindow(), {
+    type: 'info',
+    title: t('autofix-notice-title', 'Automatic repair is on', 'La réparation automatique est activée'),
+    message: t(
+      'autofix-confirm-message',
+      'Emulator files will be written into the folder of every newly detected game that needs them, during a scan.',
+      'Des fichiers d’émulateur seront écrits dans le dossier de chaque nouveau jeu détecté qui en a besoin, pendant un scan.'
+    ),
+    detail: t(
+      'autofix-confirm-detail',
+      'Expect your antivirus to flag them. These files replace a game’s Steam or Ubisoft library, which is exactly what detection engines look for, and the alert appears the moment they are written - while a scan is running, with nothing on screen to connect it to. They are safe, nothing is sent anywhere, and they are the files installed with the app.',
+      'Attends-toi à ce que ton antivirus les signale. Ces fichiers remplacent la bibliothèque Steam ou Ubisoft du jeu, ce qui est précisément ce que cherchent les antivirus, et l’alerte arrive au moment de l’écriture : pendant un scan, sans rien à l’écran qui permette de faire le lien. Ils sont sains, rien n’est envoyé nulle part, et ce sont les fichiers installés avec l’app.'
+    ),
+    buttons,
+    defaultId: buttons.length - 1,
+    cancelId: buttons.length - 1,
+    noLink: true,
+  });
+
+  const picked = actions[answer.response];
+  if (picked === 'disable') return false;
+  if (picked === 'exclude') await addEmulatorCacheExclusion();
+  return true;
+}
+
+// The folder AW Next writes its own copies into. Shared by the notice above and the Settings toggle,
+// so both say the same thing about what the exclusion does and does not cover.
+async function addEmulatorCacheExclusion() {
+  const folder = path.join(getUserDataPath(), 'cache');
+  const result = await ipcRenderer.invoke('defender:add-exclusion', folder).catch(() => ({ ok: false }));
+  remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+    type: result && result.ok ? 'info' : 'warning',
+    title: t('av-exclusion-added-title', 'Exclusion added', 'Exclusion ajoutée'),
+    message:
+      result && result.ok
+        ? t(
+            'autofix-exclusion-added',
+            'Windows Defender will leave this app’s own copies alone. The copy written into a game folder can still be flagged.',
+            'Windows Defender laissera tranquilles les copies de l’app. Celle écrite dans le dossier d’un jeu peut encore être signalée.'
+          )
+        : t('av-exclusion-failed', 'The exclusion could not be added. Add it by hand in Windows Security, then try again.', "L'exclusion n'a pas pu être ajoutée. Ajoute-la à la main dans Sécurité Windows, puis réessaie."),
+    detail: folder,
+    noLink: true,
+  });
+  return !!(result && result.ok);
+}
+
 function isEmulatorPackageBlocked(err) {
   const code = err && err.code;
   // Two packages, one cause: the Goldberg emulator AW Next downloads, and the Uplay loaders it ships
@@ -2524,8 +2595,57 @@ async function reportEmulatorPackageBlocked(err, { retry = null } = {}) {
 
 // The automatic repair has no dialog of its own, so it hands this one actionable failure back to
 // the window instead of leaving it in a log next to an unexplained virus alert.
+/*
+  Can a modal actually be seen right now? The app is a tray daemon and spends most of its life with
+  the window hidden, where a dialog is one nobody can answer - it would stall whatever is waiting on
+  it and burn a once-only explanation on an empty screen.
+*/
+function windowCanShowDialog() {
+  try {
+    const window = remote.getCurrentWindow();
+    return !!window && window.isVisible() && !window.isMinimized();
+  } catch {
+    return false;
+  }
+}
+
 achievements.onEmulatorPackageBlocked((err) => {
+  // It stays in the log, and the next attempt with the window open explains it.
+  if (!windowCanShowDialog()) {
+    debug.log('[emulator] a blocked package could not be explained: the window is not open');
+    return;
+  }
   reportEmulatorPackageBlocked(err);
+});
+
+/*
+  The same warning the Settings toggle now gives, for the people who turned automatic repair on
+  before it existed. They get it once, when the setting is actually about to write into a game -
+  which is the only moment it means anything - and never again, because the answer is recorded.
+
+  Not a gate: they asked for this, possibly a long time ago. It says what to expect, offers the
+  Defender exclusion, and offers to switch it back off.
+*/
+achievements.onAutomaticEmulatorFixStarting(async () => {
+  if (!app.config || !app.config.emulator || app.config.emulator.autoApplyNotice === true) return true;
+  /*
+    Most scans run with the window hidden, and letting the write through unannounced is the exact
+    thing this notice exists to prevent. Defer: say nothing, write nothing, and give the notice on
+    the first scan with the window actually open.
+  */
+  if (!windowCanShowDialog()) {
+    debug.log('[emulator] automatic repair is waiting for the window to be open before it says anything');
+    return 'defer';
+  }
+  app.config.emulator.autoApplyNotice = true;
+  const keepOn = await noticeAutomaticEmulatorFix();
+  if (!keepOn) app.config.emulator.autoApplyNewGames = false;
+  try {
+    await settings.save(app.config);
+  } catch (err) {
+    debug.log(`could not record the automatic repair notice => ${formatErr(err)}`);
+  }
+  return keepOn;
 });
 
 const healthStateByAppid = new Map();
@@ -8361,7 +8481,7 @@ async function runGameHealthAction(appid, action, button) {
             debug.log(`[fix-all] ${game.appid} (${game.name}) failed => ${err}`);
             // A quarantined package fails every remaining game in exactly the same way, so stop the
             // bulk pass and explain it once instead of counting dozens of identical failures.
-            if (err && err.code === 'GBE_DOWNLOAD_BLOCKED') {
+            if (isEmulatorPackageBlocked(err)) {
               await reportEmulatorPackageBlocked(err);
               break;
             }

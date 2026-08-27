@@ -21,6 +21,80 @@ const interfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
 const { legacyPresetAlias } = require(path.join(appPath, 'util/notificationPreset.js'));
 const { describeFolderDiagnosis } = require(path.join(appPath, 'util/folderDiagnosis.js'));
 
+/*
+  Switching automatic repair on is the moment to mention the antivirus, and the only one.
+
+  Once it is on, the files are written during a scan: no dialog, nothing on screen, and an alert that
+  nobody connects back to a setting they changed days earlier. The alert itself cannot be prevented -
+  these files replace a game's Steam or Ubisoft library, which is the shape detection looks for, and
+  it fires the moment they are written, whether they were downloaded or shipped with the app. What
+  can be done is to say so first, and offer the exclusion before anything is written rather than after.
+*/
+async function confirmAutomaticEmulatorFix() {
+  let defenderActive = false;
+  try {
+    defenderActive = await require('electron').ipcRenderer.invoke('defender:is-active');
+  } catch {
+    /* an unanswered probe only costs the exclusion button */
+  }
+
+  const buttons = [t('cancel', 'Cancel', 'Annuler')];
+  const actions = ['cancel'];
+  if (defenderActive) {
+    buttons.push(t('av-allow-in-defender', 'Allow in Windows Defender', 'Autoriser dans Windows Defender'));
+    actions.push('exclude');
+  }
+  buttons.push(t('autofix-enable', 'Turn it on', 'Activer'));
+  actions.push('enable');
+
+  const answer = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+    type: 'question',
+    title: t('autofix-confirm-title', 'Repair newly detected games automatically?', 'Réparer automatiquement les nouveaux jeux détectés ?'),
+    message: t(
+      'autofix-confirm-message',
+      'Emulator files will be written into the folder of every newly detected game that needs them, during a scan.',
+      'Des fichiers d’émulateur seront écrits dans le dossier de chaque nouveau jeu détecté qui en a besoin, pendant un scan.'
+    ),
+    detail: t(
+      'autofix-confirm-detail',
+      'Expect your antivirus to flag them. These files replace a game’s Steam or Ubisoft library, which is exactly what detection engines look for, and the alert appears the moment they are written - while a scan is running, with nothing on screen to connect it to. They are safe, nothing is sent anywhere, and they are the files installed with the app.',
+      'Attends-toi à ce que ton antivirus les signale. Ces fichiers remplacent la bibliothèque Steam ou Ubisoft du jeu, ce qui est précisément ce que cherchent les antivirus, et l’alerte arrive au moment de l’écriture : pendant un scan, sans rien à l’écran qui permette de faire le lien. Ils sont sains, rien n’est envoyé nulle part, et ce sont les fichiers installés avec l’app.'
+    ),
+    buttons,
+    defaultId: buttons.length - 1,
+    cancelId: 0,
+    noLink: true,
+  });
+
+  const picked = actions[answer];
+  if (picked === 'cancel') return false;
+  // Said here, so the scan does not say it again the first time the setting acts.
+  if (app.config && app.config.emulator) app.config.emulator.autoApplyNotice = true;
+  if (picked === 'exclude') {
+    const folder = path.join(remote.app.getPath('userData'), 'cache');
+    const result = await require('electron')
+      .ipcRenderer.invoke('defender:add-exclusion', folder)
+      .catch(() => ({ ok: false }));
+    // Declining the UAC prompt is an answer about the exclusion, not about the setting: the user
+    // asked for automatic repair either way, and is told what the exclusion does and does not cover.
+    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: result && result.ok ? 'info' : 'warning',
+      title: t('av-exclusion-added-title', 'Exclusion added', 'Exclusion ajoutée'),
+      message:
+        result && result.ok
+          ? t(
+              'autofix-exclusion-added',
+              'Windows Defender will leave this app’s own copies alone. The copy written into a game folder can still be flagged.',
+              'Windows Defender laissera tranquilles les copies de l’app. Celle écrite dans le dossier d’un jeu peut encore être signalée.'
+            )
+          : t('av-exclusion-failed', 'The exclusion could not be added. Add it by hand in Windows Security, then try again.', "L'exclusion n'a pas pu être ajoutée. Ajoute-la à la main dans Sécurité Windows, puis réessaie."),
+      detail: folder,
+      noLink: true,
+    });
+  }
+  return true;
+}
+
 // Sentinel for "Random"; has no extension so it can never collide with a real filename (SOUND_RE in presetSchema.js).
 const RANDOM_SOUND_VALUE = '__random__';
 // The global dropdown uses '' for silence, but a per-game blank means "inherit". This distinct
@@ -1586,9 +1660,15 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // Bind on the controls themselves as well as using a bubbling event above. This keeps the
     // dependency UI reliable for keyboard changes, programmatic population and the arrow buttons.
     $('#options-emulator select, #options-emulator2 select').on('change', updateEmulatorUi);
-    $('#option_autoApplyNewGames, #option_autoApplyNewGamesUplay').on('change', function () {
+    $('#option_autoApplyNewGames, #option_autoApplyNewGamesUplay').on('change', async function (event) {
       const value = $(this).val();
       $('#option_autoApplyNewGames, #option_autoApplyNewGamesUplay').not(this).val(value);
+      // Only a real click or keypress: this handler is also fired programmatically while the panel
+      // is being filled in, and warning somebody about a setting they are only being shown is noise.
+      if (!event.originalEvent || value !== 'true') return;
+      if (!(await confirmAutomaticEmulatorFix())) {
+        $('#option_autoApplyNewGames, #option_autoApplyNewGamesUplay').val('false');
+      }
     });
 
     // Custom theme editor (Settings > General > Custom…)

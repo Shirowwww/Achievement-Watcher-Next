@@ -193,7 +193,18 @@ test('once a ticket is set, the same silence offers to take it back out', () => 
   repairInto(dir, ['AFOP_Ach_1']);
   uplayR2.setSessionTicket({ dir, enabled: true });
 
-  const issues = withLog(dir, SILENT_LOG);
+  // The verdict is "the game ran AFTER the fix", so the log has to be unambiguously newer than the
+  // ini. Written back to back in a test the two can share a millisecond, and timestamps alone cannot
+  // then say which came first - which is why the check is a strict "newer than" and this is stamped.
+  fs.writeFileSync(path.join(dir, 'upc_r2.log'), SILENT_LOG);
+  const later = new Date(Date.now() + 5000);
+  fs.utimesSync(path.join(dir, 'upc_r2.log'), later, later);
+  const issues = uplayR2.diagnose({
+    gameDir: dir,
+    appid: FIXTURE_APPID,
+    mapping: { uplay_id: '4740', steam_appid: FIXTURE_APPID, steam_name: 'Avatar: Frontiers of Pandora' },
+    flavour: 'r2',
+  }).issues;
   assert.deepEqual(issues.filter((i) => i.code === 'NO_SESSION_TICKET'), [], 'offering it twice would be a dead end');
   assert.ok(issues.some((i) => i.code === 'SESSION_TICKET_NO_EFFECT'), 'the ticket is there and it did nothing, which is worth saying');
 });
