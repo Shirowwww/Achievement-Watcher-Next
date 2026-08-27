@@ -166,12 +166,45 @@ can also trigger heuristic detections. Download only from the [official Releases
 
 Do not disable system-wide protection. Submit a false-positive report to the antivirus vendor when a file from the official release is incorrectly quarantined.
 
-The emulator and loader DLLs are the ones this happens to: they replace a game's Steam or Ubisoft
-library, which is the shape antivirus detection looks for. Windows Defender takes every copy at once,
-including the ones installed with the app. AW Next recognises that and explains it instead of
-reporting a failure of its own, with a button to allow the folder in Defender and another to restore
-the files it ships. **Settings → Emulators → Ubisoft / Uplay R1/R2 → Restore integrated DLLs** does
-the same thing at any time.
+### The emulator files are flagged
+
+This is the detection people actually hit, and it is a false positive. Recording achievements for a
+game with no store client running means putting a stand-in library beside it: the Steam emulator
+(GBE Fork) or a Ubisoft loader. Replacing a game's Steam or Ubisoft library is precisely the
+behaviour detection engines exist to notice, so they notice it - on what the file *does*, not on
+anything it contains. Windows Defender quarantines every copy it can see in one go: the one in the
+game folder, the ones installed with AW Next, and the ones in its cache.
+
+**When it fires.** At the moment a file is written, and only then:
+
+| What you did | What gets written |
+|---|---|
+| Ran a repair, from a game's menu or from Settings | the emulator or loader, into that game's folder |
+| Opened **Settings → Emulators → Ubisoft / Uplay R1/R2** | the bundled loaders, into AW Next's own cache |
+| Turned on **Automatically fix newly detected games** | the same, during a scan, for each game that needs it |
+
+Launching AW Next writes none of them. Automatic repair is off unless you switch it on, and it tells
+you to expect this beforehand, with the chance to add a Defender exclusion first. If you had already
+turned it on, the same thing is said once, the first time it is about to act, with the exclusion and
+the off switch on the same dialog. Nothing is written while the window is hidden in the tray, since
+you would have no way of connecting the alert to anything.
+
+**What AW Next does about it.** A quarantine is reported as an antivirus problem rather than as a
+failure of its own, with a button to allow the folder in Windows Defender and another to put the
+removed files back. **Settings → Emulators → Ubisoft / Uplay R1/R2 → Restore integrated DLLs** does
+that restore at any time.
+
+**What to do.** Allow the specific file your antivirus named, or exclude
+`%APPDATA%\Achievement Watcher Next\cache`. Note what an exclusion does not cover: it protects
+AW Next's own copies, and the copy written into a game folder can still be flagged - exclude that
+game's folder too if it keeps happening. Reporting the false positive to your vendor is what
+eventually fixes it for everybody.
+
+**If you would rather check first.** Both are third-party and open source: the Steam emulator is
+downloaded from the official [GSE Fork releases](https://github.com/Detanup01/gbe_fork), and the
+Ubisoft loaders ship in `app/resources/uplayR1/` and `app/resources/uplayR2/` in the repository.
+AW Next verifies the bundled ones against known SHA-256 digests, their PE architecture and their
+achievement capability before any repair may use them, and a file that fails is refused.
 
 ## The window does not open
 

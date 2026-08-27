@@ -150,6 +150,19 @@ possible because it is not issued by a publicly trusted authority. Sensitive set
 connected-account tokens are encrypted before local storage, and the project contains no game files
 and does not bypass online ownership checks.
 
+### Your antivirus may flag the emulator files
+
+It is a false positive. The Steam emulator (GBE Fork) and the Ubisoft loaders stand in for a game's
+Steam or Ubisoft library, which is exactly the behaviour detection engines look for: they are judged
+on what they do, not on anything they contain. Both are third-party and open source, and the bundled
+ones are checked against known SHA-256 digests before any repair may use them.
+
+None is written unless you ask - a repair you run, the Emulators tab, or automatic repair, which is
+off by default and warns you first. Allow the file your antivirus named, or exclude
+`%APPDATA%\Achievement Watcher Next\cache`; never switch protection off.
+
+→ [Troubleshooting → Antivirus](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html#the-emulator-files-are-flagged)
+
 For a bug report, include the app version, Windows version, affected source and the relevant files
 from `%APPDATA%\Achievement Watcher Next\logs`. The issue tracker cannot provide games, credentials
 or piracy support.

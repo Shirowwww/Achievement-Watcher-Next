@@ -88,6 +88,16 @@ right-click **Emulator & tools** submenu and under **Settings → Emulators** - 
 folder, always after a confirmation and always with a backup.
 Use them only with games you own.
 
+**My antivirus flagged a file, or removed one.**
+Almost certainly the Steam emulator or a Ubisoft loader, and it is a false positive. Those files
+stand in for a game's Steam or Ubisoft library, which is exactly the behaviour detection engines look
+for, so they are flagged on what they do rather than on anything they contain. The alert fires the
+moment a file is written - a repair you ran, opening **Settings → Emulators**, or automatic repair
+during a scan - and Windows Defender takes every copy at once, including the ones installed with the
+app. Nothing is written unless you asked for one of those. Allow the file your antivirus named, or
+exclude `%APPDATA%\Achievement Watcher Next\cache`; never switch protection off. See
+[Troubleshooting → Antivirus](troubleshooting.md#antivirus-or-smartscreen-warning).
+
 **Windows SmartScreen warns about the installer.**
 Releases are signed with the project's own self-signed certificate rather than a commercial one, so
 SmartScreen may still ask for confirmation. You never need to install that certificate. Download only
