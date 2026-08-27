@@ -109,17 +109,24 @@ test('the executable tile is the icon inside the PE, or no tile at all', () => {
 
 test('the executable icon is the default logo, ahead of any artwork that has to be cut', () => {
   const fn = sliceFunction(init, 'async function resolveSquareGameLogo(appid, gameName, candidates, ');
+  const highRes = fn.indexOf('const highResExecutableIcon =');
   const community = fn.indexOf('fetchSteamGridDbIcon(gameName, appid)');
-  const executable = fn.indexOf('fetchExecutableIcon(executable, appid)');
+  const executable = fn.indexOf('const usableExecutableIcon =');
   const artwork = fn.indexOf('let firstPaintable');
-  assert.ok(community !== -1 && executable !== -1 && artwork !== -1, 'all three links must exist');
-  assert.ok(community < executable, 'a real icon set still wins');
-  assert.ok(executable < artwork, 'but a header cut into a square does not');
+  assert.ok(highRes !== -1 && community !== -1 && executable !== -1 && artwork !== -1, 'all four links must exist');
+  // At 256px the exe is carrying the picture Windows paints for the game; nothing looked up beats it.
+  assert.ok(highRes < community, 'a real 256px game icon wins outright');
+  assert.ok(community < executable, 'a legacy stamp does not, so the icon set still gets its go first');
+  assert.ok(executable < artwork, 'but a header cut into a square never does');
   // A 32x32 entry blown up into a 68px slot is the blurry stamp this whole resolver exists to avoid.
-  assert.match(fn, /Math\.min\(icon\.width, icon\.height\) >= MIN_EXECUTABLE_ICON_SIDE/);
+  assert.match(fn, /executableIconAtLeast\(MIN_EXECUTABLE_ICON_SIDE\)/);
+  assert.match(fn, /executableIconAtLeast\(PREFERRED_EXECUTABLE_ICON_SIDE\)/);
 
   // The Watchdog paints Windows toasts on its own and must order its chain the same way.
-  assert.match(watchdog, /steamSquareLogo\(id, game\.name\) \|\|\s*executableIcon\(id\)[\s\S]*?steamLibraryImage\(id\)/);
+  assert.match(
+    watchdog,
+    /highResExecutableIcon\(id\)[\s\S]*?steamSquareLogo\(id, game\.name\) \|\|\s*executableIcon\(id\)[\s\S]*?steamLibraryImage\(id\)/
+  );
   // It has no PE reader, so it reads the file the app extracted when the game started.
   assert.match(init, /if \(executable\) await fetchExecutableIcon\(executable, appid\);/);
 });

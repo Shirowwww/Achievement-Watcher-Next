@@ -33,6 +33,7 @@ asarUnpack:
   # watchdog/util/sharedAppModule.js - anything required that way must be listed here.
   - util/steamSchemaFetch.js
   - util/localIcons.js
+  - util/imageSize.js
   - parser/achievementTranslations.js
   - parser/steamAppInfo.js
   - parser/ff7.js

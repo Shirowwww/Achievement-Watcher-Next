@@ -68,7 +68,7 @@ const { resolvePowerShell } = require('./util/powershell.js');
 const { sendEscapeToFocusedWindow, addExcludedPid } = require('./util/sendKey.js');
 const toastIdentity = require('./util/toastIdentity.js');
 const { userDataDir } = require('./util/userData.js');
-const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon } = require('./util/steamArtwork.js');
+const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon, highResExecutableIcon } = require('./util/steamArtwork.js');
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
 
@@ -105,6 +105,8 @@ function notificationGameIcon(game) {
   return (
     customGameIcon(game.appid) ||
     customGameIcon(id) ||
+    highResExecutableIcon(id) ||
+    highResExecutableIcon(game.appid) ||
     steamSquareLogo(id, game.name) ||
     executableIcon(id) ||
     executableIcon(game.appid) ||

@@ -3348,6 +3348,11 @@ const EXECUTABLE_ICON_NAME = 'executable-icon.png';
 /* Below this an executable icon buys nothing: blown up into a 68px slot it is the blurry stamp the
    square logo exists to avoid. Small icons still appear in the picker, they just don't auto-win. */
 const MIN_EXECUTABLE_ICON_SIDE = 64;
+/* At this size the executable is carrying its real, modern icon - the picture Windows itself paints
+   for the game on the desktop and in the taskbar - and it beats everything that has to be guessed
+   at or cut out of a poster. Below it the icon is a legacy 32/48/128px stamp that only earns its
+   place once the community set has missed, which is where the chain already tries it. */
+const PREFERRED_EXECUTABLE_ICON_SIDE = 256;
 
 async function fetchExecutableIcon(exePath, appid) {
   const source = String(exePath || '');
@@ -5146,11 +5151,6 @@ function normalizeNotificationProgress(args) {
   return { current, max, percent };
 }
 
-/*
-  Whether a notification's thumbnail is the game's own artwork rather than an achievement icon.
-
-  Achievement icons are already square and already the right size; game artwork is neither, and is
-  the only case that has to be turned into a square logo before a preset paints it.
 // A thumbnail a preset can actually paint: a local file that is still there. A remote URL that was
 // never downloaded, or a path to a deleted cover, renders as an empty box - which is what the
 // notification looked like for games whose artwork had gone missing.
@@ -5242,6 +5242,27 @@ async function resolveSquareGameLogo(appid, gameName, candidates, { ignoreOverri
     }
   }
 
+  /*
+    The game's own executable icon, extracted once and reused by both attempts below.
+
+    A 256px entry is the game's real, modern icon: it is what Windows paints for it on the desktop,
+    it needs no network, and it beats a square cut out of a poster - so at that size it is taken
+    before anything is looked up. A smaller one is a legacy stamp and keeps its old place in the
+    chain, after the community icon set has had its go.
+  */
+  let executableIcon = null;
+  try {
+    const executable = String(exe || '') || configuredExecutable(appid, libraryAppid);
+    executableIcon = executable ? await fetchExecutableIcon(executable, appid) : null;
+  } catch (err) {
+    debug.log(`[artwork] executable icon lookup failed for "${gameName || appid}": ${err.message || err}`);
+  }
+  const executableIconAtLeast = (side) =>
+    executableIcon && Math.min(executableIcon.width, executableIcon.height) >= side ? paintableIconPath(executableIcon.path) : '';
+
+  const highResExecutableIcon = executableIconAtLeast(PREFERRED_EXECUTABLE_ICON_SIDE);
+  if (highResExecutableIcon) return highResExecutableIcon;
+
   try {
     const lookup = fetchSteamGridDbIcon(gameName, appid).catch(() => null);
     const icon = await Promise.race([lookup, new Promise((resolve) => setTimeout(() => resolve(null), SGDB_ICON_WAIT_MS))]);
@@ -5258,24 +5279,15 @@ async function resolveSquareGameLogo(appid, gameName, candidates, { ignoreOverri
   }
 
   /*
-    The game's own executable icon, before any of its store artwork.
+    A smaller executable icon, still before any of the store artwork.
 
     That artwork is not icon-shaped: the clienticon is a 32x32 sprite, and everything else is a
     header or a library grid that has to be CUT into a square - which lands on whatever part of a
-    poster happens to sit in the middle. The icon inside the exe is the picture the game is
-    recognised by on the desktop and in the taskbar, it is regularly a 256x256 entry, and it needs
-    no network at all. Under MIN_EXECUTABLE_ICON_SIDE it loses that argument and the chain goes on.
+    poster happens to sit in the middle. Under MIN_EXECUTABLE_ICON_SIDE the exe loses that argument
+    too and the chain goes on.
   */
-  try {
-    const executable = String(exe || '') || configuredExecutable(appid, libraryAppid);
-    const icon = executable ? await fetchExecutableIcon(executable, appid) : null;
-    if (icon && Math.min(icon.width, icon.height) >= MIN_EXECUTABLE_ICON_SIDE) {
-      const paintable = paintableIconPath(icon.path);
-      if (paintable) return paintable;
-    }
-  } catch (err) {
-    debug.log(`[artwork] executable icon lookup failed for "${gameName || appid}": ${err.message || err}`);
-  }
+  const usableExecutableIcon = executableIconAtLeast(MIN_EXECUTABLE_ICON_SIDE);
+  if (usableExecutableIcon) return usableExecutableIcon;
 
   let firstPaintable = '';
   for (const candidate of Array.isArray(candidates) ? candidates : [candidates]) {

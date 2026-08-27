@@ -12,7 +12,7 @@ const { regKeyExists, readRegistryInteger, readRegistryString, listRegistryAllSu
 const appPath = path.join(__dirname, '../');
 const steamID = require(path.join(appPath, 'util/steamID.js'));
 const fuzzyAppid = require(path.join(appPath, 'util/fuzzyAppid.js'));
-const { ipcInvoke } = require(path.join(appPath, 'util/ipcInvoke.js'));
+const { ipcInvoke, ipcAvailable } = require(path.join(appPath, 'util/ipcInvoke.js'));
 const steamLanguages = require(path.join(appPath, 'locale/steam.json'));
 const sse = require(path.join(appPath, 'parser/sse.js'));
 const ff7 = require(path.join(appPath, 'parser/ff7.js'));
@@ -966,8 +966,11 @@ const getSteamUsersList = (module.exports.getSteamUsersList = async () => {
 });
 
 async function getSteamUserStatsFromSRV(user, appID) {
-  const { ipcRenderer } = require('electron');
-  const result = await ipcRenderer.invoke('get-steam-data', { appid: appID, user, type: 'user' });
+  const result = await ipcInvoke('get-steam-data', { appid: appID, user, type: 'user' });
+  // ipcInvoke answers null outside a renderer and on a rejected handler. The caller caches whatever
+  // comes back, so a null must not get through: it would record "this user unlocked nothing" for a
+  // question that was never actually asked.
+  if (!result) throw 'Steam user stats could not be fetched';
   return result;
 }
 
@@ -1042,12 +1045,14 @@ module.exports.resolvePortrait = resolvePortrait;
 
 async function getSteamDataFromSRV(appID, lang) {
   const langObj = steamLanguages.find((language) => language.api === lang);
-  const { ipcRenderer } = require('electron');
+  // ipcInvoke, not ipcRenderer: this runs from the main process too, where ipcRenderer is undefined
+  // and every one of these calls threw the same bare "Cannot read properties of undefined (reading
+  // 'invoke')" into parser.log, once per game. Each result below is already treated as optional.
   // Product info and achievements are independent: fetch them in parallel so the keyless HTTP
   // chain (official endpoint / SteamHunters JSON) never waits behind the anonymous Steam login.
   const [resultRaw, steamhunters] = await Promise.all([
-    ipcRenderer.invoke('get-steam-data', { appid: appID, type: 'common', lang: langObj }),
-    ipcRenderer.invoke('get-steam-data', { appid: appID, type: 'steamhunters', lang }),
+    ipcInvoke('get-steam-data', { appid: appID, type: 'common', lang: langObj }),
+    ipcInvoke('get-steam-data', { appid: appID, type: 'steamhunters', lang }),
   ]);
   const result = resultRaw || {};
   const networkError = result.networkError === true && steamhunters && steamhunters.networkError === true;
@@ -1065,9 +1070,7 @@ async function getSteamDataFromSRV(appID, lang) {
     result.translated &&
     steamhunters?.source !== 'official' &&
     steamhunters?.source !== 'steamcommunity';
-  const steamcommunity = needsTranslations
-    ? await ipcRenderer.invoke('get-steam-data', { appid: appID, type: 'steamcommunity', lang: langObj })
-    : null;
+  const steamcommunity = needsTranslations ? await ipcInvoke('get-steam-data', { appid: appID, type: 'steamcommunity', lang: langObj }) : null;
   const translatedAchievements = Array.isArray(steamcommunity?.achievements) ? steamcommunity.achievements : [];
 
   mergeTranslatedAchievements(achievements, translatedAchievements);
@@ -1076,9 +1079,7 @@ async function getSteamDataFromSRV(appID, lang) {
   // with achievements. Best-effort: untagged entries are left untouched, a failure never fails the load.
   let groupsResult = { ok: false, groups: [] };
   if (result.isGame && achievements.length > 0) {
-    groupsResult = await ipcRenderer
-      .invoke('get-steam-data', { appid: appID, type: 'steamgroups' })
-      .catch(() => ({ ok: false, groups: [] }));
+    groupsResult = (await ipcInvoke('get-steam-data', { appid: appID, type: 'steamgroups' })) || { ok: false, groups: [] };
   }
   if (Array.isArray(groupsResult.groups) && groupsResult.groups.length) {
     achievements = steamSchemaFetch.applySteamHuntersGroups(achievements, groupsResult.groups);
@@ -1129,21 +1130,14 @@ async function getGameAchievementsFromWebAPI(cfg) {
 // paying for the full getSteamDataFromSRV() round-trip.
 async function getSchemaAchievements(cfg) {
   // In the renderer, reuse the main process's complete official -> SteamHunters ->
-  // SteamCommunity -> browser chain. Plain-Node tests have no ipcRenderer and keep the direct,
-  // browser-free endpoint below.
-  try {
-    const { ipcRenderer } = require('electron');
-    if (ipcRenderer && typeof ipcRenderer.invoke === 'function') {
-      const result = await ipcRenderer.invoke('get-steam-data', {
-        appid: cfg.appID,
-        type: 'steamhunters',
-        lang: cfg.lang,
-      });
-      if (result && result.networkError === true) return { achievements: [], networkError: true };
-      return result && Array.isArray(result.achievements) ? result.achievements : [];
-    }
-  } catch {
-    /* Standalone tests use the direct request below. */
+  // SteamCommunity -> browser chain. Anywhere else - the main process, plain-Node tests - there is
+  // no channel to reach it through, and the direct, browser-free endpoint below answers instead.
+  if (ipcAvailable()) {
+    const result = await ipcInvoke('get-steam-data', { appid: cfg.appID, type: 'steamhunters', lang: cfg.lang });
+    if (result && result.networkError === true) return { achievements: [], networkError: true };
+    // Any answer at all is the answer, empty included. Only a null - no channel, or a handler that
+    // rejected - is a non-answer, and falls through to the direct endpoint below.
+    if (result) return Array.isArray(result.achievements) ? result.achievements : [];
   }
   return getGameAchievementsFromWebAPI(cfg);
 }
@@ -1210,7 +1204,6 @@ const getDLCList = (module.exports.getDLCList = async (appID) => {
 async function findInAppList(appID) {
   if (!appID || !(Number.isInteger(appID) && appID > 0)) throw 'ERR_INVALID_APPID';
 
-  const { ipcRenderer } = require('electron');
   const cache = path.join(cacheRoot, 'steam_cache/schema');
   const filepath = path.join(cache, 'appList.json');
 
@@ -1264,7 +1257,8 @@ async function findInAppList(appID) {
   // catalogue answers the same "what's this appid called" question from disk instead of the network.
   const localName = await localSteamCatalogueName(appID);
   if (localName) return localName;
-  const name = await ipcRenderer.invoke('get-steam-data', { appid: appID, type: 'name' });
+  // Every caller already treats a non-string as "not found" and keeps its own fallback name.
+  const name = await ipcInvoke('get-steam-data', { appid: appID, type: 'name' });
   return name;
 }
 
@@ -1770,7 +1764,6 @@ async function findWorkingAssetPath(appid, relativePath, probe = probeUrl) {
 async function GetMissingData(data, showHidden, lang, steamSettings) {
   let updated = false;
   try {
-    const { ipcRenderer } = require('electron');
     let updatedImgs, updatedDesc;
     if (Object.values(data.img).some((im) => !im)) {
       updated = true;
@@ -1792,7 +1785,8 @@ async function GetMissingData(data, showHidden, lang, steamSettings) {
         }
       }
       if (Object.values(data.img).some((im) => !im)) {
-        updatedImgs = await ipcRenderer.invoke('get-steam-data', { appid: data.appid, type: 'common' });
+        // Optional enrichment: an unreachable channel leaves every field on the value it already had.
+        updatedImgs = (await ipcInvoke('get-steam-data', { appid: data.appid, type: 'common' })) || {};
         data.img.header = data.img.header || updatedImgs.header || 'header';
         data.img.background = data.img.background || updatedImgs.background || 'page_bg_generated_v6b';
         data.img.portrait = data.img.portrait || updatedImgs.portrait || null;
@@ -1815,7 +1809,7 @@ async function GetMissingData(data, showHidden, lang, steamSettings) {
     const hasBlankVisible = data.achievement.list.some((ac) => ac.hidden != 1 && (!ac.description || String(ac.description).trim() === ''));
     const hasBlankHidden = data.achievement.list.some((ac) => ac.hidden == 1 && (!ac.description || String(ac.description).trim() === ''));
     if (!triedRecently && (hasBlankVisible || hasBlankHidden)) {
-      updatedDesc = await ipcRenderer.invoke('get-steam-data', { appid: data.appid, type: 'steamhunters', lang });
+      updatedDesc = await ipcInvoke('get-steam-data', { appid: data.appid, type: 'steamhunters', lang });
       // For obscure titles the supplemental lookup can return nothing, leaving `achievements`
       // undefined. Guard against it so a missing response never throws and drops the game.
       const supplemental = updatedDesc && Array.isArray(updatedDesc.achievements) ? updatedDesc.achievements : [];

@@ -7,6 +7,24 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
+## Unreleased
+
+### Fixed
+
+- **Game logos came back empty.** A lint pass had removed a function together with the closing marker
+  of its comment, which silently turned the two declarations below it into prose. Every square game
+  logo went with them: the page header, the notification card, the overlay and the test notification.
+- **The Steam parser threw whenever it ran outside the window.** Five lookups reached for a channel
+  that only exists in the renderer, so from anywhere else they failed with an unreadable type error,
+  once per game.
+
+### Improved
+
+- **A game's own icon is used when it is a good one.** An executable carrying a real 256px icon - the
+  picture Windows paints for it on the desktop - now provides the game's logo ahead of anything
+  looked up, in the app and in notifications. It also works for games with no store artwork at all,
+  which used to be exactly the ones left with an empty square.
+
 ## 3.10.1 - 2026-08-27
 
 ### Added

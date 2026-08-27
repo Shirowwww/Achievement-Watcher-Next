@@ -8,6 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 const { userDataDir } = require('./userData.js');
+const { sharedAppModulePath } = require('./sharedAppModule.js');
 
 function readJson(filePath) {
   try {
@@ -150,6 +151,28 @@ function executableIcon(appid, options = {}) {
 }
 
 /*
+  The same file, but only when it is the game's real, modern icon rather than a legacy stamp.
+
+  At this size it is the picture Windows itself paints for the game, and it beats anything that had
+  to be guessed at or cut out of a poster - so the card takes it before the community icon set, the
+  same order the app's own resolver uses. Below it the icon keeps its later place in the chain.
+*/
+const PREFERRED_EXECUTABLE_ICON_SIDE = 256;
+
+function highResExecutableIcon(appid, options = {}) {
+  const file = executableIcon(appid, options);
+  if (!file) return null;
+  try {
+    const { imageSize } = require(sharedAppModulePath('util/imageSize.js'));
+    const size = imageSize(file);
+    if (!size) return null;
+    return Math.min(size.width, size.height) >= PREFERRED_EXECUTABLE_ICON_SIDE ? file : null;
+  } catch {
+    return null;
+  }
+}
+
+/*
   The icon the user picked for this game on its achievement page (cfg/gameIcons.db, written by
   app/util/gameIconStore.js). It outranks every lookup here for the same reason it does in the app:
   it is the only source that is a decision rather than a guess.
@@ -220,4 +243,4 @@ function steamLibraryImage(appid, options = {}) {
   return `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_600x900.jpg`;
 }
 
-module.exports = { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon };
+module.exports = { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon, highResExecutableIcon };

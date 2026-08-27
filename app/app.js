@@ -1174,6 +1174,26 @@ function headerIconSourcesFor(game) {
   return [img.icon, img.logo, img.portrait, img.header].filter(Boolean);
 }
 
+/*
+  The executable this game runs, for the sole purpose of reading the icon out of it.
+
+  cfg/exeList.db only holds a path once the user has linked one for the Play button, which almost
+  no game has: on its own it left the executable icon unreachable for exactly the cracked and
+  brand-new titles that have no store artwork either. The scan's own detection is the answer, and
+  only when it is confident - the same rule Game Health already applies to it.
+*/
+function gameExecutablePath(game, linkedExe = '') {
+  const linked = String(linkedExe || '').trim();
+  if (linked) return linked;
+  const detected = game && game.exeConfident ? String(game.exe || '').trim() : '';
+  if (!detected) return '';
+  try {
+    return fs.existsSync(detected) ? detected : '';
+  } catch {
+    return '';
+  }
+}
+
 // The first square-ish image the game itself ships, as a file URL. Offline last resort for the
 // header icon and the icon picker's "Game folder" tiles.
 function localGameIconUrls(game) {
@@ -1218,7 +1238,10 @@ async function paintGameHeaderIcon(game) {
   }
 
   const sources = headerIconSourcesFor(game);
-  if (sources.length === 0) {
+  // No store artwork at all is exactly the case the executable's own icon exists for (a cracked or
+  // brand-new title), so the host is still asked; only a game with nothing anywhere paints local.
+  const exe = gameExecutablePath(game);
+  if (sources.length === 0 && !exe) {
     paintLocal();
     return;
   }
@@ -1232,6 +1255,7 @@ async function paintGameHeaderIcon(game) {
       libraryAppid: game.appid,
       name: game.name || '',
       sources,
+      exe,
     });
     if (resolved) {
       paint(imageDisplayUrl(resolved));
@@ -1879,7 +1903,7 @@ function bindGameHeaderIconMenu(game) {
       const menu = new Menu();
       let exePath = '';
       try {
-        exePath = (await exeList.get(appid))?.exe || '';
+        exePath = gameExecutablePath(game, (await exeList.get(appid))?.exe || '');
       } catch {
         /* no configured executable is normal; the picker simply skips that source */
       }

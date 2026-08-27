@@ -111,6 +111,9 @@ lookups it needs, and every answer is cached locally so the library keeps workin
 | Repair tools, when you run a repair | the GBE Fork, Steamless, API-bypass and CrakFiles projects | nothing but the request |
 | Your own library and unlocks, **only if you connect an account** | Steam, Epic or Xbox Network | that account's own session token |
 
+Some of that is not asked for at all: when a game's executable carries a real 256px icon, that icon
+is read straight out of the file and used as the game's logo, ahead of anything on the network.
+
 Nothing is uploaded: not your library, not your playtime, not your folders, not your screenshots.
 The optional `Websocket @localhost:8082` broadcast listens on `127.0.0.1` only, so it is readable by
 programs on this PC and by nothing on the network. A preset or theme you submit to a gallery is the
