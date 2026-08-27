@@ -97,6 +97,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **The update chip stops saying "Checking..." when there is nothing to install.** Being already
+  up to date is the one answer the updater follows with no further event, so the title bar sat on
+  the checking state until the next restart.
+- **The Epic request no longer carries a body on a GET.** The key was passed as undefined rather
+  than left out, which some fetch implementations refuse outright instead of ignoring.
 - **A whole game no longer shows as 100% complete on its first launch.** Some shipped schemas declare
   a minimum and a maximum of 1 on every row, so the emulator writes "1 / 1" for achievements nobody
   earned. The overlay now reads a maximum of 1 as plain locked/unlocked, like the list and the toast.
@@ -191,7 +196,7 @@ renamed in 3.9.0 and the history is kept under one file.
 - Four Slovak strings were written in Czech (*Vzácný* rather than *Vzácny*), one of them the wording
   of every rare-unlock notification.
 - **The websocket broadcast listens on `127.0.0.1` again.** The Settings row is labelled
-  "Websocket @localhost:8082" and the guides promised the local machine, but the listener was given
+  `Websocket @localhost:8082` and the guides promised the local machine, but the listener was given
   no host at all, which in Node means every interface - so the feed was readable, unauthenticated,
   by anything on the network that Windows Firewall let through. It carries game and achievement
   names.

@@ -29,7 +29,7 @@ broadcast listens on the local machine again.
   Settings reported the account disconnected every morning and asked for the password again. A new
   token is now minted silently from the refresh token, with no window and no sign-in.
 - **The websocket broadcast is back on `127.0.0.1`.** The Settings row is labelled
-  "Websocket @localhost:8082" and the guides promised the local machine, but the listener was given
+  `Websocket @localhost:8082` and the guides promised the local machine, but the listener was given
   no host at all - which in Node means every interface. Anything on the same network that Windows
   Firewall let through could read the feed, unauthenticated, and it carries game and achievement
   names. If you deliberately served it to another machine, that now needs an explicit host.
