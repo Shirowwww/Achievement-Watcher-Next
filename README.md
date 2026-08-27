@@ -45,7 +45,7 @@ into one library, with live Windows notifications and an in-game overlay.
 - **Game Health.** Each game has a health panel that says whether it is tracked, why not, and offers
   only the repairs that genuinely apply.
 - **Guided repairs.** Read-only diagnosis, `steam_settings` repair, matched GBE Fork runtime install,
-  architecture-safe automatic Uplay R2 repair, transactional backups and restore.
+  architecture-safe automatic Uplay R1 and R2 repair, transactional backups and restore.
 - **Flexible interface.** Simple and Advanced modes, full controller navigation, 28 bundled
   interface languages, and thirteen built-in palettes - every one of them editable per layer, savable
   as your own and shareable as a portable `.awtheme` with its own
@@ -91,10 +91,11 @@ upgrade imports an older Achievement Watcher folder without modifying it.
 | **Steam-compatible saves** | Goldberg, GBE Fork, GreenLuma, LumaPlay, SmartSteamEmu, CreamAPI, Nemirtingas and compatible layouts |
 | **GOG Galaxy** | Native local Galaxy databases and compatible legacy saves |
 | **Epic Games** | Local installations, and official achievement state after an optional account connection |
-| **Ubisoft Connect** | Native local data, legacy Uplay formats and compatible Uplay R2 setups |
+| **Ubisoft Connect** | Native local data, legacy Uplay formats and compatible Uplay R1 and R2 setups |
 | **EA Desktop** | Achievement events from the local EA Desktop log, for games outside EA's managed folders |
 | **Console emulators** | RPCS3, ShadPS4 and Xenia, each watched live |
 | **Xbox PC** | Local Game Pass / Microsoft Store installs, plus imported Xbox Network state |
+| **Games for Windows LIVE** | XLiveLessNess profiles, with the achievement list, its texts and its icons read from the game's own executable |
 
 Sources are controlled individually, and no Steam Web API key is used: achievement lists come from
 public endpoints and are cached locally.

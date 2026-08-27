@@ -121,6 +121,8 @@ directly, with no emulator executable anywhere near it.
 
 | Source | What it is |
 |---|---|
+| **Games for Windows LIVE** | XLiveLessNess installs. Each profile's unlock records are read, and the achievement list, its texts and its icons come out of the game's own executable, so nothing has to be downloaded. Watched live. |
+| **FINAL FANTASY VII (2013)** | That re-release predates Steamworks achievements and keeps its 36 unlocks in an 8-byte bitfield beside its saves, found in Documents without adding the folder by hand. |
 | **Import notification cache** | Reads the background tracker's own cache as an extra source of past unlocks. |
 | **Manually added games** | A game added from a title and executable, with an optional platform and Steam AppID - see [Advanced tools](advanced.md#add-a-game-manually). |
 
