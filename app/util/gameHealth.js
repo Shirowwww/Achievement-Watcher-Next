@@ -16,7 +16,8 @@ const ACTION = {
   OPEN_FOLDER: 'open-folder', //  shell.openPath(gameDir)
   REPAIR_DATA: 'repair-data', //  goldberg.repair() - writes schema + icons + configs, backs up first
   REPAIR_UPLAY: 'repair-uplay', // shared Uplay R2 transaction - loader/schema/config + rollback
-  REPAIR_UPLAY_TICKET: 'repair-uplay-ticket', // uplayR2.setSessionTicket - one ini key, on or off
+  REPAIR_UPLAY_TICKET: 'repair-uplay-ticket', // uplayR2.setSessionTicket({enabled:true}) - one ini key
+  REMOVE_UPLAY_TICKET: 'remove-uplay-ticket', // uplayR2.setSessionTicket({enabled:false}) - takes it back
   INSTALL_RUNTIME: 'install-runtime', // gbeInstaller.installDlls() - backs up replaced dlls as .bak
   START_TRACKING: 'start-tracking', //  gameIndex.upsert() - the same seed the scan writes
   UNMUTE_PROGRESS: 'unmute-progress', // progressMute.toggle()
@@ -90,6 +91,8 @@ const ISSUE_TOPIC = {
   LOADER_NO_ACH_REDIRECT: 'loader',
   NO_SESSION_TICKET: 'session',
   SESSION_TICKET_NO_EFFECT: 'session',
+  SESSION_TICKET_PENDING: 'session',
+  SESSION_TICKET_UNSUPPORTED: 'session',
   NO_UPLAY_R2_DLL: 'loader',
   NOT_UPLAY_R2_LOADER: 'loader',
   LOADER_ARCH_MISMATCH: 'loader',
@@ -275,12 +278,27 @@ function uplayCheck(signals) {
         mappingMode: uplay.mapping.manual ? 'manual' : uplay.mapping.automatic ? 'automatic' : 'built-in',
       }
     : {};
-  // Kept outside REPAIRABLE_UPLAY_CODES since a game that never asked the loader for anything isn't
-  // broken; this writes one reversible ini key instead of being offered unconditionally.
-  const withTicketFix = (actions) =>
-    (uplay.issues || []).some((issue) => issue.code === 'NO_SESSION_TICKET' || issue.code === 'SESSION_TICKET_NO_EFFECT')
-      ? [...actions, ACTION.REPAIR_UPLAY_TICKET]
-      : actions;
+  /*
+    Kept outside REPAIRABLE_UPLAY_CODES since a game that never asked the loader for anything isn't
+    broken; this writes one reversible ini key instead of being offered unconditionally.
+
+    Which of the two actions is offered follows the key that is actually on disk, so the button says
+    what pressing it does. One action that flipped meaning silently read as if the last press had not
+    registered: it still said "Enable" over a game whose ticket was already written.
+  */
+  const ticketCodes = new Set((uplay.issues || []).map((issue) => issue && issue.code));
+  // What the row has to SAY about the setting, so a green row that suddenly grew a "turn it off"
+  // button explains itself instead of looking like a leftover.
+  const ticketState = ticketCodes.has('SESSION_TICKET_PENDING')
+    ? 'pending'
+    : ticketCodes.has('SESSION_TICKET_NO_EFFECT')
+      ? 'no-effect'
+      : ticketCodes.has('SESSION_TICKET_UNSUPPORTED')
+        ? 'unsupported'
+        : '';
+  const ticketAction = ticketCodes.has('NO_SESSION_TICKET') ? ACTION.REPAIR_UPLAY_TICKET : ticketState ? ACTION.REMOVE_UPLAY_TICKET : null;
+  const withTicketFix = (actions) => (ticketAction ? [...actions, ticketAction] : actions);
+  const ticketParams = ticketState ? { ticket: ticketState } : {};
 
   const errors = issuesAtLevel(uplay, 'error');
   if (errors.length > 0) {
@@ -288,7 +306,7 @@ function uplayCheck(signals) {
     // resolver first, then the validated manual picker, same recovery path as the context menu.
     const actions = withTicketFix(errors.some((issue) => REPAIRABLE_UPLAY_CODES.has(issue.code)) ? [ACTION.REPAIR_UPLAY] : []);
     return check('uplay', LEVEL.FAIL, {
-      params: { topics: issueTopics(errors), ...mappingParams },
+      params: { topics: issueTopics(errors), ...mappingParams, ...ticketParams },
       blocking: !uplay.mapping,
       actions,
     });
@@ -296,9 +314,9 @@ function uplayCheck(signals) {
   const warnings = issuesAtLevel(uplay, 'warning');
   if (warnings.length > 0) {
     const actions = withTicketFix(warnings.some((issue) => REPAIRABLE_UPLAY_CODES.has(issue.code)) ? [ACTION.REPAIR_UPLAY] : []);
-    return check('uplay', LEVEL.WARN, { params: { topics: issueTopics(warnings), ...mappingParams }, actions });
+    return check('uplay', LEVEL.WARN, { params: { topics: issueTopics(warnings), ...mappingParams, ...ticketParams }, actions });
   }
-  return check('uplay', LEVEL.OK, { params: mappingParams });
+  return check('uplay', LEVEL.OK, { params: { ...mappingParams, ...ticketParams }, actions: withTicketFix([]) });
 }
 
 // Has anything actually been unlocked or recorded yet: "has progress data" vs "has nowhere to

@@ -35,7 +35,7 @@ part is at fault, and any repair button acts on exactly that.
 | **Game identity** | Which AppID and platform was this game matched to? |
 | **Achievement data** | Is there an achievement list, and is it complete? |
 | **Emulator setup** | Does a game that needs a Steam emulator have one, and which one is serving it? |
-| **Ubisoft session** | For a Ubisoft game, did it ever ask the loader to unlock anything, or does it think it is signed out? |
+| **Offline achievements** | For a Ubisoft game, did it ever ask the loader to unlock anything, or does it think it is signed out? |
 | **Progress** | Has any unlock or save been found yet? |
 | **Live tracking** | Is the background tracker watching this game's process? |
 | **Notifications** | Which transport delivered the last notification for this game, and why? |
@@ -86,7 +86,8 @@ without a backup, and no repair runs without a confirmation.
 | *AW Next isn't watching this game while it runs* | **Watch this game** adds it to the tracker. |
 | *The last notification could not be sent* | Send a test notification, then see [Notifications](notifications.md#if-a-test-or-unlock-does-not-appear). |
 | *Working - Windows fallback active* | Not a fault. Automatic delivery chose a Windows notification for this game; see [how Automatic decides](notifications.md#how-automatic-decides). |
-| *The game has never asked for an achievement* | It reads its empty Ubisoft session as signed out. **Enable achievements offline** unblocks it; nothing is sent anywhere. |
+| *The game has never asked for an achievement* | It reads its empty Ubisoft session as signed out. **Enable achievements offline** unblocks it; nothing is sent anywhere. Launch the game once afterwards - the row then reads *Offline achievements on, launch the game once* until you have. |
+| *Offline achievements on, launch the game once* | The setting is written and nothing has been judged yet. The button beside it now reads **Turn offline achievements off**, and takes it back out. |
 | *Served by ALI213, OnlineFix, GBE Fork…* | The emulator actually reading that game, named from its own files. A Ubisoft game already served this way is not offered a Uplay repair: its Uplay layer is unused, not broken. |
 
 ---

@@ -528,27 +528,47 @@ function fakePe(arch, text = '') {
     console.log('PASS: a zero-padded Steam schema round-trips through repair, diagnose and read-back');
 
     /*
-      Re-applying a fix that changes the keys must also let the loader rebuild its runtime save, which
-      it only seeds when the file is absent. The empty leftover goes; anything holding an unlock, or
-      still sharing a key with the new schema, is left exactly where it is.
+      A repair has to reach the loader's own runtime file, because the loader will never read the
+      schema again on its own.
+
+      Confirmed by disassembling both generations (upc_r2_loader64.dll and uplay_r1_loader64.dll
+      carry byte-identical logic): the schema is parsed only when Achievements is 1, the schema file
+      exists AND <AchSavePath>chievements.json does not. Once seeded, every later launch logs
+      "Skip parsing of achievements schema!" and serves the list it already has - so a rewritten
+      schema (a language change, a blank-name repair, achievements a game update added) never
+      reached the game. Rebuilding that file, rather than deleting it, is what keeps progress.
     */
     const staleSaveFile = path.join(paddedSaveDir, 'achievements.json');
-    const stale = (contents) => {
-      fs.writeFileSync(staleSaveFile, JSON.stringify(contents));
-      return uplayR2.removeStaleRuntimeSave(paddedSaveDir, { 1: {}, 2: {}, 67: {} });
+    const schemaNow = { 1: { displayName: 'One', description: 'first', earned: 0 }, 2: { displayName: 'Two', description: '', earned: 0 } };
+    const refresh = (contents) => {
+      // Indented like the refresh writes it, so "changed" means the CONTENT changed, not the layout.
+      fs.writeFileSync(staleSaveFile, JSON.stringify(contents, null, 2));
+      const changed = uplayR2.refreshRuntimeSave(paddedSaveDir, schemaNow);
+      return { changed, saved: JSON.parse(fs.readFileSync(staleSaveFile, 'utf8')) };
     };
-    assert.strictEqual(stale({ '001': { earned: 0 }, '002': { earned: 0 } }), true, 'an unreachable, empty runtime save is rebuilt');
-    assert.strictEqual(fs.existsSync(staleSaveFile), false);
-    assert.strictEqual(stale({ '001': { earned: 1 } }), false, 'a save holding an unlock is never removed');
-    assert.strictEqual(stale({ 1: { earned: 0 }, '002': { earned: 0 } }), false, 'a save the new schema still addresses is kept');
-    assert.strictEqual(stale({}), false);
-    // "constructor" is not a key of the schema, only of every object: an own-property test is what
-    // keeps it unreachable-and-removable instead of silently protecting the file.
-    assert.strictEqual(stale({ constructor: { earned: 0 } }), true);
+
+    const renamed = refresh({ 1: { displayName: 'Un', description: 'premier', earned: 0 }, 2: { displayName: 'Deux', description: '', earned: 0 } });
+    assert.strictEqual(renamed.changed, true, 'the text the game shows has to follow the schema that was just written');
+    assert.strictEqual(renamed.saved['1'].displayName, 'One');
+
+    const withProgress = refresh({ 1: { displayName: 'Un', description: 'premier', earned: true, earned_time: 1750000000 } });
+    assert.strictEqual(withProgress.changed, true);
+    assert.strictEqual(withProgress.saved['1'].earned, true, 'an unlock is never lost to a repair');
+    assert.strictEqual(withProgress.saved['1'].earned_time, 1750000000, 'nor is anything else the loader wrote beside it');
+    assert.strictEqual(withProgress.saved['1'].displayName, 'One', 'but the text still follows the schema');
+    assert.ok(Object.prototype.hasOwnProperty.call(withProgress.saved, '2'), 'and an achievement the schema adds appears');
+
+    const dropped = refresh({ 1: { earned: 0 }, 2: { earned: 0 }, 67: { earned: true, earned_time: 1750000009 } });
+    assert.strictEqual(dropped.saved['67'].earned, true, 'a recorded unlock the new schema no longer names is still kept');
+
+    const alreadyRight = refresh(JSON.parse(JSON.stringify(schemaNow)));
+    assert.strictEqual(alreadyRight.changed, false, 'a file that already matches is not rewritten');
+
     fs.rmSync(staleSaveFile, { force: true });
-    assert.strictEqual(uplayR2.removeStaleRuntimeSave(paddedSaveDir, { 1: {} }), false, 'a missing save is not an error');
-    assert.strictEqual(uplayR2.removeStaleRuntimeSave('', { 1: {} }), false);
-    console.log('PASS: repair only clears a runtime save that provably holds nothing');
+    assert.strictEqual(uplayR2.refreshRuntimeSave(paddedSaveDir, schemaNow), false, 'a missing save is left for the loader to seed');
+    assert.strictEqual(uplayR2.refreshRuntimeSave('', schemaNow), false);
+    assert.strictEqual(uplayR2.refreshRuntimeSave(paddedSaveDir, {}), false, 'an empty schema is never written over a real save');
+    console.log('PASS: a repair rewrites the runtime save from the new schema without losing progress');
 
     /*
       Games whose Steam api-names carry no objective id at all (Brawlhalla, The Crew 2, ZOMBI, most

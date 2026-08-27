@@ -44,7 +44,9 @@ Loader configuration stays automatic. AW Next selects the proven architecture an
 required schema and configuration during repair; loader and INI options are not exposed in the app.
 
 The four integrated DLLs are visible in `app/resources/uplayR2/`. A recovery archive is kept beside
-them in case antivirus software removes a loose DLL. A manually selected DLL does not need a known
+them in case antivirus software removes a loose DLL. When both are gone, or the archive cannot be
+read because it was quarantined mid-way, AW Next says so as an antivirus problem and offers to allow
+the folder and put the files back, rather than asking you to find a package on your disk. A manually selected DLL does not need a known
 SHA-256 fingerprint, but it must still be a valid achievement-capable Uplay R2 PE with a coherent
 name and architecture. The integrated x64 aliases use the July 2026 loader build; the x86 aliases
 remain on the June 2026 build.
@@ -161,8 +163,16 @@ like a session token, not a real Ubisoft session: no account is involved, nothin
 nothing is sent anywhere. It only gets a game that checks whether a token exists past that check.
 
 It is never written automatically, because the emulator's authors warn that a token which is not
-legitimate breaks some games, and breaking a game that works would be worse. Press the button again
-to take the key back out; the game then believes it is signed out again.
+legitimate breaks some games, and breaking a game that works would be worse.
+
+**Launch the game once after switching it on.** Until you have, the row reads *Offline achievements
+on, launch the game once* and nothing is judged: the loader's log still holds the run from before.
+The button beside it then reads **Turn offline achievements off**, which takes the key back out and
+leaves the game believing it is signed out again.
+
+Only loaders that actually read the key are offered this. R1 builds do not have it - their INI
+carries an unrelated `TickedId` instead - and a `Ticket` line an older AW Next wrote into such a
+folder is removed on sight, since it never did anything there.
 
 Games whose Steam achievements do not follow a safe Steam-to-Ubisoft objective-ID convention remain
 unsupported. See the

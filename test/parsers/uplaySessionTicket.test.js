@@ -247,3 +247,157 @@ test('an overgrown loader log is cleared, a useful one is left alone', () => {
 });
 
 test.after(() => fs.rmSync(tmp, { recursive: true, force: true }));
+
+/*
+  The capability probe reads ini KEYS, and every Uplay loader exports UPLAY_USER_GetTicketUtf8 and
+  UPLAY_ACH_GetAchievements. A substring search therefore answered yes for builds that read neither,
+  which is how an R1 loader - whose session key is spelled TickedId, and which has no Ticket setting
+  at all - was offered the offline achievements fix on South Park: The Fractured but Whole, had a
+  dead line written into its ini, and was then reported as "the ticket had no effect" for good.
+*/
+test('the key probe reads ini keys, not the export names they hide inside', () => {
+  const dir = path.join(tmp, 'R1Exports');
+  fs.mkdirSync(dir, { recursive: true });
+  const dll = path.join(dir, 'uplay_r1_loader64.dll');
+  fs.writeFileSync(dll, fakePe('x64', 'UPLAY_USER_GetTicketUtf8 UPLAY_ACH_GetAchievements TickedId AchKeyPrefix AchSaveType AchSavePath'));
+
+  const caps = uplayR2.inspectInstalledLoaders([dll]);
+  assert.equal(caps.supportsTicket, false, 'UPLAY_USER_GetTicketUtf8 is not a Ticket setting');
+  assert.equal(caps.supportsAchievements, false, 'UPLAY_ACH_GetAchievements is not an Achievements setting');
+  assert.equal(caps.supportsAchKeyPrefix, true, 'the keys that really are there still have to be found');
+});
+
+// The line those earlier builds wrote is still in people's folders. It reads from nowhere, so it is
+// reported wherever it is found - the log is not consulted for this - and the panel offers to remove it.
+test('a ticket a loader cannot read is reported so it can be taken back out', () => {
+  const dir = game('DeadTicket', { inis: ['upc_r1.ini'], body: '[Uplay]\nAchievements = 1\nTickedId = noT456umPqRt\n' });
+  fs.rmSync(path.join(dir, 'upc_r2_loader64.dll'));
+  fs.writeFileSync(path.join(dir, 'uplay_r1_loader64.dll'), fakePe('x64', 'UPLAY_USER_GetTicketUtf8 Achievements AchKeyPrefix AchSaveType AchSavePath'));
+  fs.appendFileSync(path.join(dir, 'upc_r1.ini'), `Ticket=${uplayR2.SESSION_TICKET}\n`);
+
+  const issues = uplayR2.diagnose({
+    gameDir: dir,
+    appid: FIXTURE_APPID,
+    mapping: { uplay_id: '3088', steam_appid: FIXTURE_APPID, steam_name: 'South Park: The Fractured but Whole' },
+    flavour: 'r1',
+  }).issues;
+  assert.ok(issues.some((i) => i.code === 'SESSION_TICKET_UNSUPPORTED'), `the dead line has to be named: ${JSON.stringify(issues.map((i) => i.code))}`);
+  assert.deepEqual(issues.filter((i) => i.code === 'SESSION_TICKET_NO_EFFECT'), [], 'a key nothing reads cannot be said to have had no effect');
+});
+
+/*
+  "The game asked for nothing" only means anything once the game has run since the ticket was
+  written. Judging it before that convicted the fix seconds after applying it - the panel said it had
+  changed nothing before the game had been launched even once.
+*/
+test('a ticket the game has not run against yet is not judged', () => {
+  const dir = game('Pending');
+  repairInto(dir, ['AFOP_Ach_1']);
+  // The log is from before the fix, which is the whole point: the ini is written after it.
+  fs.writeFileSync(path.join(dir, 'upc_r2.log'), SILENT_LOG);
+  const old = new Date(Date.now() - 60_000);
+  fs.utimesSync(path.join(dir, 'upc_r2.log'), old, old);
+  uplayR2.setSessionTicket({ dir, enabled: true });
+
+  const issues = uplayR2.diagnose({
+    gameDir: dir,
+    appid: FIXTURE_APPID,
+    mapping: { uplay_id: '4740', steam_appid: FIXTURE_APPID, steam_name: 'Avatar: Frontiers of Pandora' },
+    flavour: 'r2',
+  }).issues;
+  const pending = issues.find((i) => i.code === 'SESSION_TICKET_PENDING');
+  assert.ok(pending, `nothing has been tried yet: ${JSON.stringify(issues.map((i) => i.code))}`);
+  assert.equal(pending.level, 'info', 'a fix waiting on the next launch is not a fault');
+  assert.deepEqual(issues.filter((i) => i.code === 'SESSION_TICKET_NO_EFFECT'), [], 'and it must not be convicted before it has run');
+});
+
+/*
+  The state of the setting is read from the ini, never from the loader log.
+
+  The log can simply not be there - a fresh folder, or a repair having just cleared an overgrown one
+  - and when the state was derived from it the whole setting vanished from the panel along with it:
+  switched on, no button, no way back off except by editing the file by hand.
+*/
+test('a ticket stays visible, and reversible, with no loader log at all', () => {
+  const dir = game('NoLog');
+  repairInto(dir, ['AFOP_Ach_1']);
+  uplayR2.setSessionTicket({ dir, enabled: true });
+  fs.rmSync(path.join(dir, 'upc_r2.log'), { force: true });
+
+  const issues = uplayR2.diagnose({
+    gameDir: dir,
+    appid: FIXTURE_APPID,
+    mapping: { uplay_id: '4740', steam_appid: FIXTURE_APPID, steam_name: 'Avatar: Frontiers of Pandora' },
+    flavour: 'r2',
+  }).issues;
+  assert.ok(
+    issues.some((i) => i.code === 'SESSION_TICKET_PENDING'),
+    `the setting has to report itself without the log: ${JSON.stringify(issues.map((i) => i.code))}`
+  );
+});
+
+/*
+  The dead line an earlier build wrote is taken back automatically. It was AW Next's own mistake, on
+  a loader with no Ticket setting to read it from, so there is no decision here for anyone to make -
+  only a warning about a setting that was never real, and a button to undo somebody else's bug.
+*/
+test("AW Next's own dead ticket is removed without asking; somebody else's is left alone", () => {
+  const withR1Loader = (name, ticket) => {
+    const dir = game(name, { inis: ['upc_r1.ini'], body: '[Uplay]\nAchievements = 1\nTickedId = noT456umPqRt\n' });
+    fs.rmSync(path.join(dir, 'upc_r2_loader64.dll'));
+    fs.writeFileSync(path.join(dir, 'uplay_r1_loader64.dll'), fakePe('x64', 'UPLAY_USER_GetTicketUtf8 Achievements AchKeyPrefix AchSaveType AchSavePath'));
+    fs.appendFileSync(path.join(dir, 'upc_r1.ini'), `Ticket=${ticket}\n`);
+    return dir;
+  };
+
+  const ours = withR1Loader('DeadOurs', uplayR2.SESSION_TICKET);
+  assert.equal(uplayR2.removeUnsupportedTicket(ours), true);
+  assert.doesNotMatch(read(ours, 'upc_r1.ini'), /^Ticket=/m, 'the line goes');
+  assert.match(read(ours, 'upc_r1.ini'), /TickedId = noT456umPqRt/, 'and nothing else in the file is touched');
+  assert.equal(uplayR2.removeUnsupportedTicket(ours), false, 'a folder with nothing to clean is not rewritten');
+
+  // Someone else's value is their business: it is reported, and its button stays.
+  const theirs = withR1Loader('DeadTheirs', 'a-ticket-somebody-put-here-themselves');
+  assert.equal(uplayR2.removeUnsupportedTicket(theirs), false);
+  assert.match(read(theirs, 'upc_r1.ini'), /^Ticket=a-ticket-somebody/m);
+
+  // And a loader that CAN read the key never has its ticket cleaned away.
+  const supported = game('Supported');
+  uplayR2.setSessionTicket({ dir: supported, enabled: true });
+  assert.equal(uplayR2.removeUnsupportedTicket(supported), false, 'a working setting is not a dead line');
+  assert.equal(uplayR2.hasSessionTicket(supported), true);
+});
+
+/*
+  An antivirus taking the loader is reported as an antivirus, not as a broken app.
+
+  Windows Defender quarantined all four copies of the Uplay R1 loader in one go - the two shipped
+  with the app included - and the only thing the user saw from here was "Bundled UPLAYR1 loaders and
+  recovery archive are unavailable", which reads as a bug in the app rather than as the alert their
+  antivirus had just raised. Tagging it routes it to the explanation the app already has.
+*/
+test('a quarantined loader package is reported as an antivirus, with a folder to allow', () => {
+  const installer = require('../../app/parser/uplayR2Installer.js');
+
+  // 7za says what really happened in its stderr; node-7z's own message is only the archive path.
+  const blocked = installer.quarantineError({ stderr: 'ERROR: C:/loader.7z : The file contains a virus' }, 'C:/cache');
+  assert.ok(blocked, 'an antivirus message in stderr is the whole signal');
+  assert.equal(blocked.code, 'EMULATOR_PACKAGE_BLOCKED', 'the code the app keys its explanation on');
+  assert.equal(blocked.folder, 'C:/cache', 'and the folder to allow');
+  assert.match(blocked.message, /antivirus/i);
+
+  // A real archive fault stays a real archive fault; wrongly blaming the antivirus would send the
+  // user off to whitelist a file that was never the problem.
+  assert.equal(installer.quarantineError({ stderr: 'ERROR: Unexpected end of archive' }, 'C:/cache'), null);
+  assert.equal(installer.quarantineError({}, 'C:/cache'), null);
+});
+
+// The other half of the same event: the loaders shipped with the app are simply gone from disk.
+test('bundled loaders that vanished are blamed on the antivirus, not on the app', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'uplayR2Installer.js'), 'utf8');
+  assert.match(source, /const missing = Object\.keys\(bundle\.sha256\)\.filter\(\(name\) => !fs\.existsSync\(path\.join\(source, name\)\)\)/);
+  assert.match(source, /gone\.code = 'EMULATOR_PACKAGE_BLOCKED';/, 'so the same dialog covers it');
+  // Missing is not the same as corrupt: a file that is there but wrong is a bug, and must keep its
+  // own message rather than being explained away as somebody's antivirus.
+  assert.match(source, /missing\.length > 0\s*\?/);
+});

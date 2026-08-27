@@ -14,12 +14,29 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Game logos came back empty.** A lint pass had removed a function together with the closing marker
   of its comment, which silently turned the two declarations below it into prose. Every square game
   logo went with them: the page header, the notification card, the overlay and the test notification.
+- **The offline achievements fix was offered on games that cannot use it.** The check for the setting
+  matched a name the loader exports rather than the setting itself, so it said yes for every Ubisoft
+  loader, including the older generation that has no such setting at all. Those games had a line
+  written into their configuration that did nothing, and were then reported forever as a fix that had
+  changed nothing. The line is now taken back out on sight.
+- **The button did not follow what it had just done.** After switching offline achievements on it
+  still read *Enable achievements offline*, and pressing it again opened a dialog about removing it.
+  It now says which way it goes, the confirmation matches, and the row reads *Offline achievements
+  on, launch the game once* until the game has actually run.
+- **A repair no longer stopped at the emulator's door.** The loader reads the achievement list only
+  once, to create its own copy; every later launch skips it. A repair could therefore rewrite that
+  list - a language change, a blank-name fix, achievements added by a game update - and the game
+  would go on showing the old one. The copy is now brought in line, keeping every unlock.
 - **The Steam parser threw whenever it ran outside the window.** Five lookups reached for a channel
   that only exists in the renderer, so from anywhere else they failed with an unreadable type error,
   once per game.
 
 ### Improved
 
+- **An antivirus is named as an antivirus.** These loaders replace a game's store library, which is
+  what detection engines look for, and Windows Defender takes every copy at once. That was reported
+  as a failure of the repair; it now gets the explanation, an offer to allow the folder in Defender,
+  and a button to put the files back - instead of a file picker asking for a package you never had.
 - **A game's own icon is used when it is a good one.** An executable carrying a real 256px icon - the
   picture Windows paints for it on the desktop - now provides the game's logo ahead of anything
   looked up, in the app and in notifications. It also works for games with no store artwork at all,

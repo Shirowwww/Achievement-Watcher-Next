@@ -166,6 +166,13 @@ can also trigger heuristic detections. Download only from the [official Releases
 
 Do not disable system-wide protection. Submit a false-positive report to the antivirus vendor when a file from the official release is incorrectly quarantined.
 
+The emulator and loader DLLs are the ones this happens to: they replace a game's Steam or Ubisoft
+library, which is the shape antivirus detection looks for. Windows Defender takes every copy at once,
+including the ones installed with the app. AW Next recognises that and explains it instead of
+reporting a failure of its own, with a button to allow the folder in Defender and another to restore
+the files it ships. **Settings → Emulators → Ubisoft / Uplay R1/R2 → Restore integrated DLLs** does
+the same thing at any time.
+
 ## The window does not open
 
 - Use the tray icon in case the app started hidden.

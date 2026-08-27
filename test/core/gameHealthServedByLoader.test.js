@@ -92,3 +92,39 @@ test('a game another emulator serves is offered neither', () => {
   });
   assert.deepEqual(row.actions, [], 'its achievements come from somewhere else entirely');
 });
+
+/*
+  Which of the two ticket buttons is offered follows the key that is actually on disk, so the button
+  always says what pressing it does. A single action that flipped meaning silently read as if the
+  last press had not registered: the panel still said "Enable achievements offline" over a game whose
+  ticket was already written, and pressing it again opened a dialog about removing it.
+*/
+test('once the ticket is written the panel offers to take it back, not to write it again', () => {
+  for (const code of ['SESSION_TICKET_NO_EFFECT', 'SESSION_TICKET_PENDING', 'SESSION_TICKET_UNSUPPORTED']) {
+    const level = code === 'SESSION_TICKET_PENDING' ? 'info' : 'warning';
+    const row = uplayRow(ticketSignals([{ level, code, message: 'a ticket is configured' }]));
+    assert.ok(row.actions.includes(gameHealth.ACTION.REMOVE_UPLAY_TICKET), `${code} must offer the removal`);
+    assert.ok(!row.actions.includes(gameHealth.ACTION.REPAIR_UPLAY_TICKET), `${code} must not offer to write it again`);
+  }
+});
+
+// A ticket the game has not been launched against yet raises no warning at all, so the row is clean -
+// and the removal still has to be reachable from it, or the setting becomes one-way.
+test('a ticket waiting on the next launch keeps its button on an otherwise healthy row', () => {
+  const row = uplayRow(ticketSignals([{ level: 'info', code: 'SESSION_TICKET_PENDING', message: 'not launched since' }]));
+  assert.equal(row.level, gameHealth.LEVEL.OK, 'nothing has gone wrong yet, so nothing is flagged');
+  assert.deepEqual(row.actions, [gameHealth.ACTION.REMOVE_UPLAY_TICKET]);
+});
+
+// A row that goes green and grows a "turn it off" button has to say why the button is there, or the
+// player who just pressed "Enable" reads the silence as the press having done nothing.
+test('a ticket waiting on the next launch says so on the row', () => {
+  const row = uplayRow(ticketSignals([{ level: 'info', code: 'SESSION_TICKET_PENDING', message: 'not launched since' }]));
+  assert.equal(row.params.ticket, 'pending', 'the row has to be able to name the state it is in');
+
+  const judged = uplayRow(ticketSignals([{ level: 'warning', code: 'SESSION_TICKET_NO_EFFECT', message: 'still nothing' }]));
+  assert.equal(judged.params.ticket, 'no-effect');
+
+  const clean = uplayRow(ticketSignals([{ level: 'warning', code: 'NO_SESSION_TICKET', message: 'never asked' }]));
+  assert.equal(clean.params.ticket, undefined, 'a setting that is off has no state to describe');
+});

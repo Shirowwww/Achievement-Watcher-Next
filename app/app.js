@@ -484,26 +484,75 @@ async function ensureUplayR2Package({ interactive = true, forceImport = false } 
   if (cache.seeded && !forceImport) return cache;
   if (!interactive) {
     const invalid = cache.invalid.map((entry) => `${entry.name || path.basename(entry.file)}: ${entry.error}`).join(', ');
-    throw new Error(`Uplay R1/R2 package is not available${bundledError ? ` (${formatErr(bundledError)})` : invalid ? ` (${invalid})` : ''}`);
+    const failure = new Error(`Uplay R1/R2 package is not available${bundledError ? ` (${formatErr(bundledError)})` : invalid ? ` (${invalid})` : ''}`);
+    // Carry the cause forward: a caller that can explain an antivirus should not lose the one fact
+    // that tells it to, just because the wrapper rephrased the message.
+    if (isEmulatorPackageBlocked(bundledError)) {
+      failure.code = bundledError.code;
+      failure.folder = bundledError.folder;
+    }
+    throw failure;
   }
 
+  /*
+    An antivirus took the loaders AW Next installs with itself. Asking someone to go and find a
+    package on their disk is the wrong question then - the right one is "allow this, and I will put
+    them back", which is what the antivirus dialog offers.
+  */
+  if (isEmulatorPackageBlocked(bundledError)) {
+    await reportEmulatorPackageBlocked(bundledError, { retry: () => ensureUplayR2Package({ interactive, forceImport }) });
+    return null;
+  }
+
+  /*
+    These loaders ship with the app, so restoring them is one button and no decision - that is the
+    answer for almost everyone reaching this dialog, and it is what it now leads with. Picking a
+    package by hand stays for people running their own build of the loader.
+  */
+  const buttons = [t('cancel', 'Cancel', 'Annuler'), t('select-file', 'Select file…', 'Sélectionner le fichier…')];
+  buttons.push(t('uplay-r2-restore-bundled', 'Restore the app’s own files', 'Restaurer les fichiers de l’app'));
   const choice = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
     type: 'warning',
     title: t('uplay-r2-dll-not-seeded', 'Uplay R1/R2 dll not seeded', 'DLL Uplay R1/R2 manquantes'),
     message: t('no-files-found-in-the-uplay-r2-cache', 'No files found in the Uplay R1/R2 cache.', 'Aucun fichier trouvé dans le cache Uplay R1/R2.'),
-    detail:
+    detail: [
+      t(
+        'uplay-r2-restore-detail',
+        'These loaders are installed with the app, so they can simply be put back. Selecting a package by hand is only needed to use your own build of the loader.',
+        'Ces loaders sont installés avec l’app, ils peuvent donc simplement être remis en place. Sélectionner un paquet à la main ne sert qu’à utiliser ta propre version du loader.'
+      ),
       t(
         'copy-the-uplay-r2-loader-64-dll-upc-r2-loader-64-dll-files-into-',
         'Select your Uplay R1/R2 package once. AW Next will import only validated x86/x64 loader DLLs into:\n{dir}',
         'Sélectionne une fois ton paquet Uplay R1/R2. AW Next importera uniquement les DLL x86/x64 validées dans :\n{dir}',
         { dir: cacheDir }
-      ) +
-      (cache.invalid.length ? `\n\n${cache.invalid.map((entry) => `${entry.name || path.basename(entry.file)}: ${entry.error}`).join('\n')}` : ''),
-    buttons: [t('cancel', 'Cancel', 'Annuler'), t('select-file', 'Select file…', 'Sélectionner le fichier…')],
-    defaultId: 1,
+      ),
+      // Why the automatic attempt did not work, rather than leaving the user to guess it never ran.
+      bundledError ? formatErr(bundledError) : '',
+      cache.invalid.length ? cache.invalid.map((entry) => `${entry.name || path.basename(entry.file)}: ${entry.error}`).join('\n') : '',
+    ]
+      .filter(Boolean)
+      .join('\n\n'),
+    buttons,
+    defaultId: buttons.length - 1,
     cancelId: 0,
     noLink: true,
   });
+  if (choice === buttons.length - 1) {
+    try {
+      const restored = await uplayR2Installer.ensureBundledEmulatorDlls({ cacheDir, log: debug, replaceExisting: true });
+      if (!restored.complete) throw new Error('The files installed with the app did not provide every Uplay R1/R2 loader');
+      return restored;
+    } catch (err) {
+      // The restore hits the same files, so it can hit the same antivirus - and this is the moment
+      // the exclusion offer is worth most, since the user is one press away from being done.
+      if (isEmulatorPackageBlocked(err)) {
+        await reportEmulatorPackageBlocked(err, { retry: () => ensureUplayR2Package({ interactive, forceImport }) });
+        return null;
+      }
+      throw err;
+    }
+  }
   if (choice !== 1) return null;
   const picked = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
     title: t('select-file', 'Select file…', 'Sélectionner le fichier…'),
@@ -2354,11 +2403,22 @@ function sourcePresentationFor(game) {
 // instead of a bare error, shown once per session. Returns whether it handled the error.
 let emulatorPackageBlockedShown = false;
 
+function isEmulatorPackageBlocked(err) {
+  const code = err && err.code;
+  // Two packages, one cause: the Goldberg emulator AW Next downloads, and the Uplay loaders it ships
+  // with itself. Both replace a game's store library, which is the shape antivirus detection looks
+  // for, and both used to fail with a message about the app rather than about the antivirus.
+  return code === 'GBE_DOWNLOAD_BLOCKED' || code === 'EMULATOR_PACKAGE_BLOCKED';
+}
+
 async function reportEmulatorPackageBlocked(err, { retry = null } = {}) {
-  if (!err || err.code !== 'GBE_DOWNLOAD_BLOCKED') return false;
+  if (!isEmulatorPackageBlocked(err)) return false;
   if (emulatorPackageBlockedShown) return true;
   emulatorPackageBlockedShown = true;
 
+  // The Goldberg package is fetched from GitHub; the Uplay loaders are installed with the app. Only
+  // the first has a repository to send anyone to, and only the first is a download at all.
+  const downloaded = err.code === 'GBE_DOWNLOAD_BLOCKED';
   const folder = String(err.folder || '');
   let defenderActive = false;
   try {
@@ -2378,17 +2438,25 @@ async function reportEmulatorPackageBlocked(err, { retry = null } = {}) {
     buttons.push(t('av-retry', 'Try again', 'Réessayer'));
     actions.push('retry');
   }
-  buttons.push(t('av-open-repository', 'Open the GSE Fork repository', 'Ouvrir le dépôt GSE Fork'));
-  actions.push('repository');
+  if (downloaded) {
+    buttons.push(t('av-open-repository', 'Open the GSE Fork repository', 'Ouvrir le dépôt GSE Fork'));
+    actions.push('repository');
+  }
   buttons.push(t('close', 'Close', 'Fermer'));
   actions.push('close');
 
   const detail = [
-    t(
-      'av-blocked-detail',
-      'Achievement Watcher Next downloads this emulator from the official GSE Fork repository on GitHub and installs nothing else. The file is safe: antivirus engines flag it because it replaces a game\'s Steam library, which is exactly what the emulator is for.',
-      'Achievement Watcher Next télécharge cet émulateur depuis le dépôt officiel GSE Fork sur GitHub et n\'installe rien d\'autre. Le fichier est sain : les antivirus le signalent parce qu\'il remplace la bibliothèque Steam du jeu, ce qui est précisément son rôle.'
-    ),
+    downloaded
+      ? t(
+          'av-blocked-detail',
+          'Achievement Watcher Next downloads this emulator from the official GSE Fork repository on GitHub and installs nothing else. The file is safe: antivirus engines flag it because it replaces a game\'s Steam library, which is exactly what the emulator is for.',
+          'Achievement Watcher Next télécharge cet émulateur depuis le dépôt officiel GSE Fork sur GitHub et n\'installe rien d\'autre. Le fichier est sain : les antivirus le signalent parce qu\'il remplace la bibliothèque Steam du jeu, ce qui est précisément son rôle.'
+        )
+      : t(
+          'av-blocked-detail-bundled',
+          'This Ubisoft loader is installed with the app; nothing was downloaded. The file is safe: antivirus engines flag it because it replaces a game\'s Ubisoft library, which is exactly what the loader is for.',
+          'Ce loader Ubisoft est installé avec l\'application, rien n\'a été téléchargé. Le fichier est sain : les antivirus le signalent parce qu\'il remplace la bibliothèque Ubisoft du jeu, ce qui est précisément son rôle.'
+        ),
     t('av-blocked-what-to-do', 'Allow the file your antivirus reported, then try again.', 'Autorise le fichier signalé par ton antivirus, puis réessaie.'),
     folder,
   ]
@@ -2398,11 +2466,13 @@ async function reportEmulatorPackageBlocked(err, { retry = null } = {}) {
   const answer = await remote.dialog.showMessageBox(remote.getCurrentWindow(), {
     type: 'warning',
     title: t('av-blocked-title', 'The emulator package was blocked', 'Le paquet de l\'émulateur a été bloqué'),
-    message: t(
-      'av-blocked-message',
-      'Your antivirus removed the emulator package before it could be installed.',
-      'Ton antivirus a supprimé le paquet de l\'émulateur avant son installation.'
-    ),
+    message: downloaded
+      ? t('av-blocked-message', 'Your antivirus removed the emulator package before it could be installed.', 'Ton antivirus a supprimé le paquet de l\'émulateur avant son installation.')
+      : t(
+          'av-blocked-message-bundled',
+          'Your antivirus removed a file needed to record this game\'s achievements.',
+          'Ton antivirus a supprimé un fichier nécessaire à l\'enregistrement des succès de ce jeu.'
+        ),
     detail,
     buttons,
     defaultId: 0,
@@ -4983,6 +5053,8 @@ var app = {
 
                       await applyUplayR2Repair({ game, gameDir, appid, box: self, interactive: true, showResult: true });
                     } catch (err) {
+                      // Same as the Game Health path: an antivirus quarantine gets its own explanation.
+                      if (await reportEmulatorPackageBlocked(err)) return;
                       remote.dialog.showMessageBoxSync({
                         type: 'error',
                         title: t('uplay-r2-install-failed', 'Uplay R1/R2 install failed', 'Échec de l\'installation de Uplay R1/R2'),
@@ -6740,6 +6812,10 @@ async function collectGameHealthSignals(appid) {
   let uplayReport = null;
   if (usesUplayLayer && gameDirExists) {
     try {
+      // Undo, before anything is reported, a Ticket line an earlier AW Next build wrote into a
+      // folder whose loader has no Ticket setting to read it from. It never did anything, and the
+      // panel would otherwise show a warning and a button for a setting that was never real.
+      if (uplayR2.removeUnsupportedTicket(gameDir)) debug.log(`[health] ${appid} removed a Ticket line this loader cannot read`);
       const identity = uplayR2.resolveGameIdentity({ ...game, appid, gameDir }, appid);
       uplayReport = uplayR2.diagnose({ gameDir, appid, name: game.name, mapping: identity.mapping });
     } catch (err) {
@@ -6902,6 +6978,9 @@ function gameHealthSimpleCheckValue(entry) {
     case 'emulator':
     case 'uplay':
       if (p.servedBy) return t('gh-simple-emulator-ok', 'Achievement support is set up', 'Prise en charge des succès configurée');
+      // Offline achievements were just switched on and the game has not run since: say so, or the
+      // row goes green with a "turn it off" button beside it and no word about why.
+      if (p.ticket === 'pending') return t('gh-ticket-pending', 'Offline achievements on - launch the game once', 'Succès hors connexion activés, lance le jeu une fois');
       if (ok) return t('gh-simple-emulator-ok', 'Achievement support is set up', 'Prise en charge des succès configurée');
       return entry.level === gameHealth.LEVEL.FAIL
         ? t('gh-simple-emulator-missing', 'Achievement support is missing', 'Prise en charge des succès absente')
@@ -6988,7 +7067,7 @@ function gameHealthIssueTopicLabel(topic) {
     case 'appid':
       return t('gh-issue-appid', 'game ID file', 'fichier d’identification du jeu');
     case 'session':
-      return t('gh-issue-session', 'Ubisoft session', 'session Ubisoft');
+      return t('gh-issue-session', 'offline achievements', 'succès hors connexion');
     case 'dlc':
       return t('gh-issue-dlc', 'DLC access', 'accès aux DLC');
     case 'compat':
@@ -7040,7 +7119,9 @@ function gameHealthCheckValue(entry, simple) {
           })
         : '';
       const problems = p.topics && p.topics.length ? p.topics.map(gameHealthIssueTopicLabel).join(' · ') : '';
-      return [mapping, problems].filter(Boolean).join(' · ') || gameHealthIssueTopicLabel('mapping');
+      const ticket =
+        p.ticket === 'pending' ? t('gh-ticket-pending', 'Offline achievements on - launch the game once', 'Succès hors connexion activés, lance le jeu une fois') : '';
+      return [mapping, problems, ticket].filter(Boolean).join(' · ') || gameHealthIssueTopicLabel('mapping');
     }
     case 'progress':
       if (p.unlocked) return t('gh-value-unlocked', '{unlocked} unlocked', '{unlocked} débloqué(s)', p);
@@ -7071,6 +7152,8 @@ function gameHealthActionLabel(action) {
       return t('gh-action-repair-uplay', 'Repair Ubisoft achievement support', 'Réparer la prise en charge des succès Ubisoft');
     case gameHealth.ACTION.REPAIR_UPLAY_TICKET:
       return t('gh-action-uplay-ticket', 'Enable achievements offline', 'Activer les succès hors connexion');
+    case gameHealth.ACTION.REMOVE_UPLAY_TICKET:
+      return t('gh-action-uplay-ticket-off', 'Turn offline achievements off', 'Désactiver les succès hors connexion');
     case gameHealth.ACTION.INSTALL_RUNTIME:
       return t('gh-action-install-runtime', 'Restore the emulator file', 'Restaurer le fichier d’émulateur');
     case gameHealth.ACTION.START_TRACKING:
@@ -7376,6 +7459,9 @@ async function runGameHealthAction(appid, action, button) {
       return !!result;
     } catch (err) {
       debug.error(`[health] Uplay R1/R2 repair failed for ${appid} => ${formatErr(err)}`);
+      // An antivirus taking the loader is not a failure of the repair, and saying so sends the user
+      // looking for a bug here instead of at the alert their antivirus just showed them.
+      if (await reportEmulatorPackageBlocked(err, { retry: () => runGameHealthAction(appid, action, button) })) return false;
       remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
         type: 'error',
         title: t('uplay-r2-install-failed', 'Uplay R1/R2 repair failed', 'Échec de la réparation Uplay R1/R2'),
@@ -7391,29 +7477,38 @@ async function runGameHealthAction(appid, action, button) {
     answers that question from one ini key it otherwise leaves empty. This writes it, and takes it
     back on a second press - it is one line either way, so a game it does not suit loses nothing.
   */
-  if (action === gameHealth.ACTION.REPAIR_UPLAY_TICKET) {
+  if (action === gameHealth.ACTION.REPAIR_UPLAY_TICKET || action === gameHealth.ACTION.REMOVE_UPLAY_TICKET) {
     if (!game.gameDir || !fs.existsSync(game.gameDir)) return false;
-    const alreadySet = uplayR2.hasSessionTicket(game.gameDir);
+    // What the panel offered, not what the folder happens to hold: the two are the same by
+    // construction (deriveHealth picks the action from the key on disk), and following the button
+    // is what guarantees the dialog says what the button said.
+    const removing = action === gameHealth.ACTION.REMOVE_UPLAY_TICKET;
     const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'question',
-      title: alreadySet
+      title: removing
         ? t('gh-ticket-remove-title', 'Turn offline achievements back off?', 'Désactiver les succès hors connexion ?')
         : t('gh-ticket-confirm-title', 'Enable achievements offline?', 'Activer les succès hors connexion ?'),
-      message: alreadySet
+      message: removing
         ? t('gh-ticket-remove-message', 'This game will believe it is signed out again, and stop recording achievements.', 'Ce jeu se croira de nouveau déconnecté et cessera d’enregistrer ses succès.')
         : t(
             'gh-ticket-confirm-message',
             'This game has never asked the emulator to unlock anything, which is how a title behaves when it thinks it is signed out.',
             'Ce jeu n’a jamais demandé de déblocage à l’émulateur, ce qui est le comportement d’un titre qui se croit déconnecté.'
           ),
-      detail: t(
-        'gh-ticket-confirm-detail',
-        'One line is added to the emulator settings beside the game. It is a placeholder, not a real Ubisoft session: no account is involved and nothing is sent anywhere. Press this again to take it back.',
-        'Une ligne est ajoutée aux réglages de l’émulateur à côté du jeu. C’est une valeur de remplacement, pas une vraie session Ubisoft : aucun compte n’est utilisé et rien n’est envoyé nulle part. Appuie de nouveau pour la retirer.'
-      ),
+      detail: removing
+        ? t(
+            'gh-ticket-remove-detail',
+            'The line AW Next added to the emulator settings beside the game is removed, and nothing else changes. Achievements already recorded are kept. You can turn this back on at any time.',
+            'La ligne ajoutée par AW Next aux réglages de l’émulateur à côté du jeu est retirée, et rien d’autre ne change. Les succès déjà enregistrés sont conservés. Tu peux la remettre quand tu veux.'
+          )
+        : t(
+            'gh-ticket-confirm-detail',
+            'One line is added to the emulator settings beside the game. It is a placeholder, not a real Ubisoft session: no account is involved and nothing is sent anywhere. Launch the game once, then check this panel again.',
+            'Une ligne est ajoutée aux réglages de l’émulateur à côté du jeu. C’est une valeur de remplacement, pas une vraie session Ubisoft : aucun compte n’est utilisé et rien n’est envoyé nulle part. Lance le jeu une fois, puis reviens voir ce panneau.'
+          ),
       buttons: [
         t('cancel', 'Cancel', 'Annuler'),
-        alreadySet
+        removing
           ? t('gh-ticket-remove-confirm', 'Turn it off', 'Désactiver')
           : t('gh-action-uplay-ticket', 'Enable achievements offline', 'Activer les succès hors connexion'),
       ],
@@ -7424,8 +7519,8 @@ async function runGameHealthAction(appid, action, button) {
     if (confirmed !== 1) return false;
 
     try {
-      const written = uplayR2.setSessionTicket({ dir: game.gameDir, enabled: !alreadySet });
-      debug.log(`[health] ${appid} session ticket ${alreadySet ? 'removed' : 'written'} in ${written.files.length} file(s)`);
+      const written = uplayR2.setSessionTicket({ dir: game.gameDir, enabled: !removing });
+      debug.log(`[health] ${appid} session ticket ${removing ? 'removed' : 'written'} in ${written.files.length} file(s)`);
       return true;
     } catch (err) {
       debug.error(`[health] session ticket failed for ${appid} => ${formatErr(err)}`);

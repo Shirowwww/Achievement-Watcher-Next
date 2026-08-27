@@ -220,6 +220,29 @@ async function listArchive(archivePath, sevenBin) {
   });
 }
 
+/*
+  A failure that is really an antivirus, told apart from a failure that is really a bug.
+
+  A Uplay loader replaces a game's Ubisoft library, which is exactly the shape malware detection
+  looks for, so engines flag it - Windows Defender took all four copies of ours at once, the ones
+  shipped with the app included. Reported under the same code as the Goldberg download so the one
+  explanation the app already has covers both, and `folder` says which folder to allow.
+*/
+const QUARANTINE_STDERR = /virus|malware|potentially unwanted|indésirable|unerwünschte|Operation did not complete/i;
+
+function quarantineError(err, folder) {
+  const stderr = String((err && err.stderr) || '');
+  if (!QUARANTINE_STDERR.test(stderr)) return null;
+  const blocked = new Error(
+    'the Uplay loader package was quarantined by security software before it could be read. ' +
+      'Ubisoft emulators are flagged by most antivirus engines; allow the file it reported, then try again.'
+  );
+  blocked.code = 'EMULATOR_PACKAGE_BLOCKED';
+  blocked.stderr = stderr;
+  blocked.folder = folder;
+  return blocked;
+}
+
 async function extractPackage(archivePath, destDir, { log = noopLog } = {}) {
   const Seven = require('node-7z');
   const sevenBin = resolveUnpackedBinary(require('7zip-bin').path7za);
@@ -246,7 +269,9 @@ async function extractPackage(archivePath, destDir, { log = noopLog } = {}) {
     // enter even the temporary tree used by the importer.
     const stream = Seven.extractFull(resolveUnpackedBinary(archivePath), destDir, { $bin: sevenBin, $cherryPick: loaderEntries });
     stream.on('end', resolve);
-    stream.on('error', reject);
+    // node-7z's own message is just the archive path; 7za's stderr carries the real cause, and the
+    // most frequent one by far is an antivirus taking the loader between the write and the read.
+    stream.on('error', (err) => reject(quarantineError(err, destDir) || err));
   });
   log.log(`[uplayR2] extracted loader package ${path.basename(archivePath)}`);
 }
@@ -365,7 +390,24 @@ async function ensureBundledEmulatorDlls({ cacheDir, flavour = 'r2', packagePath
     if (!directFilesValid) {
       const archive = resolveUnpackedBinary(path.join(defaultDir, bundle.archive));
       if (!fs.existsSync(archive) || sha256(archive) !== bundle.archiveSha256) {
-        throw new Error(`Bundled ${bundle.id.toUpperCase()} loaders and recovery archive are unavailable`);
+        /*
+          Both the loaders and the archive AW Next installs alongside itself are gone. They were
+          there when the app was installed, so something removed them since, and on these files that
+          something is an antivirus in all but the rarest case. Saying "unavailable" left the user
+          looking for a bug in the app instead of at the alert their antivirus had just shown them.
+        */
+        const missing = Object.keys(bundle.sha256).filter((name) => !fs.existsSync(path.join(source, name)));
+        const gone = new Error(
+          missing.length > 0
+            ? `the Uplay loaders shipped with AW Next are no longer on disk (${missing.join(', ')}), and neither is the recovery archive. ` +
+              'Ubisoft emulators are flagged by most antivirus engines; allow this folder, then try again.'
+            : `Bundled ${bundle.id.toUpperCase()} loaders and recovery archive are unavailable`
+        );
+        if (missing.length > 0) {
+          gone.code = 'EMULATOR_PACKAGE_BLOCKED';
+          gone.folder = source;
+        }
+        throw gone;
       }
       source = archive;
     }
@@ -1011,6 +1053,7 @@ module.exports = {
   inspectPackageDll,
   findPackageDlls,
   importPackage,
+  quarantineError,
   ensureEmulatorDlls,
   ensureBundledEmulatorDlls,
   safeArchiveEntry,

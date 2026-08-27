@@ -485,6 +485,35 @@ function detectEmulator(gameDir) {
   return result;
 }
 
+/*
+  Is `needle` a string of its OWN in this binary, rather than a fragment of a longer one?
+
+  A plain indexOf was wrong in the one way that matters here: every Uplay loader exports
+  UPLAY_USER_GetTicketUtf8 and UPLAY_ACH_GetAchievements, so a substring search for the ini keys
+  "Ticket" and "Achievements" answered yes for builds that read neither. That is how an R1 loader -
+  whose session key is spelled TickedId and which has no Ticket key at all - was offered the offline
+  achievements fix, and then reported as "the ticket had no effect" forever after (South Park TFBW).
+
+  A key literal sits between two bytes that cannot continue an identifier (a NUL terminator, in
+  practice), which is exactly what separates it from the same letters inside an export name.
+*/
+function isIdentifierByte(byte) {
+  return (byte >= 0x30 && byte <= 0x39) || (byte >= 0x41 && byte <= 0x5a) || (byte >= 0x61 && byte <= 0x7a) || byte === 0x5f;
+}
+
+function hasWholeString(bytes, needle) {
+  const pattern = Buffer.from(needle, 'ascii');
+  let at = bytes.indexOf(pattern);
+  while (at !== -1) {
+    const before = at === 0 ? 0 : bytes[at - 1];
+    const afterIndex = at + pattern.length;
+    const after = afterIndex >= bytes.length ? 0 : bytes[afterIndex];
+    if (!isIdentifierByte(before) && !isIdentifierByte(after)) return true;
+    at = bytes.indexOf(pattern, at + 1);
+  }
+  return false;
+}
+
 // Which optional [Settings] keys does THIS loader build understand? Redirect keys are recent
 // additions that older builds silently ignore, so probe the DLL's literal key names instead.
 const _loaderCapabilities = new Map();
@@ -516,7 +545,7 @@ function inspectLoader(dllPath) {
   let result;
   try {
     const bytes = fs.readFileSync(dllPath);
-    const has = (needle) => bytes.indexOf(Buffer.from(needle, 'ascii')) !== -1;
+    const has = (needle) => hasWholeString(bytes, needle);
     result = {
       path: dllPath,
       exists: true,
@@ -655,6 +684,16 @@ function hasEmulatorEvidence(gameDir, { maxDepth = 4, maxDirectories = 600 } = {
     }
   }
   return false;
+}
+
+// When a file was last written, 0 when it cannot be read. Used to order a config write against the
+// loader's own log, which is what tells "the fix did nothing" apart from "the fix has not run yet".
+function statMtimeMs(file) {
+  try {
+    return fs.statSync(file).mtimeMs;
+  } catch {
+    return 0;
+  }
 }
 
 // The ini the loader will actually read: first existing name in its own precedence order. Without a
@@ -1270,6 +1309,28 @@ function setSessionTicket({ dir, flavour = null, enabled = true } = {}) {
   return { flavour: kind.id, enabled, files: written };
 }
 
+/*
+  Take back a Ticket line AW Next wrote into a folder whose loader cannot read it.
+
+  Nothing about this is a decision for the user to make: the line was written by an earlier build
+  whose capability probe matched the loader's UPLAY_USER_GetTicket export instead of an ini key, and
+  the loader it landed on has no Ticket setting at all. Leaving it there only produces a warning
+  about a setting that never did anything, and a button to undo somebody else's bug.
+
+  Only ever removes AW Next's OWN value: a Ticket somebody put there themselves is theirs, is
+  reported rather than deleted, and keeps its button.
+*/
+function removeUnsupportedTicket(dir, flavour = null) {
+  const target = String(dir || '').trim();
+  if (!target) return false;
+  const iniFile = activeIniFile(target, flavour);
+  if (!iniFile) return false;
+  const kind = resolveFlavour(flavour || flavourForDir(target) || DEFAULT_FLAVOUR);
+  if (String(readIniSettings(iniFile, kind.id).ticket || '').trim() !== SESSION_TICKET) return false;
+  if (inspectInstalledLoaders(detectEmulator(target).dll).supportsTicket) return false;
+  return setSessionTicket({ dir: target, flavour: kind.id, enabled: false }).files.some((entry) => entry.changed);
+}
+
 // True when this folder's active ini already carries a non-empty Ticket.
 function hasSessionTicket(dir, flavour = null) {
   const iniFile = activeIniFile(dir, flavour);
@@ -1304,21 +1365,36 @@ function writeSettingsConfig(options = {}) {
 // UPC_Init seeds <AchSavePath>\achievements.json only when it does not exist yet, so a re-applied
 // setup with different keys would keep a stale save for good. Removed only when it demonstrably
 // holds nothing (no unlock, no key in common with the new schema); no backup needed.
-function removeStaleRuntimeSave(saveDir, schemaJson) {
-  if (!saveDir || !schemaJson) return false;
+function refreshRuntimeSave(saveDir, schemaJson) {
+  if (!saveDir || !schemaJson || Object.keys(schemaJson).length === 0) return false;
   const file = path.join(saveDir, ACH_SAVE_FILE);
+  let previousText;
+  let previous;
   try {
-    const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return false;
-    const keys = Object.keys(parsed);
-    if (keys.length === 0) return false;
-    if (Object.values(parsed).some(isEarnedEntry)) return false;
-    if (keys.some((key) => Object.prototype.hasOwnProperty.call(schemaJson, key))) return false;
-    fs.unlinkSync(file);
-    return true;
+    previousText = fs.readFileSync(file, 'utf8');
+    previous = JSON.parse(previousText);
   } catch {
-    return false; // absent, unreadable or half-written: leave it to the runtime
+    return false; // absent, unreadable or half-written: leave it to the loader, which seeds it
   }
+  if (!previous || typeof previous !== 'object' || Array.isArray(previous)) return false;
+
+  const next = {};
+  for (const [key, entry] of Object.entries(schemaJson)) {
+    const recorded = previous[key];
+    // The schema owns the text; everything the loader wrote (earned, earned_time, and any field
+    // this build keeps that we do not know about) is carried over untouched.
+    next[key] = recorded && typeof recorded === 'object' && !Array.isArray(recorded) ? { ...recorded, ...entry, earned: recorded.earned ?? entry.earned } : entry;
+  }
+  // A recorded unlock under a key the new schema dropped is kept: it can no longer be reached, but
+  // discarding somebody's progress to tidy a file is the worse of the two outcomes.
+  for (const [key, entry] of Object.entries(previous)) {
+    if (!Object.prototype.hasOwnProperty.call(next, key) && isEarnedEntry(entry)) next[key] = entry;
+  }
+
+  const nextText = JSON.stringify(next, null, 2);
+  if (nextText === previousText) return false;
+  writeFileAtomic(file, nextText);
+  return true;
 }
 
 // The loader appends a line per call and never rotates, growing without bound (61 MB/hour measured
@@ -1398,6 +1474,10 @@ function readLoaderLog(dir, flavour) {
   return {
     file,
     size: stat.size,
+    // When the game last wrote to it. "The game asked for nothing" only means anything once the
+    // game has actually run since the setting under test was written; without this the panel
+    // convicted a fix seconds after applying it, before the game had been launched even once.
+    mtimeMs: stat.mtimeMs,
     truncated,
     productId,
     // Any achievement entry point at all, not just the unlock: a game that only lists them still
@@ -1476,6 +1556,55 @@ function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedM
   const iniFile = activeIniFile(dir, flavour);
   const settings = iniFile ? readIniSettings(iniFile, flavour) : {};
 
+  /*
+    Whether offline achievements are switched on for this game, reported from the ini alone.
+
+    Deliberately not read out of the loader log like the OFFER to switch them on is: the log can be
+    absent (a fresh folder, or a repair having just cleared an overgrown one), and a setting that
+    disappears from the panel whenever its evidence does is a setting the user cannot switch back off.
+  */
+  // The log is read at most once per diagnosis: it is capped at 25 MB, and both the ticket state
+  // here and the unlock analysis further down want the same answer.
+  let loaderLogRead = false;
+  const loaderLog = () => {
+    if (!loaderLogRead) {
+      report.loaderLog = readLog ? readLoaderLog(dir, flavour) : null;
+      loaderLogRead = true;
+    }
+    return report.loaderLog;
+  };
+
+  const configuredTicket = String(settings.ticket || '').trim();
+  if (configuredTicket && !caps.supportsTicket) {
+    // Written by an AW Next build whose capability probe matched the loader's UPLAY_USER_GetTicket
+    // export rather than an ini key, which is how an R1 build - whose session key is spelled
+    // TickedId - was offered the fix at all. The line is inert wherever it came from.
+    add(
+      'warning',
+      'SESSION_TICKET_UNSUPPORTED',
+      `A Ticket line is configured, but this loader build has no Ticket setting and reads that key from nowhere: it does nothing here and can be removed.`
+    );
+  } else if (configuredTicket) {
+    // Judged only once the game has actually run against it. Before that the log holds the run from
+    // before the fix, and reading it as a verdict convicts a fix that has not been tried yet.
+    const log = loaderLog();
+    const ranSince = Boolean(log && log.mtimeMs) && log.mtimeMs > (iniFile ? statMtimeMs(iniFile) : 0);
+    if (!ranSince) {
+      add(
+        'info',
+        'SESSION_TICKET_PENDING',
+        `Offline achievements are switched on and the game has not been launched since. There is nothing to judge the fix on yet: play the game once and check again.`
+      );
+    } else if (!log.touchedAchievementApi) {
+      add(
+        'warning',
+        'SESSION_TICKET_NO_EFFECT',
+        `${flavour.logFile} still records no achievement call although offline achievements are switched on: this game asks for nothing for some other reason, and the ` +
+          `setting can be switched back off if it is unwanted.`
+      );
+    }
+  }
+
   const schemaFile = path.join(dir, ACH_SCHEMA_FILE);
   if (!fs.existsSync(schemaFile)) {
     add('error', 'NO_SCHEMA_JSON', `${ACH_SCHEMA_FILE} is missing - run "Apply emulator fix (Uplay R2)" to generate it. A game update re-extracting the repack removes it.`);
@@ -1549,8 +1678,7 @@ function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedM
   // the loader's log tells them apart: never asked at all, or asked for an id the schema lacks.
   const earnedSoFar = report.emulatorSave ? report.emulatorSave.earned : (report.save && report.save.earned) || 0;
   if (earnedSoFar === 0 && readLog) {
-    const log = readLoaderLog(dir, flavour);
-    report.loaderLog = log;
+    const log = loaderLog();
     if (!log) {
       add(
         'info',
@@ -1590,22 +1718,16 @@ function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedM
         // Frontiers of Pandora). Only said where the loader can act on it. With a ticket already
         // configured, the same silence means the opposite: it was tried and changed nothing, worth
         // offering to remove. A title the ticket does unblock sets touchedAchievementApi and skips this branch.
-        const hasTicket = Boolean(String(settings.ticket || '').trim());
-        if (caps.supportsTicket && !hasTicket) {
+        // The state of an existing setting is reported above, from the ini. What is left here is the
+        // OFFER to switch it on, which is the one thing that genuinely needs this evidence.
+        if (caps.supportsTicket && !configuredTicket) {
           add(
             'warning',
             'NO_SESSION_TICKET',
             `${flavour.logFile} records no achievement call at all: the game never asked to unlock anything. Titles that only report achievements while signed in to ` +
               `Ubisoft behave exactly like this, because the loader answers with an empty session ticket. Adding one usually unblocks them.`
           );
-        } else if (caps.supportsTicket && hasTicket) {
-          add(
-            'warning',
-            'SESSION_TICKET_NO_EFFECT',
-            `${flavour.logFile} still records no achievement call although a session ticket is configured: this game asks for nothing for some other reason, and the ` +
-              `ticket can be removed if it is unwanted.`
-          );
-        } else {
+        } else if (!configuredTicket) {
           add(
             'info',
             'LOADER_LOG_NO_ACH_CALL',
@@ -1678,7 +1800,17 @@ function repair({ dir, gameDir, steamAppid, schema, prefix, objectiveIds = null,
   summary.ini = applySettingsConfigPlan(iniPlan);
   // The Watchdog needs the id -> api-name direction to notify a live unlock; it cannot always derive it.
   summary.wroteObjectiveMap = saveObjectiveMap({ steamAppid, prefix, objectiveIds });
-  summary.removedStaleSave = summary.wroteSchema ? removeStaleRuntimeSave(iniPlan.achSavePath, achievementsSchemaJson) : false;
+  /*
+    Bring the loader's own runtime file in line with the schema that was just written.
+
+    Confirmed by disassembling both loader generations (upc_r2_loader64.dll and uplay_r1_loader64.dll
+    carry byte-identical logic): the schema is read ONLY when `Achievements` is 1, the schema file
+    exists, AND `<AchSavePath>chievements.json` does NOT - after which the log says "Skip parsing
+    of achievements schema!" on every later launch. So once that file exists a repair could rewrite
+    the schema all it liked and the game would go on serving the old list: renamed achievements, a
+    changed language and the entries a game update added never reached it.
+  */
+  summary.refreshedRuntimeSave = summary.wroteSchema ? refreshRuntimeSave(iniPlan.achSavePath, achievementsSchemaJson) : false;
 
   return summary;
 }
@@ -1884,8 +2016,9 @@ module.exports = {
   MAX_LOADER_LOG_BYTES,
   setSessionTicket,
   hasSessionTicket,
+  removeUnsupportedTicket,
   SESSION_TICKET,
-  removeStaleRuntimeSave,
+  refreshRuntimeSave,
   diagnose,
   repair,
 };

@@ -303,3 +303,33 @@ test('the stamp navigates to the recheck setting instead of starting a library r
   // The game panel sits above Settings, so leaving it open would hide the row just flashed.
   assert.ok(body.includes('btn-game-config-cancel'), 'the game panel is closed first');
 });
+
+/*
+  A missing loader cache asks for a decision the user should not have to make.
+
+  These loaders ship with the app, so "put them back" is one press and no thought; the dialog used to
+  offer only a file picker, which sends someone hunting on their disk for a package they never had.
+  And when an antivirus was what removed them - Windows Defender takes all four copies at once - the
+  file picker was the wrong question entirely: the right one is "allow this, and I will restore them".
+*/
+test('a missing loader cache leads with restoring the files the app ships', () => {
+  assert.match(appSource, /t\('uplay-r2-restore-bundled'/, 'the restore has to be a button, not a documented workaround');
+  assert.match(appSource, /defaultId: buttons\.length - 1/, 'and it has to be the default one');
+  assert.match(
+    appSource,
+    /ensureBundledEmulatorDlls\(\{ cacheDir, log: debug, replaceExisting: true \}\)/,
+    'pressing it restores from what is installed rather than asking for a file'
+  );
+  // The manual import stays: someone running their own build of the loader still needs it.
+  assert.match(appSource, /t\('select-file'/);
+});
+
+test('an antivirus is answered with the antivirus dialog, never with a file picker', () => {
+  const fn = appSource.slice(appSource.indexOf('async function ensureUplayR2Package('));
+  const blocked = fn.indexOf('isEmulatorPackageBlocked(bundledError)');
+  const picker = fn.indexOf("t('uplay-r2-dll-not-seeded'");
+  assert.ok(blocked !== -1 && picker !== -1, 'both paths must exist');
+  assert.ok(blocked < picker, 'the quarantine is recognised before anyone is asked to find a file');
+  // The retry matters more here than anywhere: after allowing the file, the user is one press from done.
+  assert.match(fn, /reportEmulatorPackageBlocked\(bundledError, \{ retry: \(\) => ensureUplayR2Package\(/);
+});
