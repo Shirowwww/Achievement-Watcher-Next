@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "Diagnostische logging",
-          "description": "Zet dit alleen aan tijdens het oplossen van problemen; er kunnen logbestanden van de loader naast de game ontstaan."
+          "description": "Laat dit aan staan: zonder kan de diagnose niet zeggen waarom een spel niets registreert, en geen prestaties offline aanbieden. De loader schrijft een logbestand naast het spel; de grootte is begrensd."
         },
         "import": "DLL's importeren of vervangen",
         "restore": "Geïntegreerde DLL's terugzetten",
@@ -1389,7 +1389,8 @@
     "apply-failed": "Toepassen mislukt.",
     "failed": "Mislukt.",
     "uplay-r2-diagnosis-title": "Uplay R1/R2-diagnose - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Emulatorfix toepassen (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "De Ubisoft-prestatiefix toepassen…",
+    "gh-action-repair-uplay": "Ubisoft-prestaties repareren",
     "select-install-folder-uplay-r2-loader": "Selecteer de installatiemap van de game (waar de .dll van de Uplay R1/R2-loader terecht moet komen)",
     "resolving-the-steam-equivalent": "Het Steam-equivalent opzoeken…",
     "no-steam-equivalent-found": "Geen Steam-equivalent gevonden",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "Van de huidige bestanden wordt eerst een back-up gemaakt, die je via ditzelfde menu kunt terugzetten.",
     "reapply-gbe-button": "Opnieuw toepassen",
     "gh-action-fix-appid": "Het bestand met de game-ID corrigeren",
+    "gh-issue-session": "Ubisoft-sessie",
+    "gh-action-uplay-ticket": "Prestaties offline inschakelen",
+    "gh-ticket-confirm-title": "Prestaties offline inschakelen?",
+    "gh-ticket-confirm-message": "Dit spel heeft de emulator nooit gevraagd iets te ontgrendelen, en zo gedraagt een titel zich die denkt dat je uitgelogd bent.",
+    "gh-ticket-confirm-detail": "Er wordt één regel toegevoegd aan de emulatorinstellingen naast het spel. Het is een tijdelijke waarde, geen echte Ubisoft-sessie: er is geen account bij betrokken en er wordt niets verzonden. Druk nogmaals om het terug te draaien.",
+    "gh-ticket-remove-title": "Offline prestaties weer uitschakelen?",
+    "gh-ticket-remove-message": "Dit spel denkt dan weer dat je uitgelogd bent en registreert geen prestaties meer.",
+    "gh-ticket-remove-confirm": "Uitschakelen",
     "gh-why-appid-mismatch": "De emulator in de map van deze game meldt game-ID {appidOnDisk}, maar AW Next koppelde deze game aan {appidExpected}. Prestaties die onder de verkeerde ID ontgrendeld worden, komen op naam van een andere game te staan. Corrigeer het bestand als {appidExpected} de juiste game is - de huidige waarde blijft bewaard.",
     "gh-appid-confirm-title": "Het bestand met de game-ID corrigeren?",
     "gh-appid-confirm-message": "steam_appid.txt wordt gewijzigd van {appidOnDisk} in {appidExpected}.",

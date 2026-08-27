@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "Diagnostický protokol",
-          "description": "Zapněte jen při řešení potíží; loader může vytvářet protokoly vedle hry."
+          "description": "Nechte zapnuté: bez toho diagnostika nedokáže říct, proč hra nic nezaznamenává, ani nabídnout úspěchy offline. Zavaděč zapisuje log vedle hry; jeho velikost je omezená."
         },
         "import": "Importovat nebo nahradit DLL",
         "restore": "Obnovit integrované DLL",
@@ -1389,7 +1389,8 @@
     "apply-failed": "Použití se nezdařilo.",
     "failed": "Selhalo.",
     "uplay-r2-diagnosis-title": "Diagnostika Uplay R1/R2 - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Použít fix emulátoru (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Použít opravu úspěchů Ubisoft…",
+    "gh-action-repair-uplay": "Opravit podporu úspěchů Ubisoft",
     "select-install-folder-uplay-r2-loader": "Vyberte složku instalace hry (kam má jít .dll loaderu Uplay R1/R2)",
     "resolving-the-steam-equivalent": "Zjišťování ekvivalentu ve Steamu…",
     "no-steam-equivalent-found": "Nebyl nalezen žádný ekvivalent ve Steamu",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "Současné soubory se nejprve zálohují a lze je obnovit ze stejné nabídky.",
     "reapply-gbe-button": "Použít znovu",
     "gh-action-fix-appid": "Opravit soubor s ID hry",
+    "gh-issue-session": "relace Ubisoft",
+    "gh-action-uplay-ticket": "Zapnout úspěchy offline",
+    "gh-ticket-confirm-title": "Zapnout úspěchy offline?",
+    "gh-ticket-confirm-message": "Tato hra nikdy nepožádala emulátor o odemčení čehokoli, a přesně tak se chová hra, která se domnívá, že jste odhlášeni.",
+    "gh-ticket-confirm-detail": "Do nastavení emulátoru vedle hry se přidá jeden řádek. Je to zástupná hodnota, ne skutečná relace Ubisoft: žádný účet se nepoužívá a nic se nikam neodesílá. Dalším stisknutím ji odeberete.",
+    "gh-ticket-remove-title": "Vypnout offline úspěchy zpět?",
+    "gh-ticket-remove-message": "Hra se bude opět považovat za odhlášenou a přestane zaznamenávat úspěchy.",
+    "gh-ticket-remove-confirm": "Vypnout",
     "gh-why-appid-mismatch": "Emulátor ve složce této hry hlásí ID {appidOnDisk}, ale AW Next přiřadil hru k {appidExpected}. Úspěchy odemčené pod špatným ID se zapíšou jiné hře. Opravte soubor, pokud je správná hra {appidExpected} - současná hodnota zůstane zachována.",
     "gh-appid-confirm-title": "Opravit soubor s ID hry?",
     "gh-appid-confirm-message": "steam_appid.txt se změní z {appidOnDisk} na {appidExpected}.",

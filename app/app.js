@@ -837,7 +837,7 @@ async function applyUplayR2Repair({ game, gameDir, appid, box = null, interactiv
     ].join('\n');
     const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'question',
-      title: t('apply-emulator-fix-uplay-r2', 'Apply emulator fix (Uplay R1/R2)…', 'Appliquer le correctif émulateur (Uplay R1/R2)…'),
+      title: t('apply-emulator-fix-uplay-r2', 'Apply the Ubisoft achievement fix…', 'Appliquer le correctif de succès Ubisoft…'),
       message: t(
         'apply-the-emulator-fix-to-x-detected-game-s-existing-files-are-b',
         'Apply the emulator fix to {count} detected game(s)? Existing files are backed up before being overwritten.',
@@ -845,7 +845,7 @@ async function applyUplayR2Repair({ game, gameDir, appid, box = null, interactiv
         { count: 1 }
       ),
       detail,
-      buttons: [t('cancel', 'Cancel', 'Annuler'), t('apply-emulator-fix-uplay-r2', 'Repair Uplay R1/R2', 'Réparer Uplay R1/R2')],
+      buttons: [t('cancel', 'Cancel', 'Annuler'), t('gh-action-repair-uplay', 'Repair Ubisoft achievement support', 'Réparer la prise en charge des succès Ubisoft')],
       defaultId: 1,
       cancelId: 0,
       noLink: true,
@@ -5130,7 +5130,7 @@ var app = {
                   icon: menuIcon('file-text.png'),
                   label:
                     $('#game-list').attr('data-ctx-installuplayr2') ||
-                    t('apply-emulator-fix-uplay-r2', 'Apply emulator fix (Uplay R1/R2)…', 'Appliquer le correctif émulateur (Uplay R1/R2)…'),
+                    t('apply-emulator-fix-uplay-r2', 'Apply the Ubisoft achievement fix…', 'Appliquer le correctif de succès Ubisoft…'),
                   async click() {
                     try {
                       const game = list.find((g) => g.appid == appid);
@@ -7209,6 +7209,8 @@ function gameHealthIssueTopicLabel(topic) {
       return t('gh-issue-icons', 'achievement icons', 'icônes des succès');
     case 'appid':
       return t('gh-issue-appid', 'game ID file', 'fichier d’identification du jeu');
+    case 'session':
+      return t('gh-issue-session', 'Ubisoft session', 'session Ubisoft');
     case 'dlc':
       return t('gh-issue-dlc', 'DLC access', 'accès aux DLC');
     case 'compat':
@@ -7288,7 +7290,9 @@ function gameHealthActionLabel(action) {
     case gameHealth.ACTION.REPAIR_DATA:
       return t('gh-action-repair-data', 'Rewrite the achievement data', 'Réécrire les données de succès');
     case gameHealth.ACTION.REPAIR_UPLAY:
-      return t('apply-emulator-fix-uplay-r2', 'Repair Uplay R1/R2 support', 'Réparer la prise en charge Uplay R1/R2');
+      return t('gh-action-repair-uplay', 'Repair Ubisoft achievement support', 'Réparer la prise en charge des succès Ubisoft');
+    case gameHealth.ACTION.REPAIR_UPLAY_TICKET:
+      return t('gh-action-uplay-ticket', 'Enable achievements offline', 'Activer les succès hors connexion');
     case gameHealth.ACTION.INSTALL_RUNTIME:
       return t('gh-action-install-runtime', 'Restore the emulator file', 'Restaurer le fichier d’émulateur');
     case gameHealth.ACTION.START_TRACKING:
@@ -7598,6 +7602,59 @@ async function runGameHealthAction(appid, action, button) {
         type: 'error',
         title: t('uplay-r2-install-failed', 'Uplay R1/R2 repair failed', 'Échec de la réparation Uplay R1/R2'),
         message: t('could-not-install-or-configure-goldberg-uplay-r2', 'Could not install or configure Goldberg Uplay R1/R2.', "Impossible d'installer ou de configurer Goldberg Uplay R1/R2."),
+        detail: formatErr(err),
+      });
+      return false;
+    }
+  }
+
+  /*
+    Some Ubisoft titles only report achievements once they believe they are signed in, and the loader
+    answers that question from one ini key it otherwise leaves empty. This writes it, and takes it
+    back on a second press - it is one line either way, so a game it does not suit loses nothing.
+  */
+  if (action === gameHealth.ACTION.REPAIR_UPLAY_TICKET) {
+    if (!game.gameDir || !fs.existsSync(game.gameDir)) return false;
+    const alreadySet = uplayR2.hasSessionTicket(game.gameDir);
+    const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'question',
+      title: alreadySet
+        ? t('gh-ticket-remove-title', 'Turn offline achievements back off?', 'Désactiver les succès hors connexion ?')
+        : t('gh-ticket-confirm-title', 'Enable achievements offline?', 'Activer les succès hors connexion ?'),
+      message: alreadySet
+        ? t('gh-ticket-remove-message', 'This game will believe it is signed out again, and stop recording achievements.', 'Ce jeu se croira de nouveau déconnecté et cessera d’enregistrer ses succès.')
+        : t(
+            'gh-ticket-confirm-message',
+            'This game has never asked the emulator to unlock anything, which is how a title behaves when it thinks it is signed out.',
+            'Ce jeu n’a jamais demandé de déblocage à l’émulateur, ce qui est le comportement d’un titre qui se croit déconnecté.'
+          ),
+      detail: t(
+        'gh-ticket-confirm-detail',
+        'One line is added to the emulator settings beside the game. It is a placeholder, not a real Ubisoft session: no account is involved and nothing is sent anywhere. Press this again to take it back.',
+        'Une ligne est ajoutée aux réglages de l’émulateur à côté du jeu. C’est une valeur de remplacement, pas une vraie session Ubisoft : aucun compte n’est utilisé et rien n’est envoyé nulle part. Appuie de nouveau pour la retirer.'
+      ),
+      buttons: [
+        t('cancel', 'Cancel', 'Annuler'),
+        alreadySet
+          ? t('gh-ticket-remove-confirm', 'Turn it off', 'Désactiver')
+          : t('gh-action-uplay-ticket', 'Enable achievements offline', 'Activer les succès hors connexion'),
+      ],
+      defaultId: 1,
+      cancelId: 0,
+      noLink: true,
+    });
+    if (confirmed !== 1) return false;
+
+    try {
+      const written = uplayR2.setSessionTicket({ dir: game.gameDir, enabled: !alreadySet });
+      debug.log(`[health] ${appid} session ticket ${alreadySet ? 'removed' : 'written'} in ${written.files.length} file(s)`);
+      return true;
+    } catch (err) {
+      debug.error(`[health] session ticket failed for ${appid} => ${formatErr(err)}`);
+      remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+        type: 'error',
+        title: t('repair-failed', 'Repair failed', 'Échec de la réparation'),
+        message: t('gh-action-failed', 'That repair could not be completed.', 'Cette réparation n’a pas pu être effectuée.'),
         detail: formatErr(err),
       });
       return false;

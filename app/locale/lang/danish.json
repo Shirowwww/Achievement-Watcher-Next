@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "Diagnostisk logføring",
-          "description": "Slå det kun til under fejlfinding; det kan oprette logfiler fra loaderen ved siden af spillet."
+          "description": "Lad den være slået til: uden den kan diagnosen ikke sige, hvorfor et spil ikke registrerer noget, eller tilbyde præstationer offline. Loaderen skriver en log ved siden af spillet; størrelsen er begrænset."
         },
         "import": "Importér eller udskift DLL-filer",
         "restore": "Gendan de indbyggede DLL-filer",
@@ -1389,7 +1389,8 @@
     "apply-failed": "Anvendelsen mislykkedes.",
     "failed": "Mislykkedes.",
     "uplay-r2-diagnosis-title": "Uplay R1/R2-diagnose - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Anvend emulatorreparation (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Anvend Ubisoft-præstationsrettelsen…",
+    "gh-action-repair-uplay": "Reparer Ubisoft-præstationer",
     "select-install-folder-uplay-r2-loader": "Vælg spillets installationsmappe (hvor Uplay R1/R2-loaderens .dll skal ligge)",
     "resolving-the-steam-equivalent": "Finder den tilsvarende Steam-udgave…",
     "no-steam-equivalent-found": "Ingen tilsvarende Steam-udgave fundet",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "De nuværende filer sikkerhedskopieres først og kan gendannes fra den samme menu.",
     "reapply-gbe-button": "Anvend igen",
     "gh-action-fix-appid": "Ret filen med spil-id",
+    "gh-issue-session": "Ubisoft-session",
+    "gh-action-uplay-ticket": "Aktivér præstationer offline",
+    "gh-ticket-confirm-title": "Aktivér præstationer offline?",
+    "gh-ticket-confirm-message": "Dette spil har aldrig bedt emulatoren om at låse noget op, og sådan opfører en titel sig, når den tror, du er logget ud.",
+    "gh-ticket-confirm-detail": "Der tilføjes én linje til emulatorindstillingerne ved siden af spillet. Det er en pladsholder, ikke en rigtig Ubisoft-session: ingen konto er involveret, og der sendes intet nogen steder hen. Tryk igen for at fortryde.",
+    "gh-ticket-remove-title": "Slå offlinepræstationer fra igen?",
+    "gh-ticket-remove-message": "Spillet tror så igen, at du er logget ud, og registrerer ikke længere præstationer.",
+    "gh-ticket-remove-confirm": "Slå fra",
     "gh-why-appid-mismatch": "Emulatoren i dette spils mappe melder spil-id {appidOnDisk}, men AW Next har matchet spillet med {appidExpected}. Præstationer, der låses op under det forkerte id, registreres på et andet spil. Ret filen, hvis {appidExpected} er det rigtige spil - den nuværende værdi gemmes.",
     "gh-appid-confirm-title": "Vil du rette filen med spil-id?",
     "gh-appid-confirm-message": "steam_appid.txt bliver ændret fra {appidOnDisk} til {appidExpected}.",

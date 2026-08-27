@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "Registro de diagnóstico",
-          "description": "Actívalo solo para resolver problemas; el loader puede crear registros junto al juego."
+          "description": "Déjalo activado: sin él, el diagnóstico no puede decir por qué un juego no registra nada ni ofrecer activar los logros sin conexión. El loader escribe un registro junto al juego; su tamaño está limitado."
         },
         "import": "Importar o reemplazar DLL",
         "restore": "Restaurar DLL integradas",
@@ -1389,7 +1389,8 @@
     "apply-failed": "No se pudo aplicar.",
     "failed": "Error.",
     "uplay-r2-diagnosis-title": "Diagnóstico de Uplay R1/R2 - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Aplicar fix de emulador (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Aplicar la corrección de logros de Ubisoft…",
+    "gh-action-repair-uplay": "Reparar los logros de Ubisoft",
     "select-install-folder-uplay-r2-loader": "Seleccionar la carpeta de instalación del juego (donde debe ir la .dll del loader Uplay R1/R2)",
     "resolving-the-steam-equivalent": "Resolviendo el equivalente de Steam…",
     "no-steam-equivalent-found": "No se encontró equivalente en Steam",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "Los archivos actuales se guardan antes y se pueden restaurar desde este mismo menú.",
     "reapply-gbe-button": "Volver a aplicar",
     "gh-action-fix-appid": "Corregir el archivo de identificación del juego",
+    "gh-issue-session": "sesión de Ubisoft",
+    "gh-action-uplay-ticket": "Activar los logros sin conexión",
+    "gh-ticket-confirm-title": "¿Activar los logros sin conexión?",
+    "gh-ticket-confirm-message": "Este juego nunca le pidió al emulador que desbloqueara nada, que es como se comporta un título que se cree desconectado.",
+    "gh-ticket-confirm-detail": "Se agrega una línea a la configuración del emulador junto al juego. Es un valor de relleno, no una sesión real de Ubisoft: no interviene ninguna cuenta y no se envía nada a ningún lado. Vuelve a presionar para quitarlo.",
+    "gh-ticket-remove-title": "¿Desactivar los logros sin conexión?",
+    "gh-ticket-remove-message": "Este juego volverá a creerse desconectado y dejará de registrar logros.",
+    "gh-ticket-remove-confirm": "Desactivar",
     "gh-why-appid-mismatch": "El emulador de la carpeta de este juego anuncia el ID {appidOnDisk}, pero AW Next asoció este juego a {appidExpected}. Los logros desbloqueados con el ID equivocado se registran en otro juego. Corrige el archivo si {appidExpected} es el juego correcto: el valor actual se conserva.",
     "gh-appid-confirm-title": "¿Corregir el archivo de identificación del juego?",
     "gh-appid-confirm-message": "steam_appid.txt pasará de {appidOnDisk} a {appidExpected}.",

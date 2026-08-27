@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "진단 로그",
-          "description": "문제를 해결하는 동안에만 켜세요. 게임 폴더 옆에 로더 로그 파일이 생길 수 있습니다."
+          "description": "켜 두세요. 이것이 없으면 진단이 게임이 아무것도 기록하지 않는 이유를 알려줄 수 없고, 오프라인 도전 과제도 제안할 수 없습니다. 로더가 게임 옆에 로그를 쓰지만 크기는 제한됩니다."
         },
         "import": "DLL 가져오기 또는 교체",
         "restore": "내장 DLL 복원",
@@ -1389,7 +1389,8 @@
     "apply-failed": "적용하지 못했습니다.",
     "failed": "실패했습니다.",
     "uplay-r2-diagnosis-title": "Uplay R1/R2 진단 - {gameName}",
-    "apply-emulator-fix-uplay-r2": "에뮬레이터 복구 적용(Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Ubisoft 도전 과제 수정 적용…",
+    "gh-action-repair-uplay": "Ubisoft 도전 과제 지원 복구",
     "select-install-folder-uplay-r2-loader": "게임 설치 폴더를 고르세요(Uplay R1/R2 로더 .dll이 들어갈 곳)",
     "resolving-the-steam-equivalent": "대응하는 Steam 버전을 찾는 중…",
     "no-steam-equivalent-found": "대응하는 Steam 버전을 찾지 못했습니다",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "현재 파일은 먼저 백업되며 같은 메뉴에서 복원할 수 있습니다.",
     "reapply-gbe-button": "다시 적용",
     "gh-action-fix-appid": "게임 ID 파일 바로잡기",
+    "gh-issue-session": "Ubisoft 세션",
+    "gh-action-uplay-ticket": "오프라인에서 도전 과제 사용",
+    "gh-ticket-confirm-title": "오프라인에서 도전 과제를 사용할까요?",
+    "gh-ticket-confirm-message": "이 게임은 에뮬레이터에 무언가를 해제해 달라고 요청한 적이 한 번도 없습니다. 로그아웃 상태라고 판단한 게임이 바로 이렇게 동작합니다.",
+    "gh-ticket-confirm-detail": "게임 옆의 에뮬레이터 설정에 한 줄이 추가됩니다. 실제 Ubisoft 세션이 아니라 대체 값입니다. 어떤 계정도 사용하지 않으며 아무것도 전송되지 않습니다. 다시 누르면 되돌립니다.",
+    "gh-ticket-remove-title": "오프라인 도전 과제를 다시 끌까요?",
+    "gh-ticket-remove-message": "게임이 다시 로그아웃 상태로 판단해 도전 과제를 기록하지 않습니다.",
+    "gh-ticket-remove-confirm": "끄기",
     "gh-why-appid-mismatch": "이 게임 폴더의 에뮬레이터는 게임 ID {appidOnDisk}을(를) 알리지만, AW Next는 이 게임을 {appidExpected}(으)로 인식했습니다. 잘못된 ID로 달성한 도전 과제는 다른 게임의 기록으로 남습니다. {appidExpected}이(가) 맞는 게임이라면 파일을 바로잡으세요. 현재 값은 그대로 보관됩니다.",
     "gh-appid-confirm-title": "게임 ID 파일을 바로잡을까요?",
     "gh-appid-confirm-message": "steam_appid.txt를 {appidOnDisk}에서 {appidExpected}(으)로 바꿉니다.",

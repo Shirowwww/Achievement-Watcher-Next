@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "诊断日志",
-          "description": "仅在排查问题时启用；loader 可能会在游戏旁创建日志文件。"
+          "description": "请保持开启：没有它，诊断无法说明游戏为何什么都不记录，也无法提供离线成就。加载器会在游戏旁写入日志，其大小有上限。"
         },
         "import": "导入或替换 DLL",
         "restore": "恢复内置 DLL",
@@ -1389,7 +1389,8 @@
     "apply-failed": "应用失败。",
     "failed": "失败。",
     "uplay-r2-diagnosis-title": "Uplay R1/R2 诊断 - {gameName}",
-    "apply-emulator-fix-uplay-r2": "应用模拟器修复（Uplay R1/R2）…",
+    "apply-emulator-fix-uplay-r2": "应用 Ubisoft 成就修复…",
+    "gh-action-repair-uplay": "修复 Ubisoft 成就支持",
     "select-install-folder-uplay-r2-loader": "选择游戏的安装文件夹（Uplay R1/R2 加载器 .dll 应放置的位置）",
     "resolving-the-steam-equivalent": "正在解析 Steam 对应版本…",
     "no-steam-equivalent-found": "未找到 Steam 对应版本",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "当前文件会先备份，可从同一菜单还原。",
     "reapply-gbe-button": "重新应用",
     "gh-action-fix-appid": "修正游戏 ID 文件",
+    "gh-issue-session": "Ubisoft 会话",
+    "gh-action-uplay-ticket": "离线启用成就",
+    "gh-ticket-confirm-title": "离线启用成就？",
+    "gh-ticket-confirm-message": "这个游戏从未要求模拟器解锁任何东西，而认为自己已退出登录的游戏正是这种表现。",
+    "gh-ticket-confirm-detail": "会在游戏旁边的模拟器设置中添加一行。这只是一个占位值，并非真正的 Ubisoft 会话：不涉及任何账号，也不会向任何地方发送数据。再次点击即可撤销。",
+    "gh-ticket-remove-title": "重新关闭离线成就？",
+    "gh-ticket-remove-message": "游戏会再次认为你已退出登录，不再记录成就。",
+    "gh-ticket-remove-confirm": "关闭",
     "gh-why-appid-mismatch": "该游戏文件夹中的模拟器声明游戏 ID 为 {appidOnDisk}，但 AW Next 把这个游戏匹配到了 {appidExpected}。用错误 ID 解锁的成就会记到另一个游戏上。如果 {appidExpected} 才是正确的游戏，请修正该文件--当前值会被保留。",
     "gh-appid-confirm-title": "修正游戏 ID 文件吗？",
     "gh-appid-confirm-message": "steam_appid.txt 将从 {appidOnDisk} 改为 {appidExpected}。",

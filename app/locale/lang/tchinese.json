@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "診斷記錄",
-          "description": "僅在排除問題時啟用；它可能會在遊戲旁邊產生載入器記錄檔。"
+          "description": "請保持開啟：沒有它，診斷無法說明遊戲為何什麼都不記錄，也無法提供離線成就。載入器會在遊戲旁寫入日誌，其大小有上限。"
         },
         "import": "匯入或取代 DLL",
         "restore": "還原內建 DLL",
@@ -1389,7 +1389,8 @@
     "apply-failed": "套用失敗。",
     "failed": "失敗。",
     "uplay-r2-diagnosis-title": "Uplay R1/R2 診斷 - {gameName}",
-    "apply-emulator-fix-uplay-r2": "套用模擬器修復（Uplay R1/R2）…",
+    "apply-emulator-fix-uplay-r2": "套用 Ubisoft 成就修復…",
+    "gh-action-repair-uplay": "修復 Ubisoft 成就支援",
     "select-install-folder-uplay-r2-loader": "選擇遊戲的安裝資料夾（Uplay R1/R2 載入器 .dll 應該放置的位置）",
     "resolving-the-steam-equivalent": "比對對應的 Steam 版本中…",
     "no-steam-equivalent-found": "找不到對應的 Steam 版本",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "目前的檔案會先備份，之後可以從同一個選單還原。",
     "reapply-gbe-button": "重新套用",
     "gh-action-fix-appid": "修正遊戲 ID 檔案",
+    "gh-issue-session": "Ubisoft 工作階段",
+    "gh-action-uplay-ticket": "離線啟用成就",
+    "gh-ticket-confirm-title": "離線啟用成就？",
+    "gh-ticket-confirm-message": "這個遊戲從未要求模擬器解鎖任何東西，而認為自己已登出的遊戲正是這種表現。",
+    "gh-ticket-confirm-detail": "會在遊戲旁的模擬器設定中加入一行。這只是替代值，並非真正的 Ubisoft 工作階段：不涉及任何帳號，也不會向任何地方傳送資料。再按一次即可還原。",
+    "gh-ticket-remove-title": "重新關閉離線成就？",
+    "gh-ticket-remove-message": "遊戲會再次認為你已登出，不再記錄成就。",
+    "gh-ticket-remove-confirm": "關閉",
     "gh-why-appid-mismatch": "這款遊戲資料夾中的模擬器聲稱遊戲 ID 是 {appidOnDisk}，但 AW Next 比對到的是 {appidExpected}。用錯誤 ID 解鎖的成就會被記到另一款遊戲上。如果 {appidExpected} 才是正確的遊戲，請修正這個檔案 - 目前的值會保留下來。",
     "gh-appid-confirm-title": "要修正遊戲 ID 檔案嗎？",
     "gh-appid-confirm-message": "steam_appid.txt 會從 {appidOnDisk} 改成 {appidExpected}。",

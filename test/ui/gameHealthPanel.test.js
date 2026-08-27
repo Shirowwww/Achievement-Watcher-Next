@@ -143,6 +143,24 @@ test('the Uplay health action delegates to the same confirmed transaction as the
   assert.match(shared.slice(confirmAt, writeAt), /backed up before being overwritten/);
 });
 
+/*
+  gameHealthActionLabel's `default:` returns the test-notification label, so an action added without
+  a case of its own does not fail - it renders a button that says something else entirely, and the
+  wrong button is worse than a missing one. Enumerate rather than trust.
+*/
+test('every action a check can offer has a label of its own', () => {
+  const { ACTION } = require('../../app/util/gameHealth.js');
+  const labeller = appSource.slice(appSource.indexOf('function gameHealthActionLabel'), appSource.indexOf('const GAME_HEALTH_ICON'));
+  for (const [name, value] of Object.entries(ACTION)) {
+    // The one legitimate exception: the default branch IS the test-notification label.
+    if (name === 'TEST_NOTIFICATION') continue;
+    assert.ok(
+      labeller.includes(`gameHealth.ACTION.${name}`),
+      `ACTION.${name} ("${value}") has no case, so it would render as the test-notification button`
+    );
+  }
+});
+
 test('Game Health shows the resolved Steam identity and keeps the fallback reachable', () => {
   const valueRenderer = appSource.slice(
     appSource.indexOf('function gameHealthCheckValue'),

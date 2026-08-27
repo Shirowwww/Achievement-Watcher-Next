@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "Diagnoselogging",
-          "description": "Slå den bare på under feilsøking; den kan lage loggfiler fra loaderen ved siden av spillet."
+          "description": "La den stå på: uten den kan ikke diagnosen si hvorfor et spill ikke registrerer noe, eller tilby prestasjoner frakoblet. Lasteren skriver en logg ved siden av spillet; størrelsen er begrenset."
         },
         "import": "Importer eller bytt ut DLL-er",
         "restore": "Gjenopprett de innebygde DLL-ene",
@@ -1389,7 +1389,8 @@
     "apply-failed": "Klarte ikke å ta den i bruk.",
     "failed": "Mislyktes.",
     "uplay-r2-diagnosis-title": "Uplay R1/R2-diagnose - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Bruk emulatorfiks (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Bruk Ubisoft-prestasjonsfiksen…",
+    "gh-action-repair-uplay": "Reparer Ubisoft-prestasjoner",
     "select-install-folder-uplay-r2-loader": "Velg installasjonsmappen til spillet (der .dll-filen til Uplay R1/R2-loaderen skal ligge)",
     "resolving-the-steam-equivalent": "Finner den tilsvarende Steam-utgaven…",
     "no-steam-equivalent-found": "Fant ingen tilsvarende Steam-utgave",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "Filene som ligger der nå, sikkerhetskopieres først og kan hentes tilbake fra den samme menyen.",
     "reapply-gbe-button": "Bruk på nytt",
     "gh-action-fix-appid": "Rett opp spill-ID-filen",
+    "gh-issue-session": "Ubisoft-økt",
+    "gh-action-uplay-ticket": "Slå på prestasjoner frakoblet",
+    "gh-ticket-confirm-title": "Slå på prestasjoner frakoblet?",
+    "gh-ticket-confirm-message": "Dette spillet har aldri bedt emulatoren om å låse opp noe, og slik oppfører en tittel seg når den tror du er logget av.",
+    "gh-ticket-confirm-detail": "Én linje legges til i emulatorinnstillingene ved siden av spillet. Det er en plassholder, ikke en ekte Ubisoft-økt: ingen konto er involvert, og ingenting sendes noe sted. Trykk igjen for å angre.",
+    "gh-ticket-remove-title": "Slå av frakoblede prestasjoner igjen?",
+    "gh-ticket-remove-message": "Spillet tror da igjen at du er logget av, og registrerer ikke lenger prestasjoner.",
+    "gh-ticket-remove-confirm": "Slå av",
     "gh-why-appid-mismatch": "Emulatoren i mappen til dette spillet oppgir spill-ID {appidOnDisk}, men AW Next koblet spillet til {appidExpected}. Prestasjoner som låses opp under feil ID, registreres på et annet spill. Rett opp filen hvis {appidExpected} er riktig spill - verdien som ligger der nå, tas vare på.",
     "gh-appid-confirm-title": "Vil du rette opp spill-ID-filen?",
     "gh-appid-confirm-message": "steam_appid.txt endres fra {appidOnDisk} til {appidExpected}.",

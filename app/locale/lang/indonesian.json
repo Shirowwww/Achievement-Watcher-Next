@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "Pencatatan diagnostik",
-          "description": "Aktifkan hanya saat mencari masalah; ini dapat membuat file log loader di samping game."
+          "description": "Biarkan aktif: tanpanya, diagnosis tidak dapat menjelaskan mengapa sebuah gim tidak mencatat apa pun, maupun menawarkan pencapaian saat luring. Loader menulis log di samping gim; ukurannya dibatasi."
         },
         "import": "Impor atau ganti DLL",
         "restore": "Pulihkan DLL bawaan",
@@ -1389,7 +1389,8 @@
     "apply-failed": "Penerapan gagal.",
     "failed": "Gagal.",
     "uplay-r2-diagnosis-title": "Diagnosis Uplay R1/R2 - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Terapkan perbaikan emulator (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Terapkan perbaikan pencapaian Ubisoft…",
+    "gh-action-repair-uplay": "Perbaiki dukungan pencapaian Ubisoft",
     "select-install-folder-uplay-r2-loader": "Pilih folder pemasangan game (tempat .dll loader Uplay R1/R2 seharusnya berada)",
     "resolving-the-steam-equivalent": "Mencari padanan Steam-nya…",
     "no-steam-equivalent-found": "Padanan Steam tidak ditemukan",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "File saat ini dicadangkan lebih dahulu dan dapat dipulihkan dari menu yang sama.",
     "reapply-gbe-button": "Terapkan ulang",
     "gh-action-fix-appid": "Betulkan file ID game",
+    "gh-issue-session": "sesi Ubisoft",
+    "gh-action-uplay-ticket": "Aktifkan pencapaian saat luring",
+    "gh-ticket-confirm-title": "Aktifkan pencapaian saat luring?",
+    "gh-ticket-confirm-message": "Gim ini tidak pernah meminta emulator membuka apa pun, dan begitulah perilaku sebuah judul yang mengira Anda sedang keluar dari akun.",
+    "gh-ticket-confirm-detail": "Satu baris ditambahkan ke pengaturan emulator di samping gim. Ini hanya nilai pengganti, bukan sesi Ubisoft yang sebenarnya: tidak ada akun yang terlibat dan tidak ada yang dikirim ke mana pun. Tekan lagi untuk membatalkannya.",
+    "gh-ticket-remove-title": "Matikan lagi pencapaian luring?",
+    "gh-ticket-remove-message": "Gim ini akan kembali mengira Anda keluar dari akun dan berhenti mencatat pencapaian.",
+    "gh-ticket-remove-confirm": "Matikan",
     "gh-why-appid-mismatch": "Emulator di folder game ini mengumumkan ID game {appidOnDisk}, tetapi AW Next mencocokkan game ini dengan {appidExpected}. Pencapaian yang terbuka dengan ID yang salah akan tercatat pada game lain. Betulkan filenya bila {appidExpected} memang game yang benar - nilai saat ini tetap disimpan.",
     "gh-appid-confirm-title": "Betulkan file ID game?",
     "gh-appid-confirm-message": "steam_appid.txt akan diubah dari {appidOnDisk} menjadi {appidExpected}.",

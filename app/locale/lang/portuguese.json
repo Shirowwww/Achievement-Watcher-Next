@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "Registo de diagnóstico",
-          "description": "Ative apenas para resolver problemas; o loader pode criar registos junto ao jogo."
+          "description": "Deixe ativado: sem ele, o diagnóstico não consegue dizer por que um jogo não regista nada nem propor ativar as proezas sem ligação. O loader escreve um registo junto ao jogo; o tamanho é limitado."
         },
         "import": "Importar ou substituir DLL",
         "restore": "Restaurar DLL integradas",
@@ -1389,7 +1389,8 @@
     "apply-failed": "Não foi possível aplicar.",
     "failed": "Falhou.",
     "uplay-r2-diagnosis-title": "Diagnóstico Uplay R1/R2 - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Aplicar fix do emulador (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Aplicar a correção de proezas Ubisoft…",
+    "gh-action-repair-uplay": "Reparar o suporte a proezas Ubisoft",
     "select-install-folder-uplay-r2-loader": "Selecionar a pasta de instalação do jogo (onde deve ficar a .dll do loader Uplay R1/R2)",
     "resolving-the-steam-equivalent": "A resolver o equivalente no Steam…",
     "no-steam-equivalent-found": "Não foi encontrado equivalente no Steam",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "Os ficheiros atuais são guardados antes e podem ser restaurados a partir deste mesmo menu.",
     "reapply-gbe-button": "Reaplicar",
     "gh-action-fix-appid": "Corrigir o ficheiro de identificação do jogo",
+    "gh-issue-session": "sessão Ubisoft",
+    "gh-action-uplay-ticket": "Ativar as proezas sem ligação",
+    "gh-ticket-confirm-title": "Ativar as proezas sem ligação?",
+    "gh-ticket-confirm-message": "Este jogo nunca pediu ao emulador para desbloquear nada, que é como se comporta um título que se julga com sessão terminada.",
+    "gh-ticket-confirm-detail": "É acrescentada uma linha às definições do emulador junto ao jogo. É um valor de substituição, não uma sessão Ubisoft real: nenhuma conta é usada e nada é enviado para lado nenhum. Prima novamente para a retirar.",
+    "gh-ticket-remove-title": "Desativar as proezas sem ligação?",
+    "gh-ticket-remove-message": "Este jogo voltará a julgar-se com sessão terminada e deixará de registar proezas.",
+    "gh-ticket-remove-confirm": "Desativar",
     "gh-why-appid-mismatch": "O emulador na pasta deste jogo anuncia o ID {appidOnDisk}, mas o AW Next associou este jogo a {appidExpected}. As proezas desbloqueadas com o ID errado ficam registadas noutro jogo. Corrija o ficheiro se {appidExpected} for o jogo certo - o valor atual é mantido.",
     "gh-appid-confirm-title": "Corrigir o ficheiro de identificação do jogo?",
     "gh-appid-confirm-message": "steam_appid.txt passará de {appidOnDisk} para {appidExpected}.",

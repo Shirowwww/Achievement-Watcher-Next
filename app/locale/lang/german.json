@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "Diagnoseprotokoll",
-          "description": "Nur zur Fehlersuche aktivieren; der Loader kann Protokolle neben dem Spiel erstellen."
+          "description": "Eingeschaltet lassen: ohne ihn kann die Diagnose weder sagen, warum ein Spiel nichts aufzeichnet, noch Erfolge offline anbieten. Der Loader schreibt eine Logdatei neben dem Spiel; ihre Größe ist begrenzt."
         },
         "import": "DLLs importieren oder ersetzen",
         "restore": "Integrierte DLLs wiederherstellen",
@@ -1389,7 +1389,8 @@
     "apply-failed": "Anwenden fehlgeschlagen.",
     "failed": "Fehlgeschlagen.",
     "uplay-r2-diagnosis-title": "Uplay-R1/R2-Diagnose - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Emulator-Fix anwenden (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Ubisoft-Erfolgskorrektur anwenden…",
+    "gh-action-repair-uplay": "Ubisoft-Erfolge reparieren",
     "select-install-folder-uplay-r2-loader": "Installationsordner des Spiels auswählen (wo die Uplay-R1/R2-Loader-.dll hin soll)",
     "resolving-the-steam-equivalent": "Steam-Äquivalent wird ermittelt…",
     "no-steam-equivalent-found": "Kein Steam-Äquivalent gefunden",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "Die aktuellen Dateien werden vorher gesichert und lassen sich über dasselbe Menü wiederherstellen.",
     "reapply-gbe-button": "Erneut anwenden",
     "gh-action-fix-appid": "Spiel-ID-Datei korrigieren",
+    "gh-issue-session": "Ubisoft-Sitzung",
+    "gh-action-uplay-ticket": "Erfolge offline aktivieren",
+    "gh-ticket-confirm-title": "Erfolge offline aktivieren?",
+    "gh-ticket-confirm-message": "Dieses Spiel hat den Emulator nie um eine Freischaltung gebeten, und genau so verhält sich ein Titel, der sich für abgemeldet hält.",
+    "gh-ticket-confirm-detail": "Den Emulator-Einstellungen neben dem Spiel wird eine Zeile hinzugefügt. Es ist ein Platzhalter, keine echte Ubisoft-Sitzung: kein Konto ist beteiligt und es wird nichts irgendwohin gesendet. Nochmals drücken, um es rückgängig zu machen.",
+    "gh-ticket-remove-title": "Offline-Erfolge wieder abschalten?",
+    "gh-ticket-remove-message": "Dieses Spiel hält sich dann wieder für abgemeldet und zeichnet keine Erfolge mehr auf.",
+    "gh-ticket-remove-confirm": "Abschalten",
     "gh-why-appid-mismatch": "Der Emulator im Ordner dieses Spiels meldet die Spiel-ID {appidOnDisk}, AW Next hat das Spiel aber {appidExpected} zugeordnet. Unter der falschen ID freigeschaltete Erfolge werden einem anderen Spiel gutgeschrieben. Korrigiere die Datei, wenn {appidExpected} das richtige Spiel ist - der aktuelle Wert bleibt erhalten.",
     "gh-appid-confirm-title": "Spiel-ID-Datei korrigieren?",
     "gh-appid-confirm-message": "steam_appid.txt wird von {appidOnDisk} auf {appidExpected} geändert.",

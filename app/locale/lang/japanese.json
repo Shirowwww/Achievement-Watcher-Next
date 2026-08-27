@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "診断ログ",
-          "description": "トラブルシューティング時のみ有効にしてください。loader がゲームの横にログを作成する場合があります。"
+          "description": "オンのままに：これがないと、ゲームが何も記録しない理由を診断できず、オフラインでの実績も提案できません。ローダーはゲームの隣にログを書き込みますが、サイズは制限されます。"
         },
         "import": "DLL をインポートまたは置換",
         "restore": "内蔵 DLL を復元",
@@ -1389,7 +1389,8 @@
     "apply-failed": "適用に失敗しました。",
     "failed": "失敗しました。",
     "uplay-r2-diagnosis-title": "Uplay R1/R2 診断 - {gameName}",
-    "apply-emulator-fix-uplay-r2": "エミュレータ修正を適用（Uplay R1/R2）…",
+    "apply-emulator-fix-uplay-r2": "Ubisoft の実績修正を適用…",
+    "gh-action-repair-uplay": "Ubisoft の実績サポートを修復",
     "select-install-folder-uplay-r2-loader": "ゲームのインストールフォルダを選択（Uplay R1/R2 ローダーの .dll を置く場所）",
     "resolving-the-steam-equivalent": "Steam の同等品を解決中…",
     "no-steam-equivalent-found": "Steam の同等品が見つかりません",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "現在のファイルは先にバックアップされ、同じメニューから復元できます。",
     "reapply-gbe-button": "再適用",
     "gh-action-fix-appid": "ゲーム ID ファイルを修正",
+    "gh-issue-session": "Ubisoft セッション",
+    "gh-action-uplay-ticket": "オフラインで実績を有効にする",
+    "gh-ticket-confirm-title": "オフラインで実績を有効にしますか？",
+    "gh-ticket-confirm-message": "このゲームはエミュレーターに一度も解除を要求していません。サインアウトしていると判断したタイトルはまさにこの挙動になります。",
+    "gh-ticket-confirm-detail": "ゲームの隣にあるエミュレーター設定に 1 行だけ追加します。これは代替値であり、実際の Ubisoft セッションではありません。アカウントは一切使用せず、どこにも送信しません。もう一度押すと元に戻せます。",
+    "gh-ticket-remove-title": "オフラインの実績を無効に戻しますか？",
+    "gh-ticket-remove-message": "ゲームは再びサインアウト状態と判断し、実績を記録しなくなります。",
+    "gh-ticket-remove-confirm": "無効にする",
     "gh-why-appid-mismatch": "このゲームのフォルダーにあるエミュレーターはゲーム ID {appidOnDisk} を名乗っていますが、AW Next はこのゲームを {appidExpected} と対応付けています。誤った ID で解除した実績は別のゲームに記録されます。{appidExpected} が正しいゲームならファイルを修正してください（現在の値は保持されます）。",
     "gh-appid-confirm-title": "ゲーム ID ファイルを修正しますか？",
     "gh-appid-confirm-message": "steam_appid.txt を {appidOnDisk} から {appidExpected} に変更します。",

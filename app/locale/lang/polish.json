@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "Dziennik diagnostyczny",
-          "description": "Włącz tylko podczas rozwiązywania problemów; loader może tworzyć dzienniki obok gry."
+          "description": "Zostaw włączone: bez tego diagnostyka nie powie, dlaczego gra niczego nie zapisuje, ani nie zaproponuje osiągnięć offline. Loader zapisuje dziennik obok gry; jego rozmiar jest ograniczony."
         },
         "import": "Importuj lub zastąp DLL",
         "restore": "Przywróć wbudowane DLL",
@@ -1389,7 +1389,8 @@
     "apply-failed": "Nie udało się zastosować.",
     "failed": "Nie udało się.",
     "uplay-r2-diagnosis-title": "Diagnoza Uplay R1/R2 - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Zastosuj fix emulatora (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Zastosuj poprawkę osiągnięć Ubisoft…",
+    "gh-action-repair-uplay": "Napraw obsługę osiągnięć Ubisoft",
     "select-install-folder-uplay-r2-loader": "Wybierz folder instalacyjny gry (gdzie ma trafić .dll loadera Uplay R1/R2)",
     "resolving-the-steam-equivalent": "Ustalanie odpowiednika na Steamie…",
     "no-steam-equivalent-found": "Nie znaleziono odpowiednika na Steamie",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "Bieżące pliki są najpierw archiwizowane i można je przywrócić z tego samego menu.",
     "reapply-gbe-button": "Zastosuj ponownie",
     "gh-action-fix-appid": "Popraw plik identyfikatora gry",
+    "gh-issue-session": "sesja Ubisoft",
+    "gh-action-uplay-ticket": "Włącz osiągnięcia offline",
+    "gh-ticket-confirm-title": "Włączyć osiągnięcia offline?",
+    "gh-ticket-confirm-message": "Ta gra nigdy nie poprosiła emulatora o odblokowanie czegokolwiek, a właśnie tak zachowuje się tytuł, który sądzi, że jesteś wylogowany.",
+    "gh-ticket-confirm-detail": "Do ustawień emulatora obok gry zostanie dodany jeden wiersz. To wartość zastępcza, a nie prawdziwa sesja Ubisoft: żadne konto nie jest używane i nic nigdzie nie jest wysyłane. Naciśnij ponownie, aby ją usunąć.",
+    "gh-ticket-remove-title": "Wyłączyć osiągnięcia offline z powrotem?",
+    "gh-ticket-remove-message": "Gra znów uzna, że jesteś wylogowany, i przestanie zapisywać osiągnięcia.",
+    "gh-ticket-remove-confirm": "Wyłącz",
     "gh-why-appid-mismatch": "Emulator w folderze tej gry zgłasza identyfikator {appidOnDisk}, a AW Next dopasował grę do {appidExpected}. Osiągnięcia odblokowane pod złym identyfikatorem trafiają do innej gry. Popraw plik, jeśli właściwa gra to {appidExpected} - obecna wartość zostaje zachowana.",
     "gh-appid-confirm-title": "Poprawić plik identyfikatora gry?",
     "gh-appid-confirm-message": "steam_appid.txt zostanie zmieniony z {appidOnDisk} na {appidExpected}.",

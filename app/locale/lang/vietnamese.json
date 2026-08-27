@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "Ghi nhật ký chẩn đoán",
-          "description": "Chỉ bật khi đang khắc phục sự cố; nó có thể tạo các tệp nhật ký của loader cạnh trò chơi."
+          "description": "Hãy để bật: nếu không, chẩn đoán không thể cho biết vì sao trò chơi không ghi nhận gì, cũng không thể đề xuất thành tựu ngoại tuyến. Bộ tải ghi nhật ký cạnh trò chơi; kích thước được giới hạn."
         },
         "import": "Nhập hoặc thay thế DLL",
         "restore": "Khôi phục DLL tích hợp",
@@ -1389,7 +1389,8 @@
     "apply-failed": "Áp dụng thất bại.",
     "failed": "Thất bại.",
     "uplay-r2-diagnosis-title": "Chẩn đoán Uplay R1/R2 - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Áp dụng bản sửa giả lập (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Áp dụng bản sửa thành tựu Ubisoft…",
+    "gh-action-repair-uplay": "Sửa hỗ trợ thành tựu Ubisoft",
     "select-install-folder-uplay-r2-loader": "Chọn thư mục cài đặt của trò chơi (nơi cần đặt tệp .dll của Uplay R1/R2 loader)",
     "resolving-the-steam-equivalent": "Đang tìm bản Steam tương ứng…",
     "no-steam-equivalent-found": "Không tìm thấy bản Steam tương ứng",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "Các tệp hiện tại được sao lưu trước và có thể khôi phục từ chính menu này.",
     "reapply-gbe-button": "Áp dụng lại",
     "gh-action-fix-appid": "Sửa lại tệp mã trò chơi",
+    "gh-issue-session": "phiên Ubisoft",
+    "gh-action-uplay-ticket": "Bật thành tựu khi ngoại tuyến",
+    "gh-ticket-confirm-title": "Bật thành tựu khi ngoại tuyến?",
+    "gh-ticket-confirm-message": "Trò chơi này chưa bao giờ yêu cầu bộ giả lập mở khóa bất cứ thứ gì, và đó chính là cách một tựa game hành xử khi nó nghĩ rằng bạn đã đăng xuất.",
+    "gh-ticket-confirm-detail": "Một dòng được thêm vào cài đặt bộ giả lập bên cạnh trò chơi. Đây là giá trị thay thế, không phải phiên Ubisoft thật: không có tài khoản nào được dùng và không có gì được gửi đi đâu cả. Nhấn lại để hoàn tác.",
+    "gh-ticket-remove-title": "Tắt lại thành tựu ngoại tuyến?",
+    "gh-ticket-remove-message": "Trò chơi sẽ lại nghĩ rằng bạn đã đăng xuất và ngừng ghi nhận thành tựu.",
+    "gh-ticket-remove-confirm": "Tắt",
     "gh-why-appid-mismatch": "Trình giả lập trong thư mục của trò chơi này khai báo mã trò chơi {appidOnDisk}, nhưng AW Next lại khớp trò chơi này với {appidExpected}. Thành tựu mở khóa dưới mã sai sẽ được ghi cho một trò chơi khác. Hãy sửa tệp nếu {appidExpected} mới là trò chơi đúng - giá trị hiện tại vẫn được giữ lại.",
     "gh-appid-confirm-title": "Sửa lại tệp mã trò chơi?",
     "gh-appid-confirm-message": "steam_appid.txt sẽ được đổi từ {appidOnDisk} thành {appidExpected}.",

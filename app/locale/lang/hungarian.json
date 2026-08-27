@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "Diagnosztikai naplózás",
-          "description": "Csak hibaelhárításhoz engedélyezd; a loader naplófájlokat hozhat létre a játék mellett."
+          "description": "Hagyd bekapcsolva: enélkül a diagnosztika nem tudja megmondani, miért nem rögzít semmit a játék, és nem tud offline teljesítményeket felajánlani. A betöltő naplót ír a játék mellé; a mérete korlátozott."
         },
         "import": "DLL-ek importálása vagy cseréje",
         "restore": "Beépített DLL-ek visszaállítása",
@@ -1389,7 +1389,8 @@
     "apply-failed": "Az alkalmazás nem sikerült.",
     "failed": "Sikertelen.",
     "uplay-r2-diagnosis-title": "Uplay R1/R2 diagnosztika - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Emulátor-fix alkalmazása (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Ubisoft teljesítményjavítás alkalmazása…",
+    "gh-action-repair-uplay": "Ubisoft teljesítmények javítása",
     "select-install-folder-uplay-r2-loader": "Válaszd ki a játék telepítési mappáját (ahová az Uplay R1/R2 loader .dll-je kerül)",
     "resolving-the-steam-equivalent": "Steam-megfelelő meghatározása…",
     "no-steam-equivalent-found": "Nem található Steam-megfelelő",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "A jelenlegi fájlokról előbb mentés készül, és ugyanebből a menüből visszaállíthatók.",
     "reapply-gbe-button": "Újbóli alkalmazás",
     "gh-action-fix-appid": "Játékazonosító-fájl javítása",
+    "gh-issue-session": "Ubisoft-munkamenet",
+    "gh-action-uplay-ticket": "Offline teljesítmények bekapcsolása",
+    "gh-ticket-confirm-title": "Bekapcsolod az offline teljesítményeket?",
+    "gh-ticket-confirm-message": "Ez a játék soha nem kérte az emulátortól semmi feloldását, és pontosan így viselkedik az a cím, amely kijelentkezettnek hiszi magát.",
+    "gh-ticket-confirm-detail": "Egyetlen sor kerül a játék melletti emulátorbeállításokba. Ez helykitöltő érték, nem valódi Ubisoft-munkamenet: semmilyen fiók nem vesz részt benne, és semmi nem kerül sehová elküldésre. Nyomd meg újra a visszavonáshoz.",
+    "gh-ticket-remove-title": "Kikapcsolod újra az offline teljesítményeket?",
+    "gh-ticket-remove-message": "A játék ismét kijelentkezettnek hiszi magát, és nem rögzít több teljesítményt.",
+    "gh-ticket-remove-confirm": "Kikapcsolás",
     "gh-why-appid-mismatch": "A játék mappájában lévő emulátor a(z) {appidOnDisk} azonosítót jelenti, az AW Next viszont a(z) {appidExpected} játékhoz párosította. A rossz azonosítóval feloldott teljesítmények egy másik játékhoz kerülnek. Javítsd a fájlt, ha a(z) {appidExpected} a helyes játék - a jelenlegi érték megmarad.",
     "gh-appid-confirm-title": "Javítod a játékazonosító-fájlt?",
     "gh-appid-confirm-message": "A steam_appid.txt {appidOnDisk} értékről {appidExpected} értékre változik.",

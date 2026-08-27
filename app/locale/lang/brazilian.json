@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "Log de diagnóstico",
-          "description": "Ative apenas para solucionar problemas; o loader pode criar logs ao lado do jogo."
+          "description": "Deixe ativado: sem ele, o diagnóstico não consegue dizer por que um jogo não registra nada nem propor ativar as conquistas offline. O loader escreve um log ao lado do jogo; o tamanho é limitado."
         },
         "import": "Importar ou substituir DLLs",
         "restore": "Restaurar DLLs integradas",
@@ -1389,7 +1389,8 @@
     "apply-failed": "Falha ao aplicar.",
     "failed": "Falhou.",
     "uplay-r2-diagnosis-title": "Diagnóstico Uplay R1/R2 - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Aplicar fix do emulador (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Aplicar a correção de conquistas Ubisoft…",
+    "gh-action-repair-uplay": "Reparar o suporte a conquistas Ubisoft",
     "select-install-folder-uplay-r2-loader": "Selecionar a pasta de instalação do jogo (onde deve ficar a .dll do loader Uplay R1/R2)",
     "resolving-the-steam-equivalent": "Resolvendo o equivalente no Steam…",
     "no-steam-equivalent-found": "Nenhum equivalente no Steam encontrado",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "Os arquivos atuais são salvos antes e podem ser restaurados por este mesmo menu.",
     "reapply-gbe-button": "Reaplicar",
     "gh-action-fix-appid": "Corrigir o arquivo de identificação do jogo",
+    "gh-issue-session": "sessão Ubisoft",
+    "gh-action-uplay-ticket": "Ativar as conquistas offline",
+    "gh-ticket-confirm-title": "Ativar as conquistas offline?",
+    "gh-ticket-confirm-message": "Este jogo nunca pediu ao emulador para desbloquear nada, que é como se comporta um título que se acha desconectado.",
+    "gh-ticket-confirm-detail": "Uma linha é adicionada às configurações do emulador ao lado do jogo. É um valor de preenchimento, não uma sessão Ubisoft real: nenhuma conta é usada e nada é enviado a lugar nenhum. Pressione de novo para removê-la.",
+    "gh-ticket-remove-title": "Desativar as conquistas offline?",
+    "gh-ticket-remove-message": "Este jogo voltará a se achar desconectado e deixará de registrar conquistas.",
+    "gh-ticket-remove-confirm": "Desativar",
     "gh-why-appid-mismatch": "O emulador na pasta deste jogo anuncia o ID {appidOnDisk}, mas o AW Next associou este jogo a {appidExpected}. As conquistas desbloqueadas com o ID errado são registradas em outro jogo. Corrija o arquivo se {appidExpected} for o jogo certo - o valor atual é mantido.",
     "gh-appid-confirm-title": "Corrigir o arquivo de identificação do jogo?",
     "gh-appid-confirm-message": "steam_appid.txt passará de {appidOnDisk} para {appidExpected}.",

@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "Tanılama günlüğü",
-          "description": "Yalnızca sorun giderirken etkinleştirin; loader oyun yanında günlük dosyaları oluşturabilir."
+          "description": "Açık bırak: onsuz tanılama, bir oyunun neden hiçbir şey kaydetmediğini söyleyemez ve çevrimdışı başarımları öneremez. Yükleyici oyunun yanına bir günlük yazar; boyutu sınırlıdır."
         },
         "import": "DLL içe aktar veya değiştir",
         "restore": "Tümleşik DLL dosyalarını geri yükle",
@@ -1389,7 +1389,8 @@
     "apply-failed": "Uygulanamadı.",
     "failed": "Başarısız.",
     "uplay-r2-diagnosis-title": "Uplay R1/R2 teşhisi - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Emülatör fixini uygula (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Ubisoft başarım düzeltmesini uygula…",
+    "gh-action-repair-uplay": "Ubisoft başarım desteğini onar",
     "select-install-folder-uplay-r2-loader": "Oyunun kurulum klasörünü seç (Uplay R1/R2 loader .dll’sinin gideceği yer)",
     "resolving-the-steam-equivalent": "Steam karşılığı çözümleniyor…",
     "no-steam-equivalent-found": "Steam karşılığı bulunamadı",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "Mevcut dosyalar önce yedeklenir ve aynı menüden geri yüklenebilir.",
     "reapply-gbe-button": "Yeniden uygula",
     "gh-action-fix-appid": "Oyun kimlik dosyasını düzelt",
+    "gh-issue-session": "Ubisoft oturumu",
+    "gh-action-uplay-ticket": "Başarımları çevrimdışı etkinleştir",
+    "gh-ticket-confirm-title": "Başarımlar çevrimdışı etkinleştirilsin mi?",
+    "gh-ticket-confirm-message": "Bu oyun emülatörden hiçbir zaman bir şeyin kilidini açmasını istemedi; oturumu kapalı sandığı bir oyun tam olarak böyle davranır.",
+    "gh-ticket-confirm-detail": "Oyunun yanındaki emülatör ayarlarına tek bir satır eklenir. Bu bir yer tutucudur, gerçek bir Ubisoft oturumu değildir: hiçbir hesap kullanılmaz ve hiçbir yere bir şey gönderilmez. Geri almak için tekrar bas.",
+    "gh-ticket-remove-title": "Çevrimdışı başarımlar yeniden kapatılsın mı?",
+    "gh-ticket-remove-message": "Oyun yine oturumu kapalı sanacak ve başarım kaydetmeyi bırakacak.",
+    "gh-ticket-remove-confirm": "Kapat",
     "gh-why-appid-mismatch": "Bu oyunun klasöründeki emülatör {appidOnDisk} kimliğini bildiriyor, ancak AW Next bu oyunu {appidExpected} ile eşleştirdi. Yanlış kimlikle açılan başarımlar başka bir oyuna yazılır. Doğru oyun {appidExpected} ise dosyayı düzeltin; mevcut değer saklanır.",
     "gh-appid-confirm-title": "Oyun kimlik dosyası düzeltilsin mi?",
     "gh-appid-confirm-message": "steam_appid.txt {appidOnDisk} değerinden {appidExpected} değerine değiştirilecek.",

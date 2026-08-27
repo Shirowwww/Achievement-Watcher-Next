@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "Diagnostic logging",
-          "description": "Enable only while troubleshooting; it can create loader log files beside the game."
+          "description": "Keep this on: without it, Game health cannot say why a game records nothing, nor offer to enable achievements offline. The loader writes a log beside the game; its size is capped."
         },
         "import": "Import or replace DLLs",
         "restore": "Restore integrated DLLs",
@@ -1389,7 +1389,8 @@
     "apply-failed": "Apply failed.",
     "failed": "Failed.",
     "uplay-r2-diagnosis-title": "Uplay R1/R2 diagnosis - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Apply emulator fix (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Apply the Ubisoft achievement fix…",
+    "gh-action-repair-uplay": "Repair Ubisoft achievement support",
     "select-install-folder-uplay-r2-loader": "Select the game’s install folder (where the Uplay R1/R2 loader .dll should go)",
     "resolving-the-steam-equivalent": "Resolving the Steam equivalent…",
     "no-steam-equivalent-found": "No Steam equivalent found",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "The current files are backed up first and can be restored from this same menu.",
     "reapply-gbe-button": "Re-apply",
     "gh-action-fix-appid": "Correct the game ID file",
+    "gh-issue-session": "Ubisoft session",
+    "gh-action-uplay-ticket": "Enable achievements offline",
+    "gh-ticket-confirm-title": "Enable achievements offline?",
+    "gh-ticket-confirm-message": "This game has never asked the emulator to unlock anything, which is how a title behaves when it thinks it is signed out.",
+    "gh-ticket-confirm-detail": "One line is added to the emulator settings beside the game. It is a placeholder, not a real Ubisoft session: no account is involved and nothing is sent anywhere. Press this again to take it back.",
+    "gh-ticket-remove-title": "Turn offline achievements back off?",
+    "gh-ticket-remove-message": "This game will believe it is signed out again, and stop recording achievements.",
+    "gh-ticket-remove-confirm": "Turn it off",
     "gh-why-appid-mismatch": "The emulator in this game’s folder announces game ID {appidOnDisk}, but AW Next matched this game to {appidExpected}. Achievements unlocked under the wrong ID are recorded against another game. Correct the file if {appidExpected} is the right game - the current value is kept.",
     "gh-appid-confirm-title": "Correct the game ID file?",
     "gh-appid-confirm-message": "steam_appid.txt will be changed from {appidOnDisk} to {appidExpected}.",

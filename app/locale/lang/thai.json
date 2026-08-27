@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "บันทึกการวินิจฉัย",
-          "description": "เปิดใช้เฉพาะตอนแก้ปัญหา; loader อาจสร้างไฟล์บันทึกไว้ข้างเกม"
+          "description": "ควรเปิดไว้ ถ้าไม่มีสิ่งนี้ การวินิจฉัยจะบอกไม่ได้ว่าทำไมเกมไม่บันทึกอะไรเลย และเสนอความสำเร็จแบบออฟไลน์ไม่ได้ ตัวโหลดจะเขียนบันทึกไว้ข้างเกม โดยจำกัดขนาดไว้"
         },
         "import": "นำเข้าหรือแทนที่ DLL",
         "restore": "คืนค่า DLL ในตัว",
@@ -1389,7 +1389,8 @@
     "apply-failed": "ไม่สามารถใช้ได้",
     "failed": "ล้มเหลว",
     "uplay-r2-diagnosis-title": "การวินิจฉัย Uplay R1/R2 - {gameName}",
-    "apply-emulator-fix-uplay-r2": "ใช้ฟิกซ์อีมูเลเตอร์ (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "ใช้การแก้ไขความสำเร็จของ Ubisoft…",
+    "gh-action-repair-uplay": "ซ่อมแซมการรองรับความสำเร็จของ Ubisoft",
     "select-install-folder-uplay-r2-loader": "เลือกโฟลเดอร์ติดตั้งของเกม (ตำแหน่งที่จะวาง .dll ของ loader Uplay R1/R2)",
     "resolving-the-steam-equivalent": "กำลังหาเกมเทียบเท่าใน Steam…",
     "no-steam-equivalent-found": "ไม่พบเกมเทียบเท่าใน Steam",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "ไฟล์ปัจจุบันจะถูกสำรองไว้ก่อน และกู้คืนได้จากเมนูเดียวกันนี้",
     "reapply-gbe-button": "ใช้อีกครั้ง",
     "gh-action-fix-appid": "แก้ไขไฟล์ระบุตัวเกม",
+    "gh-issue-session": "เซสชัน Ubisoft",
+    "gh-action-uplay-ticket": "เปิดใช้ความสำเร็จแบบออฟไลน์",
+    "gh-ticket-confirm-title": "เปิดใช้ความสำเร็จแบบออฟไลน์หรือไม่",
+    "gh-ticket-confirm-message": "เกมนี้ไม่เคยขอให้อีมูเลเตอร์ปลดล็อกอะไรเลย ซึ่งเป็นพฤติกรรมของเกมที่คิดว่าคุณออกจากระบบอยู่",
+    "gh-ticket-confirm-detail": "จะเพิ่มหนึ่งบรรทัดในการตั้งค่าอีมูเลเตอร์ข้างเกม นี่เป็นค่าแทนที่ ไม่ใช่เซสชัน Ubisoft จริง ไม่มีการใช้บัญชีใด และไม่มีการส่งข้อมูลไปที่ใด กดอีกครั้งเพื่อย้อนกลับ",
+    "gh-ticket-remove-title": "ปิดความสำเร็จแบบออฟไลน์อีกครั้งหรือไม่",
+    "gh-ticket-remove-message": "เกมจะคิดว่าคุณออกจากระบบอีกครั้ง และจะหยุดบันทึกความสำเร็จ",
+    "gh-ticket-remove-confirm": "ปิด",
     "gh-why-appid-mismatch": "อีมูเลเตอร์ในโฟลเดอร์ของเกมนี้ประกาศไอดีเกม {appidOnDisk} แต่ AW Next จับคู่เกมนี้กับ {appidExpected} ความสำเร็จที่ปลดล็อกด้วยไอดีผิดจะถูกบันทึกไปยังอีกเกมหนึ่ง แก้ไขไฟล์หาก {appidExpected} คือเกมที่ถูกต้อง - ค่าปัจจุบันจะถูกเก็บไว้",
     "gh-appid-confirm-title": "แก้ไขไฟล์ระบุตัวเกมหรือไม่?",
     "gh-appid-confirm-message": "steam_appid.txt จะเปลี่ยนจาก {appidOnDisk} เป็น {appidExpected}",

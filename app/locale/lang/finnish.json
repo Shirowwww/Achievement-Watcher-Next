@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "Vianmäärityslokitus",
-          "description": "Ota käyttöön vain vianetsinnän ajaksi; se voi luoda lataimen lokitiedostoja pelin viereen."
+          "description": "Pidä tämä päällä: ilman sitä diagnoosi ei voi kertoa, miksi peli ei tallenna mitään, eikä tarjota saavutuksia offline-tilassa. Lataaja kirjoittaa lokin pelin viereen; sen koko on rajattu."
         },
         "import": "Tuo tai korvaa DLL-tiedostot",
         "restore": "Palauta sisäänrakennetut DLL-tiedostot",
@@ -1389,7 +1389,8 @@
     "apply-failed": "Käyttöönotto epäonnistui.",
     "failed": "Epäonnistui.",
     "uplay-r2-diagnosis-title": "Uplay R1/R2 -vianmääritys - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Ota emulaattorikorjaus käyttöön (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Ota Ubisoft-saavutuskorjaus käyttöön…",
+    "gh-action-repair-uplay": "Korjaa Ubisoft-saavutukset",
     "select-install-folder-uplay-r2-loader": "Valitse pelin asennuskansio (johon Uplay R1/R2 -lataimen .dll tulee)",
     "resolving-the-steam-equivalent": "Selvitetään Steam-vastinetta…",
     "no-steam-equivalent-found": "Steam-vastinetta ei löytynyt",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "Nykyiset tiedostot varmuuskopioidaan ensin, ja ne voi palauttaa tästä samasta valikosta.",
     "reapply-gbe-button": "Ota uudelleen käyttöön",
     "gh-action-fix-appid": "Korjaa pelin tunnistetiedosto",
+    "gh-issue-session": "Ubisoft-istunto",
+    "gh-action-uplay-ticket": "Ota saavutukset käyttöön offline-tilassa",
+    "gh-ticket-confirm-title": "Otetaanko saavutukset käyttöön offline-tilassa?",
+    "gh-ticket-confirm-message": "Tämä peli ei ole koskaan pyytänyt emulaattoria avaamaan mitään, ja juuri niin käyttäytyy peli, joka luulee sinun kirjautuneen ulos.",
+    "gh-ticket-confirm-detail": "Pelin viereisiin emulaattoriasetuksiin lisätään yksi rivi. Se on paikanvaraaja, ei oikea Ubisoft-istunto: mitään tiliä ei käytetä eikä mitään lähetetä minnekään. Peruuta painamalla uudelleen.",
+    "gh-ticket-remove-title": "Poistetaanko offline-saavutukset taas käytöstä?",
+    "gh-ticket-remove-message": "Peli luulee jälleen sinun kirjautuneen ulos eikä enää tallenna saavutuksia.",
+    "gh-ticket-remove-confirm": "Poista käytöstä",
     "gh-why-appid-mismatch": "Tämän pelin kansiossa oleva emulaattori ilmoittaa pelitunnuksen {appidOnDisk}, mutta AW Next yhdisti pelin tunnukseen {appidExpected}. Väärällä tunnuksella avatut saavutukset kirjautuvat toiselle pelille. Korjaa tiedosto, jos {appidExpected} on oikea peli - nykyinen arvo säilytetään.",
     "gh-appid-confirm-title": "Korjataanko pelin tunnistetiedosto?",
     "gh-appid-confirm-message": "steam_appid.txt muutetaan arvosta {appidOnDisk} arvoon {appidExpected}.",

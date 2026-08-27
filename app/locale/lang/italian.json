@@ -368,7 +368,7 @@
         },
         "logging": {
           "name": "Registro diagnostico",
-          "description": "Attivalo solo per la risoluzione dei problemi; il loader può creare registri accanto al gioco."
+          "description": "Lascialo attivo: senza, la diagnosi non può dire perché un gioco non registra nulla né proporre di attivare gli obiettivi offline. Il loader scrive un registro accanto al gioco; la sua dimensione è limitata."
         },
         "import": "Importa o sostituisci DLL",
         "restore": "Ripristina DLL integrate",
@@ -1389,7 +1389,8 @@
     "apply-failed": "Applicazione non riuscita.",
     "failed": "Non riuscito.",
     "uplay-r2-diagnosis-title": "Diagnosi Uplay R1/R2 - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Applica fix emulatore (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Applica la correzione per gli obiettivi Ubisoft…",
+    "gh-action-repair-uplay": "Ripara il supporto agli obiettivi Ubisoft",
     "select-install-folder-uplay-r2-loader": "Seleziona la cartella di installazione del gioco (dove deve andare la .dll del loader Uplay R1/R2)",
     "resolving-the-steam-equivalent": "Risoluzione dell’equivalente Steam…",
     "no-steam-equivalent-found": "Nessun equivalente Steam trovato",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "I file attuali vengono salvati prima e possono essere ripristinati da questo stesso menu.",
     "reapply-gbe-button": "Riapplica",
     "gh-action-fix-appid": "Correggi il file identificativo del gioco",
+    "gh-issue-session": "sessione Ubisoft",
+    "gh-action-uplay-ticket": "Attiva gli obiettivi offline",
+    "gh-ticket-confirm-title": "Attivare gli obiettivi offline?",
+    "gh-ticket-confirm-message": "Questo gioco non ha mai chiesto all'emulatore di sbloccare nulla, ed è così che si comporta un titolo che si crede disconnesso.",
+    "gh-ticket-confirm-detail": "Viene aggiunta una riga alle impostazioni dell'emulatore accanto al gioco. È un segnaposto, non una vera sessione Ubisoft: nessun account è coinvolto e non viene inviato nulla da nessuna parte. Premi di nuovo per rimuoverlo.",
+    "gh-ticket-remove-title": "Disattivare gli obiettivi offline?",
+    "gh-ticket-remove-message": "Questo gioco tornerà a credersi disconnesso e smetterà di registrare gli obiettivi.",
+    "gh-ticket-remove-confirm": "Disattiva",
     "gh-why-appid-mismatch": "L’emulatore nella cartella di questo gioco dichiara l’ID {appidOnDisk}, ma AW Next ha associato il gioco a {appidExpected}. I successi sbloccati con l’ID sbagliato vengono registrati su un altro gioco. Correggi il file se {appidExpected} è il gioco giusto - il valore attuale viene conservato.",
     "gh-appid-confirm-title": "Correggere il file identificativo del gioco?",
     "gh-appid-confirm-message": "steam_appid.txt passerà da {appidOnDisk} a {appidExpected}.",

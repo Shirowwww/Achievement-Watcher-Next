@@ -352,7 +352,7 @@
         },
         "logging": {
           "name": "Journal de diagnostic",
-          "description": "À activer seulement pour diagnostiquer un problème ; le loader peut créer des journaux près du jeu."
+          "description": "À garder activé : sans lui, le diagnostic ne peut pas dire pourquoi un jeu n'enregistre rien, ni proposer d'activer les succès hors connexion. Le loader écrit un journal près du jeu, dont la taille est plafonnée."
         },
         "import": "Importer ou remplacer des DLL",
         "restore": "Restaurer les DLL intégrées",
@@ -1389,7 +1389,8 @@
     "apply-failed": "Échec de l’application.",
     "failed": "Échec.",
     "uplay-r2-diagnosis-title": "Diagnostic Uplay R1/R2 - {gameName}",
-    "apply-emulator-fix-uplay-r2": "Appliquer le correctif émulateur (Uplay R1/R2)…",
+    "apply-emulator-fix-uplay-r2": "Appliquer le correctif de succès Ubisoft…",
+    "gh-action-repair-uplay": "Réparer la prise en charge des succès Ubisoft",
     "select-install-folder-uplay-r2-loader": "Sélectionne le dossier d’installation du jeu (où doit aller la .dll du loader Uplay R1/R2)",
     "resolving-the-steam-equivalent": "Résolution du jeu Steam…",
     "no-steam-equivalent-found": "Jeu Steam introuvable",
@@ -1851,6 +1852,14 @@
     "reapply-gbe-detail": "Les fichiers actuels sont sauvegardés au préalable et peuvent être restaurés depuis ce même menu.",
     "reapply-gbe-button": "Ré-appliquer",
     "gh-action-fix-appid": "Corriger le fichier d’identification",
+    "gh-issue-session": "session Ubisoft",
+    "gh-action-uplay-ticket": "Activer les succès hors connexion",
+    "gh-ticket-confirm-title": "Activer les succès hors connexion ?",
+    "gh-ticket-confirm-message": "Ce jeu n'a jamais demandé de déblocage à l'émulateur, ce qui est le comportement d'un titre qui se croit déconnecté.",
+    "gh-ticket-confirm-detail": "Une ligne est ajoutée aux réglages de l'émulateur à côté du jeu. C'est une valeur de remplacement, pas une vraie session Ubisoft : aucun compte n'est utilisé et rien n'est envoyé nulle part. Appuie de nouveau pour la retirer.",
+    "gh-ticket-remove-title": "Désactiver les succès hors connexion ?",
+    "gh-ticket-remove-message": "Ce jeu se croira de nouveau déconnecté et cessera d'enregistrer ses succès.",
+    "gh-ticket-remove-confirm": "Désactiver",
     "gh-why-appid-mismatch": "L’émulateur du dossier de ce jeu annonce l’identifiant {appidOnDisk}, alors qu’AW Next a associé ce jeu à {appidExpected}. Les succès débloqués sous le mauvais identifiant sont enregistrés sur un autre jeu. Corrige le fichier si {appidExpected} est le bon jeu - la valeur actuelle est conservée.",
     "gh-appid-confirm-title": "Corriger le fichier d’identification ?",
     "gh-appid-confirm-message": "steam_appid.txt passera de {appidOnDisk} à {appidExpected}.",
