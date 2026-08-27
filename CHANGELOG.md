@@ -7,198 +7,25 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
-## Unreleased
+## 3.10.1 - 2026-08-27
 
 ### Added
 
-- **Ubisoft games from before 2019 are supported at last.** Those titles call the older Uplay R1 API
-  and can never load an R2 loader, which is why Assassin's Creed Origins and Odyssey, the Far Cry and
-  Watch Dogs entries of that era, the South Park games and Assassin's Creed Unity, Rogue or Black
-  Flag could not be set up at all. AW Next reads which generation a game's executable actually asks
-  for, repairs that one, ships the matching loader and watches its save folder. Everything else is
-  identical: same diagnosis, same backups, same read-back. Games that resolve the loader at runtime
-  instead of naming it in their import table are recognised too, and a leftover DLL from the other
-  generation can no longer strip a save redirection the active loader supports.
-- **Ubisoft games whose achievement names carry no objective number can be set up.** Brawlhalla, The
-  Crew 2, ZOMBI, Champions of Anteria, Roller Champions and the Ubisoft-published indies were refused
-  outright, because their names hold nothing that identifies a Ubisoft objective. AW Next now reads
-  the real objective numbers from Ubisoft's own achievement data and matches them by title, fetching
-  that data publicly rather than waiting for Ubisoft Connect to cache it. Where both sources existed
-  they agreed on all 166 objectives. Those games raise live notifications like any other.
+- **Many more Ubisoft games can be set up.** Titles from before 2019 call the older Uplay R1 API and
+  can never load an R2 loader, so Assassin's Creed Origins, Odyssey, Unity, Rogue and Black Flag, the
+  Far Cry and Watch Dogs entries of that era and the South Park games could not be repaired at all.
+  AW Next now reads which generation a game asks for, ships the matching loader and watches its save
+  folder, including games that resolve the loader at runtime. Titles whose achievement names carry no
+  objective number - Brawlhalla, The Crew 2, ZOMBI, Champions of Anteria, Roller Champions and the
+  Ubisoft-published indies - are matched by title against Ubisoft's own public achievement data
+  instead of being refused outright.
 - **Games for Windows LIVE games report their achievements.** A GFWL title running XLiveLessNess kept
-  its unlocks in a profile AW Next could not read, so the whole era - the Windows LIVE ports of the
-  late 2000s and early 2010s - was invisible. AW Next now finds those installs, reads each profile's
-  unlock records, and takes the achievement list, its texts and its icons out of the game's own
-  executable, so a title needs nothing downloaded to be described. The Watchdog watches the same
-  profiles and raises live notifications as they pop.
+  its unlocks in a profile AW Next could not read, so the whole era was invisible. Those profiles are
+  now read, and the achievement list, its texts and its icons come out of the game's own executable,
+  so nothing has to be downloaded. The Watchdog watches them too and raises live notifications.
 - **FINAL FANTASY VII (2013) is read.** That re-release predates Steamworks achievements and keeps its
-  36 unlocks in an 8-byte bitfield beside its saves. AW Next reads it, pairs each bit with the Steam
-  achievement it stands for, and finds the file in Documents without anyone adding the folder by hand.
-
-### Improved
-
-- **The list of Ubisoft games updates itself, and a game missing from it can still be paired.** Which
-  product a numeric id names came from a file shipped inside AW Next, so a game released after it was
-  written had no name and no cover. Ubisoft's own public catalogue and the community id list are now
-  read and cached, the shipped file staying as a starting point. A game neither names is matched to
-  its Steam release on its own, which is the one automatic decision not allowed to be wrong: it
-  answers only when a single Steam game carries the same title. A spelling slip still resolves
-  ("Frontier of Pandora" finds Frontiers of Pandora), while Assassin's Creed is never taken for
-  Assassin's Creed II, Rainbow Six for Siege, or a separately sold edition for the base game.
-  Measured against all 274 pairings the shipped list covers: 217 found, none wrong.
-- **A Ubisoft game no longer has to be in that list to be watched.** The game tells the loader its
-  product number on startup and the save folder is named after it, so AW Next reads it back from the
-  loader's own log and remembers the pairing per installation.
-- **Diagnose says why a valid-looking setup records nothing.** Two very different failures used to
-  look identical: a game that never asks the emulator to unlock anything, and one that asks using an
-  objective number the generated schema does not contain. The loader's own log is the only record of
-  which it is, so it is switched on by default, has a settings row of its own, and Diagnose reads it
-  and names the numbers in the second case. The two loader generations word that line differently,
-  and both are now read. A log whose unlock lines were cut off still gives the verdict, because a
-  game that asked while the save records nothing asked for a key the schema does not carry.
-- **A game served by ALI213, OnlineFix or the like is named after it, instead of "Goldberg".** That
-  word was the name of a shape on disk, a replaced steam_api dll with nothing configured beside it,
-  and every emulator producing that shape was reported under it: ZOMBI was shown as GBE Fork while
-  its own dll says ALI213 in its strings. The shape still decides where saves are read from and is
-  unchanged; the emulator's name is now carried alongside it and is what the reports show.
-- **A game already served by another emulator is no longer offered a Uplay repair either.** A Ubisoft
-  game sold on Steam ships both layers, so a Uplay loader lying in the folder does not mean the Uplay
-  layer is what serves its achievements. Where a crack loader is already doing that, the Uplay setup
-  is not broken, it is unused, and Game health said "achievement list missing" and offered to install
-  a loader over a game that already worked. It now says which emulator is serving the game instead.
-- **A game already served by another emulator is left completely alone.** AW Next declines to replace
-  ALI213, OnlineFix, TENOKE, SmartSteamEmu and the rest, but still wrote Goldberg settings beside
-  them, and the empty achievement list among those files then read as a fault against the game (seen
-  on ZOMBI). Nothing is written there any more, a folder AW Next left behind is taken back when every
-  file in it is one it wrote and none of it holds anything, and the refusal now says which emulator
-  is the reason.
-- **A repair package the antivirus quarantined says so, and offers a way out.** Steam emulators are
-  flagged by most antivirus engines, and the package can be removed between being downloaded and
-  being read, which surfaced as the name of a temporary file and nothing else. A window now explains
-  what happened, states that the file is safe, names the GSE Fork repository it came from and offers
-  to open it. Where Windows Defender is the one blocking, a button adds the exclusion and retries.
-  The automatic repair reaches the same window, so turning it on no longer means a virus alert from
-  nowhere and a silent failure in a log.
-
-### Fixed
-
-- **A whole game no longer shows as 100% complete on its first launch.** Some shipped schemas declare
-  a minimum and a maximum of 1 on every row, so the emulator writes "1 / 1" for achievements nobody
-  earned. The overlay painted those as full bars; it now reads a maximum of 1 as the plain
-  locked/unlocked state, which is what the list and the toast already did.
-- **Epic fallback schemas are described, and in your language.** When the namespace lookup finds
-  nothing, the direct Epic request asked for English and read only the locked texts, leaving titles
-  that ship the unlocked half with blank descriptions. It now asks for the language AW Next is set to
-  and takes whichever half the game actually filled.
-- **The emulator data generator can no longer hang a scan.** A run that reached Steam and then went
-  silent held its whole budget with nothing to show; a second budget now ends a run that has said
-  nothing at all, killing the process tree rather than the launcher in front of it, and the tool is
-  only ever run from the folder AW Next unpacked it into.
-- **A connected Steam account stays connected.** The token Steam hands out lasts a day, so Settings
-  reported the account disconnected every morning and asked for the password again. AW Next now keeps
-  the long-lived refresh token the Steam website itself uses and mints a new access token silently,
-  with no window and no sign-in; only a refusal from Steam still counts as disconnected.
-- **Global rarity percentages come back.** Valve's percentage endpoint intermittently answers with an
-  empty achievement list, and the toast and the game page then had no rarity to show at all. The
-  request is retried in the spelling that does answer before an empty reply is believed.
-- **Ubisoft games whose Steam achievements are numbered `001`, `002`, ... now record their unlocks.**
-  The Uplay loader rebuilds every key from the objective number with no leading zeros, so a schema
-  written as `001` named a key the game could never reach: the setup sat at 0% forever while
-  reporting itself valid, and Diagnose tried to repair it on every pass. Assassin's Creed Origins and
-  Odyssey, both South Park games, Starlink, Transference and Trials of the Blood Dragon were
-  affected. The Watchdog had the same blind spot, so their unlocks raised no notification either.
-  Unlocks already recorded are picked up on the next scan, and re-applying a fix that changes the
-  keys now lets the emulator rebuild its save rather than leaving an unreachable one in place.
-  The convention this rests on, that the number ending a Steam achievement name is the Ubisoft
-  objective id, was checked against Ubisoft's own achievement data for every game where both lists
-  could be obtained and matched by title: 409 achievements across eight titles, from Assassin's Creed
-  III to Shadows, agreeing on all of them.
-- **A repaired Ubisoft game records its unlocks, and looks tracked while doing it.** The fix redirects
-  achievements into the folder the Steam emulators use, which made AW Next read them as Steam unlocks:
-  every key missed the achievement list and the game stayed at 0% with a setup that was correct on
-  disk (Assassin's Creed Origins reported 67 saved achievements it could not place). The same
-  confusion made Game health call a working Uplay setup "no emulator here" and offer the wrong
-  buttons, while the tile's status dot asked whether `steam_api.dll` was present, which a Ubisoft
-  game never has. All three now read the loader and its config instead.
-- **The folders that actually hold unlocks are watched.** An ALI213 game raised no live notification
-  at all, because those emulators write either `Achievements.Bin` or `Achievements.ini` depending on
-  the build and only the first was watched. ALI213 and ColdClient-style builds also keep unlocks
-  inside the game's own folder rather than under `%APPDATA%`, so the game libraries are now searched
-  for those configs, and a folder is proposed only when its config names the game it stands in for.
-  The R1 loader's save folder joined the library scan too. On the machine this was found on it picked
-  up ZOMBI and eight Jackbox packs.
-- **Ubisoft Connect's achievement cache is found again.** AW Next looked under one fixed
-  `%ProgramData%` path while Ubisoft Connect keeps the cache in its own install folder, so every
-  cached archive was invisible. The launcher is located through the registry now, with the old paths
-  kept as fallbacks.
-- **A repack folder named after the site it came from is identified again.** A trailing domain such as
-  `... v1.52 RexaGames.com` was kept as part of the title, which pushed the match below the level AW
-  Next applies on its own: the game showed its folder name, had no artwork and resolved to no store
-  page. Folder names are also matched against the Steam spelling of a title, not only the Uplay one.
-- **Ubisoft games with no Steam release appear under their own identity**, with Ubisoft's boxart,
-  instead of becoming a card named "null". The built-in list records their missing Steam ID as empty,
-  which the scan read as if it were an ID. Rayman 3, the four Settlers History Editions, Might &
-  Magic VIII and IX, Prince of Persia, the Discovery Tours and 30 others were affected.
-- **The launch executable is found for repacks and for Ubisoft installs.** A patched copy in a
-  `Crack`/`NoDVD`/`Таблетка` folder counted as a rival candidate, a bundled
-  `UbisoftConnectInstaller.exe`, `VC_redist.x64.exe` or `7za.exe` counted as a game, and an
-  unconfirmed path from an earlier scan blocked detection from running again. The stored candidate
-  list also survived rule changes, so a shipped fix did nothing for an already scanned folder, and a
-  leftover entry for an unnamed folder could keep the executable away from the game that was
-  identified.
-- **A game sitting directly in a library folder is no longer anchored on that folder.** When the only
-  thing identifying it was an emulator config beside its steam_api dll, AW Next walked up one level
-  looking for the real game root, and the check for "does this look like a game folder" searches
-  below the folder it is given: asked about the library, it answered with the first other game's
-  executable. The game was then pinned to the whole library, and every folder-based repair aimed at
-  whichever game came first in it, offering to rewrite a different game's files. Seen on ZOMBI.
-  The same question was what the walk up from an engine folder rested on, so a game whose emulator
-  sits in Binaries/Win64 while another architecture next door ships the executable was anchored on
-  the engine folder rather than on itself. Both now climb by folder name instead, and Unity's
-  "<Game>_Data" counts as engine internals like the rest.
-- **A game identified only by its emulator's own config no longer appears twice.** A folder is skipped
-  as unidentified when something in it names a Steam ID, and taking back the settings folder above
-  removed that marker. The crack loader's own config states the ID it stands in for, which identifies
-  the folder just as well.
-- **A Steam application or tool is no longer counted as a game.** DSX, Lossless Scaling, Wallpaper
-  Engine and SteamVR sit in the library like any game you own, so starting one recorded playtime it
-  never earned and left AW Next believing a game was running all session. AW Next now asks Steam's
-  own local catalogue what an appid actually is.
-
-### Performance
-
-- **The first scan after a launch is as fast as the ones after it.** Two answers were remembered in
-  memory only and paid for again on every start: where a game's schema sits on disk (a walk of the
-  install folder, up to three seconds per game) and which AppID a title name resolves to (a network
-  search per unconfigured game, five to twelve seconds of the scan). Both are now kept on disk, an
-  oversized install can no longer hold the walk, and a manual refresh still forgets them. The progress
-  bar sweeps instead of showing the previous scan's percentage while the Steam ownership call runs,
-  and that call now gives up after fifteen seconds rather than holding the library forever.
-- **AW Next costs less while it sits in the tray.** Hiding the window left 211 MB of pages resident
-  across this app, the GPU process and the network service until something else on the machine needed
-  the RAM badly enough for Windows to take it; those working sets are now emptied on the way into
-  idle, once per transition and never on a timer. The overlay hotkey no longer keeps a PowerShell host
-  alive for the whole session either, since the app registers the shortcut itself, and the Steam
-  achievement-group cache keeps its 300 most recent games instead of growing all session.
-- **The background library scan waits for you to stop playing.** It loads the whole achievement engine
-  into the tray process and walks every library folder, and it fired mid-game every fifteen minutes
-  for work nobody was waiting for. It now holds while a game is running and resumes shortly after the
-  game exits, with a ceiling of about two hours so a background process mistaken for a game cannot
-  suspend discovery silently.
-
-### Website & Docs
-
-- The Ubisoft/Uplay settings section, its dialogs and the documentation name both loader generations
-  instead of R2 alone, and the new logging switch is translated in all 28 bundled languages. The
-  Uplay page covers both generations, states how an achievement key is rebuilt from the objective ID,
-  and names the loader's own `upc_r2.log` / `upc_r1.log` beside the DLL. Nothing else about the loader
-  is exposed: save paths, key prefixes and architectures stay decisions AW Next makes from the
-  install.
-
-## 3.10.1 - 2026-08-25
-
-### Added
-
+  36 unlocks in an 8-byte bitfield beside its saves, found in Documents without adding the folder by
+  hand.
 - **Every theme can be edited and saved as your own.** Selecting any theme - a built-in palette, one
   you saved, one somebody sent you - opens the editor on its colours. **Save theme** beside the name
   field keeps it: the same name updates that theme, a new one creates a second and leaves the first
@@ -212,6 +39,35 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Improved
 
+- **The list of Ubisoft games updates itself, and a game missing from it can still be paired.**
+  Ubisoft's public catalogue and the community id list are now read and cached, the file shipped
+  inside AW Next staying as a starting point. A game neither names is matched to its Steam release
+  only when a single Steam game carries the same title: a spelling slip still resolves, while
+  Assassin's Creed is never taken for Assassin's Creed II, nor Rainbow Six for Siege. Measured
+  against the 274 pairings the shipped list covers: 217 found, none wrong. Failing that, the product
+  number the game itself hands the loader is read back from the loader's log and remembered per
+  installation.
+- **Diagnose says why a valid-looking setup records nothing.** A game that never asks the emulator to
+  unlock anything and one that asks with an objective number the schema does not carry used to look
+  identical. The loader's log is the only record of which it is, so it is on by default, has its own
+  settings row, and Diagnose reads both loader generations and names the missing numbers.
+- **A game served by ALI213, OnlineFix or the like is named after it, instead of "Goldberg".** That
+  word named a shape on disk, so every emulator producing that shape was reported under it (ZOMBI was
+  shown as GBE Fork while its own dll says ALI213). The shape still decides where saves are read
+  from; the emulator's name is carried alongside it and is what the reports show.
+- **A game already served by another emulator is left alone.** A Ubisoft game sold on Steam ships both
+  layers, so a Uplay loader lying in the folder no longer means the Uplay layer serves its
+  achievements: Game health used to say "achievement list missing" and offer to install a loader over
+  a game that already worked. AW Next also stops writing Goldberg settings beside ALI213, OnlineFix,
+  TENOKE, SmartSteamEmu and the rest, whose empty achievement list then read as a fault; a folder it
+  left behind is taken back when everything in it is its own and holds nothing. Both refusals now
+  name the emulator that is the reason.
+- **A repair package the antivirus quarantined says so, and offers a way out.** Steam emulators are
+  flagged by most engines, and a package removed between being downloaded and being read surfaced as
+  a temporary file name and nothing else. A window now explains what happened, states that the file
+  is safe, names the GSE Fork repository it came from, and where Windows Defender is the one
+  blocking, adds the exclusion and retries. The automatic repair reaches the same window instead of
+  failing silently in a log.
 - The theme editor's **Reset** puts back the theme you are editing, and a built-in can be exported
   once you have given it a name of your own.
 - **Emulator data folders are resolved instead of assumed.** RPCS3 follows `vfs.yml`, a portable
@@ -241,6 +97,69 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **A whole game no longer shows as 100% complete on its first launch.** Some shipped schemas declare
+  a minimum and a maximum of 1 on every row, so the emulator writes "1 / 1" for achievements nobody
+  earned. The overlay now reads a maximum of 1 as plain locked/unlocked, like the list and the toast.
+- **Epic fallback schemas are described, and in your language.** The direct Epic request asked for
+  English and read only the locked texts, leaving titles that ship the unlocked half with blank
+  descriptions. It now asks in the language AW Next is set to and takes whichever half is filled.
+- **The emulator data generator can no longer hang a scan.** A run that reached Steam and then went
+  silent held its whole budget; a second budget ends a run that has said nothing at all, killing the
+  process tree rather than the launcher in front of it.
+- **A connected Steam account stays connected.** The access token Steam hands out lasts a day, so
+  Settings reported the account disconnected every morning and asked for the password again. AW Next
+  now keeps the long-lived refresh token and mints a new access token silently, with no window and no
+  sign-in; only a refusal from Steam counts as disconnected.
+- **Global rarity percentages come back.** Valve's percentage endpoint intermittently answers with an
+  empty list, which left the toast and the game page with no rarity at all. The request is retried in
+  the spelling that does answer before an empty reply is believed.
+- **Ubisoft games whose Steam achievements are numbered `001`, `002`, ... now record their unlocks.**
+  The Uplay loader rebuilds every key from the objective number with no leading zeros, so those
+  setups sat at 0% forever while reporting themselves valid, in the app and in the Watchdog alike:
+  Assassin's Creed Origins and Odyssey, both South Park games, Starlink, Transference and Trials of
+  the Blood Dragon. Unlocks already recorded are picked up on the next scan, and re-applying a fix
+  that changes the keys lets the emulator rebuild its save. The convention this rests on, that the
+  number ending a Steam achievement name is the Ubisoft objective id, was checked against Ubisoft's
+  own data on 409 achievements across eight titles, agreeing on all of them.
+- **A repaired Ubisoft game records its unlocks, and looks tracked while doing it.** The fix redirects
+  achievements into the folder the Steam emulators use, which made AW Next read them as Steam unlocks:
+  every key missed the achievement list and the game stayed at 0% (Assassin's Creed Origins reported
+  67 saved achievements it could not place). The same confusion made Game health call a working Uplay
+  setup "no emulator here", and the tile's status dot ask for a `steam_api.dll` a Ubisoft game never
+  has. All three now read the loader and its config instead.
+- **The folders that actually hold unlocks are watched.** An ALI213 game raised no live notification,
+  because those emulators write either `Achievements.Bin` or `Achievements.ini` and only the first was
+  watched, and they keep unlocks inside the game's own folder rather than under `%APPDATA%`. The game
+  libraries are now searched for those configs, a folder being proposed only when its config names
+  the game it stands in for, and the R1 loader's save folder joined the scan. On the machine this was
+  found on it picked up ZOMBI and eight Jackbox packs.
+- **Ubisoft Connect's achievement cache is found again.** AW Next looked under one fixed
+  `%ProgramData%` path while the launcher keeps the cache in its own install folder, now located
+  through the registry with the old paths as fallbacks.
+- **A repack folder named after the site it came from is identified again.** A trailing domain such as
+  `... v1.52 RexaGames.com` was kept as part of the title, leaving the game with its folder name, no
+  artwork and no store page. Folder names are also matched against the Steam spelling of a title, not
+  only the Uplay one.
+- **Ubisoft games with no Steam release appear under their own identity**, with Ubisoft's boxart,
+  instead of a card named "null": their missing Steam ID is recorded as empty, which the scan read as
+  if it were an ID. Rayman 3, the four Settlers History Editions, Might & Magic VIII and IX, Prince
+  of Persia, the Discovery Tours and 30 others were affected.
+- **The launch executable is found for repacks and for Ubisoft installs.** A patched copy in a
+  `Crack`/`NoDVD`/`Таблетка` folder counted as a rival candidate, a bundled
+  `UbisoftConnectInstaller.exe`, `VC_redist.x64.exe` or `7za.exe` counted as a game, and an
+  unconfirmed path from an earlier scan blocked detection from running again. The stored candidate
+  list also survived rule changes, so a shipped fix did nothing for an already scanned folder.
+- **A game sitting directly in a library folder is no longer anchored on that folder.** Identified
+  only by an emulator config, AW Next walked up one level looking for the real game root, and the
+  check for "does this look like a game folder" answered with the first other game in the library, so
+  every folder-based repair aimed at that game's files (seen on ZOMBI). The same question anchored a
+  game whose emulator sits in Binaries/Win64 on its engine folder; both now climb by folder name, and
+  Unity's "<Game>_Data" counts as engine internals. The game also stops appearing twice, since the
+  crack loader's own config states the Steam ID it stands in for.
+- **A Steam application or tool is no longer counted as a game.** DSX, Lossless Scaling, Wallpaper
+  Engine and SteamVR sit in the library like any game you own, so starting one recorded playtime it
+  never earned and left AW Next believing a game was running all session. Steam's own local catalogue
+  is asked what an appid actually is.
 - A tall preset and the Compare view are no longer cut off: the preview now fits in height as well
   as width, and takes the height the design actually needs.
 - **The Screen view shows the whole display.** The mock screen was drawn as wide as the stage, which
@@ -285,12 +204,33 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Performance
 
+- **The first scan after a launch is as fast as the ones after it.** Where a game's schema sits on
+  disk (a folder walk, up to three seconds per game) and which AppID a title resolves to (five to
+  twelve seconds of the scan) were remembered in memory only and paid for again on every start. Both
+  are now kept on disk, an oversized install can no longer hold the walk, and a manual refresh still
+  forgets them. The progress bar sweeps while the Steam ownership call runs, and that call gives up
+  after fifteen seconds rather than holding the library forever.
+- **AW Next costs less while it sits in the tray.** Hiding the window left 211 MB resident across the
+  app, the GPU process and the network service until Windows needed the RAM badly enough to take it;
+  those working sets are now emptied on the way into idle, once per transition and never on a timer.
+  The overlay hotkey no longer keeps a PowerShell host alive for the whole session, and the Steam
+  achievement-group cache keeps its 300 most recent games instead of growing all session.
+- **The background library scan waits for you to stop playing.** It loads the whole achievement engine
+  into the tray process and walked every library folder mid-game every fifteen minutes, for work
+  nobody was waiting for. It now holds while a game is running and resumes shortly after it exits,
+  with a ceiling of about two hours so a background process mistaken for a game cannot suspend
+  discovery silently.
 - A screenshot souvenir is written about 1.6x faster (1440p: ~570 ms against ~920). The PNG no
   longer carries an alpha channel a screenshot never uses, and the compression level was measured
   rather than left at the library default.
 
 ### Website & Docs
 
+- The Ubisoft/Uplay settings section, its dialogs and the documentation name both loader generations
+  instead of R2 alone, with the new logging switch translated in all 28 bundled languages. The Uplay
+  page covers both generations, states how an achievement key is rebuilt from the objective ID, and
+  names the loader's own `upc_r2.log` / `upc_r1.log` beside the DLL. Save paths, key prefixes and
+  architectures stay decisions AW Next makes from the install.
 - The home page has a **Themes** section that repaints a live sample in ten of the built-in palettes, and the
   site is now fully translated into nine languages - Italian, Polish and Japanese joining French,
   German, Spanish, Portuguese (Brazil), Russian and Simplified Chinese.
