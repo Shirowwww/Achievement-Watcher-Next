@@ -535,9 +535,16 @@ module.exports.load = () => {
         steamId: '', // optional account_steamid override for configs.user.ini ('' = let GBE pick)
         uplayUsername: '', // optional Uplay R2 Username override ('' = use the general username)
         uplayLanguage: 'auto', // 'auto' follows the achievement language, otherwise a loader locale code
-        // On by default: the loader's own log is the only record of which objective a game asked to
-        // unlock, and it is what Diagnose reads to tell a wrong mapping apart from a game that never
-        // asks. It costs one text file beside the loader.
+        /*
+          On by default, because the loader's own log is the only record of which objective a game
+          asked to unlock: without it Game health cannot tell a wrong mapping apart from a game that
+          never asks, and cannot offer the session fix at all. Turning it off silently takes those
+          answers away, which is why the setting says so.
+
+          The loader appends a line per call and never rotates, and a game polling for asynchronous
+          operations produces a lot of them (17 KB/s on one measured title, 97% of it one repeated
+          line), so repair() caps the file rather than leaving it to grow.
+        */
         uplayLogging: true,
       },
       notification: {
