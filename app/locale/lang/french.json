@@ -338,6 +338,21 @@
         }
       },
       "loginPlaceholder": "compte jetable",
+      "gbe": {
+        "label": "DLL d’émulateur",
+        "help": "Importez votre propre steam_api / steam_api64.dll pour qu’elle soit installée à la place de la version GBE Fork téléchargée, à chaque réparation et à chaque réparation automatique. L’architecture que vous n’importez pas continue de venir de la version officielle.",
+        "import": "Importer ou remplacer la DLL",
+        "restore": "Utiliser la version officielle",
+        "dllFilter": "DLL steam_api",
+        "customReady": "DLL importée utilisée ({files})",
+        "officialReady": "Version officielle ({tag})",
+        "notDownloaded": "Téléchargée à la première réparation",
+        "attention": "Attention requise",
+        "importSuccess": "{files} sera installée à la prochaine réparation.",
+        "importFailure": "Le fichier sélectionné n’a pas pu être importé : {reason}",
+        "restoreSuccess": "La version officielle de GBE Fork est de nouveau utilisée.",
+        "restoreFailure": "La DLL importée n’a pas pu être supprimée."
+      },
       "uplay": {
         "title": "Ubisoft / Uplay R1/R2",
         "iniTitle": "Options du loader et des INI",

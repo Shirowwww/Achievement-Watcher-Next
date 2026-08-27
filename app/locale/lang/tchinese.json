@@ -354,6 +354,21 @@
         }
       },
       "loginPlaceholder": "免洗帳號",
+      "gbe": {
+        "label": "模擬器 DLL",
+        "help": "匯入你自己的 steam_api / steam_api64.dll，每次修復與自動修復時都會安裝它，而不是下載的 GBE Fork 版本。未匯入的架構仍會來自官方版本。",
+        "import": "匯入或取代 DLL",
+        "restore": "使用官方版本",
+        "dllFilter": "steam_api DLL 檔案",
+        "customReady": "正在使用匯入的 DLL（{files}）",
+        "officialReady": "官方版本（{tag}）",
+        "notDownloaded": "首次修復時下載",
+        "attention": "需要注意",
+        "importSuccess": "{files} 將在下次修復時安裝。",
+        "importFailure": "無法匯入所選檔案：{reason}",
+        "restoreSuccess": "已恢復使用官方 GBE Fork 版本。",
+        "restoreFailure": "無法移除匯入的 DLL。"
+      },
       "uplay": {
         "title": "Ubisoft / Uplay R1/R2",
         "iniTitle": "載入器與 INI 選項",

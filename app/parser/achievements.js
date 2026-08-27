@@ -1415,11 +1415,11 @@ async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
 const UNCONFIG_SKIP_DIR = /^(_?CommonRedist|_?Redist|redist|DirectX|dx|dotnet|prerequisites|prereq|Installers|__Installer|steam_settings|steamapps|common|SaveConverter|tools|Extras|Updater|app|bin|backups|cache|httpcache|media|Patches|support|Redistributables|Binaries|Engine|plugins|Modding)$/i;
 
 // Configs a Steam emulator drops beside a game, each stating the AppID it stands in for.
-const EMULATOR_APPID_CONFIGS = ['ali213.ini', 'valve.ini', 'steamconfig.ini', 'steam_emu.ini', 'steam_api.ini', 'cpy.ini', 'hlm.ini', 'ds.ini'];
+const EMULATOR_APPID_CONFIGS = new Set(['ali213.ini', 'valve.ini', 'steamconfig.ini', 'steam_emu.ini', 'steam_api.ini', 'cpy.ini', 'hlm.ini', 'ds.ini']);
 
 function declaredEmulatorAppid(dir, entries) {
   for (const entry of entries || []) {
-    if (!entry.isFile() || !EMULATOR_APPID_CONFIGS.includes(entry.name.toLowerCase())) continue;
+    if (!entry.isFile() || !EMULATOR_APPID_CONFIGS.has(entry.name.toLowerCase())) continue;
     try {
       const declared = fs.readFileSync(path.join(dir, entry.name), 'utf8').match(/^\s*App(?:ID|Id)\s*=\s*([0-9]+)\s*$/im);
       if (declared && Number(declared[1]) > 0) return String(Number(declared[1]));

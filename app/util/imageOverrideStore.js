@@ -356,7 +356,7 @@ function createImageOverrideStore({ fileName, folder, recoverPrefix = null } = {
         preserved.add(String(appid));
         return pathToFileURL(destination).href;
       } catch (err) {
-        throw new Error(`Could not preserve custom image for ${appid}: ${err.message || err}`);
+        throw new Error(`Could not preserve custom image for ${appid}: ${err.message || err}`, { cause: err });
       }
     };
 

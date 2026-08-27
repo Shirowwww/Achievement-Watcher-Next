@@ -12,6 +12,7 @@ const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
 const request = require('request-zero');
+const pe = require('../util/pe.js');
 
 const RELEASE_API = 'https://api.github.com/repos/Detanup01/gbe_fork/releases/latest';
 const RELEASES_PAGE = 'https://github.com/Detanup01/gbe_fork/releases';
@@ -38,6 +39,23 @@ const INTERFACE_SOURCE = {
 };
 
 const noopLog = { log() {}, error() {} };
+
+/*
+  A dll the user imported by hand lives outside the tagged release folders, in cacheDir/custom/. No
+  download ever writes there, so a new GBE Fork release cannot silently discard it, and the daily
+  GitHub check keeps supplying what the import does not cover: the other architecture and the
+  version-coupled generate_interfaces tools.
+*/
+const CUSTOM_DIR = 'custom';
+const CUSTOM_MANIFEST = 'import.json';
+/*
+  Both GBE Fork and classic Goldberg read their configuration from a steam_settings folder, so the
+  string is in every emulator build and in none of Valve's own steam_api dlls. Importing a genuine
+  Steamworks dll would put it into every repaired game at once and break them all with no error
+  worth reading, so that is the one thing the import refuses.
+*/
+const EMULATOR_MARKER = Buffer.from('steam_settings', 'ascii');
+const MAX_IMPORT_ENTRIES = 4096;
 
 function resolveUnpackedBinary(binPath) {
   const normalized = String(binPath || '');
@@ -74,6 +92,213 @@ function cachedInterfaceTools(cacheDir, tag) {
     if (fs.existsSync(file)) out[arch] = file;
   }
   return out.x86 || out.x64 ? out : null;
+}
+
+function sameFileBytes(left, right) {
+  try {
+    if (fs.statSync(left).size !== fs.statSync(right).size) return false;
+    return fs.readFileSync(left).equals(fs.readFileSync(right));
+  } catch {
+    return false;
+  }
+}
+
+// The arch a file will be installed as, taken from the name it already carries.
+function archOfDllName(file) {
+  const name = path.basename(String(file || '')).toLowerCase();
+  return Object.keys(ARCH).find((key) => ARCH[key].file === name) || '';
+}
+
+function emulatorDll(file) {
+  try {
+    return fs.readFileSync(file).includes(EMULATOR_MARKER);
+  } catch {
+    return false;
+  }
+}
+
+/*
+  `archKey` is the arch the file would be installed as, not a guess: an x86 dll accepted under the
+  steam_api64.dll name only fails later, when the game refuses to start with nothing to read.
+*/
+function inspectCustomDll(file, archKey) {
+  const arch = pe.exeArch(file);
+  let error = '';
+  if (!ARCH[archKey]) error = 'UNKNOWN_ARCH';
+  else if (!arch) error = 'NOT_PE';
+  else if (arch !== archKey) error = 'ARCH_MISMATCH';
+  else if (!emulatorDll(file)) error = 'NOT_AN_EMULATOR_DLL';
+  return { name: ARCH[archKey] ? ARCH[archKey].file : path.basename(String(file || '')), file, arch, valid: !error, error };
+}
+
+/*
+  The imported dlls, re-validated on every read: a file copied into the folder by hand never becomes
+  eligible just by carrying the right name. Always returns the shape, so a caller can report what was
+  rejected and not only what worked.
+*/
+function customDlls(cacheDir) {
+  const dir = path.join(cacheDir, CUSTOM_DIR);
+  const out = { dir, x64: null, x86: null, names: [], invalid: [] };
+  for (const key of Object.keys(ARCH)) {
+    const file = path.join(dir, ARCH[key].file);
+    if (!fs.existsSync(file)) continue;
+    const inspected = inspectCustomDll(file, key);
+    if (inspected.valid) {
+      out[key] = file;
+      out.names.push(inspected.name);
+    } else {
+      out.invalid.push(inspected);
+    }
+  }
+  return out;
+}
+
+// The imported dll wins per architecture; everything it does not provide still comes from the
+// release build, including the generate_interfaces tools it has no reason to ship.
+function mergeCustomDlls(release, custom) {
+  if (!custom || custom.names.length === 0) return release;
+  const merged = { ...(release || { tag: null, dir: custom.dir, x64: null, x86: null, interfaces: null }) };
+  for (const key of Object.keys(ARCH)) {
+    if (custom[key]) merged[key] = custom[key];
+  }
+  merged.custom = [...custom.names];
+  merged.tag = merged.tag ? `${merged.tag}+custom` : 'custom';
+  return merged;
+}
+
+// What a repair would install right now, without touching GitHub: the Settings card needs an answer
+// on every tab open, and that answer must not cost a release download.
+function describeCache(cacheDir) {
+  if (!cacheDir) throw new Error('describeCache: cacheDir is required');
+  const tag = readText(path.join(cacheDir, 'latest.txt'));
+  const release = cachedDlls(cacheDir, tag);
+  const custom = customDlls(cacheDir);
+  return { tag: release ? tag : '', custom: custom.names, invalid: custom.invalid };
+}
+
+function safeArchiveEntry(entry) {
+  const file = String((entry && entry.file) || '');
+  if (!file) return false;
+  if (path.isAbsolute(file) || /^[a-z]:/i.test(file)) return false;
+  return !file.split(/[\\/]+/).includes('..');
+}
+
+// Only the two steam_api names are pulled out of a selected archive. Whatever else it carries never
+// reaches even the temporary tree.
+async function extractCustomArchive(archivePath, destDir, log) {
+  const Seven = require('node-7z');
+  const sevenBin = resolveUnpackedBinary(require('7zip-bin').path7za);
+  if (!fs.existsSync(sevenBin)) throw new Error(`7za.exe not found at "${sevenBin}"`);
+  const entries = await new Promise((resolve, reject) => {
+    const found = [];
+    const stream = Seven.list(archivePath, { $bin: sevenBin });
+    stream.on('data', (entry) => found.push(entry));
+    stream.on('end', () => resolve(found));
+    stream.on('error', reject);
+  });
+  if (entries.length === 0 || entries.length > MAX_IMPORT_ENTRIES) throw new Error('the selected archive has an invalid file count');
+  const wanted = [];
+  for (const entry of entries) {
+    if (!safeArchiveEntry(entry)) throw new Error(`unsafe path in the selected archive: ${(entry && entry.file) || '(unnamed)'}`);
+    if (archOfDllName(entry.file)) wanted.push(entry.file);
+  }
+  if (wanted.length === 0) throw new Error('no steam_api.dll or steam_api64.dll in the selected archive');
+  fs.mkdirSync(destDir, { recursive: true });
+  await new Promise((resolve, reject) => {
+    const stream = Seven.extractFull(archivePath, destDir, { $bin: sevenBin, $cherryPick: wanted });
+    stream.on('end', resolve);
+    stream.on('error', reject);
+  });
+  log.log(`[gbe] extracted ${wanted.length} dll(s) from ${path.basename(archivePath)}`);
+}
+
+/*
+  Import a user-selected archive, folder or single dll into cacheDir/custom/. Every accepted file is
+  a real PE of the architecture its installed name promises, and an emulator rather than Valve's own
+  steam_api. Returns { dir, imported, unchanged, rejected, custom }.
+*/
+async function importCustomDlls({ packagePath, cacheDir, log = noopLog } = {}) {
+  if (!cacheDir) throw new Error('importCustomDlls: cacheDir is required');
+  if (!packagePath || !fs.existsSync(packagePath)) throw new Error(`selected package not found: ${packagePath}`);
+
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gbe-import-'));
+  try {
+    let sourceRoot;
+    if (fs.statSync(packagePath).isDirectory()) {
+      sourceRoot = packagePath;
+    } else if (path.extname(packagePath).toLowerCase() === '.dll') {
+      // A renamed copy still says which arch it is; the header decides when the name does not.
+      const archKey = archOfDllName(packagePath) || pe.exeArch(packagePath);
+      if (!ARCH[archKey]) throw new Error('the selected file is not a 32-bit or 64-bit steam_api dll');
+      sourceRoot = path.join(tempDir, 'single');
+      fs.mkdirSync(sourceRoot, { recursive: true });
+      fs.copyFileSync(packagePath, path.join(sourceRoot, ARCH[archKey].file));
+    } else {
+      sourceRoot = path.join(tempDir, 'extracted');
+      await extractCustomArchive(packagePath, sourceRoot, log);
+    }
+
+    const result = { dir: path.join(cacheDir, CUSTOM_DIR), imported: [], unchanged: [], rejected: [] };
+    const accepted = [];
+    for (const key of Object.keys(ARCH)) {
+      const found = findDllInTree(sourceRoot, key);
+      if (!found) continue;
+      const inspected = inspectCustomDll(found, key);
+      if (inspected.valid) accepted.push({ ...inspected, key });
+      else result.rejected.push(inspected);
+    }
+    if (accepted.length === 0) {
+      const reasons = [...new Set(result.rejected.map((entry) => `${entry.name}: ${entry.error}`))];
+      throw new Error(`no usable steam_api dll in the selection${reasons.length ? ` (${reasons.join(', ')})` : ''}`);
+    }
+
+    fs.mkdirSync(result.dir, { recursive: true });
+    for (const entry of accepted) {
+      const destination = path.join(result.dir, entry.name);
+      if (sameFileBytes(entry.file, destination)) {
+        result.unchanged.push(entry.name);
+        continue;
+      }
+      // Copied under a temporary name and re-validated before it takes the place a repair reads, so
+      // a half-written dll is never the one installed into a game.
+      const temporary = `${destination}.${process.pid}.tmp`;
+      try {
+        fs.copyFileSync(entry.file, temporary);
+        const copied = inspectCustomDll(temporary, entry.key);
+        if (!copied.valid) throw new Error(`${entry.name}: the imported copy failed validation (${copied.error})`);
+        fs.renameSync(temporary, destination);
+      } finally {
+        try {
+          if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
+        } catch {
+          /* ignore cleanup failure */
+        }
+      }
+      result.imported.push(entry.name);
+    }
+
+    const custom = customDlls(cacheDir);
+    fs.writeFileSync(
+      path.join(result.dir, CUSTOM_MANIFEST),
+      JSON.stringify({ format: 1, importedAt: new Date().toISOString(), source: path.basename(packagePath), files: custom.names }, null, 2)
+    );
+    log.log(`[gbe] imported custom dll(s): ${custom.names.join(', ')}`);
+    return { ...result, custom };
+  } finally {
+    try {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    } catch {
+      /* temp cleanup is best-effort */
+    }
+  }
+}
+
+// Drop the imported dlls; the next repair falls back to the downloaded release build.
+function clearCustomDlls({ cacheDir } = {}) {
+  if (!cacheDir) throw new Error('clearCustomDlls: cacheDir is required');
+  const removed = customDlls(cacheDir).names;
+  fs.rmSync(path.join(cacheDir, CUSTOM_DIR), { recursive: true, force: true });
+  return removed;
 }
 
 // Locate a given arch's DLL inside an extracted release tree. Tries the canonical
@@ -114,7 +339,7 @@ function findDllInTree(extractDir, archKey) {
 // a single name or an array of candidate names (first match wins) to tolerate fork spelling drift.
 // `preferDir`, when given, ranks matches whose path contains that substring first.
 function findByBasename(extractDir, basename, preferDir) {
-  const targets = (Array.isArray(basename) ? basename : [basename]).map((b) => String(b).toLowerCase());
+  const targets = new Set((Array.isArray(basename) ? basename : [basename]).map((b) => String(b).toLowerCase()));
   if (!Array.isArray(basename) && !preferDir) {
     const direct = path.join(extractDir, basename);
     if (fs.existsSync(direct)) return direct;
@@ -125,7 +350,7 @@ function findByBasename(extractDir, basename, preferDir) {
   } catch {
     return null;
   }
-  const matches = all.filter((rel) => targets.includes(path.basename(String(rel)).toLowerCase()));
+  const matches = all.filter((rel) => targets.has(path.basename(String(rel)).toLowerCase()));
   if (matches.length === 0) return null;
   if (preferDir) {
     const pref = matches.find((rel) => String(rel).toLowerCase().includes(preferDir.toLowerCase()));
@@ -272,17 +497,12 @@ async function generateInterfaces({ dllPath, steamSettings, dlls, log = noopLog 
 
 function matchesCachedDll(file, cacheDir, archKey) {
   if (!file || !cacheDir || !archKey || !ARCH[archKey] || !fs.existsSync(file)) return false;
+  // The imported dll counts as ours too: without it a game repaired with a custom build reads as
+  // untouched and gets repaired again on every scan.
+  const candidates = [path.join(cacheDir, CUSTOM_DIR, ARCH[archKey].file)];
   const tag = readText(path.join(cacheDir, 'latest.txt'));
-  if (!tag) return false;
-  const cached = path.join(cacheDir, tag, ARCH[archKey].file);
-  if (!fs.existsSync(cached)) return false;
-  try {
-    const live = fs.readFileSync(file);
-    const expected = fs.readFileSync(cached);
-    return live.length === expected.length && live.equals(expected);
-  } catch {
-    return false;
-  }
+  if (tag) candidates.push(path.join(cacheDir, tag, ARCH[archKey].file));
+  return candidates.some((cached) => fs.existsSync(cached) && sameFileBytes(file, cached));
 }
 
 const AUXILIARY_DLL_DIRS = new Set([
@@ -354,13 +574,31 @@ function runtimeDllDirs({ gameDir, dllPaths = [], exePath = null, steamSettings 
 }
 
 /*
-  Ensure the GBE Fork DLLs are cached locally ({ tag, dir, x64, x86, interfaces }); re-checks GitHub
-  at most once a day unless force is set.
+  Ensure the DLLs a repair installs are available locally ({ tag, dir, x64, x86, interfaces }), with
+  any imported dll taking the place of the released one for its architecture.
 */
 async function ensureEmulatorDlls({ cacheDir, force = false, log = noopLog } = {}) {
   if (!cacheDir) throw new Error('ensureEmulatorDlls: cacheDir is required');
   fs.mkdirSync(cacheDir, { recursive: true });
 
+  const custom = customDlls(cacheDir);
+  let release = null;
+  try {
+    release = await ensureReleaseDlls({ cacheDir, force, log });
+  } catch (e) {
+    // An import is already a complete answer for the arch it covers, so a release the network or an
+    // antivirus made unreachable only ends the repair when there is nothing imported to install.
+    if (custom.names.length === 0) throw e;
+    log.log(`[gbe] release build unavailable (${e.message || e}); installing the imported dll(s) only`);
+  }
+  return mergeCustomDlls(release, custom);
+}
+
+/*
+  The released build, cached under cacheDir/<tag>/; re-checks GitHub at most once a day unless force
+  is set.
+*/
+async function ensureReleaseDlls({ cacheDir, force = false, log = noopLog } = {}) {
   const cachedTag = readText(path.join(cacheDir, 'latest.txt'));
   const lastCheck = parseInt(readText(path.join(cacheDir, '.last-check')), 10) || 0;
   const fresh = Date.now() - lastCheck < RECHECK_TTL_MS;
@@ -376,7 +614,7 @@ async function ensureEmulatorDlls({ cacheDir, force = false, log = noopLog } = {
       log.log(`[gbe] GitHub unreachable (${e.message || e}); using cached build ${cachedTag}`);
       return cached;
     }
-    throw new Error(`Could not reach GitHub to fetch GBE Fork: ${e.message || e}`);
+    throw new Error(`Could not reach GitHub to fetch GBE Fork: ${e.message || e}`, { cause: e });
   }
 
   const tag = release && release.tag_name ? release.tag_name : null;
@@ -470,4 +708,17 @@ function installDlls({ dllDirs, dlls, writeIfMissing = null, ensureArch = null, 
   return summary;
 }
 
-module.exports = { ensureEmulatorDlls, installDlls, generateInterfaces, matchesCachedDll, runtimeDllDirs, ARCH, INTERFACE_TOOLS };
+module.exports = {
+  ensureEmulatorDlls,
+  installDlls,
+  generateInterfaces,
+  matchesCachedDll,
+  runtimeDllDirs,
+  customDlls,
+  importCustomDlls,
+  clearCustomDlls,
+  describeCache,
+  ARCH,
+  INTERFACE_TOOLS,
+  CUSTOM_DIR,
+};

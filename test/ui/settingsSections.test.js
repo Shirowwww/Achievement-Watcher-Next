@@ -99,9 +99,9 @@ test('section keys are unique, so two cards never share one open/closed state', 
 test('anything collapsed by default is a section that actually exists', () => {
   // Empty since the preset designer moved to a tab of its own - but a name left here that no longer
   // matches a card would silently collapse nothing, so the list is still checked against the markup.
-  const keys = allSections().map(keyOf);
+  const keys = new Set(allSections().map(keyOf));
   for (const key of sectionRules.DEFAULT_COLLAPSED) {
-    assert.ok(keys.includes(key), `"${key}" is collapsed by default but is not a section key`);
+    assert.ok(keys.has(key), `"${key}" is collapsed by default but is not a section key`);
   }
 });
 

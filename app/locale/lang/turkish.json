@@ -354,6 +354,21 @@
         }
       },
       "loginPlaceholder": "tek kullanımlık hesap",
+      "gbe": {
+        "label": "Emülatör DLL’i",
+        "help": "Kendi steam_api / steam_api64.dll dosyanızı içe aktarın; her onarımda ve her otomatik onarımda indirilen GBE Fork sürümü yerine o kurulur. İçe aktarmadığınız mimari resmi sürümden gelmeye devam eder.",
+        "import": "DLL’i içe aktar veya değiştir",
+        "restore": "Resmi sürümü kullan",
+        "dllFilter": "steam_api DLL dosyası",
+        "customReady": "İçe aktarılan DLL kullanılıyor ({files})",
+        "officialReady": "Resmi sürüm ({tag})",
+        "notDownloaded": "İlk onarımda indirilir",
+        "attention": "Dikkat gerekiyor",
+        "importSuccess": "{files} bir sonraki onarımda kurulacak.",
+        "importFailure": "Seçilen dosya içe aktarılamadı: {reason}",
+        "restoreSuccess": "Yeniden resmi GBE Fork sürümü kullanılıyor.",
+        "restoreFailure": "İçe aktarılan DLL kaldırılamadı."
+      },
       "uplay": {
         "title": "Ubisoft / Uplay R1/R2",
         "iniTitle": "Loader ve INI seçenekleri",

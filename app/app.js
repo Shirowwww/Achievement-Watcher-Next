@@ -2677,7 +2677,7 @@ function createAutomaticGbeBackup({ appid, gameDir, steamSettings } = {}) {
       debug.log(`[${appid || '?'}] GBE/Goldberg pre-fix backup skipped (${message})`);
       return { skipped: true, reason: message };
     }
-    throw new Error(`backup before emulator fix failed: ${message}`);
+    throw new Error(`backup before emulator fix failed: ${message}`, { cause: err });
   }
 }
 
@@ -3998,8 +3998,8 @@ var app = {
           const linkMenu = new Menu();
           // One list, shared with Game Health: a second hand-maintained copy is how the two views
           // came to disagree about which issues the very same repair can fix.
-          const diagnosisRepairCodes = [...gameHealth.REPAIRABLE_GOLDBERG_CODES];
-          const canRepairGoldbergReport = (report) => report.issues.some((i) => diagnosisRepairCodes.includes(i.code));
+          const diagnosisRepairCodes = new Set([...gameHealth.REPAIRABLE_GOLDBERG_CODES]);
+          const canRepairGoldbergReport = (report) => report.issues.some((i) => diagnosisRepairCodes.has(i.code));
           const buildGoldbergDiagnosisLines = (report) => {
             const emuLabel =
               report.loader ||
@@ -7790,7 +7790,7 @@ async function runGameHealthAction(appid, action, button) {
     const summary = await gameHealthRepair.installEmulatorRuntime({
       gbeInstaller,
       plan,
-      cacheDir: path.join(getUserDataPath(), 'cache/gbe'),
+      cacheDir: path.join(getUserDataPath(), 'cache/gse_fork'),
       steamSettings,
       log: debug,
     });
@@ -8197,6 +8197,89 @@ async function runGameHealthAction(appid, action, button) {
           button.prop('disabled', false);
         }
       });
+      /*
+        Steam / GBE Fork: a dll the user imported by hand replaces the downloaded one for its own
+        architecture, on every fix and every automatic fix. The state is read from the cache folder
+        and never from GitHub, because opening a settings tab must not start a release download.
+      */
+      const gbeSettingsText = (key, fallback, params = {}) => {
+        const localized = window.appLocale && window.appLocale.settings && window.appLocale.settings.emulator && window.appLocale.settings.emulator.gbe;
+        const value = (localized && localized[key]) || fallback;
+        return String(value).replace(/\{(\w+)\}/g, (match, name) =>
+          Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match
+        );
+      };
+      const gbeCacheDir = () => path.join(getUserDataPath(), 'cache/gse_fork');
+      const refreshGbeDllStatus = () => {
+        let state = 'error';
+        let text = gbeSettingsText('attention', 'Needs attention');
+        try {
+          const info = gbeInstaller.describeCache(gbeCacheDir());
+          if (info.invalid.length > 0) {
+            $('#gbe-dll-result').text(info.invalid.map((entry) => `${entry.name}: ${entry.error}`).join(', '));
+          } else if (info.custom.length > 0) {
+            state = 'ready';
+            text = gbeSettingsText('customReady', 'Imported DLL in use ({files})', { files: info.custom.join(', ') });
+          } else if (info.tag) {
+            state = 'ready';
+            text = gbeSettingsText('officialReady', 'Official build ({tag})', { tag: info.tag });
+          } else {
+            state = 'pending';
+            text = gbeSettingsText('notDownloaded', 'Downloaded on the first fix');
+          }
+        } catch (err) {
+          debug.error(`[gbe settings] cache state could not be read => ${formatErr(err)}`);
+        }
+        const icon = state === 'ready' ? 'fa-check-circle' : state === 'pending' ? 'fa-cloud-download-alt' : 'fa-exclamation-circle';
+        $('#gbe-dll-status').attr('data-state', state === 'ready' ? 'ready' : state === 'pending' ? 'checking' : 'error').find('i').attr('class', `fas ${icon}`);
+        $('#gbe-dll-status-text').text(text);
+      };
+      $("#settingNav li[data-view='emulator']").on('click', refreshGbeDllStatus);
+      refreshGbeDllStatus();
+
+      $('#import-gbe-dll').on('click', async function () {
+        const button = $(this);
+        const picked = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
+          title: gbeSettingsText('import', 'Import or replace the DLL'),
+          properties: ['openFile', 'multiSelections', 'dontAddToRecent'],
+          filters: [
+            { name: gbeSettingsText('dllFilter', 'steam_api DLL'), extensions: ['dll'] },
+            { name: t('archives', 'Archives', 'Archives'), extensions: ['7z', 'zip'] },
+          ],
+        });
+        if (picked.canceled || !picked.filePaths || picked.filePaths.length === 0) return;
+        button.prop('disabled', true);
+        try {
+          const cacheDir = gbeCacheDir();
+          const names = new Set();
+          for (const packagePath of picked.filePaths) {
+            const imported = await gbeInstaller.importCustomDlls({ packagePath, cacheDir, log: debug });
+            for (const name of imported.custom.names) names.add(name);
+          }
+          $('#gbe-dll-result').text(gbeSettingsText('importSuccess', '{files} will be installed by the next fix.', { files: [...names].join(', ') }));
+        } catch (err) {
+          debug.error(`[gbe settings] dll import failed => ${formatErr(err)}`);
+          $('#gbe-dll-result').text(gbeSettingsText('importFailure', 'The selected file could not be imported: {reason}', { reason: formatErr(err) }));
+        } finally {
+          button.prop('disabled', false);
+          refreshGbeDllStatus();
+        }
+      });
+
+      $('#restore-gbe-dll').on('click', function () {
+        const button = $(this).prop('disabled', true);
+        try {
+          gbeInstaller.clearCustomDlls({ cacheDir: gbeCacheDir() });
+          $('#gbe-dll-result').text(gbeSettingsText('restoreSuccess', 'The official GBE Fork build is used again.'));
+        } catch (err) {
+          debug.error(`[gbe settings] imported dll could not be removed => ${formatErr(err)}`);
+          $('#gbe-dll-result').text(gbeSettingsText('restoreFailure', 'The imported DLL could not be removed.'));
+        } finally {
+          button.prop('disabled', false);
+          refreshGbeDllStatus();
+        }
+      });
+
       $('#repair-all-uplay-r2').on('click', async function () {
         if (uplayBatchRunning) return;
         const button = $(this);

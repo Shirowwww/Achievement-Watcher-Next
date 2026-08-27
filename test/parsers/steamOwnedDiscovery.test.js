@@ -66,9 +66,9 @@ async function discovered({ installs = [], registry = [], catalogue = CATALOGUE,
 
 test('an installed game with no stats file is discovered', async () => {
   const list = await discovered({ installs: ['1671210'], registry: [] });
-  const ids = list.map((entry) => String(entry.appID));
-  assert.ok(ids.includes('1671210'), 'DELTARUNE is on disk; a game does not have to be played to be in the library');
-  assert.ok(ids.includes(PLAYED), 'and the stats entries this source already found are kept');
+  const ids = new Set(list.map((entry) => String(entry.appID)));
+  assert.ok(ids.has('1671210'), 'DELTARUNE is on disk; a game does not have to be played to be in the library');
+  assert.ok(ids.has(PLAYED), 'and the stats entries this source already found are kept');
 });
 
 test('an owned game that was never installed is discovered in owned mode only', async () => {

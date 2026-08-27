@@ -52,8 +52,8 @@ test('a game whose emulator saves beside it becomes a watched folder', async () 
   game('Plain Game', { 'readme.txt': ['nothing to see'] });
 
   const found = await userDir.findEntries();
-  const paths = found.map((entry) => path.normalize(entry.path).toLowerCase());
-  const has = (dir) => paths.includes(path.normalize(dir).toLowerCase());
+  const paths = new Set(found.map((entry) => path.normalize(entry.path).toLowerCase()));
+  const has = (dir) => paths.has(path.normalize(dir).toLowerCase());
 
   assert.equal(has(ali213), true, 'an ALI213 game keeps its unlocks in its own folder');
   assert.equal(has(coldClient), true, 'so does a ColdClient/SteamConfig one');

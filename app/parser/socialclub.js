@@ -51,7 +51,7 @@ const ACHIEVEMENT_FILE_GLOB = [
 // emulator's own strings): the profile settings blob and the game's Rockstar save files
 // (SGTA50000 for GTA V, SRDR* for RDR2, etc.). Their presence identifies a real SocialClub game
 // folder even before any readable achievement file exists.
-const ROCKSTAR_PROFILE_MARKERS = ['cfg.dat', 'local_save.txt', 'pc_settings.bin', 'settings.xml', 'profile.dat', 'players.dat'];
+const ROCKSTAR_PROFILE_MARKERS = new Set(['cfg.dat', 'local_save.txt', 'pc_settings.bin', 'settings.xml', 'profile.dat', 'players.dat']);
 const ROCKSTAR_SAVE_FILE_RE = /^(SGTA|SRDR|CGTA|GTAV|RDR|GTASA|GTAVC|GTA3|PGTA)[0-9A-Za-z_]*$/i;
 
 // Offline name → Steam appid for the Rockstar titles the SocialClub emulator is actually used with.
@@ -157,7 +157,7 @@ function folderHasRockstarProfileData(gameDir) {
   } catch {
     return false;
   }
-  if (entries.some((e) => e.isFile() && ROCKSTAR_PROFILE_MARKERS.includes(String(e.name).toLowerCase()))) return true;
+  if (entries.some((e) => e.isFile() && ROCKSTAR_PROFILE_MARKERS.has(String(e.name).toLowerCase()))) return true;
   if (entries.some((e) => e.isFile() && ROCKSTAR_SAVE_FILE_RE.test(e.name))) return true;
   const settingsDir = entries.find((e) => e.isDirectory() && String(e.name).toLowerCase() === 'settings');
   if (settingsDir) {

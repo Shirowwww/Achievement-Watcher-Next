@@ -1,5 +1,12 @@
 {
   "$schema": "./app/node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "unicorn",
+    "oxc",
+    "import",
+    "promise",
+    "node"
+  ],
   "env": {
     "builtin": true,
     "browser": true,
@@ -31,6 +38,22 @@
     "no-control-regex": "off",
     "unicorn/no-new-array": "warn",
     "unicorn/no-useless-spread": "warn",
-    "unicorn/no-useless-length-check": "warn"
+    "unicorn/no-useless-length-check": "warn",
+    "block-scoped-var": "warn",
+    "no-new": "warn",
+    "no-shadow": "warn",
+    "no-unneeded-ternary": "warn",
+    "no-useless-concat": "warn",
+    "preserve-caught-error": "warn",
+    "unicorn/no-array-reverse": "warn",
+    "unicorn/no-array-sort": "warn",
+    "unicorn/prefer-add-event-listener": "warn",
+    "unicorn/prefer-array-find": "warn",
+    "promise/no-callback-in-promise": "warn",
+    "promise/param-names": "warn",
+    "import/named": "warn",
+    "import/no-cycle": "warn",
+    "import/no-duplicates": "warn",
+    "import/no-self-import": "warn"
   }
 }

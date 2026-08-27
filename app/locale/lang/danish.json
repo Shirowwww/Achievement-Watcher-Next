@@ -354,6 +354,21 @@
         }
       },
       "loginPlaceholder": "engangskonto",
+      "gbe": {
+        "label": "Emulator-DLL",
+        "help": "Importer din egen steam_api / steam_api64.dll, så den installeres i stedet for den downloadede GBE Fork-version ved hver reparation og hver automatisk reparation. Den arkitektur, du ikke importerer, kommer fortsat fra den officielle version.",
+        "import": "Importer eller erstat DLL",
+        "restore": "Brug den officielle version",
+        "dllFilter": "steam_api-DLL",
+        "customReady": "Importeret DLL i brug ({files})",
+        "officialReady": "Officiel version ({tag})",
+        "notDownloaded": "Downloades ved den første reparation",
+        "attention": "Kræver opmærksomhed",
+        "importSuccess": "{files} installeres ved næste reparation.",
+        "importFailure": "Den valgte fil kunne ikke importeres: {reason}",
+        "restoreSuccess": "Den officielle GBE Fork-version bruges igen.",
+        "restoreFailure": "Den importerede DLL kunne ikke fjernes."
+      },
       "uplay": {
         "title": "Ubisoft / Uplay R1/R2",
         "iniTitle": "Loader- og INI-indstillinger",

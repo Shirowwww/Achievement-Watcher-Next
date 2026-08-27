@@ -354,6 +354,21 @@
         }
       },
       "loginPlaceholder": "บัญชีทิ้ง",
+      "gbe": {
+        "label": "DLL ของตัวจำลอง",
+        "help": "นำเข้าไฟล์ steam_api / steam_api64.dll ของคุณเอง เพื่อให้ติดตั้งไฟล์นั้นแทนรุ่น GBE Fork ที่ดาวน์โหลดมา ทั้งในการซ่อมทุกครั้งและการซ่อมอัตโนมัติ สถาปัตยกรรมที่คุณไม่ได้นำเข้าจะยังมาจากรุ่นอย่างเป็นทางการ",
+        "import": "นำเข้าหรือแทนที่ DLL",
+        "restore": "ใช้รุ่นอย่างเป็นทางการ",
+        "dllFilter": "ไฟล์ DLL steam_api",
+        "customReady": "กำลังใช้ DLL ที่นำเข้า ({files})",
+        "officialReady": "รุ่นอย่างเป็นทางการ ({tag})",
+        "notDownloaded": "ดาวน์โหลดเมื่อซ่อมครั้งแรก",
+        "attention": "ต้องตรวจสอบ",
+        "importSuccess": "{files} จะถูกติดตั้งในการซ่อมครั้งถัดไป",
+        "importFailure": "นำเข้าไฟล์ที่เลือกไม่สำเร็จ: {reason}",
+        "restoreSuccess": "กลับมาใช้รุ่น GBE Fork อย่างเป็นทางการแล้ว",
+        "restoreFailure": "ลบ DLL ที่นำเข้าไม่สำเร็จ"
+      },
       "uplay": {
         "title": "Ubisoft / Uplay R1/R2",
         "iniTitle": "ตัวเลือก Loader และ INI",

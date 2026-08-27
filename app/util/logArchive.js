@@ -61,7 +61,7 @@ function exportLogs({ logsDir, destination, Zip, fs = nodeFs, meta = {} } = {}) 
   try {
     entries = fs.readdirSync(logsDir);
   } catch (err) {
-    throw new Error(`No log folder to export: ${err.message || err}`);
+    throw new Error(`No log folder to export: ${err.message || err}`, { cause: err });
   }
 
   const zip = new Zip();

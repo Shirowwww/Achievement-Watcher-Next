@@ -354,6 +354,21 @@
         }
       },
       "loginPlaceholder": "konto jednorazowe",
+      "gbe": {
+        "label": "Biblioteka DLL emulatora",
+        "help": "Zaimportuj własną bibliotekę steam_api / steam_api64.dll, aby była instalowana zamiast pobranej wersji GBE Fork przy każdej naprawie i każdej naprawie automatycznej. Architektura, której nie zaimportujesz, nadal pochodzi z wersji oficjalnej.",
+        "import": "Importuj lub zastąp bibliotekę DLL",
+        "restore": "Użyj wersji oficjalnej",
+        "dllFilter": "Biblioteka steam_api",
+        "customReady": "Używana jest zaimportowana biblioteka ({files})",
+        "officialReady": "Wersja oficjalna ({tag})",
+        "notDownloaded": "Pobierana przy pierwszej naprawie",
+        "attention": "Wymaga uwagi",
+        "importSuccess": "{files} zostanie zainstalowana przy następnej naprawie.",
+        "importFailure": "Nie udało się zaimportować wybranego pliku: {reason}",
+        "restoreSuccess": "Ponownie używana jest oficjalna wersja GBE Fork.",
+        "restoreFailure": "Nie udało się usunąć zaimportowanej biblioteki DLL."
+      },
       "uplay": {
         "title": "Ubisoft / Uplay R1/R2",
         "iniTitle": "Opcje loadera i INI",

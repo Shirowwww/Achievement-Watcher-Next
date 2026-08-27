@@ -354,6 +354,21 @@
         }
       },
       "loginPlaceholder": "tài khoản phụ",
+      "gbe": {
+        "label": "DLL của trình giả lập",
+        "help": "Nhập tệp steam_api / steam_api64.dll của riêng bạn để nó được cài đặt thay cho bản GBE Fork đã tải về, trong mọi lần sửa và mọi lần sửa tự động. Kiến trúc bạn không nhập vẫn lấy từ bản chính thức.",
+        "import": "Nhập hoặc thay thế DLL",
+        "restore": "Dùng bản chính thức",
+        "dllFilter": "Tệp DLL steam_api",
+        "customReady": "Đang dùng DLL đã nhập ({files})",
+        "officialReady": "Bản chính thức ({tag})",
+        "notDownloaded": "Được tải về ở lần sửa đầu tiên",
+        "attention": "Cần chú ý",
+        "importSuccess": "{files} sẽ được cài đặt ở lần sửa tiếp theo.",
+        "importFailure": "Không thể nhập tệp đã chọn: {reason}",
+        "restoreSuccess": "Bản GBE Fork chính thức được dùng trở lại.",
+        "restoreFailure": "Không thể xóa DLL đã nhập."
+      },
       "uplay": {
         "title": "Ubisoft / Uplay R1/R2",
         "iniTitle": "Tùy chọn loader và INI",

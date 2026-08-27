@@ -109,7 +109,7 @@ async function ensureSteamless({ cacheDir, force = false, log = noopLog } = {}) 
       log.log(`[steamless] GitHub unreachable (${e.message || e}); using cached ${cachedTag}`);
       return cached;
     }
-    throw new Error(`Could not reach GitHub to fetch Steamless: ${e.message || e}`);
+    throw new Error(`Could not reach GitHub to fetch Steamless: ${e.message || e}`, { cause: e });
   }
 
   const tag = release && release.tag_name ? release.tag_name : null;

@@ -26,9 +26,9 @@ test('the Import and Export buttons sit in the preset designer actions', () => {
     assert.equal(button.tagName, 'BUTTON');
   }
   // Both labels are localized through their own span, like every other button in this card.
-  const labels = actions.querySelectorAll('[data-lang]').map((node) => node.getAttribute('data-lang'));
-  assert.ok(labels.includes('importLabel'));
-  assert.ok(labels.includes('exportLabel'));
+  const labels = new Set(actions.querySelectorAll('[data-lang]').map((node) => node.getAttribute('data-lang')));
+  assert.ok(labels.has('importLabel'));
+  assert.ok(labels.has('exportLabel'));
 });
 
 test('every string the two buttons show is bound from the locale', () => {

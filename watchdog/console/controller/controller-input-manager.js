@@ -195,10 +195,10 @@ const CONTROLLER_BUTTON_MASKS = {
   DPAD_LEFT: XINPUT_BUTTONS.DPAD_LEFT,
   DPAD_RIGHT: XINPUT_BUTTONS.DPAD_RIGHT,
 };
-const CONTROLLER_BINDING_BUTTON_NAMES = [
+const CONTROLLER_BINDING_BUTTON_NAMES = new Set([
   ...Object.keys(CONTROLLER_BUTTON_MASKS),
   "GUIDE",
-];
+]);
 
 const CONTROLLER_BUTTON_ORDER = [
   "BACK",
@@ -366,7 +366,7 @@ function normalizeControllerButtonName(value) {
   const raw = String(value || "")
     .trim()
     .toUpperCase();
-  return CONTROLLER_BINDING_BUTTON_NAMES.includes(raw) ? raw : null;
+  return CONTROLLER_BINDING_BUTTON_NAMES.has(raw) ? raw : null;
 }
 
 function normalizeControllerBinding(value, options = {}) {

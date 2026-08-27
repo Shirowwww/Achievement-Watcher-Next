@@ -31,9 +31,9 @@ test('bundled modding editor subfolder does not steal the game appid (DOS2 / The
   write(path.join(game, 'DefEd', 'bin', 'steam_appid.txt'), '435150');
 
   const found = goldberg.findCompatibleGames([root]);
-  const ids = found.map((g) => String(g.appid));
-  assert.ok(ids.includes('435150'), 'the game appid should be resolved');
-  assert.ok(!ids.includes('435730'), "the editor's appid must never be picked up");
+  const ids = new Set(found.map((g) => String(g.appid)));
+  assert.ok(ids.has('435150'), 'the game appid should be resolved');
+  assert.ok(!ids.has('435730'), "the editor's appid must never be picked up");
 });
 
 test('a direct root steam_appid.txt always wins over a bundled tool subfolder', (t) => {
@@ -88,9 +88,9 @@ for (const tool of [
     write(path.join(game, tool, 'steam_appid.txt'), '777999');
     write(path.join(game, 'bin', 'steam_appid.txt'), '555000');
 
-    const ids = goldberg.findCompatibleGames([root]).map((g) => String(g.appid));
-    assert.ok(ids.includes('555000'), `the game appid should win over "${tool}"`);
-    assert.ok(!ids.includes('777999'), `"${tool}" appid must not be picked up`);
+    const ids = new Set(goldberg.findCompatibleGames([root]).map((g) => String(g.appid)));
+    assert.ok(ids.has('555000'), `the game appid should win over "${tool}"`);
+    assert.ok(!ids.has('777999'), `"${tool}" appid must not be picked up`);
   });
 }
 

@@ -354,6 +354,21 @@
         }
       },
       "loginPlaceholder": "slaskkonto",
+      "gbe": {
+        "label": "Emulator-DLL",
+        "help": "Importera din egen steam_api / steam_api64.dll så att den installeras i stället för den nedladdade GBE Fork-versionen vid varje reparation och varje automatisk reparation. Den arkitektur du inte importerar kommer fortfarande från den officiella versionen.",
+        "import": "Importera eller ersätt DLL",
+        "restore": "Använd den officiella versionen",
+        "dllFilter": "steam_api-DLL",
+        "customReady": "Importerad DLL används ({files})",
+        "officialReady": "Officiell version ({tag})",
+        "notDownloaded": "Laddas ned vid första reparationen",
+        "attention": "Kräver åtgärd",
+        "importSuccess": "{files} installeras vid nästa reparation.",
+        "importFailure": "Den valda filen kunde inte importeras: {reason}",
+        "restoreSuccess": "Den officiella GBE Fork-versionen används igen.",
+        "restoreFailure": "Den importerade DLL-filen kunde inte tas bort."
+      },
       "uplay": {
         "title": "Ubisoft / Uplay R1/R2",
         "iniTitle": "Alternativ för loader och INI",

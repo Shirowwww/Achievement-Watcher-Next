@@ -11,7 +11,7 @@ const os = require('os');
 const path = require('path');
 const { fileURLToPath, pathToFileURL } = require('url');
 const test = require('node:test');
-const { SAFE_CACHE_DIRS, clearSafeCaches } = require('../../app/util/clearableCaches.js');
+const { SAFE_CACHE_DIRS, PRESERVED_CACHE_CHILDREN, clearSafeCaches } = require('../../app/util/clearableCaches.js');
 const coverStore = require('../../app/util/coverStore.js');
 
 function makeUserDataDir() {
@@ -33,6 +33,9 @@ test('clearSafeCaches removes every allowlisted folder that exists and reports w
 
     assert.deepEqual([...cleared].sort(), [...SAFE_CACHE_DIRS].sort());
     for (const rel of SAFE_CACHE_DIRS) {
+      assert.equal(fs.existsSync(path.join(root, rel, 'sentinel.txt')), false, `${rel} should be emptied`);
+      // A folder holding something the user seeded stays; only its downloaded children go.
+      if (PRESERVED_CACHE_CHILDREN[rel]) continue;
       assert.equal(fs.existsSync(path.join(root, rel)), false, `${rel} should be gone`);
     }
   } finally {
@@ -49,6 +52,24 @@ test('clearSafeCaches removes normal downloaded artwork from steam_cache', async
     await clearSafeCaches(root);
 
     assert.equal(fs.existsSync(normalArtwork), false, 'normal downloaded artwork must be re-fetchable');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('clearSafeCaches keeps the imported GBE dll and drops the downloaded builds around it', async () => {
+  const root = makeUserDataDir();
+  try {
+    seedFile(root, path.join('cache', 'gse_fork', 'custom', 'steam_api64.dll'));
+    seedFile(root, path.join('cache', 'gse_fork', 'release-2026_01_01', 'steam_api64.dll'));
+
+    await clearSafeCaches(root);
+
+    assert.ok(
+      fs.existsSync(path.join(root, 'cache', 'gse_fork', 'custom', 'steam_api64.dll')),
+      'an imported dll has no download source and must survive'
+    );
+    assert.equal(fs.existsSync(path.join(root, 'cache', 'gse_fork', 'release-2026_01_01')), false, 'the downloaded build is re-fetchable');
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

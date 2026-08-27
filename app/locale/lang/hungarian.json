@@ -354,6 +354,21 @@
         }
       },
       "loginPlaceholder": "eldobható fiók",
+      "gbe": {
+        "label": "Emulátor DLL",
+        "help": "Importáld a saját steam_api / steam_api64.dll fájlodat, hogy minden javításnál és minden automatikus javításnál az kerüljön telepítésre a letöltött GBE Fork verzió helyett. Az az architektúra, amelyet nem importálsz, továbbra is a hivatalos verzióból származik.",
+        "import": "DLL importálása vagy cseréje",
+        "restore": "A hivatalos verzió használata",
+        "dllFilter": "steam_api DLL",
+        "customReady": "Importált DLL van használatban ({files})",
+        "officialReady": "Hivatalos verzió ({tag})",
+        "notDownloaded": "Az első javításkor töltődik le",
+        "attention": "Figyelmet igényel",
+        "importSuccess": "A(z) {files} a következő javításkor lesz telepítve.",
+        "importFailure": "A kiválasztott fájlt nem sikerült importálni: {reason}",
+        "restoreSuccess": "Ismét a hivatalos GBE Fork verzió van használatban.",
+        "restoreFailure": "Az importált DLL-t nem sikerült eltávolítani."
+      },
       "uplay": {
         "title": "Ubisoft / Uplay R1/R2",
         "iniTitle": "Loader- és INI-beállítások",

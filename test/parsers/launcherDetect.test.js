@@ -100,9 +100,9 @@ test('a game Steam installed is a launcher install, not a cracked one', () => {
     const skipped = [];
     const found = goldberg.findCompatibleGames([tmp], { onSkip: (dir, appid) => skipped.push(appid) });
     assert.deepEqual(skipped, ['4000']);
-    const dirs = found.map((g) => g.gameDir);
-    assert.ok(dirs.includes(cracked), 'the cracked install in the same library is still found');
-    assert.ok(!dirs.includes(gmod), 'the Steam install is not offered as an emulator target');
+    const dirs = new Set(found.map((g) => g.gameDir));
+    assert.ok(dirs.has(cracked), 'the cracked install in the same library is still found');
+    assert.ok(!dirs.has(gmod), 'the Steam install is not offered as an emulator target');
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }

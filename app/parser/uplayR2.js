@@ -1744,15 +1744,28 @@ function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedM
           triggering quest completed, and queried its list 7 seconds after launch once a ticket was
           there.
 
-          Only said where it can be acted on: the loader has to read the key at all, and a ticket
-          must not already be configured.
+          Only said where it can be acted on: the loader has to read the key at all.
+
+          With a ticket already configured, the same silence means the opposite - it was tried and it
+          changed nothing - and that is the one case where taking it back out is worth offering. A
+          title the ticket does unblock queries its list within seconds, which sets
+          touchedAchievementApi and skips this whole branch, so neither of these is ever said about a
+          game that works.
         */
-        if (caps.supportsTicket && !String(settings.ticket || '').trim()) {
+        const hasTicket = Boolean(String(settings.ticket || '').trim());
+        if (caps.supportsTicket && !hasTicket) {
           add(
             'warning',
             'NO_SESSION_TICKET',
             `${flavour.logFile} records no achievement call at all: the game never asked to unlock anything. Titles that only report achievements while signed in to ` +
               `Ubisoft behave exactly like this, because the loader answers with an empty session ticket. Adding one usually unblocks them.`
+          );
+        } else if (caps.supportsTicket && hasTicket) {
+          add(
+            'warning',
+            'SESSION_TICKET_NO_EFFECT',
+            `${flavour.logFile} still records no achievement call although a session ticket is configured: this game asks for nothing for some other reason, and the ` +
+              `ticket can be removed if it is unwanted.`
           );
         } else {
           add(

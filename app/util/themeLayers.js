@@ -244,7 +244,7 @@ function normalizeImage(value) {
   return typeof value === 'string' && value.trim() ? value.trim() : '';
 }
 
-const GRADIENT_ANGLES = [0, 45, 90, 135, 180, 270];
+const GRADIENT_ANGLES = new Set([0, 45, 90, 135, 180, 270]);
 
 function darkenHex(value, percent = 48) {
   const rgb = hexToRgbTriplet(value).split(',').map((n) => Math.round(Number(n.trim()) * (1 - percent / 100)));
@@ -261,7 +261,7 @@ function normalizeGradient(raw, baseColor) {
     enabled: value.enabled === true || legacy,
     from,
     to: normalizeColor(value.to, legacy ? darkenHex(from, 48) : from),
-    angle: GRADIENT_ANGLES.includes(Number(value.angle)) ? Number(value.angle) : 180,
+    angle: GRADIENT_ANGLES.has(Number(value.angle)) ? Number(value.angle) : 180,
   };
 }
 

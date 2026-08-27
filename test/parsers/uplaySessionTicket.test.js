@@ -183,13 +183,33 @@ test('a game that asked for nothing is offered a session, not reassurance', () =
   assert.deepEqual(issues.filter((i) => i.code === 'LOADER_LOG_NO_ACH_CALL'), [], 'and it must not also claim nothing was missed');
 });
 
-test('once a ticket is set, the silent case goes back to being just information', () => {
+/*
+  The same silence means the opposite once a ticket is there: it was tried and it changed nothing.
+  That is the only case where taking it back out is worth a button, and it is what keeps the repair
+  reversible from the app instead of by hand.
+*/
+test('once a ticket is set, the same silence offers to take it back out', () => {
   const dir = game('Ticketed');
   repairInto(dir, ['AFOP_Ach_1']);
   uplayR2.setSessionTicket({ dir, enabled: true });
 
   const issues = withLog(dir, SILENT_LOG);
   assert.deepEqual(issues.filter((i) => i.code === 'NO_SESSION_TICKET'), [], 'offering it twice would be a dead end');
+  assert.ok(issues.some((i) => i.code === 'SESSION_TICKET_NO_EFFECT'), 'the ticket is there and it did nothing, which is worth saying');
+});
+
+// A loader too old to read the key is the case neither message applies to: there is nothing to press.
+test('a loader without the key gets neither offer', () => {
+  const dir = game('NoKey');
+  repairInto(dir, ['AFOP_Ach_1']);
+  fs.writeFileSync(path.join(dir, 'upc_r2_loader64.dll'), fakePe('x64', 'Achievements AchKeyPrefix AchSaveType AchSavePath'));
+
+  const issues = withLog(dir, SILENT_LOG);
+  assert.deepEqual(
+    issues.filter((i) => i.code === 'NO_SESSION_TICKET' || i.code === 'SESSION_TICKET_NO_EFFECT'),
+    [],
+    'a key the loader never reads is not something to write'
+  );
   assert.ok(issues.some((i) => i.code === 'LOADER_LOG_NO_ACH_CALL'), 'the old message is what is left to say');
 });
 

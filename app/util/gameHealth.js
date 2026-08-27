@@ -96,6 +96,7 @@ const ISSUE_TOPIC = {
   CUSTOM_SAVE_PATH: 'savepath',
   LOADER_NO_ACH_REDIRECT: 'loader',
   NO_SESSION_TICKET: 'session',
+  SESSION_TICKET_NO_EFFECT: 'session',
   NO_UPLAY_R2_DLL: 'loader',
   NOT_UPLAY_R2_LOADER: 'loader',
   LOADER_ARCH_MISMATCH: 'loader',
@@ -301,7 +302,9 @@ function uplayCheck(signals) {
     taken back, and offering it unconditionally would put a button on games that never needed it.
   */
   const withTicketFix = (actions) =>
-    (uplay.issues || []).some((issue) => issue.code === 'NO_SESSION_TICKET') ? [...actions, ACTION.REPAIR_UPLAY_TICKET] : actions;
+    (uplay.issues || []).some((issue) => issue.code === 'NO_SESSION_TICKET' || issue.code === 'SESSION_TICKET_NO_EFFECT')
+      ? [...actions, ACTION.REPAIR_UPLAY_TICKET]
+      : actions;
 
   const errors = issuesAtLevel(uplay, 'error');
   if (errors.length > 0) {

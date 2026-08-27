@@ -331,6 +331,13 @@ function translateUI(lang, locale, template) {
       if (uplay.repair) $('#repair-all-uplay-r2-row-label, #repair-all-uplay-r2-label').text(clear(uplay.repair));
       if (uplay.repairHelp) $('#repair-all-uplay-r2-help').text(clear(uplay.repairHelp));
     }
+    if (emu.gbe) {
+      const gbe = emu.gbe;
+      if (gbe.label) $('#gbe-dll-title, #gbe-dll-label').text(clear(gbe.label));
+      if (gbe.help) $('#gbe-dll-help').text(clear(gbe.help));
+      if (gbe.import) $('#import-gbe-dll-label').text(clear(gbe.import));
+      if (gbe.restore) $('#restore-gbe-dll-label').text(clear(gbe.restore));
+    }
     const bindEmuRow = (id, t) => {
       if (!t) return;
       const li = $('#' + id).closest('li');

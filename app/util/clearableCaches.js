@@ -11,6 +11,10 @@ const gameIconStore = require('./gameIconStore.js');
 //
 // Never add: cache/uplayR2 (user-seeded dll, no download source), backups (GBE restore points),
 // or cfg/covers/gameIcons/presets/theme-images/epic_tokens.enc/lockfile (user settings/content).
+// cache/gse_fork also holds cache/gse_fork/custom: the steam_api dll the user imported by hand.
+// It has no download source, so only the downloaded builds around it are removed.
+const PRESERVED_CACHE_CHILDREN = { 'cache/gse_fork': ['custom'] };
+
 const SAFE_CACHE_DIRS = [
   'steam_cache', // Steam/GOG/Epic/SteamDB/SteamGridDB schema, icon, cover and rarity cache
   'uplay_cache', // Ubisoft Connect schema + icon cache
@@ -42,10 +46,18 @@ async function clearSafeCaches(userDataDir) {
       existed = false;
     }
     if (!existed) continue;
-    await fs.promises.rm(full, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    const preserved = PRESERVED_CACHE_CHILDREN[rel];
+    if (preserved) {
+      for (const child of await fs.promises.readdir(full)) {
+        if (preserved.includes(child.toLowerCase())) continue;
+        await fs.promises.rm(path.join(full, child), { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+      }
+    } else {
+      await fs.promises.rm(full, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    }
     cleared.push(rel);
   }
   return cleared;
 }
 
-module.exports = { SAFE_CACHE_DIRS, clearSafeCaches };
+module.exports = { SAFE_CACHE_DIRS, PRESERVED_CACHE_CHILDREN, clearSafeCaches };

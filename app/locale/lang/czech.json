@@ -354,6 +354,21 @@
         }
       },
       "loginPlaceholder": "účet na jedno použití",
+      "gbe": {
+        "label": "Knihovna DLL emulátoru",
+        "help": "Naimportujte vlastní steam_api / steam_api64.dll, aby se při každé opravě i automatické opravě instalovala místo stažené verze GBE Fork. Architektura, kterou nenaimportujete, i nadále pochází z oficiální verze.",
+        "import": "Importovat nebo nahradit DLL",
+        "restore": "Použít oficiální verzi",
+        "dllFilter": "DLL steam_api",
+        "customReady": "Používá se naimportovaná DLL ({files})",
+        "officialReady": "Oficiální verze ({tag})",
+        "notDownloaded": "Stáhne se při první opravě",
+        "attention": "Vyžaduje pozornost",
+        "importSuccess": "{files} se nainstaluje při další opravě.",
+        "importFailure": "Vybraný soubor se nepodařilo naimportovat: {reason}",
+        "restoreSuccess": "Znovu se používá oficiální verze GBE Fork.",
+        "restoreFailure": "Naimportovanou DLL se nepodařilo odebrat."
+      },
       "uplay": {
         "title": "Ubisoft / Uplay R1/R2",
         "iniTitle": "Možnosti loaderu a INI",

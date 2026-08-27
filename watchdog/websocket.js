@@ -158,7 +158,7 @@ function incoming(message) {
     try {
       req = JSON.parse(message);
     } catch (err) {
-      throw new Error(`request is not a valid JSON > ${err}`);
+      throw new Error(`request is not a valid JSON > ${err}`, { cause: err });
     }
 
     if (req.cmd === 'test') {

@@ -354,6 +354,21 @@
         }
       },
       "loginPlaceholder": "一次性账号",
+      "gbe": {
+        "label": "模拟器 DLL",
+        "help": "导入你自己的 steam_api / steam_api64.dll，每次修复和自动修复时都会安装它，而不是下载的 GBE Fork 版本。未导入的架构仍然来自官方版本。",
+        "import": "导入或替换 DLL",
+        "restore": "使用官方版本",
+        "dllFilter": "steam_api DLL 文件",
+        "customReady": "正在使用导入的 DLL（{files}）",
+        "officialReady": "官方版本（{tag}）",
+        "notDownloaded": "首次修复时下载",
+        "attention": "需要注意",
+        "importSuccess": "{files} 将在下次修复时安装。",
+        "importFailure": "无法导入所选文件：{reason}",
+        "restoreSuccess": "已恢复使用官方 GBE Fork 版本。",
+        "restoreFailure": "无法移除导入的 DLL。"
+      },
       "uplay": {
         "title": "Ubisoft / Uplay R1/R2",
         "iniTitle": "Loader 和 INI 选项",

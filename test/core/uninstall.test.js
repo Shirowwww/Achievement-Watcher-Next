@@ -54,10 +54,10 @@ test('detects NSIS and generic uninstaller names', () => {
     write(dir, 'uninstaller_x64.exe');
     write(dir, 'Uninstaller.exe');
     const found = uninstall.findUninstallers(dir);
-    const kinds = found.map((f) => `${f.kind}:${f.name.toLowerCase()}`);
-    assert.ok(kinds.includes('nsis:uninstall.exe'));
-    assert.ok(kinds.includes('nsis:uninstaller.exe'));
-    assert.ok(kinds.includes('generic:uninstaller_x64.exe'));
+    const kinds = new Set(found.map((f) => `${f.kind}:${f.name.toLowerCase()}`));
+    assert.ok(kinds.has('nsis:uninstall.exe'));
+    assert.ok(kinds.has('nsis:uninstaller.exe'));
+    assert.ok(kinds.has('generic:uninstaller_x64.exe'));
     assert.deepStrictEqual(found[0].args, ['/S', `_?=${dir}`]);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });

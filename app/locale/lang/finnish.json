@@ -354,6 +354,21 @@
         }
       },
       "loginPlaceholder": "kertakäyttötili",
+      "gbe": {
+        "label": "Emulaattorin DLL",
+        "help": "Tuo oma steam_api / steam_api64.dll, niin se asennetaan ladatun GBE Fork -version sijaan jokaisessa korjauksessa ja jokaisessa automaattisessa korjauksessa. Arkkitehtuuri, jota et tuo, tulee edelleen virallisesta versiosta.",
+        "import": "Tuo tai korvaa DLL",
+        "restore": "Käytä virallista versiota",
+        "dllFilter": "steam_api-DLL",
+        "customReady": "Tuotu DLL käytössä ({files})",
+        "officialReady": "Virallinen versio ({tag})",
+        "notDownloaded": "Ladataan ensimmäisessä korjauksessa",
+        "attention": "Vaatii huomiota",
+        "importSuccess": "{files} asennetaan seuraavassa korjauksessa.",
+        "importFailure": "Valittua tiedostoa ei voitu tuoda: {reason}",
+        "restoreSuccess": "Virallinen GBE Fork -versio on taas käytössä.",
+        "restoreFailure": "Tuotua DLL-tiedostoa ei voitu poistaa."
+      },
       "uplay": {
         "title": "Ubisoft / Uplay R1/R2",
         "iniTitle": "Lataimen ja INI-tiedostojen asetukset",

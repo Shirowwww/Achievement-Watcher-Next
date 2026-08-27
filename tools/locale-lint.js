@@ -162,7 +162,7 @@ function stripComments(source) {
 
 // Blanks translation-helper calls: their English/French args are a documented safety net for a
 // locale failure, not text to scan, so the hardcoded-string check has to skip them.
-const TRANSLATION_HELPERS = /(?<![\w$.])(?:t|localeText|uplaySettingsText|helpText|overlayText)\s*\(/g;
+const TRANSLATION_HELPERS = /(?<![\w$.])(?:t|localeText|uplaySettingsText|gbeSettingsText|helpText|overlayText)\s*\(/g;
 
 function stripTranslationCalls(source) {
   const spans = [];

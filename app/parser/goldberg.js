@@ -102,7 +102,7 @@ function findSteamSettings(gameDir, maxDepth = 6) {
     try {
       const entries = (dirCache.readdirNames(dir) || []).map((e) => e.toLowerCase());
       if (entries.includes('achievements.json')) score += 100;
-      if (entries.some((e) => GBE_CONFIG_FILES.includes(e) || CLASSIC_CONFIG_FILES.includes(e))) score += 50;
+      if (entries.some((e) => GBE_CONFIG_FILES.has(e) || CLASSIC_CONFIG_FILES.includes(e))) score += 50;
       if (entries.includes('steam_appid.txt')) score += 20;
       if (entries.includes('steam_interfaces.txt')) score += 5;
       const relativeParts = path
@@ -143,7 +143,7 @@ function findSteamSettings(gameDir, maxDepth = 6) {
 // and/or the global GSE Saves/settings folder. Classic Goldberg (mr_goldberg) used loose .txt files
 // (force_account_name.txt, user_steam_id.txt, …) and a settings/ subfolder instead. The presence of
 // any configs.*.ini is the most reliable on-disk tell that this is the fork rather than the original.
-const GBE_CONFIG_FILES = ['configs.main.ini', 'configs.user.ini', 'configs.app.ini', 'configs.overlay.ini'];
+const GBE_CONFIG_FILES = new Set(['configs.main.ini', 'configs.user.ini', 'configs.app.ini', 'configs.overlay.ini']);
 const CLASSIC_CONFIG_FILES = ['force_account_name.txt', 'user_steam_id.txt', 'account_name.txt', 'language.txt', 'listen_port.txt'];
 const EMU_DLL_NAMES = ['steam_api.dll', 'steam_api64.dll'];
 
@@ -323,7 +323,7 @@ function detectEmulator(gameDir) {
   }
 
   const entries = listShallow(steamSettings).map((e) => e.toLowerCase());
-  result.configs = entries.filter((e) => GBE_CONFIG_FILES.includes(e));
+  result.configs = entries.filter((e) => GBE_CONFIG_FILES.has(e));
   if (result.configs.length > 0) {
     result.type = 'gbe';
   } else if (entries.length > 0) {

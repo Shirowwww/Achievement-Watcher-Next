@@ -56,7 +56,7 @@ function resolveToolExe(exePath, runtimeDir) {
     realExe = fs.realpathSync(path.resolve(exe));
     realRoot = fs.realpathSync(path.resolve(root));
   } catch (e) {
-    throw new Error(`generate_emu_config.exe is unavailable: ${exe} (${e.message || e})`);
+    throw new Error(`generate_emu_config.exe is unavailable: ${exe} (${e.message || e})`, { cause: e });
   }
   if (path.basename(realExe).toLowerCase() !== 'generate_emu_config.exe') throw new Error('generate_emu_config.exe has an unexpected name');
   if (!isInsideDir(realRoot, realExe)) throw new Error('generate_emu_config.exe resolves outside its cached runtime');
@@ -168,7 +168,7 @@ async function ensureGenerateEmuConfig({ cacheDir, force = false, preferredTag =
       log.log(`[emucfg] GitHub unreachable (${e.message || e}); using cached ${cachedTag}`);
       return cached;
     }
-    throw new Error(`Could not reach GitHub to fetch generate_emu_config: ${e.message || e}`);
+    throw new Error(`Could not reach GitHub to fetch generate_emu_config: ${e.message || e}`, { cause: e });
   }
   const tag = release && release.tag_name ? release.tag_name : null;
   if (!tag) {

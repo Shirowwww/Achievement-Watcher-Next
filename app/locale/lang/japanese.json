@@ -354,6 +354,21 @@
         }
       },
       "loginPlaceholder": "使い捨てアカウント",
+      "gbe": {
+        "label": "エミュレーターの DLL",
+        "help": "自分の steam_api / steam_api64.dll をインポートすると、毎回の修復と自動修復で、ダウンロードした GBE Fork 版の代わりにそれがインストールされます。インポートしなかったアーキテクチャは引き続き公式版から取得されます。",
+        "import": "DLL をインポートまたは置き換え",
+        "restore": "公式版を使用",
+        "dllFilter": "steam_api DLL ファイル",
+        "customReady": "インポートした DLL を使用中 ({files})",
+        "officialReady": "公式版 ({tag})",
+        "notDownloaded": "最初の修復時にダウンロード",
+        "attention": "確認が必要",
+        "importSuccess": "{files} は次の修復でインストールされます。",
+        "importFailure": "選択したファイルをインポートできませんでした: {reason}",
+        "restoreSuccess": "公式の GBE Fork 版を再び使用します。",
+        "restoreFailure": "インポートした DLL を削除できませんでした。"
+      },
       "uplay": {
         "title": "Ubisoft / Uplay R1/R2",
         "iniTitle": "Loader と INI のオプション",

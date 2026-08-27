@@ -130,7 +130,7 @@ async function ensureBypassDlls({ cacheDir, force = false, log = noopLog } = {})
       log.log(`[bypass] GitHub unreachable (${e.message || e}); using cached build ${cachedTag}`);
       return cached;
     }
-    throw new Error(`Could not reach GitHub to fetch the Steam API Check Bypass: ${e.message || e}`);
+    throw new Error(`Could not reach GitHub to fetch the Steam API Check Bypass: ${e.message || e}`, { cause: e });
   }
 
   const tag = release && release.tag_name ? release.tag_name : null;

@@ -280,13 +280,13 @@ test('a lost feature is named once, not once per option it has', () => {
     maskimg: 'C:/x/mask.png',
   };
   const { report } = sanImport.mapSanCustomisation(customisation);
-  const skipped = report.skipped.map((entry) => entry.key);
+  const skipped = new Set(report.skipped.map((entry) => entry.key));
 
   for (const switchedOn of ['percentbadge', 'showdecoration', 'mask']) {
-    assert.ok(skipped.includes(switchedOn), `${switchedOn} is the feature that was lost and must be named`);
+    assert.ok(skipped.has(switchedOn), `${switchedOn} is the feature that was lost and must be named`);
   }
   for (const detail of ['percentbadgepos', 'percentbadgecolor', 'percentbadgefontcolor', 'percentbadgeimg', 'percentbadgeimggold', 'decorationpos', 'decorationscale', 'maskimg']) {
-    assert.equal(skipped.includes(detail), false, `${detail} is a detail of a feature already named`);
+    assert.equal(skipped.has(detail), false, `${detail} is a detail of a feature already named`);
   }
 
   /*
@@ -294,8 +294,8 @@ test('a lost feature is named once, not once per option it has', () => {
     border here, so the border is NOT lost - its artwork and its rarity variants are, and they have
     to keep saying so.
   */
-  assert.ok(skipped.includes('iconborderimg'));
-  assert.equal(skipped.includes('showiconborder'), false, 'the border itself was carried over');
+  assert.ok(skipped.has('iconborderimg'));
+  assert.equal(skipped.has('showiconborder'), false, 'the border itself was carried over');
 
   // A chain of gates collapses to its root rather than one link at a time.
   const chained = sanImport.mapSanCustomisation({

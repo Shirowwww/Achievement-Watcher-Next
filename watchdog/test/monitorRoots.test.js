@@ -97,9 +97,9 @@ test('an ALI213 game is watched for both spellings of its achievement file', asy
     assert.ok(watched, "the game's own stats folder must be watched");
     assert.equal(String(watched.options.appid), '339230', 'the AppID the emulator declares is what the unlock is attributed to');
 
-    const names = (watched.options.file || []).map((name) => String(name).toLowerCase());
-    assert.ok(names.includes('achievements.bin'), 'the binary spelling stays watched');
-    assert.ok(names.includes('achievements.ini'), 'the ini spelling must be watched too');
+    const names = new Set((watched.options.file || []).map((name) => String(name).toLowerCase()));
+    assert.ok(names.has('achievements.bin'), 'the binary spelling stays watched');
+    assert.ok(names.has('achievements.ini'), 'the ini spelling must be watched too');
   } finally {
     fs.rmSync(game, { recursive: true, force: true });
   }

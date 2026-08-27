@@ -354,6 +354,21 @@
         }
       },
       "loginPlaceholder": "akun sekali pakai",
+      "gbe": {
+        "label": "DLL emulator",
+        "help": "Impor steam_api / steam_api64.dll milikmu sendiri agar dipasang menggantikan versi GBE Fork yang diunduh, pada setiap perbaikan dan setiap perbaikan otomatis. Arsitektur yang tidak kamu impor tetap berasal dari versi resmi.",
+        "import": "Impor atau ganti DLL",
+        "restore": "Gunakan versi resmi",
+        "dllFilter": "Berkas DLL steam_api",
+        "customReady": "DLL hasil impor sedang dipakai ({files})",
+        "officialReady": "Versi resmi ({tag})",
+        "notDownloaded": "Diunduh pada perbaikan pertama",
+        "attention": "Perlu diperiksa",
+        "importSuccess": "{files} akan dipasang pada perbaikan berikutnya.",
+        "importFailure": "Berkas yang dipilih tidak dapat diimpor: {reason}",
+        "restoreSuccess": "Versi resmi GBE Fork digunakan kembali.",
+        "restoreFailure": "DLL hasil impor tidak dapat dihapus."
+      },
       "uplay": {
         "title": "Ubisoft / Uplay R1/R2",
         "iniTitle": "Opsi loader dan INI",

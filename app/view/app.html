@@ -373,6 +373,39 @@
                 </ul>
               </div>
 
+              <!-- Same layout as the Uplay R1/R2 package card, so it reuses its package-row classes. -->
+              <div class="emulator-group uplay-r2-settings" id="gbe-dll-settings">
+                <div class="emulator-group-title"><i class="fas fa-shield-alt"></i> <span id="gbe-dll-title">Emulator DLL</span></div>
+                <ul class="arrow-list emulator-list uplay-r2-settings-body">
+                  <li class="hasHelper uplay-r2-package-row">
+                    <div class="left">
+                      <i class="fas fa-box-open"></i>
+                      <div class="uplay-r2-package-copy">
+                        <span id="gbe-dll-label">Emulator DLL</span>
+                        <span id="gbe-dll-status" class="uplay-r2-status" data-state="checking" role="status" aria-live="polite">
+                          <i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>
+                          <span id="gbe-dll-status-text">Checking…</span>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="right uplay-r2-package-controls">
+                      <button type="button" id="import-gbe-dll" class="inline-action-btn secondary">
+                        <i class="fas fa-file-import" aria-hidden="true"></i>
+                        <span id="import-gbe-dll-label">Import or replace the DLL</span>
+                      </button>
+                      <button type="button" id="restore-gbe-dll" class="inline-action-btn secondary">
+                        <i class="fas fa-undo" aria-hidden="true"></i>
+                        <span id="restore-gbe-dll-label">Use the official build</span>
+                      </button>
+                    </div>
+                    <div class="help" id="gbe-dll-help">Import your own steam_api / steam_api64.dll to use it instead of the downloaded GBE Fork build, for every fix and automatic fix. The architecture you do not import keeps coming from the official build.</div>
+                  </li>
+                  <li class="uplay-r2-result-row">
+                    <div id="gbe-dll-result" class="diag-line" role="status" aria-live="polite"></div>
+                  </li>
+                </ul>
+              </div>
+
             </section>
 
             <section class="content emulator-settings" data-view="uplay">

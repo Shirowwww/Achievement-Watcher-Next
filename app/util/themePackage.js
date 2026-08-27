@@ -226,7 +226,7 @@ function exportTheme({ theme, name, destination, meta = {}, appVersion = '', bas
       if (stat.size > LIMITS.fileBytes) throw new Error('asset-too-large');
       data = fs.readFileSync(file);
     } catch (err) {
-      throw new Error(err.message === 'asset-too-large' ? 'asset-too-large' : 'missing-asset');
+      throw new Error(err.message === 'asset-too-large' ? 'asset-too-large' : 'missing-asset', { cause: err });
     }
 
     const info = imageInfo(data);
@@ -716,7 +716,7 @@ function saveThemeAs({ userDataPath, name, theme, meta = {}, appVersion = '', ba
       if (stat.size > LIMITS.fileBytes) throw new Error('asset-too-large');
       data = fs.readFileSync(file);
     } catch (err) {
-      throw new Error(err.message === 'asset-too-large' ? 'asset-too-large' : 'missing-asset');
+      throw new Error(err.message === 'asset-too-large' ? 'asset-too-large' : 'missing-asset', { cause: err });
     }
 
     const info = imageInfo(data);
