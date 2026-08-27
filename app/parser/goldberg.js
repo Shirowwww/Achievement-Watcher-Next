@@ -139,10 +139,8 @@ function findSteamSettings(gameDir, maxDepth = 6) {
   return best;
 }
 
-// GBE Fork (Detanup01) keeps its configuration in INI files named configs.*.ini, in steam_settings
-// and/or the global GSE Saves/settings folder. Classic Goldberg (mr_goldberg) used loose .txt files
-// (force_account_name.txt, user_steam_id.txt, …) and a settings/ subfolder instead. The presence of
-// any configs.*.ini is the most reliable on-disk tell that this is the fork rather than the original.
+// GBE Fork keeps configuration in configs.*.ini files; classic Goldberg used loose .txt files
+// instead. Presence of any configs.*.ini is the most reliable tell it's the fork.
 const GBE_CONFIG_FILES = new Set(['configs.main.ini', 'configs.user.ini', 'configs.app.ini', 'configs.overlay.ini']);
 const CLASSIC_CONFIG_FILES = ['force_account_name.txt', 'user_steam_id.txt', 'account_name.txt', 'language.txt', 'listen_port.txt'];
 const EMU_DLL_NAMES = ['steam_api.dll', 'steam_api64.dll'];
@@ -151,14 +149,8 @@ function backupTimestamp(date = new Date()) {
   return date.toISOString().replace(/[:.]/g, '-');
 }
 
-/*
-  Point steam_appid.txt at a different appid, keeping the previous file.
-
-  repair() writes this file only when it is missing, on purpose: overwriting a working setup with a
-  detection that might be wrong is not something an automatic repair may decide. Correcting a genuine
-  mismatch is a decision the user makes explicitly, so it lives here, as its own one-file operation -
-  the previous value is copied into the same .aw-backups folder every other repair uses.
-*/
+// Point steam_appid.txt at a different appid, keeping the previous file. repair() only writes this
+// file when missing; correcting a genuine mismatch is a decision the user makes explicitly.
 function writeSteamAppId({ steamSettings, appid }) {
   if (!steamSettings) throw new Error('writeSteamAppId: steamSettings path is required');
   const value = String(appid == null ? '' : appid).trim();
@@ -229,10 +221,8 @@ function backupSetup({ gameDir, destinationRoot, steamSettings } = {}) {
   return { backupDir, files, manifest };
 }
 
-// Restore a portable backup created by backupSetup back into a game folder: reads backup.json and
-// copies each recorded relative path back over the live files (DLLs + steam_settings), preserving
-// nested Unreal/Unity DLL locations. Restores into the manifest's gameDir by default; pass `gameDir`
-// to redirect. A tampered manifest can't escape the target folder (same guard as copyIntoBackup).
+// Restore a portable backup created by backupSetup: reads backup.json and copies each recorded
+// relative path back over the live files. A tampered manifest can't escape the target folder.
 function restoreSetup({ backupDir, gameDir } = {}) {
   if (!backupDir || !fs.existsSync(backupDir) || !fs.statSync(backupDir).isDirectory()) {
     throw new Error(`restore: backup folder not found: ${backupDir}`);
@@ -245,7 +235,7 @@ function restoreSetup({ backupDir, gameDir } = {}) {
   try {
     manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
   } catch (e) {
-    throw new Error(`restore: backup.json is not valid JSON: ${e.message}`);
+    throw new Error(`restore: backup.json is not valid JSON: ${e.message}`, { cause: e });
   }
 
   const targetGameDir = gameDir || manifest.gameDir;
@@ -277,8 +267,6 @@ function listShallow(dir) {
 
 // Identify which Steam emulator a game folder is set up with, by inspecting on-disk signatures.
 // Returns { type: 'gbe' | 'goldberg' | 'none', steamSettings, dll: [...], configs: [...] }.
-// 'gbe' = GBE Fork (configs.*.ini present), 'goldberg' = classic Goldberg (steam_settings but only
-// the legacy loose-file config style), 'none' = no recognizable emulator setup.
 function detectEmulator(gameDir) {
   // `type` says which SHAPE of setup is on disk, and only two shapes are read differently: a GBE
   // Fork one and a classic Goldberg one, which keep their saves in different folders. `loader` is a
@@ -307,13 +295,8 @@ function detectEmulator(gameDir) {
   const steamSettings = findSteamSettings(gameDir);
   result.steamSettings = steamSettings;
   if (!steamSettings) {
-    /*
-      A replaced dll with no steam_settings still means an emulator is present, just unconfigured, and
-      "goldberg" is what that shape has always been called here. It is not a name though: ALI213,
-      OnlineFix, SmartSteamEmu and CODEX all land in it, and ZOMBI (whose steam_api.dll says ALI213
-      in its own strings) was reported as Goldberg because of it. Ask what actually supplied the dll
-      and record that separately, leaving the shape - and everything keyed on it - alone.
-    */
+    // A replaced dll with no steam_settings still means an emulator is present, just unconfigured -
+    // "goldberg" names that shape here, not a real vendor (ALI213/OnlineFix/CODEX all land in it too).
     if (result.dll.length) {
       result.type = 'goldberg';
       const loader = crackLoaderDetect.detectWorkingCrackLoader(gameDir);
@@ -348,12 +331,8 @@ function buildAchievementsJson(schema, imagePrefix = 'images') {
   }));
 }
 
-/*
-  Is the achievements.json already on disk worth keeping over a freshly generated one? Only when it
-  carries progress definitions AW cannot reproduce AND rewriting it would not be an improvement - a
-  blank name always loses (GBE matches on it), but a blank description only loses to a schema that
-  actually has one, since many real Steam achievements (hidden ones especially) genuinely have none.
-*/
+// Is the achievements.json on disk worth keeping over a freshly generated one? Only when it carries
+// progress definitions AW cannot reproduce and rewriting it would not be an improvement.
 function hasRichProgressSchema(steamSettings, schema) {
   try {
     const parsed = JSON.parse(fs.readFileSync(path.join(steamSettings, 'achievements.json'), 'utf8'));
@@ -379,10 +358,8 @@ function hasRichProgressSchema(steamSettings, schema) {
   }
 }
 
-// Default runtime save roots, newest emulator first. GBE Fork writes to GSE Saves; classic Goldberg
-// to "Goldberg SteamEmu Saves". Both keep one <appid>/ subfolder with an achievements.json holding
-// only the unlock STATE ({ "<apiname>": { "earned": true, "earned_time": ... } }) - this is separate
-// from the steam_settings/achievements.json SCHEMA. A missing/empty save just means a 0% game.
+// Default runtime save roots, newest emulator first. Both keep one <appid>/ subfolder with an
+// achievements.json holding only the unlock STATE, separate from the steam_settings SCHEMA.
 function defaultSavesRoots() {
   const appdata = process.env['APPDATA'];
   if (!appdata) return [];
@@ -392,12 +369,9 @@ function defaultSavesRoots() {
   ];
 }
 
-/*
-  The save path a setup redirects itself to, verbatim as configured. Repacks routinely make a game
-  portable by pointing the emulator's save folder back into the game directory instead of
-  %APPDATA%\GSE Saves (`[user::saves] local_save_path` for GBE, `local_save.txt` for classic
-  Goldberg). Returns '' when unconfigured, or for the GBE template's placeholder value.
-*/
+// The save path a setup redirects itself to, verbatim as configured. Repacks routinely point the
+// save folder back into the game directory instead of %APPDATA%\GSE Saves (`local_save_path` for
+// GBE, `local_save.txt` for classic Goldberg). Returns '' when unconfigured.
 function readConfiguredSavePath(steamSettings) {
   if (!steamSettings) return '';
   let value = '';
@@ -435,12 +409,9 @@ function readConfiguredSavePath(steamSettings) {
   return value;
 }
 
-/*
-  The folder a redirected setup actually keeps this game's unlock state in, or null. A relative path
-  resolves against steam_settings' parent (where the steam_api dll sits). Not every build follows
-  Goldberg's appid-subfolder convention, so both shapes are probed and the one with an
-  achievements.json wins; with neither written yet, the first existing folder is returned instead.
-*/
+// The folder a redirected setup actually keeps this game's unlock state in, or null. A relative path
+// resolves against steam_settings' parent. Both the appid-subfolder shape and the bare folder are
+// probed; the one with an achievements.json wins, else the first existing folder.
 function resolveLocalSaveDir({ steamSettings, appid } = {}) {
   const configured = readConfiguredSavePath(steamSettings);
   if (!configured) return null;
@@ -469,10 +440,8 @@ function resolveLocalSaveDir({ steamSettings, appid } = {}) {
 }
 
 // Inspect the runtime save folder(s) for an appid and report whether the emulator has actually
-// written any unlocked-achievement state yet. Explains the common "achievements show locked even
-// though GBE Fork files are present" case: the save is simply absent/empty (nothing unlocked).
-// `localSaveDir` (from resolveLocalSaveDir) is checked first: when a setup redirects its saves, the
-// standard roots are empty by design and reporting from them would describe the wrong folder.
+// written any unlocked-achievement state yet. `localSaveDir` is checked first: when a setup
+// redirects its saves, the standard roots are empty by design.
 function inspectSaveState(appid, savesRoots = defaultSavesRoots(), localSaveDir = null) {
   const state = { root: null, type: null, file: null, earned: 0, total: 0, exists: false };
   if (appid == null) return state;
@@ -564,12 +533,8 @@ function seedRuntimeSave({ appid, schema, steamSettings, savesRoots = defaultSav
   return summary;
 }
 
-/*
-  Diagnose a game's Goldberg/GBE achievement setup.
-
-  cfg: { gameDir, appid, schema, savesRoots? }  (schema = the AW game object with achievement.list)
-  Returns a structured report; report.issues is an array of { level: 'error'|'warning', code, message }.
-*/
+// Diagnose a game's Goldberg/GBE achievement setup. cfg: { gameDir, appid, schema, savesRoots? }.
+// Returns a structured report; report.issues is an array of { level, code, message }.
 function diagnose({ gameDir, appid, schema, savesRoots }) {
   const report = {
     gameDir,
@@ -759,10 +724,8 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
   return report;
 }
 
-/*
-  Write/merge configs.app.ini so GBE Fork reports every DLC as owned: unlock_all=1 for ownership
-  queries plus the id=name list for enumeration APIs. Existing entries are preserved and unioned.
-*/
+// Write/merge configs.app.ini so GBE Fork reports every DLC as owned: unlock_all=1 for ownership
+// queries plus the id=name list for enumeration APIs. Existing entries are preserved and unioned.
 function writeDlcConfig({ steamSettings, dlcs = [], unlockAll = true } = {}) {
   if (!steamSettings) throw new Error('writeDlcConfig: steamSettings path is required');
   const file = path.join(steamSettings, 'configs.app.ini');
@@ -796,12 +759,9 @@ function writeDlcConfig({ steamSettings, dlcs = [], unlockAll = true } = {}) {
   return { file, count: map.size, unlockAll: !!unlockAll };
 }
 
-/*
-  Write/merge steam_settings/configs.main.ini with the modern GBE switches needed by newer
-  Steamworks/PSPC titles, mirroring the community-tested generate_emu_config `-token` setup (newer
-  auth ticket + a Game Coordinator token). Existing keys/comments are preserved, and achievements_bypass
-  is deliberately left at the user's value - forcing SetAchievement() true is a workaround, not a default.
-*/
+// Write/merge configs.main.ini with the modern GBE switches newer Steamworks/PSPC titles need
+// (newer auth ticket + Game Coordinator token). achievements_bypass is left at the user's value:
+// forcing SetAchievement() true is a workaround, not a default.
 function writeMainConfig({ steamSettings } = {}) {
   if (!steamSettings) throw new Error('writeMainConfig: steamSettings path is required');
   const file = path.join(steamSettings, 'configs.main.ini');
@@ -842,11 +802,8 @@ function ensureSupportedLanguage(steamSettings, language) {
   return true;
 }
 
-/*
-  Blank the template local_save_path=./… placeholder GBE ships in configs.user.EXAMPLE.ini: leaving
-  it active redirects saves away from the monitored emu roots, so unlocks are never seen. A custom
-  save path the user set is left untouched.
-*/
+// Blank the template local_save_path=./... placeholder GBE ships in configs.user.EXAMPLE.ini:
+// leaving it active redirects saves away from the monitored emu roots. A custom path is untouched.
 function neutralizePlaceholderSavePath(doc) {
   const section = getIniSection(doc, 'user::saves');
   if (!section) return false;
@@ -862,14 +819,9 @@ function neutralizePlaceholderSavePath(doc) {
   return fixed;
 }
 
-/*
-  Write/merge configs.user.ini with the app's account_name and achievement language, preserving
-  account_steamid and every other key (changing the steamid would orphan the save folder).
-
-  `fillDefaults` is what an explicit repair passes: an absent account name or language then falls back
-  to the emulator's own defaults, which is what the emulator would have used anyway and is enough to
-  clear the NO_USER_CONFIG/BAD_USER_CONFIG Game Health checks even when the app has nothing to stamp.
-*/
+// Write/merge configs.user.ini with the app's account_name and language, preserving account_steamid
+// and every other key. `fillDefaults` (an explicit repair) falls back to the emulator's own defaults,
+// clearing the NO_USER_CONFIG/BAD_USER_CONFIG Game Health checks even with nothing to stamp.
 const DEFAULT_EMU_ACCOUNT_NAME = 'Player';
 const DEFAULT_EMU_LANGUAGE = 'english';
 
@@ -913,17 +865,11 @@ function writeUserConfig({ steamSettings, accountName, language, fillDefaults = 
   return { file, accountName: updates.account_name || null, language: updates.language || null, changed, savePathFixed };
 }
 
-/*
-  Repair / auto-configure a game's steam_settings so GBE Fork shows every achievement with its icon
-  and description. Pure except for the injected downloadIcon; cfg carries the steamSettings path,
-  appid, schema, icon/image options, DLC and account/language values. Returns the write report.
-*/
-/*
-  Written into images/ when a repair found that NONE of the schema's icon urls resolve. diagnose() can
-  only stat files, so without this it can't tell "never fetched" from "Steam has no artwork yet" - only
-  the first is repairable. Any later download clears the marker, so the game recovers on its own once
-  Steam publishes the art.
-*/
+// Repair / auto-configure a game's steam_settings so GBE Fork shows every achievement with its icon
+// and description. Pure except for the injected downloadIcon. Returns the write report.
+
+// Written into images/ when NONE of the schema's icon urls resolve, so diagnose() can tell "never
+// fetched" from "Steam has no artwork yet". Any later download clears the marker.
 const ARTWORK_UNAVAILABLE_MARKER = '.aw-artwork-unavailable';
 
 // Same three-day cadence as the description backfill and the cover lookup in steam.js: Steam sends
@@ -931,13 +877,8 @@ const ARTWORK_UNAVAILABLE_MARKER = '.aw-artwork-unavailable';
 // again. The marker suppresses the pointless warning in between, it never closes the case.
 const ARTWORK_RECHECK_MS = 3 * 24 * 60 * 60 * 1000;
 
-/*
-  Read the marker for a steam_settings, if it is still within the recheck window.
-
-  Returns { stale } so a caller can tell the two negatives apart: no marker at all (icons were
-  simply never fetched) versus a marker that has aged out (worth one more look). A marker we cannot
-  parse is treated as aged out, so a corrupt file resolves itself on the next pass.
-*/
+// Read the marker for a steam_settings, if still within the recheck window. Returns { stale } so a
+// caller can tell "never fetched" apart from "aged out"; an unparseable marker counts as aged out.
 function readArtworkMarker(steamSettings, imagePrefix = 'images') {
   const file = path.join(steamSettings, imagePrefix, ARTWORK_UNAVAILABLE_MARKER);
   if (!fs.existsSync(file)) return null;
@@ -967,12 +908,8 @@ async function repair({
   // An explicit repair completes configs.user.ini even with nothing to stamp into it - see
   // writeUserConfig's fillDefaults. Off by default so the silent auto-repair keeps its old reach.
   fillUserDefaults = false,
-  /*
-    Optional progress sink: called as ({phase, done, total}) with phase one of
-    'backup' | 'icons' | 'schema' | 'config' | 'done'. Icon downloads dominate the wall clock (two
-    per achievement, hundreds for a big game), which is why they report per file rather than per
-    phase. Purely observational - a throwing sink must never take the repair down with it.
-  */
+  // Optional progress sink: ({phase, done, total}), phase one of 'backup'|'icons'|'schema'|'config'|'done'.
+  // Icons report per file since they dominate the wall clock. Purely observational.
   onProgress = null,
 }) {
   const report = (phase, done = 0, total = 0) => {
@@ -1031,13 +968,8 @@ async function repair({
           step();
           continue;
         }
-        /*
-          Never re-fetch an icon that is already sitting where achievements.json will point. An
-          emulator-only schema (no Steam data) names its images after the achievement rather than the
-          Steam content hash, so re-deriving the url from that basename 404s even when the file is
-          already complete on disk. buildAchievementsJson derives the reference the same way, so
-          basename matching here lines up with what the written schema will name.
-        */
+        // Never re-fetch an icon already sitting where achievements.json will point: an emulator-only
+        // schema names images after the achievement, not the Steam content hash, so re-deriving the url 404s.
         const basename = path.parse(String(url).split('?')[0]).base;
         if (basename && fs.existsSync(path.join(imgDir, basename))) {
           summary.icons.skipped++;
@@ -1050,13 +982,9 @@ async function repair({
       }
     }
 
-    /*
-      Fetch what is left with a bounded pool, and give up once it is clear the whole set is doomed. A
-      brand-new appid with no achievement art on the community CDN 404s for every icon; sequentially,
-      at roughly a second per dead request, that stalled a scan for minutes. Steam serves a game's
-      icons from one per-appid folder, so an opening run of failures with nothing downloaded means the
-      rest are dead too.
-    */
+    // Fetch what is left with a bounded pool, giving up once the whole set looks doomed: a brand-new
+    // appid with no art 404s on every icon, and Steam serves a game's icons from one folder, so an
+    // opening run of failures means the rest are dead too.
     const ICON_CONCURRENCY = 8;
     const ICON_FAILURE_ABORT = 12; // > ICON_CONCURRENCY, so one bad batch alone never trips it
     const queue = [...jobs.values()];
@@ -1091,12 +1019,8 @@ async function repair({
       summary.icons.abandoned = true;
     }
 
-    /*
-      `abandoned` says we stopped early; `unavailable` says the whole referenced set is unobtainable.
-      Only the second may drive the marker, or a small game that never reaches the abandon threshold
-      would fire the recheck on every scan instead of every three days. `skipped === 0` keeps this to
-      installs with no artwork at all - some icons already on disk means an ordinary repairable gap.
-    */
+    // `abandoned` says we stopped early; `unavailable` says the whole set is unobtainable and alone
+    // may drive the marker. `skipped === 0` keeps this to installs with no artwork at all.
     summary.icons.unavailable = summary.icons.downloaded === 0 && summary.icons.failed > 0 && summary.icons.skipped === 0;
 
     const marker = path.join(imgDir, ARTWORK_UNAVAILABLE_MARKER);
@@ -1180,12 +1104,8 @@ function readLocalSchema(steamSettings) {
   }
 }
 
-/*
-  Walk library roots and report Steam-emulator game installs, flagging ones without a schema. A root
-  is a game when it directly holds a replaced steam_api(64).dll or a steam_settings folder; the appid
-  comes from steam_appid.txt. Bounded depth. Returns [{ gameDir, steamSettings, appid, emulator,
-  hasSchema, schemaCount }].
-*/
+// Walk library roots and report Steam-emulator game installs, flagging ones without a schema. A root
+// is a game when it directly holds a replaced steam_api(64).dll or a steam_settings folder.
 function findCompatibleGames(roots, { maxDepth = 5, onSkip = null } = {}) {
   const list = Array.isArray(roots) ? roots : [roots];
   const found = [];
@@ -1245,17 +1165,10 @@ function findCompatibleGames(roots, { maxDepth = 5, onSkip = null } = {}) {
     return NESTED_ENGINE_DIR.test(name) || exeDetect.ENGINE_DATA_DIRS.test(name);
   };
 
-  /*
-    Walk up from an engine subfolder (Binaries/Win64, x64, plugins) to the folder the game itself
-    lives in, by climbing while the folder is engine internals and stopping at the first one that is
-    not.
-
-    It used to ask exeDetect.detect() whether each ancestor "looks like a game folder", which cannot
-    answer that question: it searches BELOW the folder it is given, so the exe under Win64 makes
-    Binaries look like a game folder and the walk stopped one level short. Worse, a game sitting
-    directly in a library root made the LIBRARY look like a game folder, because the answer was a
-    sibling game's executable, and the game was then anchored on the whole library.
-  */
+  // Walk up from an engine subfolder (Binaries/Win64, x64, plugins) to the game's own folder, by
+  // climbing while the folder is engine internals and stopping at the first one that is not.
+  // exeDetect.detect() cannot answer this: it searches BELOW the folder given, so it stopped short
+  // or anchored a game on the whole library.
   const parentGameRootFor = (markerDir) => {
     let current = markerDir;
     for (let i = 0; i < 3; i++) {
@@ -1313,11 +1226,8 @@ function findCompatibleGames(roots, { maxDepth = 5, onSkip = null } = {}) {
     if (hasSteamApi && appidConfig) {
       const appidFile = path.join(dir, appidConfig.name);
       const appid = parseAppidFromConfig(appidFile);
-      // anchorDir, not parentGameRootFor: this walks up unconditionally, and exeDetect.detect()
-      // searches below the folder it is given, so the parent of a game that sits directly in a
-      // library root answers with a SIBLING game's executable and passes for a game folder. The
-      // game was then anchored on the library root and every folder-based repair below aimed at
-      // whichever game came first in it. Walk up only from what looks like engine internals.
+      // anchorDir, not parentGameRootFor: exeDetect.detect() searches below the folder it's given,
+      // so a game sitting directly in a library root would get anchored on the whole library instead.
       if (appid) return { gameDir: anchorDir(dir), appid, appidFile };
     }
     if (exeDetect.shallowGameExe(dir)) {
@@ -1358,13 +1268,8 @@ function findCompatibleGames(roots, { maxDepth = 5, onSkip = null } = {}) {
   return found;
 }
 
-/*
-  Find the most likely game executable inside a game folder. Thin wrapper around the shared
-  exeDetect module - kept for the existing call sites that only have a gameDir + emulator dll(s)
-  and no game name. Pass a game name to exeDetect.detect directly for name-aware scoring.
-
-  Returns { name, full, size, score } or null.
-*/
+// Find the most likely game executable inside a game folder. Thin wrapper around exeDetect, kept
+// for call sites with only a gameDir + emulator dll(s) and no game name.
 function findGameExe(gameDir, dllPaths) {
   return exeDetect.detect(gameDir, '', { dllPaths });
 }

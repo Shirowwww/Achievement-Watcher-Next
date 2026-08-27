@@ -1,14 +1,10 @@
 'use strict';
 
 /*
-  Per-appid image overrides: a JSON map { "<appid>": "<file:// or http(s) url>" } under cfg/, taking
-  precedence over the artwork a game normally resolves to. Downloaded picks are stored as their
-  remote URL (not copied), so steam_cache stays disposable; a local file the user picked is copied
-  into a durable folder because nothing could ever fetch it again.
-
-  One factory, two instances: coverStore.js (library tiles, per orientation) and gameIconStore.js
-  (the square game logo, one value per game). Pure fs/JSON, no Electron, so both work from the
-  renderer and are unit-testable headless.
+  Per-appid image overrides (a JSON map under cfg/) taking precedence over a game's normal artwork.
+  Remote picks are stored as their URL so steam_cache stays disposable; local picks are copied into
+  a durable folder. One factory backs coverStore.js (per-orientation tiles) and gameIconStore.js
+  (one logo per game); pure fs/JSON, no Electron, so both are unit-testable headless.
 */
 
 const crypto = require('crypto');
@@ -50,11 +46,8 @@ function valueForOrientation(entry, orientation) {
   return entry[orientation] || null;
 }
 
-/*
-  Which tile shape an image was made for, from its own pixel ratio: a header is about 2:1, a
-  portrait grid 2:3. Anything close to square (a fan cover, an icon) is left unclassified on
-  purpose - forcing it into one shape would silently drop it from the other.
-*/
+// Which tile shape an image was made for, from its pixel ratio (header ~2:1, portrait grid ~2:3).
+// Near-square images (a fan cover, an icon) are left unclassified rather than forced into one shape.
 function orientationOfImage(file) {
   const size = file ? imageSize(file) : null;
   if (!size) return null;
@@ -74,11 +67,9 @@ function idFor(appid) {
 }
 
 /*
-  `fileName`  the cfg/<fileName> JSON map holding the selections.
-  `folder`    the durable <userData>/<folder> directory local picks are copied into.
-  `recoverPrefix`
-              the CDN base a legacy cache path can be rebuilt into when its basename carries the
-              provider's content hash, or null for a store whose provider has no such convention.
+  fileName: the cfg/<fileName> JSON map holding selections. folder: the durable <userData>/<folder>
+  dir local picks are copied into. recoverPrefix: the CDN base to rebuild a legacy cache path's
+  content hash into, or null when the provider has no such convention.
 */
 function createImageOverrideStore({ fileName, folder, recoverPrefix = null } = {}) {
   if (!fileName || !folder) throw new Error('createImageOverrideStore needs a fileName and a folder');
@@ -103,12 +94,8 @@ function createImageOverrideStore({ fileName, folder, recoverPrefix = null } = {
     return storeFile || defaultFile();
   }
 
-  /*
-    The stored filename includes a digest of the image bytes. A fixed `<appid>.<ext>` name meant a
-    second pick overwrote the first at the same URL, and Chromium's decoded-image cache kept
-    painting the old picture for that URL - so picking new art looked like nothing happened.
-    Identical bytes still reuse the same file, so re-picking the same image isn't a second copy.
-  */
+  // Filename includes a digest of the bytes: a fixed `<appid>.<ext>` name let Chromium's decoded-
+  // image cache keep painting the old picture at that URL after a re-pick. Identical bytes reuse the file.
   function safeName(appid, sourcePath, digest) {
     const id = idFor(appid);
     if (!id) return null;
@@ -134,9 +121,8 @@ function createImageOverrideStore({ fileName, folder, recoverPrefix = null } = {
     }
   }
 
-  // Drops copies this game no longer points at. Called only after the new selection is recorded,
-  // so an interrupted run leaves a stale file rather than an entry pointing at nothing. Must keep
-  // every current orientation's path, or pruning after writing one deletes the other's pick.
+  // Drops copies this game no longer points at, called only after the new selection is recorded so
+  // an interrupted run leaves a stale file, not a dangling entry. Must keep every current orientation.
   function pruneOld(root, appid, keepPaths) {
     const keep = new Set(keepPaths.map((p) => path.resolve(p).toLowerCase()));
     for (const stale of filesFor(root, appid)) {
@@ -235,10 +221,8 @@ function createImageOverrideStore({ fileName, folder, recoverPrefix = null } = {
     writeAll(map);
   }
 
-  // The provider's grid URLs use the content hash as their filename. Older AW builds kept only the
-  // downloaded cache path, but that basename is enough to reconstruct the exact remote selection
-  // after the cache was already deleted. Do not guess generic names such as header.jpg: an alternate
-  // Steam AppID is no longer present in that old path, so guessing could silently select wrong art.
+  // The provider's grid URLs use the content hash as filename, enough to rebuild the exact remote
+  // selection after the cache is deleted. Never guess generic names (header.jpg): wrong art risk.
   function recoverRemote(url) {
     if (!recoverPrefix) return null;
     const local = localPathFromUrl(url);
@@ -248,9 +232,8 @@ function createImageOverrideStore({ fileName, folder, recoverPrefix = null } = {
     return `${recoverPrefix}${basename}`;
   }
 
-  // A selected image is user state, but downloaded bytes are not. Store remote selections as the
-  // source URL so clearing steam_cache removes the image and the next render can fetch it again.
-  // Local images selected by the user remain in the durable folder; they are not re-downloadable.
+  // A selected image is user state, downloaded bytes are not: remote picks store the source URL so
+  // clearing steam_cache still lets it refetch; local picks stay in the durable folder.
   function persist(appid, url, root = userDataDir(), orientation) {
     if (!appid || !url) return null;
     const value = String(url);
@@ -279,18 +262,16 @@ function createImageOverrideStore({ fileName, folder, recoverPrefix = null } = {
       }
     }
     set(appid, stored, orientation);
-    // Record first, then tidy: the entry above is what makes the new file(s) the ones in use. Keep
-    // every orientation's current file, not just the one just written. A remote selection therefore
-    // also removes a stale durable copy left by an older build.
+    // Record first, then tidy: the entry above is what makes the new file(s) current. Keep every
+    // orientation's file, so a remote pick can also remove a stale durable copy from an older build.
     pruneOld(root, appid, keepPathsForEntry(readAll()[String(appid)]));
     return stored;
   }
 
   /*
-    Migrates legacy single-URL entries (pre-dating per-orientation storage) to the orientation their
-    image actually has, using the file itself as the only record of which shape was picked - e.g. a
-    920x430 header no longer gets cropped into a portrait tile. Unmeasurable entries (remote URL,
-    deleted file, square image) keep applying to both orientations, as before. Returns changed appids.
+    Migrates legacy single-URL entries to the orientation their image actually has, measured from
+    the file itself, so e.g. a 920x430 header no longer gets cropped into a portrait tile.
+    Unmeasurable entries (remote URL, deleted file, square image) keep applying to both.
   */
   function splitLegacyByShape() {
     const map = readAll();
@@ -316,9 +297,8 @@ function createImageOverrideStore({ fileName, folder, recoverPrefix = null } = {
     }
   }
 
-  // Upgrade overrides created by older builds before deleting steam_cache. This runs in the main
-  // process, so it reads/writes the requested user-data tree directly instead of relying on this
-  // module's renderer-side store override/cache.
+  // Upgrades overrides created by older builds before deleting steam_cache; runs in the main
+  // process, so it reads/writes the requested user-data tree directly rather than via this module's own cache.
   function preserveCachedOverrides(root = userDataDir()) {
     const targetFile = path.join(root, 'cfg', fileName);
     let map;
@@ -332,10 +312,8 @@ function createImageOverrideStore({ fileName, folder, recoverPrefix = null } = {
     const cacheRoot = path.join(root, 'steam_cache');
     const preserved = new Set();
 
-    // Convert a cache-backed value to its original source URL when the old filename carries a
-    // provider content hash. Generic legacy filenames do not contain enough information to rebuild
-    // the link, so retain those bytes as a last-resort compatibility path instead of losing a user's
-    // selection during migration.
+    // Converts a cache-backed value to its source URL when the old filename carries a content hash;
+    // a generic legacy filename can't be rebuilt, so its bytes are kept as a compatibility fallback.
     const preserveValue = (appid, value) => {
       const source = localPathFromUrl(value);
       if (!source || !pathIsWithin(source, cacheRoot)) return null;

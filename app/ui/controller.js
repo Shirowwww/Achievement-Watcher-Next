@@ -29,12 +29,8 @@ function chooseDirectionalCandidate(current, candidates, horizontal, vertical) {
   return best;
 }
 
-/*
-  In the library grid the TILE is the navigation unit, not the buttons painted on top of it
-  (achievements, health/config, play) - the generic "button:not([disabled])" rule was matching
-  those instead, so pressing right landed on the same tile's own button rather than moving across
-  the library. Excluding them makes A on a tile open the game directly, same as clicking it.
-*/
+// In the library grid the tile, not the buttons painted on top of it, is the navigation unit,
+// so A on a selected tile opens the game directly.
 function isGameTileControl(element) {
   if (!element || typeof element.closest !== 'function') return false;
   return !!element.closest('#game-list .game-box') && !element.matches('#game-list .game-box');
@@ -88,9 +84,8 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       if (!element || !element.isConnected || element.hidden || element.disabled) return false;
       const style = getComputedStyle(element);
       if (style.display === 'none' || style.visibility === 'hidden' || style.pointerEvents === 'none') return false;
-      // A fully transparent control is not on screen. The library tile's play button rests at
-      // opacity 0 until its tile is hovered, yet it still lays out at full size - so without this
-      // the pad could select, outline and activate a button nobody can see.
+      // Opacity 0 controls (e.g. the tile's hover-only play button) still lay out at full size,
+      // so without this check the pad could select an invisible button.
       if (parseFloat(style.opacity) === 0) return false;
       const rect = element.getBoundingClientRect();
       return rect.width > 0 && rect.height > 0;
@@ -146,7 +141,8 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         if (next === selected.selectedIndex) return true;
         selected.selectedIndex = next;
       } else if (selected.matches('input[type="range"], input[type="number"]')) {
-        direction < 0 ? selected.stepDown() : selected.stepUp();
+        if (direction < 0) selected.stepDown();
+        else selected.stepUp();
       } else {
         return false;
       }
@@ -197,18 +193,14 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       }
     }
 
-    /*
-      The two tile controls the grid no longer selects directly. Making the tile the navigation unit
-      fixed directional movement but took the play/Game Health buttons out of reach, and every
-      documented shortcut was already spoken for - except LT/RT, the only face/shoulder inputs the
-      app never read. Both are no-ops unless a library tile is selected.
-    */
+    // LT/RT reach the play/Game Health buttons the grid no longer selects directly (the tile is
+    // the nav unit). No-op unless a library tile is selected.
     function tileAction(controlSelector) {
       const tile = selected && selected.closest?.('#game-list .game-box');
       if (!tile) return;
       const control = tile.querySelector(controlSelector);
-      // The play button rests at opacity 0 until its tile is hovered, so isVisible() rejects it -
-      // clicking it is still exactly what the mouse does, and the tile itself is demonstrably shown.
+      // isVisible() would reject the play button's hover-only opacity 0, but clicking it here is
+      // still exactly what the mouse does.
       if (control && !control.disabled) control.click();
     }
 
@@ -306,12 +298,8 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       schedulePoll();
     }
 
-    /*
-      The navigation loop is a requestAnimationFrame poll, so it must not exist while there is no pad
-      to read: on an idle library it was a 60fps main-thread callback measured at ~8% of a core for a
-      window nobody was touching. Chromium only reports a gamepad once the user presses something on
-      it - the same gesture that starts navigation - so waiting for 'gamepadconnected' costs nothing.
-    */
+    // Must not run without a pad to read: an unconditional rAF poll measured ~8% of a core idle.
+    // Chromium only reports a gamepad once the user presses it, the same gesture that starts nav.
     function canPoll() {
       return padConnected && isAppControllerEnabled() && mainWindowVisible && document.visibilityState === 'visible';
     }

@@ -1,10 +1,7 @@
 'use strict';
 
-/*
-  Steam DRM (SteamStub) removal via atom0s/Steamless - the same tool ARMGDDN bundles. Downloads and
-  caches the CLI once, runs it on a game exe, and swaps in the unpacked exe (original kept as .bak).
-  A clean exe is a safe no-op. Windows-only.
-*/
+// Steam DRM (SteamStub) removal via atom0s/Steamless. Downloads/caches the CLI once, runs it on a
+// game exe, and swaps in the unpacked exe (original kept as .bak). Clean exe is a no-op. Windows-only.
 
 const fs = require('fs');
 const os = require('os');
@@ -86,10 +83,8 @@ async function downloadAndCache(cacheDir, tag, assetUrl, log) {
   }
 }
 
-/*
-  Ensure the Steamless CLI is available locally; returns { tag, cli, dir }. Network is hit at most
-  once a week; otherwise the cached copy is reused (Steamless is offline after the first download).
-*/
+// Ensure the Steamless CLI is available locally; returns { tag, cli, dir }. Network is hit at most
+// once a week; otherwise the cached copy is reused.
 async function ensureSteamless({ cacheDir, force = false, log = noopLog } = {}) {
   if (process.platform !== 'win32') throw new Error('Steamless is Windows-only');
   if (!cacheDir) throw new Error('ensureSteamless: cacheDir is required');
@@ -148,11 +143,8 @@ function runCli(cli, args, cwd, timeout = 120000) {
   });
 }
 
-/*
-  Strip SteamStub DRM from one executable. Returns { stripped, exe, backup, reason, output };
-  stripped is true only when Steamless unpacked a stub and we swapped the exe in. experimental passes
-  --realign for heavily-protected/repacked EXEs.
-*/
+// Strip SteamStub DRM from one exe. `stripped` is true only when a stub was unpacked and swapped in.
+// `experimental` passes --realign for heavily-protected/repacked EXEs.
 async function stripDrm({ steamless, exePath, experimental = false, log = noopLog } = {}) {
   if (!steamless || !steamless.cli) throw new Error('stripDrm: Steamless CLI is not available');
   if (!exePath || !fs.existsSync(exePath)) throw new Error(`stripDrm: exe not found: ${exePath}`);

@@ -1,12 +1,8 @@
 'use strict';
 
-/*
-  Portable application themes: read and write the `.awtheme` package, a zip of manifest.json, the
-  per-layer theme.json model, and an optional flat assets/ folder. The point of the layout is what it
-  CANNOT carry: colors, gradients, fits and pictures, but no HTML, CSS, script or URL - the app builds
-  its stylesheet from the model afterwards, which is also why a `user:` CSS theme cannot be exported.
-  Unknown manifest fields are ignored, so a future gallery can serve the same files with added metadata.
-*/
+// Portable application themes: read and write the `.awtheme` package (manifest.json, the
+// per-layer theme.json model, an optional assets/ folder). It can carry colors, gradients, fits
+// and pictures, but no HTML, CSS, script or URL, so a `user:` CSS theme cannot be exported.
 
 const fs = require('fs');
 const path = require('path');
@@ -83,38 +79,27 @@ function sanitizeThemeName(raw) {
   return sanitizePresetName(raw).slice(0, LIMITS.nameLength).trim();
 }
 
-/*
-  An asset name, as it may appear in `theme.json` and under `assets/`. One flat segment: a theme
-  image has no folder structure, so allowing one would only ever be somebody trying to write
-  outside the assets folder.
-*/
+// An asset name as it may appear in `theme.json` and under `assets/`: one flat segment, since a
+// theme image has no folder structure and allowing one would only enable a path escape.
 function safeAssetName(raw) {
   const value = String(raw == null ? '' : raw);
   if (!value || value.length > 120) return '';
   if (value !== safePackagePath(value)) return '';
   if (value.includes('/')) return '';
-  // Every asset this format writes is named after its layer, so a leading dot is never a name we
-  // produced. Refusing it keeps the accepted set as small as it can be.
+  // Every asset this format writes is named after its layer, so a leading dot is never one we produced.
   if (value.startsWith('.')) return '';
   if (!ASSET_EXT_RE.test(value)) return '';
   return value;
 }
 
-/*
-  Which built-in palette a theme started from. Descriptive only - nothing reads it to decide
-  behaviour - so a theme derived from Nord can say so and keep saying it through a round trip.
-*/
+// Which built-in palette a theme started from. Descriptive only, nothing reads it to decide behaviour.
 function cleanBase(value) {
   const name = cleanText(value, 32).toLowerCase();
   return Object.prototype.hasOwnProperty.call(BUILTIN_COLORS, name) ? name : '';
 }
 
-/*
-  The theme as it travels: the sanitized layer model with every image reduced to the bare name of
-  an asset the package carries, and every generated blur copy dropped. Returns null when the model
-  points at an image `assetFor` could not take, which is a theme that would install with a blank
-  layer rather than the one it was drawn with.
-*/
+// The theme as it travels: images reduced to the bare asset name, generated blur copies dropped.
+// Returns null when `assetFor` could not take an image, rather than installing with a blank layer.
 function packagedTheme(raw, assetFor) {
   const clean = sanitizeCustomTheme(raw);
   const out = {};
@@ -135,11 +120,8 @@ function packagedTheme(raw, assetFor) {
   return out;
 }
 
-/*
-  Validate the manifest on its own, before a single byte is written. `appVersion` is the running
-  app's version; an omitted or unparsable one skips only the compatibility floor, never the
-  structural checks.
-*/
+// Validate the manifest before a single byte is written. An omitted or unparsable `appVersion`
+// skips only the compatibility floor, never the structural checks.
 function validateManifest(raw, { appVersion = '' } = {}) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return fail('invalid-manifest');
   if (raw.format !== THEME_PACKAGE_FORMAT) return fail('not-a-theme-package');
@@ -197,11 +179,8 @@ function validateManifest(raw, { appVersion = '' } = {}) {
 
 // Writing
 
-/*
-  Write `theme` out as a package. Every image the model points at is copied in under a name derived
-  from the layer it belongs to, so the package never carries a path from this machine - not in the
-  manifest, not in theme.json and not in an entry name.
-*/
+// Write `theme` out as a package. Every image is copied in under a name derived from its layer,
+// so the package never carries a path from this machine.
 function exportTheme({ theme, name, destination, meta = {}, appVersion = '', base = '' }) {
   const themeName = sanitizeThemeName(name);
   if (!themeName) return fail('invalid-name');
@@ -210,11 +189,7 @@ function exportTheme({ theme, name, destination, meta = {}, appVersion = '', bas
   const used = new Set();
   let total = 0;
 
-  /*
-    Takes one layer image and returns the name it travels under, or throws the reason it cannot.
-    Throwing rather than returning a flag means the first real problem is the one reported, and the
-    caller cannot forget to look.
-  */
+  // Takes one layer image and returns the name it travels under, or throws the reason it cannot.
   const assetFor = (file, layerId) => {
     const known = assets.get(file);
     if (known) return known.name;
@@ -307,11 +282,8 @@ function themeFromBuiltin(name) {
 
 // Reading
 
-/*
-  Parse and fully validate a package without touching theme storage. Returns the manifest, the
-  theme with its image fields still holding asset names, and the assets that would be written, so
-  a caller can show the user what an import would do before anything is installed.
-*/
+// Parse and fully validate a package without touching theme storage, so a caller can show the
+// user what an import would do before anything is installed.
 function readThemePackage(file, { appVersion = '' } = {}) {
   let stat;
   try {
@@ -561,9 +533,8 @@ function deleteInstalledTheme(userDataPath, name) {
   if (!isInside(root, dir)) return fail('outside-theme-storage');
   if (!fs.existsSync(dir)) return fail('not-installed');
   try {
-    // Windows refuses to remove a folder while anything still holds a file in it, and a picture the
-    // window has just stopped drawing can stay open for a moment longer. Retrying is what turns
-    // that into a wait rather than an error the user has to understand.
+    // Windows refuses to remove a folder while a file in it is still held open, which a picture
+    // can be for a moment after the window stops drawing it. Retrying turns that into a wait.
     fs.rmSync(dir, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
   } catch (err) {
     return fail(String(err.message || err));
@@ -580,13 +551,9 @@ function nextFreeName(root, name, taken) {
   return '';
 }
 
-/*
-  Install a package into the user's theme storage. `duplicate` decides what an existing theme of the
-  same name means: 'fail', 'rename' (install beside it) or 'replace'. `takenNames` are names living
-  outside this folder (built-ins, user CSS themes), without which an import could silently shadow one
-  in the dropdown. Built in a staging folder and moved in one rename, so a failure anywhere leaves
-  storage exactly as it was.
-*/
+// Install a package into the user's theme storage. `duplicate` decides what an existing theme of
+// the same name means: 'fail', 'rename' or 'replace'. `takenNames` covers names living outside
+// this folder (built-ins, user CSS themes). Built in a staging folder and moved in one rename.
 function installThemePackage({ file, userDataPath, appVersion = '', duplicate = 'fail', reservedNames = [], takenNames = [] }) {
   const read = readThemePackage(file, { appVersion });
   if (!read.ok) return read;
@@ -670,22 +637,9 @@ function installThemePackage({ file, userDataPath, appVersion = '', duplicate = 
   }
 }
 
-/*
-  Save a layer model as a theme of the user's own, under a name they chose.
-
-  This is what the Save button in the theme editor writes, and it deliberately lands in the same
-  storage an imported `.awtheme` installs into: a theme somebody saved and a theme somebody sent
-  them are the same kind of thing afterwards, so they are listed, selected, exported and deleted by
-  one set of code rather than two.
-
-  The images come with it. A layer picture lives in the shared `theme-images` folder while it is
-  being edited, so a saved theme that pointed back at it would break the moment another theme reused
-  that slot or the file was cleaned up - `packagedTheme` copies each one in under a name built from
-  its layer, exactly as an export does, which is also why deleting the theme takes its pictures.
-
-  `overwrite` decides what an existing name means: false refuses, true replaces. Saving under a name
-  nothing uses is how you keep both the theme you started from and the one you just made.
-*/
+// What the Save button in the theme editor writes, into the same storage an imported `.awtheme`
+// installs into. Layer pictures (in the shared `theme-images` folder while editing) are copied in
+// under a per-layer name, as an export does, instead of left pointing back at that shared folder.
 function saveThemeAs({ userDataPath, name, theme, meta = {}, appVersion = '', base = '', overwrite = false, reservedNames = [] }) {
   const themeName = sanitizeThemeName(name);
   if (!themeName) return fail('invalid-name');

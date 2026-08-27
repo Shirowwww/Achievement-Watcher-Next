@@ -1,12 +1,10 @@
 'use strict';
 
 /*
-  Turns the per-game signals AW Next already collects (install, exe, schema, emulator diagnosis,
-  save, watchdog index, notifications) into one overall state, a plain-language explanation, check
-  rows and available repair actions.
-
-  Deliberately pure: no fs/Electron/i18n. Everything user-visible comes out as an ID the renderer
-  resolves through t(), so every branch is testable without a window, install or locale bundle.
+  Turns the per-game signals AW Next already collects into one overall state, a plain-language
+  explanation, check rows and repair actions. Deliberately pure (no fs/Electron/i18n): every
+  user-visible string comes out as an ID the renderer resolves through t(), so every branch is
+  testable without a window, install or locale bundle.
 */
 
 const STATE = { READY: 'ready', ATTENTION: 'attention', NOT_TRACKING: 'not-tracking' };
@@ -44,8 +42,6 @@ const REPAIRABLE_GOLDBERG_CODES = new Set([
   'BAD_DLC_CONFIG',
   'BAD_USER_CONFIG',
   // Both are properties of achievements.json, which the repair rewrites from the fetched schema.
-  // They were raised as warnings with no action attached, so a game whose only fault was a fabricated
-  // achievement list showed a permanent yellow row and offered no way to clear it.
   'BLANK_NAMES',
   'BLANK_DESCRIPTIONS',
 ]);
@@ -64,11 +60,8 @@ const REPAIRABLE_UPLAY_CODES = new Set([
   'NO_STEAM_MAPPING',
 ]);
 
-/*
-  Which part of the setup each diagnosis code is about, so the row can name actual subjects
-  ("2 points to review" told the user a number and nothing else) - the individual codes and
-  messages still show under Technical details.
-*/
+// Which part of the setup each diagnosis code is about, so the row can name actual subjects
+// instead of a bare issue count; the codes and messages still show under Technical details.
 const ISSUE_TOPIC = {
   NO_ACHIEVEMENTS_JSON: 'schema',
   BAD_ACHIEVEMENTS_JSON: 'schema',
@@ -124,11 +117,8 @@ function issuesAtLevel(report, level) {
   return report.issues.filter((issue) => issue && issue.level === level);
 }
 
-/*
-  The appid the emulator announces disagrees with the one AW Next resolved. It gets its own action
-  (rather than folding into "rewrite achievement data") because that repair deliberately never
-  overwrites an existing steam_appid.txt, so it would leave this exact warning standing.
-*/
+// Own action rather than folding into "rewrite achievement data", since that repair deliberately
+// never overwrites an existing steam_appid.txt and would leave this exact warning standing.
 function appidMismatch(report) {
   const issue = (report && Array.isArray(report.issues) ? report.issues : []).find(
     (entry) => entry && entry.code === 'APPID_MISMATCH' && entry.data && entry.data.expected
@@ -143,11 +133,8 @@ function check(id, level, { params = {}, blocking = false, actions = [] } = {}) 
   return { id, level, params, blocking, actions };
 }
 
-/*
-  An unknown install folder limits repairs and playtime; it does not by itself stop tracking. Most
-  cracked games are known to AW Next only through their emulator's save folder, which it re-reads on
-  every scan - reporting those as untracked called a whole library broken when nothing was.
-*/
+// An unknown install folder limits repairs and playtime but doesn't by itself stop tracking: most
+// cracked games are known to AW Next only through their emulator's save folder, re-read every scan.
 function readableWithoutInstall(signals) {
   if (Array.isArray(signals.saveSources) && signals.saveSources.length > 0) return true;
   return num(signals.achievements && signals.achievements.unlocked) > 0;
@@ -224,11 +211,10 @@ function achievementDataCheck(signals) {
 }
 
 /*
-  Goldberg/GBE setup, split from the achievement-data check because "the schema is fine but
-  nothing will ever write to it" is a different problem. `emulated` means specifically "Goldberg/
-  GBE is this game's mechanism", proven on disk - never inferred from the source label, since
-  CODEX/RUNE/OnlineFix/SmartSteamEmu/TENOKE/Goldberg SocialClub keep unlocks elsewhere entirely,
-  and demanding steam_settings from them reported working games as broken.
+  Goldberg/GBE setup, split from the achievement-data check since "schema is fine but nothing
+  writes to it" is a different problem. `emulated` means Goldberg/GBE proven on disk, never
+  inferred from the source label: other loaders (CODEX, OnlineFix, TENOKE...) keep unlocks
+  elsewhere entirely, and demanding steam_settings from them reported working games as broken.
 */
 function emulatorCheck(signals) {
   const goldberg = signals.goldberg;
@@ -276,15 +262,8 @@ function emulatorCheck(signals) {
 function uplayCheck(signals) {
   const uplay = signals.uplay;
   if (!uplay) return null;
-  /*
-    A Ubisoft game sold on Steam ships both layers, so a Uplay loader in the folder does not mean the
-    Uplay layer is the one serving its achievements. When a crack loader (ALI213, OnlineFix, TENOKE,
-    SmartSteamEmu, ...) is already doing that, the Uplay setup is not broken, it is unused: reporting
-    it as an error sent the user after a repair that would replace a working setup with another one.
-
-    Seen on ZOMBI, served by ALI213, whose leftover R1 loader is too old to redirect anything and
-    said so in the same report that offered to install it.
-  */
+  // A Uplay loader in the folder doesn't mean the Uplay layer serves achievements: a crack loader
+  // (ALI213, OnlineFix, TENOKE...) may already be doing that, making Uplay unused rather than broken.
   const servedBy = signals.crackLoader && signals.crackLoader.name;
   if (servedBy) {
     return check('uplay', LEVEL.INFO, { params: { servedBy, ...(uplay.mapping ? { steamAppid: String(uplay.mapping.steam_appid || ''), steamName: String(uplay.mapping.steam_name || '') } : {}) } });
@@ -296,11 +275,8 @@ function uplayCheck(signals) {
         mappingMode: uplay.mapping.manual ? 'manual' : uplay.mapping.automatic ? 'automatic' : 'built-in',
       }
     : {};
-  /*
-    A game that asks the loader for nothing at all is not a broken setup, so this action sits beside
-    the general repair rather than inside REPAIRABLE_UPLAY_CODES: it writes one ini key and can be
-    taken back, and offering it unconditionally would put a button on games that never needed it.
-  */
+  // Kept outside REPAIRABLE_UPLAY_CODES since a game that never asked the loader for anything isn't
+  // broken; this writes one reversible ini key instead of being offered unconditionally.
   const withTicketFix = (actions) =>
     (uplay.issues || []).some((issue) => issue.code === 'NO_SESSION_TICKET' || issue.code === 'SESSION_TICKET_NO_EFFECT')
       ? [...actions, ACTION.REPAIR_UPLAY_TICKET]
@@ -309,8 +285,7 @@ function uplayCheck(signals) {
   const errors = issuesAtLevel(uplay, 'error');
   if (errors.length > 0) {
     // NO_STEAM_MAPPING is repairable interactively: the shared transaction tries the automatic
-    // resolver first and then opens the validated manual picker. Game Health must not strand the
-    // user without the same recovery path available from the context menu.
+    // resolver first, then the validated manual picker, same recovery path as the context menu.
     const actions = withTicketFix(errors.some((issue) => REPAIRABLE_UPLAY_CODES.has(issue.code)) ? [ACTION.REPAIR_UPLAY] : []);
     return check('uplay', LEVEL.FAIL, {
       params: { topics: issueTopics(errors), ...mappingParams },
@@ -343,9 +318,8 @@ function progressCheck(signals) {
   return check('progress', LEVEL.INFO, {});
 }
 
-// Live tracking means the watchdog's process monitor matching a running binary. Console
-// emulators and official platform libraries use their own watchers, so a missing gameIndex
-// entry there is normal, not a fault.
+// Live tracking means the watchdog's process monitor matched a running binary; console emulators
+// and official platform libraries use their own watchers, so a missing entry there is normal.
 function trackingCheck(signals) {
   if (signals.processTracking === false) return null;
   const tracking = signals.tracking || {};
@@ -354,11 +328,8 @@ function trackingCheck(signals) {
   return check('tracking', LEVEL.WARN, { actions: [ACTION.CHOOSE_EXE] });
 }
 
-/*
-  What is configured, and - once the Watchdog has delivered something - what actually carried it.
-  `effective` is an observation, not a setting (transport, reason, outcome), letting the row say
-  "working, through the Windows fallback" instead of naming an overridden mode.
-*/
+// `effective` records what actually carried a delivered notification (transport/reason/outcome),
+// distinct from the configured `transport`, so the row can say "via the Windows fallback".
 function notificationCheck(signals) {
   const notifications = signals.notifications || {};
   const effective = notifications.effective || null;
@@ -401,10 +372,8 @@ function byId(checks, id) {
   return checks.find((entry) => entry.id === id) || null;
 }
 
-/*
-  The one sentence a user reads first. Ordered by what blocks unlocks earliest, so the explanation
-  always names the root cause rather than the symptom furthest downstream.
-*/
+// The one sentence a user reads first, ordered by what blocks unlocks earliest so the explanation
+// names the root cause rather than a downstream symptom.
 function explain(state, checks, signals) {
   const install = byId(checks, 'install');
   const data = byId(checks, 'achievement-data');
@@ -418,20 +387,16 @@ function explain(state, checks, signals) {
     return { reason: signals.gameDir ? 'install-gone' : 'not-installed', params: install.params };
   }
   if (data && data.level === LEVEL.FAIL && data.blocking) return { reason: 'no-achievement-data', params: data.params };
-  // Only a blocking emulator failure means "there is no emulator here". An emulator report that
-  // merely carries schema or config errors is explained by the check that owns those instead -
-  // otherwise a repairable achievements.json would be reported as a missing emulator.
+  // Only a blocking emulator failure means "there is no emulator here"; a report that merely
+  // carries schema or config errors is explained by the check that owns those instead.
   if (emulator && emulator.level === LEVEL.FAIL && emulator.blocking) {
     const canInstall = emulator.actions.includes(ACTION.INSTALL_RUNTIME);
     return { reason: canInstall ? 'emulator-runtime-missing' : 'emulator-missing', params: emulator.params };
   }
   if (uplay && uplay.level === LEVEL.FAIL) return { reason: 'uplay-broken', params: uplay.params };
   if (data && data.level === LEVEL.FAIL) return { reason: 'achievement-data-incomplete', params: data.params };
-  /*
-    A wrong appid outranks "nothing unlocked yet" below, since it's the actual reason: the emulator
-    announces one game and AW Next watches another. Naming just the topic ("game ID file") named
-    the file but not what was wrong with it - the dead end this branch removes.
-  */
+  // A wrong appid outranks "nothing unlocked yet" below, since it's the actual reason: the
+  // emulator announces one game and AW Next watches another.
   if (emulator && emulator.params && emulator.params.appidExpected) return { reason: 'appid-mismatch', params: emulator.params };
   // The signature case: everything needed is present, nothing has been recorded yet. Say where the
   // fault is likely to be, because "no notifications appeared" is the usual misread.
@@ -456,10 +421,8 @@ function deriveState(checks) {
   return STATE.READY;
 }
 
-/*
-  Everything the Technical details block shows. Kept as raw values on purpose: exact paths, counts,
-  emulator issue codes and messages, so a bug report can be assembled from this alone.
-*/
+// Everything the Technical details block shows, kept as raw values (paths, counts, issue codes
+// and messages) so a bug report can be assembled from this alone.
 function buildTechnical(signals) {
   const goldberg = signals.goldberg;
   const uplay = signals.uplay;
@@ -514,10 +477,8 @@ function buildTechnical(signals) {
   };
 }
 
-/*
-  signals - see buildTechnical() for the full accepted shape. Every field is optional; a game the
-  app knows almost nothing about still produces a usable report.
-*/
+// signals: see buildTechnical() for the full accepted shape. Every field is optional; a game the
+// app knows almost nothing about still produces a usable report.
 function deriveHealth(signals = {}) {
   const checks = buildChecks(signals);
   const state = deriveState(checks);
@@ -534,13 +495,9 @@ function deriveHealth(signals = {}) {
 }
 
 /*
-  The tile dot, answered from what a library scan already knows - the panel's full report is what
-  replaces it once someone opens it. Lives here rather than in the renderer so both halves of "what
-  colour is this game" are stated in one tested place.
-
-  A game only gets a dot when its unlocks come through an emulator AW Next set up or can set up.
-  hasSteamApiDll is a boolean only for Steam-emulator records; a Uplay R1/R2 game has no steam_api
-  dll at all by design, so it has to be recognised by its own marking or it silently gets no dot.
+  The tile dot, from what a library scan already knows (the panel's full report replaces it once
+  opened); lives here so both halves of "what colour is this game" are in one tested place. A
+  Uplay R1/R2 game has no steam_api dll by design, so it needs its own marking or gets no dot.
 */
 function hasDot(game) {
   const record = game && typeof game === 'object' ? game : {};
@@ -551,11 +508,8 @@ function scannedState(game) {
   const record = game && typeof game === 'object' ? game : {};
   const total = num(record.achievement && record.achievement.total);
   if (record.uplayR2 || record.system === 'uplay') {
-    /*
-      uplayHealthy is set by the scan only after it has actually diagnosed the loader and its config.
-      Absent means "not looked at", which is not the same answer as "broken" - reporting those as
-      untracked is exactly what the steam_api-only rule used to do to every Uplay game.
-    */
+    // uplayHealthy is set by the scan only after diagnosing the loader/config; absent means "not
+    // looked at", a different answer from "broken".
     if (record.uplayHealthy === false) return STATE.NOT_TRACKING;
     if (record.uplayHealthy === true && total > 0) return STATE.READY;
     return STATE.ATTENTION;

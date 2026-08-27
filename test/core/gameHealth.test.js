@@ -589,7 +589,7 @@ test('artwork Steam has not published is a statement, not a repair the user can 
     healthyGame({
       goldberg: {
         ...healthyGame().goldberg,
-        achievements: { expected: 63, found: 63, missing: [], missingIcons: new Array(126).fill('images/x.jpg'), iconsUnavailable },
+        achievements: { expected: 63, found: 63, missing: [], missingIcons: Array.from({ length: 126 }, () => 'images/x.jpg'), iconsUnavailable },
       },
     });
 

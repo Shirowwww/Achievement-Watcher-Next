@@ -57,7 +57,7 @@ they can be used by a repair.
 1. Add the game library in **Settings → Folders** and scan it.
 2. Open the game's **Game Health** page.
 3. Review **Diagnose Uplay R2 setup**.
-4. Run **Apply emulator fix (Uplay R2)** and launch the game once.
+4. Run **Apply the Ubisoft achievement fix** and launch the game once.
 
 Game Health displays the resolved Steam AppID alongside loader, schema, configuration and save
 problems. If no automatic identity exists, its Uplay R2 repair button opens the same validated manual
@@ -140,10 +140,29 @@ automatically if anything fails. Repeating an identical repair is a no-op.
 - Run **Diagnose** again: when nothing has unlocked yet it reads the loader's own log and says which
   of the two possible causes applies, either that the game never asked the emulator for an
   achievement, or that it asked using an objective number the schema does not carry.
-- That log only exists once `Logging = 1` is set in the INI. Set it, play until an achievement should
-  appear, then read `upc_r2.log` (or `upc_r1.log`) beside the loader DLL: every objective number the
-  game asks for is recorded there.
+- That log is what Game Health reads to tell those two apart, so **Diagnostic logging** in
+  **Settings → Emulators → Ubisoft / Uplay R2** is on by default. You can also read
+  `upc_r2.log` (or `upc_r1.log`) beside the loader DLL yourself: every objective number the game asks
+  for is recorded there. The loader appends to it forever, so AW Next deletes it once it passes 25 MB.
+- When the log shows the game asked for nothing at all, Game Health offers **Enable achievements
+  offline** - see below.
 - Check `%APPDATA%\Achievement Watcher Next\logs\parser.log`.
+
+## A game that never asks for an achievement
+
+Some Ubisoft titles ask the loader for the Ubisoft session first, and the loader answers from a
+`[Settings] Ticket` key it leaves empty. Those games read that emptiness as *signed out* and never
+call the achievement API at all: the setup validates, the log records no achievement call, and
+nothing is ever recorded. Avatar: Frontiers of Pandora behaves this way.
+
+When the log proves that, and only then, Game Health offers **Enable achievements offline**. It adds
+that one key to the INI beside the game and changes nothing else. The value is a placeholder shaped
+like a session token, not a real Ubisoft session: no account is involved, nothing is signed and
+nothing is sent anywhere. It only gets a game that checks whether a token exists past that check.
+
+It is never written automatically, because the emulator's authors warn that a token which is not
+legitimate breaks some games, and breaking a game that works would be worse. Press the button again
+to take the key back out; the game then believes it is signed out again.
 
 Games whose Steam achievements do not follow a safe Steam-to-Ubisoft objective-ID convention remain
 unsupported. See the

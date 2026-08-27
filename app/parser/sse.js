@@ -18,7 +18,8 @@ function parse(buffer) {
       if (value > 1) continue; //0/1 = achievement or stat; a stat at 100% reads >1 and also has an unlocktime
 
       result.push({
-        crc: stats[i].slice(0, 4).reverse().toString('hex'), //api_name is a CRC32
+        // oxlint-disable-next-line unicorn/no-array-reverse -- Buffer#toReversed returns a plain Uint8Array, whose toString('hex') joins decimals with commas. The copy above already makes reverse() safe.
+        crc: Buffer.from(stats[i].subarray(0, 4)).reverse().toString('hex'), //api_name is a CRC32
         Achieved: value,
         UnlockTime: stats[i].slice(8, 12).readInt32LE(),
       });

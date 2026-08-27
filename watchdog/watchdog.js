@@ -247,10 +247,9 @@ function stopXboxPolling(exitedGame) {
 let runningGames = [];
 const localProgressSchemaCache = new Map();
 
-// A live IPC channel only proves the process exists, not that its event loop is responsive - a
-// wedged monitor (blocking native call, runaway sync loop) keeps the channel open while doing
-// nothing. This timer-driven ping is what the app treats as "responsive" (see getWatchdogState in
-// app/electron/init.js); a missed beat means wedged, not just quiet.
+// A live IPC channel only proves the process exists, not that its event loop is responsive: a
+// wedged monitor keeps the channel open while doing nothing. This ping is what the app treats as
+// "responsive" (see getWatchdogState in app/electron/init.js); a missed beat means wedged.
 const HEARTBEAT_INTERVAL_MS = 5000;
 
 function sendHeartbeat() {
@@ -351,9 +350,8 @@ function mergeIndexedGameMetadata(game, appID) {
   return game;
 }
 
-// The app's main process owns this shortcut via Electron's globalShortcut (free there); this process
-// only asks for it and reacts to the press over IPC, instead of keeping a ~90 MB PowerShell host
-// resident all session just to reach RegisterHotKey.
+// The app's main process owns this shortcut via Electron's globalShortcut (free there); this
+// process only asks for it and reacts over IPC, instead of keeping a PowerShell host resident.
 function RegisterOverlayHotkey(hotkey) {
   if (typeof process.send !== 'function' || !process.connected) {
     debug.warn('[hotkey] no channel to the app - the overlay shortcut stays unregistered');
@@ -370,9 +368,8 @@ function RegisterOverlayHotkey(hotkey) {
 // hotkey and the controller "overlay.toggle" action so they stay in sync (overlayOpened tracks state).
 function toggleOverlayForRunningGame(fromController = false) {
   const opening = !overlayOpened;
-  // "Pause the game" helper: before the overlay is shown (and can take focus), send Escape to the
-  // focused window so many games open their pause/menu. Only runs for a controller-triggered open,
-  // only when a game is actually running, and only when the user enabled the option.
+  // "Pause the game" helper: before the overlay takes focus, send Escape so many games open their
+  // pause menu. Only for a controller-triggered open, with a game running and the option enabled.
   if (
     fromController &&
     opening &&
@@ -382,9 +379,8 @@ function toggleOverlayForRunningGame(fromController = false) {
     debug.log('[controller] sending Escape to the game on overlay open');
     sendEscapeToFocusedWindow();
   }
-  // With a game running, the overlay follows it. Without one, the main process
-  // resolves the currently open (or first) game from the app window so the
-  // hotkey still toggles the overlay from anywhere.
+  // With a game running, the overlay follows it. Without one, the main process resolves the
+  // currently open (or first) game so the hotkey still toggles the overlay from anywhere.
   const appid = runningAppid || '0';
   SpawnOverlayNotification([`--wintype=overlay`, `--appid=${appid}`, `--description=${opening ? 'open' : 'close'}`]);
   overlayOpened = !overlayOpened;
@@ -408,9 +404,7 @@ function controllerOptions() {
 }
 
 // Asks the app to resolve this game's square logo now that it's running. The monitor never fetches
-// artwork itself, only reads what the app already cached - doing this at launch means the answer is
-// on disk before the unlock/playtime card needs it, letting a toast (no lookup of its own) show a
-// real logo instead of a cropped poster.
+// artwork itself; doing this at launch gets the answer on disk before a toast needs it.
 function requestArtworkPrefetch(game) {
   if (typeof process.send !== 'function' || !process.connected) return;
   try {
@@ -536,22 +530,18 @@ function SpawnOverlayNotification(args) {
 }
 module.exports = { SpawnOverlayNotification };
 
-// The app reports every overlay window's actual open/close lifecycle event (not just button presses),
-// so `overlayOpened` can't drift from what's on screen - a stale value would send a close to an
-// already-gone window, or an open to one already up. Self-caused transitions land here too and are
-// dropped by the equality check below.
+// The app reports every overlay window's actual open/close event (not just button presses), so
+// `overlayOpened` can't drift from what's on screen; self-caused transitions are dropped below.
 process.on('message', (msg) => {
   if (!msg || typeof msg !== 'object') return;
   if (msg.appPid !== undefined) {
-    // The main window's renderer OS PID does not exist yet when the watchdog is first spawned
-    // (createMainWindow() runs after launchWatchdog()), so AW_APP_PIDS alone misses it on a fresh
-    // launch. The main process sends it as soon as the window is actually created.
+    // createMainWindow() runs after launchWatchdog(), so AW_APP_PIDS alone misses the renderer's
+    // PID on a fresh launch; the main process sends it once the window actually exists.
     addExcludedPid(msg.appPid);
     return;
   }
-  // What the app did with an overlay notification it was asked to render. This is the only evidence
-  // this process has that a popup appeared at all, so the delivery layer plans from it rather than
-  // from process.send() having returned (notification/overlayAck.js).
+  // What the app did with an overlay notification is the only evidence a popup appeared at all,
+  // so the delivery layer plans from it rather than from process.send() having returned.
   if (msg.notificationResult && msg.notificationResult.id) {
     require('./notification/overlayAck.js').report(String(msg.notificationResult.id), msg.notificationResult);
     return;
@@ -571,9 +561,8 @@ process.on('message', (msg) => {
     toggleOverlayForRunningGame();
     return;
   }
-  // The app went idle in the tray (or a game started) and wants resident memory handed back to
-  // Windows. The native call lives here because this process already carries koffi; the app decides
-  // when, and passes its own child pids along with the request.
+  // The app went idle in the tray and wants resident memory handed back to Windows. The native
+  // call lives here because this process already carries koffi.
   if (msg.trimWorkingSets) {
     const pids = Array.isArray(msg.trimWorkingSets.pids) ? msg.trimWorkingSets.pids : [];
     const trimmed = require('./util/workingSet.js').trim(pids);
@@ -621,9 +610,8 @@ var app = {
   starting: false,
   restartPending: false,
   optionsReloadTimer: null,
-  // Settings autosave on every keystroke, so one gesture can rewrite options.ini a dozen times a
-  // second. Restarting on every write used to tear watchers down and back up each time, leaving a
-  // gap where an unlock could land unwatched - coalesce the burst into one trailing-edge restart.
+  // Settings autosave on every keystroke, so one gesture can rewrite options.ini repeatedly; a
+  // restart per write would leave a gap where an unlock lands unwatched, so bursts coalesce.
   scheduleOptionsReload: function () {
     if (this.optionsReloadTimer) {
       clearTimeout(this.optionsReloadTimer);
@@ -732,9 +720,8 @@ var app = {
         }
       }
 
-      // ShadPS4 (PS4 emulator) live trophy toasts - isolated from the Steam watch path above. Re-run
-      // on each settings reload (start() tears down its previous watchers first). toastID is read live
-      // since it resolves asynchronously after start().
+      // ShadPS4 (PS4 emulator) live trophy toasts, isolated from the Steam watch path above.
+      // toastID is read live since it resolves asynchronously after start().
       try {
         await shadps4Watch.start({ options: self.options, getToastID: () => self.toastID, notify });
       } catch (err) {
@@ -824,9 +811,8 @@ var app = {
         if (currentTime - fileLastModified > 1000) return;
 
         let filePath = path.parse(name);
-        // NTFS is case-insensitive, so the on-disk casing path.parse() reports is not the casing
-        // the root declared: the list carries both "achievements.ini" and "Achievements.ini" and
-        // most roots declare only one, which dropped every event for the other spelling.
+        // NTFS is case-insensitive, so the on-disk casing path.parse() reports is not the casing a
+        // root declared; most roots list only one spelling, which dropped events for the other.
         if (options.file && !options.file.some((file) => file.toLowerCase() == filePath.base.toLowerCase())) return;
 
         debug.log('achievement file change detected');
@@ -836,10 +822,9 @@ var app = {
 
         let appID;
         if (options.socialClub) {
-          // Goldberg SocialClub folders are named after the GAME, not an AppID, so the only link back
-          // to a library entry is the game index the app writes. That entry also carries the Steam
-          // release the title resolved to - the namespaced "socialclub-<slug>" id would fail every
-          // Steam lookup on its own.
+          // Goldberg SocialClub folders are named after the game, not an AppID, so the only link
+          // back to a library entry is the game index; it also carries the Steam release the
+          // namespaced "socialclub-<slug>" id resolved to, since that id fails a direct lookup.
           const indexed = findIndexedSocialClubGame(dir, filePath.dir);
           if (!indexed) {
             throw 'Unable to find Goldberg SocialClub game for this save folder - run a library refresh so AW Next can map it';
@@ -890,10 +875,8 @@ var app = {
           isRunning = true;
         } else if (self.options.notification_advanced.checkIfProcessIsRunning) {
           if (runningGames.some((g) => String(g.appid) === appID)) {
-            // The playtime monitor already matched this appid via a robust appid-based check that
-            // tolerates a process name differing from the index binary (e.g. tlou-ii.exe vs
-            // tlou-ii-l.exe) - trust it instead of re-checking with tasklist, which would wrongly
-            // suppress the notification here.
+            // The playtime monitor already matched this appid tolerating a process name differing
+            // from the index binary (e.g. tlou-ii.exe vs tlou-ii-l.exe); trust it over tasklist.
             isRunning = true;
             debug.log('Game already tracked as running by the playtime monitor. Assuming process is running');
           } else if (await isFullscreenAppRunning()) {
@@ -948,17 +931,14 @@ var app = {
             let cache = await track.load(appID);
 
             // Global unlock % per achievement, used to flag a toast as "rare" (<10% of players).
-            // Fetched at most once per game per watchdog session (memoized on the cached schema
-            // object); shares the renderer's sidecar cache so it's usually already on disk.
+            // Fetched at most once per game per session and shares the renderer's sidecar cache.
             if (!game.__rarityMap) {
               game.__rarityMap = await rarity.getRarityMap(appID).catch(() => new Map());
             }
             const rarityMap = game.__rarityMap;
 
-            // Boot-seed / anti-avalanche. The first time we ever observe a game there is no persisted
-            // baseline, so a pre-existing save full of already-unlocked achievements can avalanche.
-            // Surface the latest few unlocks, then record the full current state as the baseline; every
-            // later unlock is diffed against this baseline and notifies normally.
+            // Boot-seed / anti-avalanche: the first time a game is observed there is no persisted
+            // baseline, so surface only the latest few unlocks then record the full state as baseline.
             const preUnlocked = achievements.filter((a) => a.Achieved);
             const seedOnly = (!Array.isArray(cache) || cache.length === 0) && preUnlocked.length > 1;
             const seedNotifyLimit = 3;
@@ -976,9 +956,8 @@ var app = {
                 `Boot-seed: first observation of ${appID} (${preUnlocked.length} pre-unlocked) > notifying latest ${seedNotifyNames.size}, then seeding baseline`
               );
 
-            // Platinum (100% completion) detection. Snapshot the prior unlock count so we only fire
-            // when *this* scan flips the game from incomplete to fully unlocked, and only when a real
-            // unlock notification fired this scan (guards against firing on first load of old saves).
+            // Platinum detection: snapshot the prior unlock count so this fires only when the current
+            // scan flips the game to fully unlocked and a real unlock notification also fired.
             const platinumTotal = Array.isArray(game.achievement.list) ? game.achievement.list.length : 0;
             const schemaIndex = buildSchemaIndex(game.achievement.list, {
               includeCrc: achievements.some((achievement) => achievement && achievement.crc),
@@ -1019,10 +998,8 @@ var app = {
                     ) {
                       debug.log('Unlocked:' + ach.displayName);
 
-                      // Belt-and-suspenders against duplicate toasts: a node-watch double-fire or an
-                      // emulator that rewrites the save twice can race the per-game cache (track.save)
-                      // so two scans diff against the same baseline and both fire. Drop the exact repeat
-                      // here, independent of file/cache write timing (the global tick gate is coarser).
+                      // Guards against duplicate toasts: a node-watch double-fire or a double-write
+                      // emulator can race track.save, making two scans diff the same baseline.
                       if (!notificationDedup.shouldNotify({ appid: game.appid, achievementName: ach.name })) {
                         debug.log('Duplicate unlock event suppressed (dedup):' + ach.displayName);
                         continue;
@@ -1246,73 +1223,60 @@ var app = {
     self.watcher[i].on('error', (err) => debug.error(`[watch:${dir}] ${err}`));
   },
   load: async function (appID) {
-    try {
-      let self = this;
+    let self = this;
 
-      debug.log(`loading steam schema for ${appID}`);
+    debug.log(`loading steam schema for ${appID}`);
 
-      let search = self.cache.find((game) => game.appid == appID);
-      let game;
+    let search = self.cache.find((game) => game.appid == appID);
+    let game;
 
-      if (search) {
-        game = search;
-        debug.log('from memory cache');
-      } else {
-        // Namespaced appids (e.g. Goldberg SocialClub's "socialclub-<slug>") can't be looked up on
-        // Steam directly. The game index carries the resolved Steam release; load that schema and
-        // re-key the game to its namespaced appid so track/dedup stay consistent with the library.
-        const indexed = findIndexedGame(appID);
-        const steamAppId =
-          !/^[0-9]+$/.test(String(appID)) && indexed && /^[0-9]+$/.test(String(indexed.steamappid || ''))
-            ? String(indexed.steamappid)
-            : String(appID);
-        game = await steam.loadSteamData(steamAppId, self.options.achievement.lang);
-        if (steamAppId !== String(appID)) {
-          game.appid = String(appID);
-          if (indexed && indexed.steamappid) game.steamappid = indexed.steamappid;
-        }
-        self.cache.push(game);
-        debug.log('from file cache or remote');
+    if (search) {
+      game = search;
+      debug.log('from memory cache');
+    } else {
+      // Namespaced appids (e.g. Goldberg SocialClub's "socialclub-<slug>") can't be looked up on
+      // Steam directly; load the game index's resolved Steam schema and re-key it for track/dedup.
+      const indexed = findIndexedGame(appID);
+      const steamAppId =
+        !/^[0-9]+$/.test(String(appID)) && indexed && /^[0-9]+$/.test(String(indexed.steamappid || ''))
+          ? String(indexed.steamappid)
+          : String(appID);
+      game = await steam.loadSteamData(steamAppId, self.options.achievement.lang);
+      if (steamAppId !== String(appID)) {
+        game.appid = String(appID);
+        if (indexed && indexed.steamappid) game.steamappid = indexed.steamappid;
       }
-
-      return mergeIndexedGameMetadata(game, appID);
-    } catch (err) {
-      throw err;
+      self.cache.push(game);
+      debug.log('from file cache or remote');
     }
+
+    return mergeIndexedGameMetadata(game, appID);
   },
   steamAppIdForGogId: async function (appID) {
-    try {
-      const cacheFile = path.join(userDataDir(), 'steam_cache', 'gog.db');
-      let cache = [];
+    const cacheFile = path.join(userDataDir(), 'steam_cache', 'gog.db');
+    let cache = [];
 
-      if (fs.existsSync(cacheFile)) {
-        cache = JSON.parse(fs.readFileSync(cacheFile, { encoding: 'utf8' }));
-      }
-      let cached = cache.find((g) => String(g.gogid) === String(appID));
-      if (cached) return cached.steamid;
-      const url = `https://gamesdb.gog.com/platforms/gog/external_releases/${appID}`;
-      let gameinfo = await request.getJson(url);
-      if (gameinfo) {
-        let steamid = gameinfo.game.releases.find((r) => r.platform_id === 'steam').external_id;
-        if (steamid) return steamid;
-      }
-    } catch (err) {
-      throw err;
+    if (fs.existsSync(cacheFile)) {
+      cache = JSON.parse(fs.readFileSync(cacheFile, { encoding: 'utf8' }));
+    }
+    let cached = cache.find((g) => String(g.gogid) === String(appID));
+    if (cached) return cached.steamid;
+    const url = `https://gamesdb.gog.com/platforms/gog/external_releases/${appID}`;
+    let gameinfo = await request.getJson(url);
+    if (gameinfo) {
+      let steamid = gameinfo.game.releases.find((r) => r.platform_id === 'steam').external_id;
+      if (steamid) return steamid;
     }
   },
   steamAppIdForEpicId: async function (appID) {
-    try {
-      const cacheFile = path.join(userDataDir(), 'steam_cache', 'epic.db');
-      let cache = [];
+    const cacheFile = path.join(userDataDir(), 'steam_cache', 'epic.db');
+    let cache = [];
 
-      if (fs.existsSync(cacheFile)) {
-        cache = JSON.parse(fs.readFileSync(cacheFile, { encoding: 'utf8' }));
-      }
-      let cached = cache.find((g) => String(g.epicid) === String(appID));
-      if (cached) return cached.steamid;
-    } catch (err) {
-      throw err;
+    if (fs.existsSync(cacheFile)) {
+      cache = JSON.parse(fs.readFileSync(cacheFile, { encoding: 'utf8' }));
     }
+    let cached = cache.find((g) => String(g.epicid) === String(appID));
+    if (cached) return cached.steamid;
   },
 };
 
@@ -1327,17 +1291,18 @@ var app = {
     // Start WQL before other COM clients initialize security.
     const playtimeMonitorReady = playtimeMonitor
       .init()
-      .then((monitor) => {
+      // Not named monitor: that is the achievement monitor module required at the top of this file.
+      .then((playtimeEmitter) => {
         debug.log('Playtime monitoring activated');
-        playtimeMonitorEmitter = monitor;
+        playtimeMonitorEmitter = playtimeEmitter;
         if (playtimeIndexReloadQueued) {
           playtimeIndexReloadQueued = false;
-          monitor.reloadGameIndex().catch((err) => {
+          playtimeEmitter.reloadGameIndex().catch((err) => {
             debug.warn(`[Playtime] queued gameIndex reload failed => ${err}`);
           });
         }
 
-        monitor.on('disable-overlay', () => {
+        playtimeEmitter.on('disable-overlay', () => {
           runningAppid = null;
           // Only ask for a close when an overlay is actually up - an unsolicited close reaching the
           // app with nothing open made it open the overlay on the desktop instead.
@@ -1349,7 +1314,7 @@ var app = {
           }
         });
 
-        monitor.on('source-disabled', (game) => {
+        playtimeEmitter.on('source-disabled', (game) => {
           const wasCurrentOverlayGame = runningAppid === game.appid;
           const index = runningGames.findIndex((running) => running.appid === game.appid);
           if (index !== -1) runningGames.splice(index, 1);
@@ -1366,11 +1331,11 @@ var app = {
           forwardGameActivity();
         });
 
-        monitor.on('enable-overlay', (appid) => {
+        playtimeEmitter.on('enable-overlay', (appid) => {
           runningAppid = appid;
         });
 
-        monitor.on('notify', async ([game, playedSeconds]) => {
+        playtimeEmitter.on('notify', async ([game, playedSeconds]) => {
           // Launch event emits [game]; the stop event emits [game, playedSeconds] (a number, possibly 0).
           const isExit = playedSeconds != null;
           if (isExit) {
@@ -1438,7 +1403,7 @@ var app = {
         });
 
         // Sync games already running when the monitor starts without fake launch notifications.
-        const activeGames = typeof monitor.getActiveGames === 'function' ? monitor.getActiveGames() : [];
+        const activeGames = typeof playtimeEmitter.getActiveGames === 'function' ? playtimeEmitter.getActiveGames() : [];
         const active = describeActiveGames(activeGames);
         if (active.games.length > 0) {
           runningGames = active.games;

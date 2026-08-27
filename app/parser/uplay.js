@@ -21,48 +21,40 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
 module.exports.scan = async () => {
   // LumaPlay.
   let result = [];
-  try {
-    let users = listRegistryAllSubkeys('HKCU', 'SOFTWARE/LumaPlay');
-    if (!users) throw 'LumaPlay no user found';
+  let users = listRegistryAllSubkeys('HKCU', 'SOFTWARE/LumaPlay');
+  if (!users) throw 'LumaPlay no user found';
 
-    for (let user of users) {
-      try {
-        let appidList = listRegistryAllSubkeys('HKCU', `SOFTWARE/LumaPlay/${user}`);
-        if (!appidList) throw `No achievements found for LumaPlay user: ${user}`;
+  for (let user of users) {
+    try {
+      let appidList = listRegistryAllSubkeys('HKCU', `SOFTWARE/LumaPlay/${user}`);
+      if (!appidList) throw `No achievements found for LumaPlay user: ${user}`;
 
-        for (let appid of appidList) {
-          result.push({
-            appid: `UPLAY${appid}`,
-            source: 'Lumaplay',
-            data: {
-              type: 'lumaplay',
-              root: 'HKCU',
-              path: `SOFTWARE/LumaPlay/${user}/${appid}/Achievements`,
-            },
-          });
-        }
-      } catch (err) {
-        debug.log(err);
+      for (let appid of appidList) {
+        result.push({
+          appid: `UPLAY${appid}`,
+          source: 'Lumaplay',
+          data: {
+            type: 'lumaplay',
+            root: 'HKCU',
+            path: `SOFTWARE/LumaPlay/${user}/${appid}/Achievements`,
+          },
+        });
       }
+    } catch (err) {
+      debug.log(err);
     }
-    return result;
-  } catch (err) {
-    throw err;
   }
+  return result;
 };
 
-// Set of Ubisoft Connect appids that are actually INSTALLED (have an Installs registry key with an
-// InstallDir), as opposed to merely owned/seen (which is what scanLegit() enumerates from the
-// achievements cache). Memoized for the session - registry rarely changes mid-run, and this is hit
-// once per uPlay game during a scan. Used to drive the "show installed only" filter.
+// Ubisoft Connect appids actually INSTALLED (Installs registry key with an InstallDir), as opposed
+// to merely owned/seen. Memoized for the session; drives the "show installed only" filter.
 let _installedUplayAppids = null;
 module.exports.getInstalledAppids = () => {
   if (_installedUplayAppids) return _installedUplayAppids;
   const installed = new Set();
-  // A registry subkey alone is not proof of an install: Ubisoft Connect leaves entries
-  // behind after uninstalls (and for preloads/demos), so a stale key can keep games
-  // like Assassin's Creed Mirage in the "installed" list forever. Only keep a product
-  // when its InstallDir value still points at a folder that exists on disk.
+  // A registry subkey alone is not proof of an install: Ubisoft Connect leaves stale entries after
+  // uninstalls, so only keep a product whose InstallDir still points at a folder on disk.
   for (const hive of ['HKLM', 'HKCU']) {
     for (const root of ['SOFTWARE/WOW6432Node/Ubisoft/Launcher/Installs', 'SOFTWARE/Ubisoft/Launcher/Installs']) {
       try {
@@ -92,113 +84,101 @@ module.exports.isInstalled = (appid) => {
 
 module.exports.scanLegit = async (onlyInstalled = false) => {
   // Unused: legit Ubisoft Connect exposes no local achievement-unlock data to read.
-  try {
-    const uplayPath = readRegistryString('HKLM', 'Software/WOW6432Node/Ubisoft/Launcher', 'InstallDir');
-    if (!uplayPath) throw 'Uplay Path not found';
+  const uplayPath = readRegistryString('HKLM', 'Software/WOW6432Node/Ubisoft/Launcher', 'InstallDir');
+  if (!uplayPath) throw 'Uplay Path not found';
 
-    let data = [];
+  let data = [];
 
-    if (onlyInstalled) {
-      let installedList = listRegistryAllSubkeys('HKLM', 'SOFTWARE/WOW6432Node/Ubisoft/Launcher/Installs');
-      if (!installedList) throw 'Uplay has no game installed';
+  if (onlyInstalled) {
+    let installedList = listRegistryAllSubkeys('HKLM', 'SOFTWARE/WOW6432Node/Ubisoft/Launcher/Installs');
+    if (!installedList) throw 'Uplay has no game installed';
 
-      for (let appid of installedList) {
-        data.push({
-          appid: `UPLAY${appid}`,
-          source: 'uPlay',
-          data: {
-            type: 'uplay',
-          },
-        });
-      }
-    } else {
-      const ach_cache = path.join(uplayPath, 'cache/achievements');
-      let list = (await glob('([0-9]+)_*', { cwd: ach_cache, onlyFiles: true, absolute: false })).map((filename) => {
-        let col = filename.split('_');
-
-        return {
-          appid: col[0],
-          index: col[1].replace('.zip', ''),
-        };
+    for (let appid of installedList) {
+      data.push({
+        appid: `UPLAY${appid}`,
+        source: 'uPlay',
+        data: {
+          type: 'uplay',
+        },
       });
-
-      for (let game of list) {
-        data.push({
-          appid: `UPLAY${game.appid}`,
-          source: 'uPlay',
-          data: {
-            type: 'uplay',
-          },
-        });
-      }
     }
+  } else {
+    const ach_cache = path.join(uplayPath, 'cache/achievements');
+    let list = (await glob('([0-9]+)_*', { cwd: ach_cache, onlyFiles: true, absolute: false })).map((filename) => {
+      let col = filename.split('_');
 
-    return data;
-  } catch (err) {
-    throw err;
+      return {
+        appid: col[0],
+        index: col[1].replace('.zip', ''),
+      };
+    });
+
+    for (let game of list) {
+      data.push({
+        appid: `UPLAY${game.appid}`,
+        source: 'uPlay',
+        data: {
+          type: 'uplay',
+        },
+      });
+    }
   }
+
+  return data;
 };
 
 module.exports.getGameData = async (appid, lang) => {
-  try {
-    appid = appid.replace('UPLAY', '');
+  appid = appid.replace('UPLAY', '');
 
-    const cacheFile = path.join(remote.app.getPath('userData'), 'uplay_cache/schema', `${appid}.db`);
+  const cacheFile = path.join(remote.app.getPath('userData'), 'uplay_cache/schema', `${appid}.db`);
 
-    let schema;
+  let schema;
 
-    if (fs.existsSync(cacheFile)) {
-      schema = JSON.parse(fs.readFileSync(cacheFile));
-    } else {
+  if (fs.existsSync(cacheFile)) {
+    schema = JSON.parse(fs.readFileSync(cacheFile));
+  } else {
+    try {
+      // request-zero's socket timeout destroys the request without emitting 'error', leaving the
+      // promise pending forever; race it against our own timeout so a stalled server falls back
+      // to the local cache instead of freezing the game list.
+      schema = await withTimeout(getUplayDataFromSRV(appid), 15000, `Timed out fetching UPLAY${appid} schema from server`);
+    } catch (err) {
+      debug.log(`Failed to get schema from server for UPLAY${appid}; Trying to generate from local Uplay installation ...`);
+
+      let uplayPath = readRegistryString('HKLM', 'Software/WOW6432Node/Ubisoft/Launcher', 'InstallDir');
+      if (!uplayPath) throw "Uplay not found : can't generate schema if uplay is not installed.";
+      schema = await generateSchemaFromLocalCache(appid, uplayPath);
       try {
-        // request-zero's socket timeout destroys the request without emitting 'error', leaving the
-        // promise pending forever; race it against our own timeout so a stalled server falls back
-        // to the local cache instead of freezing the game list.
-        schema = await withTimeout(getUplayDataFromSRV(appid), 15000, `Timed out fetching UPLAY${appid} schema from server`);
+        await withTimeout(shareCache(schema), 15000, `Timed out sharing UPLAY${appid} cache to server`);
       } catch (err) {
-        debug.log(`Failed to get schema from server for UPLAY${appid}; Trying to generate from local Uplay installation ...`);
-
-        let uplayPath = readRegistryString('HKLM', 'Software/WOW6432Node/Ubisoft/Launcher', 'InstallDir');
-        if (!uplayPath) throw "Uplay not found : can't generate schema if uplay is not installed.";
-        schema = await generateSchemaFromLocalCache(appid, uplayPath);
-        try {
-          await withTimeout(shareCache(schema), 15000, `Timed out sharing UPLAY${appid} cache to server`);
-        } catch (err) {
-          debug.log(`Failed to share UPLAY${appid} cache to server => ${err}`);
-        }
+        debug.log(`Failed to share UPLAY${appid} cache to server => ${err}`);
       }
-      fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
-      // fs.writeFile (callback API) throws synchronously without a callback; use the promise API
-      // so the .catch() is valid - otherwise this threw and the uPlay game failed its first load.
-      fs.promises.writeFile(cacheFile, JSON.stringify(schema, null, 2)).catch((err) => {});
     }
-
-    if (schema.achievement.list[`${lang}`]) {
-      schema.achievement.list = schema.achievement.list[`${lang}`];
-    } else {
-      schema.achievement.list = schema.achievement.list['english'];
-    }
-
-    return schema;
-  } catch (err) {
-    throw err;
+    fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
+    // fs.writeFile (callback API) throws synchronously without a callback; use the promise API
+    // so the .catch() is valid - otherwise this threw and the uPlay game failed its first load.
+    fs.promises.writeFile(cacheFile, JSON.stringify(schema, null, 2)).catch((err) => {});
   }
+
+  if (schema.achievement.list[`${lang}`]) {
+    schema.achievement.list = schema.achievement.list[`${lang}`];
+  } else {
+    schema.achievement.list = schema.achievement.list['english'];
+  }
+
+  return schema;
 };
 
 module.exports.getAchievementsFromLumaPlay = (root, key) => {
-  try {
-    let result = listRegistryAllValues(root, key);
-    if (!result) throw 'No achievement found in registry';
+  let result = listRegistryAllValues(root, key);
+  if (!result) throw 'No achievement found in registry';
 
-    return result.map((name) => {
-      return {
-        id: name.replace('ACH_', ''),
-        Achieved: parseInt(readRegistryInteger(root, key, name)),
-      };
-    });
-  } catch (err) {
-    throw err;
-  }
+  return result.map((name) => {
+    return {
+      id: name.replace('ACH_', ''),
+      Achieved: parseInt(readRegistryInteger(root, key, name)),
+    };
+  });
 };
 
 async function generateSchemaFromLocalCache(appid, uplayPath) {
@@ -464,18 +444,14 @@ let indexDB = {
     }
   },
   get: async function (uplayPath, index = null) {
-    try {
-      if (!this.cache) {
-        this.cache = await this.make(uplayPath);
-      }
+    if (!this.cache) {
+      this.cache = await this.make(uplayPath);
+    }
 
-      if (index) {
-        return this.cache.find((game) => game.index == index);
-      } else {
-        return this.cache;
-      }
-    } catch (err) {
-      throw err;
+    if (index) {
+      return this.cache.find((game) => game.index == index);
+    } else {
+      return this.cache;
     }
   },
 };
@@ -483,37 +459,29 @@ let indexDB = {
 let availableID = {
   cache: null,
   make: async function (uplayPath) {
-    try {
-      const dir = path.join(uplayPath, 'cache/achievements');
+    const dir = path.join(uplayPath, 'cache/achievements');
 
-      let list = (await glob('([0-9]+)_*', { cwd: dir, onlyFiles: true, absolute: false })).map((filename) => {
-        let col = filename.split('_');
+    let list = (await glob('([0-9]+)_*', { cwd: dir, onlyFiles: true, absolute: false })).map((filename) => {
+      let col = filename.split('_');
 
-        return {
-          appid: col[0],
-          index: col[1].replace('.zip', ''),
-          archive: path.join(dir, filename),
-        };
-      });
+      return {
+        appid: col[0],
+        index: col[1].replace('.zip', ''),
+        archive: path.join(dir, filename),
+      };
+    });
 
-      return list;
-    } catch (err) {
-      throw err;
-    }
+    return list;
   },
   get: async function (uplayPath, appid = null) {
-    try {
-      if (!this.cache) {
-        this.cache = await this.make(uplayPath);
-      }
+    if (!this.cache) {
+      this.cache = await this.make(uplayPath);
+    }
 
-      if (appid) {
-        return this.cache.find((id) => id.appid == appid);
-      } else {
-        return this.cache;
-      }
-    } catch (err) {
-      throw err;
+    if (appid) {
+      return this.cache.find((id) => id.appid == appid);
+    } else {
+      return this.cache;
     }
   },
 };

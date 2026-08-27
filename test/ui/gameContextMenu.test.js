@@ -22,7 +22,7 @@ function enclosingBlocks(marker) {
   let depth = 0;
   for (let i = target; i >= 0; i--) {
     const code = lines[i].replace(/\/\/.*$/, '');
-    for (const ch of [...code].reverse()) {
+    for (const ch of [...code].toReversed()) {
       if (ch === '}') depth += 1;
       else if (ch === '{') {
         depth -= 1;

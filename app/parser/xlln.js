@@ -1,26 +1,12 @@
 'use strict';
 
-/*
-  XLiveLessNess: the open replacement for xlive.dll that lets a Games for Windows LIVE game run
-  without the retired GFWL service - and keeps unlocking its achievements offline.
-
-  Nothing about this layout is Steam-shaped, so the whole game is read from the install itself:
-
-    <game>\xlive.dll                    the replacement runtime
-    <game>\<game>.exe.cfg               XML written beside the executable, carrying <titleid>
-    <game>\<game>.exe                   holds the SPAFILE resource: the achievement list and icons
-    <root>\XLiveLessNess\profile\title\<TITLEID>\<profile>\achievements.dat
-                                        the unlock records, one 16-byte row each
-
-  A row is: achievement id (u32), the FILETIME it was unlocked (two u32 halves) and its flags (u32),
-  all little-endian - the state file is written by the PC runtime, unlike the SPAFILE it describes,
-  which is big-endian Xbox 360 data (see xllnSpa.js).
-
-  Only unlocked achievements are ever written, and the file is appended to rather than rewritten, so
-  an absent row means locked and nothing else. That also means a truncated or half-written file must
-  be refused outright: read as-is it would silently relock achievements and, on the next pass, replay
-  every one of them as a fresh unlock.
-*/
+// XLiveLessNess replaces xlive.dll for GFWL games; nothing here is Steam-shaped, so the whole game
+// is read from the install itself: <game>\xlive.dll (runtime), <game>\<game>.exe.cfg (XML, carries
+// <titleid>), <game>\<game>.exe (SPAFILE resource: achievement list + icons), and
+// <root>\XLiveLessNess\profile\title\<TITLEID>\<profile>\achievements.dat (unlock records, 16
+// little-endian bytes each: id u32, FILETIME u32x2, flags u32 - unlike the big-endian SPAFILE, see xllnSpa.js).
+// Only unlocked entries are appended, never rewritten, so a truncated file must be refused outright
+// or a half-written read would relock and replay every achievement as new.
 
 const fs = require('fs');
 const path = require('path');
@@ -49,11 +35,8 @@ const SKIP_DIRECTORIES = new Set([
   STORAGE_DIR.toLowerCase(),
 ]);
 
-/*
-  Where the achievement icons extracted from the executable are kept. Resolved on first use, and
-  overridable, because the Watchdog loads this same module from its own process and locates the user
-  data folder its own way - both sides then write into one shared cache.
-*/
+// Where achievement icons extracted from the executable are kept. Resolved on first use and
+// overridable, since the Watchdog loads this module from its own process, locating userData its own way.
 let _iconRoot = '';
 
 function iconRoot() {
@@ -76,14 +59,6 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
     file: path.join(userDataPath, 'logs/parser.log'),
   });
 };
-
-function isFile(target) {
-  try {
-    return fs.statSync(target).isFile();
-  } catch {
-    return false;
-  }
-}
 
 function isDirectory(target) {
   try {
@@ -172,12 +147,8 @@ function formatTitleId(value) {
   return value.toString(16).toUpperCase().padStart(8, '0');
 }
 
-/*
-  One folder, inspected: it is an XLiveLessNess install when the replacement runtime sits beside an
-  executable whose own .cfg names a title, and that executable really carries the achievement list
-  the title id claims. The last check is what keeps a config copied from another game from
-  attributing its achievements here.
-*/
+// One folder, inspected: it is an XLiveLessNess install when the runtime sits beside an executable
+// whose .cfg names a title, and that executable really carries the achievement list the id claims.
 function inspect(directory) {
   const entries = readDirectory(directory);
   const byLowerName = new Map(entries.filter((entry) => entry.isFile()).map((entry) => [entry.name.toLowerCase(), entry.name]));
@@ -303,11 +274,8 @@ function filetimeToUnixSeconds(low, high) {
   return Math.floor(Number(ms) / 1000);
 }
 
-/*
-  Decode one state file into { id -> earned_time }. Returns null - never a partial answer - when the
-  file is not a whole number of records: a half-written file read as-is would drop the unlocks its
-  truncated tail holds, and they would then arrive again as new ones.
-*/
+// Decode one state file into { id -> earned_time }. Returns null - never a partial answer - when the
+// file is not a whole number of records: a half-written read would relock and replay the tail.
 function parseState(buffer) {
   if (!Buffer.isBuffer(buffer)) return null;
   if (buffer.length > MAX_STATE_BYTES) return null;
@@ -409,11 +377,8 @@ async function getGameData(data, lang = 'english') {
   };
 }
 
-/*
-  Unlock state, merged across every profile the title has. Profiles are per-player, but a game that
-  was played under more than one of them is still the same library entry here, and the library shows
-  what has been earned on this machine.
-*/
+// Unlock state, merged across every profile the title has: a game played under more than one
+// profile is still one library entry, showing what has been earned on this machine.
 function getAchievements(data) {
   const info = data && typeof data === 'object' ? data : {};
   const merged = new Map();

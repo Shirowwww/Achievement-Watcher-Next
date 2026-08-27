@@ -58,11 +58,11 @@ jobs:
         working-directory: watchdog
         run: npm ci --ignore-scripts
 
-      # oxlint is fast enough to run on every matrix entry, but its result cannot differ
-      # between engine lines, so a single run keeps the log readable. Errors (the correctness
-      # rules) fail the job; warnings are reported without blocking.
+      # Runs on every matrix entry rather than being pinned to one node-version: the result cannot
+      # differ between engine lines, but a pinned version silently stops linting the day the matrix
+      # is bumped, and oxlint takes about a second. Errors (the correctness rules) fail the job;
+      # warnings are reported without blocking.
       - name: Lint
-        if: matrix.node-version == '24.19.0'
         working-directory: app
         run: npm run lint
 

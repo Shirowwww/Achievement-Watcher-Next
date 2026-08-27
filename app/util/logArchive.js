@@ -1,14 +1,10 @@
 'use strict';
 
 /*
-  Bundles the diagnostic logs into one .zip while the app is running. Copying files under
-  <userData>\logs by hand is unreliable here: the tray daemon, Watchdog monitor and notification
-  processes keep their streams open and appending, so Explorer/a compressor can race a file being
-  written mid-line. Reading each file once into memory sidesteps that - a consistent snapshot,
-  untouched running processes, one file to attach to an issue.
-
-  Dependency-injected (`fs`, `Zip`) so it's testable without Electron, a real userData folder or a
-  real archive.
+  Bundles the diagnostic logs into one .zip while the app is running, reading each file once into
+  memory rather than copying by hand, since the tray daemon, Watchdog monitor and notification
+  processes keep their log streams open and appending (a copier could race a file mid-line).
+  Dependency-injected (`fs`, `Zip`) so it's testable without Electron or a real archive.
 */
 
 const nodeFs = require('fs');
@@ -47,11 +43,8 @@ function buildManifest({ appVersion = '', versions = {}, platform = '', release 
   return lines.join('\n') + '\n';
 }
 
-/*
-  Reads every log in `logsDir` and writes them into `destination` as a zip. A file that can't be
-  read is recorded in `skipped` rather than aborting the export - one unreadable log must never
-  cost the user the other eleven.
-*/
+// A file that can't be read is recorded in `skipped` rather than aborting the export - one
+// unreadable log must never cost the user the other eleven.
 function exportLogs({ logsDir, destination, Zip, fs = nodeFs, meta = {} } = {}) {
   if (!logsDir) throw new Error('exportLogs: logsDir is required');
   if (!destination) throw new Error('exportLogs: destination is required');

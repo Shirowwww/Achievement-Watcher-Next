@@ -5,14 +5,10 @@ const fs = require('fs');
 const coverStore = require('./coverStore.js');
 const gameIconStore = require('./gameIconStore.js');
 
-// userData folders holding only re-fetchable content (Steam/GOG/Epic/SteamDB/SteamGridDB APIs,
-// GitHub downloads). Mirrors the disposable-cache classification in util/migrateUserData.js
-// (MIGRATION_PLAN) - re-check that file before adding an entry here.
-//
-// Never add: cache/uplayR2 (user-seeded dll, no download source), backups (GBE restore points),
-// or cfg/covers/gameIcons/presets/theme-images/epic_tokens.enc/lockfile (user settings/content).
-// cache/gse_fork also holds cache/gse_fork/custom: the steam_api dll the user imported by hand.
-// It has no download source, so only the downloaded builds around it are removed.
+// Re-fetchable content only; mirrors the disposable-cache list in migrateUserData.js
+// (MIGRATION_PLAN), check there before adding an entry. Never add user-owned content
+// (uplayR2, backups, cfg/covers/gameIcons/presets/theme-images/epic_tokens.enc/lockfile).
+// cache/gse_fork/custom is a user-imported dll with no download source, kept out below.
 const PRESERVED_CACHE_CHILDREN = { 'cache/gse_fork': ['custom'] };
 
 const SAFE_CACHE_DIRS = [
@@ -29,10 +25,8 @@ const SAFE_CACHE_DIRS = [
 
 // A missing folder isn't an error - most users have touched only some of these sources.
 async function clearSafeCaches(userDataDir) {
-  // Older builds cached custom covers under steam_cache while covers.db kept a permanent
-  // reference; promote them to covers/ before this cache is wiped, so a failed copy aborts
-  // before anything is deleted. A picked game icon can sit in that same cache (the picker's
-  // SteamGridDB tiles download there), so it gets the same promotion.
+  // Promote any custom cover/icon still cached under steam_cache into its durable store before
+  // wiping it, so a failed copy aborts before deletion (game icons land there too, via the picker).
   coverStore.preserveCachedOverrides(userDataDir);
   gameIconStore.preserveCachedOverrides(userDataDir);
   const cleared = [];

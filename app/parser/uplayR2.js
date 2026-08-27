@@ -5,23 +5,16 @@
 
 const fs = require('fs');
 const path = require('path');
-const { parseIni, stringifyIni, getIniSection, readIniSectionValues, upsertIniSection, upsertIniKeys, sanitizeIniValue } = require(path.join(__dirname, '..', 'util', 'emuIni.js'));
+const { parseIni, stringifyIni, getIniSection, readIniSectionValues, upsertIniKeys, sanitizeIniValue } = require(path.join(__dirname, '..', 'util', 'emuIni.js'));
 const pe = require(path.join(__dirname, '..', 'util', 'pe.js'));
 const { userDataDir } = require(path.join(__dirname, '..', 'util', 'userDataPath.js'));
 const fuzzyAppid = require(path.join(__dirname, '..', 'util', 'fuzzyAppid.js'));
 const goldberg = require(path.join(__dirname, 'goldberg.js'));
 const uplaySteamTable = require(path.join(__dirname, 'uplaySteamTable.js'));
 
-/*
-  Two generations of the same emulator. Ubisoft games call either the R2 API (roughly 2019 onward) or
-  the older R1 one, and a game only ever loads the generation its executable imports - which is why a
-  2014-2018 title can never be served by an R2 loader.
-
-  The R1 build was checked against the R2 one instruction by instruction: it resolves its config from
-  its own directory in the same order, reads the same achievement keys, and builds its lookup key with
-  the same MSVC integer-to-string helper followed by the same prefix insert. Everything below is the
-  complete list of what actually differs, so both generations share one implementation.
-*/
+// Two generations of the same emulator. Ubisoft games call either the R2 API (roughly 2019 onward)
+// or the older R1 one, and a game only loads the generation its executable imports. The R1 build was
+// checked against R2 instruction by instruction, so both generations share one implementation below.
 const FLAVOURS = Object.freeze({
   r2: Object.freeze({
     id: 'r2',
@@ -217,14 +210,6 @@ SaveExtension = .save
 [Chunks]
 `;
 
-function listShallow(dir) {
-  try {
-    return fs.readdirSync(dir);
-  } catch {
-    return [];
-  }
-}
-
 let _userDataPath = '';
 function setUserDataPath(value) {
   _userDataPath = value ? path.resolve(value) : '';
@@ -240,12 +225,8 @@ function objectiveMapFile() {
   return root ? path.join(root, 'cfg', OBJECTIVE_MAP_FILE) : '';
 }
 
-/*
-  Product ids a lookup could not resolve this scan. Discovery is synchronous and drops such a save
-  folder on the spot, so the automatic resolver (which needs the network) cannot run there. It runs
-  after the scan instead and writes what it learns, which the next scan reads synchronously - one
-  scan late, and never in the way of one.
-*/
+// Product ids a lookup could not resolve this scan. Discovery is synchronous and drops such a save
+// folder on the spot, so the automatic resolver (needs the network) runs after the scan instead.
 const _unresolvedProducts = new Set();
 
 function noteUnresolvedProduct(uplayId) {
@@ -264,12 +245,9 @@ function productMappingsFile() {
   return root ? path.join(root, 'cfg', PRODUCT_MAPPINGS_FILE) : '';
 }
 
-/*
-  Ubisoft product id -> Steam AppID, learned automatically (parser/uplayAutoMap.js) for products the
-  shipped table does not list. Kept in its own file, and read only AFTER that table: the table is a
-  curated record of decisions a name match cannot make, and a learned answer must never overrule one.
-  Distinct from uplay-r2-mappings.json, which holds the user's own per-installation choices.
-*/
+// Ubisoft product id -> Steam AppID, learned automatically for products the shipped table does not
+// list. Read only AFTER that table: a learned answer must never overrule a curated one. Distinct
+// from uplay-r2-mappings.json, which holds the user's own per-installation choices.
 function readProductMappings() {
   try {
     const parsed = JSON.parse(fs.readFileSync(productMappingsFile(), 'utf8'));
@@ -304,13 +282,9 @@ function saveProductMapping({ uplayId, steamAppid, steamName = '' } = {}) {
   }
 }
 
-/*
-  The objective id of every achievement, written where the Watchdog can read it. The Watchdog matches
-  a live unlock by re-keying what the emulator wrote onto the schema's api-names, and it can only
-  derive that itself when the api-name ends in the id. For a game keyed from Ubisoft's own archive
-  the api-names carry no id at all, so without this table those games would show correct progress on
-  the next scan but never raise a notification.
-*/
+// The objective id of every achievement, written where the Watchdog can read it. The Watchdog
+// derives this itself only when the api-name ends in the id; for a game keyed from Ubisoft's own
+// archive the api-names carry no id at all, so without this table it would never raise a notification.
 function saveObjectiveMap({ steamAppid, prefix = '', objectiveIds } = {}) {
   const appid = String(steamAppid || '').trim();
   const file = objectiveMapFile();
@@ -511,12 +485,8 @@ function detectEmulator(gameDir) {
   return result;
 }
 
-/*
-  Which optional [Settings] keys does THIS loader build understand? The redirect keys are recent
-  additions; older builds silently ignore them, so probe the DLL's literal key names (exact, cheap,
-  no version numbers). An unreadable or unrelated DLL is never assumed capable. Returns architecture
-  and achievement/config capabilities.
-*/
+// Which optional [Settings] keys does THIS loader build understand? Redirect keys are recent
+// additions that older builds silently ignore, so probe the DLL's literal key names instead.
 const _loaderCapabilities = new Map();
 function inspectLoader(dllPath) {
   const name = path.basename(String(dllPath || '')).toLowerCase();
@@ -573,18 +543,15 @@ function inspectInstalledLoaders(dllPaths) {
   return {
     loaders,
     supportsAchievements: known.length > 0 && known.every((l) => l.supportsAchievements),
-    supportsAchRedirect: known.length === 0 || known.every((l) => l.supportsAchRedirect),
-    supportsAchKeyPrefix: known.length === 0 || known.every((l) => l.supportsAchKeyPrefix),
+    supportsAchRedirect: known.every((l) => l.supportsAchRedirect),
+    supportsAchKeyPrefix: known.every((l) => l.supportsAchKeyPrefix),
     supportsTicket: known.length > 0 && known.every((l) => l.supportsTicket),
     architectureValid: known.length > 0 && known.every((l) => l.arch && l.expectedArch === l.arch),
   };
 }
 
-/*
-  One readdir: does the top of this folder look like a Uplay install at all? Not proof of anything -
-  it is the cheap gate in front of hasEmulatorEvidence(), which walks the whole tree. A library scan
-  asks this of every install folder it resolves, so it must never recurse.
-*/
+// One readdir: does the top of this folder look like a Uplay install? Not proof - the cheap gate in
+// front of hasEmulatorEvidence(), which walks the whole tree; this must never recurse.
 function looksLikeUplayInstall(gameDir) {
   if (!gameDir) return false;
   let entries;
@@ -598,15 +565,9 @@ function looksLikeUplayInstall(gameDir) {
   return [...ALL_INI_NAMES, ...EMU_DLL_NAMES, 'uplay_install.state', 'uplay_install.manifest', 'upc.cfg'].some((name) => present.has(name));
 }
 
-/*
-  This install's own Ubisoft product id, read from the install rather than from any catalogue - the
-  one identity a game absent from every shipped table can still supply. The loader log is the game's
-  own word (it passes the id in on startup); the ini's GameUplayId is what a repack states when the
-  game does not; both beat guessing. Returns '' when the install says nothing.
-
-  Deliberately NOT derived from a save folder's name: that folder is created from an id, so reading
-  it back would only repeat whatever was configured, right or wrong.
-*/
+// This install's own Ubisoft product id, read from the install rather than any catalogue - the one
+// identity a game absent from every shipped table can still supply. Not derived from a save folder's
+// name: that folder is created from an id, so reading it back would only repeat what was configured.
 // The game states its product id on the loader's very first line, so only the head of the log is
 // worth reading. A library scan asks this of every Uplay-looking folder, and these logs run to
 // megabytes: reading them whole to get one number off line 1 is the difference between 64 KB and 7 MB
@@ -654,12 +615,8 @@ function readInstalledProductId(gameDir, { loaderDir = '' } = {}) {
   return '';
 }
 
-/*
-  A Ubisoft DLL basename is not proof of emulation: official games ship the same uplay/upc R2
-  loader names. Require a Goldberg-only configuration signal before discovery, Fix all, or Game
-  Health classifies an install as repairable. This remains deliberately separate from detectEmulator,
-  which inventories candidate DLLs for an explicitly known Uplay R2 record.
-*/
+// A Ubisoft DLL basename is not proof of emulation: official games ship the same loader names.
+// Require a Goldberg-only configuration signal before classifying an install as repairable.
 function hasEmulatorEvidence(gameDir, { maxDepth = 4, maxDirectories = 600 } = {}) {
   if (!gameDir || !fs.existsSync(gameDir)) return false;
   const loader = detectEmulator(gameDir);
@@ -700,11 +657,8 @@ function hasEmulatorEvidence(gameDir, { maxDepth = 4, maxDirectories = 600 } = {
   return false;
 }
 
-/*
-  The ini the loader will actually read: first existing name in its own precedence order. Without a
-  flavour every generation is searched, R2 first, so a caller that only has a directory still finds
-  whichever config is really there.
-*/
+// The ini the loader will actually read: first existing name in its own precedence order. Without a
+// flavour every generation is searched, R2 first.
 function activeIniFile(dir, flavour) {
   if (!dir) return '';
   const names = flavour ? resolveFlavour(flavour).iniNames : ALL_INI_NAMES;
@@ -712,11 +666,8 @@ function activeIniFile(dir, flavour) {
   return files.find((file) => fs.existsSync(file)) || '';
 }
 
-/*
-  The settings section of an ini file as a lower-cased key/value object ({} when absent/unreadable).
-  R1 keeps the very same keys under [Uplay] rather than [Settings], so the section follows the file
-  name when the caller does not name a generation.
-*/
+// The settings section of an ini file as a lower-cased key/value object ({} when absent/unreadable).
+// R1 keeps the same keys under [Uplay] rather than [Settings], so the section follows the flavour.
 function readIniSettings(file, flavour) {
   if (!file) return {};
   const section = resolveFlavour(flavour || flavourForIni(file)).section;
@@ -732,11 +683,8 @@ function uplayDefaultSaveRoot(flavour) {
   return appdata ? path.join(appdata, resolveFlavour(flavour).saveRoot) : '';
 }
 
-/*
-  Every directory the emulator could write achievements.json into, most-likely first (SaveType +
-  AchSavePath, plus leftovers from reconfigs/repack updates - reading all of them costs a few stats
-  and survives an ini that changed under us).
-*/
+// Every directory the emulator could write achievements.json into, most-likely first (SaveType +
+// AchSavePath, plus leftovers from reconfigs/repack updates).
 function resolveAchievementSaveDirs({ gameDir, runtimeDir, uplayId, steamAppid, iniFile } = {}) {
   const dirs = [];
   const add = (dir) => {
@@ -790,11 +738,8 @@ function entryUnlockTime(entry) {
   return Number.isFinite(value) ? value : 0;
 }
 
-/*
-  Read the emulator's runtime unlock state, MERGED across every candidate directory. Stale all-zero
-  copies (schema seed, previous SaveType, pre-created redirect target) must not mask the live file, so
-  "earned wins, newest timestamp wins". Returns { dir, file, files, entries } | null.
-*/
+// Read the emulator's runtime unlock state, MERGED across every candidate directory. Stale all-zero
+// copies must not mask the live file, so "earned wins, newest timestamp wins".
 function readAchievementSave(dirs) {
   const merged = {};
   const files = [];
@@ -835,16 +780,10 @@ function readAchievementSave(dirs) {
   return { ...best, files, entries: merged };
 }
 
-/*
-  Re-key an emulator save onto the Steam schema's api-names. For supported games the api-name IS
-  "<prefix><objectiveId>", so the translation is exact: try as-is, then prefixed, then the objective id.
-
-  `canonical` says the caller proved this list is a single prefix + unique objective ids
-  (derivePrefixedIds returned non-null). Only then may an id be compared numerically, which is what
-  reads back a save the loader wrote as "<prefix>1" for an api-name spelled "<prefix>001". Lists that
-  failed that proof keep the literal digit match, because there the same numeric id can belong to two
-  different api-names ("ACH_FS_01" and "ACH_FSDLC_1"). Unresolvable entries are dropped.
-*/
+// Re-key an emulator save onto the Steam schema's api-names: try as-is, then prefixed, then the
+// objective id. `canonical` (single prefix + unique ids) allows a numeric id comparison, matching a
+// save written as "<prefix>1" against an api-name spelled "<prefix>001"; otherwise the literal digit
+// match is kept, since the same numeric id can belong to two different api-names.
 function mapSaveToSchemaKeys(entries, { prefix = '', apiNames = [], canonical = false, objectiveIds = null } = {}) {
   const out = {};
   if (!entries || typeof entries !== 'object') return out;
@@ -1085,13 +1024,9 @@ function resolveSteamMapping({ appid, name, gameDir } = {}) {
   return null;
 }
 
-/*
-  The one key the loader can ever look up. Verified against upc_r2_loader64.dll: UPC_AchievementUnlock
-  takes the objective id as a uint32 and builds its lookup key as AchKeyPrefix + std::to_string(id), so
-  the digits are always a plain decimal. An api-name whose trailing digits are zero-padded ("001",
-  "spc_01") therefore names a key no game can ever produce, which is why the id is renormalised here
-  rather than reused verbatim.
-*/
+// The one key the loader can ever look up. Verified against upc_r2_loader64.dll: UPC_AchievementUnlock
+// builds its key as AchKeyPrefix + std::to_string(id), always a plain decimal - a zero-padded
+// api-name ("001") names a key no game can ever produce, so the id is renormalised here.
 function canonicalObjectiveKey(apiName) {
   const name = String(apiName == null ? '' : apiName);
   const m = name.match(/^(.*?)(\d+)$/);
@@ -1109,15 +1044,10 @@ function normalizeObjectiveTitle(value) {
     .replace(/[^a-z0-9]+/g, '');
 }
 
-/*
-  Ubisoft Connect caches the achievement definitions of every product whose achievements page it has
-  displayed: the real objective ids plus their titles in each shipped language. It is the only offline
-  source that owes nothing to a naming convention, so it both proves the convention right and keys the
-  games the convention cannot describe. The archive is a snapshot and can predate a DLC, so it is a
-  source of ids, never a source of truth about how many achievements a game has.
-
-  Returns { ids, byTitle: Map(normalizedTitle -> objectiveId | null) } | null.
-*/
+// Ubisoft Connect caches the achievement definitions of every product whose achievements page it has
+// displayed: real objective ids plus titles in each shipped language. The only offline source that
+// owes nothing to a naming convention. It's a snapshot and can predate a DLC, so a source of ids,
+// never a source of truth about how many achievements a game has.
 function readUbisoftObjectives(uplayId, { achievementsRoot = '' } = {}) {
   const id = String(uplayId || '').trim();
   if (!/^\d+$/.test(id)) return null;
@@ -1169,20 +1099,11 @@ function derivePrefixedIds(achievementList) {
 
 const _ubisoftObjectiveCache = new Map();
 
-/*
-  Decide how this game's achievements_schema.json has to be keyed, best source first:
-
-  - the Steam api-name convention "<prefix><objectiveId>", which Ubisoft's own archive confirms is the
-    real objective id. Checked by matching the two lists on the achievement title for every product
-    where both could be obtained: 409 achievements across eight titles, from Assassin's Creed III to
-    Shadows, and the two numberings agreed on all of them;
-  - Ubisoft Connect's cached archive, joined to the Steam list on the achievement title, for games
-    whose api-names carry no id at all. Its snapshot can predate a DLC, so an achievement it does not
-    know is left out of the schema rather than given an invented id.
-
-  Returns { origin, prefix, objectiveIds: Map(apiName -> id), count, total } or null when neither
-  source can key this game, which is what keeps a guess out of a game folder.
-*/
+// Decide how this game's achievements_schema.json has to be keyed, best source first: the Steam
+// api-name convention "<prefix><objectiveId>" (confirmed against Ubisoft's own archive across 409
+// achievements in 8 titles), then Ubisoft Connect's cached archive joined on achievement title for
+// games whose api-names carry no id. Returns null when neither source can key this game, keeping a
+// guess out of a game folder.
 function resolveObjectiveKeying({ achievementList, uplayId, achievementsRoot = '' } = {}) {
   const list = (Array.isArray(achievementList) ? achievementList : []).filter((a) => a && a.name != null);
   if (list.length === 0) return null;
@@ -1217,14 +1138,9 @@ function resolveObjectiveKeying({ achievementList, uplayId, achievementsRoot = '
   return { origin: 'ubisoft-archive', prefix: '', objectiveIds, count: objectiveIds.size, total: list.length };
 }
 
-/*
-  Build the Uplay R2 achievements_schema.json from the AW schema. keyed:true → prefixed objective keys
-  (loader with AchKeyPrefix); keyed:false → bare objective ids (older loader that would otherwise never
-  match). Both forms drop any zero padding, so the key matches what the loader actually looks up.
-
-  `objectiveIds` (from resolveObjectiveKeying) makes the id explicit rather than read off the end of
-  the api-name. An achievement missing from that map has no trusted id and is left out.
-*/
+// Build the Uplay R2 achievements_schema.json from the AW schema. keyed:true -> prefixed objective
+// keys (loader with AchKeyPrefix); keyed:false -> bare objective ids. Both drop zero padding.
+// `objectiveIds` makes the id explicit rather than read off the api-name; a missing entry is left out.
 function buildAchievementsSchemaJson(schema, { keyed = true, prefix = '', objectiveIds = null } = {}) {
   const list = (schema && schema.achievement && Array.isArray(schema.achievement.list) && schema.achievement.list) || [];
   const out = {};
@@ -1265,12 +1181,9 @@ function normalizeLoaderLanguage(language) {
   return UPLAY_LANGUAGE_CODES[value.toLowerCase()] || UPLAY_LANGUAGE_VALUES.get(value.toLowerCase()) || 'en-US';
 }
 
-/*
-  Read-modify-write BOTH of a generation's ini names beside the loader dll, preserving every other key
-  (UserId in particular) and section. Only keys the installed loader parses are written: redirect keys
-  are left out on builds without support, or the ini would look configured while saves stay elsewhere.
-  R1 holds the same keys under [Uplay], so the section and the starting template follow the flavour.
-*/
+// Read-modify-write BOTH of a generation's ini names beside the loader dll, preserving every other
+// key and section. Only keys the installed loader parses are written, or the ini would look
+// configured while saves stay elsewhere. R1 holds the same keys under [Uplay].
 function planSettingsConfig({ dir, steamAppid, prefix, accountName, language, logging, capabilities, flavour } = {}) {
   if (!dir) throw new Error('writeSettingsConfig: dir is required');
   if (steamAppid == null) throw new Error('writeSettingsConfig: steamAppid is required');
@@ -1315,34 +1228,18 @@ function planSettingsConfig({ dir, steamAppid, prefix, accountName, language, lo
   };
 }
 
-/*
-  A game asks the loader for its Ubisoft session ticket through UPC_TicketGet, and the loader answers
-  with whatever `[Settings] Ticket` holds - defaulting to the empty string. Several titles read that
-  emptiness as "no session" and never enable achievements at all: they call nothing, so nothing is
-  missed, nothing is mis-keyed, and the setup looks perfect while recording zero. Avatar: Frontiers of
-  Pandora is one, measured here: no achievement call whatsoever across a 47 minute session with the
-  triggering quest completed, then a list query 7 seconds after launch and a real unlock once this
-  value was present.
-
-  What this is: a syntactically well-formed JWE, five base64url segments, whose header matches the
-  shape a real Ubisoft session provides. What it is not: a credential. Nothing here is signed,
-  decryptable or issued by anyone - it only lets a game that checks whether a token EXISTS, or looks
-  like one, get past that check. A game that genuinely validates the signature is unaffected by it.
-
-  Fixed rather than generated, because it carries no secret and a constant keeps a repair
-  reproducible: two machines with the same game end up with byte-identical files.
-*/
+// A game asks the loader for its session ticket via UPC_TicketGet, answered from `[Settings] Ticket`
+// (default empty). Several titles read that emptiness as "no session" and never call the achievement
+// API at all - measured on Avatar: Frontiers of Pandora, silent for 47 minutes until this value was set.
+//
+// This is a syntactically well-formed JWE (five base64url segments matching a real session's shape),
+// not a credential: nothing is signed or decryptable, it only passes an EXISTS-style check. Fixed
+// rather than generated so a repair stays reproducible across machines.
 const SESSION_TICKET =
   'eyJlbmMiOiJBMTI4Q0JDIiwiZW52aXJvbm1lbnQiOiJwcm9kIiwiaW50IjoiSFMyNTYiLCJpdiI6IkV6eG96NkRxZ2xKcS0xYjF3NVVSUU9IIiwidHlwIjoiSldFIn0.aFdyN0xxNVpjM0ZuVWtwbWJHOTFhM0J4Y21WMFlXbHVaWEo0WTJKcg.WkdWbVlYVnNkR2xrWlc1MGFYUjU.c2Vzc2lvbi1wbGFjZWhvbGRlci1ub3QtYS1yZWFsLXViaXNvZnQtdGlja2V0LWlzc3VlZC1ieS1hdy1uZXh0.dW5zaWduZWQtcGxhY2Vob2xkZXI';
 
-/*
-  Write (or remove) that one key, and nothing else.
-
-  Deliberately not part of planSettingsConfig: that rewrites Achievements, AchKeyPrefix, AchSaveType,
-  AchSavePath, Username and Language, and needs a Steam appid to do so. Flipping a single setting must
-  not be able to disturb a setup that already works. The reverse holds too - upsertIniKeys only
-  touches the keys it is handed, so a Ticket written here survives a later full re-apply untouched.
-*/
+// Write (or remove) that one key, and nothing else. Deliberately not part of planSettingsConfig
+// (which needs a Steam appid): flipping a single setting must not disturb a working setup.
 function setSessionTicket({ dir, flavour = null, enabled = true } = {}) {
   const target = String(dir || '').trim();
   if (!target) throw 'uplay: no folder to configure';
@@ -1404,12 +1301,9 @@ function writeSettingsConfig(options = {}) {
   return applySettingsConfigPlan(planSettingsConfig(options));
 }
 
-/*
-  UPC_Init seeds <AchSavePath>\achievements.json from the schema only when that file does not exist
-  yet, so a setup re-applied with different keys would keep an unreachable runtime save for good.
-  Removing it lets the loader rebuild it - but only when it demonstrably holds nothing: no unlock
-  recorded and not one key in common with the schema just written. That is why no backup is taken.
-*/
+// UPC_Init seeds <AchSavePath>\achievements.json only when it does not exist yet, so a re-applied
+// setup with different keys would keep a stale save for good. Removed only when it demonstrably
+// holds nothing (no unlock, no key in common with the new schema); no backup needed.
 function removeStaleRuntimeSave(saveDir, schemaJson) {
   if (!saveDir || !schemaJson) return false;
   const file = path.join(saveDir, ACH_SAVE_FILE);
@@ -1427,15 +1321,9 @@ function removeStaleRuntimeSave(saveDir, schemaJson) {
   }
 }
 
-/*
-  The loader appends a line per call and never rotates, so a game that polls for its asynchronous
-  operations grows this without bound - 61 MB per hour of play on one measured title, 97% of it the
-  same repeated line. Past the point where readLoaderLog would still read the whole file, the excess
-  is noise nobody can act on, so it goes rather than sitting in somebody's game folder forever.
-
-  Deleted, not truncated: the loader holds the file open while a game runs, and a truncation it does
-  not know about leaves it writing at its old offset, producing a file padded with NUL bytes.
-*/
+// The loader appends a line per call and never rotates, growing without bound (61 MB/hour measured
+// on one title, 97% repeated lines). Deleted, not truncated: the loader holds the file open, and a
+// truncation it doesn't know about leaves it writing at the old offset, padding with NUL bytes.
 const MAX_LOADER_LOG_BYTES = 25 * 1024 * 1024;
 
 function pruneLoaderLog(dir, flavour = null, maxBytes = MAX_LOADER_LOG_BYTES) {
@@ -1451,15 +1339,9 @@ function pruneLoaderLog(dir, flavour = null, maxBytes = MAX_LOADER_LOG_BYTES) {
   }
 }
 
-/*
-  Read the loader's own diagnostic log, which is the only record of what the GAME asked for. It says
-  apart the two failures that look identical from the outside: a game that never calls the
-  achievement API at all, and one that calls it with an objective id the schema does not carry.
-
-  The log grows without bound while a game runs (7 MB after a few minutes at a menu in one measured
-  session), so it is read bounded: the head for the startup lines and the tail for what happened
-  most recently. Returns null when logging was never switched on.
-*/
+// Read the loader's own diagnostic log, the only record of what the GAME asked for, telling apart a
+// game that never calls the achievement API from one calling it with an unknown id. Grows without
+// bound (7 MB after minutes at a menu, one measured session), so it's read bounded: head + tail.
 const LOG_HEAD_BYTES = 1024 * 1024;
 const LOG_TAIL_BYTES = 23 * 1024 * 1024;
 
@@ -1498,16 +1380,9 @@ function readLoaderLog(dir, flavour) {
     return null;
   }
 
-  /*
-    Both generations name the objective, in their own words:
-
-      R1  UPLAY_ACH_EarnAchievement => achievementId (42)
-      R2  UPC_AchievementUnlock => inId (42)
-
-    The calls are counted as well as parsed, because the two answer different questions: the ids say
-    which objective was asked for, the count says that the game asked at all. A log truncated between
-    them still supports the second, and that alone convicts a setup sitting at 0%.
-  */
+  // Both generations name the objective in their own words: R1 "UPLAY_ACH_EarnAchievement =>
+  // achievementId (42)", R2 "UPC_AchievementUnlock => inId (42)". Calls are counted as well as
+  // parsed - the count alone convicts a setup sitting at 0% even if the ids are truncated away.
   const objectiveIds = [];
   const unlockPattern = /(?:UPC_AchievementUnlock[^\r\n]*?inId|UPLAY_ACH_EarnAchievement[^\r\n]*?achievementId)\s*\((\d+)\)/g;
   for (const match of text.matchAll(unlockPattern)) {
@@ -1515,12 +1390,8 @@ function readLoaderLog(dir, flavour) {
     if (!objectiveIds.includes(id)) objectiveIds.push(id);
   }
   const unlockCalls = (text.match(/UPC_AchievementUnlock|UPLAY_ACH_EarnAchievement/g) || []).length;
-  /*
-    The Ubisoft product id straight from the game, which is the only source that owes nothing to a
-    catalogue: the game passes it to the loader on startup, R2 as "UPC_Init -> ... appid (4740)" and
-    R1 as "UPLAY_Start => aUplayId (3539)". It is what every save folder is named after, so it is
-    what an automatic mapping has to start from for a game no shipped table lists.
-  */
+  // The Ubisoft product id straight from the game (R2 "UPC_Init -> ... appid (4740)", R1
+  // "UPLAY_Start => aUplayId (3539)"), the only source that owes nothing to a catalogue.
   const productMatch = text.match(/UPC_Init[^\r\n]*?\bappid\s*\((\d+)\)|aUplayId\s*\((\d+)\)/);
   const productId = productMatch ? String(Number(productMatch[1] || productMatch[2])) : '';
 
@@ -1541,15 +1412,9 @@ function readLoaderLog(dir, flavour) {
   };
 }
 
-/*
-  report.issues is an array of { level, code, message }, the same shape as goldberg.diagnose so
-  app.js's dialog-building code can be reused.
-
-  `readLog: false` skips the loader-log pass. The log is the only way to tell "the game never asked"
-  apart from "the game asked for an id the schema lacks", so the panel always wants it - but it can
-  be tens of megabytes and a library scan runs this once per Ubisoft game, where the setup verdict is
-  all that is needed.
-*/
+// report.issues is an array of { level, code, message }, the same shape as goldberg.diagnose.
+// `readLog: false` skips the (possibly tens-of-MB) loader-log pass for a library scan, where the
+// setup verdict alone is needed; the panel always wants the log to tell the two failure modes apart.
 function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedMapping = null, flavour: suppliedFlavour = null, readLog = true } = {}) {
   const report = {
     gameDir,
@@ -1582,12 +1447,8 @@ function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedM
   const dir = path.dirname(emu.dll[0]);
   report.dll = emu.dll;
 
-  /*
-    Which generation this install runs decides the config names, the ini section and the save root -
-    and which loaders count. A folder can still hold the other generation's DLL (a repack update, a
-    crack left in place); the game never loads it, so letting it drag the capability probe down would
-    strip a redirect the loader in use supports.
-  */
+  // Which generation this install runs decides the config names, ini section and save root. A folder
+  // can still hold the other generation's unused DLL, which must not drag the capability probe down.
   const flavour = suppliedFlavour ? resolveFlavour(suppliedFlavour) : resolveFlavour(emu.dll[0] || DEFAULT_FLAVOUR);
   report.flavour = flavour.id;
   const activeLoaders = emu.dll.filter((file) => (flavourForDll(file) || DEFAULT_FLAVOUR).id === flavour.id);
@@ -1621,12 +1482,8 @@ function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedM
   } else {
     try {
       const parsedSchema = JSON.parse(fs.readFileSync(schemaFile, 'utf8'));
-      /*
-        Every key has to be exactly what the loader rebuilds at unlock time: AchKeyPrefix (empty on a
-        build that does not parse it) followed by the objective id as a plain decimal. Anything else -
-        an unexpected prefix, a zero-padded id, a non-numeric suffix - names a key no unlock can ever
-        produce, and the game records nothing while the setup still looks configured.
-      */
+      // Every key has to be exactly what the loader rebuilds at unlock time: AchKeyPrefix followed by
+      // the objective id as a plain decimal. Anything else names a key no unlock can ever produce.
       const keys = Object.keys(parsedSchema || {});
       const expectedPrefix = caps.supportsAchKeyPrefix ? String(settings.achkeyprefix || '').trim() : '';
       const lowerExpected = expectedPrefix.toLowerCase();
@@ -1688,12 +1545,8 @@ function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedM
     add('info', 'NO_SAVE_YET', `No runtime save has been written yet. Checked: ${saveDirs.join(', ') || '(none)'}`);
   }
 
-  /*
-    "Setup looks valid but nothing unlocks" has two causes that look identical from the outside, and
-    only the loader's own log tells them apart: the game never asked the achievement API for anything,
-    or it did ask and named an objective the schema does not carry. The first is a game this fix
-    cannot serve; the second is a wrong mapping, and the log names the ids to fix it with.
-  */
+  // "Setup looks valid but nothing unlocks" has two causes indistinguishable from the outside; only
+  // the loader's log tells them apart: never asked at all, or asked for an id the schema lacks.
   const earnedSoFar = report.emulatorSave ? report.emulatorSave.earned : (report.save && report.save.earned) || 0;
   if (earnedSoFar === 0 && readLog) {
     const log = readLoaderLog(dir, flavour);
@@ -1722,11 +1575,8 @@ function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedM
             `${ACH_SCHEMA_FILE} has no "${expectedPrefix}${unmatched[0]}" key: this game's Steam achievement names do not carry its Ubisoft objective ids.`
         );
       } else if (log.unlockCalls > 0 && log.objectiveIds.length === 0) {
-        /*
-          The game asked, nothing was recorded, and not one id could be read: a log whose unlock
-          lines were cut off by the bounded tail read, or a loader build that words them differently.
-          The verdict survives without them, so it is still given; naming a key would not be.
-        */
+        // The game asked, nothing recorded, and no id could be read (bounded tail read cut them off,
+        // or the loader build words them differently). The verdict survives without them.
         add(
           'warning',
           'LOADER_LOG_UNLOCK_NOT_RECORDED',
@@ -1735,23 +1585,11 @@ function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedM
             `achievement names most likely do not carry its Ubisoft objective ids: re-apply the fix to key the schema from Ubisoft's own data.`
         );
       } else if (!log.touchedAchievementApi) {
-        /*
-          The game ran and asked for nothing at all. That used to be reported as reassurance - the
-          setup missed nothing - which is wrong in the case it fires most often: a title that only
-          enables achievements once it believes it has a Ubisoft session. The loader answers
-          UPC_TicketGet from `[Settings] Ticket`, defaulting to empty, and an empty answer reads as
-          "offline". Avatar: Frontiers of Pandora sat silent through a 47 minute session with the
-          triggering quest completed, and queried its list 7 seconds after launch once a ticket was
-          there.
-
-          Only said where it can be acted on: the loader has to read the key at all.
-
-          With a ticket already configured, the same silence means the opposite - it was tried and it
-          changed nothing - and that is the one case where taking it back out is worth offering. A
-          title the ticket does unblock queries its list within seconds, which sets
-          touchedAchievementApi and skips this whole branch, so neither of these is ever said about a
-          game that works.
-        */
+        // The game ran and asked for nothing: often a title that only enables achievements once it
+        // believes it has a Ubisoft session (see the Ticket comment above - measured on Avatar:
+        // Frontiers of Pandora). Only said where the loader can act on it. With a ticket already
+        // configured, the same silence means the opposite: it was tried and changed nothing, worth
+        // offering to remove. A title the ticket does unblock sets touchedAchievementApi and skips this branch.
         const hasTicket = Boolean(String(settings.ticket || '').trim());
         if (caps.supportsTicket && !hasTicket) {
           add(
@@ -1782,11 +1620,8 @@ function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedM
   return report;
 }
 
-/*
-  Repair / auto-configure a Goldberg Uplay R2 setup so unlocks land in GSE Saves\<steamAppid> with real
-  Steam api-name keys. cfg: dir (loader folder), steamAppid, schema, prefix, accountName, language.
-  Returns { dir, achievementsSchemaJson, ini, wroteSchema, backupDir }.
-*/
+// Repair / auto-configure a Goldberg Uplay R2 setup so unlocks land in GSE Saves\<steamAppid> with
+// real Steam api-name keys. cfg: dir (loader folder), steamAppid, schema, prefix, accountName, language.
 function repair({ dir, gameDir, steamAppid, schema, prefix, objectiveIds = null, accountName, language, logging, capabilities = null, flavour = null, backup = true, backupDir = null } = {}) {
   if (!dir) throw new Error('repair: dir is required');
   if (steamAppid == null) throw new Error('repair: steamAppid is required');
@@ -1848,12 +1683,8 @@ function repair({ dir, gameDir, steamAppid, schema, prefix, objectiveIds = null,
   return summary;
 }
 
-/*
-  Every repair() copies the schema and the ini files it is about to overwrite into
-  `<gameDir>/.aw-backups/<timestamp>/` first, mirroring the "restore a GBE backup" menu action the
-  Steam side already has. Newest first, so the caller can offer "undo the last repair" without
-  inspecting the layout.
-*/
+// Every repair() copies the schema and ini files it's about to overwrite into
+// `<gameDir>/.aw-backups/<timestamp>/` first, mirroring the GBE "restore a backup" action.
 const BACKUP_DIR_NAME = '.aw-backups';
 const BACKUP_MANIFEST = 'uplay-r2-backup.json';
 
@@ -1869,11 +1700,8 @@ function uniqueBackupDir(root) {
   return candidate;
 }
 
-/*
-  Snapshot every file a repair may change, including files that do not exist yet. Recording absence
-  is what makes a first-time install reversible: restore removes a loader/schema/ini that AW added
-  instead of pretending there was an original file to copy back.
-*/
+// Snapshot every file a repair may change, including files that do not exist yet: recording absence
+// is what makes a first-time install reversible.
 function createSetupBackup({ gameDir, files, backupDir } = {}) {
   if (!gameDir || !fs.existsSync(gameDir)) throw new Error(`backup: game folder not found: ${gameDir}`);
   const root = path.resolve(gameDir);

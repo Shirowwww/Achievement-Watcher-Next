@@ -11,23 +11,19 @@ module.exports.setUserDataPath = (p) => {
 };
 
 module.exports.scan = async () => {
-  try {
-    let data = [];
+  let data = [];
 
-    for (let file of await glob('([0-9])+.db', { cwd: cache, onlyFiles: true, absolute: false })) {
-      data.push({
-        appid: file.replace('.db', ''),
-        source: 'Achievement Watcher : Watchdog',
-        data: {
-          type: 'cached',
-        },
-      });
-    }
-
-    return data;
-  } catch (err) {
-    throw err;
+  for (let file of await glob('([0-9])+.db', { cwd: cache, onlyFiles: true, absolute: false })) {
+    data.push({
+      appid: file.replace('.db', ''),
+      source: 'Achievement Watcher : Watchdog',
+      data: {
+        type: 'cached',
+      },
+    });
   }
+
+  return data;
 };
 
 module.exports.getAchievements = async (appID) => {

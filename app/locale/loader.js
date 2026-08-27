@@ -12,60 +12,51 @@ const langDir = path.join(appPath, 'locale/lang');
 const uiLanguages = require(path.join(appPath, 'locale/uiLanguages.js'));
 
 module.exports.load = async (lang = 'english') => {
-  try {
-    if (!uiLanguages.has(lang)) lang = 'english';
+  if (!uiLanguages.has(lang)) lang = 'english';
 
-    let english = JSON.parse(await ffs.readFile(path.join(langDir, 'english.json'), 'utf8'));
-    let template;
-    try {
-      if (lang != 'english') {
-        let requested = JSON.parse(await ffs.readFile(path.join(langDir, `${lang}.json`), 'utf8'));
-        template = merge(english, requested, {
-          arrayMerge: (dest, src, options) => src,
-          isEmpty: (a) => a === null || a === '',
-        });
-      } else {
-        template = english;
-      }
-    } catch (err) {
-      console.warn(err);
+  let english = JSON.parse(await ffs.readFile(path.join(langDir, 'english.json'), 'utf8'));
+  let template;
+  try {
+    if (lang != 'english') {
+      let requested = JSON.parse(await ffs.readFile(path.join(langDir, `${lang}.json`), 'utf8'));
+      template = merge(english, requested, {
+        arrayMerge: (dest, src, options) => src,
+        isEmpty: (a) => a === null || a === '',
+      });
+    } else {
       template = english;
     }
-
-    let locale = uiLanguages.get(lang).webapi;
-
-    if (template) {
-      translateUI(lang, locale, template);
-      // Expose the merged locale so imperative strings (dialogs, menus) can be
-      // translated through the same files via locale/t.js.
-      window.appLocale = template;
-      /*
-        Views that write their own text instead of being reached by the DOM walk below: the Help
-        panel (built from locale + live settings), the title-bar Watchdog status (from an IPC push)
-        and the Settings account cards. None of them may break loading a language, so each is
-        optional and its failure is contained.
-      */
-      const repaint = [
-        () => window.AchievementHelp.render($),
-        () => window.refreshWatchdogStatusText(),
-        () => window.refreshSettingsLocaleText(),
-        () => window.refreshAccessibleNames(),
-      ];
-      for (const render of repaint) {
-        try {
-          render();
-        } catch (err) {
-          console.warn(err);
-        }
-      }
-    } else {
-      throw 'Unexpected Error';
-    }
-
-    return locale;
   } catch (err) {
-    throw err;
+    console.warn(err);
+    template = english;
   }
+
+  let locale = uiLanguages.get(lang).webapi;
+
+  if (template) {
+    translateUI(lang, locale, template);
+    // Expose the merged locale so imperative strings (dialogs, menus) can be translated via locale/t.js.
+    window.appLocale = template;
+    // Help panel, Watchdog status and Settings account cards write their own text outside the DOM
+    // walk below, so each repaint here is optional and its failure is contained.
+    const repaint = [
+      () => window.AchievementHelp.render($),
+      () => window.refreshWatchdogStatusText(),
+      () => window.refreshSettingsLocaleText(),
+      () => window.refreshAccessibleNames(),
+    ];
+    for (const render of repaint) {
+      try {
+        render();
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+  } else {
+    throw 'Unexpected Error';
+  }
+
+  return locale;
 };
 
 function translateUI(lang, locale, template) {
@@ -83,9 +74,8 @@ function translateUI(lang, locale, template) {
 
   $('#sort-box .installed-filter').attr('title', clear(template.installedOnly));
   if (template.sort) {
-    // Expose the dynamic sort labels for sort.js (built on click), and set the static button tooltips.
-    // NB: must NOT be named `sortLabels` - sort.js declares a global `function sortLabels()` that
-    // shares the same window slot, so reusing the name would overwrite that function (→ TypeError).
+    // Dynamic sort labels for sort.js. Not named `sortLabels`: that is a global function in
+    // sort.js sharing this window slot, and reusing it would overwrite that function.
     window.sortLabelStrings = template.sort;
     if (template.sort.tooltip) {
       $('#sort-box .sort.alpha').attr('title', clear(template.sort.tooltip.alpha));
@@ -578,8 +568,7 @@ function translateUI(lang, locale, template) {
       const value = designerText($(this).attr('data-lang-title'));
       if (typeof value === 'string') $(this).attr('title', clear(value)).attr('aria-label', clear(value));
     });
-    // The create button and the preset picker swap their wording at runtime (create vs update,
-    // "new preset" placeholder), so both spellings are parked on data attributes here and the
+    // Create/update wording swaps at runtime, so both spellings are parked on data attributes here;
     // settings code re-renders them on the event below.
     $('#pd-lbl-create').attr('data-create', clear(c.create)).attr('data-update', clear(c.update)).text(clear(c.create));
     $('#pd-load').attr('data-new', clear(c.editNew));
@@ -625,9 +614,8 @@ function translateUI(lang, locale, template) {
   $('#addCustomDir span').text(clear(template.settings.folder.add));
   if (template.settings.folder.smartFind) $('#smartFind-label').text(clear(template.settings.folder.smartFind));
   if (template.settings.folder.smartFindHelp) $('#smartFind-help').text(clear(template.settings.folder.smartFindHelp));
-  // First line = what the folder is for, shown in both modes. The rest names the emulator .ini
-  // files that identify one, which is only useful once you know which emulator you are pointing
-  // at - so it lives in its own paragraph that Simple mode hides.
+  // First line explains the folder in both modes; the rest names identifying .ini files and is
+  // hidden in Simple mode.
   {
     const addInfo = template.settings.folder.addInfo || [];
     $('#folder-add-info').text(clear(addInfo[0]));
@@ -686,9 +674,8 @@ function translateUI(lang, locale, template) {
   selector.find("li:nth-child(9) .right select option[value='true']").text(clear(template.settings.common.enable));
   selector.find("li:nth-child(9) .right select option[value='false']").text(clear(template.settings.common.disable));
   selector.find('li:nth-child(9) .help').text(clear(template.settings.source.socialClub.description));
-  // Sources whose row carries a proper name (shadPS4, Ubisoft Connect, ...) only need their help
-  // text translated. Bound by id rather than by position: the nth-child bindings above break the
-  // moment a row is inserted anywhere but the end, which is why these are kept out of that scheme.
+  // Rows with a proper name only need help text translated, bound by id: the nth-child bindings
+  // above break if a row is inserted anywhere but the end.
   for (const key of ['ubisoftOfficial', 'gogOfficial', 'epicOfficial', 'gog', 'epic', 'shadps4', 'xenia', 'xlln']) {
     const source = template.settings.source[key];
     if (source && source.description) $(`#source-help-${key}`).text(clear(source.description));
@@ -748,13 +735,11 @@ function translateUI(lang, locale, template) {
   selector.find('li:nth-child(1) .left span').text(clear(template.settings.advanced.mainSteam.name));
   selector.find('li:nth-child(1) .right select option[value="0"]').text(clear(template.settings.source.legitSteam.value.none));
   selector.find('li:nth-child(1) .help').text(clear(template.settings.advanced.mainSteam.description));
-  selector;
   selector = $('#settings .box .footer .notice p:nth-child(1)');
   selector.find('span:eq(0)').text(clear(template.settings.common.version));
   selector.find('span:eq(1)').text(clear(remote.app.getVersion()));
   selector.find('a:first').text(clear(template.settings.common.maintainedBy));
-  // The upstream lineage moved out of the footer to the foot of the Advanced tab, where both
-  // labels carry their own id instead of being addressed by position.
+  // Bound by id rather than position: the upstream-lineage labels sit at the foot of the Advanced tab.
   $('#lineage-fork-label').text(clear(template.settings.common.fork));
   $('#lineage-original-label').text(clear(template.settings.common.original));
   $("#settingNav li[data-view='general'] span").text(clear(template.settings.sideMenu.general));

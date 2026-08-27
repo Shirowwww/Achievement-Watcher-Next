@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const listDrive = require(path.join(__dirname, '..', 'util', 'listDrive.js'));
-const { readRegistryString, readRegistryStringAndExpand } = require(path.join(__dirname, '..', 'util', 'reg.js'));
+const { readRegistryStringAndExpand } = require(path.join(__dirname, '..', 'util', 'reg.js'));
 
 function addUnique(out, candidate) {
   if (!candidate) return;
@@ -107,45 +107,8 @@ function defaultSteamScanRoots(additionalSearch = []) {
   return roots;
 }
 
-function readSteamInstallPath() {
-  return (
-    readRegistryString('HKCU', 'Software/Valve/Steam', 'SteamPath') ||
-    readRegistryString('HKCU', 'Software/Valve/Steam', 'InstallPath') ||
-    envPath('ProgramFiles(x86)', 'Steam') ||
-    envPath('ProgramFiles', 'Steam')
-  );
-}
-
-function parseSteamLibraryFolders(steamPath) {
-  const roots = [];
-  if (!steamPath) return roots;
-  addUnique(roots, steamPath);
-  const vdf = path.join(steamPath, 'steamapps', 'libraryfolders.vdf');
-  let raw = '';
-  try {
-    raw = fs.readFileSync(vdf, 'utf8');
-  } catch {
-    return roots;
-  }
-
-  const modern = /"path"\s*"([^"]+)"/gi;
-  let match;
-  while ((match = modern.exec(raw))) {
-    addUnique(roots, match[1].replace(/\\\\/g, '\\'));
-  }
-
-  const legacy = /^\s*"\d+"\s*"([^"]+)"\s*$/gim;
-  while ((match = legacy.exec(raw))) {
-    addUnique(roots, match[1].replace(/\\\\/g, '\\'));
-  }
-
-  return roots;
-}
-
-// A path is "Steam-ish" when its name contains a Steam library/install segment (steam, steamapps,
-// steamlibrary, ...) - these must never become emulator-scan library roots, since Steam games are
-// handled by the Steam source. A folder that merely *contains* a steamapps subtree stays eligible;
-// the scans skip that subtree themselves.
+// A path is "Steam-ish" when its name contains a Steam library/install segment; these must never
+// become emulator-scan library roots, since Steam games are handled by the Steam source.
 function isSteamLikePath(p) {
   const value = String(p || '');
   if (!value) return false;
@@ -153,10 +116,8 @@ function isSteamLikePath(p) {
   return /(?:^|[\\/])(steam|steamapps|steamlibrary|steam library|steam games)(?:[\\/]|$)/i.test(normalized);
 }
 
-// Common game-library folder names in many languages, probed on every fixed drive by Smart Find and
-// used to recognise library-like subfolders (e.g. a "Jeux" folder on the Desktop). `Program Files`
-// variants are scoped to their Games subfolder so the scanner never treats the whole Windows install
-// as a game library.
+// Common game-library folder names in many languages, probed on every fixed drive by Smart Find.
+// `Program Files` variants are scoped to their Games subfolder, never the whole Windows install.
 const GAME_LIBRARY_FOLDER_NAMES = [
   // English / neutral
   'Games',
@@ -266,9 +227,8 @@ const GAME_LIBRARY_FOLDER_NAMES = [
   path.join('Program Files (x86)', 'Games'),
 ];
 
-// True when a folder name looks like a game library (a folder whose children are game installs),
-// e.g. "Jeux", "Games Library", "Repacks", "Bibliothèque". Used to peek into Desktop subfolders
-// safely: a Desktop\Jeux\<game> layout is scanned, while loose Desktop folders are not.
+// True when a folder name looks like a game library ("Jeux", "Games Library", "Repacks", ...). Used
+// to peek into Desktop subfolders safely: a Desktop\Jeux\<game> layout is scanned, loose folders are not.
 function isLibraryLikeFolderName(name) {
   const value = String(name || '').trim();
   if (!value) return false;
@@ -277,10 +237,8 @@ function isLibraryLikeFolderName(name) {
   return /^my ?games$/i.test(base);
 }
 
-// Per-user game-library candidates: portable/repack installs often live under the user profile
-// (%USERPROFILE%\Games, %USERPROFILE%\Jeux) or inside AppData (%APPDATA%/%LOCALAPPDATA%\Games).
-// Only library-like names are probed, never the raw AppData/LocalAppData roots themselves - those
-// hold application config and would produce false positives.
+// Per-user game-library candidates under the user profile or AppData. Only library-like names are
+// probed, never the raw AppData/LocalAppData roots (application config, false positives).
 function profileLibraryRoots() {
   const roots = [];
   const names = [];
@@ -319,9 +277,8 @@ async function discoverLibraryRoots() {
   }
   for (const root of profileLibraryRoots()) candidates.push(root);
 
-  // Portable installs are often grouped under Desktop\Games or Desktop\Jeux. Inspect only the
-  // Desktop's immediate children and only accept names from the library allowlist: this surfaces the
-  // exact folder in Smart Find without turning the Desktop (or the drive) into an invisible root.
+  // Portable installs are often grouped under Desktop\Games or Desktop\Jeux; only immediate children
+  // matching the library allowlist are accepted, so the Desktop itself never becomes an invisible root.
   for (const desktop of [envPath('USERPROFILE', 'Desktop'), envPath('PUBLIC', 'Desktop')].filter(Boolean)) {
     try {
       for (const entry of fs.readdirSync(desktop, { withFileTypes: true })) {
@@ -345,12 +302,8 @@ async function discoverLibraryRoots() {
   return results.filter(Boolean);
 }
 
-/*
-  Folder names people keep their console emulators in. A portable RPCS3/shadPS4/Xenia is not a game
-  and therefore never sits in a "Games" folder, so the game-library allowlist above cannot find one:
-  the binary search in userDir.findEntries() only ever looked inside game libraries and missed the
-  dedicated "Emulators" folder that is the single most common place for it.
-*/
+// Folder names people keep their console emulators in. A portable RPCS3/shadPS4/Xenia is not a game
+// and never sits in a "Games" folder, so the game-library allowlist above cannot find one.
 const EMULATOR_LIBRARY_FOLDER_NAMES = [
   'Emulators',
   'Emulator',

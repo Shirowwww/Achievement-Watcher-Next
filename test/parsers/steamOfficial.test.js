@@ -22,12 +22,6 @@ function kvInt(key, val) {
   b.writeInt32LE(val);
   return Buffer.concat([Buffer.from([0x02]), cstr(key), b]);
 }
-function kvFloat(key, val) {
-  const b = Buffer.alloc(4);
-  b.writeFloatLE(val);
-  return Buffer.concat([Buffer.from([0x03]), cstr(key), b]);
-}
-
 (() => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-steam-official-'));
   try {

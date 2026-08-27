@@ -1,7 +1,6 @@
 'use strict';
 
 // Theme layers and the CSS generated for the main window and overlay.
-// Custom theme data lives under userData so source images can be moved later.
 
 const fs = require('fs');
 const path = require('path');
@@ -26,11 +25,8 @@ const BUILTIN_COLORS = {
     border: '#3e5065',
     accent: '#6c91ff',
   },
-  // The only light-base built-in; see the matching block in app.css.
+  // The only light-base built-in; kept in step with the :root[data-theme='light'] block in app.css.
   light: {
-    // Kept in step with the :root[data-theme='light'] block in app.css, which is what these values
-    // paint in the overlay: the window, the library panel and the cards used to sit within a few
-    // percent of white, so nothing had any hierarchy.
     bg: '#e6ebf3',
     header: '#f6f9fc',
     panel: '#eef2f8',
@@ -191,13 +187,8 @@ function normalizeColor(value, fallback) {
   return fallback;
 }
 
-/*
-  Alpha support for layer colors, so a layer can be made partly (or fully) see-through. CSS wants
-  an 8-digit #rrggbbaa, but `<input type="color">` only produces/accepts #rrggbb - these two split
-  and rejoin a stored color so alpha survives a round trip through a control that has no concept
-  of it. Everything downstream (color-mix, gradients, overlay) already handles alpha, so nothing
-  else needed to change.
-*/
+// `<input type="color">` only produces/accepts #rrggbb, so alpha (CSS #rrggbbaa) is split off
+// here and rejoined by colorWithAlpha to survive a round trip through the picker.
 function colorAlpha(value) {
   const raw = String(value || '').trim();
   const hex8 = /^#([0-9a-f]{6})([0-9a-f]{2})$/i.exec(raw);
@@ -251,8 +242,7 @@ function darkenHex(value, percent = 48) {
   return `#${rgb.map((n) => n.toString(16).padStart(2, '0')).join('')}`;
 }
 
-// Per-layer gradient model: two user-chosen colors + a direction angle. A legacy `gradient: true`
-// (the first simple toggle) is converted into a default dark fade.
+// Legacy `gradient: true` (the first simple toggle) is converted into a default dark fade.
 function normalizeGradient(raw, baseColor) {
   const legacy = raw === true;
   const value = raw && typeof raw === 'object' ? raw : {};
@@ -327,18 +317,9 @@ function sanitizeCustomTheme(raw) {
   return theme;
 }
 
-/*
-  The name the user gives their own theme.
-
-  Same rules as util/themePackage.js `sanitizeThemeName`, deliberately repeated rather than imported:
-  themePackage requires this file, so reaching back would be a cycle, and this half has to load in
-  the overlay where the package reader never does. test/core/themeAlpha.test.js pins the two
-  against each other so they cannot drift apart.
-
-  What the rules buy is that one string can be all three things at once - what the picker shows, what
-  the folder of an installed copy is called, and what the .awtheme file is named - so a person never
-  has to notice that a theme has more than one name.
-*/
+// Same rules as themePackage.js `sanitizeThemeName`, deliberately repeated rather than imported
+// (that file requires this one, and this half also has to load in the overlay). Pinned together
+// by test/core/themeAlpha.test.js.
 function sanitizeCustomThemeName(raw) {
   return String(raw == null ? '' : raw)
     .trim()
@@ -350,12 +331,8 @@ function sanitizeCustomThemeName(raw) {
     .trim();
 }
 
-/*
-  The name is stored beside the layer model in the same file rather than inside it: sanitizeCustomTheme
-  keeps describing exactly the nine layers and nothing else, so every reader of a theme model - the
-  CSS builder, the package writer, the mock - is untouched by this. A file written before the field
-  existed simply has no name, which is what an unnamed Custom theme is.
-*/
+// The name is stored beside the layer model, not inside it, so sanitizeCustomTheme keeps
+// describing exactly the nine layers. A file written before the field existed has no name.
 function loadCustomThemeName(userDataPath) {
   try {
     const raw = JSON.parse(fs.readFileSync(customThemeFile(userDataPath), 'utf8'));
@@ -374,11 +351,8 @@ function loadCustomTheme(userDataPath) {
   }
 }
 
-/*
-  `name` is optional: passing one renames the theme, leaving it out keeps whatever name is on disk.
-  The save path runs twice per edit (once to store the draft, once to record the generated blur
-  copies), and only the first call knows the name - so the second must not erase it.
-*/
+// `name` is optional: passing one renames the theme, omitting it keeps the name on disk. The save
+// path runs twice per edit (draft, then generated blur copies) and only the first call knows it.
 function saveCustomTheme(userDataPath, theme, name) {
   const clean = sanitizeCustomTheme(theme);
   const themeName = name === undefined ? loadCustomThemeName(userDataPath) : sanitizeCustomThemeName(name);
@@ -387,10 +361,8 @@ function saveCustomTheme(userDataPath, theme, name) {
   return clean;
 }
 
-// The r, g, b of a color, with any alpha channel dropped: the callers that use this all rebuild the
-// alpha themselves (rgba() veils, --accent-soft), so an #rrggbbaa must resolve to its rgb half
-// rather than falling through to the default accent - which is what turned every translucent
-// layer colour into the stock blue.
+// The r, g, b of a color with any alpha dropped: callers rebuild alpha themselves (rgba() veils,
+// --accent-soft), so #rrggbbaa must resolve to its rgb half rather than fall through to the default.
 function hexToRgbTriplet(value) {
   const raw = String(value || DEFAULT_ACCENT_COLOR).trim().toLowerCase();
   if (/^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/.test(raw)) {
@@ -415,10 +387,8 @@ function imageUrl(filePath) {
   }
 }
 
-// The image actually rendered for a layer: a pre-blurred copy when the blur or colored-veil
-// effect is active (baked into the asset so the element's own text/content stay crisp), otherwise
-// the source image. The veil reuses the same pipeline with a light fixed blur, so images under a
-// colored veil look softer instead of flat.
+// The image actually rendered for a layer: a pre-blurred copy when the blur or veil effect is
+// active (baked in so the element's own text stays crisp), otherwise the source image.
 function effectiveImage(layer) {
   if (!layer) return '';
   if (layer.effect && layer.effect.enabled === true && layer.effect.blurImage) {
@@ -438,18 +408,12 @@ function veilLayer(layer) {
   return `linear-gradient(${veilRgba(layer)}, ${veilRgba(layer)})`;
 }
 
-/*
-  Whether the layer's gradient is the thing actually painting it. A gradient is listed BEFORE the
-  image in `background-image`, so it sits on top of the art and would hide the picture - an image
-  therefore wins: the stored gradient is left untouched (removing the image brings it back) but
-  nothing is emitted for it, which is why the editor hides the Gradient toggle for such a layer.
-*/
+// Whether the layer's gradient is actually painting it: an image wins over a gradient (the
+// gradient sits on top in `background-image` and would hide the picture otherwise).
 function gradientActive(layer) {
   return !!(layer && layer.gradient && layer.gradient.enabled === true && !layer.image);
 }
 
-// Optional per-layer gradient: a subtle top-to-bottom depth fade of the chosen color. Used as an
-// extra background layer on surface layers (bg/header/panel/card/settings) when the toggle is on.
 function layerGradient(layer) {
   if (!gradientActive(layer)) return 'none';
   const from = layer.gradient.from || layer.color || DEFAULT_THEME_COLOR;
@@ -462,24 +426,14 @@ function gradientEnabled(layer) {
   return gradientActive(layer);
 }
 
-/*
-  A layer made see-through via the editor's opacity slider (the alpha half of #rrggbbaa, since
-  `<input type="color">` can't express one). That slider must be the only thing deciding how much
-  of a layer you see - app.css frosts surfaces with a backdrop blur that survives its own color
-  going transparent, so at 0% the panel was still a blurred silhouette instead of gone. A
-  translucent layer therefore drops the blur.
-*/
+// A layer made see-through via the opacity slider must drop app.css's backdrop blur too, or a
+// panel at 0% opacity still shows as a blurred silhouette instead of gone.
 function layerIsTranslucent(layer) {
   return colorAlpha(layer && layer.color) < 100;
 }
 
-/*
-  The blur radius a layer asks for through Effect -> Blur, or 0 - the only thing that can put a
-  blur back on a see-through layer. app.css's automatic frost is removed the moment opacity leaves
-  100% (an unasked-for blur is a second, invisible opacity control), so turning Blur on says "blur
-  what's behind this layer" instead, working all the way to 0% where only the blur is left. On a
-  layer with an image the effect already bakes a blurred copy in, so the two agree.
-*/
+// The blur radius a layer asks for through Effect -> Blur, or 0: the only way to put blur back on
+// a layer once translucency has removed app.css's automatic frost.
 function layerBlurRadius(layer) {
   const effect = layer && layer.effect;
   if (!effect || effect.enabled !== true || effect.type !== 'blur') return 0;
@@ -511,16 +465,6 @@ function layerVars(theme, prefix) {
   return lines.join('\n');
 }
 
-function imageRule(selector, imageVar, fitVar, repeatVar, extra = '') {
-  return `${selector} {
-    background-image: var(${imageVar}, none);
-    background-size: var(${fitVar}, cover);
-    background-repeat: var(${repeatVar}, no-repeat);
-    background-position: center;
-    ${extra}
-  }`;
-}
-
 function buildCustomAppCss(theme) {
   const clean = sanitizeCustomTheme(theme);
   const bg = clean.bg.color;
@@ -538,15 +482,8 @@ function buildCustomAppCss(theme) {
   const panelGrad = gradientEnabled(clean.panel);
   const cardGrad = gradientEnabled(clean.card);
   const settingsGrad = gradientEnabled(clean.settings);
-  // title-bar is a shadow-DOM custom element: a light-DOM `title-bar { background-color }` rule
-  // can never beat the shadow tree's own :host rule on specificity, so the scrim/gradient
-  // overrides go through a custom property :host itself reads instead (see titlebar.css).
-  //
-  // The 72% mix reads as a glow, not a washed-out bar, because --bg-glow feeds the same color into
-  // body's radial-gradient top stop - a close match for the header. A Background image replaces
-  // that gradient (see `body {}` below), so without this guard the header would blend with
-  // unrelated artwork instead: the "half-transparent title bar" bug reports were exactly this. The
-  // header now falls back to its own color at full strength once an image is set.
+  // title-bar is shadow-DOM, so overrides go through a custom property :host reads (titlebar.css).
+  // The 72% mix only applies without a bg image, or the header blends into unrelated artwork.
   const headerScrim = headerGrad
     ? 'transparent'
     : clean.header.image
@@ -554,9 +491,8 @@ function buildCustomAppCss(theme) {
       : clean.bg.image
         ? header
         : `color-mix(in srgb, ${header} 72%, transparent)`;
-  // Same trap for the header's border/shadow: crisp() below clears these via a light-DOM
-  // `title-bar { border-color: transparent; box-shadow: none; }` rule for every other layer, but
-  // :host already declares both, so for title-bar specifically that clear needs the var path too.
+  // Same specificity trap for the header's border/shadow: crisp() clears these via a light-DOM
+  // rule for every other layer, but title-bar's :host declares both, so it needs the var path too.
   const headerFullyInvisible = colorAlpha(clean.header.color) === 0;
   const headerBorder = headerFullyInvisible ? 'transparent' : 'color-mix(in srgb, var(--border) 15%, transparent)';
   const headerShadow = headerFullyInvisible ? 'none' : '0 10px 30px rgba(0, 0, 0, 0.06)';
@@ -668,12 +604,8 @@ function buildCustomAppCss(theme) {
 }`);
   }
 
-  /*
-    Crisp opacity: whatever the slider leaves visible must be the layer itself, never a frosted
-    copy of what's behind it, so a translucent layer clears app.css's backdrop blur. At 0% the
-    surface must stop being traceable entirely - outline and drop shadow go too, or an "invisible"
-    panel still draws its own silhouette.
-  */
+  // A translucent layer clears app.css's backdrop blur; at 0% opacity, border and shadow go too,
+  // or an "invisible" panel still draws its own silhouette.
   const crisp = (selector, layer) => {
     const radius = layerBlurRadius(layer);
     if (radius > 0) {
@@ -701,11 +633,8 @@ function buildCustomAppCss(theme) {
   crisp(`#settings .box,
 #game-config .box`, clean.settings);
 
-  /*
-    The scrim behind the Settings modal belongs to the same layer as the modal: dimmed and
-    blurred, it keeps the library panel behind it looking soft even with the Settings layer at 0%
-    - so it fades with that layer instead.
-  */
+  // The scrim behind the Settings modal belongs to the same layer as the modal, so it fades with
+  // it instead of staying opaque when the Settings layer goes translucent.
   if (layerIsTranslucent(clean.settings)) {
     rules.push(`#settings .overlay,
 #game-config .overlay {
@@ -870,11 +799,8 @@ function buildBuiltinOverlayCss(themeName) {
   return buildOverlayCss(BUILTIN_COLORS[themeName] || BUILTIN_COLORS.default, null);
 }
 
-/*
-  `packTheme` is the layer model of an imported .awtheme, already resolved to this machine's paths
-  by util/themePackage.js. It's painted by exactly the same generator as the Custom theme, which is
-  why it behaves like one everywhere else - the window, overlay and editor all see one shape.
-*/
+// `packTheme` is the layer model of an imported .awtheme, resolved to local paths by
+// themePackage.js, and painted by the same generator as the Custom theme.
 function themePayload(userDataPath, themeName, customTheme, userCss, packTheme) {
   const isCustom = themeName === 'custom';
   const isUserCss = String(themeName || '').startsWith('user:');

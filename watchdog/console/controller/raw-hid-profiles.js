@@ -343,21 +343,6 @@ function extractSonyDiagnosticBytes(report, indices = []) {
   return out;
 }
 
-function normalizeGenericAxis(rawValue, logicalRange = null, invert = false) {
-  const raw = Number(rawValue);
-  if (!Number.isFinite(raw)) return 0;
-  const logicalMin = Number(logicalRange?.min);
-  const logicalMax = Number(logicalRange?.max);
-  if (!Number.isFinite(logicalMin) || !Number.isFinite(logicalMax) || logicalMax === logicalMin) {
-    const fallback = clampUnit(raw);
-    return invert ? -fallback : fallback;
-  }
-  const mid = logicalMin + (logicalMax - logicalMin) / 2;
-  const span = Math.max(1, (logicalMax - logicalMin) / 2);
-  const normalized = clampUnit((raw - mid) / span);
-  return invert ? -normalized : normalized;
-}
-
 function getNormalizedValue(genericState, usage) {
   const entry = genericState?.values?.[usage];
   if (!entry) return 0;

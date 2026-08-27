@@ -16,14 +16,14 @@ export default class titleBar extends HTMLElement {
     this.steamUsers = [];
   }
 
-  /* Life Cycle */
   connectedCallback() {
     this._selectFileDialogHandler = selectFileDialog.bind(this);
     this._contextMenuHandler = contextMenu.bind(this);
     this.addEventListener('click', this._selectFileDialogHandler);
     this.addEventListener('contextmenu', this._contextMenuHandler, false);
 
-    localStorage['avatarSquared'] == 'true' ? this.classList.remove('round') : this.classList.add('round');
+    if (localStorage['avatarSquared'] == 'true') this.classList.remove('round');
+    else this.classList.add('round');
 
     this.update();
   }
@@ -34,8 +34,6 @@ export default class titleBar extends HTMLElement {
     this._selectFileDialogHandler = null;
     this._contextMenuHandler = null;
   }
-
-  /* Custom method */
 
   update() {
     const self = this;

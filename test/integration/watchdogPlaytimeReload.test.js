@@ -15,7 +15,7 @@ test('watchdog reloads the playtime index when the app asks', () => {
   assert.match(watchdogSource, /reloadPlaytimeIndex === true/);
   assert.match(watchdogSource, /playtimeMonitorEmitter\.reloadGameIndex\(\)/);
   assert.match(watchdogSource, /playtimeIndexReloadQueued = true/, 'requests arriving before init are queued');
-  assert.match(watchdogSource, /monitor\.reloadGameIndex\(\)/, 'queued reload runs once the monitor is ready');
+  assert.match(watchdogSource, /playtimeEmitter\.reloadGameIndex\(\)/, 'queued reload runs once the monitor is ready');
 });
 
 test('playtime monitor exposes a reload that rebuilds the binary index', () => {

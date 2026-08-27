@@ -8,7 +8,7 @@ const omit = require('lodash.omit');
 const moment = require('moment');
 const request = require('request-zero');
 const urlParser = require('url');
-const { readRegistryStringAndExpand, regKeyExists, readRegistryInteger, readRegistryString, listRegistryAllSubkeys } = require('../util/reg');
+const { regKeyExists, readRegistryInteger, readRegistryString, listRegistryAllSubkeys } = require('../util/reg');
 const appPath = path.join(__dirname, '../');
 const steamID = require(path.join(appPath, 'util/steamID.js'));
 const fuzzyAppid = require(path.join(appPath, 'util/fuzzyAppid.js'));
@@ -16,7 +16,6 @@ const { ipcInvoke } = require(path.join(appPath, 'util/ipcInvoke.js'));
 const steamLanguages = require(path.join(appPath, 'locale/steam.json'));
 const sse = require(path.join(appPath, 'parser/sse.js'));
 const ff7 = require(path.join(appPath, 'parser/ff7.js'));
-const htmlParser = require('node-html-parser');
 const fs = require('fs');
 const saveRoots = require(path.join(appPath, 'parser/saveRoots.js'));
 const uplayR2 = require(path.join(appPath, 'parser/uplayR2.js'));
@@ -34,7 +33,6 @@ let steamUsersList;
 let appidListMap = new Map();
 let debug;
 let cacheRoot;
-const storeDataInFlight = new Map();
 const iconFetchInFlight = new Map();
 const workingLinkCache = new Map();
 const appSearchCache = new Map();
@@ -56,121 +54,101 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
 };
 
 module.exports.scan = async (additionalSearch = []) => {
-  try {
-    let search = saveRoots.defaultSteamScanRoots(additionalSearch);
+  let search = saveRoots.defaultSteamScanRoots(additionalSearch);
 
-    search = search.map((dir) => {
-      return normalize(dir) + '/([0-9]+)';
-    });
+  search = search.map((dir) => {
+    return normalize(dir) + '/([0-9]+)';
+  });
 
-    let data = [];
-    for (let dir of await glob(search, { onlyDirectories: true, absolute: true })) {
-      let game = {
-        appid: path.parse(dir).name,
-        data: {
-          type: 'file',
-          path: dir,
-        },
-      };
+  let data = [];
+  for (let dir of await glob(search, { onlyDirectories: true, absolute: true })) {
+    let game = {
+      appid: path.parse(dir).name,
+      data: {
+        type: 'file',
+        path: dir,
+      },
+    };
 
-      const dirKey = String(dir).replace(/\\/g, '/');
-      const dirKeyLower = dirKey.toLowerCase();
-      if (dirKeyLower.includes('codex')) {
-        game.source = 'Codex';
-      } else if (dirKeyLower.includes('rune')) {
-        game.source = 'Rune';
-      } else if (dirKeyLower.includes('onlinefix')) {
-        game.source = 'OnlineFix';
-      } else if (dirKeyLower.includes('goldberg uplayemu') || dirKeyLower.includes('r1 uplayemu')) {
-        // "Goldberg UplayEmu Saves" (R2) and "R1 UplayEmu Saves" (R1) folders are named with the
-        // Ubisoft product id, not a Steam AppID - asking Steam about them burned a 30s timeout per
-        // game and re-triggered full refreshes. Translate the id and skip ids with no Steam
-        // counterpart. Both generations key their save folders identically, so one branch serves both.
-        const productId = String(game.appid);
-        const mapping = uplayR2.resolveSteamMapping({ appid: `UPLAY${productId}` });
-        if (!mapping) {
-          // Nothing known about this product yet. Record the id so the automatic resolver can try it
-          // after the scan; discovery itself stays synchronous and drops the folder as before.
-          uplayR2.noteUnresolvedProduct(productId);
-          // scan() can run before initDebug() (the watchdog seeds its index straight from it).
-          if (debug) debug.log(`[uplay-r2] ignoring save folder '${dir}' - no Steam equivalent for Ubisoft product id ${productId}`);
-          continue;
-        }
-        game.data.type = 'uplayR2';
-        game.data.uplayId = productId;
-        game.data.uplayR2 = true;
-        game.data.system = 'uplay';
-        /*
-          A known product can deliberately have NO Steam release: Rayman 3, the Settlers History
-          Editions, Might & Magic VIII/IX, Prince of Persia, the Discovery Tours. The row exists and
-          says so with an empty AppID, which is not the same as an unknown product - and reading it as
-          one produced a card whose appid was the string "null" and whose name was nothing at all.
-          Keep it under its own Ubisoft identity instead, the same namespaced form the Ubisoft Connect
-          source already uses, so the game appears with its real title rather than disappearing.
-        */
-        const steamAppid = /^[0-9]+$/.test(String(mapping.steam_appid || '')) ? String(mapping.steam_appid) : '';
-        game.source = 'Goldberg Uplay';
-        if (steamAppid) {
-          game.appid = steamAppid;
-          game.name = mapping.steam_name;
-        } else {
-          game.appid = `uplay-${productId}`;
-          game.name = mapping.uplay_name || uplayCatalogue.nameFor(productId) || '';
-          if (debug) debug.log(`[uplay-r2] '${dir}': Ubisoft product ${productId} has no Steam release - kept as ${game.appid}`);
-        }
-      } else if (dirKeyLower.includes('goldberg') || dirKeyLower.includes('gse')) {
-        game.source = 'Goldberg';
-        /*
-          GBE Fork writes to %APPDATA%\GSE Saves, classic Goldberg to %APPDATA%\Goldberg SteamEmu Saves,
-          and the automatic emulator fix pre-creates BOTH roots for every appid since it can't know which
-          one the DLL will use. When the same appid turns up under both, keeping only one matters: a
-          later duplicate could otherwise shadow real unlock progress with a folder that was never written to.
-        */
-        const dupIndex = data.findIndex((g) => g.source === 'Goldberg' && String(g.appid) === String(game.appid));
-        if (dupIndex !== -1) {
-          const hasNew = fs.existsSync(path.join(dir, 'achievements.json'));
-          const hasExisting = fs.existsSync(path.join(data[dupIndex].data.path, 'achievements.json'));
-          if (hasNew && !hasExisting) data[dupIndex] = game;
-          continue;
-        }
-      } else if (dirKeyLower.includes('empress')) {
-        game.source = 'Goldberg (EMPRESS)';
-        // Two shapes exist: <root>\<appid>\remote\<appid> (Public Documents) and
-        // %APPDATA%\EMPRESS\remote\<appid>, where the matched folder already is the save folder.
-        if (!/\/remote\/[0-9]+$/.test(dirKeyLower)) game.data.path = path.join(game.data.path, 'remote', game.appid);
-      } else if (dirKeyLower.includes('.1911')) {
-        game.source = 'Razor1911';
-      } else if (dirKeyLower.includes('skidrow')) {
-        game.source = 'Skidrow';
-      } else if (dirKeyLower.includes('smartsteamemu')) {
-        game.source = 'SmartSteamEmu';
-      } else if (dirKeyLower.includes('programdata/steam')) {
-        game.source = 'Reloaded - 3DM';
-      } else if (dirKeyLower.includes('creamapi')) {
-        game.source = 'CreamAPI';
-      } else if (dirKeyLower.includes('steam')) {
-        game.source = 'Steam';
-      } else {
-        // A custom watched folder that doesn't match any known emulator/scene layout by name still
-        // holds a real numeric-AppID save folder - leaving source unset let the game object
-        // downstream carry an undefined source instead of a readable label.
-        game.source = 'Steam-emulator';
+    const dirKey = String(dir).replace(/\\/g, '/');
+    const dirKeyLower = dirKey.toLowerCase();
+    if (dirKeyLower.includes('codex')) {
+      game.source = 'Codex';
+    } else if (dirKeyLower.includes('rune')) {
+      game.source = 'Rune';
+    } else if (dirKeyLower.includes('onlinefix')) {
+      game.source = 'OnlineFix';
+    } else if (dirKeyLower.includes('goldberg uplayemu') || dirKeyLower.includes('r1 uplayemu')) {
+      // "Goldberg UplayEmu Saves" (R2) and "R1 UplayEmu Saves" folders are named with the Ubisoft
+      // product id, not a Steam AppID; translate it and skip ids with no Steam counterpart.
+      const productId = String(game.appid);
+      const mapping = uplayR2.resolveSteamMapping({ appid: `UPLAY${productId}` });
+      if (!mapping) {
+        // Nothing known about this product yet. Record the id so the automatic resolver can try it
+        // after the scan; discovery itself stays synchronous and drops the folder as before.
+        uplayR2.noteUnresolvedProduct(productId);
+        // scan() can run before initDebug() (the watchdog seeds its index straight from it).
+        if (debug) debug.log(`[uplay-r2] ignoring save folder '${dir}' - no Steam equivalent for Ubisoft product id ${productId}`);
+        continue;
       }
-
-      data.push(game);
+      game.data.type = 'uplayR2';
+      game.data.uplayId = productId;
+      game.data.uplayR2 = true;
+      game.data.system = 'uplay';
+      // A known product can deliberately have NO Steam release (Rayman 3, Prince of Persia, ...): an
+      // empty AppID is not the same as an unknown product, so it's kept under its own Ubisoft identity.
+      const steamAppid = /^[0-9]+$/.test(String(mapping.steam_appid || '')) ? String(mapping.steam_appid) : '';
+      game.source = 'Goldberg Uplay';
+      if (steamAppid) {
+        game.appid = steamAppid;
+        game.name = mapping.steam_name;
+      } else {
+        game.appid = `uplay-${productId}`;
+        game.name = mapping.uplay_name || uplayCatalogue.nameFor(productId) || '';
+        if (debug) debug.log(`[uplay-r2] '${dir}': Ubisoft product ${productId} has no Steam release - kept as ${game.appid}`);
+      }
+    } else if (dirKeyLower.includes('goldberg') || dirKeyLower.includes('gse')) {
+      game.source = 'Goldberg';
+      // The automatic emulator fix pre-creates both GBE Fork and classic Goldberg save roots per
+      // appid; when the same appid turns up under both, a later empty duplicate must not shadow real progress.
+      const dupIndex = data.findIndex((g) => g.source === 'Goldberg' && String(g.appid) === String(game.appid));
+      if (dupIndex !== -1) {
+        const hasNew = fs.existsSync(path.join(dir, 'achievements.json'));
+        const hasExisting = fs.existsSync(path.join(data[dupIndex].data.path, 'achievements.json'));
+        if (hasNew && !hasExisting) data[dupIndex] = game;
+        continue;
+      }
+    } else if (dirKeyLower.includes('empress')) {
+      game.source = 'Goldberg (EMPRESS)';
+      // Two shapes exist: <root>\<appid>\remote\<appid> (Public Documents) and
+      // %APPDATA%\EMPRESS\remote\<appid>, where the matched folder already is the save folder.
+      if (!/\/remote\/[0-9]+$/.test(dirKeyLower)) game.data.path = path.join(game.data.path, 'remote', game.appid);
+    } else if (dirKeyLower.includes('.1911')) {
+      game.source = 'Razor1911';
+    } else if (dirKeyLower.includes('skidrow')) {
+      game.source = 'Skidrow';
+    } else if (dirKeyLower.includes('smartsteamemu')) {
+      game.source = 'SmartSteamEmu';
+    } else if (dirKeyLower.includes('programdata/steam')) {
+      game.source = 'Reloaded - 3DM';
+    } else if (dirKeyLower.includes('creamapi')) {
+      game.source = 'CreamAPI';
+    } else if (dirKeyLower.includes('steam')) {
+      game.source = 'Steam';
+    } else {
+      // A custom watched folder that doesn't match any known emulator/scene layout by name still
+      // holds a real numeric-AppID save folder - leaving source unset let the game object
+      // downstream carry an undefined source instead of a readable label.
+      game.source = 'Steam-emulator';
     }
-    return data;
-  } catch (err) {
-    throw err;
+
+    data.push(game);
   }
+  return data;
 };
 
-/*
-  Widen the legit-Steam list from "played" to "owned or installed", without letting the noise in.
-
-  `userID` is carried over from the stats entries because the achievement reader is keyed by it; a
-  game with no stats file simply reads back as nothing unlocked.
-*/
+// Widen the legit-Steam list from "played" to "owned or installed", without letting the noise in.
+// `userID` is carried over from stats entries since the achievement reader is keyed by it.
 async function addLocallyKnownSteamApps(
   list,
   {
@@ -226,63 +204,54 @@ async function addLocallyKnownSteamApps(
 }
 
 module.exports.scanLegit = async (listingType = 0, steamAccFilter = '0') => {
-  try {
-    let data = [];
+  let data = [];
 
-    if (regKeyExists('HKCU', 'Software/Valve/Steam') && listingType > 0) {
-      let steamPath = await getSteamPath();
-      let publicUsers = await getSteamUsers(steamPath);
-      if (steamAccFilter !== '0' && publicUsers.find((p) => p.user === steamAccFilter))
-        publicUsers = publicUsers.filter((u) => u.user === steamAccFilter);
+  if (regKeyExists('HKCU', 'Software/Valve/Steam') && listingType > 0) {
+    let steamPath = await getSteamPath();
+    let publicUsers = await getSteamUsers(steamPath);
+    if (steamAccFilter !== '0' && publicUsers.find((p) => p.user === steamAccFilter))
+      publicUsers = publicUsers.filter((u) => u.user === steamAccFilter);
 
-      let steamCache = path.join(steamPath, 'appcache/stats');
-      let list = (await glob('UserGameStats_*([0-9])_*([0-9]).bin', { cwd: steamCache, onlyFiles: true, absolute: false })).map((filename) => {
-        let matches = filename.match(/([0-9]+)/g);
-        return {
-          userID: matches[0],
-          appID: matches[1],
-        };
-      });
+    let steamCache = path.join(steamPath, 'appcache/stats');
+    let list = (await glob('UserGameStats_*([0-9])_*([0-9]).bin', { cwd: steamCache, onlyFiles: true, absolute: false })).map((filename) => {
+      let matches = filename.match(/([0-9]+)/g);
+      return {
+        userID: matches[0],
+        appID: matches[1],
+      };
+    });
 
-      /*
-        A stats file only exists once a game has actually reported statistics, so on its own this
-        source lists what has been PLAYED, not what is owned or installed. Two local sources close that
-        gap: app manifests (on disk now) and, in "owned" mode, Steam's registry keys - both gated on
-        steamAppInfo.js's local catalogue since they also list DLC/demos/tools, with the original
-        stats-only read as fallback when that catalogue is unreadable.
-      */
-      list = await addLocallyKnownSteamApps(list, { steamPath, listingType, stats: list });
+    // A stats file only exists once a game has reported statistics, so this source alone lists what
+    // was PLAYED. App manifests and, in "owned" mode, registry keys close the gap to owned/installed.
+    list = await addLocallyKnownSteamApps(list, { steamPath, listingType, stats: list });
 
-      for (let stats of list) {
-        // Steam's own per-game registry flag: 1 when the game is on disk, missing/0 when it is
-        // merely owned. Capture it for every entry so "owned" mode never makes the installed
-        // filter trust a game that isn't actually installed (e.g. Assassin's Creed Mirage).
-        const installedFlag = readRegistryInteger('HKCU', `Software/Valve/Steam/Apps/${stats.appID}`, 'Installed') === 1;
-        const isInstalled = listingType == 1 ? installedFlag : true;
+    for (let stats of list) {
+      // Steam's own per-game registry flag: 1 when the game is on disk, missing/0 when it is
+      // merely owned. Capture it for every entry so "owned" mode never makes the installed
+      // filter trust a game that isn't actually installed (e.g. Assassin's Creed Mirage).
+      const installedFlag = readRegistryInteger('HKCU', `Software/Valve/Steam/Apps/${stats.appID}`, 'Installed') === 1;
+      const isInstalled = listingType == 1 ? installedFlag : true;
 
-        let user = publicUsers.find((user) => user.user == stats.userID);
+      let user = publicUsers.find((user) => user.user == stats.userID);
 
-        if (user && isInstalled) {
-          data.push({
-            appid: stats.appID,
-            source: `Steam (${user.name})`,
-            data: {
-              type: 'steamAPI',
-              userID: user,
-              cachePath: steamCache,
-              installed: installedFlag,
-            },
-          });
-        }
+      if (user && isInstalled) {
+        data.push({
+          appid: stats.appID,
+          source: `Steam (${user.name})`,
+          data: {
+            type: 'steamAPI',
+            userID: user,
+            cachePath: steamCache,
+            installed: installedFlag,
+          },
+        });
       }
-    } else {
-      throw 'Legit Steam not found or disabled.';
     }
-
-    return data;
-  } catch (err) {
-    throw err;
+  } else {
+    throw 'Legit Steam not found or disabled.';
   }
+
+  return data;
 };
 
 module.exports.getCachedData = (cfg) => {
@@ -327,12 +296,8 @@ module.exports.saveGameToCache = async (cfg) => {
   fs.writeFileSync(filePath, JSON.stringify(result, null, 2));
 };
 
-/*
-  A cached schema whose name resolved but whose achievement list is empty is ambiguous: the game may
-  genuinely have none (UNDERTALE), or the entry was written by a fetch that reached the store page but
-  not the schema. Re-check such an entry at most once per window, stamped on the record, so a
-  genuinely achievement-less game costs one lookup per window rather than a walk on every scan.
-*/
+// A cached schema with a resolved name but an empty achievement list is ambiguous: genuinely none
+// (UNDERTALE), or a fetch that reached the store page but not the schema. Re-checked once per window.
 const EMPTY_SCHEMA_RECHECK_MS = 7 * 24 * 60 * 60 * 1000;
 
 module.exports.isStaleEmptySchema = (cached, now = Date.now()) => {
@@ -476,10 +441,8 @@ module.exports.getGameData = async (cfg) => {
         return staleEmpty;
       }
       if (result && result.networkError === true && !staleEmpty) return null;
-      // findInAppList() resolves the canonical store name (app-list dump, or the per-appid `name`
-      // IPC when the dump is missing). It is an INDEPENDENT lookup from the product-info call inside
-      // getSteamDataFromSRV, so when that one comes back nameless the name is very often already in
-      // hand - use it instead of leaving a card titled with its bare appid while its artwork renders fine.
+      // findInAppList() is an INDEPENDENT lookup from the product-info call in getSteamDataFromSRV,
+      // so when that one comes back nameless the name is often already in hand here.
       const listedName = typeof inAppList === 'string' && inAppList.trim() ? inAppList.trim() : '';
       if (result && !result.name && listedName) {
         result.name = listedName;
@@ -537,10 +500,8 @@ module.exports.getGameData = async (cfg) => {
 
     needSaving = needSaving || (!fastStart && (await GetMissingData(result, cfg.showHidden, cfg.lang, cfg.steamSettings)));
     if (needSaving) {
-      // A record with no name is not a schema, it is a failed lookup wearing one. Writing it would
-      // serve a nameless entry from cache on the next scan (and JSON.stringify(undefined) writes the
-      // literal "undefined", which only reads back as a corrupt cache). Keep it in memory for this
-      // scan and let the next one retry the fetch.
+      // A record with no name is a failed lookup wearing one, not a schema; keep it in memory for
+      // this scan only and let the next one retry the fetch.
       if (result && result.name) {
         fs.mkdirSync(path.dirname(filePath), { recursive: true });
         fs.writeFileSync(filePath, JSON.stringify(result, null, 2));
@@ -555,10 +516,9 @@ module.exports.getGameData = async (cfg) => {
   }
 };
 
-// An RLD! value is a 5-byte hex blob with no separators: the first 4 bytes are a little-endian uint32,
-// the trailing byte discarded. Convert only a value that CANNOT also be read as a decimal timestamp -
-// exactly 10 hex digits including at least one a-f. An all-digit blob like "1712253396" is left alone:
-// it's both valid hex and a real unix timestamp, and guessing wrong would move a real unlock to the 1990s.
+// An RLD! value is a 5-byte hex blob (little-endian uint32 + a discarded trailing byte). Convert only
+// a value that CANNOT also be a decimal timestamp - guessing wrong on an all-digit blob would move a
+// real unlock to the 1990s.
 const RLD_BLOB = /^[0-9a-fA-F]{10}$/;
 
 function isUnambiguousRldBlob(value) {
@@ -584,191 +544,182 @@ function parseRazorAchievementFile(text) {
 module.exports._internal = Object.assign({}, module.exports._internal, { isUnambiguousRldBlob, decodeRldBlob, parseRazorAchievementFile });
 
 module.exports.getAchievementsFromFile = async (filePath) => {
-  try {
-    /*
-      FINAL FANTASY VII (2013) keeps an 8-byte bitfield in achievement.dat. It is checked before the
-      list below, and only for a folder that proves it is that game: the file name is generic enough
-      that another emulator's save of the same length would otherwise be decoded as 36 FF7 unlocks.
-    */
-    const ff7State = ff7.getAchievementsFromFile(filePath);
-    if (ff7State) return ff7State;
+  // FINAL FANTASY VII (2013) keeps an 8-byte bitfield in achievement.dat, checked only for a folder
+  // proven to be that game - the filename is generic enough to otherwise misdecode another save.
+  const ff7State = ff7.getAchievementsFromFile(filePath);
+  if (ff7State) return ff7State;
 
-    const files = [
-      'achievements.ini',
-      'achievements.json',
-      'stats.json',
-      'achiev.ini',
-      'stats.ini',
-      'Achievements.Bin',
-      'achieve.dat',
-      'Achievements.ini',
-      'stats/achievements.ini',
-      'stats.bin',
-      'stats/CreamAPI.Achievements.cfg',
-      'SteamEmu/UserStats/achiev.ini',
-      'user_stats.ini',
-      'achievement',
-    ];
+  const files = [
+    'achievements.ini',
+    'achievements.json',
+    'stats.json',
+    'achiev.ini',
+    'stats.ini',
+    'Achievements.Bin',
+    'achieve.dat',
+    'Achievements.ini',
+    'stats/achievements.ini',
+    'stats.bin',
+    'stats/CreamAPI.Achievements.cfg',
+    'SteamEmu/UserStats/achiev.ini',
+    'user_stats.ini',
+    'achievement',
+  ];
 
-    const filter = ['SteamAchievements', 'Steam64', 'Steam'];
+  const filter = ['SteamAchievements', 'Steam64', 'Steam'];
 
-    let local;
-    let matchedFile;
-    for (let file of files) {
-      try {
-        if (path.parse(file).ext == '.json') {
-          local = JSON.parse(fs.readFileSync(path.join(filePath, file), 'utf8'));
-        } else if (file === 'stats.bin') {
-          local = sse.parse(fs.readFileSync(path.join(filePath, file)));
-        } else if (file === 'achievement') {
-          local = parseRazorAchievementFile(fs.readFileSync(path.join(filePath, file), 'utf8'));
-        } else {
-          local = ini.parse(fs.readFileSync(path.join(filePath, file), 'utf8'));
-        }
-        matchedFile = file;
-        break;
-      } catch (e) {}
-    }
-    if (!local) throw `No achievement file found in '${filePath}'`;
-
-    let result = {};
-
-    if (local.AchievementsUnlockTimes && local.Achievements) {
-      //hoodlum DARKSiDERS
-
-      for (let i in local.Achievements) {
-        if (Object.prototype.hasOwnProperty.call(local.Achievements, i)) {
-          if (local.Achievements[i] == 1) {
-            result[`${i}`] = { Achieved: '1', UnlockTime: local.AchievementsUnlockTimes[i] || null };
-          }
-        }
+  let local;
+  let matchedFile;
+  for (let file of files) {
+    try {
+      if (path.parse(file).ext == '.json') {
+        local = JSON.parse(fs.readFileSync(path.join(filePath, file), 'utf8'));
+      } else if (file === 'stats.bin') {
+        local = sse.parse(fs.readFileSync(path.join(filePath, file)));
+      } else if (file === 'achievement') {
+        local = parseRazorAchievementFile(fs.readFileSync(path.join(filePath, file), 'utf8'));
+      } else {
+        local = ini.parse(fs.readFileSync(path.join(filePath, file), 'utf8'));
       }
-    } else if (local.State && local.Time) {
-      //3DM
-
-      for (let i in local.State) {
-        if (Object.prototype.hasOwnProperty.call(local.State, i)) {
-          if (local.State[i] == '0101') {
-            result[i] = {
-              Achieved: '1',
-              UnlockTime: new DataView(new Uint8Array(Buffer.from(local.Time[i].toString(), 'hex')).buffer).getUint32(0, true) || null,
-            };
-          }
-        }
-      }
-    } else if (local.ACHIEVEMENTS) {
-      // TENOKE: cross-reference the sibling [STATS] section (raw stat values) by the achievement's own
-      // key, since achievements.js can't see it once this function returns. Section casing varies, so
-      // match it case-insensitively.
-      const statsSectionKey = Object.keys(local).find((k) => String(k).toLowerCase() === 'stats');
-      const statsSection = statsSectionKey && typeof local[statsSectionKey] === 'object' ? local[statsSectionKey] : {};
-      const tenokeStatValues = {};
-      for (let s in statsSection) {
-        if (!Object.prototype.hasOwnProperty.call(statsSection, s)) continue;
-        const statKey = s.replace(/^"|"$/g, '');
-        const statNum = Number(String(statsSection[s]).replace(/,\s*$/, ''));
-        if (statKey && Number.isFinite(statNum)) tenokeStatValues[statKey] = statNum;
-      }
-
-      for (let i in local.ACHIEVEMENTS) {
-        if (!Object.prototype.hasOwnProperty.call(local.ACHIEVEMENTS, i)) continue;
-        const key = i.replace(/^"|"$/g, '');
-        const raw = local.ACHIEVEMENTS[i]; // e.g. "{unlocked=true, time=1712253396}"
-        const unlockedMatch = /unlocked\s*=\s*(true|false)/i.exec(raw);
-        const timeMatch = /time\s*=\s*(\d+)/i.exec(raw);
-        // Older Tenoke saves can store progress inline on the achievement entry itself. Only trust
-        // the value when it is a finite number (a malformed tail like "12.5.3" must not become NaN
-        // in the baseline - it would poison progress notifications for the rest of the session).
-        const progressMatch = /(?:progress|value)\s*=\s*([\d.]+)/i.exec(raw);
-        const progressNum = progressMatch ? Number(progressMatch[1]) : NaN;
-
-        const unlocked = unlockedMatch ? unlockedMatch[1].toLowerCase() === 'true' : false;
-        const time = timeMatch ? Number(timeMatch[1]) : 0;
-
-        result[key] = {
-          Achieved: unlocked ? '1' : '0',
-          UnlockTime: time,
-        };
-        if (Number.isFinite(progressNum)) {
-          result[key].CurProgress = progressNum;
-        } else if (key in tenokeStatValues) {
-          result[key].CurProgress = tenokeStatValues[key];
-        }
-      }
-    } else {
-      result = omit(local.ACHIEVE_DATA || local, filter);
-    }
-
-    for (let i in result) {
-      if (Object.prototype.hasOwnProperty.call(result, i)) {
-        if (result[i].State) {
-          //RLD!
-          try {
-            //uint32 little endian
-            result[i].State = decodeRldBlob(result[i].State);
-            result[i].CurProgress = decodeRldBlob(result[i].CurProgress);
-            result[i].MaxProgress = decodeRldBlob(result[i].MaxProgress);
-            result[i].Time = decodeRldBlob(result[i].Time);
-          } catch (e) {}
-        } else if (result[i] && typeof result[i] === 'object' && isUnambiguousRldBlob(result[i].Time)) {
-          // RLD! build that writes no State key: the unlock is carried by Time alone, and
-          // achievements.js turns a non-zero Time into Achieved (a locked entry is written Time=0).
-          // Without decoding it here that timestamp reaches the normalizer as raw hex.
-          try {
-            result[i].Time = decodeRldBlob(result[i].Time);
-            if (isUnambiguousRldBlob(result[i].CurProgress)) result[i].CurProgress = decodeRldBlob(result[i].CurProgress);
-            if (isUnambiguousRldBlob(result[i].MaxProgress)) result[i].MaxProgress = decodeRldBlob(result[i].MaxProgress);
-          } catch (e) {}
-        } else if (result[i].unlocktime && result[i].unlocktime.length === 7) {
-          //creamAPI
-          result[i].unlocktime = +result[i].unlocktime * 1000; //cf: https://cs.rin.ru/forum/viewtopic.php?p=2074273#p2074273 | timestamp is invalid/incomplete
-        }
-      }
-    }
-
-    // Merge sibling Stats.ini values for progress-type achievements.
-    if (matchedFile && /achievements\.ini$/i.test(matchedFile)) {
-      for (const statsName of ['Stats.ini', 'stats.ini']) {
-        const statsPath = path.join(filePath, path.dirname(matchedFile), statsName);
-        let statsSize = -1;
-        try {
-          statsSize = fs.statSync(statsPath).size;
-        } catch {
-          continue; // doesn't exist under this casing - try the next candidate
-        }
-        if (statsSize === 0) break; // present but empty: nothing to merge, not an error
-        try {
-          const doc = emuIni.parseIni(fs.readFileSync(statsPath, 'utf8'));
-          const values = emuIni.readIniSectionValues(doc, 'Stats');
-          const resultKeys = new Set(Object.keys(result).map((k) => String(k).toUpperCase()));
-          const rawStatKeys = [];
-          for (const [name, raw] of Object.entries(values)) {
-            // readIniSectionValues lower-cases stat names while achievement keys keep the repack's
-            // original casing, so the shadow guard must be case-insensitive.
-            if (resultKeys.has(String(name).toUpperCase())) continue; // never shadow a real achievement entry
-            const num = Number(raw);
-            if (Number.isFinite(num)) {
-              result[name] = num;
-              rawStatKeys.push(name);
-            }
-          }
-          // These are raw stat values, not achievement records - they only exist so statProgress.js's
-          // applyLocalStatProgress can resolve progress-type achievements via the local GBE schema's
-          // operand1. Tag them non-enumerable so achievements.js can strip them out of `root` after
-          // that mapping runs, instead of the matching loop trying (and failing) to match a schema
-          // entry literally named "stat_1".
-          if (rawStatKeys.length > 0) {
-            Object.defineProperty(result, '__rawStatKeys', { value: rawStatKeys, enumerable: false, configurable: true });
-          }
-        } catch (e) {}
-        break;
-      }
-    }
-
-    return result;
-  } catch (err) {
-    throw err;
+      matchedFile = file;
+      break;
+    } catch (e) {}
   }
+  if (!local) throw `No achievement file found in '${filePath}'`;
+
+  let result = {};
+
+  if (local.AchievementsUnlockTimes && local.Achievements) {
+    //hoodlum DARKSiDERS
+
+    for (let i in local.Achievements) {
+      if (Object.prototype.hasOwnProperty.call(local.Achievements, i)) {
+        if (local.Achievements[i] == 1) {
+          result[`${i}`] = { Achieved: '1', UnlockTime: local.AchievementsUnlockTimes[i] || null };
+        }
+      }
+    }
+  } else if (local.State && local.Time) {
+    //3DM
+
+    for (let i in local.State) {
+      if (Object.prototype.hasOwnProperty.call(local.State, i)) {
+        if (local.State[i] == '0101') {
+          result[i] = {
+            Achieved: '1',
+            UnlockTime: new DataView(new Uint8Array(Buffer.from(local.Time[i].toString(), 'hex')).buffer).getUint32(0, true) || null,
+          };
+        }
+      }
+    }
+  } else if (local.ACHIEVEMENTS) {
+    // TENOKE: cross-reference the sibling [STATS] section (raw stat values) by the achievement's own
+    // key, since achievements.js can't see it once this function returns. Section casing varies, so
+    // match it case-insensitively.
+    const statsSectionKey = Object.keys(local).find((k) => String(k).toLowerCase() === 'stats');
+    const statsSection = statsSectionKey && typeof local[statsSectionKey] === 'object' ? local[statsSectionKey] : {};
+    const tenokeStatValues = {};
+    for (let s in statsSection) {
+      if (!Object.prototype.hasOwnProperty.call(statsSection, s)) continue;
+      const statKey = s.replace(/^"|"$/g, '');
+      const statNum = Number(String(statsSection[s]).replace(/,\s*$/, ''));
+      if (statKey && Number.isFinite(statNum)) tenokeStatValues[statKey] = statNum;
+    }
+
+    for (let i in local.ACHIEVEMENTS) {
+      if (!Object.prototype.hasOwnProperty.call(local.ACHIEVEMENTS, i)) continue;
+      const key = i.replace(/^"|"$/g, '');
+      const raw = local.ACHIEVEMENTS[i]; // e.g. "{unlocked=true, time=1712253396}"
+      const unlockedMatch = /unlocked\s*=\s*(true|false)/i.exec(raw);
+      const timeMatch = /time\s*=\s*(\d+)/i.exec(raw);
+      // Older Tenoke saves can store progress inline on the achievement entry itself. Only trust
+      // the value when it is a finite number (a malformed tail like "12.5.3" must not become NaN
+      // in the baseline - it would poison progress notifications for the rest of the session).
+      const progressMatch = /(?:progress|value)\s*=\s*([\d.]+)/i.exec(raw);
+      const progressNum = progressMatch ? Number(progressMatch[1]) : NaN;
+
+      const unlocked = unlockedMatch ? unlockedMatch[1].toLowerCase() === 'true' : false;
+      const time = timeMatch ? Number(timeMatch[1]) : 0;
+
+      result[key] = {
+        Achieved: unlocked ? '1' : '0',
+        UnlockTime: time,
+      };
+      if (Number.isFinite(progressNum)) {
+        result[key].CurProgress = progressNum;
+      } else if (key in tenokeStatValues) {
+        result[key].CurProgress = tenokeStatValues[key];
+      }
+    }
+  } else {
+    result = omit(local.ACHIEVE_DATA || local, filter);
+  }
+
+  for (let i in result) {
+    if (Object.prototype.hasOwnProperty.call(result, i)) {
+      if (result[i].State) {
+        //RLD!
+        try {
+          //uint32 little endian
+          result[i].State = decodeRldBlob(result[i].State);
+          result[i].CurProgress = decodeRldBlob(result[i].CurProgress);
+          result[i].MaxProgress = decodeRldBlob(result[i].MaxProgress);
+          result[i].Time = decodeRldBlob(result[i].Time);
+        } catch (e) {}
+      } else if (result[i] && typeof result[i] === 'object' && isUnambiguousRldBlob(result[i].Time)) {
+        // RLD! build that writes no State key: the unlock is carried by Time alone, and
+        // achievements.js turns a non-zero Time into Achieved (a locked entry is written Time=0).
+        // Without decoding it here that timestamp reaches the normalizer as raw hex.
+        try {
+          result[i].Time = decodeRldBlob(result[i].Time);
+          if (isUnambiguousRldBlob(result[i].CurProgress)) result[i].CurProgress = decodeRldBlob(result[i].CurProgress);
+          if (isUnambiguousRldBlob(result[i].MaxProgress)) result[i].MaxProgress = decodeRldBlob(result[i].MaxProgress);
+        } catch (e) {}
+      } else if (result[i].unlocktime && result[i].unlocktime.length === 7) {
+        //creamAPI
+        result[i].unlocktime = +result[i].unlocktime * 1000; //cf: https://cs.rin.ru/forum/viewtopic.php?p=2074273#p2074273 | timestamp is invalid/incomplete
+      }
+    }
+  }
+
+  // Merge sibling Stats.ini values for progress-type achievements.
+  if (matchedFile && /achievements\.ini$/i.test(matchedFile)) {
+    for (const statsName of ['Stats.ini', 'stats.ini']) {
+      const statsPath = path.join(filePath, path.dirname(matchedFile), statsName);
+      let statsSize = -1;
+      try {
+        statsSize = fs.statSync(statsPath).size;
+      } catch {
+        continue; // doesn't exist under this casing - try the next candidate
+      }
+      if (statsSize === 0) break; // present but empty: nothing to merge, not an error
+      try {
+        const doc = emuIni.parseIni(fs.readFileSync(statsPath, 'utf8'));
+        const values = emuIni.readIniSectionValues(doc, 'Stats');
+        const resultKeys = new Set(Object.keys(result).map((k) => String(k).toUpperCase()));
+        const rawStatKeys = [];
+        for (const [name, raw] of Object.entries(values)) {
+          // readIniSectionValues lower-cases stat names while achievement keys keep the repack's
+          // original casing, so the shadow guard must be case-insensitive.
+          if (resultKeys.has(String(name).toUpperCase())) continue; // never shadow a real achievement entry
+          const num = Number(raw);
+          if (Number.isFinite(num)) {
+            result[name] = num;
+            rawStatKeys.push(name);
+          }
+        }
+        // These are raw stat values, not achievement records, kept so statProgress.js can resolve
+        // progress-type achievements via operand1. Tagged non-enumerable so they're stripped from
+        // `root` afterward rather than matched against a schema entry named "stat_1".
+        if (rawStatKeys.length > 0) {
+          Object.defineProperty(result, '__rawStatKeys', { value: rawStatKeys, enumerable: false, configurable: true });
+        }
+      } catch (e) {}
+      break;
+    }
+  }
+
+  return result;
 };
 
 module.exports.getAchievementsFromAPI = async (cfg) => {
@@ -805,10 +756,8 @@ module.exports.getAchievementsFromAPI = async (cfg) => {
     }
 
     if (time.steam > time.local) {
-      // Local-first: the freshly rewritten bin IS the state we're after - parse it together with
-      // the sibling UserGameStatsSchema bin (statId/bit mapping) instead of asking the network.
-      // Works offline/keyless and also carries achievement progress. Only when the schema bin is
-      // absent/unreadable does the old WebAPI/steamcommunity round-trip run.
+      // Local-first: parse the freshly rewritten bin together with the sibling UserGameStatsSchema
+      // bin instead of asking the network. Falls back to the WebAPI round-trip only when unreadable.
       const steamOfficial = require('./steamOfficial.js');
       result = steamOfficial.readLocalUserStats({ statsDir: cfg.path, appid: cfg.appID, accountId: cfg.user.user });
       if (result) {
@@ -830,11 +779,8 @@ module.exports.getAchievementsFromAPI = async (cfg) => {
 };
 
 const getSteamPath = (module.exports.getSteamPath = async () => {
-  /*
-       Some SteamEmu change HKCU/Software/Valve/Steam/SteamPath to the game's dir
-       Fallback to Software/WOW6432Node/Valve/Steam/InstallPath in this case
-       NB: Steam client correct the key on startup
-     */
+  // Some SteamEmu change HKCU/Software/Valve/Steam/SteamPath to the game's dir; fall back to
+  // Software/WOW6432Node/Valve/Steam/InstallPath (the Steam client corrects the key on startup).
 
   const regHives = [
     { root: 'HKCU', key: 'Software/Valve/Steam', name: 'SteamPath' },
@@ -857,9 +803,7 @@ const getSteamPath = (module.exports.getSteamPath = async () => {
 });
 
 // A Steam install's folder is authoritative: appmanifest_<appid>.acf names the installdir, and
-// libraryfolders.vdf names every library root. This powers the launch panel - a legit Steam game
-// now gets a real gameDir (and therefore exe detection) instead of asking the user to browse for
-// the executable manually.
+// libraryfolders.vdf names every library root - powers exe detection for the launch panel.
 function unescapeSteamVdf(value) {
   return String(value || '').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
 }
@@ -936,12 +880,8 @@ module.exports.scanLocalInstalls = async () => {
   return installs;
 };
 
-/*
-  Which local Steam accounts were confirmed public, remembered across runs.
-
-  Only a real answer is written here, so the file is a record of what Steam actually said - never a
-  guess made while offline. It is read only when the check could not run at all.
-*/
+// Which local Steam accounts were confirmed public, remembered across runs. Only a real answer is
+// written here, never a guess made while offline; read only when the check could not run at all.
 function publicSteamUsersPath() {
   return cacheRoot ? path.join(cacheRoot, 'steam_cache', 'steamUsers.json') : '';
 }
@@ -1031,12 +971,9 @@ async function getSteamUserStatsFromSRV(user, appID) {
   return result;
 }
 
-/*
-  Resolve a game's library portrait: product info first, then SteamDB's hashed store_item_assets
-  path, then the SteamGridDB community grids. Shared by getSteamDataFromSRV (cache MISS) and the
-  cached-schema repair path (GetMissingData), so a cover missing on first resolve can still be found
-  later. A truthy non-http value is a fetch-icon token the renderer resolves itself, returned untouched.
-*/
+// Resolve a game's library portrait: product info first, then SteamDB's hashed store_item_assets
+// path, then SteamGridDB. Shared by the cache-MISS and cached-schema repair paths. A truthy
+// non-http value is a fetch-icon token the renderer resolves itself, returned untouched.
 // How long a single game will hold its scan worker waiting for the shared SteamDB browser queue.
 const STEAMDB_COVER_WAIT_MS = 6000;
 
@@ -1091,12 +1028,9 @@ async function resolvePortrait({ appid, name, portrait, invoke, steamdbWaitMs = 
       }
     }
   }
-  /*
-    SteamDB is the only step in this chain that runs a browser, and every game in the library goes
-    through one global queue to reach it, so on a cold scan a game near the back waits out every game
-    ahead of it - inside the 30s per-game load budget. Bound the wait rather than the chain: the scrape
-    keeps running and writes its cache entry regardless, so this game just moves on to SteamGridDB.
-  */
+  // SteamDB is the only step that runs a browser, and every game shares one global queue to reach
+  // it, so a cold scan can wait out the 30s per-game budget. Bound the wait, not the chain: the
+  // scrape keeps running and writes its cache entry regardless.
   if (!portrait) portrait = (await waitBounded(send('get-steamdb-cover', appid), steamdbWaitMs)) || null;
   // The appid lets SteamGridDB answer by identity; the name is only the fallback handle for a game
   // that has no Steam appid at all.
@@ -1138,10 +1072,8 @@ async function getSteamDataFromSRV(appID, lang) {
 
   mergeTranslatedAchievements(achievements, translatedAchievements);
 
-  // SteamHunters groups tag DLC/update achievements by apiName (e.g. "The Witcher 3: Hearts of
-  // Stone"). Only worth asking when this is a real game with achievements, so non-games and
-  // zero-achievement titles never cost an extra SteamHunters request. Best-effort: untagged
-  // entries are left untouched and a failure never fails the load.
+  // SteamHunters groups tag DLC/update achievements by apiName. Only worth asking for a real game
+  // with achievements. Best-effort: untagged entries are left untouched, a failure never fails the load.
   let groupsResult = { ok: false, groups: [] };
   if (result.isGame && achievements.length > 0) {
     groupsResult = await ipcRenderer
@@ -1152,10 +1084,9 @@ async function getSteamDataFromSRV(appID, lang) {
     achievements = steamSchemaFetch.applySteamHuntersGroups(achievements, groupsResult.groups);
   }
 
-  // Product info often carries no library capsule at all (brand-new appids above all). See
-  // resolvePortrait for the recovery chain and why it is shared with the cached-schema repair. When
-  // both Steam transports already reported an outage, do not launch SteamDB/Puppeteer just to confirm
-  // the same missing portrait - the caller keeps a provisional game and the next scan can retry.
+  // Product info often carries no library capsule at all (brand-new appids above all); see
+  // resolvePortrait for the recovery chain. If both Steam transports already reported an outage,
+  // don't launch SteamDB/Puppeteer to confirm the same missing portrait - retry next scan.
   const portrait = networkError ? null : await resolvePortrait({ appid: appID, name: result.name, portrait: result.portrait });
 
   return {
@@ -1180,9 +1111,8 @@ async function getSteamDataFromSRV(appID, lang) {
 }
 
 // IPlayerService/GetGameAchievements gives real descriptions for hidden achievements too, unlike
-// the legacy ISteamUserStats/GetSchemaForGame (which always blanks them as a spoiler guard). Mapped
-// here to the same {name, defaultvalue, displayName, hidden, description, icon, icongray} shape
-// GetSchemaForGame's achievement list used, so it's a drop-in replacement for every caller below.
+// the legacy GetSchemaForGame (which always blanks them). Mapped to the same achievement-list shape
+// so it's a drop-in replacement for every caller below.
 async function getGameAchievementsFromWebAPI(cfg) {
   try {
     const url = `https://api.steampowered.com/IPlayerService/GetGameAchievements/v1/?appid=${cfg.appID}&language=${cfg.lang}`;
@@ -1216,82 +1146,6 @@ async function getSchemaAchievements(cfg) {
     /* Standalone tests use the direct request below. */
   }
   return getGameAchievementsFromWebAPI(cfg);
-}
-
-async function getDataFromSteamStore(appID) {
-  if (!appID || !(Number.isInteger(appID) && appID > 0)) throw 'ERR_INVALID_APPID';
-
-  const root = cacheRoot || userDataDir();
-  const cacheFile = path.join(root, 'steam_cache/store', `${appID}.json`);
-  const TTL = 7 * 24 * 60 * 60 * 1000;
-  try {
-    if (fs.existsSync(cacheFile) && Date.now() - fs.statSync(cacheFile).mtimeMs < TTL) {
-      const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-      if (cached && typeof cached === 'object') return cached;
-    }
-  } catch {
-    /* stale/corrupt cache -> refetch */
-  }
-  if (storeDataInFlight.has(appID)) return storeDataInFlight.get(appID);
-
-  const url = `https://store.steampowered.com/app/${appID}`;
-
-  const pending = (async () => {
-    try {
-    const { body } = await request(url, {
-      headers: {
-        Cookie: 'birthtime=662716801; wants_mature_content=1; path=/; domain=store.steampowered.com', //Bypass age check and mature filter
-        'Accept-Language': 'en-US;q=1.0', //force result to english
-      },
-    });
-
-    const html = htmlParser.parse(body);
-
-    const bgDiv = html.querySelector('.game_page_background.game');
-    let background = null;
-
-    if (bgDiv) {
-      const styleAttr = bgDiv.getAttribute('style') || '';
-      const match = styleAttr.match(/url\(\s*(['"])?(.*?)\1\s*\)/i);
-      if (match && match[2]) {
-        background = match[2].trim().split('?')[0];
-      }
-    }
-
-    const result = {
-      name: html.querySelector('.apphub_AppName').innerHTML,
-      icon: html
-        .querySelector('.apphub_AppIcon img')
-        .attributes.src.match(/([^\\/:*?"<>|])+$/)[0]
-        .replace('.jpg', ''),
-      header:
-        html.querySelector('meta[property="og:image"]')?.attributes.content.split('?')[0] ||
-        html.querySelector('.game_header_image_full')?.attributes.src.split('?')[0] ||
-        null,
-      portrait: `https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/${appID}/portrait.png`,
-      background,
-    };
-
-    return result;
-    } catch {
-      return {};
-    }
-  })();
-  storeDataInFlight.set(appID, pending);
-  try {
-    const result = await pending;
-    if (result && Object.keys(result).length > 0) {
-      try {
-        fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
-        fs.writeFileSync(cacheFile, JSON.stringify(result, null, 2));
-      } catch {
-        /* cache write failure is non-fatal */
-      }
-    }
-    return result;
-  } finally {
-    storeDataInFlight.delete(appID);
-  }
 }
 
 // Fetch and cache DLC names for GBE repair; a store failure is non-fatal.
@@ -1382,12 +1236,9 @@ async function findInAppList(appID) {
           fs.mkdirSync(path.dirname(filepath), { recursive: true });
           fs.writeFileSync(filepath, JSON.stringify(list, null, 2));
         } catch (err) {
-          // Steam retired ISteamApps/GetAppList (404: "Method 'GetAppList' not found in interface
-          // 'ISteamApps'"), gone from GetSupportedAPIList too. The keyless replacement is the app
-          // search in searchAppsByName(), which findAppidByName() already falls back to; appid ->
-          // name still resolves through get-steam-data. A failed refresh falls back to any existing
-          // cache (even stale), and sets appListRefreshFailed so only one dead round trip happens per
-          // session instead of one per appid.
+          // Steam retired ISteamApps/GetAppList entirely; the keyless replacement is the app search
+          // in searchAppsByName(). A failed refresh falls back to any existing cache (even stale) and
+          // sets appListRefreshFailed so only one dead round trip happens per session.
           appListRefreshFailed = true;
           debug.log(`GetAppList refresh failed (${err.code || err}); falling back to cached appList if present`);
           if (fs.existsSync(filepath)) {
@@ -1409,12 +1260,8 @@ async function findInAppList(appID) {
 
   const app = appidListMap.get(appID);
   if (app) return app.name;
-  /*
-    Steam retired GetAppList, so the map above is usually empty and the name would otherwise depend
-    entirely on a network round trip - rate-limited or down at exactly the moment a cleared cache needs
-    it for every game at once, showing bare appids as titles. The Steam client's own local catalogue
-    answers the same question from disk.
-  */
+  // Steam retired GetAppList, so the map above is usually empty; the Steam client's own local
+  // catalogue answers the same "what's this appid called" question from disk instead of the network.
   const localName = await localSteamCatalogueName(appID);
   if (localName) return localName;
   const name = await ipcRenderer.invoke('get-steam-data', { appid: appID, type: 'name' });
@@ -1451,17 +1298,10 @@ function appListUsable() {
   return appidListMap.size > 0;
 }
 
-/*
-  Since GetAppList was retired this search is the only way a title resolves to an AppID, and its memo
-  lived in this process only. Every launch therefore re-searched every unconfigured install over the
-  network, one candidate name at a time, before a single tile could be drawn: the 5.6s to 11.6s
-  `unconfiguredResolve` phase in the scan timings. The answers change about as often as Steam's
-  catalogue does, so they belong on disk.
-
-  Only a completed request is stored, empty results included - "Steam knows no such title" is a real
-  answer worth keeping. A failed request throws instead, and is cached nowhere: an outage must never
-  be remembered as an answer.
-*/
+// Since GetAppList was retired, this search is the only way a title resolves to an AppID; its memo
+// is written to disk so a launch doesn't re-search every unconfigured install over the network.
+// Only a completed request is stored, empty results included; a failed request throws uncached, so
+// an outage is never remembered as an answer.
 const APP_SEARCH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 let _appSearchDisk = null;
 
@@ -1555,11 +1395,8 @@ async function loadAppListBestEffort() {
   }
 }
 
-/*
-  The raw candidate list behind findAppidByName, for callers that must apply their own (stricter)
-  rule than "best confident match" - the Uplay product mapping refuses anything but a single exact
-  title, because a wrong AppID there generates another game's achievement schema.
-*/
+// The raw candidate list behind findAppidByName, for callers needing a stricter rule than "best
+// confident match" - the Uplay product mapping refuses anything but a single exact title.
 module.exports.searchAppsByName = (name) => searchAppsByName(name);
 
 module.exports.findAppidByName = async (name) => {
@@ -1592,23 +1429,13 @@ function localizedTenokeValue(local, key, lang) {
   return stripIniValue(item[language] || item.english || Object.values(item).find((v) => v != null) || '');
 }
 
-/*
-  Locating a local schema means walking an entire game install (depth 6, synchronous) - 0.3-2.1s on a
-  large install, blocking the renderer's event loop so makeList's worker pool serializes behind it.
-  Two guards keep that cost off the per-scan path: probe the handful of places emulators actually drop
-  these files before walking anything, and memoize the outcome (including "not here", the expensive one).
-*/
-/*
-  The memo used to live in this process only, and that is what made the first scan after a launch so
-  much slower than every scan after it: 62 games at around 3 seconds each, versus the same 62 in about
-  a second once the walks were remembered. Two walks per install, synchronous, on the renderer's own
-  thread, so the eight-worker pool could not overlap them either - the whole list waited.
-
-  Nothing about "this install has no schema in it" expires on its own, so it is written to disk and
-  read back on the next launch. A remembered hit is revalidated by a single stat; a remembered miss
-  expires on the TTL, and every place that writes a schema calls forgetLocalSchemaLocations() so a
-  file the app just created is never hidden behind one.
-*/
+// Locating a local schema means walking an entire game install (depth 6, synchronous) - 0.3-2.1s on
+// a large install, blocking the renderer's event loop. Two guards keep that off the per-scan path:
+// probe the handful of places emulators actually drop these files, and memoize the outcome.
+//
+// The memo is written to disk and read back on the next launch, since "no schema here" never expires
+// on its own. A hit is revalidated by a single stat; a miss expires on the TTL, and every schema
+// write calls forgetLocalSchemaLocations() so a file just created is never hidden behind one.
 const LOCATE_MISS_TTL_MS = 24 * 60 * 60 * 1000;
 // A walk cut short by the budget below proved nothing, so it keeps the old short-lived memo.
 const LOCATE_PARTIAL_TTL_MS = 10 * 60 * 1000;
@@ -1808,10 +1635,8 @@ function pickLocalized(value, lang) {
 }
 
 // Read a Goldberg / GBE-Fork steam_settings/achievements.json (the emulator's own SCHEMA) into AW's
-// schema shape. This is the offline schema a cracked game already ships, so brand-new titles that
-// aren't on SteamHunters yet (and keyless setups with no Web API schema) still show their real
-// achievement names/descriptions/icons instead of an empty list. Icons follow the same community-CDN
-// pattern as the rest of the pipeline (basename of whatever the emu recorded).
+// schema shape - the offline schema a cracked game already ships, so brand-new titles not yet on
+// SteamHunters still show real names/descriptions/icons instead of an empty list.
 function getGoldbergSchemaFromFile(file, appid, lang = 'english') {
   let parsed;
   try {
@@ -1843,12 +1668,8 @@ function getGoldbergSchemaFromFile(file, appid, lang = 'english') {
 }
 
 module.exports.getLocalAchievementSchema = (gameDir, appid, lang = 'english') => {
-  /*
-    Probe the known emulator locations for BOTH layouts before walking anything - tenoke.ini is the
-    rarer file, and looking for it first without probing would force a full walk of every non-TENOKE
-    install just to prove its absence. Both files are probed across the same directories, so TENOKE
-    still wins wherever the two sit together, the only layout that exists in practice.
-  */
+  // Probe the known emulator locations for BOTH layouts before walking anything: tenoke.ini is rare,
+  // and looking for it first without probing would force a full walk of every non-TENOKE install.
   const candidates = gameDir ? schemaCandidateDirs(gameDir) : [];
   const probedTenoke = probeFileByName(gameDir, TENOKE_SCHEMA_FILE, candidates);
   if (probedTenoke) {
@@ -1927,12 +1748,9 @@ async function findWorkingLink(appid, basename, probe = probeUrl) {
   return null;
 }
 
-/*
-  Steam's library artwork moved to hashed store_item_assets directories, so product info hands out a
-  token that carries one ("<hash>/library_capsule.jpg"). Keeping that directory is not optional:
-  every appid onboarded since the migration has no flat /steam/apps/<id>/library_600x900.jpg to fall
-  back on, so flattening the token to its basename probes a path that can never answer.
-*/
+// Steam's library artwork moved to hashed store_item_assets directories, so product info hands out
+// a token carrying one ("<hash>/library_capsule.jpg"); keeping that directory is not optional, since
+// a newer appid has no flat /steam/apps/<id>/library_600x900.jpg to fall back on.
 async function findWorkingAssetPath(appid, relativePath, probe = probeUrl) {
   const key = `${appid}:/${relativePath}`;
   if (workingLinkCache.has(key)) return workingLinkCache.get(key);
@@ -1957,12 +1775,10 @@ async function GetMissingData(data, showHidden, lang, steamSettings) {
     if (Object.values(data.img).some((im) => !im)) {
       updated = true;
       // Local-first: a GBE/Goldberg install often ships the store's own library-asset metadata in
-      // steam_settings/steam_misc/app_info/app_product_info.json. Resolve the real cover/header
-      // from that dump before the network lookup - it is authoritative for the install and still
-      // works for delisted games whose store page is gone.
+      // app_product_info.json. Resolve cover/header from that dump first - it still works for
+      // delisted games whose store page is gone.
       if (steamSettings) {
         try {
-          const steamAssets = require('../util/steamAssets.js');
           for (const [purpose, key] of [
             ['portrait', 'portrait'],
             ['header', 'header'],
@@ -1983,12 +1799,8 @@ async function GetMissingData(data, showHidden, lang, steamSettings) {
         data.img.icon = data.img.icon || updatedImgs.icon;
       }
 
-      /*
-        Still no portrait: run the same SteamDB -> SteamGridDB chain the first fetch uses. Product info
-        alone has no cover at all for plenty of titles, so without this the tile stays blank even when
-        SteamGridDB has artwork. Stamped on the same three-day cadence as the description backfill, so
-        a game with genuinely no cover anywhere costs one lookup every three days, not one per scan.
-      */
+      // Still no portrait: run the same SteamDB -> SteamGridDB chain the first fetch uses, stamped on
+      // the same three-day cadence so a game with genuinely no cover costs one lookup, not one per scan.
       const PORTRAIT_RECHECK_MS = 3 * 24 * 60 * 60 * 1000;
       const portraitTriedRecently = data.portraitCheckedAt && Date.now() - data.portraitCheckedAt < PORTRAIT_RECHECK_MS;
       if (!data.img.portrait && data.name && !portraitTriedRecently) {
@@ -2008,10 +1820,8 @@ async function GetMissingData(data, showHidden, lang, steamSettings) {
       // undefined. Guard against it so a missing response never throws and drops the game.
       const supplemental = updatedDesc && Array.isArray(updatedDesc.achievements) ? updatedDesc.achievements : [];
       if (supplemental.length) {
-        // The scraper itself falls back to a single space for achievements it doesn't know either
-        // (init.js, `item.description || ' '`); drop those here so we don't merge in a value that's
-        // truthy-but-blank, which would otherwise (a) survive the UI's `description || '...'` fallback
-        // as a stray space and (b) permanently mark the achievement "filled", blocking future retries.
+        // The scraper falls back to a single space for achievements it doesn't know; drop those here
+        // or a truthy-but-blank value would survive the UI fallback and block future retries.
         const map = new Map(
           supplemental.filter((item) => item.description && String(item.description).trim() !== '').map((item) => [item.name, item.description])
         );
@@ -2024,11 +1834,9 @@ async function GetMissingData(data, showHidden, lang, steamSettings) {
           }
         }
       }
-      // Exophase fallback for whatever SteamHunters still left blank. Unlike SteamHunters it also
-      // serves the schema's own language, so a localized schema gets localized text. Matching is by
-      // displayName only (localized title first, english title second), never by list position, so a
-      // miss can't attach another achievement's description. Runs on the same three-day
-      // descBackfilledAt stamp, no extra cost.
+      // Exophase fallback for whatever SteamHunters still left blank; unlike SteamHunters it also
+      // serves the schema's own language. Matching is by displayName only, never by list position,
+      // so a miss can't attach another achievement's description.
       const stillBlank = data.achievement.list.some((ac) => !ac.description || String(ac.description).trim() === '');
       if (stillBlank && data.name) {
         try {
@@ -2066,22 +1874,14 @@ async function GetMissingData(data, showHidden, lang, steamSettings) {
   return updated;
 }
 
-/*
-  A schema `icon`/`icongray` URL, checked and swapped for a mirror that actually answers. New appids
-  routinely have their store art live on Steam's primary CDN well before the per-achievement icons
-  are - the schema URL 404s for days. Shared here so both fetchIcon() (AW's icon cache) and
-  goldberg.repair()'s downloader use the same findWorkingLink() CDN fallback instead of failing on the raw URL.
-*/
+// A schema `icon`/`icongray` URL, checked and swapped for a mirror that actually answers - new
+// appids routinely have the schema URL 404 for days before the CDN catches up.
 async function resolveWorkingIconUrl(appID, url, { probe = probeUrl } = {}) {
   if (!url || typeof url !== 'string') return url;
   const basenameOf = (value) => value.split('/').pop().split('?')[0].replace(/\.[^.]+$/, '');
-  /*
-    Schemas do not always store a URL. `img.header` is regularly the bare "header.jpg", `img.portrait`
-    a hashed "<hash>/library_capsule.jpg" and `img.icon` a naked content hash - the same token shapes
-    the Watchdog's prefetch resolves through the CDN list. Route them through the CDN walk too, or a
-    relative path download fails and reads back as "this game has no artwork" even when the CDN has
-    it live. A token with a directory keeps it: see findWorkingAssetPath.
-  */
+  // Schemas do not always store a URL: `img.header` is often bare "header.jpg", `img.portrait` a
+  // hashed path, `img.icon` a naked hash. These tokens must route through the CDN walk too, or a
+  // relative-path download fails and reads back as "no artwork" when the CDN has it live.
   if (!url.startsWith('http')) {
     if (path.isAbsolute(url) || fs.existsSync(url)) return url;
     const relative = url.split('?')[0];
@@ -2103,10 +1903,8 @@ const fetchIcon = (module.exports.fetchIcon = async (url, appID) => {
   // `url.startsWith`/`path.parse(null)` throw - that surfaced as a noisy "Error occurred in handler
   // for 'fetch-icon': Cannot read property 'startsWith' of null" on every scan with such a game.
   if (!url || typeof url !== 'string') return null;
-  // Local file paths (e.g. Uplay schemas store absolute Windows paths like "C:/..."):
-  // new URL('C:/...') parses without throwing (protocol: 'c:') so the network branch below
-  // attempts an HTTP HEAD that stalls via the request-zero req.destroy()-without-error bug,
-  // leaving every achievement icon promise permanently pending. Short-circuit here instead.
+  // Local file paths (e.g. Uplay schemas' absolute Windows paths): new URL('C:/...') parses without
+  // throwing (protocol: 'c:'), so the network branch below would stall forever on a bogus HTTP HEAD.
   if (!url.startsWith('http') && fs.existsSync(url)) return url;
   const inFlightKey = `${appID}:${url}`;
   if (iconFetchInFlight.has(inFlightKey)) return iconFetchInFlight.get(inFlightKey);

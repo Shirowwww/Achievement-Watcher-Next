@@ -1,12 +1,6 @@
 {
   "$schema": "./app/node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "unicorn",
-    "oxc",
-    "import",
-    "promise",
-    "node"
-  ],
+  "plugins": ["unicorn", "oxc", "import", "promise", "node"],
   "env": {
     "builtin": true,
     "browser": true,
@@ -20,10 +14,21 @@
     "docs/**",
     "native/**/target/**"
   ],
+  // Everything oxlint calls a correctness problem fails the build. The rules below are the ones
+  // worth a warning on top of that, and the ones deliberately silenced.
   "categories": {
     "correctness": "error"
   },
   "rules": {
+    /*
+      Careful with the hits in app/app.js, app/ui/*.js and the three app/util scripts overlay.html
+      loads: those are plain <script> tags sharing one renderer global scope, not modules, so
+      sortOptions() is declared in ui/sort.js and called from app.js, and forgetScanCaches() is
+      declared in app.js and called from ui/refresh.js. oxlint reads one file at a time and reports
+      every such global as unused, which it is not. Grep the other renderer scripts, and the tests
+      that assert on source text, before deleting anything it names there. The "vars": "local"
+      option that would have expressed this is not implemented.
+    */
     "no-unused-vars": [
       "warn",
       {
@@ -39,21 +44,58 @@
     "unicorn/no-new-array": "warn",
     "unicorn/no-useless-spread": "warn",
     "unicorn/no-useless-length-check": "warn",
+
+    // Bug-shaped rather than stylistic: a shadowed name, a var used outside its block, an error
+    // rethrown without its cause, or a reverse() over a buffer someone else still holds.
     "block-scoped-var": "warn",
-    "no-new": "warn",
     "no-shadow": "warn",
     "no-unneeded-ternary": "warn",
     "no-useless-concat": "warn",
     "preserve-caught-error": "warn",
     "unicorn/no-array-reverse": "warn",
-    "unicorn/no-array-sort": "warn",
-    "unicorn/prefer-add-event-listener": "warn",
     "unicorn/prefer-array-find": "warn",
-    "promise/no-callback-in-promise": "warn",
-    "promise/param-names": "warn",
     "import/named": "warn",
     "import/no-cycle": "warn",
     "import/no-duplicates": "warn",
-    "import/no-self-import": "warn"
+    "import/no-self-import": "warn",
+
+    /*
+      Off on purpose. Each of these fired only on code that is already right here, and a rule that
+      is wrong every time it speaks is worse than no rule at all.
+
+      prefer-set-has cannot tell a string from an array: its autofix rewrote six
+        `source.slice(...).includes('some text')` assertions into `new Set(string).has(...)`, which
+        compares single characters, and took the suite from 1690 to 1683 passing.
+      no-map-spread flags the deliberate defensive copies the parsers hand back to callers.
+      no-unmodified-loop-condition cannot see a module flag that an event handler sets.
+      require-post-message-target-origin is about window.postMessage; every call here is a
+        worker_threads port, which takes no target origin.
+      no-new is about constructing for nothing; every call here builds a `new vm.Script` or
+        `new URL` precisely to find out whether it throws.
+      no-callback-in-promise is about node-style callbacks; the one hit awaits a queued task whose
+        rejection propagates through the returned promise.
+      prefer-add-event-listener is actively wrong here. 23 of its 26 hits assign a handler to an
+        object the expression just built (createElement, new Image, new WebSocket), where there is no
+        earlier handler to preserve. The other 3 assign to an element that is re-queried on every
+        call - the artwork retry button, the preset preview iframe - where assigning REPLACES a stale
+        closure on purpose; addEventListener would stack a second retry and a second preview render
+        on every pass.
+      param-names wants the Promise executor arguments spelled resolve and reject. Every hit is a
+        deliberate short name, a descriptive one (done, finish), or the underscore for an unused
+        resolve - which is the convention no-unused-vars is already configured around.
+      no-array-sort wants toSorted() everywhere. 116 of its 135 hits sort an array the expression
+        just built, and the other 19 sort a local accumulator on its way out of the function, so it
+        never once pointed at a shared array. Its sibling no-array-reverse stays on: same idea, and
+        it caught the two SSE parsers rewriting a buffer their caller still held.
+    */
+    "unicorn/no-array-sort": "off",
+    "unicorn/prefer-add-event-listener": "off",
+    "promise/param-names": "off",
+    "unicorn/prefer-set-has": "off",
+    "oxc/no-map-spread": "off",
+    "no-unmodified-loop-condition": "off",
+    "unicorn/require-post-message-target-origin": "off",
+    "no-new": "off",
+    "promise/no-callback-in-promise": "off"
   }
 }

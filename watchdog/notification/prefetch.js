@@ -5,7 +5,6 @@ const urlParser = require('url');
 const fs = require('fs');
 const request = require('../util/lazyRequire.js').lazyRequire('request-zero');
 
-const debug = require('../util/log.js');
 
 const cdnProviders = [
   'https://cdn.akamai.steamstatic.com/steam/apps/',
@@ -65,7 +64,7 @@ module.exports = async (url, appID) => {
     try {
       new URL(url);
       const res = await request(url, { method: 'HEAD' });
-      isValid = res.code !== 200 ? false : true;
+      isValid = res.code === 200;
       isValid = isValid ? res.headers['content-type'] : isValid;
     } catch (e) {}
 

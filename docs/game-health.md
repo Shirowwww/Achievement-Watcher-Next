@@ -35,6 +35,7 @@ part is at fault, and any repair button acts on exactly that.
 | **Game identity** | Which AppID and platform was this game matched to? |
 | **Achievement data** | Is there an achievement list, and is it complete? |
 | **Emulator setup** | Does a game that needs a Steam emulator have one, and which one is serving it? |
+| **Ubisoft session** | For a Ubisoft game, did it ever ask the loader to unlock anything, or does it think it is signed out? |
 | **Progress** | Has any unlock or save been found yet? |
 | **Live tracking** | Is the background tracker watching this game's process? |
 | **Notifications** | Which transport delivered the last notification for this game, and why? |
@@ -57,7 +58,8 @@ Only the repairs that can fix the game in front of you are shown.
 | **Locate the game** | Opens a picker so you can choose the executable to watch. |
 | **Open the game folder** | Opens the install folder in Explorer. |
 | **Rewrite the achievement data** | Writes the achievement list, icons and emulator settings. Existing files are copied to a backup first. |
-| **Repair Uplay R2 support** | For a compatible Ubisoft game, rewrites the loader configuration, schema and save redirection in one transaction, with every touched file backed up - see [Uplay R2 setup](uplay-r2.md). |
+| **Repair Ubisoft achievement support** | For a compatible Ubisoft game, rewrites the loader configuration, schema and save redirection in one transaction, with every touched file backed up - see [Uplay setup](uplay-r2.md). |
+| **Enable achievements offline** | Only for a Ubisoft game whose own loader log proves it never asked for an achievement, because it believes it is signed out. Adds one placeholder session key to the INI beside the game, and nothing else. Press it again to take the key back out - see [Uplay setup](uplay-r2.md#a-game-that-never-asks-for-an-achievement). |
 | **Restore the emulator file** | Downloads the supported emulator build and installs it into the game folder, keeping any existing file as a backup. |
 | **Correct the game ID file** | Rewrites `steam_appid.txt` when the emulator announces one game and AW Next matched another. Both values are shown, and the previous file is kept. |
 | **Watch this game** | Adds the game to the background tracker so playtime and live unlocks are recorded. |
@@ -84,6 +86,7 @@ without a backup, and no repair runs without a confirmation.
 | *AW Next isn't watching this game while it runs* | **Watch this game** adds it to the tracker. |
 | *The last notification could not be sent* | Send a test notification, then see [Notifications](notifications.md#if-a-test-or-unlock-does-not-appear). |
 | *Working - Windows fallback active* | Not a fault. Automatic delivery chose a Windows notification for this game; see [how Automatic decides](notifications.md#how-automatic-decides). |
+| *The game has never asked for an achievement* | It reads its empty Ubisoft session as signed out. **Enable achievements offline** unblocks it; nothing is sent anywhere. |
 | *Served by ALI213, OnlineFix, GBE Fork…* | The emulator actually reading that game, named from its own files. A Ubisoft game already served this way is not offered a Uplay repair: its Uplay layer is unused, not broken. |
 
 ---

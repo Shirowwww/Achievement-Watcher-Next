@@ -1,11 +1,8 @@
 'use strict';
 
-/*
-  Emulator-DLL installer - the runtime "crack" half of the pipeline. Downloads the maintained
-  Detanup01/gbe_fork release once, caches steam_api(64).dll + generate_interfaces, and drops them into
-  game folders (one-time .bak of the original), always from one matched build. The config tooling
-  lives in genEmuConfig.js; network failures degrade to the cached build.
-*/
+// Emulator-DLL installer: downloads the maintained Detanup01/gbe_fork release once, caches
+// steam_api(64).dll + generate_interfaces, and drops them into game folders (one-time .bak of the
+// original). Config tooling lives in genEmuConfig.js; network failures degrade to the cached build.
 
 const fs = require('fs');
 const os = require('os');
@@ -40,20 +37,12 @@ const INTERFACE_SOURCE = {
 
 const noopLog = { log() {}, error() {} };
 
-/*
-  A dll the user imported by hand lives outside the tagged release folders, in cacheDir/custom/. No
-  download ever writes there, so a new GBE Fork release cannot silently discard it, and the daily
-  GitHub check keeps supplying what the import does not cover: the other architecture and the
-  version-coupled generate_interfaces tools.
-*/
+// A dll the user imported by hand lives outside the tagged release folders, in cacheDir/custom/, so
+// no download ever discards it; the daily GitHub check still supplies whatever the import doesn't cover.
 const CUSTOM_DIR = 'custom';
 const CUSTOM_MANIFEST = 'import.json';
-/*
-  Both GBE Fork and classic Goldberg read their configuration from a steam_settings folder, so the
-  string is in every emulator build and in none of Valve's own steam_api dlls. Importing a genuine
-  Steamworks dll would put it into every repaired game at once and break them all with no error
-  worth reading, so that is the one thing the import refuses.
-*/
+// Every emulator build's config comes from a steam_settings folder, and no Valve steam_api dll has
+// that string - so an import lacking it is refused, rather than breaking every repaired game at once.
 const EMULATOR_MARKER = Buffer.from('steam_settings', 'ascii');
 const MAX_IMPORT_ENTRIES = 4096;
 
@@ -117,10 +106,8 @@ function emulatorDll(file) {
   }
 }
 
-/*
-  `archKey` is the arch the file would be installed as, not a guess: an x86 dll accepted under the
-  steam_api64.dll name only fails later, when the game refuses to start with nothing to read.
-*/
+// `archKey` is the arch the file would be installed as, not a guess: an x86 dll accepted under the
+// steam_api64.dll name only fails later, when the game refuses to start.
 function inspectCustomDll(file, archKey) {
   const arch = pe.exeArch(file);
   let error = '';
@@ -131,11 +118,8 @@ function inspectCustomDll(file, archKey) {
   return { name: ARCH[archKey] ? ARCH[archKey].file : path.basename(String(file || '')), file, arch, valid: !error, error };
 }
 
-/*
-  The imported dlls, re-validated on every read: a file copied into the folder by hand never becomes
-  eligible just by carrying the right name. Always returns the shape, so a caller can report what was
-  rejected and not only what worked.
-*/
+// The imported dlls, re-validated on every read: a file copied into the folder by hand never becomes
+// eligible just by carrying the right name.
 function customDlls(cacheDir) {
   const dir = path.join(cacheDir, CUSTOM_DIR);
   const out = { dir, x64: null, x86: null, names: [], invalid: [] };
@@ -212,11 +196,8 @@ async function extractCustomArchive(archivePath, destDir, log) {
   log.log(`[gbe] extracted ${wanted.length} dll(s) from ${path.basename(archivePath)}`);
 }
 
-/*
-  Import a user-selected archive, folder or single dll into cacheDir/custom/. Every accepted file is
-  a real PE of the architecture its installed name promises, and an emulator rather than Valve's own
-  steam_api. Returns { dir, imported, unchanged, rejected, custom }.
-*/
+// Import a user-selected archive, folder or single dll into cacheDir/custom/. Every accepted file is
+// a real PE of the architecture its installed name promises, and an emulator rather than Valve's own steam_api.
 async function importCustomDlls({ packagePath, cacheDir, log = noopLog } = {}) {
   if (!cacheDir) throw new Error('importCustomDlls: cacheDir is required');
   if (!packagePath || !fs.existsSync(packagePath)) throw new Error(`selected package not found: ${packagePath}`);
@@ -362,12 +343,8 @@ function findByBasename(extractDir, basename, preferDir) {
 // Download the latest release .7z and extract both arch DLLs into cacheDir/<tag>/. Returns the same
 // shape as cachedDlls(). Throws only on a genuine failure with no cached fallback available.
 async function downloadAndCache(cacheDir, tag, assetUrl, log) {
-  /*
-    Downloaded INSIDE the cache folder, not into a random temp directory. A Steam emulator is flagged
-    by most antivirus engines, so the one thing that makes the failure fixable is being able to name
-    a single folder the user can allow - and it has to be the same folder the DLLs then live in, or
-    an exclusion would cover the download and not what it produced.
-  */
+  // Downloaded INSIDE the cache folder, not a random temp directory: antivirus flags Steam emulators
+  // often, and the user needs one folder to allow that is also where the DLLs end up living.
   fs.mkdirSync(cacheDir, { recursive: true });
   const tmpDir = fs.mkdtempSync(path.join(cacheDir, '.download-'));
   try {
@@ -381,12 +358,8 @@ async function downloadAndCache(cacheDir, tag, assetUrl, log) {
     await new Promise((resolve, reject) => {
       const stream = Seven.extractFull(dl.path, extractDir, { $bin: sevenBin });
       stream.on('end', resolve);
-      /*
-        node-7z reports the archive path as the error message and keeps 7za's own words in stderr,
-        which is where the actual cause lives. The cause worth naming is the common one: a Steam
-        emulator is flagged by most antivirus engines, so the download is quarantined between being
-        written and being read, and the user sees a temp path with no explanation.
-      */
+      // node-7z's error message is just the archive path; 7za's own words in stderr carry the real
+      // cause, most often antivirus quarantining the download between write and read.
       stream.on('error', (err) => {
         const stderr = String((err && err.stderr) || '');
         if (/virus|malware|potentially unwanted|indésirable|unerwünschte|Operation did not complete/i.test(stderr)) {
@@ -573,10 +546,8 @@ function runtimeDllDirs({ gameDir, dllPaths = [], exePath = null, steamSettings 
   return out;
 }
 
-/*
-  Ensure the DLLs a repair installs are available locally ({ tag, dir, x64, x86, interfaces }), with
-  any imported dll taking the place of the released one for its architecture.
-*/
+// Ensure the DLLs a repair installs are available locally ({ tag, dir, x64, x86, interfaces }), with
+// any imported dll taking the place of the released one for its architecture.
 async function ensureEmulatorDlls({ cacheDir, force = false, log = noopLog } = {}) {
   if (!cacheDir) throw new Error('ensureEmulatorDlls: cacheDir is required');
   fs.mkdirSync(cacheDir, { recursive: true });
@@ -594,10 +565,7 @@ async function ensureEmulatorDlls({ cacheDir, force = false, log = noopLog } = {
   return mergeCustomDlls(release, custom);
 }
 
-/*
-  The released build, cached under cacheDir/<tag>/; re-checks GitHub at most once a day unless force
-  is set.
-*/
+// The released build, cached under cacheDir/<tag>/; re-checks GitHub at most once a day unless force is set.
 async function ensureReleaseDlls({ cacheDir, force = false, log = noopLog } = {}) {
   const cachedTag = readText(path.join(cacheDir, 'latest.txt'));
   const lastCheck = parseInt(readText(path.join(cacheDir, '.last-check')), 10) || 0;
@@ -659,11 +627,8 @@ async function ensureReleaseDlls({ cacheDir, force = false, log = noopLog } = {}
   return downloadAndCache(cacheDir, tag, asset.browser_download_url, log);
 }
 
-/*
-  Install the cached GBE DLLs into one or more dirs, backing up replaced originals as <name>.bak once.
-  writeIfMissing drops an arch into DLL-less dirs; ensureArch seeds an arch even when only the other
-  one is present. Returns { installed, backedUp, tag, perDir }.
-*/
+// Install the cached GBE DLLs into one or more dirs, backing up replaced originals as <name>.bak once.
+// writeIfMissing drops an arch into DLL-less dirs; ensureArch seeds an arch even when only the other one is present.
 function installDlls({ dllDirs, dlls, writeIfMissing = null, ensureArch = null, log = noopLog } = {}) {
   if (!dlls || (!dlls.x64 && !dlls.x86)) throw new Error('installDlls: no cached GBE Fork DLLs available');
   const dirs = (Array.isArray(dllDirs) ? dllDirs : [dllDirs]).filter(Boolean);

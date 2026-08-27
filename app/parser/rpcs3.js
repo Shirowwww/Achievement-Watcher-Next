@@ -19,15 +19,8 @@ const files = {
 const binary = 'rpcs3.exe';
 const layout = require('./rpcs3Layout.js');
 
-/*
-  Trophies for one folder the user watches. The folder may be the emulator install (the usual case)
-  or the virtual disk itself - a user who relocated dev_hdd0 and then added THAT folder was reading
-  a completely valid layout that the old rpcs3.exe-only gate rejected outright.
-
-  Where dev_hdd0 lives is resolved through rpcs3Layout.js (portable mode, RPCS3_CONFIG_DIR, the
-  vfs.yml remap) rather than assumed, so a relocated virtual disk is found instead of silently
-  producing an empty scan.
-*/
+// Trophies for one watched folder: either the emulator install or a relocated dev_hdd0 virtual disk
+// directly. rpcs3Layout.js resolves where dev_hdd0 actually lives (portable mode, RPCS3_CONFIG_DIR, vfs.yml).
 module.exports.scan = async (dir) => {
   const data = [];
 
@@ -65,47 +58,43 @@ module.exports.scan = async (dir) => {
 module.exports.trophyRoots = (dir) => layout.trophyRoots(dir);
 
 module.exports.getGameData = async (dir) => {
-  try {
-    let file = await ffs.readFile(path.join(dir, files.schema), 'utf-8');
-    let schema = await util.promisify(xml2js.parseString)(file, {
-      explicitArray: false,
-      explicitRoot: false,
-      ignoreAttrs: false,
-      emptyTag: null,
-    });
+  let file = await ffs.readFile(path.join(dir, files.schema), 'utf-8');
+  let schema = await util.promisify(xml2js.parseString)(file, {
+    explicitArray: false,
+    explicitRoot: false,
+    ignoreAttrs: false,
+    emptyTag: null,
+  });
 
-    // xml2js with explicitArray:false collapses a single <trophy> into an object instead of an
-    // array, so a game with exactly one trophy would crash on .length/.map. Normalize to an array.
-    const trophies = Array.isArray(schema.trophy) ? schema.trophy : schema.trophy ? [schema.trophy] : [];
+  // xml2js with explicitArray:false collapses a single <trophy> into an object instead of an
+  // array, so a game with exactly one trophy would crash on .length/.map. Normalize to an array.
+  const trophies = Array.isArray(schema.trophy) ? schema.trophy : schema.trophy ? [schema.trophy] : [];
 
-    let result = {
-      name: schema['title-name'],
-      appid: schema.npcommid,
-      system: 'playstation',
-      img: {
-        header: 'file:///' + path.join(dir, 'ICON0.PNG').replace(/\\/g, '/'),
-        //TODO: get background/portrait images
-      },
-      achievement: {
-        total: trophies.length,
-        list: trophies.map((trophy) => {
-          return {
-            name: parseInt(trophy['$'].id),
-            hidden: trophy['$'].hidden === 'yes' ? 1 : 0,
-            type: trophy['$'].ttype,
-            displayName: trophy.name,
-            description: trophy.detail,
-            icon: 'file:///' + path.join(dir, `TROP${trophy['$'].id}.png`).replace(/\\/g, '/'),
-            icongray: 'file:///' + path.join(dir, `TROP${trophy['$'].id}.png`).replace(/\\/g, '/'),
-          };
-        }),
-      },
-    };
+  let result = {
+    name: schema['title-name'],
+    appid: schema.npcommid,
+    system: 'playstation',
+    img: {
+      header: 'file:///' + path.join(dir, 'ICON0.PNG').replace(/\\/g, '/'),
+      //TODO: get background/portrait images
+    },
+    achievement: {
+      total: trophies.length,
+      list: trophies.map((trophy) => {
+        return {
+          name: parseInt(trophy['$'].id),
+          hidden: trophy['$'].hidden === 'yes' ? 1 : 0,
+          type: trophy['$'].ttype,
+          displayName: trophy.name,
+          description: trophy.detail,
+          icon: 'file:///' + path.join(dir, `TROP${trophy['$'].id}.png`).replace(/\\/g, '/'),
+          icongray: 'file:///' + path.join(dir, `TROP${trophy['$'].id}.png`).replace(/\\/g, '/'),
+        };
+      }),
+    },
+  };
 
-    return result;
-  } catch (err) {
-    throw err;
-  }
+  return result;
 };
 
 module.exports.getAchievements = async (dir) => {

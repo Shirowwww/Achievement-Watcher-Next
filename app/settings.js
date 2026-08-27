@@ -57,9 +57,7 @@ module.exports.load = () => {
       options.general.skippedVersion = 'none';
     }
 
-    // "Later" on an update prompt. Without these the answer was forgotten immediately and the
-    // hourly re-check asked again, every hour, for as long as the tray daemon stayed running.
-    // Version + deadline, so a postpone expires on its own and never hides a NEWER release.
+    // Postpone stores version + deadline, so it expires on its own and never hides a newer release.
     if (typeof options.general.updatePostponedVersion !== 'string') {
       options.general.updatePostponedVersion = '';
     }
@@ -72,9 +70,8 @@ module.exports.load = () => {
       // profile; only the missing-file defaults below should launch first-run onboarding.
       options.general.onboardingCompleted = true;
     }
-    // interfaceMode controls UI scope only (util/interfaceMode.js), not parser/watchdog behaviour.
-    // Upgraded profiles default to 'advanced' so existing tabs don't vanish; profiles still
-    // onboarding get '' to force an explicit choice.
+    // interfaceMode controls UI scope only (util/interfaceMode.js). Upgraded profiles default to
+    // 'advanced' so existing tabs don't vanish; profiles still onboarding get '' to force a choice.
     if (options.general.interfaceMode !== 'simple' && options.general.interfaceMode !== 'advanced') {
       options.general.interfaceMode = options.general.onboardingCompleted === true ? 'advanced' : '';
     }
@@ -87,24 +84,14 @@ module.exports.load = () => {
     if (typeof options.general.closeToTray !== 'boolean') {
       options.general.closeToTray = true;
     }
-    // Right-click uninstall menu on game tiles (Settings > General). Default ON:
-    // the feature is discoverable out of the box, and every action still asks for
-    // confirmation before touching anything.
+    // Right-click uninstall menu on game tiles (Settings > General). Default ON: discoverable out
+    // of the box, and every action still asks for confirmation.
     if (typeof options.general.uninstallContextMenu !== 'boolean') {
       options.general.uninstallContextMenu = true;
     }
-    /*
-      Theme (Settings > Theme): built-ins come from the theme engine, plus 'custom' (layer-based),
-      user stylesheets ('user:<name>' from <userData>\themes) and themes the user saved or imported
-      ('pack:<name>' in <userData>\theme-packs). Don't duplicate the built-in list here - a stale
-      copy would silently reset a theme it wasn't told about.
-
-      `pack:` was missing, so every read of options.ini rewrote an imported theme back to Steam Blue
-      and no imported theme ever survived a restart. The folder is not checked here on purpose: this
-      runs on every load, and walking theme storage to validate a string would put a disk read on
-      every start for the sake of a value the theme layer already falls back on when it resolves to
-      nothing.
-    */
+    // Theme values: built-in ids, 'custom', 'user:<name>' or 'pack:<name>' (all must validate here,
+    // or an imported/pack theme silently reverts on reload). Not disk-checked: this runs on every
+    // load, and the theme layer already falls back safely on a bad value.
     if (
       typeof options.general.theme !== 'string' ||
       (!Object.keys(themeLayers.BUILTIN_COLORS).includes(options.general.theme) &&
@@ -122,9 +109,8 @@ module.exports.load = () => {
     } else if (options.overlay.hotkey === 'Ctrl+Shift+O') {
       options.overlay.hotkey = 'Ctrl+Shift+K';
     }
-    // Overlay notification preset (optional transport, now the default delivery mode). A saved
-    // name that no longer matches a preset is NOT rewritten here - resolvePresetFolder() only
-    // remaps a removed bundled preset after failing to find a same-named user preset first.
+    // Overlay notification preset. A saved name that no longer matches one is NOT rewritten here:
+    // resolvePresetFolder() remaps a removed bundled preset only after checking for a user preset.
     if (typeof options.overlay.notificationPreset !== 'string') {
       options.overlay.notificationPreset = 'AW Next';
     }
@@ -142,9 +128,8 @@ module.exports.load = () => {
     if (typeof options.overlay.notificationPosition !== 'string') {
       options.overlay.notificationPosition = 'center-bottom';
     }
-    // INI values come back as strings (the compatibility parser only type-coerces booleans), so numbers must be
-    // parsed with Number() before validating - a typeof 'number' check would otherwise reset a valid
-    // persisted value to its default on every reload.
+    // INI values come back as strings (only booleans are type-coerced), so numbers must go through
+    // Number() before validating, or a typeof check would reset a valid value on every reload.
     {
       const scl = Number(options.overlay.notificationScale);
       options.overlay.notificationScale = Number.isFinite(scl) && scl > 0 ? scl : 1;
@@ -380,9 +365,8 @@ module.exports.load = () => {
       options.notification_toast.urgent = false;
     }
 
-    // Drop legacy display-transport flags so the file stays clean. NOTE: `mode` is intentionally
-    // NOT dropped here - it is the (re-introduced) notification delivery mode and must persist
-    // across restarts; it is validated/defaulted a few lines below.
+    // Drop legacy display-transport flags. `mode` is intentionally NOT dropped: it is the
+    // notification delivery mode, persisted and validated a few lines below.
     delete options.notification_transport.chromium;
     delete options.notification_transport.toast;
     delete options.notification_transport.gntp;
@@ -402,10 +386,8 @@ module.exports.load = () => {
       options.notification_transport.websocket = true;
     }
 
-    // Notification delivery mode: 'auto' (the Watchdog picks per event - see
-    // watchdog/notification/transportPolicy.js), 'toast' (Windows toast), 'overlay' (in-game
-    // HTML/CSS preset), or 'both'. A saved choice is never rewritten; only an unset or corrupt one
-    // lands on 'auto'.
+    // Delivery mode: 'auto' (Watchdog picks per event, see watchdog/notification/transportPolicy.js),
+    // 'toast', 'overlay', or 'both'. A saved choice is never rewritten, only unset/corrupt defaults to 'auto'.
     if (!['auto', 'toast', 'overlay', 'both'].includes(options.notification_transport.mode)) {
       options.notification_transport.mode = 'auto';
     }
@@ -535,16 +517,8 @@ module.exports.load = () => {
         steamId: '', // optional account_steamid override for configs.user.ini ('' = let GBE pick)
         uplayUsername: '', // optional Uplay R2 Username override ('' = use the general username)
         uplayLanguage: 'auto', // 'auto' follows the achievement language, otherwise a loader locale code
-        /*
-          On by default, because the loader's own log is the only record of which objective a game
-          asked to unlock: without it Game health cannot tell a wrong mapping apart from a game that
-          never asks, and cannot offer the session fix at all. Turning it off silently takes those
-          answers away, which is why the setting says so.
-
-          The loader appends a line per call and never rotates, and a game polling for asynchronous
-          operations produces a lot of them (17 KB/s on one measured title, 97% of it one repeated
-          line), so repair() caps the file rather than leaving it to grow.
-        */
+        // On by default: the loader's log is the only record of which objective a game asked to
+        // unlock, which Game health needs. It grows fast (17 KB/s measured), so repair() caps the file.
         uplayLogging: true,
       },
       notification: {
@@ -613,7 +587,7 @@ module.exports.save = (config) => {
   return new Promise((resolve, reject) => {
     let options;
     try {
-      options = JSON.parse(JSON.stringify(config)); //deep object copy to prevent modifying reference; We want to encrypt key to file but keep it decrypted in memory.
+      options = JSON.parse(JSON.stringify(config)); // deep copy: mutations below must not touch the caller's object.
 
       // Encrypt the emulator Steam-login password before it touches disk (kept plaintext in memory).
       if (options.emulator && typeof options.emulator.loginPassword === 'string' && options.emulator.loginPassword.length > 0) {
@@ -628,9 +602,8 @@ module.exports.save = (config) => {
     }
     fs.mkdirSync(path.dirname(filename), { recursive: true });
     fs.writeFileSync(filename, ini.stringify(options), 'utf8');
-    // Tell the main process to reload its cached config. The daemon loads options.ini once at startup
-    // and otherwise keeps the in-memory copy. This module
-    // is also require()d by the main process itself (where ipcRenderer is absent), so guard the send.
+    // Tell the main process to reload its cached config (loaded once at startup, kept in memory
+    // otherwise). Also require()d by the main process itself, where ipcRenderer is absent, so guard it.
     try {
       const { ipcRenderer } = require('electron');
       if (ipcRenderer) ipcRenderer.send('config-saved');

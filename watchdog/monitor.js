@@ -13,10 +13,8 @@ const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 // list in app/electron-builder.yml). Only its pure readers are used here.
 const ff7 = require(sharedAppModulePath('parser/ff7.js'));
 
-// A user-added folder belongs to the Goldberg SocialClub emulator when the SocialClub root is on
-// its path - the root itself, a <Game> folder, or a <Game>\<hex profile> folder. Guessing from the
-// folder's shape instead would be wrong: a plain numeric Steam AppID folder such as "1546990" is
-// also valid hexadecimal, and would be watched with the wrong parser.
+// A folder belongs to Goldberg SocialClub when the SocialClub root is on its path, not by its
+// shape: a numeric Steam AppID like "1546990" is also valid hex and would pick the wrong parser.
 const SOCIALCLUB_ROOT_RE = /^goldberg\s*social\s*club\s*emu\s*saves$/i;
 function isSocialClubWatchPath(dirPath) {
   return String(dirPath || '')
@@ -24,10 +22,8 @@ function isSocialClubWatchPath(dirPath) {
     .some((segment) => SOCIALCLUB_ROOT_RE.test(segment));
 }
 
-// regodit is ESM-only (koffi) since v2; load it lazily via dynamic import (cached by Node's module
-// registry). We deliberately use the synchronous API, not `regodit/promises`: under the pinned
-// koffi 3.x the async DWORD write segfaults (0xC0000005) and kills the Watchdog. The sync calls
-// on the same DLL are unaffected, and the reads here run once per startup.
+// regodit is ESM-only; load lazily via dynamic import. Uses the sync API deliberately: under
+// koffi 3.x the async DWORD write segfaults (0xC0000005) and kills the Watchdog.
 let regeditPromise = null;
 const loadRegedit = () => regeditPromise || (regeditPromise = import('regodit'));
 
@@ -58,12 +54,8 @@ const files = {
   steamEmu: ['ALI213.ini', 'valve.ini', 'hlm.ini', 'ds.ini', 'steam_api.ini', 'SteamConfig.ini', 'tenoke.ini', 'UniverseLAN.ini'],
 };
 
-/*
-  ALI213 and the emulators built on it write their unlock state as either "Achievements.Bin" or
-  "Achievements.ini" depending on the build. The reader accepts both (see app/parser/steam.js), but
-  the watchers listed only the first, so a game running a build that writes the .ini spelling was
-  watched and never once fired: its unlocks only appeared on the next library refresh.
-*/
+// ALI213-family emulators write either Achievements.Bin or Achievements.ini; watching only one
+// missed builds using the other spelling, so unlocks never fired until the next refresh.
 const ALI213_ACHIEVEMENT_FILES = [files.achievement[4], files.achievement[6]];
 
 module.exports.getFolders = async (userDir_file) => {
@@ -108,28 +100,22 @@ module.exports.getFolders = async (userDir_file) => {
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1], files.achievement[9], files.achievement[0]] }, //keeping "achievements.ini" [0] for backward compatibility with custom goldberg emu build
     },
     {
-      // Goldberg SocialClub Emu Saves: <GameName>\<hex profile>\… The profile folder carries the
-      // game's save/achievement files; the game name is resolved back to the app's SocialClub entry
-      // through the game index (watchdog.js handles options.socialClub).
+      // Goldberg SocialClub Emu Saves: <GameName>\<hex profile>\... watchdog.js resolves the game
+      // name back to the app's SocialClub entry through the game index (options.socialClub).
       dir: path.join(process.env['APPDATA'], 'Goldberg SocialClub Emu Saves'),
-      // Unlike the Steam emulator roots, the filter must accept game-name folders as well as profile
-      // folders - a numeric-AppID filter would never match anything here. `file` is restricted to
-      // files the parser can actually read: Rockstar's own save blobs are written constantly during
-      // play and nothing can decode them, so watching them would only wake the monitor for nothing.
+      // Unlike Steam roots, the filter must accept game-name folders too since a numeric-AppID
+      // filter never matches here; `file` excludes Rockstar's own unreadable blobs to avoid noise.
       options: { recursive: true, filter: () => true, file: SOCIALCLUB_ACHIEVEMENT_FILES, socialClub: true },
     },
     {
-      // Goldberg Uplay R2. Folders here are named with the UBISOFT product id, not a Steam AppID,
-      // so watchdog.js maps it through the gameIndex `uplayId` pair before loading the game and
-      // re-keys the objective ids onto the schema's api-names. Without this entry a Ubisoft unlock
-      // never fired a live notification at all - it only showed up on the next manual refresh.
+      // Goldberg Uplay R2: folders are named with the Ubisoft product id, not a Steam AppID, so
+      // watchdog.js maps it through gameIndex's uplayId before loading and re-keying api-names.
       dir: path.join(process.env['APPDATA'], 'Goldberg UplayEmu Saves'),
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1]], uplayR2: true },
     },
     {
-      // The same emulator, R1 generation: same folder-per-Ubisoft-product layout, same
-      // achievements.json, its own default root. Ubisoft titles from before the R2 API never load an
-      // R2 loader, so without this entry their unlocks only appeared on the next manual refresh.
+      // R1 generation of the same emulator: same folder-per-product layout and achievements.json,
+      // its own default root, needed since pre-R2 titles never load an R2 loader.
       dir: path.join(process.env['APPDATA'], 'R1 UplayEmu Saves'),
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1]], uplayR2: true },
     },
@@ -165,9 +151,8 @@ module.exports.getFolders = async (userDir_file) => {
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[7]] },
     },
     {
-      // No path filter: epic ids can be non-numeric (<user>\<epicid>\achievements.json), and a
-      // regex filter only vets the emitted path. Both Nemirtingas roots used to carry a '*/*/'
-      // glob that never exists on disk, so neither was ever watched.
+      // No path filter: epic ids can be non-numeric. Both roots used to carry a '*/*/' glob
+      // that never exists on disk, so neither was ever watched.
       dir: path.join(process.env['APPDATA'], 'NemirtingasEpicEmu'),
       options: { recursive: true, file: [files.achievement[1]] },
     },
@@ -216,9 +201,13 @@ module.exports.getFolders = async (userDir_file) => {
       if (dir && dir.notify == true && dir.enabled !== false) {
         try {
           let info;
-          for (var file of files.steamEmu) {
+          // The name of the config that parsed, not merely the last one tried: the branches below
+          // pick the save layout from it, and it must stay unset when nothing parsed.
+          let file;
+          for (const candidate of files.steamEmu) {
             try {
-              info = ini.parse(await fs.readFile(path.join(dir.path, file), 'utf8'));
+              info = ini.parse(await fs.readFile(path.join(dir.path, candidate), 'utf8'));
+              file = candidate;
               break;
             } catch (e) {}
           }
@@ -292,10 +281,8 @@ module.exports.getFolders = async (userDir_file) => {
                       options: { appid: info.GameSettings.AppId, recursive: false, file: [files.achievement[3]] },
                     });
                   } else if (file === files.steamEmu[2]) {
-                    //Hoodlum using ALI213 like emu (before ~ september 2019 ?)
-                    //User reported that setting it to mydocs has no effect. But should be double confirmed.
-                    //Seems to be using defaults: playerName VALVE and saveType 0
-                    //Write ach data only on game exit ?
+                    //Hoodlum (pre-~Sept 2019) behaves like ALI213 with defaults: playerName VALVE,
+                    //saveType 0, and writes achievement data only on game exit.
 
                     dirpath = await parentFind(
                       async (directory) => {
@@ -382,10 +369,8 @@ module.exports.getFolders = async (userDir_file) => {
               options: { recursive: true, filter: () => true, file: SOCIALCLUB_ACHIEVEMENT_FILES, socialClub: true },
             });
           } else {
-            // Folders that do not match a known emulator config are classified
-            // by file signature. Only platforms without a dedicated live
-            // watcher are added here (GOG .info, UniverseLAN); the generic
-            // numeric fallback stays for everything else.
+            // Folders matching no known emulator config are classified by file signature; only
+            // platforms without a dedicated live watcher are added here (GOG .info, UniverseLAN).
             const cascade = await scanRootOnce(dir.path).catch(() => null);
             const extra = cascade && cascade.entries
               ? cascade.entries.filter((entry) => {
@@ -429,117 +414,114 @@ module.exports.getFolders = async (userDir_file) => {
 };
 
 module.exports.parse = async (filePath) => {
-  try {
-    const filter = ['SteamAchievements', 'Steam64', 'Steam'];
+  const filter = ['SteamAchievements', 'Steam64', 'Steam'];
 
-    let local;
-    let file = path.parse(filePath);
-    // NTFS is case-insensitive and the watcher's filename filter is too, so the casing that arrives
-    // here is the one on disk, not the one a root declared. Matching exactly sent Stats.bin and
-    // Achievement to ini.parse, which reads them as nothing at all.
-    const base = file.base.toLowerCase();
-    if (file.ext.toLowerCase() == '.json') {
-      local = JSON.parse(await fs.readFile(filePath, 'utf8'));
-    } else if (base == 'stats.bin') {
-      local = sse.parse(await fs.readFile(filePath));
-    } else if (base == ff7.STATE_FILE) {
-      //FINAL FANTASY VII (2013): an 8-byte bitfield, only read for a folder that identifies itself
-      //as that game. Nothing else about it says which achievements it holds.
-      local = ff7.getAchievementsFromFile(file.dir);
-      if (!local) throw `'${filePath}' is not FINAL FANTASY VII (2013) achievement data`;
-    } else if (base == 'achievement') {
-      //RAZOR1911: plain text, "<apiname> <0|1> <epoch seconds>" per line
-      local = {};
-      for (const line of (await fs.readFile(filePath, 'utf8')).split(/\r?\n/)) {
-        const m = /^(\S+)\s+([01])\s+(\d+)\s*$/.exec(line.trim());
-        if (m) local[m[1]] = { Achieved: m[2], UnlockTime: Number(m[3]) };
-      }
-    } else {
-      local = ini.parse(await fs.readFile(filePath, 'utf8'));
+  let local;
+  let file = path.parse(filePath);
+  // NTFS and the watcher's filter are case-insensitive, so casing here is whatever's on disk, not
+  // what a root declared; exact matching silently sent Stats.bin/Achievement into ini.parse.
+  const base = file.base.toLowerCase();
+  if (file.ext.toLowerCase() == '.json') {
+    local = JSON.parse(await fs.readFile(filePath, 'utf8'));
+  } else if (base == 'stats.bin') {
+    local = sse.parse(await fs.readFile(filePath));
+  } else if (base == ff7.STATE_FILE) {
+    //FINAL FANTASY VII (2013): an 8-byte bitfield, only read for a folder that identifies itself
+    //as that game. Nothing else about it says which achievements it holds.
+    local = ff7.getAchievementsFromFile(file.dir);
+    if (!local) throw `'${filePath}' is not FINAL FANTASY VII (2013) achievement data`;
+  } else if (base == 'achievement') {
+    //RAZOR1911: plain text, "<apiname> <0|1> <epoch seconds>" per line
+    local = {};
+    for (const line of (await fs.readFile(filePath, 'utf8')).split(/\r?\n/)) {
+      const m = /^(\S+)\s+([01])\s+(\d+)\s*$/.exec(line.trim());
+      if (m) local[m[1]] = { Achieved: m[2], UnlockTime: Number(m[3]) };
     }
+  } else {
+    local = ini.parse(await fs.readFile(filePath, 'utf8'));
+  }
 
-    if (local.AchievementsUnlockTimes && local.Achievements) {
-      //hoodlum
-      let convert = {};
-      for (let i in local.Achievements) {
-        if (Object.prototype.hasOwnProperty.call(local.Achievements, i)) {
-          if (local.Achievements[i] == 1) {
-            convert[`${i}`] = { Achieved: '1', UnlockTime: local.AchievementsUnlockTimes[i] || null };
-          }
+  if (local.AchievementsUnlockTimes && local.Achievements) {
+    //hoodlum
+    let convert = {};
+    for (let i in local.Achievements) {
+      if (Object.prototype.hasOwnProperty.call(local.Achievements, i)) {
+        if (local.Achievements[i] == 1) {
+          convert[`${i}`] = { Achieved: '1', UnlockTime: local.AchievementsUnlockTimes[i] || null };
         }
       }
-      local = convert;
-    } else if (local.State && local.Time) {
-      //3DM
-      let convert = {};
-      for (let i in local.State) {
-        if (Object.prototype.hasOwnProperty.call(local.State, i)) {
-          if (local.State[i] == '0101') {
-            convert[`${i}`] = {
-              Achieved: '1',
-              UnlockTime: new DataView(new Uint8Array(Buffer.from(local.Time[i].toString(), 'hex')).buffer).getUint32(0, true) || null,
-            };
-          }
+    }
+    local = convert;
+  } else if (local.State && local.Time) {
+    //3DM
+    let convert = {};
+    for (let i in local.State) {
+      if (Object.prototype.hasOwnProperty.call(local.State, i)) {
+        if (local.State[i] == '0101') {
+          convert[`${i}`] = {
+            Achieved: '1',
+            UnlockTime: new DataView(new Uint8Array(Buffer.from(local.Time[i].toString(), 'hex')).buffer).getUint32(0, true) || null,
+          };
         }
       }
-      local = convert;
-    } else if (local.ACHIEVEMENTS) {
-      //TENOKE
-      let convert = {};
-      for (let i in local.ACHIEVEMENTS) {
-        if (!Object.prototype.hasOwnProperty.call(local.ACHIEVEMENTS, i)) continue;
-        const key = i.replace(/^"|"$/g, '');
-        const raw = local.ACHIEVEMENTS[i]; // e.g. "{unlocked=true, time=1712253396}"
-        const unlockedMatch = /unlocked\s*=\s*(true|false)/i.exec(raw);
-        const timeMatch = /time\s*=\s*(\d+)/i.exec(raw);
-
-        const unlocked = unlockedMatch ? unlockedMatch[1].toLowerCase() === 'true' : false;
-        const time = timeMatch ? Number(timeMatch[1]) : 0;
-
-        convert[`${key}`] = {
-          Achieved: unlocked ? '1' : '0',
-          UnlockTime: time,
-        };
-      }
-      local = convert;
-    } else {
-      local = omit(local.ACHIEVE_DATA || local, filter);
     }
+    local = convert;
+  } else if (local.ACHIEVEMENTS) {
+    //TENOKE
+    let convert = {};
+    for (let i in local.ACHIEVEMENTS) {
+      if (!Object.prototype.hasOwnProperty.call(local.ACHIEVEMENTS, i)) continue;
+      const key = i.replace(/^"|"$/g, '');
+      const raw = local.ACHIEVEMENTS[i]; // e.g. "{unlocked=true, time=1712253396}"
+      const unlockedMatch = /unlocked\s*=\s*(true|false)/i.exec(raw);
+      const timeMatch = /time\s*=\s*(\d+)/i.exec(raw);
 
-    let achievements = [];
+      const unlocked = unlockedMatch ? unlockedMatch[1].toLowerCase() === 'true' : false;
+      const time = timeMatch ? Number(timeMatch[1]) : 0;
 
-    for (let achievement in local) {
-      if (Object.prototype.hasOwnProperty.call(local, achievement)) {
-        try {
-          if (local[achievement].State) {
-            //RLD!
-            //uint32 little endian
-            local[achievement].State = new DataView(new Uint8Array(Buffer.from(local[achievement].State.toString(), 'hex')).buffer).getUint32(
-              0,
-              true
-            );
-            local[achievement].CurProgress = new DataView(
-              new Uint8Array(Buffer.from(local[achievement].CurProgress.toString(), 'hex')).buffer
-            ).getUint32(0, true);
-            local[achievement].MaxProgress = new DataView(
-              new Uint8Array(Buffer.from(local[achievement].MaxProgress.toString(), 'hex')).buffer
-            ).getUint32(0, true);
-            local[achievement].Time = new DataView(new Uint8Array(Buffer.from(local[achievement].Time.toString(), 'hex')).buffer).getUint32(0, true);
-          } else if (isUnambiguousRldBlob(local[achievement].Time)) {
-            //RLD! build that writes no State key: the unlock is carried by Time alone. Without
-            //decoding, the raw hex reached the toast as a bogus unlock date (app side: steam.js).
-            local[achievement].Time = decodeRldBlob(local[achievement].Time);
-            if (isUnambiguousRldBlob(local[achievement].CurProgress)) local[achievement].CurProgress = decodeRldBlob(local[achievement].CurProgress);
-            if (isUnambiguousRldBlob(local[achievement].MaxProgress)) local[achievement].MaxProgress = decodeRldBlob(local[achievement].MaxProgress);
-          } else if (local[achievement].unlocktime && local[achievement].unlocktime.length === 7) {
-            //CreamAPI writes truncated 7-digit timestamps (cf. steam.js) - scale to epoch millis.
-            local[achievement].unlocktime = +local[achievement].unlocktime * 1000;
-          }
+      convert[`${key}`] = {
+        Achieved: unlocked ? '1' : '0',
+        UnlockTime: time,
+      };
+    }
+    local = convert;
+  } else {
+    local = omit(local.ACHIEVE_DATA || local, filter);
+  }
 
-          let result = {
-            name: local[achievement].id || local[achievement].apiname || local[achievement].name || local[achievement].AchievementId || achievement,
-            Achieved:
-              local[achievement].Achieved == 1 ||
+  let achievements = [];
+
+  for (let achievement in local) {
+    if (Object.prototype.hasOwnProperty.call(local, achievement)) {
+      try {
+        if (local[achievement].State) {
+          //RLD!, uint32 little endian
+          local[achievement].State = new DataView(new Uint8Array(Buffer.from(local[achievement].State.toString(), 'hex')).buffer).getUint32(
+            0,
+            true
+          );
+          local[achievement].CurProgress = new DataView(
+            new Uint8Array(Buffer.from(local[achievement].CurProgress.toString(), 'hex')).buffer
+          ).getUint32(0, true);
+          local[achievement].MaxProgress = new DataView(
+            new Uint8Array(Buffer.from(local[achievement].MaxProgress.toString(), 'hex')).buffer
+          ).getUint32(0, true);
+          local[achievement].Time = new DataView(new Uint8Array(Buffer.from(local[achievement].Time.toString(), 'hex')).buffer).getUint32(0, true);
+        } else if (isUnambiguousRldBlob(local[achievement].Time)) {
+          //RLD! build that writes no State key: the unlock is carried by Time alone. Without
+          //decoding, the raw hex reached the toast as a bogus unlock date (app side: steam.js).
+          local[achievement].Time = decodeRldBlob(local[achievement].Time);
+          if (isUnambiguousRldBlob(local[achievement].CurProgress)) local[achievement].CurProgress = decodeRldBlob(local[achievement].CurProgress);
+          if (isUnambiguousRldBlob(local[achievement].MaxProgress)) local[achievement].MaxProgress = decodeRldBlob(local[achievement].MaxProgress);
+        } else if (local[achievement].unlocktime && local[achievement].unlocktime.length === 7) {
+          //CreamAPI writes truncated 7-digit timestamps (cf. steam.js) - scale to epoch millis.
+          local[achievement].unlocktime = +local[achievement].unlocktime * 1000;
+        }
+
+        let result = {
+          name: local[achievement].id || local[achievement].apiname || local[achievement].name || local[achievement].AchievementId || achievement,
+          Achieved: Boolean(
+            local[achievement].Achieved == 1 ||
               local[achievement].achieved == 1 ||
               local[achievement].State == 1 ||
               local[achievement].HaveAchieved == 1 ||
@@ -547,45 +529,41 @@ module.exports.parse = async (filePath) => {
               local[achievement].unlocked == 1 ||
               local[achievement].earned ||
               local[achievement] === '1'
-                ? true
-                : false,
-            CurProgress: local[achievement].CurProgress || local[achievement].progress || local[achievement].value || local[achievement].Value || 0,
-            MaxProgress: local[achievement].MaxProgress || local[achievement].max_progress || 0,
-            UnlockTime:
-              local[achievement].UnlockTime ||
-              local[achievement].unlocktime ||
-              local[achievement].unlock_time ||
-              local[achievement].HaveAchievedTime ||
-              local[achievement].HaveHaveAchievedTime ||
-              local[achievement].Time ||
-              local[achievement].earned_time ||
-              0,
-          };
+          ),
+          CurProgress: local[achievement].CurProgress || local[achievement].progress || local[achievement].value || local[achievement].Value || 0,
+          MaxProgress: local[achievement].MaxProgress || local[achievement].max_progress || 0,
+          UnlockTime:
+            local[achievement].UnlockTime ||
+            local[achievement].unlocktime ||
+            local[achievement].unlock_time ||
+            local[achievement].HaveAchievedTime ||
+            local[achievement].HaveHaveAchievedTime ||
+            local[achievement].Time ||
+            local[achievement].earned_time ||
+            0,
+        };
 
-          if (
-            (!result.Achieved && result.MaxProgress != 0 && result.CurProgress != 0 && result.MaxProgress == result.CurProgress) ||
-            // `+x !== '0'` compared a number to a string (always true), so a locked entry whose
-            // save writes Time as the string "0" read as unlocked.
-            Number(result.UnlockTime) > 0
-          ) {
-            result.Achieved = true;
-          }
+        if (
+          (!result.Achieved && result.MaxProgress != 0 && result.CurProgress != 0 && result.MaxProgress == result.CurProgress) ||
+          // `+x !== '0'` compared a number to a string (always true), so a locked entry whose
+          // save writes Time as the string "0" read as unlocked.
+          Number(result.UnlockTime) > 0
+        ) {
+          result.Achieved = true;
+        }
 
-          if (local[achievement].crc) {
-            result.crc = local[achievement].crc;
-          }
+        if (local[achievement].crc) {
+          result.crc = local[achievement].crc;
+        }
 
-          achievements.push(result);
-        } catch (e) {}
-      }
+        achievements.push(result);
+      } catch (e) {}
     }
-
-    achievements.sort((a, b) => {
-      return b.UnlockTime - a.UnlockTime;
-    });
-
-    return achievements;
-  } catch (err) {
-    throw err;
   }
+
+  achievements.sort((a, b) => {
+    return b.UnlockTime - a.UnlockTime;
+  });
+
+  return achievements;
 };

@@ -176,59 +176,55 @@ function testMessageAndOptions(kind, options, game = null) {
 }
 
 async function runTest(kind, { rumble = true, game = null } = {}) {
+  const options = await settings.load(cfg_file);
+  const [message, toastOptions] = testMessageAndOptions(kind, options, game);
+  toastOptions.toast.lang = options.achievement && options.achievement.lang ? options.achievement.lang : 'english';
+  // Test toasts honor the configured overlay sound (Son / Son aléatoire), like real ones.
+  if (!message.silent) {
+    const ov = options.overlay || {};
+    toastOptions.toast.soundFile =
+      ov.randomSound === true
+        ? notificationSound.pickRandomSound() || notificationSound.resolveSoundFile(ov.notificationSound)
+        : notificationSound.resolveSoundFile(ov.notificationSound);
+  }
+  // The test runs in the Watchdog process but reloads options itself, so it has to apply the
+  // urgency preference too - otherwise the button would not exercise what a real unlock does.
+  require('./notification/transport/toast.js').setUrgentUnlocks(options.notification_toast?.urgent === true);
+  await prepare();
+  // Settings may have changed since background preparation. Identity resolution is now cheap
+  // because the expensive Start-menu enumeration is cached for the Watchdog process.
+  const identity = await toastIdentity.resolveToastIdentity(options, { log: require('./util/log.js') });
+  await prefetchDesktopToastArtwork(message, identity.id);
+  const { notification, soundFile } = buildToastNotification(message, toastOptions);
+  await applyToastAppSettings(notification, options, identity);
+
   try {
-    const options = await settings.load(cfg_file);
-    const [message, toastOptions] = testMessageAndOptions(kind, options, game);
-    toastOptions.toast.lang = options.achievement && options.achievement.lang ? options.achievement.lang : 'english';
-    // Test toasts honor the configured overlay sound (Son / Son aléatoire), like real ones.
-    if (!message.silent) {
-      const ov = options.overlay || {};
-      toastOptions.toast.soundFile =
-        ov.randomSound === true
-          ? notificationSound.pickRandomSound() || notificationSound.resolveSoundFile(ov.notificationSound)
-          : notificationSound.resolveSoundFile(ov.notificationSound);
-    }
-    // The test runs in the Watchdog process but reloads options itself, so it has to apply the
-    // urgency preference too - otherwise the button would not exercise what a real unlock does.
-    require('./notification/transport/toast.js').setUrgentUnlocks(options.notification_toast?.urgent === true);
-    await prepare();
-    // Settings may have changed since background preparation. Identity resolution is now cheap
-    // because the expensive Start-menu enumeration is cached for the Watchdog process.
-    const identity = await toastIdentity.resolveToastIdentity(options, { log: require('./util/log.js') });
-    await prefetchDesktopToastArtwork(message, identity.id);
-    const { notification, soundFile } = buildToastNotification(message, toastOptions);
-    await applyToastAppSettings(notification, options, identity);
-
-    try {
-      await toast(notification);
-      if (soundFile) {
-        const volume = mediaPlayerVolume(options.overlay && options.overlay.notificationVolume);
-        soundPlayer.play(soundFile, { volume }).catch((e) => {
-          const debug = require('./util/log.js');
-          debug.log(`Error playing toast sound:  ${e}`);
-        });
-      }
-    } catch (err) {
-      // The balloon fallback can make a failing toast look like it worked (settings report success,
-      // the pad still rumbles) with no toast visible, so log what actually broke.
-      require('./util/log.js').warn(`[Toast] failed, falling back to a tray balloon: ${err && (err.message || err)}`);
-      if (options.notification_transport.balloon) {
-        await balloon({
-          title: notification.title,
-          message: notification.message || notifyStrings.forLang(options.achievement.lang).achievementUnlocked || 'Achievement unlocked !',
-          ico: './notification/icon/icon.ico',
-        });
-      } else {
-        throw err;
-      }
-    }
-
-    if (rumble && options.notification.rumble) {
-      const xinput = await loadXinput();
-      if (xinput) xinput.rumble().catch(() => {});
+    await toast(notification);
+    if (soundFile) {
+      const volume = mediaPlayerVolume(options.overlay && options.overlay.notificationVolume);
+      soundPlayer.play(soundFile, { volume }).catch((e) => {
+        const debug = require('./util/log.js');
+        debug.log(`Error playing toast sound:  ${e}`);
+      });
     }
   } catch (err) {
-    throw err;
+    // The balloon fallback can make a failing toast look like it worked (settings report success,
+    // the pad still rumbles) with no toast visible, so log what actually broke.
+    require('./util/log.js').warn(`[Toast] failed, falling back to a tray balloon: ${err && (err.message || err)}`);
+    if (options.notification_transport.balloon) {
+      await balloon({
+        title: notification.title,
+        message: notification.message || notifyStrings.forLang(options.achievement.lang).achievementUnlocked || 'Achievement unlocked !',
+        ico: './notification/icon/icon.ico',
+      });
+    } else {
+      throw err;
+    }
+  }
+
+  if (rumble && options.notification.rumble) {
+    const xinput = await loadXinput();
+    if (xinput) xinput.rumble().catch(() => {});
   }
 }
 

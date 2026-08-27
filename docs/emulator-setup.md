@@ -56,6 +56,17 @@ Downloads and caches a matching GBE Fork release, backs up an existing `steam_ap
 
 The runtime is installed as a normal DLL replacement. AW Next does not configure a separate ColdClient launcher.
 
+### Using your own emulator DLL
+
+**Settings → Emulators → Emulator DLL** imports your own `steam_api.dll` or `steam_api64.dll` and
+installs it instead of the downloaded GBE Fork build, on every fix and every automatic fix. The
+architecture you do not import still comes from the official build, as do the interface tools.
+
+An imported file is re-validated on every use: it must be a real PE of the architecture its name
+claims, and it must actually be a Steam emulator DLL. A file that fails any of those is reported and
+ignored rather than installed. **Use the official build** removes the import and returns to the
+downloaded release.
+
 ### Remove Steam DRM (Steamless)
 
 Attempts to unpack SteamStub from the selected executable when a DLL replacement cannot load. The original executable is kept as `*.steamstub.bak`. This action is not useful for games without SteamStub and does not bypass server-side ownership checks.

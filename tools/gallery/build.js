@@ -120,7 +120,7 @@ function committer(file) {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
     });
-    return clean(log.trim().split('\n').filter(Boolean).pop(), LIMITS.by);
+    return clean(log.trim().split('\n').findLast(Boolean), LIMITS.by);
   } catch {
     return '';
   }

@@ -1,8 +1,7 @@
 'use strict';
 
-// Import/Export are two buttons in the preset designer. Nothing here renders, so these guard the
-// wiring the buttons depend on: the markup, the locale bindings and what the main process does with
-// the request.
+// Import/Export are two buttons in the preset designer; nothing here renders, so these guard the
+// markup, the locale bindings and what the main process does with the request.
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -52,10 +51,8 @@ test('Export writes the design on screen, never some other preset', () => {
   const handler = /\$\('#btn-export-preset'\)\.click\([\s\S]*?\n    \}\);/.exec(settings);
   assert.ok(handler, 'the export handler is gone');
 
-  // Falling back to the ACTIVE notification preset when the picker sat on "New preset…" exported a
-  // package named for the builder design whose contents were the user's current preset - a
-  // "goat.awpreset" whose manifest said "Shirow", clashing with the bundled Shirow on import. Export
-  // now takes the controls, except for an imported preset, whose look the controls cannot describe.
+  // Export must use the builder's current design, not the active notification preset, or the
+  // exported package's name and manifest contents can mismatch and clash with a bundled preset.
   assert.doesNotMatch(handler[0], /#option_overlayPreset/, 'Export can still reach for the active preset');
   assert.match(handler[0], /loaded && !isEditablePreset\(loaded\)\s*\?\s*\{ name: loaded \}/, 'an imported preset is not exported from disk');
   assert.match(handler[0], /options: readPresetOptions\(\)/, 'a builder design is not exported from the controls');
@@ -111,8 +108,8 @@ test('the main process installs only into the userData preset storage', () => {
 
 test('an imported preset is listed and deletable, not an orphan in the preset folder', () => {
   const init = read('electron', 'init.js');
-  // Only the builder's options file used to count, so a hand-authored preset installed from a
-  // package was invisible in the picker and refused by delete.
+  // A hand-authored preset installed from a package (no builder options file) must still be
+  // visible in the picker and deletable, not just presets carrying builder options.
   assert.match(init, /const PRESET_MARKERS = \[PRESET_OPTIONS_FILE, presetPackage\.PRESET_PACKAGE_FILE\];/);
 
   const list = /ipcMain\.handle\('list-custom-presets'[\s\S]*?\n\}\);/.exec(init);
@@ -149,8 +146,8 @@ test('deleting a preset never moves the user onto an unrelated one', () => {
   const helper = /async function refreshOverlayPresetMenu[\s\S]*?\n    \}/.exec(settings);
   assert.ok(helper, 'the preset menu helper is gone');
 
-  // Deleting the active preset used to fall through to presets[0], i.e. whatever sorts first
-  // ("ArmsofGod"), which looked like the setting had failed to save.
+  // Deleting the active preset must not silently fall through to whatever preset sorts first
+  // ("ArmsofGod"), which would look like the setting failed to save.
   assert.match(helper[0], /\[preferred, previous, DEFAULT_PRESET_NAME\]\.find\(\(n\) => n && names\.includes\(n\)\)/);
   assert.match(settings, /const DEFAULT_PRESET_NAME = 'AW Next';/);
 

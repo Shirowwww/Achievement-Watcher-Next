@@ -1,20 +1,15 @@
 'use strict';
 
-/*
-  Steam's own local app catalogue (appcache/appinfo.vdf). Answers "is this appid a game" and "what is
-  it called" fully offline - GetAppList and the store can both be rate-limited/offline at once, and
-  there is no reliable remote non-game filter. Binary KV format (magic 0x07564427/28/29); v29 adds a
-  string table and KV keys become indexes into it. Field layout is commented at each read below.
-*/
+// Steam's local app catalogue (appcache/appinfo.vdf): answers "is this appid a game" fully offline,
+// since GetAppList/the store can be rate-limited. Binary KV, magic 0x07564427/28/29; v29 adds a string table.
 
 const fs = require('fs');
 const path = require('path');
 
 let debug = { log() {}, warn() {}, error() {} };
 
-// Logger handed in, not required here: the Watchdog loads this file from outside the asar
-// (watchdog/util/sharedAppModule.js), where a relative require can't reach into it, so a shared
-// module carries no siblings (enforced by test/core/sharedAppModules.test.js). No logger means silent.
+// Logger handed in, not required: the Watchdog loads this file outside the asar via
+// sharedAppModule.js, where a relative require can't reach siblings (test/core/sharedAppModules.test.js).
 module.exports.initDebug = ({ logger }) => {
   if (logger) debug = logger;
 };
@@ -31,7 +26,7 @@ function readCString(buf, off) {
 
 function readStringTable(buf, offset) {
   const count = buf.readUInt32LE(Number(offset));
-  const table = new Array(count);
+  const table = Array.from({ length: count });
   let off = Number(offset) + 4;
   for (let i = 0; i < count; i++) {
     const read = readCString(buf, off);
@@ -94,8 +89,7 @@ function parseNode(buf, offset, table, limit) {
   return { obj, next: off };
 }
 
-// Only the fields this module promises. Keeping the parsed KV out of the cache matters: the full
-// file is 4 MB of app records and holding it would cost far more than the answers are worth.
+// Only the fields this module promises; the full parsed KV (4 MB of app records) is never cached.
 function summarize(appid, kv) {
   const common = (kv && kv.appinfo && kv.appinfo.common) || (kv && kv.common) || null;
   if (!common) return null;
@@ -124,8 +118,7 @@ function parseAppInfo(buf) {
     const size = buf.readUInt32LE(off);
     off += 4;
     const end = off + size;
-    // appid/size are the only fields this reader needs to walk the file; everything between them
-    // and the KV payload is metadata it does not use, so it is skipped by width rather than parsed.
+    // Metadata between size and the KV payload is unused, so it is skipped by width rather than parsed.
     let kvStart = off + 4 + 4 + 8 + 20 + 4; // infoState, lastUpdated, picsToken, sha1 text, changeNumber
     if (magic !== MAGIC_V27) kvStart += 20; // sha1 of the binary section
     try {
@@ -139,9 +132,7 @@ function parseAppInfo(buf) {
   return byAppid;
 }
 
-// Re-read only when Steam has rewritten the file. The parse is ~4 MB of buffer walking; doing it
-// once per session (and again after a Steam update) is the difference between a free lookup and a
-// per-game cost.
+// Re-read only when Steam has rewritten the file; the ~4 MB parse is otherwise once per session.
 let cache = { file: '', mtimeMs: 0, size: 0, byAppid: null };
 
 function load(steamPath) {
@@ -167,9 +158,8 @@ function load(steamPath) {
   }
 }
 
-// Drop the parsed catalogue: the app keeps it for a whole scan where every game consults it (the
-// 7 MB pays for itself), but the Watchdog is a resident daemon asking about one appid at a time, so
-// it hands the memory straight back instead of holding it all session.
+// Drop the parsed catalogue: worth keeping during a scan, but the Watchdog only asks per-appid
+// and would otherwise hold the memory all session.
 module.exports.releaseCache = () => {
   cache = {};
 };
@@ -182,11 +172,8 @@ module.exports.lookup = (steamPath, appid) => {
   return (byAppid && byAppid.get(String(appid))) || null;
 };
 
-/*
-  Steam's own type for an appid ('game' | 'dlc' | 'demo' | 'music' | 'tool' | 'application' | 'video'
-  | 'config' | 'beta' ...), or '' when it is not in the local cache. Callers must treat '' as
-  "unknown", never as "not a game": the cache only covers apps this client has actually seen.
-*/
+// Steam's own type ('game'|'dlc'|'demo'|...), or '' when the appid is not in the local cache.
+// Callers must treat '' as "unknown", never as "not a game".
 module.exports.typeOf = (steamPath, appid) => {
   const entry = module.exports.lookup(steamPath, appid);
   return entry ? entry.type : '';
@@ -197,9 +184,8 @@ module.exports.nameOf = (steamPath, appid) => {
   return entry && entry.name ? entry.name : '';
 };
 
-// Types that are a playable thing a user would expect to see in their library. 'beta' is included
-// because a beta branch app is the game (REMATCH BETA TEST, Battlefield 6 Open Beta); 'demo' is
-// not, and neither are DLC, soundtracks, servers, tools and the redistributable packages.
+// Playable types a user expects in their library. 'beta' counts (e.g. a beta-branch app is the
+// game); demos, DLC, soundtracks and tools do not.
 const LIBRARY_TYPES = new Set(['game', 'beta']);
 module.exports.LIBRARY_TYPES = LIBRARY_TYPES;
 

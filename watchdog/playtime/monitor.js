@@ -35,9 +35,8 @@ let gameIndex;
 let gameIndexByBinary;
 let disabledOfficialSteamAppids = new Set();
 let appidByDirCache;
-// A long-running daemon sees an unbounded number of distinct process directories, so the
-// directory -> appid memo is capped and evicts in insertion order. It only exists to avoid
-// repeating the recursive config-file glob; losing an old entry costs one extra scan.
+// The directory -> appid memo is capped and evicts in insertion order, since a long-running daemon
+// sees unbounded process directories; losing an entry just costs one extra glob scan.
 const APPID_BY_DIR_CACHE_MAX = 512;
 function rememberAppidForDir(dirKey, appid) {
   if (appidByDirCache.size >= APPID_BY_DIR_CACHE_MAX) {
@@ -59,9 +58,8 @@ const builtinIgnoredAppids = new Set([
 ]);
 const wallpaperProcessNames = new Set(['wallpaperui.exe', 'wallpaper32.exe', 'wallpaper64.exe', 'wallpaperservice32.exe', 'winrtutil32.exe', 'winrtutil64.exe']);
 
-// Join a path under an environment root, tolerating an unset variable. The mute list below is built
-// at module load, so a missing SystemRoot used to throw before the module even finished loading -
-// path.join() rejects undefined - and take the whole playtime monitor down with it.
+// Joins a path under an environment root, tolerating an unset variable: the mute list is built at
+// module load, so a missing SystemRoot used to throw and take the whole monitor down with it.
 function envPath(variable, ...segments) {
   const root = process.env[variable];
   return root ? path.join(root, ...segments) : '';
@@ -127,11 +125,8 @@ function getIgnoredAppids() {
   return ignored;
 }
 
-// Steam sells apps/tools beside games (DSX, Lossless Scaling, Wallpaper Engine, SteamVR); running one
-// reads as a game starting and inflates playtime. appcache/appinfo.vdf's common.type is Steam's own
-// local, offline verdict, so only a definite 'application'/'tool' excludes - an unknown appid
-// (cracked, non-Steam, newer than the cache) must stay trackable, hence isLibraryGame returning null,
-// never false, there. Catalogue released right after each answer; the parsed records cost ~7 MB idle.
+// Steam sells non-game apps (DSX, Lossless Scaling, SteamVR, etc.) that would inflate playtime if
+// tracked as one; appinfo.vdf's common.type is Steam's own local, offline verdict for excluding them.
 const steamCatalogue = { path: '', resolved: false };
 const nonGameVerdicts = new Map();
 
@@ -184,9 +179,8 @@ function isIgnoredAppid(appid) {
   return getIgnoredAppids().has(key) || isNonGameSteamApp(key);
 }
 
-// Official Steam-library records are controlled by achievement_source.legitSteam. The renderer
-// already applies this setting to discovery, but the playtime monitor has its own game-index loader
-// and used to seed every Steam record regardless of that setting.
+// Official Steam-library records are gated by achievement_source.legitSteam; the renderer already
+// applies it to discovery, but the playtime monitor has its own game-index loader and must check too.
 function isOfficialSteamLibraryGame(game) {
   return /^steam\s*\(/i.test(String((game && game.source) || '').trim());
 }
@@ -212,9 +206,8 @@ function isWallpaperEngineProcess(process, filepath) {
   return wallpaperProcessNames.has(proc) || file.includes('\\wallpaper_engine\\') || file.includes('/wallpaper_engine/');
 }
 
-// Keep process-name matching indexed, but evaluate user exclusions and demo filtering for every
-// event. Both can change while the Watchdog is running, so putting either condition in the index
-// would make a previously correct match stale.
+// Process-name matching stays indexed, but user exclusions and demo filtering run per event since
+// both can change while the Watchdog runs, which would make an indexed match stale.
 function getTrackableGameMatches(binaryIndex, process, isIgnored = isIgnoredAppid) {
   return getBinaryMatches(binaryIndex, process).filter((game) => !isIgnored(game.appid) && !String(game.name || '').toLowerCase().includes('demo'));
 }
@@ -283,9 +276,8 @@ async function init() {
     processMonitor = createPollingProcessMonitor({
       list: tasklist.list,
       initialProcesses: snapshot,
-      // Resolved per creation event only. Without it the polling monitor has no image path at all,
-      // so the "more than one game shares this binary" disambiguation and the mute-by-directory
-      // filter below could never fire - they were WQL-only until this was wired up.
+      // Resolved per creation event only: without it the polling monitor has no image path, so the
+      // "shared binary" disambiguation and the mute-by-directory filter below could never fire.
       resolvePath: tasklist.getProcessPath,
       onError: (err) => debug.warn(`[Process trail] process poll failed => ${err}`),
       shouldObserve: ({ process }) => {
@@ -322,9 +314,8 @@ async function init() {
         if (appidByDirCache.has(dirKey)) {
           appid = appidByDirCache.get(dirKey);
         } else {
-          // findByReadingContentOfKnownConfigfilesIn() globs the whole game tree, so it must run at
-          // most once per directory: cache the miss as well, otherwise every relaunch of the same
-          // non-game binary re-walks it. Both outcomes count towards the cache cap.
+          // findByReadingContentOfKnownConfigfilesIn() globs the whole game tree, so cache the miss
+          // too: otherwise every relaunch of the same non-game binary re-walks it.
           debug.log(`Try to find appid from a cfg file in "${gameDir}"`);
           appid = await findByReadingContentOfKnownConfigfilesIn(gameDir).catch(() => null);
           rememberAppidForDir(dirKey, appid);
@@ -443,17 +434,17 @@ async function getGameIndex() {
     user: path.join(userDataDir(), 'cfg', 'gameIndex.json'),
   };
 
-  let gameIndex = [],
+  let cached = [],
     userOverride = [];
 
   try {
     if (fs.existsSync(filePath.cache)) {
-      gameIndex = JSON.parse(fs.readFileSync(filePath.cache, 'utf8'));
+      cached = JSON.parse(fs.readFileSync(filePath.cache, 'utf8'));
     }
-    if (gameIndex) debug.log(`[Playtime] gameIndex loaded ! ${gameIndex.length} game(s)`);
+    if (cached) debug.log(`[Playtime] gameIndex loaded ! ${cached.length} game(s)`);
   } catch (err) {
     debug.error(err);
-    gameIndex = [];
+    cached = [];
   }
 
   try {
@@ -466,7 +457,7 @@ async function getGameIndex() {
 
   //Merge (assign) arrB in arrA using prop as unique key
   const mergeArrayOfObj = (arrA, arrB, prop) => arrA.filter((a) => !arrB.find((b) => a[prop] === b[prop])).concat(arrB);
-  const merged = mergeArrayOfObj(gameIndex, userOverride, 'appid');
+  const merged = mergeArrayOfObj(cached, userOverride, 'appid');
   const options = await loadWatchdogOptions();
   const sourceFiltered = filterGamesByAchievementSources(merged, options);
   disabledOfficialSteamAppids = new Set(

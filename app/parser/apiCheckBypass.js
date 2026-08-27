@@ -1,10 +1,7 @@
 'use strict';
 
-/*
-  Optional SteamAutoCrack "Steam API Check Bypass": a proxy DLL + JSON rules that redirect the game's
-  integrity checks back to the original DLL/exe and hide steam_settings. Off by default; does not help
-  PlayStation-PSPC titles. RAR extraction is routed to the main process.
-*/
+// Optional SteamAutoCrack "Steam API Check Bypass": a proxy DLL + JSON rules that redirect the game's
+// integrity checks back to the original DLL/exe and hide steam_settings. Off by default; no PSPC support.
 
 const fs = require('fs');
 const os = require('os');
@@ -107,11 +104,8 @@ async function downloadAndCache(cacheDir, tag, rarUrl) {
   }
 }
 
-/*
-  Ensure the bypass proxy DLLs are available locally and return { tag, dir, x64, x86 }. Hits GitHub at
-  most once per day; falls back to whatever is cached on any failure (so a one-time download then works
-  offline). Throws only when nothing is cached and the download fails.
-*/
+// Ensure the bypass proxy DLLs are available locally, returning { tag, dir, x64, x86 }. Hits GitHub at
+// most once a day, falling back to the cache on any failure; throws only when nothing is cached.
 async function ensureBypassDlls({ cacheDir, force = false, log = noopLog } = {}) {
   if (!cacheDir) throw new Error('ensureBypassDlls: cacheDir is required');
   fs.mkdirSync(cacheDir, { recursive: true });
@@ -147,10 +141,8 @@ async function ensureBypassDlls({ cacheDir, force = false, log = noopLog } = {})
   return downloadAndCache(cacheDir, tag, asset.browser_download_url);
 }
 
-/*
-  Build SteamAPICheckBypass.json (pure): redirects the exe to its backup and steam_api to <dll>.bak,
-  hides steam_settings, using Windows-relative paths per SteamAutoCrack's rules.
-*/
+// Build SteamAPICheckBypass.json (pure): redirects the exe to its backup and steam_api to <dll>.bak,
+// hides steam_settings, using Windows-relative paths per SteamAutoCrack's rules.
 function buildBypassConfig({ exeName, exeBackup = null, steamApiDlls = [], mode = 'nth_time_only', nthTimes = [1] } = {}) {
   const cfg = {};
   if (exeName && exeBackup) {
@@ -182,10 +174,8 @@ function findExeBackup(exePath) {
   return null;
 }
 
-/*
-  Apply the bypass to a game folder: drop the arch-matching proxy DLL under the hijack name and write
-  SteamAPICheckBypass.json beside the exe. No-op when a hijack DLL already exists.
-*/
+// Apply the bypass to a game folder: drop the arch-matching proxy DLL under the hijack name and write
+// SteamAPICheckBypass.json beside the exe. No-op when a hijack DLL already exists.
 function applyBypass({ gameDir, exePath, dlls, dllVariant = 'winmm', mode = 'nth_time_only', nthTimes = [1], log = noopLog } = {}) {
   if (!dlls || !dlls.x64 || !dlls.x86) throw new Error('applyBypass: bypass DLLs unavailable');
   if (!exePath || !fs.existsSync(exePath)) throw new Error(`applyBypass: game exe not found: ${exePath}`);

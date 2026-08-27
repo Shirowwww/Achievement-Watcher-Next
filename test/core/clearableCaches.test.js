@@ -1,9 +1,7 @@
 'use strict';
 
-// The one thing this module must never get wrong: deleting a userData folder that isn't a pure,
-// re-fetchable cache. This builds a real userData tree with both safe caches and the known
-// irreplaceable folders side by side (including cache/uplayR2, the user-seeded folder called out
-// in util/migrateUserData.js), and asserts the dangerous ones survive a real clearSafeCaches() run.
+// Protects against deleting a userData folder that isn't a pure, re-fetchable cache: builds a real
+// tree with both safe caches and known irreplaceable folders and asserts the latter survive.
 
 const assert = require('node:assert/strict');
 const fs = require('fs');

@@ -22,15 +22,13 @@ const cliUserDataDir = (() => {
   }
 })();
 app.setPath('userData', cliUserDataDir || path.join(app.getPath('appData'), APP_DATA_DIR_NAME));
-// Import forward along the data-folder chain, newest source first. Each hop is a no-op once the
-// destination holds AW configuration, so the second call does nothing when the first one ran, and
-// a user coming straight from 1.6.8 still gets their data.
+// Import forward along the data-folder chain, newest source first: each hop is a no-op once the
+// destination already holds AW configuration, so a user coming straight from 1.6.8 still gets their data.
 migrateAw3UserData(app.getPath('userData'));
 migrateLegacyUserData(app.getPath('userData'));
 migrateSouvenirFolder(app.getPath('userData'));
-// Runs on every start, not only on the hop that imported: the folders migrated before this existed
-// still hold a restore-point index pointing at the folder they came from, which keeps working only
-// until that folder is uninstalled or deleted. Idempotent - a repointed entry is skipped next time.
+// Runs on every start: folders migrated before this existed still hold a restore-point index
+// pointing at their old location. Idempotent, a repointed entry is skipped next time.
 retargetBackupIndex(app.getPath('userData'));
 // Keep GPU acceleration enabled, but avoid Chromium background services AW does not use in tray mode.
 for (const sw of ['disable-extensions', 'disable-component-extensions-with-background-pages', 'disable-default-apps', 'disable-background-networking', 'disable-accelerated-video-decode']) {
@@ -49,10 +47,8 @@ const { autoUpdater, CancellationToken } = require('electron-updater');
 // Updates require an explicit download and install confirmation.
 autoUpdater.autoDownload = false;
 autoUpdater.autoInstallOnAppQuit = false;
-// Differential downloads patch a cached copy of the previous installer that is never revalidated
-// between runs. A corrupted base (interrupted download, disk issue, an old stacked-download bug)
-// makes every future patch attempt fail with a sha512 checksum mismatch until someone finds and
-// deletes the cache by hand. Always downloading the full installer removes that whole failure class.
+// Differential downloads patch a cached, never-revalidated copy of the previous installer; a corrupted
+// base fails every future patch with a checksum mismatch. Full downloads avoid that failure class.
 autoUpdater.disableDifferentialDownload = true;
 // Accept the project's self-signed publisher through the tested verifier.
 autoUpdater.verifyUpdateCodeSignature = (publisherNames, tempUpdateFile) =>
@@ -123,13 +119,8 @@ function shouldSuppressUpdatePrompt(version, { manual = false } = {}) {
   return suppress;
 }
 
-/*
-  One updater state, published to every window and mirrored on the taskbar and the tray tooltip.
-
-  The state itself and every transition live in util/updateStatus.js so they can be tested without a
-  release; this half is only the plumbing. Nothing here runs while the updater is idle: the state
-  changes only on an updater event, and each change is published at most once per whole percent.
-*/
+/* One updater state, published to every window and mirrored on the taskbar/tray tooltip. State and
+   transitions live in util/updateStatus.js (testable without a release); this half is plumbing only. */
 const updateStatus = require(path.join(__dirname, '../util/updateStatus.js'));
 let currentUpdateStatus = updateStatus.initialState();
 let publishedUpdateStatus = null;
@@ -164,14 +155,8 @@ function trayTooltipFor(state) {
   return 'Achievement Watcher Next';
 }
 
-/*
-  The main window is the only renderer that listens - the title bar and Settings both live in it -
-  so the overlay and the transient notification windows are deliberately left alone rather than
-  woken once per percent for a message they would drop.
-
-  A window that does not exist yet is not a missed update: the renderer asks for the current state
-  on load through get-update-status.
-*/
+/* Only the main window listens (title bar + Settings live there); overlay/notification windows are
+   left alone. A window not yet created is not a missed update, it asks via get-update-status on load. */
 function publishUpdateStatus() {
   publishedUpdateStatus = currentUpdateStatus;
   applyUpdateProgressToWindow(MainWin);
@@ -200,13 +185,8 @@ function clearUpdateDownloadProgress() {
   setUpdateStatus({ type: 'reset' });
 }
 
-/*
-  Start (or restart) the installer download, holding on to its cancellation token.
-
-  electron-updater accepts a token and aborts the transfer cleanly when it is cancelled, which is
-  what makes an in-app Cancel possible at all: without one, a download started by mistake on a
-  metered connection could only be escaped by quitting the app.
-*/
+/* Start/restart the download, keeping its cancellation token: electron-updater aborts cleanly on
+   cancel, which is what makes an in-app Cancel button possible instead of quitting the app. */
 function startUpdateDownload(version) {
   updateProgressLogged = -1;
   setUpdateStatus({ type: 'download-started', version });
@@ -274,10 +254,8 @@ function notifyUpdateHeldBack(version) {
   } catch {}
 }
 
-// Wipes the whole electron-updater cache directory (both the differential-download base files and
-// the pending/ download), and resets the updater's in-memory record of what it has on disk. Shared
-// by the automatic checksum-mismatch recovery and the manual Settings > Advanced button. The actual
-// clearing lives in util/updateCacheClear.js, tested against the real electron-updater cache class.
+// Wipes the electron-updater cache directory (differential-download base + pending/ download) and
+// resets its in-memory record. Shared by checksum-mismatch recovery and Settings > Advanced.
 async function clearUpdaterCacheDir() {
   const helper = await autoUpdater.getOrCreateDownloadHelper();
   return clearCacheDirForHelper(helper, {
@@ -395,9 +373,8 @@ function setGameActivity(count) {
     scheduleIdleTrim('game-started');
     return;
   }
-  // The last game just exited: run the scan held back during play now instead of waiting out its
-  // fifteen-minute tick. Placed above the isPackaged gate on purpose - that gate is only for update
-  // checks, and scheduleBackgroundAutoFix() itself is not gated either.
+  // The last game just exited: run the scan held back during play now, instead of waiting out its
+  // fifteen-minute tick. Above the isPackaged gate on purpose, that gate is only for update checks.
   bgAutoFixHeldTicks = 0;
   if (!MainWin) setTimeout(() => runBackgroundAutoFix('after-game'), 20 * 1000);
   if (!app.isPackaged) return;
@@ -412,7 +389,7 @@ function setGameActivity(count) {
   scheduleUpdateCheck(updateGate.INTERVALS.afterGame);
 }
 const minimist = require('minimist');
-const { execFileSync, execFile, spawn } = require('child_process');
+const { execFileSync, spawn } = require('child_process');
 const { launchViaWindowsShell, isElevationDeclinedError } = require('../util/windowsShellLaunch.js');
 const fs = require('fs');
 const ipc = require(path.join(__dirname, 'ipc.js'));
@@ -505,9 +482,8 @@ function currentThemePayload(nameOverride) {
       if (matches.length > 0) userCss = userThemes.readThemeFile(matches[0].file);
     } catch {}
   }
-  // An imported .awtheme. Read only when one is actually selected, so nothing about theme storage
-  // is touched on a start that is not using one. A theme deleted behind the app's back resolves to
-  // null here and the window falls back to the built-in look rather than to no stylesheet at all.
+  // An imported .awtheme, read only when actually selected. A theme deleted behind the app's back
+  // resolves to null here, falling back to the built-in look rather than no stylesheet at all.
   let packTheme = null;
   const pack = userThemes.parsePackValue(name);
   if (pack) {
@@ -523,12 +499,8 @@ const BASE_URL = 'https://www.steamgriddb.com/api/v2';
 const DEFAULT_API_KEY = '2a9d32ddd0bfe4e1191b4f6ff56fef60'; // bundled public fallback (rate-limited)
 // Bound artwork requests so a dead network cannot stall a scan for minutes.
 const SGDB_FETCH_TIMEOUT_MS = 8000;
-/*
-  Bounding each request is not enough on its own: artwork is requested per game, so an unreachable
-  SteamGridDB still costs the whole library one timeout each, in sequence (120 "fetch failed" lines
-  in one offline user log). Same breaker as the Steam hosts - a few consecutive transport failures
-  and the rest of the scan gets the same empty answer instantly, until any success closes it.
-*/
+/* A per-request timeout is not enough: artwork is requested per game, so an unreachable SteamGridDB
+   still costs the library one timeout each. Same breaker pattern as the Steam hosts below. */
 const SGDB_COOLDOWN_MS = 5 * 60 * 1000;
 const sgdbCircuit = createNetworkCircuit({ failureLimit: 3, cooldownMs: SGDB_COOLDOWN_MS, shouldCount: isSteamTransportFailure });
 
@@ -604,18 +576,10 @@ function resetSteamTransportCircuit() {
   productInfoCircuit.reset();
 }
 
-/*
-  store.steampowered.com/api/appdetails is rate-limited per IP (a few hundred calls per 5 minutes).
-  A cleared cache asks for it once per game, so a large library blows through the budget in seconds
-  and every remaining call comes back as an HTML block page or a bare `null` body. A user log shows
-  1066 "Unexpected token '<', "<HTML><HEA"" parse errors and 162 "Cannot read properties of null" in
-  one evening, all from this one fetch - and none of them are network errors, so the transport
-  breaker above never sees them.
-
-  The lookup is optional: resolveSteamMetadata prefers product info, and the store payload only
-  fills gaps. So once the endpoint starts refusing, stop asking for the rest of the scan instead of
-  paying a request and an exception per game.
-*/
+/* appdetails is rate-limited per IP; a cleared cache blows through the budget in seconds and every
+   remaining call returns an HTML block page or a bare `null`, neither of which the transport breaker
+   above sees as a network error. The lookup is optional (product info is preferred), so stop asking
+   once the endpoint starts refusing instead of paying a request and an exception per game. */
 const STORE_APPDETAILS_COOLDOWN_MS = 5 * 60 * 1000;
 const storeAppDetailsCircuit = createNetworkCircuit({ failureLimit: 2, cooldownMs: STORE_APPDETAILS_COOLDOWN_MS });
 
@@ -646,16 +610,9 @@ async function fetchStoreAppDetails(appid) {
   return (json[appid] && json[appid].data) || null;
 }
 
-/*
-  steam-user's product info runs over one connection and queues, and nothing on our side bounded it.
-  A cold scan shows what that costs: all eight scan workers block on it at the same instant and are
-  killed together by the 30s per-game budget - 24 games in one run, every one of them a real install
-  reduced to a provisional tile, retried (and stalled again) on the next scan.
-
-  Bound it, and stop asking once it has hung twice: product info is the preferred metadata source,
-  not the only one. The store payload and the app-list name still resolve a usable title, which is
-  what decides whether the schema can be cached at all.
-*/
+/* steam-user's product info runs over one queued connection with no bound; a cold scan can block all
+   scan workers on it at once until the per-game budget kills them. Bound it and stop after two hangs:
+   the store payload and app-list name still resolve a usable title without it. */
 const STEAM_PRODUCT_INFO_TIMEOUT_MS = 12000;
 const STEAM_PRODUCT_INFO_COOLDOWN_MS = 5 * 60 * 1000;
 const productInfoCircuit = createNetworkCircuit({ failureLimit: 2, cooldownMs: STEAM_PRODUCT_INFO_COOLDOWN_MS });
@@ -703,19 +660,9 @@ function rememberSteamGroups(cacheKey, groups) {
   }
 }
 
-/*
-  Circuit breaker for the SteamHunters achievement-groups endpoint.
-
-  Every game asks for its groups independently, so when the host is unreachable the whole library
-  pays the full 10s timeout each, one after another: a user's log shows 52 consecutive
-  "aborted due to timeout" lines spanning 70 seconds of a scan that had nothing else to wait for.
-  The answer never varies within such a window - it is the host that is down, not the game - so
-  after a few consecutive transport failures the rest of the scan skips the call outright and gets
-  the same empty result instantly.
-
-  Only transport failures count. An HTTP error is a real answer from a reachable host and leaves the
-  breaker alone, and any success closes it immediately.
-*/
+/* Circuit breaker for the SteamHunters achievement-groups endpoint: each game asks independently, so
+   an unreachable host costs the whole library one 10s timeout apiece. Only transport failures count,
+   an HTTP error is a real answer and leaves the breaker alone; any success closes it. */
 const STEAM_GROUPS_COOLDOWN_MS = 5 * 60 * 1000;
 const steamGroupsCircuit = createNetworkCircuit({ failureLimit: 3, cooldownMs: STEAM_GROUPS_COOLDOWN_MS });
 
@@ -806,17 +753,9 @@ if (!manifest.config.debug) {
 
 let puppeteerWindow = {};
 let MainWin = null;
-/*
-  Tray daemon memory: hiding the window to the tray leaves its renderer (measured ~180 MB) and the
-  GPU process it keeps alive (~140 MB) resident for the rest of the session, even though nothing in
-  the page runs while hidden - every background job (playtime, notifications, achievement polling)
-  belongs to the monitor process, and the headless new-game scan already has a main-process
-  fallback that only engages while MainWin is null (runBackgroundAutoFix).
-
-  So the window is *released* - not just hidden - once it has stayed hidden for a while. The delay
-  keeps a quick hide/show round trip instant; past it, the tray footprint drops to the daemon plus
-  the monitor. Reopening goes through the ordinary createMainWindow() path.
-*/
+/* Hiding to tray leaves the renderer (~180 MB) and its GPU process (~140 MB) resident even though
+   every background job belongs to the monitor. So the window is released, not just hidden, once it
+   has stayed hidden a while; a quick hide/show stays instant, reopening goes through createMainWindow(). */
 const MAIN_WINDOW_IDLE_RELEASE_MS = 5 * 60 * 1000;
 let mainWindowReleaseTimer = null;
 
@@ -1033,16 +972,9 @@ async function getAchievementsKeyless(appid, lang) {
   return { achievements: [], source: 'none' };
 }
 
-/*
-  One appid is asked for the same thing several times at once: the notification path requests
-  'steamhunters' and 'common' together, the library requests metadata per tile, and a cold scan runs
-  eight games in parallel over shared sources. A user log shows 162 store lookups for 39 appids -
-  four network round trips each where one answer would have served every caller.
-
-  Coalescing is per (type, appid, language) and lasts only as long as the request is in flight; a
-  completed answer is cached by the callers themselves (steam_cache), not here. Each caller gets its
-  own copy, because several of them mutate what they receive.
-*/
+/* One appid can be asked for the same thing several times at once (notification + library tile +
+   parallel scan workers). Coalesce per (type, appid, language) for the duration of the in-flight
+   request only; a completed answer is cached by the callers themselves, not here. */
 const COALESCED_STEAM_TYPES = new Set(['common', 'name', 'header', 'icon', 'portrait', 'data', 'steamhunters']);
 const steamDataInFlight = new Map();
 
@@ -1082,9 +1014,8 @@ async function resolveSteamData(request) {
     }
   }
   try {
-    // A cleared cache can fan out one lookup per game. Once two independent Steam transports have
-    // failed, do not make every AppID wait on the same dead host; the renderer will keep the game
-    // provisional and retry when the circuit is reset or its cooldown expires.
+    // A cleared cache fans out one lookup per game; once transport has failed, do not make every
+    // appid wait on the same dead host. The renderer keeps the game provisional and retries later.
     if (steamTransportUnavailable() && ['common', 'name', 'header', 'icon', 'portrait', 'user'].includes(type)) {
       return { appid, networkError: true };
     }
@@ -1297,14 +1228,8 @@ function attachOverlayRarity(game) {
   }
 }
 
-/*
-  Point each row at the picture the game itself ships, when it has one.
-
-  The overlay is on screen over a running game, which is the worst possible moment to be waiting on
-  a download - and for the player in issue #38 that download never arrives at all. An emulated
-  install holds every achievement image next to the game, so the paths are attached here and the
-  page prefers them; a game without them is untouched and keeps the normal fetch.
-*/
+/* Point each row at the picture the game itself ships, if it has one: the overlay is on screen over a
+   running game, the worst moment to wait on a download. Untouched games keep the normal fetch. */
 function attachOverlayLocalIcons(game) {
   try {
     if (!game || !game.achievement || !Array.isArray(game.achievement.list)) return;
@@ -1641,10 +1566,8 @@ ipcMain.on('fetch-source-img', async (event, arg) => {
   }
 });
 
-// ShellExecute (Start-Process), not spawn(): a detached Node child has no console handle, and
-// .NET GUI programs (e.g. Ryujinx) touch Console.Title on startup and terminate without one.
-// Also the fallback when spawn() fails with EACCES: ShellExecute elevates through the normal
-// UAC prompt for executables that need admin rights without declaring it in their manifest.
+// ShellExecute (Start-Process), not spawn(): a detached Node child has no console handle, which
+// crashes .NET GUI programs; also the EACCES fallback, ShellExecute elevates through UAC normally.
 ipcMain.handle('launch-game-via-shell', async (event, { executable, args = '', workingDirectory = '', elevate = false } = {}) => {
   try {
     if (process.platform !== 'win32') {
@@ -1669,15 +1592,9 @@ ipcMain.handle('launch-game-via-shell', async (event, { executable, args = '', w
   }
 });
 
-/*
-  Settings > Advanced > Diagnostics: write every log file into one .zip the user chooses.
-
-  "Open logs folder" is not enough on its own - the tray daemon, the monitor and each transient
-  notification process keep their streams open and keep appending, so hand-copying picks up
-  half-written lines and some compressors refuse a file whose size changes under them. Reading each
-  log once here and writing the bytes into an archive gives a consistent snapshot without stopping
-  anything, which is what a bug report actually needs.
-*/
+/* Settings > Advanced > Diagnostics: zip every log file. Hand-copying is not enough, several
+   processes keep their log streams open and appending, so read each once here for a consistent
+   snapshot without stopping anything. */
 ipcMain.handle('export-logs', async () => {
   try {
     const logArchive = require(path.join(__dirname, '..', 'util', 'logArchive.js'));
@@ -1739,11 +1656,8 @@ ipcMain.handle('check-for-updates', async () => {
   }
 });
 
-/*
-  The current updater state, for a window that has just loaded. The broadcast on its own is not
-  enough: a download started while the app sat in the tray finishes long before anyone opens the
-  window, and a renderer that only listens would show nothing at all for the whole download.
-*/
+/* Current updater state for a window that just loaded: the broadcast alone is not enough, a download
+   can finish while the app sat in the tray with nobody listening yet. */
 ipcMain.handle('get-update-status', () => currentUpdateStatus);
 
 // Stop a download in flight. Answers whether there was one, so the UI can drop a Cancel button that
@@ -1795,11 +1709,8 @@ ipcMain.handle('clear-update-cache', async (event) => {
   return result;
 });
 
-// Is the Steam client running right now? A steam:// link is only sent to the client in that case;
-// otherwise the user gets the web page instead of a client launch. Steam writes its pid to
-// ActiveProcess and clears it on exit, so this only costs a registry read; the pid is confirmed
-// with a liveness check (signal 0) since it can survive a crash, and EPERM still counts as alive.
-// Never cached: Steam can start and stop while the app stays open.
+// Is Steam running? Steam writes its pid to ActiveProcess and clears it on exit, so this is a cheap
+// registry read plus a liveness check (EPERM still counts as alive). Never cached: Steam toggles.
 ipcMain.handle('steam:is-running', () => {
   try {
     const { readRegistryInteger } = require(path.join(app.getAppPath(), 'util/reg.js'));
@@ -1895,9 +1806,8 @@ ipcMain.handle('epic:login', async () => {
       const wc = contents && !contents.isDestroyed() ? contents : epicLoginWindow && !epicLoginWindow.isDestroyed() ? epicLoginWindow.webContents : null;
       if (settled || !wc) return;
       try {
-        // Fetch the redirect endpoint from the main process through the login window's session,
-        // so cookies behave exactly like the page's own fetch without splicing the URL into an
-        // injected script body.
+        // Fetch the redirect endpoint through the login window's session so cookies behave like
+        // the page's own fetch, without splicing the URL into an injected script.
         const res = await wc.session.fetch(redirectUrl, { credentials: 'include' });
         const json = await res.json().catch(() => ({}));
         const code = (json && (json.authorizationCode || json.code)) || '';
@@ -2039,12 +1949,8 @@ ipcMain.handle('steam:login', async () => {
       finish({ ok: false, error: 'login-cancelled' });
     });
 
-    // The login page is Valve's own: AW injects no script and reads no form. The only signal is the
-    // session cookie appearing, then a readable webapi_token. The two are not simultaneous: the
-    // cookie appears right after password validation, before Steam Guard and before the session is
-    // authenticated on store.steampowered.com, so closing the window at that point used to abandon
-    // an in-progress login (reported as "steam-token-missing"). We wait for the token instead of
-    // ever failing on our own; only the user closing the window counts as cancellation.
+    // Valve's own login page, AW injects no script. The session cookie appears before the token is
+    // readable, so wait for the token rather than failing early; only closing the window cancels.
     let capturing = false;
     const tryCapture = async () => {
       if (settled || capturing) return;
@@ -2143,8 +2049,7 @@ ipcMain.handle('xbox-pc:login', async () => {
             : null;
       if (settled || !wc) return;
       // Navigation events carry the redirect URL before it commits; fall back to the current URL
-      // for the poll timer and for flows that never surface navigation events (blocked localhost
-      // load - the URL is still readable from getURL() once the navigation is attempted).
+      // for flows that never surface a navigation event (blocked localhost load).
       const result = xboxPc.extractXboxDirectAuthResult(url || wc.getURL(), state);
       if (!result) return;
       if (result.error) {
@@ -2222,10 +2127,8 @@ ipcMain.handle('xbox-pc:import', async (event, opts = {}) => {
   }
 });
 
-// Kill any Watchdog currently holding the WS port (8082). The monitor is normally our own supervised
-// child, but a crash of this app can leave an orphaned Watchdog behind (it outlives its parent on
-// Windows), so we sweep by the well-known port once at startup before the first launch. Normal quits
-// tear the child down explicitly; respawns skip the sweep.
+// Kill any Watchdog holding WS port 8082: a crash of this app can leave an orphaned Watchdog behind
+// (it outlives its parent on Windows), so sweep by the well-known port once before the first launch.
 function killWatchdog() {
   try {
     const out = execFileSync('netstat.exe', ['-ano', '-p', 'tcp'], { encoding: 'utf8', windowsHide: true });
@@ -2289,14 +2192,8 @@ function handleMonitorMessage(msg) {
   }
 }
 
-/*
-  Resolve a game's square logo while it is starting, not while its notification is on screen.
-
-  The monitor says "this game just launched"; the answer (and the file itself) then sits in the same
-  cache both transports read from, so the unlock or playtime card minutes later paints it instantly.
-  This is also the only thing that gives a Windows-notification-only user a real square logo: the
-  monitor has no network lookups of its own, it only reads what the app has already resolved.
-*/
+/* Resolve a game's square logo while it starts, not while its notification is on screen: the answer
+   lands in the same cache both transports read, so the unlock/playtime card paints it instantly. */
 const squareLogoPrefetched = new Set();
 async function prefetchSquareGameLogo(request) {
   const appid = String((request && request.appid) || '').trim();
@@ -2312,11 +2209,8 @@ async function prefetchSquareGameLogo(request) {
   } catch (err) {
     debug.log(`[artwork] square logo prefetch failed for "${name || appid}": ${err.message || err}`);
   }
-  /*
-    And extract the executable's own icon while the game is starting, for the same reason: the
-    Watchdog has no PE reader and paints Windows toasts on its own, so the file has to be sitting in
-    the shared cache before the first card is due.
-  */
+  /* Also extract the executable's own icon while starting: the Watchdog has no PE reader, so the
+     file must already be in the shared cache before the first toast is due. */
   try {
     const executable = configuredExecutable(libraryAppid, appid);
     if (executable) await fetchExecutableIcon(executable, appid);
@@ -2325,13 +2219,9 @@ async function prefetchSquareGameLogo(request) {
   }
 }
 
-/*
-  Tell the monitor what became of an overlay notification it asked for. It cannot see this window, so
-  without a report its only evidence would be that process.send() returned - which says nothing about
-  a popup appearing. Two stages: 'accepted' (the request is renderable, sent before any artwork is
-  fetched so a fallback decision is not held up behind a download or a queued popup) and 'rendered'
-  (the window actually loaded, or did not). See watchdog/notification/overlayAck.js.
-*/
+/* Tell the monitor what became of an overlay notification it asked for (it cannot see this window).
+   Two stages: 'accepted' (renderable, sent before artwork fetch) and 'rendered' (window actually
+   loaded, or not). See watchdog/notification/overlayAck.js. */
 function reportNotificationOutcome(id, stage, ok, reason = '') {
   if (!id) return;
   if (!monitorProc || monitorProc.exitCode !== null || monitorProc.killed || !monitorProc.connected) return;
@@ -2353,10 +2243,8 @@ function notifyMonitorOverlayState(opened) {
   }
 }
 
-// Frees the resident working set (GPU/network processes included) that idle Chromium keeps until
-// Windows is under memory pressure - measured at 211 MB - so a game starting next gets it back
-// sooner. Not on a timer: repeated trims thrash (pages fault straight back in), so this fires once
-// per idle transition with a cooldown, absorbing bursts like window-release then overlay-release.
+// Frees the resident working set (measured 211 MB) idle Chromium keeps until Windows reclaims it.
+// Not on a timer, repeated trims thrash; fires once per idle transition with a cooldown.
 const IDLE_TRIM_DELAY_MS = 5000;
 const IDLE_TRIM_MIN_INTERVAL_MS = 2 * 60 * 1000;
 let idleTrimTimer = null;
@@ -2420,10 +2308,8 @@ function getRendererPid() {
   return null;
 }
 
-// Covers the gap AW_APP_PIDS cannot: on a fresh launch the watchdog is already running (and has
-// already read its env) by the time createMainWindow() gives the renderer its OS PID. Without this,
-// the "send Escape to the game, never to AW itself" safeguard would not protect the main window
-// until the next watchdog respawn.
+// Covers the gap AW_APP_PIDS cannot: on a fresh launch the watchdog reads its env before
+// createMainWindow() gives the renderer its OS PID, so the Escape-to-game safeguard needs this too.
 function notifyWatchdogOfAppPid() {
   const rendererPid = getRendererPid();
   if (!rendererPid) return;
@@ -2435,8 +2321,7 @@ function notifyWatchdogOfAppPid() {
 
 function launchWatchdog() {
   // Must clearTimeout AND null the handle: scheduleMonitorRespawn() treats a non-null
-  // monitorRespawnTimer as "already pending" and bails. A manual restart landing mid-pending used
-  // to leave a stale handle, silently disabling respawn until the app was restarted.
+  // monitorRespawnTimer as already pending and bails, so a stale handle would silently disable respawn.
   clearTimeout(monitorRespawnTimer);
   monitorRespawnTimer = null;
   if (monitorProc && monitorProc.exitCode === null && !monitorProc.killed) {
@@ -2470,19 +2355,14 @@ function launchWatchdog() {
     // Where the bundled notification sounds live, so the Watchdog's Windows toasts play the
     // same sound files as the in-game overlay (user-imported sounds are under <userData>/sounds).
     AW_SOUNDS_DIR: path.join(__dirname, '../sounds'),
-    // The Watchdog's Windows toasts should appear under Achievement Watcher's own identity, not a
-    // borrowed Xbox app id. The app's AUMID is registered by the installer's Start Menu shortcut;
-    // the Watchdog checks it and falls back to the legacy ids when it is not registered (dev runs).
+    // Toasts should appear under AW's own identity, not a borrowed Xbox app id. Registered by the
+    // installer's shortcut; the Watchdog falls back to legacy ids when unregistered (dev runs).
     AW_AUMID: manifest.config.appid || '',
     // URI scheme a toast click activates. Empty when registration failed (or in a dev run), in
     // which case the Watchdog omits the activation instead of emitting one that goes nowhere.
     AW_TOAST_PROTOCOL: toastProtocolReady ? TOAST_PROTOCOL : '',
-    // Lets the Watchdog's "send Escape on controller overlay open" helper avoid ever injecting
-    // input into the Achievement Watcher window itself (e.g. when the combo is pressed while the
-    // app has focus instead of the game). Covers both the browser process and the main window's
-    // renderer, whichever owns the foreground HWND.
-    // MainWin usually does not exist yet on a fresh launch (createMainWindow() runs after this),
-    // so this only covers the common respawn/restart case. notifyWatchdogOfAppPid() covers the gap.
+    // Lets the Watchdog's Escape-on-overlay-open helper avoid injecting input into AW's own window.
+    // MainWin may not exist yet on a fresh launch; notifyWatchdogOfAppPid() covers that gap.
     AW_APP_PIDS: [String(process.pid), getRendererPid()]
       .filter(Boolean)
       .join(','),
@@ -2504,9 +2384,8 @@ function launchWatchdog() {
     child.stderr?.on('data', (d) => debug.log(`[monitor:err] ${String(d).trimEnd()}`));
     child.on('message', handleMonitorMessage);
     child.on('error', (err) => {
-      // spawn failure (missing exe, EACCES, ...) emits 'error' but not 'exit'; without this the stale
-      // monitorProc would make every future launch return "already running" and the monitor would
-      // stay dead for the whole session.
+      // spawn failure emits 'error' but not 'exit'; without clearing it, the stale monitorProc would
+      // report "already running" forever and the monitor would stay dead for the session.
       debug.log(`[monitor] spawn error: ${err.message}`);
       if (monitorProc === child) monitorProc = null;
       unregisterOverlayHotkey();
@@ -2567,11 +2446,9 @@ ipcMain.handle('start-watchdog', async (event) => {
   return restartWatchdog();
 });
 
-// The renderer re-seeds cfg/gameIndex.json at the end of every library scan. Ask the running
-// Watchdog to reload it so non-Steam games added while it is already up are tracked without a
-// restart. No-op when the Watchdog is down; the next launch reads the fresh index anyway.
-// A game's achievements were reset. The monitor caches its unlock baseline in memory, so deleting
-// the file is not enough - ask it to drop the game, or nothing that game unlocks again will notify.
+// The renderer re-seeds cfg/gameIndex.json at scan end; ask the Watchdog to reload it so new non-Steam
+// games are tracked without a restart (no-op when it's down). A reset game's unlock baseline lives in
+// the monitor's memory too, so deleting the file is not enough, ask it to drop the game explicitly.
 ipcMain.handle('watchdog-forget-achievement-baseline', (event, appid) => {
   if (!appid) return false;
   if (!monitorProc || monitorProc.exitCode !== null || monitorProc.killed || !monitorProc.connected) return false;
@@ -2601,9 +2478,7 @@ let bgAutoFixTimer = null;
 let bgAutoFixInFlight = false;
 let bgKnownAppids = null; // baseline of discovered appids; null until the first full pass seeds it
 // Mirror of the renderer's unrenderable-appid memory (see seedNewGameScanBaseline in app.js): an
-// appid that discovery keeps finding but makeList never returns must not re-trigger a headless scan
-// every poll. This matters more here than in the renderer now that the window is released after
-// sitting hidden, because that hands the polling back to this fallback for most of a session.
+// appid discovery keeps finding but makeList never returns must not re-trigger a scan every poll.
 const BG_UNRENDERABLE_MISS_LIMIT = 2;
 const bgUnrenderableAppids = new Map();
 
@@ -2619,9 +2494,8 @@ function recordBackgroundScanMisses(discoveredIds, renderedList) {
 const BG_AUTOFIX_INTERVAL_MS = 15 * 60 * 1000;
 const BG_AUTOFIX_FULL_EVERY_TICKS = 4; // ~1 hour
 let bgAutoFixTicks = 0;
-// Safety valve: "game running" comes from the monitor and can be a background Steam app mistaken
-// for one (DSX, Wallpaper Engine, etc.) until blacklisted, which would otherwise suspend the scan
-// forever. Eight ticks (~2h) outlasts any real session but caps a false positive's cost.
+// Safety valve: "game running" can be a background Steam app mistaken for one (DSX, Wallpaper
+// Engine) until blacklisted, which would otherwise suspend the scan forever. Caps that cost.
 const BG_AUTOFIX_MAX_HELD_TICKS = 8;
 let bgAutoFixHeldTicks = 0;
 
@@ -2643,9 +2517,8 @@ function notifyEmulatorFixed(game) {
 
 async function runBackgroundAutoFix(reason) {
   if (MainWin) return; // window open → the renderer's own new-game scan handles fixes
-  // Not while playing: this is the heaviest background task (loads the achievement engine, and
-  // every fourth tick walks library + db/registry sources), and the game owns the frame budget.
-  // Update checks already hold off for the same reason; this one did not.
+  // Not while playing: this is the heaviest background task (achievement engine + every fourth tick
+  // walking library/db/registry), and the game owns the frame budget.
   if (isGameRunning() && bgAutoFixHeldTicks < BG_AUTOFIX_MAX_HELD_TICKS) {
     bgAutoFixHeldTicks += 1;
     debug.log(`[bg-autofix] a game is running - holding the ${reason} scan (${bgAutoFixHeldTicks}/${BG_AUTOFIX_MAX_HELD_TICKS})`);
@@ -2682,10 +2555,8 @@ async function runBackgroundAutoFix(reason) {
     }
     if (MainWin) return; // user opened the window during the poll - defer to the renderer
     debug.log(`[bg-autofix] running headless scan (${reason})`);
-    // makeList drives the same one-shot auto-fix as the UI scan, but the per-game emulator setup now
-    // runs in the background and completes AFTER makeList returns. The "emulator fix applied" toast is
-    // therefore fired by the setEmulatorFixedHandler callback (registered in startEngines) as each fix
-    // actually lands - not collected from onGame here.
+    // makeList drives the same one-shot auto-fix as the UI scan, but per-game emulator setup runs in
+    // the background after makeList returns; the toast fires from setEmulatorFixedHandler, not onGame.
     const scanned = await achievementsJS.makeList(configJS, () => {}, () => {});
     try {
       const all = await achievementsJS.detectInstalledAppids(configJS);
@@ -2712,9 +2583,8 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Microsoft Edge ships with Windows 10/11 and is Chromium-based, so puppeteer can drive it exactly
-// like Chrome (the stealth plugin works on the CDP layer, independent of which Chromium binary runs).
-// Using it as a fallback means AW never needs to download and retain a second, quickly outdated browser.
+// Edge ships with Windows 10/11 and is Chromium-based, so puppeteer can drive it exactly like Chrome
+// (stealth plugin works at the CDP layer). Using it as fallback avoids bundling a second browser.
 function findInstalledEdge() {
   if (process.platform !== 'win32') return null;
   const roots = [process.env['ProgramFiles(x86)'], process.env['ProgramFiles'], 'C:\\Program Files (x86)', 'C:\\Program Files'];
@@ -2741,9 +2611,7 @@ async function startPuppeteer(headless, strip) {
   const StealthPlugin = require('puppeteer-extra-plugin-stealth');
   puppeteer.use(StealthPlugin());
   const ChromeLauncher = require('chrome-launcher');
-  // The old `'…macOS path…' || ChromeLauncher…` form always short-circuited to the (truthy) macOS
-  // string, so on Windows Puppeteer never reused an installed Chrome and always downloaded Chromium.
-  // Pick per-platform; getInstallations()[0] may be undefined when Chrome is not installed.
+  // Picked per-platform: getInstallations()[0] may be undefined when Chrome is not installed.
   const installedChromePath =
     process.platform === 'darwin'
       ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -2752,9 +2620,8 @@ async function startPuppeteer(headless, strip) {
   const browserPaths = [installedChromePath, findInstalledEdge()].filter(
     (browserPath, index, paths) => browserPath && fs.existsSync(browserPath) && paths.indexOf(browserPath) === index
   );
-  // --no-first-run / --no-default-browser-check matter for Edge above all: driving the browser the
-  // user has installed otherwise lands in its first-run experience, which exits the process we are
-  // waiting on and surfaces as the bare "Failed to launch the browser process: Code: 0".
+  // --no-first-run / --no-default-browser-check matter for Edge above all: without them the browser's
+  // first-run experience exits the process we are waiting on (bare "Code: 0" failure).
   const launchArgs = [
     '--disable-background-timer-throttling',
     '--disable-renderer-backgrounding',
@@ -2798,9 +2665,8 @@ async function startPuppeteer(headless, strip) {
 }
 
 async function scrapeWithPuppeteer(info = { appid: 269770 }, alternate) {
-  // The browser fallback is the slowest path there is: launching Chromium and waiting out a failed
-  // navigation costs ~10s per game. When the plain-HTTP chain has already proven the host
-  // unreachable, there is nothing left for it to find.
+  // The browser fallback is the slowest path there is (~10s per game). When the plain-HTTP chain has
+  // already proven the host unreachable, there is nothing left for it to find.
   if (steamTransportUnavailable()) {
     debug.log(`[${info.appid}] skipping the browser fallback - Steam hosts are unreachable`);
     return;
@@ -2879,10 +2745,8 @@ async function scrapeWithPuppeteer(info = { appid: 269770 }, alternate) {
           return;
         }
 
-        // NB: the old steamcommunity-in-page and steamdb scrape branches were removed - every caller
-        // goes through the steamhunters paths above (the steamcommunity schema now uses a plain HTTP
-        // fetch, see fetchSteamCommunityAchievements), and the steamdb branch relied on a
-        // `puppeteerWindow.page` that startPuppeteer never created.
+        // Every caller goes through the steamhunters paths above; the steamcommunity schema uses a
+        // plain HTTP fetch instead, see fetchSteamCommunityAchievements.
       }
     } catch (err) {
       debug.log(err);
@@ -2890,9 +2754,8 @@ async function scrapeWithPuppeteer(info = { appid: 269770 }, alternate) {
   }, delay);
 }
 
-// Drop the payloads a SteamDB/HTML scrape never reads: video, fonts and (optionally) images. The
-// shared SteamHunters page does this via startPuppeteer(strip), but the on-demand SteamDB pages open
-// their own page - without this they pull the whole capsule/screenshot gallery over the wire.
+// Drop payloads a SteamDB/HTML scrape never reads (video, fonts, optionally images): the shared
+// SteamHunters page does this via startPuppeteer(strip); on-demand SteamDB pages need it too.
 async function blockHeavyResources(page, { keepImages = false } = {}) {
   const blockedTypes = new Set(['media', 'font', 'stylesheet']);
   if (!keepImages) blockedTypes.add('image');
@@ -2903,27 +2766,17 @@ async function blockHeavyResources(page, { keepImages = false } = {}) {
   });
 }
 
-// SteamDB library-capsule covers: modern Steam covers live under a hashed store_item_assets path
-// that cannot be derived from the appid. SteamDB's app-info page lists the real asset links -
-// scrape it (stealth browser: it 403s plain requests) and cache the whole list for 30 days. The
-// scrape is serialized through one queue so a cold first scan never opens N parallel browser pages.
+// Modern Steam covers live under a hashed path that cannot be derived from the appid; SteamDB's
+// app-info page lists the real links (stealth browser, it 403s plain requests), cached 30 days and
+// serialized through one queue so a cold scan never opens N parallel browser pages.
 const steamdbCoversDir = path.join(userData, 'steam_cache', 'steamdb_covers');
 const steamdbCoversInFlight = new Map();
 let steamdbCoversQueue = Promise.resolve();
 let artworkCacheGeneration = 0;
 
-/*
-  Two things make this the most expensive lookup in a cold scan, and both used to be unbounded.
-
-  A game whose SteamDB page lists no library asset costs the full waitForSelector timeout, and the
-  result was never written to disk - so the same games were re-scraped on every scan, forever. A
-  user log shows 8.1s per miss, strictly serialized (one queue), and the same fifteen appids paying
-  it again on each of nine scans in one evening: the whole library refresh was gated behind it.
-  A miss is an answer, so it is cached too - on a shorter TTL, since a game CAN gain a capsule.
-
-  And offline the scrape has no breaker of its own: every game still opened a page and waited for a
-  navigation that DNS had already refused (66 in the same log).
-*/
+/* A miss (no library asset) costs the full waitForSelector timeout, so it is cached too, on a shorter
+   TTL since a game CAN gain a capsule. Offline is covered by the breaker below instead of opening a
+   page per game to prove the host is unreachable. */
 const STEAMDB_COVERS_TTL = 30 * 24 * 60 * 60 * 1000;
 const STEAMDB_COVERS_MISS_TTL = 7 * 24 * 60 * 60 * 1000;
 const STEAMDB_COVERS_COOLDOWN_MS = 5 * 60 * 1000;
@@ -2943,14 +2796,9 @@ function filterSteamDbCoversByOrientation(urls, orientation) {
   return tall.length ? tall : list;
 }
 
-/*
-  Everything one SteamDB info page has to say about a game's artwork: `urls` (library covers) and
-  `icons` (the square community image). One scrape answers both, because the visit itself - a
-  stealth-browser launch and a page load - is the whole cost.
-
-  `needIcons` only decides whether a cached entry from a build that recorded covers alone is worth
-  re-scraping for; a cover caller must never pay for that.
-*/
+/* Everything one SteamDB page says about artwork: `urls` (library covers) and `icons` (community
+   image), from one scrape (the visit is the whole cost). `needIcons` decides whether a covers-only
+   cached entry is worth re-scraping; a cover caller never pays for that. */
 async function fetchSteamDbAssets(appid, { needIcons = false } = {}) {
   const empty = { urls: [], icons: [] };
   const id = String(appid || '').trim();
@@ -2985,15 +2833,13 @@ async function fetchSteamDbAssets(appid, { needIcons = false } = {}) {
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121 Safari/537.36'
       );
       await page.goto(`https://steamdb.info/app/${id}/info/`, { waitUntil: 'domcontentloaded', timeout: 45000 });
-      // The assets table is server-rendered, so a page that has it resolves this immediately. The
-      // timeout is only ever paid in full by a game that has none, once per miss now that misses
-      // are cached - it does not need to be generous.
+      // The assets table is server-rendered, resolving immediately when present. The timeout is paid
+      // in full only by a game that has none, and only once now that misses are cached.
       await page
         .waitForSelector('a[href*="library_600x900.jpg"], a[href*="library_capsule"], #js-assets-table', { timeout: 3000 })
         .catch(() => {});
-      // Two reads of the same page: the assets table holds the library covers, while the icon
-      // hashes sit in the appinfo table and in the page's own avatar. Scraping SteamDB costs a
-      // browser launch, so the one visit answers both questions.
+      // Two reads of the same page: the assets table holds library covers, icon hashes sit in appinfo
+      // and the page's avatar. One scrape (a browser launch) answers both.
       const { assets, full } = await page.evaluate(() => {
         const table = document.querySelector('#js-assets-table');
         return { assets: table ? table.outerHTML : '', full: document.documentElement.innerHTML };
@@ -3001,9 +2847,8 @@ async function fetchSteamDbAssets(appid, { needIcons = false } = {}) {
       const urls = steamdbCover.coversFromHtml(id, assets || full);
       const icons = steamdbCover.iconsFromHtml(id, full);
       steamdbCoversCircuit.recordSuccess();
-      // A page that loaded and listed nothing is a real answer: cache it (shorter TTL) so the next
-      // scan reads it instead of re-opening the browser. Only a reached page may write a miss - a
-      // failed navigation lands in the catch below and leaves the cache alone.
+      // A page that loaded and listed nothing is a real answer: cache it (shorter TTL). Only a reached
+      // page may write a miss, a failed navigation leaves the cache alone.
       if (generation === artworkCacheGeneration) {
         try {
           fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
@@ -3130,19 +2975,9 @@ const SGDB_COVER_PAGES = 2; // the API serves 50 grids per page
 const SGDB_COVER_LIMIT = 48;
 const SGDB_COVERS_TTL = 30 * 24 * 60 * 60 * 1000;
 
-/*
-  Resolve a SteamGridDB game id from a Steam appid.
-
-  This is an identity mapping, not a guess, so it sidesteps title matching entirely - which is the
-  only way to reach a game SteamGridDB lists under a shorter name than Steam does ("Staffer Retro"
-  vs "Staffer Retro : A Supernatural Mystery Quest"). Loosening pickSteamGridDbGame to a prefix rule
-  would have caught that one and equally matched "LEGO Batman" to "LEGO Batman: Legacy of the Dark
-  Knight"; asking by appid needs no such trade. The title matcher below stays exactly as strict, and
-  is now only reached for sources that have no Steam appid at all (Ubisoft, GOG, Epic, manual).
-
-  Cached with the grids, on the same TTL - a null answer is cached too, since a game SteamGridDB has
-  never heard of does not start existing between two scans.
-*/
+/* Resolve a SteamGridDB game id from a Steam appid: an identity mapping, not a guess, so it sidesteps
+   title matching (SteamGridDB sometimes lists a game under a shorter name than Steam does). The title
+   matcher stays strict and is only reached for sources with no Steam appid. Null cached too. */
 const steamgriddbIdDir = path.join(userData, 'steam_cache', 'steamgriddb_ids');
 const SGDB_ID_TTL = SGDB_COVERS_TTL;
 
@@ -3386,9 +3221,8 @@ async function fetchSteamGridDbCovers(gameName, limit = SGDB_COVER_LIMIT, orient
 
 function resetArtworkLookupCaches() {
   artworkCacheGeneration += 1;
-  // Clearing caches is also the user's explicit request to try again. Do not leave the transport
-  // circuit open from the previous offline scan, otherwise the first post-clear scan would skip
-  // every Steam lookup until the five-minute cooldown elapsed.
+  // Clearing caches is also a request to try again: do not leave the transport circuit open, or the
+  // first post-clear scan would skip every Steam lookup until the cooldown elapses.
   resetSteamTransportCircuit();
   sgdbCircuit.reset();
   steamdbCoversCircuit.reset();
@@ -3476,11 +3310,8 @@ ipcMain.handle('get-steamgriddb-icon', async (event, gameName, steamAppid) => {
 // it keeps everything usable rather than the single best one fetchSteamGridDbIcon() picks.
 const SGDB_ICON_PICKER_LIMIT = 36;
 
-/*
-  The whole icon list for a game, largest first, for the icon picker. Deliberately not cached: it is
-  only ever asked for by a user who opened the dialog, and reusing the single-icon cache file would
-  overwrite the answer every notification depends on with a different shape.
-*/
+/* The whole icon list, largest first, for the icon picker. Deliberately not cached: reusing the
+   single-icon cache file would overwrite the answer every notification depends on. */
 async function fetchSteamGridDbIcons(gameName, steamAppid = '') {
   const name = String(gameName || '').trim();
   const appid = /^\d+$/.test(String(steamAppid || '').trim()) ? String(steamAppid).trim() : '';
@@ -3509,22 +3340,13 @@ async function fetchSteamGridDbIcons(gameName, steamAppid = '') {
   }
 }
 
-/*
-  The executable's own icon, as a file the picker can paint.
-
-  Windows keeps a game's real logo in its exe, and for a cracked or brand-new title that is
-  regularly the only artwork that exists anywhere. This does NOT go through app.getFileIcon(): the
-  shell answers with the generic "application" glyph rather than nothing for a file that has no icon
-  of its own, so every game was offered the same blue window picture. util/exeIcon.js reads the PE's
-  own resources instead, and an executable without an RT_GROUP_ICON simply gets no tile.
-*/
+/* The executable's own icon, as a file the picker can paint: for a cracked or brand-new title this
+   is regularly the only artwork that exists. Not via app.getFileIcon(), the shell answers with a
+   generic glyph instead of nothing; util/exeIcon.js reads the PE's own resources instead. */
 // The name is fixed so every reader - this process, the picker, the Watchdog - looks in one place.
 const EXECUTABLE_ICON_NAME = 'executable-icon.png';
-/*
-  Below this an executable icon has nothing on the artwork chain: a 32x32 entry blown up into a 68px
-  notification slot is the blurry stamp the square logo exists to avoid. Small icons are still
-  offered in the picker, they just do not win the automatic pick.
-*/
+/* Below this an executable icon buys nothing: blown up into a 68px slot it is the blurry stamp the
+   square logo exists to avoid. Small icons still appear in the picker, they just don't auto-win. */
 const MIN_EXECUTABLE_ICON_SIDE = 64;
 
 async function fetchExecutableIcon(exePath, appid) {
@@ -3533,11 +3355,8 @@ async function fetchExecutableIcon(exePath, appid) {
   try {
     const dir = path.join(userData, 'steam_cache', 'icon', String(appid || 'unknown'));
     const target = path.join(dir, EXECUTABLE_ICON_NAME);
-    /*
-      Reuse what was extracted last time. This runs on the default path now, so it is asked for on
-      every notification and every page open; re-reading a 100 MB executable's resource section each
-      time would be a real cost for an answer that only changes when the game is patched.
-    */
+    /* Reuse what was extracted last time: this runs on the default path, asked for on every
+       notification and page open, so re-reading a 100 MB PE resource section each time is real cost. */
     try {
       const [cached, exe] = [fs.statSync(target), fs.statSync(source)];
       if (cached.mtimeMs >= exe.mtimeMs) {
@@ -3572,15 +3391,9 @@ async function fetchExecutableIcon(exePath, appid) {
   }
 }
 
-/*
-  The game's own Steam artwork, as squares.
-
-  Only the clienticon is square to begin with; a header is 2:1 and a library grid 2:3, and offering
-  those unchanged filled the gallery with covers - which is not what the box beside the title paints
-  anyway. Everything is put through the same square cut the header itself uses, so a tile is exactly
-  the picture that will be applied. A clienticon is kept as it is: it is under makeSquareLogo's
-  minimum side, but it is also the game's real icon and there is nothing to cut.
-*/
+/* The game's own Steam artwork, as squares: only the clienticon starts square (header is 2:1, grid
+   2:3), so everything else goes through the same square cut the header uses. A clienticon is kept
+   as-is, under makeSquareLogo's minimum side but already the real icon. */
 async function squareIconCandidates(appid, sources) {
   const { makeSquareLogo, isSquareRatio } = require('../util/squareLogo.js');
   const { imageSize } = require('../util/imageSize.js');
@@ -3612,11 +3425,8 @@ async function squareIconCandidates(appid, sources) {
   return out;
 }
 
-/*
-  Icon picker options: everything that needs the main process. The game's Steam artwork has to be
-  downloaded and cut here, the community icon set is a network call, and the executable's icon is a
-  PE read. The renderer adds what is already on its side (the current pick, the game folder).
-*/
+/* Icon picker options needing the main process: Steam artwork (download+cut), community icons
+   (network), executable icon (PE read). The renderer adds what it already has on its side. */
 ipcMain.handle('get-icon-options', async (event, { name, steamAppid, cacheAppid, sources, exe } = {}) => {
   const id = /^\d+$/.test(String(steamAppid || '').trim()) ? String(steamAppid).trim() : '';
   // A game with no Steam appid still needs its own icon folder: sharing one named "unknown" made
@@ -3646,11 +3456,8 @@ ipcMain.handle('get-icon-options-steamdb', async (event, { steamAppid } = {}) =>
   return Array.isArray(icons) ? icons : [];
 });
 
-/*
-  Forget everything cached about a game's square logo, so "Re-download icon" actually looks it up
-  again instead of handing back the same file. Both halves have to go: the SteamGridDB answer (a
-  miss is cached too, for 30 days) and the squares already cut from local artwork.
-*/
+/* Forget everything cached about a game's square logo so "Re-download icon" actually re-fetches.
+   Both halves: the SteamGridDB answer (a miss is cached too) and squares cut from local artwork. */
 ipcMain.handle('forget-square-logo', async (event, { appid, name } = {}) => {
   const id = String(appid == null ? '' : appid).trim();
   const title = String(name || '').trim();
@@ -3680,10 +3487,8 @@ ipcMain.handle('get-steamgriddb-cover-status', async (event, gameName, steamAppi
   return { url: (result.covers[0] && result.covers[0].url) || null, networkError: result.networkError === true };
 });
 
-// Cover picker options: the two instant sources only. Steam's CDN answers a HEAD probe and
-// SteamGridDB is a JSON call behind a 30-day disk cache, so the gallery paints in well under a
-// second. SteamDB is deliberately absent - it costs a stealth-browser launch plus a page load for
-// one or two extra assets, and folding it into this call made the whole dialog wait on it.
+// Cover picker options: the two instant sources only (Steam CDN HEAD probe + SteamGridDB JSON).
+// SteamDB is deliberately absent, it costs a stealth-browser launch and would stall the dialog.
 ipcMain.handle('get-cover-options', async (event, { name, orientation, steamAppid } = {}) => {
   const gameName = String(name || '').trim();
   const orient = String(orientation || 'portrait').toLowerCase() === 'landscape' ? 'landscape' : 'portrait';
@@ -3771,20 +3576,15 @@ ipcMain.handle('get-top-owners', async () => {
   return await fetchTopOwners();
 });
 
-// Launch-metadata fallback: when local exe detection fails, learn the launch executable's process
-// name so the watchdog can still detect the game running. Two sources, cheapest first - Steam's own
-// product info over the anonymous connection, then a scrape of the game's SteamDB config page
-// (through the stealth browser, since SteamDB 403s plain requests) for the rare appid whose product
-// info has no launch section. Disk-cached for 30 days since launch options change rarely.
+// Launch-metadata fallback: when local exe detection fails, learn the process name so the watchdog
+// can still detect the game running. Two sources, cheapest first: Steam product info, then a SteamDB
+// config-page scrape (stealth browser, SteamDB 403s plain requests). Disk-cached 30 days.
 // Returns { process_name, best_process_name, arguments } or null.
 const steamdbLaunchInFlight = new Map();
 
-// Steam's own product info carries the very launch options SteamDB republishes, over the anonymous
-// connection AW already opens for names and artwork - no browser, no Cloudflare challenge, no Edge.
-// Tried before the scrape; steamdbLaunch.js does the ranking either way, so both sources agree.
-// clientLogOn() only ever resolves on 'loggedOn' (it neither rejects nor times out), and this runs
-// on every library scan, so the whole attempt is bounded - a Steam outage must fall through to the
-// scrape, never stall the scan.
+// Steam's own product info carries the same launch options SteamDB republishes, over the anonymous
+// connection AW already opens, no browser needed. clientLogOn() never rejects or times out on its
+// own, so this whole attempt is explicitly bounded, a Steam outage must fall through to the scrape.
 const STEAM_APPINFO_LAUNCH_TIMEOUT_MS = 8000;
 async function launchMetadataFromAppInfo(id) {
   const steamdbLaunch = require(path.join(app.getAppPath(), 'parser/steamdbLaunch.js'));
@@ -3810,9 +3610,8 @@ async function fetchSteamDbLaunch(appid) {
   if (!/^\d+$/.test(id)) return null;
   const cacheFile = path.join(userData, 'steam_cache', 'steamdb_launch', `${id}.json`);
   const TTL = 30 * 24 * 60 * 60 * 1000;
-  // A miss (SteamDB unreachable, no browser, no launch option) used to write nothing, so every
-  // rescan paid another headless-browser launch for the same doomed lookup. Remember the miss too,
-  // on a much shorter TTL so a transient outage still gets retried the same day.
+  // A miss (unreachable, no launch option) is remembered too, on a much shorter TTL, so a rescan does
+  // not pay another headless-browser launch for the same doomed lookup while still retrying same-day.
   const NEGATIVE_TTL = 6 * 60 * 60 * 1000;
   const writeCache = (payload) => {
     try {
@@ -4061,9 +3860,8 @@ function createMainWindow() {
     options.show = false;
     options.webPreferences = {
       devTools: manifest.config.debug || false,
-      // Full contextIsolation is a separate, larger migration (the renderer relies on nodeIntegration
-      // for require/remote). Until then the XSS->RCE surface is held shut by the page CSP (no
-      // 'unsafe-inline' / 'unsafe-eval') + output escaping; the flags below are cheap defence-in-depth.
+      // Full contextIsolation is a separate migration (renderer relies on nodeIntegration for
+      // require/remote); until then CSP + output escaping hold the XSS->RCE surface shut.
       nodeIntegration: true,
       contextIsolation: false,
       nodeIntegrationInWorker: false,
@@ -4079,13 +3877,9 @@ function createMainWindow() {
       // and the overlay/notification windows keep backgroundThrottling:false - they must run hidden.
       backgroundThrottling: true,
     };
-    // The manifest stores the icon relative to the app root, but BrowserWindow and fs both resolve a
-    // relative path against the *working directory*, which is the install folder rather than the app.
-    // Resolve it here, and prefer the multi-size .ico on Windows: the taskbar button, Alt-Tab and the
-    // window corner each pick a 16/24/32/48px frame out of it, whereas a lone 256px PNG is downscaled
-    // in one step and comes out muddy. Electron crashes on a path that does not exist, so it is
-    // dropped entirely if neither file is there.
-    // NB: `options` aliases manifest.config.window, so this has to stay idempotent across reopens.
+    // The manifest's icon path is relative to the app root, but BrowserWindow/fs resolve relative to
+    // the working directory; resolve it here and prefer the multi-size .ico (a 256px PNG downscales
+    // muddy). `options` aliases manifest.config.window, so this must stay idempotent across reopens.
     try {
       const configured = manifest.config.window.icon || 'resources/icon/icon.png';
       const base = path.isAbsolute(configured) ? configured : path.join(__dirname, '..', configured);
@@ -4100,22 +3894,18 @@ function createMainWindow() {
     getRemoteMain().enable(MainWin.webContents);
     notifyWatchdogOfAppPid();
 
-    // A download started while the app was tray-only has no taskbar button to draw on. Opening the
-    // window creates one, so hand it the progress that is already running. The renderer picks the
-    // same state up through get-update-status once it has loaded.
+    // A download started while tray-only has no taskbar button to draw on; opening the window
+    // creates one, so hand it the progress already running (renderer re-syncs via get-update-status).
     if (currentUpdateStatus.phase !== 'idle') applyUpdateProgressToWindow(MainWin);
 
     // BrowserWindow.hide() does not reliably update document.visibilityState on every Electron
-    // version. Tell the renderer directly so its optional controller polling can stop while the
-    // app is resident only in the tray.
+    // version, so tell the renderer directly to stop its optional controller polling while tray-only.
     const sendMainWindowVisibility = (visible) => {
       if (!MainWin || MainWin.isDestroyed() || MainWin.webContents.isDestroyed()) return;
       MainWin.webContents.send('main-window-visibility', visible);
     };
-    // Hiding to the tray starts the idle countdown that releases the renderer; showing cancels it.
-    // Minimizing deliberately does not: a minimized window keeps its taskbar button, so the user
-    // expects an instant restore, and it is still "open" as far as the background fallbacks are
-    // concerned.
+    // Hiding to the tray starts the idle-release countdown; showing cancels it. Minimizing does
+    // not: it keeps the taskbar button, so the user expects an instant restore and stays "open".
     MainWin.on('show', () => {
       cancelMainWindowRelease();
       sendMainWindowVisibility(true);
@@ -4164,25 +3954,22 @@ function createMainWindow() {
     MainWin.webContents.on('will-navigate', openExternal); //a href
 
     // Hardening: never let the renderer spawn its own BrowserWindow; route real links to the OS
-    // browser instead (a href target="_blank" lands here - the legacy 'new-window' event no longer
-    // exists on Electron ≥22).
+    // browser instead (a href target="_blank" lands here; 'new-window' no longer exists on Electron >=22).
     MainWin.webContents.setWindowOpenHandler(({ url }) => {
       if (/^https?:\/\//i.test(url)) shell.openExternal(url).catch(() => {});
       return { action: 'deny' };
     });
 
-    // Hardening: the app needs no web permissions (camera, mic, geolocation, web-notifications, …) -
-    // its toasts are native and audio samples use <audio>/main-process playback. Deny every request
-    // and check so a compromised renderer can't obtain one.
+    // Hardening: the app needs no web permissions (camera, mic, geolocation, web-notifications, ...);
+    // toasts are native and audio uses <audio>/main-process playback. A compromised renderer gets none.
     session.defaultSession.setPermissionRequestHandler((wc, permission, callback) => callback(false));
     session.defaultSession.setPermissionCheckHandler(() => false);
 
     MainWin.loadFile(manifest.config.window.view);
 
     let mainWindowShown = false;
-    // Window geometry, in the log. "It opened/closed the wrong shape" is otherwise unreconstructable
-    // after the fact, and the shape almost always comes from the display it landed on: a bounds line
-    // next to the display block in [diag] turns a vague report into something answerable.
+    // Window geometry, logged: "wrong shape" reports are otherwise unreconstructable after the fact,
+    // and the shape usually comes from the display it landed on.
     const logWindowGeometry = (event) => {
       if (!MainWin || MainWin.isDestroyed()) return;
       try {
@@ -4247,10 +4034,8 @@ function createMainWindow() {
           callback(false);
         });
       }
-      // Report monitor status to the renderer (its connection indicator). The monitor is launched and
-      // supervised by the daemon itself (spawned on 'ready', respawned on unexpected exit), so there
-      // is no auto-launch here. Stored + cleared on window close so repeated open/close never leaks
-      // intervals.
+      // Report monitor status to the renderer's connection indicator; no auto-launch here, the daemon
+      // already supervises it. Stored + cleared on window close so repeated open/close never leaks intervals.
       clearInterval(watchdogStatusInterval);
       const sendWatchdogStatus = (state) => {
         if (MainWin) MainWin.webContents.send('watchdog-status', state);
@@ -4271,9 +4056,8 @@ function createMainWindow() {
         });
       }),
       new Promise(function (resolve) {
-        // Clear any handler left behind by a window that was closed before its renderer reported in:
-        // handleOnce only unregisters when it actually fires, and registering a second handler for
-        // the same channel throws - which would take the whole window creation down with it.
+        // Clear any handler left behind by a window closed before its renderer reported in:
+        // handleOnce only unregisters when it fires, and a second handler on the same channel throws.
         ipcMain.removeHandler('components-loaded');
         ipcMain.handleOnce('components-loaded', () => {
           debug.log('[MainWindow] components-loaded');
@@ -4283,9 +4067,8 @@ function createMainWindow() {
     ];
 
     Promise.all(isReady).then(() => showMainWindow('ready'));
-    // Resilience: never let a hung or failed renderer (e.g. a component import error, or a slow/blocked
-    // data load) keep the window hidden forever. Once the page can paint, show it after a short grace
-    // period even if the 'components-loaded' IPC never arrives.
+    // Resilience: never let a hung/failed renderer keep the window hidden forever; once it can paint,
+    // show it after a short grace period even if 'components-loaded' never arrives.
     MainWin.once('ready-to-show', () => {
       setTimeout(() => showMainWindow('fallback-timeout'), 8000);
     });
@@ -4315,9 +4098,8 @@ function createMainWindow() {
       // tray are untouched, so background tracking continues.
       clearInterval(watchdogStatusInterval);
       watchdogStatusInterval = null;
-      // Closing the window mid-scrape would otherwise leave an orphaned headless Chromium resident
-      // (the renderer fires 'close-puppeteer' only once the game list finishes). Tear it down here so
-      // a key-less scrape can't leak ~100-200 MB into the background tray state.
+      // Closing mid-scrape would otherwise leave an orphaned headless Chromium resident (the renderer
+      // only fires 'close-puppeteer' once the list finishes); tear it down so it can't leak into tray state.
       closePuppeteer().catch(() => {});
     });
   } catch (e) {
@@ -4478,10 +4260,8 @@ function unregisterOverlayShortcuts() {
   }
 }
 
-// Held here, not the Watchdog: Electron already registers global shortcuts for free, while the
-// Watchdog is plain Node and had to keep a PowerShell host alive all session for RegisterHotKey. It
-// re-asks on every settings load, so this must be idempotent - no drop-and-add that could lose the
-// shortcut to another app in between.
+// Held here, not the Watchdog: Electron registers global shortcuts for free (the Watchdog would
+// need a PowerShell host all session). Idempotent, no drop-and-add that could lose the shortcut.
 let overlayHotkeyAccelerator = null;
 let overlayHotkeyPressedAt = 0;
 // RegisterHotKey was asked for MOD_NOREPEAT; Electron has no equivalent, so a held shortcut would
@@ -4692,8 +4472,7 @@ async function createOverlayWindow(info) {
       if (openDevTools) overlayWindow.webContents.openDevTools({ mode: 'undocked' });
       overlayWindow.isDev = true;
       console.info((({ node, electron, chrome }) => ({ node, electron, chrome }))(process.versions));
-      // electron-context-menu is ESM-only in v4+ - must use dynamic import (same as the MainWin path;
-      // the old require() always threw here and popped a warning dialog on every debug overlay open).
+      // electron-context-menu is ESM-only in v4+, must use dynamic import (same as the MainWin path).
       import('electron-context-menu').then((mod) => {
         const contextMenuFn = mod.default || mod;
         if (typeof contextMenuFn === 'function') {
@@ -4778,25 +4557,21 @@ function parseArgs(args) {
   let source = args['source'] || 'steam'; // source: steam, epic, gog, luma
   let description = args['description']; // text
   // What was ASKED for, not what will happen: an overlay request carries an action (open/close/
-  // refresh) and createOverlayWindow may well decide to do nothing with it. The old log line said
-  // "opening overlay window" even for a close request, which read as a lingering bug in the logs.
+  // refresh) and createOverlayWindow may well decide to do nothing with it.
   debug.log(`${windowType} window request` + (description ? ` (${description})` : ''));
   switch (windowType) {
     case 'overlay':
       createOverlayWindow({ appid, source, action: description });
       break;
     case 'notification':
-      // Styled overlay notification. The monitor forwards these args over IPC (handleMonitorMessage)
-      // and they are rendered as a BrowserWindow inside this resident daemon - no transient process,
-      // no single-instance forwarding, so no self-quit safety net is needed any more.
+      // Styled overlay notification, forwarded over IPC (handleMonitorMessage) and rendered as a
+      // BrowserWindow inside this resident daemon; no transient process, no self-quit safety net needed.
       enqueueNotificationFromArgs(args);
       break;
     case 'main':
     default:
-      // Resident tray daemon: open the UI window on demand. A login-item / `--hidden` start stays in
-      // the tray with no window; a normal launch, a tray "Open", or a second-instance opens it.
-      // Startup-only init (resources, tray, monitor, icon-cache prune) runs once in the 'ready'
-      // handler, not here, so reopening the window never repeats it.
+      // Resident tray daemon: open the UI window on demand (a login-item/`--hidden` start stays tray-only).
+      // Startup-only init runs once in 'ready', not here, so reopening never repeats it.
       if (!args.hidden) createMainWindow();
       break;
   }
@@ -4861,11 +4636,8 @@ ipcMain.handle('game-preset:set', (event, request = {}) => {
   return { ok, settings: saved, preset: saved.preset || '' };
 });
 
-/*
-  Preset folders change only when the designer/importer changes them or when a settings panel asks
-  for a fresh list. Index them once between those events: resolving a live unlock then costs map
-  lookups, including the per-game fallback, and no filesystem reads.
-*/
+/* Preset folders change only when the designer/importer changes them or a settings panel asks for
+   a fresh list; index them once between events so resolving a live unlock costs map lookups only. */
 let notificationPresetFolders = null;
 function refreshNotificationPresetFolders() {
   const folders = new Map();
@@ -4916,9 +4688,8 @@ function getPresetDimensions(presetFolder) {
 function notificationPlacementArea(customAnchor = null) {
   const electronScreen = require('electron').screen;
   try {
-    // A custom popup belongs to the display where the user placed it, regardless of where the
-    // cursor happens to be when a later achievement unlocks. Using the cursor here used to pull a
-    // saved popup onto another monitor before placeNotification() clamped it.
+    // A custom popup belongs to the display where the user placed it, regardless of where the cursor
+    // happens to be when a later achievement unlocks.
     if (customAnchor && Number.isFinite(Number(customAnchor.x)) && Number.isFinite(Number(customAnchor.y))) {
       const savedDisplay = electronScreen.getDisplayNearestPoint({
         x: Math.round(Number(customAnchor.x)),
@@ -4930,10 +4701,8 @@ function notificationPlacementArea(customAnchor = null) {
     // The cursor is normally over the game that triggered the unlock, so this keeps the popup on
     // that monitor instead of unexpectedly putting it on the primary display.
     const display = electronScreen.getDisplayNearestPoint(electronScreen.getCursorScreenPoint());
-    // Full display bounds, not workArea: "bottom" has to mean the bottom of the screen. Against the
-    // work area a bottom-anchored preset floats above the taskbar, which does not match the edge the
-    // user picked (nor the preset builder's preview, which lays the anchors out on the whole screen).
-    // These windows are alwaysOnTop at 'screen-saver' level, so they draw over the taskbar.
+    // Full display bounds, not workArea: "bottom" must mean the bottom of the screen, not just above
+    // the taskbar. These windows are alwaysOnTop at 'screen-saver' level, so they draw over it anyway.
     if (display && display.bounds) return display.bounds;
   } catch {}
   const primary = electronScreen.getPrimaryDisplay();
@@ -5105,11 +4874,9 @@ function createNotificationWindow(data = {}) {
   // (no reliance on 'ready-to-show', which the working in-game overlay also avoids).
   notif.webContents.on('did-finish-load', () => {
     if (notif.isDestroyed()) return;
-    // Scaling belongs to the host: the window is the preset's meta box times the scale, so zooming
-    // the page by that same factor lays the preset out at its design size and paints it exactly
-    // filling the window. Letting the preset scale itself as well shrank an already-shrunken layout
-    // a second time, which cropped dense presets below 100%. Chromium remembers a zoom level per
-    // file and a remembered one overrules the `zoomFactor` preference, so reassert it here too.
+    // Scaling belongs to the host: zooming the page by the preset's scale factor lays it out at its
+    // design size, filling the window exactly (a self-scaling preset would shrink dense layouts twice).
+    // Chromium remembers a zoom level per file, which overrules `zoomFactor`, so reassert it here too.
     notif.webContents.setZoomFactor(scale);
     notif.webContents.send('show-notification', {
       displayName: data.displayName != null ? data.displayName : notifStrings.achievementUnlocked || 'Achievement Unlocked',
@@ -5144,9 +4911,8 @@ function createNotificationWindow(data = {}) {
       },
     });
     notif.showInactive();
-    // Optional notification sound - played inside the (renderer) notification window. Volume is a
-    // 0–200 percent setting: use a WebAudio gain node for >100% (Audio.volume caps at 1.0), and fall
-    // back to Audio.volume (clamped) if WebAudio is unavailable.
+    // Optional notification sound: volume is 0-200%, use a WebAudio gain node above 100% (Audio.volume
+    // caps at 1.0), falling back to clamped Audio.volume if WebAudio is unavailable.
     if (data.soundPath) {
       // In packaged builds the sound lives under app.asar.unpacked (see electron-builder asarUnpack).
       const u = String(data.soundPath).replace(/\\/g, '/').replace('app.asar/', 'app.asar.unpacked/');
@@ -5180,10 +4946,9 @@ function createNotificationWindow(data = {}) {
         )
         .catch(() => {});
     }
-    // Custom duration: hold the notification on screen by FREEZING all animations after ~3s for the
-    // chosen time, then resume. Preset-agnostic - it pauses existing AND newly-started animations during
-    // the hold (an interval catches the exit animation), and the close is deferred (see ipc.js, via
-    // awFrozenUntil) so a preset's own self-close can't cut the hold short. 'auto' = no freeze.
+    // Custom duration: hold on screen by FREEZING all animations ~3s in for the chosen time, then
+    // resume (an interval catches newly-started ones too). Close is deferred (ipc.js, awFrozenUntil)
+    // so a preset's own self-close can't cut the hold short. 'auto' = no freeze.
     const holdMs = Number.isFinite(Number(data.durationMs)) && Number(data.durationMs) > 0 ? Number(data.durationMs) : 0;
     if (holdMs > 0 && !reposition) {
       const FREEZE_AFTER = 3000;
@@ -5236,10 +5001,9 @@ function createNotificationWindow(data = {}) {
     });
   }
 
-  // Safety net: the preset normally closes itself via window.api.closeNotificationWindow(). With a
-  // custom duration the freeze-hold above plays ~3s, freezes for that time, then exits, so the catch-all
-  // must outlast 3s + hold + exit (never cut it short - the close defer in ipc.js targets ~3s+hold+1.2s).
-  // 'auto' keeps the 20s catch-all; the reposition witness stays up much longer so there's time to place it.
+  // Safety net: the preset normally self-closes via window.api.closeNotificationWindow(). With a
+  // custom duration the catch-all must outlast 3s + hold + exit (never cut short, see ipc.js's defer).
+  // 'auto' keeps the 20s catch-all; the reposition witness stays up much longer.
   const customMs = Number(data.durationMs);
   const closeAfter = reposition ? 120000 : Number.isFinite(customMs) && customMs > 0 ? 3000 + customMs + 4000 : 20000;
   const safety = setTimeout(() => {
@@ -5256,11 +5020,9 @@ let notifQueue = [];
 let notifActive = false;
 let notifActiveWindow = null;
 
-// Guard against the same overlay notification rendering twice in quick succession. This matters when
-// the main app is open: the persistent process receives every Watchdog-forwarded notification, so a
-// duplicate spawn (e.g. two rapid playtime/unlock events, or a forwarding race) would stack two
-// identical overlays. Keyed by content within a short window. Transient app-closed processes each
-// handle a single notification, so their map is always empty and never falsely suppresses.
+// Guard against the same overlay notification rendering twice in quick succession: when the app is
+// open, this persistent process receives every Watchdog-forwarded notification, so a duplicate spawn
+// would stack two identical overlays. Keyed by content within a short window.
 const recentNotifKeys = new Map();
 function isDuplicateNotification(data) {
   try {
@@ -5276,11 +5038,8 @@ function isDuplicateNotification(data) {
   }
 }
 
-/*
-  Every notification - unlock, playtime, progress, and every Settings preview - enters here, which
-  is why the square logo is resolved at this one point rather than per caller. A cached answer costs
-  nothing; the very first card of a game waits on a short, bounded lookup before it is queued.
-*/
+/* Every notification (unlock, playtime, progress, Settings preview) enters here, which is why the
+   square logo is resolved at this one point; a cached answer costs nothing, a first card waits briefly. */
 let squareLogoChain = Promise.resolve();
 function enqueueNotification(data) {
   const payload = data || {};
@@ -5329,11 +5088,8 @@ function processNotificationQueue() {
     if (notifQueue.length) {
       setTimeout(processNotificationQueue, 50);
     } else if (shouldQuitApp()) {
-      // Vestigial. Back when a notification could be rendered by a transient Watchdog-spawned
-      // process, a failed spawn left nothing to wait on ('window-all-closed' never fires) and that
-      // process had to quit rather than sit idle holding the single-instance lock. The Watchdog is
-      // now a child of the resident tray daemon, so notifications always render in the daemon and
-      // shouldQuitApp() is a hard false: this branch is unreachable and quits nothing.
+      // Unreachable: shouldQuitApp() is a hard false now that the Watchdog is a child of this resident
+      // tray daemon, so notifications always render here and nothing needs to quit.
       app.quit();
     }
     return;
@@ -5395,12 +5151,6 @@ function normalizeNotificationProgress(args) {
 
   Achievement icons are already square and already the right size; game artwork is neither, and is
   the only case that has to be turned into a square logo before a preset paints it.
-*/
-function usesGameArtAsIcon(primaryIconPath, achievementIconPath) {
-  if (!primaryIconPath) return true;
-  return primaryIconPath !== achievementIconPath;
-}
-
 // A thumbnail a preset can actually paint: a local file that is still there. A remote URL that was
 // never downloaded, or a path to a deleted cover, renders as an empty box - which is what the
 // notification looked like for games whose artwork had gone missing.

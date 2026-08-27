@@ -14,9 +14,8 @@ const EXE_EXCLUDE = [
   /^setup/i,
   /setup\.exe$/i, // room/wizard-style setup helpers (steamvr_room_setup.exe, game_setup.exe, …)
   /^install/i,
-  // A bundled installer/redistributable ships beside the game in most repacks and Ubisoft installs
-  // (UbisoftConnectInstaller.exe, VC_redist.x64.exe). The anchored rules above miss them because the
-  // telling word is not at the start, and every one of them left the real game exe "ambiguous".
+  // Bundled installer/redistributable (UbisoftConnectInstaller.exe, VC_redist.x64.exe); the word
+  // isn't at the start, so the anchored rules above miss it.
   /installer/i,
   /redist/i,
   /^vcredist/i,
@@ -50,10 +49,7 @@ const KNOWN_NON_GAME_EXE = new Set([
   'explorer.exe', 'cmd.exe', 'powershell.exe', 'pwsh.exe', 'regedit.exe', 'taskmgr.exe', 'msconfig.exe', 'control.exe', 'msiexec.exe',
   // dev tools
   'code.exe', 'git.exe', 'node.exe', 'npm.exe', 'npx.exe', 'python.exe', 'java.exe', 'javaw.exe',
-  // .NET runtime companions - every self-contained .NET publish (Godot C#, Unity, MonoGame, ...)
-  // drops createdump.exe next to the runtime dlls. It is the CLR's crash dump writer, and its
-  // version resource reads ".NET Runtime Crash Dump Generator" - which is exactly the name that
-  // surfaced when it was picked as a game.
+  // .NET runtime companion: every self-contained .NET publish drops this CLR crash-dump writer next to the runtime dlls.
   'createdump.exe',
   'r.exe', // IBM SPSS Statistics' bundled R runtime (often picked up as a bogus "game" exe)
   'streaming_client.exe', // Steam Remote Play client process
@@ -70,10 +66,8 @@ const KNOWN_NON_GAME_EXE = new Set([
   // storefront/launcher clients
   'steam.exe', 'steamwebhelper.exe', 'epicgameslauncher.exe', 'goggalaxy.exe', 'ubisoftconnect.exe',
   'origin.exe', 'eaapp.exe', 'battle.net.exe', 'riot client.exe', 'riotclient.exe',
-  // Source engine SDK/dev tools bundled in every Source-based game's bin\ folder (Half-Life 2,
-  // Garry's Mod, Team Fortress 2, Counter-Strike: Source, ...). Never the game itself, but often
-  // individually bigger than the real root-level launcher exe, so raw size scoring alone can pick
-  // one of these over the real game (e.g. Garry's Mod's elementviewer.exe beating gmod.exe).
+  // Source engine SDK/dev tools bundled in every Source-based game's bin\ folder; often bigger than
+  // the real launcher exe, so raw size scoring alone can pick one over the game (e.g. gmod.exe).
   'hammer.exe', 'hlmv.exe', 'hlfaceposer.exe', 'elementviewer.exe', 'glview.exe',
   'studiomdl.exe', 'vbsp.exe', 'vbspinfo.exe', 'vvis.exe', 'vrad.exe', 'vpk.exe', 'vtex.exe',
   'vtf2tga.exe', 'bspzip.exe', 'captioncompiler.exe', 'demoinfo.exe', 'dmxconvert.exe', 'dmxedit.exe',
@@ -102,20 +96,14 @@ const SOFT_PENALTY = [
 // Directories never worth descending into.
 const META_DIRS = /^(_?CommonRedist|_?Redist|redist|DirectX|dx|dotnet|prerequisites|prereq|Installers)$/i;
 
-// Engine payload folders: the game's own data plus a bundled runtime, never the binary a user
-// launches. Godot 4 C# exports name theirs `data_<product>_<platform>_<arch>` and ship the whole
-// .NET runtime inside; Unity uses `<Game>_Data` and `MonoBleedingEdge`. Descending into them turns
-// a runtime helper into a candidate - and, in an unconfigured scan, into a whole bogus "game".
+// Engine payload folders (Godot's `data_<product>_<platform>_<arch>`, Unity's `<Game>_Data` and
+// `MonoBleedingEdge`): the game's data plus a bundled runtime, never the binary a user launches.
 const ENGINE_DATA_DIRS = /^(?:data_.+_(?:windows|win|linux|linuxbsd|macos|osx|web)_.*|MonoBleedingEdge|.+_Data)$/i;
 
 const MAX_DEPTH = 5;
 
-/*
-  What the candidate memo has to invalidate on. collectCandidates() applies every filter below before
-  the list is stored, so editing one of them must expire the stored answer - otherwise a shipped fix
-  reaches only folders the user happens to touch afterwards. Derived from the rules themselves rather
-  than a hand-bumped number, which nobody remembers to bump.
-*/
+// Salt the candidate memo with the filter rules themselves, so editing a rule invalidates every
+// cached answer instead of relying on a hand-bumped number nobody remembers to bump.
 exeCandidateCache.setRulesSalt(
   require('crc')
     .crc32(
@@ -164,10 +152,8 @@ function tokenize(s) {
     .filter((t) => t.length >= 2);
 }
 
-// A short string being a mere substring of a much longer one is weak evidence on its own - e.g. a
-// generic "Content" or "Fallout" folder elsewhere on disk must never satisfy "Content Warning" or
-// "Fallout New Vegas" (both real false-positive "installed" reports). Require the shorter side to
-// cover a majority of the longer one before trusting a bare substring match.
+// A short string being a mere substring of a longer one is weak evidence alone (a generic "Content"
+// folder must not satisfy "Content Warning"), so require the shorter side to cover most of the longer one.
 const SUBSTRING_MIN_RATIO = 0.55;
 
 // 0..1 similarity between a game name and an exe basename (extension already stripped).
@@ -258,22 +244,17 @@ function confidenceFor(best, candidates, gameDir, gameName, opts = {}) {
 
   if (candidates.length === 1) return { confident: true, reason: 'single-candidate' };
 
-  // Dual-DRM repacks ship a real game exe next to a loader stub that only patches the ownership check
-  // (e.g. Goldberg + a second Uplay R2 loader). The internal name is often a codename with no lexical
-  // overlap with the title ("AC4BFSP.exe" for "Assassin's Creed IV"), so name similarity alone can't
-  // clear the threshold - being the only non-soft-penalized candidate left is just as strong a signal.
+  // Dual-DRM repacks ship a real game exe next to an ownership-check loader stub; the internal name
+  // is often a codename with no lexical overlap ("AC4BFSP.exe"), so being the sole survivor is signal enough.
   const nonUtility = candidates.filter((c) => !SOFT_PENALTY.some((r) => r.test(c.name)));
   if (nonUtility.length === 1 && nonUtility[0] === best) return { confident: true, reason: 'sole-non-utility-candidate' };
 
-  /*
-    A repack keeps its patched copy of the game in a side folder ("Crack", "Таблетка", "NoDVD") under
-    the exact same filename. Those are one program, not two candidates, so counting them separately is
-    what left an unmistakable install ambiguous. The sort already put the shallowest first.
-  */
+  // A repack keeps its patched copy in a side folder ("Crack", "NoDVD") under the same filename -
+  // one program, not two candidates.
   const sameName = (c) => c.name.toLowerCase() === best.name.toLowerCase();
   if (nonUtility.every((c) => c === best || sameName(c))) return { confident: true, reason: 'sole-non-utility-name' };
 
-  const second = candidates.filter((c) => c !== best && !sameName(c))[0] || null;
+  const second = candidates.find((c) => c !== best && !sameName(c)) || null;
   const margin = second ? best.score - second.score : Infinity;
   if (
     margin >= CONFIDENCE.CLEAR_WINNER_MARGIN &&
@@ -286,10 +267,8 @@ function confidenceFor(best, candidates, gameDir, gameName, opts = {}) {
   return { confident: false, reason: 'ambiguous' };
 }
 
-/*
-  Find the most likely game executable inside gameDir. opts.taken avoids reusing exes assigned to other
-  games; opts.takenGameDirs avoids returning a second exe from an already-claimed folder.
-*/
+// Find the most likely game executable inside gameDir. opts.taken avoids reusing exes assigned to
+// other games; opts.takenGameDirs avoids a second exe from an already-claimed folder.
 function detect(gameDir, gameName, opts = {}) {
   if (!gameDir || !fs.existsSync(gameDir)) return null;
 
@@ -345,10 +324,8 @@ function detect(gameDir, gameName, opts = {}) {
     c._dllBonus = dllBonus;
     c._softHit = softHit;
   }
-  // A loader/launcher/helper is only ever picked when nothing else is available: a size/DLL bonus could
-  // otherwise let it outscore the real game exe (e.g. a sizeable Ubisoft R2 loader next to the emulator
-  // dll), silently seeding the wrong binary for playtime tracking or the launch panel's default guess.
-  // Non-utility candidates are always tried first; score only breaks ties within each tier.
+  // A loader/launcher/helper is only picked when nothing else is available: a size/DLL bonus could
+  // otherwise outscore the real game exe. Non-utility candidates are always tried first; score only breaks ties within a tier.
   candidates.sort((a, b) => a._softHit - b._softHit || b.score - a.score || a.depth - b.depth || b.size - a.size);
 
   for (const c of candidates) {

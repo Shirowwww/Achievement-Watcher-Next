@@ -67,11 +67,8 @@ function hasSceneSaveFile(dir) {
   });
 }
 
-/*
-  Where a portable CODEX/RUNE release keeps its unlock state, for `appid`. Every known layout is
-  probed with the appid folder appended and again without it; a candidate only wins if it actually
-  holds a save file the Steam parser can read. Returns { path, source }, or null.
-*/
+// Where a portable CODEX/RUNE release keeps its unlock state, for `appid`. Every known layout is
+// probed with the appid folder appended and again without it. Returns { path, source }, or null.
 function findSceneSaveDir(dir, appid) {
   if (!dir || !appid) return null;
   const candidates = [];
@@ -98,12 +95,9 @@ function findSceneSaveDir(dir, appid) {
   return null;
 }
 
-/*
-  A portable release whose emulator config is missing, renamed or never shipped still keeps the save
-  tree next to the game. Since findSceneSaveDir() needs the appid the config would have carried, this
-  walks the known portable layouts instead and takes the appid from whichever folder actually holds a
-  readable unlock file.
-*/
+// A portable release whose emulator config is missing, renamed or never shipped still keeps the save
+// tree next to the game; this walks the known portable layouts and takes the appid from whichever
+// folder actually holds a readable unlock file.
 function collectPortableSceneSaves(dir) {
   const found = [];
   for (const relative of PORTABLE_SCENE_SAVE_DIRS) {
@@ -155,12 +149,8 @@ function collectPortableSceneSavesBelow(dir) {
   return result;
 }
 
-/*
-  Markers of an EA app (EA Desktop / Origin) release. Such a game keeps no Steam-shaped anything in
-  its folder - no steam_api dll, no appid file, no emulator ini, no unlock file - because the
-  achievement state lives with the EA account rather than on disk. Without this, the folder is
-  rejected the same way as a random directory with nothing in it.
-*/
+// Markers of an EA app (EA Desktop / Origin) release. Such a game keeps no Steam-shaped anything in
+// its folder, since the achievement state lives with the EA account rather than on disk.
 const EA_APP_MARKER_GLOBS = [
   '__Installer/installerdata.xml',
   'Support/mnfst.txt',
@@ -181,25 +171,13 @@ async function detectEaAppMarkers(dirpath) {
 
 const EMULATOR_BINARIES = ['rpcs3.exe', 'shadPS4.exe', 'shadps4.exe', 'xenia.exe', 'xenia_canary.exe'];
 
-/*
-  Steam emulators that keep a game's unlocks INSIDE the game folder rather than under %APPDATA%.
-  Their %APPDATA% cousins are found by defaultSteamEmuSaveRoots() above; these are not, because the
-  data lives wherever the game was installed - so unless the game's own folder is a watched folder,
-  the Watchdog never looks at it and the game's unlocks only surface on the next library refresh.
-  The Watchdog re-reads each config itself and decides where the save actually is; all this has to do
-  is put the folder in front of it.
-*/
+// Steam emulators that keep a game's unlocks INSIDE the game folder rather than under %APPDATA%.
+// Unlike their %APPDATA% cousins, the Watchdog never sees these unless the game folder is watched.
 const IN_FOLDER_EMULATOR_CONFIGS = ['ALI213.ini', 'valve.ini', 'SteamConfig.ini', 'hlm.ini', 'ds.ini', 'steam_api.ini', 'steam_emu.ini'];
 
-/*
-  Emulator folders Windows already knows about, with no file system search at all.
-
-  "App Paths" is the key an installer writes so `start rpcs3` works, and the uninstall index carries
-  an InstallLocation for anything that shipped an installer. Both are a handful of registry reads and
-  they cover the case no folder-name heuristic can: an emulator installed under a name nobody would
-  think to probe. Read-only and failure-tolerant - a machine with neither key simply contributes
-  nothing, and the folder-based search below still runs.
-*/
+// Emulator folders Windows already knows about, with no file system search: "App Paths" is the key
+// an installer writes, and the uninstall index carries an InstallLocation - both cover an emulator
+// installed under a name no folder-name heuristic would think to probe.
 function emulatorRootsFromRegistry(registry = require('../util/reg.js')) {
   const roots = [];
   const seen = new Set();
@@ -309,12 +287,8 @@ module.exports.getEntries = async () => {
 };
 
 module.exports.save = async (data) => {
-  try {
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
-  } catch (err) {
-    throw err;
-  }
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
 };
 
 module.exports.find = async () => {
@@ -322,90 +296,73 @@ module.exports.find = async () => {
 };
 
 module.exports.findEntries = async () => {
-  try {
-    const result = [];
-    const addDetected = (dir, detector) => {
-      if (!dir) return;
-      const key = path.normalize(String(dir)).toLowerCase();
-      if (result.some((item) => path.normalize(item.path).toLowerCase() === key)) return;
-      result.push({ path: dir, notify: true, origin: 'auto', enabled: true, detector });
-    };
-    for (const dir of saveRoots.defaultSteamEmuSaveRoots({ existingOnly: true, expandProgramDataSteam: true })) {
-      addDetected(dir, 'Known achievement-data location');
-    }
-
-    // Console-emulator data has a few stable per-user locations. RPCS3 additionally honours its own
-    // RPCS3_CONFIG_DIR, which is the only pointer to a configuration root kept outside both the
-    // emulator folder and AppData.
-    for (const dir of [
-      process.env.APPDATA && path.join(process.env.APPDATA, 'rpcs3'),
-      process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'rpcs3'),
-      process.env.RPCS3_CONFIG_DIR,
-      process.env.APPDATA && path.join(process.env.APPDATA, 'shadPS4'),
-      process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'shadPS4'),
-      process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'xenia'),
-      process.env.APPDATA && path.join(process.env.APPDATA, 'xenia'),
-    ]) {
-      try {
-        if (dir && fs.statSync(dir).isDirectory()) addDetected(dir, 'Known emulator data location');
-      } catch {}
-    }
-
-    /*
-      Where a portable emulator binary is actually looked for. Never a whole-drive walk: three
-      bounded sources, in increasing cost.
-
-        - the registry Windows itself keeps for installed programs (App Paths and the uninstall
-          index): no file system work at all, and it is the only route that finds an emulator
-          installed somewhere nobody would think to name;
-        - dedicated emulator folders ("D:\Emulators", "~/Desktop/Emulation", ...), which is where a
-          portable build normally lives and which the game-library allowlist by definition misses;
-        - the detected game libraries, as before.
-    */
-    for (const dir of emulatorRootsFromRegistry()) {
-      try {
-        if (fs.statSync(dir).isDirectory()) addDetected(dir, 'Installed emulator (registry)');
-      } catch {}
-    }
-
-    const search = EMULATOR_BINARIES.map((name) => `**/${name}`);
-    const libraryRoots = await saveRoots.discoverLibraryRoots();
-    const searchRoots = [
-      ...(await saveRoots.discoverEmulatorRoots()).map((root) => ({ root, detector: 'Supported emulator in detected folder' })),
-      ...libraryRoots.map((root) => ({ root, detector: 'Supported emulator in detected library' })),
-    ];
-    for (const { root, detector } of searchRoots) {
-      for (const filepath of await glob(search, { cwd: root, deep: 3, onlyFiles: true, absolute: true, suppressErrors: true })) {
-        addDetected(path.parse(filepath).dir, detector);
-      }
-    }
-
-    // A game whose emulator writes its unlocks beside it. Same bounded walk as above, over the game
-    // libraries only: the config has to name an AppID, or the folder is not a game this can follow.
-    const inFolderSearch = IN_FOLDER_EMULATOR_CONFIGS.map((name) => `**/${name}`);
-    for (const root of libraryRoots) {
-      for (const filepath of await glob(inFolderSearch, { cwd: root, deep: 3, onlyFiles: true, absolute: true, suppressErrors: true })) {
-        try {
-          if (!/^\s*App(?:ID|Id)\s*=\s*[0-9]+\s*$/im.test(fs.readFileSync(filepath, 'utf8'))) continue;
-        } catch {
-          continue; // unreadable config names nothing
-        }
-        addDetected(path.parse(filepath).dir, 'Emulator saving inside the game folder');
-      }
-    }
-
-    return result;
-  } catch (err) {
-    throw err;
+  const result = [];
+  const addDetected = (dir, detector) => {
+    if (!dir) return;
+    const key = path.normalize(String(dir)).toLowerCase();
+    if (result.some((item) => path.normalize(item.path).toLowerCase() === key)) return;
+    result.push({ path: dir, notify: true, origin: 'auto', enabled: true, detector });
+  };
+  for (const dir of saveRoots.defaultSteamEmuSaveRoots({ existingOnly: true, expandProgramDataSteam: true })) {
+    addDetected(dir, 'Known achievement-data location');
   }
+
+  // Console-emulator data has a few stable per-user locations. RPCS3 additionally honours its own
+  // RPCS3_CONFIG_DIR, which is the only pointer to a configuration root kept outside both the
+  // emulator folder and AppData.
+  for (const dir of [
+    process.env.APPDATA && path.join(process.env.APPDATA, 'rpcs3'),
+    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'rpcs3'),
+    process.env.RPCS3_CONFIG_DIR,
+    process.env.APPDATA && path.join(process.env.APPDATA, 'shadPS4'),
+    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'shadPS4'),
+    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'xenia'),
+    process.env.APPDATA && path.join(process.env.APPDATA, 'xenia'),
+  ]) {
+    try {
+      if (dir && fs.statSync(dir).isDirectory()) addDetected(dir, 'Known emulator data location');
+    } catch {}
+  }
+
+  // Where a portable emulator binary is looked for. Never a whole-drive walk: the installed-programs
+  // registry, dedicated emulator folders (D:\Emulators, ...), then the detected game libraries.
+  for (const dir of emulatorRootsFromRegistry()) {
+    try {
+      if (fs.statSync(dir).isDirectory()) addDetected(dir, 'Installed emulator (registry)');
+    } catch {}
+  }
+
+  const search = EMULATOR_BINARIES.map((name) => `**/${name}`);
+  const libraryRoots = await saveRoots.discoverLibraryRoots();
+  const searchRoots = [
+    ...(await saveRoots.discoverEmulatorRoots()).map((root) => ({ root, detector: 'Supported emulator in detected folder' })),
+    ...libraryRoots.map((root) => ({ root, detector: 'Supported emulator in detected library' })),
+  ];
+  for (const { root, detector } of searchRoots) {
+    for (const filepath of await glob(search, { cwd: root, deep: 3, onlyFiles: true, absolute: true, suppressErrors: true })) {
+      addDetected(path.parse(filepath).dir, detector);
+    }
+  }
+
+  // A game whose emulator writes its unlocks beside it. Same bounded walk as above, over the game
+  // libraries only: the config has to name an AppID, or the folder is not a game this can follow.
+  const inFolderSearch = IN_FOLDER_EMULATOR_CONFIGS.map((name) => `**/${name}`);
+  for (const root of libraryRoots) {
+    for (const filepath of await glob(inFolderSearch, { cwd: root, deep: 3, onlyFiles: true, absolute: true, suppressErrors: true })) {
+      try {
+        if (!/^\s*App(?:ID|Id)\s*=\s*[0-9]+\s*$/im.test(fs.readFileSync(filepath, 'utf8'))) continue;
+      } catch {
+        continue; // unreadable config names nothing
+      }
+      addDetected(path.parse(filepath).dir, 'Emulator saving inside the game folder');
+    }
+  }
+
+  return result;
 };
 
-/*
-  Why a folder was accepted or rejected, not just whether it was: a rejected folder and a folder that
-  was never examined must not look the same, so every branch below names itself and the rejection
-  branches say what WAS found instead. Returns { accepted, code, evidence }; the UI turns the code
-  into a sentence - nothing here is user-visible text.
-*/
+// Why a folder was accepted or rejected, not just whether it was - a rejected folder and one never
+// examined must not look the same. Returns { accepted, code, evidence }; the UI turns code into text.
 module.exports.diagnose = async (dirpath) => {
   const accepted_files = steam_emu_cfg_file_supported.concat(EMULATOR_BINARIES);
   const evidence = { layouts: PORTABLE_SCENE_SAVE_DIRS.length };
@@ -440,12 +397,8 @@ module.exports.diagnose = async (dirpath) => {
   const config = topLevel.find((name) => accepted_files.some((filename) => filename === name));
   if (config) return { accepted: true, code: 'emulator-config', evidence: { ...evidence, config } };
 
-  /*
-    A console emulator's DATA folder, with no binary in it. RPCS3 can relocate its virtual disk
-    (vfs.yml) and shadPS4 keeps its trophies under %APPDATA%, so the folder that actually holds the
-    achievements is routinely not the folder that holds the executable - and adding it by hand used
-    to be refused. The emulator readers own the layout rules; this only asks them.
-  */
+  // A console emulator's DATA folder, with no binary in it (RPCS3's relocated vfs.yml disk, shadPS4's
+  // %APPDATA% trophies). The emulator readers own the layout rules; this only asks them.
   try {
     const rpcs3Roots = require('./rpcs3.js').trophyRoots(dirpath);
     if (rpcs3Roots.length > 0) {
@@ -475,20 +428,15 @@ module.exports.diagnose = async (dirpath) => {
   const nestedConfigs = await glob(steam_emu_cfg_file_supported.map((name) => `**/${name}`), { cwd: dirpath, onlyFiles: true, deep: 4, suppressErrors: true });
   if (nestedConfigs.length > 0) return { accepted: true, code: 'emulator-config-nested', evidence: { ...evidence, config: nestedConfigs[0] } };
 
-  /*
-    No config anywhere: the save tree itself is the better anchor than the emulator ini, since it
-    carries the appid in its folder name and is what the parser reads anyway. A release that ships
-    no ini (or whose ini the user deleted) is still discoverable this way.
-  */
+  // No config anywhere: the save tree itself is a better anchor than the emulator ini, since it
+  // carries the appid in its folder name - discoverable even when no ini ships or exists any more.
   const portable = collectPortableSceneSavesBelow(dirpath);
   if (portable.length > 0) {
     return { accepted: true, code: 'portable-save-tree', evidence: { ...evidence, saves: portable.map((record) => record.data.path) } };
   }
 
-  /*
-    Rejected. Say which kind of folder this is instead of stopping at "nothing found", so the answer
-    separates a layout AW cannot read from a folder that genuinely holds no unlock data.
-  */
+  // Rejected: say which kind of folder this is rather than "nothing found", separating a layout AW
+  // cannot read from one that genuinely holds no unlock data.
   const eaMarkers = await detectEaAppMarkers(dirpath);
   if (eaMarkers.length > 0) return { accepted: false, code: 'ea-app-release', evidence: { ...evidence, markers: eaMarkers.slice(0, 5) } };
 
@@ -505,11 +453,8 @@ module.exports.check = async (dirpath) => {
   return (await module.exports.diagnose(dirpath)).accepted;
 };
 
-/*
-  Emulator configs kept below the selected folder: one per game under a library root, or a repack
-  that buries its config a few levels down (<Game>/Engine/Binaries/.../UniverseLAN.ini). Each config
-  folder is scanned as if the user had picked it directly.
-*/
+// Emulator configs kept below the selected folder: one per game under a library root, or a repack
+// that buries its config a few levels down. Each is scanned as if the user picked it directly.
 async function scanBelow(dir) {
   const nested = await glob(steam_emu_cfg_file_supported.map((name) => `**/${name}`), {
     cwd: dir,
@@ -537,24 +482,22 @@ module.exports.scan = async (dir) => {
 
   try {
     let info;
-    for (var file of steam_emu_cfg_file_supported) {
+    // The name of the config that parsed, not merely the last one tried: the rest of scan() picks
+    // the save layout from it, and a folder where none of them parsed must match no layout at all.
+    let file;
+    for (const candidate of steam_emu_cfg_file_supported) {
       try {
-        info = ini.parse(fs.readFileSync(path.join(dir, file), 'utf8'));
+        info = ini.parse(fs.readFileSync(path.join(dir, candidate), 'utf8'));
+        file = candidate;
         break;
       } catch (e) {}
     }
-    /*
-      No emulator config at the top of the selected folder. That is the ordinary case when the user
-      adds their games LIBRARY rather than one game folder - check() accepts such a folder because of
-      the configs sitting below it, so scan() must look in the same place rather than return empty.
-    */
+    // No emulator config at the top of the selected folder: the ordinary case when the user adds
+    // their games LIBRARY, so scan() must look below rather than return empty.
     if (!info) {
       const below = await scanBelow(dir);
-      /*
-        Still nothing: no config at the top and none below it either. A release can ship with no
-        emulator ini at all (or the user removed it) - read the save tree directly instead of relying
-        on the ini, since the appid is right there in its folder name.
-      */
+      // Still nothing: no config at the top or below. A release can ship with no ini at all, so read
+      // the save tree directly - the appid is right there in its folder name.
       return below.length > 0 ? below : collectPortableSceneSavesBelow(dir);
     }
 
@@ -742,11 +685,8 @@ module.exports.scan = async (dir) => {
       if (info.GameSettings && info.GameSettings.AppID)
         result.push({ appid: info.GameSettings.AppID, data: { type: 'file', path: path.join(dir, 'UniverseLANData') } });
     } else if (file === 'steam_emu.ini' || file === 'cpy.ini') {
-      /*
-        CODEX / RUNE / CPY. Section and key casing vary between builds and between the releases of a
-        single group, so the appid is read case-insensitively from whatever section carries it rather
-        than from one hard-coded path.
-      */
+      // CODEX / RUNE / CPY. Section and key casing vary between builds, so the appid is read
+      // case-insensitively from whatever section carries it.
       let appid = '';
       for (const section of Object.values(info || {})) {
         if (!section || typeof section !== 'object') continue;
@@ -762,13 +702,9 @@ module.exports.scan = async (dir) => {
       }
       if (appid) {
         const found = findSceneSaveDir(dir, appid);
-        /*
-          A game with no save folder yet is still added, pointing at the layout this release would
-          write to. steam.getAchievementsFromFile() treats a missing file as a plain 0% game, so the
-          card appears with its full achievement list all locked - which is the whole point: a
-          missing card is indistinguishable from a game that was never installed and tells the user
-          nothing, while a 0% card says "found, nothing unlocked yet" and starts being watched.
-        */
+        // A game with no save folder yet is still added, pointing at the layout this release would
+        // write to: a missing file reads as a plain 0% game, so it appears and starts being watched
+        // rather than looking like it was never installed.
         const fallback = path.join(dir, 'Steam', 'RUNE', appid);
         result.push({
           appid,

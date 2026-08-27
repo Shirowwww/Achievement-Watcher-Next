@@ -1,11 +1,8 @@
 'use strict';
 
-/*
-  GBE Fork "generate_emu_config" integration - the Advanced steam_settings path. Shells out to the
-  cached alex47exe/gse_fork_tools generator for deeper coverage (depots, languages, inventory…).
-  Anonymous by default; an optional Steam login (env vars, never persisted) pulls private data.
-  Use a throwaway account; 2FA prompts are forwarded to onPrompt. Windows-only.
-*/
+// GBE Fork "generate_emu_config" integration, the Advanced steam_settings path. Shells out to the
+// cached alex47exe/gse_fork_tools generator; anonymous by default, an optional Steam login (env vars,
+// never persisted, use a throwaway account) pulls private data. 2FA prompts forward to onPrompt. Windows-only.
 
 const fs = require('fs');
 const os = require('os');
@@ -39,13 +36,9 @@ function isInsideDir(parentDir, candidate) {
   return rel === '' || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel));
 }
 
-/*
-  The only executable AW is willing to run is the one it extracted itself. findExe walks a tree that
-  was downloaded and unpacked seconds earlier, so both the runtime folder and the candidate are
-  resolved through realpath and the result must still sit inside that folder: a link planted in the
-  archive would otherwise point spawn() at anything on disk. Throws rather than returning a fallback,
-  because there is no safe second choice here.
-*/
+// The only executable AW will run is the one it extracted itself: both folder and candidate are
+// resolved through realpath, and the result must sit inside that folder, or a planted link could
+// point spawn() anywhere on disk.
 function resolveToolExe(exePath, runtimeDir) {
   const exe = String(exePath || '').trim();
   const root = String(runtimeDir || '').trim();
@@ -137,8 +130,8 @@ async function ensureGenerateEmuConfig({ cacheDir, force = false, preferredTag =
   const cached = cachedTool(cacheDir, cachedTag);
   const compatibleCached = preferredTag ? cachedTool(cacheDir, preferredTag) : null;
   if (compatibleCached && !force) return compatibleCached;
-  // The emulator and its tools are released on their own schedules, so most emulator tags have no
-  // matching tools release and never will. Remember which 404'd - else every fix pays for two dead GitHub round trips and repeats the same "falling back to latest" line.
+  // Most emulator tags have no matching tools release and never will; remember which 404'd so every
+  // fix doesn't pay for two dead GitHub round trips.
   const unmatchedFile = path.join(cacheDir, '.unmatched-tags');
   const unmatched = new Set(readText(unmatchedFile).split(/\r?\n/).filter(Boolean));
   const knownUnmatched = preferredTag ? unmatched.has(preferredTag) : false;
@@ -202,7 +195,7 @@ async function ensureGenerateEmuConfig({ cacheDir, force = false, preferredTag =
 }
 
 // Older builds wrote to <cwd>/output/<name-appid>; current GSE tools write beside the executable
-// under <tool>/_OUTPUT/<appid>. Support both layouts, so a tool output-root change never reads as a failed login/generation.
+// under <tool>/_OUTPUT/<appid>. Both layouts are supported.
 function collectGeneratedSteamSettings(baseDir) {
   const hits = [];
   if (!baseDir) return hits;
@@ -232,29 +225,19 @@ function findGeneratedSteamSettingsForAppid(appid, ...baseDirs) {
   return hits.find((ss) => path.basename(path.dirname(ss)) === id) || hits.find((ss) => path.basename(path.dirname(ss)).includes(id)) || hits[0] || null;
 }
 
-/*
-  The switches the tool actually accepts (run with no args to print the list). An invented switch is
-  not ignored: it prints "___ Invalid switch: <name>" and exits 1 before doing any work, losing the
-  whole run. Deliberately omitted: -name (would name the output folder after the game; lookup is by
-  appid), -rel_out/-rel_raw (default output next to the executable is what collectGeneratedSteamSettings reads),
-  -acw (all-language schemas multiply downloads; AW has its own schema - only depots/branches/stats wanted here).
-*/
+// The switches the tool actually accepts. An invented switch isn't ignored: it prints an error and
+// exits before doing any work. Deliberately omitted: -name (lookup is by appid), -rel_out/-rel_raw
+// (collectGeneratedSteamSettings reads the default output path), -acw (multiplies downloads; AW has its own schema).
 function toolArgsFor(id, login) {
-  // -anon reaches a Steam CM but hangs indefinitely on some networks; the idle timeout in run() turns that into a fast, reported failure instead of a frozen game box.
+  // -anon reaches a Steam CM but hangs indefinitely on some networks; the idle timeout in run() turns
+  // that into a fast, reported failure instead of a frozen game box.
   return [login ? '-tok' : '-anon', '-clr', '-skip_con', '-skip_inv', '-skip_cld', String(id)];
 }
 
-/*
-  Run generate_emu_config for one appid and return the generated steam_settings folder under a temp
-  work dir. Anonymous unless login is given; onPrompt forwards interactive prompts (Steam Guard 2FA).
-  Returns { steamSettings, workDir, output }.
-
-  Two budgets, because the two failure modes look nothing alike: idleTimeout ends a run that has said
-  nothing at all (the anonymous login that connects to a Steam CM and then sits there), while timeout
-  caps a run that is genuinely working but slow (hundreds of achievement icons, each retried across
-  two CDNs). A single hard cap either freezes the UI for minutes on the first or kills the second
-  mid-download.
-*/
+// Run generate_emu_config for one appid, returning { steamSettings, workDir, output }. Anonymous
+// unless login is given; onPrompt forwards interactive prompts (Steam Guard 2FA). Two separate
+// timeouts: idleTimeout catches a run that said nothing at all, timeout caps one that is slow but
+// working (hundreds of icons retried across CDNs) - a single cap would misfire on one or the other.
 async function generate({ tool, appid, login = null, onPrompt, timeout = 900000, idleTimeout = 90000, log = noopLog } = {}) {
   if (!tool || !tool.exe) throw new Error('generate_emu_config is not available');
   const id = parseInt(appid, 10);
@@ -266,7 +249,8 @@ async function generate({ tool, appid, login = null, onPrompt, timeout = 900000,
 
   const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-emucfg-run-'));
   const cleanOutputs = () => {
-    // Current GSE builds reuse _OUTPUT/<appid>; remove the previous result so success is never attributed to stale files from an earlier run.
+    // Current GSE builds reuse _OUTPUT/<appid>; remove the previous result so success is never
+    // attributed to stale files from an earlier run.
     for (const base of [toolDir, workDir]) {
       for (const folder of ['_OUTPUT', 'output']) {
         try {
@@ -282,7 +266,8 @@ async function generate({ tool, appid, login = null, onPrompt, timeout = 900000,
   if (login && login.username) env.GSE_CFG_USERNAME = login.username;
   if (login && login.password) env.GSE_CFG_PASSWORD = login.password;
 
-  // child.kill() only reaches the PyInstaller bootstrapper; the real Python process keeps the Steam connection and pipes alive, so take the whole tree down for a timeout to actually end the run.
+  // child.kill() only reaches the PyInstaller bootstrapper; the real Python process keeps the Steam
+  // connection alive, so the whole tree must go down for a timeout to actually end the run.
   const killTree = (child) => {
     try {
       if (process.platform === 'win32' && child.pid) spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], { windowsHide: true });
@@ -297,9 +282,8 @@ async function generate({ tool, appid, login = null, onPrompt, timeout = 900000,
     const toolArgs = Array.isArray(tool.args) ? tool.args : [];
     log.log(`[emucfg] ${login ? 'signed-in' : 'anonymous'} run for ${id}: ${args.join(' ')}`);
     const child = spawn(exePath, [...toolArgs, ...args], { cwd: workDir, env, windowsHide: true, shell: false });
-    // Unattended runs (no onPrompt - the automatic/bulk emulator fix) must never block on interactive
-    // input: close stdin right away so a tool that prompts (login question, "press enter", unexpected
-    // Steam Guard) gets EOF and fails fast instead of hanging the full timeout. Interactive callers pass onPrompt and keep stdin open to answer.
+    // Unattended runs (no onPrompt) must never block on interactive input: close stdin right away so
+    // a prompting tool gets EOF and fails fast. Interactive callers pass onPrompt and keep stdin open.
     if (!onPrompt) {
       try { child.stdin.end(); } catch { /* stdin may already be closed */ }
     }
@@ -322,7 +306,8 @@ async function generate({ tool, appid, login = null, onPrompt, timeout = 900000,
     let idleTimer = null;
     const armIdle = () => {
       clearTimeout(idleTimer);
-      // A question the user hasn't answered yet isn't the tool being stuck - the clock restarts once the answer is written back.
+      // A question the user hasn't answered yet isn't the tool being stuck; the clock restarts once
+      // the answer is written back.
       if (!idleTimeout || awaitingAnswer > 0) return;
       idleTimer = setTimeout(
         () => fail(`generate_emu_config produced no output for ${Math.round(idleTimeout / 1000)}s (stuck signing in to Steam?)`),
@@ -331,7 +316,8 @@ async function generate({ tool, appid, login = null, onPrompt, timeout = 900000,
     };
     armIdle();
 
-    // Forward interactive prompts (e.g. Steam Guard code) to the caller: a "prompt" is a trailing line with no newline that asks for input (ends with ':' or mentions a code/user).
+    // Forward interactive prompts (e.g. Steam Guard code) to the caller: a "prompt" is a trailing
+    // line with no newline that asks for input (ends with ':' or mentions a code/user).
     const maybePrompt = () => {
       if (!onPrompt || !buf) return;
       const tail = buf.split(/\r?\n/).pop().replace(/\x1b\[[0-9;]*m/g, '').trim();
@@ -444,7 +430,7 @@ function shouldOverwriteGeneratedFile(src, dest) {
 }
 
 // Copy a generated steam_settings into a game's steam_settings. Keep user identity/config files by
-// default, but prefer generate_emu_config's richer achievements/stats schema when it has Steam's real progress-to-stat mapping (critical for newer PSPC/Steamworks games like TLOU2).
+// default, but prefer generate_emu_config's richer schema when it has Steam's real progress-to-stat mapping.
 function mergeIntoGame(srcSteamSettings, destSteamSettings, { overwrite = false } = {}) {
   if (!fs.existsSync(srcSteamSettings)) return [];
   fs.mkdirSync(destSteamSettings, { recursive: true });

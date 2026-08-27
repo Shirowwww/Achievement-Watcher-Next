@@ -5,14 +5,11 @@ const fs = require('fs');
 const saveRoots = require(path.join(__dirname, 'saveRoots.js'));
 const launcherLibraries = require(path.join(__dirname, 'launcherLibraries.js'));
 const listDrive = require(path.join(__dirname, '..', 'util', 'listDrive.js'));
-// The same key the scan scope compares folders with, so a trailing separator or a drive-letter case
-// difference never turns one folder into two entries here either.
+// Same key the scan scope uses, so a trailing separator or drive-letter case never splits one folder into two entries.
 const { directoryKey } = require(path.join(__dirname, 'scanScope.js'));
 
-// Library roots (e.g. C:\Jeux, D:\Games, E:\SteamLibrary): folders that hold many game install
-// dirs, used by achievements.js as scan roots for Goldberg/GBE/unconfigured install detection.
-// Distinct from userDir.js, which stores per-game SAVE folders validated against known emulator
-// marker files - a library root has no such marker, it's just a folder full of game subfolders.
+// Library roots (e.g. C:\Jeux, D:\Games): folders holding many game installs, used by achievements.js
+// as scan roots. Unlike userDir.js, no marker file validates them - any folder full of subfolders qualifies.
 let file;
 
 function normalizeEntries(data, fallbackOrigin = 'manual') {
@@ -61,9 +58,7 @@ module.exports.getEntries = async () => {
     try {
       return normalizeEntries(JSON.parse(raw));
     } catch (parseErr) {
-      // Genuine corruption (e.g. a write interrupted by a crash/power loss). A transient I/O lock
-      // throws before JSON.parse and is handled by the outer catch - so we never quarantine a good
-      // file just because antivirus/the indexer held it open for a moment.
+      // Only genuine corruption reaches here; a transient I/O lock throws before JSON.parse and hits the outer catch instead.
       quarantineCorruptConfig(file, parseErr);
       try { await module.exports.save([]); } catch {}
       return [];
@@ -79,19 +74,8 @@ module.exports.find = async () => {
   return (await module.exports.findEntries()).map((entry) => entry.path);
 };
 
-/*
-  Every automatically detected library root, from two independent routes so neither one's blind spot
-  is the user's problem:
-
-    - saveRoots.discoverLibraryRoots() recognises folders by NAME ("Games", "Jeux", "Repacks", ...)
-      on every fixed drive, the user profile and the Desktop.
-    - launcherLibraries reads the folders a LAUNCHER already recorded (Epic manifests, the GOG and
-      Ubisoft registry indexes, the .GamingRoot pointer), which is how a library named after a
-      storefront - "D:\Epic Games", "D:\XboxGames" - is found without scanning anything.
-
-  The name route wins a tie, since its detector label is the more specific one for a folder the user
-  named themselves. Nothing here is added silently: Smart Find presents every hit for approval.
-*/
+// Combines two detection routes: saveRoots matches folders by name, launcherLibraries reads what a
+// launcher (Epic/GOG/Ubisoft) already recorded. The name route wins on a tie. Smart Find reviews every hit.
 module.exports.findEntries = async () => {
   const entries = [];
   const seen = new Set();
@@ -122,10 +106,6 @@ module.exports.findEntries = async () => {
 };
 
 module.exports.save = async (data) => {
-  try {
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, JSON.stringify(normalizeEntries(data), null, 2), 'utf8');
-  } catch (err) {
-    throw err;
-  }
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(normalizeEntries(data), null, 2), 'utf8');
 };

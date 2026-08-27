@@ -114,11 +114,7 @@ async function ensureSession(auth) {
   if (auth.xstsToken && auth.xuid && auth.uhs && auth.xstsExpiresAt > Date.now() + 60000) return auth;
   const { live } = await import('@xboxreplay/xboxlive-auth');
   let refreshed;
-  try {
-    refreshed = await live.refreshAccessToken(auth.refreshToken, auth.clientId || CLIENT_ID, OAUTH_SCOPE);
-  } catch (error) {
-    throw error;
-  }
+  refreshed = await live.refreshAccessToken(auth.refreshToken, auth.clientId || CLIENT_ID, OAUTH_SCOPE);
   if (!refreshed.refresh_token) refreshed.refresh_token = auth.refreshToken;
   const next = await exchangeLiveTokenForXboxSession(refreshed);
   saveAuth(next);

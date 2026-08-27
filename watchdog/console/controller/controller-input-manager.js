@@ -218,9 +218,8 @@ const CONTROLLER_BUTTON_ORDER = [
   "DPAD_RIGHT",
 ];
 
-// Three buttons on purpose: Back+Start alone is comfortable to hit by accident during normal
-// play (both sit in the same thumb-reach zone), so the shipped default adds a shoulder button
-// (a different digit entirely) to make an accidental open/close far less likely.
+// Three buttons on purpose: Back+Start alone is easy to hit by accident during play, so the
+// default adds a shoulder button to make accidental toggling far less likely.
 const DEFAULT_OVERLAY_CONTROLLER_TOGGLE_BINDING = ["BACK", "START", "LEFT_SHOULDER"];
 const OVERLAY_CONTROLLER_TOGGLE_ALLOWED_BUTTONS = [
   "BACK",
@@ -424,9 +423,8 @@ function normalizeControllerBinding(value, options = {}) {
   return null;
 }
 
-// Split out of matchesControllerBinding() so hot paths that poll the same binding ~60 times/sec
-// (the toggle/ui-mode/control-mode combo checks) can normalize once per settings change and reuse
-// the result, instead of paying normalizeControllerBinding()'s Set-rebuild-and-sort cost every tick.
+// Split out of matchesControllerBinding() so hot paths polling ~60 times/sec can normalize once
+// per settings change and reuse the result instead of rebuilding the Set every tick.
 function matchesNormalizedBinding(buttonState, normalized) {
   if (!normalized || !normalized.length) return false;
   const buttons = Number(
@@ -459,9 +457,8 @@ function matchesControllerBinding(buttonState, binding) {
   return matchesNormalizedBinding(buttonState, normalized);
 }
 
-// Caches the normalized form of a binding whose raw source (an options.ini string, refreshed by a
-// getter) rarely changes, so a hot poll-tick path only re-normalizes when the raw value itself
-// changes rather than on every call.
+// Caches the normalized form of a binding whose raw options.ini value rarely changes, so a hot
+// poll-tick path only re-normalizes when the raw value actually changes.
 function createNormalizedBindingCache() {
   let lastRaw;
   let lastNormalized = null;
@@ -1338,9 +1335,8 @@ function createXInputPollingBackend(logger, options = {}) {
           const targetIndex = connectedIndexes[0];
           const current = states[targetIndex];
           if (isSonyRawHidSnapshot(rawHidSnapshot)) {
-            // Mirrors the GameInput backend's Sony correction: XInput quantizes/drifts a DS4's
-            // analog sticks more than the raw HID report does, so prefer the raw-HID sticks here
-            // too instead of only merging the system (Guide) button.
+            // Mirrors the GameInput backend's Sony correction: XInput drifts a DS4's analog
+            // sticks more than raw HID does, so prefer raw-HID sticks here too, not just Guide.
             states[targetIndex] = mergeSonyRawHidStandardState(current, rawState, {
               profileId: rawHidSnapshot?.profileId || null,
             });
@@ -2482,33 +2478,6 @@ function createModernGameInputPollingBackend(logger, api = null, options = {}) {
   };
 }
 
-function createGameInputPollingBackend(logger) {
-  const requiresSystemButtons = false;
-  const api = resolveGameInputApi();
-  if (!api) throw new Error("GameInput is only available on Windows.");
-
-  if (!requiresSystemButtons && typeof api.GameInputInitialize === "function") {
-    return createLegacyGameInputPollingBackend(logger, api);
-  }
-
-  if (typeof api.GameInputCreate === "function") {
-    try {
-      return createModernGameInputPollingBackend(logger, api);
-    } catch (err) {
-      logger.warn("controller:gameinput:create-backend-failed", {
-        dllName: api.dllName,
-        error: err?.message || String(err),
-      });
-    }
-  }
-
-  if (typeof api.GameInputInitialize === "function") {
-    return createLegacyGameInputPollingBackend(logger, api);
-  }
-
-  throw new Error("No supported GameInput backend entry point is available.");
-}
-
 function bindingUsesSystemButtons(binding) {
   return Array.isArray(binding) && binding.includes("GUIDE");
 }
@@ -3193,9 +3162,8 @@ function createControllerInputManager(options = {}) {
     for (let userIndex = 0; userIndex < slots.length; userIndex += 1) {
       const slot = slots[userIndex];
       if (!slot.connected || !slot.current) continue;
-      // The shipped defaults (LEFT_SHOULDER+X for ui-mode, LEFT_SHOULDER+RIGHT_SHOULDER for
-      // control-mode) share a button, so a 3-button hold can satisfy both at once. Control-mode
-      // wins: it's the hold-based binding, and updateControlMode() below re-checks it every tick.
+      // The shipped ui-mode and control-mode defaults share a button, so one hold can satisfy
+      // both; control-mode wins since updateControlMode() re-checks it every tick.
       processModeToggleCombo(
         slot,
         "ui",
@@ -3204,10 +3172,6 @@ function createControllerInputManager(options = {}) {
         now,
       );
     }
-  }
-
-  function wasButtonPressed(previousButtons, buttons, mask) {
-    return hasButtons(buttons, mask) && !hasButtons(previousButtons, mask);
   }
 
   function emitDpadRepeat(

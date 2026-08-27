@@ -1,10 +1,9 @@
 'use strict';
 
 /*
-  Development timing marks for the scan and paint paths. Off by default: every call is one
-  boolean test until `enable()` is called (dev mode, or `AW_PERF=1` on a packaged build). Timings
-  are aggregated per label and reported as one line per scan, since a log line per phase per game
-  is itself a measurable cost on a 200-game library.
+  Dev-only timing marks for the scan/paint paths, off by default (each call is one boolean test
+  until `enable()`, dev mode or `AW_PERF=1`). Timings aggregate per label into one summary line per
+  scan, since a log line per phase per game is itself a measurable cost on a 200-game library.
 */
 
 const { performance } = require('perf_hooks');
@@ -54,7 +53,7 @@ function reset(prefix) {
     totals.clear();
     return;
   }
-  for (const label of [...totals.keys()]) if (label.startsWith(prefix)) totals.delete(label);
+  for (const label of totals.keys()) if (label.startsWith(prefix)) totals.delete(label);
 }
 
 // "label 812ms x1, label2 90ms x54" - slowest first, so a regression is the first thing read.

@@ -66,49 +66,45 @@ module.exports.scan = async (dir) => {
   let updateCache = false;
   const cachedByGogId = mappingByGogId(cache);
 
-  try {
-    for (const dir of await glob(path.join(process.env['APPDATA'], 'NemirtingasGalaxyEmu', '*/*/').replace(/\\/g, '/'), {
-      onlyDirectories: true,
-      absolute: true,
-    })) {
-      let game = {
-        appid: path.parse(dir).name,
-        source: 'gog',
-        data: {
-          type: 'file',
-          path: dir,
-        },
-      };
-      let steamid;
-      const cached = cachedByGogId.get(String(game.appid));
-      if (cached) {
-        steamid = cached.steamid;
-      } else {
-        try {
-          const url = `https://gamesdb.gog.com/platforms/gog/external_releases/${game.appid}`;
-          const gameinfo = await request.getJson(url);
-          const releases = Array.isArray(gameinfo?.game?.releases) ? gameinfo.game.releases : [];
-          const steamRelease = releases.find((release) => String(release?.platform_id || '').toLowerCase() === 'steam');
-          steamid = steamRelease?.external_id;
-          if (steamid) {
-            const entry = { gogid: game.appid, steamid };
-            cache.push(entry);
-            cachedByGogId.set(String(game.appid), entry);
-            updateCache = true;
-          }
-        } catch {}
-      }
-      if (steamid) {
-        game.appid = steamid;
-        data.push(game);
-      }
+  for (const dir of await glob(path.join(process.env['APPDATA'], 'NemirtingasGalaxyEmu', '*/*/').replace(/\\/g, '/'), {
+    onlyDirectories: true,
+    absolute: true,
+  })) {
+    let game = {
+      appid: path.parse(dir).name,
+      source: 'gog',
+      data: {
+        type: 'file',
+        path: dir,
+      },
+    };
+    let steamid;
+    const cached = cachedByGogId.get(String(game.appid));
+    if (cached) {
+      steamid = cached.steamid;
+    } else {
+      try {
+        const url = `https://gamesdb.gog.com/platforms/gog/external_releases/${game.appid}`;
+        const gameinfo = await request.getJson(url);
+        const releases = Array.isArray(gameinfo?.game?.releases) ? gameinfo.game.releases : [];
+        const steamRelease = releases.find((release) => String(release?.platform_id || '').toLowerCase() === 'steam');
+        steamid = steamRelease?.external_id;
+        if (steamid) {
+          const entry = { gogid: game.appid, steamid };
+          cache.push(entry);
+          cachedByGogId.set(String(game.appid), entry);
+          updateCache = true;
+        }
+      } catch {}
     }
-    fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
-    if (updateCache) fs.writeFileSync(cacheFile, JSON.stringify(cache, null, 2));
-    return data;
-  } catch (err) {
-    throw err;
+    if (steamid) {
+      game.appid = steamid;
+      data.push(game);
+    }
   }
+  fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
+  if (updateCache) fs.writeFileSync(cacheFile, JSON.stringify(cache, null, 2));
+  return data;
 };
 
 module.exports._internal = { readGogMappingCache, mappingByGogId };

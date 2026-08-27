@@ -32,12 +32,20 @@ function parse(buffer) {
   return result;
 }
 
+/*
+  Every value in the file is little-endian, so it is read back to front. Buffer#slice hands out a
+  view over the same memory rather than a copy, so reversing the argument in place would rewrite the
+  bytes of the file buffer the caller still holds: parsing it a second time would read every CRC and
+  unlock time byte-swapped. Both helpers reverse a copy.
+*/
 function toString(buffer) {
-  return buffer.reverse().toString('hex');
+  // oxlint-disable-next-line unicorn/no-array-reverse -- Buffer#toReversed returns a plain Uint8Array, whose toString('hex') joins decimals with commas. The copy above already makes reverse() safe.
+  return Buffer.from(buffer).reverse().toString('hex');
 }
 
 function toInt(buffer) {
-  return parseInt(buffer.reverse().toString('hex'), 16);
+  // oxlint-disable-next-line unicorn/no-array-reverse -- Buffer#toReversed returns a plain Uint8Array, whose toString('hex') joins decimals with commas. The copy above already makes reverse() safe.
+  return parseInt(Buffer.from(buffer).reverse().toString('hex'), 16);
 }
 
 function bufferSplit(buffer, n) {

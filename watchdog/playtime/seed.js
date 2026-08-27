@@ -65,7 +65,7 @@ function describeActiveGames(sessions) {
   return {
     games,
     overlayGame: games.length > 0 ? games[games.length - 1] : null,
-    xboxGame: [...games].reverse().find((game) => String(game.source || '') === 'Xbox PC') || null,
+    xboxGame: games.findLast((game) => String(game.source || '') === 'Xbox PC') || null,
   };
 }
 

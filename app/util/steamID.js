@@ -18,9 +18,8 @@ module.exports = {
     return SteamID.fromIndividualAccountID(userID).getSteamID64();
   },
   /*
-    An empty answer used to mean two things: "the account doesn't exist" and "the request never
-    reached Steam" - the caller reads a missing privacyState as "not public", so offline every
-    Steam account looked private (157 of 215 games in one real scan). Say which of the two it was.
+    Missing means either the account doesn't exist or the request never reached Steam; the caller
+    reads a missing privacyState as "not public", so the two must be told apart here.
   */
   whoIs: async function (steamID64) {
     const url = `http://steamcommunity.com/profiles/${steamID64}/?xml=1`;
@@ -34,6 +33,6 @@ module.exports = {
   },
   isPublic: async function (steamID64) {
     let user = await this.whoIs(steamID64);
-    return user.privacyState === 'public' ? true : false;
+    return user.privacyState === 'public';
   },
 };

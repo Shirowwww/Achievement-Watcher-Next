@@ -165,7 +165,8 @@ module.exports.window = () => {
 
   ipcMain.handle('win-maximize', async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
-    win.isMaximized() ? win.unmaximize() : win.maximize();
+    if (win.isMaximized()) win.unmaximize();
+    else win.maximize();
   });
 
   ipcMain.handle('win-isMinimizable', async (event) => {

@@ -7,9 +7,8 @@ function normalizeName(value) {
   return String(value == null ? '' : value).toUpperCase();
 }
 
-// The watchdog diff runs once for every parsed save update. Building these indexes once per scan
-// avoids walking the whole schema and prior cache for every achievement while keeping Array.find's
-// original "first matching entry wins" behaviour for duplicate names.
+// Building these indexes once per scan avoids walking the whole schema and prior cache per
+// achievement, while keeping Array.find's "first matching entry wins" behaviour for duplicates.
 function buildSchemaIndex(entries, { includeCrc = false } = {}) {
   const byName = new Map();
   const crcEntries = [];
@@ -29,8 +28,8 @@ function findSchemaAchievement(index, parsedAchievement) {
   if (!index || !parsedAchievement) return undefined;
 
   if (parsedAchievement.crc) {
-    const crc = parsedAchievement.crc;
-    return index.crcEntries.find(({ checksum }) => crc.includes(checksum))?.achievement;
+    const crcValues = parsedAchievement.crc;
+    return index.crcEntries.find(({ checksum }) => crcValues.includes(checksum))?.achievement;
   }
 
   return index.byName.get(normalizeName(parsedAchievement.name));

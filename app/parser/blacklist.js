@@ -88,10 +88,8 @@ function lookupGameIndexName(cfgDir, id) {
   }
 }
 
-/*
-  Unconfigured installs get a synthetic `local-<crc32 of the install folder>` id, so a hidden entry can
-  be found again by recomputing the hash over the scanned roots (bounded by depth/node budget).
-*/
+// Unconfigured installs get a synthetic `local-<crc32 of the install folder>` id, so a hidden entry
+// can be found again by recomputing the hash over the scanned roots.
 const LOCAL_ID_MAX_DEPTH = 4; // matches the scanner's own walk limit
 const LOCAL_ID_MAX_DIRS = 6000; // safety valve for a pathological root (a huge Desktop tree)
 
@@ -119,12 +117,8 @@ function localIdFor(dir) {
   return 'local-' + (crc32(String(dir).toLowerCase()) >>> 0).toString(16);
 }
 
-/*
-  id -> folder name for every folder under the scan roots, built at most once per process (keyed by
-  cfg dir so a test using a temp userData is never served another one's map). One walk answers every
-  id, including the ones with no match: without it, an entry whose folder is gone would re-walk the
-  disks on every render, forever, precisely because it can never be resolved and cached.
-*/
+// id -> folder name for every folder under the scan roots, built at most once per process (keyed by
+// cfg dir). Answers every id, including unmatched ones, so an entry with no folder isn't re-walked forever.
 const localInstallIndexCache = new Map();
 
 function localInstallIndex(cfgDir) {
@@ -169,18 +163,14 @@ function resolveLocalInstallName(cfgDir, id) {
 // an id that could not be resolved before may be resolvable now.
 module.exports.forgetLocalInstallIndex = () => localInstallIndexCache.clear();
 
-// Per-game Steam schema caches the app writes for every game it displays. A game you blacklisted is
-// by definition a game the app had already listed, so its schema is almost always sitting right
-// here - unlike the 250k-row appList dump, which only exists once GetAppList has answered at least
-// once. Shared with the library's cross-source dedupe, which needs the same offline name.
+// Per-game Steam schema caches the app writes for every game it displays; a blacklisted game was
+// already listed, so its schema is almost always here, unlike the appList dump which needs GetAppList.
 function lookupSchemaCacheName(userDataDir, id) {
   return require(path.join(__dirname, '../util/gameNameCache.js')).lookupSchemaCacheName(userDataDir, id);
 }
 
-// Best-effort offline name resolution for entries whose name was never stored (blacklisted before
-// the sidecar existed, or added from a context where the title wasn't known). Everything is
-// resolved relative to THIS install's userData (dirname(exclusionFile) === cfg/) rather than the
-// hardcoded APPDATA default, so portable/relocated installs and tests stay consistent.
+// Best-effort offline name resolution for entries whose name was never stored. Resolved relative to
+// THIS install's userData (dirname(exclusionFile) === cfg/), not the hardcoded APPDATA default.
 function resolveNameOffline(appid) {
   const id = String(appid ?? '').trim();
   if (!id) return '';
@@ -265,43 +255,39 @@ module.exports.remove = async (appid) => {
 };
 
 module.exports.add = async (appid, name) => {
+  debug.log(`Blacklisting ${appid} ...`);
+
+  let userExclusion;
+
   try {
-    debug.log(`Blacklisting ${appid} ...`);
+    userExclusion = JSON.parse(fs.readFileSync(exclusionFile, 'utf8'));
+  } catch (e) {
+    userExclusion = [];
+  }
 
-    let userExclusion;
-
-    try {
-      userExclusion = JSON.parse(fs.readFileSync(exclusionFile, 'utf8'));
-    } catch (e) {
-      userExclusion = [];
-    }
-
-    if (!userExclusion.some((id) => String(id) === String(appid))) {
-      userExclusion.push(appid);
-      fs.mkdirSync(path.dirname(exclusionFile), { recursive: true });
-      fs.writeFileSync(exclusionFile, JSON.stringify(userExclusion, null, 2), 'utf8');
-      debug.log('Done.');
-    } else {
-      debug.log('Already blacklisted.');
-    }
-    // Capture the title BEFORE dropping the game from gameIndex below - that index is the only
-    // local record of a non-Steam id's name, so resolving afterwards would always come up empty and
-    // the entry would be stuck rendering as a bare id in the Settings manager forever.
-    const resolved = String(name || '').trim() || resolveNameOffline(appid);
-    if (resolved) {
-      const names = readNames();
-      names[String(appid)] = resolved;
-      writeNames(names);
-    }
-    try {
-      const gameIndex = require(path.join(__dirname, 'gameIndex.js'));
-      const removed = gameIndex.remove(appid);
-      if (removed > 0) debug.log(`Removed ${removed} tracking entr${removed === 1 ? 'y' : 'ies'} from gameIndex.`);
-    } catch (err) {
-      debug.log(err);
-    }
+  if (!userExclusion.some((id) => String(id) === String(appid))) {
+    userExclusion.push(appid);
+    fs.mkdirSync(path.dirname(exclusionFile), { recursive: true });
+    fs.writeFileSync(exclusionFile, JSON.stringify(userExclusion, null, 2), 'utf8');
+    debug.log('Done.');
+  } else {
+    debug.log('Already blacklisted.');
+  }
+  // Capture the title BEFORE dropping the game from gameIndex below - that index is the only
+  // local record of a non-Steam id's name, so resolving afterwards would always come up empty and
+  // the entry would be stuck rendering as a bare id in the Settings manager forever.
+  const resolved = String(name || '').trim() || resolveNameOffline(appid);
+  if (resolved) {
+    const names = readNames();
+    names[String(appid)] = resolved;
+    writeNames(names);
+  }
+  try {
+    const gameIndex = require(path.join(__dirname, 'gameIndex.js'));
+    const removed = gameIndex.remove(appid);
+    if (removed > 0) debug.log(`Removed ${removed} tracking entr${removed === 1 ? 'y' : 'ies'} from gameIndex.`);
   } catch (err) {
-    throw err;
+    debug.log(err);
   }
 };
 

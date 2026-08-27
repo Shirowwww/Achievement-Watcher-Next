@@ -25,15 +25,6 @@ const appVersion = require(path.join(appDir, 'package.json')).version;
 
 const COMMITTED = path.join(root, 'docs', 'gallery', 'themes', 'community', 'slate-mint.awtheme');
 
-function png(width, height) {
-  const buffer = Buffer.alloc(64);
-  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(buffer, 0);
-  buffer.write('IHDR', 12, 'ascii');
-  buffer.writeUInt32BE(width, 16);
-  buffer.writeUInt32BE(height, 20);
-  return buffer;
-}
-
 function scratch(t) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-theme-render-test-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));

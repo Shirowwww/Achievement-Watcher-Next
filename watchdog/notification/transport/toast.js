@@ -68,12 +68,11 @@ function buildToastNotification(message, options) {
     time: message.time,
     title,
     message: body,
-    // Playtime prefers the high-res library art; Steam's clienticon (message.icon) is 32×32 and
-    // renders blurry when Windows scales it into the toast. Other toasts keep the achievement icon,
-    // falling back to the game's square logo for the sources that ship no per-achievement art.
+    // Playtime prefers the high-res library art since Steam's clienticon (message.icon) is 32x32
+    // and blurs when scaled; other toasts keep the achievement icon, falling back to the game logo.
     icon: type === 'playtime' ? message.gameIcon || message.icon : message.icon || message.gameIcon,
     // Silence the native toast when soundPlayer handles audio or the user muted it.
-    silent: hasCustomSound || options.toast.customAudio === '0' ? true : false,
+    silent: Boolean(hasCustomSound || options.toast.customAudio === '0'),
     audio: hasCustomSound ? null : options.toast.customAudio === '2' ? 'ms-winsoundevent:Notification.Achievement' : null,
     // Keep achievement artwork square.
     cropIcon: false,

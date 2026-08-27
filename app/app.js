@@ -22,21 +22,16 @@ const gameHealthInterfaceMode = require(path.join(appPath, 'util/interfaceMode.j
 const notificationPreset = require(path.join(appPath, 'util/notificationPreset.js'));
 const gameNotificationPreset = require(path.join(appPath, 'util/gamePreset.js'));
 
-// The DOM id carried by an achievement row icon. It is built in two places - the row markup and
-// the icon preload pass - and the two must stay byte-identical, so the derivation lives here
-// instead of being spelled out twice.
+// DOM id for an achievement row icon, built once here so the row markup and the icon preload
+// pass stay byte-identical.
 function achievementIconId(name) {
   return String(name)
     .replace(/\s+/g, '_')
     .replace(/[^\w-]/g, '');
 }
 
-/*
-  Simple mode reports outcomes ("Achievement data found"), Advanced reports the values behind them
-  (the schema count, the watched binary, the transport). Both read the SAME report: only the wording
-  and the length of the check list change, never a state, a level or an offered repair. The exact
-  values Simple leaves out are all still in Technical details, which both modes show.
-*/
+// Simple and Advanced read the same report; only wording and list length differ, never a state,
+// level or offered repair. What Simple omits is still shown in Technical details.
 function interfaceIsSimple() {
   return gameHealthInterfaceMode.isSimple(gameHealthInterfaceMode.resolve(app.config));
 }
@@ -57,7 +52,7 @@ if (achievements.setEmulatorFixedHandler) {
     try {
       ipcRenderer.send('emulator-fixed-notify', game);
     } catch (err) {
-      debug && debug.log(`[emulator-fixed] notify bridge failed => ${formatErr(err)}`);
+      if (debug) debug.log(`[emulator-fixed] notify bridge failed => ${formatErr(err)}`);
     }
   });
 }
@@ -119,12 +114,8 @@ window.addEventListener('unhandledrejection', (e) => {
     debug.error(`[unhandledrejection] ${(e.reason && e.reason.stack) || e.reason}`);
   } catch {}
 });
-/*
-  "ResizeObserver loop completed with undelivered notifications" is benign: Chromium raises it when
-  an observer callback resizes something and defers the rest to next frame (ordinary for a
-  responsive grid). It reaches window.onerror with no Error/stack, so it was the only thing landing
-  at ERROR level in an otherwise-clean exported log.
-*/
+// Chromium's benign "ResizeObserver loop..." warning reaches window.onerror with no Error/stack,
+// so unfiltered it was the only thing landing at ERROR level in an otherwise-clean exported log.
 const BENIGN_WINDOW_ERRORS = [/^ResizeObserver loop /i];
 
 window.addEventListener('error', (e) => {
@@ -135,12 +126,8 @@ window.addEventListener('error', (e) => {
   } catch {}
 });
 
-/*
-  Opens the Steam target in the client if it is running, otherwise the web page in the browser. The
-  question is asked fresh on every click and never cached: Steam can start or quit while the app is
-  open, and answering from the startup state could send a steam:// link to a client that is no
-  longer there.
-*/
+// Opens the Steam target in the client if running, else the web page. Checked fresh on every
+// click, never cached: Steam can start or quit while the app stays open.
 async function openSteamTarget(build, appid) {
   let running = false;
   try {
@@ -169,12 +156,8 @@ ipcRenderer.on('artwork-caches-cleared', () => {
 });
 let profileStatsAnimationTimer = null;
 
-/*
-  A live window resize snaps the library grid straight to its new column count - a per-card
-  reposition animation was tried and cost too much for 200+ tiles. This is the cheap version: dip
-  the whole panel's opacity while the window is actively resizing, then let it ease back once it
-  settles, so the eye reads "the panel is adjusting" instead of catching the hard jump.
-*/
+// A resize snaps the grid straight to its new column count; a per-card reposition animation was
+// tried and cost too much for 200+ tiles. Dipping the panel's opacity while resizing reads better.
 let resizeSettleTimer = null;
 window.addEventListener(
   'resize',
@@ -187,11 +170,8 @@ window.addEventListener(
   { passive: true }
 );
 
-/*
-  Recomputing the profile summary for every streamed game made both halves quadratic on a large
-  library. Streamed repaints are throttled to roughly one a frame; explicit callers (batch paint,
-  end-of-scan sort) are never throttled, so the final figures the user sees are always exact.
-*/
+// Recomputing the profile summary per streamed game was quadratic on a large library. Streamed
+// repaints are throttled to ~one a frame; explicit callers (batch paint, end-of-scan) never are.
 const PROFILE_STATS_MIN_INTERVAL_MS = 120;
 let lastProfileStatsAt = 0;
 let profileStatsNodes = null;
@@ -272,26 +252,19 @@ function getAchievementProgressState(achievement) {
 
 // Periodically discover new installs without loading their full data.
 const NEW_GAME_SCAN_INTERVAL_MS = 3 * 60 * 1000; // 3 minutes
-// Most ticks have nothing to find, and a discovery is a few hundred milliseconds of synchronous
-// directory walking on this thread. A tick therefore compares the folders the last scan read and
-// stops there when none of them moved. That check cannot see the sources that live in a database or
-// the registry (Steam, GOG Galaxy, Ubisoft Connect), so a full pass still runs on a slower cadence.
+// Most ticks find nothing, and a discovery walk is synchronous on this thread, so a tick first
+// compares folders read last scan; DB/registry sources (Steam, GOG, Ubisoft) still need a full pass.
 const FULL_DISCOVERY_EVERY_TICKS = 5; // ~15 minutes
 let newGameScanTicks = 0;
 let newGameScanTimer = null;
 let scanInFlight = false;
 
-// Appids the last completed scan discovered. Diffing against the rendered list instead made every
-// discovered-but-unrenderable appid (merged into another source, hidden by "hide 0%", no schema)
-// look new on every tick. Mirrors runBackgroundAutoFix in electron/init.js.
+// Appids the last completed scan discovered; diffing against the rendered list instead made every
+// unrenderable appid look "new" every tick. Mirrors runBackgroundAutoFix in electron/init.js.
 let knownDiscoveredAppids = null;
 
-/*
-  Appids a completed scan discovered but deliberately did not render (no achievements, not
-  installed, merged elsewhere, filtered out). Discovery is not stable for these, so a phantom
-  reappearing read as "new game installed" and triggered a full refresh - counting misses and
-  ignoring an appid after two failures breaks that loop while still letting a real new game through.
-*/
+// Appids discovered but deliberately not rendered (no achievements, merged, filtered). Discovery
+// is unstable for these, so a phantom retriggered full refreshes; ignore after two straight misses.
 const UNRENDERABLE_MISS_LIMIT = 2;
 const unrenderableAppids = new Map();
 
@@ -304,9 +277,8 @@ function seedNewGameScanBaseline(renderedList) {
     .detectInstalledAppids(app.config)
     .then((ids) => {
       knownDiscoveredAppids = new Set(ids.map(String));
-      // Within DISCOVER_TTL_MS this reuses the discovery the finished scan was built from, so the
-      // two sets are directly comparable: anything discovered but absent from the rendered list is
-      // a miss for this pass.
+      // Within DISCOVER_TTL_MS this reuses the finished scan's own discovery, so anything discovered
+      // but absent from the rendered list is a genuine miss.
       if (!Array.isArray(renderedList)) return;
       const rendered = new Set(renderedList.map((game) => String(game && game.appid)));
       for (const id of knownDiscoveredAppids) {
@@ -376,12 +348,6 @@ function scheduleNewGameScan() {
   newGameScanTimer = setInterval(runNewGameScan, NEW_GAME_SCAN_INTERVAL_MS);
 }
 
-function resolveUnpackedBinary(binPath) {
-  const normalized = String(binPath || '');
-  const unpacked = normalized.replace(/app\.asar([\\/])/, 'app.asar.unpacked$1');
-  return fs.existsSync(unpacked) ? unpacked : normalized;
-}
-
 // Show progress for long per-game actions without exposing dynamic HTML.
 function setGameBoxBusy($box, text) {
   if (!$box || !$box.length) return;
@@ -422,11 +388,8 @@ function uiLang() {
   }
 }
 
-/*
-  Fill in every href the markup declares as data-aw-link="<key>", resolved against
-  app/util/links.js. Markup names the destination, the registry owns the address: a renamed
-  repository or a moved documentation page is then one edit, not a hunt through the views.
-*/
+// Fills every href marked data-aw-link="<key>" from app/util/links.js: markup names the
+// destination, the registry owns the address, so a moved page is one edit, not a view hunt.
 function applyExternalLinks(root) {
   $(root || document)
     .find('[data-aw-link]')
@@ -490,11 +453,8 @@ function stopLibraryTextScroll(container) {
   if (container) container._scrollAnimation = null;
 }
 
-/*
-  A played-time label. Intl.DurationFormat knows all 28 bundled languages; humanize-duration is
-  kept only for a runtime that does not ship it, and its own language list does not cover every
-  locale AW Next bundles, so it stays the fallback rather than the first choice.
-*/
+// A played-time label: Intl.DurationFormat covers all 28 bundled languages; humanize-duration is
+// kept only as the fallback, since its own language list does not cover every locale AW Next bundles.
 function formatPlaytime(seconds, { units } = {}) {
   const total = Number(seconds);
   if (!Number.isFinite(total) || total <= 0) return '';
@@ -674,10 +634,8 @@ async function replaceUplayR2SteamMapping({ game, gameDir, appid, box = null } =
   return saved;
 }
 
-/*
-  One renderer Uplay R1/R2 repair entry point for the context menu, Game Health, and Fix all. The
-  background scanner calls the same installer transaction directly; validation is identical.
-*/
+// One renderer Uplay R1/R2 repair entry point for the context menu, Game Health, and Fix all. The
+// background scanner calls the same installer transaction directly; validation is identical.
 async function applyUplayR2Repair({ game, gameDir, appid, box = null, interactive = true, showResult = true } = {}) {
   if (!gameDir || !fs.existsSync(gameDir)) throw new Error(`Uplay R1/R2 game folder not found: ${gameDir || '(missing)'}`);
   const id = appid != null ? appid : game && game.appid;
@@ -943,9 +901,8 @@ function skeletonBudget(cap) {
   return Math.min(cap, remaining + EXTRA_SKELETON_TILES);
 }
 
-// Is this tile one the installed-only filter will hide? Counted from the filter state and the
-// tile's own flag rather than its computed style, so the answer does not depend on layout having
-// happened yet.
+// Is this tile one the installed-only filter will hide? From the filter state and the tile's own
+// flag, not its computed style, so the answer doesn't depend on layout having happened yet.
 function tileHiddenByInstalledFilter(item) {
   try {
     if (!(typeof window.installedOnlyEnabled === 'function' && window.installedOnlyEnabled())) return false;
@@ -988,10 +945,8 @@ function replaceSkeletonWith(item) {
   const skeleton = skeletonTiles.shift();
   if (skeleton && skeleton.parent().length) skeleton.replaceWith(item);
   else $('#game-list ul').append(item);
-  // makeList reports every game it will deliver, but installed-only hides part of them in CSS, so
-  // that total counts tiles the user will never see. A hidden arrival is removed from what is still
-  // expected instead of counting as one delivered - either way the remaining budget drops by one,
-  // and the placeholders keep matching the games the grid is actually going to show.
+  // makeList's total includes games installed-only will hide via CSS. A hidden arrival is removed
+  // from what's still expected instead of counted as delivered, so placeholders keep matching.
   if (tileHiddenByInstalledFilter(item)) {
     if (skeletonExpected !== null) skeletonExpected -= 1;
   } else {
@@ -1037,11 +992,8 @@ function refreshLibraryProgressFor(appid, games) {
   refreshProfileStats({ animate: true });
 }
 
-/*
-  The Watchdog keeps each game's unlock baseline in memory, so deleting the .db file is only half a
-  reset - the running monitor would still diff a re-earned achievement against it and report
-  "already unlocked". Best effort: a monitor that isn't running has no memory to clear.
-*/
+// The Watchdog keeps each game's unlock baseline in memory, so deleting the .db file is only half
+// a reset; a running monitor would still diff against it. Best effort if the monitor isn't running.
 async function forgetWatchdogBaseline(appid) {
   try {
     await ipcRenderer.invoke('watchdog-forget-achievement-baseline', String(appid));
@@ -1050,11 +1002,8 @@ async function forgetWatchdogBaseline(appid) {
   }
 }
 
-/*
-  Take the in-memory copy of a game back to zero after its saves were cleared, then repaint. The
-  library is only re-read from disk on a scan, so without this the tile and the achievement list
-  would keep showing the unlocks that were just deleted until the next refresh.
-*/
+// Zeroes the in-memory copy of a game after its saves were cleared, then repaints: the library is
+// only re-read from disk on a scan, so without this stale unlocks would linger until the next one.
 function repaintGameAfterReset(appid, game) {
   if (game && game.achievement && Array.isArray(game.achievement.list)) {
     for (const achievement of game.achievement.list) {
@@ -1093,9 +1042,8 @@ function openCatalogLink(url) {
   });
 }
 
-// Tracks in-flight uninstall completions so the game list refreshes once the
-// uninstaller (or Steam) has actually removed the game. One poll per
-// (mode, appid, folder) so repeated right-click actions don't stack timers.
+// Tracks in-flight uninstall completions so the list refreshes once the uninstaller (or Steam) has
+// actually removed the game. One poll per (mode, appid, folder), so repeat clicks don't stack timers.
 const uninstallPolls = new Map();
 function pollUninstallCompletion({ appid, gameDir, mode } = {}) {
   const key = `${mode}|${String(appid)}|${String(gameDir || '')}`;
@@ -1147,10 +1095,8 @@ function getSourceImg(source) {
   return img;
 }
 
-// Cover-art overrides (per-appid; cfg/covers.db)
-// One-time: covers picked before they were stored per orientation are bound to the shape their own
-// image has, so switching the grid between portrait and landscape stops reusing the other shape's
-// picture. Runs before the snapshot below so the first render already sees the split entries.
+// Cover-art overrides (per-appid; cfg/covers.db). One-time: pre-orientation covers get split by
+// their image's own shape, so switching portrait/landscape stops reusing the wrong picture.
 try {
   const split = coverStore.splitLegacyByShape();
   if (split.length > 0) debug.log(`[cover] bound ${split.length} custom cover(s) to the orientation of their artwork`);
@@ -1186,9 +1132,8 @@ function coverOverrideFor(appid, orientation) {
   }
   return override;
 }
-// Square game-logo overrides (per-appid; cfg/gameIcons.db). Same lifecycle as the cover overrides
-// above: an in-memory snapshot so a render never reads the disk, and a broken reference is dropped
-// rather than left to paint an empty box.
+// Square game-logo overrides (per-appid; cfg/gameIcons.db), same lifecycle as the cover overrides:
+// an in-memory snapshot avoids a disk read per render, and a broken reference is dropped, not painted.
 let gameIconOverrides = gameIconStore.readAll();
 function reloadGameIconOverrides() {
   gameIconOverrides = gameIconStore.readAll();
@@ -1240,12 +1185,8 @@ function localGameIconUrls(game) {
   }
 }
 
-/*
-  Paint the square logo beside the game title, in order: 1) the user's own pick (right-click ->
-  Game icon, remote picks via the icon cache), 2) the host's notification square logo (community
-  icon set, else the game's artwork cut square), 3) artwork shipped in the game folder - the only
-  source that works fully offline. Repaintable on demand after the selection changes.
-*/
+// Paints the square logo, in order: user's own pick, host notification square logo (community set
+// or cropped artwork), then artwork shipped in the game folder (offline last resort).
 async function paintGameHeaderIcon(game) {
   const iconEl = $(HEADER_ICON_SELECTOR);
   // The element is shared across game pages; another can open while this resolves, so the header's
@@ -1350,11 +1291,8 @@ function setLibraryArtworkFeedback(headerEl, state, retry) {
 async function applyCoverWithFallback(game, headerEl, imgName, orientation = 'landscape', tried, generation = artworkLoadGeneration, { sameShapeOnly = false } = {}) {
   const img = (game && game.img) || {};
   const fallback = (current) => {
-    /*
-      Shapes aren't interchangeable (header/landscape 460x215/920x430, portrait 600x900).
-      sameShapeOnly is the first pass: only the requested shape, tile left empty rather than
-      settling on the wrong one; cross-shape candidates are used only after recovery has failed.
-    */
+    // Shapes aren't interchangeable (landscape 460x215/920x430 vs portrait 600x900). sameShapeOnly
+    // is the first pass: only the requested shape, left empty rather than settling for the wrong one.
     const sameShape = orientation === 'portrait' ? [img.portrait] : [img.header, img.landscape];
     const otherShape = orientation === 'portrait' ? [img.header, img.landscape, img.background, img.icon] : [img.portrait, img.background, img.icon];
     const candidates = sameShapeOnly ? sameShape : [...sameShape, ...otherShape];
@@ -1385,11 +1323,8 @@ async function applyCoverWithFallback(game, headerEl, imgName, orientation = 'la
   return { ok: false, reason: 'missing' };
 }
 
-/*
-  Does this image actually load? A gallery tile painting an empty box is worse than no tile - the
-  provider listed art the CDN no longer serves, so drop it. Bounded so a stalled request can't hold
-  "Loading..." open for the whole dialog.
-*/
+// Does this image actually load? An empty painted box is worse than no tile, so drop art the CDN
+// no longer serves. Bounded so a stalled request can't hold "Loading..." open indefinitely.
 function imagePreviewReady(value) {
   const preview = imageDisplayUrl(value);
   if (!/^(?:https?|file|data):/i.test(preview) || typeof Image !== 'function') return Promise.resolve(false);
@@ -1549,14 +1484,8 @@ function openCoverPicker(game, appid, coverCacheAppid) {
     }
   };
 
-  // Render the current cover independently from the provider lookup: schema values like
-  // "library_600x900.jpg" are fetch-icon tokens, not browser-ready URLs, so resolve them first or
-  // "Current"/"Default" appear as an empty surface while SteamDB/SteamGridDB load.
-  /*
-    What the library tile is painted with right now. Current and Default must be offered even when
-    their value no longer resolves (CDN stopped answering, no network) - the picture is on screen
-    either way.
-  */
+  // Resolved independently from the provider lookup: schema values like "library_600x900.jpg" are
+  // fetch-icon tokens, not URLs. Current/Default stay offered even if their value no longer resolves.
   const paintedCover = () => cssUrlValue($(`#game-header-${appid}`).first().css('background-image'));
   const addResolvedTile = async (url, source) => {
     const preview = (await resolvePreview(url)) || paintedCover();
@@ -1609,9 +1538,8 @@ function openCoverPicker(game, appid, coverCacheAppid) {
     failedSources = 0;
     refreshStatus();
 
-    // Two lookups on purpose: the instant sources (Steam's CDN, SteamGridDB) paint the gallery in
-    // under a second, while the SteamDB scrape (browser launch) appends its tiles when it finishes
-    // instead of holding the dialog on "Loading covers".
+    // Two lookups on purpose: instant sources (Steam CDN, SteamGridDB) paint the gallery fast, while
+    // the SteamDB scrape (browser launch) appends tiles later instead of holding the dialog open.
     const fastOptions = ipcRenderer.invoke('get-cover-options', {
       name: game.name,
       orientation: pickerOrientation,
@@ -1670,11 +1598,8 @@ function openCoverPicker(game, appid, coverCacheAppid) {
   startSourceLoad();
 }
 
-/*
-  The icon counterpart of the cover picker, deliberately the same dialog. Sources append in order
-  (current, SteamGridDB, Steam artwork, install-folder images), so the network-free last one still
-  lands where a player with the right picture on disk would look for it.
-*/
+// Icon counterpart of the cover picker, same dialog. Sources append in order (current, SteamGridDB,
+// Steam artwork, install-folder images), so the offline last one still lands in the right place.
 function openIconPicker(game, appid, iconCacheAppid, exePath) {
   const overlay = document.createElement('div');
   overlay.className = 'aw-prompt-overlay aw-cover-picker-overlay';
@@ -1771,11 +1696,8 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
       if (seenUrls.has(key)) return true;
       const preview = await resolvePickerPreview(previewUrl, iconCacheAppid);
       if (!preview) return false;
-      /*
-        What's stored isn't always what was listed: a remote URL is kept as the source (bytes stay
-        disposable cache), but a schema token is meaningless outside fetch-icon, so its resolved
-        file is stored instead.
-      */
+      // What's stored isn't always what was listed: a remote URL is kept as the source, but a
+      // schema token is meaningless outside fetch-icon, so its resolved file is stored instead.
       const applyValue = /^https?:/i.test(key) ? key : preview;
       if (addTile(key, source, preview, () => applyGameIconSelection(game, appid, applyValue))) providerTileCount += 1;
       return true;
@@ -1807,11 +1729,8 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
     retryButton.hidden = false;
   };
 
-  /*
-    The icon this game would have with no pick at all, as the first tile - undoing a choice used to
-    mean leaving the gallery for the context menu. Clicking it clears the override instead of
-    storing one, so the game follows its own artwork again.
-  */
+  // The icon this game would have with no pick at all, offered as the first tile. Clicking it
+  // clears the override instead of storing one, so the game follows its own artwork again.
   const addDefaultTile = async (run) => {
     let resolved = '';
     try {
@@ -1856,11 +1775,8 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
     const steamAppid = /^\d+$/.test(String(iconCacheAppid || '')) ? String(iconCacheAppid) : '';
     let failed = false;
     try {
-      /*
-        The host cuts the game's own Steam artwork into squares before it gets here. Offering the
-        raw tokens filled the gallery with library covers instead - a 2:3 grid or 2:1 header is not
-        an icon.
-      */
+      // The host cuts the game's own Steam artwork into squares before it gets here; offering raw
+      // tokens filled the gallery with library covers instead (a 2:3 grid or 2:1 header isn't an icon).
       const options = await ipcRenderer.invoke('get-icon-options', {
         name: game.name || '',
         steamAppid,
@@ -1949,11 +1865,8 @@ function chooseLocalGameIcon(game, appid) {
   return applyGameIconSelection(game, appid, pathToFileURL(files[0]).href);
 }
 
-/*
-  Right-click the square logo on a game's page to change it - same four actions as the cover
-  submenu, on the icon instead. Bound per page render (namespaced, so the previous handler goes
-  with it) because the element is shared across every game page.
-*/
+// Right-click the square logo to change it, same four actions as the cover submenu. Bound per page
+// render (namespaced, so the previous handler goes with it) since the element is shared.
 function bindGameHeaderIconMenu(game) {
   const appid = String(game.appid);
   const iconCacheAppid = String(game.steamappid || game.appid);
@@ -2133,8 +2046,7 @@ async function recoverLibraryCover(game, orientation, { force = false } = {}) {
       }
 
       // SteamDB knows hashed store assets the guessable Steam CDN paths can't derive. Same ordered
-      // chain as the picker: reach it only after Steam's candidates fail, fall to SteamGridDB only
-      // if SteamDB also fails.
+      // chain as the picker: try it only after Steam fails, fall to SteamGridDB only if SteamDB fails.
       if (steamAppid && !networkUnavailable) {
         const steamdbUrls = await ipcRenderer
           .invoke('get-cover-options-steamdb', { orientation, steamAppid })
@@ -2159,11 +2071,8 @@ async function recoverLibraryCover(game, orientation, { force = false } = {}) {
       return { path: null, source: null, reason: failure ? 'failed' : 'missing' };
     })();
     coverRecoveryCache.set(key, pending);
-    /*
-      Only an answer is worth remembering. A failure caused by network-down used to be memoised for
-      the whole session, so a tile that lost its cover for one bad minute stayed blank until restart
-      even after Retry. Drop those, keep results that concluded something.
-    */
+    // Only a conclusive answer is worth remembering: a network-down failure used to be memoised for
+    // the whole session, leaving a tile blank until restart even after Retry.
     pending
       .then((result) => {
         if (result && !result.path && result.reason === 'failed') coverRecoveryCache.delete(key);
@@ -2187,8 +2096,7 @@ function scheduleLibraryCover(game, headerEl, portrait) {
   const image = game.img || {};
   const isPortrait = portrait && image.portrait;
   // Glow only once artwork is actually painted, not just "has a cover": art loads lazily via the
-  // viewport observer, so the old check painted the band over an empty placeholder. Every branch
-  // below re-adds the class once it sets a background.
+  // viewport observer, so the old check painted the band over an empty placeholder.
   const alreadyPainted = /url\(/i.test(headerEl[0].style.backgroundImage || '');
   headerEl
     .toggleClass('glow', alreadyPainted && hasOwnShapeCover(image, portrait))
@@ -2270,11 +2178,8 @@ function scheduleLibraryCover(game, headerEl, portrait) {
       setLibraryArtworkFeedback(headerEl, 'clear');
       return;
     }
-    /*
-      Last resort: no art of the right shape exists, so it's the wrong shape vs. an empty tile - a
-      recognisable cover, marked as a fallback so the grid styles rather than stretches it, beats a
-      blank rectangle.
-    */
+    // Last resort: no art of the right shape exists, so wrong-shape art (flagged as a fallback so
+    // the grid styles rather than stretches it) beats a blank tile.
     const crossShape = await applyCoverWithFallback(game, headerEl, imgName, tileOrientation, undefined, generation);
     if (generation !== artworkLoadGeneration) return;
     if (!headerEl[0]?.isConnected) return;
@@ -2318,12 +2223,8 @@ function isLegitSteamLibraryGame(game) {
   return String((game && game.source) || '').startsWith('Steam (');
 }
 
-/*
-  ONE table: an unrecognised label falls through silently to the Steam badge, so a too-narrow or
-  loose pattern ships a wrong badge unnoticed. Ubisoft is absent on purpose (isUbisoftGame() decides
-  it separately). Every `source:` literal in app/parser/*.js must appear here or in
-  STEAM_BADGE_SOURCES below - test/parsers/libraryDetectionFixes.test.js enforces it.
-*/
+// An unrecognised label falls silently through to the Steam badge, so every `source:` literal in
+// app/parser/*.js must appear here or in STEAM_BADGE_SOURCES (Ubisoft is separate); test enforces it.
 const SOURCE_BADGE = {
   playstation: /^(?:rpcs3 emulator|shadps4 emulator)$/,
   xbox: /^(?:xenia emulator|xlivelessness)$/,
@@ -2333,19 +2234,13 @@ const SOURCE_BADGE = {
   ea: /^ea$/,
 };
 
-/*
-  Labels that legitimately end on the Steam badge: Steam games via emulator/crack, plus placeholder
-  records. Listing them makes the coverage test meaningful - else "falls through to Steam" would
-  swallow genuinely unclassified labels too.
-*/
+// Labels that legitimately end on the Steam badge: Steam via emulator/crack, plus placeholders.
+// Listed explicitly so the coverage test can't be satisfied by unclassified labels falling through.
 const STEAM_BADGE_SOURCES =
   /^(?:achievement watcher : watchdog|ali213|codex|creamapi|empress|gbe fork|ff7 \(2013\)|goldberg(?: steamemu| \(empress\))?|greenluma|hoodlum|manual|onlinefix|razor1911|reloaded - 3dm|rld!|rune|skidrow|smartsteamemu|steam|steam-emulator|tenoke|unconfigured|universelan)$/;
 
-/*
-  The "legitimately owned" badge: same small dot as Steam Family, but for a game from an official
-  store install rather than an emulator save. Only official-parser sources count here - Nemirtingas
-  ('gog', 'epic') and crack labels must never match.
-*/
+// The "legitimately owned" badge: same dot as Steam Family, but for an official store install
+// rather than an emulator save. Nemirtingas ('gog','epic') and crack labels must never match here.
 const PURCHASED_SOURCE = {
   steam: /^steam \(/,
   gog: /^gog galaxy$/,
@@ -2429,18 +2324,10 @@ function sourcePresentationFor(game) {
   return { img: getSourceImg(source), label: t('steam-achievements', 'Steam achievements via emulator', 'Succès Steam via émulateur'), kind: 'steam' };
 }
 
-/*
-  The dot beside an emulated game's name reports the Game Health state (same three colours as the
-  panel's chip), not just "is steam_api(64).dll on disk?". Until the panel has been opened once it
-  falls back to the scan's coarse answer - walking every install folder for hundreds of tiles is
-  what the real report is for.
-*/
-/*
-  Steam emulators trip nearly every antivirus by design, since replacing steam_api is exactly what
-  detection looks for - a blocked download is the normal case, not a rare edge, and deserves an
-  explanation rather than a bare error. Shown once per session. Returns true when it handled the
-  error, false when the caller should report it its own way.
-*/
+// The dot beside an emulated game's name reports the Game Health state (same three colours as
+// the panel's chip). Until the panel has opened once it falls back to the scan's coarse answer.
+// Steam emulators trip nearly every antivirus by design, so a blocked download gets an explanation
+// instead of a bare error, shown once per session. Returns whether it handled the error.
 let emulatorPackageBlockedShown = false;
 
 async function reportEmulatorPackageBlocked(err, { retry = null } = {}) {
@@ -2793,11 +2680,8 @@ function setStartWatchdogButton(button, label) {
   button.append(icon, ' ', label);
 }
 
-/*
-  The status reads "<state> | <what that means>". Both halves are locale keys and the separator is
-  drawn in CSS, so no language has to carry punctuation or markup - and the detail can be dropped on
-  a narrow window without touching the state.
-*/
+// The status reads "<state> | <detail>". Both are locale keys with the separator drawn in CSS,
+// so no language carries punctuation, and detail can be dropped on a narrow window.
 function setWatchdogStatus(label, state, detail) {
   label.textContent = '';
   const strong = document.createElement('strong');
@@ -2810,20 +2694,15 @@ function setWatchdogStatus(label, state, detail) {
   label.append(span);
 }
 
-// A manual restart was asked for: show the transient state immediately rather than leaving the old
-// one on screen until the next 5s poll. renderWatchdogStatus owns the markup, so the reset cannot
-// drift from what the poll paints.
+// A manual restart: show the transient state immediately rather than waiting for the next 5s poll.
+// renderWatchdogStatus owns the markup, so the reset cannot drift from what the poll paints.
 ipcRenderer.on('reset-watchdog-status', () => {
   lastWatchdogState = 'starting';
   renderWatchdogStatus(lastWatchdogState);
 });
 
-/*
-  Accessible names that have to be derived rather than authored: the Settings rows label their
-  control with a neighbouring <span> instead of a <label> (the panel's i18n is positional, so the
-  markup cannot change), and the Font Awesome glyphs are decorative everywhere in this app. Re-run
-  whenever a language is applied, since the names come from the translated row labels.
-*/
+// Accessible names must be derived, not authored: Settings rows label controls with a neighbouring
+// <span> instead of <label> (i18n is positional, markup can't change). Re-run on every language change.
 window.refreshAccessibleNames = () => {
   const searchLabel = t('search-games', 'Search games…', 'Rechercher un jeu…');
   // The field collapses to its magnifier, so the name has to be reachable on hover too.
@@ -2841,9 +2720,8 @@ window.refreshAccessibleNames = () => {
   markDecorativeIcons(document);
 };
 
-// Every Font Awesome glyph in this app is decorative - it always sits beside its own text or inside
-// a labelled control. Rows are built at runtime (folders, blacklist, presets, game tiles), so an
-// observer keeps marking them instead of each template having to remember.
+// Every Font Awesome glyph here is decorative, sitting beside its own text or inside a labelled
+// control. Rows are built at runtime, so an observer marks them instead of each template remembering.
 function markDecorativeIcons(root) {
   for (const icon of root.querySelectorAll('i[class*="fa-"]:not([aria-hidden])')) icon.setAttribute('aria-hidden', 'true');
 }
@@ -2858,12 +2736,8 @@ new MutationObserver((records) => {
   }
 }).observe(document.documentElement, { childList: true, subtree: true });
 
-/*
-  The four states the main process can report. 'unresponsive' is the one the old up/down probe
-  could not see: the process is alive but its event loop stopped, so it offers a restart (a wedged
-  child must be killed first, see restartWatchdog in electron/init.js) rather than a start. Colours
-  reuse the title bar's three palette tokens; the pulse alone separates 'starting' from 'unresponsive'.
-*/
+// 'unresponsive' is the state the old up/down probe couldn't see: alive but its event loop
+// stopped, so it offers a restart (kills the wedged child first, see restartWatchdog in init.js).
 function watchdogPresentation(state) {
   switch (state) {
     case 'running':
@@ -2924,12 +2798,8 @@ ipcRenderer.on('watchdog-status', (event, state) => {
   renderWatchdogStatus(lastWatchdogState);
 });
 
-/*
-  The update chip, in the same title-bar row as the Watchdog indicator. A background download used
-  to be visible only on the closed Settings page, so the app looked idle for the whole download then
-  vanished to install; the chip is the always-on-screen surface for that, and the only place a
-  download can be cancelled from. Driven purely by the main process's broadcast, no polling.
-*/
+// The update chip: a background download used to be visible only on the closed Settings page, so
+// this is the always-on-screen surface for it, and the only place to cancel. Driven by broadcast, no polling.
 function updateChipPresentation(state) {
   if (!state) return null;
   const percent = Math.round(Math.max(0, Number(state.percent) || 0));
@@ -3010,11 +2880,8 @@ ipcRenderer.on('update-status', (event, state) => {
   renderUpdateStatus(state);
 });
 
-/*
-  A download that started while the app sat in the tray is already running by the time a window
-  exists, and the broadcast for it is long gone. Asking once on load is what makes the chip correct
-  for the case it matters most in.
-*/
+// A download started while the app sat in the tray is already running by the time a window exists,
+// and its broadcast is long gone, so ask once on load to make the chip correct for that case.
 ipcRenderer
   .invoke('get-update-status')
   .then((state) => {
@@ -3045,10 +2912,8 @@ ipcRenderer.on('achievement-unlock', (event, { appid, ach_data }) => {
   updateGamePage(appid, ach_data);
 });
 
-// The achievement row to scroll to and flash the next time its game view renders. A toast carries
-// the achievement in its activation URI, so a click on it should land on that row rather than on the
-// top of the game page. Consumed exactly once: a request left pending would make every later game
-// view hunt for a row belonging to a game the user has already navigated past.
+// The achievement row to scroll to and flash on the next render of its game view, from a toast's
+// activation URI. Consumed exactly once, or every later game view would hunt for a stale row.
 let pendingAchievementFocus = null;
 
 function setAchievementFocus(appid, name) {
@@ -3074,9 +2939,8 @@ ipcRenderer.on('open-game', (event, { appid, achievement } = {}) => {
   if (el.length && typeof app.onGameBoxClick === 'function') {
     debug.log(`[open-game] opening ${appid}${achievement ? ` (${achievement})` : ''}`);
     setAchievementFocus(appid, achievement);
-    // Triggered rather than calling onGameBoxClick directly so the toast path is the same code a
-    // real click runs: it also resets the achievement search box and records the tile for the
-    // mouse "Forward" button, both bound as delegated handlers in ui/game.js.
+    // Triggered rather than calling onGameBoxClick directly, so the toast path runs the same code as
+    // a real click (search-box reset, "Forward" mouse-button binding in ui/game.js).
     el.trigger('click');
   } else {
     debug.warn(`[open-game] no library tile for appid=${appid}`);
@@ -3188,9 +3052,8 @@ var app = {
     };
     // Reuse the loading footer during refreshes.
     $('#main-footer').removeClass('done');
-    // Reset it as well, and mark it indeterminate: discovery and the Steam ownership call both run
-    // before makeList can report a first percentage, so the bar used to sit on the previous scan's
-    // "100%" (or a cold start's "0%") for that entire silent phase and read as a frozen app.
+    // Marked indeterminate: discovery and the Steam ownership call both run before makeList's first
+    // percentage, so the bar used to sit frozen on the previous scan's 100% (or a cold start's 0%).
     loadingElem.progress.attr('data-percent', 0).addClass('indeterminate');
     loadingElem.meter.css('width', '0%');
     loadingElem.elem.show();
@@ -3227,10 +3090,8 @@ var app = {
       const file = manualUnlock.sidecarFile();
       return file ? manualUnlock.readMap(file) : {};
     })();
-    // How many tiles the grid was actually showing, which is not gameList.length: installed-only
-    // hides part of the library, so a 200-game list can be three tiles on screen. Placeholders are a
-    // promise about what is coming, so they have to be counted the way the grid is filtered. Read it
-    // before the list is emptied.
+    // Tiles the grid actually showed, not gameList.length: installed-only can hide most of a
+    // 200-game list. Placeholders promise what's coming, so count them the way the grid is filtered.
     const previousVisibleCount = $('#game-list ul > li').filter(function () {
       return $(this).css('display') !== 'none';
     }).length;
@@ -3520,9 +3381,8 @@ var app = {
           );
         }
         self.hasCompletedFirstScan = true;
-        // Clearing steam_cache deliberately forces a fresh schema lookup. If that lookup happens
-        // while offline, keep the last complete in-memory game instead of replacing it with a
-        // provisional 0-achievement card; the next successful recheck will replace it normally.
+        // Clearing steam_cache forces a fresh schema lookup; if that happens offline, keep the last
+        // complete in-memory game instead of a provisional 0-achievement card. Next recheck replaces it.
         if (preserveExistingOnFailure && previousGames.length > 0 && Array.isArray(list)) {
           const previousByAppid = new Map(previousGames.map((game) => [String(game && game.appid), game]));
           if (list.length === 0) {
@@ -3534,17 +3394,15 @@ var app = {
               const previous = previousByAppid.get(String(candidate && candidate.appid));
               if (!previous || !candidate.provisional || previous.provisional) continue;
               list[index] = previous;
-              // The provisional candidate was already streamed and registered as a fresh tile. Use
-              // the non-fresh path so the complete in-memory record replaces that tile instead of
-              // being discarded by the duplicate-stream guard.
+              // The provisional candidate was already streamed as a fresh tile. Use the non-fresh path
+              // so the complete record replaces that tile instead of being discarded by the duplicate-stream guard.
               renderGame(previous, { fresh: false });
             }
           }
         }
-        // Baseline for the background detector: the appids this scan was built from. Within the
-        // discovery TTL this reuses the scan's own discovery rather than repeating it. Passing the
-        // rendered list lets it also record which discovered appids produced no tile, so a phantom
-        // that flickers in and out of discovery stops re-triggering full refreshes.
+        // Baseline for the background detector: the appids this scan was built from. Passing the
+        // rendered list also records which discovered appids produced no tile, so a flickering
+        // phantom stops re-triggering full refreshes.
         seedNewGameScanBaseline(list);
         if (activeScanScope && previousGames.length > 0 && Array.isArray(list)) {
           const freshAppids = new Set(list.map((game) => String(game && game.appid)));
@@ -3604,14 +3462,12 @@ var app = {
           .reconcile(gameList)
           .then(async (n) => {
             if (n > 0) debug.log(`[exeList] reconcile fixed ${n} entr${n === 1 ? 'y' : 'ies'}`);
-            // exeList signal for the "installed only" filter: a game with a still-living configured
-            // launch exe is installed even if discovery couldn't resolve its install folder. reconcile
-            // just dropped dead paths, so any non-empty exe here exists on disk.
+            // exeList signal for "installed only": a live configured launch exe counts as installed
+            // even if discovery found no folder. reconcile just dropped dead paths, so any exe here exists on disk.
             try {
               const entries = await exeList.list();
-              // Known non-game executables (R.exe from SPSS, browser/office tools, …) must never
-              // count as an install proof - a stale "configure executable" pointing at one of those
-              // used to mark uninstalled games (e.g. The Last of Us Part II) as installed.
+              // Known non-game executables (R.exe from SPSS, browser/office tools) must never count as
+              // install proof: a stale configured exe pointing at one used to mark uninstalled games as installed.
               const withExe = new Set(
                 entries.filter((e) => e.exe && !exeDetect.isKnownNonGameExe(path.basename(e.exe))).map((e) => String(e.appid))
               );
@@ -3738,10 +3594,8 @@ var app = {
           // Console-emulator records do not use Steam/Ubisoft tools; Uplay is the exception.
           const rawSystem = self.data('system');
           const isConsoleSystem = !!rawSystem && rawSystem !== 'uplay';
-          // Manual per-game override (right-click → Emulator source) lets the user force GBE Fork or
-          // Uplay R1/R2 when the on-disk marker heuristic (isUbisoftGame) guesses wrong - e.g. a Ubisoft
-          // title repacked with both a steam_api dll and leftover Ubisoft engine files (a Steam-store
-          // Ubisoft remaster). `null` means no override: keep the automatic detection.
+          // Manual per-game override (right-click -> Emulator source) forces GBE Fork or Uplay R1/R2
+          // when the on-disk heuristic (isUbisoftGame) guesses wrong. `null` means no override, keep automatic detection.
           const emulatorSourceForced = emulatorSourceOverride.get(appid);
           const isUbisoftSource =
             emulatorSourceForced === 'ubisoft' ? true : emulatorSourceForced === 'steam' ? false : uplayR2.isUbisoftGame(ctxGame, appid);
@@ -3760,24 +3614,19 @@ var app = {
             (ubisoftTools && ubisoftTools.steamAppid) || ctxGame?.steamappid || writableAppid || (/^[0-9]+$/.test(String(appid)) ? appid : '')
           );
           const { Menu, MenuItem, nativeImage } = remote;
-          // Native Windows menus render icons at their natural size; the bundled
-          // icons are 32×32 and look oversized at typical DPI. Normalize every
-          // context-menu icon to the standard 16×16 size.
+          // Native Windows menus render icons at their natural size; the bundled 32x32 icons look
+          // oversized at typical DPI, so every context-menu icon is normalized to 16x16.
           const menuIcon = (name) => {
             const img = nativeImage.createFromPath(path.join(appPath, 'resources/img', name));
             if (img.isEmpty()) return img;
             return img.resize({ width: 16, height: 16, quality: 'best' });
           };
 
-          // CrakFiles community fixes. Declared here, appended by whichever branch below applies:
-          // the list is matched by game NAME (it holds no appids) and a fix is just files dropped into
-          // the install folder, so nothing about it is Steam-specific. It used to live inside the
-          // Steam-only branch, which silently denied it to cracked Ubisoft games.
+          // CrakFiles community fixes: appended by whichever branch below applies. Matched by game
+          // NAME (holds no appids), so nothing about it is Steam-specific; it used to be Steam-only, denying it to cracked Ubisoft games.
           const appendCrackFixItem = () => {
-            // Community "Fixes & Bypasses" from the CrakFiles list - a SEPARATE launch helper. These
-            // can overwrite game files (incl. steam_api), so it warns that achievement detection runs
-            // through the emulator and the emulator fix may need re-applying. Overwritten files are
-            // backed up under <gameDir>/.aw-crackfix-backups/.
+            // Community "Fixes & Bypasses" from CrakFiles, a SEPARATE launch helper that can overwrite
+            // game files (incl. steam_api); warns the emulator fix may need re-applying. Backed up under .aw-crackfix-backups/.
             emulatorMenu.append(
               new MenuItem({
                 icon: menuIcon('file-text.png'),
@@ -3898,9 +3747,8 @@ var app = {
                       noLink: true,
                     });
                   } catch (err) {
-                    // Pixeldrain rate-limits popular files (403): they can't be auto-downloaded, only
-                    // fetched through a browser (captcha). Rather than a dead end, walk the user through
-                    // downloading it themselves and then hand the file to AW to extract + apply.
+                    // Pixeldrain rate-limits popular files (403): can't auto-download, only fetch via
+                    // browser (captcha). Walk the user through downloading it, then hand the file to AW to extract + apply.
                     if (err && err.code === 'PIXELDRAIN_UNAVAILABLE') {
                       const href = err.href || fix?.href;
                       const choice = await remote.dialog.showMessageBox(remote.getCurrentWindow(), {
@@ -3998,7 +3846,7 @@ var app = {
           const linkMenu = new Menu();
           // One list, shared with Game Health: a second hand-maintained copy is how the two views
           // came to disagree about which issues the very same repair can fix.
-          const diagnosisRepairCodes = new Set([...gameHealth.REPAIRABLE_GOLDBERG_CODES]);
+          const diagnosisRepairCodes = new Set(gameHealth.REPAIRABLE_GOLDBERG_CODES);
           const canRepairGoldbergReport = (report) => report.issues.some((i) => diagnosisRepairCodes.has(i.code));
           const buildGoldbergDiagnosisLines = (report) => {
             const emuLabel =
@@ -4087,9 +3935,8 @@ var app = {
                     skipped: repaired.icons.skipped,
                   })
                 );
-                // A whole set that 404s is Steam not having published the art yet, not a broken
-                // install. Without this the report is a bare "150 failed" and the user goes
-                // hunting for a fault in their game folder that is not there.
+                // A whole set that 404s means Steam hasn't published the art yet, not a broken
+                // install; without this the report is a bare "150 failed" and sends the user hunting for a fault that isn't there.
                 if (repaired.icons.unavailable) lines.push(t('diagnosis-icons-unavailable', 'Steam has no achievement artwork for this game yet, so no icon could be downloaded. The achievement list itself is complete; run the repair again once the artwork is published.', "Steam n'a pas encore d'illustrations de succès pour ce jeu : aucune icône n'a pu être téléchargée. La liste des succès est complète ; relancez la réparation une fois les illustrations publiées."));
                 if (repaired.wroteAppId) lines.push(t('diagnosis-steam-appid-created', 'steam_appid.txt created', 'steam_appid.txt créé'));
                 if (repaired.main && repaired.main.changed) {
@@ -4197,11 +4044,8 @@ var app = {
             })
           );
 
-          // Manual override for which emulator family this game's tools should target - for the
-          // rare Ubisoft title (e.g. a Steam-store Ubisoft remaster) whose folder trips the on-disk
-          // marker heuristic the wrong way, or a genuine Ubisoft install the user wants to try GBE
-          // Fork on anyway. Hidden for legit Steam-owned/GOG/Epic records and console emulators,
-          // where neither fix could ever apply.
+          // Manual override for which emulator family this game's tools target, for a Ubisoft title
+          // that trips the on-disk heuristic the wrong way. Hidden for legit Steam/GOG/Epic and console records, where neither fix applies.
           if (!isConsoleSystem && !isLegitSteamOwned && !isNativeLauncher) {
             gameMenu.append(new MenuItem({ type: 'separator' }));
             const emulatorSourceMenu = new Menu();
@@ -4231,10 +4075,8 @@ var app = {
             );
           }
 
-          // Launching and picking the executable are not Ubisoft-specific: every tile carries the
-          // same play and config buttons, and onPlayButtonClick works for any source. These two
-          // entries used to sit inside the Ubisoft branch, so right-clicking a Steam, GOG or Epic
-          // game offered no way to start it even with the executable already configured.
+          // Launching and picking the executable are not Ubisoft-specific; onPlayButtonClick works
+          // for any source. These used to sit inside the Ubisoft branch, denying Steam/GOG/Epic games a way to start.
           gameMenu.append(new MenuItem({ type: 'separator' }));
           gameMenu.append(
             new MenuItem({
@@ -4284,12 +4126,8 @@ var app = {
             );
           }
 
-          /*
-            Reset the game's achievements so they can be earned again. Deliberately outside every
-            source/emulator gate above: every source AW tracks except a platform-owned unlock
-            (server-side) keeps its unlocks somewhere AW can zero. Restore is offered beside it,
-            listing existing backups.
-          */
+          // Resets achievements so they can be earned again. Deliberately outside every source/emulator
+          // gate above: every source except a platform-owned (server-side) unlock keeps unlocks somewhere AW can zero.
           gameMenu.append(new MenuItem({ type: 'separator' }));
           gameMenu.append(
             new MenuItem({
@@ -4336,12 +4174,9 @@ var app = {
             }
           }
 
-          // Native-platform records normally skip Steam-emulator tools. Ubisoft and explicitly
-          // added PC games are exceptions: the latter keep the basic per-game tools as an opt-in,
-          // while automatic/bulk config generation continues to exclude them.
-          // Gated on the raw system value (isConsoleSystem), not isUbisoftSource, so forcing a
-          // system="uplay" record to 'steam' via the override still opens this block (for the GBE
-          // Fork tools) instead of hiding both toolsets.
+          // Native-platform records skip Steam-emulator tools; Ubisoft and explicit PC games are
+          // exceptions (opt-in only, excluded from bulk config). Gated on isConsoleSystem, not
+          // isUbisoftSource, so a forced override still opens this block.
           if (!isConsoleSystem) {
             if (!isUbisoftSource) {
             if (!isManualGame) {
@@ -4534,9 +4369,8 @@ var app = {
                 })
               );
 
-              // Counterpart to "Back up GBE/Goldberg setup": copy the files from a backup folder
-              // (one created by the item above, identified by its backup.json manifest) back over the
-              // live install - the manual undo for a bad emulator fix / DLC edit / DRM strip.
+              // Counterpart to "Back up GBE/Goldberg setup": copies files from a backup folder
+              // (backup.json manifest) back over the live install, the manual undo for a bad emulator fix / DLC edit / DRM strip.
               emulatorMenu.append(
                 new MenuItem({
                   icon: menuIcon('redo-alt.png'),
@@ -4598,13 +4432,8 @@ var app = {
               );
             }
 
-            /*
-              Ubisoft installs use Uplay R1/R2 instead of the Steam GBE fix. A game with an existing
-              setup gets a RE-APPLY option rather than nothing: the automatic/bulk scan stays
-              conservative and still refuses those games, but from this menu, no entry at all was
-              itself the bug - a repack update or a wrong-appid setup left a game fixable only by
-              re-applying, with the item silently missing exactly then.
-            */
+            // Ubisoft installs use Uplay R1/R2, not the Steam GBE fix. A game with an existing setup
+            // gets a RE-APPLY option even though the bulk scan stays conservative and refuses it, so a repack update or wrong appid stays fixable.
             const gbeExistingFix = initialGbeEligibility.reason === 'existing-fix' ? initialGbeEligibility.existingFix : null;
             if (!isLegitSteamOwned && !isNativeLauncher && !isUbisoftSource && (initialGbeEligibility.eligible || gbeExistingFix)) {
               emulatorMenu.append(new MenuItem({ type: 'separator' }));
@@ -4652,9 +4481,8 @@ var app = {
                         gameDir = picked.filePaths[0];
                       }
 
-                      // 1a - Create a portable restore point before any write step. CrakFiles remains
-                      // the first actual fix applied, but the user can now undo the pre-fix
-                      // steam_settings + steam_api(64).dll state from "Restore latest GBE/Goldberg backup".
+                      // 1a - Create a portable restore point before any write step, so the pre-fix
+                      // steam_settings + steam_api(64).dll state can be undone from "Restore latest GBE/Goldberg backup".
                       setGameBoxBusy(self, t('backing-up-before-fix', 'Backing up before fix…', 'Sauvegarde avant fix…'));
                       const preFixBackup = createAutomaticGbeBackup({
                         appid,
@@ -4704,9 +4532,8 @@ var app = {
                             crackNote = t('ncommunity-crack-x-already-applied', '\nCommunity crack: "{name}" already applied', '\nCrack communautaire : « {name} » déjà appliqué', { name: cf.entry?.name });
                             debug.log(`[${appid}] CrakFiles (manual emu fix): already applied "${cf.entry?.name}" via "${cf.matchedName || game?.name}"`);
                           } else if (cf && cf.reason === 'pixeldrain-unavailable') {
-                            // A crack matched but pixeldrain rate-limited it (captcha/paid) - can't be
-                            // auto-fetched. Note it so the user knows to grab it manually; the emulator
-                            // install still proceeds below.
+                            // A crack matched but pixeldrain rate-limited it (captcha/paid), so it can't
+                            // be auto-fetched: note it for the user to grab manually, and let the emulator install proceed.
                             crackNote = t(
                               'ncommunity-crack-found-but-pixeldrain-rate-limited-captcha-requi',
                               '\nCommunity crack found but pixeldrain-rate-limited (captcha required) - download it manually: {url}',
@@ -4722,9 +4549,8 @@ var app = {
                         }
                       }
 
-                      // 1b - if we still don't have a real Steam appid (unconfigured game, no
-                      // steam_appid.txt), resolve it interactively with the fuzzy name search and write
-                      // it via repair below. Skipped silently when the name yields no candidates.
+                      // 1b - with no real Steam appid yet, resolve one interactively via fuzzy name
+                      // search and write it via repair below. Skipped silently when the name yields no candidates.
                       if (!writableAppid && game?.name) {
                         const candidates = await steamParser.findAppidCandidatesByName(game.name, 3);
                         if (candidates.length > 0) {
@@ -4743,9 +4569,8 @@ var app = {
                         }
                       }
 
-                      // 2 - detect where the dll currently lives. Both arches are handled: an existing
-                      // steam_api.dll and/or steam_api64.dll is replaced in place; a folder with
-                      // neither (fresh manual install) gets a 64-bit dll by default.
+                      // 2 - detect where the dll currently lives. Both arches are handled: existing
+                      // dll(s) are replaced in place; a folder with neither (fresh install) gets a 64-bit dll by default.
                       setGameBoxBusy(self, t('preparing', 'Preparing…', 'Préparation…'));
                       const emu = goldberg.detectEmulator(gameDir);
                       const detectedRuntimeExe = exeDetect.detect(gameDir, game?.name || '', { dllPaths: emu.dll });
@@ -4762,11 +4587,8 @@ var app = {
                       const emuCfg = app.config?.emulator || {};
                       const forceUpdate = emuCfg.checkUpdates !== false;
 
-                      // Advanced steam_settings: shell out to generate_emu_config for deeper
-                      // coverage (depots, languages, stats, branches), merged into the game's
-                      // steam_settings without clobbering AW's own achievements.json/configs. Optional
-                      // Steam login (THROWAWAY account) pulls data Steam hides anonymously; the Steam
-                      // Guard prompt is forwarded to the in-app text prompt. Returns a one-line note.
+                      // Advanced steam_settings: shells out to generate_emu_config for deeper coverage,
+                      // merged without clobbering AW's own files. Optional throwaway Steam login pulls anonymous-hidden data; returns a one-line note.
                       const runAdvanced = async (steamSettingsDirs) => {
                         if (emuCfg.steamSettingsMode !== 'advanced') return '';
                         if (!/^[0-9]+$/.test(String(writableAppid || ''))) {
@@ -4824,8 +4646,7 @@ var app = {
                       let hasSteamStub = false;
 
                       // SteamStub: strip it with Steamless so the plain DLL works (the SteamAutoCrack
-                      // way). There is no ColdClient fallback - if Steamless can't strip a detected stub
-                      // the plain DLL is still installed and the game may fail to launch.
+                      // way). No ColdClient fallback: if Steamless can't strip it, the plain DLL is still installed and the game may fail to launch.
                       try {
                         const pe = require(path.join(appPath, 'util/pe.js'));
                         // Skip DRM stripping when the community crack already replaced the runtime - a
@@ -4866,9 +4687,8 @@ var app = {
                       const cacheDir = path.join(getUserDataPath(), 'cache/gse_fork');
                       const dlls = await gbeInstaller.ensureEmulatorDlls({ cacheDir, force: forceUpdate, log: debug });
 
-                      // GBE/GSE setup requires steam_interfaces.txt generated from the
-                      // original game steam_api DLL. Run the matching bundled tool before replacing
-                      // anything; on a repeated repair generateInterfaces prefers the original .bak.
+                      // GBE/GSE setup requires steam_interfaces.txt generated from the original game
+                      // steam_api DLL, run before replacing anything; on a repeated repair generateInterfaces prefers the original .bak.
                       const runtimeDirKeys = new Set(dllDirs.map((dir) => path.resolve(dir).toLowerCase()));
                       const interfaceDlls = emu.dll.filter(
                         (file) => /^steam_api(64)?\.dll$/i.test(path.basename(file)) && runtimeDirKeys.has(path.resolve(path.dirname(file)).toLowerCase())
@@ -4900,18 +4720,11 @@ var app = {
                         } catch (e) {
                           debug.log(`[${writableAppid}] could not pre-create Goldberg/GBE save folder => ${e}`);
                         }
-                        /*
-                          Optional, opt-in: SteamAutoCrack's Steam API ownership-check bypass (proxy DLL).
-                          It redirects steam_api64.dll back to the pre-swap original on the exe's
-                          FIRST access, so a SteamStub integrity re-check (which runs before the
-                          game's own Steam init) sees the untouched DLL and passes. Windows loads a
-                          DLL once per process: without a re-check to absorb that first access, the
-                          redirect lands on the real runtime load instead and the GBE Fork DLL is
-                          never reached.
-                        */
+                        // Optional, opt-in: SteamAutoCrack's proxy-DLL bypass redirects steam_api64.dll
+                        // to the pre-swap original on the exe's FIRST access, so a SteamStub integrity re-check sees the untouched DLL and passes.
+                        // Windows loads a DLL once per process, so without that first-access redirect the GBE Fork DLL is never reached.
                         if (emuCfg.apiCheckBypass && hasSteamStub && detectedRuntimeExe && detectedRuntimeExe.full) {
                           try {
-                            const apiCheckBypass = require(path.join(appPath, 'parser/apiCheckBypass.js'));
                             setGameBoxBusy(self, t('steam-api-check-bypass', 'Steam API check bypass…', 'Contournement du contrôle API Steam…'));
                             const bypassDlls = await apiCheckBypass.ensureBypassDlls({ cacheDir: path.join(getUserDataPath(), 'cache/api_check_bypass'), log: debug });
                             const rb = apiCheckBypass.applyBypass({ gameDir, exePath: detectedRuntimeExe.full, dlls: bypassDlls, log: debug });
@@ -5089,9 +4902,8 @@ var app = {
             }
             }
 
-            // Ubisoft/uPlay counterpart of the GBE Fork block above: maps the game to its Steam
-            // equivalent, writes a matching achievements_schema.json for the Uplay R1/R2 loader, and
-            // redirects its save path into %AppData%\GSE Saves\<steamAppid> - already read by AW.
+            // Ubisoft/uPlay counterpart of the GBE Fork block above: maps to the Steam equivalent,
+            // writes the Uplay R1/R2 achievements_schema.json, and redirects saves into %AppData%\GSE Saves\<steamAppid>.
             if (isUplayR2Source) {
               if (emulatorMenu.items.length) {
                 emulatorMenu.append(new MenuItem({ type: 'separator' }));
@@ -5222,10 +5034,8 @@ var app = {
                 })
               );
 
-              // Undo the last fix. Every Uplay R1/R2 repair snapshots the schema + ini files it is about
-              // to overwrite, but nothing could read those back - the Steam side has had its
-              // "restore a backup" entry from the start, which is most of why this submenu looked so
-              // much thinner. Only offered when a snapshot actually exists.
+              // Undo the last fix: every Uplay R1/R2 repair snapshots the schema + ini files it
+              // overwrites, but nothing read those back until this entry. Only offered when a snapshot exists.
               {
                 const restoreDir = ctxGame?.gameDir && fs.existsSync(ctxGame.gameDir) ? ctxGame.gameDir : null;
                 const backups = restoreDir ? uplayR2.listConfigBackups(restoreDir) : [];
@@ -5326,9 +5136,8 @@ var app = {
               );
             }
 
-            // Keep the top-level menu short, while retaining the useful maintenance paths. Some
-            // sources point at the save FILE itself, so reveal it rather than trying to open a file
-            // as a folder.
+            // Keeps the top-level menu short while retaining useful maintenance paths. Some sources
+            // point at the save FILE itself, so reveal it rather than trying to open a file as a folder.
             const revealDataPath = (target) => {
               try {
                 if (!fs.existsSync(target)) return;
@@ -5576,10 +5385,8 @@ var app = {
             }
           }
 
-          // Uninstall (opt-in via Settings > General)
-          // Manual entries use the same guarded discovery as detected games: Steam only when the
-          // client confirms the AppID, otherwise a real local uninstaller or recoverable Recycle
-          // Bin removal. Removing the AW library entry remains a separate, non-destructive action.
+          // Uninstall (opt-in via Settings > General): Steam only when the client confirms the AppID,
+          // otherwise a real local uninstaller or recoverable Recycle Bin removal. Removing the AW entry stays separate.
           if (app.config?.general?.uninstallContextMenu !== false) {
             const uninstallCtx = $('#game-list');
             const uninstallGame = list.find((g) => g.appid == appid);
@@ -5590,9 +5397,8 @@ var app = {
             const uninstallMenu = new Menu();
             let uninstallEntries = 0;
 
-            // 1) Steam client uninstall (steam://uninstall/<appid>) - offered for real
-            //    Steam-owned games, or any numeric AppID the Steam client confirms as
-            //    installed (covers GreenLuma-style libraries too).
+            // 1) Steam client uninstall (steam://uninstall/<appid>): offered for real Steam-owned
+            //    games, or any numeric AppID the Steam client confirms installed (covers GreenLuma-style libraries too).
             const steamUrl = uninstall.steamUninstallUrl(catalogAppid);
             if (steamUrl) {
               const steamInfo = uninstall.getSteamUninstallInfo(catalogAppid);
@@ -5741,9 +5547,8 @@ var app = {
                         noLink: true,
                       });
                       if (confirm.response !== 1) return;
-                      // Moving a game folder to the Recycle Bin takes as long as the folder is big,
-                      // and the tile gave no sign of it - the same spinner the emulator fix uses says
-                      // the work started and is still going.
+                      // Moving a game folder to the Recycle Bin takes as long as the folder is big;
+                      // the same spinner the emulator fix uses shows the work started and is still going.
                       setGameBoxBusy(self, t('deleting-game-folder', 'Moving to the Recycle Bin…', 'Déplacement vers la Corbeille…'));
                       try {
                         await remote.shell.trashItem(uninstallDir);
@@ -5779,8 +5584,7 @@ var app = {
           }
 
           // Native Electron menu labels treat a lone "&" as an accelerator marker (swallowed at
-          // render time), so a literal ampersand must be doubled ("&&"). Locale strings keep the
-          // single "&" (they're also used in HTML); escape only here, at the native-menu boundary.
+          // render time), so it's doubled here; locale strings keep the single "&" since they're also used in HTML.
           const groupLabel = (attribute) => ($('#game-list').attr(attribute) || '').replace(/&/g, '&&');
           if (gameMenu.items.length) menu.append(new MenuItem({ label: groupLabel('data-ctx-group-game'), submenu: gameMenu }));
           // The emulator submenu is the GBE runtime / Steamless / Uplay R1/R2 surface, so it belongs to
@@ -5968,11 +5772,8 @@ var app = {
       $('body').fadeIn().css('background', `url('../resources/img/ach_background.jpg')`);
       if (game.img.background) {
         ipcRenderer.invoke('fetch-icon', game.img.background, game.steamappid || game.appid).then((localPath) => {
-          // This fetch can outlive the page that asked for it: going back to the library before it
-          // resolved used to repaint the *home* screen with this game's artwork, because the
-          // back button had already cleared body's style by the time this ran. The header carries
-          // the appid only while that game's page is on screen, so it doubles as the freshness
-          // check - it is cleared on the way out and overwritten when another game opens.
+          // This fetch can outlive the page that asked for it: going back before it resolved used to
+          // repaint the *home* screen. The header's data-appid only exists while that page is on screen, so it doubles as the freshness check.
           if (String($('#achievement .wrapper > .header').attr('data-appid')) !== String(game.appid)) return;
           if (game.system === 'uplay' || game.img?.overlay === true) {
             let gradient = `linear-gradient(to bottom right, color-mix(in srgb, var(--bg-base) 88%, black) 0%, color-mix(in srgb, var(--bg-glow) 78%, black) 100%)`;
@@ -5994,15 +5795,9 @@ var app = {
         $('#achievement .wrapper > .header').removeAttr('data-system');
       }
 
-      /*
-        The header box is square, and so is what belongs in it. Steam's clienticon is 32x32
-        (blurry beside a crisp title) and many games - notably brand-new releases - have none at
-        all. Ask the host for the same square logo a notification uses: the community icon set
-        first, then the game's own artwork cut into a square.
-      */
-      // `background` is deliberately absent: Steam's storepagebackground is a blurred decorative
-      // wash, and cutting a square out of it produces a flat gradient - a box that looks empty
-      // while claiming to be the game's logo.
+      // The header box is square; Steam's clienticon (32x32, blurry) is often missing entirely for
+      // new releases, so this asks the host for the same square logo a notification uses (community set, then cropped artwork).
+      // `background` is deliberately excluded: it's a blurred decorative wash that crops to a flat, empty-looking gradient.
       paintGameHeaderIcon(game);
       bindGameHeaderIconMenu(game);
 
@@ -6087,9 +5882,8 @@ var app = {
         const progressMax = progress.hasProgress ? progress.max : 0;
         const progressLabel = `${formatCount(progress.current)} / ${formatCount(progress.max)}`;
 
-        // Hidden + still locked + "show hidden" off => mask the description inline. The real text is
-        // stashed in data-desc and revealed in place on click (delegated handler below), instead of
-        // being hidden away in a separate bottom "reveal all" section.
+        // Hidden + still locked + "show hidden" off => mask the description inline; the real text
+        // sits in data-desc and is revealed in place on click, instead of a separate bottom "reveal all" section.
         const isHiddenMasked = achievement.hidden == 1 && !app.config.achievement.showHidden && !achievement.Achieved;
         const realDesc = achievement.description || '...';
         const descHtml = isHiddenMasked
@@ -6152,9 +5946,8 @@ var app = {
       if (unlockRows.length) unlock.append(unlockRows.join(''));
       if (lockRows.length) lock.append(lockRows.join(''));
 
-      // Paint the first candidate that actually decodes, and report whether one did. A row is left
-      // on its placeholder rather than painted with a broken image, so the caller can try the next
-      // source instead of showing an empty square.
+      // Paints the first candidate that actually decodes and reports whether one did. A row stays
+      // on its placeholder rather than a broken image, so the caller can try the next source.
       function setAchievementImage(selector, candidates) {
         const list = (Array.isArray(candidates) ? candidates : [candidates]).map(imageDisplayUrl).filter(Boolean);
         return new Promise((resolve) => {
@@ -6171,12 +5964,8 @@ var app = {
           attempt(0);
         });
       }
-      /*
-        A Steam-emulated install already holds every achievement image - that is what the emulator
-        paints in game. Reading them costs one readdir and works with no network at all: a player
-        whose connection cannot reach the Steam CDN was left with a page of spinners while the same
-        pictures sat in the game's own achievement_images folder.
-      */
+      // A Steam-emulated install already holds every achievement image (what the emulator paints in
+      // game); reading them costs one readdir and works offline, instead of a page of spinners with no CDN access.
       const localIconIndex = localIcons.readIndex(game);
       const imageCache = new Map(); // hash -> promise
       const cachedIcon = (hash) => {
@@ -6249,10 +6038,8 @@ var app = {
       let elem = $('#achievement .achievement-list ul > li');
       elem.removeClass('highlight');
 
-      // Reconciled rarity: any source that maps to Steam (Uplay R1/R2, official Ubisoft via the id
-      // bridge, Epic-with-Steam-release) gets the same Steam community column and refresh path as a
-      // native Steam game. Console emulators keep Exophase (trophy icon), Xbox PC paints its import
-      // cache, and sources without any percentage source (EA) keep the column hidden.
+      // Reconciled rarity: sources that map to Steam (Uplay R1/R2, Ubisoft id bridge, Epic-with-Steam)
+      // get the same Steam column; console emulators use Exophase, Xbox PC its import cache, EA hides it.
       const rarityContext = resolveGameRarityContext(game, { emulatorSources: EMU_LOCAL_ICON_SOURCES });
       if (!rarityContext) {
         $('.achievement .stats .community').hide();
@@ -6280,10 +6067,8 @@ var app = {
       }
 
       $('#achievement').fadeIn(600, function () {
-        // Focus is requested per open (see setAchievementFocus) instead of read from app.args on
-        // every render: the launch arguments never change, so the old check re-fired for every game
-        // opened afterwards, and `.offset()` on the resulting empty set threw before
-        // pointer-events could be restored - stranding the tile that was clicked.
+        // Focus is requested per open (setAchievementFocus), not read from app.args on every render:
+        // launch args never change, so the old check re-fired every time and threw on an empty `.offset()`, stranding the clicked tile.
         const focusName = takeAchievementFocus(game.appid);
         if (focusName) {
           focusAchievementRow($, $(this), elem, focusName, {
@@ -6291,9 +6076,8 @@ var app = {
           });
         }
 
-        // The rarity pass that hands out `.rare` runs before this fade, with the view still hidden
-        // and every row measuring zero, so this is the first moment the on-screen halos can be
-        // picked (see refreshRareGlow in ui/game.js).
+        // The rarity pass handing out `.rare` runs before this fade while every row measures zero,
+        // so this fade-in callback is the first moment the on-screen halos can be picked (see refreshRareGlow).
         if (typeof window.scheduleRareGlowRefresh === 'function') window.scheduleRareGlowRefresh(0);
 
         self.css('pointer-events', 'initial');
@@ -6312,9 +6096,8 @@ var app = {
         })
         .first();
       if (box.length && typeof this.onGameBoxClick === 'function') {
-        // Re-rendering the detail view is what re-applies the overrides to the in-memory game, so
-        // the tile and the header counters are refreshed from it afterwards - otherwise the library
-        // kept showing the percentage from the last full scan.
+        // Re-rendering the detail view re-applies the overrides to the in-memory game, so the tile
+        // and header counters refresh from it, instead of showing the percentage from the last full scan.
         this.onGameBoxClick(box, gameList);
       }
       refreshLibraryProgressFor(appid, gameList);
@@ -6324,12 +6107,8 @@ var app = {
       return { changed: false };
     }
   },
-  /*
-    Reset a game's achievements so they can be earned - and announced - again. Everything is
-    backed up first (parser/achievementReset.js) and the user approves the actual file list. The
-    Watchdog is told to drop its in-memory unlock baseline too - otherwise the game re-earns
-    against a baseline that still has them and never notifies again.
-  */
+  // Resets a game's achievements so they can be earned and announced again. Everything is backed up
+  // first and the user approves the file list; the Watchdog drops its baseline too, or re-earned achievements never notify.
   resetAchievementsAction: async function (appid) {
     const game = gameList.find((g) => g && String(g.appid) === String(appid));
     if (!game) return false;
@@ -6554,9 +6333,8 @@ var app = {
           debug.warn(`[${appid}] disabled broken Steam API bypass before launch: ${recovery.files.map((file) => file.from).join(', ')}`);
         }
       }
-      // spawn() takes (command, args, options) - there is no callback overload, so the old 4th-arg
-      // callback was dead code and launch failures (missing/blocked exe) were swallowed silently.
-      // Listen on 'error' and surface it so the user knows the click did something.
+      // spawn() has no callback overload, so the old 4th-arg callback was dead code and launch
+      // failures were swallowed silently. Listen on 'error' instead and surface it.
       const reportLaunchFailure = (error) => {
         clearGameBoxBusy(gameBox);
         debug.error(`Failed to launch ${cfg.exe}: ${error}`);
@@ -6574,13 +6352,9 @@ var app = {
           workingDirectory: path.dirname(cfg.exe),
           elevate,
         });
-      /*
-        spawn() is CreateProcess, which cannot start an executable whose manifest requires
-        administrator: Windows fails it with ERROR_ELEVATION_REQUIRED (reported as EACCES) even
-        though the game runs fine from Explorer. ShellExecute honours the manifest and raises the
-        UAC prompt, so an EACCES retries through it; a refusal there is offered as an explicit
-        elevated retry, not performed silently.
-      */
+      // spawn() is CreateProcess, which can't start an exe whose manifest requires administrator
+      // (Windows fails it as EACCES even though it runs fine from Explorer). ShellExecute honours the
+      // manifest and raises the UAC prompt, so an EACCES retries through it; a refusal offers an explicit elevated retry.
       const recoverFromLaunchDenied = async (error) => {
         if (process.platform !== 'win32' || !windowsShellLaunch.isElevationLikeError(error)) {
           reportLaunchFailure(error);
@@ -6645,9 +6419,8 @@ var app = {
           clearGameBoxBusy(gameBox);
           return;
         }
-        // args_split (argv-split) strips the quotes it uses for grouping; the hand-rolled regex that
-        // used to live here kept them, and since spawn() runs without a shell Node re-quoted the token,
-        // so a game asked for -savedir "D:\My Games\Save" received the literal quotes as part of the path.
+        // args_split (argv-split) strips its own grouping quotes; the old hand-rolled regex kept
+        // them, so spawn() (no shell) re-quoted the token and a game got literal quotes in a path like -savedir "D:\My Games\Save".
         let game = spawn(cfg.exe, splitLaunchArgs(cfg.args, (m) => debug.log(m)), {
           cwd: path.dirname(cfg.exe),
           detached: true,
@@ -6679,11 +6452,8 @@ var app = {
     setGameConfigView('health');
     loadGameNotificationSettings(appid);
 
-    /*
-      Resolve (and persist) the executable BEFORE the report is collected. renderGameHealth() reads
-      the same exeList this block writes to; fired un-awaited, it used to race the auto-detection
-      below and almost always win, reporting "no executable" for a game one click from a detected path.
-    */
+    // Resolves (and persists) the executable BEFORE the report is collected: renderGameHealth() reads
+    // the same exeList, and fired un-awaited it used to race auto-detection and report "no executable" wrongly.
     let cfg = await exeList.get(appid);
     if (!cfg?.exe || cfg.exe === '' || !fs.existsSync(cfg.exe)) {
       const game = gameList.find((g) => g.appid == appid);
@@ -6718,12 +6488,8 @@ var app = {
     cfg.exe = exeLbl.text();
     cfg.args = argsInput.val() === undefined ? '' : argsInput.val();
     await exeList.add(cfg);
-    /*
-      Carry the choice into the in-memory game too. exeList is the persisted truth, but the loaded
-      gameList entry is what the rest of this session reads - Game Health's own fallback, "Track this
-      game", the play button. Left stale, picking the executable by hand looked like it did nothing
-      until the next full library scan.
-    */
+    // Carries the choice into the in-memory game too: exeList is the persisted truth, but gameList is
+    // what the rest of the session reads. Left stale, it looked like picking an executable did nothing.
     const chosen = gameList.find((g) => g.appid == appid);
     if (chosen && cfg.exe) {
       chosen.exe = cfg.exe;
@@ -6733,9 +6499,8 @@ var app = {
   },
 };
 
-// The per-game report behind the tools button. Signal collection lives here because it needs the
-// renderer's game list, user config and userData paths; every state / explanation / action decision
-// is in util/gameHealth.js so it can be tested without a window or a game install.
+// The per-game report behind the tools button. Signal collection lives here (needs the renderer's
+// game list, config, userData paths); every state/explanation/action decision is in util/gameHealth.js so it can be tested headless.
 const gameHealth = require(path.join(appPath, 'util/gameHealth.js'));
 const gameHealthRepair = require(path.join(appPath, 'util/gameHealthRepair.js'));
 // Libraries whose unlocks come from the platform itself. Their watchdog watcher polls the account,
@@ -6745,11 +6510,8 @@ function isOfficialPlatformSource(source) {
   return OFFICIAL_PLATFORM_SOURCES.test(String(source || '').trim());
 }
 
-/*
-  Tab labels. Re-applied on every open rather than once at startup: the panel outlives a language
-  change, and locale/loader.js does not know about this panel's tabs, so a one-shot binding would
-  leave them frozen in whatever language the app started in.
-*/
+// Tab labels re-applied on every open, not once at startup: the panel outlives a language change,
+// and locale/loader.js doesn't know about these tabs, so a one-shot binding would freeze them.
 function applyGameConfigTabLabels() {
   $('#game-config-tab-health').text(t('game-config-tab-health', 'Health', 'État'));
   $('#game-config-tab-exe').text(t('game-config-tab-exe', 'Executable', 'Exécutable'));
@@ -6892,10 +6654,8 @@ function setGameConfigView(view) {
   $('#btn-game-config-cancel').text(editing ? t('cancel', 'Cancel', 'Annuler') : t('close', 'Close', 'Fermer'));
 }
 
-/*
-  Everything Game Health reasons about, read once per panel open. Anything unavailable stays absent
-  rather than being guessed at - deriveHealth() reports only on the signals it is actually given.
-*/
+// Everything Game Health reasons about, read once per panel open. Anything unavailable stays absent
+// rather than guessed at, since deriveHealth() reports only on the signals it is given.
 async function collectGameHealthSignals(appid) {
   const game = gameList.find((g) => g.appid == appid) || {};
   let cfg = { exe: '', args: '' };
@@ -7096,10 +6856,8 @@ function gameHealthCheckLabel(id, simple) {
   }
 }
 
-/*
-  Simple mode: one plain outcome per check, in the words a player would use. No paths, no process
-  names, no appid, no transport name - those are what Technical details is for.
-*/
+// Simple mode: one plain outcome per check, in the words a player would use. No paths, no process
+// names, no appid, no transport name - those are what Technical details is for.
 function gameHealthSimpleCheckValue(entry) {
   const p = entry.params || {};
   const ok = entry.level === gameHealth.LEVEL.OK;
@@ -7141,9 +6899,8 @@ function gameHealthSimpleCheckValue(entry) {
         return t('gh-simple-notifications-muted', 'Progress notifications are muted', 'Notifications de progression coupées');
       if (entry.level === gameHealth.LEVEL.WARN)
         return t('gh-simple-notifications-failed', 'The last notification could not be sent', "La dernière notification n'a pas pu être envoyée");
-      // Working, but not the way the setting alone would suggest - say which, since "no overlay
-      // appeared" is otherwise read as a fault rather than as the fallback doing its job. The
-      // comparison lives in gameHealth.js; Simple only picks the sentence.
+      // Working, but not the way the setting alone suggests, so say which: "no overlay appeared"
+      // reads as a fault otherwise. Comparison lives in gameHealth.js; Simple only picks the sentence.
       if (p.fallbackActive)
         return t('gh-simple-notifications-fallback', 'Working - Windows fallback active', 'Fonctionnel - repli Windows actif');
       return t('gh-simple-notifications-ok', 'Notifications working', 'Notifications opérationnelles');
@@ -7151,11 +6908,8 @@ function gameHealthSimpleCheckValue(entry) {
   }
 }
 
-/*
-  The emulator's name. "gbe" / "goldberg" are internal ids and must never reach the UI; the two
-  product names are brands that stay identical in every language, while "no emulator" is a real
-  sentence and uses the translation the right-click diagnosis already ships.
-*/
+// The emulator's display name: "gbe"/"goldberg" are internal ids that must never reach the UI, the
+// product names stay identical in every language, and "no emulator" reuses the diagnosis translation.
 function gameHealthEmulatorLabel(emulator, loader) {
   // The emulator that actually supplied the dll, when it could be named: "goldberg" is the shape of
   // an unconfigured setup, not a claim about who wrote it.

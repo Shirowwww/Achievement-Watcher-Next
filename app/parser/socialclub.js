@@ -47,10 +47,8 @@ const ACHIEVEMENT_FILE_GLOB = [
   'SteamEmu/UserStats/achiev.ini',
 ];
 
-// Files the Goldberg SocialClub Emulator writes into each profile folder (confirmed from the
-// emulator's own strings): the profile settings blob and the game's Rockstar save files
-// (SGTA50000 for GTA V, SRDR* for RDR2, etc.). Their presence identifies a real SocialClub game
-// folder even before any readable achievement file exists.
+// Files the Goldberg SocialClub Emulator writes into each profile folder: the settings blob and the
+// game's Rockstar save files. Their presence identifies the folder before any achievement file exists.
 const ROCKSTAR_PROFILE_MARKERS = new Set(['cfg.dat', 'local_save.txt', 'pc_settings.bin', 'settings.xml', 'profile.dat', 'players.dat']);
 const ROCKSTAR_SAVE_FILE_RE = /^(SGTA|SRDR|CGTA|GTAV|RDR|GTASA|GTAVC|GTA3|PGTA)[0-9A-Za-z_]*$/i;
 

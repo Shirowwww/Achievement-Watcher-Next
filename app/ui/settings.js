@@ -21,18 +21,14 @@ const interfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
 const { legacyPresetAlias } = require(path.join(appPath, 'util/notificationPreset.js'));
 const { describeFolderDiagnosis } = require(path.join(appPath, 'util/folderDiagnosis.js'));
 
-/*
-  What the sound dropdown stores when the user picks "Random". It is not a filename, so it can never
-  collide with one: util/presetSchema.js's SOUND_RE requires an extension, and this has none.
-*/
+// Sentinel for "Random"; has no extension so it can never collide with a real filename (SOUND_RE in presetSchema.js).
 const RANDOM_SOUND_VALUE = '__random__';
 // The global dropdown uses '' for silence, but a per-game blank means "inherit". This distinct
 // value lets one game explicitly mute its popup while every other game keeps the global sound.
 const NO_SOUND_VALUE = '__none__';
 
 // Frames are created on first use, not shipped in the page: an empty iframe is still a live
-// document, and the six of these (designer card, its four comparison rows, imported-theme sample)
-// measured 4.6 MB of renderer memory for panels most users never open.
+// document, and the six of these cost 4.6 MB of renderer memory for panels most users never open.
 function ensureFrame(wrap, { id = '', title = '' } = {}) {
   if (!wrap) return null;
   const existing = wrap.querySelector('iframe');
@@ -46,12 +42,7 @@ function ensureFrame(wrap, { id = '', title = '' } = {}) {
   return frame;
 }
 
-/*
-  Cards whose labels are written imperatively rather than by locale/loader.js's DOM walk. They run
-  once while the panel is wired, so without this they would keep the language that was active then -
-  and, when they run before the locale bundle is in place, the English/French literal in the `t()`
-  call. The loader replays them after applying a language.
-*/
+// Labels set imperatively (outside loader.js's DOM walk) register here so a language change replays them.
 const localeRefreshers = [];
 function registerLocaleRefresh(apply) {
   localeRefreshers.push(apply);
@@ -77,22 +68,14 @@ let settingsReady = false;
 let notifAutosaveTimer = null;
 const SETTINGS_SAVE_TIMEOUT_MS = 30000;
 
-/*
-  Simple hides three settings tabs and a handful of rows inside the tabs it keeps. Everything is
-  hidden with a class, never detached: the panel is translated positionally (locale/loader.js
-  binds `li:nth-child(n)`), so moving rows would silently re-label the UI. No setting is written,
-  reset or ignored by switching - the controls behind Advanced keep the values they already have.
-*/
+// Simple hides tabs/rows with a class, never detaches them: loader.js binds `li:nth-child(n)`, so
+// moving rows would re-label the UI. Switching mode never writes or resets a hidden control's value.
 function currentInterfaceMode() {
   return interfaceMode.resolve(typeof app !== 'undefined' ? app.config : null);
 }
 
-/*
-  The Sources tab is the one place the mode reasons instead of following a list. A niche source is
-  folded away only while it is doing nothing for you: switched off, or already contributing games to
-  the library, and its switch stays. Reading the saved config rather than the <select> matters - this
-  runs before the form is populated when Settings first opens.
-*/
+// A niche source folds away only while off and contributing no games; reads saved config, not the
+// <select>, since this can run before the form is populated.
 function applySourceVisibility(mode) {
   const enabled = (typeof app !== 'undefined' && app.config && app.config.achievement_source) || {};
   let librarySources = [];
@@ -153,10 +136,7 @@ function applyInterfaceMode() {
   }
 }
 
-/*
-  Persist a mode change immediately. Same policy as the Notifications tab: a control the user flips
-  to see the result is saved when they flip it, not when they remember to press Save.
-*/
+// Persists immediately, like the Notifications tab: a control flipped to see its result saves on flip.
 function setInterfaceMode(mode) {
   const normalized = interfaceMode.normalize(mode);
   if (!normalized || normalized === currentInterfaceMode()) return;
@@ -169,11 +149,8 @@ function setInterfaceMode(mode) {
 
 window.applyInterfaceMode = applyInterfaceMode;
 
-// Apply a stored theme value: built-ins switch <html data-theme>, while user themes, the Custom
-// theme and imported .awtheme files inject their CSS through the shared user-theme <style> element.
-// Returns a promise that settles once the new stylesheet is actually on the page. Callers that only
-// want the window repainted can ignore it; deleting a theme cannot, because the window holds every
-// image the old stylesheet names open until the moment it is replaced.
+// Built-ins switch <html data-theme>; user/Custom/.awtheme themes inject CSS via the shared style
+// element. Resolves once applied: deleting a theme must await it, or its image handles stay open.
 function applyThemeValue(value) {
   if (userThemes.usesInjectedCss(value)) {
     document.documentElement.dataset.theme = 'default';
@@ -189,10 +166,8 @@ function applyThemeValue(value) {
     .catch(() => userThemes.applyCss(''));
 }
 
-// Eighteen built-ins is too many to choose from cold, so the picker opens on a short, deliberately
-// contrasting set - the one light theme, the pure black one, a neutral grey, then four clearly
-// different accent families - and keeps the rest one step away behind "More themes…". Nothing is
-// removed: expanding appends the remaining built-ins to the same <select>.
+// Eighteen built-ins is too many to choose from cold, so the picker opens on a short contrasting
+// set and keeps the rest behind "More themes…", appended to the same <select> on expand.
 const PRIMARY_THEMES = [
   ['default', 'Steam Blue'],
   ['light', 'Light'],
@@ -217,10 +192,8 @@ let themeListExpanded = false;
 // been saved yet instead of snapping back to the persisted value.
 let themeSelection = null;
 
-// Plain rows on purpose. Tinting each option with its theme's colours was tried both ways - the
-// full palette and a faint accent wash - and neither looked right: a native <select> gives no
-// control over how the swatch is drawn, so the list reads as a patchwork and the tint competes
-// with Chromium's own highlight for the selected row, which is the one thing it has to make clear.
+// Plain rows on purpose: a native <select> can't control swatch rendering, so a color tint fights
+// Chromium's own highlight for the selected row.
 function themeOption(value, label) {
   return $('<option>').attr('value', value).text(label);
 }
@@ -229,11 +202,8 @@ function themeOption(value, label) {
 // app installed and may remove. Refreshed with the dropdown.
 let installedThemes = [];
 
-/*
-  "Custom…" is a permanent scratch slot, never the name of a theme: always there, always editable,
-  and what it holds survives between visits. Naming happens through Save, which writes a theme of
-  its own and leaves this row free for the next idea.
-*/
+// "Custom…" is a permanent scratch slot, never a theme name; Save writes a separate theme and
+// leaves this row free for the next idea.
 function customThemeLabel() {
   return t('themeCustom', 'Custom…', 'Personnalisé…');
 }
@@ -260,9 +230,7 @@ function populateThemeSelect(preferred) {
       .text(themeListExpanded ? t('themeFewer', 'Fewer themes…', 'Moins de thèmes…') : t('themeMore', 'More themes…', 'Plus de thèmes…'))
   );
   sel.append($('<option>').attr('value', 'custom').text(customThemeLabel()));
-  // Both lists in one round trip: a theme the user saved, and one somebody sent them, are the same
-  // kind of entry here, and a user stylesheet stays labelled as one - so the picker keeps reading in
-  // a single pass.
+  // Both lists in one round trip: saved and imported themes are the same kind of entry here.
   Promise.all([ipcRenderer.invoke('list-installed-themes').catch(() => []), ipcRenderer.invoke('list-user-themes').catch(() => [])])
     .then(([imported, themes]) => {
       installedThemes = Array.isArray(imported) ? imported : [];
@@ -292,9 +260,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
   $(function () {
     const transientStatusTimers = new WeakMap();
 
-    // Action feedback should be long enough to read, but it must not become permanent UI. Starting
-    // a new action cancels both phases of the previous timeout so an older callback cannot erase the
-    // newer message.
+    // Starting a new action cancels both phases of the previous timeout so an older callback can't
+    // erase the newer message.
     function setTransientStatus(result, message, options = {}) {
       const node = result && result[0];
       if (!node) return;
@@ -487,8 +454,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       settingsReady = false; // suppress auto-save while we populate the form below
       listeningHotkey = false;
       keysDown.clear();
-      // Settings always opens on General with exactly one active tab. Clear every nav <li>
-      // (including the non-clickable .nav-group section labels) so a stray .active never
+      // Clear every nav <li> (including .nav-group section labels) so a stray .active never
       // paints the accent pill behind a group header.
       $('#settingNav li').removeClass('active');
       $('#settingNav li[data-view="general"]').addClass('active');
@@ -614,12 +580,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           list.forEach((name) => {
             sel.append($('<option>').attr('value', name).text(name));
           });
-          /*
-            Show what the notification will actually render. A config naming a bundled preset that
-            has since been redesigned away resolves to the preset that replaced it (see
-            util/notificationPreset.js), so the dropdown must land there too - otherwise the setting
-            reads as empty while the popup happily renders something.
-          */
+          // A preset name that was since redesigned away resolves to its replacement (notificationPreset.js);
+          // the dropdown must land there too, or the setting looks empty while the popup renders fine.
           const savedPreset = cfgOverlay.notificationPreset || 'AW Next';
           const shownPreset = list.includes(savedPreset)
             ? savedPreset
@@ -646,11 +608,6 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const soundsReady = ipcRenderer
         .invoke('list-sounds')
         .then((sounds) => {
-          /*
-            "Random" is a sound you pick, not a switch beside the list. It used to be its own row,
-            which meant the sound dropdown could read "Steam.wav" while every notification played
-            something else - two controls describing one outcome, and the wrong one on top.
-          */
           // A settings file written before the bundled sounds were renamed still names the old file:
           // without this the dropdown would read "None" while the old name kept playing.
           const picked = cfgOverlay.notificationSound || '';
@@ -689,11 +646,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           debug.log(err);
         });
 
-      // Populate the Debug tab's read-only diagnostics (versions). Wrapped so a failure here can
-      // never block the settings form from opening.
-      //
-      // The line is kept to major runtime versions so it stays one short row; the tooltip carries
-      // the full product name and the exact build numbers for a bug report.
+      // Debug tab diagnostics: major versions only to stay one short row; the tooltip carries the
+      // exact build numbers for a bug report. Wrapped so a failure here can't block Settings opening.
       try {
         const major = (v) => String(v || '').split('.')[0];
         $('#diag-versions')
@@ -706,9 +660,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         debug.log(err);
       }
 
-      // Form is fully populated (including the async preset/sound dropdowns) -> arm auto-save for the
-      // Notifications tab. Gating on these Promises prevents the populate-time change events from
-      // persisting stale/empty values before the dropdowns have loaded.
+      // Arm Notifications auto-save only once the async preset/sound dropdowns are loaded, or
+      // populate-time change events would persist stale/empty values.
       Promise.all([presetsReady, soundsReady]).then(() => {
         settingsReady = true;
         refreshHelpPreview();
@@ -726,6 +679,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     window.addEventListener('keyup', (e) => {
       if (!listeningHotkey) return;
       keysDown.delete(normalizeKey(e));
+      // Only the last key released should repaint the label: without cancelling, a three-key combo
+      // leaves three timers racing to write what they each saw.
+      clearTimeout(holdingKeysCheck);
       holdingKeysCheck = setTimeout(() => {
         if (keysDown.size > 0) {
           keys = Array.from(keysDown).join(' + ');
@@ -761,12 +717,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         debug.log(err);
       }
     });
-    /*
-      Bundle the logs into a .zip the user picks. Copying them by hand while the app runs is
-      unreliable: the tray daemon, the monitor and each transient notification process keep
-      appending to those files, so a copy can catch half-written lines. The main process reads
-      each log once and writes the bytes into an archive instead.
-    */
+    // Bundles into a .zip via the main process: copying log files by hand while the app runs risks
+    // catching half-written lines, since the daemon/monitor/notification processes keep appending.
     $('#export-logs').click(async function () {
       const btn = $(this);
       const result = $('#export-logs-result');
@@ -857,13 +809,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     $('#footer-check-updates').click(function () {
       runUpdateCheck($(this), $('#footer-update-status'));
     });
-    /*
-      The download runs in the background regardless of which button (if any) started it, so both
-      status labels track it live. Driven by the shared updater state rather than a raw percentage,
-      so the labels also report the install step - the moment the app is about to close - instead of
-      stopping at 100% and leaving the user with no idea what happens next. The title bar shows the
-      same state (see renderUpdateStatus in app.js); this is Settings' copy of it.
-    */
+    // Both status labels track the shared updater state live (not a raw percentage), so they also
+    // report the install step. Settings' copy of renderUpdateStatus in app.js (title bar).
     function renderSettingsUpdateStatus(state) {
       const labels = $('#check-for-updates-label, #footer-update-status');
       if (!state) return;
@@ -885,10 +832,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // Opening Settings mid-download must show the download, not an idle button.
     ipcRenderer.invoke('get-update-status').then(renderSettingsUpdateStatus).catch(() => {});
 
-    // Settings > Advanced: clears every disposable cache the app knows about (updater cache +
-    // Steam/Ubisoft schema, icon and downloaded emulator-tool caches - see
-    // util/clearableCaches.js for the exact, individually-verified allowlist). Never touches game
-    // data, settings, backups, presets, theme images, logs, or the user-seeded Uplay R2 loader cache.
+    // Clears every disposable cache (see util/clearableCaches.js for the allowlist); never touches
+    // game data, settings, backups, presets, theme images, logs, or the Uplay R2 loader cache.
     $('#clear-update-cache').click(async function () {
       const btn = $(this);
       const result = $('#clear-update-cache-result');
@@ -1271,9 +1216,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     });
 
-    // Validate the saved Advanced-mode Steam credentials against the real GSE tool. AppID 480
-    // (Spacewar) is used only as a harmless generation target. Interactive Steam Guard/email/captcha
-    // prompts are forwarded to the in-app modal and `-tok` lets GSE retain the resulting refresh token.
+    // Validates against the real GSE tool using AppID 480 (Spacewar) as a harmless target; Steam
+    // Guard/email/captcha prompts forward to the in-app modal, and `-tok` lets GSE keep the refresh token.
     $('#emulator-login-test').click(async function () {
       const button = $(this);
       const status = $('#emulator-login-test-status');
@@ -1347,9 +1291,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const disconnectBtn = $('#epic-disconnect-btn');
       const setStatus = (text, cls = '') => status.removeClass('success error running').addClass(cls).text(text || '');
 
-      // Localize the static card labels here (kept out of loader.js's fragile nth-child i18n).
-      // Registered so a language change repaints them: this runs once, and `t()` falls back to the
-      // literals below whenever it runs before the locale bundle is in place.
+      // Static card labels, kept out of loader.js's fragile nth-child i18n; registered so a
+      // language change repaints them.
       registerLocaleRefresh(function applyEpicLabels() {
         $('#epic-connect-title').text(t('epic-title', 'Epic Games account', 'Compte Epic Games'));
         $('#epic-connect-desc').text(
@@ -1412,9 +1355,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       refresh();
     })();
 
-    // Steam account connect: gives AW the real owned and Steam Family library, which is what the
-    // ghost-game filter reads. The Valve sign-in window and the encrypted session live in the main
-    // process (init.js steam:* IPC); nothing here ever sees the password.
+    // Gives AW the real owned/Family library that the ghost-game filter reads. The Valve sign-in
+    // window and encrypted session live in the main process (init.js steam:* IPC); no password here.
     (function wireSteamConnect() {
       const T = () => ({
         connectedAs: (n) => t('steam-connected-as', 'Connected{suffix}', 'Connecté{suffix}', { suffix: n ? ': ' + n : '' }),
@@ -1724,11 +1666,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     let customThemeDraft = null;
     let customThemeSnapshot = null;
     let customThemeSaveTimer = null;
-    /*
-      Which theme the editor is showing, and which built-in palette it descends from. `editingValue`
-      decides whether an edit is written or only previewed (see scheduleCustomThemeSave);
-      `editingBase` is recorded in a saved theme's manifest and travels through an export unchanged.
-    */
+    // `editingValue` (the theme being shown) decides whether an edit is written or only previewed
+    // (see scheduleCustomThemeSave); `editingBase` travels into a saved theme's manifest unchanged.
     let editingValue = '';
     let editingBase = '';
 
@@ -1743,9 +1682,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         const row = $(`#theme-customizer-layers .theme-layer-row[data-layer="${meta.id}"]`);
         if (!row.length) continue;
         const current = (customThemeDraft && customThemeDraft[meta.id]) || {};
-        // `<input type="color">` has no alpha channel, so the opacity slider beside it carries that
-        // half and the two are recombined into the #rrggbbaa the theme actually stores. 100% still
-        // produces a plain 6-digit hex, so a theme that never touches opacity is written unchanged.
+        // `<input type="color">` has no alpha channel, so the opacity slider carries that half and
+        // the two recombine into the #rrggbbaa the theme actually stores.
         const alphaInput = row.find('.theme-layer-alpha');
         const alpha = alphaInput.length ? Number(alphaInput.val()) : themeLayers.colorAlpha(current.color);
         const layer = {
@@ -1805,16 +1743,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         // Remember the resolved preview image (source or blur copy) so the live gradient
         // refresh can rebuild the swatch exactly like the real renderer does.
         row.data('previewImage', previewImage);
-        /*
-          The name sits beside the controls; the sentence that says what the layer paints gets a line
-          of its own under both. The controls cannot be narrowed, so the label column is about eighty
-          pixels wide - which is why the hint used to be cut off with an ellipsis, and why wrapping it
-          in place would have broken it into a five-line ribbon instead. On its own line it has the
-          whole row and reads as a sentence.
-        */
+        // The hint gets its own line under the label/controls: the label column is only ~80px wide,
+        // too narrow to wrap the sentence in place without a five-line ribbon.
         const label = $('<div>')
           .addClass('theme-layer-label')
-          .html(`<i class="fas ${meta.icon}"></i><div class="theme-layer-label-text">` + `<div class="theme-layer-name">${escapeHtml(meta.label)}</div></div>`);
+          .html(`<i class="fas ${meta.icon}"></i><div class="theme-layer-label-text"><div class="theme-layer-name">${escapeHtml(meta.label)}</div></div>`);
         const hint = $('<div>').addClass('theme-layer-hint').text(meta.hint || '');
         const controls = $('<div>').addClass('theme-layer-controls');
         const layerAlpha = themeLayers.colorAlpha(layer.color);
@@ -1860,9 +1793,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           const toGroup = $('<div>').addClass('theme-layer-effect-group');
           toGroup.append($('<label>').text(t('theme-gradient-to', 'To', 'À')));
           toGroup.append($('<input>').attr('type', 'color').addClass('theme-layer-gradient-to').val(grad.to || grad.from || layer.color || DEFAULT_THEME_COLOR));
-          // Styled like the effect-type select but deliberately NOT one: it renders earlier in the
-          // row, so sharing that class made row.find('.theme-layer-effect-type') return this angle -
-          // which is why picking Blur kept offering a veil colour and was never saved as blur.
+          // Styled like the effect-type select but deliberately a different class: sharing it made
+          // row.find('.theme-layer-effect-type') return this angle select instead.
           const angleSelect = $('<select>').addClass('theme-layer-gradient-angle');
           for (const [deg, labelText] of Object.entries(angleLabels)) {
             angleSelect.append($('<option>').attr('value', deg).text(labelText));
@@ -1872,9 +1804,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           angleGroup.append($('<label>').text(t('theme-gradient-direction', 'Direction', 'Direction')));
           angleGroup.append(angleSelect);
           gradientPanel.append(fromGroup, toGroup, angleGroup);
-          // The gradient panel must live OUTSIDE the one-line controls row (which is a
-          // nowrap flex container): a flex child forced to 100% width would keep its
-          // space and overlap the other controls even while collapsed.
+          // Must live outside the one-line controls row (a nowrap flex container), or a flex child
+          // forced to 100% width would overlap the other controls even while collapsed.
           row.data('gradientPanel', gradientPanel);
 
           const pick = $('<button>')
@@ -1950,15 +1881,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         // color picker; removing the image brings the color picker back.
         if (CUSTOM_IMAGE_LAYERS.includes(meta.id)) {
           const hasImage = !!layer.image;
-          // An image replaces the color visually, so the picker is hidden; an enabled gradient
-          // just disables it (kept in place to avoid shifting the row controls). The opacity slider
-          // belongs to the color, so it follows the picker exactly.
+          // An image replaces the color visually, so the picker hides; an enabled gradient just
+          // disables it in place, to avoid shifting the row controls.
           row.find('.theme-layer-color').toggle(!hasImage).prop('disabled', grad.enabled === true);
           row.find('.theme-layer-alpha-group').toggle(!hasImage);
           row.find('.theme-layer-alpha').prop('disabled', grad.enabled === true);
-          // The gradient would be painted over the image rather than under it, so it does not
-          // apply while one is set: its toggle and editor disappear with the color picker. The
-          // stored gradient is left alone, so removing the image brings both back as they were.
+          // A gradient never applies while an image is set (it would paint over it), so its toggle
+          // hides with the color picker; the stored gradient itself is left alone.
           row.find('.theme-layer-gradient-toggle').toggle(!hasImage);
           if (hasImage) row.find('.theme-layer-gradient-panel').removeClass('open');
           row.find('.theme-layer-image').show();
@@ -1968,12 +1897,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     }
 
-    /*
-      The name the Save button will use. Sanitized with exactly the rules util/themeLayers.js applies
-      on the way to disk, so what the field shows after a save is what it said before it - a trailing
-      space or a `?` vanishing on its own would read as the app refusing the name rather than
-      tidying it.
-    */
+    // Sanitized with exactly the rules themeLayers.js applies on disk, so the field's text after a
+    // save still matches what was typed.
     function themeNameFromDom() {
       return themeLayers.sanitizeCustomThemeName($('#theme-customizer-name').val());
     }
@@ -1992,12 +1917,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return named;
     }
 
-    /*
-      Show the draft, and persist it only where persisting is what the user asked for. On the Custom
-      slot an edit is the slot's own content and is written straight away; on anything else it is a
-      draft over somebody's finished theme, so nothing is written until Save turns it into a theme
-      of its own. That is what keeps a built-in being the built-in.
-    */
+    // On the Custom slot an edit is the slot's own content and is written immediately; on anything
+    // else it is only a preview draft until Save turns it into a theme of its own.
     function scheduleCustomThemeSave() {
       clearTimeout(customThemeSaveTimer);
       customThemeSaveTimer = setTimeout(async () => {
@@ -2035,12 +1956,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       row.find('.blur-group').toggle(enabled && isBlur);
     }
 
-    /*
-      Open the editor on whichever theme is selected. The layer model comes from the main process,
-      which knows how to build one for a built-in, the Custom slot or a theme on disk alike, so the
-      editor never needs to know which kind it is looking at. A `user:` stylesheet is CSS someone
-      wrote rather than colours, so it is the one kind with no model, and the editor stays shut.
-    */
+    // The layer model comes from the main process for a built-in, Custom or on-disk theme alike; a
+    // `user:` stylesheet is raw CSS with no model, so the editor stays shut for it.
     function openThemeEditor(value) {
       const opening = String(value || 'custom');
       editingValue = opening;
@@ -2050,23 +1967,15 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       ipcRenderer
         .invoke('get-theme-model', opening)
         .then((model) => {
-          /*
-            Still the theme being edited? Two selections close together settle in whatever order the
-            main process answers, and a late answer painting its layers under a newer editingValue
-            would leave the editor showing one theme while believing it holds another - which, with
-            the Custom slot selected, means the next edit writes the wrong colours into it.
-          */
+          // Guard against out-of-order IPC replies: two selections close together can settle in
+          // either order, and a stale answer must not overwrite a newer editingValue's layers.
           if (editingValue !== opening) return;
           if (!model) return closeThemeEditor();
           const theme = model.theme || themeLayers.defaultCustomTheme();
           customThemeSnapshot = opening === 'custom' ? theme : null;
           editingBase = model.base || (Object.prototype.hasOwnProperty.call(themeLayers.BUILTIN_COLORS, opening) ? opening : '');
           renderCustomThemeLayers(theme);
-          /*
-            The field opens on what this theme is called, so Save with the name untouched means
-            "keep this one up to date" and Save after changing it means "make me a second one".
-            A built-in is named after its row in the picker, which is what the user is looking at.
-          */
+          // Save with the name untouched updates this theme; changing it first creates a new one.
           $('#theme-customizer-name').val(model.name || selectedThemeLabel());
           refreshThemeNameState();
         })
@@ -2083,16 +1992,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     $('#theme-customizer-layers').on('input change', '.theme-layer-color, .theme-layer-fit', () => scheduleCustomThemeSave());
 
-    // Keep the small per-row swatch in sync with the color picker immediately (the picker itself
-    // already reflects its own value natively; this mirrors it onto our custom preview box, which
-    // otherwise only gets its background from the initial render).
+    // Mirrors the color onto our custom preview box, which otherwise only updates on initial render.
     $('#theme-customizer-layers').on('input change', '.theme-layer-color', function () {
       refreshLayerSwatch($(this).closest('.theme-layer-row'));
     });
 
-    // Opacity slider: the alpha half of the layer color. The swatch is drawn over a checkerboard so
-    // "40%" and "black" are not the same picture, which is the only way to see transparency at all
-    // in a 22px square.
+    // The swatch is drawn over a checkerboard, so "40%" and "black" render as different pictures.
     $('#theme-customizer-layers').on('input change', '.theme-layer-alpha', function () {
       const row = $(this).closest('.theme-layer-row');
       row.find('.theme-layer-alpha-value').text(`${$(this).val()}%`);
@@ -2217,11 +2122,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     });
 
-    /*
-      Reset puts back the theme the editor was opened on, not a generic default: undo what changed
-      about THIS theme, read back from the main process (own palette for a built-in, disk contents
-      for a saved/imported theme). The Custom slot has nothing to go back to, so it stays default.
-    */
+    // Puts back the theme the editor was opened on (read back from the main process), not a
+    // generic default; the Custom slot has nothing to go back to, so it stays default.
     $('#theme-customizer-reset').on('click', async function () {
       if (!editingValue || editingValue === 'custom') {
         renderCustomThemeLayers(themeLayers.defaultCustomTheme());
@@ -2242,12 +2144,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#theme-save-status').text(message || '').removeClass('ok error').addClass(kind || '');
     }
 
-    /*
-      Save what the editor is holding as a theme of the user's own. The name decides everything:
-      unchanged it updates the theme it was opened on, changed it makes a second theme. A clash is
-      never overwritten silently, only an explicit Replace does that, the same two-step an import
-      uses. Saving from the Custom slot leaves the scratch slot itself untouched.
-    */
+    // A name clash is never overwritten silently, only via explicit Replace (same two-step as import).
     $('#btn-save-theme').on('click', async function () {
       const name = themeNameFromDom();
       if (!name) {
@@ -2302,11 +2199,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       refreshThemeNameState();
     });
 
-    /*
-      Portable themes (.awtheme). Export writes the theme currently selected; Import validates the
-      package in the main process and only touches theme storage once the user agrees. A user
-      stylesheet has no model to write, so it is the one selection Export refuses.
-    */
+    // Portable themes (.awtheme): Import validates the package in the main process and only touches
+    // storage once the user agrees. A user stylesheet has no model, so Export refuses it.
     function setThemeLibraryStatus(message, kind) {
       $('#theme-library-status').text(message || '').removeClass('ok error').addClass(kind || '');
     }
@@ -2316,21 +2210,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return name ? installedThemes.find((theme) => theme.name === name) || null : null;
     }
 
-    /*
-      The card belongs to the themes a person owns: the Custom theme they drew, and any theme they
-      imported. A built-in is not theirs to export or delete, so on one the card is not disabled,
-      it is simply not there. Export follows the selection and Delete only exists for a theme the
-      app installed.
-    */
+    // The card belongs to themes a person owns (Custom, imported); a built-in is not theirs to
+    // export or delete, so the card is simply absent there, not disabled.
     function refreshThemeLibraryControls() {
       const value = String($('#option_theme').val() || 'default');
       const imported = installedTheme(value);
-      /*
-        The card is there for every theme the app can write out, which is every theme except a
-        user stylesheet - a built-in included. Hiding it on a built-in was how "a built-in keeps
-        its name" used to be enforced, and it enforced it by leaving no way out of a theme you had
-        just spent ten minutes editing. The export refuses and says why instead.
-      */
+      // Shown for every theme the app can write out except a user stylesheet, built-ins included;
+      // Export itself refuses a built-in and explains why.
       const shown = value !== MORE_THEMES_VALUE && userThemes.parseValue(value) === null;
       $('#theme-library').toggle(shown);
       $('#btn-export-theme').prop('disabled', !shown);
@@ -2366,11 +2252,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       if (error === 'theme-name-required') {
         return t('theme-name-required', 'Name your theme to show it in the list and export it.', 'Nomme ton thème pour l’afficher dans la liste et l’exporter.');
       }
-      /*
-        A built-in under its own name. The file would install as "Nord" on somebody else's machine
-        and shadow the Nord they already have, so the name has to become yours first - which is
-        also the moment it stops being the built-in and starts being your theme.
-      */
+      // A built-in exported under its own name would shadow that built-in on another machine.
       if (error === 'reserved-name') {
         return t(
           'export-theme-reserved-name',
@@ -2385,11 +2267,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     $('#btn-export-theme').on('click', async function () {
       const value = String($('#option_theme').val() || 'default');
       const self = $(this);
-      /*
-        An unnamed Custom theme is stopped here rather than in the file dialog: the user is looking
-        at the field that fixes it, so put them in it. The main process refuses the same case anyway,
-        for a caller that never saw this card.
-      */
+      // An unnamed Custom theme is stopped here (not just in the file dialog) so focus lands on the
+      // field that fixes it.
       if (value === 'custom' && !refreshCustomThemeNameState()) {
         setThemeLibraryStatus(themeErrorText({ error: 'theme-name-required' }), 'error');
         $('#theme-customizer-name').trigger('focus');
@@ -2400,11 +2279,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         const known = installedTheme(value);
         const res = await ipcRenderer.invoke('export-theme', {
           value,
-          /*
-            An imported theme keeps its own name and credit through a re-export. Anything else is
-            named from the editor field, which is where the user would have renamed it - falling
-            back to the row in the picker, which is what a built-in is still called.
-          */
+          // An imported theme keeps its own name through a re-export; anything else uses the editor
+          // field, falling back to the picker's row label for a built-in.
           name: known ? known.name : themeNameFromDom() || selectedThemeLabel(),
         });
         if (res && res.ok) {
@@ -2419,19 +2295,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       self.css('pointer-events', 'initial');
     });
 
-    /*
-      The preview modal. `pendingThemeFile` is the package the frame is showing; the file is only
-      installed if the user presses the confirm button, and cancelling removes the unpacked copy the
-      preview was drawn from.
-    */
+    // `pendingThemeFile` is the package the preview frame is showing; installed only on confirm,
+    // and cancelling removes the unpacked copy it was drawn from.
     let pendingThemeFile = '';
     let themePreviewResize = null;
 
-    /*
-      The frame lays the sample out at the size the gallery renders at and is then scaled to fit,
-      so the framing here is the framing a card promises. Letting it be its own width would re-flow
-      the sample and drop a library row the published picture shows.
-    */
+    // Lays the sample out at the gallery's render size, then scales to fit, so the preview matches
+    // what the published card shows instead of re-flowing at its own width.
     function fitThemePreview() {
       const wrap = document.querySelector('#theme-preview .theme-preview-frame');
       if (!wrap) return;
@@ -2463,11 +2333,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`;
     }
 
-    /*
-      The palette the theme will install, beside the picture of it. The same five layers the gallery
-      card shows, so a theme looks the same wherever it is being decided on - and it answers the one
-      question a photograph of a window does not: what the colours actually are.
-    */
+    // The same five layers the gallery card shows, so a theme reads consistently everywhere and
+    // the actual colors (which a screenshot can't convey precisely) are visible.
     function themePalette(theme) {
       const chips = ['bg', 'header', 'panel', 'card', 'accent']
         .map((id) => (theme && theme[id] ? themeLayers.colorWithoutAlpha(theme[id].color) : ''))
@@ -2515,20 +2382,14 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           : t('theme-preview-note', 'Nothing is installed until you confirm.', 'Rien n’est installé tant que tu ne confirmes pas.')
       );
 
-      /*
-        The frame is a srcdoc document, so it inherits the page's policy: our own markup, no script
-        allowed to run, and the layer images addressed on disk exactly as the real window addresses
-        them. util/themeMock.js builds it from the theme model and nothing else.
-      */
+      // srcdoc document, so it inherits the page's CSP: own markup only, no script allowed to run.
       const frame = ensureFrame(document.querySelector('#theme-preview .theme-preview-frame'), {
         id: 'theme-preview-frame',
         title: 'theme preview',
       });
       if (frame) {
         frame.srcdoc = themeMock.buildThemeMock(result.theme, {
-          // The app's own typefaces, carried inside the document: the frame runs under
-          // `default-src 'none'`, so a font it does not bring with it is a font it cannot have - and
-          // a sample of this window set in the machine's default sans is a sample of another program.
+          // The frame runs under `default-src 'none'`, so its own typefaces must be carried inline.
           fontCss: themeFonts.themeMockFontCss(),
           labels: {
             library: t('theme-mock-library', 'Library', 'Bibliothèque'),
@@ -2651,23 +2512,16 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         noLink: true,
       });
       if (choice !== 0) return;
-      /*
-        Stop painting the theme and WAIT for that swap before deleting its folder: Windows refuses to
-        delete a folder whose images are still open by the window (the EPERM this used to report).
-        The await matters because applying a theme is a round trip to the main process; without it
-        the delete used to race the swap and fail, which looked like Delete needing two clicks.
-      */
+      // Must await the theme swap before deleting the folder: Windows refuses to delete a folder
+      // whose images the window still has open (EPERM otherwise).
       const wasSelected = String($('#option_theme').val() || '');
       populateThemeSelect('default');
       await applyThemeValue('default');
       try {
         const res = await ipcRenderer.invoke('delete-installed-theme', known.name);
         if (res && res.ok) {
-          /*
-            Rebuild the picker AFTER the folder is gone, not only before: the earlier rebuild ran
-            while the theme was still on disk, so its row stayed listed and Delete looked like it
-            needed a second click when the list had simply not caught up.
-          */
+          // Rebuild the picker AFTER the folder is gone, not only before, or the deleted theme's
+          // row stays listed until the next rebuild.
           populateThemeSelect('default');
           setThemeLibraryStatus(t('delete-theme-done', 'Theme deleted: {name}', 'Theme supprimé : {name}', { name: res.name }), 'ok');
         } else {
@@ -2686,9 +2540,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // Cancel restores whatever is saved in the config.
     $('#option_theme').on('change', function () {
       const value = $(this).val() || 'default';
-      // The toggle row is a command, not a theme: it folds the rest of the built-ins in or out,
-      // puts back the selection it interrupted, and reopens the dropdown on it. Both steps run
-      // synchronously so the picker reopens inside the click that asked for it.
+      // The toggle row is a command, not a theme: it folds the built-ins in or out, restores the
+      // interrupted selection, and reopens the dropdown synchronously on the same click.
       if (value === MORE_THEMES_VALUE) {
         const previous = themeSelection || (app.config.general && app.config.general.theme) || 'default';
         themeListExpanded = !themeListExpanded;
@@ -2704,22 +2557,15 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
       themeSelection = value;
       applyThemeValue(value);
-      /*
-        Every theme is editable, so the editor follows the picker instead of belonging to one row.
-        The only exception is a user stylesheet: it is CSS somebody wrote, not a set of colours, so
-        there is no model to put in front of the controls.
-      */
+      // Every theme is editable except a user stylesheet, which has no color model to edit.
       if (userThemes.parseValue(value)) closeThemeEditor();
       else openThemeEditor(value);
       refreshThemeLibraryControls();
       ipcRenderer.send('theme-changed', value);
     });
 
-    /*
-      Let the mouse wheel cycle the value between the arrows, but only where arrows exist to step:
-      `.right` is also a layout class the preset designer's action rows carry, and swallowing the
-      wheel there made the panel refuse to scroll across the whole bottom of the Presets tab.
-    */
+    // Only where arrows exist to step: `.right` is also a layout class on the Presets tab's action
+    // rows, and swallowing the wheel there broke scrolling across the bottom of that tab.
     $('#settings .arrow-list .right').on('wheel', function (event) {
       const stepper = $(this).find(event.originalEvent.deltaY > 0 ? '.next' : '.previous');
       if (!stepper.length) return;
@@ -2754,10 +2600,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     $('#settings').on('change.helpPreview', 'select', refreshHelpPreview);
 
-    /*
-      Cards fold under their header; state is per section and persisted. Nothing is moved or
-      removed - the i18n loader binds labels positionally, so the DOM must survive untouched.
-    */
+    // Cards fold under their header; collapse state is per section and persisted. Nothing is moved
+    // or removed, since the i18n loader binds labels positionally.
     const sectionRules = require(path.join(appPath, 'util/settingsSections.js'));
     const SECTION_STATE_KEY = 'settingsCollapsedSections';
 
@@ -2841,11 +2685,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       toggleSection($(this).closest('.settings-section'));
     });
 
-    /*
-      Typing filters every tab at once and nav counters show where the matches are. Search sees
-      through collapsed sections; rows are hidden with a class, never removed - positional i18n
-      requires the DOM structure to survive.
-    */
+    // Typing filters every tab at once; rows are hidden with a class, never removed, since
+    // positional i18n requires the DOM structure to survive.
     const searchRules = require(path.join(appPath, 'util/settingsSearch.js'));
 
     function clearSettingsSearch() {
@@ -3038,13 +2879,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           debug.log(e);
         }
         const uniqueFound = [...new Map(found.map((game) => [path.resolve(game.gameDir).toLowerCase(), game])).values()];
-        /*
-          Two groups, counted separately. This pass only ever configures games with no setup at all
-          (it runs unattended during the scan, so it must never overwrite one). Skipped games are
-          not a dead end: re-applying to them is exactly what Advanced > Fix all games does, so the
-          message points there rather than leaving a fully-configured library looking like it has
-          nothing to report.
-        */
+        // This pass only ever configures games with no setup at all (it runs unattended, so it must
+        // never overwrite one); already-configured games are pointed at Advanced > Fix all games.
         const inspected = uniqueFound.map((game) => ({ game, eligibility: emulatorFixEligibility.inspect({ gameDir: game.gameDir }) }));
         const eligible = inspected.filter((entry) => !entry.game.hasSchema && entry.eligibility.eligible);
         const alreadyConfigured = inspected.filter((entry) => entry.eligibility.reason === 'existing-fix').length;
@@ -3107,9 +2943,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     });
 
-    // Rescan only the configured locations that the user selected. The parser receives this scope
-    // ephemerally: folder preferences stay intact, and the existing tiles outside the scope remain
-    // visible while their disks are deliberately left untouched.
+    // Rescans only the user-selected locations; the scope is ephemeral to the parser call, so
+    // folder preferences and tiles outside the scope stay untouched.
     let folderRescanBusy = false;
     const folderRescanKey = scanScopeTools.directoryKey;
     function getFolderRescanLocations() {
@@ -3458,12 +3293,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         animateOverlaySettingCollapse(this, visible || KEEP_VISIBLE_OVERLAY_IDS.has(labelId));
       });
     }
-    /*
-      Presets style the in-game overlay, and the transport decides whether that overlay is used at
-      all: on Windows notifications, nothing a preset describes is ever drawn. So the whole tab goes
-      away rather than offering an authoring surface with no effect - and if it was the tab on screen
-      when the transport changed, the panel falls back to the Notification tab that caused it.
-    */
+    // Presets style the in-game overlay; on Windows-toast-only transport nothing a preset describes
+    // is ever drawn, so the whole tab hides rather than offering an authoring surface with no effect.
     function updatePresetTabVisibility() {
       const unused = ($('#option_notifMode').val() || 'auto') === 'toast';
       $("#settingNav li[data-view='presets']").toggleClass(interfaceMode.HIDDEN_CLASS, unused);
@@ -3581,13 +3412,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const gameScoped = Boolean(
         notificationOverrides && typeof notificationOverrides === 'object' && !Array.isArray(notificationOverrides)
       );
-      /*
-        The Settings form is populated lazily, only when it has been opened. A preview launched
-        straight from a game's panel therefore cannot treat its still-empty preset/sound controls
-        (or their HTML defaults for position/scale) as the global configuration. Read the saved
-        in-memory config until that form is ready; afterwards its controls win so a Settings test
-        still previews the value the user is currently editing.
-      */
+      // The Settings form populates lazily, so a preview from a game's panel before it opens must
+      // read the saved config instead of its still-empty controls; once ready, the controls win.
       const cfgOverlay = (app.config && app.config.overlay) || {};
       const globalPreset = settingsReady
         ? $('#option_overlayPreset').val() || cfgOverlay.notificationPreset || 'AW Next'
@@ -3652,13 +3478,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const durRaw = $('#option_overlayDuration').val();
       const durSec = durRaw === 'auto' || !durRaw ? 0 : parseInt(durRaw, 10) || 0;
       const achievementIcon = path.join(appPath, 'resources/img/achievement.svg');
-      /*
-        A game-scoped preview shows that game's own artwork; the generic tester keeps the app icon
-        and neutral sample wording. The overlay has no game-name field of its own - only
-        `displayName` (the achievement title) is forwarded - so naming the game in the description
-        is the only place a preview can say which game it is (playtime instead puts the game in the
-        title).
-      */
+      // The overlay has no game-name field, only `displayName` (the achievement title), so naming
+      // the game in the description is the only way a preview can say which game it is.
       const gameIcon = (game && game.icon) || path.join(appPath, 'resources/icon/icon.png');
       if (game && game.name) {
         texts.playtime.displayName = game.name;
@@ -3673,9 +3494,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           // The previewed game, so the host resolves the same square logo a real notification for
           // that game would get instead of framing whatever artwork the preview happened to carry.
           appid: (game && game.appid) || '',
-          // Only a preview launched from a game's own panel may consult that game's custom anchor.
-          // Generic Settings/designer previews also borrow game artwork, but must stay at the global
-          // custom position rather than accidentally inheriting the borrowed game's override.
+          // Only a preview launched from a game's own panel may consult its custom anchor; a
+          // generic preview that merely borrows artwork stays at the global custom position.
           gamePositionAppid: gameScoped && game ? String(game.libraryAppid || game.appid || '') : '',
           customPosition: gameScoped && overrides.position === 'custom' ? overrides.customPosition || null : null,
           // `image` is the alias createNotificationWindow() maps onto imagePath/headerPath, which is
@@ -3703,19 +3523,15 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         texts[kind] || texts.toast
       );
     }
-    // Route a test through whichever transport(s) the user picked (toast / overlay / both).
-    // `game` is optional: a test fired from a game's own panel previews that game's name and
-    // artwork, so what the user sees is what an unlock in THAT game will look like.
+    // Routes a test through the picked transport(s) (toast / overlay / both). `game` is optional:
+    // a test from a game's own panel previews that game's name and artwork.
     async function fireNotificationTest(kind, btn, modeOverride, notificationOverrides, game) {
       const mode = modeOverride || $('#option_notifMode').val() || 'auto';
       if ($(btn).hasClass('is-running')) return;
       setNotificationTestBusy(btn, true);
       try {
-        /*
-          A test with no game of its own borrows one from the library, so the preview is judged
-          against real cover art instead of the generic badge and the app's own icon. A fresh
-          install has nothing cached yet, and then the placeholder still applies.
-        */
+        // A test with no game of its own borrows one from the library, so it previews real cover
+        // art instead of the generic badge (falls back to the placeholder on a fresh install).
         if (!game) {
           try {
             const sample = await ipcRenderer.invoke('notification-sample-art');
@@ -3735,9 +3551,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         setNotificationTestBusy(btn, false);
       }
     }
-    // The first-run guide and the per-game health panel share the exact same test path, supplying
-    // their still-unsaved transport choice and (for the panel) the game to preview. Keep the
-    // rendering and Watchdog protocol in one place.
+    // Shared by the first-run guide and the per-game health panel, so the rendering and Watchdog
+    // protocol stay in one place.
     window.testAchievementWatcherNotification = function (mode, button, notificationOverrides, game, kind = 'toast') {
       // 'auto' previews the overlay: with the app in the foreground and no game covering the screen,
       // that is exactly what Automatic selects at this moment, so the preview stays truthful.
@@ -3763,11 +3578,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // Preview a sound at the configured overlay volume (0–200%). >100% needs a WebAudio gain node
     // (Audio.volume caps at 1.0) - mirrors how the real notification window plays it (init.js).
     let previewAudioCtx = null;
-    /*
-      A real file for whatever the sound dropdown is showing. Random must answer with an actual
-      sound, not silence - it is a choice like any other, so previewing it and dragging the volume
-      under it have to make a (different, each time) noise.
-    */
+    // Resolves "Random" to an actual sound file (picked fresh each call) rather than silence.
     function soundForPreview(name) {
       if (name === NO_SOUND_VALUE) return '';
       if (name !== RANDOM_SOUND_VALUE) return name;
@@ -3838,11 +3649,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       volumeWheelCommit = setTimeout(() => $(el).trigger('change'), 350);
     });
 
-    /*
-      Only a sound the user imported can be deleted - a bundled one comes back with the app, so
-      offering to remove it would be a lie. The delete button therefore follows the selection: it
-      appears on an imported sound and nowhere else.
-    */
+    // Only a sound the user imported can be deleted, since a bundled one comes back with the app.
     let userSounds = new Set();
     async function refreshUserSounds() {
       try {
@@ -3970,12 +3777,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     });
 
-    /*
-      The controls, the live preview and the generator all work from util/presetSchema.js, so a
-      property can only exist in one shape. The preview is the REAL preset - the same markup, the
-      same engine and the same generated stylesheet the notification window loads - rendered in an
-      iframe, which is why it cannot drift from what an unlock actually looks like.
-    */
+    // The preview is the REAL preset (same markup, engine and stylesheet the notification window
+    // loads) rendered in an iframe, so it cannot drift from what an unlock actually looks like.
     const presetSchema = require(path.join(appPath, 'util/presetSchema.js'));
     const presetGenerator = require(path.join(appPath, 'util/customPreset.js'));
     const presetTemplates = require(path.join(appPath, 'util/presetTemplates.js'));
@@ -3991,10 +3794,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return String(value) + (property.unit === 'deg' ? '°' : property.unit || '');
     }
 
-    /*
-      The one place that reads the designer's controls. The inline preview, the on-screen preview,
-      Create and Export all work from this, so none of them can show a different design.
-    */
+    // The one place that reads the designer's controls; the preview, Create and Export all work
+    // from this, so none of them can show a different design.
     function readPresetOptions() {
       const options = {};
       for (const property of presetSchema.PRESET_PROPERTIES) {
@@ -4038,12 +3839,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return values;
     }
 
-    /*
-      Sample payloads matching what createNotificationWindow() sends for each kind of notification,
-      so every state a preset must look right in can be checked without waiting for a real unlock.
-      Artwork and icon are inlined as data URIs: the preview frame is a srcdoc document, where a
-      file:// image is not reliably loadable.
-    */
+    // Sample payloads matching createNotificationWindow(); artwork/icon are inlined as data URIs
+    // since the preview frame is a srcdoc document where file:// images aren't reliably loadable.
     let previewState = 'normal';
     let previewView = 'card';
     function fileAsDataUri(file, mime) {
@@ -4054,17 +3851,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     }
     let previewIcon = '';
+    // Preview artwork is one of the user's own game headers (what a notification is actually seen
+    // over); an empty library falls back to a painted scene rather than the app logo.
     let previewArt = null;
-    /*
-      Artwork for the preview: one of the user's own game headers, since that is what a notification
-      is actually seen over, and nothing copyrighted lives in the repo. An empty library falls back
-      to a painted scene rather than the app's own logo, which told the user nothing about contrast.
-    */
-    /*
-      Width and height straight from a PNG or JPEG header. Both are a handful of bytes at a known
-      place, which is cheaper and far less code than an image library for the one question the
-      designer asks: is this a header or a poster?
-    */
+    // Width/height read straight from the PNG or JPEG header bytes, cheaper than an image library.
     function imageDimensions(file) {
       try {
         const buffer = settingsFs.readFileSync(file);
@@ -4159,12 +3949,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       });
     }
 
-    /*
-      Pictures a preset can use as its background, from the shared <userData>/presets/images folder.
-      The preview needs them as data URIs, not filenames, since it is a srcdoc document with no such
-      folder behind it; `presetAssetUrl` resolves the name to bytes and caches them, because the
-      stylesheet rebuilds on every slider movement and a wallpaper is not cheap to base64 twice a second.
-    */
+    // Preset background pictures live in <userData>/presets/images; the srcdoc preview needs data
+    // URIs, so `presetAssetUrl` resolves and caches them (the stylesheet rebuilds on every slider move).
     let presetImages = [];
     const presetImageUris = new Map();
 
@@ -4179,20 +3965,14 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           sel.empty();
           sel.append($('<option>').attr('value', '').text(sel.attr('data-lang-none') || ''));
           const names = presetImages.map((image) => image.name);
-          /*
-            A preset can name a picture that is no longer in the folder - an imported one whose file
-            was removed, say. Offering it anyway keeps the value in the controls, so re-saving the
-            preset does not silently drop its background.
-          */
+          // A preset can name a picture no longer in the folder; keep it listed so re-saving
+          // doesn't silently drop the background.
           if (keep && !names.includes(keep)) names.push(keep);
           names.sort((a, b) => a.localeCompare(b));
           names.forEach((name) => sel.append($('<option>').attr('value', name).text(name)));
           sel.val(names.includes(keep) ? keep : '');
-          /*
-            The list arrives after the controls were written, so a preset whose picture was not yet
-            in the menu could not be selected when the design was applied - and the preview, rendered
-            in the same breath, painted the card without its background until something else moved.
-          */
+          // The list arrives after the controls were written; repaint the preview now in case its
+          // background picture had not yet reached the menu when the design was applied.
           if (sel.val()) updatePreviewStyles(readPresetOptions());
         })
         .catch((err) => debug.log(err));
@@ -4222,11 +4002,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     const previewFrame = () => ensureFrame(document.getElementById('pd-frame-wrap'), { id: 'pd-frame', title: 'preview' });
 
-    /*
-      Rebuild the preview document. Only needed when the frame has to be re-created - switching to a
-      one-off play-through, or the very first render. Editing a property swaps the stylesheet inside
-      the existing document instead, which is what keeps dragging a slider cheap.
-    */
+    // Only needed when the frame must be re-created (play-through, first render); editing a
+    // property swaps the stylesheet inside the existing document instead, to keep slider drags cheap.
     function renderPreviewDocument(values, { hold = true } = {}) {
       const frame = previewFrame();
       if (!frame) return;
@@ -4273,33 +4050,19 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       renderPreviewDocument(readPresetOptions());
     }
 
-    /*
-      Size and place the frame. Card view shows the popup at its own size, shrunk only if the stage
-      is narrower. Screen view shows its true size relative to a display of the chosen resolution, in
-      the set corner; the popup's window box includes its transparent margin, so the stage matches
-      what the screen edge will actually look like.
-    */
-    /*
-      The stage has no width until the tab has actually been laid out, and a popup scaled to a
-      zero-width stage renders as nothing at all. Fall back to a sensible width and let the observer
-      further down re-run the layout once the panel is on screen.
-    */
+    // The stage has no width until the tab is laid out, so a popup scaled to a zero-width stage
+    // would render as nothing; fall back to a sensible width until the layout observer re-runs.
     function measuredStageWidth() {
-      // Screen view narrows the stage to its mock display, so the previous layout's width would be
-      // measured here and the display would shrink a little further on every pass. Ask for the room
-      // available, not the room last taken.
+      // Clear a width Screen view may have narrowed, or each pass would measure the previous
+      // layout's shrunk width and shrink it further.
       const node = document.querySelector('#options-notify-designer .pd-stage');
       if (node) node.style.width = '';
       const measured = $('#options-notify-designer .pd-stage').width();
       return measured > 80 ? measured - 28 : 360;
     }
 
-    /*
-      The other half of "does it fit": the stage is pinned above the controls and has a ceiling, so a
-      popup fitted on width alone overflowed it and looked cut off like a zoom bug. Read the ceiling
-      from the stylesheet rather than the box, since the box is about to be resized to what this
-      decides, and asking it directly would just echo the previous layout.
-    */
+    // The stage has a height ceiling too; read it from the stylesheet, not the box, since the box
+    // is about to be resized to what this decides.
     const STAGE_PADDING = 12; // .pd-stage padding, both sides
 
     function stageCeiling(padding = STAGE_PADDING) {
@@ -4309,11 +4072,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return Number.isFinite(cap) && cap > 60 ? cap - padding * 2 : 170;
     }
 
-    /*
-      And the height it actually takes: what the popup needs at the zoom that fits, never a flat
-      share of the panel. That flat share was the wrong shape either way, wasting stage space on a
-      short wide design and over-shrinking a tall one against an unrelated cap.
-    */
+    // Fits the stage to what the popup needs at the zoom that fits, not a flat share of the panel.
     function fitStageTo(contentHeight, padding = STAGE_PADDING) {
       const node = document.querySelector('#options-notify-designer .pd-stage');
       if (!node) return;
@@ -4348,15 +4107,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
       if (previewView === 'screen') {
         screen.classList.add('is-screen');
-        /*
-          The whole mock display, not as much of it as the width allows. A 16:9 box as wide as the
-          stage is far taller than the stage can be, and the stage clips what it centres: the top and
-          bottom edges - the ones the position picker exists for - were cut off, so a popup anchored
-          top or bottom simply did not appear. Fit the display to the shorter of the two instead, and
-          take the stage in with it: a 16:9 box in a stage twice its width is a screen adrift in a
-          band of backdrop, and the height that band costs is height the controls under it lose.
-        */
-        // The stage has no padding in this view, so it is the display and nothing else.
+        // Fit the shorter of width/height, not just width: a full-width 16:9 box would be taller
+        // than the stage and clip the position picker's top/bottom anchors.
         const displayWidth = Math.max(120, Math.min(stageWidth, Math.floor((stageCeiling(0) * 16) / 9)));
         screen.style.width = displayWidth + 'px';
         const stageNode = document.querySelector('#options-notify-designer .pd-stage');
@@ -4384,12 +4136,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         wrap.style.left = '';
         wrap.style.top = '';
       }
-      /*
-        The popup's real size, and how much the preview had to shrink it to fit - otherwise a card
-        shown at 70% reads as the design being smaller than it is. A manually placed popup is drawn
-        at the bottom centre and says so: only the app knows where it was dragged to, and quietly
-        showing it in the default corner would be the one thing a position preview must not do.
-      */
+      // Shows the popup's real size and the zoom it was shrunk to fit, so 70% doesn't read as "the
+      // design is small". A custom position is drawn at bottom-centre with a label, never guessed.
       const custom = previewView === 'screen' && String($('#option_overlayPosition').val()) === 'custom';
       const customLabel = custom ? ` · ${$("#option_overlayPosition option[value='custom']").text()}` : '';
       $('#pd-size-note').text(`${box.width}×${box.height} · ${Math.round(zoom * 100)}%${customLabel}`);
@@ -4406,11 +4154,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       wrap.style.top = Math.round(vertical) + 'px';
     }
 
-    /*
-      Editing a control repaints the preview on the next frame rather than on every input event: a
-      slider fires continuously while dragged, and regenerating the stylesheet on each one is wasted
-      work between two paints.
-    */
+    // Repaints on the next frame rather than every input event: a dragged slider fires continuously.
     let previewPending = null;
     function schedulePreview() {
       if (previewPending) return;
@@ -4428,12 +4172,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       schedulePreview();
       recordPresetHistory();
     });
-    // The one property the card cannot show: play it when it is chosen, exactly as the Notifications
-    // tab does for the app-wide sound, at the volume that setting is on.
-    /*
-      Bring a picture in. It is copied into the shared folder by the main process, which hands back
-      the name it ended up under, and that name is what the preset stores.
-    */
+    // The main process copies the picture into the shared folder and hands back the name it ended
+    // up under, which is what the preset stores.
     $('#btn-import-preset-image').click(async function (event) {
       event.preventDefault();
       const self = $(this);
@@ -4454,22 +4194,15 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       self.css('pointer-events', 'initial');
     });
 
+    // The one property the card cannot show: play it when chosen, like the Notifications tab does.
     $('#pd-sound').on('change', function () {
       const chosen = String($(this).val() || '');
       if (chosen) previewSoundAtVolume(chosen);
     });
     $('#pd-resolution').on('change', () => layoutPreview());
 
-    /*
-      Nine groups and sixty-odd properties, navigated by a filter over every label. The filter does
-      not move a control in the DOM - the same rule the Settings search follows, and for the same
-      reason: the locale binds by position and by id.
-    */
-    /*
-      Filtering. The rule the panel lives by - hide, never move - is in util/presetPanel.js, tested
-      against this same markup in a real browser; here it is only wired to the box and the two lines
-      that answer for the whole panel.
-    */
+    // Filters by hiding, never moving a control (same rule as Settings search, for the same
+    // positional-i18n reason); the filter logic itself lives in util/presetPanel.js.
     function filterDesigner(query) {
       const result = presetPanel.filterFields($, '#options-notify-designer', query);
       $('#pd-no-match').prop('hidden', !result.filtering || result.total > 0);
@@ -4488,10 +4221,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       filterDesigner('');
     });
 
-    /*
-      The stack itself is in util/presetPanel.js. What is here is what makes it a designer feature:
-      what counts as a state, when one settles, and how one is put back.
-    */
+    // The undo stack itself is in util/presetPanel.js; here decides what counts as a state, when
+    // one settles, and how one is restored.
     const presetHistory = presetPanel.createHistory(80);
     let historyTimer = null;
     let historyRestoring = false;
@@ -4545,10 +4276,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     $('#btn-preset-undo').click(() => stepPresetHistory(true));
     $('#btn-preset-redo').click(() => stepPresetHistory(false));
 
-    /*
-      The keyboard, but only while the designer is the tab on screen and the focus is not in a field
-      where the browser's own undo is what the user means.
-    */
+    // Ctrl+Z/Y, but only while the designer tab is on screen and focus is not in a text field where
+    // the browser's own undo is what the user means.
     $(document).on('keydown', function (event) {
       if (!event.ctrlKey || event.altKey) return;
       const key = String(event.key || '').toLowerCase();
@@ -4579,11 +4308,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       layoutPreview();
     });
 
-    /*
-      The three notifications side by side: switching states one at a time only answers "what does a
-      rare unlock look like?", while seeing them together answers "does it look DIFFERENT?", the
-      actual question a preset with a rare colour is asking.
-    */
+    // Seeing all three states side by side answers "does it look DIFFERENT?", not just "what does
+    // a rare unlock look like?".
     function comparePayload(state) {
       const kept = previewState;
       previewState = state;
@@ -4592,11 +4318,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return payload;
     }
 
-    /*
-      Which of the compared rows the state switch is pointing at. Compare shows them all, so the
-      switch would otherwise do nothing at all while this view is open - here it decides which one
-      is drawn at full strength and which sit back.
-    */
+    // Marks which of the compared rows the state switch points at, since Compare shows all of them.
     function markCurrentCompareRow() {
       $('#pd-compare .pd-compare-row').each(function () {
         $(this).toggleClass('is-current', String($(this).attr('data-state') || '') === previewState);
@@ -4609,12 +4331,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       markCurrentCompareRow();
       const box = presetGenerator.presetBoxSize(values);
       const stageWidth = measuredStageWidth();
-      /*
-        Every state shares the stage one card had, in height as well as width, since fitting on width
-        alone ran tall popups off the bottom. Two columns instead of a stack of four keeps the cells
-        readable, since a popup is wider than it is tall. These numbers must agree with .pd-compare
-        in the stylesheet, the only other place the grid is described.
-      */
+      // Fits height as well as width (fitting width alone ran tall popups off the bottom); these
+      // numbers must agree with .pd-compare in the stylesheet, the only other place the grid is described.
       const COLUMNS = 2;
       const COL_GAP = 14;
       const ROW_GAP = 10;
@@ -4660,11 +4378,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     }
 
-    /*
-      What the popup is judged against. A notification is never seen on the app's own panel colour -
-      it is seen over a game - and a design that reads well on dark can vanish on a bright scene, so
-      the backdrop is a preview control rather than a fixed stage.
-    */
+    // A notification is seen over a game, not the app's own panel colour, and a design that reads
+    // well on dark can vanish on a bright scene, so the backdrop is a preview control.
     $('#pd-backdrop button').on('click', function () {
       $('#pd-backdrop button').removeClass('is-on');
       $(this).addClass('is-on');
@@ -4699,17 +4414,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const values = readPresetOptions();
       clearTimeout(previewPlayTimer);
       renderPreviewDocument(values, { hold: false });
-      // Read the controls again when it ends rather than restoring the design as it was when Play was
-      // pressed: a few seconds is long enough to have changed something, and seeing that edit
-      // disappear reads as the designer losing it.
+      // Re-read the controls when it ends rather than restoring the design as it was at Play, since
+      // an edit made during playback should not appear to vanish.
       previewPlayTimer = setTimeout(() => renderPreviewDocument(readPresetOptions()), values.duration + 400);
     });
 
-    /*
-      The position anchors mirror the Notifications tab's own position setting rather than adding a
-      second one: a preset does not own where notifications appear, and previewing a corner the user
-      has not chosen would be a lie.
-    */
+    // Mirrors the Notifications tab's position setting rather than adding a second one: a preset
+    // does not own where notifications appear.
     function refreshPresetAnchors() {
       const scale = String($('#option_overlayScale').val() || '1');
       if ($('#pd-scale').val() !== scale) $('#pd-scale').val(scale);
@@ -4723,11 +4434,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       });
       if (previewView === 'screen') layoutPreview();
     }
-    /*
-      The way from choosing a preset to designing one. The choice belongs with the other notification
-      settings - it is what the popup will look like tonight - and the designer is a workshop, so the
-      row that picks one carries a button through to it rather than the two being merged.
-    */
+    // The preset choice lives with the other notification settings; the designer is a separate
+    // workshop tab, so this row carries a button through to it rather than merging the two.
     $('#btn-open-presets').on('click', function () {
       $("#settingNav li[data-view='presets']").trigger('click');
     });
@@ -4736,24 +4444,16 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#option_overlayPosition').val(String($(this).attr('data-pos'))).change();
       refreshPresetAnchors();
     });
-    /*
-      Scale is the other half of "how big will this actually be": the same app setting as the one in
-      the Notification tab, mirrored here because it is only judgeable next to the design. Changing it
-      from either place changes the one setting.
-    */
+    // Mirrors the Notification tab's scale setting here since it is only judgeable next to the
+    // design; changing it from either place changes the one setting.
     $('#pd-scale').on('change', function () {
       $('#option_overlayScale').val(String($(this).val())).change();
       layoutPreview();
     });
     $('#option_overlayPosition, #option_overlayScale').on('change', refreshPresetAnchors);
 
-    /*
-      Three tones, and only one of them is green. Green says a preset was written, renamed, deleted
-      or exported - something that outlived the panel. A message that only describes what the
-      controls now show ("Based on Poster", "a design you had not tried") is 'info' and stays in the
-      muted text colour: reported in green it read as "saved", which is exactly what had not
-      happened yet.
-    */
+    // Green means a preset was actually written/renamed/deleted/exported; a message that only
+    // describes the controls' current state stays 'info' so it doesn't read as "saved".
     function setPresetStatus(message, state) {
       $('#pd-status')
         .text(message || '')
@@ -4777,12 +4477,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         .catch((err) => debug.log(err));
     }
 
-    /*
-      Presets the app installed here: `{ name, editable }`, where editable means the designer made it
-      and can load it back. An imported preset is listed too - it can be exported and deleted - but
-      it is not editable, and the Create button must not offer to "Update" it: doing so would
-      regenerate its files from the controls and destroy artwork they cannot reproduce.
-    */
+    // `{ name, editable }`: an imported preset is listed too (export/delete) but not editable, since
+    // regenerating its files from the controls would destroy artwork they cannot reproduce.
     let generatedPresets = [];
     const managedPresetNames = () => generatedPresets.map((preset) => preset.name);
     const isEditablePreset = (name) =>
@@ -4823,13 +4519,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#btn-rename-preset').toggle(managed);
     }
 
-    /*
-      Repopulate every notification-preset menu after the preset list changed - the main one AND the
-      five per-type overrides. Keep the current choice; if it was the preset just deleted, fall back
-      to the app's default rather than whatever sorts first alphabetically. Rebuild every menu, not
-      just the main one, or a freshly imported preset stays unpickable for rare/platinum/emulator
-      notifications.
-    */
+    // Rebuilds the main preset menu AND the per-type overrides, or a freshly imported preset stays
+    // unpickable for rare/platinum/emulator notifications.
     const DEFAULT_PRESET_NAME = 'AW Next';
     const OVERLAY_PRESET_TYPE_IDS = [
       '#option_overlayPresetXenia',
@@ -4860,11 +4551,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return names;
     }
 
-    /*
-      Rename the loaded preset, moving with it every setting that pointed at the old name (the app's
-      main choice, the overlay's, any per-source override). Left behind, a pointer to a name that no
-      longer exists would silently fall back to the default preset the next time it fired.
-    */
+    // Renames the loaded preset and moves every setting that pointed at the old name, or a stale
+    // pointer would silently fall back to the default preset next time it fired.
     $('#btn-rename-preset').click(async function () {
       const from = String($('#pd-load').val() || '');
       const to = ($('#pd-name').val() || '').trim();
@@ -4944,11 +4632,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       setPresetStatus($('#pd-status').attr('data-reset') || '', 'info');
     });
 
-    /*
-      A template is an ordinary set of options, so applying one is the same as having moved every
-      control by hand. The name field is deliberately left alone: a starting point is a look, not a
-      preset, and overwriting a name the user typed would lose their work.
-    */
+    // A template is an ordinary set of options; the name field is left alone, since a starting
+    // point is a look, not a preset, and overwriting a typed name would lose the user's work.
     function applyDesignToControls(options) {
       writePresetOptions(options);
       const values = presetSchema.normalizeOptions(options);
@@ -5000,11 +4685,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       setPresetStatus($('#pd-status').attr('data-randomized') || '', 'info');
     });
 
-    /*
-      Riff on a preset without overwriting it: the controls keep the design, the name becomes a free
-      one, and the picker lets go - so the next Create adds a preset instead of replacing the one it
-      was based on.
-    */
+    // Riffs on a preset without overwriting it: keeps the design, frees the name, and clears the
+    // picker so the next Create adds a preset instead of replacing the one it was based on.
     $('#btn-duplicate-preset').click(function () {
       const source = ($('#pd-name').val() || '').trim() || String($('#pd-load').val() || '');
       if (!source) {
@@ -5022,20 +4704,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       setPresetStatus(`${$('#pd-status').attr('data-duplicated') || ''} ${$('#pd-name').val()}`.trim(), 'info');
     });
 
-    /*
-      Put a managed preset into the designer's controls. Returns 'editable', 'imported' or 'failed'.
-      Shared by the picker and by Import, since a programmatic selection fires no change event, and
-      importing a preset used to leave the controls showing the previous draft without this call.
-    */
+    // Puts a managed preset into the designer's controls. Returns 'editable', 'imported' or 'failed'.
+    // Shared by the picker and by Import, since a programmatic selection fires no change event.
     async function loadPresetIntoBuilder(name) {
       const opts = await ipcRenderer.invoke('read-custom-preset', name);
       if (!opts) return 'failed';
-      /*
-        An imported preset with no builder options behind it cannot be reproduced from the controls,
-        so leave them alone and leave the name field empty: Delete and Export work off the picker,
-        and pressing Create then makes a new preset instead of silently overwriting artwork the
-        controls could never rebuild.
-      */
+      // An imported preset with no builder options behind it cannot be reproduced from the controls,
+      // so leave them alone: Create then makes a new preset instead of overwriting unrebuildable artwork.
       if (opts.editable === false) {
         $('#pd-name').val('');
         updateCreateButtonMode();
@@ -5068,19 +4743,14 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     });
 
-    // Render the design as a real overlay popup without saving it first - the inline preview is
-    // exact, but only a real popup shows it over whatever is on screen, at the configured position
-    // and scale, with the sound.
+    // Renders the design as a real overlay popup without saving it first: only a real popup shows
+    // it over whatever is on screen, at the configured position, scale and sound.
     $('#btn-preview-preset').click(async function () {
       const self = $(this);
       self.css('pointer-events', 'none');
       try {
-        /*
-          Preview whatever the picker holds. For a preset the designer made that is the same thing as
-          the draft, since loading it filled the controls - but an imported preset has no control
-          values behind it, so building a scratch preset from the controls previewed an unrelated
-          design instead of the preset the user had just selected.
-        */
+        // Preview whatever the picker holds. An imported preset has no control values behind it, so
+        // it must preview by name rather than by building a scratch preset from the (unrelated) controls.
         const loaded = String($('#pd-load').val() || '');
         const kind = previewState === 'completion' ? 'platinum' : previewState === 'normal' ? 'toast' : previewState;
         if (loaded && !isEditablePreset(loaded)) {
@@ -5093,9 +4763,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         const res = await ipcRenderer.invoke('preview-custom-preset', options);
         if (res && res.ok) {
           setPresetStatus('');
-          // Only name the design when the user actually named it. Falling back to the picker's
-          // "New preset…" placeholder produced "Notification test - New preset… preset", which
-          // reads like a bug; an unnamed draft just shows the plain sample text instead.
+          // Only name the design when the user actually named it, or the picker's "New preset…"
+          // placeholder leaks into the preview text.
           const label = ($('#pd-name').val() || '').trim();
           const data = overlayTestData(kind, res.name, label);
           // A preset that names its own sound is what a real unlock would play, so the preview does
@@ -5139,11 +4808,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       self.css('pointer-events', 'initial');
     });
 
-    /*
-      Export writes the preset currently loaded in the designer, falling back to the active
-      notification preset so a bundled or hand-authored one can be shared too. Import validates the
-      package in the main process and only then touches the preset storage.
-    */
+    // Import validates the package in the main process and only then touches preset storage.
     function importErrorText(res) {
       const error = String((res && res.error) || '');
       if (error === 'app-too-old') {
@@ -5165,12 +4830,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return error ? `${invalid} (${error})` : invalid;
     }
 
-    /*
-      Export what the preview is showing, under the name in the Name field. An imported preset is
-      the exception: its look lives in files the controls cannot describe, so it exports from disk
-      instead. Never fall back to the ACTIVE preset when the picker sits on "New preset…" - that
-      used to export a design-in-progress under the current preset's identity, clashing with it on import.
-    */
+    // Exports what the preview is showing, under the Name field; an imported preset exports from
+    // disk instead, since its look lives in files the controls cannot describe.
     $('#btn-export-preset').click(async function () {
       const loaded = String($('#pd-load').val() || '');
       // An imported preset is exported as it stands; anything the designer can read is exported from
@@ -5248,11 +4909,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       self.css('pointer-events', 'initial');
     });
 
-    /*
-      What an imported SAN theme became. An import is never refused over a property AW Next cannot
-      draw, it converts what maps and says plainly what did not. Keys are printed as SAN spells them,
-      since they are identifiers the user can find again in SAN's own customiser.
-    */
+    // An import is never refused over a property AW Next cannot draw: it converts what maps and
+    // reports the rest. Keys are printed as SAN spells them so the user can find them there.
     function sanReportDetail(report) {
       if (!report) return '';
       const lines = [];
@@ -5387,12 +5045,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     renderPreviewDocument(readPresetOptions());
     refreshPresetAnchors();
     updatePresetTabVisibility();
-    /*
-      The stage is only measurable once the Notifications tab has been laid out, and the popup is
-      scaled to fit it - so re-measure whenever the stage itself changes width rather than baking in
-      whatever it measured while the panel was still hidden. Guarded on the width actually changing:
-      laying out writes inside the stage, and re-measuring on that would observe itself forever.
-    */
+    // Re-measure whenever the stage's width actually changes, since it is only measurable once the
+    // tab is laid out; guarded on width change, or laying out would observe itself forever.
     let lastStageWidth = 0;
     const stageNode = document.querySelector('#options-notify-designer .pd-stage');
     if (stageNode && typeof ResizeObserver === 'function') {
@@ -5424,9 +5078,8 @@ function boolifyValue(v) {
   return v === 'true' ? true : v === 'false' ? false : v;
 }
 
-// Default folder where souvenir screenshots are written when no custom folder is set.
-// Mirrors defaultDir() in watchdog/notification/souvenir.js - the Watchdog is what actually writes
-// the file, so the two must agree or the UI would show a folder nothing is saved to.
+// Mirrors defaultDir() in watchdog/notification/souvenir.js (the Watchdog writes the file), so the
+// two must agree or the UI would show a folder nothing is saved to.
 function souvenirDefaultDir() {
   try {
     return path.join(remote.app.getPath('pictures'), 'Achievement Watcher Next');
@@ -5745,12 +5398,8 @@ function populateLegitUsers(selected) {
   selector.empty();
   selector.append(defaultOption);
   if (!list || list.length === 0) {
-    /*
-      The list is fetched over the network. Offline it comes back empty, which used to leave the
-      dropdown holding only "0" - and the next settings save read that back and overwrote the
-      account the user had picked, permanently. An empty list is not the user changing their mind:
-      keep their saved account selectable so nothing is lost while the check cannot run.
-    */
+    // Fetched over the network; offline it comes back empty. Keep the saved account selectable
+    // so a save while offline doesn't overwrite it with "0".
     if (selected && selected !== '0') {
       selector.append($('<option>').attr('value', selected).prop('selected', true).text(selected));
       defaultOption.prop('selected', false);
