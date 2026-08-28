@@ -2300,7 +2300,7 @@ function isLegitSteamLibraryGame(game) {
 // app/parser/*.js must appear here or in STEAM_BADGE_SOURCES (Ubisoft is separate); test enforces it.
 const SOURCE_BADGE = {
   playstation: /^(?:rpcs3 emulator|shadps4 emulator)$/,
-  xbox: /^(?:xenia emulator|xlivelessness)$/,
+  xbox: /^(?:xenia emulator|xlivelessness|xbox pc)$/,
   epic: /^epic(?:-official)?$/,
   gog: /^(?:gog|gog galaxy)$/,
   socialclub: /^goldberg socialclub$/,

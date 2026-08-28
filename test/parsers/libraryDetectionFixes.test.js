@@ -64,12 +64,20 @@ function badgeTables() {
   return { SOURCE_BADGE: literal('SOURCE_BADGE', '{'), STEAM_BADGE_SOURCES: literal('STEAM_BADGE_SOURCES', '/') };
 }
 
-// Every source label the parsers emit, gathered the same way a reviewer would.
+// Every source label the parsers emit, gathered the same way a reviewer would. A label written once
+// as a constant and used as `source: NAME` is emitted just like a literal - reading only the
+// literals is how "Xbox PC" reached the library wearing a Steam badge with every test passing.
 function emittedSourceLabels() {
   const parserDir = path.join(appDir, 'parser');
   const emitted = new Set();
   for (const file of fs.readdirSync(parserDir).filter((f) => f.endsWith('.js'))) {
-    for (const match of fs.readFileSync(path.join(parserDir, file), 'utf8').matchAll(/source: '([^']*)'/g)) emitted.add(match[1]);
+    const source = fs.readFileSync(path.join(parserDir, file), 'utf8');
+    for (const match of source.matchAll(/source: '([^']*)'/g)) emitted.add(match[1]);
+    const constants = new Map();
+    for (const match of source.matchAll(/const ([A-Za-z0-9_]+) = '([^']*)';/g)) constants.set(match[1], match[2]);
+    for (const match of source.matchAll(/source: ([A-Za-z0-9_]+)[,\s}]/g)) {
+      if (constants.has(match[1])) emitted.add(constants.get(match[1]));
+    }
   }
   return [...emitted];
 }
@@ -90,6 +98,8 @@ test('every official platform label is recognised, in both spellings the parsers
     ['RPCS3 Emulator', 'playstation'],
     ['ShadPS4 Emulator', 'playstation'],
     ['Xenia Emulator', 'xbox'],
+    ['Xbox PC', 'xbox'],
+    ['XLiveLessNess', 'xbox'],
   ]) {
     assert.equal(badgeOf(label), expected, `${label} must earn the ${expected} badge`);
   }
