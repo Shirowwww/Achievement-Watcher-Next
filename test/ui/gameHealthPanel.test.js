@@ -80,9 +80,12 @@ test('the state chip stops spinning once the report is painted', () => {
   const paint = appSource.slice(appSource.indexOf('function paintGameHealth'));
   assert.match(paint.slice(0, paint.indexOf('\n}')), /chip\.find\('i'\)\.attr\('class'/, 'painting must replace the spinner icon');
 
+  const checking = appSource.slice(appSource.indexOf('function showGameHealthChecking'));
+  assert.match(checking.slice(0, checking.indexOf('\n}\n')), /fa-circle-notch fa-spin/, 'reopening on another game restores the spinner');
+
   const render = appSource.slice(appSource.indexOf('async function renderGameHealth'));
   const body = render.slice(0, render.indexOf('\n}\n'));
-  assert.match(body, /fa-circle-notch fa-spin/, 'reopening on another game restores the spinner');
+  assert.match(body, /showGameHealthChecking\(\)/, 'and every report starts from that state');
   // The failure path has to leave a readable state too, not a spinner over an error message.
   const failure = body.slice(body.indexOf('} catch'));
   assert.match(failure, /chip\.find\('i'\)\.attr\('class'/, 'a failed report must also stop the spinner');
@@ -187,11 +190,47 @@ test('the repairs delegate to the parsers that own the backup behaviour', () => 
 });
 
 test('a repair that changed something refreshes the report', () => {
+  const handler = appSource.slice(appSource.indexOf("$('#game-health').on('click', '[data-gh-action]'"));
+  const body = handler.slice(0, handler.indexOf('\n    });'));
   assert.match(
-    appSource,
-    /if \(await runGameHealthAction\(appid, action, button\)\) await renderGameHealth\(appid\)/,
+    body,
+    /if \(await runGameHealthAction\(appid, action, button\)\) \{/,
     'the user must not be left looking at the state that justified the button they pressed'
   );
+  assert.match(body, /await renderGameHealth\(appid\)/);
+});
+
+/*
+  A repair that wrote files also invalidated what the scan believes: the achievement list, the save
+  folders it reads unlocks from, whether the game counts as installed. Re-reading the disk answers
+  none of those, which is why the panel used to need a manual refresh (F5) before it told the truth
+  about a game it had just repaired.
+*/
+test('a repair that wrote files also has the library re-read, without a manual refresh', () => {
+  const handler = appSource.slice(appSource.indexOf("$('#game-health').on('click', '[data-gh-action]'"));
+  const body = handler.slice(0, handler.indexOf('\n    });'));
+  assert.match(body, /GAME_HEALTH_ACTIONS_NEEDING_RESCAN\.has\(action\)/, 'only the repairs that changed files');
+  assert.match(body, /await refreshLibraryAfterGameHealthRepair\(\)/);
+  assert.ok(
+    body.indexOf('refreshLibraryAfterGameHealthRepair') < body.indexOf('await renderGameHealth(appid)'),
+    'the report is painted from the refreshed library, not the stale one'
+  );
+  // The wait must look busy: a finished-looking report that is still the old one is worse than none.
+  assert.ok(body.indexOf('showGameHealthChecking()') < body.indexOf('refreshLibraryAfterGameHealthRepair'));
+
+  const set = appSource.slice(appSource.indexOf('const GAME_HEALTH_ACTIONS_NEEDING_RESCAN'));
+  const listed = set.slice(0, set.indexOf(']'));
+  for (const action of ['REPAIR_DATA', 'REPAIR_UPLAY', 'INSTALL_RUNTIME', 'FIX_APPID']) {
+    assert.match(listed, new RegExp(`ACTION\\.${action}\\b`), `${action} writes files`);
+  }
+  for (const action of ['UNMUTE_PROGRESS', 'TEST_NOTIFICATION', 'START_TRACKING', 'CHOOSE_EXE']) {
+    assert.ok(!new RegExp(`ACTION\\.${action}\\b`).test(listed), `${action} changes nothing the scan reported`);
+  }
+
+  const refresh = appSource.slice(appSource.indexOf('async function refreshLibraryAfterGameHealthRepair'));
+  const refreshBody = refresh.slice(0, refresh.indexOf('\n}\n'));
+  assert.match(refreshBody, /await app\.onStart\(\)/, 'it is the same library re-read the rest of the app uses');
+  assert.match(refreshBody, /catch \(err\)/, 'a failed scan must not become the error shown for the repair');
 });
 
 test('the notification test reuses the shared transport-aware path', () => {
@@ -332,4 +371,36 @@ test('an antivirus is answered with the antivirus dialog, never with a file pick
   assert.ok(blocked < picker, 'the quarantine is recognised before anyone is asked to find a file');
   // The retry matters more here than anywhere: after allowing the file, the user is one press from done.
   assert.match(fn, /reportEmulatorPackageBlocked\(bundledError, \{ retry: \(\) => ensureUplayR2Package\(/);
+});
+
+
+/*
+  Locating the game is the first repair the report offers, and much of what it can say depends on
+  the answer: the emulator setup, the Uplay layer, the crack loader and every folder repair are
+  gated on a known install folder. So the executable has to settle the folder too, and the report
+  has to be re-run once it is known - it was collected while the answer was still "not installed".
+*/
+test('a configured executable also settles the install folder', () => {
+  const collector = appSource.slice(appSource.indexOf('async function collectGameHealthSignals('));
+  const body = collector.slice(0, collector.indexOf('function gameHealthStateLabel('));
+  assert.match(body, /await resolveGameDirFromExe\(exe\)/, 'the folder is derived from the executable');
+  assert.ok(
+    body.indexOf('resolveGameDirFromExe') < body.indexOf('crackLoaderDetect.detectWorkingCrackLoader'),
+    'and derived before the checks that need a folder, or they are skipped as "not installed"'
+  );
+  assert.match(body, /game\.gameDir = derived/, 'the repairs offered by the report read game.gameDir');
+});
+
+test('choosing an executable re-runs the report instead of leaving the old one on screen', () => {
+  const picker = appSource.slice(appSource.indexOf('async function pickGameExecutable('));
+  assert.ok(picker.startsWith('async function pickGameExecutable('), 'the shared picker must exist');
+  const body = picker.slice(0, picker.indexOf('// Build the set of exe paths'));
+  assert.match(body, /await exeList\.add\(cfg\)/, 'the choice is persisted on the spot, not on Save');
+  assert.match(body, /await resolveGameDirFromExe\(filePath\)/, 'and it settles the install folder too');
+
+  // Returning true from the action is what makes the click handler re-render the report.
+  const action = appSource.slice(appSource.indexOf('if (action === gameHealth.ACTION.CHOOSE_EXE) {'));
+  assert.match(action.slice(0, action.indexOf('\n  }')), /return !!\(await pickGameExecutable\(appid\)\)/);
+  const handler = appSource.slice(appSource.indexOf("$('#game-health').on('click', '[data-gh-action]'"));
+  assert.match(handler.slice(0, handler.indexOf('\n    });')), /await renderGameHealth\(appid\)/);
 });

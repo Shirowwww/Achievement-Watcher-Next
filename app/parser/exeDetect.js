@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const dirCache = require(path.join(__dirname, '..', 'util', 'dirCache.js'));
 const exeCandidateCache = require(path.join(__dirname, '..', 'util', 'exeCandidateCache.js'));
+const saveRoots = require(path.join(__dirname, 'saveRoots.js'));
 
 // Hard-exclude: never a game executable (installers, redists, crash handlers, …).
 const EXE_EXCLUDE = [
@@ -394,10 +395,54 @@ function shallowGameExe(dir) {
   return null;
 }
 
+/*
+  The game folder an executable belongs to. A game exe usually sits in engine internals
+  (<Game>/Binaries/Win64, <Game>/x64, <Game>/<Game>_Data), while every repair, save scan and folder
+  diagnosis is anchored on the game's own folder. Purely lexical - it climbs out of engine internals
+  and stops at the first folder that is not one, so it answers even for a path that no longer exists.
+  The folder names are the ones goldberg.findCompatibleGames() walks up, kept in one place.
+
+  Answers '' rather than a folder that holds more than this one game: a drive root, a library-like
+  name (Games, Jeux, Repacks, ...), steamapps/common, or one of `blockedRoots` - the user's own
+  configured library and save roots. A library root is a truthful answer to "where does this exe
+  live" and a dangerous one to "which folder is this game": that folder is what the repairs write
+  into and what "Delete game folder" offers to move to the Recycle Bin. Not knowing is safe; a
+  whole collection mistaken for one game is not.
+*/
+const NESTED_ENGINE_DIR = /^(?:x86|x64|x86_64|win32|win64|binaries|bin|plugins)$/i;
+
+function isGameCollectionFolder(dir, blockedRoots) {
+  const parsed = path.parse(dir);
+  if (!parsed.base || parsed.root === dir) return true;
+  if (saveRoots.isLibraryLikeFolderName(parsed.base)) return true;
+  if (parsed.base.toLowerCase() === 'common' && path.basename(parsed.dir).toLowerCase() === 'steamapps') return true;
+  const key = dir.toLowerCase();
+  return (Array.isArray(blockedRoots) ? blockedRoots : [])
+    .filter((root) => root && String(root).trim())
+    .some((root) => path.resolve(String(root).trim()).toLowerCase() === key);
+}
+
+function gameDirForExe(exePath, { blockedRoots = [] } = {}) {
+  const full = String(exePath || '').trim();
+  if (!full) return '';
+  let dir = path.dirname(path.resolve(full));
+  // Three levels is what the deepest common layout needs (<Game>/Binaries/Win64); climbing further
+  // would trade a nested folder for a whole game library.
+  for (let i = 0; i < 3; i++) {
+    const name = path.basename(dir);
+    if (!NESTED_ENGINE_DIR.test(name) && !ENGINE_DATA_DIRS.test(name)) break;
+    const parent = path.dirname(dir);
+    if (!parent || parent === dir) break;
+    dir = parent;
+  }
+  return isGameCollectionFolder(dir, blockedRoots) ? '' : dir;
+}
+
 module.exports = {
   detect,
   detectConfident,
   shallowGameExe,
+  gameDirForExe,
   nameSimilarity,
   bestFolderMatch,
   FOLDER_MATCH_THRESHOLD,

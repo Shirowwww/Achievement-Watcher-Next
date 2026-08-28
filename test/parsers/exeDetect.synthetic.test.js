@@ -202,3 +202,50 @@ test('takenGameDirs prevents a second exe from the same install folder', () => {
   const detected = exeDetect.detect(gameDir, 'Real Game', { dllPaths: [rootDll], takenGameDirs: [gameDir] });
   assert.strictEqual(detected, null);
 });
+
+/*
+  gameDirForExe: the folder a configured executable proves the game lives in. Game Health has no
+  other way to answer that for a game the scan only knows through its emulator save folder, and
+  every folder-based check and repair is anchored on the answer.
+*/
+test('gameDirForExe climbs out of engine internals to the game folder', () => {
+  const root = path.join('C:', 'Library', 'It Takes Two');
+  assert.strictEqual(exeDetect.gameDirForExe(path.join(root, 'Nuts', 'Binaries', 'Win64', 'ItTakesTwo.exe')), path.join(root, 'Nuts'));
+  assert.strictEqual(exeDetect.gameDirForExe(path.join(root, 'Binaries', 'Win64', 'Game.exe')), root);
+  assert.strictEqual(exeDetect.gameDirForExe(path.join(root, 'x64', 'Game.exe')), root);
+  assert.strictEqual(exeDetect.gameDirForExe(path.join(root, 'Game_Data', 'Game.exe')), root);
+  assert.strictEqual(exeDetect.gameDirForExe(path.join(root, 'Game.exe')), root);
+  assert.strictEqual(exeDetect.gameDirForExe(''), '');
+  assert.strictEqual(exeDetect.gameDirForExe(null), '');
+});
+
+/*
+  The dangerous answer, and the reason this returns '' instead of a best guess: a folder that holds
+  a whole collection is what the repairs write into and what "Delete game folder" offers to move to
+  the Recycle Bin. Not knowing where a game is installed is the behaviour that was there before.
+*/
+test('gameDirForExe refuses a folder that holds more than this one game', () => {
+  for (const exe of [
+    path.join('C:', 'Jeux', 'Game.exe'),
+    path.join('C:', 'Games', 'x64', 'Game.exe'),
+    path.join('C:', 'Repacks', 'Game.exe'),
+    path.join('D:', 'Steam', 'steamapps', 'common', 'Game.exe'),
+    path.join('D:', 'Game.exe'),
+  ]) {
+    assert.strictEqual(exeDetect.gameDirForExe(exe), '', exe);
+  }
+  // A game inside one of those is still a game folder.
+  assert.strictEqual(
+    exeDetect.gameDirForExe(path.join('D:', 'Steam', 'steamapps', 'common', 'Half-Life', 'hl.exe')),
+    path.join('D:', 'Steam', 'steamapps', 'common', 'Half-Life')
+  );
+});
+
+test('gameDirForExe refuses the roots the user configured themselves', () => {
+  const root = path.join('E:', 'MyStuff');
+  const exe = path.join(root, 'Game.exe');
+  assert.strictEqual(exeDetect.gameDirForExe(exe), root, 'an unremarkable folder name is accepted');
+  assert.strictEqual(exeDetect.gameDirForExe(exe, { blockedRoots: [root + path.sep] }), '', 'a configured library root is not');
+  assert.strictEqual(exeDetect.gameDirForExe(exe, { blockedRoots: [root.toUpperCase()] }), '', 'and drive-letter casing must not defeat it');
+  assert.strictEqual(exeDetect.gameDirForExe(exe, { blockedRoots: [path.join('E:', 'Elsewhere'), null, ''] }), root);
+});

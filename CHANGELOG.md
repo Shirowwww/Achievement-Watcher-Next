@@ -7,6 +7,18 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
+## Unreleased
+
+### Fixed
+
+- **Game Health can now find a game it only knew by its save folder.** Locating the executable also
+  settles which folder the game is installed in, so the emulator setup, the Uplay layer and the
+  crack loader are checked instead of skipped as "not installed". A folder that holds a whole
+  collection (a library root, `steamapps\common`, a drive root) is never taken for one game.
+- **A repair no longer leaves a stale report on screen.** Repairs that write files now have the
+  library re-read before the report is painted again, so the panel tells the truth without a manual
+  refresh. Choosing the executable re-runs the report on the spot instead of jumping to another tab.
+
 ## 3.10.3 - 2026-08-28
 
 ### Improved

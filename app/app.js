@@ -3194,6 +3194,63 @@ function autodetectGameExe(gameDir, gameName, taken) {
   return null;
 }
 
+/*
+  The install folder a configured executable proves, or '' when nothing can be proved safely. The
+  user's own library and save roots are passed in as folders that are never one game: a game sitting
+  loose in a library root leaves the folder unknown, exactly as it was before, rather than pointing
+  the folder repairs - and "Delete game folder" - at somebody's whole collection. Unreadable roots
+  answer '' for the same reason: without them a library cannot be told from a game folder.
+*/
+async function resolveGameDirFromExe(exePath) {
+  if (!exePath || !fs.existsSync(exePath)) return '';
+  let blockedRoots = [];
+  try {
+    const [library, saves] = await Promise.all([libraryDirs.get(), userDir.get()]);
+    blockedRoots = [...(library || []), ...(saves || []).map((entry) => entry && entry.path)];
+  } catch (err) {
+    debug.log(`[health] the configured roots could not be read, leaving the install folder unknown => ${formatErr(err)}`);
+    return '';
+  }
+  const derived = exeDetect.gameDirForExe(exePath, { blockedRoots });
+  return derived && fs.existsSync(derived) ? derived : '';
+}
+
+/*
+  Ask for this game's executable and record it. Shared by the Executable tab's Edit button and by
+  Game Health's "Locate the game": the choice is persisted on the spot (like Unlink already does)
+  rather than waiting for Save, because the health report is re-run against it immediately.
+  Returns the chosen path, or '' when the dialog was dismissed.
+*/
+async function pickGameExecutable(appid) {
+  const cfg = (await exeList.get(appid)) || { appid: String(appid), exe: '', args: '' };
+  const dialog = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
+    title: t('choose-the-game-executable', 'Choose the game executable', "Choisir l'exécutable du jeu"),
+    buttonLabel: t('select', 'Select', 'Sélectionner'),
+    defaultPath: cfg.exe,
+    filters: [{ name: 'Executables', extensions: ['exe', 'bat'] }],
+    properties: ['openFile', 'showHiddenFiles', 'dontAddToRecent'],
+  });
+  const filePath = (dialog.filePaths || []).find((entry) => entry && entry.length > 0) || '';
+  if (!filePath) return '';
+
+  cfg.exe = filePath;
+  await exeList.add(cfg);
+  $('#game-config').find('.constant').text(filePath).attr('title', filePath);
+
+  // exeList is the persisted truth, gameList is what the rest of the session reads. An executable
+  // also settles where the game lives, which is what unlocks the folder-based checks and repairs.
+  const game = gameList.find((g) => g.appid == appid);
+  if (game) {
+    game.exe = filePath;
+    game.exeConfident = true;
+    if (!game.gameDir || !fs.existsSync(game.gameDir)) {
+      const derived = await resolveGameDirFromExe(filePath);
+      if (derived) game.gameDir = derived;
+    }
+  }
+  return filePath;
+}
+
 // Build the set of exe paths already claimed by appids other than `appid`, for anti-collision.
 async function takenExePaths(appid) {
   try {
@@ -3736,22 +3793,10 @@ var app = {
 
         $('#game-config').on('click', '.edit', async function (e) {
           e.stopPropagation();
-          let appid = $('#game-config .header').attr('title');
-          let cfg = await exeList.get(appid);
-          let dialog = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
-            title: t('choose-the-game-executable', 'Choose the game executable', 'Choisir l\'exécutable du jeu'),
-            buttonLabel: t('select', 'Select', 'Sélectionner'),
-            defaultPath: cfg.exe,
-            filters: [{ name: 'Executables', extensions: ['exe', 'bat'] }],
-            properties: ['openFile', 'showHiddenFiles', 'dontAddToRecent'],
-          });
-
-          if (dialog.filePaths.length > 0 && dialog.filePaths[0].length > 0) {
-            const filePath = dialog.filePaths[0];
-
-            $('#game-config').find('.constant').text(filePath);
-            $('#game-config').find('.constant').attr('title', filePath);
-          }
+          const appid = $('#game-config .header').attr('title');
+          const picked = await pickGameExecutable(appid);
+          // Game Health was reported without an executable, so it is worth re-running now.
+          if (picked && String($('#game-health').attr('data-appid')) === String(appid)) await renderGameHealth(appid);
         });
 
         $('#game-config')
@@ -6881,11 +6926,29 @@ async function collectGameHealthSignals(appid) {
     debug.log(`[health] exeList lookup failed for ${appid} => ${formatErr(err)}`);
   }
 
-  const gameDir = game.gameDir || '';
-  const gameDirExists = !!gameDir && fs.existsSync(gameDir);
   // steam.js stamps this on the cached schema every time it re-reads the list from Steam.
   const achievementsCheckedAt = Number(game.descBackfilledAt) || 0;
   const exe = cfg.exe || (game.exeConfident ? game.exe : '') || '';
+  const exeExists = !!exe && fs.existsSync(exe);
+
+  /*
+    A known executable is a known install folder: the scan resolves gameDir from the library it
+    found the game in, so a game only known through its emulator save folder (or one the user
+    located by hand) had none, and every check below that needs the folder - the emulator setup,
+    the Uplay layer, the crack loader - was skipped as if the game were not installed at all.
+  */
+  let gameDir = game.gameDir || '';
+  let gameDirExists = !!gameDir && fs.existsSync(gameDir);
+  if (!gameDirExists && exeExists) {
+    const derived = await resolveGameDirFromExe(exe);
+    if (derived) {
+      gameDir = derived;
+      gameDirExists = true;
+      // Carried into the in-memory game as well: the repairs offered by this report, "Open the game
+      // folder" and the appid fix all read game.gameDir, and would still act on nothing.
+      game.gameDir = derived;
+    }
+  }
   const source = String(game.source || '');
   const system = String(game.system || '');
 
@@ -6964,7 +7027,7 @@ async function collectGameHealthSignals(appid) {
     gameDir,
     gameDirExists,
     exe,
-    exeExists: !!exe && fs.existsSync(exe),
+    exeExists,
     achievements: { total: (game.achievement && game.achievement.total) || 0, unlocked: (game.achievement && game.achievement.unlocked) || 0 },
     emulated,
     achievementsCheckedAt,
@@ -7407,9 +7470,10 @@ function setGameHealthProgress(progress) {
   }
 }
 
-async function renderGameHealth(appid) {
+// The report is being (re)collected. Also used on its own while a repair waits for the library to
+// be re-read: the panel has to look busy for that wait, not finished and wrong.
+function showGameHealthChecking() {
   const root = $('#game-health');
-  root.attr('data-appid', String(appid));
   const chip = root.find('.gh-state').attr('data-state', 'loading');
   // Restore the spinner: a previous report for another game replaced it with its own state icon.
   chip.find('i').attr('class', 'fas fa-circle-notch fa-spin');
@@ -7495,10 +7559,13 @@ async function runGameHealthAction(appid, action, button) {
   const game = gameList.find((g) => g.appid == appid) || {};
   const writableAppid = /^[0-9]+$/.test(String(appid)) ? String(appid) : game.steamappid || null;
 
+  /*
+    Locate the game. The picker opens from here rather than by jumping to the Executable tab: the
+    answer belongs to the report the user is looking at, and returning true re-runs that report
+    with the executable - and the install folder derived from it - in place.
+  */
   if (action === gameHealth.ACTION.CHOOSE_EXE) {
-    setGameConfigView('exe-config');
-    $('#game-config .edit').trigger('click');
-    return false;
+    return !!(await pickGameExecutable(appid));
   }
 
   if (action === gameHealth.ACTION.OPEN_FOLDER) {
@@ -7939,7 +8006,13 @@ async function runGameHealthAction(appid, action, button) {
       try {
         // A repair that changed something re-runs the report, so the user sees the new state
         // instead of the one that justified the button they just pressed.
-        if (await runGameHealthAction(appid, action, button)) await renderGameHealth(appid);
+        if (await runGameHealthAction(appid, action, button)) {
+          if (GAME_HEALTH_ACTIONS_NEEDING_RESCAN.has(action)) {
+            showGameHealthChecking();
+            await refreshLibraryAfterGameHealthRepair();
+          }
+          await renderGameHealth(appid);
+        }
       } catch (err) {
         debug.error(`[health] action ${action} failed for ${appid} => ${formatErr(err)}`);
         remote.dialog.showMessageBoxSync({
