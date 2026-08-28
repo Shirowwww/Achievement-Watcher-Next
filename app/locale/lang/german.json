@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Xbox-Konto getrennt.",
     "xbox-importing": "Xbox-PC-Bibliothek wird importiert…",
     "xbox-imported": "Import abgeschlossen: {created} erstellt, {updated} aktualisiert, {failed} fehlgeschlagen.",
+    "xbox-imported-none": "Nichts zu importieren: {titles} PC-Titel gefunden, {skipped} ohne Erfolge, {failed} fehlgeschlagen.",
     "xbox-import-failed": "Xbox-Bibliotheksimport fehlgeschlagen",
     "xbox-title": "Xbox-PC-Konto",
     "xbox-desc": "Optional. Importiert deine Xbox-PC-Bibliothek (Game Pass und Microsoft Store): Erfolge, Freischaltstatus und Seltenheit kommen aus dem Xbox Network und werden lokal zwischengespeichert. Dein Sitzungstoken wird auf diesem PC verschlüsselt gespeichert.",

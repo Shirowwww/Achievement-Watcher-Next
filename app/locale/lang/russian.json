@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Аккаунт Xbox отключён.",
     "xbox-importing": "Импорт библиотеки Xbox PC…",
     "xbox-imported": "Импорт завершён: создано - {created}, обновлено - {updated}, ошибок - {failed}.",
+    "xbox-imported-none": "Нечего импортировать: найдено {titles} игр для ПК, {skipped} без достижений, {failed} с ошибкой.",
     "xbox-import-failed": "Не удалось импортировать библиотеку Xbox",
     "xbox-title": "Аккаунт Xbox PC",
     "xbox-desc": "Необязательно. Импортирует вашу библиотеку Xbox PC (Game Pass и Microsoft Store): достижения, состояние разблокировки и редкость берутся из Xbox Network и кэшируются локально. Токен сессии хранится на этом ПК в зашифрованном виде.",

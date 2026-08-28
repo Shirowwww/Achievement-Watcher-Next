@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Conta Xbox desconectada.",
     "xbox-importing": "Importando a biblioteca Xbox PC…",
     "xbox-imported": "Importação concluída: {created} criados, {updated} atualizados, {failed} com falha.",
+    "xbox-imported-none": "Nada a importar: {titles} títulos de PC encontrados, {skipped} sem conquistas, {failed} com falha.",
     "xbox-import-failed": "Falha ao importar a biblioteca Xbox",
     "xbox-title": "Conta Xbox PC",
     "xbox-desc": "Opcional. Importa sua biblioteca do Xbox PC (Game Pass e Microsoft Store): conquistas, estado de desbloqueio e raridade vêm da Xbox Network e ficam em cache local. Seu token de sessão é armazenado criptografado neste PC.",

@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Xbox hesabının bağlantısı kesildi.",
     "xbox-importing": "Xbox PC kitaplığı içe aktarılıyor…",
     "xbox-imported": "İçe aktarma tamamlandı: {created} oluşturuldu, {updated} güncellendi, {failed} başarısız.",
+    "xbox-imported-none": "İçe aktarılacak bir şey yok: {titles} PC oyunu bulundu, {skipped} tanesi başarımsız, {failed} tanesi başarısız.",
     "xbox-import-failed": "Xbox kitaplığı içe aktarılamadı",
     "xbox-title": "Xbox PC hesabı",
     "xbox-desc": "İsteğe bağlı. Xbox PC kitaplığınızı içe aktarır (Game Pass ve Microsoft Store): başarımlar, açılma durumu ve nadirlik Xbox Network’ten gelir ve yerel olarak önbelleğe alınır. Oturum belirteciniz bu bilgisayarda şifreli saklanır.",

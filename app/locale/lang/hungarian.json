@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Xbox-fiók lecsatlakoztatva.",
     "xbox-importing": "Xbox PC-könyvtár importálása…",
     "xbox-imported": "Importálás kész: {created} létrehozva, {updated} frissítve, {failed} sikertelen.",
+    "xbox-imported-none": "Nincs mit importálni: {titles} PC-cím található, {skipped} teljesítmények nélkül, {failed} sikertelen.",
     "xbox-import-failed": "Az Xbox-könyvtár importálása nem sikerült",
     "xbox-title": "Xbox PC-fiók",
     "xbox-desc": "Opcionális. Importálja az Xbox PC-könyvtáradat (Game Pass és Microsoft Store): a teljesítmények, a feloldási állapot és a ritkaság az Xbox Networkről érkezik, és helyben tárolódik. A munkamenet-tokent titkosítva tárolja ez a gép.",

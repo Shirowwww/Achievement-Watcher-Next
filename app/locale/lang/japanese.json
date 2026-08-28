@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Xbox アカウントを切断しました。",
     "xbox-importing": "Xbox PC ライブラリをインポート中…",
     "xbox-imported": "インポート完了：作成 {created} 件、更新 {updated} 件、失敗 {failed} 件。",
+    "xbox-imported-none": "インポートするものがありません: PC タイトル {titles} 件、うち実績なし {skipped} 件、失敗 {failed} 件。",
     "xbox-import-failed": "Xbox ライブラリのインポートに失敗しました",
     "xbox-title": "Xbox PC アカウント",
     "xbox-desc": "任意です。Xbox PC ライブラリ（Game Pass と Microsoft Store）をインポートします。実績・解除状況・レアリティは Xbox Network から取得し、ローカルにキャッシュされます。セッショントークンはこの PC に暗号化して保存されます。",

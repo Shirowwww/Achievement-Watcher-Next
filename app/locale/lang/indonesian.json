@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Akun Xbox diputus.",
     "xbox-importing": "Mengimpor perpustakaan Xbox PC…",
     "xbox-imported": "Impor selesai: {created} dibuat, {updated} diperbarui, {failed} gagal.",
+    "xbox-imported-none": "Tidak ada yang diimpor: {titles} judul PC ditemukan, {skipped} tanpa pencapaian, {failed} gagal.",
     "xbox-import-failed": "Impor perpustakaan Xbox gagal",
     "xbox-title": "Akun Xbox PC",
     "xbox-desc": "Opsional. Mengimpor perpustakaan Xbox PC Anda (Game Pass dan Microsoft Store): pencapaian, status terbuka, dan kelangkaan diambil dari Xbox Network lalu disimpan di cache lokal. Token sesi Anda disimpan terenkripsi di PC ini.",

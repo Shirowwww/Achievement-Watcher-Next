@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Xbox 账户已断开。",
     "xbox-importing": "正在导入 Xbox PC 库…",
     "xbox-imported": "导入完成：创建 {created} 个，更新 {updated} 个，失败 {failed} 个。",
+    "xbox-imported-none": "没有可导入的内容：找到 {titles} 个 PC 游戏，其中 {skipped} 个没有成就，{failed} 个失败。",
     "xbox-import-failed": "Xbox 库导入失败",
     "xbox-title": "Xbox PC 账户",
     "xbox-desc": "可选。导入你的 Xbox PC 库（Game Pass 与 Microsoft Store）：成就、解锁状态和稀有度来自 Xbox Network 并缓存在本地。会话令牌以加密形式保存在本机。",

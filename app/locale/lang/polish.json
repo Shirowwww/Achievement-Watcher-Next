@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Konto Xbox rozłączone.",
     "xbox-importing": "Importowanie biblioteki Xbox PC…",
     "xbox-imported": "Import zakończony: {created} utworzono, {updated} zaktualizowano, {failed} nie udało się.",
+    "xbox-imported-none": "Nie ma czego importować: znaleziono {titles} tytułów PC, {skipped} bez osiągnięć, {failed} nieudanych.",
     "xbox-import-failed": "Import biblioteki Xbox nie powiódł się",
     "xbox-title": "Konto Xbox PC",
     "xbox-desc": "Opcjonalne. Importuje twoją bibliotekę Xbox PC (Game Pass i Microsoft Store): osiągnięcia, stan odblokowania i rzadkość pochodzą z Xbox Network i są zapisywane lokalnie. Token sesji jest przechowywany na tym komputerze w postaci zaszyfrowanej.",

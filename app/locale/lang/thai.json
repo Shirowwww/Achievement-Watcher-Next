@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "ยกเลิกการเชื่อมต่อบัญชี Xbox แล้ว",
     "xbox-importing": "กำลังนำเข้าคลัง Xbox PC…",
     "xbox-imported": "นำเข้าเสร็จสิ้น: สร้าง {created} รายการ อัปเดต {updated} รายการ ล้มเหลว {failed} รายการ",
+    "xbox-imported-none": "ไม่มีอะไรให้นำเข้า: พบ {titles} รายการบน PC, {skipped} รายการไม่มีความสำเร็จ, {failed} รายการล้มเหลว",
     "xbox-import-failed": "นำเข้าคลัง Xbox ไม่สำเร็จ",
     "xbox-title": "บัญชี Xbox PC",
     "xbox-desc": "ไม่บังคับ นำเข้าไลบรารี Xbox PC ของคุณ (Game Pass และ Microsoft Store) โดยความสำเร็จ สถานะการปลดล็อก และความหายากมาจาก Xbox Network และแคชไว้ในเครื่อง โทเคนเซสชันถูกเก็บแบบเข้ารหัสบนพีซีนี้",

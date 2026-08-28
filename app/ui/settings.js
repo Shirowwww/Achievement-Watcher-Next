@@ -1554,11 +1554,24 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           disconnected: t('xbox-disconnected', 'Xbox account disconnected.', 'Compte Xbox déconnecté.'),
           importing: t('xbox-importing', 'Importing the Xbox PC library…', 'Importation de la bibliothèque Xbox…'),
           imported: (r) =>
-            t('xbox-imported', 'Import complete: {created} created, {updated} updated, {failed} failed.', 'Importation terminée : {created} créé(s), {updated} mis à jour, {failed} échec(s).', {
-              created: r?.created || 0,
-              updated: r?.updated || 0,
-              failed: r?.failed || 0,
-            }),
+            // An import that wrote nothing used to report three zeroes, which says the same thing
+            // whether the account has no PC game or the history never arrived. Say which it was.
+            (r?.created || 0) + (r?.updated || 0) === 0
+              ? t(
+                  'xbox-imported-none',
+                  'Nothing to import: {titles} PC titles found, {skipped} without achievements, {failed} failed.',
+                  'Rien à importer : {titles} titres PC trouvés, {skipped} sans succès, {failed} en échec.',
+                  {
+                    titles: r?.pcTitles || 0,
+                    skipped: r?.skipped || 0,
+                    failed: r?.failed || 0,
+                  }
+                )
+              : t('xbox-imported', 'Import complete: {created} created, {updated} updated, {failed} failed.', 'Importation terminée : {created} créé(s), {updated} mis à jour, {failed} échec(s).', {
+                  created: r?.created || 0,
+                  updated: r?.updated || 0,
+                  failed: r?.failed || 0,
+                }),
           importFailed: t('xbox-import-failed', 'Xbox library import failed', 'Échec de l’importation Xbox'),
         });
       const status = $('#xbox-connect-status');

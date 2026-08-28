@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Účet Xbox odpojený.",
     "xbox-importing": "Import knižnice Xbox PC…",
     "xbox-imported": "Import dokončený: {created} vytvorených, {updated} aktualizovaných, {failed} zlyhalo.",
+    "xbox-imported-none": "Nie je čo importovať: nájdených {titles} PC titulov, {skipped} bez úspechov, {failed} zlyhalo.",
     "xbox-import-failed": "Import knižnice Xbox sa nepodaril",
     "xbox-title": "Účet Xbox PC",
     "xbox-desc": "Voliteľné. Naimportuje vašu knižnicu Xbox PC (Game Pass a Microsoft Store): úspechy, stav odomknutia a vzácnosť pochádzajú z Xbox Network a ukladajú sa lokálne. Token relácie je na tomto PC uložený šifrovane.",

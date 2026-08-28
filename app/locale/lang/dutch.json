@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Xbox-account losgekoppeld.",
     "xbox-importing": "De Xbox PC-bibliotheek importeren…",
     "xbox-imported": "Import voltooid: {created} aangemaakt, {updated} bijgewerkt, {failed} mislukt.",
+    "xbox-imported-none": "Niets te importeren: {titles} pc-titels gevonden, {skipped} zonder prestaties, {failed} mislukt.",
     "xbox-import-failed": "Importeren van de Xbox-bibliotheek mislukt",
     "xbox-title": "Xbox PC-account",
     "xbox-desc": "Optioneel. Importeert je Xbox PC-bibliotheek (Game Pass en Microsoft Store): prestaties, ontgrendelstatus en zeldzaamheid komen van Xbox Network en worden lokaal in de cache bewaard. Je sessietoken wordt versleuteld op deze pc bewaard.",

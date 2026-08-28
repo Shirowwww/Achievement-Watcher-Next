@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Xbox-kontot är frånkopplat.",
     "xbox-importing": "Importerar Xbox-biblioteket för PC…",
     "xbox-imported": "Importen är klar: {created} skapade, {updated} uppdaterade, {failed} misslyckades.",
+    "xbox-imported-none": "Inget att importera: {titles} pc-titlar hittades, {skipped} utan prestationer, {failed} misslyckades.",
     "xbox-import-failed": "Importen av Xbox-biblioteket misslyckades",
     "xbox-title": "Xbox-konto för PC",
     "xbox-desc": "Valfritt. Importerar ditt Xbox-bibliotek för PC (Game Pass och Microsoft Store): prestationer, upplåsningar och sällsynthet kommer från Xbox Network och sparas lokalt i cachen. Din sessionstoken lagras krypterad på den här datorn.",

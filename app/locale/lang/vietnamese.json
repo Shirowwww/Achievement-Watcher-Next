@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Đã ngắt kết nối tài khoản Xbox.",
     "xbox-importing": "Đang nhập thư viện Xbox PC…",
     "xbox-imported": "Nhập xong: {created} được tạo, {updated} được cập nhật, {failed} thất bại.",
+    "xbox-imported-none": "Không có gì để nhập: tìm thấy {titles} tựa game PC, {skipped} không có thành tựu, {failed} thất bại.",
     "xbox-import-failed": "Nhập thư viện Xbox thất bại",
     "xbox-title": "Tài khoản Xbox PC",
     "xbox-desc": "Không bắt buộc. Nhập thư viện Xbox PC của bạn (Game Pass và Microsoft Store): thành tựu, trạng thái mở khóa và độ hiếm được lấy từ Xbox Network rồi lưu đệm trên máy. Mã phiên của bạn được mã hóa và lưu trên máy này.",

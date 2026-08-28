@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "已中斷 Xbox 帳戶連結。",
     "xbox-importing": "正在匯入 Xbox PC 收藏庫…",
     "xbox-imported": "匯入完成：新增 {created} 項，更新 {updated} 項，失敗 {failed} 項。",
+    "xbox-imported-none": "沒有可匯入的內容：找到 {titles} 款 PC 遊戲，其中 {skipped} 款沒有成就，{failed} 款失敗。",
     "xbox-import-failed": "Xbox 收藏庫匯入失敗",
     "xbox-title": "Xbox PC 帳戶",
     "xbox-desc": "選用。可匯入你的 Xbox PC 收藏庫（Game Pass 與 Microsoft Store）：成就、解鎖狀態與稀有度都來自 Xbox Network，並會快取在本機。你的工作階段權杖會加密儲存在這台電腦上。",

@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Xbox-tilin yhteys katkaistu.",
     "xbox-importing": "Tuodaan Xbox PC -kirjastoa…",
     "xbox-imported": "Tuonti valmis: {created} luotu, {updated} päivitetty, {failed} epäonnistui.",
+    "xbox-imported-none": "Ei tuotavaa: {titles} PC-peliä löytyi, {skipped} ilman saavutuksia, {failed} epäonnistui.",
     "xbox-import-failed": "Xbox-kirjaston tuonti epäonnistui",
     "xbox-title": "Xbox PC -tili",
     "xbox-desc": "Valinnainen. Tuo Xbox PC -kirjastosi (Game Pass ja Microsoft Store): saavutukset, avaustila ja harvinaisuus tulevat Xbox Networkista ja tallennetaan paikalliseen välimuistiin. Istuntotunnuksesi tallennetaan salattuna tälle tietokoneelle.",

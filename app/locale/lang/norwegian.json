@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Xbox-kontoen er koblet fra.",
     "xbox-importing": "Importerer Xbox PC-biblioteket…",
     "xbox-imported": "Importen er ferdig: {created} opprettet, {updated} oppdatert, {failed} mislyktes.",
+    "xbox-imported-none": "Ingenting å importere: {titles} PC-titler funnet, {skipped} uten prestasjoner, {failed} mislyktes.",
     "xbox-import-failed": "Importen av Xbox-biblioteket mislyktes",
     "xbox-title": "Xbox PC-konto",
     "xbox-desc": "Valgfritt. Importerer Xbox PC-biblioteket ditt (Game Pass og Microsoft Store): prestasjoner, opplåsinger og sjeldenhet kommer fra Xbox Network og bufres lokalt. Økttokenet ditt lagres kryptert på denne PC-en.",

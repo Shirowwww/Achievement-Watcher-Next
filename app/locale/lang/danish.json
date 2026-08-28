@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Forbindelsen til Xbox-kontoen er afbrudt.",
     "xbox-importing": "Importerer Xbox PC-biblioteket…",
     "xbox-imported": "Importen er færdig: {created} oprettet, {updated} opdateret, {failed} mislykkedes.",
+    "xbox-imported-none": "Intet at importere: {titles} pc-titler fundet, {skipped} uden præstationer, {failed} mislykkedes.",
     "xbox-import-failed": "Importen af Xbox-biblioteket mislykkedes",
     "xbox-title": "Xbox PC-konto",
     "xbox-desc": "Valgfrit. Importerer dit Xbox PC-bibliotek (Game Pass og Microsoft Store): præstationer, oplåsninger og sjældenhed kommer fra Xbox Network og gemmes lokalt i cachen. Dit sessionstoken gemmes krypteret på denne pc.",

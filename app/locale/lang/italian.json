@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Account Xbox scollegato.",
     "xbox-importing": "Importazione libreria Xbox PC…",
     "xbox-imported": "Importazione completata: {created} creati, {updated} aggiornati, {failed} non riusciti.",
+    "xbox-imported-none": "Niente da importare: trovati {titles} titoli PC, {skipped} senza obiettivi, {failed} non riusciti.",
     "xbox-import-failed": "Importazione libreria Xbox non riuscita",
     "xbox-title": "Account Xbox PC",
     "xbox-desc": "Facoltativo. Importa la tua libreria Xbox PC (Game Pass e Microsoft Store): obiettivi, stato di sblocco e rarità arrivano da Xbox Network e restano in cache locale. Il token di sessione è memorizzato cifrato su questo PC.",

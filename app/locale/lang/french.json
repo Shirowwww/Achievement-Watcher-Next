@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Compte Xbox déconnecté.",
     "xbox-importing": "Importation de la bibliothèque Xbox…",
     "xbox-imported": "Importation terminée : {created} créé(s), {updated} mis à jour, {failed} échec(s).",
+    "xbox-imported-none": "Rien à importer : {titles} titres PC trouvés, {skipped} sans succès, {failed} en échec.",
     "xbox-import-failed": "Échec de l’importation Xbox",
     "xbox-title": "Compte Xbox PC",
     "xbox-desc": "Optionnel. Importe ta bibliothèque Xbox PC (Game Pass et Microsoft Store) : succès, état de déblocage et rareté viennent de Xbox Network et sont mis en cache localement. Ton jeton est stocké chiffré sur ce PC.",

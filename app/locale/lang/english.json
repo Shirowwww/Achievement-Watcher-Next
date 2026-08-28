@@ -1623,6 +1623,7 @@
     "xbox-disconnected": "Xbox account disconnected.",
     "xbox-importing": "Importing the Xbox PC library…",
     "xbox-imported": "Import complete: {created} created, {updated} updated, {failed} failed.",
+    "xbox-imported-none": "Nothing to import: {titles} PC titles found, {skipped} without achievements, {failed} failed.",
     "xbox-import-failed": "Xbox library import failed",
     "xbox-title": "Xbox PC account",
     "xbox-desc": "Optional. Imports your Xbox PC library (Game Pass and Microsoft Store): achievements, unlock state and rarity come from Xbox Network and are cached locally. Your session token is stored encrypted on this PC.",
