@@ -67,6 +67,66 @@ test('isWindowsPcTitle only keeps PC titles (plus known installed ids)', () => {
   assert.equal(xboxPc.isWindowsPcTitle({ titleId: '123', devices: ['Win32'] }, new Set(['123'])), true);
 });
 
+test('a Win32 title is kept when the history credits it with achievements', () => {
+  // The Xbox app records every PC game it sees running as Win32, almost none of which carry Xbox
+  // achievements; the few that do used to be dropped with the rest of the device class.
+  const bare = { titleId: '123', devices: ['Win32'], achievement: { currentAchievements: 0, totalAchievements: 0 } };
+  assert.equal(xboxPc.isWindowsPcTitle(bare), false);
+  assert.equal(
+    xboxPc.isWindowsPcTitle({ ...bare, achievement: { currentAchievements: 0, totalAchievements: 77 } }),
+    true
+  );
+  // The decoration fills only one of the two counters for some titles.
+  assert.equal(
+    xboxPc.isWindowsPcTitle({ ...bare, achievement: { currentAchievements: 25, totalAchievements: 0 } }),
+    true
+  );
+});
+
+test('every Xbox Network request carries a contract version the service can read', async () => {
+  // Xbox answers "Unsupported contract version undefined" with a 400, so a default that is only
+  // applied to the tested value and not to the sent one silently emptied the whole import.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-xbox-contract-'));
+  const auth = {
+    xuid: '2535000000000000',
+    uhs: '1234567890',
+    xstsToken: 'token',
+    xstsExpiresAt: Date.now() + 3600000,
+  };
+  const seen = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    seen.push(init?.headers?.['x-xbl-contract-version']);
+    return { ok: true, status: 200, json: async () => ({ titles: [] }) };
+  };
+  try {
+    xboxPc.setUserDataPath(dir);
+    await xboxPc.importLibrary({ auth });
+  } finally {
+    globalThis.fetch = realFetch;
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  assert.ok(seen.length > 0, 'the import must have called the service at least once');
+  for (const contractVersion of seen) assert.match(String(contractVersion), /^\d+$/);
+});
+
+test('title artwork is served over https, and a re-import keeps a picture the history dropped', () => {
+  // Xbox hands its store artwork out over plain http, which the window's img-src refuses.
+  const artwork = xboxPc.resolveXboxTitleArtwork({
+    images: [{ type: 'Poster', url: 'http://store-images.s-microsoft.com/image/cover' }],
+    displayImage: 'http://store-images.s-microsoft.com/image/display',
+  });
+  assert.equal(artwork.coverUrl, 'https://store-images.s-microsoft.com/image/cover');
+  assert.equal(artwork.headerUrl, 'https://store-images.s-microsoft.com/image/display');
+
+  const kept = xboxPc.mergeXboxArtwork(
+    { portrait: 'http://store-images.s-microsoft.com/image/old', header: 'https://example.invalid/header' },
+    { portrait: '', header: 'https://example.invalid/fresh' }
+  );
+  assert.equal(kept.portrait, 'https://store-images.s-microsoft.com/image/old');
+  assert.equal(kept.header, 'https://example.invalid/fresh');
+});
+
 test('normalizeXboxAchievement extracts earned state, rarity and icon', () => {
   const ach = xboxPc.normalizeXboxAchievement({
     id: '1',

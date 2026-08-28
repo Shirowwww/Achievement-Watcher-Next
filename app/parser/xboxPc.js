@@ -270,7 +270,10 @@ function buildXboxAuthorizationHeader(auth) {
 async function xboxServiceGet(baseUrl, endpoint, options = {}) {
   const auth = options.auth || (await ensureXboxDirectSession(options));
   const url = `${baseUrl}/${String(endpoint || '').replace(/^\/+/, '')}`;
-  const contractVersion = /^\d+$/.test(String(options.contractVersion || '2')) ? String(options.contractVersion) : '2';
+  // Xbox Live rejects a request whose contract version it cannot read, so the fallback has to be
+  // applied to the value that is sent, not only to the one that is tested.
+  const requestedContractVersion = String(options.contractVersion ?? '').trim();
+  const contractVersion = /^\d+$/.test(requestedContractVersion) ? requestedContractVersion : '2';
   const res = await fetch(url, {
     signal: AbortSignal.timeout(Math.max(3000, Number(options.timeoutMs) || 15000)),
     headers: {
@@ -598,11 +601,29 @@ function normalizeDeviceNames(title = {}) {
     .filter(Boolean);
 }
 
+// What the title history says the account has unlocked there, or could. The decoration fills only
+// one of the two counters for some titles, so the larger of them is what "has achievements" means.
+function xboxTitleAchievementCount(title = {}) {
+  const achievement = title?.achievement || {};
+  return Math.max(
+    Number(achievement.currentAchievements) || 0,
+    Number(achievement.totalAchievements) || 0,
+    Number(title?.earnedAchievements) || 0,
+    Number(title?.maxAchievements) || 0
+  );
+}
+
 function isWindowsPcTitle(title, installedTitleIds = new Set()) {
   const titleId = normalizeTitleId(title?.titleId ?? title?.id);
   const devices = normalizeDeviceNames(title);
   if (titleId && installedTitleIds.has(titleId)) return true;
-  if (devices.some((device) => device === 'win32')) return false;
+  /*
+    Win32 is what the Xbox app records for every PC game it has ever seen running, Steam and Epic
+    copies included, and almost none of those carry Xbox achievements. Dropping the whole device
+    class also dropped the few that do, so keep a Win32 title exactly when the history credits it
+    with achievements.
+  */
+  if (devices.some((device) => device === 'win32')) return xboxTitleAchievementCount(title) > 0;
   return devices.some((device) => /(?:^|[^a-z])(pc|windows|windowsonecore)(?:$|[^a-z])/.test(device));
 }
 
@@ -634,6 +655,30 @@ function readJson(file) {
   }
 }
 
+/*
+  Xbox hands its store artwork out over plain http, and the window's img-src allows 'self', data:
+  and https only - left as it comes back, every Xbox tile and header is blocked and the game shows
+  up with no picture at all. The same host serves the same file over https.
+*/
+function secureImageUrl(value) {
+  const url = String(value || '').trim();
+  return url.startsWith('http://') ? `https://${url.slice('http://'.length)}` : url;
+}
+
+/*
+  Xbox answers for the same title with two different records - the store one, which carries the
+  artwork, and a bare desktop one that carries none - and which of them the history returns varies
+  between calls. A re-import must not blank a tile that already had a picture, so an empty field
+  keeps what the cache already holds.
+*/
+function mergeXboxArtwork(previous = {}, fresh = {}) {
+  const merged = {};
+  for (const key of ['header', 'portrait', 'icon', 'background']) {
+    merged[key] = String(fresh?.[key] || '').trim() || secureImageUrl(previous?.[key]);
+  }
+  return merged;
+}
+
 function resolveXboxTitleArtwork(title = {}) {
   const images = Array.isArray(title?.images) ? title.images : [];
   const find = (types) => {
@@ -642,11 +687,13 @@ function resolveXboxTitleArtwork(title = {}) {
         (image) =>
           String(image?.type || '').toLowerCase() === type.toLowerCase() && /^https?:\/\//i.test(String(image?.url || ''))
       );
-      if (match) return String(match.url).trim();
+      if (match) return secureImageUrl(match.url);
     }
     return '';
   };
-  const displayImage = firstNonEmpty(title?.displayImage, title?.image, title?.titleImage, title?.titleImageUrl);
+  const displayImage = secureImageUrl(
+    firstNonEmpty(title?.displayImage, title?.image, title?.titleImage, title?.titleImageUrl)
+  );
   const coverUrl = find(['Poster', 'BoxArt', 'BrandedKeyArt', 'FeaturePromotionalSquareArt']) || displayImage;
   const headerUrl = find(['TitledHeroArt', 'SuperHeroArt', 'BrandedKeyArt', 'Hero']) || displayImage || coverUrl;
   return { coverUrl, headerUrl };
@@ -739,6 +786,7 @@ async function importLibrary(options = {}) {
       const previous = readJson(schemaCacheFile(titleId));
       const previousState = readJson(stateCacheFile(titleId));
       const freshState = buildXboxStateSnapshot(localized.achievements);
+      schema.img = mergeXboxArtwork(previous?.img, schema.img);
       writeJson(schemaCacheFile(titleId), schema);
       writeJson(stateCacheFile(titleId), mergeXboxStateSnapshots(previousState, freshState));
       if (previous) result.updated += 1;
@@ -817,6 +865,7 @@ module.exports = {
   normalizeXboxAchievement,
   buildXboxStateSnapshot,
   mergeXboxStateSnapshots,
+  mergeXboxArtwork,
   isWindowsPcTitle,
   resolveXboxTitleArtwork,
   importLibrary,
