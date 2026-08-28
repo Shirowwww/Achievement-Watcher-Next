@@ -25,6 +25,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **An Xbox game no longer fails its scan.** Reading the local save of a source that has none
   raised an error for every Xbox title on every refresh; the unlock state already arrives with the
   achievement list.
+- **An imported Xbox game wears the Xbox badge.** Its source label matched no platform pattern, so
+  it was presented as a Steam game - next to the Steam copy of the same game, in the case where you
+  own both.
 - **An import that adds nothing says why.** Three zeroes read the same whether the account has no
   PC game or the history never arrived, so the report now gives the titles found and how many carry
   no achievements.
