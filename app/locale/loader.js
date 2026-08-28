@@ -318,7 +318,10 @@ function translateUI(lang, locale, template) {
       if (uplay.verify) $('#verify-uplay-r2-package-label').text(clear(uplay.verify));
       if (uplay.import) $('#import-uplay-r2-loaders-label').text(clear(uplay.import));
       if (uplay.restore) $('#restore-uplay-r2-loaders-label').text(clear(uplay.restore));
-      if (uplay.repair) $('#repair-all-uplay-r2-row-label, #repair-all-uplay-r2-label').text(clear(uplay.repair));
+      if (uplay.repair) $('#repair-all-uplay-r2-row-label').text(clear(uplay.repair));
+      // The row already says which games are repaired; the button beside it only needs the verb,
+      // or the long sentence wraps onto two lines inside a fixed-width action column.
+      if (uplay.repairConfirm) $('#repair-all-uplay-r2-label').text(clear(uplay.repairConfirm));
       if (uplay.repairHelp) $('#repair-all-uplay-r2-help').text(clear(uplay.repairHelp));
     }
     if (emu.gbe) {

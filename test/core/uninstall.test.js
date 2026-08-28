@@ -27,8 +27,9 @@ test('detects an Inno Setup uninstaller with its .dat sibling', () => {
     assert.strictEqual(found[0].kind, 'inno');
     assert.strictEqual(found[0].name, 'unins000.exe');
     assert.strictEqual(found[0].file, path.join(dir, 'unins000.exe'));
-    assert.ok(found[0].silent);
-    assert.deepStrictEqual(found[0].args, ['/VERYSILENT', '/NORESTART', '/SUPPRESSMSGBOXES', `_?=${dir}`]);
+    assert.ok(found[0].waitsInPlace);
+    // Never silent: the uninstaller must show its own window so a stall is visible.
+    assert.deepStrictEqual(found[0].args, [`_?=${dir}`]);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -58,7 +59,7 @@ test('detects NSIS and generic uninstaller names', () => {
     assert.ok(kinds.has('nsis:uninstall.exe'));
     assert.ok(kinds.has('nsis:uninstaller.exe'));
     assert.ok(kinds.has('generic:uninstaller_x64.exe'));
-    assert.deepStrictEqual(found[0].args, ['/S', `_?=${dir}`]);
+    assert.deepStrictEqual(found[0].args, [`_?=${dir}`]);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -136,13 +137,13 @@ test('trash-target safety gate rejects roots, files, save folders and missing pa
   }
 });
 
-test('cleanupSilentUninstaller removes a silent Inno uninstaller and its .dat, then the empty folder', () => {
+test('cleanupUninstallerLeftovers removes the Inno stub and its .dat, then the empty folder', () => {
   const dir = tempDir();
   try {
     const exe = write(dir, 'unins000.exe');
     write(dir, 'unins000.dat');
-    const local = { file: exe, kind: 'inno', silent: true };
-    uninstall.cleanupSilentUninstaller(local);
+    const local = { file: exe, kind: 'inno', waitsInPlace: true };
+    uninstall.cleanupUninstallerLeftovers(local);
     assert.strictEqual(fs.existsSync(exe), false);
     assert.strictEqual(fs.existsSync(path.join(dir, 'unins000.dat')), false);
     assert.strictEqual(fs.existsSync(dir), false);
@@ -151,29 +152,30 @@ test('cleanupSilentUninstaller removes a silent Inno uninstaller and its .dat, t
   }
 });
 
-test('cleanupSilentUninstaller removes a silent NSIS uninstaller but keeps a non-empty folder', () => {
+test('cleanupUninstallerLeftovers removes only the stub and keeps whatever the uninstall left', () => {
   const dir = tempDir();
   try {
     const exe = write(dir, 'Uninstall.exe');
-    write(dir, 'leftover-save.dat');
-    const local = { file: exe, kind: 'nsis', silent: true };
-    uninstall.cleanupSilentUninstaller(local);
+    write(dir, 'mod-config.ini');
+    const local = { file: exe, kind: 'nsis', waitsInPlace: true };
+    uninstall.cleanupUninstallerLeftovers(local);
     assert.strictEqual(fs.existsSync(exe), false);
+    // Mods, saves and configs the uninstaller did not own survive a successful uninstall.
+    assert.ok(fs.existsSync(path.join(dir, 'mod-config.ini')));
     assert.ok(fs.existsSync(dir));
-    assert.ok(fs.existsSync(path.join(dir, 'leftover-save.dat')));
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test('cleanupSilentUninstaller is a no-op for non-silent (generic) uninstallers and bad input', () => {
+test('cleanupUninstallerLeftovers is a no-op for generic uninstallers and bad input', () => {
   const dir = tempDir();
   try {
     const exe = write(dir, 'uninst.exe');
-    uninstall.cleanupSilentUninstaller({ file: exe, kind: 'generic', silent: false });
+    uninstall.cleanupUninstallerLeftovers({ file: exe, kind: 'generic', waitsInPlace: false });
     assert.ok(fs.existsSync(exe));
-    uninstall.cleanupSilentUninstaller(null);
-    uninstall.cleanupSilentUninstaller({});
+    uninstall.cleanupUninstallerLeftovers(null);
+    uninstall.cleanupUninstallerLeftovers({});
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }

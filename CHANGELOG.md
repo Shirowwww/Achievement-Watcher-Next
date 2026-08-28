@@ -18,6 +18,13 @@ renamed in 3.9.0 and the history is kept under one file.
 - **A repair no longer leaves a stale report on screen.** Repairs that write files now have the
   library re-read before the report is painted again, so the panel tells the truth without a manual
   refresh. Choosing the executable re-runs the report on the spot instead of jumping to another tab.
+- **The game uninstaller runs with its own window again.** A silent uninstall gave no sign of
+  progress and no way to answer a prompt, so one that stalled looked exactly like one that did
+  nothing. An uninstaller that requires administrator is now started through Windows itself, with
+  the UAC prompt, instead of failing outright; a dismissed prompt is treated as a decision, not an
+  error.
+- **The "Repair games" button no longer wraps onto two lines.** The row beside it already says which
+  games are repaired, so the button keeps the short verb in every language.
 
 ## 3.10.3 - 2026-08-28
 

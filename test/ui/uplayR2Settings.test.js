@@ -169,6 +169,11 @@ test('every visible Uplay settings label is locale-bound', () => {
   ]) {
     assert.match(loaderSource, new RegExp(`#${id}`), `${id} must be bound by locale/loader.js`);
   }
+  // The row label already names what is repaired; the button beside it, in a fixed-width action
+  // column, gets the short verb instead - the full sentence wrapped onto two lines in every locale.
+  assert.match(loaderSource, /#repair-all-uplay-r2-label'\)\.text\(clear\(uplay\.repairConfirm\)\)/);
+  assert.match(loaderSource, /#repair-all-uplay-r2-row-label'\)\.text\(clear\(uplay\.repair\)\)/);
+
   const required = [
     'title', 'packageLabel', 'packageHelp', 'checking', 'ready', 'attention', 'verify',
     'verifySuccess', 'verifyFailure', 'import', 'restore', 'customReady', 'importSuccess', 'importFailure',

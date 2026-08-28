@@ -4002,7 +4002,7 @@ var app = {
                       detail:
                         gameDir +
                         (res.backupDir ? `\n${t('backup', 'Backup:', 'Sauvegarde :')} ${res.backupDir}` : '') +
-                        (t('n-nif-steam-api-was-replaced-re-run-apply-emulator-fix-to-keep-a', '\n\nIf steam_api was replaced, re-run "Apply emulator fix" to keep achievement detection.', '\n\nSi steam_api a été remplacé, relance « Appliquer le fix émulateur » pour garder la détection des succès.')),
+                        '\n\n' + t('n-nif-steam-api-was-replaced-re-run-apply-emulator-fix-to-keep-a', 'If steam_api was replaced, re-run "Apply emulator fix" to keep achievement detection.', 'Si steam_api a été remplacé, relance « Appliquer le fix émulateur » pour garder la détection des succès.'),
                       noLink: true,
                     });
                   } catch (err) {
@@ -4082,7 +4082,7 @@ var app = {
                           detail:
                             applyDir +
                             (res.backupDir ? `\n${t('backup', 'Backup:', 'Sauvegarde :')} ${res.backupDir}` : '') +
-                            (t('n-nif-steam-api-was-replaced-re-run-apply-emulator-fix-to-keep-a', '\n\nIf steam_api was replaced, re-run "Apply emulator fix" to keep achievement detection.', '\n\nSi steam_api a été remplacé, relance « Appliquer le fix émulateur » pour garder la détection des succès.')),
+                            '\n\n' + t('n-nif-steam-api-was-replaced-re-run-apply-emulator-fix-to-keep-a', 'If steam_api was replaced, re-run "Apply emulator fix" to keep achievement detection.', 'Si steam_api a été remplacé, relance « Appliquer le fix émulateur » pour garder la détection des succès.'),
                           noLink: true,
                         });
                       } catch (e2) {
@@ -4749,8 +4749,8 @@ var app = {
                         steamSettings: game?.steamSettings,
                       });
                       const preFixBackupNote = preFixBackup && preFixBackup.backupDir
-                        ? t('n-nbackup-before-fix-nx', '\n\nBackup before fix:\n{dir}', '\n\nSauvegarde avant fix:\n{dir}', { dir: preFixBackup.backupDir })
-                        : t('n-nbackup-before-fix-no-existing-steam-settings-steam-api-found', '\n\nBackup before fix: no existing steam_settings / steam_api found.', '\n\nSauvegarde avant fix: aucun steam_settings / steam_api existant.');
+                        ? '\n\n' + t('n-nbackup-before-fix-nx', 'Backup before fix:\n{dir}', 'Sauvegarde avant fix:\n{dir}', { dir: preFixBackup.backupDir })
+                        : '\n\n' + t('n-nbackup-before-fix-no-existing-steam-settings-steam-api-found', 'Backup before fix: no existing steam_settings / steam_api found.', 'Sauvegarde avant fix: aucun steam_settings / steam_api existant.');
 
                       // Apply a confident CrakFiles fix before the emulator repair.
                       let crackApplied = false;
@@ -5733,32 +5733,22 @@ var app = {
                         message: t('uninstall-x-with-x', 'Uninstall "{name}" with {uninstaller}?', 'Désinstaller « {name} » avec {uninstaller} ?', { name: gameName, uninstaller: local.name }),
                         detail:
                           uninstallDir +
-                          (local.silent
-                            ? t('n-nthe-uninstaller-will-run-in-silent-mode', '\n\nThe uninstaller will run in silent mode.', '\n\nLe désinstalleur s’exécutera en mode silencieux.')
-                            : t('n-nno-reliable-silent-mode-was-detected-follow-the-uninstaller-p', '\n\nNo reliable silent mode was detected: follow the uninstaller prompts.', '\n\nAucun mode silencieux fiable n’a été détecté : suis les invites du désinstalleur.')),
+                          '\n\n' +
+                          t(
+                            'n-nno-reliable-silent-mode-was-detected-follow-the-uninstaller-p',
+                            'The uninstaller opens its own window: follow its prompts.',
+                            'Le désinstalleur ouvre sa propre fenêtre : suis ses invites.'
+                          ),
                         buttons: [t('cancel', 'Cancel', 'Annuler'), t('uninstall', 'Uninstall', 'Désinstaller')],
                         defaultId: 1,
                         cancelId: 0,
                         noLink: true,
                       });
                       if (confirm.response !== 1) return;
-                      // The tile stays busy for as long as the uninstaller runs, so a silent
-                      // uninstall (no window of its own) is not mistaken for nothing happening.
+                      // The tile stays busy while the uninstaller works, so a long uninstall reads as work in
+                      // progress instead of a click that did nothing.
                       setGameBoxBusy(self, t('uninstalling-game', 'Uninstalling…', 'Désinstallation…'));
-                      let child;
-                      try {
-                        child = spawn(local.file, local.args, { cwd: uninstallDir, detached: true, stdio: 'ignore' });
-                      } catch (err) {
-                        clearGameBoxBusy(self);
-                        remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
-                          type: 'error',
-                          title: t('launch-failed', 'Launch failed', 'Échec du lancement'),
-                          message: t('could-not-launch-the-uninstaller', 'Could not launch the uninstaller.', 'Impossible de lancer le désinstalleur.'),
-                          detail: formatErr(err),
-                        });
-                        return;
-                      }
-                      child.on('error', (err) => {
+                      const uninstallFailed = (err) => {
                         debug.warn(`[uninstall] ${local.file} => ${formatErr(err)}`);
                         clearGameBoxBusy(self);
                         remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
@@ -5767,21 +5757,60 @@ var app = {
                           message: t('could-not-launch-the-uninstaller', 'Could not launch the uninstaller.', 'Impossible de lancer le désinstalleur.'),
                           detail: formatErr(err),
                         });
+                      };
+                      const uninstallStarted = () => {
+                        remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                          type: 'info',
+                          title: t('uninstall-started', 'Uninstall started', 'Désinstallation lancée'),
+                          message: t('the-uninstaller-was-started-the-game-list-will-refresh-automatic', 'The uninstaller was started. The game list will refresh automatically.', 'Le désinstalleur a été lancé. La liste se rafraîchira automatiquement.'),
+                          noLink: true,
+                        });
+                        pollUninstallCompletion({ appid, gameDir: uninstallDir, mode: 'local' });
+                      };
+                      // spawn() is CreateProcess, which refuses an uninstaller whose manifest asks for administrator
+                      // (EACCES) even though it runs fine from Explorer. ShellExecute honours the manifest and raises
+                      // the UAC prompt, so that failure retries through it. There is no exit code on that path: the
+                      // folder poll is what notices the uninstall finished.
+                      const uninstallViaShell = async (error) => {
+                        if (process.platform !== 'win32' || !windowsShellLaunch.isElevationLikeError(error)) {
+                          uninstallFailed(error);
+                          return;
+                        }
+                        const viaShell = await ipcRenderer.invoke('launch-game-via-shell', {
+                          executable: local.file,
+                          args: local.args.map((arg) => (/\s/.test(arg) ? `"${arg}"` : arg)).join(' '),
+                          workingDirectory: uninstallDir,
+                          elevate: false,
+                        });
+                        clearGameBoxBusy(self);
+                        if (viaShell && viaShell.ok) {
+                          uninstallStarted();
+                          return;
+                        }
+                        // A dismissed UAC prompt is a decision, not a failure: nothing ran, nothing to report.
+                        if (viaShell && viaShell.declined) return;
+                        uninstallFailed((viaShell && viaShell.error) || error);
+                      };
+                      let child;
+                      try {
+                        child = spawn(local.file, local.args, { cwd: uninstallDir, detached: true, stdio: 'ignore' });
+                      } catch (err) {
+                        await uninstallViaShell(err);
+                        return;
+                      }
+                      child.on('error', (err) => {
+                        uninstallViaShell(err);
                       });
-                      // Refresh after the uninstaller exits; clean up silent temp files on success.
+                      // Refresh once the uninstaller exits, and clear the stub it was told to leave behind.
                       child.on('exit', (code) => {
-                        if (code === 0) uninstall.cleanupSilentUninstaller(local);
+                        if (code === 0) uninstall.cleanupUninstallerLeftovers(local);
                         clearGameBoxBusy(self);
                         setTimeout(() => app.onStart(), 1500);
                       });
                       child.unref();
-                      remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
-                        type: 'info',
-                        title: t('uninstall-started', 'Uninstall started', 'Désinstallation lancée'),
-                        message: t('the-uninstaller-was-started-the-game-list-will-refresh-automatic', 'The uninstaller was started. The game list will refresh automatically.', 'Le désinstalleur a été lancé. La liste se rafraîchira automatiquement.'),
-                        noLink: true,
-                      });
-                      pollUninstallCompletion({ appid, gameDir: uninstallDir, mode: 'local' });
+                      // No pid means the spawn was refused (an elevation-only uninstaller, most often):
+                      // the 'error' handler above takes over, so nothing is announced as started here.
+                      if (child.pid) uninstallStarted();
                     },
                   })
                 );
@@ -5801,7 +5830,12 @@ var app = {
                         message: t('move-x-s-folder-to-the-recycle-bin', 'Move "{name}"\'s folder to the Recycle Bin?', 'Déplacer le dossier de « {name} » vers la Corbeille ?', { name: gameName }),
                         detail:
                           uninstallDir +
-                          (t('n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov', '\n\nNo uninstaller was found in this folder. The files will be moved to the Recycle Bin (recoverable).', '\n\nAucun désinstalleur n’a été trouvé dans ce dossier. Les fichiers seront déplacés vers la Corbeille (récupérables).')),
+                          '\n\n' +
+                          t(
+                            'n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov',
+                            'No uninstaller was found in this folder. The files will be moved to the Recycle Bin (recoverable).',
+                            'Aucun désinstalleur n’a été trouvé dans ce dossier. Les fichiers seront déplacés vers la Corbeille (récupérables).'
+                          ),
                         buttons: [t('cancel', 'Cancel', 'Annuler'), t('delete', 'Delete', 'Supprimer')],
                         defaultId: 1,
                         cancelId: 0,
@@ -7481,6 +7515,39 @@ function showGameHealthChecking() {
   root.find('.gh-explanation').text('');
   root.find('.gh-checks').empty();
   root.find('.gh-actions').empty();
+}
+
+/*
+  Repairs that wrote files also changed what the last library scan believes about this game: its
+  achievement list, the folders its unlocks are read from, whether it counts as installed. The
+  report re-reads the disk itself, but those come from the scan - which is why the panel used to
+  need a manual refresh (F5) before it told the truth about a game it had just repaired. Actions
+  that only flip a setting (mute, watch, test) change nothing the scan reported, and skip this.
+*/
+const GAME_HEALTH_ACTIONS_NEEDING_RESCAN = new Set([
+  gameHealth.ACTION.REPAIR_DATA,
+  gameHealth.ACTION.REPAIR_UPLAY,
+  gameHealth.ACTION.REPAIR_UPLAY_TICKET,
+  gameHealth.ACTION.REMOVE_UPLAY_TICKET,
+  gameHealth.ACTION.INSTALL_RUNTIME,
+  gameHealth.ACTION.FIX_APPID,
+]);
+
+async function refreshLibraryAfterGameHealthRepair() {
+  try {
+    await app.onStart();
+  } catch (err) {
+    // A scan that fails leaves the previous library in place; the report below is still worth
+    // painting, so this must not become the error the user is shown for their repair.
+    debug.error(`[health] the library could not be re-read after a repair => ${formatErr(err)}`);
+  }
+}
+
+async function renderGameHealth(appid) {
+  const root = $('#game-health');
+  root.attr('data-appid', String(appid));
+  const chip = root.find('.gh-state');
+  showGameHealthChecking();
   setGameHealthProgress(null);
 
   try {

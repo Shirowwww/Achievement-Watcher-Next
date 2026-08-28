@@ -12,15 +12,15 @@ const fs = require('fs');
 const os = require('os');
 
 // Inno Setup uninstallers are named unins000.exe, unins001.exe, … and ship a
-// matching uninsNNN.dat next to them. They accept /VERYSILENT uninstall.
+// matching uninsNNN.dat next to them.
 const INNO_UNINSTALLER_RE = /^unins\d{3}\.exe$/i;
 const INNO_DATA_RE = /^unins\d{3}\.dat$/i;
 
-// NSIS uninstallers: Uninstall.exe / uninstaller.exe. Silent flag is /S.
+// NSIS uninstallers: Uninstall.exe / uninstaller.exe.
 const NSIS_UNINSTALLER_RE = /^uninstall(?:er)?\.exe$/i;
 
 // Generic uninstallers (GOG/Ubisoft/EA and others): uninst.exe, uninstall_x64.exe,
-// Uninstaller-64.exe, uninstall32.exe, … no reliable silent flag - run them visible.
+// Uninstaller-64.exe, uninstall32.exe, …
 const GENERIC_UNINSTALLER_RE = /^unins(?:t(?:al(?:l)?(?:er)?)?)?(?:[-_ ]?(?:x(?:64|86)|(?:64|32)|[0-9]+))?\.exe$/i;
 
 // Never offer to trash folders that hold achievement saves or an entire drive root.
@@ -54,21 +54,23 @@ function safeReadDir(gameDir) {
   }
 }
 
-function silentArgsFor(kind, gameDir) {
-  if (kind === 'inno') {
-    // `_?=` must be the LAST argument and keeps the uninstaller from copying
-    // itself into %TEMP% before running.
-    return ['/VERYSILENT', '/NORESTART', '/SUPPRESSMSGBOXES', `_?=${gameDir}`];
-  }
-  if (kind === 'nsis') {
-    return ['/S', `_?=${gameDir}`];
-  }
+/*
+  Uninstallers always run with their own window. A silent uninstall gives no sign of progress and
+  no way to answer a prompt, so one that stalls looks exactly like one that did nothing at all.
+
+  `_?=` (Inno Setup and NSIS) is kept: it stops the uninstaller from copying itself into %TEMP%
+  and exiting straight away, so the process really is the uninstall and its exit really is the end
+  of it. It must stay the LAST argument, and it also means the uninstaller does not delete itself,
+  which is what cleanupUninstallerLeftovers() takes care of.
+*/
+function uninstallArgsFor(kind, gameDir) {
+  if (kind === 'inno' || kind === 'nsis') return [`_?=${gameDir}`];
   return [];
 }
 
 /**
  * List every uninstaller found directly inside `gameDir`, best first.
- * Each entry: { file, name, kind, args, silent }.
+ * Each entry: { file, name, kind, args, waitsInPlace }.
  */
 function findUninstallers(gameDir) {
   if (!gameDir || typeof gameDir !== 'string') return [];
@@ -107,8 +109,8 @@ function findUninstallers(gameDir) {
       file: path.join(resolved, name),
       name,
       kind,
-      args: silentArgsFor(kind, resolved),
-      silent: kind !== 'generic',
+      args: uninstallArgsFor(kind, resolved),
+      waitsInPlace: kind !== 'generic',
     });
   }
 
@@ -123,15 +125,18 @@ function findLocalUninstaller(gameDir) {
 }
 
 /**
- * Best-effort cleanup after a silent Inno/NSIS uninstall. The `_?=` wait argument also stops the
- * uninstaller from deleting itself, which would otherwise leave unins000.exe/.dat behind forever.
+ * Best-effort cleanup of the uninstaller stub that the `_?=` argument leaves behind (it is what
+ * stops the uninstaller from deleting itself once done).
+ *
+ * Only the stub is touched, never anything else in the folder: mods, saves and configs the
+ * uninstaller did not own routinely survive a perfectly successful uninstall.
  */
-function cleanupSilentUninstaller(local) {
-  if (!local || !local.silent || !local.file) return;
+function cleanupUninstallerLeftovers(local) {
+  if (!local || !local.waitsInPlace || !local.file) return;
   try {
     if (fs.existsSync(local.file)) fs.unlinkSync(local.file);
   } catch {
-    /* best-effort: file may still be locked briefly after exit */
+    /* best-effort: the file may still be locked briefly after exit */
   }
   if (local.kind === 'inno') {
     try {
@@ -145,7 +150,7 @@ function cleanupSilentUninstaller(local) {
     const dir = path.dirname(local.file);
     if (fs.existsSync(dir) && fs.readdirSync(dir).length === 0) fs.rmdirSync(dir);
   } catch {
-    /* folder not empty (uninstall left other files) or already gone - fine either way */
+    /* the folder still holds files, or it is already gone - fine either way */
   }
 }
 
@@ -229,7 +234,7 @@ function isSafeTrashTarget(gameDir) {
 module.exports = {
   findUninstallers,
   findLocalUninstaller,
-  cleanupSilentUninstaller,
+  cleanupUninstallerLeftovers,
   steamUninstallUrl,
   getSteamPath,
   isSteamAppInstalled,
