@@ -3132,6 +3132,11 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           root = {};
         } else if (dataType === 'cached') {
           root = await watchdog.getAchievements(appid.appid);
+        } else if (dataType === 'xboxPc') {
+          // Xbox Network unlock state is not a local save: it arrives with the schema, already
+          // merged in by xboxPc.getGameData above. Reading it again here has nothing to read, so
+          // the game keeps the state it came with instead of failing the whole entry.
+          root = {};
         } else if (dataType === 'uplay') {
           // Legit Ubisoft Connect exposes no local unlock-state file the way the Steam emus do, so
           // only the schema is available (already loaded into `game`). Show the game with everything
