@@ -11,6 +11,23 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **The Xbox PC import brings your library back.** It reported "0 created, 0 updated, 0 failed" for
+  everyone whose Xbox games are not installed on the PC: every request to Xbox Network carried an
+  unreadable version header, the service refused it, and the fallback answered with an empty
+  history. Games the account has only played on the Xbox app or elsewhere now arrive with their
+  achievements, unlock state, rarity and artwork.
+- **Xbox games show their cover.** Xbox serves store artwork over plain http, which the window
+  refuses, so every imported tile and header would have been blank. A re-import also no longer
+  blanks a picture when Xbox answers with the bare record for a title instead of the store one.
+- **A game the Xbox app merely watched running is no longer dropped.** Those are recorded as
+  Win32, almost none of them carry Xbox achievements, and dropping the whole class also dropped
+  the few that do.
+- **An Xbox game no longer fails its scan.** Reading the local save of a source that has none
+  raised an error for every Xbox title on every refresh; the unlock state already arrives with the
+  achievement list.
+- **An import that adds nothing says why.** Three zeroes read the same whether the account has no
+  PC game or the history never arrived, so the report now gives the titles found and how many carry
+  no achievements.
 - **Game Health can now find a game it only knew by its save folder.** Locating the executable also
   settles which folder the game is installed in, so the emulator setup, the Uplay layer and the
   crack loader are checked instead of skipped as "not installed". A folder that holds a whole
