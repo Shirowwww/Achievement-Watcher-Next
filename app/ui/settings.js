@@ -841,10 +841,23 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         debug.log(err);
       }
     });
+    // The updater's own broadcasts own these two labels; a manual check borrows them for a few
+    // seconds to show its result, then hands them back. Before that hand-back existed a check
+    // restored whatever text it happened to find, so a stale "downloading 0%" left behind by a
+    // failed check was repainted by every retry and never went away.
+    let manualCheckOwnsLabels = false;
+    let manualCheckClearTimer = null;
+    let lastSettingsUpdateStatus = null;
+
+    function updateStatusLabels() {
+      return $('#check-for-updates-label, #footer-update-status');
+    }
+
     async function runUpdateCheck(btn, label) {
       if (btn.hasClass('busy')) return;
       btn.addClass('busy');
-      const previousText = label.text();
+      manualCheckOwnsLabels = true;
+      clearTimeout(manualCheckClearTimer);
       label
         .removeClass('update-ok update-error update-info')
         .addClass('update-info')
@@ -864,16 +877,17 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         } else if (result.status === 'uptodate') {
           label.removeClass('update-info').addClass('update-ok').text(t('update-up-to-date-short', 'Up to date', 'À jour'));
         } else {
-          label.removeClass('update-info').addClass('update-ok').text(previousText || t('update-checked', 'Check done', 'Vérifié'));
+          label.removeClass('update-info').addClass('update-ok').text(t('update-checked', 'Check done', 'Vérifié'));
         }
       } catch (err) {
         debug.log(err);
         label.removeClass('update-info').addClass('update-error').text(t('update-check-failed', 'Check failed', 'Échec de la vérification'));
       } finally {
         btn.removeClass('busy');
-        setTimeout(() => {
-          label.removeClass('update-ok update-error update-info').text('');
-          if (previousText) label.text(previousText);
+        manualCheckClearTimer = setTimeout(() => {
+          manualCheckClearTimer = null;
+          manualCheckOwnsLabels = false;
+          renderSettingsUpdateStatus();
         }, 4500);
       }
     }
@@ -883,24 +897,37 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     $('#footer-check-updates').click(function () {
       runUpdateCheck($(this), $('#footer-update-status'));
     });
-    // Both status labels track the shared updater state live (not a raw percentage), so they also
-    // report the install step. Settings' copy of renderUpdateStatus in app.js (title bar).
-    function renderSettingsUpdateStatus(state) {
-      const labels = $('#check-for-updates-label, #footer-update-status');
-      if (!state) return;
-      if (state.phase === 'downloading') {
-        labels
-          .removeClass('update-ok update-error')
-          .addClass('update-info')
-          .text(t('downloading-update', 'downloading update {percent}%', 'téléchargement de la mise à jour {percent} %', { percent: Math.round(state.percent) }));
-      } else if (state.phase === 'installing') {
-        labels
-          .removeClass('update-ok update-error')
-          .addClass('update-info')
-          .text(t('update-installing-short', 'Installing update…', 'Installation de la mise à jour…'));
-      } else if (state.phase === 'ready' || state.phase === 'held') {
-        labels.removeClass('update-info update-error').addClass('update-ok').text(t('update-ready', 'Update Ready', 'Mise à jour prête'));
+    // Every phase the updater can broadcast, so leaving a live one always clears the label instead
+    // of leaving the last live text on screen. Settings' copy of renderUpdateStatus in app.js.
+    function settingsUpdateStatusView(state) {
+      if (!state) return null;
+      switch (state.phase) {
+        case 'downloading':
+          return {
+            cls: 'update-info',
+            text: t('downloading-update', 'downloading update {percent}%', 'téléchargement de la mise à jour {percent} %', { percent: Math.round(state.percent) }),
+          };
+        case 'installing':
+          return { cls: 'update-info', text: t('update-installing-short', 'Installing update…', 'Installation de la mise à jour…') };
+        case 'ready':
+        case 'held':
+          return { cls: 'update-ok', text: t('update-ready', 'Update Ready', 'Mise à jour prête') };
+        case 'error':
+          return { cls: 'update-error', text: t('update-check-failed', 'Check failed', 'Échec de la vérification') };
+        default:
+          return null; // idle, checking and available say nothing worth a permanent line here
       }
+    }
+
+    // Both status labels track the shared updater state live (not a raw percentage), so they also
+    // report the install step.
+    function renderSettingsUpdateStatus(state) {
+      if (state) lastSettingsUpdateStatus = state;
+      if (manualCheckOwnsLabels) return; // repainted when the manual result fades
+      const view = settingsUpdateStatusView(lastSettingsUpdateStatus);
+      const labels = updateStatusLabels().removeClass('update-info update-ok update-error');
+      labels.text(view ? view.text : '');
+      if (view) labels.addClass(view.cls);
     }
     ipcRenderer.on('update-status', (event, state) => renderSettingsUpdateStatus(state));
     // Opening Settings mid-download must show the download, not an idle button.

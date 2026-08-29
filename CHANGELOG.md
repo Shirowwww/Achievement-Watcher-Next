@@ -28,6 +28,11 @@ renamed in 3.9.0 and the history is kept under one file.
   its error, then cleared the updater cache for nothing and ended on a dead end offering a manual
   download. A check that cannot reach GitHub now says so plainly and retries on its own.
 
+- **A finished or failed update no longer leaves "downloading update 0%" in Settings.** The two
+  update labels only knew how to paint a download in progress, so nothing ever wiped the last line
+  they had shown, and re-checking put it straight back instead of replacing it. They now follow
+  every state the updater reports, including the idle one.
+
 - **The Xbox PC import brings your library back.** It answered "0 created, 0 updated, 0 failed" for
   everyone whose Xbox games are not installed on this PC: every request carried an unreadable
   version header, Xbox refused it, and the fallback answered with an empty history. Games the

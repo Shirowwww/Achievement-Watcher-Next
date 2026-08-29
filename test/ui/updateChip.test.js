@@ -84,6 +84,31 @@ test('a window opened mid-download asks for the state instead of waiting for the
   assert.match(settingsJs, /ipcRenderer\.invoke\('get-update-status'\)/);
 });
 
+test('the Settings labels handle every phase, so a finished download cannot stay on screen', () => {
+  // A 504 on the releases feed left "downloading update 0%" in the Settings footer for good: the
+  // renderer only had branches for the live phases, so returning to idle painted nothing at all.
+  const fn = settingsJs.slice(settingsJs.indexOf('function settingsUpdateStatusView('));
+  assert.ok(fn, 'settingsUpdateStatusView must exist');
+  const body = fn.slice(0, fn.indexOf('\n    }\n'));
+  for (const phase of ['downloading', 'installing', 'ready', 'held', 'error']) {
+    assert.ok(body.includes(`case '${phase}':`), `missing a case for '${phase}'`);
+  }
+  assert.ok(body.includes('default:'), 'idle and the transient phases must resolve to no label');
+  for (const label of [...body.matchAll(/text: ([^,\n]+)/g)].map((match) => match[1].trim())) {
+    assert.match(label, /^t\(/, `label ${label} bypasses the locale layer`);
+  }
+  // Painting must clear, not just overwrite: an empty view has to blank the labels.
+  assert.match(settingsJs, /labels\.text\(view \? view\.text : ''\)/);
+});
+
+test('a manual check hands the Settings labels back instead of restoring what it found', () => {
+  // The old code captured label.text() and repainted it 4.5s later, so every retry put the stale
+  // "downloading 0%" straight back - which is why clearing the cache and re-checking never helped.
+  assert.doesNotMatch(settingsJs, /previousText/);
+  assert.match(settingsJs, /manualCheckOwnsLabels = true;/);
+  assert.match(settingsJs, /manualCheckOwnsLabels = false;\s*renderSettingsUpdateStatus\(\);/);
+});
+
 test('an error clears itself instead of sitting in the title bar until the next check', () => {
   assert.match(appJs, /const UPDATE_ERROR_VISIBLE_MS = \d+;/);
   const visible = Number(/const UPDATE_ERROR_VISIBLE_MS = (\d+);/.exec(appJs)[1]);
