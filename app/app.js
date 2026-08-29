@@ -2320,6 +2320,9 @@ const PURCHASED_SOURCE = {
   ubisoft: /^(?:ubisoft connect|uplay)$/,
   epic: /^epic-official$/,
   ea: /^ea$/,
+  // The imported Xbox library only. Anchored so the two Xbox emulators, which say nothing about
+  // owning anything, never earn it: 'Xenia Emulator' and 'XLiveLessNess'.
+  xbox: /^xbox pc$/,
 };
 
 function purchasedPlatformFor(game) {
@@ -3478,6 +3481,7 @@ var app = {
               purchasedUbisoft: t('purchased-badge-ubisoft', 'Ubisoft game in your library', 'Jeu Ubisoft dans ta bibliothèque'),
               purchasedEpic: t('purchased-badge-epic', 'Epic Games title in your library', 'Jeu Epic Games dans ta bibliothèque'),
               purchasedEa: t('purchased-badge-ea', 'EA game in your library', 'Jeu EA dans ta bibliothèque'),
+              purchasedXbox: t('purchased-badge-xbox', 'Xbox game in your library', 'Jeu Xbox dans ta bibliothèque'),
             };
             const purchasedPlatform = game.ownership === 'stale' || game.ownership === 'family' ? '' : purchasedPlatformFor(game);
             const purchasedLabel = purchasedPlatform
@@ -6071,7 +6075,13 @@ var app = {
           // repaint the *home* screen. The header's data-appid only exists while that page is on screen, so it doubles as the freshness check.
           if (String($('#achievement .wrapper > .header').attr('data-appid')) !== String(game.appid)) return;
           if (game.system === 'uplay' || game.img?.overlay === true) {
-            let gradient = `linear-gradient(to bottom right, color-mix(in srgb, var(--bg-base) 88%, black) 0%, color-mix(in srgb, var(--bg-glow) 78%, black) 100%)`;
+            /*
+              A veil over the artwork, not a sheet in front of it: the theme colours are opaque, so
+              the picture was replaced by a flat blue rectangle instead of being toned down. Plain
+              translucent black darkens it the way the pre-blurred backgrounds of the other sources
+              are darkened, and keeps the game visible underneath.
+            */
+            const gradient = 'linear-gradient(to bottom right, rgba(0, 0, 0, 0.74) 0%, rgba(0, 0, 0, 0.58) 100%)';
             $('body').fadeIn().attr('style', `background: ${gradient}, ${cssUrl(localPath)}`);
           } else {
             $('body').fadeIn().css('background', cssUrl(localPath));
@@ -6083,6 +6093,27 @@ var app = {
       // refreshes this page when it belongs to the game on screen (see updateGamePage).
       $('#achievement .wrapper > .header').attr('data-appid', game.appid);
       $('#achievement .wrapper > .header').attr('data-source', game.source || '');
+
+      // Which source these achievements come from, the same badge and wording the library tile
+      // carries. Without it the game screen says nothing, so an imported Xbox game reads exactly
+      // like the local copy it sits beside in the list.
+      {
+        const presentation = sourcePresentationFor(game);
+        const badge = $('#achievement .wrapper > .header .title .source-icon');
+        if (presentation.img && presentation.kind !== 'steam-hidden') {
+          badge
+            .attr({
+              src: presentation.img,
+              'data-kind': presentation.kind,
+              title: presentation.label,
+              alt: presentation.label,
+              'aria-label': presentation.label,
+            })
+            .prop('hidden', false);
+        } else {
+          badge.prop('hidden', true).removeAttr('src').removeAttr('title').removeAttr('data-kind');
+        }
+      }
 
       if (game.system) {
         $('#achievement .wrapper > .header').attr('data-system', game.system);

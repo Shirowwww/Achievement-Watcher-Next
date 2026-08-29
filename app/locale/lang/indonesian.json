@@ -842,7 +842,12 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Game Xbox PC (Game Pass / Microsoft Store). Hubungkan dan impor dari Pengaturan untuk melihat status terbuka dan kelangkaan."
+        "description": "Game Xbox PC (Game Pass / Microsoft Store). Hubungkan dan impor dari Pengaturan untuk melihat status terbuka dan kelangkaan.",
+      "value": {
+        "none": "Tidak ada",
+        "installed": "Terpasang",
+        "owned": "Dimiliki"
+      }
       },
       "importCache": {
         "name": "Impor cache notifikasi",
@@ -859,7 +864,12 @@
         "description": "Data resmi klien GOG Galaxy"
       },
       "epicOfficial": {
-        "description": "Data resmi klien Epic Games"
+        "description": "Data resmi klien Epic Games",
+      "value": {
+        "none": "Tidak ada",
+        "installed": "Terpasang",
+        "owned": "Dimiliki"
+      }
       },
       "gog": {
         "description": "Save emulator GOG"
@@ -1987,6 +1997,7 @@
     "purchased-badge-ubisoft": "Game Ubisoft di pustaka Anda",
     "purchased-badge-epic": "Judul Epic Games di pustaka Anda",
     "purchased-badge-ea": "Game EA di pustaka Anda",
+    "purchased-badge-xbox": "Game Xbox di perpustakaan Anda",
     "steam-hide-stale": "Sembunyikan gim yang tidak lagi ada di pustaka Steam-mu",
     "steam-hide-stale-help": "Membutuhkan akun Steam yang terhubung. Gim yang terpasang di PC ini dan gim yang dibagikan lewat Steam Family tidak pernah disembunyikan."
   },

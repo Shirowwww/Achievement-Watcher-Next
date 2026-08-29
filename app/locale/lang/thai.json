@@ -842,7 +842,12 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "เกม Xbox PC (Game Pass / Microsoft Store) เชื่อมต่อและนำเข้าจากการตั้งค่าเพื่อดูสถานะและความหายาก"
+        "description": "เกม Xbox PC (Game Pass / Microsoft Store) เชื่อมต่อและนำเข้าจากการตั้งค่าเพื่อดูสถานะและความหายาก",
+      "value": {
+        "none": "ไม่มี",
+        "installed": "ติดตั้งแล้ว",
+        "owned": "เป็นเจ้าของ"
+      }
       },
       "importCache": {
         "name": "นำเข้าแคชการแจ้งเตือน",
@@ -859,7 +864,12 @@
         "description": "ข้อมูลไคลเอนต์ GOG Galaxy อย่างเป็นทางการ"
       },
       "epicOfficial": {
-        "description": "ข้อมูลไคลเอนต์ Epic Games อย่างเป็นทางการ"
+        "description": "ข้อมูลไคลเอนต์ Epic Games อย่างเป็นทางการ",
+      "value": {
+        "none": "ไม่มี",
+        "installed": "ติดตั้งแล้ว",
+        "owned": "เป็นเจ้าของ"
+      }
       },
       "gog": {
         "description": "ไฟล์บันทึกของโปรแกรมจำลอง GOG"
@@ -1987,6 +1997,7 @@
     "purchased-badge-ubisoft": "เกม Ubisoft ในคลังของคุณ",
     "purchased-badge-epic": "ชื่อเกม Epic Games ในคลังของคุณ",
     "purchased-badge-ea": "เกม EA ในคลังของคุณ",
+    "purchased-badge-xbox": "เกม Xbox ในไลบรารีของคุณ",
     "steam-hide-stale": "ซ่อนเกมที่ไม่ได้อยู่ในคลัง Steam ของคุณแล้ว",
     "steam-hide-stale-help": "ต้องเชื่อมต่อบัญชี Steam ก่อน เกมที่ติดตั้งบนพีซีเครื่องนี้และเกมที่แชร์ผ่าน Steam Family จะไม่ถูกซ่อน"
   },

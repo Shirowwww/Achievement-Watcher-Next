@@ -842,7 +842,12 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox PC oyunları (Game Pass / Microsoft Store). Durumu ve nadirliği görmek için Ayarlar’dan bağlanın ve içe aktarın."
+        "description": "Xbox PC oyunları (Game Pass / Microsoft Store). Durumu ve nadirliği görmek için Ayarlar’dan bağlanın ve içe aktarın.",
+      "value": {
+        "none": "Hiçbiri",
+        "installed": "Yüklü",
+        "owned": "Sahip olunan"
+      }
       },
       "importCache": {
         "name": "Bildirim önbelleğini içe aktar",
@@ -859,7 +864,12 @@
         "description": "Resmî GOG Galaxy istemcisi verileri"
       },
       "epicOfficial": {
-        "description": "Resmî Epic Games istemcisi verileri"
+        "description": "Resmî Epic Games istemcisi verileri",
+      "value": {
+        "none": "Hiçbiri",
+        "installed": "Yüklü",
+        "owned": "Sahip olunan"
+      }
       },
       "gog": {
         "description": "GOG öykünücüsü kayıtları"
@@ -1987,6 +1997,7 @@
     "purchased-badge-ubisoft": "Kitaplığındaki Ubisoft oyunu",
     "purchased-badge-epic": "Kitaplığındaki Epic Games başlığı",
     "purchased-badge-ea": "Kitaplığındaki EA oyunu",
+    "purchased-badge-xbox": "Kitaplığındaki Xbox oyunu",
     "steam-hide-stale": "Steam kütüphanende artık bulunmayan oyunları gizle",
     "steam-hide-stale-help": "Bağlı bir Steam hesabı gerektirir. Bu bilgisayarda yüklü oyunlar ve Steam Ailesi üzerinden paylaşılan oyunlar asla gizlenmez."
   },

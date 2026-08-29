@@ -842,7 +842,12 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Trò chơi Xbox PC (Game Pass / Microsoft Store). Hãy kết nối và nhập dữ liệu trong Cài đặt để thấy trạng thái mở khóa và độ hiếm."
+        "description": "Trò chơi Xbox PC (Game Pass / Microsoft Store). Hãy kết nối và nhập dữ liệu trong Cài đặt để thấy trạng thái mở khóa và độ hiếm.",
+      "value": {
+        "none": "Không",
+        "installed": "Đã cài đặt",
+        "owned": "Đang sở hữu"
+      }
       },
       "importCache": {
         "name": "Nhập bộ nhớ đệm thông báo",
@@ -859,7 +864,12 @@
         "description": "Dữ liệu chính thức của ứng dụng GOG Galaxy"
       },
       "epicOfficial": {
-        "description": "Dữ liệu chính thức của ứng dụng Epic Games"
+        "description": "Dữ liệu chính thức của ứng dụng Epic Games",
+      "value": {
+        "none": "Không",
+        "installed": "Đã cài đặt",
+        "owned": "Đang sở hữu"
+      }
       },
       "gog": {
         "description": "Bản lưu của trình giả lập GOG"
@@ -1987,6 +1997,7 @@
     "purchased-badge-ubisoft": "Trò chơi Ubisoft trong thư viện của bạn",
     "purchased-badge-epic": "Tựa game Epic Games trong thư viện của bạn",
     "purchased-badge-ea": "Trò chơi EA trong thư viện của bạn",
+    "purchased-badge-xbox": "Game Xbox trong thư viện của bạn",
     "steam-hide-stale": "Ẩn các trò chơi không còn trong thư viện Steam của bạn",
     "steam-hide-stale-help": "Yêu cầu tài khoản Steam đã kết nối. Các trò chơi được cài đặt trên PC này và trò chơi chia sẻ qua Steam Family không bao giờ bị ẩn."
   },

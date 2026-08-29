@@ -842,7 +842,12 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Ігри Xbox PC (Game Pass / Microsoft Store). Підключіться та імпортуйте в налаштуваннях, щоб бачити статус і рідкість."
+        "description": "Ігри Xbox PC (Game Pass / Microsoft Store). Підключіться та імпортуйте в налаштуваннях, щоб бачити статус і рідкість.",
+      "value": {
+        "none": "Немає",
+        "installed": "Встановлені",
+        "owned": "У власності"
+      }
       },
       "importCache": {
         "name": "Імпортувати кеш сповіщень",
@@ -859,7 +864,12 @@
         "description": "Дані офіційного клієнта GOG Galaxy"
       },
       "epicOfficial": {
-        "description": "Дані офіційного клієнта Epic Games"
+        "description": "Дані офіційного клієнта Epic Games",
+      "value": {
+        "none": "Немає",
+        "installed": "Встановлені",
+        "owned": "У власності"
+      }
       },
       "gog": {
         "description": "Збереження емулятора GOG"
@@ -1987,6 +1997,7 @@
     "purchased-badge-ubisoft": "Гра Ubisoft у вашій бібліотеці",
     "purchased-badge-epic": "Гра Epic Games у вашій бібліотеці",
     "purchased-badge-ea": "Гра EA у вашій бібліотеці",
+    "purchased-badge-xbox": "Гра Xbox у вашій бібліотеці",
     "steam-hide-stale": "Приховувати ігри, яких більше немає у вашій бібліотеці Steam",
     "steam-hide-stale-help": "Потрібен підключений акаунт Steam. Ігри, встановлені на цьому комп'ютері, та ігри, надані через Сім'ю Steam, ніколи не приховуються."
   },

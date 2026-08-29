@@ -842,7 +842,12 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox PC játékok (Game Pass / Microsoft Store). Csatlakozz és importálj a Beállításokban az állapot és ritkaság megtekintéséhez."
+        "description": "Xbox PC játékok (Game Pass / Microsoft Store). Csatlakozz és importálj a Beállításokban az állapot és ritkaság megtekintéséhez.",
+      "value": {
+        "none": "Nincs",
+        "installed": "Telepített",
+        "owned": "Birtokolt"
+      }
       },
       "importCache": {
         "name": "Értesítési gyorsítótár importálása",
@@ -859,7 +864,12 @@
         "description": "A hivatalos GOG Galaxy kliens adatai"
       },
       "epicOfficial": {
-        "description": "A hivatalos Epic Games kliens adatai"
+        "description": "A hivatalos Epic Games kliens adatai",
+      "value": {
+        "none": "Nincs",
+        "installed": "Telepített",
+        "owned": "Birtokolt"
+      }
       },
       "gog": {
         "description": "A GOG-emulátor mentései"
@@ -1987,6 +1997,7 @@
     "purchased-badge-ubisoft": "Ubisoft játék a könyvtáradban",
     "purchased-badge-epic": "Epic Games cím a könyvtáradban",
     "purchased-badge-ea": "EA játék a könyvtáradban",
+    "purchased-badge-xbox": "Xbox-játék a könyvtáradban",
     "steam-hide-stale": "A Steam-könyvtáradban már nem szereplő játékok elrejtése",
     "steam-hide-stale-help": "Csatlakoztatott Steam-fiókot igényel. Az ezen a gépen telepített és a Steam Family révén megosztott játékok soha nem lesznek elrejtve."
   },

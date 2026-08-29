@@ -9,28 +9,52 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Added
+
+- **The Xbox PC and Epic sources offer the same three states as Steam.** None, only the games
+  installed on this PC, or everything the account owns - instead of an on/off switch that always
+  meant everything. Both open as a dropdown, as the Steam row does.
+- **Epic can list what your account owns.** It read the local install manifests and nothing else, so
+  a PC with no Epic game installed showed no Epic game at all. With **Owned** selected it lists the
+  account library and brings each game its full achievement list, its unlock state and its rarity.
+- **The game screen says where its achievements come from.** The library tile carried the source
+  badge and the game screen carried nothing, so a game listed by an account read exactly like the
+  local copy sitting beside it in the list.
+
 ### Fixed
 
-- **The Xbox PC import brings your library back.** It reported "0 created, 0 updated, 0 failed" for
-  everyone whose Xbox games are not installed on the PC: every request to Xbox Network carried an
-  unreadable version header, the service refused it, and the fallback answered with an empty
-  history. Games the account has only played on the Xbox app or elsewhere now arrive with their
-  achievements, unlock state, rarity and artwork.
-- **Xbox games show their cover.** Xbox serves store artwork over plain http, which the window
-  refuses, so every imported tile and header would have been blank. A re-import also no longer
-  blanks a picture when Xbox answers with the bare record for a title instead of the store one.
-- **A game the Xbox app merely watched running is no longer dropped.** Those are recorded as
-  Win32, almost none of them carry Xbox achievements, and dropping the whole class also dropped
-  the few that do.
-- **An Xbox game no longer fails its scan.** Reading the local save of a source that has none
-  raised an error for every Xbox title on every refresh; the unlock state already arrives with the
-  achievement list.
-- **An imported Xbox game wears the Xbox badge.** Its source label matched no platform pattern, so
-  it was presented as a Steam game - next to the Steam copy of the same game, in the case where you
-  own both.
-- **An import that adds nothing says why.** Three zeroes read the same whether the account has no
-  PC game or the history never arrived, so the report now gives the titles found and how many carry
-  no achievements.
+- **The Xbox PC import brings your library back.** It answered "0 created, 0 updated, 0 failed" for
+  everyone whose Xbox games are not installed on this PC: every request carried an unreadable
+  version header, Xbox refused it, and the fallback answered with an empty history. Games the
+  account has only played elsewhere now arrive with their achievements, unlock state, rarity and
+  artwork. A game the Xbox app merely saw running is kept when the history credits it with
+  achievements, and an import that adds nothing now says how many titles it found and how many carry
+  no achievements at all.
+- **Xbox games show their pictures.** Store artwork is served over plain http, which the window
+  refuses, so every imported tile and header would have been blank; a re-import no longer blanks a
+  picture Xbox answered without either. Achievement art was fetched at 1920x1080 - 800 MB of
+  pictures for one game, painted into a 64px box - and every icon of a game shared one cache file
+  that each download overwrote. It is asked for at the size it is drawn, each icon gets its own
+  file, and the slot follows the 16:9 shape Xbox actually draws.
+- **One game is one tile, and the record kept is the useful one.** A store id lines up with no Steam
+  appid, so a game owned on an account and installed here showed up twice: the local copy at 0%, and
+  the store entry holding the unlocks. What survives now is what serves you best - a copy the scan
+  found installed, then a copy on this PC, then Steam, then any other listing - and the other record
+  is merged in rather than dropped, so unlocks earned on a store and unlocks earned on an installed
+  copy add up on the same tile.
+- **A game listed by an account carries its own badge.** Xbox was presented as a Steam game, and had
+  none of the owned mark the Steam, GOG, Ubisoft, Epic and EA entries carry.
+- **Epic could not reach its own services from the window.** Epic answers no CORS header, so every
+  schema and library request failed with no explanation and the source came back empty. Those
+  requests are made from the main process now.
+- **Achievement pictures are the game's, not a padlock.** Epic ships a padlock as its locked
+  picture - the same one for every achievement of every game - so the real art is shown for both
+  states. The veil over a game's background was painted with opaque theme colours, which replaced
+  the artwork with a flat blue rectangle instead of toning it down.
+- **A game whose store spells its name differently keeps its cover.** An edition tag, a trademark
+  mark, a sequel numbered in roman or an accent was enough for an empty tile. The matcher stays
+  strict - a wrong cover is worse than none - so the query gives instead, and a last pass takes an
+  entry carrying the whole name plus words of its own only when exactly one does.
 - **Game Health can now find a game it only knew by its save folder.** Locating the executable also
   settles which folder the game is installed in, so the emulator setup, the Uplay layer and the
   crack loader are checked instead of skipped as "not installed". A folder that holds a whole
@@ -45,6 +69,16 @@ renamed in 3.9.0 and the history is kept under one file.
   error.
 - **The "Repair games" button no longer wraps onto two lines.** The row beside it already says which
   games are repaired, so the button keeps the short verb in every language.
+
+### Performance
+
+- **A refresh no longer waits on the network for every game it already knows.** A library of a
+  hundred owned games asked Epic who was signed in, read a second copy of every schema and queried
+  each game's unlock state, one at a time: ninety seconds of a scan. The account is asked once, a
+  schema is read once, and a known unlock state is served from disk and refreshed behind the scan.
+- **A cover already on disk is read where it is needed.** Asking the main process for each one put a
+  round trip per tile on the thread already serving every icon, and a background that had been
+  blurred once was blurred again on every scan.
 
 ## 3.10.3 - 2026-08-28
 

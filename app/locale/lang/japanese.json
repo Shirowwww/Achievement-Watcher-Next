@@ -842,7 +842,12 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox PC ゲーム（Game Pass / Microsoft Store）。設定から接続・インポートすると解除状況とレア度を表示します。"
+        "description": "Xbox PC ゲーム（Game Pass / Microsoft Store）。設定から接続・インポートすると解除状況とレア度を表示します。",
+      "value": {
+        "none": "なし",
+        "installed": "インストール済み",
+        "owned": "所有"
+      }
       },
       "importCache": {
         "name": "通知キャッシュをインポート",
@@ -859,7 +864,12 @@
         "description": "GOG Galaxy 公式クライアントのデータ"
       },
       "epicOfficial": {
-        "description": "Epic Games 公式クライアントのデータ"
+        "description": "Epic Games 公式クライアントのデータ",
+      "value": {
+        "none": "なし",
+        "installed": "インストール済み",
+        "owned": "所有"
+      }
       },
       "gog": {
         "description": "GOG エミュレーターのセーブデータ"
@@ -1987,6 +1997,7 @@
     "purchased-badge-ubisoft": "ライブラリ内のUbisoftゲーム",
     "purchased-badge-epic": "ライブラリ内のEpic Gamesタイトル",
     "purchased-badge-ea": "ライブラリ内のEAゲーム",
+    "purchased-badge-xbox": "ライブラリにある Xbox のゲーム",
     "steam-hide-stale": "Steam ライブラリにもうないゲームを隠す",
     "steam-hide-stale-help": "Steam アカウントの接続が必要です。この PC にインストール済みのゲームと Steam ファミリーで共有されているゲームは決して隠されません。"
   },

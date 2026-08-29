@@ -842,7 +842,12 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Jeux Xbox PC (Game Pass / Microsoft Store). Connecte-toi et importe depuis les Réglages pour voir les succès débloqués et leur rareté."
+        "description": "Jeux Xbox PC (Game Pass / Microsoft Store). Connecte-toi et importe depuis les Réglages pour voir les succès débloqués et leur rareté.",
+      "value": {
+        "none": "Aucun",
+        "installed": "Installé(s)",
+        "owned": "Possédé(s)"
+      }
       },
       "importCache": {
         "name": "Importer le cache de notification",
@@ -859,7 +864,12 @@
         "description": "Données du client officiel GOG Galaxy"
       },
       "epicOfficial": {
-        "description": "Données du client officiel Epic Games"
+        "description": "Données du client officiel Epic Games",
+      "value": {
+        "none": "Aucun",
+        "installed": "Installé(s)",
+        "owned": "Possédé(s)"
+      }
       },
       "gog": {
         "description": "Sauvegardes de l’émulateur GOG"
@@ -1987,6 +1997,7 @@
     "purchased-badge-ubisoft": "Jeu Ubisoft dans ta bibliothèque",
     "purchased-badge-epic": "Jeu Epic Games dans ta bibliothèque",
     "purchased-badge-ea": "Jeu EA dans ta bibliothèque",
+    "purchased-badge-xbox": "Jeu Xbox dans ta bibliothèque",
     "steam-hide-stale": "Masquer les jeux qui ne sont plus dans ta bibliothèque Steam",
     "steam-hide-stale-help": "Nécessite un compte Steam connecté. Les jeux installés sur ce PC et ceux partagés via la famille Steam ne sont jamais masqués."
   },

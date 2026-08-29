@@ -842,7 +842,12 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox-games op de pc (Game Pass / Microsoft Store). Verbind en importeer via Instellingen om de ontgrendelstatus en de zeldzaamheid te zien."
+        "description": "Xbox-games op de pc (Game Pass / Microsoft Store). Verbind en importeer via Instellingen om de ontgrendelstatus en de zeldzaamheid te zien.",
+      "value": {
+        "none": "Geen",
+        "installed": "Geïnstalleerd",
+        "owned": "In bezit"
+      }
       },
       "importCache": {
         "name": "Meldingscache importeren",
@@ -859,7 +864,12 @@
         "description": "Officiële gegevens van de GOG Galaxy-client"
       },
       "epicOfficial": {
-        "description": "Officiële gegevens van de Epic Games-client"
+        "description": "Officiële gegevens van de Epic Games-client",
+      "value": {
+        "none": "Geen",
+        "installed": "Geïnstalleerd",
+        "owned": "In bezit"
+      }
       },
       "gog": {
         "description": "Saves van de GOG-emulator"
@@ -1987,6 +1997,7 @@
     "purchased-badge-ubisoft": "Ubisoft-spel in je bibliotheek",
     "purchased-badge-epic": "Epic Games-titel in je bibliotheek",
     "purchased-badge-ea": "EA-spel in je bibliotheek",
+    "purchased-badge-xbox": "Xbox-game in je bibliotheek",
     "steam-hide-stale": "Verberg spellen die niet meer in je Steam-bibliotheek staan",
     "steam-hide-stale-help": "Vereist een verbonden Steam-account. Spellen die op deze pc geïnstalleerd zijn en spellen die via Steam Family gedeeld worden, worden nooit verborgen."
   },

@@ -842,7 +842,12 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox-PC-Spiele (Game Pass / Microsoft Store). Verbinde und importiere in den Einstellungen, um Freischaltstatus und Seltenheit zu sehen."
+        "description": "Xbox-PC-Spiele (Game Pass / Microsoft Store). Verbinde und importiere in den Einstellungen, um Freischaltstatus und Seltenheit zu sehen.",
+      "value": {
+        "none": "Keine",
+        "installed": "Installiert",
+        "owned": "Im Besitz"
+      }
       },
       "importCache": {
         "name": "Benachrichtigungs-Cache importieren",
@@ -859,7 +864,12 @@
         "description": "Daten des offiziellen GOG-Galaxy-Clients"
       },
       "epicOfficial": {
-        "description": "Daten des offiziellen Epic-Games-Clients"
+        "description": "Daten des offiziellen Epic-Games-Clients",
+      "value": {
+        "none": "Keine",
+        "installed": "Installiert",
+        "owned": "Im Besitz"
+      }
       },
       "gog": {
         "description": "Spielstände des GOG-Emulators"
@@ -1987,6 +1997,7 @@
     "purchased-badge-ubisoft": "Ubisoft-Spiel in deiner Bibliothek",
     "purchased-badge-epic": "Epic Games-Titel in deiner Bibliothek",
     "purchased-badge-ea": "EA-Spiel in deiner Bibliothek",
+    "purchased-badge-xbox": "Xbox-Spiel in deiner Bibliothek",
     "steam-hide-stale": "Spiele ausblenden, die nicht mehr in deiner Steam-Bibliothek sind",
     "steam-hide-stale-help": "Erfordert ein verbundenes Steam-Konto. Auf diesem PC installierte Spiele und über Steam Family geteilte Spiele werden nie ausgeblendet."
   },

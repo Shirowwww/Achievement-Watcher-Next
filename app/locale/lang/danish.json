@@ -842,7 +842,12 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox PC-spil (Game Pass / Microsoft Store). Opret forbindelse og importér fra Indstillinger for at se oplåsninger og sjældenhed."
+        "description": "Xbox PC-spil (Game Pass / Microsoft Store). Opret forbindelse og importér fra Indstillinger for at se oplåsninger og sjældenhed.",
+      "value": {
+        "none": "Ingen",
+        "installed": "Installerede",
+        "owned": "Ejede"
+      }
       },
       "importCache": {
         "name": "Importér notifikationscache",
@@ -859,7 +864,12 @@
         "description": "Officielle data fra GOG Galaxy-klienten"
       },
       "epicOfficial": {
-        "description": "Officielle data fra Epic Games-klienten"
+        "description": "Officielle data fra Epic Games-klienten",
+      "value": {
+        "none": "Ingen",
+        "installed": "Installerede",
+        "owned": "Ejede"
+      }
       },
       "gog": {
         "description": "Gemte filer fra GOG-emulator"
@@ -1987,6 +1997,7 @@
     "purchased-badge-ubisoft": "Ubisoft-spil i dit bibliotek",
     "purchased-badge-epic": "Epic Games-titel i dit bibliotek",
     "purchased-badge-ea": "EA-spil i dit bibliotek",
+    "purchased-badge-xbox": "Xbox-spil i dit bibliotek",
     "steam-hide-stale": "Skjul spil, der ikke længere er i dit Steam-bibliotek",
     "steam-hide-stale-help": "Kræver en forbundet Steam-konto. Spil installeret på denne pc og spil delt via Steam Family skjules aldrig."
   },

@@ -842,7 +842,12 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox PC -pelit (Game Pass ja Microsoft Store). Yhdistä tili ja tuo kirjasto asetuksista, niin näet avaustilan ja harvinaisuuden."
+        "description": "Xbox PC -pelit (Game Pass ja Microsoft Store). Yhdistä tili ja tuo kirjasto asetuksista, niin näet avaustilan ja harvinaisuuden.",
+      "value": {
+        "none": "Ei mitään",
+        "installed": "Asennetut",
+        "owned": "Omistetut"
+      }
       },
       "importCache": {
         "name": "Tuo ilmoitusvälimuisti",
@@ -859,7 +864,12 @@
         "description": "GOG Galaxy -asiakasohjelman viralliset tiedot"
       },
       "epicOfficial": {
-        "description": "Epic Games -asiakasohjelman viralliset tiedot"
+        "description": "Epic Games -asiakasohjelman viralliset tiedot",
+      "value": {
+        "none": "Ei mitään",
+        "installed": "Asennetut",
+        "owned": "Omistetut"
+      }
       },
       "gog": {
         "description": "GOG-emulaattorin tallennukset"
@@ -1987,6 +1997,7 @@
     "purchased-badge-ubisoft": "Ubisoft-peli kirjastossasi",
     "purchased-badge-epic": "Epic Games -nimike kirjastossasi",
     "purchased-badge-ea": "EA-peli kirjastossasi",
+    "purchased-badge-xbox": "Xbox-peli kirjastossasi",
     "steam-hide-stale": "Piilota pelit, joita ei enää ole Steam-kirjastossasi",
     "steam-hide-stale-help": "Vaatii yhdistetyn Steam-tilin. Tälle tietokoneelle asennettuja pelejä ja Steam Familyn kautta jaettuja pelejä ei piiloteta koskaan."
   },

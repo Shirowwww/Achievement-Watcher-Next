@@ -842,7 +842,12 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox PC games (Game Pass / Microsoft Store). Connect and import from Settings to see unlock state and rarity."
+        "description": "Xbox PC games (Game Pass / Microsoft Store). Connect and import from Settings to see unlock state and rarity.",
+      "value": {
+        "none": "None",
+        "installed": "Installed",
+        "owned": "Owned"
+      }
       },
       "importCache": {
         "name": "Import notification cache",
@@ -859,7 +864,12 @@
         "description": "Official GOG Galaxy client data"
       },
       "epicOfficial": {
-        "description": "Official Epic Games client data"
+        "description": "Official Epic Games client data",
+      "value": {
+        "none": "None",
+        "installed": "Installed",
+        "owned": "Owned"
+      }
       },
       "gog": {
         "description": "GOG emulator saves"
@@ -1987,6 +1997,7 @@
     "purchased-badge-ubisoft": "Ubisoft game in your library",
     "purchased-badge-epic": "Epic Games title in your library",
     "purchased-badge-ea": "EA game in your library",
+    "purchased-badge-xbox": "Xbox game in your library",
     "steam-hide-stale": "Hide games no longer in your Steam library",
     "steam-hide-stale-help": "Requires a connected Steam account. Games installed on this PC and games shared through Steam Family are never hidden."
   },

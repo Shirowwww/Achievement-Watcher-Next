@@ -249,8 +249,18 @@ module.exports.load = async (cfg_file) => {
       fixFile = true;
     }
 
-    if (typeof options.achievement_source.epicOfficial !== 'boolean') {
-      options.achievement_source.epicOfficial = true;
+    // Was an on/off switch before it could tell an installed game from one the account owns. On
+    // meant every installed Epic game, which is what "installed" is now.
+    if (typeof options.achievement_source.epicOfficial === 'boolean') {
+      options.achievement_source.epicOfficial = options.achievement_source.epicOfficial ? 2 : 0;
+      fixFile = true;
+    }
+    if (
+      options.achievement_source.epicOfficial != 0 &&
+      options.achievement_source.epicOfficial != 1 &&
+      options.achievement_source.epicOfficial != 2
+    ) {
+      options.achievement_source.epicOfficial = 2;
       fixFile = true;
     }
 
@@ -259,8 +269,14 @@ module.exports.load = async (cfg_file) => {
       fixFile = true;
     }
 
-    if (typeof options.achievement_source.xboxPc !== 'boolean') {
-      options.achievement_source.xboxPc = true;
+    // Was an on/off switch before it could tell an installed game from one the account merely owns.
+    // On meant everything that was imported, which is what "owned" is now.
+    if (typeof options.achievement_source.xboxPc === 'boolean') {
+      options.achievement_source.xboxPc = options.achievement_source.xboxPc ? 2 : 0;
+      fixFile = true;
+    }
+    if (options.achievement_source.xboxPc != 0 && options.achievement_source.xboxPc != 1 && options.achievement_source.xboxPc != 2) {
+      options.achievement_source.xboxPc = 2;
       fixFile = true;
     }
 
@@ -522,9 +538,9 @@ module.exports.load = async (cfg_file) => {
         gogOfficial: true,
         ubisoftOfficial: true,
         epic: true,
-        epicOfficial: true,
+        epicOfficial: 2,
         ea: true,
-        xboxPc: true,
+        xboxPc: 2,
         importCache: true,
       },
       notification: {

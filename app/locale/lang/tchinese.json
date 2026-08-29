@@ -842,7 +842,12 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox PC 遊戲（Game Pass／Microsoft Store）。請在設定中連線並匯入，才能看到解鎖狀態與稀有度。"
+        "description": "Xbox PC 遊戲（Game Pass／Microsoft Store）。請在設定中連線並匯入，才能看到解鎖狀態與稀有度。",
+      "value": {
+        "none": "無",
+        "installed": "已安裝",
+        "owned": "已擁有"
+      }
       },
       "importCache": {
         "name": "匯入通知快取",
@@ -859,7 +864,12 @@
         "description": "GOG Galaxy 官方用戶端資料"
       },
       "epicOfficial": {
-        "description": "Epic Games 官方用戶端資料"
+        "description": "Epic Games 官方用戶端資料",
+      "value": {
+        "none": "無",
+        "installed": "已安裝",
+        "owned": "已擁有"
+      }
       },
       "gog": {
         "description": "GOG 模擬器存檔"
@@ -1987,6 +1997,7 @@
     "purchased-badge-ubisoft": "您庫中的Ubisoft遊戲",
     "purchased-badge-epic": "您庫中的Epic Games遊戲",
     "purchased-badge-ea": "您庫中的EA遊戲",
+    "purchased-badge-xbox": "你收藏庫中的 Xbox 遊戲",
     "steam-hide-stale": "隱藏已不在你的 Steam 收藏庫中的遊戲",
     "steam-hide-stale-help": "需要已連接的 Steam 帳戶。安裝在這台電腦上的遊戲以及透過 Steam 家庭共享的遊戲永遠不會被隱藏。"
   },

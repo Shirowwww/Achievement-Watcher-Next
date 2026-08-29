@@ -8,7 +8,7 @@
          util/customPreset.js (PREVIEW_SCRIPT_HASHES); a test fails if they drift. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self' 'sha256-6hoK2v7NMQ9BztWRLpqwEtRRPqb93qf3AkDWdgjdGyg=' 'sha256-Je35Ely70/P1H6O6qWZNS9gTkodHCRiUd87eGa46sh0=' 'sha256-d3+6Jc/Kl3q+KAXwGGBcokVE3WBKAAm63vth3tzo3IY='; style-src 'self' 'unsafe-inline' 'unsafe-eval';  font-src 'self'; media-src 'self'; img-src 'self' data: https://*; connect-src 'self' https://api.steampowered.com https://api.epicgames.dev ws://localhost:8082"
+      content="default-src 'none'; script-src 'self' 'sha256-6hoK2v7NMQ9BztWRLpqwEtRRPqb93qf3AkDWdgjdGyg=' 'sha256-Je35Ely70/P1H6O6qWZNS9gTkodHCRiUd87eGa46sh0=' 'sha256-d3+6Jc/Kl3q+KAXwGGBcokVE3WBKAAm63vth3tzo3IY='; style-src 'self' 'unsafe-inline' 'unsafe-eval';  font-src 'self'; media-src 'self'; img-src 'self' data: https://*; connect-src 'self' https://api.steampowered.com https://api.epicgames.dev https://launcher.store.epicgames.com https://launcher-public-service-prod06.ol.epicgames.com https://catalog-public-service-prod06.ol.epicgames.com ws://localhost:8082"
     />
     <link rel="stylesheet" href="../resources/css/normalize.css" type="text/css" />
     <link rel="stylesheet" href="../resources/css/fontawesome.css" type="text/css" />
@@ -94,6 +94,7 @@
             <div class="title">
               <div class="icon"></div>
               <span></span>
+              <img class="source-icon" hidden alt="" />
             </div>
             <div class="stats">
               <div class="counter" data-count="0" data-max="0" data-percent="0"><i class="fas fa-trophy"></i></div>
@@ -884,9 +885,10 @@
                       <div class="previous">
                         <span class="arrow"><i class="fas fa-chevron-left"></i></span>
                       </div>
-                      <select autocomplete="off" id="option_xboxPc">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
+                      <select autocomplete="off" class="dropdown" id="option_xboxPc">
+                        <option value="0"></option>
+                        <option value="1"></option>
+                        <option value="2" selected></option>
                       </select>
                       <div class="next">
                         <span class="arrow"><i class="fas fa-chevron-right"></i></span>
@@ -969,9 +971,10 @@
                       <div class="previous">
                         <span class="arrow"><i class="fas fa-chevron-left"></i></span>
                       </div>
-                      <select autocomplete="off" id="option_epicOfficial">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
+                      <select autocomplete="off" class="dropdown" id="option_epicOfficial">
+                        <option value="0"></option>
+                        <option value="1"></option>
+                        <option value="2" selected></option>
                       </select>
                       <div class="next">
                         <span class="arrow"><i class="fas fa-chevron-right"></i></span>

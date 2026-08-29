@@ -666,8 +666,11 @@ function translateUI(lang, locale, template) {
   selector.find("li:nth-child(6) .right select option[value='false']").text(clear(template.settings.common.disable));
   selector.find('li:nth-child(6) .help').text(clear(template.settings.source.ea.description));
   selector.find('li:nth-child(7) .left span').text(clear(template.settings.source.xboxPc.name));
-  selector.find("li:nth-child(7) .right select option[value='true']").text(clear(template.settings.common.enable));
-  selector.find("li:nth-child(7) .right select option[value='false']").text(clear(template.settings.common.disable));
+  // Same three states as the Steam row above, with words of its own: a row borrowing another row's
+  // keys drifts the moment either one moves.
+  selector.find("li:nth-child(7) .right select option[value='0']").text(clear(template.settings.source.xboxPc.value.none));
+  selector.find("li:nth-child(7) .right select option[value='1']").text(clear(template.settings.source.xboxPc.value.installed));
+  selector.find("li:nth-child(7) .right select option[value='2']").text(clear(template.settings.source.xboxPc.value.owned));
   selector.find('li:nth-child(7) .help').text(clear(template.settings.source.xboxPc.description));
   selector.find('li:nth-child(8) .left span').text(clear(template.settings.source.importCache.name));
   selector.find("li:nth-child(8) .right select option[value='true']").text(clear(template.settings.common.enable));
@@ -679,11 +682,21 @@ function translateUI(lang, locale, template) {
   selector.find('li:nth-child(9) .help').text(clear(template.settings.source.socialClub.description));
   // Rows with a proper name only need help text translated, bound by id: the nth-child bindings
   // above break if a row is inserted anywhere but the end.
-  for (const key of ['ubisoftOfficial', 'gogOfficial', 'epicOfficial', 'gog', 'epic', 'shadps4', 'xenia', 'xlln']) {
+  for (const key of ['ubisoftOfficial', 'gogOfficial', 'gog', 'epic', 'shadps4', 'xenia', 'xlln']) {
     const source = template.settings.source[key];
     if (source && source.description) $(`#source-help-${key}`).text(clear(source.description));
     $(`#option_${key} option[value='true']`).text(clear(template.settings.common.enable));
     $(`#option_${key} option[value='false']`).text(clear(template.settings.common.disable));
+  }
+  // Epic offers the same three states as Steam and Xbox rather than an on/off switch, so it is bound
+  // apart from the loop above.
+  if (template.settings.source.epicOfficial) {
+    if (template.settings.source.epicOfficial.description) {
+      $('#source-help-epicOfficial').text(clear(template.settings.source.epicOfficial.description));
+    }
+    $("#option_epicOfficial option[value='0']").text(clear(template.settings.source.epicOfficial.value.none));
+    $("#option_epicOfficial option[value='1']").text(clear(template.settings.source.epicOfficial.value.installed));
+    $("#option_epicOfficial option[value='2']").text(clear(template.settings.source.epicOfficial.value.owned));
   }
   $('#advanced-blacklist-title').text(clear(template.settings.advanced.blacklistTitle));
   $('#blacklist_reset span').text(clear(template.settings.advanced.blacklistButton));

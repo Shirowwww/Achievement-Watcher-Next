@@ -1676,6 +1676,17 @@ body.is-resizing #game-list {
   cursor: context-menu;
 }
 
+/* The source badge sits after the name, at the size of the trophy counters beside it rather than
+   the 36px title, so it reads as a mark on the game and never competes with its name. */
+#achievement .wrapper > .header .title .source-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  margin: auto 0 auto 14px;
+  opacity: 0.9;
+  flex: none;
+}
+
 #achievement .wrapper > .header .title span {
   margin-left: 10px;
   font-family: Open-sans-bold;
@@ -2039,6 +2050,14 @@ body.is-resizing #game-list {
   height: 64px;
   border: solid color-mix(in srgb, var(--border) 18%, transparent) 1px;
   position: relative;
+}
+
+/* Xbox does not draw achievement art as a square badge: every icon it serves is 16:9, whatever the
+   game. A square slot can only letterbox it or crop a slice out of the middle, so the slot follows
+   the picture instead - same height as everywhere else, the width the art actually has. */
+#achievement .wrapper > .header[data-source='Xbox PC'] ~ .achievements .achievement .box .icon {
+  width: 114px;
+  background-size: cover !important;
 }
 
 #achievement .wrapper > .header[data-system='playstation'] ~ .achievements #lock .achievement .icon,

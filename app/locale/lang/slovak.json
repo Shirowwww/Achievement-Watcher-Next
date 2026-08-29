@@ -842,7 +842,12 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Hry Xbox PC (Game Pass / Microsoft Store). Pripojte a importujte v Nastaveniach pre stav a vzácnosť."
+        "description": "Hry Xbox PC (Game Pass / Microsoft Store). Pripojte a importujte v Nastaveniach pre stav a vzácnosť.",
+      "value": {
+        "none": "Žiadne",
+        "installed": "Nainštalované",
+        "owned": "Vlastnené"
+      }
       },
       "importCache": {
         "name": "Importovať vyrovnávaciu pamäť upozornení",
@@ -859,7 +864,12 @@
         "description": "Údaje oficiálneho klienta GOG Galaxy"
       },
       "epicOfficial": {
-        "description": "Údaje oficiálneho klienta Epic Games"
+        "description": "Údaje oficiálneho klienta Epic Games",
+      "value": {
+        "none": "Žiadne",
+        "installed": "Nainštalované",
+        "owned": "Vlastnené"
+      }
       },
       "gog": {
         "description": "Uložené pozície emulátora GOG"
@@ -1987,6 +1997,7 @@
     "purchased-badge-ubisoft": "Hra Ubisoft vo vašej knižnici",
     "purchased-badge-epic": "Titul Epic Games vo vašej knižnici",
     "purchased-badge-ea": "Hra EA vo vašej knižnici",
+    "purchased-badge-xbox": "Hra Xbox vo vašej knižnici",
     "steam-hide-stale": "Skryť hry, ktoré už nie sú vo vašej knižnici Steam",
     "steam-hide-stale-help": "Vyžaduje pripojený účet Steam. Hry nainštalované v tomto počítači a hry zdieľané cez Steam Family sa nikdy neskrývajú."
   },

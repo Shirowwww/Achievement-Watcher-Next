@@ -842,7 +842,12 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox PC 게임(Game Pass / Microsoft Store)입니다. 달성 상태와 희귀도를 보려면 설정에서 계정을 연결하고 가져오세요."
+        "description": "Xbox PC 게임(Game Pass / Microsoft Store)입니다. 달성 상태와 희귀도를 보려면 설정에서 계정을 연결하고 가져오세요.",
+      "value": {
+        "none": "없음",
+        "installed": "설치됨",
+        "owned": "보유 중"
+      }
       },
       "importCache": {
         "name": "알림 캐시 가져오기",
@@ -859,7 +864,12 @@
         "description": "공식 GOG Galaxy 클라이언트 데이터"
       },
       "epicOfficial": {
-        "description": "공식 Epic Games 클라이언트 데이터"
+        "description": "공식 Epic Games 클라이언트 데이터",
+      "value": {
+        "none": "없음",
+        "installed": "설치됨",
+        "owned": "보유 중"
+      }
       },
       "gog": {
         "description": "GOG 에뮬레이터 저장 파일"
@@ -1987,6 +1997,7 @@
     "purchased-badge-ubisoft": "라이브러리의 Ubisoft 게임",
     "purchased-badge-epic": "라이브러리의 Epic Games 타이틀",
     "purchased-badge-ea": "라이브러리의 EA 게임",
+    "purchased-badge-xbox": "라이브러리에 있는 Xbox 게임",
     "steam-hide-stale": "더 이상 Steam 라이브러리에 없는 게임 숨기기",
     "steam-hide-stale-help": "연결된 Steam 계정이 필요합니다. 이 PC에 설치된 게임과 Steam 가족을 통해 공유된 게임은 절대 숨겨지지 않습니다."
   },
