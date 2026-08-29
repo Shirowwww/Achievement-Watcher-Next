@@ -44,3 +44,25 @@ test('a bare legacy token still reaches the flat CDN paths', async () => {
   });
   assert.equal(url, legacy);
 });
+
+/*
+  Xbox serves every achievement icon of a game from one `/image` path, with the identity of the
+  picture in the query string. Cached by basename alone, a whole game collapsed onto a single file
+  that each download overwrote in turn, and the game screen showed one empty square per achievement.
+*/
+test('an icon URL whose identity is in the query gets a cache file of its own', () => {
+  const first = steam.iconCacheFilename('https://images-eds-ssl.xboxlive.com/image?url=AAA.bbb');
+  const second = steam.iconCacheFilename('https://images-eds-ssl.xboxlive.com/image?url=CCC.ddd');
+
+  assert.notEqual(first, second, 'two icons of the same game must not share a file');
+  assert.match(first, /^image-[0-9a-f]{16}$/);
+  assert.equal(first, steam.iconCacheFilename('https://images-eds-ssl.xboxlive.com/image?url=AAA.bbb'), 'stable');
+  assert.doesNotMatch(first, /[?=]/, 'a query is not a legal Windows file name');
+
+  // Steam keeps the name it has always been cached under: renaming those would re-fetch every icon
+  // already on disk.
+  assert.equal(
+    steam.iconCacheFilename('https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/440/abc123.jpg'),
+    'abc123.jpg'
+  );
+});

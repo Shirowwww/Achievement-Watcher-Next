@@ -1892,6 +1892,23 @@ async function resolveWorkingIconUrl(appID, url, { probe = probeUrl } = {}) {
 }
 module.exports.resolveWorkingIconUrl = resolveWorkingIconUrl;
 
+/*
+  The file an icon URL is cached as. Steam puts an icon's identity in its path, so the basename is
+  unique per achievement and is kept exactly as it was. Xbox serves every icon of a game from one
+  `/image` path and carries the identity in the query string: taking the basename collapsed a whole
+  game onto a single cache file that each download overwrote in turn, and the game screen showed 306
+  empty squares. A query means the basename is not the identity, so the query is folded in.
+*/
+function iconCacheFilename(rawUrl) {
+  const raw = String(rawUrl || '');
+  const mark = raw.indexOf('?');
+  const base = path.parse(mark >= 0 ? raw.slice(0, mark) : raw).base;
+  if (mark < 0) return base;
+  const digest = require('crypto').createHash('sha1').update(raw).digest('hex').slice(0, 16);
+  return `${base || 'icon'}-${digest}`;
+}
+module.exports.iconCacheFilename = iconCacheFilename;
+
 const fetchIcon = (module.exports.fetchIcon = async (url, appID) => {
   // Some games have no icon/background/portrait URL (null in the schema). Bail out instead of letting
   // `url.startsWith`/`path.parse(null)` throw - that surfaced as a noisy "Error occurred in handler
@@ -1907,7 +1924,7 @@ const fetchIcon = (module.exports.fetchIcon = async (url, appID) => {
   let filePath;
   try {
     const cache = path.join(userDataDir(), `steam_cache/icon/${appID}`);
-    let filename = path.parse(url).base;
+    let filename = iconCacheFilename(url);
     filePath = path.join(cache, filename);
     if (fs.existsSync(filePath)) return filePath;
     let exts = ['.jpg', '.png'];
@@ -1919,14 +1936,18 @@ const fetchIcon = (module.exports.fetchIcon = async (url, appID) => {
     //legacy url are full urls, check if they are still valid
     validUrl = await resolveWorkingIconUrl(appID, url);
 
-    filename = path.parse(urlParser.parse(validUrl).pathname).base;
+    filename = iconCacheFilename(validUrl);
 
     filePath = path.join(cache, filename);
 
     if (fs.existsSync(filePath)) {
       return filePath;
     } else {
-      return (await request.download(validUrl, cache, { validateFileSize: false })).path;
+      // Only name the file when its URL carries a query: left to itself the downloader derives the
+      // same basename Steam has always been cached under, and renaming those would re-fetch every
+      // icon already on disk.
+      const named = validUrl.includes('?') ? { filename } : {};
+      return (await request.download(validUrl, cache, { validateFileSize: false, ...named })).path;
     }
   } catch (err) {
     if (err.code === 'ESIZEMISMATCH') {

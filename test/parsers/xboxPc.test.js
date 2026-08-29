@@ -140,7 +140,15 @@ test('normalizeXboxAchievement extracts earned state, rarity and icon', () => {
   assert.equal(ach.snapshot.earned, true);
   assert.equal(ach.snapshot.earned_time, 1700000000);
   assert.equal(ach.rarity, 12.5);
-  assert.equal(ach.icon, 'https://xbox/icon.png');
+  // Xbox serves achievement art at 1920x1080 unless a size is asked for: 2.5 MB per achievement,
+  // 800 MB for one game, all of it painted into a 64px square.
+  assert.equal(ach.icon, 'https://xbox/icon.png?w=128&h=128');
+  assert.equal(
+    xboxPc.normalizeXboxAchievement({ id: '2', icon: 'https://xbox/icon.png?w=64' }).icon,
+    'https://xbox/icon.png?w=64',
+    'a size already asked for is left alone'
+  );
+  assert.equal(xboxPc.normalizeXboxAchievement({ id: '3', icon: '' }).icon, '', 'no icon stays no icon');
 });
 
 test('normalizeXboxAchievement recognizes the boolean isSecret flag', () => {
@@ -203,4 +211,52 @@ test('getGameData merges cached schema with unlock state', async () => {
   assert.equal(game.achievement.list[0].UnlockTime, 111);
   assert.equal(game.achievement.list[1].Achieved, false);
   assert.equal(await xboxPc.getGameData('999999', 'english'), null);
+});
+
+test('imported unlocks land on the schema of the game they are merged into', () => {
+  // Xbox numbers its achievements while Steam names them, so a merged game shares no key with its
+  // Xbox twin. The achievement titles are what the two schemas have in common.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-xbox-unlocks-'));
+  const cache = path.join(dir, 'steam_cache', 'xbox', '2079757188');
+  fs.mkdirSync(cache, { recursive: true });
+  fs.writeFileSync(
+    path.join(cache, 'schema.json'),
+    JSON.stringify({
+      name: 'Forza Horizon 6',
+      achievement: {
+        list: [
+          { name: '1', displayName: 'Welcome to Horizon!' },
+          { name: '2', displayName: 'Fame Stamp' },
+          { name: '3', displayName: 'Off to a Good Start' },
+        ],
+      },
+    })
+  );
+  fs.writeFileSync(
+    path.join(cache, 'state.json'),
+    JSON.stringify({ 1: { earned: true, earned_time: 1700000000 }, 2: { earned: false }, 3: { earned: true } })
+  );
+
+  try {
+    xboxPc.setUserDataPath(dir);
+
+    const steamSchema = [
+      { name: 'ACH_WELCOME', displayName: 'Welcome to Horizon!' },
+      { name: 'ACH_FAME', displayName: 'Fame Stamp' },
+      { name: 'ACH_START', displayName: 'Off to a good start' }, // same title, different casing
+    ];
+    const onSteam = xboxPc.unlocksForSchema('2079757188', steamSchema);
+    assert.deepEqual(Object.keys(onSteam).sort(), ['ACH_START', 'ACH_WELCOME']);
+    assert.equal(onSteam.ACH_WELCOME.Achieved, true);
+    assert.equal(onSteam.ACH_WELCOME.UnlockTime, 1700000000);
+
+    // Standing on its own, with no other schema to translate onto, the Xbox ids are the keys.
+    const onItsOwn = xboxPc.unlocksForSchema('2079757188', []);
+    assert.deepEqual(Object.keys(onItsOwn).sort(), ['1', '3']);
+
+    // A title the schema does not describe is dropped rather than invented.
+    assert.deepEqual(xboxPc.unlocksForSchema('2079757188', [{ name: 'ACH_OTHER', displayName: 'Something else' }]), {});
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });

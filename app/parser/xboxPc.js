@@ -349,6 +349,18 @@ async function fetchXboxTitleAchievements(xuid, titleId, options = {}) {
   );
 }
 
+/*
+  Xbox serves achievement art at 1920x1080 by default - 2.5 MB per achievement, so a single game
+  such as Sea of Thieves cached 800 MB of pictures for a 64px slot. Its image service resizes on
+  request, and 128px wide is the size the interface actually paints.
+*/
+const XBOX_ICON_SIZE = 128;
+function achievementIconUrl(url) {
+  const raw = String(url || '').trim();
+  if (!raw.startsWith('http') || /[?&]w=\d/.test(raw)) return raw;
+  return `${raw}${raw.includes('?') ? '&' : '?'}w=${XBOX_ICON_SIZE}&h=${XBOX_ICON_SIZE}`;
+}
+
 function normalizeXboxAchievement(raw = {}) {
   const id = firstNonEmpty(raw?.id, raw?.name, raw?.scid);
   if (!id) return null;
@@ -359,10 +371,12 @@ function normalizeXboxAchievement(raw = {}) {
   const progressMax = Number(raw?.progression?.target || raw?.maxProgress || 0);
   const rarity = Number(raw?.rarity?.currentPercentage ?? raw?.rarityPercentage ?? raw?.rarity?.percentage);
   const media = raw?.mediaAssets || raw?.media || [];
-  const icon = firstNonEmpty(
-    raw?.icon,
-    media.find((m) => /icon/i.test(String(m?.mediaType || m?.type || '')))?.url,
-    media[0]?.url
+  const icon = achievementIconUrl(
+    firstNonEmpty(
+      raw?.icon,
+      media.find((m) => /icon/i.test(String(m?.mediaType || m?.type || '')))?.url,
+      media[0]?.url
+    )
   );
   const hidden = [raw?.isSecret, raw?.hidden].some((value) => value === true || value === 1 || /secret/i.test(String(value || '')));
   return {
@@ -809,6 +823,38 @@ function listCachedTitles() {
   return entries.filter((name) => fs.existsSync(path.join(root, name, 'schema.json')));
 }
 
+// The imported title's name, straight off the cached schema. Discovery needs it to recognise that
+// this game is the one another source already found, and it must stay cheap: this runs per cached
+// title on every scan, so it reads the schema rather than building the whole game record.
+function cachedTitleName(appid) {
+  const titleId = normalizeTitleId(appid);
+  if (!titleId) return '';
+  const schema = readJson(schemaCacheFile(titleId));
+  return String(schema?.name || '').trim();
+}
+
+/*
+  The unlocks this title carries, keyed by the api-names of the schema passed in rather than by
+  Xbox's own ids. Xbox numbers its achievements 1, 2, 3 while Steam names them, so a merged game
+  has no key in common with its Xbox twin - the achievement titles are the only thing the two
+  schemas share, and they match because both come from the publisher.
+*/
+function unlocksForSchema(appid, schemaList) {
+  const titleId = normalizeTitleId(appid);
+  if (!titleId) return {};
+  const schema = readJson(schemaCacheFile(titleId));
+  const state = readJson(stateCacheFile(titleId));
+  if (!schema?.achievement?.list || !state) return {};
+
+  const unlocks = {};
+  for (const achievement of schema.achievement.list) {
+    const saved = state[achievement.name];
+    if (!saved?.earned) continue;
+    unlocks[achievement.name] = { Achieved: true, UnlockTime: Number(saved.earned_time) || 0 };
+  }
+  return require('../util/crossSchemaUnlocks.js').remapUnlocksOntoSchema(unlocks, schema.achievement.list, schemaList);
+}
+
 async function getGameData(appid, lang) {
   const titleId = normalizeTitleId(appid);
   if (!titleId) return null;
@@ -827,7 +873,10 @@ async function getGameData(appid, lang) {
     appid: titleId,
     name: schema.name || `Xbox ${titleId}`,
     source: XBOX_PC_SOURCE,
-    img: schema.img || {},
+    // Xbox has one hero picture and it is the same file the tile uses, so it cannot be blurred and
+    // tinted in the cache the way a Steam or Epic background is without darkening the tile too.
+    // `overlay` asks the game page for the veil at paint time instead, which is the same look.
+    img: { ...schema.img, overlay: true },
     achievement: {
       total: list.length,
       unlocked: list.filter((a) => a.Achieved).length,
@@ -871,5 +920,7 @@ module.exports = {
   importLibrary,
   getGameData,
   listCachedTitles,
+  cachedTitleName,
+  unlocksForSchema,
   status,
 };
