@@ -78,7 +78,7 @@ let pendingInstallPrompt = null;
 
 const updateGate = require(path.join(__dirname, '../util/updateGate.js'));
 const { resolveSteamMetadata } = require(path.join(__dirname, '../util/steamMetadata.js'));
-const { isChecksumMismatchError } = require(path.join(__dirname, '../util/updateChecksum.js'));
+const { isChecksumMismatchError, summarizeUpdaterError } = require(path.join(__dirname, '../util/updateChecksum.js'));
 const { clearUpdaterCacheDir: clearCacheDirForHelper } = require(path.join(__dirname, '../util/updateCacheClear.js'));
 const { clearSafeCaches } = require(path.join(__dirname, '../util/clearableCaches.js'));
 
@@ -198,7 +198,7 @@ function startUpdateDownload(version) {
     if (token.cancelled) return;
     // A checksum mismatch is handled entirely by the 'error' listener, which clears the cache and
     // retries once instead of surfacing the raw failure immediately.
-    if (!isChecksumMismatchError(err)) notifyUpdateError(`download failed: ${err.message || err}`);
+    if (!isChecksumMismatchError(err)) notifyUpdateError(`download failed: ${summarizeUpdaterError(err)}`);
   });
 }
 
@@ -324,7 +324,7 @@ function scheduleUpdateCheck(delayMs) {
         scheduleUpdateCheck(updateGate.nextCheckDelayMs({ gameRunning: isGameRunning() }));
       })
       .catch((err) => {
-        notifyUpdateError(err && err.message ? err.message : String(err));
+        notifyUpdateError(summarizeUpdaterError(err));
         scheduleUpdateCheck(updateGate.nextCheckDelayMs({ gameRunning: isGameRunning(), failed: true }));
       });
   }, delayMs);
@@ -6913,8 +6913,11 @@ try {
     clearUpdateDownloadProgress();
   });
   autoUpdater.on('error', (err) => {
-    const message = err && err.message ? err.message : String(err);
-    if (isChecksumMismatchError(err)) {
+    const message = summarizeUpdaterError(err);
+    // The recovery below re-runs downloadUpdate(), which only means anything while a download is
+    // actually in flight. Outside one there is no update info to download and the retry can only
+    // fail with "Please check update first", so a stray checksum error stays an ordinary error.
+    if (isChecksumMismatchError(err) && updateDownloading) {
       if (checksumRetryInFlight) {
         // The retry's own downloadUpdate() rejection already goes through the catch block below;
         // this is electron-updater's duplicate 'error' emission for that same second failure.
@@ -6939,7 +6942,7 @@ try {
           updaterErrorNotified = false; // the retry succeeded; let a future failure notify again
         } catch (retryErr) {
           if (updateDownloadCancellation && updateDownloadCancellation.cancelled) return;
-          await notifyChecksumRecoveryFailed(retryErr && retryErr.message ? retryErr.message : String(retryErr), cacheDir);
+          await notifyChecksumRecoveryFailed(summarizeUpdaterError(retryErr), cacheDir);
         } finally {
           checksumRetryInFlight = false;
         }

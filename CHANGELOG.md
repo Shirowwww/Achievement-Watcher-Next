@@ -23,6 +23,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **A slow answer from GitHub no longer looks like a corrupted download.** The update check read the
+  words "checksum mismatch" out of our own release notes, which the failed request had copied into
+  its error, then cleared the updater cache for nothing and ended on a dead end offering a manual
+  download. A check that cannot reach GitHub now says so plainly and retries on its own.
+
 - **The Xbox PC import brings your library back.** It answered "0 created, 0 updated, 0 failed" for
   everyone whose Xbox games are not installed on this PC: every request carried an unreadable
   version header, Xbox refused it, and the fallback answered with an empty history. Games the
