@@ -43,8 +43,13 @@ test('artwork fallbacks fill missing assets without replacing existing ones', ()
   const main = fs.readFileSync(path.join(root, 'app', 'electron', 'init.js'), 'utf8');
   assert.match(parser, /game\.img\.header = game\.img\.header \|\| fallback\.landscape/);
   assert.match(parser, /game\.img\.logo = game\.img\.logo \|\| fallback\.logo/);
-  assert.match(main, /steamgriddb_assets/);
-  assert.match(main, /pickSteamGridDbGame\(searchData\?\.data, gameName\)/);
+  // Where an artwork answer is kept, and for how long, is one module both processes read.
+  const cache = fs.readFileSync(path.join(root, 'app', 'util', 'sgdbAssetCache.js'), 'utf8');
+  assert.match(cache, /steamgriddb_assets/);
+  assert.match(main, /sgdbAssetCache\.readCached\(/);
+  assert.match(parser, /sgdbAssetCache\.readCached\(/, 'the window reads it without a round trip per game');
+  // The strict matcher decides, never the first search result - now once per name variant tried.
+  assert.match(main, /pickSteamGridDbGame\(searchData\?\.data, variant\)/);
   assert.doesNotMatch(main, /if \(list\.length === 1\) return list\[0\]/);
 });
 

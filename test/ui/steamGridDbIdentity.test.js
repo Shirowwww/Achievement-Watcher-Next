@@ -32,8 +32,13 @@ test('a Steam appid is resolved by identity, before any title is matched', () =>
 test('the strict title matcher is unchanged - no prefix or subset rule crept in', () => {
   const picker = source.slice(source.indexOf('function pickSteamGridDbGame'), source.indexOf('function rankSteamGridDbGrids'));
   // An exact match, then "all query words present with at most one extra word". Nothing else.
-  assert.match(picker, /tokens\.length - queryTokens\.length <= 1/);
+  assert.match(picker, /tokensOf\(g\)\.length - queryTokens\.length <= 1/);
   assert.doesNotMatch(picker, /startsWith|includes\(name\)|indexOf\(name\)/, 'a prefix rule would mismatch sequels and subtitled releases');
+  // The wider rule is a last resort a caller has to ask for, and it refuses to choose between two
+  // candidates - which is what stops it from handing a sequel's cover to the game before it.
+  assert.match(picker, /\{ relaxed = false \} = \{\}/, 'strict is what a caller gets by default');
+  assert.match(picker, /if \(close \|\| !relaxed\) return close \|\| null;/);
+  assert.match(picker, /candidates\.length === 1 \? candidates\[0\] : null/);
 });
 
 test('a network failure never poisons the appid cache', () => {
@@ -67,4 +72,94 @@ test('a dead SteamHunters groups endpoint is not re-proven once per game', () =>
   const successAt = handler.indexOf('recordSteamGroupsSuccess()');
   const okCheckAt = handler.indexOf('if (!res.ok)');
   assert.ok(successAt !== -1 && successAt < okCheckAt, 'a reachable host clears the breaker even on an error status');
+});
+
+// Lift the shipped helpers out of init.js so these check the real code, not a copy of it.
+function editionHelpers() {
+  const from = source.indexOf('const SGDB_EDITION_TAIL');
+  const body = source.slice(from, source.indexOf('/*\n  A lookup that found nothing'));
+  // The matcher, with the token normalisation it reads names through.
+  const picker = source.slice(source.indexOf('const SGDB_ROMAN'), source.indexOf('// Native size first'));
+  // oxlint-disable-next-line no-eval -- evaluating the shipped code is the point, rather than restating it here.
+  return eval(`${body}\n${picker}\n({ steamGridDbNameVariants, pickSteamGridDbGame })`);
+}
+
+test('an edition tag is dropped from the query, and a subtitle is not', () => {
+  const { steamGridDbNameVariants } = editionHelpers();
+  // SteamGridDB files these under the base name, and the matcher is strict, so the query is what
+  // has to give: every one of these showed an empty tile.
+  for (const [name, expected] of [
+    ['Disco Elysium - The Final Cut', 'Disco Elysium'],
+    ['Echo Generation: Midnight Edition', 'Echo Generation'],
+    ['Styx: Shards of Darkness - Deluxe', 'Styx: Shards of Darkness'],
+    ['The Witcher 3: Wild Hunt - Complete Edition', 'The Witcher 3: Wild Hunt'],
+    // An edition tag does not always come after a separator.
+    ['Trine Enchanted Edition', 'Trine'],
+    ['Trine 2: Complete Story', 'Trine 2'],
+  ]) {
+    assert.ok(steamGridDbNameVariants(name).includes(expected), `${name} must also be searched as "${expected}"`);
+  }
+
+  // A subtitle is part of the name, not an edition: cutting it would ask for a different game.
+  for (const name of ['Styx: Shards of Darkness', 'Total War: PHARAOH DYNASTIES', 'Half-Life 2', 'Sea of Thieves: 2026 Edition']) {
+    const variants = steamGridDbNameVariants(name);
+    assert.ok(variants.includes(name), 'the name as given is always tried first');
+    assert.equal(variants[0], name);
+  }
+  assert.deepEqual(steamGridDbNameVariants('Styx: Shards of Darkness'), ['Styx: Shards of Darkness']);
+
+  // Trademark marks are in the store name and never in SteamGridDB's.
+  assert.ok(steamGridDbNameVariants('UNCHARTED™: Legacy of Thieves Collection').includes('UNCHARTED: Legacy of Thieves Collection'));
+
+  // A subtitle after a dash is tried on its own last: SteamGridDB files some games under the short
+  // name, and the strict matcher still has to recognise what comes back.
+  assert.ok(steamGridDbNameVariants('Rustler - Grand Theft Horse').includes('Rustler'));
+});
+
+test('a lookup that found nothing is remembered, and a failed one is not', () => {
+  // Without this every coverless game was searched again on every scan, five requests each, on a
+  // key shared by every install - which is also how a rate-limited answer became a blank tile.
+  const resolver = source.slice(source.indexOf('async function resolveImagesForGame'), source.indexOf("ipcMain.on('get-images-for-game'"));
+  assert.match(resolver, /rememberMiss\(\);\s*\n\s*return null;/, 'a "no entry" answer must be cached');
+  // Reading it back belongs to the module both processes share, so the window can serve a cached
+  // answer without a round trip per game.
+  const cache = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'util', 'sgdbAssetCache.js'), 'utf8');
+  assert.match(cache, /cached\.notFound === true/, 'and read back');
+  assert.match(cache, /age < MISS_TTL_MS/, 'on a TTL of its own, shorter than a hit');
+  assert.match(cache, /MISS_TTL_MS = 3 \* 24/);
+  assert.match(cache, /HIT_TTL_MS = 30 \* 24/);
+  const failure = resolver.slice(resolver.indexOf('recordSteamGridDbFailure(err'));
+  assert.doesNotMatch(failure, /rememberMiss\(/, 'a request that failed is not an answer');
+});
+
+test('the last resort takes a single wider match, and never picks between siblings', () => {
+  const { pickSteamGridDbGame } = editionHelpers();
+  // The store dropped a subtitle SteamGridDB keeps.
+  const oneCandidate = [{ id: 1, name: 'Trine 4: The Nightmare Prince' }, { id: 2, name: 'Trine 2' }];
+  assert.equal(pickSteamGridDbGame(oneCandidate, 'Trine 4'), null, 'the usual rules still refuse it');
+  assert.equal(pickSteamGridDbGame(oneCandidate, 'Trine 4', { relaxed: true })?.id, 1);
+
+  // Two entries carry the name: the runner-up is a different game, so neither is taken.
+  const siblings = [
+    { id: 1, name: 'LEGO Batman 2: DC Super Heroes' },
+    { id: 2, name: 'LEGO Batman 3: Beyond Gotham' },
+  ];
+  assert.equal(pickSteamGridDbGame(siblings, 'LEGO Batman', { relaxed: true }), null);
+});
+
+test('a sequel numbered differently and an accent are the same name', () => {
+  const { pickSteamGridDbGame } = editionHelpers();
+  assert.equal(pickSteamGridDbGame([{ id: 7, name: 'Ghostrunner II' }], 'Ghostrunner 2')?.id, 7);
+  assert.equal(pickSteamGridDbGame([{ id: 8, name: 'Pâquerette Down the Bunburrows' }], 'Paquerette Down the Bunburrows')?.id, 8);
+  // Folding numerals must not merge two different games.
+  assert.equal(pickSteamGridDbGame([{ id: 9, name: 'Ghostrunner' }], 'Ghostrunner 2'), null);
+});
+
+test('an unreachable SteamGridDB changes nothing on disk, and asks again next time', () => {
+  // Offline, every lookup fails the same way. None of it may be mistaken for an answer: no cached
+  // "no artwork", and no wider retry either, since there was nothing to widen against.
+  const resolver = source.slice(source.indexOf('async function resolveImagesForGame'), source.indexOf("ipcMain.on('get-images-for-game'"));
+  assert.match(resolver, /if \(steamGridDbUnavailable\(\)\) return null;/, 'the breaker short-circuits before any request');
+  assert.match(resolver, /if \(!game && answered\) \{/, 'the last-resort pass needs an answer to widen from');
+  assert.match(resolver, /if \(answered\) rememberMiss\(\);/);
 });

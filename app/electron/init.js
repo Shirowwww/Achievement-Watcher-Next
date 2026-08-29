@@ -7,6 +7,7 @@ const { migrateLegacyUserData, migrateAw3UserData, migrateSouvenirFolder, retarg
 const { deriveWatchdogState } = require('../util/watchdogState.js');
 const links = require('../util/links.js');
 const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
+const sgdbAssetCache = require('../util/sgdbAssetCache.js');
 const { toAccelerator } = require('../util/hotkeyAccelerator.js');
 app.setName('Achievement Watcher');
 // Keep 3.x data separate from the legacy folder; --user-data-dir still overrides it for tests.
@@ -1410,36 +1411,125 @@ ipcMain.on('get-title-from-epic-id', async (event, arg) => {
 });
 ipcMain.handle('get-title-from-epic-id', (event, arg) => resolveTitleFromEpicId(arg));
 
+/*
+  The name a store puts on a game and the name SteamGridDB files it under differ by an edition tag
+  far more often than by anything else - a final cut, a deluxe, a midnight edition. The matcher is
+  strict on purpose (a wrong cover is worse than none), so rather than loosen it, the same strict
+  match is tried again against a shorter query. Only a tail that reads as an edition is dropped,
+  never a subtitle: the part after a colon is usually the game's own name and is kept.
+*/
+/*
+  An edition tag at the end of a name, after a separator or plain: a final cut, a deluxe, a complete
+  story. Written as one literal rather than built from a string, where the backslashes are one
+  escaping mistake away from matching the letter s instead of a space.
+*/
+const SGDB_EDITION_TAIL =
+  /\s*(?:[-–—:]\s*)?(?:(?:the\s+)?(?:final\s+cut|definitive|complete(?:\s+story)?|deluxe|ultimate|premium|gold|platinum|anniversary|remastered|enchanted|redux|midnight|enhanced|standard|digital|collector'?s?|game\s+of\s+the\s+year|goty)\b[\w\s'’]*|(?:[\w'’]+\s+)?edition\b[\w\s'’]*)$/i;
+// A dash-introduced tail that is not an edition is usually a subtitle SteamGridDB does not carry.
+// Tried last, and still only accepted if the strict matcher recognises what comes back.
+const SGDB_SUBTITLE_TAIL = /\s+[-–—]\s+.+$/;
+
+function steamGridDbNameVariants(name) {
+  const variants = [];
+  const push = (value) => {
+    const text = String(value || '').trim().replace(/\s{2,}/g, ' ');
+    if (text && !variants.some((v) => v.toLowerCase() === text.toLowerCase())) variants.push(text);
+  };
+  push(name);
+  // Trademark marks are in the store name and never in SteamGridDB's.
+  const bare = String(name).replace(/[™®©]/g, '');
+  push(bare);
+  let trimmed = bare;
+  for (let round = 0; round < 2 && SGDB_EDITION_TAIL.test(trimmed); round += 1) {
+    trimmed = trimmed.replace(SGDB_EDITION_TAIL, '');
+    push(trimmed);
+  }
+  if (SGDB_SUBTITLE_TAIL.test(trimmed)) push(trimmed.replace(SGDB_SUBTITLE_TAIL, ''));
+  return variants;
+}
+
+/*
+  A lookup that found nothing is remembered too. Without it, every game SteamGridDB has no artwork
+  for was searched again on every single scan - five requests each, on a key shared by every install
+  - which is both why those scans dragged and why the answer was sometimes a rate-limited nothing
+  for a game that does have artwork. Kept far shorter than a hit: artwork gets added over time.
+*/
+const SGDB_HIT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const SGDB_MISS_TTL_MS = 3 * 24 * 60 * 60 * 1000;
+
+// One lookup at a time is five requests; a library-wide refresh would fire hundreds at once and be
+// throttled into failures. Enough of them run together to keep a scan quick, not enough to trip it.
+const sgdbGate = { active: 0, waiting: [], limit: 4 };
+async function withSteamGridDbSlot(run) {
+  if (sgdbGate.active >= sgdbGate.limit) await new Promise((resolve) => sgdbGate.waiting.push(resolve));
+  sgdbGate.active += 1;
+  try {
+    return await run();
+  } finally {
+    sgdbGate.active -= 1;
+    const next = sgdbGate.waiting.shift();
+    if (next) next();
+  }
+}
+
 async function resolveImagesForGame(arg) {
   const gameName = String(arg && arg.name || '').trim();
   if (!gameName) return null;
-  const assetKey = require('crypto')
-    .createHash('sha1')
-    .update(`${gameName.toLowerCase()}\0${String(arg.platform || '').toLowerCase()}\0${String(arg.gameId || '').toLowerCase()}`)
-    .digest('hex');
-  const cacheFile = path.join(userData, 'steam_cache', 'steamgriddb_assets', `${assetKey}.json`);
-  try {
-    if (fs.existsSync(cacheFile) && Date.now() - fs.statSync(cacheFile).mtimeMs < 30 * 24 * 60 * 60 * 1000) {
-      const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-      if (cached && typeof cached === 'object') return cached;
-    }
-  } catch {}
+  // One module owns where an answer lives and how long it lives, because the window reads those
+  // same files directly instead of asking the main process once per game.
+  const cacheFile = sgdbAssetCache.cacheFile(userData, gameName, arg.platform, arg.gameId);
+  const cached = sgdbAssetCache.readCached(userData, gameName, arg.platform, arg.gameId);
+  if (cached !== undefined) return cached;
   if (steamGridDbUnavailable()) return null;
   const apiKey = getSteamGridDbApiKey();
   // Time-box artwork requests so network failures return quickly.
   const sgdb = (url) =>
     fetch(url, { headers: { Authorization: `Bearer ${apiKey}` }, signal: AbortSignal.timeout(SGDB_FETCH_TIMEOUT_MS) });
+  const rememberMiss = () => {
+    try {
+      fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
+      fs.writeFileSync(cacheFile, JSON.stringify({ notFound: true, name: gameName }, null, 2), 'utf8');
+    } catch {}
+  };
+  return withSteamGridDbSlot(async () => {
   try {
-    const searchRes = await sgdb(`${BASE_URL}/search/autocomplete/${encodeURIComponent(gameName)}`);
-    sgdbCircuit.recordSuccess();
-
-    const searchData = await searchRes.json();
-    // Error payloads may omit data.
-    const game = pickSteamGridDbGame(searchData?.data, gameName);
+    let game = null;
+    let matchedName = gameName;
+    /*
+      `answered` separates "SteamGridDB has nothing for this name" from "SteamGridDB did not answer".
+      Only the first is worth remembering: the key is shared by every install and gets throttled, and
+      a throttled reply is an empty list like any other. Caching one of those as "no artwork" is how
+      a game that does have a cover kept a blank tile for days.
+    */
+    let answered = false;
+    for (const variant of steamGridDbNameVariants(gameName)) {
+      const searchRes = await sgdb(`${BASE_URL}/search/autocomplete/${encodeURIComponent(variant)}`);
+      sgdbCircuit.recordSuccess();
+      // Error payloads may omit data.
+      const searchData = await searchRes.json();
+      if (searchRes.ok && searchData?.success !== false && Array.isArray(searchData?.data)) answered = true;
+      game = pickSteamGridDbGame(searchData?.data, variant);
+      if (game) {
+        matchedName = variant;
+        break;
+      }
+    }
+    if (!game && answered) {
+      // Nothing matched under the usual rules. One more pass, over the shortest query tried, where a
+      // single candidate carrying the whole name is accepted even with more words of its own.
+      const variants = steamGridDbNameVariants(gameName);
+      const shortest = variants[variants.length - 1];
+      const searchRes = await sgdb(`${BASE_URL}/search/autocomplete/${encodeURIComponent(shortest)}`);
+      const searchData = await searchRes.json();
+      game = pickSteamGridDbGame(searchData?.data, shortest, { relaxed: true });
+      if (game) matchedName = `${shortest} (relaxed)`;
+    }
     if (!game) {
-      debug.log('Game not found');
+      debug.log(`[get-images-for-game] no SteamGridDB entry for "${gameName}"${answered ? '' : ' (no answer - will retry)'}`);
+      if (answered) rememberMiss();
       return null;
     }
+    if (matchedName !== gameName) debug.log(`[get-images-for-game] "${gameName}" matched as "${matchedName}"`);
 
     const gameId = game.id;
 
@@ -1476,8 +1566,10 @@ async function resolveImagesForGame(arg) {
   } catch (err) {
     recordSteamGridDbFailure(err, 'artwork lookup');
     debug.log(`[get-images-for-game] ${gameName}: ${err.message}`);
+    // A request that failed is not an answer, so it is not remembered as one.
     return null;
   }
+  });
 }
 
 ipcMain.on('get-images-for-game', async (event, arg) => {
@@ -1494,6 +1586,13 @@ ipcMain.on('stylize-background-for-appid', async (event, arg) => {
   const imageUrl = arg.background;
   const t = path.parse(imageUrl).base;
   const outputPath = path.join(app.getPath('userData'), 'steam_cache', 'icon', arg.appid, t);
+  // The result is a file, and the same picture always blurs to the same thing: downloading and
+  // re-blurring it on every scan cost a full image pipeline per game for a file already on disk.
+  try {
+    if (fs.existsSync(outputPath)) return;
+  } catch {
+    /* unreadable - fall through and rebuild it */
+  }
   const sharp = require('sharp');
 
   try {
@@ -1733,6 +1832,58 @@ ipcMain.handle('epic:auth-status', async () => {
     return await require(path.join(app.getAppPath(), 'util/epicAuth.js')).getEpicAuthStatus({ userDataDir: userData });
   } catch (err) {
     return { configured: false, connected: false, error: String(err && err.message ? err.message : err) };
+  }
+});
+
+/*
+  Epic's services answer no CORS headers, so a fetch from the window fails with a bare "Failed to
+  fetch" whatever the page's connect-src allows - the whole Epic library came back empty because of
+  it. The renderer asks here instead, where no origin applies. Only the hosts Epic serves this data
+  from are reachable, and the account token is attached here so it never crosses the channel.
+*/
+const EPIC_FETCH_HOSTS = new Set([
+  'launcher.store.epicgames.com',
+  'launcher-public-service-prod06.ol.epicgames.com',
+  'catalog-public-service-prod06.ol.epicgames.com',
+  'api.epicgames.dev',
+]);
+
+ipcMain.handle('epic:fetch-json', async (event, { url, method = 'GET', body = null, authenticated = false } = {}) => {
+  let host = '';
+  try {
+    host = new URL(String(url)).host;
+  } catch {
+    return { ok: false, error: 'epic-url-invalid' };
+  }
+  if (!EPIC_FETCH_HOSTS.has(host)) return { ok: false, error: 'epic-host-not-allowed' };
+
+  // Epic's GraphQL answers 403 to a caller that does not identify itself as its own launcher, so
+  // the header the direct path sends has to be sent here too.
+  const headers = { Accept: 'application/json', 'User-Agent': 'EpicGamesLauncher' };
+  if (body != null) headers['Content-Type'] = 'application/json';
+  if (authenticated) {
+    try {
+      const token = await require(path.join(app.getAppPath(), 'util/epicAuth.js')).ensureEpicAccessToken({ userDataDir: userData });
+      if (!token?.access_token) return { ok: false, error: 'epic-token-missing' };
+      headers.Authorization = `${token.token_type || 'bearer'} ${token.access_token}`;
+    } catch (err) {
+      return { ok: false, error: String(err && err.message ? err.message : err) };
+    }
+  }
+
+  try {
+    // Passing the key at all is what some fetch implementations reject on a GET, so it is only
+    // added when there is a body to send.
+    const res = await fetch(url, {
+      method,
+      headers,
+      ...(body == null ? {} : { body: JSON.stringify(body) }),
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok) return { ok: false, status: res.status, error: `epic-http-${res.status}` };
+    return { ok: true, status: res.status, json: await res.json() };
+  } catch (err) {
+    return { ok: false, error: String(err && err.message ? err.message : err) };
   }
 });
 
@@ -3029,20 +3180,43 @@ async function fetchSteamGridDbGameIdBySteamAppid(steamAppid, options = {}) {
 
 // Prefer an exact title match, then a token-level match (all query words present, at most one extra
 // word for edition tags). Never take an unrelated first result - a wrong cover is worse than none.
-function pickSteamGridDbGame(games, name) {
+// A sequel is numbered in roman on one side and in digits on the other often enough to matter, and
+// an accent is dropped by one catalogue and kept by the other. Applied to both sides, so this
+// recognises the same name written differently - it never makes two different names look alike.
+const SGDB_ROMAN = { ii: '2', iii: '3', iv: '4', v: '5', vi: '6', vii: '7', viii: '8', ix: '9', x: '10' };
+function steamGridDbTokens(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => SGDB_ROMAN[token] || token);
+}
+
+function pickSteamGridDbGame(games, name, { relaxed = false } = {}) {
   const list = Array.isArray(games) ? games : [];
-  const queryTokens = name.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(/\s+/).filter(Boolean);
-  const tokensOf = (g) => String((g && g.name) || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(/\s+/).filter(Boolean);
-  const exact = list.find((g) => String((g && g.name) || '').trim().toLowerCase() === name.toLowerCase());
+  const queryTokens = steamGridDbTokens(name);
+  const tokensOf = (g) => steamGridDbTokens((g && g.name) || '');
+  const exact = list.find((g) => tokensOf(g).join(' ') === queryTokens.join(' '));
   if (exact) return exact;
   if (!queryTokens.length) return null;
-  return (
-    list.find((g) => {
-      const tokens = tokensOf(g);
-      if (!tokens.length) return false;
-      return queryTokens.every((t) => tokens.includes(t)) && tokens.length - queryTokens.length <= 1;
-    }) || null
-  );
+  const carriesQuery = (g) => {
+    const tokens = tokensOf(g);
+    return tokens.length > 0 && queryTokens.every((t) => tokens.includes(t));
+  };
+  const close = list.find((g) => carriesQuery(g) && tokensOf(g).length - queryTokens.length <= 1);
+  if (close || !relaxed) return close || null;
+  /*
+    Last resort, once every query has come back with nothing: an entry that carries the whole name
+    plus more of its own - a subtitle the store dropped, say. Taken only when exactly one candidate
+    does, because the runner-up in that list is usually the sequel, and a wrong cover is worse than
+    none.
+  */
+  const candidates = list.filter(carriesQuery);
+  return candidates.length === 1 ? candidates[0] : null;
 }
 
 // Native size first, then the other accepted dimensions in declared order. The API returns grids by
