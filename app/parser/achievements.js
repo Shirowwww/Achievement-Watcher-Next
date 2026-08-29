@@ -50,6 +50,7 @@ const installState = require(path.join(appPath, 'installState.js'));
 const { applyLocalStatProgress } = require(path.join(appPath, 'statProgress.js'));
 const scanScope = require(path.join(appPath, 'scanScope.js'));
 const manualGames = require(path.join(appPath, 'manualGames.js'));
+const sgdbAssetCache = require('../util/sgdbAssetCache.js');
 const gameNameCache = require(path.join(appPath, '..', 'util', 'gameNameCache.js'));
 const perfTrace = require(path.join(appPath, '..', 'util', 'perfTrace.js'));
 const dirCache = require(path.join(appPath, '..', 'util', 'dirCache.js'));
@@ -323,15 +324,52 @@ function consolidateDiscoveryList(list) {
 }
 
 // Merge duplicate Ubisoft/Steam records without doing network work.
+/*
+  Sources that list what an account owns rather than what is installed here, under an id of their
+  own. Their entries describe a game another source may already have found.
+
+  None of them names its achievements the way another does, so a merged game reads each source
+  through util/crossSchemaUnlocks.js rather than by key.
+*/
+const ACCOUNT_LIBRARY_TYPES = new Set(['xboxPc', 'epicOfficial']);
+
+// A store account's own listing: what it says you own, under an id only that store uses.
+const OFFICIAL_RECORD_TYPES = new Set(['steamAPI', 'gogOfficial', 'ubisoftOfficial', 'epicOfficial', 'xboxPc']);
+
+/*
+  Which of two records for one game is the one to keep. Both are merged either way, so nothing is
+  lost - this only decides which identity the tile carries, and therefore what the Play button
+  launches and what Game Health repairs:
+
+    4  a store copy the scan found installed here, folder and executable and all. Nothing describes
+       a game better than the copy sitting on the disk.
+    3  a save folder found on this PC. `gameDir` and `exe` are resolved after this runs, so an
+       installed crack and a bare save folder look alike here - reading those fields to tell them
+       apart is what silently handed four installed games to their Xbox listing. Either way the
+       game is on this PC, which is more than a listing can say.
+    2  the Steam account's own listing. Between two listings Steam is the one to keep.
+    1  any other store listing.
+    0  a listing that says outright the game is not installed here.
+*/
+function recordPrecedence(record) {
+  const data = (record && record.data) || {};
+  if (!OFFICIAL_RECORD_TYPES.has(data.type)) return 3;
+  if (data.gameDir || data.exe) return 4;
+  if (data.installed === false) return 0;
+  return data.type === 'steamAPI' ? 2 : 1;
+}
+
 function mergeCrossSourceDuplicates(appidList) {
   const byAppid = new Map((appidList || []).map((g) => [String(g.appid), g]));
   const drop = new Set();
   // Looks in every cached language, not just english - the app writes only the user's own, so an
   // english-only lookup found nothing on a non-English profile and the dedupe below never ran.
   const cachedSteamName = (appid) => gameNameCache.lookupSchemaCacheName(userDataDir(), appid);
-  // Use named numeric appids as Steam targets; fill missing names from local caches.
+  // Use named numeric appids as Steam targets; fill missing names from local caches. An account
+  // library's own ids are numeric too (an Xbox titleId is all digits), and an entry that matched
+  // itself by name would make the merge below depend on the order the list arrived in.
   const steamTargets = (appidList || [])
-    .filter((g) => /^\d+$/.test(String(g.appid)))
+    .filter((g) => /^\d+$/.test(String(g.appid)) && !(g.data && ACCOUNT_LIBRARY_TYPES.has(g.data.type)))
     .map((g) => ({
       appid: g.appid,
       name: g.name || cachedSteamName(String(g.appid)) || gameNameCache.lookupSteamDbName(String(g.appid)) || '',
@@ -352,6 +390,34 @@ function mergeCrossSourceDuplicates(appidList) {
         }
       } catch {
         /* no mapping - keep both entries */
+      }
+    }
+    /*
+      An account library keys its games by an id of its own - an Xbox titleId, an Epic namespace -
+      that lines up with no Steam appid, so the same game came out as two tiles: the copy installed
+      here at 0%, and the account entry holding the unlocks. Match them by name and fold the account
+      entry into the local one, which is the record worth keeping: it can be launched, timed and
+      repaired, and it gains the unlocks the account knows about. The install folder and the
+      executable are resolved after this runs, so a local record is never judged on having them yet.
+    */
+    if (g && g.data && ACCOUNT_LIBRARY_TYPES.has(g.data.type) && g.data.title) {
+      try {
+        const hit = require('../util/fuzzyAppid.js').bestConfidentAppid(String(g.data.title), steamTargets);
+        const target = hit && byAppid.get(String(hit));
+        if (target && target !== g) {
+          if (recordPrecedence(target) >= recordPrecedence(g)) {
+            mergeDiscoveryRecord(target, g);
+            if (debug) debug.log(`[merge] ${g.appid} (${g.source}) merged into ${target.appid} (${g.data.title})`);
+            continue;
+          }
+          // Nothing stands behind that record - a bare save folder - so the store listing is the
+          // better identity to keep. It still takes the other one's unlocks with it.
+          mergeDiscoveryRecord(g, target);
+          drop.add(String(target.appid));
+          if (debug) debug.log(`[merge] ${target.appid} merged into ${g.appid} (${g.source}, ${g.data.title})`);
+        }
+      } catch {
+        /* no confident match - keep both entries */
       }
     }
     // Drop a save-only Steam phantom when a matching GOG install exists.
@@ -1864,9 +1930,14 @@ async function discoverInScope(source, steamAccFilter, scope) {
   mark('ubisoftOfficial');
 
   //Epic official (installed Epic games - public localized schema + rarity; unlocks when connected)
-  if (!scope && source.epicOfficial) {
+  // 0 none, 1 only what is installed here, 2 everything the account owns.
+  if (!scope && source.epicOfficial > 0) {
     try {
-      data = data.concat(epicOfficial.scan());
+      const installed = epicOfficial.scan();
+      data = data.concat(installed);
+      if (source.epicOfficial > 1) {
+        data = data.concat(await epicOfficial.scanOwned(new Set(installed.map((entry) => String(entry.appid)))));
+      }
     } catch (err) {
       debug.error(err);
     }
@@ -1895,12 +1966,16 @@ async function discoverInScope(source, steamAccFilter, scope) {
   mark('ea');
 
   //Xbox PC (Game Pass / Microsoft Store / Online-Fix) - local installs + imported Xbox Network cache.
-  if (!scope && source.xboxPc) {
+  // 0 none, 1 only what is installed here, 2 everything the account owns (the imported library).
+  if (!scope && source.xboxPc > 0) {
     try {
       const xboxPc = require(path.join(appPath, 'xboxPc.js'));
       xboxPc.setUserDataPath(_userDataPath || userDataDir());
-      for (const titleId of xboxPc.listCachedTitles()) {
-        data.push({ appid: titleId, source: xboxPc.XBOX_PC_SOURCE, data: { type: 'xboxPc' } });
+      for (const titleId of source.xboxPc > 1 ? xboxPc.listCachedTitles() : []) {
+        // The name carries the record, so the dedupe below can tell that this is the same game
+        // another source already found: a titleId lines up with no appid anywhere.
+        const title = xboxPc.cachedTitleName(titleId);
+        data.push({ appid: titleId, name: title, source: xboxPc.XBOX_PC_SOURCE, data: { type: 'xboxPc', title } });
       }
       // Locally discovered installs (fs-only scan; Appx enumeration is reserved for the import action).
       const installed = await xboxPc.discoverXboxPcInstallations({ skipAppx: true });
@@ -2364,11 +2439,18 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     const benefitsFromFullFallback = ['rpcs3', 'shadps4', 'xenia', 'manual', 'unconfigured'].includes(appid.data.type);
     if (game.name && (needsPrimaryArt || benefitsFromFullFallback)) {
       try {
-        const fallback = (await ipcInvoke('get-images-for-game', {
-          name: game.name,
-          platform: appid.data.platform || game.system || appid.data.type,
-          gameId: appid.appid,
-        })) || {};
+        /*
+          The answer is a file in this app's own data folder, so it is read here. Only a question
+          that has not been answered yet goes to the main process, where the network call belongs:
+          asking it for every game put one round trip per game on the thread already serving every
+          tile's icons, and the scan waited for each one.
+        */
+        const platform = appid.data.platform || game.system || appid.data.type;
+        const cached = sgdbAssetCache.readCached(_userDataPath || userDataDir(), game.name, platform, appid.appid);
+        const fallback =
+          (cached === undefined
+            ? await ipcInvoke('get-images-for-game', { name: game.name, platform, gameId: appid.appid })
+            : cached) || {};
         game.img.header = game.img.header || fallback.landscape || '';
         game.img.portrait = game.img.portrait || fallback.portrait || '';
         game.img.background = game.img.background || fallback.background || '';
@@ -3085,7 +3167,23 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
 
       let root = {};
       try {
-        if (dataType === 'file') {
+        /*
+          The chain below is driven by the primary record's type, which is what a merged game reads
+          each of its sources as. An account-library source is not a save file sitting beside the
+          local copy: it carries its own state and its own reader, so it is dispatched on its own
+          type before the chain, and only when it differs from the record's.
+        */
+        if (appid.data && ACCOUNT_LIBRARY_TYPES.has(appid.data.type) && dataType !== appid.data.type) {
+          if (appid.data.type === 'xboxPc') {
+            const xboxPc = require(path.join(appPath, 'xboxPc.js'));
+            xboxPc.setUserDataPath(_userDataPath || userDataDir());
+            root = xboxPc.unlocksForSchema(appid.appid, game.achievement.list);
+          } else {
+            root = await epicOfficial.unlocksForSchema(appid, game.achievement.list, option.achievement.lang, {
+              forceRecheck: option.forceAchievementRecheck === true,
+            });
+          }
+        } else if (dataType === 'file') {
           root = await steam.getAchievementsFromFile(appid.data.path);
           // The same folder can hold a Steam-emulator save AND a Uplay loader's redirect target
           // ("AchSavePath = GSE Saves\<steamAppid>"). Keys the Uplay side can translate win, since a
@@ -3127,16 +3225,21 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         } else if (dataType === 'ubisoftOfficial') {
           root = ubisoftOfficial.getAchievements(appid);
         } else if (dataType === 'epicOfficial') {
-          root = await epicOfficial.getAchievements(appid);
+          root = await epicOfficial.getAchievements(appid, {
+            forceRecheck: option.forceAchievementRecheck === true,
+            lang: option.achievement.lang,
+          });
         } else if (dataType === 'manual') {
           root = {};
         } else if (dataType === 'cached') {
           root = await watchdog.getAchievements(appid.appid);
         } else if (dataType === 'xboxPc') {
-          // Xbox Network unlock state is not a local save: it arrives with the schema, already
-          // merged in by xboxPc.getGameData above. Reading it again here has nothing to read, so
-          // the game keeps the state it came with instead of failing the whole entry.
-          root = {};
+          // Xbox Network unlock state is not a local save, it comes with the imported schema. Asked
+          // for it against the schema being built, it lands on the right achievements even when
+          // that schema is the Steam one of a game merged with its Xbox entry.
+          const xboxPc = require(path.join(appPath, 'xboxPc.js'));
+          xboxPc.setUserDataPath(_userDataPath || userDataDir());
+          root = xboxPc.unlocksForSchema(appid.appid, game.achievement.list);
         } else if (dataType === 'uplay') {
           // Legit Ubisoft Connect exposes no local unlock-state file the way the Steam emus do, so
           // only the schema is available (already loaded into `game`). Show the game with everything

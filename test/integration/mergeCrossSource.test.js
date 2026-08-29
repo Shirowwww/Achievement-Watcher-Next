@@ -139,3 +139,168 @@ test('official launcher and library-name helpers are exposed for the scanner', (
     Module._load = originalLoad;
   }
 });
+
+test('an imported Xbox title merges into the local copy of the same game', () => {
+  // The two ids have nothing in common - an Xbox titleId is not a Steam appid - so before this the
+  // same game showed up twice: the copy installed here at 0%, and the account entry holding the
+  // unlocks.
+  const steam = {
+    appid: '2483190',
+    name: 'Forza Horizon 6',
+    source: 'OnlineFix',
+    data: { type: 'file', path: 'C:/saves/2483190', gameDir: 'C:/Games/Forza Horizon 6' },
+  };
+  const xbox = {
+    appid: '2079757188',
+    name: 'Forza Horizon 6',
+    source: 'Xbox PC',
+    data: { type: 'xboxPc', title: 'Forza Horizon 6' },
+  };
+  // Both ids are numeric, so the account entry could match itself: assert both arrival orders.
+  for (const list of [[xbox, steam], [steam, xbox]]) {
+    const ordered = achievements._internal.mergeCrossSourceDuplicates(list);
+    assert.equal(ordered.length, 1);
+    assert.equal(ordered[0].appid, '2483190', 'the local copy is the record kept');
+  }
+  const merged = achievements._internal.mergeCrossSourceDuplicates([xbox, steam]);
+  const sources = merged[0]._sources || [merged[0]];
+  assert.ok(
+    sources.some((s) => String(s.appid) === '2079757188' && s.data.type === 'xboxPc'),
+    'the Xbox entry is merged in so its unlocks feed the same tile'
+  );
+});
+
+test('an imported Xbox title with no local copy stays on its own', () => {
+  const xbox = {
+    appid: '1717113201',
+    name: 'Sea of Thieves',
+    source: 'Xbox PC',
+    data: { type: 'xboxPc', title: 'Sea of Thieves' },
+  };
+  const merged = achievements._internal.mergeCrossSourceDuplicates([xbox]);
+  assert.equal(merged.length, 1);
+  assert.equal(merged[0].appid, '1717113201');
+});
+
+/*
+  Which record survives a merge decides what the tile launches and what Game Health repairs. Both
+  records are always merged, so no unlock is ever lost either way.
+*/
+test('between two official stores, Steam is the record kept', () => {
+  const steam = {
+    appid: '2483190',
+    name: 'Forza Horizon 6',
+    source: 'Steam (Shirow)',
+    data: { type: 'steamAPI', userID: '76561199129454711' },
+  };
+  const xbox = {
+    appid: '2079757188',
+    name: 'Forza Horizon 6',
+    source: 'Xbox PC',
+    data: { type: 'xboxPc', title: 'Forza Horizon 6' },
+  };
+  for (const list of [[xbox, steam], [steam, xbox]]) {
+    const merged = achievements._internal.mergeCrossSourceDuplicates(list);
+    assert.equal(merged.length, 1);
+    assert.equal(merged[0].appid, '2483190');
+  }
+});
+
+test('an installed copy beats the store listing of the same game', () => {
+  const cracked = {
+    appid: '2483190',
+    name: 'Forza Horizon 6',
+    source: 'OnlineFix',
+    data: { type: 'file', path: 'C:/saves/2483190', gameDir: 'C:/Games/Forza Horizon 6' },
+  };
+  const xbox = {
+    appid: '2079757188',
+    name: 'Forza Horizon 6',
+    source: 'Xbox PC',
+    data: { type: 'xboxPc', title: 'Forza Horizon 6' },
+  };
+  for (const list of [[xbox, cracked], [cracked, xbox]]) {
+    const merged = achievements._internal.mergeCrossSourceDuplicates(list);
+    assert.equal(merged.length, 1);
+    assert.equal(merged[0].appid, '2483190', 'the copy that can actually be launched is kept');
+    const sources = merged[0]._sources || [merged[0]];
+    assert.ok(sources.some((s) => s.data.type === 'xboxPc'), 'the account entry comes with it');
+  }
+});
+
+test('a local record is kept even before its install folder is known', () => {
+  /*
+    The install folder and the executable are resolved after the merge runs, so at this point an
+    installed crack is indistinguishable from a bare save folder. Judging "is it installed" on those
+    fields here is what handed four installed games to their Xbox listing, taking the Play button,
+    the playtime and Game Health with them.
+  */
+  const local = {
+    appid: '2483190',
+    name: 'Forza Horizon 6',
+    source: 'OnlineFix',
+    data: { type: 'file', path: 'C:/saves/2483190' },
+  };
+  const xbox = {
+    appid: '2079757188',
+    name: 'Forza Horizon 6',
+    source: 'Xbox PC',
+    data: { type: 'xboxPc', title: 'Forza Horizon 6' },
+  };
+  for (const list of [[xbox, local], [local, xbox]]) {
+    const merged = achievements._internal.mergeCrossSourceDuplicates(list);
+    assert.equal(merged.length, 1);
+    assert.equal(merged[0].appid, '2483190');
+    const sources = merged[0]._sources || [merged[0]];
+    assert.ok(sources.some((s) => s.data.type === 'xboxPc'), 'the account entry is merged in, so its unlocks count');
+  }
+});
+
+test('the copy the scan found installed is the one kept', () => {
+  // A store listing that carries a folder and an executable is a copy on this disk, not a claim
+  // about an account, so it outranks everything - including a save folder for the same game.
+  const installedEpic = {
+    appid: 'ns-tobacco',
+    name: 'Tobacco Shop Simulator',
+    source: 'epic-official',
+    data: {
+      type: 'epicOfficial',
+      title: 'Tobacco Shop Simulator',
+      gameDir: 'C:/Games/Tobacco Shop Simulator',
+      exe: 'C:/Games/Tobacco Shop Simulator/game.exe',
+    },
+  };
+  const save = {
+    appid: '1878910',
+    name: 'Tobacco Shop Simulator',
+    source: 'Goldberg',
+    data: { type: 'file', path: 'C:/saves/1878910' },
+  };
+  for (const list of [[installedEpic, save], [save, installedEpic]]) {
+    const merged = achievements._internal.mergeCrossSourceDuplicates(list);
+    assert.equal(merged.length, 1);
+    assert.equal(merged[0].appid, 'ns-tobacco', 'the installed copy is the record kept');
+    const sources = merged[0]._sources || [merged[0]];
+    assert.ok(sources.some((s) => s.data.type === 'file'), 'the save is merged in, so its unlocks count');
+  }
+});
+
+test('a listing that says it is not installed never displaces anything', () => {
+  const ownedElsewhere = {
+    appid: 'ns-owned',
+    name: 'Forza Horizon 6',
+    source: 'epic-official',
+    data: { type: 'epicOfficial', title: 'Forza Horizon 6', installed: false },
+  };
+  const save = {
+    appid: '2483190',
+    name: 'Forza Horizon 6',
+    source: 'OnlineFix',
+    data: { type: 'file', path: 'C:/saves/2483190' },
+  };
+  for (const list of [[ownedElsewhere, save], [save, ownedElsewhere]]) {
+    const merged = achievements._internal.mergeCrossSourceDuplicates(list);
+    assert.equal(merged.length, 1);
+    assert.equal(merged[0].appid, '2483190');
+  }
+});
