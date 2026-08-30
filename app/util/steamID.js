@@ -2,7 +2,8 @@
 
 const util = require('util');
 const SteamID = require('steamid');
-const request = require('request-zero');
+const { lazyRequire } = require('./lazyRequire.js');
+const request = lazyRequire('request-zero');
 
 // request-zero surfaces the socket error, a bare code, or an HTTP status - only the first is a
 // "could not ask". A status came from a live host and is a real answer about the account.

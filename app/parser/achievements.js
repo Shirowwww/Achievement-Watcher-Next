@@ -45,6 +45,7 @@ const genEmuConfig = require(path.join(appPath, 'genEmuConfig.js'));
 const gameIndex = require(path.join(appPath, 'gameIndex.js'));
 const { userDataDir } = require(path.join(appPath, '..', 'util', 'userDataPath.js'));
 const { resolveAchievementDataPath } = require(path.join(appPath, '..', 'util', 'achievementDataPath.js'));
+const scanFingerprint = require(path.join(appPath, '..', 'util', 'scanFingerprint.js'));
 const exeDetect = require(path.join(appPath, 'exeDetect.js'));
 const installState = require(path.join(appPath, 'installState.js'));
 const { applyLocalStatProgress } = require(path.join(appPath, 'statProgress.js'));
@@ -542,6 +543,11 @@ let _discoverCache = null; // { key, time, appidList, folderIndex, claimedDirs }
 const DISCOVER_TTL_MS = 60000;
 // Timestamps of the folders the last full discovery walked, so the background poll can tell nothing on disk moved without walking them again.
 let _discoverFingerprint = null;
+// The same folders plus every unlock file the listed games are read from, captured before the games
+// load so anything written mid-scan reads as a change next time. Lets the renderer reuse a library
+// it already has instead of rebuilding an identical one - see util/scanFingerprint.js.
+let _scanFingerprint = null;
+let _lastDiscoveredAppids = null;
 const GAME_LOAD_TIMEOUT_MS = 30000;
 
 async function buildDiscoverCacheKey(option) {
@@ -568,6 +574,10 @@ async function discoverWithCache(option, steamAccFilter) {
     _folderIndex = _discoverCache.folderIndex;
     _folderIndexPromise = null;
     _claimedDirs = _discoverCache.claimedDirs;
+    // The folders belong to the walk, not to the call: a scan served from this cache read exactly
+    // what the walk read, so it must end up describing the same folders. Without this a manual
+    // refresh (which drops the fingerprint) left every following scan unable to prove anything.
+    _discoverFingerprint = _discoverCache.fingerprint ? _discoverCache.fingerprint.map(([dir, mtimeMs]) => [dir, mtimeMs]) : null;
     debug.log(`[discover] reusing cached scan (${((Date.now() - _discoverCache.time) / 1000).toFixed(1)}s old)`);
     return _discoverCache.appidList;
   }
@@ -582,7 +592,15 @@ async function discoverWithCache(option, steamAccFilter) {
   // Only a full scan is a usable baseline for the background poll; a scoped one looked at a subset.
   _discoverFingerprint = activeScope ? null : dirFingerprint.capture(dirCache.lastVisitedDirs());
   if (perfTrace.isEnabled()) debug.log(`[perf] discover ${Date.now() - discoverStarted}ms - ${perfTrace.summary({ prefix: 'discover:' })}`);
-  if (cacheKey) _discoverCache = { key: cacheKey, time: Date.now(), appidList, folderIndex: _folderIndex, claimedDirs: _claimedDirs };
+  if (cacheKey)
+    _discoverCache = {
+      key: cacheKey,
+      time: Date.now(),
+      appidList,
+      folderIndex: _folderIndex,
+      claimedDirs: _claimedDirs,
+      fingerprint: _discoverFingerprint,
+    };
   return appidList;
 }
 
@@ -3395,11 +3413,54 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
 // sources, so a caller must still run a real discovery for the ones in a database or the registry.
 module.exports.discoveryInputsUnchanged = () => dirFingerprint.matches(_discoverFingerprint);
 
+// Every file the listed games' unlock state is read from. A record's own data path covers the
+// emulator and crack sources; a legit Steam entry has no path of its own, but Steam rewrites one
+// stats file per game per user, and that file is the only local proof one of them unlocked.
+function achievementDataFiles(appidList) {
+  const files = [];
+  for (const entry of appidList || []) {
+    const records = Array.isArray(entry && entry._sources) && entry._sources.length > 0 ? entry._sources : [entry];
+    for (const record of records) {
+      const data = (record && record.data) || {};
+      const dataPath = resolveAchievementDataPath(data);
+      if (dataPath) files.push(dataPath);
+      const steamUser = data.userID && (data.userID.user || data.userID);
+      const appid = (record && record.appid) || (entry && entry.appid);
+      if (data.type === 'steamAPI' && data.cachePath && steamUser && appid)
+        files.push(path.join(data.cachePath, `UserGameStats_${steamUser}_${appid}.bin`));
+    }
+  }
+  return files;
+}
+
+// What the last full scan was built from, for the caller to store beside the library it produced.
+// Null after a scoped scan: it looked at a subset, so it proves nothing about the whole library.
+module.exports.getScanFingerprint = () => _scanFingerprint;
+
+// The appids the last full scan discovered, rendered or not.
+module.exports.getDiscoveredAppids = () => (_lastDiscoveredAppids ? _lastDiscoveredAppids.slice() : null);
+
+// True when every folder and unlock file that fingerprint recorded still reads the same. Blind to
+// sources with no file behind them (Xbox, Ubisoft Connect, Steam progress made on another PC), so
+// the caller must cap how long a match is trusted.
+module.exports.scanInputsUnchanged = (fingerprint) => scanFingerprint.matches(fingerprint);
+
+// Reusing a stored library skips discovery, so hand the background poll the folders that library
+// was built from - without them every one of its ticks would fall back to a full discovery walk.
+module.exports.restoreScanFingerprint = (fingerprint) => {
+  const dirs = fingerprint && Array.isArray(fingerprint.dirs) ? fingerprint.dirs : null;
+  if (!dirs || dirs.length === 0) return false;
+  _discoverFingerprint = dirs.map(([dir, mtimeMs]) => [dir, mtimeMs]);
+  _scanFingerprint = { dirs: _discoverFingerprint.map(([dir, mtimeMs]) => [dir, mtimeMs]), files: Array.isArray(fingerprint.files) ? fingerprint.files : [] };
+  return true;
+};
+
 // Manual refresh: forget the memoized install-folder walks so a game patched in place is re-read.
 module.exports.forgetInstallScanCache = () => {
   exeCandidateCache.forget();
   exeCandidateCache.flush();
   _discoverFingerprint = null;
+  _scanFingerprint = null;
 };
 
 // Lightweight discovery-only pass: runs the same folder/library walk makeList uses but skips the
@@ -3567,6 +3628,18 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
       finalList = result;
     }
     const discoveryLookup = buildDiscoveryLookup(appidList);
+    // Captured here, before a single game loads: a save file written while this scan runs must make
+    // the next launch scan again rather than trust a list built from what came before it.
+    _scanFingerprint = _discoverFingerprint
+      ? {
+          dirs: _discoverFingerprint.map(([dir, mtimeMs]) => [dir, mtimeMs]),
+          files: scanFingerprint.captureFiles(achievementDataFiles(appidList)),
+        }
+      : null;
+    // Every appid discovery found, rendered or not. Stored with the library so a reused one gives
+    // the background new-install poll the same baseline a real scan would have left it. Null for a
+    // scoped scan, for the same reason the fingerprint above is: it only looked at part of the disk.
+    _lastDiscoveredAppids = _scanFingerprint ? appidList.map((entry) => String(entry && entry.appid)).filter(Boolean) : null;
     // Announce the real total before the first game resolves, so the UI can size its placeholders to
     // what is actually coming instead of guessing from the previous session. Reported before the
     // ownership call, not after: that call is network-bound, and until it returned the progress bar
@@ -3653,6 +3726,7 @@ module.exports._internal = {
   promoteUplayRecord,
   buildProvisionalGame,
   resolveLocalGameName,
+  achievementDataFiles,
   buildDiscoveryLookup,
   getDiscoverySources,
   mergeCrossSourceDuplicates,

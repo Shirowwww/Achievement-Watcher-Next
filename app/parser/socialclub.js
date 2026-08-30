@@ -5,7 +5,8 @@
 
 const path = require('path');
 const fs = require('fs');
-const glob = require('fast-glob');
+const { lazyRequire } = require('../util/lazyRequire.js');
+const glob = lazyRequire('fast-glob');
 
 const appPath = __dirname;
 const steam = require(path.join(appPath, 'steam.js'));

@@ -1,12 +1,13 @@
 'use strict';
 
 const path = require('path');
-const glob = require('fast-glob');
+const { lazyRequire } = require('../util/lazyRequire.js');
+const glob = lazyRequire('fast-glob');
 const normalize = require('normalize-path');
 const ini = require('../util/ini');
 const omit = require('lodash.omit');
 const moment = require('moment');
-const request = require('request-zero');
+const request = lazyRequire('request-zero');
 const urlParser = require('url');
 const { regKeyExists, readRegistryInteger, readRegistryString, listRegistryAllSubkeys } = require('../util/reg');
 const appPath = path.join(__dirname, '../');

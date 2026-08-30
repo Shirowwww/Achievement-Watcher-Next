@@ -5,7 +5,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const request = require('request-zero');
+const { lazyRequire } = require('../util/lazyRequire.js');
+const request = lazyRequire('request-zero');
 const htmlParser = require('node-html-parser');
 
 let debug = { log() {}, warn() {}, error() {} };

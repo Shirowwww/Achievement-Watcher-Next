@@ -8,7 +8,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
-const request = require('request-zero');
+const { lazyRequire } = require('../util/lazyRequire.js');
+const request = lazyRequire('request-zero');
 const pe = require('../util/pe.js');
 
 const RELEASE_API = 'https://api.github.com/repos/Detanup01/gbe_fork/releases/latest';

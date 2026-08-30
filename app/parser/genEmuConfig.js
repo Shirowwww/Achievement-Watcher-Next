@@ -8,7 +8,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
-const request = require('request-zero');
+const { lazyRequire } = require('../util/lazyRequire.js');
+const request = lazyRequire('request-zero');
 
 const RELEASE_API = 'https://api.github.com/repos/alex47exe/gse_fork_tools/releases/latest';
 const RELEASES_PAGE = 'https://github.com/alex47exe/gse_fork_tools/releases';

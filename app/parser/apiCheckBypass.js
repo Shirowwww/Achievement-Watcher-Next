@@ -6,7 +6,8 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const request = require('request-zero');
+const { lazyRequire } = require('../util/lazyRequire.js');
+const request = lazyRequire('request-zero');
 const pe = require(path.join(__dirname, '..', 'util', 'pe.js'));
 
 const RELEASE_API = 'https://api.github.com/repos/SteamAutoCracks/Steam-API-Check-Bypass/releases/latest';

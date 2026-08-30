@@ -19,6 +19,8 @@ const STEAM_LOGIN_COOKIE = 'steamLoginSecure';
 const STEAM_REFRESH_COOKIE = 'steamRefresh_steam';
 const STEAM_LOGIN_DOMAIN = 'https://login.steampowered.com';
 const STEAM_RENEW_URL = 'https://api.steampowered.com/IAuthenticationService/GenerateAccessTokenForApp/v1/';
+const STEAM_FINALIZE_URL = 'https://login.steampowered.com/jwt/finalizelogin';
+const STEAM_FINALIZE_REDIR = 'https://steamcommunity.com/login/home/?goto=';
 
 function resolveSteamSessionFile(userDataDir = '', explicitPath = '') {
   const fromFlag = String(explicitPath || '').trim();
@@ -213,9 +215,70 @@ async function readRefreshSession(session) {
 }
 
 /*
-  Mints a fresh webapi_token from the refresh token, with no cookies and no window. This is the
-  call the Steam website makes for itself when its day-old access token dies; without it AW
-  declared the account disconnected every morning even though Steam still trusted it.
+  Steam's sign-in endpoints only read multipart forms, and Electron's fetch does not serialize a
+  FormData body, so the parts are written out by hand. The values here are hex nonces and steamids,
+  never free text, so no part ever has to be escaped.
+*/
+function multipartForm(fields) {
+  const boundary = `----AchievementWatcher${crypto.randomBytes(16).toString('hex')}`;
+  const parts = Object.entries(fields)
+    .map(([name, value]) => `--${boundary}\r\nContent-Disposition: form-data; name="${name}"\r\n\r\n${String(value)}\r\n`)
+    .join('');
+  return { body: `${parts}--${boundary}--\r\n`, contentType: `multipart/form-data; boundary=${boundary}` };
+}
+
+function postForm(session, url, fields) {
+  const { body, contentType } = multipartForm(fields);
+  return session.fetch(url, { method: 'POST', headers: { 'content-type': contentType }, body, credentials: 'include' });
+}
+
+/*
+  Reopens the web session from the refresh token, exactly as the Steam website does for itself:
+  finalizelogin trades the refresh token for one short-lived grant per Steam domain, then each
+  settoken call puts a fresh sign-in cookie back in our partition. This is the only renewal path
+  that works for a session opened in a browser window; GenerateAccessTokenForApp below has been
+  answering AccessDenied to browser tokens since 2025, which is why the account looked expired
+  every single day even though Steam still trusted it for months.
+*/
+async function refreshWebSession(session, refreshToken, steamid) {
+  if (!session || typeof session.fetch !== 'function') throw new Error('steam-finalize-no-session');
+  const nonce = String(refreshToken || '').trim();
+  if (!nonce) throw new Error('steam-finalize-no-refresh-token');
+
+  const response = await postForm(session, STEAM_FINALIZE_URL, {
+    nonce,
+    sessionid: crypto.randomBytes(12).toString('hex'),
+    redir: STEAM_FINALIZE_REDIR,
+  });
+  if (!response || !response.ok) throw new Error(`steam-finalize-http-${response ? response.status : 'no-response'}`);
+  const payload = await response.json();
+  // Steam reports a refused refresh token as an eresult in the body, with a 200 status.
+  if (payload && payload.error) throw new Error(`steam-finalize-eresult-${payload.error}`);
+  const transfers = Array.isArray(payload && payload.transfer_info) ? payload.transfer_info : [];
+  if (!transfers.length) throw new Error('steam-finalize-no-transfer');
+
+  const id = String((payload && payload.steamID) || steamid || '');
+  let accepted = 0;
+  for (const transfer of transfers) {
+    const url = String((transfer && transfer.url) || '');
+    if (!url) continue;
+    try {
+      const result = await postForm(session, url, { steamID: id, ...transfer.params });
+      if (result && result.ok) accepted += 1;
+    } catch {
+      // help.steampowered.com being unreachable does not make the store session any less valid.
+    }
+  }
+  // Not one domain took the cookie: nothing was signed back in, so say so rather than let the
+  // caller read a token that cannot exist yet.
+  if (!accepted) throw new Error('steam-finalize-no-cookie');
+  return id;
+}
+
+/*
+  Mints a fresh access token from the refresh token, with no cookies and no window. Kept as a last
+  resort behind refreshWebSession: Steam only answers this one for tokens issued to the mobile app
+  and to the client, so a session opened in the sign-in window is refused here.
 */
 async function renewWebApiToken(refreshToken, steamid, fetchImpl = globalThis.fetch) {
   const refresh = String(refreshToken || '').trim();
@@ -237,9 +300,10 @@ async function renewWebApiToken(refreshToken, steamid, fetchImpl = globalThis.fe
 
 /*
   A valid token, or an empty string. Never triggers any UI: if the session is dead, the caller
-  shows a state and waits for a click. Two ways back from an expired token, tried in that order:
-  re-read it from the page while the login cookie is alive, then mint one from the refresh token,
-  which outlives that cookie by months.
+  shows a state and waits for a click. Three ways back from an expired token, tried in that order:
+  re-read it from the page while the login cookie is alive, sign the session back in with the
+  refresh token, which outlives that cookie by months, then the mobile-style renewal for the rare
+  session whose token came from somewhere else.
 */
 async function ensureSteamToken({ sessionFile, tokenSecret, session, fetchImpl = globalThis.fetch } = {}) {
   const cached = await loadSession({ sessionFile, tokenSecret });
@@ -269,6 +333,21 @@ async function ensureSteamToken({ sessionFile, tokenSecret, session, fetchImpl =
   const fromCookie = await readRefreshSession(session);
   const refreshToken = String((cached && cached.refresh_token) || '') || fromCookie.refreshToken;
   const steamid = String((cached && cached.steamid) || '') || fromCookie.steamid;
+
+  if (session && refreshToken) {
+    try {
+      const id = await refreshWebSession(session, refreshToken, steamid);
+      const token = await fetchWebApiToken(session);
+      // The sign-in hands out a new refresh cookie on the way through, and the old one dies with
+      // it, so what is stored has to be what the jar now holds.
+      const renewed = await readRefreshSession(session);
+      await store(token, { refresh_token: renewed.refreshToken || refreshToken, steamid: steamid || id });
+      return token;
+    } catch {
+      // Steam refused the refresh token, or handed back no cookie: the last resort below.
+    }
+  }
+
   try {
     const token = await renewWebApiToken(refreshToken, steamid, fetchImpl);
     await store(token, { refresh_token: refreshToken, steamid });
@@ -329,6 +408,7 @@ module.exports = {
   STEAM_LOGIN_COOKIE,
   STEAM_REFRESH_COOKIE,
   STEAM_RENEW_URL,
+  STEAM_FINALIZE_URL,
   resolveSteamSessionFile,
   steamIdFromLoginCookie,
   parseJwtExpiry,
@@ -342,6 +422,7 @@ module.exports = {
   webApiTokenFromBody,
   refreshSessionFromCookie,
   readRefreshSession,
+  refreshWebSession,
   renewWebApiToken,
   ensureSteamToken,
   fetchPersona,

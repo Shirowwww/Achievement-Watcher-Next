@@ -2,8 +2,9 @@
 
 const path = require('path');
 const fs = require('fs');
-const glob = require('fast-glob');
-const request = require('request-zero');
+const { lazyRequire } = require('../util/lazyRequire.js');
+const glob = lazyRequire('fast-glob');
+const request = lazyRequire('request-zero');
 
 let cacheRoot;
 let debug;

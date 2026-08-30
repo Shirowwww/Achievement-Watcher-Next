@@ -374,3 +374,101 @@ test('a refresh token Steam no longer accepts leaves the account needing a real 
   const status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret: 'passphrase' });
   assert.equal(status.needsReconnect, true);
 });
+
+/*
+  The webapi_token and the sign-in cookie both die after a day, while the refresh token lives for
+  months. Steam only answers GenerateAccessTokenForApp for mobile and client tokens, so a session
+  opened in the sign-in window has to be signed back in through finalizelogin, exactly as the
+  website does for itself. Without it the account read as expired every single morning.
+*/
+test('an expired session is signed back in with the refresh token', async () => {
+  const sessionFile = path.join(tmp, 'web-refresh.enc');
+  await steamAuth.saveSessionEncrypted(
+    sessionFile,
+    { webapi_token: 'OLD', steamid: '76561198235048344', refresh_token: 'REFRESH-OLD', expiresAt: Date.now() - 1000 },
+    'passphrase'
+  );
+
+  const fresh = fakeJwt({ exp: Math.floor(Date.now() / 1000) + 3600 });
+  const posted = [];
+  let signedIn = false;
+  const session = {
+    cookies: {
+      get: async () => [{ value: `76561198235048344||${signedIn ? 'REFRESH-NEW' : 'REFRESH-OLD'}` }],
+    },
+    fetch: async (url, init = {}) => {
+      if (url === steamAuth.STEAM_TOKEN_URL) {
+        // The sign-in cookie is dead until finalizelogin puts a new one back.
+        if (!signedIn) return { ok: false, status: 401, json: async () => ({}) };
+        return { ok: true, json: async () => ({ success: 1, data: { webapi_token: fresh } }) };
+      }
+      posted.push({ url, body: String(init.body || ''), type: String((init.headers || {})['content-type'] || '') });
+      if (url === steamAuth.STEAM_FINALIZE_URL) {
+        return {
+          ok: true,
+          json: async () => ({
+            steamID: '76561198235048344',
+            transfer_info: [
+              { url: 'https://store.steampowered.com/login/settoken', params: { nonce: 'N1', auth: 'A1' } },
+              { url: 'https://steamcommunity.com/login/settoken', params: { nonce: 'N2', auth: 'A2' } },
+            ],
+          }),
+        };
+      }
+      signedIn = true;
+      return { ok: true, json: async () => ({ result: 1 }) };
+    },
+  };
+
+  assert.equal(await steamAuth.ensureSteamToken({ sessionFile, tokenSecret: 'passphrase', session }), fresh);
+
+  const finalize = posted.find((call) => call.url === steamAuth.STEAM_FINALIZE_URL);
+  assert.ok(finalize.type.startsWith('multipart/form-data; boundary='), 'Steam only reads a multipart form here');
+  assert.ok(finalize.body.includes('REFRESH-OLD'), 'the refresh token is the nonce');
+  assert.equal(posted.filter((call) => call.url.endsWith('/login/settoken')).length, 2, 'every domain gets its cookie back');
+
+  const status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret: 'passphrase' });
+  assert.equal(status.needsReconnect, false);
+  // Signing back in retires the old refresh token, so keeping it would break the next renewal.
+  const stored = steamAuth.decryptSession(fs.readFileSync(sessionFile, 'utf8'), 'passphrase');
+  assert.equal(stored.refresh_token, 'REFRESH-NEW');
+});
+
+test('a refresh token Steam refuses falls through instead of throwing', async () => {
+  const sessionFile = path.join(tmp, 'web-refresh-refused.enc');
+  await steamAuth.saveSessionEncrypted(
+    sessionFile,
+    { webapi_token: 'OLD', steamid: '76561198235048344', refresh_token: 'DEAD', expiresAt: Date.now() - 1000 },
+    'passphrase'
+  );
+
+  const session = {
+    cookies: { get: async () => [] },
+    fetch: async (url) => {
+      if (url === steamAuth.STEAM_TOKEN_URL) return { ok: false, status: 401, json: async () => ({}) };
+      // Steam reports a dead refresh token as an eresult in a 200 body.
+      return { ok: true, json: async () => ({ error: 15 }) };
+    },
+  };
+  const fetchImpl = async () => ({ ok: false, status: 401, json: async () => ({}) });
+  assert.equal(await steamAuth.ensureSteamToken({ sessionFile, tokenSecret: 'passphrase', session, fetchImpl }), '');
+});
+
+test('finalizelogin answering with no usable transfer is a failure, not a signed-in session', async () => {
+  const session = {
+    fetch: async () => ({ ok: true, json: async () => ({ steamID: '76561198235048344', transfer_info: [] }) }),
+  };
+  await assert.rejects(() => steamAuth.refreshWebSession(session, 'REFRESH', '76561198235048344'), /steam-finalize-no-transfer/);
+});
+
+test('a transfer no domain accepts leaves no cookie, and says so', async () => {
+  const session = {
+    fetch: async (url) => {
+      if (url === steamAuth.STEAM_FINALIZE_URL) {
+        return { ok: true, json: async () => ({ steamID: '7656119', transfer_info: [{ url: 'https://store.steampowered.com/login/settoken', params: {} }] }) };
+      }
+      return { ok: false, status: 503, json: async () => ({}) };
+    },
+  };
+  await assert.rejects(() => steamAuth.refreshWebSession(session, 'REFRESH', '7656119'), /steam-finalize-no-cookie/);
+});

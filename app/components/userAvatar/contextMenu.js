@@ -3,7 +3,8 @@
 const path = require('path');
 const remote = require('@electron/remote');
 const { Menu, MenuItem, nativeImage } = remote;
-const request = require('request-zero');
+const { lazyRequire } = require('../../util/lazyRequire.js');
+const request = lazyRequire('request-zero');
 
 const { selectFileDialog } = require('./selectFileDialog.js');
 const { getSteamPath, getSteamUsers } = require('../../parser/steam.js');

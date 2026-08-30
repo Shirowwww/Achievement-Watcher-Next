@@ -90,6 +90,7 @@ const apiCheckBypass = require(path.join(appPath, 'parser/apiCheckBypass.js'));
 const { calculateLibraryStats } = require(path.join(appPath, 'util/libraryStats.js'));
 const { resolveGameRarityContext } = require(path.join(appPath, 'util/rarity.js'));
 const librarySnapshot = require(path.join(appPath, 'util/librarySnapshot.js'));
+const libraryReuse = require(path.join(appPath, 'util/libraryReuse.js'));
 const { createViewportWork } = require(path.join(appPath, 'util/viewportWork.js'));
 const perfTrace = require(path.join(appPath, 'util/perfTrace.js'));
 const libraryLayout = require(path.join(appPath, 'util/libraryLayout.js'));
@@ -339,6 +340,26 @@ function forgetScanCaches() {
     steamParser.forgetLocalSchemaLocations();
   } catch (err) {
     debug.log(`[new-game-scan] could not clear the unresolved-appid cache: ${err}`);
+  }
+}
+
+// Empty string when the stored library may be served in place of a full scan, otherwise why it may
+// not - see util/libraryReuse.js.
+function libraryReuseRefusal(entry, options) {
+  return libraryReuse.refuseReason(entry, options, {
+    now: Date.now(),
+    appVersion: runningVersion(),
+    inputsUnchanged: (fingerprint) => achievements.scanInputsUnchanged(fingerprint),
+  });
+}
+
+// Empty when it cannot be read: a library can only be reused by the version that built it, so an
+// unreadable version has to refuse the reuse rather than assume a match.
+function runningVersion() {
+  try {
+    return remote.app.getVersion();
+  } catch {
+    return '';
   }
 }
 
@@ -3330,9 +3351,14 @@ var app = {
     // percentage, so the bar used to sit frozen on the previous scan's 100% (or a cold start's 0%).
     loadingElem.progress.attr('data-percent', 0).addClass('indeterminate');
     loadingElem.meter.css('width', '0%');
-    loadingElem.elem.show();
-    // Show activity across the whole window while scanning.
-    setLibraryBusyCursor(true);
+    // Not shown yet. A launch that reuses the stored library finishes in a few hundred milliseconds,
+    // and a progress bar that appears and disappears inside that window is noise, not feedback. The
+    // footer goes up when there is either nothing to look at or a real scan to wait for.
+    const showLoadingIndicator = () => {
+      loadingElem.elem.show();
+      // Show activity across the whole window while scanning.
+      setLibraryBusyCursor(true);
+    };
 
     renderProfileStats(calculateLibraryStats([]));
 
@@ -3356,7 +3382,8 @@ var app = {
       ? { ...self.config, scanScope: activeScanScope, fastStart, forceAchievementRecheck }
       : { ...self.config, fastStart, forceAchievementRecheck };
     const snapshotReadStartedAt = performance.now();
-    const knownGames = fastStart && !activeScanScope ? librarySnapshot.read(getUserDataPath(), scanConfig) : [];
+    const knownEntry = fastStart && !activeScanScope ? librarySnapshot.readEntry(getUserDataPath(), scanConfig) : null;
+    const knownGames = knownEntry ? knownEntry.games : [];
     const snapshotReadMs = performance.now() - snapshotReadStartedAt;
     // Read the manual-unlock sidecar once for this scan. Applying it in the streamed callback makes
     // tile percentages and profile counters survive an app restart without doing sync I/O per game.
@@ -3621,6 +3648,7 @@ var app = {
 
     // Nothing known to show: placeholders stand in until the first fresh tile arrives.
     if (gameElements.size === 0) {
+      showLoadingIndicator();
       addSkeletonTiles(
         previousVisibleCount > 0
           ? Math.min(MAX_SKELETON_TILES, previousVisibleCount + EXTRA_SKELETON_TILES)
@@ -3628,16 +3656,38 @@ var app = {
       );
     }
 
-    const listLoadPromise = achievements
-      .makeList(
-        scanConfig,
-        (percent, total) => {
-          loadingElem.progress.removeClass('indeterminate').attr('data-percent', percent);
-          loadingElem.meter.css('width', percent + '%');
-          setSkeletonExpected(total);
-        },
-        (game) => renderGame(game)
-      )
+    // Whether the stored library is served as-is. Decided one frame later, never in front of the
+    // first paint: the check stats every folder and unlock file the last scan read, and the tiles
+    // above are already on screen waiting for the thread.
+    let reuseLibrary = false;
+
+    const listLoadPromise = new Promise((resolve) => setTimeout(resolve, 0))
+      .then(() => {
+        const reuseCheckStartedAt = performance.now();
+        const reuseRefusal = fastStart && !activeScanScope ? libraryReuseRefusal(knownEntry, options) : 'a refresh always rescans';
+        reuseLibrary = reuseRefusal === '';
+        if (reuseLibrary) {
+          debug.log(
+            `[library] reusing the ${knownGames.length} game(s) the last scan built - nothing they were read from changed ` +
+              `(checked in ${(performance.now() - reuseCheckStartedAt).toFixed(0)}ms)`
+          );
+          // The background new-install poll compares against the folders a scan read. Hand it the
+          // stored ones, or its very next tick falls back to walking every library folder again.
+          achievements.restoreScanFingerprint(knownEntry.fingerprint);
+          return knownGames;
+        }
+        debug.log(`[library] full scan: ${reuseRefusal}`);
+        if (gameElements.size > 0) showLoadingIndicator();
+        return achievements.makeList(
+          scanConfig,
+          (percent, total) => {
+            loadingElem.progress.removeClass('indeterminate').attr('data-percent', percent);
+            loadingElem.meter.css('width', percent + '%');
+            setSkeletonExpected(total);
+          },
+          (game) => renderGame(game)
+        );
+      })
       .then((list) => {
         // Scan finished - release the re-entry guard. If a refresh was requested while this run was in
         // flight, run exactly one more pass now (the just-finished list is stale) and skip finalising it.
@@ -3678,7 +3728,12 @@ var app = {
         // Baseline for the background detector: the appids this scan was built from. Passing the
         // rendered list also records which discovered appids produced no tile, so a flickering
         // phantom stops re-triggering full refreshes.
-        seedNewGameScanBaseline(list);
+        if (reuseLibrary && Array.isArray(knownEntry.discoveredAppids) && knownEntry.discoveredAppids.length > 0) {
+          // No discovery ran this time, so take the baseline the scan that built this library left.
+          knownDiscoveredAppids = new Set(knownEntry.discoveredAppids);
+        } else {
+          seedNewGameScanBaseline(list);
+        }
         if (activeScanScope && previousGames.length > 0 && Array.isArray(list)) {
           const freshAppids = new Set(list.map((game) => String(game && game.appid)));
           const preserved = previousGames.filter(
@@ -3698,9 +3753,15 @@ var app = {
         gameList = gameList.filter((game) => currentAppids.has(String(game && game.appid)));
         gameListIndex.clear();
         gameList.forEach((game, index) => gameListIndex.set(String(game && game.appid), index));
-        if (!activeScanScope) {
+        // Rewriting a reused library would only move its saved timestamp forward, and that timestamp
+        // is what caps how long the reuse is allowed to go on: leave the file exactly as it is.
+        if (!activeScanScope && !reuseLibrary) {
           try {
-            librarySnapshot.write(getUserDataPath(), scanConfig, list);
+            librarySnapshot.write(getUserDataPath(), scanConfig, list, {
+              appVersion: runningVersion(),
+              fingerprint: achievements.getScanFingerprint(),
+              discoveredAppids: achievements.getDiscoveredAppids(),
+            });
           } catch (err) {
             debug.log(`[library-snapshot] save failed: ${err.message || err}`);
           }
@@ -5849,19 +5910,76 @@ var app = {
                       // Moving a game folder to the Recycle Bin takes as long as the folder is big;
                       // the same spinner the emulator fix uses shows the work started and is still going.
                       setGameBoxBusy(self, t('deleting-game-folder', 'Moving to the Recycle Bin…', 'Déplacement vers la Corbeille…'));
-                      try {
-                        await remote.shell.trashItem(uninstallDir);
-                      } catch (err) {
-                        clearGameBoxBusy(self);
-                        remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                      const removal = await ipcRenderer.invoke('delete-game-folder', { dir: uninstallDir });
+                      clearGameBoxBusy(self);
+                      if (!removal || !removal.ok) {
+                        /*
+                          Windows says "Failed to perform delete operation" and nothing else, whatever the
+                          reason. The main process looked the folder over, so the file still open is named
+                          here, and the two ways out of the failure are on the dialog: do it by hand in
+                          Explorer, or delete for good when the Recycle Bin is what is refusing.
+                        */
+                        const reason = removal && removal.busy
+                          ? t(
+                              'delete-blocked-by-open-file',
+                              'A file in this folder is still open: {file}\nClose the game and its launcher, then try again.',
+                              'Un fichier de ce dossier est encore ouvert : {file}\nFerme le jeu et son lanceur, puis réessaie.',
+                              { file: removal.busy }
+                            )
+                          : removal && removal.denied
+                            ? t(
+                                'delete-blocked-by-permissions',
+                                'This file is not writable by your account: {file}\nDeleting the folder needs administrator rights.',
+                                'Ce fichier n’est pas modifiable par ton compte : {file}\nLa suppression du dossier demande des droits administrateur.',
+                                { file: removal.denied }
+                              )
+                            : t(
+                                'delete-recycle-bin-refused',
+                                'Windows refused to recycle this folder. That happens when a file is still open, when the drive has no Recycle Bin (a removable or network drive), or when the folder is too big for it.',
+                                'Windows a refusé de mettre ce dossier à la Corbeille. Cela arrive quand un fichier est encore ouvert, quand le disque n’a pas de Corbeille (disque amovible ou réseau), ou quand le dossier est trop gros pour elle.'
+                              );
+                        const choice = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
                           type: 'error',
                           title: t('delete-failed', 'Delete failed', 'Échec de la suppression'),
                           message: t('could-not-move-the-folder-to-the-recycle-bin', 'Could not move the folder to the Recycle Bin.', 'Impossible de déplacer le dossier vers la Corbeille.'),
-                          detail: formatErr(err),
+                          detail: [
+                            uninstallDir,
+                            '',
+                            reason,
+                            '',
+                            t(
+                              'delete-permanently-detail',
+                              'A permanent delete skips the Recycle Bin: the files cannot be restored.',
+                              'Une suppression définitive ignore la Corbeille : les fichiers ne pourront pas être restaurés.'
+                            ),
+                          ].join('\n'),
+                          buttons: [
+                            t('cancel', 'Cancel', 'Annuler'),
+                            t('gh-action-open-folder', 'Open the game folder', 'Ouvrir le dossier du jeu'),
+                            t('delete-permanently', 'Delete permanently', 'Supprimer définitivement'),
+                          ],
+                          defaultId: 0,
+                          cancelId: 0,
+                          noLink: true,
                         });
-                        return;
+                        if (choice === 1) {
+                          remote.shell.openPath(uninstallDir);
+                          return;
+                        }
+                        if (choice !== 2) return;
+                        setGameBoxBusy(self, t('uninstalling-game', 'Uninstalling…', 'Désinstallation…'));
+                        const forced = await ipcRenderer.invoke('delete-game-folder', { dir: uninstallDir, permanent: true });
+                        clearGameBoxBusy(self);
+                        if (!forced || !forced.ok) {
+                          remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                            type: 'error',
+                            title: t('delete-failed', 'Delete failed', 'Échec de la suppression'),
+                            message: t('could-not-delete-the-folder', 'Could not delete the folder.', 'Impossible de supprimer le dossier.'),
+                            detail: [uninstallDir, '', (forced && forced.error) || ''].join('\n'),
+                          });
+                          return;
+                        }
                       }
-                      clearGameBoxBusy(self);
                       app.onStart();
                     },
                   })

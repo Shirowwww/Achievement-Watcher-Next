@@ -1,7 +1,8 @@
 'use strict';
 
 const path = require('path');
-const glob = require('fast-glob');
+const { lazyRequire } = require('../util/lazyRequire.js');
+const glob = lazyRequire('fast-glob');
 const ffs = require('../util/fsAsync');
 
 let cache;

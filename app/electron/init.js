@@ -1691,6 +1691,38 @@ ipcMain.handle('launch-game-via-shell', async (event, { executable, args = '', w
   }
 });
 
+/*
+  "Delete game folder": the Recycle Bin first, a permanent delete only when the renderer comes back
+  a second time with the choice made. It runs here rather than through remote.shell so the refusal
+  is logged and inspected: Windows answers every recycle failure with one opaque line, and the file
+  still open in the folder is what actually explains it. The safety gate is re-checked on this side
+  because the path arrives from the renderer.
+*/
+ipcMain.handle('delete-game-folder', async (event, { dir, permanent = false } = {}) => {
+  const uninstall = require(path.join(__dirname, '..', 'util', 'uninstall.js'));
+  const { findRemovalBlocker } = require(path.join(__dirname, '..', 'util', 'folderRemoval.js'));
+  const target = typeof dir === 'string' && dir ? path.resolve(dir) : '';
+  if (!target || !uninstall.isSafeTrashTarget(target)) {
+    debug.warn(`[uninstall] refused to delete ${target || '(empty path)'}: not a safe target`);
+    return { ok: false, error: 'This folder is not a safe removal target.' };
+  }
+  try {
+    if (permanent) await fs.promises.rm(target, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+    else await shell.trashItem(target);
+    debug.log(`[uninstall] ${permanent ? 'deleted' : 'recycled'} ${target}`);
+    return { ok: true };
+  } catch (err) {
+    const blocker = findRemovalBlocker(target);
+    const reason = err && err.message ? err.message : String(err);
+    debug.warn(
+      `[uninstall] could not ${permanent ? 'delete' : 'recycle'} ${target} => ${reason}` +
+        (blocker.busy ? ` (in use: ${blocker.busy})` : '') +
+        (blocker.denied ? ` (access denied: ${blocker.denied})` : '')
+    );
+    return { ok: false, error: reason, busy: blocker.busy, denied: blocker.denied };
+  }
+});
+
 /* Settings > Advanced > Diagnostics: zip every log file. Hand-copying is not enough, several
    processes keep their log streams open and appending, so read each once here for a consistent
    snapshot without stopping anything. */
@@ -7053,6 +7085,20 @@ try {
       } catch (err) {
         debug.log('[checkResources] failed: ' + err.message);
       }
+      // The window goes up before the rest of the startup work, not after it. Everything below runs
+      // on this one thread - the login-item sync touches the registry, the stale-Watchdog sweep shells
+      // out to netstat - while the window is a separate process that spends its first second parsing
+      // a page and loading its own modules. Opening it first overlaps the two instead of queueing
+      // them; nothing below is needed to display a library.
+      if (safeMode) startupArgs.hidden = false;
+      const startupToast = parseToastActivation(process.argv);
+      if (startupToast) startupArgs.hidden = false; // clicking a toast must surface the window
+      try {
+        parseArgs(startupArgs); // opens the window unless launched with --hidden
+        openGameFromLaunchArgs(startupToast || startupArgs); // toast activation on a cold start
+      } catch (err) {
+        debug.log('[startup] opening the window failed: ' + (err.message || err));
+      }
       if (!manifest.config.debug) {
         try {
           ipc.setStartWithWindows(configJS?.general?.startWithWindows !== false);
@@ -7090,11 +7136,6 @@ try {
           debug.log('[iconCache] prune skipped: ' + (err.message || err));
         }
       }, 15000);
-      if (safeMode) startupArgs.hidden = false;
-      const startupToast = parseToastActivation(process.argv);
-      if (startupToast) startupArgs.hidden = false; // clicking a toast must surface the window
-      parseArgs(startupArgs); // opens the window unless launched with --hidden
-      openGameFromLaunchArgs(startupToast || startupArgs); // toast activation on a cold start
     })
     .on('window-all-closed', function () {
       // Resident tray daemon: do NOT quit when the window closes - the tray + background monitor stay

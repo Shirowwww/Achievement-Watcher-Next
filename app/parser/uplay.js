@@ -2,11 +2,12 @@
 
 const path = require('path');
 const yaml = require('js-yaml');
-const glob = require('fast-glob');
+const { lazyRequire } = require('../util/lazyRequire.js');
+const glob = lazyRequire('fast-glob');
 const zip = require('adm-zip');
 const fs = require('fs');
 const { listRegistryAllSubkeys, readRegistryString, readRegistryInteger } = require('../util/reg');
-const request = require('request-zero');
+const request = lazyRequire('request-zero');
 const steamLanguages = require(path.join(__dirname, '../locale/steam.json'));
 
 let debug;

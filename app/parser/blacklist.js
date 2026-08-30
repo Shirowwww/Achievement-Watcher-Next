@@ -1,7 +1,8 @@
 'use strict';
 
 const path = require('path');
-const request = require('request-zero');
+const { lazyRequire } = require('../util/lazyRequire.js');
+const request = lazyRequire('request-zero');
 const fs = require('fs');
 const { crc32 } = require('crc');
 

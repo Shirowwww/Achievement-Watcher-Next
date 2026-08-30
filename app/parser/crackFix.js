@@ -6,7 +6,8 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const request = require('request-zero');
+const { lazyRequire } = require('../util/lazyRequire.js');
+const request = lazyRequire('request-zero');
 const fuzzy = require(path.join(__dirname, '..', 'util', 'fuzzyAppid.js'));
 
 // Community fix list source(s), fetched + merged (one for now; the loop keeps adding another trivial).

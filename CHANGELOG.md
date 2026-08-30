@@ -92,6 +92,17 @@ renamed in 3.9.0 and the history is kept under one file.
 - **A cover already on disk is read where it is needed.** Asking the main process for each one put a
   round trip per tile on the thread already serving every icon, and a background that had been
   blurred once was blurred again on every scan.
+- **A launch that changed nothing no longer rebuilds the library.** Every start walked every game
+  folder and reloaded every game, six to fifty seconds of disk and network, to arrive at the list it
+  had shown the moment before. The app now remembers the folders and unlock files the last scan read,
+  and when none of them has moved it serves that library straight away - the same 155 games were
+  ready in 0.3 s instead of 6.5 s. Anything installed, removed or unlocked while the app was closed
+  still triggers a real scan, as does a manual refresh, a new version, or a library older than six
+  hours.
+- **The window opens before the rest of the startup work.** The login-item sync and the stale-monitor
+  sweep ran first and the window queued behind them; they now run while it loads.
+- **The scan's search and download engines load only when a scan needs them.** They were pulled in
+  with the parsers at page load - about eighty files read for work a reused library never does.
 
 ## 3.10.3 - 2026-08-28
 

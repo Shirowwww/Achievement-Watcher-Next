@@ -72,3 +72,45 @@ test('a failed fresh enrichment keeps complete known achievement state and artwo
   assert.equal(merged.installed, true);
   assert.equal(merged.provisional, true);
 });
+
+test('what a library may be reused for is stored beside it, and survives the round trip', () => {
+  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-library-snapshot-reuse-'));
+  const config = { achievement: { lang: 'english' }, achievement_source: { steamEmu: true } };
+  const fingerprint = { dirs: [['C:/games', 12]], files: [['C:/games/480/achievements.json', 34]] };
+
+  snapshot.write(userData, config, [game(10)], { appVersion: '3.10.3', fingerprint, discoveredAppids: [10, '20'] });
+
+  const entry = snapshot.readEntry(userData, config);
+  assert.deepEqual(entry.games, [game(10)]);
+  assert.deepEqual(entry.fingerprint, fingerprint);
+  assert.equal(entry.appVersion, '3.10.3');
+  assert.deepEqual(entry.discoveredAppids, ['10', '20']);
+  assert.ok(entry.savedAt > 0);
+});
+
+test('a library saved without reuse metadata still paints but carries nothing to reuse', () => {
+  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-library-snapshot-bare-'));
+  const config = { achievement: { lang: 'english' }, achievement_source: {} };
+
+  snapshot.write(userData, config, [game(10)]);
+
+  const entry = snapshot.readEntry(userData, config);
+  assert.deepEqual(entry.games, [game(10)]);
+  assert.equal(entry.fingerprint, null);
+  assert.equal(entry.appVersion, '');
+});
+
+test('a library written by an older format is ignored entirely', () => {
+  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-library-snapshot-format-'));
+  const config = { achievement: { lang: 'english' }, achievement_source: {} };
+  const file = snapshot.snapshotFile(userData);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(
+    file,
+    JSON.stringify({ format: 1, configKey: snapshot.configKey(config), savedAt: Date.now(), games: [game(10)] }),
+    'utf8'
+  );
+
+  assert.equal(snapshot.readEntry(userData, config), null);
+  assert.deepEqual(snapshot.read(userData, config), []);
+});

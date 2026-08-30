@@ -25,7 +25,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const request = require('request-zero');
+const { lazyRequire } = require('../util/lazyRequire.js');
+const request = lazyRequire('request-zero');
 const { createNetworkCircuit, isSteamTransportFailure } = require(path.join(__dirname, '..', 'util', 'networkCircuit.js'));
 
 let cacheRoot = null;

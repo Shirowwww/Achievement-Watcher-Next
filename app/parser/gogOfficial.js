@@ -5,7 +5,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const request = require('request-zero');
+const { lazyRequire } = require('../util/lazyRequire.js');
+const request = lazyRequire('request-zero');
 
 let cacheRoot;
 let debug = { log() {}, warn() {}, error() {} };

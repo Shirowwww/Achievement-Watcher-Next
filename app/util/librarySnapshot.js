@@ -3,7 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const FORMAT = 1;
+// 2 added the scan fingerprint and the app version: a library saved by format 1 has neither, so it
+// still paints instantly but can never be reused in place of a scan.
+const FORMAT = 2;
 
 function snapshotFile(userDataPath) {
   return path.join(userDataPath, 'cache', 'library_snapshot', 'library.json');
@@ -33,18 +35,31 @@ function usableGame(game) {
   );
 }
 
-function read(userDataPath, config) {
+// The stored library plus what it was built from, or null when there is nothing usable on disk.
+function readEntry(userDataPath, config) {
   try {
     const data = JSON.parse(fs.readFileSync(snapshotFile(userDataPath), 'utf8'));
-    if (!data || data.format !== FORMAT || data.configKey !== configKey(config) || !Array.isArray(data.games)) return [];
-    return data.games.filter(usableGame);
-  } catch (err) {
-    if (err.code !== 'ENOENT') return [];
-    return [];
+    if (!data || data.format !== FORMAT || data.configKey !== configKey(config) || !Array.isArray(data.games)) return null;
+    const games = data.games.filter(usableGame);
+    if (games.length === 0) return null;
+    return {
+      games,
+      fingerprint: data.fingerprint || null,
+      appVersion: typeof data.appVersion === 'string' ? data.appVersion : '',
+      discoveredAppids: Array.isArray(data.discoveredAppids) ? data.discoveredAppids.map(String) : null,
+      savedAt: Number(data.savedAt) || 0,
+    };
+  } catch {
+    return null;
   }
 }
 
-function write(userDataPath, config, games) {
+function read(userDataPath, config) {
+  const entry = readEntry(userDataPath, config);
+  return entry ? entry.games : [];
+}
+
+function write(userDataPath, config, games, meta = {}) {
   const list = (Array.isArray(games) ? games : []).filter(usableGame);
   const file = snapshotFile(userDataPath);
   const temporary = path.join(path.dirname(file), `.${path.basename(file)}.${process.pid}.tmp`);
@@ -52,7 +67,17 @@ function write(userDataPath, config, games) {
   try {
     fs.writeFileSync(
       temporary,
-      JSON.stringify({ format: FORMAT, configKey: configKey(config), savedAt: Date.now(), games: list }),
+      JSON.stringify({
+        format: FORMAT,
+        configKey: configKey(config),
+        savedAt: Date.now(),
+        // Both describe how the list may be reused, never how it is displayed: a library saved by
+        // another version, or from folders that have moved since, is repainted but rescanned.
+        appVersion: typeof meta.appVersion === 'string' ? meta.appVersion : '',
+        fingerprint: meta.fingerprint || null,
+        discoveredAppids: Array.isArray(meta.discoveredAppids) ? meta.discoveredAppids.map(String) : null,
+        games: list,
+      }),
       'utf8'
     );
     fs.renameSync(temporary, file);
@@ -77,4 +102,4 @@ function mergeKnownGame(fresh, known) {
   };
 }
 
-module.exports = { configKey, mergeKnownGame, read, snapshotFile, write };
+module.exports = { configKey, mergeKnownGame, read, readEntry, snapshotFile, write };
