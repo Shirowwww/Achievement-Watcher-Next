@@ -1589,6 +1589,7 @@
     "update-available-message": "新しいバージョン（{version}）が利用可能です。",
     "download-and-install-it-now": "今すぐダウンロードしてインストールしますか？",
     "download-install": "ダウンロード && インストール",
+    "view-changelog": "変更点を見る",
     "later": "後で",
     "skip-this-version": "このバージョンをスキップ",
     "up-to-date": "すでに最新バージョン（{version}）を使用しています。",

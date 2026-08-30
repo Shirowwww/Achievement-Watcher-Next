@@ -48,6 +48,17 @@ test('the named destinations are the pages they claim to be', () => {
   assert.equal(links.upstream.original, 'https://github.com/xan105/Achievement-Watcher');
 });
 
+test('a version resolves to its own release page, and a bad one to the release index', () => {
+  // The release page is where the update prompt sends someone to read the changelog before saying
+  // yes, so a version the updater reports must never land on a 404.
+  assert.equal(links.releaseTag('3.10.3'), 'https://github.com/Shirowwww/Achievement-Watcher-Next/releases/tag/v3.10.3');
+  assert.equal(links.releaseTag('v3.10.3'), links.releaseTag('3.10.3'));
+  assert.equal(links.releaseTag(' 3.11.0-beta.1 '), 'https://github.com/Shirowwww/Achievement-Watcher-Next/releases/tag/v3.11.0-beta.1');
+  for (const bad of [undefined, '', 'latest/../../evil', 'https://example.com', '3.10.3 x']) {
+    assert.equal(links.releaseTag(bad), links.releases, `${String(bad)} must fall back to the release index`);
+  }
+});
+
 test('the old repository name is never handed to a user', () => {
   // The rename left a permanent redirect that pre-3.9 updater clients still depend on, so the old
   // slug must keep working - but nothing new may point a user at it.

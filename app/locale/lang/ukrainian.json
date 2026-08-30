@@ -1589,6 +1589,7 @@
     "update-available-message": "Доступна нова версія ({version}).",
     "download-and-install-it-now": "Завантажити та встановити зараз?",
     "download-install": "Завантажити && встановити",
+    "view-changelog": "Що нового",
     "later": "Пізніше",
     "skip-this-version": "Пропустити цю версію",
     "up-to-date": "У вас уже встановлено останню версію ({version}).",

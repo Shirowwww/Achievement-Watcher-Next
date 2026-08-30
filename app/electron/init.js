@@ -6837,15 +6837,30 @@ try {
         scheduleUpdateCheck(updateGate.INTERVALS.inGame);
         return;
       }
-      const { response } = await dialog.showMessageBox({
-        type: 'info',
-        title: t('update-available', 'Update Available', 'Mise à jour disponible'),
-        message: t('update-available-message', 'A new version ({version}) is available.', 'Une nouvelle version ({version}) est disponible.', { version: info.version }),
-        detail: t('download-and-install-it-now', 'Download and install it now?', 'La télécharger et l’installer maintenant ?'),
-        buttons: [t('download-install', 'Download && Install', 'Télécharger && installer'), t('later', 'Later', 'Plus tard'), t('skip-this-version', 'Skip this version', 'Ignorer cette version')],
-        defaultId: 0,
-        cancelId: 1,
-      });
+      // "View changelog" is not an answer: showMessageBox closes on any click, so reading the notes
+      // reopens the same dialog instead of deciding for the user.
+      let response;
+      do {
+        ({ response } = await dialog.showMessageBox({
+          type: 'info',
+          title: t('update-available', 'Update Available', 'Mise à jour disponible'),
+          message: t('update-available-message', 'A new version ({version}) is available.', 'Une nouvelle version ({version}) est disponible.', { version: info.version }),
+          detail: t('download-and-install-it-now', 'Download and install it now?', 'La télécharger et l’installer maintenant ?'),
+          buttons: [
+            t('download-install', 'Download && Install', 'Télécharger && installer'),
+            t('view-changelog', 'View changelog', 'Voir les nouveautés'),
+            t('later', 'Later', 'Plus tard'),
+            t('skip-this-version', 'Skip this version', 'Ignorer cette version'),
+          ],
+          defaultId: 0,
+          cancelId: 2,
+        }));
+        if (response === 1) {
+          const page = links.releaseTag(info.version);
+          debug.log(`[updater] opening the release notes of ${info.version}: ${page}`);
+          shell.openExternal(page).catch((err) => debug.log(`[updater] could not open ${page}: ${err.message || err}`));
+        }
+      } while (response === 1);
       if (response === 0) {
         debug.log(`[updater] user accepted download of ${info.version}${manual ? ' (manual check)' : ''}`);
         updateDownloading = true;
@@ -6853,7 +6868,7 @@ try {
         // check or Settings > Check for updates. A manual check alone must not silently install.
         updateAcceptedByUser = true;
         startUpdateDownload(info.version);
-      } else if (response === 2) {
+      } else if (response === 3) {
         configJS.general.skippedVersion = info.version;
         await settingsJS.save(configJS);
         debug.log(`[updater] version ${info.version} skipped by user`);

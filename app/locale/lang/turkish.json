@@ -1589,6 +1589,7 @@
     "update-available-message": "Yeni bir sürüm ({version}) mevcut.",
     "download-and-install-it-now": "Şimdi indirip kuralım mı?",
     "download-install": "İndir && kur",
+    "view-changelog": "Değişiklikleri gör",
     "later": "Sonra",
     "skip-this-version": "Bu sürümü atla",
     "up-to-date": "Zaten en son sürümü kullanıyorsunuz ({version}).",

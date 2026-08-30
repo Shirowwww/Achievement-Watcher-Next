@@ -1589,6 +1589,7 @@
     "update-available-message": "En ny version ({version}) er klar.",
     "download-and-install-it-now": "Vil du hente og installere den nu?",
     "download-install": "Hent && installer",
+    "view-changelog": "Se nyheder",
     "later": "Senere",
     "skip-this-version": "Spring denne version over",
     "up-to-date": "Du bruger allerede den nyeste version ({version}).",

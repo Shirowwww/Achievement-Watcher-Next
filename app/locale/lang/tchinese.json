@@ -1589,6 +1589,7 @@
     "update-available-message": "有新版本（{version}）可以使用。",
     "download-and-install-it-now": "要立即下載並安裝嗎？",
     "download-install": "下載並安裝",
+    "view-changelog": "查看更新說明",
     "later": "稍後",
     "skip-this-version": "略過這個版本",
     "up-to-date": "你已經在使用最新版本（{version}）。",

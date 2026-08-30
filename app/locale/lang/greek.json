@@ -1589,6 +1589,7 @@
     "update-available-message": "Είναι διαθέσιμη μια νέα έκδοση ({version}).",
     "download-and-install-it-now": "Να γίνει λήψη και εγκατάσταση τώρα;",
     "download-install": "Λήψη && εγκατάσταση",
+    "view-changelog": "Προβολή αλλαγών",
     "later": "Αργότερα",
     "skip-this-version": "Παράλειψη αυτής της έκδοσης",
     "up-to-date": "Χρησιμοποιείτε ήδη την τελευταία έκδοση ({version}).",

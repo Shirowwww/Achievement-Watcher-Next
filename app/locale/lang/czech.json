@@ -1589,6 +1589,7 @@
     "update-available-message": "Je dostupná nová verze ({version}).",
     "download-and-install-it-now": "Stáhnout a nainstalovat nyní?",
     "download-install": "Stáhnout && nainstalovat",
+    "view-changelog": "Zobrazit novinky",
     "later": "Později",
     "skip-this-version": "Přeskočit tuto verzi",
     "up-to-date": "Již používáte nejnovější verzi ({version}).",

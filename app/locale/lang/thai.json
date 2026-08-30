@@ -1589,6 +1589,7 @@
     "update-available-message": "มีเวอร์ชันใหม่ ({version})",
     "download-and-install-it-now": "ดาวน์โหลดและติดตั้งตอนนี้หรือไม่?",
     "download-install": "ดาวน์โหลด && ติดตั้ง",
+    "view-changelog": "ดูสิ่งที่เปลี่ยนแปลง",
     "later": "ภายหลัง",
     "skip-this-version": "ข้ามเวอร์ชันนี้",
     "up-to-date": "คุณใช้เวอร์ชันล่าสุดอยู่แล้ว ({version})",

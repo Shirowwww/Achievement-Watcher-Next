@@ -47,12 +47,23 @@ function repoFile(name) {
   return `${REPO}/blob/main/${name}`;
 }
 
+/*
+  The release page of one version - where its notes live. Releases are tagged v<version>, and a
+  version the updater did not supply (or one that is not a plain version number) falls back to the
+  releases index rather than to a 404.
+*/
+function releaseTag(version) {
+  const clean = String(version || '').trim().replace(/^v/i, '');
+  return /^[0-9]+(\.[0-9]+)*(-[0-9A-Za-z.]+)?$/.test(clean) ? `${REPO}/releases/tag/v${clean}` : `${REPO}/releases`;
+}
+
 const links = {
   REPO,
   SITE,
   DOCS,
   docs,
   repoFile,
+  releaseTag,
 
   home: REPO,
   website: `${SITE}/`,

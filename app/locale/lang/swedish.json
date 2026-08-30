@@ -1589,6 +1589,7 @@
     "update-available-message": "En ny version ({version}) finns tillgänglig.",
     "download-and-install-it-now": "Vill du hämta och installera den nu?",
     "download-install": "Hämta && installera",
+    "view-changelog": "Visa nyheter",
     "later": "Senare",
     "skip-this-version": "Hoppa över den här versionen",
     "up-to-date": "Du använder redan den senaste versionen ({version}).",

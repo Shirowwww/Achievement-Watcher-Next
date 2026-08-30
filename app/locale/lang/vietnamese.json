@@ -1589,6 +1589,7 @@
     "update-available-message": "Đã có phiên bản mới ({version}).",
     "download-and-install-it-now": "Tải và cài đặt ngay bây giờ?",
     "download-install": "Tải && Cài đặt",
+    "view-changelog": "Xem thay đổi",
     "later": "Để sau",
     "skip-this-version": "Bỏ qua phiên bản này",
     "up-to-date": "Bạn đang dùng phiên bản mới nhất ({version}).",

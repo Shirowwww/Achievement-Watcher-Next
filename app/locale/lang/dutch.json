@@ -1589,6 +1589,7 @@
     "update-available-message": "Er is een nieuwe versie ({version}) beschikbaar.",
     "download-and-install-it-now": "Nu downloaden en installeren?",
     "download-install": "Downloaden && installeren",
+    "view-changelog": "Nieuwigheden bekijken",
     "later": "Later",
     "skip-this-version": "Deze versie overslaan",
     "up-to-date": "Je gebruikt al de nieuwste versie ({version}).",

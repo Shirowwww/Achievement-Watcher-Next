@@ -1589,6 +1589,7 @@
     "update-available-message": "새 버전({version})이 나왔습니다.",
     "download-and-install-it-now": "지금 내려받아 설치할까요?",
     "download-install": "다운로드 && 설치",
+    "view-changelog": "변경 사항 보기",
     "later": "나중에",
     "skip-this-version": "이 버전 건너뛰기",
     "up-to-date": "이미 최신 버전({version})을 사용 중입니다.",

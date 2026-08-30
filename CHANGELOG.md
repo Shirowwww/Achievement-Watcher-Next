@@ -20,6 +20,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **The game screen says where its achievements come from.** The library tile carried the source
   badge and the game screen carried nothing, so a game listed by an account read exactly like the
   local copy sitting beside it in the list.
+- **The update prompt can show you what is in the version first.** "A new version is available"
+  asked you to decide without saying what changed. A **View changelog** button opens the release
+  notes and brings the question back once you have read them.
 
 ### Fixed
 

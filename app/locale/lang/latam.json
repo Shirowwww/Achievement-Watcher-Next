@@ -1589,6 +1589,7 @@
     "update-available-message": "Hay una nueva versión ({version}) disponible.",
     "download-and-install-it-now": "¿Descargar e instalar ahora?",
     "download-install": "Descargar && instalar",
+    "view-changelog": "Ver novedades",
     "later": "Más tarde",
     "skip-this-version": "Omitir esta versión",
     "up-to-date": "Ya estás usando la última versión ({version}).",

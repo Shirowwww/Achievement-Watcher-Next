@@ -1589,6 +1589,7 @@
     "update-available-message": "Versi baru ({version}) telah tersedia.",
     "download-and-install-it-now": "Unduh dan pasang sekarang?",
     "download-install": "Unduh && Pasang",
+    "view-changelog": "Lihat perubahan",
     "later": "Nanti",
     "skip-this-version": "Lewati versi ini",
     "up-to-date": "Anda sudah memakai versi terbaru ({version}).",

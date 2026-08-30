@@ -1589,6 +1589,7 @@
     "update-available-message": "Elérhető egy új verzió ({version}).",
     "download-and-install-it-now": "Letöltés és telepítés most?",
     "download-install": "Letöltés && telepítés",
+    "view-changelog": "Újdonságok megtekintése",
     "later": "Később",
     "skip-this-version": "Verzió kihagyása",
     "up-to-date": "Már a legújabb verziót használod ({version}).",
