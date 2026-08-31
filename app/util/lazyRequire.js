@@ -18,11 +18,28 @@
 function lazyRequire(id) {
   let loaded;
   const load = () => (loaded ||= require(id));
+  /*
+    One stable forwarder per property, so `mod.fn === mod.fn`. Without it every access returned a new
+    bound function - fine to call, useless to compare: `emitter.off('x', mod.handler)` removed
+    nothing, and a Set keyed on it grew an entry per access.
+
+    A forwarder rather than a cached `value.bind(module)`: the call has to reach the module's CURRENT
+    export, because some modules replace theirs after load (a test stubbing `request.getJson` is the
+    case that caught this). Calling through the module also keeps `this` right for methods.
+  */
+  const forwarders = new Map();
   return new Proxy(function lazy() {}, {
     apply: (target, thisArg, args) => Reflect.apply(load(), thisArg, args),
     get: (target, prop) => {
-      const value = load()[prop];
-      return typeof value === 'function' ? value.bind(load()) : value;
+      const module = load();
+      if (typeof module[prop] !== 'function') return module[prop];
+      if (!forwarders.has(prop)) {
+        forwarders.set(prop, function forwarded(...args) {
+          const current = load();
+          return current[prop].apply(current, args);
+        });
+      }
+      return forwarders.get(prop);
     },
     has: (target, prop) => prop in load(),
   });

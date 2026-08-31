@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, ipcMain, BrowserWindow } = require('electron');
+const { app, ipcMain, BrowserWindow, clipboard } = require('electron');
 const path = require('path');
 const { iconResultToFileUrl } = require('../util/iconUrl.js');
 const settingsJS = require(path.join(__dirname, '../settings.js'));
@@ -13,6 +13,21 @@ settingsJS.setUserDataPath(app.getPath('userData'));
 */
 const { lazyRequire } = require('../util/lazyRequire.js');
 const steamJS = lazyRequire(path.join(__dirname, '../parser/steam.js'));
+
+/*
+  The Steam parser keeps its logger and its cache root in module state, and nothing else in the main
+  process sets them: without this, getSteamUsers() logged through an undefined logger (a TypeError
+  swallowed as an empty account list) and the "confirmed public earlier" cache had no path to read.
+  Called from the handlers rather than at load time, so the parser tree still loads on first use only.
+*/
+let steamParserReady = false;
+function useSteamParser() {
+  if (!steamParserReady) {
+    steamParserReady = true;
+    steamJS.initDebug({ isDev: !app.isPackaged, userDataPath: app.getPath('userData') });
+  }
+  return steamJS;
+}
 
 function getStartupLoginItemOptions(openAtLogin) {
   const args = [];
@@ -42,6 +57,19 @@ function getStartWithWindows() {
   const state = app.getLoginItemSettings(getStartupLoginItemQueryOptions());
   return state.openAtLogin === true;
 }
+
+/*
+  Electron 44 removed the clipboard module from renderers, so the copy buttons in the game menus and
+  in the health panel ask the main process instead of reaching for a module that is no longer there.
+  The same release made every clipboard method return a promise: awaiting it is what turns a refused
+  write into an answer the button can show, instead of an unhandled rejection nobody sees.
+*/
+ipcMain.handle('clipboard:write-text', async (_event, text) => {
+  const value = typeof text === 'string' ? text : String(text ?? '');
+  if (!value) return false;
+  await clipboard.writeText(value);
+  return true;
+});
 
 ipcMain.handle('startup:get-start-with-windows', async () => {
   return getStartWithWindows();
@@ -111,21 +139,22 @@ ipcMain.on('get-user-data-path-sync', (event) => {
 });
 
 ipcMain.on('get-steam-user-list', async (event) => {
-  await steamJS.getSteamUsersList()
+  await useSteamParser()
+    .getSteamUsersList()
     .then((p) => (event.returnValue = p))
-    .catch((err) => (event.returnValue = null));
+    .catch(() => (event.returnValue = null));
 });
 
 ipcMain.on('fetch-icon', async (event, url, appid) => {
   try {
-    event.returnValue = iconResultToFileUrl(await steamJS.fetchIcon(url, appid));
+    event.returnValue = iconResultToFileUrl(await useSteamParser().fetchIcon(url, appid));
   } catch {
     event.returnValue = null;
   }
 });
 ipcMain.handle('fetch-icon', async (event, url, appid) => {
   try {
-    return iconResultToFileUrl(await steamJS.fetchIcon(url, appid));
+    return iconResultToFileUrl(await useSteamParser().fetchIcon(url, appid));
   } catch {
     return null;
   }

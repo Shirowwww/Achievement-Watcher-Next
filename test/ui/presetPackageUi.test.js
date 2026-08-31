@@ -7,6 +7,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
+// The main process is init.js plus the other electron/*.js files that register handlers.
+const { mainProcessSource } = require('../helpers/mainProcessSource.js');
 
 const appRoot = path.join(__dirname, '..', '..', 'app');
 const htmlParser = require(path.join(appRoot, 'node_modules', 'node-html-parser'));
@@ -61,7 +63,7 @@ test('Export writes the design on screen, never some other preset', () => {
 });
 
 test('the main process can export an unsaved builder design', () => {
-  const init = read('electron', 'init.js');
+  const init = mainProcessSource();
   const handler = /ipcMain\.handle\('export-preset'[\s\S]*?\n\}\);/.exec(init);
   assert.ok(handler, 'the export handler is gone');
   // A draft is generated into the scratch folder and exported through the same path as a saved one.
@@ -93,7 +95,7 @@ test('a name clash asks the user instead of overwriting or failing silently', ()
 });
 
 test('the main process installs only into the userData preset storage', () => {
-  const init = read('electron', 'init.js');
+  const init = mainProcessSource();
   const handler = /ipcMain\.handle\('import-preset'[\s\S]*?\n\}\);/.exec(init);
   assert.ok(handler, 'the import handler is gone');
 
@@ -107,7 +109,7 @@ test('the main process installs only into the userData preset storage', () => {
 });
 
 test('an imported preset is listed and deletable, not an orphan in the preset folder', () => {
-  const init = read('electron', 'init.js');
+  const init = mainProcessSource();
   // A hand-authored preset installed from a package (no builder options file) must still be
   // visible in the picker and deletable, not just presets carrying builder options.
   assert.match(init, /const PRESET_MARKERS = \[PRESET_OPTIONS_FILE, customPreset\.PRESET_PACKAGE_FILE\];/);
@@ -123,7 +125,7 @@ test('an imported preset is listed and deletable, not an orphan in the preset fo
 });
 
 test('an imported preset does not load meaningless slider values or arm an overwrite', () => {
-  const init = read('electron', 'init.js');
+  const init = mainProcessSource();
   const reader = /ipcMain\.handle\('read-custom-preset'[\s\S]*?\n\}\);/.exec(init);
   assert.ok(reader, 'the read handler is gone');
   assert.match(reader[0], /return \{ name: safe, editable: true, \.\.\.customPresetNumbers\(parsed\) \};/);
@@ -209,7 +211,7 @@ test('Preview shows the imported preset, not the unrelated slider draft', () => 
 });
 
 test('the builder never offers to "Update" a preset it cannot rebuild', () => {
-  const init = read('electron', 'init.js');
+  const init = mainProcessSource();
   const list = /ipcMain\.handle\('list-custom-presets'[\s\S]*?\n\}\);/.exec(init);
   // Both markers make a preset manageable, but only the builder's options file makes it editable.
   assert.match(list[0], /editable: managedPresetMarker\(name\) === PRESET_OPTIONS_FILE/);
@@ -222,14 +224,14 @@ test('the builder never offers to "Update" a preset it cannot rebuild', () => {
 });
 
 test('an import cannot silently shadow a bundled preset', () => {
-  const init = read('electron', 'init.js');
+  const init = mainProcessSource();
   const handler = /ipcMain\.handle\('import-preset'[\s\S]*?\n\}\);/.exec(init);
   assert.ok(handler, 'the import handler is gone');
   assert.match(handler[0], /takenNames: bundledPresetRoots\(\)/, 'bundled names are not offered to the duplicate check');
 });
 
 test('export resolves the named preset exactly, never the Default fallback', () => {
-  const init = read('electron', 'init.js');
+  const init = mainProcessSource();
   const handler = /ipcMain\.handle\('export-preset'[\s\S]*?\n\}\);/.exec(init);
   assert.ok(handler, 'the export handler is gone');
   assert.match(handler[0], /findPresetFolder\(safe\)/);

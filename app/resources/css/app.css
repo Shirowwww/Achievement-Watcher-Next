@@ -1335,6 +1335,7 @@ body.is-resizing #game-list {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
 }
 #game-list.view-compact .library-artwork-retry,
@@ -3695,6 +3696,7 @@ body.is-resizing #game-list {
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .onboarding-step label {

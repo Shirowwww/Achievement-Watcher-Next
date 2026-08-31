@@ -47,7 +47,11 @@ function saveAuth(auth) {
   try {
     fs.mkdirSync(path.dirname(authFile()), { recursive: true });
     fs.writeFileSync(authFile(), aes.encrypt(JSON.stringify(auth)), 'utf8');
-  } catch {}
+  } catch (err) {
+    // Best effort, as above in app/parser/xboxPc.js: a refreshed session that cannot be written is
+    // still usable for this run, and saying so is the only way the repeated re-login makes sense.
+    console.warn(`[xbox-pc] could not store the refreshed Xbox session (${err.message || err})`);
+  }
 }
 
 function normalizeTitleId(value) {

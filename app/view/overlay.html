@@ -2,6 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- Same default-deny policy as view/app.html. The overlay draws its icons from local files the
+         host resolves over IPC and talks to nothing, so connect-src is 'none'; 'unsafe-inline' is
+         needed for the single inline script below and the img onerror fallback it writes. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: file:; font-src 'self'; media-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'"
+    />
     <title>Achievements Overlay</title>
     <style>
       :root {
@@ -415,6 +422,7 @@
         color: var(--muted);
         display: -webkit-box;
         -webkit-line-clamp: var(--desc-lines);
+        line-clamp: var(--desc-lines);
         -webkit-box-orient: vertical;
         overflow: hidden;
       }

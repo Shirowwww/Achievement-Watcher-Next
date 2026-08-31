@@ -128,16 +128,43 @@ module.exports.scanLegit = async (onlyInstalled = false) => {
   return data;
 };
 
+/*
+  A broken optional cache must not block the game (same rule as parser/gog.js). The file was read
+  with a bare JSON.parse inside a function with no catch of its own, so a truncated .db - which the
+  non-atomic write below used to produce on a mid-write shutdown - made the game fail to load for
+  good: existsSync stayed true, so the refetch path was never reached again.
+*/
+function readSchemaCache(cacheFile) {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+    if (parsed && typeof parsed === 'object' && parsed.achievement && parsed.achievement.list) return parsed;
+  } catch {
+    /* missing, truncated or not JSON -> fetch it again */
+  }
+  return null;
+}
+
+// Temp file then rename, so an interrupted write leaves the previous cache (or none) rather than
+// half of a new one. Still not awaited: nothing here depends on the cache being on disk yet.
+function writeSchemaCache(cacheFile, schema) {
+  const temporary = `${cacheFile}.${process.pid}.tmp`;
+  fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
+  // fs.writeFile (callback API) throws synchronously without a callback; use the promise API
+  // so the .catch() is valid - otherwise this threw and the uPlay game failed its first load.
+  fs.promises
+    .writeFile(temporary, JSON.stringify(schema, null, 2))
+    .then(() => fs.promises.rename(temporary, cacheFile))
+    .catch(() => fs.promises.unlink(temporary).catch(() => {}));
+}
+
 module.exports.getGameData = async (appid, lang) => {
   appid = appid.replace('UPLAY', '');
 
   const cacheFile = path.join(remote.app.getPath('userData'), 'uplay_cache/schema', `${appid}.db`);
 
-  let schema;
+  let schema = readSchemaCache(cacheFile);
 
-  if (fs.existsSync(cacheFile)) {
-    schema = JSON.parse(fs.readFileSync(cacheFile));
-  } else {
+  if (!schema) {
     try {
       // request-zero's socket timeout destroys the request without emitting 'error', leaving the
       // promise pending forever; race it against our own timeout so a stalled server falls back
@@ -155,10 +182,7 @@ module.exports.getGameData = async (appid, lang) => {
         debug.log(`Failed to share UPLAY${appid} cache to server => ${err}`);
       }
     }
-    fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
-    // fs.writeFile (callback API) throws synchronously without a callback; use the promise API
-    // so the .catch() is valid - otherwise this threw and the uPlay game failed its first load.
-    fs.promises.writeFile(cacheFile, JSON.stringify(schema, null, 2)).catch((err) => {});
+    writeSchemaCache(cacheFile, schema);
   }
 
   if (schema.achievement.list[`${lang}`]) {

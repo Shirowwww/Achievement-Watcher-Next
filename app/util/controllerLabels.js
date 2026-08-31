@@ -747,7 +747,13 @@ function comboPressed(gamepad, binding) {
   });
 }
 
-const api = {
+/*
+  Not named `api`: this file is loaded as a classic <script> by view/overlay.html, whose preload
+  already defines a non-configurable global `api` (contextBridge). A top-level `const api` there is
+  a SyntaxError, and the whole file stopped executing - so the overlay had no controller labels at
+  all, silently.
+*/
+const controllerLabels = {
   CONTROLLER_LAYOUTS,
   CONTROLLER_BUTTON_ORDER,
   CONTROLLER_BUTTONS,
@@ -765,5 +771,5 @@ const api = {
   GAMEPAD_BUTTON_INDEX,
 };
 
-if (typeof module !== 'undefined' && module.exports) module.exports = api;
-if (typeof window !== 'undefined') window.ControllerLabels = api;
+if (typeof module !== 'undefined' && module.exports) module.exports = controllerLabels;
+if (typeof window !== 'undefined') window.ControllerLabels = controllerLabels;

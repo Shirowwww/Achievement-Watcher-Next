@@ -13,7 +13,9 @@ const test = require('node:test');
 const appDir = path.join(__dirname, '..', '..', 'app');
 const settingsUi = fs.readFileSync(path.join(appDir, 'ui', 'settings.js'), 'utf8');
 const init = fs.readFileSync(path.join(appDir, 'electron', 'init.js'), 'utf8');
-const appSource = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
+const { rendererSource } = require('../helpers/rendererSource.js');
+// app.js and the ui/*.js scripts share one global scope, so the renderer's source is all of them.
+const appSource = rendererSource();
 
 // The exact fields createNotificationWindow() forwards to the notification page.
 function windowFields() {

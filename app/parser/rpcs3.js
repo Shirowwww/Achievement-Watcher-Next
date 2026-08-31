@@ -85,7 +85,7 @@ module.exports.getGameData = async (dir) => {
       total: trophies.length,
       list: trophies.map((trophy) => {
         return {
-          name: parseInt(trophy['$'].id),
+          name: parseInt(trophy['$'].id, 10),
           hidden: trophy['$'].hidden === 'yes' ? 1 : 0,
           type: trophy['$'].ttype,
           displayName: trophy.name,

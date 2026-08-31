@@ -66,12 +66,11 @@ jobs:
         working-directory: app
         run: npm run lint
 
-      - name: Run app tests
+      # One step, not two: test/run.js already spawns the Watchdog suite as a second process (it has
+      # to, so regodit/koffi resolve from watchdog/node_modules), so a separate `npm test` in
+      # watchdog/ only ran the same files a second time.
+      - name: Run tests
         working-directory: app
-        run: npm test
-
-      - name: Run watchdog tests
-        working-directory: watchdog
         run: npm test
 
       - name: Audit app production dependencies

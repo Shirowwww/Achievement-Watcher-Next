@@ -12,7 +12,9 @@ const htmlParser = require(path.join(appDir, 'node_modules', 'node-html-parser')
 const settings = require(path.join(appDir, 'settings.js'));
 const libraryLayout = require(path.join(appDir, 'util', 'libraryLayout.js'));
 const html = fs.readFileSync(path.join(appDir, 'view', 'app.html'), 'utf8');
-const appSource = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
+const { rendererSource } = require('../helpers/rendererSource.js');
+// app.js and the ui/*.js scripts share one global scope, so the renderer's source is all of them.
+const appSource = rendererSource();
 const mainSource = fs.readFileSync(path.join(appDir, 'electron', 'init.js'), 'utf8');
 const settingsSource = fs.readFileSync(path.join(appDir, 'ui', 'settings.js'), 'utf8');
 const css = fs.readFileSync(path.join(appDir, 'resources', 'css', 'app.css'), 'utf8');

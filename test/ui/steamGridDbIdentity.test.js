@@ -76,10 +76,18 @@ test('a dead SteamHunters groups endpoint is not re-proven once per game', () =>
 
 // Lift the shipped helpers out of init.js so these check the real code, not a copy of it.
 function editionHelpers() {
+  // Sliced between markers that are part of the code being lifted, never a neighbouring comment: a
+  // comment moved elsewhere silently turned indexOf into -1, and the slice then ran to the end of
+  // the file and redeclared everything below it.
   const from = source.indexOf('const SGDB_EDITION_TAIL');
-  const body = source.slice(from, source.indexOf('/*\n  A lookup that found nothing'));
+  const bodyEnd = source.indexOf('const sgdbGate');
+  assert.ok(from !== -1 && bodyEnd > from, 'the SteamGridDB name helpers moved - update these markers');
+  const body = source.slice(from, bodyEnd);
   // The matcher, with the token normalisation it reads names through.
-  const picker = source.slice(source.indexOf('const SGDB_ROMAN'), source.indexOf('// Native size first'));
+  const pickerStart = source.indexOf('const SGDB_ROMAN');
+  const pickerEnd = source.indexOf('// Native size first');
+  assert.ok(pickerStart !== -1 && pickerEnd > pickerStart, 'the SteamGridDB matcher moved - update these markers');
+  const picker = source.slice(pickerStart, pickerEnd);
   // oxlint-disable-next-line no-eval -- evaluating the shipped code is the point, rather than restating it here.
   return eval(`${body}\n${picker}\n({ steamGridDbNameVariants, pickSteamGridDbGame })`);
 }

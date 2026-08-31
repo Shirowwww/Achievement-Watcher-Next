@@ -71,14 +71,27 @@ function encryptSession(payload, tokenSecret) {
   ).toString('base64');
 }
 
-function decryptSession(blob, tokenSecret) {
-  const secret = String(tokenSecret || DEFAULT_TOKEN_SECRET);
-  const envelope = JSON.parse(Buffer.from(String(blob || ''), 'base64').toString('utf8'));
+function decryptWith(envelope, secret) {
   const key = crypto.scryptSync(secret, Buffer.from(envelope.salt, 'base64'), 32);
   const decipher = crypto.createDecipheriv('aes-256-gcm', key, Buffer.from(envelope.iv, 'base64'));
   decipher.setAuthTag(Buffer.from(envelope.tag, 'base64'));
   const raw = Buffer.concat([decipher.update(Buffer.from(envelope.data, 'base64')), decipher.final()]);
   return JSON.parse(raw.toString('utf8'));
+}
+
+function decryptSession(blob, tokenSecret) {
+  const secret = String(tokenSecret || DEFAULT_TOKEN_SECRET);
+  const envelope = JSON.parse(Buffer.from(String(blob || ''), 'base64').toString('utf8'));
+  try {
+    return decryptWith(envelope, secret);
+  } catch (err) {
+    // A session written before the installation key existed is still encrypted under the constant
+    // below. Read it once with that, so moving to a per-machine key does not sign the user out;
+    // the next save rewrites it under the real secret. GCM authenticates, so a wrong key throws
+    // rather than returning something plausible.
+    if (secret === DEFAULT_TOKEN_SECRET) throw err;
+    return decryptWith(envelope, DEFAULT_TOKEN_SECRET);
+  }
 }
 
 async function saveSessionEncrypted(sessionFile, payload, tokenSecret) {

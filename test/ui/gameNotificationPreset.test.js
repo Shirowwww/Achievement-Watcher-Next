@@ -8,9 +8,13 @@ const test = require('node:test');
 const appDir = path.join(__dirname, '..', '..', 'app');
 const htmlParser = require(path.join(appDir, 'node_modules', 'node-html-parser'));
 const document = htmlParser.parse(fs.readFileSync(path.join(appDir, 'view', 'app.html'), 'utf8'));
-const appSource = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
+const { rendererSource, rendererScriptFiles } = require('../helpers/rendererSource.js');
+// app.js and the ui/*.js scripts share one global scope, so the renderer's source is all of them.
+const appSource = rendererSource();
 const settingsSource = fs.readFileSync(path.join(appDir, 'ui', 'settings.js'), 'utf8');
-const initSource = fs.readFileSync(path.join(appDir, 'electron', 'init.js'), 'utf8');
+// The main process is init.js plus the other electron/*.js files that register handlers.
+const { mainProcessSource } = require('../helpers/mainProcessSource.js');
+const initSource = mainProcessSource();
 const cssSource = fs.readFileSync(path.join(appDir, 'resources', 'css', 'app.css'), 'utf8');
 
 function functionBody(source, signature) {
@@ -145,7 +149,12 @@ test('the classic renderer scripts do not redeclare the preset alias helper', ()
   assert.match(appSource, /const notificationPreset = require\([^\n]*util\/notificationPreset\.js/);
   assert.match(appSource, /const gameNotificationPreset = require\([^\n]*util\/gamePreset\.js/);
   assert.match(appSource, /notificationPreset\.legacyPresetAlias\(raw\)/);
-  assert.doesNotMatch(appSource, /const \{ legacyPresetAlias \}/);
+  // ui/settings.js owns the destructured binding; a second one anywhere in the shared global scope
+  // is a SyntaxError that aborts that script, so count the declarations instead of forbidding them.
+  const declaring = rendererScriptFiles().filter((file) =>
+    /const \{ legacyPresetAlias \}/.test(fs.readFileSync(path.join(appDir, file), 'utf8'))
+  );
+  assert.deepEqual(declaring, ['ui/settings.js'], 'only ui/settings.js may destructure legacyPresetAlias');
 });
 
 test('live unlocks resolve the per-game override from memory', () => {

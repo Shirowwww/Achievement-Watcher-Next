@@ -1,6 +1,8 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+// app.js and the ui/*.js scripts share one global scope, so the renderer's source is all of them.
+const { rendererSource } = require('../helpers/rendererSource.js');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
@@ -54,7 +56,7 @@ test('artwork fallbacks fill missing assets without replacing existing ones', ()
 });
 
 test('the alternate-cover picker resolves and shows the actual current cover', () => {
-  const app = fs.readFileSync(path.join(root, 'app', 'app.js'), 'utf8');
+  const app = rendererSource();
   assert.match(app, /const overrideUrl = coverOverrideFor\(appid, pickerOrientation\);/);
   assert.match(app, /const currentUrl = overrideUrl \|\| defaultUrl;/);
   assert.match(app, /const currentTilePromise = currentUrl/);
@@ -79,7 +81,7 @@ test('the alternate-cover picker resolves and shows the actual current cover', (
 });
 
 test('streaming scans retain a skeleton tail until the list actually completes', () => {
-  const app = fs.readFileSync(path.join(root, 'app', 'app.js'), 'utf8');
+  const app = rendererSource();
   assert.match(app, /const MIN_STREAMING_SKELETON_TILES = 6/);
   assert.match(app, /if \(!skeletonStreamActive\) return;\s*const budget = skeletonBudget\(MIN_STREAMING_SKELETON_TILES\)/);
   // The tail is capped by the games still to arrive, so it runs down to nothing instead of
@@ -114,14 +116,14 @@ test('folder provenance never reuses an add-folder action as the manual-source b
 test('initial config generation is gated to games without an existing fix', () => {
   const parser = fs.readFileSync(path.join(root, 'app', 'parser', 'achievements.js'), 'utf8');
   const settingsUi = fs.readFileSync(path.join(root, 'app', 'ui', 'settings.js'), 'utf8');
-  const app = fs.readFileSync(path.join(root, 'app', 'app.js'), 'utf8');
+  const app = rendererSource();
   assert.match(parser, /onlyIfUnconfigured:\s*true/);
   assert.match(settingsUi, /emulatorFixEligibility\.inspect/);
   assert.match(app, /initialGbeEligibility\.eligible/);
 });
 
 test('manual games keep guarded per-game tools and the common uninstall flow', () => {
-  const app = fs.readFileSync(path.join(root, 'app', 'app.js'), 'utf8');
+  const app = rendererSource();
   assert.match(app, /const isManualGame = !!ctxGame\?\.manual \|\| gameSource === 'Manual'/);
   assert.match(app, /allowManual: isManualGame/);
   assert.match(app, /if \(!isConsoleSystem\)/);
@@ -133,7 +135,7 @@ test('manual games keep guarded per-game tools and the common uninstall flow', (
 });
 
 test('zero-achievement games render a localized unavailable state instead of zero percent', () => {
-  const app = fs.readFileSync(path.join(root, 'app', 'app.js'), 'utf8');
+  const app = rendererSource();
   assert.match(app, /const hasAchievements = Number\(game\.achievement\.total\) > 0/);
   assert.match(app, /const progressLabel = !hasAchievements/);
   assert.match(app, /progressBar\$\{!hasAchievements \? ' unavailable' : ''\}/);
@@ -141,7 +143,7 @@ test('zero-achievement games render a localized unavailable state instead of zer
 });
 
 test('achievement-less games open the normal detail view and only the play button launches them', () => {
-  const app = fs.readFileSync(path.join(root, 'app', 'app.js'), 'utf8');
+  const app = rendererSource();
   assert.doesNotMatch(app, /if \(selected && !gameHasAchievements\(selected\)\)/);
   assert.match(app, /on\('click\.awLibrary', '\.game-box',[\s\S]*?self\.onGameBoxClick\(\$\(this\), gameList\)/);
   assert.match(app, /on\('click\.awLibrary', '\.game-box \.play-button',[\s\S]*?self\.onPlayButtonClick/);

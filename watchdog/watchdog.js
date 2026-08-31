@@ -150,6 +150,34 @@ const cfg_file = {
   userDir: path.join(userDataDir(), 'cfg', 'userdir.db'),
 };
 
+/*
+  The GOG/Epic -> Steam appid maps the library scan writes (steam_cache/gog.db, epic.db). Read the
+  same way the app reads them: a file that is missing, truncated or not an array is "no mapping
+  known", never a crash on the unlock path - a bare JSON.parse here took the notification with it.
+*/
+function readMappingCache(cacheFile) {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(cacheFile, { encoding: 'utf8' }));
+    return Array.isArray(parsed) ? parsed.filter((entry) => entry && typeof entry === 'object') : [];
+  } catch {
+    return [];
+  }
+}
+
+// Temp file then rename: the library scan reads these while a game is running, and half a file
+// there would cost it every mapping it holds.
+function writeMappingCache(cacheFile, entries) {
+  try {
+    const temporary = `${cacheFile}.${process.pid}.tmp`;
+    fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
+    fs.writeFileSync(temporary, JSON.stringify(entries), 'utf8');
+    fs.renameSync(temporary, cacheFile);
+  } catch (err) {
+    debug.log(`[cache] could not write ${path.basename(cacheFile)}: ${err.message || err}`);
+  }
+}
+
+
 const appRoot = path.join(__dirname, '../');
 
 let isDev = process.env.NODE_ENV === 'development';
@@ -851,7 +879,9 @@ var app = {
         }
 
         if (dir.includes('NemirtingasGalaxyEmu')) {
-          appID = await self.steamAppIdForGogId(appID);
+          const mapped = await self.steamAppIdForGogId(appID);
+          if (!mapped) throw `Unknown GOG id ${appID} - run a library refresh so AW Next can map it`;
+          appID = mapped;
         } else if (dir.includes('NemirtingasEpicEmu')) {
           const mapped = await self.steamAppIdForEpicId(appID);
           if (!mapped) throw `Unknown Epic id ${appID} - run a library refresh so AW Next can map it`;
@@ -1256,28 +1286,27 @@ var app = {
   },
   steamAppIdForGogId: async function (appID) {
     const cacheFile = path.join(userDataDir(), 'steam_cache', 'gog.db');
-    let cache = [];
+    const cache = readMappingCache(cacheFile);
 
-    if (fs.existsSync(cacheFile)) {
-      cache = JSON.parse(fs.readFileSync(cacheFile, { encoding: 'utf8' }));
-    }
-    let cached = cache.find((g) => String(g.gogid) === String(appID));
+    const cached = cache.find((g) => String(g.gogid) === String(appID));
     if (cached) return cached.steamid;
     const url = `https://gamesdb.gog.com/platforms/gog/external_releases/${appID}`;
-    let gameinfo = await request.getJson(url);
-    if (gameinfo) {
-      let steamid = gameinfo.game.releases.find((r) => r.platform_id === 'steam').external_id;
-      if (steamid) return steamid;
-    }
+    const gameinfo = await request.getJson(url);
+    // Same guards as the app's parser/gog.js: a GOG-only title has no Steam release at all, and
+    // .find() on a missing releases array threw a TypeError that lost the unlock entirely.
+    const releases = Array.isArray(gameinfo?.game?.releases) ? gameinfo.game.releases : [];
+    const steamRelease = releases.find((release) => String(release?.platform_id || '').toLowerCase() === 'steam');
+    const steamid = steamRelease?.external_id;
+    if (!steamid) return undefined;
+    // Remember it: without this every GOG unlock hit gamesdb.gog.com again, and an offline moment
+    // then cost the notification that the answer was already known.
+    cache.push({ gogid: String(appID), steamid });
+    writeMappingCache(cacheFile, cache);
+    return steamid;
   },
   steamAppIdForEpicId: async function (appID) {
     const cacheFile = path.join(userDataDir(), 'steam_cache', 'epic.db');
-    let cache = [];
-
-    if (fs.existsSync(cacheFile)) {
-      cache = JSON.parse(fs.readFileSync(cacheFile, { encoding: 'utf8' }));
-    }
-    let cached = cache.find((g) => String(g.epicid) === String(appID));
+    const cached = readMappingCache(cacheFile).find((g) => String(g.epicid) === String(appID));
     if (cached) return cached.steamid;
   },
 };

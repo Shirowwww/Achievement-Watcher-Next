@@ -19,6 +19,11 @@ function configKey(config) {
     mergeDuplicate: achievement.mergeDuplicate === true,
     hideZero: achievement.hideZero !== false,
     sources: (config && config.achievement_source) || {},
+    // The selected Steam account is a discovery filter, not a display option (it is part of the
+    // discovery cache key in parser/achievements.js). Since this key also decides whether a scan
+    // runs at all, leaving it out served the previous account's library after a switch: the other
+    // account's stat files never moved, so the fingerprint still matched.
+    steamUser: String((config && config.steam && config.steam.main) || ''),
   });
 }
 

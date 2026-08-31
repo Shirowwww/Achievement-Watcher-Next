@@ -30,12 +30,62 @@ module.exports.setUserDataPath = (p) => {
   if (p) filename = path.join(p, 'cfg/options.ini');
 };
 
+/*
+  Every section this file reads. options.ini is documented as hand-editable, and a file missing one
+  of them (an edit gone wrong, a half-written file, a config from a build that predates a section)
+  used to throw on the first `options.<section>.<key>` read. That threw straight into the catch
+  below, which replaces the WHOLE config with defaults and writes it back - so one missing header
+  silently reset the theme, the Steam account, the sources and the onboarding flag, and destroyed
+  the original. A missing section is now an empty one, and only its own keys fall back to defaults.
+*/
+const SECTIONS = [
+  'general',
+  'achievement',
+  'achievement_source',
+  'overlay',
+  'notification',
+  'notification_toast',
+  'notification_transport',
+  'notification_advanced',
+  'emulator',
+  'controller',
+  'souvenir',
+  'action',
+  'steam',
+];
+
+function ensureSections(options) {
+  for (const name of SECTIONS) {
+    const section = options[name];
+    if (!section || typeof section !== 'object' || Array.isArray(section)) options[name] = {};
+  }
+  return options;
+}
+
+/*
+  Same temp-then-rename as util/librarySnapshot.js. A crash or a full disk during a plain
+  writeFileSync leaves a truncated options.ini behind, which is exactly the missing-section file
+  ensureSections() has to cope with on the next launch; renaming a complete file into place cannot
+  produce one.
+*/
+function writeOptionsFile(options) {
+  fs.mkdirSync(path.dirname(filename), { recursive: true });
+  const temporary = `${filename}.${process.pid}.tmp`;
+  try {
+    fs.writeFileSync(temporary, ini.stringify(options), 'utf8');
+    fs.renameSync(temporary, filename);
+  } finally {
+    try {
+      if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
+    } catch {}
+  }
+}
+
 module.exports.load = () => {
   let options;
   try {
-    options = ini.parse(fs.readFileSync(filename, 'utf8'));
+    options = ensureSections(ini.parse(fs.readFileSync(filename, 'utf8')));
 
-    if (!options.steam || typeof options.steam !== 'object' || Array.isArray(options.steam)) options.steam = {};
     // Steam schemas are fully keyless now. Do not keep a removed credential alive in memory or
     // write it back the next time another setting is saved.
     delete options.steam.apiKey;
@@ -462,6 +512,12 @@ module.exports.load = () => {
 
   } catch (err) {
     console.log(`failed to load settings: ${err}`);
+    // Everything below replaces the user's whole configuration with defaults. Keep whatever was
+    // there as options.ini.bak first: it is the only copy, and a file this code could not read is
+    // still one a person can.
+    try {
+      if (filename && fs.existsSync(filename)) fs.copyFileSync(filename, `${filename}.bak`);
+    } catch {}
     options = {
       general: {
         username: os.userInfo().username || 'User',
@@ -594,8 +650,7 @@ module.exports.load = () => {
     } catch (err) {
       options.achievement.lang = 'english';
     }
-    fs.mkdirSync(path.dirname(filename), { recursive: true });
-    fs.writeFileSync(filename, ini.stringify(options), 'utf8');
+    writeOptionsFile(options);
   }
 
   return options;
@@ -618,8 +673,7 @@ module.exports.save = (config) => {
     } catch (err) {
       return reject(err);
     }
-    fs.mkdirSync(path.dirname(filename), { recursive: true });
-    fs.writeFileSync(filename, ini.stringify(options), 'utf8');
+    writeOptionsFile(options);
     // Tell the main process to reload its cached config (loaded once at startup, kept in memory
     // otherwise). Also require()d by the main process itself, where ipcRenderer is absent, so guard it.
     try {

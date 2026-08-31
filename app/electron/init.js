@@ -103,7 +103,6 @@ let updateDownloading = false; // true from the accepted "Download && Install" u
 let updateAcceptedByUser = false;
 let checksumRetryInFlight = false; // guards the one automatic retry after a cache-clearing recovery
 const UPDATE_RECHECK_MS = 60 * 60 * 1000; // silent hourly re-check while the app stays resident
-const UPDATE_RETRY_MS = 30 * 60 * 1000; // slower retry after a failed check
 // How long the "installing" state stays on screen before the windows close. Covers one paint plus
 // the tray balloon; anything shorter and the app disappears before it has finished saying why.
 const INSTALL_HANDOVER_MS = 1200;
@@ -1070,7 +1069,7 @@ async function resolveSteamData(request) {
 
       return list.map((a) => {
         const name = a.apiname?.__cdata || a.apiname || '';
-        const unlock = parseInt(a.unlockTimestamp ?? 0);
+        const unlock = parseInt(a.unlockTimestamp ?? 0, 10);
         return {
           apiname: name,
           achieved: unlock > 0 ? 1 : 0,
@@ -1497,15 +1496,6 @@ function steamGridDbNameVariants(name) {
   return variants;
 }
 
-/*
-  A lookup that found nothing is remembered too. Without it, every game SteamGridDB has no artwork
-  for was searched again on every single scan - five requests each, on a key shared by every install
-  - which is both why those scans dragged and why the answer was sometimes a rate-limited nothing
-  for a game that does have artwork. Kept far shorter than a hit: artwork gets added over time.
-*/
-const SGDB_HIT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
-const SGDB_MISS_TTL_MS = 3 * 24 * 60 * 60 * 1000;
-
 // One lookup at a time is five requests; a library-wide refresh would fire hundreds at once and be
 // throttled into failures. Enough of them run together to keep a scan quick, not enough to trip it.
 const sgdbGate = { active: 0, waiting: [], limit: 4 };
@@ -1889,474 +1879,18 @@ ipcMain.handle('clear-update-cache', async (event) => {
   return result;
 });
 
-// Is Steam running? Steam writes its pid to ActiveProcess and clears it on exit, so this is a cheap
-// registry read plus a liveness check (EPERM still counts as alive). Never cached: Steam toggles.
-ipcMain.handle('steam:is-running', () => {
-  try {
-    const { readRegistryInteger } = require(path.join(app.getAppPath(), 'util/reg.js'));
-    const pid = Number(readRegistryInteger('HKCU', 'Software/Valve/Steam/ActiveProcess', 'pid')) || 0;
-    if (pid <= 0) return false;
-    try {
-      process.kill(pid, 0);
-      return true;
-    } catch (err) {
-      return err && err.code === 'EPERM';
-    }
-  } catch {
-    return false;
-  }
-});
-
-// Epic account connection
-ipcMain.handle('epic:auth-status', async () => {
-  try {
-    return await require(path.join(app.getAppPath(), 'util/epicAuth.js')).getEpicAuthStatus({ userDataDir: userData });
-  } catch (err) {
-    return { configured: false, connected: false, error: String(err && err.message ? err.message : err) };
-  }
-});
-
 /*
-  Epic's services answer no CORS headers, so a fetch from the window fails with a bare "Failed to
-  fetch" whatever the page's connect-src allows - the whole Epic library came back empty because of
-  it. The renderer asks here instead, where no origin applies. Only the hosts Epic serves this data
-  from are reachable, and the account token is attached here so it never crosses the channel.
+  Connecting an Epic, Steam or Xbox account is a leaf too: sign-in windows and the status handlers
+  behind them, with nothing here calling back into them. accounts.js gets the main window and the
+  config as getters, since a sign-in can be started from the tray with no window open at all.
 */
-const EPIC_FETCH_HOSTS = new Set([
-  'launcher.store.epicgames.com',
-  'launcher-public-service-prod06.ol.epicgames.com',
-  'catalog-public-service-prod06.ol.epicgames.com',
-  'api.epicgames.dev',
-]);
-
-ipcMain.handle('epic:fetch-json', async (event, { url, method = 'GET', body = null, authenticated = false } = {}) => {
-  let host = '';
-  try {
-    host = new URL(String(url)).host;
-  } catch {
-    return { ok: false, error: 'epic-url-invalid' };
-  }
-  if (!EPIC_FETCH_HOSTS.has(host)) return { ok: false, error: 'epic-host-not-allowed' };
-
-  // Epic's GraphQL answers 403 to a caller that does not identify itself as its own launcher, so
-  // the header the direct path sends has to be sent here too.
-  const headers = { Accept: 'application/json', 'User-Agent': 'EpicGamesLauncher' };
-  if (body != null) headers['Content-Type'] = 'application/json';
-  if (authenticated) {
-    try {
-      const token = await require(path.join(app.getAppPath(), 'util/epicAuth.js')).ensureEpicAccessToken({ userDataDir: userData });
-      if (!token?.access_token) return { ok: false, error: 'epic-token-missing' };
-      headers.Authorization = `${token.token_type || 'bearer'} ${token.access_token}`;
-    } catch (err) {
-      return { ok: false, error: String(err && err.message ? err.message : err) };
-    }
-  }
-
-  try {
-    // Passing the key at all is what some fetch implementations reject on a GET, so it is only
-    // added when there is a body to send.
-    const res = await fetch(url, {
-      method,
-      headers,
-      ...(body == null ? {} : { body: JSON.stringify(body) }),
-      signal: AbortSignal.timeout(20000),
-    });
-    if (!res.ok) return { ok: false, status: res.status, error: `epic-http-${res.status}` };
-    return { ok: true, status: res.status, json: await res.json() };
-  } catch (err) {
-    return { ok: false, error: String(err && err.message ? err.message : err) };
-  }
-});
-
-ipcMain.handle('epic:logout', async () => {
-  try {
-    await require(path.join(app.getAppPath(), 'util/epicAuth.js')).clearEpicTokens({ userDataDir: userData });
-    return { ok: true };
-  } catch (err) {
-    return { ok: false, error: String(err && err.message ? err.message : err) };
-  }
-});
-
-let epicLoginWindow = null;
-ipcMain.handle('epic:login', async () => {
-  const epicAuth = require(path.join(app.getAppPath(), 'util/epicAuth.js'));
-  if (epicLoginWindow && !epicLoginWindow.isDestroyed()) {
-    epicLoginWindow.focus();
-    return { ok: false, error: 'login-already-open' };
-  }
-  const loginUrl = epicAuth.buildEpicLoginUrl();
-  const redirectUrl = epicAuth.buildEpicAuthCodeUrl();
-
-  return new Promise((resolve) => {
-    let settled = false;
-    const finish = (result) => {
-      if (settled) return;
-      settled = true;
-      if (epicLoginWindow && !epicLoginWindow.isDestroyed()) epicLoginWindow.destroy();
-      epicLoginWindow = null;
-      resolve(result);
-    };
-
-    epicLoginWindow = new BrowserWindow({
-      width: 520,
-      height: 760,
-      title: t('connect-epic-games-account', 'Connect Epic Games account', 'Connecter le compte Epic Games'),
-      parent: MainWin && !MainWin.isDestroyed() ? MainWin : undefined, // keep it above the app window
-      autoHideMenuBar: true,
-      show: false, // shown on ready-to-show so it never flashes an empty frame or opens behind
-      webPreferences: { nodeIntegration: false, contextIsolation: true, partition: 'persist:epic-login' },
-    });
-    epicLoginWindow.once('ready-to-show', () => {
-      if (epicLoginWindow && !epicLoginWindow.isDestroyed()) {
-        epicLoginWindow.show();
-        epicLoginWindow.focus();
-      }
-    });
-
-    // Allow SSO popups from the Epic login window and capture their redirects.
-    const attachCapture = (contents) => {
-      const grab = () => tryCapture(contents);
-      contents.on('did-navigate', grab);
-      contents.on('did-navigate-in-page', grab);
-    };
-    epicLoginWindow.webContents.setWindowOpenHandler(() => ({
-      action: 'allow',
-      overrideBrowserWindowOptions: {
-        parent: epicLoginWindow,
-        width: 520,
-        height: 760,
-        autoHideMenuBar: true,
-        webPreferences: { nodeIntegration: false, contextIsolation: true, partition: 'persist:epic-login' },
-      },
-    }));
-    epicLoginWindow.webContents.on('did-create-window', (childWindow) => {
-      attachCapture(childWindow.webContents);
-    });
-
-    // Poll the redirect endpoint after each navigation settles.
-    const tryCapture = async (contents) => {
-      const wc = contents && !contents.isDestroyed() ? contents : epicLoginWindow && !epicLoginWindow.isDestroyed() ? epicLoginWindow.webContents : null;
-      if (settled || !wc) return;
-      try {
-        // Fetch the redirect endpoint through the login window's session so cookies behave like
-        // the page's own fetch, without splicing the URL into an injected script.
-        const res = await wc.session.fetch(redirectUrl, { credentials: 'include' });
-        const json = await res.json().catch(() => ({}));
-        const code = (json && (json.authorizationCode || json.code)) || '';
-        if (code) {
-          const token = await epicAuth.authenticateEpicWithCode(code, { userDataDir: userData });
-          debug.log('[epic] account connected');
-          finish({ ok: true, accountId: epicAuth.normalizeEpicAccountId(token && token.account_id), displayName: (token && token.displayName) || '' });
-        }
-      } catch (err) {
-        debug.log(`[epic] auth code capture failed: ${err.message || err}`);
-      }
-    };
-
-    attachCapture(epicLoginWindow.webContents);
-    epicLoginWindow.on('closed', () => finish({ ok: false, error: 'window-closed' }));
-    epicLoginWindow.loadURL(loginUrl).catch((err) => finish({ ok: false, error: String(err && err.message ? err.message : err) }));
-  });
-});
-
-// Optional Steam connection
-function steamAuthOptions() {
-  const steamAuth = require(path.join(app.getAppPath(), 'util/steamAuth.js'));
-  return { steamAuth, sessionFile: steamAuth.resolveSteamSessionFile(userData), tokenSecret: steamAuth.DEFAULT_TOKEN_SECRET };
-}
-
-// One attempt per run at naming an account the sign-in could not name. Steam being quiet is a
-// perfectly ordinary answer, and asking it again on every Settings open would not change it.
-let steamPersonaRetried = false;
-
-ipcMain.handle('steam:auth-status', async () => {
-  try {
-    const { steamAuth, sessionFile, tokenSecret } = steamAuthOptions();
-    let status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret });
-    // The webapi_token only lives a day. Reporting that as a dead account made Settings ask for a
-    // sign-in every morning, so renew silently first and only call it disconnected if Steam says no.
-    if (status.connected && status.needsReconnect) {
-      const renewed = await steamAuth.ensureSteamToken({
-        sessionFile,
-        tokenSecret,
-        session: session.fromPartition(steamAuth.STEAM_SESSION_PARTITION),
-      });
-      if (renewed) status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret });
-    }
-    if (status.connected && !status.persona && !status.needsReconnect && !steamPersonaRetried) {
-      steamPersonaRetried = true;
-      const persona = await steamAuth.refreshPersona({
-        sessionFile,
-        tokenSecret,
-        session: session.fromPartition(steamAuth.STEAM_SESSION_PARTITION),
-      });
-      if (persona) status.persona = persona;
-    }
-    return status;
-  } catch (err) {
-    return {
-      connected: false,
-      steamid: '',
-      persona: '',
-      expiresAt: 0,
-      needsReconnect: false,
-      error: String(err && err.message ? err.message : err),
-    };
-  }
-});
-
-ipcMain.handle('steam:logout', async () => {
-  try {
-    const { steamAuth, sessionFile } = steamAuthOptions();
-    await steamAuth.clearSteamSession({ sessionFile });
-    await session.fromPartition(steamAuth.STEAM_SESSION_PARTITION).clearStorageData();
-    return { ok: true };
-  } catch (err) {
-    return { ok: false, error: String(err && err.message ? err.message : err) };
-  }
-});
-
-// The token AND the steamid: GetOwnedGames needs both, the token alone only says who is calling.
-// Returning the token alone forced a second status call that was easy to forget, emptying libraries.
-ipcMain.handle('steam:ensure-token', async () => {
-  try {
-    const { steamAuth, sessionFile, tokenSecret } = steamAuthOptions();
-    const token = await steamAuth.ensureSteamToken({
-      sessionFile,
-      tokenSecret,
-      session: session.fromPartition(steamAuth.STEAM_SESSION_PARTITION),
-    });
-    if (!token) return { token: '', steamid: '' };
-    const status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret });
-    // Without the steamid the library call is refused, so ownership and playtime would both stop
-    // for an account that is otherwise perfectly connected. The cookie still knows who it is.
-    const steamid =
-      status.steamid ||
-      (await steamAuth.recoverSteamId({
-        sessionFile,
-        tokenSecret,
-        session: session.fromPartition(steamAuth.STEAM_SESSION_PARTITION),
-      }));
-    return { token, steamid: steamid || '' };
-  } catch {
-    return { token: '', steamid: '' };
-  }
-});
-
-let steamLoginWindow = null;
-ipcMain.handle('steam:login', async () => {
-  const { steamAuth, sessionFile, tokenSecret } = steamAuthOptions();
-  if (steamLoginWindow && !steamLoginWindow.isDestroyed()) {
-    steamLoginWindow.focus();
-    return { ok: false, error: 'login-already-open' };
-  }
-  const steamSession = session.fromPartition(steamAuth.STEAM_SESSION_PARTITION);
-  return await new Promise((resolve) => {
-    let settled = false;
-    const finish = (result) => {
-      if (settled) return;
-      settled = true;
-      try {
-        if (steamLoginWindow && !steamLoginWindow.isDestroyed()) steamLoginWindow.close();
-      } catch {
-        /* window already gone */
-      }
-      resolve(result);
-    };
-
-    steamLoginWindow = new BrowserWindow({
-      width: 900,
-      height: 800,
-      title: t('connect-steam-account', 'Connect Steam account', 'Connecter le compte Steam'),
-      parent: MainWin && !MainWin.isDestroyed() ? MainWin : undefined,
-      autoHideMenuBar: true,
-      webPreferences: {
-        session: steamSession,
-        nodeIntegration: false,
-        contextIsolation: true,
-      },
-    });
-    steamLoginWindow.on('closed', () => {
-      steamLoginWindow = null;
-      finish({ ok: false, error: 'login-cancelled' });
-    });
-
-    // Valve's own login page, AW injects no script. The session cookie appears before the token is
-    // readable, so wait for the token rather than failing early; only closing the window cancels.
-    let capturing = false;
-    const tryCapture = async () => {
-      if (settled || capturing) return;
-      capturing = true;
-      try {
-        const cookies = await steamSession.cookies.get({ name: steamAuth.STEAM_LOGIN_COOKIE });
-        const steamid = steamAuth.steamIdFromLoginCookie(cookies[0] && cookies[0].value);
-        if (!steamid) return;
-        const token = await steamAuth.fetchWebApiToken(steamSession);
-        const persona = await steamAuth.fetchPersona(token, steamid);
-        // Stored alongside the token because it is what keeps the account connected past the day:
-        // Steam gives the refresh token months, the sign-in cookie a single day.
-        const { refreshToken } = await steamAuth.readRefreshSession(steamSession);
-        await steamAuth.saveSessionEncrypted(
-          sessionFile,
-          { webapi_token: token, steamid, persona, refresh_token: refreshToken, expiresAt: steamAuth.parseJwtExpiry(token) },
-          tokenSecret
-        );
-        debug.log('[steam] account connected');
-        finish({ ok: true, steamid });
-      } catch (err) {
-        // Not ready yet: the next navigation or tick will retry.
-        debug.log(`[steam] sign-in not complete yet: ${err && err.message ? err.message : err}`);
-      } finally {
-        capturing = false;
-      }
-    };
-
-    // The final step of Steam login is often an internal redirect that emits no navigation event
-    // any more, so a plain timer backs up the events instead of relying on them.
-    const poll = setInterval(tryCapture, 2000);
-    steamLoginWindow.on('closed', () => clearInterval(poll));
-
-    steamLoginWindow.webContents.on('did-navigate', tryCapture);
-    steamLoginWindow.webContents.on('did-navigate-in-page', tryCapture);
-    steamLoginWindow.loadURL(steamAuth.STEAM_LOGIN_URL);
-  });
-});
-
-// Xbox PC connection and library import
-let xboxLoginWindow = null;
-ipcMain.handle('xbox-pc:status', async () => {
-  try {
-    const xboxPc = require(path.join(__dirname, '../parser/xboxPc.js'));
-    xboxPc.setUserDataPath(userData);
-    return xboxPc.status();
-  } catch (err) {
-    return { connected: false, error: String(err && err.message ? err.message : err) };
-  }
-});
-
-ipcMain.handle('xbox-pc:disconnect', async () => {
-  try {
-    const xboxPc = require(path.join(__dirname, '../parser/xboxPc.js'));
-    xboxPc.setUserDataPath(userData);
-    xboxPc.clearAuth();
-    return { ok: true };
-  } catch (err) {
-    return { ok: false, error: String(err && err.message ? err.message : err) };
-  }
-});
-
-ipcMain.handle('xbox-pc:login', async () => {
-  const xboxPc = require(path.join(__dirname, '../parser/xboxPc.js'));
-  xboxPc.setUserDataPath(userData);
-  if (xboxLoginWindow && !xboxLoginWindow.isDestroyed()) {
-    xboxLoginWindow.focus();
-    return { ok: false, error: 'login-already-open' };
-  }
-  return new Promise((resolve) => {
-    let settled = false;
-    let pollTimer = null;
-    const finish = (result) => {
-      if (settled) return;
-      settled = true;
-      if (pollTimer) clearInterval(pollTimer);
-      if (xboxLoginWindow && !xboxLoginWindow.isDestroyed()) xboxLoginWindow.destroy();
-      xboxLoginWindow = null;
-      resolve(result);
-    };
-    const state = `${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
-    let loginUrl;
-    try {
-      loginUrl = xboxPc.buildXboxDirectAuthorizeUrl(xboxPc.XBOX_PC_CLIENT_ID, state);
-    } catch (err) {
-      return finish({ ok: false, error: String(err && err.message ? err.message : err) });
-    }
-    // Track the login window and any consent/SSO popup that can carry the redirect.
-    const trackedContents = new Set();
-    const tryCapture = (contents, url) => {
-      const wc =
-        contents && !contents.isDestroyed()
-          ? contents
-          : xboxLoginWindow && !xboxLoginWindow.isDestroyed()
-            ? xboxLoginWindow.webContents
-            : null;
-      if (settled || !wc) return;
-      // Navigation events carry the redirect URL before it commits; fall back to the current URL
-      // for flows that never surface a navigation event (blocked localhost load).
-      const result = xboxPc.extractXboxDirectAuthResult(url || wc.getURL(), state);
-      if (!result) return;
-      if (result.error) {
-        finish({ ok: false, error: result.error });
-        return;
-      }
-      xboxPc
-        .completeXboxDirectAuthentication(result)
-        .then((auth) => finish({ ok: true, gamertag: auth.gamertag || '', xuid: auth.xuid || '' }))
-        .catch((err) => finish({ ok: false, error: String(err && err.message ? err.message : err) }));
-    };
-    xboxLoginWindow = new BrowserWindow({
-      width: 560,
-      height: 760,
-      title: t('connect-microsoft-xbox-network', 'Connect Microsoft / Xbox Network', 'Connecter Microsoft / Xbox Network'),
-      parent: MainWin && !MainWin.isDestroyed() ? MainWin : undefined,
-      autoHideMenuBar: true,
-      show: false,
-      webPreferences: { nodeIntegration: false, contextIsolation: true },
-    });
-    xboxLoginWindow.once('ready-to-show', () => {
-      if (xboxLoginWindow && !xboxLoginWindow.isDestroyed()) {
-        xboxLoginWindow.show();
-        xboxLoginWindow.focus();
-      }
-    });
-    const attach = (contents) => {
-      contents.on('will-navigate', (event, url) => {
-        // Do NOT prevent the navigation: the callback URL must commit (even as a failed localhost
-        // load) so getURL() exposes the code to the poll fallback.
-        tryCapture(contents, url);
-      });
-      contents.on('will-redirect', (event, url) => {
-        tryCapture(contents, url);
-      });
-      contents.on('did-navigate', () => tryCapture(contents));
-      contents.on('did-navigate-in-page', () => tryCapture(contents));
-      trackedContents.add(contents);
-      contents.on('destroyed', () => trackedContents.delete(contents));
-    };
-    xboxLoginWindow.webContents.setWindowOpenHandler(() => ({
-      action: 'allow',
-      overrideBrowserWindowOptions: {
-        parent: xboxLoginWindow,
-        autoHideMenuBar: true,
-        webPreferences: { nodeIntegration: false, contextIsolation: true },
-      },
-    }));
-    xboxLoginWindow.webContents.on('did-create-window', (childWindow) => attach(childWindow.webContents));
-    attach(xboxLoginWindow.webContents);
-    xboxLoginWindow.on('closed', () => finish({ ok: false, error: 'window-closed' }));
-    // Safety net: some flows end on a redirect the navigation events never surface (blocked
-    // localhost load); poll the current URL until the user closes the window.
-    pollTimer = setInterval(() => {
-      for (const wc of trackedContents) tryCapture(wc);
-    }, 400);
-    xboxLoginWindow.loadURL(loginUrl).catch((err) => finish({ ok: false, error: String(err && err.message ? err.message : err) }));
-  });
-});
-
-ipcMain.handle('xbox-pc:import', async (event, opts = {}) => {
-  try {
-    const xboxPc = require(path.join(__dirname, '../parser/xboxPc.js'));
-    xboxPc.setUserDataPath(userData);
-    const lang = String(opts.lang || '').trim() || (configJS && configJS.achievement && configJS.achievement.lang) || 'english';
-    const result = await xboxPc.importLibrary({
-      lang,
-      onProgress: (p) => {
-        if (!event.sender.isDestroyed()) event.sender.send('xbox-pc:import-progress', p);
-      },
-    });
-    return { ok: true, result };
-  } catch (err) {
-    return { ok: false, error: String(err && err.message ? err.message : err) };
-  }
+require('./accounts.js').register({
+  userData,
+  debug,
+  t,
+  appSecret,
+  getConfig: () => configJS,
+  getMainWindow: () => MainWin,
 });
 
 // Kill any Watchdog holding WS port 8082: a crash of this app can leave an orphaned Watchdog behind
@@ -2444,6 +1978,9 @@ function handleMonitorMessage(msg) {
 
 /* Resolve a game's square logo while it starts, not while its notification is on screen: the answer
    lands in the same cache both transports read, so the unlock/playtime card paints it instantly. */
+// Bounded for the same reason: one entry per distinct game started, for as long as the daemon runs.
+// It only exists to skip a repeat prefetch, so an evicted key costs one extra cached lookup.
+const SQUARE_LOGO_PREFETCH_CAP = 300;
 const squareLogoPrefetched = new Set();
 async function prefetchSquareGameLogo(request) {
   const appid = String((request && request.appid) || '').trim();
@@ -2453,6 +1990,9 @@ async function prefetchSquareGameLogo(request) {
   const key = `${appid}\0${name.toLowerCase()}`;
   if (squareLogoPrefetched.has(key)) return;
   squareLogoPrefetched.add(key);
+  while (squareLogoPrefetched.size > SQUARE_LOGO_PREFETCH_CAP) {
+    squareLogoPrefetched.delete(squareLogoPrefetched.values().next().value);
+  }
   try {
     const icon = await fetchSteamGridDbIcon(name, appid);
     if (icon && icon.url) await fetchSteamIcon(icon.url, appid);
@@ -2602,6 +2142,9 @@ function launchWatchdog() {
     ELECTRON_RUN_AS_NODE: '1',
     NODE_OPTIONS: nodeOpts,
     AW_USER_DATA: userData,
+    // The installation key, so the Watchdog can read the Xbox auth file the app wrote. Passed on
+    // this spawn only - see appSecret() for why it is not in the ambient environment.
+    AW_SECRET: appSecret(),
     // Where the bundled notification sounds live, so the Watchdog's Windows toasts play the
     // same sound files as the in-game overlay (user-imported sounds are under <userData>/sounds).
     AW_SOUNDS_DIR: path.join(__dirname, '../sounds'),
@@ -3055,18 +2598,19 @@ async function fetchSteamDbAssets(appid, { needIcons = false } = {}) {
   if (!/^\d+$/.test(id)) return empty;
   const generation = artworkCacheGeneration;
   const cacheFile = path.join(steamdbCoversDir, `${id}.json`);
+  // Asynchronous on purpose: the library scan asks this once per game, and existsSync + readFileSync
+  // + statSync are three blocking calls each on the same thread that is painting the window.
   try {
-    if (fs.existsSync(cacheFile)) {
-      const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-      if (Array.isArray(cached.urls) && (!needIcons || Array.isArray(cached.icons))) {
-        const ttl = cached.urls.length ? STEAMDB_COVERS_TTL : STEAMDB_COVERS_MISS_TTL;
-        if (Date.now() - fs.statSync(cacheFile).mtimeMs < ttl) {
-          return { urls: cached.urls, icons: Array.isArray(cached.icons) ? cached.icons : [] };
-        }
+    const [raw, stats] = await Promise.all([fs.promises.readFile(cacheFile, 'utf8'), fs.promises.stat(cacheFile)]);
+    const cached = JSON.parse(raw);
+    if (Array.isArray(cached.urls) && (!needIcons || Array.isArray(cached.icons))) {
+      const ttl = cached.urls.length ? STEAMDB_COVERS_TTL : STEAMDB_COVERS_MISS_TTL;
+      if (Date.now() - stats.mtimeMs < ttl) {
+        return { urls: cached.urls, icons: Array.isArray(cached.icons) ? cached.icons : [] };
       }
     }
   } catch {
-    /* stale/corrupt -> refetch */
+    /* missing, stale or corrupt -> refetch */
   }
   if (steamdbCoversInFlight.has(id)) return steamdbCoversInFlight.get(id);
   // The host proved itself unreachable moments ago; do not open a page per game to prove it again.
@@ -3165,7 +2709,17 @@ const STEAM_CDN_ASSETS = {
   landscape: ['header.jpg', 'capsule_616x353.jpg', 'library_hero.jpg'],
 };
 const STEAM_CDN_PROBE_TIMEOUT_MS = 6000;
+// Same reasoning as steamGroupsCache: this is a resident daemon, so an unbounded Map grows for the
+// whole session. Evicting is free - the entry is one probe away from being rebuilt.
+const STEAM_CDN_COVERS_MEMORY_CAP = 500;
 const steamCdnCoversCache = new Map();
+function rememberSteamCdnCovers(key, value) {
+  steamCdnCoversCache.delete(key); // re-inserting moves the key last, making the eviction below LRU
+  steamCdnCoversCache.set(key, value);
+  while (steamCdnCoversCache.size > STEAM_CDN_COVERS_MEMORY_CAP) {
+    steamCdnCoversCache.delete(steamCdnCoversCache.keys().next().value);
+  }
+}
 
 async function fetchSteamCdnCoversDetailed(appid, orientation = 'portrait') {
   const id = String(appid || '').trim();
@@ -3191,7 +2745,7 @@ async function fetchSteamCdnCoversDetailed(appid, orientation = 'portrait') {
       networkError: probes.some((probe) => probe.networkError),
     };
   })();
-  steamCdnCoversCache.set(key, pending);
+  rememberSteamCdnCovers(key, pending);
   return pending;
 }
 
@@ -4126,6 +3680,70 @@ function searchForSteamAppId(info = { name: '' }) {
   });
 }
 
+/*
+  The installation key (util/appSecret.js): 256 random bits held under Windows DPAPI, replacing the
+  passphrase that used to be compiled into this public repository. Resolved once, after 'ready',
+  because safeStorage needs the app to be up.
+
+  Deliberately NOT put in process.env: everything AW spawns - games, emulator tooling, Steamless -
+  would inherit it. Only the Watchdog gets it, explicitly, in the env of its own spawn.
+*/
+let cachedAppSecret;
+function appSecret() {
+  if (cachedAppSecret !== undefined) return cachedAppSecret;
+  cachedAppSecret = '';
+  try {
+    const { safeStorage } = require('electron');
+    cachedAppSecret = require(path.join(__dirname, '..', 'util', 'appSecret.js')).ensureSecret(userData, safeStorage);
+    if (!cachedAppSecret) debug.log('[secret] safeStorage unavailable - local secrets stay on the legacy key');
+  } catch (err) {
+    debug.log('[secret] could not resolve the installation key: ' + (err.message || err));
+  }
+  return cachedAppSecret;
+}
+
+// The renderer runs with Node integration, so this hands it nothing it could not read for itself;
+// it exists so util/aes.js resolves the same key on both sides without duplicating safeStorage.
+ipcMain.on('get-app-secret', (event) => {
+  event.returnValue = appSecret();
+});
+
+/*
+  Session-wide hardening, applied once at startup rather than from inside createMainWindow().
+
+  It used to live in that function, so the nominal path never reached it: a login-item start passes
+  --hidden (see electron/ipc.js) and opens no window, and --wintype=overlay / --wintype=notification
+  open one that is not the main window. The overlay and the preset popups then ran on a default
+  session with Chromium's own permission defaults.
+
+  The User-Agent header was also registered twice with the same body - once here, once per overlay
+  creation - and only the last listener of a session survives, so the repeat did nothing except
+  guarantee the two would diverge unnoticed.
+*/
+let sessionHardened = false;
+function applySessionHardening() {
+  if (sessionHardened) return;
+  sessionHardened = true;
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    details.requestHeaders['User-Agent'] = manifest.config['user-agent'];
+    callback({ cancel: false, requestHeaders: details.requestHeaders });
+  });
+  // Community notification presets may only reach store CDNs, and only for images. See
+  // presetRequestAllowed() for why this is filtered here instead of on a session of their own.
+  session.defaultSession.webRequest.onBeforeRequest((details, callback) => {
+    if (!presetWebContentsIds.has(details.webContentsId) || presetRequestAllowed(details)) {
+      callback({ cancel: false });
+      return;
+    }
+    debug.log(`[overlay-notif] blocked ${details.resourceType} request to ${details.url.slice(0, 120)}`);
+    callback({ cancel: true });
+  });
+  // The app needs no web permissions (camera, mic, geolocation, web-notifications, ...); toasts are
+  // native and audio uses <audio>/main-process playback. A compromised renderer gets none.
+  session.defaultSession.setPermissionRequestHandler((wc, permission, callback) => callback(false));
+  session.defaultSession.setPermissionCheckHandler(() => false);
+}
+
 function createMainWindow() {
   try {
     if (MainWin) {
@@ -4225,10 +3843,6 @@ function createMainWindow() {
     }
 
     MainWin.webContents.userAgent = manifest.config['user-agent'];
-    session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
-      details.requestHeaders['User-Agent'] = manifest.config['user-agent'];
-      callback({ cancel: false, requestHeaders: details.requestHeaders });
-    });
 
     // External open links: only http(s) reaches the OS - forwarding anything else turned in-page
     // navigation into arbitrary protocol launches (ms-msdt:, search-ms:, UNC…).
@@ -4246,11 +3860,6 @@ function createMainWindow() {
       if (/^https?:\/\//i.test(url)) shell.openExternal(url).catch(() => {});
       return { action: 'deny' };
     });
-
-    // Hardening: the app needs no web permissions (camera, mic, geolocation, web-notifications, ...);
-    // toasts are native and audio uses <audio>/main-process playback. A compromised renderer gets none.
-    session.defaultSession.setPermissionRequestHandler((wc, permission, callback) => callback(false));
-    session.defaultSession.setPermissionCheckHandler(() => false);
 
     MainWin.loadFile(manifest.config.window.view);
 
@@ -4781,10 +4390,6 @@ async function createOverlayWindow(info) {
     }
 
     overlayWindow.webContents.userAgent = manifest.config['user-agent'];
-    session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
-      details.requestHeaders['User-Agent'] = manifest.config['user-agent'];
-      callback({ cancel: false, requestHeaders: details.requestHeaders });
-    });
 
     overlayWindow.setAlwaysOnTop(true, 'screen-saver');
     overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
@@ -5041,6 +4646,45 @@ function loadNotificationStrings() {
   }
 }
 
+/*
+  Notification presets are third-party HTML: a `.awpreset` from the community gallery is installed
+  by presetPackage.js, which validates paths, sizes and extensions but never the markup, and an
+  inline <script> is part of what a preset IS. The window is contextIsolation'd with no Node, so the
+  script cannot touch the machine - but it could still `fetch()` any host and post the game name,
+  the achievement, the timestamps and the viewer's IP somewhere.
+
+  Presets legitimately paint artwork straight off the store CDNs (Steam achievement icons and header
+  images arrive as https URLs from the Watchdog), so a blanket block would break them. This is the
+  narrow version: from a preset window, an http(s) request is allowed only when it is an image from
+  a store CDN. XHR/fetch/websocket/script/stylesheet, and images from anywhere else, are cancelled.
+
+  It filters by webContents id on the DEFAULT session rather than giving these windows a session of
+  their own: a BrowserWindow on a non-default session cannot load a file:// page (loadFile answers
+  ERR_FAILED), and every preset is a file on disk. Requests from any other window are waved through
+  untouched, so nothing else in the app changes.
+*/
+const NOTIFICATION_IMAGE_HOSTS =
+  /(?:^|\.)(?:steamstatic\.com|steampowered\.com|steamcommunity\.com|akamaihd\.net|steamgriddb\.com|gog\.com|gog-statics\.com|epicgames\.com|unrealengine\.com|s-microsoft\.com|xboxlive\.com|ubi\.com|ubisoft\.com)$/i;
+const presetWebContentsIds = new Set();
+
+function presetRequestAllowed(details) {
+  let url;
+  try {
+    url = new URL(details.url);
+  } catch {
+    return true; // not something this can reason about; the other guards still apply
+  }
+  // file:, data: and blob: are how a preset loads its own files - nothing about that changes here.
+  if (url.protocol !== 'http:' && url.protocol !== 'https:' && url.protocol !== 'ws:' && url.protocol !== 'wss:') return true;
+  return url.protocol === 'https:' && details.resourceType === 'image' && NOTIFICATION_IMAGE_HOSTS.test(url.hostname);
+}
+
+function watchPresetWindow(win) {
+  const id = win.webContents.id;
+  presetWebContentsIds.add(id);
+  win.on('closed', () => presetWebContentsIds.delete(id));
+}
+
 function createNotificationWindow(data = {}) {
   const presetFolder = resolvePresetFolder(data.preset);
   if (!presetFolder) {
@@ -5118,6 +4762,10 @@ function createNotificationWindow(data = {}) {
       preload: path.join(__dirname, '../notificationPreload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      // notificationPreload.js requires only `electron`, which is all a sandboxed preload may use,
+      // so a community preset's own script runs in an OS-sandboxed renderer. Verified with a real
+      // preset: load, IPC payload and the host's executeJavaScript/insertCSS all still work.
+      sandbox: true,
       backgroundThrottling: false,
       autoplayPolicy: 'no-user-gesture-required',
       // The host owns the scaling (see setZoomFactor below); set it up front so the preset's very
@@ -5148,6 +4796,7 @@ function createNotificationWindow(data = {}) {
       }
     });
   }
+  watchPresetWindow(notif);
   // Real notifications are click-through; the reposition witness stays interactive so it can be dragged.
   if (reposition) {
     // Be explicit instead of relying on BrowserWindow's default: this window may be created after
@@ -6065,762 +5714,28 @@ function findPresetFolder(name) {
 }
 
 /*
-  `request` is either `{ name }` - export the preset of that name from disk - or `{ name, options }`,
-  which exports the design currently in the builder, saved or not. The second form is what keeps a
-  package matching what the user is looking at instead of some other preset that happened to be
-  selected elsewhere.
+  The portable packages - .awpreset, .awtheme and the .san import - are a leaf: every one of them is
+  an ipcMain handler and nothing here calls back into them. They live in presetLibrary.js and are
+  handed what changes while the app runs as getters, so a theme applied later still reaches the
+  overlay window that exists at that moment rather than the one open now.
 */
-ipcMain.handle('export-preset', async (event, request) => {
-  try {
-    const asked = typeof request === 'string' ? { name: request } : request || {};
-    const safe = sanitizePresetName(asked.name);
-    if (!safe || safe === PREVIEW_PRESET_NAME) return { ok: false, error: 'invalid-name' };
-    const draft = asked.options && typeof asked.options === 'object' ? customPresetNumbers(asked.options) : null;
-    // The builder's scratch folder is a real preset folder, so a draft exports through exactly the
-    // same path as a saved one; the package is named `safe`, never the reserved scratch name.
-    const presetDir = draft ? writeCustomPreset(PREVIEW_PRESET_NAME, draft) : findPresetFolder(safe);
-    if (!presetDir) return { ok: false, error: 'preset-not-found' };
-
-    const res = await dialog.showSaveDialog({
-      title: t('export-preset-title', 'Export preset', 'Exporter le preset'),
-      defaultPath: safe + presetPackage.PRESET_PACKAGE_EXTENSION,
-      filters: [{ name: t('preset-package', 'AW preset package', 'Paquet de preset AW'), extensions: ['awpreset'] }],
-    });
-    if (res.canceled || !res.filePath) return { ok: false, canceled: true };
-
-    // The builder options, when the preset came from the builder; a hand-authored preset exports
-    // without them and simply stays uneditable on the other side, exactly as it is here.
-    let options = draft;
-    if (!options) {
-      try {
-        options = JSON.parse(fs.readFileSync(path.join(presetDir, PRESET_OPTIONS_FILE), 'utf8'));
-      } catch {}
-    }
-
-    /*
-      Metadata from the manifest of a preset that was itself imported, so passing one on keeps its
-      description and credit. Credit is opt-in and only ever comes from the preset's own files:
-      nothing about the machine or the Windows account is stamped into a package the user shares.
-    */
-    let meta = {};
-    try {
-      const previous = JSON.parse(fs.readFileSync(path.join(presetDir, presetPackage.PRESET_PACKAGE_FILE), 'utf8'));
-      meta = { author: previous.author, description: previous.description, version: previous.version, tags: previous.tags };
-    } catch {}
-    if (!meta.author && options && typeof options.author === 'string') meta.author = options.author;
-
-    /*
-      The sound the preset asks for, falling back to the one currently selected so a preset with no
-      opinion still records what it was designed against. It travels with the package only when the
-      user imported it: a bundled sound is already on every install, so naming it in the manifest is
-      enough and avoids redistributing it.
-    */
-    const soundName = String((options && options.sound) || (configJS && configJS.overlay && configJS.overlay.notificationSound) || '');
-    const userSound = soundName ? path.join(userSoundsDir(), soundName) : '';
-    const sound = soundName ? { name: soundName, file: fs.existsSync(userSound) ? userSound : '' } : null;
-
-    const out = presetPackage.exportPreset({
-      presetDir,
-      name: safe,
-      destination: res.filePath,
-      options,
-      meta,
-      sound,
-      appVersion: app.getVersion(),
-    });
-    debug.log(`[preset-package] export ${safe}: ` + (out.ok ? out.file : out.error));
-    return out;
-  } catch (err) {
-    debug.log('[preset-package] export failed: ' + (err.message || err));
-    return { ok: false, error: String(err.message || err) };
-  }
-});
-
-/*
-  Import a package. Called twice for a name clash: the first call reports `duplicate` and changes
-  nothing, then the renderer asks the user and calls back with the same `file` plus a policy.
-*/
-ipcMain.handle('import-preset', async (event, opts = {}) => {
-  try {
-    let file = typeof opts.file === 'string' ? opts.file : '';
-    if (!file) {
-      const res = await dialog.showOpenDialog({
-        title: t('import-preset-title', 'Import preset', 'Importer un preset'),
-        properties: ['openFile', 'dontAddToRecent'],
-        filters: [{ name: t('preset-package', 'AW preset package', 'Paquet de preset AW'), extensions: ['awpreset'] }],
-      });
-      if (res.canceled || !res.filePaths || !res.filePaths.length) return { ok: false, canceled: true };
-      file = res.filePaths[0];
-    }
-
-    const out = presetPackage.installPackage({
-      file,
-      presetsDir: usersPresetsDir(),
-      soundsDir: userSoundsDir(),
-      appVersion: app.getVersion(),
-      duplicate: ['rename', 'replace'].includes(opts.duplicate) ? opts.duplicate : 'fail',
-      reservedNames: [PREVIEW_PRESET_NAME],
-      // A preset installed here wins over a bundled one of the same name, so importing "Shirow"
-      // must ask rather than quietly hide the bundled Shirow behind a copy.
-      takenNames: bundledPresetRoots().flatMap((root) => {
-        try {
-          return fs.readdirSync(root).filter((name) => fs.existsSync(path.join(root, name, 'index.html')));
-        } catch {
-          return [];
-        }
-      }),
-    });
-    if (out.ok) invalidateNotificationPresetFolders();
-    debug.log('[preset-package] import ' + path.basename(file) + ': ' + (out.ok ? out.name : out.error));
-    return { ...out, file };
-  } catch (err) {
-    debug.log('[preset-package] import failed: ' + (err.message || err));
-    return { ok: false, error: String(err.message || err) };
-  }
-});
-
-/*
-  Importing a Steam Achievement Notifier theme: a one-way conversion into an ordinary generated
-  preset (format/mapping/safety rules in util/sanImport.js). This side only drives the dialog and
-  names the folders; nothing about SAN is consulted again once the preset exists.
-*/
-ipcMain.handle('import-san-theme', async (event, opts = {}) => {
-  try {
-    let file = typeof opts.file === 'string' ? opts.file : '';
-    if (!file) {
-      const res = await dialog.showOpenDialog({
-        title: t('import-san-title', 'Import a Steam Achievement Notifier theme', 'Importer un theme Steam Achievement Notifier'),
-        properties: ['openFile', 'dontAddToRecent'],
-        // A .san file, the plain zip it is, or the usertheme.json inside a theme SAN already imported.
-        filters: [{ name: t('san-theme', 'Steam Achievement Notifier theme', 'Theme Steam Achievement Notifier'), extensions: ['san', 'zip', 'json'] }],
-      });
-      if (res.canceled || !res.filePaths || !res.filePaths.length) return { ok: false, canceled: true };
-      file = res.filePaths[0];
-    }
-
-    const out = sanImport.installSanTheme({
-      file,
-      presetsDir: usersPresetsDir(),
-      soundsDir: userSoundsDir(),
-      imagesDir: userPresetImagesDir(),
-      appVersion: app.getVersion(),
-      duplicate: ['rename', 'replace'].includes(opts.duplicate) ? opts.duplicate : 'fail',
-      reservedNames: [PREVIEW_PRESET_NAME],
-      takenNames: bundledPresetRoots().flatMap((root) => {
-        try {
-          return fs.readdirSync(root).filter((name) => fs.existsSync(path.join(root, name, 'index.html')));
-        } catch {
-          return [];
-        }
-      }),
-    });
-    if (out.ok) invalidateNotificationPresetFolders();
-    /*
-      The whole report, not just the outcome. A user asking why their theme looks different has one
-      dialog they may have clicked past; this is the only place the detail survives.
-    */
-    if (out.ok) {
-      const list = (entries, label) => (entries || []).map((entry) => `${entry[label] || '?'}=${entry.code}`).join(', ') || 'none';
-      debug.log(
-        `[san-import] ${path.basename(file)} -> ${out.name} (SAN ${out.report.sanVersion || '?'}, preset ${out.report.sanPreset || '?'}); ` +
-          `mapped ${(out.report.mapped || []).length}; skipped ${list(out.report.skipped, 'key')}; assets ${list(out.report.assets, 'name')}`
-      );
-    } else {
-      debug.log('[san-import] ' + path.basename(file) + ': ' + out.error);
-    }
-    return { ...out, file };
-  } catch (err) {
-    debug.log('[san-import] failed: ' + (err.message || err));
-    return { ok: false, error: String(err.message || err) };
-  }
-});
-
-// List available notification sound files for the overlay sound dropdown (bundled + user-imported).
-/*
-  Artwork for a notification test that is not tied to a game.
-
-  A test used to show the generic achievement badge and the app's own icon, which is the one thing a
-  preview must not do: the whole point of testing a preset is to judge how it frames real artwork,
-  and a flat placeholder hides exactly the problems (contrast over a bright cover, a cropped icon)
-  that the test exists to reveal. So it borrows a game from the library the user already has.
-
-  Returns {} when nothing is cached yet - the caller keeps its placeholder in that case.
-*/
-ipcMain.handle('notification-sample-art', async () => {
-  try {
-    const coversDir = path.join(userData, 'covers');
-    const covers = new Map();
-    try {
-      for (const file of fs.readdirSync(coversDir)) {
-        if (!/\.(?:png|jpe?g|webp)$/i.test(file)) continue;
-        // Covers are stored as `<appid>.<ext>` or, once a pick has been re-downloaded,
-        // `<appid>-<digest>.<ext>`. Keying on the whole basename made every digest-suffixed file
-        // invisible to this lookup, so a library full of covers could still answer "no artwork".
-        const appid = file.replace(/\.[^.]+$/, '').replace(/-[a-f0-9]+$/i, '');
-        if (!covers.has(appid)) covers.set(appid, path.join(coversDir, file));
-      }
-    } catch {}
-    if (covers.size === 0) return {};
-
-    /*
-      Prefer a game the index can name. A preview that shows one game's cover while the line above it
-      reads "Sample Game" is worse than either on its own, so the name and the artwork have to come
-      from the same entry - and only the index has both.
-    */
-    let named = [];
-    try {
-      const index = JSON.parse(fs.readFileSync(path.join(userData, 'cfg', 'gameIndex.json'), 'utf8'));
-      named = Object.values(index).filter((game) => game && game.appid && game.name && covers.has(String(game.appid)));
-    } catch {}
-
-    const keys = [...covers.keys()];
-    const pick = named.length
-      ? named[Math.floor(Math.random() * named.length)]
-      : { appid: keys[Math.floor(Math.random() * keys.length)], name: '' };
-    const appid = String(pick.appid);
-    const cover = covers.get(appid);
-    // The wide header reads better as a preset background. The thumbnail goes through the shared
-    // square-logo resolver rather than handing the raw 2:3 cover over: this sample feeds BOTH the
-    // overlay preview and the Windows-notification test, so resolving it here is what keeps either
-    // of them from framing artwork no real notification would show.
-    const header = path.join(userData, 'steam_cache', 'icon', appid, 'header.jpg');
-    const image = fs.existsSync(header) ? header : cover;
-    const icon = (await resolveSquareGameLogo(appid, pick.name || '', [cover, image]).catch(() => '')) || cover;
-    return { appid, name: pick.name || '', icon, image };
-  } catch {
-    return {};
-  }
-});
-
-/*
-  The pictures the designer can offer as a preset background. Absolute paths come back too: the
-  preview renders inside a srcdoc frame, where nothing resolves relative to a preset folder, so the
-  renderer inlines the file it picked as a data URI.
-*/
-ipcMain.handle('list-preset-images', async () => {
-  try {
-    return fs
-      .readdirSync(userPresetImagesDir())
-      .filter((name) => presetSchema.ASSET_RE.test(name))
-      .sort((a, b) => a.localeCompare(b))
-      .map((name) => ({ name, file: path.join(userPresetImagesDir(), name) }));
-  } catch {
-    return [];
-  }
-});
-
-// Copy a user-picked image into that folder and hand back the name the preset will use. Same
-// no-clobber rule as import-sound: a different file of the same name lands beside it.
-ipcMain.handle('import-preset-image', async () => {
-  try {
-    const res = await dialog.showOpenDialog({
-      title: t('choose-preset-image', 'Choose a background image', 'Choisir une image de fond'),
-      properties: ['openFile', 'dontAddToRecent'],
-      filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif'] }],
-    });
-    if (res.canceled || !res.filePaths || !res.filePaths.length) return null;
-    const src = res.filePaths[0];
-    const dir = userPresetImagesDir();
-    fs.mkdirSync(dir, { recursive: true });
-    const ext = path.extname(src);
-    const stem = path.basename(src, ext);
-    let base = stem + ext;
-    if (!presetSchema.ASSET_RE.test(base)) return null;
-    let dest = path.join(dir, base);
-    let i = 1;
-    while (fs.existsSync(dest)) {
-      try {
-        if (fs.readFileSync(dest).equals(fs.readFileSync(src))) return base;
-      } catch {}
-      base = `${stem} (${i++})${ext}`;
-      if (!presetSchema.ASSET_RE.test(base)) return null;
-      dest = path.join(dir, base);
-    }
-    fs.copyFileSync(src, dest);
-    return base;
-  } catch (err) {
-    debug.log('[preset-image] ' + (err.message || err));
-    return null;
-  }
-});
-
-ipcMain.handle('list-sounds', async () => {
-  const set = new Set();
-  for (const { name } of notificationSounds.listSoundFiles([path.join(__dirname, '../sounds'), userSoundsDir()])) set.add(name);
-  return [...set].sort((a, b) => a.localeCompare(b));
-});
-
-// User themes: *.css from <userData>\themes (Settings > General > Theme).
-ipcMain.handle('list-user-themes', async () =>
-  userThemes.listUserThemes(userData).map((t) => ({ name: t.name, file: t.file, css: userThemes.readThemeFile(t.file) }))
-);
-
-// Resolve the active theme into CSS for the main window and the overlay.
-ipcMain.handle('get-theme-payload', (event, name) => currentThemePayload(name));
-
-// Persist the Custom theme (per-layer colors + optional images) and return the
-// fresh payload so the renderer can re-apply it live.
-// `intoDir` is where the generated copies are written; an imported theme keeps its own, inside its
-// own folder, so deleting the theme takes them with it and an export never sees them. The work is
-// in util/themeBlur.js because the gallery renderer has to produce exactly the same copies.
-function prepareThemeBlurImages(theme, intoDir) {
-  return themeBlur.prepareThemeBlurImages(theme, intoDir || themeLayers.themeImagesDir(userData), { log: (line) => debug.log(line) });
-}
-
-/*
-  `request` is either the bare layer model (what older callers sent) or `{ theme, name }`. The name
-  is what the picker shows and what an export is called, so it travels with the model rather than
-  through a channel of its own; leaving it out keeps whatever name is already on disk.
-*/
-ipcMain.handle('save-custom-theme', async (event, request) => {
-  const asked = request && typeof request === 'object' && request.theme ? request : { theme: request };
-  const clean = themeLayers.saveCustomTheme(userData, asked.theme, asked.name);
-  await prepareThemeBlurImages(clean);
-  themeLayers.saveCustomTheme(userData, clean); // persist generated blur paths, keeping the name
-  return { ...themeLayers.themePayload(userData, 'custom', clean, ''), customName: themeLayers.loadCustomThemeName(userData) };
-});
-
-// What the Custom theme is called, so the editor's name field opens on it.
-ipcMain.handle('get-custom-theme-name', async () => themeLayers.loadCustomThemeName(userData));
-
-/*
-  The stylesheet for a theme that is being edited but not saved.
-
-  Every theme is editable now, so the editor needs to show a draft over a built-in or over somebody
-  else's theme without writing anything - this builds exactly what `save-custom-theme` would return
-  and stores nothing. The blur and veil copies ARE generated, because they are derived from the
-  image and the effect settings rather than from the theme: without them a layer set to blur would
-  preview a sharp picture and the draft would lie about what saving it would look like. They land in
-  the shared image folder, keyed by content, so a draft that is abandoned leaves a file the next
-  theme using that picture reuses rather than a file nothing can account for.
-*/
-ipcMain.handle('preview-theme-model', async (event, theme) => {
-  const clean = themeLayers.sanitizeCustomTheme(theme);
-  const prepared = await prepareThemeBlurImages(clean);
-  return themeLayers.themePayload(userData, 'custom', prepared, '');
-});
-
-// Pick a background image for one Custom-theme layer: copy the file into
-// <userData>/theme-images (stable location, survives source-file moves) and
-// return the stored absolute path. Returns null when the user cancels.
-ipcMain.handle('pick-theme-image', async (event, layer) => {
-  try {
-    const allowed = themeLayers.IMAGE_LAYER_IDS.includes(layer) ? layer : null;
-    if (!allowed) return { ok: false, error: 'invalid-layer' };
-    const res = await dialog.showOpenDialog({
-      title: t('choose-theme-image', 'Choose a background image', 'Choisir une image de fond'),
-      properties: ['openFile', 'dontAddToRecent'],
-      filters: [
-        { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif', 'svg'] },
-      ],
-    });
-    if (res.canceled || !res.filePaths || !res.filePaths.length) return { ok: false, canceled: true };
-    const src = res.filePaths[0];
-    const dir = themeLayers.themeImagesDir(userData);
-    fs.mkdirSync(dir, { recursive: true });
-    const ext = path.extname(src).toLowerCase() || '.png';
-    const stem = path.basename(src, ext).replace(/[^a-z0-9-_]/gi, '_').slice(0, 48) || 'image';
-    // Adopt any stored copy with identical bytes, no matter which layer imported it first. The old
-    // check only compared against the name THIS layer would use, so one wallpaper applied to several
-    // layers was stored once per layer.
-    const shared = themeImages.findByContent(dir, src);
-    if (shared) {
-      debug.log(`[theme-image] ${layer} <- ${shared} (reused)`);
-      return { ok: true, layer, file: shared };
-    }
-    let dest = path.join(dir, `${layer}-${stem}${ext}`);
-    let i = 1;
-    while (fs.existsSync(dest)) {
-      dest = path.join(dir, `${layer}-${stem} (${i++})${ext}`);
-    }
-    fs.copyFileSync(src, dest);
-    debug.log(`[theme-image] ${layer} <- ${dest}`);
-    return { ok: true, layer, file: dest };
-  } catch (err) {
-    debug.log(`[theme-image] failed: ${err.message || err}`);
-    return { ok: false, error: String(err.message || err) };
-  }
-});
-
-/*
-  Portable application themes (.awtheme): export, preview, import, delete. The format lives in
-  util/themePackage.js; this side only resolves what "the current theme" means, drives the file
-  dialogs and generates the blur copies an imported theme needs on this machine.
-*/
-
-// Names an import may not take because the dropdown already offers them: every built-in, plus
-// whatever CSS themes are in <userData>\themes.
-function takenThemeNames() {
-  const names = Object.keys(themeLayers.BUILTIN_COLORS);
-  try {
-    for (const theme of userThemes.listUserThemes(userData)) names.push(theme.name);
-  } catch {}
-  return names;
-}
-
-// The layer model behind a stored theme value, or null when that value has no model - which is
-// only ever a `user:` stylesheet, the one kind of theme this format deliberately cannot carry.
-function themeModelFor(value) {
-  const name = String(value || 'default');
-  if (name === 'custom') {
-    // The name the user gave it, so an export is called what the picker calls it rather than the
-    // word "Custom" every custom theme would otherwise share.
-    return { theme: themeLayers.loadCustomTheme(userData), base: 'custom', name: themeLayers.loadCustomThemeName(userData), meta: {} };
-  }
-  const pack = userThemes.parsePackValue(name);
-  if (pack) {
-    const installed = themePackage.readInstalledTheme(userData, pack);
-    if (!installed) return null;
-    const manifest = installed.manifest || {};
-    return {
-      theme: installed.theme,
-      base: manifest.base || '',
-      name: installed.name,
-      // Credit survives a round trip, so passing on a theme somebody shared keeps their name on it.
-      meta: { author: manifest.author, description: manifest.description, version: manifest.version, tags: manifest.tags },
-    };
-  }
-  if (userThemes.parseValue(name)) return null;
-  if (!Object.prototype.hasOwnProperty.call(themeLayers.BUILTIN_COLORS, name)) return null;
-  return { theme: themePackage.themeFromBuiltin(name), base: name, meta: {} };
-}
-
-/*
-  Export the theme a value names, under a name the caller gives. A built-in exports its palette, the
-  Custom theme exports what the editor holds, and an imported theme re-exports as it stands.
-
-  Nothing about this machine travels: util/themePackage.js copies each layer image in under a name
-  built from the layer, and the manifest carries only what the user typed plus the app version.
-*/
-ipcMain.handle('export-theme', async (event, request) => {
-  try {
-    const asked = typeof request === 'string' ? { value: request } : request || {};
-    const value = String(asked.value || (configJS && configJS.general && configJS.general.theme) || 'default');
-    const model = themeModelFor(value);
-    if (!model) {
-      return { ok: false, error: userThemes.parseValue(value) ? 'css-theme-not-exportable' : 'theme-not-found' };
-    }
-
-    /*
-      The theme's own name comes first, and the caller's fallback second: the Custom theme is called
-      what the user typed into the editor, an imported one keeps the name it travelled under, and a
-      built-in is named after its row in the picker. A custom theme with no name is not exported at
-      all - the file would be called "Custom", which is every custom theme anyone has ever made.
-    */
-    const suggested = themePackage.sanitizeThemeName(model.name || asked.name || value.replace(/^pack:/i, ''));
-    if (!suggested) return { ok: false, error: value === 'custom' ? 'theme-name-required' : 'invalid-name' };
-    /*
-      A theme may not travel under a name the picker already means something else by. It matters
-      most for a built-in exported as itself: the file would install as "Nord" on somebody else's
-      machine and shadow the Nord they already have. Renaming it is also the moment it stops being
-      the built-in and becomes the exporter's own theme, which is what the manifest then says.
-    */
-    if (!userThemes.parsePackValue(value) && takenThemeNames().some((name) => name.toLowerCase() === suggested.toLowerCase())) {
-      return { ok: false, error: 'reserved-name', name: suggested };
-    }
-    const res = await dialog.showSaveDialog({
-      title: t('export-theme-title', 'Export theme', 'Exporter le theme'),
-      defaultPath: suggested + themePackage.THEME_PACKAGE_EXTENSION,
-      filters: [{ name: t('theme-package', 'AW theme package', 'Paquet de theme AW'), extensions: ['awtheme'] }],
-    });
-    if (res.canceled || !res.filePath) return { ok: false, canceled: true };
-
-    const meta = { ...model.meta };
-    for (const field of ['author', 'description', 'version']) {
-      if (typeof asked[field] === 'string' && asked[field].trim()) meta[field] = asked[field];
-    }
-    if (Array.isArray(asked.tags) && asked.tags.length) meta.tags = asked.tags;
-
-    const out = themePackage.exportTheme({
-      theme: model.theme,
-      name: suggested,
-      destination: res.filePath,
-      meta,
-      base: model.base,
-      appVersion: app.getVersion(),
-    });
-    debug.log(`[theme-package] export ${suggested}: ` + (out.ok ? out.file : out.error));
-    return out;
-  } catch (err) {
-    debug.log('[theme-package] export failed: ' + (err.message || err));
-    return { ok: false, error: String(err.message || err) };
-  }
-});
-
-/*
-  What a package would install, without installing it.
-
-  The assets are unpacked into a throwaway folder so the preview can paint the real images, and
-  that folder is the only thing an unapproved package ever writes: nothing reaches theme storage
-  until the user says apply. One preview exists at a time, and the previous one is removed when the
-  next starts, so a user clicking through several files cannot leave a pile behind.
-*/
-let themePreview = null;
-
-function discardThemePreview() {
-  if (!themePreview) return;
-  try {
-    fs.rmSync(themePreview.dir, { recursive: true, force: true });
-  } catch {}
-  themePreview = null;
-}
-
-ipcMain.handle('preview-theme', async (event, opts = {}) => {
-  try {
-    let file = typeof opts.file === 'string' ? opts.file : '';
-    if (!file) {
-      const res = await dialog.showOpenDialog({
-        title: t('import-theme-title', 'Import theme', 'Importer un theme'),
-        properties: ['openFile', 'dontAddToRecent'],
-        filters: [{ name: t('theme-package', 'AW theme package', 'Paquet de theme AW'), extensions: ['awtheme'] }],
-      });
-      if (res.canceled || !res.filePaths || !res.filePaths.length) return { ok: false, canceled: true };
-      file = res.filePaths[0];
-    }
-
-    const read = themePackage.readThemePackage(file, { appVersion: app.getVersion() });
-    if (!read.ok) {
-      debug.log('[theme-package] preview ' + path.basename(file) + ': ' + read.error);
-      return { ...read, file };
-    }
-
-    discardThemePreview();
-    const dir = fs.mkdtempSync(path.join(app.getPath('temp'), 'aw-theme-preview-'));
-    const assets = path.join(dir, themePackage.ASSETS_DIR);
-    fs.mkdirSync(assets, { recursive: true });
-    for (const asset of read.assets) fs.writeFileSync(path.join(assets, asset.name), asset.data);
-    themePreview = { dir, file };
-
-    /*
-      The blur and veil copies, in the throwaway folder. Without them a layer with an effect would
-      preview from its source image and the frame would show a sharp wallpaper for a theme the app
-      is about to blur heavily - which is the one thing a preview must not do.
-    */
-    const previewTheme = await prepareThemeBlurImages(
-      themePackage.resolveInstalled(read.theme, dir),
-      path.join(dir, themePackage.THEME_DERIVED_DIR)
-    );
-
-    return {
-      ok: true,
-      file,
-      manifest: read.manifest,
-      theme: previewTheme,
-      bytes: read.bytes,
-      installed: themePackage.listInstalledThemes(userData).some((t2) => t2.name.toLowerCase() === read.manifest.name.toLowerCase()),
-    };
-  } catch (err) {
-    debug.log('[theme-package] preview failed: ' + (err.message || err));
-    return { ok: false, error: String(err.message || err) };
-  }
-});
-
-ipcMain.handle('discard-theme-preview', async () => {
-  discardThemePreview();
-  return { ok: true };
-});
-
-/*
-  Install a package. Called twice for a name clash: the first call reports `duplicate` and changes
-  nothing, then the renderer asks the user and calls back with the same `file` plus a policy - the
-  same two-step an .awpreset import uses.
-*/
-ipcMain.handle('import-theme', async (event, opts = {}) => {
-  try {
-    let file = typeof opts.file === 'string' ? opts.file : '';
-    if (!file) {
-      const res = await dialog.showOpenDialog({
-        title: t('import-theme-title', 'Import theme', 'Importer un theme'),
-        properties: ['openFile', 'dontAddToRecent'],
-        filters: [{ name: t('theme-package', 'AW theme package', 'Paquet de theme AW'), extensions: ['awtheme'] }],
-      });
-      if (res.canceled || !res.filePaths || !res.filePaths.length) return { ok: false, canceled: true };
-      file = res.filePaths[0];
-    }
-
-    const out = themePackage.installThemePackage({
-      file,
-      userDataPath: userData,
-      appVersion: app.getVersion(),
-      duplicate: ['rename', 'replace'].includes(opts.duplicate) ? opts.duplicate : 'fail',
-      takenNames: takenThemeNames(),
-    });
-    if (!out.ok) {
-      debug.log('[theme-package] import ' + path.basename(file) + ': ' + out.error);
-      return { ...out, file };
-    }
-
-    /*
-      The blur and veil copies a layer effect needs are generated here, once, from the image that
-      travelled - never shipped, since they depend on nothing else. They live inside the theme's own
-      folder, so removing the theme removes them too.
-    */
-    const dir = path.join(themePackage.themePackDir(userData), out.name);
-    const theme = await prepareThemeBlurImages(out.theme, path.join(dir, themePackage.THEME_DERIVED_DIR));
-    const stored = themePackage.saveInstalledTheme(userData, out.name, theme) || theme;
-
-    discardThemePreview();
-    debug.log(`[theme-package] import ${path.basename(file)}: ${out.name} (${out.assets} asset(s))`);
-    return { ...out, file, theme: stored, value: userThemes.packValue(out.name) };
-  } catch (err) {
-    debug.log('[theme-package] import failed: ' + (err.message || err));
-    return { ok: false, error: String(err.message || err) };
-  }
-});
-
-/*
-  The layer model behind any theme the picker offers, so the editor can open on the one that is
-  selected rather than only on the Custom slot. A `user:` stylesheet is the one kind with no model -
-  it is CSS somebody wrote, not colours - and answers null, which is how the editor knows to stay shut.
-*/
-ipcMain.handle('get-theme-model', async (event, value) => {
-  const model = themeModelFor(String(value || 'default'));
-  if (!model) return null;
-  return { theme: model.theme, name: model.name || '', base: model.base || '', meta: model.meta || {} };
-});
-
-/*
-  Save what the editor is holding as a theme of the user's own.
-
-  It lands in the same storage an imported .awtheme installs into, so a saved theme is listed,
-  selected, exported and deleted by the code that already does those things. Called twice for a name
-  that is taken: the first call reports `duplicate` and writes nothing, then the renderer asks and
-  calls back with `overwrite` - the same two-step as an import, and the reason saving under a new
-  name leaves the theme you started from untouched.
-*/
-ipcMain.handle('save-theme-as', async (event, request = {}) => {
-  try {
-    const out = themePackage.saveThemeAs({
-      userDataPath: userData,
-      name: request.name,
-      theme: request.theme,
-      base: request.base,
-      meta: request.meta,
-      overwrite: request.overwrite === true,
-      appVersion: app.getVersion(),
-      // A saved theme may not take a name the picker already means something else by.
-      reservedNames: takenThemeNames(),
-    });
-    if (!out.ok) {
-      debug.log(`[theme-package] save ${request.name}: ${out.error}`);
-      return out;
-    }
-
-    // The blur and veil copies live inside the theme's own folder, so removing it removes them too.
-    const dir = path.join(themePackage.themePackDir(userData), out.name);
-    const theme = await prepareThemeBlurImages(out.theme, path.join(dir, themePackage.THEME_DERIVED_DIR));
-    const stored = themePackage.saveInstalledTheme(userData, out.name, theme) || theme;
-
-    debug.log(`[theme-package] save ${out.name}: ${out.replaced ? 'replaced' : 'created'} (${out.assets} asset(s))`);
-    return { ...out, theme: stored, value: userThemes.packValue(out.name) };
-  } catch (err) {
-    debug.log('[theme-package] save failed: ' + (err.message || err));
-    return { ok: false, error: String(err.message || err) };
-  }
-});
-
-// Every imported theme, for the Theme dropdown and the manage list.
-ipcMain.handle('list-installed-themes', async () =>
-  themePackage.listInstalledThemes(userData).map((theme) => ({ ...theme, value: userThemes.packValue(theme.name) }))
-);
-
-// Remove one, with its assets and its generated copies. The caller is responsible for moving the
-// selection off it first; a theme that is gone resolves to the built-in look, not to a blank window.
-ipcMain.handle('delete-installed-theme', async (event, name) => {
-  const out = themePackage.deleteInstalledTheme(userData, typeof name === 'string' ? name : (name && name.name) || '');
-  debug.log('[theme-package] delete ' + String(name) + ': ' + (out.ok ? 'removed' : out.error));
-  return out;
-});
-
-app.on('will-quit', discardThemePreview);
-
-// Forward a theme change (Settings > General, or the Custom theme editor) to an
-// already-open in-game overlay so it recolors without reopening.
-ipcMain.on('theme-changed', (event, name) => {
-  if (!overlayVisible || !overlayWindow || overlayWindow.isDestroyed() || overlayWindow.webContents.isDestroyed()) return;
-  try {
-    overlayWindow.webContents.send('overlay-theme', currentThemePayload(name));
-  } catch (err) {
-    debug.log(`[overlay-theme] broadcast failed: ${err.message || err}`);
-  }
-});
-
-/*
-  The same, for a theme being edited but not saved. `theme-changed` names a theme the main process
-  can look up; a draft exists only in the editor, so the renderer hands over the payload it was just
-  given rather than a name nothing would resolve. Nothing here reads it back or stores it: it is one
-  hop to the overlay so the window being designed and the popup over the game agree.
-*/
-ipcMain.on('theme-preview', (event, payload) => {
-  if (!overlayVisible || !overlayWindow || overlayWindow.isDestroyed() || overlayWindow.webContents.isDestroyed()) return;
-  if (!payload || typeof payload !== 'object' || typeof payload.overlayCss !== 'string') return;
-  try {
-    overlayWindow.webContents.send('overlay-theme', payload);
-  } catch (err) {
-    debug.log(`[overlay-theme] preview failed: ${err.message || err}`);
-  }
-});
-
-// Import a custom notification sound: copy a user-picked audio file into <userData>/sounds and return
-// its (possibly de-duplicated) filename so the renderer can select it. Returns null on cancel/failure.
-ipcMain.handle('import-sound', async () => {
-  try {
-    const res = await dialog.showOpenDialog({
-      title: t('choose-a-notification-sound', 'Choose a notification sound', 'Choisir un son de notification'),
-      properties: ['openFile', 'dontAddToRecent'],
-      filters: [{ name: 'Audio', extensions: ['wav', 'mp3', 'ogg', 'flac', 'm4a', 'aac'] }],
-    });
-    if (res.canceled || !res.filePaths || !res.filePaths.length) return null;
-    const src = res.filePaths[0];
-    const dir = userSoundsDir();
-    fs.mkdirSync(dir, { recursive: true });
-    const ext = path.extname(src);
-    const stem = path.basename(src, ext);
-    let base = stem + ext;
-    let dest = path.join(dir, base);
-    // Don't clobber a different existing file of the same name - suffix " (n)".
-    let i = 1;
-    while (fs.existsSync(dest)) {
-      try {
-        if (fs.realpathSync(dest) === fs.realpathSync(src)) return base; // same file already imported
-      } catch {}
-      base = `${stem} (${i++})${ext}`;
-      dest = path.join(dir, base);
-    }
-    fs.copyFileSync(src, dest);
-    return base;
-  } catch (err) {
-    debug.log('[import-sound] ' + (err.message || err));
-    return null;
-  }
-});
-
-// Only the sounds the user imported, so Settings can offer to delete the one it is on: a bundled
-// sound comes back with the app, a user one is the only file a delete would really destroy.
-ipcMain.handle('list-user-sounds', async () => {
-  try {
-    return fs
-      .readdirSync(userSoundsDir())
-      .filter((name) => notificationSounds.SOUND_EXT_RE.test(name))
-      .sort((a, b) => a.localeCompare(b));
-  } catch {
-    return []; // no sounds folder yet: nothing was ever imported
-  }
-});
-
-// Delete one imported sound. The name is a bare filename inside <userData>/sounds and nothing else:
-// a bundled sound, a path or a traversal must not resolve, or Settings becomes a file deleter.
-ipcMain.handle('delete-sound', async (event, name) => {
-  const base = typeof name === 'string' ? name : '';
-  if (!base || base !== path.basename(base) || !notificationSounds.SOUND_EXT_RE.test(base)) return { ok: false };
-  try {
-    fs.unlinkSync(path.join(userSoundsDir(), base));
-    debug.log('[delete-sound] removed ' + base);
-    return { ok: true, name: base };
-  } catch (err) {
-    debug.log('[delete-sound] ' + (err.message || err));
-    return { ok: false, error: String(err.message || err) };
-  }
+require('./presetLibrary.js').register({
+  userData,
+  debug,
+  t,
+  getConfig: () => configJS,
+  getOverlayWindow: () => overlayWindow,
+  isOverlayVisible: () => overlayVisible,
+  currentThemePayload,
+  usersPresetsDir,
+  bundledPresetRoots,
+  userSoundsDir,
+  userPresetImagesDir,
+  findPresetFolder,
+  invalidateNotificationPresetFolders,
+  resolveSquareGameLogo,
+  writeCustomPreset,
+  PREVIEW_PRESET_NAME,
 });
 
 // NOTE: overlay notifications are no longer rendered from an app-side WebSocket bridge. The Watchdog
@@ -7166,6 +6081,7 @@ try {
     .on('ready', async function () {
       bootMark('ready');
       ipc.window();
+      applySessionHardening();
       // Startup-only init for the resident tray daemon (runs once, regardless of --hidden):
       // load config, copy resources, sync the login item, create the tray, then spawn/supervise the monitor.
       try {

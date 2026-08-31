@@ -8,7 +8,6 @@ const ini = require('../util/ini');
 const omit = require('lodash.omit');
 const moment = require('moment');
 const request = lazyRequire('request-zero');
-const urlParser = require('url');
 const { regKeyExists, readRegistryInteger, readRegistryString, listRegistryAllSubkeys } = require('../util/reg');
 const appPath = path.join(__dirname, '../');
 const steamID = require(path.join(appPath, 'util/steamID.js'));
@@ -32,7 +31,13 @@ let listReady = true;
 let appListRefreshFailed = false;
 let steamUsersList;
 let appidListMap = new Map();
-let debug;
+/*
+  Silent until initDebug() installs the real logger. The main process reaches getSteamUsersList()
+  and fetchIcon() through electron/ipc.js without ever initializing the parser, and an undefined
+  logger turned the first debug.log() into a TypeError that getSteamUsersList() swallowed as an
+  empty Steam account list.
+*/
+let debug = { log: () => {}, info: () => {}, warn: () => {}, error: () => {} };
 let cacheRoot;
 const iconFetchInFlight = new Map();
 const workingLinkCache = new Map();
@@ -571,6 +576,10 @@ module.exports.getAchievementsFromFile = async (filePath) => {
 
   let local;
   let matchedFile;
+  // Most candidates simply do not exist in a given save folder, so a missing file is not worth
+  // reporting. A file that IS there and could not be read is: keeping that error means the failure
+  // says "locked by another process" or "corrupt" instead of the misleading "no achievement file".
+  let lastReadError = null;
   for (let file of files) {
     try {
       if (path.parse(file).ext == '.json') {
@@ -584,9 +593,16 @@ module.exports.getAchievementsFromFile = async (filePath) => {
       }
       matchedFile = file;
       break;
-    } catch (e) {}
+    } catch (e) {
+      if (e && e.code !== 'ENOENT' && e.code !== 'ENOTDIR') lastReadError = { file, error: e };
+    }
   }
-  if (!local) throw `No achievement file found in '${filePath}'`;
+  if (!local) {
+    if (lastReadError) {
+      throw `No readable achievement file in '${filePath}': ${lastReadError.file} => ${lastReadError.error.message || lastReadError.error}`;
+    }
+    throw `No achievement file found in '${filePath}'`;
+  }
 
   let result = {};
 

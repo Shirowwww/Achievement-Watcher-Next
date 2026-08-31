@@ -220,7 +220,11 @@ function saveAuth(auth) {
     fs.mkdirSync(path.dirname(authFile()), { recursive: true });
     const payload = JSON.stringify(auth);
     fs.writeFileSync(authFile(), require(path.join(__dirname, '..', 'util', 'aes.js')).encrypt(payload), 'utf8');
-  } catch {}
+  } catch (err) {
+    // Swallowed, this must never break a sign-in that otherwise worked - but not silently: an
+    // unwritable token file signs the user out again at the next launch with nothing to explain it.
+    console.warn(`[xbox-pc] could not store the Xbox session (${err.message || err}); it will not survive a restart`);
+  }
 }
 
 function loadAuth() {

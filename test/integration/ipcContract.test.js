@@ -17,24 +17,25 @@ const { test } = require('node:test');
 const root = path.join(__dirname, '..', '..');
 const app = (...parts) => path.join(root, 'app', ...parts);
 
-// Where the main process registers handlers. Both files, because init.js grew a second home.
-const MAIN = [app('electron', 'init.js'), app('electron', 'ipc.js')];
+/*
+  Where the main process registers handlers, and what runs in a renderer. Both lists are derived
+  rather than written out: init.js and app.js are split across several files and go on being split,
+  and a file left off a hand-written list is a channel this test stops checking without saying so.
+*/
+const { mainProcessFiles } = require('../helpers/mainProcessSource.js');
+const { rendererScriptFiles } = require('../helpers/rendererSource.js');
 
-// Everything that runs in a renderer or a preload.
+const MAIN = mainProcessFiles();
+
 const RENDERERS = [
-  app('app.js'),
+  ...rendererScriptFiles().map((file) => app(...file.split('/'))),
   app('settings.js'),
   app('notificationPreload.js'),
   app('overlayPreload.js'),
-  app('ui', 'settings.js'),
-  app('ui', 'controller.js'),
-  app('ui', 'game.js'),
-  app('ui', 'onboarding.js'),
-  app('ui', 'sort.js'),
   // The title bar is a renderer too: its shadow DOM owns the window controls and the update chip's
   // Cancel, and a dead channel behind either of those is silent at runtime.
   app('components', 'titleBar', 'titleBar.js'),
-];
+].filter((file) => fs.existsSync(file));
 
 /*
   Presets call window.api.notificationRenderReady(), which sends this, and nothing listens - the

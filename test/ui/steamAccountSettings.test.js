@@ -10,6 +10,8 @@
 */
 
 const assert = require('node:assert/strict');
+// The main process is init.js plus the other electron/*.js files that register handlers.
+const { mainProcessSource } = require('../helpers/mainProcessSource.js');
 const fs = require('node:fs');
 const path = require('node:path');
 const { test } = require('node:test');
@@ -80,7 +82,7 @@ test('the playtime Steam knows about reaches the local counter on every refresh'
 });
 
 test('a connected account without a steamid repairs itself instead of going quiet', () => {
-  const init = fs.readFileSync(path.join(appDir, 'electron', 'init.js'), 'utf8');
+  const init = mainProcessSource();
   const handler = init.slice(init.indexOf("ipcMain.handle('steam:ensure-token'"));
   assert.match(handler.slice(0, handler.indexOf('\n});')), /steamAuth\.recoverSteamId\(/, 'the library call is refused without one');
 

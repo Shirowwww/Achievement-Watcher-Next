@@ -14,8 +14,11 @@
     - files - writing an unlock rewrites the save file in place and leaves its folder untouched, so
               the file half answers "did any progress change while we were away?".
 
-  Blind to sources with no file behind them (Xbox cloud, Ubisoft Connect, remote Steam progress), so
-  a caller must still cap how long it trusts a match - see LIBRARY_REUSE_TTL_MS in app.js.
+  Blind to sources with no file behind them: Xbox PC and the official Epic library answer from a
+  service, and Steam progress made on another PC lands in no local file either. (Ubisoft Connect is
+  NOT one of them - ubisoftOfficial reports the folder holding its spool file, which is covered
+  above.) A caller must therefore still cap how long it trusts a match - see LIBRARY_REUSE_TTL_MS
+  in app.js.
 */
 
 const fs = require('fs');

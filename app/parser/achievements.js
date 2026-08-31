@@ -3441,7 +3441,8 @@ module.exports.getScanFingerprint = () => _scanFingerprint;
 module.exports.getDiscoveredAppids = () => (_lastDiscoveredAppids ? _lastDiscoveredAppids.slice() : null);
 
 // True when every folder and unlock file that fingerprint recorded still reads the same. Blind to
-// sources with no file behind them (Xbox, Ubisoft Connect, Steam progress made on another PC), so
+// sources with no file behind them (Xbox PC, the official Epic library, Steam progress made on
+// another PC - but not Ubisoft Connect, which does report a path), so
 // the caller must cap how long a match is trusted.
 module.exports.scanInputsUnchanged = (fingerprint) => scanFingerprint.matches(fingerprint);
 
@@ -3605,7 +3606,9 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
 
       const seen = new Map();
       const duplicates = new Set();
-      const result = [];
+      // Named apart from the enclosing `result`, which it shadowed: the two hold different lists at
+      // the same point in the function, and only the indentation said which one a line meant.
+      const merged = [];
       for (const game of appidList) {
         if (seen.has(game.appid)) {
           duplicates.add(game.appid);
@@ -3615,17 +3618,17 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
       }
       for (const game of appidList) {
         if (duplicates.has(game.appid)) {
-          if (!result.some((g) => g.appid === game.appid)) {
-            result.push({
+          if (!merged.some((g) => g.appid === game.appid)) {
+            merged.push({
               appid: game.appid,
               source: game.source,
             });
           }
         } else {
-          result.push(game);
+          merged.push(game);
         }
       }
-      finalList = result;
+      finalList = merged;
     }
     const discoveryLookup = buildDiscoveryLookup(appidList);
     // Captured here, before a single game loads: a save file written while this scan runs must make

@@ -25,6 +25,39 @@ const GENERIC_UNINSTALLER_RE = /^unins(?:t(?:al(?:l)?(?:er)?)?)?(?:[-_ ]?(?:x(?:
 
 // Never offer to trash folders that hold achievement saves or an entire drive root.
 const SAVE_FOLDER_RE = /[\\/](?:gse saves|goldberg steamemu saves)(?:[\\/]|$)/i;
+/*
+  Folder names that hold a LIBRARY of games rather than one game. A scan that resolves a game to one
+  of these has resolved the wrong level, and removing it takes every other game installed under it
+  with it. This matters more than it used to: the same gate now also guards the permanent delete
+  offered when the Recycle Bin refuses, which is a recursive fs.rm with nothing to restore from.
+*/
+const LIBRARY_ROOT_BASE = new Set([
+  'games',
+  'game',
+  'my games',
+  'library',
+  'steam',
+  'steamapps',
+  'steamlibrary',
+  'common',
+  'gog games',
+  'gog galaxy',
+  'goggames',
+  'epic games',
+  'epicgames',
+  'origin games',
+  'ea games',
+  'ea',
+  'ubisoft',
+  'ubisoft game launcher',
+  'xboxgames',
+  'amazon games',
+  'battlenet',
+  'battle.net',
+  'emulators',
+  'roms',
+]);
+
 // Folders that must never be offered as a trash target even if a scan somehow
 // resolved them (user profile, system, or generic personal folders).
 const BLOCKED_BASE = new Set([
@@ -223,6 +256,7 @@ function isSafeTrashTarget(gameDir) {
     if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) return false;
     const base = parsed.base.toLowerCase();
     if (BLOCKED_BASE.has(base)) return false;
+    if (LIBRARY_ROOT_BASE.has(base)) return false;
     if (SAVE_FOLDER_RE.test(resolved)) return false;
     if (!base) return false;
     return true;

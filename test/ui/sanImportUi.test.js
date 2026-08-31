@@ -18,7 +18,9 @@ const sanImport = require(path.join(appRoot, 'util', 'sanImport.js'));
 const read = (...parts) => fs.readFileSync(path.join(appRoot, ...parts), 'utf8');
 const document = parse(read('view', 'app.html'));
 const settings = read('ui', 'settings.js');
-const main = read('electron', 'init.js');
+// The main process is init.js plus the other electron/*.js files that register handlers.
+const { mainProcessSource } = require('../helpers/mainProcessSource.js');
+const main = mainProcessSource();
 const localeDir = path.join(appRoot, 'locale', 'lang');
 const localeFiles = fs.readdirSync(localeDir).filter((file) => file.endsWith('.json'));
 

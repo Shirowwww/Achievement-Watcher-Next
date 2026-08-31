@@ -11,7 +11,11 @@ const path = require('node:path');
 const test = require('node:test');
 
 const appDir = path.join(__dirname, '..', '..', 'app');
-const init = fs.readFileSync(path.join(appDir, 'electron', 'init.js'), 'utf8');
+// app.js and the ui/*.js scripts share one global scope, so the renderer's source is all of them.
+const { rendererSource } = require('../helpers/rendererSource.js');
+// The main process is init.js plus the other electron/*.js files that register handlers.
+const { mainProcessSource } = require('../helpers/mainProcessSource.js');
+const init = mainProcessSource();
 const settingsUi = fs.readFileSync(path.join(appDir, 'ui', 'settings.js'), 'utf8');
 const watchdog = fs.readFileSync(path.join(__dirname, '..', '..', 'watchdog', 'watchdog.js'), 'utf8');
 
@@ -95,7 +99,7 @@ test('notifications keep the order they were raised in', () => {
 });
 
 test('the achievement page header asks for the same logo instead of taking the clienticon', () => {
-  const appSource = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
+  const appSource = rendererSource();
   const header = sliceFunction(appSource, 'async function paintGameHeaderIcon(game) {', '\n}\n');
   assert.match(header, /invoke\('resolve-square-logo'/, 'the header must go through the shared resolver');
   // Every artwork the game has is offered, so a game with no clienticon still gets a logo.
@@ -113,7 +117,7 @@ test('the achievement page header asks for the same logo instead of taking the c
 });
 
 test('every notification preview reuses the resolver rather than resolving artwork its own way', () => {
-  const appSource = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
+  const appSource = rendererSource();
   // One builder behind every preview - the Health panel button, the per-game Notifications tab and
   // the Settings test rows - so none of them can grow artwork resolution of its own.
   const body = sliceFunction(appSource, 'async function notificationPreviewGame(appid) {');
@@ -153,7 +157,7 @@ test('a schema token resolves to real artwork instead of falling through', () =>
 });
 
 test('the store page background is never offered as a logo', () => {
-  const appSource = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
+  const appSource = rendererSource();
   const header = appSource.slice(appSource.indexOf('const headerIconSources ='), appSource.indexOf("$('#achievement .wrapper > .header .title span').text(game.name)"));
   // Steam's storepagebackground is a blurred decorative wash; a square cut out of it is a flat
   // gradient that reads as an empty box.

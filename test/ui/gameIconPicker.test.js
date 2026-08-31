@@ -17,7 +17,9 @@ const path = require('node:path');
 const test = require('node:test');
 
 const root = path.join(__dirname, '..', '..');
-const appSource = fs.readFileSync(path.join(root, 'app', 'app.js'), 'utf8');
+const { rendererSource } = require('../helpers/rendererSource.js');
+// app.js and the ui/*.js scripts share one global scope, so the renderer's source is all of them.
+const appSource = rendererSource();
 const init = fs.readFileSync(path.join(root, 'app', 'electron', 'init.js'), 'utf8');
 const watchdog = fs.readFileSync(path.join(root, 'watchdog', 'watchdog.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'app', 'resources', 'css', 'app.css'), 'utf8');
@@ -31,7 +33,10 @@ function sliceFunction(source, signature, end = '\n}') {
 }
 
 test('achievement rows try the game\'s own images before asking the CDN for them', () => {
-  const preload = appSource.slice(appSource.indexOf('const localIconIndex = localIcons.readIndex(game);'), appSource.indexOf('if (typeof window.restoreAchievementSorts'));
+  // Search the end marker forward from the start one: ui/sort.js and ui/game.js load before app.js
+  // and mention restoreAchievementSorts too, so a plain indexOf would end the slice before it began.
+  const preloadStart = appSource.indexOf('const localIconIndex = localIcons.readIndex(game);');
+  const preload = appSource.slice(preloadStart, appSource.indexOf('if (typeof window.restoreAchievementSorts', preloadStart));
   assert.notEqual(preload.length, 0, 'the icon preload pass must build a local index');
   const localFirst = preload.indexOf('if (local && (await setAchievementImage(selector, [local]))) return;');
   const download = preload.indexOf("cachedIcon(hash)");

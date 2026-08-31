@@ -68,19 +68,27 @@ function encryptTokens(payload, tokenSecret) {
   );
 }
 
+function decryptTokensWith(payload, secret) {
+  const key = crypto.scryptSync(secret, Buffer.from(payload.s, 'base64'), 32);
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, Buffer.from(payload.i, 'base64'));
+  decipher.setAuthTag(Buffer.from(payload.t, 'base64'));
+  const decoded = Buffer.concat([decipher.update(Buffer.from(payload.c, 'base64')), decipher.final()]);
+  return JSON.parse(decoded.toString('utf8'));
+}
+
 function decryptTokens(buffer, tokenSecret) {
   if (!buffer) return null;
   const secret = String(tokenSecret || DEFAULT_EPIC_TOKEN_SECRET);
   const payload = JSON.parse(Buffer.isBuffer(buffer) ? buffer.toString('utf8') : String(buffer));
-  const salt = Buffer.from(payload.s, 'base64');
-  const iv = Buffer.from(payload.i, 'base64');
-  const tag = Buffer.from(payload.t, 'base64');
-  const ct = Buffer.from(payload.c, 'base64');
-  const key = crypto.scryptSync(secret, salt, 32);
-  const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
-  decipher.setAuthTag(tag);
-  const decoded = Buffer.concat([decipher.update(ct), decipher.final()]);
-  return JSON.parse(decoded.toString('utf8'));
+  try {
+    return decryptTokensWith(payload, secret);
+  } catch (err) {
+    // Tokens written before the installation key existed are encrypted under the constant below.
+    // Read them once with it so the move to a per-machine key does not disconnect the account; the
+    // next refresh writes them back under the real secret.
+    if (secret === DEFAULT_EPIC_TOKEN_SECRET) throw err;
+    return decryptTokensWith(payload, DEFAULT_EPIC_TOKEN_SECRET);
+  }
 }
 
 function getEpicAuthConfig(options = {}) {

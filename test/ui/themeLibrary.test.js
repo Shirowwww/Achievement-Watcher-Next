@@ -20,7 +20,9 @@ const html = fs.readFileSync(path.join(appDir, 'view', 'app.html'), 'utf8');
 const document = parse(html);
 const settings = fs.readFileSync(path.join(appDir, 'ui', 'settings.js'), 'utf8');
 const loader = fs.readFileSync(path.join(appDir, 'locale', 'loader.js'), 'utf8');
-const main = fs.readFileSync(path.join(appDir, 'electron', 'init.js'), 'utf8');
+// The main process is init.js plus the other electron/*.js files that register handlers.
+const { mainProcessSource } = require('../helpers/mainProcessSource.js');
+const main = mainProcessSource();
 const english = JSON.parse(fs.readFileSync(path.join(appDir, 'locale', 'lang', 'english.json'), 'utf8'));
 
 test('the theme file controls live in the Appearance section', () => {
@@ -130,7 +132,7 @@ test('the buttons call channels the main process answers', () => {
   const channels = ['export-theme', 'preview-theme', 'discard-theme-preview', 'import-theme', 'list-installed-themes', 'delete-installed-theme'];
   for (const channel of channels) {
     assert.ok(settings.includes(`invoke('${channel}'`), `settings.js never calls ${channel}`);
-    assert.ok(main.includes(`ipcMain.handle('${channel}'`), `init.js does not answer ${channel}`);
+    assert.ok(main.includes(`ipcMain.handle('${channel}'`), `the main process does not answer ${channel}`);
   }
 });
 

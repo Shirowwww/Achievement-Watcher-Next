@@ -19,7 +19,9 @@ const interfaceMode = require(path.join(appDir, 'util', 'interfaceMode.js'));
 const settingsSearch = require(path.join(appDir, 'util', 'settingsSearch.js'));
 const settingsUi = fs.readFileSync(path.join(appDir, 'ui', 'settings.js'), 'utf8');
 const onboardingUi = fs.readFileSync(path.join(appDir, 'ui', 'onboarding.js'), 'utf8');
-const appSource = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
+const { rendererSource } = require('../helpers/rendererSource.js');
+// app.js and the ui/*.js scripts share one global scope, so the renderer's source is all of them.
+const appSource = rendererSource();
 const settingsSource = fs.readFileSync(path.join(appDir, 'settings.js'), 'utf8');
 const english = JSON.parse(fs.readFileSync(path.join(appDir, 'locale', 'lang', 'english.json'), 'utf8'));
 

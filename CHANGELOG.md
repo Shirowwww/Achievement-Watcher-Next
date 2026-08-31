@@ -23,6 +23,11 @@ renamed in 3.9.0 and the history is kept under one file.
 - **The update prompt can show you what is in the version first.** "A new version is available"
   asked you to decide without saying what changed. A **View changelog** button opens the release
   notes and brings the question back once you have read them.
+- **What AW Next stores on your PC is now encrypted with a key only your Windows account can read.**
+  The emulator Steam password and the Epic and Xbox sign-in tokens were scrambled with a passphrase
+  written in the source of a public repository, which is obfuscation, not encryption. Each install
+  now generates its own key and keeps it under Windows DPAPI. Existing files are read and re-written
+  in the new format on their own; nothing has to be entered again.
 
 ### Fixed
 
@@ -82,6 +87,14 @@ renamed in 3.9.0 and the history is kept under one file.
   error.
 - **The "Repair games" button no longer wraps onto two lines.** The row beside it already says which
   games are repaired, so the button keeps the short verb in every language.
+- **Every "Copy" button copies again.** The Steam AppID, the Ubisoft product ID, the achievement
+  data paths and the Game Health technical details all silently did nothing on the new Chromium
+  runtime, which stopped letting the window reach the clipboard directly.
+- **A save folder that cannot be read says why.** A locked or corrupt achievement file was reported
+  as "no achievement file found" in that folder, which sent people looking for a file that was
+  sitting right there. The real reason is now named.
+- **A failed Xbox sign-in is no longer silent about it.** A session that could not be written to disk
+  signed you out again at the next launch with nothing anywhere to explain it.
 
 ### Performance
 

@@ -31,7 +31,9 @@ test('packaged builds ask before downloading, then silently upgrade and restart'
   // logged away. A check that fires while a prompt is open reschedules instead of dying.
   assert.match(init, /scheduleUpdateCheck\(8000\)/);
   assert.match(init, /UPDATE_RECHECK_MS/);
-  assert.match(init, /UPDATE_RETRY_MS/);
+  // The failed-check delay comes from util/updateGate.js, not from a constant in init.js: a dead
+  // UPDATE_RETRY_MS sat there for a while precisely because this line only looked for the name.
+  assert.match(init, /scheduleUpdateCheck\(updateGate\.nextCheckDelayMs\(\{[^}]*failed: true/);
   assert.match(init, /tray\.displayBalloon/);
   assert.match(init, /updatePromptOpen/);
 });

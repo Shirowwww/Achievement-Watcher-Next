@@ -14,6 +14,12 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+/*
+  A lookup that found nothing is remembered too. Without it, every game SteamGridDB has no artwork
+  for was searched again on every single scan - five requests each, on a key shared by every install
+  - which is both why those scans dragged and why the answer was sometimes a rate-limited nothing
+  for a game that does have artwork. Kept far shorter than a hit: artwork gets added over time.
+*/
 const HIT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const MISS_TTL_MS = 3 * 24 * 60 * 60 * 1000;
 

@@ -1,6 +1,8 @@
 'use strict';
 
 const test = require('node:test');
+// The main process is init.js plus the other electron/*.js files that register handlers.
+const { mainProcessSource } = require('../helpers/mainProcessSource.js');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
@@ -106,7 +108,7 @@ test('the sound row can delete an imported sound and only an imported one', () =
   const root = path.join(__dirname, '..', '..', 'app');
   const settings = fs.readFileSync(path.join(root, 'ui', 'settings.js'), 'utf8');
   const html = fs.readFileSync(path.join(root, 'view', 'app.html'), 'utf8');
-  const init = fs.readFileSync(path.join(root, 'electron', 'init.js'), 'utf8');
+  const init = mainProcessSource();
   const css = fs.readFileSync(path.join(root, 'resources', 'css', 'app.css'), 'utf8');
 
   assert.match(html, /id="btn-delete-sound"[^>]*hidden/, 'the delete button must start hidden');

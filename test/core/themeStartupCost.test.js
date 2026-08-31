@@ -19,7 +19,9 @@ const path = require('node:path');
 const test = require('node:test');
 
 const appRoot = path.join(__dirname, '..', '..', 'app');
-const initJs = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
+// The main process is init.js plus the other electron/*.js files that register handlers.
+const { mainProcessSource } = require('../helpers/mainProcessSource.js');
+const initJs = mainProcessSource();
 const settingsJs = fs.readFileSync(path.join(appRoot, 'ui', 'settings.js'), 'utf8');
 const themePackage = require(path.join(appRoot, 'util', 'themePackage.js'));
 
@@ -77,7 +79,7 @@ test('every place that draws a theme makes the same copies', () => {
 
   // The main process delegates rather than carrying its own copy of the logic.
   assert.match(initJs, /themeBlur\.prepareThemeBlurImages\(/);
-  assert.ok(!/sharp\(layer\.image\)/.test(initJs), 'init.js grew a second blur implementation');
+  assert.ok(!/sharp\(layer\.image\)/.test(initJs), 'the main process grew a second blur implementation');
 
   // The preview a user approves, and the picture the gallery publishes.
   const preview = block(initJs, "ipcMain.handle('preview-theme'", "ipcMain.handle('discard-theme-preview'");
