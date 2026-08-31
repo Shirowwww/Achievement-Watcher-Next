@@ -11,7 +11,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { crc32 } = require('crc');
+const { crc32 } = require('./crc32.js');
 
 const MAX_ENTRIES = 600;
 
@@ -41,9 +41,27 @@ function cacheFile() {
   fix to those rules changed nothing for any folder a user had already scanned - the old answer was
   served until the folder itself changed. exeDetect.js passes a fingerprint of its own filters.
 */
+// A function is accepted as well as a value, and resolved on the first signature() rather than at
+// the caller's module scope: the fingerprint is a hash of rules that never change while the app
+// runs, and computing it eagerly pulled the hashing library into every startup that never scans.
 let rulesSalt = '';
+let rulesSaltSource = null;
 function setRulesSalt(value) {
+  if (typeof value === 'function') {
+    rulesSaltSource = value;
+    rulesSalt = '';
+    return;
+  }
+  rulesSaltSource = null;
   rulesSalt = String(value || '');
+}
+
+function currentRulesSalt() {
+  if (rulesSaltSource) {
+    rulesSalt = String(rulesSaltSource() || '');
+    rulesSaltSource = null;
+  }
+  return rulesSalt;
 }
 
 function signature(gameDir) {
@@ -58,7 +76,7 @@ function signature(gameDir) {
     } catch {
       listing = 'unreadable';
     }
-    return `${rulesSalt}:${Math.round(stat.mtimeMs)}:${Math.round(stat.ctimeMs)}:${listing}`;
+    return `${currentRulesSalt()}:${Math.round(stat.mtimeMs)}:${Math.round(stat.ctimeMs)}:${listing}`;
   } catch {
     return null;
   }

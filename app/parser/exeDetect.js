@@ -105,7 +105,7 @@ const MAX_DEPTH = 5;
 
 // Salt the candidate memo with the filter rules themselves, so editing a rule invalidates every
 // cached answer instead of relying on a hand-bumped number nobody remembers to bump.
-exeCandidateCache.setRulesSalt(
+exeCandidateCache.setRulesSalt(() =>
   require('crc')
     .crc32(
       JSON.stringify([

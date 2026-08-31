@@ -1,5 +1,20 @@
 'use strict';
 
+/*
+  Boot timeline. Everything before the renderer was unmeasured: the log opened at "renderer modules
+  loaded", so a slow start could only ever be blamed on the part that already reported itself. Each
+  mark is the milliseconds since this process was spawned, so Electron's own runtime init (the time
+  before this file runs at all) shows up as the first one.
+*/
+const bootMarks = [];
+function bootMark(label) {
+  bootMarks.push([label, Math.round(process.uptime() * 1000)]);
+}
+function bootTimeline() {
+  return bootMarks.map(([label, at]) => `${label} ${at}ms`).join(', ');
+}
+bootMark('electron');
+
 const path = require('path');
 const { app } = require('electron');
 const { APP_DATA_DIR_NAME } = require('../util/userDataPath.js');
@@ -390,7 +405,7 @@ function setGameActivity(count) {
   scheduleUpdateCheck(updateGate.INTERVALS.afterGame);
 }
 const minimist = require('minimist');
-const { execFileSync, spawn } = require('child_process');
+const { execFile, execFileSync, spawn } = require('child_process');
 const { launchViaWindowsShell, isElevationDeclinedError } = require('../util/windowsShellLaunch.js');
 const fs = require('fs');
 const ipc = require(path.join(__dirname, 'ipc.js'));
@@ -1279,17 +1294,27 @@ async function startEngines() {
     settingsJS.setUserDataPath(userData);
   }
   configJS = await settingsJS.load();
+}
+
+/*
+  The achievement parser is 177 files, and loading it here used to be part of every startup even
+  though the main process only needs it for a background repair pass or a notification that has to
+  describe a game - both minutes away at the earliest, and neither reached at all in a session where
+  the user just looks at their library. It loads on first use instead, initialised exactly once.
+*/
+function getAchievements() {
   if (!achievementsJS) {
     achievementsJS = require(path.join(__dirname, '../parser/achievements.js'));
     achievementsJS.initDebug({ isDev: app.isDev || false, userDataPath: userData });
     // Emulator setup runs in the background; keep its completion toast wired.
     if (achievementsJS.setEmulatorFixedHandler) achievementsJS.setEmulatorFixedHandler((g) => notifyEmulatorFixed(g));
   }
+  return achievementsJS;
 }
 
 async function getCachedData(info) {
   if (!info.source) info.source = 'steam';
-  let g = await achievementsJS.getGameFromCache(info.appid, info.source, configJS);
+  let g = await getAchievements().getGameFromCache(info.appid, info.source, configJS);
   switch (info.source.toLowerCase()) {
     case 'epic':
     case 'gog':
@@ -1309,7 +1334,7 @@ async function getCachedData(info) {
       info.game = com;
       info.game.achievements = data.achievements;
 
-      await achievementsJS.saveGameToCache(info, configJS.achievement.lang);
+      await getAchievements().saveGameToCache(info, configJS.achievement.lang);
       info.a = info.game.achievements.find((ac) => ac.name === String(info.ach));
       info.description = info.a?.displayName;
   }
@@ -2312,9 +2337,27 @@ ipcMain.handle('xbox-pc:import', async (event, opts = {}) => {
 
 // Kill any Watchdog holding WS port 8082: a crash of this app can leave an orphaned Watchdog behind
 // (it outlives its parent on Windows), so sweep by the well-known port once before the first launch.
+/*
+  Asynchronous on purpose. netstat has taken well over a second on this machine, and running it
+  synchronously froze the main process at exactly the moment the renderer was loading: every
+  synchronous IPC the renderer makes on its way up (its user-data path, the app name) waits on this
+  thread, so a slow sweep showed up as a slow window with nothing in any log to say why.
+*/
 function killWatchdog() {
+  return new Promise((resolve) => {
+    execFile('netstat.exe', ['-ano', '-p', 'tcp'], { encoding: 'utf8', windowsHide: true }, (err, out) => {
+      if (err) {
+        debug.log(`[watchdog] killWatchdog failed: ${err.message}`);
+        return resolve();
+      }
+      sweepStaleWatchdogs(String(out));
+      resolve();
+    });
+  });
+}
+
+function sweepStaleWatchdogs(out) {
   try {
-    const out = execFileSync('netstat.exe', ['-ano', '-p', 'tcp'], { encoding: 'utf8', windowsHide: true });
     const pids = new Set();
     for (const line of out.split('\n')) {
       if (line.includes(':8082') && /LISTENING/i.test(line)) {
@@ -2329,7 +2372,7 @@ function killWatchdog() {
       } catch {}
     }
   } catch (err) {
-    debug.log(`[watchdog] killWatchdog failed: ${err.message}`);
+    debug.log(`[watchdog] stale sweep failed: ${err.message}`);
   }
 }
 
@@ -2713,7 +2756,7 @@ async function runBackgroundAutoFix(reason) {
   bgAutoFixHeldTicks = 0;
   if (bgAutoFixInFlight) return;
   try {
-    await startEngines(); // loads configJS + achievementsJS
+    await startEngines(); // loads configJS
   } catch (err) {
     debug.log(`[bg-autofix] startEngines failed: ${err.message || err}`);
     return;
@@ -2727,8 +2770,8 @@ async function runBackgroundAutoFix(reason) {
       // Same cheap pre-check as the renderer's poll: stat the folders the last scan read instead of
       // walking them again. A full pass still runs every few hours for the database/registry sources.
       bgAutoFixTicks += 1;
-      if (bgAutoFixTicks % BG_AUTOFIX_FULL_EVERY_TICKS !== 0 && achievementsJS.discoveryInputsUnchanged?.()) return;
-      const discovered = await achievementsJS.detectInstalledAppids(configJS);
+      if (bgAutoFixTicks % BG_AUTOFIX_FULL_EVERY_TICKS !== 0 && getAchievements().discoveryInputsUnchanged?.()) return;
+      const discovered = await getAchievements().detectInstalledAppids(configJS);
       const fresh = discovered.filter(
         (id) => !bgKnownAppids.has(String(id)) && (bgUnrenderableAppids.get(String(id)) || 0) < BG_UNRENDERABLE_MISS_LIMIT
       );
@@ -2740,9 +2783,9 @@ async function runBackgroundAutoFix(reason) {
     debug.log(`[bg-autofix] running headless scan (${reason})`);
     // makeList drives the same one-shot auto-fix as the UI scan, but per-game emulator setup runs in
     // the background after makeList returns; the toast fires from setEmulatorFixedHandler, not onGame.
-    const scanned = await achievementsJS.makeList(configJS, () => {}, () => {});
+    const scanned = await getAchievements().makeList(configJS, () => {}, () => {});
     try {
-      const all = await achievementsJS.detectInstalledAppids(configJS);
+      const all = await getAchievements().detectInstalledAppids(configJS);
       bgKnownAppids = new Set(all.map(String));
       recordBackgroundScanMisses(all, scanned);
     } catch {}
@@ -4087,6 +4130,15 @@ function createMainWindow() {
       // message handling is unaffected by throttling. The hidden scrape window (searchForSteamAppId)
       // and the overlay/notification windows keep backgroundThrottling:false - they must run hidden.
       backgroundThrottling: true,
+      // The renderer needs all three before it can open its log file, and it used to ask for them
+      // over synchronous IPC - three round trips that block it behind whatever this process happens
+      // to be doing at that moment. Handed over at creation instead; the IPC answers stay for any
+      // later caller.
+      additionalArguments: [
+        `--isDev=${manifest.config.debug ? 'true' : 'false'}`,
+        `--userDataPath=${userData}`,
+        `--appName=${app.getName()}`,
+      ],
     };
     // The manifest's icon path is relative to the app root, but BrowserWindow/fs resolve relative to
     // the working directory; resolve it here and prefer the multi-size .ico (a 256px PNG downscales
@@ -4262,6 +4314,12 @@ function createMainWindow() {
     const isReady = [
       new Promise(function (resolve) {
         MainWin.once('ready-to-show', () => {
+          // Only the first window of the session belongs to the boot timeline; a reopen after the
+          // idle release is a different measurement and would rewrite this one.
+          if (!bootMarks.some(([label]) => label === 'painted')) {
+            bootMark('painted');
+            debug.log(`[perf][boot] ${bootTimeline()}`);
+          }
           debug.log('[MainWindow] ready-to-show');
           return resolve();
         });
@@ -4628,9 +4686,9 @@ async function createOverlayWindow(info) {
 
     // Avoid re-reading options.ini + re-initializing the achievements parser on every toggle.
     // Settings saves already call startEngines(), so a loaded configJS is fresh enough here.
-    if (!configJS || !achievementsJS) await startEngines();
+    if (!configJS) await startEngines();
     await getCachedData(info);
-    info.game = await achievementsJS.getSavedAchievementsForAppid(configJS, { appid: info.appid });
+    info.game = await getAchievements().getSavedAchievementsForAppid(configJS, { appid: info.appid });
     attachOverlayRarity(info.game);
     attachOverlayLocalIcons(info.game);
 
@@ -7069,8 +7127,10 @@ try {
     }
   }
 
+  bootMark('init');
   app
     .on('ready', async function () {
+      bootMark('ready');
       ipc.window();
       // Startup-only init for the resident tray daemon (runs once, regardless of --hidden):
       // load config, copy resources, sync the login item, create the tray, then spawn/supervise the monitor.
@@ -7079,12 +7139,14 @@ try {
       } catch (err) {
         debug.log('[startEngines] failed before startup sync: ' + err.message);
       }
+      bootMark('config');
       logStartupDiagnostics();
       try {
         checkResources();
       } catch (err) {
         debug.log('[checkResources] failed: ' + err.message);
       }
+      bootMark('resources');
       // The window goes up before the rest of the startup work, not after it. Everything below runs
       // on this one thread - the login-item sync touches the registry, the stale-Watchdog sweep shells
       // out to netstat - while the window is a separate process that spends its first second parsing
@@ -7099,6 +7161,7 @@ try {
       } catch (err) {
         debug.log('[startup] opening the window failed: ' + (err.message || err));
       }
+      bootMark('window');
       if (!manifest.config.debug) {
         try {
           ipc.setStartWithWindows(configJS?.general?.startWithWindows !== false);
@@ -7119,11 +7182,13 @@ try {
           watchdogSwept = true;
           // Sweep stale detached Watchdogs from older app versions once, before the first launch.
           // They would hold port 8082 / the single-instance lock and double-fire notifications.
-          killWatchdog();
+          await killWatchdog();
         }
         launchWatchdog();
         scheduleBackgroundAutoFix(); // headless emulator auto-fix while the window stays closed
       }
+      bootMark('monitor');
+      debug.log(`[perf][boot] ${bootTimeline()}`);
       // Cap the per-appid icon cache off the startup critical path (LRU by access time, ~1 GiB
       // default; no-op when under cap).
       setTimeout(() => {

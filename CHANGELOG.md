@@ -103,6 +103,14 @@ renamed in 3.9.0 and the history is kept under one file.
   sweep ran first and the window queued behind them; they now run while it loads.
 - **The scan's search and download engines load only when a scan needs them.** They were pulled in
   with the parsers at page load - about eighty files read for work a reused library never does.
+- **The window is on screen roughly twice as fast.** The startup path had never been measured past
+  the point where the window already existed, and three things were hiding in front of it: the main
+  process loaded the whole achievement parser before opening anything, the sweep for leftover
+  monitors blocked it on a `netstat` call that can take over a second, and the window then asked for
+  its own settings over that blocked channel. Measured end to end on a cold profile, 1.5 s to 0.67 s,
+  with the occasional four-second start gone.
+- **The parser loads 104 files where it loaded 260.** The hashing and XML libraries, like the search
+  and download engines before them, are read when something actually parses a game.
 
 ## 3.10.3 - 2026-08-28
 

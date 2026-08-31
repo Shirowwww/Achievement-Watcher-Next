@@ -4,7 +4,7 @@ const path = require('path');
 const { lazyRequire } = require('../util/lazyRequire.js');
 const request = lazyRequire('request-zero');
 const fs = require('fs');
-const { crc32 } = require('crc');
+const { crc32 } = require('../util/crc32.js');
 
 let debug;
 let exclusionFile;

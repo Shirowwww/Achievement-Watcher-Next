@@ -129,3 +129,33 @@ test('the memo expires when the filter rules that produced it change', () => {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('a rules fingerprint given as a function is computed on first use, once, and keys the same entries', () => {
+  /*
+    exeDetect hashes its own filter rules for this, and that hash was the only reason the hashing
+    library was read on every startup - including the ones that never look at an install folder.
+    Passing the work instead of the answer moves it to the first folder actually examined.
+  */
+  const { root, userData, gameDir } = scratch();
+  try {
+    exeCandidateCache.setUserDataPath(userData);
+    let computed = 0;
+    exeCandidateCache.setRulesSalt(() => {
+      computed += 1;
+      return 'rules-v1';
+    });
+    assert.equal(computed, 0, 'nothing is computed until a folder is examined');
+
+    exeCandidateCache.write(gameDir, CANDIDATES);
+    assert.equal(computed, 1);
+    assert.deepEqual(exeCandidateCache.read(gameDir), CANDIDATES);
+    assert.equal(computed, 1, 'and never recomputed afterwards');
+
+    // The same fingerprint, however it was supplied, has to produce the same key.
+    exeCandidateCache.setRulesSalt('rules-v1');
+    assert.deepEqual(exeCandidateCache.read(gameDir), CANDIDATES);
+  } finally {
+    exeCandidateCache.setRulesSalt('');
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

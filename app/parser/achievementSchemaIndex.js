@@ -1,6 +1,6 @@
 'use strict';
 
-const { crc32 } = require('crc');
+const { crc32 } = require('../util/crc32.js');
 
 function normalizeApiName(value) {
   return String(value == null ? '' : value).toUpperCase();

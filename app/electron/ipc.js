@@ -2,13 +2,17 @@
 
 const { app, ipcMain, BrowserWindow } = require('electron');
 const path = require('path');
-const { fetchIcon } = require('../parser/steam');
 const { iconResultToFileUrl } = require('../util/iconUrl.js');
-const achievementsJS = require(path.join(__dirname, '../parser/achievements.js'));
-achievementsJS.initDebug({ isDev: app.isDev || false, userDataPath: app.getPath('userData') });
 const settingsJS = require(path.join(__dirname, '../settings.js'));
 settingsJS.setUserDataPath(app.getPath('userData'));
-const { getSteamUsersList } = require(path.join(__dirname, '../parser/steam.js'));
+/*
+  Every module below is reached from a handler, never while this file loads, and each pulls a large
+  tree: the Steam parser alone drags in the whole achievement parser. Requiring them here put that
+  tree on the startup path of the main process - a second copy of what the renderer loads for itself,
+  in a session that may never scan anything. They load when a handler first needs them.
+*/
+const { lazyRequire } = require('../util/lazyRequire.js');
+const steamJS = lazyRequire(path.join(__dirname, '../parser/steam.js'));
 
 function getStartupLoginItemOptions(openAtLogin) {
   const args = [];
@@ -49,7 +53,7 @@ ipcMain.handle('startup:set-start-with-windows', async (_event, enabled) => {
 
 // Adding the exclusion needs administrator rights; Windows shows its own prompt, and declining it
 // is reported as an answer, not an error.
-const defender = require(path.join(__dirname, '../util/defender.js'));
+const defender = lazyRequire(path.join(__dirname, '../util/defender.js'));
 
 ipcMain.handle('defender:is-active', async () => {
   try {
@@ -69,7 +73,7 @@ ipcMain.handle('defender:add-exclusion', async (_event, folder) => {
 
 // node-unrar-js is WASM+Embind and uses `new Function`, which the renderer's strict CSP forbids,
 // so extraction happens here in the main process instead.
-const crackFixJS = require(path.join(__dirname, '../parser/crackFix.js'));
+const crackFixJS = lazyRequire(path.join(__dirname, '../parser/crackFix.js'));
 ipcMain.handle('crackfix-extract-rar', async (_event, { archivePath, destDir } = {}) => {
   try {
     await crackFixJS.extractRarToDir(archivePath, destDir);
@@ -80,7 +84,7 @@ ipcMain.handle('crackfix-extract-rar', async (_event, { archivePath, destDir } =
 });
 
 // Same CSP problem, same fix, for the Steam API Check Bypass proxy DLLs.
-const apiCheckBypassJS = require(path.join(__dirname, '../parser/apiCheckBypass.js'));
+const apiCheckBypassJS = lazyRequire(path.join(__dirname, '../parser/apiCheckBypass.js'));
 ipcMain.handle('apicheckbypass-extract-rar', async (_event, { rarPath, destDir } = {}) => {
   try {
     const wrote = await apiCheckBypassJS.extractDllsFromRarDirect(rarPath, destDir);
@@ -107,21 +111,21 @@ ipcMain.on('get-user-data-path-sync', (event) => {
 });
 
 ipcMain.on('get-steam-user-list', async (event) => {
-  await getSteamUsersList()
+  await steamJS.getSteamUsersList()
     .then((p) => (event.returnValue = p))
     .catch((err) => (event.returnValue = null));
 });
 
 ipcMain.on('fetch-icon', async (event, url, appid) => {
   try {
-    event.returnValue = iconResultToFileUrl(await fetchIcon(url, appid));
+    event.returnValue = iconResultToFileUrl(await steamJS.fetchIcon(url, appid));
   } catch {
     event.returnValue = null;
   }
 });
 ipcMain.handle('fetch-icon', async (event, url, appid) => {
   try {
-    return iconResultToFileUrl(await fetchIcon(url, appid));
+    return iconResultToFileUrl(await steamJS.fetchIcon(url, appid));
   } catch {
     return null;
   }

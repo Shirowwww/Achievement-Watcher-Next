@@ -1,10 +1,20 @@
 'use strict';
 const rendererScriptStartedAt = performance.now();
 const { ipcRenderer, clipboard } = require('electron');
+
+// createMainWindow hands these over as switches, so the three things this file needs before it can
+// even open its log cost nothing. Asking over synchronous IPC blocks this thread until the main
+// process answers, and at startup that process is busy with the work that opened this window.
+function windowSwitch(name) {
+  const prefix = `--${name}=`;
+  const found = process.argv.find((argument) => argument.startsWith(prefix));
+  return found ? found.slice(prefix.length) : '';
+}
+
 let userDataPath = null;
 function getUserDataPath() {
   if (userDataPath) return userDataPath;
-  userDataPath = ipcRenderer.sendSync('get-user-data-path-sync');
+  userDataPath = windowSwitch('userDataPath') || ipcRenderer.sendSync('get-user-data-path-sync');
   return userDataPath;
 }
 const os = require('os');
@@ -45,7 +55,8 @@ settings.setUserDataPath(getUserDataPath());
 const achievements = require(path.join(appPath, 'parser/achievements.js'));
 const scanScope = require(path.join(appPath, 'parser/scanScope.js'));
 const userdatapath = getUserDataPath();
-const isDev = ipcRenderer.sendSync('win-isDev') || false;
+const isDevSwitch = windowSwitch('isDev');
+const isDev = isDevSwitch ? isDevSwitch === 'true' : ipcRenderer.sendSync('win-isDev') === true;
 achievements.initDebug({ isDev, userDataPath: userdatapath });
 if (achievements.setEmulatorFixedHandler) {
   achievements.setEmulatorFixedHandler((game) => {
@@ -100,7 +111,7 @@ const { localeText } = require(path.join(appPath, 'locale/t.js'));
 // `t` and `escapeHtml` come from ui/settings.js; classic scripts share their lexical scope.
 let debug = new (require(path.join(appPath, 'util/logger.js')))({
   console: isDev,
-  file: path.join(userdatapath, `logs/${ipcRenderer.sendSync('get-app-name-sync')}.log`),
+  file: path.join(userdatapath, `logs/${windowSwitch('appName') || ipcRenderer.sendSync('get-app-name-sync')}.log`),
 });
 
 if (isDev)

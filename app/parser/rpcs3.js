@@ -2,7 +2,9 @@
 
 const path = require('path');
 const util = require('util');
-const xml2js = require('xml2js');
+// The XML parser is 37 files and only a trophy file needs it, so it loads when one is read.
+let xml2jsModule = null;
+const xml2js = () => (xml2jsModule ||= require('xml2js'));
 const { lazyRequire } = require('../util/lazyRequire.js');
 const glob = lazyRequire('fast-glob');
 const ffs = require('../util/fsAsync');
@@ -60,7 +62,7 @@ module.exports.trophyRoots = (dir) => layout.trophyRoots(dir);
 
 module.exports.getGameData = async (dir) => {
   let file = await ffs.readFile(path.join(dir, files.schema), 'utf-8');
-  let schema = await util.promisify(xml2js.parseString)(file, {
+  let schema = await util.promisify(xml2js().parseString)(file, {
     explicitArray: false,
     explicitRoot: false,
     ignoreAttrs: false,

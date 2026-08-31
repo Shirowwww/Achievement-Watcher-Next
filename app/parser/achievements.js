@@ -1,6 +1,6 @@
 'use strict';
 
-const { crc32 } = require('crc');
+const { crc32 } = require('../util/crc32.js');
 const path = require('path');
 const fs = require('fs');
 const appPath = __dirname;
