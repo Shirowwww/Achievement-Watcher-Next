@@ -18,13 +18,13 @@ test('packaged builds ask before downloading, then silently upgrade and restart'
   const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
   assert.match(init, /autoUpdater\.autoDownload\s*=\s*false/);
   assert.match(init, /if \(app\.isPackaged\)/);
-  assert.match(init, /autoUpdater\s*\.\s*checkForUpdates\(\)/);
+  assert.match(init, /(?:autoUpdater|getUpdater\(\))\s*\.\s*checkForUpdates\(\)/);
   assert.match(init, /autoUpdater\.on\('update-available'/);
   assert.match(init, /autoUpdater\.downloadUpdate\(token\)/);
   assert.match(init, /autoUpdater\.on\('update-downloaded'/);
   // The install is no longer hard-coded to silent: it runs the installer's own progress window
   // unless the user asked for the windowless behaviour (see updateInstall.test.js).
-  assert.match(init, /autoUpdater\.quitAndInstall\(silent, true\)/);
+  assert.match(init, /(?:autoUpdater|getUpdater\(\))\.quitAndInstall\(silent, true\)/);
 
   // The updater stays supervised while the app is resident: a failed check retries after a delay,
   // a successful one re-checks hourly, and errors surface in the tray instead of being silently
@@ -53,7 +53,7 @@ test('a sha512 checksum mismatch clears the update cache and retries the full do
   // hand-rolled path); the actual clear+rm sequence lives in util/updateCacheClear.js, tested
   // against the real electron-updater cache class.
   assert.match(init, /async function clearUpdaterCacheDir\(/);
-  assert.match(init, /autoUpdater\.getOrCreateDownloadHelper\(\)/);
+  assert.match(init, /(?:autoUpdater|getUpdater\(\))\.getOrCreateDownloadHelper\(\)/);
   assert.match(init, /require\(path\.join\(__dirname, '\.\.\/util\/updateCacheClear\.js'\)\)/);
   assert.match(init, /clearCacheDirForHelper\(helper/);
 

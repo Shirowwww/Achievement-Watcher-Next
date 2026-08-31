@@ -55,20 +55,43 @@ for (const sw of ['disable-extensions', 'disable-component-extensions-with-backg
 app.commandLine.appendSwitch('js-flags', '--max-old-space-size=192');
 const { BrowserWindow, dialog, session, shell, ipcMain, globalShortcut, Tray, Menu, nativeImage, Notification } = require('electron');
 const os = require('os');
-const { autoUpdater, CancellationToken } = require('electron-updater');
   const { verifyUpdateCodeSignature } = require('../util/updateSignature.js');
   const { withScrapeLease } = require('../util/scrapeLease.js');
   const steamSchemaFetch = require(path.join(__dirname, '../util/steamSchemaFetch.js'));
   const { clampWindowBoundsToWorkArea } = require('../util/windowBounds.js');
-// Updates require an explicit download and install confirmation.
-autoUpdater.autoDownload = false;
-autoUpdater.autoInstallOnAppQuit = false;
-// Differential downloads patch a cached, never-revalidated copy of the previous installer; a corrupted
-// base fails every future patch with a checksum mismatch. Full downloads avoid that failure class.
-autoUpdater.disableDifferentialDownload = true;
-// Accept the project's self-signed publisher through the tested verifier.
-autoUpdater.verifyUpdateCodeSignature = (publisherNames, tempUpdateFile) =>
-  verifyUpdateCodeSignature(publisherNames, tempUpdateFile, (message) => debug.log(message));
+
+/*
+  electron-updater is 159 files and about 1.7 s of a cold start - the single largest thing this
+  process read before it could put a window on screen, for a check that happens eight seconds after
+  launch at the earliest and never happens at all outside a packaged build. It loads on the first
+  call below, and configures itself and its listeners then.
+*/
+let updaterModule = null;
+// Assigned once the startup block below has run; there is nothing to register before that.
+let registerUpdaterEvents = null;
+
+function getUpdater() {
+  if (!updaterModule) {
+    updaterModule = require('electron-updater');
+    const { autoUpdater } = updaterModule;
+    // Updates require an explicit download and install confirmation.
+    autoUpdater.autoDownload = false;
+    autoUpdater.autoInstallOnAppQuit = false;
+    // Differential downloads patch a cached, never-revalidated copy of the previous installer; a corrupted
+    // base fails every future patch with a checksum mismatch. Full downloads avoid that failure class.
+    autoUpdater.disableDifferentialDownload = true;
+    // Accept the project's self-signed publisher through the tested verifier.
+    autoUpdater.verifyUpdateCodeSignature = (publisherNames, tempUpdateFile) =>
+      verifyUpdateCodeSignature(publisherNames, tempUpdateFile, (message) => debug.log(message));
+    if (registerUpdaterEvents) registerUpdaterEvents(autoUpdater);
+  }
+  return updaterModule.autoUpdater;
+}
+
+function newCancellationToken() {
+  getUpdater();
+  return new updaterModule.CancellationToken();
+}
 let updateCheckTimer = null;
 let updatePromptOpen = false;
 let updaterErrorNotified = false;
@@ -206,9 +229,9 @@ function clearUpdateDownloadProgress() {
 function startUpdateDownload(version) {
   updateProgressLogged = -1;
   setUpdateStatus({ type: 'download-started', version });
-  const token = new CancellationToken();
+  const token = newCancellationToken();
   updateDownloadCancellation = token;
-  return autoUpdater.downloadUpdate(token).catch((err) => {
+  return getUpdater().downloadUpdate(token).catch((err) => {
     // A cancellation is not a failure; the 'update-cancelled' listener already cleared the state.
     if (token.cancelled) return;
     // A checksum mismatch is handled entirely by the 'error' listener, which clears the cache and
@@ -273,7 +296,7 @@ function notifyUpdateHeldBack(version) {
 // Wipes the electron-updater cache directory (differential-download base + pending/ download) and
 // resets its in-memory record. Shared by checksum-mismatch recovery and Settings > Advanced.
 async function clearUpdaterCacheDir() {
-  const helper = await autoUpdater.getOrCreateDownloadHelper();
+  const helper = await getUpdater().getOrCreateDownloadHelper();
   return clearCacheDirForHelper(helper, {
     onHelperClearError: (err) => debug.log(`[updater] could not reset the download helper state: ${err.message || err}`),
   });
@@ -332,7 +355,7 @@ function scheduleUpdateCheck(delayMs) {
       scheduleUpdateCheck(updateGate.INTERVALS.inGame);
       return;
     }
-    autoUpdater
+    getUpdater()
       .checkForUpdates()
       .then(() => {
         updaterErrorNotified = false; // a healthy check clears the "already told the user" flag
@@ -407,6 +430,7 @@ function setGameActivity(count) {
 const minimist = require('minimist');
 const { execFile, execFileSync, spawn } = require('child_process');
 const { launchViaWindowsShell, isElevationDeclinedError } = require('../util/windowsShellLaunch.js');
+const { lazyRequire } = require('../util/lazyRequire.js');
 const fs = require('fs');
 const ipc = require(path.join(__dirname, 'ipc.js'));
 const notificationSounds = require(path.join(__dirname, '../util/notificationSounds.js'));
@@ -414,7 +438,7 @@ const userThemes = require(path.join(__dirname, '../util/userThemes.js'));
 const themeLayers = require(path.join(__dirname, '../util/themeLayers.js'));
 const themeImages = require(path.join(__dirname, '../util/themeImages.js'));
 const themeBlur = require(path.join(__dirname, '../util/themeBlur.js'));
-const themePackage = require(path.join(__dirname, '../util/themePackage.js'));
+const themePackage = lazyRequire(path.join(__dirname, '../util/themePackage.js'));
 const overlayLocale = require(path.join(__dirname, '../util/overlayLocale.js'));
 const { resolveOverlayRequest } = require(path.join(__dirname, '../util/overlayRequest.js'));
 const { normalizeWindowArgs } = require(path.join(__dirname, '../util/windowArgs.js'));
@@ -1800,7 +1824,7 @@ ipcMain.handle('check-for-updates', async () => {
   // A manual check overrides a previous "later" choice.
   await clearUpdatePostpone();
   try {
-    await autoUpdater.checkForUpdates();
+    await getUpdater().checkForUpdates();
     // Give update events a short window to report the result.
     for (let i = 0; i < 20 && manualUpdateResult === null; i++) {
       await new Promise((resolve) => setTimeout(resolve, 150));
@@ -1828,7 +1852,7 @@ ipcMain.handle('clear-update-cache', async (event) => {
   if (updateDownloading || checksumRetryInFlight) return { ok: false, error: 'download-in-progress' };
   const result = { ok: true, error: null, updateFolder: null, updateCleared: false, updateError: null, clearedCaches: [] };
   try {
-    const helper = await autoUpdater.getOrCreateDownloadHelper();
+    const helper = await getUpdater().getOrCreateDownloadHelper();
     const cacheDir = helper.cacheDir;
     let hadContents = false;
     try {
@@ -5839,9 +5863,11 @@ ipcMain.handle('list-presets', async () => {
 // util/customPreset.js (pure string work, unit-tested); this file owns file placement and naming.
 const customPreset = require(path.join(__dirname, '../util/customPreset.js'));
 const { customPresetNumbers, buildCustomPresetHtml, buildCustomPresetCss, sanitizePresetName } = customPreset;
-const presetPackage = require(path.join(__dirname, '../util/presetPackage.js'));
+// The two package readers and the SAN importer each pull the zip and semver libraries, and every one
+// of them is reached from a file dialog the user has to open first. Loaded when one of those runs.
+const presetPackage = lazyRequire(path.join(__dirname, '../util/presetPackage.js'));
 const presetSchema = require(path.join(__dirname, '../util/presetSchema.js'));
-const sanImport = require(path.join(__dirname, '../util/sanImport.js'));
+const sanImport = lazyRequire(path.join(__dirname, '../util/sanImport.js'));
 
 /*
   Where a preset the builder generates is written: <userData>, never the app folder. Once packaged,
@@ -5916,7 +5942,9 @@ ipcMain.handle('create-custom-preset', async (event, opts = {}) => {
   the builder (options file) or installed from a package (manifest). A preset dropped in that folder
   by hand still carries neither marker and stays untouchable, as it always has.
 */
-const PRESET_MARKERS = [PRESET_OPTIONS_FILE, presetPackage.PRESET_PACKAGE_FILE];
+// Read from customPreset, which exports both: touching presetPackage here would load it (and its zip
+// library) on every start, for a constant.
+const PRESET_MARKERS = [PRESET_OPTIONS_FILE, customPreset.PRESET_PACKAGE_FILE];
 const managedPresetMarker = (name) => PRESET_MARKERS.find((file) => fs.existsSync(path.join(usersPresetsDir(), name, file))) || '';
 
 // `editable` is what the builder can load back into its controls; an imported preset without
@@ -6885,184 +6913,190 @@ try {
   if (!gotSingleInstanceLock) {
     app.quit();
   } else {
-  autoUpdater.on('checking-for-update', () => {
-    debug.log('[updater] checking for updates');
-    setUpdateStatus({ type: 'checking' });
-  });
-  autoUpdater.on('update-available', async (info) => {
-    // A manifest that names the running version, or an older one, is not an update however it got
-    // here - answer it as "up to date" before anything reports an update or downloads an installer.
-    if (updateGate.isNotAnUpgrade(info.version, app.getVersion())) {
-      debug.log(`[updater] ignoring ${info.version}: not newer than the installed ${app.getVersion()}`);
-      manualUpdateResult = 'uptodate';
-      manualUpdateCheckPending = false;
-      setUpdateStatus({ type: 'not-available' });
-      return;
-    }
-    debug.log(`[updater] update available: ${info.version}`);
-    manualUpdateResult = 'available';
-    setUpdateStatus({ type: 'available', version: info.version });
-    const manual = manualUpdateCheckPending;
-    manualUpdateCheckPending = false; // the dialog below already answers a manual check
-    // Claim the prompt BEFORE the first await. Checking here and setting the flag after
-    // startEngines() let two checks landing in the same tick (the hourly timer racing the Settings
-    // button) both walk past the guard and stack two dialogs on the user.
-    if (updatePromptOpen) {
-      debug.log('[updater] a prompt is already open; ignoring duplicate update-available');
-      return;
-    }
-    updatePromptOpen = true;
-    try {
-      try {
-        await startEngines();
-      } catch (err) {
-        debug.log(`[updater] config load failed before prompt: ${err.message || err}`);
-      }
-      if (shouldSuppressUpdatePrompt(info.version, { manual })) return;
-      // A game can start between the check being fired and this handler running, and a manual check
-      // is a deliberate request that should still answer. Nothing is recorded - the offer is only
-      // held back, and the game-exit signal brings it straight back.
-      if (!manual && isGameRunning()) {
-        debug.log(`[updater] version ${info.version} held back: a game is running`);
-        scheduleUpdateCheck(updateGate.INTERVALS.inGame);
-        return;
-      }
-      // "View changelog" is not an answer: showMessageBox closes on any click, so reading the notes
-      // reopens the same dialog instead of deciding for the user.
-      let response;
-      do {
-        ({ response } = await dialog.showMessageBox({
-          type: 'info',
-          title: t('update-available', 'Update Available', 'Mise à jour disponible'),
-          message: t('update-available-message', 'A new version ({version}) is available.', 'Une nouvelle version ({version}) est disponible.', { version: info.version }),
-          detail: t('download-and-install-it-now', 'Download and install it now?', 'La télécharger et l’installer maintenant ?'),
-          buttons: [
-            t('download-install', 'Download && Install', 'Télécharger && installer'),
-            t('view-changelog', 'View changelog', 'Voir les nouveautés'),
-            t('later', 'Later', 'Plus tard'),
-            t('skip-this-version', 'Skip this version', 'Ignorer cette version'),
-          ],
-          defaultId: 0,
-          cancelId: 2,
-        }));
-        if (response === 1) {
-          const page = links.releaseTag(info.version);
-          debug.log(`[updater] opening the release notes of ${info.version}: ${page}`);
-          shell.openExternal(page).catch((err) => debug.log(`[updater] could not open ${page}: ${err.message || err}`));
-        }
-      } while (response === 1);
-      if (response === 0) {
-        debug.log(`[updater] user accepted download of ${info.version}${manual ? ' (manual check)' : ''}`);
-        updateDownloading = true;
-        // The click is the explicit consent, regardless of whether the dialog came from the hourly
-        // check or Settings > Check for updates. A manual check alone must not silently install.
-        updateAcceptedByUser = true;
-        startUpdateDownload(info.version);
-      } else if (response === 3) {
-        configJS.general.skippedVersion = info.version;
-        await settingsJS.save(configJS);
-        debug.log(`[updater] version ${info.version} skipped by user`);
-        setUpdateStatus({ type: 'reset' });
-      } else {
-        // "Later" (and the dialog's cancel path, which maps to it).
-        await postponeUpdate(info.version);
-        setUpdateStatus({ type: 'reset' });
-      }
-    } finally {
-      updatePromptOpen = false;
-    }
-  });
-  autoUpdater.on('update-not-available', (info) => {
-    debug.log(`[updater] current version is up to date (${info.version})`);
-    manualUpdateResult = 'uptodate';
-    // Without this the state machine stays on 'checking' and the title-bar chip shows "Checking..."
-    // forever, since being up to date is the one outcome no other event follows.
-    setUpdateStatus({ type: 'not-available' });
-    if (manualUpdateCheckPending && tray) {
-      manualUpdateCheckPending = false;
-      try {
-        tray.displayBalloon({
-          iconType: 'info',
-          title: t('achievement-watcher', 'AW Next'),
-          content: t('up-to-date', 'You are already using the latest version ({version}).', 'Vous utilisez déjà la dernière version ({version}).', { version: info.version }),
-        });
-      } catch {}
-    }
-  });
-  // The download can take minutes on a slow line and gives no sign of life otherwise: the window is
-  // usually closed (tray daemon) and the app never says it is busy. Every surface that can show it -
-  // the taskbar bar, the tray tooltip, the title-bar chip and Settings - is driven from the updater's
-  // own byte counter through the shared status, which throttles the broadcast to whole percents.
-  autoUpdater.on('download-progress', (progress) => {
-    const percent = Math.max(0, Math.min(100, Number(progress && progress.percent) || 0));
-    setUpdateStatus({
-      type: 'progress',
-      percent,
-      bytesPerSecond: Number(progress && progress.bytesPerSecond) || 0,
-      transferred: Number(progress && progress.transferred) || 0,
-      total: Number(progress && progress.total) || 0,
+  // Registered the first time the updater is actually used, not at boot - see getUpdater().
+  registerUpdaterEvents = (autoUpdater) => {
+    autoUpdater.on('checking-for-update', () => {
+      debug.log('[updater] checking for updates');
+      setUpdateStatus({ type: 'checking' });
     });
-    // One line per 10% rather than per chunk, so the log stays readable.
-    const step = Math.floor(percent / 10);
-    if (step !== updateProgressLogged) {
-      updateProgressLogged = step;
-      const speed = Math.round((Number(progress && progress.bytesPerSecond) || 0) / 1024);
-      debug.log(`[updater] downloading: ${percent.toFixed(0)}% (${speed} KB/s)`);
-    }
-  });
-  // A download the user stopped is not a failure: leave no error on screen and no half state behind.
-  autoUpdater.on('update-cancelled', (info) => {
-    debug.log(`[updater] download of ${info && info.version} cancelled by the user`);
-    updateDownloading = false;
-    updateAcceptedByUser = false;
-    clearUpdateDownloadProgress();
-  });
-  autoUpdater.on('error', (err) => {
-    const message = summarizeUpdaterError(err);
-    // The recovery below re-runs downloadUpdate(), which only means anything while a download is
-    // actually in flight. Outside one there is no update info to download and the retry can only
-    // fail with "Please check update first", so a stray checksum error stays an ordinary error.
-    if (isChecksumMismatchError(err) && updateDownloading) {
-      if (checksumRetryInFlight) {
-        // The retry's own downloadUpdate() rejection already goes through the catch block below;
-        // this is electron-updater's duplicate 'error' emission for that same second failure.
+    autoUpdater.on('update-available', async (info) => {
+      // A manifest that names the running version, or an older one, is not an update however it got
+      // here - answer it as "up to date" before anything reports an update or downloads an installer.
+      if (updateGate.isNotAnUpgrade(info.version, app.getVersion())) {
+        debug.log(`[updater] ignoring ${info.version}: not newer than the installed ${app.getVersion()}`);
+        manualUpdateResult = 'uptodate';
+        manualUpdateCheckPending = false;
+        setUpdateStatus({ type: 'not-available' });
         return;
       }
-      checksumRetryInFlight = true;
-      debug.log(`[updater] checksum mismatch (${message}); clearing the update cache and retrying the download once`);
-      (async () => {
-        let cacheDir = '';
+      debug.log(`[updater] update available: ${info.version}`);
+      manualUpdateResult = 'available';
+      setUpdateStatus({ type: 'available', version: info.version });
+      const manual = manualUpdateCheckPending;
+      manualUpdateCheckPending = false; // the dialog below already answers a manual check
+      // Claim the prompt BEFORE the first await. Checking here and setting the flag after
+      // startEngines() let two checks landing in the same tick (the hourly timer racing the Settings
+      // button) both walk past the guard and stack two dialogs on the user.
+      if (updatePromptOpen) {
+        debug.log('[updater] a prompt is already open; ignoring duplicate update-available');
+        return;
+      }
+      updatePromptOpen = true;
+      try {
         try {
-          cacheDir = await clearUpdaterCacheDir();
-          debug.log(`[updater] update cache cleared: ${cacheDir}`);
-        } catch (clearErr) {
-          debug.log(`[updater] could not clear the update cache: ${clearErr.message || clearErr}`);
+          await startEngines();
+        } catch (err) {
+          debug.log(`[updater] config load failed before prompt: ${err.message || err}`);
         }
+        if (shouldSuppressUpdatePrompt(info.version, { manual })) return;
+        // A game can start between the check being fired and this handler running, and a manual check
+        // is a deliberate request that should still answer. Nothing is recorded - the offer is only
+        // held back, and the game-exit signal brings it straight back.
+        if (!manual && isGameRunning()) {
+          debug.log(`[updater] version ${info.version} held back: a game is running`);
+          scheduleUpdateCheck(updateGate.INTERVALS.inGame);
+          return;
+        }
+        // "View changelog" is not an answer: showMessageBox closes on any click, so reading the notes
+        // reopens the same dialog instead of deciding for the user.
+        let response;
+        do {
+          ({ response } = await dialog.showMessageBox({
+            type: 'info',
+            title: t('update-available', 'Update Available', 'Mise à jour disponible'),
+            message: t('update-available-message', 'A new version ({version}) is available.', 'Une nouvelle version ({version}) est disponible.', { version: info.version }),
+            detail: t('download-and-install-it-now', 'Download and install it now?', 'La télécharger et l’installer maintenant ?'),
+            buttons: [
+              t('download-install', 'Download && Install', 'Télécharger && installer'),
+              t('view-changelog', 'View changelog', 'Voir les nouveautés'),
+              t('later', 'Later', 'Plus tard'),
+              t('skip-this-version', 'Skip this version', 'Ignorer cette version'),
+            ],
+            defaultId: 0,
+            cancelId: 2,
+          }));
+          if (response === 1) {
+            const page = links.releaseTag(info.version);
+            debug.log(`[updater] opening the release notes of ${info.version}: ${page}`);
+            shell.openExternal(page).catch((err) => debug.log(`[updater] could not open ${page}: ${err.message || err}`));
+          }
+        } while (response === 1);
+        if (response === 0) {
+          debug.log(`[updater] user accepted download of ${info.version}${manual ? ' (manual check)' : ''}`);
+          updateDownloading = true;
+          // The click is the explicit consent, regardless of whether the dialog came from the hourly
+          // check or Settings > Check for updates. A manual check alone must not silently install.
+          updateAcceptedByUser = true;
+          startUpdateDownload(info.version);
+        } else if (response === 3) {
+          configJS.general.skippedVersion = info.version;
+          await settingsJS.save(configJS);
+          debug.log(`[updater] version ${info.version} skipped by user`);
+          setUpdateStatus({ type: 'reset' });
+        } else {
+          // "Later" (and the dialog's cancel path, which maps to it).
+          await postponeUpdate(info.version);
+          setUpdateStatus({ type: 'reset' });
+        }
+      } finally {
+        updatePromptOpen = false;
+      }
+    });
+    autoUpdater.on('update-not-available', (info) => {
+      debug.log(`[updater] current version is up to date (${info.version})`);
+      manualUpdateResult = 'uptodate';
+      // Without this the state machine stays on 'checking' and the title-bar chip shows "Checking..."
+      // forever, since being up to date is the one outcome no other event follows.
+      setUpdateStatus({ type: 'not-available' });
+      if (manualUpdateCheckPending && tray) {
+        manualUpdateCheckPending = false;
         try {
-          const token = new CancellationToken();
-          updateDownloadCancellation = token;
-          updateProgressLogged = -1;
-          setUpdateStatus({ type: 'download-started', version: currentUpdateStatus.version });
-          await autoUpdater.downloadUpdate(token);
-          updaterErrorNotified = false; // the retry succeeded; let a future failure notify again
-        } catch (retryErr) {
-          if (updateDownloadCancellation && updateDownloadCancellation.cancelled) return;
-          await notifyChecksumRecoveryFailed(summarizeUpdaterError(retryErr), cacheDir);
-        } finally {
-          checksumRetryInFlight = false;
+          tray.displayBalloon({
+            iconType: 'info',
+            title: t('achievement-watcher', 'AW Next'),
+            content: t('up-to-date', 'You are already using the latest version ({version}).', 'Vous utilisez déjà la dernière version ({version}).', { version: info.version }),
+          });
+        } catch {}
+      }
+    });
+    // The download can take minutes on a slow line and gives no sign of life otherwise: the window is
+    // usually closed (tray daemon) and the app never says it is busy. Every surface that can show it -
+    // the taskbar bar, the tray tooltip, the title-bar chip and Settings - is driven from the updater's
+    // own byte counter through the shared status, which throttles the broadcast to whole percents.
+    autoUpdater.on('download-progress', (progress) => {
+      const percent = Math.max(0, Math.min(100, Number(progress && progress.percent) || 0));
+      setUpdateStatus({
+        type: 'progress',
+        percent,
+        bytesPerSecond: Number(progress && progress.bytesPerSecond) || 0,
+        transferred: Number(progress && progress.transferred) || 0,
+        total: Number(progress && progress.total) || 0,
+      });
+      // One line per 10% rather than per chunk, so the log stays readable.
+      const step = Math.floor(percent / 10);
+      if (step !== updateProgressLogged) {
+        updateProgressLogged = step;
+        const speed = Math.round((Number(progress && progress.bytesPerSecond) || 0) / 1024);
+        debug.log(`[updater] downloading: ${percent.toFixed(0)}% (${speed} KB/s)`);
+      }
+    });
+    // A download the user stopped is not a failure: leave no error on screen and no half state behind.
+    autoUpdater.on('update-cancelled', (info) => {
+      debug.log(`[updater] download of ${info && info.version} cancelled by the user`);
+      updateDownloading = false;
+      updateAcceptedByUser = false;
+      clearUpdateDownloadProgress();
+    });
+    autoUpdater.on('error', (err) => {
+      const message = summarizeUpdaterError(err);
+      // The recovery below re-runs downloadUpdate(), which only means anything while a download is
+      // actually in flight. Outside one there is no update info to download and the retry can only
+      // fail with "Please check update first", so a stray checksum error stays an ordinary error.
+      if (isChecksumMismatchError(err) && updateDownloading) {
+        if (checksumRetryInFlight) {
+          // The retry's own downloadUpdate() rejection already goes through the catch block below;
+          // this is electron-updater's duplicate 'error' emission for that same second failure.
+          return;
         }
-      })();
-      return;
-    }
-    notifyUpdateError(message);
-  });
-  autoUpdater.on('update-downloaded', (info) => {
-    updateDownloading = false;
-    updateProgressLogged = -1;
-    updateDownloadCancellation = null;
-    setUpdateStatus({ type: 'downloaded', version: info.version });
-    promptDownloadedUpdate(info);
-  });
+        checksumRetryInFlight = true;
+        debug.log(`[updater] checksum mismatch (${message}); clearing the update cache and retrying the download once`);
+        (async () => {
+          let cacheDir = '';
+          try {
+            cacheDir = await clearUpdaterCacheDir();
+            debug.log(`[updater] update cache cleared: ${cacheDir}`);
+          } catch (clearErr) {
+            debug.log(`[updater] could not clear the update cache: ${clearErr.message || clearErr}`);
+          }
+          try {
+            const token = newCancellationToken();
+            updateDownloadCancellation = token;
+            updateProgressLogged = -1;
+            setUpdateStatus({ type: 'download-started', version: currentUpdateStatus.version });
+            await autoUpdater.downloadUpdate(token);
+            updaterErrorNotified = false; // the retry succeeded; let a future failure notify again
+          } catch (retryErr) {
+            if (updateDownloadCancellation && updateDownloadCancellation.cancelled) return;
+            await notifyChecksumRecoveryFailed(summarizeUpdaterError(retryErr), cacheDir);
+          } finally {
+            checksumRetryInFlight = false;
+          }
+        })();
+        return;
+      }
+      notifyUpdateError(message);
+    });
+    autoUpdater.on('update-downloaded', (info) => {
+      updateDownloading = false;
+      updateProgressLogged = -1;
+      updateDownloadCancellation = null;
+      setUpdateStatus({ type: 'downloaded', version: info.version });
+      promptDownloadedUpdate(info);
+    });
+  };
+  // Nothing calls the updater before this point, but if that ever changes the listeners still land.
+  if (updaterModule) registerUpdaterEvents(updaterModule.autoUpdater);
+
   promptDownloadedUpdate = async function (info) {
     // "Download && Install" was already explicit consent. Once downloaded, run the NSIS upgrade and
     // relaunch AW; settings/user data live outside the install directory and survive.
@@ -7120,7 +7154,7 @@ try {
     // that nobody experiences it as a hang. A failure to wait must never block the install.
     await new Promise((resolve) => setTimeout(resolve, INSTALL_HANDOVER_MS));
     try {
-      autoUpdater.quitAndInstall(silent, true);
+      getUpdater().quitAndInstall(silent, true);
     } catch (err) {
       // The installer could not be started at all: say so rather than sitting on "installing".
       notifyUpdateError(`could not start the installer: ${err.message || err}`);

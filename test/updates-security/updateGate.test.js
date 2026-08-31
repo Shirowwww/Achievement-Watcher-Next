@@ -174,7 +174,7 @@ test('the single consent prompt persists Later and a downloaded update installs 
   assert.strictEqual((init.match(/await postponeUpdate\(info\.version\)/g) || []).length, 1, 'the download prompt must record "Later"');
   // One consent covers download and install; the install step never opens a second dialog.
   assert.match(init, /await startUpdateInstall\(info\)/);
-  assert.match(init, /autoUpdater\.quitAndInstall\(silent, true\)/);
+  assert.match(init, /(?:autoUpdater|getUpdater\(\))\.quitAndInstall\(silent, true\)/);
 });
 
 /*

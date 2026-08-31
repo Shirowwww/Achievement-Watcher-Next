@@ -38,8 +38,10 @@ test('the broadcast is throttled by the shared model rather than fired per chunk
 });
 
 test('a download in flight can be cancelled, and a cancellation is not reported as a failure', () => {
-  assert.match(init, /const \{ autoUpdater, CancellationToken \} = require\('electron-updater'\)/);
-  assert.match(init, /new CancellationToken\(\)/);
+  assert.match(init, /updaterModule = require\('electron-updater'\)/);
+  // The token comes from electron-updater itself, through the accessor that loads it on first use.
+  assert.match(init, /new updaterModule\.CancellationToken\(\)/);
+  assert.match(init, /newCancellationToken\(\)/);
   assert.match(init, /autoUpdater\.downloadUpdate\(token\)/);
   assert.match(init, /ipcMain\.handle\('cancel-update-download'/);
   assert.match(init, /autoUpdater\.on\('update-cancelled'/);
@@ -64,7 +66,7 @@ test('the app says what is happening and gives it time to be seen before it quit
 
 test('the install runs the installer UI by default, with an opt-out that is read from settings', () => {
   assert.match(init, /const silent = !!\(configJS && configJS\.general && configJS\.general\.silentUpdateInstall\);/);
-  assert.match(init, /autoUpdater\.quitAndInstall\(silent, true\)/);
+  assert.match(init, /(?:autoUpdater|getUpdater\(\))\.quitAndInstall\(silent, true\)/);
 });
 
 test('the taskbar shows a real bar while downloading and an indeterminate one while installing', () => {

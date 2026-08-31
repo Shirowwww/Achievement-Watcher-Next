@@ -110,7 +110,7 @@ test('an imported preset is listed and deletable, not an orphan in the preset fo
   const init = read('electron', 'init.js');
   // A hand-authored preset installed from a package (no builder options file) must still be
   // visible in the picker and deletable, not just presets carrying builder options.
-  assert.match(init, /const PRESET_MARKERS = \[PRESET_OPTIONS_FILE, presetPackage\.PRESET_PACKAGE_FILE\];/);
+  assert.match(init, /const PRESET_MARKERS = \[PRESET_OPTIONS_FILE, customPreset\.PRESET_PACKAGE_FILE\];/);
 
   const list = /ipcMain\.handle\('list-custom-presets'[\s\S]*?\n\}\);/.exec(init);
   assert.ok(list && /managedPresetMarker\(name\)/.test(list[0]), 'the picker does not list imported presets');
