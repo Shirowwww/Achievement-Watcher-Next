@@ -1110,7 +1110,7 @@ body.is-resizing #game-list {
 }
 
 /* Discovery and the Steam ownership call run before the first percentage exists. There is nothing
-   truthful to print during that phase, so the bar sweeps and drops the number instead. */
+   truthful to count during that phase, so the bar sweeps and names the phase instead. */
 .loading .progressBar.indeterminate .meter {
   width: 35%;
   transition: none;
@@ -1122,8 +1122,9 @@ body.is-resizing #game-list {
   to { transform: translateX(285%); }
 }
 
+/* No percentage exists yet, so the overlay names the phase instead of printing a meaningless 0%. */
 .loading .progressBar.indeterminate:before {
-  content: '';
+  content: attr(data-label);
 }
 
 /* Percent text overlay */

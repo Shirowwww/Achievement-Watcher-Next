@@ -3350,11 +3350,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           $('#game-config').hide();
           $('#settings').hide();
           $('#game-list ul').empty();
-          $('#game-list .loading .progressBar').attr('data-percent', 0);
-          $('#game-list .loading .progressBar > .meter').css('width', '0%');
           self.css('pointer-events', 'initial');
           $('#win-settings').css('pointer-events', 'initial');
-          $('#game-list .loading').show();
           $('#user-info').css('opacity', 0).css('pointer-events', 'none');
           $('#game-list .isEmpty').hide();
           let elem = $('#settingNav li[data-view]').first();

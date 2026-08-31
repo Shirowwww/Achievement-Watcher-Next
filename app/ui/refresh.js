@@ -17,10 +17,7 @@ function resetUI() {
   $('#settings').hide();
   $('#game-config').hide();
   $('#game-list ul').empty();
-  $('#game-list .loading .progressBar').attr('data-percent', 0);
-  $('#game-list .loading .progressBar > .meter').css('width', '0%');
   $('title-bar')[0].inSettings = false;
-  $('#game-list .loading').show();
   $('#user-info').css('opacity', 0).css('pointer-events', 'none');
   $('#sort-box').css('opacity', 0).css('pointer-events', 'none');
   $('#search-bar').css('opacity', 0).css('pointer-events', 'none');

@@ -1218,9 +1218,9 @@ const getDLCList = (module.exports.getDLCList = async (appID) => {
   }
 });
 
-async function findInAppList(appID) {
-  if (!appID || !(Number.isInteger(appID) && appID > 0)) throw 'ERR_INVALID_APPID';
-
+// Load the app-list map, nothing else. Kept apart from findInAppList so a caller that only wants
+// the map warmed never pays for that function's per-appid fallbacks.
+async function ensureAppListLoaded() {
   const cache = path.join(cacheRoot, 'steam_cache/schema');
   const filepath = path.join(cache, 'appList.json');
 
@@ -1230,7 +1230,7 @@ async function findInAppList(appID) {
     try {
       let list;
       // Use a cached copy if it exists and is < 3 days old. Anything thrown here escapes
-      // findInAppList() and leaves listReady false, freezing every later lookup.
+      // ensureAppListLoaded() and leaves listReady false, freezing every later lookup.
       if (fs.existsSync(filepath) && Date.now() - fs.statSync(filepath).mtimeMs < 60 * 60 * 1000 * 24 * 3) {
         try {
           list = JSON.parse(fs.readFileSync(filepath, 'utf-8'));
@@ -1267,6 +1267,12 @@ async function findInAppList(appID) {
       listReady = true; // always release the lock, even on a network/parse failure
     }
   }
+}
+
+async function findInAppList(appID) {
+  if (!appID || !(Number.isInteger(appID) && appID > 0)) throw 'ERR_INVALID_APPID';
+
+  await ensureAppListLoaded();
 
   const app = appidListMap.get(appID);
   if (app) return app.name;
@@ -1400,7 +1406,10 @@ async function searchAppsByName(name) {
 
 async function loadAppListBestEffort() {
   try {
-    await findInAppList(753); // ensures appidListMap is loaded (Steam/Spacewar always resolves)
+    // Only the map is wanted here. This used to go through findInAppList(753), whose miss path ran
+    // the Steam catalogue read and a get-steam-data round trip for an appid nobody asked about -
+    // and since GetAppList was retired the map is always empty, so that miss happened every time.
+    await ensureAppListLoaded();
   } catch {
     /* list unavailable - callers can fall back to direct Steam search */
   }

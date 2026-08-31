@@ -2307,10 +2307,20 @@ var app = {
 
     $('title-bar')[0].inSettings = true;
 
+    let loadingElem = {
+      elem: $('#main-footer .loading'),
+      progress: $('#main-footer .loading .progressBar'),
+      meter: $('#main-footer .loading .progressBar > .meter'),
+    };
+    // The bar prints its own percentage once there is one; while it sweeps it says what it is doing
+    // instead. Set again after the locale loads, since the first call can land before it is there.
+    const setLoadingLabel = () => loadingElem.progress.attr('data-label', t('scanning', 'Scanning…', 'Analyse…'));
+
     l10n
       .load(self.config.achievement.lang)
       .then((locale) => {
         moment.locale(locale);
+        setLoadingLabel();
       })
       .catch((err) => {
         debug.log(err);
@@ -2319,17 +2329,16 @@ var app = {
 
     $('#user-info .info .name').text(self.config.general.username || os.userInfo().username || '');
 
-    let loadingElem = {
-      elem: $('#main-footer .loading'),
-      progress: $('#main-footer .loading .progressBar'),
-      meter: $('#main-footer .loading .progressBar > .meter'),
-    };
     // Reuse the loading footer during refreshes.
     $('#main-footer').removeClass('done');
     // Marked indeterminate: discovery and the Steam ownership call both run before makeList's first
     // percentage, so the bar used to sit frozen on the previous scan's 100% (or a cold start's 0%).
     loadingElem.progress.attr('data-percent', 0).addClass('indeterminate');
-    loadingElem.meter.css('width', '0%');
+    // Clear the width instead of pinning it to 0%: an inline width beats the .indeterminate rule
+    // that gives the sweeping meter its 35%, which left the bar empty and motionless for the whole
+    // discovery phase - the longest part of a cold start.
+    loadingElem.meter.css('width', '');
+    setLoadingLabel();
     // Not shown yet. A launch that reuses the stored library finishes in a few hundred milliseconds,
     // and a progress bar that appears and disappears inside that window is noise, not feedback. The
     // footer goes up when there is either nothing to look at or a real scan to wait for.
@@ -2659,9 +2668,13 @@ var app = {
         return achievements.makeList(
           scanConfig,
           (percent, total) => {
+            // The opening report is 0 of N: it sizes the skeletons, but the Steam ownership call
+            // still runs before any game resolves. Ending the sweep on it would put the bar back on
+            // a flat, empty 0% for that whole stretch, so keep sweeping until a game has landed.
+            setSkeletonExpected(total);
+            if (percent <= 0) return;
             loadingElem.progress.removeClass('indeterminate').attr('data-percent', percent);
             loadingElem.meter.css('width', percent + '%');
-            setSkeletonExpected(total);
           },
           (game) => renderGame(game)
         );

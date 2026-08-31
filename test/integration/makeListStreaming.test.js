@@ -62,13 +62,30 @@ test('the renderer clears the previous percentage before it scans again', () => 
   const app = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'app.js'), 'utf8');
   const start = app.indexOf("$('#main-footer').removeClass('done')");
   assert.ok(start > -1, 'the loading footer is still reused between scans');
-  const setup = app.slice(start, start + 500);
+  // Bounded by the next real statement rather than a character count: the block grows, and a fixed
+  // window silently stops covering the lines the assertions below are about.
+  const end = app.indexOf('const showLoadingIndicator', start);
+  assert.ok(end > start, 'the loading footer setup still runs before showLoadingIndicator');
+  const setup = app.slice(start, end);
   assert.match(setup, /addClass\('indeterminate'\)/, 'no percentage exists yet, so the bar must sweep instead');
-  assert.match(setup, /meter\.css\('width', '0%'\)/, 'and it must not keep the previous scan width');
+  // An inline width wins over any stylesheet rule, so pinning the meter to 0% here left the sweep
+  // running on a zero-width element: an empty bar, motionless for the whole discovery phase. The
+  // previous scan's width still has to go - by being cleared, not by being replaced with another one.
+  assert.match(setup, /meter\.css\('width', ''\)/, 'the inline width must be cleared, never pinned');
+  assert.doesNotMatch(setup, /meter\.css\('width', '\d/, 'an inline width would override the sweeping rule');
+  assert.match(setup, /setLoadingLabel\(\)/, 'the sweeping bar names its phase instead of printing a number');
 
   assert.match(app, /removeClass\('indeterminate'\)\.attr\('data-percent', percent\)/, 'the first real report ends the sweep');
+  // callbackProgress(0, total) is the opening announcement, not progress: the ownership call still
+  // has to run before any game resolves. Acting on it would drop the bar back to a flat empty 0%.
+  const report = app.slice(app.indexOf('(percent, total) => {'));
+  assert.match(report.slice(0, report.indexOf('},')), /if \(percent <= 0\) return;/, 'a zero report must not end the sweep');
 
   const css = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'resources', 'css', 'app.css'), 'utf8');
   assert.match(css, /\.loading \.progressBar\.indeterminate \.meter/, 'the sweeping state needs to exist in CSS');
-  assert.match(css, /\.loading \.progressBar\.indeterminate:before\s*\{\s*content: '';/, 'and it must not print a fake percentage');
+  assert.match(
+    css,
+    /\.loading \.progressBar\.indeterminate:before\s*\{\s*content: attr\(data-label\);/,
+    'and it must name the phase rather than print a fake percentage'
+  );
 });

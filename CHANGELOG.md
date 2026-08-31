@@ -31,6 +31,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **The loading bar in the footer actually moves again.** It was pinned to an inline width of 0%,
+  which overrode the rule that gives the sweeping bar its size, so a cold start showed an empty,
+  motionless bar reading "0%" for the whole scan - the longest wait the app has. It now sweeps and
+  names what it is doing, and only switches to a percentage once games start arriving.
+
 - **A slow answer from GitHub no longer looks like a corrupted download.** The update check read the
   words "checksum mismatch" out of our own release notes, which the failed request had copied into
   its error, then cleared the updater cache for nothing and ended on a dead end offering a manual
@@ -97,6 +102,12 @@ renamed in 3.9.0 and the history is kept under one file.
   signed you out again at the next launch with nothing anywhere to explain it.
 
 ### Performance
+
+- **A scan no longer signs in to Steam to look up a game nobody asked about.** Warming the app-list
+  cache went through a full lookup of appid 753, and since Steam retired that list the lookup always
+  missed and fell through to a Steam client sign-in and two store requests whose answer was thrown
+  away - once per name it had to resolve, on the critical path of every scan. On a cold start that
+  step took 9 s; it now takes under half a second.
 
 - **A refresh no longer waits on the network for every game it already knows.** A library of a
   hundred owned games asked Epic who was signed in, read a second copy of every schema and queried
