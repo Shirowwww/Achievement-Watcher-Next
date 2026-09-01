@@ -32,6 +32,7 @@ const goldberg = require(path.join(appPath, 'goldberg.js'));
 const uplayR2 = require(path.join(appPath, 'uplayR2.js'));
 const uplayR2Installer = require(path.join(appPath, 'uplayR2Installer.js'));
 const uplayCatalogue = require(path.join(appPath, 'uplayCatalogue.js'));
+const { steamCdnImages } = require('../util/steamCdn.js');
 const uplayAutoMap = require(path.join(appPath, 'uplayAutoMap.js'));
 const gbeInstaller = require(path.join(appPath, 'gbeInstaller.js'));
 const pe = require(path.join(appPath, '..', 'util', 'pe.js'));
@@ -299,7 +300,6 @@ function mergeDiscoveryRecord(target, incoming) {
   if (!target.source && incoming.source) target.source = incoming.source;
   if (!target.steamappid && incoming.steamappid) target.steamappid = incoming.steamappid;
   target.data = mergeDiscoveryData(target.data || {}, incoming.data || {});
-  if (incoming.name && incoming.data && incoming.data.gameDir && !target.name) target.name = incoming.name;
   return target;
 }
 
@@ -633,14 +633,7 @@ function buildProvisionalGame(appid) {
 
   const name = resolveLocalGameName(appid);
   // Steam's CDN builds these from the appid, so a numeric appid still gets its real artwork even under a numeric title.
-  const img = /^[0-9]+$/.test(id)
-    ? {
-        header: `https://cdn.akamai.steamstatic.com/steam/apps/${id}/header.jpg`,
-        background: `https://cdn.akamai.steamstatic.com/steam/apps/${id}/page_bg_generated_v6b.jpg`,
-        portrait: `https://cdn.akamai.steamstatic.com/steam/apps/${id}/library_600x900.jpg`,
-        icon: '',
-      }
-    : { header: '', background: '', portrait: '', icon: '' };
+  const img = { ...steamCdnImages(id), icon: '' };
 
   // A Ubisoft product with no Steam release has no Steam CDN to borrow from, so its card would be
   // blank; Ubisoft publishes boxart for it on its own CDN, under this very id.
@@ -1720,52 +1713,58 @@ async function discoverInScope(source, steamAccFilter, scope) {
     const configuredDirs = await userDir.get();
     const userDirs = scope ? scanScope.filterSelectedDirectories(configuredDirs, scope.userDirs, (dir) => dir.path) : configuredDirs;
     for (let dir of userDirs) {
-      debug.log(`[userdir] ${dir.path}`);
+      // Per directory, not around the loop: one scanner throwing on one folder used to abandon every
+      // folder after it, across every emulator source, with a single line in the log.
+      try {
+        debug.log(`[userdir] ${dir.path}`);
 
-      let scanned = [];
-      if (source.rpcs3) scanned = await rpcs3.scan(dir.path);
-      if (scanned.length > 0) debug.log('-> RPCS3 data added');
-      if (scanned.length === 0 && source.shadps4) {
-        scanned = await shadps4.scan(dir.path);
-        if (scanned.length > 0) debug.log('-> ShadPS4 data added');
-      }
-      if (scanned.length === 0 && source.xenia) {
-        scanned = await xenia.scan(dir.path);
-        if (scanned.length > 0) debug.log('-> Xenia data added');
-      }
-      if (scanned.length === 0 && source.xlln) {
-        // Games for Windows LIVE installs running XLiveLessNess. Like the console emulators these
-        // are game folders, so they are resolved before the appid-named save scan below.
-        scanned = xlln.scan(dir.path);
-        if (scanned.length > 0) debug.log('-> XLiveLessNess data added');
-      }
-      if (scanned.length > 0) {
-        data = data.concat(scanned);
-        debug.log('-> emulator data added');
-      } else if (source.socialClub && socialclub.isSocialClubPath(dir.path)) {
-        // Goldberg SocialClub Emu Saves: game folders are named after the game, not a numeric AppID.
-        scanned = await socialclub.scan(dir.path);
-        if (scanned.length > 0) {
-          data = data.concat(scanned);
-          debug.log('-> Goldberg SocialClub data added');
+        let scanned = [];
+        if (source.rpcs3) scanned = await rpcs3.scan(dir.path);
+        if (scanned.length > 0) debug.log('-> RPCS3 data added');
+        if (scanned.length === 0 && source.shadps4) {
+          scanned = await shadps4.scan(dir.path);
+          if (scanned.length > 0) debug.log('-> ShadPS4 data added');
         }
-      } else if (source.steamEmu) {
-        // FINAL FANTASY VII (2013) first: it is a game folder, not an appid-named save folder, so
-        // the generic emulator scan can never recognise it.
-        scanned = ff7.scan(dir.path);
+        if (scanned.length === 0 && source.xenia) {
+          scanned = await xenia.scan(dir.path);
+          if (scanned.length > 0) debug.log('-> Xenia data added');
+        }
+        if (scanned.length === 0 && source.xlln) {
+          // Games for Windows LIVE installs running XLiveLessNess. Like the console emulators these
+          // are game folders, so they are resolved before the appid-named save scan below.
+          scanned = xlln.scan(dir.path);
+          if (scanned.length > 0) debug.log('-> XLiveLessNess data added');
+        }
         if (scanned.length > 0) {
           data = data.concat(scanned);
-          debug.log('-> FINAL FANTASY VII (2013) data added');
-        } else {
-          scanned = await userDir.scan(dir.path);
+          debug.log('-> emulator data added');
+        } else if (source.socialClub && socialclub.isSocialClubPath(dir.path)) {
+          // Goldberg SocialClub Emu Saves: game folders are named after the game, not a numeric AppID.
+          scanned = await socialclub.scan(dir.path);
           if (scanned.length > 0) {
             data = data.concat(scanned);
-            debug.log('-> Steam emu data added');
+            debug.log('-> Goldberg SocialClub data added');
+          }
+        } else if (source.steamEmu) {
+          // FINAL FANTASY VII (2013) first: it is a game folder, not an appid-named save folder, so
+          // the generic emulator scan can never recognise it.
+          scanned = ff7.scan(dir.path);
+          if (scanned.length > 0) {
+            data = data.concat(scanned);
+            debug.log('-> FINAL FANTASY VII (2013) data added');
           } else {
-            additionalSearch.push(dir.path);
-            debug.log('-> will be scanned for appid folder(s)');
+            scanned = await userDir.scan(dir.path);
+            if (scanned.length > 0) {
+              data = data.concat(scanned);
+              debug.log('-> Steam emu data added');
+            } else {
+              additionalSearch.push(dir.path);
+              debug.log('-> will be scanned for appid folder(s)');
+            }
           }
         }
+      } catch (err) {
+        debug.log(`[userdir] ${dir.path} could not be scanned: ${err && err.message ? err.message : err}`);
       }
     }
   } catch (err) {
@@ -2239,7 +2238,9 @@ module.exports.getGameFromCache = async (appid, source, option) => {
     case 'epic':
       return epic.getCachedData({ appID: appid, lang: option.achievement.lang });
     case 'uplay':
-      return uplay.getGameFromCache(appid);
+      // getGameData reads the on-disk schema first and only regenerates it from the Uplay client's
+      // own cache when it is missing, so it is the cached read for this source.
+      return uplay.getGameData(appid, option.achievement.lang);
     case 'steam':
     default:
       result = await steam.getCachedData({ appID: appid, lang: option.achievement.lang });
@@ -2301,12 +2302,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         const sid = canBorrowSteamArt ? await steam.findAppidByName(uname) : null;
         if (sid) {
           steamappid = sid;
-          img = {
-            header: `https://cdn.akamai.steamstatic.com/steam/apps/${sid}/header.jpg`,
-            background: `https://cdn.akamai.steamstatic.com/steam/apps/${sid}/page_bg_generated_v6b.jpg`,
-            portrait: `https://cdn.akamai.steamstatic.com/steam/apps/${sid}/library_600x900.jpg`,
-            icon: `https://cdn.akamai.steamstatic.com/steam/apps/${sid}/capsule_231x87.jpg`,
-          };
+          img = steamCdnImages(sid);
 
         }
       } catch {
@@ -2416,9 +2412,10 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           const sid = await steam.findAppidByName(game.name);
           if (sid) {
             game.steamappid = game.steamappid || sid;
-            game.img.header = `https://cdn.akamai.steamstatic.com/steam/apps/${sid}/header.jpg`;
-            game.img.background = game.img.background || `https://cdn.akamai.steamstatic.com/steam/apps/${sid}/page_bg_generated_v6b.jpg`;
-            game.img.portrait = game.img.portrait || `https://cdn.akamai.steamstatic.com/steam/apps/${sid}/library_600x900.jpg`;
+            const borrowed = steamCdnImages(sid);
+            game.img.header = borrowed.header;
+            game.img.background = game.img.background || borrowed.background;
+            game.img.portrait = game.img.portrait || borrowed.portrait;
           }
         } catch {}
       }
@@ -2764,12 +2761,26 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
               flavour,
               log: debug,
             });
+            /*
+              The flag that lands here was persisted by an earlier scan, and this branch exists
+              precisely for a folder a repack update has since wiped, so it can be stale. The
+              interactive repair refuses a folder Ubisoft Connect's own registry claims; a write
+              started without anyone watching must refuse it too.
+            */
+            const trustedInstall = uplayR2Installer.canAdoptInstall({
+              gameDir: resolvedGameDir,
+              loaderPaths,
+              exePath: resolvedExe && resolvedExe.full,
+            });
+            if (!trustedInstall) {
+              throw new Error('this folder is a registered Ubisoft Connect install with no emulator evidence left');
+            }
             installPlan = uplayR2Installer.planInstall({
               gameDir: resolvedGameDir,
               dlls: cache,
               loaderPaths,
               exePath: resolvedExe && resolvedExe.full,
-              trustedInstall: true, // appid.data.uplayR2 was persisted by emulator-evidence discovery
+              trustedInstall,
             });
             if (!installPlan.safe) {
               throw new Error(`no architecture-safe loader target (${installPlan.issues.map((issue) => issue.code).join(', ')})`);
@@ -3191,6 +3202,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
 
     for (let appid of appids) {
       if (isDuplicate && !option.achievement.mergeDuplicate) continue;
+      let appliedFromThisSource = false;
 
       let root = {};
       try {
@@ -3368,8 +3380,8 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
               }
             } else {
               Object.assign(achievement, parsed);
-              isDuplicate = true;
             }
+            appliedFromThisSource = true;
           } catch (err) {
             if (err === 'ACH_NOT_FOUND_IN_SCHEMA') {
               schemaMissCount++;
@@ -3384,6 +3396,10 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           `[${appid.appid}] ${schemaMissCount} saved achievement${schemaMissCount === 1 ? '' : 's'} not found in the game schema - probably deleted or renamed over time`
         );
       }
+      // Only once a whole source has been applied is the next one a merge. Setting this per
+      // achievement made every entry after the first take the merge branch inside its OWN source,
+      // and that branch never writes a zero, so a counter still at 0 stayed undefined instead.
+      if (appliedFromThisSource) isDuplicate = true;
     }
     game.achievement.unlocked = game.achievement.list.filter((ach) => ach.Achieved == 1).length;
     // Reconcile the denominator with the real achievement list. A schema/list desync could leave
@@ -3667,6 +3683,8 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
     // ownership call, not after: that call is network-bound, and until it returned the progress bar
     // had nothing to show but the previous scan's percentage.
     if (finalList.length > 0) callbackProgress(0, finalList.length);
+    // Awaited on purpose: this call also seeds playtime from the Steam library, which the rows
+    // below read as they are built. Its own two lookups are each bounded by STEAM_OWNERSHIP_TIMEOUT_MS.
     await refreshSteamOwnership(appidList);
     if (finalList.length > 0) {
       gameIndex.beginBatch();

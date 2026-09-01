@@ -8,6 +8,7 @@ const path = require('path');
 const { execFile } = require('child_process');
 const { fileURLToPath } = require('url');
 const { resolvePowerShell } = require('./powershell.js');
+const { safeEnv } = require('./safeEnv.js');
 const { userDataDir } = require('./userData.js');
 
 function localImagePath(source) {
@@ -70,11 +71,10 @@ function makeSquareIcon(source, appid, options = {}) {
       {
         windowsHide: true,
         timeout: 15000,
-        env: {
-          ...process.env,
+        env: safeEnv({
           AW_ICON_SRC: src,
           AW_ICON_DST: dst,
-        },
+        }),
       },
       (err) => {
         if (err) reject(err);

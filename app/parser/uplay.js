@@ -6,17 +6,22 @@ const { lazyRequire } = require('../util/lazyRequire.js');
 const glob = lazyRequire('fast-glob');
 const zip = require('adm-zip');
 const fs = require('fs');
-const { listRegistryAllSubkeys, readRegistryString, readRegistryInteger } = require('../util/reg');
-const request = lazyRequire('request-zero');
+const { listRegistryAllSubkeys, ListRegistryAllValues, readRegistryString, readRegistryInteger } = require('../util/reg');
 const steamLanguages = require(path.join(__dirname, '../locale/steam.json'));
 
 let debug;
+let cacheRoot;
 module.exports.initDebug = ({ isDev, userDataPath }) => {
+  module.exports.setUserDataPath(userDataPath);
   // Use the passed-in debug flag; this parser also runs outside the renderer.
   debug = new (require('../util/logger'))({
     console: isDev || false,
     file: path.join(userDataPath, 'logs/uplay.log'),
   });
+};
+
+module.exports.setUserDataPath = (p) => {
+  cacheRoot = p;
 };
 
 module.exports.scan = async () => {
@@ -160,28 +165,16 @@ function writeSchemaCache(cacheFile, schema) {
 module.exports.getGameData = async (appid, lang) => {
   appid = appid.replace('UPLAY', '');
 
-  const cacheFile = path.join(remote.app.getPath('userData'), 'uplay_cache/schema', `${appid}.db`);
+  const cacheFile = path.join(cacheRoot, 'uplay_cache/schema', `${appid}.db`);
 
   let schema = readSchemaCache(cacheFile);
 
   if (!schema) {
-    try {
-      // request-zero's socket timeout destroys the request without emitting 'error', leaving the
-      // promise pending forever; race it against our own timeout so a stalled server falls back
-      // to the local cache instead of freezing the game list.
-      schema = await withTimeout(getUplayDataFromSRV(appid), 15000, `Timed out fetching UPLAY${appid} schema from server`);
-    } catch (err) {
-      debug.log(`Failed to get schema from server for UPLAY${appid}; Trying to generate from local Uplay installation ...`);
-
-      let uplayPath = readRegistryString('HKLM', 'Software/WOW6432Node/Ubisoft/Launcher', 'InstallDir');
-      if (!uplayPath) throw "Uplay not found : can't generate schema if uplay is not installed.";
-      schema = await generateSchemaFromLocalCache(appid, uplayPath);
-      try {
-        await withTimeout(shareCache(schema), 15000, `Timed out sharing UPLAY${appid} cache to server`);
-      } catch (err) {
-        debug.log(`Failed to share UPLAY${appid} cache to server => ${err}`);
-      }
-    }
+    // The schema is read from the Uplay client's own cache on this PC. The third-party server this
+    // used to ask first is gone, and it was also being sent a copy of every schema generated here.
+    const uplayPath = readRegistryString('HKLM', 'Software/WOW6432Node/Ubisoft/Launcher', 'InstallDir');
+    if (!uplayPath) throw "Uplay not found : can't generate schema if uplay is not installed.";
+    schema = await generateSchemaFromLocalCache(appid, uplayPath);
     writeSchemaCache(cacheFile, schema);
   }
 
@@ -195,8 +188,9 @@ module.exports.getGameData = async (appid, lang) => {
 };
 
 module.exports.getAchievementsFromLumaPlay = (root, key) => {
-  let result = listRegistryAllValues(root, key);
-  if (!result) throw 'No achievement found in registry';
+  // An absent key enumerates as an empty array, never null, so length is what says "nothing here".
+  let result = ListRegistryAllValues(root, key);
+  if (!result || result.length === 0) throw 'No achievement found in registry';
 
   return result.map((name) => {
     return {
@@ -220,7 +214,7 @@ async function generateSchemaFromLocalCache(appid, uplayPath) {
 
     debug.log(`${index.name} - ${id.appid}`);
 
-    const cache = path.join(remote.app.getPath('userData'), 'uplay_cache/img/', `${id.appid}`);
+    const cache = path.join(cacheRoot, 'uplay_cache/img/', `${id.appid}`);
 
     let archive = new zip(id.archive);
     let archiveEntries = archive.getEntries();
@@ -311,67 +305,6 @@ async function generateSchemaFromLocalCache(appid, uplayPath) {
   } catch (err) {
     debug.log(err);
     throw `Failed to generate schema for UPLAY${appid} => ${err}`;
-  }
-}
-
-function withTimeout(promise, ms, message) {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(message)), ms);
-    promise.then(
-      (value) => {
-        clearTimeout(timer);
-        resolve(value);
-      },
-      (err) => {
-        clearTimeout(timer);
-        reject(err);
-      }
-    );
-  });
-}
-
-function getUplayDataFromSRV(appID, lang = null) {
-  const url = lang ? `https://api.xan105.com/uplay/ach/${appID}?lang=${lang}` : `https://api.xan105.com/uplay/ach/${appID}`;
-
-  return new Promise((resolve, reject) => {
-    request
-      .getJson(url)
-      .then((data) => {
-        if (data.error) {
-          return reject(data.error);
-        } else if (data.data) {
-          return resolve(data.data);
-        } else {
-          return reject('Unexpected Error');
-        }
-      })
-      .catch((err) => {
-        return reject(err);
-      });
-  });
-}
-
-async function shareCache(schema) {
-  const url = 'https://api.xan105.com/uplay/share/';
-
-  try {
-    let appid = schema.appid.replace('UPLAY', '');
-
-    const cache = path.join(remote.app.getPath('userData'), 'uplay_cache/img/', `${appid}`);
-
-    let archive = new zip();
-    archive.addFile('schema.json', Buffer.from(JSON.stringify(schema)));
-    archive.addLocalFolder(cache);
-
-    debug.log(`Sharing ${schema.name} - ${appid}`);
-    await request.upload(url, archive.toBuffer(), {
-      headers: { 'x-hello': 'Y*Xsv+k77_Vz*tLW' },
-      fieldname: 'eXVeFUuMuaDnFXww',
-      filename: `${schema.name} - ${appid}.zip`,
-    });
-  } catch (err) {
-    debug.log(err);
-    throw err;
   }
 }
 

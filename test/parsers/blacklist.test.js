@@ -1,9 +1,9 @@
 'use strict';
 
 // Standalone test (run from app/ via: node --test "../test/parsers/blacklist.test.js").
-// Characterizes blacklist.get()'s merge/dedup of the built-in AppIDs + the server bogus-list +
-// the user exclusion file, and its graceful fallback when the server fetch fails. request-zero
-// is stubbed (the same cached instance the parser holds) so the test stays offline/deterministic.
+// Characterizes blacklist.get()'s merge/dedup of the built-in AppIDs and the user exclusion file.
+// The remote bogus list it used to merge is gone: DLC/demo/tool filtering happens at discovery from
+// Steam's own local catalogue, so this source must not reach the network at all.
 const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
@@ -41,27 +41,28 @@ const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-blacklist-'));
   const exclusionFile = path.join(temp, 'cfg', 'exclusion.db');
 
   try {
-    await test('merges built-in + server + user lists, deduped', async () => {
-      request.getJson = async () => ({ data: [100, 200, 480] }); // 480 overlaps a built-in
-      fs.writeFileSync(exclusionFile, JSON.stringify([200, 300])); // 200 overlaps the server list
+    await test('merges built-in + user lists, deduped', async () => {
+      fs.writeFileSync(exclusionFile, JSON.stringify([200, 300, 480])); // 480 overlaps a built-in
       const res = await blacklist.get();
-      for (const id of [...BUILTIN, 100, 200, 300]) assert.ok(res.includes(id), `missing ${id}`);
+      for (const id of [...BUILTIN, 200, 300]) assert.ok(res.includes(id), `missing ${id}`);
       assert.strictEqual(new Set(res).size, res.length, 'result must not contain duplicates');
     });
 
-    await test('server fetch failure → still returns built-in + user list', async () => {
+    await test('the list is built without asking the network', async () => {
+      let asked = false;
       request.getJson = async () => {
-        throw new Error('offline');
+        asked = true;
+        return { data: [] };
       };
       const res = await blacklist.get();
+      assert.ok(!asked, 'blacklist.get() runs twice per discovery; it must not cost a lookup');
       for (const id of [...BUILTIN, 200, 300]) assert.ok(res.includes(id), `missing ${id}`);
     });
 
-    await test('no user exclusion file → built-in + server only', async () => {
+    await test('no user exclusion file → built-in only', async () => {
       fs.rmSync(exclusionFile, { force: true });
-      request.getJson = async () => ({ data: [777] });
       const res = await blacklist.get();
-      for (const id of [...BUILTIN, 777]) assert.ok(res.includes(id), `missing ${id}`);
+      for (const id of BUILTIN) assert.ok(res.includes(id), `missing ${id}`);
       assert.ok(!res.includes(300), 'a removed user id should no longer appear');
     });
 

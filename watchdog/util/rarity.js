@@ -95,11 +95,39 @@ async function fetchSteamGlobal(appid) {
 // Return a Map<achievementName, percent>. Hits the network only when the sidecar is missing or older
 // than ttlMs; on any failure falls back to whatever is cached (possibly empty). Never throws - rarity
 // is a non-essential enrichment of the toast.
-async function getRarityMap(appid, { ttlMs = DEFAULT_TTL_MS } = {}) {
+/*
+  Sources whose ids are not Steam appids. Asking Valve about one is a wasted request at best, and at
+  worst it answers about an unrelated Steam game with the same number - which then lands in the
+  sidecar the app reads too. The app-side copy of this module has always had this gate; this one did
+  not, and it is called for every unlock of every platform.
+*/
+const CACHE_ONLY_SOURCES = new Set([
+  'epic-official',
+  'epic',
+  'gog-official',
+  'gog',
+  'GOG Galaxy',
+  'Ubisoft Connect',
+  'ubisoft',
+  'uplay',
+  'uPlay',
+  'Lumaplay',
+  'ea',
+  'Xbox PC',
+]);
+
+function isSteamRarityId(appid, source) {
+  if (source && CACHE_ONLY_SOURCES.has(String(source))) return false;
+  // A namespaced id (uplay-123, socialclub-x, local-abc) is never a Steam appid either.
+  return /^[0-9]+$/.test(String(appid == null ? '' : appid).trim());
+}
+
+async function getRarityMap(appid, { ttlMs = DEFAULT_TTL_MS, source = '' } = {}) {
   const payload = readPayload(appid);
   const age = payload && payload.updatedAt ? Date.now() - Date.parse(payload.updatedAt) : Infinity;
   const fresh = payload && age < ttlMs && Array.isArray(payload.achievements) && payload.achievements.length > 0;
   if (fresh) return payloadToMap(payload);
+  if (!isSteamRarityId(appid, source)) return payloadToMap(payload);
 
   try {
     const entries = await fetchSteamGlobal(appid);
@@ -113,4 +141,4 @@ async function getRarityMap(appid, { ttlMs = DEFAULT_TTL_MS } = {}) {
   return payloadToMap(payload);
 }
 
-module.exports = { readRarityMap, getRarityMap, cacheFile };
+module.exports = { readRarityMap, getRarityMap, cacheFile, isSteamRarityId, CACHE_ONLY_SOURCES };

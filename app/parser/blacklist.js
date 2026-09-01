@@ -1,8 +1,6 @@
 'use strict';
 
 const path = require('path');
-const { lazyRequire } = require('../util/lazyRequire.js');
-const request = lazyRequire('request-zero');
 const fs = require('fs');
 const { crc32 } = require('../util/crc32.js');
 
@@ -23,20 +21,17 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   });
 };
 
+/*
+  DLC, demos and tools are filtered at discovery from Steam's own local catalogue
+  (parser/steamAppInfo.js reads appcache/appinfo.vdf), which is offline, keyless and complete. This
+  list is now only the handful of Steam utility appids plus whatever the user hid by hand; the
+  remote bogus list it used to merge lived on a host that no longer resolves, and asking for it cost
+  a failed lookup on every discovery.
+*/
 module.exports.get = async () => {
-  const url = 'https://api.xan105.com/steam/getBogusList';
-  //TODO: replace this url with the full apilist of dlc/music/demo/etc
-
   let exclude = [
     ...builtinExclude,
   ];
-
-  try {
-    let srvExclusion = (await request.getJson(url)).data;
-    debug.log('blacklist from srv:');
-    debug.log(srvExclusion);
-    exclude = [...new Set([...exclude, ...srvExclusion])];
-  } catch {}
 
   try {
     let userExclusion = JSON.parse(fs.readFileSync(exclusionFile, 'utf8'));

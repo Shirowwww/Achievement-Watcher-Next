@@ -38,8 +38,9 @@ module.exports.scan = async () => {
 };
 
 module.exports.getAchievements = async (root, key) => {
+  // An absent key enumerates as an empty array, never null, so length is what says "nothing here".
   let achievements = ListRegistryAllValues(root, key);
-  if (!achievements) throw 'No achievement found in registry';
+  if (!achievements || achievements.length === 0) throw 'No achievement found in registry';
 
   let result = [];
 

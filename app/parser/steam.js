@@ -8,6 +8,21 @@ const ini = require('../util/ini');
 const omit = require('lodash.omit');
 const moment = require('moment');
 const request = lazyRequire('request-zero');
+const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
+
+/*
+  Breakers for the two calls this module makes directly rather than through the main process. Both
+  run once per game: the schema recheck on the background auto-fix pass (where there is no window,
+  so no IPC to the main process's own breakers) and the DLC list. Offline, each was paying its full
+  timeout for every game in the library.
+*/
+const directSchemaCircuit = createNetworkCircuit({ failureLimit: 2, cooldownMs: 10 * 60 * 1000, shouldCount: isSteamTransportFailure });
+const storeCircuit = createNetworkCircuit({ failureLimit: 2, cooldownMs: 10 * 60 * 1000, shouldCount: isSteamTransportFailure });
+const searchCircuit = createNetworkCircuit({ failureLimit: 2, cooldownMs: 10 * 60 * 1000, shouldCount: isSteamTransportFailure });
+
+// How long a blank description/achievement list is left alone before Steam is asked again. Declared
+// once: the two places that re-check were free to drift apart.
+const DESC_RECHECK_MS = 3 * 24 * 60 * 60 * 1000;
 const { regKeyExists, readRegistryInteger, readRegistryString, listRegistryAllSubkeys } = require('../util/reg');
 const appPath = path.join(__dirname, '../');
 const steamID = require(path.join(appPath, 'util/steamID.js'));
@@ -355,9 +370,15 @@ function rememberUnresolved(appID) {
   }
 }
 
-// A miss is meaningful only when the app list was available.
-module.exports.shouldRememberUnresolved = ({ hasResult, inAppList, appListLoaded } = {}) =>
-  !hasResult && !inAppList && !!appListLoaded;
+/*
+  A miss is meaningful only when Steam actually answered. That used to be inferred from the app list
+  having loaded, but Valve retired GetAppList, so appidListMap is empty on every machine and the
+  memo was never written again: a delisted appid paid a full lookup on every scan, for ever. What
+  proves reachability now is the lookup itself having come back rather than thrown or reported a
+  network error - the caller passes that as `answered`.
+*/
+module.exports.shouldRememberUnresolved = ({ hasResult, inAppList, answered, appListLoaded } = {}) =>
+  !hasResult && !inAppList && !!(answered || appListLoaded);
 
 // Drop the memo for one appid (or all of them) so a manual retry really re-checks Steam.
 module.exports.forgetUnresolved = (appID) => {
@@ -464,7 +485,9 @@ module.exports.getGameData = async (cfg) => {
       if ((!result || !result.name) && !inAppList) {
         // Only a miss against a list we actually have says anything about this appid (see the
         // negative-cache comment above); offline, everything misses.
-        if (module.exports.shouldRememberUnresolved({ hasResult: !!(result && result.name), inAppList, appListLoaded: appListUsable() })) {
+        // Reaching here means the lookup returned: a throw or a networkError was handled above.
+        const answered = !!result && result.networkError !== true;
+        if (module.exports.shouldRememberUnresolved({ hasResult: !!(result && result.name), inAppList, answered, appListLoaded: appListUsable() })) {
           rememberUnresolved(cfg.appID);
         }
         throw `Error trying to load steam data for ${cfg.appID}`;
@@ -482,7 +505,6 @@ module.exports.getGameData = async (cfg) => {
 
     // Self-repair: patch blank fields and pick up achievements a game update added (Steam gives no
     // change notification). Runs every 3 days, or immediately if forced from Settings > Advanced.
-    const DESC_RECHECK_MS = 3 * 24 * 60 * 60 * 1000;
     const triedRecently = !cfg.forceRecheck && result && result.descBackfilledAt && Date.now() - result.descBackfilledAt < DESC_RECHECK_MS;
     if ((!fastStart || cfg.forceRecheck) && result && result.achievement && Array.isArray(result.achievement.list) && !triedRecently) {
       let recheckSucceeded = false;
@@ -626,10 +648,15 @@ module.exports.getAchievementsFromFile = async (filePath) => {
     for (let i in local.State) {
       if (Object.prototype.hasOwnProperty.call(local.State, i)) {
         if (local.State[i] == '0101') {
-          result[i] = {
-            Achieved: '1',
-            UnlockTime: new DataView(new Uint8Array(Buffer.from(local.Time[i].toString(), 'hex')).buffer).getUint32(0, true) || null,
-          };
+          // A State key with no matching Time entry, or a blob too short to hold a uint32, must cost
+          // this one achievement its date - not the whole save file, which is what it used to do.
+          let unlockTime = null;
+          try {
+            unlockTime = decodeRldBlob(local.Time[i]) || null;
+          } catch {
+            /* unreadable timestamp - the unlock itself still counts */
+          }
+          result[i] = { Achieved: '1', UnlockTime: unlockTime };
         }
       }
     }
@@ -1136,12 +1163,15 @@ async function getSteamDataFromSRV(appID, lang) {
 // the legacy GetSchemaForGame (which always blanks them). Mapped to the same achievement-list shape
 // so it's a drop-in replacement for every caller below.
 async function getGameAchievementsFromWebAPI(cfg) {
+  if (directSchemaCircuit.unavailable()) return [];
   try {
     const url = `https://api.steampowered.com/IPlayerService/GetGameAchievements/v1/?appid=${cfg.appID}&language=${cfg.lang}`;
     const data = await request.getJson(url);
+    directSchemaCircuit.recordSuccess();
     return steamSchemaFetch.mapOfficialAchievements(data && data.response, cfg.appID);
   } catch (err) {
     debug.log(`[${cfg.appID}] keyless GetGameAchievements failed (${err.code || err.message || err})`);
+    if (directSchemaCircuit.recordFailure(err)) debug.log('[steam] the schema endpoint is unreachable; not asked again this cooldown');
     return []; // keep the game visible; the local-schema backfill can still fill the list
   }
 }
@@ -1189,8 +1219,11 @@ const getDLCList = (module.exports.getDLCList = async (appID) => {
     return dlcs;
   };
 
+  if (storeCircuit.unavailable()) return [];
+
   try {
     const base = await request.getJson(`https://store.steampowered.com/api/appdetails?appids=${id}&l=english`, { timeout: 20000 });
+    storeCircuit.recordSuccess();
     const ids = (base && base[id] && base[id].success && base[id].data && Array.isArray(base[id].data.dlc) ? base[id].data.dlc : [])
       .map((d) => parseInt(d, 10))
       .filter((d) => Number.isInteger(d) && d > 0);
@@ -1208,8 +1241,9 @@ const getDLCList = (module.exports.getDLCList = async (appID) => {
           const entry = detail && detail[did];
           if (entry && entry.success && entry.data && entry.data.name) names.set(did, String(entry.data.name).trim());
         }
-      } catch {
+      } catch (err) {
         /* this chunk's names stay blank -> fall back to a generic label below */
+        if (storeCircuit.recordFailure(err)) break;
       }
     }
 
@@ -1218,6 +1252,7 @@ const getDLCList = (module.exports.getDLCList = async (appID) => {
     return writeCache(dlcs);
   } catch (err) {
     if (debug) debug.log(`[${id}] DLC list fetch failed => ${err}`);
+    if (storeCircuit.recordFailure(err) && debug) debug.log('[steam] the store is unreachable; not asked again this cooldown');
     return [];
   }
 });
@@ -1381,6 +1416,8 @@ async function searchAppsByName(name) {
     appSearchCache.set(key, Promise.resolve(stored.apps));
     return stored.apps;
   }
+  // One 20s search per unmapped title, run in a row: offline that is the whole batch's cost.
+  if (searchCircuit.unavailable()) return [];
 
   const pending = (async () => {
     const url = `https://steamcommunity.com/actions/SearchApps/${encodeURIComponent(term)}`;
@@ -1400,9 +1437,11 @@ async function searchAppsByName(name) {
   try {
     const apps = await pending;
     rememberAppSearch(key, apps);
+    searchCircuit.recordSuccess();
     return apps;
   } catch (err) {
     if (debug) debug.log(`Steam app search failed for "${term}" (${err.code || err})`);
+    if (searchCircuit.recordFailure(err) && debug) debug.log('[steam] the app search is unreachable; not asked again this cooldown');
     appSearchCache.delete(key);
     return [];
   }
@@ -1834,7 +1873,6 @@ async function GetMissingData(data, showHidden, lang, steamSettings) {
       }
     }
     // Backfill blank descriptions every 3 days; key-based schemas already include hidden text.
-    const DESC_RECHECK_MS = 3 * 24 * 60 * 60 * 1000;
     const triedRecently = data.descBackfilledAt && Date.now() - data.descBackfilledAt < DESC_RECHECK_MS;
     const hasBlankVisible = data.achievement.list.some((ac) => ac.hidden != 1 && (!ac.description || String(ac.description).trim() === ''));
     const hasBlankHidden = data.achievement.list.some((ac) => ac.hidden == 1 && (!ac.description || String(ac.description).trim() === ''));

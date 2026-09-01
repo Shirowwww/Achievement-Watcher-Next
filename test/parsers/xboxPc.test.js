@@ -132,7 +132,9 @@ test('normalizeXboxAchievement extracts earned state, rarity and icon', () => {
     id: '1',
     name: 'First Blood',
     description: 'Kill one enemy',
-    progression: { state: 'Achieved', timeUnlocked: 1700000000 },
+    // Xbox writes this as an ISO 8601 string, not an epoch - reading it as a number left every
+    // Xbox unlock without a date.
+    progression: { state: 'Achieved', timeUnlocked: '2023-11-14T22:13:20.0000000Z' },
     rarity: { currentPercentage: 12.5 },
     mediaAssets: [{ mediaType: 'Icon', url: 'https://xbox/icon.png' }],
   });

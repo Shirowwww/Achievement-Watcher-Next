@@ -102,7 +102,7 @@ function findSteamSettings(gameDir, maxDepth = 6) {
     try {
       const entries = (dirCache.readdirNames(dir) || []).map((e) => e.toLowerCase());
       if (entries.includes('achievements.json')) score += 100;
-      if (entries.some((e) => GBE_CONFIG_FILES.has(e) || CLASSIC_CONFIG_FILES.includes(e))) score += 50;
+      if (entries.some((e) => isGbeMarker(e) || CLASSIC_CONFIG_FILES.includes(e))) score += 50;
       if (entries.includes('steam_appid.txt')) score += 20;
       if (entries.includes('steam_interfaces.txt')) score += 5;
       const relativeParts = path
@@ -142,6 +142,17 @@ function findSteamSettings(gameDir, maxDepth = 6) {
 // GBE Fork keeps configuration in configs.*.ini files; classic Goldberg used loose .txt files
 // instead. Presence of any configs.*.ini is the most reliable tell it's the fork.
 const GBE_CONFIG_FILES = new Set(['configs.main.ini', 'configs.user.ini', 'configs.app.ini', 'configs.overlay.ini']);
+
+/*
+  What marks a folder as GBE Fork rather than classic Goldberg. Matching only the four exact names
+  above missed a repack that ships its templates unrenamed (configs.user.EXAMPLE.ini) beside an
+  achievements.json: the setup then read as classic Goldberg, and its saves were looked for in
+  "Goldberg SteamEmu Saves" instead of "GSE Saves", so a working game reported no save at all.
+*/
+function isGbeMarker(entry) {
+  const name = String(entry || '').toLowerCase();
+  return GBE_CONFIG_FILES.has(name) || name.startsWith('configs.') || name === 'achievements.json';
+}
 const CLASSIC_CONFIG_FILES = ['force_account_name.txt', 'user_steam_id.txt', 'account_name.txt', 'language.txt', 'listen_port.txt'];
 const EMU_DLL_NAMES = ['steam_api.dll', 'steam_api64.dll'];
 
@@ -306,7 +317,7 @@ function detectEmulator(gameDir) {
   }
 
   const entries = listShallow(steamSettings).map((e) => e.toLowerCase());
-  result.configs = entries.filter((e) => GBE_CONFIG_FILES.has(e));
+  result.configs = entries.filter(isGbeMarker);
   if (result.configs.length > 0) {
     result.type = 'gbe';
   } else if (entries.length > 0) {

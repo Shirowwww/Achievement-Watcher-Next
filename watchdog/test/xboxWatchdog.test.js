@@ -16,7 +16,8 @@ test('normalize helpers accept decimal and hex ids', () => {
 
 test('buildSnapshot maps achievements to {id: state}', () => {
   const snapshot = xboxPc.buildSnapshot([
-    { id: 'a', progression: { state: 'Achieved', timeUnlocked: 1700000000 } },
+    // The real API answers with an ISO 8601 string here, not an epoch.
+    { id: 'a', progression: { state: 'Achieved', timeUnlocked: '2023-11-14T22:13:20.0000000Z' } },
     { id: 'b', progression: { state: 'NotStarted' }, rarity: { currentPercentage: 4.2 } },
   ]);
   assert.deepEqual(snapshot.a, { earned: true, earned_time: 1700000000 });

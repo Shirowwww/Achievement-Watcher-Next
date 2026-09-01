@@ -2604,7 +2604,7 @@ var app = {
                         }
                         ${
                           sourceIcon.img
-                            ? `<img class="source-icon" src="${sourceIcon.img}" data-kind="${escapeHtml(sourceIcon.kind)}" title="${escapeHtml(
+                            ? `<img class="source-icon" src="${escapeHtml(sourceIcon.img)}" data-kind="${escapeHtml(sourceIcon.kind)}" title="${escapeHtml(
                                 sourceIcon.label
                               )}" alt="${escapeHtml(sourceIcon.label)}" aria-label="${escapeHtml(sourceIcon.label)}">`
                             : ''
@@ -5468,6 +5468,9 @@ var app = {
             if (index >= list.length) return resolve(false);
             const img = new Image();
             img.onload = () => {
+              // The same freshness check the header artwork uses: an icon fetched for a game the
+              // user has already left must not paint over the one now on screen.
+              if (String($('#achievement .wrapper > .header').attr('data-appid')) !== String(game.appid)) return resolve(false);
               $(selector).css('background', cssUrl(list[index]));
               resolve(true);
             };

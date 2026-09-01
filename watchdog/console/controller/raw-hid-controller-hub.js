@@ -162,11 +162,12 @@ function createRawHidControllerHub(options = {}) {
         worker?.postMessage({ type: "shutdown" });
       } catch {}
       if (worker) {
+        // Hold the reference here: the outer variable is cleared below, synchronously, so reading
+        // it from the timer would always find null and the worker would never be forced down.
+        const pending = worker;
         shutdownTimer = setTimeout(() => {
-          const currentWorker = worker;
-          if (!currentWorker) return;
           try {
-            currentWorker.terminate();
+            pending.terminate();
           } catch {}
           shutdownTimer = null;
         }, 1500);

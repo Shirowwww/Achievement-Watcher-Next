@@ -93,7 +93,9 @@ function lookupSteamDbName(appid, opts = {}) {
   Steam twin stay unmerged. Exists as soon as a game has been listed once, unlike the 250k-row dump.
 */
 function lookupSchemaCacheName(userDataPath, appid) {
-  const id = String(appid ?? '').trim();
+  // The id names a file, so it is filtered the same way imageOverrideStore filters its own: a
+  // separator or a drive letter reaching path.join here would read outside the schema cache.
+  const id = String(appid ?? '').trim().replace(/[^\w.-]/g, '_');
   if (!id) return '';
   const schemaRoot = path.join(userDataPath || CACHE_BASE, 'steam_cache', 'schema');
   let langs;

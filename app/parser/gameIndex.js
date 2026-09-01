@@ -9,6 +9,7 @@
 
 const { app } = process.type === 'browser' ? require('electron') : require('@electron/remote');
 const path = require('path');
+const { pickBestClaim, isPlaceholderClaim } = require('../util/claimCollision.js');
 const fs = require('fs');
 
 function userFile() {
@@ -45,7 +46,30 @@ function loadList() {
       cachedSignature = 'missing';
       return cachedList;
     }
-    throw err;
+    // Every caller wraps this and answers empty, so a truncated file (a crash mid-write, a full
+    // disk) left playtime matching and Game Health blind for good, silently. Quarantine the bytes
+    // and start over: this index is rebuilt by the next scan.
+    quarantineCorruptIndex(file, err);
+    cachedList = [];
+    cachedSignature = fileSignature(file);
+    return cachedList;
+  }
+}
+
+// Keep the raw bytes for manual recovery rather than deleting them outright.
+function quarantineCorruptIndex(file, err) {
+  const reason = err && err.message ? err.message : String(err);
+  try {
+    const backup = `${file}.corrupt-${Date.now()}`;
+    fs.renameSync(file, backup);
+    console.warn(`[gameIndex] corrupt index ${file} (${reason}); quarantined to ${backup}, starting a fresh one`);
+  } catch (renameError) {
+    try {
+      fs.unlinkSync(file);
+    } catch {
+      /* nothing else to try - the next write replaces it */
+    }
+    console.warn(`[gameIndex] corrupt index ${file} (${reason}); could not quarantine (${renameError.message}), overwriting`);
   }
 }
 
@@ -199,23 +223,7 @@ module.exports.reconcile = (games) => {
     for (const [, entries] of groups) {
       if (entries.length < 2) continue;
       const base = String(entries[0].binary).replace(/\.exe$/i, '');
-      let best = entries[0];
-      let bestScore = -1;
-      for (const e of entries) {
-        const nm = nameByAppid.get(String(e.appid)) || e.name || '';
-        /*
-          A synthetic "local-…" row is the placeholder an earlier scan wrote for a folder it could
-          not identify. When the same install now has a real Steam AppID, the two carry the same
-          title and name similarity alone is a tie - which the placeholder used to win by being
-          first, leaving the identified game with no binary to match a running process against.
-        */
-        const placeholder = /^local-/i.test(String(e.appid || '')) || String(e.source || '').toLowerCase() === 'unconfigured';
-        const s = exeDetect.nameSimilarity(nm, base) + (placeholder ? -1 : 0);
-        if (s > bestScore) {
-          bestScore = s;
-          best = e;
-        }
-      }
+      const best = pickBestClaim(entries, base, (e) => nameByAppid.get(String(e.appid)) || e.name || '', exeDetect.nameSimilarity);
       for (const e of entries) if (e !== best) losers.add(e);
     }
     if (losers.size === 0) return 0;
@@ -243,8 +251,7 @@ module.exports.binaryClaimedByBetterMatch = (appid, name, binary) => {
       which is what left an identified game with no binary and therefore no playtime and no live
       process match (seen on ZOMBI, held by a "local-…" row of the identical name).
     */
-    const placeholderRival = /^local-/i.test(String(rival.appid || '')) || String(rival.source || '').toLowerCase() === 'unconfigured';
-    if (placeholderRival && /^\d+$/.test(String(appid))) return false;
+    if (isPlaceholderClaim(rival.appid, rival.source) && /^\d+$/.test(String(appid))) return false;
     const exeDetect = require(path.join(__dirname, 'exeDetect.js'));
     const base = String(binary).replace(/\.exe$/i, '');
     return exeDetect.nameSimilarity(rival.name || '', base) >= exeDetect.nameSimilarity(String(name || ''), base);

@@ -13,17 +13,22 @@ const steam = require(path.join(__dirname, '..', '..', 'app', 'parser', 'steam.j
   blacklist the whole library for the cache's lifetime. The rule below is what prevents that.
 */
 
-test('only a miss against a list we actually have is remembered', () => {
-  // The real negative: the app-list loaded, this appid is not in it, and no data came back.
-  assert.equal(steam.shouldRememberUnresolved({ hasResult: false, inAppList: false, appListLoaded: true }), true);
+test('only a miss Steam actually answered is remembered', () => {
+  // The real negative: Steam answered, this appid is not listed, and no data came back.
+  assert.equal(steam.shouldRememberUnresolved({ hasResult: false, inAppList: false, answered: true }), true);
 
-  // Offline / app-list unavailable: every appid misses, so a miss says nothing. Remembering here is
-  // the failure that would hide real games.
-  assert.equal(steam.shouldRememberUnresolved({ hasResult: false, inAppList: false, appListLoaded: false }), false);
+  // Offline: every appid misses, so a miss says nothing. Remembering here is the failure that would
+  // hide real games for the memo's whole lifetime.
+  assert.equal(steam.shouldRememberUnresolved({ hasResult: false, inAppList: false, answered: false }), false);
 
   // The appid is listed, or data did come back - not a miss at all.
-  assert.equal(steam.shouldRememberUnresolved({ hasResult: false, inAppList: true, appListLoaded: true }), false);
-  assert.equal(steam.shouldRememberUnresolved({ hasResult: true, inAppList: false, appListLoaded: true }), false);
+  assert.equal(steam.shouldRememberUnresolved({ hasResult: false, inAppList: true, answered: true }), false);
+  assert.equal(steam.shouldRememberUnresolved({ hasResult: true, inAppList: false, answered: true }), false);
+
+  // Valve retired GetAppList, so the old app-list signal is empty on every machine and the memo was
+  // never written again. It still counts when present, but it can no longer be the only way in.
+  assert.equal(steam.shouldRememberUnresolved({ hasResult: false, inAppList: false, appListLoaded: true }), true);
+  assert.equal(steam.shouldRememberUnresolved({ hasResult: false, inAppList: false, appListLoaded: false }), false);
 
   // Missing fields must fail closed (nothing remembered), never open.
   assert.equal(steam.shouldRememberUnresolved({}), false);

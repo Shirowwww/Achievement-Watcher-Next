@@ -25,9 +25,15 @@ function readCString(buf, off) {
 }
 
 function readStringTable(buf, offset) {
-  const count = buf.readUInt32LE(Number(offset));
+  const start = Number(offset);
+  if (!Number.isFinite(start) || start < 0 || start + 4 > buf.length) throw new Error('string table offset outside the file');
+  const count = buf.readUInt32LE(start);
+  // The count comes out of the file, so a truncated or corrupt one can announce billions of entries.
+  // Each entry is at least a terminator, so the remaining bytes are the real ceiling; allocating on
+  // the announced figure alone hung the process before any catch could run.
+  if (count > buf.length - start - 4) throw new Error(`string table announces ${count} entries, more than the file holds`);
   const table = Array.from({ length: count });
-  let off = Number(offset) + 4;
+  let off = start + 4;
   for (let i = 0; i < count; i++) {
     const read = readCString(buf, off);
     table[i] = read.value;

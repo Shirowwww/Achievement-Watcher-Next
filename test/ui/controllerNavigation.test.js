@@ -63,7 +63,10 @@ test('the main-window controller navigation covers the new Controller settings t
 });
 
 test('the overlay controller navigation focuses achievement rows and no longer resizes the window', () => {
-  const overlay = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'view', 'overlay.html'), 'utf8');
+  // The overlay's own script moved out of the page into view/overlay.js so its Content-Security-Policy
+  // could drop 'unsafe-inline'; the markup still carries the styles, so both halves are read here.
+  const viewDir = path.join(__dirname, '..', '..', 'app', 'view');
+  const overlay = fs.readFileSync(path.join(viewDir, 'overlay.html'), 'utf8') + fs.readFileSync(path.join(viewDir, 'overlay.js'), 'utf8');
   assert.match(overlay, /'\.overlay-row'/, 'achievement rows must be focusable with the controller');
   assert.match(overlay, /overlay-row\.controller-focus/, 'focused rows must get a hover-style background');
   assert.match(overlay, /createTextNode\(' \+ '\)/, 'multi-button bindings must render a visible + separator');

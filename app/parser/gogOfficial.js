@@ -7,6 +7,11 @@ const fs = require('fs');
 const path = require('path');
 const { lazyRequire } = require('../util/lazyRequire.js');
 const request = lazyRequire('request-zero');
+const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
+
+// Box art costs two sequential 15s lookups per game. Offline that is 30s each, for a library's
+// worth of games, so an unreachable api.gog.com is asked once and then left alone.
+const imagesCircuit = createNetworkCircuit({ failureLimit: 2, cooldownMs: 10 * 60 * 1000, shouldCount: isSteamTransportFailure });
 
 let cacheRoot;
 let debug = { log() {}, warn() {}, error() {} };
@@ -309,23 +314,32 @@ async function resolveGogImages(productId) {
   }
 
   const img = { header: null, background: null, portrait: null, icon: null };
-  try {
-    const v2 = await request.getJson(`https://api.gog.com/v2/games/${productId}`, { timeout: 15000 });
-    const links = v2?._links || {};
-    img.portrait = absoluteUrl(links.boxArtImage?.href);
-    img.background = absoluteUrl(links.backgroundImage?.href);
-    img.header = absoluteUrl(links.logo?.href);
-  } catch (err) {
-    debug.log(`[${productId}] GOG v2 games lookup failed => ${err.code || err}`);
+  const unreachable = imagesCircuit.unavailable();
+  if (!unreachable) {
+    try {
+      const v2 = await request.getJson(`https://api.gog.com/v2/games/${productId}`, { timeout: 15000 });
+      const links = v2?._links || {};
+      img.portrait = absoluteUrl(links.boxArtImage?.href);
+      img.background = absoluteUrl(links.backgroundImage?.href);
+      img.header = absoluteUrl(links.logo?.href);
+      imagesCircuit.recordSuccess();
+    } catch (err) {
+      debug.log(`[${productId}] GOG v2 games lookup failed => ${err.code || err}`);
+      if (imagesCircuit.recordFailure(err)) debug.log('[gog-official] api.gog.com is unreachable; not asked again this cooldown');
+    }
   }
-  try {
-    const v1 = await request.getJson(`https://api.gog.com/products/${productId}?expand=images`, { timeout: 15000 });
-    const images = v1?.images || {};
-    img.header = img.header || absoluteUrl(images.logo2x || images.logo);
-    img.background = img.background || absoluteUrl(images.background);
-    img.icon = absoluteUrl(images.sidebarIcon2x || images.sidebarIcon);
-  } catch (err) {
-    debug.log(`[${productId}] GOG products lookup failed => ${err.code || err}`);
+  if (!imagesCircuit.unavailable()) {
+    try {
+      const v1 = await request.getJson(`https://api.gog.com/products/${productId}?expand=images`, { timeout: 15000 });
+      const images = v1?.images || {};
+      img.header = img.header || absoluteUrl(images.logo2x || images.logo);
+      img.background = img.background || absoluteUrl(images.background);
+      img.icon = absoluteUrl(images.sidebarIcon2x || images.sidebarIcon);
+      imagesCircuit.recordSuccess();
+    } catch (err) {
+      debug.log(`[${productId}] GOG products lookup failed => ${err.code || err}`);
+      if (imagesCircuit.recordFailure(err)) debug.log('[gog-official] api.gog.com is unreachable; not asked again this cooldown');
+    }
   }
 
   if (Object.values(img).some(Boolean)) {

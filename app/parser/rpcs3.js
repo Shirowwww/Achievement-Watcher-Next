@@ -77,9 +77,10 @@ module.exports.getGameData = async (dir) => {
     name: schema['title-name'],
     appid: schema.npcommid,
     system: 'playstation',
+    // A PS3 trophy folder ships ICON0.PNG and nothing else; the library falls back to its own
+    // artwork chain for the background and the portrait.
     img: {
       header: 'file:///' + path.join(dir, 'ICON0.PNG').replace(/\\/g, '/'),
-      //TODO: get background/portrait images
     },
     achievement: {
       total: trophies.length,
@@ -153,7 +154,8 @@ function bufferSplit(buffer, separators) {
 
   while (pos++ < buffer.length) {
     const search = indexOfAny(buffer, separators, pos);
-    pos = search.pos > 0 ? search.pos : buffer.length;
+    // -1 is "not found"; 0 is a real match at the very start of the range.
+    pos = search.pos > -1 ? search.pos : buffer.length;
     const chunck = buffer.slice(prev, pos);
     prev = pos + search.offset;
     result.push(chunck);

@@ -300,7 +300,9 @@ function mergeAchievementMaps(maps) {
         !!value.Unlocked ||
         !!value.unlocked ||
         !!value.earned ||
-        value === '1';
+        // A producer that writes a bare "1" instead of an object: `value` is coerced above, so the
+        // raw entry is what has to be compared.
+        entry === '1';
       const entryTime = value.UnlockTime || value.unlocktime || value.unlock_time || value.earned_time || value.HaveAchievedTime || value.Time || 0;
       if (!prev) {
         merged.set(norm, { ...value, Achieved: entryUnlocked ? 1 : 0, UnlockTime: entryTime });

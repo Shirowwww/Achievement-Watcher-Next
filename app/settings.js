@@ -656,11 +656,38 @@ module.exports.load = () => {
   return options;
 };
 
-module.exports.save = (config) => {
+/*
+  Keys under [general] that only the main process ever writes: which update was skipped, and until
+  when one was postponed. The renderer holds its own copy of the settings for the whole session and
+  saves it whole, so without this a later save of any unrelated setting wrote back the stale values
+  it had loaded and silently undid "skip this version". The main process passes
+  { keepMainOwnedKeys: false } when it is the one changing them.
+*/
+const MAIN_OWNED_GENERAL_KEYS = ['skippedVersion', 'updatePostponedVersion', 'updatePostponedUntil'];
+
+function carryMainOwnedKeys(options) {
+  let onDisk;
+  try {
+    onDisk = ini.parse(fs.readFileSync(filename, 'utf8'));
+  } catch {
+    return; // no file yet, or unreadable: there is nothing to preserve
+  }
+  const stored = (onDisk && onDisk.general) || {};
+  if (!options.general) options.general = {};
+  for (const key of MAIN_OWNED_GENERAL_KEYS) {
+    if (Object.prototype.hasOwnProperty.call(stored, key)) options.general[key] = stored[key];
+    else delete options.general[key];
+  }
+}
+
+module.exports.MAIN_OWNED_GENERAL_KEYS = MAIN_OWNED_GENERAL_KEYS;
+
+module.exports.save = (config, { keepMainOwnedKeys = true } = {}) => {
   return new Promise((resolve, reject) => {
     let options;
     try {
       options = JSON.parse(JSON.stringify(config)); // deep copy: mutations below must not touch the caller's object.
+      if (keepMainOwnedKeys) carryMainOwnedKeys(options);
 
       // Encrypt the emulator Steam-login password before it touches disk (kept plaintext in memory).
       if (options.emulator && typeof options.emulator.loginPassword === 'string' && options.emulator.loginPassword.length > 0) {

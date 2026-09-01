@@ -19,14 +19,24 @@ test('Timer reports the elapsed session in whole seconds', () => {
   assert.equal(timer.played, 0, 'a running session has no recorded time yet');
 
   // Move the start back instead of waiting: the arithmetic is what matters, not real elapsed time.
-  timer.start = new Date(timer.start.getTime() - 125_400); // 125.4s
+  timer.startedAt -= 125_400_000_000n; // 125.4s
   timer.stop();
   assert.equal(timer.played, 125, 'truncated to whole seconds, never rounded up');
 
   const short = new Timer();
-  short.start = new Date(short.start.getTime() - 900);
+  short.startedAt -= 900_000_000n;
   short.stop();
   assert.equal(short.played, 0, 'a sub-second session is 0s, not a negative or a NaN');
+});
+
+// The registry counter is an unsigned DWORD, so a negative duration wraps it to a nonsense total.
+// A session is therefore measured on the monotonic clock, which an NTP correction cannot move.
+test('a clock change during a session cannot produce a negative duration', () => {
+  const timer = new Timer();
+  timer.start = new Date(timer.start.getTime() + 3_600_000); // the wall clock jumped an hour forward
+  timer.stop();
+  assert.ok(timer.played >= 0, 'the wall clock is not what measures a session');
+  assert.ok(timer.played < 5, 'and the real elapsed time is what is recorded');
 });
 
 test('a finished session is added to the registry total, and stamps `last`', { skip: windowsOnly }, async (t) => {

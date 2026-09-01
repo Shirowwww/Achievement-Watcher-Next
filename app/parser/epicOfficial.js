@@ -5,6 +5,11 @@
 
 const fs = require('fs');
 const path = require('path');
+const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
+
+// Every Epic call goes through epicFetchJson, so one breaker there covers the whole source: offline,
+// a 15s timeout per schema and per player refresh otherwise repeats for every owned game.
+const circuit = createNetworkCircuit({ failureLimit: 3, cooldownMs: 10 * 60 * 1000 });
 
 let cacheRoot;
 let debug = { log() {}, warn() {}, error() {} };
@@ -88,6 +93,8 @@ function buildEpicLocalInstallIndex(manifestsDir = EPIC_MANIFESTS_DIR) {
   token itself; everywhere else (the monitor, a test) the request goes out directly.
 */
 async function epicFetchJson(url, { method = 'GET', headers = {}, body, timeoutMs = 15000, authenticated = false } = {}) {
+  // 599 is what the paths below report for "could not ask", which is exactly what must open this.
+  if (circuit.unavailable()) return { status: 599, data: {} };
   const { ipcAvailable, ipcInvoke } = require('../util/ipcInvoke.js');
   if (ipcAvailable()) {
     let payload = null;
@@ -97,8 +104,14 @@ async function epicFetchJson(url, { method = 'GET', headers = {}, body, timeoutM
       payload = null;
     }
     const answer = await ipcInvoke('epic:fetch-json', { url, method, body: payload, authenticated });
-    if (!answer) return { status: 599, data: {} };
-    return { status: answer.ok ? Number(answer.status) || 200 : Number(answer.status) || 599, data: answer.json || {} };
+    if (!answer) {
+      recordEpicUnreachable('no answer from the main process');
+      return { status: 599, data: {} };
+    }
+    const status = answer.ok ? Number(answer.status) || 200 : Number(answer.status) || 599;
+    if (status === 599) recordEpicUnreachable(answer.error || 'request failed');
+    else circuit.recordSuccess();
+    return { status, data: answer.json || {} };
   }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -111,9 +124,21 @@ async function epicFetchJson(url, { method = 'GET', headers = {}, body, timeoutM
       signal: controller.signal,
     });
     const data = await res.json().catch(() => ({}));
+    circuit.recordSuccess();
     return { status: res.status, data };
+  } catch (err) {
+    recordEpicUnreachable(err);
+    throw err;
   } finally {
     clearTimeout(timer);
+  }
+}
+
+function recordEpicUnreachable(reason) {
+  const err = reason instanceof Error ? reason : new Error(String(reason || 'unreachable'));
+  // Only a transport failure counts; an HTTP error is an answer and must not silence the source.
+  if (isSteamTransportFailure(err) || !(reason instanceof Error)) {
+    if (circuit.recordFailure(err)) debug.log('[epic-official] Epic is unreachable; not asked again this cooldown');
   }
 }
 
@@ -351,6 +376,8 @@ async function fetchOwnedTitle(namespace, catalogItemId) {
   return String(item.title || '').trim();
 }
 
+const OWNED_LOOKUP_CONCURRENCY = 4;
+
 async function refreshOwnedLibrary() {
   const assets = await epicGet(EPIC_LAUNCHER_ASSETS_URL);
   const byNamespace = new Map();
@@ -361,15 +388,21 @@ async function refreshOwnedLibrary() {
     if (!byNamespace.has(namespace)) byNamespace.set(namespace, { namespace, catalogItemId, appName: String(asset?.appName || '') });
   }
 
+  // One catalog request per owned namespace: a large library is hundreds of them, and awaiting each
+  // in turn made this refresh as long as the sum of its round trips.
+  const pending = [...byNamespace.values()];
   const games = [];
-  for (const entry of byNamespace.values()) {
-    try {
-      const title = await fetchOwnedTitle(entry.namespace, entry.catalogItemId);
-      if (title) games.push({ ...entry, title });
-    } catch (err) {
-      debug.log(`[epic ${entry.namespace}] catalog lookup failed => ${err}`);
+  const worker = async () => {
+    for (let entry = pending.shift(); entry; entry = pending.shift()) {
+      try {
+        const title = await fetchOwnedTitle(entry.namespace, entry.catalogItemId);
+        if (title) games.push({ ...entry, title });
+      } catch (err) {
+        debug.log(`[epic ${entry.namespace}] catalog lookup failed => ${err}`);
+      }
     }
-  }
+  };
+  await Promise.all(Array.from({ length: Math.min(OWNED_LOOKUP_CONCURRENCY, pending.length) }, worker));
 
   const payload = { fetchedAt: Date.now(), games };
   try {

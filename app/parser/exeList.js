@@ -2,6 +2,7 @@
 
 const { app } = process.type === 'browser' ? require('electron') : require('@electron/remote');
 const path = require('path');
+const { pickBestClaim } = require('../util/claimCollision.js');
 const fs = require('fs');
 
 let debug = { log() {}, error() {}, warn() {} };
@@ -140,16 +141,9 @@ module.exports.reconcile = async (games) => {
     for (const [, entries] of groups) {
       if (entries.length < 2) continue;
       const base = path.basename(entries[0].exe).replace(/\.exe$/i, '');
-      let best = entries[0];
-      let bestScore = -1;
-      for (const e of entries) {
-        const g = byAppid.get(String(e.appid));
-        const score = g ? exeDetect.nameSimilarity(g.name, base) : 0;
-        if (score > bestScore) {
-          bestScore = score;
-          best = e;
-        }
-      }
+      // Same rule as gameIndex.reconcile, including the penalty that stops an unidentified
+      // "local-..." placeholder from winning a tie against the game that now has a real AppID.
+      const best = pickBestClaim(entries, base, (e) => (byAppid.get(String(e.appid)) || {}).name || '', exeDetect.nameSimilarity);
       for (const e of entries) {
         if (e !== best) {
           e.exe = '';

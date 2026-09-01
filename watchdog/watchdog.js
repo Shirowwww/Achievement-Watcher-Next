@@ -7,9 +7,22 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+/*
+  A rejection nobody handled means a subsystem gave up mid-flight, and the process kept running with
+  it dead: the heartbeat still beat, so the supervisor saw a healthy monitor tracking nothing. The
+  parent restarts this process on exit, so exiting is what actually recovers - but only past the
+  first few, since one lost promise during startup is not worth dropping every watcher for.
+*/
+let unhandledRejections = 0;
+const UNHANDLED_REJECTION_LIMIT = 3;
+
+process.on('unhandledRejection', (reason) => {
+  unhandledRejections += 1;
   console.error('Unhandled promise rejection:', reason);
-  debug?.error?.(`Unhandled promise rejection: ${reason}`);
+  debug?.error?.(`Unhandled promise rejection (${unhandledRejections}/${UNHANDLED_REJECTION_LIMIT}): ${reason && reason.stack ? reason.stack : reason}`);
+  if (unhandledRejections < UNHANDLED_REJECTION_LIMIT) return;
+  debug?.error?.('Too many unhandled rejections - exiting so the app can start a healthy monitor');
+  process.exit(1);
 });
 
 // Terminate the controller HID worker thread cleanly when the monitor is asked to stop.
@@ -49,6 +62,7 @@ const steam = require('./steam.js');
 const track = require('./track.js');
 const { mapStatProgressEntries } = require('./util/statProgress.js');
 const { notificationVolumePercent } = require('./util/notificationVolume.js');
+const { safeEnv } = require('./util/safeEnv.js');
 const playtimeMonitor = require('./playtime/monitor.js');
 const { describeActiveGames } = require('./playtime/seed.js');
 const xboxPc = require('./xboxPc.js');
@@ -144,6 +158,10 @@ const { runXboxPoll, matchesActiveXboxPoll } = require('./util/xboxPolling.js');
 
 // Trailing-edge window used to fold a burst of options.ini writes into one watchdog restart.
 const OPTIONS_RELOAD_DEBOUNCE_MS = 1500;
+
+// How often a save root that did not exist at startup is re-checked, so a game that creates its
+// folder on first run is monitored without waiting for a restart.
+const NEW_ROOT_POLL_MS = 60 * 1000;
 
 const cfg_file = {
   option: path.join(userDataDir(), 'cfg', 'options.ini'),
@@ -739,16 +757,24 @@ var app = {
       }
 
       let i = 1;
+      const missingRoots = [];
       for (let folder of await monitor.getFolders(cfg_file.userDir)) {
         try {
           if (fs.existsSync(folder.dir)) {
             self.watch(i, folder.dir, folder.options);
             i = i + 1;
+          } else {
+            missingRoots.push(folder);
           }
         } catch (err) {
           debug.log(err);
         }
       }
+      // A save root is created by the game itself, on its first run. Watching only what exists at
+      // startup meant the very first unlock of a newly installed game was never seen - the folder
+      // was armed on the next settings save or restart, and not before.
+      self.nextWatchIndex = i;
+      self.watchForNewRoots(missingRoots);
 
       // ShadPS4 (PS4 emulator) live trophy toasts, isolated from the Steam watch path above.
       // toastID is read live since it resolves asynchronously after start().
@@ -820,6 +846,10 @@ var app = {
   // Close every watcher this pass opened. node-watch tolerates closing an already-closed watcher,
   // and holes cannot occur (self.watch assigns before the caller advances its index).
   closeWatchers: function () {
+    if (this.newRootTimer) {
+      clearInterval(this.newRootTimer);
+      this.newRootTimer = null;
+    }
     for (const watcher of this.watcher) {
       try {
         if (watcher) watcher.close();
@@ -827,6 +857,46 @@ var app = {
         debug.error(`[watch] close failed: ${err && err.message ? err.message : err}`);
       }
     }
+  },
+  /*
+    Re-check the save roots that did not exist yet, and arm each one as it appears. A poll rather
+    than a watch on the parent: these roots sit directly under %APPDATA% / Documents / a drive root,
+    all of them busy folders, and this costs one existsSync per missing root per minute.
+  */
+  watchForNewRoots: function (missing) {
+    let self = this;
+    if (self.newRootTimer) {
+      clearInterval(self.newRootTimer);
+      self.newRootTimer = null;
+    }
+    let pending = Array.isArray(missing) ? [...missing] : [];
+    if (pending.length === 0) return;
+
+    debug.log(`${pending.length} save root(s) do not exist yet - watching for them to appear`);
+    self.newRootTimer = setInterval(() => {
+      const stillMissing = [];
+      for (const folder of pending) {
+        try {
+          if (!fs.existsSync(folder.dir)) {
+            stillMissing.push(folder);
+            continue;
+          }
+          self.watch(self.nextWatchIndex, folder.dir, folder.options);
+          self.nextWatchIndex += 1;
+          debug.log(`New save root appeared, now monitored: "${folder.dir}"`);
+        } catch (err) {
+          debug.log(err);
+          stillMissing.push(folder);
+        }
+      }
+      pending = stillMissing;
+      if (pending.length === 0) {
+        clearInterval(self.newRootTimer);
+        self.newRootTimer = null;
+      }
+    }, NEW_ROOT_POLL_MS);
+    // Never a reason to keep the process alive on its own.
+    if (typeof self.newRootTimer.unref === 'function') self.newRootTimer.unref();
   },
   watch: function (i, dir, options) {
     let self = this;
@@ -965,7 +1035,7 @@ var app = {
             // Global unlock % per achievement, used to flag a toast as "rare" (<10% of players).
             // Fetched at most once per game per session and shares the renderer's sidecar cache.
             if (!game.__rarityMap) {
-              game.__rarityMap = await rarity.getRarityMap(appID).catch(() => new Map());
+              game.__rarityMap = await rarity.getRarityMap(appID, { source: game.source }).catch(() => new Map());
             }
             const rarityMap = game.__rarityMap;
 
@@ -1050,8 +1120,7 @@ var app = {
                                 stdio: 'ignore',
                                 detached: true,
                                 windowsHide: self.options.action.hide ?? true,
-                                env: {
-                                  ...process.env,
+                                env: safeEnv({
                                   AW_APPID: appID.toString(),
                                   AW_GAME: game.name.toString(),
                                   AW_ACHIEVEMENT: ach.name.toString(),
@@ -1059,7 +1128,7 @@ var app = {
                                   AW_DESCRIPTION: ach.description?.toString() || '',
                                   AW_ICON: ach.icon?.toString() || '',
                                   AW_TIME: achievements[i].UnlockTime.toString(),
-                                },
+                                }),
                               },
                               (err) =>
                                 debug.error(

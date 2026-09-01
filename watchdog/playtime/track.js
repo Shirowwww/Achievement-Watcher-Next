@@ -12,7 +12,10 @@ module.exports = async (appID, time) => {
   // migratePlaytimeRegistry() in app/util/migrateUserData.js.
   const key = 'Software/Achievement Watcher Next/Playtime/Steam/' + appID;
 
-  const current = +regedit.regQueryIntegerValue('HKCU', key, 'total') || 0;
-  regedit.regWriteDwordValue('HKCU', key, 'total', current + time);
+  // The counter is an unsigned DWORD: a negative or absurd duration would not raise an error, it
+  // would wrap the stored total, so the addition is clamped rather than trusted.
+  const current = Math.max(0, +regedit.regQueryIntegerValue('HKCU', key, 'total') || 0);
+  const played = Number.isFinite(Number(time)) ? Math.max(0, Math.floor(Number(time))) : 0;
+  regedit.regWriteDwordValue('HKCU', key, 'total', Math.min(current + played, 0xffffffff));
   regedit.regWriteDwordValue('HKCU', key, 'last', Math.floor(Date.now() / 1000));
 };

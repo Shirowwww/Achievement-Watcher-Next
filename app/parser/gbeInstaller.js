@@ -11,6 +11,8 @@ const { spawn } = require('child_process');
 const { lazyRequire } = require('../util/lazyRequire.js');
 const request = lazyRequire('request-zero');
 const pe = require('../util/pe.js');
+const { resolveUnpackedBinary } = require('../util/unpacked.js');
+const { safeArchiveEntry, firstUnsafeEntry } = require('../util/archiveEntry.js');
 
 const RELEASE_API = 'https://api.github.com/repos/Detanup01/gbe_fork/releases/latest';
 const RELEASES_PAGE = 'https://github.com/Detanup01/gbe_fork/releases';
@@ -47,11 +49,6 @@ const CUSTOM_MANIFEST = 'import.json';
 const EMULATOR_MARKER = Buffer.from('steam_settings', 'ascii');
 const MAX_IMPORT_ENTRIES = 4096;
 
-function resolveUnpackedBinary(binPath) {
-  const normalized = String(binPath || '');
-  const unpacked = normalized.replace(/app\.asar([\\/])/, 'app.asar.unpacked$1');
-  return fs.existsSync(unpacked) ? unpacked : normalized;
-}
 
 function readText(file) {
   try {
@@ -159,13 +156,6 @@ function describeCache(cacheDir) {
   const release = cachedDlls(cacheDir, tag);
   const custom = customDlls(cacheDir);
   return { tag: release ? tag : '', custom: custom.names, invalid: custom.invalid };
-}
-
-function safeArchiveEntry(entry) {
-  const file = String((entry && entry.file) || '');
-  if (!file) return false;
-  if (path.isAbsolute(file) || /^[a-z]:/i.test(file)) return false;
-  return !file.split(/[\\/]+/).includes('..');
 }
 
 // Only the two steam_api names are pulled out of a selected archive. Whatever else it carries never

@@ -8,6 +8,11 @@ const path = require('path');
 const zlib = require('zlib');
 const { officialAppId } = require('../util/platformId.js');
 const uplayCatalogue = require('./uplayCatalogue.js');
+const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
+
+// The self-heal loop awaits one 30s download per broken game. Offline that is 30s each, in a row,
+// so an unreachable CDN is proved once and the rest of the pass skips it.
+const cdnCircuit = createNetworkCircuit({ failureLimit: 2, cooldownMs: 10 * 60 * 1000, shouldCount: isSteamTransportFailure });
 
 let cacheRoot;
 let debug = { log() {}, warn() {}, error() {} };
@@ -566,6 +571,7 @@ async function ensureAchievementsArchive(uplayId, options = {}) {
 
   const target = path.join(root, `${id}_${spec}`);
   if (fs.existsSync(target)) return target;
+  if (cdnCircuit.unavailable()) return '';
 
   // Downloaded to a scratch name first: the file is only this game's archive once it hashes to the
   // md5 that was asked for, and a half-written or wrong payload must never be left where the
@@ -584,6 +590,7 @@ async function ensureAchievementsArchive(uplayId, options = {}) {
     if (digest !== spec) throw new Error(`hashes to ${digest}, expected ${spec}`);
 
     fs.renameSync(pending, target);
+    cdnCircuit.recordSuccess();
     debug.log(`[ubisoft] ${id}: fetched its achievement archive from Ubisoft (${size} bytes)`);
     return target;
   } catch (err) {
@@ -593,6 +600,7 @@ async function ensureAchievementsArchive(uplayId, options = {}) {
       /* nothing to clean up */
     }
     debug.log(`[ubisoft] ${id}: achievement archive download failed => ${err && (err.code || err.message) ? err.code || err.message : err}`);
+    if (cdnCircuit.recordFailure(err)) debug.log('[ubisoft] the achievement CDN is unreachable; not asked again this cooldown');
     return '';
   }
 }

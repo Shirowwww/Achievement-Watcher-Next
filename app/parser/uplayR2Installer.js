@@ -13,6 +13,8 @@ const path = require('path');
 const pe = require('../util/pe.js');
 const uplayR2 = require('./uplayR2.js');
 const { readRegistryString, listRegistryAllSubkeys } = require('../util/reg.js');
+const { resolveUnpackedBinary } = require('../util/unpacked.js');
+const { safeArchiveEntry } = require('../util/archiveEntry.js');
 
 const noopLog = { log() {}, error() {} };
 const PACKAGE_MANIFEST = 'package-import.json';
@@ -84,11 +86,6 @@ function loaderNamesFor(flavour) {
   return Object.keys(LOADER).filter((name) => LOADER[name].flavour === id);
 }
 
-function resolveUnpackedBinary(binPath) {
-  const unpacked = String(binPath).replace(`${path.sep}app.asar${path.sep}`, `${path.sep}app.asar.unpacked${path.sep}`);
-  if (fs.existsSync(unpacked)) return unpacked;
-  return binPath;
-}
 
 function loaderName(file) {
   const name = path.basename(String(file || '')).toLowerCase();
@@ -185,17 +182,6 @@ function findPackageDlls(root) {
     accepted[name] = valid[0];
   }
   return { accepted, rejected };
-}
-
-function safeArchiveEntry(entry) {
-  const name = String((entry && entry.file) || '').replace(/\\/g, '/');
-  if (!name || name.includes('\0') || name.includes(':') || name.startsWith('/') || name.startsWith('//')) return false;
-  const segments = name.split('/');
-  if (segments.some((segment) => segment === '..')) return false;
-  // Do not materialize links from a recovery archive. The bundled package contains ordinary files;
-  // a link is unnecessary here and could point the scanner outside its temporary extraction root.
-  if (/l/i.test(String((entry && entry.attributes) || ''))) return false;
-  return true;
 }
 
 async function listArchive(archivePath, sevenBin) {

@@ -63,6 +63,56 @@ function rotateIfTooBig(file, maxBytes) {
 // whole file (plus its .1) each time and wrote a session banner per module.
 const streams = new Map();
 
+/*
+  Rotation used to happen only when a stream was opened, which is once per file per process. This
+  process runs for days, so a chatty log grew unbounded until the next restart. The size is tracked
+  as it is written and the file rolled the moment it crosses the cap, which costs no extra stat.
+
+  Windows refuses to rename a file that still has an open handle, so the old stream has to finish
+  closing before the rename; whatever is logged during that gap is held and replayed afterwards.
+*/
+function rollWhenFull(entry) {
+  if (entry.rolling || entry.written < entry.maxBytes) return;
+  entry.rolling = true;
+  entry.pending = [];
+  const previous = entry.stream;
+
+  previous.end(() => {
+    try {
+      rotateIfTooBig(entry.file, 0);
+      entry.stream = fs.createWriteStream(entry.file, { flags: 'a', encoding: 'utf8' });
+      entry.stream.on('error', (error) => console.warn(error));
+      entry.written = 0;
+    } catch {
+      // Could not roll (a lock, a removed folder): reopen the same file and keep appending rather
+      // than lose every line from here on.
+      try {
+        entry.stream = fs.createWriteStream(entry.file, { flags: 'a', encoding: 'utf8' });
+        entry.stream.on('error', (error) => console.warn(error));
+      } catch {
+        /* nothing else to try */
+      }
+      entry.written = 0;
+    }
+    const held = entry.pending;
+    entry.pending = null;
+    entry.rolling = false;
+    // Replayed through the ordinary path: a burst held during the roll can be worth more than one
+    // whole file, and must roll again rather than land in the new one all at once.
+    for (const line of held) writeLine(entry, line);
+  });
+}
+
+function writeLine(entry, line) {
+  if (entry.rolling) {
+    entry.pending.push(line);
+    return;
+  }
+  entry.stream.write(line);
+  entry.written += Buffer.byteLength(line);
+  rollWhenFull(entry);
+}
+
 function openLogStream(file, maxBytes) {
   const key = path.resolve(file);
   const existing = streams.get(key);
@@ -77,8 +127,15 @@ function openLogStream(file, maxBytes) {
   stream.on('error', (error) => console.warn(error));
   // One marker per process, so a reader can tell where a launch (or a second instance) begins.
   stream.write(`\n===== session ${new Date().toISOString()} pid=${process.pid} =====\n`);
-  streams.set(key, stream);
-  return stream;
+  let started = 0;
+  try {
+    started = fs.statSync(file).size;
+  } catch {
+    /* just created - the banner is all it holds */
+  }
+  const entry = { file, stream, maxBytes, written: started };
+  streams.set(key, entry);
+  return entry;
 }
 
 // A test run must never write into the user's real logs: every logger resolves its path from the
@@ -98,7 +155,7 @@ class Logger {
     // directory. It is the deliberate exception to the rule above, which exists to keep production
     // modules - whose paths resolve to the live userData directory - from writing during a run.
     if (options.file && (options.allowDuringTests || !logFilesDisabled())) {
-      this.stream = openLogStream(options.file, Number(options.maxBytes) > 0 ? Number(options.maxBytes) : MAX_BYTES);
+      this.sink = openLogStream(options.file, Number(options.maxBytes) > 0 ? Number(options.maxBytes) : MAX_BYTES);
     }
   }
 
@@ -107,7 +164,12 @@ class Logger {
     const output = event instanceof Error ? event.stack || event.message : typeof event === 'object' ? util.inspect(event, { depth: null }) : String(event);
     const timestamp = new Date().toISOString();
     if (this.consoleEnabled) console[normalizedLevel === 'info' ? 'log' : normalizedLevel](`[${timestamp}] ${output}`);
-    if (this.stream) this.stream.write(`[${timestamp} ${normalizedLevel.toUpperCase()}] ${output}\n`);
+    if (this.sink) writeLine(this.sink, `[${timestamp} ${normalizedLevel.toUpperCase()}] ${output}\n`);
+  }
+
+  // The write stream is replaced when the file rolls, so callers read it through here.
+  get stream() {
+    return this.sink ? this.sink.stream : undefined;
   }
 
   info(event) { this.log(event, 'info'); }

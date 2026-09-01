@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const aes = require('./util/aes.js');
+const { parseUnlockTimeSeconds } = require('./util/unlockTime.js');
 
 const CLIENT_ID = String(process.env.XBOX_PC_CLIENT_ID || '').trim() || '388ea51c-0b25-4029-aae2-17df49d23905';
 const OAUTH_SCOPE = 'Xboxlive.signin Xboxlive.offline_access';
@@ -43,10 +44,28 @@ function loadAuth() {
   }
 }
 
+/*
+  Temp sibling then rename, like the playtime baseline. A torn state.json parses as {}, which reads
+  as "this game has no unlocks yet" - and every achievement already earned is then announced again.
+*/
+function writeAtomic(file, contents) {
+  const temporary = `${file}.${process.pid}.tmp`;
+  try {
+    fs.writeFileSync(temporary, contents, 'utf8');
+    fs.renameSync(temporary, file);
+  } finally {
+    try {
+      if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
+    } catch {
+      /* the rename already consumed it */
+    }
+  }
+}
+
 function saveAuth(auth) {
   try {
     fs.mkdirSync(path.dirname(authFile()), { recursive: true });
-    fs.writeFileSync(authFile(), aes.encrypt(JSON.stringify(auth)), 'utf8');
+    writeAtomic(authFile(), aes.encrypt(JSON.stringify(auth)));
   } catch (err) {
     // Best effort, as above in app/parser/xboxPc.js: a refreshed session that cannot be written is
     // still usable for this run, and saying so is the only way the repeated re-login makes sense.
@@ -172,7 +191,7 @@ function normalizeAchievement(raw = {}) {
   if (!id) return null;
   const progressState = raw?.progressState || raw?.progression?.state || '';
   const earned = /achieved/i.test(String(progressState));
-  const earnedTime = Number(raw?.progression?.timeUnlocked || raw?.unlockTime || raw?.timeUnlocked || 0);
+  const earnedTime = parseUnlockTimeSeconds(raw?.progression?.timeUnlocked || raw?.unlockTime || raw?.timeUnlocked);
   const progressRaw = raw?.progression?.current ?? raw?.progress;
   const progressMaxRaw = raw?.progression?.target ?? raw?.maxProgress;
   const progressCurrent = progressRaw !== undefined && progressRaw !== null ? Number(progressRaw) : NaN;
@@ -228,7 +247,7 @@ function readState(titleId) {
 function writeState(titleId, snapshot) {
   try {
     fs.mkdirSync(titleCacheDir(titleId), { recursive: true });
-    fs.writeFileSync(stateFile(titleId), JSON.stringify(snapshot, null, 2), 'utf8');
+    writeAtomic(stateFile(titleId), JSON.stringify(snapshot, null, 2));
   } catch {}
 }
 

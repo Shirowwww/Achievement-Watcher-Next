@@ -2,6 +2,7 @@
 
 const { execFile } = require('child_process');
 const { resolvePowerShell } = require('./powershell.js');
+const { safeEnv } = require('./safeEnv.js');
 
 function play(filePath, { delayMs = 0, volume = 0.5 } = {}) {
   return new Promise((resolve, reject) => {
@@ -24,11 +25,10 @@ function play(filePath, { delayMs = 0, volume = 0.5 } = {}) {
         ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script],
         {
           windowsHide: true,
-          env: {
-            ...process.env,
+          env: safeEnv({
             AW_SOUND_FILE: filePath,
             AW_SOUND_VOLUME: String(volume),
-          },
+          }),
         },
         (err) => {
           if (err) reject(err);

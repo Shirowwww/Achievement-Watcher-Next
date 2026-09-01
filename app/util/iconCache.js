@@ -59,6 +59,9 @@ function scanIconFolders(root) {
     } catch {
       continue;
     }
+    // Windows commonly disables last-access-time updates (NtfsDisableLastAccessUpdate), and then
+    // atime tracks mtime: the eviction order degrades to "oldest write", which is still a sane
+    // ordering for an artwork cache but is not the LRU the name promises.
     out.push({ dir, size: folderSize(dir), atimeMs: st.atimeMs || st.mtimeMs || 0 });
   }
   return out;

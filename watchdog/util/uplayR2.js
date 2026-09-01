@@ -9,6 +9,7 @@
 const fs = require('fs');
 const path = require('path');
 const { userDataDir } = require('./userData.js');
+const { createIndexedGameLookup } = require('./indexedGameLookup.js');
 
 function gameIndexFiles() {
   const root = userDataDir();
@@ -69,16 +70,23 @@ function steamAppIdForUplayId(uplayId, { files = gameIndexFiles() } = {}) {
 function isUplayR2SteamAppId(appid, { files = gameIndexFiles() } = {}) {
   const key = String(appid || '');
   if (!key) return false;
-  for (const file of files) {
-    try {
-      const list = JSON.parse(fs.readFileSync(file, 'utf8'));
-      if (!Array.isArray(list)) continue;
-      if (list.some((game) => game && String(game.appid || '') === key && String(game.uplayId || ''))) return true;
-    } catch {
-      /* game index files are optional */
-    }
+  // Called on EVERY unlock of EVERY platform (the caller's `||` evaluates it whenever the uplayR2
+  // flag is off), so it reads through the same mtime-stamped cache the other index readers use
+  // rather than re-parsing the whole library index each time.
+  const found = uplayIndex(files)(key);
+  return !!(found && String(found.uplayId || ''));
+}
+
+// One cache per file list, so a caller passing its own files (tests) never shares the default one.
+const uplayIndexes = new Map();
+function uplayIndex(files) {
+  const cacheKey = files.join('|');
+  let lookup = uplayIndexes.get(cacheKey);
+  if (!lookup) {
+    lookup = createIndexedGameLookup({ getFiles: () => files });
+    uplayIndexes.set(cacheKey, lookup);
   }
-  return false;
+  return lookup;
 }
 
 /*

@@ -39,8 +39,14 @@ function expandKnownSteamSourceRoots(root) {
   return roots;
 }
 
+// A redirected or unreadable Documents folder means "we do not know where it is", never a failed
+// scan: this feeds the save-root list every emulator source walks.
 function documentsPath() {
-  return readRegistryStringAndExpand('HKCU', 'Software/Microsoft/Windows/CurrentVersion/Explorer/User Shell Folders', 'Personal');
+  try {
+    return readRegistryStringAndExpand('HKCU', 'Software/Microsoft/Windows/CurrentVersion/Explorer/User Shell Folders', 'Personal');
+  } catch {
+    return null;
+  }
 }
 
 function defaultSteamEmuSaveRoots({ existingOnly = false, expandProgramDataSteam = false } = {}) {

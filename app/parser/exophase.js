@@ -18,6 +18,8 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   });
 };
 
+const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
+
 const BASE_EXOPHASE_URL = 'https://www.exophase.com/game/';
 const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121 Safari/537.36';
 const STATIC_TIMEOUT_MS = 15000;
@@ -30,6 +32,14 @@ const EXOPHASE_PLATFORM_MAP = {
   rpcs3: 'ps3',
   shadps4: 'ps4',
 };
+
+/*
+  Offline, this source is the single most expensive thing a scan can do per game: a 15s static
+  request, then a real browser launch and a 30s navigation, once for every title. A host that has
+  just proved unreachable is not asked again for the rest of the cooldown. A Cloudflare block is
+  deliberately NOT counted - that is an answer, and the browser fallback exists to handle it.
+*/
+const circuit = createNetworkCircuit({ failureLimit: 2, cooldownMs: 10 * 60 * 1000, shouldCount: isSteamTransportFailure });
 
 const TROPHY_PLATFORMS = new Set(['ps3', 'ps4', 'ps5']);
 const EXOPHASE_RARITY_SOURCE = 'exophase';
@@ -403,6 +413,7 @@ async function downloadExophaseIcon(iconUrl, outPath) {
 async function fetchExophaseAchievementsMultiLang(options = {}) {
   const platform = mapExophasePlatform(options.platform || '');
   if (!platform) throw new Error('Missing platform for Exophase');
+  if (circuit.unavailable()) throw new Error('Exophase is unreachable; not retried for the rest of the cooldown');
 
   const slugCandidates =
     Array.isArray(options.slugCandidates) && options.slugCandidates.length
@@ -429,6 +440,11 @@ async function fetchExophaseAchievementsMultiLang(options = {}) {
         debug.log(`exophase: static fetch blocked (${status}) - switching to stealth browser`);
       } catch (err) {
         debug.log(`exophase: static fetch failed (${err.code || err.message || err}) - switching to stealth browser`);
+        // Only an unreachable host counts: a block is an answer, and the browser is the reply to it.
+        if (circuit.recordFailure(err)) {
+          debug.log(`exophase: host unreachable, skipping it for ${Math.round(circuit.cooldownMs / 60000)} min`);
+          throw err;
+        }
       }
       useBrowser = true;
     }
@@ -507,6 +523,7 @@ async function fetchExophaseAchievementsMultiLang(options = {}) {
       }
     }
 
+    circuit.recordSuccess();
     return {
       baseUrl,
       gameTitle,

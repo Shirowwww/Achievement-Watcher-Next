@@ -129,10 +129,12 @@ function enumerateValuesCompat(hive, key) {
     const result = queryRegExe(hive, key);
     return result ? result.values : [];
   }
-  const { enumerateValues } = registryJs;
+  // registry-js pairs every throwing export with a "Safe" one because the native call can throw on
+  // a denied ACL or a malformed key. A discovery source must degrade to "nothing here", not die.
+  const { enumerateValuesSafe } = registryJs;
   const hiveEnum = hkeyFromString(hive);
   if (!hiveEnum) throw new Error(`Unsupported hive: ${hive}`);
-  return enumerateValues(hiveEnum, key.replace(/\//g, '\\'));
+  return enumerateValuesSafe(hiveEnum, key.replace(/\//g, '\\'));
 }
 
 function enumerateKeysCompat(hive, key) {
@@ -140,10 +142,10 @@ function enumerateKeysCompat(hive, key) {
     const result = queryRegExe(hive, key);
     return result ? result.subkeys : [];
   }
-  const { enumerateKeys } = registryJs;
+  const { enumerateKeysSafe } = registryJs;
   const hiveEnum = hkeyFromString(hive);
   if (!hiveEnum) throw new Error(`Unsupported hive: ${hive}`);
-  return enumerateKeys(hiveEnum, key.replace(/\//g, '\\'));
+  return enumerateKeysSafe(hiveEnum, key.replace(/\//g, '\\'));
 }
 
 function hkeyFromString(hive) {

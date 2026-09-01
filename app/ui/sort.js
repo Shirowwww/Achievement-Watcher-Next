@@ -149,9 +149,13 @@ function sort(elem, option = {}) {
 
     if (options.alpha) {
       return aValue.title.localeCompare(bValue.title, undefined, { sensitivity: 'base' }) * factor;
-    } else {
-      return aValue.appid - bValue.appid;
     }
+    // A manually added game's id is "manual-<hash>", so subtracting reads NaN and leaves the tie in
+    // an arbitrary order. Compare as text whenever either id is not a plain number.
+    const left = Number(aValue.appid);
+    const right = Number(bValue.appid);
+    if (Number.isFinite(left) && Number.isFinite(right)) return left - right;
+    return String(aValue.appid).localeCompare(String(bValue.appid));
   });
 
   elem.append(li);

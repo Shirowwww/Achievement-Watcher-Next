@@ -7,6 +7,7 @@ const appPath = path.join(__dirname, '..');
 const merge = require('deepmerge');
 const ffs = require('../util/fsAsync');
 const { stripTags } = require('../util/stripTags.js');
+const { escapeHtml } = require('../util/escapeHtml.js');
 
 const langDir = path.join(appPath, 'locale/lang');
 const uiLanguages = require(path.join(appPath, 'locale/uiLanguages.js'));
@@ -65,9 +66,9 @@ function translateUI(lang, locale, template) {
   selector.empty();
   for (let language of uiLanguages.all()) {
     selector.append(
-      `<option value="${language.api}" data-tooltip="${language.native}" title="${language.displayName}" ${language.api === lang ? 'selected' : ''}>${
-        language.native
-      }</option>`
+      `<option value="${escapeHtml(language.api)}" data-tooltip="${escapeHtml(language.native)}" title="${escapeHtml(language.displayName)}" ${
+        language.api === lang ? 'selected' : ''
+      }>${escapeHtml(language.native)}</option>`
     );
   }
 
@@ -785,8 +786,8 @@ function translateUI(lang, locale, template) {
   $('#btn-game-config-save').text(clear(template.settings.common.save));
 }
 
+// An empty string must come back as one, not undefined: several callers chain .replace() onto this
+// and would throw partway through translateUI, leaving the rest of the interface untranslated.
 function clear(str) {
-  if (str) {
-    return stripTags(str.toString());
-  }
+  return str ? stripTags(str.toString()) : '';
 }

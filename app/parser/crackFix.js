@@ -9,6 +9,13 @@ const path = require('path');
 const { lazyRequire } = require('../util/lazyRequire.js');
 const request = lazyRequire('request-zero');
 const fuzzy = require(path.join(__dirname, '..', 'util', 'fuzzyAppid.js'));
+const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
+const { resolveUnpackedBinary } = require('../util/unpacked.js');
+const { firstUnsafeEntry } = require('../util/archiveEntry.js');
+
+// applyBestFix runs per game, and nothing on disk remembers a failed fetch, so offline every game
+// paid two 20s attempts per list source before falling through.
+const listCircuit = createNetworkCircuit({ failureLimit: 2, cooldownMs: 10 * 60 * 1000, shouldCount: isSteamTransportFailure });
 
 // Community fix list source(s), fetched + merged (one for now; the loop keeps adding another trivial).
 // Each entry is tagged with its `_source`.
@@ -26,11 +33,6 @@ const PIXELDRAIN_PROXY_FALLBACK = ['https://cdn.pixeldrain.eu.cc/']; // used onl
 
 const noopLog = { log() {}, error() {} };
 
-function resolveUnpackedBinary(binPath) {
-  const normalized = String(binPath || '');
-  const unpacked = normalized.replace(/app\.asar([\\/])/, 'app.asar.unpacked$1');
-  return fs.existsSync(unpacked) ? unpacked : normalized;
-}
 
 // Extract the file id from a pixeldrain "view" link (pixeldrain.com/u/<id>), or null.
 function pixeldrainFileId(href) {
@@ -148,13 +150,19 @@ function isApplicableHost(href) {
 // One source, two attempts. Returns the parsed array, or null when the source errored (distinct from a
 // legitimately empty list) so the caller can tell "all sources down" from "lists are empty".
 async function fetchOne(url, log) {
+  if (listCircuit.unavailable()) return null;
   let lastErr = null;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const data = await request.getJson(url, { timeout: 20000 });
+      listCircuit.recordSuccess();
       return Array.isArray(data) ? data : [];
     } catch (e) {
       lastErr = e;
+      if (listCircuit.recordFailure(e)) {
+        log.log('[crackfix] the list hosts are unreachable; not asked again this cooldown');
+        break;
+      }
     }
   }
   log.log(`[crackfix] list fetch failed (${url}) => ${lastErr && (lastErr.message || lastErr)}`);
@@ -477,6 +485,19 @@ async function extractArchive(archivePath, destDir, { log = noopLog } = {}) {
   const Seven = require('node-7z');
   const sevenBin = resolveUnpackedBinary(require('7zip-bin').path7za);
   if (!fs.existsSync(sevenBin)) throw new Error(`7za.exe not found at "${sevenBin}"`);
+
+  // These archives come from a community catalogue over a third-party mirror, so every entry is
+  // read before anything is written: an entry may not escape destDir, and may not be a link.
+  const listed = await new Promise((resolve, reject) => {
+    const entries = [];
+    const stream = Seven.list(archivePath, { $bin: sevenBin });
+    stream.on('data', (entry) => entries.push(entry));
+    stream.on('end', () => resolve(entries));
+    stream.on('error', reject);
+  });
+  const unsafe = firstUnsafeEntry(listed);
+  if (unsafe) throw new Error(`crackfix: unsafe path or link in the archive: ${unsafe}`);
+
   await new Promise((resolve, reject) => {
     const stream = Seven.extractFull(archivePath, destDir, { $bin: sevenBin });
     stream.on('end', resolve);

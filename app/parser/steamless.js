@@ -8,6 +8,8 @@ const os = require('os');
 const path = require('path');
 const { execFile } = require('child_process');
 const { lazyRequire } = require('../util/lazyRequire.js');
+const { resolveUnpackedBinary } = require('../util/unpacked.js');
+const { firstUnsafeEntry } = require('../util/archiveEntry.js');
 const request = lazyRequire('request-zero');
 
 const RELEASE_API = 'https://api.github.com/repos/atom0s/Steamless/releases/latest';
@@ -17,11 +19,6 @@ const USER_AGENT = 'Achievement-Watcher';
 
 const noopLog = { log() {}, error() {} };
 
-function resolveUnpackedBinary(binPath) {
-  const normalized = String(binPath || '');
-  const unpacked = normalized.replace(/app\.asar([\\/])/, 'app.asar.unpacked$1');
-  return fs.existsSync(unpacked) ? unpacked : normalized;
-}
 
 function readText(file) {
   try {
@@ -62,6 +59,18 @@ async function downloadAndCache(cacheDir, tag, assetUrl, log) {
     const sevenBin = resolveUnpackedBinary(require('7zip-bin').path7za);
     if (!fs.existsSync(sevenBin)) throw new Error(`7za.exe not found at "${sevenBin}"`);
     const destDir = path.join(cacheDir, tag);
+
+    // Steamless.CLI.exe is run out of this folder afterwards, so no entry may land outside it.
+    const listed = await new Promise((resolve, reject) => {
+      const entries = [];
+      const stream = Seven.list(dl.path, { $bin: sevenBin });
+      stream.on('data', (entry) => entries.push(entry));
+      stream.on('end', () => resolve(entries));
+      stream.on('error', reject);
+    });
+    const unsafe = firstUnsafeEntry(listed);
+    if (unsafe) throw new Error(`unsafe path or link in the Steamless archive: ${unsafe}`);
+
     fs.rmSync(destDir, { recursive: true, force: true });
     fs.mkdirSync(destDir, { recursive: true });
     await new Promise((resolve, reject) => {

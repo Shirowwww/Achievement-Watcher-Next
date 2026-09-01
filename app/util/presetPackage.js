@@ -329,8 +329,11 @@ function readPackage(file, { appVersion = '' } = {}) {
   for (const entry of entries) {
     if (entry.isDirectory) continue;
     const raw = String(entry.entryName || '').replace(/\\/g, '/');
-    if (seen.has(raw)) return fail('duplicate-entry');
-    seen.add(raw);
+    // NTFS is case-insensitive, so "index.html" and "INDEX.HTML" are two entries that validate
+    // separately and then write to one file - whichever the archive lists last silently wins.
+    const key = raw.toLowerCase();
+    if (seen.has(key)) return fail('duplicate-entry');
+    seen.add(key);
 
     if (entry.header.size > LIMITS.fileBytes) return fail('asset-too-large');
     total += entry.header.size;

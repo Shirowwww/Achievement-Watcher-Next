@@ -9,6 +9,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFile } = require('child_process');
+const { parseUnlockTimeSeconds } = require('../util/unlockTime.js');
 
 const XBOX_PC_PLATFORM = 'xbox-pc';
 const XBOX_PC_SOURCE = 'Xbox PC';
@@ -370,7 +371,7 @@ function normalizeXboxAchievement(raw = {}) {
   if (!id) return null;
   const progressState = raw?.progressState || raw?.progression?.state || '';
   const earned = /achieved/i.test(String(progressState));
-  const earnedTime = Number(raw?.progression?.timeUnlocked || raw?.unlockTime || raw?.timeUnlocked || 0);
+  const earnedTime = parseUnlockTimeSeconds(raw?.progression?.timeUnlocked || raw?.unlockTime || raw?.timeUnlocked);
   const progressCurrent = Number(raw?.progression?.current || raw?.progress || 0);
   const progressMax = Number(raw?.progression?.target || raw?.maxProgress || 0);
   const rarity = Number(raw?.rarity?.currentPercentage ?? raw?.rarityPercentage ?? raw?.rarity?.percentage);
@@ -867,10 +868,14 @@ async function getGameData(appid, lang) {
   const state = readJson(stateCacheFile(titleId)) || {};
   const list = schema.achievement.list.map((a) => {
     const entry = state[a.name] || {};
+    // The counter fields travel too, or a "collect 100 items" achievement renders with no bar even
+    // though its progress was fetched and cached.
     return {
       ...a,
       Achieved: entry.earned === true,
       UnlockTime: Number(entry.earned_time) || 0,
+      ...(entry.progress !== undefined ? { CurProgress: entry.progress } : {}),
+      ...(entry.max_progress !== undefined ? { MaxProgress: entry.max_progress } : {}),
     };
   });
   return {

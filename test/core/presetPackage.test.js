@@ -598,6 +598,23 @@ test('a duplicated entry name in the archive is refused', (t) => {
   assert.equal(res.error, 'duplicate-entry');
 });
 
+// NTFS is case-insensitive: two entries differing only in case land on one file, and the one a
+// reviewer read is not necessarily the one that gets written.
+test('two entries that differ only in case are one entry on disk, and are refused', (t) => {
+  const dirs = makeWorkspace(t);
+  const zip = new AdmZip();
+  zip.addFile('manifest.json', Buffer.from(manifest(), 'utf8'));
+  zip.addFile('preset/index.html', Buffer.from(INDEX_HTML, 'utf8'));
+  zip.addFile('preset/style.css', Buffer.from('a{}', 'utf8'));
+  zip.getEntries()[2].entryName = 'preset/INDEX.HTML';
+  const file = path.join(dirs.out, 'dupe-case.awpreset');
+  zip.writeZip(file);
+
+  const res = presetPackage.installPackage({ file, presetsDir: dirs.presets, soundsDir: dirs.sounds, appVersion: APP_VERSION });
+  assert.equal(res.ok, false);
+  assert.equal(res.error, 'duplicate-entry');
+});
+
 test('an oversized member is refused on its declared size, before it is decompressed', (t) => {
   const dirs = makeWorkspace(t);
   const file = writeZip(path.join(dirs.out, 'huge.awpreset'), { 'manifest.json': manifest(), 'preset/index.html': INDEX_HTML });

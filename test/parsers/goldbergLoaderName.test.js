@@ -76,3 +76,35 @@ test('the scan and the diagnosis both carry the name', () => {
 });
 
 test.after(() => fs.rmSync(tmp, { recursive: true, force: true }));
+
+/*
+  The shape also decides which save root is read: "gbe" means GSE Saves, "goldberg" means Goldberg
+  SteamEmu Saves. Recognising only the four exact configs.*.ini names meant a repack shipping its
+  templates unrenamed read as classic Goldberg, and its working setup reported no save at all.
+*/
+test('a GBE Fork install is recognised by its own files, not by four exact names', () => {
+  const withSteamSettings = (name, files) =>
+    game(name, (d) => {
+      fs.writeFileSync(path.join(d, 'steam_api64.dll'), Buffer.alloc(2048, 1));
+      const settings = path.join(d, 'steam_settings');
+      fs.mkdirSync(settings, { recursive: true });
+      for (const [file, contents] of Object.entries(files)) fs.writeFileSync(path.join(settings, file), contents);
+    });
+
+  assert.equal(goldberg.detectEmulator(withSteamSettings('gbe-exact', { 'configs.user.ini': '[user::general]\n' })).type, 'gbe');
+  assert.equal(
+    goldberg.detectEmulator(withSteamSettings('gbe-template', { 'configs.user.EXAMPLE.ini': '[user::general]\n' })).type,
+    'gbe',
+    'an unrenamed template is still a GBE Fork layout'
+  );
+  assert.equal(
+    goldberg.detectEmulator(withSteamSettings('gbe-schema', { 'achievements.json': '[]' })).type,
+    'gbe',
+    'the achievements file GBE Fork reads is a marker of its own'
+  );
+  assert.equal(
+    goldberg.detectEmulator(withSteamSettings('classic', { 'account_name.txt': 'Player' })).type,
+    'goldberg',
+    'a classic Goldberg layout must not be moved onto the GSE save root'
+  );
+});

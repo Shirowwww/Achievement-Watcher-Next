@@ -54,8 +54,14 @@ function createPollingProcessMonitor({
       const current = indexProcesses(await list(), shouldObserve);
       if (closed) return;
 
+      // A PID freed and handed to another program between two polls used to hide BOTH events: the
+      // old game's exit (the id is still in the snapshot) and the new process's start (the id was
+      // already known). The image name is compared alongside the id so a reused one reads as what
+      // it is - one process gone, another arrived.
+      const isSameProcess = (a, b) => !!a && !!b && a.process.toLowerCase() === b.process.toLowerCase();
+
       for (const process of current.values()) {
-        if (known.has(process.pid)) continue;
+        if (isSameProcess(known.get(process.pid), process)) continue;
         let filepath = process.filepath;
         if (!filepath && typeof resolvePath === 'function') {
           try {
@@ -67,7 +73,7 @@ function createPollingProcessMonitor({
         emitter.emit('creation', [process.process, process.pid, filepath]);
       }
       for (const process of known.values()) {
-        if (!current.has(process.pid)) emitter.emit('deletion', [process.process, process.pid]);
+        if (!isSameProcess(current.get(process.pid), process)) emitter.emit('deletion', [process.process, process.pid]);
       }
       known = current;
     } catch (err) {

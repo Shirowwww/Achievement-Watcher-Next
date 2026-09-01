@@ -156,3 +156,31 @@ test('a failing path resolver degrades to an empty path instead of dropping the 
 
   assert.deepEqual(created, [['game.exe', 7, '']]);
 });
+
+/*
+  Windows reuses a PID quickly. Indexed by id alone, a game exiting and an unrelated program taking
+  its id within one poll window hid both events: the playtime session never stopped, and a real game
+  launch that happened to land on a just-freed id was never seen at all.
+*/
+test('a reused PID reports the exit and the new process, not silence', async () => {
+  const events = [];
+  let snapshot = [{ pid: 4242, process: 'game.exe' }];
+  const timers = [];
+  const monitor = createPollingProcessMonitor({
+    list: async () => snapshot,
+    initialProcesses: snapshot,
+    setIntervalFn: (fn) => {
+      timers.push(fn);
+      return 1;
+    },
+    clearIntervalFn: () => {},
+  });
+  monitor.on('creation', ([name, pid]) => events.push(`+${name}:${pid}`));
+  monitor.on('deletion', ([name, pid]) => events.push(`-${name}:${pid}`));
+
+  snapshot = [{ pid: 4242, process: 'notepad.exe' }];
+  await timers[0]();
+
+  assert.deepEqual(events.sort(), ['+notepad.exe:4242', '-game.exe:4242']);
+  monitor.close();
+});

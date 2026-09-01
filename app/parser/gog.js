@@ -7,7 +7,8 @@ const glob = lazyRequire('fast-glob');
 const request = lazyRequire('request-zero');
 
 let cacheRoot;
-let debug;
+// A no-op until initDebug runs, so a caller that only set the data path still gets a working scan.
+let debug = { log() {}, warn() {}, error() {} };
 module.exports.initDebug = ({ isDev, userDataPath }) => {
   module.exports.setUserDataPath(userDataPath);
   debug = new (require('../util/logger'))({
@@ -60,7 +61,7 @@ module.exports.getCachedData = async (cfg) => {
   return result;
 };
 
-module.exports.scan = async (dir) => {
+module.exports.scan = async () => {
   const cacheFile = path.join(cacheRoot, 'steam_cache', 'gog.db');
   const data = [];
   const cache = readGogMappingCache(cacheFile);
@@ -96,11 +97,17 @@ module.exports.scan = async (dir) => {
           cachedByGogId.set(String(game.appid), entry);
           updateCache = true;
         }
-      } catch {}
+      } catch (err) {
+        // Without the Steam id this game is dropped from the scan entirely, so the reason has to
+        // reach parser.log - a silent drop reads to the user as "the game disappeared".
+        debug.log(`[gog] could not map GOG id ${game.appid} to a Steam appid: ${err.message || err}`);
+      }
     }
     if (steamid) {
       game.appid = steamid;
       data.push(game);
+    } else {
+      debug.log(`[gog] no Steam release known for GOG id ${game.appid}; the game is not listed`);
     }
   }
   fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
