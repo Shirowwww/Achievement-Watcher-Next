@@ -20,11 +20,13 @@ These read the launcher's own local data. They are marked with a shield in Setti
 | **Steam** | Local appcache state, public-profile data, achievement schemas and cached product metadata | Steam installed, and your Steam profile set to public; connecting an account is optional |
 | **GOG Galaxy** | The Galaxy client's local databases, plus compatible legacy saves | GOG Galaxy installed |
 | **Ubisoft Connect** | Native local data and legacy Uplay formats | Ubisoft Connect installed |
-| **Epic Games** | Local installations, plus official achievement state once you connect an account | Epic Games launcher; account connection is optional |
-| **Xbox PC** | Local Game Pass / Microsoft Store installs, plus imported Xbox Network achievement state | The Xbox app; account connection is optional |
+| **Epic Games** | Local installations, plus the games the account owns and their official achievement state once you connect an account | Epic Games launcher for local installs; an account connection for the rest |
+| **Xbox PC** | Local Game Pass / Microsoft Store installs, plus the games the account owns and their Xbox Network achievement state | The Xbox app for local installs; an account connection for the rest |
 
-**Display Steam Games** has three settings rather than on/off: **None**, **Installed** (games on this
-PC) or **Owned** (your whole Steam library).
+**Steam**, **Epic Games** and **Xbox PC** each have three settings rather than on/off: **None**,
+**Installed** (games on this PC) or **Owned** (the whole library that account owns). **Owned** lists
+games that are not installed here, which is what a PC with none of that store's games installed
+needs; it requires the account connection below.
 
 > [!IMPORTANT]
 > Steam only exposes your achievements while your profile is public. In Steam, open
@@ -44,8 +46,8 @@ without any account at all.
 | Account | What connecting adds |
 |---|---|
 | **Steam** | Your real library, Steam Family titles included, so a private profile still lists the right games. **Hide games no longer in your Steam library** then removes the leftovers; a game installed on this PC or shared through Steam Family is never hidden. Sign-in happens on Valve's own page. |
-| **Epic Games** | Which achievements you have already unlocked in installed Epic games. Names, descriptions and rarity work without it. |
-| **Xbox PC** | Your Xbox PC library: unlock state and rarity from Xbox Network, cached locally afterwards. |
+| **Epic Games** | Which achievements you have already unlocked, and with **Owned** the whole library the account holds - each game with its full achievement list, unlock state and rarity. Names, descriptions and rarity of an installed game work without it. |
+| **Xbox PC** | Your Xbox PC library: unlock state and rarity from Xbox Network, cached locally afterwards. With **Owned** it also brings games the account has only played elsewhere. |
 
 A tile carries a small badge for what the connection established - bought on that store, shared
 through Steam Family, or no longer in your library - so the library says where a game came from

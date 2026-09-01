@@ -51,7 +51,9 @@ into one library, with live Windows notifications and an in-game overlay.
   as your own and shareable as a portable `.awtheme` with its own
   [gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/themes/).
 - **Local-first.** No Steam Web API key, no required account, its own data directory, and caches that
-  keep the library working offline.
+  keep the library working offline. The few secrets it does keep - an emulator Steam password, the
+  Epic and Xbox sign-in tokens - are encrypted with a key generated for your install and held by
+  Windows, readable by your Windows account alone.
 
 <div align="center">
 <table>
@@ -90,11 +92,11 @@ upgrade imports an older Achievement Watcher folder without modifying it.
 | **Steam** | Local appcache state, public-profile data, achievement lists (including DLC/update tags) and cached product metadata; an optional account connection covers a private profile and Steam Family |
 | **Steam-compatible saves** | Goldberg, GBE Fork, GreenLuma, LumaPlay, SmartSteamEmu, CreamAPI, Nemirtingas and compatible layouts |
 | **GOG Galaxy** | Native local Galaxy databases and compatible legacy saves |
-| **Epic Games** | Local installations, and official achievement state after an optional account connection |
+| **Epic Games** | Local installations, and after an optional account connection, the games the account owns with their official achievement state |
 | **Ubisoft Connect** | Native local data, legacy Uplay formats and compatible Uplay R1 and R2 setups |
 | **EA Desktop** | Achievement events from the local EA Desktop log, for games outside EA's managed folders |
 | **Console emulators** | RPCS3, ShadPS4 and Xenia, each watched live |
-| **Xbox PC** | Local Game Pass / Microsoft Store installs, plus imported Xbox Network state |
+| **Xbox PC** | Local Game Pass / Microsoft Store installs, plus the games the account owns and their Xbox Network state |
 | **Games for Windows LIVE** | XLiveLessNess profiles, with the achievement list, its texts and its icons read from the game's own executable |
 
 Sources are controlled individually, and no Steam Web API key is used: achievement lists come from
