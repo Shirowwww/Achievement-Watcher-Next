@@ -22,10 +22,10 @@
   },
   "license": "LGPL-3.0-only",
   "devDependencies": {
-    "electron": "^44.1.0",
+    "electron": "^44.1.1",
     "electron-builder": "^26.15.3",
-    "electron-context-menu": "^4.1.2",
-    "oxlint": "^1.80.0",
+    "electron-context-menu": "^5.0.0",
+    "oxlint": "^1.81.0",
     "patch-package": "^8.0.1"
   },
   "dependencies": {

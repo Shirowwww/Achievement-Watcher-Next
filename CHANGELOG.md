@@ -81,6 +81,16 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Improved
 
+- **A monitor that is only half working now says so.** Its heartbeat proved the process was alive and
+  nothing more, so a live watcher that failed to start left AW Next supervising something that
+  reported itself healthy while tracking less than it should. Each one now reports how it went, and a
+  failure reaches the app's own log.
+
+- **A live watcher can no longer lose its baseline to a crash.** The file that remembers what a game
+  had already unlocked was written in place by seven separate copies of the same code; a truncated
+  one reads as "nothing unlocked yet" and announces every earned achievement again. It is written
+  atomically now, from one place.
+
 - **What AW Next hands to the program you set as an Action.** That program was receiving the key that
   protects the saved emulator password and the Xbox sign-in on this PC, along with the rest of the
   environment. It now receives only what it needs.
