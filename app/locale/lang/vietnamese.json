@@ -1056,6 +1056,7 @@
       "Giao diện",
       "Tài khoản",
       "Trò chơi",
+      "Nguồn",
       "Cài đặt"
     ],
     "languageTitle": "Chọn ngôn ngữ",
@@ -1092,6 +1093,10 @@
     "emptyList": "Chưa thêm gì trong phiên này.",
     "settingsTitle": "Cài đặt khuyên dùng",
     "settingsCopy": "Những thứ cốt lõi cho thư viện, giao diện và thông báo của bạn. Mọi thứ vẫn sửa được sau này.",
+    "sourcesTitle": "Thành tựu của bạn đến từ đâu",
+    "sourcesCopy": "Mỗi nguồn đều được đọc trên PC này. Hãy tắt những gì bạn không dùng; tất cả vẫn có thể chỉnh sửa trong Cài đặt.",
+    "sourcesEmulators": "Trình giả lập",
+    "sourcesEmulatorsCopy": "Mỗi trình chỉ được đọc khi đã cài đặt, nên bật chúng lên không tốn gì cả.",
     "source": "Hiện trò chơi Steam",
     "notifications": "Thông báo",
     "notificationTest": "Thử thông báo",

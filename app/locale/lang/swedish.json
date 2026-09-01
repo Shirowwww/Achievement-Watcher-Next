@@ -1056,6 +1056,7 @@
       "Gränssnitt",
       "Konto",
       "Spel",
+      "Källor",
       "Inställningar"
     ],
     "languageTitle": "Välj språk",
@@ -1092,6 +1093,10 @@
     "emptyList": "Inget har lagts till den här gången.",
     "settingsTitle": "Rekommenderade inställningar",
     "settingsCopy": "Det viktigaste för ditt bibliotek, utseendet och aviseringarna. Allt går att ändra senare.",
+    "sourcesTitle": "Var dina prestationer kommer ifrån",
+    "sourcesCopy": "Alla läses på den här datorn. Lämna det du inte använder avstängt; allt går fortfarande att ändra i Inställningar.",
+    "sourcesEmulators": "Emulatorer",
+    "sourcesEmulatorsCopy": "Var och en läses bara när den är installerad, så det kostar inget att låta dem vara på.",
     "source": "Visa Steam-spel",
     "notifications": "Aviseringar",
     "notificationTest": "Testa aviseringen",

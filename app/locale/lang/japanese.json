@@ -1056,6 +1056,7 @@
       "インターフェース",
       "アカウント",
       "ゲーム",
+      "ソース",
       "設定"
     ],
     "languageTitle": "言語を選択してください",
@@ -1092,6 +1093,10 @@
     "emptyList": "このセッションには何も追加されませんでした。",
     "settingsTitle": "推奨設定",
     "settingsCopy": "ライブラリ・外観・通知の要点です。あとからいつでも変更できます。",
+    "sourcesTitle": "実績の取得元",
+    "sourcesCopy": "いずれもこの PC で読み取られます。使わないものはオフのままにしてください。すべて設定であとから変更できます。",
+    "sourcesEmulators": "エミュレーター",
+    "sourcesEmulatorsCopy": "それぞれインストールされている場合のみ読み取られるため、オンのままにしても負担はありません。",
     "source": "Steam ゲームを表示する",
     "notifications": "通知",
     "notificationTest": "通知をテスト",

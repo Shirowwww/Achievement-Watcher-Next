@@ -1056,6 +1056,7 @@
       "Interface",
       "Conta",
       "Jogos",
+      "Fonte",
       "Configurações"
     ],
     "languageTitle": "Escolha o idioma",
@@ -1092,6 +1093,10 @@
     "emptyList": "Nada foi adicionado nesta sessão.",
     "settingsTitle": "Configurações recomendadas",
     "settingsCopy": "O essencial para a sua biblioteca, o aspeto e as notificações. Tudo continua editável depois.",
+    "sourcesTitle": "De onde vêm as suas proezas",
+    "sourcesCopy": "Cada uma delas é lida neste PC. Desative o que não utiliza; todas continuam editáveis nas Definições.",
+    "sourcesEmulators": "Emuladores",
+    "sourcesEmulatorsCopy": "Cada um só é lido quando está instalado, por isso mantê-los ativados não custa nada.",
     "source": "Exibir jogos Steam",
     "notifications": "Notificações",
     "notificationTest": "Testar notificação",

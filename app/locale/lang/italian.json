@@ -1056,6 +1056,7 @@
       "Interfaccia",
       "Account",
       "Giochi",
+      "Sorgente",
       "Impostazioni"
     ],
     "languageTitle": "Scegli la lingua",
@@ -1092,6 +1093,10 @@
     "emptyList": "Niente aggiunto in questa sessione.",
     "settingsTitle": "Impostazioni consigliate",
     "settingsCopy": "L’essenziale per la libreria, l’aspetto e le notifiche. Tutto resta modificabile in seguito.",
+    "sourcesTitle": "Da dove arrivano i tuoi obiettivi",
+    "sourcesCopy": "Ognuna di queste viene letta su questo PC. Disattiva ciò che non usi; restano tutte modificabili in Impostazioni.",
+    "sourcesEmulators": "Emulatori",
+    "sourcesEmulatorsCopy": "Ognuno viene letto solo se è installato, quindi lasciarli attivi non costa nulla.",
     "source": "Visualizza i giochi Steam",
     "notifications": "Notifiche",
     "notificationTest": "Prova notifica",

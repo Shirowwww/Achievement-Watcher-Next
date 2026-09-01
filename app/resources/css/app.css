@@ -3440,7 +3440,7 @@ body.is-resizing #game-list {
 
 #onboarding-progress-fill {
   display: block;
-  width: 16.6667%;
+  width: 14.2857%;
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 82%, white 18%));
@@ -3696,16 +3696,93 @@ body.is-resizing #game-list {
   gap: 14px;
 }
 
-#onboarding-step-5 .onboarding-form-grid {
+#onboarding-step-6 .onboarding-form-grid {
   gap: 11px 14px;
 }
 
-#onboarding-step-5 .onboard-field-hint {
+#onboarding-step-6 .onboard-field-hint {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+}
+
+.onboarding-source-group {
+  padding: 12px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface-sunken) 44%, transparent);
+}
+
+.onboarding-source-group + .onboarding-source-group {
+  margin-top: 12px;
+}
+
+.onboarding-source-group-head {
+  margin-bottom: 10px;
+}
+
+.onboarding-source-group-head strong {
+  font-family: 'Open-Sans-Bold';
+  font-size: 13px;
+}
+
+.onboarding-source-group-head p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-family: 'Open-Sans';
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.onboarding-source-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.onboarding-source-row {
+  grid-template-columns: minmax(0, 1fr) 112px;
+  align-items: center;
+  gap: 5px 10px !important;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 10%, transparent);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--surface-sunken) 54%, transparent);
+}
+
+.onboarding-source-name {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.onboarding-source-name i {
+  width: 16px;
+  flex: 0 0 16px;
+  color: var(--accent);
+  text-align: center;
+}
+
+.onboarding-source-row select {
+  width: 112px;
+  min-width: 0;
+}
+
+.onboarding-source-row .onboard-field-hint {
+  grid-column: 1 / -1;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.onboarding-source-standalone .onboarding-source-list {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .onboarding-step label {
@@ -4023,7 +4100,7 @@ body.is-resizing #game-list {
   }
 
   .onboarding-steps {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
   }
 
   .onboarding-steps button {

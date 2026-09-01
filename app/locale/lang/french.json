@@ -1056,6 +1056,7 @@
       "Interface",
       "Compte",
       "Jeux",
+      "Sources",
       "Paramètres"
     ],
     "languageTitle": "Choisir la langue",
@@ -1092,6 +1093,10 @@
     "emptyList": "Rien n’a été ajouté à cette session.",
     "settingsTitle": "Paramètres recommandés",
     "settingsCopy": "L’essentiel pour ta bibliothèque, l’apparence et les notifications. Tout reste modifiable ensuite.",
+    "sourcesTitle": "D’où viennent tes succès",
+    "sourcesCopy": "Chacune de ces sources est lue sur ce PC. Désactive celles que tu n’utilises pas ; elles restent toutes modifiables dans Paramètres.",
+    "sourcesEmulators": "Émulateurs",
+    "sourcesEmulatorsCopy": "Chacun n’est lu que s’il est installé, donc les laisser activés ne coûte rien.",
     "source": "Afficher les jeux Steam",
     "notifications": "Notifications",
     "notificationTest": "Tester la notification",

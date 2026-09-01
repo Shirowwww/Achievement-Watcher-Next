@@ -1056,6 +1056,7 @@
       "Antarmuka",
       "Akun",
       "Game",
+      "Sumber",
       "Pengaturan"
     ],
     "languageTitle": "Pilih bahasa",
@@ -1092,6 +1093,10 @@
     "emptyList": "Belum ada yang ditambahkan pada sesi ini.",
     "settingsTitle": "Pengaturan yang disarankan",
     "settingsCopy": "Hal penting untuk perpustakaan, tampilan, dan notifikasi Anda. Semuanya masih bisa diubah nanti.",
+    "sourcesTitle": "Dari mana pencapaian Anda berasal",
+    "sourcesCopy": "Semuanya dibaca di PC ini. Nonaktifkan yang tidak Anda pakai; semuanya tetap bisa diubah di Pengaturan.",
+    "sourcesEmulators": "Emulator",
+    "sourcesEmulatorsCopy": "Masing-masing hanya dibaca kalau sudah terpasang, jadi membiarkannya aktif tidak merugikan apa pun.",
     "source": "Tampilkan game Steam",
     "notifications": "Notifikasi",
     "notificationTest": "Uji notifikasi",

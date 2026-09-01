@@ -1056,6 +1056,7 @@
       "Grænseflade",
       "Konto",
       "Spil",
+      "Kilder",
       "Indstillinger"
     ],
     "languageTitle": "Vælg sprog",
@@ -1092,6 +1093,10 @@
     "emptyList": "Intet tilføjet i denne omgang.",
     "settingsTitle": "Anbefalede indstillinger",
     "settingsCopy": "Det vigtigste for dit bibliotek, udseendet og notifikationerne. Alt kan ændres bagefter.",
+    "sourcesTitle": "Hvor dine præstationer kommer fra",
+    "sourcesCopy": "Alle disse læses på denne pc. Lad det, du ikke bruger, være slået fra; det kan altid ændres i Indstillinger.",
+    "sourcesEmulators": "Emulatorer",
+    "sourcesEmulatorsCopy": "Hver enkelt læses kun, når den er installeret, så det koster intet at lade dem være slået til.",
     "source": "Vis Steam-spil",
     "notifications": "Notifikationer",
     "notificationTest": "Testnotifikation",

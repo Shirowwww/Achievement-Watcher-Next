@@ -18,6 +18,7 @@ bootMark('electron');
 const path = require('path');
 const { app } = require('electron');
 const { APP_DATA_DIR_NAME } = require('../util/userDataPath.js');
+const { portableUserDataDir } = require('../util/portableMode.js');
 const { migrateLegacyUserData, migrateAw3UserData, migrateSouvenirFolder, retargetBackupIndex } = require('../util/migrateUserData.js');
 const { deriveWatchdogState } = require('../util/watchdogState.js');
 const links = require('../util/links.js');
@@ -37,12 +38,17 @@ const cliUserDataDir = (() => {
     return '';
   }
 })();
-app.setPath('userData', cliUserDataDir || path.join(app.getPath('appData'), APP_DATA_DIR_NAME));
+const packagedPortableUserDataDir = portableUserDataDir({ execPath: process.execPath, isPackaged: app.isPackaged });
+const isPortableBuild = !!packagedPortableUserDataDir;
+app.setPath('userData', cliUserDataDir || packagedPortableUserDataDir || path.join(app.getPath('appData'), APP_DATA_DIR_NAME));
 // Import forward along the data-folder chain, newest source first: each hop is a no-op once the
 // destination already holds AW configuration, so a user coming straight from 1.6.8 still gets their data.
-migrateAw3UserData(app.getPath('userData'));
-migrateLegacyUserData(app.getPath('userData'));
-migrateSouvenirFolder(app.getPath('userData'));
+// A portable archive starts isolated on purpose and never imports the installed app's profile.
+if (!isPortableBuild) {
+  migrateAw3UserData(app.getPath('userData'));
+  migrateLegacyUserData(app.getPath('userData'));
+  migrateSouvenirFolder(app.getPath('userData'));
+}
 // Runs on every start: folders migrated before this existed still hold a restore-point index
 // pointing at their old location. Idempotent, a repointed entry is skipped next time.
 retargetBackupIndex(app.getPath('userData'));
@@ -123,7 +129,8 @@ async function applyGeneralPatch(patch) {
   if (!configJS) return;
   if (!configJS.general) configJS.general = {};
   Object.assign(configJS.general, patch);
-  await settingsJS.save(configJS);
+  // This IS the writer of those keys, so it must not have them read back from disk over its patch.
+  await settingsJS.save(configJS, { keepMainOwnedKeys: false });
 }
 
 async function postponeUpdate(version) {
@@ -372,7 +379,7 @@ function logStartupDiagnostics() {
   const line = (label, value) => debug.log(`[diag] ${label}: ${value}`);
   try {
     const { node, electron, chrome, v8 } = process.versions;
-    line('app', `${app.getName()} ${app.getVersion()} (${app.isPackaged ? 'packaged' : 'dev'}${manifest.config.debug ? ', debug' : ''})`);
+    line('app', `${app.getName()} ${app.getVersion()} (${app.isPackaged ? (isPortableBuild ? 'portable' : 'packaged') : 'dev'}${manifest.config.debug ? ', debug' : ''})`);
     line('runtime', `electron ${electron} · chrome ${chrome} · node ${node} · v8 ${v8}`);
     line('os', `${os.type()} ${os.release()} ${process.arch} · ${os.cpus().length} cpu · ${Math.round(os.totalmem() / 1048576)} MB`);
     line('paths', `exe=${process.execPath}`);
@@ -1621,20 +1628,46 @@ ipcMain.on('get-images-for-game', async (event, arg) => {
 });
 ipcMain.handle('get-images-for-game', (event, arg) => resolveImagesForGame(arg));
 
-ipcMain.on('stylize-background-for-appid', async (event, arg) => {
-  const imageUrl = arg.background;
-  const t = path.parse(imageUrl).base;
-  const outputPath = path.join(app.getPath('userData'), 'steam_cache', 'icon', arg.appid, t);
-  // The result is a file, and the same picture always blurs to the same thing: downloading and
-  // re-blurring it on every scan cost a full image pipeline per game for a file already on disk.
-  try {
-    if (fs.existsSync(outputPath)) return;
-  } catch {
-    /* unreadable - fall through and rebuild it */
-  }
-  const sharp = require('sharp');
+// Store artwork hosts, the only places this handler is ever pointed at.
+const STYLIZE_IMAGE_HOSTS = new Set([
+  'cdn1.epicgames.com',
+  'cdn2.epicgames.com',
+  'cdn.akamai.steamstatic.com',
+  'shared.akamai.steamstatic.com',
+  'cdn.cloudflare.steamstatic.com',
+  'steamcdn-a.akamaihd.net',
+  'media.rawg.io',
+]);
 
+ipcMain.on('stylize-background-for-appid', async (event, arg) => {
   try {
+    const imageUrl = String((arg && arg.background) || '');
+    // path.parse keeps a query string in the basename, and "?" is not a legal Windows filename: the
+    // write failed every time, so the existsSync shortcut below never engaged either and the whole
+    // fetch-and-blur ran again on every scan.
+    let parsed;
+    try {
+      parsed = new URL(imageUrl);
+    } catch {
+      return;
+    }
+    if (parsed.protocol !== 'https:' || !STYLIZE_IMAGE_HOSTS.has(parsed.hostname)) return;
+
+    const t = path.basename(parsed.pathname);
+    // The appid names a folder, so it stays a plain id, like every other file-writing handler here.
+    const appid = String((arg && arg.appid) || '').replace(/[^\w.-]/g, '_');
+    if (!t || !appid) return;
+
+    const outputPath = path.join(app.getPath('userData'), 'steam_cache', 'icon', appid, t);
+    // The result is a file, and the same picture always blurs to the same thing: downloading and
+    // re-blurring it on every scan cost a full image pipeline per game for a file already on disk.
+    try {
+      if (fs.existsSync(outputPath)) return;
+    } catch {
+      /* unreadable - fall through and rebuild it */
+    }
+    const sharp = require('sharp');
+
     const res = await fetch(imageUrl, { signal: AbortSignal.timeout(SGDB_FETCH_TIMEOUT_MS) });
     if (!res.ok) throw new Error(`Failed to fetch image: ${res.statusText}`);
     // Undici exposes arrayBuffer(), not node-fetch's buffer().
@@ -1661,7 +1694,7 @@ ipcMain.on('stylize-background-for-appid', async (event, arg) => {
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
     fs.writeFileSync(outputPath, processedBuffer);
   } catch (err) {
-    console.error('❌ Error:', err.message);
+    debug.log(`[artwork] could not stylize the background: ${err.message || err}`);
   }
 });
 
@@ -3571,7 +3604,7 @@ async function searchForGameName(info = { appid: '' }) {
         }
       }
     } catch (err) {
-      console.error(`❌ Error on page ${startIndex}:`, err.message);
+      debug.log(`[steam-search] page ${startIndex} failed: ${err.message || err}`);
     } finally {
       await page.close();
     }
@@ -3643,7 +3676,9 @@ function searchForSteamAppId(info = { name: '' }) {
       window.chrome = { runtime: {} };
     `);
   });
-  win.loadURL(`https://store.steampowered.com/search/?term=${info.name}&category1=998&ndl=1`);
+  // A title with an ampersand, a hash or an accent silently truncated the query and matched the
+  // wrong game, or nothing at all.
+  win.loadURL(`https://store.steampowered.com/search/?term=${encodeURIComponent(info.name)}&category1=998&ndl=1`);
   win.webContents.on('did-finish-load', async () => {
     let games = undefined;
     try {
@@ -3672,7 +3707,7 @@ function searchForSteamAppId(info = { name: '' }) {
       }
       info.games = games;
     } catch (error) {
-      console.error('Failed to find appid:', error);
+      debug.log(`[steam-search] could not find an appid: ${error && error.message ? error.message : error}`);
       if (!info.games) info.games = [];
     } finally {
       closeHiddenSearchWindow();
@@ -3838,7 +3873,7 @@ function createMainWindow() {
           });
         }
       }).catch((err) => {
-        console.warn('electron-context-menu init failed:', err.message);
+        debug.log(`[window] electron-context-menu init failed: ${err.message || err}`);
       });
     }
 
@@ -4385,7 +4420,7 @@ async function createOverlayWindow(info) {
           });
         }
       }).catch((err) => {
-        console.warn('electron-context-menu init failed:', err.message);
+        debug.log(`[window] electron-context-menu init failed: ${err.message || err}`);
       });
     }
 
@@ -5785,6 +5820,51 @@ function checkResources() {
   // Startup registration is user-controlled from Settings > General.
 }
 
+// ICONDIR: reserved, type, count, then 16 bytes per image, where a 0 width means 256. Only the PNG
+// entries are collected, since that is the form addRepresentation takes as a data URL.
+function readIcoPngFrames(file) {
+  const frames = new Map();
+  const buffer = fs.readFileSync(file);
+  if (buffer.length < 6) return frames;
+  const count = buffer.readUInt16LE(4);
+  for (let i = 0; i < count; i += 1) {
+    const at = 6 + i * 16;
+    if (at + 16 > buffer.length) break;
+    const width = buffer.readUInt8(at) || 256;
+    const bytes = buffer.readUInt32LE(at + 8);
+    const offset = buffer.readUInt32LE(at + 12);
+    if (offset + bytes > buffer.length) continue;
+    const data = buffer.subarray(offset, offset + bytes);
+    if (data.length > 8 && data.readUInt32BE(0) === 0x89504e47) frames.set(width, data);
+  }
+  return frames;
+}
+
+/*
+  The notification area asks for a 16x16 logical icon, which is 20 real pixels at 125% display
+  scaling and 24 at 150%. nativeImage decodes an .ico as one 256x256 bitmap at scale factor 1, so
+  the shell shrinks that single picture by 13x and the trophy comes out soft and grey. The file
+  already carries a hand-sized frame for every scaling step, so each one is handed over as its own
+  representation and Windows draws the pixels that were drawn for it.
+*/
+function trayIconImage(icoFile) {
+  const frames = readIcoPngFrames(icoFile);
+  const base = frames.has(16) ? nativeImage.createFromBuffer(frames.get(16), { scaleFactor: 1 }) : null;
+  if (!base || base.isEmpty()) return null;
+  for (const [scaleFactor, size] of [
+    [1.25, 20],
+    [1.5, 24],
+    [2, 32],
+    [2.5, 40],
+    [3, 48],
+  ]) {
+    const frame = frames.get(size);
+    if (!frame) continue;
+    base.addRepresentation({ scaleFactor, dataURL: `data:image/png;base64,${frame.toString('base64')}` });
+  }
+  return base;
+}
+
 // System tray - the app lives here. Single left-click / "Open" shows the UI window; "Quit" is the only
 // way to actually exit (it sets app.isQuiting so before-quit tears down the monitor).
 let tray = null;
@@ -5792,7 +5872,18 @@ function createTray() {
   if (tray) return tray;
   try {
     const iconPath = path.join(__dirname, '../resources/icon/icon.ico');
-    const image = nativeImage.createFromPath(iconPath);
+    let image = null;
+    try {
+      image = trayIconImage(iconPath);
+    } catch (err) {
+      debug.log(`[tray] icon frames unreadable, falling back to the whole file: ${err.message || err}`);
+    }
+    if (!image || image.isEmpty()) {
+      // Only PNG-encoded frames are collected. An icon rebuilt with a tool that stores the small
+      // sizes as BMP would land here and quietly go back to the blurry single-bitmap tray icon.
+      debug.log('[tray] no usable 16px PNG frame in icon.ico, drawing the whole file instead');
+      image = nativeImage.createFromPath(iconPath);
+    }
     tray = new Tray(image.isEmpty() ? iconPath : image);
     tray.setToolTip('Achievement Watcher Next');
     const rebuildMenu = () => {
@@ -5905,7 +5996,7 @@ try {
           startUpdateDownload(info.version);
         } else if (response === 3) {
           configJS.general.skippedVersion = info.version;
-          await settingsJS.save(configJS);
+          await settingsJS.save(configJS, { keepMainOwnedKeys: false });
           debug.log(`[updater] version ${info.version} skipped by user`);
           setUpdateStatus({ type: 'reset' });
         } else {

@@ -1056,6 +1056,7 @@
       "Käyttöliittymä",
       "Tili",
       "Pelit",
+      "Lähteet",
       "Asetukset"
     ],
     "languageTitle": "Valitse kieli",
@@ -1092,6 +1093,10 @@
     "emptyList": "Tässä istunnossa ei ole lisätty mitään.",
     "settingsTitle": "Suositellut asetukset",
     "settingsCopy": "Olennaisimmat asiat kirjastoa, ulkoasua ja ilmoituksia varten. Kaikkea voi muuttaa myöhemmin.",
+    "sourcesTitle": "Mistä saavutuksesi tulevat",
+    "sourcesCopy": "Jokainen näistä luetaan tällä koneella. Jätä pois päältä ne, joita et käytä; kaikkea voi silti muokata Asetuksissa.",
+    "sourcesEmulators": "Emulaattorit",
+    "sourcesEmulatorsCopy": "Kukin luetaan vain, jos se on asennettu, joten niiden pitäminen päällä ei maksa mitään.",
     "source": "Näytä Steam-pelit",
     "notifications": "Ilmoitukset",
     "notificationTest": "Testi-ilmoitus",

@@ -1056,6 +1056,7 @@
       "Arayüz",
       "Hesap",
       "Oyunlar",
+      "Kaynak",
       "Ayarlar"
     ],
     "languageTitle": "Dil seçin",
@@ -1092,6 +1093,10 @@
     "emptyList": "Bu oturuma hiçbir şey eklenmedi.",
     "settingsTitle": "Önerilen ayarlar",
     "settingsCopy": "Kitaplık, görünüm ve bildirimler için temel ayarlar. Hepsi sonradan değiştirilebilir.",
+    "sourcesTitle": "Başarımlarınız nereden geliyor",
+    "sourcesCopy": "Her biri bu bilgisayarda okunur. Kullanmadığınızı kapalı bırakın; hepsi Ayarlar’da düzenlenebilir kalır.",
+    "sourcesEmulators": "Emülatörler",
+    "sourcesEmulatorsCopy": "Her biri yalnızca yüklüyse okunur, bu yüzden açık bırakmanın hiçbir maliyeti yoktur.",
     "source": "Steam oyunlarını göster",
     "notifications": "Bildirimler",
     "notificationTest": "Bildirimi test et",

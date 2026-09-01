@@ -1056,6 +1056,7 @@
       "Interface",
       "Account",
       "Games",
+      "Sources",
       "Settings"
     ],
     "languageTitle": "Choose language",
@@ -1092,6 +1093,10 @@
     "emptyList": "Nothing added this session.",
     "settingsTitle": "Recommended settings",
     "settingsCopy": "The essentials for your library, look and notifications. Everything stays editable later.",
+    "sourcesTitle": "Where your achievements come from",
+    "sourcesCopy": "Every one of these is read on this PC. Leave anything you do not use switched off; they all stay editable in Settings.",
+    "sourcesEmulators": "Emulators",
+    "sourcesEmulatorsCopy": "Each one is read only when it is installed, so leaving them on costs nothing.",
     "source": "Display Steam games",
     "notifications": "Notifications",
     "notificationTest": "Test notification",

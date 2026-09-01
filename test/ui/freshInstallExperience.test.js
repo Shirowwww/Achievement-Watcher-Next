@@ -9,16 +9,32 @@ const test = require('node:test');
 
 const root = path.join(__dirname, '..', '..');
 
-test('the final onboarding step exposes exactly eight useful choices', () => {
+test('the final onboarding step keeps its seven non-source choices', () => {
   const html = fs.readFileSync(path.join(root, 'app', 'view', 'app.html'), 'utf8');
   // Found by its own content, not by a step index: inserting a step ahead of it (the Simple /
   // Advanced choice did exactly that) must not silently point this at a different section.
   const step = html.split(/<section class="onboarding-step[^"]*" id="onboarding-step-\d+"/).find((part) => part.includes('id="onboard-theme"')) || '';
   const body = step.slice(0, step.indexOf('</section>'));
-  assert.equal((body.match(/<select\b/g) || []).length, 8);
+  assert.equal((body.match(/<select\b/g) || []).length, 7);
+  assert.doesNotMatch(body, /onboard-src-|onboard-legit-steam/, 'sources belong to their own complete step');
   for (const id of ['onboard-theme', 'onboard-notification-mode', 'onboard-notification-preset', 'onboard-playtime']) {
     assert.match(body, new RegExp(`id="${id}"`));
   }
+});
+
+test('onboarding exposes every source switch from Settings', () => {
+  const html = fs.readFileSync(path.join(root, 'app', 'view', 'app.html'), 'utf8');
+  const settingsBlock = html.match(/<ul id="options-source">[\s\S]*?<\/ul>/)?.[0] || '';
+  const settingsSources = [...settingsBlock.matchAll(/id="option_([^"]+)"/g)].map((match) => match[1]).sort();
+  const onboardingSources = [...html.matchAll(/id="onboard-src-([^"-]+)"/g)].map((match) => match[1]).sort();
+
+  assert.ok(settingsSources.length > 9, 'the test must cover the complete current source list');
+  assert.deepEqual(onboardingSources, settingsSources, 'a Settings source is missing from onboarding');
+
+  const onboarding = fs.readFileSync(path.join(root, 'app', 'ui', 'onboarding.js'), 'utf8');
+  const sourceRows = onboarding.match(/const SOURCE_ROWS = \[[\s\S]*?\n  \];/)?.[0] || '';
+  const wiredSources = [...sourceRows.matchAll(/key: '([^']+)'/g)].map((match) => match[1]).sort();
+  assert.deepEqual(wiredSources, settingsSources, 'a visible source is not loaded and saved');
 });
 
 test('fresh profiles enable playtime and a notification preview uses one transport', () => {

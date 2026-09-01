@@ -1056,6 +1056,7 @@
       "인터페이스",
       "계정",
       "게임",
+      "소스",
       "설정"
     ],
     "languageTitle": "언어 선택",
@@ -1092,6 +1093,10 @@
     "emptyList": "이번에 추가한 항목이 없습니다.",
     "settingsTitle": "권장 설정",
     "settingsCopy": "라이브러리, 모양, 알림에 관한 기본 항목입니다. 나중에 언제든 바꿀 수 있습니다.",
+    "sourcesTitle": "도전 과제를 가져오는 곳",
+    "sourcesCopy": "모두 이 PC에서 읽어옵니다. 사용하지 않는 항목은 꺼두세요. 전부 설정에서 나중에 바꿀 수 있습니다.",
+    "sourcesEmulators": "에뮬레이터",
+    "sourcesEmulatorsCopy": "설치되어 있을 때만 읽으므로, 켜 두어도 부담이 없습니다.",
     "source": "Steam 게임 표시",
     "notifications": "알림",
     "notificationTest": "알림 테스트",

@@ -1056,6 +1056,7 @@
       "Felület",
       "Fiók",
       "Játékok",
+      "Forrás",
       "Beállítások"
     ],
     "languageTitle": "Válasszon nyelvet",
@@ -1092,6 +1093,10 @@
     "emptyList": "Semmi sem lett hozzáadva ehhez a munkamenethez.",
     "settingsTitle": "Ajánlott beállítások",
     "settingsCopy": "A könyvtár, a megjelenés és az értesítések lényege. Minden később is módosítható.",
+    "sourcesTitle": "Honnan származnak a teljesítményeid",
+    "sourcesCopy": "Mindegyiket erről a gépről olvassuk. Amit nem használsz, hagyd kikapcsolva; mindegyik később is szerkeszthető a Beállításokban.",
+    "sourcesEmulators": "Emulátorok",
+    "sourcesEmulatorsCopy": "Mindegyiket csak akkor olvassuk, ha telepítve van, így a bekapcsolva hagyásuk semmibe nem kerül.",
     "source": "Steam játékok megjelenítése",
     "notifications": "Értesítések",
     "notificationTest": "Értesítés tesztelése",

@@ -1056,6 +1056,7 @@
       "Interface",
       "Account",
       "Games",
+      "Bronnen",
       "Instellingen"
     ],
     "languageTitle": "Taal kiezen",
@@ -1092,6 +1093,10 @@
     "emptyList": "Deze sessie is er niets toegevoegd.",
     "settingsTitle": "Aanbevolen instellingen",
     "settingsCopy": "Het belangrijkste voor je bibliotheek, het uiterlijk en de meldingen. Alles blijft later aanpasbaar.",
+    "sourcesTitle": "Waar je prestaties vandaan komen",
+    "sourcesCopy": "Elk hiervan wordt op deze pc gelezen. Laat uit wat je niet gebruikt; alles blijft aanpasbaar in Instellingen.",
+    "sourcesEmulators": "Emulators",
+    "sourcesEmulatorsCopy": "Elke bron wordt alleen gelezen als hij is geïnstalleerd, dus ze aan laten staan kost niets.",
     "source": "Steam-games tonen",
     "notifications": "Meldingen",
     "notificationTest": "Melding testen",

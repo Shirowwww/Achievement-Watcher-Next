@@ -1,0 +1,7 @@
+# The portable archive is built after the installer by build/build.js. Its afterPack pass writes a
+# marker beside the executable, which makes the app keep its profile in ./data after extraction.
+extends: ./electron-builder.yml
+
+win:
+  target: zip
+  artifactName: 'Achievement.Watcher.Portable.${version}.${ext}'

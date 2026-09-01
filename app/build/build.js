@@ -8,6 +8,8 @@ const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
 const { publisherMatches } = require("../util/updateSignature.js");
+const { PORTABLE_MARKER } = require("../util/portableMode.js");
+const AdmZip = require("adm-zip");
 
 const signingDir = path.join(__dirname, "signing");
 const pfx = path.join(signingDir, "Shirow.pfx");
@@ -22,9 +24,8 @@ const windowsPowerShellModules = path.join(
     "Modules"
 );
 
-function verifySignedUpdateArtifacts() {
+function verifySignedUpdateArtifacts(version) {
     const appDir = path.join(__dirname, "..");
-    const version = require(path.join(appDir, "package.json")).version;
     const distDir = path.join(appDir, "dist");
     const installer = path.join(distDir, `Achievement.Watcher.Setup.${version}.exe`);
     const updateConfig = path.join(distDir, "win-unpacked", "resources", "app-update.yml");
@@ -59,6 +60,37 @@ function verifySignedUpdateArtifacts() {
     console.log("[build] Signed installer, update publisher and SHA-512 manifest verified.");
 }
 
+function verifyPortableArtifact(version) {
+    const portable = path.join(__dirname, "..", "dist", `Achievement.Watcher.Portable.${version}.zip`);
+    if (!fs.existsSync(portable)) throw new Error(`Missing portable artifact: ${portable}`);
+
+    const zip = new AdmZip(portable);
+    const marker = zip.getEntry(PORTABLE_MARKER);
+    const executable = zip.getEntry("Achievement Watcher.exe");
+    if (!marker || !executable) throw new Error("Portable ZIP is missing its profile marker or executable");
+    const parsed = JSON.parse(marker.getData().toString("utf8"));
+    if (parsed.portable !== true) throw new Error("Portable ZIP carries an invalid profile marker");
+    console.log("[build] Portable ZIP and relative-profile marker verified.");
+}
+
+function runBuilder(config, buildEnv) {
+    const result = spawnSync(
+        process.execPath,
+        [require.resolve("electron-builder/cli"), "--config", config, "--publish", "never"],
+        {
+            cwd: path.join(__dirname, ".."),
+            env: buildEnv,
+            stdio: "inherit",
+        }
+    );
+
+    if (result.error) {
+        console.error(result.error.message);
+        process.exit(1);
+    }
+    if (result.status !== 0) process.exit(result.status == null ? 1 : result.status);
+}
+
 if (fs.existsSync(pfx)) {
     env.CSC_LINK = pfx;
     if (fs.existsSync(passwordFile)) {
@@ -71,24 +103,22 @@ else {
     console.log("[build] To sign, run: powershell -ExecutionPolicy Bypass -File build/signing/create-self-signed-cert.ps1");
 }
 
-const result = spawnSync(
-    process.execPath,
-    [require.resolve("electron-builder/cli"), "--config", "electron-builder.yml", "--publish", "never"],
-    {
-        cwd: path.join(__dirname, ".."),
-        env,
-        stdio: "inherit",
-    }
-);
-
-if (result.error) {
-    console.error(result.error.message);
-    process.exit(1);
-}
-if (result.status !== 0) process.exit(result.status == null ? 1 : result.status);
+/*
+  Two passes, installer first. The portable pass cannot damage the installer's update manifest:
+  electron-builder only writes latest.yml for a target its own isSuitableWindowsTarget() accepts,
+  which is nsis, nsis-* and an updater-aware appx - never zip (app-builder-lib/out/publish/
+  PublishManager.js). So latest.yml, the file every existing install polls, is produced by the first
+  pass and left alone by the second.
+*/
+const version = require(path.join(__dirname, "..", "package.json")).version;
+const installerEnv = { ...env };
+delete installerEnv.AW_BUILD_PORTABLE;
+runBuilder("electron-builder.yml", installerEnv);
+runBuilder("electron-builder-portable.yml", { ...env, AW_BUILD_PORTABLE: "1" });
 
 try {
-    if (fs.existsSync(pfx)) verifySignedUpdateArtifacts();
+    verifyPortableArtifact(version);
+    if (fs.existsSync(pfx)) verifySignedUpdateArtifacts(version);
 } catch (error) {
     console.error(`[build] ${error.message}`);
     process.exit(1);

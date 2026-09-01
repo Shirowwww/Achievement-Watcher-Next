@@ -1056,6 +1056,7 @@
       "Grensesnitt",
       "Konto",
       "Spill",
+      "Kilder",
       "Innstillinger"
     ],
     "languageTitle": "Velg språk",
@@ -1092,6 +1093,10 @@
     "emptyList": "Ingenting lagt til i denne økten.",
     "settingsTitle": "Anbefalte innstillinger",
     "settingsCopy": "Det viktigste for biblioteket, utseendet og varslene dine. Alt kan endres senere.",
+    "sourcesTitle": "Hvor prestasjonene dine kommer fra",
+    "sourcesCopy": "Skru av det du ikke bruker; alt er fortsatt redigerbart i Innstillinger.",
+    "sourcesEmulators": "Emulatorer",
+    "sourcesEmulatorsCopy": "Hver av dem leses bare når den er installert, så det koster ingenting å la dem stå på.",
     "source": "Vis Steam-spill",
     "notifications": "Varsler",
     "notificationTest": "Testvarsel",

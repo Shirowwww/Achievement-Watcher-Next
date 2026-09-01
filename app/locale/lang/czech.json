@@ -1056,6 +1056,7 @@
       "Rozhraní",
       "Účet",
       "Hry",
+      "Zdroj",
       "Nastavení"
     ],
     "languageTitle": "Vyberte jazyk",
@@ -1092,6 +1093,10 @@
     "emptyList": "Do této relace nebylo nic přidáno.",
     "settingsTitle": "Doporučená nastavení",
     "settingsCopy": "To podstatné pro knihovnu, vzhled a oznámení. Vše lze změnit později.",
+    "sourcesTitle": "Odkud pocházejí vaše úspěchy",
+    "sourcesCopy": "Všechny se čtou na tomto počítači. Co nepoužíváte, nechte vypnuté; vše zůstává upravitelné v Nastavení.",
+    "sourcesEmulators": "Emulátory",
+    "sourcesEmulatorsCopy": "Každý se čte, jen když je nainstalovaný, takže jejich zapnutí nic nestojí.",
     "source": "Zobrazit hry na Steamu",
     "notifications": "Oznámení",
     "notificationTest": "Otestovat oznámení",

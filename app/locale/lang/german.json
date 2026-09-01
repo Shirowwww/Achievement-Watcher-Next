@@ -1056,6 +1056,7 @@
       "Oberfläche",
       "Konto",
       "Spiele",
+      "Quelle",
       "Einstellungen"
     ],
     "languageTitle": "Sprache wählen",
@@ -1092,6 +1093,10 @@
     "emptyList": "In dieser Sitzung wurde nichts hinzugefügt.",
     "settingsTitle": "Empfohlene Einstellungen",
     "settingsCopy": "Das Wichtigste für Bibliothek, Aussehen und Benachrichtigungen. Alles bleibt später änderbar.",
+    "sourcesTitle": "Woher deine Erfolge stammen",
+    "sourcesCopy": "Jede davon wird auf diesem PC gelesen. Lass aus, was du nicht nutzt; alles bleibt in den Einstellungen bearbeitbar.",
+    "sourcesEmulators": "Emulatoren",
+    "sourcesEmulatorsCopy": "Jeder wird nur gelesen, wenn er installiert ist - sie eingeschaltet zu lassen kostet also nichts.",
     "source": "Steam-Spiele anzeigen",
     "notifications": "Benachrichtigungen",
     "notificationTest": "Benachrichtigung testen",

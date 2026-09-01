@@ -48,6 +48,8 @@ publish:
 
 win:
   icon: build/icon.ico
+  # build/build.js runs this installed target first, then the portable ZIP config in a separate pass
+  # so only the archive receives the marker that selects a relative data directory.
   target: nsis
   artifactName: 'Achievement.Watcher.Setup.${version}.${ext}'
   # Code signing: no trusted certificate is configured. `npm run build`
@@ -122,6 +124,7 @@ files:
   # (patch-package is a devDependency and never runs from an installed build) and the local agent
   # tooling, which is gitignored and has no business in a user's install directory.
   - '!runme.cmd'
+  - '!electron-builder-portable.yml'
   - '!patches/**'
   - '!.agents/**'
   - '!.claude/**'

@@ -10,7 +10,7 @@ const onboardingFolderDiagnosis = require(path.join(appPath, 'util/folderDiagnos
 const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
 
 (function ($, window, document) {
-  const STEP_COUNT = 6;
+  const STEP_COUNT = 7;
   const onboardingTextCache = new Map();
   let step = 0;
   let addedSaveDirs = [];
@@ -62,6 +62,12 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
         requestedBundle.settings?.notification?.option?.mode?.value?.auto ||
         englishBundle.settings?.notification?.option?.mode?.value?.auto ||
         'Automatic';
+      // Same idea for the sources step: every row is a real Settings row, so its description and
+      // its none/installed/owned wording come from there rather than from a second set of keys.
+      localized.sourceText = merge(englishBundle.settings?.source || {}, requestedBundle.settings?.source || {}, {
+        arrayMerge: (dest, src) => src,
+        isEmpty: (a) => a === null || a === '',
+      });
       onboardingTextCache.set(lang, localized);
       return localized;
     } catch (err) {
@@ -172,6 +178,11 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     $('#onboard-add-library-dir-hint').text(t.addLibraryHint);
     $('#onboard-save-list-title').text(t.saveList);
     $('#onboard-library-list-title').text(t.libraryList);
+    $('#onboard-sources-title').text(t.sourcesTitle);
+    $('#onboard-sources-copy').text(t.sourcesCopy);
+    $('#onboard-sources-emulator-title').text(t.sourcesEmulators);
+    $('#onboard-sources-emulator-copy').text(t.sourcesEmulatorsCopy);
+    translateSourceRows(t);
     $('#onboard-settings-title').text(t.settingsTitle);
     $('#onboard-settings-copy').text(t.settingsCopy);
     $('#onboard-theme-label').text(t.theme);
@@ -181,19 +192,14 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     $('#onboard-preset-label').text(t.preset);
     $('#onboard-preset-hint').text(t.presetHint);
     $('#onboard-playtime-label').text(t.playtime);
-    $('#onboard-source-label').text(t.source);
     $('#onboard-auto-fix-label').text(t.autoFix);
     $('#onboard-hidden-label').text(t.hidden);
     $('#onboard-merge-label').text(t.merge);
-    $('#onboard-source-hint').text(t.sourceHint);
     $('#onboard-notification-mode-hint').text(t.notificationsHint);
     $('#onboard-playtime-hint').text(t.playtimeHint);
     $('#onboard-auto-fix-hint').text(t.autoFixHint);
     $('#onboard-hidden-hint').text(t.hiddenHint);
     $('#onboard-merge-hint').text(t.mergeHint);
-    $("#onboard-legit-steam option[value='0']").text(t.none);
-    $("#onboard-legit-steam option[value='1']").text(t.installed);
-    $("#onboard-legit-steam option[value='2']").text(t.owned);
     $("#onboard-notification-mode option[value='auto']").text(t.notificationAuto);
     $("#onboard-notification-mode option[value='toast']").text(t.toast);
     $("#onboard-notification-mode option[value='overlay']").text(t.overlay);
@@ -280,13 +286,69 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     }
   }
 
+  /*
+    The sources step. Each key is a real achievement_source setting, so the labels and descriptions
+    are read straight from the Settings translations rather than duplicated: a brand name needs no
+    translation, and every description here is already carried by all 28 locales.
+
+    `tri` marks the three sources that store 0/1/2 (none / installed on this PC / everything the
+    account owns) instead of a boolean.
+  */
+  const SOURCE_ROWS = [
+    { key: 'legitSteam', tri: true, fallback: 0 },
+    { key: 'xboxPc', tri: true, fallback: 2 },
+    { key: 'epicOfficial', tri: true, fallback: 2 },
+    { key: 'gogOfficial', fallback: true },
+    { key: 'ubisoftOfficial', fallback: true },
+    { key: 'ea', fallback: true },
+    { key: 'steamEmu', fallback: true },
+    { key: 'greenLuma', fallback: true },
+    { key: 'lumaPlay', fallback: true },
+    { key: 'socialClub', fallback: true },
+    { key: 'gog', fallback: true },
+    { key: 'epic', fallback: true },
+    { key: 'rpcs3', fallback: true },
+    { key: 'shadps4', fallback: true },
+    { key: 'xenia', fallback: true },
+    { key: 'xlln', fallback: true },
+    { key: 'importCache', fallback: true },
+  ];
+
+  function translateSourceRows(t) {
+    const settingsSource = t.sourceText || {};
+    const values = (settingsSource.legitSteam && settingsSource.legitSteam.value) || {};
+    for (const row of SOURCE_ROWS) {
+      const entry = settingsSource[row.key] || {};
+      $(`#onboard-src-${row.key}-hint`).text(entry.description || '');
+      if (row.tri) {
+        $(`#onboard-src-${row.key} option[value='0']`).text(values.none || t.none);
+        $(`#onboard-src-${row.key} option[value='1']`).text(values.installed || t.installed);
+        $(`#onboard-src-${row.key} option[value='2']`).text(values.owned || t.owned);
+      } else {
+        $(`#onboard-src-${row.key} option[value='true']`).text(t.enabled);
+        $(`#onboard-src-${row.key} option[value='false']`).text(t.disabled);
+      }
+    }
+    // Rows with a translated Settings name expose a label slot; brand names stay in the markup.
+    for (const row of SOURCE_ROWS) {
+      const name = (settingsSource[row.key] || {}).name;
+      if (name) $(`#onboard-src-${row.key}-name`).text(name);
+    }
+    const official = settingsSource.officialPlatforms || {};
+    if (official.title) $('#onboard-sources-official-title').text(official.title);
+    if (official.description) $('#onboard-sources-official-copy').text(official.description);
+  }
+
   function populateValues() {
     populateLanguageSelect(app.config.achievement?.lang || 'english');
     $('#onboard-username').val(app.config.general?.username || os.userInfo().username || 'User');
     populateMainSteamSelect(app.config.steam?.main || '0');
     $('#onboard-notification-mode').val(app.config.notification_transport?.mode || 'auto');
     $('#onboard-playtime').val(String(app.config.notification?.playtime ?? true));
-    $('#onboard-legit-steam').val(String(app.config.achievement_source?.legitSteam ?? 0));
+    for (const row of SOURCE_ROWS) {
+      const stored = app.config.achievement_source?.[row.key];
+      $(`#onboard-src-${row.key}`).val(String(stored ?? row.fallback));
+    }
     $('#onboard-auto-fix').val(String(app.config.emulator?.autoApplyNewGames ?? false));
     $('#onboard-hidden').val(String(app.config.achievement?.showHidden ?? false));
     $('#onboard-merge').val(String(app.config.achievement?.mergeDuplicate ?? true));
@@ -562,7 +624,10 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
       app.config.overlay.notificationPreset = $('#onboard-notification-preset').val() || app.config.overlay.notificationPreset || 'AW Next';
       app.config.general.theme = $('#onboard-theme').val() || 'default';
       app.config.notification.playtime = boolValue($('#onboard-playtime').val());
-      app.config.achievement_source.legitSteam = parseInt($('#onboard-legit-steam').val(), 10) || 0;
+      for (const row of SOURCE_ROWS) {
+        const raw = $(`#onboard-src-${row.key}`).val();
+        app.config.achievement_source[row.key] = row.tri ? parseInt(raw, 10) || 0 : boolValue(raw);
+      }
       app.config.emulator.autoApplyNewGames = boolValue($('#onboard-auto-fix').val());
       app.config.achievement.showHidden = boolValue($('#onboard-hidden').val());
       app.config.achievement.mergeDuplicate = boolValue($('#onboard-merge').val());

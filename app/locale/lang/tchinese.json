@@ -1056,6 +1056,7 @@
       "介面",
       "帳戶",
       "遊戲",
+      "來源",
       "設定"
     ],
     "languageTitle": "選擇語言",
@@ -1092,6 +1093,10 @@
     "emptyList": "這次沒有新增任何項目。",
     "settingsTitle": "建議設定",
     "settingsCopy": "收藏庫、外觀與通知的必備設定。之後都還可以隨時修改。",
+    "sourcesTitle": "成就的來源",
+    "sourcesCopy": "以下每一項都會在本機讀取。不需要的可以關閉，全部都能之後在設定中修改。",
+    "sourcesEmulators": "模擬器",
+    "sourcesEmulatorsCopy": "只有安裝後才會讀取，所以開著也不會有任何影響。",
     "source": "顯示 Steam 遊戲",
     "notifications": "通知",
     "notificationTest": "測試通知",

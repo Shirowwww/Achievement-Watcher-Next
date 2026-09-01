@@ -4,6 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { PORTABLE_MARKER } = require('../util/portableMode.js');
 
 // Size accounting for the build log.
 function dirSize(p) {
@@ -40,6 +41,16 @@ const MB = (n) => `${(n / (1024 * 1024)).toFixed(1)} MB`;
 
 exports.default = async function afterPack(context) {
   const { appOutDir, packager, electronPlatformName } = context;
+
+  // The installer and ZIP are packed in separate passes. A marker exists only in the second pass,
+  // so an installed copy keeps using %APPDATA% while the extracted archive owns ./data.
+  const portableMarker = path.join(appOutDir, PORTABLE_MARKER);
+  fs.rmSync(portableMarker, { force: true });
+  if (process.env.AW_BUILD_PORTABLE === '1') {
+    if (electronPlatformName !== 'win32') throw new Error('[afterPack] the portable archive is Windows-only');
+    fs.writeFileSync(portableMarker, `${JSON.stringify({ portable: true }, null, 2)}\n`, 'utf8');
+    console.log(`[afterPack] Added portable profile marker -> ${portableMarker}`);
+  }
 
   // Copy watchdog/node_modules into the packed output.
   const src = path.join(packager.projectDir, '..', 'watchdog', 'node_modules');

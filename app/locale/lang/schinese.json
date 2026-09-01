@@ -1056,6 +1056,7 @@
       "界面",
       "帐户",
       "游戏",
+      "来源",
       "设置"
     ],
     "languageTitle": "选择语言",
@@ -1092,6 +1093,10 @@
     "emptyList": "本次未添加任何内容。",
     "settingsTitle": "推荐设置",
     "settingsCopy": "库、外观和通知的要点。之后都可以随时更改。",
+    "sourcesTitle": "成就的来源",
+    "sourcesCopy": "以下每一项都在本机读取。不用的可以关闭，全部都可以随时在设置中修改。",
+    "sourcesEmulators": "模拟器",
+    "sourcesEmulatorsCopy": "只有安装后才会读取，所以开着也不会有任何影响。",
     "source": "显示 Steam 游戏",
     "notifications": "通知",
     "notificationTest": "测试通知",
