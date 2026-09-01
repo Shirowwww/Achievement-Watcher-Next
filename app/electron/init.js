@@ -1297,6 +1297,54 @@ function attachOverlayLocalIcons(game) {
   }
 }
 
+/*
+  The on-demand scrapes (SteamDB covers, launch metadata, top owners) run off the critical path, so
+  a teardown routinely fired while several were mid-flight: the renderer sends "close-puppeteer" the
+  moment the game list is populated, and a scan leaves a fan-out of SteamDB lookups running behind
+  it. Closing the context under them killed the page they were on, which surfaced as "Execution
+  context was destroyed" on the evaluate and an unhandled TargetCloseError from inside the stealth
+  plugin. Each scrape now takes a lease and closePuppeteer drains the ones outstanding when it was
+  called - bounded, so a wedged page can still never hold the browser open.
+*/
+const puppeteerLeases = new Set();
+const PUPPETEER_DRAIN_TIMEOUT_MS = 20000;
+/*
+  The same lease caps how many stealth pages exist at once. Nothing bounded the fan-out before: a
+  scan seeds launch metadata per game off the critical path, so a library could ask for a dozen
+  SteamDB pages simultaneously - a dozen renderers, a dozen full evasion passes, and a much wider
+  window for a teardown to land mid-scrape. Queueing costs nothing here since every caller is
+  already best-effort and off the critical path.
+*/
+const PUPPETEER_MAX_CONCURRENT_PAGES = 3;
+const puppeteerSlotQueue = [];
+let puppeteerSlotsInUse = 0;
+
+async function acquirePuppeteerSlot() {
+  if (puppeteerSlotsInUse >= PUPPETEER_MAX_CONCURRENT_PAGES) {
+    // The releasing scrape hands its slot straight over, so the count stays accurate across the await.
+    await new Promise((resolve) => puppeteerSlotQueue.push(resolve));
+  } else {
+    puppeteerSlotsInUse += 1;
+  }
+  let release;
+  const lease = new Promise((resolve) => {
+    release = resolve;
+  });
+  puppeteerLeases.add(lease);
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    puppeteerLeases.delete(lease);
+    release();
+    const next = puppeteerSlotQueue.shift();
+    if (next) next();
+    else puppeteerSlotsInUse -= 1;
+  };
+}
+
+let puppeteerClosing = null;
+
 async function closePuppeteer() {
   currentlyscraping.steamcommunity = false;
   currentlyscraping.steamhunters = false;
@@ -1304,18 +1352,32 @@ async function closePuppeteer() {
     puppeteerWindow = {};
     return;
   }
-  // Detach handles first so a concurrent scrape cannot reuse a browser being closed.
-  const browser = puppeteerWindow.browser;
-  const context = puppeteerWindow.context;
-  puppeteerWindow.browser = undefined;
-  puppeteerWindow.context = undefined;
-  puppeteerWindow.pagesh = undefined;
+  // Two close paths can overlap (the window fires both 'close' and 'closed'); one drain is enough.
+  if (puppeteerClosing) return puppeteerClosing;
+  puppeteerClosing = (async () => {
+    const outstanding = [...puppeteerLeases];
+    if (outstanding.length) {
+      debug.log(`puppeteer: waiting on ${outstanding.length} scrape(s) before closing the browser`);
+      await Promise.race([Promise.all(outstanding), delay(PUPPETEER_DRAIN_TIMEOUT_MS)]);
+    }
+    // Detach handles first so a concurrent scrape cannot reuse a browser being closed.
+    const browser = puppeteerWindow.browser;
+    const context = puppeteerWindow.context;
+    puppeteerWindow.browser = undefined;
+    puppeteerWindow.context = undefined;
+    puppeteerWindow.pagesh = undefined;
+    try {
+      if (context) await context.close();
+    } catch {}
+    try {
+      if (browser) await browser.close();
+    } catch {}
+  })();
   try {
-    if (context) await context.close();
-  } catch {}
-  try {
-    if (browser) await browser.close();
-  } catch {}
+    await puppeteerClosing;
+  } finally {
+    puppeteerClosing = null;
+  }
 }
 
 async function startEngines() {
@@ -2451,12 +2513,18 @@ function findInstalledEdge() {
   when a broken Chrome/Edge install would realistically have been repaired.
 */
 let browserLaunchFailed = false;
+let stealthRegistered = false;
 
 async function startPuppeteer(headless, strip) {
   if (browserLaunchFailed && !puppeteerWindow.browser) throw new Error('No usable browser this session (a previous launch failed).');
   const puppeteer = require('puppeteer-extra');
-  const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-  puppeteer.use(StealthPlugin());
+  // puppeteer-extra's use() has no dedupe: registering here on every call stacked another
+  // StealthPlugin (~17 evasions each) onto the module singleton, so every new page re-ran the whole
+  // set once per past call and multiplied the plugin's own console noise by the same factor.
+  if (!stealthRegistered) {
+    puppeteer.use(require('puppeteer-extra-plugin-stealth')());
+    stealthRegistered = true;
+  }
   const ChromeLauncher = require('chrome-launcher');
   // Picked per-platform: getInstallations()[0] may be undefined when Chrome is not installed.
   const installedChromePath =
@@ -2673,6 +2741,7 @@ async function fetchSteamDbAssets(appid, { needIcons = false } = {}) {
   const scrape = async () => {
     const steamdbCover = require(path.join(app.getAppPath(), 'parser/steamdbCover.js'));
     let page = null;
+    const releasePage = await acquirePuppeteerSlot();
     try {
       await startPuppeteer(true, false);
       page = await puppeteerWindow.context.newPage();
@@ -2721,6 +2790,7 @@ async function fetchSteamDbAssets(appid, { needIcons = false } = {}) {
       return { urls: [], icons: [] };
     } finally {
       if (page) await page.close().catch(() => {});
+      releasePage();
     }
   };
   const pending = steamdbCoversQueue.then(scrape);
@@ -3421,6 +3491,7 @@ async function fetchTopOwners() {
   topOwnersInFlight = (async () => {
     const topOwners = require(path.join(app.getAppPath(), 'parser/topOwners.js'));
     let page = null;
+    const releasePage = await acquirePuppeteerSlot();
     try {
       await startPuppeteer(true, false);
       page = await puppeteerWindow.context.newPage();
@@ -3449,6 +3520,7 @@ async function fetchTopOwners() {
       return [];
     } finally {
       if (page) await page.close().catch(() => {});
+      releasePage();
     }
   })();
   try {
@@ -3534,6 +3606,7 @@ async function fetchSteamDbLaunch(appid) {
       return fromAppInfo;
     }
     let page = null;
+    const releasePage = await acquirePuppeteerSlot();
     try {
       await startPuppeteer(true, false);
       page = await puppeteerWindow.context.newPage();
@@ -3571,6 +3644,7 @@ async function fetchSteamDbLaunch(appid) {
       return null;
     } finally {
       if (page) await page.close().catch(() => {});
+      releasePage();
     }
   })();
   steamdbLaunchInFlight.set(id, pending);

@@ -79,6 +79,11 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Logs stop growing without bound.** The size limit was only checked when the app started, so a
   file could grow far past it for as long as the app stayed open - which is days.
 
+- **The executable a game is tracked by is still found once the library finishes loading.** Those
+  lookups run in the background, and the browser they use was shut down the moment the list was on
+  screen, so the ones still running were cut off and filled the log with errors. They are now let
+  finish, and no more than three run at a time.
+
 ### Improved
 
 - **A monitor that is only half working now says so.** Its heartbeat proved the process was alive and
