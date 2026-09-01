@@ -17,6 +17,11 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Epic can list what your account owns.** It read the local install manifests and nothing else, so
   a PC with no Epic game installed showed no Epic game at all. With **Owned** selected it lists the
   account library and brings each game its full achievement list, its unlock state and its rarity.
+- **The game screen carries the tile's two other marks as well.** Whether the achievements are
+  healthy and what the store says you own were readable in the library list and nowhere else, so
+  opening a game dropped both. The same badges now sit beside its name, and read as a card does:
+  the health mark for a game tracked through a local save, the owned mark for one the store itself
+  reports, never the two at once.
 - **The game screen says where its achievements come from.** The library tile carried the source
   badge and the game screen carried nothing, so a game listed by an account read exactly like the
   local copy sitting beside it in the list.

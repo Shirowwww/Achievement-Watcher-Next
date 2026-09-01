@@ -1428,7 +1428,8 @@ body.is-resizing #game-list {
 
 /* The three states of the Game Health panel, in the same colours its own chip uses: ready, worth a
    look, and not tracking at all. */
-#game-list .game-box .info .health-badge {
+#game-list .game-box .info .health-badge,
+#achievement .wrapper > .header .title .health-badge {
   display: inline-block;
   width: 7px;
   height: 7px;
@@ -1436,15 +1437,18 @@ body.is-resizing #game-list {
   flex-shrink: 0;
 }
 
-#game-list .game-box .info .health-badge.ready {
+#game-list .game-box .info .health-badge.ready,
+#achievement .wrapper > .header .title .health-badge.ready {
   background: var(--success);
 }
 
-#game-list .game-box .info .health-badge.attention {
+#game-list .game-box .info .health-badge.attention,
+#achievement .wrapper > .header .title .health-badge.attention {
   background: var(--warning);
 }
 
-#game-list .game-box .info .health-badge.not-tracking {
+#game-list .game-box .info .health-badge.not-tracking,
+#achievement .wrapper > .header .title .health-badge.not-tracking {
   background: var(--danger);
 }
 
@@ -1452,7 +1456,8 @@ body.is-resizing #game-list {
    read as decoration; an info glyph reads as "hover me", same as the other fa-info-circle hints
    in this app. Same three states and colours as before (warning for stale, accent for
    family/purchased) - only the shape changed. The title carries the explanation. */
-#game-list .game-box .info .ownership-badge {
+#game-list .game-box .info .ownership-badge,
+#achievement .wrapper > .header .title .ownership-badge {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
@@ -1461,12 +1466,15 @@ body.is-resizing #game-list {
   cursor: help;
 }
 
-#game-list .game-box .info .ownership-badge.stale {
+#game-list .game-box .info .ownership-badge.stale,
+#achievement .wrapper > .header .title .ownership-badge.stale {
   color: var(--warning);
 }
 
 #game-list .game-box .info .ownership-badge.family,
-#game-list .game-box .info .ownership-badge.purchased {
+#achievement .wrapper > .header .title .ownership-badge.family,
+#game-list .game-box .info .ownership-badge.purchased,
+#achievement .wrapper > .header .title .ownership-badge.purchased {
   color: var(--accent);
 }
 
@@ -1689,7 +1697,7 @@ body.is-resizing #game-list {
   flex: none;
 }
 
-#achievement .wrapper > .header .title span {
+#achievement .wrapper > .header .title > span {
   margin-left: 10px;
   font-family: Open-sans-bold;
   font-size: 36px;
@@ -5977,13 +5985,26 @@ body {
   letter-spacing: 0.005em;
 }
 
-#game-list .game-box .info .game-meta {
+#game-list .game-box .info .game-meta,
+#achievement .wrapper > .header .title .game-meta {
   display: flex;
   align-items: center;
   gap: 5px;
   margin-left: 5px;
   height: 16px;
   flex: 0 0 auto;
+}
+
+/* Reused as it is on the game screen: only where the strip sits changes, next to the source badge
+   instead of under the name - and the rules above give both marks a display of their own, which
+   outranks the browser's [hidden] rule, so a badge with nothing to say stayed on screen. */
+#achievement .wrapper > .header .title .game-meta {
+  margin: auto 0 auto 12px;
+}
+
+#achievement .wrapper > .header .title .health-badge[hidden],
+#achievement .wrapper > .header .title .ownership-badge[hidden] {
+  display: none;
 }
 
 #game-list .game-box .info .source-icon {
@@ -6011,7 +6032,8 @@ body {
   display: none;
 }
 
-#game-list .game-box .info .health-badge {
+#game-list .game-box .info .health-badge,
+#achievement .wrapper > .header .title .health-badge {
   display: block;
   width: 8px;
   height: 8px;
@@ -6022,7 +6044,8 @@ body {
   transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
 }
 
-#game-list .game-box .info .health-badge:hover {
+#game-list .game-box .info .health-badge:hover,
+#achievement .wrapper > .header .title .health-badge:hover {
   transform: translateY(-1px);
   filter: brightness(1.08);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 0 7px rgba(255, 255, 255, 0.12);
@@ -6549,7 +6572,7 @@ body {
   padding: 14px 0 8px;
 }
 
-#achievement .wrapper > .header .title span {
+#achievement .wrapper > .header .title > span {
   font-size: clamp(24px, 3vw, 34px);
   letter-spacing: -0.025em;
 }

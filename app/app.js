@@ -1682,6 +1682,31 @@ function healthDotFor(game) {
   };
 }
 
+/*
+  What the store says about this game: no longer in your library, shared through Steam Family, or
+  bought on the platform it came from. Returns the empty state when there is nothing to say. Shared
+  with the game screen, which carries the same pair of badges as the tile.
+*/
+function ownershipBadgeFor(game) {
+  if (game.ownership === 'stale') {
+    return { state: 'stale', label: t('steam-stale-badge', 'No longer in your Steam library', 'Plus dans ta bibliothèque Steam') };
+  }
+  if (game.ownership === 'family') {
+    return { state: 'family', label: t('steam-family-badge', 'Shared with you through Steam Family', 'Partagé avec toi via la famille Steam') };
+  }
+  const purchased = {
+    steam: () => t('purchased-badge-steam', 'Steam game in your library', 'Jeu Steam dans ta bibliothèque'),
+    gog: () => t('purchased-badge-gog', 'GOG game in your library', 'Jeu GOG dans ta bibliothèque'),
+    ubisoft: () => t('purchased-badge-ubisoft', 'Ubisoft game in your library', 'Jeu Ubisoft dans ta bibliothèque'),
+    epic: () => t('purchased-badge-epic', 'Epic Games title in your library', 'Jeu Epic Games dans ta bibliothèque'),
+    ea: () => t('purchased-badge-ea', 'EA game in your library', 'Jeu EA dans ta bibliothèque'),
+    xbox: () => t('purchased-badge-xbox', 'Xbox game in your library', 'Jeu Xbox dans ta bibliothèque'),
+  };
+  const platform = purchasedPlatformFor(game);
+  const label = platform && purchased[platform] ? purchased[platform]() : '';
+  return { state: label ? 'purchased' : '', label };
+}
+
 // A full report is the better answer, so it replaces the scanned guess on the tile already on
 // screen rather than waiting for the next scan to redraw it.
 function rememberGameHealthState(appid, state) {
@@ -2489,23 +2514,10 @@ var app = {
               achievementDate: localeText('latestAchievementEarned'),
               lastPlayed: localeText('sort.tooltip.played'),
               playtime: localeText('settings.notification.test.playtime'),
-              staleOwnership: t('steam-stale-badge', 'No longer in your Steam library', 'Plus dans ta bibliothèque Steam'),
-              familyOwnership: t('steam-family-badge', 'Shared with you through Steam Family', 'Partagé avec toi via la famille Steam'),
-              purchasedSteam: t('purchased-badge-steam', 'Steam game in your library', 'Jeu Steam dans ta bibliothèque'),
-              purchasedGog: t('purchased-badge-gog', 'GOG game in your library', 'Jeu GOG dans ta bibliothèque'),
-              purchasedUbisoft: t('purchased-badge-ubisoft', 'Ubisoft game in your library', 'Jeu Ubisoft dans ta bibliothèque'),
-              purchasedEpic: t('purchased-badge-epic', 'Epic Games title in your library', 'Jeu Epic Games dans ta bibliothèque'),
-              purchasedEa: t('purchased-badge-ea', 'EA game in your library', 'Jeu EA dans ta bibliothèque'),
-              purchasedXbox: t('purchased-badge-xbox', 'Xbox game in your library', 'Jeu Xbox dans ta bibliothèque'),
             };
-            const purchasedPlatform = game.ownership === 'stale' || game.ownership === 'family' ? '' : purchasedPlatformFor(game);
-            const purchasedLabel = purchasedPlatform
-              ? tileLabels[`purchased${purchasedPlatform.charAt(0).toUpperCase()}${purchasedPlatform.slice(1)}`] || ''
-              : '';
-            const ownershipBadgeClass =
-              game.ownership === 'stale' ? 'stale' : game.ownership === 'family' ? 'family' : purchasedLabel ? 'purchased' : '';
-            const ownershipLabel =
-              game.ownership === 'stale' ? tileLabels.staleOwnership : game.ownership === 'family' ? tileLabels.familyOwnership : purchasedLabel;
+            const ownership = ownershipBadgeFor(game);
+            const ownershipBadgeClass = ownership.state;
+            const ownershipLabel = ownership.label;
             let template = `
             <li>
                 <div class="game-box" data-index="${listIndex}" data-appid="${game.appid}" data-progress="${hasAchievements ? progress : -1}" data-installed="${
@@ -5224,6 +5236,27 @@ var app = {
         } else {
           badge.prop('hidden', true).removeAttr('src').removeAttr('title').removeAttr('data-kind');
         }
+
+        /*
+          The two marks the tile carries beside that badge, for the same reason: on the game screen
+          the tile is out of sight, so whether these achievements are tracked and what the store says
+          you own was readable in the list and nowhere else.
+
+          One or the other, never both, exactly as a card reads: a game whose achievements come from
+          a local save is the one worth saying "tracked" about, and a game the store itself reports
+          is the one worth marking as owned. Saying both of a single game says nothing.
+        */
+        const health = hasHealthDot(game) && game.installed && presentation.kind !== 'steam-hidden' ? healthDotFor(game) : null;
+        const healthBadge = $('#achievement .wrapper > .header .title .health-badge');
+        healthBadge.attr('class', `health-badge${health ? ` ${health.state}` : ''}`).prop('hidden', !health);
+        if (health) healthBadge.attr({ title: health.label, 'aria-label': health.label });
+        else healthBadge.removeAttr('title').removeAttr('aria-label');
+
+        const ownership = health ? { state: '', label: '' } : ownershipBadgeFor(game);
+        const ownershipBadge = $('#achievement .wrapper > .header .title .ownership-badge');
+        ownershipBadge.attr('class', `ownership-badge${ownership.state ? ` ${ownership.state}` : ''}`).prop('hidden', !ownership.label);
+        if (ownership.label) ownershipBadge.attr({ title: ownership.label, 'aria-label': ownership.label });
+        else ownershipBadge.removeAttr('title').removeAttr('aria-label');
       }
 
       if (game.system) {
@@ -5238,7 +5271,8 @@ var app = {
       paintGameHeaderIcon(game);
       bindGameHeaderIconMenu(game);
 
-      $('#achievement .wrapper > .header .title span').text(game.name);
+      // First span only: the badges after it are spans of their own, and would each be given the name.
+      $('#achievement .wrapper > .header .title > span').first().text(game.name);
       // Never let the denominator fall below what's actually displayed: a desynced schema could leave
       // total at 0 for a completed game, rendering "39 / 0" and a NaN%/Infinity% percentage.
       const unlockedCount = Math.max(0, Math.floor(finiteNumber(game.achievement.unlocked, 0)));
