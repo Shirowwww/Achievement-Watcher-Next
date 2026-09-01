@@ -1997,6 +1997,7 @@ function handleMonitorMessage(msg) {
     // something below it would throw.
     if (msg && msg.heartbeat) {
       monitorHeartbeatAt = Date.now();
+      noteMonitorSubsystems(msg.heartbeat.failed);
       return;
     }
     if (msg && Array.isArray(msg.argv)) parseArgs(minimist(msg.argv));
@@ -2108,6 +2109,24 @@ function notifyMonitorOverlayHotkey() {
 // Schedule the supervised respawn with an exponential backoff (3s -> 6s -> 12s -> ... -> 60s cap)
 // so a monitor that crashes in a loop (bad code, missing native module, config corruption) does not
 // hammer the machine every three seconds. The backoff resets once a child survives 30 seconds.
+/*
+  A beating heart only proves the monitor's event loop turns. A watcher that failed to start leaves
+  it running and tracking less than it should, which used to be visible only in the monitor's own
+  log. Reported here once per change, not once per beat.
+*/
+let lastMonitorFailures = '';
+function noteMonitorSubsystems(failed) {
+  const list = Array.isArray(failed) ? failed : [];
+  const key = list.map((entry) => `${entry && entry.name}:${(entry && entry.detail) || ''}`).join('|');
+  if (key === lastMonitorFailures) return;
+  lastMonitorFailures = key;
+  if (list.length === 0) {
+    debug.log('[monitor] every subsystem is running');
+    return;
+  }
+  for (const entry of list) debug.log(`[monitor] subsystem "${entry && entry.name}" is not running: ${(entry && entry.detail) || 'unknown reason'}`);
+}
+
 function scheduleMonitorRespawn() {
   if (app.isQuiting || monitorRespawnTimer) return;
   const delay = monitorRespawnDelay;
@@ -2206,6 +2225,8 @@ function launchWatchdog() {
     // freshly spawned monitor look instantly healthy (or instantly wedged).
     monitorStartedAt = Date.now();
     monitorHeartbeatAt = 0;
+    // Same reason: a replacement monitor must report its own subsystems, not inherit the last one's.
+    lastMonitorFailures = '';
     child.stdout?.on('data', (d) => debug.log(`[monitor] ${String(d).trimEnd()}`));
     child.stderr?.on('data', (d) => debug.log(`[monitor:err] ${String(d).trimEnd()}`));
     child.on('message', handleMonitorMessage);

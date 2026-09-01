@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const watch = require('node-watch');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
+const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
@@ -14,7 +15,6 @@ const { notificationVolumePercent } = require('../util/notificationVolume.js');
 const notifyStrings = require('../util/notifyStrings.js');
 
 const { userDataDir } = require('../util/userData.js');
-const cacheDir = path.join(userDataDir(), 'steam_cache/console');
 // Same icon cache the app parser extracts into - icons written by either side are shared.
 const iconCacheRoot = path.join(userDataDir(), 'icon_cache/xenia');
 const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
@@ -305,24 +305,10 @@ function discover(configFile = userDirFile) {
   return targets;
 }
 
-function cacheFile(titleId) {
-  return path.join(cacheDir, `xenia-${String(titleId).replace(/[^\w.-]/g, '_')}.json`);
-}
-function cacheLoad(titleId) {
-  try {
-    return JSON.parse(fs.readFileSync(cacheFile(titleId), 'utf8'));
-  } catch {
-    return null;
-  }
-}
-function cacheSave(titleId, unlockedIds) {
-  try {
-    fs.mkdirSync(cacheDir, { recursive: true });
-    fs.writeFileSync(cacheFile(titleId), JSON.stringify({ unlocked: unlockedIds }), 'utf8');
-  } catch (err) {
-    debug.warn(`[xenia] cache save failed for ${titleId}: ${err}`);
-  }
-}
+const baseline = createBaselineCache({ prefix: 'xenia', tag: 'xenia', debug });
+const cacheFile = baseline.file;
+const cacheLoad = (key) => baseline.load(key);
+const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
 
 // Suppress duplicate events: Xenia can rewrite the same GPD several times per unlock. Keyed by
 // titleId:achievementId within a short window (the baseline diff already blocks true re-toasts;

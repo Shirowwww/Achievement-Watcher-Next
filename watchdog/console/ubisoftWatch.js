@@ -8,13 +8,13 @@ const path = require('path');
 const zlib = require('zlib');
 const watch = require('node-watch');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
+const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
 
 const { userDataDir } = require('../util/userData.js');
-const cacheDir = path.join(userDataDir(), 'steam_cache/console');
 const iconCacheRoot = path.join(userDataDir(), 'steam_cache/ubisoftOfficial');
 const SPOOL_ROOT = process.env['LOCALAPPDATA'] ? path.join(process.env['LOCALAPPDATA'], 'Ubisoft Game Launcher', 'spool') : '';
 const ACHIEVEMENTS_ROOT = process.env['ProgramData']
@@ -328,24 +328,10 @@ function discover() {
   return targets;
 }
 
-function cacheFile(appid) {
-  return path.join(cacheDir, `ubisoft-${String(appid).replace(/[^\w.-]/g, '_')}.json`);
-}
-function cacheLoad(appid) {
-  try {
-    return JSON.parse(fs.readFileSync(cacheFile(appid), 'utf8'));
-  } catch {
-    return null;
-  }
-}
-function cacheSave(appid, unlockedKeys) {
-  try {
-    fs.mkdirSync(cacheDir, { recursive: true });
-    fs.writeFileSync(cacheFile(appid), JSON.stringify({ unlocked: unlockedKeys }), 'utf8');
-  } catch (err) {
-    debug.warn(`[ubisoft] cache save failed for ${appid}: ${err}`);
-  }
-}
+const baseline = createBaselineCache({ prefix: 'ubisoft', tag: 'ubisoft', debug });
+const cacheFile = baseline.file;
+const cacheLoad = (key) => baseline.load(key);
+const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
 
 async function handleChange(target, ctx) {
   try {

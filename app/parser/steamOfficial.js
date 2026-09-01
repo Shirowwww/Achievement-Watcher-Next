@@ -14,6 +14,15 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   });
 };
 
+/*
+  A second reader for Valve's binary KV format lives in parser/steamAppInfo.js, and the duplication
+  is deliberate rather than an oversight. That file is loaded by the Watchdog from outside the asar
+  through util/sharedAppModule.js, where a relative require cannot resolve, so it must stay
+  dependency-free (test/core/sharedAppModules.test.js enforces it) and cannot share this code. The
+  two also read different documents: this one folds a repeated key into an array and keeps each
+  value's on-disk type, which a float stat needs; the catalogue reader needs the v29 string table
+  and a per-record bound, which these files do not have.
+*/
 function readCString(buf, off) {
   let i = off;
   while (i < buf.length && buf[i] !== 0x00) i++;

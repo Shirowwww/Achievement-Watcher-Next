@@ -2274,6 +2274,110 @@ module.exports.getAchievementsForAppid = async (option, requestedAppid) => {
   }
 };
 
+/*
+  Reading one discovery record's unlock state. Eighteen sources answer here, and while this lived
+  inline in getSavedAchievementsForAppid nothing showed which of them were still reachable - two dead
+  branches sat in it unnoticed for a long time. `dataType` is the PRIMARY record's type, because a
+  merged game reads every one of its records the way its main record is read; an account library is
+  the exception and is dispatched on its own type first.
+
+  Answers the raw unlock map the callers merge into the schema, or NO_RECORD_TO_READ when the record
+  carries nothing to read at all.
+*/
+const NO_RECORD_TO_READ = Symbol('no record to read');
+
+async function readRecordUnlocks(dataType, appid, game, option, helpers) {
+  const { readUplayR2Save, warnEmptyAchievementFileOnce } = helpers;
+  if (appid.data && ACCOUNT_LIBRARY_TYPES.has(appid.data.type) && dataType !== appid.data.type) {
+    if (appid.data.type === 'xboxPc') {
+      const xboxPc = require(path.join(appPath, 'xboxPc.js'));
+      xboxPc.setUserDataPath(_userDataPath || userDataDir());
+      return xboxPc.unlocksForSchema(appid.appid, game.achievement.list);
+    } else {
+      return await epicOfficial.unlocksForSchema(appid, game.achievement.list, option.achievement.lang, {
+        forceRecheck: option.forceAchievementRecheck === true,
+      });
+    }
+  } else if (dataType === 'file') {
+    // A merged game reads every one of its records with the primary record's reader, and a
+    // record from another source can carry no save folder at all (a Ubisoft loader entry
+    // beside a Steam-emulator save). Reading nothing is the right answer there; going in
+    // anyway reported a save folder literally named "undefined" on every scan.
+    if (!appid.data || typeof appid.data.path !== 'string' || !appid.data.path) {
+      debug.log(`[${appid.appid}] no save folder on the ${describeRecord(appid)} record - nothing to read from it`);
+      return NO_RECORD_TO_READ;
+    }
+    let fromFile = await steam.getAchievementsFromFile(appid.data.path);
+    // The same folder can hold a Steam-emulator save AND a Uplay loader's redirect target
+    // ("AchSavePath = GSE Saves\<steamAppid>"). Keys the Uplay side can translate win, since a
+    // bare objective id means nothing to the Steam reader.
+    if (appid.data.uplayR2) fromFile = { ...fromFile, ...readUplayR2Save(appid, game) };
+    // An empty file is a 0% game, not an error - warn instead of throwing.
+    if (fromFile.constructor === Object && Object.entries(fromFile).length === 0) warnEmptyAchievementFileOnce(appid.appid, appid.data.path);
+    return fromFile;
+  } else if (dataType === 'uplayR2') {
+    // Goldberg Uplay R2. Unlike the Steam emus there is no single well-known folder: the loader
+    // resolves its save dir from its own ini (SaveType/SavePath, plus AchSavePath on
+    // redirect-capable builds), and a game update that re-extracts the repack's ini moves it
+    // without warning. Ask uplayR2 for every plausible location, then translate the emulator's
+    // Ubisoft objective ids onto Steam api-names.
+    return readUplayR2Save(appid, game);
+  } else if (dataType === 'reg') {
+    return await greenluma.getAchievements(appid.data.root, appid.data.path);
+  } else if (dataType === 'steamAPI') {
+    return await steam.getAchievementsFromAPI({
+      appID: appid.appid,
+      user: appid.data.userID,
+      path: appid.data.cachePath,
+    });
+  } else if (dataType === 'rpcs3') {
+    return await rpcs3.getAchievements(appid.data.path, game.achievement.total);
+  } else if (dataType === 'shadps4') {
+    return await shadps4.getAchievements(appid.data.path);
+  } else if (dataType === 'xlln') {
+    return xlln.getAchievements(appid.data);
+  } else if (dataType === 'xenia') {
+    return await xenia.getAchievements(appid.data.path);
+  } else if (dataType === 'socialclub') {
+    return await socialclub.getAchievements(appid);
+  } else if (dataType === 'lumaplay') {
+    return uplay.getAchievementsFromLumaPlay(appid.data.root, appid.data.path);
+  } else if (dataType === 'ea') {
+    return await ea.getAchievements(appid);
+  } else if (dataType === 'gogOfficial') {
+    return gogOfficial.getAchievements(appid);
+  } else if (dataType === 'ubisoftOfficial') {
+    return ubisoftOfficial.getAchievements(appid);
+  } else if (dataType === 'epicOfficial') {
+    return await epicOfficial.getAchievements(appid, {
+      forceRecheck: option.forceAchievementRecheck === true,
+      lang: option.achievement.lang,
+    });
+  } else if (dataType === 'manual') {
+    return {};
+  } else if (dataType === 'cached') {
+    return await watchdog.getAchievements(appid.appid);
+  } else if (dataType === 'xboxPc') {
+    // Xbox Network unlock state is not a local save, it comes with the imported schema. Asked
+    // for it against the schema being built, it lands on the right achievements even when
+    // that schema is the Steam one of a game merged with its Xbox entry.
+    const xboxPc = require(path.join(appPath, 'xboxPc.js'));
+    xboxPc.setUserDataPath(_userDataPath || userDataDir());
+    return xboxPc.unlocksForSchema(appid.appid, game.achievement.list);
+  } else if (dataType === 'uplay') {
+    // Legit Ubisoft Connect exposes no local unlock-state file the way the Steam emus do, so
+    // only the schema is available (already loaded into `game`). Show the game with everything
+    // locked instead of throwing a misleading "Not yet implemented" FAIL on every scan.
+    return {};
+  } else if (!dataType) {
+    // No discovery record (e.g. the overlay was opened for an appid that is not in the
+    // library): there is no local save to read, so the schema-only game still loads.
+    return {};
+  } else {
+    throw `Unsupported achievement source type "${dataType}" for appid ${appid.appid}`;
+  }
+}
+
 module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cachedList, cachedLookup) => {
   let game;
   let isDuplicate = false;
@@ -3212,93 +3316,9 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           local copy: it carries its own state and its own reader, so it is dispatched on its own
           type before the chain, and only when it differs from the record's.
         */
-        if (appid.data && ACCOUNT_LIBRARY_TYPES.has(appid.data.type) && dataType !== appid.data.type) {
-          if (appid.data.type === 'xboxPc') {
-            const xboxPc = require(path.join(appPath, 'xboxPc.js'));
-            xboxPc.setUserDataPath(_userDataPath || userDataDir());
-            root = xboxPc.unlocksForSchema(appid.appid, game.achievement.list);
-          } else {
-            root = await epicOfficial.unlocksForSchema(appid, game.achievement.list, option.achievement.lang, {
-              forceRecheck: option.forceAchievementRecheck === true,
-            });
-          }
-        } else if (dataType === 'file') {
-          // A merged game reads every one of its records with the primary record's reader, and a
-          // record from another source can carry no save folder at all (a Ubisoft loader entry
-          // beside a Steam-emulator save). Reading nothing is the right answer there; going in
-          // anyway reported a save folder literally named "undefined" on every scan.
-          if (!appid.data || typeof appid.data.path !== 'string' || !appid.data.path) {
-            debug.log(`[${appid.appid}] no save folder on the ${describeRecord(appid)} record - nothing to read from it`);
-            continue;
-          }
-          root = await steam.getAchievementsFromFile(appid.data.path);
-          // The same folder can hold a Steam-emulator save AND a Uplay loader's redirect target
-          // ("AchSavePath = GSE Saves\<steamAppid>"). Keys the Uplay side can translate win, since a
-          // bare objective id means nothing to the Steam reader.
-          if (appid.data.uplayR2) root = { ...root, ...readUplayR2Save(appid, game) };
-          // An empty file is a 0% game, not an error - warn instead of throwing.
-          if (root.constructor === Object && Object.entries(root).length === 0) warnEmptyAchievementFileOnce(appid.appid, appid.data.path);
-        } else if (dataType === 'uplayR2') {
-          // Goldberg Uplay R2. Unlike the Steam emus there is no single well-known folder: the loader
-          // resolves its save dir from its own ini (SaveType/SavePath, plus AchSavePath on
-          // redirect-capable builds), and a game update that re-extracts the repack's ini moves it
-          // without warning. Ask uplayR2 for every plausible location, then translate the emulator's
-          // Ubisoft objective ids onto Steam api-names.
-          root = readUplayR2Save(appid, game);
-        } else if (dataType === 'reg') {
-          root = await greenluma.getAchievements(appid.data.root, appid.data.path);
-        } else if (dataType === 'steamAPI') {
-          root = await steam.getAchievementsFromAPI({
-            appID: appid.appid,
-            user: appid.data.userID,
-            path: appid.data.cachePath,
-          });
-        } else if (dataType === 'rpcs3') {
-          root = await rpcs3.getAchievements(appid.data.path, game.achievement.total);
-        } else if (dataType === 'shadps4') {
-          root = await shadps4.getAchievements(appid.data.path);
-        } else if (dataType === 'xlln') {
-          root = xlln.getAchievements(appid.data);
-        } else if (dataType === 'xenia') {
-          root = await xenia.getAchievements(appid.data.path);
-        } else if (dataType === 'socialclub') {
-          root = await socialclub.getAchievements(appid);
-        } else if (dataType === 'lumaplay') {
-          root = uplay.getAchievementsFromLumaPlay(appid.data.root, appid.data.path);
-        } else if (dataType === 'ea') {
-          root = await ea.getAchievements(appid);
-        } else if (dataType === 'gogOfficial') {
-          root = gogOfficial.getAchievements(appid);
-        } else if (dataType === 'ubisoftOfficial') {
-          root = ubisoftOfficial.getAchievements(appid);
-        } else if (dataType === 'epicOfficial') {
-          root = await epicOfficial.getAchievements(appid, {
-            forceRecheck: option.forceAchievementRecheck === true,
-            lang: option.achievement.lang,
-          });
-        } else if (dataType === 'manual') {
-          root = {};
-        } else if (dataType === 'cached') {
-          root = await watchdog.getAchievements(appid.appid);
-        } else if (dataType === 'xboxPc') {
-          // Xbox Network unlock state is not a local save, it comes with the imported schema. Asked
-          // for it against the schema being built, it lands on the right achievements even when
-          // that schema is the Steam one of a game merged with its Xbox entry.
-          const xboxPc = require(path.join(appPath, 'xboxPc.js'));
-          xboxPc.setUserDataPath(_userDataPath || userDataDir());
-          root = xboxPc.unlocksForSchema(appid.appid, game.achievement.list);
-        } else if (dataType === 'uplay') {
-          // Legit Ubisoft Connect exposes no local unlock-state file the way the Steam emus do, so
-          // only the schema is available (already loaded into `game`). Show the game with everything
-          // locked instead of throwing a misleading "Not yet implemented" FAIL on every scan.
-          root = {};
-        } else if (!dataType) {
-          // No discovery record (e.g. the overlay was opened for an appid that is not in the
-          // library): there is no local save to read, so the schema-only game still loads.
-          root = {};
-        } else {
-          throw `Unsupported achievement source type "${dataType}" for appid ${appid.appid}`;
-        }
+        const read = await readRecordUnlocks(dataType, appid, game, option, { readUplayR2Save, warnEmptyAchievementFileOnce });
+        if (read === NO_RECORD_TO_READ) continue;
+        root = read;
       } catch (err) {
         // A missing save file is the normal 0%-game case (emulator made the folder but nothing is
         // unlocked yet) - the game still shows with its full schema, all locked. Log it as info, not

@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const watch = require('node-watch');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
+const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
@@ -15,7 +16,6 @@ const notifyStrings = require('../util/notifyStrings.js');
 
 const APPDATA = process.env['APPDATA'] || '';
 const { userDataDir } = require('../util/userData.js');
-const cacheDir = path.join(userDataDir(), 'steam_cache/console');
 
 // Best-effort language → TROP_NN.XML suffix (Sony index). english/default is the suffix-less TROP.XML.
 const LANG_FILE = { japanese: '00', english: '01', french: '02', spanish: '03', german: '04', italian: '05', russian: '08', koreana: '09', schinese: '11', polish: '16', brazilian: '17', turkish: '19' };
@@ -152,24 +152,10 @@ function discover() {
   return targets;
 }
 
-function cacheFile(appid) {
-  return path.join(cacheDir, `${String(appid).replace(/[^\w.-]/g, '_')}.json`);
-}
-function cacheLoad(appid) {
-  try {
-    return JSON.parse(fs.readFileSync(cacheFile(appid), 'utf8'));
-  } catch {
-    return null;
-  }
-}
-function cacheSave(appid, unlockedIds) {
-  try {
-    fs.mkdirSync(cacheDir, { recursive: true });
-    fs.writeFileSync(cacheFile(appid), JSON.stringify({ unlocked: unlockedIds }), 'utf8');
-  } catch (err) {
-    debug.warn(`[shadps4] cache save failed for ${appid}: ${err}`);
-  }
-}
+const baseline = createBaselineCache({ prefix: '', tag: 'shadps4', debug });
+const cacheFile = baseline.file;
+const cacheLoad = (key) => baseline.load(key);
+const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
 
 async function handleChange(target, changedFile, ctx) {
   try {

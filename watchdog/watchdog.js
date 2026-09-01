@@ -63,6 +63,7 @@ const track = require('./track.js');
 const { mapStatProgressEntries } = require('./util/statProgress.js');
 const { notificationVolumePercent } = require('./util/notificationVolume.js');
 const { safeEnv } = require('./util/safeEnv.js');
+const subsystemHealth = require('./util/subsystemHealth.js');
 const playtimeMonitor = require('./playtime/monitor.js');
 const { describeActiveGames } = require('./playtime/seed.js');
 const xboxPc = require('./xboxPc.js');
@@ -155,6 +156,26 @@ const { spawnDetached } = require('./util/spawnDetached.js');
 const { buildSchemaIndex, findSchemaAchievement, buildPreviousAchievementIndex } = require('./util/achievementIndex.js');
 const { createIndexedGameLookup } = require('./util/indexedGameLookup.js');
 const { runXboxPoll, matchesActiveXboxPoll } = require('./util/xboxPolling.js');
+
+/*
+  Every live watcher that is not the Steam save-file path, with what each one reads:
+    shadps4  PS4 emulator trophies
+    rpcs3    PS3 emulator trophies
+    ea       EA Desktop's rotating verbose log
+    xenia    Xbox 360 emulator GPD files under the user's saved folders
+    xlln     Games for Windows LIVE profile state, through XLiveLessNess
+    gog      GOG Galaxy's gameplay.db, rewritten the moment an achievement pops
+    ubisoft  Ubisoft Connect's spool files, protobuf unlock records appended on the spot
+*/
+const CONSOLE_WATCHERS = [
+  { name: 'shadps4', watcher: shadps4Watch },
+  { name: 'rpcs3', watcher: rpcs3Watch },
+  { name: 'ea', watcher: eaWatch },
+  { name: 'xenia', watcher: xeniaWatch },
+  { name: 'xlln', watcher: xllnWatch },
+  { name: 'gog', watcher: gogWatch },
+  { name: 'ubisoft', watcher: ubisoftWatch },
+];
 
 // Trailing-edge window used to fold a burst of options.ini writes into one watchdog restart.
 const OPTIONS_RELOAD_DEBOUNCE_MS = 1500;
@@ -303,7 +324,8 @@ const HEARTBEAT_INTERVAL_MS = 5000;
 function sendHeartbeat() {
   if (typeof process.send !== 'function' || !process.connected) return;
   try {
-    process.send({ heartbeat: { at: Date.now() } });
+    const failed = subsystemHealth.failed();
+    process.send({ heartbeat: { at: Date.now(), ...(failed.length ? { failed } : {}) } });
   } catch {
     // The channel closed under us (the app is quitting). Its own exit handling covers this; a log
     // line here would fire every 5s for the rest of the shutdown.
@@ -776,59 +798,20 @@ var app = {
       self.nextWatchIndex = i;
       self.watchForNewRoots(missingRoots);
 
-      // ShadPS4 (PS4 emulator) live trophy toasts, isolated from the Steam watch path above.
-      // toastID is read live since it resolves asynchronously after start().
-      try {
-        await shadps4Watch.start({ options: self.options, getToastID: () => self.toastID, notify });
-      } catch (err) {
-        debug.error(`[shadps4] ${err}`);
-      }
-
-      // RPCS3 (PS3 emulator) live trophy toasts, same baseline-diff shape as ShadPS4 above.
-      try {
-        await rpcs3Watch.start({ options: self.options, getToastID: () => self.toastID, notify });
-      } catch (err) {
-        debug.error(`[rpcs3] ${err}`);
-      }
-
-      // EA Desktop live achievement toasts: parse EA's rotating verbose log and diff against a local
-      // baseline, independent from the Steam save-file watcher.
-      try {
-        await eaWatch.start({ options: self.options, getToastID: () => self.toastID, notify });
-      } catch (err) {
-        debug.error(`[ea] ${err}`);
-      }
-
-      // Xenia (Xbox 360 emulator) live achievement toasts - watches each title's own GPD under the
-      // user's saved folders (cfg/userdir.db) and diffs against a baseline, like shadps4Watch.
-      try {
-        await xeniaWatch.start({ options: self.options, getToastID: () => self.toastID, notify });
-      } catch (err) {
-        debug.error(`[xenia] ${err}`);
-      }
-
-      // XLiveLessNess (Games for Windows LIVE) live achievement toasts - watches each title's own
-      // profile state under the user's saved folders and diffs against a baseline, like xeniaWatch.
-      try {
-        await xllnWatch.start({ options: self.options, getToastID: () => self.toastID, notify });
-      } catch (err) {
-        debug.error(`[xlln] ${err}`);
-      }
-
-      // GOG Galaxy official live achievement toasts - watches each game's gameplay.db (SQLite,
-      // rewritten by Galaxy the moment an achievement pops) and diffs against a baseline.
-      try {
-        await gogWatch.start({ options: self.options, getToastID: () => self.toastID, notify });
-      } catch (err) {
-        debug.error(`[gog] ${err}`);
-      }
-
-      // Ubisoft Connect official live achievement toasts - watches the client's spool files
-      // (protobuf unlock records appended on the spot) and diffs against a baseline.
-      try {
-        await ubisoftWatch.start({ options: self.options, getToastID: () => self.toastID, notify });
-      } catch (err) {
-        debug.error(`[ubisoft] ${err}`);
+      /*
+        The live watchers for everything that is not a Steam save file. They share one shape - start,
+        watch, diff against a baseline, notify - so they start from one loop: seven copies of the
+        same try/catch is how a fix ends up in only one of them. A watcher that cannot start is a
+        degraded monitor, not a dead one, so its failure is recorded and the rest still run.
+      */
+      for (const entry of CONSOLE_WATCHERS) {
+        try {
+          await entry.watcher.start({ options: self.options, getToastID: () => self.toastID, notify });
+          subsystemHealth.report(entry.name, true);
+        } catch (err) {
+          debug.error(`[${entry.name}] ${err}`);
+          subsystemHealth.report(entry.name, false, err);
+        }
       }
     } catch (err) {
       debug.error(err);

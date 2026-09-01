@@ -120,9 +120,11 @@ test('the read path merges the Uplay translation over the raw Steam read', () =>
     through the translation untouched - so neither read can lose to the other.
   */
   const source = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'achievements.js'), 'utf8');
+  // Anchored on the merge itself rather than on the variable holding it: the per-source read moved
+  // into readRecordUnlocks, and the name of its local changed with it while the rule did not.
   assert.match(
     source,
-    /if \(appid\.data\.uplayR2\) root = \{ \.\.\.root, \.\.\.readUplayR2Save\(appid, game\) \};/,
+    /if \(appid\.data\.uplayR2\) \w+ = \{ \.\.\.\w+, \.\.\.readUplayR2Save\(appid, game\) \};/,
     "the 'file' branch must run the objective remap for a promoted Uplay record"
   );
 });

@@ -18,6 +18,14 @@ const MAGIC_V27 = 0x07564427;
 const MAGIC_V28 = 0x07564428;
 const MAGIC_V29 = 0x07564429;
 
+/*
+  The binary KV reader below looks like the one in parser/steamOfficial.js, and
+  sharing them has been tried: it cannot be done. The Watchdog loads this module from outside the
+  asar through util/sharedAppModule.js, where a relative require cannot resolve, so a shared module
+  has to stay dependency-free (test/core/sharedAppModules.test.js enforces it). The two also read
+  different documents - this one needs the v29 string table and a per-record bound, the other needs
+  repeated keys folded into an array and each value's on-disk type.
+*/
 function readCString(buf, off) {
   let i = off;
   while (i < buf.length && buf[i] !== 0x00) i++;

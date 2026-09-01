@@ -14,6 +14,7 @@ const path = require('path');
 const watch = require('node-watch');
 const moment = require('moment');
 const debug = require('../util/log.js');
+const { createBaselineCache } = require('../util/baselineCache.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
@@ -23,7 +24,6 @@ const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 
 const xlln = require(sharedAppModulePath('parser/xlln.js'));
 
-const cacheDir = path.join(userDataDir(), 'steam_cache/console');
 const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 // The same icon cache the app parser extracts into, so an icon written by either side serves both.
 xlln.setIconRoot(path.join(userDataDir(), 'icon_cache', 'xlln'));
@@ -84,26 +84,10 @@ function watchRootFor(game) {
   return '';
 }
 
-function cacheFile(titleId) {
-  return path.join(cacheDir, `xlln-${String(titleId).replace(/[^\w.-]/g, '_')}.json`);
-}
-
-function cacheLoad(titleId) {
-  try {
-    return JSON.parse(fs.readFileSync(cacheFile(titleId), 'utf8'));
-  } catch {
-    return null;
-  }
-}
-
-function cacheSave(titleId, unlockedIds) {
-  try {
-    fs.mkdirSync(cacheDir, { recursive: true });
-    fs.writeFileSync(cacheFile(titleId), JSON.stringify({ unlocked: unlockedIds }), 'utf8');
-  } catch (err) {
-    debug.warn(`[xlln] cache save failed for ${titleId}: ${err}`);
-  }
-}
+const baseline = createBaselineCache({ prefix: 'xlln', tag: 'xlln', debug });
+const cacheFile = baseline.file;
+const cacheLoad = (key) => baseline.load(key);
+const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
 
 // The runtime can touch the same state file several times per unlock; the baseline diff already
 // blocks true re-toasts, this only covers the burst while that baseline write races the next event.

@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const watch = require('node-watch');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
+const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
@@ -14,7 +15,6 @@ const notifyStrings = require('../util/notifyStrings.js');
 
 const LOCALAPPDATA = process.env['LOCALAPPDATA'] || '';
 const { userDataDir } = require('../util/userData.js');
-const cacheDir = path.join(userDataDir(), 'steam_cache/console');
 const EA_LOGS_ROOT = LOCALAPPDATA ? path.join(LOCALAPPDATA, 'Electronic Arts', 'EA Desktop', 'Logs') : '';
 const EA_VERBOSE_LOG_NAME = 'EADesktopVerbose.log';
 const EA_VERBOSE_BAK_NAME = 'EADesktopVerbose.bak';
@@ -225,26 +225,11 @@ function cacheKey(entry) {
   return `${entry.appid}-${String(entry.achievementSet || '').replace(/[^\w.-]/g, '_')}`;
 }
 
-function cacheFile(entry) {
-  return path.join(cacheDir, `ea-${cacheKey(entry)}.json`);
-}
-
-function cacheLoad(entry) {
-  try {
-    return JSON.parse(fs.readFileSync(cacheFile(entry), 'utf8'));
-  } catch {
-    return null;
-  }
-}
-
-function cacheSave(entry, unlocked) {
-  try {
-    fs.mkdirSync(cacheDir, { recursive: true });
-    fs.writeFileSync(cacheFile(entry), JSON.stringify({ unlocked: Array.from(unlocked) }), 'utf8');
-  } catch (err) {
-    debug.warn(`[ea] cache save failed for ${entry.appid}: ${err}`);
-  }
-}
+const baseline = createBaselineCache({ prefix: 'ea', tag: 'ea', debug });
+// EA keys a baseline on the game AND its achievement set, so the key is built before it goes in.
+const cacheFile = (entry) => baseline.file(cacheKey(entry));
+const cacheLoad = (entry) => baseline.load(cacheKey(entry));
+const cacheSave = (entry, unlocked) => baseline.save(cacheKey(entry), unlocked);
 
 async function handleChange(changedFile, ctx) {
   try {

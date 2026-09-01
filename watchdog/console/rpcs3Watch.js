@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const watch = require('node-watch');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
+const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
@@ -15,7 +16,6 @@ const { notificationVolumePercent } = require('../util/notificationVolume.js');
 const notifyStrings = require('../util/notifyStrings.js');
 const { userDataDir } = require('../util/userData.js');
 
-const cacheDir = path.join(userDataDir(), 'steam_cache/console');
 const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 
 const USER_FILE = 'TROPUSR.DAT';
@@ -183,24 +183,10 @@ function discover(configFile = userDirFile) {
   return targets;
 }
 
-function cacheFile(appid) {
-  return path.join(cacheDir, `rpcs3-${String(appid).replace(/[^\w.-]/g, '_')}.json`);
-}
-function cacheLoad(appid) {
-  try {
-    return JSON.parse(fs.readFileSync(cacheFile(appid), 'utf8'));
-  } catch {
-    return null;
-  }
-}
-function cacheSave(appid, unlockedIds) {
-  try {
-    fs.mkdirSync(cacheDir, { recursive: true });
-    fs.writeFileSync(cacheFile(appid), JSON.stringify({ unlocked: unlockedIds }), 'utf8');
-  } catch (err) {
-    debug.warn(`[rpcs3] cache save failed for ${appid}: ${err}`);
-  }
-}
+const baseline = createBaselineCache({ prefix: 'rpcs3', tag: 'rpcs3', debug });
+const cacheFile = baseline.file;
+const cacheLoad = (key) => baseline.load(key);
+const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
 
 async function handleChange(target, ctx) {
   try {
