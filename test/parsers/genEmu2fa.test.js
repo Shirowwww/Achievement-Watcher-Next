@@ -35,7 +35,13 @@ const gen = require(path.join(__dirname, '..', '..', 'app', 'parser', 'genEmuCon
       ].join('\n')
     );
     const runner = path.join(temp, 'generate_emu_config.exe');
-    fs.copyFileSync(process.execPath, runner);
+    // Same file under the required name rather than a copy of the whole runtime; links are
+    // per-volume, so the copy stays as the fallback.
+    try {
+      fs.linkSync(process.execPath, runner);
+    } catch {
+      fs.copyFileSync(process.execPath, runner);
+    }
     const prompts = [];
     result = await gen.generate({
       tool: { exe: runner, args: [shim], dir: temp, tag: 'test' },

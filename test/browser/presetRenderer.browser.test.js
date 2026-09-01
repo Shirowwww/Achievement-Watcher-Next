@@ -98,8 +98,15 @@ async function renderPreset(page, options, state = 'normal', assetUrl = undefine
   await page.setViewport({ width: box.width, height: box.height });
   await page.setContent(generator.buildPresetPreviewHtml(options, { assetUrl }), { waitUntil: 'load' });
   await page.evaluate((payload) => window.awPreviewApply(payload), payloadFor(state));
-  // Let the entry animation finish, so opacity and transform are the resting values.
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  // Let the entry animation finish, so opacity and transform are the resting values. Waiting on
+  // aw_in itself rather than on a fixed delay costs its real length, and stays right for a design
+  // whose entry is slower than any delay written here. Only aw_in: the hold that follows it lasts
+  // the whole notification, and the exit after that ends at opacity 0.
+  await page.evaluate(async () => {
+    const entry = document.getAnimations().find((animation) => animation.animationName === 'aw_in');
+    if (entry) await entry.finished.catch(() => {});
+    else await new Promise((resolve) => setTimeout(resolve, 800));
+  });
   return page.evaluate(() => {
     const card = document.querySelector('.ach');
     const title = document.querySelector('.title');

@@ -550,6 +550,10 @@ function parseRazorAchievementFile(text) {
 module.exports._internal = Object.assign({}, module.exports._internal, { isUnambiguousRldBlob, decodeRldBlob, parseRazorAchievementFile });
 
 module.exports.getAchievementsFromFile = async (filePath) => {
+  // Said plainly rather than as the "path must be of type string" thrown by the first candidate
+  // read, which reported a save folder named "undefined" and hid the caller that had none.
+  if (typeof filePath !== 'string' || !filePath) throw `No save folder to read achievements from (got ${filePath === '' ? 'an empty path' : typeof filePath})`;
+
   // FINAL FANTASY VII (2013) keeps an 8-byte bitfield in achievement.dat, checked only for a folder
   // proven to be that game - the filename is generic enough to otherwise misdecode another save.
   const ff7State = ff7.getAchievementsFromFile(filePath);

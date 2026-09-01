@@ -86,7 +86,11 @@ test('scripts the overlay loads as classic <script> declare no global the preloa
   */
   const exposed = ['api', 'customApi'];
   const overlay = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'view', 'overlay.html'), 'utf8');
-  const loaded = [...overlay.matchAll(/<script src="([^"]+)"><\/script>/g)].map((match) => match[1]);
+  // The opening tag alone, and any attribute order: matching `></script>` too meant a tag written
+  // `<script src="x" defer>` or closed `</script >` was skipped in silence, so a file that stopped
+  // being checked read exactly like one that passed. Modules are out by design - this guard is
+  // about the shared global scope only classic scripts have.
+  const loaded = [...overlay.matchAll(/<script\b(?![^>]*type\s*=\s*"module")[^>]*\ssrc\s*=\s*"([^"]+)"/g)].map((match) => match[1]);
   assert.ok(loaded.length > 0, 'expected overlay.html to load classic scripts');
   for (const relative of loaded) {
     const file = path.join(__dirname, '..', '..', 'app', 'view', relative);

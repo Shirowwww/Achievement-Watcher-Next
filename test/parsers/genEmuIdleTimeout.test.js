@@ -25,36 +25,44 @@ const shimPath = (dir, name, body) => {
     // are driven by a copy of this Node binary carrying that name. cmd.exe cannot stand in here: it
     // reads its own file name and stops parsing /c once renamed.
     const cmd = path.join(temp, 'generate_emu_config.exe');
-    fs.copyFileSync(process.execPath, cmd);
+    // A hard link is the same file under the required name, without copying the whole runtime for
+    // every run. Links only work within one volume, so the copy stays as the fallback.
+    try {
+      fs.linkSync(process.execPath, cmd);
+    } catch {
+      fs.copyFileSync(process.execPath, cmd);
+    }
 
-    // Silent: one line, then nothing for far longer than the idle budget.
+    // Silent: one line, then nothing for far longer than the idle budget. Every budget below is
+    // the smallest one still several times a process spawn, so a loaded machine cannot turn either
+    // case into the other.
     const silent = shimPath(temp, 'silent.js', "console.log('connecting');\nsetTimeout(() => {}, 30000);\n");
     const startedAt = Date.now();
     await assert.rejects(
       gen.generate({
         tool: { exe: cmd, args: [silent], dir: temp, tag: 'test' },
         appid: '480',
-        idleTimeout: 2000,
+        idleTimeout: 1000,
         timeout: 60000,
       }),
-      /no output for 2s/,
+      /no output for 1s/,
       'a silent run must be reported as stuck, naming the idle budget'
     );
     const elapsed = Date.now() - startedAt;
-    assert.ok(elapsed < 20000, `the idle budget must end the run early, took ${elapsed}ms`);
+    assert.ok(elapsed < 10000, `the idle budget must end the run early, took ${elapsed}ms`);
 
     // Chatty: keeps printing across the idle budget, so only the hard budget may stop it. It never
     // writes a steam_settings folder, so the expected rejection is the "produced no" one.
     const chatty = shimPath(
       temp,
       'chatty.js',
-      "let i = 0;\nconst t = setInterval(() => {\n  console.log(`working ${++i}`);\n  if (i >= 6) clearInterval(t);\n}, 1000);\n"
+      "let i = 0;\nconst t = setInterval(() => {\n  console.log(`working ${++i}`);\n  if (i >= 6) clearInterval(t);\n}, 300);\n"
     );
     await assert.rejects(
       gen.generate({
         tool: { exe: cmd, args: [chatty], dir: temp, tag: 'test' },
         appid: '480',
-        idleTimeout: 2500,
+        idleTimeout: 1200,
         timeout: 60000,
       }),
       /produced no steam_settings/,

@@ -2389,7 +2389,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const self = $(this);
       // An unnamed Custom theme is stopped here (not just in the file dialog) so focus lands on the
       // field that fixes it.
-      if (value === 'custom' && !refreshCustomThemeNameState()) {
+      if (value === 'custom' && !refreshThemeNameState()) {
         setThemeLibraryStatus(themeErrorText({ error: 'theme-name-required' }), 'error');
         $('#theme-customizer-name').trigger('focus');
         return;

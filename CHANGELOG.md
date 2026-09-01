@@ -36,6 +36,22 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **A library served from the last scan is no longer missing every label on it.** Reusing the stored
+  library puts it on screen in a few hundred milliseconds, ahead of the interface language file the
+  captions are read from: the cells arrived with no "Achievements" or "Last played" caption at all,
+  and a game never launched said nothing where it should have said so. Those labels are filled in as
+  soon as the language is there.
+
+- **Exporting the Custom theme works again.** The button called a function that no longer exists, so
+  a Custom theme with no name given stopped on an error nobody could see instead of asking for the
+  name.
+
+- **A game merged from several sources stops reporting an error on every scan.** Each of a game's
+  records is read with the reader its main record uses, and one that carries no save folder - a
+  Ubisoft entry beside a Steam emulator save, say - was still sent to the file reader, which then
+  reported a save folder literally named "undefined". Nothing is read from a record that has none,
+  and every message about a merged game now names which of its records it is about.
+
 - **The loading bar in the footer actually moves again.** It was pinned to an inline width of 0%,
   which overrode the rule that gives the sweeping bar its size, so a cold start showed an empty,
   motionless bar reading "0%" for the whole scan - the longest wait the app has. It now sweeps and
@@ -99,7 +115,9 @@ renamed in 3.9.0 and the history is kept under one file.
   games are repaired, so the button keeps the short verb in every language.
 - **Every "Copy" button copies again.** The Steam AppID, the Ubisoft product ID, the achievement
   data paths and the Game Health technical details all silently did nothing on the new Chromium
-  runtime, which stopped letting the window reach the clipboard directly.
+  runtime, which stopped letting the window reach the clipboard directly. The tick that follows now
+  waits for the answer: another program can hold the clipboard open, and a button that ticks anyway
+  teaches you to paste something that was never copied.
 - **A save folder that cannot be read says why.** A locked or corrupt achievement file was reported
   as "no achievement file found" in that folder, which sent people looking for a file that was
   sitting right there. The real reason is now named.

@@ -6,8 +6,16 @@ const { ipcRenderer } = require('electron');
   Electron 44 stopped exposing the clipboard module to renderers, so `require('electron').clipboard`
   is undefined here and every copy button threw instead of copying. The main process still has it.
 */
+// Resolves to whether the text actually reached the clipboard: another process can hold it open,
+// and a button that ticks anyway teaches people to paste something that was never copied.
 function copyText(text) {
-  ipcRenderer.invoke('clipboard:write-text', String(text ?? '')).catch(() => {});
+  return ipcRenderer.invoke('clipboard:write-text', String(text ?? '')).then(
+    (written) => written === true,
+    (err) => {
+      debug.log(`[clipboard] copy failed => ${err && err.message ? err.message : err}`);
+      return false;
+    }
+  );
 }
 
 // createMainWindow hands these over as switches, so the three things this file needs before it can
@@ -79,9 +87,12 @@ const blacklist = require(path.join(appPath, 'parser/blacklist.js'));
 const userDir = require(path.join(appPath, 'parser/userDir.js'));
 const libraryDirs = require(path.join(appPath, 'parser/libraryDirs.js'));
 const goldberg = require(path.join(appPath, 'parser/goldberg.js'));
+// Read here and used from ui/gameHealthPanel.js, which shares this renderer's global scope: the
+// linter cannot see that, so removing this line as unused breaks the Game Health panel instead.
 const crackLoaderDetect = require(path.join(appPath, 'util/crackLoaderDetect.js'));
 const gbeInstaller = require(path.join(appPath, 'parser/gbeInstaller.js'));
 const uplayR2 = require(path.join(appPath, 'parser/uplayR2.js'));
+// Same as crackLoaderDetect above: the consumer is ui/uplayRepair.js, through the global scope.
 const ubisoftOfficial = require(path.join(appPath, 'parser/ubisoftOfficial.js'));
 const uplayR2Installer = require(path.join(appPath, 'parser/uplayR2Installer.js'));
 const steamParser = require(path.join(appPath, 'parser/steam.js'));
@@ -1707,8 +1718,39 @@ function ownershipBadgeFor(game) {
   return { state: label ? 'purchased' : '', label };
 }
 
+/*
+  A reused library is on screen a few hundred milliseconds after launch - ahead of the locale file
+  those tiles read their captions from, and localeText() answers '' until it lands. The result was a
+  library whose cells had no caption at all, and whose empty ones said nothing rather than "never
+  played". The locale loader calls this the moment the strings exist; tiles painted after that
+  already carry them.
+*/
+window.refreshLibraryLabels = function () {
+  const captions = [
+    ['.library-achievement-summary', localeText('achievements')],
+    ['.library-recent-unlock', localeText('latestAchievementEarned')],
+    ['.library-last-played', localeText('sort.tooltip.played')],
+    ['.library-playtime', localeText('settings.notification.test.playtime')],
+  ];
+  for (const [selector, label] of captions) {
+    if (label) $(`#game-list ${selector}`).attr({ 'data-label': label, title: label });
+  }
+  // The two cells that print a sentence of their own when there is nothing to report. Only an empty
+  // one is filled: everywhere else the text is the game's own.
+  const fillEmpty = (selector, text) => {
+    if (!text) return;
+    $(`#game-list ${selector}`).each(function () {
+      const content = $(this).find('.library-scroll-content').first();
+      if (content.length && !content.text().trim()) content.text(text).closest('.library-scroll-text').attr('title', text);
+    });
+  };
+  fillEmpty('.library-recent-unlock .library-recent-name', localeText('noneUnlocked'));
+  fillEmpty('.library-last-played.is-empty', localeText('neverPlayed'));
+};
+
 // A full report is the better answer, so it replaces the scanned guess on the tile already on
-// screen rather than waiting for the next scan to redraw it.
+// screen rather than waiting for the next scan to redraw it. Called from ui/gameHealthPanel.js
+// through this renderer's global scope, which is why the linter reads it as unused.
 function rememberGameHealthState(appid, state) {
   healthStateByAppid.set(String(appid), state);
   const game = gameList.find((entry) => String(entry.appid) === String(appid));
@@ -6082,10 +6124,11 @@ var app = {
     });
 
     $('#game-health').on('click', '.gh-copy', function () {
-      copyText($('#game-health .gh-technical-dump').text());
       const icon = $(this).find('i');
-      icon.attr('class', 'fas fa-check');
-      setTimeout(() => icon.attr('class', 'fas fa-copy'), 1200);
+      copyText($('#game-health .gh-technical-dump').text()).then((written) => {
+        icon.attr('class', written ? 'fas fa-check' : 'fas fa-times');
+        setTimeout(() => icon.attr('class', 'fas fa-copy'), 1200);
+      });
     });
 
     /*

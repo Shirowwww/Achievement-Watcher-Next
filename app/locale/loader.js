@@ -44,6 +44,7 @@ module.exports.load = async (lang = 'english') => {
       () => window.refreshWatchdogStatusText(),
       () => window.refreshSettingsLocaleText(),
       () => window.refreshAccessibleNames(),
+      () => window.refreshLibraryLabels(),
     ];
     for (const render of repaint) {
       try {

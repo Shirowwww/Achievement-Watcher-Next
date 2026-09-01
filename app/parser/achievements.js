@@ -337,6 +337,15 @@ const ACCOUNT_LIBRARY_TYPES = new Set(['xboxPc', 'epicOfficial']);
 // A store account's own listing: what it says you own, under an id only that store uses.
 const OFFICIAL_RECORD_TYPES = new Set(['steamAPI', 'gogOfficial', 'ubisoftOfficial', 'epicOfficial', 'xboxPc']);
 
+// How a discovery record is named in the log. One appid can carry several, and "the Uplay R2 record"
+// says which one a message is about where the appid cannot.
+function describeRecord(record) {
+  const source = String(record?.source || '').trim();
+  const type = String(record?.data?.type || '').trim();
+  if (source && type) return `${source} (${type})`;
+  return source || type || 'unnamed';
+}
+
 /*
   Which of two records for one game is the one to keep. Both are merged either way, so nothing is
   lost - this only decides which identity the tile carries, and therefore what the Play button
@@ -3202,6 +3211,14 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
             });
           }
         } else if (dataType === 'file') {
+          // A merged game reads every one of its records with the primary record's reader, and a
+          // record from another source can carry no save folder at all (a Ubisoft loader entry
+          // beside a Steam-emulator save). Reading nothing is the right answer there; going in
+          // anyway reported a save folder literally named "undefined" on every scan.
+          if (!appid.data || typeof appid.data.path !== 'string' || !appid.data.path) {
+            debug.log(`[${appid.appid}] no save folder on the ${describeRecord(appid)} record - nothing to read from it`);
+            continue;
+          }
           root = await steam.getAchievementsFromFile(appid.data.path);
           // The same folder can hold a Steam-emulator save AND a Uplay loader's redirect target
           // ("AchSavePath = GSE Saves\<steamAppid>"). Keys the Uplay side can translate win, since a
@@ -3277,7 +3294,9 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         if (String(err).includes('No achievement file found')) {
           debug.log(`[${appid.appid}] No unlocked achievements yet (0%) in '${appid.data.path}'`);
         } else {
-          debug.error(`[${appid.appid}] Error parsing local achievements data => ${err}`);
+          // Which of a merged game's records failed is the first thing anyone reading this log
+          // needs: the appid alone is shared by all of them.
+          debug.error(`[${appid.appid}] Error parsing local achievements data from the ${describeRecord(appid)} record => ${err}`);
         }
       }
 
