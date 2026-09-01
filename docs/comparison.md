@@ -16,7 +16,7 @@ See [NOTICE](../NOTICE).
 | | ⭐ **AW Next** | [Achievements](https://github.com/PSerban93/Achievements) | [AW 2.x](https://github.com/darktakayanagi/Achievement-Watcher) |
 |---|:---:|:---:|:---:|
 | License | LGPL-3.0 | MIT | LGPL-3.0 |
-| Desktop runtime | Electron 43 | Electron | Electron 12 |
+| Desktop runtime | Electron 44 | Electron | Electron 12 |
 | Development | Active | Active | Last code push January 2026 |
 
 ## Where the achievements come from

@@ -72,8 +72,9 @@ into one library, with live Windows notifications and an in-game overlay.
 ## Quick start
 
 1. Download `Achievement.Watcher.Setup.<version>.exe` from the
-   [latest release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest).
-2. Install and open AW Next, then follow the first-run guide.
+   [latest release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest), or extract
+   `Achievement.Watcher.Portable.<version>.zip` to keep the app and its `data` profile together.
+2. Install or open AW Next, then follow the first-run guide.
 3. Run **Settings → Folders → Smart Find**, and add any custom game or save location.
 4. Leave the app in the system tray for live notifications and playtime tracking.
 
@@ -135,7 +136,7 @@ Start at the **[documentation site](https://shirowwww.github.io/Achievement-Watc
 ## Build from source
 
 Requires Windows and Node.js `22.22.2+` or `24.15+`. The app and the background Watchdog are separate
-npm projects; `npm run build` writes the installer and updater files to `app\dist`. See
+npm projects; `npm run build` writes the installer, portable ZIP and updater files to `app\dist`. See
 [BUILD.md](BUILD.md) for setup, packaging details and known constraints.
 
 ## Security and support
@@ -146,7 +147,10 @@ public issue.
 
 Download builds only from the
 [official releases page](https://github.com/Shirowwww/Achievement-Watcher-Next/releases); `latest.yml`
-carries the installer's SHA-512 digest. Installers use the project's self-signed `CN=Shirow`
+carries the installer's SHA-512 digest. Any release can also be looked up on VirusTotal by its own
+SHA-256, so you can check a download without trusting this page
+([3.10.4](https://www.virustotal.com/gui/file/98737bd01f34be8aa8d86da8c9de5d52a62b070c091c6611366b174421932f99)); a few heuristic
+detections there are the emulator false positive described below. Installers use the project's self-signed `CN=Shirow`
 certificate, which you do not need to install or trust - SmartScreen or antivirus warnings remain
 possible because it is not issued by a publicly trusted authority. Sensitive settings and
 connected-account tokens are encrypted before local storage, and the project contains no game files

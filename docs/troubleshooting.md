@@ -166,6 +166,25 @@ can also trigger heuristic detections. Download only from the [official Releases
 
 Do not disable system-wide protection. Submit a false-positive report to the antivirus vendor when a file from the official release is incorrectly quarantined.
 
+### Checking a release yourself
+
+Every published installer can be looked up on VirusTotal by its own SHA-256, so you never have to
+take this page's word for it:
+
+```powershell
+Get-FileHash "Achievement.Watcher.Setup.3.10.4.exe" -Algorithm SHA256
+```
+
+Open `https://www.virustotal.com/gui/file/<the hash it prints>`. If the file is the published one,
+the report is already there. For the current release that is
+[the 3.10.4 installer](https://www.virustotal.com/gui/file/98737bd01f34be8aa8d86da8c9de5d52a62b070c091c6611366b174421932f99)
+(`98737bd01f34be8aa8d86da8c9de5d52a62b070c091c6611366b174421932f99`).
+
+Read the result for what it is: a list of what each engine thinks, not a certificate. A handful of
+heuristic detections on a build that bundles emulator files is expected and is the false positive
+described above; what matters is that the hash matches the file the releases page published, which
+is what the command above proves.
+
 ### The emulator files are flagged
 
 This is the detection people actually hit, and it is a false positive. Recording achievements for a

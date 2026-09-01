@@ -205,10 +205,14 @@ Expected output:
 ```text
 app\dist\Achievement.Watcher.Setup.<version>.exe
 app\dist\Achievement.Watcher.Setup.<version>.exe.blockmap
+app\dist\Achievement.Watcher.Portable.<version>.zip
 app\dist\latest.yml
 ```
 
-The installer uses NSIS. `latest.yml` and the blockmap are required by the automatic updater.
+The installer uses NSIS. `latest.yml` and the blockmap are required by the automatic updater. The
+portable ZIP can be extracted anywhere; its marker makes AW Next keep the whole profile in a `data`
+folder beside `Achievement Watcher.exe`, without importing the installed app's profile. The final
+`win-unpacked` directory comes from that portable packaging pass and follows the same rule.
 
 ### Watchdog dependencies after a build
 
@@ -228,7 +232,8 @@ The main packaging files are:
 
 | Path | Purpose |
 |---|---|
-| `app/electron-builder.yml` | Product metadata, files, NSIS target and update provider |
+| `app/electron-builder.yml` | Shared product metadata, files, NSIS target and update provider |
+| `app/electron-builder-portable.yml` | ZIP target and portable artifact name |
 | `app/build/installer.nsh` | Installer language mapping, shutdown and upgrade behavior |
 | `app/build/afterPack.js` | Ensures the packaged Watchdog dependency tree is copied correctly |
 | `app/build/icon.ico` | Application and installer icon |

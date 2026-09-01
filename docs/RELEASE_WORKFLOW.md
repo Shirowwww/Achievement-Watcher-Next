@@ -36,6 +36,16 @@ Update the same version in all of these places:
 The README release badge is dynamic and does not require a manual version edit.
 Do not hand-edit generated `app/dist/latest.yml`; the build creates it.
 
+Regenerate the styled site changelog and release discovery files after dating the changelog entry:
+
+```powershell
+node tools/site/changelog.js
+node tools/site/discovery.js
+```
+
+Commit `docs/changelog.md`, `docs/releases.xml` and `docs/sitemap.xml` with the release changes. The
+site workflow rejects them when they drift from `CHANGELOG.md` or the public guide inventory.
+
 ## Documentation accuracy check
 
 Do this for every release, not only ones that "feel" doc-worthy - stale docs accumulate silently
@@ -110,6 +120,7 @@ Expected files:
 
 - `app/dist/Achievement.Watcher.Setup.<version>.exe`
 - `app/dist/Achievement.Watcher.Setup.<version>.exe.blockmap`
+- `app/dist/Achievement.Watcher.Portable.<version>.zip`
 - `app/dist/latest.yml`
 
 Check that `latest.yml` names the exact installer and version. Verify its SHA-512
@@ -124,6 +135,17 @@ $expected = [Convert]::ToBase64String(
 Get-Content app/dist/latest.yml
 $expected
 ```
+
+The documentation points readers at a VirusTotal report for the current installer, keyed on its
+SHA-256. Print the new one and update the three places that name a version, so the link does not
+keep pointing at the previous release:
+
+```powershell
+Get-FileHash "app/dist/Achievement.Watcher.Setup.$version.exe" -Algorithm SHA256
+```
+
+Open `https://www.virustotal.com/gui/file/<hash>` once so the file is analysed and the report exists,
+then refresh the hash and version in `README.md`, `docs/faq.md` and `docs/troubleshooting.md`.
 
 Also smoke-test the packaged runtime and the affected feature path. For runtime
 inspection, temporarily use Electron as Node and always remove the variable:
@@ -141,8 +163,8 @@ dependencies afterward with `npm install` from `watchdog/`.
 
 1. Ensure commits are atomic and the worktree contains no accidental files.
 2. Push `main` to `origin` and wait for `.github/workflows/test.yml` to pass.
-3. Create the GitHub release only after CI succeeds, uploading all three updater
-   assets:
+3. Create the GitHub release only after CI succeeds, uploading the three updater
+   assets and the portable archive:
 
 ```powershell
 $version = (Get-Content app/package.json | ConvertFrom-Json).version
@@ -150,6 +172,7 @@ $target = git rev-parse HEAD
 gh release create "v$version" `
   "app/dist/Achievement.Watcher.Setup.$version.exe" `
   "app/dist/Achievement.Watcher.Setup.$version.exe.blockmap" `
+  "app/dist/Achievement.Watcher.Portable.$version.zip" `
   "app/dist/latest.yml" `
   --repo Shirowwww/Achievement-Watcher-Next `
   --target $target `
@@ -157,8 +180,8 @@ gh release create "v$version" `
   --notes-file RELEASE_NOTES.md
 ```
 
-4. Verify the release page exposes the installer, blockmap and `latest.yml`, and
-   that the public manifest is downloadable.
+4. Verify the release page exposes the installer, portable ZIP, blockmap and `latest.yml`, and that
+   the public manifest is downloadable.
 5. Refresh the version the website prints under its download buttons, and commit it:
 
 ```powershell

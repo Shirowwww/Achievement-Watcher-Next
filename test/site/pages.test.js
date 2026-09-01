@@ -11,6 +11,9 @@ const { test } = require('node:test');
 
 const root = path.join(__dirname, '..', '..');
 const { parse } = require(path.join(root, 'app', 'node_modules', 'node-html-parser'));
+const { XMLParser } = require(path.join(root, 'app', 'node_modules', 'fast-xml-parser'));
+const changelogTool = require(path.join(root, 'tools', 'site', 'changelog.js'));
+const discovery = require(path.join(root, 'tools', 'site', 'discovery.js'));
 const DOCS = path.join(root, 'docs');
 
 const PAGES = [
@@ -332,6 +335,68 @@ test('the pages declare where they are, so a link preview is not blank', () => {
 
     assert.ok(document.querySelector('meta[name="description"]').getAttribute('content').length > 60);
   }
+});
+
+test('the home page describes the application to search engines', () => {
+  const document = documentOf(PAGES[0]);
+  const node = document.querySelector('script[type="application/ld+json"]');
+  assert.ok(node, 'the home page has no structured application data');
+
+  const application = JSON.parse(node.text);
+  assert.equal(application['@context'], 'https://schema.org');
+  assert.equal(application['@type'], 'SoftwareApplication');
+  assert.equal(application.name, 'Achievement Watcher Next');
+  assert.match(application.url, /^https:\/\/shirowwww\.github\.io\/Achievement-Watcher-Next\/$/);
+  assert.match(application.downloadUrl, /^https:\/\/github\.com\/Shirowwww\/Achievement-Watcher-Next\/releases\/latest$/);
+  assert.ok(application.operatingSystem.includes('Windows'));
+});
+
+test('the published changelog is an exact styled copy of the repository history', () => {
+  const published = fs.readFileSync(changelogTool.OUT, 'utf8').replace(/\r\n/g, '\n');
+  assert.equal(published, changelogTool.content());
+  assert.match(published, /^---\ntitle: Changelog\ndescription: .+\n---\n/);
+  assert.ok(published.includes('\n# Changelog\n'));
+});
+
+test('robots and the sitemap expose every public page', () => {
+  const robots = fs.readFileSync(path.join(DOCS, 'robots.txt'), 'utf8');
+  assert.match(robots, /^User-agent: \*\r?\nAllow: \/\r?\n/);
+  assert.match(robots, /Sitemap: https:\/\/shirowwww\.github\.io\/Achievement-Watcher-Next\/sitemap\.xml/);
+
+  const parser = new XMLParser();
+  const sitemap = parser.parse(fs.readFileSync(discovery.SITEMAP, 'utf8'));
+  const urls = sitemap.urlset.url.map((entry) => entry.loc);
+  const wanted = discovery.publicPages().map((page) => discovery.BASE + page);
+  assert.deepEqual(urls, wanted);
+  assert.equal(new Set(urls).size, urls.length, 'the sitemap contains duplicate URLs');
+  assert.ok(urls.includes(discovery.BASE + 'changelog.html'));
+  assert.ok(!urls.some((url) => url.endsWith('preset-gallery.html') || url.endsWith('theme-gallery.html')));
+});
+
+test('release notes are available as a valid RSS feed from every page', () => {
+  const parser = new XMLParser({ ignoreAttributes: false });
+  const rss = parser.parse(fs.readFileSync(discovery.FEED, 'utf8')).rss;
+  assert.equal(rss['@_version'], '2.0');
+  assert.equal(rss.channel['atom:link']['@_href'], discovery.BASE + 'releases.xml');
+
+  const items = Array.isArray(rss.channel.item) ? rss.channel.item : [rss.channel.item];
+  const releases = discovery.releases();
+  assert.equal(items.length, releases.length);
+  assert.deepEqual(
+    items.map((item) => item.title),
+    releases.map(({ version }) => `Achievement Watcher Next ${version}`)
+  );
+  for (const item of items) {
+    assert.match(item.link, /^https:\/\/github\.com\/Shirowwww\/Achievement-Watcher-Next\/releases\/tag\/v/);
+    assert.ok(!Number.isNaN(Date.parse(item.pubDate)), `${item.title} has an invalid publication date`);
+  }
+
+  for (const page of PAGES) {
+    const alternate = documentOf(page).querySelector('link[rel="alternate"][type="application/rss+xml"]');
+    assert.ok(alternate, `${path.relative(root, page.file)} does not advertise the release feed`);
+  }
+  const head = fs.readFileSync(path.join(DOCS, '_includes', 'head-custom.html'), 'utf8');
+  assert.match(head, /type="application\/rss\+xml"[^>]+releases\.xml/);
 });
 
 /*

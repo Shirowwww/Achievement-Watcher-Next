@@ -104,6 +104,11 @@ SmartScreen may still ask for confirmation. You never need to install that certi
 from the [official releases page](https://github.com/Shirowwww/Achievement-Watcher-Next/releases) and
 check the installer against the SHA-512 value in the matching `latest.yml`.
 
+An installer can be checked against VirusTotal by its own SHA-256 without trusting anyone: run
+`Get-FileHash <installer> -Algorithm SHA256` and open `https://www.virustotal.com/gui/file/<hash>`.
+The current release is [3.10.4](https://www.virustotal.com/gui/file/98737bd01f34be8aa8d86da8c9de5d52a62b070c091c6611366b174421932f99).
+See [Troubleshooting -> Checking a release yourself](troubleshooting.md#checking-a-release-yourself).
+
 **Where is my data, and does updating lose it?**
 Everything lives in `%APPDATA%\Achievement Watcher Next`, and installing a newer build over an older
 one preserves it. The first launch after upgrading imports an older Achievement Watcher folder

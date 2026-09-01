@@ -171,6 +171,7 @@
   "install.step3Body": "Ese es el vigilante. Las notificaciones en vivo y el tiempo jugado dependen de él.",
   "install.step3Title": "Déjala en la bandeja",
   "install.title": "Ponerla en marcha",
+  "install.virustotal": "El instalador actual en <a href=\"https://www.virustotal.com/gui/file/98737bd01f34be8aa8d86da8c9de5d52a62b070c091c6611366b174421932f99\" rel=\"noopener\">VirusTotal</a>. Las pocas detecciones heurísticas son el falso positivo de los emuladores; comprueba cualquier versión tú mismo comparando su SHA-256.",
   "nav.darkTheme": "Tema oscuro",
   "nav.docs": "Documentación",
   "nav.download": "Descargar",

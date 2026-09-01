@@ -9,6 +9,7 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
+      - 'CHANGELOG.md'
       - 'tools/site/**'
       - 'tools/gallery/**'
       - 'app/util/presetPackage.js'
@@ -19,6 +20,7 @@ on:
   pull_request:
     paths:
       - 'docs/**'
+      - 'CHANGELOG.md'
       - 'tools/site/**'
       - 'tools/gallery/**'
       - 'app/util/presetPackage.js'
@@ -41,7 +43,7 @@ env:
 
 jobs:
   check:
-    name: Gallery and assets
+    name: Pages, gallery and discovery
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -73,6 +75,12 @@ jobs:
 
       - name: Check the release data
         run: node tools/site/release-data.js --check
+
+      - name: Check the published changelog
+        run: node tools/site/changelog.js --check
+
+      - name: Check search and feed discovery
+        run: node tools/site/discovery.js --check
 
       - name: Check the pages and the listings
         working-directory: app

@@ -20,6 +20,7 @@
       content="Windows app that tracks achievements, rarity and playtime across Steam, GOG, Epic, Ubisoft, EA, Xbox PC, local saves and emulators, with an in-game overlay or Windows notifications. Free and open source."
     />
     <link rel="canonical" href="https://shirowwww.github.io/Achievement-Watcher-Next/" />
+    <link rel="alternate" type="application/rss+xml" title="Achievement Watcher Next releases" href="releases.xml" />
     <meta http-equiv="content-language" content="en" />
 
     <meta property="og:type" content="website" />
@@ -33,6 +34,27 @@
     <meta property="og:url" content="https://shirowwww.github.io/Achievement-Watcher-Next/" />
     <meta property="og:locale" content="en" />
     <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Achievement Watcher Next",
+        "description": "A free Windows app for tracking achievements, rarity and playtime across stores, local saves and emulators.",
+        "url": "https://shirowwww.github.io/Achievement-Watcher-Next/",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Windows 10, Windows 11",
+        "isAccessibleForFree": true,
+        "downloadUrl": "https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest",
+        "softwareHelp": "https://shirowwww.github.io/Achievement-Watcher-Next/README.html",
+        "license": "https://www.gnu.org/licenses/lgpl-3.0.html",
+        "image": "https://shirowwww.github.io/Achievement-Watcher-Next/assets/img/social.png",
+        "author": {
+          "@type": "Person",
+          "name": "Shirow"
+        }
+      }
+    </script>
 
     <link rel="icon" href="assets/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" href="assets/favicon.png" sizes="256x256" />
@@ -764,6 +786,10 @@
                 </a>
                 <a class="btn btn-ghost" href="getting-started.html" data-i18n="install.guide">First run guide</a>
               </div>
+              <p class="small muted" style="margin-top: 16px" data-i18n="install.virustotal">
+                The current installer on <a href="https://www.virustotal.com/gui/file/98737bd01f34be8aa8d86da8c9de5d52a62b070c091c6611366b174421932f99" rel="noopener">VirusTotal</a>. A few heuristic
+                detections are the emulator false positive; check any release yourself by comparing its SHA-256.
+              </p>
             </div>
 
             <div>
@@ -833,7 +859,7 @@
                 <a href="https://github.com/Shirowwww/Achievement-Watcher-Next/issues/new/choose" data-i18n="foot.issues">Report a problem</a>
               </li>
               <li>
-                <a href="https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md" data-i18n="foot.changelog">Changelog</a>
+                <a href="changelog.html" data-i18n="foot.changelog">Changelog</a>
               </li>
               <li>
                 <a href="https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/SECURITY.md" data-i18n="foot.security">Security policy</a>

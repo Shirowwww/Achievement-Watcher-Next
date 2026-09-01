@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://shirowwww.github.io/Achievement-Watcher-Next/sitemap.xml

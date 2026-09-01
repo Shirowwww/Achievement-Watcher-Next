@@ -86,6 +86,15 @@ git diff --check
 The app suite also verifies every relative Markdown link and heading anchor, including exact file
 casing so documentation links do not pass on Windows and then break on GitHub.
 
+The linter runs from the same folder and covers `app`, `watchdog`, `test` and `tools`. It also runs
+in CI on every push:
+
+```powershell
+Push-Location app
+npm run lint
+Pop-Location
+```
+
 For UI or integration work, describe the manual path you tested and include screenshots when they help reviewers verify the result.
 
 ## Commits and pull requests

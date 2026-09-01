@@ -171,6 +171,7 @@
   "install.step3Body": "それが監視役です。リアルタイム通知とプレイ時間は、これが動いていることに依存します。",
   "install.step3Title": "トレイに常駐させておく",
   "install.title": "動かすまで",
+  "install.virustotal": "現在のインストーラーの <a href=\"https://www.virustotal.com/gui/file/98737bd01f34be8aa8d86da8c9de5d52a62b070c091c6611366b174421932f99\" rel=\"noopener\">VirusTotal</a> レポート。いくつかのヒューリスティック検出はエミュレーターによる誤検出です。SHA-256 を照合すればどのバージョンもご自分で確認できます。",
   "nav.darkTheme": "ダークテーマ",
   "nav.docs": "ドキュメント",
   "nav.download": "ダウンロード",
