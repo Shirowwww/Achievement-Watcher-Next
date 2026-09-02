@@ -176,5 +176,9 @@ Created by [Xan105](https://github.com/xan105/Achievement-Watcher), continued by
 Shirowwww and project contributors. Redistributions of this fork must retain the project attribution
 in [NOTICE](NOTICE).
 
+Parts of this project are derived from [Achievements](https://github.com/PSerban93/Achievements) by
+JokerVerse (PSerban93), used under the MIT License, copyright (c) 2025 JokerVerse. See
+[NOTICE](NOTICE).
+
 Licensed under [LGPL-3.0](LICENSE). This project is not affiliated with Valve, Sony, Microsoft, GOG,
 Epic Games, Electronic Arts or Ubisoft.

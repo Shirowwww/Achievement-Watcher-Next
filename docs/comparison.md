@@ -9,6 +9,10 @@ All three read achievements well. The useful question is not which one wins, but
 matches how you play, so this page marks what each project does and, just as plainly, what it does
 not.
 
+Worth stating before the table: parts of AW Next are derived from Achievements, used under its MIT
+License, so where a row marks both projects, the implementation sometimes started as JokerVerse's.
+See [NOTICE](../NOTICE).
+
 | | ⭐ **AW Next** | [Achievements](https://github.com/PSerban93/Achievements) | [AW 2.x](https://github.com/darktakayanagi/Achievement-Watcher) |
 |---|:---:|:---:|:---:|
 | License | LGPL-3.0 | MIT | LGPL-3.0 |
