@@ -25,6 +25,10 @@ function resolveSteamMetadata({ appInfo, storeData, langApi = 'english', langKey
   return {
     name: name || undefined,
     isGame: type === 'game',
+    // The raw store/product type, empty when neither source answered. `isGame: false` alone cannot
+    // tell "Steam says this is a DLC" from "nobody answered", and callers need that difference: see
+    // shouldKeepFetchedAchievements in app/parser/steam.js.
+    productType: type,
     translated: !!common.languages?.[langApi],
     icon: common.icon,
     header: headerImage?.[langApi] || libraryHeader?.[langApi] || headerImage?.english || libraryHeader?.english || store.header_image,

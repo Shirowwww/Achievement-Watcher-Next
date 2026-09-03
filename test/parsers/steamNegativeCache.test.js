@@ -25,9 +25,10 @@ test('only a miss Steam actually answered is remembered', () => {
   assert.equal(steam.shouldRememberUnresolved({ hasResult: false, inAppList: true, answered: true }), false);
   assert.equal(steam.shouldRememberUnresolved({ hasResult: true, inAppList: false, answered: true }), false);
 
-  // Valve retired GetAppList, so the old app-list signal is empty on every machine and the memo was
-  // never written again. It still counts when present, but it can no longer be the only way in.
-  assert.equal(steam.shouldRememberUnresolved({ hasResult: false, inAppList: false, appListLoaded: true }), true);
+  // Valve retired GetAppList, so any dump still on disk is frozen at the day it was downloaded. A
+  // game released after that CANNOT be in it, and reading its absence as "no such AppID" blacklisted
+  // brand-new games for three days (issue #55). The list is no longer a way in at all.
+  assert.equal(steam.shouldRememberUnresolved({ hasResult: false, inAppList: false, appListLoaded: true }), false);
   assert.equal(steam.shouldRememberUnresolved({ hasResult: false, inAppList: false, appListLoaded: false }), false);
 
   // Missing fields must fail closed (nothing remembered), never open.

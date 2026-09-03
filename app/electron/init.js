@@ -23,6 +23,7 @@ const { migrateLegacyUserData, migrateAw3UserData, migrateSouvenirFolder, retarg
 const { deriveWatchdogState } = require('../util/watchdogState.js');
 const links = require('../util/links.js');
 const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
+const { createRequestGate, isThrottleStatus } = require('../util/httpThrottle.js');
 const sgdbAssetCache = require('../util/sgdbAssetCache.js');
 const { toAccelerator } = require('../util/hotkeyAccelerator.js');
 app.setName('Achievement Watcher');
@@ -620,6 +621,43 @@ function resetSteamTransportCircuit() {
   steamTransportCircuit.reset();
   storeAppDetailsCircuit.reset();
   productInfoCircuit.reset();
+  for (const gate of Object.values(steamGates)) gate.reset();
+}
+
+/*
+  One request gate per Steam host (see app/util/httpThrottle.js). The scan pool runs eight games at
+  once and each one asks several of these hosts, so without pacing a large library spends its first
+  seconds earning 429s that the rest of the scan then reads as "this game has no achievements and no
+  name" (issue #55).
+
+  The numbers are per host, and they come from the reporter's own logs plus a sweep of the 826 AppIDs
+  in them. Only the STORE ever refused there (21 x HTTP 429) and only product info ever stalled, so
+  the store keeps a wide spacing and the shortest queue budget - it is also the least important, since
+  product info and SteamHunters answer the same question. The keyless schema endpoint and SteamHunters
+  refused nothing at any rate tried, so pacing them hard bought no safety and cost real time: 826
+  AppIDs took 103s at one request per 100/120ms against 23s unpaced, for the same result. They are now
+  spaced just enough to stay polite, and the shared backoff on a refusal - which costs nothing while
+  nothing refuses - is what actually protects them.
+*/
+const steamGates = {
+  api: createRequestGate({ concurrency: 8, minIntervalMs: 25, backoffMs: 1500, maxWaitMs: 15000, onThrottled: logThrottle('api.steampowered.com') }),
+  store: createRequestGate({ concurrency: 1, minIntervalMs: 400, backoffMs: 5000, maxWaitMs: 6000, onThrottled: logThrottle('store.steampowered.com') }),
+  steamhunters: createRequestGate({ concurrency: 6, minIntervalMs: 40, backoffMs: 2000, maxWaitMs: 15000, onThrottled: logThrottle('steamhunters.com') }),
+  // An HTML page, heavier for the host than a JSON answer, and only reached when the two above
+  // could not fill the list. Kept the most spaced of the three that never refused.
+  steamcommunity: createRequestGate({ concurrency: 3, minIntervalMs: 150, backoffMs: 2000, maxWaitMs: 12000, onThrottled: logThrottle('steamcommunity.com') }),
+};
+
+/*
+  One line per refusal, not per waiting request: the pause is shared, so the other games queued
+  behind it would each report the same fact. A refused request is never an answer ABOUT THE GAME -
+  every fetcher below turns one into `networkError`, which the chain already reads as "not known
+  yet, retry next scan", rather than into the empty list that used to be cached as the truth.
+*/
+function logThrottle(host) {
+  return ({ status, waitMs, attempt, label }) => {
+    debug.log(`[throttle] ${host} answered HTTP ${status}${label ? ` for ${label}` : ''} - pausing that host for ${Math.round(waitMs / 1000)}s (attempt ${attempt})`);
+  };
 }
 
 /* appdetails is rate-limited per IP; a cleared cache blows through the budget in seconds and every
@@ -629,12 +667,22 @@ function resetSteamTransportCircuit() {
 const STORE_APPDETAILS_COOLDOWN_MS = 5 * 60 * 1000;
 const storeAppDetailsCircuit = createNetworkCircuit({ failureLimit: 2, cooldownMs: STORE_APPDETAILS_COOLDOWN_MS });
 
-// Read the store payload defensively: an error page is not JSON, and a throttled call answers with
-// a literal `null` body under a 200. Neither is worth an exception.
+/*
+  Read the store payload defensively: an error page is not JSON, and a throttled call answers with a
+  literal `null` body under a 200. Neither is worth an exception.
+
+  Returns { data, answered }. `answered` is what separates "the store says this AppID has no page"
+  from "the store never told us": both produce no data, but only the first is a fact about the game,
+  and the caller writes a three-day negative cache entry on facts (issue #55).
+*/
 async function fetchStoreAppDetails(appid) {
-  if (storeAppDetailsCircuit.unavailable()) return null;
+  const unanswered = { data: null, answered: false };
+  if (storeAppDetailsCircuit.unavailable()) return unanswered;
   const url = `https://store.steampowered.com/api/appdetails?appids=${appid}&cc=us&l=en`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS) });
+  const res = await steamGates.store.run(() => fetch(url, { signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS) }), { label: String(appid) });
+  // The gate gave up queueing this one, so nothing was asked and nothing was refused: no breaker
+  // failure to record, and the caller falls back to product info exactly as it does for a miss.
+  if (res === null) return unanswered;
   if (!res.ok || !/json/i.test(res.headers.get('content-type') || '')) {
     if (storeAppDetailsCircuit.recordFailure()) {
       debug.log(
@@ -643,17 +691,18 @@ async function fetchStoreAppDetails(appid) {
         } minutes; product info still resolves names and artwork`
       );
     }
-    return null;
+    return unanswered;
   }
   const json = await res.json().catch(() => null);
   if (!json) {
     if (storeAppDetailsCircuit.recordFailure()) {
       debug.log(`[store] appdetails returned an empty body (throttled) - skipping it for ${STORE_APPDETAILS_COOLDOWN_MS / 60000} minutes`);
     }
-    return null;
+    return unanswered;
   }
   storeAppDetailsCircuit.recordSuccess();
-  return (json[appid] && json[appid].data) || null;
+  // A JSON body with `success: false` IS an answer: the store knows the id and has nothing for it.
+  return { data: (json[appid] && json[appid].data) || null, answered: true };
 }
 
 /* steam-user's product info runs over one queued connection with no bound; a cold scan can block all
@@ -847,15 +896,28 @@ process.on('unhandledRejection', (err) => {
 async function fetchSteamCommunityAchievements(url) {
   // Parse the server-rendered achievements page without launching Chromium.
   try {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': STEAM_FETCH_UA,
-        'Accept-Language': 'en-US,en;q=0.9',
-        Cookie: 'birthtime=662716801; wants_mature_content=1', // bypass age gate; ?l= controls language
-      },
-      redirect: 'follow',
-      signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS),
-    });
+    const res = await steamGates.steamcommunity.run(
+      () =>
+        fetch(url, {
+          headers: {
+            'User-Agent': STEAM_FETCH_UA,
+            'Accept-Language': 'en-US,en;q=0.9',
+            Cookie: 'birthtime=662716801; wants_mature_content=1', // bypass age gate; ?l= controls language
+          },
+          redirect: 'follow',
+          signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS),
+        }),
+      { label: url }
+    );
+    // A refusal that outlived its retries is not "this game has no achievements": say so, or the
+    // empty list is cached as the truth about the game (issue #55). Every caller reads the result as
+    // a list, so the marker rides on the empty list rather than changing its shape.
+    // Not attempted (the queue was longer than this request's share of the game's budget) is the
+    // same kind of non-answer as a refusal: unknown, not empty.
+    if (res === null || isThrottleStatus(res.status)) {
+      debug.log(`steamcommunity not answered${res === null ? ' (queued too long)' : ` (HTTP ${res.status})`}: ${url}`);
+      return Object.assign([], { throttled: true });
+    }
     if (!res.ok) return [];
     return steamSchemaFetch.parseSteamCommunityRows(await res.text()).map((row) => ({
       img: row.img || null,
@@ -876,11 +938,18 @@ async function getSchemaFromWebAPI(appid, lang) {
   const url = `https://api.steampowered.com/IPlayerService/GetGameAchievements/v1/?appid=${appid}&language=${encodeURIComponent(language)}`;
   let res;
   try {
-    res = await fetch(url, { signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS) });
+    res = await steamGates.api.run(() => fetch(url, { signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS) }), { label: String(appid) });
   } catch (err) {
     recordSteamTransportFailure(err);
     debug.log(`[${appid}] GetGameAchievements network error: ${err.message}`);
     return null;
+  }
+  // Still refused after the gate paced and retried it. The next source down the chain talks to a
+  // different host, so it is still worth asking - but the caller must know this was a refusal and
+  // not a verdict about the appid.
+  if (res === null || isThrottleStatus(res.status)) {
+    debug.log(`[${appid}] GetGameAchievements not answered${res === null ? ' (queued too long)' : ` (HTTP ${res.status})`}`);
+    return { throttled: true };
   }
   if (!res.ok) {
     debug.log(`[${appid}] GetGameAchievements HTTP ${res.status}`);
@@ -900,10 +969,18 @@ async function getSchemaFromWebAPI(appid, lang) {
 // in one plain request. { ok: true } with an empty list is a valid "no achievements" answer.
 async function fetchSteamHuntersJson(appid) {
   try {
-    const res = await fetch(`https://steamhunters.com/api/apps/${appid}/achievements`, {
-      headers: { 'User-Agent': STEAM_FETCH_UA, Accept: 'application/json' },
-      signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS),
-    });
+    const res = await steamGates.steamhunters.run(
+      () =>
+        fetch(`https://steamhunters.com/api/apps/${appid}/achievements`, {
+          headers: { 'User-Agent': STEAM_FETCH_UA, Accept: 'application/json' },
+          signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS),
+        }),
+      { label: String(appid) }
+    );
+    if (res === null || isThrottleStatus(res.status)) {
+      debug.log(`[${appid}] SteamHunters not answered${res === null ? ' (queued too long)' : ` (HTTP ${res.status})`}`);
+      return { ok: false, list: [], throttled: true };
+    }
     if (!res.ok) return { ok: false, list: [] };
     const json = await res.json();
     return Array.isArray(json) ? { ok: true, list: json } : { ok: false, list: [] };
@@ -941,6 +1018,67 @@ function rememberApiNameIndex(appid, achievements) {
   }
 }
 
+/*
+  SteamHunters' per-app record: {appId, name, typeString, ...}. It is the only keyless source that
+  answers "what is this AppID called" for a game Steam's own retired GetAppList never listed and the
+  Steam client has never installed - which is every emulator save folder. Before this, a library of
+  GSE saves depended entirely on store.steampowered.com/api/appdetails and the anonymous product-info
+  login; both are rate-limited, so a large scan rendered most tiles as a bare number (issue #55).
+
+  Cached to disk for 30 days like the groups lookup below: a name does not change, and "Clear caches"
+  wipes steam_cache anyway.
+*/
+const STEAMHUNTERS_APP_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+function steamHuntersAppCachePath(appid) {
+  return path.join(userData, 'steam_cache/steamhunters_apps', `${appid}.json`);
+}
+
+function loadSteamHuntersApp(appid) {
+  try {
+    const raw = JSON.parse(fs.readFileSync(steamHuntersAppCachePath(appid), 'utf8'));
+    if (raw && raw.fetchedAt && Date.now() - raw.fetchedAt < STEAMHUNTERS_APP_CACHE_TTL_MS) return raw;
+  } catch {}
+  return null;
+}
+
+async function fetchSteamHuntersApp(appid) {
+  const cached = loadSteamHuntersApp(appid);
+  if (cached) return { name: String(cached.name || ''), typeString: String(cached.typeString || '') };
+  if (steamGroupsUnavailable()) return null;
+  try {
+    const res = await steamGates.steamhunters.run(
+      () =>
+        fetch(`https://steamhunters.com/api/apps/${appid}`, {
+          headers: { 'User-Agent': STEAM_FETCH_UA, Accept: 'application/json' },
+          signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS),
+        }),
+      { label: `app ${appid}` }
+    );
+    // A status code is an answer from a live host, so it clears the transport breaker even when the
+    // body is unusable; a refusal is not an answer about this appid and is simply left unanswered.
+    if (res === null) return null;
+    recordSteamGroupsSuccess();
+    if (isThrottleStatus(res.status) || !res.ok) return null;
+    const json = await res.json();
+    const name = String((json && json.name) || '').trim();
+    if (!name) return null;
+    const typeString = String((json && json.typeString) || '').trim();
+    try {
+      const file = steamHuntersAppCachePath(appid);
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.writeFileSync(file, JSON.stringify({ fetchedAt: Date.now(), name, typeString }));
+    } catch (err) {
+      debug.log(`[${appid}] could not persist the SteamHunters app record: ${err.message || err}`);
+    }
+    return { name, typeString };
+  } catch (err) {
+    recordSteamGroupsFailure();
+    debug.log(`[${appid}] SteamHunters app lookup failed: ${err.message || err}`);
+    return null;
+  }
+}
+
 function steamGroupsCachePath(appid) {
   return path.join(userData, 'steam_cache/steamhunters_groups', `${appid}.json`);
 }
@@ -969,15 +1107,21 @@ function saveSteamGroupsCache(appid, groups) {
 // hidden descriptions + icons + rarity), then SteamHunters JSON enriched with SteamCommunity
 // icons/hidden, then SteamCommunity alone, then nothing (the caller may fall back to the browser).
 async function getAchievementsKeyless(appid, lang) {
+  // A host that refused is a host that never answered about this appid. Tracked across the whole
+  // chain so an all-refusals run ends as "unknown" rather than as "this game has no achievements",
+  // which is what got cached and rendered as an empty tile (issue #55).
+  let refused = false;
   const official = await getSchemaFromWebAPI(appid, lang);
-  if (official !== null) {
+  if (Array.isArray(official)) {
     rememberApiNameIndex(appid, official);
     return { achievements: official, source: 'official' };
   }
+  if (official && official.throttled === true) refused = true;
 
   if (steamTransportUnavailable()) return { achievements: [], source: 'none', networkError: true };
 
   const sh = await fetchSteamHuntersJson(appid);
+  if (sh.throttled === true) refused = true;
   if (sh.ok) {
     if (sh.list.length === 0) return { achievements: [], source: 'steamhunters' };
     const language = (lang && (lang.api || lang)) || 'english';
@@ -1010,11 +1154,15 @@ async function getAchievementsKeyless(appid, lang) {
   const rows = await fetchSteamCommunityAchievements(
     `https://steamcommunity.com/stats/${appid}/achievements?l=${language}`
   );
+  if (rows.throttled === true) refused = true;
   if (rows.length) {
     const degraded = steamSchemaFetch.mapSteamCommunityRows(rows);
     const apiNames = loadApiNameIndex(appid);
     return { achievements: apiNames ? steamSchemaFetch.applyApiNameIndex(degraded, apiNames) : degraded, source: 'steamcommunity' };
   }
+  // networkError is the flag the whole chain already reads as "no verdict, keep the entry and try
+  // again next scan"; a refusal deserves exactly that treatment.
+  if (refused) return { achievements: [], source: 'none', networkError: true };
   return { achievements: [], source: 'none' };
 }
 
@@ -1177,10 +1325,15 @@ async function resolveSteamData(request) {
       // The host was unreachable moments ago; do not spend another timeout proving it per game.
       if (steamGroupsUnavailable()) return { ok: false, groups: [] };
       try {
-        const res = await fetch(`https://steamhunters.com/api/GetAchievementGroups/v1?appId=${appid}`, {
-          headers: { 'User-Agent': STEAM_FETCH_UA, Accept: 'application/json' },
-          signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS),
-        });
+        const res = await steamGates.steamhunters.run(
+          () =>
+            fetch(`https://steamhunters.com/api/GetAchievementGroups/v1?appId=${appid}`, {
+              headers: { 'User-Agent': STEAM_FETCH_UA, Accept: 'application/json' },
+              signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS),
+            }),
+          { label: `groups ${appid}` }
+        );
+        if (res === null) return { ok: false, groups: [] };
         // A status code is an answer from a live host, so it clears the breaker even when unusable.
         recordSteamGroupsSuccess();
         if (!res.ok) return { ok: false, groups: [] };
@@ -1209,16 +1362,54 @@ async function resolveSteamData(request) {
       if (offlineName) return offlineName;
     }
     if (steamTransportUnavailable()) return { appid, networkError: true };
-    await clientLogOn();
-    const storeData = await fetchStoreAppDetails(appid);
-    const apps = (await fetchSteamProductInfo(appid))?.apps || {};
+    // Best-effort: the anonymous session is only needed by getProductInfo, which has a breaker of
+    // its own, while the store and the SteamHunters fallback below need no session at all. Letting a
+    // login timeout throw here cost every game its name for the rest of the scan.
+    try {
+      await clientLogOn();
+    } catch (err) {
+      debug.log(`[${appid}] Steam anonymous login unavailable (${err.message || err}); continuing with the keyless sources`);
+    }
+    const store = await fetchStoreAppDetails(appid);
+    const productInfo = await fetchSteamProductInfo(appid);
+    const apps = productInfo?.apps || {};
     const appInfo = apps[appid]?.appinfo || apps[0]?.appinfo;
     const metadata = resolveSteamMetadata({
       appInfo,
-      storeData,
+      storeData: store.data,
       langApi: lang.api,
       langKey: typeof lang === 'string' ? lang : lang.api,
     });
+    // Did anything actually reply about this AppID? A nameless answer and no answer at all look
+    // identical from here, and the parser turns the first into a three-day negative cache entry -
+    // so a rate-limited scan used to blacklist the games it could not reach (issue #55).
+    let answered = store.answered || productInfo !== null;
+
+    /*
+      Neither Steam source named the game. That is the normal case for an emulator save folder:
+      GetAppList is retired, the Steam client has never installed the title, and the store endpoint
+      is the first thing to start refusing under a large scan. SteamHunters knows the same AppID and
+      is not on Steam's budget, so ask it rather than render the number (issue #55).
+    */
+    if (!metadata.name) {
+      const hunted = await fetchSteamHuntersApp(appid);
+      if (hunted) answered = true;
+      if (hunted && hunted.name) {
+        metadata.name = hunted.name;
+        if (!metadata.productType && hunted.typeString) {
+          metadata.productType = hunted.typeString.toLowerCase();
+          metadata.isGame = metadata.productType === 'game';
+        }
+        debug.log(`[${appid}] no name from Steam; SteamHunters calls it "${hunted.name}"`);
+      }
+    }
+
+    // Nobody answered and there is nothing to show for it: report it as the outage it is, so the
+    // entry stays provisional and is retried, rather than being remembered as an unknown AppID.
+    if (!answered && !metadata.name) {
+      debug.log(`[${appid}] no source answered - reporting it as unknown rather than as a miss`);
+      metadata.networkError = true;
+    }
 
     switch (type) {
       case 'name':

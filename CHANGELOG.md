@@ -29,6 +29,36 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Clearing the caches no longer removes the imported Xbox games.** The list of imported Xbox
+  titles is built from the folders that hold their schemas, so wiping the cache folder did not cost
+  a re-download: it removed those games from the library until you signed in to Xbox and ran the
+  import again by hand. That folder is now kept, like the imported emulator dll beside it, and
+  everything around it is still cleared.
+
+- **A large emulator library no longer loses the names and achievements of most of its games.** A
+  scan asks Steam's hosts about eight games at once, and a library of a couple of hundred saves went
+  through what those hosts allow within seconds. Every refusal after that was read as a fact about
+  the game - "no achievements", "no name" - so the tile rendered as a bare AppID with an empty list,
+  and rescanning until enough calls landed was the only way out. Requests to each host are now paced
+  and retried when a host asks to slow down, each host at its own rate rather than all of them at
+  the strictest one; a refusal is recorded as "not known yet" and retried on
+  the next scan instead of being cached as an empty game; an achievement list that was successfully
+  fetched is no longer discarded because Steam did not answer what kind of product the AppID is; and
+  a title Steam has no record of is resolved from a source that is not on Steam's budget, so games
+  Steam never listed still show their name.
+
+  Two things also stopped a rescan from helping. A lookup nothing answered was recorded as "there is
+  no such AppID" and the game was then not looked up again for three days; and because Valve retired
+  the app-list endpoint, any copy of that list still on disk is frozen at the day it was downloaded,
+  so a game released after it could never be in it - and its absence was read the same way. Both now
+  require Steam to have actually answered.
+
+  A game is also no longer discarded whole when only its name could not be resolved. The title and
+  the achievement list come from different hosts, so one can fail while the other succeeds, and the
+  reporter's logs show 589 games losing both because only the naming half had failed. What was found
+  is now kept: the achievements show, the title falls back to the one already on record, and the
+  next scan replaces it with the real one.
+
 - **Games added through LumaPlay come back.** Every one of them vanished from the library: the reader
   called two things that do not exist, threw before it read anything, and the failure was swallowed
   where nothing could report it. The schema is now read from the Ubisoft client's own cache on this

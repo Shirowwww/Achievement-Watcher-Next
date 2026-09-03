@@ -376,9 +376,15 @@ function rememberUnresolved(appID) {
   memo was never written again: a delisted appid paid a full lookup on every scan, for ever. What
   proves reachability now is the lookup itself having come back rather than thrown or reported a
   network error - the caller passes that as `answered`.
+
+  A loaded app list is deliberately NOT a second way in any more. The endpoint is gone, so any dump
+  still on disk is frozen at the day it was downloaded and only ages: a game released after it CANNOT
+  be listed, and reading that absence as "no such AppID" blacklisted brand-new games for three days -
+  the reported case was a March 2026 release (issue #55). `answered` covers the same ground without
+  the false positive.
 */
-module.exports.shouldRememberUnresolved = ({ hasResult, inAppList, answered, appListLoaded } = {}) =>
-  !hasResult && !inAppList && !!(answered || appListLoaded);
+module.exports.shouldRememberUnresolved = ({ hasResult, inAppList, answered } = {}) =>
+  !hasResult && !inAppList && !!answered;
 
 // Drop the memo for one appid (or all of them) so a manual retry really re-checks Steam.
 module.exports.forgetUnresolved = (appID) => {
@@ -482,12 +488,28 @@ module.exports.getGameData = async (cfg) => {
         // is free to try again. Dropping it here would empty the list on every offline scan.
         return staleEmpty;
       }
+      /*
+        A name and an achievement list come from different hosts, so one can fail while the other
+        succeeds. Losing the whole game over the missing half is what made a rate-limited scan render
+        a bare AppID with no achievements at all, when the schema had been fetched and was sitting
+        right here (issue #55): the reporter's logs show 589 games doing exactly that, then coming
+        back over the next dozen scans. Keep what was found; achievements.js fills the title in from
+        gameIndex or the discovery record, and the next scan replaces it with the real one. Nothing
+        is cached without a name, so this cannot persist a nameless record.
+      */
+      if (result && !result.name && Array.isArray(result.achievement?.list) && result.achievement.list.length > 0) {
+        debug.log(`[${cfg.appID}] no name available, but ${result.achievement.list.length} achievement(s) were fetched - keeping the game`);
+        return result;
+      }
+
       if ((!result || !result.name) && !inAppList) {
         // Only a miss against a list we actually have says anything about this appid (see the
         // negative-cache comment above); offline, everything misses.
-        // Reaching here means the lookup returned: a throw or a networkError was handled above.
-        const answered = !!result && result.networkError !== true;
-        if (module.exports.shouldRememberUnresolved({ hasResult: !!(result && result.name), inAppList, answered, appListLoaded: appListUsable() })) {
+        // Reaching here means the lookup returned: a throw or a networkError was handled above. A
+        // metadata call that never answered is not a verdict on the AppID either, or a rate-limited
+        // scan blacklists for three days every game it could not reach (issue #55).
+        const answered = !!result && result.networkError !== true && result.metadataUnanswered !== true;
+        if (module.exports.shouldRememberUnresolved({ hasResult: !!(result && result.name), inAppList, answered })) {
           rememberUnresolved(cfg.appID);
         }
         throw `Error trying to load steam data for ${cfg.appID}`;
@@ -532,7 +554,11 @@ module.exports.getGameData = async (cfg) => {
       // this scan only and let the next one retry the fetch.
       if (result && result.name) {
         fs.mkdirSync(path.dirname(filePath), { recursive: true });
-        fs.writeFileSync(filePath, JSON.stringify(result, null, 2));
+        // networkError and metadataUnanswered describe THIS lookup, not the game. A name recovered
+        // from another source can make a record with either flag worth keeping, and writing them
+        // would carry a transient outage into the cache for as long as the schema lives.
+        const { networkError: _networkError, metadataUnanswered: _metadataUnanswered, ...record } = result;
+        fs.writeFileSync(filePath, JSON.stringify(record, null, 2));
       } else {
         debug.log(`[${cfg.appID}] not caching a schema with no name - the next scan will retry the lookup`);
       }
@@ -1091,6 +1117,20 @@ async function resolvePortrait({ appid, name, portrait, invoke, steamdbWaitMs = 
 
 module.exports.resolvePortrait = resolvePortrait;
 
+/*
+  Does a fetched achievement list belong to this entry? Steam's product type answers that - but only
+  when Steam actually answered. A rate-limited or unreachable product-info/store call leaves the type
+  UNKNOWN, and reading unknown as "not a game" threw away a schema the keyless chain had already
+  fetched: the tile then rendered as a bare appid with no achievements, and the only cure was to
+  rescan until enough calls happened to land inside Steam's budget (issue #55). So unknown keeps the
+  list, and only a type Steam named, which is not a game, drops it.
+*/
+module.exports.shouldKeepFetchedAchievements = (metadata) => {
+  if (!metadata || typeof metadata !== 'object') return true;
+  if (metadata.isGame === true) return true;
+  return String(metadata.productType || '').trim() === '';
+};
+
 async function getSteamDataFromSRV(appID, lang) {
   const langObj = steamLanguages.find((language) => language.api === lang);
   // ipcInvoke, not ipcRenderer: this runs from the main process too, where ipcRenderer is undefined
@@ -1108,12 +1148,13 @@ async function getSteamDataFromSRV(appID, lang) {
   // The supplemental fetchers can legitimately come back empty (obscure title, scrape failed, site
   // unreachable). Default to [] instead of dereferencing `.achievements` on the result, or the whole
   // load throws and the game silently vanishes from the list.
-  let achievements = result.isGame && Array.isArray(steamhunters?.achievements) ? steamhunters.achievements : [];
+  const keepAchievements = module.exports.shouldKeepFetchedAchievements(result);
+  let achievements = keepAchievements && Array.isArray(steamhunters?.achievements) ? steamhunters.achievements : [];
 
   // SteamCommunity translations are only needed when the primary source is English-only
   // (SteamHunters JSON or the browser scrape). The official endpoint is already localized.
   const needsTranslations =
-    result.isGame &&
+    achievements.length > 0 &&
     lang !== 'english' &&
     result.translated &&
     steamhunters?.source !== 'official' &&
@@ -1126,7 +1167,7 @@ async function getSteamDataFromSRV(appID, lang) {
   // SteamHunters groups tag DLC/update achievements by apiName. Only worth asking for a real game
   // with achievements. Best-effort: untagged entries are left untouched, a failure never fails the load.
   let groupsResult = { ok: false, groups: [] };
-  if (result.isGame && achievements.length > 0) {
+  if (achievements.length > 0) {
     groupsResult = (await ipcInvoke('get-steam-data', { appid: appID, type: 'steamgroups' })) || { ok: false, groups: [] };
   }
   if (Array.isArray(groupsResult.groups) && groupsResult.groups.length) {
@@ -1156,6 +1197,10 @@ async function getSteamDataFromSRV(appID, lang) {
       list: achievements,
     },
     ...(networkError ? { networkError: true } : {}),
+    // Kept apart from `networkError`, which only fires when BOTH transports failed. The negative
+    // cache is about the name, so it needs to know whether anything answered about the product -
+    // a rate-limited metadata call with a working schema call is still "no verdict on the title".
+    ...(result.networkError === true ? { metadataUnanswered: true } : {}),
   };
 }
 
@@ -1347,12 +1392,6 @@ const getAppNameByAppid = (module.exports.getAppNameByAppid = async (appid) => {
     return '';
   }
 });
-
-// Did the Steam app-list actually load? When it did not (offline, endpoint down and no cached copy
-// yet) EVERY appid misses it, so a miss carries no information and must not be cached as a negative.
-function appListUsable() {
-  return appidListMap.size > 0;
-}
 
 // Since GetAppList was retired, this search is the only way a title resolves to an AppID; its memo
 // is written to disk so a launch doesn't re-search every unconfigured install over the network.

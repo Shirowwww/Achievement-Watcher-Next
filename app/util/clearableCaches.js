@@ -9,7 +9,13 @@ const gameIconStore = require('./gameIconStore.js');
 // (MIGRATION_PLAN), check there before adding an entry. Never add user-owned content
 // (uplayR2, backups, cfg/covers/gameIcons/presets/theme-images/epic_tokens.enc/lockfile).
 // cache/gse_fork/custom is a user-imported dll with no download source, kept out below.
-const PRESERVED_CACHE_CHILDREN = { 'cache/gse_fork': ['custom'] };
+/*
+  steam_cache/xbox is not a cache of the Xbox library, it IS the Xbox library: xboxPc.listCachedTitles()
+  builds the list of imported titles by reading which folders under it hold a schema.json. Wiping it
+  did not cost a re-download, it removed the games from the grid until the user signed in to Xbox and
+  ran the import again by hand. Same reason as the imported dll above: nothing here can fetch it back.
+*/
+const PRESERVED_CACHE_CHILDREN = { 'cache/gse_fork': ['custom'], steam_cache: ['xbox'] };
 
 const SAFE_CACHE_DIRS = [
   'steam_cache', // Steam/GOG/Epic/SteamDB/SteamGridDB schema, icon, cover and rarity cache
@@ -45,6 +51,11 @@ async function clearSafeCaches(userDataDir) {
       for (const child of await fs.promises.readdir(full)) {
         if (preserved.includes(child.toLowerCase())) continue;
         await fs.promises.rm(path.join(full, child), { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+      }
+      // Nothing was actually being kept here: leave no empty shell behind, so a folder with nothing
+      // to preserve disappears exactly as it did before it gained an exception.
+      if ((await fs.promises.readdir(full)).length === 0) {
+        await fs.promises.rm(full, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
       }
     } else {
       await fs.promises.rm(full, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });

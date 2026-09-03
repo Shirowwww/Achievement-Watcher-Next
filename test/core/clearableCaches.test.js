@@ -172,3 +172,53 @@ test('clearSafeCaches is a no-op-safe when userData has no caches at all yet', a
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('clearing caches keeps the imported Xbox library, which nothing can fetch back', async () => {
+  /*
+    steam_cache/xbox is not a cache OF the Xbox library, it IS the Xbox library:
+    xboxPc.listCachedTitles() builds the list of imported titles from the folders under it that hold
+    a schema.json. Wiping it did not cost a re-download - it removed those games from the grid until
+    the user signed in to Xbox and ran the import again by hand.
+  */
+  const root = makeUserDataDir();
+  try {
+    seedFile(root, path.join('steam_cache', 'xbox', '1234567890', 'schema.json'));
+    seedFile(root, path.join('steam_cache', 'xbox', '1234567890', 'state.json'));
+    // Everything else under steam_cache is genuinely re-fetchable and must still go.
+    seedFile(root, path.join('steam_cache', 'schema', 'english', '480.db'));
+    seedFile(root, path.join('steam_cache', 'icon', '480', 'header.jpg'));
+
+    const cleared = await clearSafeCaches(root);
+
+    assert.ok(cleared.includes('steam_cache'), 'steam_cache is still reported as cleared');
+    assert.equal(fs.existsSync(path.join(root, 'steam_cache', 'xbox', '1234567890', 'schema.json')), true, 'the imported title must survive');
+    assert.equal(fs.existsSync(path.join(root, 'steam_cache', 'xbox', '1234567890', 'state.json')), true, 'and its unlock state with it');
+    assert.equal(fs.existsSync(path.join(root, 'steam_cache', 'schema', 'english', '480.db')), false, 'a Steam schema is re-fetchable and goes');
+    assert.equal(fs.existsSync(path.join(root, 'steam_cache', 'icon', '480', 'header.jpg')), false, 'so is downloaded artwork');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('the folder the Xbox library is read from is the one that is preserved', () => {
+  // A move of that folder in xboxPc.js would silently reopen the hole above.
+  const xbox = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'xboxPc.js'), 'utf8');
+  assert.match(xbox, /function listCachedTitles\(\)[\s\S]*?path\.join\(getUserDataPath\(\), 'steam_cache', 'xbox'\)/);
+  assert.ok(PRESERVED_CACHE_CHILDREN.steam_cache.includes('xbox'));
+});
+
+test('a preserved folder with nothing left to preserve does not linger as an empty shell', async () => {
+  // The exception must not change what happens on a machine that never used the source it exists for.
+  const root = makeUserDataDir();
+  try {
+    seedFile(root, path.join('steam_cache', 'schema', 'english', '480.db'));
+    seedFile(root, path.join('cache', 'gse_fork', 'release-1', 'steam_api64.dll'));
+
+    await clearSafeCaches(root);
+
+    assert.equal(fs.existsSync(path.join(root, 'steam_cache')), false, 'no Xbox library here, so the folder goes');
+    assert.equal(fs.existsSync(path.join(root, 'cache', 'gse_fork')), false, 'no imported dll here either');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
