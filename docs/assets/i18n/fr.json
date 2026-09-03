@@ -172,7 +172,7 @@
   "install.step3Body": "C'est lui la surveillance. Les notifications en direct et le temps de jeu en dépendent.",
   "install.step3Title": "Laissez l'icône dans la zone de notification",
   "install.title": "La mettre en route",
-  "install.virustotal": "L’installateur actuel sur <a href=\"https://www.virustotal.com/gui/file/98737bd01f34be8aa8d86da8c9de5d52a62b070c091c6611366b174421932f99\" rel=\"noopener\">VirusTotal</a>. Les quelques détections heuristiques sont le faux positif lié aux émulateurs ; vérifiez vous-même n’importe quelle version en comparant son SHA-256.",
+  "install.virustotal": "L’installateur actuel sur <a href=\"https://www.virustotal.com/gui/file/e39331ce95c3e8d39dd79cf5d8d5559f2227c92b9b2577fd03a1b0210b8c5525\" rel=\"noopener\">VirusTotal</a>. Les quelques détections heuristiques sont le faux positif lié aux émulateurs ; vérifiez vous-même n’importe quelle version en comparant son SHA-256.",
   "nav.darkTheme": "Thème sombre",
   "nav.docs": "Docs",
   "nav.download": "Télécharger",

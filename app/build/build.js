@@ -113,14 +113,25 @@ else {
 const version = require(path.join(__dirname, "..", "package.json")).version;
 const installerEnv = { ...env };
 delete installerEnv.AW_BUILD_PORTABLE;
-runBuilder("electron-builder.yml", installerEnv);
-runBuilder("electron-builder-portable.yml", { ...env, AW_BUILD_PORTABLE: "1" });
-
-try {
-    verifyPortableArtifact(version);
-    if (fs.existsSync(pfx)) verifySignedUpdateArtifacts(version);
-} catch (error) {
-    console.error(`[build] ${error.message}`);
-    process.exit(1);
+function verifyOrExit(check) {
+    try {
+        check();
+    } catch (error) {
+        console.error(`[build] ${error.message}`);
+        process.exit(1);
+    }
 }
+
+runBuilder("electron-builder.yml", installerEnv);
+/*
+  dist/win-unpacked belongs to the installer only until the portable pass overwrites it with its own
+  output, which carries the portable marker and no app-update.yml. The signed-update check reads that
+  directory, so it has to run here rather than at the end of the build.
+*/
+verifyOrExit(() => {
+    if (fs.existsSync(pfx)) verifySignedUpdateArtifacts(version);
+});
+
+runBuilder("electron-builder-portable.yml", { ...env, AW_BUILD_PORTABLE: "1" });
+verifyOrExit(() => verifyPortableArtifact(version));
 process.exit(0);

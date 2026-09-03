@@ -172,7 +172,7 @@
   "install.step3Body": "Quello è il sorvegliante. Le notifiche in tempo reale e il tempo di gioco dipendono dal fatto che resti in esecuzione.",
   "install.step3Title": "Lascialo nell'area di notifica",
   "install.title": "Metterlo in funzione",
-  "install.virustotal": "Il programma di installazione attuale su <a href=\"https://www.virustotal.com/gui/file/98737bd01f34be8aa8d86da8c9de5d52a62b070c091c6611366b174421932f99\" rel=\"noopener\">VirusTotal</a>. Le poche rilevazioni euristiche sono il falso positivo degli emulatori; verifica tu stesso qualsiasi versione confrontando il suo SHA-256.",
+  "install.virustotal": "Il programma di installazione attuale su <a href=\"https://www.virustotal.com/gui/file/e39331ce95c3e8d39dd79cf5d8d5559f2227c92b9b2577fd03a1b0210b8c5525\" rel=\"noopener\">VirusTotal</a>. Le poche rilevazioni euristiche sono il falso positivo degli emulatori; verifica tu stesso qualsiasi versione confrontando il suo SHA-256.",
   "nav.darkTheme": "Tema scuro",
   "nav.docs": "Documentazione",
   "nav.download": "Scarica",

@@ -137,15 +137,19 @@ $expected
 ```
 
 The documentation points readers at a VirusTotal report for the current installer, keyed on its
-SHA-256. Print the new one and update the three places that name a version, so the link does not
+SHA-256. Print the new one and update every place that names it, so the link does not
 keep pointing at the previous release:
 
 ```powershell
 Get-FileHash "app/dist/Achievement.Watcher.Setup.$version.exe" -Algorithm SHA256
 ```
 
-Open `https://www.virustotal.com/gui/file/<hash>` once so the file is analysed and the report exists,
-then refresh the hash and version in `README.md`, `docs/faq.md` and `docs/troubleshooting.md`.
+Upload the installer to VirusTotal once so the report exists: looking a hash up never creates one,
+so a link to a file nobody submitted is a dead link. Then replace the previous hash everywhere it
+appears. It is in `README.md`, `docs/faq.md`, `docs/troubleshooting.md`, `docs/index.html` and the
+nine `docs/assets/i18n/*.json` files, which repeat the site sentence in each language. A plain search
+for the old hash across the repository finds them all; the version number beside it only changes in
+the first three.
 
 Also smoke-test the packaged runtime and the affected feature path. For runtime
 inspection, temporarily use Electron as Node and always remove the variable:

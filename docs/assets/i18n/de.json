@@ -172,7 +172,7 @@
   "install.step3Body": "Das ist der Wächter. Live-Benachrichtigungen und Spielzeit hängen daran.",
   "install.step3Title": "Im Infobereich laufen lassen",
   "install.title": "In Betrieb nehmen",
-  "install.virustotal": "Das aktuelle Installationsprogramm auf <a href=\"https://www.virustotal.com/gui/file/98737bd01f34be8aa8d86da8c9de5d52a62b070c091c6611366b174421932f99\" rel=\"noopener\">VirusTotal</a>. Die wenigen heuristischen Funde sind der Emulator-Fehlalarm; prüfen Sie jede Version selbst, indem Sie ihren SHA-256 vergleichen.",
+  "install.virustotal": "Das aktuelle Installationsprogramm auf <a href=\"https://www.virustotal.com/gui/file/e39331ce95c3e8d39dd79cf5d8d5559f2227c92b9b2577fd03a1b0210b8c5525\" rel=\"noopener\">VirusTotal</a>. Die wenigen heuristischen Funde sind der Emulator-Fehlalarm; prüfen Sie jede Version selbst, indem Sie ihren SHA-256 vergleichen.",
   "nav.darkTheme": "Dunkles Design",
   "nav.docs": "Doku",
   "nav.download": "Download",
