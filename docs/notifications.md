@@ -27,7 +27,8 @@ The main library window may stay closed in every mode: the background tracker ha
 Independently of the mode, **Websocket @localhost:8082** broadcasts every notification event as JSON
 on a local websocket, for stream overlays and other external tooling. It is on by default, listens on
 `127.0.0.1` only - so nothing on the network can read it - and adds no visible notification of its
-own. Turn the row off if you do not use it.
+own. Turn the row off if you do not use it. The same address also serves a ready-made stream overlay,
+described in [Show unlocks on stream (OBS)](#show-unlocks-on-stream-obs).
 
 > [!TIP]
 > Use the built-in test buttons after changing the mode. A successful test confirms the display path;
@@ -131,6 +132,66 @@ watched save is rewritten.
 
 Achievements with a global unlock rate below the rare threshold display their rarity percentage and
 are drawn in the preset's rare styling.
+
+## Show unlocks on stream (OBS)
+
+Capturing the popup as a *window* does not work, and cannot: the popup window is created for one
+unlock and destroyed a few seconds later, so by the time OBS lists it, it is already gone. Use a
+**Browser** source instead. OBS keeps a browser source loaded for the whole stream, so there is
+nothing to catch in time.
+
+1. **Settings -> Notification -> OBS browser source.** **Preview** opens the page in your browser
+   with a sample unlock every ten seconds, which is the quickest way to confirm the whole chain
+   works. **Copy link** puts the address on the clipboard.
+2. In OBS: **+ -> Browser**, paste the address into **URL**.
+3. Give the source whatever **Width** and **Height** suit your layout. The card scales itself to
+   fill the box, so there is no size to work out.
+
+That is all. The source shows the same preset, the same artwork and the same rarity styling as the
+in-game popup, and follows the preset you pick in Settings from then on. The test buttons under
+**Settings -> Notification** fire into it as well, whichever delivery mode is selected, so one click
+checks the popup and the stream at once.
+
+> [!TIP]
+> **A bigger source is a sharper card.** The card is laid out at the source's size rather than drawn
+> small and stretched, so a source with more pixels renders more detail. Give it roughly twice the
+> preset's own box and place it at half size in your scene:
+> `http://127.0.0.1:8082/obs/_config` reports both numbers. The only part that cannot get sharper is
+> the achievement icon itself, which Steam only publishes at 64x64.
+
+> [!TIP]
+> Add `?test=1` to the address while you position the source: it shows a sample unlock every ten
+> seconds so you can see what you are aligning. Remove it when you are done.
+
+### Options
+
+Append them to the address, `?first=x&then=y`:
+
+| Option | Effect |
+|---|---|
+| `?test=1` | Repeats a sample unlock every ten seconds, for positioning the source. |
+| `?scale=2` | Pins the card at that zoom instead of fitting it to the source. `?scale=app` follows the scale set in Settings. |
+| `?duration=8000` | Holds each card for that many milliseconds instead of the configured duration. |
+| `?sound=1` | Plays the notification sound through the browser source, so it reaches the stream without capturing desktop audio. Off by default, since the app already plays it on your own speakers. Tick **Control audio via OBS** on the source to put it in the mix. |
+| `/obs/preset/Xbox/` | Uses one named preset for the stream, whatever the desktop is set to. Any installed preset name works, including your own. |
+
+### Notes
+
+- **The page is deliberately blank between unlocks.** It is not broken, and it is not idling either:
+  the whole document is taken out of the layout, so no animation runs and OBS has nothing to
+  repaint. A stream overlay that keeps animating costs real CPU for hours at a time; this one costs
+  nothing until an achievement pops.
+- **It is local only.** Both the page and the feed listen on `127.0.0.1`, so the address works on
+  the machine running AW Next and nowhere else. Nothing on your network, and nobody watching the
+  stream, can reach it.
+- **Achievement icons are served from this machine** for sources that keep their artwork locally
+  (Goldberg, emulators, and your own library art). Only pictures a notification actually announced
+  are served, and only pictures.
+- **One copy of AW Next serves it.** The address belongs to whichever copy started first, so a
+  second instance (or anything else already using port 8082) leaves the source with nothing to
+  connect to. Close the extra copy and the source reconnects on its own within a few seconds.
+- If the source stays blank on a real unlock, check that notifications work at all first with the
+  test buttons in Settings, then that the **Websocket** row is on.
 
 ## Screenshot souvenirs
 

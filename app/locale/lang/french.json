@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Diffusion des succès à tous les clients connectés"
         },
+        "obsSource": {
+          "name": "Source navigateur OBS",
+          "description": "Affiche les déblocages en direct. Ajoute une source navigateur dans OBS et colle cette adresse. Elle affiche la même fenêtre de notification que celle en jeu, et reste vide entre les déblocages.",
+          "copy": "Copier le lien",
+          "copied": "Lien copié",
+          "preview": "Aperçu"
+        },
         "useChromium": {
           "name": "Notification Chromium",
           "description": "Utilise Chromium pour afficher des notifications stylisées."
@@ -1005,6 +1012,14 @@
         "Appuyez sur / pour chercher, Échap pour effacer ou fermer le panneau d’options.",
         "Le panneau engrenage change l’accent, la densité, le zoom, l’opacité et les éléments affichés ; « Utiliser le thème de l’app » suit le thème actif.",
         "Chaque succès avec un taux connu affiche sa rareté : gris pour les communs, or/argent/bronze pour les rares."
+      ],
+      "streamTitle": "Overlay de stream (OBS)",
+      "stream": [
+        "Paramètres > Notification > Source navigateur OBS > Copier le lien, puis ajoute une source navigateur dans OBS et colle-la comme URL.",
+        "Règle la largeur et la hauteur de la source sur la taille indiquée par http://127.0.0.1:8082/obs/_config : la taille propre du préréglage selon ton échelle.",
+        "Ajoute ?test=1 à l’URL pendant que tu places la source. Elle affiche un déblocage d’exemple toutes les dix secondes ; retire-le une fois terminé.",
+        "La source affiche la même fenêtre de notification que celle en jeu, et reste vide entre les déblocages, elle ne coûte donc rien pendant le stream.",
+        "Elle lit le flux de notification local, laisse donc Websocket @localhost:8082 activé dans Paramètres > Notification > Transport."
       ],
       "shortcutsTitle": "Raccourcis clavier",
       "shortcuts": [

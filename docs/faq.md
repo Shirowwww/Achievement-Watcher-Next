@@ -76,6 +76,12 @@ Yes - nine presets ship with the app, the **Preset Designer** builds your own wi
 and any preset exports to a single `.awpreset` file. See
 [Presets and the Preset Designer](presets.md).
 
+**Can I put unlocks on my stream?**
+Yes, with a Browser source in OBS. Capturing the popup as a *window* cannot work - it exists for one
+unlock and is gone before OBS lists it - so AW Next serves the same popup as a page instead. Settings
+> Notification > **OBS browser source** carries the address; see
+[Show unlocks on stream (OBS)](notifications.md#show-unlocks-on-stream-obs).
+
 **Is the in-game overlay the same thing as the popup?**
 No. The popup is a one-shot notification styled by a preset. The **overlay** is the full achievement
 list you open with `Ctrl+Shift+K` while a game runs - see the [Overlay guide](overlay.md).

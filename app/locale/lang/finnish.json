@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Lähetä saavutus kaikille yhdistetyille asiakkaille"
         },
+        "obsSource": {
+          "name": "OBS-selainlähde",
+          "description": "Näytä avaukset striimillä. Lisää selainlähde OBS:ään ja liitä tämä osoite. Se näyttää saman ponnahdusilmoituksen kuin pelin sisällä, ja pysyy tyhjänä avausten välillä.",
+          "copy": "Kopioi linkki",
+          "copied": "Linkki kopioitu",
+          "preview": "Esikatselu"
+        },
         "useChromium": {
           "name": "Chromium-ilmoitus",
           "description": "Näyttää tyylitellyt ilmoitukset Chromiumin avulla."
@@ -1005,6 +1012,14 @@
         "Paina / kohdistaaksesi hakuun ja Esc tyhjentääksesi sen tai sulkeaksesi asetuspaneelin.",
         "Rataspaneelista voit muuttaa korostusväriä, tiiviyttä, zoomausta, peittävyyttä ja näkyvien rivien määrää; ”Käytä sovelluksen teemaa” seuraa käytössä olevaa teemaa.",
         "Jokainen saavutus, jonka avausprosentti tiedetään, näyttää harvinaisuutensa: harmaa on yleinen, kulta, hopea ja pronssi ovat harvinaisia."
+      ],
+      "streamTitle": "Striimin peittokuva (OBS)",
+      "stream": [
+        "Asetukset > Ilmoitukset > OBS-selainlähde > Kopioi linkki, lisää sitten selainlähde OBS:ään ja liitä se URL-osoitteeksi.",
+        "Aseta lähteen leveys ja korkeus kokoon, jonka http://127.0.0.1:8082/obs/_config ilmoittaa: esiasetuksen oma koko sinun mittakaavassasi.",
+        "Lisää ?test=1 osoitteen perään, kun sijoitat lähdettä. Se näyttää esimerkkiavauksen kymmenen sekunnin välein; poista se, kun olet valmis.",
+        "Lähde näyttää saman ponnahdusilmoituksen kuin pelin sisällä, ja pysyy tyhjänä avausten välillä, joten se ei kuormita mitään striimatessasi.",
+        "Se lukee paikallista ilmoitusvirtaa, joten jätä Websocket @localhost:8082 päälle kohdassa Asetukset > Ilmoitukset > Välitystapa."
       ],
       "shortcutsTitle": "Näppäinoikotiet",
       "shortcuts": [

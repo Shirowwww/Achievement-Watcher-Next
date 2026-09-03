@@ -178,6 +178,7 @@ function testMessageAndOptions(kind, options, game = null) {
 async function runTest(kind, { rumble = true, game = null } = {}) {
   const options = await settings.load(cfg_file);
   const [message, toastOptions] = testMessageAndOptions(kind, options, game);
+  broadcastTest(message, options);
   toastOptions.toast.lang = options.achievement && options.achievement.lang ? options.achievement.lang : 'english';
   // Test toasts honor the configured overlay sound (Son / Son aléatoire), like real ones.
   if (!message.silent) {
@@ -228,12 +229,58 @@ async function runTest(kind, { rumble = true, game = null } = {}) {
   }
 }
 
+/*
+  A test button has to test what the user can see, and since the OBS browser source draws from the
+  notification feed, that now includes the stream. Same payload shape as a real unlock (toaster.js)
+  plus `test: true`, so a third-party client written against the feed can tell a rehearsal from an
+  achievement. Required lazily: websocket.js loads this module at its top, so a require here at load
+  time would read its exports before they exist.
+*/
+function broadcastTest(message, options) {
+  if (options.notification_transport && options.notification_transport.websocket === false) return;
+  try {
+    require('./websocket.js').broadcast({
+      appID: message.appid,
+      game: message.gameDisplayName,
+      achievement: message.achievementName,
+      displayName: message.achievementDisplayName,
+      description: message.achievementDescription,
+      rarityPercent: message.rarityPercent,
+      icon: message.icon,
+      gameIcon: message.gameIcon,
+      image: message.image,
+      notificationType: message.notificationType || (message.progress ? 'progress' : 'achievement'),
+      progress: message.progress,
+      silent: message.silent === true,
+      test: true,
+      time: message.time,
+    });
+  } catch (err) {
+    require('./util/log.js').warn(`[Toast] the test could not be broadcast: ${err && (err.message || err)}`);
+  }
+}
+
+/*
+  A test that only reaches the feed.
+
+  Settings draws its overlay preview in the app's own main process, so that button never enters
+  runTest() and nothing would reach the OBS browser source - the very transport the user is trying
+  to check. This builds the same payload runTest() would and broadcasts it alone: no toast, no
+  second popup, just the event the feed carries.
+*/
+async function broadcastOnly(kind, { game = null } = {}) {
+  const options = await settings.load(cfg_file);
+  const [message] = testMessageAndOptions(kind, options, game);
+  broadcastTest(message, options);
+}
+
 // `game` is optional and lets a test fired from one game's panel carry that game's name and artwork.
 module.exports.toast = (game) => runTest('toast', { game });
 module.exports.rare = (game) => runTest('rare', { game });
 module.exports.progress = (game) => runTest('progress', { rumble: false, game });
 module.exports.playtime = (game) => runTest('playtime', { rumble: false, game });
 module.exports.platinum = (game) => runTest('platinum', { game });
+module.exports.broadcastOnly = broadcastOnly;
 module.exports.prepare = prepare;
 module.exports.applyToastAppSettings = applyToastAppSettings;
 module.exports.testMessageAndOptions = testMessageAndOptions;

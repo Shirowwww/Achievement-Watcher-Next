@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Kringkast prestasjonen til alle tilkoblede klienter"
         },
+        "obsSource": {
+          "name": "OBS-nettleserkilde",
+          "description": "Vis opplåsinger på stream. Legg til en nettleserkilde i OBS og lim inn denne adressen. Den viser det samme popup-vinduet som spilloverlayet, og forblir tom mellom opplåsinger.",
+          "copy": "Kopier lenke",
+          "copied": "Lenke kopiert",
+          "preview": "Forhåndsvis"
+        },
         "useChromium": {
           "name": "Chromium-varsel",
           "description": "Bruker Chromium til å vise varsler med egen stil."
@@ -1005,6 +1012,14 @@
         "Trykk / for å hoppe til søket, og Esc for å tømme det eller lukke valgpanelet.",
         "Tannhjulpanelet endrer aksent, tetthet, zoom, gjennomsiktighet og antall synlige rader; «Bruk apptema» følger det aktive temaet.",
         "Hver prestasjon med kjent opplåsingsandel viser sjeldenheten sin: grått for vanlig, gull/sølv/bronse for sjelden."
+      ],
+      "streamTitle": "Streamoverlay (OBS)",
+      "stream": [
+        "Innstillinger > Varsler > OBS-nettleserkilde > Kopier lenke, legg deretter til en nettleserkilde i OBS og lim den inn som URL.",
+        "Sett kildens bredde og høyde til størrelsen som http://127.0.0.1:8082/obs/_config oppgir: presetets egen boksstørrelse ved din skalering.",
+        "Legg til ?test=1 i URL-en mens du plasserer kilden. Den viser en eksempel-opplåsing hvert tiende sekund; fjern den når du er ferdig.",
+        "Kilden viser det samme popup-vinduet som spilloverlayet, og forblir tom mellom opplåsinger, så den koster ingenting mens du streamer.",
+        "Den leser den lokale varselstrømmen, så la Websocket @localhost:8082 stå på under Innstillinger > Varsler > Leveringsmåte."
       ],
       "shortcutsTitle": "Hurtigtaster",
       "shortcuts": [

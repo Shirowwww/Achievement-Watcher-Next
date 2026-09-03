@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Zend de prestatie uit naar alle verbonden clients"
         },
+        "obsSource": {
+          "name": "OBS-browserbron",
+          "description": "Toon ontgrendelingen tijdens het streamen. Voeg een Browserbron toe in OBS en plak dit adres. Deze toont dezelfde pop-up als de in-game overlay, en blijft leeg tussen ontgrendelingen.",
+          "copy": "Link kopiëren",
+          "copied": "Link gekopieerd",
+          "preview": "Voorbeeld"
+        },
         "useChromium": {
           "name": "Chromium-melding",
           "description": "Gebruikt Chromium om meldingen met stijl te tonen."
@@ -1005,6 +1012,14 @@
         "Druk op / om het zoekveld te focussen en op Esc om het te wissen of het optiepaneel te sluiten.",
         "Via het tandwielpaneel pas je accent, dichtheid, zoom, dekking en het aantal zichtbare rijen aan; 'Thema van de app gebruiken' volgt het actieve thema.",
         "Elke prestatie met een bekend percentage toont zijn zeldzaamheid: grijs voor gewoon, goud/zilver/brons voor zeldzaam."
+      ],
+      "streamTitle": "Streamoverlay (OBS)",
+      "stream": [
+        "Instellingen > Meldingen > OBS-browserbron > Link kopiëren, voeg daarna een Browserbron toe in OBS en plak deze als URL.",
+        "Stel de breedte en hoogte van de bron in op de afmeting die http://127.0.0.1:8082/obs/_config meldt: het eigen kader van de preset op jouw schaal.",
+        "Voeg ?test=1 toe aan de URL terwijl je de bron plaatst. Er verschijnt elke tien seconden een voorbeeldontgrendeling; verwijder dit zodra je klaar bent.",
+        "De bron toont dezelfde pop-up als de in-game overlay, en blijft leeg tussen ontgrendelingen, dus kost niets terwijl je streamt.",
+        "De bron leest de lokale meldingenfeed, dus laat Websocket @localhost:8082 ingeschakeld onder Instellingen > Meldingen > Meldingskanaal."
       ],
       "shortcutsTitle": "Sneltoetsen",
       "shortcuts": [

@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Başarımı bağlı tüm istemcilere yayınla"
         },
+        "obsSource": {
+          "name": "OBS tarayıcı kaynağı",
+          "description": "Yayında açılmaları göster. OBS'de bir Tarayıcı kaynağı ekle ve bu adresi yapıştır. Oyun içi yer paylaşımıyla aynı açılır pencereyi gösterir ve açılmalar arasında boş kalır.",
+          "copy": "Bağlantıyı kopyala",
+          "copied": "Bağlantı kopyalandı",
+          "preview": "Önizleme"
+        },
         "useChromium": {
           "name": "Chromium bildirimi",
           "description": "Stilli bildirimler göstermek için Chromium kullanır."
@@ -1005,6 +1012,14 @@
         "Aramaya odaklanmak için / tuşuna, temizlemek veya seçenekler panelini kapatmak için Esc tuşuna basın.",
         "Dişli paneli vurgu rengini, yoğunluğu, yakınlaştırmayı, saydamlığı ve görünür satırları değiştirir; 'Uygulama temasını kullan' etkin temayı izler.",
         "Oranı bilinen her başarımın nadirliği gösterilir: yaygın olanlar gri, nadir olanlar altın/gümüş/bronz."
+      ],
+      "streamTitle": "Stream overlay’i (OBS)",
+      "stream": [
+        "Ayarlar > Bildirim > OBS tarayıcı kaynağı > Bağlantıyı kopyala, ardından OBS'de bir tarayıcı kaynağı ekleyip URL olarak yapıştır.",
+        "Kaynağın genişliğini ve yüksekliğini http://127.0.0.1:8082/obs/_config adresinin bildirdiği boyuta ayarla: ön ayarın kendi kutusunun senin boyutundaki hali.",
+        "Kaynağı yerleştirirken URL'ye ?test=1 ekle. Her on saniyede bir örnek açılma gösterir; işin bitince kaldır.",
+        "Kaynak, oyun içi overlay ile aynı açılır pencereyi gösterir ve açılmalar arasında boş kalır, bu yüzden yayın yaparken hiçbir şeye mal olmaz.",
+        "Yerel bildirim akışını okur, bu yüzden Ayarlar > Bildirim > Taşıma altında Websocket @localhost:8082 seçeneğini açık bırak."
       ],
       "shortcutsTitle": "Klavye kısayolları",
       "shortcuts": [

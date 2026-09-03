@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Phát thành tựu tới mọi máy khách đang kết nối"
         },
+        "obsSource": {
+          "name": "Nguồn trình duyệt OBS",
+          "description": "Hiển thị các lượt mở khóa khi phát trực tiếp. Thêm một Nguồn trình duyệt trong OBS và dán địa chỉ này vào. Trang hiển thị đúng khung thông báo giống như lớp phủ trong trò chơi, và để trống giữa các lượt mở khóa.",
+          "copy": "Chép liên kết",
+          "copied": "Đã chép liên kết",
+          "preview": "Xem thử"
+        },
         "useChromium": {
           "name": "Thông báo Chromium",
           "description": "Dùng Chromium để hiện thông báo có kiểu dáng riêng."
@@ -1005,6 +1012,14 @@
         "Nhấn / để vào ô tìm kiếm, Esc để xóa nội dung hoặc đóng bảng tùy chọn.",
         "Bảng bánh răng cho phép đổi màu nhấn, mật độ, mức phóng, độ mờ và số hàng hiển thị; 'Dùng chủ đề ứng dụng' sẽ theo chủ đề đang bật.",
         "Mỗi thành tựu có tỷ lệ đã biết đều hiện độ hiếm: xám cho phổ biến, vàng/bạc/đồng cho hiếm."
+      ],
+      "streamTitle": "Lớp phủ khi phát trực tiếp (OBS)",
+      "stream": [
+        "Cài đặt > Thông báo > Nguồn trình duyệt OBS > Chép liên kết, sau đó thêm một Nguồn trình duyệt trong OBS và dán vào làm URL.",
+        "Đặt chiều rộng và chiều cao của nguồn theo kích thước mà http://127.0.0.1:8082/obs/_config báo cáo: khung riêng của mẫu theo cỡ bạn đã chọn.",
+        "Thêm ?test=1 vào URL trong lúc bạn đặt nguồn. Nó hiển thị một lượt mở khóa mẫu mỗi mười giây; hãy gỡ bỏ khi bạn đặt xong.",
+        "Nguồn này hiển thị đúng khung thông báo giống như lớp phủ trong trò chơi, và để trống giữa các lượt mở khóa nên không tốn gì khi bạn phát trực tiếp.",
+        "Nó đọc luồng thông báo cục bộ, vì vậy hãy để Websocket @localhost:8082 bật trong Cài đặt > Thông báo > Cách gửi."
       ],
       "shortcutsTitle": "Phím tắt bàn phím",
       "shortcuts": [

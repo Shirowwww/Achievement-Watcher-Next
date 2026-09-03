@@ -15,6 +15,9 @@ const { removeBrowserProfile } = require('../helpers/browserProfileCleanup');
 
 const appDir = path.join(__dirname, '..', '..', 'app');
 const puppeteer = require(path.join(appDir, 'node_modules', 'puppeteer-core'));
+// Read from the module rather than repeated as a literal: adding a Help topic is a normal change,
+// and it used to fail here in five places that each had to be found and edited by hand.
+const HELP_TOPICS = Object.keys(require(path.join(appDir, 'ui', 'help.js')).HELP_LISTS).length;
 
 function findBrowsers() {
   const candidates = [
@@ -226,6 +229,7 @@ test('the Help filter behaves correctly in a real DOM', { concurrency: 1, timeou
         sources: 'sourcesTitle',
         controller: 'controllerTitle',
         overlay: 'overlayTitle',
+        stream: 'streamTitle',
         themes: 'themesTitle',
         shortcuts: 'shortcutsTitle',
         tips: 'tipsTitle',
@@ -241,23 +245,23 @@ test('the Help filter behaves correctly in a real DOM', { concurrency: 1, timeou
         open: document.querySelectorAll('.help-panel[open]').length,
       };
     });
-    assert.deepStrictEqual(initial, { panels: 13, open: 1 });
+    assert.deepStrictEqual(initial, { panels: HELP_TOPICS, open: 1 });
 
     const broad = await page.evaluate(() => window.AchievementHelp.applyHelpSearch($, 'emulateur'));
-    assert.deepStrictEqual(broad, { matches: 4, total: 13 }, 'accent-free search must match French topic text');
+    assert.deepStrictEqual(broad, { matches: 4, total: HELP_TOPICS }, 'accent-free search must match French topic text');
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel:not([hidden])').length), 4);
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel[open]:not([hidden])').length), 0, 'multiple matches stay compact');
 
     const narrow = await page.evaluate(() => window.AchievementHelp.applyHelpSearch($, 'RPCS3'));
-    assert.deepStrictEqual(narrow, { matches: 1, total: 13 });
+    assert.deepStrictEqual(narrow, { matches: 1, total: HELP_TOPICS });
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel[open]:not([hidden])').length), 1, 'a single result opens immediately');
 
     const none = await page.evaluate(() => window.AchievementHelp.applyHelpSearch($, 'zzzz-no-topic'));
-    assert.deepStrictEqual(none, { matches: 0, total: 13 });
+    assert.deepStrictEqual(none, { matches: 0, total: HELP_TOPICS });
     assert.strictEqual(await page.evaluate(() => document.getElementById('help-no-results').hidden), false);
 
     const cleared = await page.evaluate(() => window.AchievementHelp.applyHelpSearch($, ''));
-    assert.deepStrictEqual(cleared, { matches: 13, total: 13 });
+    assert.deepStrictEqual(cleared, { matches: HELP_TOPICS, total: HELP_TOPICS });
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel[hidden]').length), 0);
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel[open]').length), 1, 'clearing restores the original disclosure state');
   } finally {

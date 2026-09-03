@@ -433,6 +433,7 @@ function translateUI(lang, locale, template) {
     bindHelpText('help-sources-title', help.sourcesTitle);
     bindHelpText('help-controller-title', help.controllerTitle);
     bindHelpText('help-overlay-title', help.overlayTitle);
+    bindHelpText('help-stream-title', help.streamTitle);
     bindHelpText('help-themes-title', help.themesTitle);
     bindHelpText('help-shortcuts-title', help.shortcutsTitle);
     bindHelpText('help-tips-title', help.tipsTitle);
@@ -440,6 +441,7 @@ function translateUI(lang, locale, template) {
     bindHelpList('help-quick-list', help.quick);
     bindHelpList('help-notif-list', help.notifications);
     bindHelpList('help-gamehealth-list', help.gameHealth);
+    bindHelpList('help-stream-list', help.stream);
     bindHelpList('help-steam-list', help.steam);
     const uplayHelp = template.settings.emulator && template.settings.emulator.uplay;
     bindHelpList(
@@ -534,6 +536,16 @@ function translateUI(lang, locale, template) {
   $('#option_overlaySound').attr('data-lang-random', clear(template.settings.notification.option.overlayRandomSound));
   $('#option_overlaySound option[value="__random__"]').text(clear(template.settings.notification.option.overlayRandomSound));
   $('#lbl-overlayVolume').text(clear(template.settings.notification.option.overlayVolume));
+  // The OBS browser source row, last in the same list and bound the same way.
+  $('#lbl-obsSource').text(clear(template.settings.notification.option.obsSource.name));
+  // Both wordings live on the element: the button swaps to the second one for a moment after a
+  // successful copy, and has to be able to swap back in the same language.
+  $('#lbl-obsSourceCopy')
+    .text(clear(template.settings.notification.option.obsSource.copy))
+    .attr('data-lang-copy', clear(template.settings.notification.option.obsSource.copy))
+    .attr('data-lang-copied', clear(template.settings.notification.option.obsSource.copied));
+  $('#lbl-obsSourcePreview').text(clear(template.settings.notification.option.obsSource.preview));
+  $('#obs-source-help').text(clear(template.settings.notification.option.obsSource.description));
   $('#lbl-overlayDuration').text(clear(template.settings.notification.option.overlayDuration));
   if (template.settings.notification.option.overlaySoundImport) {
     $('#btn-import-sound').attr('title', clear(template.settings.notification.option.overlaySoundImport));

@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Transmite el logro a todos los clientes conectados"
         },
+        "obsSource": {
+          "name": "Fuente de navegador de OBS",
+          "description": "Muestra los desbloqueos en la transmisión en vivo. Agrega una fuente de navegador en OBS y pega esta dirección. Muestra el mismo popup que el overlay en el juego, y permanece vacía entre desbloqueos.",
+          "copy": "Copiar enlace",
+          "copied": "Enlace copiado",
+          "preview": "Vista previa"
+        },
         "useChromium": {
           "name": "Notificación Chromium",
           "description": "Usa Chromium para mostrar notificaciones con estilo."
@@ -1005,6 +1012,14 @@
         "Presiona / para enfocar la búsqueda y Esc para borrarla o cerrar el panel de opciones.",
         "El panel del engrane cambia el color de acento, la densidad, el zoom, la opacidad y las filas visibles; «Usar tema de la aplicación» sigue el tema activo.",
         "Cada logro con un porcentaje conocido muestra su rareza: gris para los comunes y oro/plata/bronce para los raros."
+      ],
+      "streamTitle": "Overlay de transmisión (OBS)",
+      "stream": [
+        "Ajustes > Notificación > Fuente de navegador de OBS > Copiar enlace, luego agrega una fuente de navegador en OBS y pégalo como URL.",
+        "Ajusta el ancho y el alto de la fuente al tamaño que reporta http://127.0.0.1:8082/obs/_config: el recuadro propio del preajuste según tu tamaño.",
+        "Agrega ?test=1 a la URL mientras colocas la fuente. Muestra un desbloqueo de ejemplo cada diez segundos; quítalo cuando termines.",
+        "La fuente muestra el mismo popup que el overlay en el juego, y permanece vacía entre desbloqueos, así que no consume nada mientras transmites.",
+        "Lee el feed de notificación local, así que deja Websocket @localhost:8082 activado en Ajustes > Notificación > Transporte."
       ],
       "shortcutsTitle": "Atajos de teclado",
       "shortcuts": [

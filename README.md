@@ -42,6 +42,9 @@ into one library, with live Windows notifications and an in-game overlay.
   themes and a [community gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/).
 - **In-game overlay.** The running game's full achievement list on `Ctrl+Shift+K`, with search,
   filters and rarity badges - drivable entirely from a gamepad.
+- **Unlocks on stream.** A ready-made OBS Browser source draws the same popup, with the same preset
+  and artwork, and paints nothing at all between unlocks - see
+  [Show unlocks on stream](https://shirowwww.github.io/Achievement-Watcher-Next/notifications.html#show-unlocks-on-stream-obs).
 - **Game Health.** Each game has a health panel that says whether it is tracked, why not, and offers
   only the repairs that genuinely apply.
 - **Guided repairs.** Read-only diagnosis, `steam_settings` repair, matched GBE Fork runtime install,

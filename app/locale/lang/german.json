@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Erfolg an alle verbundenen Clients senden"
         },
+        "obsSource": {
+          "name": "OBS-Browserquelle",
+          "description": "Zeigt Freischaltungen im Stream. Füge eine Browserquelle in OBS hinzu und füge diese Adresse ein. Sie zeigt dasselbe Popup wie das In-Game-Overlay, und bleibt zwischen Freischaltungen leer.",
+          "copy": "Link kopieren",
+          "copied": "Link kopiert",
+          "preview": "Vorschau"
+        },
         "useChromium": {
           "name": "Chromium-Benachrichtigung",
           "description": "Verwendet Chromium für gestylte Benachrichtigungen."
@@ -1005,6 +1012,14 @@
         "Drücke /, um die Suche zu fokussieren, und Esc, um sie zu leeren oder das Optionsfeld zu schließen.",
         "Im Zahnradmenü lassen sich Akzent, Dichte, Zoom, Deckkraft und sichtbare Zeilen ändern; „App-Design verwenden“ folgt dem aktiven Design.",
         "Jeder Erfolg mit bekannter Quote zeigt seine Seltenheit: Grau für häufige, Gold/Silber/Bronze für seltene."
+      ],
+      "streamTitle": "Stream-Overlay (OBS)",
+      "stream": [
+        "Einstellungen > Benachrichtigung > OBS-Browserquelle > Link kopieren, dann eine Browserquelle in OBS hinzufügen und als URL einfügen.",
+        "Setze Breite und Höhe der Quelle auf die Größe, die http://127.0.0.1:8082/obs/_config angibt: die eigene Fläche der Vorlage bei deiner eingestellten Größe.",
+        "Füge ?test=1 an die URL an, während du die Quelle platzierst. Sie zeigt alle zehn Sekunden eine Beispiel-Freischaltung; entferne es, wenn du fertig bist.",
+        "Die Quelle zeigt dasselbe Popup wie das In-Game-Overlay und bleibt zwischen Freischaltungen leer, sodass sie beim Streamen nichts kostet.",
+        "Sie liest den lokalen Benachrichtigungs-Feed, lass daher Websocket @localhost:8082 unter Einstellungen > Benachrichtigung > Transport aktiviert."
       ],
       "shortcutsTitle": "Tastenkürzel",
       "shortcuts": [

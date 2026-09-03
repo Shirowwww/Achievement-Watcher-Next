@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Vysielať úspech všetkým pripojeným klientom"
         },
+        "obsSource": {
+          "name": "Zdroj prehliadača OBS",
+          "description": "Zobrazuje odomknutia počas vysielania. Pridajte zdroj prehliadača v OBS a vložte túto adresu. Zobrazuje rovnaké vyskakovacie okno ako overlay v hre, a medzi odomknutiami zostáva prázdna.",
+          "copy": "Kopírovať odkaz",
+          "copied": "Odkaz skopírovaný",
+          "preview": "Náhľad"
+        },
         "useChromium": {
           "name": "Upozornenie Chromium",
           "description": "Používa Chromium na zobrazenie štylizovaných upozornení."
@@ -1005,6 +1012,14 @@
         "Stlačením / zameriate vyhľadávanie, klávesom Esc ho vymažete alebo zatvoríte panel možností.",
         "Panel s ozubeným kolieskom mení zvýraznenie, hustotu, priblíženie, nepriehľadnosť a viditeľné riadky; „Použiť tému aplikácie“ nasleduje aktívnu tému.",
         "Každý úspech so známou mierou zobrazuje vzácnosť: sivá pre bežné a zlatá/strieborná/bronzová pre vzácne."
+      ],
+      "streamTitle": "Overlay pre stream (OBS)",
+      "stream": [
+        "Nastavenia > Upozornenia > Zdroj prehliadača OBS > Kopírovať odkaz, potom pridajte zdroj prehliadača v OBS a vložte ho ako URL.",
+        "Nastavte šírku a výšku zdroja na veľkosť, ktorú uvádza http://127.0.0.1:8082/obs/_config: vlastný rozmer predvoľby pri vašej veľkosti.",
+        "Kým umiestňujete zdroj, pridajte do URL ?test=1. Každých desať sekúnd zobrazí ukážkové odomknutie; po dokončení ho odstráňte.",
+        "Zdroj zobrazuje rovnaké vyskakovacie okno ako overlay v hre a medzi odomknutiami zostáva prázdny, takže počas streamovania nič nestojí.",
+        "Číta miestny kanál upozornení, preto nechajte zapnutý Websocket @localhost:8082 v Nastavenia > Upozornenia > Prenos."
       ],
       "shortcutsTitle": "Klávesové skratky",
       "shortcuts": [

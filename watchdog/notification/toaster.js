@@ -125,6 +125,12 @@ module.exports = async (message, option = {}) => {
       if (plan.websocket) {
         debug.log('Websocket broadcast');
 
+        /*
+          Additive only: every field the feed has always carried keeps its name and meaning, since
+          third-party clients are written against it. What is new is what a client needs to paint a
+          card the way the app does - the kind of event, the game artwork beside the achievement
+          icon, and whether the event is meant to be silent (playtime is).
+        */
         let notification = {
           appID: message.appid,
           game: message.gameDisplayName,
@@ -133,6 +139,11 @@ module.exports = async (message, option = {}) => {
           description: message.achievementDescription,
           rarityPercent: message.rarityPercent,
           icon: message.icon,
+          gameIcon: message.gameIcon,
+          image: message.image,
+          notificationType: message.notificationType || (message.progress ? 'progress' : 'achievement'),
+          source: message.source,
+          silent: message.silent === true,
           time: message.time,
         };
 

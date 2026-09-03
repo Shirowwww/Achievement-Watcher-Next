@@ -13,6 +13,7 @@ const debug = new (require('./util/logger'))({
 });
 
 const test = require('./notification-test.js');
+const obsSource = require('./notification/obsSource.js');
 
 let WebSocket;
 
@@ -49,6 +50,27 @@ module.exports = (option = {}) => {
   } else {
     server = http.createServer();
   }
+  /*
+    The same listener also answers /obs - the OBS browser source (see notification/obsSource.js).
+    It shares this server rather than opening a second one: the page is driven by the very feed
+    this websocket broadcasts, so a separate port would be a second thing to configure, to firewall
+    and to keep in step. Every other path is answered 404 instead of being left to hang, which is
+    what an http request to this port used to do.
+  */
+  const obs = obsSource.createHandler({ auth: options.auth, log: (message) => debug.log(message) });
+  server.on('request', (req, res) => {
+    try {
+      if (obs(req, res)) return;
+    } catch (err) {
+      debug.error(`[obs] ${err}`);
+      if (!res.headersSent) res.writeHead(500, { 'content-type': 'text/plain; charset=utf-8' });
+      res.end('Internal error');
+      return;
+    }
+    res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('Not found');
+  });
+
   server.listen({ port: options.port, host: options.host, ipv6Only: options.ipv6Only });
   test.prepare().catch((err) => debug.warn(`[Toast] background preparation failed: ${err && (err.message || err)}`));
 
@@ -135,6 +157,9 @@ module.exports.LOOPBACK = LOOPBACK;
 
 module.exports.broadcast = (message) => {
   try {
+    // Artwork that lives on this machine has to be allow-listed before the browser source can ask
+    // for it; a card announced now may only be painted a moment later.
+    obsSource.rememberArtwork(message);
     if (WebSocket.clients.size > 0) {
       let json = JSON.stringify(message);
 
@@ -180,6 +205,18 @@ function incoming(message) {
         debug.log(`WS[${this.id}] Sending notification`);
         this.send(JSON.stringify(dummy));
       }
+    } else if (req.cmd === 'broadcast-test') {
+      /*
+        Put a sample unlock on the feed and nothing else. Settings renders its overlay preview in
+        the app's own process, so without this the OBS browser source - which reads this feed - sees
+        nothing when the user presses Test in any mode but "Windows notification".
+      */
+      debug.log(`WS[${this.id}] received command 'broadcast-test'`);
+      const kind = ['toast', 'rare', 'progress', 'playtime', 'platinum'].includes(req.kind) ? req.kind : 'toast';
+      test
+        .broadcastOnly(kind, { game: req.game && typeof req.game === 'object' ? req.game : null })
+        .then(() => this.send(JSON.stringify({ cmd: req.cmd, success: true })))
+        .catch((err) => this.send(JSON.stringify({ cmd: req.cmd, success: false, error: `${err}` })));
     } else if (
       req.cmd === 'toast-test' ||
       req.cmd === 'rare-test' ||

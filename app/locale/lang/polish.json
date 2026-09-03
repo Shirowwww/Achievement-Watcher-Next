@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Rozsyłaj osiągnięcie do wszystkich połączonych klientów"
         },
+        "obsSource": {
+          "name": "Źródło przeglądarki OBS",
+          "description": "Pokazuje odblokowania na streamie. Dodaj Źródło przeglądarki w OBS i wklej ten adres. Pokazuje to samo okienko co nakładka w grze, i pozostaje puste między odblokowaniami.",
+          "copy": "Kopiuj odnośnik",
+          "copied": "Odnośnik skopiowany",
+          "preview": "Podgląd"
+        },
         "useChromium": {
           "name": "Powiadomienie Chromium",
           "description": "Używa Chromium do wyświetlania stylizowanych powiadomień."
@@ -1005,6 +1012,14 @@
         "Naciśnij /, aby przejść do wyszukiwania, a Esc, aby je wyczyścić lub zamknąć panel opcji.",
         "Panel koła zębatego zmienia kolor akcentu, gęstość, powiększenie, krycie i widoczne wiersze; „Użyj motywu aplikacji” stosuje aktywny motyw.",
         "Każde osiągnięcie o znanym współczynniku pokazuje rzadkość: szary dla pospolitych, złoty/srebrny/brązowy dla rzadkich."
+      ],
+      "streamTitle": "Nakładka na stream (OBS)",
+      "stream": [
+        "Ustawienia > Powiadomienia > Źródło przeglądarki OBS > Kopiuj odnośnik, następnie dodaj Źródło przeglądarki w OBS i wklej je jako URL.",
+        "Ustaw szerokość i wysokość źródła na rozmiar podany przez http://127.0.0.1:8082/obs/_config: własny rozmiar wybranego ustawienia przy twoim rozmiarze (skali).",
+        "Dodaj ?test=1 do adresu URL, gdy ustawiasz źródło. Co dziesięć sekund pokazuje przykładowe odblokowanie; usuń ten parametr, gdy skończysz.",
+        "Źródło pokazuje to samo okienko co nakładka w grze, i pozostaje puste między odblokowaniami, więc nic nie kosztuje podczas streamu.",
+        "Odczytuje lokalny strumień powiadomień, więc zostaw włączony Websocket @localhost:8082 w Ustawienia > Powiadomienia > Transport."
       ],
       "shortcutsTitle": "Skróty klawiszowe",
       "shortcuts": [

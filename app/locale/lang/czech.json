@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Vysílat úspěch všem připojeným klientům"
         },
+        "obsSource": {
+          "name": "Zdroj prohlížeče OBS",
+          "description": "Zobrazuje odemčení při streamování. Přidejte zdroj prohlížeče v OBS a vložte tuto adresu. Zobrazuje stejné vyskakovací okno jako overlay ve hře, a mezi odemčeními zůstává prázdná.",
+          "copy": "Kopírovat odkaz",
+          "copied": "Odkaz zkopírován",
+          "preview": "Náhled"
+        },
         "useChromium": {
           "name": "Oznámení Chromium",
           "description": "Používá Chromium k zobrazení stylizovaných oznámení."
@@ -1005,6 +1012,14 @@
         "Stisknutím / zaměříte hledání, klávesou Esc ho vymažete nebo zavřete panel možností.",
         "Panel s ozubeným kolem mění zvýraznění, hustotu, přiblížení, průhlednost a viditelné řádky; „Použít motiv aplikace“ následuje aktivní motiv.",
         "Každý úspěch se známou mírou ukazuje vzácnost: šedá pro běžné a zlatá/stříbrná/bronzová pro vzácné."
+      ],
+      "streamTitle": "Overlay pro stream (OBS)",
+      "stream": [
+        "Nastavení > Oznámení > Zdroj prohlížeče OBS > Kopírovat odkaz; poté přidejte zdroj prohlížeče v OBS a vložte ho jako URL.",
+        "Nastavte šířku a výšku zdroje na velikost, kterou uvádí http://127.0.0.1:8082/obs/_config: vlastní rozměry předvolby ve vašem měřítku.",
+        "Při umisťování zdroje přidejte do URL ?test=1. Zobrazí ukázkové odemčení každých deset sekund; po dokončení jej odeberte.",
+        "Zdroj zobrazuje stejné vyskakovací okno jako overlay ve hře a mezi odemčeními zůstává prázdný, takže při streamování nic nestojí.",
+        "Čte místní kanál oznámení, takže nechte zapnutý Websocket @localhost:8082 v Nastavení > Oznámení > Přenos."
       ],
       "shortcutsTitle": "Klávesové zkratky",
       "shortcuts": [

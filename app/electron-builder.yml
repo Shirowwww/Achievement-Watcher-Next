@@ -31,6 +31,7 @@ asarUnpack:
   - resources/uplayR1/**
   # Shared modules loaded by the standalone Watchdog (which runs from the install dir) through
   # watchdog/util/sharedAppModule.js - anything required that way must be listed here.
+  - util/notificationPreset.js
   - util/steamSchemaFetch.js
   - util/localIcons.js
   - util/imageSize.js

@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Trasmetti l’obiettivo a tutti i client connessi"
         },
+        "obsSource": {
+          "name": "Sorgente browser OBS",
+          "description": "Mostra gli sblocchi in streaming. Aggiungi una sorgente browser in OBS e incolla questo indirizzo. Mostra lo stesso popup dell’overlay di gioco, e resta vuota tra uno sblocco e l’altro.",
+          "copy": "Copia collegamento",
+          "copied": "Collegamento copiato",
+          "preview": "Anteprima"
+        },
         "useChromium": {
           "name": "Notifica Chromium",
           "description": "Usa Chromium per mostrare notifiche stilizzate."
@@ -1005,6 +1012,14 @@
         "Premi / per attivare la ricerca, Esc per cancellarla o chiudere il pannello delle opzioni.",
         "Il pannello con l’ingranaggio modifica colore principale, densità, zoom, opacità e righe visibili; «Usa il tema dell’app» segue il tema attivo.",
         "Ogni obiettivo con una percentuale nota mostra la rarità: grigio per i comuni, oro/argento/bronzo per i rari."
+      ],
+      "streamTitle": "Overlay per lo streaming (OBS)",
+      "stream": [
+        "Impostazioni > Notifiche > Sorgente browser OBS > Copia collegamento, poi aggiungi una sorgente browser in OBS e incollalo come URL.",
+        "Imposta larghezza e altezza della sorgente sulla dimensione indicata da http://127.0.0.1:8082/obs/_config: il riquadro proprio della preimpostazione alla tua dimensione.",
+        "Aggiungi ?test=1 all’URL mentre posizioni la sorgente. Mostra uno sblocco di esempio ogni dieci secondi; rimuovilo quando hai finito.",
+        "La sorgente mostra lo stesso popup dell’overlay di gioco, e resta vuota tra uno sblocco e l’altro, quindi non costa nulla mentre trasmetti.",
+        "Legge il feed di notifica locale, quindi lascia attivo Websocket @localhost:8082 in Impostazioni > Notifiche > Trasporto."
       ],
       "shortcutsTitle": "Scorciatoie da tastiera",
       "shortcuts": [

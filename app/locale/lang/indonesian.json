@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Siarkan pencapaian ke semua klien yang terhubung"
         },
+        "obsSource": {
+          "name": "Sumber browser OBS",
+          "description": "Tampilkan pencapaian yang terbuka saat streaming. Tambahkan Sumber browser di OBS dan tempelkan alamat ini. Halaman ini menampilkan pop-up yang sama seperti overlay dalam game, dan tetap kosong di antara pencapaian yang terbuka.",
+          "copy": "Salin tautan",
+          "copied": "Tautan disalin",
+          "preview": "Pratinjau"
+        },
         "useChromium": {
           "name": "Notifikasi Chromium",
           "description": "Memakai Chromium untuk menampilkan notifikasi bergaya."
@@ -1005,6 +1012,14 @@
         "Tekan / untuk memfokuskan pencarian, Esc untuk mengosongkannya atau menutup panel opsi.",
         "Panel roda gigi mengubah aksen, kepadatan, zoom, opasitas, dan baris yang terlihat; 'Pakai tema aplikasi' mengikuti tema yang aktif.",
         "Setiap pencapaian dengan persentase yang diketahui menampilkan kelangkaannya: abu-abu untuk umum, emas/perak/perunggu untuk yang langka."
+      ],
+      "streamTitle": "Overlay stream (OBS)",
+      "stream": [
+        "Pengaturan > Notifikasi > Sumber browser OBS > Salin tautan, lalu tambahkan Sumber browser di OBS dan tempelkan sebagai URL.",
+        "Atur lebar dan tinggi sumber sesuai ukuran yang dilaporkan http://127.0.0.1:8082/obs/_config: kotak asli preset pada skala kamu.",
+        "Tambahkan ?test=1 ke URL saat kamu menempatkan sumber. Ini menampilkan contoh pencapaian terbuka setiap sepuluh detik; hapus setelah selesai.",
+        "Sumber ini menampilkan pop-up yang sama seperti overlay dalam game, dan tetap kosong di antara pencapaian yang terbuka, jadi tidak membebani apa pun saat kamu streaming.",
+        "Sumber ini membaca feed notifikasi lokal, jadi biarkan Websocket @localhost:8082 aktif di Pengaturan > Notifikasi > Transport."
       ],
       "shortcutsTitle": "Pintasan papan ketik",
       "shortcuts": [

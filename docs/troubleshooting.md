@@ -129,6 +129,22 @@ are deleted - settings, game data and logs are untouched.
 
 If the library updates but no notification appears, the source watcher works and the problem is likely in the selected notification transport. If the library also stays unchanged, diagnose the source or save path first.
 
+## The OBS browser source stays empty
+
+1. Press **Preview** under **Settings -> Notification -> OBS browser source**, or open
+   `http://127.0.0.1:8082/obs/?test=1` yourself. A sample card every ten seconds means the page and
+   the feed both work, and the problem is the source's settings in OBS.
+2. Nothing at all, not even a blank page: another copy of AW Next, or another program, holds port
+   8082. Only the copy that started first serves the address.
+3. A page that stays blank is normal between unlocks - it draws nothing on purpose. Use `?test=1` to
+   see it draw.
+4. Check that **Websocket @localhost:8082** is on under **Settings -> Notification -> Transport**:
+   the source reads that feed.
+5. The card fills whatever size the source is, so it cannot be too small to see. If it looks soft,
+   give the source more pixels and place it smaller in the scene.
+
+See [Show unlocks on stream (OBS)](notifications.md#show-unlocks-on-stream-obs) for the full setup.
+
 ## A game will not start from the Play button
 
 Some games require administrator rights, either because their manifest asks for it or because their

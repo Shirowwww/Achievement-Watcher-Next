@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Sänd prestationen till alla anslutna klienter"
         },
+        "obsSource": {
+          "name": "OBS-webbläsarkälla",
+          "description": "Visar upplåsningar under sändningen. Lägg till en webbläsarkälla i OBS och klistra in den här adressen. Den visar samma popup som overlayen i spelet, och förblir tom mellan upplåsningar.",
+          "copy": "Kopiera länk",
+          "copied": "Länk kopierad",
+          "preview": "Förhandsvisa"
+        },
         "useChromium": {
           "name": "Chromium-avisering",
           "description": "Använder Chromium för att visa formgivna aviseringar."
@@ -1005,6 +1012,14 @@
         "Tryck på / för att gå till sökrutan och Esc för att rensa den eller stänga alternativpanelen.",
         "Kugghjulspanelen ändrar accentfärg, täthet, zoom, genomskinlighet och antal synliga rader; ”Använd appens tema” följer det aktiva temat.",
         "Varje prestation med känd upplåsningsgrad visar sin sällsynthet: grått för vanlig, guld/silver/brons för sällsynt."
+      ],
+      "streamTitle": "Streamoverlay (OBS)",
+      "stream": [
+        "Inställningar > Aviseringar > OBS-webbläsarkälla > Kopiera länk, lägg sedan till en webbläsarkälla i OBS och klistra in den som URL.",
+        "Ställ in källans bredd och höjd till storleken som http://127.0.0.1:8082/obs/_config anger: förinställningens egen ruta vid din storlek.",
+        "Lägg till ?test=1 i URL:en medan du placerar källan. Den visar en exempelupplåsning var tionde sekund; ta bort den när du är klar.",
+        "Källan visar samma popup som overlayen i spelet, och förblir tom mellan upplåsningar, så den kostar ingenting medan du streamar.",
+        "Den läser det lokala aviseringsflödet, så låt Websocket @localhost:8082 vara på under Inställningar > Aviseringar > Leveranssätt."
       ],
       "shortcutsTitle": "Kortkommandon",
       "shortcuts": [

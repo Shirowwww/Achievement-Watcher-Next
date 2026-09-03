@@ -7261,6 +7261,23 @@ body {
   white-space: nowrap;
 }
 
+/*
+  OBS browser source row: two buttons of equal weight, side by side. Without the extra room they
+  fall onto two lines in the 212px column every one-button row uses, which reads as two settings
+  rather than one row with a copy and a check.
+*/
+#settings #options-notify-overlay li .right.action-right.obs-source-actions {
+  width: auto;
+  min-width: 260px;
+  max-width: 300px;
+  gap: 10px;
+}
+#settings #options-notify-overlay li .right.action-right.obs-source-actions .inline-action-btn {
+  flex: 1 1 0;
+  width: auto;
+  white-space: nowrap;
+}
+
 /* Souvenir save-folder button: keep the path on one line and ellipsize it (full path in the title). */
 #settings .arrow-list li .right.action-right #btn-souvenir-dir {
   justify-content: flex-start;

@@ -11,6 +11,20 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Added
 
+- **Achievement popups can go on a stream, through an OBS browser source.** Capturing the popup as a
+  window never worked and never could: the window exists for one unlock and is gone before OBS lists
+  it. AW Next now serves the selected preset as a page at `http://127.0.0.1:8082/obs`, driven by the
+  notification feed it already broadcast; a Browser source pointed at it shows the same card, the
+  same artwork and the same rare styling as the in-game popup, including artwork that only exists on
+  this machine, and it draws nothing whatsoever between unlocks, so it costs no CPU while the
+  stream runs. The card scales itself to fill whatever size the source is, so there is no size to
+  work out and a bigger source simply renders a sharper card. Settings > Notification carries
+  **Copy link** and a **Preview** button that opens the page with a sample unlock, the test buttons
+  fire into the source as well in every delivery mode, and the address takes `?test=1` for
+  positioning it plus duration,
+  sound, a pinned scale and a per-stream preset. Help gains a **Stream overlay (OBS)** topic with
+  the whole setup. (#59)
+
 - **The library grid is yours to size.** Settings > Appearance > Library tiles adds a slider for how
   big the cover art is and a slider for how much space sits around it, down to a grid with no gaps
   at all, plus an independent Show/Hide for the game name, the progress bar, the platform badge, the

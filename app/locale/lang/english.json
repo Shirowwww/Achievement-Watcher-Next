@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Broadcast achievement to all connected clients"
         },
+        "obsSource": {
+          "name": "OBS browser source",
+          "description": "Show unlocks on stream. Add a Browser source in OBS and paste this address. It draws the same popup as the in-game one, and stays empty between unlocks.",
+          "copy": "Copy link",
+          "copied": "Link copied",
+          "preview": "Preview"
+        },
         "useChromium": {
           "name": "Chromium notification",
           "description": "Uses chromium to show styled notifications."
@@ -1005,6 +1012,14 @@
         "Press / to focus the search, Esc to clear it or close the options panel.",
         "The gear panel changes accent, density, zoom, opacity and visible rows; 'Use app theme' follows the active theme.",
         "Every achievement with a known rate shows its rarity: gray for common, gold/silver/bronze for rare."
+      ],
+      "streamTitle": "Stream overlay (OBS)",
+      "stream": [
+        "Settings > Notification > OBS browser source > Copy link, then add a Browser source in OBS and paste it as the URL.",
+        "Set the source's width and height to the size http://127.0.0.1:8082/obs/_config reports: the preset's own box at your scale.",
+        "Add ?test=1 to the URL while you place the source. It shows a sample unlock every ten seconds; remove it once you are done.",
+        "The source draws the same popup as the in-game one, and stays empty between unlocks so it costs nothing while you stream.",
+        "It reads the local notification feed, so leave Websocket @localhost:8082 on in Settings > Notification > Transport."
       ],
       "shortcutsTitle": "Keyboard shortcuts",
       "shortcuts": [

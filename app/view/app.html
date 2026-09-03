@@ -592,6 +592,10 @@
                         <ul id="help-overlay-list"></ul>
                       </details>
                       <details class="help-panel">
+                        <summary><i class="fas fa-video"></i> <span id="help-stream-title">Stream overlay (OBS)</span></summary>
+                        <ul id="help-stream-list"></ul>
+                      </details>
+                      <details class="help-panel">
                         <summary><i class="fas fa-gamepad"></i> <span id="help-controller-title">Controller (gamepad)</span></summary>
                         <ul id="help-controller-list"></ul>
                       </details>
@@ -1667,6 +1671,24 @@
                         <span id="overlayVolume-value" class="volume-value">100%</span>
                       </div>
                       <div class="help"></div>
+                    </li>
+
+                    <!-- The OBS browser source: the same popup, drawn on a stream. It lives with
+                         the popup's own settings rather than under Transport, which Simple mode
+                         hides entirely. Bound by id, like the rest of this list. -->
+                    <li class="hasHelper" id="obs-source-row">
+                      <div class="left"><i class="fas fa-video"></i> <span id="lbl-obsSource"></span></div>
+                      <div class="right action-right obs-source-actions">
+                        <button type="button" id="btn-copy-obs-url" class="inline-action-btn">
+                          <i class="fas fa-copy" aria-hidden="true"></i> <span id="lbl-obsSourceCopy"></span>
+                        </button>
+                        <!-- An ordinary link, so the main window's will-navigate handler opens it in
+                             the real browser; settings.js fills the address from OBS_SOURCE_URL. -->
+                        <a id="btn-preview-obs-url" class="inline-action-btn" target="_blank">
+                          <i class="fas fa-eye" aria-hidden="true"></i> <span id="lbl-obsSourcePreview"></span>
+                        </a>
+                      </div>
+                      <div class="help" id="obs-source-help"></div>
                     </li>
                   </ul>
                 </div>

@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Transmitir a proeza a todos os clientes ligados"
         },
+        "obsSource": {
+          "name": "Fonte de navegador do OBS",
+          "description": "Mostra os desbloqueios em direto. Adiciona uma Fonte de navegador no OBS e cola este endereço. Mostra o mesmo popup do overlay no jogo, e fica vazia entre desbloqueios.",
+          "copy": "Copiar ligação",
+          "copied": "Ligação copiada",
+          "preview": "Pré-visualizar"
+        },
         "useChromium": {
           "name": "Notificação Chromium",
           "description": "Usa o Chromium para mostrar notificações estilizadas."
@@ -1005,6 +1012,14 @@
         "Prima / para focar a pesquisa e Esc para a limpar ou fechar o painel de opções.",
         "O painel da engrenagem altera o destaque, a densidade, o zoom, a opacidade e as linhas visíveis; «Usar tema da aplicação» segue o tema ativo.",
         "Cada proeza com uma taxa conhecida mostra a raridade: cinzento para comuns e ouro/prata/bronze para raras."
+      ],
+      "streamTitle": "Overlay de transmissão (OBS)",
+      "stream": [
+        "Definições > Notificação > Fonte de navegador do OBS > Copiar ligação; depois adiciona uma Fonte de navegador no OBS e cola-o como URL.",
+        "Define a largura e a altura da fonte com o tamanho indicado em http://127.0.0.1:8082/obs/_config: a caixa própria da predefinição à tua escala.",
+        "Adiciona ?test=1 ao URL enquanto posicionas a fonte. Mostra um desbloqueio de exemplo a cada dez segundos; remove-o quando terminares.",
+        "A fonte mostra o mesmo popup do overlay no jogo, e fica vazia entre desbloqueios, por isso não consome nada enquanto transmites.",
+        "Lê o feed de notificação local, por isso deixa o Websocket @localhost:8082 ativado em Definições > Notificação > Transporte."
       ],
       "shortcutsTitle": "Atalhos de teclado",
       "shortcuts": [

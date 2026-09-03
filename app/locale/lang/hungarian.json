@@ -777,6 +777,13 @@
         "useWS": {
           "description": "A teljesítmény közvetítése minden csatlakozott klienshez"
         },
+        "obsSource": {
+          "name": "OBS böngészőforrás",
+          "description": "Megjeleníti a feloldásokat közvetítés közben. Adj hozzá egy böngészőforrást az OBS-ben, és illeszd be ezt a címet. Ugyanazt a felugró ablakot jeleníti meg, mint a játékon belüli overlay, és üres marad a feloldások között.",
+          "copy": "Hivatkozás másolása",
+          "copied": "Hivatkozás másolva",
+          "preview": "Előnézet"
+        },
         "useChromium": {
           "name": "Chromium értesítés",
           "description": "A Chromiumot használja stílusos értesítések megjelenítéséhez."
@@ -1005,6 +1012,14 @@
         "A / megnyomásával a keresésre léphet, az Esc törli azt vagy bezárja a beállításpanelt.",
         "A fogaskerékpanel módosítja a kiemelőszínt, a sűrűséget, a nagyítást, az átlátszatlanságot és a látható sorokat; az „Alkalmazás témájának használata” az aktív témát követi.",
         "Minden ismert arányú teljesítmény megjeleníti a ritkaságát: szürke a gyakori, arany/ezüst/bronz a ritka."
+      ],
+      "streamTitle": "Közvetítési overlay (OBS)",
+      "stream": [
+        "Beállítások > Értesítés > OBS böngészőforrás > Hivatkozás másolása, majd adj hozzá egy böngészőforrást az OBS-ben, és illeszd be URL-ként.",
+        "Állítsd a forrás szélességét és magasságát a http://127.0.0.1:8082/obs/_config által mutatott méretre: az előbeállítás saját dobozmérete a te méretezésed szerint.",
+        "Add hozzá a ?test=1 paramétert az URL-hez, amíg elhelyezed a forrást. Tíz másodpercenként egy minta feloldást jelenít meg; távolítsd el, ha végeztél.",
+        "A forrás ugyanazt a felugró ablakot jeleníti meg, mint a játékon belüli overlay, és üres marad a feloldások között, így semmibe nem kerül közvetítés közben.",
+        "A helyi értesítési adatfolyamot olvassa, ezért hagyd bekapcsolva a Websocket @localhost:8082 lehetőséget itt: Beállítások > Értesítés > Átvitel."
       ],
       "shortcutsTitle": "Billentyűparancsok",
       "shortcuts": [

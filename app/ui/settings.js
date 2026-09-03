@@ -16,10 +16,19 @@ const DEFAULT_THEME_COLOR = themeLayers.BUILTIN_COLORS.default.bg;
 const scanScopeTools = require(path.join(appPath, 'parser/scanScope.js'));
 const emulatorFixEligibility = require(path.join(appPath, 'util/emulatorFixEligibility.js'));
 const { t } = require(path.join(appPath, 'locale/t.js'));
+// Renamed from the module's own name: the main window loads app.js and every ui/*.js as classic
+// scripts sharing one global scope, and app.js already declares `libraryChrome` (see
+// test/integration/rendererScope.test.js).
+const settingsLibraryChrome = require(path.join(appPath, 'util/libraryChrome.js'));
+const libraryRefresh = require(path.join(appPath, 'util/libraryRefresh.js'));
 const { renamedSound } = require(path.join(appPath, 'util/notificationSounds.js'));
 const interfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
 const { legacyPresetAlias } = require(path.join(appPath, 'util/notificationPreset.js'));
 const { describeFolderDiagnosis } = require(path.join(appPath, 'util/folderDiagnosis.js'));
+// Where OBS points a Browser source. The Watchdog serves the selected preset at /obs on its own
+// websocket listener, whose port is fixed in watchdog/websocket.js - the two are kept in step by
+// test/core/obsSourceUrl.test.js rather than by a second setting nobody would ever change.
+const OBS_SOURCE_URL = 'http://127.0.0.1:8082/obs';
 
 /*
   Switching automatic repair on is the moment to mention the antivirus, and the only one.
@@ -3767,6 +3776,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         if (mode === 'toast') await runNotificationTest(kind + '-test', btn, game);
         else {
           ipcRenderer.send('spawn-overlay-notification', overlayTestData(kind, notificationOverrides, null, game));
+          // The overlay preview is drawn by this app's own main process, so it never reaches the
+          // Watchdog and never reaches the notification feed - which is what the OBS browser source
+          // renders. Ask the Watchdog to put the same sample on the feed, so one Test button checks
+          // the popup and the stream in every mode, not only "Windows notification".
+          broadcastNotificationTest(kind, game);
           await new Promise((resolve) => setTimeout(resolve, 900));
         }
       } catch (err) {
@@ -4662,6 +4676,31 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // workshop tab, so this row carries a button through to it rather than merging the two.
     $('#btn-open-presets').on('click', function () {
       $("#settingNav li[data-view='presets']").trigger('click');
+    });
+
+    /*
+      The OBS browser source. The address is the Watchdog's own websocket listener, which serves the
+      selected preset as a page at /obs - the port is fixed there (websocket.js), so it is written
+      out rather than read back over IPC. The button copies it because that is the only thing anyone
+      does with it: paste it into a Browser source in OBS.
+    */
+    // "Does it work at all" answered before OBS is involved: the same page, in the real browser,
+    // asking the feed for a sample unlock every ten seconds.
+    $('#btn-preview-obs-url').attr('href', `${OBS_SOURCE_URL}/?test=1`);
+    $('#btn-copy-obs-url').on('click', function () {
+      const button = $(this);
+      const label = $('#lbl-obsSourceCopy');
+      copyText(OBS_SOURCE_URL).then((written) => {
+        // Say what happened: the clipboard can be held by another process, and a tick that appears
+        // anyway teaches people to paste an address that was never copied.
+        const done = String(label.attr('data-lang-copied') || '');
+        if (written && done) label.text(done);
+        button.toggleClass('primary', written === true);
+        setTimeout(() => {
+          label.text(String(label.attr('data-lang-copy') || label.text()));
+          button.removeClass('primary');
+        }, 2000);
+      });
     });
 
     $('#pd-anchors button').on('click', function () {

@@ -51,9 +51,9 @@ test('every bundled locale supplies the help interface labels', () => {
   }
 });
 
-test('all 13 Help topics are populated, rendered and localized', () => {
+test('all 14 Help topics are populated, rendered and localized', () => {
   const helpModule = require('../../app/ui/help.js');
-  assert.strictEqual(Object.keys(helpModule.HELP_LISTS).length, 13);
+  assert.strictEqual(Object.keys(helpModule.HELP_LISTS).length, 14);
   for (const [id, key] of Object.entries(helpModule.HELP_LISTS)) {
     assert.match(html, new RegExp(`id="${id}"`), `${key}: missing DOM list`);
     for (const file of fs.readdirSync(localeDir).filter((name) => name.endsWith('.json'))) {

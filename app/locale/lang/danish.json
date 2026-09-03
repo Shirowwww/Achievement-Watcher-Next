@@ -777,6 +777,13 @@
         "useWS": {
           "description": "Send præstationen ud til alle tilsluttede klienter"
         },
+        "obsSource": {
+          "name": "OBS-browserkilde",
+          "description": "Vis oplåsninger på stream. Tilføj en browserkilde i OBS og indsæt denne adresse. Den viser det samme pop op-vindue som overlayet i spillet, og forbliver tom mellem oplåsninger.",
+          "copy": "Kopiér link",
+          "copied": "Link kopieret",
+          "preview": "Forhåndsvis"
+        },
         "useChromium": {
           "name": "Chromium-notifikation",
           "description": "Bruger Chromium til at vise notifikationer med stil."
@@ -1005,6 +1012,14 @@
         "Tryk på / for at gå til søgefeltet, og på Esc for at rydde det eller lukke indstillingspanelet.",
         "Tandhjulspanelet ændrer accent, tæthed, zoom, uigennemsigtighed og antal synlige rækker; 'Brug appens tema' følger det aktive tema.",
         "Enhver præstation med en kendt procent viser sin sjældenhed: grå for almindelig og guld/sølv/bronze for sjælden."
+      ],
+      "streamTitle": "Streamoverlay (OBS)",
+      "stream": [
+        "Indstillinger > Notifikation > OBS-browserkilde > Kopiér link, tilføj derefter en browserkilde i OBS og indsæt det som URL.",
+        "Sæt kildens bredde og højde til den størrelse, som http://127.0.0.1:8082/obs/_config viser: presettets egen boksstørrelse ved din skalering.",
+        "Tilføj ?test=1 til URL'en, mens du placerer kilden. Den viser en eksempeloplåsning hvert tiende sekund; fjern det igen, når du er færdig.",
+        "Kilden viser det samme pop op-vindue som overlayet i spillet, og forbliver tom mellem oplåsninger, så den ikke koster noget, mens du streamer.",
+        "Den læser den lokale notifikationsstrøm, så lad Websocket @localhost:8082 være slået til under Indstillinger > Notifikation > Transport."
       ],
       "shortcutsTitle": "Tastaturgenveje",
       "shortcuts": [
