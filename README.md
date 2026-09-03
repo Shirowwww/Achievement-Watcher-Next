@@ -18,7 +18,7 @@ into one library, with live Windows notifications and an in-game overlay.
 [Sources](https://shirowwww.github.io/Achievement-Watcher-Next/sources.html) ·
 [Presets](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/) ·
 [Themes](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/themes/) ·
-[GitHub](https://github.com/Shirowwww/Achievement-Watcher-Next)
+[cs.rin Forum thread](https://cs.rin.ru/forum/viewtopic.php?f=20&t=161187)
 
 <table>
 <tr>
@@ -144,9 +144,10 @@ npm projects; `npm run build` writes the installer, portable ZIP and updater fil
 
 ## Security and support
 
-Found a problem or have an idea? [Open an issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues).
-For a vulnerability, use the private process in the [security policy](SECURITY.md) rather than a
-public issue.
+Found a problem or have an idea? [Open an issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues),
+or post in the [cs.rin forum thread](https://cs.rin.ru/forum/viewtopic.php?f=20&t=161187) where releases are
+announced and discussed. For a vulnerability, use the private process in the
+[security policy](SECURITY.md) rather than a public issue.
 
 Download builds only from the
 [official releases page](https://github.com/Shirowwww/Achievement-Watcher-Next/releases); `latest.yml`

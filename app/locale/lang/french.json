@@ -948,7 +948,8 @@
         "documentation": "Documentation",
         "faq": "FAQ",
         "issues": "Signaler un problème",
-        "download": "Dernière version"
+        "download": "Dernière version",
+        "forum": "Sujet du forum"
       },
       "quickTitle": "Premiers pas",
       "quick": [

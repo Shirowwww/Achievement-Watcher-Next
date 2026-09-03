@@ -19,10 +19,12 @@ test('help stays focused instead of duplicating the settings sidebar', () => {
   // release page - so it duplicates no sidebar entry. Its addresses come from app/util/links.js.
   assert.match(html, /id="help-links-title"/, 'the online-help row must exist');
   assert.doesNotMatch(html, /class="help-link"[^>]*href="http/, 'a help link must not spell out its address');
-  for (const key of ['documentation', 'faq', 'troubleshooting', 'issues', 'download']) {
+  for (const key of ['documentation', 'faq', 'troubleshooting', 'issues', 'download', 'community.forum']) {
     assert.match(html, new RegExp(`data-aw-link="${key}"`), `the ${key} link must name its registry key`);
   }
   assert.match(loader, /bindHelpText\('help-links-title', help\.links\.title\)/, 'its heading is localized');
+  // The forum thread reaches people who never open the tracker, so its label is translated too.
+  assert.match(loader, /bindHelpText\('help-link-forum', help\.links\.forum\)/, 'the forum label is localized');
   // Game health leads the topic list: it is the panel a player reaches for when a game misbehaves.
   assert.match(html, /id="help-gamehealth-list"/, 'the Game health panel must exist');
   assert.match(loader, /bindHelpList\('help-gamehealth-list', help\.gameHealth\)/);

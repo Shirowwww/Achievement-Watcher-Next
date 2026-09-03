@@ -32,6 +32,11 @@ renamed in 3.9.0 and the history is kept under one file.
   sound, a pinned scale and a per-stream preset. Help gains a **Stream overlay (OBS)** topic with
   the whole setup. (#59)
 
+- **The forum thread is linked from the app, the website and the README.** Releases are announced
+  and discussed there as much as on the issue tracker, and until now nothing in the project pointed
+  at it: it is now one of the links in Help, one line in the site footer, and beside the other
+  project links in the README.
+
 - **The library grid is yours to size.** Settings > Appearance > Library tiles adds a slider for how
   big the cover art is and a slider for how much space sits around it, down to a grid with no gaps
   at all, plus an independent Show/Hide for the game name, the progress bar, the platform badge, the
@@ -145,6 +150,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 - **Logs stop growing without bound.** The size limit was only checked when the app started, so a
   file could grow far past it for as long as the app stayed open - which is days.
+
+- **The executable a game is tracked by is still found once the library finishes loading.** Those
+  lookups run in the background, and the browser they use was shut down the moment the list was on
+  screen, so the ones still running were cut off and filled the log with errors. They are now let
+  finish, and no more than three run at a time.
 
 ### Improved
 

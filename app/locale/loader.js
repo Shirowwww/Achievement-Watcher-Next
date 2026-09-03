@@ -416,6 +416,7 @@ function translateUI(lang, locale, template) {
       bindHelpText('help-link-troubleshooting', help.troubleshootTitle);
       bindHelpText('help-link-issues', help.links.issues);
       bindHelpText('help-link-download', help.links.download);
+      bindHelpText('help-link-forum', help.links.forum);
     }
     if (help.groups) {
       bindHelpText('help-group-start', help.groups.start);

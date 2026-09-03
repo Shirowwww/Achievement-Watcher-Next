@@ -948,7 +948,8 @@
         "documentation": "문서",
         "faq": "FAQ",
         "issues": "문제 신고",
-        "download": "최신 릴리스"
+        "download": "최신 릴리스",
+        "forum": "포럼 스레드"
       },
       "quickTitle": "시작하기",
       "quick": [

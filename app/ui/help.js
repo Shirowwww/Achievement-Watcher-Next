@@ -12,6 +12,7 @@ const HELP_LISTS = {
   'help-emulator-list': 'emulators',
   'help-controller-list': 'controller',
   'help-overlay-list': 'overlay',
+  'help-stream-list': 'stream',
   'help-shortcuts-list': 'shortcuts',
   'help-themes-list': 'themes',
   'help-tips-list': 'tips',

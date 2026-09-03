@@ -28,8 +28,10 @@ test('every address is https and belongs to this project', () => {
   for (const [key, url] of flat) {
     assert.match(url, /^https:\/\//, `${key} must be https`);
     assert.doesNotMatch(url, /\s/, `${key} must not contain whitespace`);
-    // The upstream credits are the only entries that legitimately name another project.
-    if (key.startsWith('upstream.')) continue;
+    // Two groups legitimately sit outside the project's own two domains: the upstream credits, which
+    // name another project, and community.*, which is this project hosted somewhere else - a forum
+    // thread is still the project's, it just does not live on GitHub.
+    if (key.startsWith('upstream.') || key.startsWith('community.')) continue;
     assert.match(url, /^https:\/\/(github\.com\/Shirowwww\/Achievement-Watcher-Next|shirowwww\.github\.io\/Achievement-Watcher-Next)/, `${key} must point at this project`);
   }
 });
@@ -43,6 +45,9 @@ test('the named destinations are the pages they claim to be', () => {
   assert.equal(links.documentation, 'https://shirowwww.github.io/Achievement-Watcher-Next/README.html');
   assert.equal(links.website, 'https://shirowwww.github.io/Achievement-Watcher-Next/');
   assert.equal(links.presetGallery, 'https://shirowwww.github.io/Achievement-Watcher-Next/gallery/');
+  // Pinned like the rest: the thread id is what makes the link the project's own, and a wrong one
+  // would send people to somebody else's topic without anything failing.
+  assert.equal(links.community.forum, 'https://cs.rin.ru/forum/viewtopic.php?f=20&t=161187');
   assert.equal(links.presets, 'https://shirowwww.github.io/Achievement-Watcher-Next/presets.html');
   assert.equal(links.troubleshooting, 'https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html');
   assert.equal(links.upstream.original, 'https://github.com/xan105/Achievement-Watcher');

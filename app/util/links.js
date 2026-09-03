@@ -91,6 +91,15 @@ const links = {
   faq: docs('faq'),
   presetGalleryGuide: docs('communityGalleries'),
 
+  /*
+    Where the project is discussed outside GitHub. Its own release thread on the cs.rin.ru forum,
+    which predates the GitHub issue tracker and is still where most reports arrive; kept here with
+    every other address the app can send somebody to rather than written into a page by hand.
+  */
+  community: {
+    forum: 'https://cs.rin.ru/forum/viewtopic.php?f=20&t=161187',
+  },
+
   // Other people's projects. Everything else here belongs to this one.
   upstream: {
     // The projects AW Next descends from, shown in the About and Advanced panels.

@@ -25,6 +25,11 @@ renamed in 3.9.0 and the history is kept under one file.
   sound, a pinned scale and a per-stream preset. Help gains a **Stream overlay (OBS)** topic with
   the whole setup. (#59)
 
+- **The forum thread is linked from the app, the website and the README.** Releases are announced
+  and discussed there as much as on the issue tracker, and until now nothing in the project pointed
+  at it: it is now one of the links in Help, one line in the site footer, and beside the other
+  project links in the README.
+
 - **The library grid is yours to size.** Settings > Appearance > Library tiles adds a slider for how
   big the cover art is and a slider for how much space sits around it, down to a grid with no gaps
   at all, plus an independent Show/Hide for the game name, the progress bar, the platform badge, the

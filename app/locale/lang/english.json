@@ -885,11 +885,11 @@
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Xbox PC games (Game Pass / Microsoft Store). Connect and import from Settings to see unlock state and rarity.",
-      "value": {
-        "none": "None",
-        "installed": "Installed",
-        "owned": "Owned"
-      }
+        "value": {
+          "none": "None",
+          "installed": "Installed",
+          "owned": "Owned"
+        }
       },
       "importCache": {
         "name": "Import notification cache",
@@ -907,11 +907,11 @@
       },
       "epicOfficial": {
         "description": "Official Epic Games client data",
-      "value": {
-        "none": "None",
-        "installed": "Installed",
-        "owned": "Owned"
-      }
+        "value": {
+          "none": "None",
+          "installed": "Installed",
+          "owned": "Owned"
+        }
       },
       "gog": {
         "description": "GOG emulator saves"
@@ -948,7 +948,8 @@
         "documentation": "Documentation",
         "faq": "FAQ",
         "issues": "Report an issue",
-        "download": "Latest release"
+        "download": "Latest release",
+        "forum": "Forum thread"
       },
       "quickTitle": "First steps",
       "quick": [
