@@ -1,52 +1,54 @@
-# Achievement Watcher Next 3.10.4
+# Achievement Watcher Next 3.10.5
 
-The release that opens on the library it already had, lists the games your Epic and Xbox accounts
-own even when none of them is installed here, and stops keeping your sign-ins behind a passphrase
-anyone could read in the source.
+The release that puts unlocks on a stream, hands the library grid over to you, and stops a large
+emulator library from losing the names and achievements of most of its games.
 
 ## Highlights
 
-- **Epic and Xbox PC list what your account owns.** Both sources offered an on/off switch that only
-  ever meant "the games installed on this PC", so a machine with no Epic game installed showed no
-  Epic game at all. They now open as a dropdown with the same three states as Steam - **None**,
-  **Installed**, **Owned** - and **Owned** brings the account library, each game with its full
-  achievement list, its unlock state and its rarity. The Xbox import, which answered "0 created, 0
-  updated, 0 failed" for everyone whose games are not installed here, brings them back with their
-  artwork.
-- **What AW Next stores on your PC is encrypted with a key only your Windows account can read.** The
-  emulator Steam password and the Epic and Xbox sign-in tokens were scrambled with a passphrase
-  written in the source of a public repository, which is obfuscation, not encryption. Each install
-  now generates its own key and keeps it under Windows DPAPI. Existing files are re-written in the
-  new format on their own; nothing has to be entered again.
-- **A launch that changed nothing no longer rebuilds the library.** Every start walked every game
-  folder and reloaded every game to arrive at the list it had shown the moment before: the same 155
-  games are now ready in 0.3 s instead of 6.5 s, and the window itself is on screen in 0.6 s instead
-  of 1.5 s. Anything installed, removed or unlocked while the app was closed still triggers a real
-  scan.
-- **One game is one tile, and the record kept is the useful one.** A game owned on an account and
-  installed here showed up twice - the local copy at 0%, and the store entry holding the unlocks.
-  The two records are merged now, so unlocks earned on a store and unlocks earned on an installed
-  copy add up on the same tile.
-- **The game screen carries what the tile carries.** Where these achievements come from, whether
-  they are healthy, and what the store says you own were all readable in the library list and
-  nowhere else. The same badges now sit beside the game's name.
-- **The update prompt can show you what is in the version first.** A **View changelog** button opens
-  the release notes and brings the question back once you have read them.
+- **Achievement popups can go on a stream, through an OBS browser source.** Capturing the popup as a
+  window never worked and never could: the window exists for one unlock and is gone before OBS lists
+  it. The selected preset is now served as a page instead, and a Browser source pointed at it shows
+  the same card, the same artwork and the same rare styling as the in-game popup, including artwork
+  that only exists on your machine. It draws nothing whatsoever between unlocks, so it costs no CPU
+  while you stream. Settings > Notification carries **Copy link** and **Preview**, and Help gains a
+  **Stream overlay (OBS)** topic with the whole setup.
+- **The library grid is yours to size.** Settings > Appearance > Library tiles adds a slider for how
+  big the cover art is and a slider for how much space sits around it, down to a grid with no gaps at
+  all, plus an independent Show/Hide for the game name, the progress bar, the platform badge, the
+  game health dot and the trophy button. Game health keeps a home when its dot is off: it has its own
+  entry in a tile's right-click menu.
+- **A large emulator library no longer loses the names and achievements of most of its games.** A
+  scan asks Steam's hosts about eight games at once, and a library of a couple of hundred saves went
+  through what those hosts allow within seconds. Every refusal after that was read as a fact about
+  the game, "no achievements", "no name", so the tile rendered as a bare AppID with an empty list.
+  Requests to each host are now paced and retried when a host asks to slow down, a refusal is
+  recorded as "not known yet", and a game whose name could not be resolved keeps the achievements
+  that were found.
+- **Closing Settings no longer reloads the library every time.** OK emptied the grid and ran a full
+  scan again, so changing a theme colour cost the same seconds and the same network traffic as
+  changing a game source. The panel now rebuilds only when something the library's contents depend on
+  actually moved.
+- **First-run setup covers every achievement source.** The source step exposes all 17 switches
+  available in Settings, so a new library can be configured before its first scan.
+- **A portable ZIP is built beside the Windows installer**, and every release can be checked against
+  VirusTotal by its own published hash.
 
-See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3104---2026-09-01)
-for the complete list, including the Epic and cover fixes, the Game Health repairs and the rest of
-the startup work.
+See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3105---2026-09-03)
+for the complete list, including the LumaPlay games that came back, the Xbox unlock dates, and the
+rest of the offline and notification fixes.
 
 ## Install
 
-Download `Achievement.Watcher.Setup.3.10.4.exe` from the
-[v3.10.4 release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/tag/v3.10.4), or let
-the app update itself.
+Download `Achievement.Watcher.Setup.3.10.5.exe` from the
+[v3.10.5 release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/tag/v3.10.5), or let
+the app update itself. `Achievement.Watcher.Portable.3.10.5.zip` is the same build with no installer:
+extract it anywhere and it keeps its settings, caches and logs in a `data` folder beside the
+executable.
 
 The `.blockmap` and `latest.yml` assets are used by automatic updates.
 
 ---
 
-[Full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3104---2026-09-01) ·
+[Full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3105---2026-09-03) ·
 [Documentation](https://shirowwww.github.io/Achievement-Watcher-Next/) ·
 [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html)

@@ -5,8 +5,15 @@
     <link>https://shirowwww.github.io/Achievement-Watcher-Next/changelog.html</link>
     <description>New versions of Achievement Watcher Next.</description>
     <language>en</language>
-    <lastBuildDate>Tue, 01 Sep 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 03 Sep 2026 00:00:00 GMT</lastBuildDate>
     <atom:link href="https://shirowwww.github.io/Achievement-Watcher-Next/releases.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Achievement Watcher Next 3.10.5</title>
+      <link>https://github.com/Shirowwww/Achievement-Watcher-Next/releases/tag/v3.10.5</link>
+      <guid isPermaLink="true">https://github.com/Shirowwww/Achievement-Watcher-Next/releases/tag/v3.10.5</guid>
+      <pubDate>Thu, 03 Sep 2026 00:00:00 GMT</pubDate>
+      <description>Release notes for Achievement Watcher Next 3.10.5.</description>
+    </item>
     <item>
       <title>Achievement Watcher Next 3.10.4</title>
       <link>https://github.com/Shirowwww/Achievement-Watcher-Next/releases/tag/v3.10.4</link>
