@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Mostrar o botão Jogar",
         "description": "Mostra o botão Jogar nos cartões dos jogos. Desative se você inicia seus jogos por outro programa. A entrada Iniciar jogo do menu de botão direito continua disponível."
+      },
+      "library": {
+        "title": "Cartões da biblioteca",
+        "size": {
+          "name": "Tamanho do cartão",
+          "description": "Tamanho da arte do jogo na grade da biblioteca."
+        },
+        "density": {
+          "name": "Espaço entre os cartões",
+          "description": "Espaço ao redor de cada cartão, na horizontal e na vertical. Defina como 0 para uma grade sem espaços."
+        },
+        "showTitle": {
+          "name": "Nome do jogo",
+          "description": "Mostra o nome do jogo sob a arte. As visualizações Lista e Detalhes sempre o mantêm."
+        },
+        "showProgress": {
+          "name": "Barra de progresso",
+          "description": "Mostra a barra de conclusão em cada cartão."
+        },
+        "showSource": {
+          "name": "Ícone da plataforma",
+          "description": "Mostra o selo do Steam, GOG, Epic ou emulador em cada cartão."
+        },
+        "showHealth": {
+          "name": "Indicador de estado do jogo",
+          "description": "Mostra o ponto colorido que avisa quando um jogo não está sendo monitorado. O Estado do jogo continua acessível pelo menu de botão direito."
+        },
+        "showAchievementButton": {
+          "name": "Botão de conquistas",
+          "description": "Mostra o botão de troféu sobre a arte. Clicar no cartão também abre as conquistas."
+        },
+        "showConfigButton": {
+          "name": "Botão de configurações do jogo",
+          "description": "Mostra o botão de ferramentas no canto superior direito da arte. As Configurações do jogo continuam acessíveis pelo menu de botão direito."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Encontrado em vez disso:",
     "folder-reason-checked": "Verificado aqui: subpastas AppID, todos os arquivos de configuração de emulador conhecidos pelo AW Next e {layouts} disposições de salvamento portáteis. A pasta foi examinada, nada foi ignorado.",
     "game-health-title": "Estado do jogo",
+    "game-settings-menu": "Configurações do jogo",
     "game-config-title": "Configuração do executável",
     "import-san-app-setting": "Uma configuração do aplicativo, não do preset: {keys}",
     "import-san-asset-missing": "Ausente no arquivo do tema: {names}",

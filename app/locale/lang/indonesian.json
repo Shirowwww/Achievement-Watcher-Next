@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Tampilkan tombol Main",
         "description": "Menampilkan tombol Main pada kartu game. Matikan jika kamu menjalankan game dari program lain. Menu klik kanan Jalankan game tetap tersedia."
+      },
+      "library": {
+        "title": "Kartu perpustakaan",
+        "size": {
+          "name": "Ukuran kartu",
+          "description": "Ukuran gambar game pada kisi perpustakaan."
+        },
+        "density": {
+          "name": "Jarak antar kartu",
+          "description": "Jarak di sekeliling setiap kartu, secara horizontal maupun vertikal. Atur ke 0 untuk kisi tanpa celah sama sekali."
+        },
+        "showTitle": {
+          "name": "Nama game",
+          "description": "Menampilkan nama game di bawah gambarnya. Tampilan Daftar dan Detail selalu mempertahankannya."
+        },
+        "showProgress": {
+          "name": "Bilah kemajuan",
+          "description": "Menampilkan bilah penyelesaian pada setiap kartu."
+        },
+        "showSource": {
+          "name": "Ikon platform",
+          "description": "Menampilkan lencana kecil Steam, GOG, Epic, atau emulator pada setiap kartu."
+        },
+        "showHealth": {
+          "name": "Titik kesehatan game",
+          "description": "Menampilkan titik berwarna yang memperingatkan saat sebuah game tidak dilacak. Kesehatan game tetap bisa diakses dari menu klik kanan."
+        },
+        "showAchievementButton": {
+          "name": "Tombol pencapaian",
+          "description": "Menampilkan tombol piala pada gambar. Mengklik kartu itu sendiri juga membuka pencapaian."
+        },
+        "showConfigButton": {
+          "name": "Tombol pengaturan game",
+          "description": "Menampilkan tombol alat di sudut kanan atas gambar. Pengaturan game tetap bisa diakses dari menu klik kanan."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Yang ditemukan justru:",
     "folder-reason-checked": "Yang diperiksa di sini: subfolder AppID, setiap file konfigurasi emulator yang dikenal AW Next, dan {layouts} tata letak save portabel. Folder ini sudah ditelusuri seluruhnya - tidak ada yang dilewati.",
     "game-health-title": "Kesehatan game",
+    "game-settings-menu": "Pengaturan game",
     "game-config-title": "Konfigurasi file eksekusi",
     "import-san-app-setting": "Pengaturan aplikasi, bukan bagian dari sebuah preset: {keys}",
     "import-san-asset-missing": "Tidak ada di file tema: {names}",

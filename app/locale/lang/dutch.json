@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Speelknop tonen",
         "description": "Toont de speelknop op de gametegels. Schakel dit uit als je je games via een ander programma start. De optie Game starten in het rechtsklikmenu blijft beschikbaar."
+      },
+      "library": {
+        "title": "Bibliotheektegels",
+        "size": {
+          "name": "Tegelgrootte",
+          "description": "Grootte van de game-artwork in het bibliotheekraster."
+        },
+        "density": {
+          "name": "Ruimte tussen tegels",
+          "description": "Ruimte rond elke tegel, horizontaal en verticaal. Zet dit op 0 voor een raster zonder tussenruimte."
+        },
+        "showTitle": {
+          "name": "Gamenaam",
+          "description": "Toont de gamenaam onder de artwork. De weergaven Lijst en Details behouden deze altijd."
+        },
+        "showProgress": {
+          "name": "Voortgangsbalk",
+          "description": "Toont de voltooiingsbalk op elke tegel."
+        },
+        "showSource": {
+          "name": "Platformpictogram",
+          "description": "Toont het kleine Steam-, GOG-, Epic- of emulatorbadge op elke tegel."
+        },
+        "showHealth": {
+          "name": "Gamestatuspunt",
+          "description": "Toont het gekleurde punt dat waarschuwt wanneer een game niet wordt gevolgd. De gamestatus blijft bereikbaar via het rechtsklikmenu."
+        },
+        "showAchievementButton": {
+          "name": "Prestatiesknop",
+          "description": "Toont de trofeeknop op de artwork. Klikken op de tegel zelf opent de prestaties ook."
+        },
+        "showConfigButton": {
+          "name": "Game-instellingenknop",
+          "description": "Toont de gereedschapsknop rechtsboven op de artwork. De game-instellingen blijven bereikbaar via het rechtsklikmenu."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "In plaats daarvan gevonden:",
     "folder-reason-checked": "Hier gecontroleerd: submappen met AppID, elk emulatorconfiguratiebestand dat AW Next kent, en {layouts} draagbare save-indelingen. De map is volledig onderzocht - er is niets overgeslagen.",
     "game-health-title": "Gamestatus",
+    "game-settings-menu": "Game-instellingen",
     "game-config-title": "Configuratie van het uitvoerbare bestand",
     "import-san-app-setting": "Een instelling van de app en geen onderdeel van een preset: {keys}",
     "import-san-asset-missing": "Ontbreekt in het themabestand: {names}",

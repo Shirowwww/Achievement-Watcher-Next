@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Vis Spill-knappen",
         "description": "Viser Spill-knappen på spillrutene. Slå den av hvis du starter spillene dine fra et annet program. Valget Start spill i høyreklikkmenyen er fortsatt tilgjengelig."
+      },
+      "library": {
+        "title": "Bibliotekruter",
+        "size": {
+          "name": "Rutestørrelse",
+          "description": "Størrelsen på spillgrafikken i bibliotekets rutenett."
+        },
+        "density": {
+          "name": "Avstand mellom rutene",
+          "description": "Avstanden rundt hver rute, vannrett og loddrett. Sett den til 0 for et rutenett helt uten mellomrom."
+        },
+        "showTitle": {
+          "name": "Spillnavn",
+          "description": "Viser spillnavnet under grafikken. Liste- og Detaljer-visningene beholder det alltid."
+        },
+        "showProgress": {
+          "name": "Fremdriftslinje",
+          "description": "Viser fullføringslinjen på hver rute."
+        },
+        "showSource": {
+          "name": "Plattformikon",
+          "description": "Viser det lille Steam-, GOG-, Epic- eller emulatormerket på hver rute."
+        },
+        "showHealth": {
+          "name": "Spilltilstandsprikk",
+          "description": "Viser den fargede prikken som varsler når et spill ikke blir registrert. Spilltilstand er fortsatt tilgjengelig fra høyreklikkmenyen."
+        },
+        "showAchievementButton": {
+          "name": "Prestasjonsknapp",
+          "description": "Viser trofeknappen på grafikken. Å klikke på selve ruten åpner også prestasjonene."
+        },
+        "showConfigButton": {
+          "name": "Spillinnstillingsknapp",
+          "description": "Viser verktøyknappen øverst til høyre på grafikken. Spillinnstillinger er fortsatt tilgjengelige fra høyreklikkmenyen."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Fant i stedet:",
     "folder-reason-checked": "Sjekket her: undermapper med AppID, alle emulatoroppsettsfiler AW Next kjenner til, og {layouts} formater for flyttbare lagringsfiler. Mappen ble gjennomgått - ingenting ble hoppet over.",
     "game-health-title": "Spilltilstand",
+    "game-settings-menu": "Spillinnstillinger",
     "game-config-title": "Oppsett av programfil",
     "import-san-app-setting": "En innstilling i appen og ikke en del av et preset: {keys}",
     "import-san-asset-missing": "Mangler i temafilen: {names}",

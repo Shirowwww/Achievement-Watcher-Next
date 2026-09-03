@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Oynat düğmesini göster",
         "description": "Oyun kutucuklarında Oynat düğmesini gösterir. Oyunlarını başka bir programdan başlatıyorsan kapat. Sağ tık menüsündeki Oyunu başlat seçeneği kullanılabilir kalır."
+      },
+      "library": {
+        "title": "Kütüphane kutucukları",
+        "size": {
+          "name": "Kutucuk boyutu",
+          "description": "Kütüphane ızgarasındaki oyun görselinin boyutu."
+        },
+        "density": {
+          "name": "Kutucuklar arası boşluk",
+          "description": "Her kutucuğun çevresindeki yatay ve dikey boşluk. Hiç boşluk olmayan bir ızgara için 0 olarak ayarla."
+        },
+        "showTitle": {
+          "name": "Oyun adı",
+          "description": "Oyun adını görselin altında gösterir. Liste ve Ayrıntılar görünümleri bunu her zaman korur."
+        },
+        "showProgress": {
+          "name": "İlerleme çubuğu",
+          "description": "Her kutucukta tamamlanma çubuğunu gösterir."
+        },
+        "showSource": {
+          "name": "Platform simgesi",
+          "description": "Her kutucukta küçük Steam, GOG, Epic veya emülatör rozetini gösterir."
+        },
+        "showHealth": {
+          "name": "Oyun durumu noktası",
+          "description": "Bir oyun izlenmediğinde uyaran renkli noktayı gösterir. Oyun durumuna sağ tık menüsünden ulaşılabilir olmaya devam eder."
+        },
+        "showAchievementButton": {
+          "name": "Başarımlar düğmesi",
+          "description": "Görselin üzerinde kupa düğmesini gösterir. Kutucuğun kendisine tıklamak da başarımları açar."
+        },
+        "showConfigButton": {
+          "name": "Oyun ayarları düğmesi",
+          "description": "Görselin sağ üst köşesinde araçlar düğmesini gösterir. Oyun ayarlarına sağ tık menüsünden ulaşılabilir olmaya devam eder."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Bunun yerine bulunanlar:",
     "folder-reason-checked": "Burada denetlenenler: AppID alt klasörleri, AW Next’in bildiği tüm emülatör yapılandırma dosyaları ve {layouts} taşınabilir kayıt düzeni. Klasör incelendi, hiçbir şey atlanmadı.",
     "game-health-title": "Oyun durumu",
+    "game-settings-menu": "Oyun ayarları",
     "game-config-title": "Yürütülebilir dosya yapılandırması",
     "import-san-app-setting": "Presetin değil, uygulamanın ayarı: {keys}",
     "import-san-asset-missing": "Tema dosyasında yok: {names}",

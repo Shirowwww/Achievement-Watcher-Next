@@ -261,6 +261,41 @@
       "playButton": {
         "name": "顯示開始遊戲按鈕",
         "description": "在遊戲卡片上顯示開始遊戲按鈕。如果你透過其他程式啟動遊戲，可以將其關閉。右鍵選單中的啟動遊戲項目仍可使用。"
+      },
+      "library": {
+        "title": "收藏庫卡片",
+        "size": {
+          "name": "卡片大小",
+          "description": "收藏庫格線中遊戲美術圖的大小。"
+        },
+        "density": {
+          "name": "卡片間距",
+          "description": "每張卡片周圍的水平與垂直間距。設為0即可讓格線完全沒有間距。"
+        },
+        "showTitle": {
+          "name": "遊戲名稱",
+          "description": "在美術圖下方顯示遊戲名稱。清單與詳細資料檢視一律保留它。"
+        },
+        "showProgress": {
+          "name": "進度列",
+          "description": "在每張卡片上顯示完成度進度列。"
+        },
+        "showSource": {
+          "name": "平台圖示",
+          "description": "在每張卡片上顯示小型的Steam、GOG、Epic或模擬器徽章。"
+        },
+        "showHealth": {
+          "name": "遊戲健康狀態圓點",
+          "description": "顯示彩色圓點，在遊戲未被追蹤時提出警告。遊戲健康狀態仍可透過右鍵選單開啟。"
+        },
+        "showAchievementButton": {
+          "name": "成就按鈕",
+          "description": "在美術圖上顯示獎盃按鈕。點擊卡片本身同樣會開啟成就。"
+        },
+        "showConfigButton": {
+          "name": "遊戲設定按鈕",
+          "description": "在美術圖右上角顯示工具按鈕。遊戲設定仍可透過右鍵選單開啟。"
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "實際找到的是：",
     "folder-reason-checked": "這裡已檢查過：AppID 子資料夾、AW Next 已知的所有模擬器設定檔，以及 {layouts} 種可攜式存檔格式。整個資料夾都檢查過了，沒有略過任何項目。",
     "game-health-title": "遊戲健康狀態",
+    "game-settings-menu": "遊戲設定",
     "game-config-title": "執行檔設定",
     "import-san-app-setting": "屬於應用程式的設定，而非預設集的一部分：{keys}",
     "import-san-asset-missing": "主題檔案中缺少：{names}",

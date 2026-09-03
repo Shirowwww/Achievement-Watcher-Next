@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Pokaż przycisk Graj",
         "description": "Pokazuje przycisk Graj na kafelkach gier. Wyłącz go, jeśli uruchamiasz gry z innego programu. Pozycja Uruchom grę w menu kontekstowym pozostaje dostępna."
+      },
+      "library": {
+        "title": "Kafelki biblioteki",
+        "size": {
+          "name": "Rozmiar kafelka",
+          "description": "Rozmiar grafiki gry w siatce biblioteki."
+        },
+        "density": {
+          "name": "Odstęp między kafelkami",
+          "description": "Odstęp wokół każdego kafelka, w poziomie i w pionie. Ustaw na 0, aby uzyskać siatkę zupełnie bez odstępów."
+        },
+        "showTitle": {
+          "name": "Nazwa gry",
+          "description": "Pokazuje nazwę gry pod grafiką. Widoki Lista i Szczegóły zawsze ją zachowują."
+        },
+        "showProgress": {
+          "name": "Pasek postępu",
+          "description": "Pokazuje pasek ukończenia na każdym kafelku."
+        },
+        "showSource": {
+          "name": "Ikona platformy",
+          "description": "Pokazuje mały znaczek Steam, GOG, Epic lub emulatora na każdym kafelku."
+        },
+        "showHealth": {
+          "name": "Kropka stanu gry",
+          "description": "Pokazuje kolorową kropkę, która ostrzega, gdy gra nie jest śledzona. Stan gry pozostaje dostępny w menu kontekstowym."
+        },
+        "showAchievementButton": {
+          "name": "Przycisk osiągnięć",
+          "description": "Pokazuje przycisk trofeum na grafice. Kliknięcie samego kafelka również otwiera osiągnięcia."
+        },
+        "showConfigButton": {
+          "name": "Przycisk ustawień gry",
+          "description": "Pokazuje przycisk narzędzi w prawym górnym rogu grafiki. Ustawienia gry pozostają dostępne w menu kontekstowym."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Znaleziono zamiast tego:",
     "folder-reason-checked": "Sprawdzono tutaj: podfoldery AppID, wszystkie znane AW Next pliki konfiguracyjne emulatorów oraz {layouts} przenośnych układów zapisu. Folder został zbadany, nic nie zostało pominięte.",
     "game-health-title": "Stan gry",
+    "game-settings-menu": "Ustawienia gry",
     "game-config-title": "Konfiguracja pliku wykonywalnego",
     "import-san-app-setting": "Ustawienie aplikacji, a nie część presetu: {keys}",
     "import-san-asset-missing": "Brakuje w pliku motywu: {names}",

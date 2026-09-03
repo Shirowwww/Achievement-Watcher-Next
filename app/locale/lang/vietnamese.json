@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Hiện nút Chơi",
         "description": "Hiện nút Chơi trên thẻ trò chơi. Tắt nếu bạn khởi chạy trò chơi từ chương trình khác. Mục Khởi chạy trò chơi trong menu chuột phải vẫn có sẵn."
+      },
+      "library": {
+        "title": "Thẻ thư viện",
+        "size": {
+          "name": "Kích thước thẻ",
+          "description": "Kích thước hình ảnh trò chơi trong lưới thư viện."
+        },
+        "density": {
+          "name": "Khoảng cách giữa các thẻ",
+          "description": "Khoảng cách quanh mỗi thẻ, theo chiều ngang và chiều dọc. Đặt thành 0 để có lưới hoàn toàn không có khoảng cách."
+        },
+        "showTitle": {
+          "name": "Tên trò chơi",
+          "description": "Hiện tên trò chơi bên dưới hình ảnh. Kiểu xem Danh sách và Chi tiết luôn giữ tên này."
+        },
+        "showProgress": {
+          "name": "Thanh tiến trình",
+          "description": "Hiện thanh hoàn thành trên mỗi thẻ."
+        },
+        "showSource": {
+          "name": "Biểu tượng nền tảng",
+          "description": "Hiện huy hiệu nhỏ của Steam, GOG, Epic hoặc trình giả lập trên mỗi thẻ."
+        },
+        "showHealth": {
+          "name": "Chấm tình trạng trò chơi",
+          "description": "Hiện chấm màu cảnh báo khi một trò chơi không được theo dõi. Tình trạng trò chơi vẫn có thể truy cập từ menu chuột phải."
+        },
+        "showAchievementButton": {
+          "name": "Nút thành tựu",
+          "description": "Hiện nút cúp trên hình ảnh. Nhấp vào chính thẻ đó cũng mở thành tựu."
+        },
+        "showConfigButton": {
+          "name": "Nút cài đặt trò chơi",
+          "description": "Hiện nút công cụ ở góc trên bên phải hình ảnh. Cài đặt trò chơi vẫn có thể truy cập từ menu chuột phải."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Thay vào đó tìm thấy:",
     "folder-reason-checked": "Đã kiểm tra ở đây: các thư mục con AppID, mọi tệp cấu hình giả lập mà AW Next biết, và {layouts} kiểu lưu di động. Thư mục đã được xem xét - không bỏ sót gì.",
     "game-health-title": "Tình trạng trò chơi",
+    "game-settings-menu": "Cài đặt trò chơi",
     "game-config-title": "Cấu hình tệp thực thi",
     "import-san-app-setting": "Là cài đặt của ứng dụng chứ không thuộc về một mẫu: {keys}",
     "import-san-asset-missing": "Thiếu trong tệp chủ đề: {names}",

@@ -4,14 +4,15 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const vm = require('node:vm');
 const { test } = require('node:test');
 
 const root = path.join(__dirname, '..', '..');
 const appDir = path.join(root, 'app');
 const htmlParser = require(path.join(appDir, 'node_modules', 'node-html-parser'));
 const settings = require(path.join(appDir, 'settings.js'));
+const libraryChrome = require(path.join(appDir, 'util', 'libraryChrome.js'));
 const libraryLayout = require(path.join(appDir, 'util', 'libraryLayout.js'));
+const libraryRefresh = require(path.join(appDir, 'util', 'libraryRefresh.js'));
 const html = fs.readFileSync(path.join(appDir, 'view', 'app.html'), 'utf8');
 const appSource = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
 const settingsUi = fs.readFileSync(path.join(appDir, 'ui', 'settings.js'), 'utf8');
@@ -43,7 +44,7 @@ test('the Play button setting defaults on and persists both states', async (t) =
   assert.equal(settings.load().achievement.showPlayButton, true);
 });
 
-test('the General setting uses the existing achievement settings plumbing', () => {
+test('the row lives in the Library tiles card, not in the General list', () => {
   const document = htmlParser.parse(html);
   const control = document.querySelector('#option_showPlayButton');
   assert.ok(control);
@@ -51,42 +52,43 @@ test('the General setting uses the existing achievement settings plumbing', () =
     control.querySelectorAll('option').map((option) => option.getAttribute('value')),
     ['true', 'false']
   );
-  assert.match(settingsUi, /for \(let option in app\.config\.achievement\)/);
+
+  // Two things depended on where this control sat. The General save sweep reads every <select> in
+  // #options-ui into app.config.achievement but applies nothing, which is why turning the button off
+  // used to need a restart; the Library tiles card reads its own controls AND applies them.
+  const card = document.querySelector('#library-tiles');
+  assert.ok(card && card.querySelector('#option_showPlayButton'), 'the row must sit in the Library tiles card');
+  assert.ok(!document.querySelector('#options-ui #option_showPlayButton'), 'it must have left the General list');
 
   const generalSave = settingsUi.slice(settingsUi.indexOf("$('#options-ui .right')"), settingsUi.indexOf('app.config.achievement.thumbnailPortrait'));
-  assert.match(generalSave, /id\.replace\('option_', ''\)/);
   assert.doesNotMatch(generalSave, /option_showPlayButton/);
 
   assert.match(localeLoader, /#play-button-settings-label/);
   assert.match(localeLoader, /#play-button-settings-help/);
-  assert.match(localeLoader, /#option_showPlayButton option\[value='true'\][\s\S]*?settings\.common\.show/);
-  assert.match(localeLoader, /#option_showPlayButton option\[value='false'\][\s\S]*?settings\.common\.hide/);
+});
+
+test('saving applies the choice to the tiles already on screen, without a rescan', () => {
+  // readLibraryChromeUi() covers every TOGGLES key, so OK both stores the value and hands it to
+  // applyLibraryChrome. Nothing else in the panel does that, which is the whole point of the move.
+  assert.ok(
+    libraryChrome.TOGGLES.some((toggle) => toggle.key === 'showPlayButton'),
+    'showPlayButton must be one of the tile chrome toggles'
+  );
+  assert.match(settingsUi, /Object\.assign\(app\.config\.achievement, readLibraryChromeUi\(\)\)/);
+  assert.match(settingsUi, /window\.applyLibraryChrome\(app\.config\.achievement\)/);
+  assert.match(settingsUi, /for \(const key of LIBRARY_TOGGLES\) chrome\[key\] = /);
+
+  // A rescan would empty the grid and re-run discovery; hiding a button must not cost that.
+  const base = { config: { achievement: { showPlayButton: true } } };
+  const hidden = { config: { achievement: { showPlayButton: false } } };
+  assert.equal(libraryRefresh.needsRescan(libraryRefresh.signature(base), libraryRefresh.signature(hidden)), false);
 });
 
 test('disabled hides the shared card control without removing launch functionality', () => {
-  const helper = appSource.match(/function applyPlayButtonVisibility\(value\) \{[\s\S]*?\n\}/)?.[0];
-  assert.ok(helper, 'the renderer visibility helper must exist');
+  assert.deepEqual(libraryChrome.resolve({ showPlayButton: false }).hiddenClasses, ['hide-play-button']);
+  assert.deepEqual(libraryChrome.resolve({ showPlayButton: true }).hiddenClasses, []);
+  assert.deepEqual(libraryChrome.resolve({}).hiddenClasses, []);
 
-  const toggles = [];
-  const context = {
-    $: (selector) => {
-      assert.equal(selector, '#game-list');
-      return {
-        toggleClass(name, state) {
-          toggles.push({ name, state });
-        },
-      };
-    },
-  };
-  vm.runInNewContext(`${helper}\nresult = [applyPlayButtonVisibility(false), applyPlayButtonVisibility(true), applyPlayButtonVisibility()];`, context);
-
-  assert.deepEqual(Array.from(context.result), [false, true, true]);
-  assert.deepEqual(toggles, [
-    { name: 'hide-play-button', state: true },
-    { name: 'hide-play-button', state: false },
-    { name: 'hide-play-button', state: false },
-  ]);
-  assert.match(appSource, /applyPlayButtonVisibility\(self\.config\.achievement\.showPlayButton\)/);
   assert.equal((appSource.match(/class="game-box"/g) || []).length, 1);
   assert.equal((appSource.match(/class="play-button"/g) || []).length, 1);
   assert.match(appSource, /label: t\('launch-game'[\s\S]*?app\.onPlayButtonClick\(self\.find\('\.play-button'\)\)/);

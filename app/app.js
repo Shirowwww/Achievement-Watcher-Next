@@ -124,6 +124,7 @@ const libraryReuse = require(path.join(appPath, 'util/libraryReuse.js'));
 const { createViewportWork } = require(path.join(appPath, 'util/viewportWork.js'));
 const perfTrace = require(path.join(appPath, 'util/perfTrace.js'));
 const libraryLayout = require(path.join(appPath, 'util/libraryLayout.js'));
+const libraryChrome = require(path.join(appPath, 'util/libraryChrome.js'));
 const intlFormat = require(path.join(appPath, 'util/intlFormat.js'));
 const links = require(path.join(appPath, 'util/links.js'));
 const { localeText } = require(path.join(appPath, 'locale/t.js'));
@@ -424,12 +425,45 @@ function applyLibraryLayout(value, legacyPortrait = false) {
   return mode;
 }
 
-// Keep the control in the DOM so the other launch entry points can reuse its handler.
-function applyPlayButtonVisibility(value) {
-  const visible = value !== false;
-  $('#game-list').toggleClass('hide-play-button', !visible);
-  return visible;
+/*
+  Tile size, grid density and which pieces of chrome a tile draws (issue #56). Two CSS custom
+  properties every view's size tokens multiply by, plus one class per hidden element - so this runs
+  on the container alone and costs nothing per tile, whether the library holds twelve games or two
+  hundred, and applies to tiles still streaming in from a running scan.
+*/
+function applyLibraryChrome(achievement) {
+  const chrome = libraryChrome.resolve(achievement);
+  const list = $('#game-list');
+  list
+    .css('--library-scale', String(chrome.tileScale))
+    .css('--library-gap-scale', String(chrome.density))
+    .removeClass(chrome.allClasses.join(' '));
+  if (chrome.hiddenClasses.length) list.addClass(chrome.hiddenClasses.join(' '));
+  return chrome;
 }
+
+// Settings previews these while its dialog is open, and restores them on Cancel.
+window.applyLibraryChrome = applyLibraryChrome;
+
+/*
+  Switch the library view on the tiles that are already there. Portrait and landscape use different
+  artwork, so an orientation change re-requests the covers - but nothing has to be scanned again,
+  which is why the toolbar picker has always been instant. Settings calls the same function so both
+  controls behave identically; each caller saves the config itself.
+*/
+function applyLibraryView(nextValue, previousValue = app.config.achievement.libraryLayout) {
+  // The previous view has to be passed in by any caller that already wrote the new one into the
+  // config: Settings collects its whole form before applying it, so reading the config here would
+  // compare the new value with itself and skip the cover reload an orientation change needs.
+  const previousMode = libraryLayout.normalize(previousValue, app.config.achievement.thumbnailPortrait === true);
+  const nextMode = applyLibraryLayout(nextValue);
+  app.config.achievement.libraryLayout = nextMode;
+  app.config.achievement.thumbnailPortrait = libraryLayout.isPortrait(nextMode);
+  if (libraryLayout.isPortrait(previousMode) !== libraryLayout.isPortrait(nextMode)) refreshLibraryCovers(nextMode);
+  return nextMode;
+}
+
+window.applyLibraryView = applyLibraryView;
 
 // The interface language, for the Intl helpers. Read on each call: it changes without a reload.
 function uiLang() {
@@ -2464,18 +2498,11 @@ var app = {
       self.config.achievement.libraryLayout,
       self.config.achievement.thumbnailPortrait === true
     );
-    applyPlayButtonVisibility(self.config.achievement.showPlayButton);
+    applyLibraryChrome(self.config.achievement);
     $('#library-layout-select')
       .off('change.awLibraryLayout')
       .on('change.awLibraryLayout', function () {
-        const previousMode = libraryLayout.normalize(
-          self.config.achievement.libraryLayout,
-          self.config.achievement.thumbnailPortrait === true
-        );
-        const nextMode = applyLibraryLayout($(this).val());
-        self.config.achievement.libraryLayout = nextMode;
-        self.config.achievement.thumbnailPortrait = libraryLayout.isPortrait(nextMode);
-        if (libraryLayout.isPortrait(previousMode) !== libraryLayout.isPortrait(nextMode)) refreshLibraryCovers(nextMode);
+        applyLibraryView($(this).val());
         settings.save(self.config).catch((err) => debug.log(`library layout save failed: ${err}`));
       });
     // Remove only handlers owned by this scan.
@@ -3455,12 +3482,33 @@ var app = {
               },
             })
           );
-          gameMenu.append(
+          // Both entries open the same panel on one of its two tabs, and both the health dot and the
+          // tools button they duplicate can be turned off (Settings > Appearance > Library tiles), so
+          // they need a home that never moves. One submenu rather than two loose top-level entries.
+          const gameSettingsMenu = new Menu();
+          gameSettingsMenu.append(
             new MenuItem({
-              label: t('configure-executable', 'Configure executable…', 'Configurer l’exécutable…'),
+              label: t('game-health-title', 'Game health', 'État du jeu'),
               async click() {
                 await app.onConfigButtonClick(self.find('.config-button'));
               },
+            })
+          );
+          gameSettingsMenu.append(
+            new MenuItem({
+              label: t('configure-executable', 'Configure executable…', 'Configurer l’exécutable…'),
+              async click() {
+                // The panel always opens on Game health; this entry names a different tab, so land
+                // on it once the panel has finished loading rather than making the user click again.
+                await app.onConfigButtonClick(self.find('.config-button'));
+                setGameConfigView('exe-config');
+              },
+            })
+          );
+          gameMenu.append(
+            new MenuItem({
+              label: t('game-settings-menu', 'Game settings', 'Réglages du jeu'),
+              submenu: gameSettingsMenu,
             })
           );
 

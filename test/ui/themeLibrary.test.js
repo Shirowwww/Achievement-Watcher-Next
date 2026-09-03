@@ -68,10 +68,27 @@ test('the theme card appears for every theme the app can write out', () => {
   it can exist at all - and this is the test that keeps it that way.
 */
 test('the theme card adds no row to a list the locale loader counts', () => {
-  const rows = document.querySelectorAll('section[data-view="appearance"] .arrow-list ul > li');
-  assert.equal(rows.length, 1, 'the Appearance list is one row: the theme picker');
+  // Scoped to the theme picker's own list: Appearance holds other cards now (Library tiles), and
+  // each is a SEPARATE .arrow-list, which is the arrangement this test exists to enforce.
+  const themeList = document.querySelector('#option_theme').closest('ul');
+  const rows = themeList.querySelectorAll('li');
+  assert.equal(rows.length, 1, 'the theme list is one row: the theme picker');
   assert.ok(rows[0].querySelector('#option_theme'), 'and that row is the picker');
   assert.equal(document.querySelector('#theme-library').closest('ul'), null, 'the card must not be inside a bound list');
+});
+
+/*
+  Nothing in Appearance may be bound positionally. The loader translates this whole tab by id, so a
+  card added here - or a row added to one - can never shift another card's labels.
+*/
+test('every Appearance row is bound by id, never by position', () => {
+  const appearance = document.querySelector('section[data-view="appearance"]');
+
+  for (const row of appearance.querySelectorAll('.arrow-list ul li')) {
+    const label = row.querySelector('.left span[id]');
+    assert.ok(label, `an Appearance row has an unbindable label: ${row.textContent.trim().slice(0, 40)}`);
+    assert.ok(loader.includes(`#${label.getAttribute('id')}`), `${label.getAttribute('id')} is never written by the locale loader`);
+  }
 });
 
 test('every string in the theme card is bound by the locale loader', () => {

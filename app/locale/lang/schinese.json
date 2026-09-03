@@ -261,6 +261,41 @@
       "playButton": {
         "name": "显示开始游戏按钮",
         "description": "在游戏磁贴上显示开始游戏按钮。如果你通过其他程序启动游戏，可以将其关闭。右键菜单中的启动游戏项仍然可用。"
+      },
+      "library": {
+        "title": "游戏库磁贴",
+        "size": {
+          "name": "磁贴大小",
+          "description": "游戏库网格中游戏封面的大小。"
+        },
+        "density": {
+          "name": "磁贴间距",
+          "description": "每个磁贴周围的水平和垂直间距。设为0即可得到完全无间距的网格。"
+        },
+        "showTitle": {
+          "name": "游戏名称",
+          "description": "在封面下方显示游戏名称。列表和详细信息视图始终保留它。"
+        },
+        "showProgress": {
+          "name": "进度条",
+          "description": "在每个磁贴上显示完成度进度条。"
+        },
+        "showSource": {
+          "name": "平台图标",
+          "description": "在每个磁贴上显示小的Steam、GOG、Epic或模拟器徽标。"
+        },
+        "showHealth": {
+          "name": "游戏状态圆点",
+          "description": "显示彩色圆点，用于在游戏未被追踪时发出提示。游戏状态仍可通过右键菜单查看。"
+        },
+        "showAchievementButton": {
+          "name": "成就按钮",
+          "description": "在封面上显示奖杯按钮。点击磁贴本身同样会打开成就。"
+        },
+        "showConfigButton": {
+          "name": "游戏设置按钮",
+          "description": "在封面右上角显示工具按钮。游戏设置仍可通过右键菜单打开。"
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "实际找到的是：",
     "folder-reason-checked": "已在此检查：AppID 子文件夹、AW Next 已知的全部模拟器配置文件，以及 {layouts} 种便携存档布局。该文件夹已被检查，没有任何遗漏。",
     "game-health-title": "游戏状态",
+    "game-settings-menu": "游戏设置",
     "game-config-title": "可执行文件配置",
     "import-san-app-setting": "属于应用设置，而非预设的一部分：{keys}",
     "import-san-asset-missing": "主题文件中缺少：{names}",

@@ -1169,7 +1169,7 @@ body.is-resizing #game-list {
   width: 230px;
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--border) 10%, transparent);
+  border: var(--library-card-border) solid color-mix(in srgb, var(--border) 10%, transparent);
   box-shadow: 0 14px 28px rgba(0, 0, 0, calc(0.22 * var(--shadow-scale))), 0 3px 8px rgba(0, 0, 0, calc(0.25 * var(--shadow-scale)));
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
@@ -1269,6 +1269,61 @@ body.is-resizing #game-list {
 /* The absolutely positioned control leaves no card-layout gap when hidden. */
 #game-list.hide-play-button .play-button {
   display: none;
+}
+
+/*
+  Per-element tile chrome (issue #56). Each of these is an independent Settings toggle, so they are
+  written as one rule each rather than one combined "minimal" mode: a user who only wants the
+  health dot gone keeps everything else. The elements stay in the DOM, exactly like the Play button
+  above, so the click handlers and the accessible names they carry are untouched.
+*/
+#game-list.hide-tile-title .game-box .info .title {
+  display: none;
+}
+
+#game-list.hide-tile-progress .game-box .info .progressBar {
+  display: none;
+}
+
+#game-list.hide-tile-source .game-box .info .source-icon {
+  display: none;
+}
+
+#game-list.hide-tile-health .game-box .info .health-badge {
+  display: none;
+}
+
+#game-list.hide-tile-achievement-button .game-box .achievement-button {
+  display: none;
+}
+
+#game-list.hide-tile-config-button .game-box .config-button {
+  display: none;
+}
+
+/* With the title and the progress bar both gone the head row is only badges, and once those are
+   hidden too it is an empty band under the artwork. Collapse it rather than leave the gap. */
+#game-list.hide-tile-title.hide-tile-progress:not(.view-list):not(.view-details) .game-box .info {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+#game-list.hide-tile-title.hide-tile-progress:not(.view-list):not(.view-details) .game-box .info .info-head {
+  margin-bottom: 0;
+}
+
+#game-list.hide-tile-title.hide-tile-progress.hide-tile-source.hide-tile-health:not(.view-list):not(.view-details)
+  .game-box
+  .info
+  .info-head {
+  display: none;
+}
+
+/* The list and details views are rows of text: their metadata column is the point of the view, so a
+   row with no title would be a nameless line. Those two keep their title whatever the setting. */
+#game-list.view-list.hide-tile-title .game-box .info .title,
+#game-list.view-details.hide-tile-title .game-box .info .title {
+  display: block;
 }
 
 #game-list .library-artwork-feedback {
@@ -5209,21 +5264,26 @@ body.is-resizing #game-list {
   color: transparent;
 }
 
-#game-list.view-portrait ul {
-  grid-template-columns: repeat(auto-fit, minmax(198px, 1fr));
+/* The portrait views used to hardcode their pixels, so the library-size settings (issue #56) could
+   not reach them. Same numbers, expressed as the tokens every other view already used. */
+#game-list.view-portrait {
+  --library-item-padding: calc(15px * var(--library-gap-scale));
+  --library-card-width: calc(172px * var(--library-scale));
+  --library-cover-height: calc(258px * var(--library-scale));
 }
+
 #game-list.view-portrait ul > li {
-  padding: 15px 15px;
+  padding: var(--library-item-padding);
 }
 #game-list.view-portrait ul > li .game-box {
-  width: 172px;
+  width: var(--library-card-width);
   transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 #game-list.view-portrait ul > li .game-box:hover {
   transform: translateY(-4px) scale(1.05);
 }
 #game-list.view-portrait ul > li .game-box .header {
-  height: 258px;
+  height: var(--library-cover-height);
   background-size: cover !important;
   position: relative;
 }
@@ -5231,7 +5291,7 @@ body.is-resizing #game-list {
   opacity: 1;
 }
 #game-list.view-portrait ul > li .game-box .info {
-  max-width: 172px;
+  max-width: var(--library-card-width);
 }
 #game-list.view-portrait ul > li .game-box .info .title {
   overflow: hidden;
@@ -5246,28 +5306,30 @@ body.is-resizing #game-list {
   font-size: 12px;
 }
 
-#game-list.view-portrait-compact ul {
-  grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
-  gap: 14px 8px;
+#game-list.view-portrait-compact {
+  --library-grid-gap: calc(14px * var(--library-gap-scale)) calc(8px * var(--library-gap-scale));
+  --library-item-padding: calc(7px * var(--library-gap-scale));
+  --library-card-width: calc(138px * var(--library-scale));
+  --library-cover-height: calc(207px * var(--library-scale));
 }
 
 #game-list.view-portrait-compact ul > li {
-  padding: 7px;
+  padding: var(--library-item-padding);
 }
 
 #game-list.view-portrait-compact ul > li .game-box {
-  width: 138px;
+  width: var(--library-card-width);
   border-radius: 11px;
 }
 
 #game-list.view-portrait-compact ul > li .game-box .header {
-  height: 207px;
+  height: var(--library-cover-height);
   background-size: cover !important;
   border-radius: 10px 10px 7px 7px;
 }
 
 #game-list.view-portrait-compact ul > li .game-box .info {
-  max-width: 138px;
+  max-width: var(--library-card-width);
   padding: 8px 8px 9px;
 }
 
@@ -5935,11 +5997,19 @@ body {
 }
 
 #game-list {
-  --library-grid-min: 255px;
-  --library-grid-gap: 22px 14px;
-  --library-item-padding: 4px;
-  --library-card-width: 250px;
-  --library-cover-height: 117px;
+  /* Library customization (issue #56). Every view below sizes itself from these two multipliers, so
+     one setting resizes the artwork and one setting tightens the space around it, whichever layout
+     is on. Set from app.js; the defaults here reproduce the shipped layout exactly. */
+  --library-scale: 1;
+  --library-gap-scale: 1;
+  --library-grid-gap: calc(22px * var(--library-gap-scale)) calc(14px * var(--library-gap-scale));
+  --library-item-padding: calc(4px * var(--library-gap-scale));
+  --library-card-width: calc(250px * var(--library-scale));
+  /* One column holds one tile and nothing else - see #game-list > ul below. The card is sized
+     content-box, so its own border on each side counts towards the column too. */
+  --library-card-border: 1px;
+  --library-column: calc(var(--library-card-width) + 2 * var(--library-card-border) + 2 * var(--library-item-padding));
+  --library-cover-height: calc(117px * var(--library-scale));
   width: min(94%, 1540px);
   padding: 24px clamp(18px, 3vw, 36px);
   background: color-mix(in srgb, var(--bg-panel) 62%, transparent);
@@ -5950,8 +6020,15 @@ body {
   backdrop-filter: blur(14px) saturate(1.06);
 }
 
+/*
+  auto-fill with a FIXED column width, not `minmax(..., 1fr)`. Stretching columns to fill the row
+  puts the leftover width between the tiles, where no density setting can reach it: "space between
+  tiles: 0%" still left a wide gap (issue #56). A fixed column is exactly one tile plus its own
+  padding, and justify-content sends the remainder to the two edges instead.
+*/
 #game-list > ul {
-  grid-template-columns: repeat(auto-fit, minmax(var(--library-grid-min), 1fr));
+  grid-template-columns: repeat(auto-fill, var(--library-column));
+  justify-content: center;
   gap: var(--library-grid-gap);
   padding-bottom: 18px;
 }
@@ -6274,11 +6351,10 @@ body {
 /* The default tokens above preserve the current card exactly. Alternate views reuse the same
    game-box and only change its layout, density and which existing metadata is visible. */
 #game-list.view-compact {
-  --library-grid-min: 178px;
-  --library-grid-gap: 12px 8px;
-  --library-item-padding: 3px;
-  --library-card-width: 166px;
-  --library-cover-height: 78px;
+  --library-grid-gap: calc(12px * var(--library-gap-scale)) calc(8px * var(--library-gap-scale));
+  --library-item-padding: calc(3px * var(--library-gap-scale));
+  --library-card-width: calc(166px * var(--library-scale));
+  --library-cover-height: calc(78px * var(--library-scale));
 }
 
 #game-list.view-compact .game-box {
@@ -6326,21 +6402,22 @@ body {
 
 #game-list.view-list,
 #game-list.view-details {
-  --library-grid-min: 100%;
-  --library-grid-gap: 8px 0;
+  /* A row is as wide as the list whatever the scale (the single-column template below), so only its
+     cover and the space between rows follow the two multipliers. */
+  --library-grid-gap: calc(8px * var(--library-gap-scale)) 0;
   --library-item-padding: 0;
   --library-card-width: 100%;
   --library-row-max: 1260px;
 }
 
 #game-list.view-list {
-  --library-cover-width: 140px;
-  --library-cover-height: 65.5px;
+  --library-cover-width: calc(140px * var(--library-scale));
+  --library-cover-height: calc(65.5px * var(--library-scale));
 }
 
 #game-list.view-details {
-  --library-cover-width: 250px;
-  --library-cover-height: 117px;
+  --library-cover-width: calc(250px * var(--library-scale));
+  --library-cover-height: calc(117px * var(--library-scale));
 }
 
 #game-list.view-list .game-box,
@@ -6391,6 +6468,21 @@ body {
   align-items: center;
   gap: 18px;
   padding: 7px 78px 7px 14px;
+}
+
+/*
+  A list row is a three-column grid: name, progress, activity. Hiding the progress bar takes its item
+  out of the flow but not its column, so the activity column slid left and left a hole where the bar
+  used to be. Two columns when the bar is off (issue #56).
+*/
+#game-list.view-list.hide-tile-progress .game-box .info {
+  grid-template-columns: minmax(190px, 0.85fr) minmax(330px, 1.2fr);
+}
+
+/* The activity block is pinned to column 3 below. Left there, a two-column row grows an implicit
+   third column to hold it and the hole comes straight back. */
+#game-list.view-list.hide-tile-progress .library-details {
+  grid-column: 2;
 }
 
 #game-list.view-list .game-box .info .title {
@@ -6604,6 +6696,10 @@ body {
   #game-list.view-list .game-box .info {
     grid-template-columns: minmax(150px, 0.9fr) minmax(170px, 210px) minmax(230px, 1fr);
     gap: 12px;
+  }
+
+  #game-list.view-list.hide-tile-progress .game-box .info {
+    grid-template-columns: minmax(150px, 0.9fr) minmax(230px, 1fr);
   }
 
   #game-list.view-list .library-recent-unlock,

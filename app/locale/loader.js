@@ -284,11 +284,34 @@ function translateUI(lang, locale, template) {
     $("#option_uninstallContextMenu option[value='true']").text(clear(template.settings.common.enable));
     $("#option_uninstallContextMenu option[value='false']").text(clear(template.settings.common.disable));
   }
-  if (template.settings.general.playButton) {
-    $('#play-button-settings-label').text(clear(template.settings.general.playButton.name));
-    $('#play-button-settings-help').text(clear(template.settings.general.playButton.description));
-    $("#option_showPlayButton option[value='true']").text(clear(template.settings.common.show));
-    $("#option_showPlayButton option[value='false']").text(clear(template.settings.common.hide));
+  // Library tiles card (Appearance tab) - bound by stable id, so it shifts no nth-child binding.
+  if (template.settings.general.library) {
+    const lib = template.settings.general.library;
+    $('#library-tiles-title').text(clear(lib.title));
+    $('#library-size-label').text(clear(lib.size.name));
+    $('#library-size-help').text(clear(lib.size.description));
+    $('#library-density-label').text(clear(lib.density.name));
+    $('#library-density-help').text(clear(lib.density.description));
+    const rows = [
+      ['#library-title-label', '#library-title-help', '#option_libraryShowTitle', lib.showTitle],
+      ['#library-progress-label', '#library-progress-help', '#option_libraryShowProgress', lib.showProgress],
+      ['#library-source-label', '#library-source-help', '#option_libraryShowSource', lib.showSource],
+      ['#library-health-label', '#library-health-help', '#option_libraryShowHealth', lib.showHealth],
+      ['#library-achbutton-label', '#library-achbutton-help', '#option_libraryShowAchievementButton', lib.showAchievementButton],
+      ['#library-configbutton-label', '#library-configbutton-help', '#option_libraryShowConfigButton', lib.showConfigButton],
+      // The Play button row moved into this card; its strings stay where they always were in the
+      // locale files (settings.general.playButton), so no locale had to be re-translated for the move.
+      ['#play-button-settings-label', '#play-button-settings-help', '#option_showPlayButton', template.settings.general.playButton],
+    ];
+    for (const [label, help, select, entry] of rows) {
+      // A locale bundled before one of these rows existed simply leaves that row's shipped English in
+      // place, rather than blanking a label the user can see.
+      if (!entry) continue;
+      $(label).text(clear(entry.name));
+      $(help).text(clear(entry.description));
+      $(`${select} option[value='true']`).text(clear(template.settings.common.show));
+      $(`${select} option[value='false']`).text(clear(template.settings.common.hide));
+    }
   }
   $('#general-options-title').text(clear(template.settings.general.sectionTitle));
 

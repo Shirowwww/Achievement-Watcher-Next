@@ -11,6 +11,13 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Added
 
+- **The library grid is yours to size.** Settings > Appearance > Library tiles adds a slider for how
+  big the cover art is and a slider for how much space sits around it, down to a grid with no gaps
+  at all, plus an independent Show/Hide for the game name, the progress bar, the platform badge, the
+  game health dot and the trophy button. Both sliders apply to every library view, including the two
+  portrait ones, which used to ignore any sizing but their own. Game health keeps a home when its
+  dot is off: it has its own entry in a tile's right-click menu.
+
 - **First-run setup covers every achievement source.** The source step now exposes all 17 source
   switches available in Settings, including official stores, local emulator formats and the import
   cache, so a new library can be configured before its first scan.
@@ -34,6 +41,15 @@ renamed in 3.9.0 and the history is kept under one file.
   a re-download: it removed those games from the library until you signed in to Xbox and ran the
   import again by hand. That folder is now kept, like the imported emulator dll beside it, and
   everything around it is still cleared.
+
+- **Closing Settings no longer reloads the library every time.** OK emptied the grid, forgot which
+  AppIDs had failed to resolve and ran a full scan again, so changing a theme colour cost the same
+  seconds and the same network traffic as changing a game source. The panel now compares what it
+  opened with against what it saved, and rebuilds only when something the library's contents depend
+  on actually moved: the language, hidden achievements, duplicate merging, hiding 0% games, a game
+  source, the Steam account, the watched folders or the profile name. Changing the library view from
+  Settings now behaves like changing it from the toolbar: the tiles already on screen switch over,
+  and only an orientation change re-requests their artwork.
 
 - **A large emulator library no longer loses the names and achievements of most of its games.** A
   scan asks Steam's hosts about eight games at once, and a library of a couple of hundred saves went

@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Mostrar el botón Jugar",
         "description": "Muestra el botón Jugar en los recuadros de los juegos. Desactívalo si inicias tus juegos desde otro programa. La opción Iniciar juego del menú contextual sigue disponible."
+      },
+      "library": {
+        "title": "Recuadros de la biblioteca",
+        "size": {
+          "name": "Tamaño del recuadro",
+          "description": "Tamaño de la ilustración del juego en la cuadrícula de la biblioteca."
+        },
+        "density": {
+          "name": "Espacio entre recuadros",
+          "description": "Espacio alrededor de cada recuadro, en horizontal y en vertical. Ponlo en 0 para una cuadrícula sin espacios."
+        },
+        "showTitle": {
+          "name": "Nombre del juego",
+          "description": "Muestra el nombre del juego debajo de su ilustración. Las vistas Lista y Detalles siempre lo conservan."
+        },
+        "showProgress": {
+          "name": "Barra de progreso",
+          "description": "Muestra la barra de finalización en cada recuadro."
+        },
+        "showSource": {
+          "name": "Ícono de la plataforma",
+          "description": "Muestra la pequeña insignia de Steam, GOG, Epic o emulador en cada recuadro."
+        },
+        "showHealth": {
+          "name": "Punto de estado del juego",
+          "description": "Muestra el punto de color que avisa cuando un juego no se está registrando. El Estado del juego sigue disponible desde el menú contextual."
+        },
+        "showAchievementButton": {
+          "name": "Botón de logros",
+          "description": "Muestra el botón de trofeo sobre la ilustración. Hacer clic en el recuadro también abre los logros."
+        },
+        "showConfigButton": {
+          "name": "Botón de ajustes del juego",
+          "description": "Muestra el botón de herramientas en la esquina superior derecha de la ilustración. Los Ajustes del juego siguen disponibles desde el menú contextual."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Se encontró en su lugar:",
     "folder-reason-checked": "Revisado aquí: subcarpetas AppID, todos los archivos de configuración de emulador que AW Next conoce y {layouts} disposiciones de guardado portátiles. La carpeta se examinó, no se omitió nada.",
     "game-health-title": "Estado del juego",
+    "game-settings-menu": "Ajustes del juego",
     "game-config-title": "Configuración del ejecutable",
     "import-san-app-setting": "Un ajuste de la aplicación, no del preset: {keys}",
     "import-san-asset-missing": "Ausente en el archivo del tema: {names}",

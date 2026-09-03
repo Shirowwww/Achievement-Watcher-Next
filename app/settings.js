@@ -10,6 +10,7 @@ const uiLanguages = require(path.join(appPath, 'locale/uiLanguages.js'));
 const controllerLabels = require(path.join(appPath, 'util/controllerLabels.js'));
 const themeLayers = require(path.join(appPath, 'util/themeLayers.js'));
 const libraryLayout = require(path.join(appPath, 'util/libraryLayout.js'));
+const libraryChrome = require(path.join(appPath, 'util/libraryChrome.js'));
 
 function normalizeControllerBindingSetting(value, allowedButtons, fallback) {
   const parsed = controllerLabels.normalizeControllerBinding(value, {
@@ -255,6 +256,17 @@ module.exports.load = () => {
     // Keep the legacy flag synchronized for cover selection paths shared with older configs.
     options.achievement.thumbnailPortrait = libraryLayout.isPortrait(options.achievement.libraryLayout);
 
+    /*
+      Library customization (issue #56): how big a tile is, how tight the grid around it is, and
+      which pieces of chrome on it are drawn. Clamped rather than rejected, so a
+      hand-edited options.ini can only ever be out of range, never break the layout.
+    */
+    options.achievement.libraryTileScale = libraryChrome.normalizeTileScale(options.achievement.libraryTileScale);
+    options.achievement.libraryDensity = libraryChrome.normalizeDensity(options.achievement.libraryDensity);
+    for (const toggle of libraryChrome.TOGGLES) {
+      if (typeof options.achievement[toggle.key] !== 'boolean') options.achievement[toggle.key] = true;
+    }
+
     if (typeof options.achievement.showHidden !== 'boolean') {
       options.achievement.showHidden = false;
     }
@@ -270,11 +282,6 @@ module.exports.load = () => {
     if (typeof options.achievement.hideZero !== 'boolean') {
       options.achievement.hideZero = false;
     }
-    // Hiding the tile control does not disable other launch entry points.
-    if (typeof options.achievement.showPlayButton !== 'boolean') {
-      options.achievement.showPlayButton = true;
-    }
-
     if (typeof options.achievement.goldbergDownloadIcons !== 'boolean') {
       options.achievement.goldbergDownloadIcons = false;
     }
@@ -547,6 +554,14 @@ module.exports.load = () => {
       },
       achievement: {
         libraryLayout: 'default',
+        libraryTileScale: 1,
+        libraryDensity: 1,
+        libraryShowTitle: true,
+        libraryShowProgress: true,
+        libraryShowSource: true,
+        libraryShowHealth: true,
+        libraryShowAchievementButton: true,
+        libraryShowConfigButton: true,
         thumbnailPortrait: false,
         showHidden: false,
         mergeDuplicate: true,

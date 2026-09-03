@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Indítás gomb megjelenítése",
         "description": "Megjeleníti az Indítás gombot a játékok csempéin. Kapcsold ki, ha más programból indítod a játékaidat. A jobb gombos menü Játék indítása pontja továbbra is elérhető."
+      },
+      "library": {
+        "title": "Könyvtár csempéi",
+        "size": {
+          "name": "Csempe mérete",
+          "description": "A játék grafikájának mérete a könyvtár rácsában."
+        },
+        "density": {
+          "name": "Térköz a csempék között",
+          "description": "A térköz az egyes csempék körül, vízszintesen és függőlegesen. Állítsd 0-ra a teljesen rés nélküli rácshoz."
+        },
+        "showTitle": {
+          "name": "Játék neve",
+          "description": "Megjeleníti a játék nevét a grafikája alatt. A Lista és a Részletek nézet mindig megtartja."
+        },
+        "showProgress": {
+          "name": "Folyamatjelző sáv",
+          "description": "Megjeleníti a teljesítési sávot minden csempén."
+        },
+        "showSource": {
+          "name": "Platformikon",
+          "description": "Megjeleníti a kis Steam-, GOG-, Epic- vagy emulátorjelvényt minden csempén."
+        },
+        "showHealth": {
+          "name": "Játék állapotának pontja",
+          "description": "Megjeleníti a színes pontot, amely figyelmeztet, ha egy játékot nem követ a rendszer. A Játék állapota továbbra is elérhető a jobb gombos menüből."
+        },
+        "showAchievementButton": {
+          "name": "Teljesítmények gomb",
+          "description": "Megjeleníti a trófeagombot a grafikán. Magára a csempére kattintva is megnyílnak a teljesítmények."
+        },
+        "showConfigButton": {
+          "name": "Játékbeállítások gomb",
+          "description": "Megjeleníti az eszközök gombját a grafika jobb felső sarkában. A Játék beállításai továbbra is elérhetők a jobb gombos menüből."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Ehelyett ez található:",
     "folder-reason-checked": "Itt ellenőrizve: az AppID almappák, az AW Next által ismert összes emulátor-konfigurációs fájl és {layouts} hordozható mentési elrendezés. A mappa át lett vizsgálva, semmi nem maradt ki.",
     "game-health-title": "Játék állapota",
+    "game-settings-menu": "Játék beállításai",
     "game-config-title": "Futtatható fájl beállítása",
     "import-san-app-setting": "Az alkalmazás beállítása, nem a preseté: {keys}",
     "import-san-asset-missing": "Hiányzik a témafájlból: {names}",

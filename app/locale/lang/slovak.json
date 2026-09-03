@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Zobraziť tlačidlo Hrať",
         "description": "Zobrazí tlačidlo Hrať na dlaždiciach hier. Vypnite ho, ak hry spúšťate z iného programu. Položka Spustiť hru v kontextovej ponuke zostáva dostupná."
+      },
+      "library": {
+        "title": "Dlaždice knižnice",
+        "size": {
+          "name": "Veľkosť dlaždice",
+          "description": "Veľkosť grafiky hry v mriežke knižnice."
+        },
+        "density": {
+          "name": "Medzera medzi dlaždicami",
+          "description": "Medzera okolo každej dlaždice, vodorovne aj zvisle. Nastavte na 0 pre mriežku úplne bez medzier."
+        },
+        "showTitle": {
+          "name": "Názov hry",
+          "description": "Zobrazí názov hry pod jej grafikou. Zobrazenia Zoznam a Podrobnosti ho zachovávajú vždy."
+        },
+        "showProgress": {
+          "name": "Ukazovateľ postupu",
+          "description": "Zobrazí ukazovateľ dokončenia na každej dlaždici."
+        },
+        "showSource": {
+          "name": "Ikona platformy",
+          "description": "Zobrazí malý odznak Steam, GOG, Epic alebo emulátora na každej dlaždici."
+        },
+        "showHealth": {
+          "name": "Bodka stavu hry",
+          "description": "Zobrazí farebnú bodku, ktorá upozorní, že hra nie je sledovaná. Stav hry zostáva dostupný z kontextovej ponuky."
+        },
+        "showAchievementButton": {
+          "name": "Tlačidlo úspechov",
+          "description": "Zobrazí tlačidlo trofeje na grafike. Kliknutie na samotnú dlaždicu tiež otvorí úspechy."
+        },
+        "showConfigButton": {
+          "name": "Tlačidlo nastavení hry",
+          "description": "Zobrazí tlačidlo nástrojov v pravom hornom rohu grafiky. Nastavenia hry zostávajú dostupné z kontextovej ponuky."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Namiesto toho sa našlo:",
     "folder-reason-checked": "Skontrolované tu: podpriečinky AppID, všetky konfiguračné súbory emulátorov, ktoré AW Next pozná, a {layouts} prenosných rozložení uloženia. Priečinok bol preskúmaný, nič nebolo vynechané.",
     "game-health-title": "Stav hry",
+    "game-settings-menu": "Nastavenia hry",
     "game-config-title": "Nastavenie spustiteľného súboru",
     "import-san-app-setting": "Nastavenie aplikácie, nie súčasť presetu: {keys}",
     "import-san-asset-missing": "V súbore motívu chýba: {names}",

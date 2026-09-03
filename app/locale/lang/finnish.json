@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Näytä Pelaa-painike",
         "description": "Näyttää Pelaa-painikkeen peliruuduissa. Poista käytöstä, jos käynnistät pelisi toisesta ohjelmasta. Hiiren kakkospainikkeen valinta Käynnistä peli on yhä käytettävissä."
+      },
+      "library": {
+        "title": "Kirjaston ruudut",
+        "size": {
+          "name": "Ruudun koko",
+          "description": "Pelin kuvituksen koko kirjaston ruudukossa."
+        },
+        "density": {
+          "name": "Ruutujen väli",
+          "description": "Tila kunkin ruudun ympärillä, vaaka- ja pystysuunnassa. Aseta arvoksi 0, jos haluat ruudukon ilman välejä."
+        },
+        "showTitle": {
+          "name": "Pelin nimi",
+          "description": "Näyttää pelin nimen kuvituksen alla. Luettelo- ja Tiedot-näkymät säilyttävät sen aina."
+        },
+        "showProgress": {
+          "name": "Edistymispalkki",
+          "description": "Näyttää valmistumispalkin jokaisessa ruudussa."
+        },
+        "showSource": {
+          "name": "Alustan kuvake",
+          "description": "Näyttää pienen Steam-, GOG-, Epic- tai emulaattorimerkin jokaisessa ruudussa."
+        },
+        "showHealth": {
+          "name": "Pelin kunnon piste",
+          "description": "Näyttää värillisen pisteen, joka varoittaa, kun peliä ei seurata. Pelin kunto on yhä käytettävissä hiiren kakkospainikkeen valikosta."
+        },
+        "showAchievementButton": {
+          "name": "Saavutukset-painike",
+          "description": "Näyttää pokaalipainikkeen kuvituksen päällä. Ruudun napsauttaminen avaa saavutukset myös."
+        },
+        "showConfigButton": {
+          "name": "Pelin asetukset -painike",
+          "description": "Näyttää työkalupainikkeen kuvituksen oikeasta yläkulmasta. Pelin asetukset ovat yhä käytettävissä hiiren kakkospainikkeen valikosta."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Löytyi sen sijaan:",
     "folder-reason-checked": "Täältä tarkistettiin: AppID-alikansiot, kaikki AW Nextin tuntemat emulaattorien asetustiedostot ja {layouts} siirrettävää tallennusmuotoa. Kansio käytiin läpi kokonaan, mitään ei ohitettu.",
     "game-health-title": "Pelin kunto",
+    "game-settings-menu": "Pelin asetukset",
     "game-config-title": "Ohjelmatiedoston määritys",
     "import-san-app-setting": "Sovelluksen asetus, ei osa esiasetusta: {keys}",
     "import-san-asset-missing": "Puuttuu teematiedostosta: {names}",

@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Play-Schaltfläche anzeigen",
         "description": "Zeigt die Play-Schaltfläche auf den Spielkacheln. Deaktiviere sie, wenn du deine Spiele über ein anderes Programm startest. Der Eintrag Spiel starten im Rechtsklick-Menü bleibt verfügbar."
+      },
+      "library": {
+        "title": "Bibliothekskacheln",
+        "size": {
+          "name": "Kachelgröße",
+          "description": "Größe der Spielgrafik im Bibliotheksraster."
+        },
+        "density": {
+          "name": "Abstand zwischen Kacheln",
+          "description": "Abstand um jede Kachel, horizontal und vertikal. Setze ihn auf 0 für ein Raster ganz ohne Abstände."
+        },
+        "showTitle": {
+          "name": "Spielname",
+          "description": "Zeigt den Spielnamen unter der Grafik. Die Ansichten Liste und Details behalten ihn immer bei."
+        },
+        "showProgress": {
+          "name": "Fortschrittsbalken",
+          "description": "Zeigt den Fertigstellungsbalken auf jeder Kachel."
+        },
+        "showSource": {
+          "name": "Plattformsymbol",
+          "description": "Zeigt das kleine Steam-, GOG-, Epic- oder Emulator-Abzeichen auf jeder Kachel."
+        },
+        "showHealth": {
+          "name": "Spielzustandspunkt",
+          "description": "Zeigt den farbigen Punkt, der warnt, wenn ein Spiel nicht erfasst wird. Der Spielzustand bleibt über das Rechtsklick-Menü erreichbar."
+        },
+        "showAchievementButton": {
+          "name": "Erfolge-Schaltfläche",
+          "description": "Zeigt die Pokal-Schaltfläche auf der Grafik. Ein Klick auf die Kachel selbst öffnet die Erfolge ebenfalls."
+        },
+        "showConfigButton": {
+          "name": "Spieleinstellungen-Schaltfläche",
+          "description": "Zeigt die Werkzeug-Schaltfläche oben rechts auf der Grafik. Die Spieleinstellungen bleiben über das Rechtsklick-Menü erreichbar."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Stattdessen gefunden:",
     "folder-reason-checked": "Hier geprüft: AppID-Unterordner, alle AW Next bekannten Emulator-Konfigurationsdateien und {layouts} portable Speicher-Layouts. Der Ordner wurde untersucht, nichts wurde übersprungen.",
     "game-health-title": "Spielzustand",
+    "game-settings-menu": "Spieleinstellungen",
     "game-config-title": "Ausführbare Datei konfigurieren",
     "import-san-app-setting": "Eine Einstellung der App, nicht des Presets: {keys}",
     "import-san-asset-missing": "Fehlt in der Theme-Datei: {names}",

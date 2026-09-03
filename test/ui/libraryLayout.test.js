@@ -83,16 +83,19 @@ test('the settings control exposes all layouts without adding a positional setti
 
 test('the library toolbar switches and persists the shared layout state', () => {
   assert.match(appSource, /#library-layout-select[\s\S]*?change\.awLibraryLayout/);
-  assert.match(appSource, /self\.config\.achievement\.libraryLayout = nextMode/);
-  assert.match(appSource, /self\.config\.achievement\.thumbnailPortrait = libraryLayout\.isPortrait\(nextMode\)/);
+  // The picker's state handling moved into applyLibraryView, which Settings now shares (see
+  // test/core/libraryRefresh.test.js); it still saves what it switched to.
+  assert.match(appSource, /app\.config\.achievement\.libraryLayout = nextMode/);
+  assert.match(appSource, /app\.config\.achievement\.thumbnailPortrait = libraryLayout\.isPortrait\(nextMode\)/);
   assert.match(appSource, /settings\.save\(self\.config\)/);
   assert.match(appSource, /function refreshLibraryCovers[\s\S]*?scheduleLibraryCover/);
   assert.match(css, /#game-list\.view-list > ul,[\s\S]*?justify-items: stretch/);
   assert.match(css, /#game-list\.view-list \.achievement-button[\s\S]*?right: 40px/);
   assert.match(css, /#game-list\.view-list \.config-button[\s\S]*?right: 8px/);
   assert.match(css, /--library-row-max: 1260px/);
-  assert.match(css, /#game-list\.view-list \{[\s\S]*?--library-cover-width: 140px;[\s\S]*?--library-cover-height: 65\.5px/);
-  assert.match(css, /#game-list\.view-details \{[\s\S]*?--library-cover-width: 250px;[\s\S]*?--library-cover-height: 117px/);
+  // The base sizes are still these; the multiplier around them is the Library tiles setting.
+  assert.match(css, /#game-list\.view-list \{[\s\S]*?--library-cover-width: calc\(140px \* var\(--library-scale\)\);[\s\S]*?--library-cover-height: calc\(65\.5px \* var\(--library-scale\)\)/);
+  assert.match(css, /#game-list\.view-details \{[\s\S]*?--library-cover-width: calc\(250px \* var\(--library-scale\)\);[\s\S]*?--library-cover-height: calc\(117px \* var\(--library-scale\)\)/);
 });
 
 test('all layouts reuse one game card and details handle missing unlocks', () => {
@@ -130,7 +133,7 @@ test('all layouts reuse one game card and details handle missing unlocks', () =>
   for (const mode of ['compact', 'portrait-compact', 'list', 'details']) {
     assert.match(css, new RegExp(`#game-list\\.view-${mode}`), `${mode} needs a CSS-only layout`);
   }
-  assert.match(css, /--library-grid-min/);
+  assert.match(css, /--library-column/);
   assert.match(css, /--library-card-width/);
   assert.doesNotMatch(appSource, /game-box-(?:compact|list|details)/);
 });
@@ -213,4 +216,24 @@ test('every locale names every library layout', () => {
       assert.ok(String(setting && setting.value && setting.value[key]).trim(), `${file}: missing ${key} label`);
     }
   }
+});
+
+/*
+  Issue #56 also asked for the health dot to become "a right click option". Hiding it from the tile
+  is only half of that: the report it points at has to stay reachable, and the right-click menu is
+  where it now lives. Pinned against app.js because a native Menu cannot be built outside Electron.
+*/
+test('Game health has its own right-click entry, above the executable one', () => {
+  const menu = appSource.slice(appSource.indexOf("gameMenu.append(new MenuItem({ type: 'separator' }));"));
+  const health = menu.indexOf("t('game-health-title'");
+  const executable = menu.indexOf("t('configure-executable'");
+  assert.notEqual(health, -1, 'no Game health entry in the tile menu');
+  assert.notEqual(executable, -1, 'the executable entry is gone');
+  assert.ok(health < executable, 'Game health must come before Configure executable');
+
+  // Both open the same panel, so the second one has to land on the tab it names or the two entries
+  // would be indistinguishable.
+  const afterExecutable = menu.slice(executable, executable + 500);
+  assert.match(afterExecutable, /setGameConfigView\('exe-config'\)/, 'Configure executable must open its own tab');
+  assert.doesNotMatch(menu.slice(health, executable), /setGameConfigView/, 'Game health opens on the tab the panel already shows');
 });

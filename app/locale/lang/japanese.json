@@ -261,6 +261,41 @@
       "playButton": {
         "name": "プレイボタンを表示",
         "description": "ゲームタイルにプレイボタンを表示します。ほかのプログラムからゲームを起動している場合はオフにしてください。右クリックメニューのゲームを起動は引き続き利用できます。"
+      },
+      "library": {
+        "title": "ライブラリのタイル",
+        "size": {
+          "name": "タイルサイズ",
+          "description": "ライブラリのグリッドに表示されるゲーム画像のサイズです。"
+        },
+        "density": {
+          "name": "タイルの間隔",
+          "description": "各タイルの周囲の余白を横方向と縦方向で設定します。0にすると余白のないグリッドになります。"
+        },
+        "showTitle": {
+          "name": "ゲーム名",
+          "description": "画像の下にゲーム名を表示します。リスト表示と詳細表示では常に表示されます。"
+        },
+        "showProgress": {
+          "name": "進捗バー",
+          "description": "各タイルに達成率バーを表示します。"
+        },
+        "showSource": {
+          "name": "プラットフォームアイコン",
+          "description": "各タイルにSteam、GOG、Epicまたはエミュレーターの小さなバッジを表示します。"
+        },
+        "showHealth": {
+          "name": "ゲームの状態ドット",
+          "description": "ゲームが検出されていないときに警告する色付きのドットを表示します。ゲームの状態は右クリックメニューから引き続き確認できます。"
+        },
+        "showAchievementButton": {
+          "name": "実績ボタン",
+          "description": "画像上にトロフィーボタンを表示します。タイル自体をクリックしても実績が開きます。"
+        },
+        "showConfigButton": {
+          "name": "ゲーム設定ボタン",
+          "description": "画像右上のツールボタンを表示します。ゲーム設定は右クリックメニューから引き続き確認できます。"
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "代わりに見つかったもの:",
     "folder-reason-checked": "ここで確認した内容: AppID サブフォルダー、AW Next が知るすべてのエミュレーター設定ファイル、そして {layouts} 種類のポータブル保存レイアウト。フォルダーは調査済みで、省略されたものはありません。",
     "game-health-title": "ゲームの状態",
+    "game-settings-menu": "ゲーム設定",
     "game-config-title": "実行ファイルの設定",
     "import-san-app-setting": "プリセットではなくアプリ側の設定です: {keys}",
     "import-san-asset-missing": "テーマファイルに含まれていません: {names}",

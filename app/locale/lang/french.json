@@ -245,6 +245,41 @@
       "playButton": {
         "name": "Afficher le bouton Jouer",
         "description": "Affiche le bouton Jouer sur les tuiles de jeux. Désactive-le si tu lances tes jeux depuis un autre programme. L’entrée Lancer le jeu du clic droit reste disponible."
+      },
+      "library": {
+        "title": "Tuiles de la bibliothèque",
+        "size": {
+          "name": "Taille des tuiles",
+          "description": "Taille de l’illustration du jeu dans la grille de la bibliothèque."
+        },
+        "density": {
+          "name": "Espace entre les tuiles",
+          "description": "Espace autour de chaque tuile, à l’horizontale et à la verticale. Mets-le à 0 pour une grille sans aucun espace."
+        },
+        "showTitle": {
+          "name": "Nom du jeu",
+          "description": "Affiche le nom du jeu sous son illustration. Les vues Liste et Détails le conservent toujours."
+        },
+        "showProgress": {
+          "name": "Barre de progression",
+          "description": "Affiche la barre d’achèvement sur chaque tuile."
+        },
+        "showSource": {
+          "name": "Icône de plateforme",
+          "description": "Affiche le petit badge Steam, GOG, Epic ou émulateur sur chaque tuile."
+        },
+        "showHealth": {
+          "name": "Point d’état du jeu",
+          "description": "Affiche le point coloré qui avertit quand un jeu n’est pas suivi. L’État des jeux reste accessible depuis le clic droit."
+        },
+        "showAchievementButton": {
+          "name": "Bouton des succès",
+          "description": "Affiche le bouton trophée sur l’illustration. Cliquer sur la tuile elle-même ouvre aussi les succès."
+        },
+        "showConfigButton": {
+          "name": "Bouton des réglages du jeu",
+          "description": "Affiche le bouton outils en haut à droite de l’illustration. Les Réglages du jeu restent accessibles depuis le clic droit."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Trouvé à la place :",
     "folder-reason-checked": "Vérifié ici : les sous-dossiers AppID, tous les fichiers de configuration d'émulateur connus d'AW Next et {layouts} dispositions de sauvegarde portables. Le dossier a bien été examiné, rien n'a été ignoré.",
     "game-health-title": "État des jeux",
+    "game-settings-menu": "Réglages du jeu",
     "game-config-title": "Configuration de l’exécutable",
     "import-san-app-setting": "Un réglage de l’application, pas du preset : {keys}",
     "import-san-asset-missing": "Absent du fichier de thème : {names}",

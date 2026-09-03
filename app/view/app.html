@@ -2532,26 +2532,6 @@
                     </div>
                   </li>
 
-                  <!-- Bound by id below the seven positionally localized rows. -->
-                  <li class="hasHelper">
-                    <div class="left"><i class="fas fa-play"></i> <span id="play-button-settings-label">Show Play button</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_showPlayButton">
-                        <option value="true" selected>Show</option>
-                        <option value="false">Hide</option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="play-button-settings-help">
-                      Show the Play button on game tiles. Turn it off if you launch your games from another program. The right-click Launch game entry stays available.
-                    </div>
-                  </li>
-
                   <!-- Kept out of Advanced (Simple mode would never reach it). Appended LAST: the
                        loader binds rows 1-7 of this list by nth-child, so only the tail is free. -->
                   <li class="hasHelper onboarding-settings-row">
@@ -2594,6 +2574,118 @@
                       </div>
                     </div>
                     <div class="help" id="theme-settings-help">Color theme of the whole app and the in-game overlay (previews immediately, saved with OK).</div>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Library tiles (issue #56): how big the artwork is, how tight the grid is, and which
+                   pieces of chrome a tile draws. Its own card in Appearance rather than rows appended
+                   to the General list, so no nth-child locale binding moves; every label here is
+                   bound by id in app/locale/loader.js. -->
+              <div id="library-tiles" class="arrow-list">
+                <div class="title"><i class="fas fa-th"></i> <span id="library-tiles-title">Library tiles</span></div>
+                <ul>
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-expand-arrows-alt"></i> <span id="library-size-label">Tile size</span></div>
+                    <div class="right volume-slider">
+                      <input type="range" id="option_libraryTileScale" min="70" max="160" step="5" value="100" />
+                      <span id="library-size-value" class="volume-value">100%</span>
+                    </div>
+                    <div class="help" id="library-size-help">Size of the game artwork in the library grid.</div>
+                  </li>
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-compress-arrows-alt"></i> <span id="library-density-label">Space between tiles</span></div>
+                    <div class="right volume-slider">
+                      <input type="range" id="option_libraryDensity" min="0" max="150" step="5" value="100" />
+                      <span id="library-density-value" class="volume-value">100%</span>
+                    </div>
+                    <div class="help" id="library-density-help">Gap around each tile, horizontally and vertically. Set it to 0 for a grid with no gaps at all.</div>
+                  </li>
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-font"></i> <span id="library-title-label">Game name</span></div>
+                    <div class="right">
+                      <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                      <select autocomplete="off" id="option_libraryShowTitle">
+                        <option value="true" selected>Show</option>
+                        <option value="false">Hide</option>
+                      </select>
+                      <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                    </div>
+                    <div class="help" id="library-title-help">Show the game name under its artwork. The List and Details views always keep it.</div>
+                  </li>
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-tasks"></i> <span id="library-progress-label">Progress bar</span></div>
+                    <div class="right">
+                      <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                      <select autocomplete="off" id="option_libraryShowProgress">
+                        <option value="true" selected>Show</option>
+                        <option value="false">Hide</option>
+                      </select>
+                      <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                    </div>
+                    <div class="help" id="library-progress-help">Show the completion bar on each tile.</div>
+                  </li>
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-tags"></i> <span id="library-source-label">Platform icon</span></div>
+                    <div class="right">
+                      <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                      <select autocomplete="off" id="option_libraryShowSource">
+                        <option value="true" selected>Show</option>
+                        <option value="false">Hide</option>
+                      </select>
+                      <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                    </div>
+                    <div class="help" id="library-source-help">Show the small Steam, GOG, Epic or emulator badge on each tile.</div>
+                  </li>
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-heartbeat"></i> <span id="library-health-label">Game health dot</span></div>
+                    <div class="right">
+                      <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                      <select autocomplete="off" id="option_libraryShowHealth">
+                        <option value="true" selected>Show</option>
+                        <option value="false">Hide</option>
+                      </select>
+                      <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                    </div>
+                    <div class="help" id="library-health-help">Show the coloured dot that warns when a game is not being tracked. Game health stays reachable from the right-click menu.</div>
+                  </li>
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-trophy"></i> <span id="library-achbutton-label">Achievements button</span></div>
+                    <div class="right">
+                      <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                      <select autocomplete="off" id="option_libraryShowAchievementButton">
+                        <option value="true" selected>Show</option>
+                        <option value="false">Hide</option>
+                      </select>
+                      <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                    </div>
+                    <div class="help" id="library-achbutton-help">Show the trophy button on the artwork. Clicking the tile itself opens the achievements either way.</div>
+                  </li>
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-tools"></i> <span id="library-configbutton-label">Game settings button</span></div>
+                    <div class="right">
+                      <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                      <select autocomplete="off" id="option_libraryShowConfigButton">
+                        <option value="true" selected>Show</option>
+                        <option value="false">Hide</option>
+                      </select>
+                      <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                    </div>
+                    <div class="help" id="library-configbutton-help">Show the tools button in the top right corner of the artwork. Game settings stay reachable from the right-click menu.</div>
+                  </li>
+                  <!-- Moved here from General: it hides a piece of tile chrome like every row above,
+                       and sharing their card means it is applied live on OK instead of needing a rescan. -->
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-play"></i> <span id="play-button-settings-label">Play button</span></div>
+                    <div class="right">
+                      <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                      <select autocomplete="off" id="option_showPlayButton">
+                        <option value="true" selected>Show</option>
+                        <option value="false">Hide</option>
+                      </select>
+                      <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                    </div>
+                    <div class="help" id="play-button-settings-help">Show the Play button on game tiles. Turn it off if you launch your games from another program. The right-click Launch game entry stays available.</div>
                   </li>
                 </ul>
               </div>

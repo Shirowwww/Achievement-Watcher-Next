@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Vis Spil-knappen",
         "description": "Viser Spil-knappen på spilfelterne. Slå den fra, hvis du starter dine spil fra et andet program. Punktet Start spil i højrekliksmenuen er stadig tilgængeligt."
+      },
+      "library": {
+        "title": "Biblioteksfelter",
+        "size": {
+          "name": "Feltstørrelse",
+          "description": "Størrelsen på spilgrafikken i bibliotekets gitter."
+        },
+        "density": {
+          "name": "Afstand mellem felter",
+          "description": "Afstanden omkring hvert felt, vandret og lodret. Sæt den til 0 for et gitter helt uden mellemrum."
+        },
+        "showTitle": {
+          "name": "Spilnavn",
+          "description": "Viser spilnavnet under grafikken. Liste- og Detaljer-visningerne beholder det altid."
+        },
+        "showProgress": {
+          "name": "Fremskridtslinje",
+          "description": "Viser fuldførelseslinjen på hvert felt."
+        },
+        "showSource": {
+          "name": "Platformikon",
+          "description": "Viser det lille Steam-, GOG-, Epic- eller emulatormærke på hvert felt."
+        },
+        "showHealth": {
+          "name": "Spiltilstandsprik",
+          "description": "Viser den farvede prik, der advarer, når et spil ikke registreres. Spillets tilstand er stadig tilgængelig fra højrekliksmenuen."
+        },
+        "showAchievementButton": {
+          "name": "Præstationsknap",
+          "description": "Viser trofæknappen på grafikken. Klik på selve feltet åbner også præstationerne."
+        },
+        "showConfigButton": {
+          "name": "Spilindstillingsknap",
+          "description": "Viser værktøjsknappen øverst til højre på grafikken. Spillets indstillinger er stadig tilgængelige fra højrekliksmenuen."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Fundet i stedet:",
     "folder-reason-checked": "Her blev der tjekket: undermapper med AppID, alle de emulatorkonfigurationsfiler AW Next kender, og {layouts} bærbare gemmeformater. Mappen blev gennemgået - intet blev sprunget over.",
     "game-health-title": "Spillets tilstand",
+    "game-settings-menu": "Spillets indstillinger",
     "game-config-title": "Konfiguration af programfil",
     "import-san-app-setting": "En indstilling i appen frem for en del af et preset: {keys}",
     "import-san-asset-missing": "Mangler i temafilen: {names}",

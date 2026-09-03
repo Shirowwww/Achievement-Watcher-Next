@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Mostra il pulsante Gioca",
         "description": "Mostra il pulsante Gioca sui riquadri dei giochi. Disattivalo se avvii i giochi da un altro programma. La voce Avvia gioco del menu con il tasto destro resta disponibile."
+      },
+      "library": {
+        "title": "Riquadri della libreria",
+        "size": {
+          "name": "Dimensione dei riquadri",
+          "description": "Dimensione della grafica del gioco nella griglia della libreria."
+        },
+        "density": {
+          "name": "Spazio tra i riquadri",
+          "description": "Spazio intorno a ogni riquadro, in orizzontale e in verticale. Impostalo su 0 per una griglia senza alcuno spazio."
+        },
+        "showTitle": {
+          "name": "Nome del gioco",
+          "description": "Mostra il nome del gioco sotto la grafica. Le viste Elenco e Dettagli lo mantengono sempre."
+        },
+        "showProgress": {
+          "name": "Barra di avanzamento",
+          "description": "Mostra la barra di completamento su ogni riquadro."
+        },
+        "showSource": {
+          "name": "Icona della piattaforma",
+          "description": "Mostra il piccolo distintivo Steam, GOG, Epic o emulatore su ogni riquadro."
+        },
+        "showHealth": {
+          "name": "Puntino di stato del gioco",
+          "description": "Mostra il puntino colorato che avvisa quando un gioco non viene monitorato. Lo Stato dei giochi resta accessibile dal menu con il tasto destro."
+        },
+        "showAchievementButton": {
+          "name": "Pulsante obiettivi",
+          "description": "Mostra il pulsante trofeo sulla grafica. Anche cliccare sul riquadro stesso apre gli obiettivi."
+        },
+        "showConfigButton": {
+          "name": "Pulsante impostazioni di gioco",
+          "description": "Mostra il pulsante strumenti in alto a destra sulla grafica. Le Impostazioni di gioco restano accessibili dal menu con il tasto destro."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Trovato invece:",
     "folder-reason-checked": "Controllati qui: le sottocartelle AppID, tutti i file di configurazione degli emulatori noti ad AW Next e {layouts} strutture di salvataggio portatili. La cartella è stata esaminata, nulla è stato ignorato.",
     "game-health-title": "Stato dei giochi",
+    "game-settings-menu": "Impostazioni di gioco",
     "game-config-title": "Configurazione dell’eseguibile",
     "import-san-app-setting": "Un’impostazione dell’app, non del preset: {keys}",
     "import-san-asset-missing": "Assente dal file del tema: {names}",

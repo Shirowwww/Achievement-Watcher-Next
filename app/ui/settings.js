@@ -523,6 +523,34 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     document.addEventListener('pointerdown', captureOnboardingOpen, true);
     document.addEventListener('mousedown', captureOnboardingOpen, true);
 
+    /*
+      What the library's contents depended on when Settings opened. Compared again on OK so the panel
+      only rebuilds the grid when something that decides its rows actually moved (util/libraryRefresh.js).
+      The folder lists are filled asynchronously, so their half of the snapshot is taken once they are.
+    */
+    let librarySnapshotOnOpen = '';
+
+    function foldersFromDom() {
+      const read = (selector) => $(selector).map(function () { return folderEntryFromRow(this); }).get();
+      return { userDirs: read('#settings #dirlist > li'), libraryDirs: read('#settings #libdirlist > li') };
+    }
+
+    function takeLibrarySnapshot(folders) {
+      librarySnapshotOnOpen = libraryRefresh.signature({ config: app.config, ...folders });
+    }
+
+    // Put the panel away and leave the library alone. Everything resetUI() does beyond this is about
+    // rebuilding the grid, which closing Settings does not by itself require.
+    function closeSettingsPanel() {
+      $('#settings').hide();
+      const first = $('#settingNav li[data-view]').first();
+      $('#settingNav li[data-view]').removeClass('active');
+      first.addClass('active');
+      $('#settings .box section.content').removeClass('active');
+      $(`#settings .box section.content[data-view='${first.data('view')}']`).addClass('active');
+      $('title-bar')[0].inSettings = false;
+    }
+
     $('title-bar').on('open-settings', function () {
       this.inSettings = true;
       settingsReady = false; // suppress auto-save while we populate the form below
@@ -556,6 +584,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           $(`#option_${option}`).val(app.config.achievement[option].toString()).change();
         }
       }
+      fillLibraryChromeUi();
       if (!app.config.general) app.config.general = {};
       $('#option_startWithWindows').val(String(app.config.general.startWithWindows !== false)).change();
       $('#option_disableHardwareAccel').val(String(app.config.general.disableHardwareAccel === true)).change();
@@ -693,8 +722,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
       populateLegitUsers(app.config.steam.main || '0');
 
+      // Snapshot the settings half now and the folders once they are on screen; a folder list read
+      // before it is populated would look empty and make every OK a change.
+      takeLibrarySnapshot(foldersFromDom());
       $('#settings #dirlist').empty();
-      (userDir.getEntries ? userDir.getEntries() : userDir.get())
+      const userDirsShown = (userDir.getEntries ? userDir.getEntries() : userDir.get())
         .then(async (userDirList) => {
           for (let dir of userDirList) {
             try {
@@ -709,7 +741,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         });
 
       $('#settings #libdirlist').empty();
-      (libraryDirs.getEntries ? libraryDirs.getEntries() : libraryDirs.get())
+      const libraryDirsShown = (libraryDirs.getEntries ? libraryDirs.getEntries() : libraryDirs.get())
         .then((libraryDirList) => {
           for (const entry of libraryDirList) {
             const dir = typeof entry === 'string' ? entry : entry.path;
@@ -719,6 +751,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         .catch((err) => {
           debug.log(err);
         });
+      Promise.all([userDirsShown, libraryDirsShown]).then(() => takeLibrarySnapshot(foldersFromDom()));
 
       // Debug tab diagnostics: major versions only to stay one short row; the tooltip carries the
       // exact build numbers for a bug report. Wrapped so a failure here can't block Settings opening.
@@ -1065,20 +1098,54 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     });
 
+    /*
+      Library tiles (issue #56). Not part of the generic "#options-ui select" sweep below: this card
+      lives in Appearance and two of its rows are sliders, so it reads and writes its own controls.
+      Both scales are stored as a multiplier (1 = the shipped layout) and shown as a percentage.
+    */
+    const LIBRARY_TOGGLES = settingsLibraryChrome.TOGGLES.map((toggle) => toggle.key);
+
+    // What the controls currently say, in the shape app.config.achievement stores. Normalized here
+    // so the preview, the save and the settings file can never disagree about a value.
+    function readLibraryChromeUi() {
+      const chrome = {
+        libraryTileScale: settingsLibraryChrome.normalizeTileScale(Number($('#option_libraryTileScale').val()) / 100),
+        libraryDensity: settingsLibraryChrome.normalizeDensity(Number($('#option_libraryDensity').val()) / 100),
+      };
+      for (const key of LIBRARY_TOGGLES) chrome[key] = $(`#option_${key}`).val() !== 'false';
+      return chrome;
+    }
+
+    // Shows it without committing it: closing with Cancel re-applies app.config, which the controls
+    // have not touched.
+    function previewLibraryChrome() {
+      const chrome = readLibraryChromeUi();
+      $('#library-size-value').text(`${Math.round(chrome.libraryTileScale * 100)}%`);
+      $('#library-density-value').text(`${Math.round(chrome.libraryDensity * 100)}%`);
+      if (typeof window.applyLibraryChrome === 'function') window.applyLibraryChrome(chrome);
+    }
+
+    function fillLibraryChromeUi() {
+      const settings = app.config.achievement || {};
+      $('#option_libraryTileScale').val(Math.round(settingsLibraryChrome.normalizeTileScale(settings.libraryTileScale) * 100));
+      $('#option_libraryDensity').val(Math.round(settingsLibraryChrome.normalizeDensity(settings.libraryDensity) * 100));
+      for (const key of LIBRARY_TOGGLES) $(`#option_${key}`).val(String(settings[key] !== false)).change();
+      previewLibraryChrome();
+    }
+
+    $('#option_libraryTileScale, #option_libraryDensity').on('input change', previewLibraryChrome);
+    $(LIBRARY_TOGGLES.map((key) => `#option_${key}`).join(', ')).on('change', previewLibraryChrome);
+
     $('#btn-settings-cancel, #settings .overlay').click(function () {
       let self = $(this);
       self.css('pointer-events', 'none');
       $('#settings .box').fadeOut(() => {
-        $('#settings').hide();
-        let elem = $('#settingNav li[data-view]').first();
-        $('#settingNav li[data-view]').removeClass('active');
-        elem.addClass('active');
-        $('#settings .box section.content').removeClass('active');
-        $("#settings .box section.content[data-view='" + elem.data('view') + "']").addClass('active');
+        closeSettingsPanel();
         self.css('pointer-events', 'initial');
-        $('title-bar')[0].inSettings = false;
         // Cancel reverts an unsaved theme preview back to the persisted choice.
         applyThemeValue((app.config.general && app.config.general.theme) || 'default');
+        // Same for the live library preview: app.config still holds what was saved.
+        if (typeof window.applyLibraryChrome === 'function') window.applyLibraryChrome(app.config.achievement);
         // The Custom theme editor saves live; restore the snapshot taken when it opened.
         if (customThemeSnapshot) {
           ipcRenderer
@@ -1103,6 +1170,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       let self = $(this);
       self.css('pointer-events', 'none');
 
+      // Read before the form is collected below, which overwrites it: applyLibraryView needs to know
+      // which view we are coming FROM to decide whether the covers have to be re-requested.
+      const previousLayout = app.config.achievement.libraryLayout;
+
       app.config.overlay.hotkey = $('#hotkey').text();
       $('#options-ui .right')
         .children('select')
@@ -1126,7 +1197,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
             debug.log('error while reading general settings ui');
           }
         });
-      app.config.achievement.thumbnailPortrait = app.config.achievement.libraryLayout === 'portrait';
+      // Same switch as the toolbar picker: apply the view to the tiles already on screen (and
+      // re-request their covers if the orientation changed) instead of rebuilding the library.
+      if (typeof window.applyLibraryView === 'function') window.applyLibraryView(app.config.achievement.libraryLayout, previousLayout);
+      Object.assign(app.config.achievement, readLibraryChromeUi());
+      if (typeof window.applyLibraryChrome === 'function') window.applyLibraryChrome(app.config.achievement);
       if (!app.config.general) app.config.general = {};
       app.config.general.disableHardwareAccel = $('#option_disableHardwareAccel').val() === 'true';
       app.config.general.closeToTray = $('#option_closeToTray').val() !== 'false';
@@ -1255,9 +1330,19 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         .then(() => {
           closeThemeEditor();
           ipcRenderer.send('theme-changed', $('#option_theme').val() || 'default');
+          /*
+            Rebuild the library only when this OK changed something the library's contents depend on
+            (util/libraryRefresh.js), or when a game was un-blacklisted while the panel was open.
+            resetUI() empties the grid, forgets which AppIDs failed to resolve and runs a full scan;
+            paying that for a theme colour is what made every OK feel like a reload.
+          */
+          const after = libraryRefresh.signature({ config: app.config, userDirs: userDirList, libraryDirs: libraryDirList });
+          const rescan = libraryRefresh.needsRescan(librarySnapshotOnOpen, after) || window.__awBlacklistDirty === true;
+          window.__awBlacklistDirty = false;
           $('#settings .box').fadeOut(() => {
             self.css('pointer-events', 'initial');
-            resetUI();
+            if (rescan) resetUI();
+            else closeSettingsPanel();
           });
         })
         .catch((err) => {
@@ -3437,6 +3522,28 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         icon.attr('class', 'fas fa-spinner fa-spin');
       } else {
         icon.attr('class', icon.attr('data-notification-test-icon') || 'fas fa-bell').removeAttr('data-notification-test-icon');
+      }
+    }
+
+    /*
+      Fire and forget, unlike runNotificationTest: the preview the user asked for has already been
+      drawn by the time this runs, so a Watchdog that is down or a feed nobody is listening to is
+      not a failed test and must not raise a dialog over a preview that worked.
+    */
+    function broadcastNotificationTest(kind, game) {
+      try {
+        const ws = new WebSocket('ws://localhost:8082');
+        const close = () => {
+          try {
+            ws.close();
+          } catch {}
+        };
+        ws.onerror = close;
+        ws.onmessage = close;
+        ws.onopen = () => ws.send(JSON.stringify({ cmd: 'broadcast-test', kind, game: game || undefined }));
+        setTimeout(close, 5000);
+      } catch (err) {
+        debug.log(`notification broadcast test failed: ${err && (err.message || err)}`);
       }
     }
 

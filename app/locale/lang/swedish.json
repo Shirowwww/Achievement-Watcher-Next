@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Visa Spela-knappen",
         "description": "Visar Spela-knappen på spelrutorna. Stäng av den om du startar dina spel från ett annat program. Alternativet Starta spel i högerklicksmenyn finns kvar."
+      },
+      "library": {
+        "title": "Biblioteksrutor",
+        "size": {
+          "name": "Rutstorlek",
+          "description": "Storleken på spelgrafiken i bibliotekets rutnät."
+        },
+        "density": {
+          "name": "Mellanrum mellan rutor",
+          "description": "Utrymmet runt varje ruta, vågrätt och lodrätt. Sätt det till 0 för ett rutnät helt utan mellanrum."
+        },
+        "showTitle": {
+          "name": "Spelnamn",
+          "description": "Visar spelnamnet under grafiken. Vyerna Lista och Detaljer behåller det alltid."
+        },
+        "showProgress": {
+          "name": "Förloppsindikator",
+          "description": "Visar förloppsindikatorn på varje ruta."
+        },
+        "showSource": {
+          "name": "Plattformsikon",
+          "description": "Visar den lilla Steam-, GOG-, Epic- eller emulatorbadgen på varje ruta."
+        },
+        "showHealth": {
+          "name": "Hälsoprick för spel",
+          "description": "Visar den färgade prick som varnar när ett spel inte spåras. Spelets hälsa går fortfarande att nå via högerklicksmenyn."
+        },
+        "showAchievementButton": {
+          "name": "Prestationsknapp",
+          "description": "Visar trofeknappen på grafiken. Att klicka på själva rutan öppnar också prestationerna."
+        },
+        "showConfigButton": {
+          "name": "Knapp för spelinställningar",
+          "description": "Visar verktygsknappen uppe till höger på grafiken. Spelets inställningar går fortfarande att nå via högerklicksmenyn."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Hittade i stället:",
     "folder-reason-checked": "Kontrollerades här: undermappar med AppID, alla emulatorkonfigurationsfiler som AW Next känner till och {layouts} portabla sparformat. Mappen gicks igenom - ingenting hoppades över.",
     "game-health-title": "Spelets hälsa",
+    "game-settings-menu": "Spelets inställningar",
     "game-config-title": "Konfiguration av körbar fil",
     "import-san-app-setting": "En inställning i appen snarare än en del av en förinställning: {keys}",
     "import-san-asset-missing": "Saknas i temafilen: {names}",

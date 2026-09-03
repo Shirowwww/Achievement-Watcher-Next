@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Zobrazit tlačítko Hrát",
         "description": "Zobrazí tlačítko Hrát na dlaždicích her. Vypněte jej, pokud hry spouštíte z jiného programu. Položka Spustit hru v kontextové nabídce zůstává dostupná."
+      },
+      "library": {
+        "title": "Dlaždice knihovny",
+        "size": {
+          "name": "Velikost dlaždice",
+          "description": "Velikost grafiky hry v mřížce knihovny."
+        },
+        "density": {
+          "name": "Mezera mezi dlaždicemi",
+          "description": "Mezera kolem každé dlaždice, vodorovně i svisle. Nastavte na 0 pro mřížku zcela bez mezer."
+        },
+        "showTitle": {
+          "name": "Název hry",
+          "description": "Zobrazí název hry pod její grafikou. Zobrazení Seznam a Podrobnosti jej zachovávají vždy."
+        },
+        "showProgress": {
+          "name": "Ukazatel postupu",
+          "description": "Zobrazí ukazatel dokončení na každé dlaždici."
+        },
+        "showSource": {
+          "name": "Ikona platformy",
+          "description": "Zobrazí malý odznak Steam, GOG, Epic nebo emulátoru na každé dlaždici."
+        },
+        "showHealth": {
+          "name": "Tečka stavu hry",
+          "description": "Zobrazí barevnou tečku, která upozorní, že hra není sledována. Stav hry zůstává dostupný z kontextové nabídky."
+        },
+        "showAchievementButton": {
+          "name": "Tlačítko úspěchů",
+          "description": "Zobrazí tlačítko trofeje na grafice. Kliknutí na samotnou dlaždici úspěchy otevře také."
+        },
+        "showConfigButton": {
+          "name": "Tlačítko nastavení hry",
+          "description": "Zobrazí tlačítko nástrojů v pravém horním rohu grafiky. Nastavení hry zůstává dostupné z kontextové nabídky."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Nalezeno místo toho:",
     "folder-reason-checked": "Zkontrolováno zde: podsložky AppID, všechny konfigurační soubory emulátorů, které AW Next zná, a {layouts} přenosných rozložení uložení. Složka byla prozkoumána, nic nebylo přeskočeno.",
     "game-health-title": "Stav hry",
+    "game-settings-menu": "Nastavení hry",
     "game-config-title": "Nastavení spustitelného souboru",
     "import-san-app-setting": "Nastavení aplikace, nikoli součást presetu: {keys}",
     "import-san-asset-missing": "V souboru motivu chybí: {names}",

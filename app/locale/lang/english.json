@@ -261,6 +261,41 @@
       "playButton": {
         "name": "Show Play button",
         "description": "Show the Play button on game tiles. Turn it off if you launch your games from another program. The right-click Launch game entry stays available."
+      },
+      "library": {
+        "title": "Library tiles",
+        "size": {
+          "name": "Tile size",
+          "description": "Size of the game artwork in the library grid."
+        },
+        "density": {
+          "name": "Space between tiles",
+          "description": "Gap around each tile, horizontally and vertically. Set it to 0 for a grid with no gaps at all."
+        },
+        "showTitle": {
+          "name": "Game name",
+          "description": "Show the game name under its artwork. The List and Details views always keep it."
+        },
+        "showProgress": {
+          "name": "Progress bar",
+          "description": "Show the completion bar on each tile."
+        },
+        "showSource": {
+          "name": "Platform icon",
+          "description": "Show the small Steam, GOG, Epic or emulator badge on each tile."
+        },
+        "showHealth": {
+          "name": "Game health dot",
+          "description": "Show the coloured dot that warns when a game is not being tracked. Game health stays reachable from the right-click menu."
+        },
+        "showAchievementButton": {
+          "name": "Achievements button",
+          "description": "Show the trophy button on the artwork. Clicking the tile itself opens the achievements either way."
+        },
+        "showConfigButton": {
+          "name": "Game settings button",
+          "description": "Show the tools button in the top right corner of the artwork. Game settings stay reachable from the right-click menu."
+        }
       }
     },
     "emulator": {
@@ -1203,6 +1238,7 @@
     "folder-reason-found-instead": "Found instead:",
     "folder-reason-checked": "Checked here: AppID subfolders, every emulator configuration file AW Next knows, and {layouts} portable save layouts. The folder was examined - nothing was skipped.",
     "game-health-title": "Game health",
+    "game-settings-menu": "Game settings",
     "game-config-title": "Executable configuration",
     "import-san-app-setting": "A setting of the app rather than part of a preset: {keys}",
     "import-san-asset-missing": "Missing from the theme file: {names}",
