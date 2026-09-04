@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "Гра EA у вашій бібліотеці",
     "purchased-badge-xbox": "Гра Xbox у вашій бібліотеці",
     "steam-hide-stale": "Приховувати ігри, яких більше немає у вашій бібліотеці Steam",
-    "steam-hide-stale-help": "Потрібен підключений акаунт Steam. Ігри, встановлені на цьому комп'ютері, та ігри, надані через Сім'ю Steam, ніколи не приховуються."
+    "steam-hide-stale-help": "Потрібен підключений акаунт Steam. Ігри, встановлені на цьому комп'ютері, та ігри, надані через Сім'ю Steam, ніколи не приховуються.",
+    "profile-stats-title": "Статистика бібліотеки",
+    "profile-stats-open": "Переглянути детальну розбивку",
+    "profile-stats-overall": "Загальне завершення",
+    "profile-stats-in-progress": "У процесі",
+    "profile-stats-not-started": "Не розпочато",
+    "profile-stats-tracked": "Ігри з досягненнями",
+    "profile-stats-playtime-average": "Середній час гри",
+    "profile-stats-average": "Середнє на гру",
+    "profile-stats-playtime": "Відстежений час гри",
+    "profile-stats-platforms": "За платформою",
+    "profile-stats-games": "Ігри",
+    "profile-stats-empty": "Поки що немає ігор із досягненнями."
   },
   "watchdog": {
     "rare": "Рідкісне {percent}%",

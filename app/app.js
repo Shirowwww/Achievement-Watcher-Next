@@ -117,7 +117,7 @@ const gameIconStore = require(path.join(appPath, 'util/gameIconStore.js'));
 const localIcons = require(path.join(appPath, 'util/localIcons.js'));
 const uninstall = require(path.join(appPath, 'util/uninstall.js'));
 const apiCheckBypass = require(path.join(appPath, 'parser/apiCheckBypass.js'));
-const { calculateLibraryStats } = require(path.join(appPath, 'util/libraryStats.js'));
+const { calculateLibraryStats, calculateDetailedLibraryStats } = require(path.join(appPath, 'util/libraryStats.js'));
 const { resolveGameRarityContext } = require(path.join(appPath, 'util/rarity.js'));
 const librarySnapshot = require(path.join(appPath, 'util/librarySnapshot.js'));
 const libraryReuse = require(path.join(appPath, 'util/libraryReuse.js'));
@@ -245,6 +245,169 @@ function refreshProfileStats({ animate = false } = {}) {
 }
 
 window.refreshProfileStats = refreshProfileStats;
+
+/*
+  The detailed panel behind the profile header's three numbers.
+
+  Platform rows are grouped through sourcePresentationFor(), the same classifier the tile badges use,
+  so a game can never be summarised under a platform its own badge disagrees with. The row labels are
+  the store names themselves, which are proper nouns and stay untranslated.
+*/
+const PROFILE_STATS_PLATFORMS = {
+  steam: { label: 'Steam', img: 'Steam' },
+  'steam-hidden': { label: 'Steam', img: 'Steam' },
+  gog: { label: 'GOG', img: 'gog' },
+  epic: { label: 'Epic Games', img: 'epic' },
+  ubisoft: { label: 'Ubisoft Connect', img: 'ubisoft' },
+  ea: { label: 'EA', img: 'ea' },
+  socialclub: { label: 'Social Club', img: 'Goldberg SocialClub' },
+  playstation: { label: 'PlayStation', img: 'RPCS3 Emulator' },
+  xbox: { label: 'Xbox', img: 'Xenia Emulator' },
+};
+
+function profileStatsGroupOf(game) {
+  let kind = '';
+  try {
+    kind = String(sourcePresentationFor(game).kind || '');
+  } catch {
+    kind = '';
+  }
+  const known = PROFILE_STATS_PLATFORMS[kind] || PROFILE_STATS_PLATFORMS.steam;
+  return { key: kind === 'steam-hidden' ? 'steam' : kind || 'steam', label: known.label, img: known.img };
+}
+
+function profileStatsIconFor(key) {
+  const known = PROFILE_STATS_PLATFORMS[key];
+  if (!known) return '';
+  try {
+    return getSourceImg(known.img) || '';
+  } catch {
+    return '';
+  }
+}
+
+/*
+  Playtime is one synchronous registry read per game, so on a large library it is the single
+  expensive number in the panel. It is filled in after the panel is on screen rather than before:
+  everything else is already known from the library in memory and should not wait behind it.
+*/
+function fillProfileStatsPlaytime(games) {
+  let seconds = 0;
+  let played = 0;
+  for (const game of games) {
+    let playtime = 0;
+    try {
+      playtime = Number(PlaytimeTracking.readSync(game.appid).playtime) || 0;
+    } catch {
+      playtime = 0;
+    }
+    if (playtime <= 0) continue;
+    seconds += playtime;
+    played += 1;
+  }
+  // The panel may have been closed again while this ran.
+  if ($('#profile-stats').attr('aria-hidden') !== 'false') return;
+  // Averaged over the games that were actually played, not over the whole library: a library full of
+  // never-launched games would otherwise report an average of a few minutes and mean nothing.
+  const average = played > 0 ? Math.round(seconds / played) : 0;
+  $('#profile-stats-playtime-value').text(seconds > 0 ? libraryPlaytime(seconds) : localeText('neverPlayed'));
+  $('#profile-stats-playtime-average-value').text(average > 0 ? libraryPlaytime(average) : localeText('neverPlayed'));
+}
+
+function renderProfileStatsPanel() {
+  const installedOnly = typeof window.installedOnlyEnabled === 'function' && window.installedOnlyEnabled();
+  const games = installedOnly ? gameList.filter((game) => game && game.installed) : gameList.slice();
+  const stats = calculateDetailedLibraryStats(games, { installedOnly, groupOf: profileStatsGroupOf });
+  const overall = Math.round(stats.completion.overall);
+
+  // Reuses the settings wording for the filter that is on, prefixed with its icon so it reads as
+  // "this is what you are looking at" rather than as a control.
+  $('#profile-stats-scope').html(
+    installedOnly ? `<i class="fas fa-hdd" aria-hidden="true"></i> ${escapeHtml(localeText('installedOnly'))}` : ''
+  );
+  $('#profile-stats-ring').css('--value', overall);
+  $('#profile-stats-overall-value').text(formatCount(overall));
+  $('#profile-stats-overall-detail').text(
+    `${formatCount(stats.achievements.unlocked)} / ${formatCount(stats.achievements.total)} ${localeText('achievements')}`
+  );
+
+  const trackedGames = Math.max(1, stats.library.tracked);
+  const share = (count) => `${(100 * count) / trackedGames}%`;
+  $('#profile-stats-split .is-perfect').css('width', share(stats.games.perfect));
+  $('#profile-stats-split .is-progress').css('width', share(stats.games.inProgress));
+  $('#profile-stats-split .is-untouched').css('width', share(stats.games.notStarted));
+
+  $('#profile-stats-perfect-value').text(formatCount(stats.games.perfect));
+  $('#profile-stats-progress-value').text(formatCount(stats.games.inProgress));
+  $('#profile-stats-untouched-value').text(formatCount(stats.games.notStarted));
+  $('#profile-stats-unlocked-value').text(formatCount(stats.achievements.unlocked));
+  $('#profile-stats-locked-value').text(formatCount(stats.achievements.locked));
+  $('#profile-stats-tracked-value').text(formatCount(stats.library.tracked));
+  $('#profile-stats-average-value').text(formatPercentValue(stats.completion.average));
+  $('#profile-stats-playtime-average-value, #profile-stats-playtime-value').text(localeText('loading'));
+  setTimeout(() => fillProfileStatsPlaytime(games), 0);
+
+  const rows = stats.groups
+    .map((group) => {
+      const icon = profileStatsIconFor(group.key);
+      const completion = Math.round(group.completion);
+      return `<tr>
+        <td><span class="platform-cell">${
+          icon ? `<img src="${escapeHtml(icon)}" alt="" />` : ''
+        }${escapeHtml(group.label)}</span></td>
+        <td>${escapeHtml(formatCount(group.games))}</td>
+        <td>${escapeHtml(formatCount(group.perfect))}</td>
+        <td>${escapeHtml(`${formatCount(group.unlocked)} / ${formatCount(group.total)}`)}</td>
+        <td><span class="completion-cell"><span><i style="width: ${completion}%"></i></span>${escapeHtml(
+          formatPercentValue(completion)
+        )}</span></td>
+      </tr>`;
+    })
+    .join('');
+
+  $('#profile-stats .profile-stats-table tbody').html(rows);
+  $('#profile-stats .profile-stats-table-wrap').toggle(stats.groups.length > 0);
+  $('#profile-stats-empty').prop('hidden', stats.groups.length > 0);
+}
+
+// Applied on every open: the panel shares wording with the library ("Unlocked", "Perfect game",
+// "Completion rate") through localeText(), which only answers once window.appLocale has loaded.
+function applyProfileStatsLabels() {
+  $('#profile-stats-title').text(t('profile-stats-title', 'Library stats', 'Statistiques de la bibliothèque'));
+  $('#profile-stats-close').attr('title', t('close', 'Close', 'Fermer'));
+  $('#profile-stats-overall-label').text(t('profile-stats-overall', 'Overall completion', 'Complétion globale'));
+  $('#profile-stats-perfect-label, #profile-stats-col-perfect').text(localeText('perfectGame'));
+  $('#profile-stats-progress-label').text(t('profile-stats-in-progress', 'In progress', 'En cours'));
+  $('#profile-stats-untouched-label').text(t('profile-stats-not-started', 'Not started', 'Non commencés'));
+  $('#profile-stats-unlocked-label, #profile-stats-col-unlocked').text(localeText('unlocked'));
+  $('#profile-stats-locked-label').text(localeText('locked'));
+  $('#profile-stats-tracked-label').text(t('profile-stats-tracked', 'Games with achievements', 'Jeux avec succès'));
+  $('#profile-stats-average-label').text(t('profile-stats-average', 'Average per game', 'Moyenne par jeu'));
+  $('#profile-stats-playtime-average-label').text(t('profile-stats-playtime-average', 'Average playtime', 'Temps de jeu moyen'));
+  $('#profile-stats-playtime-label').text(t('profile-stats-playtime', 'Tracked playtime', 'Temps de jeu suivi'));
+  $('#profile-stats-platforms-label, #profile-stats-col-platform').text(t('profile-stats-platforms', 'By platform', 'Par plateforme'));
+  $('#profile-stats-col-games').text(t('profile-stats-games', 'Games', 'Jeux'));
+  // Not localeText('completionRate'): that label is the average of per-game percentages (the profile
+  // header's third number), while this column is unlocked over total for the platform, the same
+  // measure as the dial above it.
+  $('#profile-stats-col-completion').text(t('profile-stats-overall', 'Overall completion', 'Complétion globale'));
+  $('#profile-stats-empty').text(t('profile-stats-empty', 'No game with achievements yet.', 'Aucun jeu avec des succès pour le moment.'));
+}
+
+function openProfileStats() {
+  try {
+    applyProfileStatsLabels();
+    renderProfileStatsPanel();
+  } catch (err) {
+    debug.warn(`[profile-stats] could not build the summary: ${err && err.message ? err.message : err}`);
+  }
+  $('#profile-stats').attr('aria-hidden', 'false').show();
+  setTimeout(() => $('#profile-stats-close').trigger('focus'), 0);
+}
+
+function closeProfileStats() {
+  $('#profile-stats').attr('aria-hidden', 'true').hide();
+}
 
 function gameTouchesScanScope(game, scope) {
   const data = (game && game.data) || {};
@@ -5242,10 +5405,19 @@ var app = {
           menu.popup({ window: remote.getCurrentWindow() });
         });
 
-        if (self.args.appid)
-          $(`#game-list .game-box[data-appid="${self.args.appid.toString().replace(/[^\d]/g, '')}"]`)
+        // Compared in JS instead of interpolated into a selector: stripping non-digits kept the
+        // selector safe but mangled every non-numeric appid, so clicking a toast for UPLAY123 or
+        // xlln-4D5307E6 opened nothing - or, worse, whatever Steam game happened to own the digits
+        // left over ("UPLAY123" -> "123"). Matching the attribute value exactly is both safe and right.
+        if (self.args.appid) {
+          const wanted = String(self.args.appid);
+          $('#game-list .game-box')
+            .filter(function () {
+              return String(this.dataset.appid) === wanted;
+            })
             .first()
             .trigger('click');
+        }
       })
       .catch((err) => {
         loadingElem.elem.hide();
@@ -6271,6 +6443,18 @@ var app = {
       } catch (err) {
         debug.log(`game-config i18n failed: ${err}`);
       }
+
+      // Profile stats panel: only the trigger is labelled here. Everything inside the panel is
+      // labelled on open, because the locale tree localeText() reads is not loaded at this point and
+      // those keys would silently render blank.
+      const profileStatsOpenLabel = t('profile-stats-open', 'See the detailed breakdown', 'Voir le détail');
+      $('#profile-stats-open').attr({ title: profileStatsOpenLabel, 'aria-label': profileStatsOpenLabel });
+
+      $('#profile-stats-open').on('click', openProfileStats);
+      $('#profile-stats-close, #profile-stats > .overlay').on('click', closeProfileStats);
+      $(document).on('keydown.profile-stats', (event) => {
+        if (event.key === 'Escape' && $('#profile-stats').attr('aria-hidden') === 'false') closeProfileStats();
+      });
 
       // Manual library entries are first-class launch/playtime records even when no achievement
       // provider supports the game. Metadata and artwork are resolved during the normal scan.

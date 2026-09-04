@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "EA-spill i biblioteket ditt",
     "purchased-badge-xbox": "Xbox-spill i biblioteket ditt",
     "steam-hide-stale": "Skjul spill som ikke lenger er i Steam-biblioteket ditt",
-    "steam-hide-stale-help": "Krever en tilkoblet Steam-konto. Spill installert på denne PC-en og spill delt via Steam Family skjules aldri."
+    "steam-hide-stale-help": "Krever en tilkoblet Steam-konto. Spill installert på denne PC-en og spill delt via Steam Family skjules aldri.",
+    "profile-stats-title": "Biblioteksstatistikk",
+    "profile-stats-open": "Se den detaljerte oversikten",
+    "profile-stats-overall": "Samlet fullføring",
+    "profile-stats-in-progress": "Pågår",
+    "profile-stats-not-started": "Ikke startet",
+    "profile-stats-tracked": "Spill med prestasjoner",
+    "profile-stats-playtime-average": "Gjennomsnittlig spilletid",
+    "profile-stats-average": "Gjennomsnitt per spill",
+    "profile-stats-playtime": "Registrert spilletid",
+    "profile-stats-platforms": "Etter plattform",
+    "profile-stats-games": "Spill",
+    "profile-stats-empty": "Ingen spill med prestasjoner ennå."
   },
   "watchdog": {
     "rare": "Sjelden {percent} %",

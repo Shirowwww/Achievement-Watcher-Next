@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "EA-peli kirjastossasi",
     "purchased-badge-xbox": "Xbox-peli kirjastossasi",
     "steam-hide-stale": "Piilota pelit, joita ei enää ole Steam-kirjastossasi",
-    "steam-hide-stale-help": "Vaatii yhdistetyn Steam-tilin. Tälle tietokoneelle asennettuja pelejä ja Steam Familyn kautta jaettuja pelejä ei piiloteta koskaan."
+    "steam-hide-stale-help": "Vaatii yhdistetyn Steam-tilin. Tälle tietokoneelle asennettuja pelejä ja Steam Familyn kautta jaettuja pelejä ei piiloteta koskaan.",
+    "profile-stats-title": "Kirjaston tilastot",
+    "profile-stats-open": "Näytä tarkka erittely",
+    "profile-stats-overall": "Kokonaissuoritus",
+    "profile-stats-in-progress": "Kesken",
+    "profile-stats-not-started": "Aloittamatta",
+    "profile-stats-tracked": "Pelit joissa saavutuksia",
+    "profile-stats-playtime-average": "Keskimääräinen peliaika",
+    "profile-stats-average": "Keskiarvo per peli",
+    "profile-stats-playtime": "Seurattu peliaika",
+    "profile-stats-platforms": "Alustoittain",
+    "profile-stats-games": "Pelit",
+    "profile-stats-empty": "Ei vielä pelejä, joissa on saavutuksia."
   },
   "watchdog": {
     "rare": "Harvinainen {percent} %",

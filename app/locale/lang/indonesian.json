@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "Game EA di pustaka Anda",
     "purchased-badge-xbox": "Game Xbox di perpustakaan Anda",
     "steam-hide-stale": "Sembunyikan gim yang tidak lagi ada di pustaka Steam-mu",
-    "steam-hide-stale-help": "Membutuhkan akun Steam yang terhubung. Gim yang terpasang di PC ini dan gim yang dibagikan lewat Steam Family tidak pernah disembunyikan."
+    "steam-hide-stale-help": "Membutuhkan akun Steam yang terhubung. Gim yang terpasang di PC ini dan gim yang dibagikan lewat Steam Family tidak pernah disembunyikan.",
+    "profile-stats-title": "Statistik perpustakaan",
+    "profile-stats-open": "Lihat rincian lengkap",
+    "profile-stats-overall": "Penyelesaian keseluruhan",
+    "profile-stats-in-progress": "Sedang berjalan",
+    "profile-stats-not-started": "Belum dimulai",
+    "profile-stats-tracked": "Game dengan pencapaian",
+    "profile-stats-playtime-average": "Rata-rata waktu bermain",
+    "profile-stats-average": "Rata-rata per game",
+    "profile-stats-playtime": "Waktu bermain yang tercatat",
+    "profile-stats-platforms": "Berdasarkan platform",
+    "profile-stats-games": "Game",
+    "profile-stats-empty": "Belum ada game dengan pencapaian."
   },
   "watchdog": {
     "rare": "Langka {percent}%",

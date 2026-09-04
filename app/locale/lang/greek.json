@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "Παιχνίδι EA στη βιβλιοθήκη σου",
     "purchased-badge-xbox": "Παιχνίδι Xbox στη βιβλιοθήκη σας",
     "steam-hide-stale": "Απόκρυψη παιχνιδιών που δεν βρίσκονται πλέον στη βιβλιοθήκη σου Steam",
-    "steam-hide-stale-help": "Απαιτεί συνδεδεμένο λογαριασμό Steam. Τα παιχνίδια που είναι εγκατεστημένα σε αυτόν τον υπολογιστή και όσα μοιράζονται μέσω Steam Family δεν κρύβονται ποτέ."
+    "steam-hide-stale-help": "Απαιτεί συνδεδεμένο λογαριασμό Steam. Τα παιχνίδια που είναι εγκατεστημένα σε αυτόν τον υπολογιστή και όσα μοιράζονται μέσω Steam Family δεν κρύβονται ποτέ.",
+    "profile-stats-title": "Στατιστικά βιβλιοθήκης",
+    "profile-stats-open": "Δείτε την αναλυτική ανάλυση",
+    "profile-stats-overall": "Συνολική ολοκλήρωση",
+    "profile-stats-in-progress": "Σε εξέλιξη",
+    "profile-stats-not-started": "Δεν έχουν ξεκινήσει",
+    "profile-stats-tracked": "Παιχνίδια με επιτεύγματα",
+    "profile-stats-playtime-average": "Μέσος χρόνος παιχνιδιού",
+    "profile-stats-average": "Μέσος όρος ανά παιχνίδι",
+    "profile-stats-playtime": "Καταγεγραμμένος χρόνος παιχνιδιού",
+    "profile-stats-platforms": "Ανά πλατφόρμα",
+    "profile-stats-games": "Παιχνίδια",
+    "profile-stats-empty": "Δεν υπάρχει ακόμη παιχνίδι με επιτεύγματα."
   },
   "watchdog": {
     "rare": "Σπάνιο {percent}%",

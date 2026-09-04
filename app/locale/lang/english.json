@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "EA game in your library",
     "purchased-badge-xbox": "Xbox game in your library",
     "steam-hide-stale": "Hide games no longer in your Steam library",
-    "steam-hide-stale-help": "Requires a connected Steam account. Games installed on this PC and games shared through Steam Family are never hidden."
+    "steam-hide-stale-help": "Requires a connected Steam account. Games installed on this PC and games shared through Steam Family are never hidden.",
+    "profile-stats-title": "Library stats",
+    "profile-stats-open": "See the detailed breakdown",
+    "profile-stats-overall": "Overall completion",
+    "profile-stats-in-progress": "In progress",
+    "profile-stats-not-started": "Not started",
+    "profile-stats-tracked": "Games with achievements",
+    "profile-stats-playtime-average": "Average playtime",
+    "profile-stats-average": "Average per game",
+    "profile-stats-playtime": "Tracked playtime",
+    "profile-stats-platforms": "By platform",
+    "profile-stats-games": "Games",
+    "profile-stats-empty": "No game with achievements yet."
   },
   "watchdog": {
     "rare": "Rare {percent}%",

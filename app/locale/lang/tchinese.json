@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "您庫中的EA遊戲",
     "purchased-badge-xbox": "你收藏庫中的 Xbox 遊戲",
     "steam-hide-stale": "隱藏已不在你的 Steam 收藏庫中的遊戲",
-    "steam-hide-stale-help": "需要已連接的 Steam 帳戶。安裝在這台電腦上的遊戲以及透過 Steam 家庭共享的遊戲永遠不會被隱藏。"
+    "steam-hide-stale-help": "需要已連接的 Steam 帳戶。安裝在這台電腦上的遊戲以及透過 Steam 家庭共享的遊戲永遠不會被隱藏。",
+    "profile-stats-title": "收藏庫統計",
+    "profile-stats-open": "查看詳細分析",
+    "profile-stats-overall": "整體完成度",
+    "profile-stats-in-progress": "進行中",
+    "profile-stats-not-started": "尚未開始",
+    "profile-stats-tracked": "有成就的遊戲",
+    "profile-stats-playtime-average": "平均遊玩時數",
+    "profile-stats-average": "每款遊戲平均值",
+    "profile-stats-playtime": "已記錄的遊玩時數",
+    "profile-stats-platforms": "依平台",
+    "profile-stats-games": "遊戲",
+    "profile-stats-empty": "目前還沒有含成就的遊戲。"
   },
   "watchdog": {
     "rare": "稀有 {percent}%",

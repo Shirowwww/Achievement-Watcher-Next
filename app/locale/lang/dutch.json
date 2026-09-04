@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "EA-spel in je bibliotheek",
     "purchased-badge-xbox": "Xbox-game in je bibliotheek",
     "steam-hide-stale": "Verberg spellen die niet meer in je Steam-bibliotheek staan",
-    "steam-hide-stale-help": "Vereist een verbonden Steam-account. Spellen die op deze pc geïnstalleerd zijn en spellen die via Steam Family gedeeld worden, worden nooit verborgen."
+    "steam-hide-stale-help": "Vereist een verbonden Steam-account. Spellen die op deze pc geïnstalleerd zijn en spellen die via Steam Family gedeeld worden, worden nooit verborgen.",
+    "profile-stats-title": "Bibliotheekstatistieken",
+    "profile-stats-open": "Bekijk het gedetailleerde overzicht",
+    "profile-stats-overall": "Totale voltooiing",
+    "profile-stats-in-progress": "Bezig",
+    "profile-stats-not-started": "Niet begonnen",
+    "profile-stats-tracked": "Games met prestaties",
+    "profile-stats-playtime-average": "Gemiddelde speeltijd",
+    "profile-stats-average": "Gemiddelde per game",
+    "profile-stats-playtime": "Bijgehouden speeltijd",
+    "profile-stats-platforms": "Per platform",
+    "profile-stats-games": "Games",
+    "profile-stats-empty": "Nog geen game met prestaties."
   },
   "watchdog": {
     "rare": "Zeldzaam {percent}%",

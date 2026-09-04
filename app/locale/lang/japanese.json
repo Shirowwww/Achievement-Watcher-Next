@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "ライブラリ内のEAゲーム",
     "purchased-badge-xbox": "ライブラリにある Xbox のゲーム",
     "steam-hide-stale": "Steam ライブラリにもうないゲームを隠す",
-    "steam-hide-stale-help": "Steam アカウントの接続が必要です。この PC にインストール済みのゲームと Steam ファミリーで共有されているゲームは決して隠されません。"
+    "steam-hide-stale-help": "Steam アカウントの接続が必要です。この PC にインストール済みのゲームと Steam ファミリーで共有されているゲームは決して隠されません。",
+    "profile-stats-title": "ライブラリの統計",
+    "profile-stats-open": "詳細な内訳を見る",
+    "profile-stats-overall": "総合達成率",
+    "profile-stats-in-progress": "進行中",
+    "profile-stats-not-started": "未開始",
+    "profile-stats-tracked": "実績のあるゲーム",
+    "profile-stats-playtime-average": "平均プレイ時間",
+    "profile-stats-average": "ゲームごとの平均",
+    "profile-stats-playtime": "記録されたプレイ時間",
+    "profile-stats-platforms": "プラットフォーム別",
+    "profile-stats-games": "ゲーム",
+    "profile-stats-empty": "実績のあるゲームはまだありません。"
   },
   "watchdog": {
     "rare": "レア {percent}%",

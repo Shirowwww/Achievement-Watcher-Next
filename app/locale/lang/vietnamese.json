@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "Trò chơi EA trong thư viện của bạn",
     "purchased-badge-xbox": "Game Xbox trong thư viện của bạn",
     "steam-hide-stale": "Ẩn các trò chơi không còn trong thư viện Steam của bạn",
-    "steam-hide-stale-help": "Yêu cầu tài khoản Steam đã kết nối. Các trò chơi được cài đặt trên PC này và trò chơi chia sẻ qua Steam Family không bao giờ bị ẩn."
+    "steam-hide-stale-help": "Yêu cầu tài khoản Steam đã kết nối. Các trò chơi được cài đặt trên PC này và trò chơi chia sẻ qua Steam Family không bao giờ bị ẩn.",
+    "profile-stats-title": "Thống kê thư viện",
+    "profile-stats-open": "Xem chi tiết đầy đủ",
+    "profile-stats-overall": "Tỷ lệ hoàn thành chung",
+    "profile-stats-in-progress": "Đang chơi",
+    "profile-stats-not-started": "Chưa bắt đầu",
+    "profile-stats-tracked": "Trò chơi có thành tựu",
+    "profile-stats-playtime-average": "Thời gian chơi trung bình",
+    "profile-stats-average": "Trung bình mỗi trò chơi",
+    "profile-stats-playtime": "Thời gian chơi đã ghi nhận",
+    "profile-stats-platforms": "Theo nền tảng",
+    "profile-stats-games": "Trò chơi",
+    "profile-stats-empty": "Chưa có trò chơi nào có thành tựu."
   },
   "watchdog": {
     "rare": "Hiếm {percent}%",

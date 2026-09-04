@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "Игра EA в вашей библиотеке",
     "purchased-badge-xbox": "Игра Xbox в вашей библиотеке",
     "steam-hide-stale": "Скрывать игры, которых больше нет в вашей библиотеке Steam",
-    "steam-hide-stale-help": "Требуется подключённый аккаунт Steam. Игры, установленные на этом компьютере, и игры из Семьи Steam никогда не скрываются."
+    "steam-hide-stale-help": "Требуется подключённый аккаунт Steam. Игры, установленные на этом компьютере, и игры из Семьи Steam никогда не скрываются.",
+    "profile-stats-title": "Статистика библиотеки",
+    "profile-stats-open": "Посмотреть подробную разбивку",
+    "profile-stats-overall": "Общее завершение",
+    "profile-stats-in-progress": "В процессе",
+    "profile-stats-not-started": "Не начаты",
+    "profile-stats-tracked": "Игры с достижениями",
+    "profile-stats-playtime-average": "Среднее время игры",
+    "profile-stats-average": "Среднее на игру",
+    "profile-stats-playtime": "Отслеженное время игры",
+    "profile-stats-platforms": "По платформам",
+    "profile-stats-games": "Игры",
+    "profile-stats-empty": "Пока нет игр с достижениями."
   },
   "watchdog": {
     "rare": "Редкое {percent}%",

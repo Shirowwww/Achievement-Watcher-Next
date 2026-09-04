@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "您库中的EA游戏",
     "purchased-badge-xbox": "你的库中的 Xbox 游戏",
     "steam-hide-stale": "隐藏已不在你的 Steam 库中的游戏",
-    "steam-hide-stale-help": "需要已连接的 Steam 账户。安装在这台电脑上的游戏以及通过 Steam 家庭共享的游戏永远不会被隐藏。"
+    "steam-hide-stale-help": "需要已连接的 Steam 账户。安装在这台电脑上的游戏以及通过 Steam 家庭共享的游戏永远不会被隐藏。",
+    "profile-stats-title": "库统计",
+    "profile-stats-open": "查看详细数据",
+    "profile-stats-overall": "总体完成率",
+    "profile-stats-in-progress": "进行中",
+    "profile-stats-not-started": "未开始",
+    "profile-stats-tracked": "有成就的游戏",
+    "profile-stats-playtime-average": "平均游戏时长",
+    "profile-stats-average": "每款游戏平均值",
+    "profile-stats-playtime": "已记录的游戏时长",
+    "profile-stats-platforms": "按平台",
+    "profile-stats-games": "游戏",
+    "profile-stats-empty": "暂无带成就的游戏。"
   },
   "watchdog": {
     "rare": "稀有 {percent}%",

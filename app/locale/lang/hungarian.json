@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "EA játék a könyvtáradban",
     "purchased-badge-xbox": "Xbox-játék a könyvtáradban",
     "steam-hide-stale": "A Steam-könyvtáradban már nem szereplő játékok elrejtése",
-    "steam-hide-stale-help": "Csatlakoztatott Steam-fiókot igényel. Az ezen a gépen telepített és a Steam Family révén megosztott játékok soha nem lesznek elrejtve."
+    "steam-hide-stale-help": "Csatlakoztatott Steam-fiókot igényel. Az ezen a gépen telepített és a Steam Family révén megosztott játékok soha nem lesznek elrejtve.",
+    "profile-stats-title": "Könyvtár statisztikái",
+    "profile-stats-open": "Részletes kimutatás megtekintése",
+    "profile-stats-overall": "Összesített teljesítés",
+    "profile-stats-in-progress": "Folyamatban",
+    "profile-stats-not-started": "Nem kezdett",
+    "profile-stats-tracked": "Teljesítményekkel rendelkező játékok",
+    "profile-stats-playtime-average": "Átlagos játékidő",
+    "profile-stats-average": "Átlag játékonként",
+    "profile-stats-playtime": "Nyomon követett játékidő",
+    "profile-stats-platforms": "Platform szerint",
+    "profile-stats-games": "Játékok",
+    "profile-stats-empty": "Még nincs teljesítményekkel rendelkező játék."
   },
   "watchdog": {
     "rare": "Ritka {percent}%",

@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "라이브러리의 EA 게임",
     "purchased-badge-xbox": "라이브러리에 있는 Xbox 게임",
     "steam-hide-stale": "더 이상 Steam 라이브러리에 없는 게임 숨기기",
-    "steam-hide-stale-help": "연결된 Steam 계정이 필요합니다. 이 PC에 설치된 게임과 Steam 가족을 통해 공유된 게임은 절대 숨겨지지 않습니다."
+    "steam-hide-stale-help": "연결된 Steam 계정이 필요합니다. 이 PC에 설치된 게임과 Steam 가족을 통해 공유된 게임은 절대 숨겨지지 않습니다.",
+    "profile-stats-title": "라이브러리 통계",
+    "profile-stats-open": "자세한 내역 보기",
+    "profile-stats-overall": "전체 달성률",
+    "profile-stats-in-progress": "진행 중",
+    "profile-stats-not-started": "시작 전",
+    "profile-stats-tracked": "도전 과제가 있는 게임",
+    "profile-stats-playtime-average": "평균 플레이 시간",
+    "profile-stats-average": "게임당 평균",
+    "profile-stats-playtime": "기록된 플레이 시간",
+    "profile-stats-platforms": "플랫폼별",
+    "profile-stats-games": "게임",
+    "profile-stats-empty": "아직 도전 과제가 있는 게임이 없습니다."
   },
   "watchdog": {
     "rare": "희귀 {percent}%",

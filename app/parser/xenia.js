@@ -20,6 +20,10 @@ const STRING_NAMESPACE = 5;
 const IMAGE_NAMESPACE = 2;
 const TITLE_STRING_ID = 0x8000;
 const ACHIEVEMENT_EARNED_FLAG = 0x20000;
+const ACHIEVEMENT_STRUCT_SIZE = 0x1c;
+// Namespace-1 entries whose id is 0x100000000 / 0x200000000 are the sync lists Xenia writes next to
+// the achievements; parsed as achievement structs they yield garbage that outscored the real entries.
+const SYNC_ENTRY_IDS = new Set(['4294967296', '8589934592']);
 
 const FILETIME_EPOCH_DIFF_MS = 11644473600000n; // 1601 -> 1970
 const DOTNET_EPOCH_DIFF_MS = 62135596800000n; // 0001 -> 1970
@@ -30,15 +34,6 @@ function readUInt64LE(buf, offset) {
 function readUInt64BE(buf, offset) {
   return (BigInt(buf.readUInt32BE(offset)) << 32n) | BigInt(buf.readUInt32BE(offset + 4));
 }
-function readInt64LE(buf, offset) {
-  return buf.readBigInt64LE ? buf.readBigInt64LE(offset) : readUInt64LE(buf, offset);
-}
-function readInt64BE(buf, offset) {
-  if (buf.readBigInt64BE) return buf.readBigInt64BE(offset);
-  const u = readUInt64BE(buf, offset);
-  return u >= 0x8000000000000000n ? u - 0x10000000000000000n : u;
-}
-
 function decodeUtf16Be(buffer) {
   if (!buffer || buffer.length === 0) return '';
   const swapped = Buffer.from(buffer);
@@ -50,17 +45,23 @@ function decodeUtf16Be(buffer) {
   return swapped.toString('utf16le').replace(/\u0000+$/, '').trim();
 }
 
+// `terminated` separates "an empty description" (a NUL right away, which is normal and common) from
+// "the payload ran out mid-string", which only happens when the read started at the wrong offset.
 function readUtf16BeNullTerminated(buffer, offset) {
-  if (!buffer || offset >= buffer.length) return { text: '', nextOffset: offset };
+  if (!buffer || offset >= buffer.length) return { text: '', nextOffset: offset, terminated: false };
   const bytes = [];
   let cursor = offset;
+  let terminated = false;
   while (cursor + 1 < buffer.length) {
     const code = buffer.readUInt16BE(cursor);
     cursor += 2;
-    if (code === 0) break;
+    if (code === 0) {
+      terminated = true;
+      break;
+    }
     bytes.push((code >> 8) & 0xff, code & 0xff);
   }
-  return { text: decodeUtf16Be(Buffer.from(bytes)), nextOffset: cursor };
+  return { text: decodeUtf16Be(Buffer.from(bytes)), nextOffset: cursor, terminated };
 }
 
 function normalizeUnlockTime(raw) {
@@ -144,23 +145,29 @@ function parseXdbfEntries(buffer) {
   return entries;
 }
 
-function parseAchievementPayload(buffer, endian = 'le') {
-  if (!buffer || buffer.length < 0x1c) return null;
+/*
+  XACHIEVEMENT is a fixed 0x1c header followed by three UTF-16BE strings, in this order: label, the
+  description shown once earned, then the one shown while still locked. Reading them the other way
+  round swapped every pair of descriptions, and trusting the header's own structSize as the string
+  start meant one wrong byte pushed the read past the label and lost the achievement entirely.
+*/
+function parseAchievementPayload(buffer, endian = 'be', entryId = null) {
+  if (!buffer || buffer.length < ACHIEVEMENT_STRUCT_SIZE) return null;
   const readU32 = endian === 'be' ? 'readUInt32BE' : 'readUInt32LE';
-  const readI32 = endian === 'be' ? 'readInt32BE' : 'readInt32LE';
-  const structSize = buffer[readU32](0x00);
-  const startOffset = structSize >= 0x1c ? structSize : 0x1c;
-  const achievementId = buffer[readU32](0x04);
-  const imageId = buffer[readU32](0x08);
-  const gamerscore = buffer[readI32](0x0c);
-  const flags = buffer[readU32](0x10);
-  const unlockRaw = endian === 'be' ? readInt64BE(buffer, 0x14) : readInt64LE(buffer, 0x14);
-  const nameRes = readUtf16BeNullTerminated(buffer, startOffset);
-  const lockedRes = readUtf16BeNullTerminated(buffer, nameRes.nextOffset);
-  const unlockedRes = readUtf16BeNullTerminated(buffer, lockedRes.nextOffset);
+  const nameRes = readUtf16BeNullTerminated(buffer, ACHIEVEMENT_STRUCT_SIZE);
+  const unlockedRes = readUtf16BeNullTerminated(buffer, nameRes.nextOffset);
+  const lockedRes = readUtf16BeNullTerminated(buffer, unlockedRes.nextOffset);
   return {
-    achievementId, imageId, gamerscore, flags, unlockRaw,
+    structSize: buffer[readU32](0x00),
+    payloadLength: buffer.length,
+    entryId: entryId === null || entryId === undefined ? null : String(entryId),
+    achievementId: buffer[readU32](0x04),
+    imageId: buffer[readU32](0x08),
+    gamerscore: buffer[readU32](0x0c),
+    flags: buffer[readU32](0x10),
+    unlockRaw: endian === 'be' ? readUInt64BE(buffer, 0x14) : readUInt64LE(buffer, 0x14),
     name: nameRes.text, lockedDescription: lockedRes.text, unlockedDescription: unlockedRes.text,
+    stringsTerminated: nameRes.terminated && unlockedRes.terminated && lockedRes.terminated,
   };
 }
 
@@ -173,7 +180,9 @@ function parseGpdBuffer(raw, filePath) {
   for (const entry of entries) {
     const payload = raw.slice(entry.offset, entry.offset + entry.length);
     if (entry.namespace === ACHIEVEMENT_NAMESPACE) {
-      const parsed = parseAchievementPayload(payload, endian);
+      // The two sync entries share the achievement namespace but hold a sync list, not a struct.
+      if (SYNC_ENTRY_IDS.has(String(entry.id))) continue;
+      const parsed = parseAchievementPayload(payload, endian, entry.id);
       if (parsed) achievements.push(parsed);
     } else if (entry.namespace === IMAGE_NAMESPACE) {
       imagesById.set(String(entry.id), Buffer.from(payload));
@@ -185,12 +194,31 @@ function parseGpdBuffer(raw, filePath) {
 }
 
 const txt = (v) => String(v || '').trim();
-const positive = (v) => Number.isFinite(Number(v)) && Number(v) > 0;
+const uint32 = (v) => Number.isInteger(Number(v)) && Number(v) >= 0 && Number(v) <= 0xffffffff;
 
+/*
+  Validated on structure, not on content. Requiring all three strings to be non-empty and every
+  numeric field to be non-zero dropped legitimate achievements: a locked description is routinely
+  empty, and a 0-gamerscore or unflagged achievement is perfectly valid. What actually separates a
+  real struct from a misread one is its header (a 0x1c size that fits the payload), strings that all
+  terminate inside it, and an entry id that repeats the achievement id.
+*/
 function isValidAchievement(a) {
   if (!a || typeof a !== 'object') return false;
-  if (!txt(a.name) || !txt(a.lockedDescription) || !txt(a.unlockedDescription)) return false;
-  return positive(a.flags) && positive(a.imageId) && positive(a.achievementId);
+  if (!uint32(a.achievementId) || !uint32(a.imageId) || !uint32(a.gamerscore) || !uint32(a.flags)) return false;
+  if (a.stringsTerminated === false) return false;
+  if (a.structSize !== undefined) {
+    const structSize = Number(a.structSize);
+    const payloadLength = Number(a.payloadLength);
+    if (structSize !== ACHIEVEMENT_STRUCT_SIZE) return false;
+    if (Number.isFinite(payloadLength) && structSize > payloadLength) return false;
+  }
+  if (a.entryId === null || a.entryId === undefined) return true;
+  try {
+    return BigInt(a.entryId) === BigInt(a.achievementId);
+  } catch {
+    return false;
+  }
 }
 
 function score(a) {
@@ -205,7 +233,7 @@ function validAchievements(parsed) {
   const byId = new Map();
   for (const a of parsed?.achievements || []) {
     if (!isValidAchievement(a)) continue;
-    const key = String(a.achievementId || '').trim();
+    const key = String(a.achievementId ?? '').trim();
     if (!key) continue;
     const existing = byId.get(key);
     if (!existing || score(a) > score(existing)) byId.set(key, a);
@@ -334,8 +362,8 @@ module.exports.getGameData = async (gpdPath) => {
     }
     list.push({
       name: String(a.achievementId),
-      displayName: txt(a.name),
-      description: hidden ? unlocked : unlocked,
+      displayName: txt(a.name) || String(a.achievementId),
+      description: unlocked,
       hidden,
       gamerscore: a.gamerscore,
       icon,
@@ -386,13 +414,16 @@ function clearGpdBuffer(raw) {
   let cleared = 0;
   for (const entry of entries) {
     if (entry.namespace !== ACHIEVEMENT_NAMESPACE) continue;
+    // Sync entries share the namespace but are not achievement structs: zeroing bytes 0x14-0x1c of
+    // one would corrupt the sync list instead of relocking anything.
+    if (SYNC_ENTRY_IDS.has(String(entry.id))) continue;
     // 0x1c is the smallest payload that still carries flags and the unlock time.
-    if (entry.length < 0x1c || entry.offset + 0x1c > buffer.length) continue;
+    if (entry.length < ACHIEVEMENT_STRUCT_SIZE || entry.offset + ACHIEVEMENT_STRUCT_SIZE > buffer.length) continue;
     const flagsAt = entry.offset + 0x10;
     const flags = buffer[readU32](flagsAt);
     if ((flags & ACHIEVEMENT_EARNED_FLAG) !== 0) cleared += 1;
     buffer[writeU32](flags & ~ACHIEVEMENT_EARNED_FLAG, flagsAt);
-    buffer.fill(0, entry.offset + 0x14, entry.offset + 0x1c);
+    buffer.fill(0, entry.offset + 0x14, entry.offset + ACHIEVEMENT_STRUCT_SIZE);
   }
   return { buffer, cleared };
 }

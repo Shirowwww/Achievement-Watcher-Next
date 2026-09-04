@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "EA-Spiel in deiner Bibliothek",
     "purchased-badge-xbox": "Xbox-Spiel in deiner Bibliothek",
     "steam-hide-stale": "Spiele ausblenden, die nicht mehr in deiner Steam-Bibliothek sind",
-    "steam-hide-stale-help": "Erfordert ein verbundenes Steam-Konto. Auf diesem PC installierte Spiele und über Steam Family geteilte Spiele werden nie ausgeblendet."
+    "steam-hide-stale-help": "Erfordert ein verbundenes Steam-Konto. Auf diesem PC installierte Spiele und über Steam Family geteilte Spiele werden nie ausgeblendet.",
+    "profile-stats-title": "Bibliotheksstatistik",
+    "profile-stats-open": "Detaillierte Übersicht anzeigen",
+    "profile-stats-overall": "Gesamtabschluss",
+    "profile-stats-in-progress": "In Bearbeitung",
+    "profile-stats-not-started": "Nicht begonnen",
+    "profile-stats-tracked": "Spiele mit Erfolgen",
+    "profile-stats-playtime-average": "Durchschnittliche Spielzeit",
+    "profile-stats-average": "Durchschnitt pro Spiel",
+    "profile-stats-playtime": "Erfasste Spielzeit",
+    "profile-stats-platforms": "Nach Plattform",
+    "profile-stats-games": "Spiele",
+    "profile-stats-empty": "Noch kein Spiel mit Erfolgen."
   },
   "watchdog": {
     "rare": "Selten {percent}%",

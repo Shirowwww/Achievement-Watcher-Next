@@ -49,11 +49,18 @@
             <div class="info">
               <div class="name"></div>
               <div class="stats">
+                <!-- The three <li> are bound by nth-child in locale/loader.js: the details button is
+                     a sibling of the list, never a fourth item in it. -->
                 <ul>
                   <li><i class="fas fa-trophy"></i> <span class="data">0</span> <span></span></li>
                   <li><i class="fas fa-gamepad"></i> <span class="data">0</span> <span></span></li>
                   <li><i class="fas fa-cookie-bite"></i> <span class="data">0</span>% <span></span></li>
                 </ul>
+                <!-- Icon only, named by its tooltip: a worded pill here would be a different
+                     length in each of the 28 locales and squeeze the profile band. -->
+                <button type="button" id="profile-stats-open" class="profile-stats-open" aria-haspopup="dialog">
+                  <i class="fas fa-chart-pie" aria-hidden="true"></i>
+                </button>
               </div>
               <div class="completion-dist" title="">
                 <div class="fill" style="width: 0%"></div>
@@ -3065,6 +3072,68 @@
           </div>
           <div class="footer"><button type="button" id="manual-game-cancel" class="inline-action-btn secondary"></button><button type="submit" id="manual-game-save" class="inline-action-btn primary"></button></div>
         </form>
+      </section>
+
+      <section id="profile-stats" class="simple-modal" aria-hidden="true">
+        <div class="overlay"></div>
+        <div class="box" role="dialog" aria-modal="true" aria-labelledby="profile-stats-title">
+          <div class="header">
+            <i class="fas fa-chart-pie" aria-hidden="true"></i>
+            <span id="profile-stats-title">Library stats</span>
+            <small id="profile-stats-scope"></small>
+            <button type="button" id="profile-stats-close" class="icon-button" aria-label="Close"><i class="fas fa-times" aria-hidden="true"></i></button>
+          </div>
+
+          <div class="profile-stats-body">
+            <section class="profile-stats-hero">
+              <div class="profile-stats-ring" id="profile-stats-ring" style="--value: 0">
+                <span class="profile-stats-ring-value"><b id="profile-stats-overall-value">0</b>%</span>
+              </div>
+              <div class="profile-stats-hero-copy">
+                <b id="profile-stats-overall-label">Overall completion</b>
+                <span id="profile-stats-overall-detail"></span>
+                <div class="profile-stats-split" id="profile-stats-split" role="img">
+                  <i class="is-perfect" style="width: 0%"></i>
+                  <i class="is-progress" style="width: 0%"></i>
+                  <i class="is-untouched" style="width: 0%"></i>
+                </div>
+                <ul class="profile-stats-legend">
+                  <li><i class="is-perfect" aria-hidden="true"></i> <b id="profile-stats-perfect-value">0</b> <span id="profile-stats-perfect-label"></span></li>
+                  <li><i class="is-progress" aria-hidden="true"></i> <b id="profile-stats-progress-value">0</b> <span id="profile-stats-progress-label"></span></li>
+                  <li><i class="is-untouched" aria-hidden="true"></i> <b id="profile-stats-untouched-value">0</b> <span id="profile-stats-untouched-label"></span></li>
+                </ul>
+              </div>
+            </section>
+
+            <section class="profile-stats-grid">
+              <div class="profile-stats-tile"><b id="profile-stats-unlocked-value">0</b><span id="profile-stats-unlocked-label"></span></div>
+              <div class="profile-stats-tile"><b id="profile-stats-locked-value">0</b><span id="profile-stats-locked-label"></span></div>
+              <div class="profile-stats-tile"><b id="profile-stats-tracked-value">0</b><span id="profile-stats-tracked-label"></span></div>
+              <div class="profile-stats-tile"><b id="profile-stats-average-value">0%</b><span id="profile-stats-average-label"></span></div>
+              <div class="profile-stats-tile"><b id="profile-stats-playtime-average-value">0</b><span id="profile-stats-playtime-average-label"></span></div>
+              <div class="profile-stats-tile"><b id="profile-stats-playtime-value">0</b><span id="profile-stats-playtime-label"></span></div>
+            </section>
+
+            <section class="profile-stats-platforms">
+              <h3 id="profile-stats-platforms-label">By platform</h3>
+              <div class="profile-stats-table-wrap">
+                <table class="profile-stats-table">
+                  <thead>
+                    <tr>
+                      <th scope="col"><span class="sr-only" id="profile-stats-col-platform"></span></th>
+                      <th scope="col" id="profile-stats-col-games"></th>
+                      <th scope="col" id="profile-stats-col-perfect"></th>
+                      <th scope="col" id="profile-stats-col-unlocked"></th>
+                      <th scope="col" id="profile-stats-col-completion"></th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <p class="profile-stats-empty" id="profile-stats-empty" hidden></p>
+            </section>
+          </div>
+        </div>
       </section>
 
       <section id="onboarding" aria-hidden="true">

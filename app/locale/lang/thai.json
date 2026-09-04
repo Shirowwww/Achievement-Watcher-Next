@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "เกม EA ในคลังของคุณ",
     "purchased-badge-xbox": "เกม Xbox ในไลบรารีของคุณ",
     "steam-hide-stale": "ซ่อนเกมที่ไม่ได้อยู่ในคลัง Steam ของคุณแล้ว",
-    "steam-hide-stale-help": "ต้องเชื่อมต่อบัญชี Steam ก่อน เกมที่ติดตั้งบนพีซีเครื่องนี้และเกมที่แชร์ผ่าน Steam Family จะไม่ถูกซ่อน"
+    "steam-hide-stale-help": "ต้องเชื่อมต่อบัญชี Steam ก่อน เกมที่ติดตั้งบนพีซีเครื่องนี้และเกมที่แชร์ผ่าน Steam Family จะไม่ถูกซ่อน",
+    "profile-stats-title": "สถิติคลังเกม",
+    "profile-stats-open": "ดูรายละเอียดทั้งหมด",
+    "profile-stats-overall": "ความสำเร็จโดยรวม",
+    "profile-stats-in-progress": "กำลังเล่น",
+    "profile-stats-not-started": "ยังไม่เริ่ม",
+    "profile-stats-tracked": "เกมที่มีความสำเร็จ",
+    "profile-stats-playtime-average": "เวลาเล่นเฉลี่ย",
+    "profile-stats-average": "ค่าเฉลี่ยต่อเกม",
+    "profile-stats-playtime": "เวลาเล่นที่บันทึกไว้",
+    "profile-stats-platforms": "แยกตามแพลตฟอร์ม",
+    "profile-stats-games": "เกม",
+    "profile-stats-empty": "ยังไม่มีเกมที่มีความสำเร็จ"
   },
   "watchdog": {
     "rare": "หายาก {percent}%",

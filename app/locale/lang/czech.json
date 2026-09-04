@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "Hra EA ve vaší knihovně",
     "purchased-badge-xbox": "Hra Xbox ve vaší knihovně",
     "steam-hide-stale": "Skrýt hry, které už nejsou ve vaší knihovně Steam",
-    "steam-hide-stale-help": "Vyžaduje připojený účet Steam. Hry nainstalované v tomto počítači a hry sdílené přes Steam Family se nikdy neskrývají."
+    "steam-hide-stale-help": "Vyžaduje připojený účet Steam. Hry nainstalované v tomto počítači a hry sdílené přes Steam Family se nikdy neskrývají.",
+    "profile-stats-title": "Statistiky knihovny",
+    "profile-stats-open": "Zobrazit podrobný přehled",
+    "profile-stats-overall": "Celkové dokončení",
+    "profile-stats-in-progress": "Rozehrané",
+    "profile-stats-not-started": "Nezahájené",
+    "profile-stats-tracked": "Hry s úspěchy",
+    "profile-stats-playtime-average": "Průměrná doba hraní",
+    "profile-stats-average": "Průměr na hru",
+    "profile-stats-playtime": "Sledovaná doba hraní",
+    "profile-stats-platforms": "Podle platformy",
+    "profile-stats-games": "Hry",
+    "profile-stats-empty": "Zatím žádná hra s úspěchy."
   },
   "watchdog": {
     "rare": "Vzácný {percent}%",

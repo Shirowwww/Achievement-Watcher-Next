@@ -5723,10 +5723,13 @@ body.is-resizing #game-list {
   to { opacity: 0.42; }
 }
 
-/* Shared modal used for Steam Guard and the other short renderer prompts. */
+/* Shared modal used for Steam Guard and the other short renderer prompts. The 30px top inset is the
+   title-bar height, kept clear like .simple-modal and #onboarding do: an overlay covering it hides
+   the only -webkit-app-region: drag surface in the window, so the app cannot be moved while a
+   prompt is open (and a Steam Guard prompt can sit there for a while). */
 .aw-prompt-overlay {
   position: fixed;
-  inset: 0;
+  inset: 30px 0 0;
   z-index: 99999;
   display: grid;
   place-items: center;
@@ -11221,4 +11224,394 @@ body {
   #settings .uplay-r2-package-controls {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* ==========================================================================
+   Profile stats: the details button in the profile band and the panel it opens
+   ========================================================================== */
+
+/* The button sits beside the stats list, not inside it: locale/loader.js binds the three <li> by
+   nth-child, so a fourth item would rename them all. */
+#user-info .info .stats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-stats-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+  border-radius: 999px;
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  font: 12px 'Open-Sans';
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+}
+
+.profile-stats-open:hover {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+}
+
+.profile-stats-open:active {
+  transform: translateY(1px);
+}
+
+.profile-stats-open:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* --profile-stats-inset is the space kept above and below the panel. The modal itself starts 30px
+   down (clear of the draggable title bar), so the panel can never be taller than what is left once
+   both insets are taken out; on a short window the inset shrinks with the viewport rather than
+   pushing the panel off the bottom edge. */
+#profile-stats > .box {
+  --profile-stats-inset: min(9vh, 76px);
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100vh - 30px - 2 * var(--profile-stats-inset));
+  margin: var(--profile-stats-inset) auto;
+  display: flex;
+  flex-direction: column;
+}
+
+#profile-stats .header {
+  gap: 12px;
+}
+
+#profile-stats .header > span {
+  flex: 1;
+  min-width: 0;
+}
+
+#profile-stats .header > small {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 24%, transparent);
+  border-radius: 999px;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--surface-sunken) 40%, transparent);
+  font: 12px 'Open-Sans';
+}
+
+#profile-stats .header > small:empty {
+  display: none;
+}
+
+.profile-stats-body {
+  display: grid;
+  gap: 20px;
+  padding: 20px 22px 24px;
+  overflow-y: auto;
+}
+
+/* The same slim, inset scrollbar the Settings panel and the library use, rather than the platform
+   default that a freshly scrollable container gets. */
+.profile-stats-body::-webkit-scrollbar,
+.profile-stats-table-wrap::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+.profile-stats-body::-webkit-scrollbar-track,
+.profile-stats-table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+  margin-block: 9px;
+}
+.profile-stats-body::-webkit-scrollbar-thumb,
+.profile-stats-table-wrap::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 10px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+.profile-stats-body::-webkit-scrollbar-thumb:hover,
+.profile-stats-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+  background-clip: padding-box;
+}
+.profile-stats-body::-webkit-scrollbar-corner,
+.profile-stats-table-wrap::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.profile-stats-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--border) 22%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-sunken) 34%, transparent);
+}
+
+/* A conic gradient rather than an SVG arc: one custom property drives the whole dial, so updating it
+   is a single style write with no layout pass. The ring is punched out with a mask on the pseudo
+   element, not with a disc laid over it: a disc would have to repaint the card's own translucent
+   background to hide the middle, and any mismatch reads as the arc floating free of its track. */
+.profile-stats-ring {
+  position: relative;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+}
+
+.profile-stats-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    conic-gradient(var(--accent) calc(var(--value) * 1%), color-mix(in srgb, var(--border) 60%, transparent) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 13px), #000 calc(100% - 12px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 13px), #000 calc(100% - 12px));
+  transition: background 0.35s ease;
+}
+
+.profile-stats-ring-value {
+  position: relative;
+  grid-area: 1 / 1;
+  color: var(--text-muted);
+  font: 13px 'Open-Sans';
+}
+
+.profile-stats-ring-value b {
+  color: var(--text);
+  font: 26px 'Raleway-Bold';
+}
+
+.profile-stats-hero-copy {
+  display: grid;
+  gap: 8px;
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.profile-stats-hero-copy > b {
+  font: 15px 'Raleway-Bold';
+}
+
+.profile-stats-hero-copy > span {
+  color: var(--text-muted);
+  font: 12px 'Open-Sans';
+}
+
+.profile-stats-split {
+  display: flex;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--border) 26%, transparent);
+}
+
+.profile-stats-split i {
+  height: 100%;
+  transition: width 0.35s ease;
+}
+
+.profile-stats-split .is-perfect,
+.profile-stats-legend .is-perfect {
+  background: var(--accent);
+}
+
+.profile-stats-split .is-progress,
+.profile-stats-legend .is-progress {
+  background: color-mix(in srgb, var(--accent) 45%, var(--text-muted));
+}
+
+.profile-stats-split .is-untouched,
+.profile-stats-legend .is-untouched {
+  background: color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+.profile-stats-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  color: var(--text-muted);
+  font: 12px 'Open-Sans';
+}
+
+.profile-stats-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.profile-stats-legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+}
+
+.profile-stats-legend b {
+  color: var(--text);
+  font-family: 'Raleway-Bold';
+}
+
+/* auto-fit rather than a fixed column count with media queries: the main window has minWidth 900,
+   so a viewport query narrow enough to matter here can never fire, and the panel is what actually
+   changes width. The track floor is what decides: three columns in the panel at its full 760px, two
+   if it is ever narrower, without a breakpoint to keep in sync. */
+.profile-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.profile-stats-tile {
+  display: grid;
+  gap: 3px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-sunken) 28%, transparent);
+}
+
+.profile-stats-tile b {
+  font: 20px 'Raleway-Bold';
+  color: var(--text);
+}
+
+.profile-stats-tile span {
+  color: var(--text-muted);
+  font: 11px 'Open-Sans';
+}
+
+/* A duration reads as "12 days, 4 hours" and cannot be set at the counter type size without wrapping
+   onto a second line, which would push its own caption out of line with the tiles beside it. The
+   tile also aligns its caption to the bottom of the row so the two never disagree. */
+.profile-stats-tile {
+  align-content: start;
+}
+
+#profile-stats-playtime-value,
+#profile-stats-playtime-average-value {
+  font-size: 15px;
+  line-height: 1.35;
+  padding-top: 4px;
+}
+
+.profile-stats-platforms h3 {
+  margin: 0 0 10px;
+  font: 13px 'Raleway-Bold';
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* A wide table must scroll inside its own box; the panel itself never scrolls sideways. */
+.profile-stats-table-wrap {
+  overflow-x: auto;
+  border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
+  border-radius: var(--radius-sm);
+}
+
+.profile-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 12px 'Open-Sans';
+}
+
+.profile-stats-table th,
+.profile-stats-table td {
+  padding: 9px 12px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.profile-stats-table th:first-child,
+.profile-stats-table td:first-child {
+  text-align: left;
+  width: 100%;
+}
+
+.profile-stats-table thead th {
+  color: var(--text-muted);
+  font-weight: normal;
+  background: color-mix(in srgb, var(--surface-sunken) 40%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 20%, transparent);
+}
+
+.profile-stats-table tbody tr + tr td {
+  border-top: 1px solid color-mix(in srgb, var(--border) 12%, transparent);
+}
+
+.profile-stats-table .platform-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-stats-table .platform-cell img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.profile-stats-table .completion-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.profile-stats-table .completion-cell span {
+  position: relative;
+  width: 54px;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--border) 26%, transparent);
+}
+
+.profile-stats-table .completion-cell span i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--accent);
+}
+
+.profile-stats-empty {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font: 12px 'Open-Sans';
+}
+
+/* Height, not width, is where this panel actually runs out of room: the window can be as short as
+   600px (a snapped half-screen, a small laptop) but never narrower than 900. Give the body the space
+   back instead of spending it on margins. */
+@media (max-height: 700px) {
+  #profile-stats > .box {
+    --profile-stats-inset: 14px;
+  }
+
+  .profile-stats-body {
+    gap: 14px;
+    padding: 14px 20px 18px;
+  }
+
+  .profile-stats-ring {
+    width: 84px;
+    height: 84px;
+  }
+
+  .profile-stats-ring-value b {
+    font-size: 22px;
+  }
+}
+
+/* The header wraps rather than squeezing the title against the scope badge. */
+#profile-stats .header {
+  flex-wrap: wrap;
 }

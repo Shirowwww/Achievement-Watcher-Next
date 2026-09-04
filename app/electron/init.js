@@ -66,6 +66,7 @@ const os = require('os');
   const { withScrapeLease } = require('../util/scrapeLease.js');
   const steamSchemaFetch = require(path.join(__dirname, '../util/steamSchemaFetch.js'));
   const { clampWindowBoundsToWorkArea } = require('../util/windowBounds.js');
+  const { resolveMainWindowState, buildMainWindowState, mainWindowStateChanged } = require('../util/mainWindowState.js');
 
 /*
   electron-updater is 159 files and about 1.7 s of a cold start - the single largest thing this
@@ -4065,6 +4066,31 @@ function applySessionHardening() {
   session.defaultSession.setPermissionCheckHandler(() => false);
 }
 
+// The window the user resized is the window they expect back. Geometry persists to
+// <userData>/cfg/mainWindowState.json (same place and shape as overlayBounds.json) and is restored
+// on the next open, including a reopen from the tray after the idle release destroyed the window.
+function mainWindowStateFile() {
+  return path.join(userData, 'cfg', 'mainWindowState.json');
+}
+function readMainWindowState() {
+  try {
+    return JSON.parse(fs.readFileSync(mainWindowStateFile(), 'utf8')) || {};
+  } catch {
+    return {};
+  }
+}
+let lastPersistedMainWindowState = null;
+function writeMainWindowState(state) {
+  try {
+    if (!mainWindowStateChanged(lastPersistedMainWindowState, state)) return;
+    fs.mkdirSync(path.dirname(mainWindowStateFile()), { recursive: true });
+    fs.writeFileSync(mainWindowStateFile(), JSON.stringify(state), 'utf8');
+    lastPersistedMainWindowState = state;
+  } catch (e) {
+    debug.log('[main-window-state] ' + (e.message || e));
+  }
+}
+
 function createMainWindow() {
   try {
     if (MainWin) {
@@ -4073,7 +4099,9 @@ function createMainWindow() {
       MainWin.focus();
       return;
     }
-    let options = manifest.config.window;
+    // A shallow copy: mutating manifest.config.window itself made every reopen inherit whatever the
+    // previous window resolved, starting with its icon path.
+    let options = { ...manifest.config.window };
     options.show = false;
     options.webPreferences = {
       devTools: manifest.config.debug || false,
@@ -4105,7 +4133,7 @@ function createMainWindow() {
     };
     // The manifest's icon path is relative to the app root, but BrowserWindow/fs resolve relative to
     // the working directory; resolve it here and prefer the multi-size .ico (a 256px PNG downscales
-    // muddy). `options` aliases manifest.config.window, so this must stay idempotent across reopens.
+    // muddy).
     try {
       const configured = manifest.config.window.icon || 'resources/icon/icon.png';
       const base = path.isAbsolute(configured) ? configured : path.join(__dirname, '..', configured);
@@ -4115,8 +4143,54 @@ function createMainWindow() {
     } catch {
       delete options.icon;
     }
+    // Restored with setBounds() rather than through the constructor: the constructor's width/height
+    // are a content size, getNormalBounds() reports a frame size, and round-tripping one through the
+    // other made the window grow by the frame on every restart. setBounds is the exact inverse of
+    // what was saved. It runs before the window is ever shown (show: false until ready-to-show), so
+    // nothing is painted at the wrong shape first.
+    const savedWindowState = readMainWindowState();
+    let restoreMaximized = false;
+    let restoredWindowBounds = null;
+    try {
+      const screen = require('electron').screen;
+      const savedBounds = savedWindowState && savedWindowState.bounds;
+      const workArea = (
+        savedBounds && Number.isFinite(Number(savedBounds.x)) && Number.isFinite(Number(savedBounds.y))
+          ? screen.getDisplayMatching({
+              x: Math.round(Number(savedBounds.x)),
+              y: Math.round(Number(savedBounds.y)),
+              width: Math.round(Number(savedBounds.width)) || options.width,
+              height: Math.round(Number(savedBounds.height)) || options.height,
+            })
+          : screen.getPrimaryDisplay()
+      ).workArea;
+      const restored = resolveMainWindowState(manifest.config.window, savedWindowState, { workArea });
+      restoredWindowBounds = restored.bounds;
+      restoreMaximized = restored.maximized;
+      if (restored.bounds) {
+        lastPersistedMainWindowState = buildMainWindowState(savedWindowState);
+        debug.log(
+          `[MainWindow] restoring saved geometry: ${restored.bounds.width}x${restored.bounds.height}` +
+            `${restored.bounds.x === undefined ? ' (centred)' : `@${restored.bounds.x},${restored.bounds.y}`}` +
+            `${restored.maximized ? ' maximized' : ''}`
+        );
+      }
+    } catch (err) {
+      debug.log(`[MainWindow] saved geometry unusable, falling back to defaults (${err.message || err})`);
+    }
+
     const windowCreateStartedAt = Date.now();
     MainWin = new BrowserWindow(options);
+    if (restoredWindowBounds) {
+      try {
+        MainWin.setBounds(restoredWindowBounds);
+      } catch (err) {
+        debug.log(`[MainWindow] could not apply the saved geometry (${err.message || err})`);
+      }
+    }
+    // Maximizing before the first paint keeps the restore size (the bounds above) as the un-maximize
+    // target, which is what the user last dragged the window to.
+    if (restoreMaximized) MainWin.maximize();
     getRemoteMain().enable(MainWin.webContents);
     notifyWatchdogOfAppPid();
 
@@ -4203,11 +4277,36 @@ function createMainWindow() {
         debug.log(`[MainWindow] ${event}: geometry unavailable (${err.message || err})`);
       }
     };
+    // getNormalBounds() and not getBounds(): while maximized or minimized the latter reports the
+    // maximized rectangle, which would be saved as the restore size and make un-maximizing a no-op.
+    const persistMainWindowGeometry = () => {
+      if (!MainWin || MainWin.isDestroyed() || MainWin.isMinimized() || MainWin.isFullScreen()) return;
+      try {
+        writeMainWindowState(
+          buildMainWindowState({ bounds: MainWin.getNormalBounds(), maximized: MainWin.isMaximized() })
+        );
+      } catch (err) {
+        debug.log(`[main-window-state] geometry unavailable (${err.message || err})`);
+      }
+    };
+
     // 'resize'/'move' fire continuously while dragging, so they are logged once the user lets go.
-    MainWin.on('resized', () => logWindowGeometry('resized'));
-    MainWin.on('moved', () => logWindowGeometry('moved'));
-    MainWin.on('maximize', () => logWindowGeometry('maximized'));
-    MainWin.on('unmaximize', () => logWindowGeometry('unmaximized'));
+    MainWin.on('resized', () => {
+      logWindowGeometry('resized');
+      persistMainWindowGeometry();
+    });
+    MainWin.on('moved', () => {
+      logWindowGeometry('moved');
+      persistMainWindowGeometry();
+    });
+    MainWin.on('maximize', () => {
+      logWindowGeometry('maximized');
+      persistMainWindowGeometry();
+    });
+    MainWin.on('unmaximize', () => {
+      logWindowGeometry('unmaximized');
+      persistMainWindowGeometry();
+    });
     MainWin.on('minimize', () => logWindowGeometry('minimized'));
     MainWin.on('restore', () => logWindowGeometry('restored'));
     MainWin.on('enter-full-screen', () => logWindowGeometry('enter-full-screen'));
@@ -4215,6 +4314,9 @@ function createMainWindow() {
 
     const fitMainWindowInWorkArea = () => {
       if (!MainWin || MainWin.isDestroyed()) return;
+      // Windows reports a maximized window a few pixels outside the work area on purpose; clamping
+      // that back would call setBounds() and silently un-maximize a window restored as maximized.
+      if (MainWin.isMaximized() || MainWin.isFullScreen()) return;
       try {
         const bounds = MainWin.getBounds();
         const display = require('electron').screen.getDisplayMatching(bounds);
@@ -4299,6 +4401,9 @@ function createMainWindow() {
     setTimeout(() => showMainWindow('absolute-timeout'), 15000);
 
     MainWin.on('close', (event) => {
+      // Snap-resizing to a screen edge and double-clicking a border do not always emit 'resized', so
+      // the last shape is captured here too rather than only on the drag handlers above.
+      persistMainWindowGeometry();
       if (app.isQuiting) return;
       if (configJS?.general?.closeToTray === false) {
         debug.log('[MainWindow] close requested -> quitting app (closeToTray disabled)');

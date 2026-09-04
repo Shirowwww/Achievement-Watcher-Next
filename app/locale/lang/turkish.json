@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "Kitaplığındaki EA oyunu",
     "purchased-badge-xbox": "Kitaplığındaki Xbox oyunu",
     "steam-hide-stale": "Steam kütüphanende artık bulunmayan oyunları gizle",
-    "steam-hide-stale-help": "Bağlı bir Steam hesabı gerektirir. Bu bilgisayarda yüklü oyunlar ve Steam Ailesi üzerinden paylaşılan oyunlar asla gizlenmez."
+    "steam-hide-stale-help": "Bağlı bir Steam hesabı gerektirir. Bu bilgisayarda yüklü oyunlar ve Steam Ailesi üzerinden paylaşılan oyunlar asla gizlenmez.",
+    "profile-stats-title": "Kütüphane istatistikleri",
+    "profile-stats-open": "Ayrıntılı dökümü görüntüle",
+    "profile-stats-overall": "Genel tamamlama",
+    "profile-stats-in-progress": "Devam ediyor",
+    "profile-stats-not-started": "Başlanmadı",
+    "profile-stats-tracked": "Başarımlı oyunlar",
+    "profile-stats-playtime-average": "Ortalama oynama süresi",
+    "profile-stats-average": "Oyun başına ortalama",
+    "profile-stats-playtime": "Kaydedilen oynama süresi",
+    "profile-stats-platforms": "Platforma göre",
+    "profile-stats-games": "Oyunlar",
+    "profile-stats-empty": "Henüz başarımlı bir oyun yok."
   },
   "watchdog": {
     "rare": "Nadir {percent}%",

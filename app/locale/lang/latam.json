@@ -2065,7 +2065,19 @@
     "purchased-badge-ea": "Juego de EA en tu biblioteca",
     "purchased-badge-xbox": "Juego de Xbox en tu biblioteca",
     "steam-hide-stale": "Ocultar los juegos que ya no están en tu biblioteca de Steam",
-    "steam-hide-stale-help": "Requiere una cuenta de Steam conectada. Los juegos instalados en esta PC y los compartidos por Familia de Steam nunca se ocultan."
+    "steam-hide-stale-help": "Requiere una cuenta de Steam conectada. Los juegos instalados en esta PC y los compartidos por Familia de Steam nunca se ocultan.",
+    "profile-stats-title": "Estadísticas de la biblioteca",
+    "profile-stats-open": "Ver el desglose detallado",
+    "profile-stats-overall": "Finalización general",
+    "profile-stats-in-progress": "En curso",
+    "profile-stats-not-started": "Sin comenzar",
+    "profile-stats-tracked": "Juegos con logros",
+    "profile-stats-playtime-average": "Tiempo de juego promedio",
+    "profile-stats-average": "Promedio por juego",
+    "profile-stats-playtime": "Tiempo de juego registrado",
+    "profile-stats-platforms": "Por plataforma",
+    "profile-stats-games": "Juegos",
+    "profile-stats-empty": "Todavía no hay juegos con logros."
   },
   "watchdog": {
     "rare": "Raro {percent}%",
