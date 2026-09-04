@@ -86,19 +86,51 @@ function parseAppidFromConfig(file) {
   return null;
 }
 
+const EMU_DLL_NAMES = ['steam_api.dll', 'steam_api64.dll'];
+
+function sameDir(a, b) {
+  if (!a || !b) return false;
+  try {
+    return path.resolve(a).toLowerCase() === path.resolve(b).toLowerCase();
+  } catch {
+    return false;
+  }
+}
+
+/*
+  Is a replaced Steam API dll sitting directly in `dir`? Goldberg and GBE Fork read steam_settings
+  from the folder their own dll was loaded from, and from nowhere else, so a steam_settings with no
+  dll beside it is a folder the emulator never opens. That is the Unreal trap: the dll lives in
+  <Name>/Binaries/Win64 while the folder was created at the game root, and the schema then validates
+  perfectly while the game records nothing at all.
+*/
+function hasEmuDllBeside(dir) {
+  if (!dir) return false;
+  const entries = dirCache.readdirNames(dir);
+  if (!entries) return false;
+  return entries.some((entry) => EMU_DLL_NAMES.includes(String(entry).toLowerCase()));
+}
+
 // Locate the steam_settings folder for a game. GBE Fork keeps it next to the emu .dll, which may be
 // at the game root or nested under engine subfolders (e.g. Unreal's <Name>/Binaries/Win64). Returns
-// the first match (shallowest), or null.
+// the best-scoring match (shallowest on a tie), or null.
 function findSteamSettings(gameDir, maxDepth = 6) {
   if (!gameDir || !fs.existsSync(gameDir)) return null;
   const direct = path.join(gameDir, 'steam_settings');
-  if (fs.existsSync(direct) && fs.statSync(direct).isDirectory()) return direct;
+  const directExists = fs.existsSync(direct) && fs.statSync(direct).isDirectory();
+  // The root folder only short-circuits the walk when the dll is at the root too. Otherwise a
+  // nested steam_settings beside the real dll is the one the emulator reads, and returning the root
+  // one hid an Unreal game whose whole setup was in a folder nothing ever opened.
+  if (directExists && hasEmuDllBeside(gameDir)) return direct;
 
   let best = null;
   let bestScore = -Infinity;
   let bestDepth = Infinity;
-  const scoreSteamSettings = (dir, depth) => {
+  const scoreSteamSettings = (dir, depth, parent) => {
     let score = -depth;
+    // Beside the dll is where the emulator looks, so it outranks any single content signal without
+    // overturning a fully configured folder in favour of an empty one somewhere deeper.
+    if (hasEmuDllBeside(parent)) score += 60;
     try {
       const entries = (dirCache.readdirNames(dir) || []).map((e) => e.toLowerCase());
       if (entries.includes('achievements.json')) score += 100;
@@ -124,7 +156,7 @@ function findSteamSettings(gameDir, maxDepth = 6) {
       if (!e.isDirectory()) continue;
       if (e.name.toLowerCase() === 'steam_settings') {
         const candidate = path.join(dir, e.name);
-        const score = scoreSteamSettings(candidate, depth);
+        const score = scoreSteamSettings(candidate, depth, dir);
         if (score > bestScore || (score === bestScore && depth < bestDepth)) {
           best = candidate;
           bestScore = score;
@@ -136,7 +168,10 @@ function findSteamSettings(gameDir, maxDepth = 6) {
     }
   };
   walk(gameDir, 0);
-  return best;
+  // The walk scores the root folder like any other candidate, so `best` normally covers it. It only
+  // misses when gameDir itself is unreadable, and losing a folder that exists would be worse than
+  // reporting one that scores nothing.
+  return best || (directExists ? direct : null);
 }
 
 // GBE Fork keeps configuration in configs.*.ini files; classic Goldberg used loose .txt files
@@ -154,7 +189,6 @@ function isGbeMarker(entry) {
   return GBE_CONFIG_FILES.has(name) || name.startsWith('configs.') || name === 'achievements.json';
 }
 const CLASSIC_CONFIG_FILES = ['force_account_name.txt', 'user_steam_id.txt', 'account_name.txt', 'language.txt', 'listen_port.txt'];
-const EMU_DLL_NAMES = ['steam_api.dll', 'steam_api64.dll'];
 
 function backupTimestamp(date = new Date()) {
   return date.toISOString().replace(/[:.]/g, '-');
@@ -553,6 +587,8 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
     steamSettings: null,
     emulator: 'none', // 'gbe' | 'goldberg' | 'none' - the SHAPE on disk, not a product name
     loader: null, // which emulator supplied the dll, when it can be named (ALI213, OnlineFix, ...)
+    dllDirs: [], // the folders the replaced steam_api dll(s) sit in - where the emulator reads settings
+    settingsBesideDll: null, // null when no dll was found, otherwise whether steam_settings is beside one
     save: null, // runtime unlock-state summary (from inspectSaveState)
     localSaveDir: null, // set when configs.user.ini / local_save.txt redirects the save folder
     ok: false,
@@ -582,11 +618,33 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
   const emu = detectEmulator(gameDir);
   report.emulator = emu.type;
   report.loader = emu.loader;
+  const dllDirs = [];
+  for (const dllPath of emu.dll) {
+    const dir = path.dirname(dllPath);
+    if (!dllDirs.some((known) => sameDir(known, dir))) dllDirs.push(dir);
+  }
+  report.dllDirs = dllDirs;
   const steamSettings = emu.steamSettings || findSteamSettings(gameDir);
   report.steamSettings = steamSettings;
   if (!steamSettings) {
     add('error', 'NO_STEAM_SETTINGS', 'No steam_settings folder found beside the emulator - Goldberg/GBE is likely not set up.');
     return report;
+  }
+
+  /*
+    A complete steam_settings the emulator never reads looks exactly like a working setup: the
+    schema validates, every icon is there, and no unlock is ever written. Report it, and carry the
+    dll folders so the repair can write into the one the emulator does read (see hasEmuDllBeside).
+  */
+  const settingsParent = path.dirname(steamSettings);
+  report.settingsBesideDll = dllDirs.length === 0 ? null : dllDirs.some((dir) => sameDir(dir, settingsParent));
+  if (report.settingsBesideDll === false) {
+    add(
+      'warning',
+      'SETTINGS_NOT_BESIDE_DLL',
+      `steam_settings is in ${settingsParent} but the emulator dll is in ${dllDirs.join(', ')} - Goldberg/GBE only reads steam_settings from the folder its own dll was loaded from, so none of these settings are applied.`,
+      { settingsDir: settingsParent, dllDirs }
+    );
   }
 
   const localSaveDir = resolveLocalSaveDir({ steamSettings, appid: report.appid });

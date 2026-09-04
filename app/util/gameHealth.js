@@ -33,6 +33,9 @@ const REPAIRABLE_GOLDBERG_CODES = new Set([
   'ACHIEVEMENTS_JSON_NOT_ARRAY',
   'MISSING_ACHIEVEMENTS',
   'NO_STEAM_SETTINGS',
+  // Repaired by writing a complete steam_settings beside the dll instead of the one the emulator
+  // never opens; planAchievementDataRepair() picks that folder from the diagnosis.
+  'SETTINGS_NOT_BESIDE_DLL',
   'NO_APPID_TXT',
   'MISSING_ICONS',
   'NO_DLC_CONFIG',
@@ -88,6 +91,7 @@ const ISSUE_TOPIC = {
   NO_USER_CONFIG: 'account',
   BAD_USER_CONFIG: 'account',
   CUSTOM_SAVE_PATH: 'savepath',
+  SETTINGS_NOT_BESIDE_DLL: 'location',
   LOADER_NO_ACH_REDIRECT: 'loader',
   NO_SESSION_TICKET: 'session',
   SESSION_TICKET_NO_EFFECT: 'session',
@@ -470,6 +474,11 @@ function buildTechnical(signals) {
           emulator: goldberg.emulator || 'none',
           steamSettings: goldberg.steamSettings || '',
           dllCount: num(goldberg.dllCount),
+          // The folders behind that count, and whether steam_settings is in one of them: a report
+          // that only said "2 dlls" could not distinguish a working layout from an unread one.
+          dllDirs: Array.isArray(goldberg.dllDirs) ? goldberg.dllDirs : [],
+          settingsBesideDll: goldberg.settingsBesideDll === undefined ? null : goldberg.settingsBesideDll,
+          localSaveDir: goldberg.localSaveDir || '',
           expected: goldberg.achievements ? goldberg.achievements.expected : null,
           found: num(goldberg.achievements && goldberg.achievements.found),
           missing: ((goldberg.achievements && goldberg.achievements.missing) || []).length,

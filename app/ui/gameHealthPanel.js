@@ -510,6 +510,8 @@ function gameHealthIssueTopicLabel(topic) {
       return t('gh-issue-savepath', 'custom save location', 'emplacement de sauvegarde personnalisé');
     case 'loader':
       return t('gh-issue-loader', 'emulator version', 'version de l’émulateur');
+    case 'location':
+      return t('gh-issue-location', 'where the emulator files are', 'emplacement des fichiers de l’émulateur');
     default:
       return t('gh-issue-mapping', 'matching Steam release', 'version Steam correspondante');
   }
@@ -1008,26 +1010,45 @@ async function runGameHealthAction(appid, action, button) {
       Repair the folder the diagnosis actually read, not a guess: `game.steamSettings` is absent for
       many games, and the naive fallback (<gameDir>/steam_settings) is wrong when the emulator lives
       in a nested engine directory (e.g. Unreal's Binaries/Win64) - it used to create an empty
-      steam_settings the emulator never reads. Repair the report's own resolved path instead.
+      steam_settings the emulator never reads. Repair the report's own resolved path instead, and
+      let the plan move it beside the dll when the diagnosis found it somewhere the emulator cannot
+      read (SETTINGS_NOT_BESIDE_DLL).
     */
     const diagnosed = $('#game-health').data('report');
-    const diagnosedSettings = (diagnosed && diagnosed.technical && diagnosed.technical.goldberg && diagnosed.technical.goldberg.steamSettings) || '';
+    const diagnosedGoldberg = (diagnosed && diagnosed.technical && diagnosed.technical.goldberg) || null;
+    const diagnosedSettings = (diagnosedGoldberg && diagnosedGoldberg.steamSettings) || '';
     const plan = gameHealthRepair.planAchievementDataRepair({
       steamSettings: diagnosedSettings || game.steamSettings,
       gameDir: game.gameDir,
       achievementCount: (game.achievement && game.achievement.total) || 0,
       downloadIcons: !!(app.config.achievement && app.config.achievement.goldbergDownloadIcons),
+      // ...and when that folder has no dll beside it, the repair moves to the one that does: the
+      // emulator reads settings only from its own dll's folder, so rewriting the other would look
+      // like a fix and change nothing in the game.
+      dllDirs: (diagnosedGoldberg && diagnosedGoldberg.dllDirs) || [],
+      exePath: (diagnosed && diagnosed.technical && diagnosed.technical.exe) || game.exe || '',
     });
     const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'question',
       title: t('gh-confirm-repair-title', 'Rewrite the achievement data?', 'Réécrire les données de succès ?'),
       message: t('gh-confirm-repair-message', 'AW Next will write the achievement list, icons and emulator settings for this game.', 'AW Next va écrire la liste des succès, les icônes et les réglages de l’émulateur de ce jeu.'),
-      detail: t(
-        'gh-confirm-repair-detail',
-        'Files written in:\n{target}\n\n{writes}\n\nAny existing version of these files is copied to {backup} first.',
-        'Fichiers écrits dans :\n{target}\n\n{writes}\n\nToute version existante de ces fichiers est d’abord copiée dans {backup}.',
-        { target: plan.target, writes: plan.writes.join(', '), backup: plan.backup }
-      ),
+      detail:
+        // A relocation changes what the button does, so it is said before the file list, not
+        // discovered afterwards in a folder the user did not expect.
+        (plan.relocatedFrom
+          ? t(
+              'gh-confirm-repair-relocate',
+              'The settings in {from} are not beside the emulator file, so the game never reads them. They are written next to it instead, and the old folder is left untouched.',
+              'Les réglages de {from} ne sont pas à côté du fichier de l’émulateur : le jeu ne les lit jamais. Ils sont donc écrits à côté de celui-ci, et l’ancien dossier reste intact.',
+              { from: plan.relocatedFrom }
+            ) + '\n\n'
+          : '') +
+        t(
+          'gh-confirm-repair-detail',
+          'Files written in:\n{target}\n\n{writes}\n\nAny existing version of these files is copied to {backup} first.',
+          'Fichiers écrits dans :\n{target}\n\n{writes}\n\nToute version existante de ces fichiers est d’abord copiée dans {backup}.',
+          { target: plan.target, writes: plan.writes.join(', '), backup: plan.backup }
+        ),
       buttons: [t('cancel', 'Cancel', 'Annuler'), t('gh-action-repair-data', 'Rewrite the achievement data', 'Réécrire les données de succès')],
       defaultId: 1,
       cancelId: 0,

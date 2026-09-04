@@ -406,3 +406,38 @@ test('choosing an executable re-runs the report instead of leaving the old one o
   const handler = appSource.slice(appSource.indexOf("$('#game-health').on('click', '[data-gh-action]'"));
   assert.match(handler.slice(0, handler.indexOf('\n    });')), /await renderGameHealth\(appid\)/);
 });
+
+/*
+  Same trap as the action labels above: gameHealthIssueTopicLabel's `default:` returns the Uplay
+  "matching Steam release" wording, so a topic added without a case of its own does not fail - the
+  emulator row simply says something unrelated to what is wrong.
+*/
+test('every issue topic a diagnosis can raise has a label of its own', () => {
+  const { ISSUE_TOPIC } = require('../../app/util/gameHealth.js');
+  const labeller = appSource.slice(
+    appSource.indexOf('function gameHealthIssueTopicLabel'),
+    appSource.indexOf('function gameHealthCheckValue')
+  );
+  for (const topic of new Set(Object.values(ISSUE_TOPIC))) {
+    // 'mapping' IS the default branch, so it needs no case.
+    if (topic === 'mapping') continue;
+    assert.ok(labeller.includes(`case '${topic}':`), `the "${topic}" topic would render as the Uplay mapping label`);
+  }
+});
+
+/*
+  Goldberg and GBE read steam_settings only from their own dll's folder, so both repair entry points
+  have to resolve the target the same way. They used to disagree, and the one that guessed
+  <gameDir>/steam_settings wrote a complete setup into a folder the game never opens.
+*/
+test('both repair paths resolve the settings folder through the same plan', () => {
+  const healthAction = appSource.slice(appSource.indexOf('if (action === gameHealth.ACTION.REPAIR_DATA) {'));
+  const planCall = healthAction.slice(0, healthAction.indexOf('showMessageBoxSync'));
+  assert.match(planCall, /planAchievementDataRepair\(/);
+  assert.match(planCall, /dllDirs:/, 'the plan has to know where the dll is to know where to write');
+
+  const rightClick = appSource.slice(appSource.indexOf('const repairGoldbergSetup = async'));
+  const body = rightClick.slice(0, rightClick.indexOf('return goldberg.repair('));
+  assert.match(body, /planAchievementDataRepair\(/, 'the right-click repair must not resolve its own target');
+  assert.match(body, /dllDirs: report\.dllDirs/);
+});

@@ -10,13 +10,51 @@
 
 const path = require('path');
 
+function sameDir(a, b) {
+  if (!a || !b) return false;
+  try {
+    return path.resolve(a).toLowerCase() === path.resolve(b).toLowerCase();
+  } catch {
+    return false;
+  }
+}
+
+/*
+  Which folder the repair must write into. Goldberg and GBE read steam_settings only from the folder
+  their own dll was loaded from, so a diagnosed folder that has no dll beside it (the Unreal case:
+  steam_settings at the game root, dll in <Name>/Binaries/Win64) is one the emulator never opens -
+  rewriting it would clear the warning on screen and change nothing in the game. Writing beside the
+  dll is what makes the setup real. The old folder is left alone: it is inert, and it is a backup.
+*/
+function settingsTarget({ current, dllDirs = [], exePath = null }) {
+  const dirs = (dllDirs || []).filter(Boolean);
+  if (dirs.length === 0) return current;
+  const currentParent = current ? path.dirname(current) : '';
+  if (currentParent && dirs.some((dir) => sameDir(dir, currentParent))) return current;
+
+  // Several dlls can be on disk (a launcher's copy, a leftover from another crack). The one beside
+  // the game's own executable is the one that gets loaded.
+  const exeDir = exePath ? path.dirname(exePath) : '';
+  const chosen = (exeDir && dirs.find((dir) => sameDir(dir, exeDir))) || dirs[0];
+  return path.join(chosen, 'steam_settings');
+}
+
 // What "Repair the achievement data" is about to write, in the caller's own terms. The renderer
 // shows this before the first byte is written; nothing here touches the disk.
-function planAchievementDataRepair({ steamSettings, gameDir, achievementCount = 0, downloadIcons = false } = {}) {
-  const target = steamSettings || (gameDir ? path.join(gameDir, 'steam_settings') : '');
+function planAchievementDataRepair({ steamSettings, gameDir, achievementCount = 0, downloadIcons = false, dllDirs = [], exePath = null } = {}) {
+  const current = steamSettings || (gameDir ? path.join(gameDir, 'steam_settings') : '');
+  const target = settingsTarget({ current, dllDirs, exePath });
   const writes = ['achievements.json', 'steam_appid.txt', 'configs.app.ini', 'configs.main.ini', 'configs.user.ini'];
   if (downloadIcons) writes.push('images/');
-  return { target, writes, achievementCount, backup: target ? path.join(target, '.aw-backups') : '' };
+  return {
+    target,
+    writes,
+    achievementCount,
+    backup: target ? path.join(target, '.aw-backups') : '',
+    // Set only when the repair moves to a different folder than the one diagnosed, so the
+    // confirmation can say where the settings are going and why.
+    relocatedFrom: target && current && !sameDir(target, current) ? current : '',
+  };
 }
 
 /*

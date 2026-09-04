@@ -3279,7 +3279,15 @@ var app = {
           };
           const repairGoldbergSetup = async ({ report, gameDir, game }) => {
             const request = require('request-zero');
-            const target = report.steamSettings || path.join(gameDir, 'steam_settings');
+            // Same target resolution as Game Health, and for the same reason: rewriting a
+            // steam_settings that has no dll beside it reports success and leaves the game
+            // reading nothing (SETTINGS_NOT_BESIDE_DLL).
+            const { target } = gameHealthRepair.planAchievementDataRepair({
+              steamSettings: report.steamSettings,
+              gameDir,
+              dllDirs: report.dllDirs || [],
+              exePath: game?.exe || '',
+            });
             const downloadIcon = async (url, dir) => {
               // See steam.js resolveWorkingIconUrl: the raw schema URL 404s for a new appid whose
               // achievement art is not on Steam's primary CDN yet, well after the store art is.

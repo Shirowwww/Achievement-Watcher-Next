@@ -70,6 +70,7 @@ Name-based AppID matching removes common version and repack suffixes, then ranks
 `diagnose` reports independent schema and runtime state. It checks:
 
 - emulator type and `steam_settings` location;
+- whether `steam_settings` sits beside the emulator DLL (`SETTINGS_NOT_BESIDE_DLL`);
 - on-disk AppID versus the resolved game;
 - schema validity and missing achievement API names;
 - blank descriptions and missing icons;
@@ -77,6 +78,12 @@ Name-based AppID matching removes common version and repack suffixes, then ranks
 - whether a runtime save exists and how many achievements are earned.
 
 This distinction prevents an empty save from being misreported as a broken schema.
+
+Goldberg and GBE read `steam_settings` from the folder their own DLL was loaded from, and from
+nowhere else. A folder placed anywhere else is never opened, so a complete schema there validates
+while the game records nothing. Unreal titles hit this routinely: the DLL is under
+`<Name>\Binaries\Win64` while guides put `steam_settings` at the game root. Resolution prefers the
+folder beside the DLL, and a mismatch that remains is reported rather than passed as healthy.
 
 ## Repair behavior
 
@@ -90,6 +97,10 @@ A repair may:
 - set DLC behavior in `configs.app.ini`;
 - set required main options in `configs.main.ini`;
 - set account name, language and a valid save path in `configs.user.ini`.
+
+When the diagnosed folder has no emulator DLL beside it, the repair writes into the DLL's folder
+instead (the one beside the game executable when several DLLs are on disk). The confirmation says
+where the files are going; the original folder is left untouched.
 
 An existing rich schema is preserved when it contains more useful progress metadata than the replacement. Existing Steam IDs and curated DLC entries are also preserved.
 

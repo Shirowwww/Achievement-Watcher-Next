@@ -572,6 +572,44 @@ test('a fabricated achievement list is offered the repair that rewrites it', () 
   assert.ok(report.actions.includes('repair-data'));
 });
 
+/*
+  A steam_settings folder the emulator never opens (dll under Binaries/Win64, folder at the game
+  root) validates perfectly and records nothing. The health row has to name it and offer the
+  rewrite, otherwise the game reads as Ready while no unlock will ever arrive.
+*/
+test('emulator settings the game cannot read are a named, repairable warning', () => {
+  const report = deriveHealth(
+    healthyGame({
+      achievements: { total: 46, unlocked: 0 },
+      goldberg: {
+        emulator: 'gbe',
+        steamSettings: 'D:/Games/Dawnwalker/steam_settings',
+        dllCount: 1,
+        dllDirs: ['D:/Games/Dawnwalker/Binaries/Win64'],
+        settingsBesideDll: false,
+        achievements: { expected: 46, found: 46, missing: [], missingIcons: [] },
+        save: { exists: false, type: null, earned: 0, total: 0 },
+        issues: [
+          {
+            level: 'warning',
+            code: 'SETTINGS_NOT_BESIDE_DLL',
+            message: 'steam_settings is in D:/Games/Dawnwalker but the emulator dll is in D:/Games/Dawnwalker/Binaries/Win64',
+            data: { settingsDir: 'D:/Games/Dawnwalker', dllDirs: ['D:/Games/Dawnwalker/Binaries/Win64'] },
+          },
+        ],
+        ok: true,
+      },
+    })
+  );
+
+  const emulator = checkFor(report, 'emulator');
+  assert.equal(emulator.level, LEVEL.WARN);
+  assert.deepEqual(emulator.params.topics, ['location'], 'the row must say what is wrong, not just count it');
+  assert.ok(emulator.actions.includes(ACTION.REPAIR_DATA));
+  assert.notEqual(report.state, STATE.READY, 'an unreadable setup is never Ready');
+  assert.ok(REPAIRABLE_GOLDBERG_CODES.has('SETTINGS_NOT_BESIDE_DLL'));
+});
+
 test('the repairable-code list covers the account config the repair now always writes', () => {
   for (const code of ['NO_USER_CONFIG', 'BAD_USER_CONFIG', 'BLANK_NAMES', 'BLANK_DESCRIPTIONS']) {
     assert.ok(REPAIRABLE_GOLDBERG_CODES.has(code), `${code} must be answerable by the repair button`);
