@@ -397,3 +397,68 @@ test('each runtime directory is configured and validated against its own loader 
   assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(path.join(modernDir, uplayR2.ACH_SCHEMA_FILE), 'utf8'))), ['Ach_Prologue_1']);
   assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(path.join(legacyDir, uplayR2.ACH_SCHEMA_FILE), 'utf8'))), ['1']);
 });
+
+/*
+  Issue #60. The reporter's repack shipped its loader and its ini read-only, CopyFileW carried the
+  attribute into AW Next's own cache, and every rename that would have installed the next loader was
+  refused with EPERM - in the game folder and in the cache alike, with elevation no help because an
+  attribute is not an ACL. A repair has to go through anyway.
+*/
+test('a repair replaces a read-only loader and a read-only ini the repack shipped', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-uplay-readonly-'));
+  const savedAppData = process.env.APPDATA;
+  process.env.APPDATA = path.join(root, 'AppData');
+  t.after(() => {
+    if (savedAppData === undefined) delete process.env.APPDATA;
+    else process.env.APPDATA = savedAppData;
+    for (const dir of [path.join(root, 'game'), path.join(root, 'cache')]) {
+      for (const entry of fs.existsSync(dir) ? fs.readdirSync(dir) : []) {
+        try {
+          fs.chmodSync(path.join(dir, entry), 0o666);
+        } catch {
+          /* already writable */
+        }
+      }
+    }
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  const cacheDir = path.join(root, 'cache');
+  const cache = (await installer.importPackage({ packagePath: packageDir(root), cacheDir })).cache;
+  for (const file of Object.values(cache.files)) if (file) fs.chmodSync(file, 0o444);
+
+  const gameDir = path.join(root, 'game');
+  const exe = writePe(path.join(gameDir, 'Game.exe'), 'x64', 'imports: uplay_r2_loader64.dll');
+  const loader = path.join(gameDir, 'uplay_r2_loader64.dll');
+  writePe(loader, 'x64', 'Goldberg Uplay R2 Achievements AchSaveType uplay_r2_loader64.dll repack build');
+  const ini = path.join(gameDir, 'uplay_r2.ini');
+  fs.writeFileSync(ini, '[Settings]\nAchievements = 0\n');
+  fs.chmodSync(loader, 0o444);
+  fs.chmodSync(ini, 0o444);
+
+  const plan = installer.planInstall({ gameDir, dlls: cache, loaderPaths: [loader], exePath: exe, trustedInstall: true });
+  const repair = installer.repairInstallation({
+    gameDir,
+    installPlan: plan,
+    loaderPaths: [loader],
+    steamAppid: 33230,
+    uplayId: '4',
+    name: "Assassin's Creed II",
+    schema: schema(),
+    prefix: 'Ach_Prologue_',
+  });
+
+  assert.equal(repair.changed, true);
+  assert.ok(repair.validation.every((entry) => entry.ok), 'the repair must validate after a read-only replace');
+  assert.equal(installer.sameFileBytes(cache.files['uplay_r2_loader64.dll'], loader), true, 'the cached loader must be the one now installed');
+  assert.match(fs.readFileSync(ini, 'utf8'), /Achievements\s*=\s*1/);
+
+  // Nothing is left read-only, so the next repair takes the plain rename instead of a fallback.
+  for (const file of [loader, ini]) assert.equal(fs.statSync(file).mode & 0o200, 0o200, `${path.basename(file)} must be writable now`);
+
+  // And the folder holds no leftover a loader scan could pick up.
+  assert.deepEqual(
+    fs.readdirSync(gameDir).filter((entry) => entry.includes('.aw-replaced-') || entry.endsWith('.tmp')),
+    []
+  );
+});

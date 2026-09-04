@@ -11,6 +11,7 @@ const { userDataDir } = require(path.join(__dirname, '..', 'util', 'userDataPath
 const fuzzyAppid = require(path.join(__dirname, '..', 'util', 'fuzzyAppid.js'));
 const goldberg = require(path.join(__dirname, 'goldberg.js'));
 const uplaySteamTable = require(path.join(__dirname, 'uplaySteamTable.js'));
+const { replaceFileSync, unlinkForce } = require(path.join(__dirname, '..', 'util', 'replaceFile.js'));
 
 // Two generations of the same emulator. Ubisoft games call either the R2 API (roughly 2019 onward)
 // or the older R1 one, and a game only loads the generation its executable imports. The R1 build was
@@ -1343,7 +1344,7 @@ function writeFileAtomic(file, content) {
   const temporary = path.join(path.dirname(file), `.${path.basename(file)}.${process.pid}.${Date.now()}.tmp`);
   try {
     fs.writeFileSync(temporary, content);
-    fs.renameSync(temporary, file);
+    replaceFileSync(temporary, file);
   } finally {
     try {
       if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
@@ -1934,7 +1935,8 @@ function restoreConfigBackup({ dir, backup } = {}) {
         writeFileAtomic(destination, fs.readFileSync(source));
         restored.push(entry.path);
       } else if (fs.existsSync(destination)) {
-        fs.unlinkSync(destination);
+        // A read-only file the repack shipped refuses a plain unlink, and the restore would stop here.
+        if (!unlinkForce(destination)) throw new Error(`restore: ${entry.path} could not be removed`);
         removed.push(entry.path);
       }
     }

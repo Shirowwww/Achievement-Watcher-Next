@@ -13,6 +13,7 @@ const request = lazyRequire('request-zero');
 const pe = require('../util/pe.js');
 const { resolveUnpackedBinary } = require('../util/unpacked.js');
 const { safeArchiveEntry, firstUnsafeEntry } = require('../util/archiveEntry.js');
+const { replaceFileSync, clearReadOnly } = require('../util/replaceFile.js');
 
 const RELEASE_API = 'https://api.github.com/repos/Detanup01/gbe_fork/releases/latest';
 const RELEASES_PAGE = 'https://github.com/Detanup01/gbe_fork/releases';
@@ -238,7 +239,7 @@ async function importCustomDlls({ packagePath, cacheDir, log = noopLog } = {}) {
         fs.copyFileSync(entry.file, temporary);
         const copied = inspectCustomDll(temporary, entry.key);
         if (!copied.valid) throw new Error(`${entry.name}: the imported copy failed validation (${copied.error})`);
-        fs.renameSync(temporary, destination);
+        replaceFileSync(temporary, destination);
       } finally {
         try {
           if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
@@ -655,6 +656,8 @@ function installDlls({ dllDirs, dlls, writeIfMissing = null, ensureArch = null, 
           }
         }
       }
+      // A repack often ships steam_api64.dll read-only, and an open truncate is refused on it.
+      clearReadOnly(dest);
       fs.writeFileSync(dest, buf);
       entry.wrote.push(ARCH[key].file);
       summary.installed++;

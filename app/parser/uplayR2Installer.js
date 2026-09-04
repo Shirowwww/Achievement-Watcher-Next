@@ -15,6 +15,7 @@ const uplayR2 = require('./uplayR2.js');
 const { readRegistryString, listRegistryAllSubkeys } = require('../util/reg.js');
 const { resolveUnpackedBinary } = require('../util/unpacked.js');
 const { safeArchiveEntry } = require('../util/archiveEntry.js');
+const { replaceFileSync } = require('../util/replaceFile.js');
 
 const noopLog = { log() {}, error() {} };
 const PACKAGE_MANIFEST = 'package-import.json';
@@ -312,7 +313,7 @@ async function importPackage({ packagePath, cacheDir, flavour = 'r2', log = noop
         fs.copyFileSync(entry.file, temporary);
         const copied = inspectPackageDll(temporary, entry.name);
         if (!copied.valid) throw new Error(`${entry.name}: imported copy failed validation (${copied.error})`);
-        fs.renameSync(temporary, destination);
+        replaceFileSync(temporary, destination);
       } finally {
         try {
           if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
@@ -341,7 +342,7 @@ async function importPackage({ packagePath, cacheDir, flavour = 'r2', log = noop
     const manifestFile = path.join(cacheDir, PACKAGE_MANIFEST);
     const temporaryManifest = `${manifestFile}.${process.pid}.tmp`;
     fs.writeFileSync(temporaryManifest, JSON.stringify(manifest, null, 2));
-    fs.renameSync(temporaryManifest, manifestFile);
+    replaceFileSync(temporaryManifest, manifestFile);
     return { ...result, cache, manifest };
   } finally {
     try {
@@ -874,7 +875,7 @@ function installDlls({ plan, log = noopLog } = {}) {
       fs.copyFileSync(target.source, temporary);
       const copied = inspectPackageDll(temporary, target.name);
       if (!copied.valid || copied.arch !== target.arch) throw new Error(`${target.name}: copied loader failed architecture validation`);
-      fs.renameSync(temporary, target.destination);
+      replaceFileSync(temporary, target.destination);
     } finally {
       try {
         if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
