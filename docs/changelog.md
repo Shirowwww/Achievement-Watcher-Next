@@ -14,6 +14,24 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
+## Unreleased
+
+### Fixed
+
+- **Two games that ship an executable of the same name no longer steal each other's playtime.**
+  Prince of Persia The Lost Crown and the unrelated The Lost Crown both run `TheLostCrown.exe`, and
+  the file went to whichever title looked more like it, so the installed game's sessions were
+  counted against a game that was never on the disk, or, once both rows held the name, against
+  nobody at all. The library now records where it found each executable, and the Watchdog settles a
+  shared name by the folder the process actually started from; a stale row that is not in the
+  library any more hands the file over, and the catalogue a pre-3.x install left behind in
+  `steam_cache/schema` no longer outranks the app's own index. (#61)
+
+- **A Uplay R2 game's achievement screen was almost black.** The dark veil meant for a launcher's
+  raw key art was applied by platform rather than by artwork, so Steam's already-darkened page
+  background got veiled a second time. The veil now follows the artwork, and the screen shows the
+  same background every other Steam-backed game gets. (#61)
+
 ## 3.10.5 - 2026-09-03
 
 ### Added
