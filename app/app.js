@@ -6528,7 +6528,7 @@ var app = {
           storeAppId: $('#manual-game-appid').val().trim(),
         });
         await exeList.add({ appid: entry.id, exe: entry.exe, args: '' });
-        gameIndex.upsert({ appid: entry.id, name: entry.title, binary: path.basename(entry.exe), source: 'Manual', steamappid: entry.storeAppId });
+        gameIndex.upsert({ appid: entry.id, name: entry.title, binary: path.basename(entry.exe), exePath: entry.exe, source: 'Manual', steamappid: entry.storeAppId });
         closeManualGame();
         app.onStart();
       });

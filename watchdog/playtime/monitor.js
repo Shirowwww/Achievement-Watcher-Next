@@ -9,9 +9,10 @@ const Timer = require('./timer.js');
 const TimeTrack = require('./track.js');
 const { findByReadingContentOfKnownConfigfilesIn } = require('./steam_appid_find.js');
 const { loadSteamData } = require('../steam.js');
-const { buildBinaryIndex, buildSeededSessions, getBinaryMatches, snapshotActiveGames } = require('./seed.js');
+const { buildBinaryIndex, buildSeededSessions, getBinaryMatches, mergeGameIndexes, pickGameForProcess, snapshotActiveGames } = require('./seed.js');
 const { createPollingProcessMonitor } = require('./pollingProcessMonitor.js');
 const { userDataDir } = require('../util/userData.js');
+const { configuredExecutable } = require('../util/exeList.js');
 const watchdogSettings = require('../settings.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 
@@ -260,7 +261,14 @@ async function init() {
   } catch (err) {
     debug.warn(`[Process trail] process snapshot failed => ${err}`);
   }
-  for (const playing of buildSeededSessions({ gameIndex, processes: snapshot, now: Date.now(), createTimer: () => new Timer() })) {
+  for (const playing of buildSeededSessions({
+    gameIndex,
+    processes: snapshot,
+    now: Date.now(),
+    createTimer: () => new Timer(),
+    resolvePath: tasklist.getProcessPath,
+    exePathFor: configuredExecutable,
+  })) {
     nowPlaying.push(playing);
     debug.log(`[Process trail] tracking already-running ${playing.name}(${playing.appid}) pid=${[...playing.pids].join(',')}`);
   }
@@ -300,12 +308,15 @@ async function init() {
 
     if (games.length === 1) {
       game = games[0];
-    } else {
-      // More than one entry is always worth logging; an unmatched process is expected (most running
-      // processes are not games) and is not logged to avoid filling playtime.log on a busy machine.
-      if (games.length > 1) {
-        debug.log(`More than 1 entry for "${process}"`);
-      }
+    } else if (games.length > 1) {
+      // Several games answer to this name; the install folder says which one just started.
+      game = pickGameForProcess(games, filepath, configuredExecutable);
+      if (game) debug.log(`"${process}" is shared by ${games.length} games; "${filepath}" is ${game.name}(${game.appid})`);
+      else debug.log(`More than 1 entry for "${process}" and no install path settles it`);
+    }
+    if (!game) {
+      // An unmatched process is expected (most running processes are not games) and is not logged
+      // to avoid filling playtime.log on a busy machine.
       if (!filepath) return;
       const gameDir = path.parse(filepath).dir;
       try {
@@ -331,7 +342,7 @@ async function init() {
           return;
         }
         //double check that the appid is not on gameIndex:
-        game = gameIndex.find((g) => g.appid === appid);
+        game = gameIndex.find((g) => normalizeAppid(g.appid) === normalizeAppid(appid));
         if (!game) {
           const settings = require('../settings.js');
           const options = await settings.load(path.join(userDataDir(), 'cfg', 'options.ini'));
@@ -340,7 +351,9 @@ async function init() {
           // Not every app has a Steam "clienticon" (e.g. brand-new releases) - d.img.icon can be
           // undefined; guard it the same way achievements.js does instead of throwing here.
           const iconHash = d.img && d.img.icon ? String(d.img.icon).split('/').pop().split('.')[0] : '';
-          game = { appid, binary: process, icon: iconHash, name: d.name };
+          // Record where it ran from: another game can ship the same executable name, and the folder
+          // is what the next match uses to tell them apart.
+          game = { appid, binary: process, icon: iconHash, name: d.name, exePath: filepath };
           addToGameIndex(game);
         }
       } catch (err) {
@@ -359,16 +372,19 @@ async function init() {
     }
     debug.log(`DB Hit for ${game.name}(${game.appid}) ["${filepath || process}"]`);
     // Track child processes in one session so the timer starts and stops once.
-    const alreadyPlaying = nowPlaying.find((g) => g.appid === game.appid);
+    const alreadyPlaying = nowPlaying.find((g) => normalizeAppid(g.appid) === normalizeAppid(game.appid));
     if (alreadyPlaying) {
       alreadyPlaying.pids.add(pid);
       debug.log(`Tracking additional process "${process}"(${pid}) for ${game.name}`);
     } else {
+      // The live image path, else where the scan found the binary (a process whose path could
+      // not be read still has an install folder for the artwork lookups).
+      const exePath = filepath || game.exePath || '';
       const playing = Object.assign(game, {
         pids: new Set([pid]),
         timer: new Timer(),
-        exePath: filepath || '',
-        gameDir: filepath ? path.parse(filepath).dir : '',
+        exePath,
+        gameDir: exePath ? path.parse(exePath).dir : '',
       });
       debug.log(playing);
 
@@ -417,7 +433,7 @@ async function addToGameIndex(game) {
   } catch (err) {
     if (err.code === 'ENOENT') userOverride = [];
   }
-  if (userOverride.find((g) => g.appid === game.appid)) return;
+  if (userOverride.find((g) => normalizeAppid(g.appid) === normalizeAppid(game.appid))) return;
   userOverride.push(game);
   fs.writeFileSync(path.join(userDataDir(), 'cfg', 'gameIndex.json'), JSON.stringify(userOverride), 'utf8');
   gameIndex.push(game);
@@ -455,9 +471,10 @@ async function getGameIndex() {
     userOverride = [];
   }
 
-  //Merge (assign) arrB in arrA using prop as unique key
-  const mergeArrayOfObj = (arrA, arrB, prop) => arrA.filter((a) => !arrB.find((b) => a[prop] === b[prop])).concat(arrB);
-  const merged = mergeArrayOfObj(cached, userOverride, 'appid');
+  const { list: merged, yielded } = mergeGameIndexes(cached, userOverride);
+  for (const game of yielded) {
+    debug.log(`[Playtime] catalogue row ${game.name}(${game.appid}) yields "${game.binary}" to the library's own entry`);
+  }
   const options = await loadWatchdogOptions();
   const sourceFiltered = filterGamesByAchievementSources(merged, options);
   disabledOfficialSteamAppids = new Set(

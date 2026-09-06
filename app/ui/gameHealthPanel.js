@@ -866,7 +866,7 @@ async function runGameHealthAction(appid, action, button) {
     const cfg = await exeList.get(appid);
     const exe = (cfg && cfg.exe) || game.exe || '';
     if (!exe) return false;
-    gameIndex.upsert({ appid, name: game.name || '', binary: path.basename(exe), icon: game.img?.icon || '', source: game.source || '' });
+    gameIndex.upsert({ appid, name: game.name || '', binary: path.basename(exe), exePath: exe, icon: game.img?.icon || '', source: game.source || '' });
     return true;
   }
 

@@ -4,7 +4,8 @@
   User-override game index (cfg/gameIndex.json), read by the watchdog playtime monitor at startup to
   match running processes to appids. steamappid/uplayId let it attribute namespaced SocialClub/Uplay
   R2 games to their Steam data; the resolved artwork fields keep synthetic/manual appids off invalid
-  Steam-CDN URLs.
+  Steam-CDN URLs. exePath is where the scan found the binary: two games can ship an executable of
+  the same name, and the folder is what tells them apart when one of them starts.
 */
 
 const { app } = process.type === 'browser' ? require('electron') : require('@electron/remote');
@@ -14,6 +15,47 @@ const fs = require('fs');
 
 function userFile() {
   return path.join(app.getPath('userData'), 'cfg/gameIndex.json');
+}
+
+function exeListFile() {
+  return path.join(app.getPath('userData'), 'cfg/exeList.db');
+}
+
+function normalizePath(value) {
+  const text = String(value || '').trim();
+  return text ? path.resolve(text).replace(/[\\/]+/g, '/').toLowerCase() : '';
+}
+
+let cachedExePaths = null;
+let cachedExeSignature = '';
+
+// The launch executable per appid (cfg/exeList.db): what the library resolved, or the user picked.
+function configuredExePaths() {
+  const file = exeListFile();
+  let signature = 'missing';
+  try {
+    signature = fileSignature(file);
+  } catch {
+    signature = 'unreadable';
+  }
+  if (cachedExePaths && signature === cachedExeSignature) return cachedExePaths;
+  const byAppid = new Map();
+  try {
+    const rows = JSON.parse(fs.readFileSync(file, 'utf8'));
+    for (const row of Array.isArray(rows) ? rows : []) {
+      if (row && row.exe) byAppid.set(String(row.appid), String(row.exe));
+    }
+  } catch {
+    /* absent or unreadable: no launch paths known */
+  }
+  cachedExePaths = byAppid;
+  cachedExeSignature = signature;
+  return byAppid;
+}
+
+// Where a row's executable lives: the path the scan recorded, else the configured launch exe.
+function installPathOf(entry, exeByAppid) {
+  return normalizePath((entry && entry.exePath) || (exeByAppid && exeByAppid.get(String(entry && entry.appid))) || '');
 }
 
 let cachedList = null;
@@ -140,12 +182,14 @@ module.exports.upsert = (entry) => {
       iconUrl: String(entry.iconUrl || ''),
       headerUrl: String(entry.headerUrl || ''),
       portraitUrl: String(entry.portraitUrl || ''),
+      exePath: String(entry.exePath || ''),
     };
     if (!next.steamappid) delete next.steamappid;
     if (!next.uplayId) delete next.uplayId;
     if (!next.iconUrl) delete next.iconUrl;
     if (!next.headerUrl) delete next.headerUrl;
     if (!next.portraitUrl) delete next.portraitUrl;
+    if (!next.exePath) delete next.exePath;
     const existing = list.find((g) => String(g.appid) === appid);
     if (existing) {
       // Metadata-only seeds (e.g. the Ubisoft Connect row that carries uplayId/steamappid) must
@@ -161,7 +205,8 @@ module.exports.upsert = (entry) => {
         (next.uplayId && String(existing.uplayId || '') !== next.uplayId) ||
         (next.iconUrl && String(existing.iconUrl || '') !== next.iconUrl) ||
         (next.headerUrl && String(existing.headerUrl || '') !== next.headerUrl) ||
-        (next.portraitUrl && String(existing.portraitUrl || '') !== next.portraitUrl);
+        (next.portraitUrl && String(existing.portraitUrl || '') !== next.portraitUrl) ||
+        (next.exePath && String(existing.exePath || '') !== next.exePath);
       if (!changed) return;
       if (next.binary) existing.binary = next.binary;
       // A partial/offline rebuild may know only the appid or executable. Keep the last resolved
@@ -174,6 +219,7 @@ module.exports.upsert = (entry) => {
       if (next.iconUrl) existing.iconUrl = next.iconUrl;
       if (next.headerUrl) existing.headerUrl = next.headerUrl;
       if (next.portraitUrl) existing.portraitUrl = next.portraitUrl;
+      if (next.exePath) existing.exePath = next.exePath;
     } else {
       list.push(next);
     }
@@ -201,16 +247,24 @@ module.exports.remove = (appid) => {
   }
 };
 
-// When several appids claim the same binary filename (e.g. two Forza titles sharing an exe), keep
-// the assignment on the best name match and clear it from the rest. Losers keep their identity row -
-// dropping it instead made the next scan re-seed it, and the pair churned forever. Returns how many
-// assignments were cleared.
+/*
+  Several appids claiming one binary filename. Evidence settles it before names do: a row whose game
+  is not in the library any more is a stale guess and loses to one that is; rows found in different
+  install folders are different games and all keep the name, since the Watchdog tells them apart by
+  path when one starts; only rows with nothing but a name to go on (or the same folder) compete on
+  how well the title matches the file name, e.g. two Forza titles sharing an exe. Losers keep their
+  identity row - dropping it instead made the next scan re-seed it, and the pair churned forever.
+  Returns how many assignments were cleared.
+*/
 module.exports.reconcile = (games) => {
   try {
     const exeDetect = require(path.join(__dirname, 'exeDetect.js'));
     let list = loadList();
     if (list.length < 2) return 0;
-    const nameByAppid = new Map((games || []).map((g) => [String(g.appid), g.name]));
+    const library = Array.isArray(games) ? games : [];
+    const nameByAppid = new Map(library.map((g) => [String(g.appid), g.name]));
+    const exeByAppid = configuredExePaths();
+    for (const g of library) if (g && g.exe && g.exeConfident && !exeByAppid.has(String(g.appid))) exeByAppid.set(String(g.appid), String(g.exe));
 
     const groups = new Map();
     for (const e of list) {
@@ -220,14 +274,46 @@ module.exports.reconcile = (games) => {
       groups.get(key).push(e);
     }
     const losers = new Set();
+    const nameOf = (e) => nameByAppid.get(String(e.appid)) || e.name || '';
     for (const [, entries] of groups) {
       if (entries.length < 2) continue;
       const base = String(entries[0].binary).replace(/\.exe$/i, '');
-      const best = pickBestClaim(entries, base, (e) => nameByAppid.get(String(e.appid)) || e.name || '', exeDetect.nameSimilarity);
-      for (const e of entries) if (e !== best) losers.add(e);
+
+      // An empty library means the scan found nothing, not that every game is gone.
+      let contenders = entries;
+      if (library.length > 0) {
+        const present = entries.filter((e) => nameByAppid.has(String(e.appid)));
+        if (present.length > 0 && present.length < entries.length) {
+          for (const e of entries) if (!present.includes(e)) losers.add(e);
+          contenders = present;
+        }
+      }
+      if (contenders.length < 2) continue;
+
+      const byFolder = new Map();
+      const unplaced = [];
+      for (const e of contenders) {
+        const install = installPathOf(e, exeByAppid);
+        if (!install) unplaced.push(e);
+        else byFolder.set(install, (byFolder.get(install) || []).concat(e));
+      }
+      if (byFolder.size > 0) {
+        for (const e of unplaced) losers.add(e);
+        for (const same of byFolder.values()) {
+          if (same.length < 2) continue;
+          const best = pickBestClaim(same, base, nameOf, exeDetect.nameSimilarity);
+          for (const e of same) if (e !== best) losers.add(e);
+        }
+      } else {
+        const best = pickBestClaim(contenders, base, nameOf, exeDetect.nameSimilarity);
+        for (const e of contenders) if (e !== best) losers.add(e);
+      }
     }
     if (losers.size === 0) return 0;
-    for (const e of losers) e.binary = '';
+    for (const e of losers) {
+      e.binary = '';
+      delete e.exePath;
+    }
     cachedList = list;
     writeList();
     return losers.size;
@@ -236,25 +322,37 @@ module.exports.reconcile = (games) => {
   }
 };
 
-// True when another appid already claims this binary and matches its name at least as well, so the
-// scan never writes a losing claim for reconcile() to clear again.
-module.exports.binaryClaimedByBetterMatch = (appid, name, binary) => {
+/*
+  True when another appid already holds this binary and would keep it through reconcile(), so the
+  scan never writes a losing claim for reconcile() to clear again. `exePath` is where this scan found
+  the binary; a rival that launches from another folder is a different game, and both keep the name.
+*/
+module.exports.binaryClaimedByBetterMatch = (appid, name, binary, exePath = '') => {
   try {
     const key = String(binary || '').toLowerCase();
     if (!key) return false;
-    const rival = loadList().find((g) => String(g.appid) !== String(appid) && String(g.binary || '').toLowerCase() === key);
-    if (!rival) return false;
-    /*
-      A synthetic "local-…" row is what an earlier scan wrote when it could not identify the folder
-      at all. Once the same install resolves to a real Steam AppID, that placeholder is the same game
-      under a worse name - it must hand the binary over instead of holding it on an equal name score,
-      which is what left an identified game with no binary and therefore no playtime and no live
-      process match (seen on ZOMBI, held by a "local-…" row of the identical name).
-    */
-    if (isPlaceholderClaim(rival.appid, rival.source) && /^\d+$/.test(String(appid))) return false;
+    const rivals = loadList().filter((g) => String(g.appid) !== String(appid) && String(g.binary || '').toLowerCase() === key);
+    if (rivals.length === 0) return false;
+    const exeByAppid = configuredExePaths();
+    const mine = normalizePath(exePath);
     const exeDetect = require(path.join(__dirname, 'exeDetect.js'));
     const base = String(binary).replace(/\.exe$/i, '');
-    return exeDetect.nameSimilarity(rival.name || '', base) >= exeDetect.nameSimilarity(String(name || ''), base);
+    // Any rival that would keep the binary is enough to refuse the claim.
+    return rivals.some((rival) => {
+      /*
+        A synthetic "local-…" row is what an earlier scan wrote when it could not identify the folder
+        at all. Once the same install resolves to a real Steam AppID, that placeholder is the same
+        game under a worse name - it must hand the binary over instead of holding it on an equal name
+        score, which is what left an identified game with no binary and therefore no playtime and no
+        live process match (seen on ZOMBI, held by a "local-…" row of the identical name).
+      */
+      if (isPlaceholderClaim(rival.appid, rival.source) && /^\d+$/.test(String(appid))) return false;
+      const theirs = installPathOf(rival, exeByAppid);
+      if (mine && theirs) return mine === theirs && exeDetect.nameSimilarity(rival.name || '', base) >= exeDetect.nameSimilarity(String(name || ''), base);
+      if (mine) return false; // found on disk, against a row that is only a name
+      if (theirs) return true;
+      return exeDetect.nameSimilarity(rival.name || '', base) >= exeDetect.nameSimilarity(String(name || ''), base);
+    });
   } catch {
     return false;
   }

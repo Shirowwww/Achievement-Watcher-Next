@@ -145,3 +145,70 @@ test('process-trail activity has no overlay or Xbox target when no session is ac
   assert.equal(activity.overlayGame, null);
   assert.equal(activity.xboxGame, null);
 });
+
+test('a shared executable name is settled by the install folder of the process', () => {
+  const { pickGameForProcess } = require('../playtime/seed.js');
+  const lostCrown = { appid: '291710', name: 'The Lost Crown', binary: 'TheLostCrown.exe' };
+  const princeOfPersia = {
+    appid: '2751000',
+    name: 'Prince of Persia The Lost Crown',
+    binary: 'TheLostCrown.exe',
+    exePath: 'D:\\Games\\PoP\\TheLostCrown.exe',
+  };
+  const exePathFor = (appid) => (appid === '291710' ? 'C:\\Games\\The Lost Crown\\TheLostCrown.exe' : '');
+
+  assert.equal(pickGameForProcess([lostCrown, princeOfPersia], 'd:/games/pop/TheLostCrown.exe', exePathFor), princeOfPersia, 'the exact path wins');
+  assert.equal(
+    pickGameForProcess([lostCrown, princeOfPersia], 'C:\\Games\\The Lost Crown\\TheLostCrown.exe', exePathFor),
+    lostCrown,
+    'the configured launch exe counts too'
+  );
+  assert.equal(
+    pickGameForProcess([lostCrown, princeOfPersia], 'D:\\Games\\PoP\\bin\\TheLostCrown.exe', exePathFor),
+    princeOfPersia,
+    'a process below the install folder still belongs to it'
+  );
+  assert.equal(pickGameForProcess([lostCrown, princeOfPersia], 'E:\\Elsewhere\\TheLostCrown.exe', exePathFor), null, 'a path nobody owns settles nothing');
+  assert.equal(pickGameForProcess([lostCrown, princeOfPersia], '', exePathFor), null, 'no path, no answer');
+  assert.equal(pickGameForProcess([lostCrown], '', exePathFor), lostCrown, 'a single match needs no path');
+});
+
+test('an already-running game behind a shared executable name is seeded once its path is known', () => {
+  const sessions = buildSeededSessions({
+    gameIndex: [
+      { appid: '291710', name: 'The Lost Crown', binary: 'TheLostCrown.exe' },
+      { appid: '2751000', name: 'Prince of Persia The Lost Crown', binary: 'TheLostCrown.exe', exePath: 'D:\\Games\\PoP\\TheLostCrown.exe' },
+    ],
+    processes: [{ pid: 7, process: 'TheLostCrown.exe' }],
+    resolvePath: (pid) => (pid === 7 ? 'D:\\Games\\PoP\\TheLostCrown.exe' : ''),
+    exePathFor: () => '',
+  });
+  assert.equal(sessions.length, 1);
+  assert.equal(sessions[0].appid, '2751000');
+  assert.equal(sessions[0].gameDir, require('node:path').dirname('D:\\Games\\PoP\\TheLostCrown.exe'));
+});
+
+test('the library index outranks the old downloaded catalogue on a shared executable name', () => {
+  const { mergeGameIndexes } = require('../playtime/seed.js');
+  const catalogue = [
+    { appid: 291710, name: 'The Lost Crown', binary: 'TheLostCrown.exe', icon: '7f84' },
+    { appid: 480, name: 'Spacewar', binary: 'spacewar.exe' },
+    { appid: 2751000, name: 'stale copy', binary: 'other.exe' },
+  ];
+  const user = [{ appid: '2751000', name: 'Prince of Persia The Lost Crown', binary: 'TheLostCrown.exe', source: 'Goldberg Uplay' }];
+
+  const { list, yielded } = mergeGameIndexes(catalogue, user);
+  assert.deepEqual(yielded, [{ appid: '291710', name: 'The Lost Crown', binary: 'TheLostCrown.exe' }]);
+  assert.deepEqual(
+    list.map((game) => [game.appid, game.binary]),
+    [
+      ['291710', ''],
+      ['480', 'spacewar.exe'],
+      ['2751000', 'TheLostCrown.exe'],
+    ],
+    'appids are strings, the catalogue claim is cleared and the numeric duplicate is dropped'
+  );
+  const index = buildBinaryIndex(list);
+  assert.deepEqual(index.get('thelostcrown.exe').map((game) => game.appid), ['2751000']);
+  assert.deepEqual(mergeGameIndexes(null, undefined), { list: [], yielded: [] });
+});

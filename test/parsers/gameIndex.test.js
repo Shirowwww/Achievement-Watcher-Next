@@ -187,3 +187,85 @@ test('an identified game takes its binary back from an unidentified placeholder'
   assert.equal(rows.find((r) => r.appid === '339230').binary, 'ZOMBI.exe');
   assert.equal(rows.find((r) => r.appid === 'local-53306f63').binary, '', 'the placeholder keeps its row, not the binary');
 });
+
+/*
+  Issue #61: "The Lost Crown" (291710) and "Prince of Persia The Lost Crown" (2751000) both ship
+  TheLostCrown.exe. Name similarity alone hands the file to the game with the shorter title, so the
+  installed one lost its binary and its playtime went to a game that was never on the disk.
+*/
+test('a stale row loses a shared binary to the game the library actually has', () => {
+  gameIndex.upsert({ appid: '291710', name: 'The Lost Crown', binary: 'TheLostCrown.exe' });
+  assert.equal(
+    gameIndex.binaryClaimedByBetterMatch('2751000', 'Prince of Persia The Lost Crown', 'TheLostCrown.exe', 'D:\\Games\\PoP\\TheLostCrown.exe'),
+    false,
+    'found on disk in its own folder: the claim is written even though the rival name matches better'
+  );
+  gameIndex.upsert({
+    appid: '2751000',
+    name: 'Prince of Persia The Lost Crown',
+    binary: 'TheLostCrown.exe',
+    exePath: 'D:\\Games\\PoP\\TheLostCrown.exe',
+  });
+
+  const cleared = gameIndex.reconcile([{ appid: '2751000', name: 'Prince of Persia The Lost Crown' }]);
+  assert.equal(cleared, 1);
+  const rows = readRows();
+  assert.equal(rows.find((r) => r.appid === '2751000').binary, 'TheLostCrown.exe');
+  assert.equal(rows.find((r) => r.appid === '2751000').exePath, 'D:\\Games\\PoP\\TheLostCrown.exe', 'the install path is persisted for the Watchdog');
+  assert.equal(rows.find((r) => r.appid === '291710').binary, '', 'the row that is not in the library keeps its identity but not the file');
+});
+
+test('two installed games can keep one executable name when they live in different folders', () => {
+  gameIndex.upsert({
+    appid: '291710',
+    name: 'The Lost Crown',
+    binary: 'TheLostCrown.exe',
+    exePath: 'C:\\Games\\The Lost Crown\\TheLostCrown.exe',
+  });
+  assert.equal(
+    gameIndex.binaryClaimedByBetterMatch('2751000', 'Prince of Persia The Lost Crown', 'TheLostCrown.exe', 'D:\\Games\\PoP\\TheLostCrown.exe'),
+    false
+  );
+  assert.equal(
+    gameIndex.binaryClaimedByBetterMatch('2751000', 'Prince of Persia The Lost Crown', 'TheLostCrown.exe', 'c:/games/the lost crown/TheLostCrown.exe'),
+    true,
+    'the same file under another appid is one install, settled by name'
+  );
+  const cleared = gameIndex.reconcile([
+    { appid: '291710', name: 'The Lost Crown' },
+    { appid: '2751000', name: 'Prince of Persia The Lost Crown' },
+  ]);
+  assert.equal(cleared, 0, 'distinct folders: nothing to clear, the Watchdog matches by path');
+  assert.equal(readRows().find((r) => r.appid === '291710').binary, 'TheLostCrown.exe');
+  assert.equal(readRows().find((r) => r.appid === '2751000').binary, 'TheLostCrown.exe');
+});
+
+test('a name-only seed yields to a rival found on disk, and names decide when nobody has a path', () => {
+  assert.equal(
+    gameIndex.binaryClaimedByBetterMatch('7777', 'The Lost Crown Remastered', 'TheLostCrown.exe'),
+    true,
+    'no path of its own against a row with one: the guess stays out'
+  );
+  gameIndex.upsert({ appid: '1551360', name: 'Forza Horizon 5', binary: 'forzahorizon5.exe' });
+  assert.equal(gameIndex.binaryClaimedByBetterMatch('8888', 'Forza Horizon 5 Deluxe', 'forzahorizon5.exe'), true);
+  assert.equal(gameIndex.binaryClaimedByBetterMatch('1551360', 'Forza Horizon 5', 'forzahorizon5.exe', 'D:\\FH5\\forzahorizon5.exe'), false);
+});
+
+test('reconcile settles rows sharing one folder by name and leaves the other folder alone', () => {
+  gameIndex.upsert({
+    appid: 'local-aaaa',
+    name: 'Prince of Persia The Lost Crown',
+    binary: 'TheLostCrown.exe',
+    exePath: 'D:\\Games\\PoP\\TheLostCrown.exe',
+    source: 'Unconfigured',
+  });
+  const cleared = gameIndex.reconcile([
+    { appid: '2751000', name: 'Prince of Persia The Lost Crown' },
+    { appid: 'local-aaaa', name: 'Prince of Persia The Lost Crown' },
+    { appid: '291710', name: 'The Lost Crown' },
+  ]);
+  assert.equal(cleared, 1);
+  assert.equal(readRows().find((r) => r.appid === 'local-aaaa').binary, '', 'the placeholder in the same folder hands the file over');
+  assert.equal(readRows().find((r) => r.appid === '2751000').binary, 'TheLostCrown.exe');
+  assert.equal(readRows().find((r) => r.appid === '291710').binary, 'TheLostCrown.exe', 'the other folder is untouched');
+});

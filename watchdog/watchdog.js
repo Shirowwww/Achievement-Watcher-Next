@@ -86,23 +86,7 @@ const { userDataDir } = require('./util/userData.js');
 const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon, highResExecutableIcon } = require('./util/steamArtwork.js');
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
-
-/*
-  The executable the library resolved for a game (cfg/exeList.db), which is what points localIcons
-  at the install folder. The Watchdog's own game index only stores a binary NAME, so this file is
-  the only place a full path lives outside the renderer.
-*/
-function configuredExecutable(appid) {
-  const id = String(appid == null ? '' : appid).trim();
-  if (!id) return '';
-  try {
-    const list = JSON.parse(fs.readFileSync(path.join(userDataDir(), 'cfg', 'exeList.db'), 'utf8'));
-    const entry = Array.isArray(list) ? list.find((row) => row && String(row.appid) === id) : null;
-    return entry && entry.exe ? String(entry.exe) : '';
-  } catch {
-    return '';
-  }
-}
+const { configuredExecutable } = require('./util/exeList.js');
 
 /*
   The square slot of a notification card, best first, and in the same order the app resolves it in:

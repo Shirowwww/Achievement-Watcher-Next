@@ -3212,14 +3212,17 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       // "Goldberg UplayEmu Saves\<uplayId>" belongs to, and Uplay R2 games never fire a live
       // notification - they only appear after a manual refresh.
       const seedUplayId = (appid.data && appid.data.uplayId) || (appid.data && appid.data.uplayR2 ? uplayR2.resolveGameIdentity({ appid: appid.appid, name: game.name, gameDir: resolvedGameDir }).uplayId : '');
-      const seed = (binary, how) => {
-        // A binary another game claims with a better-matching name stays there; writing the losing
-        // claim only made reconcile() clear it again after every scan. The identity row still seeds.
-        const claimable = !gameIndex.binaryClaimedByBetterMatch(appid.appid, game.name, binary);
+      // `exePath` is set when the binary was found on disk: the folder is what lets two games that
+      // ship the same executable name both keep it (the Watchdog matches the running path).
+      const seed = (binary, how, exePath = '') => {
+        // A binary another game claims with better evidence stays there; writing the losing claim
+        // only made reconcile() clear it again after every scan. The identity row still seeds.
+        const claimable = !gameIndex.binaryClaimedByBetterMatch(appid.appid, game.name, binary, exePath);
         gameIndex.upsert({
           appid: appid.appid,
           name: game.name,
           binary: claimable ? binary : '',
+          exePath: claimable ? exePath : '',
           ...gameIndexArtwork(game),
           source: appid.source,
           steamappid: game.steamappid || undefined,
@@ -3247,7 +3250,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
             if (!resolvedExeConfident && exeInfo && exeInfo.confident) resolvedExeConfident = true;
             if (exeInfo) {
               _seededGameDirs.add(gameDirKey);
-              seed(exeInfo.name, '');
+              seed(exeInfo.name, '', exeInfo.full || '');
               seeded = true;
             }
           }
