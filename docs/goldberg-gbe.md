@@ -85,6 +85,21 @@ while the game records nothing. Unreal titles hit this routinely: the DLL is und
 `<Name>\Binaries\Win64` while guides put `steam_settings` at the game root. Resolution prefers the
 folder beside the DLL, and a mismatch that remains is reported rather than passed as healthy.
 
+### Packaged Unreal builds
+
+A packaged Unreal build does not load `steam_api(64).dll` from beside the executable at all. Its
+engine loads one by explicit path, from
+`Engine\Binaries\ThirdParty\Steamworks\Steamv<version>\Win64`, six levels below the build root
+and outside the game folder entirely when a library anchored the game on its project subfolder. All
+emulator walks are depth-limited, so that DLL used to be invisible: never counted, never replaced,
+and never given a `steam_settings`.
+
+`app/util/unrealLayout.js` probes that one fixed path instead of deepening the walks. The build root
+is what an executable proves, the engine's folder leads the install targets and the repair target,
+and `UNREAL_ENGINE_DLL_UNCONFIGURED` reports a setup that sits anywhere else. Every packaged build
+also ships Valve's own DLL there, so presence alone proves nothing: it counts as a setup only when
+the DLL carries the emulator marker or a `steam_settings` sits beside it.
+
 ## Repair behavior
 
 `repair` builds a normalized schema from the best available achievement metadata and updates the GBE configuration with section-aware INI edits. Unknown sections, comments and existing keys are preserved where possible.
@@ -162,6 +177,8 @@ Background attempts are keyed by game and content version so an unchanged broken
 - Preserve unknown INI content and stable account identity.
 - Keep install discovery bounded and skip dependency, redist and tool directories.
 - Keep manual and background setup paths on the same repair functions.
+- Install into every folder the game may load the DLL from, and treat a setup as done only when
+  they all carry the supported build.
 - Prefer a safe partial result over hiding a game after a transient metadata failure.
 
 ---

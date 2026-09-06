@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const dirCache = require(path.join(__dirname, '..', 'util', 'dirCache.js'));
 const exeCandidateCache = require(path.join(__dirname, '..', 'util', 'exeCandidateCache.js'));
+const unrealLayout = require(path.join(__dirname, '..', 'util', 'unrealLayout.js'));
 const saveRoots = require(path.join(__dirname, 'saveRoots.js'));
 
 // Hard-exclude: never a game executable (installers, redists, crash handlers, …).
@@ -435,6 +436,16 @@ function gameDirForExe(exePath, { blockedRoots = [] } = {}) {
     if (!parent || parent === dir) break;
     dir = parent;
   }
+  /*
+    A packaged Unreal build stops this climb on the project folder (<build root>/<Game>), and the
+    dll the engine actually loads lives in a SIBLING of it, under Engine/Binaries/ThirdParty/
+    Steamworks. Anchoring on the build root is what brings that folder inside the game, so every
+    emulator scan, repair and diagnosis can reach it. Structural check, not a name guess: only a
+    packaged build carries Engine/Binaries (see util/unrealLayout.js). Unlike the climb above this
+    reads the disk, so a path that no longer exists keeps the old, shallower answer.
+  */
+  const buildRoot = unrealLayout.buildRootFor(dir);
+  if (buildRoot && !isGameCollectionFolder(buildRoot, blockedRoots)) dir = buildRoot;
   return isGameCollectionFolder(dir, blockedRoots) ? '' : dir;
 }
 

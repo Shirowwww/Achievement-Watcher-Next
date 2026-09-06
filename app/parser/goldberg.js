@@ -9,6 +9,7 @@ const exeDetect = require(path.join(__dirname, 'exeDetect.js'));
 const dirCache = require(path.join(__dirname, '..', 'util', 'dirCache.js'));
 const launcherDetect = require(path.join(__dirname, 'launcherDetect.js'));
 const crackLoaderDetect = require(path.join(__dirname, '..', 'util', 'crackLoaderDetect.js'));
+const unrealLayout = require(path.join(__dirname, '..', 'util', 'unrealLayout.js'));
 const { parseIni, stringifyIni, getIniSection, upsertIniSection, upsertIniKeys, sanitizeIniValue } = require(path.join(__dirname, '..', 'util', 'emuIni.js'));
 
 const APPID_CONFIG_FILES = new Set([
@@ -118,10 +119,14 @@ function findSteamSettings(gameDir, maxDepth = 6) {
   if (!gameDir || !fs.existsSync(gameDir)) return null;
   const direct = path.join(gameDir, 'steam_settings');
   const directExists = fs.existsSync(direct) && fs.statSync(direct).isDirectory();
+  // A packaged Unreal build loads its dll from Engine/Binaries/ThirdParty/Steamworks, so its
+  // steam_settings belongs there and is scored below alongside the walk's own candidates. It is
+  // also the one folder the walk cannot reach on its own when gameDir is the project folder.
+  const engineDllDirs = unrealLayout.steamworksDllDirs(gameDir);
   // The root folder only short-circuits the walk when the dll is at the root too. Otherwise a
   // nested steam_settings beside the real dll is the one the emulator reads, and returning the root
   // one hid an Unreal game whose whole setup was in a folder nothing ever opened.
-  if (directExists && hasEmuDllBeside(gameDir)) return direct;
+  if (directExists && engineDllDirs.length === 0 && hasEmuDllBeside(gameDir)) return direct;
 
   let best = null;
   let bestScore = -Infinity;
@@ -131,6 +136,14 @@ function findSteamSettings(gameDir, maxDepth = 6) {
     // Beside the dll is where the emulator looks, so it outranks any single content signal without
     // overturning a fully configured folder in favour of an empty one somewhere deeper.
     if (hasEmuDllBeside(parent)) score += 60;
+    /*
+      Except in a packaged Unreal build, where "beside the dll" is not one signal among several: the
+      engine loads steam_api from its own Steamworks folder by explicit path and reads settings
+      there and nowhere else. A complete folder at the game root is the layout the fix used to
+      produce, and it is inert - so an engine-side folder wins even while it is still incomplete,
+      which is then reported as a missing schema and repaired in place.
+    */
+    if (unrealLayout.isSteamworksDllDir(parent)) score += 200;
     try {
       const entries = (dirCache.readdirNames(dir) || []).map((e) => e.toLowerCase());
       if (entries.includes('achievements.json')) score += 100;
@@ -168,6 +181,24 @@ function findSteamSettings(gameDir, maxDepth = 6) {
     }
   };
   walk(gameDir, 0);
+  // Scored at depth 0: the engine's own dll folder is never "deep" in the sense the walk penalises,
+  // it is simply somewhere the walk cannot always go.
+  for (const dllDir of engineDllDirs) {
+    const candidate = path.join(dllDir, 'steam_settings');
+    let isDir = false;
+    try {
+      isDir = fs.statSync(candidate).isDirectory();
+    } catch {
+      isDir = false;
+    }
+    if (!isDir) continue;
+    const score = scoreSteamSettings(candidate, 0, dllDir);
+    if (score > bestScore) {
+      best = candidate;
+      bestScore = score;
+      bestDepth = 0;
+    }
+  }
   // The walk scores the root folder like any other candidate, so `best` normally covers it. It only
   // misses when gameDir itself is unreadable, and losing a folder that exists would be worse than
   // reporting one that scores nothing.
@@ -336,6 +367,21 @@ function detectEmulator(gameDir) {
     }
   };
   findDll(gameDir, 0);
+  /*
+    The walk above is depth-limited on purpose, and a packaged Unreal build keeps the dll the engine
+    loads six levels down, in Engine/Binaries/ThirdParty/Steamworks - outside gameDir entirely when
+    the library anchored the game on its project folder. Probing that one fixed path is what makes
+    the dll countable, replaceable and backupable; without it a GBE fix validated perfectly while
+    the process kept loading an untouched dll. See util/unrealLayout.js.
+  */
+  for (const dllPath of unrealLayout.steamworksDlls(gameDir)) {
+    // A packaged build always ships Valve's own dll there, so presence alone proves nothing: only an
+    // emulator dll, or one with a steam_settings beside it, is evidence of a setup. Counting the
+    // stock SDK copy would report every legitimately installed Unreal game as emulated.
+    const replaced = crackLoaderDetect.isEmulatorDll(dllPath) || fs.existsSync(path.join(path.dirname(dllPath), 'steam_settings'));
+    if (!replaced) continue;
+    if (!result.dll.some((known) => known.toLowerCase() === dllPath.toLowerCase())) result.dll.push(dllPath);
+  }
 
   const steamSettings = findSteamSettings(gameDir);
   result.steamSettings = steamSettings;
@@ -588,6 +634,7 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
     emulator: 'none', // 'gbe' | 'goldberg' | 'none' - the SHAPE on disk, not a product name
     loader: null, // which emulator supplied the dll, when it can be named (ALI213, OnlineFix, ...)
     dllDirs: [], // the folders the replaced steam_api dll(s) sit in - where the emulator reads settings
+    engineDllDirs: [], // packaged-Unreal Steamworks folders: the dll the engine loads, whatever else is on disk
     settingsBesideDll: null, // null when no dll was found, otherwise whether steam_settings is beside one
     save: null, // runtime unlock-state summary (from inspectSaveState)
     localSaveDir: null, // set when configs.user.ini / local_save.txt redirects the save folder
@@ -624,6 +671,7 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
     if (!dllDirs.some((known) => sameDir(known, dir))) dllDirs.push(dir);
   }
   report.dllDirs = dllDirs;
+  report.engineDllDirs = unrealLayout.steamworksDllDirs(gameDir);
   const steamSettings = emu.steamSettings || findSteamSettings(gameDir);
   report.steamSettings = steamSettings;
   if (!steamSettings) {
@@ -644,6 +692,24 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
       'SETTINGS_NOT_BESIDE_DLL',
       `steam_settings is in ${settingsParent} but the emulator dll is in ${dllDirs.join(', ')} - Goldberg/GBE only reads steam_settings from the folder its own dll was loaded from, so none of these settings are applied.`,
       { settingsDir: settingsParent, dllDirs }
+    );
+  }
+
+  /*
+    A packaged Unreal build loads steam_api by explicit path from Engine/Binaries/ThirdParty/
+    Steamworks and from nowhere else, whatever sits beside the executable or at the game root. A
+    setup that leaves that folder without a steam_settings is therefore read by nothing, and the
+    rest of this report - complete schema, every icon, no missing key - says nothing about it.
+  */
+  const engineUnconfigured = report.engineDllDirs.filter(
+    (dir) => !sameDir(dir, settingsParent) && !fs.existsSync(path.join(dir, 'steam_settings'))
+  );
+  if (report.engineDllDirs.length > 0 && engineUnconfigured.length === report.engineDllDirs.length) {
+    add(
+      'warning',
+      'UNREAL_ENGINE_DLL_UNCONFIGURED',
+      `This is a packaged Unreal Engine build: it loads steam_api from ${engineUnconfigured.join(', ')} and has no steam_settings there, so the settings in ${settingsParent} are never read.`,
+      { settingsDir: settingsParent, engineDllDirs: engineUnconfigured }
     );
   }
 

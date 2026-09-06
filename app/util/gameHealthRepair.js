@@ -9,6 +9,7 @@
 */
 
 const path = require('path');
+const unrealLayout = require('./unrealLayout.js');
 
 function sameDir(a, b) {
   if (!a || !b) return false;
@@ -21,15 +22,24 @@ function sameDir(a, b) {
 
 /*
   Which folder the repair must write into. Goldberg and GBE read steam_settings only from the folder
-  their own dll was loaded from, so a diagnosed folder that has no dll beside it (the Unreal case:
-  steam_settings at the game root, dll in <Name>/Binaries/Win64) is one the emulator never opens -
-  rewriting it would clear the warning on screen and change nothing in the game. Writing beside the
-  dll is what makes the setup real. The old folder is left alone: it is inert, and it is a backup.
+  their own dll was loaded from, so a diagnosed folder that has no dll beside it (steam_settings at
+  the game root, dll in <Name>/Binaries/Win64) is one the emulator never opens - rewriting it would
+  clear the warning on screen and change nothing in the game. Writing beside the dll is what makes
+  the setup real. The old folder is left alone: it is inert, and it is a backup.
 */
-function settingsTarget({ current, dllDirs = [], exePath = null }) {
+function settingsTarget({ current, dllDirs = [], exePath = null, gameDir = '' }) {
   const dirs = (dllDirs || []).filter(Boolean);
-  if (dirs.length === 0) return current;
   const currentParent = current ? path.dirname(current) : '';
+  /*
+    A packaged Unreal build loads steam_api by explicit path from Engine/Binaries/ThirdParty/
+    Steamworks, so that folder outranks every other candidate - including a folder that already has
+    a dll beside it. Writing beside the game root's own copy is what looked correct on screen and
+    changed nothing in the game. Resolved from gameDir as well as from the diagnosed dll folders,
+    because the engine's copy is still Valve's own until the fix replaces it.
+  */
+  const engineDir = dirs.find((dir) => unrealLayout.isSteamworksDllDir(dir)) || unrealLayout.steamworksDllDirs(gameDir)[0];
+  if (engineDir) return sameDir(engineDir, currentParent) ? current : path.join(engineDir, 'steam_settings');
+  if (dirs.length === 0) return current;
   if (currentParent && dirs.some((dir) => sameDir(dir, currentParent))) return current;
 
   // Several dlls can be on disk (a launcher's copy, a leftover from another crack). The one beside
@@ -43,7 +53,7 @@ function settingsTarget({ current, dllDirs = [], exePath = null }) {
 // shows this before the first byte is written; nothing here touches the disk.
 function planAchievementDataRepair({ steamSettings, gameDir, achievementCount = 0, downloadIcons = false, dllDirs = [], exePath = null } = {}) {
   const current = steamSettings || (gameDir ? path.join(gameDir, 'steam_settings') : '');
-  const target = settingsTarget({ current, dllDirs, exePath });
+  const target = settingsTarget({ current, dllDirs, exePath, gameDir });
   const writes = ['achievements.json', 'steam_appid.txt', 'configs.app.ini', 'configs.main.ini', 'configs.user.ini'];
   if (downloadIcons) writes.push('images/');
   return {
@@ -126,6 +136,9 @@ async function installEmulatorRuntime({ gbeInstaller, plan, cacheDir, steamSetti
         dllPath: path.join(plan.dirs[0], plan.file),
         steamSettings,
         dlls,
+        // The other target folders hold copies of the same dll; one of them may still be the
+        // original when the one just replaced was already an emulator (see interfaceSourceFor).
+        candidates: plan.dirs.slice(1).map((dir) => path.join(dir, plan.file)),
         log,
       });
     } catch (err) {

@@ -1082,15 +1082,28 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
   });
   const runtimeDirKeys = new Set(runtimeDllDirs.map((dir) => path.resolve(dir).toLowerCase()));
 
-  // Official GSE setup requires steam_interfaces.txt generated from the ORIGINAL game DLL. Do this
-  // before replacement; generateInterfaces also prefers AW's one-time .bak on repeat/manual repairs.
-  const interfaceDlls = detectedEmu.dll.filter(
-    (file) => /^steam_api(64)?\.dll$/i.test(path.basename(file)) && runtimeDirKeys.has(path.resolve(path.dirname(file)).toLowerCase())
-  );
+  /*
+    Official GSE setup requires steam_interfaces.txt generated from the ORIGINAL game DLL, so this
+    runs before replacement. Every dll about to be replaced is a source, not only the ones
+    detectEmulator counted as evidence: a packaged Unreal build's Engine/Binaries/ThirdParty copy is
+    routinely still Valve's own, and it is both the file the engine loads and the only untouched
+    original left on a repack. generateInterfaces prefers AW's one-time .bak on repeat repairs and
+    refuses a source that is itself an emulator.
+  */
+  const interfaceDlls = [];
+  for (const dir of runtimeDllDirs) {
+    for (const key of Object.keys(gbeInstaller.ARCH)) {
+      const file = path.join(dir, gbeInstaller.ARCH[key].file);
+      if (fs.existsSync(file)) interfaceDlls.push(file);
+    }
+  }
   for (const dllPath of interfaceDlls) {
     const dest = path.join(path.dirname(dllPath), 'steam_settings');
-    const interfaces = await gbeInstaller.generateInterfaces({ dllPath, steamSettings: dest, dlls, log: debug });
-    if (!interfaces.generated) debug.log(`[${appid}] steam_interfaces.txt skipped (${interfaces.reason})`);
+    const sameName = interfaceDlls.filter(
+      (file) => file !== dllPath && path.basename(file).toLowerCase() === path.basename(dllPath).toLowerCase()
+    );
+    const interfaces = await gbeInstaller.generateInterfaces({ dllPath, steamSettings: dest, dlls, candidates: sameName, log: debug });
+    if (!interfaces.generated) debug.log(`[${appid}] steam_interfaces.txt skipped for ${dllPath} (${interfaces.reason})`);
   }
 
   // Standalone (replace steam_api dll): the only emulator-apply path.
@@ -2948,16 +2961,12 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           steamSettings: appid.data.steamSettings,
           fallbackDir: resolvedGameDir,
         });
-        const runtimeDirKeys = new Set(runtimeDirs.map((dir) => path.resolve(dir).toLowerCase()));
-        const wantedDll =
-          wanted &&
-          resolvedEmu.dll.find(
-            (file) => path.basename(file).toLowerCase() === wanted && runtimeDirKeys.has(path.resolve(path.dirname(file)).toLowerCase())
-          );
+        // Every target folder has to hold the supported build, not just the first one that does -
+        // see gbeInstaller.runtimeDllState for what that guards against on a packaged Unreal build.
         const cacheDir = _userDataPath ? path.join(_userDataPath, 'cache/gse_fork') : null;
-        const hasWantedGbeDll = wantedDll && gbeInstaller.matchesCachedDll(wantedDll, cacheDir, arch);
-        needsRuntimeFix = !!wanted && !!appid.data.steamSettings && !hasWantedGbeDll;
-        runtimeFixReason = needsRuntimeFix ? (wantedDll ? `refresh-${wanted}` : `missing-${wanted}`) : '';
+        const runtime = gbeInstaller.runtimeDllState({ dllDirs: runtimeDirs, arch, cacheDir });
+        needsRuntimeFix = !!wanted && !!appid.data.steamSettings && !runtime.ready;
+        runtimeFixReason = needsRuntimeFix ? (runtime.stale ? `refresh-${wanted}` : `missing-${wanted}`) : '';
       } catch (err) {
         debug.log(`[${appid.appid}] runtime emulator fix check failed => ${err}`);
       }

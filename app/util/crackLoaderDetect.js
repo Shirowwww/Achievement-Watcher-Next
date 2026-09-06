@@ -6,6 +6,22 @@
 
 const fs = require('fs');
 
+/*
+  Every Goldberg/GSE build reads its configuration from a steam_settings folder and carries that
+  string in the binary; no Valve steam_api dll does. It is the one certain, offline answer to "is
+  this dll an emulator or the original?" - which decides whether a steam_api dll found on disk is
+  evidence of a setup at all, and whether steam_interfaces.txt may be generated from it.
+*/
+const EMULATOR_DLL_MARKER = Buffer.from('steam_settings', 'ascii');
+
+function isEmulatorDll(file) {
+  try {
+    return fs.readFileSync(file).includes(EMULATOR_DLL_MARKER);
+  } catch {
+    return false;
+  }
+}
+
 // One entry per known loader: `markers` are exact, case-insensitive basenames looked for directly in
 // the game folder. Every listed family already supplies its own Steam emulation, so replacing its
 // runtime with GBE is never an automatic/config-generation operation.
@@ -42,4 +58,4 @@ function hasWorkingCrackLoader(gameDir) {
   return !!detectWorkingCrackLoader(gameDir);
 }
 
-module.exports = { detectWorkingCrackLoader, hasWorkingCrackLoader };
+module.exports = { detectWorkingCrackLoader, hasWorkingCrackLoader, isEmulatorDll, EMULATOR_DLL_MARKER };

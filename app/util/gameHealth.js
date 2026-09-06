@@ -36,6 +36,9 @@ const REPAIRABLE_GOLDBERG_CODES = new Set([
   // Repaired by writing a complete steam_settings beside the dll instead of the one the emulator
   // never opens; planAchievementDataRepair() picks that folder from the diagnosis.
   'SETTINGS_NOT_BESIDE_DLL',
+  // Same repair, one folder further: planAchievementDataRepair() targets the engine's own
+  // Steamworks folder, which is the only one a packaged Unreal build ever reads.
+  'UNREAL_ENGINE_DLL_UNCONFIGURED',
   'NO_APPID_TXT',
   'MISSING_ICONS',
   'NO_DLC_CONFIG',
@@ -92,6 +95,7 @@ const ISSUE_TOPIC = {
   BAD_USER_CONFIG: 'account',
   CUSTOM_SAVE_PATH: 'savepath',
   SETTINGS_NOT_BESIDE_DLL: 'location',
+  UNREAL_ENGINE_DLL_UNCONFIGURED: 'location',
   LOADER_NO_ACH_REDIRECT: 'loader',
   NO_SESSION_TICKET: 'session',
   SESSION_TICKET_NO_EFFECT: 'session',
@@ -242,7 +246,17 @@ function emulatorCheck(signals) {
 
   // Offered alongside whatever else the report raises: a mismatched appid is its own one-file fix.
   const mismatch = appidMismatch(goldberg);
-  const withAppidFix = (actions) => (mismatch ? [...actions, ACTION.FIX_APPID] : actions);
+  /*
+    A packaged Unreal build reads settings only from the engine's Steamworks folder, and rewriting
+    the schema there is half the job: without the emulator dll beside it nothing loads the folder at
+    all. dllCount is about the rest of the game, so the runtime action has to be offered on this
+    code specifically rather than on "no dll anywhere".
+  */
+  const engineUnconfigured = (goldberg.issues || []).some((issue) => issue && issue.code === 'UNREAL_ENGINE_DLL_UNCONFIGURED');
+  const withAppidFix = (actions) => {
+    const withRuntime = engineUnconfigured && !actions.includes(ACTION.INSTALL_RUNTIME) ? [...actions, ACTION.INSTALL_RUNTIME] : actions;
+    return mismatch ? [...withRuntime, ACTION.FIX_APPID] : withRuntime;
+  };
   const appidParams = mismatch ? { appidOnDisk: mismatch.onDisk, appidExpected: mismatch.expected } : {};
 
   const errors = issuesAtLevel(goldberg, 'error');
@@ -477,6 +491,9 @@ function buildTechnical(signals) {
           // The folders behind that count, and whether steam_settings is in one of them: a report
           // that only said "2 dlls" could not distinguish a working layout from an unread one.
           dllDirs: Array.isArray(goldberg.dllDirs) ? goldberg.dllDirs : [],
+          // Packaged Unreal builds only: the folder the engine loads steam_api from, which is not
+          // under the game folder at all when the library anchored the game on its project folder.
+          engineDllDirs: Array.isArray(goldberg.engineDllDirs) ? goldberg.engineDllDirs : [],
           settingsBesideDll: goldberg.settingsBesideDll === undefined ? null : goldberg.settingsBesideDll,
           localSaveDir: goldberg.localSaveDir || '',
           expected: goldberg.achievements ? goldberg.achievements.expected : null,

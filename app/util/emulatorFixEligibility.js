@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const crackLoaderDetect = require('./crackLoaderDetect.js');
+const unrealLayout = require('./unrealLayout.js');
 const launcherDetect = require('../parser/launcherDetect.js');
 const uplayR2 = require('../parser/uplayR2.js');
 
@@ -16,6 +17,8 @@ const OWN_EMULATOR_SOURCES = /(?:onlinefix|tenoke|ali213|smartsteamemu|universel
 
 function hasSteamApiDll(gameDir, { maxDepth = 4, maxDirectories = 600 } = {}) {
   if (!gameDir || !fs.existsSync(gameDir)) return false;
+  // A packaged Unreal build keeps its dll six levels down, past the depth this walk stops at.
+  if (unrealLayout.steamworksDlls(gameDir).length > 0) return true;
   const queue = [{ dir: path.resolve(gameDir), depth: 0 }];
   let visited = 0;
   while (queue.length && visited < maxDirectories) {
@@ -57,6 +60,11 @@ function findExistingFix(gameDir, { maxDepth = 4, maxDirectories = 600 } = {}) {
       }
       if (depth < maxDepth) queue.push({ dir: path.join(dir, entry.name), depth: depth + 1 });
     }
+  }
+  // Same blind spot as above: a packaged Unreal build's own setup sits beside the engine's dll.
+  for (const dir of unrealLayout.steamworksDllDirs(gameDir)) {
+    const settings = path.join(dir, 'steam_settings');
+    if (fs.existsSync(settings)) return { kind: 'steam-settings', name: 'GBE / Goldberg', path: settings };
   }
   return null;
 }

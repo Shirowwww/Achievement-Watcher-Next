@@ -610,6 +610,48 @@ test('emulator settings the game cannot read are a named, repairable warning', (
   assert.ok(REPAIRABLE_GOLDBERG_CODES.has('SETTINGS_NOT_BESIDE_DLL'));
 });
 
+/*
+  A packaged Unreal build reads settings only from Engine/Binaries/ThirdParty/Steamworks, so a
+  complete folder at the game root - the layout the fix used to produce - is inert. The row has to
+  offer both halves of the answer: rewrite the schema in the engine's folder, and put the emulator
+  dll there, since nothing loads that folder without one.
+*/
+test('an Unreal build whose engine dll folder is unconfigured offers the schema AND the runtime', () => {
+  const engineDir = 'C:/Games SSD/STAR WARS Zero Company/Engine/Binaries/ThirdParty/Steamworks/Steamv162/Win64';
+  const report = deriveHealth(
+    healthyGame({
+      achievements: { total: 53, unlocked: 0 },
+      goldberg: {
+        emulator: 'gbe',
+        steamSettings: 'C:/Games SSD/STAR WARS Zero Company/steam_settings',
+        dllCount: 1,
+        dllDirs: ['C:/Games SSD/STAR WARS Zero Company'],
+        engineDllDirs: [engineDir],
+        settingsBesideDll: true,
+        achievements: { expected: 53, found: 53, missing: [], missingIcons: [] },
+        save: { exists: true, type: 'gbe', earned: 0, total: 53 },
+        issues: [
+          {
+            level: 'warning',
+            code: 'UNREAL_ENGINE_DLL_UNCONFIGURED',
+            message: `This is a packaged Unreal Engine build: it loads steam_api from ${engineDir} and has no steam_settings there.`,
+            data: { settingsDir: 'C:/Games SSD/STAR WARS Zero Company', engineDllDirs: [engineDir] },
+          },
+        ],
+        ok: true,
+      },
+    })
+  );
+
+  const emulator = checkFor(report, 'emulator');
+  assert.equal(emulator.level, LEVEL.WARN);
+  assert.deepEqual(emulator.params.topics, ['location']);
+  assert.ok(emulator.actions.includes(ACTION.REPAIR_DATA));
+  assert.ok(emulator.actions.includes(ACTION.INSTALL_RUNTIME), 'settings without a dll beside them load nothing');
+  assert.notEqual(report.state, STATE.READY, 'a schema nothing reads is never Ready');
+  assert.ok(REPAIRABLE_GOLDBERG_CODES.has('UNREAL_ENGINE_DLL_UNCONFIGURED'));
+});
+
 test('the repairable-code list covers the account config the repair now always writes', () => {
   for (const code of ['NO_USER_CONFIG', 'BAD_USER_CONFIG', 'BLANK_NAMES', 'BLANK_DESCRIPTIONS']) {
     assert.ok(REPAIRABLE_GOLDBERG_CODES.has(code), `${code} must be answerable by the repair button`);

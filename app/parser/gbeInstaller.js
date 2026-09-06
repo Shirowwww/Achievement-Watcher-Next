@@ -13,6 +13,8 @@ const request = lazyRequire('request-zero');
 const pe = require('../util/pe.js');
 const { resolveUnpackedBinary } = require('../util/unpacked.js');
 const { safeArchiveEntry, firstUnsafeEntry } = require('../util/archiveEntry.js');
+const unrealLayout = require('../util/unrealLayout.js');
+const crackLoaderDetect = require('../util/crackLoaderDetect.js');
 const { replaceFileSync, clearReadOnly } = require('../util/replaceFile.js');
 
 const RELEASE_API = 'https://api.github.com/repos/Detanup01/gbe_fork/releases/latest';
@@ -45,9 +47,8 @@ const noopLog = { log() {}, error() {} };
 // no download ever discards it; the daily GitHub check still supplies whatever the import doesn't cover.
 const CUSTOM_DIR = 'custom';
 const CUSTOM_MANIFEST = 'import.json';
-// Every emulator build's config comes from a steam_settings folder, and no Valve steam_api dll has
-// that string - so an import lacking it is refused, rather than breaking every repaired game at once.
-const EMULATOR_MARKER = Buffer.from('steam_settings', 'ascii');
+// A steam_api dll that carries no emulator marker is Valve's own, so an import of one is refused
+// rather than breaking every repaired game at once (see crackLoaderDetect.isEmulatorDll).
 const MAX_IMPORT_ENTRIES = 4096;
 
 
@@ -97,13 +98,8 @@ function archOfDllName(file) {
   return Object.keys(ARCH).find((key) => ARCH[key].file === name) || '';
 }
 
-function emulatorDll(file) {
-  try {
-    return fs.readFileSync(file).includes(EMULATOR_MARKER);
-  } catch {
-    return false;
-  }
-}
+// One marker, one definition: the same test decides an import, and whether interfaces may be read.
+const emulatorDll = crackLoaderDetect.isEmulatorDll;
 
 // `archKey` is the arch the file would be installed as, not a guess: an x86 dll accepted under the
 // steam_api64.dll name only fails later, when the game refuses to start.
@@ -407,15 +403,48 @@ async function downloadAndCache(cacheDir, tag, assetUrl, log) {
   }
 }
 
-// Generate steam_settings/steam_interfaces.txt from the original game DLL. When AW has already
-// replaced the DLL, its one-time .bak remains the authoritative original and is preferred. The tool
-// works in a private temp directory so it never drops files beside the game unexpectedly.
-async function generateInterfaces({ dllPath, steamSettings, dlls, log = noopLog } = {}) {
+/*
+  The dll steam_interfaces.txt may be generated from, in order of preference: AW's own one-time .bak
+  is the authoritative original, then the file in place, then any caller-supplied candidate. A dll
+  that is itself a Goldberg/GSE build is skipped: a repack ships an emulator where the original used
+  to be, and interfaces read out of one describe the emulator, not the game. GSE falls back to its
+  own default interface versions when the file is absent, which is the safer of the two answers.
+*/
+function interfaceSourceFor(dllPath, candidates = []) {
+  const ordered = [];
+  const add = (file) => {
+    if (!file) return;
+    const key = path.resolve(file).toLowerCase();
+    if (!ordered.some((entry) => path.resolve(entry).toLowerCase() === key)) ordered.push(file);
+  };
+  for (const file of [dllPath, ...(candidates || [])]) {
+    if (!file) continue;
+    if (/\.bak$/i.test(file)) add(file);
+    else {
+      add(`${file}.bak`);
+      add(file);
+    }
+  }
+  const existing = ordered.filter((file) => fs.existsSync(file));
+  if (existing.length === 0) return { file: '', reason: 'missing-dll' };
+  const original = existing.find((file) => !emulatorDll(file));
+  return original ? { file: original, reason: '' } : { file: '', reason: 'emulator-dll' };
+}
+
+// Generate steam_settings/steam_interfaces.txt from the original game DLL, picked by
+// interfaceSourceFor above. The tool works in a private temp directory so it never drops files
+// beside the game unexpectedly.
+async function generateInterfaces({ dllPath, steamSettings, dlls, candidates = [], log = noopLog } = {}) {
   if (!dllPath) return { generated: false, reason: 'missing-dll' };
   if (!steamSettings) throw new Error('generateInterfaces: steamSettings path is required');
-  const isBackupPath = /\.bak$/i.test(dllPath);
-  const original = isBackupPath ? dllPath : fs.existsSync(`${dllPath}.bak`) ? `${dllPath}.bak` : dllPath;
-  if (!fs.existsSync(original)) return { generated: false, reason: 'missing-dll' };
+  const source = interfaceSourceFor(dllPath, candidates);
+  if (!source.file) {
+    if (source.reason === 'emulator-dll') {
+      log.log(`[gbe] steam_interfaces.txt skipped: every candidate for ${path.basename(dllPath)} is itself an emulator dll`);
+    }
+    return { generated: false, reason: source.reason };
+  }
+  const original = source.file;
   const originalName = path.basename(original).replace(/\.bak$/i, '').toLowerCase();
   const arch = originalName === 'steam_api64.dll' ? 'x64' : 'x86';
   const tool = dlls && dlls.interfaces && dlls.interfaces[arch];
@@ -470,6 +499,24 @@ function matchesCachedDll(file, cacheDir, archKey) {
   return candidates.some((cached) => fs.existsSync(cached) && sameFileBytes(file, cached));
 }
 
+/*
+  Is the supported build installed in every folder the fix targets? Answering on the first folder
+  that matched was wrong for a packaged Unreal build: the game root's copy is replaced while the one
+  the engine actually loads, under Engine/Binaries/ThirdParty/Steamworks, stays Valve's own, and the
+  game then reads as already fixed. `targets` are the dlls of `arch` that exist in `dllDirs`;
+  `stale` is the first that is not AW's cached build (an original, or an older/foreign emulator).
+*/
+function runtimeDllState({ dllDirs = [], arch = 'x64', cacheDir = null } = {}) {
+  const file = ARCH[arch] && ARCH[arch].file;
+  if (!file) return { file: '', targets: [], stale: null, ready: false };
+  const targets = (dllDirs || [])
+    .filter(Boolean)
+    .map((dir) => path.join(dir, file))
+    .filter((candidate) => fs.existsSync(candidate));
+  const stale = targets.find((candidate) => !matchesCachedDll(candidate, cacheDir, arch)) || null;
+  return { file, targets, stale, ready: targets.length > 0 && !stale };
+}
+
 const AUXILIARY_DLL_DIRS = new Set([
   '__overlay',
   'overlay',
@@ -514,13 +561,21 @@ function isAuxiliaryDllDir(dir, gameDir) {
 function runtimeDllDirs({ gameDir, dllPaths = [], exePath = null, steamSettings = null, fallbackDir = null } = {}) {
   const exeDir = exePath ? path.dirname(exePath) : null;
   const settingsDir = steamSettings && path.basename(steamSettings).toLowerCase() === 'steam_settings' ? path.dirname(steamSettings) : null;
-  const preferred = [exeDir, settingsDir].filter(Boolean);
+  /*
+    A packaged Unreal build loads steam_api by explicit path from Engine/Binaries/ThirdParty/
+    Steamworks, so those folders lead the list and are never treated as auxiliary - they are the
+    only ones that decide, whatever sits beside the executable. Listed even when no dll has been
+    detected in them, so an install reaches them on the first pass.
+  */
+  const engineDirs = unrealLayout.steamworksDllDirs(gameDir || exeDir || fallbackDir);
+  const preferred = [...engineDirs, exeDir, settingsDir].filter(Boolean);
   const out = [];
   const add = (dir) => {
     if (!dir) return;
     const key = path.resolve(dir).toLowerCase();
     if (!out.some((d) => path.resolve(d).toLowerCase() === key)) out.push(dir);
   };
+  for (const dir of engineDirs) add(dir);
 
   for (const dllPath of dllPaths || []) {
     if (!dllPath || !/^steam_api(64)?\.dll$/i.test(path.basename(dllPath))) continue;
@@ -637,8 +692,12 @@ function installDlls({ dllDirs, dlls, writeIfMissing = null, ensureArch = null, 
     fs.mkdirSync(dir, { recursive: true });
 
     const present = Object.keys(ARCH).filter((key) => fs.existsSync(path.join(dir, ARCH[key].file)));
-    const targets = present.length > 0 ? [...present] : writeIfMissing ? [writeIfMissing] : [];
-    if (ensureArch && !targets.includes(ensureArch)) targets.push(ensureArch);
+    // Unreal's Steamworks folders are per-architecture (Win64/Win32). Seeding the other arch there
+    // writes a dll the engine never loads, so only an arch already on disk is replaced.
+    const engineArch = unrealLayout.archOfSteamworksDir(dir);
+    const seedable = (key) => !!key && (!engineArch || engineArch === key);
+    const targets = present.length > 0 ? [...present] : seedable(writeIfMissing) ? [writeIfMissing] : [];
+    if (seedable(ensureArch) && !targets.includes(ensureArch)) targets.push(ensureArch);
 
     for (const key of targets) {
       const buf = buffers[key];
@@ -673,6 +732,8 @@ module.exports = {
   generateInterfaces,
   matchesCachedDll,
   runtimeDllDirs,
+  runtimeDllState,
+  interfaceSourceFor,
   customDlls,
   importCustomDlls,
   clearCustomDlls,
