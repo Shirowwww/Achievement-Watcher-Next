@@ -5467,7 +5467,13 @@ var app = {
           // This fetch can outlive the page that asked for it: going back before it resolved used to
           // repaint the *home* screen. The header's data-appid only exists while that page is on screen, so it doubles as the freshness check.
           if (String($('#achievement .wrapper > .header').attr('data-appid')) !== String(game.appid)) return;
-          if (game.system === 'uplay' || game.img?.overlay === true) {
+          /*
+            The veil belongs to raw artwork (a launcher's key art, a community hero), which the
+            source marks with img.overlay. It used to follow the platform instead, so a Uplay R2 game
+            drawing Steam's already-darkened page background got veiled a second time and the screen
+            came out black (issue #61).
+          */
+          if (game.img?.overlay === true) {
             /*
               A veil over the artwork, not a sheet in front of it: the theme colours are opaque, so
               the picture was replaced by a flat blue rectangle instead of being toned down. Plain

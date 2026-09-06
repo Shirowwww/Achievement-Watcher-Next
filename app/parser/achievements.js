@@ -642,7 +642,11 @@ function buildProvisionalGame(appid) {
     const official = uplayCatalogue.artworkFor(productId);
     if (official) {
       img.portrait = official.cover || img.portrait;
-      img.background = official.background || img.background;
+      // Raw key art, unlike Steam's pre-darkened page backgrounds: the game screen veils it.
+      if (official.background) {
+        img.background = official.background;
+        img.overlay = true;
+      }
     }
   }
 
@@ -2434,7 +2438,11 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           })) || {};
           img.header = img.header || fallback.landscape || '';
           img.portrait = img.portrait || fallback.portrait || '';
-          img.background = img.background || fallback.background || '';
+          // Community heroes are raw key art; only Steam's own page backgrounds come pre-darkened.
+          if (!img.background && fallback.background) {
+            img.background = fallback.background;
+            img.overlay = true;
+          }
           img.icon = img.icon || fallback.icon || fallback.logo || '';
           img.logo = img.logo || fallback.logo || '';
         } catch {
@@ -2594,7 +2602,12 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
             : cached) || {};
         game.img.header = game.img.header || fallback.landscape || '';
         game.img.portrait = game.img.portrait || fallback.portrait || '';
-        game.img.background = game.img.background || fallback.background || '';
+        // A community hero is raw key art, not one of Steam's pre-darkened page backgrounds, so the
+        // game screen has to veil it to keep the text on top readable.
+        if (!game.img.background && fallback.background) {
+          game.img.background = fallback.background;
+          game.img.overlay = true;
+        }
         game.img.logo = game.img.logo || fallback.logo || '';
         game.img.icon = game.img.icon || fallback.icon || fallback.logo || '';
       } catch (err) {

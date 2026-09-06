@@ -225,10 +225,12 @@ async function generateSchemaFromLocalCache(appid, uplayPath) {
       name: index.name,
       appid: `UPLAY${id.appid}`,
       system: 'uplay',
+      // The launcher's own key art is raw, not a pre-darkened page background: the game screen veils it.
       img: {
         header: null,
         background: null,
         icon: null,
+        overlay: true,
       },
       game_lang: [],
       achievement: {

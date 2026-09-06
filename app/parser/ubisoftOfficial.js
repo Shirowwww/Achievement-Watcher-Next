@@ -1230,7 +1230,9 @@ module.exports.getGameData = async (appid, lang) => {
   const steamAppId = identity.steamAppId;
   if (identity.method) debug.log(`[${appid.appid}] identity resolved via ${identity.method}${identity.steamAppId ? ` -> Steam ${identity.steamAppId}` : ''}`);
   const displayTitle = cleanTitle(data.title) || identity.title || '';
-  let img = { header: null, background: null, portrait: null, icon: null };
+  // Whatever fills `background` here is raw art (the launcher's own, Ubisoft's catalogue or a
+  // community hero), never a pre-darkened Steam page background: the game screen veils it.
+  let img = { header: null, background: null, portrait: null, icon: null, overlay: true };
   if (/^\d+$/.test(steamAppId)) {
     let portrait = `https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/library_600x900.jpg`;
     // Modern Steam covers live under a hashed store_item_assets path that cannot be derived from the
@@ -1252,6 +1254,7 @@ module.exports.getGameData = async (appid, lang) => {
       background: null,
       portrait,
       icon: null,
+      overlay: true,
     };
   } else {
     // No Steam release to borrow art from: use the launcher's own cached images (header/background/
