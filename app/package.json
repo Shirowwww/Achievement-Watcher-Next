@@ -48,7 +48,7 @@
     "minimist": "^1.2.5",
     "moment": "^2.30.1",
     "node-7z": "^3.0.0",
-    "node-html-parser": "^9.0.1",
+    "node-html-parser": "^9.0.3",
     "node-unrar-js": "^2.0.2",
     "normalize-path": "^3.0.0",
     "puppeteer-core": "^25.9.0",
