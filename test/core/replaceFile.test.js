@@ -89,7 +89,9 @@ test('replaceFileSync keeps the old file when the destination cannot be written 
   const dir = scratch();
   const { destination, temporary } = pair(dir, 'hopeless');
   const blocked = path.join(destination, 'inside-a-file');
-  assert.throws(() => replaceFileSync(temporary, blocked), (err) => err.code === 'ENOTDIR' || err.code === 'ENOENT');
+  // Which code a rename into a path under a file gets is up to the platform and the Node version:
+  // ENOTDIR on POSIX, ENOENT or EINVAL on Windows. What matters is that it is not swallowed.
+  assert.throws(() => replaceFileSync(temporary, blocked), (err) => ['ENOTDIR', 'ENOENT', 'EINVAL'].includes(err.code));
   assert.equal(fs.readFileSync(destination, 'utf8'), 'OLD');
 });
 

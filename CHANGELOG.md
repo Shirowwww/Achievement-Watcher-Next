@@ -20,6 +20,11 @@ renamed in 3.9.0 and the history is kept under one file.
   library any more hands the file over, and the catalogue a pre-3.x install left behind in
   `steam_cache/schema` no longer outranks the app's own index. (#61)
 
+- **The window comes back the size you left it, however you resized it.** Only a resize finished
+  with the mouse was remembered, so a window snapped to a screen edge, resized with Win and an arrow
+  key, or reshaped by a resolution or DPI change opened again at its old size. Every shape is saved
+  now, including the one the window is in when it closes.
+
 - **A Uplay R2 game's achievement screen was almost black.** The dark veil meant for a launcher's
   raw key art was applied by platform rather than by artwork, so Steam's already-darkened page
   background got veiled a second time. The veil now follows the artwork, and the screen shows the

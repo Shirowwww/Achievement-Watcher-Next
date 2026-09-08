@@ -408,6 +408,78 @@ function logStartupDiagnostics() {
   }
 }
 
+// Chromium gives up on the GPU after a few crashes and paints everything on the CPU for the rest of
+// the process life, which never heals until the app restarts. A virtual display driver that plugs and
+// unplugs a monitor under a long-lived tray process (Parsec, a headset, a KVM switch) is enough to get
+// there, and nothing says so: the window simply scrolls badly. Log the deaths, the display changes
+// that cause them, and the moment compositing actually falls back.
+function gpuCompositingState() {
+  try {
+    return app.getGPUFeatureStatus().gpu_compositing || 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
+function watchGpuHealth() {
+  let gpuDeaths = 0;
+  let statusLogged = false;
+  let sawAcceleration = false;
+  let fallbackReported = false;
+  const featureLine = () =>
+    Object.entries(app.getGPUFeatureStatus())
+      .map(([k, v]) => `${k}=${v}`)
+      .join(' ');
+  // The feature status is meaningless before a window has painted: with nothing on screen Chromium
+  // has not brought up compositing yet and reports every feature as software. Sample it once the
+  // first window has loaded, which in tray mode can be hours after startup.
+  const logStatusOnce = () => {
+    if (statusLogged) return;
+    statusLogged = true;
+    sawAcceleration = gpuCompositingState().startsWith('enabled');
+    debug.log(`[gpu] ${featureLine()}`);
+  };
+  const later = (fn, ms) => {
+    const timer = setTimeout(fn, ms);
+    if (timer.unref) timer.unref();
+  };
+  app.on('browser-window-created', (event, win) => {
+    win.webContents.once('did-finish-load', () => later(logStatusOnce, 3000));
+  });
+  // Only worth a warning once acceleration was seen working: losing it is the regression, never
+  // having had it is the user's own setting or a machine without a usable GPU.
+  const reportFallback = (why) => {
+    if (!sawAcceleration || fallbackReported) return;
+    const state = gpuCompositingState();
+    if (state.startsWith('enabled')) return;
+    fallbackReported = true;
+    debug.warn(`[gpu] compositing fell back to "${state}" after ${why}; the window is painted on the CPU until the app is restarted`);
+    debug.warn(`[gpu] ${featureLine()}`);
+  };
+  app.on('child-process-gone', (event, details) => {
+    const { type, serviceName, name, reason, exitCode } = details;
+    const who = serviceName || name || '';
+    debug.log(`[gpu] child process gone: type=${type}${who ? ` (${who})` : ''} reason=${reason} exit=${exitCode}`);
+    if (type !== 'GPU') return;
+    gpuDeaths += 1;
+    debug.warn(`[gpu] the GPU process has died ${gpuDeaths} time(s) this session`);
+    // Chromium respawns it and settles the feature status a moment later, so read it late.
+    later(() => reportFallback(`${gpuDeaths} GPU process death(s)`), 2000);
+  });
+  app.on('render-process-gone', (event, contents, details) => {
+    debug.warn(`[gpu] renderer gone: reason=${details.reason} exit=${details.exitCode} url=${contents.getURL()}`);
+  });
+  // The usual trigger. A topology change on its own is harmless; it is only worth reading next to a
+  // GPU death on the same timestamp.
+  const electronScreen = require('electron').screen;
+  const describe = (display) => `${display.id} ${display.size.width}x${display.size.height} @${display.scaleFactor}x`;
+  electronScreen.on('display-added', (event, display) => debug.log(`[gpu] display added: ${describe(display)}`));
+  electronScreen.on('display-removed', (event, display) => debug.log(`[gpu] display removed: ${describe(display)}`));
+  electronScreen.on('display-metrics-changed', (event, display, changed) => {
+    debug.log(`[gpu] display changed: ${describe(display)} (${changed.join(', ')})`);
+  });
+}
+
 // Defer updates while games run and check again when the last one exits.
 function setGameActivity(count) {
   const wasRunning = isGameRunning();
@@ -4290,7 +4362,29 @@ function createMainWindow() {
       }
     };
 
-    // 'resize'/'move' fire continuously while dragging, so they are logged once the user lets go.
+    // 'resized'/'moved' only close an interactive drag. Aero Snap, Win+arrow, a resolution or DPI
+    // change and anything else Windows does with SetWindowPos emit 'resize'/'move' alone, so those
+    // shapes used to be lost. They fire continuously, hence the debounce, and the geometry tolerance
+    // in writeMainWindowState keeps the restore-time setBounds from writing anything back.
+    let geometrySettleTimer = null;
+    const persistMainWindowGeometrySoon = () => {
+      if (geometrySettleTimer) clearTimeout(geometrySettleTimer);
+      geometrySettleTimer = setTimeout(() => {
+        geometrySettleTimer = null;
+        persistMainWindowGeometry();
+      }, 400);
+      if (geometrySettleTimer.unref) geometrySettleTimer.unref();
+    };
+    MainWin.on('resize', persistMainWindowGeometrySoon);
+    MainWin.on('move', persistMainWindowGeometrySoon);
+    // Last chance: a shape the debounce has not written yet must not die with the window, and the
+    // window is destroyed on close as well as by the idle release.
+    MainWin.on('close', () => {
+      if (geometrySettleTimer) clearTimeout(geometrySettleTimer);
+      geometrySettleTimer = null;
+      persistMainWindowGeometry();
+    });
+
     MainWin.on('resized', () => {
       logWindowGeometry('resized');
       persistMainWindowGeometry();
@@ -6573,6 +6667,7 @@ try {
       }
       bootMark('config');
       logStartupDiagnostics();
+      watchGpuHealth();
       try {
         checkResources();
       } catch (err) {
