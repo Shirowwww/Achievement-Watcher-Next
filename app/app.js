@@ -2379,8 +2379,13 @@ window.refreshWatchdogStatusText = () => {
 };
 
 ipcRenderer.on('achievement-unlock', (event, { appid, ach_data }) => {
-  // Ignore toasts for games or achievements missing from the current view.
-  const game = gameList.find((game) => game.appid == appid);
+  // Ignore toasts for games or achievements missing from the current view. The Watchdog names the
+  // game by the appid of the save folder it watched, which is the Steam one - a manually added game
+  // carries an id of its own, so match on the Steam appid too or its card never moves until the
+  // next scan.
+  const game =
+    gameList.find((entry) => entry.appid == appid) ||
+    gameList.find((entry) => entry.steamappid && entry.steamappid == appid);
   if (!game) return;
   const achievement = game.achievement.list.find((ach) => ach.name == ach_data.name);
   if (!achievement) return;
@@ -2388,9 +2393,9 @@ ipcRenderer.on('achievement-unlock', (event, { appid, ach_data }) => {
     achievement.Achieved = 1;
     achievement.UnlockTime = Date.now() / 1000;
     game.achievement.unlocked += 1;
-    updateGameBox(appid, game.achievement.total > 0 ? Math.floor((game.achievement.unlocked / game.achievement.total) * 100) : 0);
+    updateGameBox(game.appid, game.achievement.total > 0 ? Math.floor((game.achievement.unlocked / game.achievement.total) * 100) : 0);
   }
-  updateGamePage(appid, ach_data);
+  updateGamePage(game.appid, ach_data);
 });
 
 // The achievement row to scroll to and flash on the next render of its game view, from a toast's

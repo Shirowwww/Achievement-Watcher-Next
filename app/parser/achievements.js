@@ -513,6 +513,59 @@ function isPathWithin(candidate, parent) {
   return relative === '' || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative));
 }
 
+/*
+  A manual entry carries no achievement data of its own: the user typed a title, an executable and,
+  optionally, a Steam AppID. That AppID is the only thing tying it to the rest of discovery, and
+  without this the emulator save folders found under it stayed on their own record - so the library
+  showed two cards for one game and the manual one was stuck at 0% forever, however much was played.
+
+  Only plain emulator save folders are taken over: every Steam emulator lands on the 'file' type,
+  and the card reads them with that same reader. A store's own listing (legit Steam, a GOG or Epic
+  account library) says what you own rather than what is installed here, and a registry-backed or
+  Uplay record answers to a reader of its own - none of them would survive being read as this card.
+*/
+const MANUAL_ADOPTABLE_TYPES = new Set(['file']);
+
+// One Steam lookup per manual title per session. Discovery and the card's own schema both need the
+// answer, and without this the same title was searched twice on every scan - a network round trip
+// each time whenever the bulk app list is unreachable.
+const _manualAppidByTitle = new Map();
+
+async function manualSteamAppid(title) {
+  const key = String(title || '').trim().toLowerCase();
+  if (!key) return '';
+  if (_manualAppidByTitle.has(key)) return _manualAppidByTitle.get(key);
+  let resolved = '';
+  try {
+    resolved = String((await steam.findAppidByName(title)) || '');
+  } catch (err) {
+    if (debug) debug.log(`[manual-games] name lookup failed for "${title}": ${err.message || err}`);
+    return '';
+  }
+  _manualAppidByTitle.set(key, resolved);
+  return resolved;
+}
+
+function adoptManualSaveSources(data, manualRecord, storeAppId) {
+  if (!Array.isArray(data) || !manualRecord || !/^[0-9]+$/.test(String(storeAppId || ''))) return [];
+  const wanted = String(storeAppId);
+  const adopted = [];
+  // Walked backwards so the splice below never skips the entry after the one it removed.
+  for (let i = data.length - 1; i >= 0; i--) {
+    const candidate = data[i];
+    if (!candidate || candidate === manualRecord) continue;
+    if (String(candidate.appid) !== wanted) continue;
+    if (!candidate.data || !MANUAL_ADOPTABLE_TYPES.has(candidate.data.type)) continue;
+    data.splice(i, 1);
+    const copy = cloneDiscoveryRecord(candidate);
+    copy.appid = manualRecord.appid;
+    copy.steamappid = wanted;
+    adopted.unshift(copy);
+  }
+  for (const record of adopted) data.push(record);
+  return adopted;
+}
+
 // Collect the roots shown in Settings; Smart Find persists automatic detections there first, so a scan never reaches into an invisible Desktop or drive location.
 async function goldbergScanRoots(scope = _activeScanScope) {
   const roots = [];
@@ -2203,20 +2256,35 @@ async function discoverInScope(source, steamAccFilter, scope) {
   if (!scope) {
     try {
       for (const entry of manualGames.list()) {
-        data.push({
+        let storeAppId = /^\d+$/.test(entry.storeAppId) ? entry.storeAppId : '';
+        const isConsole = /playstation|xbox|nintendo|switch/i.test(String(entry.platform || ''));
+        // The AppID field is optional and most people leave it empty, so the title is the only
+        // thing left to go on. Resolved exactly the way the card's schema is resolved further
+        // down, so a manual entry cannot end up listing achievements it can never fill in. Asked
+        // only while there is still an unclaimed save folder to gain, since it can reach Steam.
+        if (!storeAppId && !isConsole && data.some((record) => record && record.data && MANUAL_ADOPTABLE_TYPES.has(record.data.type))) {
+          storeAppId = await manualSteamAppid(entry.title);
+          if (storeAppId) debug.log(`[manual-games] "${entry.title}" resolved to Steam AppID ${storeAppId} by name`);
+        }
+        const record = {
           appid: entry.id,
           name: entry.title,
           source: 'Manual',
-          steamappid: /^\d+$/.test(entry.storeAppId) ? entry.storeAppId : undefined,
+          steamappid: storeAppId || undefined,
           data: {
             type: 'manual',
             gameDir: path.dirname(entry.exe),
             exe: entry.exe,
             exeAuthoritative: true,
             platform: entry.platform,
-            storeAppId: entry.storeAppId,
+            storeAppId: storeAppId || entry.storeAppId,
           },
-        });
+        };
+        data.push(record);
+        const adopted = adoptManualSaveSources(data, record, storeAppId);
+        if (adopted.length > 0) {
+          debug.log(`[manual-games] "${entry.title}" took over ${adopted.length} save source(s) found under Steam AppID ${storeAppId}`);
+        }
       }
     } catch (err) {
       debug.log(`[manual-games] could not load entries: ${err.message || err}`);
@@ -2315,13 +2383,18 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
         forceRecheck: option.forceAchievementRecheck === true,
       });
     }
-  } else if (dataType === 'file') {
+  } else if (dataType === 'file' || dataType === 'manual') {
     // A merged game reads every one of its records with the primary record's reader, and a
     // record from another source can carry no save folder at all (a Ubisoft loader entry
     // beside a Steam-emulator save). Reading nothing is the right answer there; going in
     // anyway reported a save folder literally named "undefined" on every scan.
+    // A manual entry is read the same way: it holds no save itself, but the emulator folders it
+    // took over at discovery do, and they are plain Steam-emulator saves.
     if (!appid.data || typeof appid.data.path !== 'string' || !appid.data.path) {
-      debug.log(`[${appid.appid}] no save folder on the ${describeRecord(appid)} record - nothing to read from it`);
+      // The manual record itself never has one, so saying so on every scan would only be noise.
+      if (!appid.data || appid.data.type !== 'manual') {
+        debug.log(`[${appid.appid}] no save folder on the ${describeRecord(appid)} record - nothing to read from it`);
+      }
       return NO_RECORD_TO_READ;
     }
     let fromFile = await steam.getAchievementsFromFile(appid.data.path);
@@ -2370,8 +2443,6 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
       forceRecheck: option.forceAchievementRecheck === true,
       lang: option.achievement.lang,
     });
-  } else if (dataType === 'manual') {
-    return {};
   } else if (dataType === 'cached') {
     return await watchdog.getAchievements(appid.appid);
   } else if (dataType === 'xboxPc') {
@@ -2467,11 +2538,9 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     if (appid.data.type === 'manual') {
       const requestedTitle = appid.name || path.basename(appid.data.exe || '', path.extname(appid.data.exe || ''));
       let steamappid = /^\d+$/.test(String(appid.data.storeAppId || '')) ? String(appid.data.storeAppId) : '';
-      if (!steamappid) {
-        try {
-          steamappid = String((await steam.findAppidByName(requestedTitle)) || '');
-        } catch {}
-      }
+      // Same answer discovery already settled on, so the schema and the save folders it took over
+      // can never end up describing two different games.
+      if (!steamappid) steamappid = await manualSteamAppid(requestedTitle);
       if (steamappid) {
         try {
           game = await steam.getGameData({
@@ -2716,8 +2785,12 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       }
     }
 
-    // Detect emulators for name-resolved file entries that skipped the strict Goldberg scan.
-    if (appid.data && appid.data.type === 'file') {
+    // Detect emulators for name-resolved file entries that skipped the strict Goldberg scan. A
+    // manual PC entry naming a Steam AppID is the same situation: the user pointed straight at the
+    // install, and Diagnose/Repair and the automatic fix all need to know what sits beside its
+    // executable. Console entries are left alone - no Steam emulator is involved there.
+    const manualPcEntry = !!(appid.data && appid.data.type === 'manual' && appid.steamappid && !game.system);
+    if (appid.data && (appid.data.type === 'file' || manualPcEntry)) {
       // Every emulated/cracked ('file') game needs a definite boolean or the UI dot appears on only
       // some of them. False = no dll verified; legit Steam / RPCS3 / Uplay stay undefined (no dot).
       game.hasSteamApiDll = false;
@@ -3542,6 +3615,9 @@ module.exports.forgetInstallScanCache = () => {
   exeCandidateCache.flush();
   _discoverFingerprint = null;
   _scanFingerprint = null;
+  // A title that matched nothing on Steam an hour ago (a release too new for the bulk app list) is
+  // worth asking about again when someone hits refresh.
+  _manualAppidByTitle.clear();
 };
 
 // Lightweight discovery-only pass: runs the same folder/library walk makeList uses but skips the
@@ -3817,5 +3893,8 @@ module.exports._internal = {
   mergeCrossSourceDuplicates,
   isOfficialLauncherInstall: (dir) => launcherDetect.isOfficialLauncherInstall(dir),
   dropSteamOwnedRecords,
+  adoptManualSaveSources,
+  readRecordUnlocks,
+  NO_RECORD_TO_READ,
   isLibraryLikeFolderName: (name) => saveRoots.isLibraryLikeFolderName(name),
 };

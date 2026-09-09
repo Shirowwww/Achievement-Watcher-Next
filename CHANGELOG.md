@@ -11,6 +11,15 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **A game you added by hand now shows its progress.** A manual entry never read an achievement
+  save, whatever you played and whatever Steam AppID you typed in, so its card sat at 0% with every
+  health check green. It now takes over the emulator save folders found under its AppID, reads them
+  like any other Steam-emulator game, and shows them under "Achievement data". Leave the AppID field
+  empty and the title is matched against Steam the same way the achievement list already was. The
+  save folder no longer produces a second card of its own, an in-game unlock moves the card straight
+  away instead of waiting for the next scan, and a manual PC entry gets the emulator checks and
+  repairs the rest of the library has.
+
 - **Two games that ship an executable of the same name no longer steal each other's playtime.**
   Prince of Persia The Lost Crown and the unrelated The Lost Crown both run `TheLostCrown.exe`, and
   the file went to whichever title looked more like it, so the installed game's sessions were
