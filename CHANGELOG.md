@@ -11,6 +11,15 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **An Unreal game now gets its emulator fix where the engine actually looks.** A packaged Unreal
+  build does not load `steam_api64.dll` from beside the executable: it loads one by explicit path
+  from `Engine\Binaries\ThirdParty\Steamworks`, six levels down and outside the game folder
+  entirely. Every scan stopped short of it, so a fix landed next to the executable, validated
+  perfectly on screen, and the game kept loading an untouched DLL and recorded nothing. The engine's
+  own folder is now the first one the fix installs into and the first one `steam_settings` is looked
+  for in, a setup is only reported as done once every target folder carries it, and a folder holding
+  nothing but Valve's own DLL is left alone so a legitimately installed Unreal game is untouched.
+
 - **A game you added by hand now shows its progress.** A manual entry never read an achievement
   save, whatever you played and whatever Steam AppID you typed in, so its card sat at 0% with every
   health check green. It now takes over the emulator save folders found under its AppID, reads them
