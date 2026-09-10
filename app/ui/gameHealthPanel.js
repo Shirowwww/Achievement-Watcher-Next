@@ -443,6 +443,31 @@ function gameHealthSimpleCheckValue(entry) {
   }
 }
 
+/*
+  The store's own name for a source label.
+
+  A few of the parser's `source:` values are internal ids rather than names - "epic-official",
+  "Xbox PC", "steamAPI" - and the identity row printed them verbatim, so the panel read "Game
+  identity: 610a546d... epic-official". Store names are proper nouns and stay the same in every
+  language. Anything not listed is already a name ("Goldberg", "Rune", "GOG Galaxy") and is shown
+  as it is.
+*/
+const SOURCE_DISPLAY_NAMES = {
+  'epic-official': 'Epic Games',
+  'gog-official': 'GOG',
+  'ubisoft-official': 'Ubisoft Connect',
+  'steam-official': 'Steam',
+  steamapi: 'Steam',
+  'xbox pc': 'Xbox',
+  uplay: 'Ubisoft Connect',
+};
+
+function sourceDisplayName(source) {
+  const raw = String(source || '').trim();
+  if (!raw) return '';
+  return SOURCE_DISPLAY_NAMES[raw.toLowerCase()] || raw;
+}
+
 // The emulator's display name: "gbe"/"goldberg" are internal ids that must never reach the UI, the
 // product names stay identical in every language, and "no emulator" reuses the diagnosis translation.
 function gameHealthEmulatorLabel(emulator, loader) {
@@ -530,7 +555,7 @@ function gameHealthCheckValue(entry, simple) {
       if (p.path) return entry.level === gameHealth.LEVEL.OK ? p.path : `${p.path} - ${missing}`;
       return missing;
     case 'identity':
-      return [p.appid, p.source].filter(Boolean).join(' · ') || missing;
+      return [p.appid, sourceDisplayName(p.source)].filter(Boolean).join(' · ') || missing;
     case 'achievement-data':
       if (p.missing) return t('gh-value-missing-entries', '{missing} of {total} missing from the emulator file', '{missing} sur {total} absents du fichier de l’émulateur', p);
       if (p.missingIcons && p.iconsUnavailable) return t('gh-value-icons-unavailable', 'icons not published by Steam yet', 'illustrations pas encore publiées par Steam', p);

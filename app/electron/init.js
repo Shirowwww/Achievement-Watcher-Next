@@ -20,6 +20,7 @@ const { app } = require('electron');
 const { APP_DATA_DIR_NAME } = require('../util/userDataPath.js');
 const { portableUserDataDir } = require('../util/portableMode.js');
 const { migrateLegacyUserData, migrateAw3UserData, migrateSouvenirFolder, retargetBackupIndex } = require('../util/migrateUserData.js');
+const stylizedArtwork = require('../util/stylizedArtwork.js');
 const { deriveWatchdogState } = require('../util/watchdogState.js');
 const links = require('../util/links.js');
 const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
@@ -53,6 +54,10 @@ if (!isPortableBuild) {
 // Runs on every start: folders migrated before this existed still hold a restore-point index
 // pointing at their old location. Idempotent, a repointed entry is skipped next time.
 retargetBackupIndex(app.getPath('userData'));
+// One-time: drop the Xbox covers an older build overwrote with a tinted page background. They are
+// downloaded artwork, so the next scan fetches them again by itself. Runs before the logger exists,
+// and records what it removed in its own marker file instead.
+stylizedArtwork.purgeTintedXboxCovers(app.getPath('userData'));
 // Keep GPU acceleration enabled, but avoid Chromium background services AW does not use in tray mode.
 for (const sw of ['disable-extensions', 'disable-component-extensions-with-background-pages', 'disable-default-apps', 'disable-background-networking', 'disable-accelerated-video-decode']) {
   app.commandLine.appendSwitch(sw);
@@ -1984,7 +1989,10 @@ ipcMain.on('stylize-background-for-appid', async (event, arg) => {
     const appid = String((arg && arg.appid) || '').replace(/[^\w.-]/g, '_');
     if (!t || !appid) return;
 
-    const outputPath = path.join(app.getPath('userData'), 'steam_cache', 'icon', appid, t);
+    // Its own folder, never the cover cache: see util/stylizedArtwork.js for the tile this used to
+    // overwrite on every Xbox game.
+    const outputPath = stylizedArtwork.stylizedBackgroundPath(app.getPath('userData'), appid, imageUrl);
+    if (!outputPath) return;
     // The result is a file, and the same picture always blurs to the same thing: downloading and
     // re-blurring it on every scan cost a full image pipeline per game for a file already on disk.
     try {

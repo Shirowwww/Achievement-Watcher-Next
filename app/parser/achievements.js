@@ -2621,6 +2621,27 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       game = await ubisoftOfficial.getGameData(appid, option.achievement.lang);
     } else if (appid.data.type === 'epicOfficial') {
       game = await epicOfficial.getGameData(appid, option.achievement.lang);
+      /*
+        Epic's catalog publishes a portrait for effectively every game and a landscape for almost
+        none, so the landscape grid had nothing of its own shape to show for a game that is also on
+        Steam - Disco Elysium, Trine 4, Bendy and the Ink Machine all fell back to their portrait.
+        Steam's own capsule is the right shape and the better picture, and the name resolves against
+        the app list already in memory. Same borrowing the Uplay and unconfigured paths do; a game
+        with no Steam release matches nothing and keeps Epic's own art.
+      */
+      if (game && game.name && game.img && !game.img.header) {
+        try {
+          const sid = await steam.findAppidByName(game.name);
+          if (sid) {
+            const borrowed = steamCdnImages(sid);
+            game.img.header = borrowed.header;
+            game.img.background = game.img.background || borrowed.background;
+            game.img.portrait = game.img.portrait || borrowed.portrait;
+          }
+        } catch {
+          /* no Steam counterpart - Epic's own picture stands */
+        }
+      }
     } else if (appid.source === 'epic') {
       game = await epic.getGameData({ appID: appid.appid, steamappid: appid.steamappid, lang: option.achievement.lang });
     } else if (appid.data.type === 'xboxPc') {

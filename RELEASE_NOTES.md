@@ -1,47 +1,50 @@
-# Achievement Watcher Next 3.10.5
+# Achievement Watcher Next 3.10.6
 
-The release that puts unlocks on a stream, hands the library grid over to you, and stops a large
-emulator library from losing the names and achievements of most of its games.
+A fix release for games that looked perfectly healthy and recorded nothing - packaged Unreal builds,
+games added by hand, two games sharing an executable name - and for a library grid that was missing
+a good part of its cover art.
 
 ## Highlights
 
-- **Achievement popups can go on a stream, through an OBS browser source.** Capturing the popup as a
-  window never worked and never could: the window exists for one unlock and is gone before OBS lists
-  it. The selected preset is now served as a page instead, and a Browser source pointed at it shows
-  the same card, the same artwork and the same rare styling as the in-game popup, including artwork
-  that only exists on your machine. It draws nothing whatsoever between unlocks, so it costs no CPU
-  while you stream. Settings > Notification carries **Copy link** and **Preview**, and Help gains a
-  **Stream overlay (OBS)** topic with the whole setup.
-- **The library grid is yours to size.** Settings > Appearance > Library tiles adds a slider for how
-  big the cover art is and a slider for how much space sits around it, down to a grid with no gaps at
-  all, plus an independent Show/Hide for the game name, the progress bar, the platform badge, the
-  game health dot and the trophy button. Game health keeps a home when its dot is off: it has its own
-  entry in a tile's right-click menu.
-- **A large emulator library no longer loses the names and achievements of most of its games.** A
-  scan asks Steam's hosts about eight games at once, and a library of a couple of hundred saves went
-  through what those hosts allow within seconds. Every refusal after that was read as a fact about
-  the game, "no achievements", "no name", so the tile rendered as a bare AppID with an empty list.
-  Requests to each host are now paced and retried when a host asks to slow down, a refusal is
-  recorded as "not known yet", and a game whose name could not be resolved keeps the achievements
-  that were found.
-- **Closing Settings no longer reloads the library every time.** OK emptied the grid and ran a full
-  scan again, so changing a theme colour cost the same seconds and the same network traffic as
-  changing a game source. The panel now rebuilds only when something the library's contents depend on
-  actually moved.
-- **First-run setup covers every achievement source.** The source step exposes all 17 switches
-  available in Settings, so a new library can be configured before its first scan.
-- **A portable ZIP is built beside the Windows installer**, and every release can be checked against
-  VirusTotal by its own published hash.
+- **Xbox games are no longer painted with their own page background, and Epic games get real**
+  **covers.** The blurred, tinted picture the achievement page uses behind its text was cached under
+  the cover's own file name: Steam and Epic publish those at two different addresses so the two
+  never met, but Xbox publishes one picture and hands it back as both, leaving Minecraft, Microsoft
+  Solitaire and GTA V as blue ghosts of themselves for good. Epic's side was the opposite problem:
+  every cover came from matching the game's name against SteamGridDB, so anything obscure ended up
+  as a blank tile, even though Epic was publishing a picture for it. Both are fixed, and the covers
+  an older build overwrote are cleared once so they come back on the next scan.
 
-See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3105---2026-09-03)
-for the complete list, including the LumaPlay games that came back, the Xbox unlock dates, and the
-rest of the offline and notification fixes.
+- **An Unreal game now gets its emulator fix where the engine actually looks.** A packaged Unreal
+  build does not load `steam_api64.dll` from beside the executable: it loads one by explicit path
+  from `Engine\Binaries\ThirdParty\Steamworks`, six levels down and outside the game folder
+  entirely. Every scan stopped short of it, so a fix landed next to the executable, validated
+  perfectly on screen, and the game kept loading an untouched DLL and recorded nothing. The engine's
+  own folder is now the first one the fix installs into and the first one `steam_settings` is looked
+  for in, and a folder holding nothing but Valve's own DLL is left alone so a legitimately installed
+  Unreal game is untouched.
+- **A game you added by hand now shows its progress.** A manual entry never read an achievement
+  save, whatever you played and whatever Steam AppID you typed in, so its card sat at 0% with every
+  health check green. It now takes over the emulator save folders found under its AppID and reads
+  them like any other Steam-emulator game. Leave the AppID field empty and the title is matched
+  against Steam the same way the achievement list already was.
+- **Two games that ship an executable of the same name no longer steal each other's playtime.**
+  Prince of Persia The Lost Crown and the unrelated The Lost Crown both run `TheLostCrown.exe`, so
+  the installed game's sessions were counted against a game that was never on the disk. The Watchdog
+  now settles a shared name by the folder the process actually started from.
+- **The window comes back the size you left it**, however you resized it, including a window snapped
+  to a screen edge or reshaped by a resolution change.
+- **A Uplay R2 game's achievement screen is no longer almost black.** The dark veil meant for raw
+  key art now follows the artwork rather than the platform.
+
+See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3106---2026-09-10)
+for the complete list.
 
 ## Install
 
-Download `Achievement.Watcher.Setup.3.10.5.exe` from the
-[v3.10.5 release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/tag/v3.10.5), or let
-the app update itself. `Achievement.Watcher.Portable.3.10.5.zip` is the same build with no installer:
+Download `Achievement.Watcher.Setup.3.10.6.exe` from the
+[v3.10.6 release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/tag/v3.10.6), or let
+the app update itself. `Achievement.Watcher.Portable.3.10.6.zip` is the same build with no installer:
 extract it anywhere and it keeps its settings, caches and logs in a `data` folder beside the
 executable.
 
@@ -49,6 +52,6 @@ The `.blockmap` and `latest.yml` assets are used by automatic updates.
 
 ---
 
-[Full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3105---2026-09-03) ·
+[Full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3106---2026-09-10) ·
 [Documentation](https://shirowwww.github.io/Achievement-Watcher-Next/) ·
 [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html)

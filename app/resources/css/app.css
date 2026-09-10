@@ -6185,10 +6185,6 @@ body {
   opacity: 0.72;
 }
 
-#game-list .game-box .info .source-icon[data-kind='steam-hidden'] {
-  display: none;
-}
-
 #game-list .game-box .info .health-badge,
 #achievement .wrapper > .header .title .health-badge {
   display: block;

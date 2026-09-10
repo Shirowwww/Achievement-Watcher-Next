@@ -359,10 +359,44 @@ async function epicGet(url) {
 }
 
 /*
-  What the catalog says a namespace holds. Only the entry the account owns is asked for, and only
-  two things are read off it: the name to put on the tile, and whether this is a game at all -
-  `mainGameItem` marks an add-on, and an entry with no `games` category is a soundtrack, a bundle or
-  an engine asset. Anything the catalog will not answer for is dropped rather than guessed at.
+  Epic's own store pictures, taken from the catalog answer that was fetched anyway.
+
+  Artwork used to be left entirely to the shared SteamGridDB fallback, which matches on the game's
+  name. That works for anything well known and finds nothing at all for the rest: "Football Manager
+  2024 Pre-game editor" and "Space Grunts: Chrono Shard" both ended up as blank tiles reading "No
+  artwork found", while Epic was publishing a picture for each of them in the very response their
+  title came from. Reading it here costs no request and no name matching.
+
+  Types in preference order per shape, most specific first; every one of them is optional.
+*/
+const EPIC_LANDSCAPE_IMAGES = ['DieselStoreFrontWide', 'OfferImageWide', 'DieselGameBoxWide', 'Featured', 'VaultClosed'];
+const EPIC_PORTRAIT_IMAGES = ['DieselStoreFrontTall', 'OfferImageTall', 'DieselGameBoxTall', 'DieselGameBox'];
+const EPIC_LOGO_IMAGES = ['DieselGameBoxLogo', 'ProductLogo'];
+
+function epicCatalogArtwork(item) {
+  const images = Array.isArray(item?.keyImages) ? item.keyImages : [];
+  const pick = (types) => {
+    for (const type of types) {
+      const match = images.find(
+        (image) => String(image?.type || '') === type && /^https?:\/\//i.test(String(image?.url || ''))
+      );
+      if (match) return String(match.url);
+    }
+    return '';
+  };
+  const landscape = pick(EPIC_LANDSCAPE_IMAGES);
+  const portrait = pick(EPIC_PORTRAIT_IMAGES);
+  const logo = pick(EPIC_LOGO_IMAGES);
+  if (!landscape && !portrait && !logo) return null;
+  return { landscape, portrait, logo };
+}
+
+/*
+  What the catalog says a namespace holds. Only the entry the account owns is asked for, and three
+  things are read off it: the name to put on the tile, the store pictures above, and whether this is
+  a game at all - `mainGameItem` marks an add-on, and an entry with no `games` category is a
+  soundtrack, a bundle or an engine asset. Anything the catalog will not answer for is dropped
+  rather than guessed at.
 */
 async function fetchOwnedTitle(namespace, catalogItemId) {
   const url = `${EPIC_CATALOG_BASE}/${encodeURIComponent(namespace)}/bulk/items?id=${encodeURIComponent(
@@ -370,10 +404,12 @@ async function fetchOwnedTitle(namespace, catalogItemId) {
   )}&country=US&locale=en-US&includeMainGameDetails=true`;
   const items = await epicGet(url);
   const item = items && items[catalogItemId];
-  if (!item || item.mainGameItem) return '';
+  if (!item || item.mainGameItem) return null;
   const categories = Array.isArray(item.categories) ? item.categories.map((c) => String(c?.path || '')) : [];
-  if (!categories.includes('games')) return '';
-  return String(item.title || '').trim();
+  if (!categories.includes('games')) return null;
+  const title = String(item.title || '').trim();
+  if (!title) return null;
+  return { title, artwork: epicCatalogArtwork(item) };
 }
 
 const OWNED_LOOKUP_CONCURRENCY = 4;
@@ -395,8 +431,8 @@ async function refreshOwnedLibrary() {
   const worker = async () => {
     for (let entry = pending.shift(); entry; entry = pending.shift()) {
       try {
-        const title = await fetchOwnedTitle(entry.namespace, entry.catalogItemId);
-        if (title) games.push({ ...entry, title });
+        const owned = await fetchOwnedTitle(entry.namespace, entry.catalogItemId);
+        if (owned) games.push({ ...entry, title: owned.title, ...(owned.artwork ? { artwork: owned.artwork } : {}) });
       } catch (err) {
         debug.log(`[epic ${entry.namespace}] catalog lookup failed => ${err}`);
       }
@@ -453,6 +489,7 @@ module.exports.scanOwned = async (installedNamespaces = new Set()) => {
         catalogItemId: game.catalogItemId,
         appName: game.appName,
         title: game.title,
+        artwork: game.artwork || null,
         gameDir: null,
         exe: null,
         installed: false,
@@ -527,12 +564,22 @@ module.exports.getGameData = async (appid, lang) => {
   }
 
   /*
-    Artwork is left to the shared fallback in achievements.js, which asks for the same pictures with
-    the platform and the appid attached. Asking here as well meant two SteamGridDB lookups and two
-    cache entries for every Epic game, and a blur-and-tint pipeline per game on top; `overlay` gets
-    the same veiled background painted at display time instead.
+    Epic's own store pictures when the catalog gave any, and otherwise the shared fallback in
+    achievements.js, which asks SteamGridDB for the same shapes with the platform and the appid
+    attached. Asking SteamGridDB here as well meant two lookups and two cache entries per game, so
+    nothing is fetched here: these URLs came free with the title. A game the catalog has no picture
+    for keeps the old behaviour and leaves every field null for the fallback to fill.
+
+    `overlay` marks these as raw store art either way, so the game page veils them at paint time.
   */
-  const img = { header: null, background: null, portrait: null, icon: null, overlay: true };
+  const artwork = data.artwork || null;
+  const img = {
+    header: (artwork && artwork.landscape) || null,
+    background: (artwork && artwork.landscape) || null,
+    portrait: (artwork && artwork.portrait) || null,
+    icon: (artwork && (artwork.logo || artwork.portrait)) || null,
+    overlay: true,
+  };
 
   return {
     name: data.title || `Epic ${appid.appid}`,
@@ -730,4 +777,5 @@ module.exports._internal = {
   resolveSchema,
   fetchEpicAchievementSchemaBySandbox,
   localeFor,
+  epicCatalogArtwork,
 };

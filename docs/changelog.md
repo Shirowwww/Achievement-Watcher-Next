@@ -14,9 +14,53 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
-## Unreleased
+## 3.10.6 - 2026-09-10
+
+### Security
+
+- **Archive entries are written by the app, not by its zip library.** `adm-zip`'s own extractors
+  follow a symbolic link that already exists at the destination and write through it, which turns a
+  planted link into an arbitrary file overwrite (CVE-2026-76845). Every published version from
+  0.5.9 to the current 0.6.0 is affected and there is no fixed release to move to. The one place
+  that extracted anything - the Uplay achievement-icon cache - now resolves the destination itself,
+  proves it stays inside the extraction folder and unlinks whatever sits there before writing, so
+  the vulnerable code paths are no longer reached. A test fails the build if either extractor comes
+  back into the codebase.
 
 ### Fixed
+
+- **Xbox games are no longer painted with their own page background.** The blurred, tinted picture
+  the achievement page uses behind its text was cached under the cover's file name, in the cover's
+  folder. Steam and Epic publish a page background and a tile cover at two different addresses, so
+  the two never met; Xbox publishes one picture and hands it back as both, so the tile ended up
+  showing a blue ghost of the game - permanently, because a cover already on disk is never fetched
+  again. Minecraft, Microsoft Solitaire Collection and Grand Theft Auto V all rendered that way. The
+  veiled background now has a folder of its own, and the covers an older build overwrote are cleared
+  once so they come back on the next scan.
+
+- **Epic games use the artwork Epic publishes for them.** Every cover came from matching the game's
+  name against SteamGridDB, so anything obscure enough to miss ended up as a blank tile reading "No
+  artwork found" - while Epic was serving a picture for it in the very catalog response the title
+  already came from. Those pictures are read now, at no extra request, and the whole library gets a
+  cover instead of just the well-known half of it.
+
+- **An Epic game that also exists on Steam borrows Steam's own capsule.** Epic publishes portraits
+  and almost no landscapes, so the landscape grid had nothing of the right shape for games that had
+  a perfectly good one a name lookup away: Disco Elysium, Dead by Daylight, The Callisto Protocol
+  and 80 others in one test library. The same borrowing the Uplay and unconfigured paths already
+  did, at no extra request; a game with no Steam release keeps Epic's own picture.
+
+- **A tile no longer stays blank when the only artwork is the wrong shape.** The last-resort pass
+  that accepts a portrait in a landscape grid started from the shape it had just established was
+  missing, so it gave up before looking at anything else. Epic makes that the normal case: it
+  publishes a portrait for effectively every game and a landscape for almost none.
+
+- **A game you own on Steam says so.** Its tile carries the Steam logo beside the ownership mark,
+  like every other platform, instead of the blank space it had before. The mark itself is unchanged,
+  and a genuinely owned game still shows no health dot: there is no emulator there to diagnose.
+
+- **The Game Health panel names stores rather than internal ids.** "Game identity" read
+  "epic-official" or "Xbox PC"; it now reads "Epic Games" and "Xbox".
 
 - **An Unreal game now gets its emulator fix where the engine actually looks.** A packaged Unreal
   build does not load `steam_api64.dll` from beside the executable: it loads one by explicit path

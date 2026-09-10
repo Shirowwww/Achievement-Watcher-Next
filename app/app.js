@@ -120,6 +120,7 @@ const apiCheckBypass = require(path.join(appPath, 'parser/apiCheckBypass.js'));
 const { calculateLibraryStats, calculateDetailedLibraryStats } = require(path.join(appPath, 'util/libraryStats.js'));
 const { resolveGameRarityContext } = require(path.join(appPath, 'util/rarity.js'));
 const librarySnapshot = require(path.join(appPath, 'util/librarySnapshot.js'));
+const stylizedArtwork = require(path.join(appPath, 'util/stylizedArtwork.js'));
 const libraryReuse = require(path.join(appPath, 'util/libraryReuse.js'));
 const { createViewportWork } = require(path.join(appPath, 'util/viewportWork.js'));
 const perfTrace = require(path.join(appPath, 'util/perfTrace.js'));
@@ -255,7 +256,7 @@ window.refreshProfileStats = refreshProfileStats;
 */
 const PROFILE_STATS_PLATFORMS = {
   steam: { label: 'Steam', img: 'Steam' },
-  'steam-hidden': { label: 'Steam', img: 'Steam' },
+  'steam-owned': { label: 'Steam', img: 'Steam' },
   gog: { label: 'GOG', img: 'gog' },
   epic: { label: 'Epic Games', img: 'epic' },
   ubisoft: { label: 'Ubisoft Connect', img: 'ubisoft' },
@@ -273,7 +274,7 @@ function profileStatsGroupOf(game) {
     kind = '';
   }
   const known = PROFILE_STATS_PLATFORMS[kind] || PROFILE_STATS_PLATFORMS.steam;
-  return { key: kind === 'steam-hidden' ? 'steam' : kind || 'steam', label: known.label, img: known.img };
+  return { key: kind === 'steam-owned' ? 'steam' : kind || 'steam', label: known.label, img: known.img };
 }
 
 function profileStatsIconFor(key) {
@@ -1458,9 +1459,21 @@ function scheduleLibraryCover(game, headerEl, portrait) {
       setLibraryArtworkFeedback(headerEl, 'clear');
       return;
     }
-    // Last resort: no art of the right shape exists, so wrong-shape art (flagged as a fallback so
-    // the grid styles rather than stretches it) beats a blank tile.
-    const crossShape = await applyCoverWithFallback(game, headerEl, imgName, tileOrientation, undefined, generation);
+    /*
+      Last resort: no art of the right shape exists, so wrong-shape art (flagged as a fallback so
+      the grid styles rather than stretches it) beats a blank tile.
+
+      It has to start from a picture that exists. Handed `imgName` it started from the shape that
+      was already established as missing, returned "nothing to try" before looking at anything else,
+      and the tile stayed blank with a cover sitting right there in the schema. Epic makes that the
+      normal case: its catalog publishes a portrait for effectively every game and a landscape for
+      almost none, so the whole landscape grid read "No artwork found".
+    */
+    const anyShapeName =
+      imgName ||
+      (portrait ? image.header || image.landscape || image.background : image.portrait || image.background) ||
+      image.icon;
+    const crossShape = await applyCoverWithFallback(game, headerEl, anyShapeName, tileOrientation, undefined, generation);
     if (generation !== artworkLoadGeneration) return;
     if (!headerEl[0]?.isConnected) return;
     if (portrait !== libraryLayout.isPortrait(app.config?.achievement?.libraryLayout)) return;
@@ -1546,7 +1559,10 @@ function sourcePresentationFor(game) {
   const isUbisoft = uplayR2.isUbisoftGame(game, game && game.appid);
 
   if (isLegitSteamLibraryGame(game)) {
-    return { img: '', label: '', kind: 'steam-hidden' };
+    // A game owned on Steam says so like every other platform does. It keeps its own `kind`, so the
+    // health dot and the achievement page's own badge stay off for it: nothing here is emulated,
+    // and there is nothing to diagnose or repair.
+    return { img: getSourceImg('Steam'), label: t('steam-achievements-official', 'Steam achievements', 'Succès Steam'), kind: 'steam-owned' };
   }
 
   if (!gameHasAchievements(game)) {
@@ -2730,7 +2746,9 @@ var app = {
             const portrait = libraryLayout.isPortrait(self.config.achievement.libraryLayout);
             const sourceIcon = sourcePresentationFor(game);
             const healthDot = hasHealthDot(game) ? healthDotFor(game) : null;
-            const hideSteamBadges = sourceIcon.kind === 'steam-hidden';
+            // A game owned on Steam has nothing emulated to diagnose, so it carries no health dot.
+            // It does carry a source badge like every other platform.
+            const hideHealthDot = sourceIcon.kind === 'steam-owned';
             const recentUnlockText = !hasAchievements
               ? progressLabel
               : latestUnlock
@@ -2784,17 +2802,10 @@ var app = {
                       )}</span></div>
                       <div class="game-meta">
                         ${
-                          healthDot && !hideSteamBadges
+                          healthDot && !hideHealthDot
                             ? `<span class="health-badge ${healthDot.state}" title="${escapeHtml(
                                 healthDot.label
                               )}" role="img" aria-label="${escapeHtml(healthDot.label)}"></span>`
-                            : ''
-                        }
-                        ${
-                          ownershipLabel
-                            ? `<span class="ownership-badge ${ownershipBadgeClass}" title="${escapeHtml(
-                                ownershipLabel
-                              )}" role="img" aria-label="${escapeHtml(ownershipLabel)}"><i class="fas fa-info-circle" aria-hidden="true"></i></span>`
                             : ''
                         }
                         ${
@@ -2802,6 +2813,13 @@ var app = {
                             ? `<img class="source-icon" src="${escapeHtml(sourceIcon.img)}" data-kind="${escapeHtml(sourceIcon.kind)}" title="${escapeHtml(
                                 sourceIcon.label
                               )}" alt="${escapeHtml(sourceIcon.label)}" aria-label="${escapeHtml(sourceIcon.label)}">`
+                            : ''
+                        }
+                        ${
+                          ownershipLabel
+                            ? `<span class="ownership-badge ${ownershipBadgeClass}" title="${escapeHtml(
+                                ownershipLabel
+                              )}" role="img" aria-label="${escapeHtml(ownershipLabel)}"><i class="fas fa-info-circle" aria-hidden="true"></i></span>`
                             : ''
                         }
                       </div>
@@ -5468,7 +5486,18 @@ var app = {
     $('#home').fadeOut(function () {
       $('body').fadeIn().css('background', `url('../resources/img/ach_background.jpg')`);
       if (game.img.background) {
-        ipcRenderer.invoke('fetch-icon', game.img.background, game.steamappid || game.appid).then((localPath) => {
+        /*
+          A background the stylizer already blurred and tinted lives in its own folder now. It used
+          to be written over the cover cache entry for the same URL, which is how every Xbox tile
+          ended up painted with its own page background (see util/stylizedArtwork.js). Asked for
+          here first, so the page keeps the look it had; with none built yet the plain picture is
+          painted exactly as it was before that pass finished.
+        */
+        const stylized = stylizedArtwork.existingStylizedBackground(getUserDataPath(), game.appid, game.img.background);
+        const background = stylized
+          ? Promise.resolve(stylized)
+          : ipcRenderer.invoke('fetch-icon', game.img.background, game.steamappid || game.appid);
+        background.then((localPath) => {
           // This fetch can outlive the page that asked for it: going back before it resolved used to
           // repaint the *home* screen. The header's data-appid only exists while that page is on screen, so it doubles as the freshness check.
           if (String($('#achievement .wrapper > .header').attr('data-appid')) !== String(game.appid)) return;
@@ -5504,7 +5533,7 @@ var app = {
       {
         const presentation = sourcePresentationFor(game);
         const badge = $('#achievement .wrapper > .header .title .source-icon');
-        if (presentation.img && presentation.kind !== 'steam-hidden') {
+        if (presentation.img && presentation.kind !== 'steam-owned') {
           badge
             .attr({
               src: presentation.img,
@@ -5527,7 +5556,7 @@ var app = {
           a local save is the one worth saying "tracked" about, and a game the store itself reports
           is the one worth marking as owned. Saying both of a single game says nothing.
         */
-        const health = hasHealthDot(game) && game.installed && presentation.kind !== 'steam-hidden' ? healthDotFor(game) : null;
+        const health = hasHealthDot(game) && game.installed && presentation.kind !== 'steam-owned' ? healthDotFor(game) : null;
         const healthBadge = $('#achievement .wrapper > .header .title .health-badge');
         healthBadge.attr('class', `health-badge${health ? ` ${health.state}` : ''}`).prop('hidden', !health);
         if (health) healthBadge.attr({ title: health.label, 'aria-label': health.label });
