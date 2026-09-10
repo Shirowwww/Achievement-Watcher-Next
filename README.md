@@ -153,7 +153,7 @@ Download builds only from the
 [official releases page](https://github.com/Shirowwww/Achievement-Watcher-Next/releases); `latest.yml`
 carries the installer's SHA-512 digest. Any release can also be looked up on VirusTotal by its own
 SHA-256, so you can check a download without trusting this page
-([3.10.5](https://www.virustotal.com/gui/file/e39331ce95c3e8d39dd79cf5d8d5559f2227c92b9b2577fd03a1b0210b8c5525)); a few heuristic
+([3.10.6](https://www.virustotal.com/gui/file/e0325b7b289a266b7cc31655a4c4d8a61677d6601797990f7c22cc4be840bcbc)); a few heuristic
 detections there are the emulator false positive described below. Installers use the project's self-signed `CN=Shirow`
 certificate, which you do not need to install or trust - SmartScreen or antivirus warnings remain
 possible because it is not issued by a publicly trusted authority. Sensitive settings and
