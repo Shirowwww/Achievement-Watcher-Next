@@ -7,6 +7,7 @@ const glob = lazyRequire('fast-glob');
 const zip = require('adm-zip');
 const fs = require('fs');
 const { listRegistryAllSubkeys, ListRegistryAllValues, readRegistryString, readRegistryInteger } = require('../util/reg');
+const { writeArchiveEntry } = require('../util/archiveEntry.js');
 const steamLanguages = require(path.join(__dirname, '../locale/steam.json'));
 
 let debug;
@@ -242,7 +243,12 @@ async function generateSchemaFromLocalCache(appid, uplayPath) {
     for (let entry of archiveEntries) {
       try {
         if (entry.entryName.match(/^\d+.*$/) !== null) {
-          archive.extractEntryTo(entry.entryName, cache, true, true);
+          // The library's own extractor writes through a symlink already sitting at the destination
+          // (CVE-2026-76845, unfixed upstream), so the bytes are written here instead. A directory
+          // entry carries none and only exists to hold the files below it, which are created with them.
+          if (entry.isDirectory) continue;
+          const written = writeArchiveEntry(fs, path, { name: entry.entryName, data: entry.getData(), root: cache });
+          if (!written) debug.log(`Refused to extract '${entry.entryName}': it does not stay inside the icon cache`);
         } else if (entry.entryName.match(/([a-z]+-[A-Z]+)_loc.txt/) !== null) {
           let isoCode = entry.entryName.match(/([a-z]+-[A-Z]+)/)[0];
 
