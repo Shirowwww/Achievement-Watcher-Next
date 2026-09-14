@@ -25,7 +25,7 @@
     "electron": "^44.2.0",
     "electron-builder": "^26.15.3",
     "electron-context-menu": "^5.0.0",
-    "oxlint": "^1.81.0",
+    "oxlint": "^1.82.0",
     "patch-package": "^8.0.1"
   },
   "dependencies": {
