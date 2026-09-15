@@ -19,8 +19,12 @@ const ACTION = {
   REPAIR_UPLAY_TICKET: 'repair-uplay-ticket', // uplayR2.setSessionTicket({enabled:true}) - one ini key
   REMOVE_UPLAY_TICKET: 'remove-uplay-ticket', // uplayR2.setSessionTicket({enabled:false}) - takes it back
   INSTALL_RUNTIME: 'install-runtime', // gbeInstaller.installDlls() - backs up replaced dlls as .bak
+  // Same install, offered over a folder a scene crack already serves: the runtime is there, it just
+  // is not one that reads a steam_settings folder. Its own action so the button can say that.
+  SWITCH_RUNTIME: 'switch-runtime',
   START_TRACKING: 'start-tracking', //  gameIndex.upsert() - the same seed the scan writes
   UNMUTE_PROGRESS: 'unmute-progress', // progressMute.toggle()
+  FETCH_PROGRESS: 'fetch-progress', // anonymous generate_emu_config, kept in AW's cache only
   TEST_NOTIFICATION: 'test-notification', // the watchdog websocket test the Settings panel uses
   FIX_APPID: 'fix-appid', //          goldberg.writeSteamAppId() - one file, previous value kept
 };
@@ -46,6 +50,8 @@ const REPAIRABLE_GOLDBERG_CODES = new Set([
   'NO_NEW_APP_TICKET',
   'NO_GC_TOKEN',
   'NO_USER_CONFIG',
+  // writeUserConfig() blanks GBE's example value whenever it rewrites configs.user.ini.
+  'PLACEHOLDER_SAVE_PATH',
   'BAD_DLC_CONFIG',
   'BAD_USER_CONFIG',
   // Both are properties of achievements.json, which the repair rewrites from the fetched schema.
@@ -94,8 +100,10 @@ const ISSUE_TOPIC = {
   NO_USER_CONFIG: 'account',
   BAD_USER_CONFIG: 'account',
   CUSTOM_SAVE_PATH: 'savepath',
+  PLACEHOLDER_SAVE_PATH: 'savepath',
   SETTINGS_NOT_BESIDE_DLL: 'location',
   UNREAL_ENGINE_DLL_UNCONFIGURED: 'location',
+  RUNTIME_DLL_NOT_EMULATOR: 'runtime',
   LOADER_NO_ACH_REDIRECT: 'loader',
   NO_SESSION_TICKET: 'session',
   SESSION_TICKET_NO_EFFECT: 'session',
@@ -180,9 +188,22 @@ function identityCheck(signals) {
   return check('identity', LEVEL.WARN, { params: { source: source || '' } });
 }
 
+/*
+  Steam settled that this appid publishes no achievements (achievements.js sets the flag from the
+  verdict steam.js stamps, never from a count). A game like The Sims 4 has nothing to track, so
+  nothing here can be broken: every check that would otherwise read the empty list as a failure
+  has to step aside instead.
+*/
+function hasNoAchievements(signals) {
+  return !!(signals.achievements && signals.achievements.none);
+}
+
 function achievementDataCheck(signals) {
   const total = num(signals.achievements && signals.achievements.total);
   const goldberg = signals.goldberg;
+
+  // Not a missing schema: there is no schema to have. Informational, never blocking.
+  if (hasNoAchievements(signals)) return check('achievement-data', LEVEL.INFO, { params: { none: true } });
 
   if (total === 0) {
     // An emulated game with a readable on-disk schema still has data even when the app's own
@@ -228,7 +249,29 @@ function achievementDataCheck(signals) {
   elsewhere entirely, and demanding steam_settings from them reported working games as broken.
 */
 function emulatorCheck(signals) {
+  // An emulator setup over a game with no achievements has nothing to read and nothing to repair.
+  // Diagnosing it anyway turned an inert folder into a list of faults on a game that is fine.
+  if (hasNoAchievements(signals)) return null;
   const goldberg = signals.goldberg;
+  /*
+    A folder a crack loader already serves (RUNE, CODEX, OnlineFix, ...) is deliberately never
+    diagnosed as a Goldberg setup - measuring it against steam_settings reports working games as
+    broken. Saying nothing at all then left no row at all on exactly the games whose unlocks come
+    from somewhere unexpected, so name the loader instead. Informational: AW cannot inspect that
+    runtime, and a crack that works is not a fault.
+  */
+  if ((!signals.emulated || !goldberg) && signals.crackLoader && signals.crackLoader.name) {
+    // Launched at least once and still nothing recorded: some scene builds simply never call the
+    // achievement API. Swapping their runtime for GBE Fork is the only thing that changes that, so
+    // offer it here - never automatically, and never over a crack that is demonstrably working.
+    const idle = num(signals.playtime && signals.playtime.total) > 0 && num(signals.achievements && signals.achievements.unlocked) === 0;
+    // ...and only where that runtime IS the steam_api dll: see crackLoaderDetect's `replaceable`.
+    const canSwitch = idle && signals.crackLoader.replaceable === true;
+    return check('emulator', LEVEL.INFO, {
+      params: { servedBy: signals.crackLoader.name, ...(idle ? { idle: true } : {}) },
+      actions: canSwitch ? [ACTION.SWITCH_RUNTIME] : [],
+    });
+  }
   if (!signals.emulated || !goldberg) return null;
 
   const dllCount = num(goldberg.dllCount);
@@ -252,18 +295,28 @@ function emulatorCheck(signals) {
     all. dllCount is about the rest of the game, so the runtime action has to be offered on this
     code specifically rather than on "no dll anywhere".
   */
-  const engineUnconfigured = (goldberg.issues || []).some((issue) => issue && issue.code === 'UNREAL_ENGINE_DLL_UNCONFIGURED');
+  const codes = new Set((goldberg.issues || []).map((issue) => issue && issue.code));
+  const engineUnconfigured = codes.has('UNREAL_ENGINE_DLL_UNCONFIGURED');
+  /*
+    The dll that will be loaded is somebody else's runtime, so the settings beside it are inert and
+    every other row of this report describes a folder the game never opens. Installing the supported
+    build over it is the fix, and the same one-file install as above.
+  */
+  const foreignRuntime = codes.has('RUNTIME_DLL_NOT_EMULATOR');
+  const needsRuntime = engineUnconfigured || foreignRuntime;
   const withAppidFix = (actions) => {
-    const withRuntime = engineUnconfigured && !actions.includes(ACTION.INSTALL_RUNTIME) ? [...actions, ACTION.INSTALL_RUNTIME] : actions;
+    const withRuntime = needsRuntime && !actions.includes(ACTION.INSTALL_RUNTIME) ? [...actions, ACTION.INSTALL_RUNTIME] : actions;
     return mismatch ? [...withRuntime, ACTION.FIX_APPID] : withRuntime;
   };
-  const appidParams = mismatch ? { appidOnDisk: mismatch.onDisk, appidExpected: mismatch.expected } : {};
+  const appidParams = { ...(mismatch ? { appidOnDisk: mismatch.onDisk, appidExpected: mismatch.expected } : {}), ...(foreignRuntime ? { foreignRuntime: true } : {}) };
 
   const errors = issuesAtLevel(goldberg, 'error');
   if (errors.length > 0) {
     const actions = errors.some((issue) => REPAIRABLE_GOLDBERG_CODES.has(issue.code)) ? [ACTION.REPAIR_DATA] : [];
     return check('emulator', LEVEL.FAIL, {
       params: { emulator: goldberg.emulator || 'none', topics: issueTopics(errors), ...appidParams },
+      // Nothing this setup holds will ever be read while a foreign runtime serves the folder.
+      blocking: foreignRuntime,
       actions: withAppidFix(actions),
     });
   }
@@ -340,23 +393,62 @@ function uplayCheck(signals) {
 // Has anything actually been unlocked or recorded yet: "has progress data" vs "has nowhere to
 // read progress from" is the distinction that matters - a genuine 0% game is not a fault.
 function progressCheck(signals) {
+  // Nothing to unlock, so "nothing unlocked yet" is not a sentence worth printing.
+  if (hasNoAchievements(signals)) return null;
   const unlocked = num(signals.achievements && signals.achievements.unlocked);
   const save = signals.goldberg && signals.goldberg.save;
   const uplaySave = signals.uplay && signals.uplay.save;
 
+  /*
+    A save AW Next seeded itself and nothing has written to since is not a save: it is the locked
+    placeholder the fix leaves behind. Counting it as one turned "nothing is recording unlocks" into
+    a calm "nothing unlocked yet", which is exactly the wrong sentence for a setup the game never
+    loads (goldberg.inspectSaveState sets the flag).
+  */
+  const written = !!(save && save.exists && !save.seeded);
+
   if (unlocked > 0) return check('progress', LEVEL.OK, { params: { unlocked } });
-  if (save && save.exists && num(save.earned) > 0) return check('progress', LEVEL.OK, { params: { unlocked: num(save.earned) } });
+  if (written && num(save.earned) > 0) return check('progress', LEVEL.OK, { params: { unlocked: num(save.earned) } });
   if (uplaySave && uplaySave.exists && num(uplaySave.earned) > 0) return check('progress', LEVEL.OK, { params: { unlocked: num(uplaySave.earned) } });
-  if (save && save.exists) return check('progress', LEVEL.INFO, { params: { type: save.type || '' } });
+  if (written) return check('progress', LEVEL.INFO, { params: { type: save.type || '' } });
+  /*
+    The placeholder only means something once the game has run on it. Right after a setup or a
+    repair nothing could have been written yet, and a warning there reads as a fault in the fix
+    that was just applied. lastPlayed is in seconds, seededAt in milliseconds.
+  */
+  if (save && save.exists && save.seeded && num(save.seededAt) > 0) {
+    const lastPlayedMs = num(signals.playtime && signals.playtime.lastPlayed) * 1000;
+    if (lastPlayedMs <= num(save.seededAt)) return check('progress', LEVEL.INFO, {});
+  }
   // Only warn when the save location is actually known and empty. Without a diagnosed setup there
   // is nowhere to have looked, so "no progress" is just a game with no progress.
   if (signals.emulated && signals.goldberg && signals.goldberg.steamSettings) return check('progress', LEVEL.WARN, {});
   return check('progress', LEVEL.INFO, {});
 }
 
+/*
+  Progress counters ("37/50") for a save that keeps its stats apart from its unlocks (CODEX, RUNE,
+  OnlineFix). Shown only when that save has stats: every other game either stores progress itself
+  or has none. A missing table is not a fault, so it is INFO with the fetch offered.
+*/
+function countersCheck(signals) {
+  if (hasNoAchievements(signals)) return null;
+  const counters = signals.counters;
+  if (!counters || num(counters.stats) <= 0) return null;
+  const params = { stats: num(counters.stats), count: num(counters.count), source: counters.source || '' };
+  if (counters.source && params.count > 0) return check('counters', LEVEL.OK, { params });
+  // Steam itself says no achievement has a counter: nothing is missing, and nothing to fetch.
+  if (counters.official === 0) return check('counters', LEVEL.OK, { params: { ...params, none: true } });
+  if (num(counters.official) > 0) params.official = num(counters.official);
+  return check('counters', LEVEL.INFO, { params, actions: counters.canFetch ? [ACTION.FETCH_PROGRESS] : [] });
+}
+
 // Live tracking means the watchdog's process monitor matched a running binary; console emulators
 // and official platform libraries use their own watchers, so a missing entry there is normal.
 function trackingCheck(signals) {
+  // The process monitor exists to catch unlocks. With no achievement to catch, a game missing from
+  // the index is not a gap, and playtime alone has never been worth a warning row.
+  if (hasNoAchievements(signals)) return null;
   if (signals.processTracking === false) return null;
   const tracking = signals.tracking || {};
   if (tracking.indexed && tracking.binary) return check('tracking', LEVEL.OK, { params: { binary: tracking.binary } });
@@ -399,6 +491,7 @@ function buildChecks(signals) {
     emulatorCheck(signals),
     uplayCheck(signals),
     progressCheck(signals),
+    countersCheck(signals),
     trackingCheck(signals),
     notificationCheck(signals),
   ].filter(Boolean);
@@ -422,10 +515,16 @@ function explain(state, checks, signals) {
   if (install && install.level === LEVEL.FAIL) {
     return { reason: signals.gameDir ? 'install-gone' : 'not-installed', params: install.params };
   }
+  // Outranks every setup sentence below: there is no achievement to track, so nothing downstream
+  // can be a fault. Only the install rows above still matter, since a missing folder is one.
+  if (hasNoAchievements(signals)) return { reason: 'no-achievements', params: {} };
   if (data && data.level === LEVEL.FAIL && data.blocking) return { reason: 'no-achievement-data', params: data.params };
   // Only a blocking emulator failure means "there is no emulator here"; a report that merely
   // carries schema or config errors is explained by the check that owns those instead.
   if (emulator && emulator.level === LEVEL.FAIL && emulator.blocking) {
+    // The runtime is present, it just belongs to another crack - a different sentence from "the
+    // emulator file is missing", and a different thing for the user to decide.
+    if (emulator.params && emulator.params.foreignRuntime) return { reason: 'emulator-runtime-foreign', params: emulator.params };
     const canInstall = emulator.actions.includes(ACTION.INSTALL_RUNTIME);
     return { reason: canInstall ? 'emulator-runtime-missing' : 'emulator-missing', params: emulator.params };
   }
@@ -451,8 +550,14 @@ function explain(state, checks, signals) {
   return { reason: 'attention', params: {} };
 }
 
-function deriveState(checks) {
+function deriveState(checks, signals = {}) {
   if (checks.some((entry) => entry.blocking && entry.level === LEVEL.FAIL)) return STATE.NOT_TRACKING;
+  /*
+    The state answers "are this game's achievements being tracked". A game that publishes none is
+    trivially fine, whatever the rows above say about an executable AW could not place or a folder
+    somebody set up for nothing - none of it can cost an unlock that does not exist.
+  */
+  if (hasNoAchievements(signals)) return STATE.READY;
   if (checks.some((entry) => entry.level === LEVEL.FAIL || entry.level === LEVEL.WARN)) return STATE.ATTENTION;
   return STATE.READY;
 }
@@ -494,6 +599,10 @@ function buildTechnical(signals) {
           // Packaged Unreal builds only: the folder the engine loads steam_api from, which is not
           // under the game folder at all when the library anchored the game on its project folder.
           engineDllDirs: Array.isArray(goldberg.engineDllDirs) ? goldberg.engineDllDirs : [],
+          // One entry per steam_api dll on disk, saying which build it is (gbeInstaller
+          // .describeRuntimeDlls). "awBuild: false" on the engine's own copy is the whole answer
+          // when a repaired game still records nothing, and no other field can carry it.
+          runtimeDlls: Array.isArray(goldberg.runtimeDlls) ? goldberg.runtimeDlls : [],
           settingsBesideDll: goldberg.settingsBesideDll === undefined ? null : goldberg.settingsBesideDll,
           localSaveDir: goldberg.localSaveDir || '',
           expected: goldberg.achievements ? goldberg.achievements.expected : null,
@@ -516,6 +625,7 @@ function buildTechnical(signals) {
         }
       : null,
     tracking: signals.tracking || { indexed: false, binary: '' },
+    counters: signals.counters || null,
     notifications: signals.notifications || {},
     playtime: signals.playtime || { total: 0, lastPlayed: 0 },
   };
@@ -525,7 +635,7 @@ function buildTechnical(signals) {
 // app knows almost nothing about still produces a usable report.
 function deriveHealth(signals = {}) {
   const checks = buildChecks(signals);
-  const state = deriveState(checks);
+  const state = deriveState(checks, signals);
   const { reason, params } = explain(state, checks, signals);
 
   // Offer each action once, in the order the checks raised it, so the primary fix for the reported
@@ -545,11 +655,15 @@ function deriveHealth(signals = {}) {
 */
 function hasDot(game) {
   const record = game && typeof game === 'object' ? game : {};
+  // A game Steam says has no achievements gets no dot: there is no state to report and no repair
+  // to offer, and any colour there reads as a verdict on a setup that was never needed.
+  if (record.achievement && record.achievement.none) return false;
   return typeof record.hasSteamApiDll === 'boolean' || !!record.uplayR2 || record.system === 'uplay';
 }
 
 function scannedState(game) {
   const record = game && typeof game === 'object' ? game : {};
+  if (record.achievement && record.achievement.none) return STATE.READY;
   const total = num(record.achievement && record.achievement.total);
   if (record.uplayR2 || record.system === 'uplay') {
     // uplayHealthy is set by the scan only after diagnosing the loader/config; absent means "not

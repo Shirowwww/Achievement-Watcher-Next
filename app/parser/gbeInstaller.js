@@ -410,6 +410,22 @@ async function downloadAndCache(cacheDir, tag, assetUrl, log) {
   to be, and interfaces read out of one describe the emulator, not the game. GSE falls back to its
   own default interface versions when the file is absent, which is the safer of the two answers.
 */
+/*
+  Where a scene release keeps the Valve dll it replaced. RUNE renames the original to
+  steam_api64.rne beside its own runtime (1.1 MB emulator, 295 KB original on The Blood of
+  Dawnwalker), and a loader swap that sets the crack aside renames that one to .rne.bak in turn. The
+  name alone proves nothing, so every candidate still goes through the emulator-marker test.
+*/
+function preservedOriginalsFor(dllFile) {
+  const stem = String(dllFile).replace(/\.dll$/i, '');
+  return stem === String(dllFile) ? [] : [`${stem}.rne`, `${stem}.rne.bak`];
+}
+
+// x64 or x86 from a steam_api file name, whatever suffix a crack or a backup gave it.
+function archOfSteamApiFile(file) {
+  return /^steam_api64\./i.test(path.basename(String(file || ''))) ? 'x64' : 'x86';
+}
+
 function interfaceSourceFor(dllPath, candidates = []) {
   const ordered = [];
   const add = (file) => {
@@ -421,6 +437,12 @@ function interfaceSourceFor(dllPath, candidates = []) {
     if (!file) continue;
     if (/\.bak$/i.test(file)) add(file);
     else {
+      /*
+        A scene release's preserved original outranks AW Next's own backup. Once the swap has run,
+        that .bak holds the crack's runtime, which carries no GBE marker and so passes the emulator
+        test - the generator then read the crack instead of Valve's dll.
+      */
+      for (const preserved of preservedOriginalsFor(file)) add(preserved);
       add(`${file}.bak`);
       add(file);
     }
@@ -445,8 +467,9 @@ async function generateInterfaces({ dllPath, steamSettings, dlls, candidates = [
     return { generated: false, reason: source.reason };
   }
   const original = source.file;
-  const originalName = path.basename(original).replace(/\.bak$/i, '').toLowerCase();
-  const arch = originalName === 'steam_api64.dll' ? 'x64' : 'x86';
+  // Read from the name's stem: a preserved original is steam_api64.rne, not steam_api64.dll, and
+  // comparing against the full name sent it to the x86 generator.
+  const arch = archOfSteamApiFile(original);
   const tool = dlls && dlls.interfaces && dlls.interfaces[arch];
   const toolExe = tool && typeof tool === 'object' ? tool.exe : tool;
   const toolArgs = tool && typeof tool === 'object' && Array.isArray(tool.args) ? tool.args : [];
@@ -515,6 +538,62 @@ function runtimeDllState({ dllDirs = [], arch = 'x64', cacheDir = null } = {}) {
     .filter((candidate) => fs.existsSync(candidate));
   const stale = targets.find((candidate) => !matchesCachedDll(candidate, cacheDir, arch)) || null;
   return { file, targets, stale, ready: targets.length > 0 && !stale };
+}
+
+/*
+  What is actually sitting in each folder the emulator can be loaded from. The health report used to
+  carry a count and a list of folders, which cannot answer the only question that matters when a
+  fixed game still records nothing: is the dll in that folder the supported GBE build AW Next
+  installed, or the one the release shipped? Everything here is a disk fact - no download, no hash
+  of anything but the cached build already on this machine - so it is cheap enough for a per-game
+  report, and it is what a bug report has to carry for the answer to be readable from the outside.
+*/
+function describeRuntimeDlls({ dllDirs = [], cacheDir = null } = {}) {
+  const out = [];
+  const seen = new Set();
+  for (const dir of dllDirs || []) {
+    if (!dir) continue;
+    const dirKey = path.resolve(dir).toLowerCase();
+    if (seen.has(dirKey)) continue;
+    seen.add(dirKey);
+    for (const archKey of Object.keys(ARCH)) {
+      const name = ARCH[archKey].file;
+      const file = path.join(dir, name);
+      if (!fs.existsSync(file)) continue;
+      let size = 0;
+      let modified = 0;
+      try {
+        const stats = fs.statSync(file);
+        size = stats.size;
+        modified = Math.round(stats.mtimeMs);
+      } catch {
+        /* the file vanished between the check and the stat - report what is known */
+      }
+      const backup = `${file}.bak`;
+      const hasBackup = fs.existsSync(backup);
+      const preserved = preservedOriginalsFor(file).find((candidate) => fs.existsSync(candidate) && !emulatorDll(candidate)) || '';
+      out.push({
+        dir,
+        file: name,
+        arch: archKey,
+        size,
+        modified,
+        // Is this file an emulator at all, and is it OUR emulator? A release's own build answers
+        // yes then no, which is the difference between "the fix landed" and "the fix went elsewhere".
+        emulator: emulatorDll(file),
+        awBuild: matchesCachedDll(file, cacheDir, archKey),
+        backup: hasBackup,
+        // A backup that is itself an emulator is the release's dll, not Valve's: steam_interfaces.txt
+        // can never be generated from it (see interfaceSourceFor). Beside a scene release's preserved
+        // original, the backup is the crack's runtime unless it is that very file.
+        backupOriginal: hasBackup ? !emulatorDll(backup) && (!preserved || sameFileBytes(backup, preserved)) : false,
+        preservedOriginal: preserved ? path.basename(preserved) : '',
+        settings: fs.existsSync(path.join(dir, 'steam_settings')),
+        interfaces: fs.existsSync(path.join(dir, 'steam_settings', 'steam_interfaces.txt')),
+      });
+    }
+  }
+  return out;
 }
 
 const AUXILIARY_DLL_DIRS = new Set([
@@ -733,7 +812,10 @@ module.exports = {
   matchesCachedDll,
   runtimeDllDirs,
   runtimeDllState,
+  describeRuntimeDlls,
   interfaceSourceFor,
+  preservedOriginalsFor,
+  archOfSteamApiFile,
   customDlls,
   importCustomDlls,
   clearCustomDlls,

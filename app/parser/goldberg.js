@@ -10,7 +10,9 @@ const dirCache = require(path.join(__dirname, '..', 'util', 'dirCache.js'));
 const launcherDetect = require(path.join(__dirname, 'launcherDetect.js'));
 const crackLoaderDetect = require(path.join(__dirname, '..', 'util', 'crackLoaderDetect.js'));
 const unrealLayout = require(path.join(__dirname, '..', 'util', 'unrealLayout.js'));
+const runtimeSaveSeed = require(path.join(__dirname, '..', 'util', 'runtimeSaveSeed.js'));
 const { parseIni, stringifyIni, getIniSection, upsertIniSection, upsertIniKeys, sanitizeIniValue } = require(path.join(__dirname, '..', 'util', 'emuIni.js'));
+const awManagedConfig = require(path.join(__dirname, '..', 'util', 'awManagedConfig.js'));
 
 const APPID_CONFIG_FILES = new Set([
   'steam_appid.txt',
@@ -110,6 +112,17 @@ function hasEmuDllBeside(dir) {
   const entries = dirCache.readdirNames(dir);
   if (!entries) return false;
   return entries.some((entry) => EMU_DLL_NAMES.includes(String(entry).toLowerCase()));
+}
+
+/*
+  The steam_api dll(s) directly in `dir`, and whether any of them is a Goldberg/GBE runtime. A dll
+  that carries no such marker never opens a steam_settings folder: it is Valve's own, or another
+  crack's runtime that keeps unlocks in a tree of its own.
+*/
+function runtimeDllsIn(dir) {
+  const names = (dirCache.readdirNames(dir) || []).filter((entry) => EMU_DLL_NAMES.includes(String(entry).toLowerCase()));
+  const dlls = names.map((name) => path.join(dir, name));
+  return { dlls, emulated: dlls.some((dll) => crackLoaderDetect.isEmulatorDll(dll)) };
 }
 
 // Locate the steam_settings folder for a game. GBE Fork keeps it next to the emu .dll, which may be
@@ -286,15 +299,24 @@ function backupSetup({ gameDir, destinationRoot, steamSettings } = {}) {
   fs.mkdirSync(backupDir, { recursive: true });
 
   const files = sources.map((source) => copyIntoBackup(source, gameDir, backupDir));
+  /*
+    A backup is only as good as what it says about itself. Versions up to 3.10.6 rewrote the emulator
+    configs during a plain scan, so a backup taken afterwards captures AW Next's own configuration and
+    not the state the folder shipped in - and it looks identical to a real one. Record what was found
+    so the caller can say so instead of handing over a backup the user believes is pristine.
+  */
+  const managed = settingsDir && fs.existsSync(settingsDir) ? awManagedConfig.inspect(settingsDir) : { managed: false, files: [] };
   const manifest = {
-    version: 1,
+    version: 2,
     createdAt: new Date().toISOString(),
     gameDir: resolvedGameDir,
     emulator: emu.type,
+    pristine: !managed.managed,
+    awManagedFiles: managed.files,
     files,
   };
   fs.writeFileSync(path.join(backupDir, 'backup.json'), JSON.stringify(manifest, null, 2));
-  return { backupDir, files, manifest };
+  return { backupDir, files, manifest, pristine: !managed.managed, awManagedFiles: managed.files };
 }
 
 // Restore a portable backup created by backupSetup: reads backup.json and copies each recorded
@@ -347,7 +369,10 @@ function detectEmulator(gameDir) {
   // `type` says which SHAPE of setup is on disk, and only two shapes are read differently: a GBE
   // Fork one and a classic Goldberg one, which keep their saves in different folders. `loader` is a
   // separate question - WHICH emulator supplied the dll - and it is the one worth showing somebody.
-  const result = { type: 'none', steamSettings: null, dll: [], configs: [], loader: null };
+  // `foreignDll` are steam_api dlls that WILL be loaded and carry no Goldberg/GBE marker: another
+  // crack's runtime, or Valve's own. They stay in `dll` because a repair still has to target their
+  // folder - what they must never do is pass for a working setup (see diagnose/RUNTIME_DLL_NOT_EMULATOR).
+  const result = { type: 'none', steamSettings: null, dll: [], configs: [], loader: null, foreignDll: [] };
   if (!gameDir || !fs.existsSync(gameDir)) return result;
 
   // Replaced steam_api dll(s) anywhere shallow under the game root (the dll sits next to the binary).
@@ -378,9 +403,12 @@ function detectEmulator(gameDir) {
     // A packaged build always ships Valve's own dll there, so presence alone proves nothing: only an
     // emulator dll, or one with a steam_settings beside it, is evidence of a setup. Counting the
     // stock SDK copy would report every legitimately installed Unreal game as emulated.
-    const replaced = crackLoaderDetect.isEmulatorDll(dllPath) || fs.existsSync(path.join(path.dirname(dllPath), 'steam_settings'));
+    const isEmulator = crackLoaderDetect.isEmulatorDll(dllPath);
+    const replaced = isEmulator || fs.existsSync(path.join(path.dirname(dllPath), 'steam_settings'));
     if (!replaced) continue;
     if (!result.dll.some((known) => known.toLowerCase() === dllPath.toLowerCase())) result.dll.push(dllPath);
+    // Counted only because a steam_settings sits beside it - which is the folder AW itself wrote.
+    if (!isEmulator) result.foreignDll.push(dllPath);
   }
 
   const steamSettings = findSteamSettings(gameDir);
@@ -468,12 +496,13 @@ function readConfiguredSavePath(steamSettings) {
   let value = '';
   try {
     const text = fs.readFileSync(path.join(steamSettings, 'configs.user.ini'), 'utf8');
-    const match = text.match(/^\s*local_save_path\s*=\s*(.+?)\s*$/im);
+    // [ \t] and not \s: an emptied "local_save_path=" must not borrow the comment on the next line.
+    const match = text.match(/^[ \t]*local_save_path[ \t]*=[ \t]*(\S.*?)[ \t]*$/im);
     if (match) value = match[1].trim();
     if (!value) {
       // GBE can also rename its %APPDATA% save root ([user::saves] saves_folder_name=...): the
       // folder replaces "GSE Saves" while keeping the <appid>/achievements.json shape below it.
-      const renamed = text.match(/^\s*saves_folder_name\s*=\s*(.+?)\s*$/im);
+      const renamed = text.match(/^[ \t]*saves_folder_name[ \t]*=[ \t]*(\S.*?)[ \t]*$/im);
       const name = renamed ? renamed[1].trim() : '';
       if (name && process.env['APPDATA']) value = path.join(process.env['APPDATA'], name);
     }
@@ -534,7 +563,9 @@ function resolveLocalSaveDir({ steamSettings, appid } = {}) {
 // written any unlocked-achievement state yet. `localSaveDir` is checked first: when a setup
 // redirects its saves, the standard roots are empty by design.
 function inspectSaveState(appid, savesRoots = defaultSavesRoots(), localSaveDir = null) {
-  const state = { root: null, type: null, file: null, earned: 0, total: 0, exists: false };
+  // `seeded` marks the one case a bare "save found" cannot describe: the locked placeholder AW Next
+  // writes when a setup is applied, still untouched, which says nothing at all about the emulator.
+  const state = { root: null, type: null, file: null, earned: 0, total: 0, exists: false, seeded: false };
   if (appid == null) return state;
   const locations = [];
   if (localSaveDir) locations.push({ type: 'local', root: path.dirname(localSaveDir), file: path.join(localSaveDir, 'achievements.json') });
@@ -556,6 +587,8 @@ function inspectSaveState(appid, savesRoots = defaultSavesRoots(), localSaveDir 
     } catch {
       /* unreadable save - leave counts at 0 */
     }
+    state.seeded = runtimeSaveSeed.isUntouchedSeed(file);
+    if (state.seeded) state.seededAt = Number((runtimeSaveSeed.read(file) || {}).seededAt) || 0;
     break;
   }
   return state;
@@ -619,9 +652,46 @@ function seedRuntimeSave({ appid, schema, steamSettings, savesRoots = defaultSav
     }
 
     fs.writeFileSync(file, JSON.stringify(state, null, 2));
+    // Recorded, so a later diagnosis can say "AW Next wrote this, the emulator has not" instead of
+    // reporting the placeholder as evidence the setup works.
+    runtimeSaveSeed.record(file, { appid: summary.appid, entries: summary.entries });
     summary.created.push({ type, file });
   }
   return summary;
+}
+
+/*
+  A steam_api dll that steam_interfaces.txt could still be generated from: AW Next's own one-time
+  .bak first, then any copy on disk that is not itself an emulator. A repack that shipped its
+  emulator where the original used to be leaves none, and the file can then never be produced - GSE
+  falls back to its built-in interface versions. gbeInstaller.interfaceSourceFor makes the same call
+  at install time and only writes it to the log; this is the same answer, in the report.
+*/
+function originalSteamApiDll(dirs) {
+  const seen = new Set();
+  for (const dir of dirs || []) {
+    if (!dir) continue;
+    const key = path.resolve(dir).toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    for (const name of EMU_DLL_NAMES) {
+      // A RUNE release keeps the Valve dll it replaced as steam_api64.rne (see
+      // gbeInstaller.preservedOriginalsFor); the marker test below still decides.
+      const stem = name.replace(/\.dll$/i, '');
+      // Before AW Next's own .bak, which holds the crack's runtime once the swap has run.
+      const candidates = [`${stem}.rne`, `${stem}.rne.bak`, `${name}.bak`, name].map((file) => path.join(dir, file));
+      for (const candidate of candidates) {
+        try {
+          if (!fs.existsSync(candidate)) continue;
+        } catch {
+          continue;
+        }
+        if (crackLoaderDetect.isEmulatorDll(candidate)) continue;
+        return candidate;
+      }
+    }
+  }
+  return '';
 }
 
 // Diagnose a game's Goldberg/GBE achievement setup. cfg: { gameDir, appid, schema, savesRoots? }.
@@ -636,6 +706,7 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
     dllDirs: [], // the folders the replaced steam_api dll(s) sit in - where the emulator reads settings
     engineDllDirs: [], // packaged-Unreal Steamworks folders: the dll the engine loads, whatever else is on disk
     settingsBesideDll: null, // null when no dll was found, otherwise whether steam_settings is beside one
+    foreignRuntimeDirs: [], // folders whose steam_api dll is somebody else's runtime, so the settings there are inert
     save: null, // runtime unlock-state summary (from inspectSaveState)
     localSaveDir: null, // set when configs.user.ini / local_save.txt redirects the save folder
     ok: false,
@@ -713,6 +784,30 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
     );
   }
 
+  /*
+    A steam_settings folder is only ever read by a dll that reads steam_settings at all. A scene
+    crack (RUNE, CODEX, ...) ships a runtime of its own that keeps unlocks in its own tree and
+    ignores the folder entirely - and that folder's mere presence beside the dll is what made the
+    install count as "set up" in the first place, so the whole report below went green while the
+    game recorded nothing. Only folders whose settings this report is validating are checked, so a
+    build's unused Win32 copy is never mistaken for the runtime (Little Nightmares Enhanced Edition).
+  */
+  const servedDirs = [settingsParent, ...report.engineDllDirs.filter((dir) => fs.existsSync(path.join(dir, 'steam_settings')))].filter(
+    (dir, index, all) => all.findIndex((other) => sameDir(other, dir)) === index
+  );
+  const servedRuntimes = servedDirs.map((dir) => ({ dir, ...runtimeDllsIn(dir) })).filter((entry) => entry.dlls.length > 0);
+  const inertDirs = servedRuntimes.filter((entry) => !entry.emulated).map((entry) => entry.dir);
+  report.foreignRuntimeDirs = inertDirs;
+  // Only when NO served folder has a real runtime: one good dll is enough for the setup to work.
+  if (inertDirs.length > 0 && inertDirs.length === servedRuntimes.length) {
+    add(
+      'error',
+      'RUNTIME_DLL_NOT_EMULATOR',
+      `The steam_api dll in ${inertDirs.join(', ')} is not a Goldberg/GBE runtime${report.loader ? ` (${report.loader})` : ''}, so the steam_settings beside it is never read and none of these settings apply.`,
+      { dllDirs: inertDirs, loader: report.loader || '' }
+    );
+  }
+
   const localSaveDir = resolveLocalSaveDir({ steamSettings, appid: report.appid });
   report.localSaveDir = localSaveDir || null;
   if (localSaveDir) report.save = inspectSaveState(appid, savesRoots, localSaveDir);
@@ -761,16 +856,24 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
     add('warning', 'NO_USER_CONFIG', 'configs.user.ini is missing - account name and language are not configured.');
   } else {
     const userConfig = fs.readFileSync(userConfigFile, 'utf8');
-    if (!/^\s*\[user::general\]/im.test(userConfig) || !/^\s*account_name\s*=\s*\S/im.test(userConfig) || !/^\s*language\s*=\s*\S/im.test(userConfig)) {
+    if (!/^\s*\[user::general\]/im.test(userConfig) || !/^[ \t]*account_name[ \t]*=[ \t]*\S/im.test(userConfig) || !/^[ \t]*language[ \t]*=[ \t]*\S/im.test(userConfig)) {
       add('warning', 'BAD_USER_CONFIG', 'configs.user.ini is missing account_name and/or language under [user::general].');
     }
-    const savePathMatch = userConfig.match(/^\s*local_save_path\s*=\s*(.+?)\s*$/im);
+    const savePathMatch = userConfig.match(/^[ \t]*local_save_path[ \t]*=[ \t]*(\S.*?)[ \t]*$/im);
     if (savePathMatch && savePathMatch[1] && savePathMatch[1].trim()) {
       // A redirected save folder is only a problem when AW cannot find it. resolveLocalSaveDir
       // resolves the configured path and report.save reads from it, so a working redirect is
       // reported as info, not as the unfixable warning it would otherwise be.
       if (localSaveDir) {
         add('info', 'CUSTOM_SAVE_PATH', `Saves are redirected by configs.user.ini to ${localSaveDir} - AW reads them there.`, { path: localSaveDir });
+      } else if (isPlaceholderSavePath(savePathMatch[1])) {
+        // Nobody chose this: GBE's example value left active by a repack. repair() blanks it.
+        add(
+          'warning',
+          'PLACEHOLDER_SAVE_PATH',
+          `configs.user.ini still carries GBE's example local_save_path=${savePathMatch[1].trim()} - saves land in a folder named after it instead of GSE Saves.`,
+          { configured: savePathMatch[1].trim() }
+        );
       } else {
         add(
           'warning',
@@ -779,6 +882,32 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
           { configured: savePathMatch[1].trim() }
         );
       }
+    }
+  }
+
+  /*
+    steam_interfaces.txt lists the Steamworks interface versions the game asks for, and GSE can only
+    be handed it - AW Next generates it from the game's ORIGINAL dll. Missing, the emulator answers
+    from its own built-in versions, which is right for most titles and not for all. Reported at info
+    level in both cases: this is the one part of a complete-looking setup a repair cannot always
+    supply, and painting every working repack orange over it would say nothing useful.
+  */
+  if (!fs.existsSync(path.join(steamSettings, 'steam_interfaces.txt'))) {
+    const original = originalSteamApiDll([...dllDirs, ...report.engineDllDirs, settingsParent]);
+    if (original) {
+      add(
+        'info',
+        'NO_STEAM_INTERFACES',
+        `steam_interfaces.txt is missing from ${steamSettings}. It can be generated from ${original} by installing the emulator runtime again.`,
+        { steamSettings, source: original }
+      );
+    } else {
+      add(
+        'info',
+        'NO_STEAM_INTERFACES_UNRECOVERABLE',
+        `steam_interfaces.txt is missing from ${steamSettings} and no original Steam API dll is left on disk to generate it from - this release shipped its own emulator in its place - so the emulator answers with its built-in interface versions.`,
+        { steamSettings }
+      );
     }
   }
 
@@ -849,7 +978,20 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
   // The schema can be perfectly valid while every achievement still shows locked: that just means
   // the emulator hasn't written any unlock state yet. Surface it as info so users stop reporting a
   // correct 0% game as a bug (it's the #1 "locked despite GBE files" confusion).
-  if (report.save && report.save.exists) {
+  if (report.save && report.save.exists && report.save.seeded) {
+    /*
+      The file is there and every achievement in it is locked - because AW Next wrote it, and the
+      emulator has not written to it since. Reporting that as "runtime save found" is how a game
+      that records nothing passes for a healthy setup: the placeholder is indistinguishable from a
+      real save with no unlocks yet, unless the report says which one it is.
+    */
+    add(
+      'info',
+      'SAVE_SEEDED_NOT_WRITTEN',
+      `The runtime save at ${report.save.file} is still the locked placeholder AW Next wrote when this setup was applied - the emulator has not written to it. If the game has been played since, its steam_api dll is not the one the process loads.`,
+      { file: report.save.file, total: report.save.total }
+    );
+  } else if (report.save && report.save.exists) {
     add('info', 'SAVE_PRESENT', `Runtime save found (${report.save.type}): ${report.save.earned}/${report.save.total} unlocked.`);
   } else {
     add('info', 'NO_SAVE_YET', 'No runtime save has been written yet. If achievements unlocked in-game, the emulator/token may not be creating GSE/Goldberg save files or may be writing to a custom local_save_path.');
@@ -939,6 +1081,11 @@ function ensureSupportedLanguage(steamSettings, language) {
 
 // Blank the template local_save_path=./... placeholder GBE ships in configs.user.EXAMPLE.ini:
 // leaving it active redirects saves away from the monitored emu roots. A custom path is untouched.
+function isPlaceholderSavePath(value) {
+  const norm = String(value || '').trim().replace(/^[.\\/]+/, '').replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase();
+  return norm === 'path/relative/to/dll';
+}
+
 function neutralizePlaceholderSavePath(doc) {
   const section = getIniSection(doc, 'user::saves');
   if (!section) return false;
@@ -946,8 +1093,7 @@ function neutralizePlaceholderSavePath(doc) {
   section.body = section.body.map((line) => {
     const m = line.match(/^(\s*local_save_path\s*=\s*)(.*)$/i);
     if (!m) return line;
-    const norm = m[2].trim().replace(/^[.\\/]+/, '').replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase();
-    if (norm !== 'path/relative/to/dll') return line;
+    if (!isPlaceholderSavePath(m[2])) return line;
     fixed = true;
     return m[1].replace(/\s+$/, ''); // keep "local_save_path=", drop the placeholder value
   });
@@ -971,7 +1117,7 @@ function writeUserConfig({ steamSettings, accountName, language, fillDefaults = 
   if (fillDefaults) {
     // Only for a key the file does not already answer: a default must complete a setup, never
     // replace an identity the user (or the repack) deliberately chose.
-    const hasKey = (key) => new RegExp(`^\\s*${key}\\s*=\\s*\\S`, 'im').test(previous);
+    const hasKey = (key) => new RegExp(`^[ \\t]*${key}[ \\t]*=[ \\t]*\\S`, 'im').test(previous);
     if (!updates.account_name && !hasKey('account_name')) updates.account_name = DEFAULT_EMU_ACCOUNT_NAME;
     if (!updates.language && !hasKey('language')) updates.language = DEFAULT_EMU_LANGUAGE;
   }
@@ -1322,11 +1468,17 @@ function findCompatibleGames(roots, { maxDepth = 5, onSkip = null } = {}) {
     seen.add(key);
     const emu = detectEmulator(resolvedGameDir);
     const ssDir = path.join(resolvedGameDir, 'steam_settings');
-    const steamSettings = fs.existsSync(ssDir) ? ssDir : emu.steamSettings || null;
+    // A packaged Unreal build reads settings only beside the engine's dll, so a folder at its root is
+    // one nothing opens - often left there by an earlier AW Next scan - and must not stand in for it.
+    const isUnrealBuild = unrealLayout.steamworksDllDirs(resolvedGameDir).length > 0;
+    const steamSettings = isUnrealBuild ? emu.steamSettings || null : fs.existsSync(ssDir) ? ssDir : emu.steamSettings || null;
     const appid = readAppid(
       marker.appidFile,
       path.join(resolvedGameDir, 'steam_appid.txt'),
-      steamSettings && path.join(steamSettings, 'steam_appid.txt')
+      steamSettings && path.join(steamSettings, 'steam_appid.txt'),
+      // A packaged Unreal build states its identity beside the dll the engine loads, and the nested
+      // walk below refuses to descend into Engine/ (it is a tool folder for every other game shape).
+      ...unrealLayout.steamworksFiles(resolvedGameDir, APPID_CONFIG_FILES)
     ) || marker.appid || (findNestedAppid(resolvedGameDir, path.basename(resolvedGameDir)) || {}).appid;
     let hasSchema = false;
     let schemaCount = 0;
@@ -1371,6 +1523,19 @@ function findCompatibleGames(roots, { maxDepth = 5, onSkip = null } = {}) {
         const emu = detectEmulator(dir);
         if (emu.dll.length > 0) return { gameDir: dir, appid: nestedAppid.appid, appidFile: nestedAppid.file };
       }
+    }
+    /*
+      A packaged Unreal build carries none of the markers above at its root: its dll, its
+      steam_appid.txt and its emulator settings all sit in Engine/Binaries/ThirdParty/Steamworks,
+      seven levels down - two past where this walk stops, and inside the one folder findNestedAppid
+      refuses to enter (Engine/ is an editor/SDK folder for every other game shape). Such a build
+      was therefore never discovered as an install at all, and only surfaced as an unidentified
+      folder with no achievements (Little Nightmares II Enhanced Edition). Probed last and only for
+      a folder that actually has an Engine/ subfolder, so it costs nothing anywhere else.
+    */
+    if (entries.some((e) => e.isDirectory() && e.name.toLowerCase() === 'engine') && unrealLayout.steamworksDlls(dir).length > 0) {
+      const [appidFile] = unrealLayout.steamworksFiles(dir, APPID_CONFIG_FILES);
+      if (appidFile) return { gameDir: dir, appid: parseAppidFromConfig(appidFile), appidFile };
     }
     return null;
   };
@@ -1431,6 +1596,7 @@ module.exports = {
   writeUserConfig,
   diagnose,
   inspectSaveState,
+  originalSteamApiDll,
   readConfiguredSavePath,
   resolveLocalSaveDir,
   buildRuntimeAchievementsState,

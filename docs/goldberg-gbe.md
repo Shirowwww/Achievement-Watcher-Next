@@ -52,6 +52,19 @@ The default roots are evaluated under `%APPDATA%`:
 
 A missing runtime file is not an error. It means no unlock state has been written yet. Custom save-path settings must either resolve into a watched root or be added as a user folder.
 
+### The seeded placeholder
+
+Applying a setup calls `seedRuntimeSave`, which writes `<root>\<appid>chievements.json` with
+every achievement locked so a freshly fixed game shows its list before it has ever run. That file is
+otherwise indistinguishable from a real save with no unlocks, and reporting it as one let a setup the
+game never loads read as healthy. `runtimeSaveSeed` therefore drops a `.aw-seed.json` marker beside
+it recording the size and CRC of what was written; while the file still matches, nothing but AW Next
+has touched it, and the first store by the emulator ends the match. `inspectSaveState` exposes this
+as `save.seeded`, the diagnosis raises `SAVE_SEEDED_NOT_WRITTEN` instead of `SAVE_PRESENT`, and the
+health panel stops counting the placeholder as progress. The marker lives in the save folder rather
+than in userData so it survives a portable install, a userData migration and a second AW Next on the
+same machine.
+
 ## Detecting the emulator
 
 `app/parser/goldberg.js` uses local files rather than a product-name guess:
@@ -75,7 +88,13 @@ Name-based AppID matching removes common version and repack suffixes, then ranks
 - schema validity and missing achievement API names;
 - blank descriptions and missing icons;
 - GBE configuration and custom save paths;
-- whether a runtime save exists and how many achievements are earned.
+- whether a runtime save exists, how many achievements are earned, and whether the file is still
+  AW Next's own seeded placeholder (`SAVE_SEEDED_NOT_WRITTEN`);
+- whether `steam_interfaces.txt` is present, and if not whether an original Steam API DLL is still on
+  disk to generate it from (`NO_STEAM_INTERFACES`, `NO_STEAM_INTERFACES_UNRECOVERABLE`). Both are
+  info level: GSE answers from its built-in interface versions without the file, which is right for
+  most titles, and a release that shipped its own emulator over the original leaves nothing any
+  repair could read.
 
 This distinction prevents an empty save from being misreported as a broken schema.
 
@@ -99,6 +118,13 @@ is what an executable proves, the engine's folder leads the install targets and 
 and `UNREAL_ENGINE_DLL_UNCONFIGURED` reports a setup that sits anywhere else. Every packaged build
 also ships Valve's own DLL there, so presence alone proves nothing: it counts as a setup only when
 the DLL carries the emulator marker or a `steam_settings` sits beside it.
+
+Which DLL is in which folder is then the question a report has to answer. `describeRuntimeDlls`
+(`app/parser/gbeInstaller.js`) lists, per folder, the file's size and mtime, whether it is an
+emulator at all, whether it is the supported build AW Next cached, whether a `.bak` is present and
+whether that backup is a genuine original, plus whether a `steam_settings` and a
+`steam_interfaces.txt` sit beside it. The health report carries the result as `goldberg.runtimeDlls`
+so a fix that landed can be told from one that went somewhere the process never looks.
 
 ## Repair behavior
 
