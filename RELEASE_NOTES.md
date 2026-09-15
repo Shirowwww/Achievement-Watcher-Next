@@ -14,7 +14,6 @@ a good part of its cover art.
   every cover came from matching the game's name against SteamGridDB, so anything obscure ended up
   as a blank tile, even though Epic was publishing a picture for it. Both are fixed, and the covers
   an older build overwrote are cleared once so they come back on the next scan.
-
 - **An Unreal game now gets its emulator fix where the engine actually looks.** A packaged Unreal
   build does not load `steam_api64.dll` from beside the executable: it loads one by explicit path
   from `Engine\Binaries\ThirdParty\Steamworks`, six levels down and outside the game folder

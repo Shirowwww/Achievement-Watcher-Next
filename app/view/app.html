@@ -101,11 +101,11 @@
             <div class="title">
               <div class="icon"></div>
               <span></span>
-              <img class="source-icon" hidden alt="" />
               <div class="game-meta">
                 <span class="health-badge" role="img" hidden></span>
                 <span class="ownership-badge" role="img" hidden><i class="fas fa-info-circle" aria-hidden="true"></i></span>
               </div>
+              <img class="source-icon" hidden alt="" />
             </div>
             <div class="stats">
               <div class="counter" data-count="0" data-max="0" data-percent="0"><i class="fas fa-trophy"></i></div>
@@ -243,6 +243,32 @@
                 </li>
 
                 <li class="hasHelper">
+                  <div class="left"><i class="fas fa-puzzle-piece"></i> <span>Manage DLC ownership</span></div>
+                  <div class="right">
+                    <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                    <select autocomplete="off" id="option_manageDlc">
+                      <option value="false" selected>Disabled</option>
+                      <option value="true">Enabled</option>
+                    </select>
+                    <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                  </div>
+                  <div class="help">Writes configs.app.ini so the emulator reports every DLC as owned. Unrelated to achievements: leave it off to keep a game stock or to manage DLC yourself. Disabled by default.</div>
+                </li>
+
+                <li class="hasHelper">
+                  <div class="left"><i class="fas fa-id-card"></i> <span>Write account name and language</span></div>
+                  <div class="right">
+                    <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                    <select autocomplete="off" id="option_stampIdentity">
+                      <option value="false" selected>Disabled</option>
+                      <option value="true">Enabled</option>
+                    </select>
+                    <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                  </div>
+                  <div class="help">Stamps your account name and language into each game's configs.user.ini. Leave it off if you rely on the emulator's central configuration for a predictable name and user ID. Disabled by default.</div>
+                </li>
+
+                <li class="hasHelper">
                   <div class="left"><i class="fas fa-database"></i> <span>steam_settings data</span></div>
                   <div class="right">
                     <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
@@ -265,21 +291,20 @@
                     </select>
                     <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
                   </div>
-                  <div class="help">Anonymous mode already retrieves public DLC/depot data. Steam login is optional: it only adds private or hidden data (such as some depots, branches or languages). Use a THROWAWAY account only - never your main.</div>
+                  <div class="help">Anonymous mode already retrieves public DLC/depot data. Steam login is optional: it only adds private or hidden data (such as some depots, branches or languages).</div>
                 </li>
                 </ul>
               </div>
 
               <div id="emulator-login" class="emulator-login">
                 <div class="emulator-login-heading">
-                  <div class="title"><i class="fas fa-key"></i> <span id="emulator-login-title">Steam login (throwaway account only)</span></div>
-                  <span class="emulator-warning"><i class="fas fa-exclamation-triangle"></i> <span id="emulator-login-warning">Throwaway account</span></span>
+                  <div class="title"><i class="fas fa-key"></i> <span id="emulator-login-title">Steam login</span></div>
                 </div>
                 <p id="emulator-login-desc">Used only when "Data source" is set to Steam login. The password is stored encrypted on this PC and sent only to Steam by generate_emu_config. Steam Guard 2FA is prompted when needed. Leave empty to be asked each time.</p>
                 <div class="emulator-login-fields">
                   <div>
                     <label for="emulator-login-user"><i class="fas fa-user"></i> <span id="emulator-login-user-label">Steam username</span></label>
-                    <input type="text" id="emulator-login-user" autocomplete="off" spellcheck="false" placeholder="throwaway account" />
+                    <input type="text" id="emulator-login-user" autocomplete="off" spellcheck="false" placeholder="Steam account name" />
                   </div>
                   <div>
                     <label for="emulator-login-pass"><i class="fas fa-lock"></i> <span id="emulator-login-pass-label">Steam password</span></label>

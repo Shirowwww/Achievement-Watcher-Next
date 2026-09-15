@@ -200,10 +200,17 @@ test('a setting that was already on gets the warning once, when it acts', () => 
   // The scan has no dialog, so it asks the window - and only ever once per session.
   assert.match(achievements, /module\.exports\.onAutomaticEmulatorFixStarting/);
   assert.match(achievements, /if \(automaticFixNoticeAsked \|\| !automaticFixNoticeHandler\) return automaticFixAllowed;/);
-  // Both automatic paths announce, and both obey the answer: saying "turn it off" has to stop the
-  // game being repaired right now, not only the next one - the scan read the setting before asking.
+  // Every automatic path announces, and every one obeys the answer: saying "turn it off" has to stop
+  // the game being repaired right now, not only the next one - the scan read the setting before
+  // asking. Three paths decline on a no (Uplay repair, the GBE fix, the runtime emulator configs);
+  // the schema repair asks in the positive form because it is building a list, not guarding a write.
   const announced = achievements.match(/!\(await announceAutomaticEmulatorFix\(\)\)/g) || [];
-  assert.equal(announced.length, 2, 'both automatic repair paths must announce and obey');
+  assert.equal(announced.length, 3, 'every automatic repair path must announce and obey');
+  assert.match(
+    achievements,
+    /canAutoApply && \(await announceAutomaticEmulatorFix\(\)\)/,
+    'writing a missing schema is a write into a game folder too - it must announce as well'
+  );
   // And nothing is copied first: the announcement comes before the loader cache is even filled.
   assert.ok(
     achievements.indexOf('announceAutomaticEmulatorFix()') < achievements.indexOf('ensureBundledEmulatorDlls'),

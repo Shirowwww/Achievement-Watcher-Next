@@ -379,6 +379,11 @@ module.exports.load = () => {
     // ColdClient was removed: AW always applies the emulator standalone (DLL swap). Normalize any
     // stale stored 'coldclient' value back to the single supported mode.
     options.emulator.mode = 'regular';
+    // DLC ownership and the account identity are separate decisions from "repair my achievements":
+    // both rewrite files the user may curate by hand (a central emulator config, a deliberately
+    // absent configs.user.ini), so each is opt-in even when automatic repair is on.
+    if (typeof options.emulator.manageDlc !== 'boolean') options.emulator.manageDlc = false;
+    if (typeof options.emulator.stampIdentity !== 'boolean') options.emulator.stampIdentity = false;
     if (typeof options.emulator.steamlessAutoUnpack !== 'boolean') options.emulator.steamlessAutoUnpack = false;
     if (typeof options.emulator.steamlessExperimental !== 'boolean') options.emulator.steamlessExperimental = false;
     if (typeof options.emulator.autoApplyCrackFix !== 'boolean') options.emulator.autoApplyCrackFix = false;
@@ -592,6 +597,8 @@ module.exports.load = () => {
       emulator: {
         autoApplyNewGames: false, // opt-in: one-shot full setup for newly detected unconfigured emulated games (off = never touch game files unprompted)
         mode: 'regular', // standalone DLL swap - the only mode (ColdClient was removed)
+        manageDlc: false, // opt-in: write configs.app.ini (unlock_all + the DLC list). Unrelated to achievements, and a game the user wants stock must stay stock
+        stampIdentity: false, // opt-in: write account_name/language into configs.user.ini. Off keeps a hand-managed or deliberately absent user config untouched
         steamlessAutoUnpack: false, // run Steamless on the game exe before patching
         steamlessExperimental: false, // pass --realign for heavily-protected exes
         autoApplyCrackFix: false, // opt-in: try a confident CrakFiles community-crack match (confident name only, backed-up, idempotent) - off by default since it downloads/overwrites game files
@@ -600,8 +607,8 @@ module.exports.load = () => {
         createLaunchBat: true, // legacy, unused (ColdClient removed) - kept so saved configs round-trip
         apiCheckBypass: false, // opt-in: drop SteamAutoCrack's Steam API ownership-check bypass proxy (winmm.dll) for games that re-check the original DLL/exe after the swap
         checkUpdates: true, // force a same-day GBE Fork release re-check before applying
-        login: 'anonymous', // 'anonymous' | 'steam' (generate_emu_config richer data - throwaway account!)
-        loginAccountName: '', // optional Steam login username (throwaway account)
+        login: 'anonymous', // 'anonymous' | 'steam' (generate_emu_config richer data)
+        loginAccountName: '', // optional Steam login username
         loginPassword: '', // optional Steam login password - AES-encrypted on disk
         steamId: '', // optional account_steamid override for configs.user.ini ('' = let GBE pick)
         uplayUsername: '', // optional Uplay R2 Username override ('' = use the general username)

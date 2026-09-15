@@ -405,3 +405,52 @@ test('an accepted folder still reports which rule accepted it', async () => {
     fs.rmSync(gameDir, { recursive: true, force: true });
   }
 });
+
+// AW's own repair blanks GBE's example value to "local_save_path=". Read with \s, the empty key
+// took the comment on the next line as its path, and the repaired game was flagged forever.
+test('an emptied local_save_path does not read the next line as its value', () => {
+  const gameDir = tempGame('diagnose-localsave-blank');
+  try {
+    const steamSettings = path.join(gameDir, 'steam_settings');
+    fs.mkdirSync(steamSettings, { recursive: true });
+    fs.writeFileSync(
+      path.join(steamSettings, 'configs.user.ini'),
+      '[user::general]\naccount_name=\n# a comment\nlanguage=english\n\n[user::saves]\nlocal_save_path=\n# name of the base folder used to store save data\nsaves_folder_name=GSE Saves\n'
+    );
+    fs.writeFileSync(path.join(gameDir, 'steam_api64.dll'), 'emu');
+    fs.writeFileSync(path.join(steamSettings, 'steam_appid.txt'), '480');
+    fs.writeFileSync(path.join(steamSettings, 'achievements.json'), JSON.stringify([{ name: 'A', description: 'first' }]));
+
+    const report = goldberg.diagnose({ gameDir, appid: '480', schema: { achievement: { list: [{ name: 'A' }] } }, savesRoots: [] });
+    const codes = report.issues.map((i) => i.code);
+    assert.ok(!codes.includes('CUSTOM_SAVE_PATH'), 'an empty key is no redirect');
+    assert.ok(!codes.includes('PLACEHOLDER_SAVE_PATH'));
+    assert.ok(codes.includes('BAD_USER_CONFIG'), 'an empty account_name is still missing');
+  } finally {
+    fs.rmSync(gameDir, { recursive: true, force: true });
+  }
+});
+
+test("GBE's example local_save_path is reported as a repairable placeholder", () => {
+  const gameDir = tempGame('diagnose-localsave-placeholder');
+  try {
+    const steamSettings = path.join(gameDir, 'steam_settings');
+    writeUserIni(steamSettings, './path/relative/to/dll');
+    fs.writeFileSync(path.join(gameDir, 'steam_api64.dll'), 'emu');
+    fs.writeFileSync(path.join(steamSettings, 'steam_appid.txt'), '480');
+    fs.writeFileSync(path.join(steamSettings, 'achievements.json'), JSON.stringify([{ name: 'A', description: 'first' }]));
+
+    const report = goldberg.diagnose({ gameDir, appid: '480', schema: { achievement: { list: [{ name: 'A' }] } }, savesRoots: [] });
+    const issue = report.issues.find((i) => i.code === 'PLACEHOLDER_SAVE_PATH');
+    assert.ok(issue);
+    assert.equal(issue.level, 'warning');
+    assert.ok(!report.issues.some((i) => i.code === 'CUSTOM_SAVE_PATH'));
+    assert.ok(require('../../app/util/gameHealth.js').REPAIRABLE_GOLDBERG_CODES.has('PLACEHOLDER_SAVE_PATH'));
+
+    goldberg.writeUserConfig({ steamSettings, fillDefaults: true });
+    const after = goldberg.diagnose({ gameDir, appid: '480', schema: { achievement: { list: [{ name: 'A' }] } }, savesRoots: [] });
+    assert.ok(!after.issues.some((i) => /SAVE_PATH$/.test(i.code)), 'the repair clears it');
+  } finally {
+    fs.rmSync(gameDir, { recursive: true, force: true });
+  }
+});

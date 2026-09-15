@@ -87,6 +87,7 @@ const blacklist = require(path.join(appPath, 'parser/blacklist.js'));
 const userDir = require(path.join(appPath, 'parser/userDir.js'));
 const libraryDirs = require(path.join(appPath, 'parser/libraryDirs.js'));
 const goldberg = require(path.join(appPath, 'parser/goldberg.js'));
+const awManagedConfig = require(path.join(appPath, 'util/awManagedConfig.js'));
 // Read here and used from ui/gameHealthPanel.js, which shares this renderer's global scope: the
 // linter cannot see that, so removing this line as unused breaks the Game Health panel instead.
 const crackLoaderDetect = require(path.join(appPath, 'util/crackLoaderDetect.js'));
@@ -1977,6 +1978,39 @@ function rememberGameHealthState(appid, state) {
     .attr('class', `health-badge ${dot.state}`)
     .attr('title', dot.label)
     .attr('aria-label', dot.label);
+  // The game screen carries the same dot while it is open on this game.
+  const header = $('#achievement .wrapper > .header');
+  const headerBadge = header.find('.title .health-badge');
+  if (String(header.attr('data-appid')) === String(appid) && !headerBadge.prop('hidden')) {
+    headerBadge.attr({ class: `health-badge ${dot.state}`, title: dot.label, 'aria-label': dot.label });
+  }
+}
+
+/*
+  The dot was the scan's guess until Game health was opened on that game, and the two disagree often
+  enough (a nested install, a save path, a repair since the scan) that it seemed to fix itself when
+  the panel opened. Once a library is on screen, collect the panel's own report for every tile that
+  shows a dot, one game at a time, so the dot already says what the panel will. A newer scan
+  abandons the run in progress.
+*/
+let healthDotRefreshRun = 0;
+async function refreshHealthDots() {
+  const run = ++healthDotRefreshRun;
+  const games = gameList.filter((game) => game && hasHealthDot(game) && sourcePresentationFor(game).kind !== 'steam-owned');
+  for (const game of games) {
+    // Signal collection walks folders synchronously: leave the renderer room between two games, and
+    // do nothing at all while the window is hidden, since a dot nobody can see is not worth a disk read.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    while (document.hidden) await new Promise((resolve) => document.addEventListener('visibilitychange', resolve, { once: true }));
+    if (run !== healthDotRefreshRun) return;
+    try {
+      const signals = await collectGameHealthSignals(game.appid, { readOnly: true });
+      if (run !== healthDotRefreshRun) return;
+      rememberGameHealthState(game.appid, gameHealth.deriveHealth(signals).state);
+    } catch (err) {
+      debug.log(`[health] background report failed for ${game.appid} => ${formatErr(err)}`);
+    }
+  }
 }
 
 function normalizePathKey(value) {
@@ -2037,6 +2071,31 @@ function rememberGbeBackup({ appid, gameDir, backupDir, manifest }) {
   } catch (err) {
     debug.log(`[gbe-backup] could not remember backup => ${formatErr(err)}`);
   }
+}
+
+/*
+  Every steam_settings folder that belongs to this install, for the cleanup action. A packaged Unreal
+  or Unity build keeps the emulator beside a nested binary, so the one folder discovery recorded is
+  not always the only one AW wrote into.
+*/
+function gbeSteamSettingsDirsFor(game) {
+  const dirs = [];
+  const add = (dir) => {
+    if (!dir || !fs.existsSync(dir)) return;
+    const key = normalizePathKey(dir);
+    if (!dirs.some((d) => normalizePathKey(d) === key)) dirs.push(dir);
+  };
+  add(game && game.steamSettings);
+  try {
+    if (game && game.gameDir && fs.existsSync(game.gameDir)) {
+      const emu = goldberg.detectEmulator(game.gameDir);
+      add(emu.steamSettings);
+      for (const dll of emu.dll || []) add(path.join(path.dirname(dll), 'steam_settings'));
+    }
+  } catch (err) {
+    debug.log(`[aw-config] could not enumerate steam_settings => ${formatErr(err)}`);
+  }
+  return dirs;
 }
 
 function createAutomaticGbeBackup({ appid, gameDir, steamSettings } = {}) {
@@ -2156,6 +2215,19 @@ function formatGbeBackupDetail(backup, game) {
   if (backup?.source && backup.source !== 'manual') {
     const source = backup.source === 'index' ? (t('aw-history', 'AW history', 'historique AW')) : t('disk-scan', 'disk scan', 'scan disque');
     lines.push(t('found-automatically-via-x', 'Found automatically via {source}.', 'Trouvée automatiquement via {source}.', { source }));
+  }
+  // A backup that captured AW Next's own emulator configuration is not the untouched setup the user
+  // believes they are keeping. Versions up to 3.10.6 wrote those files during a plain scan, so say so
+  // rather than let a tainted copy pass for an original.
+  if (backup?.manifest && backup.manifest.pristine === false) {
+    lines.push('');
+    lines.push(
+      t(
+        'backup-not-pristine',
+        'Note: this folder already carried configuration written by AW Next, so the backup is not the original setup.',
+        "Note : ce dossier contenait déjà de la configuration écrite par AW Next, donc cette sauvegarde n'est pas la configuration d'origine."
+      )
+    );
   }
   return lines.join('\n');
 }
@@ -2809,17 +2881,17 @@ var app = {
                             : ''
                         }
                         ${
-                          sourceIcon.img
-                            ? `<img class="source-icon" src="${escapeHtml(sourceIcon.img)}" data-kind="${escapeHtml(sourceIcon.kind)}" title="${escapeHtml(
-                                sourceIcon.label
-                              )}" alt="${escapeHtml(sourceIcon.label)}" aria-label="${escapeHtml(sourceIcon.label)}">`
-                            : ''
-                        }
-                        ${
                           ownershipLabel
                             ? `<span class="ownership-badge ${ownershipBadgeClass}" title="${escapeHtml(
                                 ownershipLabel
                               )}" role="img" aria-label="${escapeHtml(ownershipLabel)}"><i class="fas fa-info-circle" aria-hidden="true"></i></span>`
+                            : ''
+                        }
+                        ${
+                          sourceIcon.img
+                            ? `<img class="source-icon" src="${escapeHtml(sourceIcon.img)}" data-kind="${escapeHtml(sourceIcon.kind)}" title="${escapeHtml(
+                                sourceIcon.label
+                              )}" alt="${escapeHtml(sourceIcon.label)}" aria-label="${escapeHtml(sourceIcon.label)}">`
                             : ''
                         }
                       </div>
@@ -3040,6 +3112,7 @@ var app = {
 
         clearSkeletonTiles();
         sort($('#game-list ul'), sortOptions());
+        refreshHealthDots();
 
         // Clear duplicate executable assignments before playtime tracking.
         try {
@@ -3185,11 +3258,14 @@ var app = {
             emulatorSourceForced === 'ubisoft' ? true : emulatorSourceForced === 'steam' ? false : uplayR2.isUplayR2Game(ctxGame, appid);
           const initialGbeEligibility = emulatorFixEligibility.inspect({
             gameDir: ctxGame?.gameDir,
+            gameName: ctxGame?.name,
             source: gameSource,
             system: rawSystem,
             isUbisoft: isUbisoftSource,
             manual: isManualGame,
             allowManual: isManualGame,
+            // Steam publishes no achievements for this game: there is nothing for a setup to record.
+            noAchievements: !!(ctxGame?.achievement && ctxGame.achievement.none),
           });
           const ubisoftTools = isUbisoftSource ? uplayR2.getGameToolPaths(ctxGame, appid) : null;
           const catalogAppid = String(
@@ -3489,8 +3565,12 @@ var app = {
               schema: game,
               downloadIcon,
               fetchDlc: (id) => steamParser.getDLCList(id),
-              accountName: app.config?.general?.username,
-              language: app.config?.achievement?.lang,
+              // A repair fixes achievements. Enabling every DLC and stamping an account name are
+              // separate decisions with their own settings, and a setting that says "leave my DLC
+              // alone" has to hold here too, or it just moves the surprise to another button.
+              writeDlc: app.config?.emulator?.manageDlc === true,
+              accountName: app.config?.emulator?.stampIdentity === true ? app.config?.general?.username : undefined,
+              language: app.config?.emulator?.stampIdentity === true ? app.config?.achievement?.lang : undefined,
             });
           };
           const diagnoseGoldbergSetup = async ({ game, gameDir, autoRepair = false, showDialog = true }) => {
@@ -4041,6 +4121,72 @@ var app = {
                   },
                 })
               );
+
+              /*
+                Versions up to 3.10.6 wrote configs.app.ini, configs.main.ini and configs.user.ini
+                during an ordinary scan, whatever the automatic-repair setting said, and never backed
+                them up. Restoring is therefore not an option for anyone affected - so this takes only
+                AW Next's own lines back out, leaving every value somebody else chose exactly where it is.
+              */
+              emulatorMenu.append(
+                new MenuItem({
+                  icon: menuIcon('cross.png'),
+                  label: $('#game-list').attr('data-ctx-removeawconfig') || '',
+                  async click() {
+                    try {
+                      const dirs = gbeSteamSettingsDirsFor(backupGame);
+                      const plan = dirs
+                        .map((dir) => ({ dir, result: awManagedConfig.strip(dir, { dryRun: true }) }))
+                        .filter((entry) => entry.result.changed);
+                      if (plan.length === 0) {
+                        remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                          type: 'info',
+                          title: t('aw-config-none-title', 'Nothing to remove', 'Rien à retirer'),
+                          message: t('aw-config-none-message', 'This game carries no configuration written by AW Next.', "Ce jeu ne contient aucune configuration écrite par AW Next."),
+                          noLink: true,
+                        });
+                        return;
+                      }
+                      const detail = plan
+                        .flatMap(({ result }) =>
+                          result.removed.map((r) => `${r.file}  (${r.removed === 'file' ? t('aw-config-delete-file', 'file deleted', 'fichier supprimé') : t('aw-config-keys-only', 'AW Next lines only', 'lignes AW Next uniquement')})`)
+                        )
+                        .join('\n');
+                      const confirm = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                        type: 'warning',
+                        title: t('aw-config-remove-title', "Remove AW Next's emulator configuration?", 'Retirer la configuration émulateur écrite par AW Next ?'),
+                        message: t(
+                          'aw-config-remove-message',
+                          'Only the DLC section, switches and identity keys AW Next wrote are removed. Anything you or the repack set is kept, and a file is deleted only when nothing else is left in it.',
+                          "Seuls la section DLC, les options et les clés d'identité écrites par AW Next sont retirées. Ce que vous ou le repack avez défini est conservé, et un fichier n'est supprimé que s'il ne reste rien d'autre dedans."
+                        ),
+                        detail,
+                        buttons: [t('cancel', 'Cancel', 'Annuler'), t('aw-config-remove-button', 'Remove', 'Retirer')],
+                        defaultId: 0,
+                        cancelId: 0,
+                        noLink: true,
+                      });
+                      if (confirm !== 1) return;
+                      let removed = 0;
+                      for (const { dir } of plan) removed += awManagedConfig.strip(dir).removed.length;
+                      remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                        type: 'info',
+                        title: t('aw-config-removed-title', 'Configuration removed', 'Configuration retirée'),
+                        message: t('aw-config-removed-message', 'Cleaned {count} file(s).', '{count} fichier(s) nettoyé(s).', { count: removed }),
+                        detail,
+                        noLink: true,
+                      });
+                    } catch (err) {
+                      remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                        type: 'error',
+                        title: t('aw-config-remove-failed', 'Could not remove the configuration', 'Impossible de retirer la configuration'),
+                        message: t('aw-config-remove-failed-message', "AW Next's configuration could not be removed from this game.", "La configuration d'AW Next n'a pas pu être retirée de ce jeu."),
+                        detail: formatErr(err),
+                      });
+                    }
+                  },
+                })
+              );
             }
 
             // Ubisoft installs use Uplay R1/R2, not the Steam GBE fix. A game with an existing setup
@@ -4184,7 +4330,10 @@ var app = {
                       // dll(s) are replaced in place; a folder with neither (fresh install) gets a 64-bit dll by default.
                       setGameBoxBusy(self, t('preparing', 'Preparing…', 'Préparation…'));
                       const emu = goldberg.detectEmulator(gameDir);
-                      const detectedRuntimeExe = exeDetect.detect(gameDir, game?.name || '', { dllPaths: emu.dll });
+                      // Confident matches only. This exe decides where the dll is written, which exe
+                      // Steamless unpacks and which architecture is installed; an ambiguous match
+                      // ("sims-4-updater.exe" at a folder root) makes all three wrong at once.
+                      const detectedRuntimeExe = exeDetect.detectConfident(gameDir, game?.name || '', { dllPaths: emu.dll });
                       const dllDirs = gbeInstaller.runtimeDllDirs({
                         gameDir,
                         dllPaths: emu.dll,
@@ -4199,7 +4348,7 @@ var app = {
                       const forceUpdate = emuCfg.checkUpdates !== false;
 
                       // Advanced steam_settings: shells out to generate_emu_config for deeper coverage,
-                      // merged without clobbering AW's own files. Optional throwaway Steam login pulls anonymous-hidden data; returns a one-line note.
+                      // merged without clobbering AW's own files. Optional Steam login pulls anonymous-hidden data; returns a one-line note.
                       const runAdvanced = async (steamSettingsDirs) => {
                         if (emuCfg.steamSettingsMode !== 'advanced') return '';
                         if (!/^[0-9]+$/.test(String(writableAppid || ''))) {
@@ -4212,7 +4361,7 @@ var app = {
                           let pass = emuCfg.loginPassword;
                           if (!user)
                             user = await promptText(
-                              t('steam-username-throwaway-account-only', 'Steam username (THROWAWAY account only):', 'Identifiant Steam (COMPTE JETABLE uniquement) :'),
+                              t('steam-username-throwaway-account-only', 'Steam username:', 'Identifiant Steam :'),
                               ''
                             );
                           if (!user) return '\n' + t('diagnosis-advanced-data-login-cancelled', 'Advanced data: login cancelled', 'Données avancées : connexion annulée');
@@ -5533,7 +5682,7 @@ var app = {
       {
         const presentation = sourcePresentationFor(game);
         const badge = $('#achievement .wrapper > .header .title .source-icon');
-        if (presentation.img && presentation.kind !== 'steam-owned') {
+        if (presentation.img) {
           badge
             .attr({
               src: presentation.img,
@@ -6434,6 +6583,7 @@ var app = {
         if (await runGameHealthAction(appid, action, button)) {
           if (GAME_HEALTH_ACTIONS_NEEDING_RESCAN.has(action)) {
             showGameHealthChecking();
+            setGameHealthProgress({ phase: 'rescan' });
             await refreshLibraryAfterGameHealthRepair();
           }
           await renderGameHealth(appid);
@@ -6447,6 +6597,8 @@ var app = {
           detail: `${err && (err.message || err)}`,
         });
       } finally {
+        // Whatever path ended the action, no bar is left sweeping over a finished panel.
+        setGameHealthProgress(null);
         button.prop('disabled', false);
       }
     });
@@ -6964,8 +7116,11 @@ var app = {
                 schema,
                 downloadIcon,
                 fetchDlc: (id) => steamParser.getDLCList(id),
-                accountName: app.config.general && app.config.general.username,
-                language: app.config.achievement && app.config.achievement.lang,
+                // Same two opt-ins as the single-game repair - all the more so here, where one click
+                // rewrites dozens of folders at once.
+                writeDlc: app.config.emulator && app.config.emulator.manageDlc === true,
+                accountName: app.config.emulator && app.config.emulator.stampIdentity === true ? app.config.general && app.config.general.username : undefined,
+                language: app.config.emulator && app.config.emulator.stampIdentity === true ? app.config.achievement && app.config.achievement.lang : undefined,
               });
               // The bulk pass has no per-game dialog to report into, so the log is the only record.
               // Worth keeping: it is the one path that can repair dozens of games in a row.

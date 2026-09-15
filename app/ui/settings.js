@@ -3012,10 +3012,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
               type: 'warning',
               title: t('invalid-folder', 'Invalid folder', 'Dossier invalide'),
               message: describeFolderDiagnosis(diagnosis, t),
-              detail: $("#settings .content[data-view='folder'] > .controls .info p")
-                .html()
-                .replace(/\s{2,}/g, '')
-                .replace(/<br>/g, '\n'),
+              // The old selector matched nothing, so every rejection threw inside .replace instead.
+              detail: String($('#folder-add-info').text() || '').replace(/\s{2,}/g, ' ').trim(),
             });
           }
         } else {
@@ -5506,10 +5504,8 @@ function populateUserDirList(option) {
             type: 'warning',
             title: t('invalid-folder', 'Invalid folder', 'Dossier invalide'),
             message: describeFolderDiagnosis(diagnosis, t),
-            detail: $("#settings .content[data-view='folder'] > .controls .info p")
-              .html()
-              .replace(/\s{2,}/g, '')
-              .replace(/<br>/g, '\n'),
+            // The old selector matched nothing, so every rejection threw inside .replace instead.
+            detail: String($('#folder-add-info').text() || '').replace(/\s{2,}/g, ' ').trim(),
           });
         }
       } else {

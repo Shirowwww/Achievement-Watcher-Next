@@ -104,6 +104,7 @@ function translateUI(lang, locale, template) {
     selector.attr('data-ctx-diagnose', clear(template.contextMenu.diagnose));
     selector.attr('data-ctx-backupgbe', clear(template.contextMenu.backupGBE));
     if (template.contextMenu.restoreGBE) selector.attr('data-ctx-restoregbe', clear(template.contextMenu.restoreGBE));
+    if (template.contextMenu.removeAwConfig) selector.attr('data-ctx-removeawconfig', clear(template.contextMenu.removeAwConfig));
     selector.attr('data-ctx-installgbe', clear(template.contextMenu.installGBE));
     // Same action on a game that already has a setup - named differently so "replace what is there"
     // is visible before the click, not only in the confirmation.
@@ -324,7 +325,6 @@ function translateUI(lang, locale, template) {
     if (emu.coreTitle) $('#emulator-core-title').text(clear(emu.coreTitle));
     if (emu.advancedTitle) $('#emulator-advanced-title').text(clear(emu.advancedTitle));
     if (emu.loginTitle) $('#emulator-login-title').text(clear(emu.loginTitle));
-    if (emu.loginWarning) $('#emulator-login-warning').text(clear(emu.loginWarning));
     if (emu.loginDesc) $('#emulator-login-desc').text(clear(emu.loginDesc));
     if (emu.loginUser) $('#emulator-login-user-label').text(clear(emu.loginUser));
     if (emu.loginPass) $('#emulator-login-pass-label').text(clear(emu.loginPass));
@@ -373,6 +373,8 @@ function translateUI(lang, locale, template) {
     bindEmuRow('option_uplayLogging', emu.uplay && emu.uplay.logging);
     $("#option_uplayLogging option[value='true']").text(clear(template.settings.common.enable));
     $("#option_uplayLogging option[value='false']").text(clear(template.settings.common.disable));
+    bindEmuRow('option_manageDlc', emu.manageDlc);
+    bindEmuRow('option_stampIdentity', emu.stampIdentity);
     bindEmuRow('option_steamSettingsMode', emu.steamSettings);
     bindEmuRow('option_login', emu.login);
     bindEmuRow('option_steamlessAutoUnpack', emu.steamless);

@@ -1741,13 +1741,13 @@ body.is-resizing #game-list {
   cursor: context-menu;
 }
 
-/* The source badge sits after the name, at the size of the trophy counters beside it rather than
-   the 36px title, so it reads as a mark on the game and never competes with its name. */
+/* The source badge closes the title row, after the health and ownership marks as on the tile, at the
+   size of the trophy counters beside it rather than the 36px title, so it never competes with the name. */
 #achievement .wrapper > .header .title .source-icon {
   width: 24px;
   height: 24px;
   object-fit: contain;
-  margin: auto 0 auto 14px;
+  margin: auto 0 auto 10px;
   opacity: 0.9;
   flex: none;
 }
