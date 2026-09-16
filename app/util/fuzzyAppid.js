@@ -21,12 +21,18 @@ const JUNK_TOKENS = new Set([
 // Returns { clean, tokens }. Note: "edition" is junk here only as a trailing packaging word; the core
 // title words survive, which is what matching needs.
 function cleanGameName(raw) {
-  let s = String(raw || '').toLowerCase();
+  let s = String(raw || '');
   s = s.replace(/[[({][^\])}]*[\])}]/g, ' '); // [..] (..) {..} tags
   // Release-site domains ride along in repack folder names ("... v1.52 RexaGames.com"). Left in,
   // they push a title out of the exact/token tiers and into a fuzzy score that is never
   // auto-committed, so the game is simply not identified. Strip before separators are flattened.
-  s = s.replace(/\b[a-z0-9][a-z0-9-]*\.(com|net|org|ru|to|io|cc|info|xyz|me|site|online|club|pw)\b/g, ' ');
+  s = s.replace(/\b[a-z0-9][a-z0-9-]*\.(com|net|org|ru|to|io|cc|info|xyz|me|site|online|club|pw)\b/gi, ' ');
+  // A glued name ("EnhancedEdition", "LittleNightmares") is the same name as the spaced one and has
+  // to be cleaned like it. Kept whole, the glued word escaped the junk list and matched inside a
+  // longer store title as a substring, scoring a packaging word as a confident title (Little
+  // Nightmares II was set up as The Witcher: Enhanced Edition). Split after the domains, which are
+  // glued words too.
+  s = s.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
   s = s.replace(/\bv?\d+(\.\d+){1,}[a-z]?\b/g, ' '); // dotted versions: v1.2.3 / 1.0.0.0 (before separators are flattened)
   s = s.replace(/\bmulti\d*\b/g, ' ');
   s = s.replace(/[._-]+/g, ' '); // flatten separators so "update.5" / "update_5" become "update 5"
@@ -115,6 +121,7 @@ function rankAppidCandidates(query, apps, { limit = 5, minScore = 0.5 } = {}) {
 // match (every cleaned query word present, lengths close) is trusted - a fuzzy guess is never
 // auto-applied, since the AppID gets written to steam_appid.txt.
 function bestConfidentAppid(query, apps) {
+  if (!namesAGame(query)) return null;
   const ranked = rankAppidCandidates(query, apps, { limit: 10, minScore: 0.6 });
   const hit = ranked.find((r) => r.tier === 'exact') || ranked.find((r) => r.tier === 'token' && r.score >= 0.9);
   return hit ? hit.appid : null;
@@ -131,6 +138,24 @@ const TITLE_FILLER = new Set([
   'definitive', 'special', 'collectors', 'collector', 'anniversary', 'goty', 'game', 'year', 'pack',
   'bundle', 'uplay', 'ubisoft', 'connect', 'steam', 'version', 'pc',
 ]);
+
+// Packaging words a repack names a subfolder after, on top of TITLE_FILLER. None of them says which
+// game it is, so a query made only of these is not a title at all.
+const PACKAGING_WORDS = new Set(['enhanced', 'remastered', 'remaster', 'director', 'directors', 'cut', 'digital', 'content', 'soundtrack', 'artbook', 'extras', 'bonus']);
+
+/*
+  Does `query` contain at least one word that could tell one game from another? A repack that ships
+  two builds side by side names one of them "EnhancedEdition": glued into one token, that word sits
+  inside "The Witcher: Enhanced Edition" and scored as a confident token match, so Little Nightmares
+  II was set up as The Witcher (its DLC list and all). camelCase is split here so the glued form is
+  judged like the spaced one.
+*/
+function namesAGame(query) {
+  const spaced = String(query || '').replace(/([a-z])([A-Z])/g, '$1 $2');
+  return cleanGameName(spaced)
+    .tokens.map((t) => t.replace(/[^a-z0-9]/g, ''))
+    .some((t) => t && !TITLE_FILLER.has(t) && !PACKAGING_WORDS.has(t));
+}
 
 const ROMAN_NUMERALS = { i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8, ix: 9, x: 10, xi: 11, xii: 12 };
 

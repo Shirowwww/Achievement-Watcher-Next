@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const crackLoaderDetect = require('./crackLoaderDetect.js');
 const unrealLayout = require('./unrealLayout.js');
+const exeDetect = require('../parser/exeDetect.js');
 const launcherDetect = require('../parser/launcherDetect.js');
 const uplayR2 = require('../parser/uplayR2.js');
 
@@ -69,11 +70,17 @@ function findExistingFix(gameDir, { maxDepth = 4, maxDirectories = 600 } = {}) {
   return null;
 }
 
-function inspect({ gameDir, source = '', system = '', isUbisoft = false, manual = false, allowManual = false } = {}) {
+function inspect({ gameDir, gameName = '', source = '', system = '', isUbisoft = false, manual = false, allowManual = false, noAchievements = false } = {}) {
   const normalizedSource = String(source || '').trim();
   const normalizedSystem = String(system || '').trim().toLowerCase();
   const isManualEntry = manual || /^manual$/i.test(normalizedSource);
   if (!gameDir || !fs.existsSync(gameDir)) return { eligible: false, reason: 'unknown-install-folder' };
+  /*
+    Steam publishes no achievements for this appid at all (achievements.js sets the flag only from a
+    lookup that answered). The whole setup exists to record unlocks, so there is nothing to install:
+    The Sims 4 was offered the fix, took a full GBE runtime, and got an achievements.json of "[]".
+  */
+  if (noAchievements) return { eligible: false, reason: 'no-achievements' };
   // Automatic/bulk generation must never target manual entries. The renderer may opt a single
   // manual PC game in explicitly from its context menu; every existing-fix/platform guard below
   // still applies before the write action is offered.
@@ -100,6 +107,16 @@ function inspect({ gameDir, source = '', system = '', isUbisoft = false, manual 
   const existingFix = findExistingFix(gameDir);
   if (existingFix) return { eligible: false, reason: 'existing-fix', existingFix };
   if (uplayR2.detectEmulator(gameDir).type !== 'none') return { eligible: false, reason: 'uplay-r2' };
+  /*
+    Nothing trustworthy to hang the runtime on. With no steam_api dll already in the tree, the only
+    thing deciding where the setup lands is the detected executable - and an ambiguous match is a
+    guess, which is how The Sims 4 got a steam_api64.dll beside its updater at the folder root while
+    the game itself runs from Game\Bin. detectConfident exists for callers that must not guess, and
+    a caller that writes dlls into somebody's game folder is one of them.
+  */
+  if (!hasSteamApiDll(gameDir) && !exeDetect.detectConfident(gameDir, gameName || '', { dllPaths: [] })) {
+    return { eligible: false, reason: 'no-executable' };
+  }
   return { eligible: true, reason: 'unconfigured' };
 }
 

@@ -135,6 +135,31 @@ function steamworksDlls(dir) {
   return out;
 }
 
+/*
+  The files named in `names` (lowercase basenames) sitting in those folders, in the same order. A
+  packaged build keeps its identity beside the dll the engine loads - steam_appid.txt, and a scene
+  crack's own ini - six levels below the game folder, where every depth-limited walk in AW stops.
+  The folder's own steam_settings is read too, right after it: a GBE repack keeps steam_appid.txt
+  there rather than beside the dll (the real Little Nightmares II Enhanced Edition release does).
+*/
+function steamworksFiles(dir, names) {
+  const wanted = names instanceof Set ? names : new Set(Array.from(names || []).map((name) => String(name).toLowerCase()));
+  const out = [];
+  const collect = (folder) => {
+    const entries = dirCache.readdir(folder);
+    if (!entries) return;
+    for (const entry of entries) {
+      if (entry.isFile() && wanted.has(entry.name.toLowerCase())) out.push(path.join(folder, entry.name));
+    }
+  };
+  for (const dllDir of steamworksDllDirs(dir)) {
+    collect(dllDir);
+    const settings = resolveChain(dllDir, ['steam_settings']);
+    if (settings) collect(settings);
+  }
+  return out;
+}
+
 // Is `dir` one of those folders? Path-only, so it also answers for a folder that no longer exists.
 function isSteamworksDllDir(dir) {
   if (!dir) return false;
@@ -166,5 +191,6 @@ module.exports = {
   isSteamworksDllDir,
   steamworksDllDirs,
   steamworksDlls,
+  steamworksFiles,
   STEAM_API_DLLS,
 };

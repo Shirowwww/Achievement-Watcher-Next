@@ -37,6 +37,7 @@ const uplayAutoMap = require(path.join(appPath, 'uplayAutoMap.js'));
 const gbeInstaller = require(path.join(appPath, 'gbeInstaller.js'));
 const pe = require(path.join(appPath, '..', 'util', 'pe.js'));
 const crackLoaderDetect = require(path.join(appPath, '..', 'util', 'crackLoaderDetect.js'));
+const unrealLayout = require(path.join(appPath, '..', 'util', 'unrealLayout.js'));
 const emulatorFixEligibility = require(path.join(appPath, '..', 'util', 'emulatorFixEligibility.js'));
 const { computeFolderContentVersion } = require(path.join(appPath, '..', 'util', 'contentVersion.js'));
 const steamless = require(path.join(appPath, 'steamless.js'));
@@ -49,7 +50,19 @@ const { resolveAchievementDataPath } = require(path.join(appPath, '..', 'util', 
 const scanFingerprint = require(path.join(appPath, '..', 'util', 'scanFingerprint.js'));
 const exeDetect = require(path.join(appPath, 'exeDetect.js'));
 const installState = require(path.join(appPath, 'installState.js'));
-const { applyLocalStatProgress } = require(path.join(appPath, 'statProgress.js'));
+const { applyLocalStatProgress, resolveProgressSchema } = require(path.join(appPath, 'statProgress.js'));
+
+// The Steam client's appcache/stats folder, looked up once per run; null without a client.
+let _steamStatsDir;
+function steamStatsDir() {
+  if (_steamStatsDir === undefined) {
+    _steamStatsDir = steam
+      .getSteamPath()
+      .then((steamPath) => (steamPath ? path.join(steamPath, 'appcache', 'stats') : null))
+      .catch(() => null);
+  }
+  return _steamStatsDir;
+}
 const scanScope = require(path.join(appPath, 'scanScope.js'));
 const manualGames = require(path.join(appPath, 'manualGames.js'));
 const sgdbAssetCache = require('../util/sgdbAssetCache.js');
@@ -1500,6 +1513,10 @@ async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
             savePath = scene.path;
             saveSource = scene.source;
             debug.log(`[goldberg-scan] ${appid} is a scene-emulator install; saves read from ${scene.path}`);
+          } else if (crackLoaderDetect.detectWorkingCrackLoader(g.gameDir)) {
+            // Not launched yet, so there is no save to name the group from. It is still not a GBE
+            // install, and labelling it one is what every later diagnosis keys off.
+            saveSource = 'Steam-emulator';
           }
         }
       } catch (err) {
@@ -1565,6 +1582,9 @@ const UNCONFIG_SKIP_DIR = /^(_?CommonRedist|_?Redist|redist|DirectX|dx|dotnet|pr
 
 // Configs a Steam emulator drops beside a game, each stating the AppID it stands in for.
 const EMULATOR_APPID_CONFIGS = new Set(['ali213.ini', 'valve.ini', 'steamconfig.ini', 'steam_emu.ini', 'steam_api.ini', 'cpy.ini', 'hlm.ini', 'ds.ini']);
+// Same configs, plus the file a legitimate Steamworks build always carries, since that folder is the
+// engine's own and holds nothing else that could be mistaken for a game's identity.
+const UNREAL_APPID_FILES = new Set(['steam_appid.txt', ...EMULATOR_APPID_CONFIGS]);
 
 function declaredEmulatorAppid(dir, entries) {
   for (const entry of entries || []) {
@@ -1572,6 +1592,28 @@ function declaredEmulatorAppid(dir, entries) {
     try {
       const declared = fs.readFileSync(path.join(dir, entry.name), 'utf8').match(/^\s*App(?:ID|Id)\s*=\s*([0-9]+)\s*$/im);
       if (declared && Number(declared[1]) > 0) return String(Number(declared[1]));
+    } catch {
+      /* unreadable config states nothing */
+    }
+  }
+  return '';
+}
+
+/*
+  The Steam appid a packaged Unreal build states beside the dll the engine loads. Every shallow read
+  above looks at the game folder itself, and a UE build keeps steam_appid.txt (and a scene crack its
+  own ini) six levels down under Engine/Binaries/ThirdParty/Steamworks - so a perfectly identified
+  install was listed as "Unconfigured" with no achievements at all (Little Nightmares II Enhanced
+  Edition, whose steam_appid.txt says 860510).
+*/
+function unrealDeclaredAppid(dir) {
+  for (const file of unrealLayout.steamworksFiles(dir, UNREAL_APPID_FILES)) {
+    try {
+      const content = fs.readFileSync(file, 'utf8');
+      const value = path.basename(file).toLowerCase() === 'steam_appid.txt'
+        ? content.replace(/^﻿/, '').match(/^\s*([0-9]+)/)
+        : content.match(/^\s*App(?:ID|Id)\s*=\s*([0-9]+)\s*$/im);
+      if (value && Number(value[1]) > 0) return String(Number(value[1]));
     } catch {
       /* unreadable config states nothing */
     }
@@ -1629,7 +1671,7 @@ async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScop
     const name = unconfiguredDisplayName(folderName, exe.name, productName && productName.trim().length >= 3 ? productName.trim() : '');
     // A crack loader states the Steam AppID it emulates in its own config (ALI213.ini and Hoodlum/
     // CODEX-style inis carry "AppID = <n>"), so it is not an unidentified install.
-    const id = declaredEmulatorAppid(dir, entries) || 'local-' + (crc32(dir.toLowerCase()) >>> 0).toString(16);
+    const id = declaredEmulatorAppid(dir, entries) || unrealDeclaredAppid(dir) || 'local-' + (crc32(dir.toLowerCase()) >>> 0).toString(16);
     // A shallow hasDll() check misses Goldberg files under nested Unity/UE engine folders; use the
     // same recursive detection as the Goldberg scan so the record carries its Steam evidence.
     const emu = detectEmulatorCached(dir);
@@ -2876,32 +2918,51 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       removeInertGoldbergSettings(appid.data.steamSettings, appid.appid, foreignCrackLoader.name);
     }
 
-    // Runtime GSE configs are required even when achievements.json already existed before AW saw the
-    // game: a valid schema must not permanently skip DLC + identity/language generation. Create
-    // missing files independently and keep user identity synchronized without repatching the emulator
-    // DLL or rewriting the achievement schema.
-    if (appid.data && appid.data.steamSettings && !foreignCrackLoader && /^[0-9]+$/.test(String(appid.appid)) && realGameExePresent()) {
+    /*
+      Runtime GSE configs: DLC ownership, the modern GBE switches, and the account identity. These
+      used to be written on every scan with no gate at all - a scan with automatic repair switched
+      OFF still rewrote configs.app.ini, configs.main.ini and configs.user.ini in every detected
+      game folder, which is the exact opposite of what that setting promises. It is gated now, and
+      DLC and identity each need their own opt-in on top: neither has anything to do with reading
+      achievements, and both overwrite files people curate by hand.
+    */
+    const runtimeConfigAllowed = !!(
+      appid.data &&
+      appid.data.steamSettings &&
+      !foreignCrackLoader &&
+      /^[0-9]+$/.test(String(appid.appid)) &&
+      realGameExePresent() &&
+      option.emulator &&
+      option.emulator.autoApplyNewGames !== false
+    );
+    if (runtimeConfigAllowed && !(await announceAutomaticEmulatorFix())) {
+      debug.log(`[${appid.appid}] runtime GSE config generation stopped: automatic repair was switched off or not announced yet`);
+    } else if (runtimeConfigAllowed) {
       const steamSettings = appid.data.steamSettings;
       try {
-        const appConfigFile = path.join(steamSettings, 'configs.app.ini');
-        let needsDlcConfig = true;
-        try {
-          const current = fs.readFileSync(appConfigFile, 'utf8');
-          needsDlcConfig = !/^\s*\[app::dlcs\][\s\S]*?^\s*unlock_all\s*=\s*1\s*$/im.test(current);
-        } catch {}
-        if (needsDlcConfig) {
-          let dlcs = [];
-          try { dlcs = await steam.getDLCList(appid.appid); } catch {}
-          if (realGameExePresent()) {
-            const dlc = goldberg.writeDlcConfig({ steamSettings, dlcs, unlockAll: true });
-            debug.log(`[${appid.appid}] created configs.app.ini (unlock_all=1, ${dlc.count} DLC(s))`);
+        if (option.emulator.manageDlc === true) {
+          const appConfigFile = path.join(steamSettings, 'configs.app.ini');
+          let needsDlcConfig = true;
+          try {
+            const current = fs.readFileSync(appConfigFile, 'utf8');
+            needsDlcConfig = !/^\s*\[app::dlcs\][\s\S]*?^\s*unlock_all\s*=\s*1\s*$/im.test(current);
+          } catch {}
+          if (needsDlcConfig) {
+            let dlcs = [];
+            try { dlcs = await steam.getDLCList(appid.appid); } catch {}
+            if (realGameExePresent()) {
+              const dlc = goldberg.writeDlcConfig({ steamSettings, dlcs, unlockAll: true });
+              debug.log(`[${appid.appid}] created configs.app.ini (unlock_all=1, ${dlc.count} DLC(s))`);
+            }
           }
         }
+        // configs.main.ini is not a DLC or identity decision: its keys are what makes a modern
+        // Steamworks title report achievement progress at all, so it follows automatic repair itself.
         if (realGameExePresent()) {
           const main = goldberg.writeMainConfig({ steamSettings });
           if (main && main.changed) debug.log(`[${appid.appid}] updated configs.main.ini (new_app_ticket=1, gc_token=1)`);
         }
-        if (realGameExePresent()) {
+        if (option.emulator.stampIdentity === true && realGameExePresent()) {
           const user = goldberg.writeUserConfig({
             steamSettings,
             accountName: option.general && option.general.username,
@@ -3173,11 +3234,21 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
             }
           }
 
+          /*
+            Writing a missing achievements.json is still writing into someone's game folder, and it
+            arrives with configs.app.ini/configs.main.ini/configs.user.ini in tow. It ran on every
+            scan regardless of the automatic-repair setting; it follows the setting now, like the
+            DLL swap above it.
+          */
           const schemaRepairDirs = new Set();
           const gameExeStillPresent = () => !!(bgExe && bgExe.full && fs.existsSync(bgExe.full));
-          if (!bgWorkingCrackLoader && bgNeedsSchema && gameExeStillPresent() && goldberg.readLocalSchema(bgSteamSettings).length === 0) schemaRepairDirs.add(bgSteamSettings);
-          for (const dir of fixedSteamSettingsDirs) {
-            if (dir && gameExeStillPresent() && goldberg.readLocalSchema(dir).length === 0) schemaRepairDirs.add(dir);
+          if (canAutoApply && (await announceAutomaticEmulatorFix())) {
+            if (!bgWorkingCrackLoader && bgNeedsSchema && gameExeStillPresent() && goldberg.readLocalSchema(bgSteamSettings).length === 0) schemaRepairDirs.add(bgSteamSettings);
+            for (const dir of fixedSteamSettingsDirs) {
+              if (dir && gameExeStillPresent() && goldberg.readLocalSchema(dir).length === 0) schemaRepairDirs.add(dir);
+            }
+          } else if (bgNeedsSchema) {
+            debug.log(`[${bgAppid}] schema repair skipped - automatic repair is off; use Repair on the game to write it`);
           }
 
           // Icons the last repair gave up on, retried on the same three-day cadence steam.js uses for
@@ -3211,8 +3282,11 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
                   schema: bgSchema,
                   downloadIcon,
                   fetchDlc: (id) => steam.getDLCList(id),
-                  accountName: option.general && option.general.username,
-                  language: option.achievement && option.achievement.lang,
+                  // Same two opt-ins as the runtime configs above: repairing a schema must not
+                  // quietly enable every DLC or stamp a Windows username into the emulator identity.
+                  writeDlc: option.emulator.manageDlc === true,
+                  accountName: option.emulator.stampIdentity === true ? option.general && option.general.username : undefined,
+                  language: option.emulator.stampIdentity === true ? option.achievement && option.achievement.lang : undefined,
                 });
                 debug.log(
                   `[${bgAppid}] wrote missing achievements.json schema (${summary.achievementsJson.length} entries) to ${steamSettingsDir}` +
@@ -3451,10 +3525,19 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         }
       }
 
-      if (appid.data && appid.data.steamSettings && root && typeof root === 'object') {
+      const hasSteamSettings = Boolean(appid.data && appid.data.steamSettings);
+      if (root && typeof root === 'object' && (hasSteamSettings || Array.isArray(root.__rawStatKeys))) {
         try {
-          const applied = applyLocalStatProgress(root, goldberg.readLocalSchema(appid.data.steamSettings));
-          if (applied > 0) debug.log(`[${appid.appid}] mapped ${applied} stat progress entr${applied === 1 ? 'y' : 'ies'} through local GBE schema`);
+          // A stats file with no steam_settings beside it (CODEX, RUNE) still maps through the
+          // Steam client's schema when it has one.
+          const schema = resolveProgressSchema({
+            appid: appid.appid,
+            localSchema: hasSteamSettings ? goldberg.readLocalSchema(appid.data.steamSettings) : [],
+            steamStatsDir: Array.isArray(root.__rawStatKeys) ? await steamStatsDir() : null,
+            cacheDir: _userDataPath,
+          });
+          const applied = applyLocalStatProgress(root, schema);
+          if (applied > 0) debug.log(`[${appid.appid}] mapped ${applied} stat progress entr${applied === 1 ? 'y' : 'ies'} through the progress schema`);
         } catch (err) {
           debug.log(`[${appid.appid}] local stat progress mapping failed => ${err}`);
         }
@@ -3548,6 +3631,15 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     if (!Number.isFinite(game.achievement.total) || game.achievement.total < game.achievement.list.length) {
       game.achievement.total = game.achievement.list.length;
     }
+
+    /*
+      Steam answered, and answered that this appid publishes no achievements at all (steam.js stamps
+      emptyCheckedAt only on a lookup that came back). "This game has none" and "AW could not read
+      the schema" both leave total at 0, and everything downstream used to read the second one into
+      the first: The Sims 4 was reported as not tracked, and offered an emulator setup that has
+      nothing to install. Only a verdict travels here - absent means "not settled", never "empty".
+    */
+    game.achievement.none = game.achievement.list.length === 0 && Number(game.emptyCheckedAt) > 0;
 
     // Does anything other than a cache entry say this game exists? The filter must not require
     // achievements or a verified install; only a watchdog cache import with no save and no install

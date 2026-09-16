@@ -56,3 +56,18 @@ assert.strictEqual(fuzzy.cleanGameName('S.T.A.L.K.E.R. Shadow of Chernobyl').cle
 assert.strictEqual(fuzzy.bestConfidentAppid('Portal 2', [{ appid: 620, name: 'Portal 2' }]), 620);
 
 console.log('PASS: fuzzy AppID resolution (clean + 3-tier, confident-only auto-commit)');
+
+/*
+  A packaging word is not a title. The Little Nightmares II repack ships its second build in a folder
+  named "EnhancedEdition"; glued into one token it sat inside "The Witcher: Enhanced Edition" and was
+  auto-committed, so the game got The Witcher's DLC list written into it. The real title beside it
+  must still resolve.
+*/
+const editions = [
+  { appid: 20900, name: 'The Witcher: Enhanced Edition' },
+  { appid: 1413420, name: 'Little Nightmares II Enhanced Edition' },
+];
+assert.strictEqual(fuzzy.bestConfidentAppid('EnhancedEdition', editions), null, 'a folder named after its edition names no game');
+assert.strictEqual(fuzzy.bestConfidentAppid('Enhanced Edition', editions), null);
+assert.strictEqual(fuzzy.bestConfidentAppid('DirectorsCut', editions), null);
+assert.strictEqual(fuzzy.bestConfidentAppid('Little_Nightmares_II_Enhanced', editions), 1413420);

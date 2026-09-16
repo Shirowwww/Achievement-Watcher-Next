@@ -2,7 +2,7 @@
 
 // GBE Fork "generate_emu_config" integration, the Advanced steam_settings path. Shells out to the
 // cached alex47exe/gse_fork_tools generator; anonymous by default, an optional Steam login (env vars,
-// never persisted, use a throwaway account) pulls private data. 2FA prompts forward to onPrompt. Windows-only.
+// never persisted) pulls private data. 2FA prompts forward to onPrompt. Windows-only.
 
 const fs = require('fs');
 const os = require('os');

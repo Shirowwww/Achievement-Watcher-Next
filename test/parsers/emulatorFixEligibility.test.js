@@ -93,3 +93,40 @@ test('a manual program without a Steam API DLL never receives a GBE install acti
   assert.equal(result.eligible, false);
   assert.equal(result.reason, 'no-steam-api');
 });
+
+test('a game Steam publishes no achievements for is never offered a setup', () => {
+  // The Sims 4: the fix was applied, wrote a full GBE runtime, and produced an achievements.json of
+  // "[]". Nothing a setup can do records an unlock that does not exist.
+  const dir = gameDir('no-achievements');
+  const result = eligibility.inspect({ gameDir: dir, noAchievements: true });
+  assert.equal(result.eligible, false);
+  assert.equal(result.reason, 'no-achievements');
+  // Same folder, no verdict: the ordinary answer is unchanged.
+  assert.equal(eligibility.inspect({ gameDir: dir }).eligible, true);
+});
+
+test('an anadius EA crack is left alone like any other loader', () => {
+  // Its unlocks go to %LOCALAPPDATA%\anadius\LSX emu, which the watchdog already watches. There is
+  // no steam_api dll to swap, so a GBE install here is litter and nothing else.
+  const dir = gameDir('anadius');
+  const bin = path.join(dir, 'Game', 'Bin');
+  fs.mkdirSync(bin, { recursive: true });
+  fs.writeFileSync(path.join(bin, 'anadius.cfg'), 'stub');
+  const result = eligibility.inspect({ gameDir: dir });
+  assert.equal(result.eligible, false);
+  assert.equal(result.reason, 'existing-fix');
+  assert.equal(result.existingFix.name, 'anadius (EA)');
+});
+
+test('an ambiguous executable is not a folder to write dlls into', () => {
+  // With no steam_api dll anywhere, the detected exe is the only thing deciding where the runtime
+  // lands. An updater sitting at a folder root scored highest on The Sims 4 and took the install.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-fix-eligibility-ambiguous-'));
+  roots.push(dir);
+  for (const name of ['launcher.exe', 'updater.exe', 'unins000.exe', 'setup.exe']) {
+    fs.writeFileSync(path.join(dir, name), 'stub');
+  }
+  const result = eligibility.inspect({ gameDir: dir, gameName: 'The Sims 4' });
+  assert.equal(result.eligible, false);
+  assert.equal(result.reason, 'no-executable');
+});

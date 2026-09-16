@@ -112,6 +112,28 @@ test('Xenia still works with no config file at all', async () => {
   assert.deepEqual((await xenia.scan(emulator)).map((entry) => entry.appid), ['ABCD1234']);
 });
 
+// Current Canary keeps title GPDs inside the profile package, next to the dashboard's own GPD.
+function canaryProfile(root) {
+  const profile = path.join(root, 'content', 'E0300000DEADBEEF', 'FFFE07D1', '00010000', 'E0300000DEADBEEF');
+  fs.mkdirSync(profile, { recursive: true });
+  for (const name of ['FFFE07D1.gpd', '4D5307E6.gpd', 'Account']) fs.writeFileSync(path.join(profile, name), Buffer.alloc(4));
+  return profile;
+}
+
+test('Xenia Canary profile-package GPDs are found from the emulator folder', async () => {
+  const emulator = tmpdir('aw-xenia-canary-');
+  canaryProfile(emulator);
+  assert.deepEqual((await xenia.scan(emulator)).map((entry) => entry.appid), ['4D5307E6']);
+});
+
+test('the Xenia folder holding the .gpd files can be added directly', async () => {
+  const profile = canaryProfile(tmpdir('aw-xenia-profile-'));
+  assert.deepEqual((await xenia.scan(profile)).map((entry) => entry.appid), ['4D5307E6']);
+  const diagnosis = await userDir.diagnose(profile);
+  assert.equal(diagnosis.accepted, true);
+  assert.equal(diagnosis.evidence.emulator, 'xenia');
+});
+
 test('an emulator recorded by Windows is found without touching the disk', () => {
   const registry = {
     readRegistryStringAndExpand(hive, key, valueName) {
