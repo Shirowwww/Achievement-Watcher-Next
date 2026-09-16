@@ -16,22 +16,28 @@ const SCHEMA = `<?xml version="1.0"?>
 </trophyconf>`;
 
 // Build a minimal TROPUSR.DAT: magic header, two header delimiters, then trophy records
-// (id at 0-4, unlock time at 16-20, big-endian) followed by state records (achieved at 12-16),
-// all separated by the record delimiters the real file uses.
+// (id at 0-4; offset 16 is trophy_pid, always FFFFFFFF) followed by state records (achieved at
+// 12-16, unlock time as a u64 CellRtcTick at 32-40), all separated by the record delimiters.
+const RTC_TICK_UNIX_EPOCH = 62135596800000000n;
 function buildUserData(trophies) {
   const header = Buffer.from('818F54AD', 'hex');
   const delim = Buffer.from('0400000050', 'hex');
   const chunks = [header, delim, delim];
   const records = [];
   for (const t of trophies) {
-    const r = Buffer.alloc(20, 0xaa);
+    const r = Buffer.alloc(20, 0);
     r.writeInt32BE(t.id, 0);
-    r.writeInt32BE(t.time, 16);
+    r.writeUInt32BE(0xffffffff, 16);
     records.push(r);
   }
   for (const t of trophies) {
-    const s = Buffer.alloc(16, 0xaa);
+    const s = Buffer.alloc(0x50, 0);
     s.writeInt32BE(t.achieved ? 1 : 0, 12);
+    if (t.time) {
+      const tick = BigInt(t.time) * 1000000n + RTC_TICK_UNIX_EPOCH;
+      s.writeBigUInt64BE(tick, 24);
+      s.writeBigUInt64BE(tick, 32);
+    }
     records.push(s);
   }
   for (let i = 0; i < records.length; i++) {

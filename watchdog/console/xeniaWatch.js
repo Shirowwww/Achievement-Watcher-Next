@@ -251,7 +251,7 @@ function ensureIcon(titleId, imageId, imagesById) {
 }
 
 // Discover per-title achievement GPDs under the user's saved folders (cfg/userdir.db - the same list
-// the app scans). A Xenia root is any folder holding content/<XUID>/<titleID>/00000001/<titleID>.gpd.
+// the app scans), in both layouts app/parser/xenia.js reads.
 function discover(configFile = userDirFile) {
   const targets = [];
   const seen = new Set();
@@ -269,38 +269,53 @@ function discover(configFile = userDirFile) {
     return targets;
   }
 
-  for (const dir of userDirs) {
-    const contentRoots = [];
-    if (path.basename(dir).toLowerCase() === 'content') contentRoots.push(dir);
-    else contentRoots.push(path.join(dir, 'content'));
-
-    for (const content of contentRoots) {
-      let xuids;
-      try {
-        xuids = fs.readdirSync(content, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
-      } catch {
-        continue;
-      }
-      for (const xuid of xuids) {
-        let titleIds;
-        try {
-          titleIds = fs.readdirSync(path.join(content, xuid), { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
-        } catch {
-          continue;
-        }
-        for (const titleId of titleIds) {
-          if (seen.has(titleId.toLowerCase())) continue;
-          const dataDir = path.join(content, xuid, titleId, '00000001');
-          // Only the title's own GPD carries its achievements; dashboard/profile GPDs are ignored.
-          const gpd = path.join(dataDir, `${titleId}.gpd`);
-          const gpdUpper = path.join(dataDir, `${titleId}.GPD`);
-          const gpdPath = fs.existsSync(gpd) ? gpd : fs.existsSync(gpdUpper) ? gpdUpper : null;
-          if (!gpdPath) continue;
-          targets.push({ titleId, dataDir, gpdPath });
-          seen.add(titleId.toLowerCase());
-        }
-      }
+  const subdirs = (dir) => {
+    try {
+      return fs.readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
+    } catch {
+      return [];
     }
+  };
+  const add = (titleId, dataDir, gpdPath) => {
+    if (seen.has(titleId.toLowerCase())) return;
+    targets.push({ titleId, dataDir, gpdPath });
+    seen.add(titleId.toLowerCase());
+  };
+  // Older builds: <titleID>/00000001/<titleID>.gpd. Only the title's own GPD carries its achievements.
+  const legacyTitle = (titleDir) => {
+    const titleId = path.basename(titleDir);
+    const dataDir = path.join(titleDir, '00000001');
+    for (const name of [`${titleId}.gpd`, `${titleId}.GPD`]) {
+      if (fs.existsSync(path.join(dataDir, name))) return add(titleId, dataDir, path.join(dataDir, name));
+    }
+  };
+  // Canary profile package: <XUID>/FFFE07D1/00010000/<XUID>/<titleID>.gpd beside the dashboard's FFFE07D1.gpd.
+  const profileFolder = (profileDir) => {
+    if (!/^[0-9a-f]{16}$/i.test(path.basename(profileDir))) return;
+    let names;
+    try {
+      names = fs.readdirSync(profileDir);
+    } catch {
+      return;
+    }
+    for (const name of names) {
+      const match = /^([0-9a-f]{8})\.gpd$/i.exec(name);
+      if (match && match[1].toLowerCase() !== 'fffe07d1') add(match[1], profileDir, path.join(profileDir, name));
+    }
+  };
+  const xuidFolder = (xuidDir) => {
+    const packages = path.join(xuidDir, 'FFFE07D1', '00010000');
+    for (const profile of subdirs(packages)) profileFolder(path.join(packages, profile));
+    for (const titleId of subdirs(xuidDir)) legacyTitle(path.join(xuidDir, titleId));
+  };
+
+  for (const dir of userDirs) {
+    const content = path.basename(dir).toLowerCase() === 'content' ? dir : path.join(dir, 'content');
+    for (const xuid of subdirs(content)) xuidFolder(path.join(content, xuid));
+    // A folder picked inside the tree: the profile folder, a XUID folder or a legacy title folder.
+    profileFolder(dir);
+    if (/^[0-9a-f]{16}$/i.test(path.basename(dir))) xuidFolder(dir);
+    if (/^[0-9a-f]{8}$/i.test(path.basename(dir))) legacyTitle(dir);
   }
   return targets;
 }

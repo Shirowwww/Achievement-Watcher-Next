@@ -422,6 +422,13 @@ module.exports.diagnose = async (dirpath) => {
   } catch {
     /* same */
   }
+  try {
+    // Xenia's GPD folders are hex-named but not appids, and a profile folder has no subfolder at all.
+    const gpds = await require('./xenia.js').scan(dirpath);
+    if (gpds.length > 0) return { accepted: true, code: 'emulator-data', evidence: { ...evidence, emulator: 'xenia', roots: gpds.map((r) => r.data.path) } };
+  } catch {
+    /* same */
+  }
 
   // Some GOG/UniverseLAN and repack layouts keep the config below the selected game root
   // (for example <Game>/Engine/Binaries/.../UniverseLAN.ini). Accept that root, then scan()

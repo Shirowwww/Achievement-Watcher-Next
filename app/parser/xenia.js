@@ -241,7 +241,33 @@ function validAchievements(parsed) {
   return [...byId.values()];
 }
 
-const titleIdFromPath = (gpdPath) => path.basename(path.dirname(path.dirname(gpdPath))); // .../<titleID>/00000001/<file>.gpd
+/*
+  Two on-disk layouts. Older builds keep one folder per title: <XUID>/<titleID>/00000001/<titleID>.gpd.
+  Canary since its profile rework keeps every title GPD inside the profile package instead:
+  <XUID>/FFFE07D1/00010000/<XUID>/<titleID>.gpd, beside the dashboard's own FFFE07D1.gpd. Only
+  reading the first layout meant a current Canary install scanned as empty.
+*/
+const DASHBOARD_TITLE_ID = 'fffe07d1';
+const HEX8 = /^[0-9a-f]{8}$/i;
+const HEX16 = /^[0-9a-f]{16}$/i;
+
+// The titleID a GPD holds achievements for, or null for a dashboard/profile GPD or a stray file.
+function titleIdForGpd(gpdPath) {
+  const stem = path.basename(gpdPath, path.extname(gpdPath));
+  if (!HEX8.test(stem) || stem.toLowerCase() === DASHBOARD_TITLE_ID) return null;
+  const parent = path.basename(path.dirname(gpdPath));
+  if (parent === '00000001') {
+    return path.basename(path.dirname(path.dirname(gpdPath))).toLowerCase() === stem.toLowerCase() ? stem : null;
+  }
+  return HEX16.test(parent) ? stem : null;
+}
+
+const titleIdFromPath = (gpdPath) => titleIdForGpd(gpdPath) || path.basename(gpdPath, path.extname(gpdPath));
+
+// Relative to a content root, then relative to a folder picked inside the tree (a guide often
+// points at the profile folder holding the .gpd files rather than at the emulator).
+const CONTENT_GLOBS = ['*/*/00000001/*.gpd', '*/FFFE07D1/00010000/*/*.gpd'];
+const INNER_GLOBS = ['*.gpd', '*/00000001/*.gpd', '00000001/*.gpd', 'FFFE07D1/00010000/*/*.gpd', '00010000/*/*.gpd', '*/*.gpd'];
 
 /*
   Xenia writes its config beside the binary and lets the user move the profile/content tree with
@@ -300,24 +326,22 @@ module.exports.scan = async (dir) => {
   }
   if (await exists(path.join(dir, 'content'))) pushRoot(path.join(dir, 'content'));
   if (path.basename(dir).toLowerCase() === 'content') pushRoot(dir);
-  if (contentRoots.length === 0) return data;
 
-  for (const content of contentRoots) {
+  const searches = contentRoots.map((cwd) => ({ cwd, patterns: CONTENT_GLOBS }));
+  if (contentRoots.length === 0) searches.push({ cwd: dir, patterns: INNER_GLOBS });
+
+  for (const { cwd, patterns } of searches) {
     let gpds;
     try {
-      // <XUID>/<titleID>/00000001/<file>.gpd
-      gpds = await glob('*/*/00000001/*.{gpd,GPD}', { cwd: content, onlyFiles: true, absolute: true, suppressErrors: true });
+      gpds = await glob(patterns, { cwd, onlyFiles: true, absolute: true, caseSensitiveMatch: false, suppressErrors: true });
     } catch {
       continue;
     }
     for (const gpd of gpds) {
-      const titleId = titleIdFromPath(gpd);
-      const stem = path.basename(gpd, path.extname(gpd));
-      // The per-title achievement GPD is named after its titleID; skip the dashboard/profile GPDs.
-      if (stem.toLowerCase() !== titleId.toLowerCase()) continue;
-      if (seen.has(titleId)) continue;
-      seen.add(titleId);
-      data.push({ appid: titleId, source: 'Xenia Emulator', data: { type: 'xenia', path: gpd } });
+      const titleId = titleIdForGpd(gpd);
+      if (!titleId || seen.has(titleId.toUpperCase())) continue;
+      seen.add(titleId.toUpperCase());
+      data.push({ appid: titleId, source: 'Xenia Emulator', data: { type: 'xenia', path: path.normalize(gpd) } });
     }
   }
 
@@ -438,5 +462,6 @@ module.exports._internal = {
   parseXdbfEntries,
   configuredStorageRoots,
   tomlString,
+  titleIdForGpd,
   ACHIEVEMENT_EARNED_FLAG,
 };

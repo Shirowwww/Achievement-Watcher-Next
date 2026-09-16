@@ -62,11 +62,20 @@ function parseSchema(xml) {
 
 // TROPUSR.DAT binary layout (mirrors app/parser/rpcs3.js, which the watchdog cannot require from
 // inside the app archive): magic header, then two delimiter-separated record halves - trophy
-// records (id at 0-4, timestamp at 16-20, big-endian) followed by state records (achieved at 12-16).
+// records (id at 0-4) followed by state records (achieved at 12-16, unlock tick at 32-40, big-endian).
 const magic = {
   header: Buffer.from('818F54AD', 'hex'),
   delimiter: [Buffer.from('0400000050', 'hex'), Buffer.from('0600000060', 'hex')],
 };
+
+// timestamp2 of the state record: a u64 CellRtcTick, microseconds since 0001-01-01.
+const RTC_TICK_UNIX_EPOCH = 62135596800000000n;
+function rtcTickToUnixSeconds(state, offset = 32) {
+  if (!state || state.length < offset + 8) return 0;
+  const tick = state.readBigUInt64BE(offset);
+  if (tick <= RTC_TICK_UNIX_EPOCH) return 0;
+  return Number((tick - RTC_TICK_UNIX_EPOCH) / 1000000n);
+}
 
 function indexOfAny(buffer, values, offset = 0) {
   for (const value of values) {
@@ -109,11 +118,12 @@ function parseUserData(buffer) {
   const result = [];
   for (let i = 0; i <= length - 1; i++) {
     try {
-      const timestamp = stats[i].slice(16, 20);
+      const state = stats[i + length];
+      const achieved = state.slice(12, 16).readInt32BE() === 1;
       result.push({
         id: stats[i].slice(0, 4).readInt32BE(),
-        unlockTime: timestamp.equals(Buffer.from('ffffffff', 'hex')) ? 0 : timestamp.readInt32BE(),
-        achieved: stats[i + length].slice(12, 16).readInt32BE() === 1,
+        unlockTime: achieved ? rtcTickToUnixSeconds(state) : 0,
+        achieved,
       });
     } catch {
       continue;

@@ -120,13 +120,14 @@ module.exports.getAchievements = async (dir) => {
 
   for (let i = 0; i <= length - 1; i++) {
     try {
-      const timestamp = stats[i].slice(16, 20);
-      const value = stats[i + length].slice(12, 16).readInt32BE();
+      const state = stats[i + length];
+      const achieved = state.slice(12, 16).readInt32BE() === 1;
 
       const trophy = {
         id: stats[i].slice(0, 4).readInt32BE(),
-        unlockTime: timestamp.equals(Buffer.from('ffffffff', 'hex')) ? 0 : timestamp.readInt32BE(),
-        achieved: value === 1,
+        // Named earned_time so the shared merge picks it up; the old `unlockTime` key was never read.
+        earned_time: achieved ? rtcTickToUnixSeconds(state) : 0,
+        achieved,
       };
 
       result.push(trophy);
@@ -137,6 +138,23 @@ module.exports.getAchievements = async (dir) => {
 
   return result;
 };
+
+/*
+  The unlock time lives in the state record (TROPUSREntry6), not the trophy record: after the
+  delimiter come entry_id, unk1, trophy_id, trophy_state, unk4, unk5, then timestamp1 and timestamp2
+  as u64 CellRtcTick, microseconds since 0001-01-01. RPCS3 reads timestamp2 back, so this does too.
+  Offset 16 of the trophy record, read before, is trophy_pid: always FFFFFFFF, so always 0.
+*/
+const RTC_TICK_UNIX_EPOCH = 62135596800000000n;
+
+function rtcTickToUnixSeconds(state, offset = 32) {
+  if (!state || state.length < offset + 8) return 0;
+  const tick = state.readBigUInt64BE(offset);
+  if (tick <= RTC_TICK_UNIX_EPOCH) return 0;
+  return Number((tick - RTC_TICK_UNIX_EPOCH) / 1000000n);
+}
+
+module.exports._internal = { rtcTickToUnixSeconds, RTC_TICK_UNIX_EPOCH };
 
 function indexOfAny(buffer, values, offset = 0) {
   for (const value of values) {
