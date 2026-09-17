@@ -7,6 +7,112 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
+## Unreleased
+
+### Added
+
+- **DLC ownership and the account identity are separate opt-in settings.** Enabling every DLC and
+  stamping your account name and language into each game's `configs.user.ini` have nothing to do
+  with reading achievements, and both overwrite files people curate by hand. They are now two
+  switches of their own under Emulator setup, off by default, independent of automatic repair.
+
+- **"Remove AW Next's emulator configuration" in a game's right-click menu.** The writes above were
+  never backed up, so restoring is not available to anyone already affected. This takes out only the
+  DLC section, switches and identity keys AW Next itself wrote, keeps every value you or the repack
+  chose, and deletes a file only when nothing else is left in it. It shows exactly what it will
+  remove before doing anything.
+
+### Fixed
+
+- **A scan no longer rewrites emulator configuration in your game folders.** With "Automatically fix
+  newly detected games" disabled, an ordinary library scan still wrote `configs.app.ini`,
+  `configs.main.ini` and `configs.user.ini` into every detected GBE/Goldberg game, and wrote a
+  missing `achievements.json` along with them. That setting exists to say AW Next never touches game
+  files unprompted, and it now means it: every one of those writes follows the setting and announces
+  itself first. Reported on cs.rin.ru by CharlieX_, who found a hand-managed emulator setup replaced
+  by a scan that was supposed to only read.
+
+- **A backup says when it is not an original.** Because the configuration was rewritten before
+  anyone could take a backup, the backup captured AW Next's own files and looked exactly like a
+  pristine one. A backup now records whether the folder already carried configuration AW Next wrote,
+  and the dialog says so.
+
+- **A game health report no longer treats its own placeholder as proof the emulator works.**
+  Applying a GBE setup writes a locked achievement file into `GSE Saves\<appid>` so the game shows
+  its list before it has ever run. The diagnosis read that file back and announced "Runtime save
+  found: 0/46 unlocked", which sounds like the emulator is recording and is not: the only thing that
+  ever wrote it was AW Next. The health panel believed it too, and downgraded the one warning that
+  points at the emulator into a calm "nothing unlocked yet". A setup the game never loads therefore
+  looked identical to a healthy one - exactly what happened to The Blood of Dawnwalker after the
+  packaged-Unreal fix in 3.10.5. The seed is now marked when it is written, the report says who
+  wrote the save, and a placeholder no longer stands in for progress.
+
+- **The report says which emulator build is in each folder.** It carried a count of Steam API files
+  and the folders holding them, which cannot separate a fix that landed from one that went where the
+  process never looks: a release that shipped its own emulator has a file of the same name in the
+  same place. Each folder now reports its file's size and date, whether it is an emulator, whether
+  it is the build AW Next installed, whether a backup exists and whether that backup is a genuine
+  original.
+
+- **A missing `steam_interfaces.txt` is reported instead of being left in the log.** The file is
+  generated from the game's original Steam API library, and a release that overwrote that library
+  leaves nothing to read, so the emulator falls back to its built-in interface versions. The report
+  now says so, and says whether reinstalling the runtime could still supply the file.
+
+- **A packaged Unreal game is identified by the file next to the engine's Steam library.** A build
+  of that shape keeps its `steam_appid.txt` in `Engine\Binaries\ThirdParty\Steamworks`, seven
+  levels down and inside the one folder every scan skips as an editor/SDK directory. Such a game was
+  therefore never discovered as an install at all: it appeared as an unidentified folder with no
+  achievements, whatever was configured in it. The library now reads that folder's identity, so the
+  game arrives with its appid, its achievement list and its save folder like any other. Reported on
+  cs.rin.ru by DaddyYNWA for Little Nightmares II Enhanced Edition.
+
+- **A scene release's own emulator is recognised under an Unreal build.** RUNE, CODEX and their
+  kind drop their `steam_emu.ini` beside the library they replaced, and the check that keeps AW Next
+  from touching a cracked folder only ever looked at the game root. So AW offered a GBE setup to a
+  game RUNE was already serving, and wrote a `steam_settings` folder that release never opens. The
+  check now looks where the engine loads its library from, and the health panel names the emulator
+  actually in charge instead of leaving the row out.
+  A RUNE release that ships no ini at all is recognised too, by the `steam_api64.rne` it keeps the
+  original library under, and that original is now what `steam_interfaces.txt` is generated from.
+
+- **A complete emulator setup that nothing will ever read is reported as a failure.** The moment
+  that inert `steam_settings` existed, the release's own Steam library counted as an emulator file
+  because the folder was beside it - the folder AW Next had just written. The panel then reported a
+  perfect setup, every achievement present, for a game recording nothing, which is the worst answer
+  it can give. A Steam library is now only treated as an emulator when it actually is one, and a
+  game served by a crack that has run and recorded nothing can be switched to the supported
+  emulator from the panel, with that crack's configuration renamed aside rather than deleted.
+
+- **A repack's edition folder is no longer mistaken for another game.** A release that ships two
+  builds side by side names one of them `EnhancedEdition`. Glued into one word, that name sat inside
+  "The Witcher: Enhanced Edition" and was trusted as a match, so AW Next set Little Nightmares II up
+  as The Witcher, DLC list included, in a folder the game never reads. A name made only of edition
+  and packaging words now identifies nothing, and the game's real title is tried instead. A packaged
+  Unreal build also stops taking a settings folder at its root for its setup, and finds its appid
+  inside the engine's own `steam_settings` when the repack keeps it there.
+
+- **Progress achievements show their count on CODEX and RUNE releases.** Those emulators keep stats
+  in a `stats.ini` under `[UserStats]`, with names like `kill-headshot`, and write `CurProgress=0` on
+  every achievement. The stats were never read, the zero was taken for a real value, and without a
+  `steam_settings` folder nothing said which stat drives which achievement. The stats are read now,
+  and that link comes from the Steam client's own schema when it has one, kept in AW Next's cache so
+  live notifications use it too. Nothing is written into the game folder. A GBE schema's maximum is
+  also read from `max_val`, where GBE puts it, and a stat that keeps counting past its goal no longer
+  reads 14/10.
+
+- **Game health has a "Progress counters" row for those releases.** It says where the counters come
+  from, and when nothing provides them it offers to fetch them through generate_emu_config with the
+  saved sign-in. Steam's public achievement list is asked first, so a game with no counter at all
+  says so instead of offering a fetch that can only come back empty. Only the counters are kept, in
+  AW Next's cache. A counter that moves without an unlock now reaches the Watchdog too: it follows
+  `stats.ini` and reads the achievement list beside it, so the saved state is never replaced by a
+  list of stats.
+
+- **Every long repair in Game health shows its progress.** Fetching counters, installing or switching
+  the emulator, the Ubisoft repair and the library re-read that follows a repair all showed a
+  disabled button and nothing else for up to a minute.
+
 ## 3.10.6 - 2026-09-10
 
 ### Security
@@ -292,32 +398,26 @@ renamed in 3.9.0 and the history is kept under one file.
   captions are read from: the cells arrived with no "Achievements" or "Last played" caption at all,
   and a game never launched said nothing where it should have said so. Those labels are filled in as
   soon as the language is there.
-
 - **Exporting the Custom theme works again.** The button called a function that no longer exists, so
   a Custom theme with no name given stopped on an error nobody could see instead of asking for the
   name.
-
 - **A game merged from several sources stops reporting an error on every scan.** Each of a game's
   records is read with the reader its main record uses, and one that carries no save folder - a
   Ubisoft entry beside a Steam emulator save, say - was still sent to the file reader, which then
   reported a save folder literally named "undefined". Nothing is read from a record that has none,
   and every message about a merged game now names which of its records it is about.
-
 - **The loading bar in the footer actually moves again.** It was pinned to an inline width of 0%,
   which overrode the rule that gives the sweeping bar its size, so a cold start showed an empty,
   motionless bar reading "0%" for the whole scan - the longest wait the app has. It now sweeps and
   names what it is doing, and only switches to a percentage once games start arriving.
-
 - **A slow answer from GitHub no longer looks like a corrupted download.** The update check read the
   words "checksum mismatch" out of our own release notes, which the failed request had copied into
   its error, then cleared the updater cache for nothing and ended on a dead end offering a manual
   download. A check that cannot reach GitHub now says so plainly and retries on its own.
-
 - **A finished or failed update no longer leaves "downloading update 0%" in Settings.** The two
   update labels only knew how to paint a download in progress, so nothing ever wiped the last line
   they had shown, and re-checking put it straight back instead of replacing it. They now follow
   every state the updater reports, including the idle one.
-
 - **The Xbox PC import brings your library back.** It answered "0 created, 0 updated, 0 failed" for
   everyone whose Xbox games are not installed on this PC: every request carried an unreadable
   version header, Xbox refused it, and the fallback answered with an empty history. Games the
@@ -382,7 +482,6 @@ renamed in 3.9.0 and the history is kept under one file.
   missed and fell through to a Steam client sign-in and two store requests whose answer was thrown
   away - once per name it had to resolve, on the critical path of every scan. On a cold start that
   step took 9 s; it now takes under half a second.
-
 - **A refresh no longer waits on the network for every game it already knows.** A library of a
   hundred owned games asked Epic who was signed in, read a second copy of every schema and queried
   each game's unlock state, one at a time: ninety seconds of a scan. The account is asked once, a
@@ -890,6 +989,7 @@ renamed in 3.9.0 and the history is kept under one file.
   strings out of request logs, and hardened its admin token and its content policy.
 - The site shipped in six languages beside English; the guides moved to `README.html` and gained a
   bar linking them back to the rest of the site.
+
 ## 3.9.2 - 2026-08-20
 
 ### Added
@@ -1087,6 +1187,7 @@ Measured against the installed app's own logs and user data, not synthetic load.
 - A `.awpreset` package is validated whole before anything is written and refused entirely rather than
   part-installed: format and minimum app version, an extension allowlist, and a path gate that rejects
   traversal, absolute paths, drive letters and reserved names. Nothing inside is ever executed.
+
 ## 3.8.6 - 2026-08-13
 
 ### Added
@@ -1357,6 +1458,7 @@ Measured against the installed app's own logs and user data, not synthetic load.
 - Hiding the main window to the tray stops its renderer-side gamepad polling.
 - `js-yaml` was updated to 4.3.1, removing a high-severity YAML parsing vulnerability from the updater
   dependency tree.
+
 ## 3.7.0 - 2026-08-06
 
 ### Added
