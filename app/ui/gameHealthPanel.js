@@ -166,7 +166,8 @@ function setGameConfigView(view) {
 
 // Everything Game Health reasons about, read once per panel open. Anything unavailable stays absent
 // rather than guessed at, since deriveHealth() reports only on the signals it is given.
-async function collectGameHealthSignals(appid) {
+// `readOnly` is for the tile dots refreshed in the background: nothing on disk is touched.
+async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
   const game = gameList.find((g) => g.appid == appid) || {};
   let cfg = { exe: '', args: '' };
   try {
@@ -188,9 +189,14 @@ async function collectGameHealthSignals(appid) {
   */
   let gameDir = game.gameDir || '';
   let gameDirExists = !!gameDir && fs.existsSync(gameDir);
-  if (!gameDirExists && exeExists) {
+  if (exeExists && (!gameDirExists || isPathInsideDir(exe, gameDir))) {
     const derived = await resolveGameDirFromExe(exe);
-    if (derived) {
+    /*
+      Also taken when it is a separate install nested in the scanned folder: a repack shipping the
+      base game with an Enhanced Edition inside it has two emulator setups, and the one that matters
+      is the one the configured executable loads. A derived folder outside gameDir is ignored.
+    */
+    if (derived && (!gameDirExists || (normalizePathKey(derived) !== normalizePathKey(gameDir) && isPathInsideDir(derived, gameDir)))) {
       gameDir = derived;
       gameDirExists = true;
       // Carried into the in-memory game as well: the repairs offered by this report, "Open the game
@@ -234,7 +240,17 @@ async function collectGameHealthSignals(appid) {
       const hasSetupOnDisk = emu.type !== 'none' || !!emu.steamSettings || emu.dll.length > 0;
       if (hasSetupOnDisk || (readsGoldbergSave && !usesUplayLayer)) {
         emulated = true;
-        goldbergReport = { ...goldberg.diagnose({ gameDir, appid: writableAppid, schema: game }), dllCount: emu.dll.length };
+        const report = goldberg.diagnose({ gameDir, appid: writableAppid, schema: game });
+        /*
+          Which build sits in each folder the emulator could be loaded from. A count of dlls and a
+          list of folders cannot tell a landed fix from one that went to the wrong place: both read
+          the same when the release shipped its own emulator where AW Next expected the original.
+        */
+        const runtimeDlls = gbeInstaller.describeRuntimeDlls({
+          dllDirs: [...(report.engineDllDirs || []), ...(report.dllDirs || [])],
+          cacheDir: path.join(getUserDataPath(), 'cache/gse_fork'),
+        });
+        goldbergReport = { ...report, dllCount: emu.dll.length, runtimeDlls };
       }
     } catch (err) {
       debug.log(`[health] goldberg diagnose failed for ${appid} => ${formatErr(err)}`);
@@ -247,13 +263,15 @@ async function collectGameHealthSignals(appid) {
       // Undo, before anything is reported, a Ticket line an earlier AW Next build wrote into a
       // folder whose loader has no Ticket setting to read it from. It never did anything, and the
       // panel would otherwise show a warning and a button for a setting that was never real.
-      if (uplayR2.removeUnsupportedTicket(gameDir)) debug.log(`[health] ${appid} removed a Ticket line this loader cannot read`);
+      if (!readOnly && uplayR2.removeUnsupportedTicket(gameDir)) debug.log(`[health] ${appid} removed a Ticket line this loader cannot read`);
       const identity = uplayR2.resolveGameIdentity({ ...game, appid, gameDir }, appid);
       uplayReport = uplayR2.diagnose({ gameDir, appid, name: game.name, mapping: identity.mapping });
     } catch (err) {
       debug.log(`[health] uplay R2 diagnose failed for ${appid} => ${formatErr(err)}`);
     }
   }
+
+  const counters = await readProgressCounters({ appid: writableAppid, saveSources, steamSettings: goldbergReport && goldbergReport.steamSettings });
 
   const indexEntry = gameIndex.get(appid);
   let playtime = { playtime: 0, lastplayed: 0 };
@@ -277,7 +295,12 @@ async function collectGameHealthSignals(appid) {
     gameDirExists,
     exe,
     exeExists,
-    achievements: { total: (game.achievement && game.achievement.total) || 0, unlocked: (game.achievement && game.achievement.unlocked) || 0 },
+    achievements: {
+      total: (game.achievement && game.achievement.total) || 0,
+      unlocked: (game.achievement && game.achievement.unlocked) || 0,
+      // Set only where Steam actually answered "this game publishes none" - see achievements.js.
+      none: !!(game.achievement && game.achievement.none),
+    },
     emulated,
     achievementsCheckedAt,
     saveSources,
@@ -285,7 +308,9 @@ async function collectGameHealthSignals(appid) {
     uplay: uplayReport,
     // Which crack loader is already serving this game, if any: it decides whether a Uplay setup in
     // the same folder is broken or simply unused.
-    crackLoader: foreignLoader ? { name: foreignLoader.name } : null,
+    // `replaceable` says whether swapping steam_api for GBE Fork would be a complete change: it
+    // gates the one action the panel offers over a folder AW cannot otherwise diagnose.
+    crackLoader: foreignLoader ? { name: foreignLoader.name, replaceable: foreignLoader.replaceable === true } : null,
     // Console emulators (RPCS3/ShadPS4/Xenia) and the official platform libraries are followed by
     // their own watchers, not by the process monitor, so a missing gameIndex entry means nothing
     // for them and must not be reported as a fault.
@@ -299,7 +324,42 @@ async function collectGameHealthSignals(appid) {
       effective: notificationHealth.forGame(appid),
     },
     playtime: { total: playtime.playtime || 0, lastPlayed: playtime.lastplayed || 0 },
+    counters,
   };
+}
+
+/*
+  Whether this game's save keeps stats apart from its unlocks, and where the table that turns those
+  stats into "37/50" comes from. Read-only: the Steam client's schema is not copied here, the scan
+  does that.
+*/
+async function readProgressCounters({ appid, saveSources, steamSettings }) {
+  try {
+    const statProgressLib = require(path.join(appPath, 'parser/statProgress.js'));
+    const stats = Math.max(0, ...saveSources.map((entry) => statProgressLib.countSaveStats(entry.path)));
+    if (stats <= 0) return null;
+    const steamPath = await require(path.join(appPath, 'parser/steam.js'))
+      .getSteamPath()
+      .catch(() => '');
+    const found = statProgressLib.findProgressSchema({
+      appid,
+      localSchema: steamSettings ? goldberg.readLocalSchema(steamSettings) : [],
+      steamStatsDir: steamPath ? path.join(steamPath, 'appcache', 'stats') : null,
+      cacheDir: getUserDataPath(),
+    });
+    // Only asked when nothing local answers: a game Steam gives no counter needs no fetch button.
+    const official = found.origin ? null : await statProgressLib.officialProgressCount(appid, { cacheDir: getUserDataPath() });
+    return {
+      stats,
+      count: found.schema.length,
+      source: found.origin,
+      official,
+      canFetch: process.platform === 'win32' && /^[0-9]+$/.test(String(appid || '')),
+    };
+  } catch (err) {
+    debug.log(`[health] progress counters unreadable for ${appid} => ${formatErr(err)}`);
+    return null;
+  }
 }
 
 function gameHealthStateLabel(state) {
@@ -316,12 +376,20 @@ function gameHealthExplanation(report) {
       return t('gh-why-not-installed', "This game isn't installed on this PC, or AW Next can't tell where it is. Choose its executable so it can be watched.", "Ce jeu n'est pas installé sur ce PC, ou AW Next ne sait pas où il se trouve. Choisis son exécutable pour qu'il puisse être suivi.");
     case 'install-gone':
       return t('gh-why-install-gone', 'The game folder AW Next knew about is gone - it was moved, uninstalled, or is on a drive that is not connected. Point AW Next at the game again.', "Le dossier du jeu connu d'AW Next a disparu : déplacé, désinstallé, ou sur un disque non connecté. Indique à nouveau son emplacement.", p);
+    case 'no-achievements':
+      return t(
+        'gh-why-no-achievements',
+        'This game has no achievements at all - Steam publishes none for it. There is nothing for AW Next to track here, and nothing to set up.',
+        "Ce jeu n'a aucun succès : Steam n'en publie aucun pour lui. Il n'y a rien à suivre ici, et rien à configurer."
+      );
     case 'no-achievement-data':
       return t('gh-why-no-achievement-data', 'No achievement list could be found for this game, so there is nothing to track yet. Games with no achievements at all are normal here.', "Aucune liste de succès n'a été trouvée pour ce jeu, il n'y a donc rien à suivre. C'est normal pour un jeu sans succès.");
     case 'emulator-missing':
       return t('gh-why-emulator-missing', 'This game needs a Steam emulator to record achievements, and none is set up in its folder. Use the emulator fix from the game’s right-click menu to set one up.', "Ce jeu a besoin d'un émulateur Steam pour enregistrer les succès, et aucun n'est installé dans son dossier. Utilise le fix émulateur du menu clic droit du jeu.");
     case 'emulator-runtime-missing':
       return t('gh-why-emulator-runtime-missing', 'The achievement data is in place, but the emulator file that reads it is missing from the game folder, so nothing will ever be recorded. AW Next can put it back.', "Les données de succès sont en place, mais le fichier d'émulateur qui les lit est absent du dossier du jeu : rien ne sera jamais enregistré. AW Next peut le remettre.");
+    case 'emulator-runtime-foreign':
+      return t('gh-why-emulator-runtime-foreign', 'The achievement data is in place, but the Steam file this game loads comes from another crack and never reads it, so nothing will ever be recorded there. AW Next can install the supported emulator over it - the current file is kept.', "Les données de succès sont en place, mais le fichier Steam chargé par ce jeu vient d'un autre crack et ne les lit jamais : rien n'y sera jamais enregistré. AW Next peut installer l'émulateur pris en charge par-dessus, le fichier actuel étant conservé.");
     case 'uplay-broken':
       return t('gh-why-uplay-broken', 'The Ubisoft emulator setup for this game is incomplete, so unlocks are not being recorded. Use the Uplay R1/R2 repair button below.', "La configuration de l'émulateur Ubisoft de ce jeu est incomplète : les déblocages ne sont pas enregistrés. Utilise le bouton de réparation Uplay R1/R2 ci-dessous.", p);
     case 'achievement-data-incomplete':
@@ -361,6 +429,8 @@ function gameHealthCheckLabel(id, simple) {
         return t('gh-simple-check-emulator', 'Achievement support', 'Prise en charge des succès');
       case 'progress':
         return t('gh-simple-check-progress', 'Progress', 'Progression');
+      case 'counters':
+        return t('gh-check-counters', 'Progress counters', 'Compteurs de progression');
       case 'tracking':
         return t('gh-simple-check-tracking', 'Tracking', 'Suivi');
       default:
@@ -381,6 +451,8 @@ function gameHealthCheckLabel(id, simple) {
       return t('gh-check-emulator', 'Emulator setup', 'Configuration émulateur');
     case 'progress':
       return t('gh-check-progress', 'Progress', 'Progression');
+    case 'counters':
+      return t('gh-check-counters', 'Progress counters', 'Compteurs de progression');
     case 'tracking':
       return t('gh-check-tracking', 'Live tracking', 'Suivi en direct');
     default:
@@ -403,6 +475,7 @@ function gameHealthSimpleCheckValue(entry) {
         ? t('gh-simple-executable-ok', 'Game found on this PC', 'Jeu trouvé sur ce PC')
         : t('gh-simple-executable-missing', 'Game not located yet', 'Jeu pas encore localisé');
     case 'achievement-data':
+      if (p.none) return t('gh-simple-data-none', 'This game has no achievements', "Ce jeu n'a pas de succès");
       if (ok) return t('gh-simple-data-ok', 'Achievement data found', 'Données de succès trouvées');
       return entry.level === gameHealth.LEVEL.FAIL
         ? t('gh-simple-data-missing', 'No achievement data found', 'Aucune donnée de succès trouvée')
@@ -425,6 +498,11 @@ function gameHealthSimpleCheckValue(entry) {
       return entry.level === gameHealth.LEVEL.WARN
         ? t('gh-simple-progress-none', 'No progress found yet', 'Aucune progression trouvée pour le moment')
         : t('gh-simple-progress-empty', 'Nothing unlocked yet', 'Rien de débloqué pour le moment');
+    case 'counters':
+      if (p.none) return t('gh-simple-counters-none', 'This game has no progress counters', 'Ce jeu n’a pas de compteurs de progression');
+      return ok
+        ? t('gh-simple-counters-ok', 'Counters available', 'Compteurs disponibles')
+        : t('gh-simple-counters-missing', 'Counters not available yet', 'Compteurs pas encore disponibles');
     case 'tracking':
       return ok
         ? t('gh-simple-tracking-ok', 'Tracking active', 'Suivi actif')
@@ -537,6 +615,8 @@ function gameHealthIssueTopicLabel(topic) {
       return t('gh-issue-loader', 'emulator version', 'version de l’émulateur');
     case 'location':
       return t('gh-issue-location', 'where the emulator files are', 'emplacement des fichiers de l’émulateur');
+    case 'runtime':
+      return t('gh-issue-runtime', 'the emulator file the game loads', 'le fichier d’émulateur chargé par le jeu');
     default:
       return t('gh-issue-mapping', 'matching Steam release', 'version Steam correspondante');
   }
@@ -557,12 +637,19 @@ function gameHealthCheckValue(entry, simple) {
     case 'identity':
       return [p.appid, sourceDisplayName(p.source)].filter(Boolean).join(' · ') || missing;
     case 'achievement-data':
+      if (p.none) return t('gh-value-no-achievements', 'none published for this game', 'aucun publié pour ce jeu');
       if (p.missing) return t('gh-value-missing-entries', '{missing} of {total} missing from the emulator file', '{missing} sur {total} absents du fichier de l’émulateur', p);
       if (p.missingIcons && p.iconsUnavailable) return t('gh-value-icons-unavailable', 'icons not published by Steam yet', 'illustrations pas encore publiées par Steam', p);
       if (p.missingIcons) return t('gh-value-missing-icons', '{missingIcons} icons not downloaded', '{missingIcons} icônes non téléchargées', p);
       if (p.total || p.found) return t('gh-value-achievements', '{total} achievements', '{total} succès', { total: p.total || p.found });
       return missing;
     case 'emulator':
+      // A crack loader of its own serves this folder: naming it is the whole answer, and adding
+      // "nothing recorded yet" is what tells the two cases apart before the button below is read.
+      if (p.servedBy) {
+        const servedBy = t('gh-value-served-by', 'served by {emulator}', 'pris en charge par {emulator}', { emulator: p.servedBy });
+        return p.idle ? `${servedBy} · ${t('gh-value-none-yet', 'nothing recorded yet', 'rien d’enregistré pour l’instant')}` : servedBy;
+      }
       // Name what is wrong. A bare count ("1 point to review") gave the user no way to know what to
       // look at, which defeats the purpose of the row.
       if (p.topics && p.topics.length) return p.topics.map(gameHealthIssueTopicLabel).join(' · ');
@@ -585,6 +672,13 @@ function gameHealthCheckValue(entry, simple) {
     case 'progress':
       if (p.unlocked) return t('gh-value-unlocked', '{unlocked} unlocked', '{unlocked} débloqué(s)', p);
       return t('gh-value-none-yet', 'nothing recorded yet', 'rien d’enregistré pour l’instant');
+    case 'counters':
+      if (p.source === 'game') return t('gh-value-counters-game', '{count} from the game files', '{count} depuis les fichiers du jeu', p);
+      if (p.source === 'steam') return t('gh-value-counters-steam', '{count} from the Steam client', '{count} depuis le client Steam', p);
+      if (p.source === 'saved') return t('gh-value-counters-saved', '{count} saved by AW Next', '{count} enregistrés par AW Next', p);
+      if (p.none) return t('gh-simple-counters-none', 'This game has no progress counters', 'Ce jeu n’a pas de compteurs de progression');
+      if (p.official > 0) return t('gh-value-counters-available', '{official} achievement(s) with a counter', '{official} succès à compteur', p);
+      return t('gh-simple-counters-missing', 'Counters not available yet', 'Compteurs pas encore disponibles');
     case 'tracking':
       if (p.binary) return t('gh-value-watching', 'watching {binary}', 'surveille {binary}', p);
       return t('gh-value-none-yet', 'nothing recorded yet', 'rien d’enregistré pour l’instant');
@@ -615,12 +709,16 @@ function gameHealthActionLabel(action) {
       return t('gh-action-uplay-ticket-off', 'Turn offline achievements off', 'Désactiver les succès hors connexion');
     case gameHealth.ACTION.INSTALL_RUNTIME:
       return t('gh-action-install-runtime', 'Restore the emulator file', 'Restaurer le fichier d’émulateur');
+    case gameHealth.ACTION.SWITCH_RUNTIME:
+      return t('gh-action-switch-runtime', 'Switch to the supported emulator', 'Passer à l’émulateur pris en charge');
     case gameHealth.ACTION.START_TRACKING:
       return t('gh-action-start-tracking', 'Watch this game', 'Surveiller ce jeu');
     case gameHealth.ACTION.UNMUTE_PROGRESS:
       return t('gh-action-unmute-progress', 'Unmute progress notifications', 'Réactiver les notifications de progression');
     case gameHealth.ACTION.FIX_APPID:
       return t('gh-action-fix-appid', 'Correct the game ID file', 'Corriger le fichier d’identification');
+    case gameHealth.ACTION.FETCH_PROGRESS:
+      return t('gh-action-fetch-progress', 'Fetch progress counters', 'Récupérer les compteurs de progression');
     default:
       return t('gh-action-test-notification', 'Send a test notification', 'Envoyer une notification de test');
   }
@@ -715,6 +813,11 @@ const GAME_HEALTH_PROGRESS_LABEL = {
   icons: () => t('gh-progress-icons', 'Downloading achievement icons…', 'Téléchargement des icônes de succès…'),
   schema: () => t('gh-progress-schema', 'Writing the achievement list…', 'Écriture de la liste des succès…'),
   config: () => t('gh-progress-config', 'Writing the emulator settings…', 'Écriture des réglages de l’émulateur…'),
+  // No countable unit in these, so they sweep: a download, a Steam lookup, a library re-read.
+  fetch: () => t('gh-progress-fetch', 'Asking Steam for the progress counters…', 'Demande des compteurs de progression à Steam…'),
+  runtime: () => t('gh-progress-runtime', 'Downloading and installing the emulator…', 'Téléchargement et installation de l’émulateur…'),
+  uplay: () => t('gh-progress-uplay', 'Repairing Ubisoft achievement support…', 'Réparation de la prise en charge des succès Ubisoft…'),
+  rescan: () => t('gh-progress-rescan', 'Re-reading the library…', 'Relecture de la bibliothèque…'),
 };
 
 function setGameHealthProgress(progress) {
@@ -772,7 +875,9 @@ const GAME_HEALTH_ACTIONS_NEEDING_RESCAN = new Set([
   gameHealth.ACTION.REPAIR_UPLAY_TICKET,
   gameHealth.ACTION.REMOVE_UPLAY_TICKET,
   gameHealth.ACTION.INSTALL_RUNTIME,
+  gameHealth.ACTION.SWITCH_RUNTIME,
   gameHealth.ACTION.FIX_APPID,
+  gameHealth.ACTION.FETCH_PROGRESS,
 ]);
 
 async function refreshLibraryAfterGameHealthRepair() {
@@ -943,6 +1048,96 @@ async function runGameHealthAction(appid, action, button) {
     }
   }
 
+  /*
+    The stat behind each progress achievement, fetched by generate_emu_config (the tool the advanced
+    GBE setup already uses). Only that table is kept, in AW Next's cache: nothing is written beside
+    the game, so a CODEX or RUNE release is left exactly as it was. Steam gives the schema to a
+    signed-in account only - an anonymous run sits on the login and never writes it - so the saved
+    sign-in is used, or the user is asked for one.
+  */
+  if (action === gameHealth.ACTION.FETCH_PROGRESS) {
+    if (!writableAppid) return false;
+    const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'question',
+      title: t('gh-action-fetch-progress', 'Fetch progress counters', 'Récupérer les compteurs de progression'),
+      message: t(
+        'gh-fetch-progress-message',
+        'AW Next will ask Steam which stat counts towards each achievement of this game.',
+        'AW Next va demander à Steam quelle statistique compte pour chaque succès de ce jeu.'
+      ),
+      detail: t(
+        'gh-fetch-progress-detail',
+        'Steam only shares this with a signed-in account: the sign-in already saved for generate_emu_config is used, otherwise you are asked for it. The first time, the tool is downloaded from GitHub. Nothing is written in the game folder.',
+        'Steam ne donne cette liste qu’à un compte connecté : la connexion déjà enregistrée pour generate_emu_config est utilisée, sinon elle te sera demandée. La première fois, l’outil est téléchargé depuis GitHub. Rien n’est écrit dans le dossier du jeu.'
+      ),
+      buttons: [t('cancel', 'Cancel', 'Annuler'), t('gh-action-fetch-progress', 'Fetch progress counters', 'Récupérer les compteurs de progression')],
+      defaultId: 1,
+      cancelId: 0,
+      noLink: true,
+    });
+    if (confirmed !== 1) return false;
+
+    const genEmu = require(path.join(appPath, 'parser/genEmuConfig.js'));
+    const statProgressLib = require(path.join(appPath, 'parser/statProgress.js'));
+    let generated = null;
+    try {
+      setGameHealthProgress({ phase: 'fetch' });
+      const tool = await genEmu.ensureGenerateEmuConfig({ cacheDir: path.join(getUserDataPath(), 'cache/gse_emu_config'), log: debug });
+      setGameHealthProgress(null);
+      // A refresh token from an earlier sign-in is enough on its own (-tok with no credentials).
+      let hasToken = false;
+      try {
+        hasToken = fs.statSync(path.join(tool.dir || path.dirname(tool.exe), 'refresh_tokens.json')).size > 2;
+      } catch {
+        hasToken = false;
+      }
+      let login = {};
+      if (!hasToken) {
+        const emuCfg = (app.config && app.config.emulator) || {};
+        const user =
+          emuCfg.loginAccountName ||
+          (await promptText(t('steam-username-throwaway-account-only', 'Steam username:', 'Identifiant Steam :'), ''));
+        if (!user) return false;
+        const pass = emuCfg.loginPassword || (await promptText(t('steam-password', 'Steam password:', 'Mot de passe Steam :'), '', 'password'));
+        if (!pass) return false;
+        login = { username: user, password: pass };
+      }
+      const onPrompt = (question) => promptText(`generate_emu_config - ${question}`);
+      setGameHealthProgress({ phase: 'fetch' });
+      generated = await genEmu.generate({ tool, appid: writableAppid, login, onPrompt, timeout: 300000, idleTimeout: 90000, log: debug });
+      setGameHealthProgress(null);
+      const schema = goldberg.readLocalSchema(generated.steamSettings);
+      if (!statProgressLib.writeProgressCache(getUserDataPath(), writableAppid, schema)) {
+        remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+          type: 'info',
+          title: t('gh-action-fetch-progress', 'Fetch progress counters', 'Récupérer les compteurs de progression'),
+          message: t('gh-fetch-progress-none', 'Steam lists no progress counter for this game.', 'Steam n’indique aucun compteur de progression pour ce jeu.'),
+        });
+        return false;
+      }
+      debug.log(`[health] ${appid} progress counters saved (${statProgressLib.progressEntries(schema).length})`);
+      return true;
+    } catch (err) {
+      setGameHealthProgress(null);
+      debug.error(`[health] progress counters fetch failed for ${appid} => ${formatErr(err)}`);
+      remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+        type: 'error',
+        title: t('repair-failed', 'Repair failed', 'Échec de la réparation'),
+        message: t('gh-action-failed', 'That repair could not be completed.', 'Cette réparation n’a pas pu être effectuée.'),
+        detail: formatErr(err),
+      });
+      return false;
+    } finally {
+      if (generated && generated.workDir) {
+        try {
+          fs.rmSync(generated.workDir, { recursive: true, force: true });
+        } catch {
+          /* a temp folder */
+        }
+      }
+    }
+  }
+
   if (action === gameHealth.ACTION.TEST_NOTIFICATION) {
     await testGameNotification(appid, 'toast', button && button[0]);
     return false;
@@ -951,9 +1146,11 @@ async function runGameHealthAction(appid, action, button) {
   if (action === gameHealth.ACTION.REPAIR_UPLAY) {
     if (!game.gameDir || !fs.existsSync(game.gameDir)) return false;
     try {
+      setGameHealthProgress({ phase: 'uplay' });
       const result = await applyUplayR2Repair({ game, gameDir: game.gameDir, appid, interactive: true, showResult: true });
       return !!result;
     } catch (err) {
+      setGameHealthProgress(null);
       debug.error(`[health] Uplay R1/R2 repair failed for ${appid} => ${formatErr(err)}`);
       // An antivirus taking the loader is not a failure of the repair, and saying so sends the user
       // looking for a bug here instead of at the alert their antivirus just showed them.
@@ -1147,7 +1344,10 @@ async function runGameHealthAction(appid, action, button) {
     return true;
   }
 
-  if (action === gameHealth.ACTION.INSTALL_RUNTIME) {
+  if (action === gameHealth.ACTION.INSTALL_RUNTIME || action === gameHealth.ACTION.SWITCH_RUNTIME) {
+    // The same one-file install either way. Only the words differ: one puts a missing emulator
+    // back, the other replaces another crack's runtime with the supported one.
+    const switching = action === gameHealth.ACTION.SWITCH_RUNTIME;
     const steamSettings = (game.steamSettings && fs.existsSync(game.steamSettings) ? game.steamSettings : null) || goldberg.detectEmulator(game.gameDir).steamSettings;
     const cfg = await exeList.get(appid);
     const exe = (cfg && cfg.exe) || game.exe || '';
@@ -1167,21 +1367,49 @@ async function runGameHealthAction(appid, action, button) {
         '{file} will be installed in:\n{dirs}\n\nAn existing file of that name is kept as {backup} before being replaced.',
         '{file} sera installé dans :\n{dirs}\n\nUn fichier existant de ce nom est conservé sous {backup} avant remplacement.',
         { file: plan.file, dirs: plan.dirs.join('\n'), backup: plan.backup }
-      ),
-      buttons: [t('cancel', 'Cancel', 'Annuler'), t('gh-action-install-runtime', 'Restore the emulator file', 'Restaurer le fichier d’émulateur')],
+      ) +
+        (switching
+          ? '\n\n' +
+            t(
+              'gh-confirm-switch-runtime-detail',
+              'The other crack’s configuration files are renamed to .bak in the same folders. Nothing is deleted, and the achievement data still has to be written afterwards.',
+              'Les fichiers de configuration de l’autre crack sont renommés en .bak dans les mêmes dossiers. Rien n’est supprimé, et les données de succès restent à écrire ensuite.'
+            )
+          : ''),
+      buttons: [
+        t('cancel', 'Cancel', 'Annuler'),
+        switching
+          ? t('gh-action-switch-runtime', 'Switch to the supported emulator', 'Passer à l’émulateur pris en charge')
+          : t('gh-action-install-runtime', 'Restore the emulator file', 'Restaurer le fichier d’émulateur'),
+      ],
       defaultId: 1,
       cancelId: 0,
       noLink: true,
     });
     if (confirmed !== 1) return false;
 
-    const summary = await gameHealthRepair.installEmulatorRuntime({
-      gbeInstaller,
-      plan,
-      cacheDir: path.join(getUserDataPath(), 'cache/gse_fork'),
-      steamSettings,
-      log: debug,
-    });
+    /*
+      Before the dll goes in, not after: while the other crack's ini is still on disk the folder
+      keeps reading as crack-served, and every later step - the scan's config generation, the
+      panel's own diagnosis, the achievement-data repair - deliberately skips such a folder. The
+      swap would otherwise install a runtime nothing would ever configure.
+    */
+    const sidelined = switching ? crackLoaderDetect.disableLoaderMarkers([game.gameDir, ...plan.dirs]) : [];
+    if (sidelined.length > 0) debug.log(`[health] set aside ${sidelined.length} loader config file(s): ${sidelined.join(', ')}`);
+
+    setGameHealthProgress({ phase: 'runtime' });
+    let summary;
+    try {
+      summary = await gameHealthRepair.installEmulatorRuntime({
+        gbeInstaller,
+        plan,
+        cacheDir: path.join(getUserDataPath(), 'cache/gse_fork'),
+        steamSettings,
+        log: debug,
+      });
+    } finally {
+      setGameHealthProgress(null);
+    }
     remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'info',
       title: t('repair-complete', 'Repair complete', 'Réparation terminée'),
@@ -1189,9 +1417,18 @@ async function runGameHealthAction(appid, action, button) {
         installed: summary.installed,
         tag: summary.tag || '',
       }),
-      detail: summary.backedUp
-        ? t('diagnosis-dlls-backed-up', 'Existing dll(s) backed up as *.bak', 'Dll(s) existante(s) sauvegardée(s) en .bak')
-        : '',
+      detail: [
+        summary.backedUp ? t('diagnosis-dlls-backed-up', 'Existing dll(s) backed up as *.bak', 'Dll(s) existante(s) sauvegardée(s) en .bak') : '',
+        sidelined.length > 0
+          ? t(
+              'gh-runtime-switched-detail',
+              'The previous crack’s configuration was renamed to .bak. Rewrite the achievement data next, then launch the game once.',
+              'La configuration du crack précédent a été renommée en .bak. Réécris ensuite les données de succès, puis lance le jeu une fois.'
+            )
+          : '',
+      ]
+        .filter(Boolean)
+        .join('\n\n'),
       noLink: true,
     });
     return true;

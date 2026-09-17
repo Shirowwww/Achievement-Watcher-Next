@@ -544,6 +544,14 @@ module.exports.getGameData = async (cfg) => {
       }
       if (recheckSucceeded) {
         result.descBackfilledAt = Date.now();
+        /*
+          The same lookup that backfills descriptions also settles "does this appid publish any
+          achievements at all". Stamping the verdict here is what lets a game like The Sims 4 be
+          reported as having none rather than as a schema AW failed to read - and clearing it again
+          keeps a game that gained achievements in an update from staying marked empty for a week.
+        */
+        if (result.achievement.list.length === 0) result.emptyCheckedAt = Date.now();
+        else delete result.emptyCheckedAt;
         needSaving = true;
       }
     }
@@ -769,7 +777,8 @@ module.exports.getAchievementsFromFile = async (filePath) => {
       if (statsSize === 0) break; // present but empty: nothing to merge, not an error
       try {
         const doc = emuIni.parseIni(fs.readFileSync(statsPath, 'utf8'));
-        const values = emuIni.readIniSectionValues(doc, 'Stats');
+        // OnlineFix writes [Stats]; CODEX and RUNE write [UserStats].
+        const values = { ...emuIni.readIniSectionValues(doc, 'UserStats'), ...emuIni.readIniSectionValues(doc, 'Stats') };
         const resultKeys = new Set(Object.keys(result).map((k) => String(k).toUpperCase()));
         const rawStatKeys = [];
         for (const [name, raw] of Object.entries(values)) {
@@ -1763,7 +1772,8 @@ function getGoldbergSchemaFromFile(file, appid, lang = 'english') {
         icon: cdn(entry.icon),
         icongray: cdn(entry.icongray || entry.icon_gray),
       };
-      const maxProgress = Number(entry?.progress?.max_progress || entry?.progress?.value?.operand1 || 0);
+      // GBE writes max_val; operand1 is the stat's name, never the max.
+      const maxProgress = Number(entry?.progress?.max_val || entry?.progress?.max_progress || 0);
       if (Number.isFinite(maxProgress) && maxProgress > 0) achievement.max_progress = maxProgress;
       return achievement;
     });

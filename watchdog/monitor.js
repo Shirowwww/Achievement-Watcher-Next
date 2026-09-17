@@ -69,11 +69,13 @@ module.exports.getFolders = async (userDir_file) => {
   let steamEmu = [
     {
       dir: path.join(process.env['Public'], 'Documents/Steam/CODEX'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0]] },
+      // stats.ini changes alone when only a counter moves; statsSibling reads achievements.ini for it.
+      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0], files.achievement[3]], statsSibling: true },
     },
     {
       dir: path.join(process.env['Public'], 'Documents/Steam/RUNE'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0]] },
+      // stats.ini changes alone when only a counter moves; statsSibling reads achievements.ini for it.
+      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0], files.achievement[3]], statsSibling: true },
     },
     {
       dir: path.join(process.env['Public'], 'Documents/Steam/RLD!'),
@@ -85,7 +87,8 @@ module.exports.getFolders = async (userDir_file) => {
     },
     {
       dir: path.join(process.env['APPDATA'], 'Steam/CODEX'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0]] },
+      // stats.ini changes alone when only a counter moves; statsSibling reads achievements.ini for it.
+      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0], files.achievement[3]], statsSibling: true },
     },
     {
       dir: path.join(process.env['APPDATA'], 'Steam/RLD!'),

@@ -81,7 +81,8 @@ function readIniSectionValues(doc, name) {
   if (!section) return values;
   for (const line of section.body) {
     if (/^\s*[;#]/.test(line)) continue;
-    const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*?)\s*$/);
+    // Stat names carry dashes and dots (CODEX writes kill-headshot=149).
+    const m = line.match(/^\s*([A-Za-z0-9_.-]+)\s*=\s*(.*?)\s*$/);
     if (m) values[m[1].toLowerCase()] = m[2];
   }
   return values;

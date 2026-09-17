@@ -38,9 +38,11 @@ function mapStatProgressEntries(entries, localSchema) {
     achievementNames.add(String(achievement.name).toUpperCase());
     const stat = byName.get(String(statName).toUpperCase());
     if (!stat) continue;
-    const value = numericStatValue(stat);
-    if (value == null) continue;
+    const raw = numericStatValue(stat);
+    if (raw == null) continue;
     const max = Number(achievement.progress.max_val || achievement.progress.max || achievement.progress.maxProgress || 0) || 0;
+    // A stat keeps counting past the goal (BG3 reports 14 for a 10-step achievement).
+    const value = max > 0 ? Math.min(raw, max) : raw;
     let target = byName.get(String(achievement.name).toUpperCase());
     if (!target) {
       target = {
@@ -54,7 +56,7 @@ function mapStatProgressEntries(entries, localSchema) {
       byName.set(String(achievement.name).toUpperCase(), target);
     }
     if (!target.CurProgress || value > Number(target.CurProgress || 0)) target.CurProgress = value;
-    if (!target.MaxProgress && max) target.MaxProgress = max;
+    if (!(Number(target.MaxProgress) > 0) && max) target.MaxProgress = max;
     if (!target.Achieved && max > 0 && value >= max) target.Achieved = true;
     consumedStats.add(String(statName).toUpperCase());
     applied++;

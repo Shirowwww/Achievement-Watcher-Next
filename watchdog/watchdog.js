@@ -368,6 +368,8 @@ function findLocalProgressSchema(appID, game) {
   if (game && game.steamSettings) candidates.push(path.join(game.steamSettings, 'achievements.json'));
   if (game && game.gameDir) candidates.push(path.join(game.gameDir, 'steam_settings', 'achievements.json'));
   candidates.push(path.join(userDataDir(), 'Cache', 'gse_emu_config', 'latest', 'generate_emu_config', '_OUTPUT', String(appID), 'steam_settings', 'achievements.json'));
+  // Written by the app from the Steam client's schema, for a CODEX/RUNE save with no steam_settings.
+  candidates.push(path.join(userDataDir(), 'steam_cache', 'progress', `${appID}.json`));
 
   for (const file of candidates) {
     const schema = readProgressSchemaFile(file);
@@ -377,9 +379,49 @@ function findLocalProgressSchema(appID, game) {
     }
   }
 
+  // A miss is not remembered: the app may write the table above while the Watchdog runs.
   const generated = findGeneratedProgressSchema(appID);
-  localProgressSchemaCache.set(key, generated);
+  if (generated.length > 0) localProgressSchemaCache.set(key, generated);
   return generated;
+}
+
+// CODEX and RUNE keep stats in a stats.ini beside achievements.ini ([UserStats]; OnlineFix: [Stats]).
+// Only the stats the schema names are added, as entries mapStatProgressEntries then folds away.
+function appendSiblingStats(achievements, filePath, progressSchema) {
+  if (!Array.isArray(achievements) || !Array.isArray(progressSchema) || progressSchema.length === 0) return 0;
+  if (path.basename(String(filePath)).toLowerCase() !== 'achievements.ini') return 0;
+  const wanted = new Set(
+    progressSchema.map((a) => a && a.progress && a.progress.value && a.progress.value.operand1).filter(Boolean).map((n) => String(n).toUpperCase())
+  );
+  const present = new Set(achievements.map((a) => String((a && a.name) || '').toUpperCase()));
+  let text = null;
+  for (const name of ['stats.ini', 'Stats.ini']) {
+    try {
+      text = fs.readFileSync(path.join(path.dirname(filePath), name), 'utf8');
+      break;
+    } catch {
+      /* try the other casing */
+    }
+  }
+  if (!text) return 0;
+  let section = '';
+  let added = 0;
+  for (const line of text.split(/\r?\n/)) {
+    const header = line.match(/^\s*\[([^\]]+)\]\s*$/);
+    if (header) {
+      section = header[1].trim().toLowerCase();
+      continue;
+    }
+    if (section !== 'userstats' && section !== 'stats') continue;
+    const m = line.match(/^\s*([A-Za-z0-9_.-]+)\s*=\s*(-?[\d.]+)\s*$/);
+    if (!m || !wanted.has(m[1].toUpperCase()) || present.has(m[1].toUpperCase())) continue;
+    const value = Number(m[2]);
+    if (!Number.isFinite(value)) continue;
+    achievements.push({ name: m[1], Achieved: false, CurProgress: value, MaxProgress: 0, UnlockTime: 0 });
+    present.add(m[1].toUpperCase());
+    added++;
+  }
+  return added;
 }
 
 const indexedGameLookup = createIndexedGameLookup({
@@ -882,6 +924,18 @@ var app = {
         // root declared; most roots list only one spelling, which dropped events for the other.
         if (options.file && !options.file.some((file) => file.toLowerCase() == filePath.base.toLowerCase())) return;
 
+        /*
+          A CODEX or RUNE counter moving rewrites stats.ini and nothing else. The achievement list
+          beside it is what gets parsed, with the stats folded in below: parsing stats.ini itself
+          would save a list of stats as this game's baseline and replay every unlock afterwards.
+        */
+        if (options.statsSibling && filePath.base.toLowerCase() === 'stats.ini') {
+          const sibling = path.join(filePath.dir, 'achievements.ini');
+          if (!fs.existsSync(sibling)) return;
+          name = sibling;
+          filePath = path.parse(sibling);
+        }
+
         debug.log('achievement file change detected');
 
         if (moment().diff(moment(self.tick)) <= self.options.notification_advanced.tick) throw 'Spamming protection is enabled > SKIPPING';
@@ -993,8 +1047,9 @@ var app = {
             if (remapped > 0) debug.log(`[uplay-r2] mapped ${remapped} objective id(s) onto the game's achievement names`);
           }
           const progressSchema = findLocalProgressSchema(appID, game);
+          appendSiblingStats(achievements, name, progressSchema);
           const mappedStats = mapStatProgressEntries(achievements, progressSchema);
-          if (mappedStats > 0) debug.log(`Mapped ${mappedStats} stat progress entr${mappedStats === 1 ? 'y' : 'ies'} through local GBE schema`);
+          if (mappedStats > 0) debug.log(`Mapped ${mappedStats} stat progress entr${mappedStats === 1 ? 'y' : 'ies'} through the progress schema`);
 
           if (achievements.length > 0) {
             let cache = await track.load(appID);
