@@ -61,7 +61,7 @@ function inspect(steamSettings) {
 }
 
 function matchesKeyValue(line, key, value) {
-  const m = String(line).match(/^\s*([^=;#\[]+?)\s*=\s*(.*?)\s*$/);
+  const m = String(line).match(/^\s*([^=;#[]+?)\s*=\s*(.*?)\s*$/);
   if (!m) return false;
   return m[1].toLowerCase() === key.toLowerCase() && m[2] === value;
 }
@@ -149,7 +149,7 @@ function stripUserIdentity(steamSettings, { dryRun = false } = {}) {
   if (!general) return null;
 
   const kept = general.body.filter((line) => {
-    const m = String(line).match(/^\s*([^=;#\[]+?)\s*=/);
+    const m = String(line).match(/^\s*([^=;#[]+?)\s*=/);
     return !(m && AW_USER_KEYS.has(m[1].toLowerCase()));
   });
   if (kept.length === general.body.length) return null;

@@ -449,7 +449,7 @@ test("GBE's example local_save_path is reported as a repairable placeholder", ()
 
     goldberg.writeUserConfig({ steamSettings, fillDefaults: true });
     const after = goldberg.diagnose({ gameDir, appid: '480', schema: { achievement: { list: [{ name: 'A' }] } }, savesRoots: [] });
-    assert.ok(!after.issues.some((i) => /SAVE_PATH$/.test(i.code)), 'the repair clears it');
+    assert.ok(!after.issues.some((i) => i.code.endsWith('SAVE_PATH')), 'the repair clears it');
   } finally {
     fs.rmSync(gameDir, { recursive: true, force: true });
   }
