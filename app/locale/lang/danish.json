@@ -259,6 +259,10 @@
         "name": "Afinstaller fra spillisten",
         "description": "Tilføjer afinstallationsvalg i højrekliksmenuen på spilfelter (afinstaller via Steam, spillets afinstallationsprogram eller flyt mappen til Papirkurven)."
       },
+      "showTrophies": {
+        "name": "Trofæer på profilen",
+        "description": "Viser platin-, guld-, sølv- og bronzetrofæer under dit navn. Platin er et spil på 100%; de andre rangerer dine præstationer efter, hvor mange spillere der har låst dem op."
+      },
       "playButton": {
         "name": "Vis Spil-knappen",
         "description": "Viser Spil-knappen på spilfelterne. Slå den fra, hvis du starter dine spil fra et andet program. Punktet Start spil i højrekliksmenuen er stadig tilgængeligt."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Registreret spilletid",
     "profile-stats-platforms": "Efter platform",
     "profile-stats-games": "Spil",
-    "profile-stats-empty": "Endnu intet spil med præstationer."
+    "profile-stats-empty": "Endnu intet spil med præstationer.",
+    "profile-completion-scope": "Gennemsnit for de {count} spil, du har startet eller låst en præstation op i.",
+    "profile-trophies": "Trofæer",
+    "profile-trophies-summary": "{platinum} platin, {gold} guld, {silver} sølv, {bronze} bronze, {common} almindelig. Se detaljerne",
+    "trophy-platinum": "Platin",
+    "trophy-gold": "Guld",
+    "trophy-silver": "Sølv",
+    "trophy-bronze": "Bronze",
+    "trophy-common": "Almindelig",
+    "profile-trophies-platinum-desc": "spil på 100%",
+    "profile-trophies-share": "{percent} af dine præstationer",
+    "profile-trophies-unranked": "{count} uden kendt rate",
+    "profile-trophies-at-most": "{percent} eller derunder",
+    "profile-trophies-between": "{from} til {to}",
+    "profile-trophies-above": "over {percent}, eller ukendt",
+    "profile-trophies-platinum-games": "Platinspil",
+    "profile-trophies-rarest-list": "Sjældneste præstationer",
+    "profile-trophies-players": "{percent} af spillerne",
+    "profile-trophies-no-platinum": "Endnu ingen platin.",
+    "profile-trophies-no-rarity": "Endnu ingen kendt rate."
   },
   "watchdog": {
     "rare": "Sjælden {percent} %",

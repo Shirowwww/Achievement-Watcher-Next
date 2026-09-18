@@ -259,6 +259,10 @@
         "name": "ゲーム一覧からアンインストール",
         "description": "ゲームタイルの右クリックメニューにアンインストール項目を追加します（Steam アンインストール、ゲームのアンインストーラー、フォルダーをごみ箱へ移動）。"
       },
+      "showTrophies": {
+        "name": "プロフィールのトロフィー",
+        "description": "名前の下にプラチナ・ゴールド・シルバー・ブロンズのトロフィーを表示します。プラチナは100%達成したゲーム、それ以外は実績を解除したプレイヤーの割合で分類されます。"
+      },
       "playButton": {
         "name": "プレイボタンを表示",
         "description": "ゲームタイルにプレイボタンを表示します。ほかのプログラムからゲームを起動している場合はオフにしてください。右クリックメニューのゲームを起動は引き続き利用できます。"
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "記録されたプレイ時間",
     "profile-stats-platforms": "プラットフォーム別",
     "profile-stats-games": "ゲーム",
-    "profile-stats-empty": "実績のあるゲームはまだありません。"
+    "profile-stats-empty": "実績のあるゲームはまだありません。",
+    "profile-completion-scope": "起動した、または実績を解除したことがある{count}本のゲームの平均です。",
+    "profile-trophies": "トロフィー",
+    "profile-trophies-summary": "プラチナ{platinum}個、ゴールド{gold}個、シルバー{silver}個、ブロンズ{bronze}個、コモン{common}個。詳細を見る",
+    "trophy-platinum": "プラチナ",
+    "trophy-gold": "ゴールド",
+    "trophy-silver": "シルバー",
+    "trophy-bronze": "ブロンズ",
+    "trophy-common": "コモン",
+    "profile-trophies-platinum-desc": "100%達成したゲーム",
+    "profile-trophies-share": "実績全体の{percent}",
+    "profile-trophies-unranked": "取得率不明が{count}個",
+    "profile-trophies-at-most": "{percent}以下",
+    "profile-trophies-between": "{from}から{to}まで",
+    "profile-trophies-above": "{percent}超、または不明",
+    "profile-trophies-platinum-games": "プラチナ達成ゲーム",
+    "profile-trophies-rarest-list": "最もレアな実績",
+    "profile-trophies-players": "プレイヤーの{percent}",
+    "profile-trophies-no-platinum": "まだプラチナはありません。",
+    "profile-trophies-no-rarity": "まだ取得率が判明した実績はありません。"
   },
   "watchdog": {
     "rare": "レア {percent}%",

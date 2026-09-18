@@ -51,6 +51,12 @@
   --success: #5fd49a;
   --warning: #e5b263;
   --danger: #e07a5f;
+  /* Trophy grades, the per-game PlayStation trophy colours. */
+  --trophy-platinum: #7fd3f7;
+  --trophy-gold: #ffd700;
+  --trophy-silver: #d3d8de;
+  --trophy-bronze: #c7713f;
+  --trophy-common: #6a6f78;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 18px;
@@ -105,6 +111,12 @@
    which costs a little shading but never legibility - every foreground colour is token-driven.
    The semantic hues are darkened so they still pass contrast on a near-white background. */
 :root[data-theme='light'] {
+  /* The pale trophy metals vanish on a white card. */
+  --trophy-platinum: #1f93c9;
+  --trophy-gold: #c99700;
+  --trophy-silver: #7c8794;
+  --trophy-bronze: #b35f2e;
+  --trophy-common: #b9bdc4;
   /* Shadows here are the same black as everywhere else, just far weaker: at full strength the
      dark-theme alphas turn every card into a grey halo on a near-white surface. Kept low, but not
      so low that cards lose their lift - depth is the only separation a white card on a pale panel
@@ -11287,7 +11299,7 @@ body {
   min-width: 0;
 }
 
-#profile-stats .header > small {
+#profile-stats .header > .profile-stats-scope {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -11299,8 +11311,29 @@ body {
   font: 12px 'Open-Sans';
 }
 
-#profile-stats .header > small:empty {
-  display: none;
+#profile-stats .header > .profile-stats-scope {
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+#profile-stats .header > .profile-stats-scope:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+#profile-stats .header > .profile-stats-scope.active {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: var(--accent-soft);
+}
+
+#profile-stats .header > .profile-stats-scope.active i {
+  color: var(--accent-strong);
+}
+
+#profile-stats .header > .profile-stats-scope:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .profile-stats-body {
@@ -11499,12 +11532,316 @@ body {
   padding-top: 4px;
 }
 
-.profile-stats-platforms h3 {
+.profile-stats-platforms h3,
+.profile-stats-trophies h3 {
   margin: 0 0 10px;
   font: 13px 'Raleway-Bold';
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+/* Trophy showcase. The grade colours (--trophy-*) are defined with the palette at the top. */
+
+.trophy-platinum {
+  --trophy: var(--trophy-platinum);
+}
+.trophy-gold {
+  --trophy: var(--trophy-gold);
+}
+.trophy-silver {
+  --trophy: var(--trophy-silver);
+}
+.trophy-bronze {
+  --trophy: var(--trophy-bronze);
+}
+.trophy-common {
+  --trophy: var(--trophy-common);
+}
+
+/* Header row: bare icons and counts, no pill, so it reads as part of the stats line above it. */
+/* Set like the stat pills above it: same type, and the first icon on the pills' icon column
+   (their 9px padding plus the 1px border), so the three rows read as one block. */
+#user-info .info .profile-trophies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 20px;
+  margin: 8px 0 0;
+  padding: 0 10px;
+  font: 12px 'Open-Sans-Bold';
+  border: 0;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+#user-info .info .profile-trophies[hidden] {
+  display: none;
+}
+
+#user-info .info .profile-trophies > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.15s ease;
+}
+
+#user-info .info .profile-trophies i {
+  font-size: 12px;
+  color: var(--trophy);
+  text-shadow: rgba(0, 0, 0, calc(0.5 * var(--shadow-scale))) 2px 2px 3px;
+}
+
+#user-info .info .profile-trophies:hover > span {
+  transform: translateY(-1px);
+}
+
+#user-info .info .profile-trophies:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+#user-info .info .profile-stat-hint {
+  margin-left: 2px;
+  font-size: 0.85em;
+  color: var(--text-muted);
+  opacity: 0.75;
+  cursor: help;
+}
+
+#user-info .info .stats #profile-completion-average {
+  cursor: help;
+}
+
+/* Stats panel section */
+.profile-stats-trophies-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 10px;
+}
+
+.profile-stats-trophies-head h3 {
+  margin: 0;
+}
+
+.profile-stats-trophies-head small {
+  color: var(--text-muted);
+  font: 11px 'Open-Sans';
+}
+
+.profile-stats-trophy-tiers {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.profile-stats-trophy {
+  position: relative;
+  display: grid;
+  gap: 3px;
+  align-content: start;
+  padding: 12px 14px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-sunken) 28%, transparent);
+}
+
+.profile-stats-trophy::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--trophy), transparent);
+}
+
+.profile-stats-trophy > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-muted);
+  font: 11px 'Open-Sans';
+}
+
+.profile-stats-trophy > span i {
+  color: var(--trophy);
+  font-size: 14px;
+}
+
+.profile-stats-trophy b {
+  font: 20px 'Raleway-Bold';
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.profile-stats-trophy small {
+  color: var(--text-muted);
+  font: 11px 'Open-Sans';
+}
+
+.profile-stats-trophy-dist {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.profile-stats-trophy-bar {
+  display: flex;
+  gap: 3px;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--surface-sunken) 60%, transparent);
+}
+
+.profile-stats-trophy-bar i {
+  display: block;
+  flex-basis: 0;
+  background: var(--trophy);
+}
+
+.profile-stats-trophy-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font: 11px 'Open-Sans';
+}
+
+.profile-stats-trophy-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.profile-stats-trophy-legend li i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--trophy);
+}
+
+.profile-stats-trophy-more {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.profile-stats-trophy-card {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-sunken) 28%, transparent);
+}
+
+.profile-stats-trophy-card h4 {
+  margin: 0;
+  color: var(--text-muted);
+  font: 11px 'Open-Sans-Bold';
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Platinum games and rarest unlocks: the same row in both lists. Two rows show; the rest scroll
+   inside the card, so neither list can push the platform table out of reach. */
+.profile-stats-trophy-list {
+  --trophy-row: 40px;
+  display: grid;
+  grid-auto-rows: var(--trophy-row);
+  gap: 8px;
+  max-height: calc(2 * var(--trophy-row) + 8px);
+  margin: 0;
+  padding: 0 4px 0 0;
+  overflow-y: auto;
+  list-style: none;
+  overscroll-behavior: contain;
+  scroll-snap-type: y mandatory;
+}
+
+.profile-stats-trophy-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.profile-stats-trophy-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-muted) 35%, transparent);
+}
+
+.profile-stats-trophy-list li {
+  scroll-snap-align: start;
+  display: grid;
+  grid-template-columns: var(--trophy-row) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-stats-trophy-list .row-icon {
+  display: grid;
+  place-items: center;
+  width: var(--trophy-row);
+  height: var(--trophy-row);
+  border-radius: var(--radius-sm);
+  color: var(--trophy);
+  font-size: 16px;
+  background: color-mix(in srgb, var(--trophy) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--trophy) 45%, transparent);
+}
+
+.profile-stats-trophy-list .row-icon.has-icon {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.profile-stats-trophy-list .row-icon.has-icon i {
+  display: none;
+}
+
+.profile-stats-trophy-list b,
+.profile-stats-trophy-list small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-stats-trophy-list b {
+  font: 13px 'Open-Sans-Bold';
+}
+
+.profile-stats-trophy-list small {
+  margin-top: 1px;
+  color: var(--text-muted);
+  font: 12px 'Open-Sans';
+  font-variant-numeric: tabular-nums;
+}
+
+.profile-stats-trophy-list li.is-empty {
+  display: block;
+  color: var(--text-muted);
+  font: 12px 'Open-Sans';
+}
+
+@media (max-width: 720px) {
+  .profile-stats-trophy-tiers {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .profile-stats-trophy-more {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* A wide table must scroll inside its own box; the panel itself never scrolls sideways. */

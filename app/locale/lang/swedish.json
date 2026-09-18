@@ -259,6 +259,10 @@
         "name": "Avinstallera från spellistan",
         "description": "Lägger till avinstallationsalternativ i högerklicksmenyn på spelrutorna (avinstallera via Steam, spelets avinstallationsprogram eller flytta mappen till papperskorgen)."
       },
+      "showTrophies": {
+        "name": "Troféer på profilen",
+        "description": "Visar platina-, guld-, silver- och bronströféer under ditt namn. Platina är ett spel klarat till 100%; de andra rangordnar dina prestationer efter hur många spelare som har låst upp dem."
+      },
       "playButton": {
         "name": "Visa Spela-knappen",
         "description": "Visar Spela-knappen på spelrutorna. Stäng av den om du startar dina spel från ett annat program. Alternativet Starta spel i högerklicksmenyn finns kvar."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Registrerad speltid",
     "profile-stats-platforms": "Efter plattform",
     "profile-stats-games": "Spel",
-    "profile-stats-empty": "Inget spel med prestationer ännu."
+    "profile-stats-empty": "Inget spel med prestationer ännu.",
+    "profile-completion-scope": "Genomsnitt för de {count} spel du har startat eller låst upp en prestation i.",
+    "profile-trophies": "Troféer",
+    "profile-trophies-summary": "{platinum} platina, {gold} guld, {silver} silver, {bronze} brons, {common} vanlig. Se detaljerna",
+    "trophy-platinum": "Platina",
+    "trophy-gold": "Guld",
+    "trophy-silver": "Silver",
+    "trophy-bronze": "Brons",
+    "trophy-common": "Vanlig",
+    "profile-trophies-platinum-desc": "spel på 100%",
+    "profile-trophies-share": "{percent} av dina prestationer",
+    "profile-trophies-unranked": "{count} utan känd andel",
+    "profile-trophies-at-most": "{percent} eller mindre",
+    "profile-trophies-between": "{from} till {to}",
+    "profile-trophies-above": "över {percent}, eller okänt",
+    "profile-trophies-platinum-games": "Platinaspel",
+    "profile-trophies-rarest-list": "De sällsyntaste prestationerna",
+    "profile-trophies-players": "{percent} av spelarna",
+    "profile-trophies-no-platinum": "Ingen platina ännu.",
+    "profile-trophies-no-rarity": "Ingen känd andel ännu."
   },
   "watchdog": {
     "rare": "Sällsynt {percent} %",

@@ -259,6 +259,10 @@
         "name": "Verwijderen vanuit de gamelijst",
         "description": "Voegt opties om te verwijderen toe aan het rechtsklikmenu van gametegels (verwijderen via Steam, het verwijderprogramma van de game, of de map naar de Prullenbak verplaatsen)."
       },
+      "showTrophies": {
+        "name": "Trofeeën op het profiel",
+        "description": "Toont platina-, goud-, zilver- en bronzen trofeeën onder je naam. Platina is een game op 100%; de andere rangschikken je prestaties op basis van hoeveel spelers ze hebben ontgrendeld."
+      },
       "playButton": {
         "name": "Speelknop tonen",
         "description": "Toont de speelknop op de gametegels. Schakel dit uit als je je games via een ander programma start. De optie Game starten in het rechtsklikmenu blijft beschikbaar."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Bijgehouden speeltijd",
     "profile-stats-platforms": "Per platform",
     "profile-stats-games": "Games",
-    "profile-stats-empty": "Nog geen game met prestaties."
+    "profile-stats-empty": "Nog geen game met prestaties.",
+    "profile-completion-scope": "Gemiddelde over de {count} games die je hebt gestart of waarin je een prestatie hebt ontgrendeld.",
+    "profile-trophies": "Trofeeën",
+    "profile-trophies-summary": "{platinum} platina, {gold} goud, {silver} zilver, {bronze} brons, {common} gewoon. Bekijk de details",
+    "trophy-platinum": "Platina",
+    "trophy-gold": "Goud",
+    "trophy-silver": "Zilver",
+    "trophy-bronze": "Brons",
+    "trophy-common": "Gewoon",
+    "profile-trophies-platinum-desc": "games op 100%",
+    "profile-trophies-share": "{percent} van je prestaties",
+    "profile-trophies-unranked": "{count} zonder bekend percentage",
+    "profile-trophies-at-most": "{percent} of minder",
+    "profile-trophies-between": "{from} tot {to}",
+    "profile-trophies-above": "boven {percent}, of onbekend",
+    "profile-trophies-platinum-games": "Platina games",
+    "profile-trophies-rarest-list": "Zeldzaamste prestaties",
+    "profile-trophies-players": "{percent} van de spelers",
+    "profile-trophies-no-platinum": "Nog geen platina.",
+    "profile-trophies-no-rarity": "Nog geen bekend percentage."
   },
   "watchdog": {
     "rare": "Zeldzaam {percent}%",

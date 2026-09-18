@@ -259,6 +259,10 @@
         "name": "Aus der Spieleliste deinstallieren",
         "description": "Fügt dem Rechtsklick-Menü der Spiele Deinstallationsoptionen hinzu (Steam-Deinstallation, Spiel-Deinstallationsprogramm oder Ordner in den Papierkorb verschieben)."
       },
+      "showTrophies": {
+        "name": "Trophäen im Profil",
+        "description": "Zeigt Platin-, Gold-, Silber- und Bronze-Trophäen unter deinem Namen. Platin ist ein Spiel mit 100 %; die anderen ordnen deine Erfolge danach ein, wie viele Spieler sie freigeschaltet haben."
+      },
       "playButton": {
         "name": "Play-Schaltfläche anzeigen",
         "description": "Zeigt die Play-Schaltfläche auf den Spielkacheln. Deaktiviere sie, wenn du deine Spiele über ein anderes Programm startest. Der Eintrag Spiel starten im Rechtsklick-Menü bleibt verfügbar."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Erfasste Spielzeit",
     "profile-stats-platforms": "Nach Plattform",
     "profile-stats-games": "Spiele",
-    "profile-stats-empty": "Noch kein Spiel mit Erfolgen."
+    "profile-stats-empty": "Noch kein Spiel mit Erfolgen.",
+    "profile-completion-scope": "Durchschnitt über die {count} Spiele, die du gestartet hast oder in denen du einen Erfolg freigeschaltet hast.",
+    "profile-trophies": "Trophäen",
+    "profile-trophies-summary": "{platinum} Platin, {gold} Gold, {silver} Silber, {bronze} Bronze, {common} Häufig. Details ansehen",
+    "trophy-platinum": "Platin",
+    "trophy-gold": "Gold",
+    "trophy-silver": "Silber",
+    "trophy-bronze": "Bronze",
+    "trophy-common": "Häufig",
+    "profile-trophies-platinum-desc": "Spiele mit 100 %",
+    "profile-trophies-share": "{percent} deiner Erfolge",
+    "profile-trophies-unranked": "{count} ohne bekannte Rate",
+    "profile-trophies-at-most": "{percent} oder weniger",
+    "profile-trophies-between": "{from} bis {to}",
+    "profile-trophies-above": "über {percent}, oder unbekannt",
+    "profile-trophies-platinum-games": "Platin-Spiele",
+    "profile-trophies-rarest-list": "Seltenste Erfolge",
+    "profile-trophies-players": "{percent} der Spieler",
+    "profile-trophies-no-platinum": "Noch kein Platin.",
+    "profile-trophies-no-rarity": "Noch keine bekannte Rate."
   },
   "watchdog": {
     "rare": "Selten {percent}%",

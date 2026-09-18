@@ -54,7 +54,7 @@
                 <ul>
                   <li><i class="fas fa-trophy"></i> <span class="data">0</span> <span></span></li>
                   <li><i class="fas fa-gamepad"></i> <span class="data">0</span> <span></span></li>
-                  <li><i class="fas fa-cookie-bite"></i> <span class="data">0</span>% <span></span></li>
+                  <li id="profile-completion-average"><i class="fas fa-cookie-bite"></i> <span class="data">0</span>% <span></span> <i class="far fa-question-circle profile-stat-hint" aria-hidden="true"></i></li>
                 </ul>
                 <!-- Icon only, named by its tooltip: a worded pill here would be a different
                      length in each of the 28 locales and squeeze the profile band. -->
@@ -62,6 +62,15 @@
                   <i class="fas fa-chart-pie" aria-hidden="true"></i>
                 </button>
               </div>
+              <!-- Trophy showcase (Settings > General). One button: the counts open the Trophies part of
+                   the stats panel. -->
+              <button type="button" id="profile-trophies" class="profile-trophies" hidden>
+                <span class="trophy-platinum"><i class="fas fa-trophy" aria-hidden="true"></i> <b>0</b></span>
+                <span class="trophy-gold"><i class="fas fa-trophy" aria-hidden="true"></i> <b>0</b></span>
+                <span class="trophy-silver"><i class="fas fa-trophy" aria-hidden="true"></i> <b>0</b></span>
+                <span class="trophy-bronze"><i class="fas fa-trophy" aria-hidden="true"></i> <b>0</b></span>
+                <span class="trophy-common"><i class="fas fa-trophy" aria-hidden="true"></i> <b>0</b></span>
+              </button>
               <div class="completion-dist" title="">
                 <div class="fill" style="width: 0%"></div>
               </div>
@@ -2587,6 +2596,23 @@
                     </div>
                   </li>
 
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-trophy"></i> <span id="trophies-settings-label">Trophies on the profile</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_showTrophies">
+                        <option value="true" selected>Enabled</option>
+                        <option value="false">Disabled</option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="trophies-settings-help">Shows platinum, gold, silver and bronze trophies under your name.</div>
+                  </li>
+
                   <!-- Kept out of Advanced (Simple mode would never reach it). Appended LAST: the
                        loader binds rows 1-7 of this list by nth-child, so only the tail is free. -->
                   <li class="hasHelper onboarding-settings-row">
@@ -3105,7 +3131,8 @@
           <div class="header">
             <i class="fas fa-chart-pie" aria-hidden="true"></i>
             <span id="profile-stats-title">Library stats</span>
-            <small id="profile-stats-scope"></small>
+            <!-- The same installed-only filter as the library toolbar: toggling it here toggles both. -->
+            <button type="button" id="profile-stats-scope" class="profile-stats-scope" aria-pressed="false"><i class="fas fa-hdd" aria-hidden="true"></i> <span></span></button>
             <button type="button" id="profile-stats-close" class="icon-button" aria-label="Close"><i class="fas fa-times" aria-hidden="true"></i></button>
           </div>
 
@@ -3137,6 +3164,44 @@
               <div class="profile-stats-tile"><b id="profile-stats-average-value">0%</b><span id="profile-stats-average-label"></span></div>
               <div class="profile-stats-tile"><b id="profile-stats-playtime-average-value">0</b><span id="profile-stats-playtime-average-label"></span></div>
               <div class="profile-stats-tile"><b id="profile-stats-playtime-value">0</b><span id="profile-stats-playtime-label"></span></div>
+            </section>
+
+            <section class="profile-stats-trophies" id="profile-stats-trophies">
+              <div class="profile-stats-trophies-head">
+                <h3 id="profile-stats-trophies-label">Trophies</h3>
+                <small id="profile-stats-trophies-scope"><i class="far fa-question-circle" aria-hidden="true"></i> <span></span></small>
+              </div>
+              <div class="profile-stats-trophy-tiers">
+                <div class="profile-stats-trophy trophy-platinum"><span><span class="name"></span><i class="fas fa-trophy" aria-hidden="true"></i></span><b>0</b><small></small></div>
+                <div class="profile-stats-trophy trophy-gold"><span><span class="name"></span><i class="fas fa-trophy" aria-hidden="true"></i></span><b>0</b><small></small></div>
+                <div class="profile-stats-trophy trophy-silver"><span><span class="name"></span><i class="fas fa-trophy" aria-hidden="true"></i></span><b>0</b><small></small></div>
+                <div class="profile-stats-trophy trophy-bronze"><span><span class="name"></span><i class="fas fa-trophy" aria-hidden="true"></i></span><b>0</b><small></small></div>
+                <div class="profile-stats-trophy trophy-common"><span><span class="name"></span><i class="fas fa-trophy" aria-hidden="true"></i></span><b>0</b><small></small></div>
+              </div>
+              <div class="profile-stats-trophy-dist">
+                <div class="profile-stats-trophy-bar" aria-hidden="true">
+                  <i class="trophy-gold" style="flex-grow: 0"></i>
+                  <i class="trophy-silver" style="flex-grow: 0"></i>
+                  <i class="trophy-bronze" style="flex-grow: 0"></i>
+                  <i class="trophy-common" style="flex-grow: 0"></i>
+                </div>
+                <ul class="profile-stats-trophy-legend">
+                  <li class="trophy-gold"><i aria-hidden="true"></i> <span></span></li>
+                  <li class="trophy-silver"><i aria-hidden="true"></i> <span></span></li>
+                  <li class="trophy-bronze"><i aria-hidden="true"></i> <span></span></li>
+                  <li class="trophy-common"><i aria-hidden="true"></i> <span></span></li>
+                </ul>
+              </div>
+              <div class="profile-stats-trophy-more">
+                <div class="profile-stats-trophy-card">
+                  <h4 id="profile-stats-platinum-games-label"></h4>
+                  <ul id="profile-stats-platinum-games" class="profile-stats-trophy-list"></ul>
+                </div>
+                <div class="profile-stats-trophy-card">
+                  <h4 id="profile-stats-rarest-label"></h4>
+                  <ul id="profile-stats-rarest" class="profile-stats-trophy-list"></ul>
+                </div>
+              </div>
             </section>
 
             <section class="profile-stats-platforms">

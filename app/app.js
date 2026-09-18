@@ -119,7 +119,9 @@ const localIcons = require(path.join(appPath, 'util/localIcons.js'));
 const uninstall = require(path.join(appPath, 'util/uninstall.js'));
 const apiCheckBypass = require(path.join(appPath, 'parser/apiCheckBypass.js'));
 const { calculateLibraryStats, calculateDetailedLibraryStats } = require(path.join(appPath, 'util/libraryStats.js'));
-const { resolveGameRarityContext } = require(path.join(appPath, 'util/rarity.js'));
+const rarityCache = require(path.join(appPath, 'util/rarity.js'));
+const { resolveGameRarityContext } = rarityCache;
+const { calculateTrophyStats } = require(path.join(appPath, 'util/trophyStats.js'));
 const librarySnapshot = require(path.join(appPath, 'util/librarySnapshot.js'));
 const stylizedArtwork = require(path.join(appPath, 'util/stylizedArtwork.js'));
 const libraryReuse = require(path.join(appPath, 'util/libraryReuse.js'));
@@ -220,8 +222,15 @@ function profileStatsElements() {
 }
 
 function renderProfileStats(stats, { animate = false } = {}) {
-  const values = [String(stats.totalUnlocked), `${stats.completed}/${stats.total}`, String(stats.average)];
+  // With the trophy row on, the platinum count already says how many games are complete, so the
+  // second number becomes the plain game count.
+  const trophies = trophiesEnabled();
+  const values = [String(stats.totalUnlocked), trophies ? String(stats.total) : `${stats.completed}/${stats.total}`, String(stats.average)];
+  $('#profile-completion-average').attr('title', completionScopeText(stats.started));
   const nodes = profileStatsElements();
+  const gamesLabel = nodes.stats.find('li:nth-child(2) span:eq(1)')[0];
+  const gamesText = trophies ? t('profile-stats-games', 'Games', 'Jeux') : localeText('perfectGame');
+  if (gamesLabel && gamesText && gamesLabel.textContent !== gamesText) gamesLabel.textContent = gamesText;
   let changed = false;
   nodes.data.each(function (index) {
     if (this.textContent === values[index]) return;
@@ -243,7 +252,329 @@ function renderProfileStats(stats, { animate = false } = {}) {
 
 function refreshProfileStats({ animate = false } = {}) {
   const installedOnly = typeof window.installedOnlyEnabled === 'function' && window.installedOnlyEnabled();
-  renderProfileStats(calculateLibraryStats(gameList, { installedOnly }), { animate });
+  renderProfileStats(calculateLibraryStats(gameList, { installedOnly, isStarted: hasBeenLaunched }), { animate });
+  renderProfileTrophies(installedOnly);
+}
+
+function completionScopeText(count) {
+  return t(
+    'profile-completion-scope',
+    'Average over the {count} games you have launched or unlocked an achievement in.',
+    'Moyenne sur les {count} jeux lancés ou avec au moins un succès.',
+    { count: formatCount(count) }
+  );
+}
+
+/*
+  Trophy showcase (util/trophyStats.js does the counting).
+
+  "Launched" comes from the playtime registry the tiles already read while they are built, so the
+  header never pays for a second read per game. Global rates come from the rarity sidecars the game
+  view and the parsers write; each is read once and kept, and a game whose rates arrive later drops
+  its entry through forgetTrophyRates().
+*/
+const launchedGames = new Map();
+
+function rememberLaunched(appid, playtime) {
+  launchedGames.set(String(appid), Number(playtime && playtime.playtime) > 0 || Number(playtime && playtime.lastplayed) > 0);
+}
+
+function hasBeenLaunched(game) {
+  const key = String(game.appid);
+  if (!launchedGames.has(key)) {
+    let playtime = null;
+    try {
+      playtime = PlaytimeTracking.readSync(game.appid);
+    } catch {
+      /* no counter: never launched through the app */
+    }
+    rememberLaunched(game.appid, playtime);
+  }
+  return launchedGames.get(key);
+}
+
+function trophyRarityContext(game) {
+  const context = resolveGameRarityContext(game, { emulatorSources: EMU_LOCAL_ICON_SOURCES });
+  if (!context || context.kind === 'xbox') return context;
+  const cacheId = context.kind === 'steam-bridge' ? context.cacheId : context.kind === 'emulator' ? game.appid : context.appid;
+  return cacheId ? { ...context, cacheId: String(cacheId) } : null;
+}
+
+const trophyRates = new Map();
+
+function trophyRarityOf(game) {
+  const context = trophyRarityContext(game);
+  if (!context) return null;
+  // Xbox PC keeps each rate on its schema entry; there is no sidecar to read.
+  if (context.kind === 'xbox') {
+    const rates = new Map();
+    for (const a of game.achievement.list || []) {
+      if (a && a.rarityPct != null && Number.isFinite(Number(a.rarityPct))) rates.set(String(a.name), Number(a.rarityPct));
+    }
+    return rates;
+  }
+  if (!trophyRates.has(context.cacheId)) {
+    const entries = rarityCache.readRarityCacheEntries(context.cacheId);
+    trophyRates.set(context.cacheId, new Map(entries.map((entry) => [String(entry && entry.name), entry && entry.percent])));
+  }
+  return trophyRates.get(context.cacheId);
+}
+
+window.forgetTrophyRates = (cacheId) => {
+  if (trophyRates.delete(String(cacheId))) refreshProfileStats();
+};
+
+/*
+  A game that was never opened has no rates on disk, so every unlock in it would count as bronze.
+  Games with an unlock and no sidecar get theirs fetched once per session, one at a time and well
+  after startup: the same request the game view makes when it opens.
+*/
+const TROPHY_PREFETCH_DELAY_MS = 8000;
+const TROPHY_PREFETCH_GAP_MS = 750;
+const trophyPrefetchTried = new Set();
+let trophyPrefetchTimer = null;
+let trophyPrefetchRunning = false;
+
+function scheduleTrophyRarityPrefetch() {
+  if (trophyPrefetchRunning) return;
+  clearTimeout(trophyPrefetchTimer);
+  trophyPrefetchTimer = setTimeout(prefetchTrophyRarity, TROPHY_PREFETCH_DELAY_MS);
+}
+
+async function prefetchTrophyRarity() {
+  trophyPrefetchRunning = true;
+  let fetched = 0;
+  try {
+    for (const game of gameList.slice()) {
+      if (!game || !game.achievement || !Array.isArray(game.achievement.list)) continue;
+      if (!game.achievement.list.some((a) => a && (a.Achieved === true || a.Achieved == 1))) continue;
+      const context = trophyRarityContext(game);
+      if (!context || context.kind === 'xbox' || context.kind === 'emulator') continue;
+      if (trophyPrefetchTried.has(context.cacheId)) continue;
+      trophyPrefetchTried.add(context.cacheId);
+      if (rarityCache.readRarityCache(context.cacheId)) continue;
+
+      let entries = [];
+      try {
+        entries =
+          context.kind === 'steam-bridge'
+            ? await rarityCache.getSteamBridgeRarity(context.cacheId, context.steamAppId, context.names)
+            : await rarityCache.getRarityEntries(context.appid, context.kind === 'steam' ? 'steam' : context.source, {
+                gameName: game.name,
+                achievements: game.achievement.list,
+              });
+      } catch {
+        entries = [];
+      }
+      if (entries.length > 0) {
+        trophyRates.delete(context.cacheId);
+        fetched += 1;
+      }
+      await new Promise((resolve) => setTimeout(resolve, TROPHY_PREFETCH_GAP_MS));
+    }
+  } finally {
+    trophyPrefetchRunning = false;
+  }
+  if (fetched > 0) {
+    debug.log(`[trophies] fetched global rates for ${fetched} game(s)`);
+    refreshProfileStats();
+  }
+}
+
+const TROPHY_TIERS = ['platinum', 'gold', 'silver', 'bronze', 'common'];
+
+function trophiesEnabled() {
+  return !(app.config && app.config.achievement && app.config.achievement.showTrophies === false);
+}
+
+function trophyLabels() {
+  return {
+    platinum: t('trophy-platinum', 'Platinum', 'Platine'),
+    gold: t('trophy-gold', 'Gold', 'Or'),
+    silver: t('trophy-silver', 'Silver', 'Argent'),
+    bronze: t('trophy-bronze', 'Bronze', 'Bronze'),
+    common: t('trophy-common', 'Common', 'Commun'),
+  };
+}
+
+function trophyStatsFor(installedOnly) {
+  return calculateTrophyStats(gameList, { installedOnly, isStarted: hasBeenLaunched, rarityOf: trophyRarityOf });
+}
+
+function renderProfileTrophies(installedOnly) {
+  const button = $('#profile-trophies');
+  if (!button.length) return;
+  if (!trophiesEnabled()) {
+    button.prop('hidden', true);
+    return;
+  }
+  let stats;
+  try {
+    stats = trophyStatsFor(installedOnly);
+  } catch (err) {
+    debug.warn(`[trophies] could not count trophies: ${err && err.message ? err.message : err}`);
+    button.prop('hidden', true);
+    return;
+  }
+  for (const tier of TROPHY_TIERS) {
+    const node = button.find(`.trophy-${tier} b`)[0];
+    const value = formatCount(stats[tier]);
+    if (node && node.textContent !== value) node.textContent = value;
+  }
+  const label = t(
+    'profile-trophies-summary',
+    '{platinum} platinum, {gold} gold, {silver} silver, {bronze} bronze, {common} common. See the details',
+    '{platinum} platine, {gold} or, {silver} argent, {bronze} bronze, {common} commun. Voir le détail',
+    {
+      platinum: formatCount(stats.platinum),
+      gold: formatCount(stats.gold),
+      silver: formatCount(stats.silver),
+      bronze: formatCount(stats.bronze),
+      common: formatCount(stats.common),
+    }
+  );
+  button.attr({ title: label, 'aria-label': label });
+  button.prop('hidden', false);
+  scheduleTrophyRarityPrefetch();
+}
+
+function renderProfileStatsTrophies(installedOnly) {
+  const section = $('#profile-stats-trophies');
+  const stats = trophyStatsFor(installedOnly);
+  const labels = trophyLabels();
+  const unlocked = Math.max(1, stats.gold + stats.silver + stats.bronze + stats.common);
+  const shareText = (count) =>
+    t('profile-trophies-share', '{percent} of your achievements', '{percent} de vos succès', {
+      percent: formatPercentValue((100 * count) / unlocked, 1),
+    });
+
+  $('#profile-stats-trophies-label').text(t('profile-trophies', 'Trophies', 'Trophées'));
+  $('#profile-stats-trophies-scope span').text(completionScopeText(stats.games));
+  for (const tier of TROPHY_TIERS) {
+    const tile = section.find(`.profile-stats-trophy.trophy-${tier}`);
+    tile.find('.name').text(labels[tier]);
+    tile.find('b').text(formatCount(stats[tier]));
+    section.find(`.profile-stats-trophy-bar .trophy-${tier}`).css('flex-grow', stats[tier]);
+  }
+  section.find('.profile-stats-trophy.trophy-platinum small').text(t('profile-trophies-platinum-desc', 'games at 100%', 'jeux à 100 %'));
+  section.find('.profile-stats-trophy.trophy-gold small').text(shareText(stats.gold));
+  section.find('.profile-stats-trophy.trophy-silver small').text(shareText(stats.silver));
+  section.find('.profile-stats-trophy.trophy-bronze small').text(shareText(stats.bronze));
+  section
+    .find('.profile-stats-trophy.trophy-common small')
+    .text(
+      stats.unranked > 0
+        ? t('profile-trophies-unranked', '{count} without a known rate', '{count} sans taux connu', { count: formatCount(stats.unranked) })
+        : shareText(stats.common)
+    );
+
+  // overlayUi.rarityTier's tiers, the ones the rarity badges and notifications use.
+  const legend = section.find('.profile-stats-trophy-legend');
+  legend
+    .find('.trophy-gold span')
+    .text(`${labels.gold}: ${t('profile-trophies-at-most', '{percent} or less', '{percent} ou moins', { percent: formatPercentValue(5) })}`);
+  legend.find('.trophy-silver span').text(
+    `${labels.silver}: ${t('profile-trophies-between', '{from} to {to}', 'de {from} à {to}', {
+      from: formatPercentValue(5),
+      to: formatPercentValue(10),
+    })}`
+  );
+  legend.find('.trophy-bronze span').text(
+    `${labels.bronze}: ${t('profile-trophies-between', '{from} to {to}', 'de {from} à {to}', {
+      from: formatPercentValue(10),
+      to: formatPercentValue(15),
+    })}`
+  );
+  legend.find('.trophy-common span').text(
+    `${labels.common}: ${t('profile-trophies-above', 'above {percent}, or unknown', 'plus de {percent}, ou inconnu', {
+      percent: formatPercentValue(15),
+    })}`
+  );
+
+  $('#profile-stats-platinum-games-label').text(t('profile-trophies-platinum-games', 'Platinum games', 'Jeux platine'));
+  $('#profile-stats-platinum-games').html(
+    stats.platinumGames.length > 0
+      ? stats.platinumGames
+          .map(({ game, completedAt }) =>
+            trophyRow('platinum', game.name || String(game.appid), intlFormat.formatDate(completedAt, uiLang()))
+          )
+          .join('')
+      : `<li class="is-empty">${escapeHtml(t('profile-trophies-no-platinum', 'No platinum yet.', 'Aucun platine pour le moment.'))}</li>`
+  );
+
+  $('#profile-stats-rarest-label').text(t('profile-trophies-rarest-list', 'Rarest achievements', 'Succès les plus rares'));
+  $('#profile-stats-rarest').html(
+    stats.rarest.length > 0
+      ? stats.rarest
+          .map(({ game, achievement, percent, tier }) =>
+            trophyRow(
+              tier,
+              achievement.displayName || achievement.name || '',
+              `${game.name || String(game.appid)} · ${t('profile-trophies-players', '{percent} of players', '{percent} des joueurs', {
+                percent: formatPercentValue(percent, 1),
+              })}`
+            )
+          )
+          .join('')
+      : `<li class="is-empty">${escapeHtml(t('profile-trophies-no-rarity', 'No known rate yet.', 'Aucun taux connu pour le moment.'))}</li>`
+  );
+  paintRarestIcons(stats.rarest);
+  // A redraw (the installed-only filter flipping) starts both lists from their first row again.
+  $('#profile-stats-platinum-games, #profile-stats-rarest').scrollTop(0);
+}
+
+// One row of the platinum and rarest lists: a grade-coloured icon box, a name and a detail line.
+function trophyRow(tier, name, detail) {
+  return `<li class="trophy-${escapeHtml(tier)}"><span class="row-icon"><i class="fas fa-trophy" aria-hidden="true"></i></span><div><b>${escapeHtml(
+    name
+  )}</b><small>${escapeHtml(detail)}</small></div></li>`;
+}
+
+/*
+  Each rarest unlock shows its own artwork, found the way the game view finds it: the icon the
+  install already holds first, the cached CDN download only when there is none. Until one decodes
+  (or if none does), the trophy glyph stays. A newer render of the list abandons the older paints.
+*/
+let rarestIconToken = 0;
+
+function imageDecodes(url) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = url;
+  });
+}
+
+function paintRarestIcons(entries) {
+  const token = ++rarestIconToken;
+  entries.forEach(({ game, achievement }, index) => {
+    paintRarestIcon(game, achievement, index, token).catch(() => {});
+  });
+}
+
+async function paintRarestIcon(game, achievement, index, token) {
+  const candidates = [];
+  try {
+    const local = localIcons.achievementIcon(localIcons.readIndex(game), achievement, true);
+    if (EMU_LOCAL_ICON_SOURCES.has(game.source)) candidates.push(achievement.icon, local);
+    else candidates.push(local);
+  } catch {
+    /* no local artwork: fall through to the download */
+  }
+  const tryPaint = async (list) => {
+    for (const url of list.map(imageDisplayUrl).filter(Boolean)) {
+      if (!(await imageDecodes(url))) continue;
+      if (token !== rarestIconToken) return true;
+      $('#profile-stats-rarest').children().eq(index).find('.row-icon').addClass('has-icon').css('background-image', cssUrl(url));
+      return true;
+    }
+    return false;
+  };
+  if (await tryPaint(candidates)) return;
+  if (EMU_LOCAL_ICON_SOURCES.has(game.source) || !achievement.icon) return;
+  const downloaded = await ipcRenderer.invoke('fetch-icon', achievement.icon, game.steamappid || game.appid).catch(() => null);
+  if (token === rarestIconToken) await tryPaint([downloaded]);
 }
 
 window.refreshProfileStats = refreshProfileStats;
@@ -319,14 +650,12 @@ function fillProfileStatsPlaytime(games) {
 function renderProfileStatsPanel() {
   const installedOnly = typeof window.installedOnlyEnabled === 'function' && window.installedOnlyEnabled();
   const games = installedOnly ? gameList.filter((game) => game && game.installed) : gameList.slice();
-  const stats = calculateDetailedLibraryStats(games, { installedOnly, groupOf: profileStatsGroupOf });
+  const stats = calculateDetailedLibraryStats(games, { installedOnly, groupOf: profileStatsGroupOf, isStarted: hasBeenLaunched });
   const overall = Math.round(stats.completion.overall);
 
-  // Reuses the settings wording for the filter that is on, prefixed with its icon so it reads as
-  // "this is what you are looking at" rather than as a control.
-  $('#profile-stats-scope').html(
-    installedOnly ? `<i class="fas fa-hdd" aria-hidden="true"></i> ${escapeHtml(localeText('installedOnly'))}` : ''
-  );
+  // The library toolbar's installed-only filter, operable from here as well.
+  $('#profile-stats-scope').toggleClass('active', installedOnly).attr('aria-pressed', String(installedOnly));
+  $('#profile-stats-scope span').text(localeText('installedOnly'));
   $('#profile-stats-ring').css('--value', overall);
   $('#profile-stats-overall-value').text(formatCount(overall));
   $('#profile-stats-overall-detail').text(
@@ -370,6 +699,12 @@ function renderProfileStatsPanel() {
   $('#profile-stats .profile-stats-table tbody').html(rows);
   $('#profile-stats .profile-stats-table-wrap').toggle(stats.groups.length > 0);
   $('#profile-stats-empty').prop('hidden', stats.groups.length > 0);
+
+  try {
+    renderProfileStatsTrophies(installedOnly);
+  } catch (err) {
+    debug.warn(`[trophies] could not build the panel section: ${err && err.message ? err.message : err}`);
+  }
 }
 
 // Applied on every open: the panel shares wording with the library ("Unlocked", "Perfect game",
@@ -396,7 +731,7 @@ function applyProfileStatsLabels() {
   $('#profile-stats-empty').text(t('profile-stats-empty', 'No game with achievements yet.', 'Aucun jeu avec des succès pour le moment.'));
 }
 
-function openProfileStats() {
+function openProfileStats({ section = null } = {}) {
   try {
     applyProfileStatsLabels();
     renderProfileStatsPanel();
@@ -404,8 +739,21 @@ function openProfileStats() {
     debug.warn(`[profile-stats] could not build the summary: ${err && err.message ? err.message : err}`);
   }
   $('#profile-stats').attr('aria-hidden', 'false').show();
+  const body = $('#profile-stats .profile-stats-body')[0];
+  const target = section ? document.getElementById(section) : null;
+  if (body) body.scrollTop = target ? Math.max(0, target.offsetTop - body.offsetTop - 12) : 0;
   setTimeout(() => $('#profile-stats-close').trigger('focus'), 0);
 }
+
+// Re-drawn in place when the installed-only filter flips while the panel is open.
+window.refreshProfileStatsPanel = () => {
+  if ($('#profile-stats').attr('aria-hidden') !== 'false') return;
+  try {
+    renderProfileStatsPanel();
+  } catch (err) {
+    debug.warn(`[profile-stats] could not rebuild the summary: ${err && err.message ? err.message : err}`);
+  }
+};
 
 function closeProfileStats() {
   $('#profile-stats').attr('aria-hidden', 'true').hide();
@@ -2678,6 +3026,9 @@ var app = {
       .then((locale) => {
         moment.locale(locale);
         setLoadingLabel();
+        // The loader writes the header labels from the locale, "Perfect Games" included, which the
+        // trophy row swaps for a plain game count: put the live labels back over it.
+        refreshProfileStats();
       })
       .catch((err) => {
         debug.log(err);
@@ -2810,6 +3161,7 @@ var app = {
             const stopPlaytimeRead = perfTrace.start('tile:playtime');
             const playtime = PlaytimeTracking.readSync(game.appid);
             stopPlaytimeRead();
+            rememberLaunched(game.appid, playtime);
             const lastPlayed = Number(playtime.lastplayed) || 0;
             const totalPlaytime = Number(playtime.playtime) || 0;
 
@@ -6642,7 +6994,9 @@ var app = {
       const profileStatsOpenLabel = t('profile-stats-open', 'See the detailed breakdown', 'Voir le détail');
       $('#profile-stats-open').attr({ title: profileStatsOpenLabel, 'aria-label': profileStatsOpenLabel });
 
-      $('#profile-stats-open').on('click', openProfileStats);
+      $('#profile-stats-open').on('click', () => openProfileStats());
+      $('#profile-trophies').on('click', () => openProfileStats({ section: 'profile-stats-trophies' }));
+      $('#profile-stats-scope').on('click', () => window.toggleInstalledOnly?.());
       $('#profile-stats-close, #profile-stats > .overlay').on('click', closeProfileStats);
       $(document).on('keydown.profile-stats', (event) => {
         if (event.key === 'Escape' && $('#profile-stats').attr('aria-hidden') === 'false') closeProfileStats();

@@ -259,6 +259,10 @@
         "name": "Απεγκατάσταση από τη λίστα παιχνιδιών",
         "description": "Προσθέτει επιλογές απεγκατάστασης στο μενού δεξιού κλικ των πλακιδίων (απεγκατάσταση μέσω Steam, πρόγραμμα απεγκατάστασης του παιχνιδιού ή μεταφορά του φακέλου στον Κάδο ανακύκλωσης)."
       },
+      "showTrophies": {
+        "name": "Τρόπαια στο προφίλ",
+        "description": "Εμφανίζει τρόπαια πλατίνας, χρυσού, ασημιού και χαλκού κάτω από το όνομά σας. Η πλατίνα είναι ένα παιχνίδι στο 100%· τα υπόλοιπα κατατάσσουν τα επιτεύγματά σας ανάλογα με το πόσοι παίκτες τα ξεκλείδωσαν."
+      },
       "playButton": {
         "name": "Εμφάνιση κουμπιού εκκίνησης",
         "description": "Εμφανίζει το κουμπί εκκίνησης στα πλακίδια των παιχνιδιών. Απενεργοποίησέ το αν ξεκινάς τα παιχνίδια σου από άλλο πρόγραμμα. Η επιλογή Εκκίνηση παιχνιδιού στο μενού δεξιού κλικ παραμένει διαθέσιμη."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Καταγεγραμμένος χρόνος παιχνιδιού",
     "profile-stats-platforms": "Ανά πλατφόρμα",
     "profile-stats-games": "Παιχνίδια",
-    "profile-stats-empty": "Δεν υπάρχει ακόμη παιχνίδι με επιτεύγματα."
+    "profile-stats-empty": "Δεν υπάρχει ακόμη παιχνίδι με επιτεύγματα.",
+    "profile-completion-scope": "Μέσος όρος για τα {count} παιχνίδια που έχετε εκκινήσει ή στα οποία έχετε ξεκλειδώσει ένα επίτευγμα.",
+    "profile-trophies": "Τρόπαια",
+    "profile-trophies-summary": "{platinum} πλατίνα, {gold} χρυσό, {silver} ασήμι, {bronze} χαλκό, {common} κοινό. Δείτε τις λεπτομέρειες",
+    "trophy-platinum": "Πλατίνα",
+    "trophy-gold": "Χρυσό",
+    "trophy-silver": "Ασήμι",
+    "trophy-bronze": "Χαλκός",
+    "trophy-common": "Κοινό",
+    "profile-trophies-platinum-desc": "παιχνίδια στο 100%",
+    "profile-trophies-share": "{percent} των επιτευγμάτων σας",
+    "profile-trophies-unranked": "{count} χωρίς γνωστό ποσοστό",
+    "profile-trophies-at-most": "{percent} ή λιγότερο",
+    "profile-trophies-between": "{from} έως {to}",
+    "profile-trophies-above": "πάνω από {percent}, ή άγνωστο",
+    "profile-trophies-platinum-games": "Παιχνίδια με πλατίνα",
+    "profile-trophies-rarest-list": "Σπανιότερα επιτεύγματα",
+    "profile-trophies-players": "{percent} των παικτών",
+    "profile-trophies-no-platinum": "Καμία πλατίνα ακόμη.",
+    "profile-trophies-no-rarity": "Κανένα γνωστό ποσοστό ακόμη."
   },
   "watchdog": {
     "rare": "Σπάνιο {percent}%",

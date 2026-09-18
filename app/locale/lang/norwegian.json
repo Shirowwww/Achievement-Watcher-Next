@@ -259,6 +259,10 @@
         "name": "Avinstaller fra spillisten",
         "description": "Legger avinstalleringsvalg i høyreklikkmenyen på spillrutene (avinstaller via Steam, spillets eget avinstallasjonsprogram, eller flytt mappen til papirkurven)."
       },
+      "showTrophies": {
+        "name": "Trofeer på profilen",
+        "description": "Viser platina-, gull-, sølv- og bronsetrofeer under navnet ditt. Platina er et spill fullført til 100%; de andre rangerer prestasjonene dine etter hvor mange spillere som har låst dem opp."
+      },
       "playButton": {
         "name": "Vis Spill-knappen",
         "description": "Viser Spill-knappen på spillrutene. Slå den av hvis du starter spillene dine fra et annet program. Valget Start spill i høyreklikkmenyen er fortsatt tilgjengelig."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Registrert spilletid",
     "profile-stats-platforms": "Etter plattform",
     "profile-stats-games": "Spill",
-    "profile-stats-empty": "Ingen spill med prestasjoner ennå."
+    "profile-stats-empty": "Ingen spill med prestasjoner ennå.",
+    "profile-completion-scope": "Gjennomsnitt for de {count} spillene du har startet eller låst opp en prestasjon i.",
+    "profile-trophies": "Trofeer",
+    "profile-trophies-summary": "{platinum} platina, {gold} gull, {silver} sølv, {bronze} bronse, {common} vanlig. Se detaljene",
+    "trophy-platinum": "Platina",
+    "trophy-gold": "Gull",
+    "trophy-silver": "Sølv",
+    "trophy-bronze": "Bronse",
+    "trophy-common": "Vanlig",
+    "profile-trophies-platinum-desc": "spill på 100%",
+    "profile-trophies-share": "{percent} av prestasjonene dine",
+    "profile-trophies-unranked": "{count} uten kjent andel",
+    "profile-trophies-at-most": "{percent} eller mindre",
+    "profile-trophies-between": "{from} til {to}",
+    "profile-trophies-above": "over {percent}, eller ukjent",
+    "profile-trophies-platinum-games": "Platinaspill",
+    "profile-trophies-rarest-list": "Sjeldneste prestasjoner",
+    "profile-trophies-players": "{percent} av spillerne",
+    "profile-trophies-no-platinum": "Ingen platina ennå.",
+    "profile-trophies-no-rarity": "Ingen kjent andel ennå."
   },
   "watchdog": {
     "rare": "Sjelden {percent} %",

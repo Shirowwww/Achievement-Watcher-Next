@@ -1211,6 +1211,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       if (typeof window.applyLibraryView === 'function') window.applyLibraryView(app.config.achievement.libraryLayout, previousLayout);
       Object.assign(app.config.achievement, readLibraryChromeUi());
       if (typeof window.applyLibraryChrome === 'function') window.applyLibraryChrome(app.config.achievement);
+      // Shows or hides the trophy row right away (Settings > General).
+      if (typeof window.refreshProfileStats === 'function') window.refreshProfileStats();
       if (!app.config.general) app.config.general = {};
       app.config.general.disableHardwareAccel = $('#option_disableHardwareAccel').val() === 'true';
       app.config.general.closeToTray = $('#option_closeToTray').val() !== 'false';

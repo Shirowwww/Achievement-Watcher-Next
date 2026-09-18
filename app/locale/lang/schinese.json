@@ -259,6 +259,10 @@
         "name": "从游戏列表中卸载",
         "description": "在游戏磁贴的右键菜单中添加卸载选项（通过 Steam 卸载、游戏卸载程序或将文件夹移至回收站）。"
       },
+      "showTrophies": {
+        "name": "个人资料中的奖杯",
+        "description": "在您的名称下方显示白金、金、银、铜奖杯。白金指达成 100% 的游戏；其余则根据解锁玩家的比例对您的成就进行分级。"
+      },
       "playButton": {
         "name": "显示开始游戏按钮",
         "description": "在游戏磁贴上显示开始游戏按钮。如果你通过其他程序启动游戏，可以将其关闭。右键菜单中的启动游戏项仍然可用。"
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "已记录的游戏时长",
     "profile-stats-platforms": "按平台",
     "profile-stats-games": "游戏",
-    "profile-stats-empty": "暂无带成就的游戏。"
+    "profile-stats-empty": "暂无带成就的游戏。",
+    "profile-completion-scope": "基于您启动过或已解锁成就的 {count} 款游戏的平均值。",
+    "profile-trophies": "奖杯",
+    "profile-trophies-summary": "白金 {platinum}，金 {gold}，银 {silver}，铜 {bronze}，普通 {common}。查看详情",
+    "trophy-platinum": "白金",
+    "trophy-gold": "金",
+    "trophy-silver": "银",
+    "trophy-bronze": "铜",
+    "trophy-common": "普通",
+    "profile-trophies-platinum-desc": "达成 100% 的游戏",
+    "profile-trophies-share": "占您成就的 {percent}",
+    "profile-trophies-unranked": "{count} 个未知解锁率",
+    "profile-trophies-at-most": "{percent} 或更低",
+    "profile-trophies-between": "{from} 至 {to}",
+    "profile-trophies-above": "高于 {percent}，或未知",
+    "profile-trophies-platinum-games": "白金游戏",
+    "profile-trophies-rarest-list": "最稀有的成就",
+    "profile-trophies-players": "{percent} 的玩家",
+    "profile-trophies-no-platinum": "尚无白金。",
+    "profile-trophies-no-rarity": "尚无已知解锁率。"
   },
   "watchdog": {
     "rare": "稀有 {percent}%",

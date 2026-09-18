@@ -259,6 +259,10 @@
         "name": "Oyun listesinden kaldır",
         "description": "Oyun kutucuklarının sağ tık menüsüne kaldırma seçenekleri ekler (Steam kaldırma, oyun kaldırıcısı veya klasörü Çöp Kutusu’na taşıma)."
       },
+      "showTrophies": {
+        "name": "Profildeki kupalar",
+        "description": "Adınızın altında platin, altın, gümüş ve bronz kupaları gösterir. Platin, %100 tamamlanmış bir oyundur; diğerleri başarımlarınızı kaç oyuncunun açtığına göre sıralar."
+      },
       "playButton": {
         "name": "Oynat düğmesini göster",
         "description": "Oyun kutucuklarında Oynat düğmesini gösterir. Oyunlarını başka bir programdan başlatıyorsan kapat. Sağ tık menüsündeki Oyunu başlat seçeneği kullanılabilir kalır."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Kaydedilen oynama süresi",
     "profile-stats-platforms": "Platforma göre",
     "profile-stats-games": "Oyunlar",
-    "profile-stats-empty": "Henüz başarımlı bir oyun yok."
+    "profile-stats-empty": "Henüz başarımlı bir oyun yok.",
+    "profile-completion-scope": "Başlattığınız veya bir başarım açtığınız {count} oyun üzerinden ortalama.",
+    "profile-trophies": "Kupalar",
+    "profile-trophies-summary": "{platinum} platin, {gold} altın, {silver} gümüş, {bronze} bronz, {common} yaygın. Ayrıntıları gör",
+    "trophy-platinum": "Platin",
+    "trophy-gold": "Altın",
+    "trophy-silver": "Gümüş",
+    "trophy-bronze": "Bronz",
+    "trophy-common": "Yaygın",
+    "profile-trophies-platinum-desc": "%100 tamamlanan oyun",
+    "profile-trophies-share": "başarımlarınızın {percent}'i",
+    "profile-trophies-unranked": "{count} tanesi bilinmeyen oranla",
+    "profile-trophies-at-most": "{percent} veya daha az",
+    "profile-trophies-between": "{from} - {to}",
+    "profile-trophies-above": "{percent} üzerinde, veya bilinmiyor",
+    "profile-trophies-platinum-games": "Platin oyunlar",
+    "profile-trophies-rarest-list": "En nadir başarımlar",
+    "profile-trophies-players": "oyuncuların {percent}'i",
+    "profile-trophies-no-platinum": "Henüz platin yok.",
+    "profile-trophies-no-rarity": "Henüz bilinen oran yok."
   },
   "watchdog": {
     "rare": "Nadir {percent}%",

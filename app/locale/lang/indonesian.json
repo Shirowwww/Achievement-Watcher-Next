@@ -259,6 +259,10 @@
         "name": "Copot pemasangan dari daftar game",
         "description": "Menambahkan opsi Copot pemasangan ke menu klik kanan pada kartu game (copot lewat Steam, uninstaller game, atau pindahkan folder ke Recycle Bin)."
       },
+      "showTrophies": {
+        "name": "Trofi pada profil",
+        "description": "Menampilkan trofi platinum, emas, perak, dan perunggu di bawah nama Anda. Platinum adalah game yang mencapai 100%; sisanya mengurutkan pencapaian Anda berdasarkan jumlah pemain yang meraihnya."
+      },
       "playButton": {
         "name": "Tampilkan tombol Main",
         "description": "Menampilkan tombol Main pada kartu game. Matikan jika kamu menjalankan game dari program lain. Menu klik kanan Jalankan game tetap tersedia."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Waktu bermain yang tercatat",
     "profile-stats-platforms": "Berdasarkan platform",
     "profile-stats-games": "Game",
-    "profile-stats-empty": "Belum ada game dengan pencapaian."
+    "profile-stats-empty": "Belum ada game dengan pencapaian.",
+    "profile-completion-scope": "Rata-rata dari {count} game yang pernah Anda jalankan atau raih pencapaiannya.",
+    "profile-trophies": "Trofi",
+    "profile-trophies-summary": "{platinum} platinum, {gold} emas, {silver} perak, {bronze} perunggu, {common} umum. Lihat detail",
+    "trophy-platinum": "Platinum",
+    "trophy-gold": "Emas",
+    "trophy-silver": "Perak",
+    "trophy-bronze": "Perunggu",
+    "trophy-common": "Umum",
+    "profile-trophies-platinum-desc": "game 100%",
+    "profile-trophies-share": "{percent} dari pencapaian Anda",
+    "profile-trophies-unranked": "{count} tanpa rasio yang diketahui",
+    "profile-trophies-at-most": "{percent} atau kurang",
+    "profile-trophies-between": "{from} sampai {to}",
+    "profile-trophies-above": "di atas {percent}, atau tidak diketahui",
+    "profile-trophies-platinum-games": "Game platinum",
+    "profile-trophies-rarest-list": "Pencapaian paling langka",
+    "profile-trophies-players": "{percent} pemain",
+    "profile-trophies-no-platinum": "Belum ada platinum.",
+    "profile-trophies-no-rarity": "Belum ada rasio yang diketahui."
   },
   "watchdog": {
     "rare": "Langka {percent}%",

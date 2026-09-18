@@ -285,6 +285,12 @@ function translateUI(lang, locale, template) {
     $("#option_uninstallContextMenu option[value='true']").text(clear(template.settings.common.enable));
     $("#option_uninstallContextMenu option[value='false']").text(clear(template.settings.common.disable));
   }
+  if (template.settings.general.showTrophies) {
+    $('#trophies-settings-label').text(clear(template.settings.general.showTrophies.name));
+    $('#trophies-settings-help').text(clear(template.settings.general.showTrophies.description));
+    $("#option_showTrophies option[value='true']").text(clear(template.settings.common.enable));
+    $("#option_showTrophies option[value='false']").text(clear(template.settings.common.disable));
+  }
   // Library tiles card (Appearance tab) - bound by stable id, so it shifts no nth-child binding.
   if (template.settings.general.library) {
     const lib = template.settings.general.library;

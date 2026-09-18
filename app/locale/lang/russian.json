@@ -259,6 +259,10 @@
         "name": "Удаление из списка игр",
         "description": "Добавляет варианты удаления в контекстное меню игр (удаление через Steam, деинсталлятор игры или перемещение папки в Корзину)."
       },
+      "showTrophies": {
+        "name": "Трофеи в профиле",
+        "description": "Показывает платиновые, золотые, серебряные и бронзовые трофеи под вашим именем. Платина - это игра, пройденная на 100%; остальные ранжируют ваши достижения по тому, сколько игроков их получили."
+      },
       "playButton": {
         "name": "Показывать кнопку запуска",
         "description": "Показывает кнопку запуска на плитках игр. Отключите её, если запускаете игры из другой программы. Пункт Запустить игру в контекстном меню остаётся доступным."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Отслеженное время игры",
     "profile-stats-platforms": "По платформам",
     "profile-stats-games": "Игры",
-    "profile-stats-empty": "Пока нет игр с достижениями."
+    "profile-stats-empty": "Пока нет игр с достижениями.",
+    "profile-completion-scope": "Среднее по {count} играм, которые вы запускали или в которых получили достижение.",
+    "profile-trophies": "Трофеи",
+    "profile-trophies-summary": "{platinum} платина, {gold} золото, {silver} серебро, {bronze} бронза, {common} обычное. Смотреть подробности",
+    "trophy-platinum": "Платина",
+    "trophy-gold": "Золото",
+    "trophy-silver": "Серебро",
+    "trophy-bronze": "Бронза",
+    "trophy-common": "Обычное",
+    "profile-trophies-platinum-desc": "игр на 100%",
+    "profile-trophies-share": "{percent} ваших достижений",
+    "profile-trophies-unranked": "{count} без известного процента",
+    "profile-trophies-at-most": "{percent} или менее",
+    "profile-trophies-between": "от {from} до {to}",
+    "profile-trophies-above": "более {percent}, или неизвестно",
+    "profile-trophies-platinum-games": "Игры с платиной",
+    "profile-trophies-rarest-list": "Самые редкие достижения",
+    "profile-trophies-players": "{percent} игроков",
+    "profile-trophies-no-platinum": "Пока нет платины.",
+    "profile-trophies-no-rarity": "Пока нет известного процента."
   },
   "watchdog": {
     "rare": "Редкое {percent}%",

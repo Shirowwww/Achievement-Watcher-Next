@@ -136,7 +136,13 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
     source === 'steam-bridge' && context && context.steamAppId
       ? rarity.getSteamBridgeRarity(appid, context.steamAppId, context.names || achievements.map((a) => a && a.name), {})
       : rarity.getRarityEntries(appid, source, { gameName, achievements });
-  pending.then((entries) => applyRarity(entries)).catch(() => {});
+  pending
+    .then((entries) => {
+      applyRarity(entries);
+      // The profile's trophy counts rank unlocks by these same rates.
+      if (typeof window.forgetTrophyRates === 'function') window.forgetTrophyRates(appid);
+    })
+    .catch(() => {});
 }
 
 (function ($, window, document) {

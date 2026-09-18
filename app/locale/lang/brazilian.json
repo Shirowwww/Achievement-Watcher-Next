@@ -259,6 +259,10 @@
         "name": "Desinstalar pela lista de jogos",
         "description": "Adiciona opções de desinstalação ao menu de botão direito dos jogos (desinstalação Steam, desinstalador do jogo ou mover a pasta para a Lixeira)."
       },
+      "showTrophies": {
+        "name": "Troféus no perfil",
+        "description": "Mostra os troféus platina, ouro, prata e bronze abaixo do seu nome. A platina é um jogo a 100%; os demais classificam suas conquistas de acordo com quantos jogadores as desbloquearam."
+      },
       "playButton": {
         "name": "Mostrar o botão Jogar",
         "description": "Mostra o botão Jogar nos cartões dos jogos. Desative se você inicia seus jogos por outro programa. A entrada Iniciar jogo do menu de botão direito continua disponível."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Tempo de jogo registrado",
     "profile-stats-platforms": "Por plataforma",
     "profile-stats-games": "Jogos",
-    "profile-stats-empty": "Nenhum jogo com conquistas ainda."
+    "profile-stats-empty": "Nenhum jogo com conquistas ainda.",
+    "profile-completion-scope": "Média entre os {count} jogos que você iniciou ou nos quais desbloqueou uma conquista.",
+    "profile-trophies": "Troféus",
+    "profile-trophies-summary": "{platinum} platina, {gold} ouro, {silver} prata, {bronze} bronze, {common} comum. Ver os detalhes",
+    "trophy-platinum": "Platina",
+    "trophy-gold": "Ouro",
+    "trophy-silver": "Prata",
+    "trophy-bronze": "Bronze",
+    "trophy-common": "Comum",
+    "profile-trophies-platinum-desc": "jogos a 100%",
+    "profile-trophies-share": "{percent} das suas conquistas",
+    "profile-trophies-unranked": "{count} sem taxa conhecida",
+    "profile-trophies-at-most": "{percent} ou menos",
+    "profile-trophies-between": "de {from} a {to}",
+    "profile-trophies-above": "acima de {percent}, ou desconhecida",
+    "profile-trophies-platinum-games": "Jogos platina",
+    "profile-trophies-rarest-list": "Conquistas mais raras",
+    "profile-trophies-players": "{percent} dos jogadores",
+    "profile-trophies-no-platinum": "Nenhuma platina ainda.",
+    "profile-trophies-no-rarity": "Nenhuma taxa conhecida ainda."
   },
   "watchdog": {
     "rare": "Raro {percent}%",

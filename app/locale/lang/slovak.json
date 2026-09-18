@@ -259,6 +259,10 @@
         "name": "Odinštalovať zo zoznamu hier",
         "description": "Pridá možnosti odinštalovania do kontextovej ponuky hier (odinštalovanie cez Steam, odinštalátor hry alebo presun priečinka do Koša)."
       },
+      "showTrophies": {
+        "name": "Trofeje v profile",
+        "description": "Zobrazuje platinové, zlaté, strieborné a bronzové trofeje pod vaším menom. Platina je hra dokončená na 100 %; ostatné triedia vaše úspechy podľa toho, koľko hráčov ich odomklo."
+      },
       "playButton": {
         "name": "Zobraziť tlačidlo Hrať",
         "description": "Zobrazí tlačidlo Hrať na dlaždiciach hier. Vypnite ho, ak hry spúšťate z iného programu. Položka Spustiť hru v kontextovej ponuke zostáva dostupná."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Sledovaný čas hrania",
     "profile-stats-platforms": "Podľa platformy",
     "profile-stats-games": "Hry",
-    "profile-stats-empty": "Zatiaľ žiadna hra s úspechmi."
+    "profile-stats-empty": "Zatiaľ žiadna hra s úspechmi.",
+    "profile-completion-scope": "Priemer za {count} hier, ktoré ste spustili alebo v ktorých ste odomkli úspech.",
+    "profile-trophies": "Trofeje",
+    "profile-trophies-summary": "{platinum} platina, {gold} zlato, {silver} striebro, {bronze} bronz, {common} bežné. Zobraziť podrobnosti",
+    "trophy-platinum": "Platina",
+    "trophy-gold": "Zlato",
+    "trophy-silver": "Striebro",
+    "trophy-bronze": "Bronz",
+    "trophy-common": "Bežné",
+    "profile-trophies-platinum-desc": "hier na 100 %",
+    "profile-trophies-share": "{percent} vašich úspechov",
+    "profile-trophies-unranked": "{count} bez známej miery",
+    "profile-trophies-at-most": "{percent} alebo menej",
+    "profile-trophies-between": "od {from} do {to}",
+    "profile-trophies-above": "nad {percent}, alebo neznáme",
+    "profile-trophies-platinum-games": "Hry s platinou",
+    "profile-trophies-rarest-list": "Najvzácnejšie úspechy",
+    "profile-trophies-players": "{percent} hráčov",
+    "profile-trophies-no-platinum": "Zatiaľ žiadna platina.",
+    "profile-trophies-no-rarity": "Zatiaľ žiadna známa miera."
   },
   "watchdog": {
     "rare": "Vzácny {percent}%",

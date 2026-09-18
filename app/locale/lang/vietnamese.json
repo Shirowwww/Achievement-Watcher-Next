@@ -259,6 +259,10 @@
         "name": "Gỡ cài đặt từ danh sách trò chơi",
         "description": "Thêm các tùy chọn Gỡ cài đặt vào menu chuột phải trên thẻ trò chơi (gỡ qua Steam, trình gỡ cài đặt của trò chơi, hoặc chuyển thư mục vào Thùng rác)."
       },
+      "showTrophies": {
+        "name": "Cúp trên hồ sơ",
+        "description": "Hiển thị cúp bạch kim, vàng, bạc và đồng dưới tên của bạn. Bạch kim là trò chơi đạt 100%; các cúp còn lại xếp hạng thành tựu của bạn theo số người chơi đã mở khóa chúng."
+      },
       "playButton": {
         "name": "Hiện nút Chơi",
         "description": "Hiện nút Chơi trên thẻ trò chơi. Tắt nếu bạn khởi chạy trò chơi từ chương trình khác. Mục Khởi chạy trò chơi trong menu chuột phải vẫn có sẵn."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Thời gian chơi đã ghi nhận",
     "profile-stats-platforms": "Theo nền tảng",
     "profile-stats-games": "Trò chơi",
-    "profile-stats-empty": "Chưa có trò chơi nào có thành tựu."
+    "profile-stats-empty": "Chưa có trò chơi nào có thành tựu.",
+    "profile-completion-scope": "Trung bình trên {count} trò chơi bạn đã chạy hoặc đã mở khóa một thành tựu.",
+    "profile-trophies": "Cúp",
+    "profile-trophies-summary": "{platinum} bạch kim, {gold} vàng, {silver} bạc, {bronze} đồng, {common} phổ biến. Xem chi tiết",
+    "trophy-platinum": "Bạch kim",
+    "trophy-gold": "Vàng",
+    "trophy-silver": "Bạc",
+    "trophy-bronze": "Đồng",
+    "trophy-common": "Phổ biến",
+    "profile-trophies-platinum-desc": "trò chơi đạt 100%",
+    "profile-trophies-share": "{percent} thành tựu của bạn",
+    "profile-trophies-unranked": "{count} chưa rõ tỷ lệ",
+    "profile-trophies-at-most": "{percent} trở xuống",
+    "profile-trophies-between": "từ {from} đến {to}",
+    "profile-trophies-above": "trên {percent}, hoặc chưa rõ",
+    "profile-trophies-platinum-games": "Trò chơi bạch kim",
+    "profile-trophies-rarest-list": "Thành tựu hiếm nhất",
+    "profile-trophies-players": "{percent} người chơi",
+    "profile-trophies-no-platinum": "Chưa có bạch kim nào.",
+    "profile-trophies-no-rarity": "Chưa rõ tỷ lệ nào."
   },
   "watchdog": {
     "rare": "Hiếm {percent}%",

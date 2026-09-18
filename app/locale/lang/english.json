@@ -259,6 +259,10 @@
         "name": "Uninstall from the game list",
         "description": "Adds Uninstall options to the right-click menu on game tiles (Steam uninstall, game uninstaller, or move folder to Recycle Bin)."
       },
+      "showTrophies": {
+        "name": "Trophies on the profile",
+        "description": "Shows platinum, gold, silver and bronze trophies under your name. Platinum is a game at 100%; the others rank your achievements by how many players unlocked them."
+      },
       "playButton": {
         "name": "Show Play button",
         "description": "Show the Play button on game tiles. Turn it off if you launch your games from another program. The right-click Launch game entry stays available."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Tracked playtime",
     "profile-stats-platforms": "By platform",
     "profile-stats-games": "Games",
-    "profile-stats-empty": "No game with achievements yet."
+    "profile-stats-empty": "No game with achievements yet.",
+    "profile-completion-scope": "Average over the {count} games you have launched or unlocked an achievement in.",
+    "profile-trophies": "Trophies",
+    "profile-trophies-summary": "{platinum} platinum, {gold} gold, {silver} silver, {bronze} bronze, {common} common. See the details",
+    "trophy-platinum": "Platinum",
+    "trophy-gold": "Gold",
+    "trophy-silver": "Silver",
+    "trophy-bronze": "Bronze",
+    "trophy-common": "Common",
+    "profile-trophies-platinum-desc": "games at 100%",
+    "profile-trophies-share": "{percent} of your achievements",
+    "profile-trophies-unranked": "{count} without a known rate",
+    "profile-trophies-at-most": "{percent} or less",
+    "profile-trophies-between": "{from} to {to}",
+    "profile-trophies-above": "above {percent}, or unknown",
+    "profile-trophies-platinum-games": "Platinum games",
+    "profile-trophies-rarest-list": "Rarest achievements",
+    "profile-trophies-players": "{percent} of players",
+    "profile-trophies-no-platinum": "No platinum yet.",
+    "profile-trophies-no-rarity": "No known rate yet."
   },
   "watchdog": {
     "rare": "Rare {percent}%",

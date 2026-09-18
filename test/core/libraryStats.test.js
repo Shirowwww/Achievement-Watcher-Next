@@ -16,6 +16,7 @@ test('library statistics include only games with an achievement set by default',
     totalUnlocked: 15,
     completed: 1,
     total: 2,
+    started: 2,
     average: 75,
   });
 });
@@ -25,6 +26,7 @@ test('installed-only statistics match the visible installed library', () => {
     totalUnlocked: 5,
     completed: 0,
     total: 1,
+    started: 1,
     average: 50,
   });
   assert.equal(isInstalled(games[0]), true);
@@ -43,7 +45,7 @@ test('achievement-less games never affect completed, unlocked, total or average 
 });
 
 test('empty and invalid libraries produce a stable zero summary', () => {
-  const empty = { totalUnlocked: 0, completed: 0, total: 0, average: 0 };
+  const empty = { totalUnlocked: 0, completed: 0, total: 0, started: 0, average: 0 };
   assert.deepEqual(calculateLibraryStats([]), empty);
   assert.deepEqual(calculateLibraryStats(null, { installedOnly: true }), empty);
 });

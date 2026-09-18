@@ -259,6 +259,10 @@
         "name": "Asennuksen poisto peliluettelosta",
         "description": "Lisää peliruutujen hiiren kakkospainikkeen valikkoon asennuksenpoiston vaihtoehdot (Steam-poisto, pelin asennuksenpoisto-ohjelma tai kansion siirto roskakoriin)."
       },
+      "showTrophies": {
+        "name": "Pokaalit profiilissa",
+        "description": "Näyttää platina-, kulta-, hopea- ja pronssipokaalit nimesi alla. Platina on peli, joka on suoritettu 100-prosenttisesti; muut järjestävät saavutuksesi sen mukaan, kuinka moni pelaaja on avannut ne."
+      },
       "playButton": {
         "name": "Näytä Pelaa-painike",
         "description": "Näyttää Pelaa-painikkeen peliruuduissa. Poista käytöstä, jos käynnistät pelisi toisesta ohjelmasta. Hiiren kakkospainikkeen valinta Käynnistä peli on yhä käytettävissä."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Seurattu peliaika",
     "profile-stats-platforms": "Alustoittain",
     "profile-stats-games": "Pelit",
-    "profile-stats-empty": "Ei vielä pelejä, joissa on saavutuksia."
+    "profile-stats-empty": "Ei vielä pelejä, joissa on saavutuksia.",
+    "profile-completion-scope": "Keskiarvo {count} pelistä, jotka olet käynnistänyt tai joissa olet avannut saavutuksen.",
+    "profile-trophies": "Pokaalit",
+    "profile-trophies-summary": "{platinum} platinaa, {gold} kultaa, {silver} hopeaa, {bronze} pronssia, {common} yleistä. Näytä tiedot",
+    "trophy-platinum": "Platina",
+    "trophy-gold": "Kulta",
+    "trophy-silver": "Hopea",
+    "trophy-bronze": "Pronssi",
+    "trophy-common": "Yleinen",
+    "profile-trophies-platinum-desc": "peliä 100 %:ssa",
+    "profile-trophies-share": "{percent} saavutuksistasi",
+    "profile-trophies-unranked": "{count} ilman tunnettua osuutta",
+    "profile-trophies-at-most": "enintään {percent}",
+    "profile-trophies-between": "{from} - {to}",
+    "profile-trophies-above": "yli {percent}, tai tuntematon",
+    "profile-trophies-platinum-games": "Platinapelit",
+    "profile-trophies-rarest-list": "Harvinaisimmat saavutukset",
+    "profile-trophies-players": "{percent} pelaajista",
+    "profile-trophies-no-platinum": "Ei vielä platinaa.",
+    "profile-trophies-no-rarity": "Ei vielä tunnettua osuutta."
   },
   "watchdog": {
     "rare": "Harvinainen {percent} %",

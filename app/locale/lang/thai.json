@@ -259,6 +259,10 @@
         "name": "ถอนการติดตั้งจากรายการเกม",
         "description": "เพิ่มตัวเลือกการถอนการติดตั้งในเมนูคลิกขวาของเกม (ถอนการติดตั้งผ่าน Steam, โปรแกรมถอนการติดตั้งเกม หรือย้ายโฟลเดอร์ไปยังถังขยะ)"
       },
+      "showTrophies": {
+        "name": "ถ้วยรางวัลบนโปรไฟล์",
+        "description": "แสดงถ้วยรางวัลแพลตตินัม ทอง เงิน และทองแดงใต้ชื่อของคุณ แพลตตินัมคือเกมที่ผ่าน 100% ส่วนที่เหลือจัดอันดับความสำเร็จของคุณตามจำนวนผู้เล่นที่ปลดล็อก"
+      },
       "playButton": {
         "name": "แสดงปุ่มเล่น",
         "description": "แสดงปุ่มเล่นบนการ์ดเกม ปิดตัวเลือกนี้หากคุณเปิดเกมจากโปรแกรมอื่น รายการเปิดเกมในเมนูคลิกขวายังใช้งานได้"
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "เวลาเล่นที่บันทึกไว้",
     "profile-stats-platforms": "แยกตามแพลตฟอร์ม",
     "profile-stats-games": "เกม",
-    "profile-stats-empty": "ยังไม่มีเกมที่มีความสำเร็จ"
+    "profile-stats-empty": "ยังไม่มีเกมที่มีความสำเร็จ",
+    "profile-completion-scope": "ค่าเฉลี่ยจาก {count} เกมที่คุณเปิดเล่นหรือปลดล็อกความสำเร็จอย่างน้อยหนึ่งอย่าง",
+    "profile-trophies": "ถ้วยรางวัล",
+    "profile-trophies-summary": "แพลตตินัม {platinum}, ทอง {gold}, เงิน {silver}, ทองแดง {bronze}, ทั่วไป {common} ดูรายละเอียด",
+    "trophy-platinum": "แพลตตินัม",
+    "trophy-gold": "ทอง",
+    "trophy-silver": "เงิน",
+    "trophy-bronze": "ทองแดง",
+    "trophy-common": "ทั่วไป",
+    "profile-trophies-platinum-desc": "เกมที่ผ่าน 100%",
+    "profile-trophies-share": "{percent} ของความสำเร็จของคุณ",
+    "profile-trophies-unranked": "{count} รายการที่ไม่ทราบอัตรา",
+    "profile-trophies-at-most": "{percent} หรือน้อยกว่า",
+    "profile-trophies-between": "{from} ถึง {to}",
+    "profile-trophies-above": "สูงกว่า {percent} หรือไม่ทราบ",
+    "profile-trophies-platinum-games": "เกมแพลตตินัม",
+    "profile-trophies-rarest-list": "ความสำเร็จที่หายากที่สุด",
+    "profile-trophies-players": "{percent} ของผู้เล่น",
+    "profile-trophies-no-platinum": "ยังไม่มีแพลตตินัม",
+    "profile-trophies-no-rarity": "ยังไม่มีอัตราที่ทราบ"
   },
   "watchdog": {
     "rare": "หายาก {percent}%",

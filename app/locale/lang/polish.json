@@ -259,6 +259,10 @@
         "name": "Odinstaluj z listy gier",
         "description": "Dodaje opcje odinstalowania do menu kontekstowego gier (odinstalowanie przez Steam, deinstalator gry lub przeniesienie folderu do Kosza)."
       },
+      "showTrophies": {
+        "name": "Trofea na profilu",
+        "description": "Pokazuje trofea platynowe, złote, srebrne i brązowe pod twoim imieniem. Platyna to gra ukończona w 100%; pozostałe klasyfikują twoje osiągnięcia według liczby graczy, którzy je zdobyli."
+      },
       "playButton": {
         "name": "Pokaż przycisk Graj",
         "description": "Pokazuje przycisk Graj na kafelkach gier. Wyłącz go, jeśli uruchamiasz gry z innego programu. Pozycja Uruchom grę w menu kontekstowym pozostaje dostępna."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Śledzony czas gry",
     "profile-stats-platforms": "Według platformy",
     "profile-stats-games": "Gry",
-    "profile-stats-empty": "Żadna gra nie ma jeszcze osiągnięć."
+    "profile-stats-empty": "Żadna gra nie ma jeszcze osiągnięć.",
+    "profile-completion-scope": "Średnia dla {count} gier, które uruchomiłeś lub w których zdobyłeś osiągnięcie.",
+    "profile-trophies": "Trofea",
+    "profile-trophies-summary": "{platinum} platyna, {gold} złoto, {silver} srebro, {bronze} brąz, {common} powszechne. Zobacz szczegóły",
+    "trophy-platinum": "Platyna",
+    "trophy-gold": "Złoto",
+    "trophy-silver": "Srebro",
+    "trophy-bronze": "Brąz",
+    "trophy-common": "Powszechne",
+    "profile-trophies-platinum-desc": "gier na 100%",
+    "profile-trophies-share": "{percent} twoich osiągnięć",
+    "profile-trophies-unranked": "{count} bez znanego wskaźnika",
+    "profile-trophies-at-most": "{percent} lub mniej",
+    "profile-trophies-between": "od {from} do {to}",
+    "profile-trophies-above": "powyżej {percent}, lub nieznany",
+    "profile-trophies-platinum-games": "Gry z platyną",
+    "profile-trophies-rarest-list": "Najrzadsze osiągnięcia",
+    "profile-trophies-players": "{percent} graczy",
+    "profile-trophies-no-platinum": "Jeszcze żadnej platyny.",
+    "profile-trophies-no-rarity": "Jeszcze żadnego znanego wskaźnika."
   },
   "watchdog": {
     "rare": "Rzadkie {percent}%",

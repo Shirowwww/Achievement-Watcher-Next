@@ -259,6 +259,10 @@
         "name": "Eltávolítás a játéklistából",
         "description": "Eltávolítási lehetőségeket ad a játékok jobb gombos menüjéhez (Steam-eltávolítás, játék eltávolítója, vagy mappa áthelyezése a Lomtárba)."
       },
+      "showTrophies": {
+        "name": "Trófeák a profilon",
+        "description": "Platina, arany, ezüst és bronz trófeákat jelenít meg a neved alatt. A platina egy 100%-ra teljesített játék; a többi a teljesítményeidet aszerint rangsorolja, hány játékos oldotta fel őket."
+      },
       "playButton": {
         "name": "Indítás gomb megjelenítése",
         "description": "Megjeleníti az Indítás gombot a játékok csempéin. Kapcsold ki, ha más programból indítod a játékaidat. A jobb gombos menü Játék indítása pontja továbbra is elérhető."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Nyomon követett játékidő",
     "profile-stats-platforms": "Platform szerint",
     "profile-stats-games": "Játékok",
-    "profile-stats-empty": "Még nincs teljesítményekkel rendelkező játék."
+    "profile-stats-empty": "Még nincs teljesítményekkel rendelkező játék.",
+    "profile-completion-scope": "Átlag a {count} játékon, amelyet elindítottál vagy amelyben teljesítményt oldottál fel.",
+    "profile-trophies": "Trófeák",
+    "profile-trophies-summary": "{platinum} platina, {gold} arany, {silver} ezüst, {bronze} bronz, {common} gyakori. Részletek megtekintése",
+    "trophy-platinum": "Platina",
+    "trophy-gold": "Arany",
+    "trophy-silver": "Ezüst",
+    "trophy-bronze": "Bronz",
+    "trophy-common": "Gyakori",
+    "profile-trophies-platinum-desc": "100%-os játék",
+    "profile-trophies-share": "{percent} a teljesítményeidből",
+    "profile-trophies-unranked": "{count} ismeretlen aránnyal",
+    "profile-trophies-at-most": "{percent} vagy kevesebb",
+    "profile-trophies-between": "{from} - {to}",
+    "profile-trophies-above": "{percent} felett, vagy ismeretlen",
+    "profile-trophies-platinum-games": "Platina játékok",
+    "profile-trophies-rarest-list": "Legritkább teljesítmények",
+    "profile-trophies-players": "{percent} a játékosokból",
+    "profile-trophies-no-platinum": "Még nincs platina.",
+    "profile-trophies-no-rarity": "Még nincs ismert arány."
   },
   "watchdog": {
     "rare": "Ritka {percent}%",

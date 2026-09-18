@@ -282,6 +282,10 @@ module.exports.load = () => {
     if (typeof options.achievement.hideZero !== 'boolean') {
       options.achievement.hideZero = false;
     }
+    // Trophy showcase under the profile name (Settings > General). On by default.
+    if (typeof options.achievement.showTrophies !== 'boolean') {
+      options.achievement.showTrophies = true;
+    }
     if (typeof options.achievement.goldbergDownloadIcons !== 'boolean') {
       options.achievement.goldbergDownloadIcons = false;
     }
@@ -572,6 +576,7 @@ module.exports.load = () => {
         mergeDuplicate: true,
         timeMergeRecentFirst: false,
         hideZero: false,
+        showTrophies: true,
         showPlayButton: true,
         goldbergDownloadIcons: false,
       },

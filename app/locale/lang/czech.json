@@ -259,6 +259,10 @@
         "name": "Odinstalovat ze seznamu her",
         "description": "Přidá možnosti odinstalace do kontextové nabídky her (odinstalace přes Steam, odinstalátor hry nebo přesun složky do Koše)."
       },
+      "showTrophies": {
+        "name": "Trofeje v profilu",
+        "description": "Zobrazuje platinové, zlaté, stříbrné a bronzové trofeje pod vaším jménem. Platina je hra dokončená na 100 %; ostatní řadí vaše úspěchy podle toho, kolik hráčů je odemklo."
+      },
       "playButton": {
         "name": "Zobrazit tlačítko Hrát",
         "description": "Zobrazí tlačítko Hrát na dlaždicích her. Vypněte jej, pokud hry spouštíte z jiného programu. Položka Spustit hru v kontextové nabídce zůstává dostupná."
@@ -2132,7 +2136,26 @@
     "profile-stats-playtime": "Sledovaná doba hraní",
     "profile-stats-platforms": "Podle platformy",
     "profile-stats-games": "Hry",
-    "profile-stats-empty": "Zatím žádná hra s úspěchy."
+    "profile-stats-empty": "Zatím žádná hra s úspěchy.",
+    "profile-completion-scope": "Průměr za {count} her, které jste spustili nebo ve kterých jste odemkli úspěch.",
+    "profile-trophies": "Trofeje",
+    "profile-trophies-summary": "{platinum} platina, {gold} zlato, {silver} stříbro, {bronze} bronz, {common} běžné. Zobrazit podrobnosti",
+    "trophy-platinum": "Platina",
+    "trophy-gold": "Zlato",
+    "trophy-silver": "Stříbro",
+    "trophy-bronze": "Bronz",
+    "trophy-common": "Běžné",
+    "profile-trophies-platinum-desc": "her na 100 %",
+    "profile-trophies-share": "{percent} vašich úspěchů",
+    "profile-trophies-unranked": "{count} bez známé míry",
+    "profile-trophies-at-most": "{percent} nebo méně",
+    "profile-trophies-between": "od {from} do {to}",
+    "profile-trophies-above": "nad {percent}, nebo neznámé",
+    "profile-trophies-platinum-games": "Hry s platinou",
+    "profile-trophies-rarest-list": "Nejvzácnější úspěchy",
+    "profile-trophies-players": "{percent} hráčů",
+    "profile-trophies-no-platinum": "Zatím žádná platina.",
+    "profile-trophies-no-rarity": "Zatím žádná známá míra."
   },
   "watchdog": {
     "rare": "Vzácný {percent}%",

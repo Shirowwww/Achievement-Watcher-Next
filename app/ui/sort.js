@@ -258,6 +258,13 @@ function applyInstalledFilter({ animateStats = false } = {}) {
   $('#sort-box .installed-filter').toggleClass('active', on);
   updateInstalledEmptyState();
   window.refreshProfileStats?.({ animate: animateStats });
+  window.refreshProfileStatsPanel?.();
+}
+
+// Shared by the library toolbar and the stats panel, so the two can never disagree.
+function toggleInstalledOnly() {
+  localStorage.showInstalledOnly = installedOnlyEnabled() ? 'false' : 'true';
+  applyInstalledFilter({ animateStats: true });
 }
 // Ghost entries are hidden by default: an entry the Steam account no longer knows about shouldn't
 // occupy the grid until the user asks to see it.
@@ -276,6 +283,7 @@ function applyStaleFilter() {
 // Exposed so app.js can re-apply after it flips data-installed (exeList signal, post-reconcile).
 window.applyInstalledFilter = applyInstalledFilter;
 window.installedOnlyEnabled = installedOnlyEnabled;
+window.toggleInstalledOnly = toggleInstalledOnly;
 window.applyStaleFilter = applyStaleFilter;
 window.hideStaleEnabled = hideStaleEnabled;
 
@@ -290,8 +298,7 @@ window.hideStaleEnabled = hideStaleEnabled;
       button.css('pointer-events', 'none');
 
       gamelist.fadeOut('fast', () => {
-        localStorage.showInstalledOnly = installedOnlyEnabled() ? 'false' : 'true';
-        applyInstalledFilter({ animateStats: true });
+        toggleInstalledOnly();
         gamelist.fadeIn('fast', () => button.css('pointer-events', 'initial'));
       });
     });
