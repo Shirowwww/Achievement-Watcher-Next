@@ -172,7 +172,7 @@
   "install.step3Body": "To jest nadzorca. Powiadomienia na żywo i czas gry zależą od tego, czy działa.",
   "install.step3Title": "Zostaw go w zasobniku",
   "install.title": "Uruchomienie",
-  "install.virustotal": "Bieżący instalator w <a href=\"https://www.virustotal.com/gui/file/f8f532cc8588b43968a332ab4fa0efbcaf4e499a04598d800716c4e0fbf2a367\" rel=\"noopener\">VirusTotal</a>. Nieliczne wykrycia heurystyczne to fałszywy alarm związany z emulatorami; każde wydanie możesz sprawdzić samodzielnie, porównując jego SHA-256.",
+  "install.virustotal": "Bieżący instalator w <a href=\"https://www.virustotal.com/gui/file/ed34be834d82295c92c8fd2123c825f6a7f53a7adebd2a9d28fd2ff6e4d40fec\" rel=\"noopener\">VirusTotal</a>. Nieliczne wykrycia heurystyczne to fałszywy alarm związany z emulatorami; każde wydanie możesz sprawdzić samodzielnie, porównując jego SHA-256.",
   "nav.darkTheme": "Motyw ciemny",
   "nav.docs": "Dokumentacja",
   "nav.download": "Pobierz",

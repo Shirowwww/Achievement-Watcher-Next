@@ -193,8 +193,8 @@ Get-FileHash "Achievement.Watcher.Setup.3.10.7.exe" -Algorithm SHA256
 
 Open `https://www.virustotal.com/gui/file/<the hash it prints>`. If the file is the published one,
 the report is already there. For the current release that is
-[the 3.10.7 installer](https://www.virustotal.com/gui/file/f8f532cc8588b43968a332ab4fa0efbcaf4e499a04598d800716c4e0fbf2a367)
-(`f8f532cc8588b43968a332ab4fa0efbcaf4e499a04598d800716c4e0fbf2a367`).
+[the 3.10.7 installer](https://www.virustotal.com/gui/file/ed34be834d82295c92c8fd2123c825f6a7f53a7adebd2a9d28fd2ff6e4d40fec)
+(`ed34be834d82295c92c8fd2123c825f6a7f53a7adebd2a9d28fd2ff6e4d40fec`).
 
 Read the result for what it is: a list of what each engine thinks, not a certificate. A handful of
 heuristic detections on a build that bundles emulator files is expected and is the false positive

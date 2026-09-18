@@ -172,7 +172,7 @@
   "install.step3Body": "它就是那个监视器。实时通知和游戏时长都依赖它保持运行。",
   "install.step3Title": "让它留在任务栏托盘",
   "install.title": "让它跑起来",
-  "install.virustotal": "当前安装程序的 <a href=\"https://www.virustotal.com/gui/file/f8f532cc8588b43968a332ab4fa0efbcaf4e499a04598d800716c4e0fbf2a367\" rel=\"noopener\">VirusTotal</a> 报告。少量启发式检出是模拟器引起的误报；你可以通过比对 SHA-256 自行验证任何版本。",
+  "install.virustotal": "当前安装程序的 <a href=\"https://www.virustotal.com/gui/file/ed34be834d82295c92c8fd2123c825f6a7f53a7adebd2a9d28fd2ff6e4d40fec\" rel=\"noopener\">VirusTotal</a> 报告。少量启发式检出是模拟器引起的误报；你可以通过比对 SHA-256 自行验证任何版本。",
   "nav.darkTheme": "深色主题",
   "nav.docs": "文档",
   "nav.download": "下载",

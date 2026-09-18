@@ -112,7 +112,7 @@ check the installer against the SHA-512 value in the matching `latest.yml`.
 
 An installer can be checked against VirusTotal by its own SHA-256 without trusting anyone: run
 `Get-FileHash <installer> -Algorithm SHA256` and open `https://www.virustotal.com/gui/file/<hash>`.
-The current release is [3.10.7](https://www.virustotal.com/gui/file/f8f532cc8588b43968a332ab4fa0efbcaf4e499a04598d800716c4e0fbf2a367).
+The current release is [3.10.7](https://www.virustotal.com/gui/file/ed34be834d82295c92c8fd2123c825f6a7f53a7adebd2a9d28fd2ff6e4d40fec).
 See [Troubleshooting -> Checking a release yourself](troubleshooting.md#checking-a-release-yourself).
 
 **Where is my data, and does updating lose it?**
