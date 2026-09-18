@@ -297,7 +297,10 @@ function readThemePackage(file, { appVersion = '' } = {}) {
   let entries;
   try {
     entries = new AdmZip(file).getEntries();
-  } catch {
+  } catch (err) {
+    // adm-zip itself now refuses a duplicate entry name rather than returning both - keep the
+    // specific reason instead of downgrading it to a generic unreadable file.
+    if (/duplicate entry/i.test(err.message || '')) return fail('duplicate-entry');
     return fail('unreadable-package');
   }
   if (entries.length > LIMITS.entries) return fail('too-many-files');

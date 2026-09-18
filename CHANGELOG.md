@@ -9,6 +9,13 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Security
+
+- **`adm-zip` updated to 0.6.1**, fixing an uncontrolled memory allocation from a declared uncompressed
+  size ([GHSA-7q85-xj36-vmfc](https://github.com/advisories/GHSA-7q85-xj36-vmfc)). It now also refuses
+  a zip entry duplicated by name at read time instead of returning both; the preset, theme and `.san`
+  import readers keep reporting that case by its own name rather than a generic unreadable file.
+
 ## 3.10.9 - 2026-09-18
 
 ### Fixed
