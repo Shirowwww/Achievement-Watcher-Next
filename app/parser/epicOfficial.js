@@ -109,8 +109,11 @@ async function epicFetchJson(url, { method = 'GET', headers = {}, body, timeoutM
       return { status: 599, data: {} };
     }
     const status = answer.ok ? Number(answer.status) || 200 : Number(answer.status) || 599;
-    if (status === 599) recordEpicUnreachable(answer.error || 'request failed');
-    else circuit.recordSuccess();
+    // The main process's reason is the only thing that tells a lapsed sign-in from an outage.
+    if (status === 599) {
+      debug.log(`[epic-official] ${authenticated ? 'signed-in ' : ''}request failed => ${answer.error || 'no reason given'}`);
+      recordEpicUnreachable(answer.error || 'request failed');
+    } else circuit.recordSuccess();
     return { status, data: answer.json || {} };
   }
   const controller = new AbortController();
@@ -184,6 +187,9 @@ async function fetchEpicAchievementSchemaBySandbox(sandboxId, locale = 'en') {
 async function fetchEpicPublicProductAchievements(productId, locale = 'en') {
   const url = `${EPIC_PUBLIC_ACHIEVEMENTS_BASE}/product/${encodeURIComponent(productId)}/locale/${encodeURIComponent(locale)}?includeAchievements=true`;
   const { status, data } = await epicFetchJson(url);
+  // "Record not found" is Epic saying the product has no achievements: an answer to cache for the
+  // day, not a failure to retry on every scan.
+  if (status === 404) return [];
   if (status >= 400) throw `Epic public achievements ${status}`;
   return Array.isArray(data?.achievements) ? data.achievements : [];
 }
@@ -234,6 +240,78 @@ function writeSchemaCache(cacheFile, result) {
 
 function localeFor(lang) {
   return EPIC_LOCALE_MAP[String(lang || '').toLowerCase()] || 'en';
+}
+
+/*
+  The last resort when Epic gives no schema: games-infos-datas, where Nemirtingas' EpicRetriever
+  stored what the game itself receives. Only a few dozen games so far, and it grows when he runs it
+  again. Its icons, when shipped, are bare names beside the list, which fetchIcon downloads like any
+  other (GitHub serves them as text/plain, so they only work once cached as files).
+*/
+let communityIndex = null;
+async function communitySchema(sandboxId, locale) {
+  const gamesInfosDatas = require('../util/gamesInfosDatas.js');
+  if (!communityIndex) {
+    const index = await gamesInfosDatas.readJson('epic-games-index.json', { cacheDir: cacheRoot });
+    if (!Array.isArray(index)) return [];
+    communityIndex = index;
+  }
+  const key = String(sandboxId || '').toLowerCase();
+  const language = String(locale || '').split('-')[0];
+  const text = (field) => (field && typeof field === 'object' ? firstNonEmpty(field[locale], field[language], field.en, field.default) : '');
+  for (const entry of communityIndex) {
+    if (!entry || String(entry.Namespace).toLowerCase() !== key || !entry.ApplicationId) continue;
+    const base = `epic/${entry.Namespace}/${entry.ApplicationId}/achievements`;
+    const list = await gamesInfosDatas.readJson(`${base}/achievements_db.json`, { cacheDir: cacheRoot });
+    if (!Array.isArray(list) || !list.length) continue;
+    // Some entries ship no images at all; a blank icon shows the default art instead of a broken one.
+    const first = list.find((a) => a && (a.UnlockedIconUrl || a.LockedIconUrl));
+    const firstPath = first ? `${base}/achievements_images/${encodeURIComponent(first.UnlockedIconUrl || first.LockedIconUrl)}` : '';
+    const hasImages = firstPath ? await gamesInfosDatas.exists(firstPath) : false;
+    const image = (name) => (hasImages && name ? `${gamesInfosDatas.BASE_URL}/${base}/achievements_images/${encodeURIComponent(name)}` : '');
+    return list
+      .filter((a) => a && a.AchievementId)
+      .map((a) => ({
+        name: String(a.AchievementId),
+        displayName: firstNonEmpty(text(a.UnlockedDisplayName), text(a.LockedDisplayName), a.AchievementId),
+        description: firstNonEmpty(text(a.UnlockedDescription), text(a.LockedDescription)),
+        hidden: a.IsHidden ? 1 : 0,
+        // Same choice as the live schema below: the locked picture is Epic's shared padlock.
+        icon: image(a.UnlockedIconUrl || a.LockedIconUrl),
+        icongray: image(a.UnlockedIconUrl || a.LockedIconUrl),
+        rarity: null,
+      }));
+  }
+  return [];
+}
+
+/*
+  Epic publishes no rarity for a game it has no achievement record for, but the Steam release of
+  the same game often carries the very same ids (Shadow of the Tomb Raider: 99 of 99). The title
+  search can land on the wrong release, so the ids are the proof: at least 90% must match exactly,
+  or nothing is borrowed. Written into the rarity sidecar under the namespace, marked as Steam.
+*/
+async function borrowSteamRarity(sandboxId, names) {
+  const key = String(sandboxId || '').toLowerCase();
+  const entry = (communityIndex || []).find((e) => e && String(e.Namespace).toLowerCase() === key && e.Name);
+  const { ipcAvailable, ipcInvoke } = require('../util/ipcInvoke.js');
+  if (!entry || !ipcAvailable() || !names.length) return null;
+  const rarity = require('../util/rarity.js');
+  // Epic editions often carry a suffix the Steam release does not ("…: 20 Year Celebration").
+  const titles = [...new Set([entry.Name, entry.Name.split(':')[0].trim()])].filter(Boolean);
+  for (const title of titles) {
+    const steamAppid = String((await ipcInvoke('get-steam-appid-from-title', { title })) || '');
+    if (!/^\d+$/.test(steamAppid)) continue;
+    const percent = new Map((await rarity.fetchSteamGlobalAchievementPercentages(steamAppid)).map((e) => [e.name, e.percent]));
+    const entries = names.filter((name) => percent.has(name)).map((name) => ({ name, percent: percent.get(name) }));
+    if (entries.length < names.length * 0.9) {
+      debug.log(`[epic ${sandboxId}] Steam ${steamAppid} shares only ${entries.length}/${names.length} achievement ids - no rarity borrowed`);
+      continue;
+    }
+    rarity.writeRarityCache(sandboxId, entries, 'steam');
+    return { count: entries.length, steamAppid };
+  }
+  return null;
 }
 
 // Resolve the localized schema (cached), returning { productId, list: [{name, displayName,
@@ -304,6 +382,16 @@ async function resolveSchemaUncached(sandboxId, locale) {
       }
       // A schema resolved earlier beats an empty answer, so an Epic hiccup can never erase one.
       if (stale && Array.isArray(stale.list) && stale.list.length) return stale;
+      const community = await communitySchema(sandboxId, locale).catch(() => []);
+      if (community.length) {
+        debug.log(`[epic ${sandboxId}] schema taken from games-infos-datas (${community.length})`);
+        const borrowed = await borrowSteamRarity(sandboxId, community.map((a) => a.name)).catch(() => null);
+        if (borrowed) debug.log(`[epic ${sandboxId}] rarity borrowed from Steam ${borrowed.steamAppid} (${borrowed.count})`);
+        // The proven Steam release also lends its store banner when Epic's catalog has none.
+        const result = { productId, list: community, ...(borrowed ? { steamAppid: borrowed.steamAppid } : {}) };
+        writeSchemaCache(cacheFile, result);
+        return result;
+      }
       // Nothing better to serve. Record the empty answer only if Epic actually gave one; re-writing
       // it on each expiry is what keeps the retry down to once a day instead of once a scan.
       if (answered) writeSchemaCache(cacheFile, { productId, list: [] });
@@ -551,7 +639,8 @@ module.exports.scan = () => {
 module.exports.getGameData = async (appid, lang) => {
   const data = appid.data || {};
   const schema = await resolveSchema(data.namespace, lang);
-  if (!schema || !schema.list.length) throw `No Epic achievement schema for ${appid.appid}`;
+  // Most owned Epic games simply have no achievements; that is an answer, not a failure.
+  if (!schema || !schema.list.length) throw Object.assign(new Error(`No Epic achievement schema for ${appid.appid}`), { code: 'NO_ACHIEVEMENTS' });
 
   // seed the shared rarity sidecar from the public schema (keyed on the namespace, source epic)
   try {
@@ -573,9 +662,12 @@ module.exports.getGameData = async (appid, lang) => {
     `overlay` marks these as raw store art either way, so the game page veils them at paint time.
   */
   const artwork = data.artwork || null;
+  const steamBanner = /^\d+$/.test(String(schema.steamAppid || ''))
+    ? `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${schema.steamAppid}/header.jpg`
+    : null;
   const img = {
-    header: (artwork && artwork.landscape) || null,
-    background: (artwork && artwork.landscape) || null,
+    header: (artwork && artwork.landscape) || steamBanner,
+    background: (artwork && artwork.landscape) || steamBanner,
     portrait: (artwork && artwork.portrait) || null,
     icon: (artwork && (artwork.logo || artwork.portrait)) || null,
     overlay: true,
@@ -776,6 +868,8 @@ module.exports._internal = {
   buildEpicLocalInstallIndex,
   resolveSchema,
   fetchEpicAchievementSchemaBySandbox,
+  communitySchema,
+  borrowSteamRarity,
   localeFor,
   epicCatalogArtwork,
 };

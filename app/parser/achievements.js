@@ -50,7 +50,7 @@ const { resolveAchievementDataPath } = require(path.join(appPath, '..', 'util', 
 const scanFingerprint = require(path.join(appPath, '..', 'util', 'scanFingerprint.js'));
 const exeDetect = require(path.join(appPath, 'exeDetect.js'));
 const installState = require(path.join(appPath, 'installState.js'));
-const { applyLocalStatProgress, resolveProgressSchema } = require(path.join(appPath, 'statProgress.js'));
+const { applyLocalStatProgress, resolveProgressSchema, fetchCommunityProgressSchema } = require(path.join(appPath, 'statProgress.js'));
 
 // The Steam client's appcache/stats folder, looked up once per run; null without a client.
 let _steamStatsDir;
@@ -3530,12 +3530,17 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         try {
           // A stats file with no steam_settings beside it (CODEX, RUNE) still maps through the
           // Steam client's schema when it has one.
-          const schema = resolveProgressSchema({
+          let schema = resolveProgressSchema({
             appid: appid.appid,
             localSchema: hasSteamSettings ? goldberg.readLocalSchema(appid.data.steamSettings) : [],
             steamStatsDir: Array.isArray(root.__rawStatKeys) ? await steamStatsDir() : null,
             cacheDir: _userDataPath,
           });
+          // Stats with nothing local to map them: the community copy of Steam's schema.
+          if (schema.length === 0 && Array.isArray(root.__rawStatKeys) && root.__rawStatKeys.length > 0) {
+            schema = await fetchCommunityProgressSchema(appid.appid, { cacheDir: _userDataPath });
+            if (schema.length > 0) debug.log(`[${appid.appid}] progress schema fetched from games-infos-datas (${schema.length})`);
+          }
           const applied = applyLocalStatProgress(root, schema);
           if (applied > 0) debug.log(`[${appid.appid}] mapped ${applied} stat progress entr${applied === 1 ? 'y' : 'ies'} through the progress schema`);
         } catch (err) {
@@ -3670,7 +3675,9 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
   } catch (err) {
     // `requestedAppid` is a discovery RECORD ({appid, data}), not an id - interpolating it printed
     // "[object Object]" and made the one error line in the log useless for finding the game.
-    debug.error(`[${requestedAppid?.appid ?? requestedAppid}] Error parsing local achievements data => ${err} > SKIPPING`);
+    const id = requestedAppid?.appid ?? requestedAppid;
+    if (err && err.code === 'NO_ACHIEVEMENTS') debug.log(`[${id}] ${err.message} - not listed`);
+    else debug.error(`[${id}] Error parsing local achievements data => ${err} > SKIPPING`);
   }
 };
 

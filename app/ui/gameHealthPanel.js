@@ -1053,10 +1053,20 @@ async function runGameHealthAction(appid, action, button) {
     GBE setup already uses). Only that table is kept, in AW Next's cache: nothing is written beside
     the game, so a CODEX or RUNE release is left exactly as it was. Steam gives the schema to a
     signed-in account only - an anonymous run sits on the login and never writes it - so the saved
-    sign-in is used, or the user is asked for one.
+    sign-in is used, or the user is asked for one. games-infos-datas is tried before any of that.
   */
   if (action === gameHealth.ACTION.FETCH_PROGRESS) {
     if (!writableAppid) return false;
+    // The public copy of Steam's schema needs no account, so it goes first.
+    setGameHealthProgress({ phase: 'fetch' });
+    const community = await require(path.join(appPath, 'parser/statProgress.js'))
+      .fetchCommunityProgressSchema(writableAppid, { cacheDir: getUserDataPath() })
+      .catch(() => []);
+    setGameHealthProgress(null);
+    if (community.length > 0) {
+      debug.log(`[health] ${appid} progress counters saved from games-infos-datas (${community.length})`);
+      return true;
+    }
     const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'question',
       title: t('gh-action-fetch-progress', 'Fetch progress counters', 'Récupérer les compteurs de progression'),

@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const gamesInfosDatas = require('../util/gamesInfosDatas.js');
 
 function numericStatValue(entry) {
   if (entry == null) return null;
@@ -104,6 +105,53 @@ function writeProgressCache(cacheDir, appid, schema) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, body);
   return true;
+}
+
+/*
+  games-infos-datas (util/gamesInfosDatas.js) publishes, per appid, the list Steam's own stats schema
+  gives a signed-in account - including each achievement's stat and goal. Checked against 44 local
+  appcache schemas (803 progress achievements): every stat name and goal matched. It is what a
+  CODEX/RUNE save needs when no Steam client ever cached the game.
+*/
+
+// Its `stats_thresholds` rows, in the GBE `progress` shape the rest of this module reads.
+function communityProgressEntries(list) {
+  return (Array.isArray(list) ? list : [])
+    .map((a) => {
+      const threshold = a && Array.isArray(a.stats_thresholds) ? a.stats_thresholds[0] : null;
+      const max = threshold ? Number(threshold.max_val) : 0;
+      if (!threshold || !a.name || !threshold.stat_name || !(max > 0)) return null;
+      return {
+        name: String(a.name),
+        progress: { min_val: Number(threshold.min_val) || 0, max_val: max, value: { operation: 'statvalue', operand1: String(threshold.stat_name) } },
+      };
+    })
+    .filter(Boolean);
+}
+
+// The table for one appid, saved into the same cache as a Steam-client copy. A game with no counter
+// there is not asked again until the repository's copy would be stale anyway.
+async function fetchCommunityProgressSchema(appid, { cacheDir, getJson } = {}) {
+  if (!/^[0-9]+$/.test(String(appid || ''))) return [];
+  const noCounter = cacheDir ? path.join(cacheDir, 'steam_cache', 'progress', `${appid}.community-none`) : null;
+  try {
+    if (noCounter && Date.now() - fs.statSync(noCounter).mtimeMs < gamesInfosDatas.TTL_MS) return [];
+  } catch {
+    /* never looked */
+  }
+  const list = await gamesInfosDatas.readJson(`steam/${appid}/achievements_db.json`, { cacheDir, getJson });
+  if (list == null) return [];
+  const entries = communityProgressEntries(list);
+  try {
+    if (entries.length > 0) writeProgressCache(cacheDir, appid, entries);
+    else if (noCounter) {
+      fs.mkdirSync(path.dirname(noCounter), { recursive: true });
+      fs.writeFileSync(noCounter, '');
+    }
+  } catch {
+    /* the cache is a convenience */
+  }
+  return entries;
 }
 
 /*
@@ -221,6 +269,8 @@ module.exports = {
   findProgressSchema,
   resolveProgressSchema,
   writeProgressCache,
+  communityProgressEntries,
+  fetchCommunityProgressSchema,
   progressEntries,
   countSaveStats,
 };
