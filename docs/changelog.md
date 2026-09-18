@@ -16,6 +16,15 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+## 3.10.9 - 2026-09-18
+
+### Fixed
+
+- **The duplicate-tile fix in 3.10.8 did not cover every case.** A folder added directly as a watched
+  location (rather than one found by walking a library root) was never checked against the games
+  already known before its own subfolders were scanned, so an alternate crack-launcher subfolder
+  inside it - the case 3.10.8 aimed at - could still surface as its own unidentified install.
+
 ## 3.10.8 - 2026-09-18
 
 ### Fixed

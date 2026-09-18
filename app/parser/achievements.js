@@ -1722,8 +1722,15 @@ async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScop
 
   for (const root of roots) {
     if (root && fs.existsSync(root)) {
+      // A root can itself BE a claimed game's folder (the "emulator saving inside the game folder"
+      // detector adds the game folder directly, not its parent). walk() guards against this for every
+      // folder it reaches by recursion, but a root is never walked itself - only its children are -
+      // so without this check its own crack-launcher subfolders (NoDVD\..., a repack's alternate
+      // Epic/Online Fix build) were scanned as unrelated unidentified installs.
+      if (_claimedDirs.has(path.resolve(root).toLowerCase())) continue;
       const entries = readEntries(root);
       if (!entries) continue;
+      if (hasAppidMarker(entries)) continue; // the root itself carries appid evidence, not a container
       for (const e of entries) {
         if (e.isDirectory() && !UNCONFIG_SKIP_DIR.test(e.name)) {
           const dir = path.join(root, e.name);
