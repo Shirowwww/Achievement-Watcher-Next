@@ -9,6 +9,8 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+## 3.10.7 - 2026-09-18
+
 ### Added
 
 - **DLC ownership and the account identity are separate opt-in settings.** Enabling every DLC and

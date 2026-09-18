@@ -34,7 +34,8 @@ into one library, with live Windows notifications and an in-game overlay.
 ## Highlights
 
 - **Unified library.** Launcher data, Steam-compatible saves and console emulators in a single list,
-  with search, filters, rarity tiers, progress achievements and covers.
+  with search, filters, rarity tiers, progress achievements and covers. A trophy showcase on the
+  profile splits every unlock by rarity, platinum included.
 - **Automatic notification delivery.** With **Automatic** selected, each unlock arrives through the
   in-game popup when it can be seen, and as a Windows notification when it cannot - never both.
 - **Preset Designer and sharing.** Nine bundled presets, a no-code designer that previews the real
