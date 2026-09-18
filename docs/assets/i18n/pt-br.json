@@ -172,7 +172,7 @@
   "install.step3Body": "É ele que vigia. As notificações ao vivo e o tempo de jogo dependem disso.",
   "install.step3Title": "Deixe na bandeja",
   "install.title": "Colocando para rodar",
-  "install.virustotal": "O instalador atual no <a href=\"https://www.virustotal.com/gui/file/ed34be834d82295c92c8fd2123c825f6a7f53a7adebd2a9d28fd2ff6e4d40fec\" rel=\"noopener\">VirusTotal</a>. As poucas detecções heurísticas são o falso positivo dos emuladores; verifique você mesmo qualquer versão comparando o SHA-256 dela.",
+  "install.virustotal": "O instalador atual no <a href=\"https://www.virustotal.com/gui/file/540c1d77a84eaff2a561343159ca8f090978f6478d304c687f9b7a819b920ad8\" rel=\"noopener\">VirusTotal</a>. As poucas detecções heurísticas são o falso positivo dos emuladores; verifique você mesmo qualquer versão comparando o SHA-256 dela.",
   "nav.darkTheme": "Tema escuro",
   "nav.docs": "Documentação",
   "nav.download": "Baixar",

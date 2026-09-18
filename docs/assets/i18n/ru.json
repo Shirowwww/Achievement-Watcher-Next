@@ -172,7 +172,7 @@
   "install.step3Body": "Это и есть наблюдатель. От него зависят живые уведомления и учёт времени игры.",
   "install.step3Title": "Оставьте в трее",
   "install.title": "Как запустить",
-  "install.virustotal": "Текущий установщик на <a href=\"https://www.virustotal.com/gui/file/ed34be834d82295c92c8fd2123c825f6a7f53a7adebd2a9d28fd2ff6e4d40fec\" rel=\"noopener\">VirusTotal</a>. Немногочисленные эвристические срабатывания - это ложное срабатывание на эмуляторы; любую версию можно проверить самостоятельно, сравнив её SHA-256.",
+  "install.virustotal": "Текущий установщик на <a href=\"https://www.virustotal.com/gui/file/540c1d77a84eaff2a561343159ca8f090978f6478d304c687f9b7a819b920ad8\" rel=\"noopener\">VirusTotal</a>. Немногочисленные эвристические срабатывания - это ложное срабатывание на эмуляторы; любую версию можно проверить самостоятельно, сравнив её SHA-256.",
   "nav.darkTheme": "Тёмная тема",
   "nav.docs": "Документация",
   "nav.download": "Скачать",
