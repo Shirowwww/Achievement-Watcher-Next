@@ -102,7 +102,8 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     function activeRoot() {
       const prompt = document.querySelector('.aw-prompt-overlay');
       if (isContainerVisible(prompt)) return prompt;
-      for (const selector of ['#onboarding', '#game-config', '#settings', '#achievement', '#home']) {
+      // The library stats and manual-game dialogs sit over #home but outside it, so they come first.
+      for (const selector of ['#onboarding', '#profile-stats', '#manual-game', '#game-config', '#settings', '#achievement', '#home']) {
         const root = document.querySelector(selector);
         if (isContainerVisible(root)) return root;
       }
@@ -187,7 +188,8 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         const close = document.querySelector('#onboarding-close');
         return (isVisible(previous) && !previous.disabled ? previous : close)?.click();
       }
-      for (const selector of ['#btn-game-config-cancel', '#btn-settings-cancel', '#btn-previous']) {
+      // In the stats panel, B leaves the full achievement list first, then closes the panel.
+      for (const selector of ['#profile-stats-back', '#profile-stats-close', '#manual-game-cancel', '#btn-game-config-cancel', '#btn-settings-cancel', '#btn-previous']) {
         const button = document.querySelector(selector);
         if (isVisible(button)) return button.click();
       }
