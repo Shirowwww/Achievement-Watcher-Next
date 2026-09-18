@@ -1613,12 +1613,6 @@ body.is-resizing #game-list {
   transition: opacity 0.2s ease;
 }
 
-/* Must stay above the resting opacity set further down (.game-box .achievement-button), which this
-   more specific rule would otherwise dim on hover. */
-.game-box .header:hover .config-button,
-.game-box .header:hover .achievement-button {
-  opacity: 1;
-}
 .game-box .header:hover .play-button {
   opacity: 0.95;
   transform: translate(-50%, -50%) scale(1);
@@ -6315,6 +6309,36 @@ body {
 
 .game-box .config-button {
   right: 7px;
+}
+
+/* The corner buttons only show while the tile is hovered or focused, popping in like the play
+   button. The trigger is the whole tile, so moving onto a button keeps it shown and clickable.
+   The list view keeps its always-visible cluster at the end of the row. */
+#game-list:not(.view-list) .game-box .achievement-button,
+#game-list:not(.view-list) .game-box .config-button {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.7);
+  transition: opacity 0.32s ease, transform 0.4s cubic-bezier(0.18, 0.72, 0.24, 1), background 0.2s ease;
+}
+
+#game-list:not(.view-list) .game-box:hover .achievement-button,
+#game-list:not(.view-list) .game-box:hover .config-button,
+#game-list:not(.view-list) .game-box:focus-within .achievement-button,
+#game-list:not(.view-list) .game-box:focus-within .config-button {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+#game-list:not(.view-list) .game-box .achievement-button:hover,
+#game-list:not(.view-list) .game-box .config-button:hover {
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface-sunken));
+}
+
+#game-list:not(.view-list) .game-box .achievement-button:active,
+#game-list:not(.view-list) .game-box .config-button:active {
+  transform: scale(0.9);
 }
 
 #game-list .library-details {

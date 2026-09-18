@@ -37,6 +37,9 @@ renamed in 3.9.0 and the history is kept under one file.
   up to 15%; anything more common stays unmarked. The game view badges, the in-game overlay, every
   notification preset and the "Rare" label on Windows toasts all use the same tiers.
 
+- **Cleaner library tiles.** The achievements and game settings buttons now appear only while you
+  hover a tile, popping in like the play button. The list view keeps them always visible.
+
 ### Fixed
 
 - **A scan no longer rewrites emulator configuration in your game folders.** With "Automatically fix
