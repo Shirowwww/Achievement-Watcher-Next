@@ -188,13 +188,13 @@ Every published installer can be looked up on VirusTotal by its own SHA-256, so 
 take this page's word for it:
 
 ```powershell
-Get-FileHash "Achievement.Watcher.Setup.3.10.6.exe" -Algorithm SHA256
+Get-FileHash "Achievement.Watcher.Setup.3.10.7.exe" -Algorithm SHA256
 ```
 
 Open `https://www.virustotal.com/gui/file/<the hash it prints>`. If the file is the published one,
 the report is already there. For the current release that is
-[the 3.10.6 installer](https://www.virustotal.com/gui/file/e0325b7b289a266b7cc31655a4c4d8a61677d6601797990f7c22cc4be840bcbc)
-(`e0325b7b289a266b7cc31655a4c4d8a61677d6601797990f7c22cc4be840bcbc`).
+[the 3.10.7 installer](https://www.virustotal.com/gui/file/f8f532cc8588b43968a332ab4fa0efbcaf4e499a04598d800716c4e0fbf2a367)
+(`f8f532cc8588b43968a332ab4fa0efbcaf4e499a04598d800716c4e0fbf2a367`).
 
 Read the result for what it is: a list of what each engine thinks, not a certificate. A handful of
 heuristic detections on a build that bundles emulator files is expected and is the false positive
