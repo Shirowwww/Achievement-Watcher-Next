@@ -643,7 +643,9 @@ module.exports.getAchievementsFromFile = async (filePath) => {
   for (let file of files) {
     try {
       if (path.parse(file).ext == '.json') {
-        local = JSON.parse(fs.readFileSync(path.join(filePath, file), 'utf8'));
+        // Tools that export the file from PowerShell or Playnite write a UTF-8 BOM, which JSON.parse rejects.
+        const text = fs.readFileSync(path.join(filePath, file), 'utf8');
+        local = JSON.parse(text.charCodeAt(0) === 0xfeff ? text.slice(1) : text);
       } else if (file === 'stats.bin') {
         local = sse.parse(fs.readFileSync(path.join(filePath, file)));
       } else if (file === 'achievement') {
