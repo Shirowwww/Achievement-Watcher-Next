@@ -47,14 +47,14 @@ async function run() {
   assert.equal(ui.rarityPercent({ rarityPercent: 250 }), 100);
   assert.equal(ui.rarityPercent({}), null);
 
-  // Rarity tiers: shared with the main window - gold <3%, silver <6%, bronze ≤10%, nothing above.
+  // Rarity tiers: shared with the main window - gold ≤5%, silver ≤10%, bronze ≤15%, nothing above.
   assert.equal(ui.rarityTier(0), 'gold');
-  assert.equal(ui.rarityTier(2.9), 'gold');
-  assert.equal(ui.rarityTier(3), 'silver');
-  assert.equal(ui.rarityTier(5.9), 'silver');
-  assert.equal(ui.rarityTier(6), 'bronze');
-  assert.equal(ui.rarityTier(10), 'bronze');
-  assert.equal(ui.rarityTier(10.1), null);
+  assert.equal(ui.rarityTier(5), 'gold');
+  assert.equal(ui.rarityTier(5.1), 'silver');
+  assert.equal(ui.rarityTier(10), 'silver');
+  assert.equal(ui.rarityTier(10.1), 'bronze');
+  assert.equal(ui.rarityTier(15), 'bronze');
+  assert.equal(ui.rarityTier(15.1), null);
   assert.equal(ui.rarityTier(88), null);
   assert.equal(ui.rarityTier(null), null);
   assert.equal(ui.rarityTier('garbage'), null);

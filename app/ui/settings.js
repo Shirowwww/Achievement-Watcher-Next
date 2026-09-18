@@ -3619,13 +3619,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }, 50));
     }
 
-    // Random rarity for the "rare" test: one of the three tiers presets style (gold <3%,
-    // silver <6%, bronze ≤10%), rounded to one decimal like the real watchdog path.
+    // Random rarity for the "rare" test: one of the three tiers presets style (gold ≤5%,
+    // silver ≤10%, bronze ≤15%), rounded to one decimal like the real watchdog path.
     function randomRareRarity() {
       const tiers = [
-        { min: 0.1, max: 2.9 },
-        { min: 3.0, max: 5.9 },
-        { min: 6.0, max: 10.0 },
+        { min: 0.1, max: 5.0 },
+        { min: 5.1, max: 10.0 },
+        { min: 10.1, max: 15.0 },
       ];
       const tier = tiers[Math.floor(Math.random() * tiers.length)];
       return Math.round((tier.min + Math.random() * (tier.max - tier.min)) * 10) / 10;

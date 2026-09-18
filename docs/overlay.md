@@ -18,8 +18,8 @@ and stays on top of the game.
   progress bar + `current / max` label for progress achievements.
 - A community-rarity badge (`★ 12.3%`) for every achievement with a known
   unlock rate (Epic/GOG official schemas and emulator sidecars). Common
-  achievements use a dark-gray badge; rare ones use gold (<3%), silver (<6%)
-  and bronze (≤10%) with a soft halo.
+  achievements use a dark-gray badge; rare ones use gold (≤5%), silver (≤10%)
+  and bronze (≤15%) with a soft halo.
 
 ## Search and filters
 

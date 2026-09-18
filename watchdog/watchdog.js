@@ -253,7 +253,7 @@ function startXboxPolling(game) {
             achievementName: id,
             achievementDisplayName: (ach && ach.displayName) || id,
             achievementDescription: (ach && ach.description) || '',
-            rarityPercent: rounded !== null && rounded <= 10 ? rounded : null,
+            rarityPercent: rounded !== null && rounded >= 0 && rounded <= 15 ? rounded : null,
             icon: (ach && ach.icon) || '',
             gameIcon: (schema && schema.img && schema.img.portrait) || '',
             image: (schema && schema.img && schema.img.header) || '',
@@ -1054,7 +1054,7 @@ var app = {
           if (achievements.length > 0) {
             let cache = await track.load(appID);
 
-            // Global unlock % per achievement, used to flag a toast as "rare" (<10% of players).
+            // Global unlock % per achievement, used to flag a toast as "rare" (15% of players or fewer).
             // Fetched at most once per game per session and shares the renderer's sidecar cache.
             if (!game.__rarityMap) {
               game.__rarityMap = await rarity.getRarityMap(appID, { source: game.source }).catch(() => new Map());
@@ -1167,11 +1167,11 @@ var app = {
                         debug.error(`Action failed: ${err}`);
                       }
 
-                      // Use the same one-decimal rounding and <=10% cutoff as the achievement menu,
+                      // Use the same one-decimal rounding and <=15% cutoff as the achievement menu,
                       // then forward the percentage so overlay presets can apply the matching tier.
                       const rarePct = rarityMap.get(ach.name);
                       const rounded = Math.round(rarePct * 10) / 10;
-                      const isRare = Number.isFinite(rounded) && rounded >= 0 && rounded <= 10;
+                      const isRare = Number.isFinite(rounded) && rounded >= 0 && rounded <= 15;
                       const rarityLabel = notifyStrings.interpolate(
                         notifyStrings.forLang(self.options.achievement.lang).rare,
                         { percent: rounded }

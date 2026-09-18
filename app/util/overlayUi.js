@@ -99,17 +99,18 @@
     return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : null;
   }
 
-  // Single source of truth for the rarity tiers shared by the game window and
-  // the in-game overlay. Matches the historical behavior: only achievements with
-  // a community unlock rate of 0–10% get a tier - gold <3%, silver <6%, bronze ≤10%.
+  // Single source of truth for the rarity tiers shared by the game window,
+  // the in-game overlay and the notification presets: an achievement is rare up to
+  // a 15% community unlock rate - gold ≤5%, silver ≤10%, bronze ≤15%. Above that it
+  // is common and gets no tier.
   function rarityTier(percent) {
     if (percent === null || percent === undefined || percent === '') return null;
     const raw = Number(percent);
     if (!Number.isFinite(raw)) return null;
     const p = Math.round(raw * 10) / 10;
-    if (p < 0 || p > 10) return null;
-    if (p < 3) return 'gold';
-    if (p < 6) return 'silver';
+    if (p < 0 || p > 15) return null;
+    if (p <= 5) return 'gold';
+    if (p <= 10) return 'silver';
     return 'bronze';
   }
 

@@ -79,8 +79,8 @@ const payloadFor = (state) => {
   // What the watchdog sends for a game it could not name and an unlock it has no rate for.
   if (state === 'bare') return { ...base, gameName: '', rarityPercent: null, notificationType: 'achievement' };
   if (state === 'rare-gold') return { ...base, notificationType: 'achievement', rarityPercent: 1.4 };
-  if (state === 'rare-silver') return { ...base, notificationType: 'achievement', rarityPercent: 4.5 };
-  if (state === 'rare-bronze') return { ...base, notificationType: 'achievement', rarityPercent: 8.2 };
+  if (state === 'rare-silver') return { ...base, notificationType: 'achievement', rarityPercent: 7.5 };
+  if (state === 'rare-bronze') return { ...base, notificationType: 'achievement', rarityPercent: 12.8 };
   if (state === 'platinum') return { ...base, notificationType: 'platinum', isPlatinum: true };
   // What an ordinary unlock actually carries: the app sends null when it knows no rarity.
   if (state === 'no-rarity') return { ...base, notificationType: 'achievement', rarityPercent: null };

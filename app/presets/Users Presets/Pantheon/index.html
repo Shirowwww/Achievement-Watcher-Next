@@ -182,9 +182,9 @@
           rootEl?.classList.remove("rarity-gold", "rarity-silver", "rarity-bronze");
           if (value == null || value === "") return;
           const percent = Number(value);
-          if (!Number.isFinite(percent) || percent < 0 || percent > 10) return;
-          if (percent < 3) rootEl.classList.add("rarity-gold");
-          else if (percent < 6) rootEl.classList.add("rarity-silver");
+          if (!Number.isFinite(percent) || percent < 0 || percent > 15) return;
+          if (percent <= 5) rootEl.classList.add("rarity-gold");
+          else if (percent <= 10) rootEl.classList.add("rarity-silver");
           else rootEl.classList.add("rarity-bronze");
         }
 

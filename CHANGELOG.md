@@ -22,6 +22,12 @@ renamed in 3.9.0 and the history is kept under one file.
   chose, and deletes a file only when nothing else is left in it. It shows exactly what it will
   remove before doing anything.
 
+### Improved
+
+- **New rarity tiers everywhere.** Gold is now 5% of players or fewer, silver up to 10% and bronze
+  up to 15%; anything more common stays unmarked. The game view badges, the in-game overlay, every
+  notification preset and the "Rare" label on Windows toasts all use the same tiers.
+
 ### Fixed
 
 - **A scan no longer rewrites emulator configuration in your game folders.** With "Automatically fix

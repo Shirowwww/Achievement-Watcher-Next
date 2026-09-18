@@ -98,9 +98,9 @@ function buildHarness() {
         if (request === '/app/util/overlayUi.js') {
           return {
             rarityTier(percent) {
-              if (!Number.isFinite(percent) || percent < 0 || percent > 10) return null;
-              if (percent < 3) return 'gold';
-              if (percent < 6) return 'silver';
+              if (!Number.isFinite(percent) || percent < 0 || percent > 15) return null;
+              if (percent <= 5) return 'gold';
+              if (percent <= 10) return 'silver';
               return 'bronze';
             },
           };
@@ -128,9 +128,9 @@ test('rarity renderer indexes rendered rows without selector injection or duplic
     await page.goto(pathToFileURL(harness).href);
     const result = await page.evaluate(() => {
       window.applyRarity([
-        { name: 'quote"name', percent: 3.04 },
+        { name: 'quote"name', percent: 7.04 },
         { name: 'duplicate', percent: 100.06 },
-        { name: 'bronze', percent: 6 },
+        { name: 'bronze', percent: 12 },
         { name: 'missing', percent: 1 },
       ]);
       const rows = (name) =>
@@ -157,7 +157,7 @@ test('rarity renderer indexes rendered rows without selector injection or duplic
 
     // The harness runs in French, so the figure carries that language's percent formatting while the
     // raw value stays on the attribute for sorting to read.
-    assert.deepEqual(result.quote, [{ text: '3 %', raw: '3', classes: 'achievement rare rarity-silver' }]);
+    assert.deepEqual(result.quote, [{ text: '7 %', raw: '7', classes: 'achievement rare rarity-silver' }]);
     assert.deepEqual(
       result.duplicates,
       [
@@ -166,7 +166,7 @@ test('rarity renderer indexes rendered rows without selector injection or duplic
       ],
       'every duplicate row must receive the same update'
     );
-    assert.deepEqual(result.bronze, [{ text: '6 %', raw: '6', classes: 'achievement rare rarity-bronze' }]);
+    assert.deepEqual(result.bronze, [{ text: '12 %', raw: '12', classes: 'achievement rare rarity-bronze' }]);
     // An untouched row keeps its text and never gains the sorting attribute.
     assert.deepEqual(result.untouched, [{ text: 'keep', classes: 'achievement rare rarity-gold' }]);
     assert.equal(result.headerShown, true);

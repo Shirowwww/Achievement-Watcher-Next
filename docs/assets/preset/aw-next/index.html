@@ -39,9 +39,9 @@ window.addEventListener('DOMContentLoaded', function () {
     var raw = data && data.rarityPercent;
     if (raw == null || raw === '') return;
     var percent = Number(raw);
-    if (!isFinite(percent) || percent < 0 || percent > 10) return;
+    if (!isFinite(percent) || percent < 0 || percent > 15) return;
     root.classList.add('state-rare');
-    root.classList.add(percent < 3 ? 'tier-gold' : percent < 6 ? 'tier-silver' : 'tier-bronze');
+    root.classList.add(percent <= 5 ? 'tier-gold' : percent <= 10 ? 'tier-silver' : 'tier-bronze');
   }
   function applyArtwork(data) {
     var art = fileUrl((data && (data.imagePath || data.headerPath)) || (data && data.gameIconPath) || "");

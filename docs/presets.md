@@ -32,7 +32,7 @@ Every preset is the same width, so switching preset never moves the popup sidewa
 | State | What it looks like |
 | --- | --- |
 | **Normal** | The preset's own accent. |
-| **Rare** | Gold below 3%, silver below 6%, bronze up to 10%, plus the unlock rate printed on the card, a stronger glow and an added edge. |
+| **Rare** | Gold at 5% or less, silver up to 10%, bronze up to 15%, plus the unlock rate printed on the card, a stronger glow and an added edge. |
 | **100% completion** | A cold, brighter treatment with a doubled rim - different from a rare unlock, not merely another colour. |
 | **Progress** | A real progress bar with a `current/max - %` label. |
 
