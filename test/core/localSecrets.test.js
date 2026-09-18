@@ -52,6 +52,17 @@ test('the installation key is generated once and read back', () => {
   assert.equal(raw.includes(Buffer.from(first, 'utf8')), false);
 });
 
+test('a key file that will not open is kept, never replaced by a new key', () => {
+  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-secret-keep-'));
+  const first = appSecret.ensureSecret(userData, fakeSafeStorage());
+  const onDisk = fs.readFileSync(appSecret.secretFile(userData));
+  const failingRead = { ...fakeSafeStorage(), decryptString: () => { throw new Error('DPAPI refused'); } };
+
+  assert.equal(appSecret.ensureSecret(userData, failingRead), '');
+  assert.deepEqual(fs.readFileSync(appSecret.secretFile(userData)), onDisk);
+  assert.equal(appSecret.ensureSecret(userData, fakeSafeStorage()), first, 'the key reads again once the failure passes');
+});
+
 test('no safeStorage means no key, so callers stay on the format they can read back', () => {
   const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-secret-none-'));
   assert.equal(appSecret.ensureSecret(userData, fakeSafeStorage(false)), '');

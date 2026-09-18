@@ -84,6 +84,14 @@ test('the cached square is keyed by the art it was cut from', () => {
   assert.equal(path.dirname(first), path.join(tmp, 'steam_cache', 'icon', '480'));
 });
 
+test('a long store-art name is shortened so the square stays under the Windows path limit', () => {
+  const stem = 'egs-shadowofthetombraiderdefinitiveedition-eidosmontralcrystaldynamicsnixxessoftware-s4-1200x1600-7ee40d6fa744_1200x1600-950cdb624cc75d04fe3c8c0b62ce98de';
+  const first = path.basename(squareIconFile(tmp, 'ns', path.join(tmp, stem)));
+  assert.ok(first.length <= 64 + '-logo.png'.length, first);
+  assert.ok(first.startsWith('egs-shadowofthetombraider'));
+  assert.notEqual(first, path.basename(squareIconFile(tmp, 'ns', path.join(tmp, `${stem}x`))), 'two long names must not collide');
+});
+
 test('cutting a square needs an image decoder, and reports honestly without one', () => {
   const source = writePng('grid-no-decoder.png', 600, 900);
   // No Electron in the test runner, so nativeImage is unavailable: the caller must get null rather

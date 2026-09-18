@@ -51,8 +51,17 @@ function squareCrop(width, height) {
 
 // Cached beside the art it was cut from, keyed by the source file so a game whose cover changes
 // gets a new square instead of the previous one.
+/*
+  Epic names its store art after the whole product and studio list, and a 170-character stem pushed
+  the square past Windows' 260-character path limit: Node wrote and read it fine, but the window's
+  file:// loader could not, so the page header stayed empty (Shadow of the Tomb Raider). A long stem
+  keeps its start for readability and gets a digest for uniqueness.
+*/
+const MAX_STEM = 64;
+
 function squareIconFile(root, appid, sourcePath) {
-  const stem = path.basename(String(sourcePath || 'art')).replace(/\.[^.]+$/, '');
+  let stem = path.basename(String(sourcePath || 'art')).replace(/\.[^.]+$/, '');
+  if (stem.length > MAX_STEM) stem = `${stem.slice(0, 40)}-${require('crypto').createHash('sha1').update(stem).digest('hex').slice(0, 12)}`;
   return path.join(String(root || ''), 'steam_cache', 'icon', String(appid || 'unknown'), `${stem}-logo.png`);
 }
 

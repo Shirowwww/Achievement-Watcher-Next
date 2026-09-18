@@ -220,6 +220,10 @@ ipcMain.handle('steam:auth-status', async () => {
   try {
     const { steamAuth, sessionFile, tokenSecret } = steamAuthOptions();
     let status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret });
+    // A sign-out nobody asked for has two causes that look identical in Settings; the log tells them apart.
+    if (!status.connected && require('fs').existsSync(sessionFile)) {
+      debug.log('[steam] a saved sign-in is on disk but could not be decrypted');
+    }
     // The webapi_token only lives a day. Reporting that as a dead account made Settings ask for a
     // sign-in every morning, so renew silently first and only call it disconnected if Steam says no.
     if (status.connected && status.needsReconnect) {
@@ -229,6 +233,7 @@ ipcMain.handle('steam:auth-status', async () => {
         session: session.fromPartition(steamAuth.STEAM_SESSION_PARTITION),
       });
       if (renewed) status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret });
+      else debug.log('[steam] the daily token could not be renewed: Steam refused the saved sign-in');
     }
     if (status.connected && !status.persona && !status.needsReconnect && !steamPersonaRetried) {
       steamPersonaRetried = true;

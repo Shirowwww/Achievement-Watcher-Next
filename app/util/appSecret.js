@@ -64,6 +64,13 @@ function ensureSecret(userDataPath, safeStorage) {
   if (!store || !userDataPath) return '';
   const existing = loadSecret(userDataPath, store);
   if (existing) return existing;
+  /*
+    A key file that is there but did not open this time is not a first run. Replacing it used to
+    orphan everything it protected - the Epic sign-in, the Xbox session and the emulator password all
+    stopped decrypting after one launch where the read failed (2026-09-17). Staying on the legacy
+    format for this run loses nothing, and the key is read again next launch.
+  */
+  if (fs.existsSync(secretFile(userDataPath))) return '';
   const secret = crypto.randomBytes(32).toString('hex');
   try {
     const file = secretFile(userDataPath);
