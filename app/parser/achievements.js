@@ -1303,7 +1303,7 @@ async function getFolderIndex() {
       const seen = new Set();
       const desktopSet = new Set(desktopRoots().map((d) => d.toLowerCase()));
       const addDir = (dir) => {
-        const key = dir.toLowerCase();
+        const key = path.resolve(dir).toLowerCase();
         if (seen.has(key)) return;
         if (_claimedDirs.has(key)) return; // already linked by appid - never name-match it
         seen.add(key);
@@ -1424,7 +1424,7 @@ async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
         }
         continue;
       }
-      if (g.gameDir) _claimedDirs.add(g.gameDir.toLowerCase());
+      if (g.gameDir) _claimedDirs.add(path.resolve(g.gameDir).toLowerCase());
     }
     const byAppid = new Map(data.map((g) => [String(g.appid), g]));
     let attached = 0;
@@ -1625,10 +1625,12 @@ async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScop
   const out = [];
   // Folders that already host a game configured under a real appid (from exeList): never surface them
   // again as "unconfigured", or the same game shows twice (e.g. LEGO Batman).
-  const linked = linkedExes.map((p) => String(p).toLowerCase());
+  // path.resolve forces native separators, so a folder recorded with the wrong slash style (fast-glob,
+  // a hand-typed userdir entry) still matches the backslash paths the rest of the scan compares against.
+  const linked = linkedExes.map((p) => path.resolve(String(p)).toLowerCase());
   const isLinkedSubtree = (dir) => {
-    const d = dir.toLowerCase();
-    return linked.some((p) => p === d || p.startsWith(d + path.sep) || p.startsWith(d + '/'));
+    const d = path.resolve(dir).toLowerCase();
+    return linked.some((p) => p === d || p.startsWith(d + path.sep));
   };
   const readEntries = (dir) => dirCache.readdir(dir);
   const desktopSet = new Set(desktopRoots().map((p) => p.toLowerCase()));
@@ -1655,7 +1657,7 @@ async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScop
   const isGameFolder = (dir, entries) => (entries && hasDll(entries)) || !!exeDetect.shallowGameExe(dir);
 
   const emit = (dir, entries) => {
-    if (_claimedDirs.has(dir.toLowerCase())) return;
+    if (_claimedDirs.has(path.resolve(dir).toLowerCase())) return;
     if (isKnownNonGameToolInstall(dir)) return;
     if (launcherDetect.isOfficialLauncherInstall(dir)) return; // legit launcher game - never "Unconfigured"
     if (isLinkedSubtree(dir)) return; // this folder already hosts a real-appid game (avoid duplicate)
@@ -1671,7 +1673,7 @@ async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScop
     const name = unconfiguredDisplayName(folderName, exe.name, productName && productName.trim().length >= 3 ? productName.trim() : '');
     // A crack loader states the Steam AppID it emulates in its own config (ALI213.ini and Hoodlum/
     // CODEX-style inis carry "AppID = <n>"), so it is not an unidentified install.
-    const id = declaredEmulatorAppid(dir, entries) || unrealDeclaredAppid(dir) || 'local-' + (crc32(dir.toLowerCase()) >>> 0).toString(16);
+    const id = declaredEmulatorAppid(dir, entries) || unrealDeclaredAppid(dir) || 'local-' + (crc32(path.resolve(dir).toLowerCase()) >>> 0).toString(16);
     // A shallow hasDll() check misses Goldberg files under nested Unity/UE engine folders; use the
     // same recursive detection as the Goldberg scan so the record carries its Steam evidence.
     const emu = detectEmulatorCached(dir);
@@ -1692,7 +1694,7 @@ async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScop
 
   const walk = (dir, depth) => {
     if (depth > 4) return;
-    if (_claimedDirs.has(dir.toLowerCase())) return;
+    if (_claimedDirs.has(path.resolve(dir).toLowerCase())) return;
     if (isKnownNonGameToolInstall(dir)) return;
     if (launcherDetect.isOfficialLauncherInstall(dir)) return; // Ubisoft/GOG/Epic/MS legit install
     const entries = readEntries(dir);
@@ -1702,7 +1704,7 @@ async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScop
     const childGameFolders = subdirs.filter((e) => {
       const cd = path.join(dir, e.name);
       return (
-        !_claimedDirs.has(cd.toLowerCase()) &&
+        !_claimedDirs.has(path.resolve(cd).toLowerCase()) &&
         !isKnownNonGameToolInstall(cd) &&
         !launcherDetect.isOfficialLauncherInstall(cd) &&
         isGameFolder(cd, readEntries(cd))

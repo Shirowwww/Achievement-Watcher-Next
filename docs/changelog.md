@@ -62,6 +62,12 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **A game with several bundled crack launchers no longer shows duplicate tiles.** A folder detected
+  as "emulator saving inside the game folder" was recorded with the wrong path separator, so it
+  never matched the game it already belonged to. An alternate launcher folder some repacks ship
+  alongside the main one (an Epic or Online Fix variant, for example) was then scanned as its own
+  unidentified install and added a second and third card for the same game.
+
 - **Sign-ins no longer vanish after one bad start.** If AW Next could not read its encryption key
   once, it replaced it, and the Epic, Steam and Xbox sign-ins and the emulator password saved under
   the old key could never be read again. The key is now kept and read again on the next start. The

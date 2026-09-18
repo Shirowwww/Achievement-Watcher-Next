@@ -271,7 +271,11 @@ module.exports.getEntries = async () => {
       return parsed
         .map((entry) => (typeof entry === 'string' ? { path: entry, notify: true, origin: 'manual', enabled: true } : { ...entry, notify: true }))
         .map((entry) => ({ ...entry, origin: entry.origin === 'auto' ? 'auto' : 'manual', enabled: entry.enabled !== false }))
-        .filter((entry) => entry.path);
+        .filter((entry) => entry.path)
+        // A path written with the wrong slash style (a fixed fast-glob bug, or a hand-typed entry)
+        // never matches the native-separator paths the rest of the scan compares against - resolve it
+        // back so an install already on disk self-heals instead of staying duplicated forever.
+        .map((entry) => ({ ...entry, path: path.resolve(entry.path) }));
     } catch (parseErr) {
       // Genuine corruption (e.g. a write interrupted by a crash/power loss). A transient I/O lock
       // throws before JSON.parse and is handled by the outer catch - so we never quarantine a good
@@ -341,7 +345,9 @@ module.exports.findEntries = async () => {
   ];
   for (const { root, detector } of searchRoots) {
     for (const filepath of await glob(search, { cwd: root, deep: 3, onlyFiles: true, absolute: true, suppressErrors: true })) {
-      addDetected(path.parse(filepath).dir, detector);
+      // fast-glob returns posix separators even on Windows; resolve so this matches the native-path
+      // folders already claimed elsewhere (gameDir, linked exes) instead of shadowing them.
+      addDetected(path.resolve(path.parse(filepath).dir), detector);
     }
   }
 
@@ -355,7 +361,7 @@ module.exports.findEntries = async () => {
       } catch {
         continue; // unreadable config names nothing
       }
-      addDetected(path.parse(filepath).dir, 'Emulator saving inside the game folder');
+      addDetected(path.resolve(path.parse(filepath).dir), 'Emulator saving inside the game folder');
     }
   }
 
