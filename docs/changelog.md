@@ -39,6 +39,16 @@ renamed in 3.9.0 and the history is kept under one file.
   never unlocked anything in no longer drags the average down; hover the figure to see how many
   games it covers.
 
+- **Progress counters for CODEX and RUNE games the Steam client never cached.** When no local
+  source knows which stat drives an achievement, AW Next now reads it from Nemirtingas'
+  games-infos-datas, with no Steam sign-in. "Fetch progress counters" in Game Health tries it first.
+
+- **Epic games whose achievements Epic does not publish are listed.** Some owned Epic games
+  (Shadow and Rise of the Tomb Raider, Civilization VI) have achievements in the game but none in
+  Epic's store data, so they never appeared. Their list now comes from games-infos-datas, with the
+  rarity and banner of the Steam release when its achievement ids match. Unlocks still cannot be
+  read for them: Epic does not share them, even signed in.
+
 ### Improved
 
 - **New rarity tiers everywhere.** Gold is now 5% of players or fewer, silver up to 10% and bronze
@@ -49,6 +59,17 @@ renamed in 3.9.0 and the history is kept under one file.
   hover a tile, popping in like the play button. The list view keeps them always visible.
 
 ### Fixed
+
+- **Sign-ins no longer vanish after one bad start.** If AW Next could not read its encryption key
+  once, it replaced it, and the Epic, Steam and Xbox sign-ins and the emulator password saved under
+  the old key could never be read again. The key is now kept and read again on the next start. The
+  log also says why an Epic or Steam sign-in stopped working.
+
+- **Epic games show their icon on the game page again.** Epic's very long artwork names pushed the
+  cached icon past Windows' path limit, and the page could not load it.
+
+- **Epic games without achievements no longer fill the log with errors.** They are noted as not
+  listed, and Epic's "no achievements" answer is kept for the day instead of asked again every scan.
 
 - **A scan no longer rewrites emulator configuration in your game folders.** With "Automatically fix
   newly detected games" disabled, an ordinary library scan still wrote `configs.app.ini`,
