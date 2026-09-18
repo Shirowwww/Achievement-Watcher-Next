@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Najvzácnejšie úspechy",
     "profile-trophies-players": "{percent} hráčov",
     "profile-trophies-no-platinum": "Zatiaľ žiadna platina.",
-    "profile-trophies-no-rarity": "Zatiaľ žiadna známa miera."
+    "profile-trophies-no-rarity": "Zatiaľ žiadna známa miera.",
+    "profile-trophies-all": "Všetky úspechy",
+    "profile-trophies-all-title": "Odomknuté úspechy, od najvzácnejšieho",
+    "profile-trophies-back": "Späť",
+    "profile-trophies-unknown-rate": "Neznáma miera"
   },
   "watchdog": {
     "rare": "Vzácny {percent}%",

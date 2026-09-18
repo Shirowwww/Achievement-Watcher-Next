@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Rarest achievements",
     "profile-trophies-players": "{percent} of players",
     "profile-trophies-no-platinum": "No platinum yet.",
-    "profile-trophies-no-rarity": "No known rate yet."
+    "profile-trophies-no-rarity": "No known rate yet.",
+    "profile-trophies-all": "All achievements",
+    "profile-trophies-all-title": "Unlocked achievements, rarest first",
+    "profile-trophies-back": "Back",
+    "profile-trophies-unknown-rate": "Unknown rate"
   },
   "watchdog": {
     "rare": "Rare {percent}%",

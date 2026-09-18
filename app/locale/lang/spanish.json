@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Logros más raros",
     "profile-trophies-players": "{percent} de los jugadores",
     "profile-trophies-no-platinum": "Aún no hay ningún platino.",
-    "profile-trophies-no-rarity": "Aún no hay ninguna tasa conocida."
+    "profile-trophies-no-rarity": "Aún no hay ninguna tasa conocida.",
+    "profile-trophies-all": "Todos los logros",
+    "profile-trophies-all-title": "Logros desbloqueados, del más raro al más común",
+    "profile-trophies-back": "Atrás",
+    "profile-trophies-unknown-rate": "Tasa desconocida"
   },
   "watchdog": {
     "rare": "Raro {percent}%",

@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "最もレアな実績",
     "profile-trophies-players": "プレイヤーの{percent}",
     "profile-trophies-no-platinum": "まだプラチナはありません。",
-    "profile-trophies-no-rarity": "まだ取得率が判明した実績はありません。"
+    "profile-trophies-no-rarity": "まだ取得率が判明した実績はありません。",
+    "profile-trophies-all": "すべての実績",
+    "profile-trophies-all-title": "解除済みの実績（レアな順）",
+    "profile-trophies-back": "戻る",
+    "profile-trophies-unknown-rate": "取得率不明"
   },
   "watchdog": {
     "rare": "レア {percent}%",

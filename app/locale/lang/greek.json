@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Σπανιότερα επιτεύγματα",
     "profile-trophies-players": "{percent} των παικτών",
     "profile-trophies-no-platinum": "Καμία πλατίνα ακόμη.",
-    "profile-trophies-no-rarity": "Κανένα γνωστό ποσοστό ακόμη."
+    "profile-trophies-no-rarity": "Κανένα γνωστό ποσοστό ακόμη.",
+    "profile-trophies-all": "Όλα τα επιτεύγματα",
+    "profile-trophies-all-title": "Ξεκλειδωμένα επιτεύγματα, τα πιο σπάνια πρώτα",
+    "profile-trophies-back": "Πίσω",
+    "profile-trophies-unknown-rate": "Άγνωστο ποσοστό"
   },
   "watchdog": {
     "rare": "Σπάνιο {percent}%",

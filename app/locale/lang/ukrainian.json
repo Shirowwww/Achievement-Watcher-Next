@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Найрідкісніші досягнення",
     "profile-trophies-players": "{percent} гравців",
     "profile-trophies-no-platinum": "Поки що немає платини.",
-    "profile-trophies-no-rarity": "Поки що немає відомого відсотка."
+    "profile-trophies-no-rarity": "Поки що немає відомого відсотка.",
+    "profile-trophies-all": "Усі досягнення",
+    "profile-trophies-all-title": "Отримані досягнення, спочатку найрідкісніші",
+    "profile-trophies-back": "Назад",
+    "profile-trophies-unknown-rate": "Невідомий відсоток"
   },
   "watchdog": {
     "rare": "Рідкісне {percent}%",

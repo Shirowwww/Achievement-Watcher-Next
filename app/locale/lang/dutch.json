@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Zeldzaamste prestaties",
     "profile-trophies-players": "{percent} van de spelers",
     "profile-trophies-no-platinum": "Nog geen platina.",
-    "profile-trophies-no-rarity": "Nog geen bekend percentage."
+    "profile-trophies-no-rarity": "Nog geen bekend percentage.",
+    "profile-trophies-all": "Alle prestaties",
+    "profile-trophies-all-title": "Ontgrendelde prestaties, zeldzaamste eerst",
+    "profile-trophies-back": "Terug",
+    "profile-trophies-unknown-rate": "Onbekend percentage"
   },
   "watchdog": {
     "rare": "Zeldzaam {percent}%",

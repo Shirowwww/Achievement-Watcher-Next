@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "En nadir başarımlar",
     "profile-trophies-players": "oyuncuların {percent}'i",
     "profile-trophies-no-platinum": "Henüz platin yok.",
-    "profile-trophies-no-rarity": "Henüz bilinen oran yok."
+    "profile-trophies-no-rarity": "Henüz bilinen oran yok.",
+    "profile-trophies-all": "Tüm başarımlar",
+    "profile-trophies-all-title": "Açılan başarımlar, en nadirden başlayarak",
+    "profile-trophies-back": "Geri",
+    "profile-trophies-unknown-rate": "Bilinmeyen oran"
   },
   "watchdog": {
     "rare": "Nadir {percent}%",

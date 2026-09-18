@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Proezas mais raras",
     "profile-trophies-players": "{percent} dos jogadores",
     "profile-trophies-no-platinum": "Ainda não há nenhuma platina.",
-    "profile-trophies-no-rarity": "Ainda não há nenhuma taxa conhecida."
+    "profile-trophies-no-rarity": "Ainda não há nenhuma taxa conhecida.",
+    "profile-trophies-all": "Todas as proezas",
+    "profile-trophies-all-title": "Proezas desbloqueadas, da mais rara à mais comum",
+    "profile-trophies-back": "Voltar",
+    "profile-trophies-unknown-rate": "Taxa desconhecida"
   },
   "watchdog": {
     "rare": "Raro {percent}%",

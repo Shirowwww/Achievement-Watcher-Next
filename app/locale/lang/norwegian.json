@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Sjeldneste prestasjoner",
     "profile-trophies-players": "{percent} av spillerne",
     "profile-trophies-no-platinum": "Ingen platina ennå.",
-    "profile-trophies-no-rarity": "Ingen kjent andel ennå."
+    "profile-trophies-no-rarity": "Ingen kjent andel ennå.",
+    "profile-trophies-all": "Alle prestasjoner",
+    "profile-trophies-all-title": "Opplåste prestasjoner, sjeldneste først",
+    "profile-trophies-back": "Tilbake",
+    "profile-trophies-unknown-rate": "Ukjent andel"
   },
   "watchdog": {
     "rare": "Sjelden {percent} %",

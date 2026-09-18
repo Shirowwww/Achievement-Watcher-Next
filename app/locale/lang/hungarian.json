@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Legritkább teljesítmények",
     "profile-trophies-players": "{percent} a játékosokból",
     "profile-trophies-no-platinum": "Még nincs platina.",
-    "profile-trophies-no-rarity": "Még nincs ismert arány."
+    "profile-trophies-no-rarity": "Még nincs ismert arány.",
+    "profile-trophies-all": "Összes teljesítmény",
+    "profile-trophies-all-title": "Feloldott teljesítmények, a legritkábbal kezdve",
+    "profile-trophies-back": "Vissza",
+    "profile-trophies-unknown-rate": "Ismeretlen arány"
   },
   "watchdog": {
     "rare": "Ritka {percent}%",

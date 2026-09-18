@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "De sällsyntaste prestationerna",
     "profile-trophies-players": "{percent} av spelarna",
     "profile-trophies-no-platinum": "Ingen platina ännu.",
-    "profile-trophies-no-rarity": "Ingen känd andel ännu."
+    "profile-trophies-no-rarity": "Ingen känd andel ännu.",
+    "profile-trophies-all": "Alla prestationer",
+    "profile-trophies-all-title": "Upplåsta prestationer, sällsyntast först",
+    "profile-trophies-back": "Tillbaka",
+    "profile-trophies-unknown-rate": "Okänd andel"
   },
   "watchdog": {
     "rare": "Sällsynt {percent} %",

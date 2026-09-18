@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "最稀有的成就",
     "profile-trophies-players": "{percent} 的玩家",
     "profile-trophies-no-platinum": "尚無白金。",
-    "profile-trophies-no-rarity": "尚無已知解鎖率。"
+    "profile-trophies-no-rarity": "尚無已知解鎖率。",
+    "profile-trophies-all": "所有成就",
+    "profile-trophies-all-title": "已解鎖成就，從稀有到普通",
+    "profile-trophies-back": "上一步",
+    "profile-trophies-unknown-rate": "解鎖率未知"
   },
   "watchdog": {
     "rare": "稀有 {percent}%",

@@ -104,4 +104,30 @@ function calculateTrophyStats(games, { installedOnly = false, isStarted = defaul
   return stats;
 }
 
-module.exports = { calculateTrophyStats, startedGames, defaultIsStarted, RAREST_COUNT };
+/*
+  Every unlocked achievement of the started games, rarest first, for the stats panel's full list.
+  Built only when that list opens: sorting every unlock has no place in the header refresh.
+  Achievements with no known rate go last, most recent unlock first.
+*/
+function listUnlockedByRarity(games, { installedOnly = false, isStarted = defaultIsStarted, rarityOf = null } = {}) {
+  const out = [];
+  for (const game of startedGames(games, { installedOnly, isStarted })) {
+    const list = Array.isArray(game.achievement.list) ? game.achievement.list : [];
+    const rates = typeof rarityOf === 'function' ? rarityOf(game) : null;
+    for (const achievement of list) {
+      if (!isAchieved(achievement)) continue;
+      const raw = rates ? rates.get(String(achievement.name)) : undefined;
+      const percent = raw === undefined || raw === null || !Number.isFinite(Number(raw)) ? null : Number(raw);
+      out.push({ game, achievement, percent, tier: tierFor(achievement, percent), unlockedAt: Number(achievement.UnlockTime) || 0 });
+    }
+  }
+  return out.sort((a, b) => {
+    if (a.percent === null || b.percent === null) {
+      if (a.percent !== b.percent) return a.percent === null ? 1 : -1;
+      return b.unlockedAt - a.unlockedAt;
+    }
+    return a.percent - b.percent || b.unlockedAt - a.unlockedAt;
+  });
+}
+
+module.exports = { calculateTrophyStats, listUnlockedByRarity, startedGames, defaultIsStarted, RAREST_COUNT };

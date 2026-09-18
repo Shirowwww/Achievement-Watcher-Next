@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Seltenste Erfolge",
     "profile-trophies-players": "{percent} der Spieler",
     "profile-trophies-no-platinum": "Noch kein Platin.",
-    "profile-trophies-no-rarity": "Noch keine bekannte Rate."
+    "profile-trophies-no-rarity": "Noch keine bekannte Rate.",
+    "profile-trophies-all": "Alle Erfolge",
+    "profile-trophies-all-title": "Freigeschaltete Erfolge, seltenste zuerst",
+    "profile-trophies-back": "Zurück",
+    "profile-trophies-unknown-rate": "Unbekannte Rate"
   },
   "watchdog": {
     "rare": "Selten {percent}%",

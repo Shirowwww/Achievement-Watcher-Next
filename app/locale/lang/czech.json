@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Nejvzácnější úspěchy",
     "profile-trophies-players": "{percent} hráčů",
     "profile-trophies-no-platinum": "Zatím žádná platina.",
-    "profile-trophies-no-rarity": "Zatím žádná známá míra."
+    "profile-trophies-no-rarity": "Zatím žádná známá míra.",
+    "profile-trophies-all": "Všechny úspěchy",
+    "profile-trophies-all-title": "Odemčené úspěchy, od nejvzácnějšího",
+    "profile-trophies-back": "Zpět",
+    "profile-trophies-unknown-rate": "Neznámá míra"
   },
   "watchdog": {
     "rare": "Vzácný {percent}%",

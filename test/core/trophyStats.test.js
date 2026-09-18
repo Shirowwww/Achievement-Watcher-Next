@@ -2,7 +2,7 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { calculateTrophyStats, startedGames } = require('../../app/util/trophyStats.js');
+const { calculateTrophyStats, listUnlockedByRarity, startedGames } = require('../../app/util/trophyStats.js');
 const { calculateLibraryStats, calculateDetailedLibraryStats } = require('../../app/util/libraryStats.js');
 
 const ach = (name, achieved, extra = {}) => ({ name, Achieved: achieved ? 1 : 0, UnlockTime: achieved ? 1700000000 : 0, ...extra });
@@ -91,4 +91,13 @@ test('the rarest list keeps the ten rarest unlocks, rarest first', () => {
   const stats = calculateTrophyStats([{ appid: 1, achievement: { unlocked: 25, total: 25, list } }], { rarityOf: () => rates });
   assert.equal(stats.rarest.length, 10);
   assert.deepEqual(stats.rarest.map((entry) => entry.percent), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+});
+
+test('the full list is every unlock of the started games, rarest first, unknown rates last', () => {
+  const list = listUnlockedByRarity(games, { isStarted: launched, rarityOf });
+  assert.deepEqual(
+    list.map((entry) => entry.achievement.name),
+    ['a', 'b', 'c', 'x']
+  );
+  assert.deepEqual(list.map((entry) => entry.tier), ['gold', 'silver', 'common', 'common']);
 });

@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Pencapaian paling langka",
     "profile-trophies-players": "{percent} pemain",
     "profile-trophies-no-platinum": "Belum ada platinum.",
-    "profile-trophies-no-rarity": "Belum ada rasio yang diketahui."
+    "profile-trophies-no-rarity": "Belum ada rasio yang diketahui.",
+    "profile-trophies-all": "Semua pencapaian",
+    "profile-trophies-all-title": "Pencapaian yang terbuka, langka lebih dulu",
+    "profile-trophies-back": "Kembali",
+    "profile-trophies-unknown-rate": "Rasio tidak diketahui"
   },
   "watchdog": {
     "rare": "Langka {percent}%",

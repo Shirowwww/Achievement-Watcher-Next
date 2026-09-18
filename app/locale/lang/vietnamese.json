@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Thành tựu hiếm nhất",
     "profile-trophies-players": "{percent} người chơi",
     "profile-trophies-no-platinum": "Chưa có bạch kim nào.",
-    "profile-trophies-no-rarity": "Chưa rõ tỷ lệ nào."
+    "profile-trophies-no-rarity": "Chưa rõ tỷ lệ nào.",
+    "profile-trophies-all": "Tất cả thành tựu",
+    "profile-trophies-all-title": "Thành tựu đã mở khóa, hiếm nhất trước",
+    "profile-trophies-back": "Quay lại",
+    "profile-trophies-unknown-rate": "Tỷ lệ không rõ"
   },
   "watchdog": {
     "rare": "Hiếm {percent}%",

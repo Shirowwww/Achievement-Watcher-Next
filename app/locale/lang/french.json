@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Succès les plus rares",
     "profile-trophies-players": "{percent} des joueurs",
     "profile-trophies-no-platinum": "Aucun platine pour le moment.",
-    "profile-trophies-no-rarity": "Aucun taux connu pour le moment."
+    "profile-trophies-no-rarity": "Aucun taux connu pour le moment.",
+    "profile-trophies-all": "Tous les succès",
+    "profile-trophies-all-title": "Succès débloqués, du plus rare au plus commun",
+    "profile-trophies-back": "Retour",
+    "profile-trophies-unknown-rate": "Taux inconnu"
   },
   "watchdog": {
     "rare": "Rare {percent} %",

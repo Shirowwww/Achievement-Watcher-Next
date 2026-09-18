@@ -3129,7 +3129,9 @@
         <div class="overlay"></div>
         <div class="box" role="dialog" aria-modal="true" aria-labelledby="profile-stats-title">
           <div class="header">
-            <i class="fas fa-chart-pie" aria-hidden="true"></i>
+            <!-- Shown instead of the chart glyph while the full achievement list is open. -->
+            <button type="button" id="profile-stats-back" class="icon-button" hidden><i class="fas fa-arrow-left" aria-hidden="true"></i></button>
+            <i class="fas fa-chart-pie" id="profile-stats-glyph" aria-hidden="true"></i>
             <span id="profile-stats-title">Library stats</span>
             <!-- The same installed-only filter as the library toolbar: toggling it here toggles both. -->
             <button type="button" id="profile-stats-scope" class="profile-stats-scope" aria-pressed="false"><i class="fas fa-hdd" aria-hidden="true"></i> <span></span></button>
@@ -3198,7 +3200,10 @@
                   <ul id="profile-stats-platinum-games" class="profile-stats-trophy-list"></ul>
                 </div>
                 <div class="profile-stats-trophy-card">
-                  <h4 id="profile-stats-rarest-label"></h4>
+                  <div class="profile-stats-trophy-card-head">
+                    <h4 id="profile-stats-rarest-label"></h4>
+                    <button type="button" id="profile-stats-all-open" class="profile-stats-link"></button>
+                  </div>
                   <ul id="profile-stats-rarest" class="profile-stats-trophy-list"></ul>
                 </div>
               </div>
@@ -3222,6 +3227,15 @@
               </div>
               <p class="profile-stats-empty" id="profile-stats-empty" hidden></p>
             </section>
+          </div>
+
+          <!-- Every unlock, rarest first: opened from the rarest card, left with the back button. -->
+          <div class="profile-stats-all" id="profile-stats-all" hidden>
+            <div class="profile-stats-all-head">
+              <h3 id="profile-stats-all-title"></h3>
+              <small id="profile-stats-all-count"></small>
+            </div>
+            <ul id="profile-stats-all-list"></ul>
           </div>
         </div>
       </section>

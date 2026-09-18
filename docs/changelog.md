@@ -29,6 +29,25 @@ renamed in 3.9.0 and the history is kept under one file.
   chose, and deletes a file only when nothing else is left in it. It shows exactly what it will
   remove before doing anything.
 
+- **Trophy showcase on the profile.** Platinum (games at 100%), gold, silver, bronze and common
+  counts under your name, on by default in Settings > General. Clicking them opens a new Trophies
+  section in the library stats with the split by rarity, every platinum game, your ten rarest
+  unlocks and a full list of every unlock, rarest first. Clicking one opens it in its game. The
+  installed-only filter now works from the stats panel too.
+
+- **The average completion only counts games you have started.** A game you never launched and
+  never unlocked anything in no longer drags the average down; hover the figure to see how many
+  games it covers.
+
+### Improved
+
+- **New rarity tiers everywhere.** Gold is now 5% of players or fewer, silver up to 10% and bronze
+  up to 15%; anything more common stays unmarked. The game view badges, the in-game overlay, every
+  notification preset and the "Rare" label on Windows toasts all use the same tiers.
+
+- **Cleaner library tiles.** The achievements and game settings buttons now appear only while you
+  hover a tile, popping in like the play button. The list view keeps them always visible.
+
 ### Fixed
 
 - **A scan no longer rewrites emulator configuration in your game folders.** With "Automatically fix

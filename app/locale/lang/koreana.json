@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "가장 희귀한 도전 과제",
     "profile-trophies-players": "플레이어의 {percent}",
     "profile-trophies-no-platinum": "아직 플래티넘이 없습니다.",
-    "profile-trophies-no-rarity": "아직 알려진 달성률이 없습니다."
+    "profile-trophies-no-rarity": "아직 알려진 달성률이 없습니다.",
+    "profile-trophies-all": "모든 도전 과제",
+    "profile-trophies-all-title": "달성한 도전 과제, 희귀한 순",
+    "profile-trophies-back": "뒤로",
+    "profile-trophies-unknown-rate": "알 수 없는 달성률"
   },
   "watchdog": {
     "rare": "희귀 {percent}%",

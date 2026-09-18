@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Najrzadsze osiągnięcia",
     "profile-trophies-players": "{percent} graczy",
     "profile-trophies-no-platinum": "Jeszcze żadnej platyny.",
-    "profile-trophies-no-rarity": "Jeszcze żadnego znanego wskaźnika."
+    "profile-trophies-no-rarity": "Jeszcze żadnego znanego wskaźnika.",
+    "profile-trophies-all": "Wszystkie osiągnięcia",
+    "profile-trophies-all-title": "Odblokowane osiągnięcia, od najrzadszego",
+    "profile-trophies-back": "Powrót",
+    "profile-trophies-unknown-rate": "Nieznany wskaźnik"
   },
   "watchdog": {
     "rare": "Rzadkie {percent}%",

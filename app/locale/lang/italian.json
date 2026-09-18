@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Obiettivi più rari",
     "profile-trophies-players": "{percent} dei giocatori",
     "profile-trophies-no-platinum": "Nessun platino per ora.",
-    "profile-trophies-no-rarity": "Nessun tasso noto per ora."
+    "profile-trophies-no-rarity": "Nessun tasso noto per ora.",
+    "profile-trophies-all": "Tutti gli obiettivi",
+    "profile-trophies-all-title": "Obiettivi sbloccati, dal più raro",
+    "profile-trophies-back": "Indietro",
+    "profile-trophies-unknown-rate": "Tasso sconosciuto"
   },
   "watchdog": {
     "rare": "Raro {percent}%",

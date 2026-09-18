@@ -11323,6 +11323,209 @@ body {
   min-width: 0;
 }
 
+#profile-stats .header > #profile-stats-back {
+  flex: none;
+}
+
+#profile-stats .header > #profile-stats-back[hidden] {
+  display: none;
+}
+
+/* The rarest card's title shares its line with the way into the full list. */
+.profile-stats-trophy-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.profile-stats-link {
+  flex: none;
+  padding: 3px 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 999px;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  font: 11px 'Open-Sans-Bold';
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.profile-stats-link:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 26%, transparent);
+}
+
+.profile-stats-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.profile-stats-link[hidden] {
+  display: none;
+}
+
+/* Every unlock, rarest first: the panel body's place, rows styled after the game view's list. */
+.profile-stats-all {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-height: 0;
+  padding: 18px 22px 24px;
+  overflow-y: auto;
+}
+
+.profile-stats-all[hidden] {
+  display: none;
+}
+
+.profile-stats-all::-webkit-scrollbar {
+  width: 8px;
+}
+
+.profile-stats-all::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-muted) 35%, transparent);
+}
+
+.profile-stats-all-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.profile-stats-all-head h3 {
+  margin: 0;
+  font: 13px 'Raleway-Bold';
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.profile-stats-all-head small {
+  color: var(--text-muted);
+  font: 12px 'Open-Sans';
+}
+
+#profile-stats-all-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#profile-stats-all-list li {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) minmax(120px, 190px);
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-sunken) 28%, transparent);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  /* Off-screen rows skip layout and paint until they scroll near. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 74px;
+}
+
+#profile-stats-all-list li:hover {
+  border-color: color-mix(in srgb, var(--border) 45%, transparent);
+  background: color-mix(in srgb, var(--surface-elevated) 55%, transparent);
+}
+
+#profile-stats-all-list li:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+#profile-stats-all-list .row-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 9px;
+  color: var(--trophy);
+  font-size: 18px;
+  background: color-mix(in srgb, var(--trophy) 12%, transparent);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, calc(0.24 * var(--shadow-scale)));
+}
+
+/* A rare unlock wears its grade as a ring, the way the game view marks it. */
+#profile-stats-all-list li:not(.trophy-common) .row-icon {
+  box-shadow: 0 0 0 2px var(--trophy), 0 0 12px color-mix(in srgb, var(--trophy) 35%, transparent);
+}
+
+#profile-stats-all-list .row-icon.has-icon {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+#profile-stats-all-list .row-icon.has-icon i {
+  display: none;
+}
+
+#profile-stats-all-list .all-main,
+#profile-stats-all-list .all-side {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+#profile-stats-all-list .all-main b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 13.5px 'Open-Sans-Bold';
+}
+
+#profile-stats-all-list .all-main small {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: var(--text-muted);
+  font: 12px 'Open-Sans';
+}
+
+#profile-stats-all-list .all-side {
+  justify-items: end;
+  text-align: right;
+}
+
+#profile-stats-all-list .all-game {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 12px 'Open-Sans-Bold';
+}
+
+#profile-stats-all-list .all-rate {
+  color: var(--trophy);
+  font: 12px 'Open-Sans-Bold';
+  font-variant-numeric: tabular-nums;
+}
+
+#profile-stats-all-list li.trophy-common .all-rate {
+  color: var(--text-muted);
+}
+
+#profile-stats-all-list .library-scroll-content {
+  display: inline-block;
+  min-width: max-content;
+}
+
+#profile-stats-all-list .all-side small {
+  color: var(--text-muted);
+  font: 11px 'Open-Sans';
+  font-variant-numeric: tabular-nums;
+}
+
 #profile-stats .header > .profile-stats-scope {
   display: inline-flex;
   align-items: center;
@@ -11778,14 +11981,14 @@ body {
   letter-spacing: 0.06em;
 }
 
-/* Platinum games and rarest unlocks: the same row in both lists. Two rows show; the rest scroll
+/* Platinum games and rarest unlocks: the same row in both lists. Three rows show; the rest scroll
    inside the card, so neither list can push the platform table out of reach. */
 .profile-stats-trophy-list {
   --trophy-row: 40px;
   display: grid;
   grid-auto-rows: var(--trophy-row);
   gap: 8px;
-  max-height: calc(2 * var(--trophy-row) + 8px);
+  max-height: calc(3 * var(--trophy-row) + 2 * 8px);
   margin: 0;
   padding: 0 4px 0 0;
   overflow-y: auto;
@@ -11850,6 +12053,27 @@ body {
   color: var(--text-muted);
   font: 12px 'Open-Sans';
   font-variant-numeric: tabular-nums;
+}
+
+.profile-stats-trophy-list .library-scroll-content {
+  display: inline-block;
+  min-width: max-content;
+}
+
+.profile-stats-trophy-list li[data-appid] {
+  padding-right: 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.profile-stats-trophy-list li[data-appid]:hover {
+  background: color-mix(in srgb, var(--surface-elevated) 55%, transparent);
+}
+
+.profile-stats-trophy-list li[data-appid]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
 .profile-stats-trophy-list li.is-empty {

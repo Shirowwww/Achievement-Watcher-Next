@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Sjældneste præstationer",
     "profile-trophies-players": "{percent} af spillerne",
     "profile-trophies-no-platinum": "Endnu ingen platin.",
-    "profile-trophies-no-rarity": "Endnu ingen kendt rate."
+    "profile-trophies-no-rarity": "Endnu ingen kendt rate.",
+    "profile-trophies-all": "Alle præstationer",
+    "profile-trophies-all-title": "Oplåste præstationer, sjældneste først",
+    "profile-trophies-back": "Tilbage",
+    "profile-trophies-unknown-rate": "Ukendt rate"
   },
   "watchdog": {
     "rare": "Sjælden {percent} %",

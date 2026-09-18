@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Самые редкие достижения",
     "profile-trophies-players": "{percent} игроков",
     "profile-trophies-no-platinum": "Пока нет платины.",
-    "profile-trophies-no-rarity": "Пока нет известного процента."
+    "profile-trophies-no-rarity": "Пока нет известного процента.",
+    "profile-trophies-all": "Все достижения",
+    "profile-trophies-all-title": "Полученные достижения, сначала самые редкие",
+    "profile-trophies-back": "Назад",
+    "profile-trophies-unknown-rate": "Неизвестный процент"
   },
   "watchdog": {
     "rare": "Редкое {percent}%",

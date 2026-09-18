@@ -121,7 +121,7 @@ const apiCheckBypass = require(path.join(appPath, 'parser/apiCheckBypass.js'));
 const { calculateLibraryStats, calculateDetailedLibraryStats } = require(path.join(appPath, 'util/libraryStats.js'));
 const rarityCache = require(path.join(appPath, 'util/rarity.js'));
 const { resolveGameRarityContext } = rarityCache;
-const { calculateTrophyStats } = require(path.join(appPath, 'util/trophyStats.js'));
+const { calculateTrophyStats, listUnlockedByRarity } = require(path.join(appPath, 'util/trophyStats.js'));
 const librarySnapshot = require(path.join(appPath, 'util/librarySnapshot.js'));
 const stylizedArtwork = require(path.join(appPath, 'util/stylizedArtwork.js'));
 const libraryReuse = require(path.join(appPath, 'util/libraryReuse.js'));
@@ -496,13 +496,14 @@ function renderProfileStatsTrophies(installedOnly) {
     stats.platinumGames.length > 0
       ? stats.platinumGames
           .map(({ game, completedAt }) =>
-            trophyRow('platinum', game.name || String(game.appid), intlFormat.formatDate(completedAt, uiLang()))
+            trophyRow('platinum', game.name || String(game.appid), intlFormat.formatDate(completedAt, uiLang()), { appid: game.appid })
           )
           .join('')
       : `<li class="is-empty">${escapeHtml(t('profile-trophies-no-platinum', 'No platinum yet.', 'Aucun platine pour le moment.'))}</li>`
   );
 
   $('#profile-stats-rarest-label').text(t('profile-trophies-rarest-list', 'Rarest achievements', 'Succès les plus rares'));
+  $('#profile-stats-all-open').text(t('profile-trophies-all', 'All achievements', 'Tous les succès')).prop('hidden', stats.rarest.length === 0);
   $('#profile-stats-rarest').html(
     stats.rarest.length > 0
       ? stats.rarest
@@ -512,7 +513,8 @@ function renderProfileStatsTrophies(installedOnly) {
               achievement.displayName || achievement.name || '',
               `${game.name || String(game.appid)} · ${t('profile-trophies-players', '{percent} of players', '{percent} des joueurs', {
                 percent: formatPercentValue(percent, 1),
-              })}`
+              })}`,
+              { appid: game.appid, achievement: achievement.name }
             )
           )
           .join('')
@@ -523,11 +525,24 @@ function renderProfileStatsTrophies(installedOnly) {
   $('#profile-stats-platinum-games, #profile-stats-rarest').scrollTop(0);
 }
 
-// One row of the platinum and rarest lists: a grade-coloured icon box, a name and a detail line.
-function trophyRow(tier, name, detail) {
-  return `<li class="trophy-${escapeHtml(tier)}"><span class="row-icon"><i class="fas fa-trophy" aria-hidden="true"></i></span><div><b>${escapeHtml(
-    name
-  )}</b><small>${escapeHtml(detail)}</small></div></li>`;
+/*
+  One row of the platinum and rarest lists: a grade-coloured icon box, a name and a detail line.
+  A row is a button to that game's page (and that achievement in it); text too long for the card
+  scrolls on hover, the way the library tiles do it.
+*/
+function trophyRow(tier, name, detail, { appid, achievement = '' } = {}) {
+  const scrolling = (tag, text) =>
+    `<${tag} class="library-scroll-text" title="${escapeHtml(text)}"><span class="library-scroll-content">${escapeHtml(text)}</span></${tag}>`;
+  return `<li class="trophy-${escapeHtml(tier)}" role="button" tabindex="0" data-appid="${escapeHtml(String(appid))}" data-achievement="${escapeHtml(
+    String(achievement)
+  )}"><span class="row-icon"><i class="fas fa-trophy" aria-hidden="true"></i></span><div>${scrolling('b', name)}${scrolling('small', detail)}</div></li>`;
+}
+
+function openTrophyRow(row) {
+  const appid = row.getAttribute('data-appid');
+  if (!appid) return;
+  closeProfileStats();
+  openGameFromLibrary(appid, row.getAttribute('data-achievement') || '');
 }
 
 /*
@@ -548,12 +563,16 @@ function imageDecodes(url) {
 
 function paintRarestIcons(entries) {
   const token = ++rarestIconToken;
+  const rows = $('#profile-stats-rarest').children();
   entries.forEach(({ game, achievement }, index) => {
-    paintRarestIcon(game, achievement, index, token).catch(() => {});
+    const box = rows.eq(index).find('.row-icon')[0];
+    if (box) paintAchievementIcon(box, game, achievement, () => token === rarestIconToken).catch(() => {});
   });
 }
 
-async function paintRarestIcon(game, achievement, index, token) {
+// Paints an unlock's own artwork into its row's icon box. `isCurrent` turns false once a newer
+// render replaced the row, so a late decode never lands on someone else's.
+async function paintAchievementIcon(box, game, achievement, isCurrent) {
   const candidates = [];
   try {
     const local = localIcons.achievementIcon(localIcons.readIndex(game), achievement, true);
@@ -565,8 +584,7 @@ async function paintRarestIcon(game, achievement, index, token) {
   const tryPaint = async (list) => {
     for (const url of list.map(imageDisplayUrl).filter(Boolean)) {
       if (!(await imageDecodes(url))) continue;
-      if (token !== rarestIconToken) return true;
-      $('#profile-stats-rarest').children().eq(index).find('.row-icon').addClass('has-icon').css('background-image', cssUrl(url));
+      if (isCurrent()) $(box).addClass('has-icon').css('background-image', cssUrl(url));
       return true;
     }
     return false;
@@ -574,7 +592,95 @@ async function paintRarestIcon(game, achievement, index, token) {
   if (await tryPaint(candidates)) return;
   if (EMU_LOCAL_ICON_SOURCES.has(game.source) || !achievement.icon) return;
   const downloaded = await ipcRenderer.invoke('fetch-icon', achievement.icon, game.steamappid || game.appid).catch(() => null);
-  if (token === rarestIconToken) await tryPaint([downloaded]);
+  if (isCurrent()) await tryPaint([downloaded]);
+}
+
+/*
+  Every unlock, rarest first, in place of the panel body. A library can hold thousands of unlocks,
+  so rows skip layout until they scroll near (content-visibility) and each icon is only looked up
+  once its row comes into view.
+*/
+let allAchievementEntries = [];
+let allAchievementsToken = 0;
+let allAchievementsObserver = null;
+
+function allAchievementsOpen() {
+  return !$('#profile-stats-all').prop('hidden');
+}
+
+function allAchievementRow({ game, achievement, percent, tier, unlockedAt }, index) {
+  const name = achievement.displayName || achievement.name || '';
+  const rate =
+    percent === null
+      ? t('profile-trophies-unknown-rate', 'Unknown rate', 'Taux inconnu')
+      : t('profile-trophies-players', '{percent} of players', '{percent} des joueurs', { percent: formatPercentValue(percent, 1) });
+  const date = unlockedAt > 0 ? intlFormat.formatDate(unlockedAt, uiLang()) : '';
+  return `<li class="trophy-${escapeHtml(tier)}" role="button" tabindex="0" data-index="${index}" data-appid="${escapeHtml(
+    String(game.appid)
+  )}" data-achievement="${escapeHtml(String(achievement.name))}"><span class="row-icon"><i class="fas fa-trophy" aria-hidden="true"></i></span><div class="all-main"><b class="library-scroll-text" title="${escapeHtml(
+    name
+  )}"><span class="library-scroll-content">${escapeHtml(name)}</span></b><small>${escapeHtml(achievement.description || '')}</small></div><div class="all-side"><span class="all-game library-scroll-text" title="${escapeHtml(
+    game.name || ''
+  )}"><span class="library-scroll-content">${escapeHtml(game.name || String(game.appid))}</span></span><span class="all-rate">${escapeHtml(rate)}</span>${
+    date ? `<small>${escapeHtml(date)}</small>` : ''
+  }</div></li>`;
+}
+
+function renderAllAchievements() {
+  const installedOnly = typeof window.installedOnlyEnabled === 'function' && window.installedOnlyEnabled();
+  const token = ++allAchievementsToken;
+  allAchievementEntries = listUnlockedByRarity(gameList, { installedOnly, isStarted: hasBeenLaunched, rarityOf: trophyRarityOf });
+
+  $('#profile-stats-all-title').text(
+    t('profile-trophies-all-title', 'Unlocked achievements, rarest first', 'Succès débloqués, du plus rare au plus commun')
+  );
+  $('#profile-stats-all-count').text(`${formatCount(allAchievementEntries.length)} ${localeText('achievements')}`);
+  const list = $('#profile-stats-all-list');
+  list.html(allAchievementEntries.map(allAchievementRow).join(''));
+
+  allAchievementsObserver?.disconnect();
+  const container = document.getElementById('profile-stats-all');
+  allAchievementsObserver = new IntersectionObserver(
+    (records, observer) => {
+      for (const record of records) {
+        if (!record.isIntersecting) continue;
+        observer.unobserve(record.target);
+        const entry = allAchievementEntries[Number(record.target.dataset.index)];
+        const box = record.target.querySelector('.row-icon');
+        if (entry && box) paintAchievementIcon(box, entry.game, entry.achievement, () => token === allAchievementsToken).catch(() => {});
+      }
+    },
+    { root: container, rootMargin: '300px 0px' }
+  );
+  list.children('li[data-index]').each(function () {
+    allAchievementsObserver.observe(this);
+  });
+  if (container) container.scrollTop = 0;
+}
+
+function showAllAchievements() {
+  $('#profile-stats .profile-stats-body').css('display', 'none');
+  $('#profile-stats-all').prop('hidden', false);
+  $('#profile-stats-glyph').css('display', 'none');
+  $('#profile-stats-back').prop('hidden', false);
+  try {
+    renderAllAchievements();
+  } catch (err) {
+    debug.warn(`[trophies] could not list the unlocks: ${err && err.message ? err.message : err}`);
+  }
+  setTimeout(() => $('#profile-stats-back').trigger('focus'), 0);
+}
+
+function hideAllAchievements() {
+  allAchievementsToken += 1;
+  allAchievementsObserver?.disconnect();
+  allAchievementsObserver = null;
+  allAchievementEntries = [];
+  $('#profile-stats-all-list').empty();
+  $('#profile-stats-all').prop('hidden', true);
+  $('#profile-stats .profile-stats-body').css('display', '');
+  $('#profile-stats-back').prop('hidden', true);
+  $('#profile-stats-glyph').css('display', '');
 }
 
 window.refreshProfileStats = refreshProfileStats;
@@ -712,6 +818,8 @@ function renderProfileStatsPanel() {
 function applyProfileStatsLabels() {
   $('#profile-stats-title').text(t('profile-stats-title', 'Library stats', 'Statistiques de la bibliothèque'));
   $('#profile-stats-close').attr('title', t('close', 'Close', 'Fermer'));
+  const backLabel = t('profile-trophies-back', 'Back', 'Retour');
+  $('#profile-stats-back').attr({ title: backLabel, 'aria-label': backLabel });
   $('#profile-stats-overall-label').text(t('profile-stats-overall', 'Overall completion', 'Complétion globale'));
   $('#profile-stats-perfect-label, #profile-stats-col-perfect').text(localeText('perfectGame'));
   $('#profile-stats-progress-label').text(t('profile-stats-in-progress', 'In progress', 'En cours'));
@@ -750,12 +858,14 @@ window.refreshProfileStatsPanel = () => {
   if ($('#profile-stats').attr('aria-hidden') !== 'false') return;
   try {
     renderProfileStatsPanel();
+    if (allAchievementsOpen()) renderAllAchievements();
   } catch (err) {
     debug.warn(`[profile-stats] could not rebuild the summary: ${err && err.message ? err.message : err}`);
   }
 };
 
 function closeProfileStats() {
+  hideAllAchievements();
   $('#profile-stats').attr('aria-hidden', 'true').hide();
 }
 
@@ -2850,9 +2960,9 @@ function takeAchievementFocus(appid) {
   return focus && focus.appid === String(appid) ? focus.name : '';
 }
 
-// Open the library tile targeted by a Windows toast click.
-ipcRenderer.on('open-game', (event, { appid, achievement } = {}) => {
-  if (!appid) return;
+// Open a game's page from outside the library (a toast click, the stats panel), optionally on one
+// achievement.
+function openGameFromLibrary(appid, achievement) {
   const el = $('#game-list .game-box')
     .filter(function () {
       return String(this.dataset.appid) === String(appid);
@@ -2867,6 +2977,12 @@ ipcRenderer.on('open-game', (event, { appid, achievement } = {}) => {
   } else {
     debug.warn(`[open-game] no library tile for appid=${appid}`);
   }
+}
+
+// Open the library tile targeted by a Windows toast click.
+ipcRenderer.on('open-game', (event, { appid, achievement } = {}) => {
+  if (!appid) return;
+  openGameFromLibrary(appid, achievement);
 });
 
 function updateGamePage(appid, ach_data) {
@@ -6997,9 +7113,31 @@ var app = {
       $('#profile-stats-open').on('click', () => openProfileStats());
       $('#profile-trophies').on('click', () => openProfileStats({ section: 'profile-stats-trophies' }));
       $('#profile-stats-scope').on('click', () => window.toggleInstalledOnly?.());
+      $('#profile-stats-all-open').on('click', showAllAchievements);
+      $('#profile-stats-back').on('click', hideAllAchievements);
+      $('#profile-stats')
+        // Hovered with the mouse or selected with the pad or the keyboard, a row scrolls its long names.
+        .on('mouseenter focusin', '.profile-stats-trophy-list li, #profile-stats-all-list li', function () {
+          this.querySelectorAll('.library-scroll-text').forEach(startLibraryTextScroll);
+        })
+        .on('mouseleave focusout', '.profile-stats-trophy-list li, #profile-stats-all-list li', function () {
+          this.querySelectorAll('.library-scroll-text').forEach(stopLibraryTextScroll);
+        })
+        .on('click', '.profile-stats-trophy-list li[data-appid], #profile-stats-all-list li[data-appid]', function () {
+          openTrophyRow(this);
+        })
+        .on('keydown', '.profile-stats-trophy-list li[data-appid], #profile-stats-all-list li[data-appid]', function (event) {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
+          openTrophyRow(this);
+        });
       $('#profile-stats-close, #profile-stats > .overlay').on('click', closeProfileStats);
       $(document).on('keydown.profile-stats', (event) => {
-        if (event.key === 'Escape' && $('#profile-stats').attr('aria-hidden') === 'false') closeProfileStats();
+        if (event.key === 'Escape' && $('#profile-stats').attr('aria-hidden') === 'false') {
+          // Escape steps back out of the full list first, like its back button.
+          if (allAchievementsOpen()) hideAllAchievements();
+          else closeProfileStats();
+        }
       });
 
       // Manual library entries are first-class launch/playtime records even when no achievement

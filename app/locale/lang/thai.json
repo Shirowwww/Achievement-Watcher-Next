@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "ความสำเร็จที่หายากที่สุด",
     "profile-trophies-players": "{percent} ของผู้เล่น",
     "profile-trophies-no-platinum": "ยังไม่มีแพลตตินัม",
-    "profile-trophies-no-rarity": "ยังไม่มีอัตราที่ทราบ"
+    "profile-trophies-no-rarity": "ยังไม่มีอัตราที่ทราบ",
+    "profile-trophies-all": "ความสำเร็จทั้งหมด",
+    "profile-trophies-all-title": "ความสำเร็จที่ปลดล็อก เรียงจากหายากที่สุด",
+    "profile-trophies-back": "กลับ",
+    "profile-trophies-unknown-rate": "อัตราที่ไม่ทราบ"
   },
   "watchdog": {
     "rare": "หายาก {percent}%",

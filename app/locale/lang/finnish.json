@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Harvinaisimmat saavutukset",
     "profile-trophies-players": "{percent} pelaajista",
     "profile-trophies-no-platinum": "Ei vielä platinaa.",
-    "profile-trophies-no-rarity": "Ei vielä tunnettua osuutta."
+    "profile-trophies-no-rarity": "Ei vielä tunnettua osuutta.",
+    "profile-trophies-all": "Kaikki saavutukset",
+    "profile-trophies-all-title": "Avatut saavutukset, harvinaisimmat ensin",
+    "profile-trophies-back": "Takaisin",
+    "profile-trophies-unknown-rate": "Tuntematon osuus"
   },
   "watchdog": {
     "rare": "Harvinainen {percent} %",

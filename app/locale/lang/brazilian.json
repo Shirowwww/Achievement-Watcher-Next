@@ -2155,7 +2155,11 @@
     "profile-trophies-rarest-list": "Conquistas mais raras",
     "profile-trophies-players": "{percent} dos jogadores",
     "profile-trophies-no-platinum": "Nenhuma platina ainda.",
-    "profile-trophies-no-rarity": "Nenhuma taxa conhecida ainda."
+    "profile-trophies-no-rarity": "Nenhuma taxa conhecida ainda.",
+    "profile-trophies-all": "Todas as conquistas",
+    "profile-trophies-all-title": "Conquistas desbloqueadas, da mais rara à mais comum",
+    "profile-trophies-back": "Voltar",
+    "profile-trophies-unknown-rate": "Taxa desconhecida"
   },
   "watchdog": {
     "rare": "Raro {percent}%",
