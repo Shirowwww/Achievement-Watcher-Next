@@ -11911,6 +11911,11 @@ body {
   font: 11px 'Open-Sans';
 }
 
+.profile-stats-trophy small.note {
+  font-size: 10px;
+  opacity: 0.75;
+}
+
 .profile-stats-trophy-dist {
   display: grid;
   gap: 8px;

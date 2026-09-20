@@ -462,13 +462,18 @@ function renderProfileStatsTrophies(installedOnly) {
   section.find('.profile-stats-trophy.trophy-gold small').text(shareText(stats.gold));
   section.find('.profile-stats-trophy.trophy-silver small').text(shareText(stats.silver));
   section.find('.profile-stats-trophy.trophy-bronze small').text(shareText(stats.bronze));
-  section
-    .find('.profile-stats-trophy.trophy-common small')
-    .text(
-      stats.unranked > 0
-        ? t('profile-trophies-unranked', '{count} without a known rate', '{count} sans taux connu', { count: formatCount(stats.unranked) })
-        : shareText(stats.common)
-    );
+  // The common tile keeps its share like the other tiers; the unranked count is a second line,
+  // because it used to replace the percentage and hide it for good on any library with one
+  // unranked unlock (emulator sets have no global rates at all).
+  const commonTile = section.find('.profile-stats-trophy.trophy-common');
+  commonTile.find('small.share').text(shareText(stats.common));
+  const unrankedNote = commonTile.find('small.note');
+  unrankedNote.text(
+    stats.unranked > 0
+      ? t('profile-trophies-unranked', '{count} without a known rate', '{count} sans taux connu', { count: formatCount(stats.unranked) })
+      : ''
+  );
+  unrankedNote.prop('hidden', stats.unranked === 0);
 
   // overlayUi.rarityTier's tiers, the ones the rarity badges and notifications use.
   const legend = section.find('.profile-stats-trophy-legend');
@@ -4215,11 +4220,6 @@ var app = {
             );
           }
 
-          // Launching and picking the executable are not Ubisoft-specific; onPlayButtonClick works
-          // for any source. These used to sit inside the Ubisoft branch, denying Steam/GOG/Epic games a way to start.
-          gameMenu.append(new MenuItem({ type: 'separator' }));
-          gameMenu.append(
-            new MenuItem({
           // Manual per-game appid, for a folder whose name matches more than one Steam release: the
           // automatic name-based match (fuzzyAppid.js) cannot tell them apart, and picks one only
           // once, when steam_appid.txt does not exist yet - this is the only way to correct it.
@@ -4271,6 +4271,11 @@ var app = {
             }
           }
 
+          // Launching and picking the executable are not Ubisoft-specific; onPlayButtonClick works
+          // for any source. These used to sit inside the Ubisoft branch, denying Steam/GOG/Epic games a way to start.
+          gameMenu.append(new MenuItem({ type: 'separator' }));
+          gameMenu.append(
+            new MenuItem({
               label: t('launch-game', 'Launch game', 'Lancer le jeu'),
               async click() {
                 await app.onPlayButtonClick(self.find('.play-button'));
@@ -6418,6 +6423,14 @@ var app = {
           attempt(0);
         });
       }
+      // Nothing decoded: park the row on the neutral trophy rather than the loading gif, which
+      // otherwise spins for good. Locked icons of an emulated set (Xenia, for one) simply do not
+      // exist, so no candidate can ever land.
+      const missingIcon = cssUrl(pathToFileURL(path.join(appPath, 'resources/img/achievement.svg')).href);
+      function setMissingAchievementImage(selector) {
+        if (String($('#achievement .wrapper > .header').attr('data-appid')) !== String(game.appid)) return;
+        $(selector).css('background', missingIcon);
+      }
       // A Steam-emulated install already holds every achievement image (what the emulator paints in
       // game); reading them costs one readdir and works offline, instead of a page of spinners with no CDN access.
       const localIconIndex = localIcons.readIndex(game);
@@ -6432,12 +6445,12 @@ var app = {
         const local = localIcons.achievementIcon(localIconIndex, achievement, !!achievement.Achieved);
         // These emulator sources already store a local path in the schema: nothing to download.
         if (EMU_LOCAL_ICON_SOURCES.has(game.source)) {
-          await setAchievementImage(selector, [hash, local]);
+          if (!(await setAchievementImage(selector, [hash, local]))) setMissingAchievementImage(selector);
           return;
         }
         if (local && (await setAchievementImage(selector, [local]))) return;
         const downloaded = await cachedIcon(hash).catch(() => null);
-        await setAchievementImage(selector, [downloaded, local]);
+        if (!(await setAchievementImage(selector, [downloaded, local]))) setMissingAchievementImage(selector);
       });
 
       /*

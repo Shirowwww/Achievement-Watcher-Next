@@ -21,6 +21,16 @@ renamed in 3.9.0 and the history is kept under one file.
   update added, for anyone who maintains `steam_cache` by hand. "Recheck achievement lists" still works
   as a one-off check.
 
+### Fixed
+
+- **Locked Xenia achievements now have their pictures.** The profile file only holds a picture once an
+  achievement unlocks, so every locked row had none. They are fetched from Xbox Live's image host and
+  cached. A row with no picture at all now shows the neutral trophy instead of a spinner that never stops.
+- **The common trophy tile on the profile keeps its percentage.** The "without a known rate" count used
+  to replace it; it is now a second line under it.
+- **Small text in the in-game overlay is at least 11px**, for the column headers, status pills and
+  the overlay options.
+
 ### Security
 
 - **`adm-zip` updated to 0.6.1**, fixing an uncontrolled memory allocation from a declared uncompressed

@@ -352,7 +352,67 @@ function exists(p) {
   return fsp.access(p).then(() => true).catch(() => false);
 }
 
-module.exports.getGameData = async (gpdPath) => {
+/*
+  The profile GPD only gets an achievement's picture once it unlocks (the console showed a padlock
+  until then), so every locked row has none. Xbox Live's old image host still serves a title's whole
+  set by title id and hex image id. It answers over plain http only, which the renderer's CSP
+  refuses, so the files are fetched here into the same cache the embedded pictures go to.
+*/
+const XBOX_LIVE_ICON_TIMEOUT_MS = 8000;
+const XBOX_LIVE_ICON_CONCURRENCY = 6;
+const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
+
+function xboxLiveIconUrl(titleId, imageId) {
+  if (!/^[0-9a-f]{8}$/i.test(String(titleId || '')) || !uint32(imageId) || Number(imageId) === 0) return null;
+  return `http://image.xboxlive.com/global/t.${String(titleId).toUpperCase()}/ach/0/${Number(imageId).toString(16)}`;
+}
+
+// A 404 is remembered with an empty marker so a title the host does not know costs one request per
+// picture, not one per scan. Network failures are not: offline today says nothing about tomorrow.
+async function downloadXboxLiveIcon(titleId, imageId, iconPath, fetchImpl = globalThis.fetch) {
+  const url = xboxLiveIconUrl(titleId, imageId);
+  const missPath = `${iconPath}.missing`;
+  if (!url || typeof fetchImpl !== 'function' || fs.existsSync(missPath)) return false;
+  let resp;
+  try {
+    resp = await fetchImpl(url, { signal: AbortSignal.timeout(XBOX_LIVE_ICON_TIMEOUT_MS) });
+  } catch {
+    return false;
+  }
+  if (resp.status === 404) {
+    await fsp.writeFile(missPath, '').catch(() => {});
+    return false;
+  }
+  if (!resp.ok) return false;
+  const buf = Buffer.from(await resp.arrayBuffer());
+  if (buf.length < PNG_MAGIC.length || !buf.subarray(0, PNG_MAGIC.length).equals(PNG_MAGIC)) return false;
+  // Written aside then moved in: a torn file would otherwise pass the existsSync check forever.
+  const tmpPath = `${iconPath}.${process.pid}.tmp`;
+  try {
+    await fsp.writeFile(tmpPath, buf);
+    await fsp.rename(tmpPath, iconPath);
+    return true;
+  } catch {
+    await fsp.rm(tmpPath, { force: true }).catch(() => {});
+    return false;
+  }
+}
+
+async function fillMissingIcons(titleId, iconDir, rows, fetchImpl) {
+  const queue = rows.slice();
+  const worker = async () => {
+    while (queue.length) {
+      const row = queue.shift();
+      const iconPath = path.join(iconDir, `${row.imageId}.png`);
+      if (fs.existsSync(iconPath) || (await downloadXboxLiveIcon(titleId, row.imageId, iconPath, fetchImpl))) {
+        row.entry.icon = row.entry.icongray = 'file:///' + iconPath.replace(/\\/g, '/');
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(XBOX_LIVE_ICON_CONCURRENCY, queue.length) }, worker));
+}
+
+module.exports.getGameData = async (gpdPath, { fetchImpl } = {}) => {
   const raw = await fsp.readFile(gpdPath);
   const parsed = parseGpdBuffer(raw, gpdPath);
   const titleId = titleIdFromPath(gpdPath);
@@ -369,6 +429,7 @@ module.exports.getGameData = async (gpdPath) => {
   }
 
   const list = [];
+  const withoutIcon = [];
   for (const a of valid) {
     const locked = txt(a.lockedDescription);
     const unlocked = txt(a.unlockedDescription) || locked;
@@ -384,7 +445,7 @@ module.exports.getGameData = async (gpdPath) => {
         /* leave icon empty */
       }
     }
-    list.push({
+    const entry = {
       name: String(a.achievementId),
       displayName: txt(a.name) || String(a.achievementId),
       description: unlocked,
@@ -392,8 +453,11 @@ module.exports.getGameData = async (gpdPath) => {
       gamerscore: a.gamerscore,
       icon,
       icongray: icon,
-    });
+    };
+    list.push(entry);
+    if (!icon && iconsWritten) withoutIcon.push({ entry, imageId: a.imageId });
   }
+  if (withoutIcon.length) await fillMissingIcons(titleId, iconDir, withoutIcon, fetchImpl);
 
   return {
     name: parsed.title || titleId,
@@ -463,5 +527,6 @@ module.exports._internal = {
   configuredStorageRoots,
   tomlString,
   titleIdForGpd,
+  xboxLiveIconUrl,
   ACHIEVEMENT_EARNED_FLAG,
 };
