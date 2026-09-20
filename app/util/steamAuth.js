@@ -21,6 +21,10 @@ const STEAM_LOGIN_DOMAIN = 'https://login.steampowered.com';
 const STEAM_RENEW_URL = 'https://api.steampowered.com/IAuthenticationService/GenerateAccessTokenForApp/v1/';
 const STEAM_FINALIZE_URL = 'https://login.steampowered.com/jwt/finalizelogin';
 const STEAM_FINALIZE_REDIR = 'https://steamcommunity.com/login/home/?goto=';
+const STEAM_AJAX_REFRESH_URL = 'https://login.steampowered.com/jwt/ajaxrefresh';
+const STEAM_STORE_ORIGIN = 'https://store.steampowered.com';
+// finalizelogin is only ever called by steamcommunity.com pages, and steam-session sends the same.
+const STEAM_FINALIZE_HEADERS = { origin: 'https://steamcommunity.com', referer: 'https://steamcommunity.com/' };
 
 function resolveSteamSessionFile(userDataDir = '', explicitPath = '') {
   const fromFlag = String(explicitPath || '').trim();
@@ -240,9 +244,50 @@ function multipartForm(fields) {
   return { body: `${parts}--${boundary}--\r\n`, contentType: `multipart/form-data; boundary=${boundary}` };
 }
 
-function postForm(session, url, fields) {
+function postForm(session, url, fields, headers = {}) {
   const { body, contentType } = multipartForm(fields);
-  return session.fetch(url, { method: 'POST', headers: { 'content-type': contentType }, body, credentials: 'include' });
+  return session.fetch(url, { method: 'POST', headers: { ...headers, 'content-type': contentType }, body, credentials: 'include' });
+}
+
+function postUrlEncoded(session, url, fields) {
+  return session.fetch(url, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      origin: STEAM_STORE_ORIGIN,
+      referer: `${STEAM_STORE_ORIGIN}/`,
+    },
+    body: new URLSearchParams(fields).toString(),
+    credentials: 'include',
+  });
+}
+
+/*
+  What every Steam store page does for itself (shared/javascript/auth_refresh.js): ajaxrefresh reads
+  the HttpOnly refresh cookie on login.steampowered.com and answers with a one-time grant, and posting
+  that grant to login_url hands back a fresh webapi token and a new sign-in cookie. Nothing is read
+  out of the jar, so it keeps working whatever shape Valve gives the refresh token.
+*/
+async function refreshViaSite(session, priorToken = '') {
+  if (!session || typeof session.fetch !== 'function') throw new Error('steam-ajaxrefresh-no-session');
+  const response = await postUrlEncoded(session, STEAM_AJAX_REFRESH_URL, { redir: `${STEAM_STORE_ORIGIN}/` });
+  if (!response || !response.ok) throw new Error(`steam-ajaxrefresh-http-${response ? response.status : 'no-response'}`);
+  const grant = await response.json();
+  if (!grant || !grant.success) throw new Error(`steam-ajaxrefresh-eresult-${(grant && grant.error) || 'none'}`);
+  const loginUrl = String(grant.login_url || '');
+  // The grant names where to spend it; anything off Steam is not followed.
+  if (!/^https:\/\/([a-z0-9-]+\.)*(steampowered|steamcommunity)\.com\//i.test(loginUrl)) throw new Error('steam-ajaxrefresh-bad-login-url');
+
+  const fields = {};
+  for (const [key, value] of Object.entries(grant)) {
+    if (value !== null && typeof value !== 'object') fields[key] = String(value);
+  }
+  if (priorToken) fields.prior = String(priorToken);
+  const settoken = await postUrlEncoded(session, loginUrl, fields);
+  if (!settoken || !settoken.ok) throw new Error(`steam-settoken-http-${settoken ? settoken.status : 'no-response'}`);
+  const result = await settoken.json();
+  if (!result || Number(result.result) !== 1) throw new Error(`steam-settoken-eresult-${(result && result.result) || 'none'}`);
+  return String(result.token || '').trim();
 }
 
 /*
@@ -258,11 +303,12 @@ async function refreshWebSession(session, refreshToken, steamid) {
   const nonce = String(refreshToken || '').trim();
   if (!nonce) throw new Error('steam-finalize-no-refresh-token');
 
-  const response = await postForm(session, STEAM_FINALIZE_URL, {
-    nonce,
-    sessionid: crypto.randomBytes(12).toString('hex'),
-    redir: STEAM_FINALIZE_REDIR,
-  });
+  const response = await postForm(
+    session,
+    STEAM_FINALIZE_URL,
+    { nonce, sessionid: crypto.randomBytes(12).toString('hex'), redir: STEAM_FINALIZE_REDIR },
+    STEAM_FINALIZE_HEADERS
+  );
   if (!response || !response.ok) throw new Error(`steam-finalize-http-${response ? response.status : 'no-response'}`);
   const payload = await response.json();
   // Steam reports a refused refresh token as an eresult in the body, with a 200 status.
@@ -277,7 +323,9 @@ async function refreshWebSession(session, refreshToken, steamid) {
     if (!url) continue;
     try {
       const result = await postForm(session, url, { steamID: id, ...transfer.params });
-      if (result && result.ok) accepted += 1;
+      // settoken answers 200 with an eresult, so a refused transfer looks fine on the status alone.
+      const body = result && result.ok ? await result.json().catch(() => ({})) : null;
+      if (body && (body.result === undefined || Number(body.result) === 1)) accepted += 1;
     } catch {
       // help.steampowered.com being unreachable does not make the store session any less valid.
     }
@@ -313,12 +361,16 @@ async function renewWebApiToken(refreshToken, steamid, fetchImpl = globalThis.fe
 
 /*
   A valid token, or an empty string. Never triggers any UI: if the session is dead, the caller
-  shows a state and waits for a click. Three ways back from an expired token, tried in that order:
-  re-read it from the page while the login cookie is alive, sign the session back in with the
-  refresh token, which outlives that cookie by months, then the mobile-style renewal for the rare
-  session whose token came from somewhere else.
+  shows a state and waits for a click. Four ways back from an expired token, tried in that order:
+  re-read it from the page while the login cookie is alive, the refresh the Steam site runs for
+  itself, sign the session back in with the stored refresh token, which outlives that cookie by
+  months, then the mobile-style renewal for the rare session whose token came from somewhere else.
+  `onFailure` receives the reason each step gave up, so a renewal that fails leaves evidence; the
+  reasons are error codes, never a token.
 */
-async function ensureSteamToken({ sessionFile, tokenSecret, session, fetchImpl = globalThis.fetch } = {}) {
+async function ensureSteamToken({ sessionFile, tokenSecret, session, fetchImpl = globalThis.fetch, onFailure = null } = {}) {
+  const reasons = [];
+  const note = (err) => reasons.push(String((err && err.message) || err));
   const cached = await loadSession({ sessionFile, tokenSecret });
   if (cached && cached.webapi_token && Number(cached.expiresAt) > Date.now() + 60 * 1000) {
     return cached.webapi_token;
@@ -336,8 +388,18 @@ async function ensureSteamToken({ sessionFile, tokenSecret, session, fetchImpl =
       const token = await fetchWebApiToken(session);
       await store(token);
       return token;
-    } catch {
-      // The login cookie has expired; the refresh token below is the way back in.
+    } catch (err) {
+      // The login cookie has expired; the refresh cookie below is the way back in.
+      note(err);
+    }
+
+    try {
+      const token = (await refreshViaSite(session, cached && cached.webapi_token)) || (await fetchWebApiToken(session));
+      const renewed = await readRefreshSession(session);
+      await store(token, renewed.refreshToken ? { refresh_token: renewed.refreshToken } : {});
+      return token;
+    } catch (err) {
+      note(err);
     }
   }
 
@@ -356,8 +418,9 @@ async function ensureSteamToken({ sessionFile, tokenSecret, session, fetchImpl =
       const renewed = await readRefreshSession(session);
       await store(token, { refresh_token: renewed.refreshToken || refreshToken, steamid: steamid || id });
       return token;
-    } catch {
+    } catch (err) {
       // Steam refused the refresh token, or handed back no cookie: the last resort below.
+      note(err);
     }
   }
 
@@ -365,7 +428,9 @@ async function ensureSteamToken({ sessionFile, tokenSecret, session, fetchImpl =
     const token = await renewWebApiToken(refreshToken, steamid, fetchImpl);
     await store(token, { refresh_token: refreshToken, steamid });
     return token;
-  } catch {
+  } catch (err) {
+    note(err);
+    if (typeof onFailure === 'function') onFailure(reasons);
     return '';
   }
 }
@@ -422,6 +487,7 @@ module.exports = {
   STEAM_REFRESH_COOKIE,
   STEAM_RENEW_URL,
   STEAM_FINALIZE_URL,
+  STEAM_AJAX_REFRESH_URL,
   resolveSteamSessionFile,
   steamIdFromLoginCookie,
   parseJwtExpiry,
@@ -436,6 +502,7 @@ module.exports = {
   refreshSessionFromCookie,
   readRefreshSession,
   refreshWebSession,
+  refreshViaSite,
   renewWebApiToken,
   ensureSteamToken,
   fetchPersona,

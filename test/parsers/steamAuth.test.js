@@ -402,7 +402,9 @@ test('an expired session is signed back in with the refresh token', async () => 
         if (!signedIn) return { ok: false, status: 401, json: async () => ({}) };
         return { ok: true, json: async () => ({ success: 1, data: { webapi_token: fresh } }) };
       }
-      posted.push({ url, body: String(init.body || ''), type: String((init.headers || {})['content-type'] || '') });
+      // The site's own refresh is tried first; here it has nothing to work with.
+      if (url === steamAuth.STEAM_AJAX_REFRESH_URL) return { ok: true, json: async () => ({ success: false, error: 21 }) };
+      posted.push({ url, body: String(init.body || ''), type: String((init.headers || {})['content-type'] || ''), origin: (init.headers || {}).origin });
       if (url === steamAuth.STEAM_FINALIZE_URL) {
         return {
           ok: true,
@@ -425,6 +427,7 @@ test('an expired session is signed back in with the refresh token', async () => 
   const finalize = posted.find((call) => call.url === steamAuth.STEAM_FINALIZE_URL);
   assert.ok(finalize.type.startsWith('multipart/form-data; boundary='), 'Steam only reads a multipart form here');
   assert.ok(finalize.body.includes('REFRESH-OLD'), 'the refresh token is the nonce');
+  assert.equal(finalize.origin, 'https://steamcommunity.com', 'finalizelogin is sent as the community page sends it');
   assert.equal(posted.filter((call) => call.url.endsWith('/login/settoken')).length, 2, 'every domain gets its cookie back');
 
   const status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret: 'passphrase' });
@@ -471,4 +474,79 @@ test('a transfer no domain accepts leaves no cookie, and says so', async () => {
     },
   };
   await assert.rejects(() => steamAuth.refreshWebSession(session, 'REFRESH', '7656119'), /steam-finalize-no-cookie/);
+});
+
+/*
+  The refresh every Steam store page runs for itself: ajaxrefresh spends the HttpOnly refresh cookie,
+  login_url hands back the new token. It needs nothing read out of the jar, so it is tried first.
+*/
+test('an expired session is renewed the way the Steam site renews itself', async () => {
+  const sessionFile = path.join(tmp, 'site-refresh.enc');
+  await steamAuth.saveSessionEncrypted(
+    sessionFile,
+    { webapi_token: 'OLD', steamid: '76561198235048344', refresh_token: 'REFRESH', expiresAt: Date.now() - 1000 },
+    'passphrase'
+  );
+
+  const fresh = fakeJwt({ exp: Math.floor(Date.now() / 1000) + 86400 });
+  const calls = [];
+  const session = {
+    cookies: { get: async () => [] },
+    fetch: async (url, init = {}) => {
+      calls.push({ url, body: String(init.body || ''), headers: init.headers || {} });
+      if (url === steamAuth.STEAM_TOKEN_URL) return { ok: false, status: 401, json: async () => ({}) };
+      if (url === steamAuth.STEAM_AJAX_REFRESH_URL) {
+        return {
+          ok: true,
+          json: async () => ({ success: true, login_url: 'https://store.steampowered.com/login/settoken', steamID: '76561198235048344', nonce: 'N', auth: 'A', redir: 'https://store.steampowered.com/' }),
+        };
+      }
+      if (url === 'https://store.steampowered.com/login/settoken') return { ok: true, json: async () => ({ result: 1, token: fresh, rtExpiry: 1 }) };
+      throw new Error(`unexpected ${url}`);
+    },
+  };
+
+  assert.equal(await steamAuth.ensureSteamToken({ sessionFile, tokenSecret: 'passphrase', session }), fresh);
+
+  const settoken = new URLSearchParams(calls.find((c) => c.url.endsWith('/login/settoken')).body);
+  assert.equal(settoken.get('nonce'), 'N');
+  assert.equal(settoken.get('auth'), 'A');
+  assert.equal(settoken.get('prior'), 'OLD', 'the expiring token goes back as prior, as the page sends it');
+  assert.ok(!calls.some((c) => c.url === steamAuth.STEAM_FINALIZE_URL), 'no need to spend the refresh token');
+
+  const status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret: 'passphrase' });
+  assert.equal(status.needsReconnect, false);
+  assert.equal(status.steamid, '76561198235048344');
+});
+
+test('a grant pointing off Steam is never followed', async () => {
+  const session = {
+    fetch: async (url) => {
+      if (url === steamAuth.STEAM_AJAX_REFRESH_URL) return { ok: true, json: async () => ({ success: true, login_url: 'https://evil.example/settoken' }) };
+      throw new Error('followed');
+    },
+  };
+  await assert.rejects(() => steamAuth.refreshViaSite(session, 'OLD'), /steam-ajaxrefresh-bad-login-url/);
+});
+
+test('a renewal that fails says why each step gave up', async () => {
+  const sessionFile = path.join(tmp, 'renew-reasons.enc');
+  await steamAuth.saveSessionEncrypted(
+    sessionFile,
+    { webapi_token: 'OLD', steamid: '76561198235048344', refresh_token: 'DEAD', expiresAt: Date.now() - 1000 },
+    'passphrase'
+  );
+  const session = {
+    cookies: { get: async () => [] },
+    fetch: async (url) => {
+      if (url === steamAuth.STEAM_AJAX_REFRESH_URL) return { ok: true, json: async () => ({ success: false, error: 21 }) };
+      if (url === steamAuth.STEAM_FINALIZE_URL) return { ok: true, json: async () => ({ error: 15 }) };
+      return { ok: false, status: 401, json: async () => ({}) };
+    },
+  };
+  let reasons = null;
+  const fetchImpl = async () => ({ ok: false, status: 401, json: async () => ({}) });
+  assert.equal(await steamAuth.ensureSteamToken({ sessionFile, tokenSecret: 'passphrase', session, fetchImpl, onFailure: (r) => (reasons = r) }), '');
+  assert.deepEqual(reasons, ['steam-token-http-401', 'steam-ajaxrefresh-eresult-21', 'steam-finalize-eresult-15', 'steam-renew-http-401']);
+  assert.ok(!reasons.join(' ').includes('DEAD'), 'no token ever reaches the log');
 });

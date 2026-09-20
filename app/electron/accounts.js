@@ -216,6 +216,9 @@ function steamAuthOptions() {
 // perfectly ordinary answer, and asking it again on every Settings open would not change it.
 let steamPersonaRetried = false;
 
+// Each renewal step's reason for giving up: error codes only, never a token.
+const logSteamRenewalFailure = (reasons) => debug.log(`[steam] renewal steps failed: ${reasons.join(' | ')}`);
+
 ipcMain.handle('steam:auth-status', async () => {
   try {
     const { steamAuth, sessionFile, tokenSecret } = steamAuthOptions();
@@ -231,6 +234,7 @@ ipcMain.handle('steam:auth-status', async () => {
         sessionFile,
         tokenSecret,
         session: session.fromPartition(steamAuth.STEAM_SESSION_PARTITION),
+        onFailure: logSteamRenewalFailure,
       });
       if (renewed) status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret });
       else debug.log('[steam] the daily token could not be renewed: Steam refused the saved sign-in');
@@ -277,6 +281,7 @@ ipcMain.handle('steam:ensure-token', async () => {
       sessionFile,
       tokenSecret,
       session: session.fromPartition(steamAuth.STEAM_SESSION_PARTITION),
+      onFailure: logSteamRenewalFailure,
     });
     if (!token) return { token: '', steamid: '' };
     const status = await steamAuth.getSteamAuthStatus({ sessionFile, tokenSecret });
