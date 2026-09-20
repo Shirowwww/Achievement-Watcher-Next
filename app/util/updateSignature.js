@@ -26,13 +26,24 @@ function publisherMatches(subject, publisherNames) {
 }
 
 /*
-  Thumbprints (SHA-1, uppercase hex, no spaces) of the certificates allowed to sign an update.
-  EMPTY BY DEFAULT: the release certificate is self-signed and can be regenerated, and a client
-  pinned to a thumbprint that no longer exists can never take another update. Fill this in only
-  together with a plan for rotating it, and only once the current certificate is settled - the CN
-  check below is what is enforced until then.
+  Thumbprints (SHA-1, uppercase hex) of the only certificates allowed to sign an update. A common
+  name proves nothing - anyone can issue themselves a CN=Shirow certificate - so the CN check alone
+  let any installer published under the release feed through.
+
+  Two entries on purpose, and that is the rotation plan:
+    - the release certificate build/signing/Shirow.pfx (valid until 2031-08-04);
+    - a standby certificate, build/signing/Shirow-standby.pfx, generated at the same time and kept
+      offline. A client already trusts it, so the release certificate can be retired or replaced
+      by promoting the standby without stranding anyone. Promote it, then pin a new standby in the
+      same release.
+  Losing BOTH private keys strands every installed client on its version: they would refuse every
+  later update and only a manual download would bring them forward. docs/INSTALLER_AND_UPDATES.md
+  has the procedure. build/build.js refuses to finish a release signed by anything else.
 */
-const PINNED_THUMBPRINTS = [];
+const PINNED_THUMBPRINTS = Object.freeze([
+  '2E581B204231D7EED9E33E798B5E0C503AD8FEDC', // CN=Shirow, release, Shirow.pfx
+  'F64838216091CCC975320E8A2D50F4F403837667', // CN=Shirow, standby, Shirow-standby.pfx
+]);
 
 function normalizeThumbprint(value) {
   return String(value || '')
@@ -40,7 +51,12 @@ function normalizeThumbprint(value) {
     .toUpperCase();
 }
 
-function evaluateUpdateSignature(publisherNames, signature) {
+function isPinnedThumbprint(value, pinned = PINNED_THUMBPRINTS) {
+  const thumbprint = normalizeThumbprint(value);
+  return !!thumbprint && pinned.map(normalizeThumbprint).includes(thumbprint);
+}
+
+function evaluateUpdateSignature(publisherNames, signature, { pinned = PINNED_THUMBPRINTS } = {}) {
   const status = String((signature && signature.Status) || '');
 
   /*
@@ -56,19 +72,21 @@ function evaluateUpdateSignature(publisherNames, signature) {
 
   const subject = signature && signature.SignerCertificate && signature.SignerCertificate.Subject;
 
-  // Older releases can be unsigned, and electron-updater already verifies the SHA-512 in
-  // latest.yml before this hook runs. Do not turn a valid legacy update into an error solely
-  // because it predates the local signing setup.
-  if (!subject) return null;
+  /*
+    This check only ever looks at the installer being offered - a version newer than the running
+    one, built after the signing certificate existed - so there is no legacy unsigned update left to
+    stay compatible with.
+    The SHA-512 in latest.yml is no substitute: it comes from the same feed as the installer, so
+    whoever can replace one can replace both.
+  */
+  if (!subject) return 'installer is not signed';
 
-  // A self-signed release certificate is deliberately not a Windows-trusted root on every PC.
-  // Match the configured publisher CN, rather than Authenticode's trust status, so a legitimate
-  // Shirow-signed update works on a fresh Windows installation as well.
+  // A self-signed release certificate is deliberately not a Windows-trusted root on every PC, so
+  // Authenticode's trust status is not the test: the publisher CN and the pinned thumbprint are.
   if (publisherMatches(String(subject), publisherNames)) {
-    if (PINNED_THUMBPRINTS.length === 0) return null;
+    if (pinned.length === 0) return null;
     const thumbprint = normalizeThumbprint(signature.SignerCertificate.Thumbprint);
-    if (PINNED_THUMBPRINTS.map(normalizeThumbprint).includes(thumbprint)) return null;
-    // A common name proves nothing on its own: anyone can issue themselves a certificate with it.
+    if (isPinnedThumbprint(thumbprint, pinned)) return null;
     return `installer is signed by an unknown certificate (thumbprint: ${thumbprint || 'none'})`;
   }
 
@@ -123,6 +141,7 @@ function verifyUpdateCodeSignature(publisherNames, unescapedTempUpdateFile, log 
 
 module.exports = {
   PINNED_THUMBPRINTS,
+  isPinnedThumbprint,
   publisherMatches,
   evaluateUpdateSignature,
   verifyUpdateCodeSignature,

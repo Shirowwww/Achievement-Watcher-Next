@@ -7,7 +7,7 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
-const { publisherMatches } = require("../util/updateSignature.js");
+const { publisherMatches, isPinnedThumbprint } = require("../util/updateSignature.js");
 const { PORTABLE_MARKER } = require("../util/portableMode.js");
 const AdmZip = require("adm-zip");
 
@@ -43,8 +43,14 @@ function verifySignedUpdateArtifacts(version) {
         }
     );
     if (signature.status !== 0) throw new Error(`Could not inspect installer signature: ${signature.stderr || signature.error || "unknown error"}`);
-    const subject = JSON.parse(signature.stdout).SignerCertificate?.Subject || "";
+    const signer = JSON.parse(signature.stdout).SignerCertificate || {};
+    const subject = signer.Subject || "";
     if (!publisherMatches(subject, ["Shirow"])) throw new Error(`Installer signer must be CN=Shirow, received: ${subject || "none"}`);
+    // Installed clients refuse any certificate that is not pinned in util/updateSignature.js, so a
+    // release signed by anything else would install by hand and never arrive as an update.
+    if (!isPinnedThumbprint(signer.Thumbprint)) {
+        throw new Error(`Installer certificate ${signer.Thumbprint || "(none)"} is not in PINNED_THUMBPRINTS (app/util/updateSignature.js)`);
+    }
 
     const appUpdate = fs.readFileSync(updateConfig, "utf8");
     if (!/publisherName:\s*(?:\r?\n\s*-\s*Shirow\b|Shirow\b)/.test(appUpdate)) {
@@ -100,6 +106,7 @@ if (fs.existsSync(pfx)) {
 }
 else {
     console.log("[build] No local signing certificate found (build/signing/Shirow.pfx) - building unsigned.");
+    console.log("[build] WARNING: installed clients refuse unsigned updates. Do not publish this build as a release.");
     console.log("[build] To sign, run: powershell -ExecutionPolicy Bypass -File build/signing/create-self-signed-cert.ps1");
 }
 

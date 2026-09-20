@@ -28,9 +28,14 @@ test('an installer modified after signing is refused', () => {
 test('a locally untrusted but genuine signature is still accepted', () => {
   // The release certificate is self-signed on purpose, so trust status is not the test.
   for (const status of ['UnknownError', 'NotTrusted', 'Valid']) {
-    assert.equal(evaluateUpdateSignature(['Shirow'], { Status: status, SignerCertificate: { Subject: 'CN=Shirow' } }), null, status);
+    assert.equal(
+      evaluateUpdateSignature(['Shirow'], { Status: status, SignerCertificate: { Subject: 'CN=Shirow', Thumbprint: '2E581B204231D7EED9E33E798B5E0C503AD8FEDC' } }),
+      null,
+      status
+    );
   }
-  assert.equal(evaluateUpdateSignature(['Shirow'], { Status: 'NotSigned' }), null);
+  // Unsigned is no longer "legacy compatible": the SHA-512 it leaned on comes from the same feed.
+  assert.equal(evaluateUpdateSignature(['Shirow'], { Status: 'NotSigned' }), 'installer is not signed');
 });
 
 test('the stored library is keyed to the Steam account it was scanned for', () => {

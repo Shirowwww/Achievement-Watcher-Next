@@ -2,3 +2,4 @@
 *.pfx
 *.cer
 .password
+.password-*

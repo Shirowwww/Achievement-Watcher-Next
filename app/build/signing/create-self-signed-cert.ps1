@@ -18,6 +18,12 @@
 .PARAMETER CertificateName
     Subject common name used for the certificate. Defaults to "Shirow".
 
+.PARAMETER FileName
+    Base name of the exported files. Defaults to the common name. The standby
+    certificate keeps CN=Shirow (the update check matches it) under another
+    file name: -FileName Shirow-standby. Its password goes to
+    .password-<FileName> so the release certificate's .password is untouched.
+
 .PARAMETER Years
     Validity period in years. Defaults to 5.
 
@@ -39,6 +45,7 @@
 [CmdletBinding()]
 param(
     [string]$CertificateName = "Shirow",
+    [string]$FileName,
     [int]$Years = 5,
     [string]$Password,
     [switch]$Force,
@@ -48,9 +55,12 @@ param(
 $ErrorActionPreference = "Stop"
 
 $signingDir = $PSScriptRoot
-$pfxPath = Join-Path $signingDir "$CertificateName.pfx"
-$cerPath = Join-Path $signingDir "$CertificateName.cer"
-$passwordFile = Join-Path $signingDir ".password"
+if ([string]::IsNullOrWhiteSpace($FileName)) { $FileName = $CertificateName }
+$pfxPath = Join-Path $signingDir "$FileName.pfx"
+$cerPath = Join-Path $signingDir "$FileName.cer"
+# build/build.js reads .password for Shirow.pfx; any other file keeps its own password file.
+$passwordName = if ($FileName -eq "Shirow") { ".password" } else { ".password-$FileName" }
+$passwordFile = Join-Path $signingDir $passwordName
 
 if ((Test-Path $pfxPath) -and -not $Force) {
     throw "A certificate already exists at $pfxPath. Use -Force to replace it (previously signed builds will stop being trusted)."
@@ -108,7 +118,12 @@ Write-Host "  PFX: $pfxPath"
 Write-Host "  Certificate thumbprint: $($cert.Thumbprint)"
 Write-Host "  Password stored locally (never committed): $passwordFile"
 Write-Host ""
-Write-Host "The next 'npm run build' will sign the app automatically with this certificate."
+Write-Host "Add this thumbprint to PINNED_THUMBPRINTS in app/util/updateSignature.js before shipping a build signed with it."
+if ($FileName -eq "Shirow") {
+    Write-Host "The next 'npm run build' will sign the app automatically with this certificate."
+} else {
+    Write-Host "Standby certificate: keep it offline. To rotate, rename it to Shirow.pfx and its password file to .password."
+}
 if ($InstallTrust) {
     Write-Host "Because the certificate is trusted on this machine, the local SmartScreen warning should no longer appear for these builds."
 }
