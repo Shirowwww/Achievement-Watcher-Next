@@ -1106,6 +1106,10 @@
         "name": "Periksa ulang daftar pencapaian",
         "button": "Periksa sekarang",
         "description": "Memeriksa Steam untuk pencapaian yang ditambahkan oleh pembaruan game sejak pemeriksaan terakhir. Berjalan otomatis setiap 3 hari; ini memaksanya berjalan sekarang."
+      },
+      "disableAutoRefresh": {
+        "name": "Pembaruan otomatis data pencapaian",
+        "description": "Nonaktifkan ini bila Anda mengelola steam_cache sendiri: ini menghentikan perbaikan mandiri berkala yang mengisi deskripsi kosong dan mendeteksi pencapaian yang ditambahkan oleh pembaruan game. “Periksa ulang daftar pencapaian” di atas tetap berfungsi sebagai pemeriksaan manual satu kali."
       }
     },
     "interfaceMode": {
@@ -1372,6 +1376,9 @@
     "could-not-write-steam-settings": "Tidak dapat menulis steam_settings.",
     "blacklist-add-failed": "Gagal menambahkan item ke daftar hitam pengguna",
     "emulator-source": "Sumber emulator",
+    "appid-override": "Atur AppID secara manual…",
+    "appid-override-prompt": "Steam appid untuk \"{name}\" ({folder}). Ini menggantikan tebakan AW Next berdasarkan nama - berguna saat game lain memiliki nama yang sama dengan folder ini.",
+    "appid-override-clear": "Hapus AppID manual",
     "launch-game": "Jalankan game",
     "configure-executable": "Atur file eksekusi…",
     "icon-cache-build-failed": "Gagal membangun cache ikon",
@@ -2008,9 +2015,8 @@
     "gh-action-uplay-ticket-off": "Matikan pencapaian saat luring",
     "gh-ticket-remove-detail": "Baris yang ditambahkan AW Next ke pengaturan emulator di samping gim akan dihapus, dan tidak ada yang lain berubah. Pencapaian yang sudah tercatat tetap tersimpan. Kamu bisa mengaktifkannya lagi kapan saja.",
     "gh-why-appid-mismatch": "Emulator di folder game ini mengumumkan ID game {appidOnDisk}, tetapi AW Next mencocokkan game ini dengan {appidExpected}. Pencapaian yang terbuka dengan ID yang salah akan tercatat pada game lain. Betulkan filenya bila {appidExpected} memang game yang benar - nilai saat ini tetap disimpan.",
-    "gh-appid-confirm-title": "Betulkan file ID game?",
-    "gh-appid-confirm-message": "steam_appid.txt akan diubah dari {appidOnDisk} menjadi {appidExpected}.",
-    "gh-appid-confirm-detail": "Lakukan ini hanya bila {game} benar-benar game {appidExpected} di Steam. Bila emulator memang sengaja disiapkan untuk {appidOnDisk}, batalkan: filenya sudah benar dan justru kartu perpustakaannya yang perlu dibetulkan. File saat ini dicadangkan di steam_settings\\.aw-backups.",
+    "gh-appid-prompt-message": "{game} saat ini memiliki appid {appidOnDisk} di steam_appid.txt. AW Next menyarankan {appidExpected}, tetapi masukkan sendiri appid Steam yang benar jika Anda mengetahuinya (misalnya game lain memakai nama yang sama). File saat ini dicadangkan di steam_settings\\.aw-backups.",
+    "gh-appid-not-numeric": "Appid Steam adalah angka.",
     "gh-appid-done-title": "File ID game dibetulkan",
     "gh-appid-done-message": "steam_appid.txt kini berisi {appid}.",
     "gh-simple-notifications-failed": "Notifikasi terakhir tidak dapat dikirim",

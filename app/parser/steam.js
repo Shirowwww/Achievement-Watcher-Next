@@ -451,8 +451,9 @@ module.exports.getGameData = async (cfg) => {
   try {
     result = this.getCachedData(cfg);
     // Ambiguous empty entry (see isStaleEmptySchema): fall through to the fetch path below, but
-    // keep the record so a failed re-check can hand it back untouched.
-    const staleEmpty = module.exports.isStaleEmptySchema(result) ? result : undefined;
+    // keep the record so a failed re-check can hand it back untouched. Skipped when the user
+    // disabled auto-refresh, unless this is an explicit forced recheck.
+    const staleEmpty = (cfg.forceRecheck || !cfg.disableAutoRefresh) && module.exports.isStaleEmptySchema(result) ? result : undefined;
     if (staleEmpty) result = undefined;
     if ((!result || !result.name) && isKnownUnresolved(cfg.appID)) {
       debug.log(`[${cfg.appID}] skipped: known to have no Steam data (cached miss)`);
@@ -527,7 +528,9 @@ module.exports.getGameData = async (cfg) => {
 
     // Self-repair: patch blank fields and pick up achievements a game update added (Steam gives no
     // change notification). Runs every 3 days, or immediately if forced from Settings > Advanced.
-    const triedRecently = !cfg.forceRecheck && result && result.descBackfilledAt && Date.now() - result.descBackfilledAt < DESC_RECHECK_MS;
+    // A user who hand-curates steam_cache can turn this off entirely; forceRecheck is still honored
+    // since that is an explicit, one-off action rather than the automatic background pass.
+    const triedRecently = !cfg.forceRecheck && (cfg.disableAutoRefresh || (result && result.descBackfilledAt && Date.now() - result.descBackfilledAt < DESC_RECHECK_MS));
     if ((!fastStart || cfg.forceRecheck) && result && result.achievement && Array.isArray(result.achievement.list) && !triedRecently) {
       let recheckSucceeded = false;
       try {
@@ -556,7 +559,10 @@ module.exports.getGameData = async (cfg) => {
       }
     }
 
-    needSaving = needSaving || (!fastStart && (await GetMissingData(result, cfg.showHidden, cfg.lang, cfg.steamSettings)));
+    needSaving =
+      needSaving ||
+      (!fastStart &&
+        (await GetMissingData(result, cfg.showHidden, cfg.lang, cfg.steamSettings, { forceRecheck: cfg.forceRecheck, disableAutoRefresh: cfg.disableAutoRefresh })));
     if (needSaving) {
       // A record with no name is a failed lookup wearing one, not a schema; keep it in memory for
       // this scan only and let the next one retry the fetch.
@@ -1881,7 +1887,7 @@ async function findWorkingAssetPath(appid, relativePath, probe = probeUrl) {
 // `showHidden` is accepted for call-site compatibility but no longer gates hidden-description
 // backfill: the detail view reveals hidden descriptions on click regardless of the setting, so the
 // real text must always be fetched.
-async function GetMissingData(data, showHidden, lang, steamSettings) {
+async function GetMissingData(data, showHidden, lang, steamSettings, { forceRecheck = false, disableAutoRefresh = false } = {}) {
   let updated = false;
   try {
     let updatedImgs, updatedDesc;
@@ -1916,7 +1922,7 @@ async function GetMissingData(data, showHidden, lang, steamSettings) {
       // Still no portrait: run the same SteamDB -> SteamGridDB chain the first fetch uses, stamped on
       // the same three-day cadence so a game with genuinely no cover costs one lookup, not one per scan.
       const PORTRAIT_RECHECK_MS = 3 * 24 * 60 * 60 * 1000;
-      const portraitTriedRecently = data.portraitCheckedAt && Date.now() - data.portraitCheckedAt < PORTRAIT_RECHECK_MS;
+      const portraitTriedRecently = !forceRecheck && (disableAutoRefresh || (data.portraitCheckedAt && Date.now() - data.portraitCheckedAt < PORTRAIT_RECHECK_MS));
       if (!data.img.portrait && data.name && !portraitTriedRecently) {
         data.img.portrait = await resolvePortrait({ appid: data.appid, name: data.name, portrait: null });
         data.portraitCheckedAt = Date.now(); // remember the attempt even when nothing was found
@@ -1924,7 +1930,7 @@ async function GetMissingData(data, showHidden, lang, steamSettings) {
       }
     }
     // Backfill blank descriptions every 3 days; key-based schemas already include hidden text.
-    const triedRecently = data.descBackfilledAt && Date.now() - data.descBackfilledAt < DESC_RECHECK_MS;
+    const triedRecently = !forceRecheck && (disableAutoRefresh || (data.descBackfilledAt && Date.now() - data.descBackfilledAt < DESC_RECHECK_MS));
     const hasBlankVisible = data.achievement.list.some((ac) => ac.hidden != 1 && (!ac.description || String(ac.description).trim() === ''));
     const hasBlankHidden = data.achievement.list.some((ac) => ac.hidden == 1 && (!ac.description || String(ac.description).trim() === ''));
     if (!triedRecently && (hasBlankVisible || hasBlankHidden)) {

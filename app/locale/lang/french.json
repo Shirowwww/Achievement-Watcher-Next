@@ -1106,6 +1106,10 @@
         "name": "Revérifier les listes de succès",
         "button": "Vérifier maintenant",
         "description": "Vérifie auprès de Steam si une mise à jour du jeu a ajouté des succès depuis la dernière vérification. Se fait automatiquement tous les 3 jours ; ce bouton force la vérification immédiatement."
+      },
+      "disableAutoRefresh": {
+        "name": "Mises à jour automatiques des données de succès",
+        "description": "Désactive ceci si tu maintiens toi-même steam_cache : cela arrête l’autoréparation périodique qui complète les descriptions vides et détecte les succès ajoutés par une mise à jour du jeu. « Revérifier les listes de succès » ci-dessus fonctionne toujours comme vérification manuelle ponctuelle."
       }
     },
     "interfaceMode": {
@@ -1372,6 +1376,9 @@
     "could-not-write-steam-settings": "Impossible d’écrire steam_settings.",
     "blacklist-add-failed": "Échec de l’ajout à la liste noire",
     "emulator-source": "Source de l’émulateur",
+    "appid-override": "Définir l’AppID manuellement…",
+    "appid-override-prompt": "AppID Steam à utiliser pour « {name} » ({folder}). Il remplace la déduction d’AW Next par le nom - utile quand un autre jeu porte le même nom que ce dossier.",
+    "appid-override-clear": "Effacer l’AppID manuel",
     "launch-game": "Lancer le jeu",
     "configure-executable": "Configurer l’exécutable…",
     "icon-cache-build-failed": "Échec de la construction du cache d’icônes",
@@ -2008,9 +2015,8 @@
     "gh-action-uplay-ticket-off": "Désactiver les succès hors connexion",
     "gh-ticket-remove-detail": "La ligne ajoutée par AW Next aux réglages de l’émulateur à côté du jeu est retirée, et rien d’autre ne change. Les succès déjà enregistrés sont conservés. Tu peux la remettre quand tu veux.",
     "gh-why-appid-mismatch": "L’émulateur du dossier de ce jeu annonce l’identifiant {appidOnDisk}, alors qu’AW Next a associé ce jeu à {appidExpected}. Les succès débloqués sous le mauvais identifiant sont enregistrés sur un autre jeu. Corrige le fichier si {appidExpected} est le bon jeu - la valeur actuelle est conservée.",
-    "gh-appid-confirm-title": "Corriger le fichier d’identification ?",
-    "gh-appid-confirm-message": "steam_appid.txt passera de {appidOnDisk} à {appidExpected}.",
-    "gh-appid-confirm-detail": "Ne fais ceci que si {game} est bien le jeu {appidExpected} sur Steam. Si l’émulateur a été configuré volontairement pour {appidOnDisk}, annule : c’est le fichier qui a raison et la fiche du jeu qu’il faut corriger. Le fichier actuel est sauvegardé dans steam_settings\\.aw-backups.",
+    "gh-appid-prompt-message": "{game} a actuellement l’identifiant {appidOnDisk} dans steam_appid.txt. AW Next propose {appidExpected}, mais indique toi-même le bon identifiant Steam si tu le connais (par exemple si un autre jeu partage ce nom). Le fichier actuel est sauvegardé dans steam_settings\\.aw-backups.",
+    "gh-appid-not-numeric": "Un identifiant Steam est un nombre.",
     "gh-appid-done-title": "Fichier d’identification corrigé",
     "gh-appid-done-message": "steam_appid.txt contient maintenant {appid}.",
     "gh-simple-notifications-failed": "La dernière notification n’a pas pu être envoyée",

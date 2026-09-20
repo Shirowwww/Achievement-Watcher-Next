@@ -1106,6 +1106,10 @@
         "name": "Başarım listelerini yeniden kontrol et",
         "button": "Şimdi kontrol et",
         "description": "Son kontrolden bu yana bir oyun güncellemesinin başarım eklediğini Steam’den kontrol eder. Normalde her 3 günde bir otomatik çalışır; bu düğme hemen zorlar."
+      },
+      "disableAutoRefresh": {
+        "name": "Otomatik başarım verisi güncellemeleri",
+        "description": "steam_cache'i kendiniz yönetiyorsanız bunu kapatın: bu, boş açıklamaları dolduran ve bir oyun güncellemesinin eklediği başarımları yakalayan periyodik kendi kendini onarmayı durdurur. Yukarıdaki „Başarım listelerini yeniden kontrol et” işlevi hâlâ manuel, tek seferlik bir kontrol olarak çalışır."
       }
     },
     "interfaceMode": {
@@ -1372,6 +1376,9 @@
     "could-not-write-steam-settings": "steam_settings yazılamadı.",
     "blacklist-add-failed": "Öğe kullanıcı kara listesine eklenemedi",
     "emulator-source": "Emülatör kaynağı",
+    "appid-override": "AppID’yi elle ayarla…",
+    "appid-override-prompt": "\"{name}\" ({folder}) için kullanılacak Steam appid. AW Next’in ada dayalı tahminini geçersiz kılar - başka bir oyun bu klasörle aynı ada sahipse işe yarar.",
+    "appid-override-clear": "Elle girilen AppID’yi temizle",
     "launch-game": "Oyunu başlat",
     "configure-executable": "Çalıştırılabilir dosyayı yapılandır…",
     "icon-cache-build-failed": "Simge önbelleği oluşturulamadı",
@@ -2008,9 +2015,8 @@
     "gh-action-uplay-ticket-off": "Çevrimdışı başarımları kapat",
     "gh-ticket-remove-detail": "AW Next’in oyunun yanındaki emülatör ayarlarına eklediği satır kaldırılır ve başka hiçbir şey değişmez. Zaten kaydedilmiş başarımlar korunur. Bunu istediğin zaman yeniden açabilirsin.",
     "gh-why-appid-mismatch": "Bu oyunun klasöründeki emülatör {appidOnDisk} kimliğini bildiriyor, ancak AW Next bu oyunu {appidExpected} ile eşleştirdi. Yanlış kimlikle açılan başarımlar başka bir oyuna yazılır. Doğru oyun {appidExpected} ise dosyayı düzeltin; mevcut değer saklanır.",
-    "gh-appid-confirm-title": "Oyun kimlik dosyası düzeltilsin mi?",
-    "gh-appid-confirm-message": "steam_appid.txt {appidOnDisk} değerinden {appidExpected} değerine değiştirilecek.",
-    "gh-appid-confirm-detail": "Bunu yalnızca {game} gerçekten Steam’deki {appidExpected} oyunuysa yapın. Emülatör bilerek {appidOnDisk} için kurulduysa iptal edin: dosya doğrudur, düzeltilmesi gereken kitaplık kaydıdır. Mevcut dosya steam_settings\\.aw-backups altında yedeklenir.",
+    "gh-appid-prompt-message": "{game} şu anda steam_appid.txt dosyasında {appidOnDisk} kimliğine sahip. AW Next {appidExpected} öneriyor, ancak doğru Steam kimliğini biliyorsanız kendiniz girin (örneğin başka bir oyun bu adı paylaşıyorsa). Mevcut dosya steam_settings\\.aw-backups altında yedeklenir.",
+    "gh-appid-not-numeric": "Steam kimliği bir sayıdır.",
     "gh-appid-done-title": "Oyun kimlik dosyası düzeltildi",
     "gh-appid-done-message": "steam_appid.txt artık {appid} içeriyor.",
     "gh-simple-notifications-failed": "Son bildirim gönderilemedi",

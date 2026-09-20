@@ -169,3 +169,48 @@ test('forceRecheck also bypasses fastStart, so "Check now" works on the first sc
   assert.ok(game, 'a cached game must survive the forced first-scan re-check');
   assert.ok(game.descBackfilledAt, 'fastStart must not suppress an explicit force re-check');
 });
+
+// A user hand-curating steam_cache can opt out of the whole periodic self-repair pass (Settings >
+// Advanced > "Automatic achievement data updates").
+test('disableAutoRefresh skips the periodic self-repair entirely', async () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-schema-disabled-'));
+  fs.mkdirSync(path.join(temp, 'logs'), { recursive: true });
+  steam.initDebug({ isDev: false, userDataPath: temp });
+
+  const schemaDir = path.join(temp, 'steam_cache', 'schema', 'english');
+  fs.mkdirSync(schemaDir, { recursive: true });
+  const record = {
+    name: 'Portal 2',
+    appid: '620',
+    img: { header: 'h', background: 'b', portrait: 'p', icon: 'i' },
+    achievement: { total: 1, list: [{ name: 'ACH_1', displayName: 'One', description: '', hidden: 0 }] },
+  };
+  fs.writeFileSync(path.join(schemaDir, '620.db'), JSON.stringify(record));
+
+  const game = await offline(() => steam.getGameData({ appID: '620', lang: 'english', fastStart: false, disableAutoRefresh: true }));
+  assert.ok(game, 'a cached game is returned unchanged');
+  assert.equal(game.descBackfilledAt, undefined, 'no self-repair attempt is made, so nothing is stamped');
+  assert.equal(game.achievement.list[0].description, '', 'a hand-curated blank field is left alone, not backfilled');
+});
+
+test('forceRecheck still works even when disableAutoRefresh is on', async () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-schema-disabled-force-'));
+  fs.mkdirSync(path.join(temp, 'logs'), { recursive: true });
+  steam.initDebug({ isDev: false, userDataPath: temp });
+
+  const schemaDir = path.join(temp, 'steam_cache', 'schema', 'english');
+  fs.mkdirSync(schemaDir, { recursive: true });
+  const record = {
+    name: 'Portal 2',
+    appid: '620',
+    img: { header: 'h', background: 'b', portrait: 'p', icon: 'i' },
+    achievement: { total: 1, list: [{ name: 'ACH_1', displayName: 'One', description: 'First.', hidden: 0 }] },
+  };
+  fs.writeFileSync(path.join(schemaDir, '620.db'), JSON.stringify(record));
+
+  const game = await offline(() =>
+    steam.getGameData({ appID: '620', lang: 'english', fastStart: false, disableAutoRefresh: true, forceRecheck: true })
+  );
+  assert.ok(game, 'a cached game must survive the forced re-check even with auto-refresh disabled');
+  assert.ok(game.descBackfilledAt, 'an explicit "Check now" is not the automatic pass the toggle turns off');
+});

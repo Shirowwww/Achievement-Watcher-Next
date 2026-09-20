@@ -1106,6 +1106,10 @@
         "name": "重新檢查成就清單",
         "button": "立即檢查",
         "description": "向 Steam 檢查自上次檢查後遊戲更新新增的成就。系統每 3 天會自動執行一次，這裡可以立即強制執行。"
+      },
+      "disableAutoRefresh": {
+        "name": "成就資料自動更新",
+        "description": "如果你自行維護 steam_cache，可以停用這個選項：這會停止定期的自我修復，該修復會補上空白說明並辨識遊戲更新新增的成就。上方的「重新檢查成就清單」仍可作為手動的一次性檢查使用。"
       }
     },
     "interfaceMode": {
@@ -1372,6 +1376,9 @@
     "could-not-write-steam-settings": "無法寫入 steam_settings。",
     "blacklist-add-failed": "無法將項目加入使用者黑名單",
     "emulator-source": "模擬器來源",
+    "appid-override": "手動設定 AppID…",
+    "appid-override-prompt": "用於「{name}」({folder})的 Steam appid。它會覆蓋 AW Next 依名稱所做的猜測,適用於另一款遊戲與此資料夾同名的情況。",
+    "appid-override-clear": "清除手動 AppID",
     "launch-game": "啟動遊戲",
     "configure-executable": "設定執行檔…",
     "icon-cache-build-failed": "無法建立圖示快取",
@@ -2008,9 +2015,8 @@
     "gh-action-uplay-ticket-off": "關閉離線成就",
     "gh-ticket-remove-detail": "AW Next 加入遊戲旁模擬器設定中的那一行會被移除，其他都不會改變。已記錄的成就會保留。你隨時可以重新開啟。",
     "gh-why-appid-mismatch": "這款遊戲資料夾中的模擬器聲稱遊戲 ID 是 {appidOnDisk}，但 AW Next 比對到的是 {appidExpected}。用錯誤 ID 解鎖的成就會被記到另一款遊戲上。如果 {appidExpected} 才是正確的遊戲，請修正這個檔案 - 目前的值會保留下來。",
-    "gh-appid-confirm-title": "要修正遊戲 ID 檔案嗎？",
-    "gh-appid-confirm-message": "steam_appid.txt 會從 {appidOnDisk} 改成 {appidExpected}。",
-    "gh-appid-confirm-detail": "只有在 {game} 確實就是 Steam 上的遊戲 {appidExpected} 時才這樣做。如果模擬器是刻意為 {appidOnDisk} 設定的，請取消：那份檔案是對的，該修正的是收藏庫卡片。目前的檔案會備份到 steam_settings\\.aw-backups。",
+    "gh-appid-prompt-message": "{game} 目前在 steam_appid.txt 中的 ID 是 {appidOnDisk}。AW Next 建議使用 {appidExpected}，但如果你知道正確的 Steam ID，可以自行輸入（例如另一款遊戲使用了相同名稱）。目前的檔案會備份到 steam_settings\\.aw-backups。",
+    "gh-appid-not-numeric": "Steam ID 必須是數字。",
     "gh-appid-done-title": "遊戲 ID 檔案已修正",
     "gh-appid-done-message": "steam_appid.txt 現在的內容是 {appid}。",
     "gh-simple-notifications-failed": "最後一則通知沒有送出",

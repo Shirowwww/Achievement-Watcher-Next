@@ -1106,6 +1106,10 @@
         "name": "Trófealisták újraellenőrzése",
         "button": "Ellenőrzés most",
         "description": "Ellenőrzi a Steamnél, hogy egy játékfrissítés adott-e hozzá trófeákat az utolsó ellenőrzés óta. Ez automatikusan 3 naponta lefut; ez a gomb azonnal kikényszeríti."
+      },
+      "disableAutoRefresh": {
+        "name": "Trófeaadatok automatikus frissítése",
+        "description": "Kapcsold ki ezt, ha te magad tartod karban a steam_cache-t: ez leállítja az időszakos önjavítást, amely kitölti az üres leírásokat, és felismeri a játékfrissítés által hozzáadott trófeákat. A fenti „Trófealisták újraellenőrzése” továbbra is működik kézi, egyszeri ellenőrzésként."
       }
     },
     "interfaceMode": {
@@ -1372,6 +1376,9 @@
     "could-not-write-steam-settings": "A steam_settings írása nem sikerült.",
     "blacklist-add-failed": "Az elem hozzáadása a felhasználói feketelistához nem sikerült",
     "emulator-source": "Emulátor forrása",
+    "appid-override": "AppID kézi megadása…",
+    "appid-override-prompt": "A(z) \"{name}\" ({folder}) Steam appid-ja. Felülírja az AW Next név alapú tippjét - hasznos, ha másik játéknak ugyanaz a neve, mint a mappának.",
+    "appid-override-clear": "Kézi AppID törlése",
     "launch-game": "Játék indítása",
     "configure-executable": "Futtatható fájl konfigurálása…",
     "icon-cache-build-failed": "Az ikon-gyorsítótár létrehozása nem sikerült",
@@ -2008,9 +2015,8 @@
     "gh-action-uplay-ticket-off": "Offline teljesítmények kikapcsolása",
     "gh-ticket-remove-detail": "Az AW Next által a játék melletti emulátorbeállításokhoz hozzáadott sor eltávolításra kerül, és semmi más nem változik. A már rögzített teljesítmények megmaradnak. Bármikor újra bekapcsolhatod.",
     "gh-why-appid-mismatch": "A játék mappájában lévő emulátor a(z) {appidOnDisk} azonosítót jelenti, az AW Next viszont a(z) {appidExpected} játékhoz párosította. A rossz azonosítóval feloldott teljesítmények egy másik játékhoz kerülnek. Javítsd a fájlt, ha a(z) {appidExpected} a helyes játék - a jelenlegi érték megmarad.",
-    "gh-appid-confirm-title": "Javítod a játékazonosító-fájlt?",
-    "gh-appid-confirm-message": "A steam_appid.txt {appidOnDisk} értékről {appidExpected} értékre változik.",
-    "gh-appid-confirm-detail": "Csak akkor tedd ezt, ha a(z) {game} valóban a(z) {appidExpected} játék a Steamen. Ha az emulátort szándékosan {appidOnDisk} azonosítóra állították be, mégse: a fájl helyes, és a könyvtárbeli bejegyzést kell javítani. A jelenlegi fájl a steam_settings\\.aw-backups mappába kerül.",
+    "gh-appid-prompt-message": "A(z) {game} jelenleg a(z) {appidOnDisk} azonosítót használja a steam_appid.txt fájlban. Az AW Next a(z) {appidExpected} azonosítót javasolja, de add meg magad a helyes Steam-azonosítót, ha ismered (például ha egy másik játék ugyanezt a nevet viseli). A jelenlegi fájl a steam_settings\\.aw-backups mappába kerül.",
+    "gh-appid-not-numeric": "A Steam-azonosító egy szám.",
     "gh-appid-done-title": "Játékazonosító-fájl javítva",
     "gh-appid-done-message": "A steam_appid.txt mostantól {appid} értéket tartalmaz.",
     "gh-simple-notifications-failed": "A legutóbbi értesítést nem sikerült elküldeni",

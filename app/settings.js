@@ -290,6 +290,13 @@ module.exports.load = () => {
       options.achievement.goldbergDownloadIcons = false;
     }
 
+    // Opt-in: stop the periodic steam_cache self-repair (blank-field backfill, achievement-list
+    // reconciliation, empty-schema re-check) that otherwise runs every few days regardless of
+    // fastStart. Off by default; a manual "force recheck" from Settings > Advanced still works.
+    if (typeof options.achievement.disableAutoRefresh !== 'boolean') {
+      options.achievement.disableAutoRefresh = false;
+    }
+
     if (options.achievement_source.legitSteam != 0 && options.achievement_source.legitSteam != 1 && options.achievement_source.legitSteam != 2) {
       options.achievement_source.legitSteam = 0;
     }
@@ -579,6 +586,7 @@ module.exports.load = () => {
         showTrophies: true,
         showPlayButton: true,
         goldbergDownloadIcons: false,
+        disableAutoRefresh: false, // opt-in: skip the periodic steam_cache self-repair, for a hand-curated cache
       },
       achievement_source: {
         legitSteam: 0,

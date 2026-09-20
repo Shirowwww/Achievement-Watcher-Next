@@ -775,6 +775,12 @@ function translateUI(lang, locale, template) {
     $('#force-achievement-recheck-button').text(clear(template.settings.advanced.forceAchievementRecheck.button));
     $('#force-achievement-recheck-help').text(clear(template.settings.advanced.forceAchievementRecheck.description));
   }
+  if (template.settings.advanced.disableAutoRefresh) {
+    $('#disable-auto-refresh-label').text(clear(template.settings.advanced.disableAutoRefresh.name));
+    $('#disable-auto-refresh-help').text(clear(template.settings.advanced.disableAutoRefresh.description));
+    $("#option_disableAutoRefresh option[value='false']").text(clear(template.settings.common.enable));
+    $("#option_disableAutoRefresh option[value='true']").text(clear(template.settings.common.disable));
+  }
   if (template.settings.advanced.checkUpdates) {
     $('#check-for-updates-label').text(clear(template.settings.advanced.checkUpdates));
     $('#footer-check-updates')

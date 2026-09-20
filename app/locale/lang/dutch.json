@@ -1106,6 +1106,10 @@
         "name": "Prestatielijsten opnieuw controleren",
         "button": "Nu controleren",
         "description": "Kijkt bij Steam of er sinds de laatste controle prestaties door een game-update zijn toegevoegd. Gebeurt automatisch elke 3 dagen; hiermee forceer je het nu."
+      },
+      "disableAutoRefresh": {
+        "name": "Automatische updates van prestatiegegevens",
+        "description": "Schakel dit uit als je zelf steam_cache onderhoudt: het stopt de periodieke zelfherstelling die lege beschrijvingen aanvult en prestaties oppikt die door een game-update zijn toegevoegd. “Prestatielijsten opnieuw controleren” hierboven werkt nog steeds als handmatige, eenmalige controle."
       }
     },
     "interfaceMode": {
@@ -1372,6 +1376,9 @@
     "could-not-write-steam-settings": "Kon steam_settings niet schrijven.",
     "blacklist-add-failed": "Toevoegen aan de zwarte lijst van de gebruiker mislukt",
     "emulator-source": "Emulatorbron",
+    "appid-override": "AppID handmatig instellen…",
+    "appid-override-prompt": "Steam-appid voor \"{name}\" ({folder}). Dit vervangt de op naam gebaseerde gok van AW Next - handig als een ander spel dezelfde naam als deze map heeft.",
+    "appid-override-clear": "Handmatige AppID wissen",
     "launch-game": "Game starten",
     "configure-executable": "Uitvoerbaar bestand instellen…",
     "icon-cache-build-failed": "Opbouwen van de pictogramcache mislukt",
@@ -2008,9 +2015,8 @@
     "gh-action-uplay-ticket-off": "Prestaties offline uitschakelen",
     "gh-ticket-remove-detail": "De regel die AW Next aan de emulatorinstellingen naast het spel heeft toegevoegd, wordt verwijderd en er verandert verder niets. Al vastgelegde prestaties blijven behouden. Je kunt dit op elk moment weer inschakelen.",
     "gh-why-appid-mismatch": "De emulator in de map van deze game meldt game-ID {appidOnDisk}, maar AW Next koppelde deze game aan {appidExpected}. Prestaties die onder de verkeerde ID ontgrendeld worden, komen op naam van een andere game te staan. Corrigeer het bestand als {appidExpected} de juiste game is - de huidige waarde blijft bewaard.",
-    "gh-appid-confirm-title": "Het bestand met de game-ID corrigeren?",
-    "gh-appid-confirm-message": "steam_appid.txt wordt gewijzigd van {appidOnDisk} in {appidExpected}.",
-    "gh-appid-confirm-detail": "Doe dit alleen als {game} op Steam echt game {appidExpected} is. Is de emulator bewust op {appidOnDisk} ingesteld, annuleer dan: het bestand klopt en de kaart in de bibliotheek is wat gecorrigeerd moet worden. Van het huidige bestand wordt een back-up gemaakt in steam_settings\\.aw-backups.",
+    "gh-appid-prompt-message": "{game} heeft momenteel game-ID {appidOnDisk} in steam_appid.txt. AW Next stelt {appidExpected} voor, maar voer zelf de juiste Steam-ID in als je die kent (bijvoorbeeld als een andere game dezelfde naam heeft). Van het huidige bestand wordt een back-up gemaakt in steam_settings\\.aw-backups.",
+    "gh-appid-not-numeric": "Een Steam-ID is een getal.",
     "gh-appid-done-title": "Bestand met de game-ID gecorrigeerd",
     "gh-appid-done-message": "In steam_appid.txt staat nu {appid}.",
     "gh-simple-notifications-failed": "De laatste melding kon niet worden verstuurd",

@@ -1106,6 +1106,10 @@
         "name": "Kontrollera prestationslistorna igen",
         "button": "Kontrollera nu",
         "description": "Kontrollerar hos Steam om en speluppdatering lagt till prestationer sedan den senaste kontrollen. Körs automatiskt var tredje dag; det här gör det direkt."
+      },
+      "disableAutoRefresh": {
+        "name": "Automatiska uppdateringar av prestationsdata",
+        "description": "Inaktivera det här om du underhåller steam_cache själv: det stoppar den periodiska självreparationen som fyller i tomma beskrivningar och fångar upp prestationer som en speluppdatering har lagt till. ”Kontrollera prestationslistorna igen” ovan fungerar fortfarande som en manuell engångskontroll."
       }
     },
     "interfaceMode": {
@@ -1372,6 +1376,9 @@
     "could-not-write-steam-settings": "Det gick inte att skriva steam_settings.",
     "blacklist-add-failed": "Det gick inte att lägga till posten i användarens svartlista",
     "emulator-source": "Emulatorkälla",
+    "appid-override": "Ange AppID manuellt…",
+    "appid-override-prompt": "Steam-appid att använda för \"{name}\" ({folder}). Ersätter AW Nexts gissning utifrån namnet - användbart när ett annat spel har samma namn som mappen.",
+    "appid-override-clear": "Rensa det manuella AppID:t",
     "launch-game": "Starta spelet",
     "configure-executable": "Ställ in körbar fil…",
     "icon-cache-build-failed": "Det gick inte att bygga ikoncachen",
@@ -2008,9 +2015,8 @@
     "gh-action-uplay-ticket-off": "Stäng av prestationer offline",
     "gh-ticket-remove-detail": "Raden som AW Next lade till i emulatorns inställningar bredvid spelet tas bort, och inget annat ändras. Prestationer som redan registrerats behålls. Du kan slå på det igen när som helst.",
     "gh-why-appid-mismatch": "Emulatorn i spelets mapp anger spel-ID {appidOnDisk}, men AW Next matchade det här spelet mot {appidExpected}. Prestationer som låses upp under fel ID registreras på ett annat spel. Korrigera filen om {appidExpected} är rätt spel - det nuvarande värdet sparas.",
-    "gh-appid-confirm-title": "Vill du korrigera filen med spel-ID?",
-    "gh-appid-confirm-message": "steam_appid.txt ändras från {appidOnDisk} till {appidExpected}.",
-    "gh-appid-confirm-detail": "Gör bara det här om {game} verkligen är spel {appidExpected} på Steam. Om emulatorn med flit ställdes in för {appidOnDisk} ska du avbryta: då är filen rätt och det är kortet i biblioteket som behöver korrigeras. Den nuvarande filen säkerhetskopieras under steam_settings\\.aw-backups.",
+    "gh-appid-prompt-message": "{game} har för närvarande spel-ID {appidOnDisk} i steam_appid.txt. AW Next föreslår {appidExpected}, men ange själv rätt Steam-ID om du känner till det (till exempel om ett annat spel delar det här namnet). Den nuvarande filen säkerhetskopieras under steam_settings\\.aw-backups.",
+    "gh-appid-not-numeric": "Ett Steam-ID är ett nummer.",
     "gh-appid-done-title": "Filen med spel-ID är korrigerad",
     "gh-appid-done-message": "steam_appid.txt innehåller nu {appid}.",
     "gh-simple-notifications-failed": "Den senaste aviseringen kunde inte skickas",

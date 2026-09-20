@@ -597,6 +597,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       if (!app.config.general) app.config.general = {};
       $('#option_startWithWindows').val(String(app.config.general.startWithWindows !== false)).change();
       $('#option_disableHardwareAccel').val(String(app.config.general.disableHardwareAccel === true)).change();
+      $('#option_disableAutoRefresh').val(String(app.config.achievement.disableAutoRefresh === true)).change();
       $('#option_closeToTray').val(String(app.config.general.closeToTray !== false)).change();
       $('#option_uninstallContextMenu').val(String(app.config.general.uninstallContextMenu !== false)).change();
       if (!app.config.controller) app.config.controller = {};
@@ -1215,6 +1216,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       if (typeof window.refreshProfileStats === 'function') window.refreshProfileStats();
       if (!app.config.general) app.config.general = {};
       app.config.general.disableHardwareAccel = $('#option_disableHardwareAccel').val() === 'true';
+      app.config.achievement.disableAutoRefresh = $('#option_disableAutoRefresh').val() === 'true';
       app.config.general.closeToTray = $('#option_closeToTray').val() !== 'false';
       app.config.general.uninstallContextMenu = $('#option_uninstallContextMenu').val() !== 'false';
       app.config.general.theme = $('#option_theme').val() || 'default';

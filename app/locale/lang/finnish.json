@@ -1106,6 +1106,10 @@
         "name": "Tarkista saavutusluettelot uudelleen",
         "button": "Tarkista nyt",
         "description": "Tarkistaa Steamista saavutukset, jotka pelin päivitys on lisännyt edellisen tarkistuksen jälkeen. Suoritetaan automaattisesti kolmen päivän välein; tämä pakottaa tarkistuksen heti."
+      },
+      "disableAutoRefresh": {
+        "name": "Saavutustietojen automaattiset päivitykset",
+        "description": "Poista tämä käytöstä, jos ylläpidät steam_cachea itse: se pysäyttää määräajoin tehtävän itsekorjauksen, joka täyttää tyhjät kuvaukset ja huomioi pelin päivityksen tuomat saavutukset. Yllä oleva ”Tarkista saavutusluettelot uudelleen” toimii edelleen manuaalisena, kertaluonteisena tarkistuksena."
       }
     },
     "interfaceMode": {
@@ -1372,6 +1376,9 @@
     "could-not-write-steam-settings": "steam_settings-tiedostoa ei voitu kirjoittaa.",
     "blacklist-add-failed": "Kohteen lisääminen estoluetteloon epäonnistui",
     "emulator-source": "Emulaattorin lähde",
+    "appid-override": "Aseta AppID käsin…",
+    "appid-override-prompt": "Käytettävä Steam-appid pelille \"{name}\" ({folder}). Korvaa AW Nextin nimeen perustuvan arvauksen - hyödyllinen, kun toisella pelillä on sama nimi kuin kansiolla.",
+    "appid-override-clear": "Tyhjennä käsin asetettu AppID",
     "launch-game": "Käynnistä peli",
     "configure-executable": "Määritä ohjelmatiedosto…",
     "icon-cache-build-failed": "Kuvakevälimuistin luonti epäonnistui",
@@ -2008,9 +2015,8 @@
     "gh-action-uplay-ticket-off": "Poista offline-saavutukset käytöstä",
     "gh-ticket-remove-detail": "AW Nextin pelin viereen emulaattorin asetuksiin lisäämä rivi poistetaan, eikä mikään muu muutu. Jo tallennetut saavutukset säilyvät. Voit ottaa tämän uudelleen käyttöön milloin tahansa.",
     "gh-why-appid-mismatch": "Tämän pelin kansiossa oleva emulaattori ilmoittaa pelitunnuksen {appidOnDisk}, mutta AW Next yhdisti pelin tunnukseen {appidExpected}. Väärällä tunnuksella avatut saavutukset kirjautuvat toiselle pelille. Korjaa tiedosto, jos {appidExpected} on oikea peli - nykyinen arvo säilytetään.",
-    "gh-appid-confirm-title": "Korjataanko pelin tunnistetiedosto?",
-    "gh-appid-confirm-message": "steam_appid.txt muutetaan arvosta {appidOnDisk} arvoon {appidExpected}.",
-    "gh-appid-confirm-detail": "Tee tämä vain, jos {game} todella on Steamissa peli {appidExpected}. Jos emulaattori on tarkoituksella asetettu tunnukselle {appidOnDisk}, peruuta: tiedosto on oikein ja korjausta kaipaa kirjastokortti. Nykyinen tiedosto varmuuskopioidaan kansioon steam_settings\\.aw-backups.",
+    "gh-appid-prompt-message": "Pelin {game} steam_appid.txt sisältää nyt appidin {appidOnDisk}. AW Next ehdottaa arvoa {appidExpected}, mutta anna oikea Steam-appid itse, jos tiedät sen (esim. jos toisella pelillä on sama nimi). Nykyinen tiedosto varmuuskopioidaan kansioon steam_settings\\.aw-backups.",
+    "gh-appid-not-numeric": "Steam-appid on numero.",
     "gh-appid-done-title": "Pelin tunnistetiedosto korjattu",
     "gh-appid-done-message": "steam_appid.txt sisältää nyt arvon {appid}.",
     "gh-simple-notifications-failed": "Viimeisintä ilmoitusta ei voitu lähettää",

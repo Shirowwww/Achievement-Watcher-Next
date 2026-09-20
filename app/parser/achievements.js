@@ -29,6 +29,7 @@ const launcherDetect = require(path.join(appPath, 'launcherDetect.js'));
 const blacklist = require(path.join(appPath, 'blacklist.js'));
 const watchdog = require(path.join(appPath, 'watchdog.js'));
 const goldberg = require(path.join(appPath, 'goldberg.js'));
+const appidOverride = require(path.join(appPath, 'appidOverride.js'));
 const uplayR2 = require(path.join(appPath, 'uplayR2.js'));
 const uplayR2Installer = require(path.join(appPath, 'uplayR2Installer.js'));
 const uplayCatalogue = require(path.join(appPath, 'uplayCatalogue.js'));
@@ -82,6 +83,7 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   perfTrace.enable(isDev);
   exeCandidateCache.setUserDataPath(userDataPath);
   uplayR2.setUserDataPath(userDataPath);
+  appidOverride.setUserDataPath(userDataPath);
   uplayCatalogue.initDebug({ isDev, userDataPath });
   uplayAutoMap.initDebug({ isDev, userDataPath });
   userDir.setUserDataPath(userDataPath);
@@ -1448,6 +1450,16 @@ async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
         }
       }
       if (!appid && g.gameDir) {
+        // A manual override (right-click -> Set AppID manually) always wins: the folder-name match
+        // below cannot tell two same-named games apart, and this is the one case it never gets a
+        // second chance to run once steam_appid.txt exists (see appidOverride.js).
+        const overridden = appidOverride.get(g.gameDir);
+        if (overridden) {
+          appid = overridden;
+          debug.log(`[goldberg-scan] "${path.basename(g.gameDir)}" uses the manually set appid ${appid}`);
+        }
+      }
+      if (!appid && g.gameDir) {
         try {
           const resolved = await resolveUnconfiguredSteamAppid({
             name: path.basename(g.gameDir),
@@ -2599,6 +2611,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
             lang: option.achievement.lang,
             showHidden: !!option.achievement.showHidden,
             fastStart: option.fastStart === true,
+            disableAutoRefresh: option.achievement.disableAutoRefresh === true,
           });
         } catch {}
       }
@@ -2715,6 +2728,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         showHidden: !!(option.achievement && option.achievement.showHidden),
         fastStart: option.fastStart === true,
         forceRecheck: option.forceAchievementRecheck === true,
+        disableAutoRefresh: option.achievement.disableAutoRefresh === true,
         // Known emulator config dir (Goldberg discover) - lets the schema fetch resolve cover art
         // from the local app_product_info.json dump before hitting the network.
         steamSettings: (appid.data && appid.data.steamSettings) || null,

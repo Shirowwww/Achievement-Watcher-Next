@@ -1106,6 +1106,10 @@
         "name": "実績リストを再確認",
         "button": "今すぐ確認",
         "description": "前回の確認以降にゲームのアップデートで実績が追加されていないか Steam に確認します。通常は3日ごとに自動実行されますが、このボタンで今すぐ実行します。"
+      },
+      "disableAutoRefresh": {
+        "name": "実績データの自動更新",
+        "description": "steam_cache を自分で管理している場合はこれを無効にしてください。空欄の説明文を埋め、ゲームのアップデートで追加された実績を取り込む定期的な自動修復が停止します。上の「実績リストを再確認」は、その後も手動での単発チェックとして機能します。"
       }
     },
     "interfaceMode": {
@@ -1372,6 +1376,9 @@
     "could-not-write-steam-settings": "steam_settings を書き込めませんでした。",
     "blacklist-add-failed": "ユーザーブラックリストに項目を追加できませんでした",
     "emulator-source": "エミュレータのソース",
+    "appid-override": "AppID を手動で設定…",
+    "appid-override-prompt": "\"{name}\" ({folder}) に使う Steam の appid。名前に基づく AW Next の推測を上書きします。別のゲームがこのフォルダーと同じ名前のときに便利です。",
+    "appid-override-clear": "手動の AppID を解除",
     "launch-game": "ゲームを起動",
     "configure-executable": "実行ファイルを設定…",
     "icon-cache-build-failed": "アイコンキャッシュを作成できませんでした",
@@ -2008,9 +2015,8 @@
     "gh-action-uplay-ticket-off": "オフラインの実績を無効にする",
     "gh-ticket-remove-detail": "AW Next がゲームの隣のエミュレーター設定に追加した行が削除され、他には何も変わりません。すでに記録された実績はそのまま残ります。いつでも再び有効にできます。",
     "gh-why-appid-mismatch": "このゲームのフォルダーにあるエミュレーターはゲーム ID {appidOnDisk} を名乗っていますが、AW Next はこのゲームを {appidExpected} と対応付けています。誤った ID で解除した実績は別のゲームに記録されます。{appidExpected} が正しいゲームならファイルを修正してください（現在の値は保持されます）。",
-    "gh-appid-confirm-title": "ゲーム ID ファイルを修正しますか？",
-    "gh-appid-confirm-message": "steam_appid.txt を {appidOnDisk} から {appidExpected} に変更します。",
-    "gh-appid-confirm-detail": "{game} が Steam で本当に {appidExpected} のゲームである場合にのみ実行してください。エミュレーターを意図的に {appidOnDisk} 用に設定したのであれば中止してください。その場合ファイルが正しく、修正すべきはライブラリ側です。現在のファイルは steam_settings\\.aw-backups に保存されます。",
+    "gh-appid-prompt-message": "{game} には現在 steam_appid.txt に ID {appidOnDisk} が設定されています。AW Next は {appidExpected} を提案していますが、正しい Steam ID がわかっている場合は自分で入力してください（例: 別のゲームが同じ名前を使っている場合）。現在のファイルは steam_settings\\.aw-backups に保存されます。",
+    "gh-appid-not-numeric": "Steam の ID は数字です。",
     "gh-appid-done-title": "ゲーム ID ファイルを修正しました",
     "gh-appid-done-message": "steam_appid.txt は現在 {appid} です。",
     "gh-simple-notifications-failed": "直前の通知を送信できませんでした",

@@ -9,6 +9,18 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Added
+
+- **Set a game's AppID by hand.** Right-click a game and choose "Set AppID manually..." when its folder
+  name matches several Steam releases and the automatic name match picked the wrong one. The choice is
+  remembered per install folder and written to `steam_appid.txt`. The game health "correct the game ID
+  file" action now asks for the AppID too, starting from AW Next's suggestion, instead of only
+  confirming it.
+- **A switch for the automatic achievement data refresh.** Settings > Advanced > "Automatic achievement
+  data updates" stops the periodic repair of blank descriptions and the pickup of achievements a game
+  update added, for anyone who maintains `steam_cache` by hand. "Recheck achievement lists" still works
+  as a one-off check.
+
 ### Security
 
 - **`adm-zip` updated to 0.6.1**, fixing an uncontrolled memory allocation from a declared uncompressed

@@ -1106,6 +1106,10 @@
         "name": "Znovu zkontrolovat seznamy úspěchů",
         "button": "Zkontrolovat nyní",
         "description": "Zkontroluje u Steamu, zda aktualizace hry nepřidala úspěchy od poslední kontroly. Probíhá automaticky každé 3 dny; toto ji vynutí hned."
+      },
+      "disableAutoRefresh": {
+        "name": "Automatické aktualizace dat o úspěších",
+        "description": "Toto vypněte, pokud si steam_cache spravujete sami: zastaví to pravidelnou automatickou opravu, která doplňuje prázdné popisy a zachycuje úspěchy přidané aktualizací hry. „Znovu zkontrolovat seznamy úspěchů“ výše stále funguje jako ruční jednorázová kontrola."
       }
     },
     "interfaceMode": {
@@ -1372,6 +1376,9 @@
     "could-not-write-steam-settings": "Steam_settings se nepodařilo zapsat.",
     "blacklist-add-failed": "Položku se nepodařilo přidat do uživatelské černé listiny",
     "emulator-source": "Zdroj emulátoru",
+    "appid-override": "Nastavit AppID ručně…",
+    "appid-override-prompt": "AppID služby Steam pro „{name}“ ({folder}). Přepíše odhad AW Next podle názvu - užitečné, když stejný název nese jiná hra.",
+    "appid-override-clear": "Zrušit ruční AppID",
     "launch-game": "Spustit hru",
     "configure-executable": "Konfigurovat spustitelný soubor…",
     "icon-cache-build-failed": "Mezipaměť ikon se nepodařilo vytvořit",
@@ -2008,9 +2015,8 @@
     "gh-action-uplay-ticket-off": "Vypnout úspěchy offline",
     "gh-ticket-remove-detail": "Řádek, který AW Next přidal do nastavení emulátoru vedle hry, se odstraní a nic jiného se nezmění. Již zaznamenané úspěchy zůstanou zachovány. Kdykoli to můžeš znovu zapnout.",
     "gh-why-appid-mismatch": "Emulátor ve složce této hry hlásí ID {appidOnDisk}, ale AW Next přiřadil hru k {appidExpected}. Úspěchy odemčené pod špatným ID se zapíšou jiné hře. Opravte soubor, pokud je správná hra {appidExpected} - současná hodnota zůstane zachována.",
-    "gh-appid-confirm-title": "Opravit soubor s ID hry?",
-    "gh-appid-confirm-message": "steam_appid.txt se změní z {appidOnDisk} na {appidExpected}.",
-    "gh-appid-confirm-detail": "Udělejte to jen tehdy, pokud je {game} na Steamu opravdu hra {appidExpected}. Pokud byl emulátor záměrně nastaven na {appidOnDisk}, zrušte to: soubor je správně a opravit je potřeba záznam v knihovně. Současný soubor se zálohuje do steam_settings\\.aw-backups.",
+    "gh-appid-prompt-message": "Hra {game} má nyní v souboru steam_appid.txt ID {appidOnDisk}. AW Next navrhuje {appidExpected}, ale pokud znáte správné Steam ID, zadejte ho sami (například pokud stejný název sdílí jiná hra). Aktuální soubor se zálohuje do steam_settings\\.aw-backups.",
+    "gh-appid-not-numeric": "Steam ID je číslo.",
     "gh-appid-done-title": "Soubor s ID hry opraven",
     "gh-appid-done-message": "steam_appid.txt nyní obsahuje {appid}.",
     "gh-simple-notifications-failed": "Poslední oznámení se nepodařilo odeslat",

@@ -112,6 +112,8 @@ const achievementReset = require(path.join(appPath, 'parser/achievementReset.js'
 achievementReset.setUserDataPath(getUserDataPath());
 const emulatorSourceOverride = require(path.join(appPath, 'parser/emulatorSourceOverride.js'));
 emulatorSourceOverride.setUserDataPath(getUserDataPath());
+const appidOverride = require(path.join(appPath, 'parser/appidOverride.js'));
+appidOverride.setUserDataPath(getUserDataPath());
 const l10n = require(path.join(appPath, 'locale/loader.js'));
 const coverStore = require(path.join(appPath, 'util/coverStore.js'));
 const gameIconStore = require(path.join(appPath, 'util/gameIconStore.js'));
@@ -4218,6 +4220,57 @@ var app = {
           gameMenu.append(new MenuItem({ type: 'separator' }));
           gameMenu.append(
             new MenuItem({
+          // Manual per-game appid, for a folder whose name matches more than one Steam release: the
+          // automatic name-based match (fuzzyAppid.js) cannot tell them apart, and picks one only
+          // once, when steam_appid.txt does not exist yet - this is the only way to correct it.
+          if (!isConsoleSystem && !isLegitSteamOwned && !isNativeLauncher && ctxGame?.gameDir) {
+            const currentAppidOverride = appidOverride.get(ctxGame.gameDir);
+            gameMenu.append(
+              new MenuItem({
+                icon: menuIcon('file-text.png'),
+                label: t('appid-override', 'Set AppID manually…', 'Définir l’AppID manuellement…'),
+                async click() {
+                  const typed = await promptText(
+                    t(
+                      'appid-override-prompt',
+                      'Steam appid to use for "{name}" ({folder}). This overrides AW Next\'s own name-based guess - useful when another game shares this folder\'s name.',
+                      'Appid Steam à utiliser pour « {name} » ({folder}). Ceci remplace la détection par nom d’AW Next - utile quand un autre jeu porte le même nom que ce dossier.',
+                      { name: ctxGame.name || '', folder: ctxGame.gameDir }
+                    ),
+                    String(currentAppidOverride || writableAppid || '')
+                  );
+                  if (!typed) return;
+                  if (!/^[0-9]+$/.test(typed)) {
+                    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                      type: 'error',
+                      title: t('unexpected-error', 'Unexpected Error', 'Erreur inattendue'),
+                      message: t('gh-appid-not-numeric', 'A Steam appid is a number.', 'Un appid Steam est un nombre.'),
+                    });
+                    return;
+                  }
+                  appidOverride.set(ctxGame.gameDir, typed);
+                  try {
+                    goldberg.writeSteamAppId({ steamSettings: path.join(ctxGame.gameDir, 'steam_settings'), appid: typed });
+                  } catch (err) {
+                    debug.log(`[appid-override] could not write steam_appid.txt for ${ctxGame.gameDir}: ${err}`);
+                  }
+                  app.onStart();
+                },
+              })
+            );
+            if (currentAppidOverride) {
+              gameMenu.append(
+                new MenuItem({
+                  label: t('appid-override-clear', 'Clear the manual AppID override', 'Effacer l’AppID manuel'),
+                  click() {
+                    appidOverride.set(ctxGame.gameDir, null);
+                    app.onStart();
+                  },
+                })
+              );
+            }
+          }
+
               label: t('launch-game', 'Launch game', 'Lancer le jeu'),
               async click() {
                 await app.onPlayButtonClick(self.find('.play-button'));

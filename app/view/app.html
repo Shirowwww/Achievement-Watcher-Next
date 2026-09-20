@@ -713,6 +713,19 @@
                   <li>
                     <div id="force-achievement-recheck-result" class="diag-line" role="status" aria-live="polite" aria-hidden="true"></div>
                   </li>
+
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-lock"></i> <span id="disable-auto-refresh-label">Automatic achievement data updates</span></div>
+                    <div class="right">
+                      <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                      <select autocomplete="off" id="option_disableAutoRefresh">
+                        <option value="false" selected>Enabled</option>
+                        <option value="true">Disabled</option>
+                      </select>
+                      <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                    </div>
+                    <div class="help" id="disable-auto-refresh-help">Disable this if you maintain steam_cache yourself: it stops the periodic self-repair that fills in blank descriptions and picks up achievements a game update added. "Recheck achievement lists" above still works as a manual, one-off check.</div>
+                  </li>
                 </ul>
               </div>
 

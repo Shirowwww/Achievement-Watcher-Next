@@ -1012,23 +1012,30 @@ async function runGameHealthAction(appid, action, button) {
     const steamSettings = game.steamSettings || (game.gameDir ? path.join(game.gameDir, 'steam_settings') : '');
     if (!params.appidExpected || !steamSettings) return false;
 
-    const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
-      type: 'warning',
-      title: t('gh-appid-confirm-title', 'Correct the game ID file?', 'Corriger le fichier d’identification ?'),
-      message: t('gh-appid-confirm-message', 'steam_appid.txt will be changed from {appidOnDisk} to {appidExpected}.', 'steam_appid.txt passera de {appidOnDisk} à {appidExpected}.', params),
-      detail: t('gh-appid-confirm-detail', 'Only do this if {game} really is game {appidExpected} on Steam. If the emulator was set up on purpose for {appidOnDisk}, cancel: the file is right and the library card is what needs correcting. The current file is backed up under steam_settings\\.aw-backups.', 'Ne fais ceci que si {game} est bien le jeu {appidExpected} sur Steam. Si l’émulateur a été configuré volontairement pour {appidOnDisk}, annule : c’est le fichier qui a raison et la fiche du jeu qu’il faut corriger. Le fichier actuel est sauvegardé dans steam_settings\\.aw-backups.', {
-        ...params,
-        game: game.name || appid,
-      }),
-      buttons: [t('cancel', 'Cancel', 'Annuler'), t('gh-action-fix-appid', 'Correct the game ID file', 'Corriger le fichier d’identification')],
-      defaultId: 0,
-      cancelId: 0,
-      noLink: true,
-    });
-    if (confirmed !== 1) return false;
+    // AW Next's guess is only the starting value: another game can share this one's name, so the
+    // user - who may already know the real Steam appid - can type over it rather than being forced
+    // to accept the guess.
+    const typed = await promptText(
+      t(
+        'gh-appid-prompt-message',
+        '{game} currently has appid {appidOnDisk} in steam_appid.txt. AW Next suggests {appidExpected}, but enter the correct Steam appid yourself if you know it (e.g. another game shares this name). The current file is backed up under steam_settings\\.aw-backups.',
+        '{game} a l’appid {appidOnDisk} dans steam_appid.txt. AW Next suggère {appidExpected}, mais saisis toi-même le bon appid Steam si tu le connais (par exemple si un autre jeu porte le même nom). Le fichier actuel est sauvegardé dans steam_settings\\.aw-backups.',
+        { ...params, game: game.name || appid }
+      ),
+      String(params.appidExpected)
+    );
+    if (!typed) return false;
+    if (!/^[0-9]+$/.test(typed)) {
+      remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+        type: 'error',
+        title: t('unexpected-error', 'Unexpected Error', 'Erreur inattendue'),
+        message: t('gh-appid-not-numeric', 'A Steam appid is a number.', 'Un appid Steam est un nombre.'),
+      });
+      return false;
+    }
 
     try {
-      const result = goldberg.writeSteamAppId({ steamSettings, appid: params.appidExpected });
+      const result = goldberg.writeSteamAppId({ steamSettings, appid: typed });
       remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
         type: 'info',
         title: t('gh-appid-done-title', 'Game ID file corrected', 'Fichier d’identification corrigé'),

@@ -1106,6 +1106,10 @@
         "name": "Kiểm tra lại danh sách thành tựu",
         "button": "Kiểm tra ngay",
         "description": "Hỏi Steam xem có thành tựu nào được thêm qua bản cập nhật trò chơi kể từ lần kiểm tra trước không. Việc này tự chạy 3 ngày một lần; nút này buộc nó chạy ngay."
+      },
+      "disableAutoRefresh": {
+        "name": "Cập nhật tự động dữ liệu thành tựu",
+        "description": "Tắt tùy chọn này nếu bạn tự bảo trì steam_cache: nó sẽ dừng việc tự sửa lỗi định kỳ giúp lấp đầy các mô tả trống và ghi nhận thành tựu do bản cập nhật trò chơi thêm vào. 'Kiểm tra lại danh sách thành tựu' ở trên vẫn hoạt động như một lần kiểm tra thủ công."
       }
     },
     "interfaceMode": {
@@ -1372,6 +1376,9 @@
     "could-not-write-steam-settings": "Không thể ghi steam_settings.",
     "blacklist-add-failed": "Không thêm được mục vào danh sách đen của người dùng",
     "emulator-source": "Nguồn giả lập",
+    "appid-override": "Đặt AppID thủ công…",
+    "appid-override-prompt": "Steam appid dùng cho \"{name}\" ({folder}). Giá trị này thay cho phỏng đoán theo tên của AW Next - hữu ích khi một game khác trùng tên với thư mục này.",
+    "appid-override-clear": "Xóa AppID thủ công",
     "launch-game": "Khởi chạy trò chơi",
     "configure-executable": "Cấu hình tệp thực thi…",
     "icon-cache-build-failed": "Không dựng được bộ nhớ đệm biểu tượng",
@@ -2008,9 +2015,8 @@
     "gh-action-uplay-ticket-off": "Tắt thành tựu khi ngoại tuyến",
     "gh-ticket-remove-detail": "Dòng mà AW Next đã thêm vào thiết lập của giả lập bên cạnh trò chơi sẽ bị xóa, và không có gì khác thay đổi. Các thành tựu đã ghi nhận vẫn được giữ. Bạn có thể bật lại bất cứ lúc nào.",
     "gh-why-appid-mismatch": "Trình giả lập trong thư mục của trò chơi này khai báo mã trò chơi {appidOnDisk}, nhưng AW Next lại khớp trò chơi này với {appidExpected}. Thành tựu mở khóa dưới mã sai sẽ được ghi cho một trò chơi khác. Hãy sửa tệp nếu {appidExpected} mới là trò chơi đúng - giá trị hiện tại vẫn được giữ lại.",
-    "gh-appid-confirm-title": "Sửa lại tệp mã trò chơi?",
-    "gh-appid-confirm-message": "steam_appid.txt sẽ được đổi từ {appidOnDisk} thành {appidExpected}.",
-    "gh-appid-confirm-detail": "Chỉ làm việc này nếu {game} thực sự là trò chơi {appidExpected} trên Steam. Nếu trình giả lập được cố ý thiết lập cho {appidOnDisk}, hãy hủy: tệp đó đúng rồi và thứ cần sửa là thẻ trong thư viện. Tệp hiện tại được sao lưu trong steam_settings\\.aw-backups.",
+    "gh-appid-prompt-message": "{game} hiện có mã {appidOnDisk} trong steam_appid.txt. AW Next đề xuất {appidExpected}, nhưng hãy tự nhập mã Steam đúng nếu bạn biết (ví dụ một trò chơi khác dùng chung tên này). Tệp hiện tại được sao lưu trong steam_settings\\.aw-backups.",
+    "gh-appid-not-numeric": "Mã Steam là một con số.",
     "gh-appid-done-title": "Đã sửa tệp mã trò chơi",
     "gh-appid-done-message": "steam_appid.txt giờ ghi {appid}.",
     "gh-simple-notifications-failed": "Không gửi được thông báo gần nhất",
