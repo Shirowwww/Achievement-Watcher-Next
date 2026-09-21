@@ -338,6 +338,8 @@
 
     document.querySelectorAll('[data-replay]').forEach(function (button) {
       button.addEventListener('click', function () {
+        // The hero cycle owns its own Replay (see cycleHero).
+        if (button.hasAttribute('data-cycle')) return;
         var scope = button.closest('.section, .hero') || document;
         scope.querySelectorAll('[data-preset-frame]').forEach(function (frame) {
           post(frame, state);
@@ -405,9 +407,12 @@
     }
 
     document.addEventListener('visibilitychange', restart);
+    // In the hero, Replay moves on to the next preset rather than repeating the one on screen.
     var replay = document.querySelector('.hero [data-replay]');
     if (replay) {
+      replay.setAttribute('data-cycle', '');
       replay.addEventListener('click', function () {
+        tick();
         restart();
       });
     }

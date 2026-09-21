@@ -69,6 +69,9 @@ function start(options) {
       response.writeHead(200, {
         'content-type': TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream',
         'cache-control': 'no-store',
+        // GitHub Pages sends this on every file. The preset previews run in sandboxed frames, whose
+        // origin is null, and without it their fonts and logos fail to load here but not online.
+        'access-control-allow-origin': '*',
       });
       response.end(body);
     });
