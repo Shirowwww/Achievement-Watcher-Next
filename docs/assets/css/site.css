@@ -675,11 +675,32 @@ kbd {
   height: auto;
 }
 
+/* A portrait capture (the overlay) would stand far taller than its text: narrower, and cropped
+   to the rows that make the point. */
+.shot-tall {
+  justify-self: center;
+  width: min(100%, 440px);
+}
+
+.shot-tall img {
+  aspect-ratio: 563 / 540;
+  object-fit: cover;
+  object-position: top;
+}
+
 .showcase .shot {
   transform: perspective(1600px) rotateX(1.2deg);
 }
 
 /* The live popup, sitting on the library shot the way it does over a game. */
+.showcase-popup .popup-frame {
+  transition: opacity 0.28s ease;
+}
+
+.showcase-popup .popup-frame.is-switching {
+  opacity: 0;
+}
+
 .showcase-popup {
   position: absolute;
   right: clamp(12px, 3%, 42px);

@@ -131,7 +131,7 @@
   "gallery.zoom": "Zobacz ten podgląd w pełnym rozmiarze",
   "gallery.zoomClose": "Zamknij",
   "gallery.zoomNote": "To obraz wygenerowany, a nie zrzut ekranu: okienko, które rysuje ten preset, wyrenderowane z nadesłanego pliku w rozmiarze, w jakim pokazuje je aplikacja.",
-  "hero.caption": "To okienko nie jest obrazkiem. To preset dołączony do aplikacji, działający tutaj.",
+  "hero.caption": "Podgląd na żywo: prawdziwe okienko, które aplikacja pokazuje nad grą, gdy odblokujesz osiągnięcie, w kilku jej presetach.",
   "hero.download": "Pobierz instalator",
   "hero.eyebrow": "Windows 10 i 11",
   "hero.noteLicense": "LGPL-3.0, bez konta, bez klucza API",

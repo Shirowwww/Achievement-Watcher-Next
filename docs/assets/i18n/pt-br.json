@@ -131,7 +131,7 @@
   "gallery.zoom": "Ver esta prévia em tamanho real",
   "gallery.zoomClose": "Fechar",
   "gallery.zoomNote": "Uma imagem gerada, não uma captura: a notificação que esta predefinição desenha, renderizada a partir do arquivo enviado e no tamanho em que o aplicativo a mostra.",
-  "hero.caption": "Esse popup não é uma imagem. É a predefinição que vem no aplicativo, rodando aqui.",
+  "hero.caption": "Prévia ao vivo: o popup real que o aplicativo mostra sobre o seu jogo quando você desbloqueia uma conquista, em alguns dos seus presets.",
   "hero.download": "Baixar o instalador",
   "hero.eyebrow": "Windows 10 e 11",
   "hero.noteLicense": "LGPL-3.0, sem conta, sem chave de API",

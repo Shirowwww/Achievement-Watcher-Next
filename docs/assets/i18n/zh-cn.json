@@ -131,7 +131,7 @@
   "gallery.zoom": "查看完整尺寸的预览",
   "gallery.zoomClose": "关闭",
   "gallery.zoomNote": "这是生成的图像，而非截图：它是该预设绘制的弹窗，由提交的文件渲染而成，尺寸与应用中显示的一致。",
-  "hero.caption": "这个弹窗不是图片，而是应用自带的预设，正在这里运行。",
+  "hero.caption": "实时预览：你解锁成就时应用在游戏上方显示的真实弹窗，轮流展示几种预设。",
   "hero.download": "下载安装程序",
   "hero.eyebrow": "Windows 10 和 11",
   "hero.noteLicense": "LGPL-3.0，无需账号，无需 API 密钥",

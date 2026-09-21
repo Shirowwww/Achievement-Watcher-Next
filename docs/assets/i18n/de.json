@@ -131,7 +131,7 @@
   "gallery.zoom": "Diese Vorschau in voller Größe ansehen",
   "gallery.zoomClose": "Schließen",
   "gallery.zoomNote": "Ein erzeugtes Bild, keine Aufnahme: die Benachrichtigung, die diese Vorlage zeichnet, aus der eingesendeten Datei gerendert, in der Größe, in der die App sie anzeigt.",
-  "hero.caption": "Dieses Popup ist kein Bild. Es ist das Preset der App, das hier läuft.",
+  "hero.caption": "Live-Vorschau: das echte Popup, das die App über deinem Spiel zeigt, wenn du einen Erfolg freischaltest, in einigen ihrer Presets.",
   "hero.download": "Installer herunterladen",
   "hero.eyebrow": "Windows 10 und 11",
   "hero.noteLicense": "LGPL-3.0, kein Konto, kein API-Schlüssel",

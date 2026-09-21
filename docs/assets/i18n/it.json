@@ -131,7 +131,7 @@
   "gallery.zoom": "Vedi questa anteprima a grandezza intera",
   "gallery.zoomClose": "Chiudi",
   "gallery.zoomNote": "Un'immagine generata, non una fotografia: il popup che questo preset disegna, prodotto dal file inviato e nella dimensione con cui l'app lo mostra.",
-  "hero.caption": "Quel popup non è un'immagine. È il preset che l'app include, in esecuzione qui.",
+  "hero.caption": "Anteprima dal vivo: il vero popup che l'app mostra sopra il gioco quando sblocchi un obiettivo, in alcuni dei suoi preset.",
   "hero.download": "Scarica il programma di installazione",
   "hero.eyebrow": "Windows 10 e 11",
   "hero.noteLicense": "LGPL-3.0, nessun account, nessuna chiave API",

@@ -131,7 +131,7 @@
   "gallery.zoom": "Ver esta vista previa a tamaño completo",
   "gallery.zoomClose": "Cerrar",
   "gallery.zoomNote": "Una imagen generada, no una captura: la notificación que dibuja este preajuste, renderizada a partir del archivo enviado y al tamaño con el que la aplicación la muestra.",
-  "hero.caption": "Ese popup no es una imagen. Es el preset que trae la aplicación, funcionando aquí.",
+  "hero.caption": "Vista previa en directo: el aviso real que la aplicación muestra sobre tu juego cuando desbloqueas un logro, en algunos de sus presets.",
   "hero.download": "Descargar el instalador",
   "hero.eyebrow": "Windows 10 y 11",
   "hero.noteLicense": "LGPL-3.0, sin cuenta, sin clave de API",

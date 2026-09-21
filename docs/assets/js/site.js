@@ -344,6 +344,81 @@
         });
       });
     });
+
+    cycleHero();
+  }
+
+  /*
+    The hero popup is the first thing a visitor sees, so it keeps going instead of playing once: a
+    few of the bundled presets in turn, each with a different kind of unlock, held long enough to
+    read. It pauses off screen and in a hidden tab, and a visitor who asked for reduced motion keeps
+    the one still card.
+  */
+  var HERO_STEPS = [
+    { preset: 'aw-next', state: 'normal' },
+    { preset: 'steam', state: 'rare' },
+    { preset: 'playstation', state: 'progress' },
+    { preset: 'xbox', state: 'normal' },
+    { preset: 'glass', state: 'rare' },
+    { preset: 'epic-games', state: 'progress' },
+  ];
+  var HERO_HOLD_MS = 7000;
+  var HERO_FADE_MS = 280;
+
+  function cycleHero() {
+    var frame = document.querySelector('.hero [data-preset-frame]');
+    if (!frame) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var step = 0;
+    var timer = 0;
+    var visible = true;
+
+    // A new preset is a new page, blank while it loads, so the frame fades out first and back in
+    // once the next card is asked for.
+    function show(index) {
+      var next = HERO_STEPS[index];
+      var address = 'assets/preset/' + next.preset + '/index.html';
+      frame.classList.add('is-switching');
+      window.setTimeout(function () {
+        // The preset page plays the state once it has loaded; asking before that would be dropped.
+        frame.addEventListener(
+          'load',
+          function () {
+            if (frame.contentWindow) frame.contentWindow.postMessage({ type: 'aw-preset-play', state: next.state }, '*');
+            frame.classList.remove('is-switching');
+          },
+          { once: true }
+        );
+        frame.setAttribute('src', address);
+      }, HERO_FADE_MS);
+    }
+
+    function tick() {
+      step = (step + 1) % HERO_STEPS.length;
+      show(step);
+    }
+
+    function restart() {
+      window.clearInterval(timer);
+      timer = visible && !document.hidden ? window.setInterval(tick, HERO_HOLD_MS) : 0;
+    }
+
+    document.addEventListener('visibilitychange', restart);
+    var replay = document.querySelector('.hero [data-replay]');
+    if (replay) {
+      replay.addEventListener('click', function () {
+        restart();
+      });
+    }
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        visible = entries[entries.length - 1].isIntersecting;
+        restart();
+      }).observe(frame);
+    } else {
+      restart();
+    }
   }
 
   // --- theme sampler --------------------------------------------------------------------------

@@ -131,7 +131,7 @@
   "gallery.zoom": "Voir cet aperçu en grand",
   "gallery.zoomClose": "Fermer",
   "gallery.zoomNote": "Une image générée, pas une photo : la popup que dessine ce préréglage, rendue à partir du fichier envoyé, à la taille où l'application l'affiche.",
-  "hero.caption": "Cette popup n'est pas une image : c'est le preset livré avec l'application, qui tourne ici.",
+  "hero.caption": "Aperçu en direct : la vraie popup que l'application affiche par-dessus votre jeu quand vous débloquez un succès, dans quelques-uns de ses presets.",
   "hero.download": "Télécharger l'installeur",
   "hero.eyebrow": "Windows 10 et 11",
   "hero.noteLicense": "LGPL-3.0, sans compte, sans clé d'API",

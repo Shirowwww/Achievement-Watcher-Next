@@ -13,6 +13,11 @@
   'use strict';
 
   var listener = null;
+  var played = false;
+
+  // Long enough for the page to settle before the card enters, so the entry is seen rather than
+  // spent while the page is still painting.
+  var FIRST_PLAY_DELAY_MS = 900;
 
   // On a page the popup is the illustration, so it stays. The engine reads this meta tag once, at
   // DOMContentLoaded, to work out how long the card holds before it animates itself away: raising
@@ -57,19 +62,19 @@
     normal: {
       displayName: 'First Light',
       description: 'Reach the summit before dawn.',
-      gameName: 'Achievement Watcher Next',
+      gameName: 'Northbound',
       rarityPercent: null,
     },
     rare: {
       displayName: 'No Witnesses',
       description: 'Finish the heist without an alarm.',
-      gameName: 'Achievement Watcher Next',
+      gameName: 'Northbound',
       rarityPercent: 1.4,
     },
     platinum: {
       displayName: 'Completionist',
       description: 'Every achievement unlocked.',
-      gameName: 'Achievement Watcher Next',
+      gameName: 'Northbound',
       notificationType: 'platinum',
       isPlatinum: true,
       rarityPercent: null,
@@ -77,7 +82,7 @@
     progress: {
       displayName: 'Collector',
       description: 'Recover the scattered relics.',
-      gameName: 'Achievement Watcher Next',
+      gameName: 'Northbound',
       notificationType: 'progress',
       rarityPercent: null,
       progress: { current: 34, max: 50, percent: 68 },
@@ -95,7 +100,9 @@
   }
 
   function play(state) {
-    if (listener) listener(payloadFor(state));
+    if (!listener) return;
+    played = true;
+    listener(payloadFor(state));
   }
 
   // The popup declares its own size; the page needs it to give the frame the right box.
@@ -116,10 +123,11 @@
   window.api = {
     onNotification: function (callback) {
       listener = callback;
-      // The preset registers on DOMContentLoaded; play on the next tick so it is fully wired.
+      // The preset registers on DOMContentLoaded. The page may already have asked for a state by
+      // the time this fires; only play on our own when it has not.
       window.setTimeout(function () {
-        play('normal');
-      }, 0);
+        if (!played) play('normal');
+      }, FIRST_PLAY_DELAY_MS);
     },
     // The app uses these to know when to show the window and when to close it. On a page the frame
     // is already visible and stays put, so both are deliberately inert.
