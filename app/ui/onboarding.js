@@ -188,6 +188,8 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     $('#onboard-theme-label').text(t.theme);
     $('#onboard-theme-hint').text(t.themeHint);
     $('#onboard-notification-mode-label').text(t.notifications);
+    // Icon-only beside the select, so the label lives in the tooltip and the accessible name.
+    $('#onboard-notification-test').attr({ title: t.notificationTest, 'aria-label': t.notificationTest });
     $('#onboard-notification-test span').text(t.notificationTest);
     $('#onboard-preset-label').text(t.preset);
     $('#onboard-preset-hint').text(t.presetHint);
@@ -284,31 +286,62 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
       login: 'steam:login',
       cancelled: 'login-cancelled',
       name: (state) => state.persona || state.steamid,
-      text: () => ({
-        connect: onboardingT('steam-connect', 'Connect Steam account', 'Connecter le compte Steam'),
-        reconnect: onboardingT('steam-reconnect', 'Reconnect', 'Reconnecter'),
-        connectedAs: (n) => onboardingT('steam-connected-as', 'Connected{suffix}', 'Connecté{suffix}', { suffix: n ? ': ' + n : '' }),
-        notConnected: onboardingT('steam-not-connected', 'Not connected', 'Non connecté'),
-        connecting: onboardingT('steam-connecting', 'Opening the Steam sign-in window…', 'Ouverture de la fenêtre de connexion Steam…'),
-        cancelled: onboardingT('steam-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'),
-        failed: onboardingT('steam-failed', 'Steam sign-in failed', 'Échec de la connexion Steam'),
-        needsReconnect: onboardingT('steam-needs-reconnect', 'Session expired, reconnect needed.', 'Session expirée, reconnexion nécessaire.'),
-      }),
+      // Aliased to t so the locale lint recognizes these as translated calls.
+      text: () => {
+        const t = onboardingT;
+        return {
+          connect: t('steam-connect', 'Connect Steam account', 'Connecter le compte Steam'),
+          reconnect: t('steam-reconnect', 'Reconnect', 'Reconnecter'),
+          connectedAs: (n) => t('steam-connected-as', 'Connected{suffix}', 'Connecté{suffix}', { suffix: n ? ': ' + n : '' }),
+          notConnected: t('steam-not-connected', 'Not connected', 'Non connecté'),
+          connecting: t('steam-connecting', 'Opening the Steam sign-in window…', 'Ouverture de la fenêtre de connexion Steam…'),
+          cancelled: t('steam-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'),
+          failed: t('steam-failed', 'Steam sign-in failed', 'Échec de la connexion Steam'),
+          needsReconnect: t('steam-needs-reconnect', 'Session expired, reconnect needed.', 'Session expirée, reconnexion nécessaire.'),
+        };
+      },
+    },
+    xbox: {
+      status: 'xbox-pc:status',
+      login: 'xbox-pc:login',
+      cancelled: 'window-closed',
+      name: (state) => state.gamertag,
+      // The Xbox PC source shows nothing until the library is imported, so connecting does both.
+      afterLogin: importXboxLibrary,
+      // Aliased to t so the locale lint recognizes these as translated calls.
+      text: () => {
+        const t = onboardingT;
+        return {
+          connect: t('xbox-connect', 'Connect Xbox account', 'Connecter le compte Xbox'),
+          reconnect: t('xbox-reconnect', 'Reconnect', 'Reconnecter'),
+          connectedAs: (n) => t('xbox-connected-as', 'Connected{suffix}', 'Connecté{suffix}', { suffix: n ? ': ' + n : '' }),
+          notConnected: t('xbox-not-connected', 'Not connected', 'Non connecté'),
+          connecting: t('xbox-connecting', 'Opening the Microsoft sign-in window…', 'Ouverture de la fenêtre de connexion Microsoft…'),
+          cancelled: t('xbox-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'),
+          failed: t('xbox-failed', 'Xbox sign-in failed', 'Échec de la connexion Xbox'),
+          importing: t('xbox-importing', 'Importing the Xbox PC library…', 'Importation de la bibliothèque Xbox…'),
+          importFailed: t('xbox-import-failed', 'Xbox library import failed', 'Échec de l’importation Xbox'),
+        };
+      },
     },
     epic: {
       status: 'epic:auth-status',
       login: 'epic:login',
       cancelled: 'window-closed',
       name: (state) => state.displayName,
-      text: () => ({
-        connect: onboardingT('epic-connect', 'Connect Epic account', 'Connecter le compte Epic'),
-        reconnect: onboardingT('epic-reconnect', 'Reconnect', 'Reconnecter'),
-        connectedAs: (n) => onboardingT('epic-connected-as', 'Connected{suffix}', 'Connecté{suffix}', { suffix: n ? ': ' + n : '' }),
-        notConnected: onboardingT('epic-not-connected', 'Not connected', 'Non connecté'),
-        connecting: onboardingT('epic-connecting', 'Opening the Epic sign-in window…', 'Ouverture de la fenêtre de connexion Epic…'),
-        cancelled: onboardingT('epic-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'),
-        failed: onboardingT('epic-failed', 'Epic sign-in failed', 'Échec de la connexion Epic'),
-      }),
+      // Aliased to t so the locale lint recognizes these as translated calls.
+      text: () => {
+        const t = onboardingT;
+        return {
+          connect: t('epic-connect', 'Connect Epic account', 'Connecter le compte Epic'),
+          reconnect: t('epic-reconnect', 'Reconnect', 'Reconnecter'),
+          connectedAs: (n) => t('epic-connected-as', 'Connected{suffix}', 'Connecté{suffix}', { suffix: n ? ': ' + n : '' }),
+          notConnected: t('epic-not-connected', 'Not connected', 'Non connecté'),
+          connecting: t('epic-connecting', 'Opening the Epic sign-in window…', 'Ouverture de la fenêtre de connexion Epic…'),
+          cancelled: t('epic-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'),
+          failed: t('epic-failed', 'Epic sign-in failed', 'Échec de la connexion Epic'),
+        };
+      },
     },
   };
 
@@ -330,7 +363,7 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     }
     $(`#onboard-${key}-connect span`).text(state.connected ? labels.reconnect : labels.connect);
     if (state.connected && state.needsReconnect && labels.needsReconnect) setAccountStatus(key, labels.needsReconnect, 'error');
-    else if (state.connected) setAccountStatus(key, labels.connectedAs(account.name(state)), 'success');
+    else if (state.connected && !$(`#onboard-${key}-status`).hasClass('success')) setAccountStatus(key, labels.connectedAs(account.name(state)), 'success');
     else if (!$(`#onboard-${key}-status`).hasClass('error')) setAccountStatus(key, labels.notConnected);
   }
 
@@ -347,6 +380,7 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     setAccountStatus(key, labels.connecting);
     try {
       const result = (await ipcRenderer.invoke(account.login)) || {};
+      if (result.ok && account.afterLogin) return await account.afterLogin(key, labels);
       if (result.ok) setAccountStatus(key, '');
       else if (result.error === account.cancelled) setAccountStatus(key, labels.cancelled, 'error');
       else setAccountStatus(key, `${labels.failed}${result.error ? ': ' + result.error : ''}`, 'error');
@@ -355,6 +389,28 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     } finally {
       button.prop('disabled', false);
       refreshAccount(key);
+    }
+  }
+
+  // Same import as the Settings card. The summary line comes from the Settings strings, and a
+  // library already on screen is rebuilt; while the guide is open, Finish rebuilds it anyway.
+  async function importXboxLibrary(key, labels) {
+    setAccountStatus(key, labels.importing);
+    try {
+      const res = (await ipcRenderer.invoke('xbox-pc:import', { lang: app.config?.achievement?.lang || 'english' })) || {};
+      if (!res.ok) {
+        setAccountStatus(key, `${labels.importFailed}${res.error ? ': ' + res.error : ''}`, 'error');
+        return;
+      }
+      const r = res.result || {};
+      setAccountStatus(key, onboardingT('xbox-imported', 'Import complete: {created} created, {updated} updated, {failed} failed.', 'Importation terminée : {created} créé(s), {updated} mis à jour, {failed} échec(s).', {
+        created: r.created || 0,
+        updated: r.updated || 0,
+        failed: r.failed || 0,
+      }), 'success');
+      if (!$('#onboarding').is(':visible')) app.onStart();
+    } catch (err) {
+      setAccountStatus(key, `${labels.importFailed}: ${err.message || err}`, 'error');
     }
   }
 
@@ -887,6 +943,7 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
       setInterfaceMode($(this).data('mode'));
     });
     $('#onboard-steam-connect').on('click', () => connectAccount('steam'));
+    $('#onboard-xbox-connect').on('click', () => connectAccount('xbox'));
     $('#onboard-epic-connect').on('click', () => connectAccount('epic'));
     $('#onboard-add-save-dir').on('click', pickSaveDir);
     $('#onboard-smart-find').on('click', smartFindDirs);

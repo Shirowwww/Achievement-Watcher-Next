@@ -2718,7 +2718,7 @@
                    pieces of chrome a tile draws. Its own card in Appearance rather than rows appended
                    to the General list, so no nth-child locale binding moves; every label here is
                    bound by id in app/locale/loader.js. -->
-              <div id="library-tiles" class="arrow-list">
+              <div id="library-tiles" class="arrow-list" data-advanced="1">
                 <div class="title"><i class="fas fa-th"></i> <span id="library-tiles-title">Library tiles</span></div>
                 <ul>
                   <li class="hasHelper">
@@ -3460,7 +3460,8 @@
                 </div>
 
                 <!-- Optional sign-ins, the same ones as the account cards in Settings > Sources: a private
-                     Steam profile, Steam Family games and Epic unlocks are only readable once connected. -->
+                     Steam profile, Steam Family games, the Xbox PC library and Epic unlocks are only readable once
+                     connected. -->
                 <div class="onboarding-source-group onboarding-accounts">
                   <div class="onboarding-source-group-head">
                     <strong id="onboard-accounts-title">Accounts</strong>
@@ -3468,12 +3469,28 @@
                   </div>
                   <div class="onboarding-account-list">
                     <div class="onboarding-account-row" data-account="steam">
-                      <button type="button" id="onboard-steam-connect" class="onboarding-test-button"><i class="fab fa-steam" aria-hidden="true"></i> <span></span></button>
-                      <span id="onboard-steam-status" class="onboarding-account-status" aria-live="polite"></span>
+                      <span class="onboarding-account-logo"><i class="fab fa-steam" aria-hidden="true"></i></span>
+                      <span class="onboarding-account-text">
+                        <strong>Steam</strong>
+                        <span id="onboard-steam-status" class="onboarding-account-status" aria-live="polite"></span>
+                      </span>
+                      <button type="button" id="onboard-steam-connect" class="onboarding-test-button"><span></span></button>
+                    </div>
+                    <div class="onboarding-account-row" data-account="xbox">
+                      <span class="onboarding-account-logo"><i class="fab fa-xbox" aria-hidden="true"></i></span>
+                      <span class="onboarding-account-text">
+                        <strong>Xbox</strong>
+                        <span id="onboard-xbox-status" class="onboarding-account-status" aria-live="polite"></span>
+                      </span>
+                      <button type="button" id="onboard-xbox-connect" class="onboarding-test-button"><span></span></button>
                     </div>
                     <div class="onboarding-account-row" data-account="epic">
-                      <button type="button" id="onboard-epic-connect" class="onboarding-test-button"><i class="fas fa-gamepad" aria-hidden="true"></i> <span></span></button>
-                      <span id="onboard-epic-status" class="onboarding-account-status" aria-live="polite"></span>
+                      <span class="onboarding-account-logo"><i class="brand-icon brand-epic" aria-hidden="true"></i></span>
+                      <span class="onboarding-account-text">
+                        <strong>Epic Games</strong>
+                        <span id="onboard-epic-status" class="onboarding-account-status" aria-live="polite"></span>
+                      </span>
+                      <button type="button" id="onboard-epic-connect" class="onboarding-test-button"><span></span></button>
                     </div>
                   </div>
                 </div>
@@ -3503,7 +3520,7 @@
                       <small class="onboard-field-hint" id="onboard-src-xboxPc-hint"></small>
                     </label>
                     <label class="onboarding-source-row">
-                      <span class="onboarding-source-name"><i class="fas fa-shopping-bag" aria-hidden="true"></i> Epic Games</span>
+                      <span class="onboarding-source-name"><i class="brand-icon brand-epic" aria-hidden="true"></i> Epic Games</span>
                       <select id="onboard-src-epicOfficial">
                         <option value="0"></option>
                         <option value="1"></option>
@@ -3512,7 +3529,7 @@
                       <small class="onboard-field-hint" id="onboard-src-epicOfficial-hint"></small>
                     </label>
                     <label class="onboarding-source-row">
-                      <span class="onboarding-source-name"><i class="fas fa-compact-disc" aria-hidden="true"></i> GOG Galaxy</span>
+                      <span class="onboarding-source-name"><i class="brand-icon brand-gog" aria-hidden="true"></i> GOG Galaxy</span>
                       <select id="onboard-src-gogOfficial">
                         <option value="true"></option>
                         <option value="false"></option>
@@ -3520,7 +3537,7 @@
                       <small class="onboard-field-hint" id="onboard-src-gogOfficial-hint"></small>
                     </label>
                     <label class="onboarding-source-row">
-                      <span class="onboarding-source-name"><i class="fas fa-store" aria-hidden="true"></i> Ubisoft Connect</span>
+                      <span class="onboarding-source-name"><i class="brand-icon brand-ubisoft" aria-hidden="true"></i> Ubisoft Connect</span>
                       <select id="onboard-src-ubisoftOfficial">
                         <option value="true"></option>
                         <option value="false"></option>
@@ -3528,7 +3545,7 @@
                       <small class="onboard-field-hint" id="onboard-src-ubisoftOfficial-hint"></small>
                     </label>
                     <label class="onboarding-source-row">
-                      <span class="onboarding-source-name"><i class="fas fa-gamepad" aria-hidden="true"></i> EA Desktop</span>
+                      <span class="onboarding-source-name"><i class="brand-icon brand-ea" aria-hidden="true"></i> EA Desktop</span>
                       <select id="onboard-src-ea">
                         <option value="true"></option>
                         <option value="false"></option>
@@ -3577,7 +3594,7 @@
                       <small class="onboard-field-hint" id="onboard-src-socialClub-hint"></small>
                     </label>
                     <label class="onboarding-source-row">
-                      <span class="onboarding-source-name"><i class="fas fa-compact-disc" aria-hidden="true"></i> Nemirtingas Galaxy Emu</span>
+                      <span class="onboarding-source-name"><i class="brand-icon brand-gog" aria-hidden="true"></i> Nemirtingas Galaxy Emu</span>
                       <select id="onboard-src-gog">
                         <option value="true"></option>
                         <option value="false"></option>
@@ -3585,7 +3602,7 @@
                       <small class="onboard-field-hint" id="onboard-src-gog-hint"></small>
                     </label>
                     <label class="onboarding-source-row">
-                      <span class="onboarding-source-name"><i class="fas fa-shopping-bag" aria-hidden="true"></i> Nemirtingas Epic Emu</span>
+                      <span class="onboarding-source-name"><i class="brand-icon brand-epic" aria-hidden="true"></i> Nemirtingas Epic Emu</span>
                       <select id="onboard-src-epic">
                         <option value="true"></option>
                         <option value="false"></option>
