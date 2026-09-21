@@ -27,6 +27,12 @@ renamed in 3.9.0 and the history is kept under one file.
   show a fraction of them. Both are off by default: a large library makes the first scan much longer,
   since every added game has to resolve its achievements and artwork once.
 
+- **Unlocks from your other PCs.** Steam only writes a stats file for a game once it has reported one
+  on this machine, so anything played elsewhere sat at 0% however far through it you were. With an
+  account connected, a game with nothing to read locally is now asked about directly, which also
+  works when your profile is private. The answer is kept for six hours so a second launch on the same
+  day does not ask again for every game.
+
 ### Fixed
 
 - **A game whose unlocks sit in `GSE Saves` no longer shows 0%.** Applying the emulator fix creates a

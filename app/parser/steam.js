@@ -922,6 +922,64 @@ module.exports.getAchievementsFromFile = async (filePath) => {
   return result;
 };
 
+// How long an unlock list fetched from the account is trusted before Steam is asked again. A scan
+// touching a whole library fires one request per game, so this is what keeps a second launch on the
+// same day from repeating all of them.
+const ACCOUNT_UNLOCKS_TTL_MS = 6 * 60 * 60 * 1000;
+/*
+  One dead host must not make every remaining game in the library wait out its own timeout. Rate
+  limiting and server errors count here as well as transport failures: a whole library is one
+  request per game, which is exactly the shape of traffic Steam answers with 429, and the default
+  transport test does not recognise an HTTP status as a reason to stop.
+*/
+const accountUnlocksCircuit = createNetworkCircuit({
+  failureLimit: 3,
+  cooldownMs: 10 * 60 * 1000,
+  shouldCount: (err) => isSteamTransportFailure(err) || /steam-api-http-(429|5\d\d)/.test(String((err && err.message) || err || '')),
+});
+
+/*
+  The unlocks Steam holds for a game this PC has no stats file for, or null when the question could
+  not be asked. `cfg.account` carries the connected session; without one there is nothing to ask.
+
+  Cached on disk like the local path's answers, and re-read within the TTL rather than re-fetched:
+  a library of several hundred never-installed games is several hundred requests otherwise, every
+  single scan.
+*/
+async function readAccountUnlocks(cfg, cacheFile, cachedAt) {
+  const account = cfg && cfg.account;
+  if (!account || !account.token || !account.steamid) return null;
+  if (cachedAt > 0 && Date.now() - cachedAt < ACCOUNT_UNLOCKS_TTL_MS) return null;
+  if (accountUnlocksCircuit.unavailable()) return null;
+
+  let unlocks;
+  try {
+    const steamAccount = require('./steamAccount.js');
+    unlocks = await steamAccount.fetchPlayerAchievements({
+      token: account.token,
+      steamid: account.steamid,
+      appid: cfg.appID,
+      log: (message) => debug.log(message),
+    });
+    accountUnlocksCircuit.recordSuccess();
+  } catch (err) {
+    if (accountUnlocksCircuit.recordFailure(err)) {
+      debug.log(`[steam] account unlocks unreachable, skipping them for ${accountUnlocksCircuit.cooldownMs / 60000} minute(s) => ${err}`);
+    }
+    return null;
+  }
+
+  try {
+    fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
+    fs.writeFileSync(cacheFile, JSON.stringify(unlocks, null, 2));
+  } catch (err) {
+    debug.log(`[${cfg.appID}] account unlocks could not be cached => ${err}`);
+  }
+  const earned = unlocks.filter((entry) => entry.achieved).length;
+  if (earned > 0) debug.log(`[${cfg.appID}] ${earned} unlock(s) read from the connected Steam account`);
+  return unlocks;
+}
+
 module.exports.getAchievementsFromAPI = async (cfg) => {
   try {
     let result;
@@ -942,9 +1000,11 @@ module.exports.getAchievementsFromAPI = async (cfg) => {
     }
 
     if (!fs.existsSync(cache.steam)) {
-      // Owned or installed, never played: Steam writes no stats file until the game first reports
-      // one. That is a complete answer - nothing is unlocked - and it must not throw, or every
-      // never-played game in the library would fail to load instead of showing 0%.
+      // Steam writes no stats file until a game first reports one HERE, so this is every game the
+      // account owns but has not played on this PC. "Nothing unlocked" is only the right answer
+      // when the account cannot be asked; with a connected account, ask it.
+      const remote = await readAccountUnlocks(cfg, cache.local, time.local);
+      if (remote) return remote;
       if (time.local > 0) return JSON.parse(fs.readFileSync(cache.local));
       return [];
     }

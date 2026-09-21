@@ -37,6 +37,7 @@ function classify({ owned, family, installed, listed } = {}) {
 const OWNED_URL = 'https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/';
 const FAMILY_GROUP_URL = 'https://api.steampowered.com/IFamilyGroupsService/GetFamilyGroupForUser/v1/';
 const FAMILY_APPS_URL = 'https://api.steampowered.com/IFamilyGroupsService/GetSharedLibraryApps/v1/';
+const PLAYER_ACHIEVEMENTS_URL = 'https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/';
 const EMPTY_LIBRARY = () => ({ owned: [], family: [], names: new Map(), owners: new Map(), playtime: new Map() });
 
 async function getJson(fetchImpl, url) {
@@ -154,4 +155,59 @@ async function loadLibrary({ cacheFile, token, steamid, fetchImpl = globalThis.f
   return library;
 }
 
-module.exports = { classify, fetchLibrary, loadLibrary, LIBRARY_TTL_MS, LIBRARY_CACHE_VERSION, _internal: { idSet } };
+/*
+  What the account unlocked in one game, straight from Steam.
+
+  The local reader can only answer for a game whose stats file this PC holds, which is a game that
+  ran here. Every other game the account owns is at 0% however much of it was played elsewhere. The
+  token authenticates the owner, so this also answers for a private profile, where the community
+  XML page the older path scrapes returns nothing at all.
+
+  Returns the same shape the local reader produces. An empty list is a real answer - "nothing
+  unlocked" - and a call that could not be made throws, so the caller's breaker sees the real
+  transport error instead of caching a silence as "this account unlocked nothing".
+*/
+async function fetchPlayerAchievements({ token, steamid, appid, fetchImpl = globalThis.fetch, log = () => {} } = {}) {
+  const key = String(token || '').trim();
+  const user = String(steamid || '').trim();
+  const app = String(appid || '').trim();
+  if (!key || !user || !app) throw new Error('steam-player-achievements-needs-a-connected-account');
+
+  // No `l=`: only apiname, achieved and unlocktime are read, and the names come from the schema.
+  const url = `${PLAYER_ACHIEVEMENTS_URL}?access_token=${encodeURIComponent(key)}&steamid=${encodeURIComponent(user)}&appid=${encodeURIComponent(app)}`;
+
+  let payload;
+  try {
+    payload = await getJson(fetchImpl, url);
+  } catch (err) {
+    // A 400 here is Steam saying this app publishes no stats, which is an answer about the game
+    // rather than a failure: report it as "no achievements" so it is cached and not asked again.
+    if (String((err && err.message) || '') === 'steam-api-http-400') {
+      log(`[steam] ${app} publishes no player stats`);
+      return [];
+    }
+    throw err;
+  }
+
+  const stats = payload && payload.playerstats;
+  if (!stats || stats.success === false) return [];
+  const list = Array.isArray(stats.achievements) ? stats.achievements : [];
+  return list.map((entry) => {
+    const unlocktime = Number(entry && entry.unlocktime) || 0;
+    return {
+      apiname: String((entry && entry.apiname) || ''),
+      achieved: Number(entry && entry.achieved) === 1 ? 1 : 0,
+      unlocktime,
+    };
+  });
+}
+
+module.exports = {
+  classify,
+  fetchLibrary,
+  loadLibrary,
+  fetchPlayerAchievements,
+  LIBRARY_TTL_MS,
+  LIBRARY_CACHE_VERSION,
+  _internal: { idSet },
+};

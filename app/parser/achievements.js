@@ -2506,6 +2506,8 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
       appID: appid.appid,
       user: appid.data.userID,
       path: appid.data.cachePath,
+      // Lets the reader fall back to what Steam holds for a game this PC has never run.
+      account: _steamSession,
     });
   } else if (dataType === 'rpcs3') {
     return await rpcs3.getAchievements(appid.data.path, game.achievement.total);
@@ -3809,6 +3811,9 @@ module.exports.detectInstalledAppids = async (option) => {
 const STEAM_OWNERSHIP_TIMEOUT_MS = 15000;
 let _steamOwnership = new Map();
 let _steamFamilyOwners = new Map();
+// The connected session for this scan, so a game with no local stats file can still be asked about.
+// Held here rather than fetched per game: one IPC round trip for the whole library.
+let _steamSession = null;
 
 // One read per refresh: steamAccount's 6-hour cache absorbs closely-spaced scans, and classify()
 // marks nothing stale when the list comes back empty. The token comes from the main process, which
@@ -3838,6 +3843,7 @@ async function loadSteamAccountLibrary() {
   const { token, steamid } =
     (await withTimeout(ipcInvoke('steam:ensure-token'), STEAM_OWNERSHIP_TIMEOUT_MS, 'steam:ensure-token timed out')) || {};
   if (!token || !steamid) return null;
+  _steamSession = { token, steamid };
 
   const steamAccount = require('./steamAccount.js');
   const cacheDir = path.join(_userDataPath || userDataDir(), 'steam_cache');
