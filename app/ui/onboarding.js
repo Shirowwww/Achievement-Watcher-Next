@@ -200,6 +200,9 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     $('#onboard-auto-fix-hint').text(t.autoFixHint);
     $('#onboard-hidden-hint').text(t.hiddenHint);
     $('#onboard-merge-hint').text(t.mergeHint);
+    $('#onboard-accounts-title').text(t.accountsTitle);
+    $('#onboard-accounts-copy').text(t.accountsCopy);
+    $('#onboard-summary-reopen').text(t.summaryReopen);
     $("#onboard-notification-mode option[value='auto']").text(t.notificationAuto);
     $("#onboard-notification-mode option[value='toast']").text(t.toast);
     $("#onboard-notification-mode option[value='overlay']").text(t.overlay);
@@ -212,6 +215,8 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     updateStepButtons();
     updateProgress();
     renderDirLists();
+    // Relabels the account buttons after a language change; show() covers the first open.
+    if ($('#onboarding').is(':visible')) refreshAccounts();
   }
 
   /*
@@ -228,7 +233,129 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
   function setInterfaceMode(mode) {
     chosenInterfaceMode = onboardingInterfaceMode.normalize(mode);
     renderInterfaceMode();
+    applyModeToGuide();
     if (chosenInterfaceMode) setStatus('', '');
+  }
+
+  /*
+    The later steps follow the mode picked here, with the same rules as Settings. Auto-fix lives in
+    the Emulator tab, which Simple never shows, so offering it here would let a Simple user switch
+    on something that rewrites game files and then find no switch to turn it off. The niche sources
+    fold away exactly as they do in Settings > Sources. No mode chosen yet counts as Advanced.
+  */
+  function applyModeToGuide() {
+    const simple = onboardingInterfaceMode.isSimple(chosenInterfaceMode);
+    $('#onboard-auto-fix').closest('label').toggle(!simple);
+
+    const enabled = {};
+    for (const key of Object.keys(onboardingInterfaceMode.OPTIONAL_SOURCES)) {
+      enabled[key] = boolValue($(`#onboard-src-${key}`).val());
+    }
+    let librarySources = [];
+    try {
+      // gameList belongs to app.js, which shares this script scope.
+      if (typeof gameList !== 'undefined' && Array.isArray(gameList)) librarySources = gameList.map((game) => game && game.source);
+    } catch (err) {
+      debug.log(`onboarding: library sources unavailable (${err})`);
+    }
+    const hidden = new Set(onboardingInterfaceMode.hiddenOptionalSources({ mode: chosenInterfaceMode, enabled, librarySources }));
+    for (const key of Object.keys(onboardingInterfaceMode.OPTIONAL_SOURCES)) {
+      $(`#onboard-src-${key}`).closest('.onboarding-source-row').toggle(!hidden.has(key));
+    }
+    // A group whose every row folded away would leave an empty box behind.
+    $('#onboarding .onboarding-source-group')
+      .not('.onboarding-accounts')
+      .each(function () {
+        const rows = $(this).find('.onboarding-source-row');
+        const visible = rows.filter(function () {
+          return this.style.display !== 'none';
+        });
+        $(this).toggle(rows.length === 0 || visible.length > 0);
+      });
+  }
+
+  /*
+    Optional sign-ins, driving the same main-process flows as the account cards in Settings >
+    Sources (init.js steam:* / epic:* IPC). Every label is one those cards already translate.
+  */
+  const ACCOUNTS = {
+    steam: {
+      status: 'steam:auth-status',
+      login: 'steam:login',
+      cancelled: 'login-cancelled',
+      name: (state) => state.persona || state.steamid,
+      text: () => ({
+        connect: onboardingT('steam-connect', 'Connect Steam account', 'Connecter le compte Steam'),
+        reconnect: onboardingT('steam-reconnect', 'Reconnect', 'Reconnecter'),
+        connectedAs: (n) => onboardingT('steam-connected-as', 'Connected{suffix}', 'Connecté{suffix}', { suffix: n ? ': ' + n : '' }),
+        notConnected: onboardingT('steam-not-connected', 'Not connected', 'Non connecté'),
+        connecting: onboardingT('steam-connecting', 'Opening the Steam sign-in window…', 'Ouverture de la fenêtre de connexion Steam…'),
+        cancelled: onboardingT('steam-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'),
+        failed: onboardingT('steam-failed', 'Steam sign-in failed', 'Échec de la connexion Steam'),
+        needsReconnect: onboardingT('steam-needs-reconnect', 'Session expired, reconnect needed.', 'Session expirée, reconnexion nécessaire.'),
+      }),
+    },
+    epic: {
+      status: 'epic:auth-status',
+      login: 'epic:login',
+      cancelled: 'window-closed',
+      name: (state) => state.displayName,
+      text: () => ({
+        connect: onboardingT('epic-connect', 'Connect Epic account', 'Connecter le compte Epic'),
+        reconnect: onboardingT('epic-reconnect', 'Reconnect', 'Reconnecter'),
+        connectedAs: (n) => onboardingT('epic-connected-as', 'Connected{suffix}', 'Connecté{suffix}', { suffix: n ? ': ' + n : '' }),
+        notConnected: onboardingT('epic-not-connected', 'Not connected', 'Non connecté'),
+        connecting: onboardingT('epic-connecting', 'Opening the Epic sign-in window…', 'Ouverture de la fenêtre de connexion Epic…'),
+        cancelled: onboardingT('epic-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'),
+        failed: onboardingT('epic-failed', 'Epic sign-in failed', 'Échec de la connexion Epic'),
+      }),
+    },
+  };
+
+  function setAccountStatus(key, message, kind) {
+    $(`#onboard-${key}-status`)
+      .removeClass('success error')
+      .addClass(kind || '')
+      .text(message || '');
+  }
+
+  async function refreshAccount(key) {
+    const account = ACCOUNTS[key];
+    const labels = account.text();
+    let state = {};
+    try {
+      state = (await ipcRenderer.invoke(account.status)) || {};
+    } catch (err) {
+      debug.log(`onboarding: ${key} status unavailable (${err})`);
+    }
+    $(`#onboard-${key}-connect span`).text(state.connected ? labels.reconnect : labels.connect);
+    if (state.connected && state.needsReconnect && labels.needsReconnect) setAccountStatus(key, labels.needsReconnect, 'error');
+    else if (state.connected) setAccountStatus(key, labels.connectedAs(account.name(state)), 'success');
+    else if (!$(`#onboard-${key}-status`).hasClass('error')) setAccountStatus(key, labels.notConnected);
+  }
+
+  function refreshAccounts() {
+    for (const key of Object.keys(ACCOUNTS)) refreshAccount(key);
+  }
+
+  async function connectAccount(key) {
+    const account = ACCOUNTS[key];
+    const labels = account.text();
+    const button = $(`#onboard-${key}-connect`);
+    if (button.prop('disabled')) return;
+    button.prop('disabled', true);
+    setAccountStatus(key, labels.connecting);
+    try {
+      const result = (await ipcRenderer.invoke(account.login)) || {};
+      if (result.ok) setAccountStatus(key, '');
+      else if (result.error === account.cancelled) setAccountStatus(key, labels.cancelled, 'error');
+      else setAccountStatus(key, `${labels.failed}${result.error ? ': ' + result.error : ''}`, 'error');
+    } catch (err) {
+      setAccountStatus(key, `${labels.failed}: ${err.message || err}`, 'error');
+    } finally {
+      button.prop('disabled', false);
+      refreshAccount(key);
+    }
   }
 
   // The step that owns the mode cards, found by markup rather than by a hard-coded index so
@@ -527,7 +654,33 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     updateStepButtons();
     updateProgress();
     maybeAutoDetectFolders();
+    if (step === STEP_COUNT - 1) renderSummary();
     focusStep();
+  }
+
+  /*
+    The last step shows what Finish will save, so an empty folder list is noticed here rather than
+    as an empty library. Counts merge the stored folders with this session's the way persist() does.
+  */
+  async function renderSummary() {
+    const t = text();
+    const enabledSources = SOURCE_ROWS.filter((row) => {
+      const raw = $(`#onboard-src-${row.key}`).val();
+      return row.tri ? (parseInt(raw, 10) || 0) > 0 : boolValue(raw);
+    }).length;
+    let saves = addedSaveDirs.length;
+    let libraries = addedLibraryDirs.length;
+    try {
+      const [currentSaveDirs, currentLibraryDirs] = await Promise.all([
+        userDir.getEntries ? userDir.getEntries() : userDir.get(),
+        libraryDirs.getEntries ? libraryDirs.getEntries() : libraryDirs.get(),
+      ]);
+      saves = mergeSaveDirs(currentSaveDirs, addedSaveDirs).length;
+      libraries = mergeLibraryDirs(currentLibraryDirs, addedLibraryDirs).length;
+    } catch (err) {
+      debug.log(`onboarding: folder counts unavailable (${err})`);
+    }
+    $('#onboard-summary-counts').text(`${t.saveList}: ${saves} · ${t.libraryList}: ${libraries} · ${t.summarySources}: ${enabledSources}`);
   }
 
   // First time the folders step is reached during a first-run session, kick off the smart-find scan so
@@ -628,7 +781,8 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
         const raw = $(`#onboard-src-${row.key}`).val();
         app.config.achievement_source[row.key] = row.tri ? parseInt(raw, 10) || 0 : boolValue(raw);
       }
-      app.config.emulator.autoApplyNewGames = boolValue($('#onboard-auto-fix').val());
+      // Simple never offered the row (see applyModeToGuide), so the stored value stays as it was.
+      if (!onboardingInterfaceMode.isSimple(chosenInterfaceMode)) app.config.emulator.autoApplyNewGames = boolValue($('#onboard-auto-fix').val());
       app.config.achievement.showHidden = boolValue($('#onboard-hidden').val());
       app.config.achievement.mergeDuplicate = boolValue($('#onboard-merge').val());
 
@@ -693,11 +847,13 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     applyText();
     populateValues();
     renderInterfaceMode();
+    applyModeToGuide();
     renderDirLists();
     $('#settings .box').hide();
     $('#settings').hide();
     if ($('title-bar')[0]) $('title-bar')[0].inSettings = false;
     $('#onboarding').toggleClass('is-first-run', isFirstRunSession).attr('aria-hidden', 'false').show();
+    refreshAccounts();
     showStep(0);
   }
 
@@ -730,6 +886,8 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     $('#onboarding').on('click', '.onboarding-mode-card', function () {
       setInterfaceMode($(this).data('mode'));
     });
+    $('#onboard-steam-connect').on('click', () => connectAccount('steam'));
+    $('#onboard-epic-connect').on('click', () => connectAccount('epic'));
     $('#onboard-add-save-dir').on('click', pickSaveDir);
     $('#onboard-smart-find').on('click', smartFindDirs);
     $('#onboard-add-library-dir').on('click', pickLibraryDir);

@@ -1328,6 +1328,8 @@
     "no-achievements-found": "No achievements found",
     "playstation-trophies": "PlayStation trophies",
     "xbox-achievements": "Xbox achievements",
+    "xbox360-recomp-achievements": "Xbox 360 achievements - PC recompilation",
+    "xbox360-recomp-badge": "Xbox 360 game recompiled to run natively on PC. Its achievements are read from the game itself.",
     "epic-games-achievements": "Epic Games achievements",
     "gog-achievements": "GOG achievements",
     "social-club-achievements": "Social Club achievements",

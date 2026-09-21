@@ -1328,6 +1328,8 @@
     "no-achievements-found": "ไม่พบความสำเร็จ",
     "playstation-trophies": "ถ้วยรางวัล PlayStation",
     "xbox-achievements": "ความสำเร็จ Xbox",
+    "xbox360-recomp-achievements": "ความสำเร็จ Xbox 360 - คอมไพล์ใหม่สำหรับ PC",
+    "xbox360-recomp-badge": "เกม Xbox 360 ที่ถูกคอมไพล์ใหม่ให้ทำงานแบบเนทีฟบน PC ความสำเร็จของเกมจะถูกอ่านโดยตรงจากตัวเกมเอง",
     "epic-games-achievements": "ความสำเร็จ Epic Games",
     "gog-achievements": "ความสำเร็จ GOG",
     "social-club-achievements": "ความสำเร็จ Social Club",

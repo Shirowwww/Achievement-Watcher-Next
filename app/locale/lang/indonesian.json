@@ -1328,6 +1328,8 @@
     "no-achievements-found": "Tidak ada pencapaian ditemukan",
     "playstation-trophies": "Trofi PlayStation",
     "xbox-achievements": "Pencapaian Xbox",
+    "xbox360-recomp-achievements": "Pencapaian Xbox 360 - rekompilasi PC",
+    "xbox360-recomp-badge": "Game Xbox 360 yang dikompilasi ulang agar berjalan secara native di PC. Pencapaiannya dibaca langsung dari game itu sendiri.",
     "epic-games-achievements": "Pencapaian Epic Games",
     "gog-achievements": "Pencapaian GOG",
     "social-club-achievements": "Pencapaian Social Club",

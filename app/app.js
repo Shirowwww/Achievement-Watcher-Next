@@ -1751,7 +1751,7 @@ function promptText(message, defaultValue = '', type = 'text') {
 window.awPromptText = promptText;
 
 // These emulator sources already provide local artwork paths.
-const EMU_LOCAL_ICON_SOURCES = new Set(['RPCS3 Emulator', 'ShadPS4 Emulator', 'Xenia Emulator', 'XLiveLessNess']);
+const EMU_LOCAL_ICON_SOURCES = new Set(['RPCS3 Emulator', 'ShadPS4 Emulator', 'Xenia Emulator', 'XLiveLessNess', 'Xbox 360 Recomp']);
 
 async function downloadLibraryCover(url, cacheAppid) {
   if (!url) return { path: null, source: null, reason: 'missing' };
@@ -1986,7 +1986,7 @@ function isLegitSteamLibraryGame(game) {
 // app/parser/*.js must appear here or in STEAM_BADGE_SOURCES (Ubisoft is separate); test enforces it.
 const SOURCE_BADGE = {
   playstation: /^(?:rpcs3 emulator|shadps4 emulator)$/,
-  xbox: /^(?:xenia emulator|xlivelessness|xbox pc)$/,
+  xbox: /^(?:xenia emulator|xlivelessness|xbox 360 recomp|xbox pc)$/,
   epic: /^epic(?:-official)?$/,
   gog: /^(?:gog|gog galaxy)$/,
   socialclub: /^goldberg socialclub$/,
@@ -2008,7 +2008,7 @@ const PURCHASED_SOURCE = {
   epic: /^epic-official$/,
   ea: /^ea$/,
   // The imported Xbox library only. Anchored so the two Xbox emulators, which say nothing about
-  // owning anything, never earn it: 'Xenia Emulator' and 'XLiveLessNess'.
+  // owning anything, never earn it: 'Xenia Emulator', 'XLiveLessNess' and 'Xbox 360 Recomp'.
   xbox: /^xbox pc$/,
 };
 
@@ -2068,6 +2068,13 @@ function sourcePresentationFor(game) {
         kind,
       };
     case 'xbox':
+      if (source === 'Xbox 360 Recomp') {
+        return {
+          img: getSourceImg('Xenia Emulator'),
+          label: t('xbox360-recomp-achievements', 'Xbox 360 achievements - PC recompilation', 'Succès Xbox 360 - recompilation PC'),
+          kind,
+        };
+      }
       return { img: getSourceImg('Xenia Emulator'), label: t('xbox-achievements', 'Xbox achievements', 'Succès Xbox'), kind };
     case 'epic':
       return { img: getSourceImg('epic'), label: t('epic-games-achievements', 'Epic Games achievements', 'Succès Epic Games'), kind };
@@ -2394,6 +2401,17 @@ function ownershipBadgeFor(game) {
   };
   const platform = purchasedPlatformFor(game);
   const label = platform && purchased[platform] ? purchased[platform]() : '';
+  if (!label && game && game.source === 'Xbox 360 Recomp') {
+    // Nothing to own on a platform here: the badge says what the game is and where its list comes from.
+    return {
+      state: 'recomp',
+      label: t(
+        'xbox360-recomp-badge',
+        'Xbox 360 game recompiled to run natively on PC. Its achievements are read from the game itself.',
+        'Jeu Xbox 360 recompilé pour tourner nativement sur PC. Ses succès sont lus depuis le jeu lui-même.'
+      ),
+    };
+  }
   return { state: label ? 'purchased' : '', label };
 }
 
@@ -2931,22 +2949,25 @@ window.refreshWatchdogStatusText = () => {
   if (lastUpdateStatus !== null) renderUpdateStatus(lastUpdateStatus);
 };
 
-ipcRenderer.on('achievement-unlock', (event, { appid, ach_data }) => {
-  // Ignore toasts for games or achievements missing from the current view. The Watchdog names the
-  // game by the appid of the save folder it watched, which is the Steam one - a manually added game
-  // carries an id of its own, so match on the Steam appid too or its card never moves until the
-  // next scan.
+ipcRenderer.on('achievement-unlock', (event, { appid, steamappid, ach_data } = {}) => {
+  if (!ach_data || !ach_data.name) return;
+  // Ignore unlocks for games or achievements missing from the current view. The Watchdog may name
+  // the game by the appid of the save folder it watched, which is the Steam one - a manually added
+  // game carries an id of its own, so match on the Steam appid too or its card never moves until
+  // the next scan.
+  const ids = [appid, steamappid].filter(Boolean).map(String);
   const game =
-    gameList.find((entry) => entry.appid == appid) ||
-    gameList.find((entry) => entry.steamappid && entry.steamappid == appid);
-  if (!game) return;
+    gameList.find((entry) => ids.includes(String(entry.appid))) ||
+    gameList.find((entry) => entry.steamappid && ids.includes(String(entry.steamappid)));
+  if (!game || !game.achievement || !Array.isArray(game.achievement.list)) return;
   const achievement = game.achievement.list.find((ach) => ach.name == ach_data.name);
   if (!achievement) return;
   if (!achievement.Achieved) {
     achievement.Achieved = 1;
-    achievement.UnlockTime = Date.now() / 1000;
+    achievement.UnlockTime = Number(ach_data.UnlockTime) || Date.now() / 1000;
     game.achievement.unlocked += 1;
     updateGameBox(game.appid, game.achievement.total > 0 ? Math.floor((game.achievement.unlocked / game.achievement.total) * 100) : 0);
+    refreshProfileStats();
   }
   updateGamePage(game.appid, ach_data);
 });
@@ -4191,7 +4212,10 @@ var app = {
 
           // Manual override for which emulator family this game's tools target, for a Ubisoft title
           // that trips the on-disk heuristic the wrong way. Hidden for legit Steam/GOG/Epic and console records, where neither fix applies.
-          if (!isConsoleSystem && !isLegitSteamOwned && !isNativeLauncher) {
+          // Simple leaves both overrides out, like the emulator submenu they steer, but keeps one that
+          // is already set so it can still be seen and undone.
+          const simpleMenu = interfaceIsSimple();
+          if (!isConsoleSystem && !isLegitSteamOwned && !isNativeLauncher && (!simpleMenu || emulatorSourceForced !== null)) {
             gameMenu.append(new MenuItem({ type: 'separator' }));
             const emulatorSourceMenu = new Menu();
             const emulatorSourceOptions = [
@@ -4225,7 +4249,7 @@ var app = {
           // once, when steam_appid.txt does not exist yet - this is the only way to correct it.
           if (!isConsoleSystem && !isLegitSteamOwned && !isNativeLauncher && ctxGame?.gameDir) {
             const currentAppidOverride = appidOverride.get(ctxGame.gameDir);
-            gameMenu.append(
+            if (!simpleMenu) gameMenu.append(
               new MenuItem({
                 icon: menuIcon('file-text.png'),
                 label: t('appid-override', 'Set AppID manually…', 'Définir l’AppID manuellement…'),
@@ -6536,7 +6560,7 @@ var app = {
         } else if (rarityContext.kind === 'steam-bridge') {
           getGlobalStat(rarityContext.cacheId, 'steam-bridge', game.name, game.achievement.list, rarityContext);
         } else if (rarityContext.kind === 'emulator') {
-          getGlobalStat(game.appid, rarityContext.source, game.name, game.achievement.list);
+          getGlobalStat(game.appid, rarityContext.source, game.name, game.achievement.list, { gameNames: game.rarityTitles });
         } else if (rarityContext.kind === 'steam') {
           getGlobalStat(rarityContext.appid, 'steam', game.name, game.achievement.list);
         } else {

@@ -140,7 +140,15 @@ test('toast-click focus scrolls to a row, expands its list and survives a missin
   const harness = path.join(harnessDir, 'focus.html');
   fs.writeFileSync(harness, buildHarness());
 
-  const settle = (page, ms) => page.evaluate((delay) => new Promise((resolve) => setTimeout(resolve, delay)), ms);
+  /*
+    Focus scrolls and expands through jQuery animations, so the assertions have to run after those
+    finish. A fixed sleep only stands in for that on an idle machine - the scroll runs for 500ms and
+    a 200ms wait was passing because nothing else was competing for the CPU. jQuery keeps its
+    running animations in $.timers, so waiting for that to drain asks the real question and answers
+    it the same whatever else the machine is doing.
+  */
+  const settle = (page) =>
+    page.waitForFunction(() => window.jQuery && window.jQuery.timers.length === 0, { polling: 'raf', timeout: 10000 });
 
   try {
     const page = await browser.newPage();
@@ -160,7 +168,7 @@ test('toast-click focus scrolls to a row, expands its list and survives a missin
     // A quote in the name would break an attribute selector, so matching is done in JS.
     const quoted = await page.evaluate(() => window.runFocus('quote"name'));
     assert.equal(quoted.found, true);
-    await settle(page, 200);
+    await settle(page);
     const afterQuoted = await page.evaluate(() => ({
       scrollTop: $('#achievement').scrollTop(),
       highlighted: $('#achievement li.highlight .achievement').attr('data-name'),
@@ -174,7 +182,7 @@ test('toast-click focus scrolls to a row, expands its list and survives a missin
       return window.runFocus('filtered');
     });
     assert.equal(filtered.found, true);
-    await settle(page, 200);
+    await settle(page);
     const afterFiltered = await page.evaluate(() => ({
       searchValue: $('#achievement-search-input').val(),
       stillHidden: $('#achievement li.search-hidden').length,
@@ -187,7 +195,7 @@ test('toast-click focus scrolls to a row, expands its list and survives a missin
     // A list the user collapsed has no measurable offset until it is open again.
     const collapsed = await page.evaluate(() => window.runFocus('collapsed'));
     assert.equal(collapsed.found, true);
-    await settle(page, 300);
+    await settle(page);
     const afterCollapsed = await page.evaluate(() => ({
       listVisible: $('#lock ul').is(':visible'),
       listActive: $('#lock').hasClass('active'),

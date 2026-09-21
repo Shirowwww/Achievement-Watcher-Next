@@ -1328,6 +1328,8 @@
     "no-achievements-found": "Aucun succès trouvé",
     "playstation-trophies": "Succès PlayStation",
     "xbox-achievements": "Succès Xbox",
+    "xbox360-recomp-achievements": "Succès Xbox 360 - recompilation PC",
+    "xbox360-recomp-badge": "Jeu Xbox 360 recompilé pour tourner nativement sur PC. Ses succès sont lus depuis le jeu lui-même.",
     "epic-games-achievements": "Succès Epic Games",
     "gog-achievements": "Succès GOG",
     "social-club-achievements": "Succès Social Club",

@@ -676,23 +676,6 @@
                   </li>
 
                   <li class="hasHelper">
-                    <div class="left"><i class="fas fa-microchip"></i> <span id="hwaccel-settings-label">Disable hardware acceleration</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_disableHardwareAccel">
-                        <option value="false" selected>Disabled</option>
-                        <option value="true">Enabled</option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="hwaccel-settings-help">Turn off GPU acceleration if the in-game overlay or window misbehaves. Requires a restart.</div>
-                  </li>
-
-                  <li class="hasHelper">
                     <div class="left"><i class="fas fa-broom"></i> <span id="clear-update-cache-label">Clear caches</span></div>
                     <div class="right action-right">
                       <button type="button" id="clear-update-cache" class="inline-action-btn"><i class="fas fa-broom"></i> <span id="clear-update-cache-button">Clear caches</span></button>
@@ -725,24 +708,6 @@
                       <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
                     </div>
                     <div class="help" id="disable-auto-refresh-help">Disable this if you maintain steam_cache yourself: it stops the periodic self-repair that fills in blank descriptions and picks up achievements a game update added. "Recheck achievement lists" above still works as a manual, one-off check.</div>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="arrow-list">
-                <div class="title"><i class="fas fa-ban"></i> <span id="advanced-blacklist-title"></span></div>
-                <ul>
-                  <li class="blacklist-manager-row">
-                    <ul id="blacklist-manager"></ul>
-                    <div id="blacklist-empty" class="diag-line"></div>
-                  </li>
-                  <li class="blacklist-add-row">
-                    <input type="text" id="blacklist-add-input" inputmode="numeric" placeholder="Steam App ID" autocomplete="off" spellcheck="false" />
-                    <button type="button" id="blacklist-add-btn" class="inline-action-btn"><i class="fas fa-plus"></i> <span>Add</span></button>
-                  </li>
-                  <li class="actions-row">
-                    <div id="blacklist_reset" class="btn"><i class="fas fa-file-medical-alt"></i> <span></span></div>
-                    <div id="blacklist-info" class="help"></div>
                   </li>
                 </ul>
               </div>
@@ -1469,6 +1434,25 @@
                 </div>
                 <div id="folder-rescan-result" class="diag-line" aria-live="polite"></div>
               </div>
+              <!-- Hidden games. Here rather than in Advanced: "Remove from list" is on every game's menu in
+                   both modes, so the only way to undo it cannot sit behind a mode Simple never shows. -->
+              <div class="arrow-list" id="blacklist-card">
+                <div class="title"><i class="fas fa-ban"></i> <span id="advanced-blacklist-title"></span></div>
+                <ul>
+                  <li class="blacklist-manager-row">
+                    <ul id="blacklist-manager"></ul>
+                    <div id="blacklist-empty" class="diag-line"></div>
+                  </li>
+                  <li class="blacklist-add-row">
+                    <input type="text" id="blacklist-add-input" inputmode="numeric" placeholder="Steam App ID" autocomplete="off" spellcheck="false" />
+                    <button type="button" id="blacklist-add-btn" class="inline-action-btn"><i class="fas fa-plus"></i> <span>Add</span></button>
+                  </li>
+                  <li class="actions-row">
+                    <div id="blacklist_reset" class="btn"><i class="fas fa-file-medical-alt"></i> <span></span></div>
+                    <div id="blacklist-info" class="help"></div>
+                  </li>
+                </ul>
+              </div>
             </section>
 
             <section class="content" data-view="notification">
@@ -1562,7 +1546,7 @@
                       <div class="help"></div>
                     </li>
 
-                    <li class="hasHelper expand">
+                    <li class="hasHelper expand" data-advanced="1">
                       <div class="left"><i class="fas fa-layer-group"></i> <span></span></div>
                       <div class="right">
                         <div class="previous">
@@ -1771,7 +1755,7 @@
                     <!-- The OBS browser source: the same popup, drawn on a stream. It lives with
                          the popup's own settings rather than under Transport, which Simple mode
                          hides entirely. Bound by id, like the rest of this list. -->
-                    <li class="hasHelper" id="obs-source-row">
+                    <li class="hasHelper" id="obs-source-row" data-advanced="1">
                       <div class="left"><i class="fas fa-video"></i> <span id="lbl-obsSource"></span></div>
                       <div class="right action-right obs-source-actions">
                         <button type="button" id="btn-copy-obs-url" class="inline-action-btn">
@@ -1825,7 +1809,7 @@
                       <div class="help"></div>
                     </li>
 
-                    <li class="hasHelper">
+                    <li class="hasHelper" data-advanced="1">
                       <div class="left"><i class="fas fa-sun"></i> <span id="lbl-souvenirHdr"></span></div>
                       <div class="right">
                         <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
@@ -2550,7 +2534,7 @@
                     <div class="help"></div>
                   </li>
 
-                  <li class="hasHelper">
+                  <li class="hasHelper" data-advanced="1">
                     <div class="left"><i class="fas fa-history"></i> <span></span></div>
                     <div class="right">
                       <div class="previous">
@@ -2666,6 +2650,24 @@
                     <div class="help" id="trophies-settings-help">Shows platinum, gold, silver and bronze trophies under your name.</div>
                   </li>
 
+                  <!-- Troubleshooting for a window or overlay that renders badly: a Simple user hits that
+                       as often as anyone, so it sits here rather than in the Advanced tab. Bound by id. -->
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-microchip"></i> <span id="hwaccel-settings-label">Disable hardware acceleration</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_disableHardwareAccel">
+                        <option value="false" selected>Disabled</option>
+                        <option value="true">Enabled</option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="hwaccel-settings-help">Turn off GPU acceleration if the in-game overlay or window misbehaves. Requires a restart.</div>
+                  </li>
                   <!-- Kept out of Advanced (Simple mode would never reach it). Appended LAST: the
                        loader binds rows 1-7 of this list by nth-child, so only the tail is free. -->
                   <li class="hasHelper onboarding-settings-row">
@@ -3457,6 +3459,25 @@
                   </div>
                 </div>
 
+                <!-- Optional sign-ins, the same ones as the account cards in Settings > Sources: a private
+                     Steam profile, Steam Family games and Epic unlocks are only readable once connected. -->
+                <div class="onboarding-source-group onboarding-accounts">
+                  <div class="onboarding-source-group-head">
+                    <strong id="onboard-accounts-title">Accounts</strong>
+                    <p id="onboard-accounts-copy"></p>
+                  </div>
+                  <div class="onboarding-account-list">
+                    <div class="onboarding-account-row" data-account="steam">
+                      <button type="button" id="onboard-steam-connect" class="onboarding-test-button"><i class="fab fa-steam" aria-hidden="true"></i> <span></span></button>
+                      <span id="onboard-steam-status" class="onboarding-account-status" aria-live="polite"></span>
+                    </div>
+                    <div class="onboarding-account-row" data-account="epic">
+                      <button type="button" id="onboard-epic-connect" class="onboarding-test-button"><i class="fas fa-gamepad" aria-hidden="true"></i> <span></span></button>
+                      <span id="onboard-epic-status" class="onboarding-account-status" aria-live="polite"></span>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="onboarding-source-group">
                   <div class="onboarding-source-group-head">
                     <strong id="onboard-sources-official-title">Official platforms</strong>
@@ -3684,6 +3705,12 @@
                     </select>
                     <small class="onboard-field-hint" id="onboard-merge-hint"></small>
                   </label>
+                </div>
+                <!-- What Finish is about to save, so an empty folder list is noticed here rather than as an
+                     empty library. Filled by onboarding.js each time this step opens. -->
+                <div class="onboarding-summary" id="onboard-summary" aria-live="polite">
+                  <p id="onboard-summary-counts"></p>
+                  <small class="onboard-field-hint" id="onboard-summary-reopen"></small>
                 </div>
               </section>
             </div>

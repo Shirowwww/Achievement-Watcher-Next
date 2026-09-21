@@ -14,7 +14,10 @@ const ACTION = {
   DELETE: 'delete',
   CLEAR_SHADPS4_XML: 'clear-shadps4-xml',
   CLEAR_XENIA_GPD: 'clear-xenia-gpd',
+  CLEAR_X360_JSON: 'clear-x360-json',
 };
+
+const X360_RECOMP_SOURCE = 'xbox 360 recomp';
 
 /*
   Emulator save files; mirrors the list watchdog/monitor.js watches (files.achievement plus the
@@ -44,7 +47,7 @@ const PROTECTED_FILES = new Set(['tropconf.sfm', 'trophy.trp', 'appid.txt', 'ste
 // Steam/GOG Galaxy/Ubisoft Connect/EA/Epic/Xbox unlocks live on the platform account, not a
 // local file: a reset here would just get overwritten by the next sync. Saying so beats
 // offering a button that looks like it works but does not.
-const OFFICIAL_PLATFORM_SOURCES = /^(?:steam\s*\(|gog(?:\s|$)|gog galaxy|epic(?:-official)?$|ea$|ubisoft connect|xbox)/i;
+const OFFICIAL_PLATFORM_SOURCES = /^(?:steam\s*\(|gog(?:\s|$)|gog galaxy|epic(?:-official)?$|ea$|ubisoft connect|xbox(?! 360 recomp$))/i;
 
 function isOfficialPlatformSource(source) {
   return OFFICIAL_PLATFORM_SOURCES.test(String(source || '').trim());
@@ -57,9 +60,16 @@ function isManualSource(source) {
 
 // Returns the action needed to reset this file, or null if it's not part of the reset.
 // `fileName` is a base name; the caller has already matched the folder to this game.
-function resetActionFor(fileName) {
+function resetActionFor(fileName, source = '') {
   const name = String(fileName || '').trim().toLowerCase();
   if (!name || PROTECTED_FILES.has(name)) return null;
+  if (String(source || '').trim().toLowerCase() === X360_RECOMP_SOURCE) {
+    // ReXGlue's .toml and the per-profile .tsv hold unlocks only, and a missing one reads as none.
+    // The JSON shape also carries the list itself, so only its flags are cleared.
+    if (/^[0-9a-f]{8}\.toml$/.test(name) || name.endsWith('.tsv')) return ACTION.DELETE;
+    if (name === 'achievements.json') return ACTION.CLEAR_X360_JSON;
+    return null;
+  }
   if (SAVE_FILES.has(name)) return ACTION.DELETE;
   // ShadPS4 ships one file per language (TROP.XML, TROP_01.XML, …); all of them carry the state.
   if (/^trop(_\d+)?\.xml$/.test(name)) return ACTION.CLEAR_SHADPS4_XML;

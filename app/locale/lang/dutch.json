@@ -1328,6 +1328,8 @@
     "no-achievements-found": "Geen prestaties gevonden",
     "playstation-trophies": "PlayStation-trofeeën",
     "xbox-achievements": "Xbox-prestaties",
+    "xbox360-recomp-achievements": "Xbox 360-prestaties - hercompilatie voor PC",
+    "xbox360-recomp-badge": "Xbox 360-spel dat opnieuw is gecompileerd om native op PC te draaien. De prestaties worden rechtstreeks uit het spel zelf uitgelezen.",
     "epic-games-achievements": "Epic Games-prestaties",
     "gog-achievements": "GOG-prestaties",
     "social-club-achievements": "Social Club-prestaties",

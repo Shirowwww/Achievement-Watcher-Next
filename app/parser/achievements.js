@@ -23,6 +23,7 @@ const userDir = require(path.join(appPath, 'userDir.js'));
 const socialclub = require(path.join(appPath, 'socialclub.js'));
 const ff7 = require(path.join(appPath, 'ff7.js'));
 const xlln = require(path.join(appPath, 'xlln.js'));
+const x360Recomp = require(path.join(appPath, 'x360Recomp.js'));
 const libraryDirs = require(path.join(appPath, 'libraryDirs.js'));
 const saveRoots = require(path.join(appPath, 'saveRoots.js'));
 const launcherDetect = require(path.join(appPath, 'launcherDetect.js'));
@@ -70,6 +71,8 @@ const sgdbAssetCache = require('../util/sgdbAssetCache.js');
 const gameNameCache = require(path.join(appPath, '..', 'util', 'gameNameCache.js'));
 const perfTrace = require(path.join(appPath, '..', 'util', 'perfTrace.js'));
 const dirCache = require(path.join(appPath, '..', 'util', 'dirCache.js'));
+// The recompilation walk shares the scan's directory memo, so its folders count in the reuse fingerprint.
+x360Recomp.setDirectoryReader((dir) => dirCache.readdir(dir));
 const exeCandidateCache = require(path.join(appPath, '..', 'util', 'exeCandidateCache.js'));
 const dirFingerprint = require(path.join(appPath, '..', 'util', 'dirFingerprint.js'));
 let debug;
@@ -109,6 +112,7 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   socialclub.initDebug({ isDev, userDataPath });
   ff7.initDebug({ isDev, userDataPath });
   xlln.initDebug({ isDev, userDataPath });
+  x360Recomp.initDebug({ isDev, userDataPath });
   blacklist.initDebug({ isDev, userDataPath });
   debug = new (require('../util/logger'))({
     console: isDev || false,
@@ -1898,6 +1902,19 @@ async function discoverInScope(source, steamAccFilter, scope) {
       } catch (err) {
         debug.log(`[userdir] ${dir.path} could not be scanned: ${err && err.message ? err.message : err}`);
       }
+      // Recompiled Xbox 360 games sit among ordinary ones in a library folder, so this adds to the
+      // scans above instead of standing in for them.
+      if (source.xenia) {
+        try {
+          const recompiled = x360Recomp.scan(dir.path);
+          if (recompiled.length > 0) {
+            data = data.concat(recompiled);
+            debug.log('-> Xbox 360 recompilation data added');
+          }
+        } catch (err) {
+          debug.log(`[userdir] ${dir.path} could not be scanned for recompiled games: ${err && err.message ? err.message : err}`);
+        }
+      }
     }
   } catch (err) {
     debug.log(err);
@@ -1942,6 +1959,28 @@ async function discoverInScope(source, steamAccFilter, scope) {
   }
 
   mark('ff7');
+
+  //ReXGlue recompilations write Documents\<game>\achievements\<titleid>.toml unless the game moves it.
+  if (!scope && source.xenia) {
+    try {
+      const have = new Set(data.map((g) => `${g.source}:${g.appid}`));
+      const extra = x360Recomp.scanDocuments().filter((g) => !have.has(`${g.source}:${g.appid}`));
+      if (extra.length > 0) {
+        data = data.concat(extra);
+        debug.log(`-> Xbox 360 recompilation (Documents) data added (${extra.length})`);
+      }
+    } catch (err) {
+      debug.log(err);
+    }
+  }
+
+  // A recompiled game's folder is claimed, or the unconfigured scan lists it a second time as an
+  // executable with no achievements.
+  for (const g of data) {
+    if (g.data && g.data.type === 'x360recomp' && g.data.gameDir) _claimedDirs.add(path.resolve(g.data.gameDir).toLowerCase());
+  }
+
+  mark('x360recomp');
 
   //ShadPS4 stores trophies in %APPDATA%/shadPS4 regardless of where the .exe lives - auto-scan that
   //known location so the user doesn't have to add it as a watched folder. De-dupe against anything the
@@ -2517,6 +2556,8 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
     return xlln.getAchievements(appid.data);
   } else if (dataType === 'xenia') {
     return await xenia.getAchievements(appid.data.path);
+  } else if (dataType === 'x360recomp') {
+    return x360Recomp.getAchievements(appid.data);
   } else if (dataType === 'socialclub') {
     return await socialclub.getAchievements(appid);
   } else if (dataType === 'lumaplay') {
@@ -2683,6 +2724,8 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       game = await xlln.getGameData(appid.data, option.achievement.lang);
     } else if (appid.data.type === 'xenia') {
       game = await xenia.getGameData(appid.data.path);
+    } else if (appid.data.type === 'x360recomp') {
+      game = await x360Recomp.getGameData(appid.data, option.achievement.lang);
     } else if (appid.data.type === 'socialclub') {
       game = await socialclub.getGameData(appid, option.achievement.lang, option);
     } else if (appid.data.type === 'uplay' || appid.data.type === 'lumaplay') {
@@ -2766,7 +2809,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     // for emulator/manual entries where the native provider often has a title but no library art.
     game.img = game.img && typeof game.img === 'object' ? game.img : {};
     const needsPrimaryArt = !game.img.header && !game.img.portrait;
-    const benefitsFromFullFallback = ['rpcs3', 'shadps4', 'xenia', 'manual', 'unconfigured'].includes(appid.data.type);
+    const benefitsFromFullFallback = ['rpcs3', 'shadps4', 'xenia', 'x360recomp', 'manual', 'unconfigured'].includes(appid.data.type);
     if (game.name && (needsPrimaryArt || benefitsFromFullFallback)) {
       try {
         /*
@@ -2791,6 +2834,8 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         }
         game.img.logo = game.img.logo || fallback.logo || '';
         game.img.icon = game.img.icon || fallback.icon || fallback.logo || '';
+        // A recompiled game SteamGridDB does not know still has its marketplace background.
+        if (!game.img.header && appid.data.type === 'x360recomp') game.img.header = game.img.background || '';
       } catch (err) {
         debug.log(`[${appid.appid}] artwork fallback failed: ${err.message || err}`);
       }

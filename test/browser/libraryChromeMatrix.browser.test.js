@@ -184,6 +184,38 @@ test('every view survives every combination of tile size, density and hidden chr
     }
 
     assert.equal(combinations, libraryLayout.MODES.length * SCALES.length * DENSITIES.length * toggleSets().length);
+
+    /*
+      The sweep above runs at the size a library is usually looked at. The size a library has to
+      survive is the smallest window the app allows (minWidth/minHeight in app/package.json), where
+      the biggest tile in the tightest grid has the least room to fit. Only that corner is repeated
+      here - the rest of the product adds combinations without adding a way to overflow.
+    */
+    await page.setViewport({ width: 900, height: 600 });
+    for (const mode of libraryLayout.MODES) {
+      for (const set of toggleSets()) {
+        const where = `${mode} @ 900x600, ${set.label}`;
+        const state = await measure(page, { mode, scale: libraryChrome.TILE_SCALE.max, density: libraryChrome.DENSITY.min, off: set.off });
+
+        assert.ok(state.header.width > 0 && state.header.height > 0, `${where}: the artwork collapsed`);
+        for (const box of state.boxes) {
+          assert.ok(box.width > 0 && box.height > 0, `${where}: a card collapsed`);
+          assert.ok(box.width <= state.listWidth + 1, `${where}: a ${box.width.toFixed(1)}px card in a ${state.listWidth.toFixed(1)}px list`);
+        }
+        if (state.column !== null) {
+          assert.ok(
+            state.boxes[0].width <= state.column + 1,
+            `${where}: a ${state.boxes[0].width.toFixed(1)}px card in a ${state.column.toFixed(1)}px column`
+          );
+        }
+        for (let i = 1; i < state.boxes.length; i += 1) {
+          const previous = state.boxes[i - 1];
+          const current = state.boxes[i];
+          if (Math.abs(current.top - previous.top) > 1) continue;
+          assert.ok(current.left >= previous.right - 1, `${where}: two cards on a row overlap by ${(previous.right - current.left).toFixed(1)}px`);
+        }
+      }
+    }
   } finally {
     await closeBrowser(browser, userDataDir);
   }

@@ -41,6 +41,10 @@ asarUnpack:
   - assets/ff7-achievements.json
   - parser/xlln.js
   - parser/xllnSpa.js
+  - parser/x360Recomp.js
+  - parser/xex.js
+  - util/lzx.js
+  - util/xboxLiveIcons.js
 
 publish:
   provider: github

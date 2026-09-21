@@ -10,6 +10,7 @@ const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
+const { guardWatcher } = require('../util/watchGuard.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
 const notifyStrings = require('../util/notifyStrings.js');
@@ -439,7 +440,7 @@ module.exports.start = async (ctx) => {
         if (String(path.basename(name || '')).toLowerCase() !== wantedFile) return;
         changes.run(target.titleId, () => handleChange(target, ctx));
       });
-      watchers.push(w);
+      watchers.push(guardWatcher(w, `'${target.dataDir}'`, debug));
       debug.log(`[xenia] watching achievements for ${target.titleId}`);
     } catch (err) {
       debug.warn(`[xenia] failed to watch ${target.dataDir}: ${err}`);

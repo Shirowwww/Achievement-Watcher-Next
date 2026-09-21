@@ -1328,6 +1328,8 @@
     "no-achievements-found": "Saavutuksia ei löytynyt",
     "playstation-trophies": "PlayStation-pokaalit",
     "xbox-achievements": "Xbox-saavutukset",
+    "xbox360-recomp-achievements": "Xbox 360 -saavutukset - PC-uudelleenkäännös",
+    "xbox360-recomp-badge": "Xbox 360 -peli, joka on käännetty uudelleen toimimaan natiivisti PC:llä. Sen saavutukset luetaan suoraan itse pelistä.",
     "epic-games-achievements": "Epic Games -saavutukset",
     "gog-achievements": "GOG-saavutukset",
     "social-club-achievements": "Social Club -saavutukset",

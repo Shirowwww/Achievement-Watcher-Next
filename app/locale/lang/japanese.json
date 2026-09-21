@@ -1328,6 +1328,8 @@
     "no-achievements-found": "実績が見つかりません",
     "playstation-trophies": "PlayStation トロフィー",
     "xbox-achievements": "Xbox の実績",
+    "xbox360-recomp-achievements": "Xbox 360 の実績 - PC向け再コンパイル",
+    "xbox360-recomp-badge": "Xbox 360 のゲームを、PC上でネイティブに動作するよう再コンパイルしたものです。実績はゲーム本体から直接読み取られます。",
     "epic-games-achievements": "Epic Games の実績",
     "gog-achievements": "GOG の実績",
     "social-club-achievements": "Social Club の実績",

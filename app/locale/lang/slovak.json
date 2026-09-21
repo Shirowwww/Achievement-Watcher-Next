@@ -1328,6 +1328,8 @@
     "no-achievements-found": "Nenašli sa žiadne úspechy",
     "playstation-trophies": "Trofeje PlayStation",
     "xbox-achievements": "Úspechy Xbox",
+    "xbox360-recomp-achievements": "Úspechy Xbox 360 - rekompilácia pre PC",
+    "xbox360-recomp-badge": "Hra Xbox 360 rekompilovaná na natívny beh na PC. Jej úspechy sa načítavajú priamo z hry.",
     "epic-games-achievements": "Úspechy Epic Games",
     "gog-achievements": "Úspechy GOG",
     "social-club-achievements": "Úspechy Social Club",

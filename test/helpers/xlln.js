@@ -92,7 +92,7 @@ function sampleSpa(titleId = SAMPLE_TITLE_ID) {
       namespace: 1,
       id: 2,
       data: xach([
-        { id: 1, titleStringId: 10, unlockedDescriptionId: 11, lockedDescriptionId: 12, imageId: 100, gamerscore: 20, flags: 0 },
+        { id: 1, titleStringId: 10, unlockedDescriptionId: 11, lockedDescriptionId: 12, imageId: 100, gamerscore: 20, flags: 0x9 },
         { id: 2, titleStringId: 20, unlockedDescriptionId: 21, lockedDescriptionId: 22, imageId: 101, gamerscore: 50, flags: 0x1 },
       ]),
     },

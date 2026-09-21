@@ -65,8 +65,10 @@ test('platform-owned libraries are refused with a reason instead of pretending',
     { source: 'epic-official', path: 'C:/epic' },
     { source: 'Xbox PC', path: 'C:/xbox' },
     { source: 'Goldberg', path: 'C:/gse' },
+    // A recompiled Xbox 360 game keeps its unlocks in a local file, not on an Xbox account.
+    { source: 'Xbox 360 Recomp', path: 'C:/recomp' },
   ]);
-  assert.deepEqual(resettable.map((entry) => entry.source), ['Goldberg']);
+  assert.deepEqual(resettable.map((entry) => entry.source), ['Goldberg', 'Xbox 360 Recomp']);
   assert.equal(blocked.length, 6);
   assert.ok(blocked.every((entry) => entry.reason === 'official-platform'));
 });
@@ -311,4 +313,45 @@ test('a GPD that does not parse is returned untouched rather than half-written',
   const { buffer, cleared } = xenia.clearGpdBuffer(junk);
   assert.equal(cleared, 0);
   assert.equal(buffer.equals(junk), true);
+});
+
+test('a recompiled Xbox 360 game is reset in every one of its three shapes, and comes back', (t) => {
+  const profile = tempProfile();
+  t.after(() => fs.rmSync(profile, { recursive: true, force: true }));
+  const x360 = require(path.join(appDir, 'parser', 'x360Recomp.js'));
+  const source = 'Xbox 360 Recomp';
+
+  // ReXGlue's list holds unlocks only: deleting it is the reset, and the runtime reads "none".
+  const toml = write(path.join(profile, 'rex', 'achievements', '5752084B.toml'), '[unlocked.1]\nfiletime = 134337554689438302\n');
+  assert.equal(targets.resetActionFor('5752084B.toml', source), targets.ACTION.DELETE);
+  assert.equal(targets.resetActionFor('5752084B.toml', 'Goldberg'), null, 'the rule belongs to this source only');
+  const tomlResult = achievementReset.run(achievementReset.plan({ appid: 'x360-5752084B', source, dataPath: toml }));
+  assert.equal(fs.existsSync(toml), false);
+  achievementReset.restore('x360-5752084B', tomlResult.backupId);
+  assert.equal(fs.existsSync(toml), true);
+
+  // One .tsv per profile inside the title folder.
+  const tsvDir = path.join(profile, 'eot', 'Achievements', '415608B2');
+  write(path.join(tsvDir, 'B13E07DFF9AB6772.tsv'), 'EOTACH1\t415608B2\tB13E07DFF9AB6772\n55\t1\n');
+  const tsvPlan = achievementReset.plan({ appid: 'x360-415608B2', source, dataPath: tsvDir });
+  assert.equal(tsvPlan.files.length, 1);
+  achievementReset.run(tsvPlan);
+  assert.deepEqual(fs.readdirSync(tsvDir), []);
+
+  // The JSON also carries the list: only the flags go, in the UTF-16 the game writes.
+  const body = JSON.stringify({ achievements: [{ id: 1, name: 'Зеленый', unlocked: true }, { id: 2, name: 'b', unlocked: false }] });
+  const json = write(path.join(profile, 'gears', 'SaveData', 'Achievements.json'), '');
+  fs.writeFileSync(json, Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(body, 'utf16le')]));
+  const jsonPlan = achievementReset.plan({ appid: 'x360-gears', source, dataPath: json });
+  assert.equal(jsonPlan.files[0].action, targets.ACTION.CLEAR_X360_JSON);
+  const jsonResult = achievementReset.run(jsonPlan);
+  assert.equal(jsonResult.cleared, 1);
+  const after = fs.readFileSync(json);
+  assert.deepEqual([after[0], after[1]], [0xff, 0xfe], 'the byte-order mark the game wrote is kept');
+  assert.deepEqual(x360.parseJson(after).map((entry) => [entry.name, entry.unlocked]), [['Зеленый', false], ['b', false]]);
+});
+
+test('a JSON list that does not parse is left alone rather than rewritten', () => {
+  const x360 = require(path.join(appDir, 'parser', 'x360Recomp.js'));
+  assert.throws(() => x360.clearJsonBuffer(Buffer.from('{"achievements": [')));
 });

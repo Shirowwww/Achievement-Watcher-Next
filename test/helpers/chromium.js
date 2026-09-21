@@ -84,9 +84,21 @@ function skipReason(failures) {
     : 'no Chromium-family browser installed';
 }
 
+/*
+  killProcessesUsing() spawns PowerShell and walks Win32_Process, which costs one to three seconds
+  every time. A browser whose close() resolved has already taken its children with it, so the sweep
+  only runs when close() failed. removeBrowserProfile() still calls it from inside its retry loop,
+  so a profile actually held by a survivor is not left behind.
+*/
 async function closeBrowser(browser, userDataDir) {
-  if (browser) await browser.close().catch(() => {});
-  killProcessesUsing(userDataDir);
+  let closed = true;
+  if (browser) {
+    closed = await browser
+      .close()
+      .then(() => true)
+      .catch(() => false);
+  }
+  if (!closed) killProcessesUsing(userDataDir);
   await removeBrowserProfile(userDataDir, killProcessesUsing);
 }
 

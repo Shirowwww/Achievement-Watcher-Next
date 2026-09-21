@@ -360,8 +360,9 @@ async function getGameData(data, lang = 'english') {
       name: String(achievement.id),
       displayName: text(achievement.titleStringId) || String(achievement.id),
       description: unlockedDescription || lockedDescription,
-      // Bit 0 marks an achievement whose text is withheld until it is earned.
-      hidden: (achievement.flags & 0x1) !== 0 ? 1 : 0,
+      // Bit 3 shows an achievement before it is earned; without it the achievement is secret. Bit 0
+      // is part of the achievement type, which read as "secret" hid every plain one.
+      hidden: (achievement.flags & 0x8) === 0 ? 1 : 0,
       gamerscore: achievement.gamerscore,
       icon,
       icongray: icon,

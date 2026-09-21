@@ -1328,6 +1328,8 @@
     "no-achievements-found": "Nessun obiettivo trovato",
     "playstation-trophies": "Trofei PlayStation",
     "xbox-achievements": "Obiettivi Xbox",
+    "xbox360-recomp-achievements": "Obiettivi Xbox 360 - ricompilazione per PC",
+    "xbox360-recomp-badge": "Gioco Xbox 360 ricompilato per funzionare in modo nativo su PC. I suoi obiettivi vengono letti direttamente dal gioco stesso.",
     "epic-games-achievements": "Obiettivi Epic Games",
     "gog-achievements": "Obiettivi GOG",
     "social-club-achievements": "Obiettivi Social Club",

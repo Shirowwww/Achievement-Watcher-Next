@@ -1328,6 +1328,8 @@
     "no-achievements-found": "未找到成就",
     "playstation-trophies": "PlayStation 奖杯",
     "xbox-achievements": "Xbox 成就",
+    "xbox360-recomp-achievements": "Xbox 360 成就 - PC 重新编译版",
+    "xbox360-recomp-badge": "该 Xbox 360 游戏已重新编译，可在 PC 上原生运行。其成就直接从游戏本体读取。",
     "epic-games-achievements": "Epic Games 成就",
     "gog-achievements": "GOG 成就",
     "social-club-achievements": "Social Club 成就",

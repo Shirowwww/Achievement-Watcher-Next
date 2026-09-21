@@ -49,6 +49,8 @@ const LANGUAGE_BY_ID = Object.freeze({
   12: 'russian',
 });
 
+const LANGUAGE_ALIASES = Object.freeze({ brazilian: 'portuguese', latam: 'spanish' });
+
 function need(buffer, offset, length, what) {
   if (
     !Buffer.isBuffer(buffer) ||
@@ -312,12 +314,20 @@ function languageName(id) {
 
 // The language table to read texts from: the requested one, English, then whatever exists.
 function pickLanguage(parsed, preferred = 'english') {
-  const wanted = String(preferred || '').trim().toLowerCase();
+  // The console has one Portuguese and one Spanish; AW's regional variants read those.
+  const wanted = LANGUAGE_ALIASES[String(preferred || '').trim().toLowerCase()] || String(preferred || '').trim().toLowerCase();
   const available = [...parsed.stringsByLanguage.keys()].filter((id) => parsed.stringsByLanguage.get(id)?.size).sort((a, b) => a - b);
   if (available.length === 0) return null;
   const byName = available.find((id) => languageName(id) === wanted);
   const english = available.find((id) => languageName(id) === 'english');
   return byName ?? english ?? available[0];
+}
+
+// Whether the SPA carries the requested language itself, rather than a fallback to it.
+function hasLanguage(parsed, preferred) {
+  const id = pickLanguage(parsed, preferred);
+  const wanted = String(preferred || '').trim().toLowerCase();
+  return id != null && languageName(id) === (LANGUAGE_ALIASES[wanted] || wanted);
 }
 
 function titleName(parsed, preferred = 'english') {
@@ -342,6 +352,7 @@ module.exports = {
   parseXach,
   parseXstr,
   pickLanguage,
+  hasLanguage,
   languageName,
   titleName,
 };

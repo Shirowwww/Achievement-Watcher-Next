@@ -10,6 +10,7 @@ const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
+const { guardWatcher } = require('../util/watchGuard.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
 const notifyStrings = require('../util/notifyStrings.js');
 
@@ -275,7 +276,7 @@ module.exports.start = async (ctx) => {
         if (evt !== 'update') return;
         changes.run(target.appid, () => handleChange(target, ctx));
       });
-      watchers.push(w);
+      watchers.push(guardWatcher(w, `'${target.gameplayDir}'`, debug));
       debug.log(`[gog] watching achievements for ${target.name} (${target.appid})`);
     } catch (err) {
       debug.warn(`[gog] failed to watch ${target.gameplayDir}: ${err}`);

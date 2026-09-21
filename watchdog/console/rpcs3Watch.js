@@ -11,6 +11,7 @@ const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
+const { guardWatcher } = require('../util/watchGuard.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
 const notifyStrings = require('../util/notifyStrings.js');
@@ -294,7 +295,7 @@ module.exports.start = async (ctx) => {
         if (String(path.basename(name || '')).toUpperCase() !== USER_FILE) return;
         changes.run(target.appid, () => handleChange(target, ctx));
       });
-      watchers.push(w);
+      watchers.push(guardWatcher(w, `'${target.trophyDir}'`, debug));
       debug.log(`[rpcs3] watching trophies for ${target.appid}`);
     } catch (err) {
       debug.warn(`[rpcs3] failed to watch ${target.trophyDir}: ${err}`);

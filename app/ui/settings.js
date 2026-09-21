@@ -157,7 +157,7 @@ function currentInterfaceMode() {
   return interfaceMode.resolve(typeof app !== 'undefined' ? app.config : null);
 }
 
-// A niche source folds away only while off and contributing no games; reads saved config, not the
+// A niche source folds away only while on and contributing no games; reads saved config, not the
 // <select>, since this can run before the form is populated.
 function applySourceVisibility(mode) {
   const enabled = (typeof app !== 'undefined' && app.config && app.config.achievement_source) || {};

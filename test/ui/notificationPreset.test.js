@@ -20,6 +20,8 @@ const presets = {
 test('sourcePlatform recognizes emulator source labels', () => {
   assert.equal(sourcePlatform('RPCS3 Emulator'), 'rpcs3');
   assert.equal(sourcePlatform('ShadPS4 Emulator'), 'shadps4');
+  // A recompiled Xbox 360 game follows the preset chosen for the Xbox 360.
+  assert.equal(sourcePlatform('Xbox 360 Recomp'), 'xenia');
   assert.equal(sourcePlatform('Xenia Emulator'), 'xenia');
   assert.equal(sourcePlatform('GBE Fork'), null);
   assert.equal(sourcePlatform(''), null);

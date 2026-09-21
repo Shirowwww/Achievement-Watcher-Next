@@ -11,6 +11,7 @@ const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
+const { guardWatcher } = require('../util/watchGuard.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
 
@@ -443,7 +444,7 @@ module.exports.start = async (ctx) => {
         const hit = dirTargets.find((t) => path.basename(String(name)).toLowerCase() === path.basename(t.spoolFilePath).toLowerCase());
         if (hit) changes.run(hit.appid, () => handleChange(hit, ctx));
       });
-      watchers.push(w);
+      watchers.push(guardWatcher(w, `'${target.spoolDir}'`, debug));
       debug.log(`[ubisoft] watching ${dirTargets.length} spool(s) in ${target.spoolDir}`);
     } catch (err) {
       debug.warn(`[ubisoft] failed to watch ${target.spoolDir}: ${err}`);

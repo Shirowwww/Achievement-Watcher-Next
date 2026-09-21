@@ -64,7 +64,7 @@ test('a nameless report is ignored rather than filed under an empty key', (t) =>
 test('every console watcher starts from the one table, and reports its health', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'watchdog.js'), 'utf8');
   const table = source.slice(source.indexOf('const CONSOLE_WATCHERS = ['), source.indexOf('];', source.indexOf('const CONSOLE_WATCHERS = [')));
-  for (const name of ['shadps4', 'rpcs3', 'ea', 'xenia', 'xlln', 'gog', 'ubisoft']) {
+  for (const name of ['shadps4', 'rpcs3', 'ea', 'xenia', 'xlln', 'x360recomp', 'gog', 'ubisoft']) {
     assert.match(table, new RegExp(`name: '${name}'`), `${name} must start from the shared table`);
   }
   assert.match(source, /for \(const entry of CONSOLE_WATCHERS\)/);

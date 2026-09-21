@@ -1328,6 +1328,8 @@
     "no-achievements-found": "Não foram encontradas proezas",
     "playstation-trophies": "Troféus PlayStation",
     "xbox-achievements": "Proezas Xbox",
+    "xbox360-recomp-achievements": "Proezas Xbox 360 - recompilação para PC",
+    "xbox360-recomp-badge": "Jogo Xbox 360 recompilado para correr nativamente em PC. As suas proezas são lidas diretamente a partir do próprio jogo.",
     "epic-games-achievements": "Proezas da Epic Games",
     "gog-achievements": "Proezas GOG",
     "social-club-achievements": "Proezas do Social Club",

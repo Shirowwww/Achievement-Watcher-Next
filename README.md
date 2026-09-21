@@ -102,6 +102,7 @@ upgrade imports an older Achievement Watcher folder without modifying it.
 | **EA Desktop** | Achievement events from the local EA Desktop log, for games outside EA's managed folders |
 | **Console emulators** | RPCS3, ShadPS4 and Xenia, each watched live |
 | **Xbox PC** | Local Game Pass / Microsoft Store installs, plus the games the account owns and their Xbox Network state |
+| **Xbox 360 recompilations** | Native PC recompilations such as ReXGlue ports, from the game folder or Documents, watched live |
 | **Games for Windows LIVE** | XLiveLessNess profiles, with the achievement list, its texts and its icons read from the game's own executable |
 
 Sources are controlled individually, and no Steam Web API key is used: achievement lists come from

@@ -135,7 +135,7 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
   const pending =
     source === 'steam-bridge' && context && context.steamAppId
       ? rarity.getSteamBridgeRarity(appid, context.steamAppId, context.names || achievements.map((a) => a && a.name), {})
-      : rarity.getRarityEntries(appid, source, { gameName, achievements });
+      : rarity.getRarityEntries(appid, source, { gameName, gameNames: context && context.gameNames, achievements });
   pending
     .then((entries) => {
       applyRarity(entries);

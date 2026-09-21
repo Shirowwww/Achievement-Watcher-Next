@@ -1328,6 +1328,8 @@
     "no-achievements-found": "No se encontraron logros",
     "playstation-trophies": "Trofeos de PlayStation",
     "xbox-achievements": "Logros de Xbox",
+    "xbox360-recomp-achievements": "Logros de Xbox 360 - recompilación en PC",
+    "xbox360-recomp-badge": "Juego de Xbox 360 recompilado para ejecutarse de forma nativa en PC. Sus logros se leen directamente desde el propio juego.",
     "epic-games-achievements": "Logros de Epic Games",
     "gog-achievements": "Logros de GOG",
     "social-club-achievements": "Logros de Social Club",

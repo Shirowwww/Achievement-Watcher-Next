@@ -14,6 +14,7 @@ const path = require('path');
 const watch = require('node-watch');
 const moment = require('moment');
 const debug = require('../util/log.js');
+const { guardWatcher } = require('../util/watchGuard.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
@@ -236,7 +237,7 @@ function attach(game, ctx) {
         if (!String(name || '').toUpperCase().includes(`${path.sep}${game.titleId}${path.sep}`)) return;
         changes.run(game.titleId, () => handleChange(game, name, ctx));
       });
-      watchers.push(watcher);
+      watchers.push(guardWatcher(watcher, `'${root}'`, debug));
       debug.log(`[xlln] watching achievements for ${game.titleId} under '${root}'`);
     } catch (err) {
       debug.warn(`[xlln] failed to watch ${root}: ${err}`);
@@ -256,7 +257,7 @@ function attach(game, ctx) {
       attach(game, ctx);
       changes.run(game.titleId, () => handleChange(game, '', ctx));
     });
-    watchers.push(pending);
+    watchers.push(guardWatcher(pending, `'${game.gameDir}'`, debug));
     debug.log(`[xlln] ${game.titleId} has no profile folder yet - waiting for one in '${game.gameDir}'`);
   } catch (err) {
     debug.warn(`[xlln] failed to watch ${game.gameDir}: ${err}`);

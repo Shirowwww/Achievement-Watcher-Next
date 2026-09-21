@@ -181,8 +181,10 @@ function executableCheck(signals) {
 }
 
 function identityCheck(signals) {
-  const { appid, steamappid, source, unconfigured } = signals;
-  const resolved = steamappid || (/^\d+$/.test(String(appid || '')) ? String(appid) : '');
+  const { appid, steamappid, source, unconfigured, system } = signals;
+  // An Xbox 360 game (Xenia, a recompilation) is identified by its 8-digit hex title id, not a Steam appid.
+  const titleId = system === 'xbox' ? (/^(?:x360-)?([0-9a-f]{8})$/i.exec(String(appid || '')) || [])[1] : '';
+  const resolved = steamappid || (/^\d+$/.test(String(appid || '')) ? String(appid) : '') || (titleId ? titleId.toUpperCase() : '');
   if (resolved && !unconfigured) return check('identity', LEVEL.OK, { params: { appid: resolved, source: source || '' } });
   if (resolved) return check('identity', LEVEL.WARN, { params: { appid: resolved, source: source || '' } });
   return check('identity', LEVEL.WARN, { params: { source: source || '' } });

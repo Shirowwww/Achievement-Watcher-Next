@@ -247,3 +247,63 @@ test('an app with genuinely no achievements still resolves to an empty list', as
   });
   assert.equal(calls, 2, 'both spellings are attempted before an empty result is believed');
 });
+
+test('a recompiled Xbox 360 game asks Exophase in English, under each title it may be filed as', async () => {
+  const exophase = require('../../app/parser/exophase.js');
+  const real = exophase.fetchExophaseRarity;
+  const asked = [];
+  // Only the dashboard's short title has a page, and only English wording matches it.
+  exophase.fetchExophaseRarity = async ({ gameName, platform, achievements }) => {
+    asked.push([gameName, platform]);
+    if (gameName !== 'Midnight Club: LA') throw new Error('No working Exophase URL');
+    return achievements.filter((a) => a.displayName === 'Wanted Man').map((a) => ({ name: a.name, percent: 12.5 }));
+  };
+  try {
+    const entries = await rarity.getRarityEntries('x360-545407F8', 'Xbox 360 Recomp', {
+      gameName: 'Midnight Club: Los Angeles',
+      gameNames: ['Midnight Club: Los Angeles', 'Midnight Club: LA'],
+      achievements: [{ name: '18', displayName: 'Homme recherché', description: 'x', rarityName: 'Wanted Man', rarityDescription: 'y' }],
+      forceRefresh: true,
+    });
+    assert.deepEqual(entries, [{ name: '18', percent: 12.5 }]);
+    assert.deepEqual(asked, [
+      ['Midnight Club: Los Angeles', 'xenia'],
+      ['Midnight Club: LA', 'xenia'],
+    ]);
+  } finally {
+    exophase.fetchExophaseRarity = real;
+  }
+});
+
+test('when no title names a page, Exophase search finds it, and the page that knows the most achievements wins', async () => {
+  const exophase = require('../../app/parser/exophase.js');
+  const real = { byName: exophase.fetchExophaseRarity, search: exophase.searchExophaseTitles, bySlug: exophase.fetchExophaseRarityBySlug };
+  exophase.fetchExophaseRarity = async () => {
+    throw new Error('No working Exophase URL');
+  };
+  exophase.searchExophaseTitles = async () => [
+    { title: 'Castlevania: Symphony of the Night', slug: 'japanese-release' },
+    { title: 'Castlevania HD', slug: 'another-game' },
+    { title: 'Castlevania: Symphony of the Night', slug: 'castlevania-sotn' },
+  ];
+  const visited = [];
+  exophase.fetchExophaseRarityBySlug = async ({ slug, achievements }) => {
+    visited.push(slug);
+    const known = slug === 'castlevania-sotn' ? achievements : achievements.slice(0, 1);
+    return known.map((a) => ({ name: a.name, percent: 50 }));
+  };
+  try {
+    const entries = await rarity.getRarityEntries('x360-5841089D', 'Xbox 360 Recomp', {
+      gameName: 'Castlevania: Symphony of the Night',
+      achievements: [
+        { name: '1', displayName: 'Rampage' },
+        { name: '2', displayName: 'Apprentice' },
+      ],
+      forceRefresh: true,
+    });
+    assert.equal(entries.length, 2, 'the worldwide page, which knows both');
+    assert.deepEqual(visited, ['japanese-release', 'castlevania-sotn'], 'a different game of the same series is never read');
+  } finally {
+    Object.assign(exophase, { fetchExophaseRarity: real.byName, searchExophaseTitles: real.search, fetchExophaseRarityBySlug: real.bySlug });
+  }
+});

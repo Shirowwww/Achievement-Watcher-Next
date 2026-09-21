@@ -13,6 +13,7 @@ const targets = require(path.join(__dirname, '..', 'util', 'achievementResetTarg
 const manualUnlock = require(path.join(__dirname, 'manualUnlock.js'));
 const shadps4 = require(path.join(__dirname, 'shadps4.js'));
 const xenia = require(path.join(__dirname, 'xenia.js'));
+const x360Recomp = require(path.join(__dirname, 'x360Recomp.js'));
 
 // A save folder is a save folder, not a game install: a handful of levels and files is all it holds.
 // The bounds stop a mis-resolved path (a whole library root) from walking a disk.
@@ -54,7 +55,7 @@ function collectTargets(root, source, out, depth = 0) {
   if (!stats) return out;
 
   if (stats.isFile()) {
-    const action = targets.resetActionFor(path.basename(root));
+    const action = targets.resetActionFor(path.basename(root), source);
     if (action) out.push({ path: root, action, source, size: stats.size });
     return out;
   }
@@ -71,7 +72,7 @@ function collectTargets(root, source, out, depth = 0) {
     const full = path.join(root, entry.name);
     if (entry.isDirectory()) collectTargets(full, source, out, depth + 1);
     else if (entry.isFile()) {
-      const action = targets.resetActionFor(entry.name);
+      const action = targets.resetActionFor(entry.name, source);
       if (action) out.push({ path: full, action, source, size: statSafe(full)?.size || 0 });
     }
   }
@@ -142,6 +143,11 @@ function applyClear(target) {
   if (target.action === targets.ACTION.CLEAR_SHADPS4_XML) {
     const { text, cleared } = shadps4.clearTrophyXml(fs.readFileSync(target.path, 'utf8'));
     fs.writeFileSync(target.path, text, 'utf8');
+    return cleared;
+  }
+  if (target.action === targets.ACTION.CLEAR_X360_JSON) {
+    const { buffer, cleared } = x360Recomp.clearJsonBuffer(fs.readFileSync(target.path));
+    fs.writeFileSync(target.path, buffer);
     return cleared;
   }
   if (target.action === targets.ACTION.CLEAR_XENIA_GPD) {

@@ -123,6 +123,7 @@ directly, with no emulator executable anywhere near it.
 
 | Source | What it is |
 |---|---|
+| **Xbox 360 recompilations** | Xbox 360 games recompiled to run natively on PC (ReXGlue and similar projects). Their unlock list is read from an `achievements` folder in the game folder or in `Documents\<game>` (`.toml`, `.tsv`), or from `SaveData\Achievements.json`. The achievement list, in every language the game ships, and its icons come from the game's own `default.xex` when it sits in a folder added under Settings > Folders (the Documents case included, matched by title id); [dbox.tools](https://dbox.tools) fills in DLC achievements and games whose executable was not found. A JSON list, which names no title id, is matched to its Xbox 360 title only when every achievement id and gamerscore agree. Box art comes from the Xbox 360 marketplace and rarity from Exophase. Watched live, including a game's very first unlock, resettable, and switched with the Xenia source. |
 | **Games for Windows LIVE** | XLiveLessNess installs. Each profile's unlock records are read, and the achievement list, its texts and its icons come out of the game's own executable, so nothing has to be downloaded. Watched live. |
 | **FINAL FANTASY VII (2013)** | That re-release predates Steamworks achievements and keeps its 36 unlocks in an 8-byte bitfield beside its saves, found in Documents without adding the folder by hand. |
 | **Import notification cache** | Reads the background tracker's own cache as an extra source of past unlocks. |

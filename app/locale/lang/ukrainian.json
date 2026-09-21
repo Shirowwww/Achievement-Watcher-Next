@@ -1328,6 +1328,8 @@
     "no-achievements-found": "Досягнення не знайдено",
     "playstation-trophies": "Трофеї PlayStation",
     "xbox-achievements": "Досягнення Xbox",
+    "xbox360-recomp-achievements": "Досягнення Xbox 360 - рекомпіляція для PC",
+    "xbox360-recomp-badge": "Гра Xbox 360, перекомпільована для нативного запуску на PC. Її досягнення зчитуються безпосередньо з самої гри.",
     "epic-games-achievements": "Досягнення Epic Games",
     "gog-achievements": "Досягнення GOG",
     "social-club-achievements": "Досягнення Social Club",

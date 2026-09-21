@@ -9,6 +9,7 @@ const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
+const { guardWatcher } = require('../util/watchGuard.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
 const notifyStrings = require('../util/notifyStrings.js');
@@ -310,7 +311,7 @@ module.exports.start = async (ctx) => {
       if (evt !== 'update') return;
       changes.run('ea-log', () => handleChange(name, ctx));
     });
-    watchers.push(w);
+    watchers.push(guardWatcher(w, 'the EA Desktop logs', debug));
     debug.log(`[ea] watching ${EA_LOGS_ROOT}`);
   } catch (err) {
     debug.warn(`[ea] failed to watch ${EA_LOGS_ROOT}: ${err}`);

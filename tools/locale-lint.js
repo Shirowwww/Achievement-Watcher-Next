@@ -337,6 +337,7 @@ const UI_STRING_ALLOWLIST = new Set([
   'Ubisoft Store',
   'RPCS3 Wiki',
   'AW Next',
+  'Xbox 360 Recomp',
 ]);
 
 function looksLikeUiProse(value) {

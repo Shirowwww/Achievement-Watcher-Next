@@ -70,3 +70,13 @@ truncated.writeUInt32BE(0x7000000, 24 + 14); // the first entry's length
 assert.throws(() => spa.parseSpa(truncated), /outside the buffer/);
 
 console.log('PASS: the XLiveLessNess SPAFILE reader decodes a title and refuses malformed ones');
+
+// Brazilian and Latin American players read the console's one Portuguese and one Spanish table.
+{
+  const table = (text) => new Map([[10, text]]);
+  const regional = { stringsByLanguage: new Map([[1, table('en')], [5, table('es')], [9, table('pt')]]) };
+  assert.strictEqual(spa.pickLanguage(regional, 'brazilian'), 9);
+  assert.strictEqual(spa.pickLanguage(regional, 'latam'), 5);
+  assert.strictEqual(spa.pickLanguage(regional, 'turkish'), 1, 'a language the game does not ship falls back to English');
+  console.log('PASS: regional language variants read the table the console ships');
+}

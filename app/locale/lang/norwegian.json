@@ -1328,6 +1328,8 @@
     "no-achievements-found": "Fant ingen prestasjoner",
     "playstation-trophies": "PlayStation-troféer",
     "xbox-achievements": "Xbox-prestasjoner",
+    "xbox360-recomp-achievements": "Xbox 360-prestasjoner - omkompilering til PC",
+    "xbox360-recomp-badge": "Xbox 360-spill omkompilert for å kjøre nativt på PC. Prestasjonene leses direkte fra selve spillet.",
     "epic-games-achievements": "Epic Games-prestasjoner",
     "gog-achievements": "GOG-prestasjoner",
     "social-club-achievements": "Social Club-prestasjoner",

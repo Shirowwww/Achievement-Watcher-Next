@@ -2339,9 +2339,22 @@ function handleMonitorMessage(msg) {
     else if (msg && msg.registerOverlayHotkey) registerOverlayHotkey(msg.registerOverlayHotkey.hotkey);
     else if (msg && msg.gameActivity) setGameActivity(msg.gameActivity.count);
     else if (msg && msg.artworkPrefetch) prefetchSquareGameLogo(msg.artworkPrefetch);
+    else if (msg && msg.achievementUnlocked) forwardUnlockToLibrary(msg.achievementUnlocked);
   } catch (err) {
     debug.log(`[monitor] message handling failed: ${err.message || err}`);
   }
+}
+
+// The library only re-reads saves on a scan, so without this an unlock reached the tile only after
+// a restart. A hidden window still gets it: closing to the tray keeps the same page alive.
+function forwardUnlockToLibrary(unlock) {
+  const name = String((unlock && unlock.name) || '');
+  if (!name || !MainWin || MainWin.isDestroyed() || MainWin.webContents.isDestroyed()) return;
+  MainWin.webContents.send('achievement-unlock', {
+    appid: String(unlock.appid || ''),
+    steamappid: String(unlock.steamappid || ''),
+    ach_data: { name, UnlockTime: Number(unlock.time) || 0 },
+  });
 }
 
 /* Resolve a game's square logo while it starts, not while its notification is on screen: the answer
@@ -6339,6 +6352,11 @@ function readIcoPngFrames(file) {
   the shell shrinks that single picture by 13x and the trophy comes out soft and grey. The file
   already carries a hand-sized frame for every scaling step, so each one is handed over as its own
   representation and Windows draws the pixels that were drawn for it.
+
+  Every scale Windows offers needs an entry. A display at 175% asks for 28px, and with no
+  representation at 1.75 Chromium falls back to the nearest one and resamples it - which is the
+  blurry icon this function exists to prevent, appearing only on the machines whose scale is
+  missing from the table.
 */
 function trayIconImage(icoFile) {
   const frames = readIcoPngFrames(icoFile);
@@ -6347,7 +6365,9 @@ function trayIconImage(icoFile) {
   for (const [scaleFactor, size] of [
     [1.25, 20],
     [1.5, 24],
+    [1.75, 28],
     [2, 32],
+    [2.25, 36],
     [2.5, 40],
     [3, 48],
   ]) {
@@ -6364,20 +6384,38 @@ let tray = null;
 function createTray() {
   if (tray) return tray;
   try {
-    const iconPath = path.join(__dirname, '../resources/icon/icon.ico');
+    /*
+      The tray has its own file (build/icon_tray.png -> icon_tray.ico, see build/generate-tray-icon.js),
+      and it is handed over as a PATH rather than as a nativeImage on purpose.
+
+      A nativeImage resolves to ONE bitmap, chosen by the scale factor of the display. The shell asks
+      for the icon at more than one size though: the notification area draws it at 16 points, and the
+      hidden-icons flyout at 24. Given a single 20px bitmap (16pt at 125%) the flyout has no choice
+      but to stretch it to 30px, which is exactly the soft icon this file exists to avoid - while the
+      28px and 32px frames sit unused inside the .ico. Passing the path lets Windows open the file and
+      pick the frame that fits each context.
+
+      The app icon stays the fallback so an install without the dedicated file still shows something.
+    */
+    const trayIconPath = path.join(__dirname, '../resources/icon/icon_tray.ico');
+    const hasTrayIcon = fs.existsSync(trayIconPath);
+    const iconPath = hasTrayIcon ? trayIconPath : path.join(__dirname, '../resources/icon/icon.ico');
+
     let image = null;
-    try {
-      image = trayIconImage(iconPath);
-    } catch (err) {
-      debug.log(`[tray] icon frames unreadable, falling back to the whole file: ${err.message || err}`);
+    if (!hasTrayIcon) {
+      // The legacy app icon carries one 256x256 bitmap, so it does need the per-scale representations
+      // assembled by hand; without them the shell shrinks that single picture by 13x.
+      try {
+        image = trayIconImage(iconPath);
+      } catch (err) {
+        debug.log(`[tray] icon frames unreadable, falling back to the whole file: ${err.message || err}`);
+      }
+      if (!image || image.isEmpty()) {
+        debug.log(`[tray] no usable 16px PNG frame in ${path.basename(iconPath)}, drawing the whole file instead`);
+        image = nativeImage.createFromPath(iconPath);
+      }
     }
-    if (!image || image.isEmpty()) {
-      // Only PNG-encoded frames are collected. An icon rebuilt with a tool that stores the small
-      // sizes as BMP would land here and quietly go back to the blurry single-bitmap tray icon.
-      debug.log('[tray] no usable 16px PNG frame in icon.ico, drawing the whole file instead');
-      image = nativeImage.createFromPath(iconPath);
-    }
-    tray = new Tray(image.isEmpty() ? iconPath : image);
+    tray = new Tray(image && !image.isEmpty() ? image : iconPath);
     tray.setToolTip('Achievement Watcher Next');
     const rebuildMenu = () => {
       const contextMenu = Menu.buildFromTemplate([

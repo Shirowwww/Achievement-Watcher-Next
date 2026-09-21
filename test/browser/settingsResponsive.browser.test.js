@@ -126,8 +126,14 @@ test('settings keeps its two-column rows readable in every bundled locale', { co
     const locales = fs.readdirSync(localeDir).filter((file) => file.endsWith('.json')).sort();
     assert.equal(locales.length, BUNDLED_LOCALE_COUNT);
 
-    for (const width of [900, 1068]) {
-      await page.setViewport({ width, height: 900 });
+    // 900x600 is the smallest window app/package.json allows, and the one the @media (max-height)
+    // rules exist for; a row that only fits in a tall window is a row that does not fit.
+    for (const { width, height } of [
+      { width: 900, height: 900 },
+      { width: 1068, height: 900 },
+      { width: 900, height: 600 },
+    ]) {
+      await page.setViewport({ width, height });
       for (const file of locales) {
         const locale = JSON.parse(fs.readFileSync(path.join(localeDir, file), 'utf8'));
         await page.setContent(layoutHarness(locale), { waitUntil: 'load' });
@@ -158,9 +164,9 @@ test('settings keeps its two-column rows readable in every bundled locale', { co
           };
         });
 
-        assert.equal(layout.boxOverflow, false, `${width}px ${file}: the modal overflows horizontally`);
-        assert.equal(layout.headerOverflow, false, `${width}px ${file}: the header overflows horizontally`);
-        assert.equal(layout.navOverflow, false, `${width}px ${file}: the navigation overflows horizontally`);
+        assert.equal(layout.boxOverflow, false, `${width}x${height} ${file}: the modal overflows horizontally`);
+        assert.equal(layout.headerOverflow, false, `${width}x${height} ${file}: the header overflows horizontally`);
+        assert.equal(layout.navOverflow, false, `${width}x${height} ${file}: the navigation overflows horizontally`);
         /*
           Exactly one row is allowed the stacked form. Without this the exemption could widen by
           accident - a class landing on more rows, or a selector loosened - and every row would then
@@ -169,10 +175,10 @@ test('settings keeps its two-column rows readable in every bundled locale', { co
         assert.equal(
           layout.rows.filter((row) => row.stacksByDesign).length,
           1,
-          `${width}px ${file}: the stacked form must stay the exception, not the rule`
+          `${width}x${height} ${file}: the stacked form must stay the exception, not the rule`
         );
         for (const [index, row] of layout.rows.entries()) {
-          const where = `${width}px ${file}: row ${index + 1}`;
+          const where = `${width}x${height} ${file}: row ${index + 1}`;
           assert.equal(row.overflow, false, `${where} overflows horizontally`);
           assert.equal(row.helpBelowRow, true, `${where} overlaps its description`);
 

@@ -116,13 +116,33 @@ test('reading an installed theme is two small files, not a scan', (t) => {
   fs.writeFileSync(path.join(dir, 'theme.json'), JSON.stringify(theme), 'utf8');
   fs.writeFileSync(path.join(dir, 'aw-theme.json'), JSON.stringify({ name: 'Measured', version: '1.0.0' }), 'utf8');
 
-  const started = process.hrtime.bigint();
-  for (let i = 0; i < 200; i += 1) assert.ok(themePackage.readInstalledTheme(root, 'Measured'));
-  const perCall = Number(process.hrtime.bigint() - started) / 1e6 / 200;
+  /*
+    Counted rather than timed. What this guards is the SHAPE of the read - two files opened and
+    nothing else - and a wall-clock budget only stands in for that on an idle machine: with the
+    suite running several processes at once, two small reads genuinely take longer than the budget
+    and the test fails for a reason that has nothing to do with the code it covers. Counting the
+    calls says exactly what the comment always meant, and says it the same on any machine.
+  */
+  const calls = { readFileSync: 0, readdirSync: 0, statSync: 0, existsSync: 0 };
+  const original = {};
+  for (const name of Object.keys(calls)) {
+    original[name] = fs[name];
+    fs[name] = function counted(...args) {
+      calls[name] += 1;
+      return original[name].apply(this, args);
+    };
+  }
+  try {
+    assert.ok(themePackage.readInstalledTheme(root, 'Measured'));
+  } finally {
+    for (const name of Object.keys(calls)) fs[name] = original[name];
+  }
 
-  // Generous on purpose: this is here to catch a read that starts walking a folder or decoding an
-  // image, not to measure a machine.
-  assert.ok(perCall < 5, `resolving an installed theme took ${perCall.toFixed(2)} ms, which is not two small file reads`);
+  assert.deepEqual(
+    calls,
+    { readFileSync: 2, readdirSync: 0, statSync: 0, existsSync: 0 },
+    'resolving an installed theme must be theme.json and aw-theme.json, with no folder walk and no probing'
+  );
 });
 
 test('a theme storage folder that is not there costs nothing and is not an error', () => {

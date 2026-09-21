@@ -150,9 +150,60 @@ test('the technical features named for Advanced all live behind an Advanced-only
     const view = document.querySelector(`#${id}`).closest('section.content').getAttribute('data-view');
     assert.ok(interfaceMode.ADVANCED_VIEWS.includes(view), `${id} sits in ${view}, which Simple still shows`);
   }
-  for (const id of ['scan-gbe', 'diag-versions', 'open-logs', 'fix-all-games', 'blacklist-manager']) {
+  for (const id of ['scan-gbe', 'diag-versions', 'open-logs', 'fix-all-games']) {
     const view = document.querySelector(`#${id}`).closest('section.content').getAttribute('data-view');
     assert.ok(interfaceMode.ADVANCED_VIEWS.includes(view), `${id} sits in ${view}, which Simple still shows`);
+  }
+});
+
+test('what Simple lets you do, Simple lets you undo', () => {
+  // "Remove from list" is on every game menu in both modes; its undo cannot sit behind Advanced.
+  // Hardware acceleration is the fix for an overlay that renders badly, which Simple users hit too.
+  for (const id of ['blacklist-manager', 'blacklist_reset', 'option_disableHardwareAccel']) {
+    const el = document.querySelector(`#${id}`);
+    const view = el.closest('section.content').getAttribute('data-view');
+    assert.ok(interfaceMode.SIMPLE_VIEWS.includes(view), `#${id} is stranded in the ${view} tab`);
+    assert.ok(!el.closest('[data-advanced]'), `#${id} must not be marked advanced-only`);
+  }
+  // The moved card keeps its button styling, which used to be scoped to the Advanced tab.
+  const css = fs.readFileSync(path.join(appDir, 'resources', 'css', 'app.css'), 'utf8');
+  assert.match(css, /#settings #blacklist-card \.btn,\n#settings \.content\[data-view='advanced'\] \.btn,/);
+});
+
+test('Simple folds the niche rows of the tabs it keeps', () => {
+  for (const id of ['option_timeMergeRecentFirst', 'option_groupToast', 'option_souvenirHdr', 'btn-copy-obs-url']) {
+    assert.ok(document.querySelector(`#${id}`).closest('[data-advanced]'), `#${id} is a niche row and belongs to Advanced`);
+  }
+});
+
+test('Simple leaves the per-game overrides out of the game menu, but never one already set', () => {
+  assert.match(appSource, /const simpleMenu = interfaceIsSimple\(\);/);
+  assert.match(appSource, /!isNativeLauncher && \(!simpleMenu \|\| emulatorSourceForced !== null\)\)/, 'a forced emulator source stays visible');
+  const appidBlock = appSource.slice(appSource.indexOf('const currentAppidOverride = appidOverride.get'));
+  assert.match(appidBlock.slice(0, 200), /if \(!simpleMenu\) gameMenu\.append\(/, 'setting an AppID is Advanced');
+  assert.match(appidBlock, /if \(currentAppidOverride\) \{/, 'clearing an existing one is not gated');
+});
+
+test('the guide never offers a Simple user a switch that Settings would then hide', () => {
+  const guide = onboardingUi.slice(onboardingUi.indexOf('function applyModeToGuide()'));
+  const body = guide.slice(0, guide.indexOf('\n  }\n'));
+  assert.match(body, /\$\('#onboard-auto-fix'\)\.closest\('label'\)\.toggle\(!simple\)/);
+  assert.match(body, /hiddenOptionalSources\(\{ mode: chosenInterfaceMode, enabled, librarySources \}\)/, 'same source rule as Settings');
+  // Choosing Simple must not silently turn an existing auto-fix off either.
+  assert.match(onboardingUi, /if \(!onboardingInterfaceMode\.isSimple\(chosenInterfaceMode\)\) app\.config\.emulator\.autoApplyNewGames =/);
+  assert.match(onboardingUi, /chosenInterfaceMode = onboardingInterfaceMode\.normalize\(mode\);\n\s+renderInterfaceMode\(\);\n\s+applyModeToGuide\(\);/);
+});
+
+test('the guide offers the optional account sign-ins through the Settings flows', () => {
+  for (const id of ['onboard-steam-connect', 'onboard-epic-connect', 'onboard-accounts-title', 'onboard-summary-counts']) {
+    assert.ok(document.querySelector(`#${id}`), `#${id} must exist`);
+  }
+  for (const channel of ['steam:auth-status', 'steam:login', 'epic:auth-status', 'epic:login']) {
+    assert.ok(onboardingUi.includes(`'${channel}'`), `the guide must use ${channel}`);
+    assert.ok(settingsUi.includes(`'${channel}'`), `${channel} must be the channel Settings uses too`);
+  }
+  for (const key of ['accountsTitle', 'accountsCopy', 'summarySources', 'summaryReopen']) {
+    assert.ok(String(english.onboarding[key] || '').trim(), `onboarding.${key} must be in english.json`);
   }
 });
 

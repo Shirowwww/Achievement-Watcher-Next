@@ -1328,6 +1328,8 @@
     "no-achievements-found": "도전 과제를 찾지 못했습니다",
     "playstation-trophies": "PlayStation 트로피",
     "xbox-achievements": "Xbox 도전 과제",
+    "xbox360-recomp-achievements": "Xbox 360 도전 과제 - PC 재컴파일",
+    "xbox360-recomp-badge": "PC에서 네이티브로 실행되도록 재컴파일된 Xbox 360 게임입니다. 도전 과제는 게임 자체에서 직접 읽어옵니다.",
     "epic-games-achievements": "Epic Games 도전 과제",
     "gog-achievements": "GOG 도전 과제",
     "social-club-achievements": "Social Club 도전 과제",

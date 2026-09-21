@@ -72,6 +72,7 @@ const shadps4Watch = require('./console/shadps4Watch.js');
 const rpcs3Watch = require('./console/rpcs3Watch.js');
 const xeniaWatch = require('./console/xeniaWatch.js');
 const xllnWatch = require('./console/xllnWatch.js');
+const x360RecompWatch = require('./console/x360RecompWatch.js');
 const eaWatch = require('./console/eaWatch.js');
 const gogWatch = require('./console/gogWatch.js');
 const ubisoftWatch = require('./console/ubisoftWatch.js');
@@ -148,6 +149,7 @@ const { runXboxPoll, matchesActiveXboxPoll } = require('./util/xboxPolling.js');
     ea       EA Desktop's rotating verbose log
     xenia    Xbox 360 emulator GPD files under the user's saved folders
     xlln     Games for Windows LIVE profile state, through XLiveLessNess
+    x360recomp  Xbox 360 games recompiled for PC, their own unlock lists
     gog      GOG Galaxy's gameplay.db, rewritten the moment an achievement pops
     ubisoft  Ubisoft Connect's spool files, protobuf unlock records appended on the spot
 */
@@ -157,6 +159,7 @@ const CONSOLE_WATCHERS = [
   { name: 'ea', watcher: eaWatch },
   { name: 'xenia', watcher: xeniaWatch },
   { name: 'xlln', watcher: xllnWatch },
+  { name: 'x360recomp', watcher: x360RecompWatch },
   { name: 'gog', watcher: gogWatch },
   { name: 'ubisoft', watcher: ubisoftWatch },
 ];
@@ -497,6 +500,24 @@ function parseControllerBinding(value, fallback) {
 
 function controllerOptions() {
   return (app && app.options && app.options.controller) || {};
+}
+
+// Tells the app a game gained an unlock, so its open library moves now instead of at the next scan.
+// The notification cannot carry this: a toast never passes through the app at all.
+function reportUnlockToApp(game, name, unlockTime) {
+  if (typeof process.send !== 'function' || !process.connected) return;
+  try {
+    process.send({
+      achievementUnlocked: {
+        appid: String(game.appid || ''),
+        steamappid: String(game.steamappid || ''),
+        name: String(name || ''),
+        time: Number(unlockTime) || 0,
+      },
+    });
+  } catch (err) {
+    debug.error(`[library] unlock report failed: ${err}`);
+  }
 }
 
 // Asks the app to resolve this game's square logo now that it's running. The monitor never fetches
@@ -1114,6 +1135,9 @@ var app = {
                     if (!achievements[i].UnlockTime || achievements[i].UnlockTime == 0) achievements[i].UnlockTime = moment().unix();
                     const seedPreview = seedOnly && seedNotifyNames.has(String(achievements[i].name || '').toUpperCase());
                     if (seedOnly && !seedPreview) continue; // baseline seeding: record the unlock, suppress older toasts
+                    // Before the timestamp and dedup gates: those decide whether to notify, but an
+                    // unlock too old to toast is still one the open library has not counted.
+                    reportUnlockToApp(game, ach.name, achievements[i].UnlockTime);
                     let elapsedTime = moment().diff(moment.unix(achievements[i].UnlockTime), 'seconds');
                     if (
                       seedPreview ||

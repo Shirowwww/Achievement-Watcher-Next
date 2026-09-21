@@ -1541,7 +1541,9 @@ body.is-resizing #game-list {
 #game-list .game-box .info .ownership-badge.family,
 #achievement .wrapper > .header .title .ownership-badge.family,
 #game-list .game-box .info .ownership-badge.purchased,
-#achievement .wrapper > .header .title .ownership-badge.purchased {
+#achievement .wrapper > .header .title .ownership-badge.purchased,
+#game-list .game-box .info .ownership-badge.recomp,
+#achievement .wrapper > .header .title .ownership-badge.recomp {
   color: var(--accent);
 }
 
@@ -3797,6 +3799,51 @@ body.is-resizing #game-list {
   line-height: 1.45;
 }
 
+.onboarding-account-list {
+  display: grid;
+  gap: 8px;
+}
+
+.onboarding-account-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.onboarding-account-row .onboarding-test-button[disabled] {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.onboarding-account-status {
+  color: var(--text-muted);
+  font-family: 'Open-Sans';
+  font-size: 11px;
+}
+
+.onboarding-account-status.success {
+  color: color-mix(in srgb, var(--success) 78%, white);
+}
+
+.onboarding-account-status.error {
+  color: color-mix(in srgb, var(--danger) 72%, white);
+}
+
+.onboarding-summary {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface-sunken) 44%, transparent);
+}
+
+.onboarding-summary p {
+  margin: 0 0 4px;
+  font-family: 'Open-Sans-Bold';
+  font-size: 12px;
+}
+
 .onboarding-source-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4992,6 +5039,7 @@ body.is-resizing #game-list {
    also the website's class and the notification designer's; the views named here are the ones whose
    markup uses it. */
 #settings .folder-actions .btn,
+#settings #blacklist-card .btn,
 #settings .content[data-view='advanced'] .btn,
 #settings .content[data-view='debug'] .btn,
 #settings .content[data-view='appearance'] .btn {
@@ -5011,6 +5059,7 @@ body.is-resizing #game-list {
   box-shadow: 0 8px 18px rgba(0, 0, 0, calc(0.18 * var(--shadow-scale)));
 }
 
+#settings #blacklist-card .btn,
 #settings .content[data-view='advanced'] .btn,
 #settings .content[data-view='debug'] .btn {
   margin: 4px 8px 4px 0;
@@ -5022,6 +5071,7 @@ body.is-resizing #game-list {
 }
 
 #settings .folder-actions .btn:hover,
+#settings #blacklist-card .btn:hover,
 #settings .content[data-view='advanced'] .btn:hover,
 #settings .content[data-view='debug'] .btn:hover,
 #settings .content[data-view='appearance'] .btn:hover {
@@ -5051,6 +5101,7 @@ body.is-resizing #game-list {
 }
 
 #settings .folder-actions .btn:active,
+#settings #blacklist-card .btn:active,
 #settings .content[data-view='advanced'] .btn:active,
 #settings .content[data-view='debug'] .btn:active {
   transform: scale(0.9);
@@ -7442,6 +7493,7 @@ body {
 
 #options-notify-test .btn,
 #settings .folder-actions .btn,
+#settings #blacklist-card .btn,
 #settings .content[data-view='advanced'] .btn,
 #settings .content[data-view='debug'] .btn {
   min-height: 38px;
@@ -7455,6 +7507,7 @@ body {
 
 #options-notify-test .btn:hover,
 #settings .folder-actions .btn:hover,
+#settings #blacklist-card .btn:hover,
 #settings .content[data-view='advanced'] .btn:hover,
 #settings .content[data-view='debug'] .btn:hover {
   transform: translateY(-1px);
@@ -8555,6 +8608,7 @@ body {
 #settings .inline-action-btn,
 #settings #options-notify-test .btn,
 #settings .folder-actions .btn,
+#settings #blacklist-card .btn,
 #settings .content[data-view='advanced'] .btn,
 #settings .content[data-view='debug'] .btn,
 #settings .emulator-login-actions .btn {
@@ -8574,6 +8628,7 @@ body {
 #settings .inline-action-btn:hover,
 #settings #options-notify-test .btn:hover,
 #settings .folder-actions .btn:hover,
+#settings #blacklist-card .btn:hover,
 #settings .content[data-view='advanced'] .btn:hover,
 #settings .content[data-view='debug'] .btn:hover,
 #settings .emulator-login-actions .btn:hover {

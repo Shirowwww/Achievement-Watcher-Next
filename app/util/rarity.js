@@ -151,9 +151,63 @@ function platformFromSource(source) {
   const s = String(source || '').toLowerCase();
   if (s.includes('rpcs3')) return 'rpcs3';
   if (s.includes('shadps4')) return 'shadps4';
-  if (s.includes('xenia')) return 'xenia';
+  // Recompiled Xbox 360 games are the same titles Exophase lists under the emulator's platform.
+  if (s.includes('xenia') || s === 'xbox 360 recomp') return 'xenia';
   return '';
 }
+
+// Exophase matches by English title; a source that knows the English text of a localized list
+// passes it as rarityName/rarityDescription.
+function englishForRarity(achievements) {
+  return achievements.map((a) =>
+    a && a.rarityName ? { ...a, displayName: a.rarityName, description: a.rarityDescription || a.description } : a
+  );
+}
+
+// Each title the game may be filed under on Exophase, tried in order until one answers.
+async function fetchExophaseByTitles(platform, options) {
+  const exophase = require(path.join(__dirname, '../parser/exophase.js'));
+  const titles = [...new Set([options.gameName, ...(Array.isArray(options.gameNames) ? options.gameNames : [])].filter(Boolean))];
+  const achievements = englishForRarity(options.achievements);
+  let lastError = null;
+  for (const gameName of titles) {
+    try {
+      const entries = await exophase.fetchExophaseRarity({ gameName, platform, achievements });
+      if (entries.length > 0) return entries;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  if (typeof exophase.searchExophaseTitles === 'function') {
+    const wanted = new Set(titles.map(searchKey));
+    const tried = new Set();
+    let best = [];
+    for (const gameName of titles) {
+      let found = [];
+      try {
+        found = await exophase.searchExophaseTitles(gameName, platform);
+      } catch (err) {
+        lastError = err;
+        continue;
+      }
+      for (const hit of found) {
+        if (!wanted.has(searchKey(hit.title)) || tried.has(hit.slug)) continue;
+        tried.add(hit.slug);
+        try {
+          const entries = await exophase.fetchExophaseRarityBySlug({ slug: hit.slug, platform, achievements });
+          if (entries.length > best.length) best = entries;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+      if (best.length) return best;
+    }
+  }
+  if (lastError) throw lastError;
+  return [];
+}
+
+const searchKey = (title) => String(title || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
 
 function fetchForSource(appid, source, options) {
   const platform = platformFromSource(source);
@@ -161,11 +215,7 @@ function fetchForSource(appid, source, options) {
     // Emulator rarity comes from Exophase (global unlock % per trophy/achievement). It needs the
     // game name for slug lookup and the schema list to map awards back to achievement ids.
     if (!options.gameName || !Array.isArray(options.achievements)) return Promise.resolve([]);
-    return require(path.join(__dirname, '../parser/exophase.js')).fetchExophaseRarity({
-      gameName: options.gameName,
-      platform,
-      achievements: options.achievements,
-    });
+    return fetchExophaseByTitles(platform, options);
   }
   if (source === 'epic') return fetchEpicRarityByArtifactId(appid, options);
   if (source === 'gog') return fetchGogGlobalAchievementPercentages(appid, options);

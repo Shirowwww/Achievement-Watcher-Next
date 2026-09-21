@@ -11,6 +11,19 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Added
 
+- **Xbox 360 games recompiled for PC.** ReXGlue ports and similar recompilations keep their own
+  achievement list in an `achievements` folder, either in the game folder or in `Documents\<game>`.
+  AW Next now reads those lists (`.toml`, `.tsv` and `SaveData\Achievements.json`) and treats the
+  games like any other: the list comes from the game's own `default.xex`, in every language it ships
+  and with secret achievements kept secret, dbox.tools fills in DLC achievements and games whose
+  executable was not found, the Xbox 360 marketplace supplies the box art, and Exophase the share of
+  players who earned each achievement. A game that writes only a JSON list, with no title id, is
+  recognised when every one of its achievements matches an Xbox 360 title (Gears of War 2 Hollow's 50
+  match Gears of War 2 exactly) and gets the same treatment. Every unlock is notified live, even for a game that had never
+  unlocked anything before, the play time is tracked, and "Reset achievements" works on them. The
+  Documents folder is found on its own; a game that keeps its list, or its `default.xex`, in its own
+  folder needs that folder or its library added under Settings > Folders. It follows the Xenia
+  source switch and the notification preset chosen for the Xbox 360.
 - **Set a game's AppID by hand.** Right-click a game and choose "Set AppID manually..." when its folder
   name matches several Steam releases and the automatic name match picked the wrong one. The choice is
   remembered per install folder and written to `steam_appid.txt`. The game health "correct the game ID
@@ -35,6 +48,14 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Locked Xenia achievements get their picture again.** The download went through the page
+  itself, whose security policy refused Xbox Live's plain-http image host without a word.
+- **Games for Windows LIVE secret achievements.** XLiveLessNess games marked every ordinary
+  achievement as secret and showed the real secret ones: the flag was read from the wrong bit.
+- **Brazilian and Latin American Spanish** now read the Portuguese and Spanish text of Games for
+  Windows LIVE and Xbox 360 games instead of falling back to English.
+- **Game Health on Xbox 360 games** no longer flags the game identity as needing attention: an
+  Xbox 360 title id is a valid identity, not a missing Steam AppID.
 - **A game whose unlocks sit in `GSE Saves` no longer shows 0%.** Applying the emulator fix creates a
   save folder under both `%APPDATA%\Goldberg SteamEmu Saves` and `%APPDATA%\GSE Saves`, and when both
   held a file for the same game the first one found won, whatever was in it. An abandoned, empty save

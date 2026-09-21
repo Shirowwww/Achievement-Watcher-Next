@@ -1328,6 +1328,8 @@
     "no-achievements-found": "Başarım bulunamadı",
     "playstation-trophies": "PlayStation kupaları",
     "xbox-achievements": "Xbox başarımları",
+    "xbox360-recomp-achievements": "Xbox 360 başarımları - PC için yeniden derleme",
+    "xbox360-recomp-badge": "PC üzerinde yerel olarak çalışacak şekilde yeniden derlenmiş Xbox 360 oyunu. Başarımları doğrudan oyunun kendisinden okunur.",
     "epic-games-achievements": "Epic Games başarımları",
     "gog-achievements": "GOG başarımları",
     "social-club-achievements": "Social Club başarımları",

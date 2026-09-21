@@ -623,6 +623,36 @@ function matchExophaseRarityToAchievements(achievements, items) {
 }
 
 // High-level emulator rarity fetch: tries every slug candidate, then matches awards to the schema.
+const EXOPHASE_SEARCH_URL = 'https://api.exophase.com/public/archive/platform/';
+
+// [{ title, slug }] for a name, from Exophase's archive search; the slug is the page's own.
+async function searchExophaseTitles(query, platform) {
+  const platformKey = mapExophasePlatform(platform);
+  if (!platformKey || !String(query || '').trim() || circuit.unavailable()) return [];
+  const { body } = await request(`${EXOPHASE_SEARCH_URL}${platformKey}?q=${encodeURIComponent(query)}`, {
+    timeout: STATIC_TIMEOUT_MS,
+    headers: { 'User-Agent': DEFAULT_UA, Accept: 'application/json' },
+  });
+  const parsed = typeof body === 'string' ? JSON.parse(body) : body;
+  const list = (parsed && parsed.games && Array.isArray(parsed.games.list) && parsed.games.list) || [];
+  const suffix = `-${platformKey}/achievements/`;
+  return list
+    .map((game) => {
+      const url = String((game && game.endpoint_awards) || '');
+      const at = url.indexOf('/game/');
+      const end = url.lastIndexOf(suffix);
+      return at >= 0 && end > at ? { title: String(game.title || ''), slug: url.slice(at + '/game/'.length, end) } : null;
+    })
+    .filter(Boolean);
+}
+
+// Rarity from one known page slug rather than slugs guessed from a name.
+async function fetchExophaseRarityBySlug({ slug, platform, achievements = [] } = {}) {
+  const exo = await fetchExophaseAchievementsMultiLang({ slug, platform: mapExophasePlatform(platform), langKeys: ['english'], langMap: EXOPHASE_LANG_MAP });
+  if (!exo || !exo.items || !exo.items.length) return [];
+  return matchExophaseRarityToAchievements(achievements, exo.items);
+}
+
 async function fetchExophaseRarity({ gameName = '', platform = 'rpcs3', achievements = [] } = {}) {
   const platformKey = mapExophasePlatform(platform);
   if (!platformKey) return [];
@@ -662,3 +692,5 @@ module.exports.normalizeExophaseRarityPct = normalizeExophaseRarityPct;
 module.exports.buildExophaseRaritySlugCandidates = buildExophaseRaritySlugCandidates;
 module.exports.matchExophaseRarityToAchievements = matchExophaseRarityToAchievements;
 module.exports.fetchExophaseRarity = fetchExophaseRarity;
+module.exports.searchExophaseTitles = searchExophaseTitles;
+module.exports.fetchExophaseRarityBySlug = fetchExophaseRarityBySlug;

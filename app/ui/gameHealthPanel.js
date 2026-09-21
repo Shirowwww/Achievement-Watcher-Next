@@ -15,7 +15,7 @@ const gameHealth = require(path.join(appPath, 'util/gameHealth.js'));
 const gameHealthRepair = require(path.join(appPath, 'util/gameHealthRepair.js'));
 // Libraries whose unlocks come from the platform itself. Their watchdog watcher polls the account,
 // so none of the process-tracking or Steam-emulator reasoning applies to them.
-const OFFICIAL_PLATFORM_SOURCES = /^(?:steam\s*\(|gog(?:\s|$)|gog galaxy|epic(?:-official)?$|ea$|ubisoft connect|xbox)/i;
+const OFFICIAL_PLATFORM_SOURCES = /^(?:steam\s*\(|gog(?:\s|$)|gog galaxy|epic(?:-official)?$|ea$|ubisoft connect|xbox(?! 360 recomp$))/i;
 function isOfficialPlatformSource(source) {
   return OFFICIAL_PLATFORM_SOURCES.test(String(source || '').trim());
 }
@@ -314,7 +314,8 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
     // Console emulators (RPCS3/ShadPS4/Xenia) and the official platform libraries are followed by
     // their own watchers, not by the process monitor, so a missing gameIndex entry means nothing
     // for them and must not be reported as a fault.
-    processTracking: !isConsole && !isOfficialPlatformSource(source),
+    // A recompiled Xbox 360 game is a native PC program, and its play time comes from the process.
+    processTracking: (!isConsole || source === 'Xbox 360 Recomp') && !isOfficialPlatformSource(source),
     tracking: { indexed: !!indexEntry, binary: (indexEntry && indexEntry.binary) || '' },
     notifications: {
       transport: (app.config && app.config.notification_transport && app.config.notification_transport.mode) || 'auto',

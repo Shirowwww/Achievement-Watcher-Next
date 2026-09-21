@@ -61,9 +61,10 @@ function sourceKey(value) {
 }
 
 /*
-  Which niche source rows Simple hides: only ones both switched OFF and absent from the library,
-  so the mode never strands anyone (an OFF-but-used source keeps its only control visible; a used
-  source keeps its switch in any mode). Advanced hides nothing.
+  Which niche source rows Simple hides: only ones left ON and absent from the library - still
+  scanned, just not taking up a row. A switched-OFF source keeps its row, since that switch is the
+  only way to bring those games back, and a used source keeps its switch in any mode. Advanced
+  hides nothing.
 */
 function hiddenOptionalSources({ mode, enabled = {}, librarySources = [] } = {}) {
   if (!isSimple(mode)) return [];
