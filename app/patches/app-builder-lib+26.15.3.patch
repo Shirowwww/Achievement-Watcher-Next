@@ -1,3 +1,19 @@
+diff --git a/node_modules/app-builder-lib/templates/nsis/assistedInstaller.nsh b/node_modules/app-builder-lib/templates/nsis/assistedInstaller.nsh
+index b7f4752..c55feaf 100644
+--- a/node_modules/app-builder-lib/templates/nsis/assistedInstaller.nsh
++++ b/node_modules/app-builder-lib/templates/nsis/assistedInstaller.nsh
+@@ -23,6 +23,11 @@
+     !include StrContains.nsh
+ 
+     !insertmacro skipPageIfUpdated
++    # Achievement Watcher: upstream has no hook on the directory page. build/installer.nsh uses this
++    # one to refuse a folder the installer cannot write to while the user is still on the page.
++    !ifmacrodef customDirectoryPageLeave
++      !insertmacro customDirectoryPageLeave
++    !endif
+     !insertmacro MUI_PAGE_DIRECTORY
+ 
+     # pageDirectory leave doesn't work (it seems because $INSTDIR is set after custom leave function)
 diff --git a/node_modules/app-builder-lib/templates/nsis/installSection.nsh b/node_modules/app-builder-lib/templates/nsis/installSection.nsh
 index 053772f..db30611 100644
 --- a/node_modules/app-builder-lib/templates/nsis/installSection.nsh
@@ -15,3 +31,18 @@ index 053772f..db30611 100644
  ${endif}
  
  StrCpy $appExe "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
+diff --git a/node_modules/app-builder-lib/templates/nsis/uninstaller.nsh b/node_modules/app-builder-lib/templates/nsis/uninstaller.nsh
+index c3f4f11..762ba2c 100644
+--- a/node_modules/app-builder-lib/templates/nsis/uninstaller.nsh
++++ b/node_modules/app-builder-lib/templates/nsis/uninstaller.nsh
+@@ -234,7 +234,9 @@ Section "un.${UNINSTALL_SECTION_NAME}"
+     ${if} $installMode == "all"
+       SetShellVarContext current
+     ${endif}
+-    RMDir /r "$APPDATA\${APP_FILENAME}"
++    # Achievement Watcher: upstream removes "$APPDATA\${APP_FILENAME}" here. APP_FILENAME is
++    # "Achievement Watcher", the folder of the unrelated legacy 1.6.8 app, which may still be
++    # installed. build/installer.nsh (customUnInstall) removes this product's own folders.
+     !ifdef APP_PRODUCT_FILENAME
+       RMDir /r "$APPDATA\${APP_PRODUCT_FILENAME}"
+     !endif

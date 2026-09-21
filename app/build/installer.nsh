@@ -3,43 +3,31 @@
 ; compile-time definitions are expanded after the MUI language files have been
 ; inserted. Keep user-facing strings in LangString entries below so the
 ; installer follows the language chosen at runtime.
+;
+; docs/INSTALLER_AND_UPDATES.md describes what the installer, the uninstaller
+; and the updater each do, and why.
+
+; Draw at the screen's real scale. Without it Windows renders every page at 96 DPI and stretches the
+; bitmap, so at 125-150% scaling, the usual setting on a gaming PC, all text came out blurry.
+ManifestDPIAware true
 
 Var APPDATA_MYAPP
-Var PS_CLOSE_AW
-Var CMD_RESULT
 Var OS_UI_LANG
 Var unDeleteDataCheckbox
 Var unDeleteAppData
 
 !macro customHeader
   ; electron-builder's template hides the progress details (ShowInstDetails nevershow). Show them
-  ; by default so users can follow exactly what the installer is doing — extraction, shortcuts,
-  ; the Watchdog stop step and the AppData folder creation. The user can still collapse the pane.
+  ; by default so users can follow exactly what the installer is doing - extraction, shortcuts
+  ; and the AppData folder creation. The user can still collapse the pane.
   ShowInstDetails show
   ShowUninstDetails show
 
   ; ---------------------------------------------------------------------------
   ; Localized strings used by the custom steps below. The list mirrors the
-  ; languages bundled in the app (app/locale/lang/*.json).
+  ; installerLanguages of electron-builder.yml, which mirror the languages
+  ; bundled in the app (app/locale/lang/*.json; latam shares Spanish).
   ; ---------------------------------------------------------------------------
-  LangString AW_CLOSE_WATCHDOG ${LANG_ENGLISH} "Closing the background monitor (Watchdog)…"
-  LangString AW_CLOSE_WATCHDOG ${LANG_FRENCH} "Fermeture du moniteur en arrière-plan (Watchdog)…"
-  LangString AW_CLOSE_WATCHDOG ${LANG_GERMAN} "Der Hintergrundmonitor (Watchdog) wird geschlossen…"
-  LangString AW_CLOSE_WATCHDOG ${LANG_SPANISHINTERNATIONAL} "Cerrando el monitor en segundo plano (Watchdog)…"
-  LangString AW_CLOSE_WATCHDOG ${LANG_ITALIAN} "Chiusura del monitor in background (Watchdog)…"
-  LangString AW_CLOSE_WATCHDOG ${LANG_PORTUGUESE} "A fechar o monitor em segundo plano (Watchdog)…"
-  LangString AW_CLOSE_WATCHDOG ${LANG_PORTUGUESEBR} "Fechando o monitor em segundo plano (Watchdog)…"
-  LangString AW_CLOSE_WATCHDOG ${LANG_CZECH} "Zavírání monitoru na pozadí (Watchdog)…"
-  LangString AW_CLOSE_WATCHDOG ${LANG_SLOVAK} "Zatváram monitor na pozadí (Watchdog)…"
-  LangString AW_CLOSE_WATCHDOG ${LANG_HUNGARIAN} "A háttérmonitor (Watchdog) bezárása…"
-  LangString AW_CLOSE_WATCHDOG ${LANG_POLISH} "Zamykanie monitora w tle (Watchdog)…"
-  LangString AW_CLOSE_WATCHDOG ${LANG_RUSSIAN} "Закрытие фонового монитора (Watchdog)…"
-  LangString AW_CLOSE_WATCHDOG ${LANG_UKRAINIAN} "Закриття фонового монітора (Watchdog)…"
-  LangString AW_CLOSE_WATCHDOG ${LANG_TURKISH} "Arka plan monitörü (Watchdog) kapatılıyor…"
-  LangString AW_CLOSE_WATCHDOG ${LANG_THAI} "กำลังปิดมอนิเตอร์พื้นหลัง (Watchdog)…"
-  LangString AW_CLOSE_WATCHDOG ${LANG_JAPANESE} "バックグラウンドモニター（Watchdog）を閉じています…"
-  LangString AW_CLOSE_WATCHDOG ${LANG_SIMPCHINESE} "正在关闭后台监视器（Watchdog）…"
-
   LangString AW_KEEP_DATA ${LANG_ENGLISH} "Keeping your settings and cache in:"
   LangString AW_KEEP_DATA ${LANG_FRENCH} "Conservation de vos paramètres et de votre cache dans :"
   LangString AW_KEEP_DATA ${LANG_GERMAN} "Ihre Einstellungen und Ihr Cache werden gespeichert in:"
@@ -57,6 +45,100 @@ Var unDeleteAppData
   LangString AW_KEEP_DATA ${LANG_THAI} "จะเก็บการตั้งค่าและแคชไว้ที่:"
   LangString AW_KEEP_DATA ${LANG_JAPANESE} "設定とキャッシュは次の場所に保持されます:"
   LangString AW_KEEP_DATA ${LANG_SIMPCHINESE} "设置和缓存将保留在："
+  LangString AW_KEEP_DATA ${LANG_DANISH} "Dine indstillinger og din cache bevares i:"
+  LangString AW_KEEP_DATA ${LANG_DUTCH} "Je instellingen en cache worden bewaard in:"
+  LangString AW_KEEP_DATA ${LANG_FINNISH} "Asetuksesi ja välimuistisi säilytetään kansiossa:"
+  LangString AW_KEEP_DATA ${LANG_GREEK} "Οι ρυθμίσεις και η προσωρινή μνήμη σας διατηρούνται στο:"
+  LangString AW_KEEP_DATA ${LANG_INDONESIAN} "Pengaturan dan cache Anda disimpan di:"
+  LangString AW_KEEP_DATA ${LANG_KOREAN} "설정과 캐시는 다음 위치에 보관됩니다:"
+  LangString AW_KEEP_DATA ${LANG_NORWEGIAN} "Innstillingene og hurtigbufferen din beholdes i:"
+  LangString AW_KEEP_DATA ${LANG_SWEDISH} "Dina inställningar och din cache behålls i:"
+  LangString AW_KEEP_DATA ${LANG_TRADCHINESE} "設定和快取將保留在："
+  LangString AW_KEEP_DATA ${LANG_VIETNAMESE} "Cài đặt và bộ nhớ đệm của bạn được giữ tại:"
+
+  LangString AW_DIR_NOT_WRITABLE ${LANG_ENGLISH} "AW Next cannot be installed in this folder without administrator rights. Choose a folder in your user profile, such as the one suggested by default."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_FRENCH} "AW Next ne peut pas être installé dans ce dossier sans droits d'administrateur. Choisissez un dossier de votre profil utilisateur, comme celui proposé par défaut."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_GERMAN} "AW Next kann ohne Administratorrechte nicht in diesem Ordner installiert werden. Wählen Sie einen Ordner in Ihrem Benutzerprofil, zum Beispiel den vorgeschlagenen Standardordner."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_SPANISHINTERNATIONAL} "AW Next no se puede instalar en esta carpeta sin permisos de administrador. Elige una carpeta de tu perfil de usuario, como la que se propone por defecto."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_ITALIAN} "AW Next non può essere installato in questa cartella senza diritti di amministratore. Scegli una cartella del tuo profilo utente, ad esempio quella proposta per impostazione predefinita."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_PORTUGUESE} "O AW Next não pode ser instalado nesta pasta sem direitos de administrador. Escolha uma pasta do seu perfil de utilizador, como a sugerida por predefinição."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_PORTUGUESEBR} "O AW Next não pode ser instalado nesta pasta sem direitos de administrador. Escolha uma pasta do seu perfil de usuário, como a sugerida por padrão."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_CZECH} "AW Next nelze do této složky nainstalovat bez oprávnění správce. Zvolte složku ve svém uživatelském profilu, například výchozí navrženou složku."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_SLOVAK} "AW Next nemožno do tohto priečinka nainštalovať bez oprávnení správcu. Vyberte priečinok vo svojom používateľskom profile, napríklad predvolený navrhovaný priečinok."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_HUNGARIAN} "Az AW Next nem telepíthető ebbe a mappába rendszergazdai jogok nélkül. Válasszon egy mappát a felhasználói profiljában, például az alapértelmezésként felajánlottat."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_POLISH} "Nie można zainstalować AW Next w tym folderze bez uprawnień administratora. Wybierz folder w swoim profilu użytkownika, na przykład domyślnie proponowany."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_RUSSIAN} "AW Next нельзя установить в эту папку без прав администратора. Выберите папку в своём профиле пользователя, например предложенную по умолчанию."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_UKRAINIAN} "AW Next не можна встановити в цю папку без прав адміністратора. Виберіть папку у своєму профілі користувача, наприклад запропоновану за замовчуванням."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_TURKISH} "AW Next yönetici hakları olmadan bu klasöre yüklenemez. Kullanıcı profilinizde bir klasör seçin, örneğin varsayılan olarak önerileni."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_THAI} "ไม่สามารถติดตั้ง AW Next ในโฟลเดอร์นี้ได้หากไม่มีสิทธิ์ผู้ดูแลระบบ โปรดเลือกโฟลเดอร์ในโปรไฟล์ผู้ใช้ของคุณ เช่น โฟลเดอร์ที่แนะนำไว้เป็นค่าเริ่มต้น"
+  LangString AW_DIR_NOT_WRITABLE ${LANG_JAPANESE} "管理者権限がないため、このフォルダーには AW Next をインストールできません。既定で提案されるフォルダーなど、ユーザー プロファイル内のフォルダーを選択してください。"
+  LangString AW_DIR_NOT_WRITABLE ${LANG_SIMPCHINESE} "没有管理员权限，无法将 AW Next 安装到此文件夹。请选择您用户配置文件中的文件夹，例如默认建议的文件夹。"
+  LangString AW_DIR_NOT_WRITABLE ${LANG_DANISH} "AW Next kan ikke installeres i denne mappe uden administratorrettigheder. Vælg en mappe i din brugerprofil, f.eks. den, der foreslås som standard."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_DUTCH} "AW Next kan zonder beheerdersrechten niet in deze map worden geïnstalleerd. Kies een map in je gebruikersprofiel, zoals de standaard voorgestelde map."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_FINNISH} "AW Nextiä ei voi asentaa tähän kansioon ilman järjestelmänvalvojan oikeuksia. Valitse kansio käyttäjäprofiilistasi, esimerkiksi oletuksena ehdotettu kansio."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_GREEK} "Το AW Next δεν μπορεί να εγκατασταθεί σε αυτόν τον φάκελο χωρίς δικαιώματα διαχειριστή. Επιλέξτε έναν φάκελο στο προφίλ χρήστη σας, όπως αυτόν που προτείνεται από προεπιλογή."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_INDONESIAN} "AW Next tidak dapat dipasang di folder ini tanpa hak administrator. Pilih folder di profil pengguna Anda, misalnya folder yang disarankan secara default."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_KOREAN} "관리자 권한 없이는 이 폴더에 AW Next를 설치할 수 없습니다. 기본으로 제안된 폴더처럼 사용자 프로필 안의 폴더를 선택하세요."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_NORWEGIAN} "AW Next kan ikke installeres i denne mappen uten administratorrettigheter. Velg en mappe i brukerprofilen din, for eksempel den som foreslås som standard."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_SWEDISH} "AW Next kan inte installeras i den här mappen utan administratörsbehörighet. Välj en mapp i din användarprofil, till exempel den som föreslås som standard."
+  LangString AW_DIR_NOT_WRITABLE ${LANG_TRADCHINESE} "沒有系統管理員權限，無法將 AW Next 安裝到此資料夾。請選擇您使用者設定檔中的資料夾，例如預設建議的資料夾。"
+  LangString AW_DIR_NOT_WRITABLE ${LANG_VIETNAMESE} "Không thể cài đặt AW Next vào thư mục này nếu không có quyền quản trị viên. Hãy chọn một thư mục trong hồ sơ người dùng của bạn, chẳng hạn thư mục được đề xuất mặc định."
+
+  LangString AW_UNINSTALL_TITLE ${LANG_ENGLISH} "Uninstall AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_FRENCH} "Désinstaller AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_GERMAN} "AW Next deinstallieren"
+  LangString AW_UNINSTALL_TITLE ${LANG_SPANISHINTERNATIONAL} "Desinstalar AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_ITALIAN} "Disinstalla AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_PORTUGUESE} "Desinstalar o AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_PORTUGUESEBR} "Desinstalar o AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_CZECH} "Odinstalovat AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_SLOVAK} "Odinštalovať AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_HUNGARIAN} "Az AW Next eltávolítása"
+  LangString AW_UNINSTALL_TITLE ${LANG_POLISH} "Odinstaluj AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_RUSSIAN} "Удаление AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_UKRAINIAN} "Видалення AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_TURKISH} "AW Next'i kaldır"
+  LangString AW_UNINSTALL_TITLE ${LANG_THAI} "ถอนการติดตั้ง AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_JAPANESE} "AW Next のアンインストール"
+  LangString AW_UNINSTALL_TITLE ${LANG_SIMPCHINESE} "卸载 AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_DANISH} "Afinstaller AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_DUTCH} "AW Next verwijderen"
+  LangString AW_UNINSTALL_TITLE ${LANG_FINNISH} "Poista AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_GREEK} "Απεγκατάσταση του AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_INDONESIAN} "Copot AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_KOREAN} "AW Next 제거"
+  LangString AW_UNINSTALL_TITLE ${LANG_NORWEGIAN} "Avinstaller AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_SWEDISH} "Avinstallera AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_TRADCHINESE} "解除安裝 AW Next"
+  LangString AW_UNINSTALL_TITLE ${LANG_VIETNAMESE} "Gỡ cài đặt AW Next"
+
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_ENGLISH} "Choose what happens to your settings and cached data."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_FRENCH} "Choisissez ce que deviennent vos paramètres et votre cache."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_GERMAN} "Legen Sie fest, was mit Ihren Einstellungen und dem Cache geschieht."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_SPANISHINTERNATIONAL} "Elige qué pasa con tus ajustes y la caché."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_ITALIAN} "Scegli cosa fare con le impostazioni e la cache."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_PORTUGUESE} "Escolha o que fazer com as suas definições e a cache."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_PORTUGUESEBR} "Escolha o que fazer com suas configurações e o cache."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_CZECH} "Zvolte, co se stane s nastavením a mezipamětí."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_SLOVAK} "Vyberte, čo sa stane s nastaveniami a vyrovnávacou pamäťou."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_HUNGARIAN} "Válassza ki, mi történjen a beállításokkal és a gyorsítótárral."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_POLISH} "Wybierz, co zrobić z ustawieniami i pamięcią podręczną."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_RUSSIAN} "Выберите, что сделать с настройками и кэшем."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_UKRAINIAN} "Виберіть, що зробити з налаштуваннями та кешем."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_TURKISH} "Ayarlarınıza ve önbelleğe ne olacağını seçin."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_THAI} "เลือกว่าจะทำอย่างไรกับการตั้งค่าและแคชของคุณ"
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_JAPANESE} "設定とキャッシュの扱いを選択してください。"
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_SIMPCHINESE} "选择如何处理您的设置和缓存。"
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_DANISH} "Vælg, hvad der skal ske med dine indstillinger og din cache."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_DUTCH} "Kies wat er met je instellingen en cache gebeurt."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_FINNISH} "Valitse, mitä asetuksillesi ja välimuistille tehdään."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_GREEK} "Επιλέξτε τι θα γίνει με τις ρυθμίσεις και την προσωρινή μνήμη σας."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_INDONESIAN} "Pilih apa yang terjadi pada pengaturan dan cache Anda."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_KOREAN} "설정과 캐시를 어떻게 처리할지 선택하세요."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_NORWEGIAN} "Velg hva som skal skje med innstillingene og hurtigbufferen din."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_SWEDISH} "Välj vad som ska hända med dina inställningar och din cache."
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_TRADCHINESE} "選擇如何處理您的設定和快取。"
+  LangString AW_UNINSTALL_SUBTITLE ${LANG_VIETNAMESE} "Chọn cách xử lý cài đặt và bộ nhớ đệm của bạn."
 
   LangString AW_UNINSTALL_INTRO ${LANG_ENGLISH} "AW Next will be removed from your computer. Settings and cached data are kept by default."
   LangString AW_UNINSTALL_INTRO ${LANG_FRENCH} "AW Next va être supprimé de votre ordinateur. Les paramètres et le cache sont conservés par défaut."
@@ -75,6 +157,16 @@ Var unDeleteAppData
   LangString AW_UNINSTALL_INTRO ${LANG_THAI} "AW Next จะถูกลบออกจากคอมพิวเตอร์ของคุณ การตั้งค่าและแคชจะถูกเก็บไว้ตามค่าเริ่มต้น"
   LangString AW_UNINSTALL_INTRO ${LANG_JAPANESE} "AW Next はこのコンピューターから削除されます。設定とキャッシュは既定で保持されます。"
   LangString AW_UNINSTALL_INTRO ${LANG_SIMPCHINESE} "AW Next 将从您的计算机中移除。默认保留设置和缓存。"
+  LangString AW_UNINSTALL_INTRO ${LANG_DANISH} "AW Next fjernes fra din computer. Indstillinger og cache bevares som standard."
+  LangString AW_UNINSTALL_INTRO ${LANG_DUTCH} "AW Next wordt van je computer verwijderd. Instellingen en cache blijven standaard behouden."
+  LangString AW_UNINSTALL_INTRO ${LANG_FINNISH} "AW Next poistetaan tietokoneeltasi. Asetukset ja välimuisti säilytetään oletuksena."
+  LangString AW_UNINSTALL_INTRO ${LANG_GREEK} "Το AW Next θα αφαιρεθεί από τον υπολογιστή σας. Οι ρυθμίσεις και η προσωρινή μνήμη διατηρούνται από προεπιλογή."
+  LangString AW_UNINSTALL_INTRO ${LANG_INDONESIAN} "AW Next akan dihapus dari komputer Anda. Pengaturan dan cache disimpan secara default."
+  LangString AW_UNINSTALL_INTRO ${LANG_KOREAN} "AW Next가 컴퓨터에서 제거됩니다. 설정과 캐시는 기본적으로 유지됩니다."
+  LangString AW_UNINSTALL_INTRO ${LANG_NORWEGIAN} "AW Next fjernes fra datamaskinen din. Innstillinger og hurtigbuffer beholdes som standard."
+  LangString AW_UNINSTALL_INTRO ${LANG_SWEDISH} "AW Next tas bort från datorn. Inställningar och cache behålls som standard."
+  LangString AW_UNINSTALL_INTRO ${LANG_TRADCHINESE} "AW Next 將從您的電腦中移除。預設會保留設定和快取。"
+  LangString AW_UNINSTALL_INTRO ${LANG_VIETNAMESE} "AW Next sẽ được gỡ khỏi máy tính của bạn. Cài đặt và bộ nhớ đệm được giữ lại theo mặc định."
 
   LangString AW_UNINSTALL_DELETE_DATA ${LANG_ENGLISH} "Also delete settings, cache and saved data (%APPDATA%\Achievement Watcher Next)"
   LangString AW_UNINSTALL_DELETE_DATA ${LANG_FRENCH} "Supprimer aussi les paramètres, le cache et les données enregistrées (%APPDATA%\Achievement Watcher Next)"
@@ -93,6 +185,45 @@ Var unDeleteAppData
   LangString AW_UNINSTALL_DELETE_DATA ${LANG_THAI} "ลบการตั้งค่า แคช และข้อมูลที่บันทึกไว้ด้วย (%APPDATA%\Achievement Watcher Next)"
   LangString AW_UNINSTALL_DELETE_DATA ${LANG_JAPANESE} "設定、キャッシュ、保存データも削除する (%APPDATA%\Achievement Watcher Next)"
   LangString AW_UNINSTALL_DELETE_DATA ${LANG_SIMPCHINESE} "同时删除设置、缓存和已保存的数据 (%APPDATA%\Achievement Watcher Next)"
+  LangString AW_UNINSTALL_DELETE_DATA ${LANG_DANISH} "Slet også indstillinger, cache og gemte data (%APPDATA%\Achievement Watcher Next)"
+  LangString AW_UNINSTALL_DELETE_DATA ${LANG_DUTCH} "Ook instellingen, cache en opgeslagen gegevens verwijderen (%APPDATA%\Achievement Watcher Next)"
+  LangString AW_UNINSTALL_DELETE_DATA ${LANG_FINNISH} "Poista myös asetukset, välimuisti ja tallennetut tiedot (%APPDATA%\Achievement Watcher Next)"
+  LangString AW_UNINSTALL_DELETE_DATA ${LANG_GREEK} "Διαγραφή και των ρυθμίσεων, της προσωρινής μνήμης και των αποθηκευμένων δεδομένων (%APPDATA%\Achievement Watcher Next)"
+  LangString AW_UNINSTALL_DELETE_DATA ${LANG_INDONESIAN} "Hapus juga pengaturan, cache, dan data tersimpan (%APPDATA%\Achievement Watcher Next)"
+  LangString AW_UNINSTALL_DELETE_DATA ${LANG_KOREAN} "설정, 캐시 및 저장된 데이터도 삭제 (%APPDATA%\Achievement Watcher Next)"
+  LangString AW_UNINSTALL_DELETE_DATA ${LANG_NORWEGIAN} "Slett også innstillinger, hurtigbuffer og lagrede data (%APPDATA%\Achievement Watcher Next)"
+  LangString AW_UNINSTALL_DELETE_DATA ${LANG_SWEDISH} "Ta även bort inställningar, cache och sparade data (%APPDATA%\Achievement Watcher Next)"
+  LangString AW_UNINSTALL_DELETE_DATA ${LANG_TRADCHINESE} "同時刪除設定、快取和已儲存的資料 (%APPDATA%\Achievement Watcher Next)"
+  LangString AW_UNINSTALL_DELETE_DATA ${LANG_VIETNAMESE} "Xóa cả cài đặt, bộ nhớ đệm và dữ liệu đã lưu (%APPDATA%\Achievement Watcher Next)"
+
+  ; $R5 is filled with the size in MB right before the label is created.
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_ENGLISH} "Size on disk: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_FRENCH} "Taille sur le disque : $R5 Mo"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_GERMAN} "Größe auf dem Datenträger: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_SPANISHINTERNATIONAL} "Tamaño en disco: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_ITALIAN} "Dimensioni su disco: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_PORTUGUESE} "Tamanho no disco: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_PORTUGUESEBR} "Tamanho em disco: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_CZECH} "Velikost na disku: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_SLOVAK} "Veľkosť na disku: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_HUNGARIAN} "Méret a lemezen: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_POLISH} "Rozmiar na dysku: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_RUSSIAN} "Размер на диске: $R5 МБ"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_UKRAINIAN} "Розмір на диску: $R5 МБ"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_TURKISH} "Diskteki boyut: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_THAI} "ขนาดบนดิสก์: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_JAPANESE} "ディスク上のサイズ: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_SIMPCHINESE} "占用磁盘空间：$R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_DANISH} "Størrelse på disken: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_DUTCH} "Grootte op schijf: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_FINNISH} "Koko levyllä: $R5 Mt"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_GREEK} "Μέγεθος στον δίσκο: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_INDONESIAN} "Ukuran di disk: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_KOREAN} "디스크 사용량: $R5MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_NORWEGIAN} "Størrelse på disken: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_SWEDISH} "Storlek på disk: $R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_TRADCHINESE} "佔用磁碟空間：$R5 MB"
+  LangString AW_UNINSTALL_DATA_SIZE ${LANG_VIETNAMESE} "Dung lượng trên đĩa: $R5 MB"
 
   LangString AW_UNINSTALL_DELETING ${LANG_ENGLISH} "Deleting settings and cached data…"
   LangString AW_UNINSTALL_DELETING ${LANG_FRENCH} "Suppression des paramètres et du cache…"
@@ -111,6 +242,124 @@ Var unDeleteAppData
   LangString AW_UNINSTALL_DELETING ${LANG_THAI} "กำลังลบการตั้งค่าและแคช…"
   LangString AW_UNINSTALL_DELETING ${LANG_JAPANESE} "設定とキャッシュを削除しています…"
   LangString AW_UNINSTALL_DELETING ${LANG_SIMPCHINESE} "正在删除设置和缓存…"
+  LangString AW_UNINSTALL_DELETING ${LANG_DANISH} "Sletter indstillinger og cache…"
+  LangString AW_UNINSTALL_DELETING ${LANG_DUTCH} "Instellingen en cache worden verwijderd…"
+  LangString AW_UNINSTALL_DELETING ${LANG_FINNISH} "Poistetaan asetuksia ja välimuistia…"
+  LangString AW_UNINSTALL_DELETING ${LANG_GREEK} "Διαγραφή ρυθμίσεων και προσωρινής μνήμης…"
+  LangString AW_UNINSTALL_DELETING ${LANG_INDONESIAN} "Menghapus pengaturan dan cache…"
+  LangString AW_UNINSTALL_DELETING ${LANG_KOREAN} "설정과 캐시를 삭제하는 중…"
+  LangString AW_UNINSTALL_DELETING ${LANG_NORWEGIAN} "Sletter innstillinger og hurtigbuffer…"
+  LangString AW_UNINSTALL_DELETING ${LANG_SWEDISH} "Tar bort inställningar och cache…"
+  LangString AW_UNINSTALL_DELETING ${LANG_TRADCHINESE} "正在刪除設定和快取…"
+  LangString AW_UNINSTALL_DELETING ${LANG_VIETNAMESE} "Đang xóa cài đặt và bộ nhớ đệm…"
+!macroend
+
+; ---------------------------------------------------------------------------
+; Language: follow the Windows display language instead of always defaulting to
+; English (no language dialog is shown).
+;
+; NSIS on its own only picks a language whose LANGID matches exactly, so every
+; regional variant it has no file for - fr-CA, fr-BE, de-AT, de-CH, it-CH, all
+; the es-* of Latin America, zh-HK... - used to fall back to English. Matching
+; the PRIMARY language (LANGID & 0x3FF) covers all of them; only Portuguese and
+; Chinese need the sublanguage, because each has two installer languages.
+; Used by both the installer (customInit) and the uninstaller (customUnInit).
+; ---------------------------------------------------------------------------
+!macro AW_PICK_LANGUAGE
+  System::Call 'kernel32::GetUserDefaultUILanguage() i .r0'
+  StrCpy $OS_UI_LANG $0
+  IntOp $1 $0 & 0x3FF
+
+  ; ${Switch} compares strings, so the primary language IDs are written in decimal.
+  ${Switch} $1
+    ${Case} 9
+      StrCpy $LANGUAGE ${LANG_ENGLISH}
+      ${Break}
+    ${Case} 12
+      StrCpy $LANGUAGE ${LANG_FRENCH}
+      ${Break}
+    ${Case} 7
+      StrCpy $LANGUAGE ${LANG_GERMAN}
+      ${Break}
+    ${Case} 10
+      StrCpy $LANGUAGE ${LANG_SPANISHINTERNATIONAL}
+      ${Break}
+    ${Case} 16
+      StrCpy $LANGUAGE ${LANG_ITALIAN}
+      ${Break}
+    ${Case} 22
+      ${If} $OS_UI_LANG == 1046 ; pt-BR
+        StrCpy $LANGUAGE ${LANG_PORTUGUESEBR}
+      ${Else}
+        StrCpy $LANGUAGE ${LANG_PORTUGUESE}
+      ${EndIf}
+      ${Break}
+    ${Case} 5
+      StrCpy $LANGUAGE ${LANG_CZECH}
+      ${Break}
+    ${Case} 27
+      StrCpy $LANGUAGE ${LANG_SLOVAK}
+      ${Break}
+    ${Case} 14
+      StrCpy $LANGUAGE ${LANG_HUNGARIAN}
+      ${Break}
+    ${Case} 21
+      StrCpy $LANGUAGE ${LANG_POLISH}
+      ${Break}
+    ${Case} 25
+      StrCpy $LANGUAGE ${LANG_RUSSIAN}
+      ${Break}
+    ${Case} 34
+      StrCpy $LANGUAGE ${LANG_UKRAINIAN}
+      ${Break}
+    ${Case} 31
+      StrCpy $LANGUAGE ${LANG_TURKISH}
+      ${Break}
+    ${Case} 30
+      StrCpy $LANGUAGE ${LANG_THAI}
+      ${Break}
+    ${Case} 17
+      StrCpy $LANGUAGE ${LANG_JAPANESE}
+      ${Break}
+    ${Case} 4
+      ; zh-TW (1028), zh-HK (3076) and zh-MO (5124) read Traditional Chinese.
+      ${If} $OS_UI_LANG == 1028
+      ${OrIf} $OS_UI_LANG == 3076
+      ${OrIf} $OS_UI_LANG == 5124
+        StrCpy $LANGUAGE ${LANG_TRADCHINESE}
+      ${Else}
+        StrCpy $LANGUAGE ${LANG_SIMPCHINESE}
+      ${EndIf}
+      ${Break}
+    ${Case} 6
+      StrCpy $LANGUAGE ${LANG_DANISH}
+      ${Break}
+    ${Case} 19
+      StrCpy $LANGUAGE ${LANG_DUTCH}
+      ${Break}
+    ${Case} 11
+      StrCpy $LANGUAGE ${LANG_FINNISH}
+      ${Break}
+    ${Case} 8
+      StrCpy $LANGUAGE ${LANG_GREEK}
+      ${Break}
+    ${Case} 33
+      StrCpy $LANGUAGE ${LANG_INDONESIAN}
+      ${Break}
+    ${Case} 18
+      StrCpy $LANGUAGE ${LANG_KOREAN}
+      ${Break}
+    ${Case} 20
+      ; Bokmal and Nynorsk both read the Norwegian installer.
+      StrCpy $LANGUAGE ${LANG_NORWEGIAN}
+      ${Break}
+    ${Case} 29
+      StrCpy $LANGUAGE ${LANG_SWEDISH}
+      ${Break}
+    ${Case} 42
+      StrCpy $LANGUAGE ${LANG_VIETNAMESE}
+      ${Break}
+  ${EndSwitch}
 !macroend
 
 ; ---------------------------------------------------------------------------
@@ -173,24 +422,88 @@ Var unDeleteAppData
   !insertmacro MUI_PAGE_FINISH
 !macroend
 
+; ---------------------------------------------------------------------------
+; Directory page: refuse a folder this installer cannot write to.
+;
+; The installer runs per user and unelevated unless "all users" was picked, so a folder under
+; Program Files (or any protected path) used to be accepted here and then failed in the middle of
+; the extraction with NSIS's raw "Error opening file for writing" and an Abort/Retry/Ignore box.
+; Testing the folder when the user leaves the page keeps them on it with a readable reason instead.
+; An elevated all-users install can write to Program Files, so it passes the same test untouched.
+;
+; electron-builder has no hook on this page; the patch in patches/app-builder-lib+*.patch inserts
+; this macro right before its MUI_PAGE_DIRECTORY.
+; ---------------------------------------------------------------------------
+!macro customDirectoryPageLeave
+  Function AwDirectoryLeave
+    StrCpy $R9 "0"
+    IfFileExists "$INSTDIR\*.*" +2
+      StrCpy $R9 "1" ; the folder does not exist yet: remove it again after the test
+    ClearErrors
+    CreateDirectory "$INSTDIR"
+    FileOpen $R8 "$INSTDIR\.aw-write-test" w
+    ${If} ${Errors}
+      MessageBox MB_OK|MB_ICONEXCLAMATION "$(AW_DIR_NOT_WRITABLE)$\r$\n$\r$\n$INSTDIR"
+      Abort
+    ${EndIf}
+    FileClose $R8
+    Delete "$INSTDIR\.aw-write-test"
+    ${If} $R9 == "1"
+      RMDir "$INSTDIR"
+    ${EndIf}
+  FunctionEnd
+  !define MUI_PAGE_CUSTOMFUNCTION_LEAVE AwDirectoryLeave
+!macroend
+
 !macro customUnWelcomePage
   ; Ask once, before anything is removed: delete the AppData folders too?
-  ; Default stays off — settings, cache and saves survive an uninstall unless
+  ; Default stays off - settings, cache and saves survive an uninstall unless
   ; the user explicitly opts in (the legacy 1.6.8 folder is never touched).
   PageEx un.custom
     PageCallbacks un.DeleteDataPageCreate un.DeleteDataPageLeave
   PageExEnd
 
   Function un.DeleteDataPageCreate
+    ; A custom page leaves the MUI header blank unless it sets one itself.
+    !insertmacro MUI_HEADER_TEXT "$(AW_UNINSTALL_TITLE)" "$(AW_UNINSTALL_SUBTITLE)"
     nsDialogs::Create 1018
     Pop $0
     ${If} $0 == error
       Abort
     ${EndIf}
+
     ${NSD_CreateLabel} 0 0 100% 24u "$(AW_UNINSTALL_INTRO)"
     Pop $0
-    ${NSD_CreateCheckbox} 0 28u 100% 20u "$(AW_UNINSTALL_DELETE_DATA)"
+
+    ; The checkbox names the full %APPDATA% path, which is wider than the page in most languages:
+    ; a multi-line checkbox wraps it instead of cutting it off.
+    nsDialogs::CreateControl BUTTON ${WS_VISIBLE}|${WS_CHILD}|${WS_TABSTOP}|${BS_AUTOCHECKBOX}|${BS_MULTILINE}|${BS_TOP} 0 0 32u 100% 22u "$(AW_UNINSTALL_DELETE_DATA)"
     Pop $unDeleteDataCheckbox
+
+    ; What opting in actually frees. Both folders are removed together (see customUnInstall).
+    ${If} $installMode == "all"
+      SetShellVarContext current
+    ${EndIf}
+    StrCpy $R5 0
+    ClearErrors
+    ${GetSize} "$APPDATA\Achievement Watcher Next" "/S=0M" $R6 $R7 $R8
+    ${IfNot} ${Errors}
+      IntOp $R5 $R5 + $R6
+    ${EndIf}
+    ClearErrors
+    ${GetSize} "$APPDATA\Achievement Watcher 3.0" "/S=0M" $R6 $R7 $R8
+    ${IfNot} ${Errors}
+      IntOp $R5 $R5 + $R6
+    ${EndIf}
+    ${If} $installMode == "all"
+      SetShellVarContext all
+    ${EndIf}
+    ${If} $R5 > 0
+      ${NSD_CreateLabel} 12u 56u 100% 12u "$(AW_UNINSTALL_DATA_SIZE)"
+      Pop $0
+      SetCtlColors $0 808080 transparent
+    ${EndIf}
+
     nsDialogs::Show
   FunctionEnd
 
@@ -201,97 +514,15 @@ Var unDeleteAppData
 !macroend
 
 !macro customInit
-  ; ---------------------------------------------------------------------------
-  ; Follow the Windows display language for the whole installer instead of
-  ; always defaulting to English (no language dialog is shown).
-  ; ---------------------------------------------------------------------------
-  System::Call 'kernel32::GetUserDefaultUILanguage() i .r0'
-  StrCpy $OS_UI_LANG $0
+  !insertmacro AW_PICK_LANGUAGE
+  ; No step here closes the Watchdog any more. It runs as "Achievement Watcher.exe watchdog.js"
+  ; (ELECTRON_RUN_AS_NODE, since 3.4), so electron-builder's own CHECK_APP_RUNNING, which closes
+  ; every process of that image name, already stops it with the app. The PowerShell step that used
+  ; to be here looked for node.exe/nw.exe, found nothing, and cost a second or two before the window.
+!macroend
 
-  ${Switch} $OS_UI_LANG
-    ${Case} 1033
-      StrCpy $LANGUAGE ${LANG_ENGLISH}
-      ${Break}
-    ${Case} 1036
-      StrCpy $LANGUAGE ${LANG_FRENCH}
-      ${Break}
-    ${Case} 1031
-      StrCpy $LANGUAGE ${LANG_GERMAN}
-      ${Break}
-    ${Case} 1034
-    ${Case} 3082
-    ${Case} 2058    ; es-MX
-    ${Case} 11274   ; es-AR
-    ${Case} 16394   ; es-CO
-    ${Case} 13322   ; es-CL
-    ${Case} 9226    ; es-PE
-    ${Case} 14346   ; es-VE
-    ${Case} 6154    ; es-GT
-    ${Case} 18442   ; es-EC
-    ${Case} 19466   ; es-CU
-    ${Case} 17418   ; es-DO
-    ${Case} 15370   ; es-BO
-    ${Case} 22538   ; es-PY
-    ${Case} 23562   ; es-SV
-    ${Case} 24586   ; es-HN
-    ${Case} 25610   ; es-NI
-    ${Case} 26634   ; es-PR
-    ${Case} 27658   ; es-UY
-    ${Case} 28682   ; es-PA
-    ${Case} 29706   ; es-CR
-      StrCpy $LANGUAGE ${LANG_SPANISHINTERNATIONAL}
-      ${Break}
-    ${Case} 1040
-      StrCpy $LANGUAGE ${LANG_ITALIAN}
-      ${Break}
-    ${Case} 2070
-      StrCpy $LANGUAGE ${LANG_PORTUGUESE}
-      ${Break}
-    ${Case} 1046
-      StrCpy $LANGUAGE ${LANG_PORTUGUESEBR}
-      ${Break}
-    ${Case} 1029
-      StrCpy $LANGUAGE ${LANG_CZECH}
-      ${Break}
-    ${Case} 1051
-      StrCpy $LANGUAGE ${LANG_SLOVAK}
-      ${Break}
-    ${Case} 1038
-      StrCpy $LANGUAGE ${LANG_HUNGARIAN}
-      ${Break}
-    ${Case} 1045
-      StrCpy $LANGUAGE ${LANG_POLISH}
-      ${Break}
-    ${Case} 1049
-      StrCpy $LANGUAGE ${LANG_RUSSIAN}
-      ${Break}
-    ${Case} 1058
-      StrCpy $LANGUAGE ${LANG_UKRAINIAN}
-      ${Break}
-    ${Case} 1055
-      StrCpy $LANGUAGE ${LANG_TURKISH}
-      ${Break}
-    ${Case} 1054
-      StrCpy $LANGUAGE ${LANG_THAI}
-      ${Break}
-    ${Case} 1041
-      StrCpy $LANGUAGE ${LANG_JAPANESE}
-      ${Break}
-    ${Case} 2052
-      StrCpy $LANGUAGE ${LANG_SIMPCHINESE}
-      ${Break}
-  ${EndSwitch}
-
-  ; ---------------------------------------------------------------------------
-  ; Close a previously running Watchdog before files are replaced.
-  ; Do not kill every node.exe: the Watchdog is selected by its watchdog.js
-  ; command line. electron-builder itself prompts and closes the main
-  ; "Achievement Watcher.exe" process (localized appRunning message).
-  ; ---------------------------------------------------------------------------
-  DetailPrint "$(AW_CLOSE_WATCHDOG)"
-  StrCpy $PS_CLOSE_AW "Get-CimInstance Win32_Process | Where-Object { ($$_.Name -eq 'node.exe' -or $$_.Name -eq 'nw.exe') -and $$_.CommandLine -like '*watchdog.js*' } | ForEach-Object { taskkill /F /T /PID $$_.ProcessId }"
-  nsExec::ExecToLog 'powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command "$PS_CLOSE_AW"'
-  Pop $CMD_RESULT
+!macro customUnInit
+  !insertmacro AW_PICK_LANGUAGE
 !macroend
 
 !macro customInstall
@@ -301,31 +532,77 @@ Var unDeleteAppData
   ; touches: the legacy 1.6.8 uninstaller deletes "%APPDATA%\Achievement Watcher",
   ; which used to wipe every 3.x setting and cache (issue #6). Data from an
   ; existing "Achievement Watcher 3.0" folder is imported on first launch by
-  ; migrateAw3UserData() — the installer never moves user data itself.
+  ; migrateAw3UserData() - the installer never moves user data itself.
+  ${If} $installMode == "all"
+    SetShellVarContext current
+  ${EndIf}
   StrCpy $APPDATA_MYAPP "$APPDATA\Achievement Watcher Next"
   DetailPrint "$(AW_KEEP_DATA)"
   DetailPrint "$APPDATA_MYAPP"
   CreateDirectory "$APPDATA_MYAPP"
+  ${If} $installMode == "all"
+    SetShellVarContext all
+  ${EndIf}
 !macroend
 
 !macro customUnInstall
+  ; An update runs the previous version's uninstaller with --updated (electron-builder's
+  ; uninstallOldVersion always passes it). Everything below belongs to a REAL uninstall only: an
+  ; update that dropped the autostart entry or the update cache would be a regression.
+  ;
+  ; Electron keeps per-user data even for an all-users install, so every path below is resolved
+  ; in the current user's context, exactly as electron-builder's own app-data removal does.
+  ${If} $installMode == "all"
+    SetShellVarContext current
+  ${EndIf}
+
+  ${IfNot} ${isUpdated}
+    ; Traces the app writes itself and that would otherwise outlive it:
+    ;  - the "Start with Windows" entry (app.setLoginItemSettings; the value is named after the
+    ;    AppUserModelID) and Explorer's enabled/disabled flag for it - left behind, Windows tries to
+    ;    start a missing executable at every sign-in;
+    ;  - the achievement-watcher: protocol the toast buttons open (TOAST_PROTOCOL in init.js);
+    ;  - the updater cache: installer.exe (base of the next differential download) and the last
+    ;    downloaded installer, 127 MB each. electron-builder only exposes its folder through
+    ;    APP_INSTALLER_STORE_FILE ("<updaterCacheDirName>\installer.exe"), hence the parse.
+    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${APP_ID}"
+    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" "${APP_ID}"
+    DeleteRegKey HKCU "Software\Classes\achievement-watcher"
+    !ifdef APP_INSTALLER_STORE_FILE
+      !searchparse /noerrors "${APP_INSTALLER_STORE_FILE}" "" AW_UPDATER_CACHE_DIR "\installer.exe"
+      !ifdef AW_UPDATER_CACHE_DIR
+        RMDir /r "$LOCALAPPDATA\${AW_UPDATER_CACHE_DIR}"
+        !undef AW_UPDATER_CACHE_DIR
+      !endif
+    !endif
+  ${EndIf}
+
   ; Honor the interactive checkbox (default: keep data) and the explicit
   ; `--delete-app-data` flag used by silent uninstalls. Both folders this product
-  ; has owned are removed — "Achievement Watcher 3.0" holds the same user's data,
+  ; has owned are removed - "Achievement Watcher 3.0" holds the same user's data,
   ; imported forward on first launch, and leaving it behind would strand hundreds
   ; of megabytes of caches and backups. The legacy 1.6.8
   ; "%APPDATA%\Achievement Watcher" folder still stays untouched: it belongs to a
-  ; different application that may still be installed.
-  StrCpy $unDeleteAppData "0"
-  ClearErrors
-  ${GetParameters} $R0
-  ${GetOptions} $R0 "--delete-app-data" $R1
-  ${IfNot} ${Errors}
-    StrCpy $unDeleteAppData "1"
+  ; different application that may still be installed (the app-builder-lib patch
+  ; stops electron-builder's own --delete-app-data branch from removing it).
+  ${IfNot} ${isUpdated}
+    ClearErrors
+    ${GetParameters} $R0
+    ${GetOptions} $R0 "--delete-app-data" $R1
+    ${IfNot} ${Errors}
+      StrCpy $unDeleteAppData "1"
+    ${EndIf}
+    ${If} $unDeleteAppData == "1"
+      DetailPrint "$(AW_UNINSTALL_DELETING)"
+      RMDir /r "$APPDATA\Achievement Watcher Next"
+      RMDir /r "$APPDATA\Achievement Watcher 3.0"
+      ; Playtime lives in the registry, beside the files (watchdog/playtime/track.js).
+      DeleteRegKey HKCU "Software\Achievement Watcher Next"
+      DeleteRegKey HKCU "Software\Achievement Watcher 3.0"
+    ${EndIf}
   ${EndIf}
-  ${If} $unDeleteAppData == "1"
-    DetailPrint "$(AW_UNINSTALL_DELETING)"
-    RMDir /r "$APPDATA\Achievement Watcher Next"
-    RMDir /r "$APPDATA\Achievement Watcher 3.0"
+
+  ${If} $installMode == "all"
+    SetShellVarContext all
   ${EndIf}
 !macroend

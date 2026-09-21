@@ -73,7 +73,7 @@ test('the uninstaller speaks the new name in every language but keeps the data p
   // Only the LangString definitions carry text; the dialog also references $(AW_UNINSTALL_INTRO).
   const intro = nsh.split('\n').filter((l) => l.includes('LangString AW_UNINSTALL_INTRO'));
   const deleteData = nsh.split('\n').filter((l) => l.includes('LangString AW_UNINSTALL_DELETE_DATA'));
-  assert.equal(intro.length, 17, 'the uninstaller intro must stay translated into all 17 installer languages');
+  assert.equal(intro.length, 27, 'the uninstaller intro must stay translated into all 27 installer languages');
   for (const line of intro) {
     assert.doesNotMatch(line, /Achievement Watcher/, `uninstaller intro still shows the old name: ${line.trim().slice(0, 80)}`);
     assert.match(line, /AW Next/, `uninstaller intro must name the product: ${line.trim().slice(0, 80)}`);
