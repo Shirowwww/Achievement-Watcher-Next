@@ -1544,17 +1544,16 @@ async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
           if (!existing.data.gameDir && g.gameDir) existing.data.gameDir = g.gameDir;
           if (detectedExe && !existing.data.exe) existing.data.exe = detectedExe.full;
           if (detectedEmu && detectedEmu.dll.length > 0) existing.data.hasSteamApiDll = true;
-          // The record found earlier (from an empty %APPDATA% save folder that the emulator created
-          // once and then abandoned) points at a path with nothing in it. The install tells us where
-          // the unlocks really are, so it wins - but only when that folder actually holds a save.
-          if (
-            existing.data.type === 'file' &&
-            savePath !== existing.data.path &&
-            fs.existsSync(path.join(savePath, 'achievements.json')) &&
-            !fs.existsSync(path.join(String(existing.data.path || ''), 'achievements.json'))
-          ) {
-            debug.log(`[goldberg-scan] ${appid} save folder corrected to ${savePath} (nothing written in ${existing.data.path})`);
-            existing.data.path = savePath;
+          // The record found earlier (from a %APPDATA% save folder the emulator created once and
+          // then abandoned) points at a path with no progress in it. The install tells us where the
+          // unlocks really are, so it wins - but only when its folder holds more of them.
+          if (existing.data.type === 'file' && savePath !== existing.data.path) {
+            const installWeight = steam.goldbergSaveWeight(savePath);
+            const existingWeight = steam.goldbergSaveWeight(existing.data.path);
+            if (installWeight > existingWeight) {
+              debug.log(`[goldberg-scan] ${appid} save folder corrected to ${savePath} (${installWeight} unlock(s) there against ${Math.max(0, existingWeight)} in ${existing.data.path})`);
+              existing.data.path = savePath;
+            }
           }
           if (!hasSchema && !existing.data.needsSchema) {
             existing.data.needsSchema = true;

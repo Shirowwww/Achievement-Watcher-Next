@@ -74,6 +74,31 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   });
 };
 
+/*
+  How much a Goldberg/GBE save folder is worth when the same appid sits under both %APPDATA% roots.
+  -1 when nothing was ever written there, otherwise the number of unlocks the file records.
+
+  Comparing on "does a file exist" was enough while only one root could hold a save. It stopped
+  being enough once the automatic fix started creating both: an abandoned achievements.json with
+  every achievement locked is a file, and being globbed first was all it took to hide a real save.
+*/
+function goldbergSaveWeight(dir) {
+  const file = path.join(String(dir || ''), 'achievements.json');
+  if (!fs.existsSync(file)) return -1;
+  try {
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const entries = Array.isArray(parsed) ? parsed : Object.values(parsed || {});
+    // Same predicate as goldberg.inspectSaveState, so the scan and the health panel never disagree
+    // about whether a save holds progress.
+    return entries.filter((e) => e && (e.earned === true || e.Achieved === true || e.earned === 1 || e.unlocked === true || String(e.earned) === '1'))
+      .length;
+  } catch {
+    // Unreadable or truncated: it exists, but it proves no progress.
+    return 0;
+  }
+}
+module.exports.goldbergSaveWeight = goldbergSaveWeight;
+
 module.exports.scan = async (additionalSearch = []) => {
   let search = saveRoots.defaultSteamScanRoots(additionalSearch);
 
@@ -134,9 +159,7 @@ module.exports.scan = async (additionalSearch = []) => {
       // appid; when the same appid turns up under both, a later empty duplicate must not shadow real progress.
       const dupIndex = data.findIndex((g) => g.source === 'Goldberg' && String(g.appid) === String(game.appid));
       if (dupIndex !== -1) {
-        const hasNew = fs.existsSync(path.join(dir, 'achievements.json'));
-        const hasExisting = fs.existsSync(path.join(data[dupIndex].data.path, 'achievements.json'));
-        if (hasNew && !hasExisting) data[dupIndex] = game;
+        if (goldbergSaveWeight(dir) > goldbergSaveWeight(data[dupIndex].data.path)) data[dupIndex] = game;
         continue;
       }
     } else if (dirKeyLower.includes('empress')) {
