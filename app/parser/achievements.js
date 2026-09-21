@@ -2031,6 +2031,31 @@ async function discoverInScope(source, steamAccFilter, scope) {
     }
   }
 
+  // What the local Steam client knows stops at the games it has touched. With an account connected,
+  // the rest of the library can be listed too - opt-in, because it turns a 115-game scan into a
+  // 667-game one and every added game has to resolve its schema and artwork the first time.
+  if (!scope && source.legitSteam > 0 && (source.steamAccountOwned || source.steamAccountFamily)) {
+    try {
+      const loaded = await loadSteamAccountLibrary();
+      if (!loaded) debug.log('[steam] account library requested but no Steam account is connected');
+      else {
+        data = data.concat(
+          await steam.scanAccountLibrary(loaded.library, {
+            includeOwned: source.steamAccountOwned === true,
+            includeFamily: source.steamAccountFamily === true,
+            known: data.map((record) => record && record.appid),
+            steamid: loaded.steamid,
+            steamAccFilter,
+          })
+        );
+      }
+    } catch (err) {
+      // The account library only ever ADDS games. Losing it costs the not-installed-here part of
+      // the list, never the local scan that just ran.
+      debug.log(`[steam] account library unavailable => ${err}`);
+    }
+  }
+
   mark('legitSteam');
 
   if (!scope && source.lumaPlay) {
@@ -3806,6 +3831,30 @@ async function seedPlaytimeFromSteamLibrary(steamPlaytime) {
   if (seeded > 0) debug.log(`[steam] playtime: ${seeded} counter(s) advanced from the Steam library`);
 }
 
+// The connected account's library, or null when no account is connected. Shared by discovery and
+// the ownership pass so one scan never fetches it twice; steamAccount caches it for six hours, so
+// the second caller reads the file either way.
+async function loadSteamAccountLibrary() {
+  const { token, steamid } =
+    (await withTimeout(ipcInvoke('steam:ensure-token'), STEAM_OWNERSHIP_TIMEOUT_MS, 'steam:ensure-token timed out')) || {};
+  if (!token || !steamid) return null;
+
+  const steamAccount = require('./steamAccount.js');
+  const cacheDir = path.join(_userDataPath || userDataDir(), 'steam_cache');
+  await fs.promises.mkdir(cacheDir, { recursive: true });
+  const library = await withTimeout(
+    steamAccount.loadLibrary({
+      cacheFile: path.join(cacheDir, 'library.json'),
+      token,
+      steamid,
+      log: (message) => debug.log(message),
+    }),
+    STEAM_OWNERSHIP_TIMEOUT_MS,
+    'steam library fetch timed out'
+  );
+  return { library, steamid };
+}
+
 async function refreshSteamOwnership(appidList) {
   _steamOwnership = new Map();
   _steamFamilyOwners = new Map();
@@ -3813,24 +3862,11 @@ async function refreshSteamOwnership(appidList) {
     const steamRecords = (appidList || []).filter((rec) => rec && rec.data && rec.data.type === 'steamAPI');
     if (steamRecords.length === 0) return;
 
-    const { token, steamid } =
-      (await withTimeout(ipcInvoke('steam:ensure-token'), STEAM_OWNERSHIP_TIMEOUT_MS, 'steam:ensure-token timed out')) || {};
-    if (!token || !steamid) return;
+    const loaded = await loadSteamAccountLibrary();
+    if (!loaded) return;
+    const { library } = loaded;
 
     const steamAccount = require('./steamAccount.js');
-    const cacheDir = path.join(_userDataPath || userDataDir(), 'steam_cache');
-    await fs.promises.mkdir(cacheDir, { recursive: true });
-    const library = await withTimeout(
-      steamAccount.loadLibrary({
-        cacheFile: path.join(cacheDir, 'library.json'),
-        token,
-        steamid,
-        log: (message) => debug.log(message),
-      }),
-      STEAM_OWNERSHIP_TIMEOUT_MS,
-      'steam library fetch timed out'
-    );
-
     _steamOwnership = steamAccount.classify({
       owned: library.owned,
       family: library.family,

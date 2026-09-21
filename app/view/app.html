@@ -1203,6 +1203,46 @@
                     </li>
                   </ul>
                 </div>
+
+                <!-- Listing the account's whole library, not just what this PC has touched. Own list
+                     rather than a row in #options-source: the loader binds that one by nth-child, and
+                     these two are meaningless without the connected account above them. -->
+                <div class="arrow-list" id="steam-library-card" style="display:none">
+                  <ul>
+                    <li class="hasHelper">
+                      <div class="left"><i class="fas fa-book"></i> <span id="steam-import-owned-label">Add the games you own</span></div>
+                      <div class="right">
+                        <div class="previous">
+                          <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                        </div>
+                        <select autocomplete="off" id="option_steamAccountOwned">
+                          <option value="true">Enabled</option>
+                          <option value="false" selected>Disabled</option>
+                        </select>
+                        <div class="next">
+                          <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                        </div>
+                      </div>
+                      <div class="help" id="steam-import-owned-help">Requires a connected Steam account.</div>
+                    </li>
+                    <li class="hasHelper">
+                      <div class="left"><i class="fas fa-users"></i> <span id="steam-import-family-label">Add the games shared with you through Steam Family</span></div>
+                      <div class="right">
+                        <div class="previous">
+                          <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                        </div>
+                        <select autocomplete="off" id="option_steamAccountFamily">
+                          <option value="true">Enabled</option>
+                          <option value="false" selected>Disabled</option>
+                        </select>
+                        <div class="next">
+                          <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                        </div>
+                      </div>
+                      <div class="help" id="steam-import-family-help">Requires a connected Steam account.</div>
+                    </li>
+                  </ul>
+                </div>
               </div>
 
               <!-- Xbox PC account (Game Pass / Microsoft Store). Connect + Import mirror the Epic card. -->

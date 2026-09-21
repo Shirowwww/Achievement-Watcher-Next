@@ -51,8 +51,10 @@ test('the total is announced before the ownership call, which cannot hold the sc
   assert.ok(announceAt > -1 && ownershipAt > -1, 'both steps must still be there');
   assert.ok(announceAt < ownershipAt, 'the bar must be sized before a network call, not after it');
 
-  const refresh = achievements.slice(achievements.indexOf('async function refreshSteamOwnership'));
-  const body = refresh.slice(0, refresh.indexOf('\n}'));
+  // Both network calls live in loadSteamAccountLibrary, which the ownership pass and the opt-in
+  // account-library source share. One place to hold the deadlines, covering both callers.
+  const load = achievements.slice(achievements.indexOf('async function loadSteamAccountLibrary'));
+  const body = load.slice(0, load.indexOf('\n}'));
   assert.match(body, /withTimeout\(\s*ipcInvoke\('steam:ensure-token'\)/, 'the token call needs a deadline');
   assert.match(body, /withTimeout\(\s*steamAccount\.loadLibrary\(/, 'so does the library call');
   assert.match(achievements, /const STEAM_OWNERSHIP_TIMEOUT_MS = \d+/);

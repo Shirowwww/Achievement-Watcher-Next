@@ -301,6 +301,16 @@ module.exports.load = () => {
       options.achievement_source.legitSteam = 0;
     }
 
+    // Listing the connected account's whole library, not just what this PC has touched. Both off by
+    // default: they need a connected Steam account, and each one adds hundreds of games that have to
+    // resolve their schema and artwork the first time they are seen.
+    if (typeof options.achievement_source.steamAccountOwned !== 'boolean') {
+      options.achievement_source.steamAccountOwned = false;
+    }
+    if (typeof options.achievement_source.steamAccountFamily !== 'boolean') {
+      options.achievement_source.steamAccountFamily = false;
+    }
+
     if (typeof options.achievement_source.steamEmu !== 'boolean') {
       options.achievement_source.steamEmu = true;
     }
@@ -590,6 +600,8 @@ module.exports.load = () => {
       },
       achievement_source: {
         legitSteam: 0,
+        steamAccountOwned: false,
+        steamAccountFamily: false,
         steamEmu: true,
         socialClub: true,
         greenLuma: true,

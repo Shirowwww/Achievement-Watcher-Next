@@ -189,6 +189,17 @@ module.exports.load = async (cfg_file) => {
       fixFile = true;
     }
 
+    // The library scan's business, not the Watchdog's, but both loaders write this file: a key
+    // missing here comes back reset on the next scan.
+    if (typeof options.achievement_source.steamAccountOwned !== 'boolean') {
+      options.achievement_source.steamAccountOwned = false;
+      fixFile = true;
+    }
+    if (typeof options.achievement_source.steamAccountFamily !== 'boolean') {
+      options.achievement_source.steamAccountFamily = false;
+      fixFile = true;
+    }
+
     if (typeof options.achievement_source.steamEmu !== 'boolean') {
       options.achievement_source.steamEmu = true;
       fixFile = true;
@@ -526,6 +537,8 @@ module.exports.load = async (cfg_file) => {
       },
       achievement_source: {
         legitSteam: 0,
+        steamAccountOwned: false,
+        steamAccountFamily: false,
         steamEmu: true,
         socialClub: true,
         greenLuma: true,

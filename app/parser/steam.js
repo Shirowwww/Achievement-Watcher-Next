@@ -298,6 +298,92 @@ module.exports.scanLegit = async (listingType = 0, steamAccFilter = '0') => {
   return data;
 };
 
+/*
+  The games the connected Steam account owns, whether or not this PC has ever heard of them.
+
+  scanLegit() can only see what the local client touched - a stats file, an install manifest, a
+  registry key - so an account with 667 games and 570 shared through Family listed 115 tiles on a
+  machine where most of it had never been installed (issue #80). The account library is the
+  authority on what is owned; this turns it into discovery records.
+
+  Opt-in, and never a replacement for scanLegit(): the records it produces know the install folder
+  and the real "installed" flag, so only appids missing from `known` are added here.
+*/
+module.exports.scanAccountLibrary = async (
+  library,
+  {
+    includeOwned = false,
+    includeFamily = false,
+    known = [],
+    steamid = '',
+    steamAccFilter = '0',
+    // Injected by the tests so they describe this function rather than the machine it runs on.
+    readSteamPath = () => getSteamPath(),
+    readUsers = () => getSteamUsersList(),
+  } = {}
+) => {
+  const groups = [
+    { ids: includeOwned ? (library && library.owned) || [] : [], ownership: 'owned' },
+    { ids: includeFamily ? (library && library.family) || [] : [], ownership: 'family' },
+  ];
+  if (groups.every((group) => group.ids.length === 0)) return [];
+
+  let steamPath;
+  try {
+    steamPath = await readSteamPath();
+  } catch (err) {
+    debug.log(`[steam] account library skipped - no local Steam install (${err})`);
+    return [];
+  }
+
+  // The signed-in account first: these games read ITS unlocks, and a shared PC can hold several.
+  let users = (await readUsers()) || [];
+  if (steamAccFilter !== '0' && users.some((u) => u.user === steamAccFilter)) users = users.filter((u) => u.user === steamAccFilter);
+  const user = users.find((u) => String(u.id) === String(steamid)) || users[0];
+  if (!user) {
+    debug.log('[steam] account library skipped - no public Steam profile on this PC to attribute the games to');
+    return [];
+  }
+
+  const appInfo = require('./steamAppInfo.js');
+  const catalogue = appInfo.load(steamPath);
+  const cachePath = path.join(steamPath, 'appcache/stats');
+  const names = (library && library.names) || new Map();
+  const seen = new Set((known || []).map(String));
+
+  const data = [];
+  let skipped = 0;
+  for (const { ids, ownership } of groups) {
+    for (const rawId of ids) {
+      const appid = String(rawId);
+      if (seen.has(appid)) continue;
+      seen.add(appid);
+      // GetOwnedGames answers "this is in my library", and it still lists tools and soundtracks. The
+      // local catalogue is consulted only to REJECT: an appid it has never heard of is exactly the
+      // never-installed-here game this source exists for, so an unknown type is kept.
+      const entry = catalogue && catalogue.get(appid);
+      if (entry && !appInfo.LIBRARY_TYPES.has(entry.type)) {
+        skipped++;
+        continue;
+      }
+      data.push({
+        appid,
+        name: names.get(appid) || '',
+        source: `Steam (${user.name})`,
+        data: {
+          type: 'steamAPI',
+          userID: user,
+          cachePath,
+          installed: false,
+          accountLibrary: ownership,
+        },
+      });
+    }
+  }
+  debug.log(`[steam] account library: ${data.length} game(s) added from the connected account${skipped > 0 ? ` (skipped ${skipped} non-game app(s))` : ''}`);
+  return data;
+};
+
 module.exports.getCachedData = (cfg) => {
   if (!steamLanguages.some((language) => language.api === cfg.lang)) {
     throw 'Unsupported API language code';

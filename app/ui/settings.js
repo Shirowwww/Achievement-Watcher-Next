@@ -1247,6 +1247,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           }
         });
 
+      // Both live in the Steam account card, not in #options-source, so the sweep above never sees
+      // them. Read by id instead: the pair belongs next to the account that makes them work.
+      app.config.achievement_source.steamAccountOwned = $('#option_steamAccountOwned').val() === 'true';
+      app.config.achievement_source.steamAccountFamily = $('#option_steamAccountFamily').val() === 'true';
+
       // #options-uplay carries the Uplay loader's own settings and was never collected here, so a
       // change to one was read back on the next open and silently reverted.
       $('#options-emulator .right, #options-emulator2 .right, #options-uplay .right')
@@ -1600,6 +1605,29 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         const common = (window.appLocale && window.appLocale.settings && window.appLocale.settings.common) || {};
         $('#steam-hide-stale option[value="true"]').text(common.enable || 'Enabled');
         $('#steam-hide-stale option[value="false"]').text(common.disable || 'Disabled');
+
+        $('#steam-import-owned-label').text(t('steam-import-owned', 'Add the games you own', 'Ajouter les jeux que tu possèdes'));
+        $('#steam-import-owned-help').text(
+          t(
+            'steam-import-owned-help',
+            'Lists your whole Steam library, including games that were never installed on this PC. A large library makes the first scan much longer.',
+            'Liste toute ta bibliothèque Steam, y compris les jeux jamais installés sur ce PC. Avec une grosse bibliothèque, le premier scan est nettement plus long.'
+          )
+        );
+        $('#steam-import-family-label').text(
+          t('steam-import-family', 'Add the games shared with you through Steam Family', 'Ajouter les jeux partagés avec toi via la famille Steam')
+        );
+        $('#steam-import-family-help').text(
+          t(
+            'steam-import-family-help',
+            'Games another member of your Steam Family owns and shares with you. They carry the Steam Family badge.',
+            'Les jeux qu’un autre membre de ta famille Steam possède et partage avec toi. Ils portent le badge famille Steam.'
+          )
+        );
+        for (const id of ['#option_steamAccountOwned', '#option_steamAccountFamily']) {
+          $(`${id} option[value="true"]`).text(common.enable || 'Enabled');
+          $(`${id} option[value="false"]`).text(common.disable || 'Disabled');
+        }
       });
 
       // Hiding ghost games is on by default; hideStaleEnabled() carries that default, this select
@@ -1621,6 +1649,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         } catch {}
         // With no account connected nothing can be a ghost entry, so the row would promise nothing.
         $('#steam-stale-card').toggle(!!s.connected);
+        // The library import also needs the official Steam source on: the games it adds are Steam
+        // games, and discovery skips it entirely when that source is off. Hidden rather than shown
+        // doing nothing.
+        $('#steam-library-card').toggle(!!s.connected && $('#option_legitSteam').val() !== '0');
         if (s.connected) {
           badge.toggle(!s.needsReconnect);
           disconnectBtn.show();
@@ -1661,6 +1693,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         }
         refresh();
       });
+
+      // Turning the official Steam source off while Settings is open takes the import rows with it.
+      $('#option_legitSteam').off('change.steamLibraryCard').on('change.steamLibraryCard', refresh);
 
       refresh();
     })();

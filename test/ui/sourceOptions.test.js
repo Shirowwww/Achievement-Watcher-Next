@@ -37,10 +37,13 @@ function configuredSources() {
 // Connect, GOG Galaxy, Epic, the two Nemirtingas emulators, shadPS4, Xenia) had no row at all: they
 // defaulted to on and could only be turned off by hand-editing options.ini, which is why a Ubisoft
 // entry could not be hidden through the UI (issue #20).
-test('every achievement source has a toggle in the Sources tab', () => {
-  const rows = new Set(sourceListItems().map((item) => item.key));
+//
+// The switch does not have to be in the Sources tab: the two Steam account-library ones live in the
+// Steam account card, next to the connection that makes them work. What matters is that a source
+// the scan honours can be turned off somewhere on screen.
+test('every achievement source has a toggle in Settings', () => {
   for (const key of configuredSources()) {
-    assert.ok(rows.has(key), `achievement_source.${key} has no #option_${key} row in app.html`);
+    assert.ok(appHtml.includes(`id="option_${key}"`), `achievement_source.${key} has no #option_${key} switch in app.html`);
   }
 });
 
@@ -49,6 +52,21 @@ test('no source row exists without a matching setting', () => {
   for (const { key } of sourceListItems()) {
     assert.ok(key, 'every source row must carry an #option_<key> select');
     assert.ok(configured.has(key), `#option_${key} has no achievement_source.${key} setting`);
+  }
+});
+
+// A switch outside #options-source is not collected by the sweep that reads that list, so it needs
+// its own read in ui/settings.js or an OK silently reverts it.
+test('source switches outside the Sources tab are read back on save', () => {
+  const uiJs = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'ui', 'settings.js'), 'utf8');
+  const inTab = new Set(sourceListItems().map((item) => item.key));
+  for (const key of configuredSources()) {
+    if (inTab.has(key)) continue;
+    assert.match(
+      uiJs,
+      new RegExp(`achievement_source\\.${key}\\s*=`),
+      `#option_${key} is not in #options-source, so ui/settings.js must read it back by id on save`
+    );
   }
 });
 
