@@ -43,6 +43,7 @@ The in-app **Settings → Help** tab mirrors this, filtered to your actual setup
 |---|---|
 | Contributing and building from source | [CONTRIBUTING.md](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CONTRIBUTING.md) · [BUILD.md](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/BUILD.md) |
 | Architecture, and Goldberg/GBE file formats and repair invariants | [Architecture](architecture.md) · [Goldberg / GBE reference](goldberg-gbe.md) |
+| How Uplay R1/R2 games are identified, repaired and read | [Uplay R1/R2 reference](uplay-reference.md) |
 | Versioning, publishing, CI and auto-update validation | [Release workflow](RELEASE_WORKFLOW.md) |
 | Translation, locale files and the key-parity rules | [Localization](localization.md) · [app/locale/README.md](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/app/locale/README.md) |
 | The portable theme file, its limits and its versioning rules | [.awtheme format](awtheme-format.md) |

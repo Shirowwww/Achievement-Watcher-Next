@@ -85,6 +85,8 @@ beside them. If antivirus software removes a loose DLL, or quarantines the archi
 Health reports it as an antivirus problem and offers to allow the folder and put the files back -
 you do not need to track down a replacement yourself.
 
+How identity, objective IDs and the loader log work in detail: [Uplay R1/R2 reference](uplay-reference.md).
+
 <div align="center">
 
 [← Documentation](README.md) · [Troubleshooting](troubleshooting.md) · [Project home](https://github.com/Shirowwww/Achievement-Watcher-Next)
