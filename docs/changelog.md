@@ -16,6 +16,47 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Added
+
+- **Set a game's AppID by hand.** Right-click a game and choose "Set AppID manually..." when its folder
+  name matches several Steam releases and the automatic name match picked the wrong one. The choice is
+  remembered per install folder and written to `steam_appid.txt`. The game health "correct the game ID
+  file" action now asks for the AppID too, starting from AW Next's suggestion, instead of only
+  confirming it.
+- **A switch for the automatic achievement data refresh.** Settings > Advanced > "Automatic achievement
+  data updates" stops the periodic repair of blank descriptions and the pickup of achievements a game
+  update added, for anyone who maintains `steam_cache` by hand. "Recheck achievement lists" still works
+  as a one-off check.
+- **Your whole Steam library, not only the games this PC has touched.** Two switches in the Steam
+  account card list the games you own and the games shared with you through Steam Family, including
+  ones that were never installed here. Until now the connected account was only used to decorate the
+  games the local Steam client already knew about, so an account with hundreds of games could still
+  show a fraction of them. Both are off by default: a large library makes the first scan much longer,
+  since every added game has to resolve its achievements and artwork once.
+
+### Fixed
+
+- **A game whose unlocks sit in `GSE Saves` no longer shows 0%.** Applying the emulator fix creates a
+  save folder under both `%APPDATA%\Goldberg SteamEmu Saves` and `%APPDATA%\GSE Saves`, and when both
+  held a file for the same game the first one found won, whatever was in it. An abandoned, empty save
+  therefore hid the one the game was really writing to. Whichever folder holds the unlocks is now the
+  one that is read. Reported for Mewgenics.
+
+- **Locked Xenia achievements now have their pictures.** The profile file only holds a picture once an
+  achievement unlocks, so every locked row had none. They are fetched from Xbox Live's image host and
+  cached. A row with no picture at all now shows the neutral trophy instead of a spinner that never stops.
+- **The common trophy tile on the profile keeps its percentage.** The "without a known rate" count used
+  to replace it; it is now a second line under it.
+- **Small text in the in-game overlay is at least 11px**, for the column headers, status pills and
+  the overlay options.
+
+### Security
+
+- **`adm-zip` updated to 0.6.1**, fixing an uncontrolled memory allocation from a declared uncompressed
+  size ([GHSA-7q85-xj36-vmfc](https://github.com/advisories/GHSA-7q85-xj36-vmfc)). It now also refuses
+  a zip entry duplicated by name at read time instead of returning both; the preset, theme and `.san`
+  import readers keep reporting that case by its own name rather than a generic unreadable file.
+
 ## 3.10.9 - 2026-09-18
 
 ### Fixed

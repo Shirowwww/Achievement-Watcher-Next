@@ -20,8 +20,20 @@ renamed in 3.9.0 and the history is kept under one file.
   data updates" stops the periodic repair of blank descriptions and the pickup of achievements a game
   update added, for anyone who maintains `steam_cache` by hand. "Recheck achievement lists" still works
   as a one-off check.
+- **Your whole Steam library, not only the games this PC has touched.** Two switches in the Steam
+  account card list the games you own and the games shared with you through Steam Family, including
+  ones that were never installed here. Until now the connected account was only used to decorate the
+  games the local Steam client already knew about, so an account with hundreds of games could still
+  show a fraction of them. Both are off by default: a large library makes the first scan much longer,
+  since every added game has to resolve its achievements and artwork once.
 
 ### Fixed
+
+- **A game whose unlocks sit in `GSE Saves` no longer shows 0%.** Applying the emulator fix creates a
+  save folder under both `%APPDATA%\Goldberg SteamEmu Saves` and `%APPDATA%\GSE Saves`, and when both
+  held a file for the same game the first one found won, whatever was in it. An abandoned, empty save
+  therefore hid the one the game was really writing to. Whichever folder holds the unlocks is now the
+  one that is read. Reported for Mewgenics.
 
 - **Locked Xenia achievements now have their pictures.** The profile file only holds a picture once an
   achievement unlocks, so every locked row had none. They are fetched from Xbox Live's image host and
