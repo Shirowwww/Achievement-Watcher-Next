@@ -69,7 +69,6 @@
   --shadow-md: 0 10px 30px rgba(16, 30, 54, 0.1);
   --shadow-lg: 0 30px 70px rgba(16, 30, 54, 0.16);
   --glow: transparent;
-  --grid-line: rgba(21, 32, 46, 0.05);
   --radius-sm: 8px;
   --radius: 14px;
   --radius-lg: 20px;
@@ -100,7 +99,6 @@
     --shadow-md: 0 14px 34px rgba(0, 0, 0, 0.42);
     --shadow-lg: 0 34px 90px rgba(0, 0, 0, 0.58);
     --glow: rgba(108, 145, 255, 0.16);
-    --grid-line: rgba(231, 237, 246, 0.045);
     --nav-bg: rgba(12, 19, 34, 0.78);
     --shot-frame: rgba(231, 237, 246, 0.1);
     color-scheme: dark;
@@ -126,7 +124,6 @@
   --shadow-md: 0 14px 34px rgba(0, 0, 0, 0.42);
   --shadow-lg: 0 34px 90px rgba(0, 0, 0, 0.58);
   --glow: rgba(108, 145, 255, 0.16);
-  --grid-line: rgba(231, 237, 246, 0.045);
   --nav-bg: rgba(12, 19, 34, 0.78);
   --shot-frame: rgba(231, 237, 246, 0.1);
   color-scheme: dark;
@@ -165,7 +162,7 @@ body {
   font-family: 'Open Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
   font-size: 17px;
   line-height: 1.65;
-  overflow-x: hidden;
+  overflow-x: clip;
   text-rendering: optimizeLegibility;
 }
 
@@ -295,26 +292,6 @@ kbd {
   border-block: 1px solid var(--border);
 }
 
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 0 14px;
-  font-family: 'Raleway', system-ui, sans-serif;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.eyebrow::before {
-  content: '';
-  width: 22px;
-  height: 3px;
-  border-radius: 2px;
-  background: currentColor;
-}
 
 .lead {
   font-size: 1.12rem;
@@ -616,24 +593,13 @@ kbd {
   overflow: hidden;
 }
 
-/* The app's own header glow, plus a faint grid so the section has structure without an image. */
+/* The app's own header glow. */
 .hero::before {
   content: '';
   position: absolute;
   inset: -40% 0 auto;
   height: 90%;
   background: radial-gradient(ellipse 60% 55% at 50% 50%, var(--glow), transparent 70%);
-  pointer-events: none;
-}
-
-.hero::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000, transparent 75%);
   pointer-events: none;
 }
 
@@ -650,16 +616,13 @@ kbd {
   margin-bottom: 0.35em;
 }
 
-/* Two lines, in every language: the second half is the one that carries the gradient. */
+/* Two lines, in every language: the second half carries the accent. */
 .hero h1 span {
   display: block;
 }
 
 .hero h1 .grad {
-  background: linear-gradient(100deg, var(--accent), var(--gold));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--accent);
 }
 
 .hero-sub {
@@ -1292,7 +1255,7 @@ a.card:hover,
   border: 1px solid color-mix(in srgb, var(--th-border) 80%, transparent);
   border-radius: 12px;
   background: var(--th-bg);
-  box-shadow: 0 22px 46px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 12px 24px rgba(0, 0, 0, 0.35);
   overflow: hidden;
   /* Repainting a theme should read as the window changing, not as the page redrawing. */
   transition: background-color 0.25s ease, border-color 0.25s ease;
@@ -2061,10 +2024,9 @@ a.card:hover,
   grid-template-columns: 22px minmax(0, 1fr);
   gap: 14px;
   padding: 18px 20px;
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: 0 var(--radius) var(--radius) 0;
-  background: var(--panel);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
 }
 
 .note svg {
@@ -2130,7 +2092,7 @@ a.card:hover,
   gap: 32px;
 }
 
-.foot-grid h4 {
+.foot-grid h2 {
   margin: 0 0 12px;
   font-size: 0.8rem;
   letter-spacing: 0.14em;
