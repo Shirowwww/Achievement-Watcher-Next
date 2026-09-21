@@ -77,6 +77,14 @@ renamed in 3.9.0 and the history is kept under one file.
   a zip entry duplicated by name at read time instead of returning both; the preset, theme and `.san`
   import readers keep reporting that case by its own name rather than a generic unreadable file.
 
+### Website & Docs
+
+- **The guides are rewritten to be shorter and easier to follow.** Each page now says what to click
+  and what to expect, with the history and internals left to this changelog, and covers everything
+  added since 3.10.5: the Steam account library switches, unlocks from other PCs, Xbox 360
+  recompilations, setting an AppID by hand, the opt-in emulator writes, smaller signed updates and
+  a clean uninstall. The README and the home page follow.
+
 ## 3.10.9 - 2026-09-18
 
 ### Fixed
