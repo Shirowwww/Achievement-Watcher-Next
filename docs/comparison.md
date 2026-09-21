@@ -17,10 +17,13 @@ reaches into emulated saves, whether it can repair a broken setup, and how much 
 | Official libraries + account sign-in | ✅ Steam (Family) · GOG · Ubisoft · Epic · EA · Xbox PC | ✅ Same stores, plus account sign-in | ⚠️ Steam · GOG · Epic · Uplay (legacy), no accounts |
 | Steam-emulator saves | ✅ Goldberg/GBE, Uplay R2, SocialClub, GreenLuma, CreamAPI and more | ✅ Comparable coverage | ✅ Steam emulators only |
 | Console emulators | ✅ RPCS3 · ShadPS4 · Xenia | ✅ RPCS3 · ShadPS4 · Xenia | ⚠️ RPCS3 only |
+| Xbox 360 games recompiled for PC (ReXGlue and similar) | ✅ List, icons and live unlocks | ❌ | ❌ |
+| Games for Windows LIVE | ✅ XLiveLessNess | ✅ XLiveLessNess | ❌ |
+| Niche patches | ✅ FINAL FANTASY VII (2013) | ✅ MarkerPatch · MadnessPatch · FINAL FANTASY VII (2013) | ❌ |
 | RetroAchievements | ❌ | ✅ | ❌ |
 | Per-game health report with guided repairs | ✅ | ❌ | ❌ |
 | Backup, reset and manual unlock | ✅ | ❌ | ❌ |
-| Notification transports | ✅ Toast + in-game overlay, chosen automatically | ✅ Toast + animated overlay, fixed choice | ⚠️ Toast, Chromium, WebSocket, GNTP, fixed choice |
+| Notification transports | ✅ Toast + in-game overlay, chosen automatically, plus an OBS browser source | ✅ Toast + animated overlay, fixed choice | ⚠️ Toast, Chromium, WebSocket, GNTP, fixed choice |
 | Preset designer & shareable presets | ✅ No-code editor, `.awpreset` + gallery | ⚠️ Edited as HTML/CSS | ❌ |
 | Video clips of an unlock | ❌ | ✅ | ⚠️ Via OBS |
 | Themes | ✅ Built-ins + editor + shareable `.awtheme` + gallery | ✅ Built-ins + user files | ❌ |
@@ -29,7 +32,7 @@ reaches into emulated saves, whether it can repair a broken setup, and how much 
 
 <sub>✅ = supported and documented · ⚠️ = partial, manual or a different workflow · ❌ = unavailable or
 not documented on the current public branch. Compared against public READMEs, package manifests and
-source on 25 August 2026; every one of these projects moves fast.</sub>
+source on 22 September 2026; every one of these projects moves fast.</sub>
 
 ## In short
 
