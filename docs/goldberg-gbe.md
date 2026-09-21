@@ -52,6 +52,12 @@ The default roots are evaluated under `%APPDATA%`:
 
 A missing runtime file is not an error. It means no unlock state has been written yet. Custom save-path settings must either resolve into a watched root or be added as a user folder.
 
+A GBE Fork install also creates the classic Goldberg folder alongside its own (and vice versa), so
+both can exist for the same appid. When they do, discovery does not simply keep whichever one it
+found first: it compares how many achievements each file actually has recorded
+(`steam.goldbergSaveWeight`, used in `app/parser/achievements.js`) and reads from the one that holds
+the unlocks, correcting an earlier choice if a later pass finds more progress in the other folder.
+
 ### The seeded placeholder
 
 Applying a setup calls `seedRuntimeSave`, which writes `<root>\<appid>chievements.json` with
@@ -157,7 +163,11 @@ unlock_all=1
 1234=DLC display name
 ```
 
-AW Next writes both when data is available. Explicit IDs let games enumerate DLC, while `unlock_all=1` covers ownership checks that query a specific ID. Existing entries are merged rather than discarded.
+AW Next writes both when data is available and **Manage DLC ownership** is turned on under
+**Settings → Steam / GBE Fork → Emulator setup** (off by default: enabling every DLC has nothing to do with reading
+achievements, and it overwrites a file some repacks or players curate by hand). Explicit IDs let
+games enumerate DLC, while `unlock_all=1` covers ownership checks that query a specific ID. Existing
+entries are merged rather than discarded.
 
 ## User configuration
 
@@ -170,7 +180,20 @@ language=english
 account_steamid=7656119...
 ```
 
-The account name and language follow AW Next settings. A repair started by hand from Game health fills in the emulator's own defaults (`Player` / `english`) when those settings are empty, so the file is complete either way; a value already in the file is never replaced. An existing `account_steamid` is preserved because changing it can redirect the emulator to a different save identity. Placeholder local-save paths are removed or corrected so the Watchdog can observe the resulting files.
+The account name and language follow AW Next settings only when **Write account name and language**
+is turned on under **Settings → Steam / GBE Fork → Emulator setup** (off by default, independent of DLC ownership and
+of automatic repair). With it off, a repair started by hand from Game health fills in the emulator's
+own defaults (`Player` / `english`) instead, so the file is complete either way; a value already in
+the file is never replaced. An existing `account_steamid` is preserved because changing it can
+redirect the emulator to a different save identity. Placeholder local-save paths are removed or
+corrected so the Watchdog can observe the resulting files.
+
+Right-click a game and choose **Remove AW Next's emulator configuration** to undo these writes
+(`app/util/awManagedConfig.js`): it takes out only the DLC section, switches and identity keys AW
+Next itself wrote, keeps every value the player or the repack set, and deletes a file only when
+nothing else is left in it. The dialog lists exactly what will be removed before anything happens.
+Writes made before this action existed were never backed up, so there is nothing to restore beyond
+what a fresh repair adds back.
 
 A *real* `local_save_path` is left alone and followed instead. Portable repacks routinely point it back into the game folder so the install carries its own saves; AW Next resolves the configured path (relative ones against the folder holding the Steam API DLL, with or without an `<appid>` level below it) and reads the unlock state from there rather than from `%APPDATA%\GSE Saves`. The classic Goldberg `local_save.txt` marker is read the same way.
 

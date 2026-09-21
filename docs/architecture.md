@@ -125,7 +125,9 @@ Packaged user data is stored below `%APPDATA%\Achievement Watcher Next`. AW Next
 | `Media/` | Legacy seed for custom Windows toast sounds (old registry entries point here; kept for upgrades) |
 | `sounds/`, `presets/` | Imported notification sounds and generated user presets |
 
-Settings are stored in `cfg/options.ini`. Sensitive fields are encrypted before the file is written. Epic account tokens use a separate encrypted cache.
+Settings are stored in `cfg/options.ini`. Sensitive fields are encrypted before the file is written,
+with the key itself held under Windows DPAPI through Electron's `safeStorage` rather than compiled
+into the app (`app/util/appSecret.js`). Epic account tokens use a separate encrypted cache.
 
 ## UI and localization
 

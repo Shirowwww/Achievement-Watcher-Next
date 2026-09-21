@@ -48,7 +48,7 @@ Translating these would make the product worse, not better:
 - **File names, registry paths, INI keys, protocol values, source identifiers.** `steam`,
   `epic-official`, `steam_settings`, `%APPDATA%\Achievement Watcher Next`. These are addresses, not
   words.
-- **Product and format names.** "Steam / GBE Fork", "Ubisoft / Uplay R2", "Goldberg".
+- **Product and format names.** "Steam / GBE Fork", "Ubisoft / Uplay R1/R2", "Goldberg".
 - **Dates, relative times, durations, numbers and percentages.** See below.
 
 ## Dates, numbers and durations come from Intl
@@ -191,7 +191,7 @@ someone to run a tool.
 Two of these are judgement calls rather than facts, and are tuned to stay quiet on real content:
 
 - `copied-from-english` only fires on a value that is three or more words **and** contains an
-  English function word. "Ubisoft / Uplay R2" and "Name: A → Z" are the same in every language and
+  English function word. "Ubisoft / Uplay R1/R2" and "Name: A → Z" are the same in every language and
   always will be; "No help topic matches your search." is not.
 - `hardcoded-ui-string` ignores log lines, thrown errors, paths, version strings and the arguments
   of the translation helpers. Deliberate exceptions are listed in the allowlist at the top of the
