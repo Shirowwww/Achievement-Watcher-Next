@@ -234,7 +234,8 @@ The main packaging files are:
 |---|---|
 | `app/electron-builder.yml` | Shared product metadata, files, NSIS target and update provider |
 | `app/electron-builder-portable.yml` | ZIP target and portable artifact name |
-| `app/build/installer.nsh` | Installer language mapping, shutdown and upgrade behavior |
+| `app/build/installer.nsh` | Installer and uninstaller customizations: languages, folder check, uninstall cleanup, update run ([details](docs/INSTALLER_AND_UPDATES.md)) |
+| `app/patches/app-builder-lib+26.15.3.patch` | The NSIS template changes `installer.nsh` relies on |
 | `app/build/afterPack.js` | Ensures the packaged Watchdog dependency tree is copied correctly |
 | `app/build/icon.ico` | Application and installer icon |
 | `app/build/installerSidebar.bmp` | NSIS installer welcome/finish sidebar (164 × 314) |
@@ -250,9 +251,13 @@ The Watchdog runs under Electron's bundled Node runtime through `ELECTRON_RUN_AS
 ### Signing
 
 No *publicly trusted* code-signing certificate is configured, so official releases may still
-trigger SmartScreen. Release installers use the project's self-signed `CN=Shirow` certificate;
-the in-app updater accepts that exact identity without requiring users to install the certificate,
-then independently verifies the release SHA-512. Local builds support the same signing setup:
+trigger SmartScreen. Release installers use the project's self-signed `CN=Shirow` certificate. The
+in-app updater accepts only installers signed by one of the certificates pinned by thumbprint in
+`app/util/updateSignature.js` (the release certificate and an offline standby), without requiring
+users to install either, and refuses unsigned ones. `npm run build` refuses to finish a signed
+build whose certificate is not pinned. Rotation and backup:
+[docs/INSTALLER_AND_UPDATES.md](docs/INSTALLER_AND_UPDATES.md#certificates-and-what-happens-if-one-is-lost).
+Local builds support the same signing setup:
 
 ```powershell
 Push-Location app
@@ -264,7 +269,8 @@ The script creates `CN=Shirow` and exports `app/build/signing/Shirow.pfx`
 plus a local `.password` file (both git-ignored). It does not touch the
 Windows trust stores by default, so it never shows a certificate-install
 prompt. Once the PFX exists, `npm run build` signs the app and installer
-automatically; without it the build stays unsigned (see `app/build/build.js`).
+automatically; without it the build stays unsigned (see `app/build/build.js`), and an unsigned
+build must never be published: installed copies refuse it as an update.
 The packager explicitly excludes the PFX, certificate and password: downloaders
 never receive them and the installer never asks to install a certificate.
 

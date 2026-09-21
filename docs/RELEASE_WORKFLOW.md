@@ -206,9 +206,9 @@ breaks upgrades rather than merely renaming something, and `test/core/branding.t
 
 | Identifier | Value | Why it stays |
 |---|---|---|
-| `appId` (AppUserModelID) | `io.github.shirowwww.achievement.watcher` | Windows matches toasts and taskbar pins against it |
+| `appId` (AppUserModelID) | `io.github.shirowwww.achievement.watcher` | Windows matches toasts and taskbar pins against it; it also names the autostart registry value, which the uninstaller removes by that name |
 | `executableName` | `Achievement Watcher` | Fixes the .exe name, install directory and uninstaller filename; the autostart registry value stores that full path, and the Watchdog spawns the app by it |
-| `app.setName()` | `Achievement Watcher` | Names the autostart registry value and the main log file |
+| `app.setName()` | `Achievement Watcher` | Names the main log file |
 | Installer artifact | `Achievement.Watcher.Setup.<version>.exe` | Referenced by `latest.yml`; published releases are immutable |
 | `updaterCacheDirName` | `achievement-watcher-updater` | Existing partially downloaded updates live there |
 | Legacy data folders | `Achievement Watcher 3.0`, `Achievement Watcher` | Import sources for the one-way migration; never renamed or deleted |
@@ -235,7 +235,11 @@ published higher version.
    blockmap.
 3. Launch the previous installed version normally (not `npm start`).
 4. Confirm logs show the GitHub feed check, the new version download and the
-   restart prompt.
+   restart prompt. electron-updater's own log names a differential download
+   ("Download block maps"); a line "Cannot download differentially, fallback
+   to full download" is not a failure, but note it. `[updater] update signer
+   accepted` must appear before the install: an unsigned or unpinned installer
+   is refused (see [INSTALLER_AND_UPDATES.md](INSTALLER_AND_UPDATES.md)).
 5. Accept restart, then confirm the running app reports the new version.
 
 Do not claim auto-update success from source mode, an unpacked build, or a
