@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "即使清除了 {folder} 中的缓存文件，更新仍然失败。",
     "update-retry-failed-detail": "这很可能是网络或发布方面的问题，清除缓存无法解决。您可以从发布页面手动下载并安装更新。",
     "open-release-page": "打开发布页面",
+    "portable-update-detail": "此便携版不会自动更新。请从发布页面下载新的压缩包，并将其解压到此文件夹中覆盖：data 文件夹中的数据会被保留。",
     "clear-cache": "清除缓存",
     "clear-update-cache-label": "清除缓存",
     "clear-update-cache-confirm": "删除所有可重新下载的缓存(更新文件、Steam/Ubisoft 架构和图标缓存、已下载的模拟器修复工具)？您的设置、存档、备份和手动放置的文件永远不会被触碰--此处清除的所有内容都会在需要时自动重新下载。",

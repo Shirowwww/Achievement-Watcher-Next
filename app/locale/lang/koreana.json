@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "{folder}의 캐시 파일을 지운 뒤에도 업데이트가 실패했습니다.",
     "update-retry-failed-detail": "캐시를 지워서 해결되는 문제가 아니라 네트워크나 릴리스 쪽 문제일 가능성이 큽니다. 릴리스 페이지에서 업데이트를 직접 내려받아 설치할 수 있습니다.",
     "open-release-page": "릴리스 페이지 열기",
+    "portable-update-detail": "이 포터블 버전은 자동으로 업데이트되지 않습니다. 릴리스 페이지에서 새 압축 파일을 내려받아 이 폴더 위에 압축을 풀어주세요. data 폴더에 있는 데이터는 유지됩니다.",
     "clear-cache": "캐시 지우기",
     "clear-update-cache-label": "캐시 지우기",
     "clear-update-cache-confirm": "다시 내려받을 수 있는 캐시(업데이트 파일, Steam/Ubisoft 목록 및 아이콘 캐시, 내려받은 에뮬레이터 복구 도구)를 모두 삭제할까요? 설정, 저장 파일, 백업, 직접 넣은 파일은 절대 건드리지 않습니다. 여기에서 지운 것은 필요할 때 자동으로 다시 받아 옵니다.",

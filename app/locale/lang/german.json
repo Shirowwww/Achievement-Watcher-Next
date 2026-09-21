@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "Das Update ist auch nach dem Leeren der zwischengespeicherten Dateien in {folder} fehlgeschlagen.",
     "update-retry-failed-detail": "Dies ist wahrscheinlich ein Netzwerk- oder Release-Problem, das durch Leeren des Caches nicht behoben werden kann. Du kannst das Update manuell von der Release-Seite herunterladen und installieren.",
     "open-release-page": "Release-Seite öffnen",
+    "portable-update-detail": "Diese portable Kopie aktualisiert sich nicht selbst. Lade das neue Archiv von der Release-Seite herunter und entpacke es über diesen Ordner: deine Daten im Ordner data bleiben erhalten.",
     "clear-cache": "Caches leeren",
     "clear-update-cache-label": "Caches leeren",
     "clear-update-cache-confirm": "Alle neu herunterladbaren Caches löschen (Update-Dateien, Steam/Ubisoft-Schema- und Icon-Cache, heruntergeladene Emulator-Fix-Tools)? Deine Einstellungen, Spielstände, Backups und manuell platzierten Dateien werden niemals berührt - alles, was hier geleert wird, wird bei Bedarf einfach automatisch erneut heruntergeladen.",

@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "Oppdateringen mislyktes fortsatt etter at de bufrede filene i {folder} ble slettet.",
     "update-retry-failed-detail": "Dette er sannsynligvis et nettverks- eller utgivelsesproblem, ikke noe som lar seg løse ved å tømme bufferen. Du kan laste ned og installere oppdateringen manuelt fra utgivelsessiden.",
     "open-release-page": "Åpne utgivelsessiden",
+    "portable-update-detail": "Denne bærbare kopien oppdaterer ikke seg selv. Last ned det nye arkivet fra utgivelsessiden og pakk det ut over denne mappen: dataene dine i mappen data blir beholdt.",
     "clear-cache": "Tøm buffere",
     "clear-update-cache-label": "Tøm buffere",
     "clear-update-cache-confirm": "Vil du slette alle buffere som kan lastes ned på nytt (oppdateringsfiler, skjema- og ikonbuffer for Steam/Ubisoft, nedlastede verktøy til emulatorfiksen)? Innstillingene, lagringsfilene, sikkerhetskopiene og filene du har lagt inn selv, røres aldri - alt som tømmes her, hentes eller lastes ned igjen automatisk ved behov.",

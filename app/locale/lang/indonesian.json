@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "Pembaruan tetap gagal setelah membersihkan file cache di {folder}.",
     "update-retry-failed-detail": "Ini kemungkinan masalah jaringan atau rilis, bukan sesuatu yang bisa diatasi dengan membersihkan cache. Anda dapat mengunduh dan memasang pembaruan secara manual dari halaman rilis.",
     "open-release-page": "Buka Halaman Rilis",
+    "portable-update-detail": "Salinan portabel ini tidak memperbarui dirinya sendiri. Unduh arsip baru dari halaman rilis dan ekstrak ke atas folder ini: data Anda di folder data akan tetap ada.",
     "clear-cache": "Bersihkan cache",
     "clear-update-cache-label": "Bersihkan cache",
     "clear-update-cache-confirm": "Hapus semua cache yang dapat diunduh ulang (file pembaruan, cache skema & ikon Steam/Ubisoft, alat perbaikan emulator yang telah diunduh)? Pengaturan, save, cadangan, dan file yang Anda letakkan sendiri tidak pernah disentuh - semua yang dibersihkan di sini akan diambil atau diunduh ulang otomatis saat dibutuhkan.",

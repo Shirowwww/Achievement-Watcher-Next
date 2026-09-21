@@ -42,9 +42,10 @@ test('a sha512 checksum mismatch clears the update cache and retries the full do
   const appRoot = path.join(__dirname, '..', '..', 'app');
   const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
 
-  // Differential (patch) downloads read a cached base file that is never revalidated between
-  // runs; disabling them removes that whole failure class instead of only reacting to it.
-  assert.match(init, /autoUpdater\.disableDifferentialDownload\s*=\s*true/);
+  // Differential downloads are back on: their base is rewritten by every install, a failed patch
+  // falls back to a full download inside electron-updater, and the recovery below still clears
+  // the cache when a full download mismatches.
+  assert.doesNotMatch(init, /disableDifferentialDownload\s*=\s*true/);
 
   // A checksum-mismatch error is detected (by code or message) through the unit-tested
   // classifier in util/updateChecksum.js, not re-implemented or assumed from context.
@@ -100,4 +101,34 @@ test('a sha512 checksum mismatch clears the update cache and retries the full do
   // never a blanket folder wipe that could catch an irreplaceable file by accident.
   assert.match(init, /require\(path\.join\(__dirname, '\.\.\/util\/clearableCaches\.js'\)\)/);
   assert.match(init, /clearSafeCaches\(userData\)/);
+});
+
+test('the update cache drops an installer it has already installed, once per run and never at boot', () => {
+  const appRoot = path.join(__dirname, '..', '..', 'app');
+  const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
+  assert.match(init, /require\(path\.join\(__dirname, '\.\.\/util\/updateCacheHousekeeping\.js'\)\)/);
+  assert.match(init, /pruneInstalledPendingUpdate\(helper\.cacheDirForPendingUpdate, app\.getVersion\(\)\)/);
+  // Chained in front of the scheduled check, so electron-updater is only loaded where it already was.
+  assert.match(init, /pruneInstalledPendingUpdateOnce\(\)\s*\.then\(\(\) => getUpdater\(\)\.checkForUpdates\(\)\)/);
+});
+
+test('the portable build checks the release feed and offers the release page, never the installer', () => {
+  const appRoot = path.join(__dirname, '..', '..', 'app');
+  const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
+  const builder = fs.readFileSync(path.join(appRoot, 'electron-builder.yml'), 'utf8');
+  // The feed it points at must be the one the installer publishes to.
+  const owner = /publish:[\s\S]*?owner: (\S+)[\s\S]*?repo: (\S+)/.exec(builder);
+  assert.ok(owner, 'electron-builder.yml publishes to GitHub');
+  assert.ok(
+    init.includes(`if (isPortableBuild) autoUpdater.setFeedURL({ provider: 'github', owner: '${owner[1]}', repo: '${owner[2]}' })`),
+    'the portable feed names the repository the installer publishes to'
+  );
+  const handler = init.slice(init.indexOf("autoUpdater.on('update-available'"));
+  const portableBranch = handler.indexOf('if (isPortableBuild)');
+  assert.ok(portableBranch > 0 && portableBranch < handler.indexOf('startUpdateDownload('), 'the portable branch returns before any download');
+  const offer = init.slice(init.indexOf('async function offerPortableUpdate('));
+  const body = offer.slice(0, offer.indexOf('\n  }\n'));
+  assert.doesNotMatch(body, /downloadUpdate|quitAndInstall/);
+  assert.match(body, /links\.releaseTag\(version\)/);
+  assert.match(body, /postponeUpdate\(version\)/, 'opening the page must not let the hourly check ask again at once');
 });

@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "Uppdateringen misslyckades fortfarande efter att de cachelagrade filerna i {folder} rensats.",
     "update-retry-failed-detail": "Det beror troligen på nätverket eller på själva utgåvan, inte på något som en cacherensning kan lösa. Du kan hämta och installera uppdateringen manuellt från utgåvesidan.",
     "open-release-page": "Öppna utgåvesidan",
+    "portable-update-detail": "Den här portabla kopian uppdaterar inte sig själv. Hämta det nya arkivet från utgåvesidan och packa upp det ovanpå den här mappen: dina data i mappen data behålls.",
     "clear-cache": "Rensa cacheminnen",
     "clear-update-cache-label": "Rensa cacheminnen",
     "clear-update-cache-confirm": "Vill du ta bort alla cacheminnen som går att hämta igen (uppdateringsfiler, scheman och ikoncache från Steam/Ubisoft, hämtade verktyg för emulatorfixar)? Dina inställningar, sparfiler, säkerhetskopior och filer du lagt dit själv rörs aldrig - allt som rensas här hämtas helt enkelt igen automatiskt vid behov.",

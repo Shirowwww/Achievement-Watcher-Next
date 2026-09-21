@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "{folder} klasöründeki önbelleğe alınmış dosyalar temizlendikten sonra bile güncelleme yine başarısız oldu.",
     "update-retry-failed-detail": "Bu muhtemelen önbelleği temizlemenin çözemeyeceği bir ağ veya sürüm sorunu. Güncellemeyi sürüm sayfasından manuel olarak indirip yükleyebilirsiniz.",
     "open-release-page": "Sürüm Sayfasını Aç",
+    "portable-update-detail": "Bu taşınabilir kopya kendini güncellemez. Yeni arşivi sürüm sayfasından indirin ve bu klasörün üzerine çıkarın: data klasöründeki verileriniz korunur.",
     "clear-cache": "Önbellekleri temizle",
     "clear-update-cache-label": "Önbellekleri temizle",
     "clear-update-cache-confirm": "Yeniden indirilebilir tüm önbellekler silinsin mi (güncelleme dosyaları, Steam/Ubisoft şema ve simge önbelleği, indirilen emülatör düzeltme araçları)? Ayarlarınıza, kayıtlarınıza, yedeklerinize ve elle yerleştirilen dosyalarınıza asla dokunulmaz - burada temizlenen her şey gerektiğinde otomatik olarak yeniden indirilir.",

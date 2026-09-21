@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "A frissítés a gyorsítótárazott fájlok {folder} mappából történő törlése után is sikertelen maradt.",
     "update-retry-failed-detail": "Ez valószínűleg hálózati vagy kiadási probléma, amelyet a gyorsítótár ürítése nem old meg. A frissítést manuálisan is letöltheted és telepítheted a kiadási oldalról.",
     "open-release-page": "Kiadási oldal megnyitása",
+    "portable-update-detail": "Ez a hordozható másolat nem frissíti önmagát. Töltsd le az új archívumot a kiadási oldalról, és csomagold ki erre a mappára: az adataid a data mappában megmaradnak.",
     "clear-cache": "Gyorsítótárak ürítése",
     "clear-update-cache-label": "Gyorsítótárak ürítése",
     "clear-update-cache-confirm": "Törlöd az összes újra letölthető gyorsítótárat (frissítési fájlok, Steam/Ubisoft séma- és ikon-gyorsítótár, letöltött emulátorjavító eszközök)? A beállításaid, mentéseid, biztonsági mentéseid és kézzel elhelyezett fájljaid soha nem érintettek - minden, amit itt kiürítünk, szükség esetén egyszerűen automatikusan újra letöltődik.",

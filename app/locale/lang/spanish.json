@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "La actualización volvió a fallar incluso después de vaciar los archivos en caché en {folder}.",
     "update-retry-failed-detail": "Es probable que se trate de un problema de red o de la publicación, que vaciar la caché no puede solucionar. Puede descargar e instalar la actualización manualmente desde la página de versiones.",
     "open-release-page": "Abrir página de versiones",
+    "portable-update-detail": "Esta copia portátil no se actualiza sola. Descarga el nuevo archivo desde la página de versiones y extráelo sobre esta carpeta: tus datos de la carpeta data se conservan.",
     "clear-cache": "Vaciar cachés",
     "clear-update-cache-label": "Vaciar cachés",
     "clear-update-cache-confirm": "¿Eliminar todas las cachés redescargables (archivos de actualización, caché de esquemas e iconos de Steam/Ubisoft, herramientas de corrección de emulador descargadas)? Sus ajustes, partidas guardadas, copias de seguridad y archivos colocados manualmente nunca se tocan - todo lo que se vacía aquí simplemente se vuelve a descargar automáticamente cuando se necesita.",

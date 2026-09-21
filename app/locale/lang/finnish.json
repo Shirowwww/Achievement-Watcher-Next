@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "Päivitys epäonnistui edelleen, vaikka kansion {folder} välimuistitiedostot tyhjennettiin.",
     "update-retry-failed-detail": "Kyseessä on todennäköisesti verkko- tai julkaisuongelma, jota välimuistin tyhjentäminen ei korjaa. Voit ladata ja asentaa päivityksen käsin julkaisusivulta.",
     "open-release-page": "Avaa julkaisusivu",
+    "portable-update-detail": "Tämä kannettava kopio ei päivitä itseään. Lataa uusi arkisto julkaisusivulta ja pura se tämän kansion päälle: tietosi data-kansiossa säilyvät.",
     "clear-cache": "Tyhjennä välimuistit",
     "clear-update-cache-label": "Tyhjennä välimuistit",
     "clear-update-cache-confirm": "Poistetaanko kaikki uudelleen ladattavissa olevat välimuistit (päivitystiedostot, Steamin ja Ubisoftin luettelo- ja kuvakevälimuisti sekä ladatut emulaattorikorjaustyökalut)? Asetuksiisi, tallennuksiisi, varmuuskopioihisi ja itse lisäämiisi tiedostoihin ei kosketa - kaikki täältä tyhjennettävä haetaan tai ladataan tarvittaessa automaattisesti uudelleen.",

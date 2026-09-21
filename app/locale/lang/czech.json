@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "Aktualizace se nezdařila ani po vymazání souborů v mezipaměti ve složce {folder}.",
     "update-retry-failed-detail": "Pravděpodobně jde o problém se sítí nebo vydáním, který vymazání mezipaměti nevyřeší. Aktualizaci můžete stáhnout a nainstalovat ručně ze stránky s vydáními.",
     "open-release-page": "Otevřít stránku s vydáními",
+    "portable-update-detail": "Tato přenosná kopie se sama neaktualizuje. Stáhněte nový archiv ze stránky s vydáními a rozbalte ho přes tuto složku: vaše data ve složce data zůstanou zachována.",
     "clear-cache": "Vymazat mezipaměti",
     "clear-update-cache-label": "Vymazat mezipaměti",
     "clear-update-cache-confirm": "Odstranit všechny znovu stažitelné mezipaměti (soubory aktualizace, mezipaměť schémat a ikon Steam/Ubisoft, stažené nástroje pro opravu emulátoru)? Vaše nastavení, uložené pozice, zálohy a ručně umístěné soubory nejsou nikdy dotčeny - vše, co je zde vymazáno, se v případě potřeby jednoduše automaticky znovu stáhne.",

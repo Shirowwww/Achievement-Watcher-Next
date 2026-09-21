@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "A atualização falhou novamente mesmo depois de limpar os arquivos em cache em {folder}.",
     "update-retry-failed-detail": "É provável que seja um problema de rede ou da própria versão publicada, que limpar o cache não consegue resolver. Você pode baixar e instalar a atualização manualmente na página de lançamentos.",
     "open-release-page": "Abrir página de lançamentos",
+    "portable-update-detail": "Esta cópia portátil não se atualiza sozinha. Baixe o novo arquivo compactado na página de lançamentos e extraia-o por cima desta pasta: seus dados, na pasta data, são mantidos.",
     "clear-cache": "Limpar caches",
     "clear-update-cache-label": "Limpar caches",
     "clear-update-cache-confirm": "Excluir todos os caches redownloadáveis (arquivos de atualização, cache de esquemas e ícones Steam/Ubisoft, ferramentas de correção de emulador baixadas)? Suas configurações, jogos salvos, backups e arquivos colocados manualmente nunca são tocados - tudo o que é limpo aqui é simplesmente baixado novamente de forma automática quando necessário.",

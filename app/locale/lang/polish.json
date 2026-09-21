@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "Aktualizacja nadal się nie powiodła nawet po wyczyszczeniu buforowanych plików w {folder}.",
     "update-retry-failed-detail": "To prawdopodobnie problem z siecią lub wydaniem, którego wyczyszczenie pamięci podręcznej nie rozwiąże. Możesz pobrać i zainstalować aktualizację ręcznie ze strony wydań.",
     "open-release-page": "Otwórz stronę wydań",
+    "portable-update-detail": "Ta przenośna kopia nie aktualizuje się sama. Pobierz nowe archiwum ze strony wydań i rozpakuj je nad tym folderem: twoje dane w folderze data zostaną zachowane.",
     "clear-cache": "Wyczyść pamięci podręczne",
     "clear-update-cache-label": "Wyczyść pamięci podręczne",
     "clear-update-cache-confirm": "Usunąć wszystkie pamięci podręczne, które można pobrać ponownie (pliki aktualizacji, pamięć podręczna schematów i ikon Steam/Ubisoft, pobrane narzędzia do naprawy emulatora)? Twoje ustawienia, zapisy gry, kopie zapasowe i ręcznie umieszczone pliki nigdy nie są dotykane - wszystko, co jest tu czyszczone, zostanie po prostu automatycznie pobrane ponownie w razie potrzeby.",

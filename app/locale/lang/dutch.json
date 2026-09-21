@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "De update is opnieuw mislukt, ook na het wissen van de bestanden in de cache in {folder}.",
     "update-retry-failed-detail": "Dit is waarschijnlijk een netwerk- of releaseprobleem dat je niet met het wissen van de cache oplost. Je kunt de update handmatig downloaden en installeren via de releasepagina.",
     "open-release-page": "Releasepagina openen",
+    "portable-update-detail": "Deze portable kopie werkt zichzelf niet bij. Download het nieuwe archief van de releasepagina en pak het uit over deze map: je gegevens in de map data blijven behouden.",
     "clear-cache": "Caches wissen",
     "clear-update-cache-label": "Caches wissen",
     "clear-update-cache-confirm": "Elke cache wissen die opnieuw te downloaden is (updatebestanden, de schema- en pictogramcache van Steam/Ubisoft, gedownloade gereedschappen voor de emulatorfix)? Je instellingen, saves, back-ups en handmatig geplaatste bestanden blijven altijd ongemoeid - alles wat hier gewist wordt, wordt vanzelf opnieuw opgehaald of gedownload zodra het nodig is.",

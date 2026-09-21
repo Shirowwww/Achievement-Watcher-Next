@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "即使清除了 {folder} 中的快取檔案，更新仍然失敗。",
     "update-retry-failed-detail": "這多半是網路或發行版本的問題，不是清除快取能解決的。你可以到發行頁面手動下載並安裝更新。",
     "open-release-page": "開啟發行頁面",
+    "portable-update-detail": "此可攜式版本不會自動更新。請從發行頁面下載新的壓縮檔，並解壓縮覆蓋到此資料夾：data 資料夾中的資料會保留。",
     "clear-cache": "清除快取",
     "clear-update-cache-label": "清除快取",
     "clear-update-cache-confirm": "要刪除所有可重新下載的快取嗎（更新檔案、Steam/Ubisoft 結構與圖示快取、下載回來的模擬器修復工具）？你的設定、存檔、備份與手動放入的檔案絕不會被動到 - 這裡清掉的東西，需要時都會自動重新取得或重新下載。",

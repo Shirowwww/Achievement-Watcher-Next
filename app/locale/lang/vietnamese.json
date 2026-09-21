@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "Bản cập nhật vẫn thất bại sau khi xóa các tệp lưu đệm trong {folder}.",
     "update-retry-failed-detail": "Đây nhiều khả năng là vấn đề mạng hoặc bản phát hành, chứ không phải thứ mà việc xóa bộ nhớ đệm sửa được. Bạn có thể tải và cài bản cập nhật thủ công từ trang phát hành.",
     "open-release-page": "Mở trang phát hành",
+    "portable-update-detail": "Bản sao di động này không tự cập nhật. Hãy tải tệp nén mới từ trang phát hành và giải nén đè lên thư mục này: dữ liệu của bạn trong thư mục data sẽ được giữ nguyên.",
     "clear-cache": "Xóa bộ nhớ đệm",
     "clear-update-cache-label": "Xóa bộ nhớ đệm",
     "clear-update-cache-confirm": "Xóa mọi bộ nhớ đệm có thể tải lại (tệp cập nhật, bộ đệm danh sách và biểu tượng của Steam/Ubisoft, các công cụ sửa giả lập đã tải)? Cài đặt, bản lưu, bản sao lưu và những tệp bạn tự đặt vào sẽ không bao giờ bị động tới - mọi thứ bị xóa ở đây đều được lấy hoặc tải lại tự động khi cần.",

@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "La mise à jour a encore échoué après avoir vidé les fichiers en cache dans {folder}.",
     "update-retry-failed-detail": "Il s’agit probablement d’un problème réseau ou lié à la publication, que vider le cache ne peut pas résoudre. Tu peux télécharger et installer la mise à jour manuellement depuis la page de version.",
     "open-release-page": "Ouvrir la page de version",
+    "portable-update-detail": "Cette copie portable ne se met pas à jour toute seule. Téléchargez la nouvelle archive depuis la page de version et extrayez-la par-dessus ce dossier : vos données, dans son dossier data, sont conservées.",
     "clear-cache": "Vider les caches",
     "clear-update-cache-label": "Vider les caches",
     "clear-update-cache-confirm": "Supprimer tous les caches retéléchargeables (fichiers de mise à jour, cache des schémas et icônes Steam/Ubisoft, outils de correction d’émulateur téléchargés) ? Tes réglages, sauvegardes, backups et fichiers placés manuellement ne sont jamais touchés - tout ce qui est vidé ici est simplement retéléchargé automatiquement en cas de besoin.",

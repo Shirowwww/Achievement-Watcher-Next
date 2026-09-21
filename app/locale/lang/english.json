@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "The update still failed after clearing the cached files in {folder}.",
     "update-retry-failed-detail": "This is likely a network or release problem, not something clearing the cache can fix. You can download and install the update manually from the release page.",
     "open-release-page": "Open Release Page",
+    "portable-update-detail": "This portable copy does not update itself. Download the new archive from the release page and extract it over this folder: your data in its data folder is kept.",
     "clear-cache": "Clear caches",
     "clear-update-cache-label": "Clear caches",
     "clear-update-cache-confirm": "Delete every re-downloadable cache (update files, Steam/Ubisoft schema & icon cache, downloaded emulator-fix tools)? Your settings, saves, backups and manually placed files are never touched - everything cleared here is simply re-fetched or re-downloaded automatically when needed.",

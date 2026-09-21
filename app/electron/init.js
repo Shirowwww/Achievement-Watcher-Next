@@ -90,9 +90,20 @@ function getUpdater() {
     // Updates require an explicit download and install confirmation.
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = false;
-    // Differential downloads patch a cached, never-revalidated copy of the previous installer; a corrupted
-    // base fails every future patch with a checksum mismatch. Full downloads avoid that failure class.
-    autoUpdater.disableDifferentialDownload = true;
+    /*
+      Differential downloads stay ON: they fetch only the blocks that changed between the installed
+      installer and the new one (electron-builder publishes the .blockmap for that), instead of the
+      whole 127 MB every release. Their base is installer.exe, which every install and every update
+      rewrites from the installer that just ran, so it matches the running version. A bad base is not
+      a dead end either: the patched file is checked against the SHA-512 inside the differential
+      downloader, and any failure there falls back to a full download (NsisUpdater
+      differentialDownloadInstaller). The checksum recovery below still clears the whole cache if a
+      full download ever mismatches.
+    */
+    // The portable ZIP ships no app-update.yml (electron-builder writes one for the installer only),
+    // so without an explicit feed every check failed with ENOENT. It is pointed at the same release
+    // feed and only ever checks: a portable copy cannot run the NSIS installer over itself.
+    if (isPortableBuild) autoUpdater.setFeedURL({ provider: 'github', owner: 'Shirowwww', repo: 'Achievement-Watcher-Next' });
     // Accept the project's self-signed publisher through the tested verifier.
     autoUpdater.verifyUpdateCodeSignature = (publisherNames, tempUpdateFile) =>
       verifyUpdateCodeSignature(publisherNames, tempUpdateFile, (message) => debug.log(message));
@@ -130,6 +141,7 @@ const updateGate = require(path.join(__dirname, '../util/updateGate.js'));
 const { resolveSteamMetadata } = require(path.join(__dirname, '../util/steamMetadata.js'));
 const { isChecksumMismatchError, summarizeUpdaterError } = require(path.join(__dirname, '../util/updateChecksum.js'));
 const { clearUpdaterCacheDir: clearCacheDirForHelper } = require(path.join(__dirname, '../util/updateCacheClear.js'));
+const { pruneInstalledPendingUpdate } = require(path.join(__dirname, '../util/updateCacheHousekeeping.js'));
 const { clearSafeCaches } = require(path.join(__dirname, '../util/clearableCaches.js'));
 
 async function applyGeneralPatch(patch) {
@@ -352,6 +364,21 @@ async function notifyChecksumRecoveryFailed(message, cacheDir) {
   }
 }
 
+// Once per run, on the first check (never at boot: it needs electron-updater loaded). Never fails
+// the check itself - a folder that cannot be removed now is removed by the next download anyway.
+let pendingUpdatePruned = false;
+async function pruneInstalledPendingUpdateOnce() {
+  if (pendingUpdatePruned || isPortableBuild) return;
+  pendingUpdatePruned = true;
+  try {
+    const helper = await getUpdater().getOrCreateDownloadHelper();
+    const result = await pruneInstalledPendingUpdate(helper.cacheDirForPendingUpdate, app.getVersion());
+    if (result.removed) debug.log(`[updater] removed the already installed ${result.version} from the update cache`);
+  } catch (err) {
+    debug.log(`[updater] could not tidy the update cache: ${err.message || err}`);
+  }
+}
+
 function scheduleUpdateCheck(delayMs) {
   clearTimeout(updateCheckTimer);
   updateCheckTimer = setTimeout(() => {
@@ -368,8 +395,8 @@ function scheduleUpdateCheck(delayMs) {
       scheduleUpdateCheck(updateGate.INTERVALS.inGame);
       return;
     }
-    getUpdater()
-      .checkForUpdates()
+    pruneInstalledPendingUpdateOnce()
+      .then(() => getUpdater().checkForUpdates())
       .then(() => {
         updaterErrorNotified = false; // a healthy check clears the "already told the user" flag
         scheduleUpdateCheck(updateGate.nextCheckDelayMs({ gameRunning: isGameRunning() }));
@@ -6494,6 +6521,10 @@ try {
           scheduleUpdateCheck(updateGate.INTERVALS.inGame);
           return;
         }
+        if (isPortableBuild) {
+          await offerPortableUpdate(info.version);
+          return;
+        }
         // "View changelog" is not an answer: showMessageBox closes on any click, so reading the notes
         // reopens the same dialog instead of deciding for the user.
         let response;
@@ -6633,6 +6664,44 @@ try {
   };
   // Nothing calls the updater before this point, but if that ever changes the listeners still land.
   if (updaterModule) registerUpdaterEvents(updaterModule.autoUpdater);
+
+  /*
+    The portable ZIP learns about a release like the installed app does, but cannot install it: the
+    offer is the release page. Opening it counts as "Later", or the hourly check would ask again
+    while the new archive is still downloading in the browser.
+  */
+  async function offerPortableUpdate(version) {
+    const { response } = await dialog.showMessageBox({
+      type: 'info',
+      title: t('update-available', 'Update Available', 'Mise à jour disponible'),
+      message: t('update-available-message', 'A new version ({version}) is available.', 'Une nouvelle version ({version}) est disponible.', { version }),
+      detail: t(
+        'portable-update-detail',
+        'This portable copy does not update itself. Download the new archive from the release page and extract it over this folder: your data in its data folder is kept.',
+        'Cette copie portable ne se met pas à jour toute seule. Téléchargez la nouvelle archive depuis la page de version et extrayez-la par-dessus ce dossier : vos données, dans son dossier data, sont conservées.'
+      ),
+      buttons: [
+        t('open-release-page', 'Open Release Page', 'Ouvrir la page de version'),
+        t('later', 'Later', 'Plus tard'),
+        t('skip-this-version', 'Skip this version', 'Ignorer cette version'),
+      ],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (response === 2) {
+      configJS.general.skippedVersion = version;
+      await settingsJS.save(configJS, { keepMainOwnedKeys: false });
+      debug.log(`[updater] version ${version} skipped by user (portable)`);
+    } else {
+      if (response === 0) {
+        const page = links.releaseTag(version);
+        debug.log(`[updater] portable build: opening the release page of ${version}: ${page}`);
+        shell.openExternal(page).catch((err) => debug.log(`[updater] could not open ${page}: ${err.message || err}`));
+      }
+      await postponeUpdate(version);
+    }
+    setUpdateStatus({ type: 'reset' });
+  }
 
   promptDownloadedUpdate = async function (info) {
     // "Download && Install" was already explicit consent. Once downloaded, run the NSIS upgrade and

@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "L’aggiornamento è comunque fallito dopo aver svuotato i file in cache in {folder}.",
     "update-retry-failed-detail": "Si tratta probabilmente di un problema di rete o della release, che svuotare la cache non può risolvere. Puoi scaricare e installare l’aggiornamento manualmente dalla pagina delle release.",
     "open-release-page": "Apri pagina delle release",
+    "portable-update-detail": "Questa copia portatile non si aggiorna da sola. Scarica il nuovo archivio dalla pagina delle release ed estrailo sopra questa cartella: i tuoi dati nella cartella data vengono conservati.",
     "clear-cache": "Svuota cache",
     "clear-update-cache-label": "Svuota cache",
     "clear-update-cache-confirm": "Eliminare tutte le cache riscaricabili (file di aggiornamento, cache degli schemi e delle icone Steam/Ubisoft, strumenti di correzione emulatore scaricati)? Le tue impostazioni, i salvataggi, i backup e i file posizionati manualmente non vengono mai toccati - tutto ciò che viene svuotato qui viene semplicemente riscaricato automaticamente quando necessario.",

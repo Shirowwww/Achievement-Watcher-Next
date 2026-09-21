@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "Aktualizácia zlyhala aj po vymazaní súborov vo vyrovnávacej pamäti v priečinku {folder}.",
     "update-retry-failed-detail": "Pravdepodobne ide o problém so sieťou alebo vydaním, ktorý vymazanie vyrovnávacej pamäte nevyrieši. Aktualizáciu si môžete stiahnuť a nainštalovať ručne zo stránky s vydaniami.",
     "open-release-page": "Otvoriť stránku s vydaniami",
+    "portable-update-detail": "Táto prenosná kópia sa sama neaktualizuje. Stiahnite si nový archív zo stránky s vydaniami a rozbaľte ho nad tento priečinok: vaše údaje v priečinku data zostanú zachované.",
     "clear-cache": "Vymazať vyrovnávacie pamäte",
     "clear-update-cache-label": "Vymazať vyrovnávacie pamäte",
     "clear-update-cache-confirm": "Odstrániť všetky znovu stiahnuteľné vyrovnávacie pamäte (súbory aktualizácie, vyrovnávaciu pamäť schém a ikon Steam/Ubisoft, stiahnuté nástroje na opravu emulátora)? Vaše nastavenia, uložené pozície, zálohy a ručne umiestnené súbory sa nikdy nedotknú - všetko, čo sa tu vymaže, sa v prípade potreby jednoducho automaticky znova stiahne.",

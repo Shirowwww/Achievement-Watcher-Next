@@ -1882,6 +1882,7 @@
     "update-retry-failed-message": "Opdateringen mislykkedes stadig, efter at de cachelagrede filer i {folder} blev ryddet.",
     "update-retry-failed-detail": "Det skyldes sandsynligvis netværket eller selve udgivelsen og er ikke noget, en rydning af cachen kan løse. Du kan hente og installere opdateringen manuelt fra udgivelsessiden.",
     "open-release-page": "Åbn udgivelsessiden",
+    "portable-update-detail": "Denne bærbare kopi opdaterer ikke sig selv. Download det nye arkiv fra udgivelsessiden, og udpak det oven på denne mappe: dine data i mappen data bevares.",
     "clear-cache": "Ryd cacher",
     "clear-update-cache-label": "Ryd cacher",
     "clear-update-cache-confirm": "Vil du slette alle cacher, der kan hentes igen (opdateringsfiler, skema- og ikoncache fra Steam/Ubisoft, hentede emulatorværktøjer)? Der bliver aldrig rørt ved dine indstillinger, gemte filer, sikkerhedskopier og filer, du selv har lagt ind - alt det, der ryddes her, hentes simpelthen igen automatisk efter behov.",
