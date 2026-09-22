@@ -466,6 +466,15 @@ function isKnownUnresolved(appID) {
   return loadNegativeCache().has(String(appID));
 }
 
+// Read-only query for callers outside this module: when was this appid FIRST confirmed to have no
+// Steam data, or null if it isn't a known miss. Stable across scans (rememberUnresolved only stamps
+// once), unlike Date.now() at read time - the provisional-game builder needs that stability to know
+// how long a confirmed miss has been standing rather than how long ago it was last re-checked.
+module.exports.unresolvedSince = (appID) => {
+  const at = loadNegativeCache().get(String(appID));
+  return Number.isFinite(at) ? at : null;
+};
+
 function rememberUnresolved(appID) {
   const cache = loadNegativeCache();
   cache.set(String(appID), Date.now());

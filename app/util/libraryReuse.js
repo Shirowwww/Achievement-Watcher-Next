@@ -17,6 +17,11 @@
 // whether or not anything moved locally.
 const REUSE_TTL_MS = 6 * 60 * 60 * 1000;
 
+// How long a confirmed-miss provisional entry is still allowed to force a full rescan. Short enough
+// that a fresh failure still gets its retry within the hour, long enough that it is not just noise
+// from the scan that only just found it.
+const PROVISIONAL_GRACE_MS = 30 * 60 * 1000;
+
 /*
   entry    - what librarySnapshot.readEntry() returned, or null.
   options  - the onStart() options; a recheck or a cache clear is the user asking for a real scan.
@@ -35,11 +40,21 @@ function refuseReason(entry, options = {}, context = {}) {
   if (!Number.isFinite(age) || age < 0) return 'the stored library is dated in the future';
   if (age > REUSE_TTL_MS) return `the last scan is ${(age / 3600000).toFixed(1)}h old`;
   // A provisional entry is a game whose description never arrived - a network failure, not a fact
-  // about the disk. The next scan is its retry, so it must not be skipped.
-  if (entry.games.some((game) => game && game.provisional)) return 'the last scan left entries undescribed';
+  // about the disk, so the next scan is normally its retry. But one game steam.js has positively
+  // confirmed has no Steam data (provisionalDefinitive, from the negative cache) will not resolve
+  // until that cache entry expires days from now: once it has sat provisional past the grace period
+  // it stops forcing a full network rescan of the WHOLE library on every launch. Anything else
+  // provisional (reason unknown, or just written) still blocks reuse so it gets retried promptly.
+  const blockingProvisional = entry.games.some((game) => {
+    if (!game || !game.provisional) return false;
+    if (!game.provisionalDefinitive) return true;
+    const age = Number(context.now || Date.now()) - Number(game.provisionalAt || 0);
+    return !(Number.isFinite(age) && age >= PROVISIONAL_GRACE_MS);
+  });
+  if (blockingProvisional) return 'the last scan left entries undescribed';
   if (typeof context.inputsUnchanged !== 'function' || !context.inputsUnchanged(entry.fingerprint))
     return 'a game folder or unlock file changed';
   return '';
 }
 
-module.exports = { REUSE_TTL_MS, refuseReason };
+module.exports = { REUSE_TTL_MS, PROVISIONAL_GRACE_MS, refuseReason };

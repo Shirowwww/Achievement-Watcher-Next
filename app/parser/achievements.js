@@ -723,6 +723,13 @@ function buildProvisionalGame(appid) {
     }
   }
 
+  // A numeric id steam.js has already put in its negative cache will not resolve until that cache
+  // entry expires days from now. unresolvedSince is stamped once, the first time the miss was
+  // confirmed - stable across scans, unlike Date.now() here, which would reset every time this
+  // provisional record is rebuilt. libraryReuse.js uses the two together to stop letting one such
+  // game force a full network rescan of the whole library on every launch.
+  const unresolvedSince = /^\d+$/.test(id) ? steam.unresolvedSince(id) : null;
+
   return {
     appid: appid.appid,
     name: name || id,
@@ -731,6 +738,8 @@ function buildProvisionalGame(appid) {
     gameDir: gameDir || undefined,
     dataPath: dataPath || undefined,
     provisional: true,
+    provisionalAt: unresolvedSince != null ? unresolvedSince : Date.now(),
+    provisionalDefinitive: unresolvedSince != null,
     img,
     achievement: { total: 0, unlocked: 0, list: [] },
   };

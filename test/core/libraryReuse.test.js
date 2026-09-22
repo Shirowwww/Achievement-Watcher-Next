@@ -64,6 +64,24 @@ test('a scan that left an undescribed game must run again so it retries', () => 
   assert.equal(reason(undescribed), 'the last scan left entries undescribed');
 });
 
+test('a fresh confirmed-miss provisional game still blocks reuse, so it gets a prompt retry', () => {
+  const stillFresh = entry();
+  stillFresh.games = [
+    ...stillFresh.games,
+    { appid: '20', provisional: true, provisionalDefinitive: true, provisionalAt: NOW - (libraryReuse.PROVISIONAL_GRACE_MS - 1000) },
+  ];
+  assert.equal(reason(stillFresh), 'the last scan left entries undescribed');
+});
+
+test('a confirmed-miss provisional game past the grace period no longer blocks reuse of the rest', () => {
+  const settled = entry();
+  settled.games = [
+    ...settled.games,
+    { appid: '20', provisional: true, provisionalDefinitive: true, provisionalAt: NOW - (libraryReuse.PROVISIONAL_GRACE_MS + 1000) },
+  ];
+  assert.equal(reason(settled), '');
+});
+
 test('a library with nothing to prove it is current is rebuilt', () => {
   assert.equal(reason(null), 'nothing stored yet');
   assert.equal(reason(entry({ games: [] })), 'nothing stored yet');
