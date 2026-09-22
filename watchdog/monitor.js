@@ -38,6 +38,17 @@ function decodeRldBlob(value) {
   return new DataView(new Uint8Array(Buffer.from(String(value), 'hex')).buffer).getUint32(0, true);
 }
 
+// A bare `earned` field can be a bool, a number, or a string - and a raw truthy check reads the
+// string "0" (non-empty) as achieved. Same rule as app/parser/achievements.js's isTruthyFlag.
+function isTruthyFlag(v) {
+  if (v === true || v === 1) return true;
+  if (typeof v === 'string') {
+    const s = v.trim().toLowerCase();
+    return s === '1' || s === 'true';
+  }
+  return false;
+}
+
 const files = {
   achievement: [
       'achievements.ini',
@@ -530,7 +541,7 @@ module.exports.parse = async (filePath) => {
               local[achievement].HaveAchieved == 1 ||
               local[achievement].Unlocked == 1 ||
               local[achievement].unlocked == 1 ||
-              local[achievement].earned ||
+              isTruthyFlag(local[achievement].earned) ||
               local[achievement] === '1'
           ),
           CurProgress: local[achievement].CurProgress || local[achievement].progress || local[achievement].value || local[achievement].Value || 0,

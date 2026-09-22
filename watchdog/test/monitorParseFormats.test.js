@@ -57,3 +57,42 @@ test('monitor.parse dispatches on the format, not on the casing the file happens
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// A raw truthy check on `earned` reads the string "0" (non-empty) as achieved. GBE Fork writes
+// `earned` as a bool or a number, but a save some tool wrote by hand can carry either as a string.
+test('monitor.parse treats a stringy "0"/"false" earned flag as locked, not achieved', async () => {
+  const { dir, file } = writeTemp(
+    'achievements.json',
+    JSON.stringify({
+      ACH_STRING_ZERO: { earned: '0', earned_time: 0 },
+      ACH_STRING_FALSE: { earned: 'false', earned_time: 0 },
+      ACH_BOOL_TRUE: { earned: true, earned_time: 1712575690 },
+      ACH_NUM_ONE: { earned: 1, earned_time: 1712575690 },
+      ACH_STRING_ONE: { earned: '1', earned_time: 1712575690 },
+    })
+  );
+  try {
+    const achievements = await monitor.parse(file);
+    const byName = Object.fromEntries(achievements.map((a) => [a.name, a]));
+    assert.equal(byName.ACH_STRING_ZERO.Achieved, false);
+    assert.equal(byName.ACH_STRING_FALSE.Achieved, false);
+    assert.equal(byName.ACH_BOOL_TRUE.Achieved, true);
+    assert.equal(byName.ACH_NUM_ONE.Achieved, true);
+    assert.equal(byName.ACH_STRING_ONE.Achieved, true);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// earned_time missing/0 must not hide a real unlock: Achieved comes from `earned` alone.
+test('monitor.parse marks an entry achieved even with no earned_time at all', async () => {
+  const { dir, file } = writeTemp('achievements.json', JSON.stringify({ ACH_FIRST: { earned: true } }));
+  try {
+    const achievements = await monitor.parse(file);
+    const first = achievements.find((a) => a.name === 'ACH_FIRST');
+    assert.equal(first.Achieved, true);
+    assert.equal(Number(first.UnlockTime), 0);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});

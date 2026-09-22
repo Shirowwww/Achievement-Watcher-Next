@@ -88,6 +88,7 @@ const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, ex
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
 const { configuredExecutable } = require('./util/exeList.js');
+const { immediateChildDirOf, deriveAppIdFromDir } = require('./util/appidFolder.js');
 
 /*
   The square slot of a notification card, best first, and in the same order the app resolves it in:
@@ -141,6 +142,9 @@ const { spawnDetached } = require('./util/spawnDetached.js');
 const { buildSchemaIndex, findSchemaAchievement, buildPreviousAchievementIndex } = require('./util/achievementIndex.js');
 const { createIndexedGameLookup } = require('./util/indexedGameLookup.js');
 const { runXboxPoll, matchesActiveXboxPoll } = require('./util/xboxPolling.js');
+
+// A brand-new save folder whose first write carries more unlocks than this is a copied-in save.
+const NEW_FOLDER_NOTIFY_MAX = 10;
 
 /*
   Every live watcher that is not the Steam save-file path, with what each one reads:
@@ -932,6 +936,19 @@ var app = {
     let self = this;
     debug.log(`Monitoring ach change in "${dir}" ...`);
 
+    // Snapshotted once, when this root starts being watched (at startup, or later through
+    // watchForNewRoots for a root that did not exist yet) - so a game's genuinely new appid folder
+    // can be told apart from one that was already sitting here unwatched. Only the first case may
+    // notify every achievement at once; the second is what boot-seed below must stay silent for.
+    const preexistingChildren = new Set();
+    try {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (entry.isDirectory()) preexistingChildren.add(path.join(dir, entry.name).toLowerCase());
+      }
+    } catch (err) {
+      debug.log(err);
+    }
+
     self.watcher[i] = watch(dir, { recursive: options.recursive, filter: options.filter }, async function (evt, name) {
       try {
         if (evt !== 'update') return;
@@ -961,6 +978,8 @@ var app = {
 
         if (moment().diff(moment(self.tick)) <= self.options.notification_advanced.tick) throw 'Spamming protection is enabled > SKIPPING';
         self.tick = moment().valueOf();
+
+        const isNewAppidFolder = !preexistingChildren.has(immediateChildDirOf(dir, filePath.dir).toLowerCase());
 
         let appID;
         if (options.socialClub) {
@@ -1084,8 +1103,13 @@ var app = {
 
             // Boot-seed / anti-avalanche: the first time a game is observed there is no persisted
             // baseline, so surface only the latest few unlocks then record the full state as baseline.
+            // Only for an appid folder that already existed when this root started being watched - a
+            // folder that appeared during this very session is a live first run, however many
+            // achievements its first write happens to carry, and must notify every one of them. Past
+            // a handful it is a save copied in rather than played, so it seeds like any other.
             const preUnlocked = achievements.filter((a) => a.Achieved);
-            const seedOnly = (!Array.isArray(cache) || cache.length === 0) && preUnlocked.length > 1;
+            const liveFirstRun = isNewAppidFolder && preUnlocked.length <= NEW_FOLDER_NOTIFY_MAX;
+            const seedOnly = (!Array.isArray(cache) || cache.length === 0) && preUnlocked.length > 1 && !liveFirstRun;
             const seedNotifyLimit = 3;
             const seedNotifyNames = new Set(
               seedOnly
