@@ -220,6 +220,83 @@ function shouldMuteProcessPath(filepath, dirs, indexedMatches) {
   return !(indexedMatches || []).some((game) => String(game && game.source || '').toLowerCase() === 'manual');
 }
 
+// A bundled JRE never carries the game's own binary name (java.exe/javaw.exe are excluded from
+// exe-detection on purpose), so it never appears in gameIndexByBinary. Its install folder still
+// does: it launches from a few levels under the game's own root, e.g. <install>\jre\bin\javaw.exe.
+const INTERPRETER_EXE = new Set(['java.exe', 'javaw.exe']);
+
+function isInterpreterProcess(process) {
+  return INTERPRETER_EXE.has(String(process || '').toLowerCase());
+}
+
+function isUnderDir(dir, filepath) {
+  if (!dir || !filepath) return false;
+  const root = path.resolve(dir).toLowerCase();
+  const file = path.resolve(filepath).toLowerCase();
+  return file === root || file.startsWith(root + path.sep);
+}
+
+// A known game's install folder identifies a spawned interpreter the way a binary name would for a
+// native exe. Only tried for interpreters - a system-wide java.exe running some unrelated tool must
+// never be attributed to whichever game happens to sit deepest in the index. `list` defaults to the
+// live gameIndex; tests pass their own.
+function findGameForInterpreterChild(process, filepath, list = gameIndex) {
+  if (!isInterpreterProcess(process) || !filepath) return null;
+  for (const game of list || []) {
+    const known = (game && game.exePath) || (game && configuredExecutable(game.appid));
+    if (known && isUnderDir(path.dirname(known), filepath)) return game;
+  }
+  return null;
+}
+
+// How many parent folders to try above a spawned interpreter's own directory when looking for a
+// steam_appid.txt/steam_emu.ini marker. Bounded, and only for an interpreter: climbing for every
+// unmatched process would risk picking up an unrelated marker from a shared parent folder.
+const INTERPRETER_ANCESTOR_CLIMB = 4;
+
+function candidateConfigDirs(dir, process) {
+  const dirs = [dir];
+  if (!isInterpreterProcess(process)) return dirs;
+  let current = dir;
+  for (let i = 0; i < INTERPRETER_ANCESTOR_CLIMB; i++) {
+    const parent = path.dirname(current);
+    if (!parent || parent === current) break;
+    dirs.push(parent);
+    current = parent;
+  }
+  return dirs;
+}
+
+// Loose local echo of exeDetect.js's nameSimilarity(), kept separate rather than pulling the
+// app-side exe-detection module into this long-running daemon for one heuristic.
+function normalizeForSimilarity(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+// Does the running process's own folder look like it belongs to this game? Used to corroborate a
+// single binary-name hit that comes only from the stale bundled catalogue (see catalogueOnly below).
+function tokenizeForSimilarity(value) {
+  return String(value || '')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t.length >= 3);
+}
+
+function relatedToFolder(name, filepath) {
+  const folder = path.basename(path.dirname(String(filepath || '')));
+  const a = normalizeForSimilarity(name);
+  const b = normalizeForSimilarity(folder);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const ratio = Math.min(a.length, b.length) / Math.max(a.length, b.length);
+  if ((a.includes(b) || b.includes(a)) && ratio >= 0.55) return true;
+  // A short, generic install folder ("Khazan") is fair evidence for a longer subtitled title ("The
+  // First Berserker: Khazan") even though the substring-ratio check above is too strict for it - a
+  // whole distinctive word shared between the name and the folder is real corroboration either way.
+  const nameTokens = tokenizeForSimilarity(name);
+  return nameTokens.includes(b) || tokenizeForSimilarity(folder).some((t) => nameTokens.includes(t));
+}
+
 async function init() {
   const emitter = new EventEmitter();
   // Resolved once, before the first process event, so the synchronous filter above has an answer.
@@ -301,18 +378,32 @@ async function init() {
   processMonitor.on('creation', async ([process, pid, filepath]) => {
     const games = getTrackableGameMatches(gameIndexByBinary, process);
     if (isWallpaperEngineProcess(process, filepath)) return;
-    if (filepath && shouldMuteProcessPath(filepath, filter.mute.dir, games)) return;
     if (filter.mute.file.some((bin) => bin.toLowerCase() === process.toLowerCase())) return;
 
-    let game;
+    // A spawned interpreter never matches by binary name; a known game's install folder is a
+    // stronger signal than the generic mute-by-path filter below, so it is tried first and is never
+    // muted by it (a bundled JRE regularly sits under Program Files, one of the muted roots).
+    let game = games.length === 0 ? findGameForInterpreterChild(process, filepath) : null;
 
-    if (games.length === 1) {
-      game = games[0];
-    } else if (games.length > 1) {
-      // Several games answer to this name; the install folder says which one just started.
-      game = pickGameForProcess(games, filepath, configuredExecutable);
-      if (game) debug.log(`"${process}" is shared by ${games.length} games; "${filepath}" is ${game.name}(${game.appid})`);
-      else debug.log(`More than 1 entry for "${process}" and no install path settles it`);
+    if (!game) {
+      if (filepath && shouldMuteProcessPath(filepath, filter.mute.dir, games)) return;
+
+      if (games.length === 1) {
+        // A single hit from the bundled legacy catalogue (steam_cache/schema/gameIndex.json) is a
+        // guess about every copy of that executable name, not about this one - accept it only when
+        // this process's own folder actually looks like the game it claims to be.
+        const candidate = games[0];
+        if (candidate.catalogueOnly && !relatedToFolder(candidate.name, filepath)) {
+          debug.log(`"${process}" only matches the bundled catalogue entry for ${candidate.name}(${candidate.appid}); no local corroboration - ignoring`);
+        } else {
+          game = candidate;
+        }
+      } else if (games.length > 1) {
+        // Several games answer to this name; the install folder says which one just started.
+        game = pickGameForProcess(games, filepath, configuredExecutable);
+        if (game) debug.log(`"${process}" is shared by ${games.length} games; "${filepath}" is ${game.name}(${game.appid})`);
+        else debug.log(`More than 1 entry for "${process}" and no install path settles it`);
+      }
     }
     if (!game) {
       // An unmatched process is expected (most running processes are not games) and is not logged
@@ -320,16 +411,21 @@ async function init() {
       if (!filepath) return;
       const gameDir = path.parse(filepath).dir;
       try {
-        const dirKey = gameDir.toLowerCase();
-        let appid;
-        if (appidByDirCache.has(dirKey)) {
-          appid = appidByDirCache.get(dirKey);
-        } else {
-          // findByReadingContentOfKnownConfigfilesIn() globs the whole game tree, so cache the miss
-          // too: otherwise every relaunch of the same non-game binary re-walks it.
-          debug.log(`Try to find appid from a cfg file in "${gameDir}"`);
-          appid = await findByReadingContentOfKnownConfigfilesIn(gameDir).catch(() => null);
-          rememberAppidForDir(dirKey, appid);
+        let appid = null;
+        // A bundled JRE sits a few levels under the game's own root, so the appid marker it ships
+        // lives in an ancestor of javaw's own directory, never inside it.
+        for (const dir of candidateConfigDirs(gameDir, process)) {
+          const dirKey = dir.toLowerCase();
+          if (appidByDirCache.has(dirKey)) {
+            appid = appidByDirCache.get(dirKey);
+          } else {
+            // findByReadingContentOfKnownConfigfilesIn() globs the whole game tree, so cache the miss
+            // too: otherwise every relaunch of the same non-game binary re-walks it.
+            debug.log(`Try to find appid from a cfg file in "${dir}"`);
+            appid = await findByReadingContentOfKnownConfigfilesIn(dir).catch(() => null);
+            rememberAppidForDir(dirKey, appid);
+          }
+          if (appid) break;
         }
         if (!appid) return;
         debug.log(`Found appid: ${appid}`);
@@ -475,6 +571,13 @@ async function getGameIndex() {
   for (const game of yielded) {
     debug.log(`[Playtime] catalogue row ${game.name}(${game.appid}) yields "${game.binary}" to the library's own entry`);
   }
+  // Marks a row that exists only in the bundled legacy catalogue - a guess about every install that
+  // shares its binary name, never corroborated by anything found on this machine. See the
+  // single-candidate check in the creation handler above.
+  const scannedAppids = new Set((Array.isArray(userOverride) ? userOverride : []).filter((g) => g && g.appid != null).map((g) => normalizeAppid(g.appid)));
+  for (const game of merged) {
+    if (game && !scannedAppids.has(normalizeAppid(game.appid))) game.catalogueOnly = true;
+  }
   const options = await loadWatchdogOptions();
   const sourceFiltered = filterGamesByAchievementSources(merged, options);
   disabledOfficialSteamAppids = new Set(
@@ -496,4 +599,10 @@ module.exports = {
   // exercised directly against the real local catalogue rather than inferred from a quiet log.
   resolveSteamCataloguePath,
   isNonGameSteamApp,
+  // Exported for the test suite: pure helpers behind the interpreter-child and legacy-catalogue
+  // matching in the creation handler above.
+  isInterpreterProcess,
+  findGameForInterpreterChild,
+  candidateConfigDirs,
+  relatedToFolder,
 };

@@ -2,8 +2,17 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const path = require('node:path');
 const { binaryMatchesProcess, buildBinaryIndex } = require('../playtime/seed.js');
-const { getTrackableGameMatches, isOfficialSteamLibraryGame, filterGamesByAchievementSources } = require('../playtime/monitor.js');
+const {
+  getTrackableGameMatches,
+  isOfficialSteamLibraryGame,
+  filterGamesByAchievementSources,
+  isInterpreterProcess,
+  findGameForInterpreterChild,
+  candidateConfigDirs,
+  relatedToFolder,
+} = require('../playtime/monitor.js');
 
 function legacyTrackableMatches(gameIndex, process, isIgnored) {
   return gameIndex.filter(
@@ -86,4 +95,48 @@ test('disabled official Steam games are excluded from the playtime index while e
     filterGamesByAchievementSources(games, { achievement_source: { legitSteam: 1 } }).map((game) => game.appid),
     ['1812620', 'goldberg']
   );
+});
+
+// A Java game's launcher spawns javaw.exe and exits; the process name never matches gameIndexByBinary
+// (java.exe/javaw.exe are excluded from exe-detection on purpose), so the install folder is what has
+// to identify it instead.
+test('a bundled JRE is attributed to the known game whose install folder contains it', () => {
+  const gameIndex = [
+    { appid: '111', name: "Lenna's Inception", exePath: path.join('C:', 'Games', 'Lenna', 'LennaLauncher.exe') },
+    { appid: '222', name: 'Unrelated', exePath: path.join('C:', 'Games', 'Other', 'Other.exe') },
+  ];
+  const javaw = path.join('C:', 'Games', 'Lenna', 'jre', 'bin', 'javaw.exe');
+
+  assert.equal(isInterpreterProcess('javaw.exe'), true);
+  assert.equal(isInterpreterProcess('java.exe'), true);
+  assert.equal(isInterpreterProcess('notepad.exe'), false);
+
+  const match = findGameForInterpreterChild('javaw.exe', javaw, gameIndex);
+  assert.equal(match && match.appid, '111');
+
+  // A non-interpreter process is never matched this way, even from inside the same folder.
+  assert.equal(findGameForInterpreterChild('somehelper.exe', javaw, gameIndex), null);
+
+  // A JRE outside every known game's folder (a system-wide install) matches nothing here.
+  const systemJavaw = path.join('C:', 'Program Files', 'Java', 'bin', 'javaw.exe');
+  assert.equal(findGameForInterpreterChild('javaw.exe', systemJavaw, gameIndex), null);
+});
+
+test('candidateConfigDirs climbs above a bundled interpreter but never above an ordinary exe', () => {
+  const jreBin = path.join('C:', 'Games', 'Foo', 'jre', 'bin');
+  const dirs = candidateConfigDirs(jreBin, 'javaw.exe');
+  assert.ok(dirs.includes(jreBin));
+  assert.ok(dirs.includes(path.join('C:', 'Games', 'Foo')), 'must climb up to the install root');
+  assert.ok(dirs.length > 1);
+
+  assert.deepEqual(candidateConfigDirs(jreBin, 'FooLauncher.exe'), [jreBin]);
+});
+
+// steam_cache/schema/gameIndex.json is a stale, uncurated catalogue: a single hit from it alone must
+// not hijack a game just because it happens to share an exe name.
+test('relatedToFolder rejects an unrelated legacy-catalogue title but accepts a matching one', () => {
+  const khazanPath = path.join('C:', 'Games', 'Khazan', 'Khazan.exe');
+  assert.equal(relatedToFolder('Waifu BBQ Simulator', khazanPath), false, 'a catalogue-only match with no folder relation must not be trusted');
+  assert.equal(relatedToFolder('Khazan', khazanPath), true);
+  assert.equal(relatedToFolder('The First Berserker: Khazan', khazanPath), true);
 });
