@@ -57,6 +57,7 @@ function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = f
     // suite sit through the production timeout.
     './overlayAck.js': { ...overlayAck, wait: (id) => overlayAck.wait(id, 50) },
     '../util/log.js': { log: () => {}, warn: () => {}, error: () => {} },
+    '../util/regodit.js': require('../util/regodit.js'),
     '../watchdog.js': {
       SpawnOverlayNotification: (args) => {
         calls.overlays.push(args);

@@ -24,8 +24,7 @@ function isSocialClubWatchPath(dirPath) {
 
 // regodit is ESM-only; load lazily via dynamic import. Uses the sync API deliberately: under
 // koffi 3.x the async DWORD write segfaults (0xC0000005) and kills the Watchdog.
-let regeditPromise = null;
-const loadRegedit = () => regeditPromise || (regeditPromise = import('regodit'));
+const { loadRegodit: loadRegedit } = require('./util/regodit.js');
 
 // RLD! hex blobs: exactly 10 hex digits including at least one a-f, so an all-digit unix timestamp
 // is never misread (same rule as app/parser/steam.js).

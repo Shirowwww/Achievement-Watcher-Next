@@ -56,8 +56,7 @@ function normalizeProgress(progress) {
 // Load ESM-only controller dependencies lazily; rumble remains best effort. regodit is loaded
 // through its synchronous API only - the `regodit/promises` subpath segfaults (0xC0000005) under
 // the pinned koffi 3.x when writing DWORDs, so the Watchdog must never import it.
-let regeditPromise = null;
-const loadRegedit = () => regeditPromise || (regeditPromise = import('regodit'));
+const { loadRegodit: loadRegedit } = require('../util/regodit.js');
 
 let xinputPromise = null;
 const loadXinput = () =>

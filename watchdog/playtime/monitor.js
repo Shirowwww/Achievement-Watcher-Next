@@ -15,6 +15,7 @@ const { userDataDir } = require('../util/userData.js');
 const { configuredExecutable } = require('../util/exeList.js');
 const watchdogSettings = require('../settings.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { loadRegodit } = require('../util/regodit.js');
 
 const debug = new (require('../util/logger'))({
   console: true,
@@ -135,7 +136,7 @@ async function resolveSteamCataloguePath() {
   if (steamCatalogue.resolved) return steamCatalogue.path;
   steamCatalogue.resolved = true;
   try {
-    const regedit = await import('regodit');
+    const regedit = await loadRegodit();
     // Same two hives, in the same order, as app/parser/steam.js getSteamPath(): some emulators
     // rewrite the HKCU value to the game's own folder, and the WOW6432Node install path is the
     // fallback the Steam client repairs on startup.
