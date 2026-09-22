@@ -947,6 +947,12 @@
       },
       "xlln": {
         "description": "通过 XLiveLessNess 运行的 Games for Windows LIVE"
+      },
+      "markerpatch": {
+        "description": "通过 MarkerPatch 模组运行的 Dead Space 2"
+      },
+      "madnesspatch": {
+        "description": "通过 MadnessPatch 模组运行的 Alice: Madness Returns"
       }
     },
     "help": {

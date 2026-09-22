@@ -947,6 +947,12 @@
       },
       "xlln": {
         "description": "透過 XLiveLessNess 執行的 Games for Windows LIVE"
+      },
+      "markerpatch": {
+        "description": "透過 MarkerPatch 模組執行的 Dead Space 2"
+      },
+      "madnesspatch": {
+        "description": "透過 MadnessPatch 模組執行的 Alice: Madness Returns"
       }
     },
     "help": {

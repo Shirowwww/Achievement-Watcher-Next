@@ -53,6 +53,8 @@ const OPTIONAL_SOURCES = {
   epic: ['epic'],
   socialClub: ['Goldberg SocialClub'],
   xlln: ['XLiveLessNess'],
+  markerpatch: ['MarkerPatch'],
+  madnesspatch: ['MadnessPatch'],
   importCache: ['Achievement Watcher : Watchdog'],
 };
 

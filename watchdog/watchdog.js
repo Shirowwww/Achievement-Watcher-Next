@@ -72,6 +72,8 @@ const shadps4Watch = require('./console/shadps4Watch.js');
 const rpcs3Watch = require('./console/rpcs3Watch.js');
 const xeniaWatch = require('./console/xeniaWatch.js');
 const xllnWatch = require('./console/xllnWatch.js');
+const markerpatchWatch = require('./console/markerpatchWatch.js');
+const madnesspatchWatch = require('./console/madnesspatchWatch.js');
 const x360RecompWatch = require('./console/x360RecompWatch.js');
 const eaWatch = require('./console/eaWatch.js');
 const gogWatch = require('./console/gogWatch.js');
@@ -153,6 +155,8 @@ const NEW_FOLDER_NOTIFY_MAX = 10;
     ea       EA Desktop's rotating verbose log
     xenia    Xbox 360 emulator GPD files under the user's saved folders
     xlln     Games for Windows LIVE profile state, through XLiveLessNess
+    markerpatch   Dead Space 2's settings.txt bitflag, through MarkerPatch
+    madnesspatch  Alice: Madness Returns' per-profile Achievements.txt bitflag, through MadnessPatch
     x360recomp  Xbox 360 games recompiled for PC, their own unlock lists
     gog      GOG Galaxy's gameplay.db, rewritten the moment an achievement pops
     ubisoft  Ubisoft Connect's spool files, protobuf unlock records appended on the spot
@@ -163,6 +167,8 @@ const CONSOLE_WATCHERS = [
   { name: 'ea', watcher: eaWatch },
   { name: 'xenia', watcher: xeniaWatch },
   { name: 'xlln', watcher: xllnWatch },
+  { name: 'markerpatch', watcher: markerpatchWatch },
+  { name: 'madnesspatch', watcher: madnesspatchWatch },
   { name: 'x360recomp', watcher: x360RecompWatch },
   { name: 'gog', watcher: gogWatch },
   { name: 'ubisoft', watcher: ubisoftWatch },

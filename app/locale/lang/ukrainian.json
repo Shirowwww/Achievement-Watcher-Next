@@ -947,6 +947,12 @@
       },
       "xlln": {
         "description": "Games for Windows LIVE через XLiveLessNess"
+      },
+      "markerpatch": {
+        "description": "Dead Space 2 через мод MarkerPatch"
+      },
+      "madnesspatch": {
+        "description": "Alice: Madness Returns через мод MadnessPatch"
       }
     },
     "help": {

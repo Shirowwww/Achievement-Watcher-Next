@@ -947,6 +947,12 @@
       },
       "xlln": {
         "description": "XLiveLessNess를 통한 Games for Windows LIVE"
+      },
+      "markerpatch": {
+        "description": "MarkerPatch 모드를 통한 Dead Space 2"
+      },
+      "madnesspatch": {
+        "description": "MadnessPatch 모드를 통한 Alice: Madness Returns"
       }
     },
     "help": {

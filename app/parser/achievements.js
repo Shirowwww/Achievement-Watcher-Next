@@ -23,6 +23,8 @@ const userDir = require(path.join(appPath, 'userDir.js'));
 const socialclub = require(path.join(appPath, 'socialclub.js'));
 const ff7 = require(path.join(appPath, 'ff7.js'));
 const xlln = require(path.join(appPath, 'xlln.js'));
+const markerpatch = require(path.join(appPath, 'markerpatch.js'));
+const madnesspatch = require(path.join(appPath, 'madnesspatch.js'));
 const x360Recomp = require(path.join(appPath, 'x360Recomp.js'));
 const libraryDirs = require(path.join(appPath, 'libraryDirs.js'));
 const saveRoots = require(path.join(appPath, 'saveRoots.js'));
@@ -113,6 +115,8 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   socialclub.initDebug({ isDev, userDataPath });
   ff7.initDebug({ isDev, userDataPath });
   xlln.initDebug({ isDev, userDataPath });
+  markerpatch.initDebug({ isDev, userDataPath });
+  madnesspatch.initDebug({ isDev, userDataPath });
   x360Recomp.initDebug({ isDev, userDataPath });
   blacklist.initDebug({ isDev, userDataPath });
   debug = new (require('../util/logger'))({
@@ -1899,6 +1903,14 @@ async function discoverInScope(source, steamAccFilter, scope) {
           scanned = xlln.scan(dir.path);
           if (scanned.length > 0) debug.log('-> XLiveLessNess data added');
         }
+        if (scanned.length === 0 && source.markerpatch) {
+          scanned = markerpatch.scan(dir.path);
+          if (scanned.length > 0) debug.log('-> MarkerPatch data added');
+        }
+        if (scanned.length === 0 && source.madnesspatch) {
+          scanned = madnesspatch.scan(dir.path);
+          if (scanned.length > 0) debug.log('-> MadnessPatch data added');
+        }
         if (scanned.length > 0) {
           data = data.concat(scanned);
           debug.log('-> emulator data added');
@@ -2585,6 +2597,10 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
     return await shadps4.getAchievements(appid.data.path);
   } else if (dataType === 'xlln') {
     return xlln.getAchievements(appid.data);
+  } else if (dataType === 'markerpatch') {
+    return markerpatch.getAchievements(appid.data);
+  } else if (dataType === 'madnesspatch') {
+    return madnesspatch.getAchievements(appid.data);
   } else if (dataType === 'xenia') {
     return await xenia.getAchievements(appid.data.path);
   } else if (dataType === 'x360recomp') {
@@ -2753,6 +2769,10 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       game = await shadps4.getGameData(appid.data.path, option.achievement.lang);
     } else if (appid.data.type === 'xlln') {
       game = await xlln.getGameData(appid.data, option.achievement.lang);
+    } else if (appid.data.type === 'markerpatch') {
+      game = await markerpatch.getGameData(appid.data, option.achievement.lang);
+    } else if (appid.data.type === 'madnesspatch') {
+      game = await madnesspatch.getGameData(appid.data, option.achievement.lang);
     } else if (appid.data.type === 'xenia') {
       game = await xenia.getGameData(appid.data.path);
     } else if (appid.data.type === 'x360recomp') {

@@ -339,6 +339,14 @@ module.exports.load = () => {
       options.achievement_source.xlln = true;
     }
 
+    if (typeof options.achievement_source.markerpatch !== 'boolean') {
+      options.achievement_source.markerpatch = true;
+    }
+
+    if (typeof options.achievement_source.madnesspatch !== 'boolean') {
+      options.achievement_source.madnesspatch = true;
+    }
+
     if (typeof options.achievement_source.lumaPlay !== 'boolean') {
       options.achievement_source.lumaPlay = true;
     }
@@ -609,6 +617,8 @@ module.exports.load = () => {
         shadps4: true,
         xenia: true,
         xlln: true,
+        markerpatch: true,
+        madnesspatch: true,
         lumaPlay: true,
         gog: true,
         gogOfficial: true,

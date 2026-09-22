@@ -947,6 +947,12 @@
       },
       "xlln": {
         "description": "Games for Windows LIVE μέσω XLiveLessNess"
+      },
+      "markerpatch": {
+        "description": "Dead Space 2 μέσω του mod MarkerPatch"
+      },
+      "madnesspatch": {
+        "description": "Alice: Madness Returns μέσω του mod MadnessPatch"
       }
     },
     "help": {

@@ -100,7 +100,7 @@ test('id-bound source rows have a help element and a description in every locale
   const keys = (loaderJs.match(/for \(const key of \[([^\]]+)\]\)/) || [])[1];
   assert.ok(keys, 'loader.js must list the id-bound source keys');
   const looped = keys.split(',').map((k) => k.trim().replace(/^'|'$/g, '')).filter(Boolean);
-  assert.deepStrictEqual(looped, ['ubisoftOfficial', 'gogOfficial', 'gog', 'epic', 'shadps4', 'xenia', 'xlln']);
+  assert.deepStrictEqual(looped, ['ubisoftOfficial', 'gogOfficial', 'gog', 'epic', 'shadps4', 'xenia', 'xlln', 'markerpatch', 'madnesspatch']);
   // Epic is id-bound too, but apart from the loop: it carries the same three states as Steam and
   // Xbox rather than an on/off switch, so its options are named one by one.
   assert.match(loaderJs, /#source-help-epicOfficial/, 'loader.js must bind the Epic help text by id');

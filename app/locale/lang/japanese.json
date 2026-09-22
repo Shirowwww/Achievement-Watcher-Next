@@ -947,6 +947,12 @@
       },
       "xlln": {
         "description": "XLiveLessNess 経由の Games for Windows LIVE"
+      },
+      "markerpatch": {
+        "description": "MarkerPatch MOD 経由の Dead Space 2"
+      },
+      "madnesspatch": {
+        "description": "MadnessPatch MOD 経由の Alice: Madness Returns"
       }
     },
     "help": {

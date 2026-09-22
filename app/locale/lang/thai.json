@@ -947,6 +947,12 @@
       },
       "xlln": {
         "description": "Games for Windows LIVE ผ่าน XLiveLessNess"
+      },
+      "markerpatch": {
+        "description": "Dead Space 2 ผ่านม็อด MarkerPatch"
+      },
+      "madnesspatch": {
+        "description": "Alice: Madness Returns ผ่านม็อด MadnessPatch"
       }
     },
     "help": {

@@ -494,6 +494,8 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     { key: 'shadps4', fallback: true },
     { key: 'xenia', fallback: true },
     { key: 'xlln', fallback: true },
+    { key: 'markerpatch', fallback: true },
+    { key: 'madnesspatch', fallback: true },
     { key: 'importCache', fallback: true },
   ];
 

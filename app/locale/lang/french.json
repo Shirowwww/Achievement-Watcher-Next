@@ -947,6 +947,12 @@
       },
       "xlln": {
         "description": "Games for Windows LIVE, via XLiveLessNess"
+      },
+      "markerpatch": {
+        "description": "Dead Space 2, via le mod MarkerPatch"
+      },
+      "madnesspatch": {
+        "description": "Alice: Madness Returns, via le mod MadnessPatch"
       }
     },
     "help": {

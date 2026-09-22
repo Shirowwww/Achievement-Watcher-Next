@@ -235,6 +235,16 @@ module.exports.load = async (cfg_file) => {
       fixFile = true;
     }
 
+    if (typeof options.achievement_source.markerpatch !== 'boolean') {
+      options.achievement_source.markerpatch = true;
+      fixFile = true;
+    }
+
+    if (typeof options.achievement_source.madnesspatch !== 'boolean') {
+      options.achievement_source.madnesspatch = true;
+      fixFile = true;
+    }
+
     if (typeof options.achievement_source.lumaPlay !== 'boolean') {
       options.achievement_source.lumaPlay = true;
       fixFile = true;
@@ -546,6 +556,8 @@ module.exports.load = async (cfg_file) => {
         shadps4: true,
         xenia: true,
         xlln: true,
+        markerpatch: true,
+        madnesspatch: true,
         lumaPlay: true,
         gog: true,
         gogOfficial: true,
