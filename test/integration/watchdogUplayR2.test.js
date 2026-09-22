@@ -45,6 +45,33 @@ test('the Ubisoft product id resolves to the Steam AppID the app recorded', () =
   }
 });
 
+// A Steam release can be sold under more than one Ubisoft product id (a base game and its Complete/
+// GOTY edition each get their own), and the loader reports whichever one the player actually owns.
+// The app only ever records the id it saw during repair, so the other one has to resolve through the
+// shipped Ubisoft<->Steam table instead of the per-game index row.
+test('a sibling Ubisoft product id (a different edition) resolves through the shared table', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-wd-uplay-sibling-'));
+  try {
+    const file = path.join(tmp, 'gameIndex.json');
+    fs.writeFileSync(
+      file,
+      JSON.stringify([{ appid: '1234500', name: 'Some Ubisoft Game', binary: 'game.exe', uplayId: '6145' }])
+    );
+    const siblingLookup = (steamAppid) => (String(steamAppid) === '1234500' ? ['6145', '7021'] : []);
+
+    // The id the app already recorded still resolves directly.
+    assert.equal(uplayR2.steamAppIdForUplayId('6145', { files: [file], siblingLookup }), '1234500');
+    // The Complete Edition's id, never written to gameIndex.json, resolves through the sibling table.
+    assert.equal(uplayR2.steamAppIdForUplayId('7021', { files: [file], siblingLookup }), '1234500');
+    // An id neither the index nor the table knows about still resolves to nothing.
+    assert.equal(uplayR2.steamAppIdForUplayId('9999', { files: [file], siblingLookup }), '');
+    // No sibling table at all (an older shipped uplay-steam.json) must not throw.
+    assert.equal(uplayR2.steamAppIdForUplayId('7021', { files: [file], siblingLookup: () => [] }), '');
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
 test('objective ids are rewritten onto the schema api-names', () => {
   const schema = [{ name: 'ACObsidian_Ach_1' }, { name: 'ACObsidian_Ach_7' }, { name: 'ACObsidian_Ach_12' }];
   const parsed = [
@@ -177,6 +204,18 @@ test('the watchdog watches both Uplay save roots', async () => {
     assert.equal(entry.options.uplayR2, true, 'the folder must be flagged so its ids get translated');
     assert.ok(entry.options.file.includes('achievements.json'));
   }
+});
+
+// A repaired Uplay R2 setup can also write GSE Saves\<steamAppid>\<uplayId>\achievements.json instead
+// of its own root. Without special handling the trailing digits (the Ubisoft product id) would be
+// read as if they were a second Steam appid, and the unlock would look for a schema that never loads.
+test('a nested GSE Saves\\<steamAppid>\\<uplayId> save is resolved through the Uplay id, not read as a Steam appid', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', '..', 'watchdog', 'watchdog.js'), 'utf8');
+  assert.ok(source.includes('const nested = filePath.dir.match('), 'the appID branch must recognise the two-numeric-segment nested layout');
+  assert.ok(
+    source.includes('if (nested) appID = uplayR2.steamAppIdForUplayId(nested[2]) || nested[1];'),
+    'the trailing digits are the Ubisoft id to map; the leading, already-known Steam appid is the fallback'
+  );
 });
 
 test('the watchdog watches the Goldberg SocialClub save root', async () => {

@@ -32,6 +32,7 @@ const watchdog = require(path.join(appPath, 'watchdog.js'));
 const goldberg = require(path.join(appPath, 'goldberg.js'));
 const appidOverride = require(path.join(appPath, 'appidOverride.js'));
 const uplayR2 = require(path.join(appPath, 'uplayR2.js'));
+const uplaySteamTable = require(path.join(appPath, 'uplaySteamTable.js'));
 const uplayR2Installer = require(path.join(appPath, 'uplayR2Installer.js'));
 const uplayCatalogue = require(path.join(appPath, 'uplayCatalogue.js'));
 const { steamCdnImages } = require('../util/steamCdn.js');
@@ -903,6 +904,24 @@ function removeInertGoldbergSettings(steamSettings, appidLabel, loaderName) {
     debug.log(`[${appidLabel}] could not remove the inert steam_settings folder => ${err}`);
     return false;
   }
+}
+
+// A Uplay R2 redirect can land bare Ubisoft objective ids ("1", "2", ...) inside what otherwise
+// reads as a plain Steam-emulator save, without the folder being classified as uplayR2 THIS scan
+// (the game was uninstalled, moved, or its folder no longer name-matches - see promoteUplayRecord).
+// When every key already read is bare-numeric and the schema agrees on one shared prefix, remap
+// them the same way readUplayR2Save does, so a game AW cannot currently redetect as Uplay does not
+// sit at 0% forever over a save it already has on disk. Only for a Steam appid the Ubisoft table
+// knows: plenty of ordinary Steam games also name achievements <prefix><digits>.
+function remapBareObjectiveKeys(fromFile, achievementList, steamAppid) {
+  if (uplaySteamTable.siblingsFor(steamAppid).length === 0) return fromFile;
+  const keys = Object.keys(fromFile || {});
+  if (keys.length === 0 || !keys.every((key) => /^\d+$/.test(key))) return fromFile;
+  const convention = uplayR2.derivePrefixedIds(achievementList);
+  if (!convention) return fromFile; // no single shared prefix - not this game's convention, leave it alone
+  const apiNames = (achievementList || []).map((a) => a && a.name).filter(Boolean);
+  const mapped = uplayR2.mapSaveToSchemaKeys(fromFile, { prefix: convention.prefix, apiNames, canonical: true });
+  return Object.keys(mapped).length > 0 ? mapped : fromFile;
 }
 
 // Read Uplay R2 saves and remap Ubisoft objective ids to Steam api-names.
@@ -2528,6 +2547,9 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
     // ("AchSavePath = GSE Saves\<steamAppid>"). Keys the Uplay side can translate win, since a
     // bare objective id means nothing to the Steam reader.
     if (appid.data.uplayR2) fromFile = { ...fromFile, ...readUplayR2Save(appid, game) };
+    // Same redirect, but the loader was not detected this scan - bare digit keys against a
+    // single-prefixed schema still translate on their own (see remapBareObjectiveKeys).
+    else fromFile = remapBareObjectiveKeys(fromFile, game.achievement && game.achievement.list, appid.appid);
     // An empty file is a 0% game, not an error - warn instead of throwing.
     if (fromFile.constructor === Object && Object.entries(fromFile).length === 0) warnEmptyAchievementFileOnce(appid.appid, appid.data.path);
     return fromFile;
@@ -4115,10 +4137,12 @@ module.exports._internal = {
   declaredEmulatorAppid,
   promoteUplayRecord,
   buildProvisionalGame,
+  remapBareObjectiveKeys,
   resolveLocalGameName,
   achievementDataFiles,
   buildDiscoveryLookup,
   getDiscoverySources,
+  consolidateDiscoveryList,
   mergeCrossSourceDuplicates,
   isOfficialLauncherInstall: (dir) => launcherDetect.isOfficialLauncherInstall(dir),
   dropSteamOwnedRecords,

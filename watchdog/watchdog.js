@@ -1000,16 +1000,21 @@ var app = {
           // <user>\<epicid>\achievements.json - epic ids can be non-numeric, take the folder name.
           appID = path.basename(filePath.dir);
         } else {
-          try {
-            appID = options.appid
-              ? options.appid
-              : filePath.dir.replace(/(\\stats$)|(\\SteamEmu$)|(\\SteamEmu\\UserStats$)/gi, '').match(/([0-9]+$)/g)[0];
-          } catch (err) {
-            throw "Unable to find game's appID";
+          appID = options.appid ? options.appid : deriveAppIdFromDir(filePath.dir);
+          if (!appID) throw "Unable to find game's appID";
+          // A repaired Uplay R2 setup can also write GSE Saves\<steamAppid>\<uplayId>\achievements.json
+          // instead of its own root - two numeric segments instead of the usual one. The trailing one
+          // is the Ubisoft product id, not a second Steam appid; the leading one is already the real
+          // Steam appid, kept as a fallback when the id has not been mapped yet.
+          if (!options.appid && !options.socialClub) {
+            const nested = filePath.dir.match(/([0-9]+)[\\/]+([0-9]+)$/);
+            if (nested) appID = uplayR2.steamAppIdForUplayId(nested[2]) || nested[1];
           }
         }
 
-        if (dir.includes('NemirtingasGalaxyEmu')) {
+        // The UniverseLAN root is keyed by GOG product id, like NemirtingasGalaxyEmu.
+        const isUniverseLanRoot = path.resolve(dir).toLowerCase() === path.resolve(process.env['LOCALAPPDATA'] || '', 'UniverseLAN').toLowerCase();
+        if (dir.includes('NemirtingasGalaxyEmu') || (isUniverseLanRoot && !options.appid)) {
           const mapped = await self.steamAppIdForGogId(appID);
           if (!mapped) throw `Unknown GOG id ${appID} - run a library refresh so AW Next can map it`;
           appID = mapped;

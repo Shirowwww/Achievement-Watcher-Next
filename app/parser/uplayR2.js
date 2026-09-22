@@ -755,14 +755,27 @@ function resolveAchievementSaveDirs({ gameDir, runtimeDir, uplayId, steamAppid, 
   // redirects to, so a game configured by an older AW build (or by a community script) still reads
   // back. Both save roots are probed whatever the loader on disk is: it costs a stat each, and it is
   // what lets an install read correctly while it is being switched from one generation to the other.
-  if (id) {
-    for (const known of FLAVOUR_LIST) {
-      const root = uplayDefaultSaveRoot(known);
-      if (root) add(path.join(root, id));
+  // A Steam appid can be sold under more than one Ubisoft product id (a base game and its later
+  // "Complete Edition"), and progress can be sitting under whichever one was installed before this
+  // one - probe every id the shipped table knows for this appid, not just the one this install uses.
+  const siblingIds = steamAppid ? uplaySteamTable.siblingsFor(steamAppid).filter((sibling) => sibling && sibling !== id) : [];
+  const productIds = [id, ...siblingIds].filter(Boolean);
+  if (productIds.length > 0) {
+    for (const productId of productIds) {
+      for (const known of FLAVOUR_LIST) {
+        const root = uplayDefaultSaveRoot(known);
+        if (root) add(path.join(root, productId));
+      }
+      if (gameDir) add(path.join(gameDir, UPLAY_GAME_SAVE_SUBDIR, productId));
     }
-    if (gameDir) add(path.join(gameDir, UPLAY_GAME_SAVE_SUBDIR, id));
   }
-  if (steamAppid) add(defaultSavePath(steamAppid));
+  if (steamAppid) {
+    const flatSaveDir = defaultSavePath(steamAppid);
+    add(flatSaveDir);
+    // A misconfigured SaveType=2 install can nest the achievement redirect under the product id
+    // instead of writing flat - cheap to probe, and it is where a stray leftover folder has been seen.
+    for (const productId of productIds) add(path.join(flatSaveDir, productId));
+  }
 
   return dirs;
 }

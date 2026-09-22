@@ -30,6 +30,13 @@ try {
   assert.strictEqual(table.find(PROBE_ID), null, 'the probe id must not already exist');
   assert.strictEqual(uplayR2.resolveSteamMapping({ appid: `UPLAY${PROBE_ID}` }), null, 'an unknown product resolves to nothing');
 
+  // Prince of Persia: The Lost Crown ships as two Ubisoft ids for one Steam appid - base (6145) and
+  // Complete Edition (7021). siblingsFor() must return both, so a save left under one id is still
+  // found when the install currently runs the other.
+  assert.deepStrictEqual(table.siblingsFor(2751000).sort(), ['6145', '7021'], 'both known ids for this Steam appid');
+  assert.deepStrictEqual(table.siblingsFor('2751000').sort(), ['6145', '7021'], 'a string appid answers the same');
+  assert.deepStrictEqual(table.siblingsFor(PROBE_ID), [], 'an id with no row has no siblings');
+
   const rows = JSON.parse(original);
   rows.push({ uplay_id: PROBE_ID, steam_appid: 480, steam_name: 'Probe Game', uplay_name: 'Probe Game' });
   writeTable(JSON.stringify(rows), 2);

@@ -466,6 +466,21 @@ function fakePe(arch, text = '') {
     );
     console.log('PASS: unlocks are read from wherever the emulator actually writes them, re-keyed to Steam api-names');
 
+    /*
+      A Steam appid can be sold under more than one Ubisoft product id - Prince of Persia: The Lost
+      Crown (2751000) ships as base id 6145 and Complete Edition id 7021. An install running as one
+      of them must still probe the other's save folder, and the flat GSE Saves\<steamAppid> folder
+      too, nested under either id, since a misconfigured SaveType=2 install has been seen to write
+      there instead of flat.
+    */
+    const popDirs = uplayR2.resolveAchievementSaveDirs({ gameDir: legacyDir, runtimeDir: legacyDir, uplayId: '7021', steamAppid: 2751000 });
+    const popSiblingSave = path.join(process.env.APPDATA, 'Goldberg UplayEmu Saves', '6145');
+    assert.ok(popDirs.includes(popSiblingSave), `the other known Ubisoft id for this appid must be probed: ${popDirs.join(', ')}`);
+    const popFlat = path.join(process.env.APPDATA, 'GSE Saves', '2751000');
+    assert.ok(popDirs.includes(path.join(popFlat, '7021')), 'the nested <steamAppid>\\<uplayId> folder must be probed for the installed id');
+    assert.ok(popDirs.includes(path.join(popFlat, '6145')), 'and for the sibling id too');
+    console.log('PASS: resolveAchievementSaveDirs probes every known Ubisoft id for a Steam appid, flat and nested');
+
     // diagnose() must surface a wiped setup rather than silently reporting 0%: a game update that
     // re-extracts the repack removes achievements_schema.json and restores its own ini.
     fs.rmSync(path.join(legacyDir, 'achievements_schema.json'));

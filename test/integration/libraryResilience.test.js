@@ -22,7 +22,7 @@ Module._load = function patchedLoad(request, parent, isMain) {
 };
 
 const achievements = require('../../app/parser/achievements.js');
-const { buildProvisionalGame, resolveLocalGameName } = achievements._internal;
+const { buildProvisionalGame, remapBareObjectiveKeys, resolveLocalGameName } = achievements._internal;
 
 const source = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'achievements.js'), 'utf8');
 
@@ -149,4 +149,32 @@ test('an unresolved title is flagged and kept out of the watchdog index', () => 
     /if \(game\.name && !game\.nameUnresolved && !\(appid\.data && appid\.data\.type === 'socialclub'\)\)/,
     'a numeric placeholder title must never be written into gameIndex, where notifications would read it back'
   );
+});
+
+// A Uplay R2 redirect can leave bare Ubisoft objective ids in a save folder discovery reads as a
+// plain Steam-emulator save (the loader was not detected this scan - see promoteUplayRecord). This
+// must still translate onto the Steam schema, not just when appid.data.uplayR2 is set.
+test('bare digit keys translate onto a single-prefixed schema without the uplayR2 flag', () => {
+  const schema = [{ name: 'POP_TLC_1' }, { name: 'POP_TLC_2' }, { name: 'POP_TLC_10' }];
+  const remapped = remapBareObjectiveKeys({ 1: { earned: true, earned_time: 1750000000 }, 10: { earned: true } }, schema, 2751000);
+  assert.deepEqual(Object.keys(remapped).sort(), ['POP_TLC_1', 'POP_TLC_10']);
+  assert.equal(remapped.POP_TLC_1.earned_time, 1750000000);
+});
+
+test('bare digit remap is skipped for a schema with no single shared prefix', () => {
+  const schema = [{ name: 'ACH_ONE' }, { name: 'ACH_TWO' }];
+  const untouched = { 1: { earned: true } };
+  assert.equal(remapBareObjectiveKeys(untouched, schema, 2751000), untouched);
+});
+
+test('bare digit remap is skipped for a Steam game the Ubisoft table does not list', () => {
+  const schema = [{ name: 'ACH_1' }, { name: 'ACH_2' }];
+  const save = { 1: { earned: true } };
+  assert.equal(remapBareObjectiveKeys(save, schema, 440), save, 'a digit-suffixed Steam schema alone is no Ubisoft evidence');
+});
+
+test('bare digit remap leaves a save alone once any key is not a bare number', () => {
+  const schema = [{ name: 'POP_TLC_1' }, { name: 'POP_TLC_2' }];
+  const mixed = { 1: { earned: true }, POP_TLC_2: { earned: true } };
+  assert.equal(remapBareObjectiveKeys(mixed, schema, 2751000), mixed, 'already-prefixed saves are the normal Steam-reader path');
 });

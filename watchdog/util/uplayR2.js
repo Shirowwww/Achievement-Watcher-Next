@@ -10,6 +10,30 @@ const fs = require('fs');
 const path = require('path');
 const { userDataDir } = require('./userData.js');
 const { createIndexedGameLookup } = require('./indexedGameLookup.js');
+const { sharedAppModulePath } = require('./sharedAppModule.js');
+
+// The shipped Ubisoft<->Steam pairing table, shared with the app rather than duplicated. Optional:
+// an older table with no siblingsFor(), or none at all, just means no sibling ids are known.
+function loadUplaySteamTable() {
+  try {
+    return require(sharedAppModulePath('parser/uplaySteamTable.js'));
+  } catch {
+    return null;
+  }
+}
+
+// Other Ubisoft product ids the same Steam release is known to use - a base game and its Complete/
+// GOTY edition each get their own id, and the loader reports whichever one the player actually owns.
+function siblingUplayIdsFor(steamAppid) {
+  const table = loadUplaySteamTable();
+  if (!table || typeof table.siblingsFor !== 'function') return [];
+  try {
+    const ids = table.siblingsFor(steamAppid);
+    return Array.isArray(ids) ? ids.map((id) => String(id)) : [];
+  } catch {
+    return [];
+  }
+}
 
 function gameIndexFiles() {
   const root = userDataDir();
@@ -45,20 +69,27 @@ function objectiveMapFor(appid, { file = objectiveMapFile() } = {}) {
 // Resolves a Ubisoft product id to the Steam AppID the app mapped it to. Returns '' when the app
 // hasn't scanned this game yet - the caller must treat that as "skip", never "use the Ubisoft id":
 // feeding a product id into the Steam pipeline is what used to stall the library scan for 30s a game.
-function steamAppIdForUplayId(uplayId, { files = gameIndexFiles() } = {}) {
+function steamAppIdForUplayId(uplayId, { files = gameIndexFiles(), siblingLookup = siblingUplayIdsFor } = {}) {
   const key = String(uplayId || '');
   if (!key) return '';
+  let siblingMatch = '';
   for (const file of files) {
     try {
       const list = JSON.parse(fs.readFileSync(file, 'utf8'));
       if (!Array.isArray(list)) continue;
       const found = list.find((game) => game && String(game.uplayId || '') === key);
       if (found && found.appid) return String(found.appid);
+      // The id the loader reports can be a sibling edition of a game the app mapped under a
+      // different one (base vs Complete/GOTY); the same Steam release still answers for it.
+      if (!siblingMatch) {
+        const sibling = list.find((game) => game && game.appid != null && siblingLookup(game.appid).includes(key));
+        if (sibling) siblingMatch = String(sibling.appid);
+      }
     } catch {
       /* game index files are optional */
     }
   }
-  return '';
+  return siblingMatch;
 }
 
 /*
@@ -162,4 +193,12 @@ function remapObjectiveIds(achievements, schemaList, { objectiveIds = null } = {
   return remapped;
 }
 
-module.exports = { gameIndexFiles, objectiveMapFile, objectiveMapFor, steamAppIdForUplayId, isUplayR2SteamAppId, remapObjectiveIds };
+module.exports = {
+  gameIndexFiles,
+  objectiveMapFile,
+  objectiveMapFor,
+  steamAppIdForUplayId,
+  isUplayR2SteamAppId,
+  remapObjectiveIds,
+  siblingUplayIdsFor,
+};

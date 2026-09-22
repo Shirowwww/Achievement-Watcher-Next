@@ -39,6 +39,8 @@ asarUnpack:
   - parser/steamAppInfo.js
   - parser/ff7.js
   - assets/ff7-achievements.json
+  - assets/uplay-steam.json
+  - parser/uplaySteamTable.js
   - parser/xlln.js
   - parser/xllnSpa.js
   - parser/x360Recomp.js
