@@ -40,16 +40,38 @@ const SUITES = [
 // suite cannot rely on rm's zero-retry default once several test processes run at once.
 const PRELOAD = `--require ${JSON.stringify(path.join(__dirname, 'helpers', 'tempRemovalRetry.js'))}`;
 
+// Windows caps a command line at 32767 characters; the app suite outgrew it as absolute paths, so
+// files are passed relative to the cwd and split into batches that stay well under the cap.
+const MAX_ARGV_CHARS = 24000;
+
+function batchFiles(files) {
+  const batches = [[]];
+  let length = 0;
+  for (const file of files) {
+    if (length + file.length + 3 > MAX_ARGV_CHARS && batches[batches.length - 1].length > 0) {
+      batches.push([]);
+      length = 0;
+    }
+    batches[batches.length - 1].push(file);
+    length += file.length + 3;
+  }
+  return batches;
+}
+
 function runGroup(label, files, concurrency, cwd) {
   if (files.length === 0) return true;
   console.log(`\n--- ${label} (${files.length} files, concurrency ${concurrency}) ---`);
-  const result = spawnSync(process.execPath, ['--test', `--test-concurrency=${concurrency}`, ...process.argv.slice(2), ...files], {
-    cwd,
-    stdio: 'inherit',
-    env: { ...process.env, NODE_OPTIONS: `${process.env.NODE_OPTIONS || ''} ${PRELOAD}`.trim() },
-  });
-  if (result.error) throw result.error;
-  return result.status === 0;
+  let ok = true;
+  for (const batch of batchFiles(files.map((file) => path.relative(cwd, file)))) {
+    const result = spawnSync(process.execPath, ['--test', `--test-concurrency=${concurrency}`, ...process.argv.slice(2), ...batch], {
+      cwd,
+      stdio: 'inherit',
+      env: { ...process.env, NODE_OPTIONS: `${process.env.NODE_OPTIONS || ''} ${PRELOAD}`.trim() },
+    });
+    if (result.error) throw result.error;
+    if (result.status !== 0) ok = false;
+  }
+  return ok;
 }
 
 let failed = false;
