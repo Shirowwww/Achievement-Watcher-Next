@@ -3787,6 +3787,9 @@ ipcMain.handle('get-cover-options-steamdb', async (event, { orientation, steamAp
 // owner 100%'d a game, these prolific collectors' public profiles are tried instead. Scraped from
 // SteamLadder through the stealth browser (it challenges plain requests) and disk-cached for 7 days.
 let topOwnersInFlight = null;
+// A failed scrape writes no cache, so without this every game in a scan would scrape again.
+const TOP_OWNERS_RETRY_MS = 60 * 60 * 1000;
+let lastTopOwnersScrapeAt = 0;
 async function fetchTopOwners() {
   const cacheFile = path.join(userData, 'steam_cache', 'topOwners.json');
   const TTL = 7 * 24 * 60 * 60 * 1000;
@@ -3799,6 +3802,8 @@ async function fetchTopOwners() {
     /* stale/corrupt -> refetch */
   }
   if (topOwnersInFlight) return topOwnersInFlight;
+  if (Date.now() - lastTopOwnersScrapeAt < TOP_OWNERS_RETRY_MS) return [];
+  lastTopOwnersScrapeAt = Date.now();
 
   topOwnersInFlight = (async () => {
     const topOwners = require(path.join(app.getAppPath(), 'parser/topOwners.js'));

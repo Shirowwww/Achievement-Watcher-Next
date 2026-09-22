@@ -37,3 +37,12 @@ test('extractSteamIdsFromHtml returns [] on empty or profile-less markup', () =>
   assert.deepEqual(topOwners.extractSteamIdsFromHtml(''), []);
   assert.deepEqual(topOwners.extractSteamIdsFromHtml('<html><body>nothing</body></html>'), []);
 });
+
+// A scrape that fails writes no cache, so the main process must not retry it for every game of a scan.
+test('the main process waits before scraping the top owners again', () => {
+  const source = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', '..', 'app', 'electron', 'init.js'), 'utf8');
+  const body = source.slice(source.indexOf('async function fetchTopOwners()'));
+  const guard = body.indexOf('if (Date.now() - lastTopOwnersScrapeAt < TOP_OWNERS_RETRY_MS) return [];');
+  assert.ok(guard > 0, 'a recent attempt must short-circuit the scrape');
+  assert.ok(guard < body.indexOf('acquirePuppeteerSlot'), 'the check must come before the browser is started');
+});
