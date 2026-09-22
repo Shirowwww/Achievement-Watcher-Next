@@ -46,6 +46,15 @@ renamed in 3.9.0 and the history is kept under one file.
   works when your profile is private. The answer is kept for six hours so a second launch on the same
   day does not ask again for every game.
 
+- **Dead Space 2 MarkerPatch and Alice: Madness Returns MadnessPatch.** Add the game folder under
+  Settings > Folders and AW Next builds the achievement list from the mod's own text and images,
+  reads the unlocks the mod saves, and notifies them live. Each has its own source switch, and
+  nothing is read while the mod's `AchievementSupport` is turned off.
+- **A GOG achievement fix (UniverseLAN).** Right-click a GOG game that ships a Galaxy dll and choose
+  "Apply the GOG achievement fix (UniverseLAN)" to install the UniverseLAN build that matches its
+  Galaxy SDK. The original dll is kept as a backup, existing UniverseLAN saves are never overwritten,
+  and the unlocks it writes under `%LOCALAPPDATA%UniverseLAN` are read and notified.
+
 ### Improved
 
 - **Much smaller updates.** An update now downloads only what changed since the installed version
@@ -66,6 +75,19 @@ renamed in 3.9.0 and the history is kept under one file.
   much space deleting the data would free.
 
 ### Fixed
+
+- **Java games had no play time.** Games that start `javaw.exe` and exit their own launcher are now
+  tracked through that Java process.
+- **A game could be tracked under another game's name** when only the bundled catalogue knew its
+  executable name; that match now needs the install folder to agree.
+- **Several achievements unlocked at once in a game's very first save** now each get a notification;
+  only the three most recent did before.
+- **Ubisoft games with two product ids** (a base game and its Complete Edition) now read the save of
+  either one, and bare objective ids in a save are matched to the Steam achievement list.
+- **Every launch rescanned the whole library** when one game could never get a description from
+  Steam. The saved library is now reused.
+- **A failed top-owners download was retried for every game of a scan.** It now waits an hour before
+  trying again.
 
 - **"Also delete settings, cache and saved data" did nothing when uninstalling.** The choice was
   thrown away before it was read, so the data folder always stayed. It now deletes it, along with the
