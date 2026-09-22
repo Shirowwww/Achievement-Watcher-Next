@@ -53,7 +53,37 @@ renamed in 3.9.0 and the history is kept under one file.
   works when your profile is private. The answer is kept for six hours so a second launch on the same
   day does not ask again for every game.
 
+### Improved
+
+- **Much smaller updates.** An update now downloads only what changed since the installed version
+  instead of the whole 127 MB installer; if that ever fails it falls back to the full download on its
+  own.
+- **The update cache no longer keeps an installer it has already installed.** Up to 127 MB sat in
+  `%LOCALAPPDATA%chievement-watcher-updater` until the next release; it is removed on the first
+  update check after the install.
+- **The installer and uninstaller speak all 27 languages of the app**, adding Danish, Dutch, Finnish,
+  Greek, Indonesian, Korean, Norwegian, Swedish, Traditional Chinese and Vietnamese, and follow
+  regional Windows languages too: French (Canada), German (Switzerland), Spanish (Mexico) and the like
+  no longer get an English installer.
+- **The installer opens faster.** It no longer starts PowerShell to look for a background process
+  that has not existed since 3.4.
+- **A folder the installer cannot write to is refused on the spot**, with an explanation, instead of
+  failing halfway through with "Error opening file for writing".
+- **The uninstall page** has a proper title, no longer cuts off the data folder path, and shows how
+  much space deleting the data would free.
+
 ### Fixed
+
+- **"Also delete settings, cache and saved data" did nothing when uninstalling.** The choice was
+  thrown away before it was read, so the data folder always stayed. It now deletes it, along with the
+  playtime kept in the registry; for an all-users install it now targets your own data folder.
+- **Uninstalling left traces behind:** the "Start with Windows" entry, which made Windows look for a
+  missing program at every sign-in, the `achievement-watcher:` link type the notification buttons use,
+  and the update cache (up to 254 MB). An uninstall now removes all three; an update keeps them.
+- **A silent uninstall with `--delete-app-data` deleted `%APPDATA%\Achievement Watcher`**, the folder
+  of the original 1.6.8 app, which may still be installed. It is no longer touched.
+- **The portable version no longer reports a failed update check** at every start. It now checks the
+  release feed like the installed app and offers the release page when a new version is out.
 
 - **Locked Xenia achievements get their picture again.** The download went through the page
   itself, whose security policy refused Xbox Live's plain-http image host without a word.
@@ -79,6 +109,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Security
 
+- **Updates must be signed by the project's own certificate.** The updater accepted an unsigned
+  installer, and any certificate calling itself `CN=Shirow`, which anyone can create. It now refuses
+  both and accepts only the release certificate or its offline standby, pinned by thumbprint, so a
+  tampered release cannot install itself. The release build refuses to finish with any other
+  certificate.
 - **`adm-zip` updated to 0.6.1**, fixing an uncontrolled memory allocation from a declared uncompressed
   size ([GHSA-7q85-xj36-vmfc](https://github.com/advisories/GHSA-7q85-xj36-vmfc)). It now also refuses
   a zip entry duplicated by name at read time instead of returning both; the preset, theme and `.san`
