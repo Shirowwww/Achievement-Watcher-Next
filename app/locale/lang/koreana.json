@@ -1933,6 +1933,7 @@
     "gh-value-issues": "확인할 항목 {count}개",
     "gh-value-watching": "{binary} 감시 중",
     "gh-value-served-by": "{emulator}이(가) 처리",
+    "gh-value-old-goldberg-save": "찾은 유일한 저장 파일은 오래된 Goldberg 저장 파일이며, 여기에 다시는 기록하지 않습니다",
     "gh-action-choose-exe": "게임 위치 찾기",
     "gh-action-open-folder": "게임 폴더 열기",
     "gh-action-repair-data": "도전 과제 데이터 다시 기록",

@@ -1933,6 +1933,7 @@
     "gh-value-issues": "{count} punto(s) por revisar",
     "gh-value-watching": "vigilando {binary}",
     "gh-value-served-by": "gestionado por {emulator}",
+    "gh-value-old-goldberg-save": "la única partida guardada encontrada es una antigua de Goldberg, en la que nunca escribe",
     "gh-action-choose-exe": "Localizar el juego",
     "gh-action-open-folder": "Abrir la carpeta del juego",
     "gh-action-repair-data": "Reescribir los datos de logros",

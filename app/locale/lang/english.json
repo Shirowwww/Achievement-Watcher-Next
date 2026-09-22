@@ -1933,6 +1933,7 @@
     "gh-value-issues": "{count} point(s) to review",
     "gh-value-watching": "watching {binary}",
     "gh-value-served-by": "served by {emulator}",
+    "gh-value-old-goldberg-save": "the only save found is an old Goldberg one it never writes",
     "gh-action-choose-exe": "Locate the game",
     "gh-action-open-folder": "Open the game folder",
     "gh-action-repair-data": "Rewrite the achievement data",

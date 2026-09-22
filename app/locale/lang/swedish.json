@@ -1933,6 +1933,7 @@
     "gh-value-issues": "{count} punkter att gå igenom",
     "gh-value-watching": "bevakar {binary}",
     "gh-value-served-by": "hanteras av {emulator}",
+    "gh-value-old-goldberg-save": "den enda hittade sparfilen är en gammal Goldberg-fil som den aldrig skriver till",
     "gh-action-choose-exe": "Hitta spelet",
     "gh-action-open-folder": "Öppna spelmappen",
     "gh-action-repair-data": "Skriv om prestationsdatan",

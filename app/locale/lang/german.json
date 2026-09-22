@@ -1933,6 +1933,7 @@
     "gh-value-issues": "{count} Punkt(e) zu prüfen",
     "gh-value-watching": "überwacht {binary}",
     "gh-value-served-by": "wird von {emulator} bedient",
+    "gh-value-old-goldberg-save": "der einzige gefundene Spielstand ist ein alter Goldberg-Spielstand, in den er nie schreibt",
     "gh-action-choose-exe": "Spiel suchen",
     "gh-action-open-folder": "Spielordner öffnen",
     "gh-action-repair-data": "Erfolgsdaten neu schreiben",

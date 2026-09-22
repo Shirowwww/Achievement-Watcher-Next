@@ -483,6 +483,7 @@ function gameHealthSimpleCheckValue(entry) {
         : t('gh-simple-data-partial', 'Achievement data is incomplete', 'Données de succès incomplètes');
     case 'emulator':
     case 'uplay':
+      if (p.oldSave) return t('gh-simple-emulator-partial', 'Achievement support needs attention', 'Prise en charge des succès à vérifier');
       if (p.servedBy) return t('gh-simple-emulator-ok', 'Achievement support is set up', 'Prise en charge des succès configurée');
       // Offline achievements were just switched on and the game has not run since: say so, or the
       // row goes green with a "turn it off" button beside it and no word about why.
@@ -649,6 +650,7 @@ function gameHealthCheckValue(entry, simple) {
       // "nothing recorded yet" is what tells the two cases apart before the button below is read.
       if (p.servedBy) {
         const servedBy = t('gh-value-served-by', 'served by {emulator}', 'pris en charge par {emulator}', { emulator: p.servedBy });
+        if (p.oldSave) return `${servedBy} · ${t('gh-value-old-goldberg-save', 'the only save found is an old Goldberg one it never writes', 'la seule sauvegarde trouvée est une ancienne sauvegarde Goldberg qu’il n’écrit jamais')}`;
         return p.idle ? `${servedBy} · ${t('gh-value-none-yet', 'nothing recorded yet', 'rien d’enregistré pour l’instant')}` : servedBy;
       }
       // Name what is wrong. A bare count ("1 point to review") gave the user no way to know what to
@@ -1332,6 +1334,7 @@ async function runGameHealthAction(appid, action, button) {
           return r && r.path;
         },
         fetchDlc: (id) => steamParser.getDLCList(id),
+        fetchStats: (id) => require(path.join(appPath, 'parser/statProgress.js')).fetchCommunityStats(id, { cacheDir: getUserDataPath() }),
         accountName: app.config?.general?.username,
         language: app.config?.achievement?.lang,
         // An explicit repair must be able to clear NO_USER_CONFIG / BAD_USER_CONFIG. Without this

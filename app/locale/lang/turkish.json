@@ -1933,6 +1933,7 @@
     "gh-value-issues": "gözden geçirilecek {count} nokta",
     "gh-value-watching": "{binary} izleniyor",
     "gh-value-served-by": "{emulator} tarafından sağlanıyor",
+    "gh-value-old-goldberg-save": "bulunan tek kayıt, onun asla yazmadığı eski bir Goldberg kaydı",
     "gh-action-choose-exe": "Oyunu bul",
     "gh-action-open-folder": "Oyun klasörünü aç",
     "gh-action-repair-data": "Başarım verilerini yeniden yaz",

@@ -746,6 +746,16 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
   const steamSettings = emu.steamSettings || findSteamSettings(gameDir);
   report.steamSettings = steamSettings;
   if (!steamSettings) {
+    // OnlineFix, CODEX, TENOKE... emulate Steam on their own and never read steam_settings. Their
+    // folder was reported as "Goldberg not set up", with a repair that writes files nothing loads.
+    // Unless a GBE dll was just installed over it: that one does read steam_settings.
+    const loader = crackLoaderDetect.detectWorkingCrackLoader(gameDir);
+    if (loader && !emu.dll.some((dll) => crackLoaderDetect.isEmulatorDll(dll))) {
+      report.loader = loader.name;
+      add('info', 'SERVED_BY_LOADER', `This game is served by ${loader.name}, which keeps its own achievement saves and does not use steam_settings. Nothing to repair here.`);
+      report.ok = true;
+      return report;
+    }
     add('error', 'NO_STEAM_SETTINGS', 'No steam_settings folder found beside the emulator - Goldberg/GBE is likely not set up.');
     return report;
   }

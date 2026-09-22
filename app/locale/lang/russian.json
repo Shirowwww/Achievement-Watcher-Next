@@ -1933,6 +1933,7 @@
     "gh-value-issues": "пунктов на проверку: {count}",
     "gh-value-watching": "отслеживает {binary}",
     "gh-value-served-by": "обслуживается {emulator}",
+    "gh-value-old-goldberg-save": "единственное найденное сохранение является старым сохранением Goldberg, в которое он никогда не записывает",
     "gh-action-choose-exe": "Указать игру",
     "gh-action-open-folder": "Открыть папку игры",
     "gh-action-repair-data": "Перезаписать данные достижений",

@@ -1933,6 +1933,7 @@
     "gh-value-issues": "{count} rzecz(y) do sprawdzenia",
     "gh-value-watching": "obserwuje {binary}",
     "gh-value-served-by": "obsługiwane przez {emulator}",
+    "gh-value-old-goldberg-save": "jedyny znaleziony zapis to stary zapis Goldberg, do którego nigdy nie zapisuje",
     "gh-action-choose-exe": "Znajdź grę",
     "gh-action-open-folder": "Otwórz folder gry",
     "gh-action-repair-data": "Zapisz dane osiągnięć ponownie",

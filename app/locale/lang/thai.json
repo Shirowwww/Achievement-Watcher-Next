@@ -1933,6 +1933,7 @@
     "gh-value-issues": "มี {count} จุดที่ต้องตรวจสอบ",
     "gh-value-watching": "กำลังเฝ้าดู {binary}",
     "gh-value-served-by": "จัดการโดย {emulator}",
+    "gh-value-old-goldberg-save": "ไฟล์บันทึกเกมเดียวที่พบคือไฟล์ Goldberg เก่าที่ไม่เคยเขียนทับเลย",
     "gh-action-choose-exe": "ระบุตำแหน่งเกม",
     "gh-action-open-folder": "เปิดโฟลเดอร์เกม",
     "gh-action-repair-data": "เขียนข้อมูลความสำเร็จใหม่",

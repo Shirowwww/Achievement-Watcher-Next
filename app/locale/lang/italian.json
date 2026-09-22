@@ -1933,6 +1933,7 @@
     "gh-value-issues": "{count} punto/i da rivedere",
     "gh-value-watching": "monitora {binary}",
     "gh-value-served-by": "gestito da {emulator}",
+    "gh-value-old-goldberg-save": "l'unico salvataggio trovato è un vecchio salvataggio Goldberg che non scrive mai",
     "gh-action-choose-exe": "Individua il gioco",
     "gh-action-open-folder": "Apri la cartella del gioco",
     "gh-action-repair-data": "Riscrivi i dati degli obiettivi",

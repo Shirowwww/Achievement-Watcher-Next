@@ -1933,6 +1933,7 @@
     "gh-value-issues": "{count} hal perlu ditinjau",
     "gh-value-watching": "memantau {binary}",
     "gh-value-served-by": "ditangani oleh {emulator}",
+    "gh-value-old-goldberg-save": "satu-satunya save yang ditemukan adalah save Goldberg lama yang tidak pernah ditulisinya",
     "gh-action-choose-exe": "Temukan game ini",
     "gh-action-open-folder": "Buka folder game",
     "gh-action-repair-data": "Tulis ulang data pencapaian",

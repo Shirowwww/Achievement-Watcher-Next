@@ -1933,6 +1933,7 @@
     "gh-value-issues": "{count} punkt(er) å se på",
     "gh-value-watching": "følger med på {binary}",
     "gh-value-served-by": "håndteres av {emulator}",
+    "gh-value-old-goldberg-save": "den eneste lagringsfilen som er funnet, er en gammel Goldberg-fil som den aldri skriver til",
     "gh-action-choose-exe": "Finn spillet",
     "gh-action-open-folder": "Åpne spillmappen",
     "gh-action-repair-data": "Skriv prestasjonsdataene på nytt",

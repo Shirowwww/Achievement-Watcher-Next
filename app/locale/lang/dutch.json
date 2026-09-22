@@ -1933,6 +1933,7 @@
     "gh-value-issues": "{count} punt(en) om na te kijken",
     "gh-value-watching": "{binary} wordt bewaakt",
     "gh-value-served-by": "verzorgd door {emulator}",
+    "gh-value-old-goldberg-save": "het enige gevonden savebestand is een oud Goldberg-savebestand, waarin hij nooit schrijft",
     "gh-action-choose-exe": "De game opzoeken",
     "gh-action-open-folder": "De gamemap openen",
     "gh-action-repair-data": "De prestatiegegevens opnieuw schrijven",

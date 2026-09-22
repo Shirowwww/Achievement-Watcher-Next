@@ -1933,6 +1933,7 @@
     "gh-value-issues": "有 {count} 個項目需要檢查",
     "gh-value-watching": "監看中 {binary}",
     "gh-value-served-by": "由 {emulator} 接管",
+    "gh-value-old-goldberg-save": "找到的唯一存檔是一個舊的 Goldberg 存檔，它從不寫入",
     "gh-action-choose-exe": "指出遊戲的位置",
     "gh-action-open-folder": "開啟遊戲資料夾",
     "gh-action-repair-data": "重寫成就資料",

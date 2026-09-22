@@ -1933,6 +1933,7 @@
     "gh-value-issues": "{count} bod(ov) na kontrolu",
     "gh-value-watching": "sleduje {binary}",
     "gh-value-served-by": "obsluhuje {emulator}",
+    "gh-value-old-goldberg-save": "jediná nájdená uložená pozícia je stará pozícia Goldberg, do ktorej nikdy nezapisuje",
     "gh-action-choose-exe": "Nájsť hru",
     "gh-action-open-folder": "Otvoriť priečinok hry",
     "gh-action-repair-data": "Prepísať dáta úspechov",

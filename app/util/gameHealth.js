@@ -250,6 +250,16 @@ function achievementDataCheck(signals) {
   inferred from the source label: other loaders (CODEX, OnlineFix, TENOKE...) keep unlocks
   elsewhere entirely, and demanding steam_settings from them reported working games as broken.
 */
+// ColdClient is Goldberg underneath and does write GSE Saves.
+const LOADERS_WRITING_GOLDBERG_SAVES = new Set(['ColdClient']);
+const GOLDBERG_SAVE_PATH = /[\\/](gse saves|goldberg steamemu saves)[\\/]/i;
+
+function readsOnlyForeignGoldbergSaves(signals) {
+  const saves = Array.isArray(signals.saveSources) ? signals.saveSources : [];
+  if (saves.length === 0 || LOADERS_WRITING_GOLDBERG_SAVES.has(signals.crackLoader.name)) return false;
+  return saves.every((entry) => entry && GOLDBERG_SAVE_PATH.test(String(entry.path || '')));
+}
+
 function emulatorCheck(signals) {
   // An emulator setup over a game with no achievements has nothing to read and nothing to repair.
   // Diagnosing it anyway turned an inert folder into a list of faults on a game that is fine.
@@ -269,8 +279,11 @@ function emulatorCheck(signals) {
     const idle = num(signals.playtime && signals.playtime.total) > 0 && num(signals.achievements && signals.achievements.unlocked) === 0;
     // ...and only where that runtime IS the steam_api dll: see crackLoaderDetect's `replaceable`.
     const canSwitch = idle && signals.crackLoader.replaceable === true;
-    return check('emulator', LEVEL.INFO, {
-      params: { servedBy: signals.crackLoader.name, ...(idle ? { idle: true } : {}) },
+    // Every save read is a Goldberg one, which this loader never writes: left by another copy of
+    // the game, so the card shows that copy's unlocks and none of this one's.
+    const oldSave = readsOnlyForeignGoldbergSaves(signals);
+    return check('emulator', oldSave ? LEVEL.WARN : LEVEL.INFO, {
+      params: { servedBy: signals.crackLoader.name, ...(idle ? { idle: true } : {}), ...(oldSave ? { oldSave: true } : {}) },
       actions: canSwitch ? [ACTION.SWITCH_RUNTIME] : [],
     });
   }

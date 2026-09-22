@@ -1933,6 +1933,7 @@
     "gh-value-issues": "{count} tarkistettavaa kohtaa",
     "gh-value-watching": "seurataan: {binary}",
     "gh-value-served-by": "hoitaa {emulator}",
+    "gh-value-old-goldberg-save": "ainoa löytynyt pelitallennus on vanha Goldberg-tallennus, johon se ei koskaan kirjoita",
     "gh-action-choose-exe": "Paikanna peli",
     "gh-action-open-folder": "Avaa pelikansio",
     "gh-action-repair-data": "Kirjoita saavutustiedot uudelleen",
