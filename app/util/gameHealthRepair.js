@@ -89,6 +89,7 @@ async function repairAchievementData({
   schema,
   downloadIcon = null,
   fetchDlc = null,
+  fetchStats = null,
   accountName = '',
   language = '',
   // Complete configs.user.ini even when the app has no name or language to stamp into it - the two
@@ -104,6 +105,7 @@ async function repairAchievementData({
     schema,
     downloadIcon,
     fetchDlc,
+    fetchStats,
     accountName,
     language,
     fillUserDefaults,

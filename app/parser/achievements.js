@@ -56,7 +56,7 @@ const { resolveAchievementDataPath } = require(path.join(appPath, '..', 'util', 
 const scanFingerprint = require(path.join(appPath, '..', 'util', 'scanFingerprint.js'));
 const exeDetect = require(path.join(appPath, 'exeDetect.js'));
 const installState = require(path.join(appPath, 'installState.js'));
-const { applyLocalStatProgress, resolveProgressSchema, fetchCommunityProgressSchema } = require(path.join(appPath, 'statProgress.js'));
+const { applyLocalStatProgress, resolveProgressSchema, fetchCommunityProgressSchema, fetchCommunityStats } = require(path.join(appPath, 'statProgress.js'));
 
 // The Steam client's appcache/stats folder, looked up once per run; null without a client.
 let _steamStatsDir;
@@ -3452,6 +3452,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
                   schema: bgSchema,
                   downloadIcon,
                   fetchDlc: (id) => steam.getDLCList(id),
+                  fetchStats: (id) => fetchCommunityStats(id, { cacheDir: _userDataPath || userDataDir() }),
                   // Same two opt-ins as the runtime configs above: repairing a schema must not
                   // quietly enable every DLC or stamp a Windows username into the emulator identity.
                   writeDlc: option.emulator.manageDlc === true,

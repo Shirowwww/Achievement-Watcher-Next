@@ -450,6 +450,68 @@ function buildAchievementsJson(schema, imagePrefix = 'images') {
   }));
 }
 
+// Attach the stat threshold behind each progress achievement, GBE's `progress` shape. An entry that
+// already carries one keeps it.
+function withProgress(achievementsJson, progress) {
+  const byName = new Map((Array.isArray(progress) ? progress : []).filter((e) => e && e.name && e.progress).map((e) => [String(e.name).toUpperCase(), e.progress]));
+  if (byName.size === 0) return achievementsJson;
+  return achievementsJson.map((entry) => {
+    const found = entry && !entry.progress ? byName.get(String(entry.name).toUpperCase()) : null;
+    return found ? { ...entry, progress: found } : entry;
+  });
+}
+
+// Add the stats a game declares to stats.json, keeping every entry already there. Returns how many
+// were added.
+function mergeStatsJson(steamSettings, stats) {
+  const file = path.join(steamSettings, 'stats.json');
+  let current = [];
+  try {
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (Array.isArray(parsed)) current = parsed;
+  } catch {
+    /* absent or unreadable: the backup keeps the old copy */
+  }
+  const known = new Set(current.filter((s) => s && s.name != null).map((s) => String(s.name)));
+  const added = stats.filter((s) => s && s.name && !known.has(String(s.name)));
+  if (added.length === 0 && current.length > 0) return 0;
+  fs.writeFileSync(file, JSON.stringify([...current, ...added], null, 2));
+  return added.length;
+}
+
+/*
+  The same stats and thresholds for a steam_settings that is otherwise fine, so re-applying the fix
+  completes a release that shipped without them. Existing entries are kept; both files are backed
+  up before they change. Returns { stats, progress }: how many were added.
+*/
+function applyCommunityStats(steamSettings, { stats = [], progress = [] } = {}) {
+  const result = { stats: 0, progress: 0 };
+  if (!steamSettings || !fs.existsSync(steamSettings)) return result;
+  const schemaFile = path.join(steamSettings, 'achievements.json');
+  let schema = null;
+  try {
+    const parsed = JSON.parse(fs.readFileSync(schemaFile, 'utf8'));
+    if (Array.isArray(parsed)) schema = parsed;
+  } catch {
+    /* no schema to extend */
+  }
+  const next = schema ? withProgress(schema, progress) : null;
+  result.progress = next ? next.filter((e, i) => e !== schema[i]).length : 0;
+  const statsFile = path.join(steamSettings, 'stats.json');
+  const statsChange = Array.isArray(stats) && stats.length > 0;
+  if (result.progress === 0 && !statsChange) return result;
+
+  const backupDir = path.join(steamSettings, '.aw-backups', backupTimestamp());
+  for (const file of [result.progress > 0 ? schemaFile : null, statsChange ? statsFile : null]) {
+    if (!file || !fs.existsSync(file)) continue;
+    fs.mkdirSync(backupDir, { recursive: true });
+    fs.copyFileSync(file, path.join(backupDir, path.basename(file)));
+  }
+  if (result.progress > 0) fs.writeFileSync(schemaFile, JSON.stringify(next, null, 2));
+  if (statsChange) result.stats = mergeStatsJson(steamSettings, stats);
+  return result;
+}
+
 // Is the achievements.json on disk worth keeping over a freshly generated one? Only when it carries
 // progress definitions AW cannot reproduce and rewriting it would not be an improvement.
 function hasRichProgressSchema(steamSettings, schema) {
@@ -1199,6 +1261,8 @@ async function repair({
   // An explicit repair completes configs.user.ini even with nothing to stamp into it - see
   // writeUserConfig's fillDefaults. Off by default so the silent auto-repair keeps its old reach.
   fillUserDefaults = false,
+  // Optional async (appid) => { stats, progress } - see statProgress.fetchCommunityStats.
+  fetchStats = null,
   // Optional progress sink: ({phase, done, total}), phase one of 'backup'|'icons'|'schema'|'config'|'done'.
   // Icons report per file since they dominate the wall clock. Purely observational.
   onProgress = null,
@@ -1214,14 +1278,26 @@ async function repair({
   if (!steamSettings) throw new Error('repair: steamSettings path is required');
   fs.mkdirSync(steamSettings, { recursive: true });
 
-  const achievementsJson = buildAchievementsJson(schema, imagePrefix);
+  // Declared stats and the stat behind each progress achievement. Without them GBE never moves a
+  // counter, so an achievement Steam unlocks at a threshold (collect 9 hats) stays locked forever.
+  let community = { stats: [], progress: [] };
+  if (typeof fetchStats === 'function' && appid != null) {
+    try {
+      community = (await fetchStats(appid)) || community;
+    } catch {
+      /* offline: the schema repair still stands on its own */
+    }
+  }
+  const achievementsJson = withProgress(buildAchievementsJson(schema, imagePrefix), community.progress);
   const preserveRichSchema = hasRichProgressSchema(steamSettings, schema);
-  const summary = { steamSettings, achievementsJson, preservedRichSchema: preserveRichSchema, wroteAppId: false, backupDir: null, icons: { downloaded: 0, failed: 0, skipped: 0 }, dlc: null, main: null, user: null };
+  const stats = Array.isArray(community.stats) ? community.stats : [];
+  const summary = { steamSettings, achievementsJson, preservedRichSchema: preserveRichSchema, wroteAppId: false, backupDir: null, icons: { downloaded: 0, failed: 0, skipped: 0 }, dlc: null, main: null, user: null, stats: 0 };
 
   // A manual repair can replace a malformed or incomplete schema. Keep the previous files beside
   // steam_settings before changing them; missing files need no backup and the normal auto-repair
   // therefore stays quiet for newly detected games.
   const filesToReplace = preserveRichSchema ? [] : [path.join(steamSettings, 'achievements.json')];
+  if (stats.length > 0) filesToReplace.push(path.join(steamSettings, 'stats.json'));
   if (writeAppId && appid != null) filesToReplace.push(path.join(steamSettings, 'steam_appid.txt'));
   if (writeDlc) filesToReplace.push(path.join(steamSettings, 'configs.app.ini'));
   if (writeMain) filesToReplace.push(path.join(steamSettings, 'configs.main.ini'));
@@ -1330,6 +1406,7 @@ async function repair({
   if (!preserveRichSchema) {
     fs.writeFileSync(path.join(steamSettings, 'achievements.json'), JSON.stringify(achievementsJson, null, 2));
   }
+  if (stats.length > 0) summary.stats = mergeStatsJson(steamSettings, stats);
 
   if (writeAppId && appid != null) {
     const appidTxt = path.join(steamSettings, 'steam_appid.txt');
@@ -1592,6 +1669,7 @@ function needsArtworkRecheck(steamSettings, imagePrefix = 'images') {
 }
 
 module.exports = {
+  applyCommunityStats,
   findSteamSettings,
   readArtworkMarker,
   needsArtworkRecheck,

@@ -155,6 +155,29 @@ async function fetchCommunityProgressSchema(appid, { cacheDir, getJson } = {}) {
 }
 
 /*
+  What a GBE steam_settings needs so the emulator itself can reach a stat threshold: every stat the
+  game declares (stats.json - GBE refuses SetStat on an undeclared one, so the counter never moves)
+  and the stat behind each progress achievement. Both come from games-infos-datas, so no Steam
+  account is involved. Returns { stats, progress }, both empty when the repository lacks the game.
+*/
+async function fetchCommunityStats(appid, { cacheDir, getJson } = {}) {
+  if (!/^[0-9]+$/.test(String(appid || ''))) return { stats: [], progress: [] };
+  const [statsList, achievementList] = await Promise.all([
+    gamesInfosDatas.readJson(`steam/${appid}/stats_db.json`, { cacheDir, getJson }),
+    gamesInfosDatas.readJson(`steam/${appid}/achievements_db.json`, { cacheDir, getJson }),
+  ]);
+  const stats = (Array.isArray(statsList) ? statsList : [])
+    .filter((s) => s && s.name)
+    .map((s) => ({
+      default: String(s.default ?? 0),
+      global: '0',
+      name: String(s.name),
+      type: ['int', 'float', 'avgrate'].includes(String(s.type)) ? String(s.type) : 'int',
+    }));
+  return { stats, progress: communityProgressEntries(achievementList) };
+}
+
+/*
   Where the stat -> achievement table for a game comes from, without writing anything:
   - 'game'  the emulator's own steam_settings schema
   - 'steam' the Steam client's appcache
@@ -271,6 +294,7 @@ module.exports = {
   writeProgressCache,
   communityProgressEntries,
   fetchCommunityProgressSchema,
+  fetchCommunityStats,
   progressEntries,
   countSaveStats,
 };

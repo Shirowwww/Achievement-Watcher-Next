@@ -4070,6 +4070,7 @@ var app = {
               schema: game,
               downloadIcon,
               fetchDlc: (id) => steamParser.getDLCList(id),
+              fetchStats: (id) => require(path.join(appPath, 'parser/statProgress.js')).fetchCommunityStats(id, { cacheDir: getUserDataPath() }),
               // A repair fixes achievements. Enabling every DLC and stamping an account name are
               // separate decisions with their own settings, and a setting that says "leave my DLC
               // alone" has to hold here too, or it just moves the surprise to another button.
@@ -5068,6 +5069,17 @@ var app = {
                                 : t('diagnosis-dir-status-attention', 'needs attention', 'à vérifier'),
                             })
                           );
+                        }
+                        // A release can ship a complete achievement list and still no stats.json, so no
+                        // stat-driven achievement ever unlocks. Filled in here whatever the diagnosis said.
+                        try {
+                          const community = await require(path.join(appPath, 'parser/statProgress.js')).fetchCommunityStats(writableAppid, { cacheDir: getUserDataPath() });
+                          for (const dir of dllDirs) {
+                            const added = goldberg.applyCommunityStats(path.join(dir, 'steam_settings'), community);
+                            if (added.stats || added.progress) debug.log(`[${writableAppid}] ${dir}: declared ${added.stats} stat(s), ${added.progress} progress threshold(s)`);
+                          }
+                        } catch (e) {
+                          debug.log(`[${writableAppid}] stats.json from games-infos-datas failed => ${e}`);
                         }
                         const regAdvNote = await runAdvanced(dllDirs.map((d) => path.join(d, 'steam_settings')));
                         const installedDlls = [...new Set(installResult.perDir.flatMap((d) => d.wrote))].join(', ') || 'steam_api64.dll';
@@ -7768,6 +7780,7 @@ var app = {
                 schema,
                 downloadIcon,
                 fetchDlc: (id) => steamParser.getDLCList(id),
+                fetchStats: (id) => require(path.join(appPath, 'parser/statProgress.js')).fetchCommunityStats(id, { cacheDir: getUserDataPath() }),
                 // Same two opt-ins as the single-game repair - all the more so here, where one click
                 // rewrites dozens of folders at once.
                 writeDlc: app.config.emulator && app.config.emulator.manageDlc === true,
