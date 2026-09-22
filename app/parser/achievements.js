@@ -8,6 +8,7 @@ const { buildAchievementSchemaIndex, findAchievementInSchema } = require('./achi
 const { ipcInvoke } = require('../util/ipcInvoke.js');
 const gog = require(path.join(appPath, 'gog.js'));
 const gogOfficial = require(path.join(appPath, 'gogOfficial.js'));
+const gogUniverseLan = require(path.join(appPath, 'gogUniverseLan.js'));
 const ubisoftOfficial = require(path.join(appPath, 'ubisoftOfficial.js'));
 const epic = require(path.join(appPath, 'epic.js'));
 const epicOfficial = require(path.join(appPath, 'epicOfficial.js'));
@@ -340,7 +341,12 @@ function consolidateDiscoveryList(list) {
       order.push(key);
       continue;
     }
-    byAppid.set(key, mergeDiscoveryRecord(byAppid.get(key), record));
+    // GOG UniverseLAN's local save is a fallback for a cracked install with no real Galaxy client;
+    // a real gogOfficial record must always end up as the merge target (whichever data.type a plain
+    // merge would otherwise keep), regardless of which scan happened to reach this appid first.
+    const existing = byAppid.get(key);
+    const preferIncoming = existing?.data?.type === 'gogUniverseLan' && record?.data?.type === 'gogOfficial';
+    byAppid.set(key, preferIncoming ? mergeDiscoveryRecord(record, existing) : mergeDiscoveryRecord(existing, record));
   }
   const result = order.map((key) => byAppid.get(key)).filter(Boolean);
   const before = (list || []).length;
@@ -454,8 +460,9 @@ function mergeCrossSourceDuplicates(appidList) {
         /* no confident match - keep both entries */
       }
     }
-    // Drop a save-only Steam phantom when a matching GOG install exists.
-    if (g && g.data && g.data.type === 'gogOfficial' && g.data.title) {
+    // Drop a save-only Steam phantom when a matching GOG install exists (native Galaxy data or a
+    // UniverseLAN-repaired install - both key off the same GOG product id, so this is order-independent).
+    if (g && g.data && (g.data.type === 'gogOfficial' || g.data.type === 'gogUniverseLan') && g.data.title) {
       try {
         const hit = require('../util/fuzzyAppid.js').bestConfidentAppid(String(g.data.title), steamTargets);
         const target = hit && byAppid.get(String(hit));
@@ -2172,6 +2179,18 @@ async function discoverInScope(source, steamAccFilter, scope) {
     }
   }
 
+  // GOG UniverseLAN-repaired installs (no real Galaxy client data): added right after gogOfficial's
+  // scan so, when both exist for the same GOG product id, gogOfficial's richer record is always the
+  // consolidateDiscoveryList merge target - order-independent with respect to how long either scan
+  // takes, since this is a fixed await sequence, not a race.
+  if (!scope && source.gogOfficial) {
+    try {
+      data = data.concat(gogUniverseLan.scan({ userDataPath: _userDataPath || userDataDir(), localAppData: process.env['LOCALAPPDATA'] || '' }));
+    } catch (err) {
+      debug.error(err);
+    }
+  }
+
   mark('gogOfficial');
 
   //Ubisoft Connect official (legit client data - spool unlock state + cached achievements archive)
@@ -2613,6 +2632,10 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
     return await ea.getAchievements(appid);
   } else if (dataType === 'gogOfficial') {
     return gogOfficial.getAchievements(appid);
+  } else if (dataType === 'gogUniverseLan') {
+    // GOG install repaired with the UniverseLAN emulator fix (no real Galaxy client data): unlock
+    // state comes from the Achievements.ini UniverseLAN itself writes under %LocalAppData%.
+    return gogUniverseLan.readAchievements({ localAppData: appid.data.localAppData, gogAppId: appid.data.gogAppId }) || {};
   } else if (dataType === 'ubisoftOfficial') {
     return ubisoftOfficial.getAchievements(appid);
   } else if (dataType === 'epicOfficial') {
@@ -2801,6 +2824,8 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       game = await ea.getGameData(appid, option.achievement.lang);
     } else if (appid.data.type === 'gogOfficial') {
       game = await gogOfficial.getGameData(appid);
+    } else if (appid.data.type === 'gogUniverseLan') {
+      game = gogUniverseLan.getGameData(appid);
     } else if (appid.data.type === 'ubisoftOfficial') {
       game = await ubisoftOfficial.getGameData(appid, option.achievement.lang);
     } else if (appid.data.type === 'epicOfficial') {

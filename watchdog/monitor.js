@@ -114,6 +114,17 @@ module.exports.getFolders = async (userDir_file) => {
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1], files.achievement[9], files.achievement[0]] }, //keeping "achievements.ini" [0] for backward compatibility with custom goldberg emu build
     },
     {
+      // GOG UniverseLAN, one folder per GOG product id: %LOCALAPPDATA%\UniverseLAN\<gogAppId>\
+      // UniverseLANData\Achievements.ini. Same folder-per-appid shape as GSE Saves above, and
+      // Achievements.ini's own [ApiName]/Unlocked/UnlockTime sections already read correctly
+      // through the generic ini-per-achievement path (see normalizeSaveEntry in achievements.js) -
+      // no source-specific parsing needed here, only the watch root. Independent of the
+      // GameSettings.AppID-keyed UniverseLAN.ini handling further below, which targets a different,
+      // user-configured-folder layout.
+      dir: path.join(process.env['LOCALAPPDATA'], 'UniverseLAN'),
+      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[6]] },
+    },
+    {
       // Goldberg SocialClub Emu Saves: <GameName>\<hex profile>\... watchdog.js resolves the game
       // name back to the app's SocialClub entry through the game index (options.socialClub).
       dir: path.join(process.env['APPDATA'], 'Goldberg SocialClub Emu Saves'),

@@ -68,6 +68,15 @@ try {
   assert.strictEqual(pe.readExeProductName(path.join(temp, 'notpe.txt')), '');
   assert.strictEqual(pe.readExeProductName(path.join(temp, 'does-not-exist.exe')), '');
 
+  // readExeFileVersion parses the VS_FIXEDFILEINFO numeric quad of real PEs (used to match a GOG
+  // Galaxy SDK dll against a UniverseLAN release - see gogUniverseLan.js).
+  for (const exe of realExes) {
+    const version = pe.readExeFileVersion(exe);
+    if (!/^\d+\.\d+\.\d+\.\d+$/.test(version)) throw new Error(`readExeFileVersion returned "${version}" for ${exe}`);
+  }
+  assert.strictEqual(pe.readExeFileVersion(path.join(temp, 'notpe.txt')), '');
+  assert.strictEqual(pe.readExeFileVersion(path.join(temp, 'does-not-exist.exe')), '');
+
   console.log('PASS: pe util (exeArch machine type + SteamStub .bind detection)');
 } finally {
   fs.rmSync(temp, { recursive: true, force: true });

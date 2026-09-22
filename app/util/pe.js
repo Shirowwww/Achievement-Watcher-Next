@@ -246,4 +246,127 @@ function readExeProductName(exePath) {
   }
 }
 
-module.exports = { exeArch, detectSteamStub, readExeProductName };
+// Reads a PE's VS_FIXEDFILEINFO FileVersion (the numeric quad, e.g. "1.152.6.0") rather than the
+// localized StringFileInfo table readExeProductName() reads - needed to match a GOG Galaxy SDK dll
+// against the UniverseLAN release that supports it. Deliberately a standalone read, not sharing
+// readExeProductName's internals, so this addition cannot change that function's behavior.
+function readExeFileVersion(exePath) {
+  let fd;
+  try {
+    fd = fs.openSync(exePath, 'r');
+    const head = Buffer.alloc(64);
+    fs.readSync(fd, head, 0, 64, 0);
+    if (head.readUInt16LE(0) !== 0x5a4d) return ''; // 'MZ'
+    const peOff = head.readUInt32LE(0x3c);
+    const coff = Buffer.alloc(24);
+    fs.readSync(fd, coff, 0, 24, peOff);
+    if (coff.readUInt32LE(0) !== 0x00004550) return ''; // 'PE\0\0'
+    const numSections = coff.readUInt16LE(6);
+    const sizeOptHdr = coff.readUInt16LE(20);
+    if (numSections <= 0 || numSections > 96) return '';
+
+    const magicBuf = Buffer.alloc(2);
+    fs.readSync(fd, magicBuf, 0, 2, peOff + 24);
+    const magic = magicBuf.readUInt16LE(0);
+    const ddOffset = magic === 0x20b ? 112 : magic === 0x10b ? 96 : -1;
+    if (ddOffset < 0) return '';
+    const dd = Buffer.alloc(8);
+    fs.readSync(fd, dd, 0, 8, peOff + 24 + ddOffset + 2 * 8);
+    const rsrcRva = dd.readUInt32LE(0);
+    const rsrcSize = dd.readUInt32LE(4);
+    if (!rsrcRva || rsrcSize <= 0 || rsrcSize > 16 * 1024 * 1024) return '';
+
+    const tableOff = peOff + 24 + sizeOptHdr;
+    const table = Buffer.alloc(numSections * 40);
+    fs.readSync(fd, table, 0, table.length, tableOff);
+    let fileOff = -1;
+    let avail = 0;
+    for (let i = 0; i < numSections; i++) {
+      const va = table.readUInt32LE(i * 40 + 12);
+      const rawSize = table.readUInt32LE(i * 40 + 16);
+      const rawPtr = table.readUInt32LE(i * 40 + 20);
+      if (va <= rsrcRva && rsrcRva < va + rawSize) {
+        fileOff = rawPtr + (rsrcRva - va);
+        avail = Math.min(rawSize - (rsrcRva - va), rsrcSize);
+        break;
+      }
+    }
+    if (fileOff < 0 || avail <= 0) return '';
+
+    const res = Buffer.alloc(Math.min(avail, 8 * 1024 * 1024));
+    fs.readSync(fd, res, 0, res.length, fileOff);
+
+    let leafDataEntry = -1;
+    const findLeaf = (dirOff, depth) => {
+      if (depth > 2 || dirOff + 16 > res.length) return;
+      const numNamed = res.readUInt16LE(dirOff + 12);
+      const numId = res.readUInt16LE(dirOff + 14);
+      const count = numNamed + numId;
+      let base = dirOff + 16;
+      for (let i = 0; i < count; i++) {
+        if (base + 8 > res.length) return;
+        const name = res.readUInt32LE(base);
+        const offset = res.readUInt32LE(base + 4);
+        const isDir = (offset & 0x80000000) !== 0;
+        const target = offset & 0x7fffffff;
+        if (name >= 0x80000000) {
+          base += 8;
+          continue;
+        }
+        if (depth < 2) {
+          const want = depth === 0 ? 16 : 1; // RT_VERSION type / version id levels
+          if ((name & 0xffff) !== want) {
+            base += 8;
+            continue;
+          }
+        }
+        if (isDir) {
+          findLeaf(target, depth + 1);
+        } else if (depth === 2) {
+          leafDataEntry = target;
+          return;
+        }
+        if (leafDataEntry >= 0) return;
+        base += 8;
+      }
+    };
+    findLeaf(0, 0);
+    if (leafDataEntry < 0 || leafDataEntry + 8 > res.length) return '';
+
+    const dataRva = res.readUInt32LE(leafDataEntry);
+    const dataSize = res.readUInt32LE(leafDataEntry + 4);
+    const dataStart = dataRva - rsrcRva;
+    if (dataStart < 0 || dataStart + 6 > res.length || dataSize <= 0) return '';
+    const dataEnd = Math.min(res.length, dataStart + dataSize);
+
+    // VS_VERSIONINFO root: wLength, wValueLength, wType, "VS_VERSION_INFO", pad, then the
+    // wValueLength bytes of VS_FIXEDFILEINFO itself (52 bytes when present).
+    const wValueLength = res.readUInt16LE(dataStart + 2);
+    let keyEnd = dataStart + 6;
+    while (keyEnd + 1 < dataEnd) {
+      if (res.readUInt16LE(keyEnd) === 0) {
+        keyEnd += 2;
+        break;
+      }
+      keyEnd += 2;
+    }
+    const valuePos = (keyEnd + 3) & ~3;
+    if (wValueLength < 52 || valuePos + 16 > dataEnd) return '';
+    if (res.readUInt32LE(valuePos) !== 0xfeef04bd) return ''; // VS_FIXEDFILEINFO signature
+    const fileVersionMS = res.readUInt32LE(valuePos + 8);
+    const fileVersionLS = res.readUInt32LE(valuePos + 12);
+    return [fileVersionMS >>> 16, fileVersionMS & 0xffff, fileVersionLS >>> 16, fileVersionLS & 0xffff].join('.');
+  } catch {
+    return '';
+  } finally {
+    if (fd !== undefined) {
+      try {
+        fs.closeSync(fd);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+}
+
+module.exports = { exeArch, detectSteamStub, readExeProductName, readExeFileVersion };

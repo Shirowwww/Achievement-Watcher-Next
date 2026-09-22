@@ -96,6 +96,7 @@ const uplayR2 = require(path.join(appPath, 'parser/uplayR2.js'));
 // Same as crackLoaderDetect above: the consumer is ui/uplayRepair.js, through the global scope.
 const ubisoftOfficial = require(path.join(appPath, 'parser/ubisoftOfficial.js'));
 const uplayR2Installer = require(path.join(appPath, 'parser/uplayR2Installer.js'));
+const gogUniverseLan = require(path.join(appPath, 'parser/gogUniverseLan.js'));
 const steamParser = require(path.join(appPath, 'parser/steam.js'));
 const exeList = require(path.join(appPath, 'parser/exeList.js'));
 const manualUnlock = require(path.join(appPath, 'parser/manualUnlock.js'));
@@ -5435,6 +5436,67 @@ var app = {
                     label: `${t('copy-ubisoft-product-id', 'Copy Ubisoft product ID', 'Copier l’ID produit Ubisoft')} (${ubisoftTools.uplayId})`,
                     click() {
                       copyText(ubisoftTools.uplayId);
+                    },
+                  })
+                );
+              }
+            }
+
+            // GOG UniverseLAN: offered whenever the game's own folder carries GOG's install marker
+            // and a Galaxy SDK dll - the file evidence is the gate (mirrors the Ubisoft block above),
+            // not the tile's source label, so a manually-added cracked GOG install qualifies the same
+            // as an already-repaired one.
+            {
+              const universeLanGameDir = ctxGame?.gameDir;
+              const universeLanGogAppId = universeLanGameDir ? gogUniverseLan.findGogAppId(universeLanGameDir) : null;
+              const hasGalaxyDll = universeLanGameDir && universeLanGogAppId ? gogUniverseLan.hasGalaxyDll(universeLanGameDir) : false;
+              if (universeLanGameDir && universeLanGogAppId && hasGalaxyDll) {
+                if (emulatorMenu.items.length) emulatorMenu.append(new MenuItem({ type: 'separator' }));
+                emulatorMenu.append(
+                  new MenuItem({
+                    icon: menuIcon('file-text.png'),
+                    label: t('apply-emulator-fix-gog-universelan', 'Apply the GOG achievement fix (UniverseLAN)…', 'Appliquer le correctif de succès GOG (UniverseLAN)…'),
+                    async click() {
+                      setGameBoxBusy(self, t('applying-universelan-fix', 'Applying the UniverseLAN fix…', 'Application du correctif UniverseLAN…'));
+                      try {
+                        const installer = require(path.join(appPath, 'parser/gogUniverseLanInstaller.js'));
+                        const cacheDir = path.join(getUserDataPath(), 'cache/gog_universelan');
+                        const localAppData = process.env['LOCALAPPDATA'] || '';
+                        const result = await installer.repair({ gameDir: universeLanGameDir, cacheDir, localAppData, log: debug });
+                        gogUniverseLan.recordInstall({ userDataPath: getUserDataPath(), gameDir: universeLanGameDir, gogAppId: result.gogAppId });
+                        const lines = result.installed.map((entry) => `${entry.tier}: ${entry.wrote.join(', ')}`);
+                        if (result.unmatched.length) {
+                          lines.push(
+                            t(
+                              'universelan-unmatched',
+                              '{count} dll(s) had no matching UniverseLAN build and were left untouched.',
+                              '{count} dll(s) sans version UniverseLAN correspondante, laissée(s) inchangée(s).',
+                              { count: result.unmatched.length }
+                            )
+                          );
+                        }
+                        remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                          type: 'info',
+                          title: t('universelan-fix-applied', 'UniverseLAN fix applied', 'Correctif UniverseLAN appliqué'),
+                          message: t('setupLooksValid', 'Setup looks valid.', 'La configuration semble valide.'),
+                          detail: lines.join('\n'),
+                          noLink: true,
+                        });
+                        app.onStart();
+                      } catch (err) {
+                        remote.dialog.showMessageBoxSync({
+                          type: 'error',
+                          title: t('universelan-fix-failed', 'UniverseLAN fix failed', 'Échec du correctif UniverseLAN'),
+                          message: t(
+                            'could-not-apply-the-universelan-fix',
+                            'Could not apply the GOG UniverseLAN fix.',
+                            "Impossible d'appliquer le correctif GOG UniverseLAN."
+                          ),
+                          detail: `${err}`,
+                        });
+                      } finally {
+                        clearGameBoxBusy(self);
+                      }
                     },
                   })
                 );

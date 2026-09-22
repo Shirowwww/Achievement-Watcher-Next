@@ -38,6 +38,18 @@ test('built-in watch roots include the RLD! and CreamAPI emulator saves', async 
   assert.equal(dirs.some((dir) => dir.includes('*')), false, 'no watch root may contain a glob character');
 });
 
+test('the GOG UniverseLAN save root is watched for Achievements.ini, one appid folder per game', async (t) => {
+  if (process.platform !== 'win32' || !process.env.LOCALAPPDATA) return t.skip('Windows-only watch roots');
+  const folders = await monitor.getFolders([]);
+  const entry = folders.find(
+    (e) => path.resolve(String(e.dir || '')).toLowerCase() === path.resolve(process.env.LOCALAPPDATA, 'UniverseLAN').toLowerCase()
+  );
+  assert.ok(entry, '%LOCALAPPDATA%\\UniverseLAN must be watched');
+  assert.equal(entry.options.recursive, true);
+  const names = new Set((entry.options.file || []).map((name) => String(name).toLowerCase()));
+  assert.ok(names.has('achievements.ini'), 'Achievements.ini must be watched');
+});
+
 test('a configured folder that repeats a built-in root is watched once, on the built-in options', async (t) => {
   if (process.platform !== 'win32' || !process.env.APPDATA) return t.skip('Windows-only watch roots');
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-monitor-dup-'));

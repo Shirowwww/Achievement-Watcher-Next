@@ -122,6 +122,58 @@ test('a GOG game keeps a genuinely installed Steam copy', () => {
   assert.equal(merged.length, 2);
 });
 
+test('a GOG UniverseLAN repair dedupes a same-name Steam save phantom too, both orderings', () => {
+  const universelan = {
+    appid: '1423049311',
+    source: 'GOG Galaxy',
+    data: { type: 'gogUniverseLan', title: 'Cyberpunk 2077', gogAppId: '1423049311', gameDir: 'C:\\Jeux\\Cyberpunk 2077' },
+  };
+  const steamPhantom = {
+    appid: '1091500',
+    name: 'Cyberpunk 2077',
+    source: 'CODEX',
+    data: { type: 'file', path: 'C:\\Users\\Public\\Documents\\Steam\\CODEX\\1091500' },
+  };
+  const clone = (record) => JSON.parse(JSON.stringify(record));
+
+  for (const [label, list] of [
+    ['phantom first', [steamPhantom, universelan]],
+    ['UniverseLAN first', [universelan, steamPhantom]],
+  ]) {
+    const merged = achievements._internal.mergeCrossSourceDuplicates(list.map(clone));
+    assert.equal(merged.length, 1, `${label}: exactly one tile`);
+    assert.equal(String(merged[0].appid), '1423049311', `${label}: the GOG install is the survivor`);
+  }
+});
+
+test('consolidateDiscoveryList keeps gogOfficial as the tile identity over a UniverseLAN repair of the same GOG id, both orderings', () => {
+  const gogOfficial = {
+    appid: '1423049311',
+    source: 'GOG Galaxy',
+    name: 'Cyberpunk 2077',
+    data: { type: 'gogOfficial', title: 'Cyberpunk 2077', gameplayDbPath: 'C:\\gog\\gameplay.db' },
+  };
+  const universelan = {
+    appid: '1423049311',
+    source: 'GOG Galaxy',
+    data: { type: 'gogUniverseLan', title: 'Cyberpunk 2077', gogAppId: '1423049311', gameDir: 'C:\\Jeux\\Cyberpunk 2077' },
+  };
+  const clone = (record) => JSON.parse(JSON.stringify(record));
+
+  for (const [label, list] of [
+    ['UniverseLAN scanned first', [universelan, gogOfficial]],
+    ['gogOfficial scanned first', [gogOfficial, universelan]],
+  ]) {
+    const result = achievements._internal.consolidateDiscoveryList(list.map(clone));
+    assert.equal(result.length, 1, `${label}: exactly one tile`);
+    assert.equal(result[0].data.type, 'gogOfficial', `${label}: gogOfficial wins the tile identity`);
+    // The UniverseLAN-only field still rides along on the merged record's sources, so a repair
+    // detail is never silently lost just because the native source won the tile.
+    const sources = result[0]._sources || [];
+    assert.ok(sources.some((s) => s.data.type === 'gogUniverseLan'), `${label}: the UniverseLAN source survives in _sources`);
+  }
+});
+
 test('official launcher and library-name helpers are exposed for the scanner', () => {
   const os = require('node:os');
   const fs = require('node:fs');
