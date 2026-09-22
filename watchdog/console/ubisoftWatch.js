@@ -6,7 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
-const watch = require('node-watch');
+const watch = require('../util/nodeWatch.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');

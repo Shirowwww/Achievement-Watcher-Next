@@ -11,7 +11,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const watch = require('node-watch');
+const watch = require('../util/nodeWatch.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
 const { guardWatcher } = require('../util/watchGuard.js');

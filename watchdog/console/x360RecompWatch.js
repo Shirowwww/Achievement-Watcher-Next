@@ -8,7 +8,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const watch = require('node-watch');
+const watch = require('../util/nodeWatch.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
 const { guardWatcher } = require('../util/watchGuard.js');
@@ -212,10 +212,20 @@ function seedBaseline(record, { keepRecent = false, now = Math.floor(Date.now() 
   }
 }
 
+// libuv aborts the process when a watched Windows path is in 8.3 form (RUNNER~1) and an event
+// arrives under the long name, so watch the long form.
+function longPath(dir) {
+  try {
+    return fs.realpathSync.native(dir);
+  } catch {
+    return dir;
+  }
+}
+
 function attach(record, ctx) {
   const spec = watchSpec(record);
   try {
-    const watcher = watch(spec.dir, { recursive: false }, (evt, name) => {
+    const watcher = watch(longPath(spec.dir), { recursive: false }, (evt, name) => {
       if ((evt !== 'update' && evt !== 'remove') || !spec.matches(path.basename(name || ''))) return;
       changes.run(record.appid, () => handleChange(record, name, ctx));
     });
@@ -287,7 +297,7 @@ function watchForNewLists(ctx, configFile = userDirFile) {
   });
   for (const dir of roots) {
     try {
-      const watcher = watch(dir, { recursive: true, filter: (name) => LIST_PATH_RE.test(String(name || '')) }, () => {
+      const watcher = watch(longPath(dir), { recursive: true, filter: (name) => LIST_PATH_RE.test(String(name || '')) }, () => {
         // A game writes its list in bursts: wait for it to settle, then look once.
         clearTimeout(settleTimer);
         settleTimer = setTimeout(() => rediscover(ctx), NEW_LIST_SETTLE_MS);
