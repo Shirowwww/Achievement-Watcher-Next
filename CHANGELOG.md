@@ -76,6 +76,10 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **OnlineFix, CODEX and TENOKE games no longer show as a broken Goldberg setup.** The diagnosis
+  no longer offers a repair for them, and Game Health flags a game whose only save is an old Goldberg one.
+- **Stat-based achievements can unlock.** The achievement repair now also writes the game's stats,
+  so achievements tied to a counter (collect 9 hats) are no longer stuck.
 - **Java games had no play time.** Games that start `javaw.exe` and exit their own launcher are now
   tracked through that Java process.
 - **A game could be tracked under another game's name** when only the bundled catalogue knew its
