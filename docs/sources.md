@@ -1,85 +1,162 @@
 # Compatible sources
 
 A **source** is one place AW Next can read achievements from: an official launcher's local data, a
-Steam-compatible save file, or a console emulator's trophy file. Switch sources individually in
-**Settings → Sources**, then refresh the library - only libraries actually detected on this PC show up.
+Steam-compatible save file, or a console emulator's trophy file. Every source is switched on or off
+individually in **Settings → Sources**.
+
+<div align="center">
+<img src="screenshot/sources.png" width="620" alt="Settings - Game sources"><br>
+<sub>Each source is a separate switch; the shield marks the official desktop libraries</sub>
+</div>
+
+After enabling a source, refresh the library. Only libraries actually detected on this PC are shown.
 
 ## Official platform libraries
 
-Shield-marked in Settings. Each reads the launcher's own local data.
+These read the launcher's own local data. They are marked with a shield in Settings.
 
 | Source | What AW Next reads | What it needs |
 |---|---|---|
-| **Steam** | Appcache state, public-profile data, achievement schemas, cached metadata | Steam installed, profile public; account connection optional |
-| **GOG Galaxy** | The client's local databases, plus compatible legacy saves | GOG Galaxy installed |
+| **Steam** | Local appcache state, public-profile data, achievement schemas and cached product metadata | Steam installed, and your Steam profile set to public; connecting an account is optional |
+| **GOG Galaxy** | The Galaxy client's local databases, plus compatible legacy saves | GOG Galaxy installed |
 | **Ubisoft Connect** | Native local data and legacy Uplay formats | Ubisoft Connect installed |
-| **Epic Games** | Local installs, plus owned games and their achievement state once connected | Epic launcher for local installs; account for the rest |
-| **Xbox PC** | Local Game Pass / Microsoft Store installs, plus owned games via Xbox Network once connected | Xbox app for local installs; account for the rest |
-| **EA Desktop** | EA Desktop's own local achievement log, for games outside EA's managed folders (not the regular EA library) | EA Desktop installed |
+| **Epic Games** | Local installations, plus the games the account owns and their official achievement state once you connect an account | Epic Games launcher for local installs; an account connection for the rest |
+| **Xbox PC** | Local Game Pass / Microsoft Store installs, plus the games the account owns and their Xbox Network achievement state | The Xbox app for local installs; an account connection for the rest |
 
-**Steam**, **Epic Games** and **Xbox PC** use **None / Installed / Owned** instead of on/off;
-**Owned** lists the whole account library, not just what is installed here (needs the account below).
+**Steam**, **Epic Games** and **Xbox PC** each have three settings rather than on/off: **None**,
+**Installed** (games on this PC) or **Owned** (the whole library that account owns). **Owned** lists
+games that are not installed here, which is what a PC with none of that store's games installed
+needs; it requires the account connection below.
 
 > [!IMPORTANT]
-> Steam only exposes achievements while your profile is public: set **My profile** and **Game
-> details** to *Public* under Steam's **Profile → Edit Profile → Privacy Settings**.
+> Steam only exposes your achievements while your profile is public. In Steam, open
+> **Profile → Edit Profile → Privacy Settings** and set both **My profile** and **Game details** to
+> *Public*. With either set to private, Steam returns nothing and the games appear with no progress.
+
+> [!NOTE]
+> **EA Desktop** is deliberately different. It reads EA Desktop's local achievement log for games
+> that sit outside EA's managed folders. It does not import your regular official EA library.
 
 ### Connected accounts
 
-Steam, Epic and Xbox PC can be connected from Settings to read what local files do not carry.
-Tokens are encrypted on this PC; everything else works without any account.
+Steam, Epic and Xbox PC can each optionally be connected from Settings, to read what the local files
+do not carry. Every token is encrypted before it is stored on this PC, and everything else works
+without any account at all.
 
 | Account | What connecting adds |
 |---|---|
-| **Steam** | **Add the games you own** and **Add the games shared with you through Steam Family** (both off by default - a large library makes the first scan longer). A game with nothing local yet is asked about directly, even with a private profile, and the answer is cached 6 hours. **Hide games no longer in your Steam library** removes leftovers, never an installed or Family-shared game. |
-| **Epic Games** | Which achievements you already unlocked; **Owned** adds the whole library, installed or not, each with its full list, unlock state and rarity. A few owned games have achievements Epic itself never publishes - still listed (via Nemirtingas' games-infos-datas), without unlock state. |
-| **Xbox PC** | The same **None / Installed / Owned** choice as above; unlock state and rarity come from Xbox Network and are cached locally. |
+| **Steam** | Two switches, both off by default: **add the games you own** and **add the games shared with you through Steam Family**, so a private profile - or one that has never installed most of its library here - still lists the right games. Either one makes the first scan after enabling it noticeably longer, since every added game resolves its achievements and artwork once. A game with nothing to read locally is then asked about directly, which also works with a private profile; the answer is cached for six hours, so a second launch the same day does not ask again. **Hide games no longer in your Steam library** removes the leftovers; a game installed on this PC or shared through Steam Family is never hidden. Sign-in happens on Valve's own page. |
+| **Epic Games** | Which achievements you have already unlocked, and with **Owned** the whole library the account holds - each game with its full achievement list, unlock state and rarity. A few owned games have achievements Epic's own store data never lists (Shadow of the Tomb Raider, Civilization VI); those are still listed, sourced from Nemirtingas' games-infos-datas, but without unlock state - Epic does not share it, even signed in. Names, descriptions and rarity of an installed game work without connecting an account. |
+| **Xbox PC** | Your Xbox PC library: unlock state and rarity from Xbox Network, cached locally afterwards. With **Owned** it also brings games the account has only played elsewhere. |
+
+A tile carries a small badge for what the connection established - bought on that store, shared
+through Steam Family, or no longer in your library - so the library says where a game came from
+rather than leaving you to guess.
 
 ## Steam-compatible saves
 
-Reads `achievements.json`, `achievements.ini`, `achievements.bin`, `stats.ini` and compatible
-layouts written by **Goldberg** and **GBE Fork** (the two AW Next can install and repair),
-**GreenLuma**, **LumaPlay**, **SmartSteamEmu**, **CreamAPI**, the **Nemirtingas** emulators, scene
-releases, **Goldberg SocialClub** (its own switch) and **Uplay R2** (routed through this source -
-see [Uplay R2 setup](uplay-r2.md)). Add a custom save location under **Settings → Folders**,
-including a portable release that keeps its save tree inside the game folder. When a folder cannot
-be used, AW Next says why - see [Game Health](game-health.md) and
-[Goldberg / GBE setup](emulator-setup.md) to fix it.
+AW Next reads the achievement and stats files written by Steam emulators - `achievements.json`,
+`achievements.ini`, `achievements.bin`, `stats.ini` and compatible layouts - from the locations those
+tools use.
+
+That covers **Goldberg** and **GBE Fork** (the two AW Next can also install and repair),
+**GreenLuma**, **LumaPlay**, **SmartSteamEmu**, **CreamAPI**, the **Nemirtingas** emulators and
+scene releases writing a compatible layout. A game whose files are in a custom location can be added
+under **Settings → Folders**.
+
+<div align="center">
+<img src="screenshot/folders.png" width="620" alt="Settings - Folders"><br>
+<sub>The folders AW Next checks on its own, and the ones you add - per-game saves or whole libraries</sub>
+</div>
+
+Portable releases are the case worth knowing about. A CODEX/RUNE/CPY release normally writes to
+`%PUBLIC%\Documents\Steam\<SOURCE>\<appid>`, but a portable copy keeps that same tree inside the game
+folder, where nothing is looking for it. Adding the game's own folder under **Settings → Folders** is
+enough: its `steam_emu.ini` (or `cpy.ini`) names the AppID, and the save tree is looked for beside it
+before the shared location. A game with no save written yet is still added, at 0%.
+
+A release that ships **no emulator config at all**, or whose ini you deleted, works too: the save
+tree itself is read, since `Steam\RUNE\<appid>` carries the AppID in its folder name. The same
+layouts are probed one level below the folder you add, so pointing AW at your games library works as
+well as pointing it at one game.
+
+When a folder cannot be used, AW says why: it holds a game but no readable unlock file, it holds
+nothing achievement related, or it is an **EA app** release. That last one never keeps achievements
+on disk - they live on the EA account and are read through the EA source - so no folder you add can
+make such a game appear. The message also names how many layouts were probed, so "nothing found
+here" is distinguishable from "not looked at".
+
+Two of these are a different shape and are handled separately:
+
+- **Goldberg SocialClub** - the Rockstar / Social Club variant, with its own source switch.
+- **Uplay R2** - the Ubisoft equivalent of the Goldberg path, for compatible titles. It has no
+  source switch of its own: the saves flow through the Steam emulator source, and its repair and
+  loader tools live in **Settings → Emulators → Ubisoft / Uplay R1/R2**. See
+  [Uplay R2 setup](uplay-r2.md).
+
+If a game using one of these shows no achievements, its **Game Health** panel names the missing
+piece - see [Game Health](game-health.md) and [Goldberg / GBE setup](emulator-setup.md).
 
 ## Console emulators
 
 | Emulator | Console | Trophy / achievement file |
 |---|---|---|
 | **RPCS3** | PlayStation 3 | `TROPUSR.DAT` beside the trophy list |
-| **ShadPS4** | PlayStation 4 | `TROP*.XML`, holding the list and earned state together |
-| **Xenia** | Xbox 360 | `.gpd`, likewise holding both |
+| **ShadPS4** | PlayStation 4 | `TROP*.XML`, which holds the list and the earned state together |
+| **Xenia** | Xbox 360 | `.gpd`, which likewise holds both |
 
-Each is watched live and follows the emulator's own relocated data path, so a relocated RPCS3,
-ShadPS4 or Xenia folder can be added directly under **Settings → Folders**.
+Each one is watched live, so an unlock in the emulator raises a notification like any other.
+
+All three let you move their data off the default path, and AW Next reads the same settings the
+emulator reads rather than assuming the default:
+
+- **RPCS3** - the trophy folder follows `vfs.yml` (including a `$(EmulatorDir)`-relative remap), a
+  `portable` folder beside the executable, and `RPCS3_CONFIG_DIR`.
+- **ShadPS4** - recognised whether you point at the emulator, its `user` folder or `game_data`
+  itself, and `config.toml` is read from either of the two places shadPS4 has kept it.
+- **Xenia** - follows the `storage_root` and `content_root` in its config.
+
+So a relocated RPCS3 virtual disk or a ShadPS4 data folder can be added under **Settings → Folders**
+directly, with no emulator executable anywhere near it.
 
 ## Other sources
 
 | Source | What it is |
 |---|---|
-| **Xbox 360 recompilations** | Recompiled ports (ReXGlue and similar). Unlocks come from an `achievements` folder (game folder or `Documents\<game>`) or `SaveData\Achievements.json`; the list, translations and icons come from the game's own `default.xex` once added under **Settings → Folders**. [dbox.tools](https://dbox.tools) fills in DLC and missing executables. Box art from the Xbox 360 marketplace, rarity from Exophase. Watched live, resettable, follows the Xenia switch. |
-| **Games for Windows LIVE** | XLiveLessNess installs. Unlocks, list, texts and icons all come from the game's own executable. Watched live. |
-| **FINAL FANTASY VII (2013)** | Pre-Steamworks re-release; its 36 unlocks live in an 8-byte bitfield beside its saves in Documents. |
-| **Import notification cache** | The background tracker's own cache, as an extra source of past unlocks. |
-| **Manually added games** | Title + executable, optional platform and Steam AppID - see [Advanced tools](advanced.md#add-a-game-manually). |
+| **Xbox 360 games recompiled for PC** | ReXGlue ports and similar recompilations keep their own achievement list in an `achievements` folder (`.toml`, `.tsv`) or `SaveData\Achievements.json`, either in the game folder or in `Documents\<game>`. The list comes from the game's own `default.xex`, in every language it ships and with secret achievements kept secret; [dbox.tools](https://dbox.tools) fills in DLC achievements and games whose executable was not found, the Xbox 360 marketplace supplies the box art, and Exophase the share of players who earned each achievement. A game that writes only a JSON list, with no title id, is recognised when every one of its achievements matches an Xbox 360 title. Unlocks are notified live, play time is tracked, and Reset achievements works on them. It follows the Xenia source switch and the notification preset chosen for the Xbox 360. |
+| **Games for Windows LIVE** | XLiveLessNess installs. Each profile's unlock records are read, and the achievement list, its texts and its icons come out of the game's own executable, so nothing has to be downloaded. Watched live. |
+| **FINAL FANTASY VII (2013)** | That re-release predates Steamworks achievements and keeps its 36 unlocks in an 8-byte bitfield beside its saves, found in Documents without adding the folder by hand. |
+| **Import notification cache** | Reads the background tracker's own cache as an extra source of past unlocks. |
+| **Manually added games** | A game added from a title and executable, with an optional platform and Steam AppID - see [Advanced tools](advanced.md#add-a-game-manually). |
 
 ## Steam metadata, without an API key
 
-No API key or connected account needed. Each list comes from a keyless chain - official
-`GetGameAchievements` first, then SteamHunters/SteamCommunity, then a browser scrape as last resort,
-cached per language and re-checked every 3 days for achievements a game update added. Turn that
-off at **Settings → Advanced → Automatic achievement data updates**; **Recheck achievement lists**
-there still works as a manual check. DLC achievements are tagged with the group that owns them.
+No Steam Web API key and no connected Steam account are used. Each game's achievement list is
+fetched with a keyless chain: the official `GetGameAchievements` endpoint first (which carries hidden
+descriptions, icons and global rarity), then SteamHunters enriched with the SteamCommunity page, then
+SteamCommunity alone, and a browser scrape only as a last resort.
+
+Results are cached per language in `%APPDATA%\Achievement Watcher Next\steam_cache\schema`, so local
+sources and previously seen games keep working offline.
+
+Steam never announces when a game update adds achievements, so a cached list re-checks itself every
+3 days and picks up anything new without ever removing an achievement already cached. To check
+immediately, use **Settings → Advanced → Recheck achievement lists**. **Settings → Advanced →
+Automatic achievement data updates** turns the periodic recheck off entirely, for anyone who
+maintains `steam_cache` by hand; the one-off **Recheck achievement lists** button still works either
+way.
+
+DLC and update achievements are tagged with the group that owns them (for example a
+*Hearts of Stone* tag) under the achievement title. The groups come from the same keyless lookup.
 
 ## Sources you do not see
 
-**Simple** interface mode folds away six niche rows - GreenLuma, LumaPlay, the two Nemirtingas
-emulators, Goldberg SocialClub, and the notification-cache import - but only while a row is still on
-*and* no game in your library came from it; switch one off, or own a game it found, and it comes back. **Advanced** always lists every source.
+In **Simple** interface mode the Sources list folds away six niche rows - GreenLuma, LumaPlay, the
+two Nemirtingas emulators (the GOG and Epic save readers), Goldberg SocialClub and the
+notification-cache import - but only while a row is still enabled *and* no game in your library came
+from it. Switch one off, or own a game it detected, and its row comes straight back, so the
+interface mode can never hide the one control that would explain a missing game. **Advanced** always
+lists every source.
 
 ---
 

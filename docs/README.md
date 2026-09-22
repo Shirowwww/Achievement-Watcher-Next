@@ -2,16 +2,26 @@
 permalink: /README.html
 ---
 
-<!-- jekyll-readme-index needs this front-matter permalink to publish a literal README.md. -->
+<!--
+  jekyll-readme-index still special-cases a file literally named README.md even with
+  readme_index.enabled: false in _config.yml, and drops it instead of rendering it - explicit front
+  matter with a permalink is what forces Jekyll to publish it at README.html like any other guide.
+-->
 <div align="center">
 
 # 📚 AW Next documentation
 
+Practical guides for setup, daily use and maintenance.
+
 [Home](index.html) · [Download](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest) · [Preset gallery](gallery/) · [Theme gallery](gallery/themes/) · [Changelog](changelog.md) · [Security](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/SECURITY.md) · [Report an issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues)
+
+<img src="screenshot/home.png" width="620" alt="The AW Next library">
 
 </div>
 
 ## Start here
+
+Read in order, or jump to what you need - every page ends with a link to the next one.
 
 | # | Guide | What it covers |
 |---|---|---|
@@ -35,42 +45,79 @@ permalink: /README.html
 | [Comparison](comparison.md) | How AW Next differs from Achievement Watcher 2.x and Achievements |
 | [Community galleries](community-galleries.md) | Presets and themes made by other people: taking one, and sending yours |
 
-The in-app **Settings → Help** tab mirrors this, filtered to your actual setup.
+The in-app **Settings → Help** tab is the quickest reference while you are using the app. Its topics
+are grouped as *Get started*, *Something is wrong*, *Emulated games* and *Make it yours*, it reflects
+your actual configuration - overlay hotkey, controller layout and bindings, notification mode, theme,
+enabled sources - and it filters its topic cards as you type.
 
 ## Developer reference
 
+Lower-level documentation for contributors and for anyone building AW Next from source.
+
 | Topic | Reference |
 |---|---|
-| Contributing and building from source | [CONTRIBUTING.md](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CONTRIBUTING.md) · [BUILD.md](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/BUILD.md) |
-| Architecture, and Goldberg/GBE file formats and repair invariants | [Architecture](architecture.md) · [Goldberg / GBE reference](goldberg-gbe.md) |
+| Contributing, branches, tests and commit style | [CONTRIBUTING.md](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CONTRIBUTING.md) |
+| Development setup, running and Windows packaging | [BUILD.md](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/BUILD.md) |
+| App, renderer and Watchdog boundaries; the parser contract | [Architecture](architecture.md) |
+| Goldberg / GBE file formats, detection and repair invariants | [Goldberg / GBE reference](goldberg-gbe.md) |
 | How Uplay R1/R2 games are identified, repaired and read | [Uplay R1/R2 reference](uplay-reference.md) |
-| Release, installer, uninstaller and updater | [Release workflow](RELEASE_WORKFLOW.md) · [Installer, uninstaller and updates](INSTALLER_AND_UPDATES.md) |
-| Translation, locale files and the key-parity rules | [Localization](localization.md) · [app/locale/README.md](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/app/locale/README.md) |
+| Versioning, publishing, CI and auto-update validation | [Release workflow](RELEASE_WORKFLOW.md) |
+| The installer, uninstaller and updater, and why they diverge from electron-builder defaults | [Installer, uninstaller and updates](INSTALLER_AND_UPDATES.md) |
+| Translation, Intl formatting, link routing and the locale linter | [Localization](localization.md) |
+| Locale files and the key-parity rules | [app/locale/README.md](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/app/locale/README.md) |
 | The portable theme file, its limits and its versioning rules | [.awtheme format](awtheme-format.md) |
 
 ## Where your data lives
 
-Everything AW Next writes is under **`%APPDATA%\Achievement Watcher Next`**, kept across upgrades.
+Everything AW Next writes is under one folder, **`%APPDATA%\Achievement Watcher Next`**, and the
+paths below are relative to it unless they say otherwise. An upgrade keeps all of it; the first
+launch imports an older Achievement Watcher folder without modifying it.
 
 | What | Where |
 |---|---|
-| Settings, logs and signed-in platform accounts | `cfg\`, `logs\`, `steam_session.enc`, `epic_tokens.enc`, `cfg\xbox-auth.json` |
-| Presets, sounds and themes, with their images | `presets\`, `sounds\`, `theme-packs\`, `theme-images\`, `themes\` |
-| Backups, cover art, icons and screenshot souvenirs | `backups\`, `covers\`, `gameIcons\`, `Pictures\Achievement Watcher Next` (or your chosen folder) |
-| **Re-fetchable** (Clear caches empties this): schemas, icons, rarity, tools, scans | `steam_cache\`, `uplay_cache\`, `cache\` |
-| GBE Fork / Goldberg saves *(the emulator writes these)* | `%APPDATA%\GSE Saves`, `%APPDATA%\Goldberg SteamEmu Saves` |
+| Settings, and every index and database the app keeps | `cfg\` (`options.ini` is the settings file itself) |
+| Logs | `logs\` |
+| Presets you created or imported | `presets\Users Presets\` |
+| Pictures a preset uses as its background | `presets\images\` |
+| Sounds you added | `sounds\` |
+| Themes you saved or imported | `theme-packs\` |
+| Images used by the Custom theme | `theme-images\` |
+| A stylesheet theme you dropped in yourself | `themes\` |
+| Achievement backups, and the ones taken before a GBE repair | `backups\achievements\`, `backups\gbe\` |
+| Cover art and game icons | `covers\`, `gameIcons\` |
+| Screenshot souvenirs | `Pictures\Achievement Watcher Next` (or the folder you chose in Settings) |
+| Signed-in platform accounts | `steam_session.enc`, `epic_tokens.enc`, `cfg\xbox-auth.json` |
+| **Re-fetchable:** schemas, icons and rarity from a platform | `steam_cache\`, `uplay_cache\` |
+| **Re-fetchable:** downloaded tools and the memoised folder scans | `cache\` (except `cache\uplayR2`, which holds a DLL you supplied) |
+| GBE Fork saves *(not ours: the emulator writes these)* | `%APPDATA%\GSE Saves` |
+| Classic Goldberg saves *(the same)* | `%APPDATA%\Goldberg SteamEmu Saves` |
+
+**Settings → Advanced → Clear caches** empties the two rows marked *re-fetchable* and nothing else,
+because everything in them can be downloaded again. Nothing under `cfg\`, `presets\`, `theme-packs\`,
+`theme-images\`, `themes\`, `sounds\`, `covers\`, `gameIcons\` or `backups\` is ever regenerated, so
+those are the folders worth copying before a reinstall.
+
+Before reporting a problem, use **Settings → Advanced → Diagnostics**, reproduce it once, then remove
+private data from the relevant logs.
 
 ### What leaves this PC
 
-AW Next has no analytics or telemetry; only these cached lookups ever leave your PC:
+AW Next has no analytics, no telemetry and no account of its own. The only things it sends are the
+lookups it needs, and every answer is cached locally so the library keeps working offline:
 
 | It asks for | From | Carrying |
 |---|---|---|
-| Achievement lists, icons and rarity | Steam's public endpoints, SteamHunters, SteamCommunity, Exophase | AppID and language |
-| Cover art and game logos | Steam CDN, SteamDB, SteamGridDB | AppID or title |
+| Achievement lists, icons and global rarity | Steam's public endpoints, SteamHunters, the SteamCommunity page, Exophase | a game's AppID, and the interface language |
+| Cover art and game logos | the Steam CDN, SteamDB, SteamGridDB | a game's AppID or title |
 | Update checks and downloads | the GitHub release feed | nothing but the request |
-| Repair tools, when you run a repair | GBE Fork, Steamless, API-bypass, CrakFiles | nothing but the request |
-| Your library and unlocks, **only if connected** | Steam, Epic or Xbox Network | that account's session token |
+| Repair tools, when you run a repair | the GBE Fork, Steamless, API-bypass and CrakFiles projects | nothing but the request |
+| Your own library and unlocks, **only if you connect an account** | Steam, Epic or Xbox Network | that account's own session token |
 
-Nothing else is uploaded; a preset or theme you submit to a gallery is the one thing you send
-deliberately - see [Community galleries](community-galleries.md).
+Some of that is not asked for at all: when a game's executable carries a real 256px icon, that icon
+is read straight out of the file and used as the game's logo, ahead of anything on the network.
+
+Nothing is uploaded: not your library, not your playtime, not your folders, not your screenshots.
+The optional `Websocket @localhost:8082` broadcast listens on `127.0.0.1` only, so it is readable by
+programs on this PC and by nothing on the network. A preset or theme you submit to a gallery is the
+one thing you send deliberately, and only when you press Publish - see
+[The community galleries](community-galleries.md).
