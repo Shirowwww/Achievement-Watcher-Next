@@ -52,17 +52,18 @@ const shimPath = (dir, name, body) => {
     assert.ok(elapsed < 10000, `the idle budget must end the run early, took ${elapsed}ms`);
 
     // Chatty: keeps printing across the idle budget, so only the hard budget may stop it. It never
-    // writes a steam_settings folder, so the expected rejection is the "produced no" one.
+    // writes a steam_settings folder, so the expected rejection is the "produced no" one. Its budget
+    // leaves room for a slow start under a loaded suite: the idle clock runs from the spawn.
     const chatty = shimPath(
       temp,
       'chatty.js',
-      "let i = 0;\nconst t = setInterval(() => {\n  console.log(`working ${++i}`);\n  if (i >= 6) clearInterval(t);\n}, 300);\n"
+      "let i = 0;\nconst t = setInterval(() => {\n  console.log(`working ${++i}`);\n  if (i >= 15) clearInterval(t);\n}, 300);\n"
     );
     await assert.rejects(
       gen.generate({
         tool: { exe: cmd, args: [chatty], dir: temp, tag: 'test' },
         appid: '480',
-        idleTimeout: 1200,
+        idleTimeout: 3000,
         timeout: 60000,
       }),
       /produced no steam_settings/,
