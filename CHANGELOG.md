@@ -11,6 +11,16 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Added
 
+- **Forget a game.** Right-click a game and choose "Forget this game..." to clear everything AW Next
+  keeps about it: its achievement saves (backed up first, as Reset achievements does), play time,
+  cached achievement list and icons, per-game settings, and the emulator configuration AW Next wrote
+  into its folder. The next scan finds it again as a new game. Removing a game still only hides it.
+- **An achievement language per game.** Game settings > Achievement language shows one game's
+  achievements, and its notifications, in another language than the rest of the library.
+- **A refresh button** next to the settings gear rescans the library, like F5.
+- **Steam unlocks move the library live.** A game Steam runs, including one added through SteamTools,
+  LuaTools or GreenLuma, now updates its card the moment Steam records the unlock instead of at the
+  next scan.
 - **Xbox 360 games recompiled for PC.** ReXGlue ports and similar recompilations keep their own
   achievement list in an `achievements` folder, either in the game folder or in `Documents\<game>`.
   AW Next now reads those lists (`.toml`, `.tsv` and `SaveData\Achievements.json`) and treats the
@@ -57,6 +67,10 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Improved
 
+- **A clearer library stats panel.** Wider, with the completion dial up front, an icon on every
+  figure and a proper empty state.
+- **A tidier game menu.** Right-click now reads Launch, Game settings, Achievements & playtime, then
+  the tools, with Remove, Forget and Uninstall grouped at the bottom.
 - **Much smaller updates.** An update now downloads only what changed since the installed version
   instead of the whole 127 MB installer; if that ever fails it falls back to the full download on its
   own.
@@ -76,6 +90,18 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Private Steam profiles.** A private profile, or private game details, dropped the whole Steam
+  source even though unlocks are read from the local Steam cache, which needs no public profile.
+- **An explicit DLC list is valid.** Game Health no longer flags `configs.app.ini` with `unlock_all=0`
+  and the DLC ids listed, which Capcom titles and games with dummy DLC checks need, and a repair keeps
+  that list instead of forcing `unlock_all=1`.
+- **Repairing a game served by OnlineFix could not be undone.** The repair created a `steam_settings`
+  folder the loader never reads. Diagnosis now names the loader even when such a folder exists, and
+  "Remove AW Next's emulator configuration" deletes a folder AW Next created.
+- **Games fixed over an older crack showed an orange health dot.** A leftover `SteamConfig.ini` was
+  taken for the running loader, beside `ColdClientLoader.ini` or after the emulator fix had replaced
+  that crack's dll, so the game's own saves read as a foreign copy's (The Jackbox Party Pack
+  Collection). The health dots also refresh in the order the tiles are shown.
 - **OnlineFix, CODEX and TENOKE games no longer show as a broken Goldberg setup.** The diagnosis
   no longer offers a repair for them, and Game Health flags a game whose only save is an old Goldberg one.
 - **Stat-based achievements can unlock.** The achievement repair now also writes the game's stats,

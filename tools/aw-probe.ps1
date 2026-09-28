@@ -121,15 +121,18 @@ public class AwProbe {
     public int X, Y, Width, Height;
   }
 
-  // Dev builds use the process name "electron".
+  // Dev builds use the process name "electron". The pids are resolved once: looking the process
+  // up per window cost a Process object for every visible window on the desktop.
   public static List<Win> List(string processName) {
     var found = new List<Win>();
+    var pids = new HashSet<uint>();
+    foreach (var p in System.Diagnostics.Process.GetProcessesByName(processName)) { pids.Add((uint)p.Id); p.Dispose(); }
+    if (pids.Count == 0) return found;
     EnumWindows((h, p) => {
       if (!IsWindowVisible(h)) return true;
       uint pid; GetWindowThreadProcessId(h, out pid);
-      string proc;
-      try { proc = System.Diagnostics.Process.GetProcessById((int)pid).ProcessName; } catch { return true; }
-      if (!proc.ToLowerInvariant().Contains(processName.ToLowerInvariant())) return true;
+      if (!pids.Contains(pid)) return true;
+      string proc = processName;
       var sb = new StringBuilder(512); GetWindowText(h, sb, 512);
       RECT r; GetWindowRect(h, out r);
       found.Add(new Win {
@@ -165,9 +168,10 @@ function Format-Windows($list) {
 $VK = @{
   'CTRL' = 0x11; 'CONTROL' = 0x11; 'SHIFT' = 0x10; 'ALT' = 0x12
   'ESC' = 0x1B; 'ESCAPE' = 0x1B; 'ENTER' = 0x0D; 'RETURN' = 0x0D; 'TAB' = 0x09
-  'F4' = 0x73; 'SPACE' = 0x20; 'WIN' = 0x5B; 'PAGEUP' = 0x21; 'PAGEDOWN' = 0x22
-  'HOME' = 0x24; 'END' = 0x23; 'UP' = 0x26; 'DOWN' = 0x28; 'LEFT' = 0x25; 'RIGHT' = 0x27
+  'SPACE' = 0x20; 'WIN' = 0x5B; 'PAGEUP' = 0x21; 'PAGEDOWN' = 0x22; 'DELETE' = 0x2E; 'DEL' = 0x2E
+  'BACKSPACE' = 0x08; 'HOME' = 0x24; 'END' = 0x23; 'UP' = 0x26; 'DOWN' = 0x28; 'LEFT' = 0x25; 'RIGHT' = 0x27
 }
+foreach ($n in 1..12) { $VK["F$n"] = 0x6F + $n }
 function Get-VK([string]$name) {
   $n = $name.Trim().ToUpperInvariant()
   if ($VK.ContainsKey($n)) { return $VK[$n] }
@@ -188,6 +192,12 @@ function Set-Foreground([IntPtr]$handle) {
   return $false
 }
 
+# The live Electron processes of this checkout only: another Electron app is not ours, and
+# Windows keeps listing an exited process for as long as anything holds a handle to it.
+function Get-OwnProcesses {
+  Get-Process electron -ErrorAction SilentlyContinue | Where-Object { -not $_.HasExited -and $_.Path -like "$AppDir*" }
+}
+
 # All input commands require a focused target.
 function Get-InputTarget([string]$pattern, [string]$what) {
   $target = Select-Windows $pattern | Select-Object -First 1
@@ -199,8 +209,10 @@ function Get-InputTarget([string]$pattern, [string]$what) {
 switch ($Command) {
 
   'Start' {
-    if ((Get-Process electron -ErrorAction SilentlyContinue)) {
-      Write-Host 'An Electron instance is already running; Stop it first to get a clean state.'
+    if (Get-OwnProcesses) {
+      # A second launch only forwards its argv to the running instance and exits.
+      Write-Host 'FAIL: this checkout is already running; Stop it first to get a clean state.'
+      exit 1
     }
     # Remove the flag that disables Electron's GUI.
     Remove-Item Env:\ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
@@ -212,18 +224,27 @@ switch ($Command) {
 
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while ((Get-Date) -lt $deadline) {
-      if (Select-Windows 'AW Next') { break }
+      if (Select-Windows 'AW Next') {
+        Write-Host 'Windows now visible:'
+        Format-Windows (Get-Windows)
+        exit 0
+      }
       Start-Sleep -Milliseconds 500
     }
-    Write-Host 'Windows now visible:'
-    Format-Windows (Get-Windows)
+    Write-Host "TIMEOUT after ${TimeoutSeconds}s: no 'AW Next' window (a hidden start stays in the tray)"
+    exit 1
   }
 
   'Stop' {
     $killed = 0
-    Get-CimInstance Win32_Process -Filter "Name='electron.exe'" -ErrorAction SilentlyContinue |
-      Where-Object { $_.CommandLine -like '*Achievement-Watcher*' } |
-      ForEach-Object { try { Stop-Process -Id $_.ProcessId -Force -ErrorAction Stop; $killed++ } catch {} }
+    $own = @(Get-OwnProcesses)
+    foreach ($p in $own) { try { Stop-Process -Id $p.Id -Force -ErrorAction Stop; $killed++ } catch {} }
+    # Stop-Process returns before the process is gone, and a Start in that window found it still
+    # holding the single-instance lock.
+    $deadline = (Get-Date).AddSeconds(10)
+    while ((Get-OwnProcesses) -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 200 }
+    # Chromium releases its single-instance lock a moment after the last process is gone.
+    if ($killed -gt 0) { Start-Sleep -Seconds 2 }
     Write-Host "stopped $killed process(es)"
   }
 
@@ -270,11 +291,13 @@ switch ($Command) {
   }
 
   'Hover' {
-    # Native submenus open on hover, and a click on the parent item closes the whole menu instead -
-    # so reaching one needs a cursor move with no button press. Coordinates are absolute here: a
-    # popup menu is its own window, not a child of the app's.
-    [void][AwProbe]::SetCursorPos($X, $Y)
-    Write-Host "hovering $X,$Y"
+    # Moves the cursor with no button press, for tooltips and hover states. X/Y are window-relative
+    # with -Match, absolute otherwise. Native submenus do not reliably open on a synthetic move:
+    # walk a context menu with Key DOWN/RIGHT/RETURN instead.
+    $sx = $X; $sy = $Y
+    if ($Match) { $w = Select-Windows $Match | Select-Object -First 1; if (-not $w) { Write-Host "FAIL: no window matching '$Match'"; exit 1 }; $sx += $w.X; $sy += $w.Y }
+    [void][AwProbe]::SetCursorPos($sx, $sy)
+    Write-Host "hovering $sx,$sy$(if ($Match) { " (window '$Match' + $X,$Y)" })"
   }
 
   'Wait' {
