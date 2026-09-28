@@ -25,6 +25,26 @@ const AW_SECTION_KEYS = {
   'main::stats': { stat_achievement_progress_functionality: '1', save_only_higher_stat_achievement_progress: '1' },
 };
 
+/*
+  A steam_settings folder AW Next created from nothing carries this file. Everything in such a
+  folder is ours, so undoing it means removing the folder, not picking lines out of its INIs: that
+  is what left a repaired OnlineFix game with a schema, icons and an appid file nothing ever read.
+  GBE only opens the file names it knows, so the marker is invisible to the emulator.
+*/
+const CREATED_MARKER = '.aw-next-created';
+
+function markCreated(steamSettings) {
+  fs.writeFileSync(path.join(steamSettings, CREATED_MARKER), `Created by AW Next on ${new Date().toISOString()}. Remove it from AW Next to take this folder back out.\n`);
+}
+
+function isCreatedByAw(steamSettings) {
+  try {
+    return !!steamSettings && fs.statSync(path.join(steamSettings, CREATED_MARKER)).isFile();
+  } catch {
+    return false;
+  }
+}
+
 function readText(file) {
   try {
     return fs.readFileSync(file, 'utf8');
@@ -38,6 +58,7 @@ function readText(file) {
 function inspect(steamSettings) {
   const found = [];
   if (!steamSettings) return { managed: false, files: found };
+  if (isCreatedByAw(steamSettings)) return { managed: true, files: [{ file: CREATED_MARKER, reason: 'created-folder' }] };
 
   const appIni = readText(path.join(steamSettings, 'configs.app.ini'));
   if (appIni && appIni.includes(AW_MARKER)) found.push({ file: 'configs.app.ini', reason: 'dlc-section' });
@@ -172,6 +193,10 @@ function stripUserIdentity(steamSettings, { dryRun = false } = {}) {
   wants AW out of their DLC config may still be happy with the account name it wrote.
 */
 function strip(steamSettings, { dryRun = false, includeIdentity = true } = {}) {
+  if (isCreatedByAw(steamSettings)) {
+    if (!dryRun) fs.rmSync(steamSettings, { recursive: true, force: true });
+    return { steamSettings, removed: [{ file: steamSettings, removed: 'folder' }], changed: true };
+  }
   const removed = [];
   for (const step of [stripDlcSection, stripMainKeys]) {
     const result = step(steamSettings, { dryRun });
@@ -184,4 +209,4 @@ function strip(steamSettings, { dryRun = false, includeIdentity = true } = {}) {
   return { steamSettings, removed, changed: removed.length > 0 };
 }
 
-module.exports = { AW_MARKER, inspect, strip, stripDlcSection, stripMainKeys, stripUserIdentity };
+module.exports = { AW_MARKER, CREATED_MARKER, markCreated, isCreatedByAw, inspect, strip, stripDlcSection, stripMainKeys, stripUserIdentity };

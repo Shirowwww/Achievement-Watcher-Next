@@ -36,6 +36,13 @@ function isEmulatorDll(file) {
 */
 const KNOWN_CRACK_LOADERS = [
   { name: 'OnlineFix', markers: ['onlinefix64.dll', 'onlinefix32.dll', 'onlinefix.dll', 'onlinefix.ini'], replaceable: false },
+  /*
+    Checked before the scene and legacy families: ColdClientLoader.ini names the loader that
+    actually launches the game, while a stray SteamConfig.ini or steam_emu.ini is often a leftover
+    of the crack a repack replaced (The Jackbox Party Pack Collection ships both). Taking the
+    leftover reported every ColdClient save as somebody else's.
+  */
+  { name: 'ColdClient', markers: ['coldclientloader.ini', 'coldapi.ini'], replaceable: false },
   { name: 'TENOKE', markers: ['tenoke.ini'], replaceable: true },
   { name: 'ALI213', markers: ['ali213.ini'], replaceable: true },
   { name: 'SmartSteamEmu', markers: ['smartsteamemu.ini'], replaceable: false },
@@ -48,7 +55,6 @@ const KNOWN_CRACK_LOADERS = [
   */
   { name: 'CODEX / RUNE / scene emulator', markers: ['steam_emu.ini', 'steam_api.ini', 'cpy.ini', 'steam_api64.rne', 'steam_api.rne'], replaceable: true },
   { name: 'Hoodlum / legacy emulator', markers: ['valve.ini', 'hlm.ini', 'ds.ini', 'steamconfig.ini'], replaceable: true },
-  { name: 'ColdClient', markers: ['coldclientloader.ini', 'coldapi.ini'], replaceable: false },
   /*
     anadius EA/Origin cracks (The Sims 4, EA SPORTS FC...). Not Steam emulation at all: the loader
     proxies the EA layer through winmm.dll and records unlocks under %LOCALAPPDATA%nadius\LSX emu,
@@ -58,9 +64,16 @@ const KNOWN_CRACK_LOADERS = [
   { name: 'anadius (EA)', markers: ['anadius.cfg', 'anadius64.dll', 'anadius32.dll', 'anadius64online.dll'], replaceable: false },
 ];
 
+const STEAM_API_DLLS = ['steam_api.dll', 'steam_api64.dll'];
+
 function loaderForEntries(entries, dir) {
   const present = new Set(entries.map((e) => e.toLowerCase()));
+  // A replaceable loader IS its steam_api dll. Once GBE sits in that dll's place, the loader's ini is
+  // a leftover the swap did not rename (every Jackbox Party Pack of one collection kept its
+  // SteamConfig.ini), and reading it as the live runtime called GBE's own saves foreign.
+  const emulatorDllHere = STEAM_API_DLLS.some((name) => present.has(name) && isEmulatorDll(path.join(dir, name)));
   for (const loader of KNOWN_CRACK_LOADERS) {
+    if (loader.replaceable && emulatorDllHere) continue;
     const found = loader.markers.filter((marker) => present.has(marker));
     if (found.length > 0) return { name: loader.name, replaceable: loader.replaceable === true, dir, markers: found };
   }

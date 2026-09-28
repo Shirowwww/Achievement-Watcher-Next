@@ -82,6 +82,35 @@ for (const [name, marker] of [
   eq(crackLoaderDetect.detectWorkingCrackLoader(undefined), null, 'undefined gameDir => null, no throw');
 }
 
+{
+  // The Jackbox Party Pack Collection: ColdClient launches the game, SteamConfig.ini is a leftover.
+  const dir = tmp('aw-crackloader-coldclient-leftover-');
+  fs.writeFileSync(path.join(dir, 'ColdClientLoader.ini'), '[SteamClient]\n');
+  fs.writeFileSync(path.join(dir, 'SteamConfig.ini'), '[Settings]\n');
+  const hit = crackLoaderDetect.detectWorkingCrackLoader(dir);
+  ok(hit && hit.name === 'ColdClient', 'ColdClient wins over a leftover legacy marker');
+}
+
+{
+  // GBE installed over a legacy crack: the old ini stays, but the dll it belonged to is gone.
+  const dir = tmp('aw-crackloader-gbe-over-legacy-');
+  fs.writeFileSync(path.join(dir, 'SteamConfig.ini'), '[Settings]\n');
+  fs.writeFileSync(path.join(dir, 'steam_api64.dll'), Buffer.concat([Buffer.alloc(32, 1), Buffer.from('steam_settings')]));
+  eq(crackLoaderDetect.detectWorkingCrackLoader(dir), null, 'a leftover legacy ini beside a GBE dll is not a working loader');
+
+  // The same ini beside the crack's own dll still is.
+  fs.writeFileSync(path.join(dir, 'steam_api64.dll'), Buffer.alloc(64, 2));
+  const hit = crackLoaderDetect.detectWorkingCrackLoader(dir);
+  ok(hit && hit.name === 'Hoodlum / legacy emulator', 'the legacy loader is still recognised with its own dll');
+
+  // A loader that is not the dll keeps its claim whatever the dll is.
+  const side = tmp('aw-crackloader-onlinefix-gbe-');
+  fs.writeFileSync(path.join(side, 'OnlineFix64.dll'), 'stub');
+  fs.writeFileSync(path.join(side, 'steam_api64.dll'), Buffer.from('steam_settings'));
+  const of = crackLoaderDetect.detectWorkingCrackLoader(side);
+  ok(of && of.name === 'OnlineFix', 'OnlineFix is not dismissed by a GBE dll');
+}
+
 for (const d of tmpDirs) {
   try {
     fs.rmSync(d, { recursive: true, force: true });

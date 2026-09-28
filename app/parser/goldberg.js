@@ -807,18 +807,33 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
   report.engineDllDirs = unrealLayout.steamworksDllDirs(gameDir);
   const steamSettings = emu.steamSettings || findSteamSettings(gameDir);
   report.steamSettings = steamSettings;
+  // OnlineFix, CODEX, TENOKE... emulate Steam on their own and never read steam_settings. Their
+  // folder was reported as "Goldberg not set up", with a repair that writes files nothing loads.
+  // Unless a GBE dll was just installed over it: that one does read steam_settings.
+  const servingLoader = emu.dll.some((dll) => crackLoaderDetect.isEmulatorDll(dll)) ? null : crackLoaderDetect.detectWorkingCrackLoader(gameDir);
+  const servedByLoader = () => {
+    report.loader = servingLoader.name;
+    add('info', 'SERVED_BY_LOADER', `This game is served by ${servingLoader.name}, which keeps its own achievement saves and does not use steam_settings. Nothing to repair here.`);
+    report.ok = true;
+    return report;
+  };
   if (!steamSettings) {
-    // OnlineFix, CODEX, TENOKE... emulate Steam on their own and never read steam_settings. Their
-    // folder was reported as "Goldberg not set up", with a repair that writes files nothing loads.
-    // Unless a GBE dll was just installed over it: that one does read steam_settings.
-    const loader = crackLoaderDetect.detectWorkingCrackLoader(gameDir);
-    if (loader && !emu.dll.some((dll) => crackLoaderDetect.isEmulatorDll(dll))) {
-      report.loader = loader.name;
-      add('info', 'SERVED_BY_LOADER', `This game is served by ${loader.name}, which keeps its own achievement saves and does not use steam_settings. Nothing to repair here.`);
-      report.ok = true;
-      return report;
-    }
+    if (servingLoader) return servedByLoader();
     add('error', 'NO_STEAM_SETTINGS', 'No steam_settings folder found beside the emulator - Goldberg/GBE is likely not set up.');
+    return report;
+  }
+  // A loader that is not the steam_api dll (OnlineFix proxies through its own) never opens this
+  // folder, whoever wrote it, so validating it produced a page of faults on a working game. A scene
+  // runtime that IS the dll stays on the path below: installing GBE over it is a real fix there.
+  if (servingLoader && !servingLoader.replaceable) {
+    servedByLoader();
+    const awCreated = awManagedConfig.isCreatedByAw(steamSettings);
+    add(
+      'info',
+      'UNUSED_STEAM_SETTINGS',
+      `${steamSettings} is not read by ${servingLoader.name}.${awCreated ? " AW Next created it: right-click > Emulator > Remove AW Next's emulator configuration deletes it." : ''}`,
+      { dir: steamSettings, awCreated }
+    );
     return report;
   }
 
@@ -907,8 +922,8 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
     add('warning', 'NO_DLC_CONFIG', 'configs.app.ini is missing - DLC unlock/enumeration is not configured.');
   } else {
     const appConfig = fs.readFileSync(appConfigFile, 'utf8');
-    if (!/^\s*\[app::dlcs\][\s\S]*?^\s*unlock_all\s*=\s*1\s*$/im.test(appConfig)) {
-      add('warning', 'BAD_DLC_CONFIG', 'configs.app.ini does not enable [app::dlcs] unlock_all=1.');
+    if (dlcConfigMode(appConfig) === 'none') {
+      add('warning', 'BAD_DLC_CONFIG', 'configs.app.ini neither sets [app::dlcs] unlock_all=1 nor lists any DLC id.');
     }
   }
   const mainConfigFile = path.join(steamSettings, 'configs.main.ini');
@@ -1073,12 +1088,33 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
   return report;
 }
 
+// How configs.app.ini hands out DLC ownership. Both 'unlock-all' and 'explicit' are valid setups:
+// Capcom titles and games with dummy anti-emulator DLC checks crash with unlock_all=1 and need
+// unlock_all=0 plus the real id list, so only 'none' is a misconfiguration.
+function dlcConfigMode(text) {
+  const doc = parseIni(String(text || ''));
+  const section = getIniSection(doc, 'app::dlcs');
+  if (!section) return 'none';
+  let unlockAll = false;
+  let listed = false;
+  for (const line of section.body) {
+    if (/^\s*unlock_all\s*=\s*1\s*$/i.test(line)) unlockAll = true;
+    else if (/^\s*\d+\s*=/.test(line)) listed = true;
+  }
+  if (unlockAll) return 'unlock-all';
+  return listed ? 'explicit' : 'none';
+}
+
 // Write/merge configs.app.ini so GBE Fork reports every DLC as owned: unlock_all=1 for ownership
-// queries plus the id=name list for enumeration APIs. Existing entries are preserved and unioned.
-function writeDlcConfig({ steamSettings, dlcs = [], unlockAll = true } = {}) {
+// queries plus the id=name list for enumeration APIs. Existing entries are preserved and unioned,
+// and a hand-curated explicit list (unlock_all=0 with ids) keeps unlock_all=0 unless the caller
+// forces it with `forceUnlockAll`.
+function writeDlcConfig({ steamSettings, dlcs = [], unlockAll = true, forceUnlockAll = false } = {}) {
   if (!steamSettings) throw new Error('writeDlcConfig: steamSettings path is required');
   const file = path.join(steamSettings, 'configs.app.ini');
-  const doc = parseIni(fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '');
+  const previous = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
+  if (!forceUnlockAll && dlcConfigMode(previous) === 'explicit') unlockAll = false;
+  const doc = parseIni(previous);
 
   // Preserve any id=name entries already in the file, then union the fetched list on top.
   const map = new Map();
@@ -1276,7 +1312,9 @@ async function repair({
     }
   };
   if (!steamSettings) throw new Error('repair: steamSettings path is required');
+  const createdFolder = !fs.existsSync(steamSettings);
   fs.mkdirSync(steamSettings, { recursive: true });
+  if (createdFolder) awManagedConfig.markCreated(steamSettings);
 
   // Declared stats and the stat behind each progress achievement. Without them GBE never moves a
   // counter, so an achievement Steam unlocks at a threshold (collect 9 hats) stays locked forever.
@@ -1680,6 +1718,7 @@ module.exports = {
   restoreSetup,
   repair,
   writeDlcConfig,
+  dlcConfigMode,
   writeMainConfig,
   writeUserConfig,
   diagnose,
