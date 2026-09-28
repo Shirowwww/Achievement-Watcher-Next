@@ -71,6 +71,18 @@
   document.addEventListener('DOMContentLoaded', function () {
     var root = document.documentElement;
 
+    // The theme layout has no <main>: mark its content column as one so a screen reader can jump
+    // to the guide, and let a keyboard reach code blocks and tables that only scroll sideways.
+    var column = document.querySelector('.container-lg');
+    if (column && !document.querySelector('main, [role="main"]')) column.setAttribute('role', 'main');
+    Array.prototype.forEach.call(document.querySelectorAll('.markdown-body pre, .markdown-body table'), function (box) {
+      if (box.scrollWidth > box.clientWidth) box.setAttribute('tabindex', '0');
+    });
+    // Screenshots below the first screen wait until the reader scrolls toward them.
+    Array.prototype.forEach.call(document.querySelectorAll('.markdown-body img'), function (img, index) {
+      if (index > 0 && !img.hasAttribute('loading')) img.setAttribute('loading', 'lazy');
+    });
+
     var SUN =
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-13.2a1 1 0 0 1-1-1V1.6a1 1 0 1 1 2 0v1.2a1 1 0 0 1-1 1zm0 19.6a1 1 0 0 1-1-1v-1.2a1 1 0 1 1 2 0v1.2a1 1 0 0 1-1 1zM3.8 12a1 1 0 0 1-1 1H1.6a1 1 0 1 1 0-2h1.2a1 1 0 0 1 1 1zm19.6 0a1 1 0 0 1-1 1h-1.2a1 1 0 1 1 0-2h1.2a1 1 0 0 1 1 1zM5.6 5.6a1 1 0 0 1 0-1.4l.9-.9a1 1 0 0 1 1.4 1.4l-.9.9a1 1 0 0 1-1.4 0zm11.5 11.5a1 1 0 0 1 1.4 0l.9.9a1 1 0 0 1-1.4 1.4l-.9-.9a1 1 0 0 1 0-1.4zm1.4-12.9a1 1 0 0 1 0 1.4l-.9.9a1 1 0 1 1-1.4-1.4l.9-.9a1 1 0 0 1 1.4 0zM6.9 17.1a1 1 0 0 1 0 1.4l-.9.9a1 1 0 0 1-1.4-1.4l.9-.9a1 1 0 0 1 1.4 0z"/></svg>';
     var MOON =

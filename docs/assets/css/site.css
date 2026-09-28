@@ -203,6 +203,14 @@ a:hover {
   text-decoration: underline;
 }
 
+/* A link in running text needs more than its colour to be found. */
+p a:not([class]) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
 img,
 svg,
 iframe {
@@ -2308,7 +2316,12 @@ a.card:hover,
     a phone. The mark keeps the identity and the link still carries the full name for a reader.
   */
   .brand-word {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 
   .lang-picker .site-select {
@@ -2320,7 +2333,12 @@ a.card:hover,
     a phone. The mark keeps the identity and the link still carries the full name for a reader.
   */
   .site-head .brand-word {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 
   .lang-picker .site-select {

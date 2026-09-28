@@ -19,6 +19,7 @@
 
 @mixin aw-dark-palette {
   --aw-accent: #6c91ff;
+  --aw-accent-ink: #0b1220;
   --aw-accent-soft: #1b2942;
   --aw-bg: #0c1322;
   --aw-surface: #16223a;
@@ -38,6 +39,7 @@
 
 :root {
   --aw-accent: #3d63d8;
+  --aw-accent-ink: #ffffff;
   --aw-accent-soft: #eaefff;
   --aw-bg: #ffffff;
   --aw-surface: #f6f8fb;
@@ -47,7 +49,7 @@
   --aw-shadow: rgba(20, 34, 54, 0.09);
 
   --aw-tok-comment: #6a737d;
-  --aw-tok-keyword: #d73a49;
+  --aw-tok-keyword: #c3283a;
   --aw-tok-string: #032f62;
   --aw-tok-number: #005cc5;
   --aw-tok-function: #6f42c1;
@@ -89,6 +91,21 @@ body {
 
 .markdown-body a:hover {
   text-decoration: underline;
+}
+
+/*
+  A link inside running text is told apart by more than its colour, which a reader with low colour
+  vision, or on a dim screen, cannot rely on. Headings, the site bar and button-like links stay bare.
+*/
+.markdown-body :is(p, li, td, blockquote) a:not(.aw-site-cta) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-color: color-mix(in srgb, var(--aw-accent) 45%, transparent);
+}
+
+.markdown-body :is(p, li, td, blockquote) a:not(.aw-site-cta):hover {
+  text-decoration-color: currentColor;
 }
 
 /*
@@ -240,7 +257,18 @@ body {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--aw-alert-color);
+  /* Pulled toward the text colour so every variant clears 4.5:1 on the callout surface. */
+  color: color-mix(in srgb, var(--aw-alert-color) 55%, var(--aw-text));
+}
+
+/* The theme's own footer line uses Primer's grey, which falls below 4.5:1 on the dark palette. */
+.footer.text-gray {
+  color: var(--aw-muted) !important;
+}
+
+.footer.text-gray a {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 .markdown-body blockquote.aw-alert-note {
@@ -427,7 +455,7 @@ body {
   padding: 7px 14px;
   border-radius: 8px;
   background: var(--aw-accent);
-  color: #ffffff;
+  color: var(--aw-accent-ink);
   font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
@@ -435,7 +463,7 @@ body {
 }
 
 .aw-site-actions .aw-site-cta:hover {
-  color: #ffffff;
+  color: var(--aw-accent-ink);
   text-decoration: none;
   filter: brightness(1.08);
 }
@@ -494,8 +522,14 @@ body {
     still says where "back to the site" is, and giving its ~170px to the links means five of them
     fit on a phone instead of two and a scrollbar.
   */
+  /* Hidden from sight only: the link still needs its name for a screen reader. */
   .aw-site-brand-word {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 
   .markdown-body h1 {

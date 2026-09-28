@@ -166,6 +166,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Website & Docs
 
+- **Sharper, more accessible site.** Bold text no longer loses the dot on its i's at 100% scaling,
+  links in running text are underlined, the guide bar and footer meet contrast in both themes, and
+  screen readers get a main landmark, named brand links and keyboard access to wide tables and code.
 - **The guides are rewritten to be shorter and easier to follow.** Each page now says what to click
   and what to expect, with the history and internals left to this changelog, and covers everything
   added since 3.10.5: the Steam account library switches, unlocks from other PCs, Xbox 360
