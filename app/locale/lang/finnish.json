@@ -878,7 +878,7 @@
       },
       "legitSteam": {
         "name": "Näytä Steam-pelit",
-        "description": "Steamin on oltava asennettuna ja Steam-profiilisi julkinen.",
+        "description": "Steamin on oltava asennettuna. Saavutukset luetaan Steamin paikallisesta välimuistista, joten yksityinenkin profiili toimii.",
         "value": {
           "none": "Ei mitään",
           "installed": "Asennetut",

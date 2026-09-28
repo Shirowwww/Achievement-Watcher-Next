@@ -878,7 +878,7 @@
       },
       "legitSteam": {
         "name": "Mostra i giochi Steam",
-        "description": "Steam deve essere installato e il tuo profilo Steam pubblico !",
+        "description": "Steam deve essere installato. Gli obiettivi vengono letti dalla cache locale di Steam, quindi funziona anche un profilo privato.",
         "value": {
           "none": "Nessuno",
           "installed": "Installati",

@@ -878,7 +878,7 @@
       },
       "legitSteam": {
         "name": "顯示 Steam 遊戲",
-        "description": "必須已安裝 Steam，且你的 Steam 個人檔案必須設為公開！",
+        "description": "必須安裝 Steam。成就資料是從 Steam 的本機快取讀取的，因此設為不公開的個人檔案也能使用。",
         "value": {
           "none": "無",
           "installed": "已安裝",

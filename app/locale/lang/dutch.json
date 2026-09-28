@@ -878,7 +878,7 @@
       },
       "legitSteam": {
         "name": "Steam-games tonen",
-        "description": "Steam moet geïnstalleerd zijn en je Steam-profiel moet openbaar staan!",
+        "description": "Steam moet geïnstalleerd zijn. Prestaties worden gelezen uit de lokale cache van Steam, dus een privéprofiel werkt ook.",
         "value": {
           "none": "Geen",
           "installed": "Geïnstalleerd",

@@ -878,7 +878,7 @@
       },
       "legitSteam": {
         "name": "显示 Steam 游戏",
-        "description": "Steam 必须已安装，且你的 Steam 个人资料须为公开！",
+        "description": "必须安装 Steam。成就数据从 Steam 的本地缓存读取，因此设为隐私的个人资料也可以使用。",
         "value": {
           "none": "无",
           "installed": "已安装",

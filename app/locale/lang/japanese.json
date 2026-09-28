@@ -878,7 +878,7 @@
       },
       "legitSteam": {
         "name": "Steam ゲームを表示",
-        "description": "Steam がインストールされ、Steam プロフィールが公開されている必要があります！",
+        "description": "Steam をインストールする必要があります。実績は Steam のローカルキャッシュから読み取られるため、非公開のプロフィールでも動作します。",
         "value": {
           "none": "なし",
           "installed": "インストール済み",

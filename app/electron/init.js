@@ -1682,6 +1682,42 @@ async function startEngines() {
     settingsJS.setUserDataPath(userData);
   }
   configJS = await settingsJS.load();
+  // Not awaited: a registry lookup and a folder watch have no business delaying the window.
+  syncSteamAppcacheWatch();
+}
+
+// Moves the open library as Steam records an unlock (see util/steamAppcacheWatch.js). Follows the
+// Steam source setting, so turning that off stops the watcher too.
+let steamAppcacheWatcher = null;
+let steamAppcacheWatchStarting = false;
+async function syncSteamAppcacheWatch() {
+  const wanted = Number(configJS && configJS.achievement_source && configJS.achievement_source.legitSteam) > 0;
+  if (!wanted) {
+    if (steamAppcacheWatcher) steamAppcacheWatcher.close();
+    steamAppcacheWatcher = null;
+    return;
+  }
+  if (steamAppcacheWatcher || steamAppcacheWatchStarting) return;
+  steamAppcacheWatchStarting = true;
+  try {
+    const steamParser = require(path.join(__dirname, '../parser/steam.js'));
+    const statsDir = path.join(await steamParser.getSteamPath(), 'appcache', 'stats');
+    if (!fs.existsSync(statsDir)) return;
+    const { watchSteamAppcache, scanCacheBaseline } = require(path.join(__dirname, '../util/steamAppcacheWatch.js'));
+    const steamOfficial = require(path.join(__dirname, '../parser/steamOfficial.js'));
+    steamAppcacheWatcher = watchSteamAppcache({
+      statsDir,
+      readStats: steamOfficial.readLocalUserStats,
+      baseline: scanCacheBaseline(userData),
+      isWanted: () => !!(MainWin && !MainWin.isDestroyed()),
+      onUnlock: ({ appid, name, time }) => forwardUnlockToLibrary({ appid, steamappid: appid, name, time }),
+    });
+    if (steamAppcacheWatcher) debug.log(`[steam] following unlocks in ${statsDir}`);
+  } catch (err) {
+    debug.log(`[steam] appcache watch unavailable => ${err.message || err}`);
+  } finally {
+    steamAppcacheWatchStarting = false;
+  }
 }
 
 /*

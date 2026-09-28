@@ -878,7 +878,7 @@
       },
       "legitSteam": {
         "name": "Visa Steam-spel",
-        "description": "Steam måste vara installerat och din Steam-profil offentlig!",
+        "description": "Steam måste vara installerat. Prestationer läses från Steams lokala cache, så en privat profil fungerar också.",
         "value": {
           "none": "Inga",
           "installed": "Installerade",

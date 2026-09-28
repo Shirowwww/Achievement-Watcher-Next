@@ -878,7 +878,7 @@
       },
       "legitSteam": {
         "name": "Hiện trò chơi Steam",
-        "description": "Steam phải được cài đặt và hồ sơ Steam của bạn phải ở chế độ công khai!",
+        "description": "Steam phải được cài đặt. Thành tựu được đọc từ bộ nhớ đệm cục bộ của Steam, vì vậy hồ sơ ở chế độ riêng tư cũng hoạt động được.",
         "value": {
           "none": "Không",
           "installed": "Đã cài đặt",

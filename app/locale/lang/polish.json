@@ -878,7 +878,7 @@
       },
       "legitSteam": {
         "name": "Pokaż gry Steam",
-        "description": "Steam musi być zainstalowany, a Twój profil Steam publiczny !",
+        "description": "Steam musi być zainstalowany. Osiągnięcia są odczytywane z lokalnej pamięci podręcznej Steam, więc profil prywatny też działa.",
         "value": {
           "none": "Brak",
           "installed": "Zainstalowane",

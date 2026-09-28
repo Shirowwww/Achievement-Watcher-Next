@@ -878,7 +878,7 @@
       },
       "legitSteam": {
         "name": "Display Steam Games",
-        "description": "Steam must be installed and your Steam profile public!",
+        "description": "Steam must be installed. Unlocks are read from Steam's local cache, so a private profile works too.",
         "value": {
           "none": "None",
           "installed": "Installed",

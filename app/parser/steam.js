@@ -1183,7 +1183,15 @@ const getSteamUsers = (module.exports.getSteamUsers = async (steamPath) => {
 
   if (users.length == 0) throw 'No Steam User ID found';
 
+  /*
+    A private profile used to drop the whole legit-Steam source, but unlocks are read from the
+    local appcache first and that needs no profile at all. It is also the only way to follow games
+    Valve's servers will not report on: private "game details", or titles added through SteamTools,
+    LuaTools or GreenLuma, whose stats Steam still writes to appcache/stats (issue #91). So every
+    local account is kept; the profile only supplies a display name and an avatar when it answers.
+  */
   const remembered = readPublicSteamUsers();
+  const personas = readLoginUserPersonas(steamPath);
   let unreachable = false;
   result = await Promise.all(
     users.map(async (user) => {
@@ -1199,27 +1207,41 @@ const getSteamUsers = (module.exports.getSteamUsers = async (steamPath) => {
         };
       }
       if (data.networkError === true) {
-        // Not an answer about the account. A profile confirmed public on an earlier scan does not
-        // become private because the network is down, and treating it as private drops the entire
-        // legit-Steam source - the largest part of most libraries - from an offline scan.
+        // Not an answer about the account: the name and avatar confirmed on an earlier scan still stand.
         unreachable = true;
         const known = remembered.find((entry) => entry && String(entry.user) === String(user));
         if (known) {
-          debug.log(`${user} - ${id} could not be checked (offline); reusing the profile confirmed public earlier`);
+          debug.log(`${user} - ${id} could not be checked (offline); reusing the profile confirmed earlier`);
           return known;
         }
-        debug.log(`${user} - ${id} could not be checked (offline) and was never confirmed public`);
-        return null;
+        debug.log(`${user} - ${id} could not be checked (offline); reading it from the local appcache only`);
+        return { user, id, name: personas.get(id) || user, profile: null, local: true };
       }
-      debug.log(`${user} - ${id} (${data.steamID}) is not public`);
-      return null;
+      debug.log(`${user} - ${id} is not public; reading it from the local appcache only`);
+      return { user, id, name: data.steamID || personas.get(id) || user, profile: data.steamID ? data : null, local: true };
     })
   );
-  result = result.filter(Boolean);
-  if (!unreachable) writePublicSteamUsers(result);
-  if (result.length === 0) throw unreachable ? 'Public profile: unknown (offline).' : 'Public profile: none.';
+  if (!unreachable) writePublicSteamUsers(result.filter((entry) => !entry.local));
   return result;
 });
+
+// SteamID64 -> PersonaName from config/loginusers.vdf: the name of an account whose profile could
+// not be read, rather than a bare account number on every one of its tiles.
+function readLoginUserPersonas(steamPath) {
+  const personas = new Map();
+  try {
+    const text = fs.readFileSync(path.join(String(steamPath || ''), 'config', 'loginusers.vdf'), 'utf8');
+    const re = /"(\d{17})"\s*\{([^}]*)\}/g;
+    let m = null;
+    while ((m = re.exec(text))) {
+      const name = m[2].match(/"PersonaName"\s+"([^"]*)"/i);
+      if (name && name[1]) personas.set(m[1], unescapeSteamVdf(name[1]));
+    }
+  } catch {
+    /* no loginusers.vdf: the account number stands in */
+  }
+  return personas;
+}
 
 const getSteamUsersList = (module.exports.getSteamUsersList = async () => {
   if (steamUsersList) return steamUsersList;

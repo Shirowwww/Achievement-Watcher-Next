@@ -878,7 +878,7 @@
       },
       "legitSteam": {
         "name": "Zobrazit hry Steam",
-        "description": "Steam musí být nainstalovaný a váš profil Steam veřejný !",
+        "description": "Steam musí být nainstalovaný. Úspěchy se čtou z místní mezipaměti Steamu, takže funguje i soukromý profil.",
         "value": {
           "none": "Žádné",
           "installed": "Nainstalované",

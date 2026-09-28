@@ -77,7 +77,9 @@ function contextMenu(e, position = null) {
               return getSteamUsers(SteamPath);
             })
             .then((SteamUsers) => {
-              self.steamUsers = SteamUsers;
+              // A profile that could not be read has no avatar to import.
+              self.steamUsers = SteamUsers.filter((user) => user.profile && user.profile.avatarFull);
+              if (self.steamUsers.length === 0) throw 'Public profile: none.';
             })
             .then(() => {
               menu.closePopup();

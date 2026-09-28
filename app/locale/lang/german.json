@@ -878,7 +878,7 @@
       },
       "legitSteam": {
         "name": "Steam-Spiele anzeigen",
-        "description": "Steam muss installiert und dein Steam-Profil öffentlich sein !",
+        "description": "Steam muss installiert sein. Erfolge werden aus dem lokalen Cache von Steam gelesen, daher funktioniert auch ein privates Profil.",
         "value": {
           "none": "Keine",
           "installed": "Installiert",

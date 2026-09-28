@@ -878,7 +878,7 @@
       },
       "legitSteam": {
         "name": "Steam oyunlarını göster",
-        "description": "Steam kurulu ve Steam profilin herkese açık olmalı !",
+        "description": "Steam kurulu olmalı. Başarımlar Steam'in yerel önbelleğinden okunur, bu yüzden gizli bir profil de işe yarar.",
         "value": {
           "none": "Hiçbiri",
           "installed": "Yüklü",

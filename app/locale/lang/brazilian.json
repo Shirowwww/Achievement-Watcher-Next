@@ -878,7 +878,7 @@
       },
       "legitSteam": {
         "name": "Mostrar jogos Steam",
-        "description": "A Steam precisa estar instalada e o seu perfil Steam público !",
+        "description": "A Steam precisa estar instalada. As conquistas são lidas do cache local da Steam, então um perfil privado também funciona.",
         "value": {
           "none": "Nenhum",
           "installed": "Instalados",

@@ -80,12 +80,28 @@ test('an offline scan never writes a verdict it could not verify', () =>
     assert.equal(fs.existsSync(path.join(root, 'steam_cache', 'steamUsers.json')), false, 'nothing was confirmed, so nothing is recorded');
   }));
 
-test('a genuinely private profile is still reported as private, not as offline', () =>
+// Issue #91: unlocks come from the local appcache, which needs no profile. A private account (or a
+// SteamTools/LuaTools setup Valve will not report on) must keep the legit-Steam source.
+test('a private profile is kept as a local-only account', () =>
   withScratch(async (root) => {
     steamID.whoIs = async () => ({ privacyState: 'private', steamID: 'someone' });
-    await assert.rejects(
-      () => steam.getSteamUsers(root),
-      (err) => String(err) === 'Public profile: none.',
-      'a real answer must keep its own error, so the log still tells the two cases apart'
+    const users = await steam.getSteamUsers(root);
+    assert.equal(users.length, 1);
+    assert.equal(users[0].user, '274782616');
+    assert.equal(users[0].name, 'someone');
+    assert.equal(users[0].local, true);
+    assert.equal(fs.existsSync(path.join(root, 'steam_cache', 'steamUsers.json')), true);
+    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(root, 'steam_cache', 'steamUsers.json'), 'utf8')), [], 'only confirmed public profiles are remembered');
+  }));
+
+test('an account never seen online is named from loginusers.vdf', () =>
+  withScratch(async (root) => {
+    fs.mkdirSync(path.join(root, 'config'), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, 'config', 'loginusers.vdf'),
+      '"users"\n{\n\t"76561198235048344"\n\t{\n\t\t"AccountName"\t\t"acct"\n\t\t"PersonaName"\t\t"Local Name"\n\t}\n}\n'
     );
+    steamID.whoIs = async () => ({ networkError: true });
+    const users = await steam.getSteamUsers(root);
+    assert.deepEqual(users, [{ user: '274782616', id: '76561198235048344', name: 'Local Name', profile: null, local: true }]);
   }));

@@ -878,7 +878,7 @@
       },
       "legitSteam": {
         "name": "Steam játékok megjelenítése",
-        "description": "A Steamnek telepítve kell lennie, a Steam profilodnak pedig nyilvánosnak !",
+        "description": "A Steamnek telepítve kell lennie. A teljesítmények a Steam helyi gyorsítótárából olvashatók, így egy privát profil is működik.",
         "value": {
           "none": "Nincs",
           "installed": "Telepített",

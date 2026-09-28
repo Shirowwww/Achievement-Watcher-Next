@@ -878,7 +878,7 @@
       },
       "legitSteam": {
         "name": "Tampilkan Game Steam",
-        "description": "Steam harus terpasang dan profil Steam Anda harus publik!",
+        "description": "Steam harus terpasang. Pencapaian dibaca dari cache lokal Steam, sehingga profil pribadi pun berfungsi.",
         "value": {
           "none": "Tidak ada",
           "installed": "Terpasang",
