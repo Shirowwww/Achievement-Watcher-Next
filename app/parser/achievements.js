@@ -34,6 +34,7 @@ const blacklist = require(path.join(appPath, 'blacklist.js'));
 const watchdog = require(path.join(appPath, 'watchdog.js'));
 const goldberg = require(path.join(appPath, 'goldberg.js'));
 const appidOverride = require(path.join(appPath, 'appidOverride.js'));
+const schemaLanguage = require(path.join(appPath, 'schemaLanguage.js'));
 const uplayR2 = require(path.join(appPath, 'uplayR2.js'));
 const uplaySteamTable = require(path.join(appPath, 'uplaySteamTable.js'));
 const uplayR2Installer = require(path.join(appPath, 'uplayR2Installer.js'));
@@ -91,6 +92,7 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   exeCandidateCache.setUserDataPath(userDataPath);
   uplayR2.setUserDataPath(userDataPath);
   appidOverride.setUserDataPath(userDataPath);
+  schemaLanguage.setUserDataPath(userDataPath);
   uplayCatalogue.initDebug({ isDev, userDataPath });
   uplayAutoMap.initDebug({ isDev, userDataPath });
   userDir.setUserDataPath(userDataPath);
@@ -2105,15 +2107,7 @@ async function discoverInScope(source, steamAccFilter, scope) {
       }
       data = data.concat(legit);
     } catch (err) {
-      // Every Steam account on the machine having a private profile is a user setting, not a
-      // malfunction: the legit-Steam source simply contributes nothing. Keep it out of the error
-      // channel so a genuine scan failure still stands out in the log.
-      if (String(err) === 'Public profile: none.') debug.log('[steam] no public Steam profile - skipping the legit Steam source');
-      // Same for an offline scan on a machine that has never had a confirmed-public profile: nothing
-      // is wrong with the install, the question could just not be asked.
-      else if (String(err) === 'Public profile: unknown (offline).')
-        debug.log('[steam] could not check the Steam profile (offline) - the legit Steam source is skipped for this scan');
-      else debug.error(err);
+      debug.error(err);
     }
   }
 
@@ -2530,6 +2524,7 @@ module.exports.saveGameToCache = async (info, lang) => {
 };
 
 module.exports.getAchievementsForAppid = async (option, requestedAppid) => {
+  option = schemaLanguage.optionFor(option, requestedAppid);
   try {
     let game;
     if (/^[0-9]+$/.test(requestedAppid)) {
@@ -2667,6 +2662,8 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
 }
 
 module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cachedList, cachedLookup) => {
+  // A game given its own language (issue #90) reads its schema, and its notifications, in that one.
+  option = schemaLanguage.optionFor(option, requestedAppid && requestedAppid.appid);
   let game;
   let isDuplicate = false;
 
@@ -3115,7 +3112,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           let needsDlcConfig = true;
           try {
             const current = fs.readFileSync(appConfigFile, 'utf8');
-            needsDlcConfig = !/^\s*\[app::dlcs\][\s\S]*?^\s*unlock_all\s*=\s*1\s*$/im.test(current);
+            needsDlcConfig = goldberg.dlcConfigMode(current) === 'none';
           } catch {}
           if (needsDlcConfig) {
             let dlcs = [];
@@ -3136,7 +3133,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           const user = goldberg.writeUserConfig({
             steamSettings,
             accountName: option.general && option.general.username,
-            language: option.achievement && option.achievement.lang,
+            language: schemaLanguage.get(appid.appid) || (option.achievement && option.achievement.lang),
           });
           if (user && user.changed) debug.log(`[${appid.appid}] updated configs.user.ini (${user.accountName || 'default'}, ${user.language || 'default'})`);
         }
@@ -3457,7 +3454,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
                   // quietly enable every DLC or stamp a Windows username into the emulator identity.
                   writeDlc: option.emulator.manageDlc === true,
                   accountName: option.emulator.stampIdentity === true ? option.general && option.general.username : undefined,
-                  language: option.emulator.stampIdentity === true ? option.achievement && option.achievement.lang : undefined,
+                  language: option.emulator.stampIdentity === true ? schemaLanguage.get(bgAppid) || (option.achievement && option.achievement.lang) : undefined,
                 });
                 debug.log(
                   `[${bgAppid}] wrote missing achievements.json schema (${summary.achievementsJson.length} entries) to ${steamSettingsDir}` +
@@ -4098,7 +4095,8 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
     _scanFingerprint = _discoverFingerprint
       ? {
           dirs: _discoverFingerprint.map(([dir, mtimeMs]) => [dir, mtimeMs]),
-          files: scanFingerprint.captureFiles(achievementDataFiles(appidList)),
+          // The per-game language choice changes what a game shows without touching any of its files.
+          files: scanFingerprint.captureFiles([...achievementDataFiles(appidList), schemaLanguage.file()]),
         }
       : null;
     // Every appid discovery found, rendered or not. Stored with the library so a reused one gives
