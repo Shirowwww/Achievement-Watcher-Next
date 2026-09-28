@@ -24,7 +24,7 @@
   "devDependencies": {
     "electron": "^44.4.3",
     "electron-builder": "^26.15.3",
-    "electron-context-menu": "^5.0.0",
+    "electron-context-menu": "^5.1.0",
     "oxlint": "^1.85.0",
     "patch-package": "^8.0.1"
   },
