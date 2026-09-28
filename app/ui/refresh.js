@@ -9,6 +9,9 @@
         resetUI();
       }
     });
+    // The same rescan as F5, for anyone who never guessed the shortcut.
+    const titleBar = $('title-bar')[0];
+    if (titleBar) titleBar.addEventListener('refresh-library', () => resetUI());
   });
 })(window.jQuery, window, document);
 

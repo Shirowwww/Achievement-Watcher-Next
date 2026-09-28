@@ -348,3 +348,10 @@ ul > li#btn-settings i {
 ul > li#btn-settings:hover i {
   transform: rotate(90deg);
 }
+ul > li#btn-refresh i {
+  font-size: 13px;
+  transition: transform 0.4s ease;
+}
+ul > li#btn-refresh:hover i {
+  transform: rotate(180deg);
+}

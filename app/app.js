@@ -110,11 +110,15 @@ progressMute.setUserDataPath(getUserDataPath());
 const notificationHealth = require(path.join(appPath, 'parser/notificationHealth.js'));
 notificationHealth.setUserDataPath(getUserDataPath());
 const achievementReset = require(path.join(appPath, 'parser/achievementReset.js'));
+const forgetGame = require(path.join(appPath, 'util/forgetGame.js'));
 achievementReset.setUserDataPath(getUserDataPath());
 const emulatorSourceOverride = require(path.join(appPath, 'parser/emulatorSourceOverride.js'));
 emulatorSourceOverride.setUserDataPath(getUserDataPath());
 const appidOverride = require(path.join(appPath, 'parser/appidOverride.js'));
 appidOverride.setUserDataPath(getUserDataPath());
+const schemaLanguage = require(path.join(appPath, 'parser/schemaLanguage.js'));
+const steamLanguageList = require(path.join(appPath, 'locale/steam.json'));
+schemaLanguage.setUserDataPath(getUserDataPath());
 const l10n = require(path.join(appPath, 'locale/loader.js'));
 const coverStore = require(path.join(appPath, 'util/coverStore.js'));
 const gameIconStore = require(path.join(appPath, 'util/gameIconStore.js'));
@@ -2488,7 +2492,15 @@ function rememberGameHealthState(appid, state) {
 let healthDotRefreshRun = 0;
 async function refreshHealthDots() {
   const run = ++healthDotRefreshRun;
-  const games = gameList.filter((game) => game && hasHealthDot(game) && sourcePresentationFor(game).kind !== 'steam-owned');
+  // In the order the tiles are laid out, so the dots on screen settle first instead of after a few
+  // hundred games further down the scan's own order.
+  const position = new Map();
+  $('#game-list .game-box').each(function (index) {
+    position.set(String($(this).attr('data-appid')), index);
+  });
+  const games = gameList
+    .filter((game) => game && hasHealthDot(game) && sourcePresentationFor(game).kind !== 'steam-owned')
+    .sort((a, b) => (position.get(String(a.appid)) ?? position.size) - (position.get(String(b.appid)) ?? position.size));
   for (const game of games) {
     // Signal collection walks folders synchronously: leave the renderer room between two games, and
     // do nothing at all while the window is hidden, since a dot nobody can see is not worth a disk read.
@@ -4003,7 +4015,13 @@ var app = {
             );
           };
           const menu = new Menu();
-          const gameMenu = new Menu();
+          // The menu reads top to bottom as play, per-game settings, progress, tools, then the
+          // destructive entries last. Each bucket below is filled in code order and assembled at the end.
+          const gameSettingsMenu = new Menu();
+          const identityItems = [];
+          const progressMenu = new Menu();
+          const manageItems = [];
+          const playtimeItems = [];
           const emulatorMenu = new Menu();
           const folderMenu = new Menu();
           const linkMenu = new Menu();
@@ -4076,7 +4094,7 @@ var app = {
               // alone" has to hold here too, or it just moves the surprise to another button.
               writeDlc: app.config?.emulator?.manageDlc === true,
               accountName: app.config?.emulator?.stampIdentity === true ? app.config?.general?.username : undefined,
-              language: app.config?.emulator?.stampIdentity === true ? app.config?.achievement?.lang : undefined,
+              language: app.config?.emulator?.stampIdentity === true ? schemaLanguage.get(appid) || app.config?.achievement?.lang : undefined,
             });
           };
           const diagnoseGoldbergSetup = async ({ game, gameDir, autoRepair = false, showDialog = true }) => {
@@ -4191,7 +4209,7 @@ var app = {
 
             return { report, repaired, repairError };
           };
-          gameMenu.append(
+          manageItems.push(
             new MenuItem({
               icon: menuIcon('cross.png'),
               label: $('#game-list').attr('data-contextMenu0'),
@@ -4226,7 +4244,6 @@ var app = {
           // is already set so it can still be seen and undone.
           const simpleMenu = interfaceIsSimple();
           if (!isConsoleSystem && !isLegitSteamOwned && !isNativeLauncher && (!simpleMenu || emulatorSourceForced !== null)) {
-            gameMenu.append(new MenuItem({ type: 'separator' }));
             const emulatorSourceMenu = new Menu();
             const emulatorSourceOptions = [
               { value: null, labelKey: 'emulator-source-auto', labelEn: 'Automatic (detected)', labelFr: 'Automatique (détecté)' },
@@ -4245,7 +4262,7 @@ var app = {
                 })
               );
             }
-            gameMenu.append(
+            identityItems.push(
               new MenuItem({
                 icon: menuIcon('file-text.png'),
                 label: t('emulator-source', 'Emulator source', 'Source de l’émulateur'),
@@ -4259,7 +4276,7 @@ var app = {
           // once, when steam_appid.txt does not exist yet - this is the only way to correct it.
           if (!isConsoleSystem && !isLegitSteamOwned && !isNativeLauncher && ctxGame?.gameDir) {
             const currentAppidOverride = appidOverride.get(ctxGame.gameDir);
-            if (!simpleMenu) gameMenu.append(
+            if (!simpleMenu) identityItems.push(
               new MenuItem({
                 icon: menuIcon('file-text.png'),
                 label: t('appid-override', 'Set AppID manually…', 'Définir l’AppID manuellement…'),
@@ -4293,7 +4310,7 @@ var app = {
               })
             );
             if (currentAppidOverride) {
-              gameMenu.append(
+              identityItems.push(
                 new MenuItem({
                   label: t('appid-override-clear', 'Clear the manual AppID override', 'Effacer l’AppID manuel'),
                   click() {
@@ -4307,8 +4324,7 @@ var app = {
 
           // Launching and picking the executable are not Ubisoft-specific; onPlayButtonClick works
           // for any source. These used to sit inside the Ubisoft branch, denying Steam/GOG/Epic games a way to start.
-          gameMenu.append(new MenuItem({ type: 'separator' }));
-          gameMenu.append(
+          menu.append(
             new MenuItem({
               label: t('launch-game', 'Launch game', 'Lancer le jeu'),
               async click() {
@@ -4319,7 +4335,6 @@ var app = {
           // Both entries open the same panel on one of its two tabs, and both the health dot and the
           // tools button they duplicate can be turned off (Settings > Appearance > Library tiles), so
           // they need a home that never moves. One submenu rather than two loose top-level entries.
-          const gameSettingsMenu = new Menu();
           gameSettingsMenu.append(
             new MenuItem({
               label: t('game-health-title', 'Game health', 'État du jeu'),
@@ -4339,7 +4354,55 @@ var app = {
               },
             })
           );
-          gameMenu.append(
+          // Issue #90: one game in another language than the rest of the library.
+          if (!isManualGame) {
+            const currentLanguage = schemaLanguage.get(appid);
+            const languageMenu = new Menu();
+            const pickLanguage = (value) => {
+              try {
+                schemaLanguage.set(appid, value);
+              } catch (err) {
+                debug.error(err);
+                return;
+              }
+              if (typeof resetUI === 'function') resetUI();
+              else app.onStart();
+            };
+            languageMenu.append(
+              new MenuItem({
+                type: 'radio',
+                label: t('schema-language-global', 'Same as the app ({language})', 'Comme l’application ({language})', {
+                  language: (steamLanguageList.find((entry) => entry.api === app.config.achievement.lang) || { native: app.config.achievement.lang }).native,
+                }),
+                checked: !currentLanguage,
+                click: () => pickLanguage(null),
+              })
+            );
+            languageMenu.append(new MenuItem({ type: 'separator' }));
+            for (const language of steamLanguageList) {
+              languageMenu.append(
+                new MenuItem({
+                  type: 'radio',
+                  label: language.native,
+                  checked: currentLanguage === language.api,
+                  click: () => pickLanguage(language.api),
+                })
+              );
+            }
+            gameSettingsMenu.append(new MenuItem({ type: 'separator' }));
+            gameSettingsMenu.append(
+              new MenuItem({
+                label: t('schema-language-menu', 'Achievement language', 'Langue des succès'),
+                submenu: languageMenu,
+              })
+            );
+          }
+          // How AW Next identifies this game: advanced, and rarely touched, so after the everyday entries.
+          if (identityItems.length) {
+            gameSettingsMenu.append(new MenuItem({ type: 'separator' }));
+            for (const item of identityItems) gameSettingsMenu.append(item);
+          }
+          menu.append(
             new MenuItem({
               label: t('game-settings-menu', 'Game settings', 'Réglages du jeu'),
               submenu: gameSettingsMenu,
@@ -4348,7 +4411,7 @@ var app = {
 
           if (isManualGame || isUbisoftSource) {
             // Non-Ubisoft games get their own reset-playtime entry in the emulator section below.
-            gameMenu.append(
+            playtimeItems.push(
               new MenuItem({
                 label: $('#game-list').attr('data-ctx-resetplaytime') || '',
                 async click() {
@@ -4361,7 +4424,7 @@ var app = {
           }
 
           if (!isManualGame) {
-            gameMenu.append(
+            progressMenu.append(
               new MenuItem({
                 label: progressMute.isMuted(appid)
                   ? $('#game-list').attr('data-ctx-unmuteprogress') || ''
@@ -4379,8 +4442,8 @@ var app = {
 
           // Resets achievements so they can be earned again. Deliberately outside every source/emulator
           // gate above: every source except a platform-owned (server-side) unlock keeps unlocks somewhere AW can zero.
-          gameMenu.append(new MenuItem({ type: 'separator' }));
-          gameMenu.append(
+          if (progressMenu.items.length) progressMenu.append(new MenuItem({ type: 'separator' }));
+          progressMenu.append(
             new MenuItem({
               icon: menuIcon('cross.png'),
               label: t('reset-ach-menu', 'Reset achievements…', 'Réinitialiser les succès…'),
@@ -4416,13 +4479,29 @@ var app = {
                   })
                 );
               }
-              gameMenu.append(
+              progressMenu.append(
                 new MenuItem({
                   label: t('reset-ach-restore-menu', 'Restore an achievement backup', 'Restaurer une sauvegarde de succès'),
                   submenu: restoreMenu,
                 })
               );
             }
+          }
+          if (!isManualGame) {
+            manageItems.push(
+              new MenuItem({
+                icon: menuIcon('cross.png'),
+                label: t('forget-game-menu', 'Forget this game…', 'Oublier ce jeu…'),
+                async click() {
+                  self.css('pointer-events', 'none');
+                  try {
+                    await app.forgetGameAction(appid);
+                  } finally {
+                    self.css('pointer-events', 'initial');
+                  }
+                },
+              })
+            );
           }
 
           // Native-platform records skip Steam-emulator tools; Ubisoft and explicit PC games are
@@ -4431,7 +4510,7 @@ var app = {
           if (!isConsoleSystem) {
             if (!isUbisoftSource) {
             if (!isManualGame) {
-              gameMenu.append(
+              playtimeItems.push(
                 new MenuItem({
                   label: $('#game-list').attr('data-ctx-resetplaytime') || '',
                   async click() {
@@ -4709,7 +4788,15 @@ var app = {
                       }
                       const detail = plan
                         .flatMap(({ result }) =>
-                          result.removed.map((r) => `${r.file}  (${r.removed === 'file' ? t('aw-config-delete-file', 'file deleted', 'fichier supprimé') : t('aw-config-keys-only', 'AW Next lines only', 'lignes AW Next uniquement')})`)
+                          result.removed.map((r) => {
+                            const what =
+                              r.removed === 'folder'
+                                ? t('aw-config-delete-folder', 'folder created by AW Next, deleted', 'dossier créé par AW Next, supprimé')
+                                : r.removed === 'file'
+                                  ? t('aw-config-delete-file', 'file deleted', 'fichier supprimé')
+                                  : t('aw-config-keys-only', 'AW Next lines only', 'lignes AW Next uniquement');
+                            return `${r.file}  (${what})`;
+                          })
                         )
                         .join('\n');
                       const confirm = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
@@ -6059,8 +6146,7 @@ var app = {
             }
 
             if (uninstallEntries > 0) {
-              gameMenu.append(new MenuItem({ type: 'separator' }));
-              gameMenu.append(
+              manageItems.push(
                 new MenuItem({
                   icon: menuIcon('cross.png'),
                   label: uninstallCtx.attr('data-ctx-uninstall-group') || (t('uninstall', 'Uninstall', 'Désinstaller')),
@@ -6073,7 +6159,14 @@ var app = {
           // Native Electron menu labels treat a lone "&" as an accelerator marker (swallowed at
           // render time), so it's doubled here; locale strings keep the single "&" since they're also used in HTML.
           const groupLabel = (attribute) => ($('#game-list').attr(attribute) || '').replace(/&/g, '&&');
-          if (gameMenu.items.length) menu.append(new MenuItem({ label: groupLabel('data-ctx-group-game'), submenu: gameMenu }));
+          if (playtimeItems.length) {
+            if (progressMenu.items.length) progressMenu.append(new MenuItem({ type: 'separator' }));
+            for (const item of playtimeItems) progressMenu.append(item);
+          }
+          if (progressMenu.items.length) {
+            menu.append(new MenuItem({ label: t('ctx-group-progress', 'Achievements & playtime', 'Succès et temps de jeu').replace(/&/g, '&&'), submenu: progressMenu }));
+          }
+          menu.append(new MenuItem({ type: 'separator' }));
           // The emulator submenu is the GBE runtime / Steamless / Uplay R1/R2 surface, so it belongs to
           // Advanced. Nothing is disabled by hiding it: the safe per-game repairs (rewrite the
           // achievement data, restore the emulator file) stay on the Game Health panel in both
@@ -6204,6 +6297,11 @@ var app = {
               );
             }
             menu.append(new MenuItem({ label: groupLabel('data-ctx-group-cover'), submenu: coverMenu }));
+          }
+
+          if (manageItems.length) {
+            menu.append(new MenuItem({ type: 'separator' }));
+            for (const item of manageItems) menu.append(item);
           }
 
           menu.popup({ window: remote.getCurrentWindow() });
@@ -6799,6 +6897,101 @@ var app = {
       noLink: true,
     });
     if (answer === 1) remote.shell.openPath(result.backupDir);
+    return true;
+  },
+  /*
+    Everything AW Next keeps about one game, in one confirmed step: its unlock saves (backed up, as
+    Reset achievements does), playtime, caches, per-game settings and the configuration it wrote into
+    the game folder. The next scan then meets the game as new. Removing a game only ever hid it.
+  */
+  forgetGameAction: async function (appid) {
+    const game = gameList.find((g) => g && String(g.appid) === String(appid));
+    if (!game) return false;
+
+    let resetPlan = null;
+    try {
+      resetPlan = achievementReset.plan(game);
+    } catch (err) {
+      debug.log(`[forget] no achievement reset plan for ${appid} => ${formatErr(err)}`);
+    }
+    const appids = [game.appid, game.steamappid].filter(Boolean).map(String);
+    const filePlan = forgetGame.plan({ userDataPath: getUserDataPath(), appids, settingsDirs: gbeSteamSettingsDirsFor(game) });
+    const configCount = filePlan.config.reduce((sum, entry) => sum + entry.removed.length, 0);
+
+    const detail = [];
+    if (resetPlan && resetPlan.supported) {
+      detail.push(t('forget-game-detail-ach', '• Achievements: {count} save file(s), backed up then cleared', '• Succès : {count} fichier(s) de sauvegarde, sauvegardés puis effacés', { count: resetPlan.files.length }));
+    }
+    detail.push(t('forget-game-detail-playtime', '• Playtime', '• Temps de jeu'));
+    if (filePlan.caches.length > 0) {
+      detail.push(t('forget-game-detail-cache', '• Cached achievement list, icons and unlocks ({count})', '• Liste des succès, icônes et déblocages en cache ({count})', { count: filePlan.caches.length }));
+    }
+    if (configCount > 0) {
+      detail.push(t('forget-game-detail-config', '• Configuration AW Next wrote in the game folder ({count})', '• Configuration écrite par AW Next dans le dossier du jeu ({count})', { count: configCount }));
+    }
+    detail.push(t('forget-game-detail-settings', '• Its executable, AppID, emulator source, language and progress settings in AW Next', '• Son exécutable, son AppID, sa source d’émulateur, sa langue et ses réglages de progression dans AW Next'));
+    if (resetPlan && resetPlan.blocked.length > 0) {
+      detail.push(
+        '',
+        t('reset-ach-detail-blocked', 'Unlocks held by {sources} cannot be reset from here and are left untouched.', 'Les succès gérés par {sources} ne peuvent pas être réinitialisés ici et restent intacts.', {
+          sources: [...new Set(resetPlan.blocked.map((entry) => entry.source).filter(Boolean))].join(', '),
+        })
+      );
+    }
+
+    const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'warning',
+      title: t('forget-game-confirm-title', 'Forget {game}?', 'Oublier {game} ?', { game: game.name || appid }),
+      message: t(
+        'forget-game-confirm-message',
+        'AW Next resets everything it keeps about this game. The next scan finds it again as a new game.',
+        'AW Next efface tout ce qu’il conserve sur ce jeu. Le prochain scan le retrouvera comme un nouveau jeu.'
+      ),
+      detail: detail.join('\n'),
+      buttons: [t('cancel', 'Cancel', 'Annuler'), t('forget-game-button', 'Forget', 'Oublier')],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+    });
+    if (confirmed !== 1) return false;
+
+    const errors = [];
+    const attempt = async (label, step) => {
+      try {
+        await step();
+      } catch (err) {
+        errors.push(`• ${label} - ${formatErr(err)}`);
+      }
+    };
+    if (resetPlan && resetPlan.supported) {
+      await attempt('achievements', async () => {
+        const result = achievementReset.run(resetPlan);
+        for (const entry of result.errors) errors.push(`• ${entry.path} - ${entry.message}`);
+      });
+    }
+    for (const id of appids) await attempt('baseline', () => forgetWatchdogBaseline(id));
+    await attempt('playtime', () => PlaytimeTracking.reset(game.appid));
+    await attempt('files', () => {
+      for (const entry of forgetGame.run(filePlan).errors) errors.push(`• ${entry.path} - ${entry.error}`);
+    });
+    await attempt('settings', async () => {
+      emulatorSourceOverride.set(game.appid, null);
+      if (game.gameDir && appidOverride.get(game.gameDir)) appidOverride.set(game.gameDir, null);
+      if (progressMute.isMuted(game.appid)) progressMute.toggle(game.appid);
+      schemaLanguage.set(game.appid, null);
+      await exeList.remove(String(game.appid));
+      gameIndex.remove(String(game.appid));
+    });
+
+    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: errors.length > 0 ? 'warning' : 'info',
+      title: t('forget-game-done-title', 'Game forgotten', 'Jeu oublié'),
+      message: t('forget-game-done-message', 'The library is scanned again now.', 'La bibliothèque est rescannée maintenant.'),
+      detail: errors.join('\n'),
+      noLink: true,
+    });
+    if (typeof resetUI === 'function') resetUI();
+    else app.onStart();
     return true;
   },
   // Put a backup back exactly where it came from, including the unlock baseline, so restored
@@ -7785,7 +7978,7 @@ var app = {
                 // rewrites dozens of folders at once.
                 writeDlc: app.config.emulator && app.config.emulator.manageDlc === true,
                 accountName: app.config.emulator && app.config.emulator.stampIdentity === true ? app.config.general && app.config.general.username : undefined,
-                language: app.config.emulator && app.config.emulator.stampIdentity === true ? app.config.achievement && app.config.achievement.lang : undefined,
+                language: app.config.emulator && app.config.emulator.stampIdentity === true ? schemaLanguage.get(game.appid) || (app.config.achievement && app.config.achievement.lang) : undefined,
               });
               // The bulk pass has no per-game dialog to report into, so the log is the only record.
               // Worth keeping: it is the one path that can repair dozens of games in a row.

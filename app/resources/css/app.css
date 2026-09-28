@@ -11485,7 +11485,7 @@ body {
    pushing the panel off the bottom edge. */
 #profile-stats > .box {
   --profile-stats-inset: min(9vh, 76px);
-  width: min(760px, calc(100vw - 32px));
+  width: min(980px, calc(100vw - 32px));
   max-height: calc(100vh - 30px - 2 * var(--profile-stats-inset));
   margin: var(--profile-stats-inset) auto;
   display: flex;
@@ -11781,11 +11781,14 @@ body {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 20px;
-  padding: 16px 18px;
-  border: 1px solid color-mix(in srgb, var(--border) 22%, transparent);
+  gap: 24px;
+  padding: 20px 22px;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--surface-sunken) 34%, transparent);
+  /* A faint glow behind the dial: the one number the panel is about reads first. */
+  background:
+    radial-gradient(circle at 70px 50%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 220px),
+    color-mix(in srgb, var(--surface-sunken) 34%, transparent);
 }
 
 /* A conic gradient rather than an SVG arc: one custom property drives the whole dial, so updating it
@@ -11797,8 +11800,8 @@ body {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 104px;
-  height: 104px;
+  width: 124px;
+  height: 124px;
 }
 
 .profile-stats-ring::before {
@@ -11822,7 +11825,7 @@ body {
 
 .profile-stats-ring-value b {
   color: var(--text);
-  font: 26px 'Raleway-Bold';
+  font: 32px 'Raleway-Bold';
 }
 
 .profile-stats-hero-copy {
@@ -11833,7 +11836,7 @@ body {
 }
 
 .profile-stats-hero-copy > b {
-  font: 15px 'Raleway-Bold';
+  font: 17px 'Raleway-Bold';
 }
 
 .profile-stats-hero-copy > span {
@@ -11900,25 +11903,54 @@ body {
    if it is ever narrower, without a breakpoint to keep in sync. */
 .profile-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 10px;
 }
 
+/* Icon on the left spanning both lines, value over caption on the right. */
 .profile-stats-tile {
   display: grid;
-  gap: 3px;
+  grid-template-columns: 38px minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 2px;
+  align-items: center;
   padding: 12px 14px;
   border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface-sunken) 28%, transparent);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.profile-stats-tile:hover {
+  border-color: color-mix(in srgb, var(--border) 36%, transparent);
+  background: color-mix(in srgb, var(--surface-sunken) 42%, transparent);
+}
+
+.profile-stats-tile > i {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  font-size: 15px;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--border) 16%, transparent);
+}
+
+.profile-stats-tile.is-accent > i {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 .profile-stats-tile b {
   font: 20px 'Raleway-Bold';
   color: var(--text);
+  min-width: 0;
 }
 
 .profile-stats-tile span {
+  grid-column: 2;
   color: var(--text-muted);
   font: 11px 'Open-Sans';
 }
@@ -12259,10 +12291,28 @@ body {
   outline-offset: -2px;
 }
 
+/* An empty list is a message, not a row: it takes the card's height instead of a 40px slot that
+   scrolls, and centres a muted trophy above the text. */
+.profile-stats-trophy-list:has(> li.is-empty) {
+  grid-auto-rows: auto;
+  overflow: visible;
+}
+
 .profile-stats-trophy-list li.is-empty {
-  display: block;
+  display: grid;
+  grid-template-columns: none;
+  justify-items: center;
+  gap: 8px;
+  padding: 18px 8px;
   color: var(--text-muted);
   font: 12px 'Open-Sans';
+  text-align: center;
+}
+
+.profile-stats-trophy-list li.is-empty::before {
+  content: '\f091';
+  font: 900 22px 'Font Awesome 5 Free';
+  color: color-mix(in srgb, var(--text-muted) 55%, transparent);
 }
 
 @media (max-width: 720px) {

@@ -75,6 +75,11 @@ function translateUI(lang, locale, template) {
   $('html').attr('lang', `${locale.toLowerCase()}`);
 
   $('#sort-box .installed-filter').attr('title', clear(template.installedOnly));
+  const refreshButton = $('title-bar')[0]?.shadowRoot?.querySelector('#btn-refresh');
+  if (refreshButton) {
+    refreshButton.title = clear(template.refreshLibrary);
+    refreshButton.setAttribute('aria-label', clear(template.refreshLibrary));
+  }
   if (template.sort) {
     // Dynamic sort labels for sort.js. Not named `sortLabels`: that is a global function in
     // sort.js sharing this window slot, and reusing it would overwrite that function.

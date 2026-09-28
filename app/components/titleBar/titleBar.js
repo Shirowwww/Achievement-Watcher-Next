@@ -17,6 +17,7 @@ const template = `
       <li id="btn-maximize"><i class="far fa-window-maximize"></i></li>
       <li id="btn-minimize"><i class="far fa-window-minimize"></i></li>
       <li id="btn-settings"><i class="fas fa-cog"></i></li>
+      <li id="btn-refresh" role="button" tabindex="0"><i class="fas fa-sync-alt"></i></li>
     </ul>
 `;
 
@@ -29,12 +30,19 @@ export default class titleBar extends HTMLElement {
     this.closeBtn = this.shadowRoot.querySelector('#btn-close');
     this.maximizeBtn = this.shadowRoot.querySelector('#btn-maximize');
     this.settingsBtn = this.shadowRoot.querySelector('#btn-settings');
+    this.refreshBtn = this.shadowRoot.querySelector('#btn-refresh');
     this.minimizeBtn = this.shadowRoot.querySelector('#btn-minimize');
     this.watchdogBtn = this.shadowRoot.querySelector('#start-watchdog');
     this.updateCancelBtn = this.shadowRoot.querySelector('#update-cancel');
     this.onClose = () => this.close();
     this.onMaximize = () => this.maximize();
     this.onSettings = () => this.settings();
+    // The library rescan lives in ui/refresh.js (F5); the button only asks for it.
+    this.onRefresh = (event) => {
+      if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      this.dispatchEvent(new CustomEvent('refresh-library'));
+    };
     this.onMinimize = () => this.minimize();
     this.onStartWatchdog = () => this.start_watchdog();
     this.onCancelUpdate = (event) => {
@@ -50,6 +58,8 @@ export default class titleBar extends HTMLElement {
     this.closeBtn.addEventListener('click', this.onClose);
     this.maximizeBtn.addEventListener('click', this.onMaximize);
     this.settingsBtn.addEventListener('click', this.onSettings);
+    this.refreshBtn.addEventListener('click', this.onRefresh);
+    this.refreshBtn.addEventListener('keydown', this.onRefresh);
     this.minimizeBtn.addEventListener('click', this.onMinimize);
     this.watchdogBtn.addEventListener('click', this.onStartWatchdog);
     this.updateCancelBtn.addEventListener('click', this.onCancelUpdate);
@@ -67,6 +77,8 @@ export default class titleBar extends HTMLElement {
     this.closeBtn.removeEventListener('click', this.onClose);
     this.maximizeBtn.removeEventListener('click', this.onMaximize);
     this.settingsBtn.removeEventListener('click', this.onSettings);
+    this.refreshBtn.removeEventListener('click', this.onRefresh);
+    this.refreshBtn.removeEventListener('keydown', this.onRefresh);
     this.minimizeBtn.removeEventListener('click', this.onMinimize);
     this.watchdogBtn.removeEventListener('click', this.onStartWatchdog);
     this.updateCancelBtn.removeEventListener('click', this.onCancelUpdate);
@@ -88,6 +100,7 @@ export default class titleBar extends HTMLElement {
     this.minimizeBtn.style.display = this.hasAttribute('minimizable') ? 'inline-flex' : 'none';
     const disabled = this.hasAttribute('insettings');
     this.settingsBtn.style.pointerEvents = disabled ? 'none' : 'initial';
+    this.refreshBtn.style.pointerEvents = disabled ? 'none' : 'initial';
     this.watchdogBtn.style.pointerEvents = disabled ? 'none' : 'initial';
   }
 

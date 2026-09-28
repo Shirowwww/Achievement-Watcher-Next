@@ -180,7 +180,7 @@ test('Simple leaves the per-game overrides out of the game menu, but never one a
   assert.match(appSource, /const simpleMenu = interfaceIsSimple\(\);/);
   assert.match(appSource, /!isNativeLauncher && \(!simpleMenu \|\| emulatorSourceForced !== null\)\)/, 'a forced emulator source stays visible');
   const appidBlock = appSource.slice(appSource.indexOf('const currentAppidOverride = appidOverride.get'));
-  assert.match(appidBlock.slice(0, 200), /if \(!simpleMenu\) gameMenu\.append\(/, 'setting an AppID is Advanced');
+  assert.match(appidBlock.slice(0, 200), /if \(!simpleMenu\) identityItems\.push\(/, 'setting an AppID is Advanced');
   assert.match(appidBlock, /if \(currentAppidOverride\) \{/, 'clearing an existing one is not gated');
 });
 

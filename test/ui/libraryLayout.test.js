@@ -224,7 +224,7 @@ test('every locale names every library layout', () => {
   where it now lives. Pinned against app.js because a native Menu cannot be built outside Electron.
 */
 test('Game health has its own right-click entry, above the executable one', () => {
-  const menu = appSource.slice(appSource.indexOf("gameMenu.append(new MenuItem({ type: 'separator' }));"));
+  const menu = appSource.slice(appSource.indexOf('const gameSettingsMenu = new Menu();'));
   const health = menu.indexOf("t('game-health-title'");
   const executable = menu.indexOf("t('configure-executable'");
   assert.notEqual(health, -1, 'no Game health entry in the tile menu');
