@@ -22,9 +22,9 @@
   },
   "license": "LGPL-3.0-only",
   "devDependencies": {
-    "electron": "^44.4.3",
+    "electron": "^44.5.1",
     "electron-builder": "^26.15.3",
-    "electron-context-menu": "^5.0.0",
+    "electron-context-menu": "^5.1.0",
     "oxlint": "^1.85.0",
     "patch-package": "^8.0.1"
   },
@@ -51,7 +51,7 @@
     "node-html-parser": "^9.0.4",
     "node-unrar-js": "^2.0.2",
     "normalize-path": "^3.0.0",
-    "puppeteer-core": "^25.11.0",
+    "puppeteer-core": "^25.12.0",
     "puppeteer-extra": "^3.3.4",
     "puppeteer-extra-plugin-stealth": "^2.11.1",
     "registry-js": "^1.16.1",
