@@ -107,7 +107,7 @@ build tells you when a new release is out; extracting it over the old folder kee
 | **Console emulators** | RPCS3, ShadPS4 and Xenia, each watched live |
 | **Xbox PC** | Local Game Pass / Microsoft Store installs, plus the games the account owns and their Xbox Network state |
 | **Xbox 360 recompilations** | Native PC recompilations such as ReXGlue ports, from the game folder or Documents, watched live |
-| **RetroAchievements** | After an optional account connection (username and Web API key), the emulator games you played with their unlocks and rarity; new unlocks are announced while a supported emulator runs |
+| **RetroAchievements** | After an optional account connection (username and Web API key), the emulator games you played with their unlocks and rarity; new unlocks are announced live, whatever the emulator |
 | **Games for Windows LIVE** | XLiveLessNess profiles, with the achievement list, its texts and its icons read from the game's own executable |
 | **Mod patches** | Dead Space 2 MarkerPatch and Alice: Madness Returns MadnessPatch, built from the mod's own texts and images |
 

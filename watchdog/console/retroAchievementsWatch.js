@@ -2,14 +2,16 @@
 
 /*
   Live RetroAchievements unlocks. There is no local file to watch: the emulator reports each unlock
-  to retroachievements.org, so this asks the Web API for the account's recent unlocks - and only
-  while an emulator that can earn them is running. Everything else is idle: one process snapshot
-  every few seconds, no request.
+  to retroachievements.org, so this asks the Web API for the account's recent unlocks - every few
+  seconds while an emulator that can earn them runs (known by name, or by the RA toolkit dll beside
+  it), and every few minutes otherwise, so an emulator neither test recognises is still covered.
 
   The API format, the cache and the account all live in app/parser/retroAchievements.js, loaded
   through sharedAppModule so the library and the notifications read one cache.
 */
 
+const fs = require('fs');
+const path = require('path');
 const debug = require('../util/log.js');
 const tasklist = require('../util/tasklist.js');
 const aes = require('../util/aes.js');
@@ -21,14 +23,21 @@ const ra = require(sharedAppModulePath('parser/retroAchievements.js'));
 ra.setUserDataPath(userDataDir());
 ra.setCipher(aes);
 
-// Windows emulators and frontends that report to RetroAchievements (its emulator support list).
+// Windows emulators and frontends that report to RetroAchievements (its emulator support list),
+// with the nightly and fork names that keep the same stem.
 const EMULATOR_PROCESS =
-  /^(?:retroarch|ralibretro|emuhawk|rapplewin|flycast|winarcadia|amiarcadia|ranes|ravba|rasnes9x|rap64|raquasi88|rameka|ragens|project64|skyemu|dolphin|melonds|mesen|stella|gearboy|gearsystem|gearcoleco|(?:duckstation|pcsx2|ppsspp)[\w.-]*)\.exe$/i;
+  /^(?:retroarch|ralibretro|emuhawk|rapplewin|flycast|winarcadia|amiarcadia|ranes|ravba(?:-m)?|ravisualboyadvance(?:-m)?|rasnes9x|rap64|raproject64|raquasi88|rameka|ragens|raoricutron|project64|skyemu|linkboy|rmg|gopher64|dolphin|melonds|mesen|stella|gearboy|gearsystem|gearcoleco|(?:duckstation|pcsx2|ppsspp|xbsx2|dolphin-?\w+|flycast|melonds|retroarch)[\w.-]*)\.exe$/i;
+// Every RA-integrated emulator (the RA* builds, RALibretro, WinArcadia and the forks) ships the
+// RetroAchievements toolkit beside its executable, whatever the executable is called.
+const INTEGRATION_DLLS = ['RA_Integration.dll', 'RA_Integration-x64.dll'];
+const NOT_EMULATOR_PROCESS = /^dolphin-?(?:tool|memoryengine)\.exe$/i;
 // Half the poll interval, so a poll is due on every second tick; a process snapshot costs ~6 ms.
 const CHECK_INTERVAL_MS = 4 * 1000;
 // The API blocks for ten minutes above roughly 13 calls a minute; 7.5 a minute keeps a margin for
 // an import running at the same time, and an unlock still arrives within a few seconds.
 const POLL_INTERVAL_MS = 8 * 1000;
+// No emulator recognised: an unknown one (a new release, a renamed build) is still caught, late.
+const IDLE_POLL_INTERVAL_MS = 5 * 60 * 1000;
 // How far back the first request of a session looks, so an unlock earned just before the
 // emulator was noticed is still announced.
 const LOOKBACK_MINUTES = 3;
@@ -41,9 +50,29 @@ let busy = false;
 // this covers the moment between a toast and its write, and a game the cache cannot hold.
 const seen = new Set();
 
-function findEmulator(processes) {
-  const hit = (processes || []).find((entry) => EMULATOR_PROCESS.test(String((entry && entry.process) || '')));
-  return hit ? hit.process : '';
+// pid -> whether that process carries the RA toolkit. Each pid is looked at once, and only the
+// processes the name list does not already know.
+const integrationByPid = new Map();
+
+function hasIntegrationDll(entry) {
+  const pid = Number(entry && entry.pid);
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  if (!integrationByPid.has(pid)) {
+    const exe = tasklist.getProcessPath(pid);
+    const dir = exe ? path.dirname(exe) : '';
+    integrationByPid.set(pid, !!dir && INTEGRATION_DLLS.some((name) => fs.existsSync(path.join(dir, name))));
+  }
+  return integrationByPid.get(pid);
+}
+
+function findEmulator(processes, probe = hasIntegrationDll) {
+  const list = (processes || []).filter((entry) => entry && entry.process);
+  const live = new Set(list.map((entry) => Number(entry.pid)));
+  for (const pid of integrationByPid.keys()) if (!live.has(pid)) integrationByPid.delete(pid);
+  const named = list.find((entry) => EMULATOR_PROCESS.test(entry.process) && !NOT_EMULATOR_PROCESS.test(entry.process));
+  if (named) return named.process;
+  const integrated = list.find((entry) => probe(entry));
+  return integrated ? integrated.process : '';
 }
 
 function rarityOf(schema, achievementId) {
@@ -183,26 +212,33 @@ async function tick(ctx) {
       return;
     }
 
-    if (!emulator) {
-      const ending = session;
-      if (ending) {
-        session = null;
-        // One last look: the unlock earned right before quitting is reported as the emulator closes.
-        await poll(ctx, ending);
-        debug.log(`[retroachievements] ${ending.emulator} closed - polling stopped`);
-      }
-      return;
-    }
-
     if (!session) {
       const auth = ra.loadAuth();
       if (!auth) return;
-      session = { auth, emulator, lastPoll: 0, lastSuccess: 0, pausedUntil: 0 };
-      debug.log(`[retroachievements] ${emulator} is running - polling unlocks for ${auth.username}`);
+      session = { auth, emulator: '', lastPoll: 0, lastSuccess: 0, pausedUntil: 0 };
     }
     const current = session;
+
+    if (emulator !== current.emulator) {
+      const closed = current.emulator;
+      current.emulator = emulator;
+      if (emulator) debug.log(`[retroachievements] ${emulator} is running - polling unlocks for ${current.auth.username}`);
+      else {
+        debug.log(`[retroachievements] ${closed} closed - back to polling every ${IDLE_POLL_INTERVAL_MS / 60000} min`);
+        // One last look: the unlock earned right before quitting is reported as the emulator closes.
+        current.lastPoll = 0;
+      }
+    }
     const now = Date.now();
-    if (now < current.pausedUntil || now - current.lastPoll < POLL_INTERVAL_MS) return;
+    const interval = current.emulator ? POLL_INTERVAL_MS : IDLE_POLL_INTERVAL_MS;
+    if (now < current.pausedUntil || now - current.lastPoll < interval) return;
+    // Re-read before each request: the account may have been disconnected or switched since.
+    const auth = ra.loadAuth();
+    if (!auth) {
+      session = null;
+      return;
+    }
+    current.auth = auth;
     await poll(ctx, current);
   } catch (err) {
     debug.warn(`[retroachievements] ${err.message || err}`);

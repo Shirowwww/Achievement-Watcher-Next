@@ -63,6 +63,22 @@ test('only an emulator that reports to RetroAchievements starts the polling', ()
   }
 });
 
+test('every emulator on the RetroAchievements support list is known by name', () => {
+  const names = [
+    'RANes.exe', 'RAVBA.exe', 'RAVBA-M.exe', 'RASnes9x.exe', 'RAMeka.exe', 'RAQUASI88.exe', 'RAppleWin.exe', 'RAP64.exe',
+    'RAProject64.exe', 'RAGens.exe', 'Project64.exe', 'WinArcadia.exe', 'SkyEmu.exe', 'melonDS.exe', 'flycast.exe',
+    'PPSSPPWindows.exe', 'pcsx2-qtx64-avx2.exe', 'xbsx2.exe', 'DolphinQt.exe', 'retroarch_debug.exe', 'linkboy.exe',
+  ];
+  for (const name of names) assert.equal(findEmulator([{ process: name }], () => false), name, name);
+  assert.equal(findEmulator([{ process: 'DolphinMemoryEngine.exe' }], () => false), '');
+});
+
+test('an emulator with an unknown name is found by the RA toolkit dll beside it', () => {
+  const processes = [{ process: 'explorer.exe', pid: 10 }, { process: 'MyFork.exe', pid: 20 }];
+  assert.equal(findEmulator(processes, (entry) => entry.pid === 20), 'MyFork.exe');
+  assert.equal(findEmulator(processes, () => false), '');
+});
+
 test('an unlock already in the cache is not announced, a new one is, and only once', async () => {
   freshUserData();
   ra.writeGame('1', GAME);
@@ -152,5 +168,50 @@ test('a rate limit pauses polling for as long as the API asks, then reaches back
     assert.ok(windows[0] >= 10, 'the next window covers the time the limit made it miss');
   } finally {
     ra.fetchRecentUnlocks = original;
+  }
+});
+
+test('with no emulator recognised the account is still polled, every few minutes instead of seconds', async () => {
+  const { tick } = watcher._internal;
+  const tasklist = require('../util/tasklist.js');
+  const originals = { list: tasklist.list, loadAuth: ra.loadAuth, fetch: ra.fetchRecentUnlocks, now: Date.now };
+  let running = [];
+  let clock = 1_000_000_000;
+  let polls = 0;
+  tasklist.list = async () => running;
+  ra.loadAuth = () => ({ username: 'a', apiKey: 'x' });
+  ra.fetchRecentUnlocks = async () => {
+    polls += 1;
+    return [];
+  };
+  Date.now = () => clock;
+  try {
+    watcher.stop();
+    const ctx = context();
+    await tick(ctx);
+    assert.equal(polls, 1, 'an unknown emulator is covered from the start');
+    clock += 60 * 1000;
+    await tick(ctx);
+    assert.equal(polls, 1, 'idle polling is slow');
+    running = [{ process: 'duckstation-qt-x64-ReleaseLTCG.exe', pid: 1 }];
+    clock += 10 * 1000;
+    await tick(ctx);
+    assert.equal(polls, 2, 'a known emulator switches to fast polling');
+    running = [];
+    clock += 4 * 1000;
+    await tick(ctx);
+    assert.equal(polls, 3, 'one last look as the emulator closes');
+    clock += 4 * 60 * 1000;
+    await tick(ctx);
+    assert.equal(polls, 3);
+    clock += 2 * 60 * 1000;
+    await tick(ctx);
+    assert.equal(polls, 4);
+  } finally {
+    watcher.stop();
+    tasklist.list = originals.list;
+    ra.loadAuth = originals.loadAuth;
+    ra.fetchRecentUnlocks = originals.fetch;
+    Date.now = originals.now;
   }
 });

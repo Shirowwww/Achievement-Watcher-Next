@@ -32,7 +32,7 @@ See [NOTICE](../NOTICE).
 | Console emulators | ✅ RPCS3 · ShadPS4 · Xenia | ✅ RPCS3 · ShadPS4 · Xenia | ⚠️ RPCS3 only |
 | Xbox 360 games recompiled for PC (ReXGlue and similar) | ✅ List, icons, DLC and live unlocks | ❌ | ❌ |
 | Games for Windows LIVE | ✅ XLiveLessNess, schema and icons read from the game | ✅ XLiveLessNess | ❌ |
-| RetroAchievements | ✅ Played games imported, live unlocks while an emulator runs | ✅ | ❌ |
+| RetroAchievements | ✅ Played games imported, live unlocks with any emulator | ✅ | ❌ |
 | Niche patches | ✅ FINAL FANTASY VII (2013) | ✅ MarkerPatch · MadnessPatch · FINAL FANTASY VII (2013) | ❌ |
 | Folder discovery | ✅ Auto-config & Smart Find | ✅ Auto-config | ✅ Smart Find |
 | Custom folders and manual games | ✅ Per game or whole library | ✅ Per game | ⚠️ Manual config |

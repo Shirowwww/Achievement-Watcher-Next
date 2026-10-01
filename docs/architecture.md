@@ -103,7 +103,7 @@ Current integrations include Steam (legit client and emulator saves), Goldberg/G
 | `app/parser/x360Recomp.js` | Recompiled Xbox 360 games: the ReXGlue `.toml`, `.tsv` and `SaveData\Achievements.json` unlock lists; schema from the game's `default.xex`, dbox.tools as a fallback |
 | `app/parser/xex.js` | Xbox 360 executables: title id, AES and basic/LZX unpacking (`app/util/lzx.js`), and the SPA resource inside |
 | `app/parser/ff7.js` | FINAL FANTASY VII (2013): the 8-byte `achievement.dat` bitfield, paired with Steam api-names |
-| `app/parser/retroAchievements.js` | RetroAchievements Web API: account, library import and the `steam_cache/retroachievements` cache, shared with `watchdog/console/retroAchievementsWatch.js`, which polls recent unlocks only while an emulator runs |
+| `app/parser/retroAchievements.js` | RetroAchievements Web API: account, library import and the `steam_cache/retroachievements` cache, shared with `watchdog/console/retroAchievementsWatch.js`, which polls recent unlocks every 8 s while a known emulator runs and every 5 min otherwise |
 | `app/electron/init.js` | Main lifecycle, updater, browser helpers and overlay window |
 | `app/util/updateStatus.js` | Updater state machine shared by the main process, the title bar and Settings |
 | `watchdog/watchdog.js` | Background entry point and service coordination |
