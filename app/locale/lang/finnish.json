@@ -949,6 +949,9 @@
       "xlln": {
         "description": "Games for Windows LIVE XLiveLessNessin kautta"
       },
+      "retroAchievements": {
+        "description": "Emulaattoripelit RetroAchievements-tililtäsi. Yhdistä se alla olevalla tilikortilla; uusista saavutuksista ilmoitetaan emulaattorin ollessa käynnissä."
+      },
       "markerpatch": {
         "description": "Dead Space 2 MarkerPatch-modin kautta"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "Kaikki saavutukset",
     "profile-trophies-all-title": "Avatut saavutukset, harvinaisimmat ensin",
     "profile-trophies-back": "Takaisin",
-    "profile-trophies-unknown-rate": "Tuntematon osuus"
+    "profile-trophies-unknown-rate": "Tuntematon osuus",
+    "retroachievements-desc": "Valinnainen. Tuo RetroAchievementsin avulla pelit, joita olet pelannut emulaattoreilla, ja ilmoittaa uusista saavutuksista emulaattorin ollessa käynnissä. Web API -avaimesi tallennetaan salattuna tälle tietokoneelle.",
+    "retroachievements-username": "Käyttäjätunnus",
+    "retroachievements-apikey": "Web API -avain",
+    "retroachievements-connect": "Yhdistä tili",
+    "retroachievements-import-btn-label": "Tuo kirjasto",
+    "retroachievements-import-btn-hint": "hakee pelisi RetroAchievementsista",
+    "retroachievements-connected-as": "Yhdistetty tunnuksella {name}",
+    "retroachievements-connecting": "Tarkistetaan tiliä…",
+    "retroachievements-importing": "Tuodaan RetroAchievements-kirjastoa…",
+    "retroachievements-imported": "Tuonti valmis: {created} lisätty, {updated} päivitetty, {unchanged} ennallaan, {failed} epäonnistui.",
+    "retroachievements-missing": "Anna käyttäjätunnuksesi ja osoitteessa retroachievements.org/settings näkyvä Web API -avain (avattu nyt selaimessasi).",
+    "retroachievements-disconnected": "RetroAchievements-tili irrotettu.",
+    "retroachievements-error-key": "RetroAchievements hylkäsi tämän Web API -avaimen.",
+    "retroachievements-error-user": "Millään RetroAchievements-tilillä ei ole tätä käyttäjätunnusta.",
+    "retroachievements-error-format": "Tarkista käyttäjätunnus ja Web API -avain: jompikumpi ei ole odotetussa muodossa.",
+    "retroachievements-error-network": "RetroAchievementsiin ei saatu yhteyttä. Yritä myöhemmin uudelleen.",
+    "retroachievements-error": "RetroAchievements-pyyntö epäonnistui",
+    "retroachievements-imported-none": "Tällä tilillä ei ole vielä pelejä, joissa on saavutuksia: pelaa yhtä RetroAchievementsilla, niin se ilmestyy tähän.",
+    "retroachievements-imported-partial": "RetroAchievementsin pyyntöraja keskeytti tuonnin, kun {created} oli lisätty ja {updated} päivitetty. Tuo uudelleen muutaman minuutin kuluttua jatkaaksesi siitä, mihin jäätiin.",
+    "retroachievements-rate-wait": "RetroAchievements pyytää hidastamaan: tuonti jatkuu {minutes} min kuluttua ({current}/{total})."
   },
   "watchdog": {
     "rare": "Harvinainen {percent} %",

@@ -949,6 +949,9 @@
       "xlln": {
         "description": "Games for Windows LIVE przez XLiveLessNess"
       },
+      "retroAchievements": {
+        "description": "Gry z emulatorów z twojego konta RetroAchievements. Połącz je w karcie konta poniżej; nowe osiągnięcia są ogłaszane, gdy działa emulator."
+      },
       "markerpatch": {
         "description": "Dead Space 2 przez mod MarkerPatch"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "Wszystkie osiągnięcia",
     "profile-trophies-all-title": "Odblokowane osiągnięcia, od najrzadszego",
     "profile-trophies-back": "Powrót",
-    "profile-trophies-unknown-rate": "Nieznany wskaźnik"
+    "profile-trophies-unknown-rate": "Nieznany wskaźnik",
+    "retroachievements-desc": "Opcjonalne. Importuje gry, w które grałeś na emulatorach, za pomocą RetroAchievements i ogłasza nowe osiągnięcia, gdy działa emulator. Twój klucz Web API jest przechowywany w postaci zaszyfrowanej na tym komputerze.",
+    "retroachievements-username": "Nazwa użytkownika",
+    "retroachievements-apikey": "Klucz Web API",
+    "retroachievements-connect": "Połącz konto",
+    "retroachievements-import-btn-label": "Importuj bibliotekę",
+    "retroachievements-import-btn-hint": "pobiera twoje gry z RetroAchievements",
+    "retroachievements-connected-as": "Połączono jako {name}",
+    "retroachievements-connecting": "Sprawdzanie konta…",
+    "retroachievements-importing": "Importowanie biblioteki RetroAchievements…",
+    "retroachievements-imported": "Import zakończony: {created} dodano, {updated} zaktualizowano, {unchanged} bez zmian, {failed} nie powiodło się.",
+    "retroachievements-missing": "Wpisz nazwę użytkownika i klucz Web API widoczny na retroachievements.org/settings (otwartej teraz w przeglądarce).",
+    "retroachievements-disconnected": "Konto RetroAchievements zostało odłączone.",
+    "retroachievements-error-key": "RetroAchievements odrzuciło ten klucz Web API.",
+    "retroachievements-error-user": "Żadne konto RetroAchievements nie ma takiej nazwy użytkownika.",
+    "retroachievements-error-format": "Sprawdź nazwę użytkownika i klucz Web API: jedno z nich nie ma oczekiwanego formatu.",
+    "retroachievements-error-network": "Nie można połączyć się z RetroAchievements. Spróbuj ponownie później.",
+    "retroachievements-error": "Żądanie do RetroAchievements nie powiodło się",
+    "retroachievements-imported-none": "Na tym koncie nie ma jeszcze gier z osiągnięciami: zagraj w jedną z RetroAchievements, a pojawi się tutaj.",
+    "retroachievements-imported-partial": "Wstrzymano z powodu limitu RetroAchievements po {created} dodanych i {updated} zaktualizowanych. Zaimportuj ponownie za kilka minut, aby kontynuować od miejsca zatrzymania.",
+    "retroachievements-rate-wait": "RetroAchievements prosi o zwolnienie tempa: import zostanie wznowiony za {minutes} min ({current}/{total})."
   },
   "watchdog": {
     "rare": "Rzadkie {percent}%",

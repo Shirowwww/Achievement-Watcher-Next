@@ -496,6 +496,7 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     { key: 'xlln', fallback: true },
     { key: 'markerpatch', fallback: true },
     { key: 'madnesspatch', fallback: true },
+    { key: 'retroAchievements', fallback: true },
     { key: 'importCache', fallback: true },
   ];
 

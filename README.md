@@ -57,7 +57,7 @@ into one library, with live Windows notifications and an in-game overlay.
   [gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/themes/).
 - **Local-first.** No Steam Web API key, no required account, its own data directory, and caches that
   keep the library working offline. The few secrets it does keep - an emulator Steam password, the
-  Steam, Epic and Xbox sign-in tokens - are encrypted with a key generated for your install and held by
+  Steam, Epic and Xbox sign-in tokens, the RetroAchievements Web API key - are encrypted with a key generated for your install and held by
   Windows, readable by your Windows account alone.
 
 <div align="center">
@@ -107,6 +107,7 @@ build tells you when a new release is out; extracting it over the old folder kee
 | **Console emulators** | RPCS3, ShadPS4 and Xenia, each watched live |
 | **Xbox PC** | Local Game Pass / Microsoft Store installs, plus the games the account owns and their Xbox Network state |
 | **Xbox 360 recompilations** | Native PC recompilations such as ReXGlue ports, from the game folder or Documents, watched live |
+| **RetroAchievements** | After an optional account connection (username and Web API key), the emulator games you played with their unlocks and rarity; new unlocks are announced while a supported emulator runs |
 | **Games for Windows LIVE** | XLiveLessNess profiles, with the achievement list, its texts and its icons read from the game's own executable |
 | **Mod patches** | Dead Space 2 MarkerPatch and Alice: Madness Returns MadnessPatch, built from the mod's own texts and images |
 

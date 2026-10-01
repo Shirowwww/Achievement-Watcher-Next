@@ -949,6 +949,9 @@
       "xlln": {
         "description": "Games for Windows LIVE через XLiveLessNess"
       },
+      "retroAchievements": {
+        "description": "Игры на эмуляторах из вашего аккаунта RetroAchievements. Подключите его в карточке аккаунта ниже; о новых достижениях сообщается, пока работает эмулятор."
+      },
       "markerpatch": {
         "description": "Dead Space 2 через мод MarkerPatch"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "Все достижения",
     "profile-trophies-all-title": "Полученные достижения, сначала самые редкие",
     "profile-trophies-back": "Назад",
-    "profile-trophies-unknown-rate": "Неизвестный процент"
+    "profile-trophies-unknown-rate": "Неизвестный процент",
+    "retroachievements-desc": "Необязательно. Импортирует игры, в которые вы играли на эмуляторах, через RetroAchievements и объявляет о новых достижениях, пока работает эмулятор. Ваш ключ Web API хранится на этом ПК в зашифрованном виде.",
+    "retroachievements-username": "Имя пользователя",
+    "retroachievements-apikey": "Ключ Web API",
+    "retroachievements-connect": "Подключить аккаунт",
+    "retroachievements-import-btn-label": "Импортировать библиотеку",
+    "retroachievements-import-btn-hint": "получает ваши игры из RetroAchievements",
+    "retroachievements-connected-as": "Подключено как {name}",
+    "retroachievements-connecting": "Проверка аккаунта…",
+    "retroachievements-importing": "Импорт библиотеки RetroAchievements…",
+    "retroachievements-imported": "Импорт завершён: добавлено {created}, обновлено {updated}, без изменений {unchanged}, с ошибкой {failed}.",
+    "retroachievements-missing": "Введите имя пользователя и ключ Web API, показанный на retroachievements.org/settings (страница сейчас открыта в браузере).",
+    "retroachievements-disconnected": "Аккаунт RetroAchievements отключён.",
+    "retroachievements-error-key": "RetroAchievements отклонил этот ключ Web API.",
+    "retroachievements-error-user": "Аккаунта RetroAchievements с таким именем пользователя нет.",
+    "retroachievements-error-format": "Проверьте имя пользователя и ключ Web API: один из них имеет неверный формат.",
+    "retroachievements-error-network": "RetroAchievements недоступен. Повторите попытку позже.",
+    "retroachievements-error": "Запрос к RetroAchievements не удался",
+    "retroachievements-imported-none": "На этом аккаунте пока нет игр с достижениями: поиграйте в одну через RetroAchievements, и она появится здесь.",
+    "retroachievements-imported-partial": "Приостановлено из-за ограничения частоты запросов RetroAchievements после {created} добавленных и {updated} обновлённых. Повторите импорт через несколько минут, чтобы продолжить с того места, где он остановился.",
+    "retroachievements-rate-wait": "RetroAchievements просит снизить скорость: импорт продолжится через {minutes} мин ({current}/{total})."
   },
   "watchdog": {
     "rare": "Редкое {percent}%",

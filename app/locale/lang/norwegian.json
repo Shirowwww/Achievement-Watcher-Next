@@ -949,6 +949,9 @@
       "xlln": {
         "description": "Games for Windows LIVE via XLiveLessNess"
       },
+      "retroAchievements": {
+        "description": "Emulatorspill fra RetroAchievements-kontoen din. Koble den til i kontokortet nedenfor; nye prestasjoner kunngjøres mens en emulator kjører."
+      },
       "markerpatch": {
         "description": "Dead Space 2 via MarkerPatch-modden"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "Alle prestasjoner",
     "profile-trophies-all-title": "Opplåste prestasjoner, sjeldneste først",
     "profile-trophies-back": "Tilbake",
-    "profile-trophies-unknown-rate": "Ukjent andel"
+    "profile-trophies-unknown-rate": "Ukjent andel",
+    "retroachievements-desc": "Valgfritt. Importerer spillene du har spilt på emulatorer, med RetroAchievements og kunngjør nye prestasjoner mens en emulator kjører. Web API-nøkkelen din lagres kryptert på denne PC-en.",
+    "retroachievements-username": "Brukernavn",
+    "retroachievements-apikey": "Web API-nøkkel",
+    "retroachievements-connect": "Koble til konto",
+    "retroachievements-import-btn-label": "Importer bibliotek",
+    "retroachievements-import-btn-hint": "henter spillene dine fra RetroAchievements",
+    "retroachievements-connected-as": "Tilkoblet som {name}",
+    "retroachievements-connecting": "Kontrollerer kontoen…",
+    "retroachievements-importing": "Importerer RetroAchievements-biblioteket…",
+    "retroachievements-imported": "Importen er fullført: {created} lagt til, {updated} oppdatert, {unchanged} uendret, {failed} mislyktes.",
+    "retroachievements-missing": "Skriv inn brukernavnet ditt og Web API-nøkkelen som vises på retroachievements.org/settings (nå åpnet i nettleseren din).",
+    "retroachievements-disconnected": "RetroAchievements-kontoen er frakoblet.",
+    "retroachievements-error-key": "RetroAchievements avviste denne Web API-nøkkelen.",
+    "retroachievements-error-user": "Ingen RetroAchievements-konto har dette brukernavnet.",
+    "retroachievements-error-format": "Kontroller brukernavnet og Web API-nøkkelen: en av dem har ikke det forventede formatet.",
+    "retroachievements-error-network": "Fikk ikke kontakt med RetroAchievements. Prøv igjen senere.",
+    "retroachievements-error": "Forespørselen til RetroAchievements mislyktes",
+    "retroachievements-imported-none": "Ingen spill med prestasjoner på denne kontoen ennå: spill ett med RetroAchievements, så dukker det opp her.",
+    "retroachievements-imported-partial": "Satt på pause av RetroAchievements sin grense etter {created} lagt til og {updated} oppdatert. Importer på nytt om noen minutter for å fortsette der den stoppet.",
+    "retroachievements-rate-wait": "RetroAchievements ber om at tempoet senkes: importen gjenopptas om {minutes} min ({current}/{total})."
   },
   "watchdog": {
     "rare": "Sjelden {percent} %",

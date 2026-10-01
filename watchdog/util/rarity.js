@@ -114,6 +114,7 @@ const CACHE_ONLY_SOURCES = new Set([
   'Lumaplay',
   'ea',
   'Xbox PC',
+  'RetroAchievements',
 ]);
 
 function isSteamRarityId(appid, source) {

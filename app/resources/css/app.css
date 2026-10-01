@@ -9005,10 +9005,21 @@ body {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
-#settings .emulator-login label {
+#settings .emulator-login label,
+#settings #retroachievements-connect label {
   margin: 0 0 4px;
   color: var(--text-muted);
   font-size: 12px;
+}
+/* The only account card that takes typed credentials, so it borrows the Steam login fields. */
+#settings #retroachievements-connect label {
+  display: block;
+}
+#settings #retroachievements-connect .emulator-login-fields {
+  margin: 10px 0 4px;
+}
+#settings #retroachievements-connect .emulator-login-fields input {
+  width: 100%;
 }
 #settings .emulator-login-actions {
   margin-top: 10px;

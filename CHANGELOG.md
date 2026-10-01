@@ -11,6 +11,14 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Added
 
+- **RetroAchievements.** Settings > Sources has a RetroAchievements card: enter your username and the
+  Web API key from retroachievements.org/settings, and the games you played on emulators join the
+  library with their achievements, unlock dates, points and rarity. While a supported emulator runs
+  (RetroArch, DuckStation, PCSX2, PPSSPP, Dolphin, BizHawk, Project64 and the other RetroAchievements
+  emulators), new unlocks are announced like any other, and a game played for the first time is added
+  on its own. Nothing is asked of the API when no emulator is running, and a second import only fetches
+  the games whose progress moved.
+
 - **Forget a game.** Right-click a game and choose "Forget this game..." to clear everything AW Next
   keeps about it: its achievement saves (backed up first, as Reset achievements does), play time,
   cached achievement list and icons, per-game settings, and the emulator configuration AW Next wrote

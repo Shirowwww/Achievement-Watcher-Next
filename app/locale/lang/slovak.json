@@ -949,6 +949,9 @@
       "xlln": {
         "description": "Games for Windows LIVE cez XLiveLessNess"
       },
+      "retroAchievements": {
+        "description": "Hry z emulátorov z tvojho účtu RetroAchievements. Pripoj ho v karte účtu nižšie; nové úspechy sa oznamujú, kým beží emulátor."
+      },
       "markerpatch": {
         "description": "Dead Space 2 cez mod MarkerPatch"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "Všetky úspechy",
     "profile-trophies-all-title": "Odomknuté úspechy, od najvzácnejšieho",
     "profile-trophies-back": "Späť",
-    "profile-trophies-unknown-rate": "Neznáma miera"
+    "profile-trophies-unknown-rate": "Neznáma miera",
+    "retroachievements-desc": "Voliteľné. Importuje hry, ktoré si hral na emulátoroch, pomocou RetroAchievements a oznamuje nové úspechy, kým beží emulátor. Tvoj kľúč Web API je v tomto počítači uložený zašifrovane.",
+    "retroachievements-username": "Používateľské meno",
+    "retroachievements-apikey": "Kľúč Web API",
+    "retroachievements-connect": "Pripojiť účet",
+    "retroachievements-import-btn-label": "Importovať knižnicu",
+    "retroachievements-import-btn-hint": "načíta tvoje hry z RetroAchievements",
+    "retroachievements-connected-as": "Pripojené ako {name}",
+    "retroachievements-connecting": "Overujem účet…",
+    "retroachievements-importing": "Importujem knižnicu RetroAchievements…",
+    "retroachievements-imported": "Import dokončený: {created} pridaných, {updated} aktualizovaných, {unchanged} bez zmeny, {failed} zlyhalo.",
+    "retroachievements-missing": "Zadaj svoje používateľské meno a kľúč Web API zobrazený na retroachievements.org/settings (teraz otvorené v prehliadači).",
+    "retroachievements-disconnected": "Účet RetroAchievements bol odpojený.",
+    "retroachievements-error-key": "RetroAchievements tento kľúč Web API odmietlo.",
+    "retroachievements-error-user": "Žiadny účet RetroAchievements nemá toto používateľské meno.",
+    "retroachievements-error-format": "Skontroluj používateľské meno a kľúč Web API: jedno z nich nemá očakávaný formát.",
+    "retroachievements-error-network": "Server RetroAchievements nie je dostupný. Skús to neskôr.",
+    "retroachievements-error": "Požiadavka na RetroAchievements zlyhala",
+    "retroachievements-imported-none": "Na tomto účte zatiaľ nie je žiadna hra s úspechmi: zahraj si jednu s RetroAchievements a objaví sa tu.",
+    "retroachievements-imported-partial": "Pozastavené limitom RetroAchievements po {created} pridaných a {updated} aktualizovaných. Importuj znova o niekoľko minút a pokračuj tam, kde import skončil.",
+    "retroachievements-rate-wait": "RetroAchievements žiada o spomalenie: import bude pokračovať o {minutes} min ({current}/{total})."
   },
   "watchdog": {
     "rare": "Vzácny {percent}%",

@@ -949,6 +949,9 @@
       "xlln": {
         "description": "Games for Windows LIVE via XLiveLessNess"
       },
+      "retroAchievements": {
+        "description": "Emulatorspil fra din RetroAchievements-konto. Tilslut den i kontokortet nedenfor; nye præstationer annonceres, mens en emulator kører."
+      },
       "markerpatch": {
         "description": "Dead Space 2 via MarkerPatch-modet"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "Alle præstationer",
     "profile-trophies-all-title": "Oplåste præstationer, sjældneste først",
     "profile-trophies-back": "Tilbage",
-    "profile-trophies-unknown-rate": "Ukendt rate"
+    "profile-trophies-unknown-rate": "Ukendt rate",
+    "retroachievements-desc": "Valgfrit. Importerer de spil, du har spillet på emulatorer, med RetroAchievements og annoncerer nye præstationer, mens en emulator kører. Din Web API-nøgle gemmes krypteret på denne pc.",
+    "retroachievements-username": "Brugernavn",
+    "retroachievements-apikey": "Web API-nøgle",
+    "retroachievements-connect": "Tilslut konto",
+    "retroachievements-import-btn-label": "Importér bibliotek",
+    "retroachievements-import-btn-hint": "henter dine spil fra RetroAchievements",
+    "retroachievements-connected-as": "Tilsluttet som {name}",
+    "retroachievements-connecting": "Kontrollerer kontoen…",
+    "retroachievements-importing": "Importerer RetroAchievements-biblioteket…",
+    "retroachievements-imported": "Import gennemført: {created} tilføjet, {updated} opdateret, {unchanged} uændret, {failed} mislykket.",
+    "retroachievements-missing": "Indtast dit brugernavn og den Web API-nøgle, der vises på retroachievements.org/settings (nu åbnet i din browser).",
+    "retroachievements-disconnected": "RetroAchievements-konto afbrudt.",
+    "retroachievements-error-key": "RetroAchievements afviste denne Web API-nøgle.",
+    "retroachievements-error-user": "Ingen RetroAchievements-konto har dette brugernavn.",
+    "retroachievements-error-format": "Kontrollér brugernavnet og Web API-nøglen: en af dem har ikke det forventede format.",
+    "retroachievements-error-network": "RetroAchievements kunne ikke nås. Prøv igen senere.",
+    "retroachievements-error": "Anmodningen til RetroAchievements mislykkedes",
+    "retroachievements-imported-none": "Endnu ingen spil med præstationer på denne konto: spil et med RetroAchievements, så vises det her.",
+    "retroachievements-imported-partial": "Sat på pause af RetroAchievements' grænse efter {created} tilføjet og {updated} opdateret. Importér igen om nogle minutter for at fortsætte, hvor den stoppede.",
+    "retroachievements-rate-wait": "RetroAchievements beder om at sænke tempoet: importen genoptages om {minutes} min ({current}/{total})."
   },
   "watchdog": {
     "rare": "Sjælden {percent} %",

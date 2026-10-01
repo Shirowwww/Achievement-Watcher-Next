@@ -949,6 +949,9 @@
       "xlln": {
         "description": "Games for Windows LIVE ผ่าน XLiveLessNess"
       },
+      "retroAchievements": {
+        "description": "เกมอีมูเลเตอร์จากบัญชี RetroAchievements ของคุณ เชื่อมต่อได้ในการ์ดบัญชีด้านล่าง ความสำเร็จใหม่จะถูกแจ้งขณะที่อีมูเลเตอร์ทำงานอยู่"
+      },
       "markerpatch": {
         "description": "Dead Space 2 ผ่านม็อด MarkerPatch"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "ความสำเร็จทั้งหมด",
     "profile-trophies-all-title": "ความสำเร็จที่ปลดล็อก เรียงจากหายากที่สุด",
     "profile-trophies-back": "กลับ",
-    "profile-trophies-unknown-rate": "อัตราที่ไม่ทราบ"
+    "profile-trophies-unknown-rate": "อัตราที่ไม่ทราบ",
+    "retroachievements-desc": "ไม่บังคับ นำเข้าเกมที่คุณเล่นบนอีมูเลเตอร์ด้วย RetroAchievements และแจ้งความสำเร็จใหม่ขณะที่อีมูเลเตอร์ทำงานอยู่ คีย์ Web API ของคุณถูกเก็บแบบเข้ารหัสบนพีซีเครื่องนี้",
+    "retroachievements-username": "ชื่อผู้ใช้",
+    "retroachievements-apikey": "คีย์ Web API",
+    "retroachievements-connect": "เชื่อมต่อบัญชี",
+    "retroachievements-import-btn-label": "นำเข้าคลังเกม",
+    "retroachievements-import-btn-hint": "ดึงเกมของคุณจาก RetroAchievements",
+    "retroachievements-connected-as": "เชื่อมต่อเป็น {name}",
+    "retroachievements-connecting": "กำลังตรวจสอบบัญชี…",
+    "retroachievements-importing": "กำลังนำเข้าคลังเกม RetroAchievements…",
+    "retroachievements-imported": "นำเข้าเสร็จสิ้น: เพิ่ม {created}, อัปเดต {updated}, ไม่เปลี่ยนแปลง {unchanged}, ล้มเหลว {failed}",
+    "retroachievements-missing": "กรอกชื่อผู้ใช้และคีย์ Web API ที่แสดงบน retroachievements.org/settings (เปิดในเบราว์เซอร์ของคุณแล้ว)",
+    "retroachievements-disconnected": "ยกเลิกการเชื่อมต่อบัญชี RetroAchievements แล้ว",
+    "retroachievements-error-key": "RetroAchievements ปฏิเสธคีย์ Web API นี้",
+    "retroachievements-error-user": "ไม่มีบัญชี RetroAchievements ที่ใช้ชื่อผู้ใช้นี้",
+    "retroachievements-error-format": "ตรวจสอบชื่อผู้ใช้และคีย์ Web API: อย่างใดอย่างหนึ่งไม่ตรงกับรูปแบบที่คาดไว้",
+    "retroachievements-error-network": "เชื่อมต่อ RetroAchievements ไม่ได้ โปรดลองอีกครั้งภายหลัง",
+    "retroachievements-error": "คำขอ RetroAchievements ล้มเหลว",
+    "retroachievements-imported-none": "บัญชีนี้ยังไม่มีเกมที่มีความสำเร็จ ลองเล่นสักเกมด้วย RetroAchievements แล้วเกมนั้นจะแสดงที่นี่",
+    "retroachievements-imported-partial": "หยุดชั่วคราวเนื่องจากขีดจำกัดอัตราของ RetroAchievements หลังจากเพิ่ม {created} และอัปเดต {updated} นำเข้าอีกครั้งในอีกไม่กี่นาทีเพื่อทำต่อจากจุดที่หยุด",
+    "retroachievements-rate-wait": "RetroAchievements ขอให้ชะลอความเร็ว การนำเข้าจะทำต่อใน {minutes} นาที ({current}/{total})"
   },
   "watchdog": {
     "rare": "หายาก {percent}%",

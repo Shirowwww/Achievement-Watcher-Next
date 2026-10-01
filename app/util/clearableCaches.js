@@ -14,8 +14,9 @@ const gameIconStore = require('./gameIconStore.js');
   builds the list of imported titles by reading which folders under it hold a schema.json. Wiping it
   did not cost a re-download, it removed the games from the grid until the user signed in to Xbox and
   ran the import again by hand. Same reason as the imported dll above: nothing here can fetch it back.
+  steam_cache/retroachievements is the RetroAchievements library in the same way.
 */
-const PRESERVED_CACHE_CHILDREN = { 'cache/gse_fork': ['custom'], steam_cache: ['xbox'] };
+const PRESERVED_CACHE_CHILDREN = { 'cache/gse_fork': ['custom'], steam_cache: ['xbox', 'retroachievements'] };
 
 const SAFE_CACHE_DIRS = [
   'steam_cache', // Steam/GOG/Epic/SteamDB/SteamGridDB schema, icon, cover and rarity cache

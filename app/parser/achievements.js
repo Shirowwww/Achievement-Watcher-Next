@@ -2286,6 +2286,28 @@ async function discoverInScope(source, steamAccFilter, scope) {
 
   mark('xboxPc');
 
+  // RetroAchievements: the games imported from the account. Never merged by name with another
+  // source - a Mega Drive set and a Steam re-release of the same title are different games.
+  if (!scope && source.retroAchievements) {
+    try {
+      const retroAchievements = require(path.join(appPath, 'retroAchievements.js'));
+      retroAchievements.setUserDataPath(_userDataPath || userDataDir());
+      // Read through the memo so the root joins the scan fingerprint: a game imported or added by
+      // the Watchdog moves its mtime, and the next start rescans instead of reusing the library.
+      // Created up front, since a folder missing at scan time is not in the fingerprint at all.
+      fs.mkdirSync(retroAchievements.cacheRoot(), { recursive: true });
+      dirCache.readdir(retroAchievements.cacheRoot());
+      for (const appid of retroAchievements.listCachedTitles()) {
+        const title = retroAchievements.cachedTitleName(appid);
+        data.push({ appid, name: title, source: retroAchievements.SOURCE, data: { type: retroAchievements.DATA_TYPE, title } });
+      }
+    } catch (err) {
+      debug.log(err);
+    }
+  }
+
+  mark('retroAchievements');
+
   if (!scope && source.importCache) {
     try {
       data = data.concat(await watchdog.scan());
@@ -2647,6 +2669,10 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
     const xboxPc = require(path.join(appPath, 'xboxPc.js'));
     xboxPc.setUserDataPath(_userDataPath || userDataDir());
     return xboxPc.unlocksForSchema(appid.appid, game.achievement.list);
+  } else if (dataType === 'retroAchievements') {
+    const retroAchievements = require(path.join(appPath, 'retroAchievements.js'));
+    retroAchievements.setUserDataPath(_userDataPath || userDataDir());
+    return retroAchievements.getAchievements(appid.appid);
   } else if (dataType === 'uplay') {
     // Legit Ubisoft Connect exposes no local unlock-state file the way the Steam emus do, so
     // only the schema is available (already loaded into `game`). Show the game with everything
@@ -2863,6 +2889,19 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           installed: true,
           xboxPc: true,
         };
+    } else if (appid.data.type === 'retroAchievements') {
+      const retroAchievements = require(path.join(appPath, 'retroAchievements.js'));
+      retroAchievements.setUserDataPath(_userDataPath || userDataDir());
+      game = await retroAchievements.getGameData(appid.appid);
+      // The background is a small raw screenshot: have it blurred and tinted like the Steam and
+      // Epic ones now, so it is ready by the time the game page opens. Renderer only.
+      if (game && game.img.background) {
+        try {
+          require('electron').ipcRenderer?.send('stylize-background-for-appid', { background: game.img.background, appid: appid.appid });
+        } catch {
+          /* not in a renderer: the page paints the plain picture */
+        }
+      }
     } else {
       game = await steam.getGameData({
         appID: appid.appid,
@@ -2962,7 +3001,9 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     // Prefer the folder found by the Goldberg scan; fall back to a name-based folder match so
     // non-Goldberg installs (GOG/standalone, bare cracks) also get an install dir.
     let resolvedGameDir = appid.data && appid.data.gameDir ? appid.data.gameDir : null;
-    if (!resolvedGameDir && game.name) resolvedGameDir = await resolveGameDirByName(game.name);
+    // A RetroAchievements game is a ROM played in an emulator: a PC folder matching its title is
+    // some other game.
+    if (!resolvedGameDir && game.name && dataType !== 'retroAchievements') resolvedGameDir = await resolveGameDirByName(game.name);
     if (resolvedGameDir) game.gameDir = resolvedGameDir;
     promoteUplayRecord(appid, game, resolvedGameDir);
     if (appid.data && appid.data.steamSettings) game.steamSettings = appid.data.steamSettings;

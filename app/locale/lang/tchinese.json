@@ -949,6 +949,9 @@
       "xlln": {
         "description": "透過 XLiveLessNess 執行的 Games for Windows LIVE"
       },
+      "retroAchievements": {
+        "description": "來自你的 RetroAchievements 帳號的模擬器遊戲。請在下方的帳號卡片中連線；模擬器執行時會通知新解鎖的成就。"
+      },
       "markerpatch": {
         "description": "透過 MarkerPatch 模組執行的 Dead Space 2"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "所有成就",
     "profile-trophies-all-title": "已解鎖成就，從稀有到普通",
     "profile-trophies-back": "上一步",
-    "profile-trophies-unknown-rate": "解鎖率未知"
+    "profile-trophies-unknown-rate": "解鎖率未知",
+    "retroachievements-desc": "選用。透過 RetroAchievements 匯入你在模擬器上玩過的遊戲，並在模擬器執行時通知新解鎖的成就。你的 Web API 金鑰會加密儲存在這部電腦上。",
+    "retroachievements-username": "使用者名稱",
+    "retroachievements-apikey": "Web API 金鑰",
+    "retroachievements-connect": "連線帳號",
+    "retroachievements-import-btn-label": "匯入遊戲庫",
+    "retroachievements-import-btn-hint": "從 RetroAchievements 取得你的遊戲",
+    "retroachievements-connected-as": "已連線為 {name}",
+    "retroachievements-connecting": "正在檢查帳號…",
+    "retroachievements-importing": "正在匯入 RetroAchievements 遊戲庫…",
+    "retroachievements-imported": "匯入完成：新增 {created} 個，更新 {updated} 個，未變 {unchanged} 個，失敗 {failed} 個。",
+    "retroachievements-missing": "請輸入你的使用者名稱和 retroachievements.org/settings 上顯示的 Web API 金鑰（已在瀏覽器中開啟）。",
+    "retroachievements-disconnected": "RetroAchievements 帳號已中斷連線。",
+    "retroachievements-error-key": "RetroAchievements 拒絕了此 Web API 金鑰。",
+    "retroachievements-error-user": "沒有使用此使用者名稱的 RetroAchievements 帳號。",
+    "retroachievements-error-format": "請檢查使用者名稱和 Web API 金鑰：其中一個格式不符。",
+    "retroachievements-error-network": "無法連線到 RetroAchievements。請稍後再試。",
+    "retroachievements-error": "RetroAchievements 要求失敗",
+    "retroachievements-imported-none": "此帳號上還沒有帶成就的遊戲：用 RetroAchievements 玩一款，它就會出現在這裡。",
+    "retroachievements-imported-partial": "因 RetroAchievements 的頻率限制，在新增 {created} 個、更新 {updated} 個後已暫停。幾分鐘後再次匯入，即可從中斷處繼續。",
+    "retroachievements-rate-wait": "RetroAchievements 要求放慢速度：匯入將在 {minutes} 分鐘後繼續（{current}/{total}）。"
   },
   "watchdog": {
     "rare": "稀有 {percent}%",

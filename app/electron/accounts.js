@@ -501,6 +501,65 @@ ipcMain.handle('xbox-pc:login', async () => {
   });
 });
 
+// RetroAchievements: a username and a Web API key, checked against the API before they are kept.
+function retroAchievementsModule() {
+  const retroAchievements = require(path.join(__dirname, '../parser/retroAchievements.js'));
+  retroAchievements.setUserDataPath(userData);
+  return retroAchievements;
+}
+
+function errorCode(err) {
+  return String((err && (err.code || err.message)) || err);
+}
+
+ipcMain.handle('retroachievements:status', async () => {
+  try {
+    return retroAchievementsModule().status();
+  } catch (err) {
+    return { connected: false, error: errorCode(err) };
+  }
+});
+
+ipcMain.handle('retroachievements:connect', async (_event, credentials = {}) => {
+  try {
+    const result = await retroAchievementsModule().connect({ username: credentials.username, apiKey: credentials.apiKey });
+    return { ok: true, username: result.username };
+  } catch (err) {
+    return { ok: false, error: errorCode(err) };
+  }
+});
+
+ipcMain.handle('retroachievements:disconnect', async () => {
+  try {
+    retroAchievementsModule().clearAuth();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: errorCode(err) };
+  }
+});
+
+let retroAchievementsImport = null;
+ipcMain.handle('retroachievements:import', async (event, opts = {}) => {
+  // A second click while an import runs joins it rather than doubling every request.
+  if (!retroAchievementsImport) {
+    retroAchievementsImport = retroAchievementsModule()
+      .importLibrary({
+        force: opts.force === true,
+        onProgress: (p) => {
+          if (!event.sender.isDestroyed()) event.sender.send('retroachievements:import-progress', p);
+        },
+      })
+      .finally(() => {
+        retroAchievementsImport = null;
+      });
+  }
+  try {
+    return { ok: true, result: await retroAchievementsImport };
+  } catch (err) {
+    return { ok: false, error: errorCode(err) };
+  }
+});
+
 ipcMain.handle('xbox-pc:import', async (event, opts = {}) => {
   try {
     const xboxPc = require(path.join(__dirname, '../parser/xboxPc.js'));

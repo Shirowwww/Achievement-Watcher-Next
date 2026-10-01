@@ -949,6 +949,9 @@
       "xlln": {
         "description": "Games for Windows LIVE μέσω XLiveLessNess"
       },
+      "retroAchievements": {
+        "description": "Παιχνίδια εξομοιωτή από τον λογαριασμό σου στο RetroAchievements. Σύνδεσέ τον στην κάρτα λογαριασμού παρακάτω· τα νέα επιτεύγματα ανακοινώνονται ενώ εκτελείται ένας εξομοιωτής."
+      },
       "markerpatch": {
         "description": "Dead Space 2 μέσω του mod MarkerPatch"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "Όλα τα επιτεύγματα",
     "profile-trophies-all-title": "Ξεκλειδωμένα επιτεύγματα, τα πιο σπάνια πρώτα",
     "profile-trophies-back": "Πίσω",
-    "profile-trophies-unknown-rate": "Άγνωστο ποσοστό"
+    "profile-trophies-unknown-rate": "Άγνωστο ποσοστό",
+    "retroachievements-desc": "Προαιρετικό. Εισάγει τα παιχνίδια που έπαιξες σε εξομοιωτές μέσω του RetroAchievements και ανακοινώνει νέα επιτεύγματα ενώ εκτελείται ένας εξομοιωτής. Το κλειδί Web API σου αποθηκεύεται κρυπτογραφημένο σε αυτόν τον υπολογιστή.",
+    "retroachievements-username": "Όνομα χρήστη",
+    "retroachievements-apikey": "Κλειδί Web API",
+    "retroachievements-connect": "Σύνδεση λογαριασμού",
+    "retroachievements-import-btn-label": "Εισαγωγή βιβλιοθήκης",
+    "retroachievements-import-btn-hint": "φέρνει τα παιχνίδια σου από το RetroAchievements",
+    "retroachievements-connected-as": "Συνδεδεμένος ως {name}",
+    "retroachievements-connecting": "Έλεγχος του λογαριασμού…",
+    "retroachievements-importing": "Εισαγωγή της βιβλιοθήκης RetroAchievements…",
+    "retroachievements-imported": "Η εισαγωγή ολοκληρώθηκε: {created} προστέθηκαν, {updated} ενημερώθηκαν, {unchanged} αμετάβλητα, {failed} απέτυχαν.",
+    "retroachievements-missing": "Εισήγαγε το όνομα χρήστη σου και το κλειδί Web API που εμφανίζεται στο retroachievements.org/settings (ανοιχτό τώρα στο πρόγραμμα περιήγησης).",
+    "retroachievements-disconnected": "Ο λογαριασμός RetroAchievements αποσυνδέθηκε.",
+    "retroachievements-error-key": "Το RetroAchievements απέρριψε αυτό το κλειδί Web API.",
+    "retroachievements-error-user": "Κανένας λογαριασμός RetroAchievements δεν έχει αυτό το όνομα χρήστη.",
+    "retroachievements-error-format": "Έλεγξε το όνομα χρήστη και το κλειδί Web API: το ένα από τα δύο δεν έχει την αναμενόμενη μορφή.",
+    "retroachievements-error-network": "Δεν ήταν δυνατή η σύνδεση με το RetroAchievements. Δοκίμασε ξανά αργότερα.",
+    "retroachievements-error": "Το αίτημα προς το RetroAchievements απέτυχε",
+    "retroachievements-imported-none": "Δεν υπάρχει ακόμη παιχνίδι με επιτεύγματα σε αυτόν τον λογαριασμό: παίξε ένα με το RetroAchievements και θα εμφανιστεί εδώ.",
+    "retroachievements-imported-partial": "Σε παύση λόγω του ορίου του RetroAchievements μετά από {created} προσθήκες και {updated} ενημερώσεις. Εισήγαγε ξανά σε λίγα λεπτά για να συνεχίσεις από όπου σταμάτησε.",
+    "retroachievements-rate-wait": "Το RetroAchievements ζητά να επιβραδυνθεί ο ρυθμός: η εισαγωγή συνεχίζεται σε {minutes} λεπτά ({current}/{total})."
   },
   "watchdog": {
     "rare": "Σπάνιο {percent}%",

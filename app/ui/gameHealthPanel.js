@@ -15,7 +15,7 @@ const gameHealth = require(path.join(appPath, 'util/gameHealth.js'));
 const gameHealthRepair = require(path.join(appPath, 'util/gameHealthRepair.js'));
 // Libraries whose unlocks come from the platform itself. Their watchdog watcher polls the account,
 // so none of the process-tracking or Steam-emulator reasoning applies to them.
-const OFFICIAL_PLATFORM_SOURCES = /^(?:steam\s*\(|gog(?:\s|$)|gog galaxy|epic(?:-official)?$|ea$|ubisoft connect|xbox(?! 360 recomp$))/i;
+const OFFICIAL_PLATFORM_SOURCES = /^(?:steam\s*\(|gog(?:\s|$)|gog galaxy|epic(?:-official)?$|ea$|ubisoft connect|xbox(?! 360 recomp$)|retroachievements$)/i;
 function isOfficialPlatformSource(source) {
   return OFFICIAL_PLATFORM_SOURCES.test(String(source || '').trim());
 }

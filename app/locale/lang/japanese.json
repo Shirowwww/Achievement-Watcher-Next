@@ -949,6 +949,9 @@
       "xlln": {
         "description": "XLiveLessNess 経由の Games for Windows LIVE"
       },
+      "retroAchievements": {
+        "description": "RetroAchievements アカウントのエミュレーターゲームです。下のアカウントカードで接続してください。エミュレーターの実行中に新しい実績の解除が通知されます。"
+      },
       "markerpatch": {
         "description": "MarkerPatch MOD 経由の Dead Space 2"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "すべての実績",
     "profile-trophies-all-title": "解除済みの実績（レアな順）",
     "profile-trophies-back": "戻る",
-    "profile-trophies-unknown-rate": "取得率不明"
+    "profile-trophies-unknown-rate": "取得率不明",
+    "retroachievements-desc": "任意です。RetroAchievements を使って、エミュレーターでプレイしたゲームをインポートし、エミュレーターの実行中に新しい実績の解除を通知します。Web API キーは暗号化してこの PC に保存されます。",
+    "retroachievements-username": "ユーザー名",
+    "retroachievements-apikey": "Web API キー",
+    "retroachievements-connect": "アカウントを接続",
+    "retroachievements-import-btn-label": "ライブラリをインポート",
+    "retroachievements-import-btn-hint": "RetroAchievements からゲームを取得します",
+    "retroachievements-connected-as": "{name} として接続済み",
+    "retroachievements-connecting": "アカウントを確認しています…",
+    "retroachievements-importing": "RetroAchievements ライブラリをインポートしています…",
+    "retroachievements-imported": "インポートが完了しました: {created} 件追加、{updated} 件更新、{unchanged} 件変更なし、{failed} 件失敗。",
+    "retroachievements-missing": "ユーザー名と、retroachievements.org/settings に表示される Web API キーを入力してください (ブラウザーで開きました)。",
+    "retroachievements-disconnected": "RetroAchievements アカウントの接続を解除しました。",
+    "retroachievements-error-key": "RetroAchievements がこの Web API キーを拒否しました。",
+    "retroachievements-error-user": "このユーザー名の RetroAchievements アカウントはありません。",
+    "retroachievements-error-format": "ユーザー名と Web API キーを確認してください。どちらかが想定の形式ではありません。",
+    "retroachievements-error-network": "RetroAchievements に接続できませんでした。後でもう一度お試しください。",
+    "retroachievements-error": "RetroAchievements へのリクエストに失敗しました",
+    "retroachievements-imported-none": "このアカウントには実績のあるゲームがまだありません。RetroAchievements 対応のゲームを 1 本プレイすると、ここに表示されます。",
+    "retroachievements-imported-partial": "RetroAchievements のレート制限により、{created} 件追加、{updated} 件更新の時点で一時停止しました。数分後にもう一度インポートすると、中断した続きから再開します。",
+    "retroachievements-rate-wait": "RetroAchievements から速度を落とすよう求められました。インポートは {minutes} 分後に再開します ({current}/{total})。"
   },
   "watchdog": {
     "rare": "レア {percent}%",

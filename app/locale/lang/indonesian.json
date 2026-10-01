@@ -949,6 +949,9 @@
       "xlln": {
         "description": "Games for Windows LIVE melalui XLiveLessNess"
       },
+      "retroAchievements": {
+        "description": "Game emulator dari akun RetroAchievements Anda. Hubungkan di kartu akun di bawah; pencapaian baru diumumkan saat emulator berjalan."
+      },
       "markerpatch": {
         "description": "Dead Space 2 melalui mod MarkerPatch"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "Semua pencapaian",
     "profile-trophies-all-title": "Pencapaian yang terbuka, langka lebih dulu",
     "profile-trophies-back": "Kembali",
-    "profile-trophies-unknown-rate": "Rasio tidak diketahui"
+    "profile-trophies-unknown-rate": "Rasio tidak diketahui",
+    "retroachievements-desc": "Opsional. Mengimpor game yang Anda mainkan di emulator melalui RetroAchievements, dan mengumumkan pencapaian baru saat emulator berjalan. Kunci Web API Anda disimpan terenkripsi di PC ini.",
+    "retroachievements-username": "Nama pengguna",
+    "retroachievements-apikey": "Kunci Web API",
+    "retroachievements-connect": "Hubungkan akun",
+    "retroachievements-import-btn-label": "Impor pustaka",
+    "retroachievements-import-btn-hint": "mengambil game Anda dari RetroAchievements",
+    "retroachievements-connected-as": "Terhubung sebagai {name}",
+    "retroachievements-connecting": "Memeriksa akun…",
+    "retroachievements-importing": "Mengimpor pustaka RetroAchievements…",
+    "retroachievements-imported": "Impor selesai: {created} ditambahkan, {updated} diperbarui, {unchanged} tidak berubah, {failed} gagal.",
+    "retroachievements-missing": "Masukkan nama pengguna Anda dan kunci Web API yang ditampilkan di retroachievements.org/settings (sekarang terbuka di browser Anda).",
+    "retroachievements-disconnected": "Akun RetroAchievements diputuskan.",
+    "retroachievements-error-key": "RetroAchievements menolak kunci Web API ini.",
+    "retroachievements-error-user": "Tidak ada akun RetroAchievements dengan nama pengguna ini.",
+    "retroachievements-error-format": "Periksa nama pengguna dan kunci Web API: salah satunya tidak sesuai format yang diharapkan.",
+    "retroachievements-error-network": "RetroAchievements tidak dapat dijangkau. Coba lagi nanti.",
+    "retroachievements-error": "Permintaan RetroAchievements gagal",
+    "retroachievements-imported-none": "Belum ada game dengan pencapaian di akun ini: mainkan satu dengan RetroAchievements dan game itu akan muncul di sini.",
+    "retroachievements-imported-partial": "Dijeda oleh batas laju RetroAchievements setelah {created} ditambahkan dan {updated} diperbarui. Impor lagi dalam beberapa menit untuk melanjutkan dari tempat terhenti.",
+    "retroachievements-rate-wait": "RetroAchievements meminta untuk memperlambat: impor dilanjutkan dalam {minutes} menit ({current}/{total})."
   },
   "watchdog": {
     "rare": "Langka {percent}%",

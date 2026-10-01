@@ -949,6 +949,9 @@
       "xlln": {
         "description": "Games for Windows LIVE, through XLiveLessNess"
       },
+      "retroAchievements": {
+        "description": "Emulator games from your RetroAchievements account. Connect it in the account card below; new unlocks are announced while an emulator is running."
+      },
       "markerpatch": {
         "description": "Dead Space 2, through the MarkerPatch mod"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "All achievements",
     "profile-trophies-all-title": "Unlocked achievements, rarest first",
     "profile-trophies-back": "Back",
-    "profile-trophies-unknown-rate": "Unknown rate"
+    "profile-trophies-unknown-rate": "Unknown rate",
+    "retroachievements-desc": "Optional. Imports the games you played on emulators with RetroAchievements, and announces new unlocks while an emulator is running. Your Web API key is stored encrypted on this PC.",
+    "retroachievements-username": "Username",
+    "retroachievements-apikey": "Web API key",
+    "retroachievements-connect": "Connect account",
+    "retroachievements-import-btn-label": "Import library",
+    "retroachievements-import-btn-hint": "fetch your games from RetroAchievements",
+    "retroachievements-connected-as": "Connected as {name}",
+    "retroachievements-connecting": "Checking the account…",
+    "retroachievements-importing": "Importing the RetroAchievements library…",
+    "retroachievements-imported": "Import complete: {created} added, {updated} updated, {unchanged} unchanged, {failed} failed.",
+    "retroachievements-missing": "Enter your username and the Web API key shown on retroachievements.org/settings (now open in your browser).",
+    "retroachievements-disconnected": "RetroAchievements account disconnected.",
+    "retroachievements-error-key": "RetroAchievements refused this Web API key.",
+    "retroachievements-error-user": "No RetroAchievements account has this username.",
+    "retroachievements-error-format": "Check the username and the Web API key: one of them is not in the expected format.",
+    "retroachievements-error-network": "RetroAchievements could not be reached. Try again later.",
+    "retroachievements-error": "RetroAchievements request failed",
+    "retroachievements-imported-none": "No game with achievements on this account yet: play one with RetroAchievements and it will show up here.",
+    "retroachievements-imported-partial": "Paused by the RetroAchievements rate limit after {created} added and {updated} updated. Import again in a few minutes to continue where it stopped.",
+    "retroachievements-rate-wait": "RetroAchievements asks to slow down: the import resumes in {minutes} min ({current}/{total})."
   },
   "watchdog": {
     "rare": "Rare {percent}%",

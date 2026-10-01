@@ -949,6 +949,9 @@
       "xlln": {
         "description": "Games for Windows LIVE através do XLiveLessNess"
       },
+      "retroAchievements": {
+        "description": "Jogos de emulador da tua conta do RetroAchievements. Liga-a no cartão de conta abaixo; as novas proezas são anunciadas enquanto um emulador está em execução."
+      },
       "markerpatch": {
         "description": "Dead Space 2 através do mod MarkerPatch"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "Todas as proezas",
     "profile-trophies-all-title": "Proezas desbloqueadas, da mais rara à mais comum",
     "profile-trophies-back": "Voltar",
-    "profile-trophies-unknown-rate": "Taxa desconhecida"
+    "profile-trophies-unknown-rate": "Taxa desconhecida",
+    "retroachievements-desc": "Opcional. Importa os jogos que jogaste em emuladores com o RetroAchievements e anuncia novas proezas enquanto um emulador está em execução. A tua chave Web API é guardada encriptada neste PC.",
+    "retroachievements-username": "Nome de utilizador",
+    "retroachievements-apikey": "Chave Web API",
+    "retroachievements-connect": "Ligar conta",
+    "retroachievements-import-btn-label": "Importar biblioteca",
+    "retroachievements-import-btn-hint": "obtém os teus jogos do RetroAchievements",
+    "retroachievements-connected-as": "Ligado como {name}",
+    "retroachievements-connecting": "A verificar a conta…",
+    "retroachievements-importing": "A importar a biblioteca do RetroAchievements…",
+    "retroachievements-imported": "Importação concluída: {created} adicionados, {updated} atualizados, {unchanged} inalterados, {failed} com falha.",
+    "retroachievements-missing": "Introduz o teu nome de utilizador e a chave Web API apresentada em retroachievements.org/settings (agora aberta no teu navegador).",
+    "retroachievements-disconnected": "Conta do RetroAchievements desligada.",
+    "retroachievements-error-key": "O RetroAchievements recusou esta chave Web API.",
+    "retroachievements-error-user": "Nenhuma conta do RetroAchievements tem este nome de utilizador.",
+    "retroachievements-error-format": "Verifica o nome de utilizador e a chave Web API: um deles não está no formato esperado.",
+    "retroachievements-error-network": "Não foi possível contactar o RetroAchievements. Tenta novamente mais tarde.",
+    "retroachievements-error": "O pedido ao RetroAchievements falhou",
+    "retroachievements-imported-none": "Ainda não há nenhum jogo com proezas nesta conta: joga um com o RetroAchievements e ele aparecerá aqui.",
+    "retroachievements-imported-partial": "Em pausa devido ao limite de pedidos do RetroAchievements após {created} adicionados e {updated} atualizados. Importa novamente dentro de alguns minutos para continuar onde parou.",
+    "retroachievements-rate-wait": "O RetroAchievements pede para abrandar: a importação continua dentro de {minutes} min ({current}/{total})."
   },
   "watchdog": {
     "rare": "Raro {percent}%",

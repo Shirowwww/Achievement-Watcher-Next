@@ -83,7 +83,7 @@ When adding a source:
 - make missing optional files a normal empty state;
 - keep watcher and parser rules aligned so the library and live notifications observe the same files.
 
-Current integrations include Steam (legit client and emulator saves), Goldberg/GBE-compatible saves, Goldberg SocialClub, Uplay R2, GOG, Epic, Ubisoft, EA Desktop, Xbox PC, GreenLuma, LumaPlay, SmartSteamEmu, RPCS3, ShadPS4, Xenia, Xbox 360 recompilations, XLiveLessNess (Games for Windows LIVE) and FINAL FANTASY VII (2013). Some platforms have both a legacy mapped-save parser and a newer official/local parser.
+Current integrations include Steam (legit client and emulator saves), Goldberg/GBE-compatible saves, Goldberg SocialClub, Uplay R2, GOG, Epic, Ubisoft, EA Desktop, Xbox PC, RetroAchievements, GreenLuma, LumaPlay, SmartSteamEmu, RPCS3, ShadPS4, Xenia, Xbox 360 recompilations, XLiveLessNess (Games for Windows LIVE) and FINAL FANTASY VII (2013). Some platforms have both a legacy mapped-save parser and a newer official/local parser.
 
 ## Important components
 
@@ -103,6 +103,7 @@ Current integrations include Steam (legit client and emulator saves), Goldberg/G
 | `app/parser/x360Recomp.js` | Recompiled Xbox 360 games: the ReXGlue `.toml`, `.tsv` and `SaveData\Achievements.json` unlock lists; schema from the game's `default.xex`, dbox.tools as a fallback |
 | `app/parser/xex.js` | Xbox 360 executables: title id, AES and basic/LZX unpacking (`app/util/lzx.js`), and the SPA resource inside |
 | `app/parser/ff7.js` | FINAL FANTASY VII (2013): the 8-byte `achievement.dat` bitfield, paired with Steam api-names |
+| `app/parser/retroAchievements.js` | RetroAchievements Web API: account, library import and the `steam_cache/retroachievements` cache, shared with `watchdog/console/retroAchievementsWatch.js`, which polls recent unlocks only while an emulator runs |
 | `app/electron/init.js` | Main lifecycle, updater, browser helpers and overlay window |
 | `app/util/updateStatus.js` | Updater state machine shared by the main process, the title bar and Settings |
 | `watchdog/watchdog.js` | Background entry point and service coordination |

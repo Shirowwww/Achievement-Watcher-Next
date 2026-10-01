@@ -714,6 +714,7 @@ const PROFILE_STATS_PLATFORMS = {
   socialclub: { label: 'Social Club', img: 'Goldberg SocialClub' },
   playstation: { label: 'PlayStation', img: 'RPCS3 Emulator' },
   xbox: { label: 'Xbox', img: 'Xenia Emulator' },
+  retroachievements: { label: 'RetroAchievements', img: 'RetroAchievements' },
 };
 
 function profileStatsGroupOf(game) {
@@ -2004,6 +2005,7 @@ const SOURCE_BADGE = {
   gog: /^(?:gog|gog galaxy)$/,
   socialclub: /^goldberg socialclub$/,
   ea: /^ea$/,
+  retroachievements: /^retroachievements$/,
 };
 
 // Labels that legitimately end on the Steam badge: Steam via emulator/crack, plus placeholders.
@@ -2103,6 +2105,9 @@ function sourcePresentationFor(game) {
       return { img: getSourceImg('ubisoft'), label: t('ubisoft-connect-achievements', 'Ubisoft Connect achievements', 'Succès Ubisoft Connect'), kind };
     case 'ea':
       return { img: getSourceImg('ea'), label: t('ea-app-achievements', 'EA app achievements', 'Succès EA app'), kind };
+    case 'retroachievements':
+      // A brand name, the same in every language.
+      return { img: getSourceImg('RetroAchievements'), label: 'RetroAchievements', kind };
     default:
       break;
   }
@@ -2360,6 +2365,12 @@ achievements.onAutomaticEmulatorFixStarting(async () => {
   }
   return keepOn;
 });
+
+// A RetroAchievements game is a ROM played in an emulator: there is no PC executable to launch or
+// pick, and no Steam emulator to set up, so the tile offers neither.
+function isLaunchable(game) {
+  return String((game && game.source) || '') !== 'RetroAchievements';
+}
 
 const healthStateByAppid = new Map();
 
@@ -3373,7 +3384,11 @@ var app = {
             }>
                   <div class="loading-overlay"><div class="content"><i class="fas fa-spinner fa-spin"></i></div></div>
                   <div class="header" id="game-header-${game.appid}">
-                  <button type="button" class="play-button" aria-label="${escapeHtml(tileLabels.play)}"><i class="fas fa-play" aria-hidden="true"></i></button>
+                  ${
+                    isLaunchable(game)
+                      ? `<button type="button" class="play-button" aria-label="${escapeHtml(tileLabels.play)}"><i class="fas fa-play" aria-hidden="true"></i></button>`
+                      : ''
+                  }
                   </div>
 
                   <button type="button" class="achievement-button" title="${escapeHtml(tileLabels.achievements)}" aria-label="${escapeHtml(tileLabels.achievements)}">
@@ -4324,14 +4339,16 @@ var app = {
 
           // Launching and picking the executable are not Ubisoft-specific; onPlayButtonClick works
           // for any source. These used to sit inside the Ubisoft branch, denying Steam/GOG/Epic games a way to start.
-          menu.append(
-            new MenuItem({
-              label: t('launch-game', 'Launch game', 'Lancer le jeu'),
-              async click() {
-                await app.onPlayButtonClick(self.find('.play-button'));
-              },
-            })
-          );
+          if (isLaunchable(ctxGame)) {
+            menu.append(
+              new MenuItem({
+                label: t('launch-game', 'Launch game', 'Lancer le jeu'),
+                async click() {
+                  await app.onPlayButtonClick(self.find('.play-button'));
+                },
+              })
+            );
+          }
           // Both entries open the same panel on one of its two tabs, and both the health dot and the
           // tools button they duplicate can be turned off (Settings > Appearance > Library tiles), so
           // they need a home that never moves. One submenu rather than two loose top-level entries.
@@ -4343,17 +4360,19 @@ var app = {
               },
             })
           );
-          gameSettingsMenu.append(
-            new MenuItem({
-              label: t('configure-executable', 'Configure executable…', 'Configurer l’exécutable…'),
-              async click() {
-                // The panel always opens on Game health; this entry names a different tab, so land
-                // on it once the panel has finished loading rather than making the user click again.
-                await app.onConfigButtonClick(self.find('.config-button'));
-                setGameConfigView('exe-config');
-              },
-            })
-          );
+          if (isLaunchable(ctxGame)) {
+            gameSettingsMenu.append(
+              new MenuItem({
+                label: t('configure-executable', 'Configure executable…', 'Configurer l’exécutable…'),
+                async click() {
+                  // The panel always opens on Game health; this entry names a different tab, so land
+                  // on it once the panel has finished loading rather than making the user click again.
+                  await app.onConfigButtonClick(self.find('.config-button'));
+                  setGameConfigView('exe-config');
+                },
+              })
+            );
+          }
           // Issue #90: one game in another language than the rest of the library.
           if (!isManualGame) {
             const currentLanguage = schemaLanguage.get(appid);
@@ -6171,7 +6190,7 @@ var app = {
           // Advanced. Nothing is disabled by hiding it: the safe per-game repairs (rewrite the
           // achievement data, restore the emulator file) stay on the Game Health panel in both
           // modes, and switching to Advanced brings the full menu straight back.
-          if (emulatorMenu.items.length && !interfaceIsSimple())
+          if (emulatorMenu.items.length && !interfaceIsSimple() && isLaunchable(ctxGame))
             menu.append(
               new MenuItem({
                 label: isUbisoftSource ? 'Ubisoft Connect' : groupLabel('data-ctx-group-emulator'),
@@ -6386,7 +6405,8 @@ var app = {
             drawing Steam's already-darkened page background got veiled a second time and the screen
             came out black (issue #61).
           */
-          if (game.img?.overlay === true) {
+          // A stylized background is already darkened; veiling it as well turned the page black.
+          if (game.img?.overlay === true && !stylized) {
             /*
               A veil over the artwork, not a sheet in front of it: the theme colours are opaque, so
               the picture was replaced by a flat blue rectangle instead of being toned down. Plain
@@ -6729,7 +6749,7 @@ var app = {
         $('.achievement .stats .community').show();
         $('.achievement .stats .community i').attr(
           'class',
-          rarityContext.kind === 'emulator' ? 'fas fa-trophy' : 'fab fa-steam'
+          rarityContext.kind === 'emulator' || rarityContext.source === 'RetroAchievements' ? 'fas fa-trophy' : 'fab fa-steam'
         );
         if (rarityContext.kind === 'xbox') {
           // Rarity was cached at import time on each schema entry - paint it directly, no network.

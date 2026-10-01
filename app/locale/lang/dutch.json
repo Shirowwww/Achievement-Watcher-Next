@@ -949,6 +949,9 @@
       "xlln": {
         "description": "Games for Windows LIVE via XLiveLessNess"
       },
+      "retroAchievements": {
+        "description": "Emulatorgames van je RetroAchievements-account. Koppel het in de accountkaart hieronder; nieuwe prestaties worden aangekondigd terwijl een emulator draait."
+      },
       "markerpatch": {
         "description": "Dead Space 2 via de MarkerPatch-mod"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "Alle prestaties",
     "profile-trophies-all-title": "Ontgrendelde prestaties, zeldzaamste eerst",
     "profile-trophies-back": "Terug",
-    "profile-trophies-unknown-rate": "Onbekend percentage"
+    "profile-trophies-unknown-rate": "Onbekend percentage",
+    "retroachievements-desc": "Optioneel. Importeert de games die je op emulators hebt gespeeld met RetroAchievements en kondigt nieuwe prestaties aan terwijl een emulator draait. Je Web API-sleutel wordt versleuteld op deze pc opgeslagen.",
+    "retroachievements-username": "Gebruikersnaam",
+    "retroachievements-apikey": "Web API-sleutel",
+    "retroachievements-connect": "Account koppelen",
+    "retroachievements-import-btn-label": "Bibliotheek importeren",
+    "retroachievements-import-btn-hint": "haalt je games op van RetroAchievements",
+    "retroachievements-connected-as": "Verbonden als {name}",
+    "retroachievements-connecting": "Account controleren…",
+    "retroachievements-importing": "De RetroAchievements-bibliotheek importeren…",
+    "retroachievements-imported": "Import voltooid: {created} toegevoegd, {updated} bijgewerkt, {unchanged} ongewijzigd, {failed} mislukt.",
+    "retroachievements-missing": "Voer je gebruikersnaam in en de Web API-sleutel die op retroachievements.org/settings staat (nu geopend in je browser).",
+    "retroachievements-disconnected": "RetroAchievements-account losgekoppeld.",
+    "retroachievements-error-key": "RetroAchievements heeft deze Web API-sleutel geweigerd.",
+    "retroachievements-error-user": "Geen enkel RetroAchievements-account heeft deze gebruikersnaam.",
+    "retroachievements-error-format": "Controleer de gebruikersnaam en de Web API-sleutel: een van beide heeft niet de verwachte indeling.",
+    "retroachievements-error-network": "RetroAchievements is niet bereikbaar. Probeer het later opnieuw.",
+    "retroachievements-error": "RetroAchievements-verzoek mislukt",
+    "retroachievements-imported-none": "Nog geen game met prestaties op dit account: speel er een met RetroAchievements en hij verschijnt hier.",
+    "retroachievements-imported-partial": "Gepauzeerd door de limiet van RetroAchievements na {created} toegevoegd en {updated} bijgewerkt. Importeer over een paar minuten opnieuw om verder te gaan waar het gestopt is.",
+    "retroachievements-rate-wait": "RetroAchievements vraagt om te vertragen: de import gaat verder over {minutes} min ({current}/{total})."
   },
   "watchdog": {
     "rare": "Zeldzaam {percent}%",

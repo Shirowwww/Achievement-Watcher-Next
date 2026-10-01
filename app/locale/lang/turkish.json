@@ -949,6 +949,9 @@
       "xlln": {
         "description": "XLiveLessNess üzerinden Games for Windows LIVE"
       },
+      "retroAchievements": {
+        "description": "RetroAchievements hesabınızdaki emülatör oyunları. Aşağıdaki hesap kartından bağlayın; bir emülatör çalışırken yeni başarımlar duyurulur."
+      },
       "markerpatch": {
         "description": "MarkerPatch modu üzerinden Dead Space 2"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "Tüm başarımlar",
     "profile-trophies-all-title": "Açılan başarımlar, en nadirden başlayarak",
     "profile-trophies-back": "Geri",
-    "profile-trophies-unknown-rate": "Bilinmeyen oran"
+    "profile-trophies-unknown-rate": "Bilinmeyen oran",
+    "retroachievements-desc": "İsteğe bağlı. Emülatörlerde oynadığınız oyunları RetroAchievements ile içe aktarır ve bir emülatör çalışırken yeni başarımları duyurur. Web API anahtarınız bu bilgisayarda şifrelenmiş olarak saklanır.",
+    "retroachievements-username": "Kullanıcı adı",
+    "retroachievements-apikey": "Web API anahtarı",
+    "retroachievements-connect": "Hesabı bağla",
+    "retroachievements-import-btn-label": "Kitaplığı içe aktar",
+    "retroachievements-import-btn-hint": "oyunlarınızı RetroAchievements'tan getirir",
+    "retroachievements-connected-as": "{name} olarak bağlandı",
+    "retroachievements-connecting": "Hesap denetleniyor…",
+    "retroachievements-importing": "RetroAchievements kitaplığı içe aktarılıyor…",
+    "retroachievements-imported": "İçe aktarma tamamlandı: {created} eklendi, {updated} güncellendi, {unchanged} değişmedi, {failed} başarısız.",
+    "retroachievements-missing": "Kullanıcı adınızı ve retroachievements.org/settings adresinde görünen Web API anahtarını girin (şu an tarayıcınızda açık).",
+    "retroachievements-disconnected": "RetroAchievements hesabının bağlantısı kesildi.",
+    "retroachievements-error-key": "RetroAchievements bu Web API anahtarını reddetti.",
+    "retroachievements-error-user": "Bu kullanıcı adına sahip bir RetroAchievements hesabı yok.",
+    "retroachievements-error-format": "Kullanıcı adını ve Web API anahtarını denetleyin: ikisinden biri beklenen biçimde değil.",
+    "retroachievements-error-network": "RetroAchievements'a ulaşılamadı. Daha sonra tekrar deneyin.",
+    "retroachievements-error": "RetroAchievements isteği başarısız oldu",
+    "retroachievements-imported-none": "Bu hesapta henüz başarımı olan bir oyun yok: RetroAchievements ile bir oyun oynayın, burada görünecektir.",
+    "retroachievements-imported-partial": "RetroAchievements hız sınırı nedeniyle {created} eklendi ve {updated} güncellendi sonrasında duraklatıldı. Kaldığı yerden devam etmek için birkaç dakika sonra yeniden içe aktarın.",
+    "retroachievements-rate-wait": "RetroAchievements yavaşlamayı istiyor: içe aktarma {minutes} dk sonra devam edecek ({current}/{total})."
   },
   "watchdog": {
     "rare": "Nadir {percent}%",

@@ -92,6 +92,11 @@ function plan(game) {
         ? [{ source: game.source, path: game.dataPath }]
         : []
   );
+  // An account library (Xbox, RetroAchievements) has no save folder at all, so nothing above
+  // could say its unlocks belong to the platform; "nothing to reset yet" was the wrong answer.
+  if (resettable.length === 0 && blocked.length === 0 && targets.isOfficialPlatformSource(game && game.source)) {
+    blocked.push({ source: String(game.source), path: '', reason: 'official-platform' });
+  }
 
   const files = [];
   const seen = new Set();

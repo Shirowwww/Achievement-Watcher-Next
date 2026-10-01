@@ -949,6 +949,9 @@
       "xlln": {
         "description": "Games for Windows LIVE az XLiveLessNess segítségével"
       },
+      "retroAchievements": {
+        "description": "Emulátoros játékok a RetroAchievements-fiókodból. Csatlakoztasd az alábbi fiókkártyán; az új teljesítményeket bejelenti, amíg egy emulátor fut."
+      },
       "markerpatch": {
         "description": "Dead Space 2 a MarkerPatch mod segítségével"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "Összes teljesítmény",
     "profile-trophies-all-title": "Feloldott teljesítmények, a legritkábbal kezdve",
     "profile-trophies-back": "Vissza",
-    "profile-trophies-unknown-rate": "Ismeretlen arány"
+    "profile-trophies-unknown-rate": "Ismeretlen arány",
+    "retroachievements-desc": "Opcionális. Importálja az emulátorokon játszott játékaidat a RetroAchievements segítségével, és bejelenti az új teljesítményeket, amíg egy emulátor fut. A Web API-kulcsod titkosítva tárolódik ezen a gépen.",
+    "retroachievements-username": "Felhasználónév",
+    "retroachievements-apikey": "Web API-kulcs",
+    "retroachievements-connect": "Fiók csatlakoztatása",
+    "retroachievements-import-btn-label": "Könyvtár importálása",
+    "retroachievements-import-btn-hint": "lekéri a játékaidat a RetroAchievements-ből",
+    "retroachievements-connected-as": "Csatlakozva mint {name}",
+    "retroachievements-connecting": "Fiók ellenőrzése…",
+    "retroachievements-importing": "A RetroAchievements könyvtár importálása…",
+    "retroachievements-imported": "Az importálás kész: {created} hozzáadva, {updated} frissítve, {unchanged} változatlan, {failed} sikertelen.",
+    "retroachievements-missing": "Add meg a felhasználónevedet és a retroachievements.org/settings oldalon látható Web API-kulcsot (most megnyílt a böngészőben).",
+    "retroachievements-disconnected": "A RetroAchievements-fiók leválasztva.",
+    "retroachievements-error-key": "A RetroAchievements elutasította ezt a Web API-kulcsot.",
+    "retroachievements-error-user": "Egyetlen RetroAchievements-fiók sem használja ezt a felhasználónevet.",
+    "retroachievements-error-format": "Ellenőrizd a felhasználónevet és a Web API-kulcsot: valamelyik nem a várt formátumú.",
+    "retroachievements-error-network": "A RetroAchievements nem érhető el. Próbáld újra később.",
+    "retroachievements-error": "A RetroAchievements-kérés sikertelen",
+    "retroachievements-imported-none": "Ezen a fiókon még nincs teljesítményekkel rendelkező játék: játssz eggyel a RetroAchievements segítségével, és itt fog megjelenni.",
+    "retroachievements-imported-partial": "A RetroAchievements korlátja szüneteltette az importálást {created} hozzáadott és {updated} frissített után. Importálj újra néhány perc múlva, hogy ott folytasd, ahol abbamaradt.",
+    "retroachievements-rate-wait": "A RetroAchievements lassítást kér: az importálás {minutes} perc múlva folytatódik ({current}/{total})."
   },
   "watchdog": {
     "rare": "Ritka {percent}%",

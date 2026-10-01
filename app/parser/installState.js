@@ -10,7 +10,9 @@
 // Sources whose every entry is, by construction, a real on-disk install. steamAPI is deliberately
 // absent: its scan lists owned games as well as installed ones, so install proof comes from the
 // per-game Steam registry flag (passed as trustedInstalled by the caller).
-const TRUSTED_TYPES = new Set(['rpcs3', 'xenia', 'socialclub']);
+// RetroAchievements is here because a ROM is out of reach: under "installed only" its games would
+// otherwise vanish as a whole source.
+const TRUSTED_TYPES = new Set(['rpcs3', 'xenia', 'socialclub', 'retroachievements']);
 
 function isInstalled({ dataType, hasResolvedExe, hasExeListExe, trustedInstalled } = {}) {
   const type = String(dataType || '').toLowerCase();

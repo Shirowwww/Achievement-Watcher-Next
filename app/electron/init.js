@@ -2031,6 +2031,7 @@ const STYLIZE_IMAGE_HOSTS = new Set([
   'cdn.cloudflare.steamstatic.com',
   'steamcdn-a.akamaihd.net',
   'media.rawg.io',
+  'media.retroachievements.org',
 ]);
 
 ipcMain.on('stylize-background-for-appid', async (event, arg) => {
@@ -2122,6 +2123,9 @@ ipcMain.on('fetch-source-img', async (event, arg) => {
       break;
     case 'Xenia Emulator':
       event.returnValue = path.join(userData, 'Source', 'xbox.svg');
+      break;
+    case 'RetroAchievements':
+      event.returnValue = path.join(userData, 'Source', 'retroachievements.svg');
       break;
     case 'Unconfigured':
       // Use a generic icon for entries without a Steam appid.

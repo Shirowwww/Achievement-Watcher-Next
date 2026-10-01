@@ -24,7 +24,7 @@ See [NOTICE](../NOTICE).
 | Source | ⭐ **AW Next** | Achievements | AW 2.x |
 |---|:---:|:---:|:---:|
 | Official local libraries | ✅ Steam · GOG · Ubisoft · Epic · EA · Xbox PC | ✅ Steam · GOG · Ubisoft · Epic · EA · Xbox PC | ⚠️ Steam · GOG · Epic · Uplay (legacy) |
-| Optional account connection | ✅ Steam (owned games, Family-shared games, unlocks from your other PCs) · Epic · Xbox | ✅ Epic · GOG · Xbox · RetroAchievements | ❌ |
+| Optional account connection | ✅ Steam (owned games, Family-shared games, unlocks from your other PCs) · Epic · Xbox · RetroAchievements | ✅ Epic · GOG · Xbox · RetroAchievements | ❌ |
 | Steam-emulator saves | ✅ Goldberg · GBE · GreenLuma · CreamAPI · SSE · Nemirtingas · CODEX/RUNE/EMPRESS/Online-Fix/Tenoke layouts | ✅ Comparable coverage | ✅ Steam emulators |
 | Portable releases with no config | ✅ Save tree read on its own | ⚠️ Manual entry | ❌ |
 | Goldberg Uplay R2 (Ubisoft) | ✅ Loader-version aware | ❌ | ❌ |
@@ -32,12 +32,12 @@ See [NOTICE](../NOTICE).
 | Console emulators | ✅ RPCS3 · ShadPS4 · Xenia | ✅ RPCS3 · ShadPS4 · Xenia | ⚠️ RPCS3 only |
 | Xbox 360 games recompiled for PC (ReXGlue and similar) | ✅ List, icons, DLC and live unlocks | ❌ | ❌ |
 | Games for Windows LIVE | ✅ XLiveLessNess, schema and icons read from the game | ✅ XLiveLessNess | ❌ |
-| RetroAchievements | ❌ | ✅ | ❌ |
+| RetroAchievements | ✅ Played games imported, live unlocks while an emulator runs | ✅ | ❌ |
 | Niche patches | ✅ FINAL FANTASY VII (2013) | ✅ MarkerPatch · MadnessPatch · FINAL FANTASY VII (2013) | ❌ |
 | Folder discovery | ✅ Auto-config & Smart Find | ✅ Auto-config | ✅ Smart Find |
 | Custom folders and manual games | ✅ Per game or whole library | ✅ Per game | ⚠️ Manual config |
 
-Achievements reaches further into retro sources; AW Next reaches further into the emulated PC
+Achievements covers a few more niche patches; AW Next reaches further into the emulated PC
 layouts, and is the only one of the three that can fix Uplay R2 and SocialClub saves.
 
 ## When a game does not report

@@ -49,6 +49,7 @@ asarUnpack:
   - parser/xex.js
   - util/lzx.js
   - util/xboxLiveIcons.js
+  - parser/retroAchievements.js
 
 publish:
   provider: github

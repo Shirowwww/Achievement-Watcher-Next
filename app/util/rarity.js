@@ -33,6 +33,7 @@ const CACHE_ONLY_SOURCES = new Set([
   'Lumaplay',
   'ea',
   'Xbox PC',
+  'RetroAchievements',
 ]);
 
 // Clamp anything the APIs hand back to a sane 0–100 number, tolerating "12,3" style decimals.
@@ -284,6 +285,8 @@ function resolveGameRarityContext(game, options = {}) {
   const emulatorSources = options.emulatorSources || new Set();
 
   if (source === 'Xbox PC') return { kind: 'xbox' };
+  // Same shape as Xbox: each rate was stored on its schema entry at import time.
+  if (source === 'RetroAchievements') return { kind: 'xbox', source };
   if (emulatorSources.has(source)) return { kind: 'emulator', source };
 
   // Goldberg SocialClub: namespaced appid, Steam schema loaded through the resolved release.

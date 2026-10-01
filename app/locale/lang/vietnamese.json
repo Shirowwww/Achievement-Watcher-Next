@@ -949,6 +949,9 @@
       "xlln": {
         "description": "Games for Windows LIVE thông qua XLiveLessNess"
       },
+      "retroAchievements": {
+        "description": "Game giả lập từ tài khoản RetroAchievements của bạn. Hãy kết nối ở thẻ tài khoản bên dưới; thành tựu mới được thông báo khi trình giả lập đang chạy."
+      },
       "markerpatch": {
         "description": "Dead Space 2 thông qua mod MarkerPatch"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "Tất cả thành tựu",
     "profile-trophies-all-title": "Thành tựu đã mở khóa, hiếm nhất trước",
     "profile-trophies-back": "Quay lại",
-    "profile-trophies-unknown-rate": "Tỷ lệ không rõ"
+    "profile-trophies-unknown-rate": "Tỷ lệ không rõ",
+    "retroachievements-desc": "Tùy chọn. Nhập các game bạn đã chơi trên trình giả lập thông qua RetroAchievements và thông báo thành tựu mới khi trình giả lập đang chạy. Khóa Web API của bạn được lưu mã hóa trên máy tính này.",
+    "retroachievements-username": "Tên người dùng",
+    "retroachievements-apikey": "Khóa Web API",
+    "retroachievements-connect": "Kết nối tài khoản",
+    "retroachievements-import-btn-label": "Nhập thư viện",
+    "retroachievements-import-btn-hint": "lấy các game của bạn từ RetroAchievements",
+    "retroachievements-connected-as": "Đã kết nối với tên {name}",
+    "retroachievements-connecting": "Đang kiểm tra tài khoản…",
+    "retroachievements-importing": "Đang nhập thư viện RetroAchievements…",
+    "retroachievements-imported": "Nhập xong: {created} đã thêm, {updated} đã cập nhật, {unchanged} không đổi, {failed} thất bại.",
+    "retroachievements-missing": "Nhập tên người dùng và khóa Web API hiển thị trên retroachievements.org/settings (đã mở trong trình duyệt của bạn).",
+    "retroachievements-disconnected": "Đã ngắt kết nối tài khoản RetroAchievements.",
+    "retroachievements-error-key": "RetroAchievements đã từ chối khóa Web API này.",
+    "retroachievements-error-user": "Không có tài khoản RetroAchievements nào có tên người dùng này.",
+    "retroachievements-error-format": "Hãy kiểm tra tên người dùng và khóa Web API: một trong hai không đúng định dạng.",
+    "retroachievements-error-network": "Không thể kết nối tới RetroAchievements. Hãy thử lại sau.",
+    "retroachievements-error": "Yêu cầu tới RetroAchievements thất bại",
+    "retroachievements-imported-none": "Tài khoản này chưa có game nào có thành tựu: hãy chơi một game với RetroAchievements và nó sẽ xuất hiện ở đây.",
+    "retroachievements-imported-partial": "Đã tạm dừng do giới hạn tốc độ của RetroAchievements sau khi thêm {created} và cập nhật {updated}. Hãy nhập lại sau vài phút để tiếp tục từ chỗ đã dừng.",
+    "retroachievements-rate-wait": "RetroAchievements yêu cầu giảm tốc độ: quá trình nhập sẽ tiếp tục sau {minutes} phút ({current}/{total})."
   },
   "watchdog": {
     "rare": "Hiếm {percent}%",

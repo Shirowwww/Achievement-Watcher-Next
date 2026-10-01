@@ -339,6 +339,10 @@ module.exports.load = () => {
       options.achievement_source.xlln = true;
     }
 
+    if (typeof options.achievement_source.retroAchievements !== 'boolean') {
+      options.achievement_source.retroAchievements = true;
+    }
+
     if (typeof options.achievement_source.markerpatch !== 'boolean') {
       options.achievement_source.markerpatch = true;
     }
@@ -617,6 +621,7 @@ module.exports.load = () => {
         shadps4: true,
         xenia: true,
         xlln: true,
+        retroAchievements: true,
         markerpatch: true,
         madnesspatch: true,
         lumaPlay: true,

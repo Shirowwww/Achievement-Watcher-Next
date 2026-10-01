@@ -235,6 +235,11 @@ module.exports.load = async (cfg_file) => {
       fixFile = true;
     }
 
+    if (typeof options.achievement_source.retroAchievements !== 'boolean') {
+      options.achievement_source.retroAchievements = true;
+      fixFile = true;
+    }
+
     if (typeof options.achievement_source.markerpatch !== 'boolean') {
       options.achievement_source.markerpatch = true;
       fixFile = true;
@@ -556,6 +561,7 @@ module.exports.load = async (cfg_file) => {
         shadps4: true,
         xenia: true,
         xlln: true,
+        retroAchievements: true,
         markerpatch: true,
         madnesspatch: true,
         lumaPlay: true,

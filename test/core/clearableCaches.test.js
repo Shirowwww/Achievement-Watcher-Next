@@ -207,6 +207,20 @@ test('the folder the Xbox library is read from is the one that is preserved', ()
   assert.ok(PRESERVED_CACHE_CHILDREN.steam_cache.includes('xbox'));
 });
 
+test('clearing caches keeps the imported RetroAchievements library, read from the folder it is kept in', async () => {
+  const ra = require('../../app/parser/retroAchievements.js');
+  const root = makeUserDataDir();
+  try {
+    ra.setUserDataPath(root);
+    const cached = path.relative(root, path.join(ra.cacheRoot(), '1', 'schema.json'));
+    seedFile(root, cached);
+    await clearSafeCaches(root);
+    assert.equal(fs.existsSync(path.join(root, cached)), true, 'the imported game must survive');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('a preserved folder with nothing left to preserve does not linger as an empty shell', async () => {
   // The exception must not change what happens on a machine that never used the source it exists for.
   const root = makeUserDataDir();

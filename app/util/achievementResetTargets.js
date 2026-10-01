@@ -44,10 +44,10 @@ const SAVE_FILES = new Set(
 // Schema files that live in the same folders and must survive every reset.
 const PROTECTED_FILES = new Set(['tropconf.sfm', 'trophy.trp', 'appid.txt', 'steam_appid.txt']);
 
-// Steam/GOG Galaxy/Ubisoft Connect/EA/Epic/Xbox unlocks live on the platform account, not a
-// local file: a reset here would just get overwritten by the next sync. Saying so beats
-// offering a button that looks like it works but does not.
-const OFFICIAL_PLATFORM_SOURCES = /^(?:steam\s*\(|gog(?:\s|$)|gog galaxy|epic(?:-official)?$|ea$|ubisoft connect|xbox(?! 360 recomp$))/i;
+// Steam/GOG Galaxy/Ubisoft Connect/EA/Epic/Xbox/RetroAchievements unlocks live on the platform
+// account, not a local file: a reset here would just get overwritten by the next sync. Saying so
+// beats offering a button that looks like it works but does not.
+const OFFICIAL_PLATFORM_SOURCES = /^(?:steam\s*\(|gog(?:\s|$)|gog galaxy|epic(?:-official)?$|ea$|ubisoft connect|xbox(?! 360 recomp$)|retroachievements$)/i;
 
 function isOfficialPlatformSource(source) {
   return OFFICIAL_PLATFORM_SOURCES.test(String(source || '').trim());

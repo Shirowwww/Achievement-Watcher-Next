@@ -356,3 +356,17 @@ test('a listing that says it is not installed never displaces anything', () => {
     assert.equal(merged[0].appid, '2483190');
   }
 });
+
+test('a RetroAchievements game never folds into the Steam game of the same name', () => {
+  const steam = { appid: '71113', name: 'Sonic the Hedgehog', source: 'Steam (Miza)', data: { type: 'steamAPI' } };
+  const retro = {
+    appid: 'ra-1',
+    name: 'Sonic the Hedgehog',
+    source: 'RetroAchievements',
+    data: { type: 'retroAchievements', title: 'Sonic the Hedgehog' },
+  };
+  for (const list of [[retro, steam], [steam, retro]]) {
+    const merged = achievements._internal.mergeCrossSourceDuplicates(list);
+    assert.deepEqual(merged.map((g) => g.appid).sort(), ['71113', 'ra-1']);
+  }
+});

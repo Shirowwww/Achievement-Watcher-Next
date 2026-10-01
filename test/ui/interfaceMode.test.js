@@ -446,7 +446,7 @@ test('Simple states outcomes, and every exact value stays in Technical details',
 });
 
 test('Simple hides the emulator context submenu without weakening the safe repairs', () => {
-  assert.match(appSource, /if \(emulatorMenu\.items\.length && !interfaceIsSimple\(\)\)/, 'the GBE/Steamless menu is Advanced');
+  assert.match(appSource, /if \(emulatorMenu\.items\.length && !interfaceIsSimple\(\)[ &\w()]*\)/, 'the GBE/Steamless menu is Advanced');
   // The per-game repairs Game Health offers are unconditional, in both modes.
   const runner = appSource.slice(appSource.indexOf('async function runGameHealthAction'));
   for (const action of ['REPAIR_DATA', 'INSTALL_RUNTIME', 'START_TRACKING', 'CHOOSE_EXE']) {

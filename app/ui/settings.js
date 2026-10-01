@@ -1830,6 +1830,196 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       refresh();
     })();
 
+    // RetroAchievements account card (Settings > Sources): a username and a Web API key, checked by
+    // the main process before they are kept. Import progress arrives as IPC events.
+    (function () {
+      const KEY_PAGE = 'https://retroachievements.org/settings';
+      const status = $('#retroachievements-connect-status');
+      const badge = $('#retroachievements-connect-badge');
+      const fields = $('#retroachievements-fields');
+      const userInput = $('#retroachievements-username');
+      const keyInput = $('#retroachievements-apikey');
+      const connectBtn = $('#retroachievements-connect-btn');
+      const importBtn = $('#retroachievements-import-btn');
+      const disconnectBtn = $('#retroachievements-disconnect-btn');
+      const setStatus = (text, cls = '') => status.removeClass('success error running').addClass(cls).text(text || '');
+      const busy = (button, on) => button.toggleClass('disabled', on).css('pointer-events', on ? 'none' : '');
+
+      const errorText = (code) => {
+        switch (code) {
+          case 'retroachievements-unauthorized':
+            return t('retroachievements-error-key', 'RetroAchievements refused this Web API key.', 'RetroAchievements a refusé cette clé Web API.');
+          case 'retroachievements-user-not-found':
+            return t('retroachievements-error-user', 'No RetroAchievements account has this username.', 'Aucun compte RetroAchievements ne porte ce nom.');
+          case 'retroachievements-username-invalid':
+          case 'retroachievements-api-key-invalid':
+            return t(
+              'retroachievements-error-format',
+              'Check the username and the Web API key: one of them is not in the expected format.',
+              'Vérifie le nom d’utilisateur et la clé Web API : l’un des deux n’a pas le format attendu.'
+            );
+          case 'retroachievements-network-error':
+            return t('retroachievements-error-network', 'RetroAchievements could not be reached. Try again later.', 'RetroAchievements est injoignable. Réessaie plus tard.');
+          default:
+            return `${t('retroachievements-error', 'RetroAchievements request failed', 'Échec de la requête RetroAchievements')}${code ? ': ' + code : ''}`;
+        }
+      };
+
+      registerLocaleRefresh(function applyRetroAchievementsLabels() {
+        $('#retroachievements-connect-desc').text(
+          t(
+            'retroachievements-desc',
+            'Optional. Imports the games you played on emulators with RetroAchievements, and announces new unlocks while an emulator is running. Your Web API key is stored encrypted on this PC.',
+            'Optionnel. Importe les jeux auxquels tu as joué sur émulateur avec RetroAchievements, et annonce les nouveaux succès pendant qu’un émulateur tourne. Ta clé Web API est stockée chiffrée sur ce PC.'
+          )
+        );
+        $('#retroachievements-username-label').text(t('retroachievements-username', 'Username', 'Nom d’utilisateur'));
+        $('#retroachievements-apikey-label').text(t('retroachievements-apikey', 'Web API key', 'Clé Web API'));
+        $('#retroachievements-connect-btn-label').text(t('retroachievements-connect', 'Connect account', 'Connecter le compte'));
+        $('#retroachievements-import-btn-label').text(t('retroachievements-import-btn-label', 'Import library', 'Importer la bibliothèque'));
+        $('#retroachievements-import-btn-hint').text(
+          t('retroachievements-import-btn-hint', 'fetch your games from RetroAchievements', 'récupère tes jeux depuis RetroAchievements')
+        );
+        $('#retroachievements-connect-badge-label').text(t('connected', 'Connected', 'Connecté'));
+        $('#retroachievements-disconnect-btn-label').text(t('disconnect', 'Disconnect', 'Déconnecter'));
+      });
+
+      async function refresh() {
+        let s = {};
+        try {
+          s = (await ipcRenderer.invoke('retroachievements:status')) || {};
+        } catch {}
+        badge.toggle(!!s.connected);
+        importBtn.toggle(!!s.connected);
+        disconnectBtn.toggle(!!s.connected);
+        fields.toggle(!s.connected);
+        connectBtn.toggle(!s.connected);
+        // Disconnected, the line keeps whatever it last said ("disconnected", an error).
+        if (s.connected) setStatus(t('retroachievements-connected-as', 'Connected as {name}', 'Connecté en tant que {name}', { name: s.username }), 'success');
+      }
+
+      async function runImport() {
+        busy(importBtn, true);
+        setStatus(t('retroachievements-importing', 'Importing the RetroAchievements library…', 'Importation de la bibliothèque RetroAchievements…'), 'running');
+        try {
+          const res = (await ipcRenderer.invoke('retroachievements:import')) || {};
+          if (!res.ok) {
+            setStatus(errorText(res.error), 'error');
+            return;
+          }
+          const r = res.result || {};
+          const counts = { created: r.created || 0, updated: r.updated || 0, unchanged: r.unchanged || 0, failed: r.failed || 0 };
+          if (r.rateLimited) {
+            setStatus(
+              t(
+                'retroachievements-imported-partial',
+                'Paused by the RetroAchievements rate limit after {created} added and {updated} updated. Import again in a few minutes to continue where it stopped.',
+                'Mis en pause par la limite de RetroAchievements après {created} ajouté(s) et {updated} mis à jour. Relance l’import dans quelques minutes pour reprendre là où il s’est arrêté.',
+                counts
+              ),
+              'error'
+            );
+          } else if (!r.total) {
+            setStatus(
+              t(
+                'retroachievements-imported-none',
+                'No game with achievements on this account yet: play one with RetroAchievements and it will show up here.',
+                'Aucun jeu avec des succès sur ce compte pour l’instant : joues-en un avec RetroAchievements et il apparaîtra ici.'
+              ),
+              'success'
+            );
+          } else {
+            setStatus(
+              t(
+                'retroachievements-imported',
+                'Import complete: {created} added, {updated} updated, {unchanged} unchanged, {failed} failed.',
+                'Importation terminée : {created} ajouté(s), {updated} mis à jour, {unchanged} inchangé(s), {failed} en échec.',
+                counts
+              ),
+              'success'
+            );
+          }
+          if ((r.created || 0) + (r.updated || 0) > 0) app.onStart(); // show the new and updated games
+        } catch (err) {
+          setStatus(errorText(err.message || String(err)), 'error');
+        } finally {
+          busy(importBtn, false);
+        }
+      }
+
+      connectBtn.off('click').on('click', async function () {
+        if (connectBtn.hasClass('disabled')) return;
+        const username = String(userInput.val() || '').trim();
+        const apiKey = String(keyInput.val() || '').trim();
+        if (!username || !apiKey) {
+          // The key is only shown on the account's own settings page, so that is where this goes.
+          remote.shell.openExternal(KEY_PAGE);
+          setStatus(
+            t(
+              'retroachievements-missing',
+              'Enter your username and the Web API key shown on retroachievements.org/settings (now open in your browser).',
+              'Saisis ton nom d’utilisateur et la clé Web API affichée sur retroachievements.org/settings (ouverte dans ton navigateur).'
+            ),
+            'error'
+          );
+          return;
+        }
+        busy(connectBtn, true);
+        setStatus(t('retroachievements-connecting', 'Checking the account…', 'Vérification du compte…'), 'running');
+        try {
+          const res = (await ipcRenderer.invoke('retroachievements:connect', { username, apiKey })) || {};
+          if (res.ok) {
+            keyInput.val('');
+            await refresh();
+            // A first connection with nothing imported yet would leave the library empty until a
+            // second click, so the import starts on its own.
+            await runImport();
+          } else {
+            setStatus(errorText(res.error), 'error');
+          }
+        } catch (err) {
+          setStatus(errorText(err.message || String(err)), 'error');
+        } finally {
+          busy(connectBtn, false);
+        }
+      });
+
+      importBtn.off('click').on('click', function () {
+        if (!importBtn.hasClass('disabled')) runImport();
+      });
+
+      ipcRenderer.on('retroachievements:import-progress', (_event, p) => {
+        if (p && p.rateLimitedMs) {
+          setStatus(
+            t(
+              'retroachievements-rate-wait',
+              'RetroAchievements asks to slow down: the import resumes in {minutes} min ({current}/{total}).',
+              'RetroAchievements demande de ralentir : l’import reprend dans {minutes} min ({current}/{total}).',
+              { minutes: Math.max(1, Math.ceil(p.rateLimitedMs / 60000)), current: p.current || 0, total: p.total || 0 }
+            ),
+            'running'
+          );
+        } else if (p && p.detail) {
+          setStatus(
+            `${t('retroachievements-importing', 'Importing the RetroAchievements library…', 'Importation de la bibliothèque RetroAchievements…')} ${p.current}/${p.total} - ${p.detail}`,
+            'running'
+          );
+        }
+      });
+
+      disconnectBtn.off('click').on('click', async function () {
+        try {
+          await ipcRenderer.invoke('retroachievements:disconnect');
+          setStatus(t('retroachievements-disconnected', 'RetroAchievements account disconnected.', 'Compte RetroAchievements déconnecté.'));
+        } catch (err) {
+          setStatus(`${err.message || err}`, 'error');
+        }
+        refresh();
+      });
+
+      refresh();
+    })();
+
     // Bind on the controls themselves as well as using a bubbling event above. This keeps the
     // dependency UI reliable for keyboard changes, programmatic population and the arrow buttons.
     $('#options-emulator select, #options-emulator2 select').on('change', updateEmulatorUi);

@@ -1129,6 +1129,23 @@
                     </div>
                     <div class="help" id="source-help-madnesspatch"></div>
                   </li>
+
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-gamepad"></i> <span>RetroAchievements</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_retroAchievements">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-retroAchievements"></div>
+                  </li>
                 </ul>
               </div>
 
@@ -1275,6 +1292,49 @@
                     <span class="emulator-test-copy"><strong id="xbox-disconnect-btn-label">Disconnect</strong></span>
                   </button>
                   <span id="xbox-connect-status" aria-live="polite"></span>
+                </div>
+              </div>
+
+              <!-- RetroAchievements account: a username and a Web API key, no sign-in window. -->
+              <div id="retroachievements-connect" class="settings-card">
+                <div class="emulator-login-heading">
+                  <div class="title"><i class="fas fa-gamepad"></i> <span>RetroAchievements</span></div>
+                  <span class="emulator-warning is-success" id="retroachievements-connect-badge" style="display:none"><i class="fas fa-check-circle"></i> <span id="retroachievements-connect-badge-label">Connected</span></span>
+                </div>
+                <p id="retroachievements-connect-desc">
+                  Optional. Imports the games you played on emulators with RetroAchievements, and announces new unlocks while an
+                  emulator is running. Your Web API key is stored encrypted on this PC.
+                </p>
+                <div class="emulator-login-fields" id="retroachievements-fields">
+                  <div>
+                    <label for="retroachievements-username"><i class="fas fa-user"></i> <span id="retroachievements-username-label">Username</span></label>
+                    <input type="text" id="retroachievements-username" autocomplete="off" spellcheck="false" maxlength="32" />
+                  </div>
+                  <div>
+                    <label for="retroachievements-apikey"><i class="fas fa-key"></i> <span id="retroachievements-apikey-label">Web API key</span></label>
+                    <input type="password" id="retroachievements-apikey" autocomplete="off" spellcheck="false" maxlength="64" />
+                  </div>
+                </div>
+                <div class="emulator-login-actions">
+                  <button type="button" id="retroachievements-connect-btn" class="btn">
+                    <span class="emulator-test-icon"><i class="fas fa-sign-in-alt"></i></span>
+                    <span class="emulator-test-copy">
+                      <strong id="retroachievements-connect-btn-label">Connect</strong>
+                      <small id="retroachievements-connect-btn-hint">retroachievements.org/settings</small>
+                    </span>
+                    <i class="fas fa-chevron-right emulator-test-arrow"></i>
+                  </button>
+                  <button type="button" id="retroachievements-import-btn" class="btn" style="display:none">
+                    <span class="emulator-test-icon"><i class="fas fa-download"></i></span>
+                    <span class="emulator-test-copy">
+                      <strong id="retroachievements-import-btn-label">Import library</strong>
+                      <small id="retroachievements-import-btn-hint">fetch your games from RetroAchievements</small>
+                    </span>
+                  </button>
+                  <button type="button" id="retroachievements-disconnect-btn" class="btn secondary" style="display:none">
+                    <span class="emulator-test-copy"><strong id="retroachievements-disconnect-btn-label">Disconnect</strong></span>
+                  </button>
+                  <span id="retroachievements-connect-status" aria-live="polite"></span>
                 </div>
               </div>
             </section>
@@ -3690,6 +3750,14 @@
                         <option value="false"></option>
                       </select>
                       <small class="onboard-field-hint" id="onboard-src-madnesspatch-hint"></small>
+                    </label>
+                    <label class="onboarding-source-row">
+                      <span class="onboarding-source-name"><i class="fas fa-gamepad" aria-hidden="true"></i> RetroAchievements</span>
+                      <select id="onboard-src-retroAchievements">
+                        <option value="true"></option>
+                        <option value="false"></option>
+                      </select>
+                      <small class="onboard-field-hint" id="onboard-src-retroAchievements-hint"></small>
                     </label>
                   </div>
                 </div>

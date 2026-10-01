@@ -949,6 +949,9 @@
       "xlln": {
         "description": "Games for Windows LIVE über XLiveLessNess"
       },
+      "retroAchievements": {
+        "description": "Emulator-Spiele aus deinem RetroAchievements-Konto. Verbinde es in der Kontokarte unten; neue Erfolge werden gemeldet, während ein Emulator läuft."
+      },
       "markerpatch": {
         "description": "Dead Space 2 über die MarkerPatch-Mod"
       },
@@ -2205,7 +2208,27 @@
     "profile-trophies-all": "Alle Erfolge",
     "profile-trophies-all-title": "Freigeschaltete Erfolge, seltenste zuerst",
     "profile-trophies-back": "Zurück",
-    "profile-trophies-unknown-rate": "Unbekannte Rate"
+    "profile-trophies-unknown-rate": "Unbekannte Rate",
+    "retroachievements-desc": "Optional. Importiert die Spiele, die du auf Emulatoren gespielt hast, mit RetroAchievements und meldet neue Erfolge, während ein Emulator läuft. Dein Web-API-Schlüssel wird verschlüsselt auf diesem PC gespeichert.",
+    "retroachievements-username": "Benutzername",
+    "retroachievements-apikey": "Web-API-Schlüssel",
+    "retroachievements-connect": "Konto verbinden",
+    "retroachievements-import-btn-label": "Bibliothek importieren",
+    "retroachievements-import-btn-hint": "holt deine Spiele von RetroAchievements",
+    "retroachievements-connected-as": "Verbunden als {name}",
+    "retroachievements-connecting": "Konto wird geprüft…",
+    "retroachievements-importing": "RetroAchievements-Bibliothek wird importiert…",
+    "retroachievements-imported": "Import abgeschlossen: {created} hinzugefügt, {updated} aktualisiert, {unchanged} unverändert, {failed} fehlgeschlagen.",
+    "retroachievements-missing": "Gib deinen Benutzernamen und den Web-API-Schlüssel ein, der auf retroachievements.org/settings angezeigt wird (jetzt in deinem Browser geöffnet).",
+    "retroachievements-disconnected": "RetroAchievements-Konto getrennt.",
+    "retroachievements-error-key": "RetroAchievements hat diesen Web-API-Schlüssel abgelehnt.",
+    "retroachievements-error-user": "Kein RetroAchievements-Konto hat diesen Benutzernamen.",
+    "retroachievements-error-format": "Prüfe den Benutzernamen und den Web-API-Schlüssel: Einer von beiden hat nicht das erwartete Format.",
+    "retroachievements-error-network": "RetroAchievements ist nicht erreichbar. Versuche es später erneut.",
+    "retroachievements-error": "RetroAchievements-Anfrage fehlgeschlagen",
+    "retroachievements-imported-none": "Auf diesem Konto gibt es noch kein Spiel mit Erfolgen: Spiel eines mit RetroAchievements, dann erscheint es hier.",
+    "retroachievements-imported-partial": "Pausiert wegen des Anfragelimits von RetroAchievements nach {created} hinzugefügten und {updated} aktualisierten. Importiere in ein paar Minuten erneut, um dort weiterzumachen, wo es gestoppt hat.",
+    "retroachievements-rate-wait": "RetroAchievements bittet um langsameres Vorgehen: Der Import wird in {minutes} Min. fortgesetzt ({current}/{total})."
   },
   "watchdog": {
     "rare": "Selten {percent}%",
