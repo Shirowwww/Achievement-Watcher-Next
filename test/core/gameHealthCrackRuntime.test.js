@@ -118,3 +118,23 @@ test('a seeded save the game has not run on since is not a warning yet', () => {
   assert.equal(progress(Math.floor(seededAt / 1000) - 3600).level, LEVEL.INFO, 'played only before the setup');
   assert.equal(progress(Math.floor(seededAt / 1000) + 3600).level, LEVEL.WARN, 'played since and still nothing written');
 });
+
+test('no save at all is not a warning when the game last ran before its emulator was put in place', () => {
+  // Jackbox 5: played once on the old setup, GBE swapped in weeks later and never launched since.
+  const { deriveHealth, LEVEL } = require('../../app/util/gameHealth.js');
+  const setupAt = 1785690628963;
+  const base = {
+    installed: true,
+    gameDirExists: true,
+    exeExists: true,
+    emulated: true,
+    achievements: { total: 20, unlocked: 0 },
+    goldberg: { steamSettings: 'C:/g/steam_settings', dllCount: 1, issues: [], setupAt, save: { exists: false, seeded: false, earned: 0 } },
+  };
+  const progress = (lastPlayed) => deriveHealth({ ...base, playtime: { total: 8, lastPlayed } }).checks.find((c) => c.id === 'progress');
+  assert.equal(progress(0).level, LEVEL.INFO, 'never played');
+  assert.equal(progress(Math.floor(setupAt / 1000) - 86400 * 40).level, LEVEL.INFO, 'played only before the setup');
+  assert.equal(progress(Math.floor(setupAt / 1000) + 3600).level, LEVEL.WARN, 'played since and still nothing written');
+  const unknownSetup = { ...base, goldberg: { ...base.goldberg, setupAt: 0 } };
+  assert.equal(deriveHealth({ ...unknownSetup, playtime: { total: 8, lastPlayed: 1750000000 } }).checks.find((c) => c.id === 'progress').level, LEVEL.WARN, 'no date, no excuse');
+});

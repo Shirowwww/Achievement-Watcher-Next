@@ -167,6 +167,20 @@ function setGameConfigView(view) {
 // Everything Game Health reasons about, read once per panel open. Anything unavailable stays absent
 // rather than guessed at, since deriveHealth() reports only on the signals it is given.
 // `readOnly` is for the tile dots refreshed in the background: nothing on disk is touched.
+// When the emulator was last put in place: its newest dll, in ms, 0 when none can be read. Not
+// steam_settings, whose folder date moves whenever AW Next rewrites a file in it.
+function emulatorSetupAt(emu) {
+  let newest = 0;
+  for (const file of (emu && emu.dll) || []) {
+    try {
+      newest = Math.max(newest, fs.statSync(file).mtimeMs);
+    } catch {
+      /* gone since the walk */
+    }
+  }
+  return newest;
+}
+
 async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
   const game = gameList.find((g) => g.appid == appid) || {};
   let cfg = { exe: '', args: '' };
@@ -250,7 +264,7 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
           dllDirs: [...(report.engineDllDirs || []), ...(report.dllDirs || [])],
           cacheDir: path.join(getUserDataPath(), 'cache/gse_fork'),
         });
-        goldbergReport = { ...report, dllCount: emu.dll.length, runtimeDlls };
+        goldbergReport = { ...report, dllCount: emu.dll.length, runtimeDlls, setupAt: emulatorSetupAt(emu) };
       }
     } catch (err) {
       debug.log(`[health] goldberg diagnose failed for ${appid} => ${formatErr(err)}`);

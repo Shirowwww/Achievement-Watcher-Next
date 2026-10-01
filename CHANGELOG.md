@@ -102,6 +102,8 @@ renamed in 3.9.0 and the history is kept under one file.
   taken for the running loader, beside `ColdClientLoader.ini` or after the emulator fix had replaced
   that crack's dll, so the game's own saves read as a foreign copy's (The Jackbox Party Pack
   Collection). The health dots also refresh in the order the tiles are shown.
+- **No "no progress" warning for a game not run since its fix.** A game last played before its
+  emulator was put in place has no save yet, and Game Health no longer reports that as a fault.
 - **OnlineFix, CODEX and TENOKE games no longer show as a broken Goldberg setup.** The diagnosis
   no longer offers a repair for them, and Game Health flags a game whose only save is an old Goldberg one.
 - **Stat-based achievements can unlock.** The achievement repair now also writes the game's stats,

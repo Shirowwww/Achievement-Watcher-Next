@@ -431,10 +431,14 @@ function progressCheck(signals) {
     repair nothing could have been written yet, and a warning there reads as a fault in the fix
     that was just applied. lastPlayed is in seconds, seededAt in milliseconds.
   */
+  const lastPlayedMs = num(signals.playtime && signals.playtime.lastPlayed) * 1000;
   if (save && save.exists && save.seeded && num(save.seededAt) > 0) {
-    const lastPlayedMs = num(signals.playtime && signals.playtime.lastPlayed) * 1000;
     if (lastPlayedMs <= num(save.seededAt)) return check('progress', LEVEL.INFO, {});
   }
+  // Same with no save at all: a game last run before its emulator was put in place could not have
+  // written one through it (setupAt is the newest emulator dll's timestamp, in ms).
+  const setupAt = num(signals.goldberg && signals.goldberg.setupAt);
+  if (!(save && save.exists) && setupAt > 0 && lastPlayedMs <= setupAt) return check('progress', LEVEL.INFO, {});
   // Only warn when the save location is actually known and empty. Without a diagnosed setup there
   // is nowhere to have looked, so "no progress" is just a game with no progress.
   if (signals.emulated && signals.goldberg && signals.goldberg.steamSettings) return check('progress', LEVEL.WARN, {});
