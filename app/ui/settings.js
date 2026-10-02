@@ -131,6 +131,15 @@ function registerLocaleRefresh(apply) {
   localeRefreshers.push(apply);
   apply();
 }
+// Repaints an account card's state labels after a language change. The locale also reloads on every
+// library refresh, so a result the user is still reading (an import summary, an error) stays put.
+function repaintAccountState(status, paint) {
+  const message = status.text() === status.data('stateText') ? null : { text: status.text(), cls: status.attr('class') };
+  paint();
+  status.data('stateText', status.text());
+  if (message) status.attr('class', message.cls).text(message.text);
+}
+
 window.refreshSettingsLocaleText = () => {
   for (const apply of localeRefreshers) {
     try {
@@ -1494,6 +1503,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const connectBtn = $('#epic-connect-btn');
       const disconnectBtn = $('#epic-disconnect-btn');
       const setStatus = (text, cls = '') => status.removeClass('success error running').addClass(cls).text(text || '');
+      let lastStatus = null;
 
       // Static card labels, kept out of loader.js's fragile nth-child i18n; registered so a
       // language change repaints them.
@@ -1509,6 +1519,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         $('#epic-connect-btn-hint').text(t('epic-btn-hint', 'opens the Epic sign-in window', 'ouvre la fenêtre de connexion Epic'));
         $('#epic-connect-badge-label').text(t('connected', 'Connected', 'Connecté'));
         $('#epic-disconnect-btn-label').text(t('disconnect', 'Disconnect', 'Déconnecter'));
+        // The button and status line depend on the account state, so they are repainted from the
+        // last one read; otherwise a language picked in the first-run guide left them in the old one.
+        if (lastStatus) repaintAccountState(status, () => paintStatus(lastStatus));
       });
 
       async function refresh() {
@@ -1516,6 +1529,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         try {
           s = (await ipcRenderer.invoke('epic:auth-status')) || {};
         } catch {}
+        lastStatus = s;
+        paintStatus(s);
+        status.data('stateText', status.text());
+      }
+
+      function paintStatus(s) {
         if (s.connected) {
           badge.show();
           disconnectBtn.show();
@@ -1577,6 +1596,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const connectBtn = $('#steam-connect-btn');
       const disconnectBtn = $('#steam-disconnect-btn');
       const setStatus = (text, cls = '') => status.removeClass('success error running').addClass(cls).text(text || '');
+      let lastStatus = null;
 
       registerLocaleRefresh(function applySteamLabels() {
         $('#steam-connect-title').text(t('steam-title', 'Steam account', 'Compte Steam'));
@@ -1628,6 +1648,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           $(`${id} option[value="true"]`).text(common.enable || 'Enabled');
           $(`${id} option[value="false"]`).text(common.disable || 'Disabled');
         }
+        // Same as the Epic card: the state-dependent labels follow a language change too.
+        if (lastStatus) repaintAccountState(status, () => paintStatus(lastStatus));
       });
 
       // Hiding ghost games is on by default; hideStaleEnabled() carries that default, this select
@@ -1647,6 +1669,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         try {
           s = (await ipcRenderer.invoke('steam:auth-status')) || {};
         } catch {}
+        lastStatus = s;
+        paintStatus(s);
+        status.data('stateText', status.text());
+      }
+
+      function paintStatus(s) {
         // With no account connected nothing can be a ghost entry, so the row would promise nothing.
         $('#steam-stale-card').toggle(!!s.connected);
         // The library import also needs the official Steam source on: the games it adds are Steam
@@ -1740,6 +1768,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const importBtn = $('#xbox-import-btn');
       const disconnectBtn = $('#xbox-disconnect-btn');
       const setStatus = (text, cls = '') => status.removeClass('success error running').addClass(cls).text(text || '');
+      let lastStatus = null;
 
       registerLocaleRefresh(function applyXboxLabels() {
         $('#xbox-connect-title').text(t('xbox-title', 'Xbox PC account', 'Compte Xbox PC'));
@@ -1755,6 +1784,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         $('#xbox-import-btn-hint').text(t('xbox-import-btn-hint', 'fetch achievements from Xbox Network', 'récupère les succès depuis Xbox Network'));
         $('#xbox-connect-badge-label').text(t('connected', 'Connected', 'Connecté'));
         $('#xbox-disconnect-btn-label').text(t('disconnect', 'Disconnect', 'Déconnecter'));
+        // Same as the Epic card: the state-dependent labels follow a language change too.
+        if (lastStatus) repaintAccountState(status, () => paintStatus(lastStatus));
       });
 
       async function refresh() {
@@ -1762,6 +1793,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         try {
           s = (await ipcRenderer.invoke('xbox-pc:status')) || {};
         } catch {}
+        lastStatus = s;
+        paintStatus(s);
+        status.data('stateText', status.text());
+      }
+
+      function paintStatus(s) {
         if (s.connected) {
           badge.show();
           importBtn.show();
@@ -1844,6 +1881,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const disconnectBtn = $('#retroachievements-disconnect-btn');
       const setStatus = (text, cls = '') => status.removeClass('success error running').addClass(cls).text(text || '');
       const busy = (button, on) => button.toggleClass('disabled', on).css('pointer-events', on ? 'none' : '');
+      let lastStatus = null;
 
       const errorText = (code) => {
         switch (code) {
@@ -1882,6 +1920,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         );
         $('#retroachievements-connect-badge-label').text(t('connected', 'Connected', 'Connecté'));
         $('#retroachievements-disconnect-btn-label').text(t('disconnect', 'Disconnect', 'Déconnecter'));
+        // Same as the Epic card: the "Connected as" line follows a language change too.
+        if (lastStatus) repaintAccountState(status, () => paintStatus(lastStatus));
       });
 
       async function refresh() {
@@ -1889,6 +1929,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         try {
           s = (await ipcRenderer.invoke('retroachievements:status')) || {};
         } catch {}
+        lastStatus = s;
+        paintStatus(s);
+        status.data('stateText', status.text());
+      }
+
+      function paintStatus(s) {
         badge.toggle(!!s.connected);
         importBtn.toggle(!!s.connected);
         disconnectBtn.toggle(!!s.connected);

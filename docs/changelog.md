@@ -164,6 +164,9 @@ renamed in 3.9.0 and the history is kept under one file.
   to replace it; it is now a second line under it.
 - **Small text in the in-game overlay is at least 11px**, for the column headers, status pills and
   the overlay options.
+- **The account cards follow a language change.** The Steam, Epic, Xbox and RetroAchievements cards
+  in Settings kept their button and status line in the previous language, for instance after picking
+  a language in the first-run guide.
 
 ### Security
 
