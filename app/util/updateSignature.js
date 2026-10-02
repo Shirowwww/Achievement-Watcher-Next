@@ -83,28 +83,99 @@ function evaluateUpdateSignature(publisherNames, signature, { pinned = PINNED_TH
 
   // A self-signed release certificate is deliberately not a Windows-trusted root on every PC, so
   // Authenticode's trust status is not the test: the publisher CN and the pinned thumbprint are.
-  if (publisherMatches(String(subject), publisherNames)) {
-    if (pinned.length === 0) return null;
-    const thumbprint = normalizeThumbprint(signature.SignerCertificate.Thumbprint);
-    if (isPinnedThumbprint(thumbprint, pinned)) return null;
+  if (!publisherMatches(String(subject), publisherNames)) {
+    const expected = (Array.isArray(publisherNames) ? publisherNames : [publisherNames]).filter(Boolean).join(' | ');
+    return `installer is not signed by ${expected || 'the configured publisher'} (subject: ${subject})`;
+  }
+  if (pinned.length === 0) return null;
+  const thumbprint = normalizeThumbprint(signature.SignerCertificate.Thumbprint);
+  if (!isPinnedThumbprint(thumbprint, pinned)) {
     return `installer is signed by an unknown certificate (thumbprint: ${thumbprint || 'none'})`;
   }
 
-  const expected = (Array.isArray(publisherNames) ? publisherNames : [publisherNames]).filter(Boolean).join(' | ');
-  return `installer is not signed by ${expected || 'the configured publisher'} (subject: ${subject})`;
+  /*
+    The certificate block is public: copied from any release, it names the pinned certificate while
+    its signatures are garbage, and Authenticode then reports NotSigned or UnknownError with the
+    SignerCertificate still filled in. Only the CMS check proves the pinned key signed these bytes.
+  */
+  const cms = signature.Cms;
+  if (!cms || cms.Ok !== true) return `installer signature does not verify (${(cms && cms.Error) || 'not checked'})`;
+  const signers = [].concat(cms.Thumbprints || []);
+  if (signers.length === 0 || !signers.every((value) => isPinnedThumbprint(value, pinned))) {
+    return `installer signature does not verify (signers: ${signers.map(normalizeThumbprint).join(', ') || 'none'})`;
+  }
+  return null;
 }
 
-function verifyUpdateCodeSignature(publisherNames, unescapedTempUpdateFile, log = () => {}) {
+/*
+  Windows PowerShell 5.1 script. Besides Authenticode's view, it verifies every signature layer
+  (the SHA-1 primary and the nested SHA-256 one) with SignedCms and recomputes the PE image hash
+  that layer signed, so neither the local trust store nor Authenticode's status codes decide.
+*/
+const VERIFY_SCRIPT = String.raw`
+$ErrorActionPreference = 'Stop'
+$out = @{}
+try {
+  $p = $env:AW_UPDATE_FILE
+  $s = Get-AuthenticodeSignature -LiteralPath $p
+  $out.Status = [string]$s.Status
+  if ($s.SignerCertificate) { $out.SignerCertificate = @{ Subject = $s.SignerCertificate.Subject; Thumbprint = $s.SignerCertificate.Thumbprint } }
+  Add-Type -AssemblyName System.Security
+  $b = [IO.File]::ReadAllBytes($p)
+  $opt = [BitConverter]::ToInt32($b, 60) + 24
+  $dd = if ([BitConverter]::ToUInt16($b, $opt) -eq 0x20b) { $opt + 112 } else { $opt + 96 }
+  $sec = [BitConverter]::ToInt32($b, $dd + 32)
+  $len = [BitConverter]::ToInt32($b, $sec)
+  if ($sec -le $dd -or $len -le 8 -or ($sec + $len) -gt $b.Length -or ($b.Length - $sec - $len) -ge 8) { throw 'certificate table is missing or not at the end of the file' }
+  $blob = New-Object byte[] ($len - 8)
+  [Array]::Copy($b, $sec + 8, $blob, 0, $len - 8)
+  $cms = New-Object System.Security.Cryptography.Pkcs.SignedCms
+  $cms.Decode($blob)
+  $layers = @($cms)
+  foreach ($a in $cms.SignerInfos[0].UnsignedAttributes) {
+    if ($a.Oid.Value -eq '1.3.6.1.4.1.311.2.4.1') {
+      foreach ($v in $a.Values) { $n = New-Object System.Security.Cryptography.Pkcs.SignedCms; $n.Decode($v.RawData); $layers += $n }
+    }
+  }
+  $algs = @{ '1.3.14.3.2.26' = 'SHA1'; '2.16.840.1.101.3.4.2.1' = 'SHA256'; '2.16.840.1.101.3.4.2.2' = 'SHA384'; '2.16.840.1.101.3.4.2.3' = 'SHA512' }
+  $thumbs = @()
+  foreach ($c in $layers) {
+    if ($c.SignerInfos.Count -ne 1) { throw 'unexpected signer count' }
+    $si = $c.SignerInfos[0]
+    $si.CheckSignature($true)
+    $name = $algs[$si.DigestAlgorithm.Value]
+    if (-not $name) { throw ('unsupported digest ' + $si.DigestAlgorithm.Value) }
+    $h = [Security.Cryptography.HashAlgorithm]::Create($name)
+    $size = $h.HashSize / 8
+    $content = $c.ContentInfo.Content
+    if ($content.Length -lt $size + 2 -or $content[$content.Length - $size - 2] -ne 4 -or $content[$content.Length - $size - 1] -ne $size) { throw 'unexpected signed content' }
+    $cs = $opt + 64
+    [void]$h.TransformBlock($b, 0, $cs, $null, 0)
+    [void]$h.TransformBlock($b, $cs + 4, $dd + 32 - $cs - 4, $null, 0)
+    [void]$h.TransformBlock($b, $dd + 40, $sec - $dd - 40, $null, 0)
+    [void]$h.TransformFinalBlock($b, 0, 0)
+    for ($i = 0; $i -lt $size; $i++) { if ($h.Hash[$i] -ne $content[$content.Length - $size + $i]) { throw 'file does not match its signature' } }
+    $thumbs += $si.Certificate.Thumbprint
+  }
+  $out.Cms = @{ Ok = $true; Thumbprints = $thumbs }
+} catch {
+  $out.Cms = @{ Ok = $false; Error = $_.Exception.Message }
+}
+$out | ConvertTo-Json -Compress -Depth 4
+`;
+
+function verifyUpdateCodeSignature(publisherNames, tempUpdateFile, log = () => {}) {
   return new Promise((resolve) => {
-    const tempUpdateFile = String(unescapedTempUpdateFile || '').replace(/'/g, "''");
-    const command = `Get-AuthenticodeSignature -LiteralPath '${tempUpdateFile}' | ConvertTo-Json -Compress`;
+    // Encoded and given the path through the environment: no quoting of the path at all.
+    const encoded = Buffer.from(VERIFY_SCRIPT, 'utf16le').toString('base64');
     execFile(
       'powershell.exe',
-      ['-NoProfile', '-NonInteractive', '-InputFormat', 'None', '-Command', command],
+      ['-NoProfile', '-NonInteractive', '-InputFormat', 'None', '-EncodedCommand', encoded],
       {
-        timeout: 20 * 1000,
+        timeout: 60 * 1000,
         windowsHide: true,
-        env: { ...process.env, PSModulePath: WINDOWS_POWERSHELL_MODULES },
+        maxBuffer: 1024 * 1024,
+        env: { ...process.env, PSModulePath: WINDOWS_POWERSHELL_MODULES, AW_UPDATE_FILE: String(tempUpdateFile || '') },
       },
       (error, stdout, stderr) => {
         /*

@@ -103,7 +103,10 @@ Before installing, the app checks the installer's Authenticode signature
 - an unsigned installer;
 - an installer signed by anyone but `CN=Shirow`;
 - a `CN=Shirow` installer whose certificate thumbprint is not pinned;
-- a file modified after it was signed.
+- a file modified after it was signed;
+- a signature that does not verify against the pinned key. The certificate block of any release is
+  public, so the app checks each signature layer itself (SignedCms) and recomputes the PE hash it
+  covers, instead of trusting Authenticode's status, which still names the signer for a forged block.
 
 The SHA-512 in `latest.yml` is not a substitute: it comes from the same release as the installer,
 so whoever can replace one can replace the other. A common name is no proof either, since anyone

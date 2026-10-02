@@ -168,8 +168,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Updates must be signed by the project's own certificate.** The updater accepted an unsigned
   installer, and any certificate calling itself `CN=Shirow`, which anyone can create. It now refuses
   both and accepts only the release certificate or its offline standby, pinned by thumbprint, so a
-  tampered release cannot install itself. The release build refuses to finish with any other
-  certificate.
+  tampered release cannot install itself. The signature itself is verified too, not only the
+  certificate it names, so a signature block copied from a genuine release onto another installer is
+  refused. The release build refuses to finish with any other certificate.
 - **`adm-zip` updated to 0.6.1**, fixing an uncontrolled memory allocation from a declared uncompressed
   size ([GHSA-7q85-xj36-vmfc](https://github.com/advisories/GHSA-7q85-xj36-vmfc)). It now also refuses
   a zip entry duplicated by name at read time instead of returning both; the preset, theme and `.san`

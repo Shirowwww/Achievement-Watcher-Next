@@ -8,12 +8,15 @@ const RELEASE = '2E581B204231D7EED9E33E798B5E0C503AD8FEDC';
 const STANDBY = 'F64838216091CCC975320E8A2D50F4F403837667';
 // The CN rules below are about the name alone, so they run without a pin list.
 const byName = { pinned: [] };
+// What the CMS layer check reports for a genuine release: both signature layers verified.
+const VERIFIED = { Ok: true, Thumbprints: [RELEASE, RELEASE] };
 
 test('a Shirow self-signed update is accepted even when Windows does not trust its root', () => {
   assert.equal(
     evaluateUpdateSignature(['Shirow'], {
       Status: 'UnknownError',
       SignerCertificate: { Subject: 'CN=Shirow', Thumbprint: RELEASE },
+      Cms: VERIFIED,
     }),
     null
   );
@@ -66,7 +69,11 @@ test('both the release and the standby certificate are pinned, whatever the thum
   assert.ok(Object.isFrozen(PINNED_THUMBPRINTS));
   for (const thumbprint of [RELEASE, STANDBY, STANDBY.toLowerCase(), STANDBY.replace(/(..)/g, '$1 ')]) {
     assert.equal(
-      evaluateUpdateSignature(['Shirow'], { Status: 'NotTrusted', SignerCertificate: { Subject: 'CN=Shirow', Thumbprint: thumbprint } }),
+      evaluateUpdateSignature(['Shirow'], {
+        Status: 'NotTrusted',
+        SignerCertificate: { Subject: 'CN=Shirow', Thumbprint: thumbprint },
+        Cms: { Ok: true, Thumbprints: [thumbprint] },
+      }),
       null,
       thumbprint
     );
@@ -80,4 +87,35 @@ test('a pinned certificate cannot rescue a file modified after signing', () => {
     evaluateUpdateSignature(['Shirow'], { Status: 'HashMismatch', SignerCertificate: { Subject: 'CN=Shirow', Thumbprint: RELEASE } }),
     /does not match its signature/
   );
+});
+
+test('a copied certificate block with signatures that do not verify is refused', () => {
+  // Authenticode reports such a file NotSigned yet still fills in the pinned SignerCertificate.
+  for (const Status of ['NotSigned', 'UnknownError', 'Valid']) {
+    assert.match(
+      evaluateUpdateSignature(['Shirow'], {
+        Status,
+        SignerCertificate: { Subject: 'CN=Shirow', Thumbprint: RELEASE },
+        Cms: { Ok: false, Error: 'Invalid signature.' },
+      }),
+      /does not verify \(Invalid signature\.\)/,
+      Status
+    );
+  }
+  assert.match(
+    evaluateUpdateSignature(['Shirow'], { Status: 'Valid', SignerCertificate: { Subject: 'CN=Shirow', Thumbprint: RELEASE } }),
+    /does not verify \(not checked\)/
+  );
+});
+
+test('every verified signature layer must come from a pinned certificate', () => {
+  const signedBy = (Thumbprints) =>
+    evaluateUpdateSignature(['Shirow'], {
+      Status: 'Valid',
+      SignerCertificate: { Subject: 'CN=Shirow', Thumbprint: RELEASE },
+      Cms: { Ok: true, Thumbprints },
+    });
+  assert.match(signedBy([RELEASE, 'AB'.repeat(20)]), /does not verify \(signers: /);
+  assert.match(signedBy([]), /signers: none/);
+  assert.equal(signedBy([RELEASE, STANDBY]), null);
 });

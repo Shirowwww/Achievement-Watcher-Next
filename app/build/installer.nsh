@@ -571,7 +571,10 @@ Var unDeleteAppData
     !ifdef APP_INSTALLER_STORE_FILE
       !searchparse /noerrors "${APP_INSTALLER_STORE_FILE}" "" AW_UPDATER_CACHE_DIR "\installer.exe"
       !ifdef AW_UPDATER_CACHE_DIR
-        RMDir /r "$LOCALAPPDATA\${AW_UPDATER_CACHE_DIR}"
+        ; An empty match would make this RMDir /r the whole of %LOCALAPPDATA%.
+        !if "${AW_UPDATER_CACHE_DIR}" != ""
+          RMDir /r "$LOCALAPPDATA\${AW_UPDATER_CACHE_DIR}"
+        !endif
         !undef AW_UPDATER_CACHE_DIR
       !endif
     !endif

@@ -29,7 +29,11 @@ test('a locally untrusted but genuine signature is still accepted', () => {
   // The release certificate is self-signed on purpose, so trust status is not the test.
   for (const status of ['UnknownError', 'NotTrusted', 'Valid']) {
     assert.equal(
-      evaluateUpdateSignature(['Shirow'], { Status: status, SignerCertificate: { Subject: 'CN=Shirow', Thumbprint: '2E581B204231D7EED9E33E798B5E0C503AD8FEDC' } }),
+      evaluateUpdateSignature(['Shirow'], {
+        Status: status,
+        SignerCertificate: { Subject: 'CN=Shirow', Thumbprint: '2E581B204231D7EED9E33E798B5E0C503AD8FEDC' },
+        Cms: { Ok: true, Thumbprints: ['2E581B204231D7EED9E33E798B5E0C503AD8FEDC'] },
+      }),
       null,
       status
     );
