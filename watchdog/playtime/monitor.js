@@ -255,13 +255,21 @@ function findGameForInterpreterChild(process, filepath, list = gameIndex) {
 // unmatched process would risk picking up an unrelated marker from a shared parent folder.
 const INTERPRETER_ANCESTOR_CLIMB = 4;
 
+// Folders that hold many installs: a recursive marker glob there reads every game below it (the
+// whole drive, for a root) and can return an unrelated game's appid.
+const SHARED_PARENT_NAMES = new Set(['program files', 'program files (x86)', 'programdata', 'windows', 'users', 'appdata', 'local', 'roaming', 'games', 'common', 'steamapps', 'steamlibrary', 'epic games', 'gog galaxy']);
+
+function isSharedParent(dir) {
+  return path.parse(dir).root === dir || path.dirname(dir) === dir || SHARED_PARENT_NAMES.has(path.basename(dir).toLowerCase());
+}
+
 function candidateConfigDirs(dir, process) {
   const dirs = [dir];
   if (!isInterpreterProcess(process)) return dirs;
   let current = dir;
   for (let i = 0; i < INTERPRETER_ANCESTOR_CLIMB; i++) {
     const parent = path.dirname(current);
-    if (!parent || parent === current) break;
+    if (!parent || parent === current || isSharedParent(parent)) break;
     dirs.push(parent);
     current = parent;
   }

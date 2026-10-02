@@ -50,8 +50,10 @@ function titleIdOf(xex, headers = optionalHeaders(xex)) {
 
 // Only the header is read: enough to know which title a default.xex belongs to.
 function readTitleId(file) {
-  const fd = fs.openSync(file, 'r');
+  let fd;
   try {
+    // Inside the try: a locked or vanished xex must not abort the whole folder scan.
+    fd = fs.openSync(file, 'r');
     const head = Buffer.alloc(0x18);
     fs.readSync(fd, head, 0, head.length, 0);
     if (head.toString('ascii', 0, 4) !== 'XEX2') return '';
@@ -63,7 +65,7 @@ function readTitleId(file) {
   } catch {
     return '';
   } finally {
-    fs.closeSync(fd);
+    if (fd !== undefined) fs.closeSync(fd);
   }
 }
 
@@ -85,7 +87,10 @@ function deblock(data, firstBlockSize) {
   const parts = [];
   let at = 0;
   let blockSize = firstBlockSize;
+  let total = 0;
   while (blockSize) {
+    // A block smaller than its own header would re-read overlapping bytes: quadratic on a crafted file.
+    if (blockSize < 26) throw new Error(`XEX: implausible compressed block size ${blockSize}`);
     need(data, at, 24, 'compressed block');
     const next = at + blockSize;
     const nextSize = data.readUInt32BE(at);
@@ -96,6 +101,8 @@ function deblock(data, firstBlockSize) {
       p += 2;
       if (!chunk) break;
       need(data, p, chunk, 'compressed chunk');
+      total += chunk;
+      if (total > MAX_IMAGE_BYTES) throw new Error('XEX: compressed stream larger than any image');
       parts.push(data.subarray(p, p + chunk));
       p += chunk;
     }

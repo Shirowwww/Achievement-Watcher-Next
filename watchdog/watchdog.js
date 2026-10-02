@@ -988,7 +988,9 @@ var app = {
         if (moment().diff(moment(self.tick)) <= self.options.notification_advanced.tick) throw 'Spamming protection is enabled > SKIPPING';
         self.tick = moment().valueOf();
 
-        const isNewAppidFolder = !preexistingChildren.has(immediateChildDirOf(dir, filePath.dir).toLowerCase());
+        // A file written straight into the root (a single-game root) has no appid folder to be new.
+        const inRootItself = path.relative(dir, filePath.dir) === '';
+        const isNewAppidFolder = !inRootItself && !preexistingChildren.has(immediateChildDirOf(dir, filePath.dir).toLowerCase());
 
         let appID;
         if (options.socialClub) {

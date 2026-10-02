@@ -40,8 +40,11 @@ const FAMILY_APPS_URL = 'https://api.steampowered.com/IFamilyGroupsService/GetSh
 const PLAYER_ACHIEVEMENTS_URL = 'https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/';
 const EMPTY_LIBRARY = () => ({ owned: [], family: [], names: new Map(), owners: new Map(), playtime: new Map() });
 
+const REQUEST_TIMEOUT_MS = 15 * 1000;
+
 async function getJson(fetchImpl, url) {
-  const response = await fetchImpl(url);
+  // A hung socket is not a failure the circuit breaker counts, so a scan worker would wait forever.
+  const response = await fetchImpl(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
   if (!response || !response.ok) throw new Error(`steam-api-http-${response ? response.status : 'none'}`);
   return await response.json();
 }

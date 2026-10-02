@@ -27,6 +27,7 @@ const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 x360.setDataRoot(userDataDir());
 
 let watchers = [];
+let lifecycle = 0; // bumped by stop(), so an in-flight rediscover() can tell it was cancelled
 const changes = createChangeCoalescer();
 
 function watchedFolders(configFile = userDirFile) {
@@ -124,6 +125,8 @@ async function handleChange(record, changedFile, ctx) {
         } catch (err) {
           debug.warn(`[x360recomp] cannot load the achievement list of ${record.appid}: ${err}`);
         }
+        // Keep the old baseline so these unlocks are announced on the next write instead of lost.
+        if (!schema) return;
         const byId = new Map((schema && schema.achievement ? schema.achievement.list : []).map((entry) => [String(entry.name), entry]));
         const gameName = (schema && schema.name) || record.appid;
 
@@ -246,7 +249,10 @@ async function rediscover(ctx, found = discover) {
     debug.warn(`[x360recomp] rediscovery failed: ${err}`);
     return;
   }
+  const generation = lifecycle;
   for (const record of targets) {
+    // A stop() during the await below would otherwise leave this loop attaching orphan watchers.
+    if (generation !== lifecycle) return;
     if (watched.has(record.appid)) continue;
     seedBaseline(record, { keepRecent: true });
     attach(record, ctx);
@@ -312,6 +318,7 @@ function watchForNewLists(ctx, configFile = userDirFile) {
 }
 
 module.exports.stop = () => {
+  lifecycle += 1;
   if (rediscoverTimer) clearInterval(rediscoverTimer);
   rediscoverTimer = null;
   clearTimeout(settleTimer);

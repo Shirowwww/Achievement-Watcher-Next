@@ -49,7 +49,7 @@ function listCachedBuilds(cacheDir, tag) {
     return [];
   }
   return entries
-    .filter((entry) => entry.isDirectory())
+    .filter((entry) => entry.isDirectory() && !entry.name.endsWith('.partial'))
     .map((entry) => ({ name: entry.name, dir: path.join(tagDir, entry.name) }))
     .filter((build) => isExtractedBuild(build.dir));
 }
@@ -109,12 +109,23 @@ async function extractZipAsset(archivePath, destDir, log) {
   for (const entry of entries) totalBytes += Number(entry.size) || 0;
   if (totalBytes > MAX_ARCHIVE_BYTES) throw new Error('UniverseLAN archive expands beyond the safety limit');
 
-  fs.mkdirSync(destDir, { recursive: true });
-  await new Promise((resolve, reject) => {
-    const stream = Seven.extractFull(archivePath, destDir, { $bin: sevenBin });
-    stream.on('end', resolve);
-    stream.on('error', reject);
-  });
+  // Extracted beside the target and renamed in only once complete: a build cut short still holds
+  // Galaxy.dll, and isExtractedBuild would then install that partial copy into a game forever.
+  const partialDir = `${destDir}.partial`;
+  fs.rmSync(partialDir, { recursive: true, force: true });
+  fs.mkdirSync(partialDir, { recursive: true });
+  try {
+    await new Promise((resolve, reject) => {
+      const stream = Seven.extractFull(archivePath, partialDir, { $bin: sevenBin });
+      stream.on('end', resolve);
+      stream.on('error', reject);
+    });
+    fs.rmSync(destDir, { recursive: true, force: true });
+    fs.renameSync(partialDir, destDir);
+  } catch (err) {
+    fs.rmSync(partialDir, { recursive: true, force: true });
+    throw err;
+  }
   log.log(`[gog-universelan] extracted ${path.basename(archivePath)}`);
 }
 

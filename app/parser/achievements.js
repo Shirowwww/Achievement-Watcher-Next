@@ -2518,6 +2518,8 @@ async function discoverInScope(source, steamAccFilter, scope) {
 
 module.exports.getGameFromCache = async (appid, source, option) => {
   let result;
+  // The cache is filed under the game's own language when it has one, as the scan wrote it.
+  option = schemaLanguage.optionFor(option, appid);
   switch (source) {
     case 'gog':
       return gog.getCachedData({ appID: appid, lang: option.achievement.lang });

@@ -86,7 +86,8 @@ function goldbergSaveWeight(dir) {
   const file = path.join(String(dir || ''), 'achievements.json');
   if (!fs.existsSync(file)) return -1;
   try {
-    const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+    // The readers accept a BOM, so the weight must too, or a real save scores like an empty one.
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf8').replace(/^﻿/, ''));
     const entries = Array.isArray(parsed) ? parsed : Object.values(parsed || {});
     // Same predicate as goldberg.inspectSaveState, so the scan and the health panel never disagree
     // about whether a save holds progress.

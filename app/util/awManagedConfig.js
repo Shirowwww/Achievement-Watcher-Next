@@ -192,8 +192,31 @@ function stripUserIdentity(steamSettings, { dryRun = false } = {}) {
   the confirmation dialog without touching anything. Identity removal is separate because a user who
   wants AW out of their DLC config may still be happy with the account name it wrote.
 */
+// A repair finishes within minutes of creating the folder; anything written later may be the user's.
+const CREATED_GRACE_MS = 10 * 60 * 1000;
+
+function untouchedSinceCreated(steamSettings) {
+  try {
+    const limit = fs.statSync(path.join(steamSettings, CREATED_MARKER)).mtimeMs + CREATED_GRACE_MS;
+    const pending = [steamSettings];
+    while (pending.length) {
+      const dir = pending.pop();
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (fs.statSync(full).mtimeMs > limit) return false;
+        if (entry.isDirectory()) pending.push(full);
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function strip(steamSettings, { dryRun = false, includeIdentity = true } = {}) {
-  if (isCreatedByAw(steamSettings)) {
+  // A folder changed after the repair falls back to the line-level cleanup below, so nothing
+  // the user added to it is deleted.
+  if (isCreatedByAw(steamSettings) && untouchedSinceCreated(steamSettings)) {
     if (!dryRun) fs.rmSync(steamSettings, { recursive: true, force: true });
     return { steamSettings, removed: [{ file: steamSettings, removed: 'folder' }], changed: true };
   }
@@ -205,6 +228,12 @@ function strip(steamSettings, { dryRun = false, includeIdentity = true } = {}) {
   if (includeIdentity) {
     const result = stripUserIdentity(steamSettings, { dryRun });
     if (result) removed.push(result);
+  }
+  // The marker goes too, or inspect() would keep offering a cleanup that has already run.
+  if (isCreatedByAw(steamSettings)) {
+    const marker = path.join(steamSettings, CREATED_MARKER);
+    if (!dryRun) fs.rmSync(marker, { force: true });
+    removed.push({ file: marker, removed: 'file' });
   }
   return { steamSettings, removed, changed: removed.length > 0 };
 }

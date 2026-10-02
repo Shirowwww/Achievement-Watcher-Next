@@ -102,7 +102,10 @@ async function handleChange(profile, file, ctx) {
     if (!madnesspatch.achievementSupportEnabled(currentGame.paths.ini)) return;
     if (file) await waitForFileStable(file);
 
-    const unlocked = bitsOf(madnesspatch.readProfileState(file));
+    // Locked or half-written: saving that as the baseline would replay every unlock on the next write.
+    const state = madnesspatch.readProfileState(file);
+    if (state === null) return;
+    const unlocked = bitsOf(state);
 
     const cache = cacheLoad(profile);
     const isNewProfile = !cache || !Array.isArray(cache.unlocked);
@@ -122,6 +125,8 @@ async function handleChange(profile, file, ctx) {
       } catch (err) {
         debug.warn(`[madnesspatch] cannot read the achievement list: ${err}`);
       }
+      // Keep the old baseline so these unlocks are announced on the next write instead of lost.
+      if (!schema) return;
       const byId = new Map((schema?.achievement?.list || []).map((entry) => [String(entry.name), entry]));
       const gameName = schema?.name || 'Alice: Madness Returns';
 

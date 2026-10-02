@@ -108,6 +108,8 @@ async function handleChange(ctx) {
         } catch (err) {
           debug.warn(`[markerpatch] cannot read the achievement list: ${err}`);
         }
+        // Keep the old baseline so these unlocks are announced on the next write instead of lost.
+        if (!schema) return;
         const byId = new Map((schema?.achievement?.list || []).map((entry) => [String(entry.name), entry]));
         const gameName = schema?.name || 'Dead Space 2';
 

@@ -21,9 +21,11 @@ test('each watched root snapshots its existing subfolders before the watcher sta
 
 test('boot-seed is gated on the appid folder having pre-existed the watch', () => {
   assert.ok(
-    source.includes('const isNewAppidFolder = !preexistingChildren.has(immediateChildDirOf(dir, filePath.dir).toLowerCase());'),
+    source.includes('const isNewAppidFolder = !inRootItself && !preexistingChildren.has(immediateChildDirOf(dir, filePath.dir).toLowerCase());'),
     'each event must resolve its own appid folder against the startup snapshot'
   );
+  // The root is never in its own snapshot, so a file written straight into it would pass for new.
+  assert.ok(source.includes("const inRootItself = path.relative(dir, filePath.dir) === '';"));
   assert.ok(
     source.includes('const seedOnly = (!Array.isArray(cache) || cache.length === 0) && preUnlocked.length > 1 && !liveFirstRun;'),
     'a freshly-appeared appid folder must never be silently seeded'

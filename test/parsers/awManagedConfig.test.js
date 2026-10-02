@@ -144,3 +144,21 @@ test('a backup records whether the folder was already AW-managed', () => {
   assert.equal(tainted.pristine, false, 'a backup taken after AW wrote must not pass for an original');
   assert.deepEqual(tainted.manifest.awManagedFiles, [{ file: 'configs.app.ini', reason: 'dlc-section' }]);
 });
+
+test('a folder AW created goes whole, unless something was written into it after the repair', () => {
+  const pristine = folder({ 'steam_appid.txt': '480', 'configs.app.ini': AW_APP });
+  awManagedConfig.markCreated(pristine);
+  awManagedConfig.strip(pristine);
+  assert.equal(fs.existsSync(pristine), false);
+
+  const used = folder({ 'steam_appid.txt': '480', 'configs.app.ini': AW_APP });
+  awManagedConfig.markCreated(used);
+  fs.writeFileSync(path.join(used, 'configs.overlay.ini'), ['[overlay::general]', 'enable_experimental_overlay=1', ''].join('\n'));
+  const later = new Date(Date.now() + 60 * 60 * 1000);
+  fs.utimesSync(path.join(used, 'configs.overlay.ini'), later, later);
+  awManagedConfig.strip(used);
+  assert.ok(read(used, 'configs.overlay.ini'), 'the file the user added survives');
+  assert.equal(read(used, 'steam_appid.txt'), '480');
+  assert.equal(read(used, awManagedConfig.CREATED_MARKER), null, 'the cleanup is not offered again');
+  assert.equal(awManagedConfig.inspect(used).managed, false);
+});

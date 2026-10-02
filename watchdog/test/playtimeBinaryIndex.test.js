@@ -132,6 +132,22 @@ test('candidateConfigDirs climbs above a bundled interpreter but never above an 
   assert.deepEqual(candidateConfigDirs(jreBin, 'FooLauncher.exe'), [jreBin]);
 });
 
+test('candidateConfigDirs stops below a folder shared by many installs', () => {
+  // A system JRE must not glob Program Files, a library root or the whole drive for a marker.
+  const systemBin = path.join('C:\\', 'Program Files', 'Eclipse Adoptium', 'jdk-21', 'bin');
+  const dirs = candidateConfigDirs(systemBin, 'javaw.exe');
+  assert.ok(!dirs.includes(path.join('C:\\', 'Program Files')));
+  assert.ok(!dirs.includes('C:\\'));
+  assert.ok(dirs.includes(path.join('C:\\', 'Program Files', 'Eclipse Adoptium')));
+
+  const libraryBin = path.join('D:\\', 'SteamLibrary', 'steamapps', 'common', 'Foo', 'jre', 'bin');
+  assert.deepEqual(candidateConfigDirs(libraryBin, 'javaw.exe'), [
+    libraryBin,
+    path.join('D:\\', 'SteamLibrary', 'steamapps', 'common', 'Foo', 'jre'),
+    path.join('D:\\', 'SteamLibrary', 'steamapps', 'common', 'Foo'),
+  ]);
+});
+
 // steam_cache/schema/gameIndex.json is a stale, uncurated catalogue: a single hit from it alone must
 // not hijack a game just because it happens to share an exe name.
 test('relatedToFolder rejects an unrelated legacy-catalogue title but accepts a matching one', () => {
