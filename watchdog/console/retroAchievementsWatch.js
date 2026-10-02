@@ -204,6 +204,14 @@ async function tick(ctx) {
   if (busy) return;
   busy = true;
   try {
+    // The account first: with none connected (most installs) there is no reason to list processes.
+    if (!session) {
+      const auth = ra.loadAuth();
+      if (!auth) return;
+      session = { auth, emulator: '', lastPoll: 0, lastSuccess: 0, pausedUntil: 0 };
+    }
+    const current = session;
+
     let emulator = '';
     try {
       emulator = findEmulator(await tasklist.list());
@@ -211,13 +219,6 @@ async function tick(ctx) {
       debug.warn(`[retroachievements] process snapshot failed: ${err}`);
       return;
     }
-
-    if (!session) {
-      const auth = ra.loadAuth();
-      if (!auth) return;
-      session = { auth, emulator: '', lastPoll: 0, lastSuccess: 0, pausedUntil: 0 };
-    }
-    const current = session;
 
     if (emulator !== current.emulator) {
       const closed = current.emulator;

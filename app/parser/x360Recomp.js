@@ -536,13 +536,35 @@ function loadSpa(titleId, xexPath) {
   } catch {
     const candidate = xexPath && fs.existsSync(xexPath) ? xexPath : readXexIndex()[titleId];
     if (!candidate || !fs.existsSync(candidate)) return null;
+    // A miss is remembered for this exact xex (path, size, mtime): reading and unpacking up to
+    // 256 MB again on every scan and every unlock would never find a different answer.
+    const missFile = `${spaCacheFile(titleId)}.missing`;
+    let stamp = '';
+    try {
+      const stat = fs.statSync(candidate);
+      stamp = `${candidate}|${stat.size}|${stat.mtimeMs}`;
+      if (fs.readFileSync(missFile, 'utf8') === stamp) return null;
+    } catch {
+      /* no miss recorded yet */
+    }
+    const rememberMiss = () => {
+      try {
+        if (stamp) writeAtomic(missFile, stamp);
+      } catch {
+        /* only a cache */
+      }
+    };
     try {
       const read = xex.readSpa(candidate);
-      if (!read || read.titleId !== titleId) return null;
+      if (!read || read.titleId !== titleId) {
+        rememberMiss();
+        return null;
+      }
       spa = read.spa;
       writeAtomic(spaCacheFile(titleId), spa);
     } catch (err) {
       debug.warn(`[x360recomp] cannot read the achievement list inside '${candidate}': ${err}`);
+      rememberMiss();
       return null;
     }
   }

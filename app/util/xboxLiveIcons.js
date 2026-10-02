@@ -80,13 +80,24 @@ function marketplaceArtUrl(titleId, file) {
 
 // A 404 is remembered with an empty marker so a title the host does not know costs one request per
 // picture, not one per scan. Network failures are not: offline today says nothing about tomorrow.
+// A host that just failed is left alone for a while, so a blocked or retired host costs one timeout
+// per session window rather than one per missing picture of every scan.
+// Keyed by the fetch implementation too, so a caller with its own transport starts afresh.
+const HOST_COOLDOWN_MS = 10 * 60 * 1000;
+const downUntilByFetch = new WeakMap();
+
 async function downloadImage(url, iconPath, fetchImpl = nodeFetch) {
   const missPath = `${iconPath}.missing`;
   if (!url || typeof fetchImpl !== 'function' || fs.existsSync(missPath)) return false;
+  const host = new URL(url).host;
+  if (!downUntilByFetch.has(fetchImpl)) downUntilByFetch.set(fetchImpl, new Map());
+  const hostDownUntil = downUntilByFetch.get(fetchImpl);
+  if ((hostDownUntil.get(host) || 0) > Date.now()) return false;
   let resp;
   try {
     resp = await fetchImpl(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
   } catch {
+    hostDownUntil.set(host, Date.now() + HOST_COOLDOWN_MS);
     return false;
   }
   if (resp.status === 404) {
