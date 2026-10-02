@@ -17,8 +17,8 @@ These read the launcher's own local data. They are marked with a shield in Setti
 
 | Source | What AW Next reads | What it needs |
 |---|---|---|
-| **Steam** | Local appcache state, public-profile data, achievement schemas and cached product metadata | Steam installed, and your Steam profile set to public; connecting an account is optional |
-| **GOG Galaxy** | The Galaxy client's local databases, plus compatible legacy saves | GOG Galaxy installed |
+| **Steam** | Local appcache state, public-profile data, achievement schemas and cached product metadata | Steam installed; connecting an account is optional |
+| **GOG Galaxy** | The Galaxy client's local databases, plus compatible legacy saves and UniverseLAN | GOG Galaxy installed, or a game running UniverseLAN |
 | **Ubisoft Connect** | Native local data and legacy Uplay formats | Ubisoft Connect installed |
 | **Epic Games** | Local installations, plus the games the account owns and their official achievement state once you connect an account | Epic Games launcher for local installs; an account connection for the rest |
 | **Xbox PC** | Local Game Pass / Microsoft Store installs, plus the games the account owns and their Xbox Network achievement state | The Xbox app for local installs; an account connection for the rest |
@@ -28,10 +28,11 @@ These read the launcher's own local data. They are marked with a shield in Setti
 games that are not installed here, which is what a PC with none of that store's games installed
 needs; it requires the account connection below.
 
-> [!IMPORTANT]
-> Steam only exposes your achievements while your profile is public. In Steam, open
-> **Profile → Edit Profile → Privacy Settings** and set both **My profile** and **Game details** to
-> *Public*. With either set to private, Steam returns nothing and the games appear with no progress.
+> [!NOTE]
+> Steam unlocks are read from the stats Steam keeps on this PC, so a private profile, or private
+> **Game details**, works for every game played here, including games added through SteamTools,
+> LuaTools or GreenLuma, and a card moves the moment Steam records an unlock. A public profile only
+> adds your name and avatar. Games played only on another PC need the account connection below.
 
 > [!NOTE]
 > **EA Desktop** is deliberately different. It reads EA Desktop's local achievement log for games
@@ -119,12 +120,27 @@ emulator reads rather than assuming the default:
 So a relocated RPCS3 virtual disk or a ShadPS4 data folder can be added under **Settings → Folders**
 directly, with no emulator executable anywhere near it.
 
+## RetroAchievements
+
+Games played on any emulator that reports to RetroAchievements come from your account rather than
+from a file. Turn on the **RetroAchievements** source, then fill in the account card under it: your
+username and the **Web API key** shown on retroachievements.org/settings. The key is encrypted
+before it is stored on this PC.
+
+**Import library** then adds every game you played, with its achievements, unlock dates, points and
+rarity; a second import only fetches the games whose progress moved. New unlocks are announced
+within seconds while an emulator that reports to RetroAchievements runs - RetroArch, DuckStation,
+PCSX2, PPSSPP, Dolphin, BizHawk, Project64 or any other RA-integrated build, recognised by name or by
+the RetroAchievements dll beside it - and within a few minutes otherwise. A game played for the
+first time is added on its own.
+
 ## Other sources
 
 | Source | What it is |
 |---|---|
 | **Xbox 360 games recompiled for PC** | ReXGlue ports and similar recompilations keep their own achievement list in an `achievements` folder (`.toml`, `.tsv`) or `SaveData\Achievements.json`, either in the game folder or in `Documents\<game>`. The list comes from the game's own `default.xex`, in every language it ships and with secret achievements kept secret; [dbox.tools](https://dbox.tools) fills in DLC achievements and games whose executable was not found, the Xbox 360 marketplace supplies the box art, and Exophase the share of players who earned each achievement. A game that writes only a JSON list, with no title id, is recognised when every one of its achievements matches an Xbox 360 title. Unlocks are notified live, play time is tracked, and Reset achievements works on them. It follows the Xenia source switch and the notification preset chosen for the Xbox 360. |
 | **Games for Windows LIVE** | XLiveLessNess installs. Each profile's unlock records are read, and the achievement list, its texts and its icons come out of the game's own executable, so nothing has to be downloaded. Watched live. |
+| **Dead Space 2 MarkerPatch, Alice: Madness Returns MadnessPatch** | Add the game folder under **Settings → Folders**: the achievement list is built from the mod's own texts and images, and the unlocks it saves are notified live. Each has its own source switch, and nothing is read while the mod's `AchievementSupport` is turned off. |
 | **FINAL FANTASY VII (2013)** | That re-release predates Steamworks achievements and keeps its 36 unlocks in an 8-byte bitfield beside its saves, found in Documents without adding the folder by hand. |
 | **Import notification cache** | Reads the background tracker's own cache as an extra source of past unlocks. |
 | **Manually added games** | A game added from a title and executable, with an optional platform and Steam AppID - see [Advanced tools](advanced.md#add-a-game-manually). |

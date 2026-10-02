@@ -7,9 +7,9 @@ properly.
 
 **Do I need a Steam Web API key, or to sign in to Steam?**
 No. Achievement lists are fetched with a keyless chain of public endpoints, and nothing requires an
-account. For your *own* Steam unlocks, Steam requires your profile and **Game details** to be public;
-connecting a Steam account is the optional alternative, and covers Steam Family too - see
-[Connected accounts](sources.md#connected-accounts).
+account. Your own Steam unlocks are read from the stats Steam keeps on this PC, so a private profile
+works for every game played here. Connecting a Steam account is optional: it adds the games played
+only on your other PCs, and Steam Family - see [Connected accounts](sources.md#connected-accounts).
 
 **Which platforms does it run on?**
 Windows 10 and Windows 11 only. Packaged releases include their own runtime; Node.js is needed only

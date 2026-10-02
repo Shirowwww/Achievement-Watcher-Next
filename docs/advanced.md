@@ -81,6 +81,20 @@ came from. Refresh the library afterwards to read the restored unlocks back in.
 > running background tracker. Without that, a re-earned achievement would be compared against a
 > record that still had it and would never be announced again.
 
+## Forget a game
+
+**Forget this game...**, in the right-click menu, clears everything AW Next keeps about a game: its
+achievement saves (backed up first, as a reset does), play time, cached achievement list and icons,
+its per-game settings, and the emulator configuration AW Next wrote into its folder. The
+confirmation lists each part before anything is touched. The next scan finds the game again as a new
+one. **Remove from list** only hides a game; Forget starts it over.
+
+## A different achievement language for one game
+
+**Game settings → Achievement language**, in the right-click menu, shows one game's achievements,
+and its notifications, in another language than the rest of the library. **Same as the app** goes
+back to the global choice.
+
 ## Add a game manually
 
 The `+` beside the library search adds a game from a title and an executable, with an optional
@@ -128,6 +142,11 @@ section, switches and identity keys AW Next itself wrote to a game's `configs.us
 value you or the repack set - and deletes the file only when nothing else is left in it. It shows
 exactly what it will remove before doing anything, which is the only way to recover if you never
 backed up that file yourself.
+
+**Apply the GOG achievement fix (UniverseLAN)...** appears on a GOG game that ships a Galaxy dll. It
+installs the UniverseLAN build matching that game's Galaxy SDK, keeps the original dll as a backup and
+never overwrites existing UniverseLAN saves. The unlocks it writes under
+`%LOCALAPPDATA%\UniverseLAN` are read and notified like any other.
 
 > [!WARNING]
 > Repairs create backups, but they still modify game files. Use them only with games you own.

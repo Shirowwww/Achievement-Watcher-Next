@@ -98,7 +98,7 @@ build tells you when a new release is out; extracting it over the old folder kee
 
 | Source | Support |
 |---|---|
-| **Steam** | Local appcache state, public-profile data, achievement lists (including DLC/update tags) and cached product metadata; an optional account connection covers a private profile, unlocks earned on your other PCs, and the games you own or share through Steam Family even if they were never installed here |
+| **Steam** | Local appcache state, read live and with a private profile too, public-profile data, achievement lists (including DLC/update tags) and cached product metadata; an optional account connection covers unlocks earned on your other PCs, and the games you own or share through Steam Family even if they were never installed here |
 | **Steam-compatible saves** | Goldberg, GBE Fork, GreenLuma, LumaPlay, SmartSteamEmu, CreamAPI, Nemirtingas and compatible layouts |
 | **GOG Galaxy** | Native local Galaxy databases, compatible legacy saves and UniverseLAN, with a one-click fix that installs the matching UniverseLAN build |
 | **Epic Games** | Local installations, and after an optional account connection, the games the account owns with their official achievement state |
