@@ -548,7 +548,7 @@ function fakePe(arch, text = '') {
 
       Confirmed by disassembling both generations (upc_r2_loader64.dll and uplay_r1_loader64.dll
       carry byte-identical logic): the schema is parsed only when Achievements is 1, the schema file
-      exists AND <AchSavePath>chievements.json does not. Once seeded, every later launch logs
+      exists AND <AchSavePath>\achievements.json does not. Once seeded, every later launch logs
       "Skip parsing of achievements schema!" and serves the list it already has - so a rewritten
       schema (a language change, a blank-name repair, achievements a game update added) never
       reached the game. Rebuilding that file, rather than deleting it, is what keeps progress.

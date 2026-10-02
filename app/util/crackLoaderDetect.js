@@ -57,7 +57,7 @@ const KNOWN_CRACK_LOADERS = [
   { name: 'Hoodlum / legacy emulator', markers: ['valve.ini', 'hlm.ini', 'ds.ini', 'steamconfig.ini'], replaceable: true },
   /*
     anadius EA/Origin cracks (The Sims 4, EA SPORTS FC...). Not Steam emulation at all: the loader
-    proxies the EA layer through winmm.dll and records unlocks under %LOCALAPPDATA%nadius\LSX emu,
+    proxies the EA layer through winmm.dll and records unlocks under %LOCALAPPDATA%\anadius\LSX emu,
     which the watchdog already watches. Never replaceable - there is no steam_api dll to swap, and
     installing one only litters the folder.
   */

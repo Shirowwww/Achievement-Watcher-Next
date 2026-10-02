@@ -60,7 +60,7 @@ the unlocks, correcting an earlier choice if a later pass finds more progress in
 
 ### The seeded placeholder
 
-Applying a setup calls `seedRuntimeSave`, which writes `<root>\<appid>chievements.json` with
+Applying a setup calls `seedRuntimeSave`, which writes `<root>\<appid>\achievements.json` with
 every achievement locked so a freshly fixed game shows its list before it has ever run. That file is
 otherwise indistinguishable from a real save with no unlocks, and reporting it as one let a setup the
 game never loads read as healthy. `runtimeSaveSeed` therefore drops a `.aw-seed.json` marker beside

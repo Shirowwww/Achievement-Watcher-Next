@@ -5582,7 +5582,7 @@ const recentNotifKeys = new Map();
 function isDuplicateNotification(data) {
   try {
     const progress = data.progress ? `${data.progress.current || 0}/${data.progress.max || 0}` : '';
-    const key = [data.displayName || '', data.description || '', data.iconPath || data.icon || '', progress].join('');
+    const key = [data.displayName || '', data.description || '', data.iconPath || data.icon || '', progress].join('\x01');
     const now = Date.now();
     for (const [k, t] of recentNotifKeys) if (now - t > 5000) recentNotifKeys.delete(k);
     const last = recentNotifKeys.get(key);

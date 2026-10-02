@@ -1819,7 +1819,7 @@ function repair({ dir, gameDir, steamAppid, schema, prefix, objectiveIds = null,
 
     Confirmed by disassembling both loader generations (upc_r2_loader64.dll and uplay_r1_loader64.dll
     carry byte-identical logic): the schema is read ONLY when `Achievements` is 1, the schema file
-    exists, AND `<AchSavePath>chievements.json` does NOT - after which the log says "Skip parsing
+    exists, AND `<AchSavePath>\achievements.json` does NOT - after which the log says "Skip parsing
     of achievements schema!" on every later launch. So once that file exists a repair could rewrite
     the schema all it liked and the game would go on serving the old list: renamed achievements, a
     changed language and the entries a game update added never reached it.
