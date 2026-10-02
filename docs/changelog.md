@@ -16,6 +16,8 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+## 3.11.0 - 2026-10-02
+
 ### Added
 
 - **RetroAchievements.** Settings > Sources has a RetroAchievements card: enter your username and the
@@ -26,7 +28,6 @@ renamed in 3.9.0 and the history is kept under one file.
   name or by the RetroAchievements dll beside it), within a few minutes with any other. A game played
   for the first time is added on its own, and a second import only fetches the games whose progress
   moved.
-
 - **Forget a game.** Right-click a game and choose "Forget this game..." to clear everything AW Next
   keeps about it: its achievement saves (backed up first, as Reset achievements does), play time,
   cached achievement list and icons, per-game settings, and the emulator configuration AW Next wrote
@@ -45,8 +46,9 @@ renamed in 3.9.0 and the history is kept under one file.
   executable was not found, the Xbox 360 marketplace supplies the box art, and Exophase the share of
   players who earned each achievement. A game that writes only a JSON list, with no title id, is
   recognised when every one of its achievements matches an Xbox 360 title (Gears of War 2 Hollow's 50
-  match Gears of War 2 exactly) and gets the same treatment. Every unlock is notified live, even for a game that had never
-  unlocked anything before, the play time is tracked, and "Reset achievements" works on them. The
+  match Gears of War 2 exactly) and gets the same treatment. Every unlock is notified live, even for a
+  game that had never unlocked anything before, the play time is tracked, and "Reset achievements"
+  works on them. The
   Documents folder is found on its own; a game that keeps its list, or its `default.xex`, in its own
   folder needs that folder or its library added under Settings > Folders. It follows the Xenia
   source switch and the notification preset chosen for the Xbox 360.
@@ -65,13 +67,11 @@ renamed in 3.9.0 and the history is kept under one file.
   games the local Steam client already knew about, so an account with hundreds of games could still
   show a fraction of them. Both are off by default: a large library makes the first scan much longer,
   since every added game has to resolve its achievements and artwork once.
-
 - **Unlocks from your other PCs.** Steam only writes a stats file for a game once it has reported one
   on this machine, so anything played elsewhere sat at 0% however far through it you were. With an
   account connected, a game with nothing to read locally is now asked about directly, which also
   works when your profile is private. The answer is kept for six hours so a second launch on the same
   day does not ask again for every game.
-
 - **Dead Space 2 MarkerPatch and Alice: Madness Returns MadnessPatch.** Add the game folder under
   Settings > Folders and AW Next builds the achievement list from the mod's own text and images,
   reads the unlocks the mod saves, and notifies them live. Each has its own source switch, and
@@ -79,7 +79,7 @@ renamed in 3.9.0 and the history is kept under one file.
 - **A GOG achievement fix (UniverseLAN).** Right-click a GOG game that ships a Galaxy dll and choose
   "Apply the GOG achievement fix (UniverseLAN)" to install the UniverseLAN build that matches its
   Galaxy SDK. The original dll is kept as a backup, existing UniverseLAN saves are never overwritten,
-  and the unlocks it writes under `%LOCALAPPDATA%UniverseLAN` are read and notified.
+  and the unlocks it writes under `%LOCALAPPDATA%\UniverseLAN` are read and notified.
 
 ### Improved
 
@@ -91,7 +91,7 @@ renamed in 3.9.0 and the history is kept under one file.
   instead of the whole 127 MB installer; if that ever fails it falls back to the full download on its
   own.
 - **The update cache no longer keeps an installer it has already installed.** Up to 127 MB sat in
-  `%LOCALAPPDATA%chievement-watcher-updater` until the next release; it is removed on the first
+  `%LOCALAPPDATA%\achievement-watcher-updater` until the next release; it is removed on the first
   update check after the install.
 - **The installer and uninstaller speak all 27 languages of the app**, adding Danish, Dutch, Finnish,
   Greek, Indonesian, Korean, Norwegian, Swedish, Traditional Chinese and Vietnamese, and follow
@@ -136,7 +136,6 @@ renamed in 3.9.0 and the history is kept under one file.
   Steam. The saved library is now reused.
 - **A failed top-owners download was retried for every game of a scan.** It now waits an hour before
   trying again.
-
 - **"Also delete settings, cache and saved data" did nothing when uninstalling.** The choice was
   thrown away before it was read, so the data folder always stayed. It now deletes it, along with the
   playtime kept in the registry; for an all-users install it now targets your own data folder.
@@ -147,9 +146,6 @@ renamed in 3.9.0 and the history is kept under one file.
   of the original 1.6.8 app, which may still be installed. It is no longer touched.
 - **The portable version no longer reports a failed update check** at every start. It now checks the
   release feed like the installed app and offers the release page when a new version is out.
-
-- **Locked Xenia achievements get their picture again.** The download went through the page
-  itself, whose security policy refused Xbox Live's plain-http image host without a word.
 - **Games for Windows LIVE secret achievements.** XLiveLessNess games marked every ordinary
   achievement as secret and showed the real secret ones: the flag was read from the wrong bit.
 - **Brazilian and Latin American Spanish** now read the Portuguese and Spanish text of Games for
@@ -161,7 +157,6 @@ renamed in 3.9.0 and the history is kept under one file.
   held a file for the same game the first one found won, whatever was in it. An abandoned, empty save
   therefore hid the one the game was really writing to. Whichever folder holds the unlocks is now the
   one that is read. Reported for Mewgenics.
-
 - **Locked Xenia achievements now have their pictures.** The profile file only holds a picture once an
   achievement unlocks, so every locked row had none. They are fetched from Xbox Live's image host and
   cached. A row with no picture at all now shows the neutral trophy instead of a spinner that never stops.
@@ -175,8 +170,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Updates must be signed by the project's own certificate.** The updater accepted an unsigned
   installer, and any certificate calling itself `CN=Shirow`, which anyone can create. It now refuses
   both and accepts only the release certificate or its offline standby, pinned by thumbprint, so a
-  tampered release cannot install itself. The release build refuses to finish with any other
-  certificate.
+  tampered release cannot install itself. The signature itself is verified too, not only the
+  certificate it names, so a signature block copied from a genuine release onto another installer is
+  refused. The release build refuses to finish with any other certificate.
 - **`adm-zip` updated to 0.6.1**, fixing an uncontrolled memory allocation from a declared uncompressed
   size ([GHSA-7q85-xj36-vmfc](https://github.com/advisories/GHSA-7q85-xj36-vmfc)). It now also refuses
   a zip entry duplicated by name at read time instead of returning both; the preset, theme and `.san`
@@ -192,6 +188,9 @@ renamed in 3.9.0 and the history is kept under one file.
   added since 3.10.5: the Steam account library switches, unlocks from other PCs, Xbox 360
   recompilations, setting an AppID by hand, the opt-in emulator writes, smaller signed updates and
   a clean uninstall. The README and the home page follow.
+- **The guides cover the rest of this release**: RetroAchievements, the MarkerPatch and MadnessPatch
+  mods, the GOG UniverseLAN fix, forgetting a game and a per-game achievement language. They no
+  longer ask for a public Steam profile, which games played on this PC no longer need.
 
 ## 3.10.9 - 2026-09-18
 
