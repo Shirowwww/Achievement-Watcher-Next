@@ -114,26 +114,41 @@ const field = (map, name) => {
   return key ? map[key] : undefined;
 };
 
-// Every executable a non-Steam shortcut starts, for every Steam account on this PC.
-function shortcutExecutables({ clientDir = steamClientDir() } = {}) {
-  const exes = [];
+const unquote = (value) => String(value || '').trim().replace(/^"|"$/g, '').replace(/[\\/]+$/, '');
+
+/*
+  Every non-Steam shortcut, for every Steam account on this PC: the exe it starts and the folder it
+  starts in. Steam reads steam_appid.txt from that start folder only (checked against Steam's
+  client, 2026-10-04), so an empty StartDir falls back to the exe's folder as Steam itself does.
+*/
+function shortcutLaunches({ clientDir = steamClientDir() } = {}) {
+  const launches = [];
   let accounts = [];
   try {
     accounts = fs.readdirSync(path.join(clientDir, 'userdata'), { withFileTypes: true }).filter((entry) => entry.isDirectory());
   } catch {
-    return exes;
+    return launches;
   }
   for (const account of accounts) {
     try {
       const parsed = parseBinaryVdf(fs.readFileSync(path.join(clientDir, 'userdata', account.name, 'config', 'shortcuts.vdf')));
       for (const shortcut of Object.values(field(parsed, 'shortcuts') || {})) {
-        const exe = String(field(shortcut, 'exe') || '').trim().replace(/^"|"$/g, '');
-        if (exe && !exes.some((known) => known.toLowerCase() === exe.toLowerCase())) exes.push(exe);
+        const exe = unquote(field(shortcut, 'exe'));
+        if (!exe) continue;
+        const startDir = unquote(field(shortcut, 'startdir')) || path.dirname(exe);
+        const same = (known) => known.exe.toLowerCase() === exe.toLowerCase() && known.startDir.toLowerCase() === startDir.toLowerCase();
+        if (!launches.some(same)) launches.push({ exe, startDir });
       }
     } catch {
       /* no shortcuts for this account, or a file Steam is rewriting */
     }
   }
+  return launches;
+}
+
+function shortcutExecutables(options) {
+  const exes = [];
+  for (const { exe } of shortcutLaunches(options)) if (!exes.some((known) => known.toLowerCase() === exe.toLowerCase())) exes.push(exe);
   return exes;
 }
 
@@ -145,5 +160,6 @@ module.exports = {
   libraryAppsDirs,
   installDirOf,
   parseBinaryVdf,
+  shortcutLaunches,
   shortcutExecutables,
 };

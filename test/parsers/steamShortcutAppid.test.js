@@ -4,7 +4,7 @@
   The Blood of Dawnwalker, again: achievements unlocked when the game was started from AW Next and
   never when it was started from a Steam shortcut (added for Steam Input). gbe_fork reads SteamAppId
   and SteamGameId before its own steam_appid.txt, and for a non-Steam shortcut Steam fills those from
-  a steam_appid.txt beside the exe, or with a generated id when there is none. The unlocks then went
+  a steam_appid.txt in the shortcut's start folder, or with the shortcut's own id when there is none. The unlocks then went
   to GSE Saves\<that id>. AW now writes the file where Steam reads it, and says so when it is missing.
 */
 
@@ -60,6 +60,19 @@ test("Steam's shortcuts are read from every account's shortcuts.vdf", () => {
 
   assert.deepEqual(steamLibrary.shortcutExecutables({ clientDir: client }), ['D:\\Games\\Dawnwalker\\Dawnwalker.exe', 'D:\\Emus\\Ryujinx.exe']);
   assert.deepEqual(steamLibrary.shortcutExecutables({ clientDir: path.join(tmp, 'no-steam') }), []);
+  assert.deepEqual(steamLibrary.shortcutLaunches({ clientDir: client })[0], { exe: 'D:\\Games\\Dawnwalker\\Dawnwalker.exe', startDir: 'D:\\Games\\Dawnwalker' });
+});
+
+// Measured on Steam's client: with the file only beside the exe, Steam passed the shortcut's own id.
+test('the file goes in the shortcut start folder, not beside the exe', () => {
+  const game = gbeGame('StartDir');
+  const binaries = path.join(game.gameDir, 'Binaries', 'Win64');
+  fs.mkdirSync(binaries, { recursive: true });
+  const exe = path.join(binaries, 'Game-Win64-Shipping.exe');
+  fs.writeFileSync(exe, 'MZ');
+
+  assert.deepEqual(goldberg.shortcutLaunchDirs(game.gameDir, () => [{ exe, startDir: game.gameDir }]), [path.resolve(game.gameDir)]);
+  assert.deepEqual(goldberg.shortcutLaunchDirs(game.gameDir, () => [{ exe, startDir: 'D:\\Elsewhere' }]), [], 'never writes outside the game');
 });
 
 test('a Steam shortcut with no steam_appid.txt beside its exe is a repairable warning', () => {

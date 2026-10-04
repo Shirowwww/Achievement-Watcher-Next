@@ -268,13 +268,20 @@ function writeSteamAppId({ steamSettings, appid, launchDirs = [] }) {
   return { file, previous, appid: value, changed: true, backupDir, launchFiles: besideExe };
 }
 
-// The folders of the exes Steam shortcuts start inside gameDir.
-function shortcutLaunchDirs(gameDir, shortcutExes = steamShortcutExecutables) {
+/*
+  The start folders of the Steam shortcuts that launch an exe inside gameDir: Steam reads
+  steam_appid.txt there, not beside the exe. A start folder outside the game is left alone.
+  A bare exe path (older callers, tests) starts in its own folder.
+*/
+function shortcutLaunchDirs(gameDir, shortcutExes = steamShortcutLaunches) {
   if (!gameDir) return [];
   const dirs = [];
-  for (const exe of shortcutExes().filter((file) => isInside(file, gameDir))) {
-    const dir = path.dirname(exe);
-    if (!dirs.some((known) => known.toLowerCase() === dir.toLowerCase())) dirs.push(dir);
+  for (const launch of shortcutExes()) {
+    const { exe, startDir } = typeof launch === 'string' ? { exe: launch, startDir: path.dirname(launch) } : launch;
+    if (!isInside(exe, gameDir)) continue;
+    const resolved = path.resolve(startDir);
+    if (resolved.toLowerCase() !== path.resolve(gameDir).toLowerCase() && !isInside(resolved, gameDir)) continue;
+    if (!dirs.some((known) => known.toLowerCase() === resolved.toLowerCase())) dirs.push(resolved);
   }
   return dirs;
 }
@@ -789,20 +796,20 @@ function isInside(file, dir) {
 }
 
 // Health reports for a whole library run back to back; read Steam's shortcuts once for all of them.
-let shortcutMemo = { at: 0, exes: [] };
-function steamShortcutExecutables() {
-  if (Date.now() - shortcutMemo.at < 30 * 1000) return shortcutMemo.exes;
-  let exes = [];
+let shortcutMemo = { at: 0, launches: [] };
+function steamShortcutLaunches() {
+  if (Date.now() - shortcutMemo.at < 30 * 1000) return shortcutMemo.launches;
+  let launches = [];
   try {
-    exes = require(path.join(__dirname, 'steamLibrary.js')).shortcutExecutables();
+    launches = require(path.join(__dirname, 'steamLibrary.js')).shortcutLaunches();
   } catch {
     /* no Steam here */
   }
-  shortcutMemo = { at: Date.now(), exes };
-  return exes;
+  shortcutMemo = { at: Date.now(), launches };
+  return launches;
 }
 
-function diagnose({ gameDir, appid, schema, savesRoots, shortcutExes = steamShortcutExecutables }) {
+function diagnose({ gameDir, appid, schema, savesRoots, shortcutExes = steamShortcutLaunches }) {
   const report = {
     gameDir,
     appid: appid != null ? String(appid) : null,
@@ -961,8 +968,8 @@ function diagnose({ gameDir, appid, schema, savesRoots, shortcutExes = steamShor
 
   /*
     A non-Steam shortcut (for Steam Input) hands the game SteamAppId/SteamGameId, which gbe_fork
-    reads before its own steam_appid.txt. Steam takes those from a steam_appid.txt beside the exe it
-    starts; with none there, the unlocks go to the shortcut's generated id and never show up.
+    reads before its own steam_appid.txt. Steam takes those from a steam_appid.txt in the folder the
+    shortcut starts in; with none there, the unlocks go to the shortcut's own id and never show up.
   */
   report.launchDirs = shortcutLaunchDirs(gameDir, shortcutExes);
   const expectedAppid = report.appid || readAppIdFile(appidTxt);
@@ -972,7 +979,7 @@ function diagnose({ gameDir, appid, schema, savesRoots, shortcutExes = steamShor
     if (!fs.existsSync(file)) {
       add('warning', 'STEAM_SHORTCUT_NO_APPID', `A Steam shortcut starts the game from ${dir}, with no steam_appid.txt there to give Steam the game's id.`, { file });
     } else if (expectedAppid && onDisk && onDisk !== expectedAppid) {
-      add('warning', 'APPID_MISMATCH', `steam_appid.txt beside the exe a Steam shortcut starts (${onDisk}) does not match the detected appid (${expectedAppid}).`, {
+      add('warning', 'APPID_MISMATCH', `steam_appid.txt in the folder a Steam shortcut starts in (${onDisk}) does not match the detected appid (${expectedAppid}).`, {
         onDisk,
         expected: String(expectedAppid),
         file,

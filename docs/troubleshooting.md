@@ -97,10 +97,10 @@ completion statistics.
 **It works from AW Next's Play button but not from a Steam shortcut.** A cracked game added to Steam
 as a non-Steam game (often for Steam Input) is started by Steam with a game ID of its own in the
 environment, and GBE Fork reads that ID before its `steam_appid.txt`: the unlocks are then saved
-under a generated number and never reach the game's card. Steam passes the real ID instead when a
-`steam_appid.txt` sits beside the executable the shortcut starts. Game Health flags a shortcut that
-lacks one, and its repair writes the file there; a repair or an emulator fix done from AW Next
-writes it beside the game's executable anyway.
+under the shortcut's own number and never reach the game's card. Steam passes the real ID instead
+when a `steam_appid.txt` sits in the shortcut's start folder (Start In, in the shortcut's
+properties); one beside the executable alone is not read. Game Health flags a shortcut whose start
+folder lacks it, and its repair writes the file there.
 
 **A scene crack is served and nothing is ever recorded.** Some cracks never report achievements at
 all. After an hour of play with nothing recorded, Game Health says so and, when that crack is the

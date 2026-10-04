@@ -35,8 +35,8 @@ renamed in 3.9.0 and the history is kept under one file.
   asked again once. Your profile's game details must be public for this.
 - **A game started from a Steam shortcut lost its unlocks.** Steam hands a non-Steam shortcut a game
   ID of its own, which GBE Fork prefers to its `steam_appid.txt`, so achievements were saved under a
-  generated number. Repairs now write `steam_appid.txt` beside the executable, where Steam reads it,
-  and Game Health points out a shortcut that lacks one.
+  number of the shortcut's own. Repairs now write `steam_appid.txt` in the shortcut's start folder,
+  where Steam reads it, and Game Health points out a shortcut that lacks one.
 - **Game Health stayed green on a crack that records nothing.** After an hour of play with no
   achievement recorded, the game now needs attention, says why, and offers the supported emulator
   when that crack can be replaced.
