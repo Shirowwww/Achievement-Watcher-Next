@@ -1056,7 +1056,7 @@ async function runGameHealthAction(appid, action, button) {
     }
 
     try {
-      const result = goldberg.writeSteamAppId({ steamSettings, appid: typed });
+      const result = goldberg.writeSteamAppId({ steamSettings, appid: typed, launchDirs: goldberg.shortcutLaunchDirs(game.gameDir) });
       remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
         type: 'info',
         title: t('gh-appid-done-title', 'Game ID file corrected', 'Fichier d’identification corrigé'),
@@ -1345,6 +1345,7 @@ async function runGameHealthAction(appid, action, button) {
         plan,
         appid: writableAppid,
         schema: game,
+        launchDirs: goldberg.shortcutLaunchDirs(game.gameDir),
         onProgress: pushProgress,
         downloadIcon: async (url, dir) => {
           const resolved = (await steamParser.resolveWorkingIconUrl(writableAppid, url)) || url;

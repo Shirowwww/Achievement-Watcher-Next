@@ -4102,6 +4102,7 @@ var app = {
               appid: writableAppid,
               schema: game,
               downloadIcon,
+              launchDirs: report.launchDirs || [],
               fetchDlc: (id) => steamParser.getDLCList(id),
               fetchStats: (id) => require(path.join(appPath, 'parser/statProgress.js')).fetchCommunityStats(id, { cacheDir: getUserDataPath() }),
               // A repair fixes achievements. Enabling every DLC and stamping an account name are

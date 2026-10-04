@@ -79,4 +79,71 @@ function installDirOf(appid, { clientDir = steamClientDir() } = {}) {
   return '';
 }
 
-module.exports = { unescapeSteamVdf, parseSteamLibraryFoldersVdf, parseSteamAppManifestAcf, steamClientDir, libraryAppsDirs, installDirOf };
+// Steam's binary KeyValues (shortcuts.vdf): 0x00 opens a map, 0x01 a string, 0x02 an int32,
+// 0x07 a uint64, 0x08 closes the map.
+function parseBinaryVdf(buffer) {
+  let at = 0;
+  const readString = () => {
+    const end = buffer.indexOf(0, at);
+    if (end < 0) throw new Error('unterminated string');
+    const text = buffer.toString('utf8', at, end);
+    at = end + 1;
+    return text;
+  };
+  const readMap = () => {
+    const map = {};
+    while (at < buffer.length) {
+      const type = buffer[at++];
+      if (type === 0x08) return map;
+      const key = readString();
+      if (type === 0x00) map[key] = readMap();
+      else if (type === 0x01) map[key] = readString();
+      else if (type === 0x02) {
+        map[key] = buffer.readInt32LE(at);
+        at += 4;
+      } else if (type === 0x07) at += 8;
+      else throw new Error(`unknown value type ${type}`);
+    }
+    return map;
+  };
+  return readMap();
+}
+
+const field = (map, name) => {
+  const key = Object.keys(map || {}).find((candidate) => candidate.toLowerCase() === name);
+  return key ? map[key] : undefined;
+};
+
+// Every executable a non-Steam shortcut starts, for every Steam account on this PC.
+function shortcutExecutables({ clientDir = steamClientDir() } = {}) {
+  const exes = [];
+  let accounts = [];
+  try {
+    accounts = fs.readdirSync(path.join(clientDir, 'userdata'), { withFileTypes: true }).filter((entry) => entry.isDirectory());
+  } catch {
+    return exes;
+  }
+  for (const account of accounts) {
+    try {
+      const parsed = parseBinaryVdf(fs.readFileSync(path.join(clientDir, 'userdata', account.name, 'config', 'shortcuts.vdf')));
+      for (const shortcut of Object.values(field(parsed, 'shortcuts') || {})) {
+        const exe = String(field(shortcut, 'exe') || '').trim().replace(/^"|"$/g, '');
+        if (exe && !exes.some((known) => known.toLowerCase() === exe.toLowerCase())) exes.push(exe);
+      }
+    } catch {
+      /* no shortcuts for this account, or a file Steam is rewriting */
+    }
+  }
+  return exes;
+}
+
+module.exports = {
+  unescapeSteamVdf,
+  parseSteamLibraryFoldersVdf,
+  parseSteamAppManifestAcf,
+  steamClientDir,
+  libraryAppsDirs,
+  installDirOf,
+  parseBinaryVdf,
+  shortcutExecutables,
+};

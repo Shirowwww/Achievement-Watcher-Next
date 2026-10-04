@@ -95,6 +95,8 @@ async function repairAchievementData({
   // Complete configs.user.ini even when the app has no name or language to stamp into it - the two
   // user-config warnings are listed as repairable, so the repair has to be able to clear them.
   fillUserDefaults = false,
+  // Folders of the exes Steam shortcuts start, which get a steam_appid.txt too.
+  launchDirs = [],
   // Passed straight to goldberg.repair(); see its onProgress for the phases and their counts.
   onProgress = null,
 } = {}) {
@@ -104,6 +106,7 @@ async function repairAchievementData({
     appid,
     schema,
     downloadIcon,
+    launchDirs,
     fetchDlc,
     fetchStats,
     accountName,

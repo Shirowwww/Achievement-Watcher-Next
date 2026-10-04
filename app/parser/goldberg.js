@@ -239,27 +239,44 @@ function backupTimestamp(date = new Date()) {
 }
 
 // Point steam_appid.txt at a different appid, keeping the previous file. repair() only writes this
-// file when missing; correcting a genuine mismatch is a decision the user makes explicitly.
-function writeSteamAppId({ steamSettings, appid }) {
+// file when missing; correcting a genuine mismatch is a decision the user makes explicitly. The
+// copies Steam reads beside the dll and the shortcut targets (launchDirs) are corrected with it.
+function writeSteamAppId({ steamSettings, appid, launchDirs = [] }) {
   if (!steamSettings) throw new Error('writeSteamAppId: steamSettings path is required');
   const value = String(appid == null ? '' : appid).trim();
   if (!/^[0-9]+$/.test(value)) throw new Error(`writeSteamAppId: "${value}" is not a Steam appid`);
 
   const file = path.join(steamSettings, 'steam_appid.txt');
-  let previous = null;
+  const previous = fs.existsSync(file) ? fs.readFileSync(file, 'utf8').trim() : null;
+  const dllDir = path.dirname(path.resolve(steamSettings));
+  const besideExe = [dllDir, ...launchDirs.map((dir) => path.resolve(dir))]
+    .filter((dir, index, all) => all.findIndex((other) => other.toLowerCase() === dir.toLowerCase()) === index)
+    .map((dir) => path.join(dir, 'steam_appid.txt'))
+    .filter((target) => fs.existsSync(target) && readAppIdFile(target) !== value);
+  const stale = [...(previous !== null && previous !== value ? [file] : []), ...besideExe];
+  if (previous === value && besideExe.length === 0) return { file, previous, appid: value, changed: false, backupDir: null, launchFiles: [] };
+
   let backupDir = null;
-  if (fs.existsSync(file)) {
-    previous = fs.readFileSync(file, 'utf8').trim();
-    if (previous === value) return { file, previous, appid: value, changed: false, backupDir: null };
+  if (stale.length > 0) {
     backupDir = path.join(steamSettings, '.aw-backups', backupTimestamp());
     fs.mkdirSync(backupDir, { recursive: true });
-    fs.copyFileSync(file, path.join(backupDir, 'steam_appid.txt'));
-  } else {
-    fs.mkdirSync(steamSettings, { recursive: true });
+    stale.forEach((target, index) => fs.copyFileSync(target, path.join(backupDir, index === 0 && target === file ? 'steam_appid.txt' : `steam_appid.${index}.txt`)));
   }
-
+  fs.mkdirSync(steamSettings, { recursive: true });
   fs.writeFileSync(file, value, 'utf8');
-  return { file, previous, appid: value, changed: true, backupDir };
+  for (const target of besideExe) fs.writeFileSync(target, value, 'utf8');
+  return { file, previous, appid: value, changed: true, backupDir, launchFiles: besideExe };
+}
+
+// The folders of the exes Steam shortcuts start inside gameDir.
+function shortcutLaunchDirs(gameDir, shortcutExes = steamShortcutExecutables) {
+  if (!gameDir) return [];
+  const dirs = [];
+  for (const exe of shortcutExes().filter((file) => isInside(file, gameDir))) {
+    const dir = path.dirname(exe);
+    if (!dirs.some((known) => known.toLowerCase() === dir.toLowerCase())) dirs.push(dir);
+  }
+  return dirs;
 }
 
 function copyIntoBackup(source, gameDir, backupDir) {
@@ -758,7 +775,34 @@ function originalSteamApiDll(dirs) {
 
 // Diagnose a game's Goldberg/GBE achievement setup. cfg: { gameDir, appid, schema, savesRoots? }.
 // Returns a structured report; report.issues is an array of { level, code, message }.
-function diagnose({ gameDir, appid, schema, savesRoots }) {
+function readAppIdFile(file) {
+  try {
+    return fs.readFileSync(file, 'utf8').trim();
+  } catch {
+    return '';
+  }
+}
+
+function isInside(file, dir) {
+  const relative = path.relative(path.resolve(dir), path.resolve(file));
+  return !!relative && !relative.startsWith('..') && !path.isAbsolute(relative);
+}
+
+// Health reports for a whole library run back to back; read Steam's shortcuts once for all of them.
+let shortcutMemo = { at: 0, exes: [] };
+function steamShortcutExecutables() {
+  if (Date.now() - shortcutMemo.at < 30 * 1000) return shortcutMemo.exes;
+  let exes = [];
+  try {
+    exes = require(path.join(__dirname, 'steamLibrary.js')).shortcutExecutables();
+  } catch {
+    /* no Steam here */
+  }
+  shortcutMemo = { at: Date.now(), exes };
+  return exes;
+}
+
+function diagnose({ gameDir, appid, schema, savesRoots, shortcutExes = steamShortcutExecutables }) {
   const report = {
     gameDir,
     appid: appid != null ? String(appid) : null,
@@ -913,6 +957,27 @@ function diagnose({ gameDir, appid, schema, savesRoots }) {
     }
   } else {
     add('warning', 'NO_APPID_TXT', 'steam_appid.txt is missing in steam_settings.');
+  }
+
+  /*
+    A non-Steam shortcut (for Steam Input) hands the game SteamAppId/SteamGameId, which gbe_fork
+    reads before its own steam_appid.txt. Steam takes those from a steam_appid.txt beside the exe it
+    starts; with none there, the unlocks go to the shortcut's generated id and never show up.
+  */
+  report.launchDirs = shortcutLaunchDirs(gameDir, shortcutExes);
+  const expectedAppid = report.appid || readAppIdFile(appidTxt);
+  for (const dir of report.launchDirs) {
+    const file = path.join(dir, 'steam_appid.txt');
+    const onDisk = readAppIdFile(file);
+    if (!fs.existsSync(file)) {
+      add('warning', 'STEAM_SHORTCUT_NO_APPID', `A Steam shortcut starts the game from ${dir}, with no steam_appid.txt there to give Steam the game's id.`, { file });
+    } else if (expectedAppid && onDisk && onDisk !== expectedAppid) {
+      add('warning', 'APPID_MISMATCH', `steam_appid.txt beside the exe a Steam shortcut starts (${onDisk}) does not match the detected appid (${expectedAppid}).`, {
+        onDisk,
+        expected: String(expectedAppid),
+        file,
+      });
+    }
   }
 
   // These files are runtime configuration, not achievement schema. A valid achievements.json does
@@ -1280,6 +1345,36 @@ function readArtworkMarker(steamSettings, imagePrefix = 'images') {
   return { checkedAt, stale: Date.now() - checkedAt >= ARTWORK_RECHECK_MS };
 }
 
+/*
+  steam_appid.txt beside the exe Steam starts, so a non-Steam shortcut passes the real appid to
+  gbe_fork (see diagnose). Written only where missing: beside every shortcut target, and beside the
+  dll when an exe sits there too. Each file is recorded so AW's setup can be taken back out.
+*/
+function writeLaunchAppIds({ steamSettings, appid, launchDirs = [] }) {
+  const dllDir = path.dirname(path.resolve(steamSettings));
+  let dllDirHasExe = false;
+  try {
+    dllDirHasExe = fs.readdirSync(dllDir).some((name) => /\.exe$/i.test(name));
+  } catch {
+    /* unreadable: only the shortcut targets are written */
+  }
+  const dirs = [...(dllDirHasExe ? [dllDir] : []), ...launchDirs.map((dir) => path.resolve(dir))];
+  const written = [];
+  const unique = dirs.filter((candidate, index) => dirs.findIndex((other) => other.toLowerCase() === candidate.toLowerCase()) === index);
+  for (const dir of unique) {
+    const file = path.join(dir, 'steam_appid.txt');
+    if (fs.existsSync(file)) continue;
+    try {
+      fs.writeFileSync(file, String(appid));
+      awManagedConfig.recordLaunchAppId(steamSettings, file, appid);
+      written.push(file);
+    } catch {
+      /* a read-only game folder keeps working as it did */
+    }
+  }
+  return written;
+}
+
 async function repair({
   steamSettings,
   appid,
@@ -1299,6 +1394,8 @@ async function repair({
   fillUserDefaults = false,
   // Optional async (appid) => { stats, progress } - see statProgress.fetchCommunityStats.
   fetchStats = null,
+  // Folders of the exes Steam shortcuts start (diagnose's report.launchDirs).
+  launchDirs = [],
   // Optional progress sink: ({phase, done, total}), phase one of 'backup'|'icons'|'schema'|'config'|'done'.
   // Icons report per file since they dominate the wall clock. Purely observational.
   onProgress = null,
@@ -1452,6 +1549,7 @@ async function repair({
       fs.writeFileSync(appidTxt, String(appid));
       summary.wroteAppId = true;
     }
+    summary.launchAppIds = writeLaunchAppIds({ steamSettings, appid, launchDirs });
   }
 
   // Enable all DLCs (configs.app.ini). Resolve the list from the injected fetcher when one wasn't
@@ -1712,6 +1810,8 @@ module.exports = {
   readArtworkMarker,
   needsArtworkRecheck,
   writeSteamAppId,
+  shortcutLaunchDirs,
+  writeLaunchAppIds,
   detectEmulator,
   buildAchievementsJson,
   backupSetup,

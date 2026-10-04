@@ -45,6 +45,41 @@ function isCreatedByAw(steamSettings) {
   }
 }
 
+/*
+  steam_appid.txt files AW Next wrote beside a game's executable (goldberg.writeLaunchAppIds) live
+  outside steam_settings, so they are listed in it. Taking AW back out removes each one only while
+  it still holds the value written.
+*/
+const LAUNCH_APPID_RECORD = '.aw-next-launch-appid.json';
+
+function readLaunchAppIds(steamSettings) {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(path.join(steamSettings, LAUNCH_APPID_RECORD), 'utf8'));
+    return Array.isArray(parsed) ? parsed.filter((entry) => entry && typeof entry.file === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function recordLaunchAppId(steamSettings, file, appid) {
+  const entries = readLaunchAppIds(steamSettings).filter((entry) => entry.file.toLowerCase() !== String(file).toLowerCase());
+  entries.push({ file: String(file), appid: String(appid) });
+  fs.writeFileSync(path.join(steamSettings, LAUNCH_APPID_RECORD), JSON.stringify(entries, null, 2));
+}
+
+function stripLaunchAppIds(steamSettings, { dryRun = false } = {}) {
+  const entries = readLaunchAppIds(steamSettings);
+  if (entries.length === 0) return [];
+  const removed = [];
+  for (const entry of entries) {
+    if ((readText(entry.file) || '').trim() !== entry.appid) continue;
+    if (!dryRun) fs.rmSync(entry.file, { force: true });
+    removed.push({ file: entry.file, removed: 'file' });
+  }
+  if (!dryRun) fs.rmSync(path.join(steamSettings, LAUNCH_APPID_RECORD), { force: true });
+  return removed;
+}
+
 function readText(file) {
   try {
     return fs.readFileSync(file, 'utf8');
@@ -59,6 +94,7 @@ function inspect(steamSettings) {
   const found = [];
   if (!steamSettings) return { managed: false, files: found };
   if (isCreatedByAw(steamSettings)) return { managed: true, files: [{ file: CREATED_MARKER, reason: 'created-folder' }] };
+  if (readLaunchAppIds(steamSettings).length > 0) found.push({ file: LAUNCH_APPID_RECORD, reason: 'launch-appid' });
 
   const appIni = readText(path.join(steamSettings, 'configs.app.ini'));
   if (appIni && appIni.includes(AW_MARKER)) found.push({ file: 'configs.app.ini', reason: 'dlc-section' });
@@ -214,13 +250,15 @@ function untouchedSinceCreated(steamSettings) {
 }
 
 function strip(steamSettings, { dryRun = false, includeIdentity = true } = {}) {
+  // Outside the folder, so before it can be removed with the record that lists them.
+  const launchFiles = stripLaunchAppIds(steamSettings, { dryRun });
   // A folder changed after the repair falls back to the line-level cleanup below, so nothing
   // the user added to it is deleted.
   if (isCreatedByAw(steamSettings) && untouchedSinceCreated(steamSettings)) {
     if (!dryRun) fs.rmSync(steamSettings, { recursive: true, force: true });
-    return { steamSettings, removed: [{ file: steamSettings, removed: 'folder' }], changed: true };
+    return { steamSettings, removed: [...launchFiles, { file: steamSettings, removed: 'folder' }], changed: true };
   }
-  const removed = [];
+  const removed = [...launchFiles];
   for (const step of [stripDlcSection, stripMainKeys]) {
     const result = step(steamSettings, { dryRun });
     if (result) removed.push(result);
@@ -238,4 +276,17 @@ function strip(steamSettings, { dryRun = false, includeIdentity = true } = {}) {
   return { steamSettings, removed, changed: removed.length > 0 };
 }
 
-module.exports = { AW_MARKER, CREATED_MARKER, markCreated, isCreatedByAw, inspect, strip, stripDlcSection, stripMainKeys, stripUserIdentity };
+module.exports = {
+  AW_MARKER,
+  CREATED_MARKER,
+  LAUNCH_APPID_RECORD,
+  markCreated,
+  isCreatedByAw,
+  inspect,
+  strip,
+  stripDlcSection,
+  stripMainKeys,
+  stripUserIdentity,
+  recordLaunchAppId,
+  stripLaunchAppIds,
+};
