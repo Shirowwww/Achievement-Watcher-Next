@@ -330,6 +330,26 @@ function mergeDiscoveryRecord(target, incoming) {
   return target;
 }
 
+/*
+  OnlineFix's Friend's Pass sends unlocks through real Steam, yet the game recreates an empty
+  OnlineFix\<appid> folder on every launch. That folder says nothing, so the installed Steam copy
+  keeps the card's identity (source, ownership, the Steam reader) instead of flipping to it.
+*/
+function isEmptySaveFolderRecord(record) {
+  const data = record && record.data;
+  if (!data || data.type !== 'file' || typeof data.path !== 'string' || !data.path) return false;
+  try {
+    return !fs.readdirSync(data.path, { withFileTypes: true }).some((entry) => entry.isFile());
+  } catch {
+    return false;
+  }
+}
+
+function isInstalledSteamRecord(record) {
+  const data = record && record.data;
+  return !!data && data.type === 'steamAPI' && data.installed !== false;
+}
+
 function consolidateDiscoveryList(list) {
   const byAppid = new Map();
   const order = [];
@@ -347,7 +367,9 @@ function consolidateDiscoveryList(list) {
     // a real gogOfficial record must always end up as the merge target (whichever data.type a plain
     // merge would otherwise keep), regardless of which scan happened to reach this appid first.
     const existing = byAppid.get(key);
-    const preferIncoming = existing?.data?.type === 'gogUniverseLan' && record?.data?.type === 'gogOfficial';
+    const preferIncoming =
+      (existing?.data?.type === 'gogUniverseLan' && record?.data?.type === 'gogOfficial') ||
+      (isEmptySaveFolderRecord(existing) && isInstalledSteamRecord(record));
     byAppid.set(key, preferIncoming ? mergeDiscoveryRecord(record, existing) : mergeDiscoveryRecord(existing, record));
   }
   const result = order.map((key) => byAppid.get(key)).filter(Boolean);
@@ -2596,6 +2618,12 @@ const NO_RECORD_TO_READ = Symbol('no record to read');
 
 async function readRecordUnlocks(dataType, appid, game, option, helpers) {
   const { readUplayR2Save, warnEmptyAchievementFileOnce } = helpers;
+  // The Steam account's record and a save folder under the same appid each need their own reader:
+  // read the Steam one as a folder and its unlocks vanished behind an empty OnlineFix folder.
+  const ownType = appid.data && appid.data.type;
+  if (ownType && ownType !== dataType && (ownType === 'steamAPI' || dataType === 'steamAPI')) {
+    return readRecordUnlocks(ownType, appid, game, option, helpers);
+  }
   if (appid.data && ACCOUNT_LIBRARY_TYPES.has(appid.data.type) && dataType !== appid.data.type) {
     if (appid.data.type === 'xboxPc') {
       const xboxPc = require(path.join(appPath, 'xboxPc.js'));
