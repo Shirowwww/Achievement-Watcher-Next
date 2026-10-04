@@ -9,6 +9,44 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Added
+
+- **Patched and recompiled games are found on their own.** A Steam copy of Dead Space 2 with
+  MarkerPatch or of Alice: Madness Returns with MadnessPatch is picked up through Steam's own install
+  record, by the library and by live notifications, without adding its folder. Smart find also looks
+  for these mods and for recompiled Xbox 360 games in your game libraries.
+
+### Fixed
+
+- **Settings refused the folder of a patched or recompiled game.** Adding the folder of a MarkerPatch
+  or MadnessPatch install, or of a recompiled game such as Gears of War 2 Hollow, was rejected as a
+  wrong folder, so those games could never be watched. They are accepted now, and a folder picked
+  inside such a game (`GearGame`, `SaveData`, `Binaries\Win32`) is kept as the game's own folder.
+- **Live MadnessPatch notifications in the installed app.** The background tracker could not read the
+  Documents folder the mod saves to, so its watcher stopped at start-up.
+- **Little Nightmares III with OnlineFix's Friend's Pass.** The unlocks go through real Steam, but
+  the game recreates an empty OnlineFix folder at each launch, and the card then showed every
+  achievement locked. Steam's unlocks are read whatever else sits beside them, and an empty folder no
+  longer takes the card over.
+- **A game started from a Steam shortcut lost its unlocks.** Steam hands a non-Steam shortcut a game
+  ID of its own, which GBE Fork prefers to its `steam_appid.txt`, so achievements were saved under a
+  generated number. Repairs now write `steam_appid.txt` beside the executable, where Steam reads it,
+  and Game Health points out a shortcut that lacks one.
+- **Game Health stayed green on a crack that records nothing.** After an hour of play with no
+  achievement recorded, the game now needs attention, says why, and offers the supported emulator
+  when that crack can be replaced.
+- **Antivirus behaviour detections.** Achievement screenshots no longer compile a screen-capture
+  program into `%TEMP%` (the native helper takes them all now), the full-screen check before a
+  notification no longer compiles code through PowerShell, and the update check no longer passes an
+  encoded command. These are what Kaspersky reacted to while the app ran, and what ESET and Rising
+  named CaptureScreen in the 3.11.0 installer.
+
+### Website & Docs
+
+- How to keep only AW Next's pop-up under RetroBat without switching RetroAchievements off, what to
+  do when a game works from AW Next but not from a Steam shortcut, the new Game Health rows, and the
+  antivirus notes.
+
 ## 3.11.0 - 2026-10-02
 
 ### Added
