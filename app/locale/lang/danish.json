@@ -2054,6 +2054,8 @@
     "gh-action-uplay-ticket-off": "Deaktivér præstationer offline",
     "gh-ticket-remove-detail": "Linjen, som AW Next tilføjede til emulatorens indstillinger ved siden af spillet, fjernes, og intet andet ændres. Allerede registrerede præstationer bevares. Du kan slå det til igen når som helst.",
     "gh-why-appid-mismatch": "Emulatoren i dette spils mappe melder spil-id {appidOnDisk}, men AW Next har matchet spillet med {appidExpected}. Præstationer, der låses op under det forkerte id, registreres på et andet spil. Ret filen, hvis {appidExpected} er det rigtige spil - den nuværende værdi gemmes.",
+    "gh-why-crack-records-nothing": "Dette spil har kørt i over en time med {servedBy}, uden at en eneste præstation er blevet registreret. Nogle cracks rapporterer aldrig præstationer overhovedet. AW Next kan installere den understøttede emulator oven på den - den nuværende fil beholdes.",
+    "gh-why-crack-records-nothing-fixed": "Dette spil har kørt i over en time med {servedBy}, uden at en eneste præstation er blevet registreret. Nogle cracks rapporterer aldrig præstationer overhovedet, og dette kan ikke udskiftes herfra. Tjek, at spillet startes fra sin egen mappe og ikke fra en kopi et andet sted.",
     "gh-appid-prompt-message": "{game} har i øjeblikket id {appidOnDisk} i steam_appid.txt. AW Next foreslår {appidExpected}, men indtast selv det rigtige Steam-id, hvis du kender det (f.eks. hvis et andet spil deler dette navn). Den nuværende fil sikkerhedskopieres under steam_settings\\.aw-backups.",
     "gh-appid-not-numeric": "Et Steam-id er et tal.",
     "gh-appid-done-title": "Filen med spil-id er rettet",

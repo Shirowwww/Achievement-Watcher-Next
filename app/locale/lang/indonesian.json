@@ -2054,6 +2054,8 @@
     "gh-action-uplay-ticket-off": "Matikan pencapaian saat luring",
     "gh-ticket-remove-detail": "Baris yang ditambahkan AW Next ke pengaturan emulator di samping gim akan dihapus, dan tidak ada yang lain berubah. Pencapaian yang sudah tercatat tetap tersimpan. Kamu bisa mengaktifkannya lagi kapan saja.",
     "gh-why-appid-mismatch": "Emulator di folder game ini mengumumkan ID game {appidOnDisk}, tetapi AW Next mencocokkan game ini dengan {appidExpected}. Pencapaian yang terbuka dengan ID yang salah akan tercatat pada game lain. Betulkan filenya bila {appidExpected} memang game yang benar - nilai saat ini tetap disimpan.",
+    "gh-why-crack-records-nothing": "Game ini sudah berjalan lebih dari satu jam dengan {servedBy}, tetapi tidak ada satu pun pencapaian yang tercatat. Beberapa crack tidak pernah melaporkan pencapaian sama sekali. AW Next dapat memasang emulator yang didukung di atasnya - file saat ini tetap disimpan.",
+    "gh-why-crack-records-nothing-fixed": "Game ini sudah berjalan lebih dari satu jam dengan {servedBy}, tetapi tidak ada satu pun pencapaian yang tercatat. Beberapa crack tidak pernah melaporkan pencapaian sama sekali, dan crack ini tidak dapat diganti dari sini. Pastikan game dijalankan dari foldernya sendiri, bukan dari salinan di tempat lain.",
     "gh-appid-prompt-message": "{game} saat ini memiliki appid {appidOnDisk} di steam_appid.txt. AW Next menyarankan {appidExpected}, tetapi masukkan sendiri appid Steam yang benar jika Anda mengetahuinya (misalnya game lain memakai nama yang sama). File saat ini dicadangkan di steam_settings\\.aw-backups.",
     "gh-appid-not-numeric": "Appid Steam adalah angka.",
     "gh-appid-done-title": "File ID game dibetulkan",

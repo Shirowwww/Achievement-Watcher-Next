@@ -2054,6 +2054,8 @@
     "gh-action-uplay-ticket-off": "オフラインの実績を無効にする",
     "gh-ticket-remove-detail": "AW Next がゲームの隣のエミュレーター設定に追加した行が削除され、他には何も変わりません。すでに記録された実績はそのまま残ります。いつでも再び有効にできます。",
     "gh-why-appid-mismatch": "このゲームのフォルダーにあるエミュレーターはゲーム ID {appidOnDisk} を名乗っていますが、AW Next はこのゲームを {appidExpected} と対応付けています。誤った ID で解除した実績は別のゲームに記録されます。{appidExpected} が正しいゲームならファイルを修正してください（現在の値は保持されます）。",
+    "gh-why-crack-records-nothing": "このゲームは {servedBy} で 1時間以上動作しましたが、実績は 1件も記録されていません。クラックによっては、実績をまったく報告しないものがあります。AW Next はその上にサポート対象のエミュレーターをインストールできます。現在のファイルはそのまま残ります。",
+    "gh-why-crack-records-nothing-fixed": "このゲームは {servedBy} で 1時間以上動作しましたが、実績は 1件も記録されていません。クラックによっては実績をまったく報告しないものがあり、このクラックはここから置き換えることができません。ゲームが、別の場所にあるコピーではなく自身のフォルダーから起動されているか確認してください。",
     "gh-appid-prompt-message": "{game} には現在 steam_appid.txt に ID {appidOnDisk} が設定されています。AW Next は {appidExpected} を提案していますが、正しい Steam ID がわかっている場合は自分で入力してください（例: 別のゲームが同じ名前を使っている場合）。現在のファイルは steam_settings\\.aw-backups に保存されます。",
     "gh-appid-not-numeric": "Steam の ID は数字です。",
     "gh-appid-done-title": "ゲーム ID ファイルを修正しました",

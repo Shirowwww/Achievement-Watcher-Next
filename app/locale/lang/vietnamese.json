@@ -2054,6 +2054,8 @@
     "gh-action-uplay-ticket-off": "Tắt thành tựu khi ngoại tuyến",
     "gh-ticket-remove-detail": "Dòng mà AW Next đã thêm vào thiết lập của giả lập bên cạnh trò chơi sẽ bị xóa, và không có gì khác thay đổi. Các thành tựu đã ghi nhận vẫn được giữ. Bạn có thể bật lại bất cứ lúc nào.",
     "gh-why-appid-mismatch": "Trình giả lập trong thư mục của trò chơi này khai báo mã trò chơi {appidOnDisk}, nhưng AW Next lại khớp trò chơi này với {appidExpected}. Thành tựu mở khóa dưới mã sai sẽ được ghi cho một trò chơi khác. Hãy sửa tệp nếu {appidExpected} mới là trò chơi đúng - giá trị hiện tại vẫn được giữ lại.",
+    "gh-why-crack-records-nothing": "Trò chơi này đã chạy hơn một giờ với {servedBy} mà không có thành tựu nào được ghi lại. Một số bản crack không bao giờ báo cáo thành tựu. AW Next có thể cài trình giả lập được hỗ trợ đè lên - tệp hiện tại vẫn được giữ lại.",
+    "gh-why-crack-records-nothing-fixed": "Trò chơi này đã chạy hơn một giờ với {servedBy} mà không có thành tựu nào được ghi lại. Một số bản crack không bao giờ báo cáo thành tựu, và bản này không thể thay thế từ đây. Hãy kiểm tra xem trò chơi có được khởi chạy từ thư mục riêng của nó, chứ không phải từ một bản sao ở nơi khác.",
     "gh-appid-prompt-message": "{game} hiện có mã {appidOnDisk} trong steam_appid.txt. AW Next đề xuất {appidExpected}, nhưng hãy tự nhập mã Steam đúng nếu bạn biết (ví dụ một trò chơi khác dùng chung tên này). Tệp hiện tại được sao lưu trong steam_settings\\.aw-backups.",
     "gh-appid-not-numeric": "Mã Steam là một con số.",
     "gh-appid-done-title": "Đã sửa tệp mã trò chơi",

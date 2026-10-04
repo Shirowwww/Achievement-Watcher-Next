@@ -2054,6 +2054,8 @@
     "gh-action-uplay-ticket-off": "Offline teljesítmények kikapcsolása",
     "gh-ticket-remove-detail": "Az AW Next által a játék melletti emulátorbeállításokhoz hozzáadott sor eltávolításra kerül, és semmi más nem változik. A már rögzített teljesítmények megmaradnak. Bármikor újra bekapcsolhatod.",
     "gh-why-appid-mismatch": "A játék mappájában lévő emulátor a(z) {appidOnDisk} azonosítót jelenti, az AW Next viszont a(z) {appidExpected} játékhoz párosította. A rossz azonosítóval feloldott teljesítmények egy másik játékhoz kerülnek. Javítsd a fájlt, ha a(z) {appidExpected} a helyes játék - a jelenlegi érték megmarad.",
+    "gh-why-crack-records-nothing": "Ez a játék több mint egy órán át futott a(z) {servedBy} használatával, de egyetlen teljesítmény sem rögzült. Egyes crackek soha nem jelentik a teljesítményeket. Az AW Next rátelepítheti a támogatott emulátort - a jelenlegi fájl megmarad.",
+    "gh-why-crack-records-nothing-fixed": "Ez a játék több mint egy órán át futott a(z) {servedBy} használatával, de egyetlen teljesítmény sem rögzült. Egyes crackek soha nem jelentik a teljesítményeket, és ezt innen nem lehet lecserélni. Ellenőrizd, hogy a játék a saját mappájából indul-e, nem pedig valahol máshol lévő másolatból.",
     "gh-appid-prompt-message": "A(z) {game} jelenleg a(z) {appidOnDisk} azonosítót használja a steam_appid.txt fájlban. Az AW Next a(z) {appidExpected} azonosítót javasolja, de add meg magad a helyes Steam-azonosítót, ha ismered (például ha egy másik játék ugyanezt a nevet viseli). A jelenlegi fájl a steam_settings\\.aw-backups mappába kerül.",
     "gh-appid-not-numeric": "A Steam-azonosító egy szám.",
     "gh-appid-done-title": "Játékazonosító-fájl javítva",

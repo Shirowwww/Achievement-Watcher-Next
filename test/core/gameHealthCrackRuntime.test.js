@@ -77,6 +77,38 @@ test('naming the loader does not drag the game out of its normal state', () => {
 });
 
 /*
+  The Blood of Dawnwalker report: green on every row while a FitGirl crack recorded nothing, game
+  after game. Under an hour it can still be a game with nothing unlocked yet; past that, it is the
+  crack, and the dot has to say so.
+*/
+test('an hour played with nothing recorded turns the game to attention', () => {
+  const tracked = { tracking: { indexed: true, binary: 'Little_Nightmares_Enhanced.exe' } };
+  const early = gameHealth.deriveHealth(signalsFor({ ...tracked, playtime: { total: 3599, lastPlayed: 1789280171 } }));
+  assert.equal(early.state, gameHealth.STATE.READY, 'just under an hour proves nothing yet');
+  assert.notEqual(early.reason, 'crack-records-nothing');
+
+  const late = gameHealth.deriveHealth(signalsFor({ ...tracked, playtime: { total: 3600, lastPlayed: 1789280171 } }));
+  assert.equal(late.state, gameHealth.STATE.ATTENTION);
+  assert.equal(late.reason, 'crack-records-nothing');
+  assert.equal(late.params.canSwitch, true);
+  assert.ok(late.actions.includes(gameHealth.ACTION.SWITCH_RUNTIME));
+});
+
+test('a stalled crack that cannot be swapped is flagged without a button', () => {
+  const proxied = gameHealth.deriveHealth(signalsFor({ crackLoader: { name: 'OnlineFix', replaceable: false }, playtime: { total: 7200, lastPlayed: 1789280171 } }));
+  assert.equal(proxied.state, gameHealth.STATE.ATTENTION);
+  assert.equal(proxied.reason, 'crack-records-nothing');
+  assert.equal(proxied.params.canSwitch, false);
+  assert.ok(!proxied.actions.includes(gameHealth.ACTION.SWITCH_RUNTIME));
+});
+
+test('a crack that has recorded something stays calm however long it ran', () => {
+  const working = gameHealth.deriveHealth(signalsFor({ achievements: { total: 22, unlocked: 3 }, playtime: { total: 90000, lastPlayed: 1789280171 } }));
+  assert.notEqual(working.reason, 'crack-records-nothing');
+  assert.equal(emulatorRow(signalsFor({ achievements: { total: 22, unlocked: 3 }, playtime: { total: 90000, lastPlayed: 1789280171 } })).level, gameHealth.LEVEL.INFO);
+});
+
+/*
   The other half: a folder AW does diagnose, whose dll turns out to be nobody's emulator. Every
   other row of that report describes a folder the game never opens, so the report has to lead with
   that and offer the one thing that changes it.

@@ -417,6 +417,10 @@ function gameHealthExplanation(report) {
       return t('gh-why-not-watched', "Everything needed is in place, but AW Next isn't watching this game while it runs, so playtime and live unlock notifications won't happen.", "Tout est en place, mais AW Next ne surveille pas ce jeu pendant qu'il tourne : ni temps de jeu ni notifications en direct.");
     case 'appid-mismatch':
       return t('gh-why-appid-mismatch', 'The emulator in this game’s folder announces game ID {appidOnDisk}, but AW Next matched this game to {appidExpected}. Achievements unlocked under the wrong ID are recorded against another game. Correct the file if {appidExpected} is the right game - the current value is kept.', 'L’émulateur du dossier de ce jeu annonce l’identifiant {appidOnDisk}, alors qu’AW Next a associé ce jeu à {appidExpected}. Les succès débloqués sous le mauvais identifiant sont enregistrés sur un autre jeu. Corrige le fichier si {appidExpected} est le bon jeu - la valeur actuelle est conservée.', p);
+    case 'crack-records-nothing':
+      return p.canSwitch
+        ? t('gh-why-crack-records-nothing', 'This game has run for over an hour with {servedBy} and not one achievement has been recorded. Some cracks never report achievements at all. AW Next can install the supported emulator over it - the current file is kept.', "Ce jeu a tourné plus d'une heure avec {servedBy} sans enregistrer un seul succès. Certains cracks ne signalent jamais les succès. AW Next peut installer l'émulateur pris en charge par-dessus, le fichier actuel étant conservé.", p)
+        : t('gh-why-crack-records-nothing-fixed', 'This game has run for over an hour with {servedBy} and not one achievement has been recorded. Some cracks never report achievements at all, and this one cannot be replaced from here. Check that the game is started from its own folder, not from a copy elsewhere.', "Ce jeu a tourné plus d'une heure avec {servedBy} sans enregistrer un seul succès. Certains cracks ne signalent jamais les succès, et celui-ci ne peut pas être remplacé d'ici. Vérifie que le jeu est lancé depuis son propre dossier, pas depuis une copie ailleurs.", p);
     case 'notification-failed':
       return t('gh-why-notification-failed', 'This game is tracked correctly and its unlocks are being seen, but the last notification could not be sent. Send a test notification to check the display path.', "Ce jeu est correctement suivi et ses déblocages sont bien vus, mais la dernière notification n'a pas pu être envoyée. Envoie une notification de test pour vérifier l'affichage.");
     case 'progress-muted':
@@ -497,7 +501,7 @@ function gameHealthSimpleCheckValue(entry) {
         : t('gh-simple-data-partial', 'Achievement data is incomplete', 'Données de succès incomplètes');
     case 'emulator':
     case 'uplay':
-      if (p.oldSave) return t('gh-simple-emulator-partial', 'Achievement support needs attention', 'Prise en charge des succès à vérifier');
+      if (p.oldSave || p.stalled) return t('gh-simple-emulator-partial', 'Achievement support needs attention', 'Prise en charge des succès à vérifier');
       if (p.servedBy) return t('gh-simple-emulator-ok', 'Achievement support is set up', 'Prise en charge des succès configurée');
       // Offline achievements were just switched on and the game has not run since: say so, or the
       // row goes green with a "turn it off" button beside it and no word about why.

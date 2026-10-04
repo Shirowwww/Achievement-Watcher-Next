@@ -2054,6 +2054,8 @@
     "gh-action-uplay-ticket-off": "Désactiver les succès hors connexion",
     "gh-ticket-remove-detail": "La ligne ajoutée par AW Next aux réglages de l’émulateur à côté du jeu est retirée, et rien d’autre ne change. Les succès déjà enregistrés sont conservés. Tu peux la remettre quand tu veux.",
     "gh-why-appid-mismatch": "L’émulateur du dossier de ce jeu annonce l’identifiant {appidOnDisk}, alors qu’AW Next a associé ce jeu à {appidExpected}. Les succès débloqués sous le mauvais identifiant sont enregistrés sur un autre jeu. Corrige le fichier si {appidExpected} est le bon jeu - la valeur actuelle est conservée.",
+    "gh-why-crack-records-nothing": "Ce jeu a tourné plus d’une heure avec {servedBy} sans enregistrer un seul succès. Certains cracks ne signalent jamais les succès. AW Next peut installer l’émulateur pris en charge par-dessus, le fichier actuel étant conservé.",
+    "gh-why-crack-records-nothing-fixed": "Ce jeu a tourné plus d’une heure avec {servedBy} sans enregistrer un seul succès. Certains cracks ne signalent jamais les succès, et celui-ci ne peut pas être remplacé d’ici. Vérifie que le jeu est lancé depuis son propre dossier, pas depuis une copie ailleurs.",
     "gh-appid-prompt-message": "{game} a actuellement l’identifiant {appidOnDisk} dans steam_appid.txt. AW Next propose {appidExpected}, mais indique toi-même le bon identifiant Steam si tu le connais (par exemple si un autre jeu partage ce nom). Le fichier actuel est sauvegardé dans steam_settings\\.aw-backups.",
     "gh-appid-not-numeric": "Un identifiant Steam est un nombre.",
     "gh-appid-done-title": "Fichier d’identification corrigé",

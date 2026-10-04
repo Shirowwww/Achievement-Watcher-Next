@@ -2054,6 +2054,8 @@
     "gh-action-uplay-ticket-off": "Turn offline achievements off",
     "gh-ticket-remove-detail": "The line AW Next added to the emulator settings beside the game is removed, and nothing else changes. Achievements already recorded are kept. You can turn this back on at any time.",
     "gh-why-appid-mismatch": "The emulator in this game’s folder announces game ID {appidOnDisk}, but AW Next matched this game to {appidExpected}. Achievements unlocked under the wrong ID are recorded against another game. Correct the file if {appidExpected} is the right game - the current value is kept.",
+    "gh-why-crack-records-nothing": "This game has run for over an hour with {servedBy} and not one achievement has been recorded. Some cracks never report achievements at all. AW Next can install the supported emulator over it - the current file is kept.",
+    "gh-why-crack-records-nothing-fixed": "This game has run for over an hour with {servedBy} and not one achievement has been recorded. Some cracks never report achievements at all, and this one cannot be replaced from here. Check that the game is started from its own folder, not from a copy elsewhere.",
     "gh-appid-prompt-message": "{game} currently has appid {appidOnDisk} in steam_appid.txt. AW Next suggests {appidExpected}, but enter the correct Steam appid yourself if you know it (e.g. another game shares this name). The current file is backed up under steam_settings\\.aw-backups.",
     "gh-appid-not-numeric": "A Steam appid is a number.",
     "gh-appid-done-title": "Game ID file corrected",

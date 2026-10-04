@@ -250,6 +250,8 @@ function achievementDataCheck(signals) {
   inferred from the source label: other loaders (CODEX, OnlineFix, TENOKE...) keep unlocks
   elsewhere entirely, and demanding steam_settings from them reported working games as broken.
 */
+// Playtime is counted in seconds.
+const STALLED_CRACK_SECONDS = 60 * 60;
 // ColdClient is Goldberg underneath and does write GSE Saves.
 const LOADERS_WRITING_GOLDBERG_SAVES = new Set(['ColdClient']);
 const GOLDBERG_SAVE_PATH = /[\\/](gse saves|goldberg steamemu saves)[\\/]/i;
@@ -276,14 +278,22 @@ function emulatorCheck(signals) {
     // Launched at least once and still nothing recorded: some scene builds simply never call the
     // achievement API. Swapping their runtime for GBE Fork is the only thing that changes that, so
     // offer it here - never automatically, and never over a crack that is demonstrably working.
-    const idle = num(signals.playtime && signals.playtime.total) > 0 && num(signals.achievements && signals.achievements.unlocked) === 0;
+    const playedSeconds = num(signals.playtime && signals.playtime.total);
+    const idle = playedSeconds > 0 && num(signals.achievements && signals.achievements.unlocked) === 0;
+    // An hour in with nothing recorded is no longer "early": the crack most likely never reports.
+    const stalled = idle && playedSeconds >= STALLED_CRACK_SECONDS;
     // ...and only where that runtime IS the steam_api dll: see crackLoaderDetect's `replaceable`.
     const canSwitch = idle && signals.crackLoader.replaceable === true;
     // Every save read is a Goldberg one, which this loader never writes: left by another copy of
     // the game, so the card shows that copy's unlocks and none of this one's.
     const oldSave = readsOnlyForeignGoldbergSaves(signals);
-    return check('emulator', oldSave ? LEVEL.WARN : LEVEL.INFO, {
-      params: { servedBy: signals.crackLoader.name, ...(idle ? { idle: true } : {}), ...(oldSave ? { oldSave: true } : {}) },
+    return check('emulator', oldSave || stalled ? LEVEL.WARN : LEVEL.INFO, {
+      params: {
+        servedBy: signals.crackLoader.name,
+        ...(idle ? { idle: true } : {}),
+        ...(stalled ? { stalled: true, canSwitch } : {}),
+        ...(oldSave ? { oldSave: true } : {}),
+      },
       actions: canSwitch ? [ACTION.SWITCH_RUNTIME] : [],
     });
   }
@@ -552,6 +562,7 @@ function explain(state, checks, signals) {
   // A wrong appid outranks "nothing unlocked yet" below, since it's the actual reason: the
   // emulator announces one game and AW Next watches another.
   if (emulator && emulator.params && emulator.params.appidExpected) return { reason: 'appid-mismatch', params: emulator.params };
+  if (emulator && emulator.params && emulator.params.stalled) return { reason: 'crack-records-nothing', params: emulator.params };
   // The signature case: everything needed is present, nothing has been recorded yet. Say where the
   // fault is likely to be, because "no notifications appeared" is the usual misread.
   if (progress && progress.level === LEVEL.WARN) return { reason: 'no-progress-yet', params: progress.params };

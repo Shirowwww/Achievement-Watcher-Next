@@ -2054,6 +2054,8 @@
     "gh-action-uplay-ticket-off": "Wyłącz osiągnięcia offline",
     "gh-ticket-remove-detail": "Wiersz dodany przez AW Next do ustawień emulatora obok gry zostaje usunięty i nic więcej się nie zmienia. Już zapisane osiągnięcia pozostają. Możesz to włączyć ponownie w dowolnej chwili.",
     "gh-why-appid-mismatch": "Emulator w folderze tej gry zgłasza identyfikator {appidOnDisk}, a AW Next dopasował grę do {appidExpected}. Osiągnięcia odblokowane pod złym identyfikatorem trafiają do innej gry. Popraw plik, jeśli właściwa gra to {appidExpected} - obecna wartość zostaje zachowana.",
+    "gh-why-crack-records-nothing": "Ta gra działała ponad godzinę z {servedBy}, a mimo to nie zapisano ani jednego osiągnięcia. Niektóre cracki w ogóle nie zgłaszają osiągnięć. AW Next może zainstalować na nim obsługiwany emulator - obecny plik zostaje zachowany.",
+    "gh-why-crack-records-nothing-fixed": "Ta gra działała ponad godzinę z {servedBy}, a mimo to nie zapisano ani jednego osiągnięcia. Niektóre cracki w ogóle nie zgłaszają osiągnięć, a tego nie da się stąd zastąpić. Sprawdź, czy gra jest uruchamiana z własnego folderu, a nie z kopii w innym miejscu.",
     "gh-appid-prompt-message": "{game} ma obecnie identyfikator {appidOnDisk} w pliku steam_appid.txt. AW Next sugeruje {appidExpected}, ale wpisz sam poprawny identyfikator Steam, jeśli go znasz (np. gdy inna gra ma tę samą nazwę). Bieżący plik jest archiwizowany w steam_settings\\.aw-backups.",
     "gh-appid-not-numeric": "Identyfikator Steam to liczba.",
     "gh-appid-done-title": "Poprawiono plik identyfikatora gry",

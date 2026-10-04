@@ -2054,6 +2054,8 @@
     "gh-action-uplay-ticket-off": "Desativar as proezas sem ligação",
     "gh-ticket-remove-detail": "A linha que o AW Next acrescentou às definições do emulador junto ao jogo é removida, e nada mais muda. As proezas já registadas são mantidas. Podes voltar a ativar isto quando quiseres.",
     "gh-why-appid-mismatch": "O emulador na pasta deste jogo anuncia o ID {appidOnDisk}, mas o AW Next associou este jogo a {appidExpected}. As proezas desbloqueadas com o ID errado ficam registadas noutro jogo. Corrija o ficheiro se {appidExpected} for o jogo certo - o valor atual é mantido.",
+    "gh-why-crack-records-nothing": "Este jogo esteve a correr durante mais de uma hora com {servedBy} sem registar uma única proeza. Alguns cracks nunca comunicam as proezas. O AW Next pode instalar o emulador suportado por cima - o ficheiro atual é mantido.",
+    "gh-why-crack-records-nothing-fixed": "Este jogo esteve a correr durante mais de uma hora com {servedBy} sem registar uma única proeza. Alguns cracks nunca comunicam as proezas, e este não pode ser substituído a partir daqui. Verifique se o jogo é iniciado a partir da sua própria pasta, e não de uma cópia noutro local.",
     "gh-appid-prompt-message": "{game} tem atualmente o ID {appidOnDisk} no steam_appid.txt. O AW Next sugere {appidExpected}, mas introduz tu próprio o ID da Steam correto se o souberes (por exemplo, se outro jogo partilhar este nome). O ficheiro atual é guardado em steam_settings\\.aw-backups.",
     "gh-appid-not-numeric": "Um ID da Steam é um número.",
     "gh-appid-done-title": "Ficheiro de identificação do jogo corrigido",

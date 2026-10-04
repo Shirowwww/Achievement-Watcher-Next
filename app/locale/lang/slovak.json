@@ -2054,6 +2054,8 @@
     "gh-action-uplay-ticket-off": "Vypnúť úspechy offline",
     "gh-ticket-remove-detail": "Riadok, ktorý AW Next pridal do nastavení emulátora vedľa hry, sa odstráni a nič iné sa nezmení. Už zaznamenané úspechy zostanú zachované. Kedykoľvek to môžeš znova zapnúť.",
     "gh-why-appid-mismatch": "Emulátor v priečinku tejto hry hlási ID {appidOnDisk}, ale AW Next priradil hru k {appidExpected}. Úspechy odomknuté pod nesprávnym ID sa zapíšu inej hre. Opravte súbor, ak je správna hra {appidExpected} - súčasná hodnota zostane zachovaná.",
+    "gh-why-crack-records-nothing": "Táto hra bežala viac ako hodinu s {servedBy} a nezaznamenal sa ani jeden úspech. Niektoré cracky úspechy nikdy nehlásia. AW Next môže nad ním nainštalovať podporovaný emulátor - súčasný súbor zostane zachovaný.",
+    "gh-why-crack-records-nothing-fixed": "Táto hra bežala viac ako hodinu s {servedBy} a nezaznamenal sa ani jeden úspech. Niektoré cracky úspechy nikdy nehlásia a tento nemožno odtiaľto nahradiť. Skontrolujte, či sa hra spúšťa zo svojho vlastného priečinka, a nie z kópie inde.",
     "gh-appid-prompt-message": "Hra {game} má momentálne v súbore steam_appid.txt ID {appidOnDisk}. AW Next navrhuje {appidExpected}, ale ak poznáte správne Steam ID, zadajte ho sami (napríklad ak rovnaký názov zdieľa iná hra). Súčasný súbor sa zálohuje do steam_settings\\.aw-backups.",
     "gh-appid-not-numeric": "Steam ID je číslo.",
     "gh-appid-done-title": "Súbor s ID hry opravený",

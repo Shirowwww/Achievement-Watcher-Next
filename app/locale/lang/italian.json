@@ -2054,6 +2054,8 @@
     "gh-action-uplay-ticket-off": "Disattiva gli obiettivi offline",
     "gh-ticket-remove-detail": "La riga che AW Next ha aggiunto alle impostazioni dell’emulatore accanto al gioco viene rimossa e nient’altro cambia. Gli obiettivi già registrati vengono mantenuti. Puoi riattivarlo quando vuoi.",
     "gh-why-appid-mismatch": "L’emulatore nella cartella di questo gioco dichiara l’ID {appidOnDisk}, ma AW Next ha associato il gioco a {appidExpected}. I successi sbloccati con l’ID sbagliato vengono registrati su un altro gioco. Correggi il file se {appidExpected} è il gioco giusto - il valore attuale viene conservato.",
+    "gh-why-crack-records-nothing": "Questo gioco è rimasto in esecuzione per oltre un’ora con {servedBy} senza che sia stato registrato nemmeno un obiettivo. Alcuni crack non segnalano mai gli obiettivi. AW Next può installare l’emulatore supportato sopra di esso - il file attuale viene mantenuto.",
+    "gh-why-crack-records-nothing-fixed": "Questo gioco è rimasto in esecuzione per oltre un’ora con {servedBy} senza che sia stato registrato nemmeno un obiettivo. Alcuni crack non segnalano mai gli obiettivi e questo non può essere sostituito da qui. Controlla che il gioco venga avviato dalla sua cartella, non da una copia altrove.",
     "gh-appid-prompt-message": "{game} ha attualmente l’ID {appidOnDisk} nel file steam_appid.txt. AW Next suggerisce {appidExpected}, ma inserisci tu l’ID Steam corretto se lo conosci (ad esempio se un altro gioco condivide questo nome). Il file attuale viene salvato in steam_settings\\.aw-backups.",
     "gh-appid-not-numeric": "Un ID Steam è un numero.",
     "gh-appid-done-title": "File identificativo del gioco corretto",

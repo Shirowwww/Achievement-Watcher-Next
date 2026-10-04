@@ -2054,6 +2054,8 @@
     "gh-action-uplay-ticket-off": "關閉離線成就",
     "gh-ticket-remove-detail": "AW Next 加入遊戲旁模擬器設定中的那一行會被移除，其他都不會改變。已記錄的成就會保留。你隨時可以重新開啟。",
     "gh-why-appid-mismatch": "這款遊戲資料夾中的模擬器聲稱遊戲 ID 是 {appidOnDisk}，但 AW Next 比對到的是 {appidExpected}。用錯誤 ID 解鎖的成就會被記到另一款遊戲上。如果 {appidExpected} 才是正確的遊戲，請修正這個檔案 - 目前的值會保留下來。",
+    "gh-why-crack-records-nothing": "這款遊戲已搭配 {servedBy} 執行超過一小時，卻沒有記錄到任何一項成就。有些破解檔根本不會回報成就。AW Next 可以在其上安裝支援的模擬器 - 目前的檔案會被保留。",
+    "gh-why-crack-records-nothing-fixed": "這款遊戲已搭配 {servedBy} 執行超過一小時，卻沒有記錄到任何一項成就。有些破解檔根本不會回報成就，而這個破解檔無法從這裡替換。請確認遊戲是從它自己的資料夾啟動，而不是從其他位置的副本啟動。",
     "gh-appid-prompt-message": "{game} 目前在 steam_appid.txt 中的 ID 是 {appidOnDisk}。AW Next 建議使用 {appidExpected}，但如果你知道正確的 Steam ID，可以自行輸入（例如另一款遊戲使用了相同名稱）。目前的檔案會備份到 steam_settings\\.aw-backups。",
     "gh-appid-not-numeric": "Steam ID 必須是數字。",
     "gh-appid-done-title": "遊戲 ID 檔案已修正",

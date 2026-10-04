@@ -2054,6 +2054,8 @@
     "gh-action-uplay-ticket-off": "Poista offline-saavutukset käytöstä",
     "gh-ticket-remove-detail": "AW Nextin pelin viereen emulaattorin asetuksiin lisäämä rivi poistetaan, eikä mikään muu muutu. Jo tallennetut saavutukset säilyvät. Voit ottaa tämän uudelleen käyttöön milloin tahansa.",
     "gh-why-appid-mismatch": "Tämän pelin kansiossa oleva emulaattori ilmoittaa pelitunnuksen {appidOnDisk}, mutta AW Next yhdisti pelin tunnukseen {appidExpected}. Väärällä tunnuksella avatut saavutukset kirjautuvat toiselle pelille. Korjaa tiedosto, jos {appidExpected} on oikea peli - nykyinen arvo säilytetään.",
+    "gh-why-crack-records-nothing": "Tämä peli on pyörinyt yli tunnin ({servedBy}), mutta yhtään saavutusta ei ole tallentunut. Jotkin crackit eivät koskaan ilmoita saavutuksia. AW Next voi asentaa tuetun emulaattorin sen päälle - nykyinen tiedosto säilyy.",
+    "gh-why-crack-records-nothing-fixed": "Tämä peli on pyörinyt yli tunnin ({servedBy}), mutta yhtään saavutusta ei ole tallentunut. Jotkin crackit eivät koskaan ilmoita saavutuksia, eikä tätä voi korvata täältä käsin. Tarkista, että peli käynnistetään omasta kansiostaan eikä muualla olevasta kopiosta.",
     "gh-appid-prompt-message": "Pelin {game} steam_appid.txt sisältää nyt appidin {appidOnDisk}. AW Next ehdottaa arvoa {appidExpected}, mutta anna oikea Steam-appid itse, jos tiedät sen (esim. jos toisella pelillä on sama nimi). Nykyinen tiedosto varmuuskopioidaan kansioon steam_settings\\.aw-backups.",
     "gh-appid-not-numeric": "Steam-appid on numero.",
     "gh-appid-done-title": "Pelin tunnistetiedosto korjattu",

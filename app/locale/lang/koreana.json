@@ -2054,6 +2054,8 @@
     "gh-action-uplay-ticket-off": "오프라인 도전 과제 끄기",
     "gh-ticket-remove-detail": "AW Next가 게임 옆 에뮬레이터 설정에 추가한 줄이 제거되며 그 밖에는 아무것도 바뀌지 않습니다. 이미 기록된 도전 과제는 그대로 유지됩니다. 언제든지 다시 켤 수 있습니다.",
     "gh-why-appid-mismatch": "이 게임 폴더의 에뮬레이터는 게임 ID {appidOnDisk}을(를) 알리지만, AW Next는 이 게임을 {appidExpected}(으)로 인식했습니다. 잘못된 ID로 달성한 도전 과제는 다른 게임의 기록으로 남습니다. {appidExpected}이(가) 맞는 게임이라면 파일을 바로잡으세요. 현재 값은 그대로 보관됩니다.",
+    "gh-why-crack-records-nothing": "이 게임은 {servedBy}(으)로 1시간 넘게 실행되었지만 기록된 도전 과제는 하나도 없습니다. 일부 크랙은 도전 과제를 전혀 보고하지 않습니다. AW Next가 그 위에 지원되는 에뮬레이터를 설치할 수 있으며, 현재 파일은 그대로 유지됩니다.",
+    "gh-why-crack-records-nothing-fixed": "이 게임은 {servedBy}(으)로 1시간 넘게 실행되었지만 기록된 도전 과제는 하나도 없습니다. 일부 크랙은 도전 과제를 전혀 보고하지 않으며, 이 크랙은 여기서 교체할 수 없습니다. 게임이 다른 곳의 사본이 아니라 자체 폴더에서 실행되는지 확인하세요.",
     "gh-appid-prompt-message": "{game}에는 현재 steam_appid.txt에 ID {appidOnDisk}가 설정되어 있습니다. AW Next는 {appidExpected}을(를) 제안하지만, 올바른 Steam ID를 알고 있다면 직접 입력하세요(예: 다른 게임이 같은 이름을 사용하는 경우). 현재 파일은 steam_settings\\.aw-backups에 백업됩니다.",
     "gh-appid-not-numeric": "Steam ID는 숫자입니다.",
     "gh-appid-done-title": "게임 ID 파일을 바로잡았습니다",

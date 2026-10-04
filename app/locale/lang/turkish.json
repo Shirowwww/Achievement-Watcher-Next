@@ -2054,6 +2054,8 @@
     "gh-action-uplay-ticket-off": "Çevrimdışı başarımları kapat",
     "gh-ticket-remove-detail": "AW Next’in oyunun yanındaki emülatör ayarlarına eklediği satır kaldırılır ve başka hiçbir şey değişmez. Zaten kaydedilmiş başarımlar korunur. Bunu istediğin zaman yeniden açabilirsin.",
     "gh-why-appid-mismatch": "Bu oyunun klasöründeki emülatör {appidOnDisk} kimliğini bildiriyor, ancak AW Next bu oyunu {appidExpected} ile eşleştirdi. Yanlış kimlikle açılan başarımlar başka bir oyuna yazılır. Doğru oyun {appidExpected} ise dosyayı düzeltin; mevcut değer saklanır.",
+    "gh-why-crack-records-nothing": "Bu oyun {servedBy} ile bir saatten uzun süre çalıştı ve tek bir başarım bile kaydedilmedi. Bazı crack'ler başarımları hiçbir zaman bildirmez. AW Next, üzerine desteklenen emülatörü kurabilir - mevcut dosya korunur.",
+    "gh-why-crack-records-nothing-fixed": "Bu oyun {servedBy} ile bir saatten uzun süre çalıştı ve tek bir başarım bile kaydedilmedi. Bazı crack'ler başarımları hiçbir zaman bildirmez ve bu crack buradan değiştirilemez. Oyunun, başka bir yerdeki bir kopyadan değil, kendi klasöründen başlatıldığından emin olun.",
     "gh-appid-prompt-message": "{game} şu anda steam_appid.txt dosyasında {appidOnDisk} kimliğine sahip. AW Next {appidExpected} öneriyor, ancak doğru Steam kimliğini biliyorsanız kendiniz girin (örneğin başka bir oyun bu adı paylaşıyorsa). Mevcut dosya steam_settings\\.aw-backups altında yedeklenir.",
     "gh-appid-not-numeric": "Steam kimliği bir sayıdır.",
     "gh-appid-done-title": "Oyun kimlik dosyası düzeltildi",

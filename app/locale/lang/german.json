@@ -2054,6 +2054,8 @@
     "gh-action-uplay-ticket-off": "Erfolge offline abschalten",
     "gh-ticket-remove-detail": "Die Zeile, die AW Next den Emulator-Einstellungen neben dem Spiel hinzugefügt hat, wird entfernt, sonst ändert sich nichts. Bereits aufgezeichnete Erfolge bleiben erhalten. Du kannst das jederzeit wieder einschalten.",
     "gh-why-appid-mismatch": "Der Emulator im Ordner dieses Spiels meldet die Spiel-ID {appidOnDisk}, AW Next hat das Spiel aber {appidExpected} zugeordnet. Unter der falschen ID freigeschaltete Erfolge werden einem anderen Spiel gutgeschrieben. Korrigiere die Datei, wenn {appidExpected} das richtige Spiel ist - der aktuelle Wert bleibt erhalten.",
+    "gh-why-crack-records-nothing": "Dieses Spiel lief über eine Stunde lang mit {servedBy}, ohne dass ein einziger Erfolg aufgezeichnet wurde. Manche Cracks melden Erfolge überhaupt nie. AW Next kann den unterstützten Emulator darüber installieren - die aktuelle Datei bleibt erhalten.",
+    "gh-why-crack-records-nothing-fixed": "Dieses Spiel lief über eine Stunde lang mit {servedBy}, ohne dass ein einziger Erfolg aufgezeichnet wurde. Manche Cracks melden Erfolge überhaupt nie, und dieser lässt sich von hier aus nicht ersetzen. Prüfe, ob das Spiel aus seinem eigenen Ordner gestartet wird und nicht aus einer Kopie an anderer Stelle.",
     "gh-appid-prompt-message": "{game} hat aktuell die Spiel-ID {appidOnDisk} in steam_appid.txt. AW Next schlägt {appidExpected} vor, gib aber selbst die richtige Steam-ID ein, wenn du sie kennst (zum Beispiel wenn sich ein anderes Spiel denselben Namen teilt). Die aktuelle Datei wird unter steam_settings\\.aw-backups gesichert.",
     "gh-appid-not-numeric": "Eine Steam-ID ist eine Zahl.",
     "gh-appid-done-title": "Spiel-ID-Datei korrigiert",
