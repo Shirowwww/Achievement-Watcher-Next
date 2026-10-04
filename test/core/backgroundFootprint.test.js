@@ -165,8 +165,7 @@ test('HDR screenshots add no resident capture process or Electron renderer work'
   assert.ok(fs.existsSync(path.join(projectRoot, 'watchdog', 'native', 'windows-capture.LICENSE.txt')));
   assert.ok(fs.existsSync(path.join(projectRoot, 'watchdog', 'native', 'Achievements-HDR.LICENSE.txt')));
 
-  assert.match(souvenirJs, /if \(hdrMode === 'auto' && platform === 'win32'\)/);
-  assert.match(souvenirJs, /await hdr\(file\)/);
+  assert.match(souvenirJs, /await capture\(file, hdrMode\)/);
   assert.doesNotMatch(initJs, /aw-next-hdr-screenshot|windows-capture/i, 'startup must not launch or initialize HDR capture');
   assert.doesNotMatch(appJs, /aw-next-hdr-screenshot|windows-capture/i, 'the renderer must not own HDR capture');
 });

@@ -1,5 +1,4 @@
 use std::error::Error;
-use std::fmt::{Display, Formatter};
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::{Path, PathBuf};
@@ -27,18 +26,6 @@ use windows_capture::settings::{
 };
 
 type AnyError = Box<dyn Error + Send + Sync>;
-const HDR_INACTIVE_EXIT_CODE: i32 = 2;
-
-#[derive(Debug)]
-struct HdrInactive;
-
-impl Display for HdrInactive {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str("hdr-inactive")
-    }
-}
-
-impl Error for HdrInactive {}
 
 // A screenshot is opaque, so the alpha channel only ever holds 255. Dropping it takes a
 // quarter off both the canvas and the encoded file.
@@ -62,10 +49,18 @@ impl Canvas {
     }
 }
 
+// HDR desktops are captured in FP16 and tone-mapped; SDR ones are copied as the 8-bit frame they are.
+#[derive(Clone, Copy, PartialEq)]
+enum CaptureMode {
+    Hdr,
+    Sdr,
+}
+
 #[derive(Clone)]
 struct CaptureFlags {
     canvas: Arc<Mutex<Canvas>>,
     white_scale: f32,
+    mode: CaptureMode,
 }
 
 struct SnapshotCapture {
@@ -97,20 +92,28 @@ impl GraphicsCaptureApiHandler for SnapshotCapture {
         let width = frame.width();
         let height = frame.height();
         let frame_buffer = frame.buffer()?;
-        if frame_buffer.color_format() != ColorFormat::Rgba16F {
-            return Err("Windows Graphics Capture did not return an FP16 frame".into());
+        let expected_format = match self.flags.mode {
+            CaptureMode::Hdr => ColorFormat::Rgba16F,
+            CaptureMode::Sdr => ColorFormat::Rgba8,
+        };
+        if frame_buffer.color_format() != expected_format {
+            return Err("Windows Graphics Capture returned another pixel format".into());
         }
 
         let mut unpadded = Vec::new();
         let raw = frame_buffer.as_nopadding_buffer(&mut unpadded);
-        let white_scale = self.flags.white_scale;
-        let scene_peak = estimate_scene_peak(raw, width, height, white_scale);
         let mut canvas = self
             .flags
             .canvas
             .lock()
-            .map_err(|_| "HDR screenshot canvas lock was poisoned")?;
-        tone_map_frame(raw, width, height, scene_peak, white_scale, &mut canvas)?;
+            .map_err(|_| "Screenshot canvas lock was poisoned")?;
+        if self.flags.mode == CaptureMode::Sdr {
+            copy_rgba8_frame(raw, width, height, &mut canvas)?;
+        } else {
+            let white_scale = self.flags.white_scale;
+            let scene_peak = estimate_scene_peak(raw, width, height, white_scale);
+            tone_map_frame(raw, width, height, scene_peak, white_scale, &mut canvas)?;
+        }
 
         self.complete = true;
         capture_control.stop();
@@ -568,6 +571,28 @@ fn tone_map_frame(
     Ok(())
 }
 
+// An SDR frame is already what the screen shows: keep red, green and blue, drop the alpha.
+fn copy_rgba8_frame(raw: &[u8], width: u32, height: u32, canvas: &mut Canvas) -> Result<(), AnyError> {
+    let expected = usize::try_from(width)?
+        .checked_mul(usize::try_from(height)?)
+        .and_then(|pixels| pixels.checked_mul(4))
+        .ok_or("Captured frame is too large")?;
+    if raw.len() < expected {
+        return Err("Captured frame buffer is incomplete".into());
+    }
+
+    let copy_width = width.min(canvas.width);
+    let copy_height = height.min(canvas.height);
+    for y in 0..copy_height {
+        for x in 0..copy_width {
+            let source = ((y * width + x) * 4) as usize;
+            let destination = ((y * canvas.width + x) * 3) as usize;
+            canvas.rgb[destination..destination + 3].copy_from_slice(&raw[source..source + 3]);
+        }
+    }
+    Ok(())
+}
+
 fn write_png(output: &Path, canvas: &Canvas) -> Result<(), AnyError> {
     if let Some(parent) = output.parent() {
         std::fs::create_dir_all(parent)?;
@@ -595,7 +620,7 @@ fn write_png(output: &Path, canvas: &Canvas) -> Result<(), AnyError> {
     Ok(())
 }
 
-fn capture(output: &Path, primary: Monitor, white_scale: f32) -> Result<(), AnyError> {
+fn capture(output: &Path, primary: Monitor, mode: CaptureMode, white_scale: f32) -> Result<(), AnyError> {
     let canvas = Arc::new(Mutex::new(Canvas::new(
         primary.width()?,
         primary.height()?,
@@ -607,17 +632,21 @@ fn capture(output: &Path, primary: Monitor, white_scale: f32) -> Result<(), AnyE
         SecondaryWindowSettings::Default,
         MinimumUpdateIntervalSettings::Default,
         DirtyRegionSettings::Default,
-        ColorFormat::Rgba16F,
+        match mode {
+            CaptureMode::Hdr => ColorFormat::Rgba16F,
+            CaptureMode::Sdr => ColorFormat::Rgba8,
+        },
         CaptureFlags {
             canvas: Arc::clone(&canvas),
             white_scale,
+            mode,
         },
     );
     SnapshotCapture::start(settings)?;
 
     let canvas = canvas
         .lock()
-        .map_err(|_| "HDR screenshot canvas lock was poisoned")?;
+        .map_err(|_| "Screenshot canvas lock was poisoned")?;
     write_png(output, &canvas)
 }
 
@@ -625,7 +654,7 @@ fn run() -> Result<(), AnyError> {
     let mut args = std::env::args_os().skip(1);
     let first = args
         .next()
-        .ok_or("Usage: aw-next-hdr-screenshot.exe [--status | --force] <output.png>")?;
+        .ok_or("Usage: aw-next-hdr-screenshot.exe [--status | --force | --sdr] <output.png>")?;
     let primary = Monitor::primary()?;
 
     if first == "--status" {
@@ -640,32 +669,36 @@ fn run() -> Result<(), AnyError> {
         return Ok(());
     }
 
-    let (force, output) = if first == "--force" {
-        let output = args
-            .next()
-            .map(PathBuf::from)
-            .ok_or("--force requires an output path")?;
-        (true, output)
+    // --force tone-maps even an SDR desktop, --sdr copies even an HDR one; by default the
+    // display's own mode decides.
+    let forced = if first == "--force" {
+        Some(CaptureMode::Hdr)
+    } else if first == "--sdr" {
+        Some(CaptureMode::Sdr)
     } else {
-        (false, PathBuf::from(first))
+        None
+    };
+    let output = if forced.is_some() {
+        args.next()
+            .map(PathBuf::from)
+            .ok_or("an output path is required")?
+    } else {
+        PathBuf::from(first)
     };
 
     let path = primary_path(primary)?;
-    if !force && !path_hdr_enabled(&path)? {
-        return Err(Box::new(HdrInactive));
-    }
-    capture(&output, primary, path_sdr_white_scale(&path))
+    let mode = match forced {
+        Some(mode) => mode,
+        None if path_hdr_enabled(&path)? => CaptureMode::Hdr,
+        None => CaptureMode::Sdr,
+    };
+    capture(&output, primary, mode, path_sdr_white_scale(&path))
 }
 
 fn main() {
     if let Err(error) = run() {
         eprintln!("{error}");
-        let exit_code = if error.downcast_ref::<HdrInactive>().is_some() {
-            HDR_INACTIVE_EXIT_CODE
-        } else {
-            1
-        };
-        std::process::exit(exit_code);
+        std::process::exit(1);
     }
 }
 
@@ -695,6 +728,15 @@ mod tests {
             .iter()
             .flat_map(|rgb| fp16_pixel(rgb[0], rgb[1], rgb[2]))
             .collect()
+    }
+
+    #[test]
+    fn an_sdr_frame_is_copied_without_its_alpha() {
+        let raw = [10, 20, 30, 255, 40, 50, 60, 0, 70, 80, 90, 128, 100, 110, 120, 255];
+        let mut canvas = Canvas::new(2, 2).unwrap();
+        copy_rgba8_frame(&raw, 2, 2, &mut canvas).unwrap();
+        assert_eq!(canvas.rgb, vec![10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120]);
+        assert!(copy_rgba8_frame(&raw[..8], 2, 2, &mut canvas).is_err(), "a short buffer is refused");
     }
 
     #[test]

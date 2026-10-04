@@ -1,8 +1,10 @@
 # HDR screenshot helper
 
-This transient Windows helper captures the primary display with Windows Graphics Capture in
-`R16G16B16A16_FLOAT`, tone-maps HDR highlights to SDR sRGB, and writes an ordinary PNG. It exits
-without capturing when HDR is not active, allowing the Watchdog to keep its existing SDR path.
+This transient Windows helper takes every achievement screenshot. It captures the primary display
+with Windows Graphics Capture and writes an ordinary PNG: in `R16G16B16A16_FLOAT`, tone-mapped to
+SDR sRGB, when HDR is active, and as the plain `R8G8B8A8` frame otherwise. It replaced
+`screenshot-desktop`, whose Windows path compiled a C# screen grabber with `csc.exe` into `%TEMP%`
+and ran it, which antivirus behaviour engines report as a screen-capture tool.
 
 Whether HDR is on is read from the display path of the primary monitor with
 `DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2`, not from DXGI: `IDXGIOutput6::GetDesc1` keeps reporting
@@ -11,8 +13,9 @@ query cannot tell HDR apart from Windows 11 automatic colour management. The cap
 the SDR white level of that same path, so the desktop is not crushed when the "SDR content
 brightness" slider sits above its minimum.
 
-It is started only for an achievement screenshot when the HDR preference is `Automatic`. It does
-not run in the background and does not change Electron's renderer color mode.
+It is started only for an achievement screenshot: with the output path alone when the HDR preference
+is `Automatic`, with `--sdr` when it is off. It does not run in the background and does not change
+Electron's renderer color mode.
 
 ## Tone mapping
 
@@ -75,7 +78,8 @@ setting would replace it, but it is still unstable as of Cargo 1.97. Check a reb
 which must find nothing.
 
 `--status` prints `hdr-active` or `sdr`. `--force <output.png>` is available for development-time
-capture testing on an SDR desktop. End users do not need Rust or the Windows SDK.
+capture testing on an SDR desktop, and `--sdr <output.png>` takes the plain 8-bit capture even on
+an HDR desktop. End users do not need Rust or the Windows SDK.
 
 The helper depends on the MIT-licensed `windows-capture` crate. Its license is shipped beside the
 executable, together with the license for the HDR capture implementation.

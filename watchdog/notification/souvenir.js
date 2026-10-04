@@ -11,22 +11,11 @@ const os = require('os');
 const { execFile } = require('child_process');
 const debug = require('../util/log.js');
 
+// One native helper takes every screenshot: compiling a C# grabber into %TEMP% at run time (the old
+// SDR path) is what antivirus behaviour engines flagged.
 const HDR_HELPER_NAME = 'aw-next-hdr-screenshot.exe';
 const HDR_TIMEOUT_MS = 5000;
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-
-let screenshot = null; // null = not tried, false = unavailable, fn = loaded
-function loadScreenshot() {
-  if (screenshot === null) {
-    try {
-      screenshot = require('screenshot-desktop');
-    } catch (err) {
-      screenshot = false;
-      debug.warn('[souvenir] screenshot-desktop unavailable: ' + (err.message || err));
-    }
-  }
-  return screenshot;
-}
 
 // Names Windows refuses whatever the extension, so a game called "NUL" or "COM1" would lose its
 // screenshots entirely.
@@ -80,18 +69,20 @@ function isPng(file) {
   }
 }
 
-function captureHdr(file, { helper = resolveHdrHelper(), run = execFile, timeoutMs = HDR_TIMEOUT_MS } = {}) {
+// `auto` lets the helper follow the display (tone-mapped when Windows HDR is on); anything else asks
+// for the plain 8-bit capture.
+function captureNative(file, hdrMode, { helper = resolveHdrHelper(), run = execFile, timeoutMs = HDR_TIMEOUT_MS } = {}) {
   return new Promise((resolve, reject) => {
     if (!helper) {
-      const error = new Error('HDR screenshot helper was not found');
-      error.code = 'hdr-unavailable';
+      const error = new Error('screenshot helper was not found');
+      error.code = 'capture-unavailable';
       reject(error);
       return;
     }
 
     run(
       helper,
-      [file],
+      hdrMode === 'auto' ? [file] : ['--sdr', file],
       {
         windowsHide: true,
         timeout: timeoutMs,
@@ -101,18 +92,14 @@ function captureHdr(file, { helper = resolveHdrHelper(), run = execFile, timeout
       (error, stdout, stderr) => {
         if (error) {
           const detail = String(stderr || stdout || error.message || '').trim();
-          if (Number(error.code) === 2 && detail.includes('hdr-inactive')) {
-            error.code = 'hdr-inactive';
-          } else {
-            error.code = error.killed ? 'hdr-timeout' : 'hdr-failed';
-          }
+          error.code = error.killed ? 'capture-timeout' : 'capture-failed';
           if (detail) error.message = detail.slice(0, 1000);
           reject(error);
           return;
         }
         if (!isPng(file)) {
-          const invalid = new Error('HDR screenshot helper did not create a valid PNG');
-          invalid.code = 'hdr-invalid-output';
+          const invalid = new Error('screenshot helper did not create a valid PNG');
+          invalid.code = 'capture-invalid-output';
           reject(invalid);
           return;
         }
@@ -122,15 +109,7 @@ function captureHdr(file, { helper = resolveHdrHelper(), run = execFile, timeout
   });
 }
 
-async function captureSdr(file) {
-  const shot = loadScreenshot();
-  if (!shot) throw new Error('screenshot-desktop is unavailable');
-  const image = await shot({ format: 'png' });
-  fs.writeFileSync(file, image);
-  return file;
-}
-
-function removeHdrOutput(file) {
+function removeCaptureOutput(file) {
   for (const target of [file, file + '.tmp']) {
     try {
       fs.rmSync(target, { force: true });
@@ -138,21 +117,15 @@ function removeHdrOutput(file) {
   }
 }
 
-async function captureImage(file, hdrMode, { platform = process.platform, hdr = captureHdr, sdr = captureSdr } = {}) {
-  if (hdrMode === 'auto' && platform === 'win32') {
-    try {
-      await hdr(file);
-      return 'hdr';
-    } catch (error) {
-      removeHdrOutput(file);
-      const detail = error && error.message ? error.message : String(error);
-      if (error && error.code === 'hdr-inactive') debug.log('[souvenir] Windows HDR is off; using standard capture');
-      else debug.warn('[souvenir] HDR capture unavailable; using standard capture: ' + detail);
-    }
+async function captureImage(file, hdrMode, { platform = process.platform, capture = captureNative } = {}) {
+  if (platform !== 'win32') throw new Error('screenshots are taken on Windows only');
+  try {
+    await capture(file, hdrMode);
+  } catch (error) {
+    removeCaptureOutput(file);
+    throw error;
   }
-
-  await sdr(file);
-  return 'sdr';
+  return hdrMode === 'auto' ? 'auto' : 'sdr';
 }
 
 // Capture the full desktop and write it to <dir>/<game>/<date> - <achievement>.png. Returns the path or null.
@@ -175,7 +148,7 @@ module.exports.capture = async function ({ game, achievement, dir, hdr = 'auto' 
 // Exported for the tests: both decide the path a screenshot is written to.
 module.exports._sanitize = sanitize;
 module.exports._uniquePath = uniquePath;
-module.exports._captureHdr = captureHdr;
+module.exports._captureNative = captureNative;
 module.exports._captureImage = captureImage;
 module.exports._isPng = isPng;
 module.exports._resolveHdrHelper = resolveHdrHelper;
