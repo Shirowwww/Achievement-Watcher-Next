@@ -50,6 +50,8 @@ asarUnpack:
   - util/lzx.js
   - util/xboxLiveIcons.js
   - parser/retroAchievements.js
+  # Read by ff7, madnesspatch and x360Recomp for the Documents folder; registry-js is unpacked already.
+  - util/reg.js
 
 publish:
   provider: github

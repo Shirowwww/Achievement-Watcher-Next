@@ -55,6 +55,28 @@ test('every app module the Watchdog loads through sharedAppModulePath is unpacke
   assert.deepEqual(missing, [], `add these to asarUnpack in app/electron-builder.yml: ${missing.join(', ')}`);
 });
 
+/*
+  require(path.join(__dirname, ...)) escapes the literal-path check below. The Watchdog hands its own
+  replacement in for some of those (a setter called before use); everything else must be unpacked,
+  or the packaged Watchdog throws where the dev checkout works (MadnessPatch reading util/reg.js).
+*/
+const INJECTED_BY_WATCHDOG = new Set(['util/logger.js', 'util/userDataPath.js', 'util/aes.js']);
+
+test('app files a shared module joins onto __dirname are unpacked too', () => {
+  const unpacked = unpackedEntries();
+  const covered = (rel) => unpacked.some((entry) => entry === rel || (entry.endsWith('/**') && rel.startsWith(entry.slice(0, -2))));
+  const missing = [];
+  for (const rel of sharedRequests()) {
+    const source = fs.readFileSync(path.join(root, 'app', rel), 'utf8');
+    for (const match of source.matchAll(/require\(\s*path\.join\(\s*__dirname\s*,\s*((?:'[^']+'\s*,?\s*)+)\)/g)) {
+      const parts = [...match[1].matchAll(/'([^']+)'/g)].map((part) => part[1]);
+      const target = path.posix.normalize(path.posix.join(path.posix.dirname(rel), ...parts));
+      if (!INJECTED_BY_WATCHDOG.has(target) && !covered(target)) missing.push(`${rel} -> ${target}`);
+    }
+  }
+  assert.deepEqual(missing, [], `add these to asarUnpack in app/electron-builder.yml: ${missing.join(', ')}`);
+});
+
 test('every shared module listed for the Watchdog exists and pulls in no further app code', () => {
   for (const rel of sharedRequests()) {
     const file = path.join(root, 'app', rel);
