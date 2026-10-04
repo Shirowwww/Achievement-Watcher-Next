@@ -134,13 +134,26 @@ PCSX2, PPSSPP, Dolphin, BizHawk, Project64 or any other RA-integrated build, rec
 the RetroAchievements dll beside it - and within a few minutes otherwise. A game played for the
 first time is added on its own.
 
+AW Next reads your unlocks from retroachievements.org, so RetroAchievements must stay switched on in
+the emulator: turning it off there stops the unlocks from being sent at all, and AW Next has nothing
+to announce. To see only AW Next's notification, hide the emulator's own pop-up instead. In
+RetroArch that is **Settings → Achievements → Visibility → Unlock Notifications**. On
+RetroBat, which rewrites `retroarch.cfg` at every launch, close RetroBat and add this line to
+`RetroBat\emulationstation\.emulationstation\es_settings.cfg`:
+
+```xml
+<string name="global.retroarch.cheevos_visibility_unlock" value="false" />
+```
+
+Use `cheevos_visibility_mastery` the same way for the mastery pop-up.
+
 ## Other sources
 
 | Source | What it is |
 |---|---|
-| **Xbox 360 games recompiled for PC** | ReXGlue ports and similar recompilations keep their own achievement list in an `achievements` folder (`.toml`, `.tsv`) or `SaveData\Achievements.json`, either in the game folder or in `Documents\<game>`. The list comes from the game's own `default.xex`, in every language it ships and with secret achievements kept secret; [dbox.tools](https://dbox.tools) fills in DLC achievements and games whose executable was not found, the Xbox 360 marketplace supplies the box art, and Exophase the share of players who earned each achievement. A game that writes only a JSON list, with no title id, is recognised when every one of its achievements matches an Xbox 360 title. Unlocks are notified live, play time is tracked, and Reset achievements works on them. It follows the Xenia source switch and the notification preset chosen for the Xbox 360. |
+| **Xbox 360 games recompiled for PC** | ReXGlue ports and similar recompilations keep their own achievement list in an `achievements` folder (`.toml`, `.tsv`) or `SaveData\Achievements.json`, either in the game folder or in `Documents\<game>`. The list comes from the game's own `default.xex`, in every language it ships and with secret achievements kept secret; [dbox.tools](https://dbox.tools) fills in DLC achievements and games whose executable was not found, the Xbox 360 marketplace supplies the box art, and Exophase the share of players who earned each achievement. A game that writes only a JSON list, with no title id, is recognised when every one of its achievements matches an Xbox 360 title (Gears of War 2 Hollow, for one). A list kept in `Documents` is found on its own; for one kept in the game folder, add that folder under **Settings → Folders** (picking `SaveData` or another folder inside it works too) or use **Smart find**. Unlocks are notified live, play time is tracked, and Reset achievements works on them. It follows the Xenia source switch and the notification preset chosen for the Xbox 360. |
 | **Games for Windows LIVE** | XLiveLessNess installs. Each profile's unlock records are read, and the achievement list, its texts and its icons come out of the game's own executable, so nothing has to be downloaded. Watched live. |
-| **Dead Space 2 MarkerPatch, Alice: Madness Returns MadnessPatch** | Add the game folder under **Settings → Folders**: the achievement list is built from the mod's own texts and images, and the unlocks it saves are notified live. Each has its own source switch, and nothing is read while the mod's `AchievementSupport` is turned off. |
+| **Dead Space 2 MarkerPatch, Alice: Madness Returns MadnessPatch** | A Steam copy with the mod installed is found on its own. Any other copy: add the game folder under **Settings → Folders** (a folder inside it, such as `Binaries\Win32`, is taken as the game folder), or let **Smart find** look through your game libraries. The achievement list is built from the mod's own texts and images, and the unlocks it saves are notified live. Each has its own source switch, and nothing is read while the mod's `AchievementSupport` is turned off. |
 | **FINAL FANTASY VII (2013)** | That re-release predates Steamworks achievements and keeps its 36 unlocks in an 8-byte bitfield beside its saves, found in Documents without adding the folder by hand. |
 | **Import notification cache** | Reads the background tracker's own cache as an extra source of past unlocks. |
 | **Manually added games** | A game added from a title and executable, with an optional platform and Steam AppID - see [Advanced tools](advanced.md#add-a-game-manually). |

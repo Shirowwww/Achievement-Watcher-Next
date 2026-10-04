@@ -88,6 +88,8 @@ a confirmation.
 | *The game has never asked for an achievement* | It reads its empty Ubisoft session as signed out. **Enable achievements offline** unblocks it; nothing is sent anywhere. Launch the game once afterwards - the row then reads *Offline achievements on, launch the game once* until you have. |
 | *Offline achievements on, launch the game once* | The setting is written and nothing has been judged yet. The button beside it now reads **Turn offline achievements off**, and takes it back out. |
 | *Served by ALI213, OnlineFix, GBE Fork…* | The emulator actually reading that game, named from its own files. A Ubisoft game already served this way is not offered a Uplay repair: its Uplay layer is unused, not broken. |
+| *Run for over an hour and not one achievement recorded* | The crack serving the game most likely never reports achievements. **Switch to the supported emulator** when it is offered; otherwise check that the game starts from its own folder. |
+| *Game ID file*, with a Steam shortcut to this game | Steam starts the game from a non-Steam shortcut with no `steam_appid.txt` beside it, so the emulator saves under another ID. **Rewrite the achievement data** writes the file there. |
 
 ---
 

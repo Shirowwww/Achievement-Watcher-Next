@@ -94,6 +94,19 @@ to fix by hand.
 A game with no achievement set at all displays **No achievements** rather than 0%, and is left out of
 completion statistics.
 
+**It works from AW Next's Play button but not from a Steam shortcut.** A cracked game added to Steam
+as a non-Steam game (often for Steam Input) is started by Steam with a game ID of its own in the
+environment, and GBE Fork reads that ID before its `steam_appid.txt`: the unlocks are then saved
+under a generated number and never reach the game's card. Steam passes the real ID instead when a
+`steam_appid.txt` sits beside the executable the shortcut starts. Game Health flags a shortcut that
+lacks one, and its repair writes the file there; a repair or an emulator fix done from AW Next
+writes it beside the game's executable anyway.
+
+**A scene crack is served and nothing is ever recorded.** Some cracks never report achievements at
+all. After an hour of play with nothing recorded, Game Health says so and, when that crack is the
+game's Steam library file, offers to install the supported emulator over it (the current file is
+kept).
+
 See [Goldberg and GBE Fork setup](emulator-setup.md#common-problems) or [Goldberg Uplay R2 setup](uplay-r2.md#achievements-remain-at-0) for source-specific steps.
 
 ## The wrong game was matched
@@ -278,11 +291,29 @@ AW Next's own copies, and the copy written into a game folder can still be flagg
 game's folder too if it keeps happening. Reporting the false positive to your vendor is what
 eventually fixes it for everybody.
 
+Windows Defender names the GBE Fork archive `Trojan:Win32/Suschil!rfn` while AW Next downloads it
+into its cache. It is the same false positive, reported to the emulator's authors too; allow it, or
+exclude the cache folder above, and run the fix again.
+
 **If you would rather check first.** Both are third-party and open source: the Steam emulator is
 downloaded from the official [GSE Fork releases](https://github.com/Detanup01/gbe_fork), and the
 Ubisoft loaders ship in `app/resources/uplayR1/` and `app/resources/uplayR2/` in the repository.
 AW Next verifies the bundled ones against known SHA-256 digests, their PE architecture and their
 achievement capability before any repair may use them, and a file that fails is refused.
+
+### An antivirus reacts while AW Next runs
+
+Behaviour engines (Kaspersky's System Watcher, for one) judge what a program does rather than what
+it contains. Up to 3.11.0, AW Next did three things such an engine reads as hiding something: it
+compiled a small screen-capture program into `%TEMP%` for achievement screenshots, compiled a
+Windows call through PowerShell before each notification, and passed the update check to PowerShell
+as an encoded command. None of that happens any more: screenshots go through the native helper that
+ships with the app, and the notification check calls Windows directly.
+
+If your antivirus still reacts, note the exact detection name it shows and report it, with the file
+it names, as a false positive. For Kaspersky that is
+[opentip.kaspersky.com](https://opentip.kaspersky.com): look the file up by its hash, then
+**Submit to reanalyze**.
 
 ## The window does not open
 
