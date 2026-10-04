@@ -3277,8 +3277,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
           const diagnosis = await userDir.diagnose(dialog.filePaths[0]);
           if (diagnosis.accepted) {
-            populateUserDirList({ dir: dialog.filePaths[0], origin: 'manual' });
-            reportFolderScan(dialog.filePaths[0]);
+            // A folder picked inside a game is kept as the game's own folder.
+            const accepted = diagnosis.canonicalPath || dialog.filePaths[0];
+            populateUserDirList({ dir: accepted, origin: 'manual' });
+            reportFolderScan(accepted);
           } else {
             // Say why, not just no: a rejected folder and a folder AW never looked at used to be
             // indistinguishable to the user.
@@ -5765,8 +5767,9 @@ function populateUserDirList(option) {
 
         const diagnosis = await userDir.diagnose(filePaths[0]);
         if (diagnosis.accepted) {
-          elem.find('.path').attr('title', filePaths[0]);
-          elem.find('.path span').text(filePaths[0]);
+          const accepted = diagnosis.canonicalPath || filePaths[0];
+          elem.find('.path').attr('title', accepted);
+          elem.find('.path span').text(accepted);
           elem.find('.path').removeClass('overflow');
           if (elem.find('.path span').width() >= 350) {
             elem.find('.path').addClass('overflow');

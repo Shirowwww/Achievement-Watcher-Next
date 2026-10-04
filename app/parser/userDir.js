@@ -368,8 +368,53 @@ module.exports.findEntries = async () => {
   return result;
 };
 
+function isWithin(child, parent) {
+  if (!child || !parent) return false;
+  const relative = path.relative(path.resolve(parent), path.resolve(child));
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+// Alice's mod sits in Binaries\Win32; the game is the folder holding Binaries.
+function madnessGameRoot(modRoot) {
+  const binaries = path.dirname(modRoot);
+  return /^win32$/i.test(path.basename(modRoot)) && /^binaries$/i.test(path.basename(binaries)) ? path.dirname(binaries) : modRoot;
+}
+
+/*
+  Achievement mods and recompiled games keep their unlock lists in layouts no emulator config names,
+  so their own readers are asked. Each answer says where the game lives (gameRoot, '' for a list kept
+  under Documents) and where its unlock data is.
+*/
+function ownLayoutGames(dir) {
+  const games = [];
+  const ask = (read) => {
+    try {
+      read();
+    } catch {
+      /* one reader failing says nothing about the folder */
+    }
+  };
+  ask(() => {
+    const found = require('./markerpatch.js').discover(dir);
+    if (found) games.push({ code: 'markerpatch', gameRoot: found.root, dataPath: found.root });
+  });
+  ask(() => {
+    const found = require('./madnesspatch.js').discover(dir);
+    if (found) games.push({ code: 'madnesspatch', gameRoot: madnessGameRoot(found.root), dataPath: found.root });
+  });
+  ask(() => {
+    for (const target of require('./x360Recomp.js').discover(dir)) {
+      // A bare default.xex is a disc dump, not an unlock list.
+      if (target.format === 'xex') continue;
+      games.push({ code: 'recompilation', gameRoot: target.gameDir || '', dataPath: target.file || target.dir });
+    }
+  });
+  return games;
+}
+
 // Why a folder was accepted or rejected, not just whether it was - a rejected folder and one never
 // examined must not look the same. Returns { accepted, code, evidence }; the UI turns code into text.
+// `canonicalPath`, when present, is the folder to keep instead of the one picked.
 module.exports.diagnose = async (dirpath) => {
   const accepted_files = steam_emu_cfg_file_supported.concat(EMULATOR_BINARIES);
   const evidence = { layouts: PORTABLE_SCENE_SAVE_DIRS.length };
@@ -447,6 +492,22 @@ module.exports.diagnose = async (dirpath) => {
   const portable = collectPortableSceneSavesBelow(dirpath);
   if (portable.length > 0) {
     return { accepted: true, code: 'portable-save-tree', evidence: { ...evidence, saves: portable.map((record) => record.data.path) } };
+  }
+
+  const ownLayout = ownLayoutGames(dirpath);
+  if (ownLayout.length > 0) {
+    return { accepted: true, code: ownLayout[0].code, evidence: { ...evidence, roots: ownLayout.map((game) => game.gameRoot || game.dataPath) } };
+  }
+
+  // A folder inside one of those games (GearGame, SaveData, Binaries\Win32): the game's own folder is
+  // the one to keep, a level or two up. Only a game around the pick counts, never a library.
+  let parent = path.dirname(path.resolve(dirpath));
+  for (let level = 0; level < 2 && path.dirname(parent) !== parent; level += 1, parent = path.dirname(parent)) {
+    const owner = ownLayoutGames(parent).find((game) => isWithin(dirpath, game.gameRoot) || isWithin(game.dataPath, dirpath));
+    if (owner) {
+      const canonicalPath = owner.gameRoot || parent;
+      return { accepted: true, code: owner.code, canonicalPath, evidence: { ...evidence, roots: [canonicalPath] } };
+    }
   }
 
   // Rejected: say which kind of folder this is rather than "nothing found", separating a layout AW

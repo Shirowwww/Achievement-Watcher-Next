@@ -634,8 +634,9 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
       if (!dialog.filePaths || dialog.filePaths.length === 0) return;
       const diagnosis = await userDir.diagnose(dialog.filePaths[0]);
       if (diagnosis.accepted) {
-        addSaveDir(dialog.filePaths[0]);
-        reportFolderScan(dialog.filePaths[0]);
+        const accepted = diagnosis.canonicalPath || dialog.filePaths[0];
+        addSaveDir(accepted);
+        reportFolderScan(accepted);
       } else {
         remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
           type: 'warning',
