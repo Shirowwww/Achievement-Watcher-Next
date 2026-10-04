@@ -52,6 +52,8 @@ asarUnpack:
   - parser/retroAchievements.js
   # Read by ff7, madnesspatch and x360Recomp for the Documents folder; registry-js is unpacked already.
   - util/reg.js
+  # Where Steam installed a patched game, for markerpatch and madnesspatch.
+  - parser/steamLibrary.js
 
 publish:
   provider: github

@@ -365,6 +365,24 @@ module.exports.findEntries = async () => {
     }
   }
 
+  // Achievement mods and recompiled games: the walk only finds candidates, their readers decide.
+  const ownLayoutSearch = ['**/MarkerPatch.ini', '**/MadnessPatch.ini', '**/SaveData/Achievements.json', '**/achievements/*.toml'];
+  for (const root of libraryRoots) {
+    const found = await glob(ownLayoutSearch, { cwd: root, deep: 4, onlyFiles: true, absolute: true, suppressErrors: true, caseSensitiveMatch: false });
+    for (const filepath of found) {
+      const folder = path.resolve(path.dirname(filepath));
+      const candidate = /^(savedata|achievements)$/i.test(path.basename(folder)) ? path.dirname(folder) : folder;
+      const game = ownLayoutGames(candidate)[0];
+      if (game) addDetected(game.gameRoot || candidate, 'Achievement mod or recompiled game');
+    }
+  }
+  // A patched Steam copy: Steam's own record says where it is.
+  for (const reader of [require('./markerpatch.js'), require('./madnesspatch.js')]) {
+    for (const root of reader.knownInstallRoots()) {
+      if (reader.discover(root)) addDetected(root, 'Achievement mod in a Steam game');
+    }
+  }
+
   return result;
 };
 

@@ -237,6 +237,16 @@ function scan(dir) {
   ];
 }
 
+// Where Steam installed the game, so a patched copy is found without adding its folder.
+function knownInstallRoots({ installDirOf = (appid) => require(path.join(__dirname, 'steamLibrary.js')).installDirOf(appid) } = {}) {
+  try {
+    const dir = installDirOf(APPID.replace(/^madnesspatch-/, ''));
+    return dir ? [dir] : [];
+  } catch {
+    return [];
+  }
+}
+
 function parseLanguageFile(filePath) {
   let text;
   try {
@@ -344,6 +354,7 @@ module.exports.STATE_FILE = STATE_FILE;
 module.exports.detect = detect;
 module.exports.discover = discover;
 module.exports.scan = scan;
+module.exports.knownInstallRoots = knownInstallRoots;
 module.exports.getGameData = getGameData;
 module.exports.getAchievements = getAchievements;
 module.exports.parseUnlockFlag = parseUnlockFlag;

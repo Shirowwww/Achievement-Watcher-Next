@@ -1074,29 +1074,7 @@ const getSteamPath = (module.exports.getSteamPath = async () => {
 
 // A Steam install's folder is authoritative: appmanifest_<appid>.acf names the installdir, and
 // libraryfolders.vdf names every library root - powers exe detection for the launch panel.
-function unescapeSteamVdf(value) {
-  return String(value || '').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-}
-
-function parseSteamLibraryFoldersVdf(text) {
-  const roots = [];
-  const re = /^\s*"path"\s+"([^"]+)"/gm;
-  let m = null;
-  while ((m = re.exec(String(text || '')))) roots.push(unescapeSteamVdf(m[1]));
-  return roots;
-}
-
-function parseSteamAppManifestAcf(text) {
-  const out = { appid: '', name: '', installDir: '' };
-  const re = /^\s*"(appid|name|installdir)"\s+"([^"]*)"/gm;
-  let m = null;
-  while ((m = re.exec(String(text || '')))) {
-    if (m[1] === 'appid') out.appid = unescapeSteamVdf(m[2]);
-    else if (m[1] === 'name') out.name = unescapeSteamVdf(m[2]);
-    else if (m[1] === 'installdir') out.installDir = unescapeSteamVdf(m[2]);
-  }
-  return out;
-}
+const { unescapeSteamVdf, parseSteamLibraryFoldersVdf, parseSteamAppManifestAcf } = require(path.join(__dirname, 'steamLibrary.js'));
 
 // Map of appid -> { name, gameDir } for every app with an appmanifest on disk. Rebuilt on each
 // scan (a handful of small ACF files) so newly installed Steam games are picked up immediately.

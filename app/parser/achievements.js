@@ -2023,6 +2023,25 @@ async function discoverInScope(source, steamAccFilter, scope) {
     }
   }
 
+  // A patched Steam copy nobody added as a folder: Steam's own record says where the game is.
+  if (!scope) {
+    for (const [enabled, reader] of [
+      [source.markerpatch, markerpatch],
+      [source.madnesspatch, madnesspatch],
+    ]) {
+      if (!enabled || data.some((g) => g.appid === reader.APPID)) continue;
+      try {
+        const found = reader.knownInstallRoots().flatMap((root) => reader.scan(root));
+        if (found.length > 0) {
+          data = data.concat(found.slice(0, 1));
+          debug.log(`-> ${found[0].source} (Steam install) data added`);
+        }
+      } catch (err) {
+        debug.log(err);
+      }
+    }
+  }
+
   // A recompiled game's folder is claimed, or the unconfigured scan lists it a second time as an
   // executable with no achievements.
   for (const g of data) {

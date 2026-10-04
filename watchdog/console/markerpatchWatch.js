@@ -63,9 +63,10 @@ function watchedFolders(configFile = userDirFile) {
   }
 }
 
-// There is only one title here, so the first watched folder that carries it wins.
-function discoverGame(configFile = userDirFile) {
-  for (const dir of watchedFolders(configFile)) {
+// There is only one title here, so the first watched folder that carries it wins; Steam's own
+// install is looked at last, so nobody has to add the folder.
+function discoverGame(configFile = userDirFile, knownRoots = () => markerpatch.knownInstallRoots()) {
+  for (const dir of [...watchedFolders(configFile), ...knownRoots()]) {
     let found;
     try {
       found = markerpatch.discover(dir);

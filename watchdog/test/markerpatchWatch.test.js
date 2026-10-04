@@ -38,11 +38,14 @@ try {
   assert.deepStrictEqual(watchedFolders(configFile), [library], 'a folder switched off is not watched');
   assert.deepStrictEqual(watchedFolders(path.join(temp, 'absent.db')), [], 'a missing folder list is empty, never an error');
 
-  const found = discoverGame(configFile);
+  const noSteam = () => [];
+  const found = discoverGame(configFile, noSteam);
   assert.ok(found && found.detected, 'only the enabled library is searched');
   assert.strictEqual(found.root, path.resolve(installDir));
 
-  assert.strictEqual(discoverGame(path.join(temp, 'absent.db')), null, 'no configured folders means no game');
+  assert.strictEqual(discoverGame(path.join(temp, 'absent.db'), noSteam), null, 'no configured folders means no game');
+  const fromSteam = discoverGame(path.join(temp, 'absent.db'), () => [installDir]);
+  assert.strictEqual(fromSteam && fromSteam.root, path.resolve(installDir), "Steam's own install is found without a folder");
 
   // resolveWatchTarget: the folder already exists.
   const existing = path.join(temp, 'EA Games', 'Dead Space 2');
