@@ -9,22 +9,25 @@ const state = require(path.join(__dirname, '..', 'queryUserNotificationState.js'
 
 function loadStateModuleWithFakeQuery(now, query) {
   const source = fs.readFileSync(path.join(__dirname, '..', 'queryUserNotificationState.js'), 'utf8');
-  const fakeExecFile = () => {};
   const module = { exports: {} };
   const loadModule = new Function('require', 'module', 'exports', 'process', 'Date', source);
 
   loadModule((request) => {
-    if (request === 'child_process') return { execFile: fakeExecFile };
-    if (request === 'util') {
-      return { promisify: (value) => value === fakeExecFile ? query : require('node:util').promisify(value) };
-    }
-    if (request === './util/powershell.js') return { resolvePowerShell: () => 'powershell.exe' };
     if (request === './util/log.js') return { warn: () => {} };
     throw new Error(`Unexpected module request: ${request}`);
   }, module, module.exports, { platform: 'win32' }, { now });
 
+  module.exports._setReader(query);
   return module.exports;
 }
+
+// The query used to start PowerShell and compile a C# import with csc.exe on every notification,
+// which antivirus behaviour engines flag. It is a direct native call now, and must stay one.
+test('reading the state starts no process and compiles nothing', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'queryUserNotificationState.js'), 'utf8');
+  assert.doesNotMatch(source, /require\('child_process'\)|resolvePowerShell|-MemberDefinition/);
+  assert.match(source, /koffi\.load\('shell32\.dll'\)/);
+});
 
 function deferred() {
   let resolve;
@@ -85,11 +88,11 @@ test('repeated reads inside the TTL are served from one query', async () => {
   let queries = 0;
   const isolated = loadStateModuleWithFakeQuery(() => 0, async () => {
     queries += 1;
-    return { stdout: '5' };
+    return 5;
   });
   const first = await isolated.queryUserNotificationState();
   for (let i = 0; i < 25; i += 1) assert.strictEqual(await isolated.queryUserNotificationState(), first);
-  assert.strictEqual(queries, 1, 'cached reads must not each shell out to PowerShell');
+  assert.strictEqual(queries, 1, 'cached reads must not each query Windows again');
 });
 
 test('a slow query starts the TTL when its result arrives', async () => {
@@ -104,17 +107,17 @@ test('a slow query starts the TTL when its result arrives', async () => {
   const first = isolated.queryUserNotificationState();
   assert.strictEqual(queries, 1);
 
-  // Simulate a slow PowerShell startup that exceeds the one-second cache TTL.
+  // Simulate a slow answer that exceeds the one-second cache TTL.
   now = 2000;
-  pending.resolve({ stdout: '5' });
+  pending.resolve(5);
   assert.strictEqual(await first, 'QUNS_ACCEPTS_NOTIFICATIONS');
   assert.strictEqual(await isolated.queryUserNotificationState(), 'QUNS_ACCEPTS_NOTIFICATIONS');
   assert.strictEqual(queries, 1, 'a fresh result must remain cached for the full TTL');
 });
 
 // A batch unlock asks all at once, before any answer is cached. Without in-flight sharing every
-// caller starts its own PowerShell - twenty of them, each compiling the shell32 import - which is
-// exactly the burst the notification path produces when a save file unlocks a whole set.
+// caller queries Windows on its own - twenty of them - which is exactly the burst the notification
+// path produces when a save file unlocks a whole set.
 test('a burst of simultaneous reads shares a single query', async () => {
   let queries = 0;
   const pending = deferred();
@@ -124,7 +127,7 @@ test('a burst of simultaneous reads shares a single query', async () => {
   });
   const answerPromise = Promise.all(Array.from({ length: 20 }, () => isolated.queryUserNotificationState()));
   assert.strictEqual(queries, 1, 'every caller in the burst must share the in-flight query');
-  pending.resolve({ stdout: '5' });
+  pending.resolve(5);
   const answers = await answerPromise;
 
   assert.strictEqual(new Set(answers).size, 1, 'every caller in the burst must get the same answer');

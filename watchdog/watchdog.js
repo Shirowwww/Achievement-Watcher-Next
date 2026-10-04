@@ -40,7 +40,7 @@ for (const signal of ['SIGTERM', 'SIGINT']) {
 const debug = require('./util/log.js');
 // Use a separate mutex from the legacy watchdog.
 const instance = new (require('single-instance'))('Achievement Watchdog 3.0');
-const { spawn, execFile } = require('child_process');
+const { spawn } = require('child_process');
 const path = require('path');
 const watch = require('./util/nodeWatch.js');
 const tasklist = require('./util/tasklist');
@@ -815,16 +815,14 @@ var app = {
         debug.log('[Toast] will use WinRT');
       } else {
         debug.warn('[Toast] will use PowerShell (WinRT unavailable or disabled)');
-        // When WinRT isn't used, powertoast shells out to PowerShell - if PowerShell isn't on PATH,
-        // toasts silently fail with nothing shown. Probe it here and surface a clear error instead.
-        execFile(resolvePowerShell(), ['-NoProfile', '-NonInteractive', '-Command', 'exit 0'], { windowsHide: true }, (err) => {
-          if (err)
-            debug.error(
-              '[Toast] PowerShell is not reachable - PowerShell fallback toasts will NOT appear. ' +
-                'Fix: enable WinRT in Settings, or repair Windows PowerShell at ' +
-                'C:\\Windows\\System32\\WindowsPowerShell\\v1.0. (issue #46)'
-            );
-        });
+        // When WinRT isn't used, powertoast shells out to PowerShell - if PowerShell is missing,
+        // toasts silently fail with nothing shown. Look for it rather than start one at every launch.
+        if (!fs.existsSync(resolvePowerShell()))
+          debug.error(
+            '[Toast] PowerShell is not reachable - PowerShell fallback toasts will NOT appear. ' +
+              'Fix: enable WinRT in Settings, or repair Windows PowerShell at ' +
+              'C:\\Windows\\System32\\WindowsPowerShell\\v1.0. (issue #46)'
+          );
       }
 
       applyToastIdentity(self).catch((err) => debug.error(`[Toast] identity resolution failed: ${err}`));

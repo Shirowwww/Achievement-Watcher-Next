@@ -1,10 +1,6 @@
 'use strict';
 
-const { execFile } = require('child_process');
-const { promisify } = require('util');
-const { resolvePowerShell } = require('./util/powershell.js');
 const debug = require('./util/log.js');
-const execFileAsync = promisify(execFile);
 
 const QUERY_USER_NOTIFICATION_STATE = {
   1: 'QUNS_NOT_PRESENT',
@@ -22,15 +18,23 @@ const FULLSCREEN_STATES = ['QUNS_BUSY', 'QUNS_RUNNING_D3D_FULL_SCREEN', 'QUNS_PR
 // States where Windows sends toasts to the notification centre instead of showing a popup.
 const POPUP_SUPPRESSED_STATES = [...FULLSCREEN_STATES, 'QUNS_QUIET_TIME'];
 
-// Import the shell32 function directly and reject failed HRESULTs.
-const QUERY_SCRIPT = `
-  $ErrorActionPreference = 'Stop';
-  Add-Type -Namespace AchievementWatcher -Name Shell32 -MemberDefinition '[DllImport("shell32.dll")] public static extern int SHQueryUserNotificationState(out int state);';
-  $state = 0;
-  $hr = [AchievementWatcher.Shell32]::SHQueryUserNotificationState([ref]$state);
-  if ($hr -ne 0) { throw "SHQueryUserNotificationState failed with hr=$hr" }
-  Write-Output $state;
-`;
+/*
+  shell32 called through koffi, the Watchdog's FFI. The PowerShell Add-Type it replaces compiled C#
+  with csc.exe on every notification, a pattern antivirus behaviour engines flag. A failed HRESULT
+  is still an error, never a state.
+*/
+function nativeReader() {
+  const koffi = require('koffi');
+  const query = koffi.load('shell32.dll').func('int __stdcall SHQueryUserNotificationState(_Out_ int* pquns)');
+  return () => {
+    const out = [0];
+    const hr = query(out);
+    if (hr !== 0) throw new Error(`SHQueryUserNotificationState failed with hr=${hr}`);
+    return out[0];
+  };
+}
+
+let readRawState = null;
 
 // Share the answer briefly across a batch of notifications.
 const STATE_TTL_MS = 1000;
@@ -63,9 +67,9 @@ async function readNotificationState() {
   let state = null;
   try {
     if (process.platform !== 'win32') throw new Error('not a Windows host');
-    const { stdout } = await execFileAsync(resolvePowerShell(), ['-NoProfile', '-NonInteractive', '-Command', QUERY_SCRIPT]);
-    const raw = String(stdout).trim();
-    state = QUERY_USER_NOTIFICATION_STATE[Number.parseInt(raw, 10)] || null;
+    if (!readRawState) readRawState = nativeReader();
+    const raw = await readRawState();
+    state = QUERY_USER_NOTIFICATION_STATE[raw] || null;
     // Unknown output means the query failed.
     if (!state) throw new Error(`unrecognized state ${JSON.stringify(raw)}`);
     lastReportedFailure = null;
@@ -74,7 +78,7 @@ async function readNotificationState() {
     reportFailure(err.message || String(err));
   }
 
-  // Cache failures too, and start the TTL after PowerShell returns.
+  // Cache failures too, and start the TTL once the answer is in.
   cached = { at: Date.now(), state, valid: true };
   return state;
 }
@@ -97,6 +101,11 @@ async function isOverlayLikelyHidden() {
   return state === 'QUNS_RUNNING_D3D_FULL_SCREEN';
 }
 
+// Tests swap the native call for a scripted one.
+function _setReader(reader) {
+  readRawState = reader;
+}
+
 // Tests drive this through several states in a row; the 1s cache would otherwise leak between them.
 function _resetCache() {
   cached = { at: 0, state: null, valid: false };
@@ -113,4 +122,5 @@ module.exports = {
   POPUP_SUPPRESSED_STATES,
   QUERY_USER_NOTIFICATION_STATE,
   _resetCache,
+  _setReader,
 };

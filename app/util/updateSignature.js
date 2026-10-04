@@ -166,11 +166,11 @@ $out | ConvertTo-Json -Compress -Depth 4
 
 function verifyUpdateCodeSignature(publisherNames, tempUpdateFile, log = () => {}) {
   return new Promise((resolve) => {
-    // Encoded and given the path through the environment: no quoting of the path at all.
-    const encoded = Buffer.from(VERIFY_SCRIPT, 'utf16le').toString('base64');
+    // The path goes through the environment, so nothing is quoted; the script holds no double quote
+    // either. Plain text, not -EncodedCommand: antivirus engines read a base64 command as hiding one.
     execFile(
       'powershell.exe',
-      ['-NoProfile', '-NonInteractive', '-InputFormat', 'None', '-EncodedCommand', encoded],
+      ['-NoProfile', '-NonInteractive', '-InputFormat', 'None', '-Command', VERIFY_SCRIPT],
       {
         timeout: 60 * 1000,
         windowsHide: true,
