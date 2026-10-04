@@ -783,6 +783,10 @@
           "name": "Notificações prioritárias",
           "description": "Permitir que desbloqueios de conquistas apareçam enquanto o Não perturbe estiver ativo. O Windows pede permissão uma vez."
         },
+        "steamClient": {
+          "name": "Jogos do cliente Steam",
+          "description": "Também notifica conquistas de jogos executados pelo próprio Steam, incluindo os do SteamTools, LuaTools e GreenLuma. O Steam também mostra seu próprio pop-up para eles."
+        },
         "useToast": {
           "name": "Notificação do Windows",
           "description": "Notificação de sistema do Windows 8-10"

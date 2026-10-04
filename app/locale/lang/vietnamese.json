@@ -783,6 +783,10 @@
           "name": "Thông báo ưu tiên",
           "description": "Cho phép thông báo mở khóa thành tựu hiện ra ngay cả khi chế độ Không làm phiền đang bật. Windows sẽ hỏi quyền một lần."
         },
+        "steamClient": {
+          "name": "Trò chơi của ứng dụng Steam",
+          "description": "Thông báo cả thành tựu của các trò chơi do chính Steam chạy, kể cả trò chơi từ SteamTools, LuaTools và GreenLuma. Steam cũng hiển thị cửa sổ bật lên riêng cho chúng."
+        },
         "useToast": {
           "name": "Thông báo Windows",
           "description": "Thông báo hệ thống của Windows 8-10"

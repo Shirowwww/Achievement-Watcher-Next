@@ -6,8 +6,8 @@
   Steam rewrites UserGameStats_<account>_<appid>.bin the moment a game reports an unlock, for a
   legit copy and equally for one added through SteamTools, LuaTools or GreenLuma, whose unlocks
   Valve's servers never report (issue #91). A scan already reads these files; this only moves the
-  open library as they change, so a card no longer waits for the next rescan. Steam shows its own
-  popup for these games, so nothing here notifies.
+  open library as they change, so a card no longer waits for the next rescan. Nothing here
+  notifies: the Watchdog does, when "Steam client games" is on (watchdog/util/steamClientStats.js).
 */
 
 const fs = require('fs');

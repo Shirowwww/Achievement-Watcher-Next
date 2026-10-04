@@ -783,6 +783,10 @@
           "name": "Prioriterte varsler",
           "description": "La opplåste prestasjoner vises selv når Ikke forstyrr er på. Windows ber om tillatelse én gang."
         },
+        "steamClient": {
+          "name": "Spill i Steam-klienten",
+          "description": "Varsler også om prestasjoner i spill som Steam selv starter, inkludert SteamTools, LuaTools og GreenLuma. Steam viser også sin egen pop-up for dem."
+        },
         "useToast": {
           "name": "Windows-varsel",
           "description": "Systemvarsel i Windows 8 til 10"

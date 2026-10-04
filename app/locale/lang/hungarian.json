@@ -783,6 +783,10 @@
           "name": "Kiemelt értesítések",
           "description": "Lehetővé teszi a teljesítmények feloldásának megjelenését a Ne zavarjanak mód alatt. A Windows egyszer kér engedélyt."
         },
+        "steamClient": {
+          "name": "A Steam kliens játékai",
+          "description": "A Steam által futtatott játékok teljesítményeiről is értesít, a SteamTools, LuaTools és GreenLuma játékokat is beleértve. A Steam ezekhez saját felugró ablakot is mutat."
+        },
         "useToast": {
           "name": "Windows-értesítés",
           "description": "Windows 8-10 rendszerértesítés"

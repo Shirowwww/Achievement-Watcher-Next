@@ -783,6 +783,10 @@
           "name": "Prioriterede notifikationer",
           "description": "Lad oplåste præstationer blive vist, mens Forstyr ikke er slået til. Windows beder om tilladelse én gang."
         },
+        "steamClient": {
+          "name": "Spil i Steam-klienten",
+          "description": "Giver også besked om præstationer i spil, som Steam selv starter, inklusive SteamTools, LuaTools og GreenLuma. Steam viser også sin egen pop-up for dem."
+        },
         "useToast": {
           "name": "Windows-notifikation",
           "description": "Systemnotifikation i Windows 8-10"

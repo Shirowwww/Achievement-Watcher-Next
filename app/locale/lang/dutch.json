@@ -783,6 +783,10 @@
           "name": "Meldingen met prioriteit",
           "description": "Laat ontgrendelde prestaties ook verschijnen terwijl Niet storen actief is. Windows vraagt eenmalig om toestemming."
         },
+        "steamClient": {
+          "name": "Games van de Steam-client",
+          "description": "Meldt ook prestaties van games die Steam zelf start, inclusief die van SteamTools, LuaTools en GreenLuma. Steam toont hiervoor ook een eigen pop-up."
+        },
         "useToast": {
           "name": "Windows-melding",
           "description": "Systeemmelding van Windows 8-10"

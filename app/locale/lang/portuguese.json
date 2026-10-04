@@ -783,6 +783,10 @@
           "name": "Notificações prioritárias",
           "description": "Permitir que desbloqueios de proezas apareçam enquanto o Não incomodar está ativo. O Windows pede permissão uma vez."
         },
+        "steamClient": {
+          "name": "Jogos do cliente Steam",
+          "description": "Notifica também as conquistas dos jogos executados pelo próprio Steam, incluindo os do SteamTools, LuaTools e GreenLuma. O Steam também mostra o seu próprio pop-up para eles."
+        },
         "useToast": {
           "name": "Notificação do Windows",
           "description": "Notificação de sistema do Windows 8-10"

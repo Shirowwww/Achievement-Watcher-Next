@@ -8,7 +8,7 @@ const path = require('path');
 let debug = { log() {}, warn() {}, error() {} };
 
 module.exports.initDebug = ({ isDev, userDataPath }) => {
-  debug = new (require('../util/logger'))({
+  debug = new (require(path.join(__dirname, '..', 'util', 'logger.js')))({
     console: isDev || false,
     file: path.join(userDataPath, 'logs/parser.log'),
   });

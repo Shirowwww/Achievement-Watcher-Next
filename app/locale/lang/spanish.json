@@ -783,6 +783,10 @@
           "name": "Notificaciones prioritarias",
           "description": "Permite mostrar los desbloqueos de logros mientras No molestar está activo. Windows solicita permiso una vez."
         },
+        "steamClient": {
+          "name": "Juegos del cliente de Steam",
+          "description": "Notifica también los logros de los juegos que ejecuta Steam, incluidos los de SteamTools, LuaTools y GreenLuma. Steam también muestra su propia ventana emergente para ellos."
+        },
         "useToast": {
           "name": "Notificación de Windows",
           "description": "Notificación de sistema de Windows 8-10"

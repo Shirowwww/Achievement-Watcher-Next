@@ -323,6 +323,11 @@ module.exports.load = async (cfg_file) => {
       fixFile = true;
     }
 
+    if (typeof options.notification.steamClient !== 'boolean') {
+      options.notification.steamClient = false;
+      fixFile = true;
+    }
+
     if (typeof options.notification.notifyOnProgress !== 'boolean') {
       options.notification.notifyOnProgress = true;
       fixFile = true;
@@ -580,6 +585,7 @@ module.exports.load = async (cfg_file) => {
         notifyOnProgress: true,
         playtime: true,
         platinum: true,
+        steamClient: false,
       },
       notification_toast: {
         customToastAudio: '1',

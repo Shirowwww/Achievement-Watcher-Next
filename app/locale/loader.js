@@ -511,6 +511,10 @@ function translateUI(lang, locale, template) {
   selector.find("li:nth-child(7) .right select option[value='true']").text(clear(template.settings.common.enable));
   selector.find("li:nth-child(7) .right select option[value='false']").text(clear(template.settings.common.disable));
   selector.find('li:nth-child(7) .help').text(clear(template.settings.notification.option.urgent.description));
+  selector.find('li:nth-child(8) .left span').text(clear(template.settings.notification.option.steamClient.name));
+  selector.find("li:nth-child(8) .right select option[value='true']").text(clear(template.settings.common.enable));
+  selector.find("li:nth-child(8) .right select option[value='false']").text(clear(template.settings.common.disable));
+  selector.find('li:nth-child(8) .help').text(clear(template.settings.notification.option.steamClient.description));
   selector = $('#options-notify-transport');
   selector.prev('.title').find('span').text(clear(template.settings.notification.title.transport));
   selector.find("li:nth-child(1) .right select option[value='true']").text(clear(template.settings.common.enable));

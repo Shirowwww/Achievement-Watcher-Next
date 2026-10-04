@@ -783,6 +783,10 @@
           "name": "Öncelikli bildirimler",
           "description": "Rahatsız Etmeyin etkinken başarı kilit açmalarının gösterilmesini sağlar. Windows bir kez izin ister."
         },
+        "steamClient": {
+          "name": "Steam istemcisi oyunları",
+          "description": "Steam’in kendisinin çalıştırdığı oyunların başarımlarını da bildirir; SteamTools, LuaTools ve GreenLuma oyunları dahil. Steam bunlar için kendi açılır bildirimini de gösterir."
+        },
         "useToast": {
           "name": "Windows bildirimi",
           "description": "Windows 8-10 sistem bildirimi"

@@ -447,6 +447,11 @@ module.exports.load = () => {
       options.notification.rumble = true;
     }
 
+    // Off by default: Steam shows its own pop-up for the games it runs.
+    if (typeof options.notification.steamClient !== 'boolean') {
+      options.notification.steamClient = false;
+    }
+
     if (typeof options.notification.notifyOnProgress !== 'boolean') {
       options.notification.notifyOnProgress = true;
     }
@@ -663,6 +668,7 @@ module.exports.load = () => {
         notifyOnProgress: true,
         playtime: true,
         platinum: true,
+        steamClient: false,
       },
       notification_toast: {
         customToastAudio: '1',

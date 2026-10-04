@@ -783,6 +783,10 @@
           "name": "Ensisijaiset ilmoitukset",
           "description": "Salli saavutusten avausilmoitukset myös silloin, kun Älä häiritse on käytössä. Windows pyytää luvan kerran."
         },
+        "steamClient": {
+          "name": "Steam-asiakkaan pelit",
+          "description": "Ilmoittaa myös Steamin itse käynnistämien pelien saavutuksista, myös SteamToolsin, LuaToolsin ja GreenLuman peleistä. Steam näyttää niistä myös oman ponnahdusikkunansa."
+        },
         "useToast": {
           "name": "Windows-ilmoitus",
           "description": "Windows 8-10 -järjestelmäilmoitus"

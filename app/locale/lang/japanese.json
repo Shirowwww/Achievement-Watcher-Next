@@ -783,6 +783,10 @@
           "name": "優先度の高い通知",
           "description": "「応答不可」が有効な間も実績解除を表示します。Windows は一度だけ許可を求めます。"
         },
+        "steamClient": {
+          "name": "Steam クライアントのゲーム",
+          "description": "Steam 自体が起動するゲーム（SteamTools、LuaTools、GreenLuma のものを含む）の実績解除も通知します。これらのゲームでは Steam 自身のポップアップも表示されます。"
+        },
         "useToast": {
           "name": "Windows 通知",
           "description": "Windows 8-10 システム通知"

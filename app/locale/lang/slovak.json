@@ -783,6 +783,10 @@
           "name": "Prioritné oznámenia",
           "description": "Umožní zobraziť odomknutia úspechov, keď je aktívny režim Nerušiť. Windows si raz vyžiada povolenie."
         },
+        "steamClient": {
+          "name": "Hry klienta Steam",
+          "description": "Oznamuje aj úspechy hier, ktoré spúšťa samotný Steam, vrátane hier zo SteamTools, LuaTools a GreenLuma. Steam pre ne tiež zobrazuje vlastné oznámenie."
+        },
         "useToast": {
           "name": "Oznámenie Windows",
           "description": "Systémové oznámenie Windows 8-10"

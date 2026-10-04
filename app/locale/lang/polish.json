@@ -783,6 +783,10 @@
           "name": "Powiadomienia priorytetowe",
           "description": "Umożliwia wyświetlanie odblokowanych osiągnięć, gdy aktywny jest tryb Nie przeszkadzać. System Windows raz poprosi o uprawnienie."
         },
+        "steamClient": {
+          "name": "Gry klienta Steam",
+          "description": "Powiadamia też o osiągnięciach w grach uruchamianych przez Steam, także przez SteamTools, LuaTools i GreenLuma. Steam również pokazuje dla nich własne okienko."
+        },
         "useToast": {
           "name": "Powiadomienie systemu Windows",
           "description": "Powiadomienie systemu Windows 8-10"

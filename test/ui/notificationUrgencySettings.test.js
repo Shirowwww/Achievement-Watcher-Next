@@ -25,22 +25,27 @@ test('priority notifications default off and persist as a toast setting', async 
     console.log = log;
   }
   assert.equal(config.notification_toast.urgent, false, 'priority notifications must remain opt-in');
+  assert.equal(config.notification.steamClient, false, 'Steam shows its own pop-up, so AW Next stays quiet unless asked');
 
   config.notification_toast.urgent = true;
+  config.notification.steamClient = true;
   await settings.save(config);
 
   const saved = ini.parse(fs.readFileSync(path.join(userData, 'cfg', 'options.ini'), 'utf8'));
   assert.equal(saved.notification_toast.urgent, true);
+  assert.equal(saved.notification.steamClient, true, 'the Watchdog reads it from the notification section');
   assert.equal(saved.notification.urgent, undefined, 'the control must not leak into the common notification section');
 });
 
-test('the priority control is the last common notification row and has a locale binding', () => {
+test('the priority and Steam client controls are appended to the common rows with locale bindings', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'view', 'app.html'), 'utf8');
   const list = html.match(/<ul id="options-notify-common">([\s\S]*?)<\/ul>/);
   assert.ok(list, 'common notification list must exist');
 
   const rows = [...list[1].matchAll(/<li\b[\s\S]*?<\/li>/g)];
-  assert.equal(rows.length, 7, 'priority must be appended without shifting existing positional rows');
+  assert.equal(rows.length, 8, 'new rows are appended without shifting existing positional rows');
+  assert.match(rows[7][0], /id="option_steamClient"/);
+  assert.match(rows[7][0], /<option value="false" selected><\/option>/, 'Steam client notifications start off');
   assert.match(rows[6][0], /id="option_urgent"/);
   assert.match(rows[6][0], /fa-exclamation-circle/);
   assert.match(rows[6][0], /<option value="false" selected><\/option>/);
@@ -49,4 +54,6 @@ test('the priority control is the last common notification row and has a locale 
   const loader = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'locale', 'loader.js'), 'utf8');
   assert.match(loader, /li:nth-child\(7\)[\s\S]*template\.settings\.notification\.option\.urgent\.name/);
   assert.match(loader, /li:nth-child\(7\)[\s\S]*template\.settings\.notification\.option\.urgent\.description/);
+  assert.match(loader, /li:nth-child\(8\) \.left span'\)\.text\(clear\(template\.settings\.notification\.option\.steamClient\.name/);
+  assert.match(loader, /li:nth-child\(8\) \.help'\)\.text\(clear\(template\.settings\.notification\.option\.steamClient\.description/);
 });

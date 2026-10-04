@@ -783,6 +783,10 @@
           "name": "Notifications prioritaires",
           "description": "Permet aux déblocages de succès de s’afficher lorsque Ne pas déranger est actif. Windows demande l’autorisation une seule fois."
         },
+        "steamClient": {
+          "name": "Jeux du client Steam",
+          "description": "Notifie aussi les succès des jeux lancés par Steam, y compris via SteamTools, LuaTools ou GreenLuma. Steam affiche aussi son propre pop-up pour ces jeux."
+        },
         "useToast": {
           "name": "Notification Windows",
           "description": "Notification système Windows 8-10"

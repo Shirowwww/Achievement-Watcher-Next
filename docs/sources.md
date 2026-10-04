@@ -33,6 +33,8 @@ needs; it requires the account connection below.
 > **Game details**, works for every game played here, including games added through SteamTools,
 > LuaTools or GreenLuma, and a card moves the moment Steam records an unlock. A public profile only
 > adds your name and avatar. Games played only on another PC need the account connection below.
+> These unlocks raise an AW Next notification once **Steam client games** is enabled under
+> Notification; see [Notifications](notifications.md#games-steam-runs).
 
 > [!NOTE]
 > **EA Desktop** is deliberately different. It reads EA Desktop's local achievement log for games

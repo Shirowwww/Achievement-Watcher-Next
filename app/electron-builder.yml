@@ -54,6 +54,8 @@ asarUnpack:
   - util/reg.js
   # Where Steam installed a patched game, for markerpatch and madnesspatch.
   - parser/steamLibrary.js
+  # Steam's own unlocks in appcache/stats, for the optional Steam client notifications.
+  - parser/steamOfficial.js
 
 publish:
   provider: github

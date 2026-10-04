@@ -783,6 +783,10 @@
           "name": "우선 알림",
           "description": "방해 금지가 켜져 있어도 도전 과제 달성 알림이 표시되도록 합니다. Windows가 처음 한 번만 권한을 묻습니다."
         },
+        "steamClient": {
+          "name": "Steam 클라이언트 게임",
+          "description": "Steam이 직접 실행하는 게임(SteamTools, LuaTools, GreenLuma 게임 포함)의 도전 과제 달성도 알립니다. 이 게임들에는 Steam 자체 팝업도 표시됩니다."
+        },
         "useToast": {
           "name": "Windows 알림",
           "description": "Windows 8-10 시스템 알림"

@@ -11,6 +11,10 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Added
 
+- **Notifications for games Steam runs (#91).** Owned games and games added through SteamTools,
+  LuaTools or GreenLuma only ever showed Steam's own pop-up. **Settings → Notification → Steam client
+  games** now announces their unlocks through AW Next too, the moment Steam records them. It is off by
+  default, since Steam already shows its own.
 - **Patched and recompiled games are found on their own.** A Steam copy of Dead Space 2 with
   MarkerPatch or of Alice: Madness Returns with MadnessPatch is picked up through Steam's own install
   record, by the library and by live notifications, without adding its folder. Smart find also looks

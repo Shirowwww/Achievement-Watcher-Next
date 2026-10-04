@@ -783,6 +783,10 @@
           "name": "Notifikasi prioritas",
           "description": "Izinkan pencapaian yang terbuka tetap tampil saat Jangan Ganggu aktif. Windows meminta izin sekali saja."
         },
+        "steamClient": {
+          "name": "Game klien Steam",
+          "description": "Juga memberi tahu pencapaian game yang dijalankan Steam sendiri, termasuk dari SteamTools, LuaTools, dan GreenLuma. Steam juga menampilkan pop-up sendiri untuk game tersebut."
+        },
         "useToast": {
           "name": "Notifikasi Windows",
           "description": "Notifikasi sistem Windows 8-10"

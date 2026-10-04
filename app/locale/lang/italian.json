@@ -783,6 +783,10 @@
           "name": "Notifiche prioritarie",
           "description": "Consente di visualizzare gli sblocchi degli obiettivi mentre Non disturbare è attivo. Windows chiede l’autorizzazione una sola volta."
         },
+        "steamClient": {
+          "name": "Giochi del client Steam",
+          "description": "Notifica anche gli obiettivi dei giochi avviati da Steam, compresi quelli di SteamTools, LuaTools e GreenLuma. Steam mostra anche il proprio pop-up per questi giochi."
+        },
         "useToast": {
           "name": "Notifica di Windows",
           "description": "Notifica di sistema Windows 8-10"

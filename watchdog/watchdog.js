@@ -92,6 +92,7 @@ const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
 const { configuredExecutable } = require('./util/exeList.js');
 const { immediateChildDirOf, deriveAppIdFromDir } = require('./util/appidFolder.js');
+const steamClientStats = require('./util/steamClientStats.js');
 
 /*
   The square slot of a notification card, best first, and in the same order the app resolves it in:
@@ -838,7 +839,9 @@ var app = {
 
       let i = 1;
       const missingRoots = [];
-      for (let folder of await monitor.getFolders(cfg_file.userDir)) {
+      const steamClientRoot = steamClientStats.steamClientRoot(self.options);
+      if (steamClientRoot) debug.log(`[steam] Steam client notifications on, following "${steamClientRoot.dir}"`);
+      for (let folder of [...(await monitor.getFolders(cfg_file.userDir)), ...(steamClientRoot ? [steamClientRoot] : [])]) {
         try {
           if (fs.existsSync(folder.dir)) {
             self.watch(i, folder.dir, folder.options);
@@ -991,7 +994,11 @@ var app = {
         const isNewAppidFolder = !inRootItself && !preexistingChildren.has(immediateChildDirOf(dir, filePath.dir).toLowerCase());
 
         let appID;
-        if (options.socialClub) {
+        if (options.steamClient) {
+          const ids = steamClientStats.statsFileIds(filePath.base);
+          if (!ids) return;
+          appID = ids.appid;
+        } else if (options.socialClub) {
           // Goldberg SocialClub folders are named after the game, not an AppID, so the only link
           // back to a library entry is the game index; it also carries the Steam release the
           // namespaced "socialclub-<slug>" id resolved to, since that id fails a direct lookup.
@@ -1087,7 +1094,8 @@ var app = {
           // awaitWriteFinish). parseWithRetry below still guards the residual race.
           await waitForFileStable(name);
 
-          let achievements = await parseWithRetry(() => monitor.parse(name), {
+          const parseSave = options.steamClient ? async () => steamClientStats.readSteamClientUnlocks(name) : () => monitor.parse(name);
+          let achievements = await parseWithRetry(parseSave, {
             onError: (err, attempt) => {
               debug.warn(`Achievement parse attempt ${attempt + 1} failed for "${name}": ${err.message || err}`);
             },
@@ -1171,7 +1179,14 @@ var app = {
 
                   if (!previous.Achieved && achievements[i].Achieved) {
                     if (!achievements[i].UnlockTime || achievements[i].UnlockTime == 0) achievements[i].UnlockTime = moment().unix();
-                    const seedPreview = seedOnly && seedNotifyNames.has(String(achievements[i].name || '').toUpperCase());
+                    /*
+                      Steam's stats file holds years of real unlock times, and its first observation
+                      is any game the account ever played: only an unlock that just happened may
+                      notify there, never the latest three.
+                    */
+                    const justUnlocked = moment().diff(moment.unix(achievements[i].UnlockTime), 'seconds') <= self.options.notification_advanced.timeTreshold;
+                    const seedPreview =
+                      seedOnly && seedNotifyNames.has(String(achievements[i].name || '').toUpperCase()) && (!options.steamClient || justUnlocked);
                     if (seedOnly && !seedPreview) continue; // baseline seeding: record the unlock, suppress older toasts
                     // Before the timestamp and dedup gates: those decide whether to notify, but an
                     // unlock too old to toast is still one the open library has not counted.

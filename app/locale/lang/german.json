@@ -783,6 +783,10 @@
           "name": "Prioritätsbenachrichtigungen",
           "description": "Ermöglicht, dass Erfolgsfreischaltungen angezeigt werden, während „Nicht stören“ aktiv ist. Windows fragt einmalig nach der Berechtigung."
         },
+        "steamClient": {
+          "name": "Spiele des Steam-Clients",
+          "description": "Meldet auch Erfolge von Spielen, die Steam selbst startet, einschließlich SteamTools, LuaTools und GreenLuma. Steam zeigt für sie auch ein eigenes Pop-up."
+        },
         "useToast": {
           "name": "Windows-Benachrichtigung",
           "description": "Windows-8-10-Systembenachrichtigung"

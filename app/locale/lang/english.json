@@ -783,6 +783,10 @@
           "name": "Priority notifications",
           "description": "Let achievement unlocks show while Do Not Disturb is active. Windows asks for permission once."
         },
+        "steamClient": {
+          "name": "Steam client games",
+          "description": "Also notify unlocks of games Steam itself runs, SteamTools, LuaTools and GreenLuma ones included. Steam shows its own pop-up for them too."
+        },
         "useToast": {
           "name": "Windows notification",
           "description": "Windows 8-10 system notification"

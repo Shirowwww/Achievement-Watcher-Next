@@ -783,6 +783,10 @@
           "name": "優先通知",
           "description": "讓成就解鎖在請勿打擾開啟時仍可顯示。Windows 會詢問一次權限。"
         },
+        "steamClient": {
+          "name": "Steam 用戶端遊戲",
+          "description": "同時通知由 Steam 本身執行的遊戲（包括 SteamTools、LuaTools 與 GreenLuma 的遊戲）解鎖的成就。Steam 也會為這些遊戲顯示自己的彈出通知。"
+        },
         "useToast": {
           "name": "Windows 通知",
           "description": "Windows 8 至 10 的系統通知"

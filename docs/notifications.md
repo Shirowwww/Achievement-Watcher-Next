@@ -78,6 +78,15 @@ progress or playtime updates. The underlying Windows toast uses the `urgent` sce
 Windows 10 version 2004 and later, and remains subject to Windows' notification permission and system
 policy. See [Microsoft's app-notification documentation](https://learn.microsoft.com/en-us/windows/apps/develop/notifications/app-notifications/app-notifications-content).
 
+## Games Steam runs
+
+Steam shows its own pop-up for the games it runs, so AW Next stays quiet for them by default. Enable
+**Settings → Notification → Steam client games** to get AW Next's notification too, with its sound,
+overlay, rarity and screenshot souvenir. It covers owned games and games added through SteamTools,
+LuaTools or GreenLuma alike: AW Next follows the stats file Steam rewrites in `appcache\stats` when a
+game records an unlock, and only an unlock that just happened is announced. To keep AW Next's
+notification alone, turn off **Steam → Settings → Notifications → I unlock an achievement**.
+
 ## How the popup looks
 
 The look of the in-game popup is a **preset**: nine ship with the app, you can design your own with

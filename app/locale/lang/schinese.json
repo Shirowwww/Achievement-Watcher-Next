@@ -783,6 +783,10 @@
           "name": "高优先级通知",
           "description": "即使“请勿打扰”处于开启状态，也显示成就解锁通知。Windows 将请求一次权限。"
         },
+        "steamClient": {
+          "name": "Steam 客户端游戏",
+          "description": "同时通知由 Steam 本身运行的游戏（包括 SteamTools、LuaTools 和 GreenLuma 的游戏）解锁的成就。Steam 也会为这些游戏显示自己的弹窗。"
+        },
         "useToast": {
           "name": "Windows 通知",
           "description": "Windows 8-10 系统通知"

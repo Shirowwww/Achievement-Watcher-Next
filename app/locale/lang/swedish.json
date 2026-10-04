@@ -783,6 +783,10 @@
           "name": "Prioriterade aviseringar",
           "description": "Låt upplåsta prestationer visas även när Stör ej är aktivt. Windows ber om tillåtelse en gång."
         },
+        "steamClient": {
+          "name": "Spel i Steam-klienten",
+          "description": "Aviserar även prestationer i spel som Steam själv startar, inklusive SteamTools, LuaTools och GreenLuma. Steam visar även sin egen pop-up för dem."
+        },
         "useToast": {
           "name": "Windows-avisering",
           "description": "Systemavisering i Windows 8-10"
