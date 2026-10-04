@@ -35,6 +35,11 @@ renamed in 3.9.0 and the history is kept under one file.
   the game recreates an empty OnlineFix folder at each launch, and the card then showed every
   achievement locked. Steam's unlocks are read whatever else sits beside them, and an empty folder no
   longer takes the card over.
+- **Steam games never played on this PC showed 0% (#98).** With a Steam account connected, the
+  unlocks of those games were asked from a Steam endpoint that refuses the session token, and every
+  refusal was cached as "no achievements", across whole libraries. They are now read from your
+  public Steam profile, a refusal is never cached, and the empty lists cached by the old code are
+  asked again once. Your profile's game details must be public for this.
 - **A game started from a Steam shortcut lost its unlocks.** Steam hands a non-Steam shortcut a game
   ID of its own, which GBE Fork prefers to its `steam_appid.txt`, so achievements were saved under a
   generated number. Repairs now write `steam_appid.txt` beside the executable, where Steam reads it,

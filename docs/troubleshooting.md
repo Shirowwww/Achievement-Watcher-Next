@@ -82,7 +82,7 @@ the repair for it - rewriting the achievement data, restoring the emulator file,
 - check for a custom save path;
 - repair a mismatched `steam_settings` schema only after reviewing the report;
 - if the game was played on another PC, connect that Steam account - a game with nothing to read
-  locally is then asked about directly, even on a private profile, and the answer is cached for six
+  locally is then read from your Steam profile, whose game details must be public, and the answer is cached for six
   hours so a second launch the same day does not ask again for every game (see
   [Connected accounts](sources.md#connected-accounts)).
 

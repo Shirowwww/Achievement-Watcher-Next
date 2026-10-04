@@ -34,8 +34,8 @@ changes with it, and switching back restores every control with the value it alr
 Yes. Two switches in the Steam account card - **Add the games you own** and **Add the games shared
 with you through Steam Family** - list your whole library, including titles never installed on this
 PC; both are off by default, since a large library makes the first scan much longer. With a Steam
-account connected, a game with nothing to read locally is also asked about directly, even on a
-private profile, and the answer is cached for six hours. See
+account connected, a game with nothing to read locally is also read from your Steam profile (its
+game details must be public), and the answer is cached for six hours. See
 [Connected accounts](sources.md#connected-accounts).
 
 ## The library

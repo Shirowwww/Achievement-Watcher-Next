@@ -53,6 +53,7 @@ function nodeFetch(url, { signal, redirects = MAX_REDIRECTS } = {}) {
           status,
           arrayBuffer: async () => body.buffer.slice(body.byteOffset, body.byteOffset + body.length),
           json: async () => JSON.parse(body.toString('utf8')),
+          text: async () => body.toString('utf8'),
         });
       });
       res.on('error', reject);

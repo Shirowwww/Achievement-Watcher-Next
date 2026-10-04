@@ -956,10 +956,25 @@ const accountUnlocksCircuit = createNetworkCircuit({
   a library of several hundred never-installed games is several hundred requests otherwise, every
   single scan.
 */
+// Empty lists cached before issue #98 was fixed were the Web API refusing the token, not the
+// account's answer, so they are asked again once.
+const ACCOUNT_UNLOCKS_TRUSTED_SINCE = Date.UTC(2026, 9, 5);
+
+function isPoisonedAccountCache(cacheFile, cachedAt) {
+  if (!(cachedAt > 0) || cachedAt >= ACCOUNT_UNLOCKS_TRUSTED_SINCE) return false;
+  try {
+    const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+    return Array.isArray(cached) && cached.length === 0;
+  } catch {
+    return false;
+  }
+}
+
 async function readAccountUnlocks(cfg, cacheFile, cachedAt) {
   const account = cfg && cfg.account;
   if (!account || !account.token || !account.steamid) return null;
-  if (cachedAt > 0 && Date.now() - cachedAt < ACCOUNT_UNLOCKS_TTL_MS) return null;
+  const poisoned = isPoisonedAccountCache(cacheFile, cachedAt);
+  if (cachedAt > 0 && Date.now() - cachedAt < ACCOUNT_UNLOCKS_TTL_MS && !poisoned) return null;
   if (accountUnlocksCircuit.unavailable()) return null;
 
   let unlocks;
