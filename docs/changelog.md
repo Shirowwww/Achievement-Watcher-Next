@@ -18,6 +18,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Added
 
+- **Your own background on a game's achievement page.** Right-click a game, then **Cover → Choose
+  background image…** to show a picture of your choice behind its achievements. **Reset background to
+  default** brings the usual artwork back.
 - **Notifications for games Steam runs (#91).** Owned games and games added through SteamTools,
   LuaTools or GreenLuma only ever showed Steam's own pop-up. **Settings → Notification → Steam client
   games** now announces their unlocks through AW Next too, the moment Steam records them. It is off by

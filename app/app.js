@@ -123,6 +123,7 @@ const l10n = require(path.join(appPath, 'locale/loader.js'));
 const coverStore = require(path.join(appPath, 'util/coverStore.js'));
 const { steamAppidOf } = require(path.join(appPath, 'util/platformId.js'));
 const gameIconStore = require(path.join(appPath, 'util/gameIconStore.js'));
+const backgroundStore = require(path.join(appPath, 'util/backgroundStore.js'));
 const localIcons = require(path.join(appPath, 'util/localIcons.js'));
 const uninstall = require(path.join(appPath, 'util/uninstall.js'));
 const apiCheckBypass = require(path.join(appPath, 'parser/apiCheckBypass.js'));
@@ -1485,6 +1486,15 @@ function gameIconOverrideFor(appid) {
   gameIconStore.remove(id);
   reloadGameIconOverrides();
   debug.warn(`[icon] removed missing game-icon override for ${id}`);
+  return null;
+}
+// Achievement-page background picks (cfg/backgrounds.db). Read once per page open, so no snapshot.
+function backgroundOverrideFor(appid) {
+  const override = backgroundStore.get(String(appid));
+  if (!override) return null;
+  if (backgroundStore.isUsable(override)) return override;
+  backgroundStore.remove(String(appid));
+  debug.warn(`[background] removed missing background override for ${appid}`);
   return null;
 }
 
@@ -6317,6 +6327,38 @@ var app = {
                 })
               );
             }
+            // The achievement page background, painted from this pick the next time the page opens.
+            coverMenu.append(new MenuItem({ type: 'separator' }));
+            coverMenu.append(
+              new MenuItem({
+                label: t('choose-background-image', 'Choose background image…', "Choisir une image d'arrière-plan…"),
+                click() {
+                  const files = remote.dialog.showOpenDialogSync({
+                    title: t('choose-background-image', 'Choose background image…', "Choisir une image d'arrière-plan…"),
+                    properties: ['openFile'],
+                    filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'webp', 'bmp', 'gif'] }],
+                  });
+                  if (!files || !files[0]) return;
+                  try {
+                    const url = backgroundStore.persist(appid, pathToFileURL(files[0]).href, getUserDataPath());
+                    if (!url) throw new Error('selected image could not be persisted');
+                  } catch (err) {
+                    debug.warn(`[background] local image failed => ${err}`);
+                    remote.dialog.showMessageBox({ type: 'error', message: t('could-not-set-background', 'Could not set background: {error}', "Impossible de définir l'arrière-plan : {error}", { error: err.message || err }) });
+                  }
+                },
+              })
+            );
+            if (backgroundOverrideFor(appid)) {
+              coverMenu.append(
+                new MenuItem({
+                  label: t('reset-background-to-default', 'Reset background to default', "Réinitialiser l'arrière-plan"),
+                  click() {
+                    backgroundStore.remove(String(appid));
+                  },
+                })
+              );
+            }
             menu.append(new MenuItem({ label: groupLabel('data-ctx-group-cover'), submenu: coverMenu }));
           }
 
@@ -6385,7 +6427,8 @@ var app = {
 
     $('#home').fadeOut(function () {
       $('body').fadeIn().css('background', `url('../resources/img/ach_background.jpg')`);
-      if (game.img.background) {
+      const customBackground = backgroundOverrideFor(game.appid);
+      if (customBackground || game.img.background) {
         /*
           A background the stylizer already blurred and tinted lives in its own folder now. It used
           to be written over the cover cache entry for the same URL, which is how every Xbox tile
@@ -6393,8 +6436,10 @@ var app = {
           here first, so the page keeps the look it had; with none built yet the plain picture is
           painted exactly as it was before that pass finished.
         */
-        const stylized = stylizedArtwork.existingStylizedBackground(getUserDataPath(), game.appid, game.img.background);
-        const background = stylized
+        const stylized = customBackground ? null : stylizedArtwork.existingStylizedBackground(getUserDataPath(), game.appid, game.img.background);
+        const background = customBackground
+          ? Promise.resolve(customBackground)
+          : stylized
           ? Promise.resolve(stylized)
           : ipcRenderer.invoke('fetch-icon', game.img.background, game.steamappid || game.appid);
         background.then((localPath) => {
@@ -6408,7 +6453,8 @@ var app = {
             came out black (issue #61).
           */
           // A stylized background is already darkened; veiling it as well turned the page black.
-          if (game.img?.overlay === true && !stylized) {
+          // A picture the user chose is raw art too, so it gets the same veil.
+          if ((customBackground || game.img?.overlay === true) && !stylized) {
             /*
               A veil over the artwork, not a sheet in front of it: the theme colours are opaque, so
               the picture was replaced by a flat blue rectangle instead of being toned down. Plain

@@ -49,8 +49,9 @@ test('the background veil follows the artwork, not the platform', () => {
   const opened = [...appJs.slice(0, veil).matchAll(/if \(([^\n]*)\) \{\n\s*\/\*\n/g)];
   const condition = opened.at(-1);
   assert.ok(condition, 'the veil must still be behind one readable condition');
-  // Raw art only: a background the stylizer already darkened is never veiled a second time.
-  assert.equal(condition[1], 'game.img?.overlay === true && !stylized');
+  // Raw art only (a source's key art or the user's own pick): a background the stylizer already
+  // darkened is never veiled a second time.
+  assert.equal(condition[1], '(customBackground || game.img?.overlay === true) && !stylized');
   assert.doesNotMatch(condition[1], /system/, 'the platform must not decide whether art is veiled');
 });
 
