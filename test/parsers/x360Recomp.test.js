@@ -45,7 +45,7 @@ function fakeFetch(achievements, { name = 'Sample Title', fail = false } = {}) {
     }
     if (url.includes('/title_ids/')) return { ok: true, status: 200, json: async () => ({ name }) };
     if (url.includes('/marketplace/products/')) return { ok: true, status: 200, json: async () => ({ default_title: '' }) };
-    if (url.includes('download.xbox.com')) calls.art.push(url);
+    if (new URL(url).hostname === 'download.xbox.com') calls.art.push(url);
     else calls.images.push(url);
     return { ok: true, status: 200, arrayBuffer: async () => png };
   };
