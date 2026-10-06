@@ -2894,6 +2894,20 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       }
     } else if (appid.data.type === 'ea') {
       game = await ea.getGameData(appid, option.achievement.lang);
+      // EA ships no artwork, and its numeric id is not a Steam appid: borrow the Steam release's art.
+      if (game && game.img && !game.img.header) {
+        const sid = await ea.resolveSteamAppid(
+          { gameDir: appid.data.gameDir, name: game.name },
+          { scanLocalInstalls: steam.scanLocalInstalls, findAppidByName: steam.findAppidByName }
+        );
+        if (sid) {
+          game.steamappid = sid;
+          const borrowed = steamCdnImages(sid);
+          game.img.header = borrowed.header;
+          game.img.background = game.img.background || borrowed.background;
+          game.img.portrait = game.img.portrait || borrowed.portrait;
+        }
+      }
     } else if (appid.data.type === 'gogOfficial') {
       game = await gogOfficial.getGameData(appid);
     } else if (appid.data.type === 'gogUniverseLan') {

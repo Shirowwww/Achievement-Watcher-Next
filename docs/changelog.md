@@ -29,6 +29,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **EA app games fetched covers for the wrong Steam game (#105).** An EA game is known by EA's own
+  number, which the cover lookup took for a Steam AppID, so Star Wars Battlefront II asked Steam about
+  app 193864 instead of 1237950. EA games now find their Steam release, from the Steam library folder
+  they are installed in or else by title, and borrow its cover and background. An EA game with no
+  Steam release is no longer looked up on Steam under its EA number.
 - **Settings refused the folder of a patched or recompiled game.** Adding the folder of a MarkerPatch
   or MadnessPatch install, or of a recompiled game such as Gears of War 2 Hollow, was rejected as a
   wrong folder, so those games could never be watched. They are accepted now, and a folder picked

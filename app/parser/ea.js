@@ -525,6 +525,38 @@ module.exports.getGameData = async (info, lang = 'english') => {
   };
 };
 
+function folderKey(value) {
+  return String(value || '')
+    .replace(/[\\/]+/g, '\\')
+    .replace(/\\+$/, '')
+    .toLowerCase();
+}
+
+// EA's id shares Steam's numeric range, so the Steam release is looked up instead: the appmanifest
+// owning the install folder first (a Steam copy launched through the EA app), then the title.
+async function resolveSteamAppid({ gameDir, name } = {}, { scanLocalInstalls, findAppidByName } = {}) {
+  const target = folderKey(gameDir);
+  if (target && typeof scanLocalInstalls === 'function') {
+    try {
+      for (const [appid, install] of await scanLocalInstalls()) {
+        const dir = folderKey(install && install.gameDir);
+        if (dir && (target === dir || target.startsWith(`${dir}\\`)) && /^\d+$/.test(String(appid))) return String(appid);
+      }
+    } catch (err) {
+      debug.log(`[ea] Steam library lookup failed for "${name || gameDir}": ${err}`);
+    }
+  }
+  if (name && typeof findAppidByName === 'function') {
+    try {
+      const sid = String((await findAppidByName(name)) || '').trim();
+      if (/^\d+$/.test(sid)) return sid;
+    } catch (err) {
+      debug.log(`[ea] Steam title lookup failed for "${name}": ${err}`);
+    }
+  }
+  return '';
+}
+
 // Return the unlock state keyed by achievement id, shaped for the achievements.js merge
 // (it reads `.earned` / `.earned_time`). earned_time is converted from ms to seconds (AW convention).
 module.exports.getAchievements = async (info) => {
@@ -538,6 +570,8 @@ module.exports.getAchievements = async (info) => {
   }
   return out;
 };
+
+module.exports.resolveSteamAppid = resolveSteamAppid;
 
 // Exposed for the watchdog live watcher (and tests).
 module.exports.readEaDesktopVerboseLog = readEaDesktopVerboseLog;

@@ -73,10 +73,25 @@ function rawAppId(value) {
   return m ? m[1] : s;
 }
 
+// Sources listed under a bare numeric native id that is not a Steam appid (EA's masterTitleId).
+const NATIVE_NUMERIC_SOURCES = new Set(['ea']);
+
+// The Steam appid to ask Steam, SteamDB or SteamGridDB about, or '' when the game has none.
+function steamAppidOf(game) {
+  const own = String((game && game.steamappid) || '').trim();
+  if (/^\d+$/.test(own)) return own;
+  const appid = String((game && game.appid) || '').trim();
+  if (!/^\d+$/.test(appid)) return '';
+  const source = String(game.source || '').trim().toLowerCase();
+  const system = String(game.system || '').trim().toLowerCase();
+  return NATIVE_NUMERIC_SOURCES.has(source) || NATIVE_NUMERIC_SOURCES.has(system) ? '' : appid;
+}
+
 module.exports = {
   SOURCE_TO_PLATFORM,
   normalizeType,
   sanitizeAppIdForPlatform,
   officialAppId,
   rawAppId,
+  steamAppidOf,
 };

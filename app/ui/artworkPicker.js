@@ -185,9 +185,7 @@ function openCoverPicker(game, appid, coverCacheAppid) {
     : currentTilePromise
   ).catch((err) => debug.warn(`[cover] could not add a cover tile => ${err}`));
 
-  const steamCoverId = /^\d+$/.test(String((game && (game.steamappid || game.appid)) || ''))
-    ? String(game.steamappid || game.appid)
-    : '';
+  const steamCoverId = steamAppidOf(game);
 
   let pendingSources = 0;
   let failedSources = 0;

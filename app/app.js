@@ -121,6 +121,7 @@ const steamLanguageList = require(path.join(appPath, 'locale/steam.json'));
 schemaLanguage.setUserDataPath(getUserDataPath());
 const l10n = require(path.join(appPath, 'locale/loader.js'));
 const coverStore = require(path.join(appPath, 'util/coverStore.js'));
+const { steamAppidOf } = require(path.join(appPath, 'util/platformId.js'));
 const gameIconStore = require(path.join(appPath, 'util/gameIconStore.js'));
 const localIcons = require(path.join(appPath, 'util/localIcons.js'));
 const uninstall = require(path.join(appPath, 'util/uninstall.js'));
@@ -1785,7 +1786,7 @@ async function recoverLibraryCover(game, orientation, { force = false } = {}) {
   if (!coverRecoveryCache.has(key)) {
     const pending = (async () => {
       const cacheAppid = game.steamappid || game.appid;
-      const steamAppid = /^\d+$/.test(String(cacheAppid || '')) ? String(cacheAppid) : '';
+      const steamAppid = steamAppidOf(game);
       let failure = false;
       let networkUnavailable = false;
 
@@ -3801,7 +3802,7 @@ var app = {
           });
           const ubisoftTools = isUbisoftSource ? uplayR2.getGameToolPaths(ctxGame, appid) : null;
           const catalogAppid = String(
-            (ubisoftTools && ubisoftTools.steamAppid) || ctxGame?.steamappid || writableAppid || (/^[0-9]+$/.test(String(appid)) ? appid : '')
+            (ubisoftTools && ubisoftTools.steamAppid) || ctxGame?.steamappid || steamAppidOf(ctxGame || { appid })
           );
           const { Menu, MenuItem, nativeImage } = remote;
           // Native Windows menus render icons at their natural size; the bundled 32x32 icons look
@@ -6260,7 +6261,7 @@ var app = {
                 async click() {
                   const alt = await promptText(
                     t('steam-appid-to-pull-cover-art-from', 'Steam AppID to pull cover art from:', 'AppID Steam à utiliser pour la jaquette :'),
-                    /^[0-9]+$/.test(coverCacheAppid) ? coverCacheAppid : ''
+                    /^[0-9]+$/.test(catalogAppid) ? catalogAppid : ''
                   );
                   if (!alt || !/^[0-9]+$/.test(alt)) return;
                   const alternate = {
