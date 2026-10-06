@@ -510,6 +510,12 @@
           "name": "Notifications de progression",
           "description": "Informer sur la progression quand c’est possible"
         },
+        "progressStep": {
+          "name": "Étapes de progression",
+          "description": "Afficher une notification de progression uniquement quand un compteur franchit une nouvelle étape de son objectif, au lieu de chaque +1. Les déblocages sont toujours affichés.",
+          "every": "Chaque étape",
+          "percent": "Tous les {percent} %"
+        },
         "playtime": {
           "name": "Temps de jeu",
           "description": "Informer du début et de la fin du suivi"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "Position de la fenêtre overlay en jeu à l’écran",
         "overlayScale": "Échelle",
         "overlayScaleDesc": "Taille de la fenêtre overlay en jeu",
+        "overlayProgressPosition": "Position de la progression",
+        "overlayProgressPositionDesc": "Où s’affichent les fenêtres de progression des compteurs (le +1 d’un succès de statistique). Comme les déblocages suit la position des déblocages, y compris celle propre à un jeu ; tout autre choix s’applique à tous les jeux.",
+        "overlayProgressScale": "Échelle de la progression",
+        "overlayProgressScaleDesc": "Taille des fenêtres de progression des compteurs, par exemple plus petites que celles des déblocages.",
+        "progressSameAsUnlocks": "Comme les déblocages",
         "overlaySound": "Son",
         "overlaySoundDesc": "Son joué lorsque l’overlay en jeu apparaît",
         "overlayRandomSound": "Son aléatoire",

@@ -510,6 +510,12 @@
           "name": "İlerleme bildirimleri",
           "description": "Mümkünse başarım ilerlemesinde bildir"
         },
+        "progressStep": {
+          "name": "İlerleme kilometre taşları",
+          "description": "İlerleme bildirimini her +1 yerine yalnızca sayaç hedefinin yeni bir adımını geçtiğinde göster. Kilit açmalar her zaman gösterilir.",
+          "every": "Her adım",
+          "percent": "Her %{percent}"
+        },
         "playtime": {
           "name": "Oynama süresi takibi",
           "description": "Takip başlangıcı/bitişinde bildir"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "Oyun içi yer paylaşımı açılır penceresinin ekranda nerede görüneceği",
         "overlayScale": "Boyut",
         "overlayScaleDesc": "Oyun içi yer paylaşımı açılır penceresinin boyutu",
+        "overlayProgressPosition": "İlerleme konumu",
+        "overlayProgressPositionDesc": "Sayaç ilerlemesi açılır pencerelerinin göründüğü yer (istatistik başarımındaki +1). Kilit açmalarla aynı, kilit açma konumunu izler; oyunun kendi konumu da dahildir. Diğer seçimler tüm oyunlara uygulanır.",
+        "overlayProgressScale": "İlerleme boyutu",
+        "overlayProgressScaleDesc": "Sayaç ilerlemesi açılır pencerelerinin boyutu, örneğin kilit açmalardan daha küçük.",
+        "progressSameAsUnlocks": "Kilit açmalarla aynı",
         "overlaySound": "Ses",
         "overlaySoundDesc": "Oyun içi yer paylaşımı açılır penceresi göründüğünde çalınan ses",
         "overlayRandomSound": "Rastgele ses",

@@ -5129,6 +5129,7 @@ function openGameFromLaunchArgs(args) {
 // preset via window.api. Resolves presets from the bundled library, falling back to the default.
 const { DEFAULT_PRESET, presetPriority, resolveAvailablePresetName } = require(path.join(__dirname, '../util/notificationPreset.js'));
 const gamePreset = require(path.join(__dirname, '../util/gamePreset.js'));
+const notificationPlacement = require(path.join(__dirname, '../util/notificationPlacement.js'));
 gamePreset.setUserDataPath(userData);
 
 ipcMain.handle('game-preset:get', (event, appid) => gamePreset.getSettings(appid));
@@ -5317,7 +5318,7 @@ function createNotificationWindow(data = {}) {
     const requestedAnchor = gamePreset.normalizeCustomPosition(data.customPosition);
     const gamePositionAppid = String(data.gamePositionAppid || '');
     const savedGameAnchor = gamePositionAppid ? gamePreset.getSettings(gamePositionAppid).customPosition : null;
-    customAnchor = requestedAnchor || savedGameAnchor || readOverlayBounds().notif || null;
+    customAnchor = requestedAnchor || savedGameAnchor || notificationPlacement.savedAnchor(readOverlayBounds(), data.customAnchor);
   }
   const workArea = notificationPlacementArea(customAnchor);
   // Scale the host window in both directions, then cap the effective scale to the current work
@@ -5530,7 +5531,7 @@ function createNotificationWindow(data = {}) {
       const customPosition = { x: bounds.x, y: bounds.y };
       const gameAppid = String(data.repositionGameAppid || '');
       if (!gameAppid) {
-        writeOverlayBounds({ notif: customPosition });
+        writeOverlayBounds({ [data.repositionAnchor === 'progressNotif' ? 'progressNotif' : 'notif']: customPosition });
         return;
       }
       const settings = gamePreset.getSettings(gameAppid);
@@ -6054,13 +6055,24 @@ async function enqueueNotificationFromArgs(args) {
     t('achievement-unlocked', 'Achievement Unlocked', 'Succès débloqué');
 
   const durSec = ov.notificationDuration === 'auto' || ov.notificationDuration == null ? 0 : Number(ov.notificationDuration) || 0;
+  const placement = notificationPlacement.resolvePlacement({
+    kind: notificationType,
+    game: gameSettings,
+    global: {
+      position: ov.notificationPosition,
+      scale: ov.notificationScale,
+      progressPosition: ov.notificationProgressPosition,
+      progressScale: ov.notificationProgressScale,
+    },
+  });
   enqueueNotification({
     appid: args.appid == null ? '' : String(args.appid),
     notifyId,
     preset,
-    position: gameSettings.position || ov.notificationPosition || 'center-bottom',
-    scale: gameSettings.scale || ov.notificationScale || 1,
-    customPosition: gameSettings.customPosition || null,
+    position: placement.position,
+    scale: placement.scale,
+    customPosition: placement.customPosition,
+    customAnchor: placement.anchor,
     volume: Number.isFinite(Number(ov.notificationVolume)) ? Number(ov.notificationVolume) : 100,
     durationMs: durSec > 0 ? durSec * 1000 : undefined,
     // Playtime notifications pass the game name in both fields. Keeping the dedicated game-name

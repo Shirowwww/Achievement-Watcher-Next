@@ -510,6 +510,12 @@
           "name": "Edistymisilmoitukset",
           "description": "Ilmoita saavutuksen edistymisestä, jos mahdollista"
         },
+        "progressStep": {
+          "name": "Edistymisen virstanpylväät",
+          "description": "Näytä edistymisilmoitus vain, kun laskuri ylittää tavoitteensa uuden vaiheen, eikä jokaisella +1:llä. Avaukset näytetään aina.",
+          "every": "Joka vaihe",
+          "percent": "Joka {percent} %"
+        },
         "playtime": {
           "name": "Peliajan seuranta",
           "description": "Ilmoita seurannan alkamisesta ja päättymisestä"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "Missä kohtaa näyttöä pelinsisäinen ponnahdusilmoitus näkyy",
         "overlayScale": "Koko",
         "overlayScaleDesc": "Pelinsisäisen ponnahdusilmoituksen koko",
+        "overlayProgressPosition": "Edistymisen sijainti",
+        "overlayProgressPositionDesc": "Missä laskurien edistymisen ponnahdusilmoitukset (tilastosaavutuksen +1) näkyvät. Sama kuin avauksilla seuraa avausten sijaintia, myös pelin omaa sijaintia; mikä tahansa muu valinta koskee kaikkia pelejä.",
+        "overlayProgressScale": "Edistymisen koko",
+        "overlayProgressScaleDesc": "Laskurien edistymisen ponnahdusilmoitusten koko, esimerkiksi avauksia pienempi.",
+        "progressSameAsUnlocks": "Sama kuin avauksilla",
         "overlaySound": "Ääni",
         "overlaySoundDesc": "Ääni, joka soitetaan pelinsisäisen ponnahdusilmoituksen tullessa näkyviin",
         "overlayRandomSound": "Satunnainen ääni",

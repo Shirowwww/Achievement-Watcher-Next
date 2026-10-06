@@ -510,6 +510,12 @@
           "name": "Haladási értesítések",
           "description": "Értesítés a teljesítmény folyamatáról, ha lehetséges"
         },
+        "progressStep": {
+          "name": "Haladási mérföldkövek",
+          "description": "Haladási értesítés csak akkor jelenjen meg, ha egy számláló átlép a célja egy új lépcsőfokán, nem minden +1-nél. A feloldások mindig megjelennek.",
+          "every": "Minden lépés",
+          "percent": "Minden {percent}%"
+        },
         "playtime": {
           "name": "Játékidő követése",
           "description": "Értesítés a követés kezdetekor/végekor"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "Hol jelenik meg a felugró overlay a képernyőn",
         "overlayScale": "Méret",
         "overlayScaleDesc": "A felugró overlay mérete",
+        "overlayProgressPosition": "Haladás pozíciója",
+        "overlayProgressPositionDesc": "Hol jelennek meg a számlálók haladási felugró ablakai (egy statisztikai teljesítmény +1-e). Az Ugyanaz, mint a feloldások a feloldások pozícióját követi, a játék saját pozícióját is beleértve; bármely más választás minden játékra érvényes.",
+        "overlayProgressScale": "Haladás mérete",
+        "overlayProgressScaleDesc": "A számlálók haladási felugró ablakainak mérete, például kisebb, mint a feloldásoké.",
+        "progressSameAsUnlocks": "Ugyanaz, mint a feloldások",
         "overlaySound": "Hang",
         "overlaySoundDesc": "A felugró overlay megjelenésekor lejátszott hang",
         "overlayRandomSound": "Véletlen hang",

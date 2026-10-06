@@ -510,6 +510,12 @@
           "name": "Oznámenia o postupe",
           "description": "Upozorniť na postup úspechu, ak je to možné"
         },
+        "progressStep": {
+          "name": "Míľniky postupu",
+          "description": "Zobraziť oznámenie o postupe len vtedy, keď počítadlo prekročí nový krok svojho cieľa, namiesto každého +1. Odomknutia sa zobrazujú vždy.",
+          "every": "Každý krok",
+          "percent": "Každých {percent} %"
+        },
         "playtime": {
           "name": "Sledovanie času hrania",
           "description": "Upozorniť pri začatí/ukončení sledovania"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "Kde sa na obrazovke zobrazí vyskakovací overlay",
         "overlayScale": "Veľkosť",
         "overlayScaleDesc": "Veľkosť vyskakovacieho overlayu",
+        "overlayProgressPosition": "Pozícia postupu",
+        "overlayProgressPositionDesc": "Kde sa zobrazujú vyskakovacie okná postupu počítadiel (+1 pri štatistickom úspechu). Rovnaké ako odomknutia sleduje pozíciu odomknutí vrátane vlastnej pozície hry; akákoľvek iná voľba platí pre všetky hry.",
+        "overlayProgressScale": "Veľkosť postupu",
+        "overlayProgressScaleDesc": "Veľkosť vyskakovacích okien postupu počítadiel, napríklad menšia ako pri odomknutiach.",
+        "progressSameAsUnlocks": "Rovnaké ako odomknutia",
         "overlaySound": "Zvuk",
         "overlaySoundDesc": "Zvuk prehraný pri zobrazení vyskakovacieho overlayu",
         "overlayRandomSound": "Náhodný zvuk",

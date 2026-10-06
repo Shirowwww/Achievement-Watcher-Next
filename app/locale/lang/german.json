@@ -510,6 +510,12 @@
           "name": "Fortschrittsbenachrichtigungen",
           "description": "Bei Erfolgsfortschritt benachrichtigen, wenn möglich"
         },
+        "progressStep": {
+          "name": "Fortschrittsetappen",
+          "description": "Fortschrittsbenachrichtigung nur zeigen, wenn ein Zähler eine neue Stufe seines Ziels überschreitet, statt bei jedem +1. Freischaltungen werden immer angezeigt.",
+          "every": "Jede Stufe",
+          "percent": "Alle {percent} %"
+        },
         "playtime": {
           "name": "Spielzeit-Tracking",
           "description": "Bei Tracking-Start/-Ende benachrichtigen"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "Wo das In-Game-Overlay-Popup auf dem Bildschirm erscheint",
         "overlayScale": "Größe",
         "overlayScaleDesc": "Größe des In-Game-Overlay-Popups",
+        "overlayProgressPosition": "Fortschrittsposition",
+        "overlayProgressPositionDesc": "Wo die Popups für den Zählerfortschritt (das +1 eines Statistik-Erfolgs) erscheinen. Wie Freischaltungen folgt der Position der Freischaltungen, auch der eigenen Position eines Spiels; jede andere Auswahl gilt für alle Spiele.",
+        "overlayProgressScale": "Fortschrittsgröße",
+        "overlayProgressScaleDesc": "Größe der Popups für den Zählerfortschritt, zum Beispiel kleiner als bei Freischaltungen.",
+        "progressSameAsUnlocks": "Wie Freischaltungen",
         "overlaySound": "Ton",
         "overlaySoundDesc": "Ton, der beim Erscheinen des In-Game-Overlay-Popups abgespielt wird",
         "overlayRandomSound": "Zufälliger Sound",

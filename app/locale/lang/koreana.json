@@ -510,6 +510,12 @@
           "name": "진행도 알림",
           "description": "가능하면 도전 과제 진행도를 알립니다"
         },
+        "progressStep": {
+          "name": "진행도 단계 알림",
+          "description": "카운터가 목표의 새 단계를 넘을 때만 진행도 알림을 표시하고, +1마다 표시하지 않습니다. 해제는 항상 표시됩니다.",
+          "every": "모든 단계",
+          "percent": "{percent}%마다"
+        },
         "playtime": {
           "name": "플레이 시간 추적",
           "description": "추적을 시작하거나 끝낼 때 알립니다"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "게임 내 오버레이 팝업이 화면의 어디에 나타날지",
         "overlayScale": "크기",
         "overlayScaleDesc": "게임 내 오버레이 팝업의 크기",
+        "overlayProgressPosition": "진행도 위치",
+        "overlayProgressPositionDesc": "카운터 진행도 팝업(통계형 도전 과제의 +1)이 나타나는 위치입니다. 해제와 동일은 게임별 위치를 포함해 해제 위치를 따르며, 다른 선택지는 모든 게임에 적용됩니다.",
+        "overlayProgressScale": "진행도 크기",
+        "overlayProgressScaleDesc": "카운터 진행도 팝업의 크기입니다. 예를 들어 해제 팝업보다 작게 할 수 있습니다.",
+        "progressSameAsUnlocks": "해제와 동일",
         "overlaySound": "소리",
         "overlaySoundDesc": "게임 내 오버레이 팝업이 나타날 때 재생할 소리",
         "overlayRandomSound": "무작위 소리",

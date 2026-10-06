@@ -510,6 +510,12 @@
           "name": "進行状況の通知",
           "description": "可能なら実績の進捗を通知します"
         },
+        "progressStep": {
+          "name": "進捗のマイルストーン",
+          "description": "カウンターが目標の新しい段階を超えたときだけ進捗通知を表示します。+1のたびには表示しません。解除は常に表示されます。",
+          "every": "すべての段階",
+          "percent": "{percent}%ごと"
+        },
         "playtime": {
           "name": "プレイ時間の追跡",
           "description": "追跡の開始／終了時に通知します"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "ゲーム内オーバーレイのポップアップが画面上のどこに表示されるか",
         "overlayScale": "サイズ",
         "overlayScaleDesc": "ゲーム内オーバーレイのポップアップのサイズ",
+        "overlayProgressPosition": "進捗の位置",
+        "overlayProgressPositionDesc": "カウンターの進捗ポップアップ（統計系実績の+1）を表示する場所です。「解除と同じ」は、ゲーム個別の位置も含め解除の位置に従います。それ以外を選ぶとすべてのゲームに適用されます。",
+        "overlayProgressScale": "進捗のサイズ",
+        "overlayProgressScaleDesc": "カウンターの進捗ポップアップのサイズです。たとえば解除より小さくできます。",
+        "progressSameAsUnlocks": "解除と同じ",
         "overlaySound": "サウンド",
         "overlaySoundDesc": "ゲーム内オーバーレイのポップアップ表示時に再生されるサウンド",
         "overlayRandomSound": "ランダムサウンド",

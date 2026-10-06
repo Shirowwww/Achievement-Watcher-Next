@@ -29,6 +29,11 @@ renamed in 3.9.0 and the history is kept under one file.
   MarkerPatch or of Alice: Madness Returns with MadnessPatch is picked up through Steam's own install
   record, by the library and by live notifications, without adding its folder. Smart find also looks
   for these mods and for recompiled Xbox 360 games in your game libraries.
+- **Progress popups can stay out of the way of unlocks (#106).** Counter achievements raise a "+1"
+  popup at every step, and those sat exactly where real unlocks appear. **Progress position** and
+  **Progress scale** in Settings → Notification put them somewhere else and at another size, in every
+  game. **Progress milestones** shows them only every 10, 25 or 50% of the goal. All three start on the
+  current behaviour.
 
 ### Fixed
 

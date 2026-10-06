@@ -510,6 +510,12 @@
           "name": "Notificações de progresso",
           "description": "Notificar o progresso das conquistas, se possível"
         },
+        "progressStep": {
+          "name": "Marcos de progresso",
+          "description": "Mostrar uma notificação de progresso apenas quando um contador passa uma nova etapa da meta, em vez de a cada +1. Os desbloqueios são sempre exibidos.",
+          "every": "Cada etapa",
+          "percent": "A cada {percent}%"
+        },
         "playtime": {
           "name": "Monitoramento do tempo de jogo",
           "description": "Notificar no início/fim do monitoramento"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "Onde o popup overlay no jogo aparece na tela",
         "overlayScale": "Tamanho",
         "overlayScaleDesc": "Tamanho do popup overlay no jogo",
+        "overlayProgressPosition": "Posição do progresso",
+        "overlayProgressPositionDesc": "Onde aparecem os popups de progresso de contadores (o +1 de uma conquista de estatística). Igual aos desbloqueios segue a posição dos desbloqueios, incluindo a posição própria de um jogo; qualquer outra opção vale para todos os jogos.",
+        "overlayProgressScale": "Tamanho do progresso",
+        "overlayProgressScaleDesc": "Tamanho dos popups de progresso de contadores, por exemplo menor que os desbloqueios.",
+        "progressSameAsUnlocks": "Igual aos desbloqueios",
         "overlaySound": "Som",
         "overlaySoundDesc": "Som reproduzido quando o popup overlay no jogo aparece",
         "overlayRandomSound": "Som aleatório",

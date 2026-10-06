@@ -112,9 +112,8 @@ test('all game tests reuse the existing tester with the selection currently in t
     'the old entry point is extended instead of duplicated'
   );
   assert.match(settingsSource, /fireNotificationTest\(notificationKind, button, transport, notificationOverrides, game\)/);
-  assert.match(settingsSource, /const position = overrides\.position \|\|/);
+  assert.match(settingsSource, /game: \{\s*position: overrides\.position,\s*scale: overrides\.scale,/);
   assert.match(settingsSource, /Object\.prototype\.hasOwnProperty\.call\(overrides, 'sound'\)/);
-  assert.match(settingsSource, /const overrideScale = Number\(overrides\.scale\)/);
   assert.match(
     settingsSource,
     /const globalSound = settingsReady[\s\S]*cfgOverlay\.randomSound === true[\s\S]*cfgOverlay\.notificationSound/,
@@ -137,12 +136,16 @@ test('custom placement reuses the draggable witness and stays scoped to its game
   assert.match(body, /invoke\('game-preset:set', \{ appid, settings \}\)/, 'custom mode is persisted before placement starts');
   assert.match(body, /repositionAchievementWatcherNotification\(saved, game, appid\)/);
 
-  assert.match(settingsSource, /function spawnNotificationReposition\(notificationOverrides, game, gameAppid = ''\)/);
-  assert.match(settingsSource, /data\.repositionGameAppid = String\(gameAppid \|\| ''\)/);
-  assert.match(settingsSource, /data\.gamePositionAppid = String\(gameAppid \|\| ''\)/);
+  assert.match(settingsSource, /function spawnNotificationReposition\(notificationOverrides, game, gameAppid = '', anchor = 'notif'\)/);
+  assert.match(settingsSource, /data\.repositionGameAppid = progress \? '' : String\(gameAppid \|\| ''\)/);
+  assert.match(settingsSource, /data\.gamePositionAppid = data\.repositionGameAppid/);
   assert.match(initSource, /gamePreset\.setSettings\(gameAppid, settings\)/, 'dragging writes the per-game store');
-  assert.match(initSource, /writeOverlayBounds\(\{ notif: customPosition \}\)/, 'the same witness still supports global placement');
-  assert.match(initSource, /customPosition: gameSettings\.customPosition \|\| null/, 'live unlocks carry the cached game anchor');
+  assert.match(
+    initSource,
+    /writeOverlayBounds\(\{ \[data\.repositionAnchor === 'progressNotif' \? 'progressNotif' : 'notif'\]: customPosition \}\)/,
+    'the same witness still supports global placement'
+  );
+  assert.match(initSource, /customPosition: placement\.customPosition/, 'live unlocks carry the cached game anchor');
 });
 
 test('the classic renderer scripts do not redeclare the preset alias helper', () => {
@@ -161,8 +164,8 @@ test('live unlocks resolve the per-game override from memory', () => {
   const enqueue = functionBody(initSource, 'async function enqueueNotificationFromArgs(args)');
   assert.match(enqueue, /const gameSettings = gamePreset\.getSettings\(args\.appid\)/);
   assert.match(enqueue, /game: gameSettings\.preset/);
-  assert.match(enqueue, /position: gameSettings\.position \|\| ov\.notificationPosition/);
-  assert.match(enqueue, /scale: gameSettings\.scale \|\| ov\.notificationScale/);
+  assert.match(enqueue, /game: gameSettings,\s*global: \{\s*position: ov\.notificationPosition,\s*scale: ov\.notificationScale,/);
+  assert.match(enqueue, /position: placement\.position,\s*scale: placement\.scale,/);
   assert.match(enqueue, /gameSettings\.sound === gamePreset\.SOUND_NONE/);
   assert.match(enqueue, /gameSettings\.sound === gamePreset\.SOUND_RANDOM/);
 

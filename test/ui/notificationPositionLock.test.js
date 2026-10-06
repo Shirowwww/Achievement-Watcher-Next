@@ -15,7 +15,10 @@ test('custom notification placement follows its saved display instead of the cur
   assert.match(init, /savedDisplay\.bounds/);
   assert.match(init, /const requestedAnchor = gamePreset\.normalizeCustomPosition\(data\.customPosition\)/);
   assert.match(init, /const savedGameAnchor = gamePositionAppid \? gamePreset\.getSettings\(gamePositionAppid\)\.customPosition : null/);
-  assert.match(init, /customAnchor = requestedAnchor \|\| savedGameAnchor \|\| readOverlayBounds\(\)\.notif \|\| null/);
+  assert.match(
+    init,
+    /customAnchor = requestedAnchor \|\| savedGameAnchor \|\| notificationPlacement\.savedAnchor\(readOverlayBounds\(\), data\.customAnchor\)/
+  );
   assert.match(init, /notificationPlacementArea\(customAnchor\)/);
 });
 
@@ -40,7 +43,7 @@ test('Windows repositioning persists on move and real custom popups keep exact b
   assert.match(init, /notif\.on\('move',[\s\S]*?getBounds\(\)[\s\S]*?setBounds\(lockedCustomBounds, false\)/);
   assert.doesNotMatch(init, /notif\.on\('moved'/);
   assert.match(init, /const gameAppid = String\(data\.repositionGameAppid \|\| ''\)/);
-  assert.match(init, /if \(!gameAppid\) \{[\s\S]*?writeOverlayBounds\(\{ notif: customPosition \}\)/);
+  assert.match(init, /if \(!gameAppid\) \{[\s\S]*?writeOverlayBounds\(\{ \[data\.repositionAnchor === 'progressNotif' \? 'progressNotif' : 'notif'\]: customPosition \}\)/);
   assert.match(init, /settings\.customPosition = customPosition[\s\S]*?gamePreset\.setSettings\(gameAppid, settings\)/);
 });
 

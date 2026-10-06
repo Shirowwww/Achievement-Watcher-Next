@@ -11,6 +11,9 @@ const controllerLabels = require(path.join(appPath, 'util/controllerLabels.js'))
 const themeLayers = require(path.join(appPath, 'util/themeLayers.js'));
 const libraryLayout = require(path.join(appPath, 'util/libraryLayout.js'));
 const libraryChrome = require(path.join(appPath, 'util/libraryChrome.js'));
+const notificationPlacement = require(path.join(appPath, 'util/notificationPlacement.js'));
+
+const PROGRESS_STEPS = [0, 10, 25, 50];
 
 function normalizeControllerBindingSetting(value, allowedButtons, fallback) {
   const parsed = controllerLabels.normalizeControllerBinding(value, {
@@ -185,6 +188,12 @@ module.exports.load = () => {
       const scl = Number(options.overlay.notificationScale);
       options.overlay.notificationScale = Number.isFinite(scl) && scl > 0 ? scl : 1;
     }
+    // Counter progress popups: '' follows the unlock placement. These are new keys on purpose: the
+    // progressPosition deleted below belonged to the removed per-type windows and used other values.
+    options.overlay.notificationProgressPosition = notificationPlacement.normalizeProgressPosition(
+      options.overlay.notificationProgressPosition
+    );
+    options.overlay.notificationProgressScale = notificationPlacement.normalizeProgressScale(options.overlay.notificationProgressScale);
     if (typeof options.overlay.notificationSound !== 'string') {
       options.overlay.notificationSound = '';
     }
@@ -455,6 +464,11 @@ module.exports.load = () => {
     if (typeof options.notification.notifyOnProgress !== 'boolean') {
       options.notification.notifyOnProgress = true;
     }
+    // Progress popups only when a counter crosses this percentage of its goal; 0 is every step.
+    {
+      const step = Number(options.notification.progressStep);
+      options.notification.progressStep = PROGRESS_STEPS.includes(step) ? step : 0;
+    }
 
     if (typeof options.notification.playtime !== 'boolean') {
       // Enable playtime on a new profile without changing the preference of upgraded profiles.
@@ -590,6 +604,8 @@ module.exports.load = () => {
         notificationPresetShadps4: '',
         notificationPosition: 'center-bottom',
         notificationScale: 1,
+        notificationProgressPosition: '',
+        notificationProgressScale: '',
         notificationSound: '',
         randomSound: false,
         notificationVolume: 100,
@@ -666,6 +682,7 @@ module.exports.load = () => {
         notify: true,
         rumble: true,
         notifyOnProgress: true,
+        progressStep: 0,
         playtime: true,
         platinum: true,
         steamClient: false,

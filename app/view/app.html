@@ -1690,6 +1690,25 @@
                       </div>
                       <div class="help"></div>
                     </li>
+
+                    <li class="hasHelper expand" data-advanced="1">
+                      <div class="left"><i class="fas fa-flag-checkered"></i> <span></span></div>
+                      <div class="right">
+                        <div class="previous">
+                          <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                        </div>
+                        <select autocomplete="off" id="option_progressStep">
+                          <option value="0" selected></option>
+                          <option value="10"></option>
+                          <option value="25"></option>
+                          <option value="50"></option>
+                        </select>
+                        <div class="next">
+                          <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                        </div>
+                      </div>
+                      <div class="help"></div>
+                    </li>
                   </ul>
                 </div>
 
@@ -1813,6 +1832,49 @@
                           <option value="0.5">50%</option>
                           <option value="0.75">75%</option>
                           <option value="1" selected>100%</option>
+                          <option value="1.25">125%</option>
+                          <option value="1.5">150%</option>
+                          <option value="2">200%</option>
+                        </select>
+                        <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                      </div>
+                      <div class="help"></div>
+                    </li>
+
+                    <!-- Counter progress popups ("+1") can sit apart from unlocks; '' follows them. -->
+                    <li class="hasHelper" data-advanced="1">
+                      <div class="left">
+                        <i class="fas fa-tachometer-alt"></i> <span id="lbl-overlayProgressPosition"></span>
+                        <button type="button" id="btn-overlay-progress-reposition" class="inline-action-btn" title="Reposition popup"><i class="fas fa-crosshairs"></i></button>
+                      </div>
+                      <div class="right">
+                        <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                        <select autocomplete="off" class="dropdown" id="option_overlayProgressPosition">
+                          <option value="" selected></option>
+                          <option value="center-bottom">Center bottom</option>
+                          <option value="center-top">Center top</option>
+                          <option value="top-left">Top left</option>
+                          <option value="top-right">Top right</option>
+                          <option value="bottom-left">Bottom left</option>
+                          <option value="bottom-right">Bottom right</option>
+                          <option value="middle-left">Middle left</option>
+                          <option value="middle-right">Middle right</option>
+                          <option value="custom">Custom</option>
+                        </select>
+                        <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                      </div>
+                      <div class="help"></div>
+                    </li>
+
+                    <li class="hasHelper expand" data-advanced="1">
+                      <div class="left"><i class="fas fa-compress"></i> <span id="lbl-overlayProgressScale"></span></div>
+                      <div class="right">
+                        <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                        <select autocomplete="off" class="dropdown" id="option_overlayProgressScale">
+                          <option value="" selected></option>
+                          <option value="0.5">50%</option>
+                          <option value="0.75">75%</option>
+                          <option value="1">100%</option>
                           <option value="1.25">125%</option>
                           <option value="1.5">150%</option>
                           <option value="2">200%</option>

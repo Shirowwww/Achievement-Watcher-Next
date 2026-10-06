@@ -510,6 +510,12 @@
           "name": "Notifikasi progres",
           "description": "Beri notifikasi untuk progres pencapaian bila memungkinkan"
         },
+        "progressStep": {
+          "name": "Tonggak progres",
+          "description": "Tampilkan notifikasi progres hanya saat penghitung melewati langkah baru dari targetnya, bukan di setiap +1. Pembukaan selalu ditampilkan.",
+          "every": "Setiap langkah",
+          "percent": "Setiap {percent}%"
+        },
         "playtime": {
           "name": "Pelacakan waktu bermain",
           "description": "Beri notifikasi saat pelacakan dimulai/berakhir"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "Tempat pop-up overlay dalam game muncul di layar",
         "overlayScale": "Skala",
         "overlayScaleDesc": "Ukuran pop-up overlay dalam game",
+        "overlayProgressPosition": "Posisi progres",
+        "overlayProgressPositionDesc": "Tempat pop-up progres penghitung (+1 pada pencapaian statistik) muncul. Sama seperti pembukaan mengikuti posisi pembukaan, termasuk posisi khusus sebuah game; pilihan lain berlaku untuk semua game.",
+        "overlayProgressScale": "Skala progres",
+        "overlayProgressScaleDesc": "Ukuran pop-up progres penghitung, misalnya lebih kecil daripada pembukaan.",
+        "progressSameAsUnlocks": "Sama seperti pembukaan",
         "overlaySound": "Suara",
         "overlaySoundDesc": "Suara yang diputar saat pop-up overlay dalam game muncul",
         "overlayRandomSound": "Suara acak",

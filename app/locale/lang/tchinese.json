@@ -510,6 +510,12 @@
           "name": "進度通知",
           "description": "在成就有進度時盡可能發出通知"
         },
+        "progressStep": {
+          "name": "進度里程碑",
+          "description": "只在計數器越過目標的新階段時才顯示進度通知，而非每次 +1 都顯示。解鎖通知一律顯示。",
+          "every": "每個階段",
+          "percent": "每 {percent}%"
+        },
         "playtime": {
           "name": "遊玩時數追蹤",
           "description": "在開始或結束追蹤時發出通知"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "遊戲內嵌介面彈出通知在螢幕上出現的位置",
         "overlayScale": "縮放比例",
         "overlayScaleDesc": "遊戲內嵌介面彈出通知的大小",
+        "overlayProgressPosition": "進度位置",
+        "overlayProgressPositionDesc": "計數器進度彈出通知（統計類成就的 +1）出現的位置。「與解鎖相同」會跟隨解鎖通知的位置，包括遊戲自己的位置；選擇其他選項則套用於所有遊戲。",
+        "overlayProgressScale": "進度縮放比例",
+        "overlayProgressScaleDesc": "計數器進度彈出通知的大小，例如比解鎖通知更小。",
+        "progressSameAsUnlocks": "與解鎖相同",
         "overlaySound": "音效",
         "overlaySoundDesc": "遊戲內嵌介面彈出通知時播放的音效",
         "overlayRandomSound": "隨機音效",

@@ -121,6 +121,21 @@ The scale setting resizes the whole popup without changing the preset's layout: 
 exactly as it is at 100%, only larger or smaller. **Reposition** shows the popup at the selected
 scale, so what you place is what you get.
 
+### Progress popups
+
+Counter achievements (kill 50 enemies, travel 100 km) can raise a progress popup at every step. In
+Advanced mode, **Progress position** and **Progress scale** give those popups a place and a size of
+their own, for example unlocks at the bottom right and smaller progress at the bottom left.
+**Same as unlocks**, the default, keeps today's behaviour and follows a game's own position when it
+has one. Any other choice applies to the progress popups of every game, which is what keeps them apart
+from unlocks even where a game has its own position. The crosshair beside **Progress position** places
+a custom anchor for progress only; until it is placed once, it starts from the unlock anchor. These
+two settings only move the in-game popup: Windows decides where its own notifications appear.
+
+**Progress milestones**, in the common notification settings, shows a progress notification only when
+a counter crosses another 10, 25 or 50% of its goal instead of at every step. It applies to both the
+popup and the Windows notification. The unlock itself is always shown.
+
 The in-game overlay list also supports keyboard shortcuts for moving, snapping and click-through -
 see the [Overlay guide](overlay.md#keyboard-shortcuts-overlay-open) - plus optional gamepad control,
 covered in the [Controller guide](controller.md).

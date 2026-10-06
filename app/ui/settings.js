@@ -24,6 +24,7 @@ const libraryRefresh = require(path.join(appPath, 'util/libraryRefresh.js'));
 const { renamedSound } = require(path.join(appPath, 'util/notificationSounds.js'));
 const interfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
 const { legacyPresetAlias } = require(path.join(appPath, 'util/notificationPreset.js'));
+const notificationPlacement = require(path.join(appPath, 'util/notificationPlacement.js'));
 const { describeFolderDiagnosis } = require(path.join(appPath, 'util/folderDiagnosis.js'));
 // Where OBS points a Browser source. The Watchdog serves the selected preset at /obs on its own
 // websocket listener, whose port is fixed in watchdog/websocket.js - the two are kept in step by
@@ -684,6 +685,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#option_notifMode').val(app.config.notification_transport.mode || 'auto').change();
       $('#option_overlayPosition').val(cfgOverlay.notificationPosition || 'center-bottom').change();
       $('#option_overlayScale').val(String(cfgOverlay.notificationScale || 1)).change();
+      $('#option_overlayProgressPosition').val(cfgOverlay.notificationProgressPosition || '').change();
+      $('#option_overlayProgressScale').val(String(cfgOverlay.notificationProgressScale || '')).change();
       $('#option_overlayVolume').val(String(cfgOverlay.notificationVolume != null ? cfgOverlay.notificationVolume : 100)).change();
       $('#option_overlayDuration').val(String(cfgOverlay.notificationDuration || 'auto')).change();
       const cfgSouvenir = app.config.souvenir || {};
@@ -3956,10 +3959,22 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         ? overrides.sound
         : globalSound;
       const sound = soundForPreview(soundChoice);
-      const position = overrides.position || globalPosition;
-      const overrideScale = Number(overrides.scale);
-      const scale =
-        Number.isFinite(overrideScale) && overrideScale > 0 ? overrideScale : globalScale;
+      const notificationType = kind === 'toast' || kind === 'rare' ? 'achievement' : kind;
+      // Same resolution as a live popup, so a progress preview lands where real progress would.
+      const placement = notificationPlacement.resolvePlacement({
+        kind: notificationType,
+        game: {
+          position: overrides.position,
+          scale: overrides.scale,
+          customPosition: gameScoped ? overrides.customPosition : null,
+        },
+        global: {
+          position: globalPosition,
+          scale: globalScale,
+          progressPosition: settingsReady ? $('#option_overlayProgressPosition').val() : cfgOverlay.notificationProgressPosition,
+          progressScale: settingsReady ? $('#option_overlayProgressScale').val() : cfgOverlay.notificationProgressScale,
+        },
+      });
       const rarePct = kind === 'rare' ? randomRareRarity() : null;
       const texts = {
         toast: {
@@ -4004,8 +4019,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           appid: (game && game.appid) || '',
           // Only a preview launched from a game's own panel may consult its custom anchor; a
           // generic preview that merely borrows artwork stays at the global custom position.
-          gamePositionAppid: gameScoped && game ? String(game.libraryAppid || game.appid || '') : '',
-          customPosition: gameScoped && overrides.position === 'custom' ? overrides.customPosition || null : null,
+          // A separated progress popup has its own anchor, so it never consults the game's one.
+          gamePositionAppid:
+            gameScoped && game && placement.anchor === 'notif' ? String(game.libraryAppid || game.appid || '') : '',
+          customPosition: placement.customPosition,
+          customAnchor: placement.anchor,
           // `image` is the alias createNotificationWindow() maps onto imagePath/headerPath, which is
           // what the Game Cover preset paints its background from.
           image: (game && game.image) || '',
@@ -4013,10 +4031,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           // it names a sample one rather than leaving the row a preset asked for empty.
           gameName: (game && game.name) || t('preset-sample-game', 'Sample Game', 'Jeu d’exemple'),
           // A rare unlock is a normal achievement notification carrying a rarityPercent.
-          notificationType: kind === 'toast' || kind === 'rare' ? 'achievement' : kind,
+          notificationType,
           rarityPercent: rarePct,
-          position,
-          scale,
+          position: placement.position,
+          scale: placement.scale,
           volume: globalVolume,
           durationMs: durSec > 0 ? durSec * 1000 : undefined,
           // The primary icon. A preview has no per-achievement art, so a game-scoped one shows the
@@ -4243,12 +4261,15 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     // Reposition the overlay notification popup through the same draggable witness for global and
     // per-game placement. The main process chooses the storage destination from repositionGameAppid.
-    function spawnNotificationReposition(notificationOverrides, game, gameAppid = '') {
-      const data = overlayTestData('toast', notificationOverrides, null, game);
+    function spawnNotificationReposition(notificationOverrides, game, gameAppid = '', anchor = 'notif') {
+      const progress = anchor === 'progressNotif';
+      const data = overlayTestData(progress ? 'progress' : 'toast', notificationOverrides, null, game);
       data.position = 'custom';
       data.reposition = true;
-      data.repositionGameAppid = String(gameAppid || '');
-      data.gamePositionAppid = String(gameAppid || '');
+      data.customAnchor = progress ? anchor : 'notif';
+      data.repositionAnchor = data.customAnchor;
+      data.repositionGameAppid = progress ? '' : String(gameAppid || '');
+      data.gamePositionAppid = data.repositionGameAppid;
       data.durationMs = undefined;
       data.soundPath = '';
       ipcRenderer.send('spawn-overlay-notification', data);
@@ -4260,6 +4281,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       spawnNotificationReposition();
       // Make sure the dropdown reflects that custom positioning is now in use.
       $('#option_overlayPosition').val('custom').change();
+    });
+    $('#btn-overlay-progress-reposition').click(function () {
+      // Selected first, so the witness already takes the progress scale.
+      $('#option_overlayProgressPosition').val('custom').change();
+      spawnNotificationReposition(null, null, '', 'progressNotif');
     });
 
     // Pick a custom folder for souvenir screenshots (empty = default Pictures\Achievement Watcher Next).
@@ -5666,6 +5692,8 @@ function readNotificationSettings() {
   app.config.overlay.notificationPresetShadps4 = $('#option_overlayPresetShadps4').val() || '';
   app.config.overlay.notificationPosition = $('#option_overlayPosition').val() || 'center-bottom';
   app.config.overlay.notificationScale = parseFloat($('#option_overlayScale').val()) || 1;
+  app.config.overlay.notificationProgressPosition = notificationPlacement.normalizeProgressPosition($('#option_overlayProgressPosition').val());
+  app.config.overlay.notificationProgressScale = notificationPlacement.normalizeProgressScale($('#option_overlayProgressScale').val());
   // 'Random' lives in the sound list now, so one control writes both keys: the flag the
   // notification path reads, and the filename it falls back to when the flag is off.
   const chosenSound = $('#option_overlaySound').val() || '';

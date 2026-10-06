@@ -510,6 +510,12 @@
           "name": "Notificaciones de progreso",
           "description": "Notificar el progreso de los logros, si es posible"
         },
+        "progressStep": {
+          "name": "Hitos de progreso",
+          "description": "Mostrar una notificación de progreso solo cuando un contador supera un nuevo paso de su meta, en lugar de cada +1. Los desbloqueos siempre se muestran.",
+          "every": "Cada paso",
+          "percent": "Cada {percent}%"
+        },
         "playtime": {
           "name": "Seguimiento del tiempo de juego",
           "description": "Notificar al inicio/fin del seguimiento"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "Dónde aparece el popup overlay en el juego en la pantalla",
         "overlayScale": "Tamaño",
         "overlayScaleDesc": "Tamaño del popup overlay en el juego",
+        "overlayProgressPosition": "Posición del progreso",
+        "overlayProgressPositionDesc": "Dónde aparecen los popups de progreso de contadores (el +1 de un logro de estadística). Igual que los desbloqueos sigue la posición de los desbloqueos, incluida la propia de un juego; cualquier otra opción se aplica a todos los juegos.",
+        "overlayProgressScale": "Tamaño del progreso",
+        "overlayProgressScaleDesc": "Tamaño de los popups de progreso de contadores, por ejemplo más pequeños que los desbloqueos.",
+        "progressSameAsUnlocks": "Igual que los desbloqueos",
         "overlaySound": "Sonido",
         "overlaySoundDesc": "Sonido reproducido cuando aparece el popup overlay en el juego",
         "overlayRandomSound": "Sonido aleatorio",

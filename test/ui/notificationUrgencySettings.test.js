@@ -43,7 +43,8 @@ test('the priority and Steam client controls are appended to the common rows wit
   assert.ok(list, 'common notification list must exist');
 
   const rows = [...list[1].matchAll(/<li\b[\s\S]*?<\/li>/g)];
-  assert.equal(rows.length, 8, 'new rows are appended without shifting existing positional rows');
+  // The ninth row, the progress milestone, is pinned in progressNotificationSettings.test.js.
+  assert.equal(rows.length, 9, 'new rows are appended without shifting existing positional rows');
   assert.match(rows[7][0], /id="option_steamClient"/);
   assert.match(rows[7][0], /<option value="false" selected><\/option>/, 'Steam client notifications start off');
   assert.match(rows[6][0], /id="option_urgent"/);

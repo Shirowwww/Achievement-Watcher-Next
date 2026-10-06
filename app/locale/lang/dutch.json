@@ -510,6 +510,12 @@
           "name": "Voortgangsmeldingen",
           "description": "Meld de voortgang van een prestatie indien mogelijk"
         },
+        "progressStep": {
+          "name": "Voortgangsmijlpalen",
+          "description": "Toon een voortgangsmelding alleen wanneer een teller een nieuwe stap van zijn doel passeert, in plaats van bij elke +1. Ontgrendelingen worden altijd getoond.",
+          "every": "Elke stap",
+          "percent": "Elke {percent}%"
+        },
         "playtime": {
           "name": "Speeltijd bijhouden",
           "description": "Meld het begin en het einde van het bijhouden"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "Waar de pop-up van de in-game overlay op het scherm verschijnt",
         "overlayScale": "Schaal",
         "overlayScaleDesc": "Grootte van de pop-up van de in-game overlay",
+        "overlayProgressPosition": "Positie van voortgang",
+        "overlayProgressPositionDesc": "Waar voortgangspop-ups van tellers (de +1 van een statistiekprestatie) verschijnen. Zelfde als ontgrendelingen volgt de positie van ontgrendelingen, inclusief de eigen positie van een game; elke andere keuze geldt voor alle games.",
+        "overlayProgressScale": "Schaal van voortgang",
+        "overlayProgressScaleDesc": "Grootte van voortgangspop-ups van tellers, bijvoorbeeld kleiner dan bij ontgrendelingen.",
+        "progressSameAsUnlocks": "Zelfde als ontgrendelingen",
         "overlaySound": "Geluid",
         "overlaySoundDesc": "Geluid dat klinkt wanneer de pop-up van de in-game overlay verschijnt",
         "overlayRandomSound": "Willekeurig geluid",

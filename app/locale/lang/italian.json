@@ -510,6 +510,12 @@
           "name": "Notifiche di avanzamento",
           "description": "Notifica sul progresso degli obiettivi, se possibile"
         },
+        "progressStep": {
+          "name": "Tappe di avanzamento",
+          "description": "Mostra una notifica di avanzamento solo quando un contatore supera un nuovo passo del suo traguardo, invece che a ogni +1. Gli sblocchi vengono sempre mostrati.",
+          "every": "Ogni passo",
+          "percent": "Ogni {percent}%"
+        },
         "playtime": {
           "name": "Monitoraggio tempo di gioco",
           "description": "Notifica all’inizio/fine del monitoraggio"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "Dove appare il popup overlay di gioco sullo schermo",
         "overlayScale": "Dimensione",
         "overlayScaleDesc": "Dimensione del popup overlay di gioco",
+        "overlayProgressPosition": "Posizione avanzamento",
+        "overlayProgressPositionDesc": "Dove compaiono i popup di avanzamento dei contatori (il +1 di un obiettivo a statistica). Come gli sblocchi segue la posizione degli sblocchi, compresa quella propria di un gioco; qualsiasi altra scelta vale per tutti i giochi.",
+        "overlayProgressScale": "Dimensione avanzamento",
+        "overlayProgressScaleDesc": "Dimensione dei popup di avanzamento dei contatori, ad esempio più piccoli degli sblocchi.",
+        "progressSameAsUnlocks": "Come gli sblocchi",
         "overlaySound": "Suono",
         "overlaySoundDesc": "Suono riprodotto quando appare il popup overlay di gioco",
         "overlayRandomSound": "Suono casuale",

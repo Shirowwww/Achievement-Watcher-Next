@@ -510,6 +510,12 @@
           "name": "Fremskridtsnotifikationer",
           "description": "Giv besked om fremskridt mod en præstation, hvis det er muligt"
         },
+        "progressStep": {
+          "name": "Fremskridtsmilepæle",
+          "description": "Vis kun en fremskridtsnotifikation, når en tæller passerer et nyt trin mod sit mål, i stedet for ved hver +1. Oplåsninger vises altid.",
+          "every": "Hvert trin",
+          "percent": "Hver {percent} %"
+        },
         "playtime": {
           "name": "Sporing af spilletid",
           "description": "Giv besked, når sporingen starter og slutter"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "Hvor pop op-vinduet i overlayet vises på skærmen",
         "overlayScale": "Størrelse",
         "overlayScaleDesc": "Størrelsen på pop op-vinduet i overlayet",
+        "overlayProgressPosition": "Placering af fremskridt",
+        "overlayProgressPositionDesc": "Hvor pop op-vinduer med fremskridt for tællere (+1 ved en statistikpræstation) vises. Samme som oplåsninger følger placeringen for oplåsninger, også et spils egen placering; ethvert andet valg gælder for alle spil.",
+        "overlayProgressScale": "Størrelse på fremskridt",
+        "overlayProgressScaleDesc": "Størrelsen på pop op-vinduer med fremskridt for tællere, for eksempel mindre end oplåsninger.",
+        "progressSameAsUnlocks": "Samme som oplåsninger",
         "overlaySound": "Lyd",
         "overlaySoundDesc": "Lyd, der afspilles, når pop op-vinduet i overlayet vises",
         "overlayRandomSound": "Tilfældig lyd",

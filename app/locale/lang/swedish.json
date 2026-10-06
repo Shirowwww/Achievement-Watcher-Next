@@ -510,6 +510,12 @@
           "name": "Framstegsaviseringar",
           "description": "Avisera vid framsteg mot en prestation, om det går"
         },
+        "progressStep": {
+          "name": "Framstegsmilstolpar",
+          "description": "Visa en framstegsavisering bara när en räknare passerar ett nytt steg mot sitt mål, i stället för vid varje +1. Upplåsningar visas alltid.",
+          "every": "Varje steg",
+          "percent": "Varje {percent} %"
+        },
         "playtime": {
           "name": "Spårning av speltid",
           "description": "Avisera när spårningen börjar och slutar"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "Var på skärmen popupen i overlayen visas",
         "overlayScale": "Storlek",
         "overlayScaleDesc": "Storlek på popupen i overlayen",
+        "overlayProgressPosition": "Position för framsteg",
+        "overlayProgressPositionDesc": "Var popuperna för räknarframsteg (+1 för en statistikprestation) visas. Samma som upplåsningar följer upplåsningarnas position, även ett spels egen position; varje annat val gäller alla spel.",
+        "overlayProgressScale": "Storlek på framsteg",
+        "overlayProgressScaleDesc": "Storlek på popuperna för räknarframsteg, till exempel mindre än upplåsningar.",
+        "progressSameAsUnlocks": "Samma som upplåsningar",
         "overlaySound": "Ljud",
         "overlaySoundDesc": "Ljud som spelas när popupen i overlayen visas",
         "overlayRandomSound": "Slumpmässigt ljud",

@@ -510,6 +510,12 @@
           "name": "Fremgangsvarsler",
           "description": "Varsle om fremgang mot en prestasjon, hvis mulig"
         },
+        "progressStep": {
+          "name": "Fremgangsmilepæler",
+          "description": "Vis en fremgangsvarsel bare når en teller passerer et nytt trinn mot målet, i stedet for ved hver +1. Opplåsinger vises alltid.",
+          "every": "Hvert trinn",
+          "percent": "Hver {percent} %"
+        },
         "playtime": {
           "name": "Sporing av spilletid",
           "description": "Varsle når sporingen starter og stopper"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "Hvor popup-vinduet i spilloverlayet vises på skjermen",
         "overlayScale": "Størrelse",
         "overlayScaleDesc": "Størrelsen på popup-vinduet i spilloverlayet",
+        "overlayProgressPosition": "Plassering av fremgang",
+        "overlayProgressPositionDesc": "Hvor popup-vinduene for tellerfremgang (+1 for en statistikkprestasjon) vises. Samme som opplåsinger følger plasseringen for opplåsinger, også et spills egen plassering; alle andre valg gjelder for alle spill.",
+        "overlayProgressScale": "Størrelse på fremgang",
+        "overlayProgressScaleDesc": "Størrelsen på popup-vinduene for tellerfremgang, for eksempel mindre enn opplåsinger.",
+        "progressSameAsUnlocks": "Samme som opplåsinger",
         "overlaySound": "Lyd",
         "overlaySoundDesc": "Lyden som spilles når popup-vinduet i spilloverlayet vises",
         "overlayRandomSound": "Tilfeldig lyd",

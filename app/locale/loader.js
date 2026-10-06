@@ -515,6 +515,15 @@ function translateUI(lang, locale, template) {
   selector.find("li:nth-child(8) .right select option[value='true']").text(clear(template.settings.common.enable));
   selector.find("li:nth-child(8) .right select option[value='false']").text(clear(template.settings.common.disable));
   selector.find('li:nth-child(8) .help').text(clear(template.settings.notification.option.steamClient.description));
+  // Appended after steamClient for the same reason as urgent above.
+  selector.find('li:nth-child(9) .left span').text(clear(template.settings.notification.option.progressStep.name));
+  selector.find("li:nth-child(9) .right select option[value='0']").text(clear(template.settings.notification.option.progressStep.every));
+  for (const percent of ['10', '25', '50']) {
+    selector
+      .find(`li:nth-child(9) .right select option[value='${percent}']`)
+      .text(clear(template.settings.notification.option.progressStep.percent).replace('{percent}', percent));
+  }
+  selector.find('li:nth-child(9) .help').text(clear(template.settings.notification.option.progressStep.description));
   selector = $('#options-notify-transport');
   selector.prev('.title').find('span').text(clear(template.settings.notification.title.transport));
   selector.find("li:nth-child(1) .right select option[value='true']").text(clear(template.settings.common.enable));
@@ -548,6 +557,13 @@ function translateUI(lang, locale, template) {
   }
   $('#lbl-overlayPosition').text(clear(template.settings.notification.option.overlayPosition));
   $('#lbl-overlayScale').text(clear(template.settings.notification.option.overlayScale));
+  $('#lbl-overlayProgressPosition').text(clear(template.settings.notification.option.overlayProgressPosition));
+  $('#lbl-overlayProgressPosition').closest('li').find('.help').text(clear(template.settings.notification.option.overlayProgressPositionDesc));
+  $('#lbl-overlayProgressScale').text(clear(template.settings.notification.option.overlayProgressScale));
+  $('#lbl-overlayProgressScale').closest('li').find('.help').text(clear(template.settings.notification.option.overlayProgressScaleDesc));
+  $("#option_overlayProgressPosition option[value=''], #option_overlayProgressScale option[value='']").text(
+    clear(template.settings.notification.option.progressSameAsUnlocks)
+  );
   $('#lbl-overlaySound').text(clear(template.settings.notification.option.overlaySound));
   // 'Random' is an entry in the sound dropdown now, not a row of its own. Same string, and it is
   // exposed as a data attribute because the list is rebuilt asynchronously.
@@ -663,7 +679,13 @@ function translateUI(lang, locale, template) {
   $("#option_overlayPosition option[value='middle-right']").text(clear(template.settings.notification.option.position.middleRight));
   if (template.settings.notification.option.position.custom)
     $("#option_overlayPosition option[value='custom']").text(clear(template.settings.notification.option.position.custom));
-  if (template.settings.notification.option.reposition) $('#btn-overlay-reposition').attr('title', clear(template.settings.notification.option.reposition));
+  // The progress list offers the same places; its leading '' entry is labelled above.
+  $('#option_overlayPosition option').each(function () {
+    $(`#option_overlayProgressPosition option[value='${this.value}']`).text($(this).text());
+  });
+  if (template.settings.notification.option.reposition) {
+    $('#btn-overlay-reposition, #btn-overlay-progress-reposition').attr('title', clear(template.settings.notification.option.reposition));
+  }
   $('#option_overlaySound').attr('data-lang-none', clear(template.settings.notification.option.soundNone));
   selector = $("#settings .box .content[data-view='folder']");
   selector.find('.disclaimer span').text(clear(template.settings.folder.headline));

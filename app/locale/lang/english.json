@@ -510,6 +510,12 @@
           "name": "Progress notifications",
           "description": "Notify on achievement progress if possible"
         },
+        "progressStep": {
+          "name": "Progress milestones",
+          "description": "Show a progress notification only when a counter passes a new step of its goal, instead of at every +1. Unlocks are always shown.",
+          "every": "Every step",
+          "percent": "Every {percent}%"
+        },
         "playtime": {
           "name": "Playtime tracking",
           "description": "Notify on tracking start/end"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "Where the in-game overlay popup appears on screen",
         "overlayScale": "Scale",
         "overlayScaleDesc": "Size of the in-game overlay popup",
+        "overlayProgressPosition": "Progress position",
+        "overlayProgressPositionDesc": "Where counter progress popups (the +1 of a stat achievement) appear. Same as unlocks follows the unlock position, a game's own position included; any other choice applies to every game.",
+        "overlayProgressScale": "Progress scale",
+        "overlayProgressScaleDesc": "Size of counter progress popups, for example smaller than unlocks.",
+        "progressSameAsUnlocks": "Same as unlocks",
         "overlaySound": "Sound",
         "overlaySoundDesc": "Sound played when the in-game overlay popup appears",
         "overlayRandomSound": "Random sound",

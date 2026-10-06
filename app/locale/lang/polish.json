@@ -510,6 +510,12 @@
           "name": "Powiadomienia o postępie",
           "description": "Powiadom o postępie osiągnięcia, jeśli to możliwe"
         },
+        "progressStep": {
+          "name": "Kamienie milowe postępu",
+          "description": "Pokazuj powiadomienie o postępie tylko wtedy, gdy licznik przekroczy kolejny próg celu, zamiast przy każdym +1. Odblokowania są zawsze pokazywane.",
+          "every": "Każdy próg",
+          "percent": "Co {percent}%"
+        },
         "playtime": {
           "name": "Śledzenie czasu gry",
           "description": "Powiadom o rozpoczęciu/zakończeniu śledzenia"
@@ -541,6 +547,11 @@
         "overlayPositionDesc": "Gdzie na ekranie pojawia się wyskakująca nakładka",
         "overlayScale": "Rozmiar",
         "overlayScaleDesc": "Rozmiar wyskakującej nakładki",
+        "overlayProgressPosition": "Pozycja postępu",
+        "overlayProgressPositionDesc": "Gdzie pojawiają się wyskakujące powiadomienia o postępie liczników (+1 w osiągnięciu statystycznym). Taki sam jak odblokowania podąża za pozycją odblokowań, w tym za własną pozycją gry; każdy inny wybór dotyczy wszystkich gier.",
+        "overlayProgressScale": "Rozmiar postępu",
+        "overlayProgressScaleDesc": "Rozmiar wyskakujących powiadomień o postępie liczników, na przykład mniejszy niż odblokowań.",
+        "progressSameAsUnlocks": "Taki sam jak odblokowania",
         "overlaySound": "Dźwięk",
         "overlaySoundDesc": "Dźwięk odtwarzany, gdy pojawia się wyskakująca nakładka",
         "overlayRandomSound": "Losowy dźwięk",
