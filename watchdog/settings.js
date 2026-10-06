@@ -5,6 +5,7 @@ const ini = require('./util/ini');
 const osLocale = require('./util/osLocale');
 const fs = require('./util/fsAsync');
 const steamLang = require('./steam.json');
+const { normalizeProgressStep } = require('./util/progressMilestone');
 
 // Complete partial options.ini sections before validating their values.
 const REQUIRED_OBJECT_SECTIONS = [
@@ -333,6 +334,12 @@ module.exports.load = async (cfg_file) => {
       fixFile = true;
     }
 
+    {
+      const step = normalizeProgressStep(options.notification.progressStep);
+      if (String(step) !== String(options.notification.progressStep)) fixFile = true;
+      options.notification.progressStep = step;
+    }
+
     if (typeof options.notification.playtime !== 'boolean') {
       options.notification.playtime = options.general.onboardingCompleted !== true;
       fixFile = true;
@@ -583,6 +590,7 @@ module.exports.load = async (cfg_file) => {
         notify: true,
         rumble: true,
         notifyOnProgress: true,
+        progressStep: 0,
         playtime: true,
         platinum: true,
         steamClient: false,

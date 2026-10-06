@@ -57,6 +57,7 @@ const waitForFileStable = require('./util/waitForFileStable.js');
 const uplayR2 = require('./util/uplayR2.js');
 const notificationDedup = require('./util/notificationDedup.js');
 const progressMute = require('./util/progressMute.js');
+const { reachesProgressMilestone } = require('./util/progressMilestone.js');
 const rarity = require('./util/rarity.js');
 const steam = require('./steam.js');
 const track = require('./track.js');
@@ -1305,7 +1306,17 @@ var app = {
                       achievements[i].UnlockTime = previous.UnlockTime;
                   } else if (!achievements[i].Achieved && achievements[i].MaxProgress > 0 && +previous.CurProgress < +achievements[i].CurProgress) {
                     debug.log('Progress update:' + ach.displayName);
-                    if (!seedOnly && self.options.notification.notifyOnProgress && !progressMute.isMuted(game.appid, self.cfgOptionPath))
+                    if (
+                      !seedOnly &&
+                      self.options.notification.notifyOnProgress &&
+                      !progressMute.isMuted(game.appid, self.cfgOptionPath) &&
+                      reachesProgressMilestone(
+                        previous.CurProgress,
+                        achievements[i].CurProgress,
+                        achievements[i].MaxProgress,
+                        self.options.notification.progressStep
+                      )
+                    )
                       await notify(
                         {
                           appid: game.appid,
