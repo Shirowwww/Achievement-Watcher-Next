@@ -21,6 +21,7 @@ const { APP_DATA_DIR_NAME } = require('../util/userDataPath.js');
 const { portableUserDataDir } = require('../util/portableMode.js');
 const { migrateLegacyUserData, migrateAw3UserData, migrateSouvenirFolder, retargetBackupIndex } = require('../util/migrateUserData.js');
 const stylizedArtwork = require('../util/stylizedArtwork.js');
+const { removeLegacyScreenCapture } = require('../util/legacyScreenCapture.js');
 const { deriveWatchdogState } = require('../util/watchdogState.js');
 const links = require('../util/links.js');
 const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
@@ -58,6 +59,8 @@ retargetBackupIndex(app.getPath('userData'));
 // downloaded artwork, so the next scan fetches them again by itself. Runs before the logger exists,
 // and records what it removed in its own marker file instead.
 stylizedArtwork.purgeTintedXboxCovers(app.getPath('userData'));
+// Drops the screen grabber 3.11.0 and earlier compiled into %TEMP%, which antivirus engines flag.
+const legacyScreenCapture = removeLegacyScreenCapture();
 // Keep GPU acceleration enabled, but avoid Chromium background services AW does not use in tray mode.
 for (const sw of ['disable-extensions', 'disable-component-extensions-with-background-pages', 'disable-default-apps', 'disable-background-networking', 'disable-accelerated-video-decode']) {
   app.commandLine.appendSwitch(sw);
@@ -990,6 +993,7 @@ let debug = new (require('../util/logger'))({
   console: manifest.config.debug || false,
   file: path.join(userData, `logs/renderer.log`),
 });
+if (legacyScreenCapture.removed) debug.log(`[startup] removed the old screen grabber from %TEMP%: ${legacyScreenCapture.files.join(', ')}`);
 
 process.on('uncaughtException', (err) => {
   debug.log(`[uncaughtException] ${err && err.stack ? err.stack : err}`);
