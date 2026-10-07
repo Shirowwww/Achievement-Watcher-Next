@@ -16,6 +16,8 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+## 3.11.1 - 2026-10-07
+
 ### Added
 
 - **Video clips of each unlock, like a console's trophy video.** Turn on **Settings → Notification →
@@ -23,9 +25,8 @@ renamed in 3.9.0 and the history is kept under one file.
   notification in the middle of the clip. Choose its length (10 to 30 seconds), format (H.264, HEVC
   or AV1), resolution, frame rate, quality, whether the sound is the game's alone or the whole PC's,
   and its folder (`Videos\Achievement Watcher Next` by default); the page estimates the size of a
-  clip as you go. The recording runs only
-  while a game does and stays on the graphics card's video encoder, and HDR games are tone-mapped
-  like HDR screenshots.
+  clip as you go. The recording runs only while a game does and stays on the graphics card's video
+  encoder, and HDR games are tone-mapped like HDR screenshots.
 - **Your own background on a game's achievement page.** Right-click a game, then **Cover → Choose
   background image…** to show a picture of your choice behind its achievements. **Reset background to
   default** brings the usual artwork back.
@@ -72,6 +73,10 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Game Health stayed green on a crack that records nothing.** After an hour of play with no
   achievement recorded, the game now needs attention, says why, and offers the supported emulator
   when that crack can be replaced.
+- **Screenshot souvenirs failed when the Windows user name has a space (#107).** Outside HDR, the
+  screen grabber was started through a batch file in `%TEMP%` whose path was not quoted, so a
+  profile such as `C:\Users\AMD RYZEN 5` lost every screenshot. All of them are now taken by the
+  app's own capture tool, started directly.
 - **Antivirus behaviour detections.** Achievement screenshots no longer compile a screen-capture
   program into `%TEMP%` (the native helper takes them all now), the full-screen check before a
   notification no longer compiles code through PowerShell, and the update check no longer passes an

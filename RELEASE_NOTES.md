@@ -1,52 +1,30 @@
-# Achievement Watcher Next 3.11.0
+# Achievement Watcher Next 3.11.1
 
-A feature release: RetroAchievements joins the library, Steam unlocks are read locally and live
-whatever your profile privacy, Xbox 360 recompilations and two PC mods become sources, and updates
-are smaller and must now be signed by the project's own certificate.
+Video clips of each unlock, notifications for the games Steam runs, quieter progress popups, and a round of fixes from your reports: EA covers, Steam games never played on this PC, Steam shortcuts, screenshots and antivirus detections.
 
 ## Highlights
 
-- **RetroAchievements.** Connect your username and Web API key under Settings > Sources and the games
-  you played on emulators join the library with their achievements, unlock dates, points and rarity.
-  New unlocks are announced within seconds while RetroArch, DuckStation, PCSX2, PPSSPP, Dolphin or any
-  other RetroAchievements-integrated emulator runs.
-- **Steam unlocks are read locally and live.** A private profile, or private game details, no longer
-  drops the Steam source, games added through SteamTools, LuaTools or GreenLuma are followed too, and
-  a card moves the moment Steam records an unlock. With an account connected, unlocks earned on your
-  other PCs show up, and two opt-in switches list every game you own or share through Steam Family.
-- **Xbox 360 games recompiled for PC.** ReXGlue ports and similar recompilations are read from their
-  `achievements` folder, with the list, languages and secret achievements taken from the game's own
-  `default.xex`, live notifications and tracked play time.
-- **New sources and fixes for specific games:** Dead Space 2 MarkerPatch and Alice: Madness Returns
-  MadnessPatch, and a one-click GOG achievement fix that installs the matching UniverseLAN build.
-- **Library tools.** Forget a game to start it over from scratch, pick an achievement language for
-  one game, set a game's AppID by hand when the name match picked the wrong release, and a refresh
-  button beside the settings gear.
-- **Smaller, signed updates.** An update downloads only what changed instead of the whole installer,
-  and the updater now accepts only the project's pinned release certificate and verifies the
-  signature itself, so a tampered installer is refused.
-- **A cleaner installer and uninstaller**, in all 27 languages of the app. Uninstalling now really
-  deletes your data when asked, and no longer leaves the startup entry, the link handler or the update
-  cache behind.
-- **Many Game Health and tracking fixes**: no false alarms for OnlineFix, CODEX, TENOKE or explicit
-  DLC lists, repairs that can be undone, stat-based achievements that can unlock, Java games with play
-  time, and a game whose unlocks sit in `GSE Saves` no longer showing 0%.
+- **Video clips of each unlock, like a console's trophy video.** Turn on Settings > Notification > Video clip on unlock and every achievement is saved as an MP4 with the unlock in the middle. Length, format (H.264, HEVC or AV1), resolution, frame rate, quality, sound and folder are yours to pick. The recording runs only while a game does, stays on the graphics card's video encoder, and tone-maps HDR games like HDR screenshots.
+- **Notifications for games Steam runs (#91).** Owned games and games added through SteamTools, LuaTools or GreenLuma can now announce their unlocks through AW Next too, with Settings > Notification > Steam client games. Off by default, since Steam shows its own.
+- **Progress popups out of the way of unlocks (#106).** Give the "+1" popups of counter achievements their own position and scale, or show them only every 10, 25 or 50% of the goal.
+- **Your own background on a game's page.** Right-click a game, then Cover > Choose background image.
+- **Patched and recompiled games are found on their own**, through Steam's install record and by Smart find, and Settings now accepts their folders.
+- **EA app games get the right cover (#105).** They were looked up on Steam under EA's own number; they now borrow the cover of their Steam release.
+- **Steam games never played on this PC no longer show 0% (#98)** with an account connected: their unlocks are read from your public Steam profile.
+- **Fewer antivirus reactions.** Screenshots no longer compile a capture program into `%TEMP%`, and nothing compiles code through PowerShell any more. These are what Kaspersky, ESET and Rising reacted to.
+- **Screenshot souvenirs work again with a space in the Windows user name (#107).**
+- **More fixes:** a game started from a Steam shortcut keeps its unlocks, Little Nightmares III with OnlineFix's Friend's Pass reads Steam's unlocks, MadnessPatch notifies live in the installed app, and Game Health flags a crack that records nothing after an hour of play.
 
-See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3110---2026-10-02)
-for the complete list.
+See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3111---2026-10-07) for the complete list.
 
 ## Install
 
-Download `Achievement.Watcher.Setup.3.11.0.exe` from the
-[v3.11.0 release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/tag/v3.11.0), or let
-the app update itself. `Achievement.Watcher.Portable.3.11.0.zip` is the same build with no installer:
-extract it anywhere and it keeps its settings, caches and logs in a `data` folder beside the
-executable.
-
-The `.blockmap` and `latest.yml` assets are used by automatic updates.
+| File | What it is |
+|---|---|
+| `Achievement.Watcher.Setup.3.11.1.exe` | The installer. An installed copy also updates itself. |
+| `Achievement.Watcher.Portable.3.11.1.zip` | The same build with no installer: extract it anywhere, it keeps its settings, caches and logs in a `data` folder beside the executable. |
+| `.blockmap` and `latest.yml` | Used by automatic updates, nothing to download by hand. |
 
 ---
 
-[Full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3110---2026-10-02) ·
-[Documentation](https://shirowwww.github.io/Achievement-Watcher-Next/) ·
-[Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html)
+[Full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3111---2026-10-07) · [Documentation](https://shirowwww.github.io/Achievement-Watcher-Next/) · [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html)
