@@ -352,6 +352,16 @@ function forwardGameActivity() {
   }
 }
 
+// The clip recorder follows the latest game still running, with the current settings.
+function syncClipRecorder() {
+  try {
+    const game = runningGames.length > 0 ? runningGames[runningGames.length - 1] : null;
+    require('./notification/clip.js').sync(app.options.souvenir, game);
+  } catch (err) {
+    debug.error(`[clip] ${err}`);
+  }
+}
+
 function readProgressSchemaFile(file) {
   try {
     if (!file || !fs.existsSync(file)) return [];
@@ -809,6 +819,7 @@ var app = {
       require('./notification/transport/toast.js').setUrgentUnlocks(self.options.notification_toast?.urgent === true);
       self.cfgOptionPath = cfg_file.option; // used to locate the per-game progress-mute store
       debug.log('Options loaded');
+      syncClipRecorder();
 
       RegisterOverlayHotkey((self.options.overlay && self.options.overlay.hotkey) || 'Ctrl+Shift+K');
       syncOverlayController();
@@ -1539,6 +1550,7 @@ var app = {
             }
           }
           forwardGameActivity();
+          syncClipRecorder();
         });
 
         playtimeEmitter.on('enable-overlay', (appid) => {
@@ -1558,6 +1570,7 @@ var app = {
             requestArtworkPrefetch(game);
           }
           forwardGameActivity();
+          syncClipRecorder();
           if (app.options.notification.playtime) {
             // Localize the playtime text here (the monitor stays language-agnostic and emits raw seconds).
             const wdStrings = notifyStrings.forLang(app.options.achievement.lang);
@@ -1622,6 +1635,7 @@ var app = {
           debug.log(`[Process trail] synchronized ${active.games.length} already-running game(s)`);
         }
         forwardGameActivity();
+        syncClipRecorder();
       })
       .catch((err) => {
         debug.error(err);

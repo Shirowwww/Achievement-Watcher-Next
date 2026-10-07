@@ -461,6 +461,12 @@ module.exports.load = async (cfg_file) => {
       delete options.souvenir.combineNotif; // simplified: capture always includes whatever is on screen
       fixFile = true;
     }
+    // Video clip keys. The file holds numbers as text, so only a different value counts as a fix.
+    const clip = require('./notification/clipProfile.js').normalize(options.souvenir);
+    for (const [key, value] of Object.entries(clip)) {
+      if (String(options.souvenir[key]) !== String(value)) fixFile = true;
+      options.souvenir[key] = value;
+    }
 
     //Controller (native → overlay control). Opt-in; the koffi/HID stack loads only when enabled.
     // Bindings are stored as "BUTTON+BUTTON+BUTTON" strings (one to three buttons).
@@ -616,6 +622,7 @@ module.exports.load = async (cfg_file) => {
         screenshot: false,
         dir: '',
         hdr: 'auto',
+        ...require('./notification/clipProfile.js').normalize({}),
       },
       controller: {
         enabled: false,

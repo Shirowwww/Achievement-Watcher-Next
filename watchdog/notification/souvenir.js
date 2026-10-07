@@ -38,9 +38,9 @@ function sanitize(s) {
 
 // Never overwrite an earlier souvenir: several achievements can unlock within the same second, and
 // the same one can be unlocked again after a reset.
-function uniquePath(dir, base) {
-  let file = path.join(dir, `${base}.png`);
-  for (let n = 2; fs.existsSync(file) && n < 1000; n++) file = path.join(dir, `${base} (${n}).png`);
+function uniquePath(dir, base, ext = '.png') {
+  let file = path.join(dir, `${base}${ext}`);
+  for (let n = 2; fs.existsSync(file) && n < 1000; n++) file = path.join(dir, `${base} (${n})${ext}`);
   return file;
 }
 
@@ -128,14 +128,19 @@ async function captureImage(file, hdrMode, { platform = process.platform, captur
   return hdrMode === 'auto' ? 'auto' : 'sdr';
 }
 
+// <dir>/<game>/<date> - <achievement><ext>, its folder created. Clips use the same layout.
+function souvenirPath({ game, achievement, dir } = {}, ext = '.png') {
+  const baseDir = dir && String(dir).trim() ? String(dir).trim() : defaultDir();
+  const gameDir = path.join(baseDir, sanitize(game));
+  fs.mkdirSync(gameDir, { recursive: true });
+  const ts = new Date().toISOString().replace(/[:.]/g, '-').replace('T', ' ').slice(0, 19); // e.g. 2026-06-23 23-10-05
+  return uniquePath(gameDir, ts + ' - ' + sanitize(achievement), ext);
+}
+
 // Capture the full desktop and write it to <dir>/<game>/<date> - <achievement>.png. Returns the path or null.
 module.exports.capture = async function ({ game, achievement, dir, hdr = 'auto' } = {}) {
   try {
-    const baseDir = dir && String(dir).trim() ? String(dir).trim() : defaultDir();
-    const gameDir = path.join(baseDir, sanitize(game));
-    fs.mkdirSync(gameDir, { recursive: true });
-    const ts = new Date().toISOString().replace(/[:.]/g, '-').replace('T', ' ').slice(0, 19); // e.g. 2026-06-23 23-10-05
-    const file = uniquePath(gameDir, ts + ' - ' + sanitize(achievement));
+    const file = souvenirPath({ game, achievement, dir });
     const mode = await captureImage(file, hdr);
     debug.log(`[souvenir] saved ${file} (${mode})`);
     return file;
@@ -144,6 +149,8 @@ module.exports.capture = async function ({ game, achievement, dir, hdr = 'auto' 
     return null;
   }
 };
+
+module.exports.souvenirPath = souvenirPath;
 
 // Exported for the tests: both decide the path a screenshot is written to.
 module.exports._sanitize = sanitize;

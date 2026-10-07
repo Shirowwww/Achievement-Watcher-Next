@@ -214,6 +214,16 @@ module.exports = async (message, option = {}) => {
         }, 800);
       }
 
+      // Video souvenir: the clip is centred on this moment, so the toast or overlay popup that is
+      // appearing now sits in the middle of it.
+      if (options.souvenir && !message.silent && !message.progress) {
+        require('./clip.js').trigger({
+          game: message.gameDisplayName,
+          achievement: message.achievementDisplayName,
+          dir: options.souvenir.clipDir,
+        });
+      }
+
       if (options.prefetch) {
         debug.log(`Prefetching...`);
         if (message.icon) {
