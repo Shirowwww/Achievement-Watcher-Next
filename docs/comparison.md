@@ -67,7 +67,7 @@ Every tracker can tell you a game is stuck at 0%. This is the part where AW Next
 | Per-emulator presets | ✅ Xenia · RPCS3 · ShadPS4 | ✅ | ❌ |
 | Sounds | ✅ Random pick, FLAC/M4A/AAC | ✅ | ⚠️ Custom file |
 | Screenshot souvenirs | ✅ HDR-aware capture (BT.2408 tone mapped) | ✅ HDR capture | ✅ |
-| Video clips of an unlock | ❌ | ✅ 10-30 s, 30/60 FPS | ⚠️ Via OBS |
+| Video clips of an unlock | ✅ 10-30 s, 30/60 FPS, H.264 · HEVC · AV1, HDR tone mapped | ✅ 10-30 s, 30/60 FPS | ⚠️ Via OBS |
 | Playtime and progress notifications | ✅ Per-game progress mute | ✅ Per-game progress mute | ✅ Playtime |
 
 ## The app itself

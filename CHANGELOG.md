@@ -11,6 +11,14 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Added
 
+- **Video clips of each unlock, like a console's trophy video.** Turn on **Settings → Notification →
+  Video clip on unlock** and every achievement is saved as an MP4, with the unlock and its
+  notification in the middle of the clip. Choose its length (10 to 30 seconds), format (H.264, HEVC
+  or AV1), resolution, frame rate, quality, whether the sound is the game's alone or the whole PC's,
+  and its folder (`Videos\Achievement Watcher Next` by default); the page estimates the size of a
+  clip as you go. The recording runs only
+  while a game does and stays on the graphics card's video encoder, and HDR games are tone-mapped
+  like HDR screenshots.
 - **Your own background on a game's achievement page.** Right-click a game, then **Cover → Choose
   background image…** to show a picture of your choice behind its achievements. **Reset background to
   default** brings the usual artwork back.

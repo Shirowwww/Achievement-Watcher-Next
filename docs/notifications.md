@@ -244,6 +244,43 @@ the notification.
 On multi-monitor setups the souvenir captures the primary monitor, so play on it if you want your
 screenshots to match.
 
+## Video clips
+
+**Video clip on unlock** works like a console's trophy video. While a game AW Next tracks is
+running, the last seconds of play are kept in memory, already compressed by the graphics card's own
+video encoder; when an achievement pops, the stretch around it is saved as an MP4 in
+`<folder>\<game>\<date> - <achievement>.mp4`. The folder is the card's own, `Videos\Achievement
+Watcher Next` unless you pick another. The unlock sits in the middle of the
+clip, so the toast or overlay popup is in it too. Achievements unlocking close together share one
+clip instead of writing near-identical copies.
+
+| Setting | Choices | Default |
+|---|---|---|
+| Clip length | 10 to 30 seconds, half before the unlock and half after | 20 s |
+| Format | H.264, HEVC or AV1, saved as MP4 | H.264 |
+| Resolution | Screen, 2160p, 1440p, 1080p or 720p, never above the screen | 1080p |
+| Frame rate | 30 or 60 FPS | 30 FPS |
+| Quality | Low, Medium or High | Medium |
+| Sound | Game only, or the whole PC | Game only |
+
+The row under them estimates the size of one clip for your screen. It is a ceiling: the encoder runs
+at a constant bitrate and a quiet scene comes out smaller.
+
+- **What it costs.** Nothing runs while no game does. During play, capture, scaling and encoding stay
+  on the GPU, on the encoder block that is separate from the one rendering the game; the recorder
+  uses well under 1 % of the CPU and about 70 to 110 MB of memory plus the length of one clip.
+  Nothing is written to disk until an achievement unlocks.
+- **Format.** H.264 plays everywhere, Discord and phones included. HEVC and AV1 make smaller files.
+  AV1 needs a GeForce RTX 40, Radeon RX 7000, Intel Arc or newer graphics card; on a card without
+  the chosen format the clip is recorded in H.264. A card without any hardware video encoder cannot
+  record clips, and the log says so.
+- **HDR.** With Windows HDR on, the clip is tone-mapped with the same curve as HDR screenshots, so it
+  looks right on any screen. **HDR screenshots** set to **Off** applies to clips too.
+- **Sound.** **Game only** records the game and leaves voice chat and music out. When the game's
+  sound cannot be recorded on its own, the whole PC is recorded instead.
+- **What is captured.** The monitor showing the game, as it appears on screen, notifications
+  included. A very old game running in exclusive fullscreen may record as black frames.
+
 ## If a test or unlock does not appear
 
 1. Confirm notifications are enabled, and check the Notifications row of the game's

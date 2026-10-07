@@ -399,15 +399,16 @@ function translateUI(lang, locale, template) {
   // Help & tips section: static help, bound by stable ids so settings rows can move safely.
   if (template.settings.help) {
     const help = template.settings.help;
+    // .text() already escapes; stripTags would eat placeholders such as <userData>.
     const bindHelpText = (id, value) => {
-      if (value) $('#' + id).text(clear(value));
+      if (value) $('#' + id).text(String(value));
     };
     const bindHelpList = (id, items) => {
       if (!Array.isArray(items)) return;
       const list = $('#' + id);
       if (!list.length) return;
       list.empty();
-      items.forEach((item) => $('<li>').text(clear(item) || '').appendTo(list));
+      items.forEach((item) => $('<li>').text(item ? String(item) : '').appendTo(list));
     };
     bindHelpText('help-nav-label', help.nav);
     bindHelpText('help-title', help.title);
@@ -613,9 +614,38 @@ function translateUI(lang, locale, template) {
     $("#option_souvenirHdr option[value='auto']").text(clear(opt.souvenirHdrAuto));
     $("#option_souvenirHdr option[value='off']").text(clear(opt.souvenirHdrOff));
     $('#lbl-souvenirDir').text(clear(opt.souvenirDir));
-    $('#souvenir-dir-help').text(clear(opt.souvenirDirHelp));
+    $('#souvenir-dir-help').text(String(opt.souvenirDirHelp || ''));
     $('#souvenir-open-label').text(clear(opt.souvenirOpenDir));
     $('#btn-souvenir-open').attr('title', clear(opt.souvenirOpenDir));
+  }
+  if (template.settings.notification.option.clipTitle) {
+    const opt = template.settings.notification.option;
+    const row = (id, label, help) => {
+      $(id).text(clear(opt[label]));
+      if (help) $(id).closest('li').find('.help').text(clear(opt[help]));
+    };
+    $('#clip-notify-title').text(clear(opt.clipTitle));
+    row('#lbl-clip', 'clip', 'clipDesc');
+    $("#option_clip option[value='true']").text(clear(template.settings.common.enable));
+    $("#option_clip option[value='false']").text(clear(template.settings.common.disable));
+    row('#lbl-clipSeconds', 'clipSeconds', 'clipSecondsDesc');
+    row('#lbl-clipCodec', 'clipCodec', 'clipCodecDesc');
+    row('#lbl-clipResolution', 'clipResolution', 'clipResolutionDesc');
+    $("#option_clipResolution option[value='native']").text(clear(opt.clipResolutionNative));
+    row('#lbl-clipFps', 'clipFps', 'clipFpsDesc');
+    row('#lbl-clipQuality', 'clipQuality', 'clipQualityDesc');
+    $("#option_clipQuality option[value='low']").text(clear(opt.clipQualityLow));
+    $("#option_clipQuality option[value='medium']").text(clear(opt.clipQualityMedium));
+    $("#option_clipQuality option[value='high']").text(clear(opt.clipQualityHigh));
+    row('#lbl-clipAudio', 'clipAudio', 'clipAudioDesc');
+    $("#option_clipAudio option[value='game']").text(clear(opt.clipAudioGame));
+    $("#option_clipAudio option[value='all']").text(clear(opt.clipAudioAll));
+    row('#lbl-clipEstimate', 'clipEstimate');
+    // Same label and button as the screenshot folder row; .text() keeps the <...> of the help.
+    $('#lbl-clipDir').text(clear(opt.souvenirDir));
+    $('#clip-dir-help').text(String(opt.clipDirHelp || ''));
+    $('#clip-open-label').text(clear(opt.souvenirOpenDir));
+    $('#btn-clip-open').attr('title', clear(opt.souvenirOpenDir));
   }
   if (template.settings.notification.option.designer) {
     const c = template.settings.notification.option.designer;

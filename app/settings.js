@@ -552,6 +552,7 @@ module.exports.load = () => {
     if (typeof options.souvenir.dir !== 'string') options.souvenir.dir = '';
     if (options.souvenir.hdr !== 'auto' && options.souvenir.hdr !== 'off') options.souvenir.hdr = 'auto';
     delete options.souvenir.combineNotif; // simplified: capture always includes whatever is on screen
+    Object.assign(options.souvenir, require('./util/clipProfile.js').normalize(options.souvenir));
 
     if (typeof options.action.target !== 'string') {
       options.action.target = '';
@@ -720,6 +721,7 @@ module.exports.load = () => {
         screenshot: false,
         dir: '',
         hdr: 'auto',
+        ...require('./util/clipProfile.js').normalize({}),
       },
       action: {
         target: '',

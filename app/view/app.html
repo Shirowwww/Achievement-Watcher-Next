@@ -2005,6 +2005,119 @@
                     </li>
                   </ul>
                 </div>
+
+                <!-- Video souvenir: the seconds around each unlock, in a folder of their own.
+                     Bound by id, like the souvenir list above. -->
+                <div class="arrow-list">
+                  <div class="title"><span id="clip-notify-title"></span></div>
+                  <ul id="options-notify-clip" class="clip-off">
+                    <li class="hasHelper">
+                      <div class="left"><i class="fas fa-video"></i> <span id="lbl-clip"></span></div>
+                      <div class="right">
+                        <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                        <select autocomplete="off" class="dropdown" id="option_clip">
+                          <option value="false" selected></option>
+                          <option value="true"></option>
+                        </select>
+                        <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                      </div>
+                      <div class="help"></div>
+                    </li>
+
+                    <li class="hasHelper">
+                      <div class="left"><i class="fas fa-stopwatch"></i> <span id="lbl-clipSeconds"></span></div>
+                      <div class="right volume-slider">
+                        <input type="range" id="option_clipSeconds" min="10" max="30" step="1" value="20" />
+                        <span id="clipSeconds-value" class="volume-value">20</span>
+                      </div>
+                      <div class="help"></div>
+                    </li>
+
+                    <li class="hasHelper" data-advanced="1">
+                      <div class="left"><i class="fas fa-film"></i> <span id="lbl-clipCodec"></span></div>
+                      <div class="right">
+                        <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                        <select autocomplete="off" class="dropdown" id="option_clipCodec">
+                          <option value="h264" selected>H.264 (MP4)</option>
+                          <option value="hevc">HEVC (MP4)</option>
+                          <option value="av1">AV1 (MP4)</option>
+                        </select>
+                        <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                      </div>
+                      <div class="help"></div>
+                    </li>
+
+                    <li class="hasHelper" data-advanced="1">
+                      <div class="left"><i class="fas fa-expand"></i> <span id="lbl-clipResolution"></span></div>
+                      <div class="right">
+                        <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                        <select autocomplete="off" class="dropdown" id="option_clipResolution">
+                          <option value="native"></option>
+                          <option value="2160">2160p</option>
+                          <option value="1440">1440p</option>
+                          <option value="1080" selected>1080p</option>
+                          <option value="720">720p</option>
+                        </select>
+                        <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                      </div>
+                      <div class="help"></div>
+                    </li>
+
+                    <li class="hasHelper" data-advanced="1">
+                      <div class="left"><i class="fas fa-tachometer-alt"></i> <span id="lbl-clipFps"></span></div>
+                      <div class="right">
+                        <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                        <select autocomplete="off" class="dropdown" id="option_clipFps">
+                          <option value="30" selected>30 FPS</option>
+                          <option value="60">60 FPS</option>
+                        </select>
+                        <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                      </div>
+                      <div class="help"></div>
+                    </li>
+
+                    <li class="hasHelper" data-advanced="1">
+                      <div class="left"><i class="fas fa-sliders-h"></i> <span id="lbl-clipQuality"></span></div>
+                      <div class="right">
+                        <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                        <select autocomplete="off" class="dropdown" id="option_clipQuality">
+                          <option value="low"></option>
+                          <option value="medium" selected></option>
+                          <option value="high"></option>
+                        </select>
+                        <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                      </div>
+                      <div class="help"></div>
+                    </li>
+
+                    <li class="hasHelper" data-advanced="1">
+                      <div class="left"><i class="fas fa-volume-up"></i> <span id="lbl-clipAudio"></span></div>
+                      <div class="right">
+                        <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                        <select autocomplete="off" class="dropdown" id="option_clipAudio">
+                          <option value="game" selected></option>
+                          <option value="all"></option>
+                        </select>
+                        <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                      </div>
+                      <div class="help"></div>
+                    </li>
+
+                    <li class="hasHelper">
+                      <div class="left"><i class="fas fa-hdd"></i> <span id="lbl-clipEstimate"></span></div>
+                      <div class="right"><span id="clip-estimate" class="clip-estimate"></span></div>
+                    </li>
+
+                    <li class="hasHelper">
+                      <div class="left"><i class="fas fa-folder-open"></i> <span id="lbl-clipDir"></span></div>
+                      <div class="right action-right">
+                        <button type="button" id="btn-clip-dir" class="inline-action-btn"><i class="fas fa-folder"></i> <span id="clip-dir-display"></span></button>
+                        <button type="button" id="btn-clip-open" class="inline-action-btn secondary"><i class="fas fa-folder-open"></i> <span id="clip-open-label"></span></button>
+                      </div>
+                      <div class="help" id="clip-dir-help"></div>
+                    </li>
+                  </ul>
+                </div>
               </div>
 
             </section>

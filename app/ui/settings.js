@@ -26,6 +26,7 @@ const interfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
 const { legacyPresetAlias } = require(path.join(appPath, 'util/notificationPreset.js'));
 const notificationPlacement = require(path.join(appPath, 'util/notificationPlacement.js'));
 const { describeFolderDiagnosis } = require(path.join(appPath, 'util/folderDiagnosis.js'));
+const clipProfile = require(path.join(appPath, 'util/clipProfile.js'));
 // Where OBS points a Browser source. The Watchdog serves the selected preset at /obs on its own
 // websocket listener, whose port is fixed in watchdog/websocket.js - the two are kept in step by
 // test/core/obsSourceUrl.test.js rather than by a second setting nobody would ever change.
@@ -695,6 +696,18 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const souvenirDir = cfgSouvenir.dir && cfgSouvenir.dir.trim() ? cfgSouvenir.dir : souvenirDefaultDir();
       $('#souvenir-dir-display').text(souvenirDir);
       $('#btn-souvenir-dir').attr('title', souvenirDir);
+      const cfgClip = clipProfile.normalize(cfgSouvenir);
+      $('#option_clip').val(String(cfgClip.clip)).change();
+      $('#option_clipSeconds').val(String(cfgClip.clipSeconds));
+      $('#option_clipCodec').val(cfgClip.clipCodec).change();
+      $('#option_clipResolution').val(cfgClip.clipResolution).change();
+      $('#option_clipFps').val(String(cfgClip.clipFps)).change();
+      $('#option_clipQuality').val(cfgClip.clipQuality).change();
+      $('#option_clipAudio').val(cfgClip.clipAudio).change();
+      const clipDir = cfgClip.clipDir || clipDefaultDir();
+      $('#clip-dir-display').text(clipDir);
+      $('#btn-clip-dir').attr('title', clipDir);
+      updateClipReadouts();
       // Arm auto-save only after both asynchronous lists are populated.
       const presetsReady = ipcRenderer
         .invoke('list-presets')
@@ -4159,6 +4172,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const v = parseInt($('#option_overlayVolume').val(), 10);
       $('#overlayVolume-value').text((Number.isFinite(v) ? v : 100) + '%');
     }
+    // The clip length slider saves on release like the volume one; the delegated auto-save above
+    // only covers the volume slider by id.
+    $('#option_clipSeconds').on('input', updateClipReadouts);
+    $('#option_clipSeconds').on('change', autosaveNotifications);
+    $('#options-notify-clip').on('change', 'select', updateClipReadouts);
     $('#option_overlayVolume').on('input', updateOverlayVolumeLabel);
     $('#option_overlayVolume').on('change', function () {
       updateOverlayVolumeLabel();
@@ -4309,6 +4327,31 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       try {
         const configured = app.config.souvenir && app.config.souvenir.dir ? app.config.souvenir.dir.trim() : '';
         const dir = configured || souvenirDefaultDir();
+        settingsFs.mkdirSync(dir, { recursive: true });
+        remote.shell.openPath(dir);
+      } catch (e) {
+        debug.log(e);
+      }
+    });
+
+    // The clip folder works like the screenshot one, with Videos\Achievement Watcher Next as default.
+    $('#btn-clip-dir').click(async function () {
+      try {
+        const res = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), { properties: ['openDirectory', 'dontAddToRecent'] });
+        if (res.canceled || !res.filePaths || !res.filePaths.length) return;
+        if (!app.config.souvenir) app.config.souvenir = {};
+        app.config.souvenir.clipDir = res.filePaths[0];
+        $('#clip-dir-display').text(res.filePaths[0]);
+        $('#btn-clip-dir').attr('title', res.filePaths[0]);
+        autosaveNotifications();
+      } catch (e) {
+        debug.log(e);
+      }
+    });
+
+    $('#btn-clip-open').click(function () {
+      try {
+        const dir = clipProfile.normalize(app.config.souvenir || {}).clipDir || clipDefaultDir();
         settingsFs.mkdirSync(dir, { recursive: true });
         remote.shell.openPath(dir);
       } catch (e) {
@@ -5652,6 +5695,15 @@ function souvenirDefaultDir() {
   }
 }
 
+// Mirrors defaultDir() in watchdog/notification/clip.js, for the same reason.
+function clipDefaultDir() {
+  try {
+    return path.join(remote.app.getPath('videos'), 'Achievement Watcher Next');
+  } catch (e) {
+    return 'Videos\\Achievement Watcher Next';
+  }
+}
+
 // Resolve a notification sound name to an absolute path. User-imported sounds (in <userData>/sounds)
 // take priority over the bundled ones (app/sounds), matching the main process's resolveNotificationSound.
 function resolveSoundFile(name) {
@@ -5708,6 +5760,35 @@ function readNotificationSettings() {
   if (!app.config.souvenir) app.config.souvenir = {};
   app.config.souvenir.screenshot = $('#option_souvenirScreenshot').val() === 'true';
   app.config.souvenir.hdr = $('#option_souvenirHdr').val() === 'off' ? 'off' : 'auto';
+  Object.assign(app.config.souvenir, readClipSettings());
+}
+
+function readClipSettings() {
+  return clipProfile.normalize({
+    clip: $('#option_clip').val(),
+    clipSeconds: $('#option_clipSeconds').val(),
+    clipCodec: $('#option_clipCodec').val(),
+    clipResolution: $('#option_clipResolution').val(),
+    clipFps: $('#option_clipFps').val(),
+    clipQuality: $('#option_clipQuality').val(),
+    clipAudio: $('#option_clipAudio').val(),
+    // Set by the folder picker, not by a control.
+    clipDir: (app.config.souvenir && app.config.souvenir.clipDir) || '',
+  });
+}
+
+// The card follows its controls: only the switch while clips are off, and the length readout and
+// size estimate while they move. Sizes are for this screen, never recorded above.
+function updateClipReadouts() {
+  const clip = readClipSettings();
+  $('#options-notify-clip').toggleClass('clip-off', !clip.clip);
+  $('#clipSeconds-value').text(localeText('settings.notification.option.clipSecondsValue', { seconds: clip.clipSeconds }) || `${clip.clipSeconds} s`);
+  const ratio = window.devicePixelRatio || 1;
+  const screen = { width: Math.round(window.screen.width * ratio), height: Math.round(window.screen.height * ratio) };
+  const native = localeText('settings.notification.option.clipResolutionNative');
+  if (native) $("#option_clipResolution option[value='native']").text(`${native} (${screen.height}p)`);
+  const size = Math.max(1, Math.round(clipProfile.estimateMegabytes(clip, screen)));
+  $('#clip-estimate').text(localeText('settings.notification.option.clipEstimateValue', { size }) || `${size} MB`);
 }
 
 // Debounced auto-save for the Notifications tab. No-op until the form has finished populating.
