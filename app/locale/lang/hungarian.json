@@ -512,7 +512,7 @@
         },
         "progressStep": {
           "name": "Haladási mérföldkövek",
-          "description": "Haladási értesítés csak akkor jelenjen meg, ha egy számláló átlép a célja egy új lépcsőfokán, nem minden +1-nél. A feloldások mindig megjelennek.",
+          "description": "Haladási értesítés csak akkor jelenjen meg, ha egy számláló átlép a célja egy új lépésén, nem minden +1-nél. A feloldások mindig megjelennek.",
           "every": "Minden lépés",
           "percent": "Minden {percent}%"
         },
@@ -548,7 +548,7 @@
         "overlayScale": "Méret",
         "overlayScaleDesc": "A felugró overlay mérete",
         "overlayProgressPosition": "Haladás pozíciója",
-        "overlayProgressPositionDesc": "Hol jelennek meg a számlálók haladási felugró ablakai (+1).",
+        "overlayProgressPositionDesc": "Hol jelennek meg a haladási felugró ablakok (a haladás +1 lépései).",
         "overlayProgressScale": "Haladás mérete",
         "overlayProgressScaleDesc": "A számlálók haladási felugró ablakainak mérete, például kisebb, mint a feloldásoké.",
         "progressSameAsUnlocks": "Ugyanaz, mint a feloldások",

@@ -548,7 +548,7 @@
         "overlayScale": "Dimensione",
         "overlayScaleDesc": "Dimensione del popup overlay di gioco",
         "overlayProgressPosition": "Posizione avanzamento",
-        "overlayProgressPositionDesc": "Dove compaiono i popup di avanzamento dei contatori (+1).",
+        "overlayProgressPositionDesc": "Dove compaiono i popup di avanzamento (i passi di avanzamento +1).",
         "overlayProgressScale": "Dimensione avanzamento",
         "overlayProgressScaleDesc": "Dimensione dei popup di avanzamento dei contatori, ad esempio più piccoli degli sblocchi.",
         "progressSameAsUnlocks": "Come gli sblocchi",

@@ -548,7 +548,7 @@
         "overlayScale": "Κλίμακα",
         "overlayScaleDesc": "Μέγεθος του αναδυόμενου παραθύρου της επικάλυψης",
         "overlayProgressPosition": "Θέση προόδου",
-        "overlayProgressPositionDesc": "Πού εμφανίζονται τα αναδυόμενα παράθυρα προόδου των μετρητών (+1).",
+        "overlayProgressPositionDesc": "Πού εμφανίζονται τα αναδυόμενα παράθυρα προόδου (τα +1 της προόδου).",
         "overlayProgressScale": "Κλίμακα προόδου",
         "overlayProgressScaleDesc": "Μέγεθος των αναδυόμενων παραθύρων προόδου των μετρητών, για παράδειγμα μικρότερο από των ξεκλειδωμάτων.",
         "progressSameAsUnlocks": "Ίδια με τα ξεκλειδώματα",

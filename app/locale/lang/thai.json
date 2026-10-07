@@ -548,7 +548,7 @@
         "overlayScale": "ขนาด",
         "overlayScaleDesc": "ขนาดของป็อปอัปโอเวอร์เลย์ในเกม",
         "overlayProgressPosition": "ตำแหน่งความคืบหน้า",
-        "overlayProgressPositionDesc": "ตำแหน่งที่ป็อปอัปความคืบหน้าของตัวนับ (+1) แสดงขึ้น",
+        "overlayProgressPositionDesc": "ตำแหน่งที่ป็อปอัปความคืบหน้า (ขั้น +1 ของความคืบหน้า) แสดงขึ้น",
         "overlayProgressScale": "ขนาดความคืบหน้า",
         "overlayProgressScaleDesc": "ขนาดของป็อปอัปความคืบหน้าของตัวนับ เช่น เล็กกว่าการปลดล็อก",
         "progressSameAsUnlocks": "เหมือนการปลดล็อก",

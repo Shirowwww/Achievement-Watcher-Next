@@ -512,7 +512,7 @@
         },
         "progressStep": {
           "name": "Fremgangsmilepæler",
-          "description": "Vis en fremgangsvarsel bare når en teller passerer et nytt trinn mot målet, i stedet for ved hver +1. Opplåsinger vises alltid.",
+          "description": "Vis et fremgangsvarsel bare når en teller passerer et nytt trinn mot målet, i stedet for ved hver +1. Opplåsinger vises alltid.",
           "every": "Hvert trinn",
           "percent": "Hver {percent} %"
         },
@@ -548,7 +548,7 @@
         "overlayScale": "Størrelse",
         "overlayScaleDesc": "Størrelsen på popup-vinduet i spilloverlayet",
         "overlayProgressPosition": "Plassering av fremgang",
-        "overlayProgressPositionDesc": "Hvor popup-vinduene for tellerfremgang (+1) vises.",
+        "overlayProgressPositionDesc": "Hvor popup-vinduene for fremgang vises (fremgangstrinnene på +1).",
         "overlayProgressScale": "Størrelse på fremgang",
         "overlayProgressScaleDesc": "Størrelsen på popup-vinduene for tellerfremgang, for eksempel mindre enn opplåsinger.",
         "progressSameAsUnlocks": "Samme som opplåsinger",

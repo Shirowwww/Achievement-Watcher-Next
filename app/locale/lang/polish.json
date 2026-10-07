@@ -548,7 +548,7 @@
         "overlayScale": "Rozmiar",
         "overlayScaleDesc": "Rozmiar wyskakującej nakładki",
         "overlayProgressPosition": "Pozycja postępu",
-        "overlayProgressPositionDesc": "Gdzie pojawiają się wyskakujące powiadomienia o postępie liczników (+1).",
+        "overlayProgressPositionDesc": "Gdzie pojawiają się wyskakujące powiadomienia o postępie (kroki postępu +1).",
         "overlayProgressScale": "Rozmiar postępu",
         "overlayProgressScaleDesc": "Rozmiar wyskakujących powiadomień o postępie liczników, na przykład mniejszy niż odblokowań.",
         "progressSameAsUnlocks": "Taki sam jak odblokowania",

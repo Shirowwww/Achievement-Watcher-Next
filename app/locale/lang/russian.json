@@ -548,7 +548,7 @@
         "overlayScale": "Размер",
         "overlayScaleDesc": "Размер всплывающего оверлея",
         "overlayProgressPosition": "Положение прогресса",
-        "overlayProgressPositionDesc": "Где появляются всплывающие окна прогресса счётчиков (+1).",
+        "overlayProgressPositionDesc": "Где появляются всплывающие окна прогресса (шаги прогресса +1).",
         "overlayProgressScale": "Размер прогресса",
         "overlayProgressScaleDesc": "Размер всплывающих окон прогресса счётчиков, например меньше, чем у разблокировок.",
         "progressSameAsUnlocks": "Как разблокировки",

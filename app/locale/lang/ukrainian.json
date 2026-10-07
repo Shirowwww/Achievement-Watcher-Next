@@ -548,7 +548,7 @@
         "overlayScale": "Розмір",
         "overlayScaleDesc": "Розмір спливаючого оверлея",
         "overlayProgressPosition": "Положення прогресу",
-        "overlayProgressPositionDesc": "Де з’являються спливаючі вікна прогресу лічильників (+1).",
+        "overlayProgressPositionDesc": "Де з’являються спливаючі вікна прогресу (кроки прогресу +1).",
         "overlayProgressScale": "Розмір прогресу",
         "overlayProgressScaleDesc": "Розмір спливаючих вікон прогресу лічильників, наприклад менший, ніж у розблокувань.",
         "progressSameAsUnlocks": "Як розблокування",

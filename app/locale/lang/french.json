@@ -548,7 +548,7 @@
         "overlayScale": "Échelle",
         "overlayScaleDesc": "Taille de la fenêtre overlay en jeu",
         "overlayProgressPosition": "Position de la progression",
-        "overlayProgressPositionDesc": "Où s’affichent les fenêtres de progression (+1).",
+        "overlayProgressPositionDesc": "Où s’affichent les fenêtres de progression (les +1 de progression).",
         "overlayProgressScale": "Échelle de la progression",
         "overlayProgressScaleDesc": "Taille des fenêtres de progression des compteurs, par exemple plus petites que celles des déblocages.",
         "progressSameAsUnlocks": "Comme les déblocages",

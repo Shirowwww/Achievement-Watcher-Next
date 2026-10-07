@@ -548,7 +548,7 @@
         "overlayScale": "Koko",
         "overlayScaleDesc": "Pelinsisäisen ponnahdusilmoituksen koko",
         "overlayProgressPosition": "Edistymisen sijainti",
-        "overlayProgressPositionDesc": "Missä laskurien edistymisen ponnahdusilmoitukset (+1) näkyvät.",
+        "overlayProgressPositionDesc": "Missä edistymisen ponnahdusilmoitukset näkyvät (edistymisen +1-askeleet).",
         "overlayProgressScale": "Edistymisen koko",
         "overlayProgressScaleDesc": "Laskurien edistymisen ponnahdusilmoitusten koko, esimerkiksi avauksia pienempi.",
         "progressSameAsUnlocks": "Sama kuin avauksilla",

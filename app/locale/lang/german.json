@@ -548,7 +548,7 @@
         "overlayScale": "Größe",
         "overlayScaleDesc": "Größe des In-Game-Overlay-Popups",
         "overlayProgressPosition": "Fortschrittsposition",
-        "overlayProgressPositionDesc": "Wo die Popups für den Zählerfortschritt (+1) erscheinen.",
+        "overlayProgressPositionDesc": "Wo die Fortschritts-Popups erscheinen (die +1-Schritte beim Fortschritt).",
         "overlayProgressScale": "Fortschrittsgröße",
         "overlayProgressScaleDesc": "Größe der Popups für den Zählerfortschritt, zum Beispiel kleiner als bei Freischaltungen.",
         "progressSameAsUnlocks": "Wie Freischaltungen",
