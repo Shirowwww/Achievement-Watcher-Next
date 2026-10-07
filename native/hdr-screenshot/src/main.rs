@@ -1,20 +1,14 @@
-use std::error::Error;
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
+use aw_next_hdr_screenshot::AnyError;
+use aw_next_hdr_screenshot::display::*;
+use aw_next_hdr_screenshot::tone::*;
 use half::f16;
 use png::{BitDepth, ColorType, DeflateCompression, Encoder, SrgbRenderingIntent};
-use windows::Win32::Devices::Display::{
-    DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO,
-    DISPLAYCONFIG_DEVICE_INFO_GET_SDR_WHITE_LEVEL, DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME,
-    DISPLAYCONFIG_DEVICE_INFO_HEADER, DISPLAYCONFIG_DEVICE_INFO_TYPE,
-    DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO, DISPLAYCONFIG_MODE_INFO, DISPLAYCONFIG_PATH_INFO,
-    DISPLAYCONFIG_SDR_WHITE_LEVEL, DISPLAYCONFIG_SOURCE_DEVICE_NAME, DisplayConfigGetDeviceInfo,
-    GetDisplayConfigBufferSizes, QDC_ONLY_ACTIVE_PATHS, QueryDisplayConfig,
-};
-use windows::Win32::Foundation::{ERROR_SUCCESS, WIN32_ERROR};
+use windows::Win32::Devices::Display::DISPLAYCONFIG_PATH_INFO;
 use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, HMONITOR, MONITORINFOEXW};
 use windows_capture::capture::{Context, GraphicsCaptureApiHandler};
 use windows_capture::frame::Frame;
@@ -24,8 +18,6 @@ use windows_capture::settings::{
     ColorFormat, CursorCaptureSettings, DirtyRegionSettings, DrawBorderSettings,
     MinimumUpdateIntervalSettings, SecondaryWindowSettings, Settings,
 };
-
-type AnyError = Box<dyn Error + Send + Sync>;
 
 // A screenshot is opaque, so the alpha channel only ever holds 255. Dropping it takes a
 // quarter off both the canvas and the encoded file.
@@ -140,119 +132,6 @@ fn primary_device_name(primary: Monitor) -> Result<Vec<u16>, AnyError> {
     Ok(info.szDevice.to_vec())
 }
 
-fn active_display_paths() -> Result<Vec<DISPLAYCONFIG_PATH_INFO>, AnyError> {
-    let mut path_count = 0_u32;
-    let mut mode_count = 0_u32;
-    let status = unsafe {
-        GetDisplayConfigBufferSizes(QDC_ONLY_ACTIVE_PATHS, &mut path_count, &mut mode_count)
-    };
-    if status != ERROR_SUCCESS {
-        return Err(format!("GetDisplayConfigBufferSizes failed: {}", status.0).into());
-    }
-
-    let mut paths = vec![DISPLAYCONFIG_PATH_INFO::default(); path_count as usize];
-    let mut modes = vec![DISPLAYCONFIG_MODE_INFO::default(); mode_count as usize];
-    let status = unsafe {
-        QueryDisplayConfig(
-            QDC_ONLY_ACTIVE_PATHS,
-            &mut path_count,
-            paths.as_mut_ptr(),
-            &mut mode_count,
-            modes.as_mut_ptr(),
-            None,
-        )
-    };
-    if status != ERROR_SUCCESS {
-        return Err(format!("QueryDisplayConfig failed: {}", status.0).into());
-    }
-
-    paths.truncate(path_count as usize);
-    Ok(paths)
-}
-
-fn path_source_name(path: &DISPLAYCONFIG_PATH_INFO) -> Option<Vec<u16>> {
-    let mut request = DISPLAYCONFIG_SOURCE_DEVICE_NAME::default();
-    request.header.r#type = DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
-    request.header.size = size_of::<DISPLAYCONFIG_SOURCE_DEVICE_NAME>() as u32;
-    request.header.adapterId = path.sourceInfo.adapterId;
-    request.header.id = path.sourceInfo.id;
-    let status = WIN32_ERROR(unsafe { DisplayConfigGetDeviceInfo(&mut request.header) } as u32);
-    if status != ERROR_SUCCESS {
-        return None;
-    }
-    Some(request.viewGdiDeviceName.to_vec())
-}
-
-// DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2, which the windows crate does not expose yet. Windows 11
-// 24H2 added it because the older query cannot tell HDR apart from automatic colour management:
-// a display running in wide colour gamut reports advancedColorEnabled just like an HDR one does.
-const DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO_2: DISPLAYCONFIG_DEVICE_INFO_TYPE =
-    DISPLAYCONFIG_DEVICE_INFO_TYPE(15);
-const DISPLAYCONFIG_ADVANCED_COLOR_MODE_HDR: u32 = 2;
-
-#[repr(C)]
-#[derive(Clone, Copy, Default)]
-struct AdvancedColorInfo2 {
-    header: DISPLAYCONFIG_DEVICE_INFO_HEADER,
-    value: u32,
-    color_encoding: u32,
-    bits_per_color_channel: u32,
-    active_color_mode: u32,
-}
-
-fn path_active_color_mode(path: &DISPLAYCONFIG_PATH_INFO) -> Option<u32> {
-    let mut request = AdvancedColorInfo2 {
-        header: DISPLAYCONFIG_DEVICE_INFO_HEADER {
-            r#type: DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO_2,
-            size: size_of::<AdvancedColorInfo2>() as u32,
-            adapterId: path.targetInfo.adapterId,
-            id: path.targetInfo.id,
-        },
-        ..Default::default()
-    };
-    let status = WIN32_ERROR(unsafe { DisplayConfigGetDeviceInfo(&mut request.header) } as u32);
-    (status == ERROR_SUCCESS).then_some(request.active_color_mode)
-}
-
-fn path_advanced_color_enabled(path: &DISPLAYCONFIG_PATH_INFO) -> Result<bool, AnyError> {
-    let mut request = DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO::default();
-    request.header.r#type = DISPLAYCONFIG_DEVICE_INFO_GET_ADVANCED_COLOR_INFO;
-    request.header.size = size_of::<DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO>() as u32;
-    request.header.adapterId = path.targetInfo.adapterId;
-    request.header.id = path.targetInfo.id;
-    let status = WIN32_ERROR(unsafe { DisplayConfigGetDeviceInfo(&mut request.header) } as u32);
-    if status != ERROR_SUCCESS {
-        return Err(format!("DisplayConfigGetDeviceInfo failed: {}", status.0).into());
-    }
-    // Bit 1 is advancedColorEnabled.
-    Ok(unsafe { request.Anonymous.value } & 0b10 != 0)
-}
-
-fn path_hdr_enabled(path: &DISPLAYCONFIG_PATH_INFO) -> Result<bool, AnyError> {
-    match path_active_color_mode(path) {
-        Some(mode) => Ok(mode == DISPLAYCONFIG_ADVANCED_COLOR_MODE_HDR),
-        // Before 24H2 there is no wide colour gamut mode, so the old query means HDR.
-        None => path_advanced_color_enabled(path),
-    }
-}
-
-// While HDR is on, the desktop composes in scRGB where 1.0 is 80 nits, but Windows paints SDR
-// content at the brightness of the "SDR content brightness" slider. Without dividing by that
-// factor the whole desktop reads as a highlight and the tone mapper crushes it.
-fn path_sdr_white_scale(path: &DISPLAYCONFIG_PATH_INFO) -> f32 {
-    let mut request = DISPLAYCONFIG_SDR_WHITE_LEVEL::default();
-    request.header.r#type = DISPLAYCONFIG_DEVICE_INFO_GET_SDR_WHITE_LEVEL;
-    request.header.size = size_of::<DISPLAYCONFIG_SDR_WHITE_LEVEL>() as u32;
-    request.header.adapterId = path.targetInfo.adapterId;
-    request.header.id = path.targetInfo.id;
-    let status = WIN32_ERROR(unsafe { DisplayConfigGetDeviceInfo(&mut request.header) } as u32);
-    if status != ERROR_SUCCESS || request.SDRWhiteLevel == 0 {
-        return 1.0;
-    }
-    // The level is reported in thousandths of the 80 nit scRGB reference white.
-    (request.SDRWhiteLevel as f32 / 1000.0).max(1.0)
-}
-
 fn primary_path(primary: Monitor) -> Result<DISPLAYCONFIG_PATH_INFO, AnyError> {
     let primary_name = primary_device_name(primary)?;
 
@@ -280,11 +159,6 @@ fn read_half(raw: &[u8], offset: usize) -> f32 {
     }
 }
 
-// Finite non-negative f16 bit patterns sort like their values, so the brightest channel can be
-// picked without decoding. Negative (out-of-gamut) or infinity/NaN patterns sit above HALF_INFINITY
-// and never count as the peak.
-const HALF_INFINITY: u16 = 0x7c00;
-
 fn pixel_peak_bits(pixel: &[u8]) -> u16 {
     let mut best = 0_u16;
     for channel in 0..3 {
@@ -294,35 +168,6 @@ fn pixel_peak_bits(pixel: &[u8]) -> u16 {
         }
     }
     best
-}
-
-// PQ (SMPTE ST 2084): the roll-off is computed in this perceptually uniform domain, not linear
-// light, so its remaining output codes go where the eye can still tell two highlights apart.
-const PQ_M1: f32 = 2610.0 / 16384.0;
-const PQ_M2: f32 = 2523.0 / 32.0;
-const PQ_C1: f32 = 3424.0 / 4096.0;
-const PQ_C2: f32 = 2413.0 / 128.0;
-const PQ_C3: f32 = 2392.0 / 128.0;
-
-// BT.2408 reference white. The capture is already divided by the SDR white level, so anchoring
-// diffuse white at a fixed 203 cd/m2 makes the curve depend only on the peak-to-white ratio, not on
-// the user's "SDR content brightness" slider.
-const REF_WHITE_NITS: f32 = 203.0;
-
-fn pq_from_rel(value: f32) -> f32 {
-    let y = (value * (REF_WHITE_NITS / 10000.0)).clamp(0.0, 1.0);
-    let ym = y.powf(PQ_M1);
-    ((PQ_C1 + PQ_C2 * ym) / (1.0 + PQ_C3 * ym)).powf(PQ_M2)
-}
-
-fn rel_from_pq(value: f32) -> f32 {
-    let e = value.clamp(0.0, 1.0).powf(1.0 / PQ_M2);
-    let numerator = (e - PQ_C1).max(0.0);
-    let denominator = PQ_C2 - PQ_C3 * e;
-    if denominator <= 0.0 {
-        return 0.0;
-    }
-    (numerator / denominator).powf(1.0 / PQ_M1) * (10000.0 / REF_WHITE_NITS)
 }
 
 // Percentile of the second-brightest pixel in each 2x2 block, not the raw max: a lone firefly loses
@@ -380,65 +225,6 @@ fn estimate_scene_peak(raw: &[u8], width: u32, height: u32, white_scale: f32) ->
     1.0
 }
 
-// Knee-anchored roll-off: content below the knee passes through untouched (SDR content and UI
-// look the same as an SDR capture), and an extended Reinhard shoulder above it reaches the scene
-// peak without collapsing highlights to flat white. SHOULDER=0.035 keeps the drop at diffuse white
-// under a noticeable threshold while still resolving a dozen or so highlight levels.
-const SHOULDER: f32 = 0.035;
-
-#[derive(Clone, Copy)]
-struct ToneCurve {
-    pq_peak: f32,
-    knee: f32,
-    width: f32,
-    reach: f32,
-    passthrough: bool,
-}
-
-impl ToneCurve {
-    fn new(scene_peak: f32) -> Self {
-        let pq_peak = pq_from_rel(scene_peak);
-        let white = pq_from_rel(1.0);
-        if scene_peak <= 1.0 + 1e-4 || pq_peak <= white {
-            return Self {
-                pq_peak,
-                knee: 1.0,
-                width: 0.0,
-                reach: 1.0,
-                passthrough: true,
-            };
-        }
-        let max_lum = white / pq_peak;
-        // Never spend more of the SDR range on the shoulder than there is headroom above white to
-        // absorb: as the scene peak approaches diffuse white the curve becomes the identity.
-        let width = SHOULDER.min(1.0 - max_lum).min(0.98 * max_lum);
-        Self {
-            pq_peak,
-            knee: max_lum - width,
-            width,
-            reach: (1.0 - (max_lum - width)) / width,
-            passthrough: false,
-        }
-    }
-
-    fn map(&self, value: f32) -> f32 {
-        let value = value.max(0.0);
-        if self.passthrough {
-            return value.min(1.0);
-        }
-        let normalised = (pq_from_rel(value) / self.pq_peak).clamp(0.0, 1.0);
-        if normalised < self.knee {
-            return value;
-        }
-        // Reinhard with a white point, in shoulder units: T(0) = 0, T'(0) = 1 and T(L) = 1, so the
-        // curve leaves the knee at slope 1 and lands exactly on the scene peak.
-        let t = (normalised - self.knee) / self.width;
-        let shaped = t * (1.0 + t / (self.reach * self.reach)) / (1.0 + t);
-        let mapped = (self.knee + self.width * shaped).clamp(0.0, 1.0);
-        rel_from_pq(mapped * self.pq_peak).min(1.0)
-    }
-}
-
 // 8x8 ordered dither. Compressing several stops of highlight into the top few sRGB codes leaves
 // wide flat steps, which read as banding on a sky or a glow; a sub-code offset breaks them up
 // without shifting the average.
@@ -471,60 +257,6 @@ fn linear_to_srgb_dithered(value: f32, dither: f32) -> u8 {
 #[cfg(test)]
 fn linear_to_srgb(value: f32) -> u8 {
     linear_to_srgb_dithered(value, 0.0)
-}
-
-// A light source far above diffuse white reads as white, not as a saturated colour, and scaling
-// every channel equally cannot brighten one already at its maximum. Blending each channel towards
-// the pixel's brightest one washes highlights out with rising intensity instead of dimming them.
-const WASH: f32 = 0.6;
-
-fn highlight_wash(pixel_peak: f32, scene_peak: f32) -> f32 {
-    if scene_peak <= 1.05 || pixel_peak <= 1.0 {
-        return 0.0;
-    }
-    let position = ((pixel_peak - 1.0) / (scene_peak - 1.0)).clamp(0.0, 1.0);
-    position * position * WASH
-}
-
-fn desaturate_highlight(rgb: [f32; 3], blend: f32) -> [f32; 3] {
-    if blend <= 0.0 {
-        return rgb;
-    }
-    let white = rgb[0].max(rgb[1]).max(rgb[2]);
-    [
-        rgb[0] + (white - rgb[0]) * blend,
-        rgb[1] + (white - rgb[1]) * blend,
-        rgb[2] + (white - rgb[2]) * blend,
-    ]
-}
-
-// The per-pixel decision depends only on the brightest channel, one of 31744 finite non-negative f16
-// patterns, so compression and highlight wash are precomputed into an exact lookup table.
-struct PixelTables {
-    scale: Vec<f32>,
-    blend: Vec<f32>,
-}
-
-impl PixelTables {
-    fn new(scene_peak: f32, white_scale: f32) -> Self {
-        let curve = ToneCurve::new(scene_peak);
-        let mut scale = vec![0.0_f32; HALF_INFINITY as usize];
-        let mut blend = vec![0.0_f32; HALF_INFINITY as usize];
-        for bits in 0..HALF_INFINITY {
-            let raw = f16::from_bits(bits).to_f32();
-            let peak = raw / white_scale;
-            let index = bits as usize;
-            // The SDR white division is folded into the table, so a channel goes straight from its
-            // captured value to its tone-mapped one with a single multiply.
-            scale[index] = if raw > 0.0 {
-                curve.map(peak) / raw
-            } else {
-                0.0
-            };
-            blend[index] = highlight_wash(peak, scene_peak);
-        }
-        Self { scale, blend }
-    }
 }
 
 fn tone_map_frame(

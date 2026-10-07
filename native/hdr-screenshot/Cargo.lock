@@ -16,6 +16,7 @@ dependencies = [
  "png",
  "windows",
  "windows-capture",
+ "windows-core",
 ]
 
 [[package]]

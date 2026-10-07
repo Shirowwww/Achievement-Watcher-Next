@@ -131,6 +131,8 @@ exports.default = async function afterPack(context) {
       path.join(appOutDir, 'watchdog', 'native', 'aw-next-hdr-screenshot.exe'),
       path.join(appOutDir, 'watchdog', 'native', 'windows-capture.LICENSE.txt'),
       path.join(appOutDir, 'watchdog', 'native', 'Achievements-HDR.LICENSE.txt'),
+      // Video souvenir recorder, started only while a game runs with clips enabled.
+      path.join(appOutDir, 'watchdog', 'native', 'aw-next-clip.exe'),
       // The 7-Zip build node-7z resolves by process.arch.
       path.join(unpacked, '7zip-bin', 'win', targetArch, '7za.exe'),
     ];
