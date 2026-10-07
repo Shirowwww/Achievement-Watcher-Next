@@ -86,15 +86,18 @@ git diff --check
 Push-Location app
 npm ci
 npm test
-npm audit --omit=dev
+node ../tools/audit.js
 Pop-Location
 
 Push-Location watchdog
 npm ci
 npm test
-npm audit --omit=dev
+node ../tools/audit.js
 Pop-Location
 ```
+
+`tools/audit.js` is `npm audit --omit=dev --audit-level=high` with a short list of advisories
+accepted by id, each with its reason; an accepted one blocks again once its package has a fix.
 
 The app suite includes locale completeness. If a native optional dependency is
 unavailable on the current machine, record the exact limitation; do not silently

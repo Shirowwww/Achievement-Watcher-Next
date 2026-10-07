@@ -73,10 +73,12 @@ jobs:
         working-directory: app
         run: npm test
 
+      # Same bar as `npm audit --omit=dev --audit-level=high`, minus the advisories tools/audit.js
+      # accepts by id, each with its reason, and only until their package has a fix.
       - name: Audit app production dependencies
         working-directory: app
-        run: npm audit --omit=dev --audit-level=high
+        run: node ../tools/audit.js
 
       - name: Audit Watchdog production dependencies
         working-directory: watchdog
-        run: npm audit --omit=dev --audit-level=high
+        run: node ../tools/audit.js
