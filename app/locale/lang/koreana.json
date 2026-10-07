@@ -548,7 +548,7 @@
         "overlayScale": "크기",
         "overlayScaleDesc": "게임 내 오버레이 팝업의 크기",
         "overlayProgressPosition": "진행도 위치",
-        "overlayProgressPositionDesc": "카운터 진행도 팝업(통계형 도전 과제의 +1)이 나타나는 위치입니다. 해제와 동일은 게임별 위치를 포함해 해제 위치를 따르며, 다른 선택지는 모든 게임에 적용됩니다.",
+        "overlayProgressPositionDesc": "카운터 진행도 팝업(+1)이 나타나는 위치입니다.",
         "overlayProgressScale": "진행도 크기",
         "overlayProgressScaleDesc": "카운터 진행도 팝업의 크기입니다. 예를 들어 해제 팝업보다 작게 할 수 있습니다.",
         "progressSameAsUnlocks": "해제와 동일",

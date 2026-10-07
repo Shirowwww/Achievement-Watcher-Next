@@ -548,7 +548,7 @@
         "overlayScale": "Størrelse",
         "overlayScaleDesc": "Størrelsen på popup-vinduet i spilloverlayet",
         "overlayProgressPosition": "Plassering av fremgang",
-        "overlayProgressPositionDesc": "Hvor popup-vinduene for tellerfremgang (+1 for en statistikkprestasjon) vises. Samme som opplåsinger følger plasseringen for opplåsinger, også et spills egen plassering; alle andre valg gjelder for alle spill.",
+        "overlayProgressPositionDesc": "Hvor popup-vinduene for tellerfremgang (+1) vises.",
         "overlayProgressScale": "Størrelse på fremgang",
         "overlayProgressScaleDesc": "Størrelsen på popup-vinduene for tellerfremgang, for eksempel mindre enn opplåsinger.",
         "progressSameAsUnlocks": "Samme som opplåsinger",

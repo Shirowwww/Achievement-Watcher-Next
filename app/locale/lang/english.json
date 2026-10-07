@@ -548,7 +548,7 @@
         "overlayScale": "Scale",
         "overlayScaleDesc": "Size of the in-game overlay popup",
         "overlayProgressPosition": "Progress position",
-        "overlayProgressPositionDesc": "Where counter progress popups (the +1 of a stat achievement) appear. Same as unlocks follows the unlock position, a game's own position included; any other choice applies to every game.",
+        "overlayProgressPositionDesc": "Where counter progress popups (+1) appear.",
         "overlayProgressScale": "Progress scale",
         "overlayProgressScaleDesc": "Size of counter progress popups, for example smaller than unlocks.",
         "progressSameAsUnlocks": "Same as unlocks",

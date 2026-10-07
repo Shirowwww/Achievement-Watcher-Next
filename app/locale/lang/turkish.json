@@ -548,7 +548,7 @@
         "overlayScale": "Boyut",
         "overlayScaleDesc": "Oyun içi yer paylaşımı açılır penceresinin boyutu",
         "overlayProgressPosition": "İlerleme konumu",
-        "overlayProgressPositionDesc": "Sayaç ilerlemesi açılır pencerelerinin göründüğü yer (istatistik başarımındaki +1). Kilit açmalarla aynı, kilit açma konumunu izler; oyunun kendi konumu da dahildir. Diğer seçimler tüm oyunlara uygulanır.",
+        "overlayProgressPositionDesc": "Sayaç ilerlemesi açılır pencerelerinin göründüğü yer (+1).",
         "overlayProgressScale": "İlerleme boyutu",
         "overlayProgressScaleDesc": "Sayaç ilerlemesi açılır pencerelerinin boyutu, örneğin kilit açmalardan daha küçük.",
         "progressSameAsUnlocks": "Kilit açmalarla aynı",

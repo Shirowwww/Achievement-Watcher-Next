@@ -548,7 +548,7 @@
         "overlayScale": "Tamanho",
         "overlayScaleDesc": "Tamanho do popup overlay no jogo",
         "overlayProgressPosition": "Posição do progresso",
-        "overlayProgressPositionDesc": "Onde aparecem os popups de progresso dos contadores (o +1 de uma proeza de estatística). Igual aos desbloqueios segue a posição dos desbloqueios, incluindo a posição própria de um jogo; qualquer outra opção aplica-se a todos os jogos.",
+        "overlayProgressPositionDesc": "Onde aparecem os popups de progresso dos contadores (+1).",
         "overlayProgressScale": "Tamanho do progresso",
         "overlayProgressScaleDesc": "Tamanho dos popups de progresso dos contadores, por exemplo mais pequenos do que os desbloqueios.",
         "progressSameAsUnlocks": "Igual aos desbloqueios",

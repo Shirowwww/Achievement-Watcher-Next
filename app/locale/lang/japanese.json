@@ -548,7 +548,7 @@
         "overlayScale": "サイズ",
         "overlayScaleDesc": "ゲーム内オーバーレイのポップアップのサイズ",
         "overlayProgressPosition": "進捗の位置",
-        "overlayProgressPositionDesc": "カウンターの進捗ポップアップ（統計系実績の+1）を表示する場所です。「解除と同じ」は、ゲーム個別の位置も含め解除の位置に従います。それ以外を選ぶとすべてのゲームに適用されます。",
+        "overlayProgressPositionDesc": "カウンターの進捗ポップアップ（+1）を表示する場所です。",
         "overlayProgressScale": "進捗のサイズ",
         "overlayProgressScaleDesc": "カウンターの進捗ポップアップのサイズです。たとえば解除より小さくできます。",
         "progressSameAsUnlocks": "解除と同じ",

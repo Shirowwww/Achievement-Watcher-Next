@@ -548,7 +548,7 @@
         "overlayScale": "Cỡ",
         "overlayScaleDesc": "Kích thước của khung thông báo lớp phủ trong trò chơi",
         "overlayProgressPosition": "Vị trí tiến độ",
-        "overlayProgressPositionDesc": "Nơi các khung thông báo tiến độ của bộ đếm (+1 của thành tựu thống kê) xuất hiện. Giống mở khóa sẽ theo vị trí mở khóa, kể cả vị trí riêng của từng trò chơi; mọi lựa chọn khác áp dụng cho mọi trò chơi.",
+        "overlayProgressPositionDesc": "Nơi các khung thông báo tiến độ của bộ đếm (+1) xuất hiện.",
         "overlayProgressScale": "Cỡ tiến độ",
         "overlayProgressScaleDesc": "Kích thước khung thông báo tiến độ của bộ đếm, ví dụ nhỏ hơn khung mở khóa.",
         "progressSameAsUnlocks": "Giống mở khóa",

@@ -548,7 +548,7 @@
         "overlayScale": "縮放比例",
         "overlayScaleDesc": "遊戲內嵌介面彈出通知的大小",
         "overlayProgressPosition": "進度位置",
-        "overlayProgressPositionDesc": "計數器進度彈出通知（統計類成就的 +1）出現的位置。「與解鎖相同」會跟隨解鎖通知的位置，包括遊戲自己的位置；選擇其他選項則套用於所有遊戲。",
+        "overlayProgressPositionDesc": "計數器進度彈出通知（+1）出現的位置。",
         "overlayProgressScale": "進度縮放比例",
         "overlayProgressScaleDesc": "計數器進度彈出通知的大小，例如比解鎖通知更小。",
         "progressSameAsUnlocks": "與解鎖相同",

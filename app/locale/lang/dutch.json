@@ -548,7 +548,7 @@
         "overlayScale": "Schaal",
         "overlayScaleDesc": "Grootte van de pop-up van de in-game overlay",
         "overlayProgressPosition": "Positie van voortgang",
-        "overlayProgressPositionDesc": "Waar voortgangspop-ups van tellers (de +1 van een statistiekprestatie) verschijnen. Zelfde als ontgrendelingen volgt de positie van ontgrendelingen, inclusief de eigen positie van een game; elke andere keuze geldt voor alle games.",
+        "overlayProgressPositionDesc": "Waar voortgangspop-ups van tellers (+1) verschijnen.",
         "overlayProgressScale": "Schaal van voortgang",
         "overlayProgressScaleDesc": "Grootte van voortgangspop-ups van tellers, bijvoorbeeld kleiner dan bij ontgrendelingen.",
         "progressSameAsUnlocks": "Zelfde als ontgrendelingen",

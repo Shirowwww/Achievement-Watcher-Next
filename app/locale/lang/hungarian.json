@@ -548,7 +548,7 @@
         "overlayScale": "Méret",
         "overlayScaleDesc": "A felugró overlay mérete",
         "overlayProgressPosition": "Haladás pozíciója",
-        "overlayProgressPositionDesc": "Hol jelennek meg a számlálók haladási felugró ablakai (egy statisztikai teljesítmény +1-e). Az Ugyanaz, mint a feloldások a feloldások pozícióját követi, a játék saját pozícióját is beleértve; bármely más választás minden játékra érvényes.",
+        "overlayProgressPositionDesc": "Hol jelennek meg a számlálók haladási felugró ablakai (+1).",
         "overlayProgressScale": "Haladás mérete",
         "overlayProgressScaleDesc": "A számlálók haladási felugró ablakainak mérete, például kisebb, mint a feloldásoké.",
         "progressSameAsUnlocks": "Ugyanaz, mint a feloldások",

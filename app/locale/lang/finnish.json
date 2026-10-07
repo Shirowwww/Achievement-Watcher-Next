@@ -548,7 +548,7 @@
         "overlayScale": "Koko",
         "overlayScaleDesc": "Pelinsisäisen ponnahdusilmoituksen koko",
         "overlayProgressPosition": "Edistymisen sijainti",
-        "overlayProgressPositionDesc": "Missä laskurien edistymisen ponnahdusilmoitukset (tilastosaavutuksen +1) näkyvät. Sama kuin avauksilla seuraa avausten sijaintia, myös pelin omaa sijaintia; mikä tahansa muu valinta koskee kaikkia pelejä.",
+        "overlayProgressPositionDesc": "Missä laskurien edistymisen ponnahdusilmoitukset (+1) näkyvät.",
         "overlayProgressScale": "Edistymisen koko",
         "overlayProgressScaleDesc": "Laskurien edistymisen ponnahdusilmoitusten koko, esimerkiksi avauksia pienempi.",
         "progressSameAsUnlocks": "Sama kuin avauksilla",

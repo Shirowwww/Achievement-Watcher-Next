@@ -548,7 +548,7 @@
         "overlayScale": "Skala",
         "overlayScaleDesc": "Ukuran pop-up overlay dalam game",
         "overlayProgressPosition": "Posisi progres",
-        "overlayProgressPositionDesc": "Tempat pop-up progres penghitung (+1 pada pencapaian statistik) muncul. Sama seperti pembukaan mengikuti posisi pembukaan, termasuk posisi khusus sebuah game; pilihan lain berlaku untuk semua game.",
+        "overlayProgressPositionDesc": "Tempat pop-up progres penghitung (+1) muncul.",
         "overlayProgressScale": "Skala progres",
         "overlayProgressScaleDesc": "Ukuran pop-up progres penghitung, misalnya lebih kecil daripada pembukaan.",
         "progressSameAsUnlocks": "Sama seperti pembukaan",

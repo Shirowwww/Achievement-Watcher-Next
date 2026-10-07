@@ -548,7 +548,7 @@
         "overlayScale": "Størrelse",
         "overlayScaleDesc": "Størrelsen på pop op-vinduet i overlayet",
         "overlayProgressPosition": "Placering af fremskridt",
-        "overlayProgressPositionDesc": "Hvor pop op-vinduer med fremskridt for tællere (+1 ved en statistikpræstation) vises. Samme som oplåsninger følger placeringen for oplåsninger, også et spils egen placering; ethvert andet valg gælder for alle spil.",
+        "overlayProgressPositionDesc": "Hvor pop op-vinduer med fremskridt for tællere (+1) vises.",
         "overlayProgressScale": "Størrelse på fremskridt",
         "overlayProgressScaleDesc": "Størrelsen på pop op-vinduer med fremskridt for tællere, for eksempel mindre end oplåsninger.",
         "progressSameAsUnlocks": "Samme som oplåsninger",

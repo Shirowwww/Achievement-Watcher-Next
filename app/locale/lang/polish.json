@@ -548,7 +548,7 @@
         "overlayScale": "Rozmiar",
         "overlayScaleDesc": "Rozmiar wyskakującej nakładki",
         "overlayProgressPosition": "Pozycja postępu",
-        "overlayProgressPositionDesc": "Gdzie pojawiają się wyskakujące powiadomienia o postępie liczników (+1 w osiągnięciu statystycznym). Taki sam jak odblokowania podąża za pozycją odblokowań, w tym za własną pozycją gry; każdy inny wybór dotyczy wszystkich gier.",
+        "overlayProgressPositionDesc": "Gdzie pojawiają się wyskakujące powiadomienia o postępie liczników (+1).",
         "overlayProgressScale": "Rozmiar postępu",
         "overlayProgressScaleDesc": "Rozmiar wyskakujących powiadomień o postępie liczników, na przykład mniejszy niż odblokowań.",
         "progressSameAsUnlocks": "Taki sam jak odblokowania",

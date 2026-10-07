@@ -548,7 +548,7 @@
         "overlayScale": "Veľkosť",
         "overlayScaleDesc": "Veľkosť vyskakovacieho overlayu",
         "overlayProgressPosition": "Pozícia postupu",
-        "overlayProgressPositionDesc": "Kde sa zobrazujú vyskakovacie okná postupu počítadiel (+1 pri štatistickom úspechu). Rovnaké ako odomknutia sleduje pozíciu odomknutí vrátane vlastnej pozície hry; akákoľvek iná voľba platí pre všetky hry.",
+        "overlayProgressPositionDesc": "Kde sa zobrazujú vyskakovacie okná postupu počítadiel (+1).",
         "overlayProgressScale": "Veľkosť postupu",
         "overlayProgressScaleDesc": "Veľkosť vyskakovacích okien postupu počítadiel, napríklad menšia ako pri odomknutiach.",
         "progressSameAsUnlocks": "Rovnaké ako odomknutia",
