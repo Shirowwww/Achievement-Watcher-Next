@@ -47,6 +47,9 @@ into one library, with live Windows notifications and an in-game overlay.
 - **Unlocks on stream.** A ready-made OBS Browser source draws the same popup, with the same preset
   and artwork, and paints nothing at all between unlocks - see
   [Show unlocks on stream](https://shirowwww.github.io/Achievement-Watcher-Next/notifications.html#show-unlocks-on-stream-obs).
+- **Screenshots and video clips of each unlock.** A picture of the screen, HDR included, and
+  optionally an MP4 with the unlock in the middle, recorded by the graphics card only while a game
+  runs - see [Video clips](https://shirowwww.github.io/Achievement-Watcher-Next/notifications.html#video-clips).
 - **Game Health.** Each game has a health panel that says whether it is tracked, why not, and offers
   only the repairs that genuinely apply.
 - **Guided repairs.** Read-only diagnosis, `steam_settings` repair, matched GBE Fork runtime install,
