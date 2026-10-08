@@ -29,6 +29,7 @@ function pinModule(file) {
 }
 
 function loadRegodit() {
+  if (process.platform !== 'win32') return Promise.reject(new Error('the Windows registry is not available on this system'));
   if (!regoditPromise) {
     regoditPromise = import('regodit').then((regodit) => {
       try {

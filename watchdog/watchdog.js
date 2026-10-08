@@ -843,10 +843,12 @@ var app = {
 
       debug.log('Achievement Watchdog starting ...');
       const net = require('net');
-      const PIPE_NAME = '\\\\.\\pipe\\AchievementWatchdogPipe';
+      const PIPE_NAME = require(sharedAppModulePath('util/watchdogPipe.js')).watchdogPipePath();
 
       // The pipe survives settings reloads and must be opened only once.
       if (!self.pipeServer) {
+        // A Unix socket outlives a crashed owner as a file; the instance lock above makes it ours.
+        if (process.platform !== 'win32') fs.rmSync(PIPE_NAME, { force: true });
         self.pipeServer = net.createServer(() => {});
         self.pipeServer.on('error', (err) => debug.error(`[pipe] ${err}`));
         self.pipeServer.listen(PIPE_NAME, () => {
