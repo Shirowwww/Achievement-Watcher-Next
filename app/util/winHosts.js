@@ -3,8 +3,9 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { discoverPrefixes } = require('./winePrefixes.js');
-const wineRegistry = require('./wineRegistry.js');
+// Joined onto __dirname: the Watchdog loads this file from app.asar.unpacked (see asarUnpack).
+const { discoverPrefixes } = require(path.join(__dirname, 'winePrefixes.js'));
+const wineRegistry = require(path.join(__dirname, 'wineRegistry.js'));
 
 /*
   The places where Windows-style save folders live. On Windows that is this machine and nothing
@@ -132,6 +133,10 @@ function prefixHost(prefix, user) {
 function listHosts({ platform = process.platform, env = process.env, home = os.homedir(), nativeDocuments, extraPrefixes = [] } = {}) {
   if (platform === 'win32') return [windowsHost({ env, documents: nativeDocuments })];
   const hosts = [linuxHost({ env, home })];
+  // Windows-style variables set on purpose (a sandboxed run, a test) still name one more host.
+  if (env.APPDATA || env.LOCALAPPDATA || env.PUBLIC || env.Public || env.PROGRAMDATA) {
+    hosts.push({ ...windowsHost({ env, documents: nativeDocuments }), id: 'env', kind: 'env', label: 'environment' });
+  }
   for (const prefix of discoverPrefixes({ env, home, extra: extraPrefixes })) {
     for (const user of prefixUsers(prefix.path)) hosts.push(prefixHost(prefix, user));
   }

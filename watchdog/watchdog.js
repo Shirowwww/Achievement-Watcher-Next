@@ -881,7 +881,9 @@ var app = {
       RegisterOverlayHotkey((self.options.overlay && self.options.overlay.hotkey) || 'Ctrl+Shift+K');
       syncOverlayController();
 
-      if ((await isWinRTAvailable()) === true && self.options.notification_transport.winRT === true) {
+      if (process.platform !== 'win32') {
+        debug.log('[Toast] will use the desktop notification service (through the app)');
+      } else if ((await isWinRTAvailable()) === true && self.options.notification_transport.winRT === true) {
         debug.log('[Toast] will use WinRT');
       } else {
         debug.warn('[Toast] will use PowerShell (WinRT unavailable or disabled)');
