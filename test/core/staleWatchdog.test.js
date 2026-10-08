@@ -9,7 +9,7 @@ const assert = require('node:assert/strict');
 const net = require('node:net');
 const test = require('node:test');
 
-const { sweepStaleWatchdog, listenerPids, imageName, answers, WATCHDOG_PIPE } = require('../../app/util/staleWatchdog.js');
+const { sweepStaleWatchdog, listenerPids, imageName, procListenerPids, procImageName, windowsProcesses, answers, WATCHDOG_PIPE } = require('../../app/util/staleWatchdog.js');
 
 const NETSTAT = [
   '',
@@ -36,7 +36,7 @@ function recorder(outputs) {
 
 test('runs nothing when no Watchdog answers on the pipe or the port', async () => {
   const { calls, run } = recorder({});
-  const result = await sweepStaleWatchdog({ exeName: 'Achievement Watcher.exe', probe: async () => false, run });
+  const result = await sweepStaleWatchdog({ exeName: 'Achievement Watcher.exe', processes: windowsProcesses, probe: async () => false, run });
 
   assert.deepEqual(result, { checked: false, killed: [] });
   assert.deepEqual(calls, []);
@@ -50,6 +50,7 @@ test('kills a listener on 8082 that runs this executable', async () => {
   const probed = [];
   const result = await sweepStaleWatchdog({
     exeName: 'Achievement Watcher.exe',
+    processes: windowsProcesses,
     probe: async (target) => {
       probed.push(target);
       return target === WATCHDOG_PIPE;
@@ -68,7 +69,7 @@ test('leaves another application holding 8082 running', async () => {
     'tasklist.exe': '"obs64.exe","4242","Console","1","300,000 K"\r\n',
   });
   const logged = [];
-  const result = await sweepStaleWatchdog({ exeName: 'Achievement Watcher.exe', probe: async () => true, run, log: (m) => logged.push(m) });
+  const result = await sweepStaleWatchdog({ exeName: 'Achievement Watcher.exe', processes: windowsProcesses, probe: async () => true, run, log: (m) => logged.push(m) });
 
   assert.deepEqual(result.killed, []);
   assert.ok(!calls.some((call) => call.startsWith('taskkill')));
@@ -77,7 +78,7 @@ test('leaves another application holding 8082 running', async () => {
 
 test('never kills its own process', async () => {
   const { calls, run } = recorder({ 'netstat.exe': NETSTAT, 'tasklist.exe': '"Achievement Watcher.exe","4242"' });
-  await sweepStaleWatchdog({ exeName: 'Achievement Watcher.exe', selfPid: 4242, probe: async () => true, run });
+  await sweepStaleWatchdog({ exeName: 'Achievement Watcher.exe', processes: windowsProcesses, selfPid: 4242, probe: async () => true, run });
 
   assert.deepEqual(calls, ['netstat.exe -ano -p tcp']);
 });
@@ -90,6 +91,36 @@ test('reads only listening sockets bound to the port itself', () => {
 test('reads the image name out of a tasklist line', () => {
   assert.equal(imageName('"Achievement Watcher.exe","4242","Console"'), 'Achievement Watcher.exe');
   assert.equal(imageName('INFO: No tasks are running which match the specified criteria.'), '');
+});
+
+test('on Linux the listener is found from /proc: the listening socket inode, then the pid holding it', { skip: process.platform === 'win32' && 'Linux-only' }, () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const proc = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-proc-'));
+  try {
+    fs.mkdirSync(path.join(proc, 'net'));
+    const header = '  sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode';
+    fs.writeFileSync(
+      path.join(proc, 'net', 'tcp'),
+      [
+        header,
+        '   0: 0100007F:1F92 00000000:0000 0A 00000000:00000000 00:00000000 00000000  1000        0 777 1',
+        '   1: 0100007F:C350 0100007F:1F92 01 00000000:00000000 00:00000000 00000000  1000        0 888 1',
+      ].join('\n')
+    );
+    for (const [pid, inode] of [['4242', 777], ['5151', 888]]) {
+      fs.mkdirSync(path.join(proc, pid, 'fd'), { recursive: true });
+      fs.symlinkSync(`socket:[${inode}]`, path.join(proc, pid, 'fd', '3'));
+    }
+    fs.symlinkSync('/opt/aw/achievement-watcher', path.join(proc, '4242', 'exe'));
+
+    assert.deepEqual(procListenerPids(8082, proc), ['4242']);
+    assert.equal(procImageName('4242', proc), 'achievement-watcher');
+    assert.equal(procImageName('9999', proc), '');
+  } finally {
+    fs.rmSync(proc, { recursive: true, force: true });
+  }
 });
 
 test('a probe answers true for a live listener and false for a closed port', async () => {

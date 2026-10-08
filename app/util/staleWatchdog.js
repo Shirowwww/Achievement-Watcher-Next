@@ -155,4 +155,15 @@ async function sweepStaleWatchdog({
   return { checked: true, killed };
 }
 
-module.exports = { sweepStaleWatchdog, listenerPids, imageName, procListenerPids, procImageName, answers, WATCHDOG_PIPE, WATCHDOG_PORT };
+module.exports = {
+  sweepStaleWatchdog,
+  listenerPids,
+  imageName,
+  procListenerPids,
+  procImageName,
+  windowsProcesses,
+  procProcesses,
+  answers,
+  WATCHDOG_PIPE,
+  WATCHDOG_PORT,
+};

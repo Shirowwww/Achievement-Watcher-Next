@@ -2,7 +2,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { writeFileAtomicSync } = require('./replaceFile.js');
+// Joined onto __dirname: the Watchdog loads this file from app.asar.unpacked (see asarUnpack).
+const { writeFileAtomicSync } = require(path.join(__dirname, 'replaceFile.js'));
 
 /*
   Playtime counters where there is no Windows registry: `cfg/playtime.json` in the profile, one

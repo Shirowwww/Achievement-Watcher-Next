@@ -327,7 +327,10 @@ function currentUpdateWindowView() {
 }
 
 function updateWindowInstance() {
-  if (!updateWindow) updateWindow = createUpdateWindow({ onAction: onUpdateWindowAction, icon: path.join(__dirname, '../resources/icon/icon.ico') });
+  if (!updateWindow) {
+    const icon = path.join(__dirname, '../resources/icon', process.platform === 'win32' ? 'icon.ico' : 'icon.png');
+    updateWindow = createUpdateWindow({ onAction: onUpdateWindowAction, icon });
+  }
   return updateWindow;
 }
 
@@ -6959,6 +6962,13 @@ function trayIconImage(icoFile) {
 // System tray - the app lives here. Single left-click / "Open" shows the UI window; "Quit" is the only
 // way to actually exit (it sets app.isQuiting so before-quit tears down the monitor).
 let tray = null;
+
+// Linux tray hosts (StatusNotifierItem) cannot read an .ico and scale the picture themselves; they
+// also only open the menu on a click, so "Open AW Next" in that menu is the way in.
+function linuxTrayImage() {
+  return nativeImage.createFromPath(path.join(__dirname, '../resources/icon/icon.png')).resize({ width: 64, height: 64, quality: 'best' });
+}
+
 function createTray() {
   if (tray) return tray;
   try {
@@ -6993,7 +7003,8 @@ function createTray() {
         image = nativeImage.createFromPath(iconPath);
       }
     }
-    tray = new Tray(image && !image.isEmpty() ? image : iconPath);
+    if (process.platform === 'win32') tray = new Tray(image && !image.isEmpty() ? image : iconPath);
+    else tray = new Tray(linuxTrayImage());
     tray.setToolTip('Achievement Watcher Next');
     const rebuildMenu = () => {
       const contextMenu = Menu.buildFromTemplate([
