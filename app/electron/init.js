@@ -2621,9 +2621,25 @@ function handleMonitorMessage(msg) {
     else if (msg && msg.artworkPrefetch) prefetchSquareGameLogo(msg.artworkPrefetch);
     else if (msg && msg.achievementUnlocked) forwardUnlockToLibrary(msg.achievementUnlocked);
     else if (msg && msg.achievementProgress) forwardProgressToLibrary(msg.achievementProgress);
+    else if (msg && msg.desktopNotification) desktopNotifier().show(msg.desktopNotification);
   } catch (err) {
     debug.log(`[monitor] message handling failed: ${err.message || err}`);
   }
+}
+
+let cachedDesktopNotifier = null;
+function desktopNotifier() {
+  if (!cachedDesktopNotifier) {
+    cachedDesktopNotifier = require('./desktopNotification.js').createDesktopNotifier({
+      Notification: require('electron').Notification,
+      onClick: (target) => {
+        createMainWindow();
+        openGameFromLaunchArgs(target);
+      },
+      log: (message) => debug.log(message),
+    });
+  }
+  return cachedDesktopNotifier;
 }
 
 // The library only re-reads saves on a scan, so without this an unlock reached the tile only after
