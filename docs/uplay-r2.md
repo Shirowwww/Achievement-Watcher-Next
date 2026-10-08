@@ -25,7 +25,7 @@ From **Game Health**:
 From **Settings → Emulators → Ubisoft / Uplay R1/R2**:
 
 <div align="center">
-<img src="screenshot/uplay-r2.png" width="620" alt="Settings - Ubisoft / Uplay R2"><br>
+<picture><source srcset="assets/shot/uplay-r2-panel-800.webp 800w, assets/shot/uplay-r2-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/uplay-r2-panel.png" width="720" height="529" alt="Settings - Ubisoft / Uplay R2"></picture><br>
 <sub>The integrated repair package is verified before any game is touched</sub>
 </div>
 

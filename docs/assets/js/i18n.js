@@ -209,6 +209,11 @@
     set: choose,
   };
 
+  // The page is held back while a translation is on its way (see the script in each page's head).
+  function release() {
+    document.documentElement.classList.remove('i18n-wait');
+  }
+
   fetchJson('assets/i18n/languages.json')
     .then(function (list) {
       var available = Array.isArray(list)
@@ -224,5 +229,6 @@
     })
     .catch(function () {
       /* No translations installed, or one failed to load: the English markup is already correct. */
-    });
+    })
+    .then(release);
 })();

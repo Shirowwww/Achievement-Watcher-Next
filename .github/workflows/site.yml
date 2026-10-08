@@ -79,12 +79,21 @@ jobs:
       - name: Check the published changelog
         run: node tools/site/changelog.js --check
 
+      - name: Check the home page figures and theme list
+        run: node tools/site/home-data.js --check
+
+      - name: Check the FAQ structured data
+        run: node tools/site/faq.js --check
+
+      - name: Check the guide search index
+        run: node tools/site/search-index.js --check
+
       - name: Check search and feed discovery
         run: node tools/site/discovery.js --check
 
       - name: Check the pages and the listings
         working-directory: app
-        run: node --test ../test/site/gallery.test.js ../test/site/themeGallery.test.js ../test/site/pages.test.js
+        run: node --test ../test/site/gallery.test.js ../test/site/themeGallery.test.js ../test/site/pages.test.js ../test/site/guides.test.js ../test/site/home.test.js
 
   # Only after a merge, and only over code that is already on main: the listings are rebuilt from
   # the files in the repository and committed, so nobody has to run a command to publish one.

@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 530" role="img" aria-labelledby="t d">
+<title id="t">Default controller shortcuts</title>
+<desc id="d">A gamepad with the default shortcuts of the main window: LT opens Game Health, RT launches the selected game, LB and RB change settings tab or scroll, the D-pad and left stick move the focus, A confirms, B goes back, X focuses the search and Y or Start open Settings. Below, the three in-game overlay combinations.</desc>
+<style>
+text{font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif}
+.bg{fill:#0c1322;stroke:#26344f}
+.body{fill:#16223a;stroke:#3a4d72;stroke-width:2}
+.part{fill:#1b2942;stroke:#3a4d72;stroke-width:2}
+.hl{fill:#1b2942;stroke:#6c91ff;stroke-width:2.5}
+.lead{stroke:#6c91ff;stroke-width:1.6;fill:none}
+.dot{fill:#6c91ff}
+.k{fill:#e7edf6;font-size:16px;font-weight:700}
+.m{fill:#9bacc2;font-size:14px}
+.h{fill:#e7edf6;font-size:19px;font-weight:700}
+.s{fill:#9bacc2;font-size:13px;font-weight:600;letter-spacing:.06em}
+.glyph{fill:#e7edf6;font-size:13px;font-weight:700;text-anchor:middle}
+.card{fill:#16223a;stroke:#26344f}
+.chip{fill:#1b2942;stroke:#6c91ff;stroke-width:1.5}
+.chipt{fill:#e7edf6;font-size:14px;font-weight:700;text-anchor:middle}
+.plus{fill:#9bacc2;font-size:16px;text-anchor:middle}
+</style>
+<rect class="bg" x=".5" y=".5" width="879" height="529" rx="14"/>
+<text class="h" x="28" y="40">Default controller shortcuts</text>
+
+<g transform="translate(0,52)">
+  <defs>
+    <linearGradient id="shell" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#22324f"/><stop offset=".55" stop-color="#18243b"/><stop offset="1" stop-color="#111a2c"/>
+    </linearGradient>
+    <linearGradient id="trig" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a3b5c"/><stop offset="1" stop-color="#1b2942"/>
+    </linearGradient>
+    <radialGradient id="cap" cx=".4" cy=".35" r=".7">
+      <stop offset="0" stop-color="#2c3d60"/><stop offset="1" stop-color="#141e33"/>
+    </radialGradient>
+    <radialGradient id="guide" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#9fb6ff"/><stop offset=".6" stop-color="#6c91ff"/><stop offset="1" stop-color="#3a5cc0"/>
+    </radialGradient>
+    <filter id="drop" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#000" flood-opacity=".45"/>
+    </filter>
+  </defs>
+
+  <!-- triggers, behind the shell -->
+  <path fill="url(#trig)" stroke="#6c91ff" stroke-width="2.2" d="M343 62V48c0-6 4-10 10-10h34c6 0 10 4 10 10v14z"/>
+  <path fill="url(#trig)" stroke="#6c91ff" stroke-width="2.2" d="M483 62V48c0-6 4-10 10-10h34c6 0 10 4 10 10v14z"/>
+  <text class="glyph" x="370" y="56">LT</text>
+  <text class="glyph" x="510" y="56">RT</text>
+
+  <!-- bumpers, hugging the top of the shell -->
+  <path fill="url(#trig)" stroke="#6c91ff" stroke-width="2.2" d="M314 98c8-16 26-30 58-32h38v18h-36c-24 1-40 9-50 20z"/>
+  <path fill="url(#trig)" stroke="#6c91ff" stroke-width="2.2" d="M566 98c-8-16-26-30-58-32h-38v18h36c24 1 40 9 50 20z"/>
+  <text class="glyph" x="378" y="80">LB</text>
+  <text class="glyph" x="502" y="80">RB</text>
+
+  <!-- shell -->
+  <path fill="url(#shell)" stroke="#3a4d72" stroke-width="2" filter="url(#drop)" d="M332 92C362 84 404 86 440 86C476 86 518 84 548 92C584 102 604 148 618 204C629 250 618 290 589 292C564 293 550 270 534 247C522 230 506 220 487 220L393 220C374 220 358 230 346 247C330 270 316 293 291 292C262 290 251 250 262 204C276 148 296 102 332 92Z"/>
+  <path fill="none" stroke="#ffffff" stroke-opacity=".06" stroke-width="2" d="M336 100C366 93 404 95 440 95C476 95 514 93 544 100"/>
+
+  <!-- left stick -->
+  <circle cx="362" cy="138" r="27" fill="#0f1828" stroke="#6c91ff" stroke-width="2.5"/>
+  <circle cx="362" cy="138" r="18" fill="url(#cap)" stroke="#3a4d72" stroke-width="1.5"/>
+  <circle cx="362" cy="138" r="11" fill="none" stroke="#ffffff" stroke-opacity=".08" stroke-width="1.5"/>
+
+  <!-- D-pad -->
+  <circle cx="400" cy="190" r="26" fill="#0f1828" stroke="#2c3b58" stroke-width="1.5"/>
+  <path fill="url(#cap)" stroke="#6c91ff" stroke-width="2.2" stroke-linejoin="round" d="M393 170h14v13h13v14h-13v13h-14v-13h-13v-14h13z"/>
+
+  <!-- View, Guide, Menu -->
+  <circle cx="413" cy="136" r="8" fill="#0f1828" stroke="#3a4d72" stroke-width="1.5"/>
+  <rect x="409" y="132" width="5" height="5" rx="1" fill="none" stroke="#9bacc2" stroke-width="1.2"/>
+  <rect x="412" y="135" width="5" height="5" rx="1" fill="#0f1828" stroke="#9bacc2" stroke-width="1.2"/>
+  <circle cx="440" cy="112" r="13" fill="url(#guide)" stroke="#9fb6ff" stroke-width="1.5"/>
+  <circle cx="440" cy="112" r="18" fill="none" stroke="#6c91ff" stroke-opacity=".25" stroke-width="3"/>
+  <circle cx="467" cy="136" r="8" fill="#0f1828" stroke="#6c91ff" stroke-width="2.2"/>
+  <path d="M463 133h8M463 136h8M463 139h8" stroke="#e7edf6" stroke-width="1.3"/>
+
+  <!-- right stick -->
+  <circle cx="484" cy="190" r="27" fill="#0f1828" stroke="#2c3b58" stroke-width="1.5"/>
+  <circle cx="484" cy="190" r="18" fill="url(#cap)" stroke="#3a4d72" stroke-width="1.5"/>
+  <circle cx="484" cy="190" r="11" fill="none" stroke="#ffffff" stroke-opacity=".08" stroke-width="1.5"/>
+
+  <!-- face buttons -->
+  <circle cx="530" cy="138" r="38" fill="#0f1828" stroke="#2c3b58" stroke-width="1.5"/>
+  <circle cx="530" cy="112" r="13" fill="#f0b072" fill-opacity=".16" stroke="#f0b072" stroke-width="2"/>
+  <circle cx="506" cy="138" r="13" fill="#79c0ff" fill-opacity=".16" stroke="#79c0ff" stroke-width="2"/>
+  <circle cx="554" cy="138" r="13" fill="#ff7b72" fill-opacity=".16" stroke="#ff7b72" stroke-width="2"/>
+  <circle cx="530" cy="164" r="13" fill="#7ee787" fill-opacity=".16" stroke="#7ee787" stroke-width="2"/>
+  <text class="glyph" x="530" y="117" style="fill:#f0b072">Y</text>
+  <text class="glyph" x="506" y="143" style="fill:#79c0ff">X</text>
+  <text class="glyph" x="554" y="143" style="fill:#ff7b72">B</text>
+  <text class="glyph" x="530" y="169" style="fill:#7ee787">A</text>
+
+  <!-- left callouts -->
+  <path class="lead" d="M238 51H343"/><circle class="dot" cx="343" cy="51" r="3.5"/>
+  <text class="k" x="230" y="46" text-anchor="end">LT</text>
+  <text class="m" x="230" y="64" text-anchor="end">Game Health of the tile</text>
+
+  <path class="lead" d="M238 100H296V82H324"/><circle class="dot" cx="324" cy="82" r="3.5"/>
+  <text class="k" x="230" y="95" text-anchor="end">LB</text>
+  <text class="m" x="230" y="113" text-anchor="end">Previous settings tab, scroll</text>
+
+  <path class="lead" d="M238 165H300"/><path class="lead" d="M300 138H335"/><path class="lead" d="M300 138V190H374"/><circle class="dot" cx="335" cy="138" r="3.5"/><circle class="dot" cx="374" cy="190" r="3.5"/>
+  <text class="k" x="230" y="160" text-anchor="end">D-pad, left stick</text>
+  <text class="m" x="230" y="178" text-anchor="end">Move the focus ring</text>
+
+  <!-- right callouts -->
+  <path class="lead" d="M642 51H537"/><circle class="dot" cx="537" cy="51" r="3.5"/>
+  <text class="k" x="650" y="46">RT</text>
+  <text class="m" x="650" y="64">Launch the selected game</text>
+
+  <path class="lead" d="M642 100H584V82H556"/><circle class="dot" cx="556" cy="82" r="3.5"/>
+  <text class="k" x="650" y="95">RB</text>
+  <text class="m" x="650" y="113">Next settings tab, scroll</text>
+
+  <path class="lead" d="M642 160H590V138H567"/><circle class="dot" cx="567" cy="138" r="3.5"/>
+  <text class="k" x="650" y="143">A</text><text class="m" x="672" y="143">Confirm</text>
+  <text class="k" x="650" y="163">B</text><text class="m" x="672" y="163">Back, cancel</text>
+  <text class="k" x="650" y="183">X</text><text class="m" x="672" y="183">Focus the search box</text>
+  <text class="k" x="650" y="203">Y</text><text class="m" x="672" y="203">Open Settings</text>
+
+  <!-- Menu (Start) opens Settings too -->
+  <path class="lead" d="M467 128V12"/><circle class="dot" cx="467" cy="128" r="3.5"/>
+  <text class="k" x="477" y="22">Start</text>
+  <text class="m" x="522" y="22">Open Settings</text>
+</g>
+
+<!-- overlay combinations -->
+<text class="s" x="28" y="382">IN-GAME OVERLAY, EACH COMBINATION CAN BE CHANGED IN SETTINGS</text>
+
+<g transform="translate(28,398)">
+  <rect class="card" x=".5" y=".5" width="264" height="102" rx="10"/>
+  <text class="k" x="16" y="28">Open or close</text>
+  <rect class="chip" x="16" y="44" width="52" height="28" rx="7"/><text class="chipt" x="42" y="63">Back</text>
+  <text class="plus" x="80" y="64">+</text>
+  <rect class="chip" x="92" y="44" width="54" height="28" rx="7"/><text class="chipt" x="119" y="63">Start</text>
+  <text class="plus" x="158" y="64">+</text>
+  <rect class="chip" x="170" y="44" width="40" height="28" rx="7"/><text class="chipt" x="190" y="63">LB</text>
+  <text class="m" x="16" y="92">Three buttons, on purpose</text>
+</g>
+<g transform="translate(308,398)">
+  <rect class="card" x=".5" y=".5" width="264" height="102" rx="10"/>
+  <text class="k" x="16" y="28">Toggle overlay navigation</text>
+  <rect class="chip" x="16" y="44" width="40" height="28" rx="7"/><text class="chipt" x="36" y="63">LB</text>
+  <text class="plus" x="68" y="64">+</text>
+  <rect class="chip" x="80" y="44" width="34" height="28" rx="7"/><text class="chipt" x="97" y="63">X</text>
+  <text class="m" x="16" y="92">Then A confirms, B cancels</text>
+</g>
+<g transform="translate(588,398)">
+  <rect class="card" x=".5" y=".5" width="264" height="102" rx="10"/>
+  <text class="k" x="16" y="28">Move and scroll</text>
+  <text class="m" x="16" y="63">Hold</text>
+  <rect class="chip" x="56" y="44" width="40" height="28" rx="7"/><text class="chipt" x="76" y="63">LB</text>
+  <text class="plus" x="108" y="64">+</text>
+  <rect class="chip" x="120" y="44" width="40" height="28" rx="7"/><text class="chipt" x="140" y="63">RB</text>
+  <text class="m" x="16" y="92">Left stick moves, right stick scrolls</text>
+</g>
+</svg>

@@ -22,24 +22,38 @@ anywhere; its data stays in a `data` folder beside the executable.
 ## First launch
 
 <div align="center">
-<img src="screenshot/onboarding.png" width="620" alt="First-run guide, choosing between the Simple and Advanced interface"><br>
-<sub>Six steps: language, how it works, interface, account, games and settings</sub>
+<picture><source srcset="assets/shot/onboarding-dialog-800.webp 800w, assets/shot/onboarding-dialog.webp 1250w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/onboarding-dialog.png" width="720" height="475" alt="First-run guide, choosing the language and the Simple or Advanced interface"></picture><br>
+<sub>Six steps: basics, profile, games, sources, look and alerts, and a final recap</sub>
 </div>
 
 The first-run guide asks for the main choices needed to populate the library:
 
-- **Language** controls the interface and the preferred language for game metadata when the source provides it.
-- **Interface** chooses between Simple and Advanced (see below). The guide will not move past this
-  step until you pick one - neither is preselected.
-- **Sources** enables launcher, local-save and emulator integrations.
-- **Accounts** (optional) signs in to Steam, Epic or Xbox to read your real library - including
-  games shared with you through Steam Family - and unlocks made on another PC. You can skip this
-  and connect later from **Settings → Sources**.
-- **Folders** tells AW Next where to look for game libraries and achievement saves.
-- **Notifications** chooses how unlocks are announced. **Automatic** is the default and needs no
-  decision: it uses the in-game overlay when it can be shown and a Windows notification when it cannot.
+- **Basics** are the language and the interface. The language controls the interface and the
+  preferred language for game metadata when the source provides it. The interface chooses between
+  Simple and Advanced (see below); the guide will not move past this step until you pick one -
+  neither is preselected.
+- **Profile** is the name shown in the header, an optional local avatar and your main Steam account.
+- **Games** reports what was found on this PC: the installed Steam, GOG, Epic and Ubisoft games, and
+  the games inside every emulator folder it finds, with a count. Add a folder only if something is
+  missing.
+- **Sources** signs in to Steam, Epic or Xbox (optional) to read your real library - including games
+  shared with you through Steam Family - and unlocks made on another PC. You can skip this and
+  connect later from **Settings → Sources**. Every source switch is still there under **Fine-tune
+  sources**, folded away because the defaults read whatever is installed.
+- **Look and alerts** picks the theme and how unlocks are announced, with a **Test notification**
+  button. **Automatic** is the default and needs no decision: it uses the in-game overlay when it can
+  be shown and a Windows notification when it cannot.
+- **Ready** recaps your choices, each with a **Change** button, and points at collections, trophy
+  mode, video clips and the in-game overlay.
 
-You can revisit every option later from **Settings**.
+<div align="center">
+<picture><source srcset="assets/shot/onboarding-ready-dialog-800.webp 800w, assets/shot/onboarding-ready-dialog.webp 1250w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/onboarding-ready-dialog.png" width="720" height="475" alt="The last step of the first-run guide, with the recap and the Good to know cards" loading="lazy" decoding="async"></picture><br>
+<sub>The last step: each choice with its Change button, then one card per feature worth knowing about</sub>
+</div>
+
+**Skip setup** is always available: it keeps what you have answered, leaves the rest as it was and
+starts the first scan. You can revisit every option later from **Settings**, and reopen the guide
+from **Settings → General**.
 
 ## Simple and Advanced
 
@@ -47,11 +61,11 @@ The interface comes in two sizes. Pick one in the first-run guide, and change it
 from the **Interface** control at the top of **Settings**.
 
 <div align="center">
-<img src="screenshot/settings.png" width="620" alt="AW Next settings"><br>
+<picture><source srcset="assets/shot/settings-panel-800.webp 800w, assets/shot/settings-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/settings-panel.png" width="720" height="529" alt="AW Next settings" loading="lazy" decoding="async"></picture><br>
 <sub>The Interface control sits beside the panel title; the search field filters every tab at once</sub>
 </div>
 
-- **Simple** shows the everyday tabs: General, Theme, Controller, Notification, Presets, Sources,
+- **Simple** shows the everyday tabs: General, Theme, Controller, Notification, Notification presets, Sources,
   Folders and Help.
 - **Advanced** adds the **Steam / GBE Fork**, **Ubisoft / Uplay R1/R2** and **Advanced** tabs, plus
   the deeper options inside the tabs Simple already shows.
@@ -77,7 +91,7 @@ playtime and last session. The choice is saved, and every view keeps the same ca
 context menu.
 
 <div align="center">
-<img src="screenshot/library-views.png" width="620" alt="The Details library view"><br>
+<picture><source srcset="assets/shot/library-views-800.webp 800w, assets/shot/library-views.webp 1280w" sizes="(max-width: 700px) 100vw, 800px"><img src="screenshot/library-views.png" width="800" height="493" alt="The Details library view with latest achievement, last session and playtime" loading="lazy" decoding="async"></picture><br>
 <sub>The Details view: latest achievement, last session and playtime for every game at a glance</sub>
 </div>
 
@@ -90,6 +104,53 @@ The search field at the top of **Settings** filters every tab at once, and the s
 many options each tab matches - for when you remember what an option does but not where it lives. It
 matches labels, descriptions, the values an option offers and its internal name, so `hideZero` finds
 the same row in any interface language. `Ctrl+F` jumps to it, `Esc` clears it.
+
+## Collections
+
+Collections are your own groups of games. Right-click a game, choose **Collections** and tick one,
+or make a new one from the same menu. The collections button next to the installed-only toggle
+then filters the library to a single collection, and the profile numbers above it follow suit.
+
+<div align="center">
+<img src="assets/shot/collections-flow.webp" width="800" height="493" alt="Creating a Favourites collection, adding a game to it from its right-click menu, then choosing it in the filter menu so the library and the profile totals narrow to its games" loading="lazy"><br>
+<sub>Create a collection, add games from their right-click menu, then filter the library by it</sub>
+</div>
+
+<div align="center">
+<picture><source srcset="assets/shot/collections-panel-800.webp 800w, assets/shot/collections-panel.webp 1280w" sizes="(max-width: 700px) 100vw, 800px"><img src="screenshot/collections-panel.png" width="800" height="289" alt="The library filtered to a Favourites collection, with the profile numbers counting only its games" loading="lazy" decoding="async"></picture><br>
+<sub>Viewing one collection: the button takes its icon and colour, and the totals count only its games</sub>
+</div>
+
+Each collection has a name, a colour and an icon, or a picture of your own. **Edit collection…** in
+the button's menu opens the editor, which is also where a collection is deleted; its games stay in
+the library.
+
+<div align="center">
+<picture><source srcset="assets/shot/collection-editor.webp 552w" sizes="(max-width: 700px) 100vw, 360px"><img src="screenshot/collection-editor.png" width="360" height="307" alt="The collection editor, with name, colour, icon and image" loading="lazy" decoding="async"></picture><br>
+<sub>The collection editor</sub>
+</div>
+
+## Library stats
+
+The round button beside the completion rate in the profile header opens **Library stats**: the whole
+library on one screen. It shows overall completion, how many achievements are unlocked and locked,
+the average per game, average and tracked playtime, and the trophy counts, with one row per
+platform at the bottom. **Show installed games only** limits the totals to what is on this PC.
+
+<div align="center">
+<picture><source srcset="assets/shot/stats-overview-800.webp 800w, assets/shot/stats-overview.webp 1250w" sizes="(max-width: 700px) 100vw, 800px"><img src="screenshot/stats-overview.png" width="800" height="520" alt="The Library stats panel: overall completion, unlocked and locked counts, average per game and playtime" loading="lazy" decoding="async"></picture><br>
+<sub>The overview: completion, counts, average per game and playtime</sub>
+</div>
+
+**Trophies** counts platinum for each finished game and grades every other unlocked achievement by
+its rarity, with the thresholds listed under the bar (they follow the rarity setting in
+[Notifications](notifications.md#trophy-mode)). **Platinum games** lists the games you finished and when,
+**Rarest achievements** the hardest ones you hold, and **All achievements** opens the complete list.
+
+<div align="center">
+<picture><source srcset="assets/shot/stats-trophies-800.webp 800w, assets/shot/stats-trophies.webp 1250w" sizes="(max-width: 700px) 100vw, 800px"><img src="screenshot/stats-trophies.png" width="800" height="520" alt="The trophy counts, the platinum games, the rarest achievements and the per-platform table" loading="lazy" decoding="async"></picture><br>
+<sub>Trophies, platinum games, rarest unlocks and the totals per platform</sub>
+</div>
 
 ## Themes
 

@@ -37,8 +37,16 @@ function publicPages() {
   return ['', 'gallery/', 'gallery/themes/', ...guides];
 }
 
+// Every page is as current as the latest release: the guides are written for the version that is out.
+function lastModified() {
+  const entries = releases();
+  return entries.length ? entries[0].date : null;
+}
+
 function sitemapContent() {
-  const urls = publicPages().map((page) => `  <url><loc>${xml(BASE + page)}</loc></url>`).join('\n');
+  const modified = lastModified();
+  const stamp = modified ? `<lastmod>${modified}</lastmod>` : '';
+  const urls = publicPages().map((page) => `  <url><loc>${xml(BASE + page)}</loc>${stamp}</url>`).join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 }
 

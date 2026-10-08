@@ -11,7 +11,7 @@ not.
 
 Worth stating before the table: parts of AW Next are derived from Achievements, used under its MIT
 License, so where a row marks both projects, the implementation sometimes started as JokerVerse's.
-See [NOTICE](../NOTICE).
+See [NOTICE](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/NOTICE).
 
 | | ⭐ **AW Next** | [Achievements](https://github.com/PSerban93/Achievements) | [AW 2.x](https://github.com/darktakayanagi/Achievement-Watcher) |
 |---|:---:|:---:|:---:|

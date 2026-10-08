@@ -4,5 +4,6 @@
   "published": "2026-10-07T21:41:19Z",
   "url": "https://github.com/Shirowwww/Achievement-Watcher-Next/releases/tag/v3.11.1",
   "installer": "Achievement.Watcher.Setup.3.11.1.exe",
-  "installerBytes": 127716336
+  "installerBytes": 127716336,
+  "sha256": "faf0ae445f8abb1265312fdfda196fcdbce9af7ec8cb19164fa1a52f891570b7"
 }

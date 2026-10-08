@@ -1,0 +1,34 @@
+# The guide list in the sidebar of every guide, in reading order.
+# `file` is the Markdown file without its extension; `label` is the short name shown in the list.
+# test/site/guides.test.js fails when a guide is missing from here or listed twice.
+
+- title: Start here
+  items:
+    - { file: getting-started, label: Getting started }
+    - { file: sources, label: Compatible sources }
+    - { file: notifications, label: Notifications }
+    - { file: presets, label: Presets and the designer }
+    - { file: overlay, label: In-game overlay }
+    - { file: controller, label: Controller }
+    - { file: game-health, label: Game Health }
+    - { file: troubleshooting, label: Troubleshooting }
+
+- title: When you need it
+  items:
+    - { file: faq, label: FAQ }
+    - { file: advanced, label: Advanced tools }
+    - { file: emulator-setup, label: Goldberg and GBE setup }
+    - { file: uplay-r2, label: Uplay setup }
+    - { file: comparison, label: Compared to 2.x }
+    - { file: community-galleries, label: Community galleries }
+    - { file: changelog, label: Changelog }
+
+- title: For contributors
+  items:
+    - { file: architecture, label: Architecture }
+    - { file: goldberg-gbe, label: Goldberg and GBE reference }
+    - { file: uplay-reference, label: Uplay reference }
+    - { file: awtheme-format, label: The .awtheme format }
+    - { file: localization, label: Localization }
+    - { file: RELEASE_WORKFLOW, label: Release workflow }
+    - { file: INSTALLER_AND_UPDATES, label: Installer and updates }

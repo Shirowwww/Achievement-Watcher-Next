@@ -2,11 +2,11 @@
 
 A **preset** is the look of the in-game overlay popup: its layout, colours, motion and the way it
 paints a rare unlock or a 100% completion. Pick one under **Settings → Notification → Preset**,
-design your own in **Settings → Presets**, or import one somebody shared with you.
+design your own in **Settings → Notification presets**, or import one somebody shared with you.
 
 > [!NOTE]
 > Presets style the **in-game overlay**. With **Notification type** set to *Windows notification*,
-> nothing a preset describes is ever drawn, and the Presets tab is not shown at all.
+> nothing a preset describes is ever drawn, and the Notification presets tab is not shown at all.
 
 ## The bundled presets
 
@@ -57,12 +57,12 @@ palettes and the state system are AW Next's own.
 
 ## Design your own
 
-The designer has its own tab - **Settings → Presets**, listed under Notification and reachable from
+The designer has its own tab - **Settings → Notification presets**, listed under Alerts and reachable from
 the tools button beside the preset setting. Everything is set with ordinary controls: there is no
 CSS, no JSON and no file to edit.
 
 <div align="center">
-<img src="screenshot/notification-preset.png" width="620" alt="The Preset Designer"><br>
+<picture><source srcset="assets/shot/notification-preset-panel-800.webp 800w, assets/shot/notification-preset-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/notification-preset-panel.png" width="720" height="529" alt="The Preset Designer"></picture><br>
 <sub>Start from a complete design, then shape it under a live preview of the real popup, which stays on screen while the controls scroll</sub>
 </div>
 
@@ -120,9 +120,9 @@ group. In **Simple** interface mode the Advanced halves are not shown at all.
 | Group | What it covers |
 | --- | --- |
 | **Layout & size** | Icon on the left, right, above the text or not at all; text alignment; popup width, padding and spacing; and whether the **game's name** is printed above the achievement. |
-| **Text** | Font, title size, description size, how many lines the description may wrap onto, what colours the title, and - under Advanced - title weight, uppercase, letter spacing, and two ways to stay readable over a picture: a text shadow and an outline drawn around every glyph. |
+| **Text** | Font - one of five families, or **a font file of your own** (TTF, OTF, WOFF or WOFF2, 4 MB at most; it is checked, then copied into the preset and travels with it) - title size, description size, how many lines the description may wrap onto, what colours the title, and - under Advanced - title weight, uppercase, letter spacing, and two ways to stay readable over a picture: a text shadow and an outline drawn around every glyph. |
 | **Colours & background** | A solid colour, a two-colour gradient with an angle, the **game's own artwork**, or **a picture of your own**, dimmed, blurred and framed behind the text. Plus text colour, accent and opacity. Under Advanced, a **texture** - grid, dots, hatching or speckle - drawn over whichever background you chose and under the text, at a strength you set; it is drawn rather than stored, so it costs the preset nothing to carry. A picture you pick is copied into the preset, so it travels with it when you share it. |
-| **Icon** | Size, **shape** - a rounded square, a circle, a squircle, a hexagon or a diamond - and, under Advanced, a border and a glow in the accent colour. The corner rounding applies to the rounded square; the other shapes carry their own outline, so they are drawn without a border. |
+| **Icon** | Size, **shape** - a rounded square, a circle, a squircle, a hexagon or a diamond - and, under Advanced, a border and a glow in the accent colour. The corner rounding applies to the rounded square; the other shapes carry their own outline, so they are drawn without a border. A **logo** (PNG, JPEG, GIF, WebP or BMP, 2 MB at most) can sit behind the text in a corner or at the middle of a side, with a size and a distance from the edge you set; it is copied into the preset like the font. |
 | **Border & corners** | Corner radius, which edge carries the accent bar (or a full outline, or none) and its thickness; under Advanced, a border of your own colour. |
 | **Shadow & glow** | How deep the drop shadow is, how much the popup glows in its accent colour, and whether that glow **pulses** or **breathes** while the popup is on screen. |
 | **Motion & timing** | Which edge the popup enters from and leaves to (or fade, or zoom), how long it stays on screen, and - under Advanced - how far it travels, entry and exit speed, the entry curve (smooth, linear, back, gentle, snap or elastic) and an **exit curve** of its own, which defaults to the one every preset always left on. |
@@ -153,10 +153,42 @@ presets and hand-written ones are never touched.
 > Presets you create are stored in `%APPDATA%\Achievement Watcher Next\presets\Users Presets`, not in
 > the installation folder. They survive app updates.
 
+## Customize a bundled preset
+
+**Customize a bundled preset**, at the top of the designer, starts from one of the presets that ship
+with the app instead of from a blank design. Nothing of that preset is copied or edited: the layer
+you save is a few lines naming it, plus the values you changed, and the popup is the bundled preset
+as it ships with those values laid over it. If a later version improves the bundled preset, your
+layer improves with it.
+
+Tick the sections you want to change - **background** (a colour or a gradient), **text colour**,
+**accent**, **border**, **glow**, **font** (one of the five families or a font file of your own) and
+**logo** - and leave the rest alone. The controls start from the bundled preset's own colours. The
+preview shows the bundled preset with your layer on top, and **Show on screen** does the same in a
+real popup.
+
+<div align="center">
+<picture><source srcset="assets/shot/preset-customize-panel-800.webp 800w, assets/shot/preset-customize-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/preset-customize-panel.png" width="720" height="529" alt="Customizing the AW Next preset with a font file and a logo, previewed live" loading="lazy" decoding="async"></picture><br>
+<sub>AW Next with a font file of its own and a logo in the top-right corner: only ticked sections change</sub>
+</div>
+
+What it covers, and what it does not:
+
+- It works on the nine presets in the **Default Presets** list, which all draw the same card and so
+  can be restyled the same way (this is checked against each of them). The community presets
+  (Batman, Onyx, Outline and the others) draw their own layouts, which a generic layer cannot
+  restyle reliably, so they are not offered.
+- A layer cannot be exported as an `.awpreset`, because it has no page of its own: it only exists on
+  top of the bundled preset of the install that made it. To share a design, build it with the
+  designer instead.
+- The **OBS browser source** does not know about layers and shows the default preset in their place.
+- The popup keeps the bundled preset's window size, so a large glow or border can be clipped at the
+  window edge.
+
 ## Import a theme from Steam Achievement Notifier
 
 If you used **Steam Achievement Notifier**, the themes you made there do not have to be rebuilt by
-hand. **Import SAN theme**, in the **Presets** tab, reads a `.san` file and turns it into an AW Next
+hand. **Import SAN theme**, in the **Notification presets** tab, reads a `.san` file and turns it into an AW Next
 preset.
 
 It is a conversion, not a compatibility mode. What lands on disk is an ordinary generated preset:
@@ -212,7 +244,7 @@ report. An import that fails at any point leaves every preset you already have u
 
 ## Share a preset
 
-**Export** and **Import** sit in the **Presets** tab and move a preset between machines as one
+**Export** and **Import** sit in the **Notification presets** tab and move a preset between machines as one
 `.awpreset` file - the style, every image and font it uses, its designer settings and its metadata.
 
 The [preset gallery](gallery/) is where those files are collected: browse what other people made,

@@ -6,17 +6,15 @@
 #
 # The site is two things published side by side:
 #
-#   index.html and gallery/index.html   hand written pages, static files with no front matter, so
-#                                       Jekyll copies them out untouched. They share
-#                                       assets/css/site.css and are what a visitor lands on.
-#   every .md in this folder            the guides, rendered by the Primer theme. They stay the
-#                                       single source of truth: what GitHub shows when browsing the
-#                                       repository is what the site publishes.
-#
-# No layout or Liquid template is added to the Markdown on purpose. assets/css/style.scss imports
-# the theme and applies the app's palette, and _includes/head-custom.html adds the favicon, the
-# theme toggle and the bar that links the guides back to the rest of the site - styling and
-# navigation only, so browsing the same files on GitHub is unaffected.
+#   index.html, 404.html and gallery/   hand written pages that share assets/css/site.css. The home
+#                                       page and the galleries have no front matter, so Jekyll
+#                                       copies them out untouched.
+#   every .md in this folder            the guides. They stay the single source of truth: what GitHub
+#                                       shows when browsing the repository is what the site
+#                                       publishes, so the Markdown carries no front matter and no
+#                                       Liquid. Their title, description and layout come from
+#                                       `defaults` below, and _layouts/default.html draws the header,
+#                                       the guide list and the table of contents around them.
 #
 # Two plugins that ship with GitHub Pages do the rest without any configuration:
 #   jekyll-relative-links         [x](getting-started.md) resolves to the built page
@@ -27,6 +25,10 @@ theme: jekyll-theme-primer
 title: Achievement Watcher Next
 description: Setup, sources, notifications, presets and troubleshooting for AW Next.
 lang: en
+
+# The original .md of a guide is not a page anyone should reach: the built .html is.
+optional_front_matter:
+  remove_originals: true
 
 # jekyll-readme-index turns README.md into the site index when there is no index page. There is one
 # now - the home page - so the plugin is switched off rather than left to decide: with it enabled
@@ -42,6 +44,126 @@ readme_index:
 # agree, and keeps the fix in one line rather than markdown="1" on every block in every file.
 kramdown:
   parse_block_html: true
+
+# One title and one description per guide, read by jekyll-seo-tag for <title>, the search snippet
+# and the link preview. test/site/pages.test.js fails when a guide has none.
+defaults:
+  - scope:
+      path: ''
+    values:
+      layout: default
+      image: /assets/img/social.png
+      locale: en_US
+  - scope:
+      path: README.md
+    values:
+      title: Documentation
+      description: Guides for installing, configuring and fixing Achievement Watcher Next - sources, notifications, presets, the overlay and troubleshooting.
+  - scope:
+      path: getting-started.md
+    values:
+      title: Getting started
+      description: Install Achievement Watcher Next, follow the first-run guide, choose Simple or Advanced, find your games and keep the app up to date.
+  - scope:
+      path: sources.md
+    values:
+      title: Compatible sources
+      description: Every game source Achievement Watcher Next reads - Steam, GOG, Epic, Ubisoft, EA, Xbox PC, emulators and RetroAchievements - and what each one needs.
+  - scope:
+      path: notifications.md
+    values:
+      title: Notifications
+      description: Overlay popups or Windows notifications - delivery modes, Automatic, sounds, position, trophy mode, OBS, screenshot souvenirs and video clips.
+  - scope:
+      path: presets.md
+    values:
+      title: Presets and the Preset Designer
+      description: The look of the unlock popup - the nine bundled presets, the Preset Designer, and sharing your own .awpreset file.
+  - scope:
+      path: overlay.md
+    values:
+      title: In-game overlay
+      description: The in-game achievement list opened with Ctrl+Shift+K - search, filters, rarity, hidden descriptions and customization.
+  - scope:
+      path: controller.md
+    values:
+      title: Controller guide
+      description: Drive Achievement Watcher Next and its in-game overlay with an Xbox, PlayStation or Switch controller, and feel an unlock through its vibration.
+  - scope:
+      path: game-health.md
+    values:
+      title: Game Health
+      description: The per-game report that says why a game is or is not tracked, with the guided repairs that apply to it.
+  - scope:
+      path: troubleshooting.md
+    values:
+      title: Troubleshooting
+      description: Fixes for missing games, wrong progress, notifications that do not appear, playtime, and antivirus or SmartScreen warnings.
+  - scope:
+      path: faq.md
+    values:
+      title: FAQ
+      description: Short answers about accounts, sources, notifications, safety, backups and supported platforms for Achievement Watcher Next.
+  - scope:
+      path: advanced.md
+    values:
+      title: Advanced tools
+      description: The maintenance tools under Settings, Advanced - clearing caches, diagnostics, profile backup, manual AppIDs and resets.
+  - scope:
+      path: emulator-setup.md
+    values:
+      title: Goldberg and GBE Fork setup
+      description: Diagnose or repair an emulated Steam game with Goldberg or GBE Fork, with a backup and a confirmation before every write.
+  - scope:
+      path: uplay-r2.md
+    values:
+      title: Goldberg Uplay setup, R1 and R2
+      description: Set up achievements for compatible Ubisoft games with the Uplay R1 and R2 loaders, and repair them safely.
+  - scope:
+      path: comparison.md
+    values:
+      title: How AW Next compares
+      description: How Achievement Watcher Next differs from Achievement Watcher 2.x and from the Achievements app, feature by feature.
+  - scope:
+      path: community-galleries.md
+    values:
+      title: The community galleries
+      description: Take a notification preset or a theme made by someone else, or send yours to the community gallery.
+  - scope:
+      path: awtheme-format.md
+    values:
+      title: The .awtheme format
+      description: The portable .awtheme file - what it holds, what it cannot hold, and its versioning rules.
+  - scope:
+      path: localization.md
+    values:
+      title: Localization
+      description: How Achievement Watcher Next is translated - locale files, Intl formatting, link routing and the locale linter.
+  - scope:
+      path: architecture.md
+    values:
+      title: Architecture
+      description: The app, renderer and Watchdog boundaries and the parser contract of Achievement Watcher Next, for contributors.
+  - scope:
+      path: goldberg-gbe.md
+    values:
+      title: Goldberg and GBE Fork reference
+      description: Goldberg and GBE Fork file formats, detection rules and the repair invariants Achievement Watcher Next keeps.
+  - scope:
+      path: uplay-reference.md
+    values:
+      title: Uplay R1 and R2 reference
+      description: How Achievement Watcher Next identifies, repairs and reads Uplay R1 and R2 games - file layouts and invariants.
+  - scope:
+      path: RELEASE_WORKFLOW.md
+    values:
+      title: Commit and release workflow
+      description: How Achievement Watcher Next releases are versioned, built, signed, published and validated for auto-update.
+  - scope:
+      path: INSTALLER_AND_UPDATES.md
+    values:
+      title: Installer, uninstaller and updates
+      description: The installer, uninstaller and updater of Achievement Watcher Next, and why they diverge from the electron-builder defaults.
 
 # The repository is a monorepo for a desktop app; only this folder is published, but be explicit so
 # a stray file added here later is not served by accident.

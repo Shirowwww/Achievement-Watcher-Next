@@ -6,7 +6,7 @@ lock state, unlock dates and progress. The window is draggable by its header
 and stays on top of the game.
 
 <div align="center">
-<img src="screenshot/overlay.png" width="360" alt="In-game overlay achievement list"><br>
+<picture><source srcset="assets/shot/overlay.webp 569w" sizes="(max-width: 700px) 100vw, 360px"><img src="screenshot/overlay.png" width="360" height="633" alt="In-game overlay achievement list"></picture><br>
 <sub>Status, rarity and date columns, with search and filters</sub>
 </div>
 
@@ -20,6 +20,17 @@ and stays on top of the game.
   unlock rate (Epic/GOG official schemas and emulator sidecars). Common
   achievements use a dark-gray badge; rare ones use gold (≤5%), silver (≤10%)
   and bronze (≤15%) with a soft halo.
+
+## Hidden achievements
+
+The overlay does not spoil a hidden achievement you have not unlocked yet: its description reads
+*Hidden - click to reveal*, as in the main window. Click it - or press **A** on a controller - to
+reveal that one description. Search ignores descriptions that are still masked.
+
+<div align="center">
+<picture><source srcset="assets/shot/overlay-hidden-800.webp 800w, assets/shot/overlay-hidden.webp 1162w" sizes="(max-width: 700px) 100vw, 560px"><img src="screenshot/overlay-hidden.png" width="560" height="482" alt="The overlay list twice: hidden descriptions masked, then one revealed" loading="lazy" decoding="async"></picture><br>
+<sub>Before and after a click on "Ohhhhhh! That hurt!": only that description is revealed</sub>
+</div>
 
 ## Search and filters
 

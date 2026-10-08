@@ -38,14 +38,14 @@ DLL, not the configuration files, not even a missing `achievements.json`. Nothin
 until you ask for a repair.
 
 <div align="center">
-<img src="screenshot/steam-gbe.png" width="620" alt="Settings - Steam / GBE Fork"><br>
+<picture><source srcset="assets/shot/steam-gbe-panel-800.webp 800w, assets/shot/steam-gbe-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/steam-gbe-panel.png" width="720" height="529" alt="Settings - Steam / GBE Fork"></picture><br>
 <sub>Automatic repair, the DLC and identity switches, and the opt-in SteamStub unpacker</sub>
 </div>
 
 ## Context-menu actions
 
 <div align="center">
-<img src="screenshot/emulator-tools.png" width="560" alt="Emulator & tools context menu"><br>
+<picture><source srcset="assets/shot/emulator-tools-800.webp 800w, assets/shot/emulator-tools.webp 1049w" sizes="(max-width: 700px) 100vw, 560px"><img src="screenshot/emulator-tools.png" width="560" height="299" alt="Emulator & tools context menu" loading="lazy" decoding="async"></picture><br>
 <sub>Right-click a game → Emulator &amp; tools</sub>
 </div>
 

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: 'en' }}" class="no-js">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% seo %}
+    <meta name="theme-color" content="#f2f5fa" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0c1322" media="(prefers-color-scheme: dark)">
+    <link rel="stylesheet" href="{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}">
+    {% include head-custom.html %}
+  </head>
+  <body class="aw-guide">
+    <a class="aw-skip" href="#content">Skip to content</a>
+    {% include site-header.html %}
+
+    {%- comment -%}
+      The table of contents is read out of the rendered page here rather than built by script, so it is
+      there with scripting off and the text does not move when it appears. Kramdown gives every heading
+      an id; the second and third levels are the entries.
+    {%- endcomment -%}
+    {%- assign pieces = content | split: '<h' -%}
+    {%- capture toc_items -%}
+      {%- for piece in pieces -%}
+        {%- assign lead = piece | slice: 0, 6 -%}
+        {%- if lead == '2 id="' or lead == '3 id="' -%}
+          {%- assign level = piece | slice: 0, 1 -%}
+          {%- assign head = piece | split: '</h' | first -%}
+          {%- assign slug = head | split: 'id="' | last | split: '"' | first -%}
+          {%- assign label = '<h' | append: head | strip_html | strip -%}
+          <li class="aw-toc-h{{ level }}"><a href="#{{ slug }}">{{ label }}</a></li>
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endcapture -%}
+    {%- assign toc_count = toc_items | split: '<li' | size | minus: 1 -%}
+
+    <div class="aw-shell">
+      <!--
+        The guide list. Written here with Liquid because the Markdown files must stay what GitHub
+        shows; the order and the short labels are in _data/guides.yml.
+      -->
+      <aside class="aw-guides" id="aw-guides" aria-label="Guides">
+        <nav class="aw-drawer-links" aria-label="Site">
+          <a href="{{ '/' | relative_url }}">Home</a>
+          <a href="{{ '/gallery/' | relative_url }}">Presets</a>
+          <a href="{{ '/gallery/themes/' | relative_url }}">Themes</a>
+          <a href="https://github.com/Shirowwww/Achievement-Watcher-Next">GitHub</a>
+        </nav>
+        <!--
+          Search over docs/data/search.json (tools/site/search-index.js), loaded on first use. With
+          scripting off the box is hidden rather than left doing nothing.
+        -->
+        <div class="aw-search" role="search">
+          <label class="aw-search-label" for="aw-search-input">Search the guides</label>
+          <input class="aw-search-input" id="aw-search-input" type="search" placeholder="Search the guides" autocomplete="off" spellcheck="false" aria-controls="aw-search-results" aria-describedby="aw-search-status" data-search-index="{{ '/data/search.json' | relative_url }}" data-search-base="{{ '/' | relative_url }}">
+          <kbd class="aw-search-key" aria-hidden="true">/</kbd>
+          <p class="aw-search-status" id="aw-search-status" aria-live="polite"></p>
+          <ul class="aw-search-results" id="aw-search-results"></ul>
+        </div>
+        <a class="aw-guides-all" href="{{ '/README.html' | relative_url }}"{% if page.name == 'README.md' %} aria-current="page"{% endif %}>All guides</a>
+        {% for group in site.data.guides %}
+        <section class="aw-guides-group">
+          <p class="aw-guides-title">{{ group.title }}</p>
+          <ul>
+            {% for item in group.items %}
+            {% assign source = item.file | append: '.md' %}
+            <li><a href="{{ item.file | append: '.html' | relative_url }}"{% if page.name == source %} aria-current="page"{% endif %}>{{ item.label }}</a></li>
+            {% endfor %}
+          </ul>
+        </section>
+        {% endfor %}
+      </aside>
+
+      <main class="aw-main" id="content" tabindex="-1">
+        <article class="markdown-body" id="article">
+          {%- if toc_count >= 3 -%}
+            {%- capture toc_inline -%}
+              <details class="aw-toc-inline"><summary>On this page</summary><ul>{{ toc_items }}</ul></details>
+            {%- endcapture -%}
+            {%- assign first_section = toc_inline | append: '<h2 ' -%}
+            {{ content | replace_first: '<h2 ', first_section }}
+          {%- else -%}
+            {{ content }}
+          {%- endif -%}
+        </article>
+
+        <footer class="aw-foot">
+          {% if page.name %}
+          {% if page.name == 'changelog.md' %}
+          <a href="https://github.com/Shirowwww/Achievement-Watcher-Next/edit/main/CHANGELOG.md">Improve this page on GitHub</a>
+          {% else %}
+          <a href="https://github.com/Shirowwww/Achievement-Watcher-Next/edit/main/docs/{{ page.name }}">Improve this page on GitHub</a>
+          {% endif %}
+          {% endif %}
+          <span>Achievement Watcher Next, LGPL-3.0. Windows only.</span>
+        </footer>
+      </main>
+
+      {%- if toc_count >= 3 -%}
+      <nav class="aw-toc" aria-label="On this page">
+        <p class="aw-toc-title">On this page</p>
+        <ul>{{ toc_items }}</ul>
+      </nav>
+      {%- endif -%}
+    </div>
+
+    <script src="{{ '/assets/js/guide.js' | relative_url }}" defer></script>
+  </body>
+</html>

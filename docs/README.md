@@ -15,7 +15,7 @@ Practical guides for setup, daily use and maintenance.
 
 [Home](index.html) · [Download](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest) · [Preset gallery](gallery/) · [Theme gallery](gallery/themes/) · [Changelog](changelog.md) · [Security](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/SECURITY.md) · [Report an issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues)
 
-<img src="screenshot/home.png" width="620" alt="The AW Next library">
+<picture><source srcset="assets/shot/home-800.webp 800w, assets/shot/home.webp 1280w" sizes="(max-width: 700px) 100vw, 800px"><img src="screenshot/home.png" width="800" height="493" alt="The AW Next library"></picture>
 
 </div>
 
@@ -112,9 +112,15 @@ lookups it needs, and every answer is cached locally so the library keeps workin
 | Update checks and downloads | the GitHub release feed | nothing but the request |
 | Repair tools, when you run a repair | the GBE Fork, Steamless, API-bypass and CrakFiles projects | nothing but the request |
 | Your own library and unlocks, **only if you connect an account** | Steam, Epic or Xbox Network | that account's own session token |
+| Your RetroAchievements library and unlocks, **only if you fill in the account card** | retroachievements.org | your username and Web API key, stored encrypted on this PC |
+| Community presets and themes, **only if you open or publish to the gallery** | the gallery service, `aw-gallery.shirow.dedyn.io` | the listing request; a file only when you press Publish |
 
 Some of that is not asked for at all: when a game's executable carries a real 256px icon, that icon
 is read straight out of the file and used as the game's logo, ahead of anything on the network.
+
+This website sets no cookies, runs no analytics and loads its fonts and scripts from its own host.
+Its preset and theme gallery pages fetch their listing from the gallery service named above, and
+fall back to the copy committed beside them when it cannot be reached.
 
 Nothing is uploaded: not your library, not your playtime, not your folders, not your screenshots.
 The optional `Websocket @localhost:8082` broadcast listens on `127.0.0.1` only, so it is readable by

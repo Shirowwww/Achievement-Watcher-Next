@@ -5,7 +5,7 @@ main window and the in-game overlay. Both are configured from **Settings →
 Controller**.
 
 <div align="center">
-<img src="screenshot/controller.png" width="600" alt="Settings - Controller"><br>
+<picture><source srcset="assets/shot/controller-panel-800.webp 800w, assets/shot/controller-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/controller-panel.png" width="720" height="529" alt="Settings - Controller"></picture><br>
 <sub>Overlay and app navigation, layout, and per-shortcut button bindings</sub>
 </div>
 
@@ -24,6 +24,10 @@ stack in the background tracker, so it is opt-in.
 
 Button names below use the Xbox vocabulary; the app shows them in whichever
 layout you select.
+
+<div align="center">
+<img src="assets/img/controller-map.svg" width="700" height="422" alt="A gamepad with the default shortcuts: LT opens Game Health, RT launches the game, LB and RB change settings tab, the D-pad moves the focus, A confirms, B cancels, X searches, Y and Start open Settings, plus the three overlay combinations" loading="lazy">
+</div>
 
 | Shortcut | Default | Where |
 |---|---|---|

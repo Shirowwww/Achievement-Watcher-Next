@@ -10,220 +10,28 @@
 <link rel="apple-touch-icon" href="{{ '/assets/favicon.png' | relative_url }}" />
 
 <!--
-  The site is published in one language (site.lang in _config.yml, which the theme layout also puts
-  on <html>). Declaring it here as well is what browser translation, screen readers and link
-  previews read, and it is the hook a second language would hang off: adding one means adding an
-  alternate hreflang beside this, not reworking the pages.
-  The localization strategy for the app and for this site is docs/localization.md.
+  The guides are published in one language (site.lang in _config.yml). Declaring it here as well is
+  what browser translation, screen readers and link previews read; the localization strategy for
+  the app and for this site is docs/localization.md.
 -->
 <meta http-equiv="content-language" content="{{ site.lang | default: 'en' }}" />
-<meta property="og:locale" content="{{ site.lang | default: 'en' | replace: '-', '_' }}" />
 <link rel="alternate" hreflang="{{ site.lang | default: 'en' }}" href="{{ page.url | absolute_url }}" />
 <link rel="alternate" type="application/rss+xml" title="Achievement Watcher Next releases" href="{{ '/releases.xml' | relative_url }}" />
 
 <!--
-  Light/dark toggle for the documentation site.
-
-  The theme's default layout includes this file inside <head>, which is what makes the first script
-  worth having there: it applies a stored choice before the page paints, so a reader who picked dark
-  never sees a flash of the light palette first. The palettes themselves live in
-  assets/css/style.scss - this only sets data-theme on <html>.
-
-  With no stored choice nothing is set, and the stylesheet's prefers-color-scheme rules follow the
-  system as before.
+  Applied before the first paint, so a reader who chose dark never sees a flash of the light palette.
+  The palettes themselves live in assets/css/style.scss; this only sets data-theme on <html>, and
+  with no stored choice nothing is set, so the prefers-color-scheme rules follow the system.
 -->
 <script>
   (function () {
+    document.documentElement.className = document.documentElement.className.replace('no-js', 'js');
     try {
       var stored = window.localStorage.getItem('aw-theme');
-      if (stored === 'light' || stored === 'dark') {
-        document.documentElement.setAttribute('data-theme', stored);
-      }
+      if (stored === 'light' || stored === 'dark') document.documentElement.setAttribute('data-theme', stored);
     } catch (err) {
       /* private mode or blocked storage: fall back to the system preference */
     }
   })();
-
-  /*
-    Every word this file puts on screen, in one place.
-
-    The pages themselves are Markdown and are translated by translating the Markdown; these few
-    strings are built by script and would otherwise be the one part of the site a translator could
-    not reach. Keeping them here means a translated build is a copy of this object, not a hunt
-    through the code. See docs/localization.md.
-  */
-  var SITE_STRINGS = {
-    toLightTheme: 'Switch to the light theme',
-    toDarkTheme: 'Switch to the dark theme',
-    lightTheme: 'Light theme',
-    darkTheme: 'Dark theme',
-    alerts: { NOTE: 'Note', TIP: 'Tip', IMPORTANT: 'Important', WARNING: 'Warning', CAUTION: 'Caution' },
-    nav: {
-      label: 'Site',
-      home: 'Home',
-      guides: 'Guides',
-      gallery: 'Presets',
-      themes: 'Themes',
-      download: 'Download',
-    },
-  };
-
-  document.addEventListener('DOMContentLoaded', function () {
-    var root = document.documentElement;
-
-    // The theme layout has no <main>: mark its content column as one so a screen reader can jump
-    // to the guide, and let a keyboard reach code blocks and tables that only scroll sideways.
-    var column = document.querySelector('.container-lg');
-    if (column && !document.querySelector('main, [role="main"]')) column.setAttribute('role', 'main');
-    Array.prototype.forEach.call(document.querySelectorAll('.markdown-body pre, .markdown-body table'), function (box) {
-      if (box.scrollWidth > box.clientWidth) box.setAttribute('tabindex', '0');
-    });
-    // Screenshots below the first screen wait until the reader scrolls toward them.
-    Array.prototype.forEach.call(document.querySelectorAll('.markdown-body img'), function (img, index) {
-      if (index > 0 && !img.hasAttribute('loading')) img.setAttribute('loading', 'lazy');
-    });
-
-    var SUN =
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-13.2a1 1 0 0 1-1-1V1.6a1 1 0 1 1 2 0v1.2a1 1 0 0 1-1 1zm0 19.6a1 1 0 0 1-1-1v-1.2a1 1 0 1 1 2 0v1.2a1 1 0 0 1-1 1zM3.8 12a1 1 0 0 1-1 1H1.6a1 1 0 1 1 0-2h1.2a1 1 0 0 1 1 1zm19.6 0a1 1 0 0 1-1 1h-1.2a1 1 0 1 1 0-2h1.2a1 1 0 0 1 1 1zM5.6 5.6a1 1 0 0 1 0-1.4l.9-.9a1 1 0 0 1 1.4 1.4l-.9.9a1 1 0 0 1-1.4 0zm11.5 11.5a1 1 0 0 1 1.4 0l.9.9a1 1 0 0 1-1.4 1.4l-.9-.9a1 1 0 0 1 0-1.4zm1.4-12.9a1 1 0 0 1 0 1.4l-.9.9a1 1 0 1 1-1.4-1.4l.9-.9a1 1 0 0 1 1.4 0zM6.9 17.1a1 1 0 0 1 0 1.4l-.9.9a1 1 0 0 1-1.4-1.4l.9-.9a1 1 0 0 1 1.4 0z"/></svg>';
-    var MOON =
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.4 13.9A9.3 9.3 0 0 1 10.1 2.6a1 1 0 0 0-1.3-1.2 10.7 10.7 0 1 0 13.8 13.8 1 1 0 0 0-1.2-1.3z"/></svg>';
-
-    // What the reader is actually looking at right now: an explicit choice if there is one,
-    // otherwise whatever the system is asking for.
-    function effectiveTheme() {
-      var explicit = root.getAttribute('data-theme');
-      if (explicit === 'light' || explicit === 'dark') return explicit;
-      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-
-    var button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'aw-theme-toggle';
-
-    function render() {
-      var dark = effectiveTheme() === 'dark';
-      // The control offers the other mode, so it shows the icon of what it switches to.
-      button.innerHTML = dark ? SUN : MOON;
-      button.setAttribute('aria-label', dark ? SITE_STRINGS.toLightTheme : SITE_STRINGS.toDarkTheme);
-      button.setAttribute('title', dark ? SITE_STRINGS.lightTheme : SITE_STRINGS.darkTheme);
-    }
-
-    button.addEventListener('click', function () {
-      var next = effectiveTheme() === 'dark' ? 'light' : 'dark';
-      root.setAttribute('data-theme', next);
-      try {
-        window.localStorage.setItem('aw-theme', next);
-      } catch (err) {
-        /* the choice still applies for this page view */
-      }
-      render();
-    });
-
-    // Track the system while the reader has not chosen anything of their own.
-    if (window.matchMedia) {
-      var query = window.matchMedia('(prefers-color-scheme: dark)');
-      var onChange = function () {
-        if (!root.getAttribute('data-theme')) render();
-      };
-      if (query.addEventListener) query.addEventListener('change', onChange);
-      else if (query.addListener) query.addListener(onChange);
-    }
-
-    render();
-
-    /*
-      The bar that puts a guide back inside the site.
-
-      These pages are Markdown rendered by the theme, so they have no header of their own: without
-      this, the home page and the preset gallery are reachable only from whatever link the text
-      happens to carry. Built here rather than added to every file because it is navigation, not
-      content - the Markdown stays what GitHub shows when browsing the repository.
-
-      relative_url is what makes this work on a project page served from /<repo>/.
-    */
-    var SITE_ROOT = '{{ "/" | relative_url }}';
-    var REPO = 'https://github.com/Shirowwww/Achievement-Watcher-Next';
-
-    var bar = document.createElement('nav');
-    bar.className = 'aw-site-bar';
-    bar.setAttribute('aria-label', SITE_STRINGS.nav.label);
-
-    var inner = document.createElement('div');
-    inner.className = 'aw-site-bar-inner';
-
-    var brand = document.createElement('a');
-    brand.className = 'aw-site-brand';
-    brand.href = SITE_ROOT;
-    brand.innerHTML =
-      '<span class="aw-site-mark" aria-hidden="true"></span><span class="aw-site-brand-word">Achievement Watcher <em>Next</em></span>';
-    inner.appendChild(brand);
-
-    /*
-      The same links in the same order as the home page's own header, and split the same way: the
-      guides are navigation, Download and the light/dark control are actions, and a hairline between
-      the two says so. A reader moving between a guide and the rest of the site should not have to
-      re-find anything.
-    */
-    var links = document.createElement('div');
-    links.className = 'aw-site-links';
-    [
-      { href: SITE_ROOT, text: SITE_STRINGS.nav.home },
-      { href: SITE_ROOT + 'README.html', text: SITE_STRINGS.nav.guides },
-      { href: SITE_ROOT + 'gallery/', text: SITE_STRINGS.nav.gallery },
-      { href: SITE_ROOT + 'gallery/themes/', text: SITE_STRINGS.nav.themes },
-      { href: REPO, text: 'GitHub' },
-    ].forEach(function (item) {
-      var link = document.createElement('a');
-      link.href = item.href;
-      link.textContent = item.text;
-      links.appendChild(link);
-    });
-
-    // Toggle first, then Download: the same order the home page puts them in, so the primary button
-    // stays the last thing on the bar on every page of the site.
-    var actions = document.createElement('div');
-    actions.className = 'aw-site-actions';
-    actions.appendChild(button);
-
-    var download = document.createElement('a');
-    download.className = 'aw-site-cta';
-    download.href = REPO + '/releases/latest';
-    download.textContent = SITE_STRINGS.nav.download;
-    actions.appendChild(download);
-
-    inner.appendChild(links);
-    inner.appendChild(actions);
-    bar.appendChild(inner);
-    document.body.insertBefore(bar, document.body.firstChild);
-
-    /*
-      GitHub renders "> [!WARNING]" as an alert box; kramdown, which builds this site, does not and
-      leaves the literal marker sitting in the quote. The Markdown stays as it is - it is correct
-      where it is authored and on github.com - so the marker is turned into the same kind of box
-      here instead.
-    */
-    var ALERTS = SITE_STRINGS.alerts;
-    var quotes = document.querySelectorAll('.markdown-body blockquote');
-
-    Array.prototype.forEach.call(quotes, function (quote) {
-      var first = quote.firstElementChild;
-      if (!first || first.tagName !== 'P') return;
-
-      var match = /^\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/.exec(first.textContent);
-      if (!match) return;
-
-      // The marker is plain text at the head of the paragraph; leave any markup after it alone.
-      var lead = first.firstChild;
-      if (!lead || lead.nodeType !== 3) return;
-      lead.nodeValue = lead.nodeValue.replace(/^\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*/, '');
-
-      var kind = match[1];
-      var label = document.createElement('p');
-      label.className = 'aw-alert-label';
-      label.textContent = ALERTS[kind];
-
-      quote.classList.add('aw-alert', 'aw-alert-' + kind.toLowerCase());
-      quote.insertBefore(label, first);
-    });
-  });
 </script>
+{% if page.name == 'faq.md' %}{% include faq-jsonld.html %}{% endif %}

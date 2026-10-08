@@ -5,7 +5,7 @@ Steam-compatible save file, or a console emulator's trophy file. Every source is
 individually in **Settings → Sources**.
 
 <div align="center">
-<img src="screenshot/sources.png" width="620" alt="Settings - Game sources"><br>
+<picture><source srcset="assets/shot/sources-panel-800.webp 800w, assets/shot/sources-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/sources-panel.png" width="720" height="529" alt="Settings - Game sources"></picture><br>
 <sub>Each source is a separate switch; the shield marks the official desktop libraries</sub>
 </div>
 
@@ -68,7 +68,7 @@ scene releases writing a compatible layout. A game whose files are in a custom l
 under **Settings → Folders**.
 
 <div align="center">
-<img src="screenshot/folders.png" width="620" alt="Settings - Folders"><br>
+<picture><source srcset="assets/shot/folders-panel-800.webp 800w, assets/shot/folders-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/folders-panel.png" width="720" height="529" alt="Settings - Folders" loading="lazy" decoding="async"></picture><br>
 <sub>The folders AW Next checks on its own, and the ones you add - per-game saves or whole libraries</sub>
 </div>
 
@@ -92,6 +92,10 @@ here" is distinguishable from "not looked at".
 Two of these are a different shape and are handled separately:
 
 - **Goldberg SocialClub** - the Rockstar / Social Club variant, with its own source switch.
+- **RUNE Ubisoft Connect** - RUNE's Ubisoft emulator keeps `achievements.cfg` files under
+  `Documents\RUNE\Ubisoft Connect\achievements`. They are found without adding a folder (a `RUNE\Ubisoft Connect` folder added under **Settings → Folders** works too) and follow
+  the Ubisoft Connect emulator switch. Names and icons come from Ubisoft Connect's achievement list for
+  the game; without it only the achievement numbers are shown.
 - **Uplay R2** - the Ubisoft equivalent of the Goldberg path, for compatible titles. It has no
   source switch of its own: the saves flow through the Steam emulator source, and its repair and
   loader tools live in **Settings → Emulators → Ubisoft / Uplay R1/R2**. See
@@ -128,6 +132,11 @@ Games played on any emulator that reports to RetroAchievements come from your ac
 from a file. Turn on the **RetroAchievements** source, then fill in the account card under it: your
 username and the **Web API key** shown on retroachievements.org/settings. The key is encrypted
 before it is stored on this PC.
+
+<div align="center">
+<picture><source srcset="assets/shot/retroachievements-panel-800.webp 800w, assets/shot/retroachievements-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/retroachievements-panel.png" width="720" height="529" alt="Settings, Sources: the RetroAchievements switch above the account cards" loading="lazy" decoding="async"></picture><br>
+<sub>The RetroAchievements switch, with the Epic and Steam account cards under it</sub>
+</div>
 
 **Import library** then adds every game you played, with its achievements, unlock dates, points and
 rarity; a second import only fetches the games whose progress moved. New unlocks are announced

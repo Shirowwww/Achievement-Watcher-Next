@@ -160,6 +160,42 @@
     }, 4000);
   }
 
+  // --- tab lists --------------------------------------------------------------------------------
+
+  /*
+    The preset and theme pickers are tab lists: one tab is in the tab order and the arrows move
+    between the others, and the panel they control is named after the tab that is selected.
+  */
+  function nameTabs(tabs, panel, prefix, attribute) {
+    Array.prototype.forEach.call(tabs.querySelectorAll('[role="tab"]'), function (tab) {
+      tab.id = prefix + tab.getAttribute(attribute);
+    });
+    var selected = tabs.querySelector('[role="tab"][aria-selected="true"]');
+    if (selected && panel) panel.setAttribute('aria-labelledby', selected.id);
+  }
+
+  function selectTab(tabs, tab, panel) {
+    Array.prototype.forEach.call(tabs.querySelectorAll('[role="tab"]'), function (other) {
+      other.setAttribute('aria-selected', String(other === tab));
+      other.setAttribute('tabindex', other === tab ? '0' : '-1');
+    });
+    if (panel && tab.id) panel.setAttribute('aria-labelledby', tab.id);
+  }
+
+  // Left, right, Home and End move through a tab list, wrapping at the ends.
+  function tabKeys(tabs, event) {
+    var keys = { ArrowRight: 1, ArrowLeft: -1, Home: 'first', End: 'last' };
+    if (!(event.key in keys)) return;
+    var chips = Array.prototype.slice.call(tabs.querySelectorAll('[role="tab"]'));
+    var index = chips.indexOf(document.activeElement);
+    if (index < 0) return;
+    event.preventDefault();
+    var step = keys[event.key];
+    var next = step === 'first' ? chips[0] : step === 'last' ? chips[chips.length - 1] : chips[(index + step + chips.length) % chips.length];
+    next.focus();
+    next.click();
+  }
+
   // --- live preset previews -------------------------------------------------------------------
 
   /*
@@ -274,12 +310,11 @@
     });
 
     if (tabs && stageFrame) {
+      nameTabs(tabs, stage, 'preset-tab-', 'data-preset');
       tabs.addEventListener('click', function (event) {
         var chip = event.target.closest('[data-preset]');
         if (!chip) return;
-        tabs.querySelectorAll('[data-preset]').forEach(function (other) {
-          other.setAttribute('aria-selected', String(other === chip));
-        });
+        selectTab(tabs, chip, stage);
         var slug = chip.getAttribute('data-preset');
         if (!PRESET_SLUG.test(slug)) return;
         describe(slug);
@@ -294,16 +329,8 @@
         );
       });
 
-      // Left and right arrows move through the presets, as a tablist should.
       tabs.addEventListener('keydown', function (event) {
-        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
-        var chips = Array.prototype.slice.call(tabs.querySelectorAll('[data-preset]'));
-        var index = chips.indexOf(document.activeElement);
-        if (index < 0) return;
-        event.preventDefault();
-        var next = chips[(index + (event.key === 'ArrowRight' ? 1 : chips.length - 1)) % chips.length];
-        next.focus();
-        next.click();
+        tabKeys(tabs, event);
       });
     }
 
@@ -484,25 +511,16 @@
       describe(chip.getAttribute('data-theme'));
     }
 
+    nameTabs(tabs, stage, 'theme-tab-', 'data-theme');
     tabs.addEventListener('click', function (event) {
       var chip = event.target.closest('[data-theme]');
       if (!chip) return;
-      tabs.querySelectorAll('[data-theme]').forEach(function (other) {
-        other.setAttribute('aria-selected', String(other === chip));
-      });
+      selectTab(tabs, chip, stage);
       paint(chip);
     });
 
-    // Left and right arrows move through the themes, as a tablist should.
     tabs.addEventListener('keydown', function (event) {
-      if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
-      var chips = Array.prototype.slice.call(tabs.querySelectorAll('[data-theme]'));
-      var index = chips.indexOf(document.activeElement);
-      if (index < 0) return;
-      event.preventDefault();
-      var next = chips[(index + (event.key === 'ArrowRight' ? 1 : chips.length - 1)) % chips.length];
-      next.focus();
-      next.click();
+      tabKeys(tabs, event);
     });
 
     document.addEventListener('aw-i18n-applied', function () {
@@ -524,11 +542,35 @@
     if (!lines.length || !window.fetch) return;
 
     var release = null;
+    var DOWNLOADS = 'https://github.com/Shirowwww/Achievement-Watcher-Next/releases/download/';
+
+    // The download buttons go straight to the installer once the release is known. Only a plain
+    // version and a plain file name ever become part of an address; without release data they keep
+    // pointing at the releases page, which is where the portable ZIP is too.
+    function linkInstaller() {
+      if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(release.version || '')) return;
+      if (!/^[A-Za-z0-9._-]+\.exe$/.test(release.installer || '')) return;
+      var address = DOWNLOADS + 'v' + release.version + '/' + release.installer;
+      Array.prototype.forEach.call(document.querySelectorAll('[data-installer]'), function (link) {
+        link.setAttribute('href', address);
+      });
+    }
+
+    // The VirusTotal link in the install section carries the digest of the current installer. The
+    // translation overlay rewrites that sentence, so this runs again after every language change.
+    function linkScan() {
+      if (!/^[0-9a-f]{64}$/.test(release.sha256 || '')) return;
+      Array.prototype.forEach.call(document.querySelectorAll('a[href*="virustotal.com/gui/file/"]'), function (link) {
+        link.setAttribute('href', 'https://www.virustotal.com/gui/file/' + release.sha256);
+      });
+    }
 
     // Rebuilt rather than cached, because the language decides both the word and the date format,
     // and the translation overlay lands whenever its file arrives.
     function paint() {
       if (!release) return;
+      linkInstaller();
+      linkScan();
       var parts = [t('release.version', 'Version') + ' ' + release.version];
       if (release.installerBytes) parts.push(Math.round(release.installerBytes / 1048576) + ' MB');
       if (release.published) {

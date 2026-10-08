@@ -5,8 +5,8 @@ Advanced tab only exists while the interface is in **Advanced** mode - switch th
 control at the top of Settings if you do not see it. Nothing is lost by switching back afterwards.
 
 <div align="center">
-<img src="screenshot/advanced.png" width="620" alt="Settings - Advanced, setup and maintenance"><br>
-<sub>Setup &amp; maintenance, and the AppID blacklist</sub>
+<picture><source srcset="assets/shot/advanced-panel-800.webp 800w, assets/shot/advanced-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/advanced-panel.png" width="720" height="529" alt="Settings - Advanced, setup and maintenance"></picture><br>
+<sub>Setup &amp; maintenance; the other sections fold away below it</sub>
 </div>
 
 ## Setup and maintenance
@@ -28,7 +28,7 @@ details stay automatic.
 ## Diagnostics
 
 <div align="center">
-<img src="screenshot/diagnostics.png" width="620" alt="Settings - Advanced, diagnostics"><br>
+<picture><source srcset="assets/shot/diagnostics-panel-800.webp 800w, assets/shot/diagnostics-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/diagnostics-panel.png" width="720" height="529" alt="Settings - Advanced, diagnostics" loading="lazy" decoding="async"></picture><br>
 <sub>Versions, and one click to the logs and data folders</sub>
 </div>
 
@@ -39,6 +39,19 @@ hand is unreliable in exactly the situation the logs are wanted for. Those versi
 files are what a bug report needs - see
 [Troubleshooting](troubleshooting.md#open-logs-and-local-data) for what to collect and how to strip
 private data from it first.
+
+## Profile backup
+
+<div align="center">
+<picture><source srcset="assets/shot/profile-backup-panel-800.webp 800w, assets/shot/profile-backup-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/profile-backup-panel.png" width="720" height="529" alt="Settings - Advanced, profile backup" loading="lazy" decoding="async"></picture><br>
+<sub>Export profile and Restore profile, under Settings → Advanced</sub>
+</div>
+
+**Export profile…** saves your settings, library choices, presets, themes, covers, custom backgrounds,
+GBE restore points and playtime to one `.awbackup` file, for a reinstall or a new PC. Sign-ins,
+caches and logs are never saved, so you sign in again to Epic, Steam, Xbox and RetroAchievements
+afterwards. **Restore profile…** checks the whole file first and applies it at the next start; the
+files it replaces are kept, and a restore that fails puts everything back.
 
 ## AppID blacklist
 
@@ -53,7 +66,7 @@ playtime, or from its right-click menu. Every achievement goes back to locked, s
 them again and AW Next announces them as new when it does.
 
 <div align="center">
-<img src="screenshot/achievements.png" width="620" alt="A game page with Reset achievements"><br>
+<picture><source srcset="assets/shot/achievements-800.webp 800w, assets/shot/achievements.webp 1280w" sizes="(max-width: 700px) 100vw, 800px"><img src="screenshot/achievements.png" width="800" height="493" alt="A game page with Reset achievements" loading="lazy" decoding="async"></picture><br>
 <sub>Reset sits beside the completion count on the game's own page</sub>
 </div>
 

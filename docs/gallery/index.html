@@ -25,7 +25,10 @@
     <meta property="og:description" content="Notification presets made by AW Next users, one downloadable file each." />
     <meta property="og:image" content="https://shirowwww.github.io/Achievement-Watcher-Next/assets/img/social.png" />
     <meta property="og:url" content="https://shirowwww.github.io/Achievement-Watcher-Next/gallery/" />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#f2f5fa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0c1322" media="(prefers-color-scheme: dark)" />
 
     <link rel="icon" href="../assets/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="256x256" />
@@ -35,13 +38,34 @@
     <link rel="preload" as="font" type="font/woff2" href="../assets/font/opensans-regular.woff2" crossorigin />
     <link rel="stylesheet" href="../assets/css/site.css" />
 
+    <!--
+      Applied before the first paint, so a reader who chose dark never sees a white flash, and a reader
+      who will be shown another language does not see the English first: the page is held back until
+      assets/js/i18n.js has laid the translation over it (or a second and a half has gone by), so the
+      text is never swapped under their eyes and the page does not jump when it is.
+    -->
     <script>
       (function () {
+        var html = document.documentElement;
+        html.classList.add('js');
         try {
           var stored = window.localStorage.getItem('aw-theme');
-          if (stored === 'light' || stored === 'dark') document.documentElement.setAttribute('data-theme', stored);
+          if (stored === 'light' || stored === 'dark') html.setAttribute('data-theme', stored);
         } catch (err) {
           /* private mode: the system preference decides */
+        }
+        try {
+          var asked = new URLSearchParams(window.location.search).get('lang');
+          var chosen = window.localStorage.getItem('aw-lang');
+          var preferred = String(asked || chosen || (navigator.languages && navigator.languages[0]) || navigator.language || 'en');
+          if (preferred.toLowerCase().split('-')[0] !== 'en') {
+            html.classList.add('i18n-wait');
+            window.setTimeout(function () {
+              html.classList.remove('i18n-wait');
+            }, 1500);
+          }
+        } catch (err) {
+          /* the English markup is complete without it */
         }
       })();
     </script>
@@ -80,6 +104,7 @@
         </nav>
 
         <div class="head-actions">
+          <span class="lang-slot" data-lang-picker></span>
           <button class="icon-btn" type="button" data-theme-toggle aria-label="Switch theme"></button>
           <a class="btn" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-i18n="nav.download">
             Download
@@ -94,7 +119,7 @@
           <div class="section-head narrow">
             <h1 data-i18n="gallery.title">Preset gallery</h1>
             <p class="lead" data-i18n="gallery.lead">
-              Notification designs made by people using AW Next. Download the file, open Settings, Presets, Import, and
+              Notification designs made by people using AW Next. Download the file, open Settings, Notification presets, Import, and
               it is installed. Nothing runs in your browser here: each card shows the picture the submission carries.
             </p>
           </div>
@@ -146,7 +171,13 @@
           <h2 class="visually-hidden" data-i18n="nav.presets">Presets</h2>
           <div class="gallery-grid" data-gallery data-gallery-api="https://aw-gallery.shirow.dedyn.io" hidden></div>
 
-          <div class="empty" data-gallery-status>
+          <!-- Holds the place of the grid while the listing loads, so what is below does not jump when it arrives. -->
+          <div class="gallery-grid gallery-skeleton" data-gallery-skeleton aria-hidden="true">
+            <span class="skeleton-card"></span><span class="skeleton-card"></span><span class="skeleton-card"></span>
+            <span class="skeleton-card"></span><span class="skeleton-card"></span><span class="skeleton-card"></span>
+          </div>
+
+          <div class="empty" data-gallery-status data-loading role="status">
             <h3 data-i18n="gallery.loadingTitle">Loading</h3>
             <p data-i18n="gallery.loadingBody">One moment.</p>
           </div>
@@ -155,7 +186,7 @@
             <div>
               <h3 data-i18n="gallery.uploadTitle">Send yours straight from here</h3>
               <p class="muted" data-i18n="gallery.uploadBody">
-                Export your preset in Settings, Presets, Export, then choose the <code>.awpreset</code> here. Choosing
+                Export your preset in Settings, Notification presets, Export, then choose the <code>.awpreset</code> here. Choosing
                 it sends nothing: the picture is drawn from the preset itself, the boxes below are filled in from the
                 file, and nothing leaves your browser until you press Publish. A maintainer looks at it before it
                 appears.
@@ -283,7 +314,7 @@
                 <li>
                   <b data-i18n="gallery.submitExportTitle">Export your preset</b>
                   <span class="muted" data-i18n="gallery.submitExportBody">
-                    Settings, Presets, Export. The file already carries the preset's name, version and preview.
+                    Settings, Notification presets, Export. The file already carries the preset's name, version and preview.
                   </span>
                 </li>
                 <li>
@@ -350,7 +381,7 @@
             have not licensed them for redistribution.
           </p>
           <p data-i18n="gallery.sanBody2">
-            AW Next reads yours instead. Import a <code>.san</code> file in Settings, Presets, and it becomes an ordinary
+            AW Next reads yours instead. Import a <code>.san</code> file in Settings, Notification presets, and it becomes an ordinary
             preset you can keep editing. Nothing in the theme file is executed, only pictures and audio come out of it,
             and whatever could not be converted is listed by name rather than dropped in silence.
           </p>

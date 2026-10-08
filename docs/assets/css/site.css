@@ -48,6 +48,52 @@
   font-display: swap;
 }
 
+/*
+  What the text is drawn in until the real fonts arrive. Arial, scaled and spaced to the same
+  measure as each family, so a line breaks where it will break once the font is in and the page does
+  not jump when it swaps. The numbers come from the fonts' own metrics (average advance over a
+  sample sentence, and the ascent and descent of each).
+*/
+@font-face {
+  font-family: 'Open Sans Fallback';
+  src: local('Arial'), local('Helvetica Neue'), local('Helvetica'), local('Liberation Sans');
+  font-weight: 400;
+  size-adjust: 102.6%;
+  ascent-override: 102.1%;
+  descent-override: 28.3%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Open Sans Fallback';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Helvetica Neue Bold'), local('Liberation Sans Bold');
+  font-weight: 700;
+  size-adjust: 103.1%;
+  ascent-override: 103.6%;
+  descent-override: 30.3%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Raleway Fallback';
+  src: local('Arial'), local('Helvetica Neue'), local('Helvetica'), local('Liberation Sans');
+  font-weight: 400;
+  size-adjust: 102.4%;
+  ascent-override: 91.8%;
+  descent-override: 22.8%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Raleway Fallback';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Helvetica Neue Bold'), local('Liberation Sans Bold');
+  font-weight: 700;
+  size-adjust: 99.2%;
+  ascent-override: 94.8%;
+  descent-override: 23.6%;
+  line-gap-override: 0%;
+}
+
 /* --- tokens ----------------------------------------------------------------------------------- */
 
 :root {
@@ -159,7 +205,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Open Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: 'Open Sans', 'Open Sans Fallback', 'Segoe UI', system-ui, -apple-system, sans-serif;
   font-size: 17px;
   line-height: 1.65;
   overflow-x: clip;
@@ -170,7 +216,7 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: 'Raleway', 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Raleway', 'Raleway Fallback', 'Segoe UI', system-ui, sans-serif;
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.02em;
@@ -331,7 +377,7 @@ kbd {
   border-radius: var(--radius);
   background: var(--accent);
   color: var(--accent-ink);
-  font-family: 'Raleway', system-ui, sans-serif;
+  font-family: 'Raleway', 'Raleway Fallback', system-ui, sans-serif;
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -417,7 +463,7 @@ kbd {
   gap: 11px;
   margin-right: auto;
   color: var(--text);
-  font-family: 'Raleway', system-ui, sans-serif;
+  font-family: 'Raleway', 'Raleway Fallback', system-ui, sans-serif;
   font-weight: 700;
   font-size: 1.02rem;
   letter-spacing: -0.01em;
@@ -463,10 +509,11 @@ kbd {
   white-space: nowrap;
 }
 
+/* The accent on its own tint is 4.49:1 in the light theme; a little of the text colour clears 4.5. */
 .site-nav a:hover,
 .site-nav a[aria-current='page'] {
   background: var(--accent-soft);
-  color: var(--accent);
+  color: color-mix(in srgb, var(--accent) 80%, var(--text));
   text-decoration: none;
 }
 
@@ -482,6 +529,12 @@ kbd {
   margin-left: 18px;
   padding-left: 18px;
   border-left: 1px solid var(--border);
+}
+
+/* The bar has one word to spare for its button: it gets longer rather than breaking inside the word. */
+.head-actions .btn {
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .icon-btn {
@@ -572,6 +625,38 @@ kbd {
   padding-left: 34px;
 }
 
+/*
+  The place the language picker will be drawn in. It is built by script once the list of languages
+  has arrived, and without room kept for it the buttons beside it were pushed along as it appeared.
+  With no scripting there will never be a picker, so the room is not kept.
+*/
+.lang-slot {
+  display: none;
+  min-width: 10rem;
+  height: 38px;
+}
+
+.js .lang-slot {
+  display: block;
+}
+
+.lang-slot .select-shell,
+.lang-slot .site-select {
+  width: 100%;
+}
+
+@media (max-width: 420px) {
+  .lang-slot {
+    min-width: 7.6rem;
+  }
+}
+
+/* A reader who will be shown a translation sees it, not the English first (assets/js/i18n.js). */
+.i18n-wait main,
+.i18n-wait .site-foot {
+  visibility: hidden;
+}
+
 .select-shell:hover {
   color: var(--accent);
 }
@@ -614,10 +699,61 @@ kbd {
 .hero > .wrap {
   position: relative;
   z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(36px, 5vw, 56px);
+  align-items: center;
 }
 
 .hero-copy {
   max-width: 44rem;
+}
+
+/*
+  Wide enough, the product sits beside the words instead of under them, so the first screen already
+  shows the library and the popup over it. The capture is cropped to its first two rows of games
+  (the third is cut off in the file itself), and the popup overhangs the lower corner the way it
+  hangs over a game.
+*/
+@media (min-width: 1001px) {
+  .hero > .wrap {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6.4fr);
+    gap: clamp(36px, 4.5vw, 64px);
+    /* The picture stays where it is whatever the words do while the fonts arrive. */
+    align-items: start;
+  }
+
+  .showcase {
+    padding-top: clamp(0px, 3vw, 44px);
+  }
+
+  .hero h1 {
+    font-size: clamp(2.2rem, 0.9rem + 2.35vw, 3.3rem);
+  }
+
+  .hero-sub {
+    font-size: clamp(1.02rem, 0.95rem + 0.3vw, 1.18rem);
+  }
+
+  .showcase-popup {
+    right: -14px;
+    bottom: -30px;
+  }
+
+  .showcase-caption {
+    margin-top: 52px;
+  }
+
+  .showcase-caption {
+    justify-content: flex-start;
+    text-align: left;
+  }
+}
+
+.showcase .shot img {
+  aspect-ratio: 1280 / 700;
+  object-fit: cover;
+  object-position: top left;
 }
 
 .hero h1 {
@@ -661,11 +797,28 @@ kbd {
   font-weight: 600;
 }
 
+/* The gap separates the facts; a dot would land at the start of a wrapped line. */
+.cta-note .dot-sep::before {
+  display: none;
+}
+
+/* A wide window gets a wider page, so the product beside the words is not a small picture. */
+@media (min-width: 1500px) {
+  .wrap {
+    width: min(1320px, 100% - 96px);
+  }
+}
+
 /* --- hero showcase ---------------------------------------------------------------------------- */
 
 .showcase {
   position: relative;
-  margin-top: clamp(40px, 5vw, 64px);
+  min-width: 0;
+}
+
+/* The shot and the popup that hangs over it; the caption sits outside, below both. */
+.showcase-stage {
+  position: relative;
 }
 
 .shot {
@@ -769,7 +922,7 @@ kbd {
 
 .strip-list {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   margin: 0;
   padding: 0;
   list-style: none;
@@ -796,7 +949,7 @@ kbd {
 
 .strip-list b {
   display: block;
-  font-family: 'Raleway', system-ui, sans-serif;
+  font-family: 'Raleway', 'Raleway Fallback', system-ui, sans-serif;
   font-size: clamp(1.9rem, 2.6vw, 2.4rem);
   font-variant-numeric: tabular-nums;
   line-height: 1.05;
@@ -1022,11 +1175,154 @@ a.card:hover,
   color: var(--accent);
 }
 
+/* --- more in the box -------------------------------------------------------------------------- */
+
+/*
+  Six columns, so a tile is two of them, or three, or four and two rows tall. Each tile is a picture
+  over a heading and a line; the heading's link covers the whole tile (::after), so there is one
+  target per tile and the picture needs no description of its own.
+*/
+.bento {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.tile:hover,
+.tile:focus-within {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.tile-a {
+  grid-column: span 4;
+}
+
+.tile-b {
+  grid-column: span 2;
+}
+
+.tile-shot {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+  aspect-ratio: 16 / 10;
+}
+
+/* The wide tile shows its picture whole; the tall one beside it fills whatever height that leaves. */
+.tile-a .tile-shot {
+  flex: none;
+  aspect-ratio: 1250 / 812;
+}
+
+.tile-tall .tile-shot {
+  aspect-ratio: auto;
+}
+
+.tile-shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+}
+
+.tile-text {
+  flex: none;
+  padding: 18px 20px 22px;
+}
+
+.tile-text h3 {
+  margin-bottom: 6px;
+  font-size: 1.1rem;
+}
+
+.tile-text h3 a {
+  color: var(--text);
+}
+
+.tile-text h3 a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* The tile is the link. */
+.tile-text h3 a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.tile-text h3 a:focus-visible {
+  outline: none;
+}
+
+.tile:has(h3 a:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.tile-text p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+@media (max-width: 1000px) {
+  .bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tile-a,
+  .tile-b {
+    grid-column: span 1;
+  }
+
+  .tile-a {
+    grid-column: 1 / -1;
+  }
+
+  .tile-tall .tile-shot {
+    aspect-ratio: 16 / 10;
+  }
+
+  /* Seven tiles under the wide one: the last has no neighbour. */
+  .tile-b:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 620px) {
+  .bento {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tile-a {
+    grid-column: auto;
+  }
+}
+
 /* --- source table ----------------------------------------------------------------------------- */
 
 .sources {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 14px;
 }
 
@@ -1106,6 +1402,10 @@ a.card:hover,
 
 .source-mark[data-mark='xbox']::before {
   --mark: url('../img/source/xbox.svg');
+}
+
+.source-mark[data-mark='retro']::before {
+  --mark: url('../img/source/retro.svg');
 }
 
 .source b {
@@ -1234,14 +1534,22 @@ a.card:hover,
   margin: 0;
 }
 
+/* The pickers wrap on a wide screen, so thirteen themes are all in view; a phone scrolls the row. */
 .preset-strip {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 20px;
   padding-bottom: 6px;
-  overflow-x: auto;
-  scroll-snap-type: x proximity;
-  scrollbar-width: thin;
+}
+
+@media (max-width: 700px) {
+  .preset-strip {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+  }
 }
 
 .preset-strip .chip {
@@ -1539,6 +1847,45 @@ a.card:hover,
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
   gap: 20px;
+}
+
+/*
+  The cards' place while the listing loads. Without them the page is a short "Loading" box, and when
+  the cards arrive everything below drops by their height - the footer was visible and then was not.
+*/
+.skeleton-card {
+  display: block;
+  min-height: 380px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(110deg, var(--panel) 30%, var(--panel-2) 50%, var(--panel) 70%) 0 0 / 220% 100%;
+  animation: skeleton-sweep 1.6s ease-in-out infinite;
+}
+
+@keyframes skeleton-sweep {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+/* While it loads, the line of text is for a screen reader: the placeholder cards are the picture. */
+.empty[data-loading] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-card {
+    animation: none;
+  }
 }
 
 .preset-card {
@@ -2096,7 +2443,7 @@ a.card:hover,
   border-radius: 50%;
   border: 1px solid var(--border-strong);
   background: var(--panel);
-  font-family: 'Raleway', system-ui, sans-serif;
+  font-family: 'Raleway', 'Raleway Fallback', system-ui, sans-serif;
   font-weight: 700;
   font-size: 0.92rem;
   color: var(--accent);
@@ -2137,7 +2484,11 @@ a.card:hover,
   gap: 9px;
 }
 
+/* A line of links needs a target a finger can hit: at least 24px tall, and spaced from the next. */
 .foot-grid a {
+  display: inline-block;
+  min-height: 24px;
+  padding-block: 3px;
   color: var(--text);
 }
 
@@ -2167,6 +2518,40 @@ a.card:hover,
 }
 
 /* --- responsive ------------------------------------------------------------------------------- */
+
+/* Under the width where the product sits beside the words, the popup goes under the shot. */
+@media (max-width: 1000px) {
+  .showcase .shot {
+    transform: none;
+  }
+
+  .showcase-popup {
+    position: static;
+    display: flex;
+    justify-content: center;
+    margin-top: 18px;
+  }
+
+  /*
+    The frame is scaled to the column once the page script has measured it. Until then it would be
+    drawn at full size and the page would jump as it shrinks, so it starts from a close guess.
+  */
+  .popup-frame {
+    --popup-scale: 0.9;
+  }
+}
+
+@media (max-width: 500px) {
+  .popup-frame {
+    --popup-scale: 0.76;
+  }
+}
+
+@media (max-width: 400px) {
+  .popup-frame {
+    --popup-scale: 0.66;
+  }
+}
 
 @media (max-width: 940px) {
   .wrap {
@@ -2201,6 +2586,12 @@ a.card:hover,
 
   .strip-list li:nth-child(odd) {
     border-right: 1px solid var(--border);
+  }
+
+  /* Five figures: the last one has no neighbour, so it takes the whole row. */
+  .strip-list li:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    border-right: 0;
   }
 }
 
@@ -2260,17 +2651,6 @@ a.card:hover,
     background: var(--accent);
     color: var(--accent-ink);
     filter: brightness(1.08);
-  }
-
-  .showcase .shot {
-    transform: none;
-  }
-
-  .showcase-popup {
-    position: static;
-    display: flex;
-    justify-content: center;
-    margin-top: 18px;
   }
 
   /* The about column is prose; only the link lists are worth putting side by side. */

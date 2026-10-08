@@ -1,6 +1,6 @@
 # The source marks
 
-The eight marks on the **Sources** section of the home page. They are drawn as CSS masks in the
+The nine marks on the **Sources** section of the home page. They are drawn as CSS masks in the
 accent colour, never as the logos in their own colours - see `.source-mark` in
 `assets/css/site.css` for why - so **only the alpha channel of each file is ever used**. A file here
 may be any colour; what matters is its shape.
@@ -17,14 +17,16 @@ may be any colour; what matters is its shape.
 | `xbox.svg` | `app/Source/xbox.svg`, unchanged |
 | `saves.svg` | ours: a folder holding a save |
 | `emulators.svg` | ours: a controller |
+| `retro.svg` | ours: a trophy |
 
 The six brand marks are the ones the **application itself** uses for the source badge on a library
 tile, so the site and the app identify a platform with the same artwork. Take a corrected logo
 upstream in `app/Source/` first and copy it here after, rather than the other way round.
 
-Two of the eight are deliberately not logos. "Steam compatible saves" is Goldberg, GBE Fork,
+Three of the nine are deliberately not logos. "Steam compatible saves" is Goldberg, GBE Fork,
 GreenLuma and the rest - a family of readers, not a storefront - and "Emulators" is RPCS3, ShadPS4
-and Xenia, three programs where any one mark would stand in wrongly for the other two.
+and Xenia, three programs where any one mark would stand in wrongly for the other two. RetroAchievements
+is a service that every emulator reports to, so its tile is a trophy rather than the service's own logo.
 
 ## Why Epic is the one raster file
 

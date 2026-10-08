@@ -79,11 +79,6 @@ body {
   line-height: 1.68;
 }
 
-/* A comfortable measure for prose; the theme's own container is sized for code. */
-.container-lg {
-  max-width: 880px;
-}
-
 .markdown-body a {
   color: var(--aw-accent);
   text-decoration: none;
@@ -106,30 +101,6 @@ body {
 
 .markdown-body :is(p, li, td, blockquote) a:not(.aw-site-cta):hover {
   text-decoration-color: currentColor;
-}
-
-/*
-  The theme prepends site.title as a bare <h1> link on every page, which then competes with the
-  page's own title right underneath it. Kramdown gives every heading written in Markdown an id, so
-  the one without an id is always the theme's - style that as a masthead instead of a second title.
-*/
-.markdown-body > h1:first-child:not([id]) {
-  font-size: 0.8em;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin: 0 0 2.4em;
-  padding-bottom: 0.9em;
-  border-bottom: 1px solid var(--aw-border);
-}
-
-.markdown-body > h1:first-child:not([id]) a {
-  color: var(--aw-muted);
-}
-
-.markdown-body > h1:first-child:not([id]) a:hover {
-  color: var(--aw-accent);
-  text-decoration: none;
 }
 
 /* The page title block each guide opens with. */
@@ -242,7 +213,7 @@ body {
 }
 
 /*
-  GitHub-style alerts, rebuilt by _includes/head-custom.html because kramdown does not understand
+  GitHub-style alerts, rebuilt by assets/js/guide.js because kramdown does not understand
   the "[!WARNING]" marker. The background stays neutral in both themes and the type is carried by
   the rail and the label, which keeps every variant legible without a palette per colour.
 */
@@ -259,16 +230,6 @@ body {
   text-transform: uppercase;
   /* Pulled toward the text colour so every variant clears 4.5:1 on the callout surface. */
   color: color-mix(in srgb, var(--aw-alert-color) 55%, var(--aw-text));
-}
-
-/* The theme's own footer line uses Primer's grey, which falls below 4.5:1 on the dark palette. */
-.footer.text-gray {
-  color: var(--aw-muted) !important;
-}
-
-.footer.text-gray a {
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
 }
 
 .markdown-body blockquote.aw-alert-note {
@@ -357,17 +318,46 @@ body {
   color: var(--aw-muted);
 }
 
-/*
-  The site bar, injected by _includes/head-custom.html.
 
-  A guide is a Markdown file with no header of its own, so this is what connects it to the home page
-  and the preset gallery. It is navigation rather than content, which is why it is not written into
-  every page: browsing the same files on github.com is unaffected.
+/* --- guide layout --------------------------------------------------------------------------------
+
+  _layouts/default.html draws this around every guide: the site bar, the guide list on the left,
+  the text, and a table of contents on the right when the window is wide enough for one. Below that
+  the contents fold into the page and the guide list becomes a menu.
 */
+
+html {
+  scroll-padding-top: 84px;
+}
+
+body.aw-guide {
+  margin: 0;
+}
+
+.aw-skip {
+  position: absolute;
+  left: 12px;
+  top: -64px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: var(--aw-accent);
+  color: var(--aw-accent-ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.aw-skip:focus {
+  top: 12px;
+  color: var(--aw-accent-ink);
+  text-decoration: none;
+}
+
+/* The site bar: the same links as the home page's header, in the same order and the same split. */
 .aw-site-bar {
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: 40;
   background: color-mix(in srgb, var(--aw-bg) 88%, transparent);
   backdrop-filter: saturate(1.4) blur(12px);
   border-bottom: 1px solid var(--aw-border);
@@ -376,21 +366,20 @@ body {
 .aw-site-bar-inner {
   display: flex;
   align-items: center;
-  gap: 8px;
-  max-width: 880px;
-  min-height: 56px;
+  gap: 10px;
+  max-width: 1320px;
+  min-height: 60px;
   margin: 0 auto;
-  padding: 8px 16px;
+  padding: 8px 24px;
 }
 
 .aw-site-brand {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  margin-right: auto;
+  gap: 10px;
   color: var(--aw-text);
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-weight: 700;
+  font-size: 1rem;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -405,8 +394,8 @@ body {
 }
 
 .aw-site-mark {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   flex: none;
   background-color: var(--aw-accent);
   -webkit-mask: url("../img/brand-mark.png") center / contain no-repeat;
@@ -417,65 +406,59 @@ body {
   display: flex;
   align-items: center;
   gap: 2px;
-  overflow-x: auto;
-  scrollbar-width: none;
+  margin-left: 12px;
 }
 
 .aw-site-links a {
-  padding: 7px 10px;
+  padding: 8px 12px;
   border-radius: 8px;
   color: var(--aw-muted);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
 }
 
-.aw-site-links a:hover {
+.aw-site-links a:hover,
+.aw-site-links a[aria-current="page"] {
   background: var(--aw-accent-soft);
   color: var(--aw-accent);
   text-decoration: none;
 }
 
-/*
-  Navigation on the left, actions on the right, a hairline between them: the same split the home
-  page's header uses, so the bar reads as the same bar on both sides of the site.
-*/
 .aw-site-actions {
   display: flex;
   flex: none;
   align-items: center;
   gap: 10px;
-  margin-left: 14px;
-  padding-left: 14px;
-  border-left: 1px solid var(--aw-border);
+  margin-left: auto;
 }
 
-.aw-site-actions .aw-site-cta {
-  padding: 7px 14px;
+.aw-site-cta {
+  padding: 8px 16px;
   border-radius: 8px;
   background: var(--aw-accent);
   color: var(--aw-accent-ink);
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.92rem;
+  font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
 }
 
-.aw-site-actions .aw-site-cta:hover {
+.aw-site-cta:hover {
   color: var(--aw-accent-ink);
   text-decoration: none;
   filter: brightness(1.08);
 }
 
-/* Theme toggle, injected by _includes/head-custom.html into the bar above. */
-.aw-theme-toggle {
+.aw-theme-toggle,
+.aw-menu-toggle {
   flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border: 1px solid var(--aw-border);
   border-radius: 50%;
@@ -484,45 +467,520 @@ body {
   cursor: pointer;
 }
 
-.aw-theme-toggle:hover {
+.aw-theme-toggle:hover,
+.aw-menu-toggle:hover {
   color: var(--aw-accent);
   border-color: var(--aw-accent);
 }
 
-.aw-theme-toggle:focus-visible {
-  outline: 2px solid var(--aw-accent);
-  outline-offset: 2px;
-}
-
-.aw-theme-toggle svg {
+.aw-theme-toggle svg,
+.aw-menu-toggle svg {
   width: 18px;
   height: 18px;
   display: block;
   fill: currentColor;
 }
 
-@media (max-width: 600px) {
+/* Only a phone has a menu, and only a page with scripting can open one. */
+.aw-menu-toggle {
+  display: none;
+}
+
+.aw-shell {
+  display: grid;
+  grid-template-columns: 252px minmax(0, 1fr);
+  column-gap: 56px;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.aw-main {
+  min-width: 0;
+  padding: 36px 0 72px;
+}
+
+.aw-main:focus {
+  outline: none;
+}
+
+.markdown-body {
+  max-width: 800px;
+}
+
+.markdown-body :is(h1, h2, h3, h4) {
+  scroll-margin-top: 84px;
+}
+
+/* The guide list. */
+.aw-guides {
+  position: sticky;
+  top: 60px;
+  align-self: start;
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
+  padding: 28px 0 32px;
+  font-size: 0.92rem;
+}
+
+.aw-drawer-links {
+  display: none;
+}
+
+/* Search over the guides. Hidden without scripting, where it could not do anything. */
+.aw-search {
+  position: relative;
+  margin: 0 0 18px;
+}
+
+.no-js .aw-search {
+  display: none;
+}
+
+.aw-search-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.aw-search-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 34px 8px 12px;
+  border: 1px solid var(--aw-border);
+  border-radius: 10px;
+  background: var(--aw-surface);
+  color: var(--aw-text);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.aw-search-input::placeholder {
+  color: var(--aw-muted);
+}
+
+.aw-search-input:focus {
+  border-color: var(--aw-accent);
+  outline: 2px solid var(--aw-accent-soft);
+  outline-offset: 0;
+}
+
+.aw-search-key {
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  min-width: 18px;
+  padding: 1px 5px;
+  border: 1px solid var(--aw-border);
+  border-radius: 5px;
+  color: var(--aw-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  text-align: center;
+  pointer-events: none;
+}
+
+.aw-search-input:focus ~ .aw-search-key,
+.aw-search.has-query .aw-search-key {
+  display: none;
+}
+
+.aw-search-status {
+  margin: 8px 2px 0;
+  color: var(--aw-muted);
+  font-size: 0.8rem;
+}
+
+.aw-search-status:empty {
+  display: none;
+}
+
+.aw-guides .aw-search-results {
+  margin: 6px 0 0;
+}
+
+.aw-search-results a {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: var(--aw-text);
+  text-decoration: none;
+}
+
+.aw-search-results a:hover,
+.aw-search-results a:focus,
+.aw-search-results a[aria-selected="true"] {
+  background: var(--aw-accent-soft);
+  text-decoration: none;
+}
+
+.aw-search-page {
+  display: block;
+  color: var(--aw-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.aw-search-heading {
+  display: block;
+  color: var(--aw-accent);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.aw-search-snippet {
+  display: block;
+  margin-top: 2px;
+  color: var(--aw-muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.aw-search-snippet mark {
+  padding: 0 1px;
+  border-radius: 3px;
+  background: var(--aw-accent-soft);
+  color: var(--aw-text);
+  font-weight: 700;
+}
+
+/* While results are listed, the guide list under them steps aside. */
+.aw-guides.is-searching > :not(.aw-search):not(.aw-drawer-links) {
+  display: none;
+}
+
+.aw-guides-all {
+  display: block;
+  margin-bottom: 18px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  color: var(--aw-text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.aw-guides-group + .aw-guides-group {
+  margin-top: 22px;
+}
+
+.aw-guides-title {
+  margin: 0 0 6px;
+  padding: 0 12px;
+  color: var(--aw-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.aw-guides ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.aw-guides li a {
+  display: block;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: var(--aw-muted);
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.aw-guides li a:hover,
+.aw-guides-all:hover {
+  background: var(--aw-accent-soft);
+  color: var(--aw-accent);
+  text-decoration: none;
+}
+
+.aw-guides a[aria-current="page"] {
+  background: var(--aw-accent-soft);
+  color: var(--aw-accent);
+  font-weight: 700;
+}
+
+/* The table of contents, in the right-hand column when there is one. */
+.aw-toc {
+  display: none;
+  position: sticky;
+  top: 60px;
+  align-self: start;
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
+  padding: 36px 0 32px;
+  font-size: 0.85rem;
+}
+
+.aw-toc-title {
+  margin: 0 0 8px;
+  color: var(--aw-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.aw-toc ul,
+.aw-toc-inline ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.aw-toc a,
+.aw-toc-inline a {
+  display: block;
+  padding: 4px 0 4px 12px;
+  border-left: 2px solid var(--aw-border);
+  color: var(--aw-muted);
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.aw-toc .aw-toc-h3 a,
+.aw-toc-inline .aw-toc-h3 a {
+  padding-left: 26px;
+}
+
+.aw-toc a:hover,
+.aw-toc-inline a:hover {
+  color: var(--aw-accent);
+  text-decoration: none;
+}
+
+.aw-toc a[aria-current="true"] {
+  border-left-color: var(--aw-accent);
+  color: var(--aw-accent);
+  font-weight: 700;
+}
+
+.aw-toc-inline {
+  margin: 1.6em 0;
+  border: 1px solid var(--aw-border);
+  border-radius: 10px;
+  background: var(--aw-surface);
+  font-size: 0.92rem;
+}
+
+.aw-toc-inline summary {
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.aw-toc-inline ul {
+  padding: 0 14px 12px;
+}
+
+/* A link on a heading, and the screenshot a reader can open. */
+.aw-anchor {
+  margin-left: 0.4em;
+  color: var(--aw-muted);
+  font-weight: 400;
+  opacity: 0;
+  text-decoration: none;
+}
+
+.markdown-body :is(h2, h3, h4):hover .aw-anchor,
+.aw-anchor:focus {
+  opacity: 1;
+}
+
+.markdown-body .aw-anchor {
+  text-decoration: none;
+}
+
+.aw-zoom {
+  display: inline-block;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  line-height: 0;
+  cursor: zoom-in;
+}
+
+.aw-zoom:focus-visible {
+  outline: 2px solid var(--aw-accent);
+  outline-offset: 3px;
+}
+
+.aw-zoom-dialog {
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.aw-zoom-dialog::backdrop {
+  background: rgba(5, 10, 20, 0.82);
+}
+
+.aw-zoom-dialog img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(96vw, 1700px);
+  max-height: 88vh;
+  border: 0;
+  border-radius: 10px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+.aw-zoom-close {
+  position: absolute;
+  top: -44px;
+  right: 0;
+  padding: 7px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 8px;
+  background: rgba(10, 16, 28, 0.9);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.aw-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
+  max-width: 800px;
+  margin-top: 56px;
+  padding-top: 18px;
+  border-top: 1px solid var(--aw-border);
+  color: var(--aw-muted);
+  font-size: 0.88rem;
+}
+
+.aw-foot a {
+  color: var(--aw-muted);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.aw-foot a:hover {
+  color: var(--aw-accent);
+}
+
+/* Wide enough for the contents beside the text. */
+@media (min-width: 1281px) {
+  .aw-shell {
+    grid-template-columns: 252px minmax(0, 1fr) 220px;
+    column-gap: 48px;
+  }
+
+  .aw-toc {
+    display: block;
+  }
+
+  .aw-toc-inline {
+    display: none;
+  }
+}
+
+/* No room for the guide list beside the text: it becomes a menu under the bar. */
+@media (max-width: 980px) {
+  .aw-site-bar-inner {
+    padding-inline: 14px;
+  }
+
+  .aw-site-links {
+    display: none;
+  }
+
+  .js .aw-menu-toggle {
+    display: flex;
+  }
+
+  .aw-shell {
+    display: block;
+    padding: 0 18px;
+  }
+
+  .js .aw-guides {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    z-index: 35;
+    box-sizing: border-box;
+    width: min(330px, 88vw);
+    height: calc(100vh - 60px);
+    max-height: none;
+    padding: 16px 14px 40px;
+    border-right: 1px solid var(--aw-border);
+    background: var(--aw-bg);
+    box-shadow: 8px 0 40px rgba(0, 0, 0, 0.25);
+    transform: translateX(-104%);
+    visibility: hidden;
+    transition: transform 0.2s ease, visibility 0s linear 0.2s;
+  }
+
+  .js body.aw-menu-open .aw-guides,
+  .js.aw-menu-open .aw-guides {
+    transform: none;
+    visibility: visible;
+    transition: transform 0.2s ease;
+  }
+
+  .js body.aw-menu-open::after {
+    content: "";
+    position: fixed;
+    inset: 60px 0 0;
+    z-index: 30;
+    background: rgba(5, 10, 20, 0.5);
+  }
+
+  /* Without scripting there is nothing to open, so the list sits above the text. */
+  .no-js .aw-guides {
+    position: static;
+    max-height: none;
+    padding: 16px 0 8px;
+    border-bottom: 1px solid var(--aw-border);
+  }
+
+  .aw-drawer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 4px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--aw-border);
+  }
+
+  .aw-drawer-links a {
+    padding: 7px 12px;
+    border-radius: 8px;
+    color: var(--aw-text);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .aw-main {
+    padding-top: 24px;
+  }
+}
+
+@media (max-width: 560px) {
   .markdown-body {
     font-size: 15px;
   }
 
-  .aw-site-bar-inner {
-    padding: 6px 12px;
-  }
-
-  /* No room for a hairline and its gutters beside a scrolling row of links on a phone. */
-  .aw-site-actions {
-    margin-left: 8px;
-    padding-left: 0;
-    border-left: 0;
-  }
-
-  /*
-    The brand word is the widest thing on the bar and the least load-bearing: the mark on its own
-    still says where "back to the site" is, and giving its ~170px to the links means five of them
-    fit on a phone instead of two and a scrollbar.
-  */
-  /* Hidden from sight only: the link still needs its name for a screen reader. */
+  /* The mark still says where "back to the site" is; its name stays for a screen reader. */
   .aw-site-brand-word {
     position: absolute;
     width: 1px;
@@ -541,5 +999,11 @@ body {
     display: block;
     overflow-x: auto;
     white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js .aw-guides {
+    transition: none;
   }
 }

@@ -4,7 +4,7 @@ AW Next announces an unlock with a native Windows notification (toast), an in-ga
 both. Choose how under **Settings → Notification**.
 
 <div align="center">
-<img src="screenshot/notifications.png" width="620" alt="Settings - Notification"><br>
+<picture><source srcset="assets/shot/notifications-panel-800.webp 800w, assets/shot/notifications-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/notifications-panel.png" width="720" height="529" alt="Settings - Notification"></picture><br>
 <sub>One delivery mode, one preset - Automatic handles the rest</sub>
 </div>
 
@@ -20,7 +20,7 @@ both. Choose how under **Settings → Notification**.
 The main library window may stay closed in every mode: the background tracker handles delivery.
 
 <div align="center">
-<img src="screenshot/notification-popup.png" width="440" alt="An unlock popup"><br>
+<picture><source srcset="assets/shot/notification-popup.webp 598w" sizes="(max-width: 700px) 100vw, 440px"><img src="screenshot/notification-popup.png" width="440" height="125" alt="An unlock popup" loading="lazy" decoding="async"></picture><br>
 <sub>The overlay popup, drawn by the selected preset with the game's own artwork</sub>
 </div>
 
@@ -158,6 +158,32 @@ Achievements with a global unlock rate below the rare threshold display their ra
 are drawn in the preset's rare styling: **gold** at 5% or less, **silver** up to 10%, **bronze** up to
 15%.
 
+### Trophy mode
+
+**Settings → General → Rarity display** switches to **Trophy mode**: every achievement is graded by
+its global unlock rate (gold under 20%, silver under 50%, bronze otherwise or when the rate is
+unknown), in the game window, the overlay, the profile trophies and the notification. All three
+grades use the preset's rare styling (`state-rare` plus `tier-gold`, `tier-silver` or `tier-bronze`),
+so a preset needs nothing new; platinum stays the separate completion state. In Advanced mode the
+two bounds can be moved. The app tells a preset its tier in `rarityTier` (with `rarityMode` and the
+localized `rarityGrade`); a preset that predates the field falls back to the percentage and so keeps
+the rare tiers.
+
+<div align="center">
+<picture><source srcset="assets/shot/trophy-profile.webp 640w" sizes="(max-width: 700px) 100vw, 440px"><img src="screenshot/trophy-profile.png" width="440" height="148" alt="The profile header with platinum, gold, silver, bronze and common trophy counts" loading="lazy" decoding="async"></picture><br>
+<sub>The profile counts every unlock by grade, with platinum for finished games</sub>
+</div>
+
+<div align="center">
+<picture><source srcset="assets/shot/trophy-game-panel.webp 800w" sizes="(max-width: 700px) 100vw, 560px"><img src="screenshot/trophy-game-panel.png" width="560" height="672" alt="A game page where each achievement is graded gold, silver or bronze" loading="lazy" decoding="async"></picture><br>
+<sub>On a game's page each achievement carries its grade and the share of players who have it</sub>
+</div>
+
+<div align="center">
+<picture><source srcset="assets/shot/notification-popup-trophy.webp 598w" sizes="(max-width: 700px) 100vw, 440px"><img src="screenshot/notification-popup-trophy.png" width="440" height="125" alt="An unlock popup drawn in the gold style" loading="lazy" decoding="async"></picture><br>
+<sub>A gold unlock in the AW Next preset</sub>
+</div>
+
 ## Show unlocks on stream (OBS)
 
 Capturing the popup as a *window* does not work, and cannot: the popup window is created for one
@@ -262,6 +288,11 @@ clip instead of writing near-identical copies.
 | Frame rate | 30 or 60 FPS | 30 FPS |
 | Quality | Low, Medium or High | Medium |
 | Sound | Game only, or the whole PC | Game only |
+
+<div align="center">
+<picture><source srcset="assets/shot/video-clip-panel-800.webp 800w, assets/shot/video-clip-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/video-clip-panel.png" width="720" height="529" alt="Settings, Notification: the Video clip section with its on/off switch" loading="lazy" decoding="async"></picture><br>
+<sub>The Video clip section sits at the bottom of the Notification tab and is off until you turn it on</sub>
+</div>
 
 The row under them estimates the size of one clip for your screen. It is a ceiling: the encoder runs
 at a constant bitrate and a quiet scene comes out smaller.

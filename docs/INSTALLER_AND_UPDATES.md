@@ -12,7 +12,7 @@ covers building, [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md) covers publishing.
 | `app/electron/init.js` (`getUpdater`, `scheduleUpdateCheck`, `registerUpdaterEvents`) | The in-app updater |
 | `app/util/updateSignature.js` | Which certificates may sign an update |
 | `app/util/updateCacheHousekeeping.js` | Removes an installer that is already installed from the update cache |
-| `app/build/build.js` | Signs the release and refuses one clients would reject |
+| `app/build/build.js` | Signs the release and refuses one clients would reject, including any packaged `.exe` that is unsigned, signed by an unpinned certificate, or a native helper that differs from `watchdog/native/` (`app/build/packagedExecutables.js`) |
 
 ## Installer
 
@@ -113,8 +113,13 @@ so whoever can replace one can replace the other. A common name is no proof eith
 can issue themselves a `CN=Shirow` certificate. The thumbprint is what ties an update to the
 project's own key.
 
-If PowerShell itself cannot run, the check is skipped rather than blocking every update forever.
-That is not something a forged installer can trigger.
+If PowerShell cannot run or prints nothing (an antivirus or a policy can cause this), the update is
+refused and the message points to the GitHub releases page for a manual download. A check that cannot
+answer never counts as a pass.
+
+The check runs again when the update finishes downloading and just before the installer starts, on the
+same file with its SHA-512 compared between the two. electron-updater reuses an installer cached by a
+previous launch without verifying its signature, so a cached file that fails is deleted.
 
 ### Certificates, and what happens if one is lost
 

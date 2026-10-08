@@ -30,6 +30,7 @@
   if (!grid) return;
 
   var status = document.querySelector('[data-gallery-status]');
+  var skeleton = document.querySelector('[data-gallery-skeleton]');
   var search = document.querySelector('[data-gallery-search]');
   var tagBar = document.querySelector('[data-gallery-tags]');
   var sortSelect = document.querySelector('[data-gallery-sort]');
@@ -44,7 +45,7 @@
       accept: /\.awpreset$/i,
       maxUpload: 4 * 1024 * 1024,
       wrongFile: function () {
-        return t('gallery.uploadWrongFile', 'That is not an .awpreset file. Export one from Settings, Presets.');
+        return t('gallery.uploadWrongFile', 'That is not an .awpreset file. Export one from Settings, Notification presets.');
       },
       tooBig: function () {
         return t('gallery.uploadTooBig', 'That package is over 4 MB, which is more than the gallery serves.');
@@ -320,7 +321,14 @@
     });
   }
 
+  // The placeholder cards and the loading line give way to whatever the listing turned out to be.
+  function ready() {
+    if (skeleton) skeleton.hidden = true;
+    if (status) status.removeAttribute('data-loading');
+  }
+
   function render() {
+    ready();
     var query = (search && search.value ? search.value : '').trim().toLowerCase();
     var shown = entries.filter(function (entry) {
       return matches(entry, query);
@@ -389,6 +397,7 @@
   // The three states that replace the grid entirely. Each is a function so the language picker can
   // ask for the same state again once the dictionary has changed.
   function message(title, body) {
+    ready();
     if (!status) return;
     grid.hidden = true;
     status.hidden = false;

@@ -17,7 +17,7 @@
     <title>Achievement Watcher Next - every achievement, one experience</title>
     <meta
       name="description"
-      content="Windows app that tracks achievements, rarity and playtime across Steam, GOG, Epic, Ubisoft, EA, Xbox PC, local saves and emulators, with an in-game overlay or Windows notifications. Free and open source."
+      content="Windows app that tracks achievements, rarity and playtime across Steam, GOG, Epic, Ubisoft, EA, Xbox PC, RetroAchievements, local saves and emulators, with an in-game overlay or Windows notifications. Free and open source."
     />
     <link rel="canonical" href="https://shirowwww.github.io/Achievement-Watcher-Next/" />
     <link rel="alternate" type="application/rss+xml" title="Achievement Watcher Next releases" href="releases.xml" />
@@ -28,30 +28,40 @@
     <meta property="og:title" content="Achievement Watcher Next" />
     <meta
       property="og:description"
-      content="Every achievement, one experience. Steam, GOG, Epic, Ubisoft, EA, Xbox PC, local saves and emulators in a single library."
+      content="Every achievement, one experience. Steam, GOG, Epic, Ubisoft, EA, Xbox PC, RetroAchievements, local saves and emulators in a single library."
     />
     <meta property="og:image" content="https://shirowwww.github.io/Achievement-Watcher-Next/assets/img/social.png" />
     <meta property="og:url" content="https://shirowwww.github.io/Achievement-Watcher-Next/" />
-    <meta property="og:locale" content="en" />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://shirowwww.github.io/Achievement-Watcher-Next/assets/img/social.png" />
+    <meta name="theme-color" content="#f2f5fa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0c1322" media="(prefers-color-scheme: dark)" />
 
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "Achievement Watcher Next",
-        "description": "A free Windows app for tracking achievements, rarity and playtime across stores, local saves and emulators.",
+        "description": "A free Windows app for tracking achievements, rarity and playtime across stores, local saves, emulators and RetroAchievements.",
         "url": "https://shirowwww.github.io/Achievement-Watcher-Next/",
         "applicationCategory": "GameApplication",
         "operatingSystem": "Windows 10, Windows 11",
+        "softwareVersion": "3.11.1",
         "isAccessibleForFree": true,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
         "downloadUrl": "https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest",
         "softwareHelp": "https://shirowwww.github.io/Achievement-Watcher-Next/README.html",
         "license": "https://www.gnu.org/licenses/lgpl-3.0.html",
         "image": "https://shirowwww.github.io/Achievement-Watcher-Next/assets/img/social.png",
         "author": {
           "@type": "Person",
-          "name": "Shirow"
+          "name": "Shirowwww",
+          "url": "https://github.com/Shirowwww"
         }
       }
     </script>
@@ -64,14 +74,34 @@
     <link rel="preload" as="font" type="font/woff2" href="assets/font/opensans-regular.woff2" crossorigin />
     <link rel="stylesheet" href="assets/css/site.css" />
 
-    <!-- Applied before the first paint, so a reader who chose dark never sees a white flash. -->
+    <!--
+      Applied before the first paint, so a reader who chose dark never sees a white flash, and a reader
+      who will be shown another language does not see the English first: the page is held back until
+      assets/js/i18n.js has laid the translation over it (or a second and a half has gone by), so the
+      text is never swapped under their eyes and the page does not jump when it is.
+    -->
     <script>
       (function () {
+        var html = document.documentElement;
+        html.classList.add('js');
         try {
           var stored = window.localStorage.getItem('aw-theme');
-          if (stored === 'light' || stored === 'dark') document.documentElement.setAttribute('data-theme', stored);
+          if (stored === 'light' || stored === 'dark') html.setAttribute('data-theme', stored);
         } catch (err) {
           /* private mode: the system preference decides */
+        }
+        try {
+          var asked = new URLSearchParams(window.location.search).get('lang');
+          var chosen = window.localStorage.getItem('aw-lang');
+          var preferred = String(asked || chosen || (navigator.languages && navigator.languages[0]) || navigator.language || 'en');
+          if (preferred.toLowerCase().split('-')[0] !== 'en') {
+            html.classList.add('i18n-wait');
+            window.setTimeout(function () {
+              html.classList.remove('i18n-wait');
+            }, 1500);
+          }
+        } catch (err) {
+          /* the English markup is complete without it */
         }
       })();
     </script>
@@ -106,12 +136,13 @@
           <a href="README.html" data-i18n="nav.docs">Docs</a>
           <a href="https://github.com/Shirowwww/Achievement-Watcher-Next" data-i18n="nav.github">GitHub</a>
           <!-- The header button is hidden on a narrow screen, so the menu carries it instead. -->
-          <a class="nav-download" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-i18n="nav.download">Download</a>
+          <a class="nav-download" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-installer data-i18n="nav.download">Download</a>
         </nav>
 
         <div class="head-actions">
+          <span class="lang-slot" data-lang-picker></span>
           <button class="icon-btn" type="button" data-theme-toggle aria-label="Switch theme"></button>
-          <a class="btn" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-i18n="nav.download">
+          <a class="btn" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-installer data-i18n="nav.download">
             Download
           </a>
         </div>
@@ -128,13 +159,13 @@
               <span class="grad" data-i18n="hero.titleAccent">One experience.</span>
             </h1>
             <p class="hero-sub" data-i18n="hero.sub">
-              Steam, GOG, Epic, Ubisoft, EA, Xbox PC, local emulator saves, RPCS3, ShadPS4, Xenia and Xbox 360 PC ports end up in one
-              library, watched by one background service. When something unlocks you get an overlay popup over the game,
-              or a Windows notification if the overlay cannot be seen.
+              Steam, GOG, Epic, Ubisoft, EA, Xbox PC, RetroAchievements, local emulator saves, RPCS3, ShadPS4, Xenia and Xbox
+              360 PC ports end up in one library, watched by one background service. When something unlocks you get an
+              overlay popup over the game, or a Windows notification if the overlay cannot be seen.
             </p>
 
             <div class="hero-cta">
-              <a class="btn btn-lg" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest">
+              <a class="btn btn-lg" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-installer>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4a1 1 0 0 1 1-1zM5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1z" />
                 </svg>
@@ -147,38 +178,43 @@
               <span data-release-line data-i18n="hero.noteVersion">Latest release on GitHub</span>
               <span class="dot-sep" data-i18n="hero.eyebrow">Windows 10 and 11</span>
               <span class="dot-sep" data-i18n="hero.noteLicense">LGPL-3.0, no account, no API key</span>
+              <a class="dot-sep" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-i18n="hero.allDownloads">Portable ZIP and all downloads</a>
             </p>
           </div>
 
           <!--
             The library, with the real popup on top of it. The frame loads the same index.html and
             style.css the app installs, driven by a stand-in for the app's notification bridge.
+            The capture is cropped to its first two rows of games, so the popup sits where it would
+            over the library and nothing is cut off at the bottom.
           -->
           <div class="showcase">
-            <div class="shot">
-              <img
-                src="assets/shot/home.webp"
-                srcset="assets/shot/home-800.webp 800w, assets/shot/home.webp 1280w"
-                sizes="(max-width: 1180px) 100vw, 1132px"
-                width="1280"
-                height="788"
-                alt="The Achievement Watcher Next library showing game cards with completion percentages"
-                fetchpriority="high"
-              />
-            </div>
+            <div class="showcase-stage">
+              <div class="shot">
+                <img
+                  src="assets/shot/home.webp"
+                  srcset="assets/shot/home-800.webp 800w, assets/shot/home.webp 1280w"
+                  sizes="(max-width: 1000px) 100vw, 700px"
+                  width="1280"
+                  height="788"
+                  alt="The Achievement Watcher Next library showing game cards with completion percentages"
+                  fetchpriority="high"
+                />
+              </div>
 
-            <div class="showcase-popup" data-preset-slot>
-              <iframe
-                class="popup-frame"
-                data-preset-frame
-                src="assets/preset/aw-next/index.html"
-                width="474"
-                height="136"
-                sandbox="allow-scripts"
-                scrolling="no"
-                title="Live preview of the AW Next notification preset"
-                data-i18n-attr="title:hero.popupTitle"
-              ></iframe>
+              <div class="showcase-popup" data-preset-slot>
+                <iframe
+                  class="popup-frame"
+                  data-preset-frame
+                  src="assets/preset/aw-next/index.html"
+                  width="474"
+                  height="136"
+                  sandbox="allow-scripts"
+                  scrolling="no"
+                  title="Live preview of the AW Next notification preset"
+                  data-i18n-attr="title:hero.popupTitle"
+                ></iframe>
+              </div>
             </div>
 
             <p class="showcase-caption">
@@ -190,12 +226,14 @@
       </section>
 
       <!-- Strip --------------------------------------------------------------------------- -->
+      <!-- The figures are written by tools/site/home-data.js from the app itself. -->
       <section class="strip" aria-label="At a glance" data-i18n-attr="aria-label:strip.label">
         <div class="wrap">
           <ul class="strip-list">
-            <li><b>8</b><span data-i18n="strip.sources">source families</span></li>
-            <li><b>28</b><span data-i18n="strip.languages">interface languages</span></li>
-            <li><b>9</b><span data-i18n="strip.presets">bundled presets</span></li>
+            <li><b data-count="sources">9</b><span data-i18n="strip.sources">source families</span></li>
+            <li><b data-count="languages">28</b><span data-i18n="strip.languages">interface languages</span></li>
+            <li><b data-count="presets">9</b><span data-i18n="strip.presets">bundled presets</span></li>
+            <li><b data-count="themes">13</b><span data-i18n="strip.themes">built-in themes</span></li>
             <li><b>0</b><span data-i18n="strip.keys">API keys to enter</span></li>
           </ul>
         </div>
@@ -281,8 +319,8 @@
             <div class="shot shot-tall">
               <img
                 src="assets/shot/overlay.webp"
-                width="563"
-                height="724"
+                width="569"
+                height="1000"
                 loading="lazy"
                 decoding="async"
                 alt="The in-game overlay listing achievements over a running game"
@@ -303,10 +341,10 @@
             <div class="shot">
               <img
                 src="assets/shot/game-health.webp"
-                srcset="assets/shot/game-health-800.webp 800w, assets/shot/game-health.webp 864w"
+                srcset="assets/shot/game-health-800.webp 800w, assets/shot/game-health.webp 874w"
                 sizes="(max-width: 940px) 100vw, 600px"
-                width="864"
-                height="690"
+                width="874"
+                height="722"
                 loading="lazy"
                 decoding="async"
                 alt="The Game Health panel explaining why a game is or is not tracked"
@@ -316,8 +354,196 @@
         </div>
       </section>
 
+      <!-- More ---------------------------------------------------------------------------- -->
+      <!--
+        The features a screenshot of the library does not show. Each tile is one link, to the guide
+        that explains it: the heading's link is stretched over the whole tile, so the picture is
+        not a second, unlabelled link.
+      -->
+      <section class="section section-alt" id="more">
+        <div class="wrap">
+          <div class="section-head narrow">
+            <h2 data-i18n="more.title">What else is in the box</h2>
+            <p class="lead" data-i18n="more.lead">
+              The parts you find in the first week rather than in the first minute. Each one has a guide.
+            </p>
+          </div>
+
+          <div class="bento">
+            <article class="tile tile-a">
+              <div class="tile-shot">
+                <img
+                  src="assets/shot/stats-overview.webp"
+                  srcset="assets/shot/stats-overview-800.webp 800w, assets/shot/stats-overview.webp 1250w"
+                  sizes="(max-width: 700px) 100vw, (max-width: 1000px) 50vw, 760px"
+                  width="1250"
+                  height="812"
+                  loading="lazy"
+                  decoding="async"
+                  alt=""
+                />
+              </div>
+              <div class="tile-text">
+                <h3><a href="getting-started.html#library-stats" data-i18n="more.statsTitle">Library stats</a></h3>
+                <p data-i18n="more.statsBody">
+                  Overall completion, unlocked and locked counts, trophies, platinum games and your rarest unlocks, with
+                  a row per platform. One click from the profile header.
+                </p>
+              </div>
+            </article>
+
+            <article class="tile tile-b tile-tall">
+              <div class="tile-shot">
+                <img
+                  src="assets/shot/trophy-game-panel.webp"
+                  width="800"
+                  height="960"
+                  loading="lazy"
+                  decoding="async"
+                  alt=""
+                />
+              </div>
+              <div class="tile-text">
+                <h3><a href="notifications.html#trophy-mode" data-i18n="more.trophyTitle">Trophy mode</a></h3>
+                <p data-i18n="more.trophyBody">
+                  Grade every achievement gold, silver or bronze by how rare it is, with platinum for a finished game.
+                </p>
+              </div>
+            </article>
+
+            <article class="tile tile-b">
+              <div class="tile-shot">
+                <img
+                  src="assets/shot/video-clip-panel.webp"
+                  srcset="assets/shot/video-clip-panel-800.webp 800w, assets/shot/video-clip-panel.webp 960w"
+                  sizes="(max-width: 700px) 100vw, 380px"
+                  width="960"
+                  height="705"
+                  loading="lazy"
+                  decoding="async"
+                  alt=""
+                />
+              </div>
+              <div class="tile-text">
+                <h3><a href="notifications.html#video-clips" data-i18n="more.clipsTitle">Video clips</a></h3>
+                <p data-i18n="more.clipsBody">
+                  A short clip around each unlock, popup included, like a console's trophy video. Off until you turn it
+                  on.
+                </p>
+              </div>
+            </article>
+
+            <article class="tile tile-b">
+              <div class="tile-shot">
+                <img
+                  src="assets/shot/collection-editor.webp"
+                  width="552"
+                  height="470"
+                  loading="lazy"
+                  decoding="async"
+                  alt=""
+                />
+              </div>
+              <div class="tile-text">
+                <h3><a href="getting-started.html#collections" data-i18n="more.collectionsTitle">Collections</a></h3>
+                <p data-i18n="more.collectionsBody">
+                  Your own lists of games, with a colour and an icon. The library and the profile totals follow the one
+                  you pick.
+                </p>
+              </div>
+            </article>
+
+            <article class="tile tile-b">
+              <div class="tile-shot">
+                <img
+                  src="assets/shot/profile-backup-panel.webp"
+                  srcset="assets/shot/profile-backup-panel-800.webp 800w, assets/shot/profile-backup-panel.webp 960w"
+                  sizes="(max-width: 700px) 100vw, 380px"
+                  width="960"
+                  height="705"
+                  loading="lazy"
+                  decoding="async"
+                  alt=""
+                />
+              </div>
+              <div class="tile-text">
+                <h3><a href="advanced.html#profile-backup" data-i18n="more.backupTitle">Profile backup</a></h3>
+                <p data-i18n="more.backupBody">
+                  Settings, library choices, presets, themes and playtime in one file, for a reinstall or a new PC.
+                </p>
+              </div>
+            </article>
+
+            <article class="tile tile-b">
+              <div class="tile-shot">
+                <img
+                  src="assets/shot/controller-panel.webp"
+                  srcset="assets/shot/controller-panel-800.webp 800w, assets/shot/controller-panel.webp 960w"
+                  sizes="(max-width: 700px) 100vw, 380px"
+                  width="960"
+                  height="705"
+                  loading="lazy"
+                  decoding="async"
+                  alt=""
+                />
+              </div>
+              <div class="tile-text">
+                <h3><a href="controller.html" data-i18n="more.controllerTitle">Controller</a></h3>
+                <p data-i18n="more.controllerBody">
+                  Drive the library, the overlay and Settings with an Xbox, PlayStation or Switch pad.
+                </p>
+              </div>
+            </article>
+
+            <article class="tile tile-b">
+              <div class="tile-shot">
+                <img
+                  src="assets/shot/onboarding-dialog.webp"
+                  srcset="assets/shot/onboarding-dialog-800.webp 800w, assets/shot/onboarding-dialog.webp 1250w"
+                  sizes="(max-width: 700px) 100vw, 580px"
+                  width="1250"
+                  height="825"
+                  loading="lazy"
+                  decoding="async"
+                  alt=""
+                />
+              </div>
+              <div class="tile-text">
+                <h3><a href="getting-started.html#first-launch" data-i18n="more.onboardingTitle">First-run guide</a></h3>
+                <p data-i18n="more.onboardingBody">
+                  Six steps from language to alerts. It finds what is installed, and everything it asks can be changed
+                  later in Settings.
+                </p>
+              </div>
+            </article>
+
+            <article class="tile tile-b">
+              <div class="tile-shot">
+                <img
+                  src="assets/shot/retroachievements-panel.webp"
+                  srcset="assets/shot/retroachievements-panel-800.webp 800w, assets/shot/retroachievements-panel.webp 960w"
+                  sizes="(max-width: 700px) 100vw, 580px"
+                  width="960"
+                  height="705"
+                  loading="lazy"
+                  decoding="async"
+                  alt=""
+                />
+              </div>
+              <div class="tile-text">
+                <h3><a href="sources.html#retroachievements" data-i18n="more.retroTitle">RetroAchievements</a></h3>
+                <p data-i18n="more.retroBody">
+                  Connect your account, import every game you played, and unlocks from any emulator that reports to it
+                  are announced within seconds.
+                </p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <!-- Sources ------------------------------------------------------------------------- -->
-      <section class="section section-alt" id="sources">
+      <section class="section" id="sources">
         <div class="wrap">
           <div class="section-head narrow">
             <h2 data-i18n="sources.title">Sources</h2>
@@ -329,7 +555,7 @@
 
           <!--
             Each tile carries the platform's own mark, drawn as a mask in the accent colour rather
-            than as the logo in its own colours: eight brand palettes in one grid fight each other
+            than as the logo in its own colours: a grid of brand palettes fights itself
             and half of them disappear against one theme or the other. The files are the ones the
             application itself uses for its library badges - see assets/img/source/README.md.
           -->
@@ -374,6 +600,11 @@
               <b>Xbox PC</b>
               <span data-i18n="sources.xbox">Game Pass and Microsoft Store installs, plus imported Xbox Network state</span>
             </div>
+            <div class="source">
+              <span class="source-mark" data-mark="retro" aria-hidden="true"></span>
+              <b>RetroAchievements</b>
+              <span data-i18n="sources.retro">Every game you played on an emulator that reports to your account, with unlocks announced within seconds</span>
+            </div>
           </div>
 
           <div class="note" style="margin-top: 22px">
@@ -393,17 +624,17 @@
       </section>
 
       <!-- Presets ------------------------------------------------------------------------- -->
-      <section class="section" id="presets">
+      <section class="section section-alt" id="presets">
         <div class="wrap">
           <div class="section-head narrow">
             <h2 data-i18n="presets.title">Presets</h2>
             <p class="lead" data-i18n="presets.lead">
-              Nine designs ship with the app, and each one paints four states: a normal unlock, a rare one, 100%
+              The app ships with ready-made designs, and each one paints four states: a normal unlock, a rare one, 100%
               completion and a progress step. Pick one below, they are all running.
             </p>
           </div>
 
-          <div class="preset-stage" data-stage data-backdrop="art">
+          <div class="preset-stage" id="preset-panel" role="tabpanel" data-stage data-backdrop="art">
             <iframe
               class="popup-frame"
               data-preset-frame
@@ -419,15 +650,15 @@
           </div>
 
           <div class="preset-strip" role="tablist" data-preset-tabs data-i18n-attr="aria-label:presets.pickerLabel" aria-label="Choose a preset">
-            <button class="chip" type="button" role="tab" aria-selected="true" data-preset="aw-next">AW Next</button>
-            <button class="chip" type="button" role="tab" aria-selected="false" data-preset="steam">Steam</button>
-            <button class="chip" type="button" role="tab" aria-selected="false" data-preset="epic-games">Epic Games</button>
-            <button class="chip" type="button" role="tab" aria-selected="false" data-preset="playstation">PlayStation</button>
-            <button class="chip" type="button" role="tab" aria-selected="false" data-preset="xbox">Xbox</button>
-            <button class="chip" type="button" role="tab" aria-selected="false" data-preset="cover">Cover</button>
-            <button class="chip" type="button" role="tab" aria-selected="false" data-preset="glass">Glass</button>
-            <button class="chip" type="button" role="tab" aria-selected="false" data-preset="arcade">Arcade</button>
-            <button class="chip" type="button" role="tab" aria-selected="false" data-preset="slim">Slim</button>
+            <button class="chip" type="button" role="tab" aria-selected="true" tabindex="0" aria-controls="preset-panel" data-preset="aw-next">AW Next</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="preset-panel" data-preset="steam">Steam</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="preset-panel" data-preset="epic-games">Epic Games</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="preset-panel" data-preset="playstation">PlayStation</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="preset-panel" data-preset="xbox">Xbox</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="preset-panel" data-preset="cover">Cover</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="preset-panel" data-preset="glass">Glass</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="preset-panel" data-preset="arcade">Arcade</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="preset-panel" data-preset="slim">Slim</button>
           </div>
 
           <div class="stage-controls">
@@ -489,8 +720,8 @@
               <h3 data-i18n="presets.designerTitle">Make your own</h3>
               <p data-i18n="presets.designerBody">
                 Settings has a designer: layout, type, colours, motion, the rare and completion treatments, a per-preset
-                sound. No CSS and no JSON, and the preview is the real popup rather than an approximation of it. Fourteen
-                starting points, or roll one with Surprise me.
+                sound. No CSS and no JSON, and the preview is the real popup rather than an approximation of it. Start from one of the
+                ready-made styles, or roll one with Surprise me.
               </p>
               <p>
                 <a class="card-more" href="presets.html" data-i18n="presets.designerLink">How the designer works</a>
@@ -518,18 +749,18 @@
         frame, a theme is only colours and numbers, so the sample below is painted directly by the
         page from the palette on the chip that was pressed. Nothing is fetched and nothing runs.
       -->
-      <section class="section section-alt" id="themes">
+      <section class="section" id="themes">
         <div class="wrap">
           <div class="section-head narrow">
             <h2 data-i18n="homeThemes.title">Themes</h2>
             <p class="lead" data-i18n="homeThemes.lead">
               A preset paints the popup. A theme paints the rest: the window, the title bar, the library, the
-              achievement lists, the settings surface and the in-game overlay. Thirteen ship with the app. Pick one and
+              achievement lists, the settings surface and the in-game overlay. The app ships with a set of them. Pick one and
               the sample below is repainted with it.
             </p>
           </div>
 
-          <div class="theme-stage" data-theme-stage>
+          <div class="theme-stage" id="theme-panel" role="tabpanel" data-theme-stage>
             <!--
               A schematic of the home screen, not a screenshot: the same regions the theme colours,
               small enough to read at a glance. Every colour on it comes from a custom property the
@@ -577,106 +808,21 @@
             data-i18n-attr="aria-label:homeThemes.pickerLabel"
             aria-label="Choose a theme"
           >
-            <button
-              class="chip"
-              type="button"
-              role="tab"
-              aria-selected="true"
-              data-theme="default"
-              data-colors="#142236,#26384c,#192a40,#263b55,#e7edf6,#94a5ba,#3e5065,#6c91ff"
-            >
-              Steam Blue
-            </button>
-            <button
-              class="chip"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              data-theme="light"
-              data-colors="#e6ebf3,#f6f9fc,#eef2f8,#ffffff,#16202e,#5b6b80,#c5cfdd,#3a63b5"
-            >
-              Light
-            </button>
-            <button
-              class="chip"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              data-theme="oled"
-              data-colors="#000000,#101014,#060608,#141419,#e8ecf2,#9aa3b2,#2c2c34,#4da3ff"
-            >
-              OLED Black
-            </button>
-            <button
-              class="chip"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              data-theme="graphite"
-              data-colors="#1d1f22,#2a2d31,#17181b,#292c30,#e3e6ea,#a4aab2,#45494f,#6fbf73"
-            >
-              Graphite
-            </button>
-            <button
-              class="chip"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              data-theme="nord"
-              data-colors="#2e3440,#3b4252,#242933,#3b4252,#eceff4,#9099ab,#4c566a,#88c0d0"
-            >
-              Nord
-            </button>
-            <button
-              class="chip"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              data-theme="dracula"
-              data-colors="#282a36,#343747,#1e1f29,#343746,#f8f8f2,#9ba3c7,#4b4e63,#bd93f9"
-            >
-              Dracula
-            </button>
-            <button
-              class="chip"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              data-theme="gruvbox"
-              data-colors="#282828,#3c3836,#1d2021,#3c3836,#ebdbb2,#a89984,#504945,#fe8019"
-            >
-              Gruvbox
-            </button>
-            <button
-              class="chip"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              data-theme="tokyonight"
-              data-colors="#1a1b26,#24283b,#16161e,#24283b,#c0caf5,#565f89,#3b4261,#7dcfff"
-            >
-              Tokyo Night
-            </button>
-            <button
-              class="chip"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              data-theme="catppuccin"
-              data-colors="#1e1e2e,#313244,#181825,#313244,#cdd6f4,#a6adc8,#45475a,#89b4fa"
-            >
-              Catppuccin
-            </button>
-            <button
-              class="chip"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              data-theme="everforest"
-              data-colors="#232a2e,#2d353b,#1c2226,#343f44,#d3c6aa,#859289,#4a555b,#a7c080"
-            >
-              Everforest
-            </button>
+            <!-- generated:theme-chips (node tools/site/home-data.js) -->
+            <button class="chip" type="button" role="tab" aria-selected="true" tabindex="0" aria-controls="theme-panel" data-theme="default" data-colors="#142236,#26384c,#192a40,#263b55,#e7edf6,#94a5ba,#3e5065,#6c91ff">Steam Blue</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="theme-panel" data-theme="light" data-colors="#e6ebf3,#f6f9fc,#eef2f8,#ffffff,#16202e,#5b6b80,#c5cfdd,#3a63b5">Light</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="theme-panel" data-theme="oled" data-colors="#000000,#101014,#060608,#141419,#e8ecf2,#9aa3b2,#2c2c34,#4da3ff">OLED Black</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="theme-panel" data-theme="graphite" data-colors="#1d1f22,#2a2d31,#17181b,#292c30,#e3e6ea,#a4aab2,#45494f,#6fbf73">Graphite</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="theme-panel" data-theme="nord" data-colors="#2e3440,#3b4252,#242933,#3b4252,#eceff4,#9099ab,#4c566a,#88c0d0">Nord</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="theme-panel" data-theme="dracula" data-colors="#282a36,#343747,#1e1f29,#343746,#f8f8f2,#9ba3c7,#4b4e63,#bd93f9">Dracula</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="theme-panel" data-theme="gruvbox" data-colors="#282828,#3c3836,#1d2021,#3c3836,#ebdbb2,#a89984,#504945,#fe8019">Gruvbox</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="theme-panel" data-theme="tokyonight" data-colors="#1a1b26,#24283b,#16161e,#24283b,#c0caf5,#8790bb,#3b4261,#7dcfff">Tokyo Night</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="theme-panel" data-theme="catppuccin" data-colors="#1e1e2e,#313244,#181825,#313244,#cdd6f4,#a6adc8,#45475a,#89b4fa">Catppuccin Mocha</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="theme-panel" data-theme="rosepine" data-colors="#191724,#1f1d2e,#15131d,#26233a,#e0def4,#908caa,#403d52,#c4a7e7">Rosé Pine</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="theme-panel" data-theme="synthwave" data-colors="#241b2f,#2d2440,#1a1325,#372a54,#f4efff,#b7a8d9,#52407a,#36f9f6">Synthwave '84</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="theme-panel" data-theme="everforest" data-colors="#232a2e,#2d353b,#1c2226,#343f44,#d3c6aa,#859289,#4a555b,#a7c080">Everforest</button>
+            <button class="chip" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="theme-panel" data-theme="ocean" data-colors="#0b1e26,#12323d,#08171c,#16404d,#d7f2f5,#8fb4bd,#2e5a66,#35d0ba">Ocean</button>
+            <!-- /generated:theme-chips -->
           </div>
 
           <p class="preset-note" data-theme-note data-i18n="homeThemes.noteDefault">
@@ -719,6 +865,15 @@
             <li data-theme="everforest" data-i18n="homeThemes.noteEverforest">
               Everforest. Muted green greys and a sage accent, the least saturated set here.
             </li>
+            <li data-theme="rosepine" data-i18n="homeThemes.noteRosepine">
+              Rosé Pine. Dusky violet blacks, soft grey-pink text and a lilac accent.
+            </li>
+            <li data-theme="synthwave" data-i18n="homeThemes.noteSynthwave">
+              Synthwave '84. Deep purple under a neon cyan accent, the loudest palette here.
+            </li>
+            <li data-theme="ocean" data-i18n="homeThemes.noteOcean">
+              Ocean. Dark teal surfaces and a sea-green accent.
+            </li>
           </ul>
 
           <div class="split" style="margin-top: 44px">
@@ -760,7 +915,9 @@
                 <li>
                   <b data-i18n="install.step1Title">Install it</b>
                   <span class="muted" data-i18n="install.step1Body">
-                    <code>Achievement.Watcher.Setup.exe</code> from the releases page. Nowhere else publishes it.
+                    <code>Achievement.Watcher.Setup.&lt;version&gt;.exe</code> from the releases page, or
+                    <code>Achievement.Watcher.Portable.&lt;version&gt;.zip</code> if you would rather have no installer:
+                    extract it anywhere and its data stays beside it. Nowhere else publishes them.
                   </span>
                 </li>
                 <li>
@@ -782,7 +939,7 @@
                 Achievement Watcher folder without modifying it.
               </p>
               <div class="hero-cta">
-                <a class="btn" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-i18n="install.download">
+                <a class="btn" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-installer data-i18n="install.download">
                   Download
                 </a>
                 <a class="btn btn-ghost" href="getting-started.html" data-i18n="install.guide">First run guide</a>

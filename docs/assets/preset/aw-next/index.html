@@ -34,6 +34,13 @@ window.addEventListener('DOMContentLoaded', function () {
     var type = String((data && data.notificationType) || '').toLowerCase();
     if ((data && data.isPlatinum) || type === 'platinum') { root.classList.add('state-platinum'); return; }
     if (type === 'progress' || type === 'playtime') return;
+    // The host names the tier (rare tiers or trophy grades); the percentage is the fallback for a
+    // host that does not send one, such as the designer preview.
+    var tier = data && data.rarityTier;
+    if (typeof tier === 'string') {
+      if (tier === 'gold' || tier === 'silver' || tier === 'bronze') root.classList.add('state-rare', 'tier-' + tier);
+      return;
+    }
     // An ordinary unlock carries rarityPercent null, and Number(null) is 0 - which would make
     // every notification the rarest tier there is. Absence has to be checked before the number.
     var raw = data && data.rarityPercent;
