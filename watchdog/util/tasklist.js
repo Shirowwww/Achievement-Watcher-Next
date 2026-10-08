@@ -5,12 +5,14 @@
 // `tasklist.exe` round trip. `win-tasklist` is the fallback for machines where koffi can't load
 // kernel32 - reached only after the native path throws once.
 
-const snapshot = require('./processSnapshot.js');
+const snapshot = process.platform === 'win32' ? require('./processSnapshot.js') : require('./procSnapshot.js');
 
 let modulePromise;
 let nativeBroken = false;
 
+// win-tasklist is a Windows-only optional dependency; elsewhere /proc is the only source.
 function loadWinTasklist() {
+  if (process.platform !== 'win32') return Promise.reject(new Error('process listing unavailable: /proc is not readable'));
   modulePromise ||= import('win-tasklist');
   return modulePromise;
 }

@@ -10,12 +10,18 @@ const APP_DATA_DIR_NAME = 'Achievement Watcher Next';
 
 let cached = null;
 
+// Electron's own appData: %APPDATA% on Windows, the XDG config folder elsewhere.
+function appDataRoot() {
+  if (process.platform === 'win32') return process.env['APPDATA'] || '';
+  return process.env.XDG_CONFIG_HOME || path.join(require('os').homedir(), '.config');
+}
+
 function userDataDir() {
   if (cached) return cached;
   if (process.env.AW_USER_DATA) {
     cached = process.env.AW_USER_DATA;
   } else {
-    cached = path.join(process.env['APPDATA'] || '', APP_DATA_DIR_NAME);
+    cached = path.join(appDataRoot(), APP_DATA_DIR_NAME);
   }
   return cached;
 }

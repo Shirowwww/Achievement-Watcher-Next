@@ -58,6 +58,14 @@ asarUnpack:
   - parser/steamLibrary.js
   # Steam's own unlocks in appcache/stats, for the optional Steam client notifications.
   - parser/steamOfficial.js
+  # Wine prefixes and the native XDG host (Linux save roots), the presence pipe name, and the
+  # registry-free playtime store with the atomic writer it uses.
+  - util/winHosts.js
+  - util/winePrefixes.js
+  - util/wineRegistry.js
+  - util/watchdogPipe.js
+  - util/playtimeFile.js
+  - util/replaceFile.js
 
 publish:
   provider: github

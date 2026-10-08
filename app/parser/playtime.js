@@ -1,13 +1,39 @@
 'use strict';
 
 const { readRegistryInteger, readRegistryIntegers, writeRegistryDword } = require('../util/reg');
+const playtimeFile = require('../util/playtimeFile.js');
+const { userDataDir } = require('../util/userDataPath.js');
 
 // Read side of the playtime counters the Watchdog writes in watchdog/playtime/track.js - the two
 // must name the same registry key. Counters recorded under the older "Achievement Watcher" and
 // "Achievement Watcher 3.0" namespaces are copied here once by migratePlaytimeRegistry().
+// Without a registry (Linux) both sides use cfg/playtime.json instead.
 const PLAYTIME_KEY = 'Software/Achievement Watcher Next/Playtime/Steam/';
+const useRegistry = () => process.platform === 'win32';
+
+function readCounters(appID) {
+  if (!useRegistry()) {
+    const { total, last } = playtimeFile.read(playtimeFile.playtimeFile(userDataDir()), appID);
+    return { total, last };
+  }
+  return readRegistryIntegers('HKCU', PLAYTIME_KEY + appID, ['total', 'last']);
+}
+
+async function writeCounters(appID, total, last) {
+  if (!useRegistry()) {
+    playtimeFile.write(playtimeFile.playtimeFile(userDataDir()), appID, { total, last });
+    return;
+  }
+  const path = `${PLAYTIME_KEY}${appID}`;
+  await writeRegistryDword('HKCU', path, 'total', total);
+  await writeRegistryDword('HKCU', path, 'last', last);
+}
 
 module.exports = async (appID) => {
+  if (!useRegistry()) {
+    const { total, last } = readCounters(appID);
+    return { playtime: total, lastplayed: last };
+  }
   const current = +readRegistryInteger('HKCU', PLAYTIME_KEY + appID, 'total') || 0;
   const last = +readRegistryInteger('HKCU', PLAYTIME_KEY + appID, 'last') || 0;
   return { playtime: current, lastplayed: last };
@@ -18,6 +44,7 @@ module.exports = async (appID) => {
 // in-process (registry-js) and cheap; guarded so a missing key can never break the list build.
 module.exports.lastPlayedSync = (appID) => {
   try {
+    if (!useRegistry()) return readCounters(appID).last;
     return +readRegistryInteger('HKCU', PLAYTIME_KEY + appID, 'last') || 0;
   } catch {
     return 0;
@@ -27,7 +54,7 @@ module.exports.lastPlayedSync = (appID) => {
 // One registry pass for library rows that show both total playtime and the last session.
 module.exports.readSync = (appID) => {
   try {
-    const values = readRegistryIntegers('HKCU', PLAYTIME_KEY + appID, ['total', 'last']);
+    const values = readCounters(appID);
     return { playtime: +values.total || 0, lastplayed: +values.last || 0 };
   } catch {
     return { playtime: 0, lastplayed: 0 };
@@ -35,9 +62,7 @@ module.exports.readSync = (appID) => {
 };
 
 module.exports.reset = async (appID) => {
-  const path = `${PLAYTIME_KEY}${appID}`;
-  await writeRegistryDword('HKCU', path, 'total', 0);
-  await writeRegistryDword('HKCU', path, 'last', 0);
+  await writeCounters(appID, 0, 0);
 };
 
 // Neither Steam nor the local counter is authoritative (Steam sees other machines, AW sees
@@ -59,8 +84,6 @@ module.exports.mergeSteamPlaytime = mergeSteamPlaytime;
 module.exports.seedFromSteam = async (appID, steam) => {
   const merged = mergeSteamPlaytime(module.exports.readSync(appID), steam);
   if (!merged) return false;
-  const path = `${PLAYTIME_KEY}${appID}`;
-  await writeRegistryDword('HKCU', path, 'total', merged.total);
-  await writeRegistryDword('HKCU', path, 'last', merged.last);
+  await writeCounters(appID, merged.total, merged.last);
   return true;
 };

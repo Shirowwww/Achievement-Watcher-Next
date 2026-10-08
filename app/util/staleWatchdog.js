@@ -6,10 +6,13 @@
   netstat only runs once something already answers on the Watchdog's pipe or port.
 */
 
+const fs = require('fs');
 const net = require('net');
+const path = require('path');
 const { execFile } = require('child_process');
+const { watchdogPipePath } = require('./watchdogPipe.js');
 
-const WATCHDOG_PIPE = '\\\\.\\pipe\\AchievementWatchdogPipe';
+const WATCHDOG_PIPE = watchdogPipePath();
 const WATCHDOG_PORT = 8082;
 const PROBE_TIMEOUT_MS = 1000;
 
@@ -59,24 +62,90 @@ function imageName(tasklistOutput) {
   return match ? match[1] : '';
 }
 
+// Linux: the socket inodes listening on the port (/proc/net/tcp*, state 0A), then the processes
+// holding one of those sockets open.
+function procListenerPids(port = WATCHDOG_PORT, procRoot = '/proc') {
+  const inodes = new Set();
+  const portHex = port.toString(16).toUpperCase().padStart(4, '0');
+  for (const table of ['net/tcp', 'net/tcp6']) {
+    let text = '';
+    try {
+      text = fs.readFileSync(path.join(procRoot, table), 'utf8');
+    } catch {
+      continue;
+    }
+    for (const line of text.split('\n').slice(1)) {
+      const cols = line.trim().split(/\s+/);
+      if (cols.length > 9 && cols[1].endsWith(`:${portHex}`) && cols[3] === '0A') inodes.add(cols[9]);
+    }
+  }
+  if (!inodes.size) return [];
+  const pids = [];
+  for (const pid of fs.readdirSync(procRoot).filter((name) => /^\d+$/.test(name))) {
+    let fds = [];
+    try {
+      fds = fs.readdirSync(path.join(procRoot, pid, 'fd'));
+    } catch {
+      continue;
+    }
+    const holds = fds.some((fd) => {
+      try {
+        const match = /^socket:\[(\d+)\]$/.exec(fs.readlinkSync(path.join(procRoot, pid, 'fd', fd)));
+        return match && inodes.has(match[1]);
+      } catch {
+        return false;
+      }
+    });
+    if (holds) pids.push(pid);
+  }
+  return pids;
+}
+
+function procImageName(pid, procRoot = '/proc') {
+  try {
+    return path.basename(fs.readlinkSync(path.join(procRoot, String(pid), 'exe')));
+  } catch {
+    return '';
+  }
+}
+
+const windowsProcesses = {
+  listenerPids: async (run) => listenerPids(await run('netstat.exe', ['-ano', '-p', 'tcp'])),
+  imageName: async (run, pid) => imageName(await run('tasklist.exe', ['/FI', `PID eq ${pid}`, '/FO', 'CSV', '/NH']).catch(() => '')),
+  kill: (run, pid) => run('taskkill.exe', ['/F', '/PID', pid]),
+};
+
+const procProcesses = {
+  listenerPids: async () => procListenerPids(),
+  imageName: async (run, pid) => procImageName(pid),
+  kill: async (run, pid) => process.kill(Number(pid), 'SIGKILL'),
+};
+
 /*
   Only a listener running this very executable is killed: port 8082 is not reserved, and another
   application holding it is not ours to stop.
 */
-async function sweepStaleWatchdog({ exeName, selfPid = process.pid, log = () => {}, probe = answers, run = runFile } = {}) {
+async function sweepStaleWatchdog({
+  exeName,
+  selfPid = process.pid,
+  log = () => {},
+  probe = answers,
+  run = runFile,
+  processes = process.platform === 'win32' ? windowsProcesses : procProcesses,
+} = {}) {
   const [pipe, port] = await Promise.all([probe(WATCHDOG_PIPE), probe({ host: '127.0.0.1', port: WATCHDOG_PORT })]);
   if (!pipe && !port) return { checked: false, killed: [] };
 
   const killed = [];
-  for (const pid of listenerPids(await run('netstat.exe', ['-ano', '-p', 'tcp']))) {
+  for (const pid of await processes.listenerPids(run)) {
     if (pid === String(selfPid)) continue;
-    const image = imageName(await run('tasklist.exe', ['/FI', `PID eq ${pid}`, '/FO', 'CSV', '/NH']).catch(() => ''));
+    const image = await processes.imageName(run, pid);
     if (!image || image.toLowerCase() !== String(exeName || '').toLowerCase()) {
       log(`port ${WATCHDOG_PORT} is held by ${image || 'an unknown process'} (PID ${pid}), left running`);
       continue;
     }
     try {
-      await run('taskkill.exe', ['/F', '/PID', pid]);
+      await processes.kill(run, pid);
       killed.push(pid);
       log(`killed stale instance PID ${pid} on port ${WATCHDOG_PORT}`);
     } catch (err) {
@@ -86,4 +155,4 @@ async function sweepStaleWatchdog({ exeName, selfPid = process.pid, log = () => 
   return { checked: true, killed };
 }
 
-module.exports = { sweepStaleWatchdog, listenerPids, imageName, answers, WATCHDOG_PIPE, WATCHDOG_PORT };
+module.exports = { sweepStaleWatchdog, listenerPids, imageName, procListenerPids, procImageName, answers, WATCHDOG_PIPE, WATCHDOG_PORT };

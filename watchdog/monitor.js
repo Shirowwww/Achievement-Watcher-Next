@@ -12,6 +12,8 @@ const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 // Shared with the app so the bit-to-api-name table lives in exactly one place (see the asarUnpack
 // list in app/electron-builder.yml). Only its pure readers are used here.
 const ff7 = require(sharedAppModulePath('parser/ff7.js'));
+const winHosts = require(sharedAppModulePath('util/winHosts.js'));
+const { hostPath } = winHosts;
 
 // A folder belongs to Goldberg SocialClub when the SocialClub root is on its path, not by its
 // shape: a numeric Steam AppID like "1546990" is also valid hex and would pick the wrong parser.
@@ -68,49 +70,47 @@ const files = {
 // missed builds using the other spelling, so unlocks never fired until the next refresh.
 const ALI213_ACHIEVEMENT_FILES = [files.achievement[4], files.achievement[6]];
 
-module.exports.getFolders = async (userDir_file, options = {}) => {
-  let configuredDirs = [];
-  try {
-    const parsed = JSON.parse(await fs.readFile(userDir_file, 'utf8'));
-    if (Array.isArray(parsed)) configuredDirs = parsed;
-  } catch {
-    configuredDirs = [];
-  }
-  let steamEmu = [
+const GSE_SAVES_OPTIONS = { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1], files.achievement[9], files.achievement[0]] }; //keeping "achievements.ini" [0] for backward compatibility with custom goldberg emu build
+
+// The emulator save roots of one host (see app/util/winHosts.js); a root whose base folder the host
+// does not have is left out.
+function builtinRoots(host) {
+  const at = (envName, ...segments) => hostPath(host, envName, ...segments);
+  return [
     {
-      dir: path.join(process.env['Public'], 'Documents/Steam/CODEX'),
+      dir: at('PUBLIC', 'Documents/Steam/CODEX'),
       // stats.ini changes alone when only a counter moves; statsSibling reads achievements.ini for it.
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0], files.achievement[3]], statsSibling: true },
     },
     {
-      dir: path.join(process.env['Public'], 'Documents/Steam/RUNE'),
+      dir: at('PUBLIC', 'Documents/Steam/RUNE'),
       // stats.ini changes alone when only a counter moves; statsSibling reads achievements.ini for it.
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0], files.achievement[3]], statsSibling: true },
     },
     {
-      dir: path.join(process.env['Public'], 'Documents/Steam/RLD!'),
+      dir: at('PUBLIC', 'Documents/Steam/RLD!'),
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[2], files.achievement[4], files.achievement[6]] },
     },
     {
-      dir: path.join(process.env['Public'], 'Documents/OnlineFix'),
+      dir: at('PUBLIC', 'Documents/OnlineFix'),
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0]] },
     },
     {
-      dir: path.join(process.env['APPDATA'], 'Steam/CODEX'),
+      dir: at('APPDATA', 'Steam/CODEX'),
       // stats.ini changes alone when only a counter moves; statsSibling reads achievements.ini for it.
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0], files.achievement[3]], statsSibling: true },
     },
     {
-      dir: path.join(process.env['APPDATA'], 'Steam/RLD!'),
+      dir: at('APPDATA', 'Steam/RLD!'),
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[2], files.achievement[4], files.achievement[6]] },
     },
     {
-      dir: path.join(process.env['APPDATA'], 'Goldberg SteamEmu Saves'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1], files.achievement[9], files.achievement[0]] }, //keeping "achievements.ini" [0] for backward compatibility with custom goldberg emu build
+      dir: at('APPDATA', 'Goldberg SteamEmu Saves'),
+      options: { ...GSE_SAVES_OPTIONS },
     },
     {
-      dir: path.join(process.env['APPDATA'], 'GSE Saves'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1], files.achievement[9], files.achievement[0]] }, //keeping "achievements.ini" [0] for backward compatibility with custom goldberg emu build
+      dir: at('APPDATA', 'GSE Saves'),
+      options: { ...GSE_SAVES_OPTIONS },
     },
     {
       // GOG UniverseLAN, one folder per GOG product id: %LOCALAPPDATA%\UniverseLAN\<gogAppId>\
@@ -120,13 +120,13 @@ module.exports.getFolders = async (userDir_file, options = {}) => {
       // no source-specific parsing needed here, only the watch root. Independent of the
       // GameSettings.AppID-keyed UniverseLAN.ini handling further below, which targets a different,
       // user-configured-folder layout.
-      dir: path.join(process.env['LOCALAPPDATA'], 'UniverseLAN'),
+      dir: at('LOCALAPPDATA', 'UniverseLAN'),
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[6]] },
     },
     {
       // Goldberg SocialClub Emu Saves: <GameName>\<hex profile>\... watchdog.js resolves the game
       // name back to the app's SocialClub entry through the game index (options.socialClub).
-      dir: path.join(process.env['APPDATA'], 'Goldberg SocialClub Emu Saves'),
+      dir: at('APPDATA', 'Goldberg SocialClub Emu Saves'),
       // Unlike Steam roots, the filter must accept game-name folders too since a numeric-AppID
       // filter never matches here; `file` excludes Rockstar's own unreadable blobs to avoid noise.
       options: { recursive: true, filter: () => true, file: SOCIALCLUB_ACHIEVEMENT_FILES, socialClub: true },
@@ -134,101 +134,129 @@ module.exports.getFolders = async (userDir_file, options = {}) => {
     {
       // Goldberg Uplay R2: folders are named with the Ubisoft product id, not a Steam AppID, so
       // watchdog.js maps it through gameIndex's uplayId before loading and re-keying api-names.
-      dir: path.join(process.env['APPDATA'], 'Goldberg UplayEmu Saves'),
+      dir: at('APPDATA', 'Goldberg UplayEmu Saves'),
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1]], uplayR2: true },
     },
     {
       // R1 generation of the same emulator: same folder-per-product layout and achievements.json,
       // its own default root, needed since pre-R2 titles never load an R2 loader.
-      dir: path.join(process.env['APPDATA'], 'R1 UplayEmu Saves'),
+      dir: at('APPDATA', 'R1 UplayEmu Saves'),
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1]], uplayR2: true },
     },
     {
-      dir: path.join(process.env['APPDATA'], 'EMPRESS'),
+      dir: at('APPDATA', 'EMPRESS'),
       // Matches both shapes: <appid>\remote\<appid> and the flat remote\<appid>.
-      options: { recursive: true, filter: /remote\\([0-9]+)/, file: [files.achievement[1]] },
+      options: { recursive: true, filter: /remote[\\/]([0-9]+)/, file: [files.achievement[1]] },
     },
     {
-      dir: path.join(process.env['APPDATA'], 'CreamAPI'),
+      dir: at('APPDATA', 'CreamAPI'),
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0]] },
     },
     {
-      dir: path.join(process.env['Public'], 'Documents/EMPRESS'),
-      options: { recursive: true, filter: /remote\\([0-9]+)/, file: [files.achievement[1]] },
+      dir: at('PUBLIC', 'Documents/EMPRESS'),
+      options: { recursive: true, filter: /remote[\\/]([0-9]+)/, file: [files.achievement[1]] },
     },
     {
-      dir: path.join(process.env['PROGRAMDATA'], 'Steam'),
+      dir: at('PROGRAMDATA', 'Steam'),
       options: {
         disableCheckIfProcessIsRunning: true,
         disableCheckTimestamp: true,
         recursive: true,
-        filter: /([0-9]+)\\stats/,
+        filter: /([0-9]+)[\\/]stats/,
         file: [files.achievement[0]],
       },
     },
     {
-      dir: path.join(process.env['LOCALAPPDATA'], 'SKIDROW'),
+      dir: at('LOCALAPPDATA', 'SKIDROW'),
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[5]] },
     },
     {
-      dir: path.join(process.env['APPDATA'], 'SmartSteamEmu'),
+      dir: at('APPDATA', 'SmartSteamEmu'),
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[7]] },
     },
     {
       // No path filter: epic ids can be non-numeric. Both roots used to carry a '*/*/' glob
       // that never exists on disk, so neither was ever watched.
-      dir: path.join(process.env['APPDATA'], 'NemirtingasEpicEmu'),
+      dir: at('APPDATA', 'NemirtingasEpicEmu'),
       options: { recursive: true, file: [files.achievement[1]] },
     },
     {
-      dir: path.join(process.env['APPDATA'], 'NemirtingasGalaxyEmu'),
+      dir: at('APPDATA', 'NemirtingasGalaxyEmu'),
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1]] },
     },
     {
       // RAZOR1911: plain-text `achievement` file, "<apiname> <0|1> <epoch>" per line.
-      dir: path.join(process.env['APPDATA'], '.1911'),
+      dir: at('APPDATA', '.1911'),
       options: { recursive: true, filter: /([0-9]+)/, file: ['achievement'] },
     },
     {
-      dir: path.join(process.env['LOCALAPPDATA'], 'anadius', 'LSX emu', 'achievement_watcher'),
+      dir: at('LOCALAPPDATA', 'anadius', 'LSX emu', 'achievement_watcher'),
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0]] },
     },
+  ].filter((entry) => entry.dir);
+}
+
+function documentsRoots(mydocs) {
+  const roots = [
+    {
+      dir: path.join(mydocs, 'SKIDROW'),
+      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[5]] },
+    },
   ];
+  // FINAL FANTASY VII (2013) rewrites achievement.dat beside its saves. The folder is watched
+  // only once it proves it is that game, since an 8-byte achievement.dat is far too generic.
+  const ff7Root = path.join(mydocs, 'FINAL FANTASY VII');
+  if (ff7.detect(ff7Root).detected) {
+    roots.push({
+      dir: ff7Root,
+      options: { appid: ff7.APPID, recursive: false, file: [ff7.STATE_FILE] },
+    });
+  }
+  return roots;
+}
+
+async function windowsDocuments() {
+  const regedit = await loadRegedit();
+  return regedit.regQueryStringValueAndExpand('HKCU', winHosts.SHELL_FOLDERS_KEY, 'Personal');
+}
+
+// The Documents folder of the host a configured game folder sits in (its Wine prefix on Linux).
+function documentsFor(dirPath, hosts, docsByHost) {
+  const key = winHosts.pathKey(dirPath);
+  const owner = hosts.find((host) => host.root && key.startsWith(winHosts.pathKey(host.root) + path.sep));
+  return docsByHost.get(owner || hosts[0]) || null;
+}
+
+module.exports.getFolders = async (userDir_file, options = {}) => {
+  let configuredDirs = [];
+  try {
+    const parsed = JSON.parse(await fs.readFile(userDir_file, 'utf8'));
+    if (Array.isArray(parsed)) configuredDirs = parsed;
+  } catch {
+    configuredDirs = [];
+  }
+
+  let nativeDocs = null;
+  if (process.platform === 'win32') nativeDocs = await windowsDocuments().catch(() => null);
+  const hosts = winHosts.listHosts({ nativeDocuments: () => nativeDocs });
+  let steamEmu = hosts.flatMap(builtinRoots);
 
   // The GBE save folder chosen in Settings (issue #123) has the GSE Saves shape: one folder per appid.
   const customSaves = String((options && options.emulator && options.emulator.savePath) || '').trim();
   if (customSaves && path.isAbsolute(customSaves)) {
-    const gse = steamEmu.find((entry) => entry.dir === path.join(process.env['APPDATA'], 'GSE Saves'));
-    steamEmu.push({ dir: customSaves, options: { ...gse.options } });
+    steamEmu.push({ dir: customSaves, options: { ...GSE_SAVES_OPTIONS } });
+  }
+
+  const docsByHost = new Map();
+  for (const host of hosts) {
+    const docs = host.documents();
+    docsByHost.set(host, docs);
+    if (docs) steamEmu = steamEmu.concat(documentsRoots(docs));
   }
 
   try {
-    const regedit = await loadRegedit();
-    const mydocs = regedit.regQueryStringValueAndExpand(
-      'HKCU',
-      'Software/Microsoft/Windows/CurrentVersion/Explorer/User Shell Folders',
-      'Personal'
-    );
-    if (mydocs) {
-      steamEmu = steamEmu.concat([
-        {
-          dir: path.join(mydocs, 'SKIDROW'),
-          options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[5]] },
-        },
-      ]);
-
-      // FINAL FANTASY VII (2013) rewrites achievement.dat beside its saves. The folder is watched
-      // only once it proves it is that game, since an 8-byte achievement.dat is far too generic.
-      const ff7Root = path.join(mydocs, 'FINAL FANTASY VII');
-      if (ff7.detect(ff7Root).detected) {
-        steamEmu.push({
-          dir: ff7Root,
-          options: { appid: ff7.APPID, recursive: false, file: [ff7.STATE_FILE] },
-        });
-      }
-    }
-
     for (let dir of configuredDirs) {
+      const mydocs = dir && dir.path ? documentsFor(dir.path, hosts, docsByHost) : null;
       if (dir && dir.notify == true && dir.enabled !== false) {
         try {
           let info;
@@ -428,7 +456,7 @@ module.exports.getFolders = async (userDir_file, options = {}) => {
   // first, so first-wins keeps their uplayR2 / socialClub flags and narrow `file` list.
   const seen = new Set();
   steamEmu = steamEmu.filter((entry) => {
-    const key = path.resolve(String((entry && entry.dir) || '')).toLowerCase();
+    const key = winHosts.pathKey(entry && entry.dir);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -436,10 +464,10 @@ module.exports.getFolders = async (userDir_file, options = {}) => {
 
   const disabled = configuredDirs
     .filter((entry) => entry && entry.enabled === false && entry.path)
-    .map((entry) => path.resolve(String(entry.path)).toLowerCase());
+    .map((entry) => winHosts.pathKey(entry.path));
   if (!disabled.length) return steamEmu;
   return steamEmu.filter((entry) => {
-    const candidate = path.resolve(String(entry && entry.dir || '')).toLowerCase();
+    const candidate = winHosts.pathKey(entry && entry.dir);
     return !disabled.some((root) => candidate === root || candidate.startsWith(root + path.sep));
   });
 };

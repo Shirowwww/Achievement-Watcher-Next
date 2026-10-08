@@ -35,16 +35,22 @@ function userDataDir() {
     /* not running inside Electron (unit tests / plain node) */
   }
 
-  cached = path.join(process.env['APPDATA'] || '', APP_DATA_DIR_NAME);
+  cached = path.join(appDataRoot(), APP_DATA_DIR_NAME);
   return cached;
 }
 
+// Electron's own appData: %APPDATA% on Windows, the XDG config folder elsewhere.
+function appDataRoot() {
+  if (process.platform === 'win32') return process.env['APPDATA'] || '';
+  return process.env.XDG_CONFIG_HOME || path.join(require('os').homedir(), '.config');
+}
+
 function legacyUserDataDir() {
-  return path.join(process.env['APPDATA'] || '', LEGACY_DATA_DIR_NAME);
+  return path.join(appDataRoot(), LEGACY_DATA_DIR_NAME);
 }
 
 function aw3UserDataDir() {
-  return path.join(process.env['APPDATA'] || '', AW3_DATA_DIR_NAME);
+  return path.join(appDataRoot(), AW3_DATA_DIR_NAME);
 }
 
 function resetCache() {

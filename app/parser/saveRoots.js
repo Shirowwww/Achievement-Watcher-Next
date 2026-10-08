@@ -4,13 +4,16 @@ const fs = require('fs');
 const path = require('path');
 const listDrive = require(path.join(__dirname, '..', 'util', 'listDrive.js'));
 const { readRegistryStringAndExpand } = require(path.join(__dirname, '..', 'util', 'reg.js'));
+const { listHosts, hostPath } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 
+// Same folder once: case-insensitively on Windows, exactly on case-sensitive Linux filesystems.
 function addUnique(out, candidate) {
   if (!candidate) return;
   const value = String(candidate).trim();
   if (!value) return;
-  const key = path.normalize(value).toLowerCase();
-  if (out.some((p) => path.normalize(p).toLowerCase() === key)) return;
+  const fold = (p) => (process.platform === 'win32' ? path.normalize(p).toLowerCase() : path.normalize(p));
+  const key = fold(value);
+  if (out.some((p) => fold(p) === key)) return;
   out.push(value);
 }
 
@@ -56,6 +59,14 @@ function publicSceneSaveRoot() {
 
 function defaultSteamEmuSaveRoots({ existingOnly = false, expandProgramDataSteam = false } = {}) {
   const roots = [];
+  for (const host of listHosts({ nativeDocuments: documentsPath })) addHostRoots(roots, host, { expandProgramDataSteam });
+  return existingOnly ? roots.filter((p) => fs.existsSync(p)) : roots;
+}
+
+// One host's emulator save roots: this machine on Windows, each Wine prefix and the XDG data folder
+// on Linux (see util/winHosts.js).
+function addHostRoots(roots, host, { expandProgramDataSteam }) {
+  const envPath = (envName, ...segments) => hostPath(host, envName, ...segments);
   [
     envPath('PUBLIC', 'Documents', 'OnlineFix'),
     publicSceneSaveRoot(),
@@ -84,7 +95,7 @@ function defaultSteamEmuSaveRoots({ existingOnly = false, expandProgramDataSteam
     envPath('LOCALAPPDATA', 'anadius', 'LSX emu', 'achievement_watcher'),
   ].forEach((p) => addUnique(roots, p));
 
-  const docs = documentsPath();
+  const docs = host.documents();
   if (docs) {
     addUnique(roots, path.join(docs, 'SkidRow'));
     // DARKSiDERS writes its per-appid tree under Documents rather than beside the game whenever the
@@ -106,8 +117,6 @@ function defaultSteamEmuSaveRoots({ existingOnly = false, expandProgramDataSteam
       addUnique(roots, programDataSteam);
     }
   }
-
-  return existingOnly ? roots.filter((p) => fs.existsSync(p)) : roots;
 }
 
 function defaultSteamScanRoots(additionalSearch = []) {
