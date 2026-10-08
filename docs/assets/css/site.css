@@ -194,6 +194,31 @@
   display: none !important;
 }
 
+/* Thin scrollbars in the site's colours instead of the browser's grey slabs. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) var(--bg);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 10px;
+  background: var(--border-strong) padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted) padding-box;
+}
+
 html {
   scroll-behavior: smooth;
   /* The sticky header must not sit on top of a section that was just jumped to. */

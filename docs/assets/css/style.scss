@@ -330,6 +330,59 @@ html {
   scroll-padding-top: 84px;
 }
 
+/* Thin scrollbars in the site's colours instead of the browser's grey slabs. */
+html,
+.aw-guides,
+.aw-toc,
+.markdown-body pre,
+.markdown-body table {
+  scrollbar-width: thin;
+  scrollbar-color: var(--aw-border) transparent;
+}
+
+html {
+  scrollbar-color: var(--aw-border) var(--aw-bg);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 10px;
+  background: var(--aw-border) padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--aw-muted) padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* The side columns only show theirs while the pointer is over them. */
+.aw-guides:not(:hover),
+.aw-toc:not(:hover) {
+  scrollbar-color: transparent transparent;
+}
+
+.aw-guides:not(:hover)::-webkit-scrollbar-thumb,
+.aw-toc:not(:hover)::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.aw-guides:hover,
+.aw-toc:hover {
+  scrollbar-color: var(--aw-border) transparent;
+}
+
 body.aw-guide {
   margin: 0;
 }
