@@ -348,6 +348,8 @@ test('keyboard: arrows move the interface choice, Enter in the name moves on, Ta
     await page.focus('#onboard-username');
     await page.keyboard.press('Enter');
     assert.equal((await state(page)).step, '2');
+    // The new step takes the focus on a timer; let it land first, or it steals the focus set below.
+    await page.waitForFunction(() => document.activeElement && document.activeElement.closest('.onboarding-step.active'), { timeout: 3000 }).catch(() => {});
 
     // Shift+Tab from the first control wraps to the last one, and Tab from the last wraps back.
     await page.evaluate(() => $('#onboarding-close').trigger('focus'));

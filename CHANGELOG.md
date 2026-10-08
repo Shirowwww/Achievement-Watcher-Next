@@ -9,6 +9,97 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Added
+
+- **RUNE's Ubisoft Connect emulator.** Its saves under `Documents\RUNE\Ubisoft Connect` are listed
+  with the Ubisoft Connect emulator source, with no folder to add, and new unlocks trigger a
+  notification.
+- **Collections.** Group games into your own collections from a game's right-click menu
+  (**Collections**), then filter the library to one with the new button next to the installed-only
+  toggle. Each collection has a name, a colour, an icon or your own image. The profile numbers follow
+  the collection you are viewing.
+- **Back up and restore your profile.** **Settings → Advanced → Profile backup** exports your
+  settings, library choices, presets, themes, covers, custom backgrounds, GBE restore points and
+  playtime to one `.awbackup` file, and restores it after a reinstall or on a new PC. Sign-ins, caches
+  and logs are never saved, so you sign in again to Epic, Steam, Xbox and RetroAchievements after a
+  restore. The file is checked in full first, applied at the next start, and the files it replaces are
+  kept; a restore that fails puts everything back.
+- **Trophy mode for rarity.** **Settings → General → Rarity display** can grade every achievement
+  gold, silver or bronze by its global unlock rate (under 20%, under 50%, otherwise or unknown), in
+  the game window, the overlay, the profile trophies and the notification popups, with platinum for
+  finished games. Advanced mode can move the two bounds. The default keeps today's rare tiers.
+
+- **A font file and a logo in the preset designer.** Pick a TTF, OTF, WOFF or WOFF2 font and a
+  logo picture; both are checked by their contents, copied into the preset and carried by its
+  `.awpreset` package. The logo sits behind the text in a corner or at a side, at a size and distance
+  you choose. A package whose font is not really a font is now refused.
+
+- **Customize a bundled preset.** The preset designer can start from one of the nine bundled
+  presets and layer a few changes on top - background, text colour, accent, border, glow, font and
+  logo - without copying or editing it. A layer cannot be exported or used by the OBS source.
+
+### Improved
+
+- **Settings are easier to scan.** General and Sources are split into sections, rarely used ones
+  (Notification tests, souvenirs, clips, theme files, folder lists) start folded, and rows that only
+  matter while another switch is on are dimmed. Searching still finds everything, and in Simple mode
+  it points to matches that only Advanced shows. The Presets tab is now **Notification presets**, the
+  side menu captions no longer repeat the tab names, and the footer says which tabs save as you go
+  and when Cancel has something to discard.
+- The rarity tiers are defined once (`util/rarityTiers.js`) instead of in several places, and the
+  app now tells a notification preset its tier instead of each preset working it out.
+- **Keyboard and screen-reader use.** Every control now shows a focus ring, including the preset
+  designer, game configuration and onboarding. The title bar buttons, the library toolbar, the
+  sort buttons, Back, the collapsible achievement lists and Settings tabs can be reached and pressed
+  with Tab, Enter and Space, and a hidden achievement's description can be revealed from the
+  keyboard. Settings and the game configuration are named dialogs: Escape closes the top one,
+  focus moves in and returns, and Tab stays inside. Tile buttons are named after their game.
+- **Readable labels on accent buttons.** Save, the selected segment and Create preset pick black or
+  white text from the theme's accent, instead of light text that was under 2:1 in most themes.
+- **Tokyo Night** uses a lighter muted text colour so descriptions and captions are readable.
+- **A shorter first-run guide.** Six steps instead of seven: language and interface share the first
+  one, and a "Found on this PC" report on the Games step shows the launchers and emulator folders it
+  found and how many games they hold. Sources and the less common options are folded away, the
+  notification test button is labelled, a last step recaps your choices with a Change button for each,
+  and a few lines say what the overlay, collections, trophy mode, video clips and profile backup do.
+  Tab stays inside the guide, and the interface choice works with the arrow keys.
+
+### Fixed
+
+- **The first-run guide can be skipped.** The corner button refused with "choose a language" even
+  after one was chosen. Skip setup now saves what you answered, leaves the rest as it was and starts
+  the first scan. An unanswered interface choice stays unset, which the app treats as Advanced.
+- **Updates are refused when the signature cannot be checked.** If PowerShell is blocked or silent the
+  update no longer installs unverified; the message links to the releases page. The installer is
+  also verified again when the download ends and just before it runs, so an installer cached by an
+  earlier launch cannot skip the check.
+- **A signed release now proves every program inside it is signed.** The build checks each `.exe` of
+  the packaged app against the pinned certificates and that the video and HDR helpers are the
+  repository's own binaries, and refuses to finish otherwise.
+- **The in-game overlay no longer spoils hidden achievements.** A hidden achievement you have not
+  unlocked now shows "Hidden - click to reveal" in the overlay, as in the main window. Click it, or
+  press A on a controller, to reveal that one description. Search ignores masked descriptions.
+- **The profile header keeps to two lines.** On a narrow window the statistics button no longer
+  drops to a third line on its own; it stays beside the last figure.
+- **Text prompts use the app's font.** Naming a collection or a preset opened a box in a serif
+  font.
+
+### Website & Docs
+
+- Every screenshot is retaken against the reorganised Settings and the new first-run guide, and the
+  guides now show collections, trophy mode, hidden achievements in the overlay, profile backup,
+  library stats and the preset designer's font and logo options.
+- **A new home page.** The app and a live unlock popup sit side by side at the top, and a grid shows
+  what else is in the box: library stats, trophy mode, video clips, collections, profile backup,
+  the controller, the first-run guide and RetroAchievements. All thirteen themes are listed.
+- **Search in the guides.** A box above the guide list finds any section of any guide and opens it
+  on its heading; press `/` to jump to it. The guides also gained a guide list, a table of contents,
+  click-to-enlarge screenshots and a 404 page.
+- Links to the site now preview with a card that names the app, instead of a bare screenshot.
+- The controller guide has a map of the default shortcuts, the getting-started guide shows creating
+  and filtering a collection as a short animation, and the emulator tools menu is shown as it is
+  today.
+
 ## 3.11.1 - 2026-10-07
 
 ### Added

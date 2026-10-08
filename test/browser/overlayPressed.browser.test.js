@@ -9,18 +9,14 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium');
-const { appDir } = require('../helpers/staticApp');
+const { appDir, withoutScripts } = require('../helpers/staticApp');
 
 test('overlay choices report which one is on through aria-pressed', async (t) => {
   const { browser, userDataDir, failures } = await launchBrowser(['--allow-file-access-from-files']);
   if (!browser) return t.skip(skipReason(failures));
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-overlay-'));
   try {
-    const html = fs
-      .readFileSync(path.join(appDir, 'view', 'overlay.html'), 'utf8')
-      .replace(/<script[\s\S]*?<\/script>/g, '')
-      .replace(/<meta\s+http-equiv="Content-Security-Policy"[\s\S]*?\/>/, '')
-      .replace('<head>', `<head><base href="file:///${path.join(appDir, 'view').replace(/\\/g, '/')}/">`);
+    const html = withoutScripts(fs.readFileSync(path.join(appDir, 'view', 'overlay.html'), 'utf8')).replace('<head>', `<head><base href="file:///${path.join(appDir, 'view').replace(/\\/g, '/')}/">`);
     const file = path.join(directory, 'overlay.html');
     fs.writeFileSync(file, html);
 

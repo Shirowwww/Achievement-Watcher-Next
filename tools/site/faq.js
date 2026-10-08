@@ -20,10 +20,13 @@ const OUT = path.join(root, 'docs', '_includes', 'faq-jsonld.html');
 
 // What a reader sees of a Markdown run: link text without the address, no emphasis, no code ticks.
 function plain(markdown) {
-  return markdown
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    .replace(/<\/?(?:div|p|br|img|picture|source|sub|sup|b|i|em|strong|a|code|kbd|span)\b[^>]*>/g, '')
+  let text = markdown.replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');
+  // Repeated until nothing changes, so a removal cannot join two halves into a new tag.
+  for (let before = ''; before !== text; ) {
+    before = text;
+    text = text.replace(/<\/?(?:div|p|br|img|picture|source|sub|sup|b|i|em|strong|a|code|kbd|span)\b[^>]*>/g, '');
+  }
+  return text
     .replace(/[*_`]+/g, '')
     .replace(/\s+/g, ' ')
     .trim();
@@ -36,7 +39,7 @@ function questions() {
   let fenced = false;
 
   for (const line of lines) {
-    if (/^```/.test(line)) fenced = !fenced;
+    if (line.startsWith('```')) fenced = !fenced;
     const heading = !fenced && /^(#{1,3}) (.+)$/.exec(line);
     if (heading) {
       current = null;

@@ -1,0 +1,36 @@
+name: Commits
+
+# The commit rules in one place a push can be held to: a handful of commits, dates spread over the
+# work rather than one burst, and late CI fixes amended into the last commit (tools/ci/commit-hygiene.js).
+
+on:
+  push:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+jobs:
+  hygiene:
+    name: Commit hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.19.0
+
+      - name: Check the pushed commits
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.event.after }}
+          FORCED: ${{ github.event.forced }}
+        # A force push rewrites the range; it is then checked against the branch it replaced only
+        # when that commit still exists.
+        run: |
+          if [ "$FORCED" = "true" ] && ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then BEFORE=""; fi
+          node tools/ci/commit-hygiene.js "$BEFORE" "$AFTER"

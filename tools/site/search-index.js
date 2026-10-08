@@ -24,16 +24,45 @@ const yaml = require(path.join(root, 'app', 'node_modules', 'js-yaml'));
 const TEXT_LIMIT = 900;
 const CHANGELOG_TEXT_LIMIT = 300;
 
+const TAGS = new Set('a b br code dd details div dl dt em i img kbd li ol p picture source span strong sub summary sup table tbody td th thead tr ul'.split(' '));
+
+// Comments and real HTML tags out, in one left-to-right pass, so nothing removed can join two halves
+// into a new tag. Anything else in angle brackets, such as the <version> placeholders, is text.
+function stripMarkup(text) {
+  let out = '';
+  let i = 0;
+  while (i < text.length) {
+    const open = text.indexOf('<', i);
+    if (open === -1) {
+      out += text.slice(i);
+      break;
+    }
+    out += text.slice(i, open);
+    if (text.startsWith('<!--', open)) {
+      const close = text.indexOf('-->', open + 4);
+      out += ' ';
+      i = close === -1 ? text.length : close + 3;
+      continue;
+    }
+    const close = text.indexOf('>', open + 1);
+    const name = close === -1 ? '' : text.slice(open + 1, close).replace(/^\//, '').split(/[\s/]/)[0].toLowerCase();
+    if (TAGS.has(name)) {
+      out += ' ';
+      i = close + 1;
+    } else {
+      out += '<';
+      i = open + 1;
+    }
+  }
+  return out;
+}
+
 // What a reader sees of a Markdown run: link text without the address, no emphasis, no code ticks.
 // A heading is one inline run, so list and quote markers are only stripped from a body.
 function plain(markdown, { inline = false } = {}) {
-  const text = inline ? markdown : markdown.replace(/^\s*(?:[-*+]|\d+\.|>|\|)\s*/gm, '');
-  return text
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    // Only real tags: the guides also write placeholders such as <version> as text.
-    .replace(/<\/?(?:a|b|br|code|dd|details|div|dl|dt|em|i|img|kbd|li|ol|p|picture|source|span|strong|sub|summary|sup|table|tbody|td|th|thead|tr|ul)\b[^>]*>/gi, ' ')
+  let text = inline ? markdown : markdown.replace(/^\s*(?:[-*+]|\d+\.|>|\|)\s*/gm, '');
+  text = text.replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');
+  return stripMarkup(text)
     .replace(/\[!(?:NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/g, '')
     .replace(/\|/g, ' ')
     .replace(/[*_`]+/g, '')

@@ -14,14 +14,22 @@ const path = require('node:path');
 const appDir = path.join(__dirname, '..', '..', 'app');
 const jquery = path.join(appDir, 'ui', 'lib', 'jquery-3.7.1.min.js');
 
+// The page without its scripts and its CSP, removed as elements by a parser rather than by a regex
+// over the markup.
+function withoutScripts(markup) {
+  const { parse } = require(path.join(appDir, 'node_modules', 'node-html-parser'));
+  const root = parse(markup, { comment: true });
+  for (const node of root.querySelectorAll('script, meta[http-equiv="Content-Security-Policy"]')) node.remove();
+  return root.toString();
+}
+
 // Writes a throwaway copy of app.html whose relative URLs still resolve against app/view, because
 // a page set through setContent() cannot load file: stylesheets.
 function writeStaticPage(directory) {
-  const html = fs
-    .readFileSync(path.join(appDir, 'view', 'app.html'), 'utf8')
-    .replace(/<script[\s\S]*?<\/script>/g, '')
-    .replace(/<meta\s+http-equiv="Content-Security-Policy"[\s\S]*?\/>/, '')
-    .replace('<head>', `<head><base href="${pathToFileUrl(path.join(appDir, 'view'))}/">`);
+  const html = withoutScripts(fs.readFileSync(path.join(appDir, 'view', 'app.html'), 'utf8')).replace(
+    '<head>',
+    `<head><base href="${pathToFileUrl(path.join(appDir, 'view'))}/">`
+  );
   const file = path.join(directory, 'app.html');
   fs.writeFileSync(file, html);
   return file;
@@ -56,4 +64,4 @@ async function showPanel(page, selector) {
   }, selector);
 }
 
-module.exports = { appDir, openStaticApp, showPanel };
+module.exports = { appDir, openStaticApp, showPanel, withoutScripts };
