@@ -4,16 +4,16 @@
   The profile's trophy showcase.
 
   Platinum is a game at 100%, not an achievement. Every unlocked achievement is graded by its
-  global unlock rate with the tiers the rarity badges and notifications use (overlayUi.rarityTier:
-  gold up to 5%, silver up to 10%, bronze up to 15%). Anything more common, or with no known rate,
-  is common.
+  global unlock rate with the tiers the rarity badges and notifications use (rarityTiers.js). By
+  default that is gold up to 5%, silver up to 10%, bronze up to 15%, and anything more common, or
+  with no known rate, is common. In trophy mode every unlock is graded.
 
   Only games the player has started count: launched at least once, or with an unlock. A library
   full of never-launched games would otherwise sink every average without saying anything about
   the player.
 */
 
-const { rarityTier } = require('./overlayUi.js');
+const rarityTiers = require('./rarityTiers.js');
 
 // RPCS3 trophy sets carry their own grade. The platinum trophy itself is a single achievement, so it
 // ranks with the gold ones; the game it completes is what the platinum counter counts.
@@ -48,17 +48,18 @@ function startedGames(games, { installedOnly = false, isStarted = defaultIsStart
   });
 }
 
-function tierFor(achievement, percent) {
+function tierFor(achievement, percent, grading) {
   const native = NATIVE_GRADES[String((achievement && achievement.type) || '').toUpperCase()];
   if (native) return native;
-  return rarityTier(percent) || 'common';
+  return rarityTiers.tierFor(percent, grading.mode, grading.thresholds) || 'common';
 }
 
 /*
   `rarityOf(game)` returns a Map of achievement name to global unlock %, or null when the game has
   no known rates. It is injected because the rates live in the renderer's on-disk cache.
 */
-function calculateTrophyStats(games, { installedOnly = false, isStarted = defaultIsStarted, rarityOf = null } = {}) {
+function calculateTrophyStats(games, { installedOnly = false, isStarted = defaultIsStarted, rarityOf = null, mode, thresholds } = {}) {
+  const grading = { mode, thresholds };
   const counted = startedGames(games, { installedOnly, isStarted });
   const stats = {
     games: counted.length,
@@ -86,9 +87,9 @@ function calculateTrophyStats(games, { installedOnly = false, isStarted = defaul
       if (!isAchieved(achievement)) continue;
       const raw = rates ? rates.get(String(achievement.name)) : undefined;
       const percent = raw === undefined || raw === null || !Number.isFinite(Number(raw)) ? null : Number(raw);
-      const tier = tierFor(achievement, percent);
+      const tier = tierFor(achievement, percent, grading);
       stats[tier] += 1;
-      if (percent === null && tier === 'common') stats.unranked += 1;
+      if (percent === null && !NATIVE_GRADES[String(achievement.type || '').toUpperCase()]) stats.unranked += 1;
       // Kept sorted and capped as it goes: a large library has tens of thousands of unlocks.
       if (percent !== null && (stats.rarest.length < RAREST_COUNT || percent < stats.rarest[stats.rarest.length - 1].percent)) {
         const entry = { game, achievement, percent, tier };
@@ -109,7 +110,8 @@ function calculateTrophyStats(games, { installedOnly = false, isStarted = defaul
   Built only when that list opens: sorting every unlock has no place in the header refresh.
   Achievements with no known rate go last, most recent unlock first.
 */
-function listUnlockedByRarity(games, { installedOnly = false, isStarted = defaultIsStarted, rarityOf = null } = {}) {
+function listUnlockedByRarity(games, { installedOnly = false, isStarted = defaultIsStarted, rarityOf = null, mode, thresholds } = {}) {
+  const grading = { mode, thresholds };
   const out = [];
   for (const game of startedGames(games, { installedOnly, isStarted })) {
     const list = Array.isArray(game.achievement.list) ? game.achievement.list : [];
@@ -118,7 +120,7 @@ function listUnlockedByRarity(games, { installedOnly = false, isStarted = defaul
       if (!isAchieved(achievement)) continue;
       const raw = rates ? rates.get(String(achievement.name)) : undefined;
       const percent = raw === undefined || raw === null || !Number.isFinite(Number(raw)) ? null : Number(raw);
-      out.push({ game, achievement, percent, tier: tierFor(achievement, percent), unlockedAt: Number(achievement.UnlockTime) || 0 });
+      out.push({ game, achievement, percent, tier: tierFor(achievement, percent, grading), unlockedAt: Number(achievement.UnlockTime) || 0 });
     }
   }
   return out.sort((a, b) => {

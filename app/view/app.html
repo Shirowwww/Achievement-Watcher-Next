@@ -8,7 +8,7 @@
          util/customPreset.js (PREVIEW_SCRIPT_HASHES); a test fails if they drift. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self' 'sha256-6hoK2v7NMQ9BztWRLpqwEtRRPqb93qf3AkDWdgjdGyg=' 'sha256-Je35Ely70/P1H6O6qWZNS9gTkodHCRiUd87eGa46sh0=' 'sha256-lvqMnyUhRrkan7Gl+I4y3mlwsXOii3yH+4HsziY69II='; style-src 'self' 'unsafe-inline';  font-src 'self'; media-src 'self'; img-src 'self' data: https://*; connect-src 'self' https://api.steampowered.com https://api.epicgames.dev https://launcher.store.epicgames.com https://launcher-public-service-prod06.ol.epicgames.com https://catalog-public-service-prod06.ol.epicgames.com ws://localhost:8082"
+      content="default-src 'none'; script-src 'self' 'sha256-6hoK2v7NMQ9BztWRLpqwEtRRPqb93qf3AkDWdgjdGyg=' 'sha256-Je35Ely70/P1H6O6qWZNS9gTkodHCRiUd87eGa46sh0=' 'sha256-ErENpYNmGjbcgrlvKKO2YSCg4lTm9+LN7b2NVrGmP6w='; style-src 'self' 'unsafe-inline';  font-src 'self' data:; media-src 'self'; img-src 'self' data: https://*; connect-src 'self' https://api.steampowered.com https://api.epicgames.dev https://launcher.store.epicgames.com https://launcher-public-service-prod06.ol.epicgames.com https://catalog-public-service-prod06.ol.epicgames.com ws://localhost:8082"
     />
     <link rel="stylesheet" href="../resources/css/normalize.css" type="text/css" />
     <link rel="stylesheet" href="../resources/css/fontawesome.css" type="text/css" />
@@ -24,7 +24,7 @@
         <!-- Profile and library controls share one grid row, not absolute overlays on the profile
              band, so a narrow window can't slide them under the avatar. -->
         <div id="home-header">
-          <div id="search-bar">
+          <div id="search-bar" inert>
             <label class="library-layout-control" for="library-layout-select" title="Library view">
               <i class="fas fa-th-large" aria-hidden="true"></i>
               <select autocomplete="off" id="library-layout-select" aria-label="Library view">
@@ -44,7 +44,7 @@
             </div>
           </div>
 
-          <div id="user-info">
+          <div id="user-info" inert>
             <user-avatar></user-avatar>
             <div class="info">
               <div class="name"></div>
@@ -77,13 +77,14 @@
             </div>
           </div>
 
-          <div id="sort-box">
-            <div class="installed-filter"><i class="fas fa-hdd"></i></div>
+          <div id="sort-box" inert>
+            <div class="collection-filter" role="button" tabindex="0" aria-haspopup="menu"><i class="fas fa-layer-group" aria-hidden="true"></i></div>
+            <div class="installed-filter" role="button" tabindex="0"><i class="fas fa-hdd"></i></div>
             <div class="sort-group">
-              <div class="alpha sort" title="Nom : A → Z"><i class="fas fa-font"></i><i class="fas fa-arrow-up sort-direction"></i></div>
-              <div class="percentage sort" title="Progression"><i class="fas fa-percent"></i><i class="fas fa-arrow-up sort-direction"></i></div>
-              <div class="time sort" title="Date du succès"><i class="far fa-clock"></i><i class="fas fa-arrow-up sort-direction"></i></div>
-              <div class="played sort" title="Dernière partie"><i class="fas fa-gamepad"></i><i class="fas fa-arrow-up sort-direction"></i></div>
+              <div class="alpha sort" role="button" tabindex="0" title="Nom : A → Z"><i class="fas fa-font"></i><i class="fas fa-arrow-up sort-direction"></i></div>
+              <div class="percentage sort" role="button" tabindex="0" title="Progression"><i class="fas fa-percent"></i><i class="fas fa-arrow-up sort-direction"></i></div>
+              <div class="time sort" role="button" tabindex="0" title="Date du succès"><i class="far fa-clock"></i><i class="fas fa-arrow-up sort-direction"></i></div>
+              <div class="played sort" role="button" tabindex="0" title="Dernière partie"><i class="fas fa-gamepad"></i><i class="fas fa-arrow-up sort-direction"></i></div>
             </div>
           </div>
         </div>
@@ -94,7 +95,7 @@
             <i class="fas fa-ghost"></i>
             <span class="empty-title"></span>
             <p class="empty-hint"></p>
-            <div id="empty-open-folders" class="btn"><i class="fas fa-folder-plus"></i> <span class="empty-action"></span></div>
+            <div id="empty-open-folders" class="btn" role="button" tabindex="0"><i class="fas fa-folder-plus"></i> <span class="empty-action"></span></div>
           </div>
         </div>
         <div id="main-footer">
@@ -130,7 +131,7 @@
             <div class="playtime"><i class="fas fa-stopwatch"></i> <span></span></div>
             <div class="lastplayed"><i class="fas fa-calendar-alt"></i> <span></span></div>
             <div class="resetAchievements" id="btn-reset-achievements" role="button" tabindex="0"><i class="fas fa-undo"></i> <span></span></div>
-            <div class="backButton" id="btn-previous"></div>
+            <div class="backButton" id="btn-previous" role="button" tabindex="0"></div>
           </div>
 
           <div class="achievements">
@@ -140,28 +141,28 @@
             </div>
             <div id="unlock" class="achievement-list active">
               <div class="header">
-                <span class="title" data-count="0"><i class="fas fa-unlock"></i> <span></span></span>
+                <span class="title" id="unlocked-list-title" data-count="0"><i class="fas fa-unlock"></i> <span></span></span>
                 <span class="sort-ach">
-                  <div class="percentage sort"><i class="fas fa-percent"></i><i class="fas fa-arrow-up sort-direction"></i></div>
-                  <div class="time sort"><i class="far fa-clock"></i><i class="fas fa-arrow-up sort-direction"></i></div>
+                  <div class="percentage sort" role="button" tabindex="0"><i class="fas fa-percent"></i><i class="fas fa-arrow-up sort-direction"></i></div>
+                  <div class="time sort" role="button" tabindex="0"><i class="far fa-clock"></i><i class="fas fa-arrow-up sort-direction"></i></div>
                 </span>
-                <span class="toggle"><i class="fas fa-chevron-right"></i></span>
+                <span class="toggle" role="button" tabindex="0" aria-expanded="true" aria-labelledby="unlocked-list-title"><i class="fas fa-chevron-right"></i></span>
               </div>
               <ul></ul>
             </div>
 
             <div id="lock" class="achievement-list active">
               <div class="header">
-                <span class="title" data-count="0"><i class="fas fa-lock"></i> <span></span></span>
+                <span class="title" id="locked-list-title" data-count="0"><i class="fas fa-lock"></i> <span></span></span>
                 <span class="sort-ach">
-                  <div class="percentage sort"><i class="fas fa-percent"></i><i class="fas fa-arrow-up sort-direction"></i></div>
+                  <div class="percentage sort" role="button" tabindex="0"><i class="fas fa-percent"></i><i class="fas fa-arrow-up sort-direction"></i></div>
                 </span>
-                <span class="toggle"><i class="fas fa-chevron-right"></i></span>
+                <span class="toggle" role="button" tabindex="0" aria-expanded="true" aria-labelledby="locked-list-title"><i class="fas fa-chevron-right"></i></span>
               </div>
               <ul></ul>
             </div>
 
-            <div id="btn-scrollup">
+            <div id="btn-scrollup" role="button" tabindex="0">
               <div></div>
               <span></span>
             </div>
@@ -171,12 +172,12 @@
 
       <section id="settings">
         <div class="overlay"></div>
-        <div class="box">
+        <div class="box" role="dialog" aria-modal="true" aria-labelledby="settings-title">
           <!-- NB: the i18n loader binds the settings title with `#settings .box .header span`, so
                NOTHING else in this header may contain a <span> - the search field and the interface
                switch below both label themselves with <i>/<b>/<button> for exactly that reason. -->
           <div class="header">
-            <i class="fas fa-cog"></i> <span></span>
+            <i class="fas fa-cog"></i> <span id="settings-title"></span>
 
             <!-- Interface mode, right beside the panel title. It decides which tabs exist, so it
                  cannot sit inside one of them. Labels are bound by id; see locale/loader.js. -->
@@ -204,23 +205,30 @@
             <nav id="settingNav">
               <ul>
                 <li class="nav-group" id="nav-group-general" data-nav-group="general"></li>
-                <li class="active" data-view="general"><i class="fas fa-tools"></i> <span></span><b class="nav-count"></b></li>
-                <li data-view="appearance"><i class="fas fa-palette"></i> <span id="appearance-nav-label"></span><b class="nav-count"></b></li>
-                <li data-view="controller"><i class="fas fa-gamepad"></i> <span></span><b class="nav-count"></b></li>
+                <li class="active" data-view="general" role="button" tabindex="0"><i class="fas fa-tools"></i> <span></span><b class="nav-count"></b></li>
+                <li data-view="appearance" role="button" tabindex="0"><i class="fas fa-palette"></i> <span id="appearance-nav-label"></span><b class="nav-count"></b></li>
+                <li data-view="controller" role="button" tabindex="0"><i class="fas fa-gamepad"></i> <span></span><b class="nav-count"></b></li>
                 <li class="nav-group" id="nav-group-notification" data-nav-group="notification"></li>
-                <li data-view="notification"><i class="fas fa-bell"></i> <span></span><b class="nav-count"></b></li>
-                <li data-view="presets"><i class="fas fa-toolbox"></i> <span id="presets-nav-label">Presets</span><b class="nav-count"></b></li>
+                <li data-view="notification" role="button" tabindex="0"><i class="fas fa-bell"></i> <span></span><b class="nav-count"></b></li>
+                <li data-view="presets" role="button" tabindex="0"><i class="fas fa-toolbox"></i> <span id="presets-nav-label">Presets</span><b class="nav-count"></b></li>
                 <li class="nav-group" id="nav-group-library" data-nav-group="library"></li>
-                <li data-view="source"><i class="fas fa-file-import"></i> <span></span><b class="nav-count"></b></li>
-                <li data-view="folder"><i class="far fa-folder"></i> <span></span><b class="nav-count"></b></li>
+                <li data-view="source" role="button" tabindex="0"><i class="fas fa-file-import"></i> <span></span><b class="nav-count"></b></li>
+                <li data-view="folder" role="button" tabindex="0"><i class="far fa-folder"></i> <span></span><b class="nav-count"></b></li>
                 <li class="nav-group" id="nav-group-emulator" data-nav-group="emulator"></li>
-                <li data-view="emulator"><i class="fab fa-steam"></i> <span id="emulator-nav-label">Steam / GBE Fork</span><b class="nav-count"></b></li>
-                <li data-view="uplay"><i class="fas fa-gamepad"></i> <span id="uplay-r2-nav-label">Ubisoft / Uplay R1/R2</span><b class="nav-count"></b></li>
+                <li data-view="emulator" role="button" tabindex="0"><i class="fab fa-steam"></i> <span id="emulator-nav-label">Steam / GBE Fork</span><b class="nav-count"></b></li>
+                <li data-view="uplay" role="button" tabindex="0"><i class="fas fa-gamepad"></i> <span id="uplay-r2-nav-label">Ubisoft / Uplay R1/R2</span><b class="nav-count"></b></li>
                 <li class="nav-group" id="nav-group-help" data-nav-group="help"></li>
-                <li data-view="help"><i class="fas fa-question-circle"></i> <span id="help-nav-label">Help</span><b class="nav-count"></b></li>
+                <li data-view="help" role="button" tabindex="0"><i class="fas fa-question-circle"></i> <span id="help-nav-label">Help</span><b class="nav-count"></b></li>
                 <li class="nav-group" id="nav-group-advanced" data-nav-group="advanced"></li>
-                <li data-view="advanced"><i class="fas fa-flask"></i> <span></span><b class="nav-count"></b></li>
+                <li data-view="advanced" role="button" tabindex="0"><i class="fas fa-flask"></i> <span></span><b class="nav-count"></b></li>
               </ul>
+
+              <!-- Simple mode only: a search that also matches rows Advanced would show. No <span> in
+                   here, the loader binds the nav labels by `li ... span`. -->
+              <div id="settings-search-advanced" hidden>
+                <p></p>
+                <button type="button"><i class="fas fa-sliders-h" aria-hidden="true"></i> <b></b></button>
+              </div>
 
             </nav>
 
@@ -769,6 +777,26 @@
                 </ul>
               </div>
 
+              <!-- Bound by id in loader.js, so it takes no part in the nth-child bindings. -->
+              <div class="arrow-list diag-list">
+                <div class="title"><i class="fas fa-file-export"></i> <span id="profile-backup-title">Profile backup</span></div>
+                <ul>
+                  <li>
+                    <p id="profile-backup-desc">
+                      Save your settings, library choices, presets, themes, covers and backups to one file, then bring
+                      them back after a reinstall or on a new PC. Sign-ins are never saved.
+                    </p>
+                  </li>
+                  <li class="actions-row">
+                    <div id="profile-export" class="btn"><i class="fas fa-file-export"></i> <span>Export profile…</span></div>
+                    <div id="profile-restore" class="btn"><i class="fas fa-file-import"></i> <span>Restore profile…</span></div>
+                  </li>
+                  <li>
+                    <div id="profile-backup-result" class="diag-line"></div>
+                  </li>
+                </ul>
+              </div>
+
               <!-- Upstream lineage: kept with the technical credits, not every Settings tab. Bound
                    by id (no .title, so it is not collapsible) - see bindSettings() in loader.js. -->
               <div class="arrow-list">
@@ -803,7 +831,7 @@
                     <p id="source-official-description">Enable the shield-marked sources below. Only libraries detected on this PC can be shown.</p>
                   </div>
                 </div>
-                <ul id="options-source">
+                <ul id="options-source" class="source-list">
                   <li class="hasHelper official-source">
                     <div class="left"><i class="fab fa-steam"></i> <span></span><i class="fas fa-shield-alt source-official-badge" aria-hidden="true"></i></div>
                     <div class="right">
@@ -958,7 +986,13 @@
                     </div>
                     <div class="help"></div>
                   </li>
+                </ul>
+              </div>
 
+              <!-- The rows above are bound by nth-child, so only the tail moves: these sections are bound by id. -->
+              <div class="arrow-list">
+                <div class="title"><span id="source-stores-title"></span></div>
+                <ul id="options-source-stores" class="source-list">
                   <li class="hasHelper official-source">
                     <div class="left"><i class="fas fa-store"></i> <span>Ubisoft Connect</span><i class="fas fa-shield-alt source-official-badge" aria-hidden="true"></i></div>
                     <div class="right">
@@ -1010,7 +1044,12 @@
                     </div>
                     <div class="help" id="source-help-epicOfficial"></div>
                   </li>
+                </ul>
+              </div>
 
+              <div class="arrow-list">
+                <div class="title"><span id="source-emulators-title"></span></div>
+                <ul id="options-source-emulators" class="source-list">
                   <li class="hasHelper">
                     <div class="left"><i class="fas fa-file-alt"></i> <span>Nemirtingas Galaxy Emu</span></div>
                     <div class="right">
@@ -1043,40 +1082,6 @@
                       </div>
                     </div>
                     <div class="help" id="source-help-epic"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fab fa-playstation"></i> <span>shadPS4</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_shadps4">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-shadps4"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fab fa-xbox"></i> <span>Xenia</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_xenia">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-xenia"></div>
                   </li>
 
                   <li class="hasHelper">
@@ -1128,6 +1133,45 @@
                       </div>
                     </div>
                     <div class="help" id="source-help-madnesspatch"></div>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="arrow-list">
+                <div class="title"><span id="source-consoles-title"></span></div>
+                <ul id="options-source-consoles" class="source-list">
+                  <li class="hasHelper">
+                    <div class="left"><i class="fab fa-playstation"></i> <span>shadPS4</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_shadps4">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-shadps4"></div>
+                  </li>
+
+                  <li class="hasHelper">
+                    <div class="left"><i class="fab fa-xbox"></i> <span>Xenia</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_xenia">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-xenia"></div>
                   </li>
 
                   <li class="hasHelper">
@@ -1551,7 +1595,6 @@
 
             <section class="content" data-view="notification">
               <div id="options-notify">
-                <div class="autosave-hint"><i class="fas fa-check-circle"></i> <span></span></div>
                 <div class="arrow-list">
                   <div class="title"><span></span></div>
                   <ul id="options-notify-common">
@@ -2147,7 +2190,10 @@
                     <div class="pd-bar">
                       <label class="pd-file"><span data-lang="load"></span><select autocomplete="off" id="pd-load"></select></label>
                       <label class="pd-file"><span data-lang="name"></span><input type="text" id="pd-name" maxlength="48" /></label>
+                      <!-- A layer: a bundled preset plus a few overrides, instead of a design from scratch. -->
+                      <label class="pd-file"><span data-lang="layer.title"></span><select autocomplete="off" id="pd-layer-base" data-lang-none="layer.none"></select></label>
                     </div>
+                    <p class="pd-layer-note" id="pd-layer-note" hidden></p>
 
                     <div class="pd-workspace">
                       <div class="pd-preview">
@@ -2324,6 +2370,13 @@
                                   <option value="mono" data-lang="value.mono"></option>
                                 </select>
                               </label>
+                              <label class="pd-field pd-field-asset" data-key="fontFile">
+                                <span data-lang="field.fontFile"></span>
+                                <span class="pd-asset">
+                                  <select autocomplete="off" id="pd-fontFile" data-lang-none="value.noFont"></select>
+                                  <button type="button" id="btn-import-preset-font" class="pd-asset-btn"><i class="fas fa-folder-open"></i></button>
+                                </span>
+                              </label>
                               <label class="pd-field" data-key="fontSize">
                                 <span><span data-lang="field.fontSize"></span> <b class="pd-value" id="pd-val-fontSize"></b></span>
                                 <input type="range" id="pd-fontSize" min="10" max="28" step="1" value="16" />
@@ -2489,6 +2542,13 @@
                                 <span><span data-lang="field.iconRadius"></span> <b class="pd-value" id="pd-val-iconRadius"></b></span>
                                 <input type="range" id="pd-iconRadius" min="0" max="50" step="1" value="14" />
                               </label>
+                              <label class="pd-field pd-field-asset" data-key="logoImage">
+                                <span data-lang="field.logoImage"></span>
+                                <span class="pd-asset">
+                                  <select autocomplete="off" id="pd-logoImage" data-lang-none="value.noImage"></select>
+                                  <button type="button" id="btn-import-preset-logo" class="pd-asset-btn"><i class="fas fa-folder-open"></i></button>
+                                </span>
+                              </label>
                             </div>
                             <button type="button" class="pd-more" data-advanced="1"><i class="fas fa-sliders-h"></i> <span data-lang="advanced"></span></button>
                             <div class="pd-fields pd-adv" data-advanced="1" hidden>
@@ -2499,6 +2559,27 @@
                               <label class="pd-field" data-key="iconGlow">
                                 <span><span data-lang="field.iconGlow"></span> <b class="pd-value" id="pd-val-iconGlow"></b></span>
                                 <input type="range" id="pd-iconGlow" min="0" max="100" step="5" value="0" />
+                              </label>
+                              <label class="pd-field" data-key="logoPosition">
+                                <span data-lang="field.logoPosition"></span>
+                                <select autocomplete="off" id="pd-logoPosition">
+                                  <option value="top-left" data-lang="value.topLeft"></option>
+                                  <option value="top" data-lang="value.top"></option>
+                                  <option value="top-right" data-lang="value.topRight"></option>
+                                  <option value="left" data-lang="value.left"></option>
+                                  <option value="right" data-lang="value.right"></option>
+                                  <option value="bottom-left" data-lang="value.bottomLeft"></option>
+                                  <option value="bottom" data-lang="value.bottom"></option>
+                                  <option value="bottom-right" data-lang="value.bottomRight"></option>
+                                </select>
+                              </label>
+                              <label class="pd-field" data-key="logoSize">
+                                <span><span data-lang="field.logoSize"></span> <b class="pd-value" id="pd-val-logoSize"></b></span>
+                                <input type="range" id="pd-logoSize" min="12" max="120" step="1" value="32" />
+                              </label>
+                              <label class="pd-field" data-key="logoOffset">
+                                <span><span data-lang="field.logoOffset"></span> <b class="pd-value" id="pd-val-logoOffset"></b></span>
+                                <input type="range" id="pd-logoOffset" min="0" max="60" step="1" value="8" />
                               </label>
                             </div>
                           </div>
@@ -2865,7 +2946,14 @@
                     </div>
                     <div class="help"><span></span></div>
                   </li>
+                </ul>
+              </div>
 
+              <!-- #options-ui keeps the seven rows the loader binds by nth-child; these two sections are
+                   bound by id. The save handler reads all three containers. -->
+              <div id="options-ui-app" class="arrow-list">
+                <div class="title"><span id="general-app-title"></span></div>
+                <ul>
                   <li class="hasHelper">
                     <div class="left"><i class="fas fa-power-off"></i> <span>Launch at startup</span></div>
                     <div class="right">
@@ -2919,23 +3007,6 @@
                     </div>
                   </li>
 
-                  <li class="hasHelper">
-                    <div class="left"><i class="fas fa-trophy"></i> <span id="trophies-settings-label">Trophies on the profile</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_showTrophies">
-                        <option value="true" selected>Enabled</option>
-                        <option value="false">Disabled</option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="trophies-settings-help">Shows platinum, gold, silver and bronze trophies under your name.</div>
-                  </li>
-
                   <!-- Troubleshooting for a window or overlay that renders badly: a Simple user hits that
                        as often as anyone, so it sits here rather than in the Advanced tab. Bound by id. -->
                   <li class="hasHelper">
@@ -2954,8 +3025,7 @@
                     </div>
                     <div class="help" id="hwaccel-settings-help">Turn off GPU acceleration if the in-game overlay or window misbehaves. Requires a restart.</div>
                   </li>
-                  <!-- Kept out of Advanced (Simple mode would never reach it). Appended LAST: the
-                       loader binds rows 1-7 of this list by nth-child, so only the tail is free. -->
+
                   <li class="hasHelper onboarding-settings-row">
                     <div class="left"><i class="fas fa-route"></i> <span id="onboarding-settings-label">First-run guide</span></div>
                     <div class="right action-right">
@@ -2963,7 +3033,87 @@
                     </div>
                     <div class="help" id="onboarding-settings-help">Reopen the setup guide for profile, folders, sources, and notifications.</div>
                   </li>
+                </ul>
+              </div>
 
+              <div id="options-ui-trophies" class="arrow-list">
+                <div class="title"><span id="general-trophies-title"></span></div>
+                <ul>
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-trophy"></i> <span id="trophies-settings-label">Trophies on the profile</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_showTrophies">
+                        <option value="true" selected>Enabled</option>
+                        <option value="false">Disabled</option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="trophies-settings-help">Shows platinum, gold, silver and bronze trophies under your name.</div>
+                  </li>
+
+                  <!-- Rarity display: bound by id, so it shifts no nth-child binding. -->
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-gem"></i> <span id="rarity-mode-settings-label">Rarity display</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_rarityMode">
+                        <option value="rare" selected>Rare tiers</option>
+                        <option value="trophy">Trophy mode</option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="rarity-mode-settings-help">Rare tiers mark only the rarest achievements. Trophy mode grades every achievement gold, silver or bronze by its unlock rate.</div>
+                  </li>
+
+                  <li class="hasHelper" data-advanced="1">
+                    <div class="left"><i class="fas fa-medal"></i> <span id="trophy-gold-settings-label">Gold trophy below</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_trophyGoldBelow">
+                        <option value="5">5%</option>
+                        <option value="10">10%</option>
+                        <option value="15">15%</option>
+                        <option value="20" selected>20%</option>
+                        <option value="25">25%</option>
+                        <option value="30">30%</option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="trophy-gold-settings-help">In trophy mode, achievements unlocked by fewer players than this earn gold.</div>
+                  </li>
+
+                  <li class="hasHelper" data-advanced="1">
+                    <div class="left"><i class="fas fa-medal"></i> <span id="trophy-silver-settings-label">Silver trophy below</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_trophySilverBelow">
+                        <option value="40">40%</option>
+                        <option value="50" selected>50%</option>
+                        <option value="60">60%</option>
+                        <option value="70">70%</option>
+                        <option value="80">80%</option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="trophy-silver-settings-help">In trophy mode, achievements below this rate earn silver; the rest, or those with no known rate, earn bronze.</div>
+                  </li>
                 </ul>
               </div>
 
@@ -3309,6 +3459,10 @@
                 <span id="footer-update-status" class="footer-update-status" aria-live="polite"></span>
               </p>
             </div>
+            <!-- What Save and Cancel mean on the tab being viewed; filled by ui/settings.js. -->
+            <div id="settings-save-state" class="settings-save-state" role="status" aria-live="polite" data-state="">
+              <i class="fas" aria-hidden="true"></i> <em></em>
+            </div>
             <div class="buttons">
               <div id="btn-settings-cancel"></div>
               <div id="btn-settings-save"></div>
@@ -3319,7 +3473,7 @@
 
       <section id="game-config">
         <div class="overlay"></div>
-        <div class="box">
+        <div class="box" role="dialog" aria-modal="true" aria-labelledby="game-config-title">
           <div class="header"><i class="fas fa-cog"></i> <span id="game-config-title">Executable configuration</span><span></span></div>
           <div class="container">
             <!-- Both tabs are labelled by id from app.js, not positionally, so this strip can grow
@@ -3590,7 +3744,7 @@
               <h1 id="onboarding-title">Achievement Watcher Next</h1>
             </div>
             <div class="onboarding-progress" aria-live="polite">
-              <span id="onboarding-progress-text">1 / 7</span>
+              <span id="onboarding-progress-text">1 / 6</span>
               <span class="onboarding-progress-track" aria-hidden="true"><span id="onboarding-progress-fill"></span></span>
             </div>
             <button type="button" id="onboarding-close" class="icon-button" title="Close" aria-label="Close"><i class="fas fa-times" aria-hidden="true"></i></button>
@@ -3598,22 +3752,25 @@
 
           <div class="onboarding-body">
             <nav class="onboarding-steps" aria-label="">
-              <button type="button" class="active" data-step="0" aria-controls="onboarding-step-0" aria-current="step"><i class="fas fa-language"></i> <span>Language</span></button>
-              <button type="button" data-step="1" aria-controls="onboarding-step-1"><i class="fas fa-info-circle"></i> <span>How it works</span></button>
-              <button type="button" data-step="2" aria-controls="onboarding-step-2"><i class="fas fa-layer-group"></i> <span>Interface</span></button>
-              <button type="button" data-step="3" aria-controls="onboarding-step-3"><i class="fas fa-user-circle"></i> <span>Account</span></button>
-              <button type="button" data-step="4" aria-controls="onboarding-step-4"><i class="fas fa-folder-open"></i> <span>Games</span></button>
-              <button type="button" data-step="5" aria-controls="onboarding-step-5"><i class="fas fa-shield-alt"></i> <span>Sources</span></button>
-              <button type="button" data-step="6" aria-controls="onboarding-step-6"><i class="fas fa-sliders-h"></i> <span>Settings</span></button>
+              <button type="button" class="active" data-step="0" aria-controls="onboarding-step-0" aria-current="step"><i class="fas fa-language"></i> <span>Basics</span></button>
+              <button type="button" data-step="1" aria-controls="onboarding-step-1"><i class="fas fa-user-circle"></i> <span>Profile</span></button>
+              <button type="button" data-step="2" aria-controls="onboarding-step-2"><i class="fas fa-folder-open"></i> <span>Games</span></button>
+              <button type="button" data-step="3" aria-controls="onboarding-step-3"><i class="fas fa-shield-alt"></i> <span>Sources</span></button>
+              <button type="button" data-step="4" aria-controls="onboarding-step-4"><i class="fas fa-sliders-h"></i> <span>Look and alerts</span></button>
+              <button type="button" data-step="5" aria-controls="onboarding-step-5"><i class="fas fa-flag-checkered"></i> <span>Ready</span></button>
             </nav>
 
             <div class="onboarding-panel">
+              <!-- Language and interface mode share the first step. Neither mode card carries `selected`, no
+                   card is styled as a default and neither is called recommended: the guide refuses to
+                   advance until one is picked, so the choice is genuinely the user's. See
+                   app/util/interfaceMode.js. -->
               <section class="onboarding-step active" id="onboarding-step-0" data-step="0">
                 <div class="step-heading">
                   <i class="fas fa-language"></i>
                   <div>
-                    <h2 id="onboard-language-title">Choose language</h2>
-                    <p id="onboard-language-copy">Games, metadata, achievements and Steam caches all load in this language from the start.</p>
+                    <h2 id="onboard-welcome-title">Welcome to AW Next</h2>
+                    <p id="onboard-welcome-copy">Two quick choices to start. Everything can be changed later in Settings, and you can skip the rest of this guide at any time.</p>
                   </div>
                 </div>
                 <div class="onboarding-form-grid">
@@ -3623,57 +3780,17 @@
                     <small class="onboard-field-hint" id="onboard-language-hint"></small>
                   </label>
                 </div>
-              </section>
-
-              <section class="onboarding-step" id="onboarding-step-1" data-step="1">
-                <div class="step-heading">
-                  <i class="fas fa-info-circle"></i>
-                  <div>
-                    <h2 id="onboard-intro-title">How it works</h2>
-                  </div>
-                </div>
-                <div class="onboarding-cards">
-                  <div>
-                    <i class="fas fa-search"></i>
-                    <strong id="onboard-card-scan-title">Scan</strong>
-                    <span id="onboard-card-scan-copy">Launcher, emulator and achievement-file locations are detected automatically - you review each one before the first scan.</span>
-                  </div>
-                  <div>
-                    <i class="fas fa-bell"></i>
-                    <strong id="onboard-card-watch-title">Watch</strong>
-                    <span id="onboard-card-watch-copy">The background Watchdog spots the game when it launches, tracks playtime and watches its achievement files.</span>
-                  </div>
-                  <div>
-                    <i class="fas fa-tools"></i>
-                    <strong id="onboard-card-fix-title">Repair</strong>
-                    <span id="onboard-card-fix-copy">For emulated Steam games, the right-click fix installs GBE Fork and writes the achievement schema and DLC data.</span>
-                  </div>
-                  <div>
-                    <i class="fas fa-layer-group"></i>
-                    <strong id="onboard-card-overlay-title">In-game overlay</strong>
-                    <span id="onboard-card-overlay-copy">A small achievements panel you bring up over the game with a hotkey - Ctrl+Shift+K by default.</span>
-                  </div>
-                </div>
-              </section>
-
-              <!-- Interface mode. No option carries `selected`, no card is styled as a default and
-                   neither is called recommended: onboarding refuses to advance until one is picked,
-                   so the choice is genuinely the user's. See app/util/interfaceMode.js. -->
-              <section class="onboarding-step" id="onboarding-step-2" data-step="2">
-                <div class="step-heading">
-                  <i class="fas fa-layer-group"></i>
-                  <div>
-                    <h2 id="onboard-mode-title">Choose your interface</h2>
-                    <p id="onboard-mode-copy">Both track achievements exactly the same way. This only decides how much of AW Next is on screen.</p>
-                  </div>
+                <div class="onboarding-subhead">
+                  <strong id="onboard-mode-title">Choose your interface</strong>
+                  <span id="onboard-mode-copy">Both track achievements exactly the same way. This only decides how much of AW Next is on screen.</span>
                 </div>
                 <div class="onboarding-mode-choice" role="radiogroup" aria-labelledby="onboard-mode-title">
-                  <button type="button" class="onboarding-mode-card" data-mode="simple" role="radio" aria-checked="false">
+                  <button type="button" class="onboarding-mode-card" data-mode="simple" role="radio" aria-checked="false" tabindex="0">
                     <i class="fas fa-feather-alt" aria-hidden="true"></i>
                     <strong id="onboard-mode-simple-title">Simple</strong>
                     <span id="onboard-mode-simple-copy">A streamlined interface built around what you use every day: your library, notifications, appearance and sources.</span>
                   </button>
-                  <button type="button" class="onboarding-mode-card" data-mode="advanced" role="radio" aria-checked="false">
+                  <button type="button" class="onboarding-mode-card" data-mode="advanced" role="radio" aria-checked="false" tabindex="0">
                     <i class="fas fa-sliders-h" aria-hidden="true"></i>
                     <strong id="onboard-mode-advanced-title">Advanced</strong>
                     <span id="onboard-mode-advanced-copy">The complete AW Next: emulator runtime setup, controller control, diagnostics, repair tools and experimental options.</span>
@@ -3682,7 +3799,7 @@
                 <small class="onboard-field-hint" id="onboard-mode-hint">Nothing is switched off either way - Simple shows less, and you can change this at any time in Settings.</small>
               </section>
 
-              <section class="onboarding-step" id="onboarding-step-3" data-step="3">
+              <section class="onboarding-step" id="onboarding-step-1" data-step="1">
                 <div class="step-heading">
                   <i class="fas fa-user-circle"></i>
                   <div>
@@ -3710,13 +3827,24 @@
                 </div>
               </section>
 
-              <section class="onboarding-step" id="onboarding-step-4" data-step="4">
+
+              <section class="onboarding-step" id="onboarding-step-2" data-step="2">
                 <div class="step-heading">
                   <i class="fas fa-folder-open"></i>
                   <div>
-                    <h2 id="onboard-folders-title">Add games on disk</h2>
-                    <p id="onboard-folders-copy">Add save/config folders for specific emulators, and library roots that contain many installed games.</p>
+                    <h2 id="onboard-folders-title">Your games</h2>
+                    <p id="onboard-folders-copy">AW Next looks for games on this PC and shows what it finds. Add a folder only if something is missing.</p>
                   </div>
+                </div>
+                <!-- What the detection found, filled by onboarding.js: launchers read from their own files plus
+                     the games inside every folder listed below. -->
+                <div class="onboarding-detect" id="onboard-detect" aria-live="polite">
+                  <div class="onboarding-detect-head">
+                    <strong id="onboard-detect-title">Found on this PC</strong>
+                    <span id="onboard-detect-total"></span>
+                  </div>
+                  <ul id="onboard-detect-list"></ul>
+                  <p class="onboarding-detect-note" id="onboard-detect-note" hidden></p>
                 </div>
                 <div class="onboarding-folder-actions">
                   <button type="button" id="onboard-smart-find" class="inline-action-btn primary"><i class="fas fa-search-plus"></i> <span>Smart find folders</span><small id="onboard-smart-find-hint">saves + libraries</small></button>
@@ -3736,7 +3864,7 @@
                 </div>
               </section>
 
-              <section class="onboarding-step" id="onboarding-step-5" data-step="5">
+              <section class="onboarding-step" id="onboarding-step-3" data-step="3">
                 <div class="step-heading">
                   <i class="fas fa-shield-alt"></i>
                   <div>
@@ -3781,6 +3909,10 @@
                   </div>
                 </div>
 
+                <!-- Every switch from Settings > Sources stays here, folded: the defaults read whatever is
+                     installed, so a newcomer has nothing to decide. -->
+                <details class="onboarding-fine" id="onboard-sources-details">
+                  <summary id="onboard-sources-more">Fine-tune sources</summary>
                 <div class="onboarding-source-group">
                   <div class="onboarding-source-group-head">
                     <strong id="onboard-sources-official-title">Official platforms</strong>
@@ -3966,21 +4098,27 @@
                     </label>
                   </div>
                 </div>
+                </details>
               </section>
 
-              <section class="onboarding-step" id="onboarding-step-6" data-step="6">
+              <section class="onboarding-step" id="onboarding-step-4" data-step="4">
                 <div class="step-heading">
                   <i class="fas fa-sliders-h"></i>
                   <div>
-                    <h2 id="onboard-settings-title">Recommended settings</h2>
-                    <p id="onboard-settings-copy">The essentials for your library, look and notifications. Everything stays editable later.</p>
+                    <h2 id="onboard-settings-title">Look and alerts</h2>
+                    <p id="onboard-settings-copy">Pick a theme and how unlock alerts appear. Use Test notification to see one right now.</p>
                   </div>
                 </div>
-                <div class="onboarding-form-grid">
+                <div class="onboarding-form-grid onboarding-look-grid">
                   <label class="onboarding-visual-choice">
                     <span id="onboard-theme-label">App theme</span>
                     <select id="onboard-theme"></select>
                     <small class="onboard-field-hint" id="onboard-theme-hint"></small>
+                  </label>
+                  <label class="onboarding-visual-choice">
+                    <span id="onboard-preset-label">Notification preset</span>
+                    <select id="onboard-notification-preset"></select>
+                    <small class="onboard-field-hint" id="onboard-preset-hint"></small>
                   </label>
                   <div class="onboarding-notification-field">
                     <label>
@@ -3995,56 +4133,97 @@
                     </label>
                     <button type="button" id="onboard-notification-test" class="onboarding-test-button"><i class="fas fa-bell"></i> <span>Test notification</span></button>
                   </div>
-                  <label class="onboarding-visual-choice">
-                    <span id="onboard-preset-label">Notification preset</span>
-                    <select id="onboard-notification-preset"></select>
-                    <small class="onboard-field-hint" id="onboard-preset-hint"></small>
-                  </label>
-                  <label>
-                    <span id="onboard-playtime-label">Playtime tracking</span>
-                    <select id="onboard-playtime">
-                      <option value="true">Enabled</option>
-                      <option value="false">Disabled</option>
-                    </select>
-                    <small class="onboard-field-hint" id="onboard-playtime-hint"></small>
-                  </label>
-                  <label>
-                    <span id="onboard-auto-fix-label">Auto-fix emulated games</span>
-                    <select id="onboard-auto-fix">
-                      <option value="true">Enabled</option>
-                      <option value="false">Disabled</option>
-                    </select>
-                    <small class="onboard-field-hint" id="onboard-auto-fix-hint">Applies the matching GBE Fork or Uplay R1/R2 repair to newly detected emulated games.</small>
-                  </label>
-                  <label>
-                    <span id="onboard-hidden-label">Hidden achievements</span>
-                    <select id="onboard-hidden">
-                      <option value="false">Hide</option>
-                      <option value="true">Show</option>
-                    </select>
-                    <small class="onboard-field-hint" id="onboard-hidden-hint"></small>
-                  </label>
-                  <label>
-                    <span id="onboard-merge-label">Merge duplicates</span>
-                    <select id="onboard-merge">
-                      <option value="true">Enabled</option>
-                      <option value="false">Disabled</option>
-                    </select>
-                    <small class="onboard-field-hint" id="onboard-merge-hint"></small>
-                  </label>
                 </div>
-                <!-- What Finish is about to save, so an empty folder list is noticed here rather than as an
-                     empty library. Filled by onboarding.js each time this step opens. -->
-                <div class="onboarding-summary" id="onboard-summary" aria-live="polite">
-                  <p id="onboard-summary-counts"></p>
-                  <small class="onboard-field-hint" id="onboard-summary-reopen"></small>
+                <details class="onboarding-fine" id="onboard-more-details">
+                  <summary id="onboard-more-label">More options</summary>
+                  <div class="onboarding-form-grid">
+                    <label>
+                      <span id="onboard-playtime-label">Playtime tracking</span>
+                      <select id="onboard-playtime">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                      </select>
+                      <small class="onboard-field-hint" id="onboard-playtime-hint"></small>
+                    </label>
+                    <label>
+                      <span id="onboard-auto-fix-label">Auto-fix emulated games</span>
+                      <select id="onboard-auto-fix">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                      </select>
+                      <small class="onboard-field-hint" id="onboard-auto-fix-hint">Applies the matching GBE Fork or Uplay R1/R2 repair to newly detected emulated games.</small>
+                    </label>
+                    <label>
+                      <span id="onboard-hidden-label">Hidden achievements</span>
+                      <select id="onboard-hidden">
+                        <option value="false">Hide</option>
+                        <option value="true">Show</option>
+                      </select>
+                      <small class="onboard-field-hint" id="onboard-hidden-hint"></small>
+                    </label>
+                    <label>
+                      <span id="onboard-merge-label">Merge duplicates</span>
+                      <select id="onboard-merge">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                      </select>
+                      <small class="onboard-field-hint" id="onboard-merge-hint"></small>
+                    </label>
+                  </div>
+                </details>
+              </section>
+
+              <section class="onboarding-step" id="onboarding-step-5" data-step="5">
+                <div class="step-heading">
+                  <i class="fas fa-flag-checkered"></i>
+                  <div>
+                    <h2 id="onboard-ready-title">You are all set</h2>
+                    <p id="onboard-ready-copy">AW Next now watches your games in the background and tells you when you unlock something.</p>
+                  </div>
                 </div>
+                <!-- What Finish is about to save, so a wrong answer is noticed here. Rows are built by
+                     onboarding.js each time this step opens; every one jumps back to its step. -->
+                <ul class="onboarding-recap" id="onboard-recap" aria-live="polite"></ul>
+                <div class="onboarding-subhead">
+                  <strong id="onboard-features-title">Good to know</strong>
+                </div>
+                <div class="onboarding-cards onboarding-features">
+                  <div>
+                    <i class="fas fa-layer-group" aria-hidden="true"></i>
+                    <strong id="onboard-feat-overlay-title">In-game overlay</strong>
+                    <span id="onboard-feat-overlay-copy"></span>
+                  </div>
+                  <div>
+                    <i class="fas fa-folder-plus" aria-hidden="true"></i>
+                    <strong id="onboard-feat-collections-title">Collections</strong>
+                    <span id="onboard-feat-collections-copy"></span>
+                  </div>
+                  <div>
+                    <i class="fas fa-trophy" aria-hidden="true"></i>
+                    <strong id="onboard-feat-trophy-title">Trophy mode</strong>
+                    <span id="onboard-feat-trophy-copy"></span>
+                  </div>
+                  <div>
+                    <i class="fas fa-video" aria-hidden="true"></i>
+                    <strong id="onboard-feat-clips-title">Video clips</strong>
+                    <span id="onboard-feat-clips-copy"></span>
+                  </div>
+                  <div id="onboard-feat-backup" data-advanced>
+                    <i class="fas fa-file-export" aria-hidden="true"></i>
+                    <strong id="onboard-feat-backup-title">Profile backup</strong>
+                    <span id="onboard-feat-backup-copy"></span>
+                  </div>
+                </div>
+                <small class="onboard-field-hint" id="onboard-summary-reopen">You can reopen this guide at any time from Settings &gt; General.</small>
               </section>
             </div>
           </div>
 
           <div class="onboarding-footer">
-            <div id="onboarding-status" aria-live="polite"></div>
+            <div class="onboarding-footer-start">
+              <button type="button" id="onboarding-skip" class="onboarding-skip"><span>Skip setup</span></button>
+              <div id="onboarding-status" aria-live="polite"></div>
+            </div>
             <div class="onboarding-actions">
               <button type="button" id="onboarding-prev" class="inline-action-btn secondary"><i class="fas fa-chevron-left"></i> <span>Back</span></button>
               <button type="button" id="onboarding-next" class="inline-action-btn primary"><span>Next</span> <i class="fas fa-chevron-right"></i></button>
@@ -4080,13 +4259,16 @@
 
     <script>window.$ = window.jQuery = require('../ui/lib/jquery-3.7.1.min.js');</script>
     <script src="../components/register.js" type="module"></script>
+    <script src="../ui/keyboardPress.js" type="text/javascript"></script>
     <script src="../ui/sort.js" type="text/javascript"></script>
     <script src="../ui/search.js" type="text/javascript"></script>
+    <script src="../ui/collections.js" type="text/javascript"></script>
     <script src="../ui/game.js" type="text/javascript"></script>
     <script src="../ui/refresh.js" type="text/javascript"></script>
     <script src="../util/controllerLabels.js" type="text/javascript"></script>
     <script src="../ui/help.js" type="text/javascript"></script>
     <script src="../ui/settings.js" type="text/javascript"></script>
+    <script src="../ui/profileBackup.js" type="text/javascript"></script>
     <script src="../app.js" type="text/javascript"></script>
     <script src="../ui/uplayRepair.js" type="text/javascript"></script>
     <script src="../ui/artworkPicker.js" type="text/javascript"></script>

@@ -99,6 +99,9 @@
   --set-account-bg: linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, transparent), var(--set-panel));
   --set-btn-top: color-mix(in srgb, var(--set-surface) 78%, white 4%);
   --set-btn-bottom: color-mix(in srgb, var(--set-surface) 92%, black 12%);
+  /* Label colour for anything filled with the accent: black or white, whichever reads better on the
+     theme's own accent. Light text on a pale accent was under 2:1 in most built-in themes. */
+  --on-accent: oklch(from var(--accent) clamp(0, (0.62 - l) * 1000, 1) 0 0);
 }
 
 /* App themes (Settings > General). Every theme but 'light' is a dark variant: the stylesheet's
@@ -246,7 +249,7 @@
   --set-surface: #1f2335;
   --border: #3b4261;
   --text: #c0caf5;
-  --text-muted: #565f89;
+  --text-muted: #8790bb;
   --accent: #7dcfff;
   --accent-soft: rgba(125, 207, 255, 0.18);
   --surface-elevated: #292e42;
@@ -357,6 +360,22 @@ p {
 }
 *:focus {
   outline: none;
+}
+
+/* The reset above leaves every control without its own ring invisible to a keyboard user. This is
+   the fallback: specificity 0 for the list, so any control-specific rule still wins. Text fields
+   are left out, their caret and border change already mark them. */
+:where(
+    button,
+    a[href],
+    select,
+    summary,
+    input:not([type='text'], [type='search'], [type='password'], [type='number'], [type='url']),
+    [tabindex]:not([tabindex='-1']),
+    [role='button']
+  ):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* Native Gamepad API navigation. The marker is only visible after an actual controller input, so
@@ -842,7 +861,8 @@ body.is-resizing #game-list {
 }
 
 /* Installed-only filter: a standalone rounded toggle, kept visually apart from the sort group. */
-#sort-box .installed-filter {
+#sort-box .installed-filter,
+#sort-box .collection-filter {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -856,18 +876,34 @@ body.is-resizing #game-list {
   border: 1px solid color-mix(in srgb, var(--border) 12%, transparent);
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
-#sort-box .installed-filter:hover {
+#sort-box .installed-filter:hover,
+#sort-box .collection-filter:hover {
   color: var(--text);
   border-color: color-mix(in srgb, var(--border) 32%, transparent);
   transform: translateY(-1px);
 }
-#sort-box .installed-filter:active {
+#sort-box .installed-filter:active,
+#sort-box .collection-filter:active {
   transform: scale(0.94);
 }
-#sort-box .installed-filter.active {
+#sort-box .installed-filter.active,
+#sort-box .collection-filter.active {
   color: var(--text);
   background: var(--accent-soft);
   border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+#sort-box .collection-filter:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+#sort-box .collection-filter.active i {
+  color: var(--collection-color, var(--text));
+}
+#sort-box .collection-filter .collection-image {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  object-fit: cover;
 }
 
 /* Sort: a three-state segmented control - normal, reversed, then cleared. */
@@ -945,6 +981,63 @@ body.is-resizing #game-list {
    so a tile shows only when it matches the search AND passes the installed-only filter). */
 #game-list ul li.search-hidden {
   display: none !important;
+}
+/* Collection filter: same class-based mechanism, so it composes with search and installed-only. */
+#game-list ul li.collection-hidden {
+  display: none !important;
+}
+
+/* Collection editor: reuses the aw-prompt dialog; only the controls inside it are new. */
+.aw-collection-editor {
+  width: min(460px, calc(100vw - 48px));
+}
+.aw-collection-field {
+  margin-bottom: 14px;
+}
+.aw-collection-label {
+  margin-bottom: 6px;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.aw-collection-choices,
+.aw-collection-image-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.aw-collection-swatch,
+.aw-collection-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+}
+.aw-collection-swatch {
+  border-radius: 50%;
+}
+.aw-collection-swatch[aria-checked='true'],
+.aw-collection-icon[aria-checked='true'] {
+  border-color: var(--text);
+}
+.aw-collection-swatch:focus-visible,
+.aw-collection-icon:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.aw-collection-image-row .chosen {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.aw-collection-delete {
+  margin-right: auto;
+}
+.aw-collection-image-row [hidden] {
+  display: none;
 }
 
 #main-footer {
@@ -2363,6 +2456,28 @@ body.is-resizing #game-list {
   color: #e0915ac7;
 }
 
+/* Trophy mode: every row with a known rate wears its grade next to the percentage. Only gold keeps
+   the animated .rare halo; silver and bronze would repaint on the main thread for most of the list. */
+.achievement.trophy-grade .stats .community span.data::before {
+  content: attr(data-grade) ' - ';
+}
+
+.achievement.trophy-grade.rarity-gold .stats .community {
+  color: var(--trophy-gold);
+}
+
+.achievement.trophy-grade.rarity-silver .stats .community {
+  color: var(--trophy-silver);
+}
+
+.achievement.trophy-grade.rarity-bronze .stats .community {
+  color: var(--trophy-bronze);
+}
+
+.library-achievement-summary[data-platinum] {
+  color: var(--trophy-platinum);
+}
+
 /* Notifications tab: turn the test list into styled inline pills. */
 #options-notify-test {
   display: grid;
@@ -2697,6 +2812,41 @@ body.is-resizing #game-list {
   display: none !important;
 }
 
+/* Simple mode, search only: matches that exist but belong to Advanced. Lives in the nav column so
+   the pane does not change height while typing. */
+#settings-search-advanced {
+  margin: 14px 2px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: 8px;
+  background: var(--set-panel);
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+#settings-search-advanced[hidden] {
+  display: none;
+}
+#settings-search-advanced p {
+  margin: 0 0 8px;
+}
+#settings-search-advanced button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 7px;
+  background: var(--accent-soft);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+#settings-search-advanced button:hover {
+  border-color: var(--accent);
+}
+
 #settings-search-empty {
   display: none;
   flex: 1 1 auto;
@@ -2808,6 +2958,9 @@ body.is-resizing #game-list {
   width: auto;
   min-width: 0;
   scroll-padding-block: 18px 32px;
+  /* The pane only scrolls vertically; the blur band below reaches into the padding and drew a
+     horizontal scrollbar under every tab. */
+  overflow-x: hidden;
 }
 
 /* The tail of the card you just scrolled past keeps showing in the strip above the next card's
@@ -3056,6 +3209,46 @@ body.is-resizing #game-list {
   transition: background 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
 }
 
+/* Says what Save and Cancel mean on the tab in front of you. Empty (and gone) on a tab that simply
+   waits for Save with nothing changed yet. */
+#settings .settings-save-state {
+  margin: auto 0 auto auto;
+  max-width: 190px;
+  flex: 0 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  line-height: 1.3;
+}
+#settings .settings-save-state[data-state=''] {
+  display: none;
+}
+#settings .settings-save-state em {
+  font-style: normal;
+}
+#settings .settings-save-state i {
+  flex: none;
+  color: var(--success);
+}
+#settings .settings-save-state[data-state='dirty'] i {
+  color: var(--accent);
+  font-size: 8px;
+}
+#settings .settings-save-state.is-flash i {
+  animation: aw-saved-pulse 0.9s ease;
+}
+@keyframes aw-saved-pulse {
+  30% {
+    transform: scale(1.5);
+  }
+}
+/* Only a visible status takes over the auto margin; a hidden one must leave the buttons on the right. */
+#settings .box .footer .settings-save-state:not([data-state='']) + .buttons {
+  margin-left: 0;
+}
+
 /* Cancel = quiet secondary. The old alarming red read as "destructive" for an action that just
    closes the panel; the affirmative Save below now carries the emphasis instead. */
 #settings .box .footer .buttons div#btn-settings-cancel,
@@ -3071,7 +3264,7 @@ body.is-resizing #game-list {
    (blue on Steam, purple on Dracula, green on Graphite …). */
 #settings .box .footer .buttons div#btn-settings-save,
 #game-config .box .footer .buttons div#btn-game-config-save {
-  color: var(--text);
+  color: var(--on-accent);
   border-color: color-mix(in srgb, var(--accent) 55%, transparent);
   background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 82%, white 4%), var(--accent));
 }
@@ -3714,11 +3907,11 @@ body.is-resizing #game-list {
 }
 
 .onboarding-mode-card {
-  min-height: 168px;
+  min-height: 0;
   display: grid;
   align-content: start;
-  gap: 10px;
-  padding: 18px;
+  gap: 8px;
+  padding: 14px 16px;
   text-align: left;
   cursor: pointer;
   border: 1px solid var(--set-hairline-soft);
@@ -3762,11 +3955,270 @@ body.is-resizing #game-list {
 
 #onboard-mode-hint {
   display: block;
-  margin-top: 14px;
+  margin-top: 10px;
   color: var(--text-muted);
   font-family: 'Open-Sans';
   font-size: 12px;
   line-height: 1.5;
+}
+
+.onboarding-subhead {
+  display: grid;
+  gap: 3px;
+  margin: 12px 0 8px;
+}
+
+.onboarding-subhead strong {
+  color: var(--text);
+  font-family: 'Open-Sans-Bold';
+  font-size: 14px;
+}
+
+.onboarding-subhead span {
+  color: var(--text-muted);
+  font-family: 'Open-Sans';
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* What the detection found: one row per launcher or source, a muted row when nothing was found. */
+.onboarding-detect {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface-sunken) 44%, transparent);
+}
+
+.onboarding-detect-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.onboarding-detect-head strong {
+  font-family: 'Open-Sans-Bold';
+  font-size: 13px;
+}
+
+#onboard-detect-total {
+  color: var(--text-muted);
+  font-family: 'Open-Sans';
+  font-size: 12px;
+}
+
+#onboard-detect-total.is-found {
+  color: color-mix(in srgb, var(--success) 78%, white);
+  font-family: 'Open-Sans-Bold';
+}
+
+#onboard-detect-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#onboard-detect-list li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  font-family: 'Open-Sans';
+  font-size: 12px;
+}
+
+#onboard-detect-list li > i {
+  color: var(--text-muted);
+  text-align: center;
+}
+
+#onboard-detect-list li.is-found > i {
+  color: color-mix(in srgb, var(--success) 78%, white);
+}
+
+#onboard-detect-list li > span:last-child {
+  justify-self: end;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+#onboard-detect-list li.is-found > span:last-child {
+  color: var(--text);
+}
+
+#onboard-detect-list li.is-empty {
+  opacity: 0.62;
+}
+
+.onboarding-detect-note {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-family: 'Open-Sans';
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.onboarding-detect-note button {
+  padding: 0;
+  border: 0;
+  color: var(--accent);
+  background: transparent;
+  font: inherit;
+  font-family: 'Open-Sans-Bold';
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.onboarding-detect-note button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Settings that stay folded: a newcomer has nothing to decide there, an expert opens it. */
+.onboarding-fine {
+  margin-top: 16px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface-sunken) 30%, transparent);
+}
+
+.onboarding-fine > summary {
+  padding: 10px 14px;
+  cursor: pointer;
+  color: var(--text);
+  font-family: 'Open-Sans-Bold';
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+.onboarding-fine > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.onboarding-fine[open] > summary {
+  border-bottom: 1px solid var(--set-hairline-soft);
+  border-radius: 10px 10px 0 0;
+}
+
+.onboarding-fine > :not(summary) {
+  margin: 14px;
+}
+
+.onboarding-fine > .onboarding-source-group + .onboarding-source-group {
+  margin-top: 14px;
+}
+
+.onboarding-recap {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 4px;
+  padding: 0;
+  list-style: none;
+}
+
+.onboarding-recap li {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 10px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--surface-sunken) 44%, transparent);
+  font-family: 'Open-Sans';
+  font-size: 12px;
+}
+
+.onboarding-recap li > i {
+  color: color-mix(in srgb, var(--success) 78%, white);
+  text-align: center;
+}
+
+.onboarding-recap li.is-warning > i {
+  color: color-mix(in srgb, var(--danger) 60%, white);
+}
+
+.onboarding-recap button {
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: var(--accent);
+  background: transparent;
+  font-family: 'Open-Sans-Bold';
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.onboarding-recap button:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.onboarding-recap button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.onboarding-features {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.onboarding-features > div {
+  grid-template-columns: 22px minmax(0, 1fr);
+  column-gap: 10px;
+  row-gap: 2px;
+  padding: 10px 12px;
+}
+
+.onboarding-features > div > i {
+  grid-row: 1 / span 2;
+  font-size: 16px;
+  text-align: center;
+}
+
+.onboarding-features strong {
+  font-size: 12px;
+}
+
+/* Simple hides Settings > Advanced, where the backup lives, so the tip would point at nothing. */
+#onboarding.is-simple .onboarding-features [data-advanced] {
+  display: none;
+}
+
+.onboarding-footer-start {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.onboarding-skip {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text);
+  background: transparent;
+  font-family: 'Open-Sans-Bold';
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.onboarding-skip:hover {
+  border-color: color-mix(in srgb, var(--border) 32%, transparent);
+  background: color-mix(in srgb, var(--surface-sunken) 60%, transparent);
+}
+
+.onboarding-skip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .onboarding-form-grid {
@@ -3775,11 +4227,16 @@ body.is-resizing #game-list {
   gap: 14px;
 }
 
-#onboarding-step-6 .onboarding-form-grid {
+.onboarding-look-grid {
   gap: 18px 16px;
 }
 
-#onboarding-step-6 .onboard-field-hint {
+.onboarding-look-grid .onboarding-notification-field {
+  grid-column: 1 / -1;
+  max-width: 560px;
+}
+
+.onboarding-look-grid .onboard-field-hint {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
@@ -4073,19 +4530,9 @@ body.is-resizing #game-list {
 .onboarding-notification-field .onboarding-test-button {
   grid-row: 2;
   grid-column: 2;
-  width: 38px;
   min-height: 38px;
-  padding: 0;
-  font-size: 13px;
-}
-
-.onboarding-notification-field .onboarding-test-button span {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+  padding: 0 12px;
+  font-size: 12px;
 }
 
 .onboarding-test-button {
@@ -4197,7 +4644,7 @@ body.is-resizing #game-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
 .onboarding-lists .list-title {
@@ -4208,8 +4655,8 @@ body.is-resizing #game-list {
 }
 
 .onboarding-lists ul {
-  min-height: 150px;
-  max-height: 190px;
+  min-height: 84px;
+  max-height: 150px;
   overflow-y: auto;
   padding: 5px;
   border: 1px solid var(--set-hairline-soft);
@@ -4323,7 +4770,7 @@ body.is-resizing #game-list {
   }
 
   .onboarding-steps {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
   .onboarding-steps button {
@@ -4336,7 +4783,9 @@ body.is-resizing #game-list {
 
   .onboarding-cards,
   .onboarding-form-grid,
-  .onboarding-lists {
+  .onboarding-lists,
+  .onboarding-mode-choice,
+  #onboard-detect-list {
     grid-template-columns: 1fr;
   }
 }
@@ -5116,27 +5565,6 @@ body.is-resizing #game-list {
   font-size: 14px;
 }
 
-/* "saved automatically" cue - clarifies that this tab persists changes instantly (unlike the
-   General/Source/Advanced tabs, which apply on Save + rescan). */
-#options-notify .autosave-hint {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: fit-content;
-  gap: 6px;
-  font-family: Open-sans;
-  font-size: 12px;
-  color: var(--text-muted);
-  margin: 0 0 12px;
-  padding: 5px 9px;
-  border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--success) 9%, transparent);
-}
-#options-notify .autosave-hint i {
-  color: var(--success);
-}
-
 #settings .folder-actions .info p {
   padding: 0;
 }
@@ -5677,10 +6105,10 @@ body.is-resizing #game-list {
 #settings .emulator-list li.is-off .right select {
   color: var(--text-muted);
 }
-#settings .emulator-list li.is-inactive {
+#settings li.is-inactive {
   opacity: 0.42;
 }
-#settings .emulator-list li.is-inactive .right {
+#settings li.is-inactive .right {
   pointer-events: none;
 }
 #settings .emulator-login {
@@ -5920,6 +6348,11 @@ body.is-resizing #game-list {
   background: linear-gradient(160deg, var(--surface-elevated), var(--surface-sunken));
   box-shadow: 0 24px 70px rgba(0, 0, 0, calc(0.55 * var(--shadow-scale))), inset 0 1px 0 rgba(255, 255, 255, 0.035);
   animation: aw-prompt-in 0.16s ease-out;
+  /* Appended to <body>, which sets no font: without this the text and the field fell back to Times. */
+  font-family: 'Raleway', sans-serif;
+}
+.aw-prompt input {
+  font-family: inherit;
 }
 .aw-prompt-heading {
   display: flex;
@@ -6919,6 +7352,7 @@ body {
 }
 
 #sort-box .installed-filter,
+#sort-box .collection-filter,
 #sort-box .sort-group,
 #search-bar .library-add-button,
 #search-bar input[type='search'] {
@@ -7199,6 +7633,19 @@ body {
   background: transparent;
   border-color: transparent;
   transform: none;
+}
+
+/* Advanced sits under the Support caption with Help, so its own header draws nothing. */
+#settingNav #nav-group-advanced {
+  display: none;
+}
+
+/* A group of one tab has no caption of its own (it would only repeat the tab): just a divider. */
+#settingNav li.nav-group:empty {
+  height: 1px;
+  margin: 12px 13px 8px;
+  padding: 0;
+  background: var(--set-hairline-soft);
 }
 
 /* Simple / Advanced interface mode. Rows and tabs Simple mode leaves out. Hidden with a class and
@@ -7515,22 +7962,6 @@ body {
 }
 
 #settings .content[data-view='folder'] .disclaimer,
-#options-notify .autosave-hint {
-  width: auto;
-  justify-content: flex-start;
-  padding: 9px 12px;
-  margin: 0 0 14px;
-  color: var(--text-muted);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 16%, transparent);
-  border-radius: 9px;
-  text-align: left;
-}
-
-#options-notify .autosave-hint i {
-  color: var(--success);
-}
-
 #defaultdir,
 #dirlist,
 #libdirlist {
@@ -8113,7 +8544,7 @@ body {
 
 #settings .box .footer .buttons div#btn-settings-save,
 #game-config .box .footer .buttons div#btn-game-config-save {
-  color: var(--text);
+  color: var(--on-accent);
   border-color: color-mix(in srgb, var(--accent) 55%, transparent);
   background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 82%, white 6%), var(--accent));
 }
@@ -8393,11 +8824,11 @@ body {
   line-height: 1.4;
 }
 
-#settings #options-source > li.official-source {
+#settings .source-list > li.official-source {
   box-shadow: inset 3px 0 0 color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
-#settings #options-source .source-official-badge {
+#settings .source-list .source-official-badge {
   margin-left: 2px;
   color: color-mix(in srgb, var(--accent) 72%, var(--text-muted));
   font-size: 10px;
@@ -9110,16 +9541,6 @@ body {
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
-#options-notify .autosave-hint {
-  min-height: 38px;
-  box-sizing: border-box;
-  margin: 0 0 24px;
-  padding: 9px 12px;
-  border: 1px solid var(--set-hairline-soft);
-  border-radius: 9px;
-  background: var(--set-panel);
-}
-
 /* The folder-view disclaimer reuses the same flat section-header look as
    #settings .content .title (icon + label, hairline underline) instead of a boxed callout. */
 #settings .content[data-view='folder'] .disclaimer {
@@ -9138,18 +9559,6 @@ body {
   letter-spacing: 0.06em;
   line-height: 1.2;
   text-transform: uppercase;
-}
-
-/* A one-line fact, not a finding: it reads as a caption above the sections rather than as a card
-   competing with them. The Folders disclaimer above keeps the card - it carries a real warning. */
-#options-notify .autosave-hint {
-  min-height: 0;
-  margin: 0 0 12px;
-  padding: 0 2px;
-  border: 0;
-  background: none;
-  font-size: 12.5px;
-  opacity: 0.85;
 }
 
 #settings .folder-actions {
@@ -9653,7 +10062,7 @@ body {
 
 #settings .pd-seg button.is-on {
   background: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
   font-weight: 700;
 }
 
@@ -10227,6 +10636,37 @@ body {
   color: var(--accent);
 }
 
+/* Customising a bundled preset: only the sections that can be layered over somebody else's design
+   are shown, each behind a switch, and a section left off stays dimmed. Fields are hidden rather
+   than moved, as everywhere in the designer. */
+#settings .pd-layer-note {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+#settings .pd-layer-toggle {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  color: var(--text);
+  font-size: 0.9em;
+  font-weight: 700;
+}
+
+#settings #options-notify-designer.is-layered .pd-controls .pd-field:not([data-layer-section]),
+#settings #options-notify-designer.is-layered .pd-controls .pd-more,
+#settings #options-notify-designer.is-layered .pd-controls .pd-group.pd-layer-skip,
+#settings #options-notify-designer.is-layered #pd-templates-row {
+  display: none;
+}
+
+#settings #options-notify-designer.is-layered .pd-field.is-inherited {
+  opacity: 0.45;
+}
+
 /* Live readout for each slider. */
 #settings .pd-value {
   color: var(--text);
@@ -10294,7 +10734,7 @@ body {
 #settings #options-notify-designer .pd-actions #btn-create-preset {
   border-color: transparent;
   background: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
   font-weight: 700;
 }
 
@@ -10455,6 +10895,13 @@ body {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 8px;
+}
+
+/* These sit edge to edge inside a box that clips overflow, so an outer ring would be cut off. */
+#settings .pd-seg button:focus-visible,
+#settings .pd-group-head:focus-visible,
+#settings .help-panel summary:focus-visible {
+  outline-offset: -2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -10718,7 +11165,7 @@ body {
   font-size: 12.5px;
   border-color: transparent;
   background: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
   font-weight: 700;
 }
 
@@ -11475,6 +11922,12 @@ body {
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+/* The pills and the button share one flow, so a wrapped list keeps the button beside its last pill
+   instead of leaving it alone on a third line. The markup is unchanged for the nth-child binding. */
+#user-info .info .stats ul {
+  display: contents;
 }
 
 .profile-stats-open {

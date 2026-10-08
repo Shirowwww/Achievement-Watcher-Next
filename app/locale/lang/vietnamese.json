@@ -86,16 +86,25 @@
     "runUninstaller": "Chạy trình gỡ cài đặt của trò chơi…",
     "deleteFolder": "Xóa thư mục trò chơi (Thùng rác)…"
   },
+  "windowControls": {
+    "minimize": "Thu nhỏ",
+    "maximize": "Phóng to",
+    "close": "Đóng"
+  },
   "settings": {
     "title": "Cài đặt",
     "sideMenu": {
       "general": "Chung",
       "notification": "Thông báo",
-      "presets": "Mẫu",
+      "presets": "Mẫu thông báo",
       "souvenir": "Kỷ niệm",
       "folder": "Thư mục",
       "source": "Nguồn",
-      "advanced": "Nâng cao"
+      "advanced": "Nâng cao",
+      "groupApp": "Ứng dụng",
+      "groupAlerts": "Cảnh báo",
+      "groupLibrary": "Thư viện",
+      "groupSupport": "Hỗ trợ"
     },
     "common": {
       "show": "Hiện",
@@ -108,13 +117,17 @@
       "maintainedBy": "được duy trì bởi",
       "fork": "Bản fork",
       "original": "Bản gốc v1.6.8",
-      "edit": "Sửa"
+      "edit": "Sửa",
+      "close": "Đóng",
+      "unsaved": "Thay đổi chưa lưu"
     },
     "search": {
       "placeholder": "Tìm trong cài đặt…",
       "empty": "Không có cài đặt nào khớp với tìm kiếm của bạn.",
       "ariaLabel": "Tìm trong cài đặt",
-      "clear": "Xóa"
+      "clear": "Xóa",
+      "advancedMore": "Thêm {count} trong chế độ Nâng cao",
+      "advancedShow": "Hiện Nâng cao"
     },
     "watchdog": {
       "startup": {
@@ -143,7 +156,7 @@
       "duration": "Thời lượng hiệu ứng"
     },
     "general": {
-      "sectionTitle": "Giao diện và hành vi",
+      "sectionTitle": "Cài đặt hằng ngày",
       "language": {
         "name": "Ngôn ngữ",
         "description": "Ngôn ngữ giao diện. Dữ liệu trò chơi cũng được tải theo ngôn ngữ này khi có sẵn."
@@ -161,7 +174,7 @@
         }
       },
       "hiddenAch": {
-        "name": "Thành tựu ẩn",
+        "name": "Hiện thành tựu ẩn",
         "description": "Hiện tên và mô tả của thành tựu ẩn trước khi bạn mở khóa chúng."
       },
       "mergeDuplicates": {
@@ -264,6 +277,20 @@
         "name": "Cúp trên hồ sơ",
         "description": "Hiển thị cúp bạch kim, vàng, bạc và đồng dưới tên của bạn. Bạch kim là trò chơi đạt 100%; các cúp còn lại xếp hạng thành tựu của bạn theo số người chơi đã mở khóa chúng."
       },
+      "rarityDisplay": {
+        "name": "Hiển thị độ hiếm",
+        "description": "Cấp hiếm chỉ đánh dấu những thành tựu hiếm nhất. Chế độ cúp xếp mỗi thành tựu vào vàng, bạc hoặc đồng theo tỷ lệ mở khóa và hiển thị bạch kim cho các trò chơi đã hoàn thành.",
+        "rare": "Cấp hiếm",
+        "trophy": "Chế độ cúp",
+        "goldBelow": {
+          "name": "Cúp vàng dưới",
+          "description": "Ở chế độ cúp, thành tựu được ít người chơi mở khóa hơn tỷ lệ này sẽ nhận vàng."
+        },
+        "silverBelow": {
+          "name": "Cúp bạc dưới",
+          "description": "Ở chế độ cúp, thành tựu dưới tỷ lệ này nhận bạc; phần còn lại, hoặc chưa biết tỷ lệ, nhận đồng."
+        }
+      },
       "playButton": {
         "name": "Hiện nút Chơi",
         "description": "Hiện nút Chơi trên thẻ trò chơi. Tắt nếu bạn khởi chạy trò chơi từ chương trình khác. Mục Khởi chạy trò chơi trong menu chuột phải vẫn có sẵn."
@@ -302,7 +329,9 @@
           "name": "Nút cài đặt trò chơi",
           "description": "Hiện nút công cụ ở góc trên bên phải hình ảnh. Cài đặt trò chơi vẫn có thể truy cập từ menu chuột phải."
         }
-      }
+      },
+      "appSectionTitle": "Ứng dụng",
+      "trophySectionTitle": "Cúp và độ hiếm"
     },
     "emulator": {
       "nav": "Sửa lỗi giả lập",
@@ -467,13 +496,13 @@
     },
     "notification": {
       "title": {
-        "common": "Chung",
+        "common": "Cơ bản",
         "toast": "Thông báo Windows",
-        "transport": "Cách gửi",
+        "transport": "Tích hợp",
         "chromium": "Thông báo Chromium",
         "watchdog": "Watchdog",
         "test": "Thử",
-        "overlay": "Thông báo"
+        "overlay": "Cửa sổ bật lên"
       },
       "info": {
         "toast": "Một số tính năng chỉ có trên Windows 10",
@@ -602,6 +631,7 @@
             "easingOut": "Đường cong khi ra",
             "entryDistance": "Quãng đường di chuyển",
             "fontFamily": "Phông chữ",
+            "fontFile": "Tệp phông chữ",
             "fontSize": "Cỡ chữ",
             "gap": "Khoảng cách",
             "glow": "Ánh sáng",
@@ -613,6 +643,10 @@
             "iconSize": "Cỡ biểu tượng",
             "layout": "Cách sắp xếp",
             "letterSpacing": "Giãn chữ",
+            "logoImage": "Logo",
+            "logoOffset": "Khoảng cách từ logo đến mép",
+            "logoPosition": "Vị trí logo",
+            "logoSize": "Kích thước logo",
             "opacity": "Độ mờ",
             "padX": "Đệm hai bên",
             "padY": "Đệm trên dưới",
@@ -655,6 +689,10 @@
           "imported": "Đã nhập và chọn:",
           "importedOnly": "Mẫu đã nhập - bạn có thể xuất hoặc xóa nó ở đây; không thể chỉnh bằng các thanh trượt.",
           "importSan": "Nhập chủ đề SAN",
+          "layer": {
+            "none": "Không tùy chỉnh",
+            "title": "Tùy chỉnh một mẫu có sẵn"
+          },
           "load": "Sửa một mẫu",
           "loaded": "Đã tải:",
           "name": "Tên",
@@ -700,6 +738,8 @@
             "artwork": "Ảnh của trò chơi",
             "back": "Nảy",
             "bottom": "Dưới",
+            "bottomLeft": "Dưới cùng bên trái",
+            "bottomRight": "Dưới cùng bên phải",
             "breathe": "Thở",
             "center": "Giữa",
             "circle": "Hình tròn",
@@ -723,6 +763,7 @@
             "linear": "Tuyến tính",
             "lines": "Gạch chéo",
             "mono": "Đều nét",
+            "noFont": "Không có tệp phông chữ",
             "noImage": "Không dùng ảnh",
             "noise": "Hạt nhiễu",
             "none": "Không",
@@ -742,6 +783,8 @@
             "text": "Màu chữ",
             "textOnly": "Chỉ chữ",
             "top": "Trên",
+            "topLeft": "Trên cùng bên trái",
+            "topRight": "Trên cùng bên phải",
             "transparent": "Trong suốt",
             "uppercase": "IN HOA",
             "zoom": "Phóng to"
@@ -997,7 +1040,10 @@
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns thông qua mod MadnessPatch"
-      }
+      },
+      "groupStores": "Trình khởi chạy chính thức",
+      "groupEmulators": "Trình giả lập và bản vá",
+      "groupConsoles": "Máy console và retro"
     },
     "help": {
       "nav": "Trợ giúp",
@@ -1134,7 +1180,11 @@
         "goldbergTitle": "Goldberg / GBE Fork",
         "goldbergDesc": "Quét một thư mục thư viện trò chơi để tìm các bản cài Goldberg / GBE Fork và đánh dấu những bản thiếu tệp steam_settings/achievements.json. Dùng menu chuột phải của một trò chơi (Chẩn đoán / Sửa) để sửa từng bản.",
         "scanFolder": "Quét một thư mục…",
-        "exportLogs": "Xuất nhật ký (.zip)"
+        "exportLogs": "Xuất nhật ký (.zip)",
+        "profileBackupTitle": "Sao lưu hồ sơ",
+        "profileBackupDesc": "Lưu cài đặt, lựa chọn thư viện, cấu hình sẵn, giao diện, ảnh bìa và các bản sao lưu vào một tệp, rồi khôi phục sau khi cài lại hoặc trên máy tính mới. Thông tin đăng nhập không bao giờ được lưu.",
+        "profileExport": "Xuất hồ sơ…",
+        "profileRestore": "Khôi phục hồ sơ…"
       },
       "blacklistTitle": "Danh sách đen AppID",
       "blacklistButton": "Đặt lại danh sách đen",
@@ -1176,28 +1226,28 @@
     "eyebrow": "Thiết lập lần đầu",
     "close": "Đóng",
     "steps": [
-      "Ngôn ngữ",
-      "Cách hoạt động",
-      "Giao diện",
-      "Tài khoản",
+      "Cơ bản",
+      "Hồ sơ",
       "Trò chơi",
       "Nguồn",
-      "Cài đặt"
+      "Giao diện và cảnh báo",
+      "Sẵn sàng"
     ],
-    "languageTitle": "Chọn ngôn ngữ",
-    "languageCopy": "Trò chơi, dữ liệu mô tả, thành tựu và bộ đệm Steam đều được tải theo ngôn ngữ này ngay từ đầu.",
+    "welcomeTitle": "Chào mừng đến với AW Next",
+    "welcomeCopy": "Hai lựa chọn nhanh để bắt đầu. Mọi thứ đều có thể đổi sau trong Cài đặt, và bạn có thể bỏ qua phần còn lại của hướng dẫn này bất cứ lúc nào.",
     "language": "Ngôn ngữ trò chơi và giao diện",
     "languagePlaceholder": "Chọn một ngôn ngữ…",
-    "languageHint": "Lần tải thư viện đầu tiên chỉ bắt đầu sau lựa chọn này.",
-    "introTitle": "Cách hoạt động",
-    "scanTitle": "Quét",
-    "scanCopy": "Vị trí của ứng dụng phát hành, trình giả lập và tệp thành tựu được phát hiện tự động - bạn xem lại từng mục trước lần quét đầu tiên.",
-    "watchTitle": "Theo dõi",
-    "watchCopy": "Watchdog chạy nền sẽ nhận ra trò chơi khi nó khởi chạy, ghi lại thời gian chơi và theo dõi các tệp thành tựu của nó.",
-    "fixTitle": "Sửa",
-    "fixCopy": "Với các trò chơi Steam chạy qua giả lập, bản sửa trong menu chuột phải sẽ cài GBE Fork rồi ghi danh sách thành tựu và dữ liệu DLC.",
+    "languageHint": "Trò chơi, siêu dữ liệu, thành tựu và bộ nhớ đệm Steam đều được tải bằng ngôn ngữ này. Lần tải thư viện đầu tiên bắt đầu sau lựa chọn này.",
     "overlayTitle": "Lớp phủ trong trò chơi",
-    "overlayCopy": "Một bảng thành tựu nhỏ mà bạn gọi lên trên trò chơi bằng phím tắt - mặc định là Ctrl+Shift+K.",
+    "overlayCopy": "Nhấn {hotkey} trong trò chơi để xem thành tựu của nó hiện lên trên.",
+    "collectionsTitle": "Bộ sưu tập",
+    "collectionsCopy": "Nhóm các trò chơi vào bộ sưu tập của riêng bạn từ menu chuột phải của một trò chơi.",
+    "trophyTitle": "Chế độ cúp",
+    "trophyCopy": "Xếp hạng thành tựu vàng, bạc hoặc đồng theo độ hiếm. Bật trong Cài đặt.",
+    "clipsTitle": "Đoạn video",
+    "clipsCopy": "Giữ một đoạn ngắn quanh mỗi lần mở khóa. Bật trong Cài đặt, mục Thông báo.",
+    "backupTitle": "Sao lưu hồ sơ",
+    "backupCopy": "Lưu cài đặt và lựa chọn thư viện của bạn vào một tệp, rồi khôi phục sau khi cài đặt lại.",
     "profileTitle": "Hồ sơ",
     "profileCopy": "Chọn tên hiển thị ở thanh trên cùng và nếu muốn thì đặt một ảnh đại diện lưu trên máy.",
     "username": "Tên hiển thị",
@@ -1205,8 +1255,21 @@
     "avatarPick": "Chọn ảnh",
     "avatarDefault": "Mặc định",
     "avatarHint": "Không bắt buộc. Được lưu trên máy này.",
-    "foldersTitle": "Thêm trò chơi trên ổ đĩa",
-    "foldersCopy": "Dùng Tìm thông minh để tự phát hiện thư mục lưu/cấu hình và thư viện trò chơi. Hoặc thêm thủ công theo từng loại thư mục.",
+    "foldersTitle": "Trò chơi của bạn",
+    "foldersCopy": "AW Next tìm trò chơi trên PC này và hiển thị những gì tìm thấy. Chỉ thêm thư mục nếu thiếu thứ gì đó.",
+    "detectTitle": "Tìm thấy trên PC này",
+    "detectInstalled": "{count} đã cài",
+    "detectNone": "Không tìm thấy",
+    "detectOff": "tắt",
+    "detectEmulators": "Dữ liệu lưu của trình giả lập",
+    "detectFolders": "Trò chơi: {games} · Thư mục: {folders}",
+    "detectTotal": "Trò chơi đã tìm thấy: {count}",
+    "detectNothing": "Chưa tìm thấy trò chơi nào",
+    "detectSteamOff": "Các trò chơi Steam của bạn vẫn bị ẩn cho đến khi Steam được bật trong Nguồn.",
+    "detectReviewSources": "Xem lại nguồn",
+    "smartFound": "Thư mục mới đã tìm thấy: {count}",
+    "smartNone": "Không tìm thấy thư mục mới.",
+    "folderGames": "Trò chơi đã tìm thấy trong thư mục này: {count}",
     "addSave": "Thư mục lưu/cấu hình",
     "smartFind": "Tìm thư mục thông minh",
     "addLibrary": "Thư mục thư viện trò chơi",
@@ -1216,12 +1279,22 @@
     "saveList": "Thư mục lưu / cấu hình",
     "libraryList": "Thư viện trò chơi",
     "emptyList": "Chưa thêm gì trong phiên này.",
-    "settingsTitle": "Cài đặt khuyên dùng",
-    "settingsCopy": "Những thứ cốt lõi cho thư viện, giao diện và thông báo của bạn. Mọi thứ vẫn sửa được sau này.",
-    "summarySources": "Nguồn đã bật",
+    "settingsTitle": "Giao diện và cảnh báo",
+    "settingsCopy": "Chọn một chủ đề và cách cảnh báo mở khóa xuất hiện. Dùng Thử thông báo để xem ngay một cái.",
+    "moreOptions": "Thêm tùy chọn",
+    "readyTitle": "Mọi thứ đã sẵn sàng",
+    "readyCopy": "AW Next giờ theo dõi các trò chơi của bạn ở chế độ nền và báo cho bạn khi bạn mở khóa thứ gì đó.",
+    "featuresTitle": "Nên biết",
+    "summarySources": "{count} nguồn đã bật",
+    "summaryAccounts": "Đã đăng nhập: {names}",
+    "summaryGames": "Trò chơi đã tìm thấy: {count} · Thư mục đang theo dõi: {folders}",
+    "summaryNoGames": "Chưa tìm thấy trò chơi nào. Bạn có thể thêm thư mục sau trong Cài đặt.",
+    "summaryLook": "Chủ đề: {theme} · Thông báo: {notifications}",
+    "summaryChange": "Thay đổi",
     "summaryReopen": "Bạn có thể mở lại hướng dẫn này bất cứ lúc nào từ Cài đặt > Chung.",
     "sourcesTitle": "Thành tựu của bạn đến từ đâu",
-    "sourcesCopy": "Mỗi nguồn đều được đọc trên PC này. Hãy tắt những gì bạn không dùng; tất cả vẫn có thể chỉnh sửa trong Cài đặt.",
+    "sourcesCopy": "Mọi nguồn được cài trên PC này đều được đọc tự động, nên mặc định là đủ. Chỉ đăng nhập bên dưới nếu bạn muốn nhiều hơn.",
+    "sourcesMore": "Tinh chỉnh nguồn ({count} đã bật)",
     "accountsTitle": "Tài khoản (tùy chọn)",
     "accountsCopy": "Đăng nhập để đọc các mục mở khóa từ hồ sơ Steam riêng tư, thêm các trò chơi Steam Family của bạn, nhập thư viện Xbox PC của bạn và hiển thị tiến độ Epic của bạn. Bạn có thể bỏ qua bước này và kết nối sau trong Cài đặt > Nguồn.",
     "sourcesEmulators": "Trình giả lập",
@@ -1253,6 +1326,8 @@
     "next": "Tiếp theo",
     "finish": "Hoàn tất",
     "skip": "Bỏ qua",
+    "skipSetup": "Bỏ qua thiết lập",
+    "saveClose": "Lưu và đóng",
     "saving": "Đang lưu…",
     "saved": "Đã lưu thiết lập.",
     "languageRequired": "Hãy chọn một ngôn ngữ để tiếp tục.",
@@ -1324,7 +1399,28 @@
     "controllerMove": "Di chuyển/cuộn"
   },
   "dialogs": {
+    "collections": "Bộ sưu tập",
+    "collection-all": "Tất cả trò chơi",
+    "collection-new": "Bộ sưu tập mới…",
+    "collection-edit": "Chỉnh sửa bộ sưu tập…",
+    "collection-name": "Tên bộ sưu tập",
+    "collection-default-name": "Bộ sưu tập mới",
+    "collection-field-name": "Tên",
+    "collection-field-color": "Màu",
+    "collection-field-icon": "Biểu tượng",
+    "collection-field-image": "Hình ảnh",
+    "collection-choose-image": "Chọn hình ảnh…",
+    "collection-remove-image": "Xóa hình ảnh",
+    "collection-delete": "Xóa bộ sưu tập",
+    "collection-delete-confirm": "Xóa bộ sưu tập \"{name}\"? Các trò chơi vẫn nằm trong thư viện của bạn.",
+    "collection-limit": "Bạn đã đạt giới hạn {count} bộ sưu tập.",
+    "collection-image-error": "Không thể dùng hình ảnh này. Hãy chọn tệp PNG, JPEG, GIF hoặc WebP dưới 5 MB.",
     "choose-preset-image": "Chọn một hình nền",
+    "choose-preset-font": "Chọn một tệp phông chữ",
+    "choose-preset-logo": "Chọn một logo",
+    "preset-font-refused": "Tệp đó không phải là phông chữ dùng được. Hãy dùng tệp TTF, OTF, WOFF hoặc WOFF2 tối đa 4 MB.",
+    "preset-logo-refused": "Tệp đó không phải là logo dùng được. Hãy dùng ảnh PNG, JPEG, GIF, WebP hoặc BMP tối đa 2 MB.",
+    "preset-layer-note": "Đang tùy chỉnh {preset}. Đánh dấu một phần để thay đổi; những gì bạn không đánh dấu sẽ giữ nguyên như mẫu có sẵn cung cấp. Thay đổi của bạn được đặt lên trên: mẫu có sẵn không bị sao chép hay sửa đổi.",
     "folder-reason-ea-app": "Đây là bản phát hành của ứng dụng EA. Trò chơi chạy qua ứng dụng EA giữ thành tựu trên tài khoản EA chứ không phải trong thư mục trò chơi, nên ở đây không có tệp mở khóa nào để đọc. Những thành tựu đó được lấy qua nguồn EA trong Cài đặt > Nguồn thay vì qua một thư mục được theo dõi.",
     "folder-reason-game-no-data": "Đây là một thư mục trò chơi, nhưng nó không chứa cấu hình giả lập nào và cũng không có tệp mở khóa theo bất kỳ định dạng nào AW Next đọc được.",
     "folder-reason-unreadable": "Không thể đọc thư mục này.",
@@ -2175,6 +2271,31 @@
     "export-logs-done": "Đã ghi {count} tệp nhật ký vào {path}",
     "export-logs-failed": "Không thể xuất nhật ký: {error}",
     "zip-archive": "Tệp nén Zip",
+    "profile-backup-file-type": "Bản sao lưu hồ sơ AW Next",
+    "profile-backup-export-title": "Xuất hồ sơ",
+    "profile-backup-restore-title": "Khôi phục hồ sơ",
+    "profile-backup-exporting": "Đang xuất hồ sơ… {percent}%",
+    "profile-backup-export-done": "Đã lưu hồ sơ vào {path} ({count} tệp, {size}).",
+    "profile-backup-export-failed": "Không thể xuất hồ sơ: {error}",
+    "profile-backup-restore-confirm": "Khôi phục hồ sơ này?",
+    "profile-backup-restore-confirm-detail": "Bản sao lưu chứa {count} tệp ({size}), được lưu lúc {date}. Cài đặt, cấu hình sẵn, giao diện và ảnh bìa hiện tại của bạn sẽ được thay bằng nội dung trong bản sao lưu. Các tệp bị thay thế vẫn được giữ lại, và nếu khôi phục thất bại thì sẽ được hoàn tác. AW Next sẽ khởi động lại để áp dụng.",
+    "profile-backup-restore-button": "Khôi phục và khởi động lại",
+    "profile-backup-checking": "Đang kiểm tra bản sao lưu… {percent}%",
+    "profile-backup-restarting": "Đã kiểm tra bản sao lưu. Đang khởi động lại để áp dụng…",
+    "profile-backup-restore-failed": "Không thể khôi phục hồ sơ: {error}",
+    "profile-backup-applied": "Đã khôi phục hồ sơ ({count} tệp).",
+    "profile-backup-applied-signin": "Thông tin đăng nhập không bao giờ được lưu trong bản sao lưu. Hãy đăng nhập lại vào: {accounts}.",
+    "profile-backup-applied-signin-generic": "Thông tin đăng nhập không bao giờ được lưu trong bản sao lưu. Hãy đăng nhập lại vào mọi tài khoản bạn đã kết nối.",
+    "profile-backup-apply-failed": "Không thể khôi phục hồ sơ. Các tệp trước đó của bạn đã được đặt lại. Chi tiết: {error}",
+    "profile-backup-account-emulator": "Đăng nhập Steam cho công cụ giả lập",
+    "profile-backup-error-invalid": "Tệp này không phải là bản sao lưu hồ sơ AW Next.",
+    "profile-backup-error-too-new": "Bản sao lưu này được tạo bởi phiên bản AW Next mới hơn. Hãy cập nhật ứng dụng trước.",
+    "profile-backup-error-corrupt": "Bản sao lưu này bị hỏng hoặc đã bị chỉnh sửa.",
+    "profile-backup-error-unsafe": "Bản sao lưu này chứa các tệp không thể khôi phục một cách an toàn.",
+    "profile-backup-error-too-large": "Bản sao lưu này lớn hơn mức AW Next có thể khôi phục.",
+    "profile-backup-error-empty": "Hiện chưa có gì để đưa vào bản sao lưu.",
+    "profile-backup-error-busy": "Một bản sao lưu đang chạy.",
+    "profile-backup-error-inside": "Hãy chọn vị trí bên ngoài thư mục dữ liệu của AW Next.",
     "theme-layer-opacity": "Độ mờ",
     "chooseAnotherIconTitle": "Chọn biểu tượng khác",
     "chooseAnotherIcon": "Chọn biểu tượng khác…",
@@ -2243,6 +2364,7 @@
     "profile-trophies-share": "{percent} thành tựu của bạn",
     "profile-trophies-unranked": "{count} chưa rõ tỷ lệ",
     "profile-trophies-at-most": "{percent} trở xuống",
+    "profile-trophies-under": "dưới {percent}",
     "profile-trophies-between": "từ {from} đến {to}",
     "profile-trophies-above": "trên {percent}, hoặc chưa rõ",
     "profile-trophies-platinum-games": "Trò chơi bạch kim",

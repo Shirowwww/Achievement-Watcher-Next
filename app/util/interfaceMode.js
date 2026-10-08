@@ -48,7 +48,7 @@ const SIMPLE_HIDDEN_CHECKS = ['identity'];
 */
 const OPTIONAL_SOURCES = {
   greenLuma: ['GreenLuma Reborn', 'GreenLuma 2020', 'GreenLuma 2024', 'GreenLuma 2025'],
-  lumaPlay: ['Lumaplay'],
+  lumaPlay: ['Lumaplay', 'RUNE Uplay'],
   gog: ['gog'],
   epic: ['epic'],
   socialClub: ['Goldberg SocialClub'],

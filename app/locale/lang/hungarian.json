@@ -86,16 +86,25 @@
     "runUninstaller": "Játék eltávolítójának futtatása…",
     "deleteFolder": "Játékmappa törlése (Lomtár)…"
   },
+  "windowControls": {
+    "minimize": "Kicsinyítés",
+    "maximize": "Nagyítás",
+    "close": "Bezárás"
+  },
   "settings": {
     "title": "Beállítások",
     "sideMenu": {
       "general": "Általános",
       "notification": "Értesítés",
-      "presets": "Előbeállítások",
+      "presets": "Értesítési előbeállítások",
       "souvenir": "Emlék",
       "folder": "Mappák",
       "source": "Forrás",
-      "advanced": "Speciális"
+      "advanced": "Speciális",
+      "groupApp": "Alkalmazás",
+      "groupAlerts": "Riasztások",
+      "groupLibrary": "Könyvtár",
+      "groupSupport": "Támogatás"
     },
     "common": {
       "show": "Megjelenítés",
@@ -108,13 +117,17 @@
       "maintainedBy": "karbantartja",
       "fork": "Származék",
       "original": "Eredeti v1.6.8",
-      "edit": "Szerkesztés"
+      "edit": "Szerkesztés",
+      "close": "Bezárás",
+      "unsaved": "Nem mentett módosítások"
     },
     "search": {
       "placeholder": "Beállítások keresése…",
       "empty": "Egyetlen beállítás sem felel meg a keresésnek.",
       "ariaLabel": "Keresés a beállításokban",
-      "clear": "Törlés"
+      "clear": "Törlés",
+      "advancedMore": "{count} további Speciális módban",
+      "advancedShow": "Speciális megjelenítése"
     },
     "watchdog": {
       "startup": {
@@ -143,7 +156,7 @@
       "duration": "Animáció időtartama"
     },
     "general": {
-      "sectionTitle": "Felület és viselkedés",
+      "sectionTitle": "Mindennapi beállítások",
       "language": {
         "name": "Nyelv",
         "description": "A felület nyelve. A játékadatok ezen a nyelven töltődnek le, ha elérhető."
@@ -161,7 +174,7 @@
         }
       },
       "hiddenAch": {
-        "name": "Rejtett teljesítmények",
+        "name": "Rejtett teljesítmények felfedése",
         "description": "A rejtett teljesítmények nevének és leírásának megjelenítése a feloldás előtt."
       },
       "mergeDuplicates": {
@@ -264,6 +277,20 @@
         "name": "Trófeák a profilon",
         "description": "Platina, arany, ezüst és bronz trófeákat jelenít meg a neved alatt. A platina egy 100%-ra teljesített játék; a többi a teljesítményeidet aszerint rangsorolja, hány játékos oldotta fel őket."
       },
+      "rarityDisplay": {
+        "name": "Ritkaság megjelenítése",
+        "description": "A ritka szintek csak a legritkább eredményeket jelölik. A trófea mód minden eredményt arany, ezüst vagy bronz minősítéssel lát el a feloldási arány alapján, a befejezett játékoknál pedig platinát mutat.",
+        "rare": "Ritka szintek",
+        "trophy": "Trófea mód",
+        "goldBelow": {
+          "name": "Aranytrófea ez alatt",
+          "description": "Trófea módban az az eredmény kap aranyat, amelyet ennél kevesebb játékos oldott fel."
+        },
+        "silverBelow": {
+          "name": "Ezüsttrófea ez alatt",
+          "description": "Trófea módban az ennél az aránynál alacsonyabb eredmények ezüstöt kapnak; a többi, vagy az ismeretlen arányú, bronzot kap."
+        }
+      },
       "playButton": {
         "name": "Indítás gomb megjelenítése",
         "description": "Megjeleníti az Indítás gombot a játékok csempéin. Kapcsold ki, ha más programból indítod a játékaidat. A jobb gombos menü Játék indítása pontja továbbra is elérhető."
@@ -302,7 +329,9 @@
           "name": "Játékbeállítások gomb",
           "description": "Megjeleníti az eszközök gombját a grafika jobb felső sarkában. A Játék beállításai továbbra is elérhetők a jobb gombos menüből."
         }
-      }
+      },
+      "appSectionTitle": "Alkalmazás",
+      "trophySectionTitle": "Trófeák és ritkaság"
     },
     "emulator": {
       "nav": "Emulátorjavítás",
@@ -467,13 +496,13 @@
     },
     "notification": {
       "title": {
-        "common": "Közös",
+        "common": "Alapok",
         "toast": "Windows-értesítés",
-        "transport": "Átvitel",
+        "transport": "Integrációk",
         "chromium": "Chromium értesítés",
         "watchdog": "Watchdog",
         "test": "Teszt",
-        "overlay": "Értesítés"
+        "overlay": "Felugró ablak"
       },
       "info": {
         "toast": "Egyes funkciók csak Windows 10-en érhetők el",
@@ -602,6 +631,7 @@
             "easingOut": "Kilépési görbe",
             "entryDistance": "Mozgás távolsága",
             "fontFamily": "Betűtípus",
+            "fontFile": "Betűtípusfájl",
             "fontSize": "Betűméret",
             "gap": "Térköz",
             "glow": "Ragyogás",
@@ -613,6 +643,10 @@
             "iconSize": "Ikonméret",
             "layout": "Elrendezés",
             "letterSpacing": "Betűköz",
+            "logoImage": "Logó",
+            "logoOffset": "A logó távolsága a széltől",
+            "logoPosition": "A logó helye",
+            "logoSize": "A logó mérete",
             "opacity": "Átlátszatlanság",
             "padX": "Oldalsó térköz",
             "padY": "Felső térköz",
@@ -655,6 +689,10 @@
           "imported": "Importálva és kiválasztva:",
           "importedOnly": "Importált előbeállítás - itt exportálható vagy törölhető; a csúszkákkal nem szerkeszthető.",
           "importSan": "SAN téma importálása",
+          "layer": {
+            "none": "Nincs testreszabás",
+            "title": "Mellékelt előbeállítás testreszabása"
+          },
           "load": "Előbeállítás szerkesztése",
           "loaded": "Betöltve:",
           "name": "Név",
@@ -700,6 +738,8 @@
             "artwork": "Játék képe",
             "back": "Rugalmas",
             "bottom": "Lent",
+            "bottomLeft": "Balra lent",
+            "bottomRight": "Jobbra lent",
             "breathe": "Lélegzés",
             "center": "Középre",
             "circle": "Kör",
@@ -723,6 +763,7 @@
             "linear": "Egyenletes",
             "lines": "Sraffozás",
             "mono": "Rögzített szélességű",
+            "noFont": "Nincs betűtípusfájl",
             "noImage": "Nincs kép",
             "noise": "Szemcsézet",
             "none": "Nincs",
@@ -742,6 +783,8 @@
             "text": "Szöveg színe",
             "textOnly": "Csak szöveg",
             "top": "Fent",
+            "topLeft": "Balra fent",
+            "topRight": "Jobbra fent",
             "transparent": "Átlátszó",
             "uppercase": "NAGYBETŰS",
             "zoom": "Nagyítás"
@@ -997,7 +1040,10 @@
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns a MadnessPatch mod segítségével"
-      }
+      },
+      "groupStores": "Hivatalos indítók",
+      "groupEmulators": "Emulátorok és javítások",
+      "groupConsoles": "Konzolok és retro"
     },
     "help": {
       "nav": "Súgó",
@@ -1134,7 +1180,11 @@
         "goldbergTitle": "Goldberg / GBE Fork",
         "goldbergDesc": "Átvizsgál egy játékkönyvtár-mappát Goldberg / GBE Fork telepítések után, és megjelöli azokat, amelyekből hiányzik a steam_settings/achievements.json séma. Egy javításához használd a játék jobb gombos menüjét (Diagnosztizálás / Javítás).",
         "scanFolder": "Mappa átvizsgálása…",
-        "exportLogs": "Naplók exportálása (.zip)"
+        "exportLogs": "Naplók exportálása (.zip)",
+        "profileBackupTitle": "Profilmentés",
+        "profileBackupDesc": "Mentse el a beállításokat, a könyvtárválasztásokat, az előbeállításokat, a témákat, a borítókat és a mentéseket egyetlen fájlba, majd állítsa vissza őket újratelepítés után vagy új számítógépen. A bejelentkezéseket soha nem menti.",
+        "profileExport": "Profil exportálása…",
+        "profileRestore": "Profil visszaállítása…"
       },
       "blacklistTitle": "AppID feketelista",
       "blacklistButton": "Feketelista visszaállítása",
@@ -1176,28 +1226,28 @@
     "eyebrow": "Első beállítás",
     "close": "Bezárás",
     "steps": [
-      "Nyelv",
-      "Hogyan működik",
-      "Felület",
-      "Fiók",
+      "Alapok",
+      "Profil",
       "Játékok",
-      "Forrás",
-      "Beállítások"
+      "Források",
+      "Megjelenés és értesítések",
+      "Kész"
     ],
-    "languageTitle": "Válasszon nyelvet",
-    "languageCopy": "A játékok, a metaadatok, a teljesítmények és a Steam-gyorsítótárak már az elejétől ezen a nyelven töltődnek be.",
+    "welcomeTitle": "Üdvözlünk az AW Nextben",
+    "welcomeCopy": "Két gyors választás az induláshoz. Minden módosítható később a Beállításokban, az útmutató hátralévő részét pedig bármikor átugorhatod.",
     "language": "A játék és a felület nyelve",
     "languagePlaceholder": "Válassz nyelvet…",
-    "languageHint": "Az első könyvtárbetöltés csak e választás után indul el.",
-    "introTitle": "Hogyan működik",
-    "scanTitle": "Vizsgálat",
-    "scanCopy": "A launcherek, emulátorok és teljesítményfájlok helyét a program automatikusan felismeri - mindegyiket átnézed az első keresés előtt.",
-    "watchTitle": "Figyelés",
-    "watchCopy": "A háttérben futó Watchdog felismeri a játékot induláskor, méri a játékidőt és figyeli a teljesítményfájljait.",
-    "fixTitle": "Javítás",
-    "fixCopy": "Emulált Steam-játékoknál a jobbklikkes javítás telepíti a GBE Forkot, és kiírja a teljesítmény-sémát és a DLC-adatokat.",
+    "languageHint": "A játékok, a metaadatok, a teljesítmények és a Steam-gyorsítótárak mind ezen a nyelven töltődnek be. Az első könyvtárbetöltés e választás után indul.",
     "overlayTitle": "Játékon belüli overlay",
-    "overlayCopy": "Kis teljesítménypanel, amelyet gyorsbillentyűvel hívsz elő a játék fölé - alapértelmezés szerint Ctrl+Shift+K.",
+    "overlayCopy": "Nyomd meg a(z) {hotkey} billentyűt egy játékban, hogy fölötte lásd a teljesítményeit.",
+    "collectionsTitle": "Gyűjtemények",
+    "collectionsCopy": "Csoportosítsd a játékokat saját gyűjteményekbe egy játék jobb gombos menüjéből.",
+    "trophyTitle": "Trófea mód",
+    "trophyCopy": "Minősítsd a teljesítményeket arannyal, ezüsttel vagy bronzzal a ritkaságuk szerint. Kapcsold be a Beállításokban.",
+    "clipsTitle": "Videóklipek",
+    "clipsCopy": "Őrizz meg egy rövid klipet minden feloldás körül. Kapcsold be a Beállításokban, az Értesítések alatt.",
+    "backupTitle": "Profilmentés",
+    "backupCopy": "Mentsd a beállításaidat és a könyvtárválasztásaidat egyetlen fájlba, és állítsd vissza őket újratelepítés után.",
     "profileTitle": "Profil",
     "profileCopy": "Válassza ki a fejlécben látható nevet, és opcionálisan állítson be egy helyi avatart.",
     "username": "Megjelenítési név",
@@ -1205,8 +1255,21 @@
     "avatarPick": "Válasszon fényképet",
     "avatarDefault": "Alapértelmezett",
     "avatarHint": "Választható. Helyileg ezen a számítógépen tárolva.",
-    "foldersTitle": "Játékok hozzáadása a lemezen",
-    "foldersCopy": "Használd az Okos keresést a mentés-/beállításmappák és a játékkönyvtárak automatikus felismeréséhez. Vagy add hozzá őket kézzel, mappatípus szerint.",
+    "foldersTitle": "A játékaid",
+    "foldersCopy": "Az AW Next játékokat keres ezen a számítógépen, és megmutatja, mit talál. Csak akkor adj hozzá mappát, ha valami hiányzik.",
+    "detectTitle": "Megtalálva ezen a számítógépen",
+    "detectInstalled": "{count} telepítve",
+    "detectNone": "Nem található",
+    "detectOff": "ki",
+    "detectEmulators": "Emulátormentések",
+    "detectFolders": "Játékok: {games} · Mappák: {folders}",
+    "detectTotal": "Talált játékok: {count}",
+    "detectNothing": "Még nem található játék",
+    "detectSteamOff": "A Steam-játékaid rejtve maradnak, amíg a Steamet be nem kapcsolod a Források alatt.",
+    "detectReviewSources": "Források áttekintése",
+    "smartFound": "Talált új mappák: {count}",
+    "smartNone": "Nem található új mappa.",
+    "folderGames": "Talált játékok ebben a mappában: {count}",
     "addSave": "Mentésmappa hozzáadása",
     "smartFind": "Okos keresés",
     "addLibrary": "Könyvtári mappa hozzáadása",
@@ -1216,12 +1279,22 @@
     "saveList": "Mentés/beállítás mappák",
     "libraryList": "Könyvtári mappák",
     "emptyList": "Semmi sem lett hozzáadva ehhez a munkamenethez.",
-    "settingsTitle": "Ajánlott beállítások",
-    "settingsCopy": "A könyvtár, a megjelenés és az értesítések lényege. Minden később is módosítható.",
-    "summarySources": "Bekapcsolt források",
+    "settingsTitle": "Megjelenés és értesítések",
+    "settingsCopy": "Válassz témát, és azt, hogyan jelenjenek meg a feloldási értesítések. Az Értesítés tesztelése gombbal rögtön megnézhetsz egyet.",
+    "moreOptions": "További beállítások",
+    "readyTitle": "Minden kész",
+    "readyCopy": "Az AW Next mostantól a háttérben figyeli a játékaidat, és szól, ha feloldasz valamit.",
+    "featuresTitle": "Jó tudni",
+    "summarySources": "{count} forrás bekapcsolva",
+    "summaryAccounts": "Bejelentkezve: {names}",
+    "summaryGames": "Talált játékok: {count} · Figyelt mappák: {folders}",
+    "summaryNoGames": "Még nem található játék. Mappákat később is hozzáadhatsz a Beállításokban.",
+    "summaryLook": "Téma: {theme} · Értesítések: {notifications}",
+    "summaryChange": "Módosítás",
     "summaryReopen": "Ezt az útmutatót bármikor újra megnyithatod a Beállítások > Általános alatt.",
     "sourcesTitle": "Honnan származnak a teljesítményeid",
-    "sourcesCopy": "Mindegyiket erről a gépről olvassuk. Amit nem használsz, hagyd kikapcsolva; mindegyik később is szerkeszthető a Beállításokban.",
+    "sourcesCopy": "A számítógépre telepített összes forrás automatikusan beolvasásra kerül, így az alapbeállítások megfelelnek. Csak akkor jelentkezz be lent, ha többet szeretnél.",
+    "sourcesMore": "Források finomhangolása ({count} bekapcsolva)",
     "accountsTitle": "Fiókok (opcionális)",
     "accountsCopy": "Jelentkezz be, hogy feloldásokat olvashass be egy privát Steam-profilról, hozzáadhasd a Steam Family játékaidat, importálhasd az Xbox PC könyvtáradat, és megjeleníthesd az Epic-előrehaladásodat. Ezt kihagyhatod, és később is csatlakozhatsz a Beállítások > Forrás alatt.",
     "sourcesEmulators": "Emulátorok",
@@ -1253,6 +1326,8 @@
     "next": "Következő",
     "finish": "Befejezés",
     "skip": "Kihagyás",
+    "skipSetup": "Beállítás átugrása",
+    "saveClose": "Mentés és bezárás",
     "saving": "Mentés…",
     "saved": "A beállítás elmentve.",
     "languageRequired": "A folytatáshoz válasszon nyelvet.",
@@ -1324,7 +1399,28 @@
     "controllerMove": "Mozgatás/görgetés"
   },
   "dialogs": {
+    "collections": "Gyűjtemények",
+    "collection-all": "Minden játék",
+    "collection-new": "Új gyűjtemény…",
+    "collection-edit": "Gyűjtemény szerkesztése…",
+    "collection-name": "Gyűjtemény neve",
+    "collection-default-name": "Új gyűjtemény",
+    "collection-field-name": "Név",
+    "collection-field-color": "Szín",
+    "collection-field-icon": "Ikon",
+    "collection-field-image": "Kép",
+    "collection-choose-image": "Kép kiválasztása…",
+    "collection-remove-image": "Kép eltávolítása",
+    "collection-delete": "Gyűjtemény törlése",
+    "collection-delete-confirm": "Törlöd a(z) \"{name}\" gyűjteményt? A játékok megmaradnak a könyvtáradban.",
+    "collection-limit": "Elérted a {count} gyűjteményes korlátot.",
+    "collection-image-error": "Ez a kép nem használható. Válassz egy 5 MB-nál kisebb PNG, JPEG, GIF vagy WebP fájlt.",
     "choose-preset-image": "Háttérkép kiválasztása",
+    "choose-preset-font": "Betűtípusfájl kiválasztása",
+    "choose-preset-logo": "Logó kiválasztása",
+    "preset-font-refused": "Ez a fájl nem használható betűtípus. Használj legfeljebb 4 MB méretű TTF, OTF, WOFF vagy WOFF2 fájlt.",
+    "preset-logo-refused": "Ez a fájl nem használható logó. Használj legfeljebb 2 MB méretű PNG, JPEG, GIF, WebP vagy BMP képet.",
+    "preset-layer-note": "{preset} testreszabása. Jelölj be egy szakaszt a módosításhoz; amit bejelöletlenül hagysz, az olyan marad, amilyennek a mellékelt előbeállítás adja. A módosításaid ráépülnek: a mellékelt előbeállítást nem másoljuk és nem módosítjuk.",
     "folder-reason-ea-app": "Ez egy EA app kiadás. Az EA appon keresztül indított játék az EA-fiókban tárolja a teljesítményeit, nem a játék mappájában, így itt nincs feloldásokat tartalmazó fájl, amit be lehetne olvasni. Ezeket a teljesítményeket a Beállítások > Források alatti EA forrás gyűjti be, nem egy figyelt mappa.",
     "folder-reason-game-no-data": "Ez egy játékmappa, de nem tartalmaz emulátor-konfigurációt és olyan feloldásfájlt sem, amelyet az AW Next be tudna olvasni.",
     "folder-reason-unreadable": "Ezt a mappát nem sikerült beolvasni.",
@@ -2175,6 +2271,31 @@
     "export-logs-done": "{count} naplófájl kiírva ide: {path}",
     "export-logs-failed": "A naplókat nem sikerült exportálni: {error}",
     "zip-archive": "Zip archívum",
+    "profile-backup-file-type": "AW Next profilmentés",
+    "profile-backup-export-title": "Profil exportálása",
+    "profile-backup-restore-title": "Profil visszaállítása",
+    "profile-backup-exporting": "Profil exportálása… {percent}%",
+    "profile-backup-export-done": "A profil elmentve ide: {path} ({count} fájl, {size}).",
+    "profile-backup-export-failed": "A profilt nem sikerült exportálni: {error}",
+    "profile-backup-restore-confirm": "Visszaállítja ezt a profilt?",
+    "profile-backup-restore-confirm-detail": "A mentés {count} fájlt tartalmaz ({size}), mentve: {date}. A jelenlegi beállításokat, előbeállításokat, témákat és borítókat a mentésben lévők váltják fel. A felváltott fájlok megmaradnak, a sikertelen visszaállítás pedig visszavonásra kerül. Az AW Next újraindul, hogy alkalmazza.",
+    "profile-backup-restore-button": "Visszaállítás és újraindítás",
+    "profile-backup-checking": "A mentés ellenőrzése… {percent}%",
+    "profile-backup-restarting": "A mentés ellenőrizve. Újraindítás az alkalmazáshoz…",
+    "profile-backup-restore-failed": "A profilt nem sikerült visszaállítani: {error}",
+    "profile-backup-applied": "A profil visszaállítva ({count} fájl).",
+    "profile-backup-applied-signin": "A bejelentkezéseket a mentés soha nem tartalmazza. Jelentkezzen be újra ide: {accounts}.",
+    "profile-backup-applied-signin-generic": "A bejelentkezéseket a mentés soha nem tartalmazza. Jelentkezzen be újra minden korábban összekapcsolt fiókba.",
+    "profile-backup-apply-failed": "A profilt nem sikerült visszaállítani. A korábbi fájlok visszakerültek. Részletek: {error}",
+    "profile-backup-account-emulator": "Steam-bejelentkezés az emulátoreszközökhöz",
+    "profile-backup-error-invalid": "Ez a fájl nem AW Next profilmentés.",
+    "profile-backup-error-too-new": "Ezt a mentést az AW Next újabb verziója készítette. Először frissítse az alkalmazást.",
+    "profile-backup-error-corrupt": "Ez a mentés sérült, vagy módosították.",
+    "profile-backup-error-unsafe": "Ez a mentés olyan fájlokat tartalmaz, amelyeket nem lehet biztonságosan visszaállítani.",
+    "profile-backup-error-too-large": "Ez a mentés nagyobb, mint amit az AW Next vissza tud állítani.",
+    "profile-backup-error-empty": "Még nincs mit mentésbe tenni.",
+    "profile-backup-error-busy": "Már fut egy mentés.",
+    "profile-backup-error-inside": "Válasszon helyet az AW Next adatmappáján kívül.",
     "theme-layer-opacity": "Átlátszatlanság",
     "chooseAnotherIconTitle": "Másik ikon választása",
     "chooseAnotherIcon": "Másik ikon választása…",
@@ -2243,6 +2364,7 @@
     "profile-trophies-share": "{percent} a teljesítményeidből",
     "profile-trophies-unranked": "{count} ismeretlen aránnyal",
     "profile-trophies-at-most": "{percent} vagy kevesebb",
+    "profile-trophies-under": "{percent} alatt",
     "profile-trophies-between": "{from} - {to}",
     "profile-trophies-above": "{percent} felett, vagy ismeretlen",
     "profile-trophies-platinum-games": "Platina játékok",

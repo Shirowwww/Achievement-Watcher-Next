@@ -86,16 +86,25 @@
     "runUninstaller": "Oyun kaldırıcısını çalıştır…",
     "deleteFolder": "Oyun klasörünü sil (Çöp Kutusu)…"
   },
+  "windowControls": {
+    "minimize": "Simge durumuna küçült",
+    "maximize": "Ekranı kapla",
+    "close": "Kapat"
+  },
   "settings": {
     "title": "Ayarlar",
     "sideMenu": {
       "general": "Genel",
       "notification": "Bildirim",
-      "presets": "Ön ayarlar",
+      "presets": "Bildirim ön ayarları",
       "souvenir": "Anı",
       "folder": "Klasörler",
       "source": "Kaynak",
-      "advanced": "Gelişmiş"
+      "advanced": "Gelişmiş",
+      "groupApp": "Uygulama",
+      "groupAlerts": "Uyarılar",
+      "groupLibrary": "Kütüphane",
+      "groupSupport": "Destek"
     },
     "common": {
       "show": "Göster",
@@ -108,13 +117,17 @@
       "maintainedBy": "geliştiren",
       "fork": "Çatal sürüm",
       "original": "Orijinal v1.6.8",
-      "edit": "Düzenle"
+      "edit": "Düzenle",
+      "close": "Kapat",
+      "unsaved": "Kaydedilmemiş değişiklikler"
     },
     "search": {
       "placeholder": "Ayarlarda ara…",
       "empty": "Aramanızla eşleşen ayar yok.",
       "ariaLabel": "Ayarlarda ara",
-      "clear": "Temizle"
+      "clear": "Temizle",
+      "advancedMore": "Gelişmiş modda {count} tane daha",
+      "advancedShow": "Gelişmişi göster"
     },
     "watchdog": {
       "startup": {
@@ -143,7 +156,7 @@
       "duration": "Animasyon süresi"
     },
     "general": {
-      "sectionTitle": "Arayüz ve davranış",
+      "sectionTitle": "Günlük ayarlar",
       "language": {
         "name": "Dil",
         "description": "Arayüz dili. Oyun verileri, mevcut olduğunda bu dilde alınır."
@@ -161,7 +174,7 @@
         }
       },
       "hiddenAch": {
-        "name": "Gizli başarımlar",
+        "name": "Gizli başarımları göster",
         "description": "Gizli başarımların adını ve açıklamasını açmadan önce göster."
       },
       "mergeDuplicates": {
@@ -264,6 +277,20 @@
         "name": "Profildeki kupalar",
         "description": "Adınızın altında platin, altın, gümüş ve bronz kupaları gösterir. Platin, %100 tamamlanmış bir oyundur; diğerleri başarımlarınızı kaç oyuncunun açtığına göre sıralar."
       },
+      "rarityDisplay": {
+        "name": "Nadirlik gösterimi",
+        "description": "Nadir seviyeler yalnızca en nadir başarımları işaretler. Kupa modu, her başarımı açılma oranına göre altın, gümüş veya bronz olarak derecelendirir ve tamamlanan oyunlarda platin gösterir.",
+        "rare": "Nadir seviyeler",
+        "trophy": "Kupa modu",
+        "goldBelow": {
+          "name": "Altın kupa eşiği",
+          "description": "Kupa modunda, bu orandan daha az oyuncunun açtığı başarımlar altın alır."
+        },
+        "silverBelow": {
+          "name": "Gümüş kupa eşiği",
+          "description": "Kupa modunda, bu oranın altındaki başarımlar gümüş alır; diğerleri veya oranı bilinmeyenler bronz alır."
+        }
+      },
       "playButton": {
         "name": "Oynat düğmesini göster",
         "description": "Oyun kutucuklarında Oynat düğmesini gösterir. Oyunlarını başka bir programdan başlatıyorsan kapat. Sağ tık menüsündeki Oyunu başlat seçeneği kullanılabilir kalır."
@@ -302,7 +329,9 @@
           "name": "Oyun ayarları düğmesi",
           "description": "Görselin sağ üst köşesinde araçlar düğmesini gösterir. Oyun ayarlarına sağ tık menüsünden ulaşılabilir olmaya devam eder."
         }
-      }
+      },
+      "appSectionTitle": "Uygulama",
+      "trophySectionTitle": "Kupalar ve nadirlik"
     },
     "emulator": {
       "nav": "Emülatör onarımı",
@@ -467,13 +496,13 @@
     },
     "notification": {
       "title": {
-        "common": "Ortak",
+        "common": "Temel",
         "toast": "Windows bildirimi",
-        "transport": "Taşıma",
+        "transport": "Entegrasyonlar",
         "chromium": "Chromium bildirimi",
         "watchdog": "Watchdog",
         "test": "Test",
-        "overlay": "Bildirim"
+        "overlay": "Açılır pencere"
       },
       "info": {
         "toast": "Bazı özellikler yalnızca Windows 10’da kullanılabilir",
@@ -602,6 +631,7 @@
             "easingOut": "Çıkış eğrisi",
             "entryDistance": "Hareket mesafesi",
             "fontFamily": "Yazı tipi",
+            "fontFile": "Yazı tipi dosyası",
             "fontSize": "Yazı boyutu",
             "gap": "Aralık",
             "glow": "Parıltı",
@@ -613,6 +643,10 @@
             "iconSize": "Simge boyutu",
             "layout": "Yerleşim",
             "letterSpacing": "Harf aralığı",
+            "logoImage": "Logo",
+            "logoOffset": "Logonun kenara uzaklığı",
+            "logoPosition": "Logo konumu",
+            "logoSize": "Logo boyutu",
             "opacity": "Saydamlık",
             "padX": "Yan boşluk",
             "padY": "Üst boşluk",
@@ -655,6 +689,10 @@
           "imported": "İçe aktarıldı ve seçildi:",
           "importedOnly": "İçe aktarılan ön ayar - burada dışa aktarılabilir veya silinebilir; kaydırıcılarla düzenlenemez.",
           "importSan": "SAN temasını içe aktar",
+          "layer": {
+            "none": "Özelleştirme yok",
+            "title": "Birlikte gelen bir ön ayarı özelleştir"
+          },
           "load": "Ön ayarı düzenle",
           "loaded": "Yüklendi:",
           "name": "Ad",
@@ -700,6 +738,8 @@
             "artwork": "Oyun görseli",
             "back": "Yaylı",
             "bottom": "Alt",
+            "bottomLeft": "Sol alt",
+            "bottomRight": "Sağ alt",
             "breathe": "Nefes",
             "center": "Orta",
             "circle": "Daire",
@@ -723,6 +763,7 @@
             "linear": "Doğrusal",
             "lines": "Tarama",
             "mono": "Eş aralıklı",
+            "noFont": "Yazı tipi dosyası yok",
             "noImage": "Görsel yok",
             "noise": "Benek",
             "none": "Yok",
@@ -742,6 +783,8 @@
             "text": "Metin rengi",
             "textOnly": "Yalnızca metin",
             "top": "Üst",
+            "topLeft": "Sol üst",
+            "topRight": "Sağ üst",
             "transparent": "Saydam",
             "uppercase": "BÜYÜK HARF",
             "zoom": "Yakınlaştırma"
@@ -997,7 +1040,10 @@
       },
       "madnesspatch": {
         "description": "MadnessPatch modu üzerinden Alice: Madness Returns"
-      }
+      },
+      "groupStores": "Resmi başlatıcılar",
+      "groupEmulators": "Emülatörler ve yamalar",
+      "groupConsoles": "Konsollar ve retro"
     },
     "help": {
       "nav": "Yardım",
@@ -1134,7 +1180,11 @@
         "goldbergTitle": "Goldberg / GBE Fork",
         "goldbergDesc": "Bir oyun kütüphanesi klasörünü Goldberg / GBE Fork kurulumları için tarar ve steam_settings/achievements.json şeması eksik olanları işaretler. Birini düzeltmek için bir oyunun sağ tık menüsünü (Tanıla / Onar) kullan.",
         "scanFolder": "Bir klasör tara…",
-        "exportLogs": "Günlükleri dışa aktar (.zip)"
+        "exportLogs": "Günlükleri dışa aktar (.zip)",
+        "profileBackupTitle": "Profil yedeği",
+        "profileBackupDesc": "Ayarlarınızı, kitaplık seçimlerinizi, hazır ayarlarınızı, temalarınızı, kapaklarınızı ve yedeklerinizi tek bir dosyaya kaydedin, ardından yeniden kurulumdan sonra veya yeni bir bilgisayarda geri getirin. Oturum açma bilgileri asla kaydedilmez.",
+        "profileExport": "Profili dışa aktar…",
+        "profileRestore": "Profili geri yükle…"
       },
       "blacklistTitle": "AppID kara listesi",
       "blacklistButton": "Kara listeyi sıfırla",
@@ -1176,28 +1226,28 @@
     "eyebrow": "İlk kurulum",
     "close": "Kapat",
     "steps": [
-      "Dil",
-      "Nasıl çalışır?",
-      "Arayüz",
-      "Hesap",
+      "Temel",
+      "Profil",
       "Oyunlar",
-      "Kaynak",
-      "Ayarlar"
+      "Kaynaklar",
+      "Görünüm ve uyarılar",
+      "Hazır"
     ],
-    "languageTitle": "Dil seçin",
-    "languageCopy": "Oyunlar, meta veriler, başarımlar ve Steam önbellekleri en baştan bu dilde yüklenir.",
+    "welcomeTitle": "AW Next'e hoş geldiniz",
+    "welcomeCopy": "Başlamak için iki hızlı seçim. Her şey daha sonra Ayarlar'dan değiştirilebilir ve bu kılavuzun geri kalanını istediğiniz zaman atlayabilirsiniz.",
     "language": "Oyun ve arayüz dili",
     "languagePlaceholder": "Bir dil seçin…",
-    "languageHint": "İlk kütüphane yüklemesi ancak bu seçimden sonra başlar.",
-    "introTitle": "Nasıl çalışır?",
-    "scanTitle": "Tarama",
-    "scanCopy": "Başlatıcı, emülatör ve başarım dosyası konumları otomatik bulunur - ilk taramadan önce her birini siz onaylarsınız.",
-    "watchTitle": "İzleme",
-    "watchCopy": "Arka plandaki Watchdog oyunu açılışında tanır, oynama süresini tutar ve başarım dosyalarını izler.",
-    "fixTitle": "Onarma",
-    "fixCopy": "Emüle Steam oyunlarında sağ tık düzeltmesi GBE Fork’u kurar, başarım şemasını ve DLC verilerini yazar.",
+    "languageHint": "Oyunlar, meta veriler, başarımlar ve Steam önbellekleri bu dilde yüklenir. İlk kütüphane yüklemesi bu seçimden sonra başlar.",
     "overlayTitle": "Oyun içi overlay",
-    "overlayCopy": "Oyunun üzerine kısayolla açtığınız küçük bir başarım paneli - varsayılan olarak Ctrl+Shift+K.",
+    "overlayCopy": "Bir oyunda başarımlarını üstte görmek için {hotkey} tuşuna basın.",
+    "collectionsTitle": "Koleksiyonlar",
+    "collectionsCopy": "Oyunları, bir oyunun sağ tık menüsünden kendi koleksiyonlarınızda gruplayın.",
+    "trophyTitle": "Kupa modu",
+    "trophyCopy": "Başarımları nadirliğine göre altın, gümüş veya bronz olarak derecelendirin. Ayarlar'dan açın.",
+    "clipsTitle": "Video klipler",
+    "clipsCopy": "Her kilit açılışının çevresinde kısa bir klip saklayın. Ayarlar'da Bildirimler altından açın.",
+    "backupTitle": "Profil yedeği",
+    "backupCopy": "Ayarlarınızı ve kütüphane seçimlerinizi tek bir dosyaya kaydedin ve yeniden kurulumdan sonra geri yükleyin.",
     "profileTitle": "Profil",
     "profileCopy": "Başlıkta gösterilen adı seçin ve isteğe bağlı olarak yerel bir avatar ayarlayın.",
     "username": "Ekran adı",
@@ -1205,8 +1255,21 @@
     "avatarPick": "Fotoğraf seç",
     "avatarDefault": "Varsayılan",
     "avatarHint": "İsteğe bağlı. Bu bilgisayarda yerel olarak depolanır.",
-    "foldersTitle": "Diskteki oyunları ekle",
-    "foldersCopy": "Kayıt/yapılandırma klasörlerini ve oyun kitaplıklarını otomatik bulmak için Akıllı Bul'u kullanın. Ya da klasör türüne göre elle ekleyin.",
+    "foldersTitle": "Oyunlarınız",
+    "foldersCopy": "AW Next bu bilgisayarda oyunları arar ve bulduklarını gösterir. Yalnızca bir şey eksikse klasör ekleyin.",
+    "detectTitle": "Bu bilgisayarda bulundu",
+    "detectInstalled": "{count} yüklü",
+    "detectNone": "Hiçbiri bulunamadı",
+    "detectOff": "kapalı",
+    "detectEmulators": "Emülatör kayıtları",
+    "detectFolders": "Oyunlar: {games} · Klasörler: {folders}",
+    "detectTotal": "Bulunan oyunlar: {count}",
+    "detectNothing": "Henüz oyun bulunamadı",
+    "detectSteamOff": "Steam oyunlarınız, Steam Kaynaklar bölümünden açılana kadar gizli kalır.",
+    "detectReviewSources": "Kaynakları gözden geçir",
+    "smartFound": "Bulunan yeni klasörler: {count}",
+    "smartNone": "Yeni klasör bulunamadı.",
+    "folderGames": "Bu klasörde bulunan oyunlar: {count}",
     "addSave": "Kaydetme klasörü ekle",
     "smartFind": "Akıllı Bul",
     "addLibrary": "Kitaplık klasörü ekle",
@@ -1216,12 +1279,22 @@
     "saveList": "Kayıt/yapılandırma klasörleri",
     "libraryList": "Kütüphane klasörleri",
     "emptyList": "Bu oturuma hiçbir şey eklenmedi.",
-    "settingsTitle": "Önerilen ayarlar",
-    "settingsCopy": "Kitaplık, görünüm ve bildirimler için temel ayarlar. Hepsi sonradan değiştirilebilir.",
-    "summarySources": "Etkin kaynaklar",
+    "settingsTitle": "Görünüm ve uyarılar",
+    "settingsCopy": "Bir tema ve kilit açma uyarılarının nasıl görüneceğini seçin. Hemen bir tane görmek için Bildirimi test et'i kullanın.",
+    "moreOptions": "Daha fazla seçenek",
+    "readyTitle": "Her şey hazır",
+    "readyCopy": "AW Next artık oyunlarınızı arka planda izliyor ve bir şeyin kilidini açtığınızda sizi haberdar ediyor.",
+    "featuresTitle": "Bilmekte fayda var",
+    "summarySources": "{count} kaynak etkin",
+    "summaryAccounts": "Oturum açıldı: {names}",
+    "summaryGames": "Bulunan oyunlar: {count} · İzlenen klasörler: {folders}",
+    "summaryNoGames": "Henüz oyun bulunamadı. Klasörleri daha sonra Ayarlar'dan ekleyebilirsiniz.",
+    "summaryLook": "Tema: {theme} · Bildirimler: {notifications}",
+    "summaryChange": "Değiştir",
     "summaryReopen": "Bu kılavuzu istediğiniz zaman Ayarlar > Genel bölümünden yeniden açabilirsiniz.",
     "sourcesTitle": "Başarımlarınız nereden geliyor",
-    "sourcesCopy": "Her biri bu bilgisayarda okunur. Kullanmadığınızı kapalı bırakın; hepsi Ayarlar’da düzenlenebilir kalır.",
+    "sourcesCopy": "Bu bilgisayarda yüklü her kaynak otomatik olarak okunur, bu yüzden varsayılanlar yeterlidir. Daha fazlasını istiyorsanız aşağıdan oturum açın.",
+    "sourcesMore": "Kaynakları ayarla ({count} etkin)",
     "accountsTitle": "Hesaplar (isteğe bağlı)",
     "accountsCopy": "Gizli bir Steam profilinden açılışları okumak, Steam Ailesi oyunlarınızı eklemek, Xbox PC kitaplığınızı içe aktarmak ve Epic ilerlemenizi göstermek için oturum açın. Bu adımı atlayıp Ayarlar > Kaynak bölümünden daha sonra bağlanabilirsiniz.",
     "sourcesEmulators": "Emülatörler",
@@ -1253,6 +1326,8 @@
     "next": "Sonraki",
     "finish": "Bitir",
     "skip": "Atla",
+    "skipSetup": "Kurulumu atla",
+    "saveClose": "Kaydet ve kapat",
     "saving": "Kaydediliyor…",
     "saved": "Kurulum kaydedildi.",
     "languageRequired": "Devam etmek için bir dil seçin.",
@@ -1324,7 +1399,28 @@
     "controllerMove": "Taşı/kaydır"
   },
   "dialogs": {
+    "collections": "Koleksiyonlar",
+    "collection-all": "Tüm oyunlar",
+    "collection-new": "Yeni koleksiyon…",
+    "collection-edit": "Koleksiyonu düzenle…",
+    "collection-name": "Koleksiyon adı",
+    "collection-default-name": "Yeni koleksiyon",
+    "collection-field-name": "Ad",
+    "collection-field-color": "Renk",
+    "collection-field-icon": "Simge",
+    "collection-field-image": "Görsel",
+    "collection-choose-image": "Görsel seç…",
+    "collection-remove-image": "Görseli kaldır",
+    "collection-delete": "Koleksiyonu sil",
+    "collection-delete-confirm": "\"{name}\" koleksiyonu silinsin mi? Oyunlar kütüphanende kalır.",
+    "collection-limit": "{count} koleksiyon sınırına ulaştın.",
+    "collection-image-error": "Bu görsel kullanılamadı. 5 MB altında bir PNG, JPEG, GIF veya WebP dosyası seç.",
     "choose-preset-image": "Bir arka plan görseli seç",
+    "choose-preset-font": "Bir yazı tipi dosyası seç",
+    "choose-preset-logo": "Bir logo seç",
+    "preset-font-refused": "Bu dosya kullanılabilir bir yazı tipi değil. En fazla 4 MB boyutunda bir TTF, OTF, WOFF veya WOFF2 dosyası kullan.",
+    "preset-logo-refused": "Bu dosya kullanılabilir bir logo değil. En fazla 2 MB boyutunda bir PNG, JPEG, GIF, WebP veya BMP görseli kullan.",
+    "preset-layer-note": "{preset} özelleştiriliyor. Değiştirmek için bir bölümü işaretle; işaretlemeden bıraktığın her şey, birlikte gelen ön ayarın sunduğu gibi kalır. Değişikliklerin onun üzerine eklenir: birlikte gelen ön ayar kopyalanmaz ve değiştirilmez.",
     "folder-reason-ea-app": "Bu bir EA app sürümüdür. EA app üzerinden başlatılan bir oyun başarımlarını oyun klasöründe değil EA hesabında tutar, bu yüzden burada okunacak bir kilit açma dosyası yoktur. Bu başarımları izlenen bir klasör değil, Ayarlar > Kaynaklar altındaki EA kaynağı toplar.",
     "folder-reason-game-no-data": "Burası bir oyun klasörü, ancak içinde ne bir emülatör yapılandırması ne de AW Next’in okuyabileceği bir kilit açma dosyası var.",
     "folder-reason-unreadable": "Bu klasör okunamadı.",
@@ -2175,6 +2271,31 @@
     "export-logs-done": "{count} günlük dosyası şuraya yazıldı: {path}",
     "export-logs-failed": "Günlükler dışa aktarılamadı: {error}",
     "zip-archive": "Zip arşivi",
+    "profile-backup-file-type": "AW Next profil yedeği",
+    "profile-backup-export-title": "Profili dışa aktar",
+    "profile-backup-restore-title": "Profili geri yükle",
+    "profile-backup-exporting": "Profil dışa aktarılıyor… %{percent}",
+    "profile-backup-export-done": "Profil {path} konumuna kaydedildi ({count} dosya, {size}).",
+    "profile-backup-export-failed": "Profil dışa aktarılamadı: {error}",
+    "profile-backup-restore-confirm": "Bu profil geri yüklensin mi?",
+    "profile-backup-restore-confirm-detail": "Yedek {count} dosya ({size}) içeriyor, kaydedilme zamanı: {date}. Mevcut ayarlarınız, hazır ayarlarınız, temalarınız ve kapaklarınız yedektekilerle değiştirilecek. Değiştirilen dosyalar saklanır ve başarısız olan bir geri yükleme geri alınır. Uygulamak için AW Next yeniden başlatılır.",
+    "profile-backup-restore-button": "Geri yükle ve yeniden başlat",
+    "profile-backup-checking": "Yedek denetleniyor… %{percent}",
+    "profile-backup-restarting": "Yedek denetlendi. Uygulamak için yeniden başlatılıyor…",
+    "profile-backup-restore-failed": "Profil geri yüklenemedi: {error}",
+    "profile-backup-applied": "Profil geri yüklendi ({count} dosya).",
+    "profile-backup-applied-signin": "Oturum açma bilgileri yedeğe asla kaydedilmez. Şuralarda yeniden oturum açın: {accounts}.",
+    "profile-backup-applied-signin-generic": "Oturum açma bilgileri yedeğe asla kaydedilmez. Bağlı olan tüm hesaplarda yeniden oturum açın.",
+    "profile-backup-apply-failed": "Profil geri yüklenemedi. Önceki dosyalarınız yerine konuldu. Ayrıntılar: {error}",
+    "profile-backup-account-emulator": "Emülatör araçları için Steam oturumu",
+    "profile-backup-error-invalid": "Bu dosya bir AW Next profil yedeği değil.",
+    "profile-backup-error-too-new": "Bu yedek AW Next'in daha yeni bir sürümüyle oluşturulmuş. Önce uygulamayı güncelleyin.",
+    "profile-backup-error-corrupt": "Bu yedek hasarlı veya değiştirilmiş.",
+    "profile-backup-error-unsafe": "Bu yedek, güvenli biçimde geri yüklenemeyen dosyalar içeriyor.",
+    "profile-backup-error-too-large": "Bu yedek, AW Next'in geri yükleyebileceğinden büyük.",
+    "profile-backup-error-empty": "Henüz bir yedeğe konacak bir şey yok.",
+    "profile-backup-error-busy": "Bir yedekleme zaten çalışıyor.",
+    "profile-backup-error-inside": "AW Next veri klasörünün dışında bir konum seçin.",
     "theme-layer-opacity": "Saydamlık",
     "chooseAnotherIconTitle": "Başka bir simge seç",
     "chooseAnotherIcon": "Başka bir simge seç…",
@@ -2243,6 +2364,7 @@
     "profile-trophies-share": "başarımlarınızın {percent}'i",
     "profile-trophies-unranked": "{count} tanesi bilinmeyen oranla",
     "profile-trophies-at-most": "{percent} veya daha az",
+    "profile-trophies-under": "{percent} altı",
     "profile-trophies-between": "{from} - {to}",
     "profile-trophies-above": "{percent} üzerinde, veya bilinmiyor",
     "profile-trophies-platinum-games": "Platin oyunlar",

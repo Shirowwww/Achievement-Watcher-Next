@@ -191,7 +191,7 @@ function appendChip(container, iconClass, label, value, state) {
 }
 
 function countSources($) {
-  const rows = $('#options-source li').toArray();
+  const rows = $('#settings .source-list li').toArray();
   let enabled = 0;
   for (const row of rows) {
     const select = row.querySelector('select');
@@ -249,7 +249,7 @@ function renderControllerStatus($, values) {
 function renderSourceChips($) {
   const list = $('#help-sources-list');
   if (!list.length) return;
-  const rows = $('#options-source li').toArray();
+  const rows = $('#settings .source-list li').toArray();
   if (!rows.length) return;
   const row = document.createElement('li');
   row.className = 'help-chip-row';
@@ -351,7 +351,8 @@ function bindSearch($) {
     applyHelpSearch($, $(this).val());
   });
   input.on('keydown.achievementHelp', function (event) {
-    if (event.key !== 'Escape') return;
+    // Same as the Settings search: clear first, and only an empty field lets Escape close the panel.
+    if (event.key !== 'Escape' || !$(this).val()) return;
     event.stopPropagation();
     $(this).val('');
     applyHelpSearch($, '');

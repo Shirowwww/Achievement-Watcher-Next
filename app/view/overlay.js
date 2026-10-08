@@ -6,10 +6,13 @@
 
   let overlayLang = 'english';
   let currentGame = null;
+  let trophyLabels = {};
   let isLoading = false;
   let sortState = { status: null, rarity: null, time: null };
   let filter = 'all';
   let query = '';
+  // Names of hidden achievements the player has clicked open; cleared whenever the overlay reopens.
+  let revealedDescriptions = new Set();
   let controllerConfig = {
     layout: 'auto',
     nativeModeToggles: false,
@@ -31,6 +34,7 @@
     unlocked: 'Unlocked',
     progress: 'Progress',
     hidden: 'Hidden',
+    hiddenDescription: 'Hidden - click to reveal',
     na: 'N/A',
     title: 'Achievements',
     search: 'Search achievements…',
@@ -308,6 +312,10 @@
     $('overlay-stats-fill').style.width = stats.percent + '%';
   }
 
+  function isDescriptionHidden(achievement) {
+    return ui.isDescriptionMasked(achievement, currentGame && currentGame.showHidden) && !revealedDescriptions.has(achievement.name);
+  }
+
   function filteredAchievements() {
     const achievements = currentGame ? currentGame.achievements || (currentGame.achievement && currentGame.achievement.list) : [];
     if (!Array.isArray(achievements)) return [];
@@ -318,7 +326,9 @@
       if (filter === 'locked' && a.Achieved) return false;
       if (filter === 'progress' && (a.Achieved || !ui.progressInfo(a).hasProgress)) return false;
       if (q) {
-        const haystack = `${ui.safeLocalizedText(a.displayName, overlayLang, '')} ${ui.safeLocalizedText(a.description, overlayLang, '')}`.toLowerCase();
+        // A masked description must not be searchable, or typing guesses would reveal it.
+        const description = isDescriptionHidden(a) ? '' : ui.safeLocalizedText(a.description, overlayLang, '');
+        const haystack = `${ui.safeLocalizedText(a.displayName, overlayLang, '')} ${description}`.toLowerCase();
         if (!haystack.includes(q)) return false;
       }
       return true;
@@ -392,7 +402,10 @@
       seen.add(achievement.name);
 
       const displayName = ui.escapeHtml(ui.safeLocalizedText(achievement.displayName, overlayLang, overlayStrings.hidden));
-      const description = ui.escapeHtml(ui.safeLocalizedText(achievement.description, overlayLang, overlayStrings.hidden));
+      const masked = isDescriptionHidden(achievement);
+      const description = ui.escapeHtml(
+        masked ? overlayStrings.hiddenDescription : ui.safeLocalizedText(achievement.description, overlayLang, overlayStrings.hidden)
+      );
       const achieved = !!achievement.Achieved;
       const progress = ui.progressInfo(achievement);
       const rarity = ui.rarityPercent(achievement);
@@ -403,8 +416,14 @@
       // Every achievement with a known unlock rate gets a badge; the overlay-only
       // "common" tier keeps non-rare rows readable (dark gray) while rare tiers stay
       // gold/silver/bronze. The shared rarityTier helper is intentionally untouched.
-      const tier = ui.rarityTier(rarity) || (rarity !== null && rarity !== undefined ? 'common' : null);
-      const rarityHtml = tier ? `<span class="rarity-badge ${tier}">★ ${rarity.toFixed(1)}%</span>` : '';
+      const grading = currentGame.rarityGrading || {};
+      const trophyMode = grading.mode === 'trophy';
+      const tier = ui.rarityTier(rarity, grading.mode, grading.thresholds) || (rarity !== null && rarity !== undefined ? 'common' : null);
+      // Trophy mode grades every row; one with no known rate is bronze and shows the grade alone.
+      const badgeText = trophyMode
+        ? [trophyLabels[tier] || tier, rarity === null || rarity === undefined ? '' : `${rarity.toFixed(1)}%`].filter(Boolean).join(' ')
+        : rarity === null || rarity === undefined ? '' : `${rarity.toFixed(1)}%`;
+      const rarityHtml = tier ? `<span class="rarity-badge ${tier}">★ ${ui.escapeHtml(badgeText)}</span>` : '';
 
       const progressHtml = progress.hasProgress && progress.max > 1
         ? `<div class="overlay-progress"><div class="progress-meta"><span>${ui.escapeHtml(overlayStrings.progress)}</span><span>${progress.current} / ${progress.max}</span></div>
@@ -421,8 +440,13 @@
         // game, and the case it exists for is precisely the one where no image downloaded.
         `<div class="overlay-icon"><img alt="${ui.escapeHtml(overlayStrings.icon)}" onerror="this.onerror=null; this.src='../resources/img/achievement.svg';" /></div>` +
         `<div class="overlay-info"><div class="overlay-name" title="${displayName}">${displayName}</div>` +
-        `<div class="overlay-desc" title="${description}">${description}</div>${progressHtml}${rarityHtml}</div>` +
+        `<div class="overlay-desc${masked ? ' masked-desc' : ''}" title="${description}">${description}</div>${progressHtml}${rarityHtml}</div>` +
         `<div class="overlay-status">${statusHtml}</div>`;
+
+      if (masked) {
+        // The gamepad focuses and clicks the row, not the description, so the row listens.
+        row.addEventListener('click', () => revealDescription(row, achievement), { once: true });
+      }
 
       container.appendChild(row);
 
@@ -439,6 +463,16 @@
         })
         .catch(() => {});
     });
+  }
+
+  function revealDescription(row, achievement) {
+    revealedDescriptions.add(achievement.name);
+    const el = row.querySelector('.overlay-desc');
+    if (!el) return;
+    const text = ui.safeLocalizedText(achievement.description, overlayLang, overlayStrings.hidden);
+    el.classList.remove('masked-desc');
+    el.textContent = text;
+    el.title = text;
   }
 
   function toggleSettings(open) {
@@ -496,6 +530,17 @@
       renderRows();
     });
   });
+
+  // Which filter, density, icon size or accent is on is only a CSS class; mirror it as aria-pressed.
+  const pressedChoices = '.filter-pill, #density-seg button, #iconsize-seg button, .swatch';
+  const syncPressed = () => {
+    document.querySelectorAll(pressedChoices).forEach((choice) => choice.setAttribute('aria-pressed', String(choice.classList.contains('active'))));
+  };
+  const pressedObserver = new MutationObserver(syncPressed);
+  for (const group of ['overlay-filters', 'overlay-settings']) {
+    pressedObserver.observe($(group), { attributes: true, attributeFilter: ['class'], subtree: true });
+  }
+  syncPressed();
 
   $('overlay-th-rarity').addEventListener('click', () => setSort('rarity'));
   $('overlay-th-date').addEventListener('click', () => setSort('time'));
@@ -578,6 +623,7 @@
     if (!data) return;
     if (data.lang) overlayLang = data.lang;
     if (data.strings) Object.assign(overlayStrings, data.strings);
+    if (data.trophyLabels) trophyLabels = data.trophyLabels;
     applyOverlayStrings();
   });
 
@@ -607,6 +653,7 @@
   window.api.onOverlay((game) => {
     isLoading = false;
     query = '';
+    revealedDescriptions = new Set();
     filter = 'all';
     sortState = { status: null, rarity: null, time: null };
     $('overlay-search').value = '';

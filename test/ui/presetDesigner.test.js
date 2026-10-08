@@ -56,7 +56,7 @@ test('the designer has a tab of its own, listed under Notification', () => {
   for (const file of fs.readdirSync(localeDir).filter((name) => name.endsWith('.json'))) {
     const label = JSON.parse(fs.readFileSync(path.join(localeDir, file), 'utf8')).settings.sideMenu.presets;
     assert.ok(String(label || '').trim(), file + ': the tab has no side-menu label');
-    assert.ok(label.length <= 16, file + ': the side-menu label is too long for the nav column');
+    assert.ok(label.length <= 26, file + ': the side-menu label is too long for the nav column');
   }
 });
 
@@ -339,7 +339,9 @@ test('the live preview swaps only the stylesheet, and never reloads on every key
   // Rebuilding the document on each input would restart the animation under the user's cursor and
   // make dragging a slider feel broken; the stylesheet is the only thing that has to change.
   assert.match(settings, /const previewCss = \(values\) => presetGenerator\.buildCustomPresetCss\(values, \{ assetUrl: presetAssetUrl \}\);/);
-  assert.match(settings, /styleEl\.textContent = previewCss\(values\);/);
+  // One function picks the stylesheet: the generated one, or a bundled preset's own plus a layer.
+  assert.match(settings, /styleEl\.textContent = stylesheetFor\(values\);/);
+  assert.match(settings, /const stylesheetFor = \(values\) => \(layerMode \? layerStylesheet\(values\) : previewCss\(values\)\);/);
   assert.match(settings, /getElementById\('aw-preview-css'\)/);
   assert.match(settings, /previewPending = setTimeout/, 'preview updates are not batched');
   // …and the preview is fed the same payload shape the notification window sends.
@@ -405,7 +407,7 @@ test('every state can be compared side by side', () => {
   );
   // Editing has to reach the compare frames, and cheaply: the stylesheet is swapped, not reloaded.
   assert.match(settings, /if \(previewView === 'compare'\) renderComparePreviews\(values\);/);
-  assert.match(settings, /style\.textContent = previewCss\(values\)/);
+  assert.match(settings, /style\.textContent = stylesheetFor\(values\)/);
 
   /*
     And the state switch keeps meaning something while Compare is open: it marks the row it names

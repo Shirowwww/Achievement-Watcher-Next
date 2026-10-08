@@ -18,8 +18,42 @@ const SECTION_SELECTOR = '.arrow-list, .emulator-group, .settings-card, #epic-co
 */
 const HEADER_SELECTOR = '.title, .emulator-group-title, .emulator-login-heading';
 
-// Sections that start collapsed on a fresh profile.
-const DEFAULT_COLLAPSED = [];
+/*
+  Sections that start collapsed: rarely-touched cards, so a tab opens on the few controls most
+  people use. Keys are section ids (see sectionKey). Bump DEFAULTS_VERSION when this list changes,
+  so a profile that already stored its own open/closed state is brought up to date once.
+*/
+const DEFAULT_COLLAPSED = [
+  'options-ui-app',
+  'options-ui-trophies',
+  'options-source-emulators',
+  'defaultdir',
+  'options-notify-transport',
+  'options-notify-test',
+  'options-notify-souvenir',
+  'options-notify-clip',
+  'theme-library',
+  'theme-customizer',
+  'adv-goldberg-title',
+  'adv-diag-title',
+  'profile-backup-title',
+  'gbe-dll-settings',
+];
+const DEFAULTS_VERSION = 1;
+
+/*
+  The collapsed keys to apply, given what was stored. A profile with no stored state gets the
+  defaults; one stored before DEFAULTS_VERSION keeps its choices and gains the new defaults once.
+  `changed` tells the caller to write the result back.
+*/
+function resolveCollapsed(stored, seenVersion) {
+  const keys = new Set(Array.isArray(stored) ? stored : DEFAULT_COLLAPSED);
+  if (!Array.isArray(stored) || Number(seenVersion) >= DEFAULTS_VERSION) {
+    return { keys, version: DEFAULTS_VERSION, changed: false };
+  }
+  DEFAULT_COLLAPSED.forEach((key) => keys.add(key));
+  return { keys, version: DEFAULTS_VERSION, changed: true };
+}
 
 // The header element of a section, or null when it has none (which makes it not a section).
 function headerFor($, section) {
@@ -60,4 +94,4 @@ function sectionKey($, section, view, index) {
   return `${view || 'view'}:${index}`;
 }
 
-module.exports = { SECTION_SELECTOR, HEADER_SELECTOR, DEFAULT_COLLAPSED, headerFor, sectionsIn, sectionKey };
+module.exports = { SECTION_SELECTOR, HEADER_SELECTOR, DEFAULT_COLLAPSED, DEFAULTS_VERSION, resolveCollapsed, headerFor, sectionsIn, sectionKey };

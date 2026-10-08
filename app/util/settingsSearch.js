@@ -83,6 +83,23 @@ function rowsIn($, section) {
   });
 }
 
+/*
+  How many rows match but are folded away by the interface mode (a row of its own, or one inside a
+  folded section or tab). Simple mode cannot show them, so the panel uses this number to say they
+  exist and offer Advanced instead of answering "nothing found".
+*/
+function countModeHiddenMatches($, query, scope = '#settings') {
+  const terms = parseTerms(query);
+  if (terms.length === 0) return 0;
+  let count = 0;
+  $(`${scope} .box section.content[data-view]`).each(function () {
+    rowsIn($, $(this)).each(function () {
+      if ($(this).closest(`.${MODE_HIDDEN_CLASS}`).length && matches(haystackFor($, this), terms)) count++;
+    });
+  });
+  return count;
+}
+
 function filterSections($, query, scope = '#settings') {
   const terms = parseTerms(query);
   const perView = {};
@@ -123,4 +140,4 @@ function filterSections($, query, scope = '#settings') {
   return { total, perView };
 }
 
-module.exports = { ROW_SELECTOR, BLOCK_SELECTOR, MODE_HIDDEN_CLASS, normalize, parseTerms, matches, buildHaystack, haystackFor, rowsIn, filterSections };
+module.exports = { ROW_SELECTOR, BLOCK_SELECTOR, MODE_HIDDEN_CLASS, normalize, parseTerms, matches, buildHaystack, haystackFor, rowsIn, countModeHiddenMatches, filterSections };

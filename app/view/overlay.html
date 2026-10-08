@@ -427,6 +427,11 @@
         overflow: hidden;
       }
 
+      .overlay-desc.masked-desc {
+        font-style: italic;
+        cursor: pointer;
+      }
+
       .overlay-progress {
         margin-top: 6px;
       }
@@ -981,6 +986,7 @@
 
     <!-- intlFormat first: overlayUi reads window.IntlFormat when it cannot require(). -->
     <script src="../util/intlFormat.js"></script>
+    <script src="../util/rarityTiers.js"></script>
     <script src="../util/overlayUi.js"></script>
     <script src="../util/controllerLabels.js"></script>
     <script src="./overlay.js"></script>

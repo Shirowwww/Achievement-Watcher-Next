@@ -86,16 +86,25 @@
     "runUninstaller": "Spustit odinstalátor hry…",
     "deleteFolder": "Smazat složku hry (Koš)…"
   },
+  "windowControls": {
+    "minimize": "Minimalizovat",
+    "maximize": "Maximalizovat",
+    "close": "Zavřít"
+  },
   "settings": {
     "title": "Nastavení",
     "sideMenu": {
       "general": "Obecné",
       "notification": "Oznámení",
-      "presets": "Předvolby",
+      "presets": "Předvolby oznámení",
       "souvenir": "Vzpomínka",
       "folder": "Složky",
       "source": "Zdroj",
-      "advanced": "Pokročilé"
+      "advanced": "Pokročilé",
+      "groupApp": "Aplikace",
+      "groupAlerts": "Upozornění",
+      "groupLibrary": "Knihovna",
+      "groupSupport": "Podpora"
     },
     "common": {
       "show": "Zobrazit",
@@ -108,13 +117,17 @@
       "maintainedBy": "spravuje",
       "fork": "Fork",
       "original": "Originál v1.6.8",
-      "edit": "Upravit"
+      "edit": "Upravit",
+      "close": "Zavřít",
+      "unsaved": "Neuložené změny"
     },
     "search": {
       "placeholder": "Hledat nastavení…",
       "empty": "Hledání neodpovídá žádné nastavení.",
       "ariaLabel": "Hledat v nastavení",
-      "clear": "Vymazat"
+      "clear": "Vymazat",
+      "advancedMore": "Dalších {count} v Pokročilém režimu",
+      "advancedShow": "Zobrazit Pokročilé"
     },
     "watchdog": {
       "startup": {
@@ -143,7 +156,7 @@
       "duration": "Délka animace"
     },
     "general": {
-      "sectionTitle": "Rozhraní a chování",
+      "sectionTitle": "Každodenní nastavení",
       "language": {
         "name": "Jazyk",
         "description": "Jazyk rozhraní. Data her se načítají v tomto jazyce, pokud je k dispozici."
@@ -161,7 +174,7 @@
         }
       },
       "hiddenAch": {
-        "name": "Skryté úspěchy",
+        "name": "Odhalit skryté úspěchy",
         "description": "Zobrazit název a popis skrytých úspěchů ještě před jejich odemčením."
       },
       "mergeDuplicates": {
@@ -264,6 +277,20 @@
         "name": "Trofeje v profilu",
         "description": "Zobrazuje platinové, zlaté, stříbrné a bronzové trofeje pod vaším jménem. Platina je hra dokončená na 100 %; ostatní řadí vaše úspěchy podle toho, kolik hráčů je odemklo."
       },
+      "rarityDisplay": {
+        "name": "Zobrazení vzácnosti",
+        "description": "Vzácné úrovně označují jen nejvzácnější úspěchy. Režim trofejí ohodnotí každý úspěch zlatem, stříbrem nebo bronzem podle podílu odemčení a u dokončených her zobrazí platinu.",
+        "rare": "Vzácné úrovně",
+        "trophy": "Režim trofejí",
+        "goldBelow": {
+          "name": "Zlatá trofej pod",
+          "description": "V režimu trofejí získají zlato úspěchy, které odemklo méně hráčů než tento podíl."
+        },
+        "silverBelow": {
+          "name": "Stříbrná trofej pod",
+          "description": "V režimu trofejí získají stříbro úspěchy pod tímto podílem; ostatní, nebo ty bez známého podílu, získají bronz."
+        }
+      },
       "playButton": {
         "name": "Zobrazit tlačítko Hrát",
         "description": "Zobrazí tlačítko Hrát na dlaždicích her. Vypněte jej, pokud hry spouštíte z jiného programu. Položka Spustit hru v kontextové nabídce zůstává dostupná."
@@ -302,7 +329,9 @@
           "name": "Tlačítko nastavení hry",
           "description": "Zobrazí tlačítko nástrojů v pravém horním rohu grafiky. Nastavení hry zůstává dostupné z kontextové nabídky."
         }
-      }
+      },
+      "appSectionTitle": "Aplikace",
+      "trophySectionTitle": "Trofeje a vzácnost"
     },
     "emulator": {
       "nav": "Oprava emulátorů",
@@ -467,13 +496,13 @@
     },
     "notification": {
       "title": {
-        "common": "Společné",
+        "common": "Základy",
         "toast": "Oznámení Windows",
-        "transport": "Přenos",
+        "transport": "Integrace",
         "chromium": "Oznámení Chromium",
         "watchdog": "Watchdog",
         "test": "Test",
-        "overlay": "Oznámení"
+        "overlay": "Vyskakovací okno"
       },
       "info": {
         "toast": "Některé funkce jsou dostupné pouze ve Windows 10",
@@ -602,6 +631,7 @@
             "easingOut": "Křivka odchodu",
             "entryDistance": "Vzdálenost pohybu",
             "fontFamily": "Písmo",
+            "fontFile": "Soubor s písmem",
             "fontSize": "Velikost písma",
             "gap": "Mezera",
             "glow": "Záře",
@@ -613,6 +643,10 @@
             "iconSize": "Velikost ikony",
             "layout": "Uspořádání",
             "letterSpacing": "Rozestup písmen",
+            "logoImage": "Logo",
+            "logoOffset": "Vzdálenost loga od okraje",
+            "logoPosition": "Poloha loga",
+            "logoSize": "Velikost loga",
             "opacity": "Průhlednost",
             "padX": "Boční odsazení",
             "padY": "Horní odsazení",
@@ -655,6 +689,10 @@
           "imported": "Importováno a vybráno:",
           "importedOnly": "Importovaná předvolba - lze ji zde exportovat nebo smazat; posuvníky ji upravit nelze.",
           "importSan": "Importovat motiv SAN",
+          "layer": {
+            "none": "Bez úprav",
+            "title": "Upravit přibalenou předvolbu"
+          },
           "load": "Upravit předvolbu",
           "loaded": "Načteno:",
           "name": "Název",
@@ -700,6 +738,8 @@
             "artwork": "Obrázek hry",
             "back": "Pružný",
             "bottom": "Dole",
+            "bottomLeft": "Vlevo dole",
+            "bottomRight": "Vpravo dole",
             "breathe": "Dýchání",
             "center": "Střed",
             "circle": "Kruh",
@@ -723,6 +763,7 @@
             "linear": "Lineární",
             "lines": "Šrafování",
             "mono": "Neproporcionální",
+            "noFont": "Žádný soubor s písmem",
             "noImage": "Žádný obrázek",
             "noise": "Zrnitost",
             "none": "Žádný",
@@ -742,6 +783,8 @@
             "text": "Barva textu",
             "textOnly": "Pouze text",
             "top": "Nahoře",
+            "topLeft": "Vlevo nahoře",
+            "topRight": "Vpravo nahoře",
             "transparent": "Průhledné",
             "uppercase": "VELKÁ PÍSMENA",
             "zoom": "Přiblížení"
@@ -997,7 +1040,10 @@
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns prostřednictvím modu MadnessPatch"
-      }
+      },
+      "groupStores": "Oficiální launchery",
+      "groupEmulators": "Emulátory a patche",
+      "groupConsoles": "Konzole a retro"
     },
     "help": {
       "nav": "Nápověda",
@@ -1134,7 +1180,11 @@
         "goldbergTitle": "Goldberg / GBE Fork",
         "goldbergDesc": "Prohledá složku knihovny her na instalace Goldberg / GBE Fork a označí ty, kterým chybí schéma steam_settings/achievements.json. Pro opravu jedné použijte kontextovou nabídku hry (Diagnostikovat / Opravit).",
         "scanFolder": "Prohledat složku…",
-        "exportLogs": "Exportovat protokoly (.zip)"
+        "exportLogs": "Exportovat protokoly (.zip)",
+        "profileBackupTitle": "Záloha profilu",
+        "profileBackupDesc": "Uložte nastavení, volby knihovny, předvolby, motivy, obaly a zálohy do jednoho souboru a po přeinstalaci nebo na novém počítači je obnovte. Přihlášení se nikdy neukládají.",
+        "profileExport": "Exportovat profil…",
+        "profileRestore": "Obnovit profil…"
       },
       "blacklistTitle": "Černá listina AppID",
       "blacklistButton": "Resetovat černou listinu",
@@ -1176,28 +1226,28 @@
     "eyebrow": "První nastavení",
     "close": "Zavřít",
     "steps": [
-      "Jazyk",
-      "Jak to funguje",
-      "Rozhraní",
-      "Účet",
+      "Základy",
+      "Profil",
       "Hry",
-      "Zdroj",
-      "Nastavení"
+      "Zdroje",
+      "Vzhled a upozornění",
+      "Hotovo"
     ],
-    "languageTitle": "Vyberte jazyk",
-    "languageCopy": "Hry, metadata, úspěchy i mezipaměti Steamu se od začátku načtou v tomto jazyce.",
+    "welcomeTitle": "Vítejte v AW Next",
+    "welcomeCopy": "Dvě rychlé volby na začátek. Vše lze později změnit v Nastavení a zbytek tohoto průvodce můžete kdykoli přeskočit.",
     "language": "Jazyk hry a rozhraní",
     "languagePlaceholder": "Vyberte jazyk…",
-    "languageHint": "První načtení knihovny se spustí až po této volbě.",
-    "introTitle": "Jak to funguje",
-    "scanTitle": "Skenovat",
-    "scanCopy": "Umístění launcherů, emulátorů a souborů s úspěchy se rozpoznají automaticky - každé před prvním skenem potvrdíte.",
-    "watchTitle": "Sledovat",
-    "watchCopy": "Watchdog na pozadí rozpozná hru při spuštění, měří odehraný čas a hlídá její soubory s úspěchy.",
-    "fixTitle": "Opravit",
-    "fixCopy": "U emulovaných her ze Steamu oprava z pravého tlačítka nainstaluje GBE Fork a zapíše schéma úspěchů a data DLC.",
+    "languageHint": "Hry, metadata, úspěchy i mezipaměti Steamu se načítají v tomto jazyce. První načtení knihovny začne až po této volbě.",
     "overlayTitle": "Overlay ve hře",
-    "overlayCopy": "Malý panel úspěchů, který nad hrou vyvoláte klávesovou zkratkou - ve výchozím stavu Ctrl+Shift+K.",
+    "overlayCopy": "Stiskněte ve hře {hotkey} a uvidíte nad ní její úspěchy.",
+    "collectionsTitle": "Kolekce",
+    "collectionsCopy": "Seskupujte hry do vlastních kolekcí z nabídky po kliknutí pravým tlačítkem na hru.",
+    "trophyTitle": "Režim trofejí",
+    "trophyCopy": "Hodnoťte úspěchy zlatou, stříbrnou nebo bronzovou podle vzácnosti. Zapnete to v Nastavení.",
+    "clipsTitle": "Videoklipy",
+    "clipsCopy": "Uložte si krátký klip kolem každého odemknutí. Zapnete to v Nastavení v části Oznámení.",
+    "backupTitle": "Záloha profilu",
+    "backupCopy": "Uložte nastavení a volby knihovny do jednoho souboru a po přeinstalaci je obnovte.",
     "profileTitle": "Profil",
     "profileCopy": "Vyberte jméno zobrazené v záhlaví a volitelně nastavte místního avatara.",
     "username": "Zobrazovaný název",
@@ -1205,8 +1255,21 @@
     "avatarPick": "Vyberte fotografii",
     "avatarDefault": "Výchozí",
     "avatarHint": "Volitelné. Uloženo lokálně v tomto počítači.",
-    "foldersTitle": "Přidejte hry z disku",
-    "foldersCopy": "Použijte Chytré hledání k automatickému nalezení složek se savy/konfigurací a herních knihoven. Nebo je přidejte ručně podle typu složky.",
+    "foldersTitle": "Vaše hry",
+    "foldersCopy": "AW Next hledá hry v tomto počítači a ukáže, co našel. Složku přidejte, jen když něco chybí.",
+    "detectTitle": "Nalezeno v tomto počítači",
+    "detectInstalled": "{count} nainstalováno",
+    "detectNone": "Nic nenalezeno",
+    "detectOff": "vypnuto",
+    "detectEmulators": "Savy emulátorů",
+    "detectFolders": "Hry: {games} · Složky: {folders}",
+    "detectTotal": "Nalezeno her: {count}",
+    "detectNothing": "Zatím nebyly nalezeny žádné hry",
+    "detectSteamOff": "Vaše hry ze Steamu zůstanou skryté, dokud Steam nezapnete v části Zdroje.",
+    "detectReviewSources": "Zkontrolovat zdroje",
+    "smartFound": "Nalezeno nových složek: {count}",
+    "smartNone": "Nebyly nalezeny žádné nové složky.",
+    "folderGames": "Nalezeno her v této složce: {count}",
     "addSave": "Přidat složku pro uložení",
     "smartFind": "Chytré hledání",
     "addLibrary": "Přidat složku knihovny",
@@ -1216,12 +1279,22 @@
     "saveList": "Složky se savy/konfigurací",
     "libraryList": "Složky knihovny",
     "emptyList": "Do této relace nebylo nic přidáno.",
-    "settingsTitle": "Doporučená nastavení",
-    "settingsCopy": "To podstatné pro knihovnu, vzhled a oznámení. Vše lze změnit později.",
-    "summarySources": "Aktivované zdroje",
+    "settingsTitle": "Vzhled a upozornění",
+    "settingsCopy": "Vyberte motiv a způsob zobrazení upozornění na odemknutí. Tlačítkem Otestovat oznámení si jedno hned zobrazíte.",
+    "moreOptions": "Další možnosti",
+    "readyTitle": "Vše je připraveno",
+    "readyCopy": "AW Next teď na pozadí sleduje vaše hry a dá vám vědět, když něco odemknete.",
+    "featuresTitle": "Dobré vědět",
+    "summarySources": "Zapnuté zdroje: {count}",
+    "summaryAccounts": "Přihlášeno: {names}",
+    "summaryGames": "Nalezeno her: {count} · Sledované složky: {folders}",
+    "summaryNoGames": "Zatím nebyly nalezeny žádné hry. Složky můžete přidat později v Nastavení.",
+    "summaryLook": "Motiv: {theme} · Oznámení: {notifications}",
+    "summaryChange": "Změnit",
     "summaryReopen": "Tohoto průvodce můžete kdykoli znovu otevřít v Nastavení > Obecné.",
     "sourcesTitle": "Odkud pocházejí vaše úspěchy",
-    "sourcesCopy": "Všechny se čtou na tomto počítači. Co nepoužíváte, nechte vypnuté; vše zůstává upravitelné v Nastavení.",
+    "sourcesCopy": "Každý zdroj nainstalovaný v tomto počítači se čte automaticky, takže výchozí nastavení stačí. Přihlaste se níže, jen pokud chcete víc.",
+    "sourcesMore": "Doladit zdroje (zapnuto: {count})",
     "accountsTitle": "Účty (volitelné)",
     "accountsCopy": "Přihlaste se a získáte odemčení ze soukromého profilu Steam, přidáte hry ze svého Steam Family, importujete svou knihovnu Xbox PC a zobrazíte postup v Epic. Tento krok můžete přeskočit a připojit se později v Nastavení > Zdroj.",
     "sourcesEmulators": "Emulátory",
@@ -1253,6 +1326,8 @@
     "next": "Další",
     "finish": "Dokončit",
     "skip": "Přeskočit",
+    "skipSetup": "Přeskočit nastavení",
+    "saveClose": "Uložit a zavřít",
     "saving": "Ukládání…",
     "saved": "Nastavení bylo uloženo.",
     "languageRequired": "Chcete-li pokračovat, vyberte jazyk.",
@@ -1324,7 +1399,28 @@
     "controllerMove": "Pohyb/rolování"
   },
   "dialogs": {
+    "collections": "Kolekce",
+    "collection-all": "Všechny hry",
+    "collection-new": "Nová kolekce…",
+    "collection-edit": "Upravit kolekci…",
+    "collection-name": "Název kolekce",
+    "collection-default-name": "Nová kolekce",
+    "collection-field-name": "Název",
+    "collection-field-color": "Barva",
+    "collection-field-icon": "Ikona",
+    "collection-field-image": "Obrázek",
+    "collection-choose-image": "Vybrat obrázek…",
+    "collection-remove-image": "Odebrat obrázek",
+    "collection-delete": "Smazat kolekci",
+    "collection-delete-confirm": "Smazat kolekci \"{name}\"? Hry zůstanou ve vaší knihovně.",
+    "collection-limit": "Dosáhli jste limitu {count} kolekcí.",
+    "collection-image-error": "Tento obrázek nelze použít. Vyberte soubor PNG, JPEG, GIF nebo WebP menší než 5 MB.",
     "choose-preset-image": "Vybrat obrázek pozadí",
+    "choose-preset-font": "Vybrat soubor s písmem",
+    "choose-preset-logo": "Vybrat logo",
+    "preset-font-refused": "Tento soubor není použitelné písmo. Použijte soubor TTF, OTF, WOFF nebo WOFF2 o velikosti nejvýše 4 MB.",
+    "preset-logo-refused": "Tento soubor není použitelné logo. Použijte obrázek PNG, JPEG, GIF, WebP nebo BMP o velikosti nejvýše 2 MB.",
+    "preset-layer-note": "Úprava předvolby {preset}. Zaškrtněte část, kterou chcete změnit; co nezaškrtnete, zůstane tak, jak to přibalená předvolba dodává. Vaše změny se vrství navrch: přibalená předvolba se nekopíruje ani nemění.",
     "folder-reason-ea-app": "Toto je vydání pro EA app. Hra spuštěná přes EA app ukládá své úspěchy na účet EA, nikoli do složky hry, takže tu není žádný soubor s odemčeními ke čtení. Tyto úspěchy načítá zdroj EA v Nastavení > Zdroje, ne sledovaná složka.",
     "folder-reason-game-no-data": "Toto je složka hry, neobsahuje však žádnou konfiguraci emulátoru ani soubor s odemčeními ve formátu, který AW Next umí přečíst.",
     "folder-reason-unreadable": "Tuto složku se nepodařilo přečíst.",
@@ -2175,6 +2271,31 @@
     "export-logs-done": "Zapsáno souborů protokolu: {count} - do {path}",
     "export-logs-failed": "Protokoly se nepodařilo exportovat: {error}",
     "zip-archive": "Archiv zip",
+    "profile-backup-file-type": "Záloha profilu AW Next",
+    "profile-backup-export-title": "Exportovat profil",
+    "profile-backup-restore-title": "Obnovit profil",
+    "profile-backup-exporting": "Exportuje se profil… {percent} %",
+    "profile-backup-export-done": "Profil uložen do {path} (souborů: {count}, {size}).",
+    "profile-backup-export-failed": "Profil se nepodařilo exportovat: {error}",
+    "profile-backup-restore-confirm": "Obnovit tento profil?",
+    "profile-backup-restore-confirm-detail": "Záloha obsahuje souborů: {count} ({size}), uloženo {date}. Vaše aktuální nastavení, předvolby, motivy a obaly budou nahrazeny těmi ze zálohy. Nahrazené soubory se ponechají a neúspěšné obnovení se vrátí zpět. AW Next se restartuje, aby změny použil.",
+    "profile-backup-restore-button": "Obnovit a restartovat",
+    "profile-backup-checking": "Kontroluje se záloha… {percent} %",
+    "profile-backup-restarting": "Záloha zkontrolována. Restartuje se kvůli použití…",
+    "profile-backup-restore-failed": "Profil se nepodařilo obnovit: {error}",
+    "profile-backup-applied": "Profil obnoven (souborů: {count}).",
+    "profile-backup-applied-signin": "Přihlášení se do zálohy nikdy neukládají. Přihlaste se znovu k: {accounts}.",
+    "profile-backup-applied-signin-generic": "Přihlášení se do zálohy nikdy neukládají. Přihlaste se znovu ke všem účtům, které jste měli připojené.",
+    "profile-backup-apply-failed": "Profil se nepodařilo obnovit. Vaše předchozí soubory byly vráceny zpět. Podrobnosti: {error}",
+    "profile-backup-account-emulator": "Přihlášení ke Steamu pro nástroje emulátoru",
+    "profile-backup-error-invalid": "Tento soubor není záloha profilu AW Next.",
+    "profile-backup-error-too-new": "Tuto zálohu vytvořila novější verze AW Next. Nejprve aplikaci aktualizujte.",
+    "profile-backup-error-corrupt": "Tato záloha je poškozená nebo byla změněna.",
+    "profile-backup-error-unsafe": "Tato záloha obsahuje soubory, které nelze bezpečně obnovit.",
+    "profile-backup-error-too-large": "Tato záloha je větší, než dokáže AW Next obnovit.",
+    "profile-backup-error-empty": "Zatím není co do zálohy uložit.",
+    "profile-backup-error-busy": "Záloha už probíhá.",
+    "profile-backup-error-inside": "Vyberte umístění mimo datovou složku AW Next.",
     "theme-layer-opacity": "Krytí",
     "chooseAnotherIconTitle": "Vybrat jinou ikonu",
     "chooseAnotherIcon": "Vybrat jinou ikonu…",
@@ -2243,6 +2364,7 @@
     "profile-trophies-share": "{percent} vašich úspěchů",
     "profile-trophies-unranked": "{count} bez známé míry",
     "profile-trophies-at-most": "{percent} nebo méně",
+    "profile-trophies-under": "pod {percent}",
     "profile-trophies-between": "od {from} do {to}",
     "profile-trophies-above": "nad {percent}, nebo neznámé",
     "profile-trophies-platinum-games": "Hry s platinou",

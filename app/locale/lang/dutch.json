@@ -86,16 +86,25 @@
     "runUninstaller": "Verwijderprogramma van de game uitvoeren…",
     "deleteFolder": "Gamemap verwijderen (Prullenbak)…"
   },
+  "windowControls": {
+    "minimize": "Minimaliseren",
+    "maximize": "Maximaliseren",
+    "close": "Sluiten"
+  },
   "settings": {
     "title": "Instellingen",
     "sideMenu": {
       "general": "Algemeen",
       "notification": "Meldingen",
-      "presets": "Presets",
+      "presets": "Meldingspresets",
       "souvenir": "Souvenir",
       "folder": "Mappen",
       "source": "Bronnen",
-      "advanced": "Geavanceerd"
+      "advanced": "Geavanceerd",
+      "groupApp": "App",
+      "groupAlerts": "Meldingen",
+      "groupLibrary": "Bibliotheek",
+      "groupSupport": "Ondersteuning"
     },
     "common": {
       "show": "Tonen",
@@ -108,13 +117,17 @@
       "maintainedBy": "onderhouden door",
       "fork": "Fork",
       "original": "Origineel v1.6.8",
-      "edit": "Bewerken"
+      "edit": "Bewerken",
+      "close": "Sluiten",
+      "unsaved": "Niet-opgeslagen wijzigingen"
     },
     "search": {
       "placeholder": "Instellingen zoeken…",
       "empty": "Geen enkele instelling komt overeen met je zoekopdracht.",
       "ariaLabel": "Instellingen zoeken",
-      "clear": "Wissen"
+      "clear": "Wissen",
+      "advancedMore": "{count} meer in Geavanceerde modus",
+      "advancedShow": "Geavanceerd tonen"
     },
     "watchdog": {
       "startup": {
@@ -143,7 +156,7 @@
       "duration": "Duur van de animatie"
     },
     "general": {
-      "sectionTitle": "Interface en gedrag",
+      "sectionTitle": "Dagelijkse instellingen",
       "language": {
         "name": "Taal",
         "description": "Taal van de interface. Gamegegevens worden in deze taal opgehaald als die beschikbaar is."
@@ -161,7 +174,7 @@
         }
       },
       "hiddenAch": {
-        "name": "Verborgen prestaties",
+        "name": "Verborgen prestaties onthullen",
         "description": "Toon de naam en beschrijving van verborgen prestaties voordat je ze ontgrendelt."
       },
       "mergeDuplicates": {
@@ -264,6 +277,20 @@
         "name": "Trofeeën op het profiel",
         "description": "Toont platina-, goud-, zilver- en bronzen trofeeën onder je naam. Platina is een game op 100%; de andere rangschikken je prestaties op basis van hoeveel spelers ze hebben ontgrendeld."
       },
+      "rarityDisplay": {
+        "name": "Zeldzaamheidsweergave",
+        "description": "Zeldzame niveaus markeren alleen de zeldzaamste prestaties. De trofeeënmodus beoordeelt elke prestatie met goud, zilver of brons op basis van het ontgrendelpercentage en toont platina bij voltooide spellen.",
+        "rare": "Zeldzame niveaus",
+        "trophy": "Trofeeënmodus",
+        "goldBelow": {
+          "name": "Gouden trofee onder",
+          "description": "In de trofeeënmodus krijgen prestaties die door minder spelers zijn behaald dan dit percentage goud."
+        },
+        "silverBelow": {
+          "name": "Zilveren trofee onder",
+          "description": "In de trofeeënmodus krijgen prestaties onder dit percentage zilver; de rest, of die zonder bekend percentage, krijgt brons."
+        }
+      },
       "playButton": {
         "name": "Speelknop tonen",
         "description": "Toont de speelknop op de gametegels. Schakel dit uit als je je games via een ander programma start. De optie Game starten in het rechtsklikmenu blijft beschikbaar."
@@ -302,7 +329,9 @@
           "name": "Game-instellingenknop",
           "description": "Toont de gereedschapsknop rechtsboven op de artwork. De game-instellingen blijven bereikbaar via het rechtsklikmenu."
         }
-      }
+      },
+      "appSectionTitle": "Applicatie",
+      "trophySectionTitle": "Trofeeën en zeldzaamheid"
     },
     "emulator": {
       "nav": "Emulatorreparatie",
@@ -467,13 +496,13 @@
     },
     "notification": {
       "title": {
-        "common": "Algemeen",
+        "common": "Basis",
         "toast": "Windows-melding",
-        "transport": "Meldingskanaal",
+        "transport": "Integraties",
         "chromium": "Chromium-melding",
         "watchdog": "Watchdog",
         "test": "Test",
-        "overlay": "Melding"
+        "overlay": "Pop-up"
       },
       "info": {
         "toast": "Sommige functies werken alleen in Windows 10",
@@ -602,6 +631,7 @@
             "easingOut": "Uitgangscurve",
             "entryDistance": "Afgelegde afstand",
             "fontFamily": "Lettertype",
+            "fontFile": "Lettertypebestand",
             "fontSize": "Tekengrootte",
             "gap": "Tussenruimte",
             "glow": "Gloed",
@@ -613,6 +643,10 @@
             "iconSize": "Grootte pictogram",
             "layout": "Rangschikking",
             "letterSpacing": "Letterafstand",
+            "logoImage": "Logo",
+            "logoOffset": "Afstand van logo tot rand",
+            "logoPosition": "Positie van logo",
+            "logoSize": "Grootte van logo",
             "opacity": "Dekking",
             "padX": "Marge opzij",
             "padY": "Marge boven",
@@ -655,6 +689,10 @@
           "imported": "Geïmporteerd en gekozen:",
           "importedOnly": "Geïmporteerde preset - exporteer of verwijder hem hier; met de schuifregelaars is hij niet te bewerken.",
           "importSan": "SAN-thema importeren",
+          "layer": {
+            "none": "Niet aanpassen",
+            "title": "Een meegeleverde preset aanpassen"
+          },
           "load": "Een preset bewerken",
           "loaded": "Geladen:",
           "name": "Naam",
@@ -700,6 +738,8 @@
             "artwork": "Artwork van de game",
             "back": "Verend",
             "bottom": "Onder",
+            "bottomLeft": "Linksonder",
+            "bottomRight": "Rechtsonder",
             "breathe": "Ademen",
             "center": "Midden",
             "circle": "Cirkel",
@@ -723,6 +763,7 @@
             "linear": "Lineair",
             "lines": "Arcering",
             "mono": "Monospace",
+            "noFont": "Geen lettertypebestand",
             "noImage": "Geen afbeelding",
             "noise": "Ruis",
             "none": "Geen",
@@ -742,6 +783,8 @@
             "text": "Tekstkleur",
             "textOnly": "Alleen tekst",
             "top": "Boven",
+            "topLeft": "Linksboven",
+            "topRight": "Rechtsboven",
             "transparent": "Transparant",
             "uppercase": "HOOFDLETTERS",
             "zoom": "Zoom"
@@ -997,7 +1040,10 @@
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns via de MadnessPatch-mod"
-      }
+      },
+      "groupStores": "Officiële launchers",
+      "groupEmulators": "Emulators en patches",
+      "groupConsoles": "Consoles en retro"
     },
     "help": {
       "nav": "Help",
@@ -1134,7 +1180,11 @@
         "goldbergTitle": "Goldberg / GBE Fork",
         "goldbergDesc": "Scan een gamebibliotheekmap op installaties van Goldberg / GBE Fork en markeer de installaties waarvan het schema steam_settings/achievements.json ontbreekt. Gebruik het rechtsklikmenu van een game (Diagnose / Repareren) om er een te herstellen.",
         "scanFolder": "Een map scannen…",
-        "exportLogs": "Logboeken exporteren (.zip)"
+        "exportLogs": "Logboeken exporteren (.zip)",
+        "profileBackupTitle": "Profielback-up",
+        "profileBackupDesc": "Sla je instellingen, bibliotheekkeuzes, voorinstellingen, thema's, covers en back-ups op in één bestand en haal ze terug na een herinstallatie of op een nieuwe pc. Aanmeldingen worden nooit opgeslagen.",
+        "profileExport": "Profiel exporteren…",
+        "profileRestore": "Profiel herstellen…"
       },
       "blacklistTitle": "Zwarte lijst met AppID's",
       "blacklistButton": "Zwarte lijst resetten",
@@ -1176,28 +1226,28 @@
     "eyebrow": "Eerste installatie",
     "close": "Sluiten",
     "steps": [
-      "Taal",
-      "Hoe het werkt",
-      "Interface",
-      "Account",
+      "Basis",
+      "Profiel",
       "Games",
       "Bronnen",
-      "Instellingen"
+      "Uiterlijk en meldingen",
+      "Klaar"
     ],
-    "languageTitle": "Taal kiezen",
-    "languageCopy": "Games, metagegevens, prestaties en Steam-caches worden vanaf het begin in deze taal geladen.",
+    "welcomeTitle": "Welkom bij AW Next",
+    "welcomeCopy": "Twee snelle keuzes om te beginnen. Alles kan later worden gewijzigd in Instellingen, en je kunt de rest van deze gids op elk moment overslaan.",
     "language": "Taal van de games en de interface",
     "languagePlaceholder": "Kies een taal…",
-    "languageHint": "De bibliotheek wordt pas na deze keuze voor het eerst geladen.",
-    "introTitle": "Hoe het werkt",
-    "scanTitle": "Scannen",
-    "scanCopy": "Locaties van launchers, emulators en prestatiebestanden worden automatisch gevonden - je bekijkt ze stuk voor stuk vóór de eerste scan.",
-    "watchTitle": "Volgen",
-    "watchCopy": "De Watchdog op de achtergrond ziet de game zodra die start, houdt de speeltijd bij en bewaakt zijn prestatiebestanden.",
-    "fixTitle": "Repareren",
-    "fixCopy": "Voor geëmuleerde Steam-games installeert de fix uit het rechtsklikmenu GBE Fork en schrijft hij het prestatieschema en de DLC-gegevens weg.",
+    "languageHint": "Games, metadata, prestaties en Steam-caches worden allemaal in deze taal geladen. De eerste bibliotheeklading begint na deze keuze.",
     "overlayTitle": "In-game overlay",
-    "overlayCopy": "Een klein prestatiepaneel dat je met een sneltoets over de game oproept - standaard Ctrl+Shift+K.",
+    "overlayCopy": "Druk in een game op {hotkey} om de prestaties ervan eroverheen te zien.",
+    "collectionsTitle": "Collecties",
+    "collectionsCopy": "Groepeer games in je eigen collecties via het rechtermuisknopmenu van een game.",
+    "trophyTitle": "Trofeeënmodus",
+    "trophyCopy": "Geef prestaties goud, zilver of brons naar zeldzaamheid. Schakel het in via Instellingen.",
+    "clipsTitle": "Videoclips",
+    "clipsCopy": "Bewaar een korte clip rond elke ontgrendeling. Schakel het in via Instellingen onder Meldingen.",
+    "backupTitle": "Profielback-up",
+    "backupCopy": "Sla je instellingen en bibliotheekkeuzes op in één bestand en herstel ze na een herinstallatie.",
     "profileTitle": "Profiel",
     "profileCopy": "Kies de naam die in de kopbalk komt te staan en stel eventueel een lokale avatar in.",
     "username": "Weergavenaam",
@@ -1205,8 +1255,21 @@
     "avatarPick": "Foto kiezen",
     "avatarDefault": "Standaard",
     "avatarHint": "Optioneel. Wordt lokaal op deze pc bewaard.",
-    "foldersTitle": "Games op schijf toevoegen",
-    "foldersCopy": "Gebruik Slim zoeken om save-/configmappen en gamebibliotheken automatisch te vinden. Of voeg ze handmatig toe per type map.",
+    "foldersTitle": "Je games",
+    "foldersCopy": "AW Next zoekt naar games op deze pc en toont wat het vindt. Voeg alleen een map toe als er iets ontbreekt.",
+    "detectTitle": "Gevonden op deze pc",
+    "detectInstalled": "{count} geïnstalleerd",
+    "detectNone": "Niets gevonden",
+    "detectOff": "uit",
+    "detectEmulators": "Emulatorsaves",
+    "detectFolders": "Games: {games} · Mappen: {folders}",
+    "detectTotal": "Games gevonden: {count}",
+    "detectNothing": "Nog geen games gevonden",
+    "detectSteamOff": "Je Steam-games blijven verborgen tot Steam is ingeschakeld onder Bronnen.",
+    "detectReviewSources": "Bronnen controleren",
+    "smartFound": "Nieuwe mappen gevonden: {count}",
+    "smartNone": "Geen nieuwe mappen gevonden.",
+    "folderGames": "Games gevonden in deze map: {count}",
     "addSave": "Save-/configmap",
     "smartFind": "Slim mappen zoeken",
     "addLibrary": "Map met gamebibliotheek",
@@ -1216,12 +1279,22 @@
     "saveList": "Save- / configmappen",
     "libraryList": "Gamebibliotheken",
     "emptyList": "Deze sessie is er niets toegevoegd.",
-    "settingsTitle": "Aanbevolen instellingen",
-    "settingsCopy": "Het belangrijkste voor je bibliotheek, het uiterlijk en de meldingen. Alles blijft later aanpasbaar.",
-    "summarySources": "Ingeschakelde bronnen",
+    "settingsTitle": "Uiterlijk en meldingen",
+    "settingsCopy": "Kies een thema en hoe ontgrendelmeldingen verschijnen. Gebruik Melding testen om er direct een te zien.",
+    "moreOptions": "Meer opties",
+    "readyTitle": "Alles is klaar",
+    "readyCopy": "AW Next volgt nu je games op de achtergrond en laat het je weten als je iets ontgrendelt.",
+    "featuresTitle": "Goed om te weten",
+    "summarySources": "{count} bronnen ingeschakeld",
+    "summaryAccounts": "Aangemeld: {names}",
+    "summaryGames": "Games gevonden: {count} · Bewaakte mappen: {folders}",
+    "summaryNoGames": "Nog geen games gevonden. Je kunt later mappen toevoegen in Instellingen.",
+    "summaryLook": "Thema: {theme} · Meldingen: {notifications}",
+    "summaryChange": "Wijzigen",
     "summaryReopen": "Je kunt deze gids op elk moment opnieuw openen via Instellingen > Algemeen.",
     "sourcesTitle": "Waar je prestaties vandaan komen",
-    "sourcesCopy": "Elk hiervan wordt op deze pc gelezen. Laat uit wat je niet gebruikt; alles blijft aanpasbaar in Instellingen.",
+    "sourcesCopy": "Elke bron die op deze pc is geïnstalleerd, wordt automatisch gelezen, dus de standaardinstellingen zijn prima. Meld je hieronder alleen aan als je meer wilt.",
+    "sourcesMore": "Bronnen verfijnen ({count} ingeschakeld)",
     "accountsTitle": "Accounts (optioneel)",
     "accountsCopy": "Log in om ontgrendelingen van een privé Steam-profiel te lezen, je Steam Family-games toe te voegen, je Xbox PC-bibliotheek te importeren en je Epic-voortgang te tonen. Je kunt dit overslaan en later verbinding maken in Instellingen > Bronnen.",
     "sourcesEmulators": "Emulators",
@@ -1253,6 +1326,8 @@
     "next": "Volgende",
     "finish": "Voltooien",
     "skip": "Overslaan",
+    "skipSetup": "Installatie overslaan",
+    "saveClose": "Opslaan en sluiten",
     "saving": "Opslaan…",
     "saved": "Installatie opgeslagen.",
     "languageRequired": "Kies een taal om verder te gaan.",
@@ -1324,7 +1399,28 @@
     "controllerMove": "Verplaatsen/scrollen"
   },
   "dialogs": {
+    "collections": "Collecties",
+    "collection-all": "Alle games",
+    "collection-new": "Nieuwe collectie…",
+    "collection-edit": "Collectie bewerken…",
+    "collection-name": "Naam van de collectie",
+    "collection-default-name": "Nieuwe collectie",
+    "collection-field-name": "Naam",
+    "collection-field-color": "Kleur",
+    "collection-field-icon": "Pictogram",
+    "collection-field-image": "Afbeelding",
+    "collection-choose-image": "Afbeelding kiezen…",
+    "collection-remove-image": "Afbeelding verwijderen",
+    "collection-delete": "Collectie verwijderen",
+    "collection-delete-confirm": "De collectie \"{name}\" verwijderen? De games blijven in je bibliotheek.",
+    "collection-limit": "Je hebt de limiet van {count} collecties bereikt.",
+    "collection-image-error": "Deze afbeelding kon niet worden gebruikt. Kies een PNG-, JPEG-, GIF- of WebP-bestand van minder dan 5 MB.",
     "choose-preset-image": "Kies een achtergrondafbeelding",
+    "choose-preset-font": "Kies een lettertypebestand",
+    "choose-preset-logo": "Kies een logo",
+    "preset-font-refused": "Dit bestand is geen bruikbaar lettertype. Gebruik een TTF-, OTF-, WOFF- of WOFF2-bestand van maximaal 4 MB.",
+    "preset-logo-refused": "Dit bestand is geen bruikbaar logo. Gebruik een PNG-, JPEG-, GIF-, WebP- of BMP-afbeelding van maximaal 2 MB.",
+    "preset-layer-note": "{preset} wordt aangepast. Vink een onderdeel aan om het te wijzigen; wat je niet aanvinkt, blijft zoals de meegeleverde preset het levert. Je wijzigingen komen er bovenop: de meegeleverde preset wordt niet gekopieerd of gewijzigd.",
     "folder-reason-ea-app": "Dit is een release van de EA app. Een game die je via de EA app start, bewaart zijn prestaties op het EA-account en niet in de gamemap, dus er valt hier geen ontgrendelbestand te lezen. Die ontgrendelingen worden opgepikt door de EA-bron bij Instellingen > Bronnen en niet door een bewaakte map.",
     "folder-reason-game-no-data": "Dit is een gamemap, maar er staat geen emulatorconfiguratie in en geen ontgrendelbestand in een indeling die AW Next kan lezen.",
     "folder-reason-unreadable": "Deze map kon niet worden gelezen.",
@@ -2175,6 +2271,31 @@
     "export-logs-done": "{count} logbestand(en) geschreven naar {path}",
     "export-logs-failed": "Kon de logboeken niet exporteren: {error}",
     "zip-archive": "Zip-archief",
+    "profile-backup-file-type": "AW Next-profielback-up",
+    "profile-backup-export-title": "Profiel exporteren",
+    "profile-backup-restore-title": "Profiel herstellen",
+    "profile-backup-exporting": "Profiel exporteren… {percent}%",
+    "profile-backup-export-done": "Profiel opgeslagen in {path} ({count} bestanden, {size}).",
+    "profile-backup-export-failed": "Kon het profiel niet exporteren: {error}",
+    "profile-backup-restore-confirm": "Dit profiel herstellen?",
+    "profile-backup-restore-confirm-detail": "De back-up bevat {count} bestanden ({size}), opgeslagen op {date}. Je huidige instellingen, voorinstellingen, thema's en covers worden vervangen door die in de back-up. De vervangen bestanden blijven bewaard en een herstel dat mislukt wordt ongedaan gemaakt. AW Next start opnieuw op om het toe te passen.",
+    "profile-backup-restore-button": "Herstellen en opnieuw starten",
+    "profile-backup-checking": "Back-up controleren… {percent}%",
+    "profile-backup-restarting": "Back-up gecontroleerd. Opnieuw starten om toe te passen…",
+    "profile-backup-restore-failed": "Kon het profiel niet herstellen: {error}",
+    "profile-backup-applied": "Profiel hersteld ({count} bestanden).",
+    "profile-backup-applied-signin": "Aanmeldingen worden nooit in een back-up opgeslagen. Meld je opnieuw aan bij: {accounts}.",
+    "profile-backup-applied-signin-generic": "Aanmeldingen worden nooit in een back-up opgeslagen. Meld je opnieuw aan bij elk account dat je had gekoppeld.",
+    "profile-backup-apply-failed": "Het profiel kon niet worden hersteld. Je vorige bestanden zijn teruggezet. Details: {error}",
+    "profile-backup-account-emulator": "Steam-aanmelding voor de emulatortools",
+    "profile-backup-error-invalid": "Dit bestand is geen AW Next-profielback-up.",
+    "profile-backup-error-too-new": "Deze back-up is gemaakt door een nieuwere versie van AW Next. Werk eerst de app bij.",
+    "profile-backup-error-corrupt": "Deze back-up is beschadigd of is gewijzigd.",
+    "profile-backup-error-unsafe": "Deze back-up bevat bestanden die niet veilig kunnen worden hersteld.",
+    "profile-backup-error-too-large": "Deze back-up is groter dan AW Next kan herstellen.",
+    "profile-backup-error-empty": "Er is nog niets om in een back-up op te nemen.",
+    "profile-backup-error-busy": "Er wordt al een back-up gemaakt.",
+    "profile-backup-error-inside": "Kies een locatie buiten de gegevensmap van AW Next.",
     "theme-layer-opacity": "Dekking",
     "chooseAnotherIconTitle": "Een ander pictogram kiezen",
     "chooseAnotherIcon": "Een ander pictogram kiezen…",
@@ -2243,6 +2364,7 @@
     "profile-trophies-share": "{percent} van je prestaties",
     "profile-trophies-unranked": "{count} zonder bekend percentage",
     "profile-trophies-at-most": "{percent} of minder",
+    "profile-trophies-under": "minder dan {percent}",
     "profile-trophies-between": "{from} tot {to}",
     "profile-trophies-above": "boven {percent}, of onbekend",
     "profile-trophies-platinum-games": "Platina games",

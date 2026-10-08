@@ -83,6 +83,11 @@ const FULL = {
   bgPatternOpacity: 45,
   easingOut: 'elastic',
   stateTint: 30,
+  fontFile: 'Face.woff2',
+  logoImage: 'mark.png',
+  logoPosition: 'bottom-left',
+  logoSize: 48,
+  logoOffset: 14,
 };
 
 test('the reference design covers every property, so nothing new is silently untested', () => {
@@ -184,7 +189,7 @@ test('the generated stylesheet carries every option through to CSS', () => {
   }
 
   // …and the properties resolved through a table rather than written out by the user.
-  assert.match(css, /--font: 'Bahnschrift'/, 'font stack not applied');
+  assert.match(css, /--font: 'AW Custom Font', 'Bahnschrift'/, 'font stack not applied behind the preset font');
   assert.match(css, /--ease: cubic-bezier\(0\.34, 1\.56, 0\.64, 1\)/, 'easing not applied');
   // The offsets are the edge's own distance scaled by the travel distance (60% of -130% = -78%).
   assert.match(css, /--in-dx: -78%; --in-dy: 0%; --in-scale: 1;/, 'entry direction not applied');

@@ -9,7 +9,7 @@ const test = require('node:test');
 
 const root = path.join(__dirname, '..', '..');
 
-test('the final onboarding step keeps its seven non-source choices', () => {
+test('the look-and-alerts step keeps its seven non-source choices', () => {
   const html = fs.readFileSync(path.join(root, 'app', 'view', 'app.html'), 'utf8');
   // Found by its own content, not by a step index: inserting a step ahead of it (the Simple /
   // Advanced choice did exactly that) must not silently point this at a different section.
@@ -24,7 +24,7 @@ test('the final onboarding step keeps its seven non-source choices', () => {
 
 test('onboarding exposes every source switch from Settings', () => {
   const html = fs.readFileSync(path.join(root, 'app', 'view', 'app.html'), 'utf8');
-  const settingsBlock = html.match(/<ul id="options-source">[\s\S]*?<\/ul>/)?.[0] || '';
+  const settingsBlock = (html.match(/<ul id="options-source[^"]*" class="source-list">[\s\S]*?<\/ul>/g) || []).join('\n');
   const settingsSources = [...settingsBlock.matchAll(/id="option_([^"]+)"/g)].map((match) => match[1]).sort();
   const onboardingSources = [...html.matchAll(/id="onboard-src-([^"-]+)"/g)].map((match) => match[1]).sort();
 
@@ -108,7 +108,7 @@ test('streaming scans retain a skeleton tail until the list actually completes',
 
 test('manual game creation is a compact search-adjacent action with explicit optional fields', () => {
   const html = fs.readFileSync(path.join(root, 'app', 'view', 'app.html'), 'utf8');
-  const search = html.match(/<div id="search-bar">[\s\S]*?<\/div>\s*<\/div>/)?.[0] || '';
+  const search = html.match(/<div id="search-bar"[^>]*>[\s\S]*?<\/div>\s*<\/div>/)?.[0] || '';
   assert.match(search, /id="add-game-manually"[\s\S]*?<div class="wrapper">/);
   assert.match(search, /<i class="fas fa-plus"/);
   assert.match(search, /<span class="sr-only">Add game manually<\/span>/);

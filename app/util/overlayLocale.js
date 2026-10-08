@@ -23,7 +23,14 @@ function loadOverlayLocale({ localeDir, lang } = {}) {
   }
   return {
     lang: language,
-    strings: (data && data.overlay) || {},
+    // The masked-description label is shared with the main window, so it is read from there.
+    strings: Object.assign({ hiddenDescription: data && data.hiddenDescriptionPlaceholder }, data && data.overlay),
+    // Grade names for the overlay's trophy mode, from the same dialogs keys the profile uses.
+    trophyLabels: {
+      gold: (data && data.dialogs && data.dialogs['trophy-gold']) || 'Gold',
+      silver: (data && data.dialogs && data.dialogs['trophy-silver']) || 'Silver',
+      bronze: (data && data.dialogs && data.dialogs['trophy-bronze']) || 'Bronze',
+    },
   };
 }
 

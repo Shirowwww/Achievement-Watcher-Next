@@ -169,5 +169,5 @@ test('the toolbar picker and the Settings row switch the view through the same c
   assert.match(settings, /const previousLayout = app\.config\.achievement\.libraryLayout;/);
   assert.match(settings, /window\.applyLibraryView\(app\.config\.achievement\.libraryLayout, previousLayout\)/);
   const collect = settings.slice(settings.indexOf('const previousLayout'), settings.indexOf('window.applyLibraryView'));
-  assert.ok(collect.includes("$('#options-ui .right')"), 'the previous view must be read before the form overwrites it');
+  assert.ok(collect.includes('rightsOf(settingsContainers.GENERAL)'), 'the previous view must be read before the form overwrites it');
 });

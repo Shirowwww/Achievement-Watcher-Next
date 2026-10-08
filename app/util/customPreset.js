@@ -11,6 +11,9 @@ const schema = require('./presetSchema.js');
 const { cssUrl } = require('./cssUrl.js');
 const { PRESET_PROPERTIES, FONT_STACKS, ICON_SHAPES, BG_PATTERNS, BG_PATTERN_SIZES, MOTION_OFFSETS, EASINGS, normalizeOptions, cssValue } = schema;
 
+// The family name @font-face gives the preset's own font file.
+const CUSTOM_FONT_FAMILY = 'AW Custom Font';
+
 /*
   The one inline script every generated preset carries, identical in all of them - the design is
   entirely in the generated stylesheet. This lets the designer preview a draft with this same
@@ -42,6 +45,13 @@ const PRESET_ENGINE = [
   "    var type = String((data && data.notificationType) || '').toLowerCase();",
   "    if ((data && data.isPlatinum) || type === 'platinum') { root.classList.add('state-platinum'); return; }",
   "    if (type === 'progress' || type === 'playtime') return;",
+  '    // The host names the tier (rare tiers or trophy grades); the percentage is the fallback for a',
+  '    // host that does not send one, such as the designer preview.',
+  '    var tier = data && data.rarityTier;',
+  "    if (typeof tier === 'string') {",
+  "      if (tier === 'gold' || tier === 'silver' || tier === 'bronze') root.classList.add('state-rare', 'tier-' + tier);",
+  '      return;',
+  '    }',
   '    // An ordinary unlock carries rarityPercent null, and Number(null) is 0 - which would make',
   '    // every notification the rarest tier there is. Absence has to be checked before the number.',
   '    var raw = data && data.rarityPercent;',
@@ -256,7 +266,8 @@ const PREVIEW_HOLD_MS = 3600000;
 // What view/app.html must allow for the designer's preview frame to run at all.
 const PREVIEW_SCRIPT_HASHES = [inlineScriptHash(PRESET_PREVIEW_BRIDGE), inlineScriptHash(PRESET_ENGINE)];
 
-function buildPresetPreviewHtml(options, { hold = true, assetUrl } = {}) {
+// `css` replaces the generated stylesheet: the designer previews a layer over a bundled preset's own.
+function buildPresetPreviewHtml(options, { hold = true, assetUrl, css } = {}) {
   const values = normalizeOptions(options);
   return [
     '<!DOCTYPE html>',
@@ -264,7 +275,7 @@ function buildPresetPreviewHtml(options, { hold = true, assetUrl } = {}) {
     '<meta charset="UTF-8" />',
     `<meta name="duration" content="${hold ? PREVIEW_HOLD_MS : values.duration}" />`,
     '<style id="aw-preview-css">',
-    buildCustomPresetCss(values, { assetUrl }),
+    css != null ? css : buildCustomPresetCss(values, { assetUrl }),
     '</style>',
     inlineScript(PRESET_PREVIEW_BRIDGE),
     '</head><body>',
@@ -296,7 +307,9 @@ function rootVariables(values, assetUrl) {
   };
   const motionIn = MOTION_OFFSETS[values.animIn];
   const motionOut = MOTION_OFFSETS[values.animOut];
-  lines.push(`  --font: ${FONT_STACKS[values.fontFamily]};`);
+  // The user's own font goes first; the chosen stack stays behind it for the instant before the file
+  // loads and for a preset whose file went missing.
+  lines.push(`  --font: ${values.fontFile ? `'${CUSTOM_FONT_FAMILY}', ` : ''}${FONT_STACKS[values.fontFamily]};`);
   lines.push(`  --ease: ${EASINGS[values.easing]};`);
   // `same` is the exit the preset always had, written out rather than left implicit so one variable
   // drives the animation whichever way it is set.
@@ -391,6 +404,67 @@ const GLOW_ANIMATIONS = {
   breathe: { name: 'aw_glow_breathe', css: '@keyframes aw_glow_breathe { 0%, 100% { --glow-pulse: 0.55; } 50% { --glow-pulse: 1; } }', duration: 4200 },
 };
 
+// Commas that separate layers, not the ones inside a gradient's own parentheses.
+function splitLayers(list) {
+  const parts = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < list.length; i += 1) {
+    if (list[i] === '(') depth += 1;
+    else if (list[i] === ')') depth -= 1;
+    else if (list[i] === ',' && depth === 0) {
+      parts.push(list.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  parts.push(list.slice(start).trim());
+  return parts;
+}
+
+// background-position for a logo anchored to a corner or the middle of a side, `offset` px from it.
+function logoPositionCss(position, offset) {
+  const [first, second] = String(position).split('-');
+  const edge = (side) => `${side} ${offset}px`;
+  if (!second) {
+    if (first === 'left' || first === 'right') return `${edge(first)} center`;
+    return `center ${edge(first)}`;
+  }
+  return `${edge(second)} ${edge(first)}`;
+}
+
+/*
+  The logo shares the card's one `::after` layer with the texture, as the top background layer of
+  that pseudo-element: it sits under the text, over the picture, and needs no element of its own.
+*/
+function logoLayerRule(values, assetUrl, withPattern) {
+  const images = [cssUrl(assetUrl ? assetUrl(values.logoImage) : values.logoImage)];
+  const sizes = [`auto ${values.logoSize}px`];
+  const positions = [logoPositionCss(values.logoPosition, values.logoOffset)];
+  const repeats = ['no-repeat'];
+  if (withPattern) {
+    const layers = splitLayers(BG_PATTERNS[values.bgPattern]);
+    const tiles = String(BG_PATTERN_SIZES[values.bgPattern] || 'auto').split(',').map((tile) => tile.trim());
+    layers.forEach((layer, index) => {
+      images.push(layer);
+      sizes.push(tiles[index] || tiles[0]);
+      positions.push('0 0');
+      repeats.push('repeat');
+    });
+  }
+  return (
+    `.ach::after { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; pointer-events: none; ` +
+    `background-image: ${images.join(', ')}; background-repeat: ${repeats.join(', ')}; ` +
+    `background-position: ${positions.join(', ')}; background-size: ${sizes.join(', ')}; }`
+  );
+}
+
+// The user's font file, loaded by name from beside the stylesheet (or from a data URI in the preview).
+function fontFaceRule(values, assetUrl) {
+  if (!values.fontFile) return '';
+  const url = cssUrl(assetUrl ? assetUrl(values.fontFile) : values.fontFile);
+  return `@font-face { font-family: '${CUSTOM_FONT_FAMILY}'; src: ${url} format('${schema.fontFormat(values.fontFile)}'); font-display: block; }`;
+}
+
 function buildCustomPresetCss(options, { assetUrl } = {}) {
   const values = normalizeOptions(options);
   const flexAlign = FLEX_ALIGN[values.align];
@@ -401,6 +475,7 @@ function buildCustomPresetCss(options, { assetUrl } = {}) {
 
   const css = [
     '@property --glow-pulse { syntax: "<number>"; inherits: false; initial-value: 1; }',
+    fontFaceRule(values, assetUrl),
     ':root {',
     ...rootVariables(values, assetUrl),
     '}',
@@ -424,7 +499,7 @@ function buildCustomPresetCss(options, { assetUrl } = {}) {
     backgroundRule(values),
     ...borderRules(values),
     ...layoutRules(values),
-    picture || pattern ? '  overflow: hidden;' : '',
+    picture || pattern || values.logoImage ? '  overflow: hidden;' : '',
     '  box-shadow: 0 4px 12px rgba(0, 0, 0, var(--shadow)), 0 0 calc(var(--glow-strength) * var(--glow-pulse) * ' + GLOW_RADIUS_PX + 'px) color-mix(in srgb, var(--accent) 65%, transparent);',
     '}',
     '.ach.state-rare { --accent: var(--rare-accent); --glow-strength: var(--rare-glow); }',
@@ -449,7 +524,10 @@ function buildCustomPresetCss(options, { assetUrl } = {}) {
     );
   }
 
-  if (pattern) {
+  const logo = Boolean(values.logoImage);
+  if (logo) {
+    css.push(logoLayerRule(values, assetUrl, pattern));
+  } else if (pattern) {
     // Its own layer above the background and any picture, and below the text.
     const size = BG_PATTERN_SIZES[values.bgPattern];
     css.push(
@@ -461,7 +539,7 @@ function buildCustomPresetCss(options, { assetUrl } = {}) {
 
   // An absolutely positioned pseudo-element paints above in-flow content, so once the card has a
   // layer, the text needs its own stacking position or the picture/pattern draw over it.
-  if (picture || pattern) css.push('.ach > * { position: relative; z-index: 1; }');
+  if (picture || pattern || logo) css.push('.ach > * { position: relative; z-index: 1; }');
 
   css.push(
     ...iconRules(values),
@@ -565,6 +643,7 @@ module.exports = {
   PRESET_OPTIONS_FILE,
   PRESET_PACKAGE_FILE,
   PRESET_ENGINE,
+  CUSTOM_FONT_FAMILY,
   PRESET_MARKUP,
   PREVIEW_SCRIPT_HASHES,
   // Kept under its original name: init.js and the package format both clamp through it, and an

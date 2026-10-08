@@ -124,6 +124,11 @@
 
         function applyRarityTier(rootEl, value) {
           rootEl?.classList.remove("rarity-gold", "rarity-silver", "rarity-bronze");
+          // The host names the tier; the percentage is only the fallback for an older host.
+          if (value === "gold" || value === "silver" || value === "bronze") {
+            rootEl.classList.add("rarity-" + value);
+            return;
+          }
           if (value == null || value === "") return;
           const percent = Number(value);
           if (!Number.isFinite(percent) || percent < 0 || percent > 15) return;
@@ -417,7 +422,7 @@
           descEl.textContent = descText;
           descEl.style.display = descText ? "block" : "none";
           applyScale(payload?.scale);
-          applyRarityTier(shell, payload?.rarityPercent);
+          applyRarityTier(shell, payload?.rarityTier ?? payload?.rarityPercent);
           applyProgress(payload);
 
           preloadIcon(iconSrc).then((readySrc) => {

@@ -112,7 +112,7 @@ test('an imported preset is listed and deletable, not an orphan in the preset fo
   const init = mainProcessSource();
   // A hand-authored preset installed from a package (no builder options file) must still be
   // visible in the picker and deletable, not just presets carrying builder options.
-  assert.match(init, /const PRESET_MARKERS = \[PRESET_OPTIONS_FILE, customPreset\.PRESET_PACKAGE_FILE\];/);
+  assert.match(init, /const PRESET_MARKERS = \[PRESET_OPTIONS_FILE, customPreset\.PRESET_PACKAGE_FILE, presetLayer\.LAYER_FILE\];/);
 
   const list = /ipcMain\.handle\('list-custom-presets'[\s\S]*?\n\}\);/.exec(init);
   assert.ok(list && /managedPresetMarker\(name\)/.test(list[0]), 'the picker does not list imported presets');
@@ -135,7 +135,7 @@ test('an imported preset does not load meaningless slider values or arm an overw
   const settings = read('ui', 'settings.js');
   assert.match(settings, /if \(opts\.editable === false\) \{/, 'the builder still loads defaults over an imported preset');
   // The name field is cleared, so Create makes a new preset instead of replacing the artwork.
-  assert.match(settings, /if \(opts\.editable === false\) \{\s*\$\('#pd-name'\)\.val\(''\);/);
+  assert.match(settings, /if \(opts\.editable === false\) \{\s*exitLayerMode\(\);\s*\$\('#pd-name'\)\.val\(''\);/);
   assert.match(settings, /attr\('data-imported-only'\)/, 'nothing explains why the controls did not move');
 
   const english = JSON.parse(read('locale', 'lang', 'english.json'));
@@ -214,7 +214,7 @@ test('the builder never offers to "Update" a preset it cannot rebuild', () => {
   const init = mainProcessSource();
   const list = /ipcMain\.handle\('list-custom-presets'[\s\S]*?\n\}\);/.exec(init);
   // Both markers make a preset manageable, but only the builder's options file makes it editable.
-  assert.match(list[0], /editable: managedPresetMarker\(name\) === PRESET_OPTIONS_FILE/);
+  assert.match(list[0], /editable: marker === PRESET_OPTIONS_FILE \|\| marker === presetLayer\.LAYER_FILE/);
 
   const settings = read('ui', 'settings.js');
   assert.match(settings, /const known = Boolean\(name\) && isEditablePreset\(name\);/, 'Update is still offered for an imported preset');

@@ -78,10 +78,13 @@ function applyRarity(entries) {
   try {
     const remote = require('@electron/remote');
     const path = require('path');
-    rarityTier = require(path.join(remote.app.getAppPath(), 'util/overlayUi.js')).rarityTier;
+    rarityTier = require(path.join(remote.app.getAppPath(), 'util/rarityTiers.js')).tierFor;
   } catch {
     return; // rarity is a non-essential enrichment
   }
+  const grading = typeof window.rarityGrading === 'function' ? window.rarityGrading() : { mode: 'rare' };
+  const trophyMode = grading.mode === 'trophy';
+  const grades = trophyMode && typeof window.trophyLabels === 'function' ? window.trophyLabels() : {};
   const rowsByName = indexAchievementRows($);
   const lang = String((window.app && window.app.config && window.app.config.achievement && window.app.config.achievement.lang) || 'english');
   for (const { name, percent: raw } of entries) {
@@ -91,18 +94,18 @@ function applyRarity(entries) {
     const elem = $(rowsByName.get(String(name)) || []);
     // Shown with the language's own decimal separator and percent placement; sorting reads the raw
     // number from the attribute, because parseFloat cannot read "84,5".
-    elem
-      .find('.stats .community span.data')
-      .attr('data-percent', percent)
-      .text(formatRarityPercent(percent, lang));
+    const figure = elem.find('.stats .community span.data');
+    figure.attr('data-percent', percent).text(formatRarityPercent(percent, lang));
 
-    const tier = rarityTier(percent);
-    if (tier) {
-      elem.addClass('rare');
-      elem.removeClass('rarity-gold rarity-silver rarity-bronze');
-      elem.addClass('rarity-' + tier);
-    } else {
-      elem.removeClass('rare rarity-gold rarity-silver rarity-bronze');
+    const tier = rarityTier(percent, grading.mode, grading.thresholds);
+    elem.removeClass('rare trophy-grade rarity-gold rarity-silver rarity-bronze');
+    figure.removeAttr('data-grade');
+    if (!tier) continue;
+    if (!trophyMode || tier === 'gold') elem.addClass('rare');
+    elem.addClass('rarity-' + tier);
+    if (trophyMode) {
+      elem.addClass('trophy-grade');
+      figure.attr('data-grade', grades[tier] || tier);
     }
   }
   $('.achievement-list > .header .sort-ach .sort.percentage').addClass('show');
@@ -300,6 +303,7 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
         list.slideDown(speed);
         elem.addClass('active');
       }
+      self.attr('aria-expanded', String(elem.hasClass('active')));
       setTimeout(() => {
         self.css('pointer-events', 'initial');
         // Folding a section moves everything below it, so re-pick the halos once it has settled.

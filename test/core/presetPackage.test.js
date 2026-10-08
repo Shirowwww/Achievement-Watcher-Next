@@ -37,7 +37,7 @@ function writeSourcePreset(dir, { options = null } = {}) {
   fs.writeFileSync(path.join(dir, 'index.html'), INDEX_HTML, 'utf8');
   fs.writeFileSync(path.join(dir, 'style.css'), '.ach { color: #fff; }', 'utf8');
   fs.writeFileSync(path.join(dir, 'icon.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47, 1, 2, 3]));
-  fs.writeFileSync(path.join(dir, 'fonts', 'face.ttf'), Buffer.from([0, 1, 0, 0, 9]));
+  fs.writeFileSync(path.join(dir, 'fonts', 'face.ttf'), Buffer.concat([Buffer.from([0, 1, 0, 0]), Buffer.alloc(16, 9)]));
   if (options) fs.writeFileSync(path.join(dir, 'aw-preset.json'), JSON.stringify(options), 'utf8');
   return dir;
 }

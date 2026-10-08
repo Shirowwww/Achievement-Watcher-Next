@@ -97,8 +97,8 @@ test('section keys are unique, so two cards never share one open/closed state', 
 });
 
 test('anything collapsed by default is a section that actually exists', () => {
-  // Empty since the preset designer moved to a tab of its own - but a name left here that no longer
-  // matches a card would silently collapse nothing, so the list is still checked against the markup.
+  // A name that no longer matches a card would silently collapse nothing, so the list is checked
+  // against the markup.
   const keys = new Set(allSections().map(keyOf));
   for (const key of sectionRules.DEFAULT_COLLAPSED) {
     assert.ok(keys.has(key), `"${key}" is collapsed by default but is not a section key`);
@@ -126,4 +126,35 @@ test('the collapse never depends on wrapping or reordering the panel', () => {
     assert.ok(!wiring.includes(forbidden), `section wiring must not use ${forbidden} - i18n binds labels positionally`);
   }
   assert.ok(wiring.includes("addClass('settings-section')"), 'sections must be marked with a class, not restructured');
+});
+
+test('a fresh profile starts with the rarely-used sections folded', () => {
+  const { keys, changed } = sectionRules.resolveCollapsed(null, null);
+  assert.deepEqual([...keys].sort(), [...sectionRules.DEFAULT_COLLAPSED].sort());
+  assert.equal(changed, false, 'nothing is stored until the user toggles a section');
+});
+
+test('a profile that stored its own state keeps it and gains the new defaults once', () => {
+  const first = sectionRules.resolveCollapsed(['help-quick-list'], null);
+  assert.ok(first.keys.has('help-quick-list'), 'the user choice survives');
+  for (const key of sectionRules.DEFAULT_COLLAPSED) assert.ok(first.keys.has(key), `${key} is added`);
+  assert.equal(first.changed, true);
+
+  // Written back with the current version, a section the user reopened stays open.
+  const reopened = [...first.keys].filter((key) => key !== 'options-notify-clip');
+  const second = sectionRules.resolveCollapsed(reopened, first.version);
+  assert.equal(second.keys.has('options-notify-clip'), false);
+  assert.equal(second.changed, false);
+});
+
+test('sections other screens jump to are never folded by default', () => {
+  // app.js scrolls to #force-achievement-recheck and opens the Folders tab on an empty library.
+  const keyByCard = new Map(allSections().map((entry) => [entry.card, keyOf(entry)]));
+  for (const id of ['force-achievement-recheck', 'dirlist']) {
+    const el = settings.querySelector(`#${id}`);
+    assert.ok(el, `#${id} should exist`);
+    for (let node = el; node && node !== settings; node = node.parentNode) {
+      if (keyByCard.has(node)) assert.ok(!sectionRules.DEFAULT_COLLAPSED.includes(keyByCard.get(node)), `${id} sits in a section that starts folded`);
+    }
+  }
 });

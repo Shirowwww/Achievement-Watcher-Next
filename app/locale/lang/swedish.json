@@ -86,16 +86,25 @@
     "runUninstaller": "Kör spelets avinstallationsprogram…",
     "deleteFolder": "Ta bort spelmappen (papperskorgen)…"
   },
+  "windowControls": {
+    "minimize": "Minimera",
+    "maximize": "Maximera",
+    "close": "Stäng"
+  },
   "settings": {
     "title": "Inställningar",
     "sideMenu": {
       "general": "Allmänt",
       "notification": "Aviseringar",
-      "presets": "Förinställningar",
+      "presets": "Aviseringsförinställningar",
       "souvenir": "Souvenir",
       "folder": "Mappar",
       "source": "Källor",
-      "advanced": "Avancerat"
+      "advanced": "Avancerat",
+      "groupApp": "App",
+      "groupAlerts": "Aviseringar",
+      "groupLibrary": "Bibliotek",
+      "groupSupport": "Support"
     },
     "common": {
       "show": "Visa",
@@ -108,13 +117,17 @@
       "maintainedBy": "underhålls av",
       "fork": "Fork",
       "original": "Original v1.6.8",
-      "edit": "Redigera"
+      "edit": "Redigera",
+      "close": "Stäng",
+      "unsaved": "Osparade ändringar"
     },
     "search": {
       "placeholder": "Sök inställningar…",
       "empty": "Ingen inställning matchar din sökning.",
       "ariaLabel": "Sök inställningar",
-      "clear": "Rensa"
+      "clear": "Rensa",
+      "advancedMore": "{count} till i Avancerat läge",
+      "advancedShow": "Visa Avancerat"
     },
     "watchdog": {
       "startup": {
@@ -143,7 +156,7 @@
       "duration": "Animeringslängd"
     },
     "general": {
-      "sectionTitle": "Gränssnitt och beteende",
+      "sectionTitle": "Vardagsinställningar",
       "language": {
         "name": "Språk",
         "description": "Gränssnittets språk. Speldata hämtas på det här språket när det finns tillgängligt."
@@ -161,7 +174,7 @@
         }
       },
       "hiddenAch": {
-        "name": "Dolda prestationer",
+        "name": "Visa dolda prestationer",
         "description": "Visa namn och beskrivning för dolda prestationer innan du låser upp dem."
       },
       "mergeDuplicates": {
@@ -264,6 +277,20 @@
         "name": "Troféer på profilen",
         "description": "Visar platina-, guld-, silver- och bronströféer under ditt namn. Platina är ett spel klarat till 100%; de andra rangordnar dina prestationer efter hur många spelare som har låst upp dem."
       },
+      "rarityDisplay": {
+        "name": "Visning av sällsynthet",
+        "description": "Sällsynta nivåer markerar bara de sällsyntaste prestationerna. Trofeläget ger varje prestation guld, silver eller brons efter upplåsningsandel och visar platina på avklarade spel.",
+        "rare": "Sällsynta nivåer",
+        "trophy": "Trofeläge",
+        "goldBelow": {
+          "name": "Guldtrofé under",
+          "description": "I trofeläge får prestationer som färre spelare har låst upp än denna andel guld."
+        },
+        "silverBelow": {
+          "name": "Silvertrofé under",
+          "description": "I trofeläge får prestationer under denna andel silver; resten, eller de utan känd andel, får brons."
+        }
+      },
       "playButton": {
         "name": "Visa Spela-knappen",
         "description": "Visar Spela-knappen på spelrutorna. Stäng av den om du startar dina spel från ett annat program. Alternativet Starta spel i högerklicksmenyn finns kvar."
@@ -302,7 +329,9 @@
           "name": "Knapp för spelinställningar",
           "description": "Visar verktygsknappen uppe till höger på grafiken. Spelets inställningar går fortfarande att nå via högerklicksmenyn."
         }
-      }
+      },
+      "appSectionTitle": "Program",
+      "trophySectionTitle": "Troféer och sällsynthet"
     },
     "emulator": {
       "nav": "Emulatorreparation",
@@ -467,13 +496,13 @@
     },
     "notification": {
       "title": {
-        "common": "Allmänt",
+        "common": "Grunder",
         "toast": "Windows-avisering",
-        "transport": "Leveranssätt",
+        "transport": "Integrationer",
         "chromium": "Chromium-avisering",
         "watchdog": "Watchdog",
         "test": "Test",
-        "overlay": "Avisering"
+        "overlay": "Popup"
       },
       "info": {
         "toast": "Vissa funktioner finns bara i Windows 10",
@@ -602,6 +631,7 @@
             "easingOut": "Utgångskurva",
             "entryDistance": "Rörelsesträcka",
             "fontFamily": "Typsnitt",
+            "fontFile": "Typsnittsfil",
             "fontSize": "Textstorlek",
             "gap": "Mellanrum",
             "glow": "Sken",
@@ -613,6 +643,10 @@
             "iconSize": "Ikonstorlek",
             "layout": "Placering",
             "letterSpacing": "Teckenavstånd",
+            "logoImage": "Logotyp",
+            "logoOffset": "Logotypens avstånd från kanten",
+            "logoPosition": "Logotypens placering",
+            "logoSize": "Logotypens storlek",
             "opacity": "Genomskinlighet",
             "padX": "Marginal i sidled",
             "padY": "Marginal upptill",
@@ -655,6 +689,10 @@
           "imported": "Importerad och vald:",
           "importedOnly": "Importerad förinställning - du kan exportera eller ta bort den här; den går inte att redigera med reglagen.",
           "importSan": "Importera SAN-tema",
+          "layer": {
+            "none": "Anpassar inte",
+            "title": "Anpassa en medföljande förinställning"
+          },
           "load": "Redigera en förinställning",
           "loaded": "Inläst:",
           "name": "Namn",
@@ -700,6 +738,8 @@
             "artwork": "Spelets bild",
             "back": "Fjädrande",
             "bottom": "Nedtill",
+            "bottomLeft": "Nere till vänster",
+            "bottomRight": "Nere till höger",
             "breathe": "Andning",
             "center": "Mitten",
             "circle": "Cirkel",
@@ -723,6 +763,7 @@
             "linear": "Linjär",
             "lines": "Skraffering",
             "mono": "Fast breddsteg",
+            "noFont": "Ingen typsnittsfil",
             "noImage": "Ingen bild",
             "noise": "Korn",
             "none": "Ingen",
@@ -742,6 +783,8 @@
             "text": "Textfärg",
             "textOnly": "Endast text",
             "top": "Överst",
+            "topLeft": "Uppe till vänster",
+            "topRight": "Uppe till höger",
             "transparent": "Genomskinlig",
             "uppercase": "VERSALER",
             "zoom": "Zoom"
@@ -997,7 +1040,10 @@
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns via MadnessPatch-modden"
-      }
+      },
+      "groupStores": "Officiella launchers",
+      "groupEmulators": "Emulatorer och patchar",
+      "groupConsoles": "Konsoller och retro"
     },
     "help": {
       "nav": "Hjälp",
@@ -1134,7 +1180,11 @@
         "goldbergTitle": "Goldberg / GBE Fork",
         "goldbergDesc": "Genomsök en biblioteksmapp efter installationer av Goldberg / GBE Fork och märk ut dem som saknar sitt schema i steam_settings/achievements.json. Använd ett spels högerklicksmeny (Diagnostisera / Reparera) för att åtgärda ett enskilt spel.",
         "scanFolder": "Genomsök en mapp…",
-        "exportLogs": "Exportera loggar (.zip)"
+        "exportLogs": "Exportera loggar (.zip)",
+        "profileBackupTitle": "Profilbackup",
+        "profileBackupDesc": "Spara dina inställningar, biblioteksval, förinställningar, teman, omslag och backuper i en enda fil och återställ dem efter en ominstallation eller på en ny dator. Inloggningar sparas aldrig.",
+        "profileExport": "Exportera profil…",
+        "profileRestore": "Återställ profil…"
       },
       "blacklistTitle": "Svartlista över AppID",
       "blacklistButton": "Återställ svartlistan",
@@ -1176,28 +1226,28 @@
     "eyebrow": "Första uppsättningen",
     "close": "Stäng",
     "steps": [
-      "Språk",
-      "Så fungerar det",
-      "Gränssnitt",
-      "Konto",
+      "Grunder",
+      "Profil",
       "Spel",
       "Källor",
-      "Inställningar"
+      "Utseende och aviseringar",
+      "Klart"
     ],
-    "languageTitle": "Välj språk",
-    "languageCopy": "Spel, metadata, prestationer och Steam-cacheminnen läses in på det här språket redan från början.",
+    "welcomeTitle": "Välkommen till AW Next",
+    "welcomeCopy": "Två snabba val för att komma igång. Allt kan ändras senare i Inställningar, och du kan hoppa över resten av guiden när som helst.",
     "language": "Språk för spel och gränssnitt",
     "languagePlaceholder": "Välj ett språk…",
-    "languageHint": "Biblioteket läses in första gången först efter det här valet.",
-    "introTitle": "Så fungerar det",
-    "scanTitle": "Genomsökning",
-    "scanCopy": "Platser för spelklienter, emulatorer och prestationsfiler hittas automatiskt - du går igenom var och en före den första genomsökningen.",
-    "watchTitle": "Bevakning",
-    "watchCopy": "Watchdog i bakgrunden märker när spelet startar, räknar speltiden och bevakar spelets prestationsfiler.",
-    "fixTitle": "Reparation",
-    "fixCopy": "För emulerade Steam-spel installerar fixen i högerklicksmenyn GBE Fork och skriver prestationsschemat och DLC-data.",
+    "languageHint": "Spel, metadata, prestationer och Steam-cacher läses alla in på det här språket. Biblioteket läses in första gången efter det här valet.",
     "overlayTitle": "Overlay i spelet",
-    "overlayCopy": "En liten prestationspanel som du tar fram ovanpå spelet med en snabbtangent - Ctrl+Shift+K som standard.",
+    "overlayCopy": "Tryck på {hotkey} i ett spel för att se spelets prestationer ovanpå det.",
+    "collectionsTitle": "Samlingar",
+    "collectionsCopy": "Gruppera spel i dina egna samlingar från ett spels högerklicksmeny.",
+    "trophyTitle": "Trofeläge",
+    "trophyCopy": "Betygsätt prestationer med guld, silver eller brons efter hur sällsynta de är. Slå på det i Inställningar.",
+    "clipsTitle": "Videoklipp",
+    "clipsCopy": "Spara ett kort klipp runt varje upplåsning. Slå på det i Inställningar under Aviseringar.",
+    "backupTitle": "Profilbackup",
+    "backupCopy": "Spara dina inställningar och biblioteksval i en enda fil och återställ dem efter en ominstallation.",
     "profileTitle": "Profil",
     "profileCopy": "Välj namnet som visas i sidhuvudet och lägg gärna till en lokal profilbild.",
     "username": "Visningsnamn",
@@ -1205,8 +1255,21 @@
     "avatarPick": "Välj bild",
     "avatarDefault": "Standard",
     "avatarHint": "Valfritt. Sparas lokalt på den här datorn.",
-    "foldersTitle": "Lägg till spel på hårddisken",
-    "foldersCopy": "Använd Smart sökning för att automatiskt hitta mappar med sparfiler och konfigurationer samt spelbibliotek. Eller lägg till dem manuellt efter mapptyp.",
+    "foldersTitle": "Dina spel",
+    "foldersCopy": "AW Next letar efter spel på den här datorn och visar vad den hittar. Lägg bara till en mapp om något saknas.",
+    "detectTitle": "Hittat på den här datorn",
+    "detectInstalled": "{count} installerade",
+    "detectNone": "Inga hittades",
+    "detectOff": "av",
+    "detectEmulators": "Emulatorsparfiler",
+    "detectFolders": "Spel: {games} · Mappar: {folders}",
+    "detectTotal": "Spel hittades: {count}",
+    "detectNothing": "Inga spel hittades ännu",
+    "detectSteamOff": "Dina Steam-spel förblir dolda tills Steam slås på under Källor.",
+    "detectReviewSources": "Granska källor",
+    "smartFound": "Nya mappar hittades: {count}",
+    "smartNone": "Inga nya mappar hittades.",
+    "folderGames": "Spel hittades i den här mappen: {count}",
     "addSave": "Mapp för sparfiler/konfiguration",
     "smartFind": "Sök mappar smart",
     "addLibrary": "Mapp med spelbibliotek",
@@ -1216,12 +1279,22 @@
     "saveList": "Mappar för sparfiler/konfiguration",
     "libraryList": "Spelbibliotek",
     "emptyList": "Inget har lagts till den här gången.",
-    "settingsTitle": "Rekommenderade inställningar",
-    "settingsCopy": "Det viktigaste för ditt bibliotek, utseendet och aviseringarna. Allt går att ändra senare.",
-    "summarySources": "Aktiverade källor",
+    "settingsTitle": "Utseende och aviseringar",
+    "settingsCopy": "Välj ett tema och hur upplåsningsaviseringar visas. Använd Testa aviseringen för att se en direkt.",
+    "moreOptions": "Fler alternativ",
+    "readyTitle": "Allt är klart",
+    "readyCopy": "AW Next bevakar nu dina spel i bakgrunden och berättar när du låser upp något.",
+    "featuresTitle": "Bra att veta",
+    "summarySources": "{count} källor aktiverade",
+    "summaryAccounts": "Inloggad: {names}",
+    "summaryGames": "Spel hittades: {count} · Bevakade mappar: {folders}",
+    "summaryNoGames": "Inga spel hittades ännu. Du kan lägga till mappar senare i Inställningar.",
+    "summaryLook": "Tema: {theme} · Aviseringar: {notifications}",
+    "summaryChange": "Ändra",
     "summaryReopen": "Du kan öppna den här guiden igen när som helst från Inställningar > Allmänt.",
     "sourcesTitle": "Var dina prestationer kommer ifrån",
-    "sourcesCopy": "Alla läses på den här datorn. Lämna det du inte använder avstängt; allt går fortfarande att ändra i Inställningar.",
+    "sourcesCopy": "Varje källa som är installerad på den här datorn läses automatiskt, så standardvalen är bra. Logga bara in nedan om du vill ha mer.",
+    "sourcesMore": "Finjustera källor ({count} aktiverade)",
     "accountsTitle": "Konton (valfritt)",
     "accountsCopy": "Logga in för att läsa upplåsningar från en privat Steam-profil, lägga till dina spel från Steam Family, importera ditt Xbox PC-bibliotek och visa dina Epic-framsteg. Du kan hoppa över det här och ansluta senare i Inställningar > Källor.",
     "sourcesEmulators": "Emulatorer",
@@ -1253,6 +1326,8 @@
     "next": "Nästa",
     "finish": "Slutför",
     "skip": "Hoppa över",
+    "skipSetup": "Hoppa över konfigurationen",
+    "saveClose": "Spara och stäng",
     "saving": "Sparar…",
     "saved": "Uppsättningen är sparad.",
     "languageRequired": "Välj ett språk för att fortsätta.",
@@ -1324,7 +1399,28 @@
     "controllerMove": "Flytta/rulla"
   },
   "dialogs": {
+    "collections": "Samlingar",
+    "collection-all": "Alla spel",
+    "collection-new": "Ny samling…",
+    "collection-edit": "Redigera samling…",
+    "collection-name": "Samlingens namn",
+    "collection-default-name": "Ny samling",
+    "collection-field-name": "Namn",
+    "collection-field-color": "Färg",
+    "collection-field-icon": "Ikon",
+    "collection-field-image": "Bild",
+    "collection-choose-image": "Välj bild…",
+    "collection-remove-image": "Ta bort bild",
+    "collection-delete": "Ta bort samling",
+    "collection-delete-confirm": "Vill du ta bort samlingen \"{name}\"? Spelen finns kvar i ditt bibliotek.",
+    "collection-limit": "Du har nått gränsen på {count} samlingar.",
+    "collection-image-error": "Den här bilden kunde inte användas. Välj en PNG-, JPEG-, GIF- eller WebP-fil under 5 MB.",
     "choose-preset-image": "Välj en bakgrundsbild",
+    "choose-preset-font": "Välj en typsnittsfil",
+    "choose-preset-logo": "Välj en logotyp",
+    "preset-font-refused": "Den filen är inte ett användbart typsnitt. Använd en TTF-, OTF-, WOFF- eller WOFF2-fil på högst 4 MB.",
+    "preset-logo-refused": "Den filen är inte en användbar logotyp. Använd en PNG-, JPEG-, GIF-, WebP- eller BMP-bild på högst 2 MB.",
+    "preset-layer-note": "Anpassar {preset}. Kryssa i ett avsnitt för att ändra det; allt du inte kryssar i förblir som den medföljande förinställningen levereras. Dina ändringar läggs ovanpå: den medföljande förinställningen kopieras eller ändras inte.",
     "folder-reason-ea-app": "Det här är en utgåva för EA-appen. Ett spel som startas via EA-appen sparar sina prestationer på EA-kontot i stället för i spelmappen, så det finns ingen upplåsningsfil att läsa här. De upplåsningarna hämtas av EA-källan under Inställningar > Källor i stället för av en bevakad mapp.",
     "folder-reason-game-no-data": "Det här är en spelmapp, men den innehåller varken någon emulatorkonfiguration eller någon upplåsningsfil i ett format som AW Next kan läsa.",
     "folder-reason-unreadable": "Den här mappen kunde inte läsas.",
@@ -2175,6 +2271,31 @@
     "export-logs-done": "{count} loggfiler skrevs till {path}",
     "export-logs-failed": "Det gick inte att exportera loggarna: {error}",
     "zip-archive": "Zip-arkiv",
+    "profile-backup-file-type": "AW Next-profilbackup",
+    "profile-backup-export-title": "Exportera profil",
+    "profile-backup-restore-title": "Återställ profil",
+    "profile-backup-exporting": "Exporterar profil… {percent} %",
+    "profile-backup-export-done": "Profilen sparades i {path} ({count} filer, {size}).",
+    "profile-backup-export-failed": "Det gick inte att exportera profilen: {error}",
+    "profile-backup-restore-confirm": "Återställa den här profilen?",
+    "profile-backup-restore-confirm-detail": "Backupen innehåller {count} filer ({size}), sparad {date}. Dina nuvarande inställningar, förinställningar, teman och omslag ersätts av dem i backupen. De ersatta filerna behålls, och en återställning som misslyckas ångras. AW Next startar om för att tillämpa den.",
+    "profile-backup-restore-button": "Återställ och starta om",
+    "profile-backup-checking": "Kontrollerar backupen… {percent} %",
+    "profile-backup-restarting": "Backupen är kontrollerad. Startar om för att tillämpa den…",
+    "profile-backup-restore-failed": "Det gick inte att återställa profilen: {error}",
+    "profile-backup-applied": "Profilen återställdes ({count} filer).",
+    "profile-backup-applied-signin": "Inloggningar sparas aldrig i en backup. Logga in igen på: {accounts}.",
+    "profile-backup-applied-signin-generic": "Inloggningar sparas aldrig i en backup. Logga in igen på alla konton du hade anslutit.",
+    "profile-backup-apply-failed": "Profilen kunde inte återställas. Dina tidigare filer sattes tillbaka. Detaljer: {error}",
+    "profile-backup-account-emulator": "Steam-inloggning för emulatorverktygen",
+    "profile-backup-error-invalid": "Den här filen är inte en AW Next-profilbackup.",
+    "profile-backup-error-too-new": "Den här backupen skapades av en nyare version av AW Next. Uppdatera appen först.",
+    "profile-backup-error-corrupt": "Den här backupen är skadad eller har ändrats.",
+    "profile-backup-error-unsafe": "Den här backupen innehåller filer som inte kan återställas säkert.",
+    "profile-backup-error-too-large": "Den här backupen är större än vad AW Next kan återställa.",
+    "profile-backup-error-empty": "Det finns inget att lägga i en backup än.",
+    "profile-backup-error-busy": "En backup pågår redan.",
+    "profile-backup-error-inside": "Välj en plats utanför AW Next-datamappen.",
     "theme-layer-opacity": "Genomskinlighet",
     "chooseAnotherIconTitle": "Välj en annan ikon",
     "chooseAnotherIcon": "Välj en annan ikon…",
@@ -2243,6 +2364,7 @@
     "profile-trophies-share": "{percent} av dina prestationer",
     "profile-trophies-unranked": "{count} utan känd andel",
     "profile-trophies-at-most": "{percent} eller mindre",
+    "profile-trophies-under": "under {percent}",
     "profile-trophies-between": "{from} till {to}",
     "profile-trophies-above": "över {percent}, eller okänt",
     "profile-trophies-platinum-games": "Platinaspel",

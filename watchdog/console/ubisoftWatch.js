@@ -21,6 +21,12 @@ const SPOOL_ROOT = process.env['LOCALAPPDATA'] ? path.join(process.env['LOCALAPP
 const ACHIEVEMENTS_ROOT = process.env['ProgramData']
   ? path.join(process.env['ProgramData'], 'Ubisoft', 'Ubisoft Game Launcher', 'cache', 'achievements')
   : '';
+// Where an archive can sit: the launcher's own cache, or the copy the app fetched itself.
+const ACHIEVEMENTS_ROOTS = [
+  ACHIEVEMENTS_ROOT,
+  process.env['ProgramFiles(x86)'] ? path.join(process.env['ProgramFiles(x86)'], 'Ubisoft', 'Ubisoft Game Launcher', 'cache', 'achievements') : '',
+  path.join(userDataDir(), 'cache', 'ubisoftAchievements'),
+].filter(Boolean);
 const CONFIGURATIONS_PATH = process.env['LOCALAPPDATA']
   ? path.join(process.env['LOCALAPPDATA'], 'Ubisoft Game Launcher', 'cache', 'configuration', 'configurations')
   : '';
@@ -184,14 +190,15 @@ function parseLocTxt(buffer) {
 // Locale preference: the app language's Ubisoft locale, then en-US, then any.
 function loadSchema(appid, lang) {
   const prefix = `${appid}_`;
-  let candidates = [];
-  try {
-    candidates = fs
-      .readdirSync(ACHIEVEMENTS_ROOT, { withFileTypes: true })
-      .filter((e) => e.isFile() && e.name.startsWith(prefix))
-      .map((e) => path.join(ACHIEVEMENTS_ROOT, e.name));
-  } catch {
-    return null;
+  const candidates = [];
+  for (const root of ACHIEVEMENTS_ROOTS) {
+    try {
+      for (const e of fs.readdirSync(root, { withFileTypes: true })) {
+        if (e.isFile() && e.name.startsWith(prefix)) candidates.push(path.join(root, e.name));
+      }
+    } catch {
+      /* an absent root must not hide the others */
+    }
   }
   if (!candidates.length) return null;
   const archivePath = candidates.sort((a, b) => {

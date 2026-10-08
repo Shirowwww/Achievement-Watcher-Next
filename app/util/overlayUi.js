@@ -6,11 +6,11 @@
 // window.OverlayUi instead of using require).
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
-    module.exports = factory(require('./intlFormat.js'));
+    module.exports = factory(require('./intlFormat.js'), require('./rarityTiers.js'));
   } else {
-    root.OverlayUi = factory(root.IntlFormat);
+    root.OverlayUi = factory(root.IntlFormat, root.RarityTiers);
   }
-})(typeof self !== 'undefined' ? self : this, function (intlFormat) {
+})(typeof self !== 'undefined' ? self : this, function (intlFormat, rarityTiers) {
   'use strict';
 
   const HIDDEN_FALLBACK = 'Hidden';
@@ -99,19 +99,9 @@
     return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : null;
   }
 
-  // Single source of truth for the rarity tiers shared by the game window,
-  // the in-game overlay and the notification presets: an achievement is rare up to
-  // a 15% community unlock rate - gold ≤5%, silver ≤10%, bronze ≤15%. Above that it
-  // is common and gets no tier.
-  function rarityTier(percent) {
-    if (percent === null || percent === undefined || percent === '') return null;
-    const raw = Number(percent);
-    if (!Number.isFinite(raw)) return null;
-    const p = Math.round(raw * 10) / 10;
-    if (p < 0 || p > 15) return null;
-    if (p <= 5) return 'gold';
-    if (p <= 10) return 'silver';
-    return 'bronze';
+  // The cut-offs live in rarityTiers.js; without a mode this is the historic rare-only tiering.
+  function rarityTier(percent, mode, thresholds) {
+    return rarityTiers.tierFor(percent, mode, thresholds);
   }
 
   function sortAchievements(list, sortState, getTitle) {
@@ -150,6 +140,13 @@
     });
   }
 
+  // Same rule as the achievement list in the main window: a hidden achievement that is still
+  // locked keeps its description behind a click unless the user turned "show hidden" on.
+  function isDescriptionMasked(achievement, showHidden) {
+    const a = achievement || {};
+    return a.hidden == 1 && !showHidden && !a.Achieved;
+  }
+
   function buildStats(list) {
     const items = Array.isArray(list) ? list : [];
     const total = items.length;
@@ -173,6 +170,7 @@
     rarityPercent,
     rarityTier,
     sortAchievements,
+    isDescriptionMasked,
     buildStats,
   };
 });

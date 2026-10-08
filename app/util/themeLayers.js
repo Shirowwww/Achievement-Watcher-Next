@@ -100,7 +100,7 @@ const BUILTIN_COLORS = {
     card: '#24283b',
     settings: '#1f2335',
     text: '#c0caf5',
-    muted: '#565f89',
+    muted: '#8790bb',
     border: '#3b4261',
     accent: '#7dcfff',
   },

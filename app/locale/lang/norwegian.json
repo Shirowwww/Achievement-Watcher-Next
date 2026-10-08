@@ -86,16 +86,25 @@
     "runUninstaller": "Kjør spillets avinstallasjonsprogram…",
     "deleteFolder": "Slett spillmappen (papirkurven)…"
   },
+  "windowControls": {
+    "minimize": "Minimer",
+    "maximize": "Maksimer",
+    "close": "Lukk"
+  },
   "settings": {
     "title": "Innstillinger",
     "sideMenu": {
       "general": "Generelt",
       "notification": "Varsler",
-      "presets": "Presets",
+      "presets": "Varselpresets",
       "souvenir": "Suvenir",
       "folder": "Mapper",
       "source": "Kilder",
-      "advanced": "Avansert"
+      "advanced": "Avansert",
+      "groupApp": "App",
+      "groupAlerts": "Varsler",
+      "groupLibrary": "Bibliotek",
+      "groupSupport": "Støtte"
     },
     "common": {
       "show": "Vis",
@@ -108,13 +117,17 @@
       "maintainedBy": "vedlikeholdt av",
       "fork": "Fork",
       "original": "Original v1.6.8",
-      "edit": "Rediger"
+      "edit": "Rediger",
+      "close": "Lukk",
+      "unsaved": "Ulagrede endringer"
     },
     "search": {
       "placeholder": "Søk i innstillinger…",
       "empty": "Ingen innstilling passer med søket ditt.",
       "ariaLabel": "Søk i innstillinger",
-      "clear": "Tøm"
+      "clear": "Tøm",
+      "advancedMore": "{count} til i Avansert modus",
+      "advancedShow": "Vis Avansert"
     },
     "watchdog": {
       "startup": {
@@ -143,7 +156,7 @@
       "duration": "Animasjonslengde"
     },
     "general": {
-      "sectionTitle": "Grensesnitt og oppførsel",
+      "sectionTitle": "Hverdagsinnstillinger",
       "language": {
         "name": "Språk",
         "description": "Språket i grensesnittet. Spilldata hentes på dette språket når det er tilgjengelig."
@@ -161,7 +174,7 @@
         }
       },
       "hiddenAch": {
-        "name": "Skjulte prestasjoner",
+        "name": "Vis skjulte prestasjoner",
         "description": "Vis navn og beskrivelse på skjulte prestasjoner før du låser dem opp."
       },
       "mergeDuplicates": {
@@ -264,6 +277,20 @@
         "name": "Trofeer på profilen",
         "description": "Viser platina-, gull-, sølv- og bronsetrofeer under navnet ditt. Platina er et spill fullført til 100%; de andre rangerer prestasjonene dine etter hvor mange spillere som har låst dem opp."
       },
+      "rarityDisplay": {
+        "name": "Visning av sjeldenhet",
+        "description": "Sjeldne nivåer markerer bare de sjeldneste prestasjonene. Trofémodus gir hver prestasjon gull, sølv eller bronse etter opplåsingsandel og viser platina på fullførte spill.",
+        "rare": "Sjeldne nivåer",
+        "trophy": "Trofémodus",
+        "goldBelow": {
+          "name": "Gulltrofé under",
+          "description": "I trofémodus får prestasjoner som færre spillere har låst opp enn denne andelen, gull."
+        },
+        "silverBelow": {
+          "name": "Sølvtrofé under",
+          "description": "I trofémodus får prestasjoner under denne andelen sølv; resten, eller de uten kjent andel, får bronse."
+        }
+      },
       "playButton": {
         "name": "Vis Spill-knappen",
         "description": "Viser Spill-knappen på spillrutene. Slå den av hvis du starter spillene dine fra et annet program. Valget Start spill i høyreklikkmenyen er fortsatt tilgjengelig."
@@ -302,7 +329,9 @@
           "name": "Spillinnstillingsknapp",
           "description": "Viser verktøyknappen øverst til høyre på grafikken. Spillinnstillinger er fortsatt tilgjengelige fra høyreklikkmenyen."
         }
-      }
+      },
+      "appSectionTitle": "Applikasjon",
+      "trophySectionTitle": "Trofeer og sjeldenhet"
     },
     "emulator": {
       "nav": "Emulatorreparasjon",
@@ -467,13 +496,13 @@
     },
     "notification": {
       "title": {
-        "common": "Felles",
+        "common": "Grunnleggende",
         "toast": "Windows-varsel",
-        "transport": "Leveringsmåte",
+        "transport": "Integrasjoner",
         "chromium": "Chromium-varsel",
         "watchdog": "Watchdog",
         "test": "Test",
-        "overlay": "Varsel"
+        "overlay": "Popup"
       },
       "info": {
         "toast": "Enkelte funksjoner finnes bare i Windows 10",
@@ -602,6 +631,7 @@
             "easingOut": "Utgangskurve",
             "entryDistance": "Bevegelseslengde",
             "fontFamily": "Skrift",
+            "fontFile": "Skriftfil",
             "fontSize": "Skriftstørrelse",
             "gap": "Avstand",
             "glow": "Glød",
@@ -613,6 +643,10 @@
             "iconSize": "Ikonstørrelse",
             "layout": "Oppstilling",
             "letterSpacing": "Tegnavstand",
+            "logoImage": "Logo",
+            "logoOffset": "Logoens avstand fra kanten",
+            "logoPosition": "Logoens plassering",
+            "logoSize": "Logoens størrelse",
             "opacity": "Gjennomsiktighet",
             "padX": "Luft på sidene",
             "padY": "Luft på toppen",
@@ -655,6 +689,10 @@
           "imported": "Importert og valgt:",
           "importedOnly": "Importert preset - du kan eksportere eller slette det her, men ikke redigere det med glidebryterne.",
           "importSan": "Importer SAN-tema",
+          "layer": {
+            "none": "Tilpasser ikke",
+            "title": "Tilpass en medfølgende preset"
+          },
           "load": "Rediger et preset",
           "loaded": "Lastet inn:",
           "name": "Navn",
@@ -700,6 +738,8 @@
             "artwork": "Spillbilde",
             "back": "Fjærende",
             "bottom": "Nede",
+            "bottomLeft": "Nederst til venstre",
+            "bottomRight": "Nederst til høyre",
             "breathe": "Pust",
             "center": "Midtstilt",
             "circle": "Sirkel",
@@ -723,6 +763,7 @@
             "linear": "Lineær",
             "lines": "Skravering",
             "mono": "Fastbredde",
+            "noFont": "Ingen skriftfil",
             "noImage": "Uten bilde",
             "noise": "Korning",
             "none": "Ingen",
@@ -742,6 +783,8 @@
             "text": "Tekstfarge",
             "textOnly": "Bare tekst",
             "top": "Oppe",
+            "topLeft": "Øverst til venstre",
+            "topRight": "Øverst til høyre",
             "transparent": "Gjennomsiktig",
             "uppercase": "STORE BOKSTAVER",
             "zoom": "Zoom"
@@ -997,7 +1040,10 @@
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns via MadnessPatch-modden"
-      }
+      },
+      "groupStores": "Offisielle startprogrammer",
+      "groupEmulators": "Emulatorer og patcher",
+      "groupConsoles": "Konsoller og retro"
     },
     "help": {
       "nav": "Hjelp",
@@ -1134,7 +1180,11 @@
         "goldbergTitle": "Goldberg / GBE Fork",
         "goldbergDesc": "Søk gjennom en bibliotekmappe etter Goldberg- og GBE Fork-installasjoner, og merk dem som mangler skjemaet steam_settings/achievements.json. Bruk høyreklikkmenyen til et spill (Diagnostiser / Reparer) for å fikse ett av dem.",
         "scanFolder": "Søk gjennom en mappe…",
-        "exportLogs": "Eksporter logger (.zip)"
+        "exportLogs": "Eksporter logger (.zip)",
+        "profileBackupTitle": "Profilsikkerhetskopi",
+        "profileBackupDesc": "Lagre innstillingene, bibliotekvalgene, forhåndsinnstillingene, temaene, coverne og sikkerhetskopiene dine i én fil, og få dem tilbake etter en ominstallering eller på en ny PC. Pålogginger lagres aldri.",
+        "profileExport": "Eksporter profil…",
+        "profileRestore": "Gjenopprett profil…"
       },
       "blacklistTitle": "Svarteliste for AppID-er",
       "blacklistButton": "Nullstill svartelisten",
@@ -1176,28 +1226,28 @@
     "eyebrow": "Førstegangsoppsett",
     "close": "Lukk",
     "steps": [
-      "Språk",
-      "Slik virker det",
-      "Grensesnitt",
-      "Konto",
+      "Grunnleggende",
+      "Profil",
       "Spill",
       "Kilder",
-      "Innstillinger"
+      "Utseende og varsler",
+      "Klar"
     ],
-    "languageTitle": "Velg språk",
-    "languageCopy": "Spill, metadata, prestasjoner og Steam-buffere lastes inn på dette språket helt fra starten.",
+    "welcomeTitle": "Velkommen til AW Next",
+    "welcomeCopy": "To raske valg for å komme i gang. Alt kan endres senere i Innstillinger, og du kan hoppe over resten av denne guiden når som helst.",
     "language": "Språk for spill og grensesnitt",
     "languagePlaceholder": "Velg et språk…",
-    "languageHint": "Biblioteket lastes inn første gang først etter dette valget.",
-    "introTitle": "Slik virker det",
-    "scanTitle": "Søk",
-    "scanCopy": "Plasseringen til klienter, emulatorer og prestasjonsfiler finnes automatisk - du ser over hver enkelt før det første søket.",
-    "watchTitle": "Følg med",
-    "watchCopy": "Watchdog i bakgrunnen oppdager spillet når det starter, sporer spilletid og holder øye med prestasjonsfilene.",
-    "fixTitle": "Reparer",
-    "fixCopy": "For emulerte Steam-spill installerer fiksen i høyreklikkmenyen GBE Fork og skriver prestasjonsskjemaet og DLC-dataene.",
+    "languageHint": "Spill, metadata, prestasjoner og Steam-cacher lastes alle inn på dette språket. Biblioteket lastes inn første gang etter dette valget.",
     "overlayTitle": "Overlay i spill",
-    "overlayCopy": "Et lite prestasjonspanel du henter opp over spillet med en hurtigtast - Ctrl+Shift+K som standard.",
+    "overlayCopy": "Trykk {hotkey} i et spill for å se prestasjonene dets over spillet.",
+    "collectionsTitle": "Samlinger",
+    "collectionsCopy": "Grupper spill i dine egne samlinger fra høyreklikkmenyen til et spill.",
+    "trophyTitle": "Trofémodus",
+    "trophyCopy": "Gi prestasjoner gull, sølv eller bronse etter hvor sjeldne de er. Slå det på i Innstillinger.",
+    "clipsTitle": "Videoklipp",
+    "clipsCopy": "Behold et kort klipp rundt hver opplåsing. Slå det på i Innstillinger under Varsler.",
+    "backupTitle": "Profilsikkerhetskopi",
+    "backupCopy": "Lagre innstillingene og bibliotekvalgene dine i én fil, og gjenopprett dem etter en ominstallering.",
     "profileTitle": "Profil",
     "profileCopy": "Velg navnet som vises i topplinjen, og sett eventuelt et lokalt profilbilde.",
     "username": "Visningsnavn",
@@ -1205,8 +1255,21 @@
     "avatarPick": "Velg bilde",
     "avatarDefault": "Standard",
     "avatarHint": "Valgfritt. Lagres lokalt på denne PC-en.",
-    "foldersTitle": "Legg til spill på disken",
-    "foldersCopy": "Bruk Smart søk for å finne mapper med lagringsfiler og oppsett samt spillbibliotek automatisk. Eller legg dem til manuelt etter mappetype.",
+    "foldersTitle": "Spillene dine",
+    "foldersCopy": "AW Next leter etter spill på denne PC-en og viser hva den finner. Legg til en mappe bare hvis noe mangler.",
+    "detectTitle": "Funnet på denne PC-en",
+    "detectInstalled": "{count} installert",
+    "detectNone": "Ingen funnet",
+    "detectOff": "av",
+    "detectEmulators": "Emulatorlagringer",
+    "detectFolders": "Spill: {games} · Mapper: {folders}",
+    "detectTotal": "Spill funnet: {count}",
+    "detectNothing": "Ingen spill funnet ennå",
+    "detectSteamOff": "Steam-spillene dine forblir skjult til Steam er slått på under Kilder.",
+    "detectReviewSources": "Gå gjennom kilder",
+    "smartFound": "Nye mapper funnet: {count}",
+    "smartNone": "Ingen nye mapper funnet.",
+    "folderGames": "Spill funnet i denne mappen: {count}",
     "addSave": "Mappe for lagring/oppsett",
     "smartFind": "Smart søk etter mapper",
     "addLibrary": "Mappe med spillbibliotek",
@@ -1216,12 +1279,22 @@
     "saveList": "Mapper for lagring/oppsett",
     "libraryList": "Spillbibliotek",
     "emptyList": "Ingenting lagt til i denne økten.",
-    "settingsTitle": "Anbefalte innstillinger",
-    "settingsCopy": "Det viktigste for biblioteket, utseendet og varslene dine. Alt kan endres senere.",
-    "summarySources": "Aktiverte kilder",
+    "settingsTitle": "Utseende og varsler",
+    "settingsCopy": "Velg et tema og hvordan opplåsingsvarsler vises. Bruk Testvarsel for å se ett med en gang.",
+    "moreOptions": "Flere valg",
+    "readyTitle": "Alt er klart",
+    "readyCopy": "AW Next følger nå med på spillene dine i bakgrunnen og gir deg beskjed når du låser opp noe.",
+    "featuresTitle": "Greit å vite",
+    "summarySources": "{count} kilder aktivert",
+    "summaryAccounts": "Logget inn: {names}",
+    "summaryGames": "Spill funnet: {count} · Overvåkede mapper: {folders}",
+    "summaryNoGames": "Ingen spill funnet ennå. Du kan legge til mapper senere i Innstillinger.",
+    "summaryLook": "Tema: {theme} · Varsler: {notifications}",
+    "summaryChange": "Endre",
     "summaryReopen": "Du kan når som helst åpne denne guiden igjen fra Innstillinger > Generelt.",
     "sourcesTitle": "Hvor prestasjonene dine kommer fra",
-    "sourcesCopy": "Skru av det du ikke bruker; alt er fortsatt redigerbart i Innstillinger.",
+    "sourcesCopy": "Alle kilder som er installert på denne PC-en, leses automatisk, så standardvalgene fungerer fint. Logg inn nedenfor bare hvis du vil ha mer.",
+    "sourcesMore": "Finjuster kilder ({count} aktivert)",
     "accountsTitle": "Kontoer (valgfritt)",
     "accountsCopy": "Logg inn for å lese opplåsinger fra en privat Steam-profil, legge til spillene dine fra Steam Family, importere Xbox PC-biblioteket ditt og vise Epic-fremgangen din. Du kan hoppe over dette og koble til senere under Innstillinger > Kilder.",
     "sourcesEmulators": "Emulatorer",
@@ -1253,6 +1326,8 @@
     "next": "Neste",
     "finish": "Fullfør",
     "skip": "Hopp over",
+    "skipSetup": "Hopp over oppsett",
+    "saveClose": "Lagre og lukk",
     "saving": "Lagrer…",
     "saved": "Oppsettet er lagret.",
     "languageRequired": "Velg et språk for å fortsette.",
@@ -1324,7 +1399,28 @@
     "controllerMove": "Flytt/rull"
   },
   "dialogs": {
+    "collections": "Samlinger",
+    "collection-all": "Alle spill",
+    "collection-new": "Ny samling…",
+    "collection-edit": "Rediger samling…",
+    "collection-name": "Navn på samlingen",
+    "collection-default-name": "Ny samling",
+    "collection-field-name": "Navn",
+    "collection-field-color": "Farge",
+    "collection-field-icon": "Ikon",
+    "collection-field-image": "Bilde",
+    "collection-choose-image": "Velg bilde…",
+    "collection-remove-image": "Fjern bilde",
+    "collection-delete": "Slett samling",
+    "collection-delete-confirm": "Vil du slette samlingen \"{name}\"? Spillene blir værende i biblioteket ditt.",
+    "collection-limit": "Du har nådd grensen på {count} samlinger.",
+    "collection-image-error": "Dette bildet kunne ikke brukes. Velg en PNG-, JPEG-, GIF- eller WebP-fil under 5 MB.",
     "choose-preset-image": "Velg et bakgrunnsbilde",
+    "choose-preset-font": "Velg en skriftfil",
+    "choose-preset-logo": "Velg en logo",
+    "preset-font-refused": "Den filen er ikke en brukbar skrift. Bruk en TTF-, OTF-, WOFF- eller WOFF2-fil på maks 4 MB.",
+    "preset-logo-refused": "Den filen er ikke en brukbar logo. Bruk et PNG-, JPEG-, GIF-, WebP- eller BMP-bilde på maks 2 MB.",
+    "preset-layer-note": "Tilpasser {preset}. Kryss av for en del for å endre den; alt du lar stå uten avkryssing, forblir slik den medfølgende presetten leveres. Endringene dine legges oppå: den medfølgende presetten kopieres eller endres ikke.",
     "folder-reason-ea-app": "Dette er en utgivelse for EA-appen. Et spill som startes gjennom EA-appen, lagrer prestasjonene sine på EA-kontoen og ikke i spillmappen, så det finnes ingen opplåsingsfil å lese her. De opplåsingene fanges opp av EA-kilden under Innstillinger > Kilder i stedet for av en overvåket mappe.",
     "folder-reason-game-no-data": "Dette er en spillmappe, men den inneholder verken emulatoroppsett eller en opplåsingsfil i noe format AW Next kan lese.",
     "folder-reason-unreadable": "Denne mappen kunne ikke leses.",
@@ -2175,6 +2271,31 @@
     "export-logs-done": "{count} loggfil(er) skrevet til {path}",
     "export-logs-failed": "Kunne ikke eksportere loggene: {error}",
     "zip-archive": "Zip-arkiv",
+    "profile-backup-file-type": "AW Next-profilsikkerhetskopi",
+    "profile-backup-export-title": "Eksporter profil",
+    "profile-backup-restore-title": "Gjenopprett profil",
+    "profile-backup-exporting": "Eksporterer profil… {percent} %",
+    "profile-backup-export-done": "Profilen ble lagret i {path} ({count} filer, {size}).",
+    "profile-backup-export-failed": "Kunne ikke eksportere profilen: {error}",
+    "profile-backup-restore-confirm": "Gjenopprette denne profilen?",
+    "profile-backup-restore-confirm-detail": "Sikkerhetskopien inneholder {count} filer ({size}), lagret {date}. Gjeldende innstillinger, forhåndsinnstillinger, temaer og covere erstattes av dem i sikkerhetskopien. Filene som erstattes beholdes, og en gjenoppretting som mislykkes, angres. AW Next starter på nytt for å ta den i bruk.",
+    "profile-backup-restore-button": "Gjenopprett og start på nytt",
+    "profile-backup-checking": "Kontrollerer sikkerhetskopien… {percent} %",
+    "profile-backup-restarting": "Sikkerhetskopien er kontrollert. Starter på nytt for å ta den i bruk…",
+    "profile-backup-restore-failed": "Kunne ikke gjenopprette profilen: {error}",
+    "profile-backup-applied": "Profilen er gjenopprettet ({count} filer).",
+    "profile-backup-applied-signin": "Pålogginger lagres aldri i en sikkerhetskopi. Logg på igjen hos: {accounts}.",
+    "profile-backup-applied-signin-generic": "Pålogginger lagres aldri i en sikkerhetskopi. Logg på igjen på alle kontoene du hadde koblet til.",
+    "profile-backup-apply-failed": "Profilen kunne ikke gjenopprettes. De tidligere filene dine ble satt tilbake. Detaljer: {error}",
+    "profile-backup-account-emulator": "Steam-pålogging for emulatorverktøyene",
+    "profile-backup-error-invalid": "Denne filen er ikke en AW Next-profilsikkerhetskopi.",
+    "profile-backup-error-too-new": "Denne sikkerhetskopien er laget av en nyere versjon av AW Next. Oppdater appen først.",
+    "profile-backup-error-corrupt": "Denne sikkerhetskopien er skadet eller har blitt endret.",
+    "profile-backup-error-unsafe": "Denne sikkerhetskopien inneholder filer som ikke kan gjenopprettes trygt.",
+    "profile-backup-error-too-large": "Denne sikkerhetskopien er større enn AW Next kan gjenopprette.",
+    "profile-backup-error-empty": "Det er ingenting å legge i en sikkerhetskopi ennå.",
+    "profile-backup-error-busy": "En sikkerhetskopiering pågår allerede.",
+    "profile-backup-error-inside": "Velg en plassering utenfor AW Next-datamappen.",
     "theme-layer-opacity": "Gjennomsiktighet",
     "chooseAnotherIconTitle": "Velg et annet ikon",
     "chooseAnotherIcon": "Velg et annet ikon…",
@@ -2243,6 +2364,7 @@
     "profile-trophies-share": "{percent} av prestasjonene dine",
     "profile-trophies-unranked": "{count} uten kjent andel",
     "profile-trophies-at-most": "{percent} eller mindre",
+    "profile-trophies-under": "under {percent}",
     "profile-trophies-between": "{from} til {to}",
     "profile-trophies-above": "over {percent}, eller ukjent",
     "profile-trophies-platinum-games": "Platinaspill",

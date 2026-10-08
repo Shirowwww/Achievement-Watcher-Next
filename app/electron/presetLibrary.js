@@ -25,6 +25,8 @@ const themePackage = lazyRequire(path.join(__dirname, '../util/themePackage.js')
 const presetPackage = lazyRequire(path.join(__dirname, '../util/presetPackage.js'));
 const presetSchema = require('../util/presetSchema.js');
 const sanImport = lazyRequire(path.join(__dirname, '../util/sanImport.js'));
+const presetAssets = presetSchema;
+const presetLayer = require('../util/presetLayer.js');
 const customPreset = require('../util/customPreset.js');
 const { customPresetNumbers, sanitizePresetName, PRESET_OPTIONS_FILE } = customPreset;
 
@@ -39,6 +41,7 @@ let usersPresetsDir = () => '';
 let bundledPresetRoots = () => [];
 let userSoundsDir = () => '';
 let userPresetImagesDir = () => '';
+let userPresetFontsDir = () => '';
 let findPresetFolder = () => null;
 let invalidateNotificationPresetFolders = () => {};
 let resolveSquareGameLogo = async () => null;
@@ -64,6 +67,7 @@ function register(context) {
     bundledPresetRoots,
     userSoundsDir,
     userPresetImagesDir,
+    userPresetFontsDir,
     findPresetFolder,
     invalidateNotificationPresetFolders,
     resolveSquareGameLogo,
@@ -84,6 +88,8 @@ ipcMain.handle('export-preset', async (event, request) => {
     const asked = typeof request === 'string' ? { name: request } : request || {};
     const safe = sanitizePresetName(asked.name);
     if (!safe || safe === PREVIEW_PRESET_NAME) return { ok: false, error: 'invalid-name' };
+    // A layer has no page of its own to package: it only exists on top of this install's bundled one.
+    if (fs.existsSync(path.join(usersPresetsDir(), safe, presetLayer.LAYER_FILE))) return { ok: false, error: 'layered-not-exportable' };
     const draft = asked.options && typeof asked.options === 'object' ? customPresetNumbers(asked.options) : null;
     // The builder's scratch folder is a real preset folder, so a draft exports through exactly the
     // same path as a saved one; the package is named `safe`, never the reserved scratch name.
@@ -312,9 +318,88 @@ ipcMain.handle('list-preset-images', async () => {
       .readdirSync(userPresetImagesDir())
       .filter((name) => presetSchema.ASSET_RE.test(name))
       .sort((a, b) => a.localeCompare(b))
-      .map((name) => ({ name, file: path.join(userPresetImagesDir(), name) }));
+      .map((name) => {
+        const file = path.join(userPresetImagesDir(), name);
+        // The size lets the logo menu leave out pictures too big to be a logo.
+        return { name, file, size: fs.statSync(file).size };
+      });
   } catch {
     return [];
+  }
+});
+
+/*
+  Copy a user-picked file into a shared designer folder after checking what it is. A file of the same
+  name with other bytes lands beside it as "name (2)"; identical bytes are reused. Returns the name
+  the preset will use, or the reason it was refused.
+*/
+function importIntoLibrary(source, dir, check) {
+  const bytes = fs.readFileSync(source);
+  const ext = path.extname(source);
+  const stem = path.basename(source, ext);
+  let name = stem + ext;
+  const verdict = check(name, bytes);
+  if (!verdict.ok) return verdict;
+  fs.mkdirSync(dir, { recursive: true });
+  for (let i = 2; i < 100; i += 1) {
+    const dest = path.join(dir, name);
+    if (!fs.existsSync(dest)) {
+      fs.writeFileSync(dest, bytes);
+      return { ok: true, name };
+    }
+    try {
+      if (fs.readFileSync(dest).equals(bytes)) return { ok: true, name };
+    } catch {}
+    name = `${stem} (${i})${ext}`;
+    if (!check(name, bytes).ok) return { ok: false, error: 'invalid-name' };
+  }
+  return { ok: false, error: 'name-taken' };
+}
+
+ipcMain.handle('list-preset-fonts', async () => {
+  try {
+    return fs
+      .readdirSync(userPresetFontsDir())
+      .filter((name) => presetAssets.FONT_NAME_RE.test(name))
+      .sort((a, b) => a.localeCompare(b))
+      .map((name) => ({ name, file: path.join(userPresetFontsDir(), name) }));
+  } catch {
+    return [];
+  }
+});
+
+ipcMain.handle('import-preset-font', async () => {
+  try {
+    const res = await dialog.showOpenDialog({
+      title: t('choose-preset-font', 'Choose a font file', 'Choisir un fichier de police'),
+      properties: ['openFile', 'dontAddToRecent'],
+      filters: [{ name: 'Fonts', extensions: presetAssets.FONT_EXTENSIONS }],
+    });
+    if (res.canceled || !res.filePaths || !res.filePaths.length) return { ok: false, canceled: true };
+    const out = importIntoLibrary(res.filePaths[0], userPresetFontsDir(), presetAssets.checkFont);
+    if (!out.ok) debug.log('[preset-font] refused: ' + out.error);
+    return out;
+  } catch (err) {
+    debug.log('[preset-font] ' + (err.message || err));
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+
+// The same picture library as the background, with the limits of a logo.
+ipcMain.handle('import-preset-logo', async () => {
+  try {
+    const res = await dialog.showOpenDialog({
+      title: t('choose-preset-logo', 'Choose a logo', 'Choisir un logo'),
+      properties: ['openFile', 'dontAddToRecent'],
+      filters: [{ name: 'Images', extensions: presetAssets.IMAGE_EXTENSIONS }],
+    });
+    if (res.canceled || !res.filePaths || !res.filePaths.length) return { ok: false, canceled: true };
+    const out = importIntoLibrary(res.filePaths[0], userPresetImagesDir(), presetAssets.checkLogo);
+    if (!out.ok) debug.log('[preset-logo] refused: ' + out.error);
+    return out;
+  } catch (err) {
+    debug.log('[preset-logo] ' + (err.message || err));
+    return { ok: false, error: String(err.message || err) };
   }
 });
 

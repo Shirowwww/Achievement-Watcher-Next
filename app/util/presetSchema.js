@@ -92,10 +92,14 @@ const BG_PATTERN_SIZES = {
 
 const MOTION_VALUES = Object.keys(MOTION_OFFSETS);
 
+// Where the logo sits on the card: a corner or the middle of a side. The offset is its distance from
+// the edge it is anchored to.
+const LOGO_POSITIONS = ['top-left', 'top', 'top-right', 'left', 'right', 'bottom-left', 'bottom', 'bottom-right'];
+
 /*
   A property is:
     key       what it is called in aw-preset.json and in an .awpreset manifest
-    type      color | number | select | toggle | sound | asset
+    type      color | number | select | toggle | sound | asset | font | logo
     def       the default, which must reproduce the pre-designer look (see the header)
     group     which section of the designer shows it
     advanced  folded behind the group's "Advanced" disclosure
@@ -119,6 +123,11 @@ const PRESET_PROPERTIES = [
 
   // text
   { key: 'fontFamily', type: 'select', def: 'sans', values: Object.keys(FONT_STACKS), group: 'text' },
+  /*
+    A font file of the user's own, copied beside the preset and loaded with @font-face. The stack
+    chosen above stays behind it as the fallback while the file loads or if it is missing.
+  */
+  { key: 'fontFile', type: 'font', def: '', group: 'text' },
   { key: 'fontSize', type: 'number', def: 16, min: 10, max: 28, step: 1, group: 'text', css: '--font-size', unit: 'px' },
   { key: 'detailScale', type: 'number', def: 100, min: 60, max: 130, step: 5, group: 'text', css: '--detail-scale', scale: 100, advanced: true },
   /*
@@ -193,6 +202,14 @@ const PRESET_PROPERTIES = [
   { key: 'iconRadius', type: 'number', def: 14, min: 0, max: 50, step: 1, group: 'icon', css: '--icon-radius', unit: '%', shownFor: { iconShape: ['rounded'] } },
   { key: 'iconBorder', type: 'number', def: 0, min: 0, max: 6, step: 1, group: 'icon', advanced: true, css: '--icon-border', unit: 'px' },
   { key: 'iconGlow', type: 'number', def: 0, min: 0, max: 100, step: 5, group: 'icon', advanced: true, css: '--icon-glow', scale: 100 },
+  /*
+    A logo or decoration of the preset's own, drawn behind the text. A bare filename like the
+    background picture; nothing is drawn while it is empty, so no existing preset changes.
+  */
+  { key: 'logoImage', type: 'logo', def: '', group: 'icon' },
+  { key: 'logoPosition', type: 'select', def: 'top-right', values: LOGO_POSITIONS, group: 'icon', advanced: true },
+  { key: 'logoSize', type: 'number', def: 32, min: 12, max: 120, step: 1, group: 'icon', advanced: true },
+  { key: 'logoOffset', type: 'number', def: 8, min: 0, max: 60, step: 1, group: 'icon', advanced: true },
 
   // border & corners
   { key: 'radius', type: 'number', def: 12, min: 0, max: 40, step: 1, group: 'border', css: '--radius', unit: 'px' },
@@ -274,6 +291,87 @@ const SOUND_RE = /^[^\\/:*?"<>|\x00-\x1f]+\.(?:wav|mp3|ogg|flac|m4a|aac)$/i;
 */
 const ASSET_RE = /^[^/:*?"<>| -]+.(?:png|jpe?g|gif|webp|bmp)$/i;
 
+/*
+  The files a preset can carry beyond its stylesheet: a font and a logo. They come from the user or
+  from a package someone else made, so the name, the size and the first bytes are all checked before
+  a file is copied anywhere. No SVG on purpose: it is a document that can carry script. Kept in this
+  file rather than a module of its own because the gallery service holds a copy of exactly the files
+  that validate a package and would otherwise miss a dependency.
+*/
+const FONT_EXTENSIONS = ['ttf', 'otf', 'woff', 'woff2'];
+const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'];
+
+// A font family rarely needs more than a few hundred KB; a CJK face is the realistic worst case.
+const MAX_FONT_BYTES = 4 * 1024 * 1024;
+const MAX_LOGO_BYTES = 2 * 1024 * 1024;
+
+// A bare filename: never a path, never anything a url('...') token or a Windows folder would mangle.
+const SAFE_NAME = '[^\\\\/:*?"<>|\\x00-\\x1f\']+';
+const FONT_NAME_RE = new RegExp(`^${SAFE_NAME}\\.(?:${FONT_EXTENSIONS.join('|')})$`, 'i');
+const IMAGE_NAME_RE = new RegExp(`^${SAFE_NAME}\\.(?:${IMAGE_EXTENSIONS.join('|')})$`, 'i');
+
+const ascii = (buffer, from, to) => buffer.subarray(from, to).toString('latin1');
+
+// What the first bytes say a font is, or '' when they say nothing a browser would load.
+function fontKind(buffer) {
+  if (!Buffer.isBuffer(buffer) || buffer.length < 12) return '';
+  const tag = ascii(buffer, 0, 4);
+  if (tag === 'wOFF') return 'woff';
+  if (tag === 'wOF2') return 'woff2';
+  if (tag === 'OTTO') return 'otf';
+  if (tag === 'true' || buffer.readUInt32BE(0) === 0x00010000) return 'ttf';
+  return '';
+}
+
+function imageKind(buffer) {
+  if (!Buffer.isBuffer(buffer) || buffer.length < 12) return '';
+  if (buffer[0] === 0x89 && ascii(buffer, 1, 4) === 'PNG') return 'png';
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return 'jpeg';
+  if (ascii(buffer, 0, 3) === 'GIF') return 'gif';
+  if (ascii(buffer, 0, 4) === 'RIFF' && ascii(buffer, 8, 12) === 'WEBP') return 'webp';
+  if (ascii(buffer, 0, 2) === 'BM') return 'bmp';
+  return '';
+}
+
+const extensionOf = (name) => String(name || '').split('.').pop().toLowerCase();
+
+// .ttf and .otf both hold either flavour of sfnt, so only the container formats have to agree.
+function fontKindMatches(kind, extension) {
+  if (kind === 'woff' || kind === 'woff2') return kind === extension;
+  return extension === 'ttf' || extension === 'otf';
+}
+
+function imageKindMatches(kind, extension) {
+  return kind === 'jpeg' ? extension === 'jpg' || extension === 'jpeg' : kind === extension;
+}
+
+// { ok: true, kind } or { ok: false, error } with a short machine-readable reason.
+function checkFont(name, bytes) {
+  if (!FONT_NAME_RE.test(String(name || ''))) return { ok: false, error: 'invalid-font-name' };
+  if (!Buffer.isBuffer(bytes) || bytes.length === 0) return { ok: false, error: 'empty-font' };
+  if (bytes.length > MAX_FONT_BYTES) return { ok: false, error: 'font-too-large' };
+  const kind = fontKind(bytes);
+  if (!kind || !fontKindMatches(kind, extensionOf(name))) return { ok: false, error: 'not-a-font' };
+  return { ok: true, kind };
+}
+
+function checkLogo(name, bytes) {
+  if (!IMAGE_NAME_RE.test(String(name || ''))) return { ok: false, error: 'invalid-image-name' };
+  if (!Buffer.isBuffer(bytes) || bytes.length === 0) return { ok: false, error: 'empty-image' };
+  if (bytes.length > MAX_LOGO_BYTES) return { ok: false, error: 'image-too-large' };
+  const kind = imageKind(bytes);
+  if (!kind || !imageKindMatches(kind, extensionOf(name))) return { ok: false, error: 'not-an-image' };
+  return { ok: true, kind };
+}
+
+const FONT_MIME = { ttf: 'font/ttf', otf: 'font/otf', woff: 'font/woff', woff2: 'font/woff2' };
+const FONT_FORMAT = { ttf: 'truetype', otf: 'opentype', woff: 'woff', woff2: 'woff2' };
+const IMAGE_MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', bmp: 'image/bmp' };
+
+const fontMime = (name) => FONT_MIME[extensionOf(name)] || 'application/octet-stream';
+const fontFormat = (name) => FONT_FORMAT[extensionOf(name)] || 'truetype';
+const imageMime = (name) => IMAGE_MIME[extensionOf(name)] || 'image/png';
+
 function clampNumber(value, property) {
   const number = Number(value);
   if (!Number.isFinite(number)) return property.def;
@@ -300,6 +398,10 @@ function normalizeValue(raw, property) {
       return typeof raw === 'string' && SOUND_RE.test(raw.trim()) ? raw.trim() : property.def;
     case 'asset':
       return typeof raw === 'string' && ASSET_RE.test(raw.trim()) ? raw.trim() : property.def;
+    case 'font':
+      return typeof raw === 'string' && FONT_NAME_RE.test(raw.trim()) ? raw.trim() : property.def;
+    case 'logo':
+      return typeof raw === 'string' && IMAGE_NAME_RE.test(raw.trim()) ? raw.trim() : property.def;
     default:
       return property.def;
   }
@@ -336,6 +438,20 @@ module.exports = {
   BG_PATTERN_SIZES,
   MOTION_OFFSETS,
   MOTION_VALUES,
+  LOGO_POSITIONS,
+  FONT_EXTENSIONS,
+  IMAGE_EXTENSIONS,
+  MAX_FONT_BYTES,
+  MAX_LOGO_BYTES,
+  FONT_NAME_RE,
+  IMAGE_NAME_RE,
+  fontKind,
+  imageKind,
+  checkFont,
+  checkLogo,
+  fontMime,
+  fontFormat,
+  imageMime,
   EASINGS,
   COLOR_RE,
   SOUND_RE,

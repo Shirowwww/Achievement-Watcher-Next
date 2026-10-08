@@ -930,7 +930,7 @@ function isUplayR2Game(game, fallbackAppid) {
   if (record.uplayR2 || data.uplayR2 || /uplay r2|goldberg uplay|lumaplay|^uplay$/i.test(source)) return true;
   // Official records also use namespaced uplay-<id> identities. Source/type must veto that legacy
   // heuristic or Fix all could put an emulator DLL into a legitimate Ubisoft Connect installation.
-  if (/^ubisoft connect$/i.test(source) || data.type === 'ubisoftOfficial') return false;
+  if (/^(?:ubisoft connect|rune uplay)$/i.test(source) || data.type === 'ubisoftOfficial' || data.type === 'runeUplay') return false;
   if (gameDir && hasEmulatorEvidence(gameDir)) return true;
   return /^(?:UPLAY|uplay-)\d+$/i.test(String(appid || ''));
 }

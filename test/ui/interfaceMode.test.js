@@ -41,7 +41,7 @@ test('onboarding asks for the mode with two cards and no preselected answer', ()
 
 test('a first run cannot leave the mode step unanswered, and reopening does not re-ask blindly', () => {
   assert.match(onboardingUi, /chosenInterfaceMode = isFirstRunSession \? '' :/, 'a first run starts with no answer');
-  assert.match(onboardingUi, /step === modeStep && nextStep > modeStep && !chosenInterfaceMode/, 'moving on needs an answer');
+  assert.match(onboardingUi, /step === modeStep && nextStep > modeStep\) \{[\s\S]*?if \(!chosenInterfaceMode\) \{/, 'moving on needs an answer');
   assert.match(onboardingUi, /setStatus\(text\(\)\.modeRequired, 'error'\)/, 'and says so');
   // Going backwards must stay possible, otherwise the guide traps the user on this step.
   assert.match(onboardingUi, /nextStep > modeStep/, 'only forward is gated');
@@ -50,7 +50,8 @@ test('a first run cannot leave the mode step unanswered, and reopening does not 
 
 test('the mode step is located by its markup, not by a hard-coded index', () => {
   assert.match(onboardingUi, /function interfaceModeStep\(\)/);
-  assert.match(onboardingUi, /\.onboarding-mode-choice'\)\.closest\('\.onboarding-step'\)/);
+  assert.match(onboardingUi, /stepOf\('#onboarding \.onboarding-mode-choice'\)/);
+  assert.match(onboardingUi, /\$\(selector\)\.closest\('\.onboarding-step'\)/);
 });
 
 test('the guide still counts its steps correctly after gaining one', () => {
@@ -195,7 +196,7 @@ test('the guide never offers a Simple user a switch that Settings would then hid
 });
 
 test('the guide offers the optional account sign-ins through the Settings flows', () => {
-  for (const id of ['onboard-steam-connect', 'onboard-epic-connect', 'onboard-accounts-title', 'onboard-summary-counts']) {
+  for (const id of ['onboard-steam-connect', 'onboard-epic-connect', 'onboard-accounts-title', 'onboard-recap']) {
     assert.ok(document.querySelector(`#${id}`), `#${id} must exist`);
   }
   for (const channel of ['steam:auth-status', 'steam:login', 'epic:auth-status', 'epic:login']) {

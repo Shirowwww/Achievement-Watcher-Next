@@ -86,16 +86,25 @@
     "runUninstaller": "Spustiť odinštalátor hry…",
     "deleteFolder": "Odstrániť priečinok hry (Kôš)…"
   },
+  "windowControls": {
+    "minimize": "Minimalizovať",
+    "maximize": "Maximalizovať",
+    "close": "Zavrieť"
+  },
   "settings": {
     "title": "Nastavenia",
     "sideMenu": {
       "general": "Všeobecné",
       "notification": "Upozornenia",
-      "presets": "Predvoľby",
+      "presets": "Predvoľby upozornení",
       "souvenir": "Spomienka",
       "folder": "Priečinky",
       "source": "Zdroj",
-      "advanced": "Pokročilé"
+      "advanced": "Pokročilé",
+      "groupApp": "Aplikácia",
+      "groupAlerts": "Upozornenia",
+      "groupLibrary": "Knižnica",
+      "groupSupport": "Podpora"
     },
     "common": {
       "show": "Zobraziť",
@@ -108,13 +117,17 @@
       "maintainedBy": "spravuje",
       "fork": "Fork",
       "original": "Originál v1.6.8",
-      "edit": "Upraviť"
+      "edit": "Upraviť",
+      "close": "Zavrieť",
+      "unsaved": "Neuložené zmeny"
     },
     "search": {
       "placeholder": "Hľadať nastavenia…",
       "empty": "Hľadaniu nezodpovedá žiadne nastavenie.",
       "ariaLabel": "Hľadať v nastaveniach",
-      "clear": "Vymazať"
+      "clear": "Vymazať",
+      "advancedMore": "Ďalších {count} v Pokročilom režime",
+      "advancedShow": "Zobraziť Pokročilé"
     },
     "watchdog": {
       "startup": {
@@ -143,7 +156,7 @@
       "duration": "Dĺžka animácie"
     },
     "general": {
-      "sectionTitle": "Rozhranie a správanie",
+      "sectionTitle": "Každodenné nastavenia",
       "language": {
         "name": "Jazyk",
         "description": "Jazyk rozhrania. Dáta hier sa načítavajú v tomto jazyku, ak je k dispozícii."
@@ -161,7 +174,7 @@
         }
       },
       "hiddenAch": {
-        "name": "Skryté úspechy",
+        "name": "Odhaliť skryté úspechy",
         "description": "Zobraziť názov a popis skrytých úspechov ešte pred ich odomknutím."
       },
       "mergeDuplicates": {
@@ -264,6 +277,20 @@
         "name": "Trofeje v profile",
         "description": "Zobrazuje platinové, zlaté, strieborné a bronzové trofeje pod vaším menom. Platina je hra dokončená na 100 %; ostatné triedia vaše úspechy podľa toho, koľko hráčov ich odomklo."
       },
+      "rarityDisplay": {
+        "name": "Zobrazenie vzácnosti",
+        "description": "Vzácne úrovne označujú len najvzácnejšie úspechy. Režim trofejí ohodnotí každý úspech zlatom, striebrom alebo bronzom podľa podielu odomknutí a pri dokončených hrách zobrazí platinu.",
+        "rare": "Vzácne úrovne",
+        "trophy": "Režim trofejí",
+        "goldBelow": {
+          "name": "Zlatá trofej pod",
+          "description": "V režime trofejí získajú zlato úspechy, ktoré odomklo menej hráčov než tento podiel."
+        },
+        "silverBelow": {
+          "name": "Strieborná trofej pod",
+          "description": "V režime trofejí získajú striebro úspechy pod týmto podielom; ostatné, alebo tie bez známeho podielu, získajú bronz."
+        }
+      },
       "playButton": {
         "name": "Zobraziť tlačidlo Hrať",
         "description": "Zobrazí tlačidlo Hrať na dlaždiciach hier. Vypnite ho, ak hry spúšťate z iného programu. Položka Spustiť hru v kontextovej ponuke zostáva dostupná."
@@ -302,7 +329,9 @@
           "name": "Tlačidlo nastavení hry",
           "description": "Zobrazí tlačidlo nástrojov v pravom hornom rohu grafiky. Nastavenia hry zostávajú dostupné z kontextovej ponuky."
         }
-      }
+      },
+      "appSectionTitle": "Aplikácia",
+      "trophySectionTitle": "Trofeje a vzácnosť"
     },
     "emulator": {
       "nav": "Oprava emulátorov",
@@ -467,13 +496,13 @@
     },
     "notification": {
       "title": {
-        "common": "Spoločné",
+        "common": "Základy",
         "toast": "Oznámenie Windows",
-        "transport": "Prenos",
+        "transport": "Integrácie",
         "chromium": "Upozornenie Chromium",
         "watchdog": "Watchdog",
         "test": "Test",
-        "overlay": "Upozornenia"
+        "overlay": "Vyskakovacie okno"
       },
       "info": {
         "toast": "Niektoré funkcie sú dostupné iba vo Windows 10",
@@ -602,6 +631,7 @@
             "easingOut": "Krivka odchodu",
             "entryDistance": "Vzdialenosť pohybu",
             "fontFamily": "Písmo",
+            "fontFile": "Súbor s písmom",
             "fontSize": "Veľkosť písma",
             "gap": "Medzera",
             "glow": "Žiara",
@@ -613,6 +643,10 @@
             "iconSize": "Veľkosť ikony",
             "layout": "Usporiadanie",
             "letterSpacing": "Rozostup písmen",
+            "logoImage": "Logo",
+            "logoOffset": "Vzdialenosť loga od okraja",
+            "logoPosition": "Poloha loga",
+            "logoSize": "Veľkosť loga",
             "opacity": "Priehľadnosť",
             "padX": "Bočné odsadenie",
             "padY": "Horné odsadenie",
@@ -655,6 +689,10 @@
           "imported": "Importované a vybrané:",
           "importedOnly": "Importovaná predvoľba - možno ju tu exportovať alebo odstrániť; posuvníkmi sa upraviť nedá.",
           "importSan": "Importovať motív SAN",
+          "layer": {
+            "none": "Bez úprav",
+            "title": "Upraviť pribalenú predvoľbu"
+          },
           "load": "Upraviť predvoľbu",
           "loaded": "Načítané:",
           "name": "Názov",
@@ -700,6 +738,8 @@
             "artwork": "Obrázok hry",
             "back": "Pružný",
             "bottom": "Dole",
+            "bottomLeft": "Vľavo dole",
+            "bottomRight": "Vpravo dole",
             "breathe": "Dýchanie",
             "center": "Stred",
             "circle": "Kruh",
@@ -723,6 +763,7 @@
             "linear": "Lineárny",
             "lines": "Šrafovanie",
             "mono": "Neproporcionálne",
+            "noFont": "Žiadny súbor s písmom",
             "noImage": "Žiadny obrázok",
             "noise": "Zrnitosť",
             "none": "Žiadny",
@@ -742,6 +783,8 @@
             "text": "Farba textu",
             "textOnly": "Iba text",
             "top": "Hore",
+            "topLeft": "Vľavo hore",
+            "topRight": "Vpravo hore",
             "transparent": "Priehľadné",
             "uppercase": "VEĽKÉ PÍSMENÁ",
             "zoom": "Priblíženie"
@@ -997,7 +1040,10 @@
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns cez mod MadnessPatch"
-      }
+      },
+      "groupStores": "Oficiálne launchery",
+      "groupEmulators": "Emulátory a patche",
+      "groupConsoles": "Konzoly a retro"
     },
     "help": {
       "nav": "Pomocník",
@@ -1134,7 +1180,11 @@
         "goldbergTitle": "Goldberg / GBE Fork",
         "goldbergDesc": "Prehľadá priečinok knižnice hier na inštalácie Goldberg / GBE Fork a označí tie, ktorým chýba schéma steam_settings/achievements.json. Na opravu jednej použite kontextovú ponuku hry (Diagnostikovať / Opraviť).",
         "scanFolder": "Prehľadať priečinok…",
-        "exportLogs": "Exportovať protokoly (.zip)"
+        "exportLogs": "Exportovať protokoly (.zip)",
+        "profileBackupTitle": "Záloha profilu",
+        "profileBackupDesc": "Uložte nastavenia, voľby knižnice, predvoľby, motívy, obaly a zálohy do jedného súboru a po preinštalovaní alebo na novom počítači ich obnovte. Prihlásenia sa nikdy neukladajú.",
+        "profileExport": "Exportovať profil…",
+        "profileRestore": "Obnoviť profil…"
       },
       "blacklistTitle": "Čierna listina AppID",
       "blacklistButton": "Resetovať čiernu listinu",
@@ -1176,28 +1226,28 @@
     "eyebrow": "Prvé nastavenie",
     "close": "Zavrieť",
     "steps": [
-      "Jazyk",
-      "Ako to funguje",
-      "Rozhranie",
-      "Účet",
+      "Základy",
+      "Profil",
       "Hry",
-      "Zdroj",
-      "Nastavenia"
+      "Zdroje",
+      "Vzhľad a upozornenia",
+      "Hotovo"
     ],
-    "languageTitle": "Vyberte jazyk",
-    "languageCopy": "Hry, metadáta, úspechy aj vyrovnávacie pamäte Steamu sa od začiatku načítajú v tomto jazyku.",
+    "welcomeTitle": "Vitajte v AW Next",
+    "welcomeCopy": "Dve rýchle voľby na začiatok. Všetko sa dá neskôr zmeniť v Nastaveniach a zvyšok tohto sprievodcu môžete kedykoľvek preskočiť.",
     "language": "Jazyk hry a rozhrania",
     "languagePlaceholder": "Vyberte jazyk…",
-    "languageHint": "Prvé načítanie knižnice sa spustí až po tejto voľbe.",
-    "introTitle": "Ako to funguje",
-    "scanTitle": "Skenovať",
-    "scanCopy": "Umiestnenia launcherov, emulátorov a súborov s úspechmi sa rozpoznajú automaticky - každé pred prvým skenom potvrdíte.",
-    "watchTitle": "Sledovať",
-    "watchCopy": "Watchdog na pozadí rozpozná hru pri spustení, meria odohraný čas a stráži jej súbory s úspechmi.",
-    "fixTitle": "Opraviť",
-    "fixCopy": "Pri emulovaných hrách zo Steamu oprava z pravého tlačidla nainštaluje GBE Fork a zapíše schému úspechov a dáta DLC.",
+    "languageHint": "Hry, metadáta, úspechy aj vyrovnávacie pamäte služby Steam sa načítavajú v tomto jazyku. Prvé načítanie knižnice sa spustí až po tejto voľbe.",
     "overlayTitle": "Overlay v hre",
-    "overlayCopy": "Malý panel úspechov, ktorý nad hrou vyvoláte klávesovou skratkou - predvolene Ctrl+Shift+K.",
+    "overlayCopy": "Stlačte v hre {hotkey} a uvidíte nad ňou jej úspechy.",
+    "collectionsTitle": "Kolekcie",
+    "collectionsCopy": "Zoskupujte hry do vlastných kolekcií z ponuky po kliknutí pravým tlačidlom na hru.",
+    "trophyTitle": "Režim trofejí",
+    "trophyCopy": "Ohodnoťte úspechy zlatou, striebornou alebo bronzovou podľa vzácnosti. Zapnete to v Nastaveniach.",
+    "clipsTitle": "Videoklipy",
+    "clipsCopy": "Uložte si krátky klip okolo každého odomknutia. Zapnete to v Nastaveniach v časti Upozornenia.",
+    "backupTitle": "Záloha profilu",
+    "backupCopy": "Uložte nastavenia a voľby knižnice do jedného súboru a po preinštalovaní ich obnovte.",
     "profileTitle": "Profil",
     "profileCopy": "Vyberte meno zobrazené v hlavičke a voliteľne nastavte miestneho avatara.",
     "username": "Zobrazovaný názov",
@@ -1205,8 +1255,21 @@
     "avatarPick": "Vyberte fotografiu",
     "avatarDefault": "Predvolené",
     "avatarHint": "Voliteľné. Uložené lokálne v tomto počítači.",
-    "foldersTitle": "Pridajte hry z disku",
-    "foldersCopy": "Použite Inteligentné hľadanie na automatické nájdenie priečinkov so savmi/konfiguráciou a herných knižníc. Alebo ich pridajte ručne podľa typu priečinka.",
+    "foldersTitle": "Vaše hry",
+    "foldersCopy": "AW Next hľadá hry v tomto počítači a ukáže, čo našiel. Priečinok pridajte, len ak niečo chýba.",
+    "detectTitle": "Nájdené v tomto počítači",
+    "detectInstalled": "{count} nainštalovaných",
+    "detectNone": "Nič sa nenašlo",
+    "detectOff": "vypnuté",
+    "detectEmulators": "Savy emulátorov",
+    "detectFolders": "Hry: {games} · Priečinky: {folders}",
+    "detectTotal": "Nájdených hier: {count}",
+    "detectNothing": "Zatiaľ sa nenašli žiadne hry",
+    "detectSteamOff": "Vaše hry zo služby Steam zostanú skryté, kým Steam nezapnete v časti Zdroje.",
+    "detectReviewSources": "Skontrolovať zdroje",
+    "smartFound": "Nájdených nových priečinkov: {count}",
+    "smartNone": "Nenašli sa žiadne nové priečinky.",
+    "folderGames": "Nájdených hier v tomto priečinku: {count}",
     "addSave": "Pridať priečinok na uloženie",
     "smartFind": "Inteligentné hľadanie",
     "addLibrary": "Pridať priečinok knižnice",
@@ -1216,12 +1279,22 @@
     "saveList": "Priečinky so savmi/konfiguráciou",
     "libraryList": "Priečinky knižnice",
     "emptyList": "Do tejto relácie nebolo pridané nič.",
-    "settingsTitle": "Odporúčané nastavenia",
-    "settingsCopy": "To podstatné pre knižnicu, vzhľad a upozornenia. Všetko sa dá zmeniť neskôr.",
-    "summarySources": "Aktivované zdroje",
+    "settingsTitle": "Vzhľad a upozornenia",
+    "settingsCopy": "Vyberte motív a spôsob zobrazenia upozornení na odomknutie. Tlačidlom Otestovať upozornenie si jedno hneď zobrazíte.",
+    "moreOptions": "Ďalšie možnosti",
+    "readyTitle": "Všetko je pripravené",
+    "readyCopy": "AW Next teraz na pozadí sleduje vaše hry a dá vám vedieť, keď niečo odomknete.",
+    "featuresTitle": "Dobré vedieť",
+    "summarySources": "Zapnuté zdroje: {count}",
+    "summaryAccounts": "Prihlásený: {names}",
+    "summaryGames": "Nájdených hier: {count} · Sledované priečinky: {folders}",
+    "summaryNoGames": "Zatiaľ sa nenašli žiadne hry. Priečinky môžete pridať neskôr v Nastaveniach.",
+    "summaryLook": "Motív: {theme} · Upozornenia: {notifications}",
+    "summaryChange": "Zmeniť",
     "summaryReopen": "Tohto sprievodcu môžete kedykoľvek znova otvoriť v časti Nastavenia > Všeobecné.",
     "sourcesTitle": "Odkiaľ pochádzajú vaše úspechy",
-    "sourcesCopy": "Každý z nich sa číta na tomto počítači. Čo nepoužívate, nechajte vypnuté; všetko zostáva upraviteľné v Nastaveniach.",
+    "sourcesCopy": "Každý zdroj nainštalovaný v tomto počítači sa číta automaticky, takže predvolené nastavenie stačí. Prihláste sa nižšie, len ak chcete viac.",
+    "sourcesMore": "Doladiť zdroje (zapnuté: {count})",
     "accountsTitle": "Účty (voliteľné)",
     "accountsCopy": "Prihláste sa a získate odomknutia zo súkromného profilu Steam, pridáte hry zo svojho Steam Family, importujete svoju knižnicu Xbox PC a zobrazíte si priebeh v Epic. Tento krok môžete preskočiť a pripojiť sa neskôr v časti Nastavenia > Zdroj.",
     "sourcesEmulators": "Emulátory",
@@ -1253,6 +1326,8 @@
     "next": "Ďalej",
     "finish": "Dokončiť",
     "skip": "Preskočiť",
+    "skipSetup": "Preskočiť nastavenie",
+    "saveClose": "Uložiť a zavrieť",
     "saving": "Ukladá sa…",
     "saved": "Nastavenie bolo uložené.",
     "languageRequired": "Ak chcete pokračovať, vyberte jazyk.",
@@ -1324,7 +1399,28 @@
     "controllerMove": "Pohyb/rolovanie"
   },
   "dialogs": {
+    "collections": "Kolekcie",
+    "collection-all": "Všetky hry",
+    "collection-new": "Nová kolekcia…",
+    "collection-edit": "Upraviť kolekciu…",
+    "collection-name": "Názov kolekcie",
+    "collection-default-name": "Nová kolekcia",
+    "collection-field-name": "Názov",
+    "collection-field-color": "Farba",
+    "collection-field-icon": "Ikona",
+    "collection-field-image": "Obrázok",
+    "collection-choose-image": "Vybrať obrázok…",
+    "collection-remove-image": "Odstrániť obrázok",
+    "collection-delete": "Odstrániť kolekciu",
+    "collection-delete-confirm": "Odstrániť kolekciu \"{name}\"? Hry zostanú vo vašej knižnici.",
+    "collection-limit": "Dosiahli ste limit {count} kolekcií.",
+    "collection-image-error": "Tento obrázok sa nepodarilo použiť. Vyberte súbor PNG, JPEG, GIF alebo WebP menší ako 5 MB.",
     "choose-preset-image": "Vybrať obrázok pozadia",
+    "choose-preset-font": "Vybrať súbor s písmom",
+    "choose-preset-logo": "Vybrať logo",
+    "preset-font-refused": "Tento súbor nie je použiteľné písmo. Použite súbor TTF, OTF, WOFF alebo WOFF2 s veľkosťou najviac 4 MB.",
+    "preset-logo-refused": "Tento súbor nie je použiteľné logo. Použite obrázok PNG, JPEG, GIF, WebP alebo BMP s veľkosťou najviac 2 MB.",
+    "preset-layer-note": "Úprava predvoľby {preset}. Zaškrtnite časť, ktorú chcete zmeniť; čo nezaškrtnete, zostane tak, ako to pribalená predvoľba dodáva. Vaše zmeny sa vrstvia navrch: pribalená predvoľba sa nekopíruje ani nemení.",
     "folder-reason-ea-app": "Toto je vydanie pre EA app. Hra spustená cez EA app ukladá svoje úspechy na účet EA, nie do priečinka hry, takže tu nie je žiadny súbor s odomknutiami na čítanie. Tieto úspechy načítava zdroj EA v Nastavenia > Zdroje, nie sledovaný priečinok.",
     "folder-reason-game-no-data": "Toto je priečinok hry, neobsahuje však žiadnu konfiguráciu emulátora ani súbor s odomknutiami vo formáte, ktorý AW Next dokáže prečítať.",
     "folder-reason-unreadable": "Tento priečinok sa nepodarilo prečítať.",
@@ -2175,6 +2271,31 @@
     "export-logs-done": "Zapísaných súborov protokolu: {count} - do {path}",
     "export-logs-failed": "Protokoly sa nepodarilo exportovať: {error}",
     "zip-archive": "Archív zip",
+    "profile-backup-file-type": "Záloha profilu AW Next",
+    "profile-backup-export-title": "Exportovať profil",
+    "profile-backup-restore-title": "Obnoviť profil",
+    "profile-backup-exporting": "Exportuje sa profil… {percent} %",
+    "profile-backup-export-done": "Profil uložený do {path} (súborov: {count}, {size}).",
+    "profile-backup-export-failed": "Profil sa nepodarilo exportovať: {error}",
+    "profile-backup-restore-confirm": "Obnoviť tento profil?",
+    "profile-backup-restore-confirm-detail": "Záloha obsahuje súborov: {count} ({size}), uložená {date}. Vaše aktuálne nastavenia, predvoľby, motívy a obaly budú nahradené tými zo zálohy. Nahradené súbory sa ponechajú a neúspešné obnovenie sa vráti späť. AW Next sa reštartuje, aby ich použil.",
+    "profile-backup-restore-button": "Obnoviť a reštartovať",
+    "profile-backup-checking": "Kontroluje sa záloha… {percent} %",
+    "profile-backup-restarting": "Záloha skontrolovaná. Reštartuje sa kvôli použitiu…",
+    "profile-backup-restore-failed": "Profil sa nepodarilo obnoviť: {error}",
+    "profile-backup-applied": "Profil obnovený (súborov: {count}).",
+    "profile-backup-applied-signin": "Prihlásenia sa do zálohy nikdy neukladajú. Prihláste sa znova do: {accounts}.",
+    "profile-backup-applied-signin-generic": "Prihlásenia sa do zálohy nikdy neukladajú. Prihláste sa znova do všetkých účtov, ktoré ste mali pripojené.",
+    "profile-backup-apply-failed": "Profil sa nepodarilo obnoviť. Vaše predchádzajúce súbory boli vrátené späť. Podrobnosti: {error}",
+    "profile-backup-account-emulator": "Prihlásenie do Steamu pre nástroje emulátora",
+    "profile-backup-error-invalid": "Tento súbor nie je záloha profilu AW Next.",
+    "profile-backup-error-too-new": "Túto zálohu vytvorila novšia verzia AW Next. Najprv aktualizujte aplikáciu.",
+    "profile-backup-error-corrupt": "Táto záloha je poškodená alebo bola zmenená.",
+    "profile-backup-error-unsafe": "Táto záloha obsahuje súbory, ktoré sa nedajú bezpečne obnoviť.",
+    "profile-backup-error-too-large": "Táto záloha je väčšia, než dokáže AW Next obnoviť.",
+    "profile-backup-error-empty": "Zatiaľ nie je čo uložiť do zálohy.",
+    "profile-backup-error-busy": "Záloha už prebieha.",
+    "profile-backup-error-inside": "Vyberte umiestnenie mimo dátovej zložky AW Next.",
     "theme-layer-opacity": "Krytie",
     "chooseAnotherIconTitle": "Vybrať inú ikonu",
     "chooseAnotherIcon": "Vybrať inú ikonu…",
@@ -2243,6 +2364,7 @@
     "profile-trophies-share": "{percent} vašich úspechov",
     "profile-trophies-unranked": "{count} bez známej miery",
     "profile-trophies-at-most": "{percent} alebo menej",
+    "profile-trophies-under": "pod {percent}",
     "profile-trophies-between": "od {from} do {to}",
     "profile-trophies-above": "nad {percent}, alebo neznáme",
     "profile-trophies-platinum-games": "Hry s platinou",

@@ -86,16 +86,25 @@
     "runUninstaller": "Jalankan uninstaller game…",
     "deleteFolder": "Hapus folder game (Recycle Bin)…"
   },
+  "windowControls": {
+    "minimize": "Perkecil",
+    "maximize": "Perbesar",
+    "close": "Tutup"
+  },
   "settings": {
     "title": "Pengaturan",
     "sideMenu": {
       "general": "Umum",
       "notification": "Notifikasi",
-      "presets": "Preset",
+      "presets": "Preset notifikasi",
       "souvenir": "Suvenir",
       "folder": "Folder",
       "source": "Sumber",
-      "advanced": "Lanjutan"
+      "advanced": "Lanjutan",
+      "groupApp": "Aplikasi",
+      "groupAlerts": "Peringatan",
+      "groupLibrary": "Pustaka",
+      "groupSupport": "Dukungan"
     },
     "common": {
       "show": "Tampilkan",
@@ -108,13 +117,17 @@
       "maintainedBy": "dikelola oleh",
       "fork": "Fork",
       "original": "Asli v1.6.8",
-      "edit": "Edit"
+      "edit": "Edit",
+      "close": "Tutup",
+      "unsaved": "Perubahan belum disimpan"
     },
     "search": {
       "placeholder": "Cari pengaturan…",
       "empty": "Tidak ada pengaturan yang cocok dengan pencarian Anda.",
       "ariaLabel": "Cari pengaturan",
-      "clear": "Hapus"
+      "clear": "Hapus",
+      "advancedMore": "{count} lagi di mode Lanjutan",
+      "advancedShow": "Tampilkan Lanjutan"
     },
     "watchdog": {
       "startup": {
@@ -143,7 +156,7 @@
       "duration": "Durasi animasi"
     },
     "general": {
-      "sectionTitle": "Antarmuka dan perilaku",
+      "sectionTitle": "Pengaturan sehari-hari",
       "language": {
         "name": "Bahasa",
         "description": "Bahasa antarmuka. Data game diambil dalam bahasa ini jika tersedia."
@@ -161,7 +174,7 @@
         }
       },
       "hiddenAch": {
-        "name": "Pencapaian Tersembunyi",
+        "name": "Tampilkan Pencapaian Tersembunyi",
         "description": "Tampilkan nama dan deskripsi pencapaian tersembunyi sebelum Anda membukanya."
       },
       "mergeDuplicates": {
@@ -264,6 +277,20 @@
         "name": "Trofi pada profil",
         "description": "Menampilkan trofi platinum, emas, perak, dan perunggu di bawah nama Anda. Platinum adalah game yang mencapai 100%; sisanya mengurutkan pencapaian Anda berdasarkan jumlah pemain yang meraihnya."
       },
+      "rarityDisplay": {
+        "name": "Tampilan kelangkaan",
+        "description": "Tingkat langka hanya menandai pencapaian paling langka. Mode piala menilai setiap pencapaian dengan emas, perak, atau perunggu menurut tingkat pembukaannya dan menampilkan platinum pada game yang tamat.",
+        "rare": "Tingkat langka",
+        "trophy": "Mode piala",
+        "goldBelow": {
+          "name": "Piala emas di bawah",
+          "description": "Dalam mode piala, pencapaian yang dibuka oleh lebih sedikit pemain dari angka ini mendapat emas."
+        },
+        "silverBelow": {
+          "name": "Piala perak di bawah",
+          "description": "Dalam mode piala, pencapaian di bawah angka ini mendapat perak; sisanya, atau yang tidak diketahui angkanya, mendapat perunggu."
+        }
+      },
       "playButton": {
         "name": "Tampilkan tombol Main",
         "description": "Menampilkan tombol Main pada kartu game. Matikan jika kamu menjalankan game dari program lain. Menu klik kanan Jalankan game tetap tersedia."
@@ -302,7 +329,9 @@
           "name": "Tombol pengaturan game",
           "description": "Menampilkan tombol alat di sudut kanan atas gambar. Pengaturan game tetap bisa diakses dari menu klik kanan."
         }
-      }
+      },
+      "appSectionTitle": "Aplikasi",
+      "trophySectionTitle": "Trofi dan kelangkaan"
     },
     "emulator": {
       "nav": "Perbaikan emulator",
@@ -467,13 +496,13 @@
     },
     "notification": {
       "title": {
-        "common": "Umum",
+        "common": "Dasar",
         "toast": "Notifikasi Windows",
-        "transport": "Transport",
+        "transport": "Integrasi",
         "chromium": "Notifikasi Chromium",
         "watchdog": "Watchdog",
         "test": "Uji",
-        "overlay": "Notifikasi"
+        "overlay": "Popup"
       },
       "info": {
         "toast": "Sebagian fitur hanya tersedia di Windows 10",
@@ -602,6 +631,7 @@
             "easingOut": "Kurva keluar",
             "entryDistance": "Jarak tempuh",
             "fontFamily": "Fon",
+            "fontFile": "Berkas fon",
             "fontSize": "Ukuran fon",
             "gap": "Jarak antar elemen",
             "glow": "Pendar",
@@ -613,6 +643,10 @@
             "iconSize": "Ukuran ikon",
             "layout": "Susunan",
             "letterSpacing": "Jarak huruf",
+            "logoImage": "Logo",
+            "logoOffset": "Jarak logo dari tepi",
+            "logoPosition": "Posisi logo",
+            "logoSize": "Ukuran logo",
             "opacity": "Opasitas",
             "padX": "Padding samping",
             "padY": "Padding atas",
@@ -655,6 +689,10 @@
           "imported": "Diimpor & dipilih:",
           "importedOnly": "Preset hasil impor - ekspor atau hapus di sini; preset ini tidak dapat diubah dengan penggeser.",
           "importSan": "Impor tema SAN",
+          "layer": {
+            "none": "Tidak dikustomisasi",
+            "title": "Kustomisasi preset bawaan"
+          },
           "load": "Edit sebuah preset",
           "loaded": "Dimuat:",
           "name": "Nama",
@@ -700,6 +738,8 @@
             "artwork": "Gambar game",
             "back": "Memantul",
             "bottom": "Bawah",
+            "bottomLeft": "Kiri bawah",
+            "bottomRight": "Kanan bawah",
             "breathe": "Bernapas",
             "center": "Tengah",
             "circle": "Lingkaran",
@@ -723,6 +763,7 @@
             "linear": "Linear",
             "lines": "Garis silang",
             "mono": "Monospasi",
+            "noFont": "Tanpa berkas fon",
             "noImage": "Tanpa gambar",
             "noise": "Bintik",
             "none": "Tidak ada",
@@ -742,6 +783,8 @@
             "text": "Warna teks",
             "textOnly": "Teks saja",
             "top": "Atas",
+            "topLeft": "Kiri atas",
+            "topRight": "Kanan atas",
             "transparent": "Transparan",
             "uppercase": "HURUF BESAR",
             "zoom": "Zoom"
@@ -997,7 +1040,10 @@
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns melalui mod MadnessPatch"
-      }
+      },
+      "groupStores": "Peluncur resmi",
+      "groupEmulators": "Emulator dan patch",
+      "groupConsoles": "Konsol dan retro"
     },
     "help": {
       "nav": "Bantuan",
@@ -1134,7 +1180,11 @@
         "goldbergTitle": "Goldberg / GBE Fork",
         "goldbergDesc": "Pindai folder perpustakaan game untuk pemasangan Goldberg / GBE Fork dan tandai yang tidak memiliki skema steam_settings/achievements.json. Pakai menu klik kanan sebuah game (Diagnosis / Perbaiki) untuk memperbaiki satu game.",
         "scanFolder": "Pindai sebuah folder…",
-        "exportLogs": "Ekspor log (.zip)"
+        "exportLogs": "Ekspor log (.zip)",
+        "profileBackupTitle": "Cadangan profil",
+        "profileBackupDesc": "Simpan pengaturan, pilihan pustaka, preset, tema, sampul, dan cadangan Anda dalam satu file, lalu pulihkan setelah instal ulang atau di PC baru. Info login tidak pernah disimpan.",
+        "profileExport": "Ekspor profil…",
+        "profileRestore": "Pulihkan profil…"
       },
       "blacklistTitle": "Daftar Hitam AppID",
       "blacklistButton": "Atur ulang daftar hitam",
@@ -1176,28 +1226,28 @@
     "eyebrow": "Penyiapan awal",
     "close": "Tutup",
     "steps": [
-      "Bahasa",
-      "Cara kerjanya",
-      "Antarmuka",
-      "Akun",
+      "Dasar",
+      "Profil",
       "Game",
       "Sumber",
-      "Pengaturan"
+      "Tampilan dan peringatan",
+      "Siap"
     ],
-    "languageTitle": "Pilih bahasa",
-    "languageCopy": "Game, metadata, pencapaian, dan cache Steam semuanya dimuat dalam bahasa ini sejak awal.",
+    "welcomeTitle": "Selamat datang di AW Next",
+    "welcomeCopy": "Dua pilihan cepat untuk memulai. Semuanya bisa diubah nanti di Pengaturan, dan Anda dapat melewati sisa panduan ini kapan saja.",
     "language": "Bahasa game dan antarmuka",
     "languagePlaceholder": "Pilih bahasa…",
-    "languageHint": "Pemuatan perpustakaan pertama baru dimulai setelah pilihan ini.",
-    "introTitle": "Cara kerjanya",
-    "scanTitle": "Pindai",
-    "scanCopy": "Lokasi launcher, emulator, dan file pencapaian dideteksi otomatis - Anda meninjau setiap lokasi sebelum pemindaian pertama.",
-    "watchTitle": "Pantau",
-    "watchCopy": "Watchdog di latar belakang mengenali game saat dijalankan, melacak waktu bermain, dan memantau file pencapaiannya.",
-    "fixTitle": "Perbaikan",
-    "fixCopy": "Untuk game Steam yang diemulasikan, perbaikan lewat klik kanan memasang GBE Fork serta menulis skema pencapaian dan data DLC.",
+    "languageHint": "Game, metadata, pencapaian, dan cache Steam semuanya dimuat dalam bahasa ini. Pemuatan perpustakaan pertama dimulai setelah pilihan ini.",
     "overlayTitle": "Overlay dalam game",
-    "overlayCopy": "Panel pencapaian kecil yang Anda munculkan di atas game dengan sebuah pintasan - Ctrl+Shift+K secara bawaan.",
+    "overlayCopy": "Tekan {hotkey} di dalam game untuk melihat pencapaiannya di atas game.",
+    "collectionsTitle": "Koleksi",
+    "collectionsCopy": "Kelompokkan game ke dalam koleksi Anda sendiri dari menu klik kanan sebuah game.",
+    "trophyTitle": "Mode piala",
+    "trophyCopy": "Beri pencapaian peringkat emas, perak, atau perunggu berdasarkan kelangkaannya. Aktifkan di Pengaturan.",
+    "clipsTitle": "Klip video",
+    "clipsCopy": "Simpan klip singkat di sekitar setiap pembukaan. Aktifkan di Pengaturan, di bagian Notifikasi.",
+    "backupTitle": "Cadangan profil",
+    "backupCopy": "Simpan pengaturan dan pilihan perpustakaan Anda ke satu berkas, lalu pulihkan setelah instal ulang.",
     "profileTitle": "Profil",
     "profileCopy": "Pilih nama yang tampil di header dan, bila mau, tetapkan avatar lokal.",
     "username": "Nama tampilan",
@@ -1205,8 +1255,21 @@
     "avatarPick": "Pilih foto",
     "avatarDefault": "Bawaan",
     "avatarHint": "Opsional. Disimpan secara lokal di PC ini.",
-    "foldersTitle": "Tambahkan game di diska",
-    "foldersCopy": "Pakai Pencarian cerdas untuk mendeteksi folder save/konfigurasi dan perpustakaan game secara otomatis. Atau tambahkan sendiri menurut jenis foldernya.",
+    "foldersTitle": "Game Anda",
+    "foldersCopy": "AW Next mencari game di PC ini dan menampilkan hasilnya. Tambahkan folder hanya jika ada yang kurang.",
+    "detectTitle": "Ditemukan di PC ini",
+    "detectInstalled": "{count} terpasang",
+    "detectNone": "Tidak ada yang ditemukan",
+    "detectOff": "nonaktif",
+    "detectEmulators": "Save emulator",
+    "detectFolders": "Game: {games} · Folder: {folders}",
+    "detectTotal": "Game ditemukan: {count}",
+    "detectNothing": "Belum ada game yang ditemukan",
+    "detectSteamOff": "Game Steam Anda tetap tersembunyi sampai Steam diaktifkan di Sumber.",
+    "detectReviewSources": "Tinjau sumber",
+    "smartFound": "Folder baru ditemukan: {count}",
+    "smartNone": "Tidak ada folder baru yang ditemukan.",
+    "folderGames": "Game ditemukan di folder ini: {count}",
     "addSave": "Folder save/konfigurasi",
     "smartFind": "Cari folder secara cerdas",
     "addLibrary": "Folder perpustakaan game",
@@ -1216,12 +1279,22 @@
     "saveList": "Folder save / konfigurasi",
     "libraryList": "Perpustakaan game",
     "emptyList": "Belum ada yang ditambahkan pada sesi ini.",
-    "settingsTitle": "Pengaturan yang disarankan",
-    "settingsCopy": "Hal penting untuk perpustakaan, tampilan, dan notifikasi Anda. Semuanya masih bisa diubah nanti.",
-    "summarySources": "Sumber yang diaktifkan",
+    "settingsTitle": "Tampilan dan peringatan",
+    "settingsCopy": "Pilih tema dan cara peringatan pembukaan muncul. Gunakan Uji notifikasi untuk melihatnya sekarang juga.",
+    "moreOptions": "Opsi lainnya",
+    "readyTitle": "Semua sudah siap",
+    "readyCopy": "AW Next kini memantau game Anda di latar belakang dan memberi tahu saat Anda membuka sesuatu.",
+    "featuresTitle": "Perlu diketahui",
+    "summarySources": "{count} sumber diaktifkan",
+    "summaryAccounts": "Masuk sebagai: {names}",
+    "summaryGames": "Game ditemukan: {count} · Folder dipantau: {folders}",
+    "summaryNoGames": "Belum ada game yang ditemukan. Anda dapat menambahkan folder nanti di Pengaturan.",
+    "summaryLook": "Tema: {theme} · Notifikasi: {notifications}",
+    "summaryChange": "Ubah",
     "summaryReopen": "Anda dapat membuka kembali panduan ini kapan saja dari Pengaturan > Umum.",
     "sourcesTitle": "Dari mana pencapaian Anda berasal",
-    "sourcesCopy": "Semuanya dibaca di PC ini. Nonaktifkan yang tidak Anda pakai; semuanya tetap bisa diubah di Pengaturan.",
+    "sourcesCopy": "Setiap sumber yang terpasang di PC ini dibaca otomatis, jadi pengaturan bawaan sudah cukup. Masuk di bawah hanya jika Anda ingin lebih.",
+    "sourcesMore": "Atur sumber ({count} diaktifkan)",
     "accountsTitle": "Akun (opsional)",
     "accountsCopy": "Masuk untuk membaca pencapaian yang terbuka dari profil Steam pribadi, menambahkan game Steam Family Anda, mengimpor pustaka Xbox PC Anda, dan menampilkan progres Epic Anda. Anda dapat melewati ini dan menghubungkan akun nanti di Pengaturan > Sumber.",
     "sourcesEmulators": "Emulator",
@@ -1253,6 +1326,8 @@
     "next": "Lanjut",
     "finish": "Selesai",
     "skip": "Lewati",
+    "skipSetup": "Lewati penyiapan",
+    "saveClose": "Simpan dan tutup",
     "saving": "Menyimpan…",
     "saved": "Penyiapan tersimpan.",
     "languageRequired": "Pilih sebuah bahasa untuk melanjutkan.",
@@ -1324,7 +1399,28 @@
     "controllerMove": "Pindah/gulir"
   },
   "dialogs": {
+    "collections": "Koleksi",
+    "collection-all": "Semua game",
+    "collection-new": "Koleksi baru…",
+    "collection-edit": "Edit koleksi…",
+    "collection-name": "Nama koleksi",
+    "collection-default-name": "Koleksi baru",
+    "collection-field-name": "Nama",
+    "collection-field-color": "Warna",
+    "collection-field-icon": "Ikon",
+    "collection-field-image": "Gambar",
+    "collection-choose-image": "Pilih gambar…",
+    "collection-remove-image": "Hapus gambar",
+    "collection-delete": "Hapus koleksi",
+    "collection-delete-confirm": "Hapus koleksi \"{name}\"? Game tetap ada di perpustakaan Anda.",
+    "collection-limit": "Anda telah mencapai batas {count} koleksi.",
+    "collection-image-error": "Gambar ini tidak dapat digunakan. Pilih file PNG, JPEG, GIF, atau WebP di bawah 5 MB.",
     "choose-preset-image": "Pilih gambar latar",
+    "choose-preset-font": "Pilih berkas fon",
+    "choose-preset-logo": "Pilih logo",
+    "preset-font-refused": "Berkas itu bukan fon yang dapat dipakai. Gunakan berkas TTF, OTF, WOFF, atau WOFF2 maksimal 4 MB.",
+    "preset-logo-refused": "Berkas itu bukan logo yang dapat dipakai. Gunakan gambar PNG, JPEG, GIF, WebP, atau BMP maksimal 2 MB.",
+    "preset-layer-note": "Mengustomisasi {preset}. Centang bagian untuk mengubahnya; apa pun yang tidak dicentang tetap seperti yang disediakan preset bawaan. Perubahanmu diterapkan di atasnya: preset bawaan tidak disalin atau diubah.",
     "folder-reason-ea-app": "Ini rilis aplikasi EA. Game yang dijalankan lewat aplikasi EA menyimpan pencapaiannya di akun EA, bukan di folder game, jadi tidak ada file pembuka pencapaian yang bisa dibaca di sini. Pencapaian tersebut diambil oleh sumber EA di Pengaturan > Sumber, bukan oleh folder yang dipantau.",
     "folder-reason-game-no-data": "Ini folder game, tetapi tidak memuat konfigurasi emulator maupun file pencapaian dalam tata letak apa pun yang dapat dibaca AW Next.",
     "folder-reason-unreadable": "Folder ini tidak dapat dibaca.",
@@ -2175,6 +2271,31 @@
     "export-logs-done": "{count} file log ditulis ke {path}",
     "export-logs-failed": "Tidak dapat mengekspor log: {error}",
     "zip-archive": "Arsip Zip",
+    "profile-backup-file-type": "Cadangan profil AW Next",
+    "profile-backup-export-title": "Ekspor profil",
+    "profile-backup-restore-title": "Pulihkan profil",
+    "profile-backup-exporting": "Mengekspor profil… {percent}%",
+    "profile-backup-export-done": "Profil disimpan ke {path} ({count} file, {size}).",
+    "profile-backup-export-failed": "Tidak dapat mengekspor profil: {error}",
+    "profile-backup-restore-confirm": "Pulihkan profil ini?",
+    "profile-backup-restore-confirm-detail": "Cadangan berisi {count} file ({size}), disimpan {date}. Pengaturan, preset, tema, dan sampul Anda saat ini akan diganti dengan yang ada di cadangan. File yang diganti tetap disimpan, dan pemulihan yang gagal akan dibatalkan. AW Next dimulai ulang untuk menerapkannya.",
+    "profile-backup-restore-button": "Pulihkan dan mulai ulang",
+    "profile-backup-checking": "Memeriksa cadangan… {percent}%",
+    "profile-backup-restarting": "Cadangan telah diperiksa. Memulai ulang untuk menerapkannya…",
+    "profile-backup-restore-failed": "Tidak dapat memulihkan profil: {error}",
+    "profile-backup-applied": "Profil dipulihkan ({count} file).",
+    "profile-backup-applied-signin": "Info login tidak pernah disimpan dalam cadangan. Login kembali ke: {accounts}.",
+    "profile-backup-applied-signin-generic": "Info login tidak pernah disimpan dalam cadangan. Login kembali ke akun apa pun yang sebelumnya terhubung.",
+    "profile-backup-apply-failed": "Profil tidak dapat dipulihkan. File Anda sebelumnya telah dikembalikan. Detail: {error}",
+    "profile-backup-account-emulator": "Login Steam untuk alat emulator",
+    "profile-backup-error-invalid": "File ini bukan cadangan profil AW Next.",
+    "profile-backup-error-too-new": "Cadangan ini dibuat oleh versi AW Next yang lebih baru. Perbarui aplikasi terlebih dahulu.",
+    "profile-backup-error-corrupt": "Cadangan ini rusak atau telah diubah.",
+    "profile-backup-error-unsafe": "Cadangan ini berisi file yang tidak dapat dipulihkan dengan aman.",
+    "profile-backup-error-too-large": "Cadangan ini lebih besar dari yang dapat dipulihkan AW Next.",
+    "profile-backup-error-empty": "Belum ada yang dapat dimasukkan ke dalam cadangan.",
+    "profile-backup-error-busy": "Pencadangan sedang berjalan.",
+    "profile-backup-error-inside": "Pilih lokasi di luar folder data AW Next.",
     "theme-layer-opacity": "Opasitas",
     "chooseAnotherIconTitle": "Pilih ikon lain",
     "chooseAnotherIcon": "Pilih ikon lain…",
@@ -2243,6 +2364,7 @@
     "profile-trophies-share": "{percent} dari pencapaian Anda",
     "profile-trophies-unranked": "{count} tanpa rasio yang diketahui",
     "profile-trophies-at-most": "{percent} atau kurang",
+    "profile-trophies-under": "di bawah {percent}",
     "profile-trophies-between": "{from} sampai {to}",
     "profile-trophies-above": "di atas {percent}, atau tidak diketahui",
     "profile-trophies-platinum-games": "Game platinum",

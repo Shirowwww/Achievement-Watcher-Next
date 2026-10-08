@@ -255,7 +255,7 @@ function updateInstalledEmptyState() {
 function applyInstalledFilter({ animateStats = false } = {}) {
   const on = installedOnlyEnabled();
   $('#game-list ul').toggleClass('installed-only', on);
-  $('#sort-box .installed-filter').toggleClass('active', on);
+  $('#sort-box .installed-filter').toggleClass('active', on).attr('aria-pressed', String(on));
   updateInstalledEmptyState();
   window.refreshProfileStats?.({ animate: animateStats });
   window.refreshProfileStatsPanel?.();

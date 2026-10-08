@@ -86,16 +86,25 @@
     "runUninstaller": "執行遊戲解除安裝程式…",
     "deleteFolder": "刪除遊戲資料夾（資源回收筒）…"
   },
+  "windowControls": {
+    "minimize": "最小化",
+    "maximize": "最大化",
+    "close": "關閉"
+  },
   "settings": {
     "title": "設定",
     "sideMenu": {
       "general": "一般",
       "notification": "通知",
-      "presets": "預設集",
+      "presets": "通知預設集",
       "souvenir": "紀念",
       "folder": "資料夾",
       "source": "來源",
-      "advanced": "進階"
+      "advanced": "進階",
+      "groupApp": "應用程式",
+      "groupAlerts": "提醒",
+      "groupLibrary": "資料庫",
+      "groupSupport": "支援"
     },
     "common": {
       "show": "顯示",
@@ -108,13 +117,17 @@
       "maintainedBy": "維護者",
       "fork": "分支版本",
       "original": "原版 v1.6.8",
-      "edit": "編輯"
+      "edit": "編輯",
+      "close": "關閉",
+      "unsaved": "未儲存的變更"
     },
     "search": {
       "placeholder": "搜尋設定…",
       "empty": "沒有符合搜尋條件的設定。",
       "ariaLabel": "搜尋設定",
-      "clear": "清除"
+      "clear": "清除",
+      "advancedMore": "進階模式中還有 {count} 項",
+      "advancedShow": "顯示進階"
     },
     "watchdog": {
       "startup": {
@@ -143,7 +156,7 @@
       "duration": "動畫持續時間"
     },
     "general": {
-      "sectionTitle": "介面與行為",
+      "sectionTitle": "日常設定",
       "language": {
         "name": "語言",
         "description": "介面語言。遊戲資料在可取得時也會以此語言載入。"
@@ -161,7 +174,7 @@
         }
       },
       "hiddenAch": {
-        "name": "隱藏成就",
+        "name": "顯示隱藏成就",
         "description": "在解鎖之前就顯示隱藏成就的名稱與說明。"
       },
       "mergeDuplicates": {
@@ -264,6 +277,20 @@
         "name": "個人檔案中的獎盃",
         "description": "在您的名稱下方顯示白金、金、銀、銅獎盃。白金指達成 100% 的遊戲；其餘則依解鎖玩家的比例為您的成就分級。"
       },
+      "rarityDisplay": {
+        "name": "稀有度顯示",
+        "description": "稀有等級只標記最稀有的成就。獎盃模式會依解鎖率將每個成就評為金、銀或銅，並在已完成的遊戲上顯示白金。",
+        "rare": "稀有等級",
+        "trophy": "獎盃模式",
+        "goldBelow": {
+          "name": "金獎盃低於",
+          "description": "在獎盃模式下，解鎖玩家比例低於此值的成就獲得金獎盃。"
+        },
+        "silverBelow": {
+          "name": "銀獎盃低於",
+          "description": "在獎盃模式下，低於此比例的成就獲得銀獎盃；其餘或比例未知的成就獲得銅獎盃。"
+        }
+      },
       "playButton": {
         "name": "顯示開始遊戲按鈕",
         "description": "在遊戲卡片上顯示開始遊戲按鈕。如果你透過其他程式啟動遊戲，可以將其關閉。右鍵選單中的啟動遊戲項目仍可使用。"
@@ -302,7 +329,9 @@
           "name": "遊戲設定按鈕",
           "description": "在美術圖右上角顯示工具按鈕。遊戲設定仍可透過右鍵選單開啟。"
         }
-      }
+      },
+      "appSectionTitle": "應用程式",
+      "trophySectionTitle": "獎盃與稀有度"
     },
     "emulator": {
       "nav": "模擬器修復",
@@ -467,13 +496,13 @@
     },
     "notification": {
       "title": {
-        "common": "一般",
+        "common": "基礎",
         "toast": "Windows 通知",
-        "transport": "傳送方式",
+        "transport": "整合",
         "chromium": "Chromium 通知",
         "watchdog": "Watchdog",
         "test": "測試",
-        "overlay": "通知"
+        "overlay": "彈出視窗"
       },
       "info": {
         "toast": "部分功能僅在 Windows 10 可用",
@@ -602,6 +631,7 @@
             "easingOut": "退場曲線",
             "entryDistance": "移動距離",
             "fontFamily": "字型",
+            "fontFile": "字型檔案",
             "fontSize": "字型大小",
             "gap": "間距",
             "glow": "光暈",
@@ -613,6 +643,10 @@
             "iconSize": "圖示大小",
             "layout": "排列方式",
             "letterSpacing": "字元間距",
+            "logoImage": "標誌",
+            "logoOffset": "標誌與邊緣的距離",
+            "logoPosition": "標誌位置",
+            "logoSize": "標誌大小",
             "opacity": "不透明度",
             "padX": "左右留白",
             "padY": "上下留白",
@@ -655,6 +689,10 @@
           "imported": "已匯入並選用：",
           "importedOnly": "匯入的預設集 - 只能在此匯出或刪除，無法用滑桿編輯。",
           "importSan": "匯入 SAN 主題",
+          "layer": {
+            "none": "不自訂",
+            "title": "自訂內建預設集"
+          },
           "load": "編輯預設集",
           "loaded": "已載入：",
           "name": "名稱",
@@ -700,6 +738,8 @@
             "artwork": "遊戲圖像",
             "back": "彈跳",
             "bottom": "下方",
+            "bottomLeft": "左下",
+            "bottomRight": "右下",
             "breathe": "呼吸",
             "center": "置中",
             "circle": "圓形",
@@ -723,6 +763,7 @@
             "linear": "線性",
             "lines": "斜紋",
             "mono": "等寬",
+            "noFont": "無字型檔案",
             "noImage": "不使用圖片",
             "noise": "顆粒",
             "none": "無",
@@ -742,6 +783,8 @@
             "text": "文字顏色",
             "textOnly": "僅文字",
             "top": "上方",
+            "topLeft": "左上",
+            "topRight": "右上",
             "transparent": "透明",
             "uppercase": "全部大寫",
             "zoom": "縮放"
@@ -997,7 +1040,10 @@
       },
       "madnesspatch": {
         "description": "透過 MadnessPatch 模組執行的 Alice: Madness Returns"
-      }
+      },
+      "groupStores": "官方啟動器",
+      "groupEmulators": "模擬器與修補程式",
+      "groupConsoles": "主機與復古"
     },
     "help": {
       "nav": "說明",
@@ -1134,7 +1180,11 @@
         "goldbergTitle": "Goldberg / GBE Fork",
         "goldbergDesc": "掃描遊戲收藏庫資料夾，找出 Goldberg / GBE Fork 的安裝，並標記缺少 steam_settings/achievements.json 結構的項目。要修復單一遊戲，請使用它的右鍵選單（診斷／修復）。",
         "scanFolder": "掃描資料夾…",
-        "exportLogs": "匯出記錄檔（.zip）"
+        "exportLogs": "匯出記錄檔（.zip）",
+        "profileBackupTitle": "設定檔備份",
+        "profileBackupDesc": "將設定、媒體庫選擇、預設、佈景主題、封面和備份儲存到一個檔案中，重新安裝後或在新電腦上即可還原。登入資訊不會被儲存。",
+        "profileExport": "匯出設定檔…",
+        "profileRestore": "還原設定檔…"
       },
       "blacklistTitle": "AppID 黑名單",
       "blacklistButton": "重設黑名單",
@@ -1176,28 +1226,28 @@
     "eyebrow": "初次設定",
     "close": "關閉",
     "steps": [
-      "語言",
-      "運作方式",
-      "介面",
-      "帳戶",
+      "基礎",
+      "個人檔案",
       "遊戲",
       "來源",
-      "設定"
+      "外觀與提醒",
+      "完成"
     ],
-    "languageTitle": "選擇語言",
-    "languageCopy": "遊戲、中繼資料、成就與 Steam 快取從一開始就會以這個語言載入。",
+    "welcomeTitle": "歡迎使用 AW Next",
+    "welcomeCopy": "開始前先做兩個簡單的選擇。之後都可以在設定中變更，你也可以隨時略過本指南的其餘部分。",
     "language": "遊戲與介面語言",
     "languagePlaceholder": "選擇語言…",
-    "languageHint": "第一次載入收藏庫要在做出選擇之後才會開始。",
-    "introTitle": "運作方式",
-    "scanTitle": "掃描",
-    "scanCopy": "啟動器、模擬器與成就檔案的位置都會自動偵測 - 你可以在第一次掃描前逐一確認。",
-    "watchTitle": "監看",
-    "watchCopy": "背景執行的 Watchdog 會在遊戲啟動時發現它，追蹤遊玩時數並監看它的成就檔案。",
-    "fixTitle": "修復",
-    "fixCopy": "對於模擬的 Steam 遊戲，右鍵選單中的修復會安裝 GBE Fork，並寫入成就結構與 DLC 資料。",
+    "languageHint": "遊戲、中繼資料、成就和 Steam 快取都會以此語言載入。第一次載入收藏庫要在做出選擇之後才會開始。",
     "overlayTitle": "遊戲內嵌介面",
-    "overlayCopy": "一個可以用快速鍵叫出、疊在遊戲畫面上的小型成就面板 - 預設為 Ctrl+Shift+K。",
+    "overlayCopy": "在遊戲中按 {hotkey}，就能在遊戲上方查看它的成就。",
+    "collectionsTitle": "收藏集",
+    "collectionsCopy": "透過遊戲的右鍵選單，把遊戲歸入你自己的收藏集。",
+    "trophyTitle": "獎盃模式",
+    "trophyCopy": "依稀有度把成就評為金、銀或銅。可在設定中開啟。",
+    "clipsTitle": "影片剪輯",
+    "clipsCopy": "在每次解鎖前後保留一小段剪輯。可在設定的通知中開啟。",
+    "backupTitle": "設定檔備份",
+    "backupCopy": "把你的設定和收藏庫選擇儲存到一個檔案中，重新安裝後可以還原。",
     "profileTitle": "個人檔案",
     "profileCopy": "選擇要顯示在標題列的名稱，也可以另外設定本機頭像。",
     "username": "顯示名稱",
@@ -1205,8 +1255,21 @@
     "avatarPick": "選擇相片",
     "avatarDefault": "預設",
     "avatarHint": "選填。只會儲存在這台電腦上。",
-    "foldersTitle": "加入磁碟上的遊戲",
-    "foldersCopy": "使用智慧尋找自動偵測存檔／設定資料夾與遊戲收藏庫，也可以依資料夾類型手動新增。",
+    "foldersTitle": "你的遊戲",
+    "foldersCopy": "AW Next 會在這台電腦上尋找遊戲並顯示找到的內容。只有在缺少某些遊戲時才需要加入資料夾。",
+    "detectTitle": "在這台電腦上找到",
+    "detectInstalled": "已安裝 {count} 個",
+    "detectNone": "未找到",
+    "detectOff": "關閉",
+    "detectEmulators": "模擬器存檔",
+    "detectFolders": "遊戲：{games} · 資料夾：{folders}",
+    "detectTotal": "找到的遊戲：{count}",
+    "detectNothing": "尚未找到遊戲",
+    "detectSteamOff": "在來源中開啟 Steam 之前，你的 Steam 遊戲會保持隱藏。",
+    "detectReviewSources": "檢視來源",
+    "smartFound": "找到的新資料夾：{count}",
+    "smartNone": "未找到新資料夾。",
+    "folderGames": "此資料夾中找到的遊戲：{count}",
     "addSave": "存檔／設定資料夾",
     "smartFind": "智慧尋找資料夾",
     "addLibrary": "遊戲收藏庫資料夾",
@@ -1216,12 +1279,22 @@
     "saveList": "存檔／設定資料夾",
     "libraryList": "遊戲收藏庫",
     "emptyList": "這次沒有新增任何項目。",
-    "settingsTitle": "建議設定",
-    "settingsCopy": "收藏庫、外觀與通知的必備設定。之後都還可以隨時修改。",
-    "summarySources": "已啟用的來源",
+    "settingsTitle": "外觀與提醒",
+    "settingsCopy": "選擇佈景主題以及解鎖提醒的顯示方式。使用測試通知可立即查看一個。",
+    "moreOptions": "更多選項",
+    "readyTitle": "一切就緒",
+    "readyCopy": "AW Next 現在會在背景關注你的遊戲，並在你解鎖成就時通知你。",
+    "featuresTitle": "須知",
+    "summarySources": "已啟用 {count} 個來源",
+    "summaryAccounts": "已登入：{names}",
+    "summaryGames": "找到的遊戲：{count} · 監看的資料夾：{folders}",
+    "summaryNoGames": "尚未找到遊戲。你可以稍後在設定中加入資料夾。",
+    "summaryLook": "佈景主題：{theme} · 通知：{notifications}",
+    "summaryChange": "變更",
     "summaryReopen": "你可以隨時從設定 > 一般重新開啟這份指南。",
     "sourcesTitle": "成就的來源",
-    "sourcesCopy": "以下每一項都會在本機讀取。不需要的可以關閉，全部都能之後在設定中修改。",
+    "sourcesCopy": "這台電腦上安裝的每個來源都會自動讀取，因此預設值即可。只有需要更多內容時才在下方登入。",
+    "sourcesMore": "微調來源（已啟用 {count} 個）",
     "accountsTitle": "帳戶（選用）",
     "accountsCopy": "登入即可讀取私人 Steam 個人資料的解鎖紀錄、加入你的 Steam 家庭遊戲、匯入你的 Xbox PC 遊戲庫，並顯示你的 Epic 進度。你可以略過這一步，之後再到設定 > 來源中連結。",
     "sourcesEmulators": "模擬器",
@@ -1253,6 +1326,8 @@
     "next": "下一步",
     "finish": "完成",
     "skip": "略過",
+    "skipSetup": "略過設定",
+    "saveClose": "儲存並關閉",
     "saving": "儲存中…",
     "saved": "設定已儲存。",
     "languageRequired": "請選擇語言以繼續。",
@@ -1324,7 +1399,28 @@
     "controllerMove": "移動／捲動"
   },
   "dialogs": {
+    "collections": "收藏集",
+    "collection-all": "所有遊戲",
+    "collection-new": "新增收藏集…",
+    "collection-edit": "編輯收藏集…",
+    "collection-name": "收藏集名稱",
+    "collection-default-name": "新收藏集",
+    "collection-field-name": "名稱",
+    "collection-field-color": "顏色",
+    "collection-field-icon": "圖示",
+    "collection-field-image": "圖片",
+    "collection-choose-image": "選擇圖片…",
+    "collection-remove-image": "移除圖片",
+    "collection-delete": "刪除收藏集",
+    "collection-delete-confirm": "要刪除收藏集「{name}」嗎？遊戲仍會保留在你的收藏庫中。",
+    "collection-limit": "你已達到 {count} 個收藏集的上限。",
+    "collection-image-error": "無法使用此圖片。請選擇小於 5 MB 的 PNG、JPEG、GIF 或 WebP 檔案。",
     "choose-preset-image": "選擇背景圖片",
+    "choose-preset-font": "選擇字型檔案",
+    "choose-preset-logo": "選擇標誌",
+    "preset-font-refused": "該檔案不是可用的字型。請使用不超過 4 MB 的 TTF、OTF、WOFF 或 WOFF2 檔案。",
+    "preset-logo-refused": "該檔案不是可用的標誌。請使用不超過 2 MB 的 PNG、JPEG、GIF、WebP 或 BMP 圖片。",
+    "preset-layer-note": "正在自訂 {preset}。勾選某個部分即可變更;未勾選的部分維持內建預設集的原樣。你的變更疊加在其上:內建預設集不會被複製或修改。",
     "folder-reason-ea-app": "這是 EA app 版本。透過 EA app 啟動的遊戲會把成就保存在 EA 帳戶上，而不是遊戲資料夾裡，因此這裡沒有可讀取的解鎖檔案。那些解鎖會由「設定 > 來源」中的 EA 來源接手，而不是靠監看資料夾。",
     "folder-reason-game-no-data": "這是遊戲資料夾，但裡面沒有模擬器設定，也沒有任何 AW Next 讀得懂的解鎖檔案格式。",
     "folder-reason-unreadable": "無法讀取這個資料夾。",
@@ -2175,6 +2271,31 @@
     "export-logs-done": "已將 {count} 個記錄檔寫入 {path}",
     "export-logs-failed": "無法匯出記錄檔：{error}",
     "zip-archive": "Zip 壓縮檔",
+    "profile-backup-file-type": "AW Next 設定檔備份",
+    "profile-backup-export-title": "匯出設定檔",
+    "profile-backup-restore-title": "還原設定檔",
+    "profile-backup-exporting": "正在匯出設定檔… {percent}%",
+    "profile-backup-export-done": "設定檔已儲存到 {path}（{count} 個檔案，{size}）。",
+    "profile-backup-export-failed": "無法匯出設定檔：{error}",
+    "profile-backup-restore-confirm": "要還原此設定檔嗎？",
+    "profile-backup-restore-confirm-detail": "此備份包含 {count} 個檔案（{size}），儲存於 {date}。目前的設定、預設、佈景主題和封面將被備份中的內容取代。被取代的檔案會保留，還原失敗時會自動復原。AW Next 將重新啟動以套用。",
+    "profile-backup-restore-button": "還原並重新啟動",
+    "profile-backup-checking": "正在檢查備份… {percent}%",
+    "profile-backup-restarting": "備份檢查完成。正在重新啟動以套用…",
+    "profile-backup-restore-failed": "無法還原設定檔：{error}",
+    "profile-backup-applied": "設定檔已還原（{count} 個檔案）。",
+    "profile-backup-applied-signin": "登入資訊不會儲存在備份中。請重新登入：{accounts}。",
+    "profile-backup-applied-signin-generic": "登入資訊不會儲存在備份中。請重新登入您先前連結過的所有帳號。",
+    "profile-backup-apply-failed": "無法還原設定檔。您先前的檔案已放回原處。詳細資料：{error}",
+    "profile-backup-account-emulator": "模擬器工具使用的 Steam 登入",
+    "profile-backup-error-invalid": "此檔案不是 AW Next 設定檔備份。",
+    "profile-backup-error-too-new": "此備份由較新版本的 AW Next 建立。請先更新應用程式。",
+    "profile-backup-error-corrupt": "此備份已損毀或被修改過。",
+    "profile-backup-error-unsafe": "此備份包含無法安全還原的檔案。",
+    "profile-backup-error-too-large": "此備份超出 AW Next 可還原的大小。",
+    "profile-backup-error-empty": "目前沒有可放入備份的內容。",
+    "profile-backup-error-busy": "已有備份正在進行。",
+    "profile-backup-error-inside": "請選擇 AW Next 資料資料夾以外的位置。",
     "theme-layer-opacity": "不透明度",
     "chooseAnotherIconTitle": "選擇其他圖示",
     "chooseAnotherIcon": "選擇其他圖示…",
@@ -2243,6 +2364,7 @@
     "profile-trophies-share": "佔您成就的 {percent}",
     "profile-trophies-unranked": "{count} 個未知解鎖率",
     "profile-trophies-at-most": "{percent} 或更低",
+    "profile-trophies-under": "低於 {percent}",
     "profile-trophies-between": "{from} 至 {to}",
     "profile-trophies-above": "高於 {percent}，或未知",
     "profile-trophies-platinum-games": "白金遊戲",

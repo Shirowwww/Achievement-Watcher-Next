@@ -86,16 +86,25 @@
     "runUninstaller": "运行游戏卸载程序…",
     "deleteFolder": "删除游戏文件夹（回收站）…"
   },
+  "windowControls": {
+    "minimize": "最小化",
+    "maximize": "最大化",
+    "close": "关闭"
+  },
   "settings": {
     "title": "设置",
     "sideMenu": {
       "general": "常规",
       "notification": "通知",
-      "presets": "预设",
+      "presets": "通知预设",
       "souvenir": "纪念",
       "folder": "文件夹",
       "source": "来源",
-      "advanced": "高级"
+      "advanced": "高级",
+      "groupApp": "应用",
+      "groupAlerts": "提醒",
+      "groupLibrary": "库",
+      "groupSupport": "支持"
     },
     "common": {
       "show": "显示",
@@ -108,13 +117,17 @@
       "maintainedBy": "维护者",
       "fork": "分支",
       "original": "原版 v1.6.8",
-      "edit": "编辑"
+      "edit": "编辑",
+      "close": "关闭",
+      "unsaved": "未保存的更改"
     },
     "search": {
       "placeholder": "搜索设置…",
       "empty": "没有符合搜索条件的设置。",
       "ariaLabel": "搜索设置",
-      "clear": "清除"
+      "clear": "清除",
+      "advancedMore": "高级模式中还有 {count} 项",
+      "advancedShow": "显示高级"
     },
     "watchdog": {
       "startup": {
@@ -143,7 +156,7 @@
       "duration": "动画时长"
     },
     "general": {
-      "sectionTitle": "界面与行为",
+      "sectionTitle": "日常设置",
       "language": {
         "name": "语言",
         "description": "界面语言。在可用时，游戏数据将以此语言获取。"
@@ -161,7 +174,7 @@
         }
       },
       "hiddenAch": {
-        "name": "隐藏成就",
+        "name": "显示隐藏成就",
         "description": "在解锁前显示隐藏成就的名称和描述。"
       },
       "mergeDuplicates": {
@@ -264,6 +277,20 @@
         "name": "个人资料中的奖杯",
         "description": "在您的名称下方显示白金、金、银、铜奖杯。白金指达成 100% 的游戏；其余则根据解锁玩家的比例对您的成就进行分级。"
       },
+      "rarityDisplay": {
+        "name": "稀有度显示",
+        "description": "稀有等级只标记最稀有的成就。奖杯模式会按解锁率把每个成就评为金、银或铜，并在已完成的游戏上显示白金。",
+        "rare": "稀有等级",
+        "trophy": "奖杯模式",
+        "goldBelow": {
+          "name": "金奖杯低于",
+          "description": "在奖杯模式下，解锁玩家比例低于此值的成就获得金奖杯。"
+        },
+        "silverBelow": {
+          "name": "银奖杯低于",
+          "description": "在奖杯模式下，低于此比例的成就获得银奖杯；其余或比例未知的成就获得铜奖杯。"
+        }
+      },
       "playButton": {
         "name": "显示开始游戏按钮",
         "description": "在游戏磁贴上显示开始游戏按钮。如果你通过其他程序启动游戏，可以将其关闭。右键菜单中的启动游戏项仍然可用。"
@@ -302,7 +329,9 @@
           "name": "游戏设置按钮",
           "description": "在封面右上角显示工具按钮。游戏设置仍可通过右键菜单打开。"
         }
-      }
+      },
+      "appSectionTitle": "应用程序",
+      "trophySectionTitle": "奖杯与稀有度"
     },
     "emulator": {
       "nav": "模拟器修复",
@@ -467,13 +496,13 @@
     },
     "notification": {
       "title": {
-        "common": "通用",
+        "common": "基础",
         "toast": "Windows 通知",
-        "transport": "传输",
+        "transport": "集成",
         "chromium": "Chromium 通知",
         "watchdog": "Watchdog",
         "test": "测试",
-        "overlay": "通知"
+        "overlay": "弹窗"
       },
       "info": {
         "toast": "部分功能仅在 Windows 10 中可用",
@@ -602,6 +631,7 @@
             "easingOut": "退出曲线",
             "entryDistance": "移动距离",
             "fontFamily": "字体",
+            "fontFile": "字体文件",
             "fontSize": "字体大小",
             "gap": "间距",
             "glow": "光晕",
@@ -613,6 +643,10 @@
             "iconSize": "图标大小",
             "layout": "排列方式",
             "letterSpacing": "字间距",
+            "logoImage": "徽标",
+            "logoOffset": "徽标与边缘的距离",
+            "logoPosition": "徽标位置",
+            "logoSize": "徽标大小",
             "opacity": "不透明度",
             "padX": "左右内边距",
             "padY": "上下内边距",
@@ -655,6 +689,10 @@
           "imported": "已导入并选择：",
           "importedOnly": "导入的预设 - 可在此导出或删除，但无法用滑块编辑。",
           "importSan": "导入 SAN 主题",
+          "layer": {
+            "none": "不自定义",
+            "title": "自定义内置预设"
+          },
           "load": "编辑预设",
           "loaded": "已加载：",
           "name": "名称",
@@ -700,6 +738,8 @@
             "artwork": "游戏封面",
             "back": "回弹",
             "bottom": "底部",
+            "bottomLeft": "左下",
+            "bottomRight": "右下",
             "breathe": "呼吸",
             "center": "居中",
             "circle": "圆形",
@@ -723,6 +763,7 @@
             "linear": "匀速",
             "lines": "斜纹",
             "mono": "等宽",
+            "noFont": "无字体文件",
             "noImage": "无图片",
             "noise": "颗粒",
             "none": "无",
@@ -742,6 +783,8 @@
             "text": "文字颜色",
             "textOnly": "仅文字",
             "top": "顶部",
+            "topLeft": "左上",
+            "topRight": "右上",
             "transparent": "透明",
             "uppercase": "大写",
             "zoom": "缩放"
@@ -997,7 +1040,10 @@
       },
       "madnesspatch": {
         "description": "通过 MadnessPatch 模组运行的 Alice: Madness Returns"
-      }
+      },
+      "groupStores": "官方启动器",
+      "groupEmulators": "模拟器与补丁",
+      "groupConsoles": "主机与复古"
     },
     "help": {
       "nav": "帮助",
@@ -1134,7 +1180,11 @@
         "goldbergTitle": "Goldberg / GBE Fork",
         "goldbergDesc": "扫描游戏库文件夹中的 Goldberg / GBE Fork 安装，并标记缺少 steam_settings/achievements.json 架构的项目。使用游戏的右键菜单（诊断 / 修复）来修复其中一项。",
         "scanFolder": "扫描文件夹…",
-        "exportLogs": "导出日志 (.zip)"
+        "exportLogs": "导出日志 (.zip)",
+        "profileBackupTitle": "配置文件备份",
+        "profileBackupDesc": "将设置、库选择、预设、主题、封面和备份保存到一个文件中，重装后或在新电脑上即可恢复。登录信息不会被保存。",
+        "profileExport": "导出配置文件…",
+        "profileRestore": "恢复配置文件…"
       },
       "blacklistTitle": "AppID 黑名单",
       "blacklistButton": "重置黑名单",
@@ -1176,28 +1226,28 @@
     "eyebrow": "首次设置",
     "close": "关闭",
     "steps": [
-      "语言",
-      "它是如何运作的",
-      "界面",
-      "帐户",
+      "基础",
+      "个人资料",
       "游戏",
       "来源",
-      "设置"
+      "外观与提醒",
+      "完成"
     ],
-    "languageTitle": "选择语言",
-    "languageCopy": "游戏、元数据、成就和 Steam 缓存从一开始就会以此语言加载。",
+    "welcomeTitle": "欢迎使用 AW Next",
+    "welcomeCopy": "开始前先做两个简单选择。以后都可以在设置中更改，你也可以随时跳过本指南的其余部分。",
     "language": "游戏和界面语言",
     "languagePlaceholder": "选择一种语言…",
-    "languageHint": "仅在选择此选项后才开始加载第一个库。",
-    "introTitle": "它是如何运作的",
-    "scanTitle": "扫描",
-    "scanCopy": "启动器、模拟器和成就文件的位置会自动检测，首次扫描前你可以逐一确认。",
-    "watchTitle": "监控",
-    "watchCopy": "后台的 Watchdog 会在游戏启动时识别它，记录游戏时长并监视其成就文件。",
-    "fixTitle": "修复",
-    "fixCopy": "对于模拟的 Steam 游戏，右键修复会安装 GBE Fork 并写入成就架构和 DLC 数据。",
+    "languageHint": "游戏、元数据、成就和 Steam 缓存都会以此语言加载。首次加载游戏库会在你做出选择后开始。",
     "overlayTitle": "游戏内叠加层",
-    "overlayCopy": "用快捷键在游戏上方唤出的小型成就面板，默认为 Ctrl+Shift+K。",
+    "overlayCopy": "在游戏中按 {hotkey}，即可在游戏上方查看它的成就。",
+    "collectionsTitle": "收藏集",
+    "collectionsCopy": "通过游戏的右键菜单，把游戏归入你自己的收藏集。",
+    "trophyTitle": "奖杯模式",
+    "trophyCopy": "按稀有度把成就评为金、银或铜。可在设置中开启。",
+    "clipsTitle": "视频剪辑",
+    "clipsCopy": "在每次解锁前后保留一小段剪辑。可在设置的通知中开启。",
+    "backupTitle": "配置文件备份",
+    "backupCopy": "把你的设置和游戏库选择保存到一个文件中，重新安装后可以恢复。",
     "profileTitle": "个人资料",
     "profileCopy": "选择标题中显示的名称，并可以选择设置本地头像。",
     "username": "显示名称",
@@ -1205,8 +1255,21 @@
     "avatarPick": "选择照片",
     "avatarDefault": "默认",
     "avatarHint": "选修的。本地存储在此 PC 上。",
-    "foldersTitle": "添加磁盘上的游戏",
-    "foldersCopy": "使用智能查找自动检测存档/配置文件夹和游戏库，也可以按文件夹类型手动添加。",
+    "foldersTitle": "你的游戏",
+    "foldersCopy": "AW Next 会在这台电脑上查找游戏并显示找到的内容。只有在缺少某些游戏时才需要添加文件夹。",
+    "detectTitle": "在这台电脑上找到",
+    "detectInstalled": "已安装 {count} 个",
+    "detectNone": "未找到",
+    "detectOff": "关闭",
+    "detectEmulators": "模拟器存档",
+    "detectFolders": "游戏：{games} · 文件夹：{folders}",
+    "detectTotal": "找到的游戏：{count}",
+    "detectNothing": "尚未找到游戏",
+    "detectSteamOff": "在来源中开启 Steam 之前，你的 Steam 游戏会保持隐藏。",
+    "detectReviewSources": "查看来源",
+    "smartFound": "找到的新文件夹：{count}",
+    "smartNone": "未找到新文件夹。",
+    "folderGames": "此文件夹中找到的游戏：{count}",
     "addSave": "添加保存文件夹",
     "smartFind": "智能查找",
     "addLibrary": "添加库文件夹",
@@ -1216,12 +1279,22 @@
     "saveList": "保存/配置文件夹",
     "libraryList": "游戏库",
     "emptyList": "本次未添加任何内容。",
-    "settingsTitle": "推荐设置",
-    "settingsCopy": "库、外观和通知的要点。之后都可以随时更改。",
-    "summarySources": "已启用的来源",
+    "settingsTitle": "外观与提醒",
+    "settingsCopy": "选择主题以及解锁提醒的显示方式。使用测试通知可立即查看一个。",
+    "moreOptions": "更多选项",
+    "readyTitle": "一切就绪",
+    "readyCopy": "AW Next 现在会在后台关注你的游戏，并在你解锁成就时通知你。",
+    "featuresTitle": "须知",
+    "summarySources": "已启用 {count} 个来源",
+    "summaryAccounts": "已登录：{names}",
+    "summaryGames": "找到的游戏：{count} · 监视的文件夹：{folders}",
+    "summaryNoGames": "尚未找到游戏。你可以稍后在设置中添加文件夹。",
+    "summaryLook": "主题：{theme} · 通知：{notifications}",
+    "summaryChange": "更改",
     "summaryReopen": "你可以随时从设置 > 常规重新打开本指南。",
     "sourcesTitle": "成就的来源",
-    "sourcesCopy": "以下每一项都在本机读取。不用的可以关闭，全部都可以随时在设置中修改。",
+    "sourcesCopy": "这台电脑上安装的每个来源都会自动读取，因此默认设置即可。只有需要更多内容时才在下方登录。",
+    "sourcesMore": "微调来源（已启用 {count} 个）",
     "accountsTitle": "账户（可选）",
     "accountsCopy": "登录后可读取私密 Steam 个人资料中的解锁记录，添加你的 Steam 家庭游戏，导入你的 Xbox PC 游戏库，并显示你的 Epic 进度。你可以跳过这一步，稍后在设置 > 来源中连接。",
     "sourcesEmulators": "模拟器",
@@ -1253,6 +1326,8 @@
     "next": "下一步",
     "finish": "完成",
     "skip": "跳过",
+    "skipSetup": "跳过设置",
+    "saveClose": "保存并关闭",
     "saving": "保存…",
     "saved": "设置已保存。",
     "languageRequired": "选择一种语言以继续。",
@@ -1324,7 +1399,28 @@
     "controllerMove": "移动/滚动"
   },
   "dialogs": {
+    "collections": "收藏集",
+    "collection-all": "所有游戏",
+    "collection-new": "新建收藏集…",
+    "collection-edit": "编辑收藏集…",
+    "collection-name": "收藏集名称",
+    "collection-default-name": "新建收藏集",
+    "collection-field-name": "名称",
+    "collection-field-color": "颜色",
+    "collection-field-icon": "图标",
+    "collection-field-image": "图片",
+    "collection-choose-image": "选择图片…",
+    "collection-remove-image": "移除图片",
+    "collection-delete": "删除收藏集",
+    "collection-delete-confirm": "要删除收藏集“{name}”吗？游戏仍会保留在你的库中。",
+    "collection-limit": "你已达到 {count} 个收藏集的上限。",
+    "collection-image-error": "无法使用此图片。请选择小于 5 MB 的 PNG、JPEG、GIF 或 WebP 文件。",
     "choose-preset-image": "选择背景图片",
+    "choose-preset-font": "选择字体文件",
+    "choose-preset-logo": "选择徽标",
+    "preset-font-refused": "该文件不是可用的字体。请使用不超过 4 MB 的 TTF、OTF、WOFF 或 WOFF2 文件。",
+    "preset-logo-refused": "该文件不是可用的徽标。请使用不超过 2 MB 的 PNG、JPEG、GIF、WebP 或 BMP 图片。",
+    "preset-layer-note": "正在自定义 {preset}。勾选某个部分即可更改;未勾选的部分保持内置预设的原样。你的更改叠加在其上:内置预设不会被复制或修改。",
     "folder-reason-ea-app": "这是 EA app 版本。通过 EA app 启动的游戏会把成就保存在 EA 账户中，而不是游戏文件夹里，因此这里没有可读取的解锁文件。这类成就由设置 > 来源中的 EA 来源获取，而不是由被监视的文件夹获取。",
     "folder-reason-game-no-data": "这是一个游戏文件夹，但其中既没有模拟器配置，也没有 AW Next 能够读取的任何解锁文件。",
     "folder-reason-unreadable": "无法读取此文件夹。",
@@ -2175,6 +2271,31 @@
     "export-logs-done": "已将 {count} 个日志文件写入 {path}",
     "export-logs-failed": "无法导出日志：{error}",
     "zip-archive": "Zip 压缩包",
+    "profile-backup-file-type": "AW Next 配置文件备份",
+    "profile-backup-export-title": "导出配置文件",
+    "profile-backup-restore-title": "恢复配置文件",
+    "profile-backup-exporting": "正在导出配置文件… {percent}%",
+    "profile-backup-export-done": "配置文件已保存到 {path}（{count} 个文件，{size}）。",
+    "profile-backup-export-failed": "无法导出配置文件：{error}",
+    "profile-backup-restore-confirm": "要恢复此配置文件吗？",
+    "profile-backup-restore-confirm-detail": "该备份包含 {count} 个文件（{size}），保存于 {date}。当前的设置、预设、主题和封面将被备份中的内容替换。被替换的文件会保留，恢复失败时会自动撤销。AW Next 将重新启动以应用。",
+    "profile-backup-restore-button": "恢复并重启",
+    "profile-backup-checking": "正在检查备份… {percent}%",
+    "profile-backup-restarting": "备份检查完毕。正在重启以应用…",
+    "profile-backup-restore-failed": "无法恢复配置文件：{error}",
+    "profile-backup-applied": "配置文件已恢复（{count} 个文件）。",
+    "profile-backup-applied-signin": "登录信息不会保存在备份中。请重新登录：{accounts}。",
+    "profile-backup-applied-signin-generic": "登录信息不会保存在备份中。请重新登录你之前连接过的所有账户。",
+    "profile-backup-apply-failed": "无法恢复配置文件。你之前的文件已放回原处。详细信息：{error}",
+    "profile-backup-account-emulator": "模拟器工具使用的 Steam 登录",
+    "profile-backup-error-invalid": "此文件不是 AW Next 配置文件备份。",
+    "profile-backup-error-too-new": "此备份由更新版本的 AW Next 创建。请先更新应用。",
+    "profile-backup-error-corrupt": "此备份已损坏或被修改过。",
+    "profile-backup-error-unsafe": "此备份包含无法安全恢复的文件。",
+    "profile-backup-error-too-large": "此备份超出了 AW Next 可恢复的大小。",
+    "profile-backup-error-empty": "目前没有可放入备份的内容。",
+    "profile-backup-error-busy": "已有备份正在进行。",
+    "profile-backup-error-inside": "请选择 AW Next 数据文件夹之外的位置。",
     "theme-layer-opacity": "不透明度",
     "chooseAnotherIconTitle": "选择其他图标",
     "chooseAnotherIcon": "选择其他图标…",
@@ -2243,6 +2364,7 @@
     "profile-trophies-share": "占您成就的 {percent}",
     "profile-trophies-unranked": "{count} 个未知解锁率",
     "profile-trophies-at-most": "{percent} 或更低",
+    "profile-trophies-under": "低于 {percent}",
     "profile-trophies-between": "{from} 至 {to}",
     "profile-trophies-above": "高于 {percent}，或未知",
     "profile-trophies-platinum-games": "白金游戏",

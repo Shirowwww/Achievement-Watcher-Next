@@ -86,16 +86,25 @@
     "runUninstaller": "Kør spillets afinstallationsprogram…",
     "deleteFolder": "Slet spilmappe (Papirkurven)…"
   },
+  "windowControls": {
+    "minimize": "Minimer",
+    "maximize": "Maksimer",
+    "close": "Luk"
+  },
   "settings": {
     "title": "Indstillinger",
     "sideMenu": {
       "general": "Generelt",
       "notification": "Notifikation",
-      "presets": "Presets",
+      "presets": "Notifikationspresets",
       "souvenir": "Souvenir",
       "folder": "Mapper",
       "source": "Kilder",
-      "advanced": "Avanceret"
+      "advanced": "Avanceret",
+      "groupApp": "App",
+      "groupAlerts": "Advarsler",
+      "groupLibrary": "Bibliotek",
+      "groupSupport": "Support"
     },
     "common": {
       "show": "Vis",
@@ -108,13 +117,17 @@
       "maintainedBy": "vedligeholdt af",
       "fork": "Fork",
       "original": "Original v1.6.8",
-      "edit": "Rediger"
+      "edit": "Rediger",
+      "close": "Luk",
+      "unsaved": "Ændringer ikke gemt"
     },
     "search": {
       "placeholder": "Søg i indstillinger…",
       "empty": "Ingen indstilling matcher din søgning.",
       "ariaLabel": "Søg i indstillinger",
-      "clear": "Ryd"
+      "clear": "Ryd",
+      "advancedMore": "{count} mere i Avanceret tilstand",
+      "advancedShow": "Vis Avanceret"
     },
     "watchdog": {
       "startup": {
@@ -143,7 +156,7 @@
       "duration": "Animationens varighed"
     },
     "general": {
-      "sectionTitle": "Grænseflade og adfærd",
+      "sectionTitle": "Daglige indstillinger",
       "language": {
         "name": "Sprog",
         "description": "Grænsefladens sprog. Spildata hentes på dette sprog, når det er muligt."
@@ -161,7 +174,7 @@
         }
       },
       "hiddenAch": {
-        "name": "Skjulte præstationer",
+        "name": "Vis skjulte præstationer",
         "description": "Vis navn og beskrivelse på skjulte præstationer, før du låser dem op."
       },
       "mergeDuplicates": {
@@ -264,6 +277,20 @@
         "name": "Trofæer på profilen",
         "description": "Viser platin-, guld-, sølv- og bronzetrofæer under dit navn. Platin er et spil på 100%; de andre rangerer dine præstationer efter, hvor mange spillere der har låst dem op."
       },
+      "rarityDisplay": {
+        "name": "Visning af sjældenhed",
+        "description": "Sjældne niveauer markerer kun de sjældneste bedrifter. Trofætilstand giver hver bedrift guld, sølv eller bronze efter oplåsningsandel og viser platin på gennemførte spil.",
+        "rare": "Sjældne niveauer",
+        "trophy": "Trofætilstand",
+        "goldBelow": {
+          "name": "Guldtrofæ under",
+          "description": "I trofætilstand får bedrifter, som færre spillere har låst op end denne andel, guld."
+        },
+        "silverBelow": {
+          "name": "Sølvtrofæ under",
+          "description": "I trofætilstand får bedrifter under denne andel sølv; resten, eller dem uden kendt andel, får bronze."
+        }
+      },
       "playButton": {
         "name": "Vis Spil-knappen",
         "description": "Viser Spil-knappen på spilfelterne. Slå den fra, hvis du starter dine spil fra et andet program. Punktet Start spil i højrekliksmenuen er stadig tilgængeligt."
@@ -302,7 +329,9 @@
           "name": "Spilindstillingsknap",
           "description": "Viser værktøjsknappen øverst til højre på grafikken. Spillets indstillinger er stadig tilgængelige fra højrekliksmenuen."
         }
-      }
+      },
+      "appSectionTitle": "Applikation",
+      "trophySectionTitle": "Trofæer og sjældenhed"
     },
     "emulator": {
       "nav": "Emulatorreparation",
@@ -467,13 +496,13 @@
     },
     "notification": {
       "title": {
-        "common": "Fælles",
+        "common": "Basis",
         "toast": "Windows-notifikation",
-        "transport": "Transport",
+        "transport": "Integrationer",
         "chromium": "Chromium-notifikation",
         "watchdog": "Watchdog",
         "test": "Test",
-        "overlay": "Notifikation"
+        "overlay": "Popup"
       },
       "info": {
         "toast": "Nogle funktioner findes kun i Windows 10",
@@ -602,6 +631,7 @@
             "easingOut": "Udgangskurve",
             "entryDistance": "Bevægelsesafstand",
             "fontFamily": "Skrifttype",
+            "fontFile": "Skrifttypefil",
             "fontSize": "Skriftstørrelse",
             "gap": "Afstand",
             "glow": "Glød",
@@ -613,6 +643,10 @@
             "iconSize": "Ikonstørrelse",
             "layout": "Opstilling",
             "letterSpacing": "Bogstavafstand",
+            "logoImage": "Logo",
+            "logoOffset": "Logoets afstand til kanten",
+            "logoPosition": "Logoets placering",
+            "logoSize": "Logoets størrelse",
             "opacity": "Uigennemsigtighed",
             "padX": "Sidemargen",
             "padY": "Topmargen",
@@ -655,6 +689,10 @@
           "imported": "Importeret og valgt:",
           "importedOnly": "Importeret preset - eksportér eller slet det her; det kan ikke redigeres med skyderne.",
           "importSan": "Importér SAN-tema",
+          "layer": {
+            "none": "Tilpasser ikke",
+            "title": "Tilpas et medfølgende preset"
+          },
           "load": "Rediger et preset",
           "loaded": "Indlæst:",
           "name": "Navn",
@@ -700,6 +738,8 @@
             "artwork": "Spillets grafik",
             "back": "Fjedrende",
             "bottom": "Nederst",
+            "bottomLeft": "Nederst til venstre",
+            "bottomRight": "Nederst til højre",
             "breathe": "Ånde",
             "center": "Midt",
             "circle": "Cirkel",
@@ -723,6 +763,7 @@
             "linear": "Lineær",
             "lines": "Skravering",
             "mono": "Fast bredde",
+            "noFont": "Ingen skrifttypefil",
             "noImage": "Intet billede",
             "noise": "Støj",
             "none": "Ingen",
@@ -742,6 +783,8 @@
             "text": "Tekstfarve",
             "textOnly": "Kun tekst",
             "top": "Øverst",
+            "topLeft": "Øverst til venstre",
+            "topRight": "Øverst til højre",
             "transparent": "Gennemsigtig",
             "uppercase": "STORE BOGSTAVER",
             "zoom": "Zoom"
@@ -997,7 +1040,10 @@
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns via MadnessPatch-modet"
-      }
+      },
+      "groupStores": "Officielle launchere",
+      "groupEmulators": "Emulatorer og patches",
+      "groupConsoles": "Konsoller og retro"
     },
     "help": {
       "nav": "Hjælp",
@@ -1134,7 +1180,11 @@
         "goldbergTitle": "Goldberg / GBE Fork",
         "goldbergDesc": "Scan en spilbiblioteksmappe for Goldberg / GBE Fork-installationer, og markér dem, der mangler deres steam_settings/achievements.json-skema. Brug et spils højrekliksmenu (Diagnosticer / Reparer) for at reparere ét af dem.",
         "scanFolder": "Scan en mappe…",
-        "exportLogs": "Eksportér logfiler (.zip)"
+        "exportLogs": "Eksportér logfiler (.zip)",
+        "profileBackupTitle": "Profilsikkerhedskopi",
+        "profileBackupDesc": "Gem dine indstillinger, biblioteksvalg, forudindstillinger, temaer, covers og sikkerhedskopier i én fil, og få dem tilbage efter en ominstallation eller på en ny pc. Logins gemmes aldrig.",
+        "profileExport": "Eksportér profil…",
+        "profileRestore": "Gendan profil…"
       },
       "blacklistTitle": "Sortliste over AppID'er",
       "blacklistButton": "Nulstil sortlisten",
@@ -1176,28 +1226,28 @@
     "eyebrow": "Første opsætning",
     "close": "Luk",
     "steps": [
-      "Sprog",
-      "Sådan virker det",
-      "Grænseflade",
-      "Konto",
+      "Grundlæggende",
+      "Profil",
       "Spil",
       "Kilder",
-      "Indstillinger"
+      "Udseende og beskeder",
+      "Klar"
     ],
-    "languageTitle": "Vælg sprog",
-    "languageCopy": "Spil, metadata, præstationer og Steam-cacher indlæses alle på dette sprog fra starten.",
+    "welcomeTitle": "Velkommen til AW Next",
+    "welcomeCopy": "To hurtige valg til at starte med. Alt kan ændres senere i Indstillinger, og du kan springe resten af denne guide over når som helst.",
     "language": "Sprog for spil og grænseflade",
     "languagePlaceholder": "Vælg et sprog…",
-    "languageHint": "Biblioteket indlæses første gang, når du har valgt.",
-    "introTitle": "Sådan virker det",
-    "scanTitle": "Scan",
-    "scanCopy": "Launchere, emulatorer og placeringer med præstationsfiler findes automatisk - du gennemgår hver enkelt inden den første scanning.",
-    "watchTitle": "Hold øje",
-    "watchCopy": "Watchdog kører i baggrunden, opdager spillet når det starter, registrerer spilletid og holder øje med dets præstationsfiler.",
-    "fixTitle": "Reparation",
-    "fixCopy": "Til emulerede Steam-spil installerer reparationen i højrekliksmenuen GBE Fork og skriver præstationsskemaet og DLC-data.",
+    "languageHint": "Spil, metadata, præstationer og Steam-caches indlæses alle på dette sprog. Biblioteket indlæses første gang, når du har valgt.",
     "overlayTitle": "Overlay i spillet",
-    "overlayCopy": "Et lille præstationspanel, du henter frem oven på spillet med en genvejstast - Ctrl+Shift+K som standard.",
+    "overlayCopy": "Tryk på {hotkey} i et spil for at se spillets præstationer oven på det.",
+    "collectionsTitle": "Samlinger",
+    "collectionsCopy": "Gruppér spil i dine egne samlinger fra et spils højrekliksmenu.",
+    "trophyTitle": "Trofætilstand",
+    "trophyCopy": "Giv præstationer guld, sølv eller bronze efter sjældenhed. Slå det til i Indstillinger.",
+    "clipsTitle": "Videoklip",
+    "clipsCopy": "Gem et kort klip omkring hver oplåsning. Slå det til i Indstillinger under Notifikationer.",
+    "backupTitle": "Profilsikkerhedskopi",
+    "backupCopy": "Gem dine indstillinger og biblioteksvalg i én fil, og gendan dem efter en geninstallation.",
     "profileTitle": "Profil",
     "profileCopy": "Vælg det navn, der vises i topbjælken, og vælg eventuelt et lokalt profilbillede.",
     "username": "Vist navn",
@@ -1205,8 +1255,21 @@
     "avatarPick": "Vælg foto",
     "avatarDefault": "Standard",
     "avatarHint": "Valgfrit. Gemmes lokalt på denne pc.",
-    "foldersTitle": "Tilføj spil fra disken",
-    "foldersCopy": "Brug Find automatisk til at finde mapper med gemte filer, konfigurationer og spilbiblioteker. Eller tilføj dem manuelt efter mappetype.",
+    "foldersTitle": "Dine spil",
+    "foldersCopy": "AW Next leder efter spil på denne pc og viser, hvad den finder. Tilføj kun en mappe, hvis noget mangler.",
+    "detectTitle": "Fundet på denne pc",
+    "detectInstalled": "{count} installeret",
+    "detectNone": "Ingen fundet",
+    "detectOff": "fra",
+    "detectEmulators": "Emulatorgemte filer",
+    "detectFolders": "Spil: {games} · Mapper: {folders}",
+    "detectTotal": "Spil fundet: {count}",
+    "detectNothing": "Ingen spil fundet endnu",
+    "detectSteamOff": "Dine Steam-spil forbliver skjult, indtil Steam er slået til under Kilder.",
+    "detectReviewSources": "Gennemgå kilder",
+    "smartFound": "Nye mapper fundet: {count}",
+    "smartNone": "Ingen nye mapper fundet.",
+    "folderGames": "Spil fundet i denne mappe: {count}",
     "addSave": "Mappe med gemte filer",
     "smartFind": "Find mapper automatisk",
     "addLibrary": "Mappe med spilbibliotek",
@@ -1216,12 +1279,22 @@
     "saveList": "Mapper med gemte filer",
     "libraryList": "Spilbiblioteker",
     "emptyList": "Intet tilføjet i denne omgang.",
-    "settingsTitle": "Anbefalede indstillinger",
-    "settingsCopy": "Det vigtigste for dit bibliotek, udseendet og notifikationerne. Alt kan ændres bagefter.",
-    "summarySources": "Aktiverede kilder",
+    "settingsTitle": "Udseende og beskeder",
+    "settingsCopy": "Vælg et tema, og hvordan oplåsningsbeskeder vises. Brug Testnotifikation for at se en med det samme.",
+    "moreOptions": "Flere valg",
+    "readyTitle": "Du er klar",
+    "readyCopy": "AW Next holder nu øje med dine spil i baggrunden og giver dig besked, når du låser noget op.",
+    "featuresTitle": "Godt at vide",
+    "summarySources": "{count} kilder aktiveret",
+    "summaryAccounts": "Logget ind: {names}",
+    "summaryGames": "Spil fundet: {count} · Overvågede mapper: {folders}",
+    "summaryNoGames": "Ingen spil fundet endnu. Du kan tilføje mapper senere i Indstillinger.",
+    "summaryLook": "Tema: {theme} · Notifikationer: {notifications}",
+    "summaryChange": "Skift",
     "summaryReopen": "Du kan altid åbne denne guide igen fra Indstillinger > Generelt.",
     "sourcesTitle": "Hvor dine præstationer kommer fra",
-    "sourcesCopy": "Alle disse læses på denne pc. Lad det, du ikke bruger, være slået fra; det kan altid ændres i Indstillinger.",
+    "sourcesCopy": "Alle kilder, der er installeret på denne pc, læses automatisk, så standardindstillingerne er fine. Log kun ind nedenfor, hvis du vil have mere.",
+    "sourcesMore": "Finjustér kilder ({count} aktiveret)",
     "accountsTitle": "Konti (valgfrit)",
     "accountsCopy": "Log ind for at se oplåsninger fra en privat Steam-profil, tilføje dine spil fra Steam Family, importere dit Xbox PC-bibliotek og vise dine Epic-fremskridt. Du kan springe dette over og oprette forbindelse senere i Indstillinger > Kilder.",
     "sourcesEmulators": "Emulatorer",
@@ -1253,6 +1326,8 @@
     "next": "Næste",
     "finish": "Afslut",
     "skip": "Spring over",
+    "skipSetup": "Spring opsætning over",
+    "saveClose": "Gem og luk",
     "saving": "Gemmer…",
     "saved": "Opsætningen er gemt.",
     "languageRequired": "Vælg et sprog for at fortsætte.",
@@ -1324,7 +1399,28 @@
     "controllerMove": "Flyt/rul"
   },
   "dialogs": {
+    "collections": "Samlinger",
+    "collection-all": "Alle spil",
+    "collection-new": "Ny samling…",
+    "collection-edit": "Rediger samling…",
+    "collection-name": "Samlingens navn",
+    "collection-default-name": "Ny samling",
+    "collection-field-name": "Navn",
+    "collection-field-color": "Farve",
+    "collection-field-icon": "Ikon",
+    "collection-field-image": "Billede",
+    "collection-choose-image": "Vælg billede…",
+    "collection-remove-image": "Fjern billede",
+    "collection-delete": "Slet samling",
+    "collection-delete-confirm": "Vil du slette samlingen \"{name}\"? Spillene bliver i dit bibliotek.",
+    "collection-limit": "Du har nået grænsen på {count} samlinger.",
+    "collection-image-error": "Dette billede kunne ikke bruges. Vælg en PNG-, JPEG-, GIF- eller WebP-fil under 5 MB.",
     "choose-preset-image": "Vælg et baggrundsbillede",
+    "choose-preset-font": "Vælg en skrifttypefil",
+    "choose-preset-logo": "Vælg et logo",
+    "preset-font-refused": "Den fil er ikke en brugbar skrifttype. Brug en TTF-, OTF-, WOFF- eller WOFF2-fil på højst 4 MB.",
+    "preset-logo-refused": "Den fil er ikke et brugbart logo. Brug et PNG-, JPEG-, GIF-, WebP- eller BMP-billede på højst 2 MB.",
+    "preset-layer-note": "Tilpasser {preset}. Afkryds et afsnit for at ændre det; alt, du lader være afkrydset fra, forbliver som det medfølgende preset leveres. Dine ændringer lægges oven på: det medfølgende preset kopieres eller ændres ikke.",
     "folder-reason-ea-app": "Dette er en udgivelse til EA app. Et spil, der startes gennem EA app, gemmer sine præstationer på EA-kontoen i stedet for i spilmappen, så der er ingen oplåsningsfil at læse her. De oplåsninger opsamles af EA-kilden under Indstillinger > Kilder i stedet for af en overvåget mappe.",
     "folder-reason-game-no-data": "Dette er en spilmappe, men den indeholder hverken en emulatorkonfiguration eller en oplåsningsfil i et format, AW Next kan læse.",
     "folder-reason-unreadable": "Denne mappe kunne ikke læses.",
@@ -2175,6 +2271,31 @@
     "export-logs-done": "{count} logfil(er) skrevet til {path}",
     "export-logs-failed": "Logfilerne kunne ikke eksporteres: {error}",
     "zip-archive": "Zip-arkiv",
+    "profile-backup-file-type": "AW Next-profilsikkerhedskopi",
+    "profile-backup-export-title": "Eksportér profil",
+    "profile-backup-restore-title": "Gendan profil",
+    "profile-backup-exporting": "Eksporterer profil… {percent} %",
+    "profile-backup-export-done": "Profilen blev gemt i {path} ({count} filer, {size}).",
+    "profile-backup-export-failed": "Profilen kunne ikke eksporteres: {error}",
+    "profile-backup-restore-confirm": "Gendan denne profil?",
+    "profile-backup-restore-confirm-detail": "Sikkerhedskopien indeholder {count} filer ({size}), gemt {date}. Dine nuværende indstillinger, forudindstillinger, temaer og covers erstattes af dem i sikkerhedskopien. De erstattede filer bevares, og en gendannelse, der mislykkes, fortrydes. AW Next genstarter for at anvende den.",
+    "profile-backup-restore-button": "Gendan og genstart",
+    "profile-backup-checking": "Kontrollerer sikkerhedskopien… {percent} %",
+    "profile-backup-restarting": "Sikkerhedskopien er kontrolleret. Genstarter for at anvende den…",
+    "profile-backup-restore-failed": "Profilen kunne ikke gendannes: {error}",
+    "profile-backup-applied": "Profilen er gendannet ({count} filer).",
+    "profile-backup-applied-signin": "Logins gemmes aldrig i en sikkerhedskopi. Log ind igen på: {accounts}.",
+    "profile-backup-applied-signin-generic": "Logins gemmes aldrig i en sikkerhedskopi. Log ind igen på alle de konti, du havde forbundet.",
+    "profile-backup-apply-failed": "Profilen kunne ikke gendannes. Dine tidligere filer blev sat tilbage. Detaljer: {error}",
+    "profile-backup-account-emulator": "Steam-login til emulatorværktøjerne",
+    "profile-backup-error-invalid": "Denne fil er ikke en AW Next-profilsikkerhedskopi.",
+    "profile-backup-error-too-new": "Denne sikkerhedskopi er lavet af en nyere version af AW Next. Opdater appen først.",
+    "profile-backup-error-corrupt": "Denne sikkerhedskopi er beskadiget eller er blevet ændret.",
+    "profile-backup-error-unsafe": "Denne sikkerhedskopi indeholder filer, der ikke kan gendannes sikkert.",
+    "profile-backup-error-too-large": "Denne sikkerhedskopi er større, end AW Next kan gendanne.",
+    "profile-backup-error-empty": "Der er endnu intet at lægge i en sikkerhedskopi.",
+    "profile-backup-error-busy": "En sikkerhedskopiering kører allerede.",
+    "profile-backup-error-inside": "Vælg en placering uden for AW Next-datamappen.",
     "theme-layer-opacity": "Uigennemsigtighed",
     "chooseAnotherIconTitle": "Vælg et andet ikon",
     "chooseAnotherIcon": "Vælg et andet ikon…",
@@ -2243,6 +2364,7 @@
     "profile-trophies-share": "{percent} af dine præstationer",
     "profile-trophies-unranked": "{count} uden kendt rate",
     "profile-trophies-at-most": "{percent} eller derunder",
+    "profile-trophies-under": "under {percent}",
     "profile-trophies-between": "{from} til {to}",
     "profile-trophies-above": "over {percent}, eller ukendt",
     "profile-trophies-platinum-games": "Platinspil",

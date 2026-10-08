@@ -10,6 +10,8 @@ const gog = require(path.join(appPath, 'gog.js'));
 const gogOfficial = require(path.join(appPath, 'gogOfficial.js'));
 const gogUniverseLan = require(path.join(appPath, 'gogUniverseLan.js'));
 const ubisoftOfficial = require(path.join(appPath, 'ubisoftOfficial.js'));
+const runeUplay = require(path.join(appPath, 'runeUplay.js'));
+const runeUplayGame = require(path.join(appPath, 'runeUplayGame.js'));
 const epic = require(path.join(appPath, 'epic.js'));
 const epicOfficial = require(path.join(appPath, 'epicOfficial.js'));
 const ea = require(path.join(appPath, 'ea.js'));
@@ -101,6 +103,7 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   gog.initDebug({ isDev, userDataPath });
   gogOfficial.initDebug({ isDev, userDataPath });
   ubisoftOfficial.initDebug({ isDev, userDataPath });
+  runeUplayGame.initDebug({ isDev, userDataPath });
   require(path.join(appPath, 'steamOfficial.js')).initDebug({ isDev, userDataPath });
   // Shared with the Watchdog, so it cannot require a logger of its own - see steamAppInfo.js.
   require(path.join(appPath, 'steamAppInfo.js')).initDebug({
@@ -1908,6 +1911,7 @@ async function discoverInScope(source, steamAccFilter, scope) {
   };
 
   let additionalSearch = [];
+  const runeUplayFolders = [];
   try {
     const configuredDirs = await userDir.get();
     const userDirs = scope ? scanScope.filterSelectedDirectories(configuredDirs, scope.userDirs, (dir) => dir.path) : configuredDirs;
@@ -1916,6 +1920,9 @@ async function discoverInScope(source, steamAccFilter, scope) {
       // folder after it, across every emulator source, with a single line in the log.
       try {
         debug.log(`[userdir] ${dir.path}`);
+
+        // Scanned once with the default root below, so one folder is never listed twice.
+        if (source.lumaPlay && runeUplay.resolveAchievementsRoot(dir.path)) runeUplayFolders.push(dir.path);
 
         let scanned = [];
         if (source.rpcs3) scanned = await rpcs3.scan(dir.path);
@@ -2186,11 +2193,24 @@ async function discoverInScope(source, steamAccFilter, scope) {
     } catch (err) {
       debug.error(err);
     }
+    // RUNE's Ubisoft emulator keeps its saves in Documents, so no folder has to be added. A folder
+    // the user added goes through the same call: a file reached twice is listed once.
+    try {
+      data = data.concat(runeUplay.scan([...runeUplay.defaultRoots(), ...runeUplayFolders]));
+    } catch (err) {
+      debug.error(err);
+    }
 
     // uplay.scanLegit() (legit Ubisoft Connect cache) is intentionally NOT called here: legit Ubisoft
     // Connect exposes no local unlock-state, so those entries always resolve to root = {} (see
     // getAchievements 'uplay' branch) and would show as permanent 0% clutter for games the user owns
     // legitimately. The "Émulateur Ubisoft Connect" toggle is for emulated saves only.
+  } else if (scope && runeUplayFolders.length > 0) {
+    try {
+      data = data.concat(runeUplay.scan(runeUplayFolders));
+    } catch (err) {
+      debug.error(err);
+    }
   }
 
   mark('lumaPlay');
@@ -2621,7 +2641,7 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
   // The Steam account's record and a save folder under the same appid each need their own reader:
   // read the Steam one as a folder and its unlocks vanished behind an empty OnlineFix folder.
   const ownType = appid.data && appid.data.type;
-  if (ownType && ownType !== dataType && (ownType === 'steamAPI' || dataType === 'steamAPI')) {
+  if (ownType && ownType !== dataType && (ownType === 'steamAPI' || dataType === 'steamAPI' || ownType === 'runeUplay' || dataType === 'runeUplay')) {
     return readRecordUnlocks(ownType, appid, game, option, helpers);
   }
   if (appid.data && ACCOUNT_LIBRARY_TYPES.has(appid.data.type) && dataType !== appid.data.type) {
@@ -2704,6 +2724,8 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
     return gogUniverseLan.readAchievements({ localAppData: appid.data.localAppData, gogAppId: appid.data.gogAppId }) || {};
   } else if (dataType === 'ubisoftOfficial') {
     return ubisoftOfficial.getAchievements(appid);
+  } else if (dataType === 'runeUplay') {
+    return runeUplay.getAchievements(appid.data);
   } else if (dataType === 'epicOfficial') {
     return await epicOfficial.getAchievements(appid, {
       forceRecheck: option.forceAchievementRecheck === true,
@@ -2914,6 +2936,8 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       game = gogUniverseLan.getGameData(appid);
     } else if (appid.data.type === 'ubisoftOfficial') {
       game = await ubisoftOfficial.getGameData(appid, option.achievement.lang);
+    } else if (appid.data.type === 'runeUplay') {
+      game = await runeUplayGame.getGameData(appid, option.achievement.lang);
     } else if (appid.data.type === 'epicOfficial') {
       game = await epicOfficial.getGameData(appid, option.achievement.lang);
       /*
@@ -3752,7 +3776,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     // Ubisoft Connect official entries also need a gameIndex row so the Watchdog's live spool watcher
     // can attribute a <productId>.spool change back to the app's resolved game name and Steam release
     // - including titles resolved generically from the configurations block or the local Steam library.
-    if (appid.data && appid.data.type === 'ubisoftOfficial' && game.name && appid.data.uplayId) {
+    if (appid.data && (appid.data.type === 'ubisoftOfficial' || appid.data.type === 'runeUplay') && game.name && appid.data.uplayId) {
       try {
         gameIndex.upsert({
           appid: appid.appid,
@@ -3932,7 +3956,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         (appid.data && appid.data.installed === true) ||
         !!(appid.data && appid.data.trustedInstalled) ||
         (dataType === 'uplay' ? uplay.isInstalled(appid.appid) : false) ||
-        (dataType === 'ubisoftOfficial' && appid.data && appid.data.uplayId ? uplay.isInstalled(appid.data.uplayId) : false),
+        ((dataType === 'ubisoftOfficial' || dataType === 'runeUplay') && appid.data && appid.data.uplayId ? uplay.isInstalled(appid.data.uplayId) : false),
     });
 
     // The renderer never receives appid.data, but it needs to know an entry came from the legitimate

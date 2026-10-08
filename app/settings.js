@@ -12,6 +12,7 @@ const themeLayers = require(path.join(appPath, 'util/themeLayers.js'));
 const libraryLayout = require(path.join(appPath, 'util/libraryLayout.js'));
 const libraryChrome = require(path.join(appPath, 'util/libraryChrome.js'));
 const notificationPlacement = require(path.join(appPath, 'util/notificationPlacement.js'));
+const rarityTiers = require(path.join(appPath, 'util/rarityTiers.js'));
 
 const PROGRESS_STEPS = [0, 10, 25, 50];
 
@@ -294,6 +295,17 @@ module.exports.load = () => {
     // Trophy showcase under the profile name (Settings > General). On by default.
     if (typeof options.achievement.showTrophies !== 'boolean') {
       options.achievement.showTrophies = true;
+    }
+    // Rarity display: 'rare' tiers only the rarest unlocks, 'trophy' grades every achievement. The
+    // two trophy bounds travel as a pair (INI values are strings; a bad pair resets to 20 / 50).
+    options.achievement.rarityMode = rarityTiers.normalizeMode(options.achievement.rarityMode);
+    {
+      const bounds = rarityTiers.normalizeThresholds({
+        goldBelow: options.achievement.trophyGoldBelow,
+        silverBelow: options.achievement.trophySilverBelow,
+      });
+      options.achievement.trophyGoldBelow = bounds.goldBelow;
+      options.achievement.trophySilverBelow = bounds.silverBelow;
     }
     if (typeof options.achievement.goldbergDownloadIcons !== 'boolean') {
       options.achievement.goldbergDownloadIcons = false;
@@ -628,6 +640,9 @@ module.exports.load = () => {
         timeMergeRecentFirst: false,
         hideZero: false,
         showTrophies: true,
+        rarityMode: 'rare',
+        trophyGoldBelow: 20,
+        trophySilverBelow: 50,
         showPlayButton: true,
         goldbergDownloadIcons: false,
         disableAutoRefresh: false, // opt-in: skip the periodic steam_cache self-repair, for a hand-curated cache

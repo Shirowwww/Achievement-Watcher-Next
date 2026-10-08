@@ -21,9 +21,9 @@ function resetUI() {
   $('#game-config').hide();
   $('#game-list ul').empty();
   $('title-bar')[0].inSettings = false;
-  $('#user-info').css('opacity', 0).css('pointer-events', 'none');
-  $('#sort-box').css('opacity', 0).css('pointer-events', 'none');
-  $('#search-bar').css('opacity', 0).css('pointer-events', 'none');
+  $('#user-info').css('opacity', 0).css('pointer-events', 'none').prop('inert', true);
+  $('#sort-box').css('opacity', 0).css('pointer-events', 'none').prop('inert', true);
+  $('#search-bar').css('opacity', 0).css('pointer-events', 'none').prop('inert', true);
   $('#game-list .isEmpty').hide();
   let elem = $('#settingNav li').first();
   $('#settingNav li').removeClass('active');

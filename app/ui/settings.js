@@ -15,6 +15,8 @@ const themeFonts = require(path.join(appPath, 'util/themeFonts.js'));
 const DEFAULT_THEME_COLOR = themeLayers.BUILTIN_COLORS.default.bg;
 const scanScopeTools = require(path.join(appPath, 'parser/scanScope.js'));
 const emulatorFixEligibility = require(path.join(appPath, 'util/emulatorFixEligibility.js'));
+const { panelToClose } = require(path.join(appPath, 'util/panelEscape.js'));
+const { focusTrapTarget } = require(path.join(appPath, 'util/panelFocus.js'));
 const { t } = require(path.join(appPath, 'locale/t.js'));
 // Renamed from the module's own name: the main window loads app.js and every ui/*.js as classic
 // scripts sharing one global scope, and app.js already declares `libraryChrome` (see
@@ -23,6 +25,8 @@ const settingsLibraryChrome = require(path.join(appPath, 'util/libraryChrome.js'
 const libraryRefresh = require(path.join(appPath, 'util/libraryRefresh.js'));
 const { renamedSound } = require(path.join(appPath, 'util/notificationSounds.js'));
 const interfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
+const settingsContainers = require(path.join(appPath, 'util/settingsContainers.js'));
+const settingsDependencies = require(path.join(appPath, 'util/settingsDependencies.js'));
 const { legacyPresetAlias } = require(path.join(appPath, 'util/notificationPreset.js'));
 const notificationPlacement = require(path.join(appPath, 'util/notificationPlacement.js'));
 const { describeFolderDiagnosis } = require(path.join(appPath, 'util/folderDiagnosis.js'));
@@ -153,6 +157,15 @@ window.refreshSettingsLocaleText = () => {
 };
 
 let listeningHotkey = false;
+// What had the keyboard focus before Settings opened, so closing it puts the user back there.
+let focusBeforeSettings = null;
+
+// The focused element, looking through shadow roots (the title bar's buttons live in one).
+function deepActiveElement() {
+  let element = document.activeElement;
+  while (element && element.shadowRoot && element.shadowRoot.activeElement) element = element.shadowRoot.activeElement;
+  return element;
+}
 let keysDown = new Set();
 let keys = '';
 let holdingKeysCheck = null;
@@ -186,6 +199,16 @@ function applySourceVisibility(mode) {
   }
 }
 
+// A section whose rows are all folded away would be a bare header; hide it too. Sections gated as a
+// whole with data-advanced are already handled by the blanket toggle in applyInterfaceMode.
+function foldEmptySections(hidden) {
+  $('#settings .box section.content .arrow-list').each(function () {
+    if ($(this).closest(`[${interfaceMode.ADVANCED_ATTRIBUTE}]`).length) return;
+    const rows = $(this).children('ul').children('li');
+    if (rows.length) $(this).toggleClass(hidden, rows.not(`.${hidden}`).length === 0);
+  });
+}
+
 function applyInterfaceMode() {
   const mode = currentInterfaceMode();
   const simple = interfaceMode.isSimple(mode);
@@ -202,6 +225,7 @@ function applyInterfaceMode() {
   $('#nav-group-advanced').toggleClass(hidden, simple);
   $(`#settings [${interfaceMode.ADVANCED_ATTRIBUTE}], #game-config [${interfaceMode.ADVANCED_ATTRIBUTE}]`).toggleClass(hidden, simple);
   applySourceVisibility(mode);
+  foldEmptySections(hidden);
 
   // The header has no room for a caption, so what each side does is a tooltip on the side itself.
   const hints = {
@@ -455,6 +479,66 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       });
     }
 
+    // The trophy thresholds only mean something in trophy mode.
+    function updateRarityUi() {
+      const trophy = $('#option_rarityMode').val() === 'trophy';
+      $('#option_trophyGoldBelow, #option_trophySilverBelow').closest('li').toggleClass('is-inactive', !trophy).attr('aria-disabled', String(!trophy));
+    }
+
+    // Rows that only matter while another switch is on are dimmed, never hidden: the value stays and
+    // is still saved. The rules are in util/settingsDependencies.js.
+    function updateDependentRows() {
+      const values = {};
+      for (const id of settingsDependencies.watchedControls()) values[id] = $(`#${id}`).val();
+      const inactive = settingsDependencies.inactiveControls(values);
+      for (const id of settingsDependencies.dimmableControls()) {
+        const off = inactive.has(id);
+        $(`#${id}`).closest('li').toggleClass('is-inactive', off).attr('aria-disabled', String(off));
+      }
+    }
+    $('#settings').on('change.dependentRows', 'select', updateDependentRows);
+
+    /*
+      Two save models live side by side: the Notification tab writes as you change it, everything else
+      waits for Save. The footer says which one you are in, and Cancel only reads "Cancel" while it
+      still has something to throw away. Edits are tracked loosely (any change, or a click on a
+      button, outside the autosaved and read-only tabs), so a doubt keeps the safe label.
+    */
+    const AUTOSAVE_VIEWS = ['notification'];
+    const UNTRACKED_VIEWS = [...AUTOSAVE_VIEWS, 'help', 'presets'];
+    let settingsDirty = false;
+    let savedFlashTimer = null;
+
+    function renderSaveState() {
+      const view = $('#settingNav li[data-view].active').attr('data-view');
+      const state = AUTOSAVE_VIEWS.includes(view) ? 'auto' : settingsDirty ? 'dirty' : '';
+      const text = {
+        auto: localeText('settings.notification.info.autoSave'),
+        dirty: localeText('settings.common.unsaved'),
+      }[state];
+      const box = $('#settings-save-state').attr('data-state', state);
+      box.find('em').text(text || '');
+      box.find('i').attr('class', state === 'dirty' ? 'fas fa-circle' : 'fas fa-check-circle');
+      const cancelLabel = localeText(settingsDirty ? 'settings.common.cancel' : 'settings.common.close');
+      if (cancelLabel) document.getElementById('btn-settings-cancel').textContent = cancelLabel;
+    }
+    registerLocaleRefresh(renderSaveState);
+
+    function markSettingsDirty(event) {
+      if (!settingsReady || settingsDirty) return;
+      if ($(event.target).closest(UNTRACKED_VIEWS.map((view) => `section.content[data-view='${view}']`).join(', ')).length) return;
+      settingsDirty = true;
+      renderSaveState();
+    }
+    $('#settings').on('change.dirty input.dirty', '.content :input', markSettingsDirty);
+    $('#settings').on('click.dirty', '.content button, .content .btn', markSettingsDirty);
+
+    window.flashSettingsSaved = function () {
+      const box = $('#settings-save-state').addClass('is-flash');
+      clearTimeout(savedFlashTimer);
+      savedFlashTimer = setTimeout(() => box.removeClass('is-flash'), 1000);
+    };
+
     // Re-render the Help tab's live values after a user change (never during form population).
     function refreshHelpPreview() {
       if (!settingsReady || !$('#settings').is(':visible')) return;
@@ -569,11 +653,16 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#settings .box section.content').removeClass('active');
       $(`#settings .box section.content[data-view='${first.data('view')}']`).addClass('active');
       $('title-bar')[0].inSettings = false;
+      const back = focusBeforeSettings;
+      focusBeforeSettings = null;
+      if (back && back.isConnected) back.focus({ preventScroll: true });
     }
 
     $('title-bar').on('open-settings', function () {
+      focusBeforeSettings = deepActiveElement();
       this.inSettings = true;
       settingsReady = false; // suppress auto-save while we populate the form below
+      settingsDirty = false;
       listeningHotkey = false;
       keysDown.clear();
       // Clear every nav <li> (including .nav-group section labels) so a stray .active never
@@ -598,6 +687,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       // Rows are built lazily, so the derived control names and icon roles are applied per open too.
       if (typeof window.refreshAccessibleNames === 'function') window.refreshAccessibleNames();
       renderBlacklistManager().catch((err) => debug.log(err));
+      // Keyboard focus moves into the panel, otherwise Tab keeps walking the library behind it.
+      const entry = $('#settingNav li.active')[0];
+      if (entry) entry.focus({ preventScroll: true });
 
       for (let option in app.config.achievement) {
         if ($(`#option_${option} option[value="${app.config.achievement[option]}"]`).length > 0) {
@@ -659,6 +751,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         $('#emulator-login-pass').val(app.config.emulator.loginPassword || '');
       }
       updateEmulatorUi();
+      updateRarityUi();
 
       $('#hotkey').text(app.config.overlay.hotkey);
 
@@ -778,9 +871,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#settings #libdirlist').empty();
       const libraryDirsShown = (libraryDirs.getEntries ? libraryDirs.getEntries() : libraryDirs.get())
         .then((libraryDirList) => {
-          for (const entry of libraryDirList) {
-            const dir = typeof entry === 'string' ? entry : entry.path;
-            populateLibraryDirList({ ...(typeof entry === 'object' ? entry : {}), dir, reverse: true });
+          for (const libraryDir of libraryDirList) {
+            const dir = typeof libraryDir === 'string' ? libraryDir : libraryDir.path;
+            populateLibraryDirList({ ...(typeof libraryDir === 'object' ? libraryDir : {}), dir, reverse: true });
           }
         })
         .catch((err) => {
@@ -806,6 +899,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       // populate-time change events would persist stale/empty values.
       Promise.all([presetsReady, soundsReady]).then(() => {
         settingsReady = true;
+        updateDependentRows();
+        renderSaveState();
         refreshHelpPreview();
       });
     });
@@ -1171,6 +1266,46 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     $('#option_libraryTileScale, #option_libraryDensity').on('input change', previewLibraryChrome);
     $(LIBRARY_TOGGLES.map((key) => `#option_${key}`).join(', ')).on('change', previewLibraryChrome);
 
+    // Escape closes the topmost panel like Cancel does. Anything with its own Escape (a prompt, the
+    // cover picker, a search field, a hotkey being recorded) gets the key first and is left alone.
+    $(document).on('keydown.panelEscape', function (event) {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      const panel = panelToClose({
+        gameConfigOpen: $('#game-config').is(':visible'),
+        settingsOpen: $('#settings').is(':visible'),
+        onboardingOpen: $('#onboarding').is(':visible'),
+        promptOpen: document.querySelector('.aw-prompt-overlay') !== null,
+        recordingHotkey: listeningHotkey,
+      });
+      const cancel = panel === 'game-config' ? $('#btn-game-config-cancel') : panel === 'settings' ? $('#btn-settings-cancel') : null;
+      // Cancel locks itself while it fades the panel out; a second Escape must not start it again.
+      if (cancel && cancel.css('pointer-events') !== 'none') cancel.trigger('click');
+    });
+
+    // The library stays in the DOM under the scrim, so Tab has to be kept inside the open panel.
+    document.addEventListener('focusin', function (event) {
+      const gameConfig = $('#game-config').is(':visible');
+      const panel = gameConfig ? $('#game-config .box')[0] : $('#settings').is(':visible') ? $('#settings .box')[0] : null;
+      const target = focusTrapTarget({
+        panel,
+        landed: event.target,
+        exempt: '.aw-prompt-overlay, #onboarding, #theme-preview, .simple-modal, title-bar',
+        preferred: gameConfig ? '#game-config-tabs button.active' : '#settingNav li.active',
+      });
+      if (target) target.focus({ preventScroll: true });
+    });
+
+    // The open tab is a CSS class; mirror it for screen readers wherever that class changes.
+    const settingNav = document.getElementById('settingNav');
+    const markCurrentTab = () => {
+      for (const item of settingNav.querySelectorAll('li[data-view]')) {
+        if (item.classList.contains('active')) item.setAttribute('aria-current', 'page');
+        else item.removeAttribute('aria-current');
+      }
+    };
+    new MutationObserver(markCurrentTab).observe(settingNav, { attributes: true, attributeFilter: ['class'], subtree: true });
+    markCurrentTab();
+
     $('#btn-settings-cancel, #settings .overlay').click(function () {
       let self = $(this);
       self.css('pointer-events', 'none');
@@ -1210,7 +1345,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const previousLayout = app.config.achievement.libraryLayout;
 
       app.config.overlay.hotkey = $('#hotkey').text();
-      $('#options-ui .right')
+      $(settingsContainers.rightsOf(settingsContainers.GENERAL))
         .children('select')
         .each(function (index) {
           try {
@@ -1258,7 +1393,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       app.config.controller.sendEscapeOnControllerOpen = $('#option_controllerSendEscape').val() === 'true';
       document.dispatchEvent(new Event('controller-settings-changed'));
 
-      $('#options-source .right')
+      $(settingsContainers.rightsOf(settingsContainers.SOURCE))
         .children('select')
         .each(function (index) {
           try {
@@ -2085,6 +2220,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // Bind on the controls themselves as well as using a bubbling event above. This keeps the
     // dependency UI reliable for keyboard changes, programmatic population and the arrow buttons.
     $('#options-emulator select, #options-emulator2 select').on('change', updateEmulatorUi);
+    $('#option_rarityMode').on('change', updateRarityUi);
     $('#option_autoApplyNewGames, #option_autoApplyNewGamesUplay').on('change', async function (event) {
       const value = $(this).val();
       $('#option_autoApplyNewGames, #option_autoApplyNewGamesUplay').not(this).val(value);
@@ -3086,6 +3222,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     $('#settings-mode .settings-mode-switch button').on('click', function () {
       setInterfaceMode($(this).attr('data-mode'));
+      // The rows a search can see depend on the mode.
+      const query = $('#settings-search-input').val();
+      if (query) applySettingsSearch(query);
     });
 
     $('#settingNav li[data-view]').click(function () {
@@ -3101,6 +3240,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $("#settings .box section.content[data-view='" + view + "']").addClass('active settings-view-opening').scrollTop(0);
 
       self.css('pointer-events', 'initial');
+      renderSaveState();
     });
 
     $('#settings').on('change.helpPreview', 'select', refreshHelpPreview);
@@ -3109,11 +3249,14 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // or removed, since the i18n loader binds labels positionally.
     const sectionRules = require(path.join(appPath, 'util/settingsSections.js'));
     const SECTION_STATE_KEY = 'settingsCollapsedSections';
+    const SECTION_DEFAULTS_KEY = 'settingsSectionDefaults';
 
     function readCollapsedSections() {
       try {
         const stored = JSON.parse(localStorage.getItem(SECTION_STATE_KEY) || 'null');
-        if (Array.isArray(stored)) return new Set(stored);
+        const resolved = sectionRules.resolveCollapsed(stored, localStorage.getItem(SECTION_DEFAULTS_KEY));
+        if (resolved.changed) writeCollapsedSections(resolved.keys);
+        return resolved.keys;
       } catch (err) {
         debug.log(`settings sections: unreadable stored state (${err})`);
       }
@@ -3123,6 +3266,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     function writeCollapsedSections(keys) {
       try {
         localStorage.setItem(SECTION_STATE_KEY, JSON.stringify([...keys]));
+        localStorage.setItem(SECTION_DEFAULTS_KEY, String(sectionRules.DEFAULTS_VERSION));
       } catch (err) {
         debug.log(`settings sections: could not persist state (${err})`);
       }
@@ -3199,7 +3343,22 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#settings .box .content').removeClass('search-hidden');
       $('#settings .box .content .search-hidden').removeClass('search-hidden');
       $('#settingNav li[data-view]').removeClass('no-match').find('.nav-count').text('');
+      $('#settings-search-advanced').prop('hidden', true);
     }
+
+    // Simple mode folds rows away; say so when a search would have matched them.
+    function showAdvancedMatches(rawQuery) {
+      const count = interfaceMode.isSimple(currentInterfaceMode()) ? searchRules.countModeHiddenMatches($, rawQuery) : 0;
+      const box = $('#settings-search-advanced');
+      box.prop('hidden', count === 0);
+      if (count === 0) return;
+      box.find('p').text(localeText('settings.search.advancedMore', { count }));
+      box.find('b').text(localeText('settings.search.advancedShow'));
+    }
+
+    $('#settings-search-advanced button').on('click', function () {
+      $(`#settings-mode .settings-mode-switch button[data-mode='${interfaceMode.ADVANCED}']`).trigger('click');
+    });
 
     function applySettingsSearch(rawQuery) {
       if (searchRules.parseTerms(rawQuery).length === 0) {
@@ -3209,6 +3368,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
       $('#settings').addClass('searching');
       const { total, perView } = searchRules.filterSections($, rawQuery);
+      showAdvancedMatches(rawQuery);
 
       for (const [view, count] of Object.entries(perView)) {
         const navItem = $(`#settingNav li[data-view='${view}']`);
@@ -3235,7 +3395,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     });
 
     $('#settings-search-input').on('keydown', function (e) {
-      if (e.key === 'Escape') {
+      // The first Escape clears the field; with nothing to clear it goes on and closes Settings.
+      if (e.key === 'Escape' && $(this).val()) {
         e.stopPropagation();
         $(this).val('');
         clearSettingsSearch();
@@ -3737,7 +3898,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           $('#game-list ul').empty();
           self.css('pointer-events', 'initial');
           $('#win-settings').css('pointer-events', 'initial');
-          $('#user-info').css('opacity', 0).css('pointer-events', 'none');
+          $('#user-info').css('opacity', 0).css('pointer-events', 'none').prop('inert', true);
           $('#game-list .isEmpty').hide();
           let elem = $('#settingNav li[data-view]').first();
           $('#settingNav li[data-view]').removeClass('active');
@@ -4365,6 +4526,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     const presetGenerator = require(path.join(appPath, 'util/customPreset.js'));
     const presetTemplates = require(path.join(appPath, 'util/presetTemplates.js'));
     const presetPanel = require(path.join(appPath, 'util/presetPanel.js'));
+    const presetLayerTool = require(path.join(appPath, 'util/presetLayer.js'));
 
     // Value formatting for the readout beside each slider. Purely cosmetic: the stored value is
     // always what the schema says.
@@ -4534,53 +4696,107 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // Preset background pictures live in <userData>/presets/images; the srcdoc preview needs data
     // URIs, so `presetAssetUrl` resolves and caches them (the stylesheet rebuilds on every slider move).
     let presetImages = [];
+    let presetFonts = [];
     const presetImageUris = new Map();
 
-    function refreshPresetImages(selected) {
+    // One menu per kind of file the designer can attach: the first entry is "none", and a name the
+    // folder no longer holds stays listed so that re-saving does not silently drop it.
+    function fillAssetMenu(sel, files, keep) {
+      if (!sel.length) return;
+      sel.empty();
+      sel.append($('<option>').attr('value', '').text(sel.attr('data-lang-none') || ''));
+      const names = files.map((entry) => entry.name);
+      if (keep && !names.includes(keep)) names.push(keep);
+      names.sort((a, b) => a.localeCompare(b));
+      names.forEach((name) => sel.append($('<option>').attr('value', name).text(name)));
+      sel.val(names.includes(keep) ? keep : '');
+    }
+
+    // The background and the logo draw from one folder of pictures; a logo has a smaller size limit,
+    // so the logo menu leaves out what the generator would refuse to copy.
+    function refreshPresetImages(selected, selectedLogo) {
       return ipcRenderer
         .invoke('list-preset-images')
         .then((images) => {
           presetImages = images || [];
-          const sel = $('#pd-bgImage');
-          if (!sel.length) return;
-          const keep = selected != null ? selected : sel.val() || '';
-          sel.empty();
-          sel.append($('<option>').attr('value', '').text(sel.attr('data-lang-none') || ''));
-          const names = presetImages.map((image) => image.name);
-          // A preset can name a picture no longer in the folder; keep it listed so re-saving
-          // doesn't silently drop the background.
-          if (keep && !names.includes(keep)) names.push(keep);
-          names.sort((a, b) => a.localeCompare(b));
-          names.forEach((name) => sel.append($('<option>').attr('value', name).text(name)));
-          sel.val(names.includes(keep) ? keep : '');
+          const bg = $('#pd-bgImage');
+          const logo = $('#pd-logoImage');
+          fillAssetMenu(bg, presetImages, selected != null ? selected : bg.val() || '');
+          fillAssetMenu(
+            logo,
+            presetImages.filter((image) => image.size <= presetSchema.MAX_LOGO_BYTES),
+            selectedLogo != null ? selectedLogo : logo.val() || ''
+          );
           // The list arrives after the controls were written; repaint the preview now in case its
-          // background picture had not yet reached the menu when the design was applied.
+          // pictures had not yet reached the menus when the design was applied.
+          if (bg.val() || logo.val()) updatePreviewStyles(readPresetOptions());
+        })
+        .catch((err) => debug.log(err));
+    }
+
+    function refreshPresetFonts(selected) {
+      return ipcRenderer
+        .invoke('list-preset-fonts')
+        .then((fonts) => {
+          presetFonts = fonts || [];
+          const sel = $('#pd-fontFile');
+          fillAssetMenu(sel, presetFonts, selected != null ? selected : sel.val() || '');
           if (sel.val()) updatePreviewStyles(readPresetOptions());
         })
         .catch((err) => debug.log(err));
     }
 
+    // Pictures and fonts both reach the srcdoc preview as data URIs. An empty answer is not cached,
+    // since it only means the folder listing had not arrived yet.
     function presetAssetUrl(name) {
       if (!name) return '';
       if (presetImageUris.has(name)) return presetImageUris.get(name);
+      const font = presetFonts.find((entry) => entry.name === name);
       const image = presetImages.find((entry) => entry.name === name);
-      const mime = /\.png$/i.test(name)
-        ? 'image/png'
-        : /\.gif$/i.test(name)
-          ? 'image/gif'
-          : /\.webp$/i.test(name)
-            ? 'image/webp'
-            : /\.bmp$/i.test(name)
-              ? 'image/bmp'
-              : 'image/jpeg';
-      const uri = image ? fileAsDataUri(image.file, mime) : '';
-      presetImageUris.set(name, uri);
+      const source = font || image;
+      const uri = source ? fileAsDataUri(source.file, font ? presetSchema.fontMime(name) : presetSchema.imageMime(name)) : '';
+      if (uri) presetImageUris.set(name, uri);
       return uri;
     }
 
     // The generated stylesheet as the PREVIEW needs it. The only difference from what is written to
     // disk is how a preset's own picture is addressed; every other value is identical.
     const previewCss = (values) => presetGenerator.buildCustomPresetCss(values, { assetUrl: presetAssetUrl });
+
+    /*
+      Customising a bundled preset. `layerMode` holds the base (its own stylesheet, with relative
+      urls pointed at its folder, and its window size) while a layer is being edited; the preview then
+      wears that stylesheet followed by the layer's, exactly the order the popup uses.
+    */
+    let layerMode = null;
+    const layerSections = new Set();
+
+    const layerStylesheet = (values) =>
+      layerMode.css +
+      '\n' +
+      presetLayerTool.buildLayerCss({ base: layerMode.base, sections: [...layerSections], options: values }, { assetUrl: presetAssetUrl });
+
+    const stylesheetFor = (values) => (layerMode ? layerStylesheet(values) : previewCss(values));
+    const previewBox = (values) => (layerMode ? { width: layerMode.width, height: layerMode.height } : presetGenerator.presetBoxSize(values));
+
+    // The logo is one extra element inside the card; the preview document is built without it.
+    function syncLayerLogo(doc) {
+      try {
+        const card = doc && doc.querySelector('.ach');
+        if (!card) return;
+        const existing = card.querySelector('.' + presetLayerTool.LAYER_LOGO_CLASS);
+        const wanted = layerMode && presetLayerTool.layerHasLogo({ base: layerMode.base, sections: [...layerSections], options: readPresetOptions() });
+        if (wanted && !existing) {
+          const logo = doc.createElement('div');
+          logo.className = presetLayerTool.LAYER_LOGO_CLASS;
+          card.insertBefore(logo, card.firstChild);
+        } else if (!wanted && existing) {
+          existing.remove();
+        }
+      } catch (e) {
+        debug.log(e);
+      }
+    }
 
     const previewFrame = () => ensureFrame(document.getElementById('pd-frame-wrap'), { id: 'pd-frame', title: 'preview' });
 
@@ -4589,9 +4805,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     function renderPreviewDocument(values, { hold = true } = {}) {
       const frame = previewFrame();
       if (!frame) return;
-      frame.srcdoc = presetGenerator.buildPresetPreviewHtml(values, { hold, assetUrl: presetAssetUrl });
+      frame.srcdoc = presetGenerator.buildPresetPreviewHtml(values, { hold, assetUrl: presetAssetUrl, css: layerMode ? layerStylesheet(values) : undefined });
       frame.onload = () => {
         try {
+          syncLayerLogo(frame.contentDocument);
           frame.contentWindow.awPreviewApply(previewPayload());
         } catch (e) {
           debug.log(e);
@@ -4613,7 +4830,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         renderPreviewDocument(values);
         return;
       }
-      styleEl.textContent = previewCss(values);
+      styleEl.textContent = stylesheetFor(values);
+      syncLayerLogo(frame.contentDocument);
       if (previewView === 'compare') renderComparePreviews(values);
       layoutPreview(values);
     }
@@ -4670,7 +4888,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const wrap = document.getElementById('pd-frame-wrap');
       const screen = document.getElementById('pd-screen');
       if (!frame || !wrap || !screen) return;
-      const box = presetGenerator.presetBoxSize(values || readPresetOptions());
+      const box = previewBox(values || readPresetOptions());
       frame.width = box.width;
       frame.height = box.height;
       frame.style.width = box.width + 'px';
@@ -4776,6 +4994,63 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       self.css('pointer-events', 'initial');
     });
 
+    // A font or a logo: the main process checks what the file really is before it keeps a copy, and
+    // says why when it refuses.
+    function refusalText(kind) {
+      if (kind === 'font') {
+        return t(
+          'preset-font-refused',
+          'That file is not a usable font. Use a TTF, OTF, WOFF or WOFF2 file of 4 MB at most.',
+          'Ce fichier n’est pas une police utilisable. Utilise un fichier TTF, OTF, WOFF ou WOFF2 de 4 Mo au plus.'
+        );
+      }
+      return t(
+        'preset-logo-refused',
+        'That file is not a usable logo. Use a PNG, JPEG, GIF, WebP or BMP picture of 2 MB at most.',
+        'Ce fichier n’est pas un logo utilisable. Utilise une image PNG, JPEG, GIF, WebP ou BMP de 2 Mo au plus.'
+      );
+    }
+
+    $('#btn-import-preset-font').click(async function (event) {
+      event.preventDefault();
+      const self = $(this);
+      self.css('pointer-events', 'none');
+      try {
+        const res = await ipcRenderer.invoke('import-preset-font');
+        if (res && res.ok) {
+          await refreshPresetFonts(res.name);
+          updatePreviewStyles(refreshPresetControls());
+          replayPreview();
+          setPresetStatus('');
+        } else if (res && !res.canceled) {
+          setPresetStatus(refusalText('font'), 'error');
+        }
+      } catch (err) {
+        debug.log(err);
+      }
+      self.css('pointer-events', 'initial');
+    });
+
+    $('#btn-import-preset-logo').click(async function (event) {
+      event.preventDefault();
+      const self = $(this);
+      self.css('pointer-events', 'none');
+      try {
+        const res = await ipcRenderer.invoke('import-preset-logo');
+        if (res && res.ok) {
+          await refreshPresetImages(null, res.name);
+          updatePreviewStyles(refreshPresetControls());
+          replayPreview();
+          setPresetStatus('');
+        } else if (res && !res.canceled) {
+          setPresetStatus(refusalText('logo'), 'error');
+        }
+      } catch (err) {
+        debug.log(err);
+      }
+      self.css('pointer-events', 'initial');
+    });
+
     // The one property the card cannot show: play it when chosen, like the Notifications tab does.
     $('#pd-sound').on('change', function () {
       const chosen = String($(this).val() || '');
@@ -4845,7 +5120,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         const values = JSON.parse(state);
         writePresetOptions(values);
         refreshPresetSounds(values.sound || '');
-        refreshPresetImages(values.bgImage || '');
+        refreshPresetImages(values.bgImage || '', values.logoImage || '');
+        refreshPresetFonts(values.fontFile || '');
         updatePreviewStyles(readPresetOptions());
         replayPreview();
         filterDesigner($('#pd-search').val());
@@ -4911,7 +5187,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const rows = document.querySelectorAll('#pd-compare .pd-compare-row');
       if (!rows.length) return;
       markCurrentCompareRow();
-      const box = presetGenerator.presetBoxSize(values);
+      const box = previewBox(values);
       const stageWidth = measuredStageWidth();
       // Fits height as well as width (fitting width alone ran tall popups off the bottom); these
       // numbers must agree with .pd-compare in the stylesheet, the only other place the grid is described.
@@ -4925,7 +5201,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const cellHeight = Math.max(24, (stageCeiling() - ROW_GAP * (gridRows - 1)) / gridRows - LABEL_ROOM);
       const zoom = Math.min(1, cellWidth / box.width, cellHeight / box.height);
       fitStageTo((Math.ceil(box.height * zoom) + LABEL_ROOM) * gridRows + ROW_GAP * (gridRows - 1));
-      const document_ = presetGenerator.buildPresetPreviewHtml(values, { assetUrl: presetAssetUrl });
+      const document_ = presetGenerator.buildPresetPreviewHtml(values, { assetUrl: presetAssetUrl, css: layerMode ? layerStylesheet(values) : undefined });
       for (const row of rows) {
         const wrap = row.querySelector('.pd-compare-frame');
         const frame = ensureFrame(wrap, { title: String(row.getAttribute('data-state') || 'normal') });
@@ -4942,7 +5218,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         try {
           if (frame.contentWindow && frame.contentWindow.awPreviewApply) {
             const style = frame.contentDocument.getElementById('aw-preview-css');
-            if (style) style.textContent = previewCss(values);
+            if (style) style.textContent = stylesheetFor(values);
+            syncLayerLogo(frame.contentDocument);
             frame.contentWindow.awPreviewApply(payload);
             continue;
           }
@@ -4951,6 +5228,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         }
         frame.onload = () => {
           try {
+            syncLayerLogo(frame.contentDocument);
             frame.contentWindow.awPreviewApply(payload);
           } catch (e) {
             debug.log(e);
@@ -5239,13 +5517,202 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       setPresetStatus($('#pd-status').attr('data-reset') || '', 'info');
     });
 
+    /*
+      Customising a bundled preset: the designer keeps its controls, but only the sections that can be
+      layered over somebody else's design are shown, each behind a switch. Fields are marked and
+      hidden by class (never moved), and everything is put back when the mode ends.
+    */
+    const pdRoot = $('#options-notify-designer');
+    const layerBackground = () => $('#pd-bgMode option[value="artwork"], #pd-bgMode option[value="image"]');
+    const layerRevealedBlocks = [];
+
+    function rgbToHex(text) {
+      const value = String(text || '').trim();
+      if (/^#[0-9a-f]{6}$/i.test(value)) return value.toLowerCase();
+      if (/^#[0-9a-f]{3}$/i.test(value)) return '#' + value.slice(1).split('').map((c) => c + c).join('').toLowerCase();
+      const match = /rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)(?:[\s,/]+([\d.]+))?/i.exec(value);
+      if (!match || (match[4] !== undefined && Number(match[4]) < 0.3)) return '';
+      return '#' + [match[1], match[2], match[3]].map((n) => Math.min(255, Number(n)).toString(16).padStart(2, '0')).join('');
+    }
+
+    // Start the controls from what the bundled preset actually looks like, so ticking a section does
+    // not begin by replacing its colours with the designer's defaults.
+    function seedLayerControlsFromBase(frame) {
+      try {
+        const card = frame.contentDocument.querySelector('.ach');
+        const style = frame.contentWindow.getComputedStyle(card);
+        const gradientStop = /rgba?\([^)]*\)/i.exec(style.backgroundImage);
+        const seeds = {
+          accent: rgbToHex(style.getPropertyValue('--accent')),
+          text: rgbToHex(style.color),
+          bg: rgbToHex(style.backgroundColor) || rgbToHex(gradientStop && gradientStop[0]),
+          borderColor: parseFloat(style.borderTopWidth) > 0 ? rgbToHex(style.borderTopColor) : '',
+        };
+        for (const [key, hex] of Object.entries(seeds)) if (hex) $('#pd-' + key).val(hex);
+        refreshPresetControls();
+      } catch (e) {
+        debug.log(e);
+      }
+    }
+
+    function refreshLayerToggles() {
+      pdRoot.find('.pd-field[data-layer-section]').each(function () {
+        $(this).toggleClass('is-inherited', !layerSections.has($(this).attr('data-layer-section')));
+      });
+      pdRoot.find('.pd-layer-toggle input').each(function () {
+        this.checked = layerSections.has($(this).attr('data-section'));
+      });
+    }
+
+    function enterLayerMode(base, sections) {
+      exitLayerMode(false);
+      layerMode = {
+        base: base.name,
+        width: base.width,
+        height: base.height,
+        css: presetLayerTool.absolutizeCssUrls(base.css, require('url').pathToFileURL(base.folder).href),
+      };
+      layerSections.clear();
+      for (const name of sections || []) if (presetLayerTool.LAYER_SECTION_NAMES.includes(name)) layerSections.add(name);
+      pdRoot.addClass('is-layered');
+      for (const [key, section] of Object.entries(presetLayerTool.LAYER_FIELD_SECTION)) {
+        pdRoot.find('.pd-field[data-key="' + key + '"]').attr('data-layer-section', section);
+      }
+      // One switch in front of the first field of each section, in the order the fields appear.
+      for (const section of presetLayerTool.LAYER_SECTION_NAMES) {
+        const first = pdRoot.find('.pd-controls .pd-field[data-layer-section="' + section + '"]').first();
+        if (!first.length) continue;
+        const labelNode = first.find('[data-lang]').first();
+        const toggle = $('<label class="pd-layer-toggle"><input type="checkbox"><span></span></label>');
+        toggle.find('input').attr('data-section', section);
+        toggle.find('span').text(labelNode.text());
+        first.before(toggle);
+      }
+      // The Advanced halves of a group fold away fields the layer needs, so they open and stay open.
+      pdRoot.find('.pd-controls .pd-adv').each(function () {
+        if (!this.hidden || !$(this).find('.pd-field[data-layer-section]').length) return;
+        this.hidden = false;
+        layerRevealedBlocks.push(this);
+      });
+      // A group with nothing to layer is not shown; the ones that have something are opened.
+      pdRoot.find('.pd-controls .pd-group').each(function () {
+        const group = $(this);
+        if (!group.find('.pd-field[data-layer-section]').length) {
+          group.addClass('pd-layer-skip');
+        } else if (!group.hasClass('is-open')) {
+          group.addClass('is-open pd-layer-opened');
+        }
+      });
+      layerBackground().prop('disabled', true);
+      if (['artwork', 'image'].includes(String($('#pd-bgMode').val()))) $('#pd-bgMode').val('solid');
+      $('#btn-export-preset').prop('disabled', true);
+      $('#pd-layer-base').val(base.name);
+      $('#pd-layer-note')
+        .text(
+          t(
+            'preset-layer-note',
+            'Customizing {preset}. Tick a section to change it; whatever you leave unticked stays as the bundled preset ships. Your changes sit on top of it: the bundled preset is not copied or modified.',
+            'Personnalisation de {preset}. Coche une section pour la modifier ; ce que tu laisses décoché reste comme dans le preset fourni. Tes changements se posent par-dessus : le preset fourni n’est ni copié ni modifié.',
+            { preset: base.name }
+          )
+        )
+        .prop('hidden', false);
+      refreshLayerToggles();
+    }
+
+    function exitLayerMode(clearPicker = true) {
+      if (!layerMode) return;
+      layerMode = null;
+      layerSections.clear();
+      pdRoot.removeClass('is-layered').find('.pd-layer-toggle').remove();
+      pdRoot.find('.pd-field[data-layer-section]').removeAttr('data-layer-section').removeClass('is-inherited');
+      while (layerRevealedBlocks.length) layerRevealedBlocks.pop().hidden = true;
+      pdRoot.find('.pd-controls .pd-group').removeClass('pd-layer-skip').filter('.pd-layer-opened').removeClass('is-open pd-layer-opened');
+      layerBackground().prop('disabled', false);
+      $('#btn-export-preset').prop('disabled', false);
+      $('#pd-layer-note').prop('hidden', true).text('');
+      if (clearPicker) $('#pd-layer-base').val('');
+    }
+
+    async function openLayerBase(name, sections) {
+      const base = await ipcRenderer.invoke('read-layer-base', name);
+      if (!base) return false;
+      enterLayerMode(base, sections);
+      return true;
+    }
+
+    function fillLayerBases(names, keep) {
+      const sel = $('#pd-layer-base');
+      sel.empty().append($('<option>').attr('value', '').text(sel.attr('data-lang-none') || ''));
+      names.forEach((name) => sel.append($('<option>').attr('value', name).text(name)));
+      sel.val(names.includes(keep) ? keep : '');
+    }
+
+    function refreshLayerBases() {
+      return ipcRenderer
+        .invoke('list-layer-bases')
+        .then((names) => fillLayerBases(names || [], layerMode ? layerMode.base : ''))
+        .catch((err) => debug.log(err));
+    }
+
+    $('#pd-layer-base').on('change', async function () {
+      const name = String($(this).val() || '');
+      if (!name) {
+        exitLayerMode();
+        writePresetOptions({});
+        updatePreviewStyles(readPresetOptions());
+        renderPreviewDocument(readPresetOptions());
+        return;
+      }
+      try {
+        $('#pd-load').val('');
+        if (!(await openLayerBase(name, []))) {
+          setPresetStatus($('#pd-status').attr('data-fail') || '', 'error');
+          $(this).val('');
+          return;
+        }
+        $('#pd-name').val(`${name} custom`.slice(0, 48));
+        $('#options-notify-designer .pd-template').removeClass('is-on');
+        writePresetOptions({});
+        refreshPresetImages('', '');
+        refreshPresetFonts('');
+        resetPresetHistory();
+        const frame = previewFrame();
+        renderPreviewDocument(readPresetOptions());
+        if (frame) frame.addEventListener('load', () => seedLayerControlsFromBase(frame), { once: true });
+        updateCreateButtonMode();
+        updateDeleteButtonVisibility();
+        setPresetStatus('');
+      } catch (err) {
+        debug.log(err);
+        setPresetStatus($('#pd-status').attr('data-fail') || '', 'error');
+      }
+    });
+
+    pdRoot.on('change', '.pd-layer-toggle input', function () {
+      const section = $(this).attr('data-section');
+      if (this.checked) layerSections.add(section);
+      else layerSections.delete(section);
+      refreshLayerToggles();
+      schedulePreview();
+    });
+
+    // Touching a dimmed field is a decision to use it.
+    pdRoot.on('input change', '.pd-field[data-layer-section]', function () {
+      const section = $(this).attr('data-layer-section');
+      if (!layerMode || layerSections.has(section)) return;
+      layerSections.add(section);
+      refreshLayerToggles();
+    });
+
     // A template is an ordinary set of options; the name field is left alone, since a starting
     // point is a look, not a preset, and overwriting a typed name would lose the user's work.
     function applyDesignToControls(options) {
       writePresetOptions(options);
       const values = presetSchema.normalizeOptions(options);
       refreshPresetSounds(values.sound || '');
-      refreshPresetImages(values.bgImage || '');
+      refreshPresetImages(values.bgImage || '', values.logoImage || '');
+      refreshPresetFonts(values.fontFile || '');
       updatePreviewStyles(readPresetOptions());
       replayPreview();
       // A load, a template or a reset starts a design rather than continuing one: undoing across it
@@ -5280,6 +5747,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       if (!options) return;
       $('#options-notify-designer .pd-template').removeClass('is-on');
       $(this).addClass('is-on');
+      exitLayerMode();
       applyDesignToControls(options);
       setPresetStatus(`${$('#pd-status').attr('data-template') || ''} ${name}`.trim(), 'info');
     });
@@ -5288,6 +5756,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // drives the accent and the background is built around it, so the result is a design, not noise.
     $('#btn-random-preset').click(function () {
       $('#options-notify-designer .pd-template').removeClass('is-on');
+      exitLayerMode();
       applyDesignToControls(presetTemplates.randomPresetOptions());
       setPresetStatus($('#pd-status').attr('data-randomized') || '', 'info');
     });
@@ -5319,14 +5788,21 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       // An imported preset with no builder options behind it cannot be reproduced from the controls,
       // so leave them alone: Create then makes a new preset instead of overwriting unrebuildable artwork.
       if (opts.editable === false) {
+        exitLayerMode();
         $('#pd-name').val('');
         updateCreateButtonMode();
         updateDeleteButtonVisibility();
         return 'imported';
       }
+      if (opts.layered) {
+        if (!(await openLayerBase(opts.base, opts.sections))) return 'failed';
+      } else {
+        exitLayerMode();
+      }
       $('#pd-name').val(opts.name || name);
       $('#options-notify-designer .pd-template').removeClass('is-on');
       applyDesignToControls(opts);
+      refreshLayerToggles();
       updateCreateButtonMode();
       updateDeleteButtonVisibility();
       return 'editable';
@@ -5367,7 +5843,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           return;
         }
         const options = readPresetOptions();
-        const res = await ipcRenderer.invoke('preview-custom-preset', options);
+        const res = layerMode
+          ? await ipcRenderer.invoke('preview-layered-preset', { base: layerMode.base, sections: [...layerSections], options })
+          : await ipcRenderer.invoke('preview-custom-preset', options);
         if (res && res.ok) {
           setPresetStatus('');
           // Only name the design when the user actually named it, or the picker's "New preset…"
@@ -5398,7 +5876,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
       self.css('pointer-events', 'none');
       try {
-        const res = await ipcRenderer.invoke('create-custom-preset', Object.assign({ name }, readPresetOptions()));
+        const res = layerMode
+          ? await ipcRenderer.invoke('create-layered-preset', { name, base: layerMode.base, sections: [...layerSections], options: readPresetOptions() })
+          : await ipcRenderer.invoke('create-custom-preset', Object.assign({ name }, readPresetOptions()));
         if (res && res.ok) {
           // Refresh the preset dropdown and select the new preset (autosave persists the choice).
           await refreshOverlayPresetMenu(res.name);
@@ -5648,6 +6128,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     refreshGeneratedPresetList().catch((err) => debug.log(err));
     refreshPresetSounds('');
     refreshPresetImages('');
+    refreshPresetFonts('');
+    refreshLayerBases();
     refreshPresetControls();
     renderPreviewDocument(readPresetOptions());
     refreshPresetAnchors();
@@ -5670,6 +6152,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       refreshGeneratedPresetList(String($('#pd-load').val() || '')).catch((err) => debug.log(err));
       refreshPresetSounds();
       refreshPresetImages();
+      refreshPresetFonts();
+      refreshLayerBases();
     });
 
     $('#option_mergeDuplicate')
@@ -5803,7 +6287,12 @@ function autosaveNotifications() {
   clearTimeout(notifAutosaveTimer);
   notifAutosaveTimer = setTimeout(() => {
     settings.setUserDataPath(ipcRenderer.sendSync('get-user-data-path-sync'));
-    settings.save(app.config).catch((err) => debug.log(err));
+    settings
+      .save(app.config)
+      .then(() => {
+        if (typeof window.flashSettingsSaved === 'function') window.flashSettingsSaved();
+      })
+      .catch((err) => debug.log(err));
   }, 200);
 }
 

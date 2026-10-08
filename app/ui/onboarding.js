@@ -8,9 +8,10 @@ const uiLanguages = require(path.join(appPath, 'locale/uiLanguages.js'));
 const onboardingInterfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
 const onboardingFolderDiagnosis = require(path.join(appPath, 'util/folderDiagnosis.js')).describeFolderDiagnosis;
 const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
+const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'));
 
 (function ($, window, document) {
-  const STEP_COUNT = 7;
+  const STEP_COUNT = 6;
   const onboardingTextCache = new Map();
   let step = 0;
   let addedSaveDirs = [];
@@ -27,6 +28,12 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
   // first shown so the user reviews/trims real candidates instead of starting from an empty list.
   let isFirstRunSession = false;
   let autoDetectedThisSession = false;
+  // Detection report shown on the Games step and reused by the last one. `detectRun` drops the
+  // answer of a scan that a newer one has already replaced.
+  let detection = null;
+  let detectRun = 0;
+  const folderScanCache = new Map();
+  let focusBeforeOpen = null;
 
   function localizedText() {
     const lang = uiLanguages.has(app.config?.achievement?.lang) ? app.config.achievement.lang : 'english';
@@ -93,7 +100,23 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
   }
 
   function setStatus(message, kind) {
-    $('#onboarding-status, #onboarding-folder-status').removeClass('success error running').addClass(kind || '').text(message || '');
+    $('#onboarding-status').removeClass('success error running').addClass(kind || '').text(message || '');
+  }
+
+  // Folder search and scan messages stay on the Games step; the footer is for gates and saving.
+  function setFolderStatus(message, kind) {
+    $('#onboarding-folder-status').removeClass('success error running').addClass(kind || '').text(message || '');
+  }
+
+  function fill(template, params) {
+    return String(template || '').replace(/\{(\w+)\}/g, (match, name) => (Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match));
+  }
+
+  // The step that holds `selector`, found by markup so inserting a step never moves a gate or a
+  // jump target onto the wrong one. -1 rather than NaN: showStep() clamps it to a real step.
+  function stepOf(selector) {
+    const found = parseInt($(selector).closest('.onboarding-step').attr('data-step'), 10);
+    return Number.isFinite(found) ? found : -1;
   }
 
   function updateProgress() {
@@ -108,6 +131,27 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
         .attr('aria-current', current ? 'step' : null)
         .attr('aria-label', `${index + 1} / ${STEP_COUNT}: ${t.steps[index]}`);
     });
+  }
+
+  // The dialog is modal, so Tab must wrap inside it instead of walking into the page behind.
+  function trapFocus(event) {
+    const items = $('#onboarding .box')
+      .find('a[href], button, input, select, summary, [tabindex]')
+      .filter(function () {
+        return !this.disabled && this.tabIndex >= 0 && $(this).is(':visible');
+      })
+      .get();
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    const inside = items.includes(document.activeElement);
+    if (event.shiftKey && (document.activeElement === first || !inside)) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (document.activeElement === last || !inside)) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   function focusStep() {
@@ -141,19 +185,10 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     $('.onboarding-steps button').each(function (index) {
       $(this).find('span').text(t.steps[index]);
     });
-    $('#onboard-language-title').text(t.languageTitle);
-    $('#onboard-language-copy').text(t.languageCopy);
+    $('#onboard-welcome-title').text(t.welcomeTitle);
+    $('#onboard-welcome-copy').text(t.welcomeCopy);
     $('#onboard-language-label').text(t.language);
     $('#onboard-language-hint').text(t.languageHint);
-    $('#onboard-intro-title').text(t.introTitle);
-    $('#onboard-card-scan-title').text(t.scanTitle);
-    $('#onboard-card-scan-copy').text(t.scanCopy);
-    $('#onboard-card-watch-title').text(t.watchTitle);
-    $('#onboard-card-watch-copy').text(t.watchCopy);
-    $('#onboard-card-fix-title').text(t.fixTitle);
-    $('#onboard-card-fix-copy').text(t.fixCopy);
-    $('#onboard-card-overlay-title').text(t.overlayTitle);
-    $('#onboard-card-overlay-copy').text(t.overlayCopy);
     $('#onboard-mode-title').text(t.modeTitle);
     $('#onboard-mode-copy').text(t.modeCopy);
     $('#onboard-mode-simple-title').text(t.modeSimple);
@@ -170,6 +205,7 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     $('#onboard-avatar-hint').text(t.avatarHint);
     $('#onboard-folders-title').text(t.foldersTitle);
     $('#onboard-folders-copy').text(t.foldersCopy);
+    $('#onboard-detect-title').text(t.detectTitle);
     $('#onboard-add-save-dir span').text(t.addSave);
     $('#onboard-smart-find span').text(t.smartFind);
     $('#onboard-add-library-dir span').text(t.addLibrary);
@@ -204,6 +240,20 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     $('#onboard-merge-hint').text(t.mergeHint);
     $('#onboard-accounts-title').text(t.accountsTitle);
     $('#onboard-accounts-copy').text(t.accountsCopy);
+    $('#onboard-more-label').text(t.moreOptions);
+    $('#onboard-ready-title').text(t.readyTitle);
+    $('#onboard-ready-copy').text(t.readyCopy);
+    $('#onboard-features-title').text(t.featuresTitle);
+    $('#onboard-feat-overlay-title').text(t.overlayTitle);
+    $('#onboard-feat-overlay-copy').text(fill(t.overlayCopy, { hotkey: app.config.overlay?.hotkey || 'Ctrl+Shift+K' }));
+    $('#onboard-feat-collections-title').text(t.collectionsTitle);
+    $('#onboard-feat-collections-copy').text(t.collectionsCopy);
+    $('#onboard-feat-trophy-title').text(t.trophyTitle);
+    $('#onboard-feat-trophy-copy').text(t.trophyCopy);
+    $('#onboard-feat-clips-title').text(t.clipsTitle);
+    $('#onboard-feat-clips-copy').text(t.clipsCopy);
+    $('#onboard-feat-backup-title').text(t.backupTitle);
+    $('#onboard-feat-backup-copy').text(t.backupCopy);
     $('#onboard-summary-reopen').text(t.summaryReopen);
     $("#onboard-notification-mode option[value='auto']").text(t.notificationAuto);
     $("#onboard-notification-mode option[value='toast']").text(t.toast);
@@ -214,9 +264,13 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     $("#onboard-hidden option[value='true']").text(t.show);
     $("#onboard-hidden option[value='false']").text(t.hide);
     $('#onboarding-prev span').text(t.back);
+    $("#onboard-main-steam option[value='0']").text(t.none);
     updateStepButtons();
     updateProgress();
     renderDirLists();
+    renderDetection();
+    updateSourcesCount();
+    if (step === stepOf('#onboard-recap')) renderRecap();
     // Relabels the account buttons after a language change; show() covers the first open.
     if ($('#onboarding').is(':visible')) refreshAccounts();
   }
@@ -226,10 +280,23 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     the guide will not move past this step while `chosenInterfaceMode` is empty.
   */
   function renderInterfaceMode() {
-    $('#onboarding .onboarding-mode-card').each(function () {
+    const cards = $('#onboarding .onboarding-mode-card');
+    cards.each(function (index) {
       const selected = $(this).data('mode') === chosenInterfaceMode;
-      $(this).toggleClass('is-selected', selected).attr('aria-checked', String(selected));
+      // Roving tabindex of a radio group: one tab stop, arrows move inside it.
+      const stop = chosenInterfaceMode ? selected : index === 0;
+      $(this)
+        .toggleClass('is-selected', selected)
+        .attr({ 'aria-checked': String(selected), tabindex: stop ? '0' : '-1' });
     });
+    $('#onboarding').toggleClass('is-simple', onboardingInterfaceMode.isSimple(chosenInterfaceMode));
+  }
+
+  function moveInterfaceMode(card, delta) {
+    const cards = $('#onboarding .onboarding-mode-card');
+    const next = cards.eq((cards.index(card) + delta + cards.length) % cards.length);
+    setInterfaceMode(next.data('mode'));
+    next.trigger('focus');
   }
 
   function setInterfaceMode(mode) {
@@ -274,6 +341,17 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
         });
         $(this).toggle(rows.length === 0 || visible.length > 0);
       });
+  }
+
+  function enabledSourceCount() {
+    return SOURCE_ROWS.filter((row) => {
+      const raw = $(`#onboard-src-${row.key}`).val();
+      return row.tri ? (parseInt(raw, 10) || 0) > 0 : boolValue(raw);
+    }).length;
+  }
+
+  function updateSourcesCount() {
+    $('#onboard-sources-more').text(fill(text().sourcesMore, { count: enabledSourceCount() }));
   }
 
   /*
@@ -362,6 +440,8 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
       debug.log(`onboarding: ${key} status unavailable (${err})`);
     }
     $(`#onboard-${key}-connect span`).text(state.connected ? labels.reconnect : labels.connect);
+    if (state.connected) connectedAccounts.add(key);
+    else connectedAccounts.delete(key);
     if (state.connected && state.needsReconnect && labels.needsReconnect) setAccountStatus(key, labels.needsReconnect, 'error');
     else if (state.connected && !$(`#onboard-${key}-status`).hasClass('success')) setAccountStatus(key, labels.connectedAs(account.name(state)), 'success');
     else if (!$(`#onboard-${key}-status`).hasClass('error')) setAccountStatus(key, labels.notConnected);
@@ -414,13 +494,10 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     }
   }
 
-  // The step that owns the mode cards, found by markup rather than by a hard-coded index so
-  // inserting another step never silently moves the gate onto the wrong one.
+  // The step that owns the mode cards (and the language), found by markup rather than by a
+  // hard-coded index so inserting another step never silently moves the gate onto the wrong one.
   function interfaceModeStep() {
-    const found = parseInt($('#onboarding .onboarding-mode-choice').closest('.onboarding-step').attr('data-step'), 10);
-    // -1 rather than NaN: callers compare it against the current step and pass it to showStep(),
-    // and a NaN would clamp to NaN there and leave the guide on no step at all.
-    return Number.isFinite(found) ? found : -1;
+    return stepOf('#onboarding .onboarding-mode-choice');
   }
 
   function populateLanguageSelect(selected) {
@@ -585,6 +662,7 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
             .on('click', () => {
               rows.splice(index, 1);
               renderDirLists();
+              scheduleDetection();
             })
         );
         list.append(item);
@@ -602,6 +680,7 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     if (!normalized || addedSaveDirs.some((item) => normalizeDir(item.path) === normalized)) return;
     addedSaveDirs.push({ notify: true, ...entry });
     renderDirLists();
+    scheduleDetection();
   }
 
   function addLibraryDir(value, metadata = {}) {
@@ -612,19 +691,173 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     if (!normalized || addedLibraryDirs.some((item) => normalizeDir(item.path || item) === normalized)) return;
     addedLibraryDirs.push(entry);
     renderDirLists();
+    scheduleDetection();
+  }
+
+  /*
+    "Found on this PC". Launchers are read from their own files, folders by scanning each one the
+    guide will save, so the numbers are what the first scan will start from. A launcher whose
+    Sources switch is off is still listed, marked off, because that is the surprise worth avoiding.
+  */
+  const DETECT_ROWS = [
+    { key: 'steam', name: 'Steam', icon: 'fab fa-steam', source: 'legitSteam' },
+    { key: 'gog', name: 'GOG Galaxy', icon: 'brand-icon brand-gog', source: 'gogOfficial' },
+    { key: 'epic', name: 'Epic Games', icon: 'brand-icon brand-epic', source: 'epicOfficial' },
+    { key: 'ubisoft', name: 'Ubisoft Connect', icon: 'brand-icon brand-ubisoft', source: 'ubisoftOfficial' },
+  ];
+  const DETECT_PARALLEL_SCANS = 4;
+  let detectRunning = false;
+  let detectTimer = null;
+  let savedFolderCount = 0;
+
+  function launcherReaders() {
+    const parser = (name) => require(path.join(appPath, `parser/${name}.js`));
+    return {
+      steam: () => {
+        const library = parser('steamLibrary');
+        return onboardingDetect.steamInstalledAppids({ libraryAppsDirs: () => library.libraryAppsDirs(library.steamClientDir()), readdir: onboardingFs.readdirSync });
+      },
+      gog: () => parser('gogOfficial').scan(),
+      epic: () => parser('epicOfficial').scan(),
+      ubisoft: () => parser('ubisoftOfficial').scan(),
+    };
+  }
+
+  function sourceIsOff(key) {
+    const raw = $(`#onboard-src-${key}`).val();
+    return raw === '0' || raw === 'false';
+  }
+
+  async function scanFolderOnce(dir) {
+    const key = normalizeDir(dir);
+    if (!folderScanCache.has(key)) {
+      try {
+        folderScanCache.set(key, (await userDir.scan(dir)) || []);
+      } catch (err) {
+        debug.log(`onboarding: could not scan ${dir} (${err})`);
+        folderScanCache.set(key, []);
+      }
+    }
+    return folderScanCache.get(key);
+  }
+
+  async function refreshDetection() {
+    const run = ++detectRun;
+    detectRunning = true;
+    renderDetection();
+    try {
+      const launchers = await onboardingDetect.collectLaunchers(launcherReaders());
+      const [saved, libraries] = await Promise.all([
+        userDir.getEntries ? userDir.getEntries() : userDir.get(),
+        libraryDirs.getEntries ? libraryDirs.getEntries() : libraryDirs.get(),
+      ]);
+      const dirs = [...mergeSaveDirs(saved, addedSaveDirs), ...mergeLibraryDirs(libraries, addedLibraryDirs)].filter((entry) => entry && entry.path && entry.enabled !== false);
+      // Launchers answer at once: show them while the folders are still being read.
+      detection = onboardingDetect.buildReport({ launchers, folders: [] });
+      renderDetection();
+      const lists = await onboardingDetect.mapLimit(dirs, DETECT_PARALLEL_SCANS, (entry) => scanFolderOnce(entry.path), () => run !== detectRun);
+      if (run !== detectRun) return;
+      savedFolderCount = dirs.length;
+      detection = onboardingDetect.buildReport({ launchers, folders: lists });
+    } catch (err) {
+      debug.log(`onboarding: detection failed (${err})`);
+    }
+    if (run !== detectRun) return;
+    detectRunning = false;
+    renderDetection();
+    if (step === stepOf('#onboard-recap')) renderRecap();
+  }
+
+  function scheduleDetection() {
+    clearTimeout(detectTimer);
+    detectTimer = setTimeout(refreshDetection, 250);
+  }
+
+  function renderDetection() {
+    const t = text();
+    const list = $('#onboard-detect-list').empty();
+    const total = $('#onboard-detect-total').removeClass('is-found');
+    const note = $('#onboard-detect-note').empty().prop('hidden', true);
+    if (!detection) {
+      total.text(detectRunning ? t.smartRunning : '');
+      return;
+    }
+    const append = (icon, name, found, label) =>
+      list.append(
+        $('<li>')
+          .toggleClass('is-found', found)
+          .toggleClass('is-empty', !found)
+          .append($('<i>').addClass(icon).attr('aria-hidden', 'true'), $('<span>').text(name), $('<span>').text(label))
+      );
+    let offFound = false;
+    for (const row of DETECT_ROWS) {
+      const count = detection.launchers[row.key] || 0;
+      const off = count > 0 && sourceIsOff(row.source);
+      offFound = offFound || (row.key === 'steam' && off);
+      append(row.icon, row.name, count > 0, count > 0 ? fill(t.detectInstalled, { count }) + (off ? ` · ${t.detectOff}` : '') : t.detectNone);
+    }
+    const emulators = detection.emulators;
+    const emulatorLabel = emulators.games > 0 ? fill(t.detectFolders, { games: emulators.games, folders: emulators.folders }) : detectRunning ? t.smartRunning : t.detectNone;
+    append('fas fa-file-alt', t.detectEmulators, emulators.games > 0, emulatorLabel);
+    total.toggleClass('is-found', detection.total > 0).text(detectRunning ? t.smartRunning : detection.total > 0 ? fill(t.detectTotal, { count: detection.total }) : t.detectNothing);
+    if (offFound) {
+      note.prop('hidden', false).append(
+        $('<span>').text(t.detectSteamOff + ' '),
+        $('<button>')
+          .attr('type', 'button')
+          .text(t.detectReviewSources)
+          .on('click', () => {
+            $('#onboard-sources-details').prop('open', true);
+            showStep(stepOf('#onboard-sources-details'));
+          })
+      );
+    }
+  }
+
+  const connectedAccounts = new Set();
+
+  function renderRecap() {
+    const t = text();
+    const language = uiLanguages.all().find((entry) => entry.api === $('#onboard-language').val());
+    const mode = chosenInterfaceMode === 'simple' ? t.modeSimple : chosenInterfaceMode === 'advanced' ? t.modeAdvanced : t.none;
+    const folders = savedFolderCount || addedSaveDirs.length + addedLibraryDirs.length;
+    const games = detection ? detection.total : 0;
+    const accounts = [...connectedAccounts].map((key) => ({ steam: 'Steam', xbox: 'Xbox', epic: 'Epic Games' })[key]);
+    const sources = fill(t.summarySources, { count: enabledSourceCount() }) + (accounts.length ? ` · ${fill(t.summaryAccounts, { names: accounts.join(', ') })}` : '');
+    const theme = $('#onboard-theme option:selected').text();
+    const alerts = $('#onboard-notification-mode option:selected').text();
+    const rows = [
+      { icon: 'fa-language', text: `${language ? language.native || language.displayName : ''} · ${mode}`, target: interfaceModeStep() },
+      {
+        icon: games > 0 ? 'fa-check-circle' : 'fa-exclamation-circle',
+        warning: games === 0,
+        text: games > 0 ? fill(t.summaryGames, { count: games, folders }) : t.summaryNoGames,
+        target: stepOf('#onboard-smart-find'),
+      },
+      { icon: 'fa-shield-alt', text: sources, target: stepOf('#onboard-sources-details') },
+      { icon: 'fa-bell', text: fill(t.summaryLook, { theme, notifications: alerts }), target: stepOf('#onboard-theme') },
+    ];
+    const list = $('#onboard-recap').empty();
+    for (const row of rows) {
+      const change = $('<button>')
+        .attr({ type: 'button', 'aria-label': `${t.summaryChange}: ${row.text}` })
+        .text(t.summaryChange)
+        .on('click', () => showStep(row.target));
+      list.append($('<li>').toggleClass('is-warning', Boolean(row.warning)).append($('<i>').addClass(`fas ${row.icon}`).attr('aria-hidden', 'true'), $('<span>').text(row.text), change));
+    }
   }
 
   // Scan a freshly added folder and report what it contains, so picking the wrong folder is obvious
   // immediately instead of silently accepting anything.
   async function reportFolderScan(dir) {
-    setStatus(text().smartRunning, 'running');
+    setFolderStatus(text().smartRunning, 'running');
     try {
       const found = await userDir.scan(dir);
       const count = Array.isArray(found) ? found.length : 0;
-      setStatus(count > 0 ? `${text().smartDone} (${count})` : text().invalidFolder, count > 0 ? 'success' : '');
+      setFolderStatus(count > 0 ? fill(text().folderGames, { count }) : text().invalidFolder, count > 0 ? 'success' : '');
     } catch (err) {
       debug.log(err);
-      setStatus('', '');
+      setFolderStatus('', '');
     }
   }
 
@@ -655,7 +888,7 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
   async function smartFindDirs() {
     if (smartFindRunning) return;
     setSmartFindBusy(true);
-    setStatus(text().smartRunning, 'running');
+    setFolderStatus(text().smartRunning, 'running');
     const before = addedSaveDirs.length + addedLibraryDirs.length;
     try {
       const foundSaveDirs = userDir.findEntries ? await userDir.findEntries() : (await userDir.find()).map((path) => ({ path, origin: 'auto' }));
@@ -673,12 +906,13 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
         }
       }
       const added = Math.max(0, addedSaveDirs.length + addedLibraryDirs.length - before);
-      setStatus(`${text().smartDone} (${added})`, added > 0 ? 'success' : '');
+      setFolderStatus(added > 0 ? fill(text().smartFound, { count: added }) : text().smartNone, added > 0 ? 'success' : '');
     } catch (err) {
-      setStatus(`${err}`, 'error');
+      setFolderStatus(`${err}`, 'error');
       debug.log(err);
     } finally {
       setSmartFindBusy(false);
+      scheduleDetection();
     }
   }
 
@@ -693,16 +927,20 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
   }
 
   function showStep(nextStep) {
-    if (isFirstRunSession && step === 0 && nextStep > 0 && !uiLanguages.has($('#onboard-language').val())) {
-      setStatus(text().languageRequired, 'error');
-      return;
-    }
-    // Same shape as the language gate: leaving the interface step forward needs an answer. Going
-    // back is always allowed, so the guide can be re-read without being trapped here.
+    // Leaving the first step forward needs both answers. Going back is always allowed, so the
+    // guide can be re-read without being trapped here.
     const modeStep = interfaceModeStep();
-    if (modeStep >= 0 && step === modeStep && nextStep > modeStep && !chosenInterfaceMode) {
-      setStatus(text().modeRequired, 'error');
-      return;
+    if (modeStep >= 0 && step === modeStep && nextStep > modeStep) {
+      if (isFirstRunSession && !uiLanguages.has($('#onboard-language').val())) {
+        setStatus(text().languageRequired, 'error');
+        $('#onboard-language').trigger('focus');
+        return;
+      }
+      if (!chosenInterfaceMode) {
+        setStatus(text().modeRequired, 'error');
+        $('#onboarding .onboarding-mode-card[tabindex="0"]').first().trigger('focus');
+        return;
+      }
     }
     step = Math.max(0, Math.min(STEP_COUNT - 1, nextStep));
     visitedSteps.add(step);
@@ -714,33 +952,12 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     updateStepButtons();
     updateProgress();
     maybeAutoDetectFolders();
-    if (step === STEP_COUNT - 1) renderSummary();
+    // The folder search ends in a detection run of its own; any other first visit starts one.
+    const needsDetection = (step === stepOf('#onboard-detect') || step === stepOf('#onboard-recap')) && !detection && !detectRunning;
+    if (needsDetection && !smartFindRunning) refreshDetection();
+    if (step === stepOf('#onboard-recap')) renderRecap();
+    if (step === stepOf('#onboard-detect')) renderDetection();
     focusStep();
-  }
-
-  /*
-    The last step shows what Finish will save, so an empty folder list is noticed here rather than
-    as an empty library. Counts merge the stored folders with this session's the way persist() does.
-  */
-  async function renderSummary() {
-    const t = text();
-    const enabledSources = SOURCE_ROWS.filter((row) => {
-      const raw = $(`#onboard-src-${row.key}`).val();
-      return row.tri ? (parseInt(raw, 10) || 0) > 0 : boolValue(raw);
-    }).length;
-    let saves = addedSaveDirs.length;
-    let libraries = addedLibraryDirs.length;
-    try {
-      const [currentSaveDirs, currentLibraryDirs] = await Promise.all([
-        userDir.getEntries ? userDir.getEntries() : userDir.get(),
-        libraryDirs.getEntries ? libraryDirs.getEntries() : libraryDirs.get(),
-      ]);
-      saves = mergeSaveDirs(currentSaveDirs, addedSaveDirs).length;
-      libraries = mergeLibraryDirs(currentLibraryDirs, addedLibraryDirs).length;
-    } catch (err) {
-      debug.log(`onboarding: folder counts unavailable (${err})`);
-    }
-    $('#onboard-summary-counts').text(`${t.saveList}: ${saves} · ${t.libraryList}: ${libraries} · ${t.summarySources}: ${enabledSources}`);
   }
 
   // First time the folders step is reached during a first-run session, kick off the smart-find scan so
@@ -758,10 +975,12 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     $('#onboarding-prev').prop('disabled', step === 0);
     $('#onboarding-next span').text(step === STEP_COUNT - 1 ? t.finish : t.next);
     $('#onboarding-next i').toggleClass('fa-check', step === STEP_COUNT - 1).toggleClass('fa-chevron-right', step !== STEP_COUNT - 1);
-    // One dismiss affordance, always visible: the backdrop dismisses the guide either way, so
-    // hiding the button only made the escape hatch invisible.
+    // Two dismiss affordances, always visible: the corner button and a plain-text one in the footer.
+    // Both save what is already chosen; a reopened guide edits live settings, so closing keeps them.
     const dismiss = isFirstRunSession ? t.skip : t.close;
     $('#onboarding-close').attr({ title: dismiss, 'aria-label': dismiss });
+    $('#onboarding-skip span').text(isFirstRunSession ? t.skipSetup : t.saveClose);
+    $('#onboarding-skip').toggle(step !== STEP_COUNT - 1);
   }
 
   function mergeSaveDirs(existing, additions) {
@@ -802,7 +1021,13 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     return result;
   }
 
-  async function persist(markComplete = true) {
+  /*
+    strict: Finish. Needs a language and an interface mode, and says so otherwise.
+    not strict: Skip. Saves whatever was chosen so far and leaves the rest as it was: an unanswered
+    mode stays unset, which the app resolves to Advanced rather than hiding anything from someone
+    who never asked for Simple.
+  */
+  async function persist(markComplete = true, { strict = true } = {}) {
     if (persistRunning) return false;
     const t = text();
     setPersistBusy(true);
@@ -817,18 +1042,21 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
       if (!app.config.emulator) app.config.emulator = {};
       if (!app.config.achievement) app.config.achievement = {};
 
-      const language = $('#onboard-language').val();
+      let language = $('#onboard-language').val();
       if (!uiLanguages.has(language)) {
-        setStatus(t.languageRequired, 'error');
-        return false;
+        if (strict) {
+          setStatus(t.languageRequired, 'error');
+          return false;
+        }
+        language = uiLanguages.has(app.config.achievement.lang) ? app.config.achievement.lang : 'english';
       }
-      if (!chosenInterfaceMode) {
+      if (!chosenInterfaceMode && strict) {
         setStatus(t.modeRequired, 'error');
         const modeStep = interfaceModeStep();
         if (modeStep >= 0) showStep(modeStep);
         return false;
       }
-      app.config.general.interfaceMode = chosenInterfaceMode;
+      if (chosenInterfaceMode) app.config.general.interfaceMode = chosenInterfaceMode;
       app.config.achievement.lang = language;
       app.config.general.username = $('#onboard-username').val().trim() || app.config.general.username || os.userInfo().username || 'User';
       app.config.general.onboardingCompleted = markComplete;
@@ -877,13 +1105,12 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
   }
 
   async function skip() {
-    if (isFirstRunSession) {
-      setStatus(text().languageRequired, 'error');
-      return;
-    }
-    if (!(await persist(true))) return;
+    const firstRun = isFirstRunSession;
+    if (!(await persist(true, { strict: false }))) return;
     if (typeof window.applyInterfaceMode === 'function') window.applyInterfaceMode();
     hide({ returnToSettings: true });
+    // The first scan was held back for the guide, so leaving it by any door starts that scan.
+    if (firstRun) resetUI();
   }
 
   function hide({ returnToSettings = false } = {}) {
@@ -892,14 +1119,22 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
     setStatus('', '');
     openedFromSettings = false;
     if (restoreSettings) $('title-bar').trigger('open-settings');
+    else if (focusBeforeOpen && document.contains(focusBeforeOpen)) focusBeforeOpen.focus();
+    focusBeforeOpen = null;
   }
 
   function show(force) {
     if (!force && app.config.general?.onboardingCompleted === true) return;
     openedFromSettings = Boolean(force && $('#settings').is(':visible'));
+    focusBeforeOpen = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
     isFirstRunSession = !force; // auto-detect candidates only on the genuine first-run guide
     autoDetectedThisSession = false;
     languageChosenThisSession = false;
+    detection = null;
+    detectRunning = false;
+    detectRun += 1;
+    folderScanCache.clear();
+    $('#onboarding details').prop('open', false);
     chosenInterfaceMode = isFirstRunSession ? '' : onboardingInterfaceMode.normalize(app.config.general?.interfaceMode);
     addedSaveDirs = [];
     addedLibraryDirs = [];
@@ -996,8 +1231,27 @@ const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
       applyText();
       populateLanguageSelect(app.config.achievement.lang);
     });
+    $('#onboarding-skip').on('click', skip);
+    $('#onboarding select[id^="onboard-src-"]').on('change', () => {
+      updateSourcesCount();
+      renderDetection();
+    });
+    $('#onboard-username').on('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      showStep(step + 1);
+    });
+    $('#onboarding').on('keydown', '.onboarding-mode-card', function (event) {
+      const delta = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+      if (!delta) return;
+      event.preventDefault();
+      moveInterfaceMode(this, delta);
+    });
     $(document).on('keydown.awOnboarding', (event) => {
-      if (!$('#onboarding').is(':visible') || event.key !== 'Escape' || isFirstRunSession || persistRunning) return;
+      if (!$('#onboarding').is(':visible')) return;
+      if (event.key === 'Tab') return trapFocus(event);
+      // A first run has no Escape: closing the guide there is a decision, not a reflex.
+      if (event.key !== 'Escape' || isFirstRunSession || persistRunning) return;
       event.preventDefault();
       skip();
     });

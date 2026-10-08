@@ -45,6 +45,7 @@ asarUnpack:
   - parser/xllnSpa.js
   - parser/markerpatch.js
   - parser/madnesspatch.js
+  - parser/runeUplay.js
   - parser/x360Recomp.js
   - parser/xex.js
   - util/lzx.js

@@ -86,16 +86,25 @@
     "runUninstaller": "Suorita pelin asennuksenpoisto-ohjelma…",
     "deleteFolder": "Poista pelikansio (roskakoriin)…"
   },
+  "windowControls": {
+    "minimize": "Pienennä",
+    "maximize": "Suurenna",
+    "close": "Sulje"
+  },
   "settings": {
     "title": "Asetukset",
     "sideMenu": {
       "general": "Yleiset",
       "notification": "Ilmoitukset",
-      "presets": "Esiasetukset",
+      "presets": "Ilmoitusten esiasetukset",
       "souvenir": "Muisto",
       "folder": "Kansiot",
       "source": "Lähteet",
-      "advanced": "Lisäasetukset"
+      "advanced": "Lisäasetukset",
+      "groupApp": "Sovellus",
+      "groupAlerts": "Hälytykset",
+      "groupLibrary": "Kirjasto",
+      "groupSupport": "Tuki"
     },
     "common": {
       "show": "Näytä",
@@ -108,13 +117,17 @@
       "maintainedBy": "ylläpitäjä",
       "fork": "Haara",
       "original": "Alkuperäinen v1.6.8",
-      "edit": "Muokkaa"
+      "edit": "Muokkaa",
+      "close": "Sulje",
+      "unsaved": "Tallentamattomia muutoksia"
     },
     "search": {
       "placeholder": "Hae asetuksia…",
       "empty": "Yksikään asetus ei vastaa hakuasi.",
       "ariaLabel": "Hae asetuksia",
-      "clear": "Tyhjennä"
+      "clear": "Tyhjennä",
+      "advancedMore": "{count} lisää Laaja-tilassa",
+      "advancedShow": "Näytä Laaja"
     },
     "watchdog": {
       "startup": {
@@ -143,7 +156,7 @@
       "duration": "Animaation kesto"
     },
     "general": {
-      "sectionTitle": "Käyttöliittymä ja toiminta",
+      "sectionTitle": "Arjen asetukset",
       "language": {
         "name": "Kieli",
         "description": "Käyttöliittymän kieli. Pelien tiedot haetaan tällä kielellä, kun se on mahdollista."
@@ -161,7 +174,7 @@
         }
       },
       "hiddenAch": {
-        "name": "Piilotetut saavutukset",
+        "name": "Paljasta piilotetut saavutukset",
         "description": "Paljasta piilotettujen saavutusten nimi ja kuvaus jo ennen niiden avaamista."
       },
       "mergeDuplicates": {
@@ -264,6 +277,20 @@
         "name": "Pokaalit profiilissa",
         "description": "Näyttää platina-, kulta-, hopea- ja pronssipokaalit nimesi alla. Platina on peli, joka on suoritettu 100-prosenttisesti; muut järjestävät saavutuksesi sen mukaan, kuinka moni pelaaja on avannut ne."
       },
+      "rarityDisplay": {
+        "name": "Harvinaisuuden näyttö",
+        "description": "Harvinaiset tasot merkitsevät vain harvinaisimmat saavutukset. Pokaalitila arvioi jokaisen saavutuksen kullaksi, hopeaksi tai pronssiksi avausprosentin mukaan ja näyttää platinan suoritetuissa peleissä.",
+        "rare": "Harvinaiset tasot",
+        "trophy": "Pokaalitila",
+        "goldBelow": {
+          "name": "Kultapokaali alle",
+          "description": "Pokaalitilassa saavutukset, jotka on avannut tätä pienempi osuus pelaajista, saavat kullan."
+        },
+        "silverBelow": {
+          "name": "Hopeapokaali alle",
+          "description": "Pokaalitilassa tämän osuuden alle jäävät saavutukset saavat hopean; muut tai ne, joiden osuutta ei tunneta, saavat pronssin."
+        }
+      },
       "playButton": {
         "name": "Näytä Pelaa-painike",
         "description": "Näyttää Pelaa-painikkeen peliruuduissa. Poista käytöstä, jos käynnistät pelisi toisesta ohjelmasta. Hiiren kakkospainikkeen valinta Käynnistä peli on yhä käytettävissä."
@@ -302,7 +329,9 @@
           "name": "Pelin asetukset -painike",
           "description": "Näyttää työkalupainikkeen kuvituksen oikeasta yläkulmasta. Pelin asetukset ovat yhä käytettävissä hiiren kakkospainikkeen valikosta."
         }
-      }
+      },
+      "appSectionTitle": "Sovellus",
+      "trophySectionTitle": "Pokaalit ja harvinaisuus"
     },
     "emulator": {
       "nav": "Emulaattorin korjaus",
@@ -467,13 +496,13 @@
     },
     "notification": {
       "title": {
-        "common": "Yleiset",
+        "common": "Perusasiat",
         "toast": "Windows-ilmoitus",
-        "transport": "Välitystapa",
+        "transport": "Integraatiot",
         "chromium": "Chromium-ilmoitus",
         "watchdog": "Watchdog",
         "test": "Testi",
-        "overlay": "Ilmoitus"
+        "overlay": "Ponnahdusikkuna"
       },
       "info": {
         "toast": "Osa ominaisuuksista on käytettävissä vain Windows 10:ssä",
@@ -602,6 +631,7 @@
             "easingOut": "Poistumiskäyrä",
             "entryDistance": "Liikkeen matka",
             "fontFamily": "Kirjasin",
+            "fontFile": "Kirjasintiedosto",
             "fontSize": "Kirjasinkoko",
             "gap": "Välistys",
             "glow": "Hehku",
@@ -613,6 +643,10 @@
             "iconSize": "Kuvakkeen koko",
             "layout": "Asettelu",
             "letterSpacing": "Merkkiväli",
+            "logoImage": "Logo",
+            "logoOffset": "Logon etäisyys reunasta",
+            "logoPosition": "Logon sijainti",
+            "logoSize": "Logon koko",
             "opacity": "Peittävyys",
             "padX": "Sivutäyte",
             "padY": "Ylätäyte",
@@ -655,6 +689,10 @@
           "imported": "Tuotu ja valittu:",
           "importedOnly": "Tuotu esiasetus - voit viedä tai poistaa sen täältä, mutta sitä ei voi muokata liukusäätimillä.",
           "importSan": "Tuo SAN-teema",
+          "layer": {
+            "none": "Ei mukautusta",
+            "title": "Mukauta mukana tuleva esiasetus"
+          },
           "load": "Muokkaa esiasetusta",
           "loaded": "Ladattu:",
           "name": "Nimi",
@@ -700,6 +738,8 @@
             "artwork": "Pelin kuvitus",
             "back": "Joustava",
             "bottom": "Alhaalla",
+            "bottomLeft": "Vasen alakulma",
+            "bottomRight": "Oikea alakulma",
             "breathe": "Hengitys",
             "center": "Keskellä",
             "circle": "Ympyrä",
@@ -723,6 +763,7 @@
             "linear": "Tasainen",
             "lines": "Viivoitus",
             "mono": "Tasalevyinen",
+            "noFont": "Ei kirjasintiedostoa",
             "noImage": "Ei kuvaa",
             "noise": "Rae",
             "none": "Ei mitään",
@@ -742,6 +783,8 @@
             "text": "Tekstin väri",
             "textOnly": "Vain teksti",
             "top": "Ylhäällä",
+            "topLeft": "Vasen yläkulma",
+            "topRight": "Oikea yläkulma",
             "transparent": "Läpinäkyvä",
             "uppercase": "SUURAAKKOSET",
             "zoom": "Zoomaus"
@@ -997,7 +1040,10 @@
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns MadnessPatch-modin kautta"
-      }
+      },
+      "groupStores": "Viralliset pelikäynnistimet",
+      "groupEmulators": "Emulaattorit ja korjaukset",
+      "groupConsoles": "Konsolit ja retro"
     },
     "help": {
       "nav": "Ohje",
@@ -1134,7 +1180,11 @@
         "goldbergTitle": "Goldberg / GBE Fork",
         "goldbergDesc": "Etsi pelikirjastokansiosta Goldberg- ja GBE Fork -asennukset ja merkitse ne, joilta puuttuu steam_settings/achievements.json-luettelo. Korjaa yksittäinen peli sen hiiren kakkospainikkeen valikosta (Vianmääritys / Korjaus).",
         "scanFolder": "Etsi kansiosta…",
-        "exportLogs": "Vie lokit (.zip)"
+        "exportLogs": "Vie lokit (.zip)",
+        "profileBackupTitle": "Profiilin varmuuskopio",
+        "profileBackupDesc": "Tallenna asetukset, kirjastovalinnat, esiasetukset, teemat, kansikuvat ja varmuuskopiot yhteen tiedostoon ja palauta ne uudelleenasennuksen jälkeen tai uudella tietokoneella. Kirjautumisia ei koskaan tallenneta.",
+        "profileExport": "Vie profiili…",
+        "profileRestore": "Palauta profiili…"
       },
       "blacklistTitle": "AppID-estoluettelo",
       "blacklistButton": "Tyhjennä estoluettelo",
@@ -1176,28 +1226,28 @@
     "eyebrow": "Ensimmäinen käyttöönotto",
     "close": "Sulje",
     "steps": [
-      "Kieli",
-      "Toimintaperiaate",
-      "Käyttöliittymä",
-      "Tili",
+      "Perusteet",
+      "Profiili",
       "Pelit",
       "Lähteet",
-      "Asetukset"
+      "Ulkoasu ja ilmoitukset",
+      "Valmis"
     ],
-    "languageTitle": "Valitse kieli",
-    "languageCopy": "Pelit, metatiedot, saavutukset ja Steam-välimuistit ladataan tällä kielellä alusta alkaen.",
+    "welcomeTitle": "Tervetuloa AW Nextiin",
+    "welcomeCopy": "Kaksi nopeaa valintaa alkuun. Kaiken voi muuttaa myöhemmin Asetuksissa, ja voit ohittaa loput tästä oppaasta milloin tahansa.",
     "language": "Pelien ja käyttöliittymän kieli",
     "languagePlaceholder": "Valitse kieli…",
-    "languageHint": "Kirjasto ladataan ensimmäisen kerran vasta tämän valinnan jälkeen.",
-    "introTitle": "Näin se toimii",
-    "scanTitle": "Haku",
-    "scanCopy": "Käynnistimien, emulaattorien ja saavutustiedostojen sijainnit tunnistetaan automaattisesti - käyt jokaisen läpi ennen ensimmäistä hakua.",
-    "watchTitle": "Seuranta",
-    "watchCopy": "Taustalla toimiva Watchdog huomaa pelin käynnistyessä, seuraa peliaikaa ja tarkkailee sen saavutustiedostoja.",
-    "fixTitle": "Korjaus",
-    "fixCopy": "Emuloiduissa Steam-peleissä kakkospainikkeen korjaus asentaa GBE Forkin sekä kirjoittaa saavutusluettelon ja DLC-tiedot.",
+    "languageHint": "Pelit, metatiedot, saavutukset ja Steam-välimuistit ladataan kaikki tällä kielellä. Kirjasto ladataan ensimmäisen kerran vasta tämän valinnan jälkeen.",
     "overlayTitle": "Pelinsisäinen peittokuva",
-    "overlayCopy": "Pieni saavutuspaneeli, jonka saat pelin päälle pikanäppäimellä - oletuksena Ctrl+Shift+K.",
+    "overlayCopy": "Paina pelissä {hotkey}, niin näet sen saavutukset pelin päällä.",
+    "collectionsTitle": "Kokoelmat",
+    "collectionsCopy": "Ryhmittele pelejä omiin kokoelmiisi pelin hiiren kakkospainikkeen valikosta.",
+    "trophyTitle": "Pokaalitila",
+    "trophyCopy": "Arvioi saavutukset kullalla, hopealla tai pronssilla harvinaisuuden mukaan. Ota käyttöön Asetuksissa.",
+    "clipsTitle": "Videoklippi",
+    "clipsCopy": "Tallenna lyhyt klippi jokaisen avautumisen ympäriltä. Ota käyttöön Asetuksissa kohdassa Ilmoitukset.",
+    "backupTitle": "Profiilin varmuuskopio",
+    "backupCopy": "Tallenna asetuksesi ja kirjastovalintasi yhteen tiedostoon ja palauta ne uudelleenasennuksen jälkeen.",
     "profileTitle": "Profiili",
     "profileCopy": "Valitse ylätunnisteessa näkyvä nimi ja halutessasi paikallinen profiilikuva.",
     "username": "Näyttönimi",
@@ -1205,8 +1255,21 @@
     "avatarPick": "Valitse kuva",
     "avatarDefault": "Oletus",
     "avatarHint": "Valinnainen. Tallennetaan paikallisesti tälle tietokoneelle.",
-    "foldersTitle": "Lisää levyllä olevat pelit",
-    "foldersCopy": "Käytä Älykästä hakua tallennus- ja asetuskansioiden sekä pelikirjastojen tunnistamiseen automaattisesti. Voit myös lisätä ne käsin kansiotyypin mukaan.",
+    "foldersTitle": "Pelisi",
+    "foldersCopy": "AW Next etsii pelejä tältä tietokoneelta ja näyttää löydetyt. Lisää kansio vain, jos jokin puuttuu.",
+    "detectTitle": "Löydetty tältä tietokoneelta",
+    "detectInstalled": "{count} asennettu",
+    "detectNone": "Ei löytynyt",
+    "detectOff": "pois",
+    "detectEmulators": "Emulaattorien tallennukset",
+    "detectFolders": "Pelit: {games} · Kansiot: {folders}",
+    "detectTotal": "Pelejä löytyi: {count}",
+    "detectNothing": "Pelejä ei ole vielä löytynyt",
+    "detectSteamOff": "Steam-pelisi pysyvät piilossa, kunnes Steam otetaan käyttöön kohdassa Lähteet.",
+    "detectReviewSources": "Tarkista lähteet",
+    "smartFound": "Uusia kansioita löytyi: {count}",
+    "smartNone": "Uusia kansioita ei löytynyt.",
+    "folderGames": "Pelejä löytyi tästä kansiosta: {count}",
     "addSave": "Tallennus- tai asetuskansio",
     "smartFind": "Etsi kansiot älykkäästi",
     "addLibrary": "Pelikirjaston kansio",
@@ -1216,12 +1279,22 @@
     "saveList": "Tallennus- ja asetuskansiot",
     "libraryList": "Pelikirjastot",
     "emptyList": "Tässä istunnossa ei ole lisätty mitään.",
-    "settingsTitle": "Suositellut asetukset",
-    "settingsCopy": "Olennaisimmat asiat kirjastoa, ulkoasua ja ilmoituksia varten. Kaikkea voi muuttaa myöhemmin.",
-    "summarySources": "Käytössä olevat lähteet",
+    "settingsTitle": "Ulkoasu ja ilmoitukset",
+    "settingsCopy": "Valitse teema ja miten avautumisilmoitukset näytetään. Testi-ilmoitus näyttää sellaisen heti.",
+    "moreOptions": "Lisäasetukset",
+    "readyTitle": "Kaikki on valmista",
+    "readyCopy": "AW Next seuraa nyt pelejäsi taustalla ja kertoo, kun avaat jotain.",
+    "featuresTitle": "Hyvä tietää",
+    "summarySources": "{count} lähdettä käytössä",
+    "summaryAccounts": "Kirjautuneena: {names}",
+    "summaryGames": "Pelejä löytyi: {count} · Seurattavat kansiot: {folders}",
+    "summaryNoGames": "Pelejä ei ole vielä löytynyt. Voit lisätä kansioita myöhemmin Asetuksissa.",
+    "summaryLook": "Teema: {theme} · Ilmoitukset: {notifications}",
+    "summaryChange": "Muuta",
     "summaryReopen": "Voit avata tämän oppaan uudelleen milloin tahansa kohdasta Asetukset > Yleiset.",
     "sourcesTitle": "Mistä saavutuksesi tulevat",
-    "sourcesCopy": "Jokainen näistä luetaan tällä koneella. Jätä pois päältä ne, joita et käytä; kaikkea voi silti muokata Asetuksissa.",
+    "sourcesCopy": "Kaikki tälle tietokoneelle asennetut lähteet luetaan automaattisesti, joten oletukset riittävät. Kirjaudu sisään alla vain, jos haluat enemmän.",
+    "sourcesMore": "Hienosäädä lähteitä ({count} käytössä)",
     "accountsTitle": "Tilit (valinnainen)",
     "accountsCopy": "Kirjaudu sisään nähdäksesi avaukset yksityiseltä Steam-profiililtasi, lisätäksesi Steam Family -pelisi, tuodaksesi Xbox PC -kirjastosi ja näyttääksesi Epic-edistymisesi. Voit ohittaa tämän ja yhdistää myöhemmin kohdassa Asetukset > Lähteet.",
     "sourcesEmulators": "Emulaattorit",
@@ -1253,6 +1326,8 @@
     "next": "Seuraava",
     "finish": "Valmis",
     "skip": "Ohita",
+    "skipSetup": "Ohita käyttöönotto",
+    "saveClose": "Tallenna ja sulje",
     "saving": "Tallennetaan…",
     "saved": "Asetukset tallennettu.",
     "languageRequired": "Valitse kieli jatkaaksesi.",
@@ -1324,7 +1399,28 @@
     "controllerMove": "Siirrä tai vieritä"
   },
   "dialogs": {
+    "collections": "Kokoelmat",
+    "collection-all": "Kaikki pelit",
+    "collection-new": "Uusi kokoelma…",
+    "collection-edit": "Muokkaa kokoelmaa…",
+    "collection-name": "Kokoelman nimi",
+    "collection-default-name": "Uusi kokoelma",
+    "collection-field-name": "Nimi",
+    "collection-field-color": "Väri",
+    "collection-field-icon": "Kuvake",
+    "collection-field-image": "Kuva",
+    "collection-choose-image": "Valitse kuva…",
+    "collection-remove-image": "Poista kuva",
+    "collection-delete": "Poista kokoelma",
+    "collection-delete-confirm": "Poistetaanko kokoelma \"{name}\"? Pelit pysyvät kirjastossasi.",
+    "collection-limit": "Olet saavuttanut {count} kokoelman rajan.",
+    "collection-image-error": "Tätä kuvaa ei voitu käyttää. Valitse PNG-, JPEG-, GIF- tai WebP-tiedosto, joka on alle 5 Mt.",
     "choose-preset-image": "Valitse taustakuva",
+    "choose-preset-font": "Valitse kirjasintiedosto",
+    "choose-preset-logo": "Valitse logo",
+    "preset-font-refused": "Tämä tiedosto ei ole käyttökelpoinen kirjasin. Käytä TTF-, OTF-, WOFF- tai WOFF2-tiedostoa, jonka koko on enintään 4 Mt.",
+    "preset-logo-refused": "Tämä tiedosto ei ole käyttökelpoinen logo. Käytä PNG-, JPEG-, GIF-, WebP- tai BMP-kuvaa, jonka koko on enintään 2 Mt.",
+    "preset-layer-note": "Mukautetaan esiasetusta {preset}. Valitse osio muuttaaksesi sitä; mitä jätät valitsematta, pysyy sellaisena kuin mukana tuleva esiasetus sen tarjoaa. Muutoksesi tulevat sen päälle: mukana tulevaa esiasetusta ei kopioida eikä muokata.",
     "folder-reason-ea-app": "Tämä on EA app -julkaisu. EA appin kautta käynnistetty peli säilyttää saavutuksensa EA-tilillä eikä pelikansiossa, joten täällä ei ole luettavaa avaustiedostoa. Nämä avaukset poimitaan kohdan Asetukset > Lähteet EA-lähteestä eikä valvotusta kansiosta.",
     "folder-reason-game-no-data": "Tämä on pelikansio, mutta siinä ei ole emulaattorin asetuksia eikä avaustiedostoa missään sellaisessa muodossa, jota AW Next osaisi lukea.",
     "folder-reason-unreadable": "Tätä kansiota ei voitu lukea.",
@@ -2175,6 +2271,31 @@
     "export-logs-done": "{count} lokitiedostoa kirjoitettiin kohteeseen {path}",
     "export-logs-failed": "Lokeja ei voitu viedä: {error}",
     "zip-archive": "Zip-arkisto",
+    "profile-backup-file-type": "AW Next -profiilin varmuuskopio",
+    "profile-backup-export-title": "Vie profiili",
+    "profile-backup-restore-title": "Palauta profiili",
+    "profile-backup-exporting": "Viedään profiilia… {percent} %",
+    "profile-backup-export-done": "Profiili tallennettu kohteeseen {path} ({count} tiedostoa, {size}).",
+    "profile-backup-export-failed": "Profiilia ei voitu viedä: {error}",
+    "profile-backup-restore-confirm": "Palautetaanko tämä profiili?",
+    "profile-backup-restore-confirm-detail": "Varmuuskopio sisältää {count} tiedostoa ({size}), tallennettu {date}. Nykyiset asetukset, esiasetukset, teemat ja kansikuvat korvataan varmuuskopion vastaavilla. Korvatut tiedostot säilytetään, ja epäonnistunut palautus puretaan. AW Next käynnistyy uudelleen ottaakseen muutokset käyttöön.",
+    "profile-backup-restore-button": "Palauta ja käynnistä uudelleen",
+    "profile-backup-checking": "Tarkistetaan varmuuskopiota… {percent} %",
+    "profile-backup-restarting": "Varmuuskopio tarkistettu. Käynnistetään uudelleen käyttöönottoa varten…",
+    "profile-backup-restore-failed": "Profiilia ei voitu palauttaa: {error}",
+    "profile-backup-applied": "Profiili palautettu ({count} tiedostoa).",
+    "profile-backup-applied-signin": "Kirjautumisia ei koskaan tallenneta varmuuskopioon. Kirjaudu uudelleen palveluun: {accounts}.",
+    "profile-backup-applied-signin-generic": "Kirjautumisia ei koskaan tallenneta varmuuskopioon. Kirjaudu uudelleen kaikkiin tileihin, jotka olit yhdistänyt.",
+    "profile-backup-apply-failed": "Profiilia ei voitu palauttaa. Aiemmat tiedostosi palautettiin paikalleen. Lisätiedot: {error}",
+    "profile-backup-account-emulator": "Steam-kirjautuminen emulaattorityökaluille",
+    "profile-backup-error-invalid": "Tämä tiedosto ei ole AW Next -profiilin varmuuskopio.",
+    "profile-backup-error-too-new": "Tämän varmuuskopion on tehnyt AW Nextin uudempi versio. Päivitä sovellus ensin.",
+    "profile-backup-error-corrupt": "Tämä varmuuskopio on vioittunut tai sitä on muokattu.",
+    "profile-backup-error-unsafe": "Tämä varmuuskopio sisältää tiedostoja, joita ei voi palauttaa turvallisesti.",
+    "profile-backup-error-too-large": "Tämä varmuuskopio on suurempi kuin AW Next pystyy palauttamaan.",
+    "profile-backup-error-empty": "Varmuuskopioon ei ole vielä mitään laitettavaa.",
+    "profile-backup-error-busy": "Varmuuskopiointi on jo käynnissä.",
+    "profile-backup-error-inside": "Valitse sijainti AW Nextin tietokansion ulkopuolelta.",
     "theme-layer-opacity": "Peittävyys",
     "chooseAnotherIconTitle": "Valitse toinen kuvake",
     "chooseAnotherIcon": "Valitse toinen kuvake…",
@@ -2243,6 +2364,7 @@
     "profile-trophies-share": "{percent} saavutuksistasi",
     "profile-trophies-unranked": "{count} ilman tunnettua osuutta",
     "profile-trophies-at-most": "enintään {percent}",
+    "profile-trophies-under": "alle {percent}",
     "profile-trophies-between": "{from} - {to}",
     "profile-trophies-above": "yli {percent}, tai tuntematon",
     "profile-trophies-platinum-games": "Platinapelit",

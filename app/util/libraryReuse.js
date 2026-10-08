@@ -48,8 +48,8 @@ function refuseReason(entry, options = {}, context = {}) {
   const blockingProvisional = entry.games.some((game) => {
     if (!game || !game.provisional) return false;
     if (!game.provisionalDefinitive) return true;
-    const age = Number(context.now || Date.now()) - Number(game.provisionalAt || 0);
-    return !(Number.isFinite(age) && age >= PROVISIONAL_GRACE_MS);
+    const provisionalAge = Number(context.now || Date.now()) - Number(game.provisionalAt || 0);
+    return !(Number.isFinite(provisionalAge) && provisionalAge >= PROVISIONAL_GRACE_MS);
   });
   if (blockingProvisional) return 'the last scan left entries undescribed';
   if (typeof context.inputsUnchanged !== 'function' || !context.inputsUnchanged(entry.fingerprint))

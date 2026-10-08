@@ -80,6 +80,19 @@ function translateUI(lang, locale, template) {
     refreshButton.title = clear(template.refreshLibrary);
     refreshButton.setAttribute('aria-label', clear(template.refreshLibrary));
   }
+  // Icon-only buttons: the tooltip is the label, and it is also the accessible name.
+  const windowButtons = [
+    ['#btn-settings', template.settings && template.settings.title],
+    ['#btn-minimize', template.windowControls && template.windowControls.minimize],
+    ['#btn-maximize', template.windowControls && template.windowControls.maximize],
+    ['#btn-close', template.windowControls && template.windowControls.close],
+  ];
+  for (const [buttonSelector, label] of windowButtons) {
+    const button = $('title-bar')[0]?.shadowRoot?.querySelector(buttonSelector);
+    if (!button || !label) continue;
+    button.title = clear(label);
+    button.setAttribute('aria-label', clear(label));
+  }
   if (template.sort) {
     // Dynamic sort labels for sort.js. Not named `sortLabels`: that is a global function in
     // sort.js sharing this window slot, and reusing it would overwrite that function.
@@ -296,6 +309,17 @@ function translateUI(lang, locale, template) {
     $("#option_showTrophies option[value='true']").text(clear(template.settings.common.enable));
     $("#option_showTrophies option[value='false']").text(clear(template.settings.common.disable));
   }
+  if (template.settings.general.rarityDisplay) {
+    const rarity = template.settings.general.rarityDisplay;
+    $('#rarity-mode-settings-label').text(clear(rarity.name));
+    $('#rarity-mode-settings-help').text(clear(rarity.description));
+    $("#option_rarityMode option[value='rare']").text(clear(rarity.rare));
+    $("#option_rarityMode option[value='trophy']").text(clear(rarity.trophy));
+    $('#trophy-gold-settings-label').text(clear(rarity.goldBelow.name));
+    $('#trophy-gold-settings-help').text(clear(rarity.goldBelow.description));
+    $('#trophy-silver-settings-label').text(clear(rarity.silverBelow.name));
+    $('#trophy-silver-settings-help').text(clear(rarity.silverBelow.description));
+  }
   // Library tiles card (Appearance tab) - bound by stable id, so it shifts no nth-child binding.
   if (template.settings.general.library) {
     const lib = template.settings.general.library;
@@ -326,6 +350,8 @@ function translateUI(lang, locale, template) {
     }
   }
   $('#general-options-title').text(clear(template.settings.general.sectionTitle));
+  $('#general-app-title').text(clear(template.settings.general.appSectionTitle));
+  $('#general-trophies-title').text(clear(template.settings.general.trophySectionTitle));
 
   // Emulator setup section (own settings tab) - bound by stable id, not nth-child.
   if (template.settings.emulator) {
@@ -479,7 +505,6 @@ function translateUI(lang, locale, template) {
     bindHelpList('help-troubleshoot-list', help.troubleshoot);
   }
 
-  $('#options-notify .autosave-hint span').text(clear(template.settings.notification.info.autoSave));
   selector = $('#options-notify-common');
   selector.prev('.title').find('span').text(clear(template.settings.notification.title.common));
   selector.find('li:nth-child(1) .left span').text(clear(template.settings.notification.option.notification.name));
@@ -681,6 +706,11 @@ function translateUI(lang, locale, template) {
     $('#pd-sound').attr('data-lang-app', clear(c.value.appSound));
     // ...and of its background-picture menu, which is rebuilt the same way.
     $('#pd-bgImage').attr('data-lang-none', clear(c.value.noImage));
+    // The font and logo menus: their first choice is "none".
+    $('#pd-fontFile').attr('data-lang-none', clear(c.value.noFont));
+    $('#pd-logoImage').attr('data-lang-none', clear(c.value.noImage));
+    // ...and the menu of bundled presets a layer can sit on.
+    $('#pd-layer-base').attr('data-lang-none', clear(c.layer.none));
     $('#pd-status')
       .attr('data-err', clear(c.errName))
       .attr('data-ok', clear(c.created))
@@ -787,6 +817,9 @@ function translateUI(lang, locale, template) {
   selector.find("li:nth-child(9) .right select option[value='true']").text(clear(template.settings.common.enable));
   selector.find("li:nth-child(9) .right select option[value='false']").text(clear(template.settings.common.disable));
   selector.find('li:nth-child(9) .help').text(clear(template.settings.source.socialClub.description));
+  $('#source-stores-title').text(clear(template.settings.source.groupStores));
+  $('#source-emulators-title').text(clear(template.settings.source.groupEmulators));
+  $('#source-consoles-title').text(clear(template.settings.source.groupConsoles));
   // Rows with a proper name only need help text translated, bound by id: the nth-child bindings
   // above break if a row is inserted anywhere but the end.
   for (const key of ['ubisoftOfficial', 'gogOfficial', 'gog', 'epic', 'shadps4', 'xenia', 'xlln', 'markerpatch', 'madnesspatch', 'retroAchievements']) {
@@ -855,6 +888,10 @@ function translateUI(lang, locale, template) {
     $('#open-logs span').text(clear(d.logsFolder));
     $('#export-logs span').text(clear(d.exportLogs));
     $('#open-userdata span').text(clear(d.dataFolder));
+    $('#profile-backup-title').text(clear(d.profileBackupTitle));
+    $('#profile-backup-desc').text(clear(d.profileBackupDesc));
+    $('#profile-export span').text(clear(d.profileExport));
+    $('#profile-restore span').text(clear(d.profileRestore));
     $('#adv-goldberg-title').text(clear(d.goldbergTitle));
     $('#adv-goldberg-desc').text(clear(d.goldbergDesc));
     $('#scan-gbe span').text(clear(d.scanFolder));
@@ -884,13 +921,14 @@ function translateUI(lang, locale, template) {
     $('#settings-mode-simple').text(clear(template.settings.interfaceMode.simple));
     $('#settings-mode-advanced').text(clear(template.settings.interfaceMode.advanced));
   }
-  // Sidebar group headers keep the flat list readable without adding new locale keys.
-  $('#nav-group-general').text(clear(template.settings.sideMenu.general));
-  $('#nav-group-notification').text(clear(template.settings.sideMenu.notification));
-  $('#nav-group-library').text(clear(template.settings.source.title || template.settings.sideMenu.source));
+  // A caption must not repeat the tab under it, so each names the group. Help and Advanced share
+  // one "Support" caption; Advanced's own header stays empty and CSS hides it.
+  $('#nav-group-general').text(clear(template.settings.sideMenu.groupApp));
+  $('#nav-group-notification').text(clear(template.settings.sideMenu.groupAlerts));
+  $('#nav-group-library').text(clear(template.settings.sideMenu.groupLibrary));
   $('#nav-group-emulator').text(clear(template.settings.emulator.groupNav));
-  $('#nav-group-help').text(clear(template.settings.help.nav));
-  $('#nav-group-advanced').text(clear(template.settings.sideMenu.advanced));
+  $('#nav-group-help').text(clear(template.settings.sideMenu.groupSupport || ''));
+  $('#nav-group-advanced').empty();
   $('#btn-settings-cancel').text(clear(template.settings.common.cancel));
   $('#btn-settings-save').text(clear(template.settings.common.save));
   $('#btn-game-config-cancel').text(clear(template.settings.common.cancel));

@@ -31,6 +31,7 @@ const CACHE_ONLY_SOURCES = new Set([
   'uplay',
   'uPlay',
   'Lumaplay',
+  'RUNE Uplay',
   'ea',
   'Xbox PC',
   'RetroAchievements',

@@ -7,7 +7,8 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
-const { publisherMatches, isPinnedThumbprint } = require("../util/updateSignature.js");
+const { publisherMatches, isPinnedThumbprint, verifyUpdateCodeSignature } = require("../util/updateSignature.js");
+const { verifyPackagedExecutables } = require("./packagedExecutables.js");
 const { PORTABLE_MARKER } = require("../util/portableMode.js");
 const AdmZip = require("adm-zip");
 
@@ -24,7 +25,7 @@ const windowsPowerShellModules = path.join(
     "Modules"
 );
 
-function verifySignedUpdateArtifacts(version) {
+async function verifySignedUpdateArtifacts(version) {
     const appDir = path.join(__dirname, "..");
     const distDir = path.join(appDir, "dist");
     const installer = path.join(distDir, `Achievement.Watcher.Setup.${version}.exe`);
@@ -64,6 +65,12 @@ function verifySignedUpdateArtifacts(version) {
         throw new Error("latest.yml SHA-512 does not match the signed installer");
     }
     console.log("[build] Signed installer, update publisher and SHA-512 manifest verified.");
+
+    const checked = await verifyPackagedExecutables(path.join(distDir, "win-unpacked"), {
+        nativeSourceDir: path.join(appDir, "..", "watchdog", "native"),
+        verifySignature: (file) => verifyUpdateCodeSignature(["Shirow"], file, () => {}, { raw: true }),
+    });
+    console.log(`[build] ${checked} packaged executables are signed by a pinned certificate; native helpers match the repository.`);
 }
 
 function verifyPortableArtifact(version) {
@@ -120,25 +127,29 @@ else {
 const version = require(path.join(__dirname, "..", "package.json")).version;
 const installerEnv = { ...env };
 delete installerEnv.AW_BUILD_PORTABLE;
-function verifyOrExit(check) {
+async function verifyOrExit(check) {
     try {
-        check();
+        await check();
     } catch (error) {
         console.error(`[build] ${error.message}`);
         process.exit(1);
     }
 }
 
-runBuilder("electron-builder.yml", installerEnv);
-/*
-  dist/win-unpacked belongs to the installer only until the portable pass overwrites it with its own
-  output, which carries the portable marker and no app-update.yml. The signed-update check reads that
-  directory, so it has to run here rather than at the end of the build.
-*/
-verifyOrExit(() => {
-    if (fs.existsSync(pfx)) verifySignedUpdateArtifacts(version);
-});
+async function main() {
+    runBuilder("electron-builder.yml", installerEnv);
+    /*
+      dist/win-unpacked belongs to the installer only until the portable pass overwrites it with its own
+      output, which carries the portable marker and no app-update.yml. The signed-update check reads that
+      directory, so it has to run here rather than at the end of the build.
+    */
+    await verifyOrExit(async () => {
+        if (fs.existsSync(pfx)) await verifySignedUpdateArtifacts(version);
+    });
 
-runBuilder("electron-builder-portable.yml", { ...env, AW_BUILD_PORTABLE: "1" });
-verifyOrExit(() => verifyPortableArtifact(version));
-process.exit(0);
+    runBuilder("electron-builder-portable.yml", { ...env, AW_BUILD_PORTABLE: "1" });
+    await verifyOrExit(() => verifyPortableArtifact(version));
+    process.exit(0);
+}
+
+main();

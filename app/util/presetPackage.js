@@ -18,6 +18,9 @@ const AdmZip = require('adm-zip');
 const semver = require('semver');
 const { customPresetNumbers, sanitizePresetName, PRESET_OPTIONS_FILE, PRESET_PACKAGE_FILE } = require('./customPreset.js');
 const { SOUND_EXT_RE } = require('./notificationSounds.js');
+const presetAssets = require('./presetSchema.js');
+
+const FONT_FILE_RE = /\.(?:ttf|otf|woff2?)$/i;
 
 const PRESET_PACKAGE_EXTENSION = '.awpreset';
 const PRESET_PACKAGE_FORMAT = 'aw-preset';
@@ -467,6 +470,8 @@ function installPackage({ file, presetsDir, soundsDir, appVersion = '', duplicat
       const data = entry.getData();
       // The header can lie about the size; the data itself cannot.
       if (data.length > LIMITS.fileBytes) throw new Error('asset-too-large');
+      // A file named like a font has to start like one: the extension is all a package can claim.
+      if (FONT_FILE_RE.test(relative) && !presetAssets.fontKind(data)) throw new Error('not-a-font');
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.writeFileSync(target, data);
     }

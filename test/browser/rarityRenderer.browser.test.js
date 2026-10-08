@@ -72,6 +72,7 @@ function buildHarness() {
   // The real formatter, so the harness proves what a French user actually reads rather than an
   // English-only stub. It attaches to window.IntlFormat when loaded as a plain browser script.
   const intlScript = fs.readFileSync(path.join(appDir, 'util', 'intlFormat.js'), 'utf8').replace(/<\/script/gi, '</script');
+  const tiersScript = fs.readFileSync(path.join(appDir, 'util', 'rarityTiers.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
   return `<!doctype html><html><head><meta charset="utf-8"></head><body>
     <section id="achievement">
       <div class="achievement-list">
@@ -87,6 +88,7 @@ function buildHarness() {
     </section>
     <script>${jquery}</script>
     <script>${intlScript}</script>
+    <script>${tiersScript}</script>
     <script>
       window.restoreCalls = 0;
       window.app = { config: { achievement: { lang: 'french' } } };
@@ -95,16 +97,7 @@ function buildHarness() {
         if (request === '@electron/remote') return { app: { getAppPath: () => '/app' } };
         if (request === 'path') return { join: (...parts) => parts.join('/') };
         if (request === '/app/util/intlFormat.js') return window.IntlFormat;
-        if (request === '/app/util/overlayUi.js') {
-          return {
-            rarityTier(percent) {
-              if (!Number.isFinite(percent) || percent < 0 || percent > 15) return null;
-              if (percent <= 5) return 'gold';
-              if (percent <= 10) return 'silver';
-              return 'bronze';
-            },
-          };
-        }
+        if (request === '/app/util/rarityTiers.js') return window.RarityTiers;
         throw new Error('unexpected require: ' + request);
       };
       ${gameScript}
@@ -171,6 +164,29 @@ test('rarity renderer indexes rendered rows without selector injection or duplic
     assert.deepEqual(result.untouched, [{ text: 'keep', classes: 'achievement rare rarity-gold' }]);
     assert.equal(result.headerShown, true);
     assert.equal(result.restoreCalls, 1);
+
+    // Trophy mode: every rated row is graded and wears its grade; only gold keeps the animated halo.
+    const trophy = await page.evaluate(() => {
+      window.rarityGrading = () => ({ mode: 'trophy', thresholds: { goldBelow: 20, silverBelow: 50 } });
+      window.trophyLabels = () => ({ gold: 'Or', silver: 'Argent', bronze: 'Bronze' });
+      window.applyRarity([
+        { name: 'quote"name', percent: 7 },
+        { name: 'bronze', percent: 80 },
+        { name: 'duplicate', percent: 35 },
+      ]);
+      const row = (name) => {
+        const el = $('#achievement li .achievement')
+          .filter(function () {
+            return this.getAttribute('data-name') === name;
+          })
+          .first();
+        return { classes: el[0].className, grade: el.find('span.data').attr('data-grade') };
+      };
+      return { gold: row('quote"name'), bronze: row('bronze'), silver: row('duplicate') };
+    });
+    assert.deepEqual(trophy.gold, { classes: 'achievement rare rarity-gold trophy-grade', grade: 'Or' });
+    assert.deepEqual(trophy.silver, { classes: 'achievement rarity-silver trophy-grade', grade: 'Argent' });
+    assert.deepEqual(trophy.bronze, { classes: 'achievement rarity-bronze trophy-grade', grade: 'Bronze' });
   } finally {
     if (browser) await browser.close().catch(() => {});
     killBrowserUsing(userDataDir);

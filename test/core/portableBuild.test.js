@@ -6,8 +6,13 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const yaml = require('../../app/node_modules/js-yaml');
-const { DebugLogger } = require('../../app/node_modules/builder-util');
+const { DebugLogger, log } = require('../../app/node_modules/builder-util');
 const { getConfig, validateConfiguration } = require('../../app/node_modules/app-builder-lib/out/util/config/config');
+
+// getConfig prints "loaded configuration" to stdout in several writes, and stdout is the test
+// runner's serialized channel: an unlucky interleave failed the file with "Unable to deserialize
+// cloned data".
+log.stream = { write() {} };
 const { PORTABLE_MARKER, PORTABLE_DATA_DIR, portableUserDataDir } = require('../../app/util/portableMode.js');
 
 const root = path.join(__dirname, '..', '..');

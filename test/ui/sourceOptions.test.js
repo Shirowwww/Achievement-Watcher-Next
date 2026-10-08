@@ -11,16 +11,28 @@ const loaderJs = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'locale
 const settingsJs = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'settings.js'), 'utf8');
 const localeDir = path.join(__dirname, '..', '..', 'app', 'locale', 'lang');
 
-// The <ul> holding the Sources tab's rows, in document order.
-function sourceListItems() {
-  const list = htmlParser.parse(appHtml).querySelector('#options-source');
-  assert.ok(list, 'the source options list must exist in app.html');
+// The rows of one Sources <ul>, in document order.
+function rowsOf(list) {
   return list.childNodes
     .filter((item) => item.rawTagName === 'li')
     .map((item) => {
       const select = item.querySelector('select[id^="option_"]');
       return { key: select ? select.id.replace(/^option_/, '') : null, html: item.toString() };
     });
+}
+
+// The first Sources list: its rows are the ones the loader binds by nth-child.
+function headSourceItems() {
+  const list = htmlParser.parse(appHtml).querySelector('#options-source');
+  assert.ok(list, 'the source options list must exist in app.html');
+  return rowsOf(list);
+}
+
+// Every Sources row, across the head list and the sections that follow it.
+function sourceListItems() {
+  const lists = htmlParser.parse(appHtml).querySelectorAll('ul.source-list');
+  assert.ok(lists.length > 1, 'the source rows are split into sections');
+  return lists.flatMap(rowsOf);
 }
 
 // Keys of the achievement_source block in the settings defaults.
@@ -55,7 +67,7 @@ test('no source row exists without a matching setting', () => {
   }
 });
 
-// A switch outside #options-source is not collected by the sweep that reads that list, so it needs
+// A switch outside the source lists is not collected by the sweep that reads them, so it needs
 // its own read in ui/settings.js or an OK silently reverts it.
 test('source switches outside the Sources tab are read back on save', () => {
   const uiJs = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'ui', 'settings.js'), 'utf8');
@@ -65,7 +77,7 @@ test('source switches outside the Sources tab are read back on save', () => {
     assert.match(
       uiJs,
       new RegExp(`achievement_source\\.${key}\\s*=`),
-      `#option_${key} is not in #options-source, so ui/settings.js must read it back by id on save`
+      `#option_${key} is not in a source list, so ui/settings.js must read it back by id on save`
     );
   }
 });
@@ -78,7 +90,7 @@ test('positional locale bindings still point at the row they describe', () => {
   const end = loaderJs.indexOf('selector = $(', start + 1);
   const region = loaderJs.slice(start, end > start ? end : undefined);
 
-  const rows = sourceListItems();
+  const rows = headSourceItems();
   let checked = 0;
   for (const line of region.split('\n')) {
     const position = line.match(/li:nth-child\((\d+)\)/);
@@ -121,7 +133,7 @@ test('id-bound source rows have a help element and a description in every locale
   }
 });
 
-// settings.js reads the tab back with `$('#options-source .right').children('select')`, so a row
+// settings.js reads each source list back with `.right` > select, so a row
 // whose select is not a direct child of .right would be silently dropped on save.
 test('every source select is a direct child of its .right container', () => {
   for (const { key, html } of sourceListItems()) {

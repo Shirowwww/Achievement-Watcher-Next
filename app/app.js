@@ -131,6 +131,7 @@ const { calculateLibraryStats, calculateDetailedLibraryStats } = require(path.jo
 const rarityCache = require(path.join(appPath, 'util/rarity.js'));
 const { resolveGameRarityContext } = rarityCache;
 const { calculateTrophyStats, listUnlockedByRarity } = require(path.join(appPath, 'util/trophyStats.js'));
+const rarityTiers = require(path.join(appPath, 'util/rarityTiers.js'));
 const librarySnapshot = require(path.join(appPath, 'util/librarySnapshot.js'));
 const stylizedArtwork = require(path.join(appPath, 'util/stylizedArtwork.js'));
 const libraryReuse = require(path.join(appPath, 'util/libraryReuse.js'));
@@ -259,9 +260,14 @@ function renderProfileStats(stats, { animate = false } = {}) {
   profileStatsAnimationTimer = setTimeout(() => statsEl.removeClass('is-updating'), 220);
 }
 
+// The profile numbers describe what the library shows, so they follow the active collection.
+function libraryScopeGames() {
+  return window.awCollections ? window.awCollections.scopeGames(gameList) : gameList;
+}
+
 function refreshProfileStats({ animate = false } = {}) {
   const installedOnly = typeof window.installedOnlyEnabled === 'function' && window.installedOnlyEnabled();
-  renderProfileStats(calculateLibraryStats(gameList, { installedOnly, isStarted: hasBeenLaunched }), { animate });
+  renderProfileStats(calculateLibraryStats(libraryScopeGames(), { installedOnly, isStarted: hasBeenLaunched }), { animate });
   renderProfileTrophies(installedOnly);
 }
 
@@ -406,8 +412,20 @@ function trophyLabels() {
   };
 }
 
+window.trophyLabels = trophyLabels;
+
+// The "Rarity display" setting, in the shape trophyStats and rarityTiers take.
+function rarityGrading() {
+  const cfg = (app.config && app.config.achievement) || {};
+  return {
+    mode: rarityTiers.normalizeMode(cfg.rarityMode),
+    thresholds: rarityTiers.normalizeThresholds({ goldBelow: cfg.trophyGoldBelow, silverBelow: cfg.trophySilverBelow }),
+  };
+}
+window.rarityGrading = rarityGrading;
+
 function trophyStatsFor(installedOnly) {
-  return calculateTrophyStats(gameList, { installedOnly, isStarted: hasBeenLaunched, rarityOf: trophyRarityOf });
+  return calculateTrophyStats(libraryScopeGames(), { installedOnly, isStarted: hasBeenLaunched, rarityOf: trophyRarityOf, ...rarityGrading() });
 }
 
 function renderProfileTrophies(installedOnly) {
@@ -482,28 +500,26 @@ function renderProfileStatsTrophies(installedOnly) {
   );
   unrankedNote.prop('hidden', stats.unranked === 0);
 
-  // overlayUi.rarityTier's tiers, the ones the rarity badges and notifications use.
+  // The tiers of rarityTiers.js, the ones the rarity badges and notifications use.
   const legend = section.find('.profile-stats-trophy-legend');
-  legend
-    .find('.trophy-gold span')
-    .text(`${labels.gold}: ${t('profile-trophies-at-most', '{percent} or less', '{percent} ou moins', { percent: formatPercentValue(5) })}`);
-  legend.find('.trophy-silver span').text(
-    `${labels.silver}: ${t('profile-trophies-between', '{from} to {to}', 'de {from} à {to}', {
-      from: formatPercentValue(5),
-      to: formatPercentValue(10),
-    })}`
-  );
-  legend.find('.trophy-bronze span').text(
-    `${labels.bronze}: ${t('profile-trophies-between', '{from} to {to}', 'de {from} à {to}', {
-      from: formatPercentValue(10),
-      to: formatPercentValue(15),
-    })}`
-  );
-  legend.find('.trophy-common span').text(
-    `${labels.common}: ${t('profile-trophies-above', 'above {percent}, or unknown', 'plus de {percent}, ou inconnu', {
-      percent: formatPercentValue(15),
-    })}`
-  );
+  const between = (from, to) =>
+    t('profile-trophies-between', '{from} to {to}', 'de {from} à {to}', { from: formatPercentValue(from), to: formatPercentValue(to) });
+  const above = (percent) =>
+    t('profile-trophies-above', 'above {percent}, or unknown', 'plus de {percent}, ou inconnu', { percent: formatPercentValue(percent) });
+  const grading = rarityGrading();
+  const trophyMode = grading.mode === rarityTiers.MODE_TROPHY;
+  const rare = rarityTiers.RARE_MAX;
+  const { goldBelow, silverBelow } = grading.thresholds;
+  const goldText = trophyMode
+    ? t('profile-trophies-under', 'under {percent}', 'moins de {percent}', { percent: formatPercentValue(goldBelow) })
+    : t('profile-trophies-at-most', '{percent} or less', '{percent} ou moins', { percent: formatPercentValue(rare.gold) });
+  legend.find('.trophy-gold span').text(`${labels.gold}: ${goldText}`);
+  legend.find('.trophy-silver span').text(`${labels.silver}: ${trophyMode ? between(goldBelow, silverBelow) : between(rare.gold, rare.silver)}`);
+  legend.find('.trophy-bronze span').text(`${labels.bronze}: ${trophyMode ? above(silverBelow) : between(rare.silver, rare.bronze)}`);
+  legend.find('.trophy-common span').text(`${labels.common}: ${above(rare.bronze)}`);
+  // Trophy mode grades everything, so nothing is left to be common.
+  commonTile.toggle(!trophyMode);
+  legend.find('.trophy-common').toggle(!trophyMode);
 
   $('#profile-stats-platinum-games-label').text(t('profile-trophies-platinum-games', 'Platinum games', 'Jeux platine'));
   $('#profile-stats-platinum-games').html(
@@ -643,7 +659,12 @@ function allAchievementRow({ game, achievement, percent, tier, unlockedAt }, ind
 function renderAllAchievements() {
   const installedOnly = typeof window.installedOnlyEnabled === 'function' && window.installedOnlyEnabled();
   const token = ++allAchievementsToken;
-  allAchievementEntries = listUnlockedByRarity(gameList, { installedOnly, isStarted: hasBeenLaunched, rarityOf: trophyRarityOf });
+  allAchievementEntries = listUnlockedByRarity(libraryScopeGames(), {
+    installedOnly,
+    isStarted: hasBeenLaunched,
+    rarityOf: trophyRarityOf,
+    ...rarityGrading(),
+  });
 
   $('#profile-stats-all-title').text(
     t('profile-trophies-all-title', 'Unlocked achievements, rarest first', 'Succès débloqués, du plus rare au plus commun')
@@ -770,7 +791,8 @@ function fillProfileStatsPlaytime(games) {
 
 function renderProfileStatsPanel() {
   const installedOnly = typeof window.installedOnlyEnabled === 'function' && window.installedOnlyEnabled();
-  const games = installedOnly ? gameList.filter((game) => game && game.installed) : gameList.slice();
+  const scoped = libraryScopeGames();
+  const games = installedOnly ? scoped.filter((game) => game && game.installed) : scoped.slice();
   const stats = calculateDetailedLibraryStats(games, { installedOnly, groupOf: profileStatsGroupOf, isStarted: hasBeenLaunched });
   const overall = Math.round(stats.completion.overall);
 
@@ -3156,6 +3178,8 @@ async function takenExePaths(appid) {
   }
 }
 
+let gameConfigFocusReturn = null;
+
 var app = {
   args: getArgs(remote.process.argv),
   config: settings.load(),
@@ -3249,9 +3273,9 @@ var app = {
 
     // Keep the profile summary in sync with the streamed list and active installed-only filter.
     sortOptions(); // reflect persisted sort state on the sort-box during load (real sort runs once at the end)
-    $('#user-info').fadeTo('fast', 1).css('pointer-events', 'initial');
-    $('#sort-box').fadeTo('fast', 1).css('pointer-events', 'initial');
-    $('#search-bar').fadeTo('fast', 1).css('pointer-events', 'initial');
+    $('#user-info').fadeTo('fast', 1).css('pointer-events', 'initial').prop('inert', false);
+    $('#sort-box').fadeTo('fast', 1).css('pointer-events', 'initial').prop('inert', false);
+    $('#search-bar').fadeTo('fast', 1).css('pointer-events', 'initial').prop('inert', false);
     $('title-bar')[0].inSettings = false;
     // A scoped refresh replaces only entries under the selected roots.
     const preserveExistingOnFailure = options && options.preserveExistingOnFailure === true;
@@ -3372,6 +3396,11 @@ var app = {
             const achievementSummaryText = hasAchievements
               ? `${formatCount(game.achievement.unlocked)} / ${formatCount(game.achievement.total)}`
               : progressLabel;
+            // In trophy mode a finished game wears the platinum colour on its trophy icon.
+            const platinumAttr =
+              hasAchievements && Number(game.achievement.unlocked) >= Number(game.achievement.total) && rarityGrading().mode === rarityTiers.MODE_TROPHY
+                ? ' data-platinum="true"'
+                : '';
             // Accessible names for the three icon-only controls on a tile.
             const tileLabels = {
               play: t('launch-game', 'Launch game', 'Lancer le jeu'),
@@ -3397,16 +3426,16 @@ var app = {
                   <div class="header" id="game-header-${game.appid}">
                   ${
                     isLaunchable(game)
-                      ? `<button type="button" class="play-button" aria-label="${escapeHtml(tileLabels.play)}"><i class="fas fa-play" aria-hidden="true"></i></button>`
+                      ? `<button type="button" class="play-button" aria-label="${escapeHtml(`${game.name} - ${tileLabels.play}`)}"><i class="fas fa-play" aria-hidden="true"></i></button>`
                       : ''
                   }
                   </div>
 
-                  <button type="button" class="achievement-button" title="${escapeHtml(tileLabels.achievements)}" aria-label="${escapeHtml(tileLabels.achievements)}">
+                  <button type="button" class="achievement-button" title="${escapeHtml(tileLabels.achievements)}" aria-label="${escapeHtml(`${game.name} - ${tileLabels.achievements}`)}">
                     <i class="fas fa-trophy" aria-hidden="true"></i>
                   </button>
 
-                  <button type="button" class="config-button" title="${escapeHtml(tileLabels.health)}" aria-label="${escapeHtml(tileLabels.health)}">
+                  <button type="button" class="config-button" title="${escapeHtml(tileLabels.health)}" aria-label="${escapeHtml(`${game.name} - ${tileLabels.health}`)}">
                     <i class="fas fa-tools" aria-hidden="true"></i>
                   </button>
 
@@ -3445,7 +3474,7 @@ var app = {
                       progressLabel
                     )}</span></span></div>
                     <div class="library-details${hasAchievements ? '' : ' no-achievements'}">
-                      <span class="library-achievement-summary" data-label="${escapeHtml(tileLabels.achievements)}" title="${escapeHtml(tileLabels.achievements)}"><i class="fas fa-trophy" aria-hidden="true"></i><span class="library-scroll-text" title="${escapeHtml(
+                      <span class="library-achievement-summary" data-label="${escapeHtml(tileLabels.achievements)}" title="${escapeHtml(tileLabels.achievements)}"${platinumAttr}><i class="fas fa-trophy" aria-hidden="true"></i><span class="library-scroll-text" title="${escapeHtml(
                         achievementSummaryText
                       )}"><span class="library-scroll-content">${escapeHtml(achievementSummaryText)}</span></span></span>
                       <span class="library-recent-unlock${latestUnlock ? '' : ' is-empty'}" data-label="${escapeHtml(tileLabels.achievementDate)}" title="${escapeHtml(tileLabels.achievementDate)}"><i class="fas fa-medal" aria-hidden="true"></i><span class="library-recent-name library-scroll-text" title="${escapeHtml(
@@ -3487,6 +3516,7 @@ var app = {
               gameList.push(game);
             }
             gameElements.set(appidKey, item.find('.game-box')[0]);
+            window.awCollections?.applyToTile(item[0]);
             if (!deferStats) {
               const now = performance.now();
               if (now - lastProfileStatsAt >= PROFILE_STATS_MIN_INTERVAL_MS) {
@@ -6362,6 +6392,12 @@ var app = {
             menu.append(new MenuItem({ label: groupLabel('data-ctx-group-cover'), submenu: coverMenu }));
           }
 
+          const collectionsItem = window.awCollections ? window.awCollections.gameMenuItem(appid) : null;
+          if (collectionsItem) {
+            menu.append(new MenuItem({ type: 'separator' }));
+            menu.append(collectionsItem);
+          }
+
           if (manageItems.length) {
             menu.append(new MenuItem({ type: 'separator' }));
             for (const item of manageItems) menu.append(item);
@@ -6398,9 +6434,9 @@ var app = {
         });
       })
       .finally(() => {
-        $('#user-info').fadeTo('fast', 1).css('pointer-events', 'initial');
-        $('#sort-box').fadeTo('fast', 1).css('pointer-events', 'initial');
-        $('#search-bar').fadeTo('fast', 1).css('pointer-events', 'initial');
+        $('#user-info').fadeTo('fast', 1).css('pointer-events', 'initial').prop('inert', false);
+        $('#sort-box').fadeTo('fast', 1).css('pointer-events', 'initial').prop('inert', false);
+        $('#search-bar').fadeTo('fast', 1).css('pointer-events', 'initial').prop('inert', false);
         $('title-bar')[0].inSettings = false;
       });
     self.listLoadPromise = listLoadPromise;
@@ -6615,7 +6651,7 @@ var app = {
         const isHiddenMasked = achievement.hidden == 1 && !app.config.achievement.showHidden && !achievement.Achieved;
         const realDesc = achievement.description || '...';
         const descHtml = isHiddenMasked
-          ? `<div class="description masked-desc" data-desc="${escapeHtml(realDesc)}">${escapeHtml(hiddenDescLabel)}</div>`
+          ? `<div class="description masked-desc" role="button" tabindex="0" data-desc="${escapeHtml(realDesc)}">${escapeHtml(hiddenDescLabel)}</div>`
           : `<div class="description">${escapeHtml(realDesc)}</div>`;
 
         let template = `
@@ -7295,6 +7331,9 @@ var app = {
     // Health opens first: it answers "is this game ready" without the user knowing which tab to
     // look in. The executable configuration is one click away and still loads below either way.
     setGameConfigView('health');
+    // Keyboard focus goes into the panel and comes back to the tile button on close.
+    gameConfigFocusReturn = document.activeElement;
+    $('#game-config-tabs button.active')[0]?.focus({ preventScroll: true });
     loadGameNotificationSettings(appid);
 
     // Resolves (and persists) the executable BEFORE the report is collected: renderGameHealth() reads
@@ -7323,6 +7362,8 @@ var app = {
     $('#game-config .box').fadeOut(() => {
       $('#game-config').hide();
       self.css('pointer-events', 'initial');
+      if (gameConfigFocusReturn && gameConfigFocusReturn.isConnected) gameConfigFocusReturn.focus({ preventScroll: true });
+      gameConfigFocusReturn = null;
     });
   },
   onGameConfigSaveClick: async function (self) {
@@ -7665,7 +7706,8 @@ var app = {
         const el = $(this);
         const real = el.data('desc');
         if (real == null) return;
-        el.text(real).removeClass('masked-desc');
+        // Plain text now, but still the focused element: tabindex -1 keeps the keyboard where it was.
+        el.text(real).removeClass('masked-desc').removeAttr('role').attr('tabindex', '-1');
       });
 
       // Settings → Ubisoft / Uplay R1/R2: keep the bundled package and the targeted batch action
@@ -7746,7 +7788,7 @@ var app = {
           for (const packagePath of picked.filePaths) {
             await uplayR2Installer.importPackage({ packagePath, cacheDir, log: debug });
           }
-          const cache = await uplayR2Installer.ensureBundledEmulatorDlls({ cacheDir, log: debug });
+          await uplayR2Installer.ensureBundledEmulatorDlls({ cacheDir, log: debug });
           setUplayPackageStatus('ready', uplaySettingsText('customReady', 'Custom DLLs ready'));
           $('#uplay-r2-settings-result').text(
             uplaySettingsText('importSuccess', '{count} selected file(s) imported for the next repair.', { count: picked.filePaths.length })
@@ -8086,7 +8128,7 @@ var app = {
         fixAllRunning = false;
       });
 
-      remote.app.on('second-instance', (event, argv, cwd) => {});
+      remote.app.on('second-instance', () => {});
     } catch (err) {
       debug.log(err);
       app.errorExit(err);

@@ -86,16 +86,25 @@
     "runUninstaller": "Run game uninstaller…",
     "deleteFolder": "Delete game folder (Recycle Bin)…"
   },
+  "windowControls": {
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "close": "Close"
+  },
   "settings": {
     "title": "Settings",
     "sideMenu": {
       "general": "General",
       "notification": "Notification",
-      "presets": "Presets",
+      "presets": "Notification presets",
       "souvenir": "Souvenir",
       "folder": "Folders",
       "source": "Sources",
-      "advanced": "Advanced"
+      "advanced": "Advanced",
+      "groupApp": "App",
+      "groupAlerts": "Alerts",
+      "groupLibrary": "Library",
+      "groupSupport": "Support"
     },
     "common": {
       "show": "Show",
@@ -108,13 +117,17 @@
       "maintainedBy": "maintained by",
       "fork": "Fork",
       "original": "Original v1.6.8",
-      "edit": "Edit"
+      "edit": "Edit",
+      "close": "Close",
+      "unsaved": "Unsaved changes"
     },
     "search": {
       "placeholder": "Search settings…",
       "empty": "No setting matches your search.",
       "ariaLabel": "Search settings",
-      "clear": "Clear"
+      "clear": "Clear",
+      "advancedMore": "{count} more in Advanced mode",
+      "advancedShow": "Show Advanced"
     },
     "watchdog": {
       "startup": {
@@ -143,7 +156,7 @@
       "duration": "Animation duration"
     },
     "general": {
-      "sectionTitle": "Interface and behavior",
+      "sectionTitle": "Everyday settings",
       "language": {
         "name": "Language",
         "description": "Interface language. Game data is fetched in this language when available."
@@ -161,7 +174,7 @@
         }
       },
       "hiddenAch": {
-        "name": "Hidden Achievements",
+        "name": "Reveal hidden achievements",
         "description": "Reveal the name and description of hidden achievements before you unlock them."
       },
       "mergeDuplicates": {
@@ -177,7 +190,7 @@
         }
       },
       "hideZero": {
-        "name": "Hide 0% Game",
+        "name": "Hide games at 0%",
         "description": "Hide games for which you haven’t unlocked any achievement yet."
       },
       "startup": {
@@ -264,6 +277,20 @@
         "name": "Trophies on the profile",
         "description": "Shows platinum, gold, silver and bronze trophies under your name. Platinum is a game at 100%; the others rank your achievements by how many players unlocked them."
       },
+      "rarityDisplay": {
+        "name": "Rarity display",
+        "description": "Rare tiers mark only the rarest achievements. Trophy mode grades every achievement gold, silver or bronze by its unlock rate, and shows platinum on finished games.",
+        "rare": "Rare tiers",
+        "trophy": "Trophy mode",
+        "goldBelow": {
+          "name": "Gold trophy below",
+          "description": "In trophy mode, achievements unlocked by fewer players than this earn gold."
+        },
+        "silverBelow": {
+          "name": "Silver trophy below",
+          "description": "In trophy mode, achievements under this rate earn silver; the rest, or those with no known rate, earn bronze."
+        }
+      },
       "playButton": {
         "name": "Show Play button",
         "description": "Show the Play button on game tiles. Turn it off if you launch your games from another program. The right-click Launch game entry stays available."
@@ -302,7 +329,9 @@
           "name": "Game settings button",
           "description": "Show the tools button in the top right corner of the artwork. Game settings stay reachable from the right-click menu."
         }
-      }
+      },
+      "appSectionTitle": "Application",
+      "trophySectionTitle": "Trophies and rarity"
     },
     "emulator": {
       "nav": "Emulator repair",
@@ -467,13 +496,13 @@
     },
     "notification": {
       "title": {
-        "common": "Common",
+        "common": "Basics",
         "toast": "Windows notification",
-        "transport": "Transport",
+        "transport": "Integrations",
         "chromium": "Chromium notification",
         "watchdog": "Watchdog",
         "test": "Test",
-        "overlay": "Notification"
+        "overlay": "Popup"
       },
       "info": {
         "toast": "Some features are only available in Windows 10",
@@ -602,6 +631,7 @@
             "easingOut": "Exit curve",
             "entryDistance": "Travel distance",
             "fontFamily": "Font",
+            "fontFile": "Font file",
             "fontSize": "Font size",
             "gap": "Spacing",
             "glow": "Glow",
@@ -613,6 +643,10 @@
             "iconSize": "Icon size",
             "layout": "Arrangement",
             "letterSpacing": "Letter spacing",
+            "logoImage": "Logo",
+            "logoOffset": "Logo distance from the edge",
+            "logoPosition": "Logo position",
+            "logoSize": "Logo size",
             "opacity": "Opacity",
             "padX": "Side padding",
             "padY": "Top padding",
@@ -655,6 +689,10 @@
           "importSan": "Import SAN theme",
           "imported": "Imported & selected:",
           "importedOnly": "Imported preset - export or delete it here; it is not editable with the sliders.",
+          "layer": {
+            "none": "Not customizing",
+            "title": "Customize a bundled preset"
+          },
           "load": "Edit a preset",
           "loaded": "Loaded:",
           "name": "Name",
@@ -700,6 +738,8 @@
             "artwork": "Game artwork",
             "back": "Springy",
             "bottom": "Bottom",
+            "bottomLeft": "Bottom left",
+            "bottomRight": "Bottom right",
             "breathe": "Breathe",
             "center": "Centre",
             "circle": "Circle",
@@ -723,6 +763,7 @@
             "linear": "Linear",
             "lines": "Hatching",
             "mono": "Monospace",
+            "noFont": "No font file",
             "noImage": "No image",
             "noise": "Speckle",
             "none": "None",
@@ -742,6 +783,8 @@
             "text": "Text colour",
             "textOnly": "Text only",
             "top": "Top",
+            "topLeft": "Top left",
+            "topRight": "Top right",
             "transparent": "Transparent",
             "uppercase": "UPPERCASE",
             "zoom": "Zoom"
@@ -997,7 +1040,10 @@
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns, through the MadnessPatch mod"
-      }
+      },
+      "groupStores": "Official launchers",
+      "groupEmulators": "Emulators and patches",
+      "groupConsoles": "Consoles and retro"
     },
     "help": {
       "nav": "Help",
@@ -1134,7 +1180,11 @@
         "goldbergTitle": "Goldberg / GBE Fork",
         "goldbergDesc": "Scan a game-library folder for Goldberg / GBE Fork installs and flag the ones missing their steam_settings/achievements.json schema. Use a game’s right-click menu (Diagnose / Repair) to fix one.",
         "scanFolder": "Scan a folder…",
-        "exportLogs": "Export logs (.zip)"
+        "exportLogs": "Export logs (.zip)",
+        "profileBackupTitle": "Profile backup",
+        "profileBackupDesc": "Save your settings, library choices, presets, themes, covers and backups to one file, then bring them back after a reinstall or on a new PC. Sign-ins are never saved.",
+        "profileExport": "Export profile…",
+        "profileRestore": "Restore profile…"
       },
       "blacklistTitle": "AppID Blacklist",
       "blacklistButton": "Reset blacklist",
@@ -1176,28 +1226,28 @@
     "eyebrow": "First setup",
     "close": "Close",
     "steps": [
-      "Language",
-      "How it works",
-      "Interface",
-      "Account",
+      "Basics",
+      "Profile",
       "Games",
       "Sources",
-      "Settings"
+      "Look and alerts",
+      "Ready"
     ],
-    "languageTitle": "Choose language",
-    "languageCopy": "Games, metadata, achievements and Steam caches all load in this language from the start.",
+    "welcomeTitle": "Welcome to AW Next",
+    "welcomeCopy": "Two quick choices to start. Everything can be changed later in Settings, and you can skip the rest of this guide at any time.",
     "language": "Game and interface language",
     "languagePlaceholder": "Choose a language…",
-    "languageHint": "The first library load starts only after this choice.",
-    "introTitle": "How it works",
-    "scanTitle": "Scan",
-    "scanCopy": "Launcher, emulator and achievement-file locations are detected automatically - you review each one before the first scan.",
-    "watchTitle": "Watch",
-    "watchCopy": "The background Watchdog spots the game when it launches, tracks playtime and watches its achievement files.",
-    "fixTitle": "Repair",
-    "fixCopy": "For emulated Steam games, the right-click fix installs GBE Fork and writes the achievement schema and DLC data.",
+    "languageHint": "Games, metadata, achievements and Steam caches all load in this language. The first library load starts after this choice.",
     "overlayTitle": "In-game overlay",
-    "overlayCopy": "A small achievements panel you bring up over the game with a hotkey - Ctrl+Shift+K by default.",
+    "overlayCopy": "Press {hotkey} in a game to see its achievements over it.",
+    "collectionsTitle": "Collections",
+    "collectionsCopy": "Group games into your own collections from a game's right-click menu.",
+    "trophyTitle": "Trophy mode",
+    "trophyCopy": "Grade achievements gold, silver or bronze by rarity. Turn it on in Settings.",
+    "clipsTitle": "Video clips",
+    "clipsCopy": "Keep a short clip around each unlock. Turn it on in Settings under Notifications.",
+    "backupTitle": "Profile backup",
+    "backupCopy": "Save your settings and library choices to one file, and restore them after a reinstall.",
     "profileTitle": "Profile",
     "profileCopy": "Pick the name shown in the header and optionally set a local avatar.",
     "username": "Display name",
@@ -1205,8 +1255,21 @@
     "avatarPick": "Choose photo",
     "avatarDefault": "Default",
     "avatarHint": "Optional. Stored locally on this PC.",
-    "foldersTitle": "Add games on disk",
-    "foldersCopy": "Use Smart find to automatically detect save/config folders and game libraries. Or add them manually by folder type.",
+    "foldersTitle": "Your games",
+    "foldersCopy": "AW Next looks for games on this PC and shows what it finds. Add a folder only if something is missing.",
+    "detectTitle": "Found on this PC",
+    "detectInstalled": "{count} installed",
+    "detectNone": "None found",
+    "detectOff": "off",
+    "detectEmulators": "Emulator saves",
+    "detectFolders": "Games: {games} · Folders: {folders}",
+    "detectTotal": "Games found: {count}",
+    "detectNothing": "No games found yet",
+    "detectSteamOff": "Your Steam games stay hidden until Steam is switched on under Sources.",
+    "detectReviewSources": "Review sources",
+    "smartFound": "New folders found: {count}",
+    "smartNone": "No new folders found.",
+    "folderGames": "Games found in this folder: {count}",
     "addSave": "Save/config folder",
     "smartFind": "Smart find folders",
     "addLibrary": "Game library folder",
@@ -1216,12 +1279,22 @@
     "saveList": "Save / config folders",
     "libraryList": "Game libraries",
     "emptyList": "Nothing added this session.",
-    "settingsTitle": "Recommended settings",
-    "settingsCopy": "The essentials for your library, look and notifications. Everything stays editable later.",
-    "summarySources": "Sources enabled",
+    "settingsTitle": "Look and alerts",
+    "settingsCopy": "Pick a theme and how unlock alerts appear. Use Test notification to see one right now.",
+    "moreOptions": "More options",
+    "readyTitle": "You are all set",
+    "readyCopy": "AW Next now watches your games in the background and tells you when you unlock something.",
+    "featuresTitle": "Good to know",
+    "summarySources": "{count} sources enabled",
+    "summaryAccounts": "Signed in: {names}",
+    "summaryGames": "Games found: {count} · Folders watched: {folders}",
+    "summaryNoGames": "No games found yet. You can add folders later in Settings.",
+    "summaryLook": "Theme: {theme} · Notifications: {notifications}",
+    "summaryChange": "Change",
     "summaryReopen": "You can reopen this guide at any time from Settings > General.",
     "sourcesTitle": "Where your achievements come from",
-    "sourcesCopy": "Every one of these is read on this PC. Leave anything you do not use switched off; they all stay editable in Settings.",
+    "sourcesCopy": "Every source installed on this PC is read automatically, so the defaults are fine. Sign in below only if you want more.",
+    "sourcesMore": "Fine-tune sources ({count} enabled)",
     "accountsTitle": "Accounts (optional)",
     "accountsCopy": "Sign in to read unlocks from a private Steam profile, add your Steam Family games, import your Xbox PC library and show your Epic progress. You can skip this and connect later in Settings > Sources.",
     "sourcesEmulators": "Emulators",
@@ -1253,6 +1326,8 @@
     "next": "Next",
     "finish": "Finish",
     "skip": "Skip",
+    "skipSetup": "Skip setup",
+    "saveClose": "Save and close",
     "saving": "Saving…",
     "saved": "Setup saved.",
     "languageRequired": "Choose a language to continue.",
@@ -1324,7 +1399,28 @@
     "controllerMove": "Move/scroll"
   },
   "dialogs": {
+    "collections": "Collections",
+    "collection-all": "All games",
+    "collection-new": "New collection…",
+    "collection-edit": "Edit collection…",
+    "collection-name": "Collection name",
+    "collection-default-name": "New collection",
+    "collection-field-name": "Name",
+    "collection-field-color": "Color",
+    "collection-field-icon": "Icon",
+    "collection-field-image": "Image",
+    "collection-choose-image": "Choose image…",
+    "collection-remove-image": "Remove image",
+    "collection-delete": "Delete collection",
+    "collection-delete-confirm": "Delete the collection \"{name}\"? The games stay in your library.",
+    "collection-limit": "You reached the limit of {count} collections.",
+    "collection-image-error": "This image could not be used. Pick a PNG, JPEG, GIF or WebP file under 5 MB.",
     "choose-preset-image": "Choose a background image",
+    "choose-preset-font": "Choose a font file",
+    "choose-preset-logo": "Choose a logo",
+    "preset-font-refused": "That file is not a usable font. Use a TTF, OTF, WOFF or WOFF2 file of 4 MB at most.",
+    "preset-logo-refused": "That file is not a usable logo. Use a PNG, JPEG, GIF, WebP or BMP picture of 2 MB at most.",
+    "preset-layer-note": "Customizing {preset}. Tick a section to change it; whatever you leave unticked stays as the bundled preset ships. Your changes sit on top of it: the bundled preset is not copied or modified.",
     "folder-reason-ea-app": "This is an EA app release. A game started through the EA app keeps its achievements on the EA account rather than in the game folder, so there is no unlock file here to read. Those unlocks are picked up by the EA source in Settings > Sources instead of by a watched folder.",
     "folder-reason-game-no-data": "This is a game folder, but it holds no emulator configuration and no unlock file in any layout AW Next can read.",
     "folder-reason-unreadable": "This folder could not be read.",
@@ -2175,6 +2271,31 @@
     "export-logs-done": "{count} log file(s) written to {path}",
     "export-logs-failed": "Could not export the logs: {error}",
     "zip-archive": "Zip archive",
+    "profile-backup-file-type": "AW Next profile backup",
+    "profile-backup-export-title": "Export profile",
+    "profile-backup-restore-title": "Restore profile",
+    "profile-backup-exporting": "Exporting profile… {percent}%",
+    "profile-backup-export-done": "Profile saved to {path} ({count} files, {size}).",
+    "profile-backup-export-failed": "Could not export the profile: {error}",
+    "profile-backup-restore-confirm": "Restore this profile?",
+    "profile-backup-restore-confirm-detail": "The backup holds {count} files ({size}), saved {date}. Your current settings, presets, themes and covers will be replaced by the ones in the backup. The files they replace are kept, and a restore that fails is undone. AW Next restarts to apply it.",
+    "profile-backup-restore-button": "Restore and restart",
+    "profile-backup-checking": "Checking the backup… {percent}%",
+    "profile-backup-restarting": "Backup checked. Restarting to apply it…",
+    "profile-backup-restore-failed": "Could not restore the profile: {error}",
+    "profile-backup-applied": "Profile restored ({count} files).",
+    "profile-backup-applied-signin": "Sign-ins are never saved in a backup. Sign in again to: {accounts}.",
+    "profile-backup-applied-signin-generic": "Sign-ins are never saved in a backup. Sign in again to any account you had connected.",
+    "profile-backup-apply-failed": "The profile could not be restored. Your previous files were put back. Details: {error}",
+    "profile-backup-account-emulator": "Steam login for the emulator tools",
+    "profile-backup-error-invalid": "This file is not an AW Next profile backup.",
+    "profile-backup-error-too-new": "This backup was made by a newer version of AW Next. Update the app first.",
+    "profile-backup-error-corrupt": "This backup is damaged or has been modified.",
+    "profile-backup-error-unsafe": "This backup contains files that cannot be restored safely.",
+    "profile-backup-error-too-large": "This backup is larger than AW Next can restore.",
+    "profile-backup-error-empty": "There is nothing to put in a backup yet.",
+    "profile-backup-error-busy": "A backup is already running.",
+    "profile-backup-error-inside": "Choose a location outside the AW Next data folder.",
     "theme-layer-opacity": "Opacity",
     "chooseAnotherIconTitle": "Choose another icon",
     "chooseAnotherIcon": "Choose another icon…",
@@ -2243,6 +2364,7 @@
     "profile-trophies-share": "{percent} of your achievements",
     "profile-trophies-unranked": "{count} without a known rate",
     "profile-trophies-at-most": "{percent} or less",
+    "profile-trophies-under": "under {percent}",
     "profile-trophies-between": "{from} to {to}",
     "profile-trophies-above": "above {percent}, or unknown",
     "profile-trophies-platinum-games": "Platinum games",

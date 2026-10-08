@@ -2,6 +2,7 @@
 
 const { execFile } = require('child_process');
 const path = require('path');
+const links = require('./links.js');
 
 // Electron inherits the developer's PowerShell 7 module path on some systems. A child Windows
 // PowerShell 5 process then tries to load incompatible module metadata and cannot find
@@ -164,7 +165,18 @@ try {
 $out | ConvertTo-Json -Compress -Depth 4
 `;
 
-function verifyUpdateCodeSignature(publisherNames, tempUpdateFile, log = () => {}) {
+// Every refusal ends with the way out: a check that cannot vouch for the file never lets it install.
+function manualDownloadHint() {
+  return `Download the release manually from ${links.releases}`;
+}
+
+function refuseWithHint(reason) {
+  return `${reason}. ${manualDownloadHint()}`;
+}
+
+// `raw` skips the manual-download hint for callers that are not an installed client (the build).
+function verifyUpdateCodeSignature(publisherNames, tempUpdateFile, log = () => {}, { raw = false } = {}) {
+  const refuse = raw ? (reason) => reason : refuseWithHint;
   return new Promise((resolve) => {
     // The path goes through the environment, so nothing is quoted; the script holds no double quote
     // either. Plain text, not -EncodedCommand: antivirus engines read a base64 command as hiding one.
@@ -180,13 +192,13 @@ function verifyUpdateCodeSignature(publisherNames, tempUpdateFile, log = () => {
       (error, stdout, stderr) => {
         /*
           stderr alone is not a failure: PowerShell writes progress and module-load noise there
-          while still producing the JSON on stdout, and treating any of it as "could not run"
-          turned one stray warning line into a skipped signature check. Only a real execFile
-          error - or output that does not parse - disables the check.
+          while still producing the JSON on stdout. A real execFile error, empty output or output
+          that does not parse is a refusal: an antivirus or a policy that blocks PowerShell must
+          not turn "could not check" into "accepted".
         */
         if (error) {
           log(`[updater] signature check could not run: ${error}`);
-          resolve(null); // Keep the legacy updater fallback for a broken PowerShell installation.
+          resolve(refuse('the installer signature could not be checked (PowerShell did not run)'));
           return;
         }
         if (stderr) log(`[updater] signature check stderr (ignored): ${String(stderr).trim().slice(0, 200)}`);
@@ -196,15 +208,15 @@ function verifyUpdateCodeSignature(publisherNames, tempUpdateFile, log = () => {
         } catch (err) {
           if (!String(stdout || '').trim()) {
             log('[updater] signature check produced no output');
-            resolve(null); // Same broken-PowerShell fallback: no answer at all is not a bad answer.
+            resolve(refuse('the installer signature could not be checked (no answer from PowerShell)'));
             return;
           }
-          resolve(`signature check failed to parse: ${err.message}`);
+          resolve(refuse(`signature check failed to parse: ${err.message}`));
           return;
         }
         const result = evaluateUpdateSignature(publisherNames, parsed);
         if (result === null) log('[updater] update signer accepted');
-        resolve(result);
+        resolve(result === null ? null : refuse(result));
       }
     );
   });
@@ -214,6 +226,7 @@ module.exports = {
   PINNED_THUMBPRINTS,
   isPinnedThumbprint,
   publisherMatches,
+  manualDownloadHint,
   evaluateUpdateSignature,
   verifyUpdateCodeSignature,
 };

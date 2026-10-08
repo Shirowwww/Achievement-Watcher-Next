@@ -79,6 +79,7 @@ const x360RecompWatch = require('./console/x360RecompWatch.js');
 const eaWatch = require('./console/eaWatch.js');
 const gogWatch = require('./console/gogWatch.js');
 const ubisoftWatch = require('./console/ubisoftWatch.js');
+const runeUplayWatch = require('./console/runeUplayWatch.js');
 const retroAchievementsWatch = require('./console/retroAchievementsWatch.js');
 const { isWinRTAvailable } = require('./util/powertoast');
 const { isFullscreenAppRunning } = require('./queryUserNotificationState.js');
@@ -163,6 +164,7 @@ const NEW_FOLDER_NOTIFY_MAX = 10;
     x360recomp  Xbox 360 games recompiled for PC, their own unlock lists
     gog      GOG Galaxy's gameplay.db, rewritten the moment an achievement pops
     ubisoft  Ubisoft Connect's spool files, protobuf unlock records appended on the spot
+    rune-uplay  RUNE's Ubisoft emulator, one achievements.cfg per user and product under Documents
     retroachievements  the account's recent unlocks on retroachievements.org, asked only while an emulator runs
 */
 const CONSOLE_WATCHERS = [
@@ -176,6 +178,7 @@ const CONSOLE_WATCHERS = [
   { name: 'x360recomp', watcher: x360RecompWatch },
   { name: 'gog', watcher: gogWatch },
   { name: 'ubisoft', watcher: ubisoftWatch },
+  { name: 'rune-uplay', watcher: runeUplayWatch },
   { name: 'retroachievements', watcher: retroAchievementsWatch },
 ];
 

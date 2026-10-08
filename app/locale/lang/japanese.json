@@ -86,16 +86,25 @@
     "runUninstaller": "ゲームのアンインストーラーを実行…",
     "deleteFolder": "ゲームフォルダーを削除（ごみ箱）…"
   },
+  "windowControls": {
+    "minimize": "最小化",
+    "maximize": "最大化",
+    "close": "閉じる"
+  },
   "settings": {
     "title": "設定",
     "sideMenu": {
       "general": "一般",
       "notification": "通知",
-      "presets": "プリセット",
+      "presets": "通知プリセット",
       "souvenir": "記念",
       "folder": "フォルダー",
       "source": "ソース",
-      "advanced": "詳細"
+      "advanced": "詳細",
+      "groupApp": "アプリ",
+      "groupAlerts": "アラート",
+      "groupLibrary": "ライブラリ",
+      "groupSupport": "サポート"
     },
     "common": {
       "show": "表示",
@@ -108,13 +117,17 @@
       "maintainedBy": "メンテナー",
       "fork": "フォーク",
       "original": "オリジナル v1.6.8",
-      "edit": "編集"
+      "edit": "編集",
+      "close": "閉じる",
+      "unsaved": "未保存の変更"
     },
     "search": {
       "placeholder": "設定を検索…",
       "empty": "検索に一致する設定はありません。",
       "ariaLabel": "設定を検索",
-      "clear": "クリア"
+      "clear": "クリア",
+      "advancedMore": "詳細モードにあと {count} 件",
+      "advancedShow": "詳細を表示"
     },
     "watchdog": {
       "startup": {
@@ -143,7 +156,7 @@
       "duration": "アニメーション時間"
     },
     "general": {
-      "sectionTitle": "インターフェースと動作",
+      "sectionTitle": "日常の設定",
       "language": {
         "name": "言語",
         "description": "インターフェースの言語。可能な場合、ゲームデータはこの言語で取得されます。"
@@ -161,7 +174,7 @@
         }
       },
       "hiddenAch": {
-        "name": "隠し実績",
+        "name": "隠し実績を表示",
         "description": "隠し実績の名前と説明を、解除する前に表示します。"
       },
       "mergeDuplicates": {
@@ -264,6 +277,20 @@
         "name": "プロフィールのトロフィー",
         "description": "名前の下にプラチナ・ゴールド・シルバー・ブロンズのトロフィーを表示します。プラチナは100%達成したゲーム、それ以外は実績を解除したプレイヤーの割合で分類されます。"
       },
+      "rarityDisplay": {
+        "name": "レア度の表示",
+        "description": "レア段階は最もレアな実績だけに印を付けます。トロフィーモードでは、解除率に応じてすべての実績を金・銀・銅で評価し、クリア済みのゲームにはプラチナを表示します。",
+        "rare": "レア段階",
+        "trophy": "トロフィーモード",
+        "goldBelow": {
+          "name": "金トロフィーの基準（未満）",
+          "description": "トロフィーモードでは、この割合より少ないプレイヤーしか解除していない実績が金になります。"
+        },
+        "silverBelow": {
+          "name": "銀トロフィーの基準（未満）",
+          "description": "トロフィーモードでは、この割合未満の実績が銀になり、それ以外や解除率が不明なものは銅になります。"
+        }
+      },
       "playButton": {
         "name": "プレイボタンを表示",
         "description": "ゲームタイルにプレイボタンを表示します。ほかのプログラムからゲームを起動している場合はオフにしてください。右クリックメニューのゲームを起動は引き続き利用できます。"
@@ -302,7 +329,9 @@
           "name": "ゲーム設定ボタン",
           "description": "画像右上のツールボタンを表示します。ゲーム設定は右クリックメニューから引き続き確認できます。"
         }
-      }
+      },
+      "appSectionTitle": "アプリケーション",
+      "trophySectionTitle": "トロフィーとレア度"
     },
     "emulator": {
       "nav": "エミュレーター修復",
@@ -467,13 +496,13 @@
     },
     "notification": {
       "title": {
-        "common": "共通",
+        "common": "基本",
         "toast": "Windows 通知",
-        "transport": "トランスポート",
+        "transport": "連携",
         "chromium": "Chromium 通知",
         "watchdog": "Watchdog",
         "test": "テスト",
-        "overlay": "通知"
+        "overlay": "ポップアップ"
       },
       "info": {
         "toast": "一部の機能は Windows 10 でのみ利用できます",
@@ -602,6 +631,7 @@
             "easingOut": "退場カーブ",
             "entryDistance": "移動距離",
             "fontFamily": "フォント",
+            "fontFile": "フォントファイル",
             "fontSize": "フォントサイズ",
             "gap": "要素間の間隔",
             "glow": "グロー",
@@ -613,6 +643,10 @@
             "iconSize": "アイコンサイズ",
             "layout": "配置",
             "letterSpacing": "字間",
+            "logoImage": "ロゴ",
+            "logoOffset": "ロゴと端の距離",
+            "logoPosition": "ロゴの位置",
+            "logoSize": "ロゴのサイズ",
             "opacity": "不透明度",
             "padX": "左右の余白",
             "padY": "上下の余白",
@@ -655,6 +689,10 @@
           "imported": "インポートして選択しました：",
           "importedOnly": "インポートしたプリセット - ここでエクスポートや削除ができます。スライダーでは編集できません。",
           "importSan": "SAN テーマを読み込む",
+          "layer": {
+            "none": "カスタマイズしない",
+            "title": "付属のプリセットをカスタマイズ"
+          },
           "load": "プリセットを編集",
           "loaded": "読み込みました：",
           "name": "名前",
@@ -700,6 +738,8 @@
             "artwork": "ゲームのアートワーク",
             "back": "バウンド",
             "bottom": "下",
+            "bottomLeft": "左下",
+            "bottomRight": "右下",
             "breathe": "ゆらぎ",
             "center": "中央",
             "circle": "円",
@@ -723,6 +763,7 @@
             "linear": "一定速度",
             "lines": "斜線",
             "mono": "等幅",
+            "noFont": "フォントファイルなし",
             "noImage": "画像なし",
             "noise": "粒子",
             "none": "なし",
@@ -742,6 +783,8 @@
             "text": "文字色",
             "textOnly": "テキストのみ",
             "top": "上",
+            "topLeft": "左上",
+            "topRight": "右上",
             "transparent": "透明",
             "uppercase": "大文字",
             "zoom": "ズーム"
@@ -997,7 +1040,10 @@
       },
       "madnesspatch": {
         "description": "MadnessPatch MOD 経由の Alice: Madness Returns"
-      }
+      },
+      "groupStores": "公式ランチャー",
+      "groupEmulators": "エミュレーターとパッチ",
+      "groupConsoles": "コンソールとレトロ"
     },
     "help": {
       "nav": "ヘルプ",
@@ -1134,7 +1180,11 @@
         "goldbergTitle": "Goldberg / GBE Fork",
         "goldbergDesc": "ゲームライブラリフォルダーをスキャンして Goldberg / GBE Fork のインストールを探し、steam_settings/achievements.json スキーマが欠落しているものを示します。1 つを修正するには、ゲームの右クリックメニュー（診断 / 修復）を使用してください。",
         "scanFolder": "フォルダーをスキャン…",
-        "exportLogs": "ログをエクスポート (.zip)"
+        "exportLogs": "ログをエクスポート (.zip)",
+        "profileBackupTitle": "プロファイルのバックアップ",
+        "profileBackupDesc": "設定、ライブラリの選択、プリセット、テーマ、カバー、バックアップを 1 つのファイルに保存し、再インストール後や新しい PC で復元できます。サインイン情報は保存されません。",
+        "profileExport": "プロファイルをエクスポート…",
+        "profileRestore": "プロファイルを復元…"
       },
       "blacklistTitle": "AppID ブラックリスト",
       "blacklistButton": "ブラックリストをリセット",
@@ -1176,28 +1226,28 @@
     "eyebrow": "最初のセットアップ",
     "close": "閉じる",
     "steps": [
-      "言語",
-      "仕組み",
-      "インターフェース",
-      "アカウント",
+      "基本",
+      "プロフィール",
       "ゲーム",
       "ソース",
-      "設定"
+      "外観と通知",
+      "準備完了"
     ],
-    "languageTitle": "言語を選択してください",
-    "languageCopy": "ゲーム、メタデータ、実績、Steam キャッシュは最初からこの言語で読み込まれます。",
+    "welcomeTitle": "AW Next へようこそ",
+    "welcomeCopy": "最初に簡単な選択を2つ行います。すべて後から設定で変更でき、このガイドの残りはいつでもスキップできます。",
     "language": "ゲームおよびインターフェース言語",
     "languagePlaceholder": "言語を選択してください…",
-    "languageHint": "最初のライブラリのロードは、この選択後にのみ開始されます。",
-    "introTitle": "仕組み",
-    "scanTitle": "スキャン",
-    "scanCopy": "ランチャー・エミュレーター・実績ファイルの場所は自動で検出されます。初回スキャン前にすべて確認できます。",
-    "watchTitle": "監視",
-    "watchCopy": "バックグラウンドの Watchdog がゲームの起動を検知し、プレイ時間を記録して実績ファイルを監視します。",
-    "fixTitle": "修復",
-    "fixCopy": "エミュレートされた Steam ゲームでは、右クリックの修正が GBE Fork を導入し、実績スキーマと DLC データを書き込みます。",
+    "languageHint": "ゲーム、メタデータ、実績、Steam のキャッシュはすべてこの言語で読み込まれます。最初のライブラリの読み込みは、この選択の後に始まります。",
     "overlayTitle": "ゲーム内オーバーレイ",
-    "overlayCopy": "ホットキーでゲームの上に呼び出せる小さな実績パネルです（既定は Ctrl+Shift+K）。",
+    "overlayCopy": "ゲーム中に {hotkey} を押すと、そのゲームの実績が上に表示されます。",
+    "collectionsTitle": "コレクション",
+    "collectionsCopy": "ゲームの右クリックメニューから、ゲームを独自のコレクションにまとめられます。",
+    "trophyTitle": "トロフィーモード",
+    "trophyCopy": "実績をレア度に応じて金、銀、銅で評価します。設定でオンにできます。",
+    "clipsTitle": "ビデオクリップ",
+    "clipsCopy": "実績の解除ごとに、その前後の短いクリップを保存します。設定の通知でオンにできます。",
+    "backupTitle": "プロファイルのバックアップ",
+    "backupCopy": "設定とライブラリの選択を1つのファイルに保存し、再インストール後に復元できます。",
     "profileTitle": "プロフィール",
     "profileCopy": "ヘッダーに表示される名前を選択し、必要に応じてローカル アバターを設定します。",
     "username": "表示名",
@@ -1205,8 +1255,21 @@
     "avatarPick": "写真を選択してください",
     "avatarDefault": "デフォルト",
     "avatarHint": "オプション。この PC にローカルに保存されます。",
-    "foldersTitle": "ディスク上のゲームを追加",
-    "foldersCopy": "スマート検索を使うと、保存/設定フォルダーとゲームライブラリを自動で検出できます。フォルダーの種類ごとに手動で追加することもできます。",
+    "foldersTitle": "あなたのゲーム",
+    "foldersCopy": "AW Next はこの PC のゲームを探し、見つかったものを表示します。足りないものがある場合だけフォルダーを追加してください。",
+    "detectTitle": "この PC で見つかったもの",
+    "detectInstalled": "{count} 件インストール済み",
+    "detectNone": "見つかりませんでした",
+    "detectOff": "オフ",
+    "detectEmulators": "エミュレーターのセーブ",
+    "detectFolders": "ゲーム: {games} · フォルダー: {folders}",
+    "detectTotal": "見つかったゲーム: {count}",
+    "detectNothing": "まだゲームが見つかっていません",
+    "detectSteamOff": "Steam のゲームは、ソースで Steam をオンにするまで表示されません。",
+    "detectReviewSources": "ソースを確認",
+    "smartFound": "見つかった新しいフォルダー: {count}",
+    "smartNone": "新しいフォルダーは見つかりませんでした。",
+    "folderGames": "このフォルダーで見つかったゲーム: {count}",
     "addSave": "保存フォルダーを追加",
     "smartFind": "スマート検索",
     "addLibrary": "ライブラリフォルダーを追加",
@@ -1216,12 +1279,22 @@
     "saveList": "保存/設定フォルダー",
     "libraryList": "ライブラリフォルダー",
     "emptyList": "このセッションには何も追加されませんでした。",
-    "settingsTitle": "推奨設定",
-    "settingsCopy": "ライブラリ・外観・通知の要点です。あとからいつでも変更できます。",
-    "summarySources": "有効なソース",
+    "settingsTitle": "外観と通知",
+    "settingsCopy": "テーマと、実績解除の通知の表示方法を選びます。通知をテストを使うと、その場で確認できます。",
+    "moreOptions": "その他のオプション",
+    "readyTitle": "準備が整いました",
+    "readyCopy": "AW Next はバックグラウンドでゲームを監視し、何かを解除したときにお知らせします。",
+    "featuresTitle": "知っておくと便利",
+    "summarySources": "{count} 件のソースが有効",
+    "summaryAccounts": "サインイン中: {names}",
+    "summaryGames": "見つかったゲーム: {count} · 監視中のフォルダー: {folders}",
+    "summaryNoGames": "まだゲームが見つかっていません。フォルダーは後から設定で追加できます。",
+    "summaryLook": "テーマ: {theme} · 通知: {notifications}",
+    "summaryChange": "変更",
     "summaryReopen": "このガイドはいつでも設定 > 一般から開き直せます。",
     "sourcesTitle": "実績の取得元",
-    "sourcesCopy": "いずれもこの PC で読み取られます。使わないものはオフのままにしてください。すべて設定であとから変更できます。",
+    "sourcesCopy": "この PC にインストールされているソースはすべて自動で読み込まれるため、既定のままで問題ありません。さらに必要な場合のみ、下でサインインしてください。",
+    "sourcesMore": "ソースを微調整（{count} 件が有効）",
     "accountsTitle": "アカウント（任意）",
     "accountsCopy": "サインインすると、非公開の Steam プロフィールの解除状況を読み取り、Steam ファミリーのゲームを追加し、Xbox PC のライブラリをインポートし、Epic の進行状況を表示できます。この手順は省略して、あとから設定 > ソースで接続することもできます。",
     "sourcesEmulators": "エミュレーター",
@@ -1253,6 +1326,8 @@
     "next": "次へ",
     "finish": "完了",
     "skip": "スキップ",
+    "skipSetup": "セットアップをスキップ",
+    "saveClose": "保存して閉じる",
     "saving": "保存中…",
     "saved": "セットアップが保存されました。",
     "languageRequired": "続行するには言語を選択してください。",
@@ -1324,7 +1399,28 @@
     "controllerMove": "移動/スクロール"
   },
   "dialogs": {
+    "collections": "コレクション",
+    "collection-all": "すべてのゲーム",
+    "collection-new": "新しいコレクション…",
+    "collection-edit": "コレクションを編集…",
+    "collection-name": "コレクション名",
+    "collection-default-name": "新しいコレクション",
+    "collection-field-name": "名前",
+    "collection-field-color": "色",
+    "collection-field-icon": "アイコン",
+    "collection-field-image": "画像",
+    "collection-choose-image": "画像を選択…",
+    "collection-remove-image": "画像を削除",
+    "collection-delete": "コレクションを削除",
+    "collection-delete-confirm": "コレクション \"{name}\" を削除しますか？ ゲームはライブラリに残ります。",
+    "collection-limit": "コレクションの上限 {count} 件に達しました。",
+    "collection-image-error": "この画像は使用できません。5 MB 未満の PNG、JPEG、GIF、WebP ファイルを選択してください。",
     "choose-preset-image": "背景画像を選ぶ",
+    "choose-preset-font": "フォントファイルを選ぶ",
+    "choose-preset-logo": "ロゴを選ぶ",
+    "preset-font-refused": "このファイルは使用できるフォントではありません。4 MB 以下の TTF、OTF、WOFF、WOFF2 ファイルを使用してください。",
+    "preset-logo-refused": "このファイルは使用できるロゴではありません。2 MB 以下の PNG、JPEG、GIF、WebP、BMP 画像を使用してください。",
+    "preset-layer-note": "{preset} をカスタマイズ中です。変更したい項目にチェックを入れてください。チェックしない項目は、付属のプリセットのままになります。変更内容はその上に重ねて適用され、付属のプリセット自体はコピーも変更もされません。",
     "folder-reason-ea-app": "これは EA app 版です。EA app から起動したゲームは実績をゲームフォルダーではなく EA アカウント側に保存するため、ここに読み取れる解除ファイルはありません。これらの実績は監視フォルダーではなく、設定 > ソースの EA ソースが取得します。",
     "folder-reason-game-no-data": "ここはゲームフォルダーですが、エミュレーターの設定ファイルも、AW Next が読める形式の解除ファイルもありません。",
     "folder-reason-unreadable": "このフォルダーを読み取れませんでした。",
@@ -2175,6 +2271,31 @@
     "export-logs-done": "{count} 個のログファイルを {path} に書き出しました",
     "export-logs-failed": "ログをエクスポートできませんでした: {error}",
     "zip-archive": "Zip アーカイブ",
+    "profile-backup-file-type": "AW Next プロファイルのバックアップ",
+    "profile-backup-export-title": "プロファイルをエクスポート",
+    "profile-backup-restore-title": "プロファイルを復元",
+    "profile-backup-exporting": "プロファイルをエクスポートしています… {percent}%",
+    "profile-backup-export-done": "プロファイルを {path} に保存しました ({count} 個のファイル、{size})。",
+    "profile-backup-export-failed": "プロファイルをエクスポートできませんでした: {error}",
+    "profile-backup-restore-confirm": "このプロファイルを復元しますか?",
+    "profile-backup-restore-confirm-detail": "このバックアップには {count} 個のファイル ({size}) が含まれています。保存日時: {date}。現在の設定、プリセット、テーマ、カバーはバックアップの内容に置き換えられます。置き換えられるファイルは保持され、復元に失敗した場合は元に戻されます。適用するために AW Next が再起動します。",
+    "profile-backup-restore-button": "復元して再起動",
+    "profile-backup-checking": "バックアップを確認しています… {percent}%",
+    "profile-backup-restarting": "バックアップを確認しました。適用するために再起動しています…",
+    "profile-backup-restore-failed": "プロファイルを復元できませんでした: {error}",
+    "profile-backup-applied": "プロファイルを復元しました ({count} 個のファイル)。",
+    "profile-backup-applied-signin": "サインイン情報はバックアップに保存されません。次に再度サインインしてください: {accounts}。",
+    "profile-backup-applied-signin-generic": "サインイン情報はバックアップに保存されません。接続していたすべてのアカウントに再度サインインしてください。",
+    "profile-backup-apply-failed": "プロファイルを復元できませんでした。以前のファイルは元に戻されました。詳細: {error}",
+    "profile-backup-account-emulator": "エミュレーターツール用の Steam サインイン",
+    "profile-backup-error-invalid": "このファイルは AW Next のプロファイルバックアップではありません。",
+    "profile-backup-error-too-new": "このバックアップは新しいバージョンの AW Next で作成されました。先にアプリを更新してください。",
+    "profile-backup-error-corrupt": "このバックアップは破損しているか、変更されています。",
+    "profile-backup-error-unsafe": "このバックアップには、安全に復元できないファイルが含まれています。",
+    "profile-backup-error-too-large": "このバックアップは AW Next が復元できるサイズを超えています。",
+    "profile-backup-error-empty": "バックアップに含める内容がまだありません。",
+    "profile-backup-error-busy": "バックアップはすでに実行中です。",
+    "profile-backup-error-inside": "AW Next のデータフォルダーの外にある場所を選んでください。",
     "theme-layer-opacity": "不透明度",
     "chooseAnotherIconTitle": "別のアイコンを選択",
     "chooseAnotherIcon": "別のアイコンを選択…",
@@ -2243,6 +2364,7 @@
     "profile-trophies-share": "実績全体の{percent}",
     "profile-trophies-unranked": "取得率不明が{count}個",
     "profile-trophies-at-most": "{percent}以下",
+    "profile-trophies-under": "{percent}未満",
     "profile-trophies-between": "{from}から{to}まで",
     "profile-trophies-above": "{percent}超、または不明",
     "profile-trophies-platinum-games": "プラチナ達成ゲーム",

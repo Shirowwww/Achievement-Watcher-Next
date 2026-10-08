@@ -44,6 +44,9 @@ const cliUserDataDir = (() => {
 const packagedPortableUserDataDir = portableUserDataDir({ execPath: process.execPath, isPackaged: app.isPackaged });
 const isPortableBuild = !!packagedPortableUserDataDir;
 app.setPath('userData', cliUserDataDir || packagedPortableUserDataDir || path.join(app.getPath('appData'), APP_DATA_DIR_NAME));
+// A restored profile is swapped in here, before the migrations and before anything reads the data
+// folder. The result waits in result.json until the UI has shown it.
+require('../util/profileRestore.js').applyPendingRestore(app.getPath('userData'));
 // Import forward along the data-folder chain, newest source first: each hop is a no-op once the
 // destination already holds AW configuration, so a user coming straight from 1.6.8 still gets their data.
 // A portable archive starts isolated on purpose and never imports the installed app's profile.
@@ -143,6 +146,7 @@ let pendingInstallPrompt = null;
 const updateGate = require(path.join(__dirname, '../util/updateGate.js'));
 const { resolveSteamMetadata } = require(path.join(__dirname, '../util/steamMetadata.js'));
 const { isChecksumMismatchError, summarizeUpdaterError } = require(path.join(__dirname, '../util/updateChecksum.js'));
+const { verifyPendingInstaller } = require(path.join(__dirname, '../util/pendingInstallerGuard.js'));
 const { clearUpdaterCacheDir: clearCacheDirForHelper } = require(path.join(__dirname, '../util/updateCacheClear.js'));
 const { pruneInstalledPendingUpdate } = require(path.join(__dirname, '../util/updateCacheHousekeeping.js'));
 const { clearSafeCaches } = require(path.join(__dirname, '../util/clearableCaches.js'));
@@ -328,6 +332,44 @@ async function clearUpdaterCacheDir() {
   return clearCacheDirForHelper(helper, {
     onHelperClearError: (err) => debug.log(`[updater] could not reset the download helper state: ${err.message || err}`),
   });
+}
+
+// The installer that passed verification and the digest it had then; the install step re-checks both.
+let verifiedInstaller = null;
+
+/*
+  Signature and hash check of a downloaded installer, independent of electron-updater: it only
+  verifies freshly downloaded files, while a cached one is reused after a feed SHA-512 comparison.
+  A missing publisher configuration is a refusal, never a pass.
+*/
+async function checkPendingInstaller(file, expectedDigest) {
+  let publisherNames = [];
+  try {
+    const config = await getUpdater().configOnDisk.value;
+    publisherNames = [].concat((config && config.publisherName) || []);
+  } catch (err) {
+    debug.log(`[updater] could not read the update publisher: ${err.message || err}`);
+  }
+  return verifyPendingInstaller({
+    file,
+    publisherNames,
+    expectedDigest,
+    verify: (names, target) => verifyUpdateCodeSignature(names, target, (message) => debug.log(message)),
+  });
+}
+
+// An installer that failed the check must not be offered again by the next launch's cache.
+async function rejectPendingInstaller(file, reason) {
+  verifiedInstaller = null;
+  pendingInstallPrompt = null;
+  try {
+    const helper = await getUpdater().getOrCreateDownloadHelper();
+    await helper.clear();
+  } catch (err) {
+    debug.log(`[updater] could not reset the download helper state: ${err.message || err}`);
+  }
+  if (file) await fs.promises.rm(file, { force: true, maxRetries: 5, retryDelay: 100 }).catch(() => {});
+  notifyUpdateError(`update not installed: ${reason}`);
 }
 
 // The one automatic retry (cache cleared, full download re-attempted) also failed: this is no
@@ -555,6 +597,17 @@ const themeImages = require(path.join(__dirname, '../util/themeImages.js'));
 const themeBlur = require(path.join(__dirname, '../util/themeBlur.js'));
 const themePackage = lazyRequire(path.join(__dirname, '../util/themePackage.js'));
 const overlayLocale = require(path.join(__dirname, '../util/overlayLocale.js'));
+const rarityTiers = require(path.join(__dirname, '../util/rarityTiers.js'));
+const presetLayer = require(path.join(__dirname, '../util/presetLayer.js'));
+
+// The "Rarity display" setting as the tier functions take it.
+function currentRarityGrading() {
+  const cfg = (configJS && configJS.achievement) || {};
+  return {
+    mode: rarityTiers.normalizeMode(cfg.rarityMode),
+    thresholds: rarityTiers.normalizeThresholds({ goldBelow: cfg.trophyGoldBelow, silverBelow: cfg.trophySilverBelow }),
+  };
+}
 const { resolveOverlayRequest } = require(path.join(__dirname, '../util/overlayRequest.js'));
 const { normalizeWindowArgs } = require(path.join(__dirname, '../util/windowArgs.js'));
 const notificationBounds = require(path.join(__dirname, '../util/notificationBounds.js'));
@@ -2232,6 +2285,15 @@ ipcMain.handle('export-logs', async () => {
   } catch (err) {
     return { ok: false, error: err && err.message ? err.message : String(err) };
   }
+});
+
+require('./profileBackupIpc.js').register({
+  getWindow: () => (MainWin && !MainWin.isDestroyed() ? MainWin : undefined),
+  t,
+  debug: { log: (message) => debug.log(message) },
+  setQuitting: () => {
+    app.isQuiting = true;
+  },
 });
 
 ipcMain.handle('get-achievements', async (event, appid) => {
@@ -4883,7 +4945,9 @@ function sendOverlayPayloads(info) {
   overlayWindow.webContents.send('overlay-language', overlayLanguagePayload());
   overlayWindow.webContents.send('overlay-theme', currentThemePayload());
   overlayWindow.webContents.send('overlay-controller-config', overlayControllerConfigPayload());
-  overlayWindow.webContents.send('show-overlay', info.game);
+  // The overlay masks hidden descriptions exactly like the main window, so it needs the same option.
+  const showHidden = !!(configJS && configJS.achievement && configJS.achievement.showHidden);
+  overlayWindow.webContents.send('show-overlay', info.game ? { ...info.game, showHidden } : info.game);
 }
 
 function showOverlayAfterLoad(info) {
@@ -4940,6 +5004,7 @@ async function createOverlayWindow(info) {
     await getCachedData(info);
     info.game = await getAchievements().getSavedAchievementsForAppid(configJS, { appid: info.appid });
     attachOverlayRarity(info.game);
+    if (info.game) info.game.rarityGrading = currentRarityGrading();
     attachOverlayLocalIcons(info.game);
 
     // Fast path: the window already exists (hidden) from a previous open. Swap the data and show.
@@ -5155,6 +5220,12 @@ ipcMain.handle('game-preset:set', (event, request = {}) => {
 /* Preset folders change only when the designer/importer changes them or a settings panel asks for
    a fresh list; index them once between events so resolving a live unlock costs map lookups only. */
 let notificationPresetFolders = null;
+// A layered preset (util/presetLayer.js) has no page of its own: its name resolves to the bundled
+// preset it sits on, and this map holds what to put over that page when it is shown.
+const notificationPresetLayers = new Map();
+
+const readPresetLayer = (name) => presetLayer.readLayerFolder(usersPresetsDir(), bundledPresetRoots()[0], name);
+
 function refreshNotificationPresetFolders() {
   const folders = new Map();
   const roots = [usersPresetsDir(), ...bundledPresetRoots(), path.join(__dirname, '../presets')];
@@ -5167,6 +5238,20 @@ function refreshNotificationPresetFolders() {
       }
     } catch {}
   }
+  notificationPresetLayers.clear();
+  try {
+    for (const name of fs.readdirSync(usersPresetsDir())) {
+      if (folders.has(name) || !fs.existsSync(path.join(usersPresetsDir(), name, presetLayer.LAYER_FILE))) continue;
+      try {
+        const found = readPresetLayer(name);
+        if (!found) continue;
+        folders.set(name, found.baseFolder);
+        notificationPresetLayers.set(name, found.layer);
+      } catch (err) {
+        debug.log(`[custom-preset] layer ${name} unreadable: ${err.message || err}`);
+      }
+    }
+  } catch {}
   notificationPresetFolders = folders;
   return folders;
 }
@@ -5264,6 +5349,38 @@ function loadNotificationStrings() {
   }
 }
 
+// Localized grade names (dialogs.trophy-*), read once per language.
+let trophyLabelCache = null;
+function loadTrophyLabels() {
+  const lang = String((configJS && configJS.achievement && configJS.achievement.lang) || 'english');
+  if (trophyLabelCache && trophyLabelCache.lang === lang) return trophyLabelCache.labels;
+  const labels = {};
+  try {
+    const langDir = path.join(__dirname, '../locale/lang');
+    const english = JSON.parse(fs.readFileSync(path.join(langDir, 'english.json'), 'utf8'));
+    let dialogs = english.dialogs || {};
+    if (lang !== 'english') dialogs = { ...dialogs, ...JSON.parse(fs.readFileSync(path.join(langDir, `${lang}.json`), 'utf8')).dialogs };
+    for (const grade of ['platinum', 'gold', 'silver', 'bronze']) labels[grade] = dialogs[`trophy-${grade}`] || grade;
+  } catch (err) {
+    debug.log(`[overlay-notif] trophy labels unavailable: ${err.message || err}`);
+  }
+  trophyLabelCache = { lang, labels };
+  return labels;
+}
+
+// What a preset needs to paint the tier of one popup: the class name, the mode and the grade's name.
+function describeNotificationTier(data) {
+  const grading = currentRarityGrading();
+  const tier = rarityTiers.notificationTier({
+    percent: data.rarityPercent,
+    type: data.notificationType,
+    mode: grading.mode,
+    thresholds: grading.thresholds,
+  });
+  const label = tier && grading.mode === rarityTiers.MODE_TROPHY ? loadTrophyLabels()[tier] || '' : '';
+  return { tier, mode: grading.mode, label };
+}
+
 /*
   Notification presets are third-party HTML: a `.awpreset` from the community gallery is installed
   by presetPackage.js, which validates paths, sizes and extensions but never the markup, and an
@@ -5304,7 +5421,9 @@ function watchPresetWindow(win) {
 }
 
 function createNotificationWindow(data = {}) {
-  const presetFolder = resolvePresetFolder(data.preset);
+  const resolvedPreset = resolveNotificationPreset([String(data.preset || DEFAULT_PRESET), DEFAULT_PRESET]);
+  const presetFolder = resolvedPreset.folder;
+  const layer = notificationPresetLayers.get(resolvedPreset.name) || null;
   if (!presetFolder) {
     debug.log('[overlay-notif] no usable preset found under app/presets');
     return null;
@@ -5424,11 +5543,24 @@ function createNotificationWindow(data = {}) {
   } else {
     notif.setIgnoreMouseEvents(true, { forward: true });
   }
+  if (layer) {
+    // Inserted once the bundled page's DOM exists and well before the payload arrives (that waits
+    // for did-finish-load, i.e. for the page's pictures and fonts too).
+    notif.webContents.once('dom-ready', () => {
+      if (notif.isDestroyed()) return;
+      const css = presetLayer.buildLayerCss(layer, { assetUrl: (name) => presetLayer.layerAssetFileUrl(layer.dir, name) });
+      if (css) notif.webContents.insertCSS(css).catch((err) => debug.log(`[overlay-notif] layer css failed: ${err.message || err}`));
+      if (presetLayer.layerHasLogo(layer)) {
+        notif.webContents.executeJavaScript(presetLayer.LAYER_LOGO_SCRIPT).catch((err) => debug.log(`[overlay-notif] layer logo failed: ${err.message || err}`));
+      }
+    });
+  }
   notif.loadFile(presetHtml);
 
   // Localized fallback labels for presets that render a placeholder when the payload has no
   // display name/description (e.g. the defensive `'Achievement Unlocked'` text in the themes).
   const notifStrings = loadNotificationStrings();
+  const notificationTier = describeNotificationTier(data);
 
   // Match the proven overlayWindow pattern: show inactively once content is loaded
   // (no reliance on 'ready-to-show', which the working in-game overlay also avoids).
@@ -5445,6 +5577,11 @@ function createNotificationWindow(data = {}) {
       // a popup could never say where it happened; presets that do not ask for it simply ignore it.
       gameName: data.gameName != null ? String(data.gameName) : '',
       rarityPercent: data.rarityPercent,
+      // The tier the preset paints ('gold' | 'silver' | 'bronze' | 'platinum' | ''), decided here so a
+      // preset never carries cut-offs of its own; `rarityGrade` is its localized name.
+      rarityTier: notificationTier.tier,
+      rarityMode: notificationTier.mode,
+      rarityGrade: notificationTier.label,
       notificationType: data.notificationType || '',
       // Reference-project presets key on these: `isPlatinum` (Xbox Series Platinum diamond) and
       // `headerPath` (Game Cover background). Keep them as aliases of our own fields.
@@ -6111,6 +6248,10 @@ function userSoundsDir() {
 function userPresetImagesDir() {
   return path.join(userData, 'presets', 'images');
 }
+// Font files the designer can offer, kept beside the pictures for the same reason.
+function userPresetFontsDir() {
+  return path.join(userData, 'presets', 'fonts');
+}
 function resolveNotificationSound(name) {
   if (!name) return '';
   // A settings file written before the bundled sounds were renamed still names the old file.
@@ -6145,6 +6286,7 @@ const { customPresetNumbers, buildCustomPresetHtml, buildCustomPresetCss, saniti
 // of them is reached from a file dialog the user has to open first. Loaded when one of those runs.
 const presetPackage = lazyRequire(path.join(__dirname, '../util/presetPackage.js'));
 const presetSchema = require(path.join(__dirname, '../util/presetSchema.js'));
+const presetAssets = presetSchema;
 const sanImport = lazyRequire(path.join(__dirname, '../util/sanImport.js'));
 
 /*
@@ -6189,11 +6331,50 @@ function copyPresetImage(dir, name) {
   }
 }
 
+/*
+  The font and the logo follow the same rule as the background picture, with one more step: the
+  bytes are checked again here, because the name in the options file is not proof of what the file is.
+*/
+function copyPresetAsset(dir, name, sourceDir, check, label) {
+  if (!name) return;
+  try {
+    const destination = path.join(dir, name);
+    const source = path.join(sourceDir, name);
+    if (fs.existsSync(destination) || !fs.existsSync(source)) return;
+    const verdict = check(name, fs.readFileSync(source));
+    if (!verdict.ok) {
+      debug.log(`[custom-preset] ${label} not copied: ${verdict.error}`);
+      return;
+    }
+    fs.copyFileSync(source, destination);
+  } catch (err) {
+    debug.log(`[custom-preset] ${label} not copied: ` + (err.message || err));
+  }
+}
+
+// A font or logo the previous save carried and this one no longer names would otherwise stay in the
+// preset forever, and travel with every export of it.
+function dropStalePresetAssets(dir, next) {
+  try {
+    const previous = JSON.parse(fs.readFileSync(path.join(dir, PRESET_OPTIONS_FILE), 'utf8'));
+    for (const key of ['bgImage', 'fontFile', 'logoImage']) {
+      const old = typeof previous[key] === 'string' ? previous[key] : '';
+      if (!old || ['bgImage', 'fontFile', 'logoImage'].some((other) => next[other] === old)) continue;
+      const target = path.join(dir, old);
+      if (path.dirname(path.resolve(target)) === path.resolve(dir)) fs.rmSync(target, { force: true });
+    }
+  } catch {}
+}
+
 function writeCustomPreset(name, opts) {
   const dir = path.join(usersPresetsDir(), name);
   const values = customPresetNumbers(opts);
   fs.mkdirSync(dir, { recursive: true });
+  dropStalePresetAssets(dir, values);
+  fs.rmSync(path.join(dir, presetLayer.LAYER_FILE), { force: true });
   copyPresetImage(dir, values.bgImage);
+  copyPresetAsset(dir, values.fontFile, userPresetFontsDir(), presetAssets.checkFont, 'font');
+  copyPresetAsset(dir, values.logoImage, userPresetImagesDir(), presetAssets.checkLogo, 'logo');
   fs.writeFileSync(path.join(dir, 'index.html'), buildCustomPresetHtml(opts), 'utf8');
   fs.writeFileSync(path.join(dir, 'style.css'), buildCustomPresetCss(opts), 'utf8');
   fs.writeFileSync(path.join(dir, PRESET_OPTIONS_FILE), JSON.stringify({ name, ...values }, null, 2), 'utf8');
@@ -6222,7 +6403,7 @@ ipcMain.handle('create-custom-preset', async (event, opts = {}) => {
 */
 // Read from customPreset, which exports both: touching presetPackage here would load it (and its zip
 // library) on every start, for a constant.
-const PRESET_MARKERS = [PRESET_OPTIONS_FILE, customPreset.PRESET_PACKAGE_FILE];
+const PRESET_MARKERS = [PRESET_OPTIONS_FILE, customPreset.PRESET_PACKAGE_FILE, presetLayer.LAYER_FILE];
 const managedPresetMarker = (name) => PRESET_MARKERS.find((file) => fs.existsSync(path.join(usersPresetsDir(), name, file))) || '';
 
 // `editable` is what the builder can load back into its controls; an imported preset without
@@ -6233,7 +6414,10 @@ ipcMain.handle('list-custom-presets', async () => {
       .readdirSync(usersPresetsDir())
       .filter((name) => name !== PREVIEW_PRESET_NAME && managedPresetMarker(name))
       .sort((a, b) => a.localeCompare(b))
-      .map((name) => ({ name, editable: managedPresetMarker(name) === PRESET_OPTIONS_FILE }));
+      .map((name) => {
+        const marker = managedPresetMarker(name);
+        return { name, editable: marker === PRESET_OPTIONS_FILE || marker === presetLayer.LAYER_FILE, layered: marker === presetLayer.LAYER_FILE };
+      });
   } catch {
     return [];
   }
@@ -6248,11 +6432,116 @@ ipcMain.handle('list-custom-presets', async () => {
 ipcMain.handle('read-custom-preset', async (event, name) => {
   const safe = sanitizePresetName(name);
   if (!safe || !managedPresetMarker(safe)) return null;
+  if (managedPresetMarker(safe) === presetLayer.LAYER_FILE) return readLayeredPreset(safe);
   try {
     const parsed = JSON.parse(fs.readFileSync(path.join(usersPresetsDir(), safe, PRESET_OPTIONS_FILE), 'utf8'));
     return { name: safe, editable: true, ...customPresetNumbers(parsed) };
   } catch {
     return { name: safe, editable: false };
+  }
+});
+
+/*
+  Layered presets (util/presetLayer.js): a bundled preset plus a few overrides, stored as
+  aw-layer.json and the font/logo it names. Only bundled presets that run the shared engine can be a
+  base, and the base is always looked up by name in the bundled library.
+*/
+const layerBaseNames = () => {
+  const root = bundledPresetRoots()[0];
+  try {
+    return fs
+      .readdirSync(root)
+      .filter((name) => {
+        try {
+          return presetLayer.isLayerableHtml(fs.readFileSync(path.join(root, name, 'index.html'), 'utf8'));
+        } catch {
+          return false;
+        }
+      })
+      .sort((a, b) => a.localeCompare(b));
+  } catch {
+    return [];
+  }
+};
+
+ipcMain.handle('list-layer-bases', async () => layerBaseNames());
+
+// The base's own window size and stylesheet, which the designer needs to preview a layer over it.
+ipcMain.handle('read-layer-base', async (event, name) => {
+  const base = String(name || '');
+  if (!layerBaseNames().includes(base)) return null;
+  const folder = path.join(bundledPresetRoots()[0], base);
+  try {
+    const dimensions = getPresetDimensions(folder);
+    return { name: base, folder, width: dimensions.width, height: dimensions.height, css: fs.readFileSync(path.join(folder, 'style.css'), 'utf8') };
+  } catch {
+    return null;
+  }
+});
+
+function readLayeredPreset(name) {
+  try {
+    const layer = presetLayer.normalizeLayer(JSON.parse(fs.readFileSync(path.join(usersPresetsDir(), name, presetLayer.LAYER_FILE), 'utf8')));
+    return { name, editable: true, layered: true, base: layer.base, sections: layer.sections, ...layer.options };
+  } catch {
+    return { name, editable: false };
+  }
+}
+
+function dropStaleLayerAssets(dir, next) {
+  try {
+    const previous = presetLayer.layerAssets(JSON.parse(fs.readFileSync(path.join(dir, presetLayer.LAYER_FILE), 'utf8')));
+    for (const key of ['fontFile', 'logoImage']) {
+      const old = previous[key];
+      if (!old || old === next.fontFile || old === next.logoImage) continue;
+      const target = path.join(dir, old);
+      if (path.dirname(path.resolve(target)) === path.resolve(dir)) fs.rmSync(target, { force: true });
+    }
+  } catch {}
+}
+
+function writeLayeredPreset(name, request) {
+  const layer = presetLayer.normalizeLayer(request);
+  if (!layerBaseNames().includes(layer.base)) throw new Error('invalid-base');
+  const dir = path.join(usersPresetsDir(), name);
+  fs.mkdirSync(dir, { recursive: true });
+  // The scratch preview folder is reused between a layered and an ordinary draft.
+  for (const stale of ['index.html', 'style.css', PRESET_OPTIONS_FILE]) fs.rmSync(path.join(dir, stale), { force: true });
+  const assets = presetLayer.layerAssets(layer);
+  dropStaleLayerAssets(dir, assets);
+  copyPresetAsset(dir, assets.fontFile, userPresetFontsDir(), presetAssets.checkFont, 'font');
+  copyPresetAsset(dir, assets.logoImage, userPresetImagesDir(), presetAssets.checkLogo, 'logo');
+  const stored = { name, base: layer.base, sections: layer.sections, options: presetLayer.layerOptions(layer) };
+  fs.writeFileSync(path.join(dir, presetLayer.LAYER_FILE), JSON.stringify(stored, null, 2), 'utf8');
+  invalidateNotificationPresetFolders();
+  return dir;
+}
+
+ipcMain.handle('create-layered-preset', async (event, request = {}) => {
+  try {
+    const name = sanitizePresetName(request.name);
+    if (!name) return { ok: false, error: 'invalid-name' };
+    if (name === PREVIEW_PRESET_NAME) return { ok: false, error: 'reserved-name' };
+    const marker = managedPresetMarker(name);
+    // Saving over a preset the designer or an import made would swap its files for a layer.
+    if (marker && marker !== presetLayer.LAYER_FILE) return { ok: false, error: 'name-taken' };
+    if (!marker && findNotificationPresetFolder(name)) return { ok: false, error: 'name-taken' };
+    const existed = marker === presetLayer.LAYER_FILE;
+    debug.log('[custom-preset] wrote layer ' + writeLayeredPreset(name, request));
+    return { ok: true, name, replaced: existed };
+  } catch (err) {
+    debug.log('[custom-preset] layer failed: ' + (err.message || err));
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+
+ipcMain.handle('preview-layered-preset', async (event, request = {}) => {
+  try {
+    writeLayeredPreset(PREVIEW_PRESET_NAME, request);
+    return { ok: true, name: PREVIEW_PRESET_NAME };
+  } catch (err) {
+    debug.log('[custom-preset] layer preview failed: ' + (err.message || err));
+    return { ok: false, error: String(err.message || err) };
   }
 });
 
@@ -6360,6 +6649,7 @@ require('./presetLibrary.js').register({
   bundledPresetRoots,
   userSoundsDir,
   userPresetImagesDir,
+  userPresetFontsDir,
   findPresetFolder,
   invalidateNotificationPresetFolders,
   resolveSquareGameLogo,
@@ -6715,10 +7005,19 @@ try {
       }
       notifyUpdateError(message);
     });
-    autoUpdater.on('update-downloaded', (info) => {
+    autoUpdater.on('update-downloaded', async (info) => {
       updateDownloading = false;
       updateProgressLogged = -1;
       updateDownloadCancellation = null;
+      if (!isPortableBuild) {
+        // A cache hit skips electron-updater's own signature check, so every downloaded file is checked here.
+        const checked = await checkPendingInstaller(info.downloadedFile, null);
+        if (!checked.ok) {
+          await rejectPendingInstaller(info.downloadedFile, checked.reason);
+          return;
+        }
+        verifiedInstaller = { file: info.downloadedFile, digest: checked.digest };
+      }
       setUpdateStatus({ type: 'downloaded', version: info.version });
       promptDownloadedUpdate(info);
     });
@@ -6820,6 +7119,18 @@ try {
     // Long enough for the chip and the balloon to paint before the windows go away, short enough
     // that nobody experiences it as a hang. A failure to wait must never block the install.
     await new Promise((resolve) => setTimeout(resolve, INSTALL_HANDOVER_MS));
+    if (!isPortableBuild) {
+      // Last look before the installer runs: the same file, byte for byte, still signed by a pinned key.
+      const held = verifiedInstaller;
+      const sameFile = held && path.normalize(String(getUpdater().installerPath || '')).toLowerCase() === path.normalize(held.file).toLowerCase();
+      const checked = sameFile
+        ? await checkPendingInstaller(held.file, held.digest)
+        : { ok: false, reason: 'the installer to run is not the one that was verified' };
+      if (!checked.ok) {
+        await rejectPendingInstaller(held && held.file, checked.reason);
+        return;
+      }
+    }
     try {
       getUpdater().quitAndInstall(silent, true);
     } catch (err) {

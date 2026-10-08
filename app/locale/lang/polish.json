@@ -86,16 +86,25 @@
     "runUninstaller": "Uruchom deinstalator gry…",
     "deleteFolder": "Usuń folder gry (Kosz)…"
   },
+  "windowControls": {
+    "minimize": "Minimalizuj",
+    "maximize": "Maksymalizuj",
+    "close": "Zamknij"
+  },
   "settings": {
     "title": "Ustawienia",
     "sideMenu": {
       "general": "Ogólne",
       "notification": "Powiadomienia",
-      "presets": "Presety",
+      "presets": "Presety powiadomień",
       "souvenir": "Pamiątka",
       "folder": "Foldery",
       "source": "Źródło",
-      "advanced": "Zaawansowane"
+      "advanced": "Zaawansowane",
+      "groupApp": "Aplikacja",
+      "groupAlerts": "Alerty",
+      "groupLibrary": "Biblioteka",
+      "groupSupport": "Wsparcie"
     },
     "common": {
       "show": "Pokaż",
@@ -108,13 +117,17 @@
       "maintainedBy": "utrzymywane przez",
       "fork": "Fork",
       "original": "Oryginał v1.6.8",
-      "edit": "Edytuj"
+      "edit": "Edytuj",
+      "close": "Zamknij",
+      "unsaved": "Niezapisane zmiany"
     },
     "search": {
       "placeholder": "Szukaj ustawień…",
       "empty": "Żadne ustawienie nie pasuje do wyszukiwania.",
       "ariaLabel": "Szukaj w ustawieniach",
-      "clear": "Wyczyść"
+      "clear": "Wyczyść",
+      "advancedMore": "Jeszcze {count} w trybie zaawansowanym",
+      "advancedShow": "Pokaż zaawansowane"
     },
     "watchdog": {
       "startup": {
@@ -143,7 +156,7 @@
       "duration": "Czas trwania animacji"
     },
     "general": {
-      "sectionTitle": "Interfejs i zachowanie",
+      "sectionTitle": "Ustawienia na co dzień",
       "language": {
         "name": "Język",
         "description": "Język interfejsu. Dane gier są pobierane w tym języku, gdy są dostępne."
@@ -161,7 +174,7 @@
         }
       },
       "hiddenAch": {
-        "name": "Ukryte osiągnięcia",
+        "name": "Odkryj ukryte osiągnięcia",
         "description": "Ujawnij nazwę i opis ukrytych osiągnięć przed ich odblokowaniem."
       },
       "mergeDuplicates": {
@@ -264,6 +277,20 @@
         "name": "Trofea na profilu",
         "description": "Pokazuje trofea platynowe, złote, srebrne i brązowe pod twoim imieniem. Platyna to gra ukończona w 100%; pozostałe klasyfikują twoje osiągnięcia według liczby graczy, którzy je zdobyli."
       },
+      "rarityDisplay": {
+        "name": "Wyświetlanie rzadkości",
+        "description": "Poziomy rzadkości oznaczają tylko najrzadsze osiągnięcia. Tryb trofeów ocenia każde osiągnięcie jako złote, srebrne lub brązowe według odsetka odblokowań i pokazuje platynę przy ukończonych grach.",
+        "rare": "Poziomy rzadkości",
+        "trophy": "Tryb trofeów",
+        "goldBelow": {
+          "name": "Złote trofeum poniżej",
+          "description": "W trybie trofeów osiągnięcia odblokowane przez mniej graczy niż ten odsetek otrzymują złoto."
+        },
+        "silverBelow": {
+          "name": "Srebrne trofeum poniżej",
+          "description": "W trybie trofeów osiągnięcia poniżej tego odsetka otrzymują srebro; pozostałe, lub bez znanego odsetka, otrzymują brąz."
+        }
+      },
       "playButton": {
         "name": "Pokaż przycisk Graj",
         "description": "Pokazuje przycisk Graj na kafelkach gier. Wyłącz go, jeśli uruchamiasz gry z innego programu. Pozycja Uruchom grę w menu kontekstowym pozostaje dostępna."
@@ -302,7 +329,9 @@
           "name": "Przycisk ustawień gry",
           "description": "Pokazuje przycisk narzędzi w prawym górnym rogu grafiki. Ustawienia gry pozostają dostępne w menu kontekstowym."
         }
-      }
+      },
+      "appSectionTitle": "Aplikacja",
+      "trophySectionTitle": "Trofea i rzadkość"
     },
     "emulator": {
       "nav": "Naprawa emulatorów",
@@ -467,13 +496,13 @@
     },
     "notification": {
       "title": {
-        "common": "Wspólne",
+        "common": "Podstawy",
         "toast": "Powiadomienie systemu Windows",
-        "transport": "Transport",
+        "transport": "Integracje",
         "chromium": "Powiadomienie Chromium",
         "watchdog": "Watchdog",
         "test": "Test",
-        "overlay": "Powiadomienia"
+        "overlay": "Okno powiadomienia"
       },
       "info": {
         "toast": "Niektóre funkcje są dostępne tylko w systemie Windows 10",
@@ -602,6 +631,7 @@
             "easingOut": "Krzywa wyjścia",
             "entryDistance": "Dystans ruchu",
             "fontFamily": "Czcionka",
+            "fontFile": "Plik czcionki",
             "fontSize": "Rozmiar tekstu",
             "gap": "Odstęp",
             "glow": "Poświata",
@@ -613,6 +643,10 @@
             "iconSize": "Rozmiar ikony",
             "layout": "Rozmieszczenie",
             "letterSpacing": "Odstęp liter",
+            "logoImage": "Logo",
+            "logoOffset": "Odległość logo od krawędzi",
+            "logoPosition": "Położenie logo",
+            "logoSize": "Rozmiar logo",
             "opacity": "Przezroczystość",
             "padX": "Margines boczny",
             "padY": "Margines pionowy",
@@ -655,6 +689,10 @@
           "imported": "Zaimportowano i wybrano:",
           "importedOnly": "Zaimportowane ustawienie - możesz je tu wyeksportować lub usunąć; suwaki go nie zmienią.",
           "importSan": "Importuj motyw SAN",
+          "layer": {
+            "none": "Bez dostosowywania",
+            "title": "Dostosuj dołączone ustawienie"
+          },
           "load": "Edytuj ustawienie",
           "loaded": "Wczytano:",
           "name": "Nazwa",
@@ -700,6 +738,8 @@
             "artwork": "Grafika gry",
             "back": "Sprężysty",
             "bottom": "Dół",
+            "bottomLeft": "Lewy dół",
+            "bottomRight": "Prawy dół",
             "breathe": "Oddech",
             "center": "Środek",
             "circle": "Koło",
@@ -723,6 +763,7 @@
             "linear": "Liniowy",
             "lines": "Kreskowanie",
             "mono": "Stała szerokość",
+            "noFont": "Brak pliku czcionki",
             "noImage": "Brak obrazu",
             "noise": "Ziarno",
             "none": "Brak",
@@ -742,6 +783,8 @@
             "text": "Kolor tekstu",
             "textOnly": "Sam tekst",
             "top": "Góra",
+            "topLeft": "Lewa góra",
+            "topRight": "Prawa góra",
             "transparent": "Przezroczyste",
             "uppercase": "WIELKIE LITERY",
             "zoom": "Zbliżenie"
@@ -997,7 +1040,10 @@
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns przez mod MadnessPatch"
-      }
+      },
+      "groupStores": "Oficjalne launchery",
+      "groupEmulators": "Emulatory i patche",
+      "groupConsoles": "Konsole i retro"
     },
     "help": {
       "nav": "Pomoc",
@@ -1134,7 +1180,11 @@
         "goldbergTitle": "Goldberg / GBE Fork",
         "goldbergDesc": "Skanuje folder biblioteki gier w poszukiwaniu instalacji Goldberg / GBE Fork i oznacza te, którym brakuje schematu steam_settings/achievements.json. Użyj menu prawego przycisku gry (Diagnozuj / Napraw), aby naprawić jedną.",
         "scanFolder": "Skanuj folder…",
-        "exportLogs": "Eksportuj dzienniki (.zip)"
+        "exportLogs": "Eksportuj dzienniki (.zip)",
+        "profileBackupTitle": "Kopia zapasowa profilu",
+        "profileBackupDesc": "Zapisz ustawienia, wybory biblioteki, ustawienia wstępne, motywy, okładki i kopie zapasowe w jednym pliku, a potem przywróć je po ponownej instalacji lub na nowym komputerze. Dane logowania nigdy nie są zapisywane.",
+        "profileExport": "Eksportuj profil…",
+        "profileRestore": "Przywróć profil…"
       },
       "blacklistTitle": "Czarna lista AppID",
       "blacklistButton": "Resetuj czarną listę",
@@ -1176,28 +1226,28 @@
     "eyebrow": "Pierwsza konfiguracja",
     "close": "Zamknij",
     "steps": [
-      "Język",
-      "Jak to działa",
-      "Interfejs",
-      "Konto",
+      "Podstawy",
+      "Profil",
       "Gry",
-      "Źródło",
-      "Ustawienia"
+      "Źródła",
+      "Wygląd i alerty",
+      "Gotowe"
     ],
-    "languageTitle": "Wybierz język",
-    "languageCopy": "Gry, metadane, osiągnięcia i pamięci podręczne Steam będą wczytywane w tym języku od samego początku.",
+    "welcomeTitle": "Witaj w AW Next",
+    "welcomeCopy": "Dwa szybkie wybory na start. Wszystko można później zmienić w Ustawieniach, a resztę tego przewodnika możesz pominąć w dowolnej chwili.",
     "language": "Język gry i interfejsu",
     "languagePlaceholder": "Wybierz język…",
-    "languageHint": "Pierwsze ładowanie biblioteki rozpoczyna się dopiero po dokonaniu tego wyboru.",
-    "introTitle": "Jak to działa",
-    "scanTitle": "Skanuj",
-    "scanCopy": "Lokalizacje launcherów, emulatorów i plików osiągnięć są wykrywane automatycznie - każdą sprawdzasz przed pierwszym skanowaniem.",
-    "watchTitle": "Monitoruj",
-    "watchCopy": "Watchdog w tle rozpoznaje grę przy uruchomieniu, liczy czas gry i pilnuje jej plików osiągnięć.",
-    "fixTitle": "Napraw",
-    "fixCopy": "W emulowanych grach Steam poprawka z menu prawego przycisku instaluje GBE Fork i zapisuje schemat osiągnięć oraz dane DLC.",
+    "languageHint": "Gry, metadane, osiągnięcia i pamięci podręczne Steam ładują się w tym języku. Pierwsze ładowanie biblioteki rozpocznie się po tym wyborze.",
     "overlayTitle": "Nakładka w grze",
-    "overlayCopy": "Mały panel osiągnięć wywoływany nad grą skrótem klawiszowym - domyślnie Ctrl+Shift+K.",
+    "overlayCopy": "Naciśnij {hotkey} w grze, aby zobaczyć jej osiągnięcia na wierzchu.",
+    "collectionsTitle": "Kolekcje",
+    "collectionsCopy": "Grupuj gry we własnych kolekcjach z menu prawego przycisku myszy danej gry.",
+    "trophyTitle": "Tryb trofeów",
+    "trophyCopy": "Oceniaj osiągnięcia złotem, srebrem lub brązem według rzadkości. Włączysz to w Ustawieniach.",
+    "clipsTitle": "Klipy wideo",
+    "clipsCopy": "Zachowuj krótki klip wokół każdego odblokowania. Włączysz to w Ustawieniach, w sekcji Powiadomienia.",
+    "backupTitle": "Kopia zapasowa profilu",
+    "backupCopy": "Zapisz swoje ustawienia i wybory biblioteki w jednym pliku i przywróć je po ponownej instalacji.",
     "profileTitle": "Profil",
     "profileCopy": "Wybierz nazwę wyświetlaną w nagłówku i opcjonalnie ustaw lokalnego awatara.",
     "username": "Nazwa wyświetlana",
@@ -1205,8 +1255,21 @@
     "avatarPick": "Wybierz zdjęcie",
     "avatarDefault": "Domyślne",
     "avatarHint": "Opcjonalne. Przechowywane lokalnie na tym komputerze.",
-    "foldersTitle": "Dodaj gry na dysku",
-    "foldersCopy": "Użyj Inteligentnego wyszukiwania, aby automatycznie wykryć foldery zapisów/konfiguracji i biblioteki gier. Albo dodaj je ręcznie według typu folderu.",
+    "foldersTitle": "Twoje gry",
+    "foldersCopy": "AW Next szuka gier na tym komputerze i pokazuje, co znajdzie. Dodaj folder tylko wtedy, gdy czegoś brakuje.",
+    "detectTitle": "Znaleziono na tym komputerze",
+    "detectInstalled": "Zainstalowane: {count}",
+    "detectNone": "Nic nie znaleziono",
+    "detectOff": "wyłączone",
+    "detectEmulators": "Zapisy emulatorów",
+    "detectFolders": "Gry: {games} · Foldery: {folders}",
+    "detectTotal": "Znalezione gry: {count}",
+    "detectNothing": "Nie znaleziono jeszcze żadnych gier",
+    "detectSteamOff": "Twoje gry ze Steam pozostaną ukryte, dopóki nie włączysz Steam w sekcji Źródła.",
+    "detectReviewSources": "Sprawdź źródła",
+    "smartFound": "Znalezione nowe foldery: {count}",
+    "smartNone": "Nie znaleziono nowych folderów.",
+    "folderGames": "Znalezione gry w tym folderze: {count}",
     "addSave": "Dodaj folder zapisu",
     "smartFind": "Inteligentne wyszukiwanie",
     "addLibrary": "Dodaj folder biblioteki",
@@ -1216,12 +1279,22 @@
     "saveList": "Foldery zapisów/konfiguracji",
     "libraryList": "Foldery biblioteczne",
     "emptyList": "Nie dodano nic w tej sesji.",
-    "settingsTitle": "Zalecane ustawienia",
-    "settingsCopy": "Najważniejsze ustawienia biblioteki, wyglądu i powiadomień. Wszystko można zmienić później.",
-    "summarySources": "Włączone źródła",
+    "settingsTitle": "Wygląd i alerty",
+    "settingsCopy": "Wybierz motyw i sposób wyświetlania alertów o odblokowaniu. Użyj opcji Testuj powiadomienie, aby od razu zobaczyć jeden z nich.",
+    "moreOptions": "Więcej opcji",
+    "readyTitle": "Wszystko gotowe",
+    "readyCopy": "AW Next obserwuje teraz Twoje gry w tle i da Ci znać, gdy coś odblokujesz.",
+    "featuresTitle": "Warto wiedzieć",
+    "summarySources": "Włączone źródła: {count}",
+    "summaryAccounts": "Zalogowano: {names}",
+    "summaryGames": "Znalezione gry: {count} · Obserwowane foldery: {folders}",
+    "summaryNoGames": "Nie znaleziono jeszcze żadnych gier. Foldery możesz dodać później w Ustawieniach.",
+    "summaryLook": "Motyw: {theme} · Powiadomienia: {notifications}",
+    "summaryChange": "Zmień",
     "summaryReopen": "Możesz ponownie otworzyć ten przewodnik w dowolnym momencie w Ustawienia > Ogólne.",
     "sourcesTitle": "Skąd pochodzą twoje osiągnięcia",
-    "sourcesCopy": "Każde z nich jest odczytywane na tym komputerze. Wyłącz to, czego nie używasz; wszystko nadal można zmienić w Ustawieniach.",
+    "sourcesCopy": "Każde źródło zainstalowane na tym komputerze jest odczytywane automatycznie, więc ustawienia domyślne wystarczą. Zaloguj się poniżej tylko wtedy, gdy chcesz więcej.",
+    "sourcesMore": "Dostosuj źródła (włączone: {count})",
     "accountsTitle": "Konta (opcjonalnie)",
     "accountsCopy": "Zaloguj się, aby odczytywać odblokowania z prywatnego profilu Steam, dodać gry z Twojej Rodziny Steam, zaimportować swoją bibliotekę Xbox PC i pokazać swój postęp w Epic. Możesz pominąć ten krok i połączyć się później w Ustawienia > Źródło.",
     "sourcesEmulators": "Emulatory",
@@ -1253,6 +1326,8 @@
     "next": "Następny",
     "finish": "Zakończ",
     "skip": "Pomiń",
+    "skipSetup": "Pomiń konfigurację",
+    "saveClose": "Zapisz i zamknij",
     "saving": "Zapisywanie…",
     "saved": "Konfiguracja została zapisana.",
     "languageRequired": "Wybierz język, aby kontynuować.",
@@ -1324,7 +1399,28 @@
     "controllerMove": "Przesuń/przewiń"
   },
   "dialogs": {
+    "collections": "Kolekcje",
+    "collection-all": "Wszystkie gry",
+    "collection-new": "Nowa kolekcja…",
+    "collection-edit": "Edytuj kolekcję…",
+    "collection-name": "Nazwa kolekcji",
+    "collection-default-name": "Nowa kolekcja",
+    "collection-field-name": "Nazwa",
+    "collection-field-color": "Kolor",
+    "collection-field-icon": "Ikona",
+    "collection-field-image": "Obraz",
+    "collection-choose-image": "Wybierz obraz…",
+    "collection-remove-image": "Usuń obraz",
+    "collection-delete": "Usuń kolekcję",
+    "collection-delete-confirm": "Usunąć kolekcję \"{name}\"? Gry pozostaną w Twojej bibliotece.",
+    "collection-limit": "Osiągnięto limit {count} kolekcji.",
+    "collection-image-error": "Nie można użyć tego obrazu. Wybierz plik PNG, JPEG, GIF lub WebP mniejszy niż 5 MB.",
     "choose-preset-image": "Wybierz obraz tła",
+    "choose-preset-font": "Wybierz plik czcionki",
+    "choose-preset-logo": "Wybierz logo",
+    "preset-font-refused": "Ten plik nie jest użyteczną czcionką. Użyj pliku TTF, OTF, WOFF lub WOFF2 o rozmiarze do 4 MB.",
+    "preset-logo-refused": "Ten plik nie jest użytecznym logo. Użyj obrazu PNG, JPEG, GIF, WebP lub BMP o rozmiarze do 2 MB.",
+    "preset-layer-note": "Dostosowywanie: {preset}. Zaznacz sekcję, aby ją zmienić; wszystko, czego nie zaznaczysz, pozostaje takie, jak w dołączonym ustawieniu. Twoje zmiany są nałożone na wierzch: dołączone ustawienie nie jest kopiowane ani modyfikowane.",
     "folder-reason-ea-app": "To wydanie uruchamiane przez EA app. Gra startowana z EA app przechowuje osiągnięcia na koncie EA, a nie w folderze gry, więc nie ma tu żadnego pliku odblokowań do odczytania. Takie osiągnięcia pobiera źródło EA w Ustawienia > Źródła, a nie obserwowany folder.",
     "folder-reason-game-no-data": "To folder gry, ale nie zawiera żadnej konfiguracji emulatora ani pliku odblokowań w formacie, który AW Next potrafi odczytać.",
     "folder-reason-unreadable": "Nie udało się odczytać tego folderu.",
@@ -2175,6 +2271,31 @@
     "export-logs-done": "Zapisano plików dziennika: {count} - w {path}",
     "export-logs-failed": "Nie udało się wyeksportować dzienników: {error}",
     "zip-archive": "Archiwum zip",
+    "profile-backup-file-type": "Kopia zapasowa profilu AW Next",
+    "profile-backup-export-title": "Eksportuj profil",
+    "profile-backup-restore-title": "Przywróć profil",
+    "profile-backup-exporting": "Eksportowanie profilu… {percent}%",
+    "profile-backup-export-done": "Profil zapisano w {path} (plików: {count}, {size}).",
+    "profile-backup-export-failed": "Nie udało się wyeksportować profilu: {error}",
+    "profile-backup-restore-confirm": "Przywrócić ten profil?",
+    "profile-backup-restore-confirm-detail": "Kopia zapasowa zawiera plików: {count} ({size}), zapisana {date}. Bieżące ustawienia, ustawienia wstępne, motywy i okładki zostaną zastąpione tymi z kopii. Zastępowane pliki zostają zachowane, a nieudane przywracanie jest cofane. AW Next uruchomi się ponownie, aby je zastosować.",
+    "profile-backup-restore-button": "Przywróć i uruchom ponownie",
+    "profile-backup-checking": "Sprawdzanie kopii zapasowej… {percent}%",
+    "profile-backup-restarting": "Kopia zapasowa sprawdzona. Ponowne uruchamianie w celu zastosowania…",
+    "profile-backup-restore-failed": "Nie udało się przywrócić profilu: {error}",
+    "profile-backup-applied": "Profil przywrócony (plików: {count}).",
+    "profile-backup-applied-signin": "Dane logowania nigdy nie są zapisywane w kopii zapasowej. Zaloguj się ponownie do: {accounts}.",
+    "profile-backup-applied-signin-generic": "Dane logowania nigdy nie są zapisywane w kopii zapasowej. Zaloguj się ponownie na wszystkie konta, które były połączone.",
+    "profile-backup-apply-failed": "Nie udało się przywrócić profilu. Poprzednie pliki zostały przywrócone na miejsce. Szczegóły: {error}",
+    "profile-backup-account-emulator": "Logowanie do Steam dla narzędzi emulatora",
+    "profile-backup-error-invalid": "Ten plik nie jest kopią zapasową profilu AW Next.",
+    "profile-backup-error-too-new": "Ta kopia zapasowa została utworzona w nowszej wersji AW Next. Najpierw zaktualizuj aplikację.",
+    "profile-backup-error-corrupt": "Ta kopia zapasowa jest uszkodzona lub została zmodyfikowana.",
+    "profile-backup-error-unsafe": "Ta kopia zapasowa zawiera pliki, których nie można bezpiecznie przywrócić.",
+    "profile-backup-error-too-large": "Ta kopia zapasowa jest większa, niż AW Next może przywrócić.",
+    "profile-backup-error-empty": "Nie ma jeszcze nic do umieszczenia w kopii zapasowej.",
+    "profile-backup-error-busy": "Tworzenie kopii zapasowej już trwa.",
+    "profile-backup-error-inside": "Wybierz lokalizację poza folderem danych AW Next.",
     "theme-layer-opacity": "Krycie",
     "chooseAnotherIconTitle": "Wybierz inną ikonę",
     "chooseAnotherIcon": "Wybierz inną ikonę…",
@@ -2243,6 +2364,7 @@
     "profile-trophies-share": "{percent} twoich osiągnięć",
     "profile-trophies-unranked": "{count} bez znanego wskaźnika",
     "profile-trophies-at-most": "{percent} lub mniej",
+    "profile-trophies-under": "poniżej {percent}",
     "profile-trophies-between": "od {from} do {to}",
     "profile-trophies-above": "powyżej {percent}, lub nieznany",
     "profile-trophies-platinum-games": "Gry z platyną",

@@ -81,6 +81,10 @@ const payloadFor = (state) => {
   if (state === 'rare-gold') return { ...base, notificationType: 'achievement', rarityPercent: 1.4 };
   if (state === 'rare-silver') return { ...base, notificationType: 'achievement', rarityPercent: 7.5 };
   if (state === 'rare-bronze') return { ...base, notificationType: 'achievement', rarityPercent: 12.8 };
+  // The host names the tier itself; in trophy mode that is a grade the percentage could never give.
+  if (state === 'host-silver') return { ...base, notificationType: 'achievement', rarityPercent: 40, rarityTier: 'silver', rarityMode: 'trophy' };
+  if (state === 'host-bronze-unknown') return { ...base, notificationType: 'achievement', rarityPercent: null, rarityTier: 'bronze', rarityMode: 'trophy' };
+  if (state === 'host-none') return { ...base, notificationType: 'achievement', rarityPercent: 3, rarityTier: '', rarityMode: 'rare' };
   if (state === 'platinum') return { ...base, notificationType: 'platinum', isPlatinum: true };
   // What an ordinary unlock actually carries: the app sends null when it knows no rarity.
   if (state === 'no-rarity') return { ...base, notificationType: 'achievement', rarityPercent: null };
@@ -248,6 +252,19 @@ test('a designed preset renders every property it was given', { concurrency: 1, 
       assert.equal(bronze.accent, '#cd7f32');
     });
 
+    await t.test('the tier the host names wins over the percentage', async () => {
+      const design = { accent: '#4aa3ff', rareSilver: '#9fb2cc', rareBronze: '#cd7f32' };
+      const silver = await renderPreset(page, design, 'host-silver');
+      assert.match(silver.classes, /state-rare/);
+      assert.match(silver.classes, /tier-silver/);
+      assert.equal(silver.accent, '#9fb2cc');
+      const bronze = await renderPreset(page, design, 'host-bronze-unknown');
+      assert.match(bronze.classes, /tier-bronze/);
+      assert.equal(bronze.accent, '#cd7f32');
+      const none = await renderPreset(page, design, 'host-none');
+      assert.doesNotMatch(none.classes, /state-rare|tier-/, 'a host that names no tier must not be overruled by the percentage');
+    });
+
     await t.test('a 100% completion has its own colour, and progress never borrows a state', async () => {
       const design = { platinumAccent: '#cfe3ff', platinumGlow: 70 };
       const platinum = await renderPreset(page, design, 'platinum');
@@ -370,6 +387,42 @@ test('a designed preset renders every property it was given', { concurrency: 1, 
         assert.ok(Number(moving.glowPulse) > 0 && Number(moving.glowPulse) <= 1, 'the animation must only ever dim the glow');
         assert.match(moving.boxShadow, /rgb/, 'the glow is no longer painted while it animates');
       }
+    });
+
+    await t.test('a preset paints its own font and its logo, and shows neither by default', async () => {
+      const fontFile = path.join(appDir, 'presets', 'Default Presets', 'PlayStation', 'SST.ttf');
+      const fontUri = `data:font/ttf;base64,${fs.readFileSync(fontFile).toString('base64')}`;
+      const assetUrl = (name) => (name.endsWith('.ttf') ? fontUri : SAMPLE_IMAGE);
+
+      const plain = await renderPreset(page, {});
+      assert.doesNotMatch(plain.fontFamily, /AW Custom Font/);
+      const none = await page.evaluate(() => getComputedStyle(document.querySelector('.ach'), '::after').backgroundImage);
+      assert.equal(none, 'none', 'a preset with no logo must not draw one');
+
+      const designed = await renderPreset(page, { fontFile: 'Face.ttf', logoImage: 'mark.png', logoPosition: 'bottom-right', logoSize: 30, logoOffset: 6 }, 'normal', assetUrl);
+      assert.match(designed.fontFamily, /^"AW Custom Font"/);
+      const painted = await page.evaluate(async () => {
+        await document.fonts.ready;
+        const layer = getComputedStyle(document.querySelector('.ach'), '::after');
+        return {
+          loaded: document.fonts.check('16px "AW Custom Font"'),
+          faces: [...document.fonts].map((face) => `${face.family}:${face.status}`),
+          image: layer.backgroundImage,
+          position: layer.backgroundPosition,
+          size: layer.backgroundSize,
+        };
+      });
+      assert.equal(painted.loaded, true, `the font file did not load (${painted.faces.join(', ')})`);
+      assert.match(painted.image, /^url\("data:image\/png/);
+      assert.equal(painted.position, 'calc(100% - 6px) calc(100% - 6px)', 'the logo is not anchored to the bottom right corner');
+      assert.equal(painted.size, 'auto 30px');
+
+      // The text still sits above the layer: the logo is decoration, not a cover over the title.
+      const order = await page.evaluate(() => ({
+        title: getComputedStyle(document.querySelector('.text_wrap')).zIndex,
+        position: getComputedStyle(document.querySelector('.text_wrap')).position,
+      }));
+      assert.deepEqual(order, { title: '1', position: 'relative' });
     });
 
     await t.test('a title too long to fit is scrolled inside the card, never over it', async () => {
