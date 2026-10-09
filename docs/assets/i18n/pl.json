@@ -176,7 +176,7 @@
   "install.step3Body": "To jest nadzorca. Powiadomienia na żywo i czas gry zależą od tego, czy działa.",
   "install.step3Title": "Zostaw go w zasobniku",
   "install.title": "Uruchomienie",
-  "install.virustotal": "Bieżący instalator w <a href=\"https://www.virustotal.com/gui/file/faf0ae445f8abb1265312fdfda196fcdbce9af7ec8cb19164fa1a52f891570b7\" rel=\"noopener\">VirusTotal</a>. Nieliczne wykrycia heurystyczne to fałszywy alarm związany z emulatorami; każde wydanie możesz sprawdzić samodzielnie, porównując jego SHA-256.",
+  "install.virustotal": "Bieżący instalator w <a href=\"https://www.virustotal.com/gui/file/3600cc5d179f056277e54676121f1a671603719d5e01fc2e1974dfdde2f48cf5\" rel=\"noopener\">VirusTotal</a>. Nieliczne wykrycia heurystyczne to fałszywy alarm związany z emulatorami; każde wydanie możesz sprawdzić samodzielnie, porównując jego SHA-256.",
   "more.backupBody": "Ustawienia, wybory w bibliotece, presety, motywy i czas gry w jednym pliku, na potrzeby ponownej instalacji lub nowego komputera.",
   "more.backupTitle": "Kopia profilu",
   "more.clipsBody": "Krótki klip wokół każdego odblokowania, razem z okienkiem, jak filmik z trofeum na konsoli. Wyłączone, dopóki go nie włączysz.",

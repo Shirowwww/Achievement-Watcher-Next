@@ -176,7 +176,7 @@
   "install.step3Body": "É ele que vigia. As notificações ao vivo e o tempo de jogo dependem disso.",
   "install.step3Title": "Deixe na bandeja",
   "install.title": "Colocando para rodar",
-  "install.virustotal": "O instalador atual no <a href=\"https://www.virustotal.com/gui/file/faf0ae445f8abb1265312fdfda196fcdbce9af7ec8cb19164fa1a52f891570b7\" rel=\"noopener\">VirusTotal</a>. As poucas detecções heurísticas são o falso positivo dos emuladores; verifique você mesmo qualquer versão comparando o SHA-256 dela.",
+  "install.virustotal": "O instalador atual no <a href=\"https://www.virustotal.com/gui/file/3600cc5d179f056277e54676121f1a671603719d5e01fc2e1974dfdde2f48cf5\" rel=\"noopener\">VirusTotal</a>. As poucas detecções heurísticas são o falso positivo dos emuladores; verifique você mesmo qualquer versão comparando o SHA-256 dela.",
   "more.backupBody": "Configurações, escolhas da biblioteca, predefinições, temas e tempo de jogo em um só arquivo, para uma reinstalação ou um PC novo.",
   "more.backupTitle": "Backup do perfil",
   "more.clipsBody": "Um clipe curto em torno de cada desbloqueio, com o popup incluído, como o vídeo de troféu de um console. Desligado até você ativar.",

@@ -176,7 +176,7 @@
   "install.step3Body": "Quello è il sorvegliante. Le notifiche in tempo reale e il tempo di gioco dipendono dal fatto che resti in esecuzione.",
   "install.step3Title": "Lascialo nell'area di notifica",
   "install.title": "Metterlo in funzione",
-  "install.virustotal": "Il programma di installazione attuale su <a href=\"https://www.virustotal.com/gui/file/faf0ae445f8abb1265312fdfda196fcdbce9af7ec8cb19164fa1a52f891570b7\" rel=\"noopener\">VirusTotal</a>. Le poche rilevazioni euristiche sono il falso positivo degli emulatori; verifica tu stesso qualsiasi versione confrontando il suo SHA-256.",
+  "install.virustotal": "Il programma di installazione attuale su <a href=\"https://www.virustotal.com/gui/file/3600cc5d179f056277e54676121f1a671603719d5e01fc2e1974dfdde2f48cf5\" rel=\"noopener\">VirusTotal</a>. Le poche rilevazioni euristiche sono il falso positivo degli emulatori; verifica tu stesso qualsiasi versione confrontando il suo SHA-256.",
   "more.backupBody": "Impostazioni, scelte della libreria, preset, temi e tempo di gioco in un solo file, per una reinstallazione o un nuovo PC.",
   "more.backupTitle": "Backup del profilo",
   "more.clipsBody": "Una breve clip attorno a ogni sblocco, popup compreso, come il video trofeo di una console. Disattivata finché non la attivi.",

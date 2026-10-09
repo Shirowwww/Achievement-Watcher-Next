@@ -176,7 +176,7 @@
   "install.step3Body": "C'est lui la surveillance. Les notifications en direct et le temps de jeu en dépendent.",
   "install.step3Title": "Laisse l'icône dans la zone de notification",
   "install.title": "La mettre en route",
-  "install.virustotal": "L’installateur actuel sur <a href=\"https://www.virustotal.com/gui/file/faf0ae445f8abb1265312fdfda196fcdbce9af7ec8cb19164fa1a52f891570b7\" rel=\"noopener\">VirusTotal</a>. Les quelques détections heuristiques sont le faux positif lié aux émulateurs ; vérifie toi-même n’importe quelle version en comparant son SHA-256.",
+  "install.virustotal": "L’installateur actuel sur <a href=\"https://www.virustotal.com/gui/file/3600cc5d179f056277e54676121f1a671603719d5e01fc2e1974dfdde2f48cf5\" rel=\"noopener\">VirusTotal</a>. Les quelques détections heuristiques sont le faux positif lié aux émulateurs ; vérifie toi-même n’importe quelle version en comparant son SHA-256.",
   "more.backupBody": "Paramètres, choix de la bibliothèque, presets, thèmes et temps de jeu dans un seul fichier, pour une réinstallation ou un nouveau PC.",
   "more.backupTitle": "Sauvegarde du profil",
   "more.clipsBody": "Un court clip autour de chaque déblocage, popup comprise, comme la vidéo de trophée d'une console. Désactivé tant que tu ne l'actives pas.",
