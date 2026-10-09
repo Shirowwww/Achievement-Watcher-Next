@@ -2479,5 +2479,103 @@
     "playedFor": "{duration} 플레이했습니다",
     "trackingPlaytime": "플레이 시간 기록 중",
     "playtime": "플레이 시간"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "데스크톱 세션에 로그인하면 AW Next를 자동으로 실행하고 트레이에 숨깁니다."
+          },
+          "uninstallMenu": {
+            "description": "게임 타일의 오른쪽 클릭 메뉴에 제거 항목을 추가합니다(Steam 제거, 게임 제거 프로그램, 폴더를 휴지통으로 이동)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "데스크톱 알림"
+          },
+          "info": {
+            "toast": "이 섹션의 일부 옵션은 Windows에서만 작동합니다"
+          },
+          "test": {
+            "toast": "데스크톱 알림"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "데스크톱 알림"
+              }
+            },
+            "platinum": {
+              "description": "게임 달성률이 100%가 되면 전용 데스크톱 알림을 표시합니다"
+            },
+            "mode": {
+              "description": "자동은 게임 내 오버레이를 표시할 수 있으면 오버레이를, 그럴 수 없으면 데스크톱 알림을 사용합니다. 나머지 항목은 항상 선택한 방식만 사용합니다.",
+              "value": {
+                "toast": "데스크톱 알림"
+              }
+            },
+            "customToastAudio": {
+              "name": "데스크톱 알림 소리",
+              "description": "데스크톱 알림이 표시될 때 재생할 소리를 지정합니다"
+            },
+            "toastSouvenir": {
+              "name": "데스크톱 알림 기념 스크린샷",
+              "description": "Windows 전용: 알림 안에 기념 스크린샷을 표시합니다."
+            },
+            "groupToast": {
+              "description": "Windows 전용: 같은 게임에서 온 알림을 알림 센터에서 시각적으로 묶습니다."
+            },
+            "urgent": {
+              "description": "방해 금지가 켜져 있어도 도전 과제 달성 알림이 표시되도록 합니다. 중요 알림으로 전송되며, 대부분의 데스크톱은 이를 허용합니다."
+            },
+            "useToast": {
+              "name": "데스크톱 알림",
+              "description": "데스크톱에서 표시하는 시스템 알림"
+            },
+            "useWinRT": {
+              "description": "Windows 전용. Linux에서는 효과가 없습니다."
+            },
+            "useBalloon": {
+              "description": "Windows 전용. Linux에서는 효과가 없습니다."
+            },
+            "souvenirHdrDesc": "Windows 전용: Windows HDR이 켜져 있을 때 색을 보정합니다. Linux에서는 일반 스크린샷을 저장합니다."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "설정, 캐시, 로그, 사용자 지정 테마 등 모든 데이터는 ~/.config/Achievement Watcher Next에 들어 있습니다."
+          },
+          "notifications": {
+            "0": "기본값은 자동입니다. 게임이 표시할 수 있으면 게임 내 팝업, 표시할 수 없으면 데스크톱 알림이 사용되며 둘이 함께 나오지는 않습니다.",
+            "3": "달성 시 스크린샷은 그 순간의 이미지를 ~/Pictures/Achievement Watcher Next 폴더에 저장합니다."
+          },
+          "troubleshoot": {
+            "1": "알림이 뜨지 않으면 데스크톱에서 방해 금지가 꺼져 있는지, 그리고 데스크톱의 알림 설정이 AW Next를 차단하고 있지 않은지 확인하세요."
+          },
+          "sources": {
+            "2": "보유 중인 Steam 게임은 Steam 자체 파일에서 확인될 때만 설치된 것으로 간주합니다."
+          },
+          "steam": {
+            "0": "GBE / Goldberg 저장 파일은 보통 게임의 Wine 또는 Proton 프리픽스 안의 AppData/Roaming/GSE Saves에 있으며, 네이티브 Linux 게임은 ~/.local/share/GSE Saves에 있습니다."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "달성 알림이 어디에 표시될지 정합니다. 자동은 오버레이와 데스크톱 알림 중에서 알아서 고릅니다.",
+        "toast": "데스크톱 알림"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "게임 폴더 삭제(휴지통)…",
+        "move-x-s-folder-to-the-recycle-bin": "“{name}”의 폴더를 휴지통으로 옮길까요?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "이 폴더에서 제거 프로그램을 찾지 못했습니다. 파일은 휴지통으로 옮겨지므로 되돌릴 수 있습니다.",
+        "deleting-game-folder": "휴지통으로 옮기는 중…",
+        "could-not-move-the-folder-to-the-recycle-bin": "폴더를 휴지통으로 옮기지 못했습니다.",
+        "delete-permanently-detail": "영구 삭제는 휴지통을 거치지 않습니다. 파일을 복원할 수 없습니다.",
+        "delete-recycle-bin-refused": "시스템이 이 폴더를 휴지통으로 옮기지 못했습니다. 파일이 아직 열려 있거나, 드라이브에 휴지통이 없거나(이동식 또는 네트워크 드라이브), 폴더에 쓸 수 없을 때 발생합니다.",
+        "gh-simple-notifications-fallback": "정상 - 데스크톱 알림 대체 방식 사용 중"
+      }
+    }
   }
 }

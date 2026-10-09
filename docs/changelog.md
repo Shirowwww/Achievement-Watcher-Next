@@ -18,6 +18,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Added
 
+- **AW Next on Linux.** A native Linux build watches the games you run through Wine, Proton,
+  Lutris, Heroic or Bottles, plus native games, from their save folders and processes. Unlocks
+  appear in the in-game overlay or as desktop notifications, with their sound, playtime is
+  tracked, and the app can start with your desktop session. On Linux the interface speaks of
+  desktop notifications, the Trash and Linux folders instead of their Windows counterparts.
 - **RetroAchievements games found on disk.** A game whose ROM RetroArch knows, from its history or
   a scanned playlist, now counts as installed and opens on the ROM's folder.
 - **A new installer and uninstaller.** One window in AW Next's own look replaces the Windows

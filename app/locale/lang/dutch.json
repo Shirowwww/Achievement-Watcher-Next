@@ -2479,5 +2479,103 @@
     "playedFor": "Je hebt {duration} gespeeld",
     "trackingPlaytime": "Speeltijd bijhouden",
     "playtime": "Speeltijd"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Start AW Next automatisch zodra je inlogt op je bureaubladsessie, verborgen in het systeemvak."
+          },
+          "uninstallMenu": {
+            "description": "Voegt opties om te verwijderen toe aan het rechtsklikmenu van gametegels (verwijderen via Steam, het verwijderprogramma van de game, of de map naar de Prullenbak verplaatsen)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Bureaubladmelding"
+          },
+          "info": {
+            "toast": "Sommige opties in dit onderdeel werken alleen in Windows"
+          },
+          "test": {
+            "toast": "Bureaubladmelding"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Bureaubladmelding"
+              }
+            },
+            "platinum": {
+              "description": "Stuur een aparte bureaubladmelding zodra een game 100% voltooid is"
+            },
+            "mode": {
+              "description": "Automatisch gebruikt de in-game overlay wanneer die getoond kan worden en anders een bureaubladmelding. De andere keuzes gebruiken altijd wat jij aanwijst.",
+              "value": {
+                "toast": "Bureaubladmelding"
+              }
+            },
+            "customToastAudio": {
+              "name": "Geluid van de bureaubladmelding",
+              "description": "Bepaalt welk geluid klinkt wanneer er een bureaubladmelding verschijnt"
+            },
+            "toastSouvenir": {
+              "name": "Souvenir in de bureaubladmelding",
+              "description": "Alleen Windows: toont de souvenirscreenshot in de melding."
+            },
+            "groupToast": {
+              "description": "Alleen Windows: groepeert meldingen van dezelfde game in het Actiecentrum."
+            },
+            "urgent": {
+              "description": "Laat ontgrendelde prestaties ook verschijnen terwijl Niet storen actief is. Ze worden verstuurd als kritieke meldingen, die de meeste bureaubladen doorlaten."
+            },
+            "useToast": {
+              "name": "Bureaubladmelding",
+              "description": "Systeemmelding die je bureaublad toont"
+            },
+            "useWinRT": {
+              "description": "Alleen Windows. Heeft geen effect op Linux."
+            },
+            "useBalloon": {
+              "description": "Alleen Windows. Heeft geen effect op Linux."
+            },
+            "souvenirHdrDesc": "Alleen Windows: corrigeert de kleuren wanneer HDR van Windows actief is. Op Linux wordt de gewone screenshot opgeslagen."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Alles (instellingen, caches, logboeken, eigen thema's) staat in ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Automatisch is de standaard: de pop-up in de game als de game die kan tonen, anders een bureaubladmelding, nooit allebei.",
+            "3": "Schermafbeelding bij ontgrendeling bewaart een beeld van het moment in ~/Pictures/Achievement Watcher Next."
+          },
+          "troubleshoot": {
+            "1": "Verschijnen er geen meldingen: controleer of Niet storen op je bureaublad uitstaat en of de meldingsinstellingen ervan AW Next niet blokkeren."
+          },
+          "sources": {
+            "2": "Steam-games in je bezit tellen pas als geïnstalleerd wanneer de eigen bestanden van Steam dat bevestigen."
+          },
+          "steam": {
+            "0": "Saves van GBE / Goldberg staan meestal in AppData/Roaming/GSE Saves binnen het Wine- of Proton-prefix van de game, of in ~/.local/share/GSE Saves voor een native Linux-game."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Waar ontgrendelingen verschijnen. Automatisch kiest de overlay of een bureaubladmelding voor je.",
+        "toast": "Bureaubladmelding"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Gamemap verwijderen (Prullenbak)…",
+        "move-x-s-folder-to-the-recycle-bin": "De map van “{name}” naar de Prullenbak verplaatsen?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "In deze map staat geen verwijderprogramma. De bestanden gaan naar de Prullenbak (dus terug te halen).",
+        "deleting-game-folder": "Naar de Prullenbak verplaatsen…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Kon de map niet naar de Prullenbak verplaatsen.",
+        "delete-permanently-detail": "Definitief verwijderen slaat de Prullenbak over: de bestanden kunnen niet worden hersteld.",
+        "delete-recycle-bin-refused": "Het systeem weigerde deze map naar de Prullenbak te verplaatsen. Dat gebeurt wanneer een bestand nog geopend is, wanneer het station geen Prullenbak heeft (verwisselbaar station of netwerkstation) of wanneer je niet naar de map kunt schrijven.",
+        "gh-simple-notifications-fallback": "Werkt - terugval op bureaubladmelding actief"
+      }
+    }
   }
 }

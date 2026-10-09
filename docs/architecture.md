@@ -1,6 +1,6 @@
 # Architecture
 
-AW Next is a Windows-only Electron application with a separate background monitor. This page describes the boundaries that matter when changing the project.
+AW Next is an Electron application for Windows with a separate background monitor; a Linux port is in progress (see [Windows and Linux](#windows-and-linux)). This page describes the boundaries that matter when changing the project.
 
 ## Runtime overview
 
@@ -12,10 +12,33 @@ Electron main process
 └── starts the Watchdog with ELECTRON_RUN_AS_NODE
     ├── watches processes and achievement files
     ├── tracks playtime
-    └── dispatches Windows notifications and overlay events
+    └── dispatches desktop notifications and overlay events
 ```
 
 Electron's bundled Node runtime runs both processes. The installed app does not ship a second Node or NW.js executable.
+
+## Windows and Linux
+
+Windows is the platform every release is built and validated on, and Linux code never changes what
+Windows does: it sits behind `process.platform` or behind the host layer below. On Linux AW Next is
+a native app. It never starts Wine; Windows games running under Wine or Proton are found through
+their files inside each prefix and through `/proc`.
+
+| Concern | Windows | Linux |
+|---|---|---|
+| Profile folders (`APPDATA`, `LOCALAPPDATA`, Documents...) | this machine, from the environment and the registry | one host per Wine/Proton/Lutris/Heroic/Bottles prefix and user, plus a native host on the XDG folders (`app/util/winHosts.js`, `winePrefixes.js`) |
+| Registry reads | `registry-js` / `regodit` | the prefix's `user.reg`, read as text (`app/util/wineRegistry.js`) |
+| Running processes | Win32 process APIs through koffi, `win-tasklist` as a fallback (`watchdog/util/processSnapshot.js`) | `/proc`, a Wine game named by the `.exe` in its command line (`watchdog/util/procSnapshot.js`) |
+| Playtime store | `HKCU\Software\Achievement Watcher Next\Playtime` | `cfg/playtime.json` (`app/util/playtimeFile.js`) |
+| Toast | WinRT through powertoast | the Watchdog asks the app, which shows an Electron `Notification` through the freedesktop service (`app/electron/desktopNotification.js`) |
+| Notification sound | a PowerShell `MediaPlayer` | `pw-play`, then `paplay` |
+| Watchdog presence pipe | named pipe | Unix socket in `XDG_RUNTIME_DIR` (`app/util/watchdogPipe.js`) |
+| Start with the session | `Run` registry value | XDG autostart entry (`app/util/linuxAutostart.js`) |
+| User data | `%APPDATA%\Achievement Watcher Next` | `~/.config/Achievement Watcher Next` |
+
+Path comparisons go through `winHosts.pathKey()` because Windows filesystems ignore case and Linux
+ones do not. A source that reads a Windows profile takes one root per host rather than reading the
+environment, so the same parser serves both systems.
 
 ## Main directories
 
@@ -116,7 +139,7 @@ Current integrations include Steam (legit client and emulator saves), Goldberg/G
 
 ## Local data
 
-Packaged user data is stored below `%APPDATA%\Achievement Watcher Next`. AW Next owns a folder neither predecessor's uninstaller touches, and imports forward along the chain `Achievement Watcher` (1.6.8) → `Achievement Watcher 3.0` → `Achievement Watcher Next` on first launch, newest source first. Each hop is one-way and non-destructive: it never deletes a source, never overwrites a file already present in the destination, and stops as soon as the destination holds AW configuration (`app/util/migrateUserData.js`):
+Packaged user data is stored below `%APPDATA%\Achievement Watcher Next` (`~/.config/Achievement Watcher Next` on Linux). AW Next owns a folder neither predecessor's uninstaller touches, and imports forward along the chain `Achievement Watcher` (1.6.8) → `Achievement Watcher 3.0` → `Achievement Watcher Next` on first launch, newest source first. Each hop is one-way and non-destructive: it never deletes a source, never overwrites a file already present in the destination, and stops as soon as the destination holds AW configuration (`app/util/migrateUserData.js`):
 
 | Directory | Contents |
 |---|---|
@@ -169,7 +192,9 @@ When changing a parser or watcher, verify:
 - cache identity and platform namespacing;
 - missing/offline data behavior;
 - logs and user-facing diagnostics;
-- both app and Watchdog tests when the boundary crosses processes.
+- both app and Watchdog tests when the boundary crosses processes;
+- Windows unchanged, and the Linux side through every host (a Wine prefix as well as the native
+  folders) when the change reads profile folders, the registry, processes or notifications.
 
 ---
 

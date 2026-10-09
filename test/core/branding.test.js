@@ -137,9 +137,10 @@ test('no stale product branding is left in the localized UI', () => {
     (function walk(node, keyPath) {
       if (typeof node === 'string') {
         // A remaining hit is only legitimate as a path segment the app really writes to, which is
-        // always preceded by a separator (Pictures\, %APPDATA%\, and their translated folder words).
+        // always preceded by a separator (Pictures\, %APPDATA%\, ~/.config/ and their translated
+        // folder words).
         for (const match of node.matchAll(/Achievement Watcher/g)) {
-          if (node[match.index - 1] !== '\\') offenders.push(`${file}: ${keyPath}`);
+          if (!['\\', '/'].includes(node[match.index - 1])) offenders.push(`${file}: ${keyPath}`);
         }
         return;
       }

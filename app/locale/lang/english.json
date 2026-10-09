@@ -2479,5 +2479,103 @@
     "playedFor": "You played for {duration}",
     "trackingPlaytime": "Tracking playtime",
     "playtime": "Playtime"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Starts AW Next automatically when you log in to your desktop session, hidden in the tray."
+          },
+          "uninstallMenu": {
+            "description": "Adds Uninstall options to the right-click menu on game tiles (Steam uninstall, game uninstaller, or move folder to Trash)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Desktop notification"
+          },
+          "info": {
+            "toast": "Some options in this section only work on Windows"
+          },
+          "test": {
+            "toast": "Desktop notification"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Desktop notification"
+              }
+            },
+            "platinum": {
+              "description": "Fire a dedicated desktop notification when a game reaches 100% completion"
+            },
+            "mode": {
+              "description": "Automatic uses the in-game overlay when it can be shown and a desktop notification when it cannot. The other choices always use the one you pick.",
+              "value": {
+                "toast": "Desktop notification"
+              }
+            },
+            "customToastAudio": {
+              "name": "Desktop notification sound",
+              "description": "Specifies the sound to play when a desktop notification is displayed"
+            },
+            "toastSouvenir": {
+              "name": "Desktop notification souvenir",
+              "description": "Windows only: shows the souvenir screenshot inside the notification."
+            },
+            "groupToast": {
+              "description": "Windows only: groups notifications from the same game in Action Center."
+            },
+            "urgent": {
+              "description": "Let achievement unlocks show while Do Not Disturb is active. They are sent as critical notifications, which most desktops let through."
+            },
+            "useToast": {
+              "name": "Desktop notification",
+              "description": "System notification shown by your desktop"
+            },
+            "useWinRT": {
+              "description": "Windows only. Has no effect on Linux."
+            },
+            "useBalloon": {
+              "description": "Windows only. Has no effect on Linux."
+            },
+            "souvenirHdrDesc": "Windows only: corrects colours when Windows HDR is active. On Linux the standard capture is saved."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Everything (settings, caches, logs, custom themes) lives in ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Automatic is the default: the in-game popup when the game can show it, a desktop notification when it cannot, never both.",
+            "3": "Screenshot on unlock keeps a picture of the moment in ~/Pictures/Achievement Watcher Next."
+          },
+          "troubleshoot": {
+            "1": "If notifications don’t appear: check that Do Not Disturb is off on your desktop and that its notification settings do not block AW Next."
+          },
+          "sources": {
+            "2": "Owned Steam games count as installed only when Steam’s own files confirm it."
+          },
+          "steam": {
+            "0": "GBE / Goldberg saves are usually under AppData/Roaming/GSE Saves inside the game’s Wine or Proton prefix, or under ~/.local/share/GSE Saves for a native Linux game."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Where unlocks appear. Automatic picks the overlay or a desktop notification for you.",
+        "toast": "Desktop notification"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Delete game folder (Trash)…",
+        "move-x-s-folder-to-the-recycle-bin": "Move “{name}”'s folder to the Trash?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "No uninstaller was found in this folder. The files will be moved to the Trash (recoverable).",
+        "deleting-game-folder": "Moving to the Trash…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Could not move the folder to the Trash.",
+        "delete-permanently-detail": "A permanent delete skips the Trash: the files cannot be restored.",
+        "delete-recycle-bin-refused": "The system refused to move this folder to the Trash. That happens when a file is still open, when the drive has no Trash (a removable or network drive), or when you cannot write to the folder.",
+        "gh-simple-notifications-fallback": "Working - desktop notification fallback active"
+      }
+    }
   }
 }

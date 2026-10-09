@@ -6,7 +6,9 @@ This guide covers local development and Windows packaging. Use [docs/RELEASE_WOR
 
 ## Requirements
 
-- Windows 10 or Windows 11.
+- Windows 10 or Windows 11. Every release is built and validated on Windows.
+- Linux (optional): the Linux port can be developed and tested there, see
+  [Develop and test on Linux](#develop-and-test-on-linux).
 - Node.js `22.22.2+` or `24.15+`, matching the `engines` field in both package manifests.
 - npm, included with Node.js.
 
@@ -173,6 +175,37 @@ The repository is LF-only except for Windows command files (`.cmd` and `.bat`), 
 $a = git diff --numstat; $b = git diff --numstat --ignore-cr-at-eol
 if (Compare-Object $a $b) { 'line endings were rewritten - fix before committing' } else { 'ok' }
 ```
+
+## Develop and test on Linux
+
+The Linux port is not released yet. Windows stays the platform every release is built and
+validated on, and a Linux change must leave the Windows path exactly as it was. On Linux the app is
+a native Electron app: it never starts Wine itself, and sees Windows games running under Wine or
+Proton through their files inside each prefix and through `/proc`.
+
+Install, test and run from a POSIX shell:
+
+```bash
+(cd watchdog && npm ci --ignore-scripts)
+(cd app && npm ci --ignore-scripts && npx patch-package && node node_modules/electron/install.js)
+chmod +x app/node_modules/7zip-bin/linux/x64/7za
+(cd app && npm test)
+(cd app && npx electron . --no-sandbox)
+```
+
+- `--ignore-scripts` mirrors CI. It leaves the bundled `7za` without its executable bit, which the
+  archive tests need, and Electron without its binary until `install.js` runs.
+- `--no-sandbox` is for a development tree only: the `chrome-sandbox` helper in `node_modules` is
+  not setuid root, so Chromium refuses to start without it.
+- Both suites run on Linux. A test that only makes sense on one system is skipped there, never
+  deleted: `{ skip: process.platform !== 'win32' && 'Windows-only' }`, or the reverse with
+  `'Linux-only'`.
+- `tools/aw-probe.ps1` is Windows-only. To watch the app on Linux, run it on a virtual display
+  (Xvfb) with a notification daemon such as dunst, record the `Notify` calls with `dbus-monitor
+  "interface='org.freedesktop.Notifications'"`, and capture the screen with ImageMagick's
+  `import -window root`.
+- A source that reads files under a Windows profile is checked against a real Wine prefix: a test
+  game linked to a Steam emulator and run under Wine writes its saves where a player's game would.
 
 ## Build an unpacked app
 

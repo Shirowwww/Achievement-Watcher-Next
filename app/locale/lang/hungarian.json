@@ -2479,5 +2479,103 @@
     "playedFor": "{duration} játszottál",
     "trackingPlaytime": "Játékidő követése",
     "playtime": "Játékidő"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Az AW Nextet automatikusan elindítja, amikor bejelentkezel az asztali munkamenetbe, elrejtve a tálcán."
+          },
+          "uninstallMenu": {
+            "description": "Eltávolítási lehetőségeket ad a játékok jobb gombos menüjéhez (Steam-eltávolítás, játék eltávolítója, vagy mappa áthelyezése a Kukába)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Asztali értesítés"
+          },
+          "info": {
+            "toast": "Az ebben a szakaszban lévő egyes beállítások csak Windows alatt működnek"
+          },
+          "test": {
+            "toast": "Asztali értesítés"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Asztali értesítés"
+              }
+            },
+            "platinum": {
+              "description": "Külön asztali értesítést indít, amikor egy játék eléri a 100%-os teljesítést"
+            },
+            "mode": {
+              "description": "Az „Automatikus” a játékbeli overlayt használja, ha megjeleníthető, különben asztali értesítést. A többi választás mindig a megadottat használja.",
+              "value": {
+                "toast": "Asztali értesítés"
+              }
+            },
+            "customToastAudio": {
+              "name": "Asztali értesítés hangja",
+              "description": "Megadja az asztali értesítés megjelenésekor lejátszandó hangot"
+            },
+            "toastSouvenir": {
+              "name": "Emlék az asztali értesítésben",
+              "description": "Csak Windows: az emlék képernyőképet az értesítésben jeleníti meg."
+            },
+            "groupToast": {
+              "description": "Csak Windows: az azonos játék értesítéseit csoportosítja a Műveletközpontban."
+            },
+            "urgent": {
+              "description": "Lehetővé teszi a teljesítmények feloldásának megjelenését a Ne zavarjanak mód alatt. Kritikus értesítésként kerülnek elküldésre, amelyeket a legtöbb asztali környezet átenged."
+            },
+            "useToast": {
+              "name": "Asztali értesítés",
+              "description": "Az asztali környezeted által megjelenített rendszerértesítés"
+            },
+            "useWinRT": {
+              "description": "Csak Windows. Linuxon nincs hatása."
+            },
+            "useBalloon": {
+              "description": "Csak Windows. Linuxon nincs hatása."
+            },
+            "souvenirHdrDesc": "Csak Windows: kijavítja a színeket, amikor a Windows HDR aktív. Linuxon a normál képernyőkép lesz mentve."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Minden (beállítások, gyorsítótárak, naplók és egyéni témák) a ~/.config/Achievement Watcher Next mappában található."
+          },
+          "notifications": {
+            "0": "Az Automatikus az alapértelmezés: a játékon belüli buborék, ha a játék meg tudja jeleníteni, és asztali értesítés, ha nem, soha nem mindkettő.",
+            "3": "A feloldáskor készített képernyőkép a pillanat képét a ~/Pictures/Achievement Watcher Next mappába menti."
+          },
+          "troubleshoot": {
+            "1": "Ha nem jelennek meg értesítések: ellenőrizze, hogy a Ne zavarjanak mód ki van-e kapcsolva az asztalon, és hogy annak értesítési beállításai nem blokkolják-e az AW Nextet."
+          },
+          "sources": {
+            "2": "A birtokolt Steam-játékok csak akkor számítanak telepítettnek, ha ezt maguk a Steam-fájlok megerősítik."
+          },
+          "steam": {
+            "0": "A GBE/Goldberg mentések általában az AppData/Roaming/GSE Saves alatt találhatók a játék Wine- vagy Proton-prefixumán belül, natív Linux-játéknál pedig a ~/.local/share/GSE Saves alatt."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Hol jelennek meg a feloldások. Az Automatikus helyetted választ overlay és asztali értesítés között.",
+        "toast": "Asztali értesítés"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Játékmappa törlése (Kuka)…",
+        "move-x-s-folder-to-the-recycle-bin": "Áthelyezzük a(z) „{name}” mappáját a Kukába?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "Ebben a mappában nem található eltávolító. A fájlok a Kukába kerülnek (visszaállíthatók).",
+        "deleting-game-folder": "Áthelyezés a Kukába…",
+        "could-not-move-the-folder-to-the-recycle-bin": "A mappa áthelyezése a Kukába nem sikerült.",
+        "delete-permanently-detail": "A végleges törlés kihagyja a Kukát: a fájlok nem állíthatók vissza.",
+        "delete-recycle-bin-refused": "A rendszer nem volt hajlandó a Kukába helyezni ezt a mappát. Ez akkor fordul elő, ha egy fájl még nyitva van, ha a meghajtónak nincs Kukája (cserélhető vagy hálózati meghajtó), vagy ha nem írhatsz a mappába.",
+        "gh-simple-notifications-fallback": "Működik - asztali értesítési tartalék aktív"
+      }
+    }
   }
 }

@@ -25,3 +25,19 @@ To run one family or one file directly from `app/`:
 node --test "../test/core/*.test.js"
 node --test "../test/parsers/steamOfficial.test.js"
 ```
+
+## Windows and Linux
+
+Both suites run on Windows and on Linux. A test that only makes sense on one system is skipped on the
+other with its reason, never deleted or weakened:
+
+```js
+test('reads the Run key', { skip: process.platform !== 'win32' && 'Windows-only' }, () => {});
+test('finds the game in /proc', { skip: process.platform === 'win32' && 'Linux-only' }, () => {});
+```
+
+Prefer a test that runs everywhere: build paths with `path.join`, or with `path.win32` when the
+value under test is a Windows path, and pass `platform`, `env` and `home` to helpers that accept them
+(`app/util/winHosts.js` does) instead of depending on the machine running the test. Setting up a
+Linux machine for the suite is covered in
+[BUILD.md](../BUILD.md#develop-and-test-on-linux).

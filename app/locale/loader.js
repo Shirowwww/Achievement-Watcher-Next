@@ -8,6 +8,7 @@ const merge = require('deepmerge');
 const ffs = require('../util/fsAsync');
 const { stripTags } = require('../util/stripTags.js');
 const { escapeHtml } = require('../util/escapeHtml.js');
+const { withPlatformText } = require('./platformText.js');
 
 const langDir = path.join(appPath, 'locale/lang');
 const uiLanguages = require(path.join(appPath, 'locale/uiLanguages.js'));
@@ -32,6 +33,7 @@ module.exports.load = async (lang = 'english') => {
     template = english;
   }
 
+  template = withPlatformText(template);
   let locale = uiLanguages.get(lang).webapi;
 
   if (template) {

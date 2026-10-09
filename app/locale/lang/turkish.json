@@ -2479,5 +2479,103 @@
     "playedFor": "{duration} oynadınız",
     "trackingPlaytime": "Oyun süresi izleniyor",
     "playtime": "Oyun süresi"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "AW Next’i masaüstü oturumunuzda oturum açtığınızda otomatik olarak, tepside gizli başlatır."
+          },
+          "uninstallMenu": {
+            "description": "Oyun kutucuklarının sağ tık menüsüne kaldırma seçenekleri ekler (Steam kaldırma, oyun kaldırıcısı veya klasörü Çöp Kutusu’na taşıma)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Masaüstü bildirimi"
+          },
+          "info": {
+            "toast": "Bu bölümdeki bazı seçenekler yalnızca Windows’ta çalışır"
+          },
+          "test": {
+            "toast": "Masaüstü bildirimi"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Masaüstü bildirimi"
+              }
+            },
+            "platinum": {
+              "description": "Bir oyun %100 tamamlamaya ulaştığında özel bir masaüstü bildirimi gönderir"
+            },
+            "mode": {
+              "description": "Otomatik, gösterilebildiğinde oyun içi yer paylaşımını, gösterilemediğinde bir masaüstü bildirimini kullanır. Diğer seçenekler her zaman seçtiğinizi kullanır.",
+              "value": {
+                "toast": "Masaüstü bildirimi"
+              }
+            },
+            "customToastAudio": {
+              "name": "Masaüstü bildirimi sesi",
+              "description": "Bir masaüstü bildirimi görüntülendiğinde çalınacak sesi belirtir"
+            },
+            "toastSouvenir": {
+              "name": "Masaüstü bildiriminde anı",
+              "description": "Yalnızca Windows: anı ekran görüntüsünü bildirimin içinde gösterir."
+            },
+            "groupToast": {
+              "description": "Yalnızca Windows: aynı oyunun bildirimlerini İşlem Merkezi içinde gruplar."
+            },
+            "urgent": {
+              "description": "Rahatsız Etmeyin etkinken başarı kilit açmalarının gösterilmesini sağlar. Bunlar kritik bildirim olarak gönderilir ve çoğu masaüstü bunları geçirir."
+            },
+            "useToast": {
+              "name": "Masaüstü bildirimi",
+              "description": "Masaüstünüzün gösterdiği sistem bildirimi"
+            },
+            "useWinRT": {
+              "description": "Yalnızca Windows. Linux’ta etkisi yoktur."
+            },
+            "useBalloon": {
+              "description": "Yalnızca Windows. Linux’ta etkisi yoktur."
+            },
+            "souvenirHdrDesc": "Yalnızca Windows: Windows HDR etkinken renkleri düzeltir. Linux’ta standart ekran görüntüsü kaydedilir."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Her şey (ayarlar, önbellekler, günlükler ve özel temalar) ~/.config/Achievement Watcher Next konumunda bulunur."
+          },
+          "notifications": {
+            "0": "Otomatik varsayılandır: oyun gösterebiliyorsa oyun içi bildirim, gösteremiyorsa masaüstü bildirimi kullanılır, ikisi birden asla gönderilmez.",
+            "3": "Kilit açıldığında ekran görüntüsü, o anın resmini ~/Pictures/Achievement Watcher Next klasörüne kaydeder."
+          },
+          "troubleshoot": {
+            "1": "Bildirimler görünmüyorsa: masaüstünüzde Rahatsız Etmeyin’in kapalı olduğunu ve masaüstünün bildirim ayarlarının AW Next’i engellemediğini kontrol edin."
+          },
+          "sources": {
+            "2": "Sahip olunan Steam oyunları yalnızca Steam’in kendi dosyaları doğruladığında kurulu sayılır."
+          },
+          "steam": {
+            "0": "GBE / Goldberg kayıtları genellikle oyunun Wine veya Proton önekindeki AppData/Roaming/GSE Saves altındadır; yerel bir Linux oyunu için ~/.local/share/GSE Saves altındadır."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Açılışların nerede görüneceği. Otomatik, yer paylaşımı ile masaüstü bildirimi arasında sizin için seçer.",
+        "toast": "Masaüstü bildirimi"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Oyun klasörünü sil (Çöp Kutusu)…",
+        "move-x-s-folder-to-the-recycle-bin": "“{name}” klasörü Çöp Kutusu’na taşınsın mı?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "Bu klasörde kaldırıcı bulunamadı. Dosyalar Çöp Kutusu’na taşınacak (geri alınabilir).",
+        "deleting-game-folder": "Çöp Kutusuna taşınıyor…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Klasör Çöp Kutusu’na taşınamadı.",
+        "delete-permanently-detail": "Kalıcı silme Çöp Kutusu’nu atlar: dosyalar geri getirilemez.",
+        "delete-recycle-bin-refused": "Sistem bu klasörü Çöp Kutusu’na taşımayı reddetti. Bir dosya hâlâ açıksa, sürücünün Çöp Kutusu yoksa (çıkarılabilir veya ağ sürücüsü) ya da klasöre yazamıyorsanız olur.",
+        "gh-simple-notifications-fallback": "Çalışıyor - masaüstü bildirimi yedeği etkin"
+      }
+    }
   }
 }

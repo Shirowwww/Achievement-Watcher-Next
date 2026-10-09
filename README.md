@@ -2,14 +2,15 @@
 
 # 🏆 Achievement Watcher Next
 
-<p><strong>A unified achievement tracker for Windows.</strong></p>
+<p><strong>A unified achievement tracker for Windows and Linux.</strong></p>
 
 AW Next brings achievements, rarity and playtime from launchers, local saves and supported emulators
-into one library, with live Windows notifications and an in-game overlay.
+into one library, with live desktop notifications and an in-game overlay.
 
 [![Latest release](https://img.shields.io/github/v/release/Shirowwww/Achievement-Watcher-Next?display_name=tag&sort=semver&style=flat-square)](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/Shirowwww/Achievement-Watcher-Next/total?style=flat-square)](https://github.com/Shirowwww/Achievement-Watcher-Next/releases)
 ![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&style=flat-square)
+![Linux](https://img.shields.io/badge/Linux-AppImage-FCC624?logo=linux&logoColor=black&style=flat-square)
 [![License](https://img.shields.io/badge/license-LGPL--3.0-green?style=flat-square)](LICENSE)
 
 **[Visit the website](https://shirowwww.github.io/Achievement-Watcher-Next/)** ·

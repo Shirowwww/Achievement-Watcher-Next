@@ -2479,5 +2479,103 @@
     "playedFor": "Hrál jsi {duration}",
     "trackingPlaytime": "Sledování herního času",
     "playtime": "Herní čas"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Spustí AW Next automaticky po přihlášení do relace na ploše, skrytý v oznamovací oblasti."
+          },
+          "uninstallMenu": {
+            "description": "Přidá možnosti odinstalace do kontextové nabídky her (odinstalace přes Steam, odinstalátor hry nebo přesun složky do Koše)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Oznámení na ploše"
+          },
+          "info": {
+            "toast": "Některé volby v této sekci fungují jen ve Windows"
+          },
+          "test": {
+            "toast": "Oznámení na ploše"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Oznámení na ploše"
+              }
+            },
+            "platinum": {
+              "description": "Spustí vyhrazené oznámení na ploše, když hra dosáhne 100% dokončení"
+            },
+            "mode": {
+              "description": "„Automaticky“ použije overlay ve hře, když jej lze zobrazit, a oznámení na ploše, když ne. Ostatní volby vždy použijí to, co vybereš.",
+              "value": {
+                "toast": "Oznámení na ploše"
+              }
+            },
+            "customToastAudio": {
+              "name": "Zvuk oznámení na ploše",
+              "description": "Určuje zvuk přehraný při zobrazení oznámení na ploše"
+            },
+            "toastSouvenir": {
+              "name": "Vzpomínka v oznámení na ploše",
+              "description": "Pouze Windows: zobrazí vzpomínkový snímek uvnitř oznámení."
+            },
+            "groupToast": {
+              "description": "Pouze Windows: seskupí oznámení ze stejné hry v Centru akcí."
+            },
+            "urgent": {
+              "description": "Umožnit zobrazení odemknutí úspěchů, když je aktivní režim Nerušit. Odesílají se jako kritická oznámení, která většina desktopů propustí."
+            },
+            "useToast": {
+              "name": "Oznámení na ploše",
+              "description": "Systémové oznámení zobrazené vaší plochou"
+            },
+            "useWinRT": {
+              "description": "Pouze Windows. V Linuxu nemá žádný účinek."
+            },
+            "useBalloon": {
+              "description": "Pouze Windows. V Linuxu nemá žádný účinek."
+            },
+            "souvenirHdrDesc": "Pouze Windows: opraví barvy, když je aktivní HDR ve Windows. V Linuxu se uloží standardní snímek."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Vše (nastavení, mezipaměti, protokoly a vlastní motivy) je uloženo v ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Automatický režim je výchozí: oznámení ve hře, když ho hra dokáže zobrazit, a oznámení na ploše, když ne, nikdy obojí.",
+            "3": "Snímek obrazovky při odemčení uloží obrázek okamžiku do složky ~/Pictures/Achievement Watcher Next."
+          },
+          "troubleshoot": {
+            "1": "Pokud se oznámení nezobrazují: zkontrolujte, že je na vaší ploše vypnutý režim Nerušit a že jeho nastavení oznámení AW Next neblokuje."
+          },
+          "sources": {
+            "2": "Vlastněné hry na Steamu se považují za nainstalované jen tehdy, když to potvrdí vlastní soubory Steamu."
+          },
+          "steam": {
+            "0": "Uložené pozice GBE/Goldberg bývají v AppData/Roaming/GSE Saves uvnitř prefixu Wine nebo Proton dané hry, případně v ~/.local/share/GSE Saves u nativní hry pro Linux."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Kde se zobrazují odemčení. Automaticky za vás zvolí overlay nebo oznámení na ploše.",
+        "toast": "Oznámení na ploše"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Smazat složku hry (Koš)…",
+        "move-x-s-folder-to-the-recycle-bin": "Přesunout složku hry „{name}“ do Koše?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "V této složce nebyl nalezen žádný odeinstalátor. Soubory budou přesunuty do Koše (lze je obnovit).",
+        "deleting-game-folder": "Přesouvání do Koše…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Složku se nepodařilo přesunout do Koše.",
+        "delete-permanently-detail": "Trvalé smazání obchází Koš: soubory nepůjde obnovit.",
+        "delete-recycle-bin-refused": "Systém odmítl přesunout tuto složku do Koše. To se stává, když je soubor stále otevřený, když disk nemá Koš (vyměnitelný nebo síťový disk) nebo když do složky nemůžeš zapisovat.",
+        "gh-simple-notifications-fallback": "Funguje - aktivní záloha přes oznámení na ploše"
+      }
+    }
   }
 }

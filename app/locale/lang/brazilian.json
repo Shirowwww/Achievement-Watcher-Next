@@ -2479,5 +2479,103 @@
     "playedFor": "Você jogou por {duration}",
     "trackingPlaytime": "Registrando o tempo de jogo",
     "playtime": "Tempo de jogo"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Inicia o AW Next automaticamente quando você entra na sua sessão da área de trabalho, oculto na bandeja."
+          },
+          "uninstallMenu": {
+            "description": "Adiciona opções de desinstalação ao menu de botão direito dos jogos (desinstalação Steam, desinstalador do jogo ou mover a pasta para a Lixeira)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Notificação da área de trabalho"
+          },
+          "info": {
+            "toast": "Algumas opções desta seção só funcionam no Windows"
+          },
+          "test": {
+            "toast": "Notificação da área de trabalho"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Notificação da área de trabalho"
+              }
+            },
+            "platinum": {
+              "description": "Dispara uma notificação da área de trabalho dedicada quando um jogo atinge 100% de conclusão"
+            },
+            "mode": {
+              "description": "Automático usa o overlay no jogo quando ele pode aparecer e uma notificação da área de trabalho quando não. As outras opções usam sempre a que você escolher.",
+              "value": {
+                "toast": "Notificação da área de trabalho"
+              }
+            },
+            "customToastAudio": {
+              "name": "Som da notificação da área de trabalho",
+              "description": "Especifica o som a reproduzir quando uma notificação da área de trabalho é exibida"
+            },
+            "toastSouvenir": {
+              "name": "Recordação na notificação da área de trabalho",
+              "description": "Somente no Windows: mostra a captura de recordação dentro da notificação."
+            },
+            "groupToast": {
+              "description": "Somente no Windows: agrupa as notificações do mesmo jogo na Central de Ações."
+            },
+            "urgent": {
+              "description": "Permitir que desbloqueios de conquistas apareçam enquanto o Não perturbe estiver ativo. Eles são enviados como notificações críticas, que a maioria das áreas de trabalho deixa passar."
+            },
+            "useToast": {
+              "name": "Notificação da área de trabalho",
+              "description": "Notificação de sistema exibida pela sua área de trabalho"
+            },
+            "useWinRT": {
+              "description": "Somente no Windows. Não tem efeito no Linux."
+            },
+            "useBalloon": {
+              "description": "Somente no Windows. Não tem efeito no Linux."
+            },
+            "souvenirHdrDesc": "Somente no Windows: corrige as cores quando o HDR do Windows está ativo. No Linux, a captura padrão é salva."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Tudo (configurações, caches, logs e temas personalizados) fica em ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Automático é o padrão: o aviso dentro do jogo quando o jogo consegue exibi-lo e uma notificação da área de trabalho quando não, nunca os dois.",
+            "3": "A captura ao desbloquear guarda uma imagem do momento em ~/Pictures/Achievement Watcher Next."
+          },
+          "troubleshoot": {
+            "1": "Se as notificações não aparecerem: verifique se o Não perturbe está desativado na sua área de trabalho e se as configurações de notificação dela não bloqueiam o AW Next."
+          },
+          "sources": {
+            "2": "Os jogos adquiridos na Steam só contam como instalados quando os próprios arquivos da Steam confirmam."
+          },
+          "steam": {
+            "0": "Os salvamentos GBE/Goldberg geralmente ficam em AppData/Roaming/GSE Saves dentro do prefixo Wine ou Proton do jogo, ou em ~/.local/share/GSE Saves para um jogo nativo do Linux."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Onde os desbloqueios aparecem. Automático escolhe para você entre overlay e notificação da área de trabalho.",
+        "toast": "Notificação da área de trabalho"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Excluir pasta do jogo (Lixeira)…",
+        "move-x-s-folder-to-the-recycle-bin": "Mover a pasta de “{name}” para a Lixeira?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "Nenhum desinstalador foi encontrado nesta pasta. Os arquivos serão movidos para a Lixeira (recuperáveis).",
+        "deleting-game-folder": "Movendo para a Lixeira…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Não foi possível mover a pasta para a Lixeira.",
+        "delete-permanently-detail": "A exclusão permanente ignora a Lixeira: os arquivos não poderão ser restaurados.",
+        "delete-recycle-bin-refused": "O sistema recusou mover esta pasta para a Lixeira. Isso acontece quando um arquivo ainda está aberto, quando a unidade não tem Lixeira (unidade removível ou de rede) ou quando você não tem permissão de gravação na pasta.",
+        "gh-simple-notifications-fallback": "Funcionando - alternativa de notificação da área de trabalho ativa"
+      }
+    }
   }
 }

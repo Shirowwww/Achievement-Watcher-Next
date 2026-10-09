@@ -8,6 +8,7 @@ const uiLanguages = require(path.join(appPath, 'locale/uiLanguages.js'));
 const onboardingInterfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
 const onboardingFolderDiagnosis = require(path.join(appPath, 'util/folderDiagnosis.js')).describeFolderDiagnosis;
 const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
+const onboardingPlatformText = require(path.join(appPath, 'locale/platformText.js')).withPlatformText;
 const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'));
 
 (function ($, window, document) {
@@ -40,13 +41,13 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     if (onboardingTextCache.has(lang)) return onboardingTextCache.get(lang);
 
     try {
-      const englishBundle = JSON.parse(onboardingFs.readFileSync(path.join(appPath, 'locale/lang/english.json'), 'utf8'));
+      const englishBundle = onboardingPlatformText(JSON.parse(onboardingFs.readFileSync(path.join(appPath, 'locale/lang/english.json'), 'utf8')));
       const english = englishBundle.onboarding || {};
       let requestedBundle = englishBundle;
       let requested = english;
       if (lang !== 'english') {
         try {
-          requestedBundle = JSON.parse(onboardingFs.readFileSync(path.join(appPath, `locale/lang/${lang}.json`), 'utf8'));
+          requestedBundle = onboardingPlatformText(JSON.parse(onboardingFs.readFileSync(path.join(appPath, `locale/lang/${lang}.json`), 'utf8')));
           requested = requestedBundle.onboarding || {};
         } catch (err) {
           // A broken or missing per-language file degrades to English, exactly like locale/loader.js.

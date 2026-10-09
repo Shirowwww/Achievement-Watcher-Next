@@ -2479,5 +2479,103 @@
     "playedFor": "Hral si {duration}",
     "trackingPlaytime": "Sledovanie herného času",
     "playtime": "Herný čas"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Spustí AW Next automaticky po prihlásení do relácie na pracovnej ploche, skrytý v oznamovacej oblasti."
+          },
+          "uninstallMenu": {
+            "description": "Pridá možnosti odinštalovania do kontextovej ponuky hier (odinštalovanie cez Steam, odinštalátor hry alebo presun priečinka do Koša)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Oznámenie na pracovnej ploche"
+          },
+          "info": {
+            "toast": "Niektoré voľby v tejto sekcii fungujú len vo Windows"
+          },
+          "test": {
+            "toast": "Oznámenie na pracovnej ploche"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Oznámenie na pracovnej ploche"
+              }
+            },
+            "platinum": {
+              "description": "Spustí vyhradené oznámenie na pracovnej ploche, keď hra dosiahne 100% dokončenie"
+            },
+            "mode": {
+              "description": "„Automaticky“ použije overlay v hre, keď sa dá zobraziť, a oznámenie na pracovnej ploche, keď nie. Ostatné voľby vždy použijú to, čo vyberieš.",
+              "value": {
+                "toast": "Oznámenie na pracovnej ploche"
+              }
+            },
+            "customToastAudio": {
+              "name": "Zvuk oznámenia na pracovnej ploche",
+              "description": "Určuje zvuk prehraný pri zobrazení oznámenia na pracovnej ploche"
+            },
+            "toastSouvenir": {
+              "name": "Spomienka v oznámení na pracovnej ploche",
+              "description": "Iba Windows: zobrazí spomienkový snímok vnútri oznámenia."
+            },
+            "groupToast": {
+              "description": "Iba Windows: zoskupí oznámenia tej istej hry v Centre akcií."
+            },
+            "urgent": {
+              "description": "Umožní zobraziť odomknutia úspechov, keď je aktívny režim Nerušiť. Odosielajú sa ako kritické oznámenia, ktoré väčšina pracovných prostredí prepustí."
+            },
+            "useToast": {
+              "name": "Oznámenie na pracovnej ploche",
+              "description": "Systémové oznámenie zobrazené vašou pracovnou plochou"
+            },
+            "useWinRT": {
+              "description": "Iba Windows. V Linuxe nemá žiadny účinok."
+            },
+            "useBalloon": {
+              "description": "Iba Windows. V Linuxe nemá žiadny účinok."
+            },
+            "souvenirHdrDesc": "Iba Windows: opraví farby, keď je vo Windowse aktívne HDR. V Linuxe sa uloží štandardná snímka."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Všetko (nastavenia, vyrovnávacie pamäte, záznamy a vlastné motívy) je uložené v ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Automatický režim je predvolený: upozornenie v hre, keď ho hra dokáže zobraziť, a oznámenie na pracovnej ploche, keď nie, nikdy oboje.",
+            "3": "Snímka obrazovky pri odomknutí uloží obrázok okamihu do priečinka ~/Pictures/Achievement Watcher Next."
+          },
+          "troubleshoot": {
+            "1": "Ak sa upozornenia nezobrazujú: skontrolujte, či je na pracovnej ploche vypnutý režim Nerušiť a či jeho nastavenia oznámení neblokujú AW Next."
+          },
+          "sources": {
+            "2": "Vlastnené hry na Steame sa považujú za nainštalované len vtedy, keď to potvrdia vlastné súbory Steamu."
+          },
+          "steam": {
+            "0": "Uložené pozície GBE/Goldberg sa zvyčajne nachádzajú v AppData/Roaming/GSE Saves vnútri prefixu Wine alebo Proton danej hry, prípadne v ~/.local/share/GSE Saves pri natívnej hre pre Linux."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Kde sa zobrazujú odomknutia. Automaticky za vás zvolí overlay alebo oznámenie na pracovnej ploche.",
+        "toast": "Oznámenie na pracovnej ploche"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Vymazať priečinok hry (Kôš)…",
+        "move-x-s-folder-to-the-recycle-bin": "Presunúť priečinok hry „{name}“ do Koša?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "V tomto priečinku sa nenašiel žiadny odinštalátor. Súbory sa presunú do Koša (možno ich obnoviť).",
+        "deleting-game-folder": "Presúvanie do koša…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Priečinok sa nepodarilo presunúť do Koša.",
+        "delete-permanently-detail": "Trvalé odstránenie obchádza Kôš: súbory sa nebudú dať obnoviť.",
+        "delete-recycle-bin-refused": "Systém odmietol presunúť tento priečinok do Koša. Stáva sa to, keď je súbor stále otvorený, keď disk nemá Kôš (vymeniteľný alebo sieťový disk) alebo keď do priečinka nemôžete zapisovať.",
+        "gh-simple-notifications-fallback": "Funguje - aktívna záloha cez oznámenie na pracovnej ploche"
+      }
+    }
   }
 }
