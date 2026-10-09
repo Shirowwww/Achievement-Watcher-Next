@@ -50,8 +50,30 @@ test('the renderer matches either appid and moves both the tile and the profile 
   const start = renderer.indexOf("ipcRenderer.on('achievement-unlock',");
   assert.notEqual(start, -1);
   const handler = renderer.slice(start, renderer.indexOf('\n});', start));
-  assert.match(handler, /const ids = \[appid, steamappid\]/);
+  assert.match(handler, /findLiveReportTarget\(appid, steamappid, ach_data\.name\)/);
+  assert.match(sliceFunction(renderer, 'function findLiveReportTarget('), /const ids = \[appid, steamappid\]/);
   assert.match(handler, /updateGameBox\(game\.appid,/);
   assert.match(handler, /refreshProfileStats\(\)/);
   assert.match(handler, /UnlockTime = Number\(ach_data\.UnlockTime\) \|\| Date\.now\(\) \/ 1000/);
+});
+
+// A counter that moves without an unlock (DaddyYNWA's kid glitches in LN2) took the same path to
+// nowhere: only the popup saw it.
+test('a progress counter takes the same three hops, ahead of the popup-only gates', () => {
+  const report = sliceFunction(watchdog, 'function reportProgressToApp(game, name, current, max) {');
+  assert.match(report, /process\.send\(\{\s*achievementProgress: \{/);
+  const call = watchdog.indexOf('reportProgressToApp(game, ach.name, achievements[i].CurProgress');
+  const muteGate = watchdog.indexOf('progressMute.isMuted(game.appid', call);
+  assert.ok(call !== -1 && muteGate > call, 'a muted or sub-milestone counter still has to reach the library');
+  const callLine = watchdog.slice(watchdog.lastIndexOf('\n', call), call);
+  assert.doesNotMatch(callLine, /seedOnly/, "a game's first observed counter move is the one a player sees first");
+
+  assert.match(sliceFunction(init, 'function handleMonitorMessage(msg) {'), /msg\.achievementProgress\) forwardProgressToLibrary\(msg\.achievementProgress\)/);
+  assert.match(sliceFunction(init, 'function forwardProgressToLibrary(progress) {'), /MainWin\.webContents\.send\('achievement-progress', \{/);
+
+  const start = renderer.indexOf("ipcRenderer.on('achievement-progress',");
+  assert.notEqual(start, -1);
+  const handler = renderer.slice(start, renderer.indexOf('\n});', start));
+  assert.match(handler, /target\.achievement\.CurProgress = Number\(ach_data\.CurProgress\)/);
+  assert.match(handler, /setTimeout\(\(\) => updateGamePage\(target\.game\.appid, ach_data\), LIVE_PROGRESS_REDRAW_MS\)/);
 });

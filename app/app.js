@@ -3014,19 +3014,40 @@ window.refreshWatchdogStatusText = () => {
   if (lastUpdateStatus !== null) renderUpdateStatus(lastUpdateStatus);
 };
 
-ipcRenderer.on('achievement-unlock', (event, { appid, steamappid, ach_data } = {}) => {
-  if (!ach_data || !ach_data.name) return;
-  // Ignore unlocks for games or achievements missing from the current view. The Watchdog may name
-  // the game by the appid of the save folder it watched, which is the Steam one - a manually added
-  // game carries an id of its own, so match on the Steam appid too or its card never moves until
-  // the next scan.
+// The library entry a live Watchdog report names, or nothing when it is not in the current view.
+// The Watchdog may name the game by the appid of the save folder it watched, which is the Steam one -
+// a manually added game carries an id of its own, so match on the Steam appid too or its card never
+// moves until the next scan.
+function findLiveReportTarget(appid, steamappid, name) {
   const ids = [appid, steamappid].filter(Boolean).map(String);
   const game =
     gameList.find((entry) => ids.includes(String(entry.appid))) ||
     gameList.find((entry) => entry.steamappid && ids.includes(String(entry.steamappid)));
-  if (!game || !game.achievement || !Array.isArray(game.achievement.list)) return;
-  const achievement = game.achievement.list.find((ach) => ach.name == ach_data.name);
-  if (!achievement) return;
+  if (!game || !game.achievement || !Array.isArray(game.achievement.list)) return null;
+  const achievement = game.achievement.list.find((ach) => ach.name == name);
+  return achievement ? { game, achievement } : null;
+}
+
+// A float counter (distance driven) can report every 600ms, and each page refresh rebuilds every
+// row, so the open page is redrawn once the counter settles rather than on every report.
+const LIVE_PROGRESS_REDRAW_MS = 1500;
+let liveProgressRedraw = null;
+
+ipcRenderer.on('achievement-progress', (event, { appid, steamappid, ach_data } = {}) => {
+  if (!ach_data || !ach_data.name) return;
+  const target = findLiveReportTarget(appid, steamappid, ach_data.name);
+  if (!target || target.achievement.Achieved) return;
+  target.achievement.CurProgress = Number(ach_data.CurProgress) || 0;
+  if (Number(ach_data.MaxProgress) > 0) target.achievement.MaxProgress = Number(ach_data.MaxProgress);
+  clearTimeout(liveProgressRedraw);
+  liveProgressRedraw = setTimeout(() => updateGamePage(target.game.appid, ach_data), LIVE_PROGRESS_REDRAW_MS);
+});
+
+ipcRenderer.on('achievement-unlock', (event, { appid, steamappid, ach_data } = {}) => {
+  if (!ach_data || !ach_data.name) return;
+  const target = findLiveReportTarget(appid, steamappid, ach_data.name);
+  if (!target) return;
+  const { game, achievement } = target;
   if (!achievement.Achieved) {
     achievement.Achieved = 1;
     achievement.UnlockTime = Number(ach_data.UnlockTime) || Date.now() / 1000;

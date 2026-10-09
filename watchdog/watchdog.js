@@ -548,6 +548,25 @@ function reportUnlockToApp(game, name, unlockTime) {
   }
 }
 
+// Same route for a counter that moved without unlocking anything (a collectible picked up), which
+// would otherwise sit at its old value in the library until the next scan.
+function reportProgressToApp(game, name, current, max) {
+  if (typeof process.send !== 'function' || !process.connected) return;
+  try {
+    process.send({
+      achievementProgress: {
+        appid: String(game.appid || ''),
+        steamappid: String(game.steamappid || ''),
+        name: String(name || ''),
+        current: Number(current) || 0,
+        max: Number(max) || 0,
+      },
+    });
+  } catch (err) {
+    debug.error(`[library] progress report failed: ${err}`);
+  }
+}
+
 // Asks the app to resolve this game's square logo now that it's running. The monitor never fetches
 // artwork itself; doing this at launch gets the answer on disk before a toast needs it.
 function requestArtworkPrefetch(game) {
@@ -1320,6 +1339,9 @@ var app = {
                       achievements[i].UnlockTime = previous.UnlockTime;
                   } else if (!achievements[i].Achieved && achievements[i].MaxProgress > 0 && +previous.CurProgress < +achievements[i].CurProgress) {
                     debug.log('Progress update:' + ach.displayName);
+                    // Before the seeding, mute and milestone gates: those only decide the popup, and
+                    // a counter is an absolute value, so reporting it is right even on first sight.
+                    reportProgressToApp(game, ach.name, achievements[i].CurProgress, achievements[i].MaxProgress);
                     if (
                       !seedOnly &&
                       self.options.notification.notifyOnProgress &&

@@ -2473,6 +2473,7 @@ function handleMonitorMessage(msg) {
     else if (msg && msg.gameActivity) setGameActivity(msg.gameActivity.count);
     else if (msg && msg.artworkPrefetch) prefetchSquareGameLogo(msg.artworkPrefetch);
     else if (msg && msg.achievementUnlocked) forwardUnlockToLibrary(msg.achievementUnlocked);
+    else if (msg && msg.achievementProgress) forwardProgressToLibrary(msg.achievementProgress);
   } catch (err) {
     debug.log(`[monitor] message handling failed: ${err.message || err}`);
   }
@@ -2487,6 +2488,16 @@ function forwardUnlockToLibrary(unlock) {
     appid: String(unlock.appid || ''),
     steamappid: String(unlock.steamappid || ''),
     ach_data: { name, UnlockTime: Number(unlock.time) || 0 },
+  });
+}
+
+function forwardProgressToLibrary(progress) {
+  const name = String((progress && progress.name) || '');
+  if (!name || !MainWin || MainWin.isDestroyed() || MainWin.webContents.isDestroyed()) return;
+  MainWin.webContents.send('achievement-progress', {
+    appid: String(progress.appid || ''),
+    steamappid: String(progress.steamappid || ''),
+    ach_data: { name, CurProgress: Number(progress.current) || 0, MaxProgress: Number(progress.max) || 0 },
   });
 }
 
