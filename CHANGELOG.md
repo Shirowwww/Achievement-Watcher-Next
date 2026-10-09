@@ -7,7 +7,7 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
-## Unreleased
+## 3.11.2 - 2026-10-09
 
 ### Added
 
@@ -63,8 +63,19 @@ renamed in 3.9.0 and the history is kept under one file.
   notification test button is labelled, a last step recaps your choices with a Change button for each,
   and a few lines say what the overlay, collections, trophy mode, video clips and profile backup do.
   Tab stays inside the guide, and the interface choice works with the arrow keys.
+- **Counter achievements move in the library while you play.** A counter that advances without
+  unlocking anything (a collectible picked up) kept its old value until the next scan; the game's
+  page now follows it, redrawn once the counter settles.
 
 ### Fixed
+
+- **Fewer antivirus reactions.** Each update no longer rewrites the app's window files in
+  `%APPDATA%`, which Kaspersky's System Watcher rolled back, and a scan no longer starts PowerShell
+  several times in a row: the drive list is asked once, and AW Next's own notification identity is
+  read from its Start Menu shortcut.
+- **The Steam account library stays out under Installed.** With the Steam source set to
+  **Installed**, **Add the games you own** still brought the whole account back. The account library
+  switches now apply, and show, only under **Owned**.
 
 - **The first-run guide can be skipped.** The corner button refused with "choose a language" even
   after one was chosen. Skip setup now saves what you answered, leaves the rest as it was and starts

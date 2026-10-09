@@ -35,8 +35,9 @@ into one library, with live Windows notifications and an in-game overlay.
 
 - **Unified library.** Steam, GOG, Epic, Ubisoft, EA and Xbox, Steam-compatible saves and console
   emulators in a single list,
-  with search, filters, rarity tiers, progress achievements and covers. A trophy showcase on the
-  profile splits every unlock by rarity, platinum included.
+  with search, filters, rarity tiers, progress achievements, covers and your own collections. A trophy
+  showcase on the profile splits every unlock by rarity, platinum included, and trophy mode grades
+  every achievement gold, silver or bronze.
 - **Automatic notification delivery.** With **Automatic** selected, each unlock arrives through the
   in-game popup when it can be seen, and as a Windows notification when it cannot - never both.
 - **Preset Designer and sharing.** Nine bundled presets, a no-code designer that previews the real
@@ -59,7 +60,7 @@ into one library, with live Windows notifications and an in-game overlay.
   as your own and shareable as a portable `.awtheme` with its own
   [gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/themes/).
 - **Local-first.** No Steam Web API key, no required account, its own data directory, and caches that
-  keep the library working offline. The few secrets it does keep - an emulator Steam password, the
+  keep the library working offline, with one-file profile backup for a reinstall or a new PC. The few secrets it does keep - an emulator Steam password, the
   Steam, Epic and Xbox sign-in tokens, the RetroAchievements Web API key - are encrypted with a key generated for your install and held by
   Windows, readable by your Windows account alone.
 
