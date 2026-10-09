@@ -21,6 +21,8 @@ const test = require('node:test');
 const uplayR2 = require('../../app/parser/uplayR2.js');
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-ticket-'));
+// The loader's achievement save redirect lives under %APPDATA%, which a Linux host does not define.
+if (!process.env.APPDATA) process.env.APPDATA = path.join(tmp, 'AppData');
 const R2_INIS = ['upc_r2.ini', 'uplay_r2.ini'];
 // Deliberately not a real Steam appid: diagnose resolves the runtime save from it, and a real one
 // would read (and judge) this machine's own progress instead of the fixture's.
@@ -213,7 +215,12 @@ test('once a ticket is set, the same silence offers to take it back out', () => 
 test('a loader without the key gets neither offer', () => {
   const dir = game('NoKey');
   repairInto(dir, ['AFOP_Ach_1']);
-  fs.writeFileSync(path.join(dir, 'upc_r2_loader64.dll'), fakePe('x64', 'Achievements AchKeyPrefix AchSaveType AchSavePath'));
+  const loader = path.join(dir, 'upc_r2_loader64.dll');
+  fs.writeFileSync(loader, fakePe('x64', 'Achievements AchKeyPrefix AchSaveType AchSavePath'));
+  // The capability probe is cached on path, mtime and size: a same-size rewrite within one file
+  // system tick would read the previous loader's answer.
+  const later = new Date(Date.now() + 5000);
+  fs.utimesSync(loader, later, later);
 
   const issues = withLog(dir, SILENT_LOG);
   assert.deepEqual(

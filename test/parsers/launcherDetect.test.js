@@ -21,6 +21,7 @@ function makeGame(tmp, name, files = [], dirs = []) {
 function makeSteamLibrary(tmp, name) {
   const steamapps = path.join(tmp, name, 'steamapps');
   fs.mkdirSync(path.join(steamapps, 'common'), { recursive: true });
+  let installs = 0;
   return {
     steamapps,
     install(appid, installdir, { emulated = false, files = ['Game.exe', 'steam_appid.txt'] } = {}) {
@@ -28,6 +29,10 @@ function makeSteamLibrary(tmp, name) {
         path.join(steamapps, `appmanifest_${appid}.acf`),
         `"AppState"\n{\n\t"appid"\t\t"${appid}"\n\t"installdir"\t\t"${installdir}"\n}\n`
       );
+      // The manifest cache is keyed on this folder's mtime, and two installs in the same clock tick
+      // (a few ms on Linux) would share one: move it forward like a later real install would.
+      const later = new Date(fs.statSync(steamapps).mtimeMs + 1000 * ++installs);
+      fs.utimesSync(steamapps, later, later);
       const dir = path.join(steamapps, 'common', installdir);
       fs.mkdirSync(path.join(dir, 'bin'), { recursive: true });
       for (const file of files) fs.writeFileSync(path.join(dir, file), file === 'steam_appid.txt' ? String(appid) : Buffer.alloc(16, 1));

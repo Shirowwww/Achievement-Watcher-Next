@@ -8,7 +8,7 @@ const path = require('node:path');
 // Keep every side-effect (rarity sidecar, image cache) inside the sandbox: both caches key off
 // APPDATA / the parser's userData path, so point them at the tmp dir BEFORE loading the modules.
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gog-official-'));
-process.env.APPDATA = tmp;
+process.env.APPDATA = process.env.XDG_CONFIG_HOME = tmp; // XDG_CONFIG_HOME is the Linux counterpart of %APPDATA%
 
 let DatabaseSync;
 try {

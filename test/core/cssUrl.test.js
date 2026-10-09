@@ -12,7 +12,7 @@ const { cssUrl, cssUrlValue } = require(path.join(__dirname, '..', '..', 'app', 
 // that used to slip through.
 
 test('an apostrophe in the path cannot close the quoted url() early', () => {
-  const url = pathToFileURL(String.raw`C:\Jeux\Assassin's Creed\icon.png`).href;
+  const url = pathToFileURL(String.raw`C:\Jeux\Assassin's Creed\icon.png`, { windows: true }).href;
   assert.ok(url.includes("'"), 'pathToFileURL is expected to leave the apostrophe literal');
 
   const token = cssUrl(url);
@@ -22,7 +22,7 @@ test('an apostrophe in the path cannot close the quoted url() early', () => {
 });
 
 test('a parenthesis in the path stays inside the token', () => {
-  const url = pathToFileURL(String.raw`C:\Program Files (x86)\Game\header.jpg`).href;
+  const url = pathToFileURL(String.raw`C:\Program Files (x86)\Game\header.jpg`, { windows: true }).href;
   assert.ok(url.includes('('), 'pathToFileURL is expected to leave parentheses literal');
 
   const token = cssUrl(url);

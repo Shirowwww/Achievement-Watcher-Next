@@ -14,7 +14,10 @@ const path = require('node:path');
 
 const defender = require('../../app/util/defender.js');
 
-test('Defender counts as active only when it is the one protecting the machine', async () => {
+// Defender and the UAC elevation exist only on Windows; the module answers "not-windows" elsewhere.
+const WINDOWS_ONLY = process.platform !== 'win32' && 'Windows-only';
+
+test('Defender counts as active only when it is the one protecting the machine', { skip: WINDOWS_ONLY }, async () => {
   const answers = { 'true': true, 'false': false, '': false, 'True': false };
   for (const [stdout, expected] of Object.entries(answers)) {
     defender.resetStatusCache();
@@ -38,7 +41,7 @@ test('Defender counts as active only when it is the one protecting the machine',
   );
 });
 
-test('the status is measured once, not on every failed download', async () => {
+test('the status is measured once, not on every failed download', { skip: WINDOWS_ONLY }, async () => {
   defender.resetStatusCache();
   let calls = 0;
   const execFile = (_e, _a, _o, cb) => {
@@ -52,7 +55,7 @@ test('the status is measured once, not on every failed download', async () => {
   defender.resetStatusCache();
 });
 
-test('the exclusion refuses anything that is not a real folder path', async () => {
+test('the exclusion refuses anything that is not a real folder path', { skip: WINDOWS_ONLY }, async () => {
   const never = () => {
     throw new Error('should not have launched anything');
   };
@@ -63,7 +66,7 @@ test('the exclusion refuses anything that is not a real folder path', async () =
   }
 });
 
-test('the folder reaches PowerShell as a literal, and UAC is asked for', async () => {
+test('the folder reaches PowerShell as a literal, and UAC is asked for', { skip: WINDOWS_ONLY }, async () => {
   let seen = null;
   const result = await defender.addExclusion("C:\\Users\\a b\\AppData\\O'Brien\\gse_fork", {
     launch: async (opts) => {
@@ -79,7 +82,7 @@ test('the folder reaches PowerShell as a literal, and UAC is asked for', async (
   assert.match(seen.args, /'C:\\Users\\a b\\AppData\\O''Brien\\gse_fork'/);
 });
 
-test('declining the UAC prompt is an answer, not a failure to report', async () => {
+test('declining the UAC prompt is an answer, not a failure to report', { skip: WINDOWS_ONLY }, async () => {
   const { isElevationDeclinedError } = require('../../app/util/windowsShellLaunch.js');
   const declined = new Error('The operation was canceled by the user.');
   declined.code = 'ERROR_CANCELLED';

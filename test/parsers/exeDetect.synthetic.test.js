@@ -18,6 +18,10 @@ function writeBytes(file, size) {
   fs.writeFileSync(file, Buffer.alloc(size, 1));
 }
 
+// Absolute stand-ins for a drive: a real drive letter on Windows, a mount point elsewhere.
+const volume = (letter) => (process.platform === 'win32' ? `${letter}:\\` : `/mnt/${letter.toLowerCase()}`);
+const rootOfVolume = (letter) => (process.platform === 'win32' ? `${letter}:\\` : '/');
+
 test('root exe beside root steam_api64 wins over nested steam_api helper exe', () => {
   const gameDir = tmpGame('exe-root-dll');
   const gameExe = path.join(gameDir, 'RealGame.exe');
@@ -209,7 +213,7 @@ test('takenGameDirs prevents a second exe from the same install folder', () => {
   every folder-based check and repair is anchored on the answer.
 */
 test('gameDirForExe climbs out of engine internals to the game folder', () => {
-  const root = path.join('C:', 'Library', 'It Takes Two');
+  const root = path.join(volume('C'), 'Library', 'It Takes Two');
   assert.strictEqual(exeDetect.gameDirForExe(path.join(root, 'Nuts', 'Binaries', 'Win64', 'ItTakesTwo.exe')), path.join(root, 'Nuts'));
   assert.strictEqual(exeDetect.gameDirForExe(path.join(root, 'Binaries', 'Win64', 'Game.exe')), root);
   assert.strictEqual(exeDetect.gameDirForExe(path.join(root, 'x64', 'Game.exe')), root);
@@ -226,26 +230,26 @@ test('gameDirForExe climbs out of engine internals to the game folder', () => {
 */
 test('gameDirForExe refuses a folder that holds more than this one game', () => {
   for (const exe of [
-    path.join('C:', 'Jeux', 'Game.exe'),
-    path.join('C:', 'Games', 'x64', 'Game.exe'),
-    path.join('C:', 'Repacks', 'Game.exe'),
-    path.join('D:', 'Steam', 'steamapps', 'common', 'Game.exe'),
-    path.join('D:', 'Game.exe'),
+    path.join(volume('C'), 'Jeux', 'Game.exe'),
+    path.join(volume('C'), 'Games', 'x64', 'Game.exe'),
+    path.join(volume('C'), 'Repacks', 'Game.exe'),
+    path.join(volume('D'), 'Steam', 'steamapps', 'common', 'Game.exe'),
+    path.join(rootOfVolume('D'), 'Game.exe'),
   ]) {
     assert.strictEqual(exeDetect.gameDirForExe(exe), '', exe);
   }
   // A game inside one of those is still a game folder.
   assert.strictEqual(
-    exeDetect.gameDirForExe(path.join('D:', 'Steam', 'steamapps', 'common', 'Half-Life', 'hl.exe')),
-    path.join('D:', 'Steam', 'steamapps', 'common', 'Half-Life')
+    exeDetect.gameDirForExe(path.join(volume('D'), 'Steam', 'steamapps', 'common', 'Half-Life', 'hl.exe')),
+    path.join(volume('D'), 'Steam', 'steamapps', 'common', 'Half-Life')
   );
 });
 
 test('gameDirForExe refuses the roots the user configured themselves', () => {
-  const root = path.join('E:', 'MyStuff');
+  const root = path.join(volume('E'), 'MyStuff');
   const exe = path.join(root, 'Game.exe');
   assert.strictEqual(exeDetect.gameDirForExe(exe), root, 'an unremarkable folder name is accepted');
   assert.strictEqual(exeDetect.gameDirForExe(exe, { blockedRoots: [root + path.sep] }), '', 'a configured library root is not');
   assert.strictEqual(exeDetect.gameDirForExe(exe, { blockedRoots: [root.toUpperCase()] }), '', 'and drive-letter casing must not defeat it');
-  assert.strictEqual(exeDetect.gameDirForExe(exe, { blockedRoots: [path.join('E:', 'Elsewhere'), null, ''] }), root);
+  assert.strictEqual(exeDetect.gameDirForExe(exe, { blockedRoots: [path.join(volume('E'), 'Elsewhere'), null, ''] }), root);
 });

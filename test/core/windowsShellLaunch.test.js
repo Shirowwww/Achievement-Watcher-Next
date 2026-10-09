@@ -11,7 +11,10 @@ const {
   isElevationDeclinedError,
 } = require('../../app/util/windowsShellLaunch.js');
 
-test('manual Windows launch uses Start-Process with an explicit working directory and raw arguments', async () => {
+// Start-Process is Windows-only, and drive-letter paths are only absolute to path.resolve on Windows.
+const WINDOWS_ONLY = process.platform !== 'win32' && 'Windows-only';
+
+test('manual Windows launch uses Start-Process with an explicit working directory and raw arguments', { skip: WINDOWS_ONLY }, async () => {
   const executable = 'C:\\Games\\Portable Game\\game.exe';
   let call;
   await launchViaWindowsShell(
@@ -46,7 +49,7 @@ test('the PowerShell resolver falls back safely and missing executables are reje
 
 // An explicit elevation is only ever requested, never assumed: the verb is empty unless asked for,
 // because -Verb RunAs always raises a UAC prompt even for a game that does not need one.
-test('elevation is opt-in and travels as the Start-Process verb', async () => {
+test('elevation is opt-in and travels as the Start-Process verb', { skip: WINDOWS_ONLY }, async () => {
   const executable = 'C:\\Games\\Needs Admin\\game.exe';
   const runWith = async (options) => {
     let call;
@@ -73,7 +76,7 @@ test('elevation is opt-in and travels as the Start-Process verb', async () => {
 
 // execFile's Error only carries the exit code; the reason the launch failed is on stderr, and it is
 // the only thing that lets the caller tell "declined the prompt" from "could not start".
-test('a failed shell launch surfaces the PowerShell message, not just the exit code', async () => {
+test('a failed shell launch surfaces the PowerShell message, not just the exit code', { skip: WINDOWS_ONLY }, async () => {
   await assert.rejects(
     launchViaWindowsShell(
       { executable: 'C:\\Games\\g\\game.exe' },

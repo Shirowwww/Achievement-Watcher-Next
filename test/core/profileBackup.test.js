@@ -18,6 +18,10 @@ const rebase = require(path.join(appUtil, 'profileRebase.js'));
 
 const SECRET_TEXT = 'SECRET-MARKER-9f3a';
 
+// The profile rebase only rewrites drive-letter paths, and the fixture homes are temp directories,
+// which are drive-letter paths only on Windows.
+const DRIVE_LETTER_HOME = process.platform !== 'win32' && 'Windows-only';
+
 function temp() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'aw-profile-backup-'));
 }
@@ -125,7 +129,7 @@ test('scrubbing blanks only the emulator password', () => {
   assert.match(out.text, /\[other\]\r\nloginPassword=keep/);
 });
 
-test('round trip restores the saved profile, keeps secrets out and merges cfg', async () => {
+test('round trip restores the saved profile, keeps secrets out and merges cfg', { skip: DRIVE_LETTER_HOME }, async () => {
   const sandbox = temp();
   try {
     const old = path.join(sandbox, 'old', 'AppData', 'Roaming', 'Achievement Watcher Next');
@@ -210,7 +214,7 @@ test('collections and their pictures survive a round trip', async () => {
   }
 });
 
-test('absolute paths into the old profile are rebased, others are left alone', async () => {
+test('absolute paths into the old profile are rebased, others are left alone', { skip: DRIVE_LETTER_HOME }, async () => {
   const sandbox = temp();
   try {
     const oldHome = path.join(sandbox, 'old');

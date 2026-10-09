@@ -108,7 +108,9 @@ test('discovery accepts both the RUNE root and its achievements folder, and igno
   fs.mkdirSync(path.join(root, 'savegames', 'user1', '77'), { recursive: true });
   fs.writeFileSync(path.join(root, 'savegames', 'user1', '77', 'achievements.cfg'), cfg({}));
 
-  for (const given of [root, path.join(root, 'achievements'), root.toUpperCase().replace(/^([A-Z]:)/, '$1')]) {
+  // Only a case-insensitive file system answers to a differently cased spelling of the same folder.
+  const spellings = process.platform === 'win32' ? [root.toUpperCase()] : [];
+  for (const given of [root, path.join(root, 'achievements'), ...spellings]) {
     const found = runeUplay.discoverFiles([given]);
     assert.equal(found.length, 1, given);
     assert.equal(found[0].uplayId, '5059');

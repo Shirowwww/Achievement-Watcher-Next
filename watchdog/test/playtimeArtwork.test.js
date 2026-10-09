@@ -2,7 +2,12 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const os = require('node:os');
+const path = require('node:path');
 const { numericSteamId, usableArtwork, resolvePlaytimeArtwork } = require('../util/playtimeArtwork.js');
+
+// Local artwork is a native absolute path on whichever host cached it.
+const nativeCover = path.join(os.tmpdir(), 'cache', '480.png');
 
 test('manual games use their resolved artwork instead of synthetic Steam URLs', () => {
   const game = {
@@ -45,9 +50,9 @@ test('a Steam game with no header or portrait art falls back to its square logo'
   assert.match(artwork.image, /\/480\/header\.jpg$/);
 
   // Without a numeric appid there is no Steam header to fall back to, so the logo fills the slot.
-  const synthetic = resolvePlaytimeArtwork({ appid: 'gse-480', icon: 'hash', iconUrl: 'C:\\cache\\480.png' });
-  assert.equal(synthetic.image, 'C:\\cache\\480.png');
-  assert.equal(synthetic.gameIcon, 'C:\\cache\\480.png');
+  const synthetic = resolvePlaytimeArtwork({ appid: 'gse-480', icon: 'hash', iconUrl: nativeCover });
+  assert.equal(synthetic.image, nativeCover);
+  assert.equal(synthetic.gameIcon, nativeCover);
 });
 
 test('a manual optional Steam AppID remains a valid fallback', () => {
@@ -60,7 +65,7 @@ test('a manual optional Steam AppID remains a valid fallback', () => {
 test('artwork references reject relative schema tokens but accept URLs and absolute paths', () => {
   assert.equal(usableArtwork('header'), undefined);
   assert.equal(usableArtwork('https://example.test/image.png'), 'https://example.test/image.png');
-  assert.equal(usableArtwork('C:\\Games\\cover.png'), 'C:\\Games\\cover.png');
+  assert.equal(usableArtwork(nativeCover), nativeCover);
 });
 
 test('a community square logo outranks the poster for the card thumbnail', () => {

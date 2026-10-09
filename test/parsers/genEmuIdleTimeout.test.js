@@ -58,7 +58,10 @@ const shimPath = (dir, name, body) => {
     try {
       await assert.rejects(gen.generate({ tool: { exe: cmd, args: [silent], dir: temp, tag: 'test' }, appid: '480', idleTimeout: 1000, timeout: 60000 }));
     } finally {
-      Object.assign(process.env, savedTemp);
+      for (const [key, value] of Object.entries(savedTemp)) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
     }
     assert.deepEqual(fs.readdirSync(ownTemp), [], 'the failed run cleaned up its work folder');
 

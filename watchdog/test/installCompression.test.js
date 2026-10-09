@@ -7,6 +7,9 @@ const os = require('os');
 const path = require('path');
 const { compressInstallation, sizeOnDisk } = require('../util/installCompression.js');
 
+// WOF compression is a Windows file system control reached through koffi and kernel32.
+const WINDOWS_ONLY = process.platform !== 'win32' && 'Windows-only';
+
 // Compressible content well past one cluster: text, like most of an installation's bytes.
 const text = Buffer.from('Achievement Watcher Next '.repeat(8192));
 
@@ -29,7 +32,7 @@ function fakeInstall(t) {
   };
 }
 
-test('the installed files are compressed on disk and still read back byte for byte', async (t) => {
+test('the installed files are compressed on disk and still read back byte for byte', { skip: WINDOWS_ONLY }, async (t) => {
   const install = fakeInstall(t);
 
   const result = await compressInstallation({ installDir: install.dir });
@@ -47,7 +50,7 @@ test('the installed files are compressed on disk and still read back byte for by
   assert.equal(sizeOnDisk(install.data), fs.statSync(install.data).size);
 });
 
-test('a later start only compresses what an update put back', async (t) => {
+test('a later start only compresses what an update put back', { skip: WINDOWS_ONLY }, async (t) => {
   const install = fakeInstall(t);
   const first = await compressInstallation({ installDir: install.dir });
   if (first.files === 0) {
@@ -95,7 +98,7 @@ test('under Electron, app.asar is compressed as the file it is', async (t) => {
   assert.ok(sizeOnDisk(install.asar) < fs.statSync(install.asar).size, 'app.asar itself is compressed');
 });
 
-test('a folder without app.asar beside the executable is a development run and is left alone', async (t) => {
+test('a folder without app.asar beside the executable is a development run and is left alone', { skip: WINDOWS_ONLY }, async (t) => {
   const install = fakeInstall(t);
   fs.rmSync(install.asar);
 

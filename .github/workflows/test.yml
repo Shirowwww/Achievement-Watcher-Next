@@ -16,7 +16,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-# The app + watchdog are Windows-only and ship native deps (registry-js, sharp,
+# The app + watchdog run on Windows and Linux and ship native deps (registry-js, sharp,
 # and koffi-based watchdog modules). The unit tests run under standalone Node and
 # do not load those native modules, so we install with --ignore-scripts: this
 # skips the native build step (which would need a full Visual Studio toolchain on
@@ -28,15 +28,20 @@ env:
 
 jobs:
   test:
-    name: Node ${{ matrix.node-version }}
-    runs-on: windows-latest
+    name: ${{ matrix.os }} / Node ${{ matrix.node-version }}
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
+        os: [windows-latest]
         # Exercise both supported engine lines. Node 24 is the current packaged/runtime target;
         # Node 22 remains supported for users and contributors on the previous LTS line.
         node-version: [22.22.2, 24.19.0]
+        # Linux runs the packaged engine line only: the Linux build ships Electron's Node 24.
+        include:
+          - os: ubuntu-latest
+            node-version: 24.19.0
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -57,6 +62,12 @@ jobs:
       - name: Install watchdog dependencies
         working-directory: watchdog
         run: npm ci --ignore-scripts
+
+      # 7zip-bin's Linux binary comes out of npm ci without the executable bit; the archive tests run it.
+      - name: Make the bundled 7za executable
+        if: runner.os == 'Linux'
+        working-directory: app
+        run: chmod +x node_modules/7zip-bin/linux/x64/7za
 
       # Runs on every matrix entry rather than being pinned to one node-version: the result cannot
       # differ between engine lines, but a pinned version silently stops linting the day the matrix
