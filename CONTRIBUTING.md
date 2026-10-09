@@ -16,7 +16,7 @@ Use the repository templates for bug reports, feature requests and support quest
 
 ## Development setup
 
-AW Next is developed and packaged on Windows. Follow [BUILD.md](BUILD.md) to install both npm workspaces, run the app and build the installer.
+AW Next is developed and packaged on Windows. Follow [BUILD.md](BUILD.md) to install both npm workspaces, run the app and build the installer. A Linux port is in progress; working on it from Linux is covered in [Develop and test on Linux](BUILD.md#develop-and-test-on-linux).
 
 Create a focused branch and inspect the worktree before making changes:
 
@@ -36,6 +36,27 @@ git switch -c fix/short-description
 - Use LF line endings: the repository normalizes to LF (`.gitattributes` + `.editorconfig`),
   with `.cmd`/`.bat` files kept as CRLF. Before committing, `git diff --numstat` must match
   `git diff --numstat --ignore-cr-at-eol`.
+
+## Windows and Linux
+
+Windows comes first: a change must not alter what the Windows build does. The Linux port lives
+beside it, so think of both systems whenever a change touches one of these:
+
+- **Folders under a user profile.** Do not read `process.env.APPDATA`, `LOCALAPPDATA`,
+  `USERPROFILE` or `PUBLIC` directly. Ask `app/util/winHosts.js` for the hosts and take one root per
+  host: on Windows that is this machine, read exactly as before; on Linux it is the native XDG
+  folders plus every Wine, Proton, Lutris, Heroic and Bottles prefix.
+- **Paths.** Split on `[\\/]`, not on `\\`. Compare paths with `winHosts.pathKey()`: Windows
+  filesystems ignore case, Linux ones do not.
+- **Registry.** On Linux a Windows game's registry is the prefix's `user.reg`, read as text through
+  the host (`app/util/wineRegistry.js`). Never call `reg.exe` or `regodit` off Windows.
+- **Processes.** Linux processes come from `/proc` (`watchdog/util/procSnapshot.js`); a Windows
+  game under Wine is named by its `.exe`, taken from its command line.
+- **Notifications, sound, autostart, tray.** Each has its own Linux path (desktop notification
+  service, `pw-play` or `paplay`, an XDG autostart entry, a PNG tray icon). A new notification or
+  setting is checked on both.
+- **New code that only one system can run** stays behind `process.platform` or the host layer, and
+  its tests are skipped on the other system rather than deleted.
 
 ## Translations and user-visible text
 
@@ -82,6 +103,9 @@ Pop-Location
 
 git diff --check
 ```
+
+When a change touches anything listed under [Windows and Linux](#windows-and-linux), run both suites
+on Linux as well, as described in [BUILD.md](BUILD.md#develop-and-test-on-linux).
 
 The app suite also verifies every relative Markdown link and heading anchor, including exact file
 casing so documentation links do not pass on Windows and then break on GitHub.
