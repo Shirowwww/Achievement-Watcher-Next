@@ -86,6 +86,26 @@ function buildEpicLocalInstallIndex(manifestsDir = EPIC_MANIFESTS_DIR) {
   return entries;
 }
 
+// The same index on Linux, from what Heroic or legendary installed (same fields, plus the launcher).
+function linuxEpicInstallIndex(options) {
+  return require('../util/linuxLaunchers.js')
+    .epicInstalls(options)
+    .map((game) => ({
+      title: game.title,
+      namespace: game.namespace,
+      catalogItemId: game.catalogItemId,
+      appName: game.id,
+      installLocation: game.installPath,
+      executablePath: game.executable,
+      processName: game.executable ? path.basename(game.executable) : '',
+      launcher: game.launcher,
+    }));
+}
+
+function localInstallIndex() {
+  return process.platform === 'win32' ? buildEpicLocalInstallIndex() : [...buildEpicLocalInstallIndex(), ...linuxEpicInstallIndex()];
+}
+
 /*
   Epic answers no CORS headers, so any of these requests made from the window fails with a bare
   "Failed to fetch" no matter what the page's connect-src allows - it emptied the whole Epic
@@ -609,7 +629,7 @@ module.exports.unlocksForSchema = async (appid, schemaList, lang, { forceRecheck
 module.exports.scan = () => {
   let entries;
   try {
-    entries = buildEpicLocalInstallIndex();
+    entries = localInstallIndex();
   } catch (err) {
     debug.log(`Epic official scan skipped => ${err}`);
     return [];
@@ -630,6 +650,7 @@ module.exports.scan = () => {
         gameDir: entry.installLocation && fs.existsSync(entry.installLocation) ? entry.installLocation : null,
         exe: entry.executablePath && fs.existsSync(entry.executablePath) ? entry.executablePath : null,
         exeAuthoritative: true,
+        ...(entry.launcher ? { launcher: entry.launcher } : {}),
       },
     });
   }
@@ -866,6 +887,7 @@ module.exports.localeFor = localeFor;
 // Exposed for unit tests.
 module.exports._internal = {
   buildEpicLocalInstallIndex,
+  linuxEpicInstallIndex,
   resolveSchema,
   fetchEpicAchievementSchemaBySandbox,
   communitySchema,

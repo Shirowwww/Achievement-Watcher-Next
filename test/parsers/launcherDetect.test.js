@@ -112,3 +112,23 @@ test('a game Steam installed is a launcher install, not a cracked one', () => {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+test('on Linux, a game Heroic installed from Epic is an official install', { skip: process.platform === 'win32' && 'Linux-only' }, () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-heroic-detect-'));
+  const config = path.join(tmp, '.config');
+  const official = makeGame(tmp, 'Fortnite', ['FortniteLauncher.exe']);
+  const repack = makeGame(tmp, 'Repack', ['Game.exe']);
+  const legendary = path.join(config, 'heroic', 'legendaryConfig', 'legendary');
+  fs.mkdirSync(legendary, { recursive: true });
+  fs.writeFileSync(path.join(legendary, 'installed.json'), JSON.stringify({ Fortnite: { app_name: 'Fortnite', install_path: official } }));
+
+  const saved = process.env.XDG_CONFIG_HOME;
+  process.env.XDG_CONFIG_HOME = config;
+  try {
+    assert.equal(isOfficialLauncherInstall(official), true);
+    assert.equal(isOfficialLauncherInstall(repack), false);
+  } finally {
+    if (saved === undefined) delete process.env.XDG_CONFIG_HOME;
+    else process.env.XDG_CONFIG_HOME = saved;
+  }
+});

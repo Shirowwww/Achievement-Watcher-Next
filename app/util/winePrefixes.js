@@ -80,10 +80,21 @@ function protonPrefixes(ctx) {
   return out;
 }
 
+// Lutris keeps its game configs under ~/.config/lutris, or under its data folder when that is absent.
+function lutrisGameDirs(ctx) {
+  const { config, data } = xdgDirs(ctx);
+  const flatpak = path.join(ctx.home, '.var', 'app', 'net.lutris.Lutris');
+  return [
+    path.join(config, 'lutris', 'games'),
+    path.join(data, 'lutris', 'games'),
+    path.join(flatpak, 'config', 'lutris', 'games'),
+    path.join(flatpak, 'data', 'lutris', 'games'),
+  ];
+}
+
 function lutrisPrefixes(ctx) {
-  const { config } = xdgDirs(ctx);
   const out = [];
-  for (const dir of [path.join(config, 'lutris', 'games'), path.join(ctx.home, '.var', 'app', 'net.lutris.Lutris', 'config', 'lutris', 'games')]) {
+  for (const dir of lutrisGameDirs(ctx)) {
     let names = [];
     try {
       names = fs.readdirSync(dir).filter((name) => /\.ya?ml$/i.test(name));
@@ -124,11 +135,21 @@ function heroicPrefixes(ctx) {
   return out;
 }
 
+// A top-level `key: value` of a small YAML file, enough for the two Bottles settings read here.
+function yamlValue(file, key) {
+  const match = new RegExp(`^${key}:\\s*['"]?(.+?)['"]?\\s*$`, 'm').exec(readText(file) || '');
+  return match ? match[1] : null;
+}
+
+// Bottles in their default folder, in a custom one (data.yml), or moved elsewhere (placeholder.yml).
 function bottlesPrefixes(ctx) {
   const { data } = xdgDirs(ctx);
-  return [path.join(data, 'bottles', 'bottles'), path.join(ctx.home, '.var', 'app', 'com.usebottles.bottles', 'data', 'bottles', 'bottles')]
+  const bases = [path.join(data, 'bottles'), path.join(ctx.home, '.var', 'app', 'com.usebottles.bottles', 'data', 'bottles')];
+  const roots = [...bases.map((base) => path.join(base, 'bottles')), ...bases.map((base) => yamlValue(path.join(base, 'data.yml'), 'custom_bottles_path'))];
+  return roots
+    .filter(Boolean)
     .flatMap(listDirs)
-    .map((dir) => ({ path: dir, kind: 'bottles' }));
+    .map((dir) => ({ path: yamlValue(path.join(dir, 'placeholder.yml'), 'Path') || dir, kind: 'bottles' }));
 }
 
 function plainWinePrefixes(ctx) {
@@ -162,4 +183,4 @@ function discoverPrefixes({ env = process.env, home = os.homedir(), extra = [] }
   return prefixes;
 }
 
-module.exports = { discoverPrefixes, steamRoots, isPrefix };
+module.exports = { discoverPrefixes, steamRoots, isPrefix, lutrisGameDirs, bottlesPrefixes };
