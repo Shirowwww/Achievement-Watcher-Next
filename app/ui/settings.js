@@ -1829,9 +1829,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         // With no account connected nothing can be a ghost entry, so the row would promise nothing.
         $('#steam-stale-card').toggle(!!s.connected);
         // The library import also needs the official Steam source on: the games it adds are Steam
-        // games, and discovery skips it entirely when that source is off. Hidden rather than shown
-        // doing nothing.
-        $('#steam-library-card').toggle(!!s.connected && $('#option_legitSteam').val() !== '0');
+        // games, and discovery skips it unless that source lists owned games. Hidden rather than
+        // shown doing nothing.
+        $('#steam-library-card').toggle(!!s.connected && $('#option_legitSteam').val() === '2');
         if (s.connected) {
           badge.toggle(!s.needsReconnect);
           disconnectBtn.show();

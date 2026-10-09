@@ -2162,7 +2162,9 @@ async function discoverInScope(source, steamAccFilter, scope) {
   // What the local Steam client knows stops at the games it has touched. With an account connected,
   // the rest of the library can be listed too - opt-in, because it turns a 115-game scan into a
   // 667-game one and every added game has to resolve its schema and artwork the first time.
-  if (!scope && source.legitSteam > 0 && (source.steamAccountOwned || source.steamAccountFamily)) {
+  // Only under "owned": every game it adds is one this PC has not installed, so under "installed"
+  // it used to bring the whole account back.
+  if (!scope && source.legitSteam > 1 && (source.steamAccountOwned || source.steamAccountFamily)) {
     try {
       const loaded = await loadSteamAccountLibrary();
       if (!loaded) debug.log('[steam] account library requested but no Steam account is connected');
