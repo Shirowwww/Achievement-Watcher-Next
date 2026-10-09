@@ -5,6 +5,9 @@
   under Wine or Proton shows up with its own .exe as argv[0] (`Z:\...\Game.exe`) while /proc/<pid>/exe
   points at the Wine loader, so the name comes from argv[0] for those and from the executable link
   for native processes. Names are cached per pid and start time, so a poll only reads the new ones.
+
+  /proc/<pid>/comm is the last resort: the kernel cuts it to 15 characters, so a native game called
+  "SomeLongGameName.x86_64" would never match its own binary name through it.
 */
 
 const fs = require('fs');
@@ -14,6 +17,7 @@ const { sharedAppModulePath } = require('./sharedAppModule.js');
 const { winToUnix } = require(sharedAppModulePath('util/winHosts.js'));
 
 const PROC = '/proc';
+const COMM_LENGTH = 15;
 const known = new Map();
 
 function readProc(pid, file) {
@@ -41,26 +45,43 @@ function isWindowsImage(arg) {
   return /\.exe$/i.test(arg);
 }
 
+// The link reads "<path> (deleted)" once the file is replaced, e.g. a game updated while it runs.
+// Only another user's processes refuse it.
+function exeLink(pid) {
+  try {
+    return fs.readlinkSync(path.join(PROC, String(pid), 'exe')).replace(/ \(deleted\)$/, '');
+  } catch {
+    return '';
+  }
+}
+
+// Without the executable link, argv[0] still has the full name; comm vouches that it names the
+// program that was started rather than a title the process wrote over its own arguments.
 function nameOf(pid) {
   const arg = argv0(pid);
   if (isWindowsImage(arg)) return arg.split(/[\\/]/).pop();
-  try {
-    return path.basename(fs.readlinkSync(path.join(PROC, String(pid), 'exe')));
-  } catch {
-    return (readProc(pid, 'comm') || '').trim();
-  }
+  const exe = exeLink(pid);
+  if (exe) return path.basename(exe);
+  const comm = (readProc(pid, 'comm') || '').trim();
+  const argName = path.basename(arg);
+  return comm.length === COMM_LENGTH && argName.startsWith(comm) ? argName : comm;
 }
 
 function isAvailable() {
   return fs.existsSync(path.join(PROC, 'self', 'stat'));
 }
 
+function pidsInProc() {
+  return fs
+    .readdirSync(PROC)
+    .filter((entry) => /^\d+$/.test(entry))
+    .map(Number);
+}
+
 function listSync() {
-  const pids = fs.readdirSync(PROC).filter((entry) => /^\d+$/.test(entry));
   const live = new Set();
   const rows = [];
-  for (const entry of pids) {
-    const pid = Number(entry);
+  for (const pid of pidsInProc()) {
     const start = startTime(pid);
     if (!start) continue;
     live.add(pid);
@@ -101,11 +122,34 @@ function getProcessPath(pid) {
     if (path.isAbsolute(arg)) return arg;
     return winToUnix(prefixOf(environ(pid)), arg) || '';
   }
-  try {
-    return fs.readlinkSync(path.join(PROC, String(pid), 'exe'));
-  } catch {
-    return '';
-  }
+  return exeLink(pid);
 }
 
-module.exports = { isAvailable, listSync, getProcessPath, environ, prefixOf };
+// Steam sets SteamAppId and SteamGameId for everything it starts, Proton games included, and
+// umu-launcher does the same from GAMEID=umu-<appid>. A non-Steam shortcut gets 0, or a shortcut id
+// with the top bit set, which is no Steam appid.
+const MAX_STEAM_APPID = 0x7fffffff;
+
+function launchAppid(env) {
+  for (const value of [env.SteamAppId, env.SteamGameId]) {
+    const text = String(value || '').trim();
+    if (/^\d+$/.test(text) && Number(text) > 0 && Number(text) <= MAX_STEAM_APPID) return String(Number(text));
+  }
+  return '';
+}
+
+// The Steam appid a process was launched for, '' when none.
+function getLaunchAppid(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) return '';
+  return launchAppid(environ(pid));
+}
+
+// Every live process started for this appid: Steam's reaper, the Proton and Wine helpers, the game
+// and any launcher in between.
+function pidsWithLaunchAppid(appid) {
+  const wanted = String(appid || '');
+  if (!wanted) return [];
+  return pidsInProc().filter((pid) => getLaunchAppid(pid) === wanted);
+}
+
+module.exports = { isAvailable, listSync, getProcessPath, environ, prefixOf, launchAppid, getLaunchAppid, pidsWithLaunchAppid };

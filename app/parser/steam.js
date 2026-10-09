@@ -23,7 +23,11 @@ const searchCircuit = createNetworkCircuit({ failureLimit: 2, cooldownMs: 10 * 6
 // How long a blank description/achievement list is left alone before Steam is asked again. Declared
 // once: the two places that re-check were free to drift apart.
 const DESC_RECHECK_MS = 3 * 24 * 60 * 60 * 1000;
-const { regKeyExists, readRegistryInteger, readRegistryString, listRegistryAllSubkeys } = require('../util/reg');
+const reg = require('../util/reg');
+const { readRegistryString } = reg;
+const steamLibrary = require(path.join(__dirname, 'steamLibrary.js'));
+const { isSteamClientDir, steamClientDir } = steamLibrary;
+const steamRegistry = () => steamLibrary.steamRegistry(process.platform, reg);
 const appPath = path.join(__dirname, '../');
 const steamID = require(path.join(appPath, 'util/steamID.js'));
 const fuzzyAppid = require(path.join(appPath, 'util/fuzzyAppid.js'));
@@ -202,7 +206,7 @@ async function addLocallyKnownSteamApps(
     stats,
     // Injected by the tests so they describe this function rather than the machine it runs on.
     readInstalls = () => module.exports.scanLocalInstalls(),
-    readOwnedRegistry = () => listRegistryAllSubkeys('HKCU', 'Software/Valve/Steam/Apps'),
+    readOwnedRegistry = () => steamRegistry().subkeys('Apps'),
   }
 ) {
   const appInfo = require('./steamAppInfo.js');
@@ -251,7 +255,8 @@ async function addLocallyKnownSteamApps(
 module.exports.scanLegit = async (listingType = 0, steamAccFilter = '0') => {
   let data = [];
 
-  if (regKeyExists('HKCU', 'Software/Valve/Steam') && listingType > 0) {
+  const registry = steamRegistry();
+  if (registry.exists('') && listingType > 0) {
     let steamPath = await getSteamPath();
     let publicUsers = await getSteamUsers(steamPath);
     if (steamAccFilter !== '0' && publicUsers.find((p) => p.user === steamAccFilter))
@@ -274,7 +279,7 @@ module.exports.scanLegit = async (listingType = 0, steamAccFilter = '0') => {
       // Steam's own per-game registry flag: 1 when the game is on disk, missing/0 when it is
       // merely owned. Capture it for every entry so "owned" mode never makes the installed
       // filter trust a game that isn't actually installed (e.g. Assassin's Creed Mirage).
-      const installedFlag = readRegistryInteger('HKCU', `Software/Valve/Steam/Apps/${stats.appID}`, 'Installed') === 1;
+      const installedFlag = registry.integer(`Apps/${stats.appID}`, 'Installed') === 1;
       const isInstalled = listingType == 1 ? installedFlag : true;
 
       let user = publicUsers.find((user) => user.user == stats.userID);
@@ -1066,6 +1071,11 @@ module.exports.getAchievementsFromAPI = async (cfg) => {
 const getSteamPath = (module.exports.getSteamPath = async () => {
   // Some SteamEmu change HKCU/Software/Valve/Steam/SteamPath to the game's dir; fall back to
   // Software/WOW6432Node/Valve/Steam/InstallPath (the Steam client corrects the key on startup).
+  if (process.platform !== 'win32') {
+    const linuxRoot = steamClientDir();
+    if (!linuxRoot) throw 'Steam Path not found';
+    return linuxRoot;
+  }
 
   const regHives = [
     { root: 'HKCU', key: 'Software/Valve/Steam', name: 'SteamPath' },
@@ -1100,7 +1110,7 @@ module.exports.scanLocalInstalls = async () => {
   } catch {
     return new Map();
   }
-  if (!steamPath || !fs.existsSync(path.join(steamPath, 'steam.exe'))) return new Map();
+  if (!isSteamClientDir(steamPath)) return new Map();
 
   const libraryFile = path.join(steamPath, 'steamapps', 'libraryfolders.vdf');
 
@@ -1172,7 +1182,7 @@ function writePublicSteamUsers(users) {
 const getSteamUsers = (module.exports.getSteamUsers = async (steamPath) => {
   let result = [];
 
-  let users = listRegistryAllSubkeys('HKCU', 'Software/Valve/Steam/Users');
+  let users = steamRegistry().subkeys('Users');
   if (!users || users.length == 0) users = await glob('*([0-9])', { cwd: path.join(steamPath, 'userdata'), onlyDirectories: true, absolute: false });
 
   if (users.length == 0) throw 'No Steam User ID found';
@@ -1239,7 +1249,7 @@ function readLoginUserPersonas(steamPath) {
 
 const getSteamUsersList = (module.exports.getSteamUsersList = async () => {
   if (steamUsersList) return steamUsersList;
-  if (!regKeyExists('HKCU', 'Software/Valve/Steam')) return [];
+  if (!steamRegistry().exists('')) return [];
   try {
     let steamPath = await getSteamPath();
     let publicUsers = await getSteamUsers(steamPath);

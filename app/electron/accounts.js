@@ -36,12 +36,11 @@ function register(context) {
 
 module.exports = { register };
 
-// Is Steam running? Steam writes its pid to ActiveProcess and clears it on exit, so this is a cheap
-// registry read plus a liveness check (EPERM still counts as alive). Never cached: Steam toggles.
+// Is Steam running? Steam records its pid (ActiveProcess on Windows, steam.pid on Linux), so this is
+// a cheap read plus a liveness check (EPERM still counts as alive). Never cached: Steam toggles.
 ipcMain.handle('steam:is-running', () => {
   try {
-    const { readRegistryInteger } = require(path.join(app.getAppPath(), 'util/reg.js'));
-    const pid = Number(readRegistryInteger('HKCU', 'Software/Valve/Steam/ActiveProcess', 'pid')) || 0;
+    const pid = require(path.join(app.getAppPath(), 'parser/steamLibrary.js')).steamClientPid();
     if (pid <= 0) return false;
     try {
       process.kill(pid, 0);

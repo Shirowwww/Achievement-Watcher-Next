@@ -59,4 +59,9 @@ function usingNativeSnapshot() {
   return !nativeBroken && snapshot.isAvailable();
 }
 
-module.exports = { list, isProcessRunning, getProcessPath: snapshot.getProcessPath, usingNativeSnapshot };
+// The Steam appid a process was launched for, read from its environment on Linux only: Windows
+// keeps another process's environment out of reach without reading its memory.
+const getLaunchAppid = snapshot.getLaunchAppid || (() => '');
+const pidsWithLaunchAppid = snapshot.pidsWithLaunchAppid || (() => []);
+
+module.exports = { list, isProcessRunning, getProcessPath: snapshot.getProcessPath, getLaunchAppid, pidsWithLaunchAppid, usingNativeSnapshot };

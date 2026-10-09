@@ -7,7 +7,8 @@
   misses the folder a user actually keeps their games in whenever they named it after a storefront
   they installed through - "D:\Epic Games", "E:\Ubisoft\Ubisoft Game Launcher\games", "D:\XboxGames".
   Those folders are named in a manifest or a registry key the launcher wrote itself, so they can be
-  read directly: one JSON/registry read each, no globbing, no drive walking.
+  read directly: one JSON/registry read each, no globbing, no drive walking. On Linux, Heroic,
+  legendary, Lutris and Bottles name them in their own files (util/linuxLaunchers.js).
 
   What is contributed is the PARENT of an install directory, not the install itself: the parent is
   the folder that holds many game folders, which is what a library root is (see libraryDirs.js).
@@ -17,13 +18,23 @@
 */
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const saveRoots = require(path.join(__dirname, 'saveRoots.js'));
+const linuxLaunchers = require(path.join(__dirname, '..', 'util', 'linuxLaunchers.js'));
+
+const LINUX_DETECTORS = {
+  heroic: 'Heroic library',
+  legendary: 'legendary library',
+  lutris: 'Lutris library',
+  bottles: 'Bottles library',
+};
 
 // A parent directory that is a system/profile container rather than a game library. Contributing
 // one of these would turn %ProgramFiles% or %LOCALAPPDATA% into a scan root, which is both enormous
 // and full of things that are not games.
 function reservedRoots() {
+  if (process.platform !== 'win32') return linuxReservedRoots();
   const roots = [];
   for (const name of [
     'SystemRoot',
@@ -45,16 +56,25 @@ function reservedRoots() {
   return roots;
 }
 
+function linuxReservedRoots({ env = process.env, home = os.homedir() } = {}) {
+  return [home, env.XDG_DATA_HOME || path.join(home, '.local', 'share'), env.XDG_CONFIG_HOME || path.join(home, '.config'), os.tmpdir()].map(
+    (dir) => path.normalize(dir).replace(/\/+$/, '').toLowerCase()
+  );
+}
+
+// Inside a Wine prefix, drive_c and its Program Files folders play the part of the Windows ones.
+const PREFIX_CONTAINER = /[\\/]drive_c(?:[\\/]Program Files(?: \(x86\))?)?$/i;
+
 function normalizeDir(value) {
   const raw = String(value == null ? '' : value).trim().replace(/^"+|"+$/g, '');
   if (!raw) return '';
   let normalized;
   try {
-    normalized = path.win32.normalize(raw);
+    normalized = path.normalize(raw);
   } catch {
     return '';
   }
-  const root = path.win32.parse(normalized).root;
+  const root = path.parse(normalized).root;
   if (normalized !== root) normalized = normalized.replace(/[\\/]+$/, '');
   return normalized;
 }
@@ -62,7 +82,7 @@ function normalizeDir(value) {
 function isDriveRoot(dir) {
   const normalized = normalizeDir(dir);
   if (!normalized) return true;
-  return normalized === path.win32.parse(normalized).root;
+  return normalized === path.parse(normalized).root;
 }
 
 /*
@@ -74,10 +94,10 @@ function isDriveRoot(dir) {
 function libraryRootFromInstallDir(installDir, options = {}) {
   const { minSiblings = 2, statSync = fs.statSync, readdirSync = fs.readdirSync, reserved = reservedRoots() } = options;
   const dir = normalizeDir(installDir);
-  if (!dir || isDriveRoot(dir)) return '';
-  const parent = normalizeDir(path.win32.dirname(dir));
+  if (!dir || !path.isAbsolute(dir) || isDriveRoot(dir)) return '';
+  const parent = normalizeDir(path.dirname(dir));
   if (!parent || isDriveRoot(parent)) return '';
-  if (reserved.includes(parent.toLowerCase())) return '';
+  if (reserved.includes(parent.toLowerCase()) || PREFIX_CONTAINER.test(parent)) return '';
   // Modern-app packages live under a protected folder no scan can read.
   if (/(?:^|[\\/])windowsapps(?:[\\/]|$)/i.test(parent)) return '';
   if (saveRoots.isSteamLikePath(parent)) return '';
@@ -247,6 +267,9 @@ function discoverLauncherLibraryRoots(options = {}) {
   fromInstalls(gogInstallLocations(options.registry), 'GOG Galaxy library');
   fromInstalls(ubisoftInstallLocations(options.registry), 'Ubisoft Connect library');
   for (const root of xboxGamingRoots(drives)) add(root, 'Xbox games folder');
+  if (process.platform !== 'win32') {
+    for (const entry of linuxLaunchers.listInstalls(options.linux)) fromInstalls([entry.installPath], LINUX_DETECTORS[entry.launcher]);
+  }
 
   return found;
 }

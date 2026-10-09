@@ -148,3 +148,30 @@ test('discovery deduplicates roots and tags each with the launcher that named it
 
   assert.deepEqual(found, [{ path: library, detector: 'Epic Games library' }]);
 });
+
+test('on Linux, the folders Heroic and Lutris install into are library roots', { skip: process.platform === 'win32' && 'Linux-only' }, () => {
+  const home = tmpdir('aw-linux-launchers-');
+  const config = path.join(home, '.config');
+  const heroicGames = makeLibrary(path.join(home, 'Games', 'Heroic'), ['Fortnite', 'Control']);
+  fs.mkdirSync(path.join(config, 'heroic', 'gog_store'), { recursive: true });
+  // A game in a prefix's Program Files says nothing about where the user keeps games.
+  const programFiles = makeLibrary(path.join(home, 'prefix', 'drive_c', 'Program Files'), ['A', 'B']);
+  fs.writeFileSync(
+    path.join(config, 'heroic', 'gog_store', 'installed.json'),
+    JSON.stringify({
+      installed: [
+        { appName: '1', install_path: path.join(heroicGames, 'Control') },
+        { appName: '2', install_path: path.join(programFiles, 'A') },
+      ],
+    })
+  );
+
+  const found = launcherLibraries.discoverLauncherLibraryRoots({
+    epicManifestsDir: path.join(home, 'none'),
+    epicLauncherInstalledDat: path.join(home, 'none.dat'),
+    registry: { listRegistryAllSubkeys: () => [], readRegistryString: () => null },
+    linux: { home, env: { XDG_CONFIG_HOME: config, XDG_DATA_HOME: path.join(home, '.local', 'share') } },
+  });
+
+  assert.deepEqual(found, [{ path: heroicGames, detector: 'Heroic library' }]);
+});

@@ -10,6 +10,8 @@
 const fs = require('fs');
 const path = require('path');
 const dirCache = require(path.join(__dirname, '..', 'util', 'dirCache.js'));
+const linuxLaunchers = require(path.join(__dirname, '..', 'util', 'linuxLaunchers.js'));
+const { pathKey } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 
 const GOG_GAME_FILE = /^goggame-\d+\.(?:info|id)$/i;
 const STEAM_API_DLL = /^steam_api(?:64)?\.dll$/i;
@@ -162,7 +164,15 @@ function isOfficialLauncherInstall(gameDir) {
   if (entries.some((e) => e.isDirectory() && e.name.toLowerCase() === '.egstore')) return true;
   if (names.has('AppxManifest.xml')) return true;
 
-  return false;
+  return isLinuxStoreInstall(gameDir);
+}
+
+// Heroic and legendary install Epic, GOG and Amazon games without the `.egstore` marker the Epic
+// launcher leaves; their own install lists say which folders are theirs.
+function isLinuxStoreInstall(gameDir) {
+  if (process.platform === 'win32') return false;
+  const key = pathKey(gameDir);
+  return linuxLaunchers.storeInstallDirs().some((dir) => pathKey(dir) === key);
 }
 
 module.exports = { isOfficialLauncherInstall, steamLibraryAppid, hasEmulatedSteamApi };

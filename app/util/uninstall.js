@@ -207,6 +207,7 @@ function getReg() {
 
 /** Steam install path from HKCU\Software\Valve\Steam, or null when unavailable. */
 function getSteamPath() {
+  if (process.platform !== 'win32') return require('../parser/steamLibrary.js').steamClientDir() || null;
   const reg = getReg();
   if (!reg || typeof reg.readRegistryString !== 'function') return null;
   try {
@@ -221,6 +222,10 @@ function getSteamPath() {
  * Returns true/false when the registry says so, or null when it cannot be read.
  */
 function isSteamAppInstalled(appid) {
+  if (process.platform !== 'win32') {
+    const value = require('../parser/steamLibrary.js').steamRegistry().integer(`Apps/${String(appid)}`, 'Installed');
+    return value === null ? null : value === 1;
+  }
   const reg = getReg();
   if (!reg || typeof reg.readRegistryInteger !== 'function') return null;
   try {
