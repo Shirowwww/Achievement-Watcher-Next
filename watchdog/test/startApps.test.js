@@ -39,3 +39,31 @@ test('hasAumid does an exact Start Menu lookup and never throws', async () => {
   assert.equal(typeof (await startApps.hasAumid('Definitely.Not.A.Real.App_12345678!App')), 'boolean');
   assert.ok(Array.isArray(await startApps.listAumids()));
 });
+
+// A shortcut's id sits in its property store as UTF-16, after a length that may leave it on an odd
+// byte. The fixtures put one id on each alignment, beside unrelated bytes.
+test('hasShortcutAumid finds an id in a Start Menu shortcut on either byte alignment', async () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-startmenu-'));
+  try {
+    const shortcut = (id, pad) =>
+      Buffer.concat([Buffer.alloc(76 + pad, 1), Buffer.from([0x28, 0, 0, 0]), Buffer.from(`${id}\0`, 'utf16le'), Buffer.alloc(9, 2)]);
+    fs.mkdirSync(path.join(root, 'Sub'));
+    fs.writeFileSync(path.join(root, 'AW.lnk'), shortcut('io.github.shirowwww.achievement.watcher', 0));
+    fs.writeFileSync(path.join(root, 'Sub', 'Other.lnk'), shortcut('Com.Example.Odd', 1));
+    fs.writeFileSync(path.join(root, 'notes.txt'), Buffer.from('Some.Text.Id\0', 'utf16le'));
+
+    assert.equal(await startApps.hasShortcutAumid('io.github.shirowwww.achievement.watcher', [root]), true);
+    assert.equal(await startApps.hasShortcutAumid('IO.GitHub.Shirowwww.Achievement.Watcher', [root]), true, 'ids compare case-insensitively');
+    assert.equal(await startApps.hasShortcutAumid('com.example.odd', [root]), true, 'an id on an odd byte is found');
+    assert.equal(await startApps.hasShortcutAumid('io.github.shirowwww', [root]), false, 'a prefix is not the id');
+    assert.equal(await startApps.hasShortcutAumid('achievement.watcher', [root]), false, 'a suffix is not the id');
+    assert.equal(await startApps.hasShortcutAumid('Some.Text.Id', [root]), false, 'only .lnk files count');
+    assert.equal(await startApps.hasShortcutAumid('', [root]), false);
+    assert.equal(await startApps.hasShortcutAumid('anything', [path.join(root, 'missing')]), false);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

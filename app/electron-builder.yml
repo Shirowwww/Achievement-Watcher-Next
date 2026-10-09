@@ -204,6 +204,3 @@ extraFiles:
 
   - from: ./Source
     to: resources/userData/Source
-
-  - from: ./view
-    to: resources/userData/view

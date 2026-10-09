@@ -17,6 +17,13 @@ function registeredAumids() {
   return registeredAumidsPromise;
 }
 
+// A Start Menu shortcut carrying the id settles it without PowerShell; anything else (a packaged
+// app, a shortcut this reader cannot see into) still goes to Get-StartApps.
+async function isRegistered(aumid) {
+  if (await startApps.hasShortcutAumid(aumid).catch(() => false)) return true;
+  return startApps.hasAumid(aumid, await registeredAumids());
+}
+
 // Candidates are checked in override, app, then legacy order.
 function toastIdentityCandidates(options, env = process.env) {
   const candidates = [];
@@ -39,19 +46,18 @@ function toastIdentityCandidates(options, env = process.env) {
 async function resolveToastIdentity(options, { env = process.env, log } = {}) {
   const debug = log || { log() {}, warn() {}, error() {} };
   const candidates = toastIdentityCandidates(options, env);
-  const registered = await registeredAumids();
 
   // Respect an explicit override even when it cannot be enumerated.
   if (candidates[0] && candidates[0].why === 'user override') {
     const override = candidates.shift();
-    const known = await startApps.hasAumid(override.id, registered);
+    const known = await isRegistered(override.id);
     if (!known) debug.warn(`[Toast] "${override.id}" (user override) is not a registered app id - toasts may not appear`);
     debug.log(`[Toast] will use appid: "${override.id}" (${override.why})`);
     return { ...override, registered: known };
   }
 
   for (const candidate of candidates) {
-    if (await startApps.hasAumid(candidate.id, registered)) {
+    if (await isRegistered(candidate.id)) {
       debug.log(`[Toast] will use appid: "${candidate.id}" (${candidate.why})`);
       return { ...candidate, registered: true };
     }

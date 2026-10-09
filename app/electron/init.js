@@ -6706,9 +6706,8 @@ function checkResources() {
   // and no code path ever read <userData>/Media - notification sounds resolve against the bundled
   // app/sounds plus user-imported <userData>/sounds. An existing Media/ folder from an older install
   // is left in place rather than deleted; it is inert and the user owns that directory.
-  const view = path.join(resourcesPath, 'view');
-  copyFolderRecursive(view, path.join(userData, 'view'));
-
+  // view/ is not copied either: the windows load it from app.asar, and an app rewriting HTML and
+  // script files in AppData on every update is what Kaspersky's System Watcher rolls back.
   const source = path.join(resourcesPath, 'Source');
   copyFolderRecursive(source, path.join(userData, 'Source'));
 

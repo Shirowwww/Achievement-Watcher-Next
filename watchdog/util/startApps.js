@@ -1,6 +1,8 @@
 'use strict';
 
 const { execFile } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 const { promisify } = require('util');
 const execFileAsync = promisify(execFile);
 const { resolvePowerShell } = require('./powershell.js');
@@ -66,6 +68,72 @@ async function listAumids() {
   }
 }
 
+/*
+  A desktop app's AppUserModelID lives in its Start Menu shortcut, which is where Get-StartApps
+  finds it too. Reading the shortcuts answers the common case (AW Next's own id) without starting
+  PowerShell, which antivirus behaviour engines weigh. Packaged ids have no shortcut, so a miss
+  here proves nothing and the caller still asks Get-StartApps.
+*/
+function startMenuRoots(env = process.env) {
+  return [env.APPDATA, env.ProgramData || env.PROGRAMDATA]
+    .filter(Boolean)
+    .map((base) => path.join(base, 'Microsoft', 'Windows', 'Start Menu', 'Programs'));
+}
+
+async function collectShortcutTexts(dir, texts) {
+  let entries;
+  try {
+    entries = await fs.promises.readdir(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      await collectShortcutTexts(full, texts);
+    } else if (/\.lnk$/i.test(entry.name)) {
+      try {
+        const bytes = await fs.promises.readFile(full);
+        // Both alignments, as the string may start on an odd byte. The odd view is copied first:
+        // decoding an unaligned slice as UTF-16 corrupts the heap under Node 24.
+        texts.push(bytes.toString('utf16le').toLowerCase(), Buffer.from(bytes.subarray(1)).toString('utf16le').toLowerCase());
+      } catch {
+        /* unreadable shortcut */
+      }
+    }
+  }
+}
+
+let shortcutTextsPromise = null;
+
+function shortcutTexts(roots) {
+  if (roots) return collectAll(roots);
+  if (!shortcutTextsPromise) shortcutTextsPromise = collectAll(startMenuRoots()).catch(() => []);
+  return shortcutTextsPromise;
+}
+
+async function collectAll(roots) {
+  const texts = [];
+  for (const root of roots) await collectShortcutTexts(root, texts);
+  return texts;
+}
+
+// The id must stand alone: "io.github.x" must not match inside "io.github.x.y" or "a.io.github.x".
+async function hasShortcutAumid(aumid, roots = null) {
+  if (typeof aumid !== 'string' || !aumid.trim()) return false;
+  const id = aumid.trim().toLowerCase();
+  const idChar = /[a-z0-9._!-]/;
+  for (const text of await shortcutTexts(roots)) {
+    let at = text.indexOf(id);
+    while (at !== -1) {
+      const before = at > 0 ? text[at - 1] : '';
+      if (text[at + id.length] === '\0' && !idChar.test(before)) return true;
+      at = text.indexOf(id, at + 1);
+    }
+  }
+  return false;
+}
+
 // Exact Start Menu AppUserModelID lookup - the only check that answers "will Windows display a toast
 // posted under this id?" Windows silently drops toasts for an id no installed app owns, which is how
 // the hardcoded Xbox app default kept failing once that app stopped shipping while the format check
@@ -76,4 +144,4 @@ async function hasAumid(aumid, known = null) {
   return list.includes(aumid.trim().toLowerCase());
 }
 
-module.exports = { has, hasAumid, listAumids, isValidAUMID, isPackagedAUMID };
+module.exports = { has, hasAumid, hasShortcutAumid, listAumids, isValidAUMID, isPackagedAUMID };
