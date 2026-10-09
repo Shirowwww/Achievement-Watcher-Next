@@ -634,8 +634,10 @@ function readConfiguredSavePath(steamSettings) {
 // resolves against steam_settings' parent. Both the appid-subfolder shape and the bare folder are
 // probed; the one with an achievements.json wins, else the first existing folder.
 function resolveLocalSaveDir({ steamSettings, appid } = {}) {
-  const configured = readConfiguredSavePath(steamSettings);
+  let configured = readConfiguredSavePath(steamSettings);
   if (!configured) return null;
+  // A repack written for Windows spells a relative folder with backslashes, literal characters elsewhere.
+  if (process.platform !== 'win32') configured = configured.replace(/\\/g, '/');
   let root;
   try {
     root = path.isAbsolute(configured) ? path.resolve(configured) : path.resolve(path.dirname(steamSettings), configured);

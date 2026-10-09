@@ -72,8 +72,9 @@ test('the save folder written is the one the reader follows', () => {
 
 test('Settings decide what a fix stamps', () => {
   const options = (emulator) => ({ general: { username: 'Shirow' }, emulator });
-  const off = goldberg.userIdentity(options({ stampIdentity: false, accountName: 'Pierre', accountSteamId: '76561197960287930', savePath: 'D:\\Saves' }), 'french');
-  assert.deepEqual(off, { accountName: undefined, language: undefined, accountSteamId: undefined, localSavePath: 'D:\\Saves' }, 'identity waits for its switch, the folder does not');
+  const saveDir = path.join(tmp, 'Saves');
+  const off = goldberg.userIdentity(options({ stampIdentity: false, accountName: 'Pierre', accountSteamId: '76561197960287930', savePath: saveDir }), 'french');
+  assert.deepEqual(off, { accountName: undefined, language: undefined, accountSteamId: undefined, localSavePath: saveDir }, 'identity waits for its switch, the folder does not');
 
   const on = goldberg.userIdentity(options({ stampIdentity: true, accountName: '', accountSteamId: '76561197960287930', savePath: '' }), 'french');
   assert.deepEqual(on, { accountName: 'Shirow', language: 'french', accountSteamId: '76561197960287930', localSavePath: undefined }, 'an empty name falls back to the profile');

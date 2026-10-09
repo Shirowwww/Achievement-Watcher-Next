@@ -60,7 +60,7 @@ test('achievement toast payload carries the intended AUMID under the key powerto
 // option parser store a null group and crash before the toast ever shows. Both callers then fall
 // back to a tray balloon, so the failure looked like a delivered notification (issue #18) - a
 // numeric appid alone was enough to trigger it.
-test('a grouped toast never hands powertoast a group it will reject', async () => {
+test('a grouped toast never hands powertoast a group it will reject', () => {
   const numeric = buildToastNotification(
     { appid: 367520, achievementName: 'TOAST_TEST', achievementDisplayName: 'X', achievementDescription: 'y', gameDisplayName: 'Hollow Knight' },
     toastOptions({ group: true })
@@ -74,8 +74,15 @@ test('a grouped toast never hands powertoast a group it will reject', async () =
     toastOptions({ group: true })
   ).notification;
   assert.ok(!('group' in unnamed), 'an empty game name must not produce a group powertoast rejects');
+});
 
-  // The contract that actually matters: powertoast must accept the payload we build.
+// The contract that actually matters: powertoast must accept the payload we build. powertoast drives
+// WinRT toasts and refuses to construct a Toast anywhere else.
+test('powertoast accepts the group we build and rejects a numeric one', { skip: process.platform !== 'win32' && 'Windows-only' }, async () => {
+  const numeric = buildToastNotification(
+    { appid: 367520, achievementName: 'TOAST_TEST', achievementDisplayName: 'X', achievementDescription: 'y', gameDisplayName: 'Hollow Knight' },
+    toastOptions({ group: true })
+  ).notification;
   const { Toast } = await import('powertoast');
   assert.doesNotThrow(() => new Toast({ aumid: 'x', title: 't', message: 'm', group: numeric.group }));
   assert.throws(

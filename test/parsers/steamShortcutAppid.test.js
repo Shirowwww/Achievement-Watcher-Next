@@ -31,9 +31,10 @@ const int = (key, value) => {
   return Buffer.concat([Buffer.from([0x02]), Buffer.from(`${key}\0`), number]);
 };
 
+// shortcuts.vdf holds the Windows paths Steam recorded, whichever host reads it.
 function shortcutsVdf(exes) {
   const entries = exes.map((exe, index) =>
-    map(String(index), Buffer.concat([int('appid', -1441195210 + index), str('AppName', `Game ${index}`), str('Exe', `"${exe}"`), str('StartDir', `"${path.dirname(exe)}"`), map('tags', Buffer.alloc(0))]))
+    map(String(index), Buffer.concat([int('appid', -1441195210 + index), str('AppName', `Game ${index}`), str('Exe', `"${exe}"`), str('StartDir', `"${path.win32.dirname(exe)}"`), map('tags', Buffer.alloc(0))]))
   );
   return Buffer.concat([map('shortcuts', Buffer.concat(entries)), Buffer.from([0x08])]);
 }

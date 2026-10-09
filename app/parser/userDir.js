@@ -244,9 +244,10 @@ function emulatorRootsFromRegistry(registry = require('../util/reg.js')) {
   const add = (value) => {
     const dir = String(value || '').trim().replace(/^"+|"+$/g, '');
     if (!dir) return;
-    // App Paths stores the executable; the uninstall index stores the folder.
-    const normalized = /\.exe$/i.test(dir) ? path.dirname(dir) : dir.replace(/[\\/]+$/, '');
-    const key = path.normalize(normalized).toLowerCase();
+    // Registry values are Windows paths whatever host reads them; App Paths stores the executable,
+    // the uninstall index stores the folder.
+    const normalized = /\.exe$/i.test(dir) ? path.win32.dirname(dir) : dir.replace(/[\\/]+$/, '');
+    const key = path.win32.normalize(normalized).toLowerCase();
     if (!normalized || seen.has(key)) return;
     seen.add(key);
     roots.push(normalized);

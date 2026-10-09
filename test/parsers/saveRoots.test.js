@@ -206,24 +206,28 @@ test('per-user game libraries under the profile and AppData are probed (never th
     APPDATA: process.env.APPDATA,
     LOCALAPPDATA: process.env.LOCALAPPDATA,
   };
-  process.env.USERPROFILE = 'C:\\Users\\TestUser';
-  process.env.APPDATA = 'C:\\Users\\TestUser\\AppData\\Roaming';
-  process.env.LOCALAPPDATA = 'C:\\Users\\TestUser\\AppData\\Local';
+  // Native paths: the roots are joined with the host's separator.
+  const profile = path.join(os.tmpdir(), 'Users', 'TestUser');
+  const roaming = path.join(profile, 'AppData', 'Roaming');
+  const local = path.join(profile, 'AppData', 'Local');
+  process.env.USERPROFILE = profile;
+  process.env.APPDATA = roaming;
+  process.env.LOCALAPPDATA = local;
   try {
     const roots = saveRoots.profileLibraryRoots();
     for (const expected of [
-      'C:\\Users\\TestUser\\Games',
-      'C:\\Users\\TestUser\\Jeux',
-      'C:\\Users\\TestUser\\AppData\\Roaming\\Games',
-      'C:\\Users\\TestUser\\AppData\\Local\\Games',
-      'C:\\Users\\TestUser\\AppData\\Local\\Repacks',
-      'C:\\Users\\TestUser\\Игры',
-      'C:\\Users\\TestUser\\AppData\\Local\\Jogos',
+      path.join(profile, 'Games'),
+      path.join(profile, 'Jeux'),
+      path.join(roaming, 'Games'),
+      path.join(local, 'Games'),
+      path.join(local, 'Repacks'),
+      path.join(profile, 'Игры'),
+      path.join(local, 'Jogos'),
     ]) {
       assert.ok(roots.includes(expected), `profile roots must include "${expected}"`);
     }
-    assert.ok(!roots.some((r) => r === 'C:\\Users\\TestUser\\AppData\\Roaming'), 'the raw AppData root must never be probed');
-    assert.ok(!roots.some((r) => r === 'C:\\Users\\TestUser\\AppData\\Local'), 'the raw LocalAppData root must never be probed');
+    assert.ok(!roots.some((r) => r === roaming), 'the raw AppData root must never be probed');
+    assert.ok(!roots.some((r) => r === local), 'the raw LocalAppData root must never be probed');
   } finally {
     for (const [key, value] of Object.entries(previous)) {
       if (value === undefined) delete process.env[key];

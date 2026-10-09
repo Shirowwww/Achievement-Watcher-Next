@@ -15,7 +15,7 @@ function immediateChildDirOf(rootDir, targetDir) {
 // Known fixed leaf subfolder names an emulator's save layout adds below the appid folder itself, so
 // the appid can be recovered even though it is not the last path segment: ALI213-family builds write
 // into <appid>/stats or <appid>/SteamEmu(/UserStats), GOG UniverseLAN into <gogAppId>/UniverseLANData.
-const APPID_STRIP_SUFFIXES = /(\\stats$)|(\\SteamEmu$)|(\\SteamEmu\\UserStats$)|(\\UniverseLANData$)/gi;
+const APPID_STRIP_SUFFIXES = /([\\/]stats$)|([\\/]SteamEmu$)|([\\/]SteamEmu[\\/]UserStats$)|([\\/]UniverseLANData$)/gi;
 
 // The trailing numeric appid folder from an achievement file's own directory, stripping one of the
 // known fixed leaf subfolders above first. Returns null (never throws) when no trailing digit run is

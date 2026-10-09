@@ -15,6 +15,10 @@ const test = require('node:test');
 
 const launcherLibraries = require('../../app/parser/launcherLibraries.js');
 
+// Launcher install folders are normalized as Windows paths, so a real temp directory only counts as
+// one when it has a drive letter.
+const WINDOWS_PATHS = process.platform !== 'win32' && 'Windows-only';
+
 function tmpdir(prefix) {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 }
@@ -24,7 +28,7 @@ function makeLibrary(root, names) {
   return root;
 }
 
-test('an Epic .item manifest contributes the folder that holds it, not the game folder', () => {
+test('an Epic .item manifest contributes the folder that holds it, not the game folder', { skip: WINDOWS_PATHS }, () => {
   const tmp = tmpdir('aw-epic-manifests-');
   const library = makeLibrary(path.join(tmp, 'Epic Games'), ['Fortnite', 'Rocket League']);
   const manifests = path.join(tmp, 'Manifests');
@@ -125,7 +129,7 @@ test('an unreadable drive contributes nothing instead of throwing', () => {
   assert.deepEqual(launcherLibraries.xboxGamingRoots(['\\\\server\\share', '', 'not a drive']), []);
 });
 
-test('discovery deduplicates roots and tags each with the launcher that named it', () => {
+test('discovery deduplicates roots and tags each with the launcher that named it', { skip: WINDOWS_PATHS }, () => {
   const tmp = tmpdir('aw-launcher-discovery-');
   const library = makeLibrary(path.join(tmp, 'Epic Games'), ['GameA', 'GameB']);
   const manifests = path.join(tmp, 'Manifests');

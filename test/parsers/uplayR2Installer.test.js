@@ -8,6 +8,9 @@ const test = require('node:test');
 const uplayR2 = require('../../app/parser/uplayR2.js');
 const installer = require('../../app/parser/uplayR2Installer.js');
 
+// The loader's achievement save redirect lives under %APPDATA%, which a Linux host does not define.
+if (!process.env.APPDATA) process.env.APPDATA = path.join(os.tmpdir(), 'aw-uplay-installer-appdata');
+
 function fakePe(arch, text = '') {
   const buffer = Buffer.alloc(4096);
   buffer.writeUInt16LE(0x5a4d, 0);
@@ -414,7 +417,9 @@ test('a repair replaces a read-only loader and a read-only ini the repack shippe
     for (const dir of [path.join(root, 'game'), path.join(root, 'cache')]) {
       for (const entry of fs.existsSync(dir) ? fs.readdirSync(dir) : []) {
         try {
-          fs.chmodSync(path.join(dir, entry), 0o666);
+          const target = path.join(dir, entry);
+          // A directory needs its execute bits to be removed; 0o666 would lock it on POSIX.
+          fs.chmodSync(target, fs.statSync(target).isDirectory() ? 0o777 : 0o666);
         } catch {
           /* already writable */
         }

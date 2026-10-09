@@ -8,13 +8,16 @@ const path = require('node:path');
 const appPaths = require('../../app/util/userDataPath.js');
 const watchdogPaths = require('../../watchdog/util/userData.js');
 
+// Electron's appData root: %APPDATA% on Windows, the XDG config folder elsewhere.
+const ROOT_VAR = process.platform === 'win32' ? 'APPDATA' : 'XDG_CONFIG_HOME';
+
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-userdata-path-'));
-const previousAppData = process.env.APPDATA;
+const previousRoot = process.env[ROOT_VAR];
 const previousAw = process.env.AW_USER_DATA;
 
 (async () => {
   try {
-    process.env.APPDATA = tmp;
+    process.env[ROOT_VAR] = tmp;
     delete process.env.AW_USER_DATA;
 
     // AW Next must live in its own directory - never either predecessor's folder (issue #6).
@@ -35,8 +38,8 @@ const previousAw = process.env.AW_USER_DATA;
   } finally {
     if (previousAw === undefined) delete process.env.AW_USER_DATA;
     else process.env.AW_USER_DATA = previousAw;
-    if (previousAppData === undefined) delete process.env.APPDATA;
-    else process.env.APPDATA = previousAppData;
+    if (previousRoot === undefined) delete process.env[ROOT_VAR];
+    else process.env[ROOT_VAR] = previousRoot;
     try {
       fs.rmSync(tmp, { recursive: true, force: true });
     } catch {

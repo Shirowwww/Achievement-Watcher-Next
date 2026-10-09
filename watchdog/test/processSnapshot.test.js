@@ -6,10 +6,13 @@ const path = require('path');
 const snapshot = require('../util/processSnapshot.js');
 const tasklist = require('../util/tasklist.js');
 
+// processSnapshot.js is the koffi/Win32 backend; Linux reads /proc instead (see procSnapshot.test.js).
+const WINDOWS_ONLY = process.platform !== 'win32' && 'Windows-only';
+
 // The native process list replaces spawning `tasklist.exe` on the playtime monitor's 3s poll: these
 // assert the shape the monitor relies on, not a specific machine's process table contents.
 
-test('the native snapshot is available and lists the current process', () => {
+test('the native snapshot is available and lists the current process', { skip: WINDOWS_ONLY }, () => {
   assert.equal(snapshot.isAvailable(), true);
 
   const processes = snapshot.listSync();
@@ -21,7 +24,7 @@ test('the native snapshot is available and lists the current process', () => {
   assert.equal(self.process.toLowerCase(), path.basename(process.execPath).toLowerCase());
 });
 
-test('every row carries a usable name and a positive pid', () => {
+test('every row carries a usable name and a positive pid', { skip: WINDOWS_ONLY }, () => {
   for (const entry of snapshot.listSync()) {
     assert.equal(typeof entry.process, 'string');
     assert.notEqual(entry.process, '');
@@ -29,7 +32,7 @@ test('every row carries a usable name and a positive pid', () => {
   }
 });
 
-test('a process path resolves for the current process and never throws for a dead one', () => {
+test('a process path resolves for the current process and never throws for a dead one', { skip: WINDOWS_ONLY }, () => {
   assert.equal(snapshot.getProcessPath(process.pid).toLowerCase(), process.execPath.toLowerCase());
   // Unreachable pids (exited, protected, malformed) must degrade to '' rather than throw: the
   // playtime monitor treats a missing path as "not resolvable" and carries on.
@@ -38,7 +41,7 @@ test('a process path resolves for the current process and never throws for a dea
   assert.equal(snapshot.getProcessPath(undefined), '');
 });
 
-test('the system query lists the same processes as the ToolHelp snapshot', () => {
+test('the system query lists the same processes as the ToolHelp snapshot', { skip: WINDOWS_ONLY }, () => {
   const key = (entry) => `${entry.pid}:${entry.process}`;
   // Processes come and go between two reads, so compare against a read taken on either side.
   const before = new Set(snapshot.listToolHelpSync().map(key));
@@ -49,7 +52,7 @@ test('the system query lists the same processes as the ToolHelp snapshot', () =>
   for (const row of before) if (after.has(row)) assert.ok(seen.has(row), `missing row ${row}`);
 });
 
-test('a process started or ended between two polls is seen by the next one', async () => {
+test('a process started or ended between two polls is seen by the next one', { skip: WINDOWS_ONLY }, async () => {
   const { spawn } = require('child_process');
   snapshot.listSync();
   const child = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 5000)'], { stdio: 'ignore' });
@@ -69,7 +72,7 @@ test('a process started or ended between two polls is seen by the next one', asy
   assert.ok(gone, 'the exited process must leave the list');
 });
 
-test('without the one-call list the snapshot still answers through ToolHelp', () => {
+test('without the one-call list the snapshot still answers through ToolHelp', { skip: WINDOWS_ONLY }, () => {
   // A child process: koffi registers struct names for the whole process, so the module cannot be
   // loaded a second time here.
   const { execFileSync } = require('child_process');
@@ -124,7 +127,7 @@ test('the fast path is reported as live so a silent fallback is visible in the l
   assert.equal(tasklist.usingNativeSnapshot(), true);
 });
 
-test('the win-tasklist fallback agrees with the native path', async () => {
+test('the win-tasklist fallback agrees with the native path', { skip: WINDOWS_ONLY }, async () => {
   const path2 = require('path');
   const snapshotModule = require('../util/processSnapshot.js');
   const listSync = snapshotModule.listSync;

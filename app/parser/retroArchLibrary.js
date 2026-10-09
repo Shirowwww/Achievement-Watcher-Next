@@ -62,7 +62,7 @@ function findRoots(roots = candidateRoots()) {
   return roots.filter((root) => fs.existsSync(path.join(root, 'retroarch.cfg')));
 }
 
-// retroarch.cfg writes a folder inside the install as ":\playlists".
+// retroarch.cfg writes a folder inside the install as ":\playlists" (":/playlists" on other hosts).
 function playlistDirectory(root) {
   let configured = '';
   try {
@@ -72,7 +72,7 @@ function playlistDirectory(root) {
     /* unreadable config: the default folder below */
   }
   if (!configured || configured === 'default') return path.join(root, 'playlists');
-  if (configured.startsWith(':')) return path.join(root, configured.slice(1));
+  if (configured.startsWith(':')) return path.join(root, configured.slice(1).replace(/\\/g, '/'));
   return configured;
 }
 

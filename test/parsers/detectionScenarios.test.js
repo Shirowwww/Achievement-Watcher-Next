@@ -29,10 +29,13 @@ async function detectIn({ build, persistSmartFind = false } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-scen-root-'));
   const envRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-scen-env-'));
   const oldEnv = {};
-  for (const key of ['USERPROFILE', 'APPDATA', 'LOCALAPPDATA', 'PUBLIC', 'PROGRAMDATA']) {
+  for (const key of ['USERPROFILE', 'APPDATA', 'LOCALAPPDATA', 'PUBLIC', 'PROGRAMDATA', 'HOME', 'XDG_DATA_HOME', 'XDG_CONFIG_HOME', 'WINEPREFIX']) {
     oldEnv[key] = process.env[key];
   }
   process.env.USERPROFILE = envRoot;
+  // On Linux the real home (Wine prefixes, XDG data) is a discovery host too, so it is sandboxed as well.
+  process.env.HOME = envRoot;
+  for (const key of ['XDG_DATA_HOME', 'XDG_CONFIG_HOME', 'WINEPREFIX']) delete process.env[key];
   process.env.APPDATA = path.join(envRoot, 'AppData', 'Roaming');
   process.env.LOCALAPPDATA = path.join(envRoot, 'AppData', 'Local');
   process.env.PUBLIC = path.join(envRoot, 'Public');
