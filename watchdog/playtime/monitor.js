@@ -35,6 +35,8 @@ if (!Array.isArray(blacklist.mute)) blacklist.mute = [];
 let gameIndex;
 let gameIndexByBinary;
 let disabledOfficialSteamAppids = new Set();
+// Whether official Steam games are a source: a game Steam launched that the index does not know is one.
+let officialSteamTracked = false;
 let appidByDirCache;
 // The directory -> appid memo is capped and evicts in insertion order, since a long-running daemon
 // sees unbounded process directories; losing an entry just costs one extra glob scan.
@@ -80,16 +82,49 @@ const filter = {
       envPath('SystemRoot', 'System32'),
       envPath('SystemRoot', 'SysWOW64'),
       envPath('SystemRoot'),
+      ...(process.platform === 'linux' ? linuxMutedDirs() : []),
     ],
     file: blacklist.mute,
   },
 };
 
+// Linux counterparts of the roots above: the distribution's own programs, C:\windows in every Wine
+// prefix, and the runtimes Steam, umu, Lutris, Heroic and Bottles run games through. A pattern
+// stands for a folder that exists once per prefix or per Steam library; it is tested against the
+// lower-case path with forward slashes.
+function linuxMutedDirs() {
+  return [
+    '/bin',
+    '/sbin',
+    '/lib',
+    '/lib32',
+    '/lib64',
+    '/usr/bin',
+    '/usr/sbin',
+    '/usr/lib',
+    '/usr/lib32',
+    '/usr/lib64',
+    '/usr/libexec',
+    '/usr/share',
+    '/run',
+    '/snap',
+    /\/drive_c\/windows\//,
+    /\/steamapps\/common\/(steamlinuxruntime[^/]*|proton( [^/]*)?|steamworks shared)\//,
+    /\/ubuntu12_(32|64)\//,
+    /\/compatibilitytools\.d\//,
+    /\/umu\/steamrt[^/]*\//,
+    /\/lutris\/(runners|runtime)\//,
+    /\/heroic\/tools\//,
+    /\/bottles\/(runners|dxvk|vkd3d)\//,
+  ];
+}
+
 function normalizeAppid(appid) {
   return String(appid || '').trim();
 }
 
-// Ignore process paths listed in the optional mute filter.
+// Ignore process paths listed in the optional mute filter: a folder and everything below it, or a
+// pattern anywhere in the path.
 function isMutedByPath(filepath, dirs) {
   if (!filepath) return false;
   // Normalize Windows paths even when tests run on another host.
@@ -99,6 +134,7 @@ function isMutedByPath(filepath, dirs) {
   const dir = lastSeparator < 0 ? '' : file.slice(0, lastSeparator);
   return (Array.isArray(dirs) ? dirs : []).some((dirpath) => {
     if (!dirpath) return false;
+    if (dirpath instanceof RegExp) return dirpath.test(file);
     const root = norm(dirpath);
     return root !== '' && (dir === root || dir.startsWith(root + '/'));
   });
@@ -131,19 +167,23 @@ function getIgnoredAppids() {
 const steamCatalogue = { path: '', resolved: false };
 const nonGameVerdicts = new Map();
 
+async function steamClientCandidates() {
+  if (process.platform !== 'win32') return [require(sharedAppModulePath('parser/steamLibrary.js')).steamClientDir()];
+  const regedit = await loadRegodit();
+  // Same two hives, in the same order, as app/parser/steam.js getSteamPath(): some emulators
+  // rewrite the HKCU value to the game's own folder, and the WOW6432Node install path is the
+  // fallback the Steam client repairs on startup.
+  return [
+    ['HKCU', 'Software/Valve/Steam', 'SteamPath'],
+    ['HKLM', 'Software/WOW6432Node/Valve/Steam', 'InstallPath'],
+  ].map(([root, key, name]) => String(regedit.regQueryStringValue(root, key, name) || '').trim());
+}
+
 async function resolveSteamCataloguePath() {
   if (steamCatalogue.resolved) return steamCatalogue.path;
   steamCatalogue.resolved = true;
   try {
-    const regedit = await loadRegodit();
-    // Same two hives, in the same order, as app/parser/steam.js getSteamPath(): some emulators
-    // rewrite the HKCU value to the game's own folder, and the WOW6432Node install path is the
-    // fallback the Steam client repairs on startup.
-    for (const [root, key, name] of [
-      ['HKCU', 'Software/Valve/Steam', 'SteamPath'],
-      ['HKLM', 'Software/WOW6432Node/Valve/Steam', 'InstallPath'],
-    ]) {
-      const value = String(regedit.regQueryStringValue(root, key, name) || '').trim();
+    for (const value of await steamClientCandidates()) {
       if (value && fs.existsSync(path.join(value, 'appcache', 'appinfo.vdf'))) {
         steamCatalogue.path = value;
         break;
@@ -186,8 +226,12 @@ function isOfficialSteamLibraryGame(game) {
   return /^steam\s*\(/i.test(String((game && game.source) || '').trim());
 }
 
+function tracksOfficialSteam(options) {
+  return Number(options && options.achievement_source && options.achievement_source.legitSteam) > 0;
+}
+
 function filterGamesByAchievementSources(games, options) {
-  const showOfficialSteam = Number(options && options.achievement_source && options.achievement_source.legitSteam) > 0;
+  const showOfficialSteam = tracksOfficialSteam(options);
   return (Array.isArray(games) ? games : []).filter((game) => showOfficialSteam || !isOfficialSteamLibraryGame(game));
 }
 
@@ -297,6 +341,57 @@ function candidateConfigDirs(dir, process) {
   return dirs;
 }
 
+// A home folder or a drive root holds everything: a recursive marker glob there reads the whole disk.
+function isTooBroadToSearch(dir) {
+  return path.parse(dir).root === dir || path.resolve(dir) === path.resolve(os.homedir());
+}
+
+// The appid an emulator config next to the process names (steam_appid.txt, steam_emu.ini...), or null.
+async function findAppidInConfigFiles(process, filepath) {
+  // A bundled JRE sits a few levels under the game's own root, so the appid marker it ships lives in
+  // an ancestor of javaw's own directory, never inside it.
+  for (const dir of candidateConfigDirs(path.dirname(filepath), process)) {
+    if (isTooBroadToSearch(dir)) break;
+    const dirKey = dir.toLowerCase();
+    let appid;
+    if (appidByDirCache.has(dirKey)) {
+      appid = appidByDirCache.get(dirKey);
+    } else {
+      // findByReadingContentOfKnownConfigfilesIn() globs the whole game tree, so cache the miss too:
+      // otherwise every relaunch of the same non-game binary re-walks it.
+      debug.log(`Try to find appid from a cfg file in "${dir}"`);
+      appid = await findByReadingContentOfKnownConfigfilesIn(dir).catch(() => null);
+      rememberAppidForDir(dirKey, appid);
+    }
+    if (appid) return appid;
+  }
+  return null;
+}
+
+function isObservedProcess(process) {
+  const name = String(process || '').toLowerCase();
+  return !filter.ignore.some((bin) => bin.toLowerCase() === name);
+}
+
+// The appid a running process was launched for, unless it is one of the runtime or system processes
+// a launch also starts (the muted folders): those never stand for the game.
+function launchedGameAppid(pid) {
+  const appid = tasklist.getLaunchAppid(pid);
+  return appid && !isMutedByPath(tasklist.getProcessPath(pid), filter.mute.dir) ? appid : '';
+}
+
+// The processes still running for this launch appid, among those the process monitor reports exits for.
+async function launchSurvivors(appid) {
+  try {
+    const launched = new Set(tasklist.pidsWithLaunchAppid(appid));
+    if (launched.size === 0) return [];
+    return (await tasklist.list()).filter((row) => launched.has(row.pid) && isObservedProcess(row.process)).map((row) => row.pid);
+  } catch (err) {
+    debug.warn(`[Process trail] could not look for the rest of launch ${appid}: ${err.message || err}`);
+    return [];
+  }
+}
+
 // Loose local echo of exeDetect.js's nameSimilarity(), kept separate rather than pulling the
 // app-side exe-detection module into this long-running daemon for one heuristic.
 function normalizeForSimilarity(value) {
@@ -375,6 +470,7 @@ async function init() {
     createTimer: () => new Timer(),
     resolvePath: tasklist.getProcessPath,
     exePathFor: configuredExecutable,
+    launchAppidFor: launchedGameAppid,
   })) {
     nowPlaying.push(playing);
     debug.log(`[Process trail] tracking already-running ${playing.name}(${playing.appid}) pid=${[...playing.pids].join(',')}`);
@@ -395,10 +491,7 @@ async function init() {
       // "shared binary" disambiguation and the mute-by-directory filter below could never fire.
       resolvePath: tasklist.getProcessPath,
       onError: (err) => debug.warn(`[Process trail] process poll failed => ${err}`),
-      shouldObserve: ({ process }) => {
-        const name = process.toLowerCase();
-        return !filter.ignore.some((bin) => bin.toLowerCase() === name);
-      },
+      shouldObserve: ({ process }) => isObservedProcess(process),
     });
     debug.log(
       `[Process trail] using polling monitor over ${tasklist.usingNativeSnapshot() ? 'the native process snapshot' : 'tasklist.exe (native snapshot unavailable)'}`
@@ -414,6 +507,8 @@ async function init() {
     // stronger signal than the generic mute-by-path filter below, so it is tried first and is never
     // muted by it (a bundled JRE regularly sits under Program Files, one of the muted roots).
     let game = games.length === 0 ? findGameForInterpreterChild(process, filepath) : null;
+    // The appid Steam (or umu) launched this process for; always '' on Windows.
+    const launchAppid = tasklist.getLaunchAppid(pid);
 
     if (!game) {
       if (filepath && shouldMuteProcessPath(filepath, filter.mute.dir, games, configuredExecutable)) {
@@ -426,40 +521,31 @@ async function init() {
         // guess about every copy of that executable name, not about this one - accept it only when
         // this process's own folder actually looks like the game it claims to be.
         const candidate = games[0];
-        if (candidate.catalogueOnly && !relatedToFolder(candidate.name, filepath)) {
+        if (candidate.catalogueOnly && normalizeAppid(candidate.appid) !== launchAppid && !relatedToFolder(candidate.name, filepath)) {
           debug.log(`"${process}" only matches the bundled catalogue entry for ${candidate.name}(${candidate.appid}); no local corroboration - ignoring`);
         } else {
           game = candidate;
         }
       } else if (games.length > 1) {
-        // Several games answer to this name; the install folder says which one just started.
-        game = pickGameForProcess(games, filepath, configuredExecutable);
+        // Several games answer to this name; the install folder says which one just started, else
+        // the appid it was launched for.
+        game = pickGameForProcess(games, filepath, configuredExecutable) || games.find((g) => normalizeAppid(g.appid) === launchAppid) || null;
         if (game) debug.log(`"${process}" is shared by ${games.length} games; "${filepath}" is ${game.name}(${game.appid})`);
         else debug.log(`More than 1 entry for "${process}" and no install path settles it`);
+      } else if (launchAppid) {
+        // A name the index does not know, e.g. a Proton game's launcher or a native binary: the
+        // appid Steam launched it for still names the game.
+        game = gameIndex.find((g) => normalizeAppid(g.appid) === launchAppid) || null;
+        if (game) debug.log(`"${process}" was launched for ${game.name}(${game.appid})`);
       }
     }
     if (!game) {
       // An unmatched process is expected (most running processes are not games) and is not logged
       // to avoid filling playtime.log on a busy machine.
       if (!filepath) return;
-      const gameDir = path.parse(filepath).dir;
       try {
-        let appid = null;
-        // A bundled JRE sits a few levels under the game's own root, so the appid marker it ships
-        // lives in an ancestor of javaw's own directory, never inside it.
-        for (const dir of candidateConfigDirs(gameDir, process)) {
-          const dirKey = dir.toLowerCase();
-          if (appidByDirCache.has(dirKey)) {
-            appid = appidByDirCache.get(dirKey);
-          } else {
-            // findByReadingContentOfKnownConfigfilesIn() globs the whole game tree, so cache the miss
-            // too: otherwise every relaunch of the same non-game binary re-walks it.
-            debug.log(`Try to find appid from a cfg file in "${dir}"`);
-            appid = await findByReadingContentOfKnownConfigfilesIn(dir).catch(() => null);
-            rememberAppidForDir(dirKey, appid);
-          }
-          if (appid) break;
-        }
+        // A launch appid outside the index is an official Steam game: only taken when that source is on.
+        const appid = (officialSteamTracked && launchAppid) || (await findAppidInConfigFiles(process, filepath));
         if (!appid) return;
         debug.log(`Found appid: ${appid}`);
         if (isIgnoredAppid(appid)) {
@@ -485,6 +571,12 @@ async function init() {
           game = { appid, binary: process, icon: iconHash, name: d.name, exePath: filepath };
           addToGameIndex(game);
         }
+        // The lookups above take time: a launcher can be gone already, and a session holding a dead
+        // pid would never see its exit.
+        if (game && !(await tasklist.isProcessRunning(pid))) {
+          debug.log(`"${process}"(${pid}) exited before ${game.name}(${game.appid}) was resolved`);
+          return;
+        }
       } catch (err) {
         debug.warn(err);
       }
@@ -504,6 +596,7 @@ async function init() {
     const alreadyPlaying = nowPlaying.find((g) => normalizeAppid(g.appid) === normalizeAppid(game.appid));
     if (alreadyPlaying) {
       alreadyPlaying.pids.add(pid);
+      if (launchAppid === normalizeAppid(game.appid)) alreadyPlaying.launchAppid = launchAppid;
       debug.log(`Tracking additional process "${process}"(${pid}) for ${game.name}`);
     } else {
       // The live image path, else where the scan found the binary (a process whose path could
@@ -514,6 +607,7 @@ async function init() {
         timer: new Timer(),
         exePath,
         gameDir: exePath ? path.parse(exePath).dir : '',
+        launchAppid: launchAppid === normalizeAppid(game.appid) ? launchAppid : '',
       });
       debug.log(playing);
 
@@ -523,7 +617,7 @@ async function init() {
     }
   });
 
-  processMonitor.on('deletion', ([, pid]) => {
+  processMonitor.on('deletion', async ([, pid]) => {
     // PID is authoritative; process names may differ at exit.
     const game = nowPlaying.find((g) => g.pids.has(pid));
 
@@ -531,6 +625,18 @@ async function init() {
 
     game.pids.delete(pid);
     if (game.pids.size > 0) return; //other processes of this game are still running
+
+    // A launcher that hands over to the game exits first; Steam's reaper and the Proton processes
+    // started for the same appid keep the session open until the game is really gone.
+    if (game.launchAppid) {
+      const survivors = await launchSurvivors(game.launchAppid);
+      if (game.pids.size > 0) return;
+      if (survivors.length > 0) {
+        for (const survivor of survivors) game.pids.add(survivor);
+        debug.log(`${game.name}(${game.appid}) is still running through pid=${survivors.join(',')}`);
+        return;
+      }
+    }
 
     debug.log(`Stop playing ${game.name}(${game.appid})`);
     game.timer.stop();
@@ -610,6 +716,7 @@ async function getGameIndex() {
   }
   const options = await loadWatchdogOptions();
   const sourceFiltered = filterGamesByAchievementSources(merged, options);
+  officialSteamTracked = tracksOfficialSteam(options);
   disabledOfficialSteamAppids = new Set(
     merged
       .filter((game) => isOfficialSteamLibraryGame(game) && !sourceFiltered.includes(game))
@@ -621,6 +728,7 @@ async function getGameIndex() {
 module.exports = {
   init,
   isMutedByPath,
+  linuxMutedDirs,
   shouldMuteProcessPath,
   getTrackableGameMatches,
   isOfficialSteamLibraryGame,

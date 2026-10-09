@@ -7,9 +7,17 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
-const steamRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-steam-local-'));
+// The registry names the client on Windows, HOME does on Linux: both point at this one.
+const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-steam-local-'));
+const steamRoot = path.join(fakeHome, '.local', 'share', 'Steam');
 const extraLibrary = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-steam-lib-'));
+fs.mkdirSync(steamRoot, { recursive: true });
 fs.writeFileSync(path.join(steamRoot, 'steam.exe'), '');
+fs.writeFileSync(path.join(steamRoot, 'steam.sh'), '');
+if (process.platform !== 'win32') {
+  process.env.HOME = fakeHome;
+  delete process.env.XDG_DATA_HOME;
+}
 
 let fakeSteamPath = steamRoot;
 const originalLoad = Module._load;
@@ -29,7 +37,7 @@ Module._load = function patchedLoad(request, parent, isMain) {
 const steam = require('../../app/parser/steam.js');
 
 test.after(() => {
-  fs.rmSync(steamRoot, { recursive: true, force: true });
+  fs.rmSync(fakeHome, { recursive: true, force: true });
   fs.rmSync(extraLibrary, { recursive: true, force: true });
 });
 

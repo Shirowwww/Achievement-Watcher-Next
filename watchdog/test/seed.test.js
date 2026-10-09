@@ -69,6 +69,37 @@ test('seeds task-list snapshots that expose process instead of name', () => {
   assert.equal(sessions[0].portraitUrl, artworkGame.portraitUrl);
 });
 
+test('a running game the index does not know by name is seeded from the appid it was launched for', () => {
+  const launched = { 31: '300', 32: '300', 33: '999' };
+  const sessions = buildSeededSessions({
+    gameIndex,
+    processes: [
+      { pid: 31, process: 'Launcher.exe' },
+      { pid: 32, process: 'BetaGame.x86_64' },
+      { pid: 33, process: 'Unknown.exe' },
+      { pid: 34, process: 'bash' },
+    ],
+    resolvePath: (pid) => `/games/Beta/${pid}`,
+    launchAppidFor: (pid) => launched[pid] || '',
+  });
+  assert.equal(sessions.length, 1);
+  assert.equal(sessions[0].appid, '300');
+  assert.deepEqual([...sessions[0].pids], [31, 32]);
+  assert.equal(sessions[0].launchAppid, '300');
+  assert.equal(sessions[0].exePath, '/games/Beta/31');
+});
+
+test('a binary match wins over the launch appid and is not marked as a launch', () => {
+  const sessions = buildSeededSessions({
+    gameIndex,
+    processes: [{ pid: 11, process: 'alpha.exe' }],
+    launchAppidFor: () => '300',
+  });
+  assert.equal(sessions.length, 1);
+  assert.equal(sessions[0].appid, '100');
+  assert.equal(sessions[0].launchAppid, '');
+});
+
 test('ambiguous binary matches are skipped (delegated to the live watcher)', () => {
   const sessions = buildSeededSessions({
     gameIndex: [

@@ -49,6 +49,8 @@ test('a transport failure is told apart from a real answer about the account', (
 
 async function withScratch(run) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-steam-users-'));
+  // The Linux client has no Users key: its accounts are the userdata folders.
+  fs.mkdirSync(path.join(root, 'userdata', '274782616'), { recursive: true });
   const previousWhoIs = steamID.whoIs;
   try {
     steam.initDebug({ isDev: false, userDataPath: root });

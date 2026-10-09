@@ -102,3 +102,56 @@ test('#110: outside the muted roots nothing changes', () => {
   const free = exeAt(root, 'Jeux', 'Free', 'Free.exe');
   assert.equal(shouldMuteProcessPath(free, mutedRoots, []), false);
 });
+
+/*
+  Linux: the same filter over Unix paths. The distribution's programs, C:\windows in each Wine prefix
+  and the runtimes a launch goes through are muted; the games themselves, wherever they sit under the
+  home folder, are not.
+*/
+const { linuxMutedDirs } = require('../playtime/monitor.js');
+const linuxRoots = linuxMutedDirs();
+const home = '/home/player';
+const steam = `${home}/.local/share/Steam`;
+
+test('Linux: system programs and the runtimes behind a launch are muted', () => {
+  for (const file of [
+    '/usr/bin/python3.12',
+    '/usr/lib/wine/wine64-preloader',
+    '/usr/libexec/xdg-desktop-portal',
+    '/run/pressure-vessel/pv-from-host/bin/pv-adverb',
+    `${home}/.wine/drive_c/windows/system32/explorer.exe`,
+    `${steam}/steamapps/compatdata/400/pfx/drive_c/windows/system32/steam.exe`,
+    `${steam}/ubuntu12_32/reaper`,
+    `${steam}/steamapps/common/SteamLinuxRuntime_sniper/pressure-vessel/bin/pressure-vessel-wrap`,
+    `${steam}/steamapps/common/Proton 9.0/files/bin/wineserver`,
+    `${steam}/steamapps/common/Proton - Experimental/files/bin/wineserver`,
+    `${steam}/compatibilitytools.d/GE-Proton9-20/files/bin/wineserver`,
+    `${home}/.local/share/umu/steamrt3/pressure-vessel/bin/pv-adverb`,
+    `${home}/.local/share/lutris/runners/wine/wine-ge-8-26-x86_64/bin/wineserver`,
+    `${home}/.config/heroic/tools/proton/GE-Proton9-20/files/bin/wineserver`,
+    `${home}/.local/share/bottles/runners/soda-9.0-1/bin/wineserver`,
+  ]) {
+    assert.equal(isMutedByPath(file, linuxRoots), true, file);
+  }
+});
+
+test('Linux: games in a Steam library, a Wine prefix or the home folder are not muted', () => {
+  for (const file of [
+    `${steam}/steamapps/common/Portal/hl2_linux`,
+    `${steam}/steamapps/common/Hollow Knight/hollow_knight.x86_64`,
+    `${steam}/steamapps/common/ELDEN RING/Game/eldenring.exe`,
+    `${home}/.wine/drive_c/Program Files/Game/Game.exe`,
+    `${home}/Games/lutris/game/drive_c/Games/Game/Game.exe`,
+    `${home}/Games/Native/Game.x86_64`,
+    '/mnt/data/SteamLibrary/steamapps/common/Game/bin/linux64/game',
+  ]) {
+    assert.equal(isMutedByPath(file, linuxRoots), false, file);
+  }
+});
+
+test('Linux: a process the index claims by name in a system folder stays muted', () => {
+  const preloader = '/usr/lib/wine/wine64-preloader';
+  assert.equal(shouldMuteProcessPath(preloader, linuxRoots, []), true);
+  assert.equal(shouldMuteProcessPath(preloader, linuxRoots, [{ appid: '1', source: 'Steam' }]), true);
+  assert.equal(shouldMuteProcessPath(preloader, linuxRoots, [{ appid: 'manual-1', source: 'Manual' }]), false);
+});

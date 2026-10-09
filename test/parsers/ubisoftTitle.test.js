@@ -340,6 +340,7 @@ test('the local Steam library reader understands the real VDF/ACF layout', async
   const fakeSteam = path.join(tmp, 'Steam');
   fs.mkdirSync(path.join(fakeSteam, 'steamapps'), { recursive: true });
   fs.writeFileSync(path.join(fakeSteam, 'steam.exe'), '');
+  fs.writeFileSync(path.join(fakeSteam, 'steam.sh'), '');
   fs.writeFileSync(
     path.join(fakeSteam, 'steamapps', 'libraryfolders.vdf'),
     '"libraryfolders"\n{\n\t"0"\n\t{\n\t\t"path"\t\t"' + fakeSteam.replace(/\\/g, '\\\\') + '"\n\t}\n}'

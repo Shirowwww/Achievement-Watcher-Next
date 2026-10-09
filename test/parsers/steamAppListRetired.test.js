@@ -12,10 +12,18 @@ const test = require('node:test');
   really holds steam.exe, so a machine with no Steam install throws 'Steam Path not found' and the
   module-level catalogue path caches as '' - short-circuiting localSteamCatalogueName() before it
   ever calls appInfo.nameOf() below. A fake registry answer plus a real (empty) steam.exe on disk
-  makes that resolve the same way on a CI runner as on a developer's own machine.
+  makes that resolve the same way on a CI runner as on a developer's own machine. On Linux the
+  client is found under HOME instead, so HOME points at a fake one there.
 */
-const fakeSteamDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-fake-steam-'));
+const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-fake-steam-'));
+const fakeSteamDir = path.join(fakeHome, '.local', 'share', 'Steam');
+fs.mkdirSync(fakeSteamDir, { recursive: true });
 fs.writeFileSync(path.join(fakeSteamDir, 'steam.exe'), '');
+fs.writeFileSync(path.join(fakeSteamDir, 'steam.sh'), '');
+if (process.platform !== 'win32') {
+  process.env.HOME = fakeHome;
+  delete process.env.XDG_DATA_HOME;
+}
 
 let steamDataCalls = 0;
 const originalLoad = Module._load;

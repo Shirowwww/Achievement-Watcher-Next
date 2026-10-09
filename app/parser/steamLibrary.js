@@ -2,8 +2,8 @@
 
 /*
   Where Steam installed a game, read from Steam's own files: libraryfolders.vdf names every library,
-  appmanifest_<appid>.acf names the install folder. Nothing here but util/reg.js (unpacked), so the
-  Watchdog loads this through sharedAppModulePath as well as the app.
+  appmanifest_<appid>.acf names the install folder. Nothing here but util/reg.js and, on Linux,
+  util/steamLinux.js (both unpacked), so the Watchdog loads this through sharedAppModulePath too.
 */
 
 const fs = require('fs');
@@ -33,8 +33,16 @@ function parseSteamAppManifestAcf(text) {
   return out;
 }
 
+const linuxSteam = () => require(path.join(__dirname, '..', 'util', 'steamLinux.js'));
+
+function isSteamClientDir(dir, platform = process.platform) {
+  if (platform !== 'win32') return linuxSteam().isSteamClientDir(dir);
+  return Boolean(dir) && fs.existsSync(path.join(dir, 'steam.exe'));
+}
+
 // Some emulators point HKCU SteamPath at a game folder, so a value counts only where steam.exe is.
-function steamClientDir(readString = require(path.join(__dirname, '..', 'util', 'reg.js')).readRegistryString) {
+function steamClientDir(readString = require(path.join(__dirname, '..', 'util', 'reg.js')).readRegistryString, platform = process.platform) {
+  if (platform !== 'win32') return linuxSteam().steamClientRoot();
   for (const [hive, key, name] of [
     ['HKCU', 'Software/Valve/Steam', 'SteamPath'],
     ['HKLM', 'Software/WOW6432Node/Valve/Steam', 'InstallPath'],
@@ -77,6 +85,27 @@ function installDirOf(appid, { clientDir = steamClientDir() } = {}) {
     }
   }
   return '';
+}
+
+/*
+  HKCU\Software\Valve\Steam, `sub` being a slash path under it ('' or 'Apps/730'). The Linux client
+  keeps the same tree in registry.vdf, so callers do not care which one answers.
+*/
+function steamRegistry(platform = process.platform, reg = require(path.join(__dirname, '..', 'util', 'reg.js'))) {
+  if (platform !== 'win32') return linuxSteam().steamRegistry();
+  const key = (sub) => ['Software/Valve/Steam', sub].filter(Boolean).join('/');
+  return {
+    exists: (sub) => reg.regKeyExists('HKCU', key(sub)),
+    subkeys: (sub) => reg.listRegistryAllSubkeys('HKCU', key(sub)) || [],
+    integer: (sub, name) => reg.readRegistryInteger('HKCU', key(sub), name),
+    string: (sub, name) => reg.readRegistryString('HKCU', key(sub), name),
+  };
+}
+
+// The running client's pid as Steam recorded it, 0 when it is not running. The pid may be stale.
+function steamClientPid(platform = process.platform) {
+  if (platform !== 'win32') return linuxSteam().steamClientPid();
+  return Number(steamRegistry(platform).integer('ActiveProcess', 'pid')) || 0;
 }
 
 // Steam's binary KeyValues (shortcuts.vdf): 0x00 opens a map, 0x01 a string, 0x02 an int32,
@@ -156,7 +185,10 @@ module.exports = {
   unescapeSteamVdf,
   parseSteamLibraryFoldersVdf,
   parseSteamAppManifestAcf,
+  isSteamClientDir,
   steamClientDir,
+  steamRegistry,
+  steamClientPid,
   libraryAppsDirs,
   installDirOf,
   parseBinaryVdf,

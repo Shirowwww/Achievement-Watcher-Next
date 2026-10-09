@@ -848,6 +848,8 @@ async function loadLocalSteamLibrary(options = {}) {
 async function scanLocalSteamLibrary(options = {}) {
   const explicitPath = String(options.steamPath || '').trim();
   let steamPath = explicitPath;
+  const steamLibrary = require('./steamLibrary.js');
+  if (!steamPath && process.platform !== 'win32') steamPath = steamLibrary.steamClientDir();
   if (!steamPath) {
     try {
       steamPath = readRegistryString('HKCU', 'Software/Valve/Steam', 'SteamPath');
@@ -859,7 +861,7 @@ async function scanLocalSteamLibrary(options = {}) {
     }
   }
   const empty = { names: [], installs: [] };
-  if (!steamPath || !fs.existsSync(path.join(steamPath, 'steam.exe'))) return empty;
+  if (!steamLibrary.isSteamClientDir(steamPath)) return empty;
 
   const libraryFile = path.join(steamPath, 'steamapps', 'libraryfolders.vdf');
   let mtimeMs = 0;

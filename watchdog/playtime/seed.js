@@ -141,7 +141,9 @@ function describeActiveGames(sessions) {
 
 // Build sessions from task-list snapshots; tests inject the timer. The snapshot carries no image
 // paths, so `resolvePath` is asked for one only when several games share the executable name.
-function buildSeededSessions({ gameIndex, processes, now = Date.now(), createTimer = () => ({}), resolvePath = null, exePathFor = null }) {
+// `launchAppidFor(pid)` names the appid a process was launched for (Steam's SteamAppId on Linux):
+// it seeds a game whose running binary the index does not know by name.
+function buildSeededSessions({ gameIndex, processes, now = Date.now(), createTimer = () => ({}), resolvePath = null, exePathFor = null, launchAppidFor = null }) {
   if (!Array.isArray(gameIndex) || !Array.isArray(processes)) return [];
   const gamesByProcessName = buildBinaryIndex(gameIndex);
   const sessionsByAppid = new Map();
@@ -149,9 +151,15 @@ function buildSeededSessions({ gameIndex, processes, now = Date.now(), createTim
   for (const proc of processes) {
     if (!proc || !Number.isFinite(Number(proc.pid))) continue;
     const pid = Number(proc.pid);
-    const matches = getBinaryMatches(gamesByProcessName, proc.process || proc.name);
-    if (matches.length === 0) continue;
+    let matches = getBinaryMatches(gamesByProcessName, proc.process || proc.name);
     let filepath = proc.filepath || '';
+    let launchAppid = '';
+    if (matches.length === 0 && typeof launchAppidFor === 'function') {
+      launchAppid = launchAppidFor(pid);
+      if (launchAppid) matches = gameIndex.filter((game) => game && String(game.appid) === launchAppid).slice(0, 1);
+      if (matches.length > 0 && !filepath && typeof resolvePath === 'function') filepath = resolvePath(pid) || '';
+    }
+    if (matches.length === 0) continue;
     let game = matches[0];
     if (matches.length > 1) {
       if (!filepath && typeof resolvePath === 'function') {
@@ -167,6 +175,7 @@ function buildSeededSessions({ gameIndex, processes, now = Date.now(), createTim
     const existing = sessionsByAppid.get(game.appid);
     if (existing) {
       existing.pids.add(pid);
+      if (launchAppid) existing.launchAppid = launchAppid;
       continue;
     }
     sessionsByAppid.set(game.appid, {
@@ -183,6 +192,7 @@ function buildSeededSessions({ gameIndex, processes, now = Date.now(), createTim
       timer: createTimer(now),
       exePath: filepath,
       gameDir: filepath ? path.dirname(filepath) : '',
+      launchAppid,
       seeded: true,
       startedAt: now,
     });
