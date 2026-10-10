@@ -239,10 +239,11 @@ module.exports.getFolders = async (userDir_file, options = {}) => {
   const hosts = winHosts.listHosts({ nativeDocuments: () => nativeDocs });
   let steamEmu = hosts.flatMap(builtinRoots);
 
-  // The GBE save folder chosen in Settings (issue #123) has the GSE Saves shape: one folder per appid.
-  const customSaves = String((options && options.emulator && options.emulator.savePath) || '').trim();
-  if (customSaves && path.isAbsolute(customSaves)) {
-    steamEmu.push({ dir: customSaves, options: { ...GSE_SAVES_OPTIONS } });
+  // The GBE save folder chosen in Settings (issue #123) has the GSE Saves shape: one folder per appid,
+  // and so has GBE's GseSavePath when the session sets it for every game.
+  const customSaves = [(options && options.emulator && options.emulator.savePath) || '', process.env.GseSavePath || ''];
+  for (const dir of new Set(customSaves.map((value) => String(value).trim()))) {
+    if (dir && path.isAbsolute(dir)) steamEmu.push({ dir, options: { ...GSE_SAVES_OPTIONS } });
   }
 
   const docsByHost = new Map();

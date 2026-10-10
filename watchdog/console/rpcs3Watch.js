@@ -17,6 +17,8 @@ const waitForFileStable = require('../util/waitForFileStable.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
 const notifyStrings = require('../util/notifyStrings.js');
 const { userDataDir } = require('../util/userData.js');
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { xdgAppDirs } = require(sharedAppModulePath('util/xdgAppDirs.js'));
 
 const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 
@@ -151,8 +153,10 @@ function read(trophyDir) {
 }
 
 // Discover trophy sets under the user's saved folders (cfg/userdir.db - the same list the app
-// scans). An RPCS3 root is any folder holding rpcs3.exe with dev_hdd0/home/<user>/trophy/<game>.
-function discover(configFile = userDirFile) {
+// scans). An RPCS3 root is any folder holding rpcs3.exe with dev_hdd0/home/<user>/trophy/<game>, or
+// the configuration folder of the Linux build (~/.config/rpcs3, or its Flatpak copy), which holds
+// dev_hdd0 the same way.
+function discover(configFile = userDirFile, nativeRoots = xdgAppDirs('rpcs3')) {
   const targets = [];
   const seen = new Set();
 
@@ -166,11 +170,11 @@ function discover(configFile = userDirFile) {
         .filter(Boolean);
     }
   } catch {
-    return targets;
+    /* no saved folders yet: the Linux build's own folder is still watched */
   }
 
-  for (const dir of userDirs) {
-    if (!fs.existsSync(path.join(dir, 'rpcs3.exe'))) continue;
+  const roots = [...userDirs.filter((dir) => fs.existsSync(path.join(dir, 'rpcs3.exe'))), ...nativeRoots];
+  for (const dir of roots) {
     let users;
     try {
       users = fs.readdirSync(path.join(dir, 'dev_hdd0', 'home'), { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);

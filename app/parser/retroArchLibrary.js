@@ -13,7 +13,9 @@
 */
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
+const { xdgAppDirs } = require('../util/xdgAppDirs.js');
 
 // The libretro database a scanned playlist names, for each RetroAchievements console. Only used to
 // reject a ROM of the wrong console: a history entry carries no database and is matched by name.
@@ -45,7 +47,7 @@ const CONSOLE_DATABASES = {
 };
 
 // The usual install folders. A portable build keeps everything beside retroarch.exe; the installer
-// and Scoop put it in fixed places.
+// and Scoop put it in fixed places, the Linux builds in their XDG or Flatpak config folder.
 function candidateRoots(env = process.env) {
   const roots = [];
   for (const drive of ['C', 'D', 'E', 'F', 'G']) {
@@ -55,6 +57,7 @@ function candidateRoots(env = process.env) {
   if (env.ProgramFiles) roots.push(path.join(env.ProgramFiles, 'RetroArch'));
   if (env['ProgramFiles(x86)']) roots.push(path.join(env['ProgramFiles(x86)'], 'RetroArch'));
   if (env.USERPROFILE) roots.push(path.join(env.USERPROFILE, 'scoop', 'apps', 'retroarch', 'current'));
+  roots.push(...xdgAppDirs('retroarch', { env }));
   return roots;
 }
 
@@ -62,8 +65,9 @@ function findRoots(roots = candidateRoots()) {
   return roots.filter((root) => fs.existsSync(path.join(root, 'retroarch.cfg')));
 }
 
-// retroarch.cfg writes a folder inside the install as ":\playlists" (":/playlists" on other hosts).
-function playlistDirectory(root) {
+// retroarch.cfg writes a folder inside the install as ":\playlists" (":/playlists" on other hosts),
+// and the Linux build its default as "~/.config/retroarch/playlists".
+function playlistDirectory(root, home = os.homedir()) {
   let configured = '';
   try {
     const match = /^playlist_directory\s*=\s*"([^"]*)"/m.exec(fs.readFileSync(path.join(root, 'retroarch.cfg'), 'utf8'));
@@ -73,6 +77,7 @@ function playlistDirectory(root) {
   }
   if (!configured || configured === 'default') return path.join(root, 'playlists');
   if (configured.startsWith(':')) return path.join(root, configured.slice(1).replace(/\\/g, '/'));
+  if (configured.startsWith('~/')) return path.join(home, configured.slice(2));
   return configured;
 }
 

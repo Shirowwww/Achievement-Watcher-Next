@@ -612,10 +612,12 @@ function saveFolderFor(type, appid, gameDir) {
 
 // The save path a setup redirects itself to, verbatim as configured. Repacks routinely point the
 // save folder back into the game directory instead of %APPDATA%\GSE Saves (`local_save_path` for
-// GBE, `local_save.txt` for classic Goldberg). Returns '' when unconfigured.
-function readConfiguredSavePath(steamSettings) {
+// GBE, `local_save.txt` for classic Goldberg). GBE reads its GseSavePath variable before both, so a
+// session that sets it for every game moves every save there. Returns '' when unconfigured.
+function readConfiguredSavePath(steamSettings, env = process.env) {
   if (!steamSettings) return '';
-  let value = '';
+  let value = String(env.GseSavePath || '').trim();
+  if (value) return value;
   try {
     const text = fs.readFileSync(path.join(steamSettings, 'configs.user.ini'), 'utf8');
     // [ \t] and not \s: an emptied "local_save_path=" must not borrow the comment on the next line.

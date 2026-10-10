@@ -44,6 +44,7 @@ const uplayR2Installer = require(path.join(appPath, 'uplayR2Installer.js'));
 const uplayCatalogue = require(path.join(appPath, 'uplayCatalogue.js'));
 const { steamCdnImages } = require('../util/steamCdn.js');
 const { hostPaths } = require('../util/winHosts.js');
+const { xdgAppDirs } = require('../util/xdgAppDirs.js');
 const uplayAutoMap = require(path.join(appPath, 'uplayAutoMap.js'));
 const gbeInstaller = require(path.join(appPath, 'gbeInstaller.js'));
 const pe = require(path.join(appPath, '..', 'util', 'pe.js'));
@@ -2255,13 +2256,13 @@ async function discoverInScope(source, steamAccFilter, scope) {
   mark('x360recomp');
 
   //ShadPS4 stores trophies in %APPDATA%/shadPS4 regardless of where the .exe lives - auto-scan that
-  //known location (on every host) so the user doesn't have to add it as a watched folder. De-dupe
-  //against anything the watched-folder pass already found (portable installs that keep game_data
-  //next to the binary).
+  //known location (on every host, and the Flatpak build's on Linux) so the user doesn't have to add
+  //it as a watched folder. De-dupe against anything the watched-folder pass already found (portable
+  //installs that keep game_data next to the binary).
   if (!scope && source.shadps4) {
     try {
       const known = [];
-      for (const dir of hostPaths('APPDATA', 'shadPS4')) known.push(...(await shadps4.scan(dir)));
+      for (const dir of new Set([...hostPaths('APPDATA', 'shadPS4'), ...xdgAppDirs('shadps4')])) known.push(...(await shadps4.scan(dir)));
       const extra = entriesNotIn(data, known);
       if (extra.length > 0) {
         data = data.concat(extra);

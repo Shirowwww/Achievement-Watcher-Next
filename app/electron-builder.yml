@@ -64,6 +64,8 @@ asarUnpack:
   - util/winHosts.js
   - util/winePrefixes.js
   - util/wineRegistry.js
+  # The XDG and Flatpak folders of the Linux emulator builds (RPCS3, shadPS4).
+  - util/xdgAppDirs.js
   # The hosts with the app's own registry reader, for the Documents folder ff7, madnesspatch,
   # runeUplay and x360Recomp read.
   - util/appHosts.js

@@ -27,3 +27,16 @@ test('no folder, or a relative one, adds nothing', async (t) => {
   assert.equal((await monitor.getFolders([], { emulator: { savePath: 'saves' } })).length, base);
   assert.equal((await monitor.getFolders([], {})).length, base);
 });
+
+test('GBE GseSavePath set for the session is watched with the GSE Saves shape', async (t) => {
+  const saves = path.resolve(path.sep, 'gse-session-saves');
+  const before = process.env.GseSavePath;
+  process.env.GseSavePath = saves;
+  t.after(() => {
+    if (before === undefined) delete process.env.GseSavePath;
+    else process.env.GseSavePath = before;
+  });
+  const entry = find(await monitor.getFolders([]), saves);
+  assert.ok(entry, 'the GseSavePath folder must be watched');
+  assert.equal(entry.options.recursive, true);
+});

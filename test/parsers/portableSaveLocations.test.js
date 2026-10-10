@@ -171,6 +171,19 @@ test('a renamed GBE save root (saves_folder_name) is resolved under %APPDATA%', 
   }
 });
 
+test('GBE GseSavePath set for the session wins over the setup files', () => {
+  const gameDir = tempGame('gsesavepath');
+  try {
+    const steamSettings = path.join(gameDir, 'steam_settings');
+    writeUserIni(steamSettings, 'mysaves');
+    const saves = path.join(gameDir, 'session-saves');
+    assert.equal(goldberg.readConfiguredSavePath(steamSettings, { GseSavePath: ` ${saves} ` }), saves);
+    assert.equal(goldberg.readConfiguredSavePath(steamSettings, {}), 'mysaves');
+  } finally {
+    fs.rmSync(gameDir, { recursive: true, force: true });
+  }
+});
+
 // Portable CODEX/RUNE.
 
 test('a portable RUNE release is accepted as an achievement folder and read from its own tree', async () => {
