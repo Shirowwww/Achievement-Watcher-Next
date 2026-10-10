@@ -52,7 +52,9 @@ function reportFailure(reason) {
   debug.warn(`Could not read the user notification state (${reason}) - full-screen/quiet-hours detection is unavailable`);
 }
 
+// A Windows shell signal: other platforms have nothing to ask, which is not a failure worth a warning.
 function queryUserNotificationState() {
+  if (process.platform !== 'win32') return Promise.resolve(null);
   if (cached.valid && Date.now() - cached.at < STATE_TTL_MS) return Promise.resolve(cached.state);
   if (inFlight) return inFlight;
   inFlight = readNotificationState();
@@ -66,7 +68,6 @@ function queryUserNotificationState() {
 async function readNotificationState() {
   let state = null;
   try {
-    if (process.platform !== 'win32') throw new Error('not a Windows host');
     if (!readRawState) readRawState = nativeReader();
     const raw = await readRawState();
     state = QUERY_USER_NOTIFICATION_STATE[raw] || null;
@@ -95,7 +96,9 @@ async function arePopupsSuppressed() {
 // Only exclusive full-screen D3D hides an always-on-top window (it owns the swap chain); a
 // borderless/windowed game still shows the overlay, so this deliberately skips FULLSCREEN_STATES.
 // Returns null (not false) when the state can't be read, so callers don't treat "unknown" as "fine".
+// Linux has no exclusive full screen: the compositor draws AW's notification windows over the game.
 async function isOverlayLikelyHidden() {
+  if (process.platform !== 'win32') return false;
   const state = await queryUserNotificationState();
   if (!state) return null;
   return state === 'QUNS_RUNNING_D3D_FULL_SCREEN';

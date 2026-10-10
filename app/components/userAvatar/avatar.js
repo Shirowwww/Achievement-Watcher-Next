@@ -39,7 +39,12 @@ async function getAvatar() {
       avatar = legacy;
     }
   }
-  if (!avatar) avatar = await getWindowsProfileAvatar();
+  if (!avatar) {
+    avatar =
+      process.platform === 'win32'
+        ? await getWindowsProfileAvatar()
+        : await require('../../util/linuxAccountPicture.js').linuxAccountPicture();
+  }
   return avatar;
 }
 

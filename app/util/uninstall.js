@@ -78,6 +78,42 @@ const BLOCKED_BASE = new Set([
   'goldberg steamemu saves',
 ]);
 
+// The same rule for Unix: system folders, the folders a home is made of, and the inside of a Wine or
+// Proton prefix, which holds every game installed in it (Program Files and users are already above).
+const UNIX_BLOCKED_BASE = new Set([
+  'home',
+  'root',
+  'usr',
+  'etc',
+  'opt',
+  'var',
+  'srv',
+  'mnt',
+  'media',
+  'run',
+  'tmp',
+  '.local',
+  'share',
+  '.config',
+  '.steam',
+  '.wine',
+  'drive_c',
+  'pfx',
+  'compatdata',
+  'prefixes',
+  'bottles',
+  'lutris',
+  'heroic',
+]);
+
+function isUnsafeUnixTarget(resolved) {
+  const parsed = path.parse(resolved);
+  if (parsed.dir === parsed.root) return true; // /games, /data: a whole top-level folder
+  if (UNIX_BLOCKED_BASE.has(parsed.base.toLowerCase())) return true;
+  if (path.resolve(os.homedir()).startsWith(resolved + path.sep)) return true;
+  return fs.existsSync(path.join(resolved, 'drive_c')) || fs.existsSync(path.join(resolved, 'system.reg'));
+}
+
 function safeReadDir(gameDir) {
   try {
     return fs.readdirSync(gameDir, { withFileTypes: true });
@@ -150,8 +186,12 @@ function findUninstallers(gameDir) {
   return found.sort((a, b) => priority[a.kind] - priority[b.kind] || a.name.localeCompare(b.name));
 }
 
-/** Best single local uninstaller for a game folder, or null. */
-function findLocalUninstaller(gameDir) {
+/**
+ * Best single local uninstaller for a game folder, or null. Off Windows these are Windows programs
+ * inside a Wine prefix, and AW never runs Windows code itself, so the folder removal is offered instead.
+ */
+function findLocalUninstaller(gameDir, platform = process.platform) {
+  if (platform !== 'win32') return null;
   const list = findUninstallers(gameDir);
   return list[0] || null;
 }
@@ -247,7 +287,7 @@ function getSteamUninstallInfo(appid) {
  * Safety gate for the "move folder to Recycle Bin" fallback: must be an existing
  * directory, not a drive root or a known save-folder, and never a system path.
  */
-function isSafeTrashTarget(gameDir) {
+function isSafeTrashTarget(gameDir, platform = process.platform) {
   if (!gameDir || typeof gameDir !== 'string') return false;
   try {
     const resolved = path.resolve(gameDir);
@@ -261,6 +301,7 @@ function isSafeTrashTarget(gameDir) {
     if (LIBRARY_ROOT_BASE.has(base)) return false;
     if (SAVE_FOLDER_RE.test(resolved)) return false;
     if (!base) return false;
+    if (platform !== 'win32' && isUnsafeUnixTarget(resolved)) return false;
     return true;
   } catch {
     return false;

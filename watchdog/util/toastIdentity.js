@@ -44,6 +44,9 @@ function toastIdentityCandidates(options, env = process.env) {
 
 /** Pick the first usable AppUserModelID and report whether it is registered. */
 async function resolveToastIdentity(options, { env = process.env, log } = {}) {
+  // AppUserModelIDs are a Windows notion: elsewhere the app shows the toast through the desktop's
+  // notification service, which needs no registration.
+  if (process.platform !== 'win32') return { id: ACHIEVEMENT_WATCHER_AUMID, why: 'desktop notification', registered: true };
   const debug = log || { log() {}, warn() {}, error() {} };
   const candidates = toastIdentityCandidates(options, env);
 
