@@ -10,6 +10,7 @@ const pe = require(path.join(__dirname, '..', 'util', 'pe.js'));
 const { userDataDir } = require(path.join(__dirname, '..', 'util', 'userDataPath.js'));
 const fuzzyAppid = require(path.join(__dirname, '..', 'util', 'fuzzyAppid.js'));
 const goldberg = require(path.join(__dirname, 'goldberg.js'));
+const winHosts = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 const uplaySteamTable = require(path.join(__dirname, 'uplaySteamTable.js'));
 const { replaceFileSync, unlinkForce } = require(path.join(__dirname, '..', 'util', 'replaceFile.js'));
 
@@ -718,9 +719,31 @@ function readIniSettings(file, flavour) {
   }
 }
 
-function uplayDefaultSaveRoot(flavour) {
-  const appdata = process.env['APPDATA'];
-  return appdata ? path.join(appdata, resolveFlavour(flavour).saveRoot) : '';
+// The hosts a Windows loader in `dir` can run in: this machine, or its Wine prefix on Linux (every
+// prefix when the game sits outside one). The native Linux host never runs it.
+function loaderHosts(dir) {
+  return winHosts.hostsFor(dir).filter((host) => host.windowsPath(winHosts.hostPath(host, 'APPDATA')));
+}
+
+// A path the loader reads from its ini, as local paths: one per host it may run in.
+function localCandidates(winPath, dir) {
+  return loaderHosts(dir)
+    .map((host) => host.localPath(winPath))
+    .filter(Boolean);
+}
+
+// GSE Saves\<steamAppid> where the save redirection points: in the host that already has it, else the
+// first one the loader can run in. `configured` is the same folder as the loader's ini spells it.
+function redirectTarget(steamAppid, dir) {
+  const folder = (host) => winHosts.hostPath(host, 'APPDATA', 'GSE Saves', String(steamAppid));
+  const hosts = loaderHosts(dir);
+  const host = hosts.find((candidate) => fs.existsSync(folder(candidate))) || hosts[0];
+  if (!host) return { local: '', configured: '' };
+  return { local: folder(host), configured: host.windowsPath(folder(host)) };
+}
+
+function defaultSavePath(steamAppid, dir) {
+  return redirectTarget(steamAppid, dir).local;
 }
 
 // Every directory the emulator could write achievements.json into, most-likely first (SaveType +
@@ -739,14 +762,19 @@ function resolveAchievementSaveDirs({ gameDir, runtimeDir, uplayId, steamAppid, 
   const settings = readIniSettings(configFile);
   const id = String(uplayId || '').trim();
 
-  // Configured achievement redirect (newer loaders only) wins when it is actually set.
-  if (String(settings.achsavetype || '').trim() === '1' && String(settings.achsavepath || '').trim()) add(settings.achsavepath.trim());
+  // Configured achievement redirect (newer loaders only) wins when it is actually set. The ini holds
+  // Windows paths, read in every host the loader may run in.
+  if (String(settings.achsavetype || '').trim() === '1' && String(settings.achsavepath || '').trim()) {
+    for (const local of localCandidates(settings.achsavepath.trim(), dir)) add(local);
+  }
 
   const saveType = String(settings.savetype || '').trim();
   const savePath = String(settings.savepath || '').trim();
   if (saveType === '2' && savePath) {
-    add(savePath);
-    if (id) add(path.join(savePath, id));
+    for (const local of localCandidates(savePath, dir)) {
+      add(local);
+      if (id) add(path.join(local, id));
+    }
   } else if (saveType === '1' && gameDir) {
     add(path.join(gameDir, savePath || UPLAY_GAME_SAVE_SUBDIR, id || ''));
   }
@@ -763,18 +791,19 @@ function resolveAchievementSaveDirs({ gameDir, runtimeDir, uplayId, steamAppid, 
   if (productIds.length > 0) {
     for (const productId of productIds) {
       for (const known of FLAVOUR_LIST) {
-        const root = uplayDefaultSaveRoot(known);
-        if (root) add(path.join(root, productId));
+        for (const host of loaderHosts(dir)) add(winHosts.hostPath(host, 'APPDATA', resolveFlavour(known).saveRoot, productId));
       }
       if (gameDir) add(path.join(gameDir, UPLAY_GAME_SAVE_SUBDIR, productId));
     }
   }
   if (steamAppid) {
-    const flatSaveDir = defaultSavePath(steamAppid);
-    add(flatSaveDir);
-    // A misconfigured SaveType=2 install can nest the achievement redirect under the product id
-    // instead of writing flat - cheap to probe, and it is where a stray leftover folder has been seen.
-    for (const productId of productIds) add(path.join(flatSaveDir, productId));
+    for (const host of loaderHosts(dir)) {
+      const flatSaveDir = winHosts.hostPath(host, 'APPDATA', 'GSE Saves', String(steamAppid));
+      add(flatSaveDir);
+      // A misconfigured SaveType=2 install can nest the achievement redirect under the product id
+      // instead of writing flat - cheap to probe, and it is where a stray leftover folder has been seen.
+      for (const productId of productIds) add(path.join(flatSaveDir, productId));
+    }
   }
 
   return dirs;
@@ -993,7 +1022,7 @@ function getGameToolPaths(game, fallbackAppid) {
     configFiles,
     configFile,
     schemaFile: runtimeDir ? path.join(runtimeDir, ACH_SCHEMA_FILE) : '',
-    saveDir: identity.steamAppid ? defaultSavePath(identity.steamAppid) : '',
+    saveDir: identity.steamAppid ? defaultSavePath(identity.steamAppid, runtimeDir || gameDir) : '',
     saveDirs: resolveAchievementSaveDirs({
       gameDir,
       runtimeDir,
@@ -1222,12 +1251,6 @@ function backupTimestamp(date = new Date()) {
   return date.toISOString().replace(/[:.]/g, '-');
 }
 
-function defaultSavePath(steamAppid) {
-  const appdata = process.env['APPDATA'];
-  if (!appdata) return '';
-  return path.join(appdata, 'GSE Saves', String(steamAppid));
-}
-
 function normalizeLoaderLanguage(language) {
   const value = String(language || '').trim();
   if (!value) return '';
@@ -1246,7 +1269,8 @@ function planSettingsConfig({ dir, steamAppid, prefix, accountName, language, lo
   const updates = { Achievements: '1' };
   if (caps.supportsAchKeyPrefix) updates.AchKeyPrefix = sanitizeIniValue(prefix || '');
   if (caps.supportsAchRedirect) {
-    const achievementSavePath = defaultSavePath(steamAppid);
+    // The loader reads this path itself, so it is written the way the loader's host spells it.
+    const achievementSavePath = redirectTarget(steamAppid, dir).configured;
     if (!achievementSavePath) throw new Error('writeSettingsConfig: APPDATA is unavailable for the achievement save redirect');
     updates.AchSaveType = '1';
     updates.AchSavePath = sanitizeIniValue(achievementSavePath);
@@ -1649,7 +1673,7 @@ function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedM
     }
   }
 
-  const expectedSavePath = defaultSavePath(mapping.steam_appid);
+  const expectedSavePath = redirectTarget(mapping.steam_appid, dir).configured;
   report.iniFile = iniFile;
   if (!iniFile) {
     add('warning', 'NO_INI', `No ${flavour.iniNames.join('/')} found beside the loader dll.`);

@@ -3,6 +3,7 @@
 const path = require('path');
 const fs = require('fs');
 const { lazyRequire } = require('../util/lazyRequire.js');
+const { hostPaths } = require('../util/winHosts.js');
 const glob = lazyRequire('fast-glob');
 const request = lazyRequire('request-zero');
 
@@ -68,10 +69,9 @@ module.exports.scan = async () => {
   let updateCache = false;
   const cachedByGogId = mappingByGogId(cache);
 
-  for (const dir of await glob(path.join(process.env['APPDATA'], 'NemirtingasGalaxyEmu', '*/*/').replace(/\\/g, '/'), {
-    onlyDirectories: true,
-    absolute: true,
-  })) {
+  // <user>/<appid>/ under the emulator's save root of every host (see util/winHosts.js).
+  const patterns = hostPaths('APPDATA', 'NemirtingasGalaxyEmu').map((root) => `${glob.convertPathToPattern(root)}/*/*/`);
+  for (const dir of patterns.length > 0 ? await glob(patterns, { onlyDirectories: true, absolute: true }) : []) {
     let game = {
       appid: path.parse(dir).name,
       source: 'gog',

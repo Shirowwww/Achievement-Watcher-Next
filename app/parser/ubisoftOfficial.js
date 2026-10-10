@@ -9,6 +9,8 @@ const zlib = require('zlib');
 const { officialAppId } = require('../util/platformId.js');
 const uplayCatalogue = require('./uplayCatalogue.js');
 const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
+const { hostPaths, firstExisting } = require('../util/winHosts.js');
+const ubisoftRegistry = require('../util/ubisoftRegistry.js');
 
 // The self-heal loop awaits one 30s download per broken game. Offline that is 30s each, in a row,
 // so an unreachable CDN is proved once and the rest of the pass skips it.
@@ -31,10 +33,10 @@ module.exports.setUserDataPath = (p) => {
   achievementsRootsCache = null;
 };
 
-const DEFAULT_SPOOL_ROOT = process.env['LOCALAPPDATA'] ? path.join(process.env['LOCALAPPDATA'], 'Ubisoft Game Launcher', 'spool') : '';
-const DEFAULT_CONFIGURATIONS_PATH = process.env['LOCALAPPDATA']
-  ? path.join(process.env['LOCALAPPDATA'], 'Ubisoft Game Launcher', 'cache', 'configuration', 'configurations')
-  : '';
+// The launcher is installed once, in whichever host holds it (a Wine prefix on Linux).
+const defaultSpoolRoot = () => firstExisting(hostPaths('LOCALAPPDATA', 'Ubisoft Game Launcher', 'spool'));
+const defaultConfigurationsPath = () =>
+  firstExisting(hostPaths('LOCALAPPDATA', 'Ubisoft Game Launcher', 'cache', 'configuration', 'configurations'));
 /*
   Ubisoft Connect keeps the achievement archives under its OWN install folder, which the user chooses
   at install time - not under %ProgramData%, where only `cache\statistics` lives. Reading one fixed
@@ -53,22 +55,9 @@ const DEFAULT_ACHIEVEMENTS_ROOTS = () => {
     const full = path.join(String(dir).trim(), 'cache', 'achievements');
     if (!roots.some((entry) => entry.toLowerCase() === full.toLowerCase())) roots.push(full);
   };
-  for (const [hive, key] of [
-    ['HKLM', 'Software/WOW6432Node/Ubisoft/Launcher'],
-    ['HKLM', 'Software/Ubisoft/Launcher'],
-    ['HKCU', 'Software/WOW6432Node/Ubisoft/Launcher'],
-    ['HKCU', 'Software/Ubisoft/Launcher'],
-  ]) {
-    try {
-      add(readRegistryString(hive, key, 'InstallDir'));
-    } catch {
-      /* key absent on this hive/bitness - try the next one */
-    }
-  }
-  if (process.env['ProgramData']) add(path.join(process.env['ProgramData'], 'Ubisoft', 'Ubisoft Game Launcher'));
-  for (const programFiles of [process.env['ProgramFiles(x86)'], process.env['ProgramFiles']]) {
-    if (programFiles) add(path.join(programFiles, 'Ubisoft', 'Ubisoft Game Launcher'));
-  }
+  for (const dir of ubisoftRegistry.launcherDirs()) add(dir);
+  for (const dir of hostPaths('PROGRAMDATA', 'Ubisoft', 'Ubisoft Game Launcher')) add(dir);
+  for (const dir of [...hostPaths('PROGRAMFILES_X86', 'Ubisoft', 'Ubisoft Game Launcher'), ...hostPaths('PROGRAMFILES', 'Ubisoft', 'Ubisoft Game Launcher')]) add(dir);
   // Archives AW Next fetched itself live here, and are searched like any other root.
   if (cacheRoot) {
     const own = path.join(cacheRoot, 'cache', 'ubisoftAchievements');
@@ -208,7 +197,7 @@ function buildUbisoftOfficialSnapshot(records) {
   return snapshot;
 }
 
-function listSpoolEntries(spoolRoot = DEFAULT_SPOOL_ROOT) {
+function listSpoolEntries(spoolRoot = defaultSpoolRoot()) {
   const out = [];
   if (!spoolRoot || !fs.existsSync(spoolRoot)) return out;
   let userEntries = [];
@@ -414,7 +403,7 @@ function mergeConfigBlocks(blocks) {
   return merged;
 }
 
-function readConfigurationsIndex(configurationsPath = DEFAULT_CONFIGURATIONS_PATH) {
+function readConfigurationsIndex(configurationsPath = defaultConfigurationsPath()) {
   const filePath = String(configurationsPath || '').trim();
   if (!filePath || !fs.existsSync(filePath)) return [];
   let stat;
@@ -491,7 +480,7 @@ function readConfigurationsIndex(configurationsPath = DEFAULT_CONFIGURATIONS_PAT
 */
 let productSpecCache = { path: '', mtimeMs: 0, specs: new Map() };
 
-function readProductAchievementSpecs(configurationsPath = DEFAULT_CONFIGURATIONS_PATH) {
+function readProductAchievementSpecs(configurationsPath = defaultConfigurationsPath()) {
   const filePath = String(configurationsPath || '').trim();
   if (!filePath || !fs.existsSync(filePath)) return new Map();
   let stat;
@@ -762,7 +751,7 @@ async function seedRarityFromSteam(cacheId, steamAppId, ids) {
 // installed in the Steam library, so its ACF carries the REAL Steam appid and store name. Matching
 // the configurations candidates against those offline manifests resolves ANY future title with no
 // asset edit and no network.
-const { readRegistryString, listRegistryAllSubkeys } = require('../util/reg.js');
+const { readRegistryString } = require('../util/reg.js');
 
 function unescapeVdf(value) {
   return String(value || '').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
@@ -804,17 +793,7 @@ function normalizePathKey(value) {
 function ubisoftInstallDir(productId) {
   const id = String(productId || '').trim();
   if (!/^\d+$/.test(id)) return '';
-  for (const hive of ['HKLM', 'HKCU']) {
-    for (const root of ['Software/WOW6432Node/Ubisoft/Launcher/Installs', 'Software/Ubisoft/Launcher/Installs']) {
-      try {
-        const dir = readRegistryString(hive, `${root}/${id}`, 'InstallDir');
-        if (dir && String(dir).trim()) return String(dir).trim();
-      } catch {
-        /* key absent on this hive/bitness - try the next one */
-      }
-    }
-  }
-  return '';
+  return ubisoftRegistry.installDir(id);
 }
 
 // The Steam appid whose install folder contains (or equals) `installDir`.
@@ -926,26 +905,15 @@ let _installedUbisoftProducts = null;
 function isUbisoftProductInstalled(productId) {
   const id = String(productId || '').trim();
   if (!/^\d+$/.test(id)) return false;
-  if (_installedUbisoftProducts) return _installedUbisoftProducts.has(id);
-  const installed = new Set();
-  for (const hive of ['HKLM', 'HKCU']) {
-    for (const root of ['Software/WOW6432Node/Ubisoft/Launcher/Installs', 'Software/Ubisoft/Launcher/Installs']) {
-      try {
-        for (const sub of listRegistryAllSubkeys(hive, root) || []) {
-          try {
-            const dir = readRegistryString(hive, `${root}/${sub}`, 'InstallDir');
-            if (dir && fs.existsSync(dir)) installed.add(String(sub));
-          } catch {
-            /* one corrupt entry must not hide the others */
-          }
-        }
-      } catch {
-        /* key absent on this hive/bitness - try the next one */
-      }
-    }
+  if (!_installedUbisoftProducts) {
+    _installedUbisoftProducts = new Set(
+      ubisoftRegistry
+        .installs()
+        .filter(({ dir }) => fs.existsSync(dir))
+        .map((install) => install.id)
+    );
   }
-  _installedUbisoftProducts = installed;
-  return installed.has(id);
+  return _installedUbisoftProducts.has(id);
 }
 
 async function resolveIdentity(entry, options = {}) {
@@ -1262,10 +1230,7 @@ module.exports.getGameData = async (appid, lang) => {
     // No Steam release to borrow art from: use the launcher's own cached images (header/background/
     // icon) when the configurations index names them, then SteamGridDB by title as a last resort.
     try {
-      const uplayPath =
-        readRegistryString('HKLM', 'Software/WOW6432Node/Ubisoft/Launcher', 'InstallDir') ||
-        readRegistryString('HKCU', 'Software/WOW6432Node/Ubisoft/Launcher', 'InstallDir') ||
-        readRegistryString('HKLM', 'Software/Ubisoft/Launcher', 'InstallDir');
+      const uplayPath = ubisoftRegistry.launcherDirs()[0];
       const assetsRoot = uplayPath ? path.join(uplayPath, 'cache/assets') : '';
       const gamesRoot = uplayPath ? path.join(uplayPath, 'data/games') : '';
       const meta = data.configBlock || {};

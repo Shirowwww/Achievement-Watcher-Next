@@ -18,9 +18,10 @@ const documents = path.join(tmp, 'Documents');
 fs.mkdirSync(documents, { recursive: true });
 
 const originalLoad = Module._load;
+// The Documents folder of the host the game folder belongs to, as util/appHosts.js answers it.
 Module._load = function patchedLoad(request) {
-  if (request.endsWith('util/reg') || request.endsWith('util\\reg')) {
-    return { readRegistryStringAndExpand: () => documents };
+  if (/util[\\/]appHosts\.js$/.test(request)) {
+    return { appHosts: () => [], documentsFor: () => documents };
   }
   return originalLoad.apply(this, arguments);
 };

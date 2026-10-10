@@ -43,6 +43,7 @@ const uplaySteamTable = require(path.join(appPath, 'uplaySteamTable.js'));
 const uplayR2Installer = require(path.join(appPath, 'uplayR2Installer.js'));
 const uplayCatalogue = require(path.join(appPath, 'uplayCatalogue.js'));
 const { steamCdnImages } = require('../util/steamCdn.js');
+const { hostPaths } = require('../util/winHosts.js');
 const uplayAutoMap = require(path.join(appPath, 'uplayAutoMap.js'));
 const gbeInstaller = require(path.join(appPath, 'gbeInstaller.js'));
 const pe = require(path.join(appPath, '..', 'util', 'pe.js'));
@@ -1430,7 +1431,7 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
 
   // Create the save folder the installed build writes to, so the game is listed before its first launch.
   try {
-    fs.mkdirSync(emulatorFixSaveFolder(appid, cfg), { recursive: true });
+    fs.mkdirSync(emulatorFixSaveFolder(appid, cfg, gameDir), { recursive: true });
   } catch (e) {
     debug.log(`[${appid}] could not pre-create the GBE save folder => ${e}`);
   }
@@ -1560,8 +1561,20 @@ async function getFolderIndex() {
   return _folderIndexPromise;
 }
 
+// The entries of `found` whose source and appid are not in `data` yet, each once: the same game can
+// sit in two Wine prefixes.
+function entriesNotIn(data, found) {
+  const have = new Set(data.map((g) => `${g.source}:${g.appid}`));
+  return found.filter((g) => {
+    const key = `${g.source}:${g.appid}`;
+    if (have.has(key)) return false;
+    have.add(key);
+    return true;
+  });
+}
+
 function desktopRoots() {
-  return [process.env['USERPROFILE'] && path.join(process.env['USERPROFILE'], 'Desktop'), process.env['PUBLIC'] && path.join(process.env['PUBLIC'], 'Desktop')].filter(Boolean);
+  return [...hostPaths('USERPROFILE', 'Desktop'), ...hostPaths('PUBLIC', 'Desktop')];
 }
 
 // Prefer product metadata, then the folder name, then the executable name.
@@ -1597,20 +1610,18 @@ async function resolveGameDirByName(gameName) {
   }
 }
 
-function goldbergSaveFolder(emulator, appid) {
-  const appdata = process.env['APPDATA'];
-  if (!appdata) return null;
-  const dirName = emulator === 'goldberg' ? 'Goldberg SteamEmu Saves' : 'GSE Saves';
-  return path.join(appdata, dirName, String(appid));
+// `gameDir` picks the host: on Linux the Wine prefix the game sits in (see goldberg.saveFolderFor).
+function goldbergSaveFolder(emulator, appid, gameDir) {
+  return goldberg.saveFolderFor(emulator === 'goldberg' ? 'goldberg' : 'gbe', appid, gameDir);
 }
 
 // The fix always installs GBE Fork, which writes under the save folder set on the Emulator identity
 // card when there is one (local_save_path), under %APPDATA%\GSE Saves otherwise. Classic Goldberg's
 // folder is still read, but nothing AW installs ever writes there.
-function emulatorFixSaveFolder(appid, emulatorCfg) {
+function emulatorFixSaveFolder(appid, emulatorCfg, gameDir) {
   const custom = String((emulatorCfg && emulatorCfg.savePath) || '').trim();
   if (custom && path.isAbsolute(custom)) return path.join(custom, String(appid));
-  return goldbergSaveFolder('gbe', appid);
+  return goldbergSaveFolder('gbe', appid, gameDir);
 }
 module.exports.emulatorFixSaveFolder = emulatorFixSaveFolder;
 
@@ -1735,7 +1746,7 @@ async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
       const hasSchema = steamSettings ? goldberg.readLocalSchema(steamSettings).length > 0 || g.hasSchema : g.hasSchema;
       // Portable repacks routinely redirect the emulator's save folder into the game directory, so
       // %APPDATA%\\GSE Saves stays empty; read the setup's own configured folder when it has one.
-      let savePath = goldbergSaveFolder(emulatorType, appid);
+      let savePath = goldbergSaveFolder(emulatorType, appid, g.gameDir);
       let saveSource = null;
       try {
         const redirected = goldberg.resolveLocalSaveDir({ steamSettings, appid });
@@ -2169,10 +2180,9 @@ async function discoverInScope(source, steamAccFilter, scope) {
   //other known emulator roots, even when the user never added it to Settings.
   if (!scope && source.socialClub) {
     try {
-      const scRoot = socialclub.defaultRoot();
-      const scanned = scRoot ? await socialclub.scan(scRoot) : [];
-      const have = new Set(data.map((g) => `${g.source}:${g.appid}`));
-      const extra = scanned.filter((g) => !have.has(`${g.source}:${g.appid}`));
+      const scanned = [];
+      for (const root of socialclub.defaultRoots()) scanned.push(...(await socialclub.scan(root)));
+      const extra = entriesNotIn(data, scanned);
       if (extra.length > 0) {
         data = data.concat(extra);
         debug.log(`-> Goldberg SocialClub (APPDATA) data added (${extra.length})`);
@@ -2245,13 +2255,14 @@ async function discoverInScope(source, steamAccFilter, scope) {
   mark('x360recomp');
 
   //ShadPS4 stores trophies in %APPDATA%/shadPS4 regardless of where the .exe lives - auto-scan that
-  //known location so the user doesn't have to add it as a watched folder. De-dupe against anything the
-  //watched-folder pass already found (portable installs that keep game_data next to the binary).
+  //known location (on every host) so the user doesn't have to add it as a watched folder. De-dupe
+  //against anything the watched-folder pass already found (portable installs that keep game_data
+  //next to the binary).
   if (!scope && source.shadps4) {
     try {
-      const known = await shadps4.scan(path.join(process.env['APPDATA'] || '', 'shadPS4'));
-      const have = new Set(data.map((g) => `${g.source}:${g.appid}`));
-      const extra = known.filter((g) => !have.has(`${g.source}:${g.appid}`));
+      const known = [];
+      for (const dir of hostPaths('APPDATA', 'shadPS4')) known.push(...(await shadps4.scan(dir)));
+      const extra = entriesNotIn(data, known);
       if (extra.length > 0) {
         data = data.concat(extra);
         debug.log(`-> ShadPS4 (APPDATA) data added (${extra.length})`);
@@ -2407,7 +2418,7 @@ async function discoverInScope(source, steamAccFilter, scope) {
   // takes, since this is a fixed await sequence, not a race.
   if (!scope && source.gogOfficial) {
     try {
-      data = data.concat(gogUniverseLan.scan({ userDataPath: _userDataPath || userDataDir(), localAppData: process.env['LOCALAPPDATA'] || '' }));
+      data = data.concat(gogUniverseLan.scan({ userDataPath: _userDataPath || userDataDir() }));
     } catch (err) {
       debug.error(err);
     }
@@ -2613,7 +2624,7 @@ async function discoverInScope(source, steamAccFilter, scope) {
               source: 'Uplay R2',
               data: {
                 type: 'file',
-                path: goldbergSaveFolder('gbe', mapping.steam_appid),
+                path: goldbergSaveFolder('gbe', mapping.steam_appid, u.data.gameDir),
                 gameDir: u.data.gameDir,
                 exe: u.data.exe,
                 uplayR2: true,
@@ -2665,7 +2676,7 @@ async function discoverInScope(source, steamAccFilter, scope) {
             source: 'GBE Fork',
             data: {
               type: 'file',
-              path: goldbergSaveFolder('gbe', resolved.appid),
+              path: goldbergSaveFolder('gbe', resolved.appid, u.data.gameDir),
               steamSettings: path.join(u.data.gameDir, 'steam_settings'),
               gameDir: u.data.gameDir,
               exe: u.data.exe,
@@ -2862,7 +2873,7 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
     // Ubisoft objective ids onto Steam api-names.
     return readUplayR2Save(appid, game);
   } else if (dataType === 'reg') {
-    return await greenluma.getAchievements(appid.data.root, appid.data.path);
+    return await greenluma.getAchievements(appid.data.root, appid.data.path, appid.data.host);
   } else if (dataType === 'steamAPI') {
     return await steam.getAchievementsFromAPI({
       appID: appid.appid,
@@ -2890,7 +2901,7 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
   } else if (dataType === 'socialclub') {
     return await socialclub.getAchievements(appid);
   } else if (dataType === 'lumaplay') {
-    return uplay.getAchievementsFromLumaPlay(appid.data.root, appid.data.path);
+    return uplay.getAchievementsFromLumaPlay(appid.data.root, appid.data.path, appid.data.host);
   } else if (dataType === 'ea') {
     return await ea.getAchievements(appid);
   } else if (dataType === 'gogOfficial') {

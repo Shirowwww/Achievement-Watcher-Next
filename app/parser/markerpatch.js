@@ -10,6 +10,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { hostPaths, firstExisting } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 
 const APPID = 'markerpatch-47780';
 const EXECUTABLE = 'deadspace2.exe';
@@ -147,9 +148,14 @@ function parseSettingsFlag(text) {
   return low | (high << 32n);
 }
 
+// settings.txt on every host: the game writes it in %LOCALAPPDATA% of the host it runs in.
+function stateFilePaths() {
+  return hostPaths('LOCALAPPDATA', STATE_RELATIVE_PATH);
+}
+
+// The state file in use: the first one that exists, else where the game would write it first.
 function stateFilePath() {
-  if (!process.env.LOCALAPPDATA) return '';
-  return path.join(process.env.LOCALAPPDATA, STATE_RELATIVE_PATH);
+  return firstExisting(stateFilePaths());
 }
 
 function readState(stateFile) {
@@ -324,6 +330,7 @@ module.exports.getAchievements = getAchievements;
 module.exports.parseSettingsFlag = parseSettingsFlag;
 module.exports.achievementSupportEnabled = achievementSupportEnabled;
 module.exports.stateFilePath = stateFilePath;
+module.exports.stateFilePaths = stateFilePaths;
 module.exports.readState = readState;
 module.exports.iconDirFor = iconDirFor;
 module.exports.decodeTextBuffer = decodeTextBuffer;

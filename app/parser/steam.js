@@ -3,7 +3,6 @@
 const path = require('path');
 const { lazyRequire } = require('../util/lazyRequire.js');
 const glob = lazyRequire('fast-glob');
-const normalize = require('normalize-path');
 const ini = require('../util/ini');
 const omit = require('lodash.omit');
 const moment = require('moment');
@@ -107,8 +106,9 @@ module.exports.goldbergSaveWeight = goldbergSaveWeight;
 module.exports.scan = async (additionalSearch = []) => {
   let search = saveRoots.defaultSteamScanRoots(additionalSearch);
 
+  // Escaped, since a root can hold glob characters: a Wine prefix named "Game (2020)", say.
   search = search.map((dir) => {
-    return normalize(dir) + '/([0-9]+)';
+    return glob.convertPathToPattern(dir) + '/([0-9]+)';
   });
 
   let data = [];

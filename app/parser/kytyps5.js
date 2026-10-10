@@ -13,6 +13,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { hostPath, hostsFor } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 
 const SOURCE = 'KytyPS5 Emulator';
 const EMULATOR_BINARY = 'kyty_emulator.exe';
@@ -180,10 +181,13 @@ function gameDirsFromSettings(text) {
   return dirs.length > 0 ? dirs : parseSettingsList(values.game_dir);
 }
 
-// A portable launcher keeps Kyty.ini beside itself, an installed one under ProgramData.
+// A portable launcher keeps Kyty.ini beside itself, an installed one under ProgramData of its host.
 function settingsFiles(root) {
   const files = [path.join(root, SETTINGS_FILE)];
-  if (process.env.ProgramData) files.push(path.join(process.env.ProgramData, 'Kyty', SETTINGS_FILE));
+  for (const host of hostsFor(root)) {
+    const programData = hostPath(host, 'PROGRAMDATA', 'Kyty', SETTINGS_FILE);
+    if (programData) files.push(programData);
+  }
   return files;
 }
 

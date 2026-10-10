@@ -99,6 +99,7 @@ const { userDataDir } = require('./util/userData.js');
 const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon, highResExecutableIcon } = require('./util/steamArtwork.js');
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
+const winHosts = require(sharedAppModulePath('util/winHosts.js'));
 const { configuredExecutable } = require('./util/exeList.js');
 const { immediateChildDirOf, deriveAppIdFromDir } = require('./util/appidFolder.js');
 const steamClientStats = require('./util/steamClientStats.js');
@@ -1106,7 +1107,7 @@ var app = {
         }
 
         // The UniverseLAN root is keyed by GOG product id, like NemirtingasGalaxyEmu.
-        const isUniverseLanRoot = path.resolve(dir).toLowerCase() === path.resolve(process.env['LOCALAPPDATA'] || '', 'UniverseLAN').toLowerCase();
+        const isUniverseLanRoot = winHosts.hostPaths('LOCALAPPDATA', 'UniverseLAN').some((root) => winHosts.pathKey(root) === winHosts.pathKey(dir));
         if (dir.includes('NemirtingasGalaxyEmu') || (isUniverseLanRoot && !options.appid)) {
           const mapped = await self.steamAppIdForGogId(appID);
           if (!mapped) throw `Unknown GOG id ${appID} - run a library refresh so AW Next can map it`;

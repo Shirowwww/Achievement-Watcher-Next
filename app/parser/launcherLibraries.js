@@ -7,8 +7,9 @@
   misses the folder a user actually keeps their games in whenever they named it after a storefront
   they installed through - "D:\Epic Games", "E:\Ubisoft\Ubisoft Game Launcher\games", "D:\XboxGames".
   Those folders are named in a manifest or a registry key the launcher wrote itself, so they can be
-  read directly: one JSON/registry read each, no globbing, no drive walking. On Linux, Heroic,
-  legendary, Lutris and Bottles name them in their own files (util/linuxLaunchers.js).
+  read directly: one JSON/registry read each, no globbing, no drive walking. On Linux the Windows
+  launchers are read inside each Wine prefix (its drive_c and registry, through util/appHosts.js),
+  and Heroic, legendary, Lutris and Bottles name them in their own files (util/linuxLaunchers.js).
 
   What is contributed is the PARENT of an install directory, not the install itself: the parent is
   the folder that holds many game folders, which is what a library root is (see libraryDirs.js).
@@ -22,6 +23,9 @@ const os = require('os');
 const path = require('path');
 const saveRoots = require(path.join(__dirname, 'saveRoots.js'));
 const linuxLaunchers = require(path.join(__dirname, '..', 'util', 'linuxLaunchers.js'));
+const { appHosts } = require(path.join(__dirname, '..', 'util', 'appHosts.js'));
+const { hostPath } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
+const ubisoftRegistry = require(path.join(__dirname, '..', 'util', 'ubisoftRegistry.js'));
 
 const LINUX_DETECTORS = {
   heroic: 'Heroic library',
@@ -114,9 +118,10 @@ function libraryRootFromInstallDir(installDir, options = {}) {
 }
 
 // Epic Games Launcher: one .item manifest per installed game, each naming its InstallLocation.
-function epicInstallLocations(manifestsDir) {
-  const dir =
-    manifestsDir || path.join(process.env['ProgramData'] || 'C:\\ProgramData', 'Epic', 'EpicGamesLauncher', 'Data', 'Manifests');
+// `localPath` turns the Windows paths a launcher wrote into local ones (a prefix's drive_c on Linux).
+const asIs = (winPath) => winPath;
+
+function epicInstallLocations(dir, localPath = asIs) {
   const locations = [];
   let files;
   try {
@@ -128,7 +133,7 @@ function epicInstallLocations(manifestsDir) {
     try {
       const item = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'));
       const location = item.InstallLocation || item.installLocation;
-      if (location) locations.push(String(location));
+      if (location) locations.push(localPath(String(location)) || String(location));
     } catch {
       /* one unreadable manifest must not lose the others */
     }
@@ -137,38 +142,39 @@ function epicInstallLocations(manifestsDir) {
 }
 
 // The launcher also keeps a single roll-up file, which survives when a per-game manifest does not.
-function epicLauncherInstalledLocations(datFile) {
-  const file =
-    datFile || path.join(process.env['ProgramData'] || 'C:\\ProgramData', 'Epic', 'UnrealEngineLauncher', 'LauncherInstalled.dat');
+function epicLauncherInstalledLocations(file, localPath = asIs) {
   try {
     const payload = JSON.parse(fs.readFileSync(file, 'utf8'));
     const list = Array.isArray(payload.InstallationList) ? payload.InstallationList : [];
-    return list.map((entry) => String((entry && (entry.InstallLocation || entry.installLocation)) || '')).filter(Boolean);
+    return list
+      .map((entry) => String((entry && (entry.InstallLocation || entry.installLocation)) || ''))
+      .filter(Boolean)
+      .map((location) => localPath(location) || location);
   } catch {
     return [];
   }
 }
 
-function defaultRegistry() {
-  return require(path.join(__dirname, '..', 'util', 'reg.js'));
+// The Epic launcher's per-game manifests and roll-up file, on every host that holds the launcher.
+function epicHostLocations(hosts) {
+  return hosts.flatMap((host) => {
+    const epic = hostPath(host, 'PROGRAMDATA', 'Epic');
+    if (!epic) return [];
+    return [
+      ...epicInstallLocations(path.join(epic, 'EpicGamesLauncher', 'Data', 'Manifests'), host.localPath),
+      ...epicLauncherInstalledLocations(path.join(epic, 'UnrealEngineLauncher', 'LauncherInstalled.dat'), host.localPath),
+    ];
+  });
 }
 
-// Every install folder GOG Galaxy recorded under its own registry branch.
-function gogInstallLocations(registry = defaultRegistry()) {
+// Every install folder GOG Galaxy recorded under its own registry branch, on every host.
+function gogInstallLocations(hosts = appHosts()) {
   const locations = [];
-  for (const root of ['Software/WOW6432Node/GOG.com/Games', 'Software/GOG.com/Games']) {
-    let ids = [];
-    try {
-      ids = registry.listRegistryAllSubkeys('HKLM', root) || [];
-    } catch {
-      continue;
-    }
-    for (const id of ids) {
-      try {
-        const value = registry.readRegistryString('HKLM', `${root}/${id}`, 'path');
-        if (value) locations.push(value);
-      } catch {
-        /* skip one unreadable product */
+  for (const host of hosts) {
+    for (const root of ['Software/WOW6432Node/GOG.com/Games', 'Software/GOG.com/Games']) {
+      for (const id of host.regSubkeys('HKLM', root)) {
+        const value = host.regValue('HKLM', `${root}/${id}`, 'path');
+        if (value) locations.push(host.localPath(String(value)) || String(value));
       }
     }
   }
@@ -176,25 +182,8 @@ function gogInstallLocations(registry = defaultRegistry()) {
 }
 
 // Ubisoft Connect keeps the same kind of index (already read for the official source).
-function ubisoftInstallLocations(registry = defaultRegistry()) {
-  const locations = [];
-  for (const root of ['Software/WOW6432Node/Ubisoft/Launcher/Installs', 'Software/Ubisoft/Launcher/Installs']) {
-    let ids = [];
-    try {
-      ids = registry.listRegistryAllSubkeys('HKLM', root) || [];
-    } catch {
-      continue;
-    }
-    for (const id of ids) {
-      try {
-        const value = registry.readRegistryString('HKLM', `${root}/${id}`, 'InstallDir');
-        if (value) locations.push(value);
-      } catch {
-        /* skip one unreadable product */
-      }
-    }
-  }
-  return locations;
+function ubisoftInstallLocations(hosts = appHosts()) {
+  return ubisoftRegistry.installs(hosts).map((install) => install.dir);
 }
 
 /*
@@ -260,12 +249,10 @@ function discoverLauncherLibraryRoots(options = {}) {
     }
   };
 
-  fromInstalls(
-    [...epicInstallLocations(options.epicManifestsDir), ...epicLauncherInstalledLocations(options.epicLauncherInstalledDat)],
-    'Epic Games library'
-  );
-  fromInstalls(gogInstallLocations(options.registry), 'GOG Galaxy library');
-  fromInstalls(ubisoftInstallLocations(options.registry), 'Ubisoft Connect library');
+  const { hosts = appHosts() } = options;
+  fromInstalls(epicHostLocations(hosts), 'Epic Games library');
+  fromInstalls(gogInstallLocations(hosts), 'GOG Galaxy library');
+  fromInstalls(ubisoftInstallLocations(hosts), 'Ubisoft Connect library');
   for (const root of xboxGamingRoots(drives)) add(root, 'Xbox games folder');
   if (process.platform !== 'win32') {
     for (const entry of linuxLaunchers.listInstalls(options.linux)) fromInstalls([entry.installPath], LINUX_DETECTORS[entry.launcher]);

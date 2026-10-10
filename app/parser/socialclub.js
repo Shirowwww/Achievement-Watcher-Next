@@ -6,6 +6,7 @@
 const path = require('path');
 const fs = require('fs');
 const { lazyRequire } = require('../util/lazyRequire.js');
+const { hostPaths } = require('../util/winHosts.js');
 const glob = lazyRequire('fast-glob');
 
 const appPath = __dirname;
@@ -83,8 +84,9 @@ const ROCKSTAR_STEAM_APPIDS = new Map([
   ['bully scholarship edition', 12200],
 ]);
 
-function defaultRoot() {
-  return process.env['APPDATA'] ? path.join(process.env['APPDATA'], 'Goldberg SocialClub Emu Saves') : '';
+// The emulator's save root on every host (see util/winHosts.js).
+function defaultRoots() {
+  return hostPaths('APPDATA', 'Goldberg SocialClub Emu Saves');
 }
 
 function isSocialClubRootName(dir) {
@@ -388,7 +390,7 @@ async function getGameData(appid, lang) {
 
 module.exports = {
   initDebug: module.exports.initDebug,
-  defaultRoot,
+  defaultRoots,
   isSocialClubPath,
   scan,
   getAchievements,

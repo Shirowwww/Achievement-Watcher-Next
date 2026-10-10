@@ -6,6 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { hostPaths, firstExisting } = require('../util/winHosts.js');
 
 let debug = { log() {}, warn() {}, error() {} };
 
@@ -16,9 +17,10 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   });
 };
 
-const DEFAULT_EA_LOGS_ROOT = process.env.LOCALAPPDATA
-  ? path.join(process.env.LOCALAPPDATA, 'Electronic Arts', 'EA Desktop', 'Logs')
-  : '';
+// EA Desktop is installed once, in whichever host holds it (a Wine prefix on Linux).
+function defaultEaLogsRoot() {
+  return firstExisting(hostPaths('LOCALAPPDATA', 'Electronic Arts', 'EA Desktop', 'Logs'));
+}
 const EA_VERBOSE_LOG_NAME = 'EADesktopVerbose.log';
 const EA_VERBOSE_LOG_BAK_NAME = 'EADesktopVerbose.bak';
 const EA_ICON_BASE = 'https://achievements.gameservices.ea.com/achievements/icons';
@@ -446,8 +448,9 @@ function resolveSetForAppid(appid, data = {}) {
 module.exports.scan = async () => {
   const data = [];
   try {
-    if (!DEFAULT_EA_LOGS_ROOT) return data;
-    const sets = listEaOfficialAchievementSets(DEFAULT_EA_LOGS_ROOT);
+    const logsRoot = defaultEaLogsRoot();
+    if (!logsRoot) return data;
+    const sets = listEaOfficialAchievementSets(logsRoot);
     const seen = new Set();
     for (const entry of sets) {
       if (!entry.appid || seen.has(entry.appid)) continue;
@@ -575,5 +578,5 @@ module.exports.listEaOfficialAchievementSets = listEaOfficialAchievementSets;
 module.exports.resolveEaOfficialLogsRoots = resolveEaOfficialLogsRoots;
 module.exports.resolveEaOfficialVerboseLogPath = resolveEaOfficialVerboseLogPath;
 module.exports.buildEaOfficialSnapshot = buildEaOfficialSnapshot;
-module.exports.DEFAULT_EA_LOGS_ROOT = DEFAULT_EA_LOGS_ROOT;
+module.exports.defaultEaLogsRoot = defaultEaLogsRoot;
 module.exports.EA_VERBOSE_LOG_NAME = EA_VERBOSE_LOG_NAME;

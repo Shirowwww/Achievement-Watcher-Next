@@ -3,6 +3,7 @@
 const path = require('path');
 const fs = require('fs');
 const { lazyRequire } = require('../util/lazyRequire.js');
+const { hostPaths } = require('../util/winHosts.js');
 const glob = lazyRequire('fast-glob');
 const request = lazyRequire('request-zero');
 const epicIdentity = require('../util/epicIdentity.js');
@@ -73,10 +74,9 @@ module.exports.scan = async () => {
   const cache = readEpicMappingCache(cacheFile);
   const cachedByEpicId = mappingByEpicId(cache);
 
-  const directories = await glob(path.join(process.env['APPDATA'], 'NemirtingasEpicEmu', '*/*/').replace(/\\/g, '/'), {
-    onlyDirectories: true,
-    absolute: true,
-  });
+  // <user>/<appid>/ under the emulator's save root of every host (see util/winHosts.js).
+  const patterns = hostPaths('APPDATA', 'NemirtingasEpicEmu').map((root) => `${glob.convertPathToPattern(root)}/*/*/`);
+  const directories = patterns.length > 0 ? await glob(patterns, { onlyDirectories: true, absolute: true }) : [];
   const games = directories
     .map((gameDir) => ({
       appid: path.parse(gameDir).name,

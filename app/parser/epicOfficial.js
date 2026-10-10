@@ -6,6 +6,8 @@
 const fs = require('fs');
 const path = require('path');
 const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
+const { appHosts } = require('../util/appHosts.js');
+const { hostPath } = require('../util/winHosts.js');
 
 // Every Epic call goes through epicFetchJson, so one breaker there covers the whole source: offline,
 // a 15s timeout per schema and per player refresh otherwise repeats for every owned game.
@@ -28,7 +30,6 @@ module.exports.setUserDataPath = (p) => {
 
 const EPIC_GRAPHQL_URL = 'https://launcher.store.epicgames.com/graphql';
 const EPIC_PUBLIC_ACHIEVEMENTS_BASE = 'https://api.epicgames.dev/epic/achievements/v1/public/achievements';
-const EPIC_MANIFESTS_DIR = path.join(process.env['ProgramData'] || 'C:\\ProgramData', 'Epic', 'EpicGamesLauncher', 'Data', 'Manifests');
 const SCHEMA_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 // steam-api language names → Epic locale codes (Epic serves "fr", "en", "pt-BR" …)
@@ -58,7 +59,8 @@ function readJsonFile(filePath) {
 }
 
 // [{title, namespace, catalogItemId, appName, installLocation, executablePath, processName}]
-function buildEpicLocalInstallIndex(manifestsDir = EPIC_MANIFESTS_DIR) {
+// `localPath` turns the launcher's Windows paths into local ones (a prefix's drive_c on Linux).
+function buildEpicLocalInstallIndex(manifestsDir, localPath = (winPath) => winPath) {
   const entries = [];
   let files = [];
   try {
@@ -71,16 +73,17 @@ function buildEpicLocalInstallIndex(manifestsDir = EPIC_MANIFESTS_DIR) {
     if (!String(file || '').toLowerCase().endsWith('.item')) continue;
     const item = readJsonFile(path.join(manifestsDir, file));
     if (!item || typeof item !== 'object') continue;
-    const installLocation = firstNonEmpty(item.InstallLocation, item.installLocation);
-    const launchExecutable = firstNonEmpty(item.LaunchExecutable, item.launchExecutable);
+    const rawLocation = firstNonEmpty(item.InstallLocation, item.installLocation);
+    const installLocation = (rawLocation && localPath(rawLocation)) || rawLocation;
+    const launchParts = firstNonEmpty(item.LaunchExecutable, item.launchExecutable).split(/[\\/]+/).filter(Boolean);
     entries.push({
       title: firstNonEmpty(item.DisplayName, item.displayName),
       namespace: firstNonEmpty(item.CatalogNamespace, item.catalogNamespace),
       catalogItemId: firstNonEmpty(item.CatalogItemId, item.catalogItemId),
       appName: firstNonEmpty(item.AppName, item.appName),
       installLocation,
-      executablePath: installLocation && launchExecutable ? path.join(installLocation, launchExecutable) : '',
-      processName: launchExecutable ? path.basename(launchExecutable) : '',
+      executablePath: installLocation && launchParts.length ? path.join(installLocation, ...launchParts) : '',
+      processName: launchParts.at(-1) || '',
     });
   }
   return entries;
@@ -102,8 +105,14 @@ function linuxEpicInstallIndex(options) {
     }));
 }
 
-function localInstallIndex() {
-  return process.platform === 'win32' ? buildEpicLocalInstallIndex() : [...buildEpicLocalInstallIndex(), ...linuxEpicInstallIndex()];
+// The Epic launcher's manifests on every host (this machine, or each Wine prefix), plus on Linux
+// what Heroic and legendary installed.
+function localInstallIndex(hosts = appHosts()) {
+  const fromLauncher = hosts.flatMap((host) => {
+    const manifests = hostPath(host, 'PROGRAMDATA', 'Epic', 'EpicGamesLauncher', 'Data', 'Manifests');
+    return manifests ? buildEpicLocalInstallIndex(manifests, host.localPath) : [];
+  });
+  return process.platform === 'win32' ? fromLauncher : [...fromLauncher, ...linuxEpicInstallIndex()];
 }
 
 /*
@@ -888,6 +897,7 @@ module.exports.localeFor = localeFor;
 module.exports._internal = {
   buildEpicLocalInstallIndex,
   linuxEpicInstallIndex,
+  localInstallIndex,
   resolveSchema,
   fetchEpicAchievementSchemaBySandbox,
   communitySchema,

@@ -14,8 +14,19 @@ const { guardWatcher } = require('../util/watchGuard.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
 const notifyStrings = require('../util/notifyStrings.js');
 
-const STORAGE_DB = path.join(process.env['ProgramData'] || 'C:\\ProgramData', 'GOG.com', 'Galaxy', 'storage', 'galaxy-2.0.db');
-const APPLICATIONS_ROOT = path.join(process.env['LOCALAPPDATA'] || '', 'GOG.com', 'Galaxy', 'Applications');
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { listHosts, hostPath } = require(sharedAppModulePath('util/winHosts.js'));
+
+// Galaxy's catalog and per-game databases, in each host that can hold an install (this machine, or
+// every Wine prefix on Linux).
+function galaxyInstalls() {
+  return listHosts()
+    .map((host) => ({
+      storageDb: hostPath(host, 'PROGRAMDATA', 'GOG.com', 'Galaxy', 'storage', 'galaxy-2.0.db'),
+      applicationsRoot: hostPath(host, 'LOCALAPPDATA', 'GOG.com', 'Galaxy', 'Applications'),
+    }))
+    .filter((install) => install.storageDb && install.applicationsRoot);
+}
 
 let DatabaseSync = null;
 try {
@@ -62,10 +73,10 @@ function queryAll(dbPath, sql) {
 }
 
 // clientId -> {productId, title} from the Galaxy catalog.
-function readProductsByClientId() {
+function readProductsByClientId(storageDb) {
   const out = new Map();
   const rows = queryAll(
-    STORAGE_DB,
+    storageDb,
     `SELECT pa.productId AS productId, pa.clientId AS clientId, ld.title AS title
      FROM ProductAuthorizations pa
      LEFT JOIN LimitedDetails ld ON ld.productId = pa.productId`
@@ -107,25 +118,29 @@ function read(target) {
 }
 
 function discover() {
+  return galaxyInstalls().flatMap(discoverInstall);
+}
+
+function discoverInstall({ storageDb, applicationsRoot }) {
   const targets = [];
   // Galaxy not installed (or installed for another user) is the normal case, not a failure: probe
   // the two paths first so a missing catalog never reaches SQLite, which would only report the
   // opaque "unable to open database file" on every settings reload.
-  if (!fs.existsSync(STORAGE_DB)) return targets;
+  if (!fs.existsSync(storageDb)) return targets;
   let clientDirs = [];
   try {
-    clientDirs = fs.readdirSync(APPLICATIONS_ROOT, { withFileTypes: true });
+    clientDirs = fs.readdirSync(applicationsRoot, { withFileTypes: true });
   } catch {
     return targets;
   }
   if (clientDirs.length === 0) return targets;
-  const products = readProductsByClientId();
+  const products = readProductsByClientId(storageDb);
   for (const clientDir of clientDirs) {
     if (!clientDir.isDirectory()) continue;
     const clientId = normalizeId(clientDir.name);
     const product = clientId ? products.get(clientId) : null;
     if (!product) continue;
-    const gameplayRoot = path.join(APPLICATIONS_ROOT, clientId, 'Gameplay');
+    const gameplayRoot = path.join(applicationsRoot, clientId, 'Gameplay');
     let userDirs = [];
     try {
       userDirs = fs.readdirSync(gameplayRoot, { withFileTypes: true });

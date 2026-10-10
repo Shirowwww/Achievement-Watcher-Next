@@ -9,6 +9,7 @@ const exeDetect = require(path.join(__dirname, 'exeDetect.js'));
 const dirCache = require(path.join(__dirname, '..', 'util', 'dirCache.js'));
 const launcherDetect = require(path.join(__dirname, 'launcherDetect.js'));
 const crackLoaderDetect = require(path.join(__dirname, '..', 'util', 'crackLoaderDetect.js'));
+const winHosts = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 const unrealLayout = require(path.join(__dirname, '..', 'util', 'unrealLayout.js'));
 const runtimeSaveSeed = require(path.join(__dirname, '..', 'util', 'runtimeSaveSeed.js'));
 const { parseIni, stringifyIni, getIniSection, upsertIniSection, upsertIniKeys, sanitizeIniValue } = require(path.join(__dirname, '..', 'util', 'emuIni.js'));
@@ -579,14 +580,34 @@ function hasRichProgressSchema(steamSettings, schema) {
 }
 
 // Default runtime save roots, newest emulator first. Both keep one <appid>/ subfolder with an
-// achievements.json holding only the unlock STATE, separate from the steam_settings SCHEMA.
-function defaultSavesRoots() {
-  const appdata = process.env['APPDATA'];
+// achievements.json holding only the unlock STATE, separate from the steam_settings SCHEMA. They sit
+// in %APPDATA% of the hosts `gameDir` belongs to: this machine on Windows, its Wine prefix on Linux
+// (every host when the game sits outside any prefix).
+function defaultSavesRoots(gameDir) {
+  return winHosts.hostsFor(gameDir).flatMap(hostSavesRoots);
+}
+
+function hostSavesRoots(host) {
+  const appdata = winHosts.hostPath(host, 'APPDATA');
   if (!appdata) return [];
   return [
     { type: 'gbe', root: path.join(appdata, 'GSE Saves') },
     { type: 'goldberg', root: path.join(appdata, 'Goldberg SteamEmu Saves') },
   ];
+}
+
+// The roots of the one host a setup writes a game's save in: where this appid already has a save
+// folder, else the first host the game belongs to.
+function writableSavesRoots(gameDir, appid) {
+  const hasSave = (host) => appid != null && hostSavesRoots(host).some(({ root }) => fs.existsSync(path.join(root, String(appid))));
+  const host = winHosts.hostFor(gameDir, hasSave);
+  return host ? hostSavesRoots(host) : [];
+}
+
+// The save folder of one emulator type for an appid (see writableSavesRoots), or null.
+function saveFolderFor(type, appid, gameDir) {
+  const root = writableSavesRoots(gameDir, appid).find((entry) => entry.type === type);
+  return root ? path.join(root.root, String(appid)) : null;
 }
 
 // The save path a setup redirects itself to, verbatim as configured. Repacks routinely point the
@@ -605,7 +626,8 @@ function readConfiguredSavePath(steamSettings) {
       // folder replaces "GSE Saves" while keeping the <appid>/achievements.json shape below it.
       const renamed = text.match(/^[ \t]*saves_folder_name[ \t]*=[ \t]*(\S.*?)[ \t]*$/im);
       const name = renamed ? renamed[1].trim() : '';
-      if (name && process.env['APPDATA']) value = path.join(process.env['APPDATA'], name);
+      const appdata = name ? winHosts.hostPath(winHosts.hostsFor(steamSettings)[0], 'APPDATA') : null;
+      if (appdata) value = path.join(appdata, name);
     }
   } catch {
     /* no configs.user.ini - fall through to the classic Goldberg marker file */
@@ -729,7 +751,7 @@ function buildRuntimeAchievementsState({ schema, steamSettings } = {}) {
   return state;
 }
 
-function seedRuntimeSave({ appid, schema, steamSettings, savesRoots = defaultSavesRoots(), types = ['gbe'] } = {}) {
+function seedRuntimeSave({ appid, schema, steamSettings, savesRoots = writableSavesRoots(steamSettings, appid), types = ['gbe'] } = {}) {
   const summary = { appid: appid != null ? String(appid) : null, entries: 0, roots: [], created: [], skipped: [] };
   if (summary.appid == null) return summary;
 
@@ -826,7 +848,7 @@ function steamShortcutLaunches() {
   return launches;
 }
 
-function diagnose({ gameDir, appid, schema, savesRoots, shortcutExes = steamShortcutLaunches }) {
+function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameDir), shortcutExes = steamShortcutLaunches }) {
   const report = {
     gameDir,
     appid: appid != null ? String(appid) : null,
@@ -1900,6 +1922,7 @@ module.exports = {
   writeUserConfig,
   diagnose,
   inspectSaveState,
+  saveFolderFor,
   originalSteamApiDll,
   readConfiguredSavePath,
   resolveLocalSaveDir,

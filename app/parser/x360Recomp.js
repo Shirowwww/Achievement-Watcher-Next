@@ -369,17 +369,10 @@ function scan(dir) {
   return games;
 }
 
+// The shell folder and the profile one of every host (see util/appHosts.js).
 function documentsRoots() {
-  const roots = [];
-  try {
-    const { readRegistryStringAndExpand } = require(path.join(__dirname, '..', 'util', 'reg.js'));
-    const personal = readRegistryStringAndExpand('HKCU', 'Software/Microsoft/Windows/CurrentVersion/Explorer/User Shell Folders', 'Personal');
-    if (personal) roots.push(personal);
-  } catch {
-    /* the profile default below still applies */
-  }
-  if (process.env.USERPROFILE) roots.push(path.join(process.env.USERPROFILE, 'Documents'));
-  return roots.filter((root, i) => roots.findIndex((other) => other.toLowerCase() === root.toLowerCase()) === i);
+  const { documentsFolders } = require(path.join(__dirname, '..', 'util', 'appHosts.js'));
+  return documentsFolders();
 }
 
 // ReXGlue's default: Documents\<game>\achievements. Only folders holding one are walked.

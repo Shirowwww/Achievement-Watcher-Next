@@ -14,8 +14,13 @@ const waitForFileStable = require('../util/waitForFileStable.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
 const notifyStrings = require('../util/notifyStrings.js');
 
-const LOCALAPPDATA = process.env['LOCALAPPDATA'] || '';
-const EA_LOGS_ROOT = LOCALAPPDATA ? path.join(LOCALAPPDATA, 'Electronic Arts', 'EA Desktop', 'Logs') : '';
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { hostPaths, firstExisting } = require(sharedAppModulePath('util/winHosts.js'));
+
+// EA Desktop is installed once, in whichever host holds it (a Wine prefix on Linux).
+function eaLogsRoot() {
+  return firstExisting(hostPaths('LOCALAPPDATA', 'Electronic Arts', 'EA Desktop', 'Logs'));
+}
 const EA_VERBOSE_LOG_NAME = 'EADesktopVerbose.log';
 const EA_VERBOSE_BAK_NAME = 'EADesktopVerbose.bak';
 const EA_ICON_BASE = 'https://achievements.gameservices.ea.com/achievements/icons';
@@ -100,7 +105,7 @@ function normalizeAchievement(attrs) {
   };
 }
 
-function logFiles(logsRoot = EA_LOGS_ROOT) {
+function logFiles(logsRoot = eaLogsRoot()) {
   const out = [];
   if (!logsRoot) return out;
   const bak = path.join(logsRoot, EA_VERBOSE_BAK_NAME);
@@ -139,7 +144,7 @@ function gameInfoFromLog(text) {
   return byContentId;
 }
 
-function parseLog(logsRoot = EA_LOGS_ROOT) {
+function parseLog(logsRoot = eaLogsRoot()) {
   const files = logFiles(logsRoot);
   if (files.length === 0) return { entries: [], snapshots: new Map() };
 
@@ -302,19 +307,20 @@ module.exports.start = async (ctx) => {
   if (ctx.options.achievement_source && ctx.options.achievement_source.ea === false) return;
   if (ctx.options.notification && ctx.options.notification.notify === false) return;
   if (typeof ctx.notify !== 'function') return;
-  if (!EA_LOGS_ROOT || !fs.existsSync(EA_LOGS_ROOT)) return;
+  const logsRoot = eaLogsRoot();
+  if (!logsRoot || !fs.existsSync(logsRoot)) return;
 
   await handleChange(null, ctx);
 
   try {
-    const w = watch(EA_LOGS_ROOT, { recursive: false, filter: /EADesktopVerbose\.(log|bak)$/i }, (evt, name) => {
+    const w = watch(logsRoot, { recursive: false, filter: /EADesktopVerbose\.(log|bak)$/i }, (evt, name) => {
       if (evt !== 'update') return;
       changes.run('ea-log', () => handleChange(name, ctx));
     });
     watchers.push(guardWatcher(w, 'the EA Desktop logs', debug));
-    debug.log(`[ea] watching ${EA_LOGS_ROOT}`);
+    debug.log(`[ea] watching ${logsRoot}`);
   } catch (err) {
-    debug.warn(`[ea] failed to watch ${EA_LOGS_ROOT}: ${err}`);
+    debug.warn(`[ea] failed to watch ${logsRoot}: ${err}`);
   }
 };
 

@@ -17,19 +17,21 @@ const { notificationVolumePercent } = require('../util/notificationVolume.js');
 
 const { userDataDir } = require('../util/userData.js');
 const iconCacheRoot = path.join(userDataDir(), 'steam_cache/ubisoftOfficial');
-const SPOOL_ROOT = process.env['LOCALAPPDATA'] ? path.join(process.env['LOCALAPPDATA'], 'Ubisoft Game Launcher', 'spool') : '';
-const ACHIEVEMENTS_ROOT = process.env['ProgramData']
-  ? path.join(process.env['ProgramData'], 'Ubisoft', 'Ubisoft Game Launcher', 'cache', 'achievements')
-  : '';
-// Where an archive can sit: the launcher's own cache, or the copy the app fetched itself.
-const ACHIEVEMENTS_ROOTS = [
-  ACHIEVEMENTS_ROOT,
-  process.env['ProgramFiles(x86)'] ? path.join(process.env['ProgramFiles(x86)'], 'Ubisoft', 'Ubisoft Game Launcher', 'cache', 'achievements') : '',
-  path.join(userDataDir(), 'cache', 'ubisoftAchievements'),
-].filter(Boolean);
-const CONFIGURATIONS_PATH = process.env['LOCALAPPDATA']
-  ? path.join(process.env['LOCALAPPDATA'], 'Ubisoft Game Launcher', 'cache', 'configuration', 'configurations')
-  : '';
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { hostPaths, firstExisting } = require(sharedAppModulePath('util/winHosts.js'));
+
+// The launcher is installed once, in whichever host holds it (a Wine prefix on Linux).
+const defaultSpoolRoot = () => firstExisting(hostPaths('LOCALAPPDATA', 'Ubisoft Game Launcher', 'spool'));
+const defaultConfigurationsPath = () => firstExisting(hostPaths('LOCALAPPDATA', 'Ubisoft Game Launcher', 'cache', 'configuration', 'configurations'));
+
+// Where an archive can sit: the launcher's own cache on any host, or the copy the app fetched itself.
+function achievementsRoots() {
+  return [
+    ...hostPaths('PROGRAMDATA', 'Ubisoft', 'Ubisoft Game Launcher', 'cache', 'achievements'),
+    ...hostPaths('PROGRAMFILES_X86', 'Ubisoft', 'Ubisoft Game Launcher', 'cache', 'achievements'),
+    path.join(userDataDir(), 'cache', 'ubisoftAchievements'),
+  ];
+}
 
 let watchers = [];
 const changes = createChangeCoalescer();
@@ -191,7 +193,7 @@ function parseLocTxt(buffer) {
 function loadSchema(appid, lang) {
   const prefix = `${appid}_`;
   const candidates = [];
-  for (const root of ACHIEVEMENTS_ROOTS) {
+  for (const root of achievementsRoots()) {
     try {
       for (const e of fs.readdirSync(root, { withFileTypes: true })) {
         if (e.isFile() && e.name.startsWith(prefix)) candidates.push(path.join(root, e.name));
@@ -263,7 +265,7 @@ function cleanConfigTitle(value) {
 }
 
 // Product titles from the configurations index (best effort). Path injectable for tests.
-function readTitles(configurationsPath = CONFIGURATIONS_PATH) {
+function readTitles(configurationsPath = defaultConfigurationsPath()) {
   const out = new Map(); // normalizedSpec is not needed here - map by product id prefix of archives
   let text = '';
   try {
@@ -312,15 +314,16 @@ function indexedUplayName(uplayId, files = [
 
 function discover() {
   const targets = [];
+  const spoolRoot = defaultSpoolRoot();
   let userDirs = [];
   try {
-    userDirs = fs.readdirSync(SPOOL_ROOT, { withFileTypes: true });
+    userDirs = fs.readdirSync(spoolRoot, { withFileTypes: true });
   } catch {
     return targets;
   }
   for (const userDir of userDirs) {
     if (!userDir.isDirectory()) continue;
-    const dir = path.join(SPOOL_ROOT, userDir.name);
+    const dir = path.join(spoolRoot, userDir.name);
     let files = [];
     try {
       files = fs.readdirSync(dir);

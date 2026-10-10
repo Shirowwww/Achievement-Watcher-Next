@@ -216,8 +216,7 @@ function resolveWatchTarget(root) {
   return { ready: false, watchDir: probe, nextExpected: missing[0] };
 }
 
-function attach() {
-  const root = madnesspatch.checkpointRoot();
+function attach(root) {
   if (!root) return;
   const target = resolveWatchTarget(root);
 
@@ -237,7 +236,7 @@ function attach() {
         /* already closed */
       }
       watchers = watchers.filter((entry) => entry !== watcher);
-      attach();
+      attach(root);
     });
     watchers.push(guardWatcher(watcher, `'${target.watchDir}'`, debug));
     debug.log(`[madnesspatch] '${root}' does not exist yet - waiting under '${target.watchDir}'`);
@@ -284,7 +283,8 @@ module.exports.start = async (ctx) => {
     }
   }
 
-  attach();
+  // One checkpoint folder per host (each Wine prefix on Linux); the game writes the one it runs in.
+  for (const root of madnesspatch.checkpointRoots()) attach(root);
 };
 
 module.exports.stop = () => {

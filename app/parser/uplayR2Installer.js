@@ -12,7 +12,8 @@ const os = require('os');
 const path = require('path');
 const pe = require('../util/pe.js');
 const uplayR2 = require('./uplayR2.js');
-const { readRegistryString, listRegistryAllSubkeys } = require('../util/reg.js');
+const ubisoftRegistry = require('../util/ubisoftRegistry.js');
+const { pathKey } = require('../util/winHosts.js');
 const { resolveUnpackedBinary } = require('../util/unpacked.js');
 const { safeArchiveEntry } = require('../util/archiveEntry.js');
 const { replaceFileSync } = require('../util/replaceFile.js');
@@ -644,39 +645,11 @@ function executableCandidates(gameDir, exePath) {
 */
 function isRegisteredUbisoftInstall(gameDir) {
   if (!gameDir) return false;
-  let target;
-  try {
-    target = path.resolve(gameDir).toLowerCase();
-  } catch {
-    return false;
-  }
-  for (const hive of ['HKLM', 'HKCU']) {
-    for (const root of ['Software/WOW6432Node/Ubisoft/Launcher/Installs', 'Software/Ubisoft/Launcher/Installs']) {
-      let subs = [];
-      try {
-        subs = listRegistryAllSubkeys(hive, root) || [];
-      } catch {
-        continue;
-      }
-      for (const sub of subs) {
-        let dir = '';
-        try {
-          dir = readRegistryString(hive, `${root}/${sub}`, 'InstallDir') || '';
-        } catch {
-          continue;
-        }
-        if (!dir) continue;
-        let installed;
-        try {
-          installed = path.resolve(dir).toLowerCase();
-        } catch {
-          continue;
-        }
-        if (target === installed || target.startsWith(installed.endsWith(path.sep) ? installed : installed + path.sep)) return true;
-      }
-    }
-  }
-  return false;
+  const target = pathKey(gameDir);
+  return ubisoftRegistry.installs().some(({ dir }) => {
+    const installed = pathKey(dir);
+    return target === installed || target.startsWith(installed.endsWith(path.sep) ? installed : installed + path.sep);
+  });
 }
 
 /*

@@ -269,6 +269,16 @@ function readRegistryStringAndExpand(hive, key, valueName) {
   }
 }
 
+// A string (expanded like readRegistryString) or a number, whichever the value holds, in one read.
+function readRegistryValue(hive, key, valueName) {
+  const val = enumerateValuesCompat(hive, key).find((v) => v.name === (valueName || ''));
+  if (!val) return null;
+  if (val.type === 'REG_DWORD' || val.type === 'REG_QWORD') return Number(val.data);
+  if (val.type === 'REG_EXPAND_SZ') return expandEnvVariables(val.data);
+  if (val.type === 'REG_SZ') return val.data;
+  return null;
+}
+
 function regKeyExists(hive, key) {
   // If the key doesn't exist, both enumerations come back empty
   let subkeys = [];
@@ -296,6 +306,7 @@ module.exports = {
   writeRegistryString,
   readRegistryString,
   readRegistryStringAndExpand,
+  readRegistryValue,
   readRegistryInteger,
   readRegistryIntegers,
   listRegistryAllSubkeys,

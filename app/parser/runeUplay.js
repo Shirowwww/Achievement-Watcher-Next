@@ -144,14 +144,9 @@ function documentsFolders() {
   const add = (dir) => {
     if (dir && !folders.some((known) => known.toLowerCase() === dir.toLowerCase())) folders.push(dir);
   };
-  // Documents is often redirected (OneDrive), so the shell folder comes first.
-  try {
-    const { readRegistryStringAndExpand } = require(path.join(__dirname, '..', 'util', 'reg.js'));
-    add(readRegistryStringAndExpand('HKCU', 'Software/Microsoft/Windows/CurrentVersion/Explorer/User Shell Folders', 'Personal'));
-  } catch {
-    /* unknown location: fall back to the profile guesses below */
-  }
-  if (process.env.USERPROFILE) add(path.join(process.env.USERPROFILE, 'Documents'));
+  // The shell folder and the profile one of every host (see util/appHosts.js), then OneDrive's.
+  const { documentsFolders: hostDocuments } = require(path.join(__dirname, '..', 'util', 'appHosts.js'));
+  for (const dir of hostDocuments()) add(dir);
   if (process.env.OneDrive) add(path.join(process.env.OneDrive, 'Documents'));
   return folders;
 }
