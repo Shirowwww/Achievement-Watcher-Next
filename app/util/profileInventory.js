@@ -45,6 +45,7 @@ const RULES = [
   { path: 'cfg/notificationHealth.json', include: false, why: 'delivery health of this machine' },
   { path: 'cfg/userdir.db', include: false, why: 'emulator save folders found on this machine, rediscovered by a scan' },
   { path: 'cfg/steamdb.json', include: false, why: 'name cache' },
+  { path: 'cfg/playtime.json', include: false, why: 'playtime counters without a registry, carried in the manifest and merged with max()' },
 
   // Excluded because it is regenerated.
   { path: 'steam_cache', include: false, why: 'schema, icon and cover cache' },

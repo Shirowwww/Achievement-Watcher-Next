@@ -18,10 +18,6 @@ const rebase = require(path.join(appUtil, 'profileRebase.js'));
 
 const SECRET_TEXT = 'SECRET-MARKER-9f3a';
 
-// The profile rebase only rewrites drive-letter paths, and the fixture homes are temp directories,
-// which are drive-letter paths only on Windows.
-const DRIVE_LETTER_HOME = process.platform !== 'win32' && 'Windows-only';
-
 function temp() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'aw-profile-backup-'));
 }
@@ -47,9 +43,9 @@ function fakeRegistry(rows = []) {
 }
 
 function fakeProfile(root, { home }) {
-  put(root, 'cfg/options.ini', `[general]\ntheme=default\n[souvenir]\ndir=${home}\\Pictures\\Shots\n[emulator]\nloginPassword=${SECRET_TEXT}\nlogin=steam\n`);
+  put(root, 'cfg/options.ini', `[general]\ntheme=default\n[souvenir]\ndir=${path.join(home, 'Pictures', 'Shots')}\n[emulator]\nloginPassword=${SECRET_TEXT}\nlogin=steam\n`);
   put(root, 'cfg/covers.db', JSON.stringify({ 10: pathToFileURL(path.join(root, 'covers', '10.png')).href, 11: 'https://cdn.example/x.png' }));
-  put(root, 'cfg/librarydirs.db', JSON.stringify([{ path: `${home}\\Games`, origin: 'manual', enabled: true }, { path: 'D:\\Games', origin: 'manual', enabled: true }]));
+  put(root, 'cfg/librarydirs.db', JSON.stringify([{ path: path.join(home, 'Games'), origin: 'manual', enabled: true }, { path: 'D:\\Games', origin: 'manual', enabled: true }]));
   put(root, 'cfg/secret.key', SECRET_TEXT);
   put(root, 'cfg/xbox-auth.json', SECRET_TEXT);
   put(root, 'cfg/retroachievements-auth.json', SECRET_TEXT);
@@ -129,7 +125,7 @@ test('scrubbing blanks only the emulator password', () => {
   assert.match(out.text, /\[other\]\r\nloginPassword=keep/);
 });
 
-test('round trip restores the saved profile, keeps secrets out and merges cfg', { skip: DRIVE_LETTER_HOME }, async () => {
+test('round trip restores the saved profile, keeps secrets out and merges cfg', async () => {
   const sandbox = temp();
   try {
     const old = path.join(sandbox, 'old', 'AppData', 'Roaming', 'Achievement Watcher Next');
@@ -168,7 +164,7 @@ test('round trip restores the saved profile, keeps secrets out and merges cfg', 
 
     assert.match(read(fresh, 'cfg/options.ini'), /theme=default/);
     assert.doesNotMatch(read(fresh, 'cfg/options.ini'), new RegExp(SECRET_TEXT));
-    assert.match(read(fresh, 'cfg/options.ini'), new RegExp(`dir= ${newHome.replace(/\\/g, '\\\\')}\\\\Pictures\\\\Shots`));
+    assert.ok(read(fresh, 'cfg/options.ini').includes(`dir= ${path.join(newHome, 'Pictures', 'Shots')}`));
     assert.equal(read(fresh, 'cfg/secret.key'), 'KEEP-LOCAL-KEY');
     assert.equal(read(fresh, 'cfg/extra.json'), '{"keep":true}');
     assert.equal(fs.existsSync(path.join(fresh, 'covers', 'stale.png')), false);
@@ -214,7 +210,7 @@ test('collections and their pictures survive a round trip', async () => {
   }
 });
 
-test('absolute paths into the old profile are rebased, others are left alone', { skip: DRIVE_LETTER_HOME }, async () => {
+test('absolute paths into the old profile are rebased, others are left alone', async () => {
   const sandbox = temp();
   try {
     const oldHome = path.join(sandbox, 'old');
@@ -231,7 +227,7 @@ test('absolute paths into the old profile are rebased, others are left alone', {
     assert.equal(covers['10'], pathToFileURL(path.join(fresh, 'covers', '10.png')).href);
     assert.equal(covers['11'], 'https://cdn.example/x.png');
     const dirs = JSON.parse(read(fresh, 'cfg/librarydirs.db'));
-    assert.equal(dirs[0].path, `${newHome}\\Games`);
+    assert.equal(dirs[0].path, path.join(newHome, 'Games'));
     assert.equal(dirs[1].path, 'D:\\Games');
   } finally {
     fs.rmSync(sandbox, { recursive: true, force: true });
@@ -245,6 +241,44 @@ test('rebasePath respects folder boundaries and slash style', () => {
   assert.equal(rebase.rebaseString('C:\\Users\\older\\a.png', maps), 'C:\\Users\\older\\a.png');
   assert.equal(rebase.rebaseString('C:\\Users\\old', maps), 'D:\\Users\\new');
   assert.equal(rebase.buildMappings([{ from: 'C:\\x', to: 'c:\\X\\' }]).length, 0);
+});
+
+test('Unix paths are rebased case-sensitively, and a Windows profile moves onto a Unix one', () => {
+  const unix = rebase.buildMappings([{ from: '/home/old/.config/AW', to: '/home/new/.config/AW' }]);
+  assert.equal(rebase.rebaseString('/home/old/.config/AW/covers/1.png', unix), '/home/new/.config/AW/covers/1.png');
+  assert.equal(rebase.rebaseString('/home/old/.config/AWX/a.png', unix), '/home/old/.config/AWX/a.png');
+  assert.equal(rebase.rebaseString('/home/OLD/.config/AW/a.png', unix), '/home/OLD/.config/AW/a.png');
+  assert.equal(rebase.buildMappings([{ from: '/home/a', to: '/home/A' }]).length, 1);
+
+  const crossed = rebase.buildMappings([{ from: 'C:\\Users\\old', to: '/home/new' }]);
+  assert.equal(rebase.rebaseString('C:\\Users\\old\\Pictures\\a.png', crossed), '/home/new/Pictures/a.png');
+  assert.equal(rebase.rebaseString('/api/x', rebase.buildMappings([{ from: 'C:\\Users\\old', to: 'D:\\new' }])), '/api/x');
+});
+
+test('playtime without a registry comes from cfg/playtime.json and is merged with the larger value', { skip: process.platform === 'win32' && 'Linux-only' }, async () => {
+  const sandbox = temp();
+  try {
+    const old = path.join(sandbox, 'old');
+    put(old, 'cfg/options.ini', '[general]\n');
+    put(old, 'cfg/playtime.json', JSON.stringify({ 400: { total: 600, last: 1700000000 }, 220: { total: 30, last: 1600000000 } }));
+    const file = path.join(sandbox, 'save.awbackup');
+    const summary = await exportProfile({ userDataDir: old, destination: file, home: sandbox });
+    assert.equal(summary.playtimeCount, 2);
+    const { manifest } = await archive.readManifest(file);
+    assert.ok(!manifest.files.some((f) => f.path === 'cfg/playtime.json'));
+    assert.deepEqual(manifest.registry.playtime.find((row) => row.appid === '400'), { appid: '400', total: 600, last: 1700000000 });
+
+    const fresh = path.join(sandbox, 'new');
+    put(fresh, 'cfg/playtime.json', JSON.stringify({ 400: { total: 900, last: 1500000000 } }));
+    await restore.stageRestore(file, { userDataDir: fresh, home: sandbox });
+    assert.equal(restore.applyPendingRestore(fresh).ok, true);
+    assert.deepEqual(JSON.parse(read(fresh, 'cfg/playtime.json')), {
+      400: { total: 900, last: 1700000000 },
+      220: { total: 30, last: 1600000000 },
+    });
+  } finally {
+    fs.rmSync(sandbox, { recursive: true, force: true });
+  }
 });
 
 test('hostile manifests are rejected before anything is written', async () => {

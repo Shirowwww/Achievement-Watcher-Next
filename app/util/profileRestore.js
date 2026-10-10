@@ -253,7 +253,7 @@ function applyPendingRestore(userDataDir, { registry = null, hooks = {} } = {}) 
     const warnings = [];
     if (pending.playtime && pending.playtime.length) {
       try {
-        (registry || require('./profileBackup.js').defaultRegistry()).mergePlaytime(pending.playtime);
+        (registry || require('./profileBackup.js').defaultRegistry(userDataDir)).mergePlaytime(pending.playtime);
       } catch (err) {
         warnings.push(`playtime: ${err && err.message ? err.message : err}`);
       }

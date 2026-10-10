@@ -49,4 +49,23 @@ function addSession(file, appid, seconds, now = Date.now()) {
   write(file, appid, { total: current.total + played, last: Math.floor(now / 1000) });
 }
 
-module.exports = { playtimeFile, read, write, addSession };
+function list(file) {
+  return Object.keys(readAll(file)).map((appid) => ({ appid, ...read(file, appid) }));
+}
+
+// Larger value wins, so a restored backup can never turn a counter back.
+function mergeMax(file, rows) {
+  const next = { ...readAll(file) };
+  for (const row of rows) {
+    const current = next[String(row.appid)] || {};
+    next[String(row.appid)] = {
+      total: Math.max(counter(current.total), counter(row.total)),
+      last: Math.max(counter(current.last), counter(row.last)),
+    };
+  }
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  writeFileAtomicSync(file, JSON.stringify(next, null, 2));
+  return rows.length;
+}
+
+module.exports = { playtimeFile, read, write, addSession, list, mergeMax };

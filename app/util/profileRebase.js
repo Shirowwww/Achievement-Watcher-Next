@@ -11,7 +11,11 @@ const { fileURLToPath, pathToFileURL } = require('url');
 
 const REBASED_EXTENSIONS = new Set(['.json', '.db', '.ini']);
 
+// Unix paths are compared as written: their filesystems are case-sensitive and use only '/'.
+const isUnixPath = (value) => String(value).startsWith('/');
+
 function key(value) {
+  if (isUnixPath(value)) return String(value).replace(/\/+$/, '');
   return String(value).replace(/\//g, '\\').replace(/\\+$/, '').toLowerCase();
 }
 
@@ -28,9 +32,10 @@ function rebasePath(value, mappings) {
   for (const map of mappings) {
     if (!probe.startsWith(map.fromKey)) continue;
     const next = probe[map.fromKey.length];
-    if (next !== undefined && next !== '\\') continue;
+    if (next !== undefined && next !== (isUnixPath(value) ? '/' : '\\')) continue;
     const rest = String(value).slice(map.fromKey.length);
     const target = map.to.replace(/[\\/]+$/, '');
+    if (isUnixPath(target)) return target + rest.replace(/\\/g, '/');
     // Keep the slash style the file used.
     return value.includes('\\') || !value.includes('/') ? target.replace(/\//g, '\\') + rest : target.replace(/\\/g, '/') + rest;
   }
@@ -47,7 +52,7 @@ function rebaseString(value, mappings) {
       return value;
     }
   }
-  return /^[A-Za-z]:[\\/]/.test(value) ? rebasePath(value, mappings) : value;
+  return /^[A-Za-z]:[\\/]/.test(value) || isUnixPath(value) ? rebasePath(value, mappings) : value;
 }
 
 function rebaseJson(node, mappings) {

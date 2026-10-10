@@ -71,9 +71,11 @@ test('Inno uninstallers win over NSIS/generic ones', () => {
     write(dir, 'unins000.exe');
     write(dir, 'unins000.dat');
     write(dir, 'Uninstall.exe');
-    const best = uninstall.findLocalUninstaller(dir);
+    const best = uninstall.findLocalUninstaller(dir, 'win32');
     assert.strictEqual(best.kind, 'inno');
     assert.strictEqual(best.name, 'unins000.exe');
+    // Off Windows the uninstaller is a Windows program in a Wine prefix: AW offers the folder removal instead.
+    assert.strictEqual(uninstall.findLocalUninstaller(dir, 'linux'), null);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -132,6 +134,31 @@ test('trash-target safety gate rejects roots, files, save folders and missing pa
     const downloads = path.join(dir, 'Downloads');
     fs.mkdirSync(downloads);
     assert.strictEqual(uninstall.isSafeTrashTarget(downloads), false);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('on Linux the gate also refuses system folders, a home above, and a Wine prefix or its inside', { skip: process.platform === 'win32' && 'Linux-only' }, () => {
+  const dir = tempDir();
+  try {
+    const game = path.join(dir, 'Games', 'AWTestGame');
+    fs.mkdirSync(game, { recursive: true });
+    assert.strictEqual(uninstall.isSafeTrashTarget(game, 'linux'), true);
+
+    for (const folder of ['/usr', '/home', '/opt', '/games', path.dirname(os.homedir())]) {
+      assert.strictEqual(uninstall.isSafeTrashTarget(folder, 'linux'), false, folder);
+    }
+
+    const prefix = path.join(dir, 'prefixes', 'mygame');
+    const programFiles = path.join(prefix, 'drive_c', 'Program Files');
+    const wineGame = path.join(programFiles, 'AWTestGame');
+    fs.mkdirSync(wineGame, { recursive: true });
+    fs.writeFileSync(path.join(prefix, 'system.reg'), '');
+    assert.strictEqual(uninstall.isSafeTrashTarget(wineGame, 'linux'), true);
+    for (const folder of [prefix, path.join(prefix, 'drive_c'), programFiles, path.join(dir, 'prefixes')]) {
+      assert.strictEqual(uninstall.isSafeTrashTarget(folder, 'linux'), false, folder);
+    }
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }

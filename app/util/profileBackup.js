@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const inventory = require('./profileInventory.js');
 const archive = require('./profileArchive.js');
+const playtimeFile = require('./playtimeFile.js');
 
 const PLAYTIME_KEY = 'Software/Achievement Watcher Next/Playtime/Steam';
 const OPTIONS_REL = 'cfg/options.ini';
@@ -20,8 +21,13 @@ const SIGN_IN_FILES = [
   ['retroachievements', 'cfg/retroachievements-auth.json'],
 ];
 
-// Registry access behind an object so tests never touch the real hive.
-function defaultRegistry() {
+// Playtime counters behind an object so tests never touch the real hive. Without a registry (Linux)
+// they live in cfg/playtime.json, which is then carried in the manifest rather than as a file.
+function defaultRegistry(userDataDir) {
+  if (process.platform !== 'win32') {
+    const file = playtimeFile.playtimeFile(userDataDir);
+    return { readPlaytime: () => playtimeFile.list(file), mergePlaytime: (rows) => playtimeFile.mergeMax(file, rows) };
+  }
   const reg = require('./reg.js');
   const read = (appid) => reg.readRegistryIntegers('HKCU', `${PLAYTIME_KEY}/${appid}`, ['total', 'last']);
   return {
@@ -82,7 +88,7 @@ async function exportProfile({ userDataDir, destination, appVersion = '', home =
     return { rel: file.rel, buffer: Buffer.from(scrubbed.text, 'utf8') };
   });
 
-  const reg = registry || defaultRegistry();
+  const reg = registry || defaultRegistry(userDataDir);
   let playtime = [];
   try {
     playtime = reg.readPlaytime();
