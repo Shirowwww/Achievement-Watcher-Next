@@ -2479,5 +2479,103 @@
     "playedFor": "Tu as joué pendant {duration}",
     "trackingPlaytime": "Suivi du temps de jeu en cours",
     "playtime": "Temps de jeu"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Lance AW Next automatiquement à l’ouverture de ta session de bureau, caché dans la zone de notification."
+          },
+          "uninstallMenu": {
+            "description": "Ajoute des options de désinstallation au menu clic droit des jeux (désinstallation Steam, désinstalleur du jeu, ou déplacement du dossier vers la Corbeille)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Notification de bureau"
+          },
+          "info": {
+            "toast": "Certaines options de cette section ne fonctionnent que sous Windows"
+          },
+          "test": {
+            "toast": "Notification de bureau"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Notification de bureau"
+              }
+            },
+            "platinum": {
+              "description": "Envoyer une notification de bureau dédiée quand un jeu atteint 100 % de complétion"
+            },
+            "mode": {
+              "description": "Automatique utilise l’overlay en jeu quand il peut s’afficher, et une notification de bureau sinon. Les autres choix utilisent toujours celui que tu désignes.",
+              "value": {
+                "toast": "Notification de bureau"
+              }
+            },
+            "customToastAudio": {
+              "name": "Son de la notification de bureau",
+              "description": "Spécifie le son à jouer lorsqu’une notification de bureau est affichée"
+            },
+            "toastSouvenir": {
+              "name": "Souvenir dans la notification de bureau",
+              "description": "Windows uniquement : affiche la capture d’écran souvenir dans la notification."
+            },
+            "groupToast": {
+              "description": "Windows uniquement : regroupe les notifications du même jeu dans le Centre de notifications."
+            },
+            "urgent": {
+              "description": "Permet aux déblocages de succès de s’afficher lorsque Ne pas déranger est actif. Ils sont envoyés comme notifications critiques, que la plupart des bureaux laissent passer."
+            },
+            "useToast": {
+              "name": "Notification de bureau",
+              "description": "Notification système affichée par ton bureau"
+            },
+            "useWinRT": {
+              "description": "Windows uniquement. Sans effet sous Linux."
+            },
+            "useBalloon": {
+              "description": "Windows uniquement. Sans effet sous Linux."
+            },
+            "souvenirHdrDesc": "Windows uniquement : corrige les couleurs lorsque le HDR de Windows est actif. Sous Linux, la capture standard est enregistrée."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Tes réglages, caches, journaux et thèmes personnalisés se trouvent dans ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Automatique est le mode par défaut : le popup en jeu quand le jeu peut l’afficher, une notification de bureau sinon, jamais les deux.",
+            "3": "La capture au déblocage garde une image du moment dans ~/Pictures/Achievement Watcher Next."
+          },
+          "troubleshoot": {
+            "1": "Si les notifications n’apparaissent pas : vérifie que Ne pas déranger est désactivé sur ton bureau et que ses réglages de notifications ne bloquent pas AW Next."
+          },
+          "sources": {
+            "2": "Les jeux Steam possédés ne comptent comme installés que si les fichiers de Steam le confirment."
+          },
+          "steam": {
+            "0": "Les sauvegardes GBE / Goldberg se trouvent en général dans AppData/Roaming/GSE Saves, dans le préfixe Wine ou Proton du jeu, ou dans ~/.local/share/GSE Saves pour un jeu Linux natif."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Où apparaissent les succès. Automatique choisit pour toi entre overlay et notification de bureau.",
+        "toast": "Notification de bureau"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Supprimer le dossier du jeu (Corbeille)…",
+        "move-x-s-folder-to-the-recycle-bin": "Déplacer le dossier de « {name} » vers la Corbeille ?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "Aucun désinstalleur n’a été trouvé dans ce dossier. Les fichiers seront déplacés vers la Corbeille (récupérables).",
+        "deleting-game-folder": "Déplacement vers la Corbeille…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Impossible de déplacer le dossier vers la Corbeille.",
+        "delete-permanently-detail": "Une suppression définitive ignore la Corbeille : les fichiers ne pourront pas être restaurés.",
+        "delete-recycle-bin-refused": "Le système a refusé de mettre ce dossier à la Corbeille. Cela arrive quand un fichier est encore ouvert, quand le disque n’a pas de Corbeille (disque amovible ou réseau), ou quand tu n’as pas le droit d’écrire dans le dossier.",
+        "gh-simple-notifications-fallback": "Fonctionnel - repli sur la notification de bureau actif"
+      }
+    }
   }
 }

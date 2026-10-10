@@ -52,6 +52,7 @@ function installWorld(world) {
     return { all: () => languages, has: (api) => languages.some((entry) => entry.api === api) };
   })();
   modules['APP/locale/t.js'] = { t: (key, english) => english };
+  modules['APP/locale/platformText.js'] = { withPlatformText: ({ platform, ...text }) => text };
   modules['APP/util/folderDiagnosis.js'] = { describeFolderDiagnosis: () => '' };
   modules['APP/util/avatarStore.js'] = { setAvatar() {}, clearAvatar() {} };
   modules['APP/components/userAvatar/avatar.js'] = { getAvatar: async () => '', imageFileToBase64: async () => '' };

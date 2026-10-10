@@ -2479,5 +2479,103 @@
     "playedFor": "Jugaste durante {duration}",
     "trackingPlaytime": "Registrando tiempo de juego",
     "playtime": "Tiempo de juego"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Inicia AW Next automáticamente cuando inicias sesión en tu escritorio, oculto en la bandeja."
+          },
+          "uninstallMenu": {
+            "description": "Agrega opciones de desinstalación al menú contextual de los juegos (desinstalación de Steam, desinstalador del juego o mover la carpeta a la Papelera)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Notificación de escritorio"
+          },
+          "info": {
+            "toast": "Algunas opciones de esta sección solo funcionan en Windows"
+          },
+          "test": {
+            "toast": "Notificación de escritorio"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Notificación de escritorio"
+              }
+            },
+            "platinum": {
+              "description": "Lanza una notificación de escritorio dedicada cuando un juego alcanza el 100% de finalización"
+            },
+            "mode": {
+              "description": "Automático usa el overlay en el juego cuando puede mostrarse y una notificación de escritorio cuando no. Las demás opciones usan siempre la que elijas.",
+              "value": {
+                "toast": "Notificación de escritorio"
+              }
+            },
+            "customToastAudio": {
+              "name": "Sonido de la notificación de escritorio",
+              "description": "Especifica el sonido que se reproduce al mostrar una notificación de escritorio"
+            },
+            "toastSouvenir": {
+              "name": "Souvenir en la notificación de escritorio",
+              "description": "Solo Windows: muestra la captura souvenir dentro de la notificación."
+            },
+            "groupToast": {
+              "description": "Solo Windows: agrupa las notificaciones del mismo juego en el Centro de notificaciones."
+            },
+            "urgent": {
+              "description": "Permite mostrar los desbloqueos de logros mientras No molestar está activo. Se envían como notificaciones críticas, que la mayoría de los escritorios dejan pasar."
+            },
+            "useToast": {
+              "name": "Notificación de escritorio",
+              "description": "Notificación del sistema que muestra tu escritorio"
+            },
+            "useWinRT": {
+              "description": "Solo Windows. No tiene efecto en Linux."
+            },
+            "useBalloon": {
+              "description": "Solo Windows. No tiene efecto en Linux."
+            },
+            "souvenirHdrDesc": "Solo Windows: corrige los colores cuando el HDR de Windows está activo. En Linux se guarda la captura estándar."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Todo (ajustes, cachés, registros y temas personalizados) se guarda en ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Automático es el modo predeterminado: el aviso dentro del juego cuando el juego puede mostrarlo y una notificación de escritorio cuando no, nunca ambos.",
+            "3": "La captura al desbloquear guarda una imagen del momento en ~/Pictures/Achievement Watcher Next."
+          },
+          "troubleshoot": {
+            "1": "Si no aparecen notificaciones: verifica que No molestar esté desactivado en tu escritorio y que sus ajustes de notificaciones no bloqueen AW Next."
+          },
+          "sources": {
+            "2": "Los juegos adquiridos en Steam solo cuentan como instalados cuando los propios archivos de Steam lo confirman."
+          },
+          "steam": {
+            "0": "Los guardados de GBE/Goldberg suelen estar en AppData/Roaming/GSE Saves dentro del prefijo de Wine o Proton del juego, o en ~/.local/share/GSE Saves para un juego nativo de Linux."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Dónde aparecen los desbloqueos. Automático elige por ti entre overlay y notificación de escritorio.",
+        "toast": "Notificación de escritorio"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Eliminar carpeta del juego (papelera)…",
+        "move-x-s-folder-to-the-recycle-bin": "¿Mover la carpeta de «{name}» a la papelera?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "No se encontró un desinstalador en esta carpeta. Los archivos se moverán a la papelera (recuperables).",
+        "deleting-game-folder": "Moviendo a la Papelera…",
+        "could-not-move-the-folder-to-the-recycle-bin": "No se pudo mover la carpeta a la papelera.",
+        "delete-permanently-detail": "Una eliminación definitiva omite la papelera: los archivos no se podrán restaurar.",
+        "delete-recycle-bin-refused": "El sistema se negó a enviar esta carpeta a la papelera. Esto ocurre cuando un archivo sigue abierto, cuando la unidad no tiene papelera (unidad extraíble o de red) o cuando no puedes escribir en la carpeta.",
+        "gh-simple-notifications-fallback": "Funcionando - respaldo de notificación de escritorio activo"
+      }
+    }
   }
 }

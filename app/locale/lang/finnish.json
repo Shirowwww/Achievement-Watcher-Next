@@ -2479,5 +2479,103 @@
     "playedFor": "Pelasit {duration}",
     "trackingPlaytime": "Seurataan peliaikaa",
     "playtime": "Peliaika"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Käynnistää AW Nextin automaattisesti, kun kirjaudut työpöytäistuntoosi, piilotettuna ilmaisinalueelle."
+          },
+          "uninstallMenu": {
+            "description": "Lisää peliruutujen hiiren kakkospainikkeen valikkoon asennuksenpoiston vaihtoehdot (Steam-poisto, pelin asennuksenpoisto-ohjelma tai kansion siirto roskakoriin)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Työpöytäilmoitus"
+          },
+          "info": {
+            "toast": "Osa tämän osion asetuksista toimii vain Windowsissa"
+          },
+          "test": {
+            "toast": "Työpöytäilmoitus"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Työpöytäilmoitus"
+              }
+            },
+            "platinum": {
+              "description": "Näytä oma työpöytäilmoitus, kun peli saavuttaa 100 %:n suoritusasteen"
+            },
+            "mode": {
+              "description": "Automaattinen käyttää pelinsisäistä peittokuvaa, kun se voidaan näyttää, ja muutoin työpöytäilmoitusta. Muut vaihtoehdot käyttävät aina valitsemaasi tapaa.",
+              "value": {
+                "toast": "Työpöytäilmoitus"
+              }
+            },
+            "customToastAudio": {
+              "name": "Työpöytäilmoituksen ääni",
+              "description": "Määrittää äänen, joka soitetaan työpöytäilmoituksen näkyessä"
+            },
+            "toastSouvenir": {
+              "name": "Muistokuva työpöytäilmoituksessa",
+              "description": "Vain Windows: näyttää muistokuvakaappauksen ilmoituksen sisällä."
+            },
+            "groupToast": {
+              "description": "Vain Windows: ryhmittelee saman pelin ilmoitukset toimintokeskuksessa."
+            },
+            "urgent": {
+              "description": "Salli saavutusten avausilmoitukset myös silloin, kun Älä häiritse on käytössä. Ne lähetetään kriittisinä ilmoituksina, jotka useimmat työpöydät päästävät läpi."
+            },
+            "useToast": {
+              "name": "Työpöytäilmoitus",
+              "description": "Työpöytäsi näyttämä järjestelmäilmoitus"
+            },
+            "useWinRT": {
+              "description": "Vain Windows. Ei vaikutusta Linuxissa."
+            },
+            "useBalloon": {
+              "description": "Vain Windows. Ei vaikutusta Linuxissa."
+            },
+            "souvenirHdrDesc": "Vain Windows: korjaa värit, kun Windowsin HDR on käytössä. Linuxissa tallennetaan tavallinen kuvakaappaus."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Kaikki (asetukset, välimuistit, lokit ja omat teemat) sijaitsee kansiossa ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Automaattinen on oletus: pelin sisäinen ponnahdus, kun peli voi näyttää sen, ja työpöytäilmoitus, kun ei voi, ei koskaan molempia.",
+            "3": "Kuvakaappaus avauksen yhteydessä tallentaa hetken kuvan kansioon ~/Pictures/Achievement Watcher Next."
+          },
+          "troubleshoot": {
+            "1": "Jos ilmoitukset eivät näy: tarkista, että Älä häiritse on pois päältä työpöydälläsi ja että sen ilmoitusasetukset eivät estä AW Nextiä."
+          },
+          "sources": {
+            "2": "Omistetut Steam-pelit lasketaan asennetuiksi vain, kun Steamin omat tiedostot vahvistavat sen."
+          },
+          "steam": {
+            "0": "GBE- ja Goldberg-tallennukset ovat yleensä kansiossa AppData/Roaming/GSE Saves pelin Wine- tai Proton-prefiksin sisällä tai kansiossa ~/.local/share/GSE Saves natiivissa Linux-pelissä."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Missä avaukset näkyvät. Automaattinen valitsee puolestasi peittokuvan tai työpöytäilmoituksen.",
+        "toast": "Työpöytäilmoitus"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Poista pelikansio (roskakoriin)…",
+        "move-x-s-folder-to-the-recycle-bin": "Siirretäänkö pelin ”{name}” kansio roskakoriin?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "Tästä kansiosta ei löytynyt asennuksenpoisto-ohjelmaa. Tiedostot siirretään roskakoriin, josta ne voi palauttaa.",
+        "deleting-game-folder": "Siirretään roskakoriin…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Kansiota ei voitu siirtää roskakoriin.",
+        "delete-permanently-detail": "Pysyvä poisto ohittaa roskakorin: tiedostoja ei voi palauttaa.",
+        "delete-recycle-bin-refused": "Järjestelmä kieltäytyi siirtämästä tätä kansiota roskakoriin. Näin käy, kun tiedosto on yhä auki, kun asemassa ei ole roskakoria (siirrettävä asema tai verkkoasema) tai kun kansioon ei voi kirjoittaa.",
+        "gh-simple-notifications-fallback": "Toimii - työpöytäilmoituksen varatapa käytössä"
+      }
+    }
   }
 }

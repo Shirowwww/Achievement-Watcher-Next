@@ -2479,5 +2479,103 @@
     "playedFor": "Du spelade i {duration}",
     "trackingPlaytime": "Räknar speltid",
     "playtime": "Speltid"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Startar AW Next automatiskt när du loggar in på din skrivbordssession, dolt i aktivitetsfältet."
+          },
+          "uninstallMenu": {
+            "description": "Lägger till avinstallationsalternativ i högerklicksmenyn på spelrutorna (avinstallera via Steam, spelets avinstallationsprogram eller flytta mappen till papperskorgen)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Skrivbordsavisering"
+          },
+          "info": {
+            "toast": "Vissa alternativ i det här avsnittet fungerar bara i Windows"
+          },
+          "test": {
+            "toast": "Skrivbordsavisering"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Skrivbordsavisering"
+              }
+            },
+            "platinum": {
+              "description": "Visa en egen skrivbordsavisering när ett spel når 100 % slutförande"
+            },
+            "mode": {
+              "description": "Automatiskt använder overlayen i spelet när den kan visas och en skrivbordsavisering när den inte kan. De andra valen använder alltid det du väljer.",
+              "value": {
+                "toast": "Skrivbordsavisering"
+              }
+            },
+            "customToastAudio": {
+              "name": "Ljud för skrivbordsaviseringar",
+              "description": "Anger vilket ljud som spelas när en skrivbordsavisering visas"
+            },
+            "toastSouvenir": {
+              "name": "Souvenir i skrivbordsaviseringen",
+              "description": "Endast Windows: visar souvenirskärmbilden inuti aviseringen."
+            },
+            "groupToast": {
+              "description": "Endast Windows: grupperar aviseringar från samma spel i Åtgärdscenter."
+            },
+            "urgent": {
+              "description": "Låt upplåsta prestationer visas även när Stör ej är aktivt. De skickas som kritiska aviseringar, som de flesta skrivbord släpper igenom."
+            },
+            "useToast": {
+              "name": "Skrivbordsavisering",
+              "description": "Systemavisering som visas av ditt skrivbord"
+            },
+            "useWinRT": {
+              "description": "Endast Windows. Har ingen effekt i Linux."
+            },
+            "useBalloon": {
+              "description": "Endast Windows. Har ingen effekt i Linux."
+            },
+            "souvenirHdrDesc": "Endast Windows: korrigerar färgerna när HDR i Windows är aktivt. I Linux sparas den vanliga skärmbilden."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Allt (inställningar, cacheminnen, loggar, egna teman) ligger i ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Automatiskt är standard: popup-fönstret i spelet när spelet kan visa det och en skrivbordsavisering när det inte går, aldrig båda.",
+            "3": "Skärmbild vid upplåsning sparar en bild av ögonblicket i ~/Pictures/Achievement Watcher Next."
+          },
+          "troubleshoot": {
+            "1": "Om aviseringar inte visas: kontrollera att Stör ej är avstängt på ditt skrivbord och att dess aviseringsinställningar inte blockerar AW Next."
+          },
+          "sources": {
+            "2": "Ägda Steam-spel räknas som installerade först när Steams egna filer bekräftar det."
+          },
+          "steam": {
+            "0": "Sparfiler från GBE / Goldberg ligger oftast i AppData/Roaming/GSE Saves inuti spelets Wine- eller Proton-prefix, eller i ~/.local/share/GSE Saves för ett inbyggt Linux-spel."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Var upplåsningar visas. Automatiskt väljer overlayen eller en skrivbordsavisering åt dig.",
+        "toast": "Skrivbordsavisering"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Ta bort spelmappen (papperskorgen)…",
+        "move-x-s-folder-to-the-recycle-bin": "Vill du flytta mappen för ”{name}” till papperskorgen?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "Inget avinstallationsprogram hittades i den här mappen. Filerna flyttas till papperskorgen (går att återställa).",
+        "deleting-game-folder": "Flyttar till papperskorgen…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Det gick inte att flytta mappen till papperskorgen.",
+        "delete-permanently-detail": "Permanent borttagning hoppar över papperskorgen: filerna kan inte återställas.",
+        "delete-recycle-bin-refused": "Systemet vägrade flytta den här mappen till papperskorgen. Det händer när en fil fortfarande är öppen, när enheten saknar papperskorg (flyttbar enhet eller nätverksenhet) eller när du inte kan skriva till mappen.",
+        "gh-simple-notifications-fallback": "Fungerar - reservläget med skrivbordsavisering är aktivt"
+      }
+    }
   }
 }

@@ -2479,5 +2479,103 @@
     "playedFor": "Hai giocato per {duration}",
     "trackingPlaytime": "Monitoraggio del tempo di gioco",
     "playtime": "Tempo di gioco"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Avvia AW Next automaticamente quando accedi alla sessione del desktop, nascosto nell’area di notifica."
+          },
+          "uninstallMenu": {
+            "description": "Aggiunge opzioni di disinstallazione al menu con il tasto destro sui giochi (disinstallazione Steam, disinstallatore del gioco o spostamento della cartella nel Cestino)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Notifica del desktop"
+          },
+          "info": {
+            "toast": "Alcune opzioni di questa sezione funzionano solo in Windows"
+          },
+          "test": {
+            "toast": "Notifica del desktop"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Notifica del desktop"
+              }
+            },
+            "platinum": {
+              "description": "Mostra una notifica del desktop dedicata quando un gioco raggiunge il 100% di completamento"
+            },
+            "mode": {
+              "description": "Automatico usa l’overlay nel gioco quando può essere mostrato e una notifica del desktop quando non può. Le altre scelte usano sempre quella indicata.",
+              "value": {
+                "toast": "Notifica del desktop"
+              }
+            },
+            "customToastAudio": {
+              "name": "Suono della notifica del desktop",
+              "description": "Specifica il suono da riprodurre quando viene mostrata una notifica del desktop"
+            },
+            "toastSouvenir": {
+              "name": "Souvenir nella notifica del desktop",
+              "description": "Solo Windows: mostra lo screenshot souvenir all’interno della notifica."
+            },
+            "groupToast": {
+              "description": "Solo Windows: raggruppa le notifiche dello stesso gioco nel Centro notifiche."
+            },
+            "urgent": {
+              "description": "Consente di visualizzare gli sblocchi degli obiettivi mentre Non disturbare è attivo. Vengono inviati come notifiche critiche, che la maggior parte dei desktop lascia passare."
+            },
+            "useToast": {
+              "name": "Notifica del desktop",
+              "description": "Notifica di sistema mostrata dal tuo desktop"
+            },
+            "useWinRT": {
+              "description": "Solo Windows. Non ha effetto su Linux."
+            },
+            "useBalloon": {
+              "description": "Solo Windows. Non ha effetto su Linux."
+            },
+            "souvenirHdrDesc": "Solo Windows: corregge i colori quando l’HDR di Windows è attivo. Su Linux viene salvato lo screenshot standard."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Tutto (impostazioni, cache, registri e temi personalizzati) si trova in ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Automatico è la modalità predefinita: il popup nel gioco quando il gioco può mostrarlo e una notifica del desktop quando non può, mai entrambi.",
+            "3": "La cattura allo sblocco salva un’immagine del momento in ~/Pictures/Achievement Watcher Next."
+          },
+          "troubleshoot": {
+            "1": "Se le notifiche non compaiono: controlla che Non disturbare sia disattivato sul tuo desktop e che le sue impostazioni di notifica non blocchino AW Next."
+          },
+          "sources": {
+            "2": "I giochi Steam posseduti risultano installati solo quando i file stessi di Steam lo confermano."
+          },
+          "steam": {
+            "0": "I salvataggi GBE/Goldberg si trovano normalmente in AppData/Roaming/GSE Saves nel prefisso Wine o Proton del gioco, oppure in ~/.local/share/GSE Saves per un gioco Linux nativo."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Dove appaiono gli sblocchi. Automatico sceglie per te tra overlay e notifica del desktop.",
+        "toast": "Notifica del desktop"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Elimina cartella del gioco (Cestino)…",
+        "move-x-s-folder-to-the-recycle-bin": "Spostare la cartella di «{name}» nel Cestino?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "In questa cartella non è stato trovato alcun disinstallatore. I file verranno spostati nel Cestino (recuperabili).",
+        "deleting-game-folder": "Spostamento nel Cestino…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Impossibile spostare la cartella nel Cestino.",
+        "delete-permanently-detail": "L’eliminazione definitiva salta il Cestino: i file non potranno essere ripristinati.",
+        "delete-recycle-bin-refused": "Il sistema ha rifiutato di spostare questa cartella nel Cestino. Succede quando un file è ancora aperto, quando l’unità non ha un Cestino (unità rimovibile o di rete) o quando non puoi scrivere nella cartella.",
+        "gh-simple-notifications-fallback": "Funzionante - fallback su notifica del desktop attivo"
+      }
+    }
   }
 }

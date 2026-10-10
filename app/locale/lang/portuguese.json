@@ -2479,5 +2479,103 @@
     "playedFor": "Jogaste durante {duration}",
     "trackingPlaytime": "A registar o tempo de jogo",
     "playtime": "Tempo de jogo"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Inicia o AW Next automaticamente quando inicias sessão no teu ambiente de trabalho, oculto na bandeja."
+          },
+          "uninstallMenu": {
+            "description": "Adiciona opções de desinstalação ao menu do botão direito dos jogos (desinstalação Steam, desinstalador do jogo ou mover a pasta para a Reciclagem)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Notificação do ambiente de trabalho"
+          },
+          "info": {
+            "toast": "Algumas opções desta secção só funcionam no Windows"
+          },
+          "test": {
+            "toast": "Notificação do ambiente de trabalho"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Notificação do ambiente de trabalho"
+              }
+            },
+            "platinum": {
+              "description": "Dispara uma notificação do ambiente de trabalho dedicada quando um jogo atinge 100% de conclusão"
+            },
+            "mode": {
+              "description": "Automático usa o overlay no jogo quando pode ser mostrado e uma notificação do ambiente de trabalho quando não. As outras opções usam sempre a que escolheres.",
+              "value": {
+                "toast": "Notificação do ambiente de trabalho"
+              }
+            },
+            "customToastAudio": {
+              "name": "Som da notificação do ambiente de trabalho",
+              "description": "Especifica o som a reproduzir quando uma notificação do ambiente de trabalho é exibida"
+            },
+            "toastSouvenir": {
+              "name": "Recordação na notificação do ambiente de trabalho",
+              "description": "Apenas no Windows: mostra a captura de recordação dentro da notificação."
+            },
+            "groupToast": {
+              "description": "Apenas no Windows: agrupa as notificações do mesmo jogo no Centro de Atividades."
+            },
+            "urgent": {
+              "description": "Permitir que desbloqueios de proezas apareçam enquanto o Não incomodar está ativo. São enviados como notificações críticas, que a maioria dos ambientes de trabalho deixa passar."
+            },
+            "useToast": {
+              "name": "Notificação do ambiente de trabalho",
+              "description": "Notificação de sistema mostrada pelo teu ambiente de trabalho"
+            },
+            "useWinRT": {
+              "description": "Apenas no Windows. Não tem efeito no Linux."
+            },
+            "useBalloon": {
+              "description": "Apenas no Windows. Não tem efeito no Linux."
+            },
+            "souvenirHdrDesc": "Apenas no Windows: corrige as cores quando o HDR do Windows está ativo. No Linux, é guardada a captura padrão."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Tudo (definições, caches, registos e temas personalizados) fica em ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Automático é a predefinição: o aviso dentro do jogo quando o jogo o consegue mostrar e uma notificação do ambiente de trabalho quando não, nunca os dois.",
+            "3": "A captura ao desbloquear guarda uma imagem do momento em ~/Pictures/Achievement Watcher Next."
+          },
+          "troubleshoot": {
+            "1": "Se as notificações não aparecerem: verifique se o Não incomodar está desativado no seu ambiente de trabalho e se as definições de notificações do mesmo não bloqueiam o AW Next."
+          },
+          "sources": {
+            "2": "Os jogos Steam adquiridos só contam como instalados quando os próprios ficheiros do Steam o confirmam."
+          },
+          "steam": {
+            "0": "As gravações GBE/Goldberg encontram-se normalmente em AppData/Roaming/GSE Saves dentro do prefixo Wine ou Proton do jogo, ou em ~/.local/share/GSE Saves para um jogo nativo de Linux."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Onde aparecem os desbloqueios. Automático escolhe por ti entre overlay e notificação do ambiente de trabalho.",
+        "toast": "Notificação do ambiente de trabalho"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Eliminar pasta do jogo (Reciclagem)…",
+        "move-x-s-folder-to-the-recycle-bin": "Mover a pasta de «{name}» para a Reciclagem?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "Não foi encontrado nenhum desinstalador nesta pasta. Os ficheiros serão movidos para a Reciclagem (recuperáveis).",
+        "deleting-game-folder": "A mover para a Reciclagem…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Não foi possível mover a pasta para a Reciclagem.",
+        "delete-permanently-detail": "Uma eliminação definitiva ignora a Reciclagem: os ficheiros não poderão ser restaurados.",
+        "delete-recycle-bin-refused": "O sistema recusou mover esta pasta para a Reciclagem. Isso acontece quando um ficheiro ainda está aberto, quando a unidade não tem Reciclagem (unidade amovível ou de rede) ou quando não tens permissão para escrever na pasta.",
+        "gh-simple-notifications-fallback": "A funcionar - alternativa de notificação do ambiente de trabalho ativa"
+      }
+    }
   }
 }

@@ -2479,5 +2479,103 @@
     "playedFor": "Du spilte i {duration}",
     "trackingPlaytime": "Sporer spilletid",
     "playtime": "Spilletid"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Starter AW Next automatisk når du logger inn på skrivebordsøkten, skjult i systemkurven."
+          },
+          "uninstallMenu": {
+            "description": "Legger avinstalleringsvalg i høyreklikkmenyen på spillrutene (avinstaller via Steam, spillets eget avinstallasjonsprogram, eller flytt mappen til papirkurven)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Skrivebordsvarsel"
+          },
+          "info": {
+            "toast": "Enkelte innstillinger i denne delen fungerer bare i Windows"
+          },
+          "test": {
+            "toast": "Skrivebordsvarsel"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Skrivebordsvarsel"
+              }
+            },
+            "platinum": {
+              "description": "Send et eget skrivebordsvarsel når et spill når 100 % fullført"
+            },
+            "mode": {
+              "description": "Automatisk bruker overlayet i spill når det kan vises, og et skrivebordsvarsel når det ikke kan. De andre valgene bruker alltid det du velger.",
+              "value": {
+                "toast": "Skrivebordsvarsel"
+              }
+            },
+            "customToastAudio": {
+              "name": "Lyd for skrivebordsvarsel",
+              "description": "Angir lyden som spilles når et skrivebordsvarsel vises"
+            },
+            "toastSouvenir": {
+              "name": "Suvenir i skrivebordsvarsel",
+              "description": "Kun Windows: viser suvenirbildet inne i varselet."
+            },
+            "groupToast": {
+              "description": "Kun Windows: grupperer varsler fra samme spill i Handlingssenteret."
+            },
+            "urgent": {
+              "description": "La opplåste prestasjoner vises selv når Ikke forstyrr er på. De sendes som kritiske varsler, som de fleste skrivebord slipper gjennom."
+            },
+            "useToast": {
+              "name": "Skrivebordsvarsel",
+              "description": "Systemvarsel som vises av skrivebordet ditt"
+            },
+            "useWinRT": {
+              "description": "Kun Windows. Har ingen effekt i Linux."
+            },
+            "useBalloon": {
+              "description": "Kun Windows. Har ingen effekt i Linux."
+            },
+            "souvenirHdrDesc": "Kun Windows: retter fargene når HDR er aktivt i Windows. I Linux lagres det vanlige skjermbildet."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Alt (innstillinger, buffere, logger, egne temaer) ligger i ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Automatisk er standard: sprettoppvarselet i spillet når spillet kan vise det, og et skrivebordsvarsel når det ikke kan, aldri begge.",
+            "3": "Skjermbilde ved opplåsing lagrer et bilde av øyeblikket i ~/Pictures/Achievement Watcher Next."
+          },
+          "troubleshoot": {
+            "1": "Kommer ingen varsler: sjekk at Ikke forstyrr er slått av på skrivebordet ditt, og at varselinnstillingene der ikke blokkerer AW Next."
+          },
+          "sources": {
+            "2": "Eide Steam-spill regnes som installerte bare når Steams egne filer bekrefter det."
+          },
+          "steam": {
+            "0": "Lagringsfiler fra GBE / Goldberg ligger som regel under AppData/Roaming/GSE Saves i spillets Wine- eller Proton-prefiks, eller under ~/.local/share/GSE Saves for et native Linux-spill."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Hvor opplåsinger vises. Automatisk velger overlayet eller et skrivebordsvarsel for deg.",
+        "toast": "Skrivebordsvarsel"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Slett spillmappen (papirkurven)…",
+        "move-x-s-folder-to-the-recycle-bin": "Vil du flytte mappen til «{name}» til papirkurven?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "Fant ingen avinstallasjonsprogram i denne mappen. Filene flyttes til papirkurven (og kan hentes tilbake).",
+        "deleting-game-folder": "Flytter til papirkurven…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Kunne ikke flytte mappen til papirkurven.",
+        "delete-permanently-detail": "Permanent sletting hopper over papirkurven: filene kan ikke gjenopprettes.",
+        "delete-recycle-bin-refused": "Systemet nektet å flytte denne mappen til papirkurven. Det skjer når en fil fortsatt er åpen, når stasjonen ikke har papirkurv (flyttbar stasjon eller nettverksstasjon), eller når du ikke kan skrive til mappen.",
+        "gh-simple-notifications-fallback": "Virker - reserve med skrivebordsvarsel er aktiv"
+      }
+    }
   }
 }

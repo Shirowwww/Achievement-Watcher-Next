@@ -2479,5 +2479,103 @@
     "playedFor": "{duration}プレイしました",
     "trackingPlaytime": "プレイ時間を記録中",
     "playtime": "プレイ時間"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "デスクトップのセッションにログインしたときに AW Next を自動起動し、トレイに隠します。"
+          },
+          "uninstallMenu": {
+            "description": "ゲームタイルの右クリックメニューにアンインストール項目を追加します（Steam アンインストール、ゲームのアンインストーラー、フォルダーをごみ箱へ移動）。"
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "デスクトップ通知"
+          },
+          "info": {
+            "toast": "このセクションの一部の項目は Windows でのみ動作します"
+          },
+          "test": {
+            "toast": "デスクトップ通知"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "デスクトップ通知"
+              }
+            },
+            "platinum": {
+              "description": "ゲームが 100% 達成に到達したとき専用のデスクトップ通知を表示します"
+            },
+            "mode": {
+              "description": "「自動」は表示できるときはゲーム内オーバーレイを、できないときはデスクトップ通知を使います。ほかの選択肢は常に指定したものを使います。",
+              "value": {
+                "toast": "デスクトップ通知"
+              }
+            },
+            "customToastAudio": {
+              "name": "デスクトップ通知のサウンド",
+              "description": "デスクトップ通知表示時に再生する音を指定します"
+            },
+            "toastSouvenir": {
+              "name": "デスクトップ通知内の記念",
+              "description": "Windows のみ：記念スクリーンショットを通知内に表示します。"
+            },
+            "groupToast": {
+              "description": "Windows のみ：同じゲームの通知をアクションセンターでグループ化します。"
+            },
+            "urgent": {
+              "description": "「応答不可」が有効な間も実績解除を表示します。重要な通知として送信されるため、ほとんどのデスクトップで表示されます。"
+            },
+            "useToast": {
+              "name": "デスクトップ通知",
+              "description": "お使いのデスクトップが表示するシステム通知"
+            },
+            "useWinRT": {
+              "description": "Windows のみ。Linux では効果がありません。"
+            },
+            "useBalloon": {
+              "description": "Windows のみ。Linux では効果がありません。"
+            },
+            "souvenirHdrDesc": "Windows のみ：Windows HDR が有効なときに色を補正します。Linux では標準のスクリーンショットを保存します。"
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "設定、キャッシュ、ログ、カスタムテーマはすべて ~/.config/Achievement Watcher Next に保存されます。"
+          },
+          "notifications": {
+            "0": "既定は［自動］です。ゲームが表示できるときはゲーム内ポップアップ、できないときはデスクトップ通知が使われ、両方が出ることはありません。",
+            "3": "解除時のスクリーンショットは、その瞬間の画像を ~/Pictures/Achievement Watcher Next に保存します。"
+          },
+          "troubleshoot": {
+            "1": "通知が表示されない場合：デスクトップで「応答不可」がオフになっていること、およびデスクトップの通知設定が AW Next をブロックしていないことを確認してください。"
+          },
+          "sources": {
+            "2": "所有中の Steam ゲームは、Steam 自身のファイルで確認できた場合にのみインストール済みとして扱われます。"
+          },
+          "steam": {
+            "0": "GBE / Goldberg のセーブデータは通常、ゲームの Wine または Proton プレフィックス内の AppData/Roaming/GSE Saves、ネイティブの Linux ゲームでは ~/.local/share/GSE Saves にあります。"
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "解除通知の表示場所。「自動」がオーバーレイとデスクトップ通知を選び分けます。",
+        "toast": "デスクトップ通知"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "ゲームフォルダを削除（ごみ箱）…",
+        "move-x-s-folder-to-the-recycle-bin": "「{name}」のフォルダをごみ箱に移動しますか？",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "このフォルダにアンインストーラが見つかりませんでした。ファイルはごみ箱に移動されます（復元可能）。",
+        "deleting-game-folder": "ごみ箱へ移動中…",
+        "could-not-move-the-folder-to-the-recycle-bin": "フォルダをごみ箱に移動できませんでした。",
+        "delete-permanently-detail": "完全な削除はごみ箱を経由しません。ファイルは復元できません。",
+        "delete-recycle-bin-refused": "システムがこのフォルダをごみ箱へ移動できませんでした。ファイルがまだ開いている場合、ドライブにごみ箱がない場合 (リムーバブル ドライブやネットワーク ドライブ)、またはフォルダに書き込めない場合に起こります。",
+        "gh-simple-notifications-fallback": "動作中 - デスクトップ通知へのフォールバックが有効"
+      }
+    }
   }
 }

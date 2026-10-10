@@ -2479,5 +2479,103 @@
     "playedFor": "Grałeś przez {duration}",
     "trackingPlaytime": "Śledzenie czasu gry",
     "playtime": "Czas gry"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Uruchamia AW Next automatycznie po zalogowaniu do sesji pulpitu, ukryty w zasobniku."
+          },
+          "uninstallMenu": {
+            "description": "Dodaje opcje odinstalowania do menu kontekstowego gier (odinstalowanie przez Steam, deinstalator gry lub przeniesienie folderu do Kosza)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Powiadomienie pulpitu"
+          },
+          "info": {
+            "toast": "Niektóre opcje w tej sekcji działają tylko w systemie Windows"
+          },
+          "test": {
+            "toast": "Powiadomienie pulpitu"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Powiadomienie pulpitu"
+              }
+            },
+            "platinum": {
+              "description": "Wyświetla dedykowane powiadomienie pulpitu, gdy gra osiąga 100% ukończenia"
+            },
+            "mode": {
+              "description": "„Automatycznie” używa nakładki w grze, gdy da się ją pokazać, a powiadomienia pulpitu, gdy nie. Pozostałe opcje zawsze używają wybranej.",
+              "value": {
+                "toast": "Powiadomienie pulpitu"
+              }
+            },
+            "customToastAudio": {
+              "name": "Dźwięk powiadomienia pulpitu",
+              "description": "Określa dźwięk odtwarzany podczas wyświetlania powiadomienia pulpitu"
+            },
+            "toastSouvenir": {
+              "name": "Pamiątka w powiadomieniu pulpitu",
+              "description": "Tylko Windows: pokazuje zrzut pamiątkowy wewnątrz powiadomienia."
+            },
+            "groupToast": {
+              "description": "Tylko Windows: grupuje powiadomienia tej samej gry w Centrum akcji."
+            },
+            "urgent": {
+              "description": "Umożliwia wyświetlanie odblokowanych osiągnięć, gdy aktywny jest tryb Nie przeszkadzać. Są wysyłane jako powiadomienia krytyczne, które większość pulpitów przepuszcza."
+            },
+            "useToast": {
+              "name": "Powiadomienie pulpitu",
+              "description": "Powiadomienie systemowe wyświetlane przez Twój pulpit"
+            },
+            "useWinRT": {
+              "description": "Tylko Windows. Nie ma wpływu w systemie Linux."
+            },
+            "useBalloon": {
+              "description": "Tylko Windows. Nie ma wpływu w systemie Linux."
+            },
+            "souvenirHdrDesc": "Tylko Windows: koryguje kolory, gdy funkcja HDR systemu Windows jest aktywna. W systemie Linux zapisywany jest standardowy zrzut ekranu."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Wszystko (ustawienia, pamięci podręczne, dzienniki i motywy użytkownika) znajduje się w ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Automatyczny to tryb domyślny: powiadomienie w grze, gdy gra może je pokazać, i powiadomienie pulpitu, gdy nie może, nigdy oba naraz.",
+            "3": "Zrzut ekranu przy odblokowaniu zapisuje obraz tej chwili w ~/Pictures/Achievement Watcher Next."
+          },
+          "troubleshoot": {
+            "1": "Jeśli powiadomienia się nie pojawiają: sprawdź, czy tryb Nie przeszkadzać jest wyłączony na pulpicie i czy jego ustawienia powiadomień nie blokują AW Next."
+          },
+          "sources": {
+            "2": "Posiadane gry Steam są uznawane za zainstalowane tylko wtedy, gdy potwierdzają to własne pliki Steam."
+          },
+          "steam": {
+            "0": "Zapisy GBE/Goldberg zwykle znajdują się w AppData/Roaming/GSE Saves wewnątrz prefiksu Wine lub Proton gry albo w ~/.local/share/GSE Saves dla natywnej gry na Linuksa."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Gdzie pojawiają się odblokowania. Automatycznie wybiera za Ciebie nakładkę lub powiadomienie pulpitu.",
+        "toast": "Powiadomienie pulpitu"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Usuń folder gry (Kosz)…",
+        "move-x-s-folder-to-the-recycle-bin": "Przenieść folder gry „{name}” do Kosza?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "W tym folderze nie znaleziono dezinstalatora. Pliki zostaną przeniesione do Kosza (można je odzyskać).",
+        "deleting-game-folder": "Przenoszenie do Kosza…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Nie udało się przenieść folderu do Kosza.",
+        "delete-permanently-detail": "Trwałe usunięcie pomija Kosz: plików nie będzie można przywrócić.",
+        "delete-recycle-bin-refused": "System odmówił przeniesienia tego folderu do Kosza. Dzieje się tak, gdy plik jest wciąż otwarty, gdy dysk nie ma Kosza (dysk wymienny lub sieciowy) albo gdy nie możesz zapisywać w tym folderze.",
+        "gh-simple-notifications-fallback": "Działa - aktywne zapasowe powiadomienie pulpitu"
+      }
+    }
   }
 }

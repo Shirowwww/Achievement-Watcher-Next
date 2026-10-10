@@ -2479,5 +2479,103 @@
     "playedFor": "Bạn đã chơi {duration}",
     "trackingPlaytime": "Đang theo dõi thời gian chơi",
     "playtime": "Thời gian chơi"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Tự khởi động AW Next khi bạn đăng nhập vào phiên màn hình nền, ẩn dưới khay hệ thống."
+          },
+          "uninstallMenu": {
+            "description": "Thêm các tùy chọn Gỡ cài đặt vào menu chuột phải trên thẻ trò chơi (gỡ qua Steam, trình gỡ cài đặt của trò chơi, hoặc chuyển thư mục vào Thùng rác)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Thông báo màn hình nền"
+          },
+          "info": {
+            "toast": "Một số tùy chọn trong phần này chỉ hoạt động trên Windows"
+          },
+          "test": {
+            "toast": "Thông báo màn hình nền"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Thông báo màn hình nền"
+              }
+            },
+            "platinum": {
+              "description": "Gửi một thông báo màn hình nền riêng khi một trò chơi đạt 100% hoàn thành"
+            },
+            "mode": {
+              "description": "Tự động sẽ dùng lớp phủ trong trò chơi khi hiển thị được và dùng thông báo màn hình nền khi không. Các lựa chọn còn lại luôn dùng đúng thứ bạn chọn.",
+              "value": {
+                "toast": "Thông báo màn hình nền"
+              }
+            },
+            "customToastAudio": {
+              "name": "Âm thanh thông báo màn hình nền",
+              "description": "Chọn âm thanh phát khi một thông báo màn hình nền hiện ra"
+            },
+            "toastSouvenir": {
+              "name": "Ảnh kỷ niệm trong thông báo màn hình nền",
+              "description": "Chỉ trên Windows: hiển thị ảnh kỷ niệm ngay trong thông báo."
+            },
+            "groupToast": {
+              "description": "Chỉ trên Windows: gộp trực quan các thông báo của cùng một trò chơi trong Trung tâm hành động."
+            },
+            "urgent": {
+              "description": "Cho phép thông báo mở khóa thành tựu hiện ra ngay cả khi chế độ Không làm phiền đang bật. Chúng được gửi dưới dạng thông báo quan trọng, loại mà hầu hết màn hình nền đều cho qua."
+            },
+            "useToast": {
+              "name": "Thông báo màn hình nền",
+              "description": "Thông báo hệ thống do màn hình nền của bạn hiển thị"
+            },
+            "useWinRT": {
+              "description": "Chỉ trên Windows. Không có tác dụng trên Linux."
+            },
+            "useBalloon": {
+              "description": "Chỉ trên Windows. Không có tác dụng trên Linux."
+            },
+            "souvenirHdrDesc": "Chỉ trên Windows: chỉnh lại màu khi HDR của Windows đang bật. Trên Linux, ảnh chụp thông thường sẽ được lưu."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Mọi thứ (cài đặt, bộ nhớ đệm, nhật ký, chủ đề tùy chỉnh) nằm trong ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Tự động là chế độ mặc định: khung thông báo trong trò chơi khi trò chơi hiển thị được, và thông báo màn hình nền khi không, không bao giờ cả hai.",
+            "3": "Chụp màn hình khi mở khóa lưu lại hình ảnh khoảnh khắc đó trong ~/Pictures/Achievement Watcher Next."
+          },
+          "troubleshoot": {
+            "1": "Nếu thông báo không hiện ra: hãy kiểm tra chế độ Không làm phiền đã tắt trên màn hình nền của bạn và cài đặt thông báo của nó không chặn AW Next."
+          },
+          "sources": {
+            "2": "Trò chơi Steam đang sở hữu chỉ được tính là đã cài đặt khi chính các tệp của Steam xác nhận điều đó."
+          },
+          "steam": {
+            "0": "Bản lưu của GBE / Goldberg thường nằm trong AppData/Roaming/GSE Saves bên trong prefix Wine hoặc Proton của trò chơi, hoặc trong ~/.local/share/GSE Saves với trò chơi Linux gốc."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Nơi thông báo mở khóa xuất hiện. Tự động sẽ chọn giúp bạn giữa lớp phủ và thông báo màn hình nền.",
+        "toast": "Thông báo màn hình nền"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Xóa thư mục trò chơi (Thùng rác)…",
+        "move-x-s-folder-to-the-recycle-bin": "Chuyển thư mục của “{name}” vào Thùng rác?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "Không tìm thấy trình gỡ cài đặt nào trong thư mục này. Các tệp sẽ được chuyển vào Thùng rác (vẫn khôi phục được).",
+        "deleting-game-folder": "Đang chuyển vào Thùng rác…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Không thể chuyển thư mục vào Thùng rác.",
+        "delete-permanently-detail": "Xóa vĩnh viễn sẽ bỏ qua Thùng rác: các tệp sẽ không thể khôi phục.",
+        "delete-recycle-bin-refused": "Hệ thống đã từ chối chuyển thư mục này vào Thùng rác. Điều đó xảy ra khi một tệp vẫn đang mở, khi ổ đĩa không có Thùng rác (ổ rời hoặc ổ mạng), hoặc khi bạn không thể ghi vào thư mục.",
+        "gh-simple-notifications-fallback": "Đang hoạt động - dùng phương án dự phòng thông báo màn hình nền"
+      }
+    }
   }
 }

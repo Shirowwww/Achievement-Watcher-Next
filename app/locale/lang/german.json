@@ -2479,5 +2479,103 @@
     "playedFor": "Du hast {duration} gespielt",
     "trackingPlaytime": "Spielzeit wird erfasst",
     "playtime": "Spielzeit"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Startet AW Next automatisch bei der Anmeldung an deiner Desktop-Sitzung, versteckt im Infobereich."
+          },
+          "uninstallMenu": {
+            "description": "Fügt dem Rechtsklick-Menü der Spiele Deinstallationsoptionen hinzu (Steam-Deinstallation, Spiel-Deinstallationsprogramm oder Ordner in den Papierkorb verschieben)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Desktop-Benachrichtigung"
+          },
+          "info": {
+            "toast": "Einige Optionen in diesem Bereich funktionieren nur unter Windows"
+          },
+          "test": {
+            "toast": "Desktop-Benachrichtigung"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Desktop-Benachrichtigung"
+              }
+            },
+            "platinum": {
+              "description": "Eine eigene Desktop-Benachrichtigung auslösen, wenn ein Spiel 100 % Abschluss erreicht"
+            },
+            "mode": {
+              "description": "Automatisch nutzt das In-Game-Overlay, wenn es angezeigt werden kann, sonst eine Desktop-Benachrichtigung. Die anderen Optionen nutzen immer die gewählte.",
+              "value": {
+                "toast": "Desktop-Benachrichtigung"
+              }
+            },
+            "customToastAudio": {
+              "name": "Ton der Desktop-Benachrichtigung",
+              "description": "Legt den Ton fest, der beim Anzeigen einer Desktop-Benachrichtigung abgespielt wird"
+            },
+            "toastSouvenir": {
+              "name": "Souvenir in der Desktop-Benachrichtigung",
+              "description": "Nur Windows: zeigt den Souvenir-Screenshot innerhalb der Benachrichtigung an."
+            },
+            "groupToast": {
+              "description": "Nur Windows: gruppiert Benachrichtigungen desselben Spiels im Info-Center."
+            },
+            "urgent": {
+              "description": "Ermöglicht, dass Erfolgsfreischaltungen angezeigt werden, während „Nicht stören“ aktiv ist. Sie werden als kritische Benachrichtigungen gesendet, die die meisten Desktops durchlassen."
+            },
+            "useToast": {
+              "name": "Desktop-Benachrichtigung",
+              "description": "Von deinem Desktop angezeigte Systembenachrichtigung"
+            },
+            "useWinRT": {
+              "description": "Nur Windows. Unter Linux ohne Wirkung."
+            },
+            "useBalloon": {
+              "description": "Nur Windows. Unter Linux ohne Wirkung."
+            },
+            "souvenirHdrDesc": "Nur Windows: korrigiert die Farben, wenn Windows-HDR aktiv ist. Unter Linux wird der Standard-Screenshot gespeichert."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Alles (Einstellungen, Caches, Protokolle und benutzerdefinierte Designs) befindet sich in ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Automatisch ist die Voreinstellung: das Pop-up im Spiel, wenn das Spiel es zeigen kann, sonst eine Desktop-Benachrichtigung, nie beides.",
+            "3": "Screenshot beim Freischalten legt ein Bild des Moments in ~/Pictures/Achievement Watcher Next ab."
+          },
+          "troubleshoot": {
+            "1": "Wenn keine Benachrichtigungen erscheinen: Prüfen, ob „Nicht stören“ auf deinem Desktop ausgeschaltet ist und ob dessen Benachrichtigungseinstellungen AW Next nicht blockieren."
+          },
+          "sources": {
+            "2": "Eigene Steam-Spiele gelten nur dann als installiert, wenn die eigenen Dateien von Steam dies bestätigen."
+          },
+          "steam": {
+            "0": "GBE-/Goldberg-Spielstände befinden sich normalerweise unter AppData/Roaming/GSE Saves im Wine- oder Proton-Präfix des Spiels oder unter ~/.local/share/GSE Saves bei einem nativen Linux-Spiel."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Wo Freischaltungen erscheinen. Automatisch wählt für dich zwischen Overlay und Desktop-Benachrichtigung.",
+        "toast": "Desktop-Benachrichtigung"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Spielordner löschen (Papierkorb)…",
+        "move-x-s-folder-to-the-recycle-bin": "Ordner von „{name}“ in den Papierkorb verschieben?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "In diesem Ordner wurde kein Deinstallierer gefunden. Die Dateien werden in den Papierkorb verschoben (wiederherstellbar).",
+        "deleting-game-folder": "Wird in den Papierkorb verschoben…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Der Ordner konnte nicht in den Papierkorb verschoben werden.",
+        "delete-permanently-detail": "Endgültiges Löschen umgeht den Papierkorb: Die Dateien lassen sich nicht wiederherstellen.",
+        "delete-recycle-bin-refused": "Das System hat abgelehnt, diesen Ordner in den Papierkorb zu verschieben. Das passiert, wenn eine Datei noch geöffnet ist, wenn das Laufwerk keinen Papierkorb hat (Wechsel- oder Netzlaufwerk) oder wenn du nicht in den Ordner schreiben darfst.",
+        "gh-simple-notifications-fallback": "Funktioniert - Rückfall auf Desktop-Benachrichtigung aktiv"
+      }
+    }
   }
 }

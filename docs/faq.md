@@ -12,13 +12,16 @@ works for every game played here. Connecting a Steam account is optional: it add
 only on your other PCs, and Steam Family - see [Connected accounts](sources.md#connected-accounts).
 
 ### Which platforms does it run on?
-Windows 10 and Windows 11 only. Packaged releases include their own runtime; Node.js is needed only
-to build from source.
+Windows 10 and Windows 11, and Linux (x64). Packaged releases include their own runtime; Node.js is
+needed only to build from source.
 
 ### Does it run on Linux or the Steam Deck?
-No. AW Next is a Windows application: its watcher uses Windows process, registry and notification
-APIs, and nothing is built or tested for another system. Running it through Wine or Proton on Linux
-or SteamOS is not supported; a Steam Deck that has Windows installed is a normal Windows PC.
+Yes on Linux: download the AppImage from the releases page, make it executable and start it. AW Next
+runs as a native Linux app, never through Wine. It finds the games you run with Wine, Proton,
+Lutris, Heroic or Bottles in their prefixes, reads their processes for playtime and shows unlocks
+in the in-game overlay or as desktop notifications. Settings and data live in
+`~/.config/Achievement Watcher Next`. The Steam Deck is not supported yet: nothing has been tested
+on it, in Game Mode or in Desktop Mode.
 
 ### Does it support RetroAchievements?
 Yes. Turn on the **RetroAchievements** source, connect your account with its username and Web API
@@ -33,7 +36,8 @@ account.
 ### Does it work offline?
 Yes, for local sources and anything already cached. Achievement names, descriptions and artwork are
 fetched online the first time and then reused from
-`%APPDATA%\Achievement Watcher Next\steam_cache`.
+`%APPDATA%\Achievement Watcher Next\steam_cache` (`~/.config/Achievement Watcher Next/steam_cache` on
+Linux).
 
 ### Simple or Advanced - do I lose anything by choosing Simple?
 No. Simple hides controls, it never turns a feature off. No parser, watcher, scan or stored value

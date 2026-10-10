@@ -2479,5 +2479,103 @@
     "playedFor": "Anda bermain selama {duration}",
     "trackingPlaytime": "Melacak waktu bermain",
     "playtime": "Waktu Bermain"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Menjalankan AW Next secara otomatis saat Anda masuk ke sesi desktop, tersembunyi di baki sistem."
+          },
+          "uninstallMenu": {
+            "description": "Menambahkan opsi Copot pemasangan ke menu klik kanan pada kartu game (copot lewat Steam, uninstaller game, atau pindahkan folder ke Tempat Sampah)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Notifikasi desktop"
+          },
+          "info": {
+            "toast": "Sebagian opsi di bagian ini hanya berfungsi di Windows"
+          },
+          "test": {
+            "toast": "Notifikasi desktop"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Notifikasi desktop"
+              }
+            },
+            "platinum": {
+              "description": "Munculkan notifikasi desktop khusus saat sebuah game mencapai penyelesaian 100%"
+            },
+            "mode": {
+              "description": "Otomatis memakai overlay dalam game bila dapat ditampilkan dan notifikasi desktop bila tidak. Pilihan lain selalu memakai yang Anda tentukan.",
+              "value": {
+                "toast": "Notifikasi desktop"
+              }
+            },
+            "customToastAudio": {
+              "name": "Suara notifikasi desktop",
+              "description": "Menentukan suara yang diputar saat notifikasi desktop ditampilkan"
+            },
+            "toastSouvenir": {
+              "name": "Suvenir pada notifikasi desktop",
+              "description": "Hanya Windows: menampilkan tangkapan layar suvenir di dalam notifikasi."
+            },
+            "groupToast": {
+              "description": "Hanya Windows: mengelompokkan notifikasi dari game yang sama di Pusat Tindakan."
+            },
+            "urgent": {
+              "description": "Izinkan pencapaian yang terbuka tetap tampil saat Jangan Ganggu aktif. Notifikasinya dikirim sebagai notifikasi kritis, yang diloloskan oleh sebagian besar desktop."
+            },
+            "useToast": {
+              "name": "Notifikasi desktop",
+              "description": "Notifikasi sistem yang ditampilkan oleh desktop Anda"
+            },
+            "useWinRT": {
+              "description": "Hanya Windows. Tidak berpengaruh di Linux."
+            },
+            "useBalloon": {
+              "description": "Hanya Windows. Tidak berpengaruh di Linux."
+            },
+            "souvenirHdrDesc": "Hanya Windows: mengoreksi warna saat HDR Windows aktif. Di Linux, tangkapan layar standar yang disimpan."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Semuanya (pengaturan, cache, log, tema kustom) berada di ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Otomatis adalah bawaan: pop-up dalam game saat game bisa menampilkannya, dan notifikasi desktop saat tidak bisa, tidak pernah keduanya.",
+            "3": "Tangkapan layar saat terbuka menyimpan gambar momen itu di ~/Pictures/Achievement Watcher Next."
+          },
+          "troubleshoot": {
+            "1": "Bila notifikasi tidak muncul: pastikan Jangan Ganggu nonaktif di desktop Anda dan pengaturan notifikasinya tidak memblokir AW Next."
+          },
+          "sources": {
+            "2": "Game Steam yang dimiliki dihitung terpasang hanya bila file milik Steam sendiri membenarkannya."
+          },
+          "steam": {
+            "0": "Save GBE / Goldberg biasanya ada di AppData/Roaming/GSE Saves di dalam prefix Wine atau Proton game, atau di ~/.local/share/GSE Saves untuk game Linux native."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Tempat pencapaian yang terbuka ditampilkan. Otomatis memilihkan overlay atau notifikasi desktop untuk Anda.",
+        "toast": "Notifikasi desktop"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Hapus folder game (Tempat Sampah)…",
+        "move-x-s-folder-to-the-recycle-bin": "Pindahkan folder “{name}” ke Tempat Sampah?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "Tidak ada uninstaller di folder ini. File-nya akan dipindahkan ke Tempat Sampah (masih dapat dikembalikan).",
+        "deleting-game-folder": "Memindahkan ke Tempat Sampah…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Tidak dapat memindahkan folder ke Tempat Sampah.",
+        "delete-permanently-detail": "Penghapusan permanen melewati Tempat Sampah: file tidak dapat dipulihkan.",
+        "delete-recycle-bin-refused": "Sistem menolak memindahkan folder ini ke Tempat Sampah. Ini terjadi saat sebuah file masih terbuka, saat drive tidak memiliki Tempat Sampah (drive lepasan atau jaringan), atau saat Anda tidak dapat menulis ke folder.",
+        "gh-simple-notifications-fallback": "Berfungsi - cadangan notifikasi desktop aktif"
+      }
+    }
   }
 }

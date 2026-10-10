@@ -2479,5 +2479,103 @@
     "playedFor": "Du spillede i {duration}",
     "trackingPlaytime": "Registrerer spilletid",
     "playtime": "Spilletid"
+  },
+  "platform": {
+    "linux": {
+      "settings": {
+        "general": {
+          "startup": {
+            "description": "Starter AW Next automatisk, når du logger ind på din skrivebordssession, skjult i systembakken."
+          },
+          "uninstallMenu": {
+            "description": "Tilføjer afinstallationsvalg i højrekliksmenuen på spilfelter (afinstaller via Steam, spillets afinstallationsprogram eller flyt mappen til Papirkurven)."
+          }
+        },
+        "notification": {
+          "title": {
+            "toast": "Skrivebordsnotifikation"
+          },
+          "info": {
+            "toast": "Nogle indstillinger i dette afsnit virker kun i Windows"
+          },
+          "test": {
+            "toast": "Skrivebordsnotifikation"
+          },
+          "option": {
+            "transportMode": {
+              "value": {
+                "toast": "Skrivebordsnotifikation"
+              }
+            },
+            "platinum": {
+              "description": "Send en særlig skrivebordsnotifikation, når et spil når 100 % gennemført"
+            },
+            "mode": {
+              "description": "Automatisk bruger overlayet i spillet, når det kan vises, og en skrivebordsnotifikation, når det ikke kan. De andre valg bruger altid det, du vælger.",
+              "value": {
+                "toast": "Skrivebordsnotifikation"
+              }
+            },
+            "customToastAudio": {
+              "name": "Lyd til skrivebordsnotifikation",
+              "description": "Angiver den lyd, der afspilles, når en skrivebordsnotifikation vises"
+            },
+            "toastSouvenir": {
+              "name": "Souvenir i skrivebordsnotifikation",
+              "description": "Kun Windows: viser souvenirskærmbilledet inde i notifikationen."
+            },
+            "groupToast": {
+              "description": "Kun Windows: grupperer notifikationer fra samme spil i Løbende meddelelser."
+            },
+            "urgent": {
+              "description": "Lad oplåste præstationer blive vist, mens Forstyr ikke er slået til. De sendes som kritiske notifikationer, som de fleste skriveborde lader passere."
+            },
+            "useToast": {
+              "name": "Skrivebordsnotifikation",
+              "description": "Systemnotifikation vist af dit skrivebord"
+            },
+            "useWinRT": {
+              "description": "Kun Windows. Har ingen virkning i Linux."
+            },
+            "useBalloon": {
+              "description": "Kun Windows. Har ingen virkning i Linux."
+            },
+            "souvenirHdrDesc": "Kun Windows: retter farverne, når HDR er aktivt i Windows. I Linux gemmes det almindelige skærmbillede."
+          }
+        },
+        "help": {
+          "quick": {
+            "2": "Alt (indstillinger, cacher, logfiler, egne temaer) ligger i ~/.config/Achievement Watcher Next."
+          },
+          "notifications": {
+            "0": "Automatisk er standard: pop op-vinduet i spillet, når spillet kan vise det, og en skrivebordsnotifikation, når det ikke kan, aldrig begge dele.",
+            "3": "Skærmbillede ved oplåsning gemmer et billede af øjeblikket i ~/Pictures/Achievement Watcher Next."
+          },
+          "troubleshoot": {
+            "1": "Kommer der ingen notifikationer: tjek, at Forstyr ikke er slået fra på dit skrivebord, og at dets notifikationsindstillinger ikke blokerer AW Next."
+          },
+          "sources": {
+            "2": "Ejede Steam-spil tæller først som installerede, når Steams egne filer bekræfter det."
+          },
+          "steam": {
+            "0": "Gemte filer fra GBE / Goldberg ligger som regel i AppData/Roaming/GSE Saves inde i spillets Wine- eller Proton-præfiks eller i ~/.local/share/GSE Saves for et native Linux-spil."
+          }
+        }
+      },
+      "onboarding": {
+        "notificationsHint": "Her vises oplåsninger. Automatisk vælger overlayet eller en skrivebordsnotifikation for dig.",
+        "toast": "Skrivebordsnotifikation"
+      },
+      "dialogs": {
+        "delete-game-folder-recycle-bin": "Slet spilmappe (Papirkurven)…",
+        "move-x-s-folder-to-the-recycle-bin": "Vil du flytte mappen til “{name}” til Papirkurven?",
+        "n-nno-uninstaller-was-found-in-this-folder-the-files-will-be-mov": "Der blev ikke fundet et afinstallationsprogram i denne mappe. Filerne flyttes til Papirkurven (de kan hentes tilbage).",
+        "deleting-game-folder": "Flytter til Papirkurven…",
+        "could-not-move-the-folder-to-the-recycle-bin": "Mappen kunne ikke flyttes til Papirkurven.",
+        "delete-permanently-detail": "Permanent sletning springer Papirkurven over: filerne kan ikke gendannes.",
+        "delete-recycle-bin-refused": "Systemet nægtede at flytte denne mappe til Papirkurven. Det sker, når en fil stadig er åben, når drevet ikke har en papirkurv (flytbart drev eller netværksdrev), eller når du ikke kan skrive til mappen.",
+        "gh-simple-notifications-fallback": "Virker - reserve med skrivebordsnotifikation er aktiv"
+      }
+    }
   }
 }
