@@ -12,9 +12,10 @@ const { buildToastNotification } = require('./notification/transport/toast.js');
 const notificationSound = require('./util/notificationSound.js');
 const notifyStrings = require('./util/notifyStrings.js');
 
-// Load the optional rumble dependency only when needed.
+// Load the optional rumble dependency only when needed: XInput on Windows, kernel force feedback elsewhere.
 let xinputPromise = null;
 const loadXinput = () => xinputPromise || (xinputPromise = import('xinput-ffi').catch(() => null));
+const loadRumble = () => (process.platform === 'win32' ? loadXinput() : Promise.resolve(require('./util/evdevRumble.js')));
 
 const cfg_file = path.join(require('./util/userData.js').userDataDir(), 'cfg', 'options.ini');
 
@@ -210,7 +211,9 @@ async function runTest(kind, { rumble = true, game = null } = {}) {
     }
   } catch (err) {
     // The balloon fallback can make a failing toast look like it worked (settings report success,
-    // the pad still rumbles) with no toast visible, so log what actually broke.
+    // the pad still rumbles) with no toast visible, so log what actually broke. Balloons are a
+    // Windows tray feature: elsewhere the failure is reported as it is.
+    if (process.platform !== 'win32') throw err;
     require('./util/log.js').warn(`[Toast] failed, falling back to a tray balloon: ${err && (err.message || err)}`);
     if (options.notification_transport.balloon) {
       await balloon({
@@ -224,8 +227,8 @@ async function runTest(kind, { rumble = true, game = null } = {}) {
   }
 
   if (rumble && options.notification.rumble) {
-    const xinput = await loadXinput();
-    if (xinput) xinput.rumble().catch(() => {});
+    const pad = await loadRumble();
+    if (pad) pad.rumble().catch(() => {});
   }
 }
 
