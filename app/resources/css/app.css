@@ -13217,3 +13217,8 @@ body {
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
+
+/* Settings that rest on Windows itself (Xbox PC, Steamless) are not offered on other systems. */
+html:not([data-platform='win32']) [data-windows-only] {
+  display: none !important;
+}
