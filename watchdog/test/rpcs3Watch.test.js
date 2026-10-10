@@ -93,10 +93,26 @@ test('discover finds trophy sets under a saved RPCS3 folder', () => {
     const config = path.join(tmp, 'userdir.db');
     fs.writeFileSync(config, JSON.stringify([{ path: emuDir, enabled: true }, { path: path.join(tmp, 'not-rpcs3'), enabled: true }]));
 
-    const targets = rpcs3Watch._internal.discover(config);
+    const targets = rpcs3Watch._internal.discover(config, []);
     assert.equal(targets.length, 1);
     assert.equal(targets[0].appid, 'NPWR12345_00');
     assert.equal(targets[0].trophyDir, trophyDir);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('discover finds trophy sets in the Linux build configuration folder, with no saved folder', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-rpcs3xdg-'));
+  try {
+    const configDir = path.join(tmp, '.config', 'rpcs3');
+    const trophyDir = path.join(configDir, 'dev_hdd0', 'home', '00000001', 'trophy', 'NPWR54321_00');
+    fs.mkdirSync(trophyDir, { recursive: true });
+    fs.writeFileSync(path.join(trophyDir, 'TROPCONF.SFM'), SCHEMA, 'utf8');
+    fs.writeFileSync(path.join(trophyDir, 'TROPUSR.DAT'), buildUserData([{ id: 0, time: 0, achieved: false }]));
+
+    const targets = rpcs3Watch._internal.discover(path.join(tmp, 'missing-userdir.db'), [configDir]);
+    assert.deepEqual(targets, [{ appid: 'NPWR54321_00', trophyDir }]);
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }

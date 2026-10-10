@@ -78,9 +78,44 @@ const KNOWN_NON_GAME_EXE = new Set([
   'splitskybox.exe', 'gmad.exe', 'gmpublish.exe', 'awesomium_process.exe',
 ]);
 
+// A native Linux game is an ELF binary with no extension, or an architecture one (Unity's .x86_64).
+const NATIVE_BINARY_SUFFIX = /\.(?:x86_64|x86|aarch64|arm64)$/i;
+const EXECUTABLE_SUFFIX = /\.(?:exe|x86_64|x86|aarch64|arm64)$/i;
+const ELF_MAGIC = Buffer.from([0x7f, 0x45, 0x4c, 0x46]);
+
+function exeBaseName(name) {
+  return String(name || '').replace(EXECUTABLE_SUFFIX, '');
+}
+
+// The same tool is listed once, by its Windows name: "steam" on Linux is "steam.exe" here.
 function isKnownNonGameExe(name) {
   const value = String(name || '').toLowerCase();
-  return KNOWN_NON_GAME_EXE.has(value) || KNOWN_NON_GAME_EXE.has(value.replace(/\.exe$/i, ''));
+  const base = exeBaseName(value);
+  return KNOWN_NON_GAME_EXE.has(value) || KNOWN_NON_GAME_EXE.has(base) || KNOWN_NON_GAME_EXE.has(`${base}.exe`);
+}
+
+// An executable ELF file. Libraries (.so) and scripts (.sh) are ruled out by their extension before
+// the file is opened; Electron's setuid helper ships next to every Electron game.
+function isNativeExecutable(dir, name) {
+  if (process.platform === 'win32' || name === 'chrome-sandbox') return false;
+  if (path.extname(name) && !NATIVE_BINARY_SUFFIX.test(name)) return false;
+  const full = path.join(dir, name);
+  let fd;
+  try {
+    if ((fs.statSync(full).mode & 0o111) === 0) return false;
+    fd = fs.openSync(full, 'r');
+    const head = Buffer.alloc(ELF_MAGIC.length);
+    fs.readSync(fd, head, 0, head.length, 0);
+    return head.equals(ELF_MAGIC);
+  } catch {
+    return false;
+  } finally {
+    if (fd !== undefined) fs.closeSync(fd);
+  }
+}
+
+function isExecutableFile(dir, entry) {
+  return entry.isFile() && (entry.name.toLowerCase().endsWith('.exe') || isNativeExecutable(dir, entry.name));
 }
 
 // Soft-penalty: usually-not-the-game helpers that occasionally are. Penalize, don't exclude.
@@ -191,7 +226,7 @@ function collectCandidates(gameDir) {
         if (e.name.toLowerCase() === 'steam_settings') continue;
         if (META_DIRS.test(e.name) || ENGINE_DATA_DIRS.test(e.name)) continue;
         walk(path.join(dir, e.name), depth + 1);
-      } else if (e.isFile() && e.name.toLowerCase().endsWith('.exe')) {
+      } else if (isExecutableFile(dir, e)) {
         if (EXE_EXCLUDE.some((r) => r.test(e.name))) continue;
         if (isKnownNonGameExe(e.name)) continue;
         const full = path.join(dir, e.name);
@@ -223,7 +258,7 @@ function collectCandidatesCached(gameDir) {
 function confidenceFor(best, candidates, gameDir, gameName, opts = {}) {
   if (opts.authoritative) return { confident: true, reason: 'authoritative' };
 
-  const base = best.name.replace(/\.exe$/i, '');
+  const base = exeBaseName(best.name);
   const gameSim = nameSimilarity(gameName || '', base);
   const folderBase = path.basename(String(gameDir || ''));
   const folderSim = nameSimilarity(folderBase, base);
@@ -302,9 +337,9 @@ function detect(gameDir, gameName, opts = {}) {
   const hasNestedDll = [...dllDirs].some((dir) => dir !== rootDir && dir.startsWith(rootDir + path.sep));
 
   const maxSize = Math.max(...candidates.map((c) => c.size), 1);
-  const basesInSameDir = new Set(candidates.map((c) => `${path.resolve(c.dir).toLowerCase()}|${c.name.replace(/\.exe$/i, '').toLowerCase()}`));
+  const basesInSameDir = new Set(candidates.map((c) => `${path.resolve(c.dir).toLowerCase()}|${exeBaseName(c.name).toLowerCase()}`));
   for (const c of candidates) {
-    const base = c.name.replace(/\.exe$/i, '');
+    const base = exeBaseName(c.name);
     const sim = nameSimilarity(gameName, base);
     const sizeFactor = c.size / maxSize;
     const candidateDir = path.resolve(c.dir).toLowerCase();
@@ -388,7 +423,7 @@ function shallowGameExe(dir) {
   const entries = dirCache.readdir(dir);
   if (!entries) return null;
   for (const e of entries) {
-    if (!e.isFile() || !e.name.toLowerCase().endsWith('.exe')) continue;
+    if (!isExecutableFile(dir, e)) continue;
     if (EXE_EXCLUDE.some((r) => r.test(e.name))) continue;
     if (isKnownNonGameExe(e.name)) continue;
     if (SOFT_PENALTY.some((r) => r.test(e.name))) continue;

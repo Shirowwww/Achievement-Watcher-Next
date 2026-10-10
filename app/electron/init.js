@@ -3902,7 +3902,9 @@ const PREFERRED_EXECUTABLE_ICON_SIDE = 256;
 
 async function fetchExecutableIcon(exePath, appid) {
   const source = String(exePath || '');
-  if (!source || !/\.exe$/i.test(source)) return null;
+  // A native Linux game has no PE resources; its desktop entry's icon stands in for them.
+  const native = !/\.exe$/i.test(source);
+  if (!source || (native && process.platform === 'win32')) return null;
   try {
     const dir = path.join(userData, 'steam_cache', 'icon', String(appid || 'unknown'));
     const target = path.join(dir, EXECUTABLE_ICON_NAME);
@@ -3916,6 +3918,15 @@ async function fetchExecutableIcon(exePath, appid) {
       }
     } catch {
       /* nothing cached yet, or the executable is newer: extract it again */
+    }
+
+    if (native) {
+      const file = require('../util/desktopEntryIcon.js').desktopEntryIcon(source);
+      if (!file) return null;
+      fs.mkdirSync(dir, { recursive: true });
+      fs.copyFileSync(file, target);
+      const size = require('../util/imageSize.js').imageSize(target);
+      return { path: target, width: (size && size.width) || 0, height: (size && size.height) || 0 };
     }
 
     const { extractIcon } = require('../util/exeIcon.js');

@@ -18,6 +18,7 @@ const notifyStrings = require('../util/notifyStrings.js');
 
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const { hostPaths } = require(sharedAppModulePath('util/winHosts.js'));
+const { xdgAppDirs } = require(sharedAppModulePath('util/xdgAppDirs.js'));
 
 // Best-effort language → TROP_NN.XML suffix (Sony index). english/default is the suffix-less TROP.XML.
 const LANG_FILE = { japanese: '00', english: '01', french: '02', spanish: '03', german: '04', italian: '05', russian: '08', koreana: '09', schinese: '11', polish: '16', brazilian: '17', turkish: '19' };
@@ -122,11 +123,12 @@ function read(target, lang) {
 }
 
 // Discover ShadPS4 trophy sets under %APPDATA%/shadPS4 (game_data and user/game_data) of every host:
-// the Windows build in a Wine prefix, or the Linux build's own data folder.
+// the Windows build in a Wine prefix, or the Linux build's own data folder, native or Flatpak.
 function discover() {
   const targets = [];
   const seen = new Set();
-  const roots = [...hostPaths('APPDATA', 'shadPS4', 'game_data'), ...hostPaths('APPDATA', 'shadPS4', 'user', 'game_data')];
+  const dataDirs = [...new Set([...hostPaths('APPDATA', 'shadPS4'), ...xdgAppDirs('shadps4')])];
+  const roots = [...dataDirs.map((dir) => path.join(dir, 'game_data')), ...dataDirs.map((dir) => path.join(dir, 'user', 'game_data'))];
 
   for (const gameData of roots) {
     let cusas;

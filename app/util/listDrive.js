@@ -6,9 +6,12 @@ const fs = require('fs');
 /*
   List local fixed drive letters. WMIC is gone on Windows 11 24H2+, so query CIM via PowerShell and
   fall back to a drive-letter probe; the "C:" output format is unchanged.
+
+  On Linux the answer is the mount points of real disks instead ("/", "/home", "/mnt/games", ...).
 */
 module.exports = (option = {}) => {
   const ignoreSystemDrive = option.ignoreSystemDrive || false;
+  if (process.platform !== 'win32') return Promise.resolve(linuxMountRoots(readMountInfo(), { ignoreSystemDrive }));
   const systemDrive = (process.env['SystemDrive'] || 'C:').toUpperCase();
   const finalize = (drives) => {
     let list = drives.filter((d) => /^[A-Za-z]:$/.test(d));
@@ -77,3 +80,54 @@ function runDriveQuery() {
     );
   });
 }
+
+// Filesystems a game library can live on. Network shares, FUSE mounts (except fuseblk, which is how
+// ntfs-3g and exfat-fuse appear), virtual filesystems and WSL's 9p view of the Windows drives are not.
+const DISK_FILESYSTEMS = new Set([
+  'ext2', 'ext3', 'ext4', 'btrfs', 'xfs', 'f2fs', 'jfs', 'reiserfs', 'zfs', 'bcachefs', 'nilfs2',
+  'ntfs', 'ntfs3', 'fuseblk', 'exfat', 'vfat',
+]);
+
+// The system's own mounts (EFI partition, /var on its own volume, snaps) never hold a game library.
+const SYSTEM_MOUNT_PREFIXES = ['/boot', '/efi', '/proc', '/sys', '/dev', '/run', '/snap', '/var', '/usr', '/tmp', '/opt', '/srv', '/etc', '/root', '/nix', '/gnu'];
+// Removable disks, mounted by udisks as /run/media/<user>/<label>.
+const REMOVABLE_MOUNT_PREFIX = '/run/media/';
+
+function readMountInfo() {
+  try {
+    return fs.readFileSync('/proc/self/mountinfo', 'utf8');
+  } catch {
+    return '';
+  }
+}
+
+// mountinfo writes a space, tab, newline or backslash inside a path as an octal escape ("\040").
+function unescapeMountPath(value) {
+  return value.replace(/\\([0-7]{3})/g, (whole, octal) => String.fromCharCode(parseInt(octal, 8)));
+}
+
+function isSystemMount(mountPoint) {
+  if (mountPoint.startsWith(REMOVABLE_MOUNT_PREFIX)) return false;
+  if (mountPoint.split('/').some((segment) => segment.startsWith('.'))) return true; // /.snapshots
+  return SYSTEM_MOUNT_PREFIXES.some((prefix) => mountPoint === prefix || mountPoint.startsWith(prefix + '/'));
+}
+
+/*
+  Mount points of real disks, in mountinfo order. A line reads "<id> <parent> <dev> <root> <mount
+  point> <options> [optional fields] - <fstype> <source> <super options>".
+*/
+function linuxMountRoots(mountInfo, { ignoreSystemDrive = false } = {}) {
+  const roots = [];
+  for (const line of String(mountInfo || '').split('\n')) {
+    const [left, right] = line.split(' - ');
+    if (!right) continue;
+    const mountPoint = unescapeMountPath(left.split(' ')[4] || '');
+    const fsType = right.split(' ')[0];
+    if (!mountPoint.startsWith('/') || !DISK_FILESYSTEMS.has(fsType)) continue;
+    if (mountPoint === '/' ? ignoreSystemDrive : isSystemMount(mountPoint)) continue;
+    if (!roots.includes(mountPoint)) roots.push(mountPoint);
+  }
+  return roots;
+}
+
+module.exports.linuxMountRoots = linuxMountRoots;

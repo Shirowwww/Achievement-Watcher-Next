@@ -67,3 +67,15 @@ test('an absolute playlist folder in retroarch.cfg is honoured', () => {
   assert.equal(retroArch.playlistDirectory(root), elsewhere);
   assert.equal(retroArch.readEntries([root]).length, 0);
 });
+
+test('the Linux default playlist folder "~/..." resolves under the home folder', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-retroarch-home-'));
+  const { root } = fakeInstall({ playlistSetting: '~/.config/retroarch/playlists' });
+  assert.equal(retroArch.playlistDirectory(root, home), path.join(home, '.config', 'retroarch', 'playlists'));
+});
+
+test('the Linux builds are looked for in their XDG and Flatpak config folders', { skip: process.platform === 'win32' && 'Linux-only' }, () => {
+  const roots = retroArch.candidateRoots({ XDG_CONFIG_HOME: '/xdg/config' });
+  assert.ok(roots.includes(path.join('/xdg/config', 'retroarch')));
+  assert.ok(roots.includes(path.join(os.homedir(), '.var', 'app', 'org.libretro.RetroArch', 'config', 'retroarch')));
+});

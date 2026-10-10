@@ -10,6 +10,7 @@ const fs = require('fs');
 const saveRoots = require(path.join(appPath, 'parser/saveRoots.js'));
 const { appHosts, documentsFor } = require(path.join(appPath, 'util/appHosts.js'));
 const { hostPath, hostFor } = require(path.join(appPath, 'util/winHosts.js'));
+const { xdgAppDirs } = require(path.join(appPath, 'util/xdgAppDirs.js'));
 
 let file;
 
@@ -390,9 +391,9 @@ module.exports.findEntries = async () => {
     addDetected(dir, 'Known achievement-data location');
   }
 
-  // Console-emulator data has a few stable per-user locations. RPCS3 additionally honours its own
-  // RPCS3_CONFIG_DIR, which is the only pointer to a configuration root kept outside both the
-  // emulator folder and AppData.
+  // Console-emulator data has a few stable per-user locations, plus the XDG and Flatpak folders of
+  // the Linux builds. RPCS3 additionally honours its own RPCS3_CONFIG_DIR, which is the only pointer
+  // to a configuration root kept outside both the emulator folder and AppData.
   const consoleDirs = appHosts().flatMap((host) => [
     hostPath(host, 'APPDATA', 'rpcs3'),
     hostPath(host, 'LOCALAPPDATA', 'rpcs3'),
@@ -401,6 +402,7 @@ module.exports.findEntries = async () => {
     hostPath(host, 'LOCALAPPDATA', 'xenia'),
     hostPath(host, 'APPDATA', 'xenia'),
   ]);
+  consoleDirs.push(...xdgAppDirs('rpcs3'), ...xdgAppDirs('shadps4'), ...xdgAppDirs('xenia'));
   for (const dir of [...consoleDirs, process.env.RPCS3_CONFIG_DIR]) {
     try {
       if (dir && fs.statSync(dir).isDirectory()) addDetected(dir, 'Known emulator data location');
@@ -620,8 +622,10 @@ module.exports.diagnose = async (dirpath) => {
 
   const executables = topLevel.filter((name) => /\.exe$/i.test(name));
   const nestedExecutables = executables.length > 0 ? executables : await glob('**/*.exe', { cwd: dirpath, onlyFiles: true, deep: 4, suppressErrors: true });
-  if (nestedExecutables.length > 0) {
-    return { accepted: false, code: 'game-folder-no-data', evidence: { ...evidence, executable: nestedExecutables[0] } };
+  // A native Linux game has no .exe, only its ELF binary.
+  const executable = nestedExecutables[0] || (process.platform !== 'win32' && require('./exeDetect.js').shallowGameExe(dirpath));
+  if (executable) {
+    return { accepted: false, code: 'game-folder-no-data', evidence: { ...evidence, executable } };
   }
 
   return { accepted: false, code: 'no-marker', evidence };
