@@ -222,10 +222,8 @@ function getSteamPath() {
  * Returns true/false when the registry says so, or null when it cannot be read.
  */
 function isSteamAppInstalled(appid) {
-  if (process.platform !== 'win32') {
-    const value = require('../parser/steamLibrary.js').steamRegistry().integer(`Apps/${String(appid)}`, 'Installed');
-    return value === null ? null : value === 1;
-  }
+  // The Linux client keeps no Apps key in registry.vdf: its install manifest answers instead.
+  if (process.platform !== 'win32') return require('../parser/steamLibrary.js').installDirOf(String(appid)) !== '';
   const reg = getReg();
   if (!reg || typeof reg.readRegistryInteger !== 'function') return null;
   try {

@@ -11,9 +11,9 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
-const { parseHive, readValue } = require('../../app/util/wineRegistry.js');
+const { parseHive, readValue, listSubkeys, listValueNames } = require('../../app/util/wineRegistry.js');
 const { discoverPrefixes } = require('../../app/util/winePrefixes.js');
-const { listHosts, winToUnix, pathKey } = require('../../app/util/winHosts.js');
+const { listHosts, winToUnix, pathKey, hostsFor, hostFor } = require('../../app/util/winHosts.js');
 
 // Real symlinks and POSIX paths: these describe Linux and do not run on Windows.
 const LINUX_ONLY = { skip: process.platform === 'win32' && 'Linux-only' };
@@ -117,11 +117,31 @@ test('a Linux host list is the XDG folder plus one host per prefix user, with Do
 });
 
 test('Windows keeps exactly one host: this machine, read from its own environment', () => {
-  const env = { APPDATA: 'C:\\Users\\A\\AppData\\Roaming', LOCALAPPDATA: 'C:\\Users\\A\\AppData\\Local', Public: 'C:\\Users\\Public', PROGRAMDATA: 'C:\\ProgramData', USERPROFILE: 'C:\\Users\\A' };
-  const hosts = listHosts({ platform: 'win32', env, nativeDocuments: () => 'C:\\Users\\A\\Documents' });
+  const env = {
+    APPDATA: 'C:\\Users\\A\\AppData\\Roaming',
+    LOCALAPPDATA: 'C:\\Users\\A\\AppData\\Local',
+    Public: 'C:\\Users\\Public',
+    PROGRAMDATA: 'C:\\ProgramData',
+    ProgramFiles: 'C:\\Program Files',
+    'ProgramFiles(x86)': 'C:\\Program Files (x86)',
+    USERPROFILE: 'C:\\Users\\A',
+  };
+  const registry = { value: (hive, key, name) => `${hive}\\${key}\\${name}`, subkeys: () => ['a', 'b'] };
+  const hosts = listHosts({ platform: 'win32', env, nativeDocuments: () => 'C:\\Users\\A\\Documents', nativeRegistry: registry });
   assert.equal(hosts.length, 1);
-  assert.deepEqual(hosts[0].env, { APPDATA: env.APPDATA, LOCALAPPDATA: env.LOCALAPPDATA, PUBLIC: env.Public, PROGRAMDATA: env.PROGRAMDATA, USERPROFILE: env.USERPROFILE });
+  assert.deepEqual(hosts[0].env, {
+    APPDATA: env.APPDATA,
+    LOCALAPPDATA: env.LOCALAPPDATA,
+    PUBLIC: env.Public,
+    PROGRAMDATA: env.PROGRAMDATA,
+    PROGRAMFILES: env.ProgramFiles,
+    PROGRAMFILES_X86: env['ProgramFiles(x86)'],
+    USERPROFILE: env.USERPROFILE,
+  });
   assert.equal(hosts[0].documents(), 'C:\\Users\\A\\Documents');
+  assert.equal(hosts[0].regValue('HKLM', 'Software/X', 'Y'), 'HKLM\\Software/X\\Y', "the caller's registry answers");
+  assert.deepEqual(hosts[0].regSubkeys('HKLM', 'Software/X'), ['a', 'b']);
+  assert.equal(hosts[0].localPath('D:\\Games\\X'), 'D:\\Games\\X', 'a Windows path is already local');
 });
 
 test('Windows paths map into the prefix: C: to drive_c, Z: to the filesystem root', LINUX_ONLY, () => {
@@ -133,6 +153,69 @@ test('Windows paths map into the prefix: C: to drive_c, Z: to the filesystem roo
     assert.equal(winToUnix(prefix, 'relative\\path'), null);
   } finally {
     fs.rmSync(prefix, { recursive: true, force: true });
+  }
+});
+
+test('a Wine hive lists subkeys and value names as spelled, parents included', () => {
+  const dir = tmp('aw-reg-');
+  try {
+    const file = path.join(dir, 'user.reg');
+    fs.writeFileSync(file, USER_REG);
+    assert.deepEqual(listSubkeys(file, 'Software'), ['Microsoft', 'Valve'], 'Software has no values of its own and is still a parent');
+    assert.deepEqual(listSubkeys(file, 'software/valve'), ['Steam']);
+    assert.deepEqual(listValueNames(file, 'Software/Valve/Steam'), ['SteamPath', 'RunningAppID', '']);
+    assert.deepEqual(listSubkeys(path.join(dir, 'missing.reg'), 'Software'), []);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a prefix host reads both hives, expands its own variables and maps paths both ways', LINUX_ONLY, () => {
+  const home = tmp('aw-home-');
+  try {
+    const prefix = makePrefix(path.join(home, '.wine'), ['player']);
+    fs.writeFileSync(
+      path.join(prefix, 'system.reg'),
+      ['WINE REGISTRY Version 2', '', '[Software\\\\Wow6432Node\\\\Ubisoft\\\\Launcher] 1', '"InstallDir"="C:\\\\Ubisoft\\\\"', ''].join('\n')
+    );
+    const host = listHosts({ platform: 'linux', env: {}, home })[1];
+    const driveC = path.join(fs.realpathSync(prefix), 'drive_c');
+
+    assert.equal(host.regValue('HKLM', 'Software/WOW6432Node/Ubisoft/Launcher', 'InstallDir'), 'C:\\Ubisoft\\');
+    assert.equal(host.regValue('HKCU', 'Software/Microsoft/Windows/CurrentVersion/Explorer/User Shell Folders', 'AppData'), 'C:\\users\\player\\AppData\\Roaming');
+    assert.equal(host.regValue('HKCU', 'Software/Valve/Steam', 'RunningAppID'), 480);
+    assert.deepEqual(host.regSubkeys('HKLM', 'Software/WOW6432Node'), ['Ubisoft']);
+    assert.equal(host.localPath('C:\\Ubisoft\\'), path.join(driveC, 'Ubisoft'));
+    assert.equal(host.windowsPath(path.join(driveC, 'users', 'player', 'AppData')), 'C:\\users\\player\\AppData');
+    assert.equal(host.windowsPath('/home/player/Games/x.exe'), 'Z:\\home\\player\\Games\\x.exe');
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('a game folder belongs to the prefix it sits in, otherwise to every host', LINUX_ONLY, () => {
+  const home = tmp('aw-home-');
+  try {
+    const prefix = makePrefix(path.join(home, '.wine'), ['player']);
+    const hosts = listHosts({ platform: 'linux', env: {}, home });
+    const inPrefix = path.join(prefix, 'drive_c', 'Games', 'Portal');
+    assert.deepEqual(hostsFor(inPrefix, hosts).map((h) => h.kind), ['wine']);
+    assert.deepEqual(hostsFor(path.join(home, 'Games', 'Native'), hosts).map((h) => h.kind), ['linux', 'wine']);
+    const withSave = (host) => host.kind === 'wine';
+    assert.equal(hostFor(path.join(home, 'Games', 'Native'), withSave, hosts).kind, 'wine', 'the host that already has the files wins');
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('Windows-style variables set on purpose name a host listed before the others', LINUX_ONLY, () => {
+  const home = tmp('aw-home-');
+  try {
+    const hosts = listHosts({ platform: 'linux', env: { APPDATA: '/sandbox/AppData' }, home });
+    assert.deepEqual(hosts.map((h) => h.kind), ['env', 'linux']);
+    assert.equal(hosts[0].env.APPDATA, '/sandbox/AppData');
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
   }
 });
 

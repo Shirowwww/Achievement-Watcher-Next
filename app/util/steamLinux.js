@@ -1,10 +1,11 @@
 'use strict';
 
 /*
-  The Linux Steam client, read from its own files: the install folder (native, Flatpak or Snap) and
-  registry.vdf, where it keeps the tree the Windows client writes to HKCU\Software\Valve\Steam
-  (Apps\<appid>\Installed, ActiveProcess\pid). Loaded by the Watchdog through steamLibrary.js, so it
-  stays free of app code but util/winePrefixes.js (unpacked as well).
+  The Linux Steam client, read from its own files: the install folder (native, Debian package,
+  Flatpak or Snap) and registry.vdf, its stand-in for HKCU\Software\Valve\Steam. A signed-in client
+  was seen writing neither Apps nor ActiveProcess there, so installs come from the manifests and the
+  pid from steam.pid. Loaded by the Watchdog through steamLibrary.js, so it stays free of app code
+  but util/winePrefixes.js (unpacked as well).
 */
 
 const fs = require('fs');

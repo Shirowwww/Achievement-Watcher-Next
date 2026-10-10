@@ -23,6 +23,16 @@ function tmpdir(prefix) {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 }
 
+// A host as util/winHosts.js describes one: its folders, its registry, its path translation.
+function fakeHost(env, registry = {}) {
+  return {
+    env,
+    regSubkeys: (hive, key) => (registry.subkeys ? registry.subkeys(hive, key) : []),
+    regValue: (hive, key, name) => (registry.value ? registry.value(hive, key, name) : null),
+    localPath: (winPath) => winPath,
+  };
+}
+
 function makeLibrary(root, names) {
   for (const name of names) fs.mkdirSync(path.join(root, name), { recursive: true });
   return root;
@@ -94,22 +104,22 @@ test('the GOG and Ubisoft registry indexes are read through their documented val
   const gogLibrary = makeLibrary(path.join(tmp, 'GOG Games'), ['Cyberpunk 2077', 'The Witcher 3']);
   const ubiLibrary = makeLibrary(path.join(tmp, 'Ubisoft', 'games'), ['Far Cry 6', 'Anno 1800']);
 
-  const registry = {
-    listRegistryAllSubkeys(hive, key) {
+  const host = fakeHost({}, {
+    subkeys(hive, key) {
       if (hive !== 'HKLM') return [];
       if (key === 'Software/WOW6432Node/GOG.com/Games') return ['1423049311'];
       if (key === 'Software/WOW6432Node/Ubisoft/Launcher/Installs') return ['5595'];
       return [];
     },
-    readRegistryString(hive, key, valueName) {
+    value(hive, key, valueName) {
       if (key.endsWith('1423049311') && valueName === 'path') return path.join(gogLibrary, 'Cyberpunk 2077');
       if (key.endsWith('5595') && valueName === 'InstallDir') return path.join(ubiLibrary, 'Far Cry 6');
       return null;
     },
-  };
+  });
 
-  assert.deepEqual(launcherLibraries.gogInstallLocations(registry), [path.join(gogLibrary, 'Cyberpunk 2077')]);
-  assert.deepEqual(launcherLibraries.ubisoftInstallLocations(registry), [path.join(ubiLibrary, 'Far Cry 6')]);
+  assert.deepEqual(launcherLibraries.gogInstallLocations([host]), [path.join(gogLibrary, 'Cyberpunk 2077')]);
+  assert.deepEqual(launcherLibraries.ubisoftInstallLocations([host]), [path.join(ubiLibrary, 'Far Cry 6')]);
 });
 
 test('a .GamingRoot pointer is decoded, and anything that is not one is refused', () => {
@@ -132,19 +142,14 @@ test('an unreadable drive contributes nothing instead of throwing', () => {
 test('discovery deduplicates roots and tags each with the launcher that named it', { skip: WINDOWS_PATHS }, () => {
   const tmp = tmpdir('aw-launcher-discovery-');
   const library = makeLibrary(path.join(tmp, 'Epic Games'), ['GameA', 'GameB']);
-  const manifests = path.join(tmp, 'Manifests');
+  const programData = path.join(tmp, 'ProgramData');
+  const manifests = path.join(programData, 'Epic', 'EpicGamesLauncher', 'Data', 'Manifests');
   fs.mkdirSync(manifests, { recursive: true });
   // Two games in the same folder must produce one root, not two.
   fs.writeFileSync(path.join(manifests, 'A.item'), JSON.stringify({ InstallLocation: path.join(library, 'GameA') }), 'utf8');
   fs.writeFileSync(path.join(manifests, 'B.item'), JSON.stringify({ InstallLocation: path.join(library, 'GameB') }), 'utf8');
 
-  const emptyRegistry = { listRegistryAllSubkeys: () => [], readRegistryString: () => null };
-  const found = launcherLibraries.discoverLauncherLibraryRoots({
-    epicManifestsDir: manifests,
-    epicLauncherInstalledDat: path.join(tmp, 'missing.dat'),
-    registry: emptyRegistry,
-    drives: [],
-  });
+  const found = launcherLibraries.discoverLauncherLibraryRoots({ hosts: [fakeHost({ PROGRAMDATA: programData })], drives: [] });
 
   assert.deepEqual(found, [{ path: library, detector: 'Epic Games library' }]);
 });
@@ -167,9 +172,7 @@ test('on Linux, the folders Heroic and Lutris install into are library roots', {
   );
 
   const found = launcherLibraries.discoverLauncherLibraryRoots({
-    epicManifestsDir: path.join(home, 'none'),
-    epicLauncherInstalledDat: path.join(home, 'none.dat'),
-    registry: { listRegistryAllSubkeys: () => [], readRegistryString: () => null },
+    hosts: [],
     linux: { home, env: { XDG_CONFIG_HOME: config, XDG_DATA_HOME: path.join(home, '.local', 'share') } },
   });
 

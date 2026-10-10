@@ -9,6 +9,10 @@ const fs = require('fs');
 */
 
 const cache = new Map();
+// Values map -> the key as spelled in the hive, and value -> its name as spelled, for listings
+// (lookups ignore case).
+const keyNames = new WeakMap();
+const valueNames = new WeakMap();
 
 function unescapeRegString(text) {
   let out = '';
@@ -73,9 +77,11 @@ function parseHive(text) {
         current = null;
         continue;
       }
-      const name = unescapeRegString(line.slice(1, end)).toLowerCase();
+      const spelled = unescapeRegString(line.slice(1, end));
+      const name = spelled.toLowerCase();
       current = keys.get(name) || new Map();
       keys.set(name, current);
+      keyNames.set(current, spelled);
       continue;
     }
     if (!current) continue;
@@ -91,7 +97,10 @@ function parseHive(text) {
       rest = line.slice(quoted[1] + 1);
     } else continue;
     const value = parseValue(rest);
-    if (value) current.set(name.toLowerCase(), value);
+    if (value) {
+      current.set(name.toLowerCase(), value);
+      valueNames.set(value, name);
+    }
   }
   return keys;
 }
@@ -112,12 +121,40 @@ function loadHive(file) {
 }
 
 // `key` uses either slash, like the Windows registry helpers: 'Software/Valve/Steam'.
+function keyPath(key) {
+  return String(key).replace(/\//g, '\\').replace(/^\\+|\\+$/g, '').toLowerCase();
+}
+
 function readValue(hiveFile, key, name) {
   const keys = loadHive(hiveFile);
   if (!keys) return null;
-  const values = keys.get(String(key).replace(/\//g, '\\').replace(/^\\+|\\+$/g, '').toLowerCase());
+  const values = keys.get(keyPath(key));
   if (!values) return null;
   return values.get(String(name || '').toLowerCase()) || null;
 }
 
-module.exports = { parseHive, readValue };
+// Immediate subkeys as spelled in the hive. Wine writes only keys that hold values, so a parent
+// is known through its descendants.
+function listSubkeys(hiveFile, key) {
+  const keys = loadHive(hiveFile);
+  if (!keys) return [];
+  const parent = keyPath(key);
+  const depth = parent ? parent.split('\\').length : 0;
+  const children = new Map();
+  for (const [name, values] of keys) {
+    if (parent && !name.startsWith(`${parent}\\`)) continue;
+    const child = (keyNames.get(values) || name).split('\\')[depth];
+    if (child && !children.has(child.toLowerCase())) children.set(child.toLowerCase(), child);
+  }
+  return [...children.values()];
+}
+
+// The names of a key's values as spelled in the hive ('' for the default value).
+function listValueNames(hiveFile, key) {
+  const keys = loadHive(hiveFile);
+  const values = keys && keys.get(keyPath(key));
+  if (!values) return [];
+  return [...values.entries()].map(([name, value]) => (valueNames.has(value) ? valueNames.get(value) : name));
+}
+
+module.exports = { parseHive, readValue, listSubkeys, listValueNames };

@@ -16,20 +16,21 @@ const Module = require('node:module');
 
 const appDir = path.join(__dirname, '..', '..', 'app');
 const uplayPath = path.join(appDir, 'parser', 'uplay.js');
-const regPath = path.join(appDir, 'util', 'reg.js');
 
-// The registry is the machine's, so stand in for reg.js with a fixed key layout.
+// The registry is the machine's, so stand in for its host (util/appHosts.js) with a fixed key layout.
 function loadUplayWithRegistry(values) {
-  for (const target of [uplayPath, regPath]) delete require.cache[require.resolve(target)];
+  delete require.cache[require.resolve(uplayPath)];
+  const host = {
+    id: 'native',
+    regValueNames: (hive, key) => Object.keys(values[`${hive}\\${key}`] || {}),
+    regSubkeys: () => [],
+    regValue: (hive, key, name) => values[`${hive}\\${key}`]?.[name] ?? null,
+    localPath: (p) => p,
+  };
   const originalLoad = Module._load;
   Module._load = function (request, parent, isMain) {
-    if (request === '../util/reg' && parent && parent.filename === uplayPath) {
-      return {
-        ListRegistryAllValues: (hive, key) => Object.keys(values[`${hive}\\${key}`] || {}),
-        listRegistryAllSubkeys: () => [],
-        readRegistryString: () => null,
-        readRegistryInteger: (hive, key, name) => values[`${hive}\\${key}`]?.[name] ?? null,
-      };
+    if (request === '../util/appHosts.js' && parent && parent.filename === uplayPath) {
+      return { appHosts: () => [host], hostById: () => host };
     }
     return originalLoad.call(this, request, parent, isMain);
   };

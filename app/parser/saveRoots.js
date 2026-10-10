@@ -3,8 +3,8 @@
 const fs = require('fs');
 const path = require('path');
 const listDrive = require(path.join(__dirname, '..', 'util', 'listDrive.js'));
-const { readRegistryStringAndExpand } = require(path.join(__dirname, '..', 'util', 'reg.js'));
-const { listHosts, hostPath } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
+const { hostPath, hostFor } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
+const { appHosts } = require(path.join(__dirname, '..', 'util', 'appHosts.js'));
 
 // Same folder once: case-insensitively on Windows, exactly on case-sensitive Linux filesystems.
 function addUnique(out, candidate) {
@@ -17,10 +17,9 @@ function addUnique(out, candidate) {
   out.push(value);
 }
 
-function envPath(envName, ...segments) {
-  const base = process.env[envName];
-  if (!base) return null;
-  return path.join(base, ...segments);
+// One path per host (see util/winHosts.js) under the same folder variable.
+function hostsPaths(hosts, envName, ...segments) {
+  return hosts.map((host) => hostPath(host, envName, ...segments)).filter(Boolean);
 }
 
 const steamSourceFolderNames = ['RUNE', 'CODEX'];
@@ -42,24 +41,15 @@ function expandKnownSteamSourceRoots(root) {
   return roots;
 }
 
-// A redirected or unreadable Documents folder means "we do not know where it is", never a failed
-// scan: this feeds the save-root list every emulator source walks.
-function documentsPath() {
-  try {
-    return readRegistryStringAndExpand('HKCU', 'Software/Microsoft/Windows/CurrentVersion/Explorer/User Shell Folders', 'Personal');
-  } catch {
-    return null;
-  }
-}
-
-// Where an installed (non-portable) RUNE release writes, whether or not anything is there yet.
-function publicSceneSaveRoot() {
-  return envPath('PUBLIC', 'Documents', 'Steam', 'RUNE');
+// Where an installed (non-portable) RUNE release in `gameDir` writes, whether or not anything is
+// there yet: on Linux, inside the Wine prefix the game sits in (see util/winHosts.js).
+function publicSceneSaveRoot(gameDir) {
+  return hostPath(hostFor(gameDir), 'PUBLIC', 'Documents', 'Steam', 'RUNE');
 }
 
 function defaultSteamEmuSaveRoots({ existingOnly = false, expandProgramDataSteam = false } = {}) {
   const roots = [];
-  for (const host of listHosts({ nativeDocuments: documentsPath })) addHostRoots(roots, host, { expandProgramDataSteam });
+  for (const host of appHosts()) addHostRoots(roots, host, { expandProgramDataSteam });
   return existingOnly ? roots.filter((p) => fs.existsSync(p)) : roots;
 }
 
@@ -69,7 +59,7 @@ function addHostRoots(roots, host, { expandProgramDataSteam }) {
   const envPath = (envName, ...segments) => hostPath(host, envName, ...segments);
   [
     envPath('PUBLIC', 'Documents', 'OnlineFix'),
-    publicSceneSaveRoot(),
+    envPath('PUBLIC', 'Documents', 'Steam', 'RUNE'),
     envPath('PUBLIC', 'Documents', 'Steam', 'CODEX'),
     envPath('PUBLIC', 'Documents', 'Steam', 'RLD!'),
     envPath('PUBLIC', 'Documents', 'EMPRESS'),
@@ -95,7 +85,14 @@ function addHostRoots(roots, host, { expandProgramDataSteam }) {
     envPath('LOCALAPPDATA', 'anadius', 'LSX emu', 'achievement_watcher'),
   ].forEach((p) => addUnique(roots, p));
 
-  const docs = host.documents();
+  // A redirected or unreadable Documents folder means "we do not know where it is", never a failed
+  // scan: this feeds the save-root list every emulator source walks.
+  let docs = null;
+  try {
+    docs = host.documents();
+  } catch {
+    docs = null;
+  }
   if (docs) {
     addUnique(roots, path.join(docs, 'SkidRow'));
     // DARKSiDERS writes its per-appid tree under Documents rather than beside the game whenever the
@@ -274,32 +271,44 @@ function profileLibraryRoots() {
     seen.add(key);
     names.push(base);
   }
-  for (const base of [process.env['USERPROFILE'], process.env['APPDATA'], process.env['LOCALAPPDATA']]) {
-    if (!base) continue;
+  const hosts = appHosts();
+  for (const base of [...hostsPaths(hosts, 'USERPROFILE'), ...hostsPaths(hosts, 'APPDATA'), ...hostsPaths(hosts, 'LOCALAPPDATA')]) {
     for (const name of names) addUnique(roots, path.join(base, name));
   }
   return roots;
 }
 
-async function discoverLibraryRoots() {
-  let drives = [];
-  try {
-    drives = await listDrive({ ignoreSystemDrive: false });
-  } catch {
-    drives = [];
-  }
-
-  const candidates = [];
-  for (const drive of drives) {
-    for (const name of GAME_LIBRARY_FOLDER_NAMES) {
-      candidates.push(path.join(`${drive}\\`, name));
+// The roots Smart Find treats as drives: every fixed drive on Windows; on Linux the mount points
+// and each prefix's C:.
+async function driveRoots() {
+  if (process.platform !== 'win32') {
+    const roots = [];
+    try {
+      for (const mount of await listDrive()) addUnique(roots, mount);
+    } catch {
+      /* no mount list: the prefixes below still count */
     }
+    for (const host of appHosts()) if (host.root) addUnique(roots, path.join(host.root, 'drive_c'));
+    return roots;
+  }
+  try {
+    return (await listDrive({ ignoreSystemDrive: false })).map((drive) => `${drive}\\`);
+  } catch {
+    return [];
+  }
+}
+
+async function discoverLibraryRoots() {
+  const candidates = [];
+  for (const drive of await driveRoots()) {
+    for (const name of GAME_LIBRARY_FOLDER_NAMES) candidates.push(path.join(drive, name));
   }
   for (const root of profileLibraryRoots()) candidates.push(root);
 
   // Portable installs are often grouped under Desktop\Games or Desktop\Jeux; only immediate children
   // matching the library allowlist are accepted, so the Desktop itself never becomes an invisible root.
-  for (const desktop of [envPath('USERPROFILE', 'Desktop'), envPath('PUBLIC', 'Desktop')].filter(Boolean)) {
+  const hosts = appHosts();
+  for (const desktop of [...hostsPaths(hosts, 'USERPROFILE', 'Desktop'), ...hostsPaths(hosts, 'PUBLIC', 'Desktop')]) {
     try {
       for (const entry of fs.readdirSync(desktop, { withFileTypes: true })) {
         if (entry.isDirectory() && isLibraryLikeFolderName(entry.name)) candidates.push(path.join(desktop, entry.name));
@@ -343,19 +352,12 @@ const EMULATOR_LIBRARY_FOLDER_NAMES = [
 // The same shape as discoverLibraryRoots(), for emulator folders: every fixed drive and the user
 // profile, one stat per candidate, no recursion.
 async function discoverEmulatorRoots() {
-  let drives = [];
-  try {
-    drives = await listDrive({ ignoreSystemDrive: false });
-  } catch {
-    drives = [];
-  }
-
   const candidates = [];
-  for (const drive of drives) {
-    for (const name of EMULATOR_LIBRARY_FOLDER_NAMES) candidates.push(path.join(`${drive}\\`, name));
+  for (const drive of await driveRoots()) {
+    for (const name of EMULATOR_LIBRARY_FOLDER_NAMES) candidates.push(path.join(drive, name));
   }
-  for (const base of [process.env['USERPROFILE'], envPath('USERPROFILE', 'Desktop'), process.env['LOCALAPPDATA']]) {
-    if (!base) continue;
+  const hosts = appHosts();
+  for (const base of [...hostsPaths(hosts, 'USERPROFILE'), ...hostsPaths(hosts, 'USERPROFILE', 'Desktop'), ...hostsPaths(hosts, 'LOCALAPPDATA')]) {
     for (const name of EMULATOR_LIBRARY_FOLDER_NAMES) candidates.push(path.join(base, name));
   }
 

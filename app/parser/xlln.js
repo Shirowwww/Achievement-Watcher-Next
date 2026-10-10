@@ -11,6 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 const spa = require(path.join(__dirname, 'xllnSpa.js'));
+const { hostPath, hostsFor } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 
 const RUNTIME_DLL = 'xlive.dll';
 const STORAGE_DIR = 'XLiveLessNess';
@@ -235,7 +236,8 @@ function storageRoots(gameDir) {
     add(path.join(gameDir, STORAGE_DIR));
     add(path.join(path.dirname(gameDir), STORAGE_DIR));
   }
-  if (process.env.LOCALAPPDATA) add(path.join(process.env.LOCALAPPDATA, STORAGE_DIR));
+  // The per-user folder of the host the game runs in (its Wine prefix on Linux).
+  for (const host of hostsFor(gameDir)) add(hostPath(host, 'LOCALAPPDATA', STORAGE_DIR));
   return roots;
 }
 

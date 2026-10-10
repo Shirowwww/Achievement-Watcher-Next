@@ -5,7 +5,7 @@
   resources, and unlock state is one "UnlockFlag = <decimal>" line per save profile, under
   Documents\My Games\Alice Madness Returns\AliceGame\CheckPoint\<profile>\Achievements.txt.
 
-  checkpointRoot() itself is not exercised here - it resolves the real Documents shell folder
+  checkpointRoots() itself is not exercised here - it resolves the real Documents shell folder
   through the registry, and a test has no business writing into a developer's actual Documents
   folder. listProfiles() takes an explicit root instead, which is what every other assertion here
   uses. Same reasoning ff7.test.js already follows for its own documentsRoot().

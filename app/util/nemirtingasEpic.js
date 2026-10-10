@@ -17,6 +17,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { hostPath, hostPaths, hostsFor } = require(path.join(__dirname, 'winHosts.js'));
 
 const CONFIG_DIR = 'nepice_settings';
 const CONFIG_FILE = 'NemirtingasEpicEmu.json';
@@ -114,23 +115,33 @@ function hasEpicArguments(args) {
   return /(^|\s)-epicapp=\S/i.test(String(args || ''));
 }
 
+// %APPDATA% of the hosts a game folder belongs to (its Wine prefix on Linux).
+function appDataFolders(gameDir) {
+  return hostsFor(gameDir)
+    .map((host) => hostPath(host, 'APPDATA'))
+    .filter(Boolean);
+}
+
 // The emulator already saved for this AppId, so however the game is started, it signs in.
-function hasSavedFor(appId, appData = process.env.APPDATA) {
-  if (!appId || !appData) return false;
-  const root = path.join(appData, 'NemirtingasEpicEmu');
-  let users = [];
-  try {
-    users = fs.readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory());
-  } catch {
-    return false;
-  }
+// `appData` is one %APPDATA% folder or several (one per host the game may run in).
+function hasSavedFor(appId, appData = hostPaths('APPDATA')) {
+  if (!appId) return false;
   const wanted = appId.toLowerCase();
-  return users.some((user) => {
+  return [].concat(appData || []).some((dir) => {
+    const root = path.join(dir, 'NemirtingasEpicEmu');
+    let users = [];
     try {
-      return fs.readdirSync(path.join(root, user.name)).some((name) => name.toLowerCase() === wanted);
+      users = fs.readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory());
     } catch {
       return false;
     }
+    return users.some((user) => {
+      try {
+        return fs.readdirSync(path.join(root, user.name)).some((name) => name.toLowerCase() === wanted);
+      } catch {
+        return false;
+      }
+    });
   });
 }
 
@@ -140,7 +151,7 @@ function hasSavedFor(appId, appData = process.env.APPDATA) {
   overlay flag reminds that the plugin crashed the reporter's game. A config that cannot be parsed
   right now (the emulator may be rewriting it) reports nothing rather than a guess.
 */
-function diagnose({ gameDir, launchArgs = '', appData = process.env.APPDATA } = {}) {
+function diagnose({ gameDir, launchArgs = '', appData = appDataFolders(gameDir) } = {}) {
   const configFile = findConfig(gameDir);
   if (!configFile) return null;
   let settings;

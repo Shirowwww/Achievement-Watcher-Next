@@ -222,9 +222,7 @@ async function windowsDocuments() {
 
 // The Documents folder of the host a configured game folder sits in (its Wine prefix on Linux).
 function documentsFor(dirPath, hosts, docsByHost) {
-  const key = winHosts.pathKey(dirPath);
-  const owner = hosts.find((host) => host.root && key.startsWith(winHosts.pathKey(host.root) + path.sep));
-  return docsByHost.get(owner || hosts[0]) || null;
+  return docsByHost.get(winHosts.hostsFor(dirPath, hosts)[0]) || null;
 }
 
 module.exports.getFolders = async (userDir_file, options = {}) => {

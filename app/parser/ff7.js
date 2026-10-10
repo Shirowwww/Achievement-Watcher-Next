@@ -115,19 +115,10 @@ function getAchievementsFromFile(dir) {
   return parsed;
 }
 
-function documentsRoot() {
-  const { readRegistryStringAndExpand } = require(path.join(__dirname, '..', 'util', 'reg.js'));
-  return readRegistryStringAndExpand('HKCU', 'Software/Microsoft/Windows/CurrentVersion/Explorer/User Shell Folders', 'Personal');
-}
-
-// Where the 2013 launcher puts the folder when nobody moved it.
+// Where the 2013 launcher puts the folder when nobody moved it, on every host (see util/winHosts.js).
 function defaultRoots() {
-  const roots = [];
-  const docs = documentsRoot();
-  if (docs) roots.push(path.join(docs, 'FINAL FANTASY VII'));
-  const userProfile = process.env.USERPROFILE;
-  if (userProfile) roots.push(path.join(userProfile, 'Documents', 'FINAL FANTASY VII'));
-  return roots;
+  const { documentsFolders } = require(path.join(__dirname, '..', 'util', 'appHosts.js'));
+  return documentsFolders().map((docs) => path.join(docs, 'FINAL FANTASY VII'));
 }
 
 /*

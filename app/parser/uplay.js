@@ -6,7 +6,8 @@ const { lazyRequire } = require('../util/lazyRequire.js');
 const glob = lazyRequire('fast-glob');
 const zip = require('adm-zip');
 const fs = require('fs');
-const { listRegistryAllSubkeys, ListRegistryAllValues, readRegistryString, readRegistryInteger } = require('../util/reg');
+const { appHosts, hostById } = require('../util/appHosts.js');
+const ubisoftRegistry = require('../util/ubisoftRegistry.js');
 const { writeArchiveEntry } = require('../util/archiveEntry.js');
 const steamLanguages = require(path.join(__dirname, '../locale/steam.json'));
 
@@ -25,18 +26,12 @@ module.exports.setUserDataPath = (p) => {
   cacheRoot = p;
 };
 
+// LumaPlay keeps its unlocks in HKCU of the host the game runs in: this machine, or a Wine prefix.
 module.exports.scan = async () => {
-  // LumaPlay.
-  let result = [];
-  let users = listRegistryAllSubkeys('HKCU', 'SOFTWARE/LumaPlay');
-  if (!users) throw 'LumaPlay no user found';
-
-  for (let user of users) {
-    try {
-      let appidList = listRegistryAllSubkeys('HKCU', `SOFTWARE/LumaPlay/${user}`);
-      if (!appidList) throw `No achievements found for LumaPlay user: ${user}`;
-
-      for (let appid of appidList) {
+  const result = [];
+  for (const host of appHosts()) {
+    for (const user of host.regSubkeys('HKCU', 'SOFTWARE/LumaPlay')) {
+      for (const appid of host.regSubkeys('HKCU', `SOFTWARE/LumaPlay/${user}`)) {
         result.push({
           appid: `UPLAY${appid}`,
           source: 'Lumaplay',
@@ -44,11 +39,10 @@ module.exports.scan = async () => {
             type: 'lumaplay',
             root: 'HKCU',
             path: `SOFTWARE/LumaPlay/${user}/${appid}/Achievements`,
+            host: host.id,
           },
         });
       }
-    } catch (err) {
-      debug.log(err);
     }
   }
   return result;
@@ -59,26 +53,14 @@ module.exports.scan = async () => {
 let _installedUplayAppids = null;
 module.exports.getInstalledAppids = () => {
   if (_installedUplayAppids) return _installedUplayAppids;
-  const installed = new Set();
   // A registry subkey alone is not proof of an install: Ubisoft Connect leaves stale entries after
   // uninstalls, so only keep a product whose InstallDir still points at a folder on disk.
-  for (const hive of ['HKLM', 'HKCU']) {
-    for (const root of ['SOFTWARE/WOW6432Node/Ubisoft/Launcher/Installs', 'SOFTWARE/Ubisoft/Launcher/Installs']) {
-      try {
-        for (const sub of listRegistryAllSubkeys(hive, root) || []) {
-          try {
-            const dir = readRegistryString(hive, `${root}/${sub}`, 'InstallDir');
-            if (dir && fs.existsSync(dir)) installed.add(String(sub));
-          } catch {
-            /* one corrupt entry must not hide the others */
-          }
-        }
-      } catch {
-        /* key absent on this hive/bitness - try the next one */
-      }
-    }
-  }
-  _installedUplayAppids = installed;
+  _installedUplayAppids = new Set(
+    ubisoftRegistry
+      .installs()
+      .filter(({ dir }) => fs.existsSync(dir))
+      .map(({ id }) => id)
+  );
   return _installedUplayAppids;
 };
 
@@ -91,14 +73,14 @@ module.exports.isInstalled = (appid) => {
 
 module.exports.scanLegit = async (onlyInstalled = false) => {
   // Unused: legit Ubisoft Connect exposes no local achievement-unlock data to read.
-  const uplayPath = readRegistryString('HKLM', 'Software/WOW6432Node/Ubisoft/Launcher', 'InstallDir');
+  const uplayPath = ubisoftRegistry.launcherDirs()[0];
   if (!uplayPath) throw 'Uplay Path not found';
 
   let data = [];
 
   if (onlyInstalled) {
-    let installedList = listRegistryAllSubkeys('HKLM', 'SOFTWARE/WOW6432Node/Ubisoft/Launcher/Installs');
-    if (!installedList) throw 'Uplay has no game installed';
+    const installedList = [...new Set(ubisoftRegistry.installs().map(({ id }) => id))];
+    if (installedList.length === 0) throw 'Uplay has no game installed';
 
     for (let appid of installedList) {
       data.push({
@@ -173,7 +155,7 @@ module.exports.getGameData = async (appid, lang) => {
   if (!schema) {
     // The schema is read from the Uplay client's own cache on this PC. The third-party server this
     // used to ask first is gone, and it was also being sent a copy of every schema generated here.
-    const uplayPath = readRegistryString('HKLM', 'Software/WOW6432Node/Ubisoft/Launcher', 'InstallDir');
+    const uplayPath = ubisoftRegistry.launcherDirs()[0];
     if (!uplayPath) throw "Uplay not found : can't generate schema if uplay is not installed.";
     schema = await generateSchemaFromLocalCache(appid, uplayPath);
     writeSchemaCache(cacheFile, schema);
@@ -188,15 +170,16 @@ module.exports.getGameData = async (appid, lang) => {
   return schema;
 };
 
-module.exports.getAchievementsFromLumaPlay = (root, key) => {
+module.exports.getAchievementsFromLumaPlay = (root, key, hostId) => {
+  const host = hostById(hostId);
   // An absent key enumerates as an empty array, never null, so length is what says "nothing here".
-  let result = ListRegistryAllValues(root, key);
-  if (!result || result.length === 0) throw 'No achievement found in registry';
+  const result = host.regValueNames(root, key);
+  if (result.length === 0) throw 'No achievement found in registry';
 
   return result.map((name) => {
     return {
       id: name.replace('ACH_', ''),
-      Achieved: parseInt(readRegistryInteger(root, key, name)),
+      Achieved: parseInt(host.regValue(root, key, name)),
     };
   });
 };

@@ -7,8 +7,9 @@ const parentFind = require('../util/findUp');
 const { lazyRequire } = require('../util/lazyRequire.js');
 const glob = lazyRequire('fast-glob');
 const fs = require('fs');
-const { readRegistryStringAndExpand } = require('../util/reg');
 const saveRoots = require(path.join(appPath, 'parser/saveRoots.js'));
+const { appHosts, documentsFor } = require(path.join(appPath, 'util/appHosts.js'));
+const { hostPath, hostFor } = require(path.join(appPath, 'util/winHosts.js'));
 
 let file;
 
@@ -127,16 +128,25 @@ function readSceneSaveNote(configFile, appid) {
   if (!match) return null;
   const noted = match[1].replace(/[\\/]+$/, '');
   // The line ends in the appid itself or in a placeholder such as <appid>; either way the folder
-  // above it is the source root the game's own folder goes under.
-  const root = /^\d+$|[<{%]/.test(path.basename(noted)) ? path.dirname(noted) : noted;
+  // above it is the source root the game's own folder goes under. It is a Windows path on Linux too.
+  const root = /^\d+$|[<{%]/.test(path.win32.basename(noted)) ? path.win32.dirname(noted) : noted;
   let unresolved = false;
   const expanded = root.replace(/%([^%]+)%/g, (whole, name) => {
     const value = process.env[name];
     if (!value) unresolved = true;
     return value || whole;
   });
-  if (unresolved || !path.isAbsolute(expanded)) return null;
-  return path.join(expanded, String(appid));
+  const local = unresolved ? null : sceneNoteLocalPath(expanded, configFile);
+  return local ? path.join(local, String(appid)) : null;
+}
+
+// On Linux the noted folder is read inside the Wine prefix the release sits in (see util/winHosts.js).
+function sceneNoteLocalPath(notedPath, configFile) {
+  if (process.platform === 'win32') return path.isAbsolute(notedPath) ? notedPath : null;
+  const unix = notedPath.replace(/\\/g, '/');
+  if (path.isAbsolute(unix)) return unix;
+  const host = hostFor(path.dirname(configFile));
+  return (host && host.localPath(notedPath)) || null;
 }
 
 // Where a CODEX/RUNE release will write before it has written anything, for `dir`, the folder
@@ -151,7 +161,7 @@ function sceneSaveFallback(dir, appid) {
   if (portable) return { path: path.join(portable, String(appid)), source: sceneSourceOf(portable) };
   const noted = readSceneSaveNote(config, appid);
   if (noted) return { path: noted, source: sceneSourceOf(path.dirname(noted)) };
-  const publicRoot = saveRoots.publicSceneSaveRoot();
+  const publicRoot = saveRoots.publicSceneSaveRoot(dir);
   return publicRoot ? { path: path.join(publicRoot, String(appid)), source: 'Rune' } : null;
 }
 
@@ -237,8 +247,15 @@ const IN_FOLDER_EMULATOR_CONFIGS = ['ALI213.ini', 'valve.ini', 'SteamConfig.ini'
 
 // Emulator folders Windows already knows about, with no file system search: "App Paths" is the key
 // an installer writes, and the uninstall index carries an InstallLocation - both cover an emulator
-// installed under a name no folder-name heuristic would think to probe.
-function emulatorRootsFromRegistry(registry = require('../util/reg.js')) {
+// installed under a name no folder-name heuristic would think to probe. On Linux each Wine prefix's
+// registry is read the same way (see util/winHosts.js).
+function emulatorRootsFromRegistry(hosts = appHosts()) {
+  const roots = [];
+  for (const host of hosts) roots.push(...hostEmulatorRoots(host));
+  return roots;
+}
+
+function hostEmulatorRoots(host) {
   const roots = [];
   const seen = new Set();
   const add = (value) => {
@@ -250,14 +267,15 @@ function emulatorRootsFromRegistry(registry = require('../util/reg.js')) {
     const key = path.win32.normalize(normalized).toLowerCase();
     if (!normalized || seen.has(key)) return;
     seen.add(key);
-    roots.push(normalized);
+    const local = host.localPath(normalized);
+    if (local) roots.push(local);
   };
 
   const APP_PATHS = 'Software/Microsoft/Windows/CurrentVersion/App Paths';
   for (const hive of ['HKCU', 'HKLM']) {
     for (const binary of EMULATOR_BINARIES) {
       try {
-        add(registry.readRegistryStringAndExpand(hive, `${APP_PATHS}/${binary}`, ''));
+        add(host.regValue(hive, `${APP_PATHS}/${binary}`, ''));
       } catch {
         /* a missing key is the normal case */
       }
@@ -273,7 +291,7 @@ function emulatorRootsFromRegistry(registry = require('../util/reg.js')) {
   for (const [hive, root] of UNINSTALL_ROOTS) {
     let keys = [];
     try {
-      keys = registry.listRegistryAllSubkeys(hive, root) || [];
+      keys = host.regSubkeys(hive, root) || [];
     } catch {
       continue;
     }
@@ -282,7 +300,7 @@ function emulatorRootsFromRegistry(registry = require('../util/reg.js')) {
       // hundreds of registry enumerations on an ordinary machine.
       if (!EMULATOR_NAME.test(key)) continue;
       try {
-        add(registry.readRegistryStringAndExpand(hive, `${root}/${key}`, 'InstallLocation'));
+        add(host.regValue(hive, `${root}/${key}`, 'InstallLocation'));
       } catch {
         /* skip one unreadable entry */
       }
@@ -375,15 +393,15 @@ module.exports.findEntries = async () => {
   // Console-emulator data has a few stable per-user locations. RPCS3 additionally honours its own
   // RPCS3_CONFIG_DIR, which is the only pointer to a configuration root kept outside both the
   // emulator folder and AppData.
-  for (const dir of [
-    process.env.APPDATA && path.join(process.env.APPDATA, 'rpcs3'),
-    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'rpcs3'),
-    process.env.RPCS3_CONFIG_DIR,
-    process.env.APPDATA && path.join(process.env.APPDATA, 'shadPS4'),
-    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'shadPS4'),
-    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'xenia'),
-    process.env.APPDATA && path.join(process.env.APPDATA, 'xenia'),
-  ]) {
+  const consoleDirs = appHosts().flatMap((host) => [
+    hostPath(host, 'APPDATA', 'rpcs3'),
+    hostPath(host, 'LOCALAPPDATA', 'rpcs3'),
+    hostPath(host, 'APPDATA', 'shadPS4'),
+    hostPath(host, 'LOCALAPPDATA', 'shadPS4'),
+    hostPath(host, 'LOCALAPPDATA', 'xenia'),
+    hostPath(host, 'APPDATA', 'xenia'),
+  ]);
+  for (const dir of [...consoleDirs, process.env.RPCS3_CONFIG_DIR]) {
     try {
       if (dir && fs.statSync(dir).isDirectory()) addDetected(dir, 'Known emulator data location');
     } catch {}
@@ -689,7 +707,7 @@ module.exports.scan = async (dir) => {
           });
         }
       } else if (info.Settings.AppID && info.Settings.PlayerName && info.Settings.SaveType == 1) {
-        const mydocs = readRegistryStringAndExpand('HKCU', 'Software/Microsoft/Windows/CurrentVersion/Explorer/User Shell Folders', 'Personal');
+        const mydocs = documentsFor(dir);
         if (mydocs) {
           result.push({
             appid: info.Settings.AppID,
@@ -790,7 +808,7 @@ module.exports.scan = async (dir) => {
         info.GameSettings.UserName &&
         info.GameSettings.UserName !== ''
       ) {
-        const mydocs = readRegistryStringAndExpand('HKCU', 'Software/Microsoft/Windows/CurrentVersion/Explorer/User Shell Folders', 'Personal');
+        const mydocs = documentsFor(dir);
         if (mydocs) {
           let dirpath = path.join(mydocs, info.GameSettings.UserName, info.GameSettings.AppId, 'SteamEmu');
 

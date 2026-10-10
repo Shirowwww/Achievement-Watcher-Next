@@ -1,58 +1,52 @@
 'use strict';
 
-const { listRegistryAllSubkeys, readRegistryInteger, ListRegistryAllValues } = require('../util/reg');
+const { appHosts, hostById } = require('../util/appHosts.js');
 
+const KEY_LIST = [
+  { keyName: 'GLR', name: 'GreenLuma Reborn' },
+  { keyName: 'GL2020', name: 'GreenLuma 2020' },
+  { keyName: 'GL2024', name: 'GreenLuma 2024' },
+  { keyName: 'GL2025', name: 'GreenLuma 2025' },
+];
+
+// GreenLuma keeps its state in HKCU of the host Steam runs in: this machine, or a Wine prefix on Linux.
 module.exports.scan = async () => {
-  let data = [];
-
-  const keyList = {
-    glr: { keyName: 'GLR', name: 'GreenLuma Reborn' },
-    gl2020: { keyName: 'GL2020', name: 'GreenLuma 2020' },
-    gl2024: { keyName: 'GL2024', name: 'GreenLuma 2024' },
-    gl2025: { keyName: 'GL2025', name: 'GreenLuma 2025' },
-  };
-
-  // keyList is a plain object map: `for...of keyList` would throw, so iterate Object.values() instead.
-  for (let k of Object.values(keyList)) {
-    const keys = listRegistryAllSubkeys('HKCU', `SOFTWARE/${k.keyName}/AppID`);
-    if (!keys) continue;
-    for (let key of keys) {
-      try {
-        let gl_ach_enable = parseInt(readRegistryInteger('HKCU', `SOFTWARE/${k.keyName}/AppID/${key}`, 'SkipStatsAndAchievements'));
-        if (gl_ach_enable === 0) {
-          data.push({
-            appid: key,
-            source: k.name,
-            data: {
-              type: 'reg',
-              root: 'HKCU',
-              path: `SOFTWARE/${k.keyName}/AppID/${key}/Achievements`,
-            },
-          });
-        }
-      } catch {}
+  const data = [];
+  for (const host of appHosts()) {
+    for (const k of KEY_LIST) {
+      for (const key of host.regSubkeys('HKCU', `SOFTWARE/${k.keyName}/AppID`)) {
+        const glAchEnable = parseInt(host.regValue('HKCU', `SOFTWARE/${k.keyName}/AppID/${key}`, 'SkipStatsAndAchievements'));
+        if (glAchEnable !== 0) continue;
+        data.push({
+          appid: key,
+          source: k.name,
+          data: {
+            type: 'reg',
+            root: 'HKCU',
+            path: `SOFTWARE/${k.keyName}/AppID/${key}/Achievements`,
+            host: host.id,
+          },
+        });
+      }
     }
   }
-
   return data;
 };
 
-module.exports.getAchievements = async (root, key) => {
+module.exports.getAchievements = async (root, key, hostId) => {
+  const host = hostById(hostId);
   // An absent key enumerates as an empty array, never null, so length is what says "nothing here".
-  let achievements = ListRegistryAllValues(root, key);
-  if (!achievements || achievements.length === 0) throw 'No achievement found in registry';
+  const achievements = host.regValueNames(root, key);
+  if (achievements.length === 0) throw 'No achievement found in registry';
 
-  let result = [];
-
-  for (let achievement of achievements) {
-    if (!achievement.endsWith('_Time')) {
-      result.push({
-        id: achievement,
-        Achieved: parseInt(readRegistryInteger(root, key, achievement)),
-        UnlockTime: parseInt(readRegistryInteger(root, key, achievement + '_Time')),
-      });
-    }
+  const result = [];
+  for (const achievement of achievements) {
+    if (achievement.endsWith('_Time')) continue;
+    result.push({
+      id: achievement,
+      Achieved: parseInt(host.regValue(root, key, achievement)),
+      UnlockTime: parseInt(host.regValue(root, key, achievement + '_Time')),
+    });
   }
-
   return result;
 };

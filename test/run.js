@@ -17,12 +17,19 @@ function discoverTests(directory) {
 }
 
 /*
-  Only the files that read or write the real Windows registry can race each other; everything else
-  runs in its own child process with its own temp directory, so the whole rest of the tree is safe
-  to run in parallel. Listing the exceptions by name instead of serialising all 400 files turns a
-  long serial walk into a short parallel one.
+  Only the files that read or write the real Windows registry, or rewrite a shipped asset in place,
+  can race each other; everything else runs in its own child process with its own temp directory,
+  so the whole rest of the tree is safe to run in parallel. Listing the exceptions by name instead
+  of serialising all 400 files turns a long serial walk into a short parallel one.
+  uplaySteamTable.test.js rewrites app/assets/uplay-steam.json, which every Uplay test reads.
 */
-const SERIAL_TESTS = new Set(['reg.test.js', 'backgroundFootprint.test.js', 'regoditSafety.test.js', 'playtimeTrack.test.js']);
+const SERIAL_TESTS = new Set([
+  'reg.test.js',
+  'backgroundFootprint.test.js',
+  'regoditSafety.test.js',
+  'playtimeTrack.test.js',
+  'uplaySteamTable.test.js',
+]);
 
 // Browser tests each start a real Chromium, so they get a smaller share than the pure-Node files.
 const CPUS = Math.max(1, os.availableParallelism ? os.availableParallelism() : os.cpus().length);

@@ -87,6 +87,7 @@ const blacklist = require(path.join(appPath, 'parser/blacklist.js'));
 const userDir = require(path.join(appPath, 'parser/userDir.js'));
 const libraryDirs = require(path.join(appPath, 'parser/libraryDirs.js'));
 const goldberg = require(path.join(appPath, 'parser/goldberg.js'));
+const winHosts = require(path.join(appPath, 'util/winHosts.js'));
 const awManagedConfig = require(path.join(appPath, 'util/awManagedConfig.js'));
 const gbeBackup = require(path.join(appPath, 'util/gbeBackup.js'));
 // Read here and used from ui/gameHealthPanel.js, which shares this renderer's global scope: the
@@ -5234,7 +5235,7 @@ var app = {
                         });
                         // Pre-create the save folder the installed build writes to, so the game is listed before its first launch.
                         try {
-                          fs.mkdirSync(achievements.emulatorFixSaveFolder(writableAppid, emuCfg), { recursive: true });
+                          fs.mkdirSync(achievements.emulatorFixSaveFolder(writableAppid, emuCfg, gameDir), { recursive: true });
                         } catch (e) {
                           debug.log(`[${writableAppid}] could not pre-create the GBE save folder => ${e}`);
                         }
@@ -5671,7 +5672,9 @@ var app = {
                       try {
                         const installer = require(path.join(appPath, 'parser/gogUniverseLanInstaller.js'));
                         const cacheDir = path.join(getUserDataPath(), 'cache/gog_universelan');
-                        const localAppData = process.env['LOCALAPPDATA'] || '';
+                        // UniverseLAN reads %LOCALAPPDATA% of the host the game runs in (its Wine prefix on Linux).
+                        const gameHost = winHosts.hostsFor(universeLanGameDir).find((host) => host.windowsPath(winHosts.hostPath(host, 'LOCALAPPDATA')));
+                        const localAppData = gameHost ? winHosts.hostPath(gameHost, 'LOCALAPPDATA') : '';
                         const result = await installer.repair({ gameDir: universeLanGameDir, cacheDir, localAppData, log: debug });
                         gogUniverseLan.recordInstall({ userDataPath: getUserDataPath(), gameDir: universeLanGameDir, gogAppId: result.gogAppId });
                         const lines = result.installed.map((entry) => `${entry.tier}: ${entry.wrote.join(', ')}`);

@@ -3,7 +3,6 @@
 const path = require('path');
 const { lazyRequire } = require('../util/lazyRequire.js');
 const glob = lazyRequire('fast-glob');
-const normalize = require('normalize-path');
 const ini = require('../util/ini');
 const omit = require('lodash.omit');
 const moment = require('moment');
@@ -107,8 +106,9 @@ module.exports.goldbergSaveWeight = goldbergSaveWeight;
 module.exports.scan = async (additionalSearch = []) => {
   let search = saveRoots.defaultSteamScanRoots(additionalSearch);
 
+  // Escaped, since a root can hold glob characters: a Wine prefix named "Game (2020)", say.
   search = search.map((dir) => {
-    return normalize(dir) + '/([0-9]+)';
+    return glob.convertPathToPattern(dir) + '/([0-9]+)';
   });
 
   let data = [];
@@ -275,11 +275,13 @@ module.exports.scanLegit = async (listingType = 0, steamAccFilter = '0') => {
     // was PLAYED. App manifests and, in "owned" mode, registry keys close the gap to owned/installed.
     list = await addLocallyKnownSteamApps(list, { steamPath, listingType, stats: list });
 
+    // The Linux client keeps no Apps key in registry.vdf, so there its install manifests answer.
+    const linuxInstalls = process.platform === 'win32' ? null : await module.exports.scanLocalInstalls();
     for (let stats of list) {
       // Steam's own per-game registry flag: 1 when the game is on disk, missing/0 when it is
       // merely owned. Capture it for every entry so "owned" mode never makes the installed
       // filter trust a game that isn't actually installed (e.g. Assassin's Creed Mirage).
-      const installedFlag = registry.integer(`Apps/${stats.appID}`, 'Installed') === 1;
+      const installedFlag = linuxInstalls ? linuxInstalls.has(String(stats.appID)) : registry.integer(`Apps/${stats.appID}`, 'Installed') === 1;
       const isInstalled = listingType == 1 ? installedFlag : true;
 
       let user = publicUsers.find((user) => user.user == stats.userID);

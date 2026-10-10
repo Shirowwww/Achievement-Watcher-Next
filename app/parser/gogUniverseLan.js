@@ -10,6 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 const emuIni = require('../util/emuIni.js');
+const winHosts = require('../util/winHosts.js');
 const { replaceFileSync, unlinkForce } = require('../util/replaceFile.js');
 
 const noopLog = { log() {}, error() {} };
@@ -533,11 +534,14 @@ function readGogGameTitle(gameDir, gogAppId) {
   the one consolidateDiscoveryList keeps as the merge target, regardless of which repair state each
   scan happens to observe.
 */
-function scan({ userDataPath, localAppData }) {
+// `localAppData` defaults to %LOCALAPPDATA% of the host each game runs in (its Wine prefix on Linux).
+function scan({ userDataPath, localAppData = null }) {
   const out = [];
   for (const entry of readInstalls(userDataPath)) {
     if (!fs.existsSync(entry.gameDir)) continue;
-    if (!fs.existsSync(achievementsIniPath({ localAppData, gogAppId: entry.gogAppId }))) continue;
+    const candidates = localAppData ? [localAppData] : winHosts.hostsFor(entry.gameDir).map((host) => winHosts.hostPath(host, 'LOCALAPPDATA'));
+    const found = candidates.find((dir) => dir && fs.existsSync(achievementsIniPath({ localAppData: dir, gogAppId: entry.gogAppId })));
+    if (!found) continue;
     out.push({
       appid: entry.gogAppId,
       source: 'GOG Galaxy',
@@ -547,7 +551,7 @@ function scan({ userDataPath, localAppData }) {
         title: readGogGameTitle(entry.gameDir, entry.gogAppId),
         gogAppId: entry.gogAppId,
         gameDir: entry.gameDir,
-        localAppData,
+        localAppData: found,
       },
     });
   }

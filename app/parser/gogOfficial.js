@@ -1,6 +1,6 @@
 'use strict';
 
-// Read GOG Galaxy's local catalog and gameplay databases.
+// Read GOG Galaxy's local catalog and gameplay databases, on Linux in every Wine prefix holding Galaxy.
 // Native schemas, unlocks, icons and rarity are available without Steam mapping or network access.
 
 const fs = require('fs');
@@ -9,6 +9,8 @@ const { lazyRequire } = require('../util/lazyRequire.js');
 const { parseUnlockTimeSeconds } = require('../util/unlockTime.js');
 const request = lazyRequire('request-zero');
 const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
+const { appHosts } = require('../util/appHosts.js');
+const { hostPath } = require('../util/winHosts.js');
 
 // Box art costs two sequential 15s lookups per game. Offline that is 30s each, for a library's
 // worth of games, so an unreachable api.gog.com is asked once and then left alone.
@@ -29,8 +31,6 @@ module.exports.setUserDataPath = (p) => {
   cacheRoot = p;
 };
 
-const DEFAULT_STORAGE_DB_PATH = path.join(process.env['ProgramData'] || 'C:\\ProgramData', 'GOG.com', 'Galaxy', 'storage', 'galaxy-2.0.db');
-const DEFAULT_APPLICATIONS_ROOT = path.join(process.env['LOCALAPPDATA'] || '', 'GOG.com', 'Galaxy', 'Applications');
 const GAMEPLAY_DB_NAME = 'gameplay.db';
 const IMAGES_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -98,9 +98,21 @@ function fileSignature(filePath) {
   }
 }
 
-// One-entry memo keyed on db+wal+shm signatures - Galaxy writes in WAL mode, so all three files
+// Galaxy's catalog and per-game databases in each host that can hold an install: this machine, or
+// every Wine prefix on Linux. The same roots the Watchdog's gogWatch follows.
+function galaxyInstalls(hosts = appHosts()) {
+  return hosts
+    .map((host) => ({
+      storageDbPath: hostPath(host, 'PROGRAMDATA', 'GOG.com', 'Galaxy', 'storage', 'galaxy-2.0.db'),
+      applicationsRoot: hostPath(host, 'LOCALAPPDATA', 'GOG.com', 'Galaxy', 'Applications'),
+      localPath: host.localPath,
+    }))
+    .filter((install) => install.storageDbPath && install.applicationsRoot);
+}
+
+// Memo per catalog keyed on db+wal+shm signatures - Galaxy writes in WAL mode, so all three files
 // participate in "has anything changed".
-let productCache = { key: '', value: null };
+const productCache = new Map();
 
 function galaxyCacheKey(storageDbPath) {
   return [storageDbPath, fileSignature(storageDbPath), fileSignature(`${storageDbPath}-wal`), fileSignature(`${storageDbPath}-shm`)].join('|');
@@ -132,9 +144,10 @@ function titleScore(row) {
 }
 
 function readGogGalaxyProducts(options = {}) {
-  const storageDbPath = options.storageDbPath ? path.resolve(options.storageDbPath) : DEFAULT_STORAGE_DB_PATH;
+  const storageDbPath = path.resolve(options.storageDbPath);
   const cacheKey = galaxyCacheKey(storageDbPath);
-  if (productCache.key === cacheKey && productCache.value) return productCache.value;
+  const cached = productCache.get(storageDbPath);
+  if (cached && cached.key === cacheKey) return cached.value;
 
   const db = openReadOnly(storageDbPath);
   try {
@@ -202,7 +215,7 @@ function readGogGalaxyProducts(options = {}) {
     }
 
     const result = { rows, byClientId };
-    productCache = { key: cacheKey, value: result };
+    productCache.set(storageDbPath, { key: cacheKey, value: result });
     return result;
   } finally {
     safeClose(db);
@@ -234,9 +247,11 @@ function isGameplayReady(gameplay) {
   return String(gameplay?.databaseInfo?.achievements_retrieved ?? '').trim() !== '0';
 }
 
+// `localPath` turns the Windows paths Galaxy stores into local ones (a prefix's drive_c on Linux).
 function listGameplayEntries(options = {}) {
-  const applicationsRoot = options.applicationsRoot ? path.resolve(options.applicationsRoot) : DEFAULT_APPLICATIONS_ROOT;
+  const applicationsRoot = options.applicationsRoot ? path.resolve(options.applicationsRoot) : '';
   if (!applicationsRoot || !fs.existsSync(applicationsRoot)) return [];
+  const localPath = (winPath) => (winPath && options.localPath ? options.localPath(winPath) || winPath : winPath);
   const products = readGogGalaxyProducts(options);
   const out = [];
 
@@ -271,8 +286,8 @@ function listGameplayEntries(options = {}) {
         clientId,
         userId,
         title: product.title || '',
-        installationPath: product.installationPath || '',
-        executablePath: product.executablePath || '',
+        installationPath: localPath(product.installationPath) || '',
+        executablePath: localPath(product.executablePath) || '',
         gameplayDir,
         gameplayDbPath,
       });
@@ -284,10 +299,10 @@ function listGameplayEntries(options = {}) {
 // Galaxy's PlayTaskLaunchParameters path is usually absolute, but may be relative to the install
 // dir on some setups. Resolve both, and only trust a path that actually exists on disk.
 function resolveInstalledExe(executablePath, installationPath) {
-  const raw = String(executablePath || '').trim().replace(/\//g, '\\');
+  const raw = String(executablePath || '').trim();
   if (!raw || !/\.exe$/i.test(raw)) return '';
-  const abs = path.win32.isAbsolute(raw) ? raw : installationPath ? path.join(installationPath, raw) : raw;
-  return fs.existsSync(abs) ? abs : '';
+  const abs = path.isAbsolute(raw) ? raw : installationPath ? path.join(installationPath, ...raw.split(/[\\/]+/)) : raw;
+  return fs.existsSync(abs) ? path.normalize(abs) : '';
 }
 
 function absoluteUrl(u) {
@@ -359,7 +374,7 @@ async function resolveGogImages(productId) {
 module.exports.scan = async () => {
   let entries;
   try {
-    entries = await withRetry(() => listGameplayEntries(), { label: 'galaxy scan' });
+    entries = await withRetry(() => galaxyInstalls().flatMap((install) => listGameplayEntries(install)), { label: 'galaxy scan' });
   } catch (err) {
     debug.log(`GOG official scan skipped => ${err}`);
     return [];
@@ -480,6 +495,7 @@ module.exports.getAchievements = (appid) => {
 module.exports._internal = {
   readGogGalaxyProducts,
   listGameplayEntries,
+  galaxyInstalls,
   readGogGameplayDb,
   isGameplayReady,
   parseUnlockTimeSeconds,

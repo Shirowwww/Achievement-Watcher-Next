@@ -134,38 +134,43 @@ test('the Xenia folder holding the .gpd files can be added directly', async () =
   assert.equal(diagnosis.evidence.emulator, 'xenia');
 });
 
+// A host as util/winHosts.js builds it, over a hand-written registry.
+function registryHost({ value, subkeys }) {
+  return { regValue: value, regSubkeys: subkeys, localPath: (p) => p };
+}
+
 test('an emulator recorded by Windows is found without touching the disk', () => {
-  const registry = {
-    readRegistryStringAndExpand(hive, key, valueName) {
+  const host = registryHost({
+    value(hive, key, valueName) {
       if (hive === 'HKLM' && key.endsWith('App Paths/rpcs3.exe') && valueName === '') return 'D:\\Tools\\PS3\\rpcs3.exe';
       if (hive === 'HKLM' && key.endsWith('Uninstall/shadPS4') && valueName === 'InstallLocation') return 'C:\\PS4\\shadPS4\\';
       return null;
     },
-    listRegistryAllSubkeys(hive, key) {
+    subkeys(hive, key) {
       if (hive === 'HKLM' && key === 'Software/Microsoft/Windows/CurrentVersion/Uninstall') {
         // A real machine holds hundreds of these; only the emulator keys may be read further.
         return ['{some-guid}', 'shadPS4', 'Notepad++'];
       }
       return [];
     },
-  };
+  });
 
-  const roots = userDir._internal.emulatorRootsFromRegistry(registry);
+  const roots = userDir._internal.emulatorRootsFromRegistry([host]);
   // An App Paths value names the executable, an uninstall entry names the folder: both land as folders.
   assert.ok(roots.includes('D:\\Tools\\PS3'));
   assert.ok(roots.includes('C:\\PS4\\shadPS4'));
 });
 
 test('a registry with nothing in it contributes nothing instead of throwing', () => {
-  const registry = {
-    readRegistryStringAndExpand() {
+  const host = registryHost({
+    value() {
       throw new Error('key not found');
     },
-    listRegistryAllSubkeys() {
+    subkeys() {
       throw new Error('key not found');
     },
-  };
-  assert.deepEqual(userDir._internal.emulatorRootsFromRegistry(registry), []);
+  });
+  assert.deepEqual(userDir._internal.emulatorRootsFromRegistry([host]), []);
 });
 
 test('a relocated RPCS3 virtual disk is accepted as a watchable folder', async () => {

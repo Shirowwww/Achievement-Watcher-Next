@@ -38,6 +38,6 @@ test('a new folder whose first write carries many unlocks is a copied save and s
 });
 
 test('UniverseLAN saves are keyed by GOG product id and go through the GOG to Steam mapping', () => {
-  assert.ok(source.includes("const isUniverseLanRoot = path.resolve(dir).toLowerCase() === path.resolve(process.env['LOCALAPPDATA'] || '', 'UniverseLAN').toLowerCase();"));
+  assert.ok(source.includes("const isUniverseLanRoot = winHosts.hostPaths('LOCALAPPDATA', 'UniverseLAN').some((root) => winHosts.pathKey(root) === winHosts.pathKey(dir));"));
   assert.ok(source.includes("if (dir.includes('NemirtingasGalaxyEmu') || (isUniverseLanRoot && !options.appid)) {"));
 });

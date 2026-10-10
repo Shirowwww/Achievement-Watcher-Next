@@ -156,33 +156,30 @@ function readProfileState(stateFile) {
   }
 }
 
-function documentsRoot() {
-  const { readRegistryStringAndExpand } = require(path.join(__dirname, '..', 'util', 'reg.js'));
-  return readRegistryStringAndExpand('HKCU', 'Software/Microsoft/Windows/CurrentVersion/Explorer/User Shell Folders', 'Personal');
+// Where the mod keeps every save profile's unlock state: under Documents of the host the game runs
+// in, so one root per host (each Wine prefix on Linux).
+function checkpointRoots() {
+  const { documentsFolders } = require(path.join(__dirname, '..', 'util', 'appHosts.js'));
+  return documentsFolders().map((docs) => path.join(docs, CHECKPOINT_RELATIVE_PATH));
 }
 
-// Where the mod keeps every save profile's unlock state. Resolved from the shell folder first, the
-// environment variable only as a last resort.
-function checkpointRoot() {
-  const docs = documentsRoot() || (process.env.USERPROFILE ? path.join(process.env.USERPROFILE, 'Documents') : '');
-  return docs ? path.join(docs, CHECKPOINT_RELATIVE_PATH) : '';
-}
-
-// Every profile that has a state file, newest first.
-function listProfiles(root = checkpointRoot()) {
-  if (!root || !isDirectory(root)) return [];
+// Every profile that has a state file, newest first, under one checkpoint root or several.
+function listProfiles(roots = checkpointRoots()) {
   const profiles = [];
-  for (const entry of readDirectory(root)) {
-    if (!entry.isDirectory()) continue;
-    const file = path.join(root, entry.name, STATE_FILE);
-    if (!isFile(file)) continue;
-    let mtimeMs = 0;
-    try {
-      mtimeMs = fs.statSync(file).mtimeMs;
-    } catch {
-      /* keep it at 0, still a valid profile */
+  for (const root of [].concat(roots)) {
+    if (!root || !isDirectory(root)) continue;
+    for (const entry of readDirectory(root)) {
+      if (!entry.isDirectory()) continue;
+      const file = path.join(root, entry.name, STATE_FILE);
+      if (!isFile(file)) continue;
+      let mtimeMs = 0;
+      try {
+        mtimeMs = fs.statSync(file).mtimeMs;
+      } catch {
+        /* keep it at 0, still a valid profile */
+      }
+      profiles.push({ profile: entry.name, file, mtimeMs });
     }
-    profiles.push({ profile: entry.name, file, mtimeMs });
   }
   return profiles.sort((left, right) => right.mtimeMs - left.mtimeMs || left.profile.localeCompare(right.profile));
 }
@@ -359,7 +356,7 @@ module.exports.getGameData = getGameData;
 module.exports.getAchievements = getAchievements;
 module.exports.parseUnlockFlag = parseUnlockFlag;
 module.exports.achievementSupportEnabled = achievementSupportEnabled;
-module.exports.checkpointRoot = checkpointRoot;
+module.exports.checkpointRoots = checkpointRoots;
 module.exports.listProfiles = listProfiles;
 module.exports.readProfileState = readProfileState;
 module.exports.iconDirFor = iconDirFor;

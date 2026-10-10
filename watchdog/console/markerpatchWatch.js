@@ -197,8 +197,7 @@ function resolveWatchTarget(finalDir) {
 
 // Watch for the settings.txt folder to exist - only ever one level at a time, never a deep
 // recursive watch over a system folder.
-function attach() {
-  const stateFile = markerpatch.stateFilePath();
+function attach(stateFile) {
   if (!stateFile) return;
   const finalDir = path.dirname(stateFile);
   const target = resolveWatchTarget(finalDir);
@@ -219,7 +218,7 @@ function attach() {
         /* already closed */
       }
       watchers = watchers.filter((entry) => entry !== watcher);
-      attach();
+      attach(stateFile);
     });
     watchers.push(guardWatcher(watcher, `'${target.watchDir}'`, debug));
     debug.log(`[markerpatch] '${finalDir}' does not exist yet - waiting under '${target.watchDir}'`);
@@ -264,7 +263,8 @@ module.exports.start = async (ctx) => {
     }
   }
 
-  attach();
+  // One state file per host (each Wine prefix on Linux); the game writes the one it runs in.
+  for (const stateFile of markerpatch.stateFilePaths()) attach(stateFile);
 };
 
 module.exports.stop = () => {
