@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const state = require(path.join(__dirname, '..', 'queryUserNotificationState.js'));
 
-function loadStateModuleWithFakeQuery(now, query) {
+function loadStateModuleWithFakeQuery(now, query, platform = 'win32') {
   const source = fs.readFileSync(path.join(__dirname, '..', 'queryUserNotificationState.js'), 'utf8');
   const module = { exports: {} };
   const loadModule = new Function('require', 'module', 'exports', 'process', 'Date', source);
@@ -15,7 +15,7 @@ function loadStateModuleWithFakeQuery(now, query) {
   loadModule((request) => {
     if (request === './util/log.js') return { warn: () => {} };
     throw new Error(`Unexpected module request: ${request}`);
-  }, module, module.exports, { platform: 'win32' }, { now });
+  }, module, module.exports, { platform }, { now });
 
   module.exports._setReader(query);
   return module.exports;
@@ -81,6 +81,20 @@ test('an unreadable notification state never suppresses a notification', { skip:
   assert.strictEqual(await state.arePopupsSuppressed(), false);
   state._resetCache();
   assert.strictEqual(await state.isFullscreenAppRunning(), false);
+});
+
+// Linux has no such signal: nothing is queried or warned about, and Automatic plans the overlay
+// (drawn above the game by the compositor) instead of reading "unknown" as a reason to toast.
+test('on Linux nothing is queried and the overlay is not predicted hidden', async () => {
+  let queries = 0;
+  const linux = loadStateModuleWithFakeQuery(() => 0, () => {
+    queries += 1;
+    return 3;
+  }, 'linux');
+  assert.strictEqual(await linux.queryUserNotificationState(), null);
+  assert.strictEqual(await linux.isOverlayLikelyHidden(), false);
+  assert.strictEqual(await linux.arePopupsSuppressed(), false);
+  assert.strictEqual(queries, 0);
 });
 
 // The state is read once per achievement in a batch unlock, so the answer has to be shared.

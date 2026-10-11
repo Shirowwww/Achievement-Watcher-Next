@@ -15,6 +15,9 @@ function bootTimeline() {
 }
 bootMark('electron');
 
+// First thing on Linux: a Wayland session hands this start over to a copy running through XWayland.
+if (require('../util/linuxSession.js').restartThroughXWayland()) process.exit(0);
+
 const path = require('path');
 const { app } = require('electron');
 const { APP_DATA_DIR_NAME } = require('../util/userDataPath.js');
@@ -5147,7 +5150,9 @@ function showOverlayAfterLoad(info) {
   try {
     overlayWindow.webContents.send('overlay-visibility', true);
   } catch {}
-  if ((configJS && configJS.controller && configJS.controller.focusOverlay) === true) {
+  // KWin keeps a focused full-screen window above every "always on top" one, so on Linux the
+  // overlay only shows over a game once it has the focus.
+  if (process.platform === 'linux' || (configJS && configJS.controller && configJS.controller.focusOverlay) === true) {
     overlayWindow.show();
     overlayWindow.focus();
   } else {

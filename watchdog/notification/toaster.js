@@ -25,7 +25,7 @@ overlayAck.onResult(({ ok, stage, reason }) => {
     transportPolicy.recordOverlaySuccess();
     return;
   }
-  debug.warn(`[notify] the overlay could not show this notification (${stage}: ${reason || 'no reason given'}) - falling back to Windows notifications`);
+  debug.warn(`[notify] the overlay could not show this notification (${stage}: ${reason || 'no reason given'}) - falling back to system notifications`);
   transportPolicy.recordOverlayFailure();
 });
 
@@ -296,11 +296,11 @@ module.exports = async (message, option = {}) => {
       if (!deliverToast && overlayAckId) {
         const ack = await overlayAck.wait(overlayAckId);
         if (ack === overlayAck.RESULT.REJECTED) {
-          debug.warn('Overlay reported it could not display this notification > falling back to a Windows notification');
+          debug.warn('Overlay reported it could not display this notification > falling back to a system notification');
           deliverToast = true;
           outcome = 'fallback';
         } else if (ack === overlayAck.RESULT.UNKNOWN) {
-          debug.warn('No overlay delivery report - not duplicating this notification; the next one will use Windows notifications');
+          debug.warn('No overlay delivery report - not duplicating this notification; the next one will use system notifications');
           outcome = 'unknown';
           transportPolicy.recordOverlayFailure();
         }
@@ -360,7 +360,7 @@ module.exports = async (message, option = {}) => {
       }
 
       if (options.rumble) {
-        const xinput = await loadXinput();
+        const xinput = process.platform === 'win32' ? await loadXinput() : require('../util/evdevRumble.js');
         if (xinput) {
           if (!deliverToast) message.delay = 0;
           const regedit = await loadRegedit();
