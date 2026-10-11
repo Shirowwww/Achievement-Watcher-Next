@@ -27,14 +27,16 @@ test('an untouched set of folders still matches its fingerprint', () => {
   }
 });
 
-// Windows file timestamps advance in ~1ms ticks, so a change made inside the same tick as the
-// capture lands on the identical mtime. Real scans and polls are minutes apart; the test only has
-// to leave the tick it captured in.
+// File timestamps come from a coarse clock (about 1 ms on Windows, a kernel tick of several ms on
+// Linux, longer under load), so a change made inside the same tick as the capture lands on the
+// identical mtime. Real scans and polls are minutes apart; the test only has to wait until a fresh
+// write gets a later timestamp.
 function nextClockTick() {
-  const start = Date.now();
-  while (Date.now() - start < 5) {
-    /* busy wait: the point is wall-clock time, not scheduling */
-  }
+  const probe = path.join(os.tmpdir(), `aw-fingerprint-tick-${process.pid}`);
+  fs.writeFileSync(probe, '0');
+  const start = fs.statSync(probe).mtimeMs;
+  for (let i = 1; fs.statSync(probe).mtimeMs === start; i++) fs.writeFileSync(probe, String(i));
+  fs.rmSync(probe, { force: true });
 }
 
 test('a new install, a removed one and a deleted root all break the match', () => {

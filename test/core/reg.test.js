@@ -141,3 +141,25 @@ test('both backends give the same answer, so a missing binary only costs speed',
     );
   }
 });
+
+test('off Windows a read finds nothing and a write is refused, with no reg.exe started', (t) => {
+  if (process.platform === 'win32') return t.skip('Linux-only');
+  const childProcess = require('node:child_process');
+  const originalExecSync = childProcess.execSync;
+  let started = 0;
+  childProcess.execSync = (...args) => {
+    started += 1;
+    return originalExecSync(...args);
+  };
+  try {
+    const reg = loadReg({ breakNative: true });
+    assert.equal(reg.readRegistryString('HKCU', 'Software/Valve/Steam', 'SteamPath'), null);
+    assert.equal(reg.readRegistryValue('HKCU', 'Software/Valve/Steam', 'SteamPath'), null);
+    assert.deepEqual(reg.listRegistryAllSubkeys('HKCU', 'Software/Valve/Steam/Users'), []);
+    assert.equal(reg.regKeyExists('HKCU', 'Software/Valve/Steam'), false);
+    assert.throws(() => reg.writeRegistryDword('HKCU', 'Software/AchievementWatcherRegTest', 'Number', 1), /No Windows registry/);
+    assert.equal(started, 0, 'every answer came without a shell');
+  } finally {
+    childProcess.execSync = originalExecSync;
+  }
+});

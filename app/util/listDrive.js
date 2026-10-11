@@ -118,14 +118,19 @@ function isSystemMount(mountPoint) {
 */
 function linuxMountRoots(mountInfo, { ignoreSystemDrive = false } = {}) {
   const roots = [];
+  // A bind mount shows the same folder of the same device again (WSLg's /mnt/wslg/distro is "/").
+  const seen = new Set();
   for (const line of String(mountInfo || '').split('\n')) {
     const [left, right] = line.split(' - ');
     if (!right) continue;
-    const mountPoint = unescapeMountPath(left.split(' ')[4] || '');
+    const [, , device, root, rawMountPoint] = left.split(' ');
+    const mountPoint = unescapeMountPath(rawMountPoint || '');
     const fsType = right.split(' ')[0];
     if (!mountPoint.startsWith('/') || !DISK_FILESYSTEMS.has(fsType)) continue;
+    if (seen.has(`${device} ${root}`)) continue;
+    seen.add(`${device} ${root}`);
     if (mountPoint === '/' ? ignoreSystemDrive : isSystemMount(mountPoint)) continue;
-    if (!roots.includes(mountPoint)) roots.push(mountPoint);
+    roots.push(mountPoint);
   }
   return roots;
 }
