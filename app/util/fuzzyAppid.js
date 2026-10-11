@@ -120,10 +120,17 @@ function rankAppidCandidates(query, apps, { limit = 5, minScore = 0.5 } = {}) {
 // Best high-confidence AppID for automatic use, or null. Only an exact match or a near-length token
 // match (every cleaned query word present, lengths close) is trusted - a fuzzy guess is never
 // auto-applied, since the AppID gets written to steam_appid.txt.
-function bestConfidentAppid(query, apps) {
+//
+// `sameTitleOnly` also requires a token match to title the same game (see sameTitle below). A
+// token match is a containment test, so "Yakuza Kiwami" was confidently matched to "Yakuza Kiwami 2"
+// and "Far Cry" to "Far Cry Primal". Callers that fold one record into another, and so can hide a
+// tile, pass it; an exact match is unaffected since it is the same name by definition.
+function bestConfidentAppid(query, apps, { sameTitleOnly = false } = {}) {
   if (!namesAGame(query)) return null;
   const ranked = rankAppidCandidates(query, apps, { limit: 10, minScore: 0.6 });
-  const hit = ranked.find((r) => r.tier === 'exact') || ranked.find((r) => r.tier === 'token' && r.score >= 0.9);
+  const hit =
+    ranked.find((r) => r.tier === 'exact') ||
+    ranked.find((r) => r.tier === 'token' && r.score >= 0.9 && (!sameTitleOnly || sameTitle(query, r.name)));
   return hit ? hit.appid : null;
 }
 

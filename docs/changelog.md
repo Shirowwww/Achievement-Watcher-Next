@@ -14,6 +14,15 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
+## Unreleased
+
+### Fixed
+
+- **A game no longer merges into a different title.** When an account library (Xbox, Epic, GOG) and a
+  local copy were matched by name, a title that only contained another one was treated as the same
+  game: "Yakuza Kiwami" could take the place of "Yakuza Kiwami 2", and a GOG "Far Cry" could drop the
+  "Far Cry Primal" save. Now only the same title is merged, so each game keeps its own tile (#111).
+
 ## 3.11.2 - 2026-10-09
 
 ### Added

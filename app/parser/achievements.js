@@ -466,10 +466,12 @@ function mergeCrossSourceDuplicates(appidList) {
       entry into the local one, which is the record worth keeping: it can be launched, timed and
       repaired, and it gains the unlocks the account knows about. The install folder and the
       executable are resolved after this runs, so a local record is never judged on having them yet.
+      The name has to title the same game, not a sibling: folding "Yakuza Kiwami" into "Yakuza Kiwami 2"
+      made the Xbox tile vanish, and the same goes for the save-folder drop below.
     */
     if (g && g.data && ACCOUNT_LIBRARY_TYPES.has(g.data.type) && g.data.title) {
       try {
-        const hit = require('../util/fuzzyAppid.js').bestConfidentAppid(String(g.data.title), steamTargets);
+        const hit = require('../util/fuzzyAppid.js').bestConfidentAppid(String(g.data.title), steamTargets, { sameTitleOnly: true });
         const target = hit && byAppid.get(String(hit));
         if (target && target !== g) {
           if (recordPrecedence(target) >= recordPrecedence(g)) {
@@ -491,7 +493,7 @@ function mergeCrossSourceDuplicates(appidList) {
     // UniverseLAN-repaired install - both key off the same GOG product id, so this is order-independent).
     if (g && g.data && (g.data.type === 'gogOfficial' || g.data.type === 'gogUniverseLan') && g.data.title) {
       try {
-        const hit = require('../util/fuzzyAppid.js').bestConfidentAppid(String(g.data.title), steamTargets);
+        const hit = require('../util/fuzzyAppid.js').bestConfidentAppid(String(g.data.title), steamTargets, { sameTitleOnly: true });
         const target = hit && byAppid.get(String(hit));
         if (target && target !== g && target.data && target.data.type === 'file' && !target.data.gameDir && !target.data.exe) {
           drop.add(String(target.appid));

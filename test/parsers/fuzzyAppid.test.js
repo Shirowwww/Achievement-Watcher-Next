@@ -71,3 +71,21 @@ assert.strictEqual(fuzzy.bestConfidentAppid('EnhancedEdition', editions), null, 
 assert.strictEqual(fuzzy.bestConfidentAppid('Enhanced Edition', editions), null);
 assert.strictEqual(fuzzy.bestConfidentAppid('DirectorsCut', editions), null);
 assert.strictEqual(fuzzy.bestConfidentAppid('Little_Nightmares_II_Enhanced', editions), 1413420);
+
+/*
+  A token match is a containment test, so a franchise sibling was auto-committed: "Yakuza Kiwami" to
+  "Yakuza Kiwami 2", "Far Cry" to "Far Cry Primal" (#111 is a Yakuza 0 vs Director's Cut case). A merge
+  that can hide a tile asks for the same title with sameTitleOnly. An exact name is still trusted, and
+  edition packaging still counts as the same title.
+*/
+const franchise = [
+  { appid: 1234567, name: 'Yakuza Kiwami 2' },
+  { appid: 1000001, name: 'Far Cry Primal' },
+  { appid: 638970, name: "Yakuza 0 Director's Cut" },
+];
+assert.strictEqual(fuzzy.bestConfidentAppid('Yakuza Kiwami', franchise, { sameTitleOnly: true }), null);
+assert.strictEqual(fuzzy.bestConfidentAppid('Far Cry', franchise, { sameTitleOnly: true }), null);
+assert.strictEqual(fuzzy.bestConfidentAppid('Yakuza 0', franchise, { sameTitleOnly: true }), null);
+assert.strictEqual(fuzzy.bestConfidentAppid('Far Cry Primal', franchise, { sameTitleOnly: true }), 1000001, 'an exact title still resolves');
+assert.strictEqual(fuzzy.bestConfidentAppid('Yakuza 0', [{ appid: 638970, name: 'Yakuza 0' }], { sameTitleOnly: true }), 638970);
+assert.strictEqual(fuzzy.bestConfidentAppid('ELDEN RING Deluxe Edition', apps, { sameTitleOnly: true }), 1245620, 'edition packaging is the same title');

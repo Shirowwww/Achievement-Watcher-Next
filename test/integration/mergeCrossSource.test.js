@@ -370,3 +370,68 @@ test('a RetroAchievements game never folds into the Steam game of the same name'
     assert.deepEqual(merged.map((g) => g.appid).sort(), ['71113', 'ra-1']);
   }
 });
+
+test('a title that merely contains another never folds into it', () => {
+  /*
+    #111: an Xbox "Yakuza 0" entry was reported to vanish into the Director's Cut. The name match
+    treated a containment as the same game, so Yakuza Kiwami folded into Yakuza Kiwami 2 (its tile
+    gone, its unlocks counted for the sequel) and a GOG Far Cry dropped the Far Cry Primal save.
+    Different titles stay two tiles in both arrival orders; the same title still merges.
+  */
+  const clone = (record) => JSON.parse(JSON.stringify(record));
+  const xboxBase = { appid: '2000000101', name: 'Yakuza 0', source: 'Xbox PC', data: { type: 'xboxPc', title: 'Yakuza 0' } };
+  const localDirectorsCut = {
+    appid: '638970',
+    name: "Yakuza 0 Director's Cut",
+    source: 'OnlineFix',
+    data: { type: 'file', path: 'C:/saves/638970' },
+  };
+  const xboxKiwami = {
+    appid: '2000000102',
+    name: 'Yakuza Kiwami',
+    source: 'Xbox PC',
+    data: { type: 'xboxPc', title: 'Yakuza Kiwami' },
+  };
+  const localKiwami2 = {
+    appid: '1234567',
+    name: 'Yakuza Kiwami 2',
+    source: 'Goldberg',
+    data: { type: 'file', path: 'C:/saves/1234567' },
+  };
+  const gogFarCry = {
+    appid: '1423049399',
+    source: 'GOG Galaxy',
+    data: { type: 'gogOfficial', title: 'Far Cry', gameplayDbPath: 'C:/gog/gameplay.db' },
+  };
+  const savePrimal = { appid: '1000001', name: 'Far Cry Primal', source: 'CODEX', data: { type: 'file', path: 'C:/saves/1000001' } };
+
+  for (const list of [
+    [xboxBase, localDirectorsCut],
+    [localDirectorsCut, xboxBase],
+    [xboxKiwami, localKiwami2],
+    [localKiwami2, xboxKiwami],
+  ]) {
+    const merged = achievements._internal.mergeCrossSourceDuplicates(list.map(clone));
+    assert.equal(merged.length, 2, `${list.map((g) => g.name || g.data.title).join(' + ')}: two tiles`);
+  }
+
+  for (const list of [
+    [gogFarCry, savePrimal],
+    [savePrimal, gogFarCry],
+  ]) {
+    const merged = achievements._internal.mergeCrossSourceDuplicates(list.map(clone));
+    assert.deepEqual(merged.map((g) => String(g.appid)).sort(), ['1000001', '1423049399'], 'the Far Cry Primal save is not dropped');
+  }
+
+  // The same title still folds in, which is what the match is for.
+  const xboxSame = { appid: '2000000103', name: 'Yakuza 0', source: 'Xbox PC', data: { type: 'xboxPc', title: 'Yakuza 0' } };
+  const localSame = { appid: '638971', name: 'Yakuza 0', source: 'OnlineFix', data: { type: 'file', path: 'C:/saves/638971' } };
+  for (const list of [
+    [xboxSame, localSame],
+    [localSame, xboxSame],
+  ]) {
+    const merged = achievements._internal.mergeCrossSourceDuplicates(list.map(clone));
+    assert.equal(merged.length, 1, 'the same title is one tile');
+    assert.equal(merged[0].appid, '638971');
+  }
+});
