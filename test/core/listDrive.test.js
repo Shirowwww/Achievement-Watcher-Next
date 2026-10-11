@@ -25,9 +25,10 @@ const MOUNTINFO = [
   '38 26 7:3 / /snap/core22/1612 ro,nodev,relatime - squashfs /dev/loop3 ro',
   '39 26 259:3 / /data rw,relatime - xfs /dev/nvme1n1p1 rw',
   '40 26 8:1 / /mnt/Jeux\\040SSD rw,relatime shared:40 - ext4 /dev/sda1 rw',
+  '41 26 259:2 /@ /mnt/wslg/distro rw,relatime - btrfs /dev/nvme0n1p2 rw,subvol=/@',
 ].join('\n');
 
-test('real disks are kept, system, virtual, network and WSL mounts are not', () => {
+test('real disks are kept once; system, virtual, network, WSL and bind mounts are not', () => {
   assert.deepEqual(listDrive.linuxMountRoots(MOUNTINFO), [
     '/',
     '/home',
