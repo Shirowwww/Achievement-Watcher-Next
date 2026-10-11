@@ -14,6 +14,7 @@
     "prepare": "patch-package",
     "prepare:watchdog": "cd ../watchdog && npm prune --omit=dev --ignore-scripts",
     "build": "npm run prepare:watchdog && node build/build.js",
+    "build:linux": "npm run prepare:watchdog && node build/build-linux.js",
     "lint": "cd .. && oxlint app watchdog test tools",
     "lint:fix": "cd .. && oxlint --fix app watchdog test tools"
   },

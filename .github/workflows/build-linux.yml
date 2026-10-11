@@ -1,0 +1,48 @@
+name: Linux build
+
+# Builds the AppImage and its latest-linux.yml on demand. Releases are still assembled by hand
+# (docs/RELEASE_WORKFLOW.md): both files are downloaded from this run and attached to the same
+# GitHub release as the Windows installer, never published from here.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  npm_config_audit: 'false'
+  npm_config_fund: 'false'
+
+jobs:
+  appimage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.19.0
+          cache: npm
+          cache-dependency-path: |
+            app/package-lock.json
+            watchdog/package-lock.json
+
+      # The prebuilt Linux binaries (sharp, koffi, 7zip-bin) come with the packages, so install
+      # scripts are not needed; the patches are applied the way the test workflow does.
+      - name: Install dependencies
+        run: |
+          (cd watchdog && npm ci --ignore-scripts)
+          (cd app && npm ci --ignore-scripts && npx patch-package)
+
+      - name: Build the AppImage
+        working-directory: app
+        run: npm run build:linux
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: linux-appimage
+          path: |
+            app/dist/*.AppImage
+            app/dist/latest-linux.yml
+          if-no-files-found: error

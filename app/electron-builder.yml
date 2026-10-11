@@ -146,6 +146,27 @@ nsis:
   license: build/license.txt
   differentialPackage: true
 
+# Built on Linux by build/build-linux.js. The AppImage updates itself from latest-linux.yml in the
+# same GitHub release as the Windows installer. A versioned file name is replaced by the next
+# version's name on update; the autostart entry follows because startup rewrites it from $APPIMAGE.
+linux:
+  target: AppImage
+  artifactName: 'Achievement.Watcher.${version}.${ext}'
+  # The Watchdog's fallback spawn uses this name (watchdog/watchdog.js).
+  executableName: achievement-watcher
+  icon: resources/icon/icon.png
+  category: Game
+  synopsis: Achievement notifications and playtime tracking
+  desktop:
+    entry:
+      Name: Achievement Watcher Next
+      StartupWMClass: Achievement Watcher Next
+
+# build/license.txt is the NSIS license page. Found by default, it would make the AppImage ask to
+# accept the LGPL in a dialog before starting.
+appImage:
+  license: null
+
 directories:
   buildResources: ./build
 

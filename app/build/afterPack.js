@@ -185,10 +185,55 @@ exports.default = async function afterPack(context) {
     const installed = filesUnder(appOutDir).reduce((sum, file) => sum + (sizeOnDisk(file) ?? fs.statSync(file).size), 0);
     process.env.AW_INSTALLED_KB = String(Math.ceil(installed / 1024));
     console.log(`[afterPack] Installed size once compressed: ${MB(installed)} (${MB(dirSize(appOutDir))} uncompressed)`);
+  } else if (electronPlatformName === 'linux') {
+    saved += pruneForLinux(appOutDir, dest);
   }
 
   console.log(`[afterPack] Total reclaimed: ${MB(saved)}`);
 };
+
+// The Linux x64 AppImage: Windows helpers and other platforms' binaries go, and the one 7-Zip that
+// runs here gets back the executable bit npm can drop.
+function pruneForLinux(appOutDir, watchdogModules) {
+  const unpacked = path.join(appOutDir, 'resources', 'app.asar.unpacked', 'node_modules');
+  let saved = 0;
+
+  const rules = [
+    // The video and HDR screenshot helpers are Windows executables, with their licence notices.
+    ['watchdog/native', path.join(appOutDir, 'watchdog', 'native')],
+    ['watchdog regodit DLLs', path.join(watchdogModules, 'regodit', 'dist')],
+    ['watchdog wql-process-monitor DLLs', path.join(watchdogModules, 'wql-process-monitor', 'lib', 'dist')],
+    ...['vendor', 'doc'].map((d) => [`watchdog koffi/${d}`, path.join(watchdogModules, 'koffi', d)]),
+    ...['min', 'src', 'dist'].map((d) => [`watchdog moment/${d}`, path.join(watchdogModules, 'moment', d)]),
+    ['watchdog nan', path.join(watchdogModules, 'nan')],
+    ['7zip-bin/mac', path.join(unpacked, '7zip-bin', 'mac')],
+    ...['ia32', 'arm', 'arm64'].map((a) => [`7zip-bin/linux/${a}`, path.join(unpacked, '7zip-bin', 'linux', a)]),
+  ];
+  for (const [label, target] of rules) {
+    const delta = rm(target);
+    saved += delta;
+    console.log(delta > 0 ? `[afterPack] Pruned ${label} (${MB(delta)})` : `[afterPack] ${label}: already absent`);
+  }
+
+  const swept = sweepFiles(watchdogModules, BUILD_ONLY_FILE);
+  saved += swept.bytes;
+  console.log(`[afterPack] Pruned ${swept.count} watchdog source/declaration/readme file(s) (${MB(swept.bytes)})`);
+
+  const sevenZip = path.join(unpacked, '7zip-bin', 'linux', 'x64', '7za');
+  const mustKeep = [
+    path.join(watchdogModules, 'koffi', 'src', 'koffi', 'index.cjs'),
+    path.join(watchdogModules, '@koromix', 'koffi-linux-x64', 'linux_x64', 'koffi.node'),
+    sevenZip,
+  ];
+  const missing = mustKeep.filter((file) => !fs.existsSync(file));
+  if (missing.length) {
+    throw new Error(`[afterPack] pruning removed or missed required runtime file(s):\n  ${missing.join('\n  ')}`);
+  }
+  fs.chmodSync(sevenZip, 0o755);
+  console.log(`[afterPack] Verified ${mustKeep.length} required runtime file(s); 7za is executable`);
+  return saved;
+}
+exports.pruneForLinux = pruneForLinux;
 
 function filesUnder(dir) {
   const files = [];

@@ -47,6 +47,9 @@ const cliUserDataDir = (() => {
 })();
 const packagedPortableUserDataDir = portableUserDataDir({ execPath: process.execPath, isPackaged: app.isPackaged });
 const isPortableBuild = !!packagedPortableUserDataDir;
+// Only the Windows installer is Authenticode-signed. An AppImage update is trusted through the
+// SHA-512 in latest-linux.yml, which electron-updater checks on download and on cache reuse.
+const updateIsSignedInstaller = process.platform === 'win32' && !isPortableBuild;
 app.setPath('userData', cliUserDataDir || packagedPortableUserDataDir || path.join(app.getPath('appData'), APP_DATA_DIR_NAME));
 // A restored profile is swapped in here, before the migrations and before anything reads the data
 // folder. The result waits in result.json until the UI has shown it.
@@ -7281,7 +7284,7 @@ try {
       updateDownloading = false;
       updateProgressLogged = -1;
       updateDownloadCancellation = null;
-      if (!isPortableBuild) {
+      if (updateIsSignedInstaller) {
         // A cache hit skips electron-updater's own signature check, so every downloaded file is checked here.
         const checked = await checkPendingInstaller(info.downloadedFile, null);
         if (!checked.ok) {
@@ -7376,7 +7379,7 @@ try {
     // Long enough for the chip and the balloon to paint before the windows go away, short enough
     // that nobody experiences it as a hang. A failure to wait must never block the install.
     await new Promise((resolve) => setTimeout(resolve, INSTALL_HANDOVER_MS));
-    if (!isPortableBuild) {
+    if (updateIsSignedInstaller) {
       // Last look before the installer runs: the same file, byte for byte, still signed by a pinned key.
       const held = verifiedInstaller;
       const sameFile = held && path.normalize(String(getUpdater().installerPath || '')).toLowerCase() === path.normalize(held.file).toLowerCase();
