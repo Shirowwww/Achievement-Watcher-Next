@@ -42,6 +42,7 @@ const { focusAchievementRow } = require(path.join(appPath, 'util/achievementFocu
 const { applyUpdateChip } = require(path.join(appPath, 'util/updateChipView.js'));
 const { splitLaunchArgs } = require(path.join(appPath, 'util/launchArgs.js'));
 const windowsShellLaunch = require(path.join(appPath, 'util/windowsShellLaunch.js'));
+const linuxGameLaunch = require(path.join(appPath, 'util/linuxGameLaunch.js'));
 const { openExternalSafe } = require(path.join(appPath, 'util/externalLink.js'));
 const steamClientLinks = require(path.join(appPath, 'util/steamClientLinks.js'));
 const gameHealthInterfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
@@ -185,6 +186,23 @@ async function openSteamTarget(build, appid) {
   }
   const url = build(appid, { clientRunning: running });
   if (url) remote.shell.openExternal(url);
+}
+
+// Hands a Linux launcher URI (steam://, lutris:, heroic://) to the desktop; it fails when that
+// launcher is not installed, which is worth saying rather than leaving the click unanswered.
+async function openLinuxLaunchUri(plan) {
+  debug.log(`[launch] ${plan.launcher}: ${plan.url}`);
+  try {
+    await remote.shell.openExternal(plan.url);
+  } catch (err) {
+    debug.warn(`[launch] ${plan.url} => ${formatErr(err)}`);
+    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'error',
+      title: t('launch-failed', 'Launch failed', 'Échec du lancement'),
+      message: t('could-not-start-the-game', 'Could not start the game.', 'Impossible de démarrer le jeu.'),
+      detail: `${plan.url}\n${formatErr(err)}`,
+    });
+  }
 }
 
 const gameElements = new Map();
@@ -7212,6 +7230,14 @@ var app = {
       if (answer === 1) remote.shell.openExternal(steamClientLinks.steamInstallUrl(gameRecord.appid));
       return;
     }
+    // A Steam game on Linux runs through Proton or the native build, both of which only Steam can start.
+    if (process.platform === 'linux') {
+      const plan = linuxGameLaunch.planLaunch({ game: gameRecord });
+      if (plan && plan.kind === 'uri') {
+        await openLinuxLaunchUri(plan);
+        return;
+      }
+    }
     let cfg = await exeList.get(appid);
     if (!cfg?.exe || cfg.exe === '' || !fs.existsSync(cfg.exe)) {
       const game = gameList.find((g) => g.appid == appid);
@@ -7229,7 +7255,14 @@ var app = {
         title: t('choose-the-game-executable', 'Choose the game executable', 'Choisir l\'exécutable du jeu'),
         buttonLabel: t('select', 'Select', 'Sélectionner'),
         defaultPath: cfg?.exe || '',
-        filters: [{ name: 'Executables', extensions: ['exe', 'bat'] }],
+        // Native Linux programs carry no extension, so the Windows filter would hide them.
+        filters:
+          process.platform === 'linux'
+            ? [
+                { name: 'All files', extensions: ['*'] },
+                { name: 'Windows programs', extensions: ['exe', 'bat'] },
+              ]
+            : [{ name: 'Executables', extensions: ['exe', 'bat'] }],
         properties: ['openFile', 'showHiddenFiles', 'dontAddToRecent'],
       });
 
@@ -7322,6 +7355,21 @@ var app = {
         reportLaunchFailure((elevated && elevated.error) || (viaShell && viaShell.error) || error);
       };
       try {
+        if (process.platform === 'linux') {
+          const plan = linuxGameLaunch.planLaunch({ exe: cfg.exe, game: gameRecord });
+          if (plan.kind === 'uri') {
+            await openLinuxLaunchUri(plan);
+            clearGameBoxBusy(gameBox);
+            return;
+          }
+          if (plan.kind === 'open') {
+            debug.log(`[${appid}] no launcher owns ${cfg.exe} - opening it with the desktop's file association`);
+            const failure = await remote.shell.openPath(cfg.exe);
+            if (failure) throw new Error(failure);
+            clearGameBoxBusy(gameBox);
+            return;
+          }
+        }
         if (process.platform === 'win32' && gameRecord && gameRecord.manual) {
           // ShellExecute gives GUI/.NET programs a normal Windows launch environment. Ryujinx
           // crashes in Console.Title when started as a detached child with ignored stdio handles.
