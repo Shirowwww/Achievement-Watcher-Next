@@ -15,7 +15,6 @@ const { userDataDir } = require('../util/userData.js');
 const { configuredExecutable } = require('../util/exeList.js');
 const watchdogSettings = require('../settings.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
-const winHosts = require(sharedAppModulePath('util/winHosts.js'));
 const { loadRegodit } = require('../util/regodit.js');
 
 const debug = new (require('../util/logger'))({
@@ -69,31 +68,20 @@ function envPath(variable, ...segments) {
   return root ? path.join(root, ...segments) : '';
 }
 
-// The profile, program and system folders of one Windows host (this machine, or a Wine prefix).
-// The native Linux host is left out: its home folder is where Linux games live.
-function hostMutedRoots(host) {
-  if (host.kind === 'linux') return [];
-  const at = (envName) => winHosts.hostPath(host, envName);
-  const systemRoot = host.root ? path.join(host.root, 'drive_c', 'windows') : envPath('SystemRoot');
-  return [
-    at('USERPROFILE'),
-    at('APPDATA'),
-    at('LOCALAPPDATA'),
-    at('PROGRAMFILES'),
-    at('PROGRAMFILES_X86'),
-    systemRoot && path.join(systemRoot, 'System32'),
-    systemRoot && path.join(systemRoot, 'SysWOW64'),
-    systemRoot,
-  ].filter(Boolean);
-}
-
 const filter = {
   ignore: blacklist.ignore, //WMI WQL FILTER
   mute: {
     dir: [
       systemTempDir,
+      process.env['USERPROFILE'],
+      process.env['APPDATA'],
       path.join(__dirname, '../..'),
-      ...winHosts.listHosts().flatMap(hostMutedRoots),
+      process.env['LOCALAPPDATA'],
+      process.env['ProgramFiles'],
+      process.env['ProgramFiles(x86)'],
+      envPath('SystemRoot', 'System32'),
+      envPath('SystemRoot', 'SysWOW64'),
+      envPath('SystemRoot'),
       ...(process.platform === 'linux' ? linuxMutedDirs() : []),
     ],
     file: blacklist.mute,

@@ -196,13 +196,15 @@ function builtinRoots(host) {
   ].filter((entry) => entry.dir);
 }
 
+// The app lists this folder as SkidRow and the Watchdog as SKIDROW: one folder on NTFS, two on a
+// case-sensitive Linux filesystem, where both are watched.
+const SKIDROW_DOCUMENTS_NAMES = process.platform === 'win32' ? ['SKIDROW'] : ['SKIDROW', 'SkidRow'];
+
 function documentsRoots(mydocs) {
-  const roots = [
-    {
-      dir: path.join(mydocs, 'SKIDROW'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[5]] },
-    },
-  ];
+  const roots = SKIDROW_DOCUMENTS_NAMES.map((name) => ({
+    dir: path.join(mydocs, name),
+    options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[5]] },
+  }));
   // FINAL FANTASY VII (2013) rewrites achievement.dat beside its saves. The folder is watched
   // only once it proves it is that game, since an 8-byte achievement.dat is far too generic.
   const ff7Root = path.join(mydocs, 'FINAL FANTASY VII');

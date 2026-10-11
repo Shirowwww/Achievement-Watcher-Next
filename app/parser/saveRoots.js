@@ -94,7 +94,9 @@ function addHostRoots(roots, host, { expandProgramDataSteam }) {
     docs = null;
   }
   if (docs) {
+    // The Watchdog spells it SKIDROW: the same folder on NTFS (kept once), another one on Linux.
     addUnique(roots, path.join(docs, 'SkidRow'));
+    addUnique(roots, path.join(docs, 'SKIDROW'));
     // DARKSiDERS writes its per-appid tree under Documents rather than beside the game whenever the
     // release is not portable; the emulator ini in the game folder points here (see userDir.scan).
     addUnique(roots, path.join(docs, 'DARKSiDERS'));

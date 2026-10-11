@@ -1,5 +1,13 @@
 const { execSync } = require('child_process');
 
+// Only Windows has a registry of its own. Elsewhere a read finds nothing and a write is refused,
+// with no reg.exe started; a Wine prefix's registry is read through util/winHosts.js instead.
+const HAS_REGISTRY = process.platform === 'win32';
+
+function refuseWrite(hive, keyPath, valueName) {
+  throw new Error(`No Windows registry on ${process.platform}: ${hive}\\${keyPath}\\${valueName || ''} not written`);
+}
+
 let registryJs = null;
 let registryLoadError = null;
 
@@ -125,6 +133,7 @@ function queryRegExe(hive, key) {
 // Both compat helpers return the shape registry-js uses, so the readers below stay identical
 // whichever backend answered.
 function enumerateValuesCompat(hive, key) {
+  if (!HAS_REGISTRY) return [];
   if (usingFallback()) {
     const result = queryRegExe(hive, key);
     return result ? result.values : [];
@@ -138,6 +147,7 @@ function enumerateValuesCompat(hive, key) {
 }
 
 function enumerateKeysCompat(hive, key) {
+  if (!HAS_REGISTRY) return [];
   if (usingFallback()) {
     const result = queryRegExe(hive, key);
     return result ? result.subkeys : [];
@@ -175,6 +185,7 @@ function writeRegistryFallback(hive, keyPath, valueName, type, value) {
 }
 
 function writeRegistryString(hive, keyPath, valueName, value) {
+  if (!HAS_REGISTRY) refuseWrite(hive, keyPath, valueName);
   if (usingFallback()) return writeRegistryFallback(hive, keyPath, valueName, 'REG_SZ', String(value));
 
   const { setValue, createKey } = requireRegistry();
@@ -192,6 +203,7 @@ function writeRegistryString(hive, keyPath, valueName, value) {
 }
 
 function writeRegistryDword(hive, keyPath, valueName, value) {
+  if (!HAS_REGISTRY) refuseWrite(hive, keyPath, valueName);
   if (usingFallback()) return writeRegistryFallback(hive, keyPath, valueName, 'REG_DWORD', String(value));
 
   const { setValue, createKey } = requireRegistry();
