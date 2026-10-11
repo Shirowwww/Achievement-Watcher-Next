@@ -35,22 +35,6 @@ function isValidAUMID(appID) {
   return true;
 }
 
-async function has({ id, name } = {}) {
-  try {
-    const script = [
-      '$apps = Get-StartApps;',
-      name ? '$apps = $apps | Where-Object { $_.Name -like $args[0] };' : '',
-      id ? '$apps = $apps | Where-Object { $_.AppID -match $args[1] };' : '',
-      'if ($apps) { "true" } else { "false" }',
-    ].join(' ');
-    const args = [name ? `*${name}*` : '', id ? `.*${id}.*` : ''];
-    const { stdout } = await execFileAsync(resolvePowerShell(), ['-NoProfile', '-NonInteractive', '-Command', script, ...args], { windowsHide: true });
-    return stdout.trim().toLowerCase().includes('true');
-  } catch {
-    return false;
-  }
-}
-
 // Every AppUserModelID Windows knows about, lower-cased. One PowerShell spawn answers the question
 // for all candidates at once, instead of one spawn per id.
 async function listAumids() {
@@ -137,11 +121,11 @@ async function hasShortcutAumid(aumid, roots = null) {
 // Exact Start Menu AppUserModelID lookup - the only check that answers "will Windows display a toast
 // posted under this id?" Windows silently drops toasts for an id no installed app owns, which is how
 // the hardcoded Xbox app default kept failing once that app stopped shipping while the format check
-// said it was fine. `has({id})` matches by regex and can hit lookalikes, so this is a strict comparison.
+// said it was fine. A regex match on the id can hit lookalikes, so this is a strict comparison.
 async function hasAumid(aumid, known = null) {
   if (typeof aumid !== 'string' || !aumid.trim()) return false;
   const list = Array.isArray(known) ? known : await listAumids();
   return list.includes(aumid.trim().toLowerCase());
 }
 
-module.exports = { has, hasAumid, hasShortcutAumid, listAumids, isValidAUMID, isPackagedAUMID };
+module.exports = { hasAumid, hasShortcutAumid, listAumids, isValidAUMID, isPackagedAUMID };

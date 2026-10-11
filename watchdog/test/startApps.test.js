@@ -4,6 +4,11 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const startApps = require('../util/startApps.js');
 
+// The by-name / by-regex Get-StartApps lookup had no caller left, so it is gone rather than kept.
+test('the id/name lookup that spawned PowerShell per call is gone', () => {
+  assert.equal(startApps.has, undefined);
+});
+
 test('isValidAUMID accepts both packaged and desktop app ids', () => {
   assert.equal(startApps.isValidAUMID('Microsoft.XboxGamingOverlay_8wekyb3d8bbwe!App'), true);
   // AW's own identity: the old check required the packaged "family!app" shape and rejected
