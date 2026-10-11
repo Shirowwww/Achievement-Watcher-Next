@@ -2460,7 +2460,9 @@
     "retroachievements-error": "Échec de la requête RetroAchievements",
     "retroachievements-imported-none": "Aucun jeu avec des succès sur ce compte pour l’instant : joues-en un avec RetroAchievements et il apparaîtra ici.",
     "retroachievements-imported-partial": "Mis en pause par la limite de RetroAchievements après {created} ajouté(s) et {updated} mis à jour. Relance l’import dans quelques minutes pour reprendre là où il s’est arrêté.",
-    "retroachievements-rate-wait": "RetroAchievements demande de ralentir : l’import reprend dans {minutes} min ({current}/{total})."
+    "retroachievements-rate-wait": "RetroAchievements demande de ralentir : l’import reprend dans {minutes} min ({current}/{total}).",
+    "no-keyring-title": "Tes connexions ne sont pas protégées",
+    "no-keyring-body": "Aucun trousseau (GNOME Keyring ou KWallet) n'a répondu : les connexions enregistrées (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) sont stockées sans vrai chiffrement. Lance le trousseau de ton bureau puis redémarre AW Next."
   },
   "watchdog": {
     "rare": "Rare {percent} %",

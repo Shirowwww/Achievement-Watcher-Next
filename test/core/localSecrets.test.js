@@ -63,6 +63,32 @@ test('a key file that will not open is kept, never replaced by a new key', () =>
   assert.equal(appSecret.ensureSecret(userData, fakeSafeStorage()), first, 'the key reads again once the failure passes');
 });
 
+// Chromium on Linux: "v10" under its fixed password when no keyring answers, "v11" under the keyring.
+function fakeLinuxSafeStorage(backend) {
+  const sealed = (prefix, value) => Buffer.concat([Buffer.from(prefix), fakeSafeStorage().encryptString(value)]);
+  return {
+    isEncryptionAvailable: () => true,
+    getSelectedStorageBackend: () => backend,
+    encryptString: (value) => sealed(backend === 'basic_text' ? 'v10' : 'v11', value),
+    decryptString: (buffer) => fakeSafeStorage().decryptString(buffer.subarray(3)),
+  };
+}
+
+test('on Linux a key stored without a keyring is sealed under the keyring once one answers', () => {
+  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-secret-linux-'));
+  const prefix = () => fs.readFileSync(appSecret.secretFile(userData)).subarray(0, 3).toString('latin1');
+  const first = appSecret.ensureSecret(userData, fakeLinuxSafeStorage('basic_text'));
+  assert.equal(prefix(), 'v10');
+
+  const keyring = fakeLinuxSafeStorage('gnome_libsecret');
+  const stored = fs.readFileSync(appSecret.secretFile(userData));
+  appSecret.moveToKeyring(userData, keyring, stored, first, 'win32');
+  assert.equal(prefix(), 'v10', 'never on Windows, whose output also starts with v10');
+  appSecret.moveToKeyring(userData, keyring, stored, first, 'linux');
+  assert.equal(prefix(), 'v11');
+  assert.equal(appSecret.loadSecret(userData, keyring), first, 'the same key, now under the keyring');
+});
+
 test('no safeStorage means no key, so callers stay on the format they can read back', () => {
   const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-secret-none-'));
   assert.equal(appSecret.ensureSecret(userData, fakeSafeStorage(false)), '');

@@ -2460,7 +2460,9 @@
     "retroachievements-error": "RetroAchievements 요청에 실패했습니다",
     "retroachievements-imported-none": "이 계정에는 아직 도전 과제가 있는 게임이 없습니다. RetroAchievements로 게임을 하나 플레이하면 여기에 표시됩니다.",
     "retroachievements-imported-partial": "RetroAchievements의 요청 제한으로 {created}개 추가, {updated}개 업데이트 후 일시 중지되었습니다. 몇 분 뒤에 다시 가져오면 중단된 곳부터 이어서 진행합니다.",
-    "retroachievements-rate-wait": "RetroAchievements가 속도를 늦춰 달라고 요청했습니다. 가져오기는 {minutes}분 후에 재개됩니다({current}/{total})."
+    "retroachievements-rate-wait": "RetroAchievements가 속도를 늦춰 달라고 요청했습니다. 가져오기는 {minutes}분 후에 재개됩니다({current}/{total}).",
+    "no-keyring-title": "로그인 정보가 보호되지 않습니다",
+    "no-keyring-body": "키링(GNOME Keyring 또는 KWallet)이 응답하지 않아 저장된 로그인 정보 (Steam, Epic, Xbox, RetroAchievements, SteamGridDB)가 실제 암호화 없이 저장됩니다. 데스크톱의 키링을 실행한 뒤 AW Next를 다시 시작하세요."
   },
   "watchdog": {
     "rare": "희귀 {percent}%",

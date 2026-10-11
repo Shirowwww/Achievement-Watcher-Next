@@ -2460,7 +2460,9 @@
     "retroachievements-error": "Richiesta a RetroAchievements non riuscita",
     "retroachievements-imported-none": "Ancora nessun gioco con obiettivi su questo account: gioca a uno con RetroAchievements e comparirà qui.",
     "retroachievements-imported-partial": "In pausa per il limite di richieste di RetroAchievements dopo {created} aggiunti e {updated} aggiornati. Importa di nuovo tra qualche minuto per riprendere da dove si era fermato.",
-    "retroachievements-rate-wait": "RetroAchievements chiede di rallentare: l’importazione riprende tra {minutes} min ({current}/{total})."
+    "retroachievements-rate-wait": "RetroAchievements chiede di rallentare: l’importazione riprende tra {minutes} min ({current}/{total}).",
+    "no-keyring-title": "I tuoi accessi non sono protetti",
+    "no-keyring-body": "Nessun portachiavi (GNOME Keyring o KWallet) ha risposto, quindi gli accessi salvati (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) sono archiviati senza una vera cifratura. Avvia il portachiavi del tuo desktop e riavvia AW Next."
   },
   "watchdog": {
     "rare": "Raro {percent}%",

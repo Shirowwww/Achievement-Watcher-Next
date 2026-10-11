@@ -2460,7 +2460,9 @@
     "retroachievements-error": "A RetroAchievements-kérés sikertelen",
     "retroachievements-imported-none": "Ezen a fiókon még nincs teljesítményekkel rendelkező játék: játssz eggyel a RetroAchievements segítségével, és itt fog megjelenni.",
     "retroachievements-imported-partial": "A RetroAchievements korlátja szüneteltette az importálást {created} hozzáadott és {updated} frissített után. Importálj újra néhány perc múlva, hogy ott folytasd, ahol abbamaradt.",
-    "retroachievements-rate-wait": "A RetroAchievements lassítást kér: az importálás {minutes} perc múlva folytatódik ({current}/{total})."
+    "retroachievements-rate-wait": "A RetroAchievements lassítást kér: az importálás {minutes} perc múlva folytatódik ({current}/{total}).",
+    "no-keyring-title": "A bejelentkezéseid nem védettek",
+    "no-keyring-body": "Egyetlen kulcstartó (GNOME Keyring vagy KWallet) sem válaszolt, ezért a mentett bejelentkezések (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) valódi titkosítás nélkül tárolódnak. Indítsd el az asztalod kulcstartóját, majd indítsd újra az AW Next alkalmazást."
   },
   "watchdog": {
     "rare": "Ritka {percent}%",

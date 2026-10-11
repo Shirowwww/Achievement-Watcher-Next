@@ -2460,7 +2460,9 @@
     "retroachievements-error": "คำขอ RetroAchievements ล้มเหลว",
     "retroachievements-imported-none": "บัญชีนี้ยังไม่มีเกมที่มีความสำเร็จ ลองเล่นสักเกมด้วย RetroAchievements แล้วเกมนั้นจะแสดงที่นี่",
     "retroachievements-imported-partial": "หยุดชั่วคราวเนื่องจากขีดจำกัดอัตราของ RetroAchievements หลังจากเพิ่ม {created} และอัปเดต {updated} นำเข้าอีกครั้งในอีกไม่กี่นาทีเพื่อทำต่อจากจุดที่หยุด",
-    "retroachievements-rate-wait": "RetroAchievements ขอให้ชะลอความเร็ว การนำเข้าจะทำต่อใน {minutes} นาที ({current}/{total})"
+    "retroachievements-rate-wait": "RetroAchievements ขอให้ชะลอความเร็ว การนำเข้าจะทำต่อใน {minutes} นาที ({current}/{total})",
+    "no-keyring-title": "ข้อมูลการเข้าสู่ระบบของคุณไม่ได้รับการป้องกัน",
+    "no-keyring-body": "ไม่มี keyring (GNOME Keyring หรือ KWallet) ตอบสนอง ข้อมูลการเข้าสู่ระบบที่บันทึกไว้ (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) จึงถูกจัดเก็บโดยไม่มีการเข้ารหัสจริง โปรดเริ่ม keyring ของเดสก์ท็อปแล้วรีสตาร์ท AW Next"
   },
   "watchdog": {
     "rare": "หายาก {percent}%",

@@ -2460,7 +2460,9 @@
     "retroachievements-error": "Запит до RetroAchievements не вдався",
     "retroachievements-imported-none": "На цьому обліковому записі ще немає ігор із досягненнями: пограйте в одну через RetroAchievements, і вона з’явиться тут.",
     "retroachievements-imported-partial": "Призупинено через обмеження частоти запитів RetroAchievements після {created} доданих і {updated} оновлених. Повторіть імпорт за кілька хвилин, щоб продовжити з місця, де він зупинився.",
-    "retroachievements-rate-wait": "RetroAchievements просить сповільнитися: імпорт продовжиться через {minutes} хв ({current}/{total})."
+    "retroachievements-rate-wait": "RetroAchievements просить сповільнитися: імпорт продовжиться через {minutes} хв ({current}/{total}).",
+    "no-keyring-title": "Ваші дані для входу не захищені",
+    "no-keyring-body": "Жодна в'язка ключів (GNOME Keyring або KWallet) не відповіла, тому збережені дані для входу (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) зберігаються без справжнього шифрування. Запустіть в'язку ключів вашого робочого столу та перезапустіть AW Next."
   },
   "watchdog": {
     "rare": "Рідкісне {percent}%",

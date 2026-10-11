@@ -710,7 +710,7 @@ function SpawnOverlayNotification(args) {
       (err) => debug.error(`[overlay] Failed to start Electron: ${err && err.message ? err.message : err}`)
     );
   } else {
-    const execPath = path.join(appRoot, 'Achievement Watcher.exe');
+    const execPath = path.join(appRoot, process.platform === 'win32' ? 'Achievement Watcher.exe' : 'achievement-watcher');
     spawnDetached(
       spawn,
       execPath,

@@ -2460,7 +2460,9 @@
     "retroachievements-error": "Żądanie do RetroAchievements nie powiodło się",
     "retroachievements-imported-none": "Na tym koncie nie ma jeszcze gier z osiągnięciami: zagraj w jedną z RetroAchievements, a pojawi się tutaj.",
     "retroachievements-imported-partial": "Wstrzymano z powodu limitu RetroAchievements po {created} dodanych i {updated} zaktualizowanych. Zaimportuj ponownie za kilka minut, aby kontynuować od miejsca zatrzymania.",
-    "retroachievements-rate-wait": "RetroAchievements prosi o zwolnienie tempa: import zostanie wznowiony za {minutes} min ({current}/{total})."
+    "retroachievements-rate-wait": "RetroAchievements prosi o zwolnienie tempa: import zostanie wznowiony za {minutes} min ({current}/{total}).",
+    "no-keyring-title": "Twoje logowania nie są chronione",
+    "no-keyring-body": "Żaden pęk kluczy (GNOME Keyring lub KWallet) nie odpowiedział, więc zapisane dane logowania (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) są przechowywane bez prawdziwego szyfrowania. Uruchom pęk kluczy swojego pulpitu i zrestartuj AW Next."
   },
   "watchdog": {
     "rare": "Rzadkie {percent}%",

@@ -2460,7 +2460,9 @@
     "retroachievements-error": "O pedido ao RetroAchievements falhou",
     "retroachievements-imported-none": "Ainda não há nenhum jogo com proezas nesta conta: joga um com o RetroAchievements e ele aparecerá aqui.",
     "retroachievements-imported-partial": "Em pausa devido ao limite de pedidos do RetroAchievements após {created} adicionados e {updated} atualizados. Importa novamente dentro de alguns minutos para continuar onde parou.",
-    "retroachievements-rate-wait": "O RetroAchievements pede para abrandar: a importação continua dentro de {minutes} min ({current}/{total})."
+    "retroachievements-rate-wait": "O RetroAchievements pede para abrandar: a importação continua dentro de {minutes} min ({current}/{total}).",
+    "no-keyring-title": "As suas sessões não estão protegidas",
+    "no-keyring-body": "Nenhum porta-chaves (GNOME Keyring ou KWallet) respondeu, pelo que as sessões guardadas (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) são armazenadas sem cifragem real. Inicie o porta-chaves do seu ambiente de trabalho e reinicie o AW Next."
   },
   "watchdog": {
     "rare": "Raro {percent}%",

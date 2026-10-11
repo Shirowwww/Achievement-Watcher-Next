@@ -2460,7 +2460,9 @@
     "retroachievements-error": "RetroAchievements-pyyntö epäonnistui",
     "retroachievements-imported-none": "Tällä tilillä ei ole vielä pelejä, joissa on saavutuksia: pelaa yhtä RetroAchievementsilla, niin se ilmestyy tähän.",
     "retroachievements-imported-partial": "RetroAchievementsin pyyntöraja keskeytti tuonnin, kun {created} oli lisätty ja {updated} päivitetty. Tuo uudelleen muutaman minuutin kuluttua jatkaaksesi siitä, mihin jäätiin.",
-    "retroachievements-rate-wait": "RetroAchievements pyytää hidastamaan: tuonti jatkuu {minutes} min kuluttua ({current}/{total})."
+    "retroachievements-rate-wait": "RetroAchievements pyytää hidastamaan: tuonti jatkuu {minutes} min kuluttua ({current}/{total}).",
+    "no-keyring-title": "Kirjautumisesi eivät ole suojattuja",
+    "no-keyring-body": "Mikään avainnippu (GNOME Keyring tai KWallet) ei vastannut, joten tallennetut kirjautumiset (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) tallennetaan ilman todellista salausta. Käynnistä työpöytäsi avainnippu ja käynnistä AW Next uudelleen."
   },
   "watchdog": {
     "rare": "Harvinainen {percent} %",

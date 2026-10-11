@@ -2460,7 +2460,9 @@
     "retroachievements-error": "Το αίτημα προς το RetroAchievements απέτυχε",
     "retroachievements-imported-none": "Δεν υπάρχει ακόμη παιχνίδι με επιτεύγματα σε αυτόν τον λογαριασμό: παίξε ένα με το RetroAchievements και θα εμφανιστεί εδώ.",
     "retroachievements-imported-partial": "Σε παύση λόγω του ορίου του RetroAchievements μετά από {created} προσθήκες και {updated} ενημερώσεις. Εισήγαγε ξανά σε λίγα λεπτά για να συνεχίσεις από όπου σταμάτησε.",
-    "retroachievements-rate-wait": "Το RetroAchievements ζητά να επιβραδυνθεί ο ρυθμός: η εισαγωγή συνεχίζεται σε {minutes} λεπτά ({current}/{total})."
+    "retroachievements-rate-wait": "Το RetroAchievements ζητά να επιβραδυνθεί ο ρυθμός: η εισαγωγή συνεχίζεται σε {minutes} λεπτά ({current}/{total}).",
+    "no-keyring-title": "Οι συνδέσεις σας δεν προστατεύονται",
+    "no-keyring-body": "Κανένα keyring (GNOME Keyring ή KWallet) δεν απάντησε, γι' αυτό οι αποθηκευμένες συνδέσεις (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) αποθηκεύονται χωρίς πραγματική κρυπτογράφηση. Ξεκινήστε το keyring του υπολογιστή σας και επανεκκινήστε το AW Next."
   },
   "watchdog": {
     "rare": "Σπάνιο {percent}%",

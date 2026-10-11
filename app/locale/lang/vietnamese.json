@@ -2460,7 +2460,9 @@
     "retroachievements-error": "Yêu cầu tới RetroAchievements thất bại",
     "retroachievements-imported-none": "Tài khoản này chưa có game nào có thành tựu: hãy chơi một game với RetroAchievements và nó sẽ xuất hiện ở đây.",
     "retroachievements-imported-partial": "Đã tạm dừng do giới hạn tốc độ của RetroAchievements sau khi thêm {created} và cập nhật {updated}. Hãy nhập lại sau vài phút để tiếp tục từ chỗ đã dừng.",
-    "retroachievements-rate-wait": "RetroAchievements yêu cầu giảm tốc độ: quá trình nhập sẽ tiếp tục sau {minutes} phút ({current}/{total})."
+    "retroachievements-rate-wait": "RetroAchievements yêu cầu giảm tốc độ: quá trình nhập sẽ tiếp tục sau {minutes} phút ({current}/{total}).",
+    "no-keyring-title": "Thông tin đăng nhập của bạn chưa được bảo vệ",
+    "no-keyring-body": "Không có keyring nào (GNOME Keyring hoặc KWallet) phản hồi, nên các thông tin đăng nhập đã lưu (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) được lưu trữ mà không có mã hóa thực sự. Hãy khởi động keyring của môi trường desktop rồi khởi động lại AW Next."
   },
   "watchdog": {
     "rare": "Hiếm {percent}%",
