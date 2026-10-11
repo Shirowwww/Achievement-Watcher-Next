@@ -2460,7 +2460,9 @@
     "retroachievements-error": "Error en la solicitud a RetroAchievements",
     "retroachievements-imported-none": "Todavía no hay ningún juego con logros en esta cuenta: juega a uno con RetroAchievements y aparecerá aquí.",
     "retroachievements-imported-partial": "En pausa por el límite de solicitudes de RetroAchievements tras {created} añadidos y {updated} actualizados. Vuelve a importar en unos minutos para continuar donde se detuvo.",
-    "retroachievements-rate-wait": "RetroAchievements pide que se vaya más despacio: la importación se reanuda en {minutes} min ({current}/{total})."
+    "retroachievements-rate-wait": "RetroAchievements pide que se vaya más despacio: la importación se reanuda en {minutes} min ({current}/{total}).",
+    "no-keyring-title": "Tus inicios de sesión no están protegidos",
+    "no-keyring-body": "Ningún llavero (GNOME Keyring o KWallet) respondió, así que los inicios de sesión guardados (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) se almacenan sin cifrado real. Inicia el llavero de tu escritorio y reinicia AW Next."
   },
   "watchdog": {
     "rare": "Raro {percent}%",

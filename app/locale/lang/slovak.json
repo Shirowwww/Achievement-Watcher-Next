@@ -2460,7 +2460,9 @@
     "retroachievements-error": "Požiadavka na RetroAchievements zlyhala",
     "retroachievements-imported-none": "Na tomto účte zatiaľ nie je žiadna hra s úspechmi: zahraj si jednu s RetroAchievements a objaví sa tu.",
     "retroachievements-imported-partial": "Pozastavené limitom RetroAchievements po {created} pridaných a {updated} aktualizovaných. Importuj znova o niekoľko minút a pokračuj tam, kde import skončil.",
-    "retroachievements-rate-wait": "RetroAchievements žiada o spomalenie: import bude pokračovať o {minutes} min ({current}/{total})."
+    "retroachievements-rate-wait": "RetroAchievements žiada o spomalenie: import bude pokračovať o {minutes} min ({current}/{total}).",
+    "no-keyring-title": "Vaše prihlásenia nie sú chránené",
+    "no-keyring-body": "Žiadna kľúčenka (GNOME Keyring alebo KWallet) neodpovedala, preto sa uložené prihlásenia (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) ukladajú bez skutočného šifrovania. Spustite kľúčenku svojho desktopu a reštartujte AW Next."
   },
   "watchdog": {
     "rare": "Vzácny {percent}%",

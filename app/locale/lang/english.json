@@ -2460,7 +2460,9 @@
     "retroachievements-error": "RetroAchievements request failed",
     "retroachievements-imported-none": "No game with achievements on this account yet: play one with RetroAchievements and it will show up here.",
     "retroachievements-imported-partial": "Paused by the RetroAchievements rate limit after {created} added and {updated} updated. Import again in a few minutes to continue where it stopped.",
-    "retroachievements-rate-wait": "RetroAchievements asks to slow down: the import resumes in {minutes} min ({current}/{total})."
+    "retroachievements-rate-wait": "RetroAchievements asks to slow down: the import resumes in {minutes} min ({current}/{total}).",
+    "no-keyring-title": "Your sign-ins are not protected",
+    "no-keyring-body": "No keyring (GNOME Keyring or KWallet) answered, so saved sign-ins (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) are stored without real encryption. Start your desktop's keyring and restart AW Next."
   },
   "watchdog": {
     "rare": "Rare {percent}%",

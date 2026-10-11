@@ -2460,7 +2460,9 @@
     "retroachievements-error": "Permintaan RetroAchievements gagal",
     "retroachievements-imported-none": "Belum ada game dengan pencapaian di akun ini: mainkan satu dengan RetroAchievements dan game itu akan muncul di sini.",
     "retroachievements-imported-partial": "Dijeda oleh batas laju RetroAchievements setelah {created} ditambahkan dan {updated} diperbarui. Impor lagi dalam beberapa menit untuk melanjutkan dari tempat terhenti.",
-    "retroachievements-rate-wait": "RetroAchievements meminta untuk memperlambat: impor dilanjutkan dalam {minutes} menit ({current}/{total})."
+    "retroachievements-rate-wait": "RetroAchievements meminta untuk memperlambat: impor dilanjutkan dalam {minutes} menit ({current}/{total}).",
+    "no-keyring-title": "Info masuk Anda tidak terlindungi",
+    "no-keyring-body": "Tidak ada keyring (GNOME Keyring atau KWallet) yang merespons, sehingga info masuk yang tersimpan (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) disimpan tanpa enkripsi yang sebenarnya. Jalankan keyring desktop Anda lalu mulai ulang AW Next."
   },
   "watchdog": {
     "rare": "Langka {percent}%",

@@ -2460,7 +2460,9 @@
     "retroachievements-error": "Forespørselen til RetroAchievements mislyktes",
     "retroachievements-imported-none": "Ingen spill med prestasjoner på denne kontoen ennå: spill ett med RetroAchievements, så dukker det opp her.",
     "retroachievements-imported-partial": "Satt på pause av RetroAchievements sin grense etter {created} lagt til og {updated} oppdatert. Importer på nytt om noen minutter for å fortsette der den stoppet.",
-    "retroachievements-rate-wait": "RetroAchievements ber om at tempoet senkes: importen gjenopptas om {minutes} min ({current}/{total})."
+    "retroachievements-rate-wait": "RetroAchievements ber om at tempoet senkes: importen gjenopptas om {minutes} min ({current}/{total}).",
+    "no-keyring-title": "Påloggingene dine er ikke beskyttet",
+    "no-keyring-body": "Ingen nøkkelring (GNOME Keyring eller KWallet) svarte, så lagrede pålogginger (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) lagres uten ekte kryptering. Start nøkkelringen på skrivebordet ditt og start AW Next på nytt."
   },
   "watchdog": {
     "rare": "Sjelden {percent} %",

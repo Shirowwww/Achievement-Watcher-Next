@@ -2460,7 +2460,9 @@
     "retroachievements-error": "RetroAchievements へのリクエストに失敗しました",
     "retroachievements-imported-none": "このアカウントには実績のあるゲームがまだありません。RetroAchievements 対応のゲームを 1 本プレイすると、ここに表示されます。",
     "retroachievements-imported-partial": "RetroAchievements のレート制限により、{created} 件追加、{updated} 件更新の時点で一時停止しました。数分後にもう一度インポートすると、中断した続きから再開します。",
-    "retroachievements-rate-wait": "RetroAchievements から速度を落とすよう求められました。インポートは {minutes} 分後に再開します ({current}/{total})。"
+    "retroachievements-rate-wait": "RetroAchievements から速度を落とすよう求められました。インポートは {minutes} 分後に再開します ({current}/{total})。",
+    "no-keyring-title": "サインイン情報が保護されていません",
+    "no-keyring-body": "キーリング(GNOME Keyring または KWallet)が応答しなかったため、保存されたサインイン情報 (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) は実際の暗号化なしで保存されます。デスクトップのキーリングを起動してから AW Next を再起動してください。"
   },
   "watchdog": {
     "rare": "レア {percent}%",

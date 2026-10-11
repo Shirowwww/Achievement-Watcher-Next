@@ -2460,7 +2460,9 @@
     "retroachievements-error": "RetroAchievements-verzoek mislukt",
     "retroachievements-imported-none": "Nog geen game met prestaties op dit account: speel er een met RetroAchievements en hij verschijnt hier.",
     "retroachievements-imported-partial": "Gepauzeerd door de limiet van RetroAchievements na {created} toegevoegd en {updated} bijgewerkt. Importeer over een paar minuten opnieuw om verder te gaan waar het gestopt is.",
-    "retroachievements-rate-wait": "RetroAchievements vraagt om te vertragen: de import gaat verder over {minutes} min ({current}/{total})."
+    "retroachievements-rate-wait": "RetroAchievements vraagt om te vertragen: de import gaat verder over {minutes} min ({current}/{total}).",
+    "no-keyring-title": "Je aanmeldingen zijn niet beschermd",
+    "no-keyring-body": "Geen sleutelhanger (GNOME Keyring of KWallet) reageerde, dus opgeslagen aanmeldingen (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) worden zonder echte versleuteling bewaard. Start de sleutelhanger van je bureaublad en herstart AW Next."
   },
   "watchdog": {
     "rare": "Zeldzaam {percent}%",

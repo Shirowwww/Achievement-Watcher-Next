@@ -2,8 +2,8 @@
 
 /*
   The key everything locally encrypted is encrypted with: 256 random bits, generated once per
-  installation and stored under Windows DPAPI through Electron's safeStorage, which ties it to the
-  Windows account that created it.
+  installation and stored through Electron's safeStorage, which ties it to the account that created
+  it: Windows DPAPI, or on Linux the desktop keyring (GNOME Keyring, KWallet).
 
   What it replaces: a passphrase compiled into a public repository (util/aes.js). Anything
   "encrypted" with a key anybody can read is obfuscated, not encrypted - the emulator Steam
@@ -47,10 +47,42 @@ function loadSecret(userDataPath, safeStorage) {
   const store = usableSafeStorage(safeStorage);
   if (!store || !userDataPath) return '';
   try {
-    const decrypted = store.decryptString(fs.readFileSync(secretFile(userDataPath)));
-    return isSecret(decrypted) ? decrypted.trim().toLowerCase() : '';
+    const stored = fs.readFileSync(secretFile(userDataPath));
+    const decrypted = store.decryptString(stored);
+    if (!isSecret(decrypted)) return '';
+    const secret = decrypted.trim().toLowerCase();
+    moveToKeyring(userDataPath, store, stored, secret);
+    return secret;
   } catch {
     return '';
+  }
+}
+
+function writeKeyFile(userDataPath, store, secret) {
+  const file = secretFile(userDataPath);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  // Temp file then rename: half a key file is a key nobody can read, and it would take the
+  // emulator password and the Xbox session with it.
+  const temporary = `${file}.${process.pid}.tmp`;
+  fs.writeFileSync(temporary, store.encryptString(secret));
+  fs.renameSync(temporary, file);
+}
+
+/*
+  Linux only. With no keyring running, Chromium seals data under a fixed password ("v10" prefix),
+  which it can still open once a keyring is there. A key first stored that way is sealed again
+  under the keyring (gnome-libsecret, kwallet) the first time one answers, so it does not stay
+  merely obfuscated for the life of the installation.
+*/
+function moveToKeyring(userDataPath, store, stored, secret, platform = process.platform) {
+  // Windows output starts with "v10" too, for an unrelated reason: never touch it there.
+  if (platform !== 'linux' || typeof store.getSelectedStorageBackend !== 'function') return;
+  try {
+    const backend = store.getSelectedStorageBackend();
+    if (backend === 'basic_text' || backend === 'unknown' || stored.subarray(0, 3).toString('latin1') !== 'v10') return;
+    writeKeyFile(userDataPath, store, secret);
+  } catch {
+    /* the obfuscated copy keeps working; this is retried next launch */
   }
 }
 
@@ -73,17 +105,11 @@ function ensureSecret(userDataPath, safeStorage) {
   if (fs.existsSync(secretFile(userDataPath))) return '';
   const secret = crypto.randomBytes(32).toString('hex');
   try {
-    const file = secretFile(userDataPath);
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    // Temp file then rename: half a key file is a key nobody can read, and it would take the
-    // emulator password and the Xbox session with it.
-    const temporary = `${file}.${process.pid}.tmp`;
-    fs.writeFileSync(temporary, store.encryptString(secret));
-    fs.renameSync(temporary, file);
+    writeKeyFile(userDataPath, store, secret);
   } catch {
     return ''; // could not persist it: staying on the legacy format beats writing what we cannot re-read
   }
   return secret;
 }
 
-module.exports = { SECRET_FILE, ensureSecret, isSecret, loadSecret, secretFile };
+module.exports = { SECRET_FILE, ensureSecret, isSecret, loadSecret, moveToKeyring, secretFile };

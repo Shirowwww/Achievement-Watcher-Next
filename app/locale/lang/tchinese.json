@@ -2460,7 +2460,9 @@
     "retroachievements-error": "RetroAchievements 要求失敗",
     "retroachievements-imported-none": "此帳號上還沒有帶成就的遊戲：用 RetroAchievements 玩一款，它就會出現在這裡。",
     "retroachievements-imported-partial": "因 RetroAchievements 的頻率限制，在新增 {created} 個、更新 {updated} 個後已暫停。幾分鐘後再次匯入，即可從中斷處繼續。",
-    "retroachievements-rate-wait": "RetroAchievements 要求放慢速度：匯入將在 {minutes} 分鐘後繼續（{current}/{total}）。"
+    "retroachievements-rate-wait": "RetroAchievements 要求放慢速度：匯入將在 {minutes} 分鐘後繼續（{current}/{total}）。",
+    "no-keyring-title": "你的登入資訊未受保護",
+    "no-keyring-body": "沒有金鑰圈(GNOME Keyring 或 KWallet)回應,因此已儲存的登入資訊 (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) 將在沒有真正加密的情況下儲存。請啟動桌面的金鑰圈,然後重新啟動 AW Next。"
   },
   "watchdog": {
     "rare": "稀有 {percent}%",

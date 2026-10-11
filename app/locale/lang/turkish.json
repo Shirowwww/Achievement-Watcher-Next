@@ -2460,7 +2460,9 @@
     "retroachievements-error": "RetroAchievements isteği başarısız oldu",
     "retroachievements-imported-none": "Bu hesapta henüz başarımı olan bir oyun yok: RetroAchievements ile bir oyun oynayın, burada görünecektir.",
     "retroachievements-imported-partial": "RetroAchievements hız sınırı nedeniyle {created} eklendi ve {updated} güncellendi sonrasında duraklatıldı. Kaldığı yerden devam etmek için birkaç dakika sonra yeniden içe aktarın.",
-    "retroachievements-rate-wait": "RetroAchievements yavaşlamayı istiyor: içe aktarma {minutes} dk sonra devam edecek ({current}/{total})."
+    "retroachievements-rate-wait": "RetroAchievements yavaşlamayı istiyor: içe aktarma {minutes} dk sonra devam edecek ({current}/{total}).",
+    "no-keyring-title": "Oturum bilgilerin korunmuyor",
+    "no-keyring-body": "Hiçbir anahtar zinciri (GNOME Keyring veya KWallet) yanıt vermedi, bu yüzden kayıtlı oturumlar (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) gerçek şifreleme olmadan saklanıyor. Masaüstünün anahtar zincirini başlat ve AW Next'i yeniden başlat."
   },
   "watchdog": {
     "rare": "Nadir {percent}%",

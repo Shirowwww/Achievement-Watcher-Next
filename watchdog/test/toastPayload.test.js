@@ -211,7 +211,8 @@ test('the payload renders a valid toast XML (hero image, progress, protocol acti
   assert.match(xml, /displayTimestamp="1970-01-02/);
 });
 
-test('applyToastAppSettings honours the user AUMID override and the WinRT flag', async () => {
+// AppUserModelIDs only exist on Windows; elsewhere the desktop notification service needs none.
+test('applyToastAppSettings honours the user AUMID override and the WinRT flag', { skip: process.platform !== 'win32' && 'Windows-only' }, async () => {
   const payload = { aumid: toastIdentity.DEFAULT_TOAST_AUMID, title: 'T' };
   const options = {
     notification_transport: { winRT: false },

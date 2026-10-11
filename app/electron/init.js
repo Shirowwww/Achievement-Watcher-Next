@@ -1170,7 +1170,8 @@ const openDevTools = manifest.config.debug && /^(1|true)$/i.test(String(process.
 // Register a per-user URI scheme so toast clicks can reopen the unpackaged app.
 const TOAST_PROTOCOL = 'achievement-watcher';
 let toastProtocolReady = false;
-if (!manifest.config.debug) {
+// Linux routes the scheme through the application entry instead, see installLinuxDesktopEntry().
+if (!manifest.config.debug && process.platform !== 'linux') {
   try {
     toastProtocolReady = app.setAsDefaultProtocolClient(TOAST_PROTOCOL);
   } catch {
@@ -4439,6 +4440,8 @@ function appSecret() {
     const { safeStorage } = require('electron');
     cachedAppSecret = require(path.join(__dirname, '..', 'util', 'appSecret.js')).ensureSecret(userData, safeStorage);
     if (!cachedAppSecret) debug.log('[secret] safeStorage unavailable - local secrets stay on the legacy key');
+    // basic_text means no keyring answered: the key is then only obfuscated until one does.
+    if (process.platform === 'linux') debug.log(`[secret] safeStorage backend: ${safeStorage.getSelectedStorageBackend()}`);
   } catch (err) {
     debug.log('[secret] could not resolve the installation key: ' + (err.message || err));
   }
@@ -4860,7 +4863,20 @@ function createMainWindow() {
       clearInterval(watchdogStatusInterval);
       watchdogStatusInterval = null;
       closePuppeteer().catch(() => {});
-      MainWin.hide();
+      if (process.platform !== 'linux') {
+        MainWin.hide();
+        return;
+      }
+      const win = MainWin;
+      require('../util/linuxTrayHost.js')
+        .hasStatusNotifierHost()
+        .then((visible) => {
+          if (win.isDestroyed()) return;
+          if (visible) return win.hide();
+          // No tray host on this desktop: a hidden window could only come back by relaunching AW.
+          debug.log('[MainWindow] no StatusNotifier host -> minimizing instead of hiding to tray');
+          win.minimize();
+        });
     });
 
     MainWin.on('closed', () => {
@@ -6985,6 +7001,47 @@ function linuxTrayImage() {
   return nativeImage.createFromPath(path.join(__dirname, '../resources/icon/icon.png')).resize({ width: 64, height: 64, quality: 'best' });
 }
 
+function installLinuxDesktopEntry() {
+  require('../util/linuxDesktopEntry.js')
+    .install({
+      protocol: TOAST_PROTOCOL,
+      iconSource: path.join(__dirname, '../resources/icon/icon.png'),
+      args: process.defaultApp ? [app.getAppPath()] : [],
+    })
+    .then((r) => debug.log(`[desktop-entry] ${r.file}${r.changed ? ' written' : ' up to date'}, ${TOAST_PROTOCOL}:// handler ${r.handler ? 'set' : `not set (${r.detail})`}`))
+    .catch((err) => debug.log(`[desktop-entry] failed: ${err.message || err}`));
+}
+
+/*
+  Without a keyring, safeStorage on Linux only obfuscates (basic_text), so saved sign-ins are not
+  really protected. Said once, and again if a keyring that was there goes away.
+*/
+function warnIfNoKeyring() {
+  const marker = path.join(userData, 'cfg', 'no-keyring-warned');
+  try {
+    appSecret(); // safeStorage picks its backend on first use
+    const backend = require('electron').safeStorage.getSelectedStorageBackend();
+    if (backend !== 'basic_text' && backend !== 'unknown') {
+      fs.rmSync(marker, { force: true });
+      return;
+    }
+    if (fs.existsSync(marker)) return;
+    debug.log(`[secret] no keyring (${backend}) - warning the user once`);
+    new Notification({
+      title: t('no-keyring-title', 'Your sign-ins are not protected', 'Tes connexions ne sont pas protégées'),
+      body: t(
+        'no-keyring-body',
+        "No keyring (GNOME Keyring or KWallet) answered, so saved sign-ins (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) are stored without real encryption. Start your desktop's keyring and restart AW Next.",
+        "Aucun trousseau (GNOME Keyring ou KWallet) n'a répondu : les connexions enregistrées (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) sont stockées sans vrai chiffrement. Lance le trousseau de ton bureau puis redémarre AW Next."
+      ),
+    }).show();
+    fs.mkdirSync(path.dirname(marker), { recursive: true });
+    fs.writeFileSync(marker, backend);
+  } catch (err) {
+    debug.log(`[secret] keyring check failed: ${err.message || err}`);
+  }
+}
+
 function createTray() {
   if (tray) return tray;
   try {
@@ -7044,6 +7101,11 @@ function createTray() {
     tray.on('click', () => createMainWindow());
     tray.on('double-click', () => createMainWindow());
     debug.log('[tray] created');
+    if (process.platform === 'linux') {
+      require('../util/linuxTrayHost.js')
+        .hasStatusNotifierHost()
+        .then((visible) => debug.log(`[tray] StatusNotifier host ${visible ? 'present' : 'missing (icon not shown)'}`));
+    }
   } catch (err) {
     debug.log(`[tray] failed to create: ${err.message || err}`);
   }
@@ -7379,6 +7441,8 @@ try {
         }
       }
       createTray();
+      if (process.platform === 'linux' && !manifest.config.debug) installLinuxDesktopEntry();
+      if (process.platform === 'linux') warnIfNoKeyring();
       // electron-updater reads resources/app-update.yml generated by electron-builder. Checking a
       // few seconds after startup keeps the tray responsive; failed checks retry and healthy checks
       // re-run periodically while the app stays resident (see scheduleUpdateCheck). Development

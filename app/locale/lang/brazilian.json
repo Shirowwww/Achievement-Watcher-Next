@@ -2460,7 +2460,9 @@
     "retroachievements-error": "Falha na solicitação ao RetroAchievements",
     "retroachievements-imported-none": "Nenhum jogo com conquistas nesta conta ainda: jogue um com o RetroAchievements e ele aparecerá aqui.",
     "retroachievements-imported-partial": "Pausado pelo limite de requisições do RetroAchievements após {created} adicionados e {updated} atualizados. Importe novamente em alguns minutos para continuar de onde parou.",
-    "retroachievements-rate-wait": "O RetroAchievements pede para diminuir o ritmo: a importação continua em {minutes} min ({current}/{total})."
+    "retroachievements-rate-wait": "O RetroAchievements pede para diminuir o ritmo: a importação continua em {minutes} min ({current}/{total}).",
+    "no-keyring-title": "Seus logins não estão protegidos",
+    "no-keyring-body": "Nenhum chaveiro (GNOME Keyring ou KWallet) respondeu, então os logins salvos (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) são armazenados sem criptografia real. Inicie o chaveiro da sua área de trabalho e reinicie o AW Next."
   },
   "watchdog": {
     "rare": "Raro {percent}%",
