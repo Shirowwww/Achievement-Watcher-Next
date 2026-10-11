@@ -214,11 +214,20 @@ function getTrackableGameMatches(binaryIndex, process, isIgnored = isIgnoredAppi
   return getBinaryMatches(binaryIndex, process).filter((game) => !isIgnored(game.appid) && !String(game.name || '').toLowerCase().includes('demo'));
 }
 
+// Steam installs every library game under <library>\steamapps\common\<folder>, whichever drive or
+// Program Files folder the library is on. That folder is the game's own, not a system one.
+const STEAM_COMMON_DIR = /[\\/]steamapps[\\/]common[\\/]/i;
+
 function shouldMuteProcessPath(filepath, dirs, indexedMatches) {
   if (!isMutedByPath(filepath, dirs)) return false;
+  const matches = indexedMatches || [];
   // Profile folders remain muted for unknown processes, but an explicitly indexed manual game is
   // authoritative. This covers portable games and emulators stored on Desktop or in AppData.
-  return !(indexedMatches || []).some((game) => String(game && game.source || '').toLowerCase() === 'manual');
+  if (matches.some((game) => String(game && game.source || '').toLowerCase() === 'manual')) return false;
+  // An indexed game running from a Steam library is tracked the same whether the library is on
+  // Program Files or on another drive. Before this, every game in the default Steam library was muted.
+  if (matches.length > 0 && STEAM_COMMON_DIR.test(String(filepath))) return false;
+  return true;
 }
 
 // A bundled JRE never carries the game's own binary name (java.exe/javaw.exe are excluded from
@@ -395,7 +404,11 @@ async function init() {
     let game = games.length === 0 ? findGameForInterpreterChild(process, filepath) : null;
 
     if (!game) {
-      if (filepath && shouldMuteProcessPath(filepath, filter.mute.dir, games)) return;
+      if (filepath && shouldMuteProcessPath(filepath, filter.mute.dir, games)) {
+        // A known game silently dropped by its folder is the case users report; leave a trace of it.
+        if (games.length > 0) debug.log(`"${process}" matches ${games[0].name}(${games[0].appid}) but runs from a muted folder: "${filepath}"`);
+        return;
+      }
 
       if (games.length === 1) {
         // A single hit from the bundled legacy catalogue (steam_cache/schema/gameIndex.json) is a

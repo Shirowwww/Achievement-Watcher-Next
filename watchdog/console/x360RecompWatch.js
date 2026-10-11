@@ -171,6 +171,8 @@ async function handleChange(record, changedFile, ctx) {
               },
               prefetch: false, // the icons are already local files
               rumble: ctx.options.notification.rumble,
+              // toaster.js takes a screenshot only when this is passed; without it every ReXGlue souvenir was skipped.
+              souvenir: ctx.options.souvenir || null,
             }
           );
           delay += 1;

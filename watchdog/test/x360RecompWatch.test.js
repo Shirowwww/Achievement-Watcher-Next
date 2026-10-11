@@ -107,6 +107,42 @@ test('a first sight is silent, a new unlock toasts, the runtime rewrite is ignor
   assert.equal(sent[1].achievementDisplayName, 'Name 1', 'an achievement earned before the reset toasts again');
 });
 
+test('an unlock hands the souvenir settings to the toaster, so its screenshot is taken', async () => {
+  const titleId = '33333333';
+  const file = write(path.join(temp, 'Souvenir', 'achievements', `${titleId}.toml`), toml([1]));
+  const record = { appid: `x360-${titleId}`, data: { type: 'x360recomp', format: 'toml', titleId, file, folder: 'Souvenir' } };
+  write(
+    path.join(process.env.AW_USER_DATA, 'steam_cache', 'x360recomp', `${titleId}.json`),
+    JSON.stringify({
+      fetchedAt: Date.now(),
+      name: 'Souvenir Game',
+      achievements: [1, 2].map((id) => ({ achievement_id: id, gamerscore: 10, localizations: [{ locale: { identifier: 'en_US' }, name: `Name ${id}`, description: 'd' }] })),
+    })
+  );
+  for (const id of [1, 2]) write(path.join(process.env.AW_USER_DATA, 'icon_cache', 'x360recomp', titleId, `${id}.png`), 'png');
+  cacheArt(titleId);
+
+  const souvenir = { screenshot: true, dir: path.join(temp, 'Souvenirs'), hdr: 'auto', clip: false };
+  const toasterOptions = [];
+  const ctx = {
+    options: {
+      achievement: { lang: 'english' },
+      notification: { notify: true, rumble: false },
+      notification_transport: {},
+      notification_toast: {},
+      souvenir,
+    },
+    // ctx.notify(message, options): the second argument is what toaster.js reads the souvenir from.
+    notify: async (message, options) => toasterOptions.push(options),
+  };
+
+  await handleChange(record, '', ctx);
+  fs.writeFileSync(file, toml([1, 2]));
+  await handleChange(record, file, ctx);
+  assert.equal(toasterOptions.length, 1);
+  assert.deepEqual(toasterOptions[0].souvenir, souvenir, 'without this the toaster sets souvenir to null and no screenshot is taken');
+});
+
 test('a list that appears after startup toasts its recent unlocks only', async () => {
   const recent = Math.floor(Date.now() / 1000) - 60;
   const filetime = (unix) => String((BigInt(unix) + 11644473600n) * 10000000n);

@@ -31,3 +31,14 @@ test('an explicitly indexed manual game overrides the broad user-profile path mu
   assert.equal(shouldMuteProcessPath(desktopGame, mutedRoots, [{ appid: 'manual-1', source: 'Manual' }]), false);
   assert.equal(shouldMuteProcessPath(desktopGame, mutedRoots, [{ appid: '123', source: 'Steam' }]), true);
 });
+
+test('an indexed game in a Steam library is tracked even under a muted Program Files root', () => {
+  const mutedRoots = ['C:\\Program Files', 'C:\\Program Files (x86)'];
+  const indexed = [{ appid: '123', name: 'Gambonanza', binary: 'Gambonanza.exe', source: 'Steam' }];
+  const steamGame = 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Gambonanza\\Gambonanza.exe';
+  assert.equal(shouldMuteProcessPath(steamGame, mutedRoots, indexed), false);
+  assert.equal(shouldMuteProcessPath(steamGame.replace(/\\/g, '/'), mutedRoots, indexed), false);
+  // The exemption is the Steam library folder, not the game's name: a same-named program elsewhere in Program Files stays muted.
+  assert.equal(shouldMuteProcessPath('C:\\Program Files\\Gambonanza\\Gambonanza.exe', mutedRoots, indexed), true);
+  assert.equal(shouldMuteProcessPath(steamGame, mutedRoots, []), true);
+});
