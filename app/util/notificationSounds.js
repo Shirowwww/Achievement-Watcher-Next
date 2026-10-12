@@ -55,4 +55,17 @@ function pickRandomSound(dirs) {
   return list[Math.floor(Math.random() * list.length)].file;
 }
 
-module.exports = { SOUND_EXTENSIONS, SOUND_EXT_RE, RENAMED_SOUNDS, renamedSound, listSoundFiles, pickRandomSound };
+// The tier-specific sound picked for a rare unlock or a 100% completion (#109). '' means "same as
+// unlocks", NO_SOUND means silent. Progress and playtime popups never take a tier sound.
+const NO_SOUND = '__none__';
+
+function tierSound(overlay, { notificationType = '', rarityPercent = null } = {}) {
+  const ov = overlay || {};
+  const type = String(notificationType || '').toLowerCase();
+  if (type === 'platinum') return String(ov.notificationSoundPlatinum || '');
+  if (type === 'progress' || type === 'playtime') return '';
+  const rare = rarityPercent != null && rarityPercent !== '' && Number.isFinite(Number(rarityPercent));
+  return rare ? String(ov.notificationSoundRare || '') : '';
+}
+
+module.exports = { SOUND_EXTENSIONS, SOUND_EXT_RE, RENAMED_SOUNDS, NO_SOUND, renamedSound, listSoundFiles, pickRandomSound, tierSound };

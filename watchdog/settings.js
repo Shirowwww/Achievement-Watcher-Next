@@ -172,6 +172,10 @@ module.exports.load = async (cfg_file) => {
       options.overlay.notificationSound = '';
       fixFile = true;
     }
+    // Rare and 100% sounds ('' follows the unlock sound); read only, the app owns these keys.
+    for (const key of ['notificationSoundRare', 'notificationSoundPlatinum']) {
+      if (typeof options.overlay[key] !== 'string') options.overlay[key] = '';
+    }
     if (typeof options.overlay.randomSound !== 'boolean') {
       options.overlay.randomSound = false;
       fixFile = true;

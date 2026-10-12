@@ -6190,9 +6190,13 @@ async function enqueueNotificationFromArgs(args) {
       ? notificationSounds.pickRandomSound([path.join(__dirname, '../sounds'), userSoundsDir()]) ||
         resolveNotificationSound(ov.notificationSound)
       : resolveNotificationSound(presetOwnSound || ov.notificationSound);
+  // A rare unlock or a 100% completion can have its own sound; a game's own choice still wins.
+  const tierSound = notificationSounds.tierSound(ov, { notificationType, rarityPercent: args.rarityPercent });
   let chosenSound = '';
   if (!silent) {
     if (gameSettings.sound === gamePreset.SOUND_NONE) chosenSound = '';
+    else if (!gameSettings.sound && tierSound === notificationSounds.NO_SOUND) chosenSound = '';
+    else if (!gameSettings.sound && tierSound) chosenSound = resolveNotificationSound(tierSound) || globalSound();
     else if (gameSettings.sound === gamePreset.SOUND_RANDOM) {
       chosenSound =
         notificationSounds.pickRandomSound([path.join(__dirname, '../sounds'), userSoundsDir()]) || globalSound();

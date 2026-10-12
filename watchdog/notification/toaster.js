@@ -114,9 +114,15 @@ module.exports = async (message, option = {}) => {
 
     // Reuse the configured sound; playtime cards stay silent.
     const overlay = option.overlay || defaultOverlay || {};
-    options.toast.soundFile = message.silent
+    const tierSound = notificationSound.tierSound(overlay, {
+      notificationType: message.progress ? 'progress' : message.notificationType,
+      rarityPercent: message.rarityPercent,
+    });
+    options.toast.soundFile = message.silent || tierSound === notificationSound.NO_SOUND
       ? ''
-      : overlay.randomSound === true
+      : tierSound
+        ? notificationSound.resolveSoundFile(tierSound) || notificationSound.resolveSoundFile(overlay.notificationSound)
+        : overlay.randomSound === true
         ? notificationSound.pickRandomSound() || notificationSound.resolveSoundFile(overlay.notificationSound)
         : notificationSound.resolveSoundFile(overlay.notificationSound);
 

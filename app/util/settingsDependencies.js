@@ -18,6 +18,8 @@ const OVERLAY_ONLY = [
   'option_overlayProgressScale',
   'option_overlayDuration',
   'option_overlaySound',
+  'option_overlaySoundRare',
+  'option_overlaySoundPlatinum',
   'option_overlayVolume',
 ];
 

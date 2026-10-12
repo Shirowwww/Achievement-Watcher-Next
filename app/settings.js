@@ -198,6 +198,10 @@ module.exports.load = () => {
     if (typeof options.overlay.notificationSound !== 'string') {
       options.overlay.notificationSound = '';
     }
+    // Rare and 100% sounds: '' follows the unlock sound.
+    for (const key of ['notificationSoundRare', 'notificationSoundPlatinum']) {
+      if (typeof options.overlay[key] !== 'string') options.overlay[key] = '';
+    }
     // Randomize the overlay notification sound from the merged bundled+user sound list.
     if (typeof options.overlay.randomSound !== 'boolean') {
       options.overlay.randomSound = false;
@@ -620,6 +624,8 @@ module.exports.load = () => {
         notificationProgressPosition: '',
         notificationProgressScale: '',
         notificationSound: '',
+        notificationSoundRare: '',
+        notificationSoundPlatinum: '',
         randomSound: false,
         notificationVolume: 100,
         notificationDuration: 'auto',

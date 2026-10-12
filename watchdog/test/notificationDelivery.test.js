@@ -45,7 +45,7 @@ function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = f
     },
     './prefetch.js': async (url) => url,
     '../util/squareIcon.js': { makeSquareIcon: async () => '' },
-    '../util/notificationSound.js': { pickRandomSound: () => '', resolveSoundFile: () => '' },
+    '../util/notificationSound.js': { pickRandomSound: () => '', resolveSoundFile: () => '', tierSound: () => '', NO_SOUND: '__none__' },
     '../websocket.js': { broadcast: (payload) => calls.broadcasts.push(payload) },
     '../queryUserNotificationState.js': {
       arePopupsSuppressed: async () => false,

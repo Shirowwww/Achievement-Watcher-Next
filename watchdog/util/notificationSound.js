@@ -86,4 +86,17 @@ function pickRandomSound() {
   return list[Math.floor(Math.random() * list.length)].file;
 }
 
-module.exports = { bundledSoundsDir, userSoundsDir, resolveSoundFile, listSoundFiles, pickRandomSound };
+// Mirrors tierSound() in app/util/notificationSounds.js: the rare or 100% sound, '' for "same as
+// unlocks", NO_SOUND for silent.
+const NO_SOUND = '__none__';
+
+function tierSound(overlay, { notificationType = '', rarityPercent = null } = {}) {
+  const ov = overlay || {};
+  const type = String(notificationType || '').toLowerCase();
+  if (type === 'platinum') return String(ov.notificationSoundPlatinum || '');
+  if (type === 'progress' || type === 'playtime') return '';
+  const rare = rarityPercent != null && rarityPercent !== '' && Number.isFinite(Number(rarityPercent));
+  return rare ? String(ov.notificationSoundRare || '') : '';
+}
+
+module.exports = { bundledSoundsDir, userSoundsDir, resolveSoundFile, listSoundFiles, pickRandomSound, NO_SOUND, tierSound };

@@ -595,6 +595,15 @@ function translateUI(lang, locale, template) {
   // exposed as a data attribute because the list is rebuilt asynchronously.
   $('#option_overlaySound').attr('data-lang-random', clear(template.settings.notification.option.overlayRandomSound));
   $('#option_overlaySound option[value="__random__"]').text(clear(template.settings.notification.option.overlayRandomSound));
+  $('#lbl-overlaySoundRare').text(clear(template.settings.notification.option.overlaySoundRare));
+  $('#lbl-overlaySoundRare').closest('li').find('.help').text(clear(template.settings.notification.option.overlaySoundRareDesc));
+  $('#lbl-overlaySoundPlatinum').text(clear(template.settings.notification.option.overlaySoundPlatinum));
+  $('#lbl-overlaySoundPlatinum').closest('li').find('.help').text(clear(template.settings.notification.option.overlaySoundPlatinumDesc));
+  // "Same as unlocks" is the first entry of a list rebuilt asynchronously, hence the data attribute.
+  $('#option_overlaySoundRare, #option_overlaySoundPlatinum').attr('data-lang-same', clear(template.settings.notification.option.progressSameAsUnlocks));
+  $("#option_overlaySoundRare option[value=''], #option_overlaySoundPlatinum option[value='']").text(
+    clear(template.settings.notification.option.progressSameAsUnlocks)
+  );
   $('#lbl-overlayVolume').text(clear(template.settings.notification.option.overlayVolume));
   // The OBS browser source row, last in the same list and bound the same way.
   $('#lbl-obsSource').text(clear(template.settings.notification.option.obsSource.name));

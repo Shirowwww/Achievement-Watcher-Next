@@ -101,6 +101,10 @@ ordinary controls, and a preset can be shared as a single `.awpreset` file.
   notification plays a different file from the ones you have. It previews like any other choice too -
   selecting it, moving the volume slider under it or firing a test all play a real sound, a different
   one each time.
+- **Rare achievement sound** and **100% completion sound** (Advanced mode) give a rare unlock and
+  the completion popup a sound of their own, for both the overlay and Windows notifications. Both
+  start on "Same as unlocks"; "None" makes that kind of popup silent. A sound chosen for one game
+  in its own panel still wins.
 - Overlay volume ranges from 0% to 200%. Values above 100% apply an overlay-side boost; Windows
   notification playback is limited by the system audio path.
 - Duration can follow the preset automatically or use a fixed cap.

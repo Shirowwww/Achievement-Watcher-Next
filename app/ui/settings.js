@@ -23,7 +23,7 @@ const { t } = require(path.join(appPath, 'locale/t.js'));
 // test/integration/rendererScope.test.js).
 const settingsLibraryChrome = require(path.join(appPath, 'util/libraryChrome.js'));
 const libraryRefresh = require(path.join(appPath, 'util/libraryRefresh.js'));
-const { renamedSound } = require(path.join(appPath, 'util/notificationSounds.js'));
+const { renamedSound, tierSound } = require(path.join(appPath, 'util/notificationSounds.js'));
 const interfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
 const settingsContainers = require(path.join(appPath, 'util/settingsContainers.js'));
 const settingsDependencies = require(path.join(appPath, 'util/settingsDependencies.js'));
@@ -843,6 +843,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           // without this the dropdown would read "None" while the old name kept playing.
           const picked = cfgOverlay.notificationSound || '';
           const shown = sounds && sounds.includes(picked) ? picked : renamedSound(picked) || picked;
+          $('#option_overlaySoundRare').val('').attr('data-value', cfgOverlay.notificationSoundRare || '');
+          $('#option_overlaySoundPlatinum').val('').attr('data-value', cfgOverlay.notificationSoundPlatinum || '');
           fillSoundDropdown(sounds, cfgOverlay.randomSound === true ? RANDOM_SOUND_VALUE : shown);
           refreshUserSounds();
         })
@@ -3950,7 +3952,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const mode = $('#option_notifMode').val() || 'auto';
       const visible = mode !== 'toast';
       // Sound controls also apply to Windows toasts.
-      const KEEP_VISIBLE_OVERLAY_IDS = new Set(['lbl-overlaySound', 'lbl-overlayVolume']);
+      const KEEP_VISIBLE_OVERLAY_IDS = new Set(['lbl-overlaySound', 'lbl-overlaySoundRare', 'lbl-overlaySoundPlatinum', 'lbl-overlayVolume']);
       $('#options-notify-overlay > li:not(:first-child)').each(function () {
         const labelId = $(this).find('[id^="lbl-overlay"]').first().attr('id') || '';
         animateOverlaySettingCollapse(this, visible || KEEP_VISIBLE_OVERLAY_IDS.has(labelId));
@@ -4132,8 +4134,19 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const soundChoice = Object.prototype.hasOwnProperty.call(overrides, 'sound')
         ? overrides.sound
         : globalSound;
-      const sound = soundForPreview(soundChoice);
       const notificationType = kind === 'toast' || kind === 'rare' ? 'achievement' : kind;
+      const rarePct = kind === 'rare' ? randomRareRarity() : null;
+      // The rare and 100% tests play the sound those popups would, unless the game picked its own.
+      const tierChoice = Object.prototype.hasOwnProperty.call(overrides, 'sound')
+        ? ''
+        : tierSound(
+            {
+              notificationSoundRare: settingsReady ? $('#option_overlaySoundRare').val() : cfgOverlay.notificationSoundRare,
+              notificationSoundPlatinum: settingsReady ? $('#option_overlaySoundPlatinum').val() : cfgOverlay.notificationSoundPlatinum,
+            },
+            { notificationType, rarityPercent: rarePct }
+          );
+      const sound = soundForPreview(soundChoice);
       // Same resolution as a live popup, so a progress preview lands where real progress would.
       const placement = notificationPlacement.resolvePlacement({
         kind: notificationType,
@@ -4149,7 +4162,6 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           progressScale: settingsReady ? $('#option_overlayProgressScale').val() : cfgOverlay.notificationProgressScale,
         },
       });
-      const rarePct = kind === 'rare' ? randomRareRarity() : null;
       const texts = {
         toast: {
           displayName: t('test-toast-name', 'Achievement Unlocked', 'Succès débloqué'),
@@ -4218,7 +4230,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           gameIconPath: gameIcon,
           progress: kind === 'progress' ? { current: 3, max: 10, percent: 30 } : null,
           // Playtime notifications never play a sound, so its test mirrors that behaviour.
-          soundPath: kind === 'playtime' ? '' : resolveSoundFile(sound),
+          soundPath: kind === 'playtime' ? '' : resolveSoundFile(tierChoice ? soundForPreview(tierChoice) : sound),
         },
         texts[kind] || texts.toast
       );
@@ -4383,7 +4395,26 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       (sounds || []).forEach((n) => sel.append($('<option>').attr('value', n).text(n.replace(/\.[^.]+$/, ''))));
       if (selected != null) sel.val(selected);
       updateDeleteSoundButton();
+      fillTierSoundDropdowns(sounds);
     }
+    // The rare and 100% rows offer the same files, plus "Same as unlocks" ('') and "None".
+    function fillTierSoundDropdowns(sounds) {
+      $('#option_overlaySoundRare, #option_overlaySoundPlatinum').each(function () {
+        const sel = $(this);
+        const wanted = String(sel.val() || sel.attr('data-value') || '');
+        sel.empty();
+        sel.append($('<option>').attr('value', '').text(sel.attr('data-lang-same') || ''));
+        sel.append($('<option>').attr('value', NO_SOUND_VALUE).text($('#option_overlaySound').attr('data-lang-none') || ''));
+        (sounds || []).forEach((n) => sel.append($('<option>').attr('value', n).text(n.replace(/\.[^.]+$/, ''))));
+        const shown = (sounds || []).includes(wanted) ? wanted : renamedSound(wanted) || wanted;
+        sel.val(sel.find(`option[value="${CSS.escape(shown)}"]`).length ? shown : '');
+        sel.removeAttr('data-value');
+      });
+    }
+    $('#option_overlaySoundRare, #option_overlaySoundPlatinum').on('change', function () {
+      const v = $(this).val();
+      if (settingsReady && v && v !== NO_SOUND_VALUE) previewSoundAtVolume(v);
+    });
 
     // Import a custom notification sound: copy it into <userData>/sounds, then refresh the dropdown and
     // select it (the change triggers a preview + the Notifications-tab auto-save).
@@ -6235,6 +6266,13 @@ function readNotificationSettings() {
   const chosenSound = $('#option_overlaySound').val() || '';
   app.config.overlay.randomSound = chosenSound === RANDOM_SOUND_VALUE;
   app.config.overlay.notificationSound = chosenSound === RANDOM_SOUND_VALUE ? '' : chosenSound;
+  // An unfilled list (the sound folder could not be read) keeps the saved choice.
+  for (const [id, key] of [
+    ['#option_overlaySoundRare', 'notificationSoundRare'],
+    ['#option_overlaySoundPlatinum', 'notificationSoundPlatinum'],
+  ]) {
+    if ($(id).find('option').length > 0) app.config.overlay[key] = String($(id).val() || '');
+  }
   const volRaw = parseInt($('#option_overlayVolume').val(), 10);
   app.config.overlay.notificationVolume = Number.isFinite(volRaw) ? volRaw : 100;
   const durRaw = $('#option_overlayDuration').val();
