@@ -2063,6 +2063,7 @@
     "health-dot-ok": "ความสำเร็จอยู่ในสภาพดี",
     "health-dot-check": "มีสิ่งที่ต้องตรวจสอบในสถานะเกม (ปุ่มตั้งค่าเกม)",
     "health-dot-problem": "ความสำเร็จไม่ได้ถูกติดตาม - ดูสถานะเกม (ปุ่มตั้งค่าเกม)",
+    "retroachievements-badge": "ความสำเร็จจากบัญชี RetroAchievements ของคุณ",
     "gh-check-install": "ไฟล์เกม",
     "gh-check-executable": "ไฟล์เกม",
     "gh-check-identity": "ข้อมูลระบุเกม",

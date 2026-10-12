@@ -2063,6 +2063,7 @@
     "health-dot-ok": "Saavutukset ovat kunnossa",
     "health-dot-check": "Tarkistettavaa kohdassa Pelin kunto (pelin asetuspainike)",
     "health-dot-problem": "Saavutuksia ei seurata - katso Pelin kunto (pelin asetuspainike)",
+    "retroachievements-badge": "Saavutukset RetroAchievements-tililtäsi",
     "gh-check-install": "Pelitiedostot",
     "gh-check-executable": "Ohjelmatiedosto",
     "gh-check-identity": "Pelin tunnistetiedot",

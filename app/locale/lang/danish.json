@@ -2063,6 +2063,7 @@
     "health-dot-ok": "Præstationer er i orden",
     "health-dot-check": "Noget at tjekke i Spillets tilstand (knappen med spilindstillinger)",
     "health-dot-problem": "Præstationer spores ikke - se Spillets tilstand (knappen med spilindstillinger)",
+    "retroachievements-badge": "Præstationer fra din RetroAchievements-konto",
     "gh-check-install": "Spilfiler",
     "gh-check-executable": "Programfil",
     "gh-check-identity": "Spillets identitet",

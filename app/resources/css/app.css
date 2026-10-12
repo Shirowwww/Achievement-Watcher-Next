@@ -1636,14 +1636,10 @@ body.is-resizing #game-list {
 #game-list .game-box .info .ownership-badge.purchased,
 #achievement .wrapper > .header .title .ownership-badge.purchased,
 #game-list .game-box .info .ownership-badge.recomp,
-#achievement .wrapper > .header .title .ownership-badge.recomp {
+#achievement .wrapper > .header .title .ownership-badge.recomp,
+#game-list .game-box .info .ownership-badge.account,
+#achievement .wrapper > .header .title .ownership-badge.account {
   color: var(--accent);
-}
-
-/* A local health signal only makes sense once the game is confirmed on this PC. The badge stays in
-   the DOM so it appears automatically if exe-list reconciliation upgrades installed state. */
-#game-list .game-box[data-installed='0'] .info .health-badge {
-  display: none;
 }
 
 #game-list .game-box .info .source {

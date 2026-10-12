@@ -2063,6 +2063,7 @@
     "health-dot-ok": "成就狀態正常",
     "health-dot-check": "遊戲健康狀態中有需要檢查的項目（遊戲設定按鈕）",
     "health-dot-problem": "成就未被追蹤 - 請查看遊戲健康狀態（遊戲設定按鈕）",
+    "retroachievements-badge": "來自你的 RetroAchievements 帳號的成就",
     "gh-check-install": "遊戲檔案",
     "gh-check-executable": "執行檔",
     "gh-check-identity": "遊戲識別",

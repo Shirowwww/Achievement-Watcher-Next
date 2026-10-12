@@ -2063,6 +2063,7 @@
     "health-dot-ok": "Erfolge sind in Ordnung",
     "health-dot-check": "Etwas zu prüfen im Spielzustand (Schaltfläche für Spieleinstellungen)",
     "health-dot-problem": "Erfolge werden nicht verfolgt - siehe Spielzustand (Schaltfläche für Spieleinstellungen)",
+    "retroachievements-badge": "Erfolge aus deinem RetroAchievements-Konto",
     "gh-check-install": "Spieldateien",
     "gh-check-executable": "Programmdatei",
     "gh-check-identity": "Spielzuordnung",

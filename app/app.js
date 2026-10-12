@@ -2410,12 +2410,10 @@ function isLaunchable(game) {
 
 const healthStateByAppid = new Map();
 
-// Both halves live in util/gameHealth.js, beside the full report they stand in for.
-const hasHealthDot = (game) => gameHealth.hasDot(game);
-const scannedHealthState = (game) => gameHealth.scannedState(game);
 
 function healthDotFor(game) {
-  const state = healthStateByAppid.get(String(game.appid)) || scannedHealthState(game);
+  const state = gameHealth.dotState(game, healthStateByAppid.get(String(game.appid)));
+  if (!state) return null;
   if (state === gameHealth.STATE.READY) {
     return { state, label: t('health-dot-ok', 'Achievements are healthy', 'Succès sains') };
   }
@@ -2476,6 +2474,34 @@ function ownershipBadgeFor(game) {
 }
 
 /*
+  The one mark beside a game's source badge: what the store says for an official game, the health
+  dot for an installed game a crack or an emulator serves. Saying both of one game says nothing, so
+  the tile and the game screen both ask here. RetroAchievements is an account, not a crack.
+*/
+function statusBadgeFor(game) {
+  const ownership = ownershipBadgeFor(game);
+  if (ownership.label) return { kind: 'info', ...ownership };
+  if (String((game && game.source) || '') === 'RetroAchievements') {
+    return {
+      kind: 'info',
+      state: 'account',
+      label: t('retroachievements-badge', 'Achievements from your RetroAchievements account', 'Succès de ton compte RetroAchievements'),
+    };
+  }
+  // No dot at all for a game that is not installed or has no achievements.
+  const dot = healthDotFor(game);
+  return dot ? { kind: 'health', ...dot } : { kind: 'none', state: '', label: '' };
+}
+
+function statusBadgeHtml(game) {
+  const status = statusBadgeFor(game);
+  if (status.kind === 'none') return '';
+  const label = escapeHtml(status.label);
+  if (status.kind === 'health') return `<span class="health-badge ${status.state}" title="${label}" role="img" aria-label="${label}"></span>`;
+  return `<span class="ownership-badge ${status.state}" title="${label}" role="img" aria-label="${label}"><i class="fas fa-info-circle" aria-hidden="true"></i></span>`;
+}
+
+/*
   A reused library is on screen a few hundred milliseconds after launch - ahead of the locale file
   those tiles read their captions from, and localeText() answers '' until it lands. The result was a
   library whose cells had no caption at all, and whose empty ones said nothing rather than "never
@@ -2511,21 +2537,34 @@ window.refreshLibraryLabels = function () {
 function rememberGameHealthState(appid, state) {
   healthStateByAppid.set(String(appid), state);
   const game = gameList.find((entry) => String(entry.appid) === String(appid));
-  if (!game || !hasHealthDot(game)) return;
-  const dot = healthDotFor(game);
-  $('#game-list .game-box')
+  if (game) repaintStatusBadge(game);
+}
+
+// Redraws the status mark on the tile and, while it is open on this game, on the game screen.
+function repaintStatusBadge(game) {
+  const appid = String(game.appid);
+  const meta = $('#game-list .game-box')
     .filter(function () {
-      return String($(this).attr('data-appid')) === String(appid);
+      return String($(this).attr('data-appid')) === appid;
     })
-    .find('.health-badge')
-    .attr('class', `health-badge ${dot.state}`)
-    .attr('title', dot.label)
-    .attr('aria-label', dot.label);
-  // The game screen carries the same dot while it is open on this game.
-  const header = $('#achievement .wrapper > .header');
-  const headerBadge = header.find('.title .health-badge');
-  if (String(header.attr('data-appid')) === String(appid) && !headerBadge.prop('hidden')) {
-    headerBadge.attr({ class: `health-badge ${dot.state}`, title: dot.label, 'aria-label': dot.label });
+    .find('.game-meta');
+  // Removed and re-added rather than replaced: a game that had no mark gains one once installed.
+  meta.children('.health-badge, .ownership-badge').remove();
+  meta.prepend(statusBadgeHtml(game));
+  if (String($('#achievement .wrapper > .header').attr('data-appid')) === appid) paintHeaderStatusBadge(game);
+}
+
+// The game screen keeps one span of each kind in its markup and shows whichever applies.
+function paintHeaderStatusBadge(game) {
+  const status = statusBadgeFor(game);
+  const title = $('#achievement .wrapper > .header .title');
+  for (const [kind, base] of [
+    ['health', 'health-badge'],
+    ['info', 'ownership-badge'],
+  ]) {
+    const badge = title.find(`.${base}`);
+    if (status.kind === kind) badge.attr({ class: `${base} ${status.state}`, title: status.label, 'aria-label': status.label }).prop('hidden', false);
+    else badge.attr('class', base).removeAttr('title').removeAttr('aria-label').prop('hidden', true);
   }
 }
 
@@ -2546,7 +2585,7 @@ async function refreshHealthDots() {
     position.set(String($(this).attr('data-appid')), index);
   });
   const games = gameList
-    .filter((game) => game && hasHealthDot(game) && sourcePresentationFor(game).kind !== 'steam-owned')
+    .filter((game) => game && gameHealth.needsFullReport(game) && statusBadgeFor(game).kind === 'health')
     .sort((a, b) => (position.get(String(a.appid)) ?? position.size) - (position.get(String(b.appid)) ?? position.size));
   for (const game of games) {
     // Signal collection walks folders synchronously: leave the renderer room between two games, and
@@ -3404,10 +3443,6 @@ var app = {
             // changed; newly arriving tiles must use the same orientation as those already shown.
             const portrait = libraryLayout.isPortrait(self.config.achievement.libraryLayout);
             const sourceIcon = sourcePresentationFor(game);
-            const healthDot = hasHealthDot(game) ? healthDotFor(game) : null;
-            // A game owned on Steam has nothing emulated to diagnose, so it carries no health dot.
-            // It does carry a source badge like every other platform.
-            const hideHealthDot = sourceIcon.kind === 'steam-owned';
             const recentUnlockText = !hasAchievements
               ? progressLabel
               : latestUnlock
@@ -3434,9 +3469,6 @@ var app = {
               lastPlayed: localeText('sort.tooltip.played'),
               playtime: localeText('settings.notification.test.playtime'),
             };
-            const ownership = ownershipBadgeFor(game);
-            const ownershipBadgeClass = ownership.state;
-            const ownershipLabel = ownership.label;
             let template = `
             <li>
                 <div class="game-box" data-index="${listIndex}" data-appid="${game.appid}" data-progress="${hasAchievements ? progress : -1}" data-installed="${
@@ -3469,20 +3501,7 @@ var app = {
                         game.name
                       )}</span></div>
                       <div class="game-meta">
-                        ${
-                          healthDot && !hideHealthDot
-                            ? `<span class="health-badge ${healthDot.state}" title="${escapeHtml(
-                                healthDot.label
-                              )}" role="img" aria-label="${escapeHtml(healthDot.label)}"></span>`
-                            : ''
-                        }
-                        ${
-                          ownershipLabel
-                            ? `<span class="ownership-badge ${ownershipBadgeClass}" title="${escapeHtml(
-                                ownershipLabel
-                              )}" role="img" aria-label="${escapeHtml(ownershipLabel)}"><i class="fas fa-info-circle" aria-hidden="true"></i></span>`
-                            : ''
-                        }
+                        ${statusBadgeHtml(game)}
                         ${
                           sourceIcon.img
                             ? `<img class="source-icon" src="${escapeHtml(sourceIcon.img)}" data-kind="${escapeHtml(sourceIcon.kind)}" title="${escapeHtml(
@@ -3735,12 +3754,14 @@ var app = {
               const withExe = new Set(
                 entries.filter((e) => e.exe && !exeDetect.isKnownNonGameExe(path.basename(e.exe))).map((e) => String(e.appid))
               );
-              for (const game of gameList) {
-                if (withExe.has(String(game.appid))) game.installed = true;
-              }
+              const upgraded = gameList.filter((game) => !game.installed && withExe.has(String(game.appid)));
+              for (const game of upgraded) game.installed = true;
               for (const box of document.querySelectorAll('#game-list .game-box[data-installed="0"]')) {
                 if (withExe.has(String(box.dataset.appid))) box.dataset.installed = '1';
               }
+              // They had no dot while not installed: draw one, then let the full report have its say.
+              for (const game of upgraded) repaintStatusBadge(game);
+              if (upgraded.length > 0) refreshHealthDots();
               window.applyInstalledFilter?.();
             } catch (err) {
               debug.log(err);
@@ -6554,26 +6575,8 @@ var app = {
           badge.prop('hidden', true).removeAttr('src').removeAttr('title').removeAttr('data-kind');
         }
 
-        /*
-          The two marks the tile carries beside that badge, for the same reason: on the game screen
-          the tile is out of sight, so whether these achievements are tracked and what the store says
-          you own was readable in the list and nowhere else.
-
-          One or the other, never both, exactly as a card reads: a game whose achievements come from
-          a local save is the one worth saying "tracked" about, and a game the store itself reports
-          is the one worth marking as owned. Saying both of a single game says nothing.
-        */
-        const health = hasHealthDot(game) && game.installed && presentation.kind !== 'steam-owned' ? healthDotFor(game) : null;
-        const healthBadge = $('#achievement .wrapper > .header .title .health-badge');
-        healthBadge.attr('class', `health-badge${health ? ` ${health.state}` : ''}`).prop('hidden', !health);
-        if (health) healthBadge.attr({ title: health.label, 'aria-label': health.label });
-        else healthBadge.removeAttr('title').removeAttr('aria-label');
-
-        const ownership = health ? { state: '', label: '' } : ownershipBadgeFor(game);
-        const ownershipBadge = $('#achievement .wrapper > .header .title .ownership-badge');
-        ownershipBadge.attr('class', `ownership-badge${ownership.state ? ` ${ownership.state}` : ''}`).prop('hidden', !ownership.label);
-        if (ownership.label) ownershipBadge.attr({ title: ownership.label, 'aria-label': ownership.label });
-        else ownershipBadge.removeAttr('title').removeAttr('aria-label');
+        // The tile's status mark beside that badge: on the game screen the tile is out of sight.
+        paintHeaderStatusBadge(game);
       }
 
       if (game.system) {

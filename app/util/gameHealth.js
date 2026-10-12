@@ -735,11 +735,40 @@ function scannedState(game) {
   return STATE.READY;
 }
 
+// Console emulators keep their trophies with the emulator; 'uplay' is a PC launcher, not a console.
+function isConsoleRecord(record) {
+  const system = String(record.system || '');
+  return !!system && system !== 'uplay';
+}
+
+/*
+  The dot of a game that is not an official purchase, or null for none. `reported` is the full
+  report's state once one exists. A game not installed, or with no achievements, has nothing on this
+  PC to judge, so it gets no dot rather than the report's "install folder unknown" orange.
+*/
+function dotState(game, reported) {
+  const record = game && typeof game === 'object' ? game : {};
+  if ((record.achievement && record.achievement.none) || !record.installed) return null;
+  const total = num(record.achievement && record.achievement.total);
+  if (isConsoleRecord(record)) return total > 0 ? STATE.READY : STATE.ATTENTION;
+  if (reported) return reported;
+  if (hasDot(record)) return scannedState(record);
+  return total > 0 ? STATE.READY : STATE.ATTENTION;
+}
+
+// Whether the full report can change the dot: dotState() ignores it everywhere else.
+function needsFullReport(game) {
+  const record = game && typeof game === 'object' ? game : {};
+  return !(record.achievement && record.achievement.none) && !isConsoleRecord(record) && !!record.installed;
+}
+
 module.exports = {
   deriveHealth,
   issueTopics,
   hasDot,
   scannedState,
+  dotState,
+  needsFullReport,
   STATE,
   LEVEL,
   ACTION,

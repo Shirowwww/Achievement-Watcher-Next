@@ -2063,6 +2063,7 @@
     "health-dot-ok": "Prestationerna är i ordning",
     "health-dot-check": "Något att kontrollera i Spelets hälsa (knappen för spelinställningar)",
     "health-dot-problem": "Prestationer spåras inte - se Spelets hälsa (knappen för spelinställningar)",
+    "retroachievements-badge": "Prestationer från ditt RetroAchievements-konto",
     "gh-check-install": "Spelfiler",
     "gh-check-executable": "Körbar fil",
     "gh-check-identity": "Spelets identitet",

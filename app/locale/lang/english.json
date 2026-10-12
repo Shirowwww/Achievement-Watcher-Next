@@ -2063,6 +2063,7 @@
     "health-dot-ok": "Achievements are healthy",
     "health-dot-check": "Something to check in Game health (game settings button)",
     "health-dot-problem": "Achievements are not tracked - see Game health (game settings button)",
+    "retroachievements-badge": "Achievements from your RetroAchievements account",
     "gh-check-install": "Game files",
     "gh-check-executable": "Executable",
     "gh-check-identity": "Game identity",

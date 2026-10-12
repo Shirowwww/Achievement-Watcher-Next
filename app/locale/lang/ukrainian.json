@@ -2063,6 +2063,7 @@
     "health-dot-ok": "З досягненнями все гаразд",
     "health-dot-check": "Є що перевірити в розділі Стан гри (кнопка налаштувань гри)",
     "health-dot-problem": "Досягнення не відстежуються - дивись Стан гри (кнопка налаштувань гри)",
+    "retroachievements-badge": "Досягнення з вашого облікового запису RetroAchievements",
     "gh-check-install": "Файли гри",
     "gh-check-executable": "Файл запуску",
     "gh-check-identity": "Ідентифікація гри",

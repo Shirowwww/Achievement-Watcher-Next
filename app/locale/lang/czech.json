@@ -2063,6 +2063,7 @@
     "health-dot-ok": "Úspěchy jsou v pořádku",
     "health-dot-check": "Něco ke kontrole ve Stavu hry (tlačítko nastavení hry)",
     "health-dot-problem": "Úspěchy nejsou sledovány - viz Stav hry (tlačítko nastavení hry)",
+    "retroachievements-badge": "Úspěchy z tvého účtu RetroAchievements",
     "gh-check-install": "Soubory hry",
     "gh-check-executable": "Spustitelný soubor",
     "gh-check-identity": "Identita hry",

@@ -2063,6 +2063,7 @@
     "health-dot-ok": "도전 과제가 정상입니다",
     "health-dot-check": "게임 상태에서 확인할 항목이 있습니다 (게임 설정 버튼)",
     "health-dot-problem": "도전 과제가 추적되지 않습니다 - 게임 상태를 확인하세요 (게임 설정 버튼)",
+    "retroachievements-badge": "RetroAchievements 계정의 도전 과제",
     "gh-check-install": "게임 파일",
     "gh-check-executable": "실행 파일",
     "gh-check-identity": "게임 식별",

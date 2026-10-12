@@ -51,12 +51,18 @@ renamed in 3.9.0 and the history is kept under one file.
 - **More console trophies get their unlock rate.** A trophy that Exophase titles a little
   differently from the game ("1 down" / "One Down") is now matched on its description, when that
   description is specific and unique. Astro's Playroom goes from 49 to all 51 rates.
+- **The same marks beside every game's name**, on its tile and on its achievement screen: where its
+  achievements come from, then either an info badge for an official game (Steam, GOG, Epic, Ubisoft
+  Connect, EA, Xbox, RetroAchievements) or the Game health dot for an installed game a crack or an
+  emulator serves. Installed console emulator games get a dot too.
 
 ### Fixed
 
 - **A console game's own background on its achievement page.** Artwork a console emulator source
   keeps on disk, such as a PS5 game's key art, never reached the page background, which stayed
   plain dark.
+- **Official Ubisoft Connect games no longer show a Game health dot** beside their "in your
+  library" badge: there is nothing emulated to diagnose on them.
 - **Screenshot and clip souvenirs for every source.** Unlocks seen by the RPCS3, ShadPS4, Xenia,
   recompiled Xbox 360, GOG, Ubisoft, RetroAchievements and mod watchers showed their popup but took
   no souvenir.
