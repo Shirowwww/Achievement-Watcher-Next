@@ -862,6 +862,12 @@
         "clipAudioDesc": "Pouze hra vynechá hlasový chat a hudbu. Když nelze zvuk hry zaznamenat samostatně, zaznamená se zvuk celého PC.",
         "clipAudioGame": "Pouze hra",
         "clipAudioAll": "Celý PC",
+        "clipEngine": "Nahrávač",
+        "clipEngineDesc": "gpu-screen-recorder nahrává pomocí grafické karty téměř bez zátěže. Softwarový nahrávač funguje na každém počítači, ale kóduje procesorem, ukládá soubory WebM a nahrává zvuk celého počítače.",
+        "clipEngineSoftware": "Softwarový (používá procesor)",
+        "clipEngineGpuFound": "gpu-screen-recorder je nainstalován.",
+        "clipEngineGpuMissing": "gpu-screen-recorder není nainstalován: nainstalujte jej z distribuce nebo z Flathubu, nebo zvolte softwarový nahrávač.",
+        "clipEngineCost": "Poslední hra se softwarovým nahrávačem: {cpu} % jednoho jádra procesoru.",
         "clipEstimate": "Velikost na klip",
         "clipEstimateValue": "až {size} MB",
         "clipDirHelp": "Jedna podsložka pro každou hru, soubory pojmenované „datum - úspěch“. Výchozí: Videa\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Pouze Windows. V Linuxu nemá žádný účinek."
             },
-            "souvenirHdrDesc": "Pouze Windows: opraví barvy, když je aktivní HDR ve Windows. V Linuxu se uloží standardní snímek."
+            "souvenirHdrDesc": "Pouze Windows: opraví barvy, když je aktivní HDR ve Windows. V Linuxu se uloží standardní snímek.",
+            "souvenirDirHelp": "Jedna podsložka pro každou hru, soubory pojmenované „datum - úspěch“. Výchozí: ~/Pictures/Achievement Watcher Next. Ve Waylandu se plocha jednou za relaci zeptá na sdílení obrazovky.",
+            "clipDesc": "Když hra běží, její poslední sekundy se uchovávají v paměti a při každém odemčení se uloží, přičemž oznámení je uprostřed. Ve Waylandu se plocha jednou zeptá na sdílení obrazovky.",
+            "clipAudioDesc": "V Linuxu se nahrává zvuk celého počítače.",
+            "clipDirHelp": "Jedna podsložka pro každou hru, soubory pojmenované „datum - úspěch“. Výchozí: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

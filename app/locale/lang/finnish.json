@@ -862,6 +862,12 @@
         "clipAudioDesc": "Vain peli jättää pois puheen ja musiikin. Jos pelin ääntä ei voi tallentaa erikseen, tallennetaan koko tietokoneen ääni.",
         "clipAudioGame": "Vain peli",
         "clipAudioAll": "Koko tietokone",
+        "clipEngine": "Tallennin",
+        "clipEngineDesc": "gpu-screen-recorder tallentaa näytönohjaimella lähes ilman kuormaa. Ohjelmistotallennin toimii millä tahansa tietokoneella, mutta koodaa prosessorilla, tallentaa WebM-tiedostoja ja tallentaa koko tietokoneen äänen.",
+        "clipEngineSoftware": "Ohjelmisto (käyttää prosessoria)",
+        "clipEngineGpuFound": "gpu-screen-recorder on asennettu.",
+        "clipEngineGpuMissing": "gpu-screen-recorder ei ole asennettu: asenna se jakelustasi tai Flathubista tai valitse ohjelmistotallennin.",
+        "clipEngineCost": "Viimeisin peli ohjelmistotallentimella: {cpu} % yhdestä prosessoriytimestä.",
         "clipEstimate": "Koko per klippi",
         "clipEstimateValue": "enintään {size} Mt",
         "clipDirHelp": "Yksi alikansio peliä kohden, tiedostojen nimet muodossa \"pvm - saavutus\". Oletus: Videot\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Vain Windows. Ei vaikutusta Linuxissa."
             },
-            "souvenirHdrDesc": "Vain Windows: korjaa värit, kun Windowsin HDR on käytössä. Linuxissa tallennetaan tavallinen kuvakaappaus."
+            "souvenirHdrDesc": "Vain Windows: korjaa värit, kun Windowsin HDR on käytössä. Linuxissa tallennetaan tavallinen kuvakaappaus.",
+            "souvenirDirHelp": "Yksi alikansio peliä kohden, tiedostojen nimet muodossa \"pvm - saavutus\". Oletus: ~/Pictures/Achievement Watcher Next. Waylandissa työpöytä kysyy kerran istuntoa kohden, saako näytön jakaa.",
+            "clipDesc": "Pelin ollessa käynnissä sen viimeiset sekunnit pidetään muistissa ja tallennetaan jokaisen avaamisen ympäriltä, ilmoitus keskellä. Waylandissa työpöytä kysyy kerran, saako näytön jakaa.",
+            "clipAudioDesc": "Linuxissa tallennetaan koko tietokoneen ääni.",
+            "clipDirHelp": "Yksi alikansio peliä kohden, tiedostojen nimet muodossa \"pvm - saavutus\". Oletus: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

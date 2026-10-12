@@ -30,3 +30,7 @@ test('a platform chosen on the command line is kept, which also stops a restart 
   assert.equal(run({ argv: ['/opt/aw/aw', '--ozone-platform=wayland'] }), null);
   assert.equal(run({ argv: ['/opt/aw/aw', '--ozone-platform-hint=auto'] }), null);
 });
+
+test('a shortcut press forwarded to the running copy is not restarted first', () => {
+  assert.equal(run({ argv: ['/opt/aw/aw', '--toggle-overlay'] }), null);
+});

@@ -25,6 +25,10 @@ renamed in 3.9.0 and the history is kept under one file.
   desktop notifications, with their sound, playtime is tracked, and the app can start with your
   desktop session. On Linux the interface speaks of desktop notifications, the Trash and Linux
   folders instead of their Windows counterparts.
+- **Souvenirs on Linux.** Screenshots and clips of each unlock work on Linux too, on X11 and on
+  Wayland, where the desktop asks once to share the screen. Clips are recorded by
+  gpu-screen-recorder with the graphics card when it is installed, or, if you choose it in
+  Settings, by AW Next's own software recorder, which saves WebM files and shows what it cost.
 - **RetroAchievements games found on disk.** A game whose ROM RetroArch knows, from its history or
   a scanned playlist, now counts as installed and opens on the ROM's folder.
 - **A new installer and uninstaller.** One window in AW Next's own look replaces the Windows

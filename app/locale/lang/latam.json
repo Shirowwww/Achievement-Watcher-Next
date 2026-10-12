@@ -862,6 +862,12 @@
         "clipAudioDesc": "Solo el juego deja fuera el chat de voz y la música. Cuando el sonido del juego no se puede grabar por separado, se graba el de toda la PC.",
         "clipAudioGame": "Solo el juego",
         "clipAudioAll": "Toda la PC",
+        "clipEngine": "Grabador",
+        "clipEngineDesc": "gpu-screen-recorder graba con la tarjeta gráfica con un costo casi nulo. El grabador por software funciona en cualquier PC, pero codifica con el procesador, guarda archivos WebM y graba el sonido de toda la PC.",
+        "clipEngineSoftware": "Software (usa el procesador)",
+        "clipEngineGpuFound": "gpu-screen-recorder está instalado.",
+        "clipEngineGpuMissing": "gpu-screen-recorder no está instalado: instálalo desde tu distribución o Flathub, o elige el grabador por software.",
+        "clipEngineCost": "Última partida con el grabador por software: {cpu} % de un núcleo del procesador.",
         "clipEstimate": "Tamaño por clip",
         "clipEstimateValue": "hasta {size} MB",
         "clipDirHelp": "Una subcarpeta por juego, archivos con el nombre \"fecha - logro\". Predeterminado: Videos\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Solo Windows. No tiene efecto en Linux."
             },
-            "souvenirHdrDesc": "Solo Windows: corrige los colores cuando el HDR de Windows está activo. En Linux se guarda la captura estándar."
+            "souvenirHdrDesc": "Solo Windows: corrige los colores cuando el HDR de Windows está activo. En Linux se guarda la captura estándar.",
+            "souvenirDirHelp": "Una subcarpeta por juego, archivos con el nombre \"fecha - logro\". Predeterminado: ~/Pictures/Achievement Watcher Next. En Wayland, el escritorio pregunta una vez por sesión para compartir la pantalla.",
+            "clipDesc": "Mientras un juego se ejecuta, sus últimos segundos se mantienen en memoria y se guardan alrededor de cada desbloqueo, con la notificación en el medio. En Wayland, el escritorio pregunta una vez para compartir la pantalla.",
+            "clipAudioDesc": "En Linux se graba el sonido de toda la PC.",
+            "clipDirHelp": "Una subcarpeta por juego, archivos con el nombre \"fecha - logro\". Predeterminado: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

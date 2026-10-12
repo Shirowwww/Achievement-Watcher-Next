@@ -862,6 +862,12 @@
         "clipAudioDesc": "Jeu seulement laisse de côté le chat vocal et la musique. Si le son du jeu ne peut pas être capté seul, c’est celui de tout le PC qui est enregistré.",
         "clipAudioGame": "Jeu seulement",
         "clipAudioAll": "Tout le PC",
+        "clipEngine": "Enregistreur",
+        "clipEngineDesc": "gpu-screen-recorder enregistre avec la carte graphique pour un coût quasi nul. L'enregistreur logiciel fonctionne sur n'importe quel PC mais encode avec le processeur, produit des fichiers WebM et enregistre le son de tout le PC.",
+        "clipEngineSoftware": "Logiciel (utilise le processeur)",
+        "clipEngineGpuFound": "gpu-screen-recorder est installé.",
+        "clipEngineGpuMissing": "gpu-screen-recorder n'est pas installé : installez-le depuis votre distribution ou Flathub, ou choisissez l'enregistreur logiciel.",
+        "clipEngineCost": "Dernière partie avec l'enregistreur logiciel : {cpu} % d'un cœur de processeur.",
         "clipEstimate": "Taille par clip",
         "clipEstimateValue": "jusqu’à {size} Mo",
         "clipDirHelp": "Un sous-dossier par jeu, fichiers nommés « date - succès ». Par défaut : Vidéos\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Windows uniquement. Sans effet sous Linux."
             },
-            "souvenirHdrDesc": "Windows uniquement : corrige les couleurs lorsque le HDR de Windows est actif. Sous Linux, la capture standard est enregistrée."
+            "souvenirHdrDesc": "Windows uniquement : corrige les couleurs lorsque le HDR de Windows est actif. Sous Linux, la capture standard est enregistrée.",
+            "souvenirDirHelp": "Un sous-dossier par jeu, fichiers nommés « date - succès ». Par défaut : ~/Pictures/Achievement Watcher Next. Sous Wayland, le bureau demande une fois par session de partager l'écran.",
+            "clipDesc": "Pendant une partie, ses dernières secondes sont gardées en mémoire puis enregistrées autour de chaque succès, la notification au milieu. Sous Wayland, le bureau demande une fois de partager l'écran.",
+            "clipAudioDesc": "Sous Linux, le son de tout le PC est enregistré.",
+            "clipDirHelp": "Un sous-dossier par jeu, fichiers nommés « date - succès ». Par défaut : ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

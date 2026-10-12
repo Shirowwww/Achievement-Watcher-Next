@@ -862,6 +862,12 @@
         "clipAudioDesc": "Iba hra vynechá hlasový čet a hudbu. Keď sa zvuk hry nedá zaznamenať samostatne, zaznamená sa zvuk celého PC.",
         "clipAudioGame": "Iba hra",
         "clipAudioAll": "Celý PC",
+        "clipEngine": "Nahrávač",
+        "clipEngineDesc": "gpu-screen-recorder nahráva pomocou grafickej karty takmer bez záťaže. Softvérový nahrávač funguje na každom počítači, ale kóduje procesorom, ukladá súbory WebM a nahráva zvuk celého počítača.",
+        "clipEngineSoftware": "Softvérový (používa procesor)",
+        "clipEngineGpuFound": "gpu-screen-recorder je nainštalovaný.",
+        "clipEngineGpuMissing": "gpu-screen-recorder nie je nainštalovaný: nainštalujte ho z distribúcie alebo z Flathubu, alebo zvoľte softvérový nahrávač.",
+        "clipEngineCost": "Posledná hra so softvérovým nahrávačom: {cpu} % jedného jadra procesora.",
         "clipEstimate": "Veľkosť na klip",
         "clipEstimateValue": "až {size} MB",
         "clipDirHelp": "Jeden podpriečinok pre každú hru, súbory pomenované „dátum - úspech“. Predvolené: Videá\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Iba Windows. V Linuxe nemá žiadny účinok."
             },
-            "souvenirHdrDesc": "Iba Windows: opraví farby, keď je vo Windowse aktívne HDR. V Linuxe sa uloží štandardná snímka."
+            "souvenirHdrDesc": "Iba Windows: opraví farby, keď je vo Windowse aktívne HDR. V Linuxe sa uloží štandardná snímka.",
+            "souvenirDirHelp": "Jeden podpriečinok pre každú hru, súbory pomenované „dátum - úspech“. Predvolené: ~/Pictures/Achievement Watcher Next. Vo Waylande sa pracovná plocha raz za reláciu opýta na zdieľanie obrazovky.",
+            "clipDesc": "Kým hra beží, jej posledné sekundy sa uchovávajú v pamäti a pri každom odomknutí sa uložia, pričom oznámenie je v strede. Vo Waylande sa pracovná plocha raz opýta na zdieľanie obrazovky.",
+            "clipAudioDesc": "V Linuxe sa nahráva zvuk celého počítača.",
+            "clipDirHelp": "Jeden podpriečinok pre každú hru, súbory pomenované „dátum - úspech“. Predvolené: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

@@ -862,6 +862,12 @@
         "clipAudioDesc": "Só o jogo deixa de fora o bate-papo por voz e a música. Quando o som do jogo não pode ser gravado separadamente, o do PC inteiro é gravado.",
         "clipAudioGame": "Só o jogo",
         "clipAudioAll": "PC inteiro",
+        "clipEngine": "Gravador",
+        "clipEngineDesc": "O gpu-screen-recorder grava com a placa de vídeo com custo quase nulo. O gravador por software funciona em qualquer PC, mas codifica com o processador, salva arquivos WebM e grava o som de todo o PC.",
+        "clipEngineSoftware": "Software (usa o processador)",
+        "clipEngineGpuFound": "O gpu-screen-recorder está instalado.",
+        "clipEngineGpuMissing": "O gpu-screen-recorder não está instalado: instale-o pela sua distribuição ou pelo Flathub, ou escolha o gravador por software.",
+        "clipEngineCost": "Última partida com o gravador por software: {cpu}% de um núcleo do processador.",
         "clipEstimate": "Tamanho por clipe",
         "clipEstimateValue": "até {size} MB",
         "clipDirHelp": "Uma subpasta por jogo, arquivos com o nome \"data - conquista\". Padrão: Vídeos\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Somente no Windows. Não tem efeito no Linux."
             },
-            "souvenirHdrDesc": "Somente no Windows: corrige as cores quando o HDR do Windows está ativo. No Linux, a captura padrão é salva."
+            "souvenirHdrDesc": "Somente no Windows: corrige as cores quando o HDR do Windows está ativo. No Linux, a captura padrão é salva.",
+            "souvenirDirHelp": "Uma subpasta por jogo, arquivos com o nome \"data - conquista\". Padrão: ~/Pictures/Achievement Watcher Next. No Wayland, a área de trabalho pergunta uma vez por sessão se deseja compartilhar a tela.",
+            "clipDesc": "Enquanto um jogo está em execução, seus últimos segundos ficam na memória e são salvos em torno de cada desbloqueio, com a notificação no meio. No Wayland, a área de trabalho pergunta uma vez se deseja compartilhar a tela.",
+            "clipAudioDesc": "No Linux, o som de todo o PC é gravado.",
+            "clipDirHelp": "Uma subpasta por jogo, arquivos com o nome \"data - conquista\". Padrão: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

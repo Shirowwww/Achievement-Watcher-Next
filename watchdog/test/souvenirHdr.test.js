@@ -66,3 +66,10 @@ test('no screen grabber is compiled at run time any more', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
   assert.equal((manifest.dependencies || {})['screenshot-desktop'], undefined);
 });
+
+test('on Linux the app takes the screenshot, asked over the IPC channel', async () => {
+  const sent = [];
+  const mode = await souvenir._captureImage('/home/me/Pictures/AW/Game/shot.png', 'auto', { platform: 'linux', send: (msg) => sent.push(msg) });
+  assert.equal(mode, 'sdr', 'Linux captures carry no HDR');
+  assert.deepEqual(sent, [{ souvenirCapture: { file: '/home/me/Pictures/AW/Game/shot.png' } }]);
+});

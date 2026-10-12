@@ -862,6 +862,12 @@
         "clipAudioDesc": "Endast spelet utelämnar röstchatt och musik. När spelets ljud inte kan spelas in separat spelas hela datorns ljud in.",
         "clipAudioGame": "Endast spelet",
         "clipAudioAll": "Hela datorn",
+        "clipEngine": "Inspelare",
+        "clipEngineDesc": "gpu-screen-recorder spelar in med grafikkortet och kostar nästan ingenting. Programvaruinspelaren fungerar på alla datorer, men kodar med processorn, sparar WebM-filer och spelar in ljudet från hela datorn.",
+        "clipEngineSoftware": "Programvara (använder processorn)",
+        "clipEngineGpuFound": "gpu-screen-recorder är installerat.",
+        "clipEngineGpuMissing": "gpu-screen-recorder är inte installerat: installera det från din distribution eller Flathub, eller välj programvaruinspelaren.",
+        "clipEngineCost": "Senaste spel med programvaruinspelaren: {cpu} % av en processorkärna.",
         "clipEstimate": "Storlek per klipp",
         "clipEstimateValue": "upp till {size} MB",
         "clipDirHelp": "En undermapp per spel, filer med namnet \"datum - prestation\". Standard: Videoklipp\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Endast Windows. Har ingen effekt i Linux."
             },
-            "souvenirHdrDesc": "Endast Windows: korrigerar färgerna när HDR i Windows är aktivt. I Linux sparas den vanliga skärmbilden."
+            "souvenirHdrDesc": "Endast Windows: korrigerar färgerna när HDR i Windows är aktivt. I Linux sparas den vanliga skärmbilden.",
+            "souvenirDirHelp": "En undermapp per spel, filer med namnet \"datum - prestation\". Standard: ~/Pictures/Achievement Watcher Next. I Wayland frågar skrivbordet en gång per session om skärmen ska delas.",
+            "clipDesc": "Medan ett spel körs sparas dess sista sekunder i minnet och lagras runt varje upplåsning, med aviseringen i mitten. I Wayland frågar skrivbordet en gång om skärmen ska delas.",
+            "clipAudioDesc": "I Linux spelas ljudet från hela datorn in.",
+            "clipDirHelp": "En undermapp per spel, filer med namnet \"datum - prestation\". Standard: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

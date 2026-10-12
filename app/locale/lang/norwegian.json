@@ -862,6 +862,12 @@
         "clipAudioDesc": "Bare spillet utelater talechat og musikk. Når spillets lyd ikke kan tas opp alene, tas hele pc-ens lyd opp.",
         "clipAudioGame": "Bare spillet",
         "clipAudioAll": "Hele pc-en",
+        "clipEngine": "Opptaker",
+        "clipEngineDesc": "gpu-screen-recorder tar opp med grafikkortet og koster nesten ingenting. Programvareopptakeren fungerer på alle PC-er, men koder med prosessoren, lagrer WebM-filer og tar opp lyden fra hele PC-en.",
+        "clipEngineSoftware": "Programvare (bruker prosessoren)",
+        "clipEngineGpuFound": "gpu-screen-recorder er installert.",
+        "clipEngineGpuMissing": "gpu-screen-recorder er ikke installert: installer det fra distribusjonen din eller Flathub, eller velg programvareopptakeren.",
+        "clipEngineCost": "Siste spill med programvareopptakeren: {cpu} % av én prosessorkjerne.",
         "clipEstimate": "Størrelse per klipp",
         "clipEstimateValue": "opptil {size} MB",
         "clipDirHelp": "Én undermappe per spill, filer med navn «dato - prestasjon». Standard: Videoer\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Kun Windows. Har ingen effekt i Linux."
             },
-            "souvenirHdrDesc": "Kun Windows: retter fargene når HDR er aktivt i Windows. I Linux lagres det vanlige skjermbildet."
+            "souvenirHdrDesc": "Kun Windows: retter fargene når HDR er aktivt i Windows. I Linux lagres det vanlige skjermbildet.",
+            "souvenirDirHelp": "Én undermappe per spill, filer med navn «dato - prestasjon». Standard: ~/Pictures/Achievement Watcher Next. På Wayland spør skrivebordet én gang per økt om å dele skjermen.",
+            "clipDesc": "Mens et spill kjører, lagres de siste sekundene i minnet og lagres rundt hver opplåsing, med varselet i midten. På Wayland spør skrivebordet én gang om å dele skjermen.",
+            "clipAudioDesc": "På Linux tas lyden fra hele PC-en opp.",
+            "clipDirHelp": "Én undermappe per spill, filer med navn «dato - prestasjon». Standard: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

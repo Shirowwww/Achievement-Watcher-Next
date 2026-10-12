@@ -7,7 +7,7 @@ const fs = require('fs');
 // no archive and the path is already the real one.
 function resolveUnpackedBinary(binPath) {
   const normalized = String(binPath || '');
-  const unpacked = normalized.replace(/app\.asar([\/])/, 'app.asar.unpacked$1');
+  const unpacked = normalized.replace(/app\.asar([\\/])/,'app.asar.unpacked$1');
   return fs.existsSync(unpacked) ? unpacked : normalized;
 }
 

@@ -26,7 +26,8 @@ function xwaylandRelaunch({ platform = process.platform, env = process.env, argv
   // No XWayland in this session: native Wayland is the only display there is.
   if (!env.DISPLAY) return null;
   const args = argv.slice(1);
-  if (hasPlatformChoice(args)) return null;
+  // A shortcut's `--toggle-overlay` only hands its press to the running copy: no window, no restart.
+  if (hasPlatformChoice(args) || args.includes('--toggle-overlay')) return null;
   return { execPath: env.APPIMAGE || execPath, args: [...args, X11_SWITCH] };
 }
 

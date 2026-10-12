@@ -24,8 +24,11 @@ test('settings saved as text are read by value, and anything unknown falls back'
     clipFps: 30,
     clipQuality: 'medium',
     clipAudio: 'game',
+    clipEngine: 'gpu',
     clipDir: '',
   });
+  assert.equal(profile.normalize({ clipEngine: 'software' }).clipEngine, 'software');
+  assert.equal(profile.normalize({ clipEngine: 'obs' }).clipEngine, 'gpu');
   assert.equal(profile.normalize({ clipDir: '  D:\\Clips ' }).clipDir, 'D:\\Clips');
   const read = profile.normalize({ clip: 'true', clipSeconds: '45', clipFps: '60', clipCodec: 'av1', clipResolution: 'native', clipAudio: 'all' });
   assert.equal(read.clip, true);

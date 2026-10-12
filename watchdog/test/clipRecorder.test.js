@@ -53,12 +53,89 @@ test('the Watchdog keeps the recorder in step with games and settings, and unloc
   assert.match(toasterSource, /!message\.silent && !message\.progress\) \{\n\s+require\('\.\/clip\.js'\)\.trigger\(/);
 });
 
-test('nothing runs while clips are off, off Windows, or without a game', () => {
+test('nothing runs while clips are off, without a recorder program, or without a game', () => {
   const spawner = fakeSpawner();
   assert.equal(clip.sync({ clip: false }, game, deps(spawner)), null);
-  assert.equal(clip.sync(enabled, game, { ...deps(spawner), platform: 'linux' }), null);
+  assert.equal(clip.sync(enabled, game, { ...deps(spawner), platform: 'linux', locate: () => null }), null);
+  assert.equal(clip.sync(enabled, game, { ...deps(spawner), platform: 'darwin' }), null);
   assert.equal(clip.sync(enabled, null, deps(spawner)), null);
   assert.equal(spawner.children.length, 0);
+});
+
+function linuxDeps(spawner, extra = {}) {
+  const signals = [];
+  return {
+    signals,
+    platform: 'linux',
+    run: spawner.run,
+    locate: () => ({ command: '/usr/bin/gpu-screen-recorder', prefix: [], via: 'path' }),
+    replayDir: '/tmp/replay',
+    profileDir: '/home/me/.config/aw',
+    env: { XDG_SESSION_TYPE: 'x11' },
+    kill: (pid, signal) => signals.push(signal),
+    ...extra,
+  };
+}
+
+test('on Linux gpu-screen-recorder keeps the replay buffer, through the portal on Wayland', () => {
+  const spawner = fakeSpawner();
+  clip.sync(enabled, game, linuxDeps(spawner));
+  const args = spawner.children[0].args;
+  const value = (name) => args[args.indexOf(name) + 1];
+  assert.equal(value('-w'), 'screen');
+  assert.equal(value('-r'), '20', 'the buffer holds the whole clip');
+  assert.equal(value('-f'), '60');
+  assert.equal(value('-q'), 'very_high');
+  assert.equal(value('-o'), '/tmp/replay');
+  assert.equal(args.includes('-restore-portal-session'), false);
+
+  clip.sync(enabled, game, linuxDeps(spawner, { env: { XDG_SESSION_TYPE: 'wayland' } }));
+  const wayland = spawner.children[1].args;
+  assert.equal(wayland[wayland.indexOf('-w') + 1], 'portal');
+  assert.equal(wayland[wayland.indexOf('-portal-session-token-filepath') + 1], path.join('/home/me/.config/aw', '.aw-next-gsr-portal-token'));
+});
+
+test('on Linux an unlock saves the replay half a clip later, renamed into the clip folder', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-clip-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const spawner = fakeSpawner();
+  const d = linuxDeps(spawner);
+  clip.sync(enabled, game, d);
+  const file = clip.trigger({ game: 'Some Game', achievement: 'First Blood', dir });
+  assert.match(path.basename(file), / - First Blood\.mp4$/);
+  assert.equal(clip.trigger({ game: 'Some Game', achievement: 'Second', dir }), file, 'a close unlock joins the same clip');
+  assert.deepEqual(d.signals, []);
+  t.mock.timers.tick(10000);
+  assert.deepEqual(d.signals, ['SIGUSR1']);
+
+  const saved = path.join(dir, 'Replay_2026-10-14_12-00-00.mp4');
+  fs.writeFileSync(saved, 'video');
+  spawner.children[0].stdout.write(saved + '\n');
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(fs.readFileSync(file, 'utf8'), 'video');
+  assert.equal(fs.existsSync(saved), false);
+
+  clip.stop();
+  assert.deepEqual(d.signals, ['SIGUSR1', 'SIGINT'], 'gpu-screen-recorder is asked to quit');
+});
+
+test('the software recorder runs in the app, which the Watchdog only drives', (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-clip-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const sent = [];
+  const spawner = fakeSpawner();
+  clip.sync({ ...enabled, clipEngine: 'software' }, game, { platform: 'linux', run: spawner.run, send: (msg) => sent.push(msg) });
+  assert.equal(spawner.children.length, 0);
+  assert.equal(sent[0].clipRecorder.action, 'start');
+  assert.equal(sent[0].clipRecorder.settings.clipSeconds, 20);
+
+  const file = clip.trigger({ game: 'Some Game', achievement: 'First Blood', dir });
+  assert.match(path.basename(file), / - First Blood\.webm$/);
+  assert.deepEqual(sent[1], { clipRecorder: { action: 'trigger', file } });
+
+  clip.sync({ ...enabled, clipEngine: 'software' }, null, {});
+  assert.deepEqual(sent[2], { clipRecorder: { action: 'stop' } });
 });
 
 test('the recorder follows the game and the settings, the unlock in the middle of the clip', () => {

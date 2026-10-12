@@ -2632,16 +2632,32 @@ function handleMonitorMessage(msg) {
     else if (msg && msg.achievementUnlocked) forwardUnlockToLibrary(msg.achievementUnlocked);
     else if (msg && msg.achievementProgress) forwardProgressToLibrary(msg.achievementProgress);
     else if (msg && msg.desktopNotification) desktopNotifier().show(msg.desktopNotification);
+    else if (msg && (msg.souvenirCapture || msg.clipRecorder) && process.platform === 'linux') linuxSouvenirs().handle(msg);
   } catch (err) {
     debug.log(`[monitor] message handling failed: ${err.message || err}`);
   }
 }
 
+let cachedLinuxSouvenirs = null;
+function linuxSouvenirs() {
+  if (!cachedLinuxSouvenirs) {
+    cachedLinuxSouvenirs = require('./souvenirLinux.js').createSouvenirService({
+      electron: require('electron'),
+      userData: app.getPath('userData'),
+      log: (message) => debug.log(message),
+    });
+  }
+  return cachedLinuxSouvenirs;
+}
+
+// Settings > Souvenirs on Linux: is gpu-screen-recorder there, and what did software clips cost.
+ipcMain.handle('souvenir:linux-status', () => (process.platform === 'linux' ? linuxSouvenirs().status() : null));
+
 let cachedDesktopNotifier = null;
 function desktopNotifier() {
   if (!cachedDesktopNotifier) {
     cachedDesktopNotifier = require('./desktopNotification.js').createDesktopNotifier({
-      Notification: require('electron').Notification,
+      Notification,
       onClick: (target) => {
         createMainWindow();
         openGameFromLaunchArgs(target);
@@ -3013,14 +3029,14 @@ let bgAutoFixHeldTicks = 0;
 function notifyEmulatorFixed(game) {
   try {
     if (configJS && configJS.notification && configJS.notification.notify === false) return; // master notif switch
-    if (!Notification.isSupported || !Notification.isSupported()) return;
     const name = (game && game.name) || `AppID ${game && game.appid}`;
-    new Notification({
-      title: t('emulator-fix-applied', 'Emulator fix applied', 'Correctif émulateur appliqué'),
-      body: t('x-is-ready-achievements-enabled', '{name} is ready - achievements enabled.', '{name} est prêt - succès activés.', { name }),
-      icon: path.join(__dirname, '../resources/icon/icon.png'),
-    }).show();
-    debug.log(`[bg-autofix] toast: emulator fix applied for ${name}`);
+    desktopNotifier()
+      .notify({
+        title: t('emulator-fix-applied', 'Emulator fix applied', 'Correctif émulateur appliqué'),
+        body: t('x-is-ready-achievements-enabled', '{name} is ready - achievements enabled.', '{name} est prêt - succès activés.', { name }),
+        icon: path.join(__dirname, '../resources/icon/icon.png'),
+      })
+      .then((shown) => shown && debug.log(`[bg-autofix] toast: emulator fix applied for ${name}`));
   } catch (err) {
     debug.log(`[bg-autofix] notify failed: ${err.message || err}`);
   }
@@ -7019,7 +7035,7 @@ function installLinuxDesktopEntry() {
   Without a keyring, safeStorage on Linux only obfuscates (basic_text), so saved sign-ins are not
   really protected. Said once, and again if a keyring that was there goes away.
 */
-function warnIfNoKeyring() {
+async function warnIfNoKeyring() {
   const marker = path.join(userData, 'cfg', 'no-keyring-warned');
   try {
     appSecret(); // safeStorage picks its backend on first use
@@ -7030,14 +7046,16 @@ function warnIfNoKeyring() {
     }
     if (fs.existsSync(marker)) return;
     debug.log(`[secret] no keyring (${backend}) - warning the user once`);
-    new Notification({
+    const shown = await desktopNotifier().notify({
       title: t('no-keyring-title', 'Your sign-ins are not protected', 'Tes connexions ne sont pas protégées'),
       body: t(
         'no-keyring-body',
         "No keyring (GNOME Keyring or KWallet) answered, so saved sign-ins (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) are stored without real encryption. Start your desktop's keyring and restart AW Next.",
         "Aucun trousseau (GNOME Keyring ou KWallet) n'a répondu : les connexions enregistrées (Steam, Epic, Xbox, RetroAchievements, SteamGridDB) sont stockées sans vrai chiffrement. Lance le trousseau de ton bureau puis redémarre AW Next."
       ),
-    }).show();
+    });
+    // Unseen (no notification service), it is said again on a later start.
+    if (!shown) return;
     fs.mkdirSync(path.dirname(marker), { recursive: true });
     fs.writeFileSync(marker, backend);
   } catch (err) {
@@ -7498,6 +7516,12 @@ try {
       // the tray) should surface the UI window.
       debug.log(`[second-instance] argv=${JSON.stringify(argv || [])}`);
       const args = normalizeWindowArgs(minimist(argv.slice(1)));
+      // A desktop shortcut running `--toggle-overlay` reaches the overlay whatever window has the
+      // focus, which the global shortcut cannot do while a native Wayland window holds it.
+      if (args['toggle-overlay']) {
+        notifyMonitorOverlayHotkey();
+        return;
+      }
       if ((args['wintype'] || 'main') === 'main') createMainWindow();
       else parseArgs(args);
 

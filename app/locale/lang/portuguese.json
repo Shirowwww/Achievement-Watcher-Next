@@ -862,6 +862,12 @@
         "clipAudioDesc": "Só o jogo deixa de fora o chat de voz e a música. Quando o som do jogo não pode ser gravado em separado, é gravado o de todo o PC.",
         "clipAudioGame": "Só o jogo",
         "clipAudioAll": "Todo o PC",
+        "clipEngine": "Gravador",
+        "clipEngineDesc": "O gpu-screen-recorder grava com a placa gráfica com custo quase nulo. O gravador por software funciona em qualquer PC, mas codifica com o processador, guarda ficheiros WebM e grava o som de todo o PC.",
+        "clipEngineSoftware": "Software (usa o processador)",
+        "clipEngineGpuFound": "O gpu-screen-recorder está instalado.",
+        "clipEngineGpuMissing": "O gpu-screen-recorder não está instalado: instale-o a partir da sua distribuição ou do Flathub, ou escolha o gravador por software.",
+        "clipEngineCost": "Último jogo com o gravador por software: {cpu}% de um núcleo do processador.",
         "clipEstimate": "Tamanho por clipe",
         "clipEstimateValue": "até {size} MB",
         "clipDirHelp": "Uma subpasta por jogo, ficheiros com o nome \"data - proeza\". Predefinição: Vídeos\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Apenas no Windows. Não tem efeito no Linux."
             },
-            "souvenirHdrDesc": "Apenas no Windows: corrige as cores quando o HDR do Windows está ativo. No Linux, é guardada a captura padrão."
+            "souvenirHdrDesc": "Apenas no Windows: corrige as cores quando o HDR do Windows está ativo. No Linux, é guardada a captura padrão.",
+            "souvenirDirHelp": "Uma subpasta por jogo, ficheiros com o nome \"data - proeza\". Predefinição: ~/Pictures/Achievement Watcher Next. No Wayland, o ambiente de trabalho pergunta uma vez por sessão se pretende partilhar o ecrã.",
+            "clipDesc": "Enquanto um jogo está em execução, os seus últimos segundos ficam na memória e são guardados em redor de cada desbloqueio, com a notificação no meio. No Wayland, o ambiente de trabalho pergunta uma vez se pretende partilhar o ecrã.",
+            "clipAudioDesc": "No Linux, é gravado o som de todo o PC.",
+            "clipDirHelp": "Uma subpasta por jogo, ficheiros com o nome \"data - proeza\". Predefinição: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

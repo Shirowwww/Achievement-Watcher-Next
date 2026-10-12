@@ -862,6 +862,12 @@
         "clipAudioDesc": "ゲームのみではボイスチャットと音楽を含めません。ゲームの音だけを録音できない場合は、PC 全体の音を録音します。",
         "clipAudioGame": "ゲームのみ",
         "clipAudioAll": "PC 全体",
+        "clipEngine": "レコーダー",
+        "clipEngineDesc": "gpu-screen-recorder はグラフィックカードで録画するため、負荷はほとんどかかりません。ソフトウェアレコーダーはどの PC でも動作しますが、プロセッサでエンコードし、WebM ファイルとして保存し、PC 全体の音声を録音します。",
+        "clipEngineSoftware": "ソフトウェア（プロセッサを使用）",
+        "clipEngineGpuFound": "gpu-screen-recorder はインストールされています。",
+        "clipEngineGpuMissing": "gpu-screen-recorder はインストールされていません。ディストリビューションまたは Flathub からインストールするか、ソフトウェアレコーダーを選んでください。",
+        "clipEngineCost": "ソフトウェアレコーダーでの直近のゲーム: プロセッサ 1 コアの {cpu}%。",
         "clipEstimate": "クリップあたりのサイズ",
         "clipEstimateValue": "最大 {size} MB",
         "clipDirHelp": "ゲームごとにサブフォルダーを作成し、ファイル名は「日付 - 実績」になります。既定: ビデオ\\Achievement Watcher Next。",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Windows のみ。Linux では効果がありません。"
             },
-            "souvenirHdrDesc": "Windows のみ：Windows HDR が有効なときに色を補正します。Linux では標準のスクリーンショットを保存します。"
+            "souvenirHdrDesc": "Windows のみ：Windows HDR が有効なときに色を補正します。Linux では標準のスクリーンショットを保存します。",
+            "souvenirDirHelp": "ゲームごとにサブフォルダーを作成し、ファイル名は「日付 - 実績」になります。既定: ~/Pictures/Achievement Watcher Next。Wayland ではセッションごとに 1 回、デスクトップから画面共有の確認が表示されます。",
+            "clipDesc": "ゲームの実行中は直前の数秒をメモリに保持し、実績を解除するたびにその前後を保存します。通知はクリップの中央に入ります。Wayland ではデスクトップから画面共有の確認が 1 回表示されます。",
+            "clipAudioDesc": "Linux では PC 全体の音声が録音されます。",
+            "clipDirHelp": "ゲームごとにサブフォルダーを作成し、ファイル名は「日付 - 実績」になります。既定: ~/Videos/Achievement Watcher Next。"
           }
         },
         "help": {

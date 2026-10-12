@@ -862,6 +862,12 @@
         "clipAudioDesc": "Game only leaves voice chat and music out. When the game's sound cannot be recorded on its own, the whole PC is.",
         "clipAudioGame": "Game only",
         "clipAudioAll": "Whole PC",
+        "clipEngine": "Recorder",
+        "clipEngineDesc": "gpu-screen-recorder records with the graphics card at almost no cost. The software recorder works on any PC but encodes on the processor, saves WebM files and records the whole PC's sound.",
+        "clipEngineSoftware": "Software (uses the processor)",
+        "clipEngineGpuFound": "gpu-screen-recorder is installed.",
+        "clipEngineGpuMissing": "gpu-screen-recorder is not installed: install it from your distribution or Flathub, or choose the software recorder.",
+        "clipEngineCost": "Last game with the software recorder: {cpu}% of one processor core.",
         "clipEstimate": "Size per clip",
         "clipEstimateValue": "up to {size} MB",
         "clipDirHelp": "One subfolder per game, files named \"date - achievement\". Default: Videos\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Windows only. Has no effect on Linux."
             },
-            "souvenirHdrDesc": "Windows only: corrects colours when Windows HDR is active. On Linux the standard capture is saved."
+            "souvenirHdrDesc": "Windows only: corrects colours when Windows HDR is active. On Linux the standard capture is saved.",
+            "souvenirDirHelp": "One subfolder per game, files named \"date - achievement\". Default: ~/Pictures/Achievement Watcher Next. On Wayland the desktop asks once per session to share the screen.",
+            "clipDesc": "While a game runs, its last seconds are kept and saved around each unlock, with the notification in the middle. On Wayland the desktop asks once to share the screen.",
+            "clipAudioDesc": "On Linux the whole PC's sound is recorded.",
+            "clipDirHelp": "One subfolder per game, files named \"date - achievement\". Default: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {
