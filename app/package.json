@@ -22,7 +22,7 @@
   },
   "license": "LGPL-3.0-only",
   "devDependencies": {
-    "electron": "^44.5.1",
+    "electron": "^44.7.0",
     "electron-builder": "^26.15.3",
     "electron-context-menu": "^5.1.0",
     "oxlint": "^1.87.0",
