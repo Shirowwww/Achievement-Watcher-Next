@@ -7,6 +7,7 @@ const balloon = require('../util/powerballoon');
 const fetch = require('./prefetch.js');
 const { makeSquareIcon } = require('../util/squareIcon.js');
 const notificationSound = require('../util/notificationSound.js');
+const gameSound = require('../util/gameSound.js');
 const { broadcast } = require('../websocket.js');
 const { arePopupsSuppressed, isOverlayLikelyHidden } = require('../queryUserNotificationState.js');
 const transportPolicy = require('./transportPolicy.js');
@@ -72,6 +73,29 @@ function setOverlayOptions(overlay) {
   defaultOverlay = overlay || null;
 }
 
+/*
+  Same order as the overlay popup in the app (enqueueNotificationFromArgs): a silent event never
+  rings, then the sound picked in the game's own panel, then a rare/100% sound, then the global one.
+  Playtime cards are the silent ones.
+*/
+function chooseToastSound(message, overlay) {
+  if (message.silent) return '';
+  const globalSound = () => notificationSound.resolveSoundFile(overlay.notificationSound);
+  const ownSound = gameSound.soundFor(message.appid);
+  if (ownSound === gameSound.SOUND_NONE) return '';
+  if (ownSound === gameSound.SOUND_RANDOM) return notificationSound.pickRandomSound() || globalSound();
+  if (ownSound) return notificationSound.resolveSoundFile(ownSound) || globalSound();
+
+  const tierSound = notificationSound.tierSound(overlay, {
+    notificationType: message.progress ? 'progress' : message.notificationType,
+    rarityPercent: message.rarityPercent,
+  });
+  if (tierSound === notificationSound.NO_SOUND) return '';
+  if (tierSound) return notificationSound.resolveSoundFile(tierSound) || globalSound();
+  if (overlay.randomSound === true) return notificationSound.pickRandomSound() || globalSound();
+  return globalSound();
+}
+
 module.exports = async (message, option = {}) => {
   try {
     // Playtime uses the game title, not an achievement label.
@@ -112,19 +136,7 @@ module.exports = async (message, option = {}) => {
       souvenir: option.souvenir || null,
     };
 
-    // Reuse the configured sound; playtime cards stay silent.
-    const overlay = option.overlay || defaultOverlay || {};
-    const tierSound = notificationSound.tierSound(overlay, {
-      notificationType: message.progress ? 'progress' : message.notificationType,
-      rarityPercent: message.rarityPercent,
-    });
-    options.toast.soundFile = message.silent || tierSound === notificationSound.NO_SOUND
-      ? ''
-      : tierSound
-        ? notificationSound.resolveSoundFile(tierSound) || notificationSound.resolveSoundFile(overlay.notificationSound)
-        : overlay.randomSound === true
-        ? notificationSound.pickRandomSound() || notificationSound.resolveSoundFile(overlay.notificationSound)
-        : notificationSound.resolveSoundFile(overlay.notificationSound);
+    options.toast.soundFile = chooseToastSound(message, option.overlay || defaultOverlay || {});
 
     if (options.notify) {
       if (plan.websocket) {

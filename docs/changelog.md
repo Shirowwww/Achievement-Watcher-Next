@@ -63,6 +63,10 @@ renamed in 3.9.0 and the history is kept under one file.
   plain dark.
 - **Official Ubisoft Connect games no longer show a Game health dot** beside their "in your
   library" badge: there is nothing emulated to diagnose on them.
+- **A game's own notification settings apply everywhere.** The sound picked in a game's panel now
+  also plays on its Windows notifications, where the global sound rang even for a game set to
+  "None". XLiveLessNess games now get their own preset, position and sound, and clicking their
+  Windows notification opens the game.
 - **Screenshot and clip souvenirs for every source.** Unlocks seen by the RPCS3, ShadPS4, Xenia,
   recompiled Xbox 360, GOG, Ubisoft, RetroAchievements and mod watchers showed their popup but took
   no souvenir.

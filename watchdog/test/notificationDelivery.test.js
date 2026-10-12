@@ -31,21 +31,30 @@ const REPLY = {
   SILENCE: () => {},
 };
 
-function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = false } = {}) {
+// Sound stubs that make the chosen file visible: resolveSoundFile echoes the name it was asked for.
+const ECHO_SOUNDS = {
+  pickRandomSound: () => 'random.wav',
+  resolveSoundFile: (name) => (name ? `resolved:${name}` : ''),
+  tierSound: () => '',
+  NO_SOUND: '__none__',
+};
+
+function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = false, sounds = null, gameSound = '' } = {}) {
   const calls = { overlays: [], toasts: [], balloons: [], broadcasts: [] };
 
   const stubs = {
     path,
     fs,
-    './transport/toast.js': async (message) => {
-      calls.toasts.push(message);
+    './transport/toast.js': async (message, toastOptions) => {
+      calls.toasts.push([message, toastOptions]);
     },
     '../util/powerballoon': async (notification) => {
       calls.balloons.push(notification);
     },
     './prefetch.js': async (url) => url,
     '../util/squareIcon.js': { makeSquareIcon: async () => '' },
-    '../util/notificationSound.js': { pickRandomSound: () => '', resolveSoundFile: () => '', tierSound: () => '', NO_SOUND: '__none__' },
+    '../util/notificationSound.js': sounds || { pickRandomSound: () => '', resolveSoundFile: () => '', tierSound: () => '', NO_SOUND: '__none__' },
+    '../util/gameSound.js': { SOUND_NONE: '__none__', SOUND_RANDOM: '__random__', soundFor: () => gameSound },
     '../websocket.js': { broadcast: (payload) => calls.broadcasts.push(payload) },
     '../queryUserNotificationState.js': {
       arePopupsSuppressed: async () => false,
@@ -204,6 +213,38 @@ test('playtime notifications are not what the per-game memory learns from', asyn
   const { notify } = loadToaster();
   await notify(unlock({ notificationType: 'playtime', silent: true }), options('auto'));
   assert.equal(transportMemory.entryForGame('480'), null);
+});
+
+// The overlay popup already plays the game's own sound; a Windows notification for the same game
+// must not fall back to the global one.
+test('a Windows notification plays the sound chosen in the game panel', async () => {
+  const { notify, calls } = loadToaster({ sounds: ECHO_SOUNDS, gameSound: 'Xbox Classic.wav' });
+  await notify(unlock(), options('toast', { overlay: { notificationSound: 'Global.wav' } }));
+  assert.equal(calls.toasts[0][1].toast.soundFile, 'resolved:Xbox Classic.wav');
+});
+
+test('a game set to no sound gets a silent Windows notification', async () => {
+  const { notify, calls } = loadToaster({ sounds: ECHO_SOUNDS, gameSound: '__none__' });
+  await notify(unlock(), options('toast', { overlay: { notificationSound: 'Global.wav' } }));
+  assert.equal(calls.toasts[0][1].toast.soundFile, '');
+});
+
+test('a game set to random sound picks a random file for its Windows notification', async () => {
+  const { notify, calls } = loadToaster({ sounds: ECHO_SOUNDS, gameSound: '__random__' });
+  await notify(unlock(), options('toast', { overlay: { notificationSound: 'Global.wav' } }));
+  assert.equal(calls.toasts[0][1].toast.soundFile, 'random.wav');
+});
+
+test('a game with no sound of its own keeps the global sound on Windows notifications', async () => {
+  const { notify, calls } = loadToaster({ sounds: ECHO_SOUNDS });
+  await notify(unlock(), options('toast', { overlay: { notificationSound: 'Global.wav' } }));
+  assert.equal(calls.toasts[0][1].toast.soundFile, 'resolved:Global.wav');
+});
+
+test('a silent notification stays silent whatever the game panel chose', async () => {
+  const { notify, calls } = loadToaster({ sounds: ECHO_SOUNDS, gameSound: 'Xbox Classic.wav' });
+  await notify(unlock({ notificationType: 'playtime', silent: true }), options('toast'));
+  assert.equal(calls.toasts[0][1].toast.soundFile, '');
 });
 
 test('a game that only ever worked on toasts is not asked to try the overlay blind', async () => {

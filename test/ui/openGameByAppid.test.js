@@ -14,7 +14,7 @@ const appJs = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
 // digits. Both parsers below are the reason this cannot be relaxed back to a numeric assumption.
 test('non-numeric appids are a real shape a tile can carry', () => {
   assert.match(fs.readFileSync(path.join(appDir, 'parser/uplay.js'), 'utf8'), /appid: `UPLAY\$\{/);
-  assert.match(fs.readFileSync(path.join(appDir, 'parser/xlln.js'), 'utf8'), /appid: `xlln-\$\{/);
+  assert.equal(require(path.join(appDir, 'parser/xlln.js')).toAppid('4D5307D3'), 'xlln-4D5307D3');
 });
 
 test('a tile is found by comparing its appid, never by interpolating one into a selector', () => {

@@ -61,6 +61,17 @@ try {
   fs.mkdirSync(created, { recursive: true });
   assert.strictEqual(watchRootFor({ titleId: '66666666', gameDir: fresh }), created);
 
+  /*
+    Unlocks are notified under the id the library shows the game with, or the game's own notification
+    settings (preset, position, sound) and its Game Health delivery record never match it.
+  */
+  const libraryIds = require(path.join(__dirname, '..', '..', 'app', 'parser', 'xlln.js'))
+    .scan(library)
+    .map((entry) => entry.appid);
+  assert.ok(libraryIds.includes(`xlln-${SAMPLE_TITLE_ID_HEX}`), 'the library lists the title under its prefixed id');
+  const source = fs.readFileSync(path.join(__dirname, '..', 'console', 'xllnWatch.js'), 'utf8');
+  assert.match(source, /appid: xlln\.toAppid\(game\.titleId\),/, 'the watcher notifies under the library id');
+
   assert.strictEqual(iconPathOf({ icon: 'file:///C:/cache/xlln/ABC/1.png' }), path.normalize('C:/cache/xlln/ABC/1.png'));
   assert.strictEqual(iconPathOf({ icon: 'https://example.invalid/1.png' }), '', 'only local files are passed to the toast');
   assert.strictEqual(iconPathOf({}), '');

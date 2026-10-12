@@ -293,12 +293,18 @@ function parseState(buffer) {
   return unlocked;
 }
 
+// The library id of a title. The watcher notifies under the same id, so the game's own
+// notification settings and its Game Health delivery record apply to its unlocks.
+function toAppid(titleId) {
+  return `xlln-${titleId}`;
+}
+
 function scan(dir) {
   const games = [];
   for (const game of discover(dir)) {
     debug.log(`[xlln] ${game.name} (title ${game.titleId}, ${game.total} achievements) in '${game.gameDir}'`);
     games.push({
-      appid: `xlln-${game.titleId}`,
+      appid: toAppid(game.titleId),
       source: 'XLiveLessNess',
       data: {
         type: 'xlln',
@@ -371,7 +377,7 @@ async function getGameData(data, lang = 'english') {
 
   return {
     name: spa.titleName(parsed, lang) || String(info.titleId || ''),
-    appid: `xlln-${info.titleId}`,
+    appid: toAppid(info.titleId),
     system: 'xbox',
     img: { header: list.find((entry) => entry.icon)?.icon },
     achievement: { total: list.length, list },
@@ -405,6 +411,7 @@ function getAchievements(data) {
 }
 
 module.exports.iconDirFor = iconDirFor;
+module.exports.toAppid = toAppid;
 module.exports.scan = scan;
 module.exports.getGameData = getGameData;
 module.exports.getAchievements = getAchievements;

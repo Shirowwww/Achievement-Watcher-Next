@@ -146,7 +146,7 @@ async function handleChange(game, stateFile, ctx) {
           await ctx.notify(
             {
               source: 'XLiveLessNess',
-              appid: game.titleId,
+              appid: xlln.toAppid(game.titleId),
               gameDisplayName: gameName,
               achievementName: String(entry.id),
               achievementDisplayName: described.displayName,
