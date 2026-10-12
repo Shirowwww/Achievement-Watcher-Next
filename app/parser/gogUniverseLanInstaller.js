@@ -11,7 +11,7 @@ const path = require('path');
 const { lazyRequire } = require('../util/lazyRequire.js');
 const request = lazyRequire('request-zero');
 const pe = require('../util/pe.js');
-const { resolveUnpackedBinary } = require('../util/unpacked.js');
+const { sevenZipBin } = require('../util/unpacked.js');
 const { firstUnsafeEntry } = require('../util/archiveEntry.js');
 const gogUniverseLan = require('./gogUniverseLan.js');
 
@@ -93,8 +93,7 @@ async function ensureCompatTable({ cacheDir, force = false, log = noopLog } = {}
 
 async function extractZipAsset(archivePath, destDir, log) {
   const Seven = require('node-7z');
-  const sevenBin = resolveUnpackedBinary(require('7zip-bin').path7za);
-  if (!fs.existsSync(sevenBin)) throw new Error(`7za.exe not found at "${sevenBin}"`);
+  const sevenBin = sevenZipBin();
   const entries = await new Promise((resolve, reject) => {
     const found = [];
     const stream = Seven.list(archivePath, { $bin: sevenBin });

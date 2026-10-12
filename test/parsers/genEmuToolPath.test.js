@@ -11,7 +11,7 @@ const os = require('os');
 const path = require('path');
 const gen = require(path.join(__dirname, '..', '..', 'app', 'parser', 'genEmuConfig.js'));
 
-const { resolveToolExe, findExe } = gen._internal;
+const { resolveToolExe, findExe, TOOL_NAME } = gen._internal;
 
 (async () => {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-genemu-path-'));
@@ -21,16 +21,16 @@ const { resolveToolExe, findExe } = gen._internal;
     fs.mkdirSync(runtime, { recursive: true });
     fs.mkdirSync(outside, { recursive: true });
 
-    const good = path.join(runtime, 'generate_emu_config.exe');
+    const good = path.join(runtime, TOOL_NAME);
     fs.writeFileSync(good, 'MZ');
     assert.strictEqual(fs.realpathSync(resolveToolExe(good, runtime)), fs.realpathSync(good), 'the generator inside its runtime is accepted');
 
-    const nested = path.join(runtime, 'tools', 'generate_emu_config.exe');
+    const nested = path.join(runtime, 'tools', TOOL_NAME);
     fs.mkdirSync(path.dirname(nested), { recursive: true });
     fs.writeFileSync(nested, 'MZ');
     assert.ok(resolveToolExe(nested, runtime), 'a subfolder of the runtime is still inside it');
 
-    const stray = path.join(outside, 'generate_emu_config.exe');
+    const stray = path.join(outside, TOOL_NAME);
     fs.writeFileSync(stray, 'MZ');
     assert.throws(() => resolveToolExe(stray, runtime), /outside its cached runtime/, 'an executable outside the runtime is refused');
 
@@ -55,7 +55,7 @@ const { resolveToolExe, findExe } = gen._internal;
     }
     if (junctions) {
       assert.throws(
-        () => resolveToolExe(path.join(linked, 'generate_emu_config.exe'), runtime),
+        () => resolveToolExe(path.join(linked, TOOL_NAME), runtime),
         /outside its cached runtime/,
         'a link planted in the archive must not smuggle an executable in'
       );
@@ -64,9 +64,9 @@ const { resolveToolExe, findExe } = gen._internal;
     // findExe answers with the real path of a valid candidate and skips the ones it must refuse.
     const walkRoot = path.join(temp, 'walk');
     fs.mkdirSync(path.join(walkRoot, 'inner'), { recursive: true });
-    fs.writeFileSync(path.join(walkRoot, 'inner', 'generate_emu_config.exe'), 'MZ');
+    fs.writeFileSync(path.join(walkRoot, 'inner', TOOL_NAME), 'MZ');
     const found = findExe(walkRoot);
-    assert.ok(found && found.toLowerCase().endsWith('generate_emu_config.exe'), 'the generator is found anywhere in the extracted tree');
+    assert.ok(found && found.toLowerCase().endsWith(TOOL_NAME), 'the generator is found anywhere in the extracted tree');
     assert.strictEqual(fs.realpathSync(found), found, 'findExe answers with a real path');
 
     const emptyRoot = path.join(temp, 'empty');

@@ -11,7 +11,9 @@ const { spawn } = require('child_process');
 const { lazyRequire } = require('../util/lazyRequire.js');
 const request = lazyRequire('request-zero');
 const pe = require('../util/pe.js');
-const { resolveUnpackedBinary } = require('../util/unpacked.js');
+const { sevenZipBin, ensureExecutable } = require('../util/unpacked.js');
+const { elfArch } = require('../util/elf.js');
+const { unwrapTarball } = require('../util/tarball.js');
 const { safeArchiveEntry } = require('../util/archiveEntry.js');
 const unrealLayout = require('../util/unrealLayout.js');
 const crackLoaderDetect = require('../util/crackLoaderDetect.js');
@@ -30,15 +32,22 @@ const ARCH = {
 };
 
 
+// A native Linux game loads libsteam_api.so, one name for both builds; its ELF header says which.
+// The Linux builds come from the release's emu-linux-release archive, cached under <tag>/linux/<arch>/.
+const NATIVE_LIB = 'libsteam_api.so';
+const NATIVE_ASSET = 'emu-linux-release.tar.bz2';
+
 // GSE/GBE require steam_interfaces.txt to be generated from the game's ORIGINAL Steam API DLL. Both
-// generators are bundled in the same official emu-win-release.7z as the emulator binaries, so cache
+// generators are bundled in the same official release archive as the emulator binaries, so cache
 // them with the matching build instead of downloading an unrelated helper or guessing interfaces.
+// The generator only scans the dll's bytes, so off Windows the Linux build reads a Windows dll too.
+const TOOL_SUFFIX = process.platform === 'win32' ? '.exe' : '';
 const INTERFACE_TOOLS = {
-  x86: 'generate_interfaces_x86.exe',
-  x64: 'generate_interfaces_x64.exe',
+  x86: `generate_interfaces_x86${TOOL_SUFFIX}`,
+  x64: `generate_interfaces_x64${TOOL_SUFFIX}`,
 };
 const INTERFACE_SOURCE = {
-  x86: ['generate_interfaces_x86.exe', 'generate_interfaces_x32.exe'],
+  x86: [`generate_interfaces_x86${TOOL_SUFFIX}`, `generate_interfaces_x32${TOOL_SUFFIX}`],
 };
 
 const noopLog = { log() {}, error() {} };
@@ -64,13 +73,19 @@ function readText(file) {
 function cachedDlls(cacheDir, tag) {
   if (!tag) return null;
   const dir = path.join(cacheDir, tag);
-  const out = { tag, dir, x64: null, x86: null, interfaces: null };
+  const out = { tag, dir, x64: null, x86: null, native: { x64: null, x86: null }, interfaces: null };
   for (const key of Object.keys(ARCH)) {
     const p = path.join(dir, ARCH[key].file);
     if (fs.existsSync(p)) out[key] = p;
+    const lib = nativeCachePath(cacheDir, tag, key);
+    if (fs.existsSync(lib)) out.native[key] = lib;
   }
   out.interfaces = cachedInterfaceTools(cacheDir, tag);
   return out.x64 || out.x86 ? out : null;
+}
+
+function nativeCachePath(cacheDir, tag, archKey) {
+  return path.join(cacheDir, tag, 'linux', archKey, NATIVE_LIB);
 }
 
 function cachedInterfaceTools(cacheDir, tag) {
@@ -159,8 +174,7 @@ function describeCache(cacheDir) {
 // reaches even the temporary tree.
 async function extractCustomArchive(archivePath, destDir, log) {
   const Seven = require('node-7z');
-  const sevenBin = resolveUnpackedBinary(require('7zip-bin').path7za);
-  if (!fs.existsSync(sevenBin)) throw new Error(`7za.exe not found at "${sevenBin}"`);
+  const sevenBin = sevenZipBin();
   const entries = await new Promise((resolve, reject) => {
     const found = [];
     const stream = Seven.list(archivePath, { $bin: sevenBin });
@@ -328,9 +342,56 @@ function findByBasename(extractDir, basename, preferDir) {
   return path.join(extractDir, matches[0]);
 }
 
-// Download the latest release .7z and extract both arch DLLs into cacheDir/<tag>/. Returns the same
-// shape as cachedDlls(). Throws only on a genuine failure with no cached fallback available.
-async function downloadAndCache(cacheDir, tag, assetUrl, log) {
+// node-7z's error message is just the archive path; 7za's own words in stderr carry the real cause,
+// most often antivirus quarantining the download between write and read.
+function extractRelease(archive, destDir, cacheDir) {
+  const Seven = require('node-7z');
+  return new Promise((resolve, reject) => {
+    const stream = Seven.extractFull(archive, destDir, { $bin: sevenZipBin() });
+    stream.on('end', resolve);
+    stream.on('error', (err) => {
+      const stderr = String((err && err.stderr) || '');
+      if (/virus|malware|potentially unwanted|indésirable|unerwünschte|Operation did not complete/i.test(stderr)) {
+        const blocked = new Error(
+          'the emulator package was quarantined by security software before it could be read. ' +
+            'Steam emulators are flagged by most antivirus engines; allow this download, or install the DLLs by hand.'
+        );
+        blocked.code = 'GBE_DOWNLOAD_BLOCKED';
+        blocked.stderr = stderr;
+        blocked.folder = cacheDir;
+        return reject(blocked);
+      }
+      reject(err);
+    });
+  });
+}
+
+async function downloadLinuxBuild(assetUrl, tmpDir, cacheDir) {
+  const dl = await request.download(assetUrl, tmpDir);
+  if (!dl || !dl.path) throw new Error('download produced no file');
+  const tar = await unwrapTarball(dl.path, path.join(tmpDir, 'linux-tar'));
+  const extractDir = path.join(tmpDir, 'linux');
+  await extractRelease(tar, extractDir, cacheDir);
+  return extractDir;
+}
+
+function cacheNativeLibs(extractDir, cacheDir, tag, log) {
+  for (const key of Object.keys(ARCH)) {
+    const src = ARCH[key].dirs.map((dir) => path.join(extractDir, 'release', 'regular', dir, NATIVE_LIB)).find((file) => fs.existsSync(file));
+    if (!src) {
+      log.log(`[gbe] ${key} ${NATIVE_LIB} not found in ${tag} archive`);
+      continue;
+    }
+    const dest = nativeCachePath(cacheDir, tag, key);
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.copyFileSync(src, dest);
+  }
+}
+
+// Download the latest release and extract both arch DLLs into cacheDir/<tag>/, plus the native
+// libraries and this system's interface generators when `linuxUrl` is given. Returns the same shape
+// as cachedDlls(). Throws only on a genuine failure with no cached fallback available.
+async function downloadAndCache(cacheDir, tag, assetUrl, log, linuxUrl = null) {
   // Downloaded INSIDE the cache folder, not a random temp directory: antivirus flags Steam emulators
   // often, and the user needs one folder to allow that is also where the DLLs end up living.
   fs.mkdirSync(cacheDir, { recursive: true });
@@ -338,31 +399,8 @@ async function downloadAndCache(cacheDir, tag, assetUrl, log) {
   try {
     const dl = await request.download(assetUrl, tmpDir);
     if (!dl || !dl.path) throw new Error('download produced no file');
-
-    const Seven = require('node-7z');
-    const sevenBin = resolveUnpackedBinary(require('7zip-bin').path7za);
-    if (!fs.existsSync(sevenBin)) throw new Error(`7za.exe not found at "${sevenBin}"`);
     const extractDir = path.join(tmpDir, 'extracted');
-    await new Promise((resolve, reject) => {
-      const stream = Seven.extractFull(dl.path, extractDir, { $bin: sevenBin });
-      stream.on('end', resolve);
-      // node-7z's error message is just the archive path; 7za's own words in stderr carry the real
-      // cause, most often antivirus quarantining the download between write and read.
-      stream.on('error', (err) => {
-        const stderr = String((err && err.stderr) || '');
-        if (/virus|malware|potentially unwanted|indésirable|unerwünschte|Operation did not complete/i.test(stderr)) {
-          const blocked = new Error(
-            'the emulator package was quarantined by security software before it could be read. ' +
-              'Steam emulators are flagged by most antivirus engines; allow this download, or install the DLLs by hand.'
-          );
-          blocked.code = 'GBE_DOWNLOAD_BLOCKED';
-          blocked.stderr = stderr;
-          blocked.folder = cacheDir;
-          return reject(blocked);
-        }
-        reject(err);
-      });
-    });
+    await extractRelease(dl.path, extractDir, cacheDir);
 
     const destDir = path.join(cacheDir, tag);
     fs.mkdirSync(destDir, { recursive: true });
@@ -381,14 +419,25 @@ async function downloadAndCache(cacheDir, tag, assetUrl, log) {
     }
     if (found === 0) throw new Error('no steam_api DLL found in the downloaded archive');
 
+    let toolsSource = extractDir;
+    if (linuxUrl) {
+      toolsSource = await downloadLinuxBuild(linuxUrl, tmpDir, cacheDir);
+      cacheNativeLibs(toolsSource, cacheDir, tag, log);
+    }
+
     // Cache the exact generate_interfaces tools shipped with this emulator build. They must stay
     // version-coupled to the DLLs because interface support changes along with the fork.
     const toolsDir = path.join(destDir, 'tools');
     fs.mkdirSync(toolsDir, { recursive: true });
     for (const [arch, name] of Object.entries(INTERFACE_TOOLS)) {
-      const src = findByBasename(extractDir, INTERFACE_SOURCE[arch] || name);
-      if (src) fs.copyFileSync(src, path.join(toolsDir, name));
-      else log.log(`[gbe] ${name} not found in ${tag} archive`);
+      const src = findByBasename(toolsSource, INTERFACE_SOURCE[arch] || name);
+      if (!src) {
+        log.log(`[gbe] ${name} not found in ${tag} archive`);
+        continue;
+      }
+      const dest = path.join(toolsDir, name);
+      fs.copyFileSync(src, dest);
+      ensureExecutable(dest);
     }
 
     fs.writeFileSync(path.join(cacheDir, 'latest.txt'), tag);
@@ -421,8 +470,14 @@ function preservedOriginalsFor(dllFile) {
   return stem === String(dllFile) ? [] : [`${stem}.rne`, `${stem}.rne.bak`];
 }
 
+// libsteam_api.so, or a backup of it.
+function isNativeLib(file) {
+  return path.basename(String(file || '')).startsWith(NATIVE_LIB);
+}
+
 // x64 or x86 from a steam_api file name, whatever suffix a crack or a backup gave it.
 function archOfSteamApiFile(file) {
+  if (isNativeLib(file)) return elfArch(file) || 'x64';
   return /^steam_api64\./i.test(path.basename(String(file || ''))) ? 'x64' : 'x86';
 }
 
@@ -477,7 +532,7 @@ async function generateInterfaces({ dllPath, steamSettings, dlls, candidates = [
 
   const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gse-interfaces-'));
   try {
-    const localDll = path.join(workDir, ARCH[arch].file);
+    const localDll = path.join(workDir, isNativeLib(original) ? NATIVE_LIB : ARCH[arch].file);
     fs.copyFileSync(original, localDll);
     const run = await new Promise((resolve, reject) => {
       const child = spawn(toolExe, [...toolArgs, localDll], { cwd: workDir, windowsHide: true });
@@ -516,8 +571,9 @@ function matchesCachedDll(file, cacheDir, archKey) {
   if (!file || !cacheDir || !archKey || !ARCH[archKey] || !fs.existsSync(file)) return false;
   // The imported dll counts as ours too: without it a game repaired with a custom build reads as
   // untouched and gets repaired again on every scan.
-  const candidates = [path.join(cacheDir, CUSTOM_DIR, ARCH[archKey].file)];
   const tag = readText(path.join(cacheDir, 'latest.txt'));
+  if (isNativeLib(file)) return !!tag && sameFileBytes(file, nativeCachePath(cacheDir, tag, archKey));
+  const candidates = [path.join(cacheDir, CUSTOM_DIR, ARCH[archKey].file)];
   if (tag) candidates.push(path.join(cacheDir, tag, ARCH[archKey].file));
   return candidates.some((cached) => fs.existsSync(cached) && sameFileBytes(file, cached));
 }
@@ -556,10 +612,12 @@ function describeRuntimeDlls({ dllDirs = [], cacheDir = null } = {}) {
     const dirKey = path.resolve(dir).toLowerCase();
     if (seen.has(dirKey)) continue;
     seen.add(dirKey);
-    for (const archKey of Object.keys(ARCH)) {
-      const name = ARCH[archKey].file;
+    const runtimes = Object.keys(ARCH).map((archKey) => ({ name: ARCH[archKey].file, archKey }));
+    if (process.platform !== 'win32') runtimes.push({ name: NATIVE_LIB, archKey: null });
+    for (const { name, archKey: knownArch } of runtimes) {
       const file = path.join(dir, name);
       if (!fs.existsSync(file)) continue;
+      const archKey = knownArch || elfArch(file);
       let size = 0;
       let modified = 0;
       try {
@@ -657,7 +715,7 @@ function runtimeDllDirs({ gameDir, dllPaths = [], exePath = null, steamSettings 
   for (const dir of engineDirs) add(dir);
 
   for (const dllPath of dllPaths || []) {
-    if (!dllPath || !/^steam_api(64)?\.dll$/i.test(path.basename(dllPath))) continue;
+    if (!dllPath || !(/^steam_api(64)?\.dll$/i.test(path.basename(dllPath)) || path.basename(dllPath) === NATIVE_LIB)) continue;
     const dir = path.dirname(dllPath);
     const preferredDir = preferred.some((p) => sameDir(p, dir));
     if (!preferredDir && isAuxiliaryDllDir(dir, gameDir)) continue;
@@ -749,13 +807,36 @@ async function ensureReleaseDlls({ cacheDir, force = false, log = noopLog } = {}
     throw new Error(`No suitable .7z asset in the latest GBE Fork release. Check ${RELEASES_PAGE}`);
   }
 
-  log.log(`[gbe] downloading GBE Fork ${tag} (${asset.name})`);
-  return downloadAndCache(cacheDir, tag, asset.browser_download_url, log);
+  // Off Windows the native libraries and the interface generators come from the Linux build.
+  let linuxUrl = null;
+  if (process.platform !== 'win32') {
+    const linux = (release.assets || []).find((a) => a && a.name === NATIVE_ASSET && typeof a.browser_download_url === 'string');
+    if (!linux) {
+      if (cached) return cached;
+      throw new Error(`No ${NATIVE_ASSET} in the latest GBE Fork release. Check ${RELEASES_PAGE}`);
+    }
+    linuxUrl = linux.browser_download_url;
+  }
+
+  log.log(`[gbe] downloading GBE Fork ${tag} (${asset.name}${linuxUrl ? ` + ${NATIVE_ASSET}` : ''})`);
+  return downloadAndCache(cacheDir, tag, asset.browser_download_url, log, linuxUrl);
+}
+
+/*
+  The native library a dir needs, if any: the one already there is replaced by the build of its own
+  architecture, and `seedArch` puts one into a dir that has no Steam API runtime at all.
+*/
+function nativeTarget(dir, dlls, seedArch) {
+  const file = path.join(dir, NATIVE_LIB);
+  const arch = fs.existsSync(file) ? elfArch(file) : seedArch;
+  const source = arch && dlls.native && dlls.native[arch];
+  return source ? { name: NATIVE_LIB, buf: fs.readFileSync(source) } : null;
 }
 
 // Install the cached GBE DLLs into one or more dirs, backing up replaced originals as <name>.bak once.
 // writeIfMissing drops an arch into DLL-less dirs; ensureArch seeds an arch even when only the other one is present.
-function installDlls({ dllDirs, dlls, writeIfMissing = null, ensureArch = null, log = noopLog } = {}) {
+// nativeArch does the same for a native Linux game's libsteam_api.so, which is replaced wherever it is found.
+function installDlls({ dllDirs, dlls, writeIfMissing = null, ensureArch = null, nativeArch = null, log = noopLog } = {}) {
   if (!dlls || (!dlls.x64 && !dlls.x86)) throw new Error('installDlls: no cached GBE Fork DLLs available');
   const dirs = (Array.isArray(dllDirs) ? dllDirs : [dllDirs]).filter(Boolean);
   if (dirs.length === 0) throw new Error('installDlls: no target directories');
@@ -775,19 +856,24 @@ function installDlls({ dllDirs, dlls, writeIfMissing = null, ensureArch = null, 
     // writes a dll the engine never loads, so only an arch already on disk is replaced.
     const engineArch = unrealLayout.archOfSteamworksDir(dir);
     const seedable = (key) => !!key && (!engineArch || engineArch === key);
-    const targets = present.length > 0 ? [...present] : seedable(writeIfMissing) ? [writeIfMissing] : [];
-    if (seedable(ensureArch) && !targets.includes(ensureArch)) targets.push(ensureArch);
+    // A native game's folder never gets a Windows dll seeded beside its libsteam_api.so.
+    const hasNative = process.platform !== 'win32' && fs.existsSync(path.join(dir, NATIVE_LIB));
+    const targets = present.length > 0 || hasNative ? [...present] : seedable(writeIfMissing) ? [writeIfMissing] : [];
+    if (!hasNative && seedable(ensureArch) && !targets.includes(ensureArch)) targets.push(ensureArch);
 
-    for (const key of targets) {
-      const buf = buffers[key];
-      if (!buf) continue; // this arch wasn't in the release
-      const dest = path.join(dir, ARCH[key].file);
+    // An arch that wasn't in the release has no buffer and is skipped.
+    const files = targets.filter((key) => buffers[key]).map((key) => ({ name: ARCH[key].file, buf: buffers[key] }));
+    const native = nativeTarget(dir, dlls, present.length === 0 ? nativeArch : null);
+    if (native) files.push(native);
+
+    for (const { name, buf } of files) {
+      const dest = path.join(dir, name);
       if (fs.existsSync(dest)) {
         const bak = `${dest}.bak`;
         if (!fs.existsSync(bak)) {
           try {
             fs.copyFileSync(dest, bak);
-            entry.backedUp.push(ARCH[key].file);
+            entry.backedUp.push(name);
             summary.backedUp++;
           } catch (e) {
             log.error(`[gbe] could not back up ${dest} => ${e}`);
@@ -797,7 +883,7 @@ function installDlls({ dllDirs, dlls, writeIfMissing = null, ensureArch = null, 
       // A repack often ships steam_api64.dll read-only, and an open truncate is refused on it.
       clearReadOnly(dest);
       fs.writeFileSync(dest, buf);
-      entry.wrote.push(ARCH[key].file);
+      entry.wrote.push(name);
       summary.installed++;
     }
     summary.perDir.push(entry);
@@ -822,5 +908,6 @@ module.exports = {
   describeCache,
   ARCH,
   INTERFACE_TOOLS,
+  NATIVE_LIB,
   CUSTOM_DIR,
 };

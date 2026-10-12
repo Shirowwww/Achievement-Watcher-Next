@@ -21,10 +21,10 @@ const shimPath = (dir, name, body) => {
 (async () => {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-genemu-idle-'));
   try {
-    // generate() only runs a generate_emu_config.exe that lives inside the tool folder, so the shims
+    // generate() only runs a generator named like the real one that lives inside the tool folder, so the shims
     // are driven by a copy of this Node binary carrying that name. cmd.exe cannot stand in here: it
     // reads its own file name and stops parsing /c once renamed.
-    const cmd = path.join(temp, 'generate_emu_config.exe');
+    const cmd = path.join(temp, gen._internal.TOOL_NAME);
     // A hard link is the same file under the required name, without copying the whole runtime for
     // every run. Links only work within one volume, so the copy stays as the fallback.
     try {

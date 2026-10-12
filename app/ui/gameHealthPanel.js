@@ -394,7 +394,7 @@ async function readProgressCounters({ appid, saveSources, steamSettings }) {
       count: found.schema.length,
       source: found.origin,
       official,
-      canFetch: process.platform === 'win32' && /^[0-9]+$/.test(String(appid || '')),
+      canFetch: /^[0-9]+$/.test(String(appid || '')),
     };
   } catch (err) {
     debug.log(`[health] progress counters unreadable for ${appid} => ${formatErr(err)}`);
@@ -1471,12 +1471,17 @@ async function runGameHealthAction(appid, action, button) {
     const cfg = await exeList.get(appid);
     const exe = (cfg && cfg.exe) || game.exe || '';
     let arch = 'x64';
+    let nativeArch = null;
     try {
-      if (exe && fs.existsSync(exe)) arch = require(path.join(appPath, 'util/pe.js')).exeArch(exe) || 'x64';
+      if (exe && fs.existsSync(exe)) {
+        // A native Linux executable takes libsteam_api.so of its own architecture.
+        nativeArch = require(path.join(appPath, 'util/elf.js')).elfArch(exe);
+        arch = nativeArch || require(path.join(appPath, 'util/pe.js')).exeArch(exe) || 'x64';
+      }
     } catch {
       /* an unreadable header just means the 64-bit default is used */
     }
-    const plan = gameHealthRepair.planRuntimeInstall({ gbeInstaller, gameDir: game.gameDir, exePath: exe || null, steamSettings, arch });
+    const plan = gameHealthRepair.planRuntimeInstall({ gbeInstaller, gameDir: game.gameDir, exePath: exe || null, steamSettings, arch, native: !!nativeArch });
     const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'question',
       title: t('gh-confirm-runtime-title', 'Restore the emulator file?', 'Restaurer le fichier d’émulateur ?'),

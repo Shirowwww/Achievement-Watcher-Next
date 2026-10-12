@@ -2,14 +2,16 @@
 
 // GBE Fork "generate_emu_config" integration, the Advanced steam_settings path. Shells out to the
 // cached alex47exe/gse_fork_tools generator; anonymous by default, an optional Steam login (env vars,
-// never persisted) pulls private data. 2FA prompts forward to onPrompt. Windows-only.
+// never persisted) pulls private data. 2FA prompts forward to onPrompt. Linux runs the same release's
+// own Linux build.
 
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
 const { lazyRequire } = require('../util/lazyRequire.js');
-const { resolveUnpackedBinary } = require('../util/unpacked.js');
+const { sevenZipBin, ensureExecutable } = require('../util/unpacked.js');
+const { unwrapTarball } = require('../util/tarball.js');
 const { firstUnsafeEntry } = require('../util/archiveEntry.js');
 const request = lazyRequire('request-zero');
 
@@ -19,6 +21,9 @@ const RECHECK_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const USER_AGENT = 'Achievement-Watcher';
 
 const noopLog = { log() {}, error() {} };
+
+const IS_WINDOWS = process.platform === 'win32';
+const TOOL_NAME = IS_WINDOWS ? 'generate_emu_config.exe' : 'generate_emu_config';
 
 
 function readText(file) {
@@ -47,11 +52,11 @@ function resolveToolExe(exePath, runtimeDir) {
     realExe = fs.realpathSync(path.resolve(exe));
     realRoot = fs.realpathSync(path.resolve(root));
   } catch (e) {
-    throw new Error(`generate_emu_config.exe is unavailable: ${exe} (${e.message || e})`, { cause: e });
+    throw new Error(`${TOOL_NAME} is unavailable: ${exe} (${e.message || e})`, { cause: e });
   }
-  if (path.basename(realExe).toLowerCase() !== 'generate_emu_config.exe') throw new Error('generate_emu_config.exe has an unexpected name');
-  if (!isInsideDir(realRoot, realExe)) throw new Error('generate_emu_config.exe resolves outside its cached runtime');
-  if (!fs.statSync(realExe).isFile()) throw new Error('generate_emu_config.exe is not a file');
+  if (path.basename(realExe).toLowerCase() !== TOOL_NAME) throw new Error(`${TOOL_NAME} has an unexpected name`);
+  if (!isInsideDir(realRoot, realExe)) throw new Error(`${TOOL_NAME} resolves outside its cached runtime`);
+  if (!fs.statSync(realExe).isFile()) throw new Error(`${TOOL_NAME} is not a file`);
   return realExe;
 }
 
@@ -64,7 +69,7 @@ function findExe(dir) {
       return null;
     }
   };
-  const direct = accept(path.join(dir, 'generate_emu_config.exe'));
+  const direct = accept(path.join(dir, TOOL_NAME));
   if (direct) return direct;
   let all;
   try {
@@ -73,7 +78,7 @@ function findExe(dir) {
     return null;
   }
   for (const rel of all) {
-    if (path.basename(String(rel)).toLowerCase() !== 'generate_emu_config.exe') continue;
+    if (path.basename(String(rel)).toLowerCase() !== TOOL_NAME) continue;
     const hit = accept(path.join(dir, rel));
     if (hit) return hit;
   }
@@ -92,14 +97,14 @@ async function downloadAndCache(cacheDir, tag, assetUrl) {
     const dl = await request.download(assetUrl, tmpDir);
     if (!dl || !dl.path) throw new Error('download produced no file');
     const Seven = require('node-7z');
-    const sevenBin = resolveUnpackedBinary(require('7zip-bin').path7za);
-    if (!fs.existsSync(sevenBin)) throw new Error(`7za.exe not found at "${sevenBin}"`);
+    const sevenBin = sevenZipBin();
     const destDir = path.join(cacheDir, tag);
+    const archive = await unwrapTarball(dl.path, path.join(tmpDir, 'tar'));
 
     // An executable is run out of this folder afterwards, so no entry may land outside it.
     const listed = await new Promise((resolve, reject) => {
       const entries = [];
-      const stream = Seven.list(dl.path, { $bin: sevenBin });
+      const stream = Seven.list(archive, { $bin: sevenBin });
       stream.on('data', (entry) => entries.push(entry));
       stream.on('end', () => resolve(entries));
       stream.on('error', reject);
@@ -110,12 +115,13 @@ async function downloadAndCache(cacheDir, tag, assetUrl) {
     fs.rmSync(destDir, { recursive: true, force: true });
     fs.mkdirSync(destDir, { recursive: true });
     await new Promise((resolve, reject) => {
-      const stream = Seven.extractFull(dl.path, destDir, { $bin: sevenBin });
+      const stream = Seven.extractFull(archive, destDir, { $bin: sevenBin });
       stream.on('end', resolve);
       stream.on('error', reject);
     });
     const exe = findExe(destDir);
-    if (!exe) throw new Error('generate_emu_config.exe not found in the downloaded archive');
+    if (!exe) throw new Error(`${TOOL_NAME} not found in the downloaded archive`);
+    ensureExecutable(exe);
     fs.writeFileSync(path.join(cacheDir, 'latest.txt'), tag);
     fs.writeFileSync(path.join(cacheDir, '.last-check'), String(Date.now()));
     return { tag, exe, dir: path.dirname(exe) };
@@ -130,7 +136,6 @@ async function downloadAndCache(cacheDir, tag, assetUrl) {
 
 // Ensure the generate_emu_config tool is available; returns { tag, exe, dir }. Network at most weekly.
 async function ensureGenerateEmuConfig({ cacheDir, force = false, preferredTag = null, log = noopLog } = {}) {
-  if (process.platform !== 'win32') throw new Error('generate_emu_config is Windows-only');
   if (!cacheDir) throw new Error('ensureGenerateEmuConfig: cacheDir is required');
   fs.mkdirSync(cacheDir, { recursive: true });
 
@@ -188,10 +193,18 @@ async function ensureGenerateEmuConfig({ cacheDir, force = false, preferredTag =
     }
     return haveThis;
   }
-  const assets = (release && Array.isArray(release.assets) ? release.assets : []).filter(
-    (a) => a && typeof a.browser_download_url === 'string' && typeof a.name === 'string' && /\.(7z|zip)$/i.test(a.name)
+  const released = (release && Array.isArray(release.assets) ? release.assets : []).filter(
+    (a) => a && typeof a.browser_download_url === 'string' && typeof a.name === 'string'
   );
+  const assets = released.filter((a) => /\.(7z|zip)$/i.test(a.name));
+  // Off Windows only the release's own Linux build can run: gen_emu_cfg-Linux-Release.tar.bz2.
+  const linuxAsset = IS_WINDOWS ? null : released.find((a) => /linux/i.test(a.name) && /\.tar\.bz2$/i.test(a.name));
+  if (!IS_WINDOWS && !linuxAsset) {
+    if (cached) return cached;
+    throw new Error(`No Linux build in the latest gse_fork_tools release. Check ${RELEASES_PAGE}`);
+  }
   const asset =
+    linuxAsset ||
     assets.find((a) => /generate.*emu.*config/i.test(a.name) && /win/i.test(a.name)) ||
     assets.find((a) => /generate.*emu.*config/i.test(a.name)) ||
     assets.find((a) => /win/i.test(a.name)) ||
@@ -531,4 +544,4 @@ function mergeIntoGame(srcSteamSettings, destSteamSettings, { overwrite = false 
 }
 
 module.exports = { ensureGenerateEmuConfig, generate, mergeIntoGame, findGeneratedSteamSettings, pruneGeneratedOutputs };
-module.exports._internal = { resolveToolExe, isInsideDir, findExe };
+module.exports._internal = { resolveToolExe, isInsideDir, findExe, TOOL_NAME };

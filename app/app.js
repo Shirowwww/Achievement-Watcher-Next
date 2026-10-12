@@ -5232,7 +5232,7 @@ var app = {
                       // steam_api DLL, run before replacing anything; on a repeated repair generateInterfaces prefers the original .bak.
                       const runtimeDirKeys = new Set(dllDirs.map((dir) => path.resolve(dir).toLowerCase()));
                       const interfaceDlls = emu.dll.filter(
-                        (file) => /^steam_api(64)?\.dll$/i.test(path.basename(file)) && runtimeDirKeys.has(path.resolve(path.dirname(file)).toLowerCase())
+                        (file) => /^(steam_api(64)?\.dll|libsteam_api\.so)$/i.test(path.basename(file)) && runtimeDirKeys.has(path.resolve(path.dirname(file)).toLowerCase())
                       );
                       for (const dllPath of interfaceDlls) {
                         const dest = path.join(path.dirname(dllPath), 'steam_settings');
@@ -5245,10 +5245,13 @@ var app = {
                         setGameBoxBusy(self, t('installing-the-dll', 'Installing the DLL…', 'Installation de la DLL…'));
                         const pe = require(path.join(appPath, 'util/pe.js'));
                         const missingArch = detectedRuntimeExe && detectedRuntimeExe.full ? pe.exeArch(detectedRuntimeExe.full) : 'x64';
+                        // A native Linux game takes libsteam_api.so of its own architecture instead.
+                        const nativeArch = detectedRuntimeExe && detectedRuntimeExe.full ? require(path.join(appPath, 'util/elf.js')).elfArch(detectedRuntimeExe.full) : null;
                         const installResult = gbeInstaller.installDlls({
                           dllDirs,
                           dlls,
-                          writeIfMissing: missingArch || 'x64',
+                          writeIfMissing: nativeArch ? null : missingArch || 'x64',
+                          nativeArch,
                           log: debug,
                         });
                         // Pre-create the save folder the installed build writes to, so the game is listed before its first launch.
@@ -5676,7 +5679,7 @@ var app = {
             // not the tile's source label, so a manually-added cracked GOG install qualifies the same
             // as an already-repaired one.
             {
-              const universeLanGameDir = ctxGame?.gameDir;
+              const universeLanGameDir = process.platform === 'win32' ? ctxGame?.gameDir : null;
               const universeLanGogAppId = universeLanGameDir ? gogUniverseLan.findGogAppId(universeLanGameDir) : null;
               const hasGalaxyDll = universeLanGameDir && universeLanGogAppId ? gogUniverseLan.hasGalaxyDll(universeLanGameDir) : false;
               if (universeLanGameDir && universeLanGogAppId && hasGalaxyDll) {

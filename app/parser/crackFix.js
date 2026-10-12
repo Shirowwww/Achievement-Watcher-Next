@@ -10,7 +10,7 @@ const { lazyRequire } = require('../util/lazyRequire.js');
 const request = lazyRequire('request-zero');
 const fuzzy = require(path.join(__dirname, '..', 'util', 'fuzzyAppid.js'));
 const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
-const { resolveUnpackedBinary } = require('../util/unpacked.js');
+const { sevenZipBin } = require('../util/unpacked.js');
 const { firstUnsafeEntry } = require('../util/archiveEntry.js');
 
 // applyBestFix runs per game, and nothing on disk remembers a failed fetch, so offline every game
@@ -483,8 +483,7 @@ async function extractArchive(archivePath, destDir, { log = noopLog } = {}) {
     return extractRarToDir(archivePath, destDir, { log });
   }
   const Seven = require('node-7z');
-  const sevenBin = resolveUnpackedBinary(require('7zip-bin').path7za);
-  if (!fs.existsSync(sevenBin)) throw new Error(`7za.exe not found at "${sevenBin}"`);
+  const sevenBin = sevenZipBin();
 
   // These archives come from a community catalogue over a third-party mirror, so every entry is
   // read before anything is written: an entry may not escape destDir, and may not be a link.
