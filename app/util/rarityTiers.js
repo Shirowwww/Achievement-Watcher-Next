@@ -66,12 +66,23 @@
     return normalizeMode(mode) === MODE_TROPHY ? trophyTier(percent, thresholds) : rareTier(percent);
   }
 
-  // The fields a notification preset reads: the tier class to paint and the platinum flag.
-  function notificationTier({ percent, type, mode, thresholds } = {}) {
+  // A PlayStation trophy's own grade, from its letter (P/G/S/B) or its name; '' for anything else.
+  const TROPHY_GRADES = Object.freeze({ p: 'platinum', g: 'gold', s: 'silver', b: 'bronze' });
+  function trophyGrade(value) {
+    const key = String(value || '').trim().toLowerCase();
+    if (TROPHY_GRADES[key]) return TROPHY_GRADES[key];
+    return Object.values(TROPHY_GRADES).includes(key) ? key : '';
+  }
+
+  /*
+    The fields a notification preset reads: the tier class to paint and the platinum flag. A trophy
+    carries its colour itself, so its grade wins over any tier worked out from an unlock rate.
+  */
+  function notificationTier({ percent, type, mode, thresholds, grade } = {}) {
     const kind = String(type || '').toLowerCase();
     if (kind === 'platinum') return 'platinum';
     if (kind === 'progress' || kind === 'playtime') return '';
-    return tierFor(percent, mode, thresholds) || '';
+    return trophyGrade(grade) || tierFor(percent, mode, thresholds) || '';
   }
 
   return {
@@ -84,6 +95,7 @@
     normalizeMode,
     normalizeThresholds,
     tierFor,
+    trophyGrade,
     notificationTier,
   };
 });

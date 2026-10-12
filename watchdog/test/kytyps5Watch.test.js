@@ -91,6 +91,8 @@ test('a known title announces only what is new, with its name and icon', async (
   assert.equal(ctx.sent[0].source, 'KytyPS5 Emulator');
   assert.equal(ctx.sent[0].time, 1700000500);
   assert.ok(ctx.sent[0].icon && fs.existsSync(ctx.sent[0].icon), 'the icon is a local file');
+  assert.equal(ctx.sent[0].trophyGrade, 'platinum', 'the popup is painted in the trophy grade');
+  assert.ok(ctx.sent[0].gameIcon && fs.existsSync(ctx.sent[0].gameIcon), "the game's own icon goes along");
 
   await handleChange(title, unlockFile(emulator), ctx, known);
   assert.equal(ctx.sent.length, 1, 'the same file read again announces nothing');

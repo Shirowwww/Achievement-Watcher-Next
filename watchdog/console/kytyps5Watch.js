@@ -28,6 +28,9 @@ const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 // The same icon cache the app parser extracts into, so an icon written by either side serves both.
 kyty.setIconRoot(path.join(userDataDir(), 'icon_cache', 'kytyps5'));
 
+// The popup's colour comes from the trophy itself.
+const TROPHY_GRADES = { P: 'platinum', G: 'gold', S: 'silver', B: 'bronze' };
+
 // A title's first unlock file carrying more than this is a copied-in save, not a play session.
 const NEW_TITLE_NOTIFY_MAX = 10;
 
@@ -120,6 +123,9 @@ async function announce(title, fresh, ctx) {
   }
   const byId = new Map(schema.achievement.list.map((entry) => [String(entry.name), entry]));
   const gameName = schema.name || title.titleId;
+  // The game's own square icon and key art, for presets that paint the game beside the trophy.
+  const gameIcon = iconPathOf(schema.img);
+  const image = iconPathOf({ icon: schema.img && schema.img.header });
   let delay = 0;
   for (const entry of fresh) {
     const described = byId.get(String(entry.id));
@@ -135,6 +141,9 @@ async function announce(title, fresh, ctx) {
         achievementDisplayName: described.displayName,
         achievementDescription: described.description,
         icon: icon && fs.existsSync(icon) ? icon : undefined,
+        gameIcon: gameIcon || undefined,
+        image: image || undefined,
+        trophyGrade: TROPHY_GRADES[described.type] || undefined,
         time: entry.earned_time || moment().unix(),
         delay,
       },

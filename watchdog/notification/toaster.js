@@ -143,6 +143,7 @@ module.exports = async (message, option = {}) => {
           displayName: message.achievementDisplayName,
           description: message.achievementDescription,
           rarityPercent: message.rarityPercent,
+          trophyGrade: message.trophyGrade || undefined,
           icon: message.icon,
           gameIcon: message.gameIcon,
           image: message.image,
@@ -186,6 +187,8 @@ module.exports = async (message, option = {}) => {
           if (message.rarityPercent != null && message.rarityPercent !== '' && Number.isFinite(Number(message.rarityPercent))) {
             overlayArgs.push(`--rarityPercent=${Number(message.rarityPercent)}`);
           }
+          // A PlayStation trophy's own grade, which the popup paints instead of a tier from a rate.
+          if (/^(?:platinum|gold|silver|bronze)$/.test(String(message.trophyGrade || ''))) overlayArgs.push(`--trophyGrade=${message.trophyGrade}`);
           // Some notifications (e.g. playtime) must never play the overlay sound.
           if (message.silent) overlayArgs.push('--silent=1');
           // Ask for an acknowledgement only when one can come back (the app renders it over IPC) and

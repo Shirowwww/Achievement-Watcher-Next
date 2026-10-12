@@ -5352,13 +5352,16 @@ function loadTrophyLabels() {
 // What a preset needs to paint the tier of one popup: the class name, the mode and the grade's name.
 function describeNotificationTier(data) {
   const grading = currentRarityGrading();
+  const grade = rarityTiers.trophyGrade(data.trophyGrade);
   const tier = rarityTiers.notificationTier({
     percent: data.rarityPercent,
     type: data.notificationType,
     mode: grading.mode,
     thresholds: grading.thresholds,
+    grade,
   });
-  const label = tier && grading.mode === rarityTiers.MODE_TROPHY ? loadTrophyLabels()[tier] || '' : '';
+  // A real trophy names its grade whatever the rarity mode: it is what the game calls it.
+  const label = tier && (grade || grading.mode === rarityTiers.MODE_TROPHY) ? loadTrophyLabels()[tier] || '' : '';
   return { tier, mode: grading.mode, label };
 }
 
@@ -5566,7 +5569,8 @@ function createNotificationWindow(data = {}) {
       notificationType: data.notificationType || '',
       // Reference-project presets key on these: `isPlatinum` (Xbox Series Platinum diamond) and
       // `headerPath` (Game Cover background). Keep them as aliases of our own fields.
-      isPlatinum: String(data.notificationType || '').toLowerCase() === 'platinum',
+      // A platinum trophy is painted like a completion: it is the PlayStation's own 100%.
+      isPlatinum: String(data.notificationType || '').toLowerCase() === 'platinum' || notificationTier.tier === 'platinum',
       iconPath: data.iconPath || data.icon || '',
       gameIconPath: data.gameIconPath || data.gameIcon || '',
       imagePath: data.imagePath || data.image || '',
@@ -6233,6 +6237,7 @@ async function enqueueNotificationFromArgs(args) {
     gameName: args.gameDisplayName != null ? String(args.gameDisplayName) : '',
     description: args.description != null ? String(args.description) : '',
     rarityPercent: Number.isFinite(Number(args.rarityPercent)) ? Number(args.rarityPercent) : null,
+    trophyGrade: rarityTiers.trophyGrade(args.trophyGrade),
     notificationType,
     iconPath: primaryIconPath,
     achievementIconPath: iconPath,

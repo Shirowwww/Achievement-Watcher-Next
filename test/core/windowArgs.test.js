@@ -12,7 +12,10 @@ test('normalizes case-folded notification arguments from a second instance', () 
     progresscurrent: '4',
     progressmax: '10',
     raritypercent: '2.5',
+    trophygrade: 'gold',
   });
+
+  assert.equal(args.trophyGrade, 'gold', 'a trophy grade survives the hand-off too');
 
   assert.equal(args.displayName, 'Unlocked title');
   assert.equal(args.gameDisplayName, 'Game title');

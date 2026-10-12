@@ -22,6 +22,9 @@ const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 const USER_FILE = 'TROPUSR.DAT';
 const SCHEMA_FILE = 'TROPCONF.SFM';
 
+// The popup's colour comes from the trophy itself.
+const TROPHY_GRADES = { P: 'platinum', G: 'gold', S: 'silver', B: 'bronze' };
+
 let watchers = [];
 const changes = createChangeCoalescer();
 
@@ -228,6 +231,7 @@ async function handleChange(target, ctx) {
             achievementDisplayName: t.displayName,
             achievementDescription: t.description,
             icon: fs.existsSync(t.icon) ? t.icon : undefined,
+            trophyGrade: TROPHY_GRADES[t.type] || undefined,
             time: t.time || moment().unix(),
             delay,
           },

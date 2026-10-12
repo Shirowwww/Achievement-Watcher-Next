@@ -74,6 +74,21 @@ test('a notification gets the tier its preset paints, platinum apart, progress a
   }
 });
 
+// A PlayStation trophy is bronze, silver, gold or platinum by itself, whatever its unlock rate.
+test("a trophy's own grade paints its popup in either mode", () => {
+  assert.equal(tiers.trophyGrade('P'), 'platinum');
+  assert.equal(tiers.trophyGrade('g'), 'gold');
+  assert.equal(tiers.trophyGrade('silver'), 'silver');
+  assert.equal(tiers.trophyGrade('X'), '');
+  assert.equal(tiers.trophyGrade(undefined), '');
+  for (const mode of ['rare', 'trophy']) {
+    assert.equal(tiers.notificationTier({ mode, percent: 80, grade: 'B' }), 'bronze', 'a common bronze is still bronze');
+    assert.equal(tiers.notificationTier({ mode, percent: 2, grade: 'S' }), 'silver', 'the grade wins over the rate');
+    assert.equal(tiers.notificationTier({ mode, percent: null, grade: 'P' }), 'platinum');
+    assert.equal(tiers.notificationTier({ mode, grade: 'G', type: 'progress' }), '', 'progress stays untinted');
+  }
+});
+
 test('the profile showcase counts the same unlocks differently per mode', () => {
   const ach = (name) => ({ name, Achieved: 1, UnlockTime: 1 });
   const game = { appid: 1, achievement: { unlocked: 4, total: 4, list: [ach('a'), ach('b'), ach('c'), ach('d')] } };

@@ -20,6 +20,7 @@ const CANONICAL_WINDOW_ARGS = [
   'rarityPercent',
   'silent',
   'source',
+  'trophyGrade',
   'wintype',
 ];
 
