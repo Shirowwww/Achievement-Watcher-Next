@@ -72,6 +72,7 @@ function buildHarness() {
   </style></head><body>
     <div id="sort-box"><button class="sort alpha"></button><button class="sort percentage"></button><button class="sort time"></button><button class="sort played"></button><button class="installed-filter"></button></div>
     <div id="game-list"><ul id="games"></ul><div class="isEmpty"></div></div>
+    <div id="unlock" class="achievement-list"><div class="header"><span class="sort-ach"><div class="percentage sort" role="button"></div><div class="time sort" role="button"></div></span></div><ul><li><div class="achievement" data-index="0"><div class="stats"><span class="time" data-time="1"></span></div></div></li></ul></div>
     <script>${jquery}</script>
     <script>
       localStorage.showInstalledOnly = 'false';
@@ -173,6 +174,43 @@ test('installed-only toggle refreshes profile statistics and visible games toget
     assert.equal(result.active, true);
     assert.deepEqual(result.visible, ['a', 'c']);
     assert.deepEqual(result.refreshes, [{ animate: true }]);
+  } finally {
+    await browser.close().catch(() => {});
+    killBrowserUsing(userDataDir);
+    fs.rmSync(harnessDir, { recursive: true, force: true });
+    await removeBrowserProfile(userDataDir, killBrowserUsing);
+  }
+});
+
+// The achievement sort buttons are icon-only: an idle one used to have no name at all, so a screen
+// reader announced "button" and nothing said what clicking it would do.
+test('every achievement sort button is named, active or not', { concurrency: 1, timeout: 180000 }, async (t) => {
+  const { browser, userDataDir, failures } = await launchBrowser();
+  if (!browser) {
+    t.skip(failures.length ? `no usable Chromium-family browser - ${failures.join(' | ')}` : 'no Chromium-family browser installed');
+    return;
+  }
+
+  const harnessDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-achievement-sort-harness-'));
+  const harness = path.join(harnessDir, 'achievement-sort.html');
+  fs.writeFileSync(harness, buildHarness());
+
+  try {
+    const page = await browser.newPage();
+    await page.goto(pathToFileURL(harness).href);
+    const result = await page.evaluate(async () => {
+      const names = () => $('#unlock .sort').map(function () { return this.getAttribute('aria-label') || ''; }).get();
+      localStorage.clear();
+      window.restoreAchievementSorts();
+      const idle = names();
+      document.querySelector('#unlock .sort.percentage').click();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return { idle, afterClick: names() };
+    });
+
+    assert.deepEqual(result.idle, ['Rareté : plus rare → plus commun', 'Succès : récent → ancien']);
+    assert.ok(result.afterClick.every(Boolean), `every button keeps a name: ${JSON.stringify(result.afterClick)}`);
+    assert.equal(result.afterClick[1], 'Succès : récent → ancien');
   } finally {
     await browser.close().catch(() => {});
     killBrowserUsing(userDataDir);

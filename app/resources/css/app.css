@@ -11042,6 +11042,11 @@ body {
     margin-top: 8px;
   }
 
+  .achievement .stats .time,
+  .achievement .stats .community {
+    width: auto;
+  }
+
   .achievement .progressBar {
     width: 100%;
     min-width: 0;

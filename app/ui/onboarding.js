@@ -652,6 +652,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
         const origin = $('<small>')
           .addClass(`folder-origin ${automatic ? 'auto' : 'manual'}`)
           .attr('title', automatic ? t.smartFind : t.manualSource)
+          .attr('role', 'img')
           .attr('aria-label', automatic ? t.smartFind : t.manualSource)
           .append($('<i>').addClass(`fas ${automatic ? 'fa-magic' : 'fa-hand-pointer'}`).attr('aria-hidden', 'true'));
         item.append(origin);

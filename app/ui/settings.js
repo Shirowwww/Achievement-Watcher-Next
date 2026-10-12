@@ -6535,6 +6535,7 @@ function applyFolderRowMetadata(elem, options, library) {
   const origin = $('<small>')
     .addClass(`folder-origin ${automatic ? 'auto' : 'manual'}`)
     .attr('title', automatic ? detectedLabel : manualLabel)
+    .attr('role', 'img')
     .attr('aria-label', automatic ? detectedLabel : manualLabel)
     .append($('<i>').addClass(`fas ${automatic ? 'fa-magic' : 'fa-hand-pointer'}`).attr('aria-hidden', 'true'));
   elem

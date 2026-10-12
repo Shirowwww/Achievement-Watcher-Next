@@ -129,6 +129,18 @@ test('folder provenance never reuses an add-folder action as the manual-source b
   assert.doesNotMatch(onboarding, /entry\.detector \|\| t\.smartFind/);
 });
 
+// A <small> may not carry aria-label on its own (axe aria-prohibited-attr): the icon badge is named
+// as an image, so screen readers announce "Manual" or "Smart Find" for each folder.
+test('the folder provenance badge is a named image', () => {
+  const settingsUi = fs.readFileSync(path.join(root, 'app', 'ui', 'settings.js'), 'utf8');
+  const onboarding = fs.readFileSync(path.join(root, 'app', 'ui', 'onboarding.js'), 'utf8');
+  for (const source of [settingsUi, onboarding]) {
+    const badge = source.match(/const origin = \$\('<small>'\)[\s\S]*?\.append\(/)?.[0] || '';
+    assert.match(badge, /\.attr\('role', 'img'\)/);
+    assert.match(badge, /\.attr\('aria-label'/);
+  }
+});
+
 test('initial config generation is gated to games without an existing fix', () => {
   const parser = fs.readFileSync(path.join(root, 'app', 'parser', 'achievements.js'), 'utf8');
   const settingsUi = fs.readFileSync(path.join(root, 'app', 'ui', 'settings.js'), 'utf8');

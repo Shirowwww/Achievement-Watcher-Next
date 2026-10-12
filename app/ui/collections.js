@@ -185,7 +185,13 @@
     );
     if (current) menu.append(new MenuItem({ label: t('collection-edit', 'Edit collection…', 'Modifier la collection…'), click: () => openEditor(current) }));
     const rect = event && event.currentTarget ? event.currentTarget.getBoundingClientRect() : null;
-    menu.popup({ window: remote().getCurrentWindow(), x: rect ? Math.round(rect.left) : undefined, y: rect ? Math.round(rect.bottom) : undefined });
+    const button = $('#sort-box .collection-filter').attr('aria-expanded', 'true');
+    menu.popup({
+      window: remote().getCurrentWindow(),
+      x: rect ? Math.round(rect.left) : undefined,
+      y: rect ? Math.round(rect.bottom) : undefined,
+      callback: () => button.attr('aria-expanded', 'false'),
+    });
   }
 
   // The "Collections" submenu of a game's context menu: one checkbox per collection.

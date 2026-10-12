@@ -56,6 +56,11 @@ renamed in 3.9.0 and the history is kept under one file.
   plain dark.
 - **Official Ubisoft Connect games no longer show a Game health dot** beside their "in your
   library" badge: there is nothing emulated to diagnose on them.
+- **An achievement's rarity line stays on one line in a narrow window.** Below 1050px it kept the
+  width of the old side column, so "59.6% of all players" wrapped beside an empty row.
+- **Screen readers name more controls.** The achievement sort buttons are named even when they are
+  not the active sort, the collections button says whether its menu is open, and the Manual /
+  Smart Find badge beside each folder is announced.
 - **A game's own notification settings apply everywhere.** The sound picked in a game's panel now
   also plays on its Windows notifications, where the global sound rang even for a game set to
   "None". XLiveLessNess games now get their own preset, position and sound, and clicking their

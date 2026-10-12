@@ -75,6 +75,22 @@ function achievementSortTitle(mode, direction) {
   return sortTitle(mode, direction);
 }
 
+function initialAchievementDirection(mode) {
+  return mode === 'percent' ? 'asc' : defaultSortDirection(mode);
+}
+
+// The buttons are icon-only, so an idle one is named by the order a click applies; the active one
+// carries its full title from applyAchievementSort.
+function nameIdleAchievementSorts(root) {
+  const labels = sortLabels().label || SORT_LABEL_FALLBACK.label;
+  root.find('.header .sort-ach .sort:not(.active)').each(function () {
+    const mode = modeForButton($(this));
+    const byDirection = (mode === 'percent' ? labels.rarity : labels[mode]) || SORT_LABEL_FALLBACK.label[mode === 'percent' ? 'rarity' : mode];
+    const label = byDirection[initialAchievementDirection(mode)];
+    $(this).attr('title', label).attr('aria-label', label);
+  });
+}
+
 // The arrow indicator reflects *default vs reversed* order, not asc/desc - so the first click shows
 // the same arrow (default order) on every criterion instead of ▲ for names and ▼ for the rest.
 // `defaultDir` lets the achievement panel pass its own initial direction (percent starts ascending).
@@ -196,9 +212,10 @@ function applyAchievementSort(root, mode, direction) {
   root.find('.header .sort-ach .sort').removeClass('active direction-default direction-reversed').attr('aria-pressed', 'false');
   const button = root.find('.header .sort-ach .sort.' + (mode === 'percent' ? 'percentage' : mode));
   if (button.length) {
-    paintSortButton(button, mode, direction, mode === 'percent' ? 'asc' : defaultSortDirection(mode));
+    paintSortButton(button, mode, direction, initialAchievementDirection(mode));
     button.attr('title', achievementSortTitle(mode, direction)).attr('aria-label', achievementSortTitle(mode, direction));
   }
+  nameIdleAchievementSorts(root);
 }
 
 function restoreAchievementSort(root) {
@@ -214,6 +231,7 @@ function restoreAchievementSort(root) {
     localStorage[directionKey] = direction;
   }
   if (['percent', 'time'].includes(mode) && ['asc', 'desc'].includes(direction)) applyAchievementSort(root, mode, direction);
+  else nameIdleAchievementSorts(root);
 }
 
 window.restoreAchievementSorts = function () {
@@ -349,7 +367,7 @@ window.hideStaleEnabled = hideStaleEnabled;
       const directionKey = achievementStorageKey(root, 'direction');
       const currentMode = localStorage[modeKey];
       const currentDirection = localStorage[directionKey];
-      const initialDirection = mode === 'percent' ? 'asc' : defaultSortDirection(mode);
+      const initialDirection = initialAchievementDirection(mode);
       if (currentMode === mode && currentDirection === oppositeDirection(initialDirection)) {
         localStorage.removeItem(modeKey);
         localStorage.removeItem(directionKey);
