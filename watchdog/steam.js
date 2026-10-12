@@ -37,6 +37,13 @@ function normalizeName(name, appID) {
   return String(appID);
 }
 
+// Whether the library scan already cached a schema under this id, the only source a non-Steam id has.
+module.exports.hasCachedSchema = (appID, lang) => {
+  const id = String(appID || '');
+  if (!/^[A-Za-z0-9_-]+$/.test(id) || !steamLang.some((language) => language.api === lang)) return false;
+  return fs.existsSync(path.join(userDataDir(), 'steam_cache/schema', lang, `${id}.db`));
+};
+
 module.exports.loadSteamData = async (appID, lang, binary = null) => {
   if (!steamLang.some((language) => language.api === lang)) {
     throw 'Unsupported API language code';

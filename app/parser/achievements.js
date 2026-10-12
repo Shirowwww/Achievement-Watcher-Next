@@ -3722,7 +3722,18 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           }
         }
 
-        // 2) Launch metadata, for every game step 1 could not name a binary for - an obfuscated/renamed
+        // 2) The executable the user picked. A game known only through its emulator's save folder
+        //    and not by a Steam appid (Nemirtingas Epic, #114) has no install folder for step 1.
+        const indexed = gameIndex.get(appid.appid);
+        if (!seeded && !(indexed && indexed.binary)) {
+          const configured = gameIndex.configuredExe(appid.appid);
+          if (configured && /\.exe$/i.test(configured) && fs.existsSync(configured)) {
+            seed(path.basename(configured), ' from the configured executable', configured);
+            seeded = true;
+          }
+        }
+
+        // 3) Launch metadata, for every game step 1 could not name a binary for - an obfuscated/renamed
         //    exe, a launcher-only install, or no install folder at all (the normal state for a game AW
         //    only knows through its emulator's save folder). Fetched through the main-process stealth
         //    browser (SteamDB 403s plain requests), disk-cached, best-effort - NOT awaited, since a

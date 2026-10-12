@@ -147,6 +147,9 @@ module.exports.get = (appid) => {
   }
 };
 
+// The executable cfg/exeList.db records for this appid, or ''.
+module.exports.configuredExe = (appid) => configuredExePaths().get(String(appid)) || '';
+
 // The index is durable user state, unlike the schema/name caches. Library reconstruction uses this
 // title while fresh metadata is unavailable, so a cache clear or offline restart does not briefly
 // turn a known game back into its appid.

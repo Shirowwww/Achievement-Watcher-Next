@@ -355,3 +355,16 @@ test('a JSON list that does not parse is left alone rather than rewritten', () =
   const x360 = require(path.join(appDir, 'parser', 'x360Recomp.js'));
   assert.throws(() => x360.clearJsonBuffer(Buffer.from('{"achievements": [')));
 });
+
+// The Nemirtingas emulators borrow the store names as labels, but their saves are local files.
+test('Nemirtingas Epic and Galaxy saves are local and resettable, unlike the stores', () => {
+  assert.equal(targets.isOfficialPlatformSource('epic'), false);
+  assert.equal(targets.isOfficialPlatformSource('gog'), false);
+  assert.equal(targets.isOfficialPlatformSource('epic-official'), true);
+  assert.equal(targets.isOfficialPlatformSource('GOG Galaxy'), true);
+  const { resettable } = targets.classifySources([
+    { source: 'epic', path: 'C:/NemirtingasEpicEmu/user/game' },
+    { source: 'gog', path: 'C:/NemirtingasGalaxyEmu/user/game' },
+  ]);
+  assert.deepEqual(resettable.map((entry) => entry.source), ['epic', 'gog']);
+});

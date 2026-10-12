@@ -27,6 +27,7 @@ const ACTION = {
   FETCH_PROGRESS: 'fetch-progress', // anonymous generate_emu_config, kept in AW's cache only
   TEST_NOTIFICATION: 'test-notification', // the watchdog websocket test the Settings panel uses
   FIX_APPID: 'fix-appid', //          goldberg.writeSteamAppId() - one file, previous value kept
+  SET_EPIC_ARGS: 'set-epic-args', //  exeList launch arguments built from the Nemirtingas config
 };
 
 // goldberg.diagnose() issue codes that goldberg.repair() actually rewrites. Mirrors the list the
@@ -190,6 +191,12 @@ function identityCheck(signals) {
   const resolved = steamappid || (/^\d+$/.test(String(appid || '')) ? String(appid) : '') || (titleId ? titleId.toUpperCase() : '');
   if (resolved && !unconfigured) return check('identity', LEVEL.OK, { params: { appid: resolved, source: source || '' } });
   if (resolved) return check('identity', LEVEL.WARN, { params: { appid: resolved, source: source || '' } });
+  // Epic, GOG and their emulators name a game by their own id. With its achievements read under
+  // that id, nothing is missing; a Steam appid would only add rarity and artwork (#114).
+  const ownId = String(appid || '').trim();
+  if (ownId && !unconfigured && num(signals.achievements && signals.achievements.total) > 0) {
+    return check('identity', LEVEL.OK, { params: { appid: ownId, source: source || '' } });
+  }
   return check('identity', LEVEL.WARN, { params: { source: source || '' } });
 }
 
@@ -514,12 +521,28 @@ function notificationCheck(signals) {
   return check('notifications', LEVEL.OK, { params, actions: [ACTION.TEST_NOTIFICATION] });
 }
 
+/*
+  The Nemirtingas Epic emulator (#112). Only a SavePath other than "appdata" is a fault: the saves
+  then never reach the folder AW Next reads. The Epic launch arguments are an informational offer
+  while the emulator has saved nothing for the game, since only some EOS games need them, and the
+  overlay plugin is a reminder.
+*/
+function nemirtingasCheck(signals) {
+  const report = signals.nemirtingasEpic;
+  if (!report) return null;
+  const params = { problem: report.problem || '', hint: report.hint || '', overlay: !!report.overlay };
+  if (report.problem) return check('nemirtingas', LEVEL.WARN, { params });
+  if (report.hint === 'launch-args') return check('nemirtingas', LEVEL.INFO, { params, actions: [ACTION.SET_EPIC_ARGS] });
+  return check('nemirtingas', report.overlay ? LEVEL.INFO : LEVEL.OK, { params });
+}
+
 function buildChecks(signals) {
   return [
     installCheck(signals),
     executableCheck(signals),
     identityCheck(signals),
     achievementDataCheck(signals),
+    nemirtingasCheck(signals),
     emulatorCheck(signals),
     uplayCheck(signals),
     progressCheck(signals),
@@ -562,6 +585,8 @@ function explain(state, checks, signals) {
   }
   if (uplay && uplay.level === LEVEL.FAIL) return { reason: 'uplay-broken', params: uplay.params };
   if (data && data.level === LEVEL.FAIL) return { reason: 'achievement-data-incomplete', params: data.params };
+  const nemirtingas = byId(checks, 'nemirtingas');
+  if (nemirtingas && nemirtingas.level === LEVEL.WARN) return { reason: 'nemirtingas-setup', params: nemirtingas.params };
   // A wrong appid outranks "nothing unlocked yet" below, since it's the actual reason: the
   // emulator announces one game and AW Next watches another.
   if (emulator && emulator.params && emulator.params.appidExpected) return { reason: 'appid-mismatch', params: emulator.params };

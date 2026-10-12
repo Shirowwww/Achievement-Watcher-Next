@@ -723,3 +723,20 @@ test('the Steam-emulator answers are unchanged', () => {
   assert.equal(scannedState({ hasSteamApiDll: true, unconfigured: true, achievement: { total: 12 } }), STATE.ATTENTION);
   assert.equal(scannedState({ hasSteamApiDll: true, achievement: { total: 12 } }), STATE.READY);
 });
+
+// #114: a Nemirtingas Epic game is named by its Epic id and read from the emulator's save folder.
+test('a game named by its own launcher id has a settled identity once its achievements load', () => {
+  const epicEmu = healthyGame({ appid: 'c4763f236d08423eb47b4c3008779c84', steamAppid: '', source: 'epic', emulated: false, goldberg: null });
+  assert.equal(checkFor(deriveHealth(epicEmu), 'identity').level, LEVEL.OK);
+  const empty = { ...epicEmu, achievements: { total: 0, unlocked: 0 } };
+  assert.equal(checkFor(deriveHealth(empty), 'identity').level, LEVEL.WARN);
+  const unconfigured = { ...epicEmu, appid: 'local-abc', unconfigured: true };
+  assert.equal(checkFor(deriveHealth(unconfigured), 'identity').level, LEVEL.WARN);
+});
+
+test('an emulated Epic game with a known executable but no index row offers to start tracking', () => {
+  const epicEmu = healthyGame({ appid: 'c4763f236d08423eb47b4c3008779c84', source: 'epic', emulated: false, goldberg: null, tracking: { indexed: false, binary: '' } });
+  const tracking = checkFor(deriveHealth(epicEmu), 'tracking');
+  assert.equal(tracking.level, LEVEL.WARN);
+  assert.deepEqual(tracking.actions, [ACTION.START_TRACKING]);
+});

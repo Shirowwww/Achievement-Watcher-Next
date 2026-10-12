@@ -15,10 +15,8 @@ const gameHealth = require(path.join(appPath, 'util/gameHealth.js'));
 const gameHealthRepair = require(path.join(appPath, 'util/gameHealthRepair.js'));
 // Libraries whose unlocks come from the platform itself. Their watchdog watcher polls the account,
 // so none of the process-tracking or Steam-emulator reasoning applies to them.
-const OFFICIAL_PLATFORM_SOURCES = /^(?:steam\s*\(|gog(?:\s|$)|gog galaxy|epic(?:-official)?$|ea$|ubisoft connect|xbox(?! 360 recomp$)|retroachievements$)/i;
-function isOfficialPlatformSource(source) {
-  return OFFICIAL_PLATFORM_SOURCES.test(String(source || '').trim());
-}
+const { isOfficialPlatformSource } = require(path.join(appPath, 'util/achievementResetTargets.js'));
+const nemirtingasEpic = require(path.join(appPath, 'util/nemirtingasEpic.js'));
 
 // Tab labels re-applied on every open, not once at startup: the panel outlives a language change,
 // and locale/loader.js doesn't know about these tabs, so a one-shot binding would freeze them.
@@ -181,6 +179,15 @@ function emulatorSetupAt(emu) {
   return newest;
 }
 
+function safeNemirtingasDiagnose(gameDir, launchArgs) {
+  try {
+    return nemirtingasEpic.diagnose({ gameDir, launchArgs });
+  } catch (err) {
+    debug.log(`[health] Nemirtingas Epic check failed for ${gameDir} => ${formatErr(err)}`);
+    return null;
+  }
+}
+
 async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
   const game = gameList.find((g) => g.appid == appid) || {};
   let cfg = { exe: '', args: '' };
@@ -325,6 +332,8 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
     // `replaceable` says whether swapping steam_api for GBE Fork would be a complete change: it
     // gates the one action the panel offers over a folder AW cannot otherwise diagnose.
     crackLoader: foreignLoader ? { name: foreignLoader.name, replaceable: foreignLoader.replaceable === true } : null,
+    // A folder set up with the Nemirtingas Epic emulator, and what it still needs before it saves (#112).
+    nemirtingasEpic: gameDirExists ? safeNemirtingasDiagnose(gameDir, cfg.args) : null,
     // Console emulators (RPCS3/ShadPS4/Xenia) and the official platform libraries are followed by
     // their own watchers, not by the process monitor, so a missing gameIndex entry means nothing
     // for them and must not be reported as a fault.
@@ -415,6 +424,12 @@ function gameHealthExplanation(report) {
       return t('gh-why-install-unknown', "AW Next is reading this game's achievements from its save files, but doesn't know where the game itself is installed. Locate it to enable playtime tracking and repairs.", "AW Next lit les succès de ce jeu dans ses fichiers de sauvegarde, mais ne sait pas où le jeu est installé. Localise-le pour activer le temps de jeu et les réparations.");
     case 'not-watched':
       return t('gh-why-not-watched', "Everything needed is in place, but AW Next isn't watching this game while it runs, so playtime and live unlock notifications won't happen.", "Tout est en place, mais AW Next ne surveille pas ce jeu pendant qu'il tourne : ni temps de jeu ni notifications en direct.");
+    case 'nemirtingas-setup':
+      return t(
+        'gh-why-nemirtingas-setup',
+        'This game uses the Nemirtingas Epic emulator, which records achievements only once it is set up as the Epic emulator row below says.',
+        "Ce jeu utilise l'émulateur Epic de Nemirtingas, qui n'enregistre les succès qu'une fois configuré comme l'indique la ligne Émulateur Epic ci-dessous."
+      );
     case 'appid-mismatch':
       return t('gh-why-appid-mismatch', 'The emulator in this game’s folder announces game ID {appidOnDisk}, but AW Next matched this game to {appidExpected}. Achievements unlocked under the wrong ID are recorded against another game. Correct the file if {appidExpected} is the right game - the current value is kept.', 'L’émulateur du dossier de ce jeu annonce l’identifiant {appidOnDisk}, alors qu’AW Next a associé ce jeu à {appidExpected}. Les succès débloqués sous le mauvais identifiant sont enregistrés sur un autre jeu. Corrige le fichier si {appidExpected} est le bon jeu - la valeur actuelle est conservée.', p);
     case 'crack-records-nothing':
@@ -450,6 +465,8 @@ function gameHealthCheckLabel(id, simple) {
         return t('gh-simple-check-progress', 'Progress', 'Progression');
       case 'counters':
         return t('gh-check-counters', 'Progress counters', 'Compteurs de progression');
+      case 'nemirtingas':
+        return t('gh-check-nemirtingas', 'Epic emulator', 'Émulateur Epic');
       case 'tracking':
         return t('gh-simple-check-tracking', 'Tracking', 'Suivi');
       default:
@@ -472,6 +489,8 @@ function gameHealthCheckLabel(id, simple) {
       return t('gh-check-progress', 'Progress', 'Progression');
     case 'counters':
       return t('gh-check-counters', 'Progress counters', 'Compteurs de progression');
+    case 'nemirtingas':
+      return t('gh-check-nemirtingas', 'Epic emulator', 'Émulateur Epic');
     case 'tracking':
       return t('gh-check-tracking', 'Live tracking', 'Suivi en direct');
     default:
@@ -523,6 +542,8 @@ function gameHealthSimpleCheckValue(entry) {
       return ok
         ? t('gh-simple-counters-ok', 'Counters available', 'Compteurs disponibles')
         : t('gh-simple-counters-missing', 'Counters not available yet', 'Compteurs pas encore disponibles');
+    case 'nemirtingas':
+      return gameHealthNemirtingasValue(entry);
     case 'tracking':
       return ok
         ? t('gh-simple-tracking-ok', 'Tracking active', 'Suivi actif')
@@ -558,6 +579,9 @@ const SOURCE_DISPLAY_NAMES = {
   steamapi: 'Steam',
   'xbox pc': 'Xbox',
   uplay: 'Ubisoft Connect',
+  // The Nemirtingas emulators' labels, which read like the stores they stand in for.
+  epic: 'Nemirtingas Epic Emu',
+  gog: 'Nemirtingas Galaxy Emu',
 };
 
 function sourceDisplayName(source) {
@@ -700,6 +724,8 @@ function gameHealthCheckValue(entry, simple) {
       if (p.none) return t('gh-simple-counters-none', 'This game has no progress counters', 'Ce jeu n’a pas de compteurs de progression');
       if (p.official > 0) return t('gh-value-counters-available', '{official} achievement(s) with a counter', '{official} succès à compteur', p);
       return t('gh-simple-counters-missing', 'Counters not available yet', 'Compteurs pas encore disponibles');
+    case 'nemirtingas':
+      return gameHealthNemirtingasValue(entry);
     case 'tracking':
       if (p.binary) return t('gh-value-watching', 'watching {binary}', 'surveille {binary}', p);
       return t('gh-value-none-yet', 'nothing recorded yet', 'rien d’enregistré pour l’instant');
@@ -712,6 +738,24 @@ function gameHealthCheckValue(entry, simple) {
       return detail ? `${transport} · ${detail}` : transport;
     }
   }
+}
+
+// The same words in Simple and Advanced: a save path AW Next cannot read, else an optional hint.
+function gameHealthNemirtingasValue(entry) {
+  const p = entry.params || {};
+  if (p.problem === 'save-path') {
+    return t('gh-value-nemirtingas-save-path', 'saves are not written to AppData - set SavePath to "appdata" in NemirtingasEpicEmu.json', 'les sauvegardes ne vont pas dans AppData : mets SavePath sur "appdata" dans NemirtingasEpicEmu.json');
+  }
+  if (p.hint === 'launch-args') {
+    return t(
+      'gh-value-nemirtingas-launch-args',
+      'nothing saved yet - some games only record achievements when started with the Epic launch arguments',
+      'rien d’enregistré pour l’instant : certains jeux n’enregistrent les succès que lancés avec les arguments Epic'
+    );
+  }
+  return p.overlay
+    ? t('gh-value-nemirtingas-overlay', 'set up - if the game crashes at launch, turn the emulator overlay off', 'configuré : si le jeu plante au lancement, désactive l’overlay de l’émulateur')
+    : t('gh-value-nemirtingas-ok', 'set up', 'configuré');
 }
 
 function gameHealthActionLabel(action) {
@@ -740,6 +784,8 @@ function gameHealthActionLabel(action) {
       return t('gh-action-fix-appid', 'Correct the game ID file', 'Corriger le fichier d’identification');
     case gameHealth.ACTION.FETCH_PROGRESS:
       return t('gh-action-fetch-progress', 'Fetch progress counters', 'Récupérer les compteurs de progression');
+    case gameHealth.ACTION.SET_EPIC_ARGS:
+      return t('gh-action-epic-args', 'Add the Epic launch arguments', 'Ajouter les arguments de lancement Epic');
     default:
       return t('gh-action-test-notification', 'Send a test notification', 'Envoyer une notification de test');
   }
@@ -1010,6 +1056,20 @@ async function runGameHealthAction(appid, action, button) {
 
   if (action === gameHealth.ACTION.UNMUTE_PROGRESS) {
     progressMute.toggle(appid);
+    return true;
+  }
+
+  // Written to this game's own launch settings, kept after whatever arguments were already there,
+  // so the Play button starts it the way an Epic launcher would (#112).
+  if (action === gameHealth.ACTION.SET_EPIC_ARGS) {
+    const report = game.gameDir ? nemirtingasEpic.diagnose({ gameDir: game.gameDir }) : null;
+    if (!report || !report.suggestedArgs) return false;
+    const cfg = (await exeList.get(appid)) || { appid: String(appid), exe: '', args: '' };
+    if (nemirtingasEpic.hasEpicArguments(cfg.args)) return true;
+    cfg.args = [String(cfg.args || '').trim(), report.suggestedArgs].filter(Boolean).join(' ');
+    await exeList.add(cfg);
+    // The Executable tab was filled when the panel opened; its Save would write the old value back.
+    $('#launch-args').val(cfg.args);
     return true;
   }
 

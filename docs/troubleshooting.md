@@ -219,6 +219,23 @@ AW Next follows the configured game executable and its process lifetime. If a la
 A Java game that starts through `javaw.exe` and exits its own launcher is tracked through that Java
 process automatically; you do not need to point AW Next at `javaw.exe` by hand.
 
+## A Nemirtingas Epic game records nothing
+
+When a game folder holds the emulator (its `EOSSDK` library with a
+`nepice_settings\NemirtingasEpicEmu.json` beside it), the game's **Game health** tab shows an
+**Epic emulator** row:
+
+- **SavePath must be `"appdata"`.** The emulator writes achievements to
+  `%APPDATA%\NemirtingasEpicEmu`, where AW Next reads them, only with that value; anything else keeps
+  them in the game folder. The row warns when it is set to something else.
+- **Some games need the Epic launch arguments.** Some EOS games only sign in to the emulator, and so
+  only save an achievement, when a launcher passes `-epicapp=...` and the others; many do not need
+  them. While the emulator has saved nothing for the game, the row offers **Add the Epic launch
+  arguments**, which writes them into the game's own launch settings from the config's `AppId`, so
+  the Play button starts it the way the Epic launcher would. A `.bat` that passes them works too.
+- If the game crashes at launch with the emulator in place, turn its overlay plugin off
+  (`"Plugins": { "Overlay": { "Enabled": false } }`); the row reminds you while it is on.
+
 ## Ubisoft or Uplay R2 uses the wrong action
 
 Ubisoft games should receive Ubisoft-specific metadata and the Uplay R2 repair action, not the Steam GBE action. Run a fresh folder scan and check the source icon. If the game is still misidentified, attach `parser.log`, the displayed source/IDs and the game directory name to a report.

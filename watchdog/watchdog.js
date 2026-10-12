@@ -1077,8 +1077,12 @@ var app = {
           appID = mapped;
         } else if (dir.includes('NemirtingasEpicEmu')) {
           const mapped = await self.steamAppIdForEpicId(appID);
-          if (!mapped) throw `Unknown Epic id ${appID} - run a library refresh so AW Next can map it`;
-          appID = mapped;
+          if (mapped) appID = mapped;
+          else if (steam.hasCachedSchema(appID, self.options.achievement.lang)) {
+            // An Epic exclusive has no Steam release; the library scan cached its Epic schema under
+            // the Epic id, which is what the load below reads (#114).
+            debug.log(`[epic] ${appID} has no Steam release - using the schema the library cached for it`);
+          } else throw `Unknown Epic id ${appID} - run a library refresh so AW Next can map it`;
         }
 
         if (options.uplayR2) {

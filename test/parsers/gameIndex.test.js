@@ -269,3 +269,16 @@ test('reconcile settles rows sharing one folder by name and leaves the other fol
   assert.equal(readRows().find((r) => r.appid === '2751000').binary, 'TheLostCrown.exe');
   assert.equal(readRows().find((r) => r.appid === '291710').binary, 'TheLostCrown.exe', 'the other folder is untouched');
 });
+
+test('configuredExe reads the launch executable recorded for an appid, and follows edits', () => {
+  const file = path.join(userData, 'cfg', 'exeList.db');
+  fs.writeFileSync(file, JSON.stringify([{ appid: 'c4763f23', exe: 'C:\\Games\\Alan Wake 2\\AlanWake2.exe', args: '-epicapp=x' }]));
+  assert.equal(gameIndex.configuredExe('c4763f23'), 'C:\\Games\\Alan Wake 2\\AlanWake2.exe');
+  assert.equal(gameIndex.configuredExe('missing'), '');
+
+  fs.writeFileSync(file, JSON.stringify([{ appid: 'c4763f23', exe: 'D:\\Moved\\AlanWake2.exe', args: '' }, { appid: 'x' }]));
+  const later = new Date(Date.now() + 5000);
+  fs.utimesSync(file, later, later);
+  assert.equal(gameIndex.configuredExe('c4763f23'), 'D:\\Moved\\AlanWake2.exe');
+  fs.rmSync(file, { force: true });
+});
