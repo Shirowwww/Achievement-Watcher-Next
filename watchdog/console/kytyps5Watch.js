@@ -13,6 +13,7 @@ const path = require('path');
 const watch = require('../util/nodeWatch.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
+const { trophyGradeOf } = require('../util/trophyGrade.js');
 const { guardWatcher } = require('../util/watchGuard.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
@@ -28,8 +29,6 @@ const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 // The same icon cache the app parser extracts into, so an icon written by either side serves both.
 kyty.setIconRoot(path.join(userDataDir(), 'icon_cache', 'kytyps5'));
 
-// The popup's colour comes from the trophy itself.
-const TROPHY_GRADES = { P: 'platinum', G: 'gold', S: 'silver', B: 'bronze' };
 
 // A title's first unlock file carrying more than this is a copied-in save, not a play session.
 const NEW_TITLE_NOTIFY_MAX = 10;
@@ -143,7 +142,7 @@ async function announce(title, fresh, ctx) {
         icon: icon && fs.existsSync(icon) ? icon : undefined,
         gameIcon: gameIcon || undefined,
         image: image || undefined,
-        trophyGrade: TROPHY_GRADES[described.type] || undefined,
+        trophyGrade: trophyGradeOf(described.type),
         time: entry.earned_time || moment().unix(),
         delay,
       },

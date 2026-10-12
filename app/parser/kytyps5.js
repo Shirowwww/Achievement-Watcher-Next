@@ -209,8 +209,9 @@ function findGames(gameDirs, maxDepth = MAX_GAME_DEPTH) {
   const games = new Map();
   const pending = gameDirs.map((dir) => ({ dir, depth: 0 }));
   let visited = 0;
-  while (pending.length > 0 && visited < MAX_GAME_DIRECTORIES) {
-    const { dir, depth } = pending.shift();
+  // An index, not shift(): the queue can hold thousands of folders.
+  while (visited < pending.length && visited < MAX_GAME_DIRECTORIES) {
+    const { dir, depth } = pending[visited];
     visited++;
     if (isFile(path.join(dir, 'eboot.bin'))) {
       const param = readParam(dir);
@@ -421,7 +422,7 @@ function writeIcon(dir, label, id, image) {
   const file = path.join(dir, `${trophyKey(label, id)}.png`);
   try {
     if (!isFile(file) || fs.statSync(file).size !== image.length) fs.writeFileSync(file, image);
-    return 'file:///' + file.replace(/\\/g, '/');
+    return toFileUrl(file);
   } catch {
     return '';
   }
@@ -436,8 +437,12 @@ function localizedTitle(param, locale) {
   return '';
 }
 
+function toFileUrl(file) {
+  return 'file:///' + file.replace(/\\/g, '/');
+}
+
 function fileUrl(file) {
-  return isFile(file) ? 'file:///' + file.replace(/\\/g, '/') : '';
+  return isFile(file) ? toFileUrl(file) : '';
 }
 
 // The game's own key art and icon, which PS5 games ship in sce_sys.

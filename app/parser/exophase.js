@@ -567,6 +567,9 @@ function getSchemaLocalizedTextForRarity(value) {
   return '';
 }
 
+// Console emulators whose Exophase pages can carry a platform suffix on the slug.
+const PLATFORM_SLUG_SUFFIX = { shadps4: 'ps4', kytyps5: 'ps5' };
+
 function buildExophaseRaritySlugCandidates(title, platform) {
   const clean = String(title || '')
     .replace(/\((?:Xenia|RPCS3|PS4|PS5|shadps4|kytyps5)\)\s*$/i, '')
@@ -574,12 +577,8 @@ function buildExophaseRaritySlugCandidates(title, platform) {
     .replace(/\s+/g, ' ')
     .trim();
   const variants = buildExophaseSlugVariants(clean);
-  if (platform === 'shadps4') {
-    return Array.from(new Set([...variants, ...variants.map((slug) => `${slug}-ps4`)]));
-  }
-  if (platform === 'kytyps5') {
-    return Array.from(new Set([...variants, ...variants.map((slug) => `${slug}-ps5`)]));
-  }
+  const suffix = PLATFORM_SLUG_SUFFIX[platform];
+  if (suffix) return Array.from(new Set([...variants, ...variants.map((slug) => `${slug}-${suffix}`)]));
   if (platform !== 'rpcs3') return variants;
   return Array.from(
     new Set([...variants, ...variants.map((slug) => `${slug}-ps3`), ...variants.map((slug) => `${slug}-psn`)])

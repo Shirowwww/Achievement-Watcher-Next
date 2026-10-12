@@ -11,6 +11,7 @@ const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
+const { trophyGradeOf } = require('../util/trophyGrade.js');
 const { guardWatcher } = require('../util/watchGuard.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
@@ -22,8 +23,6 @@ const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 const USER_FILE = 'TROPUSR.DAT';
 const SCHEMA_FILE = 'TROPCONF.SFM';
 
-// The popup's colour comes from the trophy itself.
-const TROPHY_GRADES = { P: 'platinum', G: 'gold', S: 'silver', B: 'bronze' };
 
 let watchers = [];
 const changes = createChangeCoalescer();
@@ -231,7 +230,7 @@ async function handleChange(target, ctx) {
             achievementDisplayName: t.displayName,
             achievementDescription: t.description,
             icon: fs.existsSync(t.icon) ? t.icon : undefined,
-            trophyGrade: TROPHY_GRADES[t.type] || undefined,
+            trophyGrade: trophyGradeOf(t.type),
             time: t.time || moment().unix(),
             delay,
           },

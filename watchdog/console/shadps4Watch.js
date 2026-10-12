@@ -10,6 +10,7 @@ const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
+const { trophyGradeOf } = require('../util/trophyGrade.js');
 const { guardWatcher } = require('../util/watchGuard.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
@@ -21,8 +22,6 @@ const { userDataDir } = require('../util/userData.js');
 // Best-effort language → TROP_NN.XML suffix (Sony index). english/default is the suffix-less TROP.XML.
 const LANG_FILE = { japanese: '00', english: '01', french: '02', spanish: '03', german: '04', italian: '05', russian: '08', koreana: '09', schinese: '11', polish: '16', brazilian: '17', turkish: '19' };
 
-// The popup's colour comes from the trophy itself.
-const TROPHY_GRADES = { P: 'platinum', G: 'gold', S: 'silver', B: 'bronze' };
 
 let watchers = [];
 const changes = createChangeCoalescer();
@@ -189,7 +188,7 @@ async function handleChange(target, changedFile, ctx) {
             achievementDisplayName: t.displayName,
             achievementDescription: t.description,
             icon: fs.existsSync(t.icon) ? t.icon : undefined,
-            trophyGrade: TROPHY_GRADES[t.type] || undefined,
+            trophyGrade: trophyGradeOf(t.type),
             time: t.time || moment().unix(),
             delay,
           },
