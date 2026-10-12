@@ -71,6 +71,22 @@ test('a record with nothing on disk behind it is still not resurrected', () => {
   assert.equal(buildProvisionalGame(null), null);
 });
 
+// #111: an Xbox game whose load timed out used to vanish until a later, faster scan.
+test('an imported account-library game keeps its tile when its load fails, with no borrowed art', () => {
+  const xbox = buildProvisionalGame({
+    appid: '1144039928',
+    name: 'Yakuza 0 for Windows 10',
+    source: 'Xbox PC',
+    data: { type: 'xboxPc', title: 'Yakuza 0 for Windows 10' },
+  });
+  assert.ok(xbox, 'the imported library is evidence the game exists');
+  assert.equal(xbox.name, 'Yakuza 0 for Windows 10');
+  assert.equal(xbox.provisional, true);
+  assert.equal(xbox.img.header, undefined, 'an Xbox titleId is not a Steam appid, so no Steam CDN art');
+  const epic = buildProvisionalGame({ appid: 'ns-1', source: 'epic-official', data: { type: 'epicOfficial', title: 'Hades' } });
+  assert.equal(epic.name, 'Hades');
+});
+
 test('makeList admits the provisional entry and no longer silently skips a failed load', () => {
   assert.match(source, /game = buildProvisionalGame\(appid\);/, 'a failed load must fall back to the local entry');
   // The keep-filter used to require achievements or a verified install, which dropped fifteen owned

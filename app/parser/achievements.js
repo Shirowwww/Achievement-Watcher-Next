@@ -420,6 +420,9 @@ function describeRecord(record) {
 */
 function recordPrecedence(record) {
   const data = (record && record.data) || {};
+  // A Watchdog cache import with nothing on disk behind it is never rendered (evidenceless), so a
+  // store listing folded into it would vanish with it (#111). It yields to anything.
+  if (data.type === 'cached' && !data.gameDir && !data.path && !data.root) return -1;
   if (!OFFICIAL_RECORD_TYPES.has(data.type)) return 3;
   if (data.gameDir || data.exe) return 4;
   if (data.installed === false) return 0;
@@ -740,11 +743,15 @@ function buildProvisionalGame(appid) {
   // Only for entries backed by something on disk; a record with no achievement data and no install folder is exactly the phantom cache import the keep-filter below exists to drop.
   const dataPath = resolveAchievementDataPath(record);
   const gameDir = record.gameDir || '';
-  if (!dataPath && !gameDir) return null;
+  // An imported account library (Xbox, Epic) is evidence of its own: a load that times out must not
+  // make one of its games vanish until a later scan happens to be faster (#111).
+  const accountRecord = ACCOUNT_LIBRARY_TYPES.has(record.type);
+  if (!dataPath && !gameDir && !accountRecord) return null;
 
-  const name = resolveLocalGameName(appid);
-  // Steam's CDN builds these from the appid, so a numeric appid still gets its real artwork even under a numeric title.
-  const img = { ...steamCdnImages(id), icon: '' };
+  const name = resolveLocalGameName(appid) || (accountRecord ? String(record.title || appid.name || '') : '');
+  // Steam's CDN builds these from the appid, so a numeric appid still gets its real artwork even under
+  // a numeric title. An account id (an Xbox titleId) is not a Steam appid and would borrow another game's.
+  const img = accountRecord ? { icon: '' } : { ...steamCdnImages(id), icon: '' };
 
   // A Ubisoft product with no Steam release has no Steam CDN to borrow from, so its card would be
   // blank; Ubisoft publishes boxart for it on its own CDN, under this very id.
@@ -766,7 +773,7 @@ function buildProvisionalGame(appid) {
   // confirmed - stable across scans, unlike Date.now() here, which would reset every time this
   // provisional record is rebuilt. libraryReuse.js uses the two together to stop letting one such
   // game force a full network rescan of the whole library on every launch.
-  const unresolvedSince = /^\d+$/.test(id) ? steam.unresolvedSince(id) : null;
+  const unresolvedSince = !accountRecord && /^\d+$/.test(id) ? steam.unresolvedSince(id) : null;
 
   return {
     appid: appid.appid,

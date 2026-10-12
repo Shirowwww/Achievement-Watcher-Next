@@ -370,3 +370,29 @@ test('a RetroAchievements game never folds into the Steam game of the same name'
     assert.deepEqual(merged.map((g) => g.appid).sort(), ['71113', 'ra-1']);
   }
 });
+
+// #111: a Watchdog cache import has nothing on disk behind it and is never rendered, so an Xbox
+// title folded into it disappeared with it. It yields to the listing instead, in either order.
+test('an imported Xbox title is never folded into a phantom cache import', () => {
+  const phantom = { appid: '638970', name: 'Yakuza 0 for Windows 10', source: 'Achievement Watcher : Watchdog', data: { type: 'cached' } };
+  const xbox = {
+    appid: '1144039928',
+    name: 'Yakuza 0 for Windows 10',
+    source: 'Xbox PC',
+    data: { type: 'xboxPc', title: 'Yakuza 0 for Windows 10' },
+  };
+  for (const list of [[phantom, xbox], [xbox, phantom]]) {
+    const merged = achievements._internal.mergeCrossSourceDuplicates(list);
+    assert.deepEqual(merged.map((g) => g.appid), ['1144039928']);
+    assert.equal(merged[0].data.type, 'xboxPc', 'the listing keeps its own reader');
+  }
+});
+
+test('a cache import backed by a save folder still keeps the tile, as before', () => {
+  const cachedWithSave = { appid: '638970', name: 'Yakuza 0 for Windows 10', source: 'Watchdog', data: { type: 'cached', path: 'C:/saves/638970' } };
+  const xbox = { appid: '1144039928', name: 'Yakuza 0 for Windows 10', source: 'Xbox PC', data: { type: 'xboxPc', title: 'Yakuza 0 for Windows 10' } };
+  for (const list of [[cachedWithSave, xbox], [xbox, cachedWithSave]]) {
+    const merged = achievements._internal.mergeCrossSourceDuplicates(list);
+    assert.deepEqual(merged.map((g) => g.appid), ['638970']);
+  }
+});
