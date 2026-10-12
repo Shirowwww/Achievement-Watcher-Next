@@ -14,6 +14,44 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
+## Unreleased
+
+### Added
+
+- **A sound for rare unlocks and one for 100%.** **Settings → Notifications** (Advanced mode) has
+  **Rare achievement sound** and **100% completion sound** under **Sound**, for the in-game popup and
+  Windows notifications alike. Both start on "Same as unlocks"; "None" silences that kind of popup.
+  A sound chosen for one game in its own panel still wins.
+- **Game health guides a Nemirtingas Epic setup.** A game whose folder carries the Nemirtingas
+  Epic emulator gets an **Epic emulator** row. It warns when `SavePath` is not `"appdata"`, the only
+  place AW Next reads its saves; while nothing has been saved, it offers **Add the Epic launch
+  arguments**, built from the emulator's own config, for the games that only save when started with
+  them; and it reminds you that its overlay plugin can crash some games.
+
+### Improved
+
+- **Text cut with "…" scrolls under the pointer.** A long game title on a tile or a long value in
+  a Settings control slides to its end and back while you hover it, so it can be read in full.
+
+### Fixed
+
+- **Screenshot and clip souvenirs for every source.** Unlocks seen by the RPCS3, ShadPS4, Xenia,
+  recompiled Xbox 360, GOG, Ubisoft, RetroAchievements and mod watchers showed their popup but took
+  no souvenir.
+- **Steam games in the default library are tracked again.** A game started from Program Files was
+  ignored like a system tool, so it got no playtime and no "now playing" notification. A library
+  game is now followed when it runs from a Steam library or its own install folder; a program that
+  only shares a game's executable name stays ignored.
+- **An imported Xbox game no longer drops out of the library.** One whose load timed out, or that
+  matched a leftover cache entry by name, vanished until a later scan brought it back.
+- **Nemirtingas Epic emulator games.** The executable you pick is enough to track playtime and
+  check that the game is running, an Epic exclusive with no Steam release gets its live
+  notifications, and Game Health no longer mistakes the emulator for the Epic Games library.
+  Achievement reset now also works for the Nemirtingas Epic and Galaxy emulators.
+- **Fewer antivirus false alarms.** The installer no longer starts PowerShell to check whether AW
+  Next is running, and AW Next no longer lists the PC's network connections each time it starts:
+  the background monitor now closes with the app instead of being left running after a crash.
+
 ## 3.11.2 - 2026-10-09
 
 ### Added
