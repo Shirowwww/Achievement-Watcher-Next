@@ -69,6 +69,7 @@ const playtimeMonitor = require('./playtime/monitor.js');
 const { describeActiveGames } = require('./playtime/seed.js');
 const xboxPc = require('./xboxPc.js');
 const notify = require('./notification/toaster.js');
+const { withSouvenir } = require('./notification/withSouvenir.js');
 const shadps4Watch = require('./console/shadps4Watch.js');
 const rpcs3Watch = require('./console/rpcs3Watch.js');
 const xeniaWatch = require('./console/xeniaWatch.js');
@@ -899,9 +900,15 @@ var app = {
         same try/catch is how a fix ends up in only one of them. A watcher that cannot start is a
         degraded monitor, not a dead one, so its failure is recorded and the rest still run.
       */
+      const watcherNotify = withSouvenir(notify, () => self.options);
       for (const entry of CONSOLE_WATCHERS) {
         try {
-          await entry.watcher.start({ options: self.options, getToastID: () => self.toastID, notify, reportUnlock: reportUnlockToApp });
+          await entry.watcher.start({
+            options: self.options,
+            getToastID: () => self.toastID,
+            notify: watcherNotify,
+            reportUnlock: reportUnlockToApp,
+          });
           subsystemHealth.report(entry.name, true);
         } catch (err) {
           debug.error(`[${entry.name}] ${err}`);
