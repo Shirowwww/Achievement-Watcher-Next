@@ -44,9 +44,10 @@ renamed in 3.9.0 and the history is kept under one file.
 - **A console game shows its own square logo.** The achievement page and the notifications use the
   square icon a game ships, such as a PS5 game's own, instead of a logo looked up by name, and a
   PlayStation game no longer has the PlayStation logo painted over its icon.
-- **PlayStation trophies keep their colour in the popup.** An unlock seen by RPCS3, ShadPS4 or
-  KytyPS5 is painted platinum, gold, silver or bronze by the trophy's own grade, named in your
-  language, whatever the rarity display is set to.
+- **PlayStation trophies keep their own colour.** An unlock seen by RPCS3, ShadPS4 or KytyPS5 is
+  painted platinum, gold, silver or bronze by the trophy's own grade, named in your language,
+  whatever the rarity display is set to, in the popup and on the game page alike; the unlock rate
+  only fills in its percentage.
 - **More console trophies get their unlock rate.** A trophy that Exophase titles a little
   differently from the game ("1 down" / "One Down") is now matched on its description, when that
   description is specific and unique. Astro's Playroom goes from 49 to all 51 rates.

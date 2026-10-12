@@ -70,6 +70,9 @@ function formatRarityPercent(percent, lang) {
   return rarityPercentFormat.formatPercent(percent, lang, { maximumFractionDigits: 1 }) || String(percent);
 }
 
+// The colour a console trophy carries itself; platinum ranks with gold, as in the profile counts.
+const NATIVE_TROPHY_TIERS = { P: 'gold', G: 'gold', S: 'silver', B: 'bronze' };
+
 // Paint the global unlock % (rarity) onto the rendered achievement rows. `entries` is the normalized
 // [{name, percent}] shape produced by util/rarity.js, identical for Steam/Epic/GOG.
 function applyRarity(entries) {
@@ -84,7 +87,7 @@ function applyRarity(entries) {
   }
   const grading = typeof window.rarityGrading === 'function' ? window.rarityGrading() : { mode: 'rare' };
   const trophyMode = grading.mode === 'trophy';
-  const grades = trophyMode && typeof window.trophyLabels === 'function' ? window.trophyLabels() : {};
+  const grades = typeof window.trophyLabels === 'function' ? window.trophyLabels() : {};
   const rowsByName = indexAchievementRows($);
   const lang = String((window.app && window.app.config && window.app.config.achievement && window.app.config.achievement.lang) || 'english');
   for (const { name, percent: raw } of entries) {
@@ -97,13 +100,16 @@ function applyRarity(entries) {
     const figure = elem.find('.stats .community span.data');
     figure.attr('data-percent', percent).text(formatRarityPercent(percent, lang));
 
-    const tier = rarityTier(percent, grading.mode, grading.thresholds);
+    // A PlayStation trophy is graded by the game itself; its unlock rate only fills in the figure.
+    const native = NATIVE_TROPHY_TIERS[String(elem.find('[data-type]').first().attr('data-type') || '').toUpperCase()];
+    const graded = trophyMode || !!native;
+    const tier = native || rarityTier(percent, grading.mode, grading.thresholds);
     elem.removeClass('rare trophy-grade rarity-gold rarity-silver rarity-bronze');
     figure.removeAttr('data-grade');
     if (!tier) continue;
-    if (!trophyMode || tier === 'gold') elem.addClass('rare');
+    if (!graded || tier === 'gold') elem.addClass('rare');
     elem.addClass('rarity-' + tier);
-    if (trophyMode) {
+    if (graded) {
       elem.addClass('trophy-grade');
       figure.attr('data-grade', grades[tier] || tier);
     }

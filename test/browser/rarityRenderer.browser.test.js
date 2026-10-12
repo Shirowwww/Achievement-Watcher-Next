@@ -188,6 +188,18 @@ test('rarity renderer indexes rendered rows without selector injection or duplic
     assert.deepEqual(trophy.silver, { classes: 'achievement rarity-silver trophy-grade', grade: 'Argent' });
     assert.deepEqual(trophy.bronze, { classes: 'achievement rarity-bronze trophy-grade', grade: 'Bronze' });
 
+    // A PlayStation trophy keeps its own grade, whatever its rate says, in the rare mode too.
+    const native = await page.evaluate(() => {
+      window.rarityGrading = () => ({ mode: 'rare' });
+      const row = $('#achievement li .achievement').filter(function () {
+        return this.getAttribute('data-name') === 'bronze';
+      });
+      row.find('.stats').append('<i data-type="B"></i>');
+      window.applyRarity([{ name: 'bronze', percent: 2 }]);
+      return { classes: row[0].className, grade: row.find('span.data').attr('data-grade') };
+    });
+    assert.deepEqual(native, { classes: 'achievement rarity-bronze trophy-grade', grade: 'Bronze' }, 'a 2% bronze trophy is bronze, not a gold rarity');
+
     // Once the lookup is over, a row nobody has a rate for hides its "--" instead of showing it.
     const shown = await page.evaluate(() => {
       window.hideUnknownRarity();
