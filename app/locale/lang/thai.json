@@ -1030,6 +1030,9 @@
       "shadps4": {
         "description": "โปรแกรมจำลอง PlayStation 4"
       },
+      "kytyps5": {
+        "description": "โปรแกรมจำลอง PlayStation 5"
+      },
       "xenia": {
         "description": "โปรแกรมจำลอง Xbox 360"
       },

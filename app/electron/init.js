@@ -1597,7 +1597,7 @@ async function resolveSteamData(request) {
 }
 
 // Sources whose artwork and rarity come from local emulator data.
-const OVERLAY_EMULATOR_RARITY_SOURCES = new Set(['RPCS3 Emulator', 'ShadPS4 Emulator', 'Xenia Emulator']);
+const OVERLAY_EMULATOR_RARITY_SOURCES = new Set(['RPCS3 Emulator', 'ShadPS4 Emulator', 'KytyPS5 Emulator', 'Xenia Emulator']);
 
   // Apply cached rarity so the overlay can render immediately without network access.
 function attachOverlayRarity(game) {
@@ -2177,6 +2177,7 @@ ipcMain.on('fetch-source-img', async (event, arg) => {
       break;
     case 'RPCS3 Emulator':
     case 'ShadPS4 Emulator':
+    case 'KytyPS5 Emulator':
       event.returnValue = path.join(userData, 'Source', 'playstation.svg');
       break;
     case 'Xenia Emulator':
@@ -5836,6 +5837,27 @@ function paintableIconPath(candidate) {
   }
 }
 
+/*
+  A candidate that is already the game's own square icon on disk, at least PREFERRED_EXECUTABLE_ICON_SIDE
+  wide: nothing a lookup could return beats it. Store art is a remote URL or a content hash, never this.
+*/
+function ownSquareIcon(candidates) {
+  const { imageSize } = require('../util/imageSize.js');
+  for (const candidate of Array.isArray(candidates) ? candidates : [candidates]) {
+    const value = String(candidate || '');
+    let file = value;
+    try {
+      if (/^file:/i.test(value)) file = require('url').fileURLToPath(value);
+    } catch {
+      continue;
+    }
+    if (!paintableIconPath(file)) continue;
+    const size = imageSize(file);
+    if (size && size.width === size.height && size.width >= PREFERRED_EXECUTABLE_ICON_SIDE) return file;
+  }
+  return '';
+}
+
 const localIcons = require('../util/localIcons.js');
 
 /*
@@ -5934,6 +5956,10 @@ async function resolveSquareGameLogo(appid, gameName, candidates, { ignoreOverri
 
   const highResExecutableIcon = executableIconAtLeast(PREFERRED_EXECUTABLE_ICON_SIDE);
   if (highResExecutableIcon) return highResExecutableIcon;
+
+  // The same argument for a square icon the game ships as a picture (a PS5 game's icon0.png).
+  const shippedSquare = ownSquareIcon(candidates);
+  if (shippedSquare) return shippedSquare;
 
   try {
     const lookup = fetchSteamGridDbIcon(gameName, appid).catch(() => null);

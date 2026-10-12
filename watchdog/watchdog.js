@@ -76,6 +76,7 @@ const notify = require('./notification/toaster.js');
 const { withSouvenir } = require('./notification/withSouvenir.js');
 const shadps4Watch = require('./console/shadps4Watch.js');
 const rpcs3Watch = require('./console/rpcs3Watch.js');
+const kytyps5Watch = require('./console/kytyps5Watch.js');
 const xeniaWatch = require('./console/xeniaWatch.js');
 const xllnWatch = require('./console/xllnWatch.js');
 const markerpatchWatch = require('./console/markerpatchWatch.js');
@@ -161,6 +162,7 @@ const NEW_FOLDER_NOTIFY_MAX = 10;
   Every live watcher that is not the Steam save-file path, with what each one reads:
     shadps4  PS4 emulator trophies
     rpcs3    PS3 emulator trophies
+    kytyps5  PS5 emulator trophies, its _Trophies unlock files
     ea       EA Desktop's rotating verbose log
     xenia    Xbox 360 emulator GPD files under the user's saved folders
     xlln     Games for Windows LIVE profile state, through XLiveLessNess
@@ -175,6 +177,7 @@ const NEW_FOLDER_NOTIFY_MAX = 10;
 const CONSOLE_WATCHERS = [
   { name: 'shadps4', watcher: shadps4Watch },
   { name: 'rpcs3', watcher: rpcs3Watch },
+  { name: 'kytyps5', watcher: kytyps5Watch },
   { name: 'ea', watcher: eaWatch },
   { name: 'xenia', watcher: xeniaWatch },
   { name: 'xlln', watcher: xllnWatch },

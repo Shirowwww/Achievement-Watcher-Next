@@ -230,6 +230,11 @@ module.exports.load = async (cfg_file) => {
       fixFile = true;
     }
 
+    if (typeof options.achievement_source.kytyps5 !== 'boolean') {
+      options.achievement_source.kytyps5 = true;
+      fixFile = true;
+    }
+
     if (typeof options.achievement_source.xenia !== 'boolean') {
       options.achievement_source.xenia = true;
       fixFile = true;
@@ -581,6 +586,7 @@ module.exports.load = async (cfg_file) => {
         greenLuma: true,
         rpcs3: true,
         shadps4: true,
+        kytyps5: true,
         xenia: true,
         xlln: true,
         retroAchievements: true,

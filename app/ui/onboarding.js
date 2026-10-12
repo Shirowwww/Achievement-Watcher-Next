@@ -569,6 +569,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     { key: 'epic', fallback: true },
     { key: 'rpcs3', fallback: true },
     { key: 'shadps4', fallback: true },
+    { key: 'kytyps5', fallback: true },
     { key: 'xenia', fallback: true },
     { key: 'xlln', fallback: true },
     { key: 'markerpatch', fallback: true },

@@ -1030,6 +1030,9 @@
       "shadps4": {
         "description": "Émulateur PlayStation 4"
       },
+      "kytyps5": {
+        "description": "Émulateur PlayStation 5"
+      },
       "xenia": {
         "description": "Émulateur Xbox 360"
       },

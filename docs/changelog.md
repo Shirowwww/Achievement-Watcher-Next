@@ -27,11 +27,23 @@ renamed in 3.9.0 and the history is kept under one file.
   place AW Next reads its saves; while nothing has been saved, it offers **Add the Epic launch
   arguments**, built from the emulator's own config, for the games that only save when started with
   them; and it reminds you that its overlay plugin can crash some games.
+- **KytyPS5 trophies.** Games played on the KytyPS5 PlayStation 5 emulator are listed with their
+  trophies, read from the game's own trophy package, in your language when the game has it. Add the
+  emulator folder under **Settings → Folders** (it is also found on its own in the usual emulator
+  folders); the games are looked up in the game folders set in the KytyPS5 launcher. New trophies
+  trigger a notification, the PlayStation badge and Exophase rarity follow, and **Reset
+  achievements** clears a game's trophies. A game you delete stays in the library, shown as not
+  installed, with its trophies and art.
 
 ### Improved
 
 - **Text cut with "…" scrolls under the pointer.** A long game title on a tile or a long value in
   a Settings control slides to its end and back while you hover it, so it can be read in full.
+- **No more "--" for an unknown unlock rate.** When no source knows how many players earned an
+  achievement, the game page leaves the line out instead of showing "-- of all players".
+- **A console game shows its own square logo.** The achievement page and the notifications use the
+  square icon a game ships, such as a PS5 game's own, instead of a logo looked up by name, and a
+  PlayStation game no longer has the PlayStation logo painted over its icon.
 
 ### Fixed
 

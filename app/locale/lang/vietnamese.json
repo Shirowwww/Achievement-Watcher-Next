@@ -1030,6 +1030,9 @@
       "shadps4": {
         "description": "Trình giả lập PlayStation 4"
       },
+      "kytyps5": {
+        "description": "Trình giả lập PlayStation 5"
+      },
       "xenia": {
         "description": "Trình giả lập Xbox 360"
       },

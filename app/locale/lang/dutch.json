@@ -1030,6 +1030,9 @@
       "shadps4": {
         "description": "PlayStation 4-emulator"
       },
+      "kytyps5": {
+        "description": "PlayStation 5-emulator"
+      },
       "xenia": {
         "description": "Xbox 360-emulator"
       },

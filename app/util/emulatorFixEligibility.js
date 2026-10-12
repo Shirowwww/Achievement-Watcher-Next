@@ -13,7 +13,7 @@ const launcherDetect = require('../parser/launcherDetect.js');
 const uplayR2 = require('../parser/uplayR2.js');
 
 const ALLOWED_SYSTEMS = new Set(['', 'pc', 'windows', 'steam']);
-const NON_GBE_SOURCES = /^(?:gog|epic|ea|xbox|playstation|rpcs3|shadps4|xenia|ubisoft|uplay|social\s*club)/i;
+const NON_GBE_SOURCES = /^(?:gog|epic|ea|xbox|playstation|rpcs3|shadps4|kytyps5|xenia|ubisoft|uplay|social\s*club)/i;
 const OWN_EMULATOR_SOURCES = /(?:onlinefix|tenoke|ali213|smartsteamemu|universelan|hoodlum|codex|rune)/i;
 
 function hasSteamApiDll(gameDir, { maxDepth = 4, maxDirectories = 600 } = {}) {

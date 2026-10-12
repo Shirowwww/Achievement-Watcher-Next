@@ -20,6 +20,7 @@ const exophase = require(path.join(appPath, 'exophase.js'));
 const uplay = require(path.join(appPath, 'uplay.js'));
 const rpcs3 = require(path.join(appPath, 'rpcs3.js'));
 const shadps4 = require(path.join(appPath, 'shadps4.js'));
+const kytyps5 = require(path.join(appPath, 'kytyps5.js'));
 const xenia = require(path.join(appPath, 'xenia.js'));
 const greenluma = require(path.join(appPath, 'greenluma.js'));
 const userDir = require(path.join(appPath, 'userDir.js'));
@@ -121,6 +122,7 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   socialclub.initDebug({ isDev, userDataPath });
   ff7.initDebug({ isDev, userDataPath });
   xlln.initDebug({ isDev, userDataPath });
+  kytyps5.initDebug({ isDev, userDataPath });
   markerpatch.initDebug({ isDev, userDataPath });
   madnesspatch.initDebug({ isDev, userDataPath });
   x360Recomp.initDebug({ isDev, userDataPath });
@@ -1938,6 +1940,10 @@ async function discoverInScope(source, steamAccFilter, scope) {
           scanned = await shadps4.scan(dir.path);
           if (scanned.length > 0) debug.log('-> ShadPS4 data added');
         }
+        if (scanned.length === 0 && source.kytyps5) {
+          scanned = kytyps5.scan(dir.path);
+          if (scanned.length > 0) debug.log('-> KytyPS5 data added');
+        }
         if (scanned.length === 0 && source.xenia) {
           scanned = await xenia.scan(dir.path);
           if (scanned.length > 0) debug.log('-> Xenia data added');
@@ -2709,6 +2715,8 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
     return await rpcs3.getAchievements(appid.data.path, game.achievement.total);
   } else if (dataType === 'shadps4') {
     return await shadps4.getAchievements(appid.data.path);
+  } else if (dataType === 'kytyps5') {
+    return kytyps5.getAchievements(appid.data);
   } else if (dataType === 'xlln') {
     return xlln.getAchievements(appid.data);
   } else if (dataType === 'markerpatch') {
@@ -2893,6 +2901,8 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       game = await rpcs3.getGameData(appid.data.path);
     } else if (appid.data.type === 'shadps4') {
       game = await shadps4.getGameData(appid.data.path, option.achievement.lang);
+    } else if (appid.data.type === 'kytyps5') {
+      game = await kytyps5.getGameData(appid.data, option.achievement.lang);
     } else if (appid.data.type === 'xlln') {
       game = await xlln.getGameData(appid.data, option.achievement.lang);
     } else if (appid.data.type === 'markerpatch') {
@@ -3017,7 +3027,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     // for emulator/manual entries where the native provider often has a title but no library art.
     game.img = game.img && typeof game.img === 'object' ? game.img : {};
     const needsPrimaryArt = !game.img.header && !game.img.portrait;
-    const benefitsFromFullFallback = ['rpcs3', 'shadps4', 'xenia', 'x360recomp', 'manual', 'unconfigured'].includes(appid.data.type);
+    const benefitsFromFullFallback = ['rpcs3', 'shadps4', 'kytyps5', 'xenia', 'x360recomp', 'manual', 'unconfigured'].includes(appid.data.type);
     if (game.name && (needsPrimaryArt || benefitsFromFullFallback)) {
       try {
         /*

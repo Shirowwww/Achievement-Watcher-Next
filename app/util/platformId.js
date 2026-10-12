@@ -40,6 +40,8 @@ function sanitizeAppIdForPlatform(value, type) {
       return /^NP[A-Z0-9_]+$/i.test(raw) ? raw : '';
     case 'shadps4':
       return /^CUSA[0-9]+$/i.test(raw) || /^NP[A-Z0-9_]+$/i.test(raw) ? raw : '';
+    case 'kytyps5':
+      return /^[A-Z0-9_-]{1,32}$/i.test(raw) ? raw : '';
     case 'xenia':
       return /^(?:0x)?[0-9a-f]+$/i.test(raw) ? raw.replace(/^0x/i, '') : '';
     case 'steam':

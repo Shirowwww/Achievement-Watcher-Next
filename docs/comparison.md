@@ -29,7 +29,7 @@ See [NOTICE](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/NOT
 | Portable releases with no config | ✅ Save tree read on its own | ⚠️ Manual entry | ❌ |
 | Goldberg Uplay R2 (Ubisoft) | ✅ Loader-version aware | ❌ | ❌ |
 | Goldberg SocialClub (Rockstar / GTA) | ✅ | ❌ | ❌ |
-| Console emulators | ✅ RPCS3 · ShadPS4 · Xenia | ✅ RPCS3 · ShadPS4 · Xenia | ⚠️ RPCS3 only |
+| Console emulators | ✅ RPCS3 · ShadPS4 · KytyPS5 · Xenia | ✅ RPCS3 · ShadPS4 · Xenia | ⚠️ RPCS3 only |
 | Xbox 360 games recompiled for PC (ReXGlue and similar) | ✅ List, icons, DLC and live unlocks | ❌ | ❌ |
 | Games for Windows LIVE | ✅ XLiveLessNess, schema and icons read from the game | ✅ XLiveLessNess | ❌ |
 | RetroAchievements | ✅ Played games imported, live unlocks with any emulator | ✅ | ❌ |

@@ -1588,6 +1588,8 @@ async function paintGameHeaderIcon(game) {
   const paint = (value) => {
     if (!stillOnScreen()) return;
     iconEl.css('background', value ? cssUrl(value) : '');
+    // A console game shows its platform's logo only while it has no icon of its own.
+    iconEl.toggleClass('has-game-icon', !!value);
   };
   const paintLocal = () => paint(localGameIconUrls(game)[0] || '');
   const cacheAppid = game.steamappid || game.appid;
@@ -1793,6 +1795,7 @@ window.awPromptText = promptText;
 const EMU_LOCAL_ICON_SOURCES = new Set([
   'RPCS3 Emulator',
   'ShadPS4 Emulator',
+  'KytyPS5 Emulator',
   'Xenia Emulator',
   'XLiveLessNess',
   'Xbox 360 Recomp',
@@ -2032,7 +2035,7 @@ function isLegitSteamLibraryGame(game) {
 // An unrecognised label falls silently through to the Steam badge, so every `source:` literal in
 // app/parser/*.js must appear here or in STEAM_BADGE_SOURCES (Ubisoft is separate); test enforces it.
 const SOURCE_BADGE = {
-  playstation: /^(?:rpcs3 emulator|shadps4 emulator)$/,
+  playstation: /^(?:rpcs3 emulator|shadps4 emulator|kytyps5 emulator)$/,
   xbox: /^(?:xenia emulator|xlivelessness|xbox 360 recomp|xbox pc)$/,
   epic: /^epic(?:-official)?$/,
   gog: /^(?:gog|gog galaxy)$/,
@@ -2111,7 +2114,7 @@ function sourcePresentationFor(game) {
   switch (kind) {
     case 'playstation':
       return {
-        img: getSourceImg(source === 'ShadPS4 Emulator' ? source : 'RPCS3 Emulator'),
+        img: getSourceImg(source === 'ShadPS4 Emulator' || source === 'KytyPS5 Emulator' ? source : 'RPCS3 Emulator'),
         label: t('playstation-trophies', 'PlayStation trophies', 'Succès PlayStation'),
         kind,
       };
@@ -5897,7 +5900,7 @@ var app = {
                   })
                 );
                 addPcgw('PCGamingWiki');
-              } else if (sourceLower.includes('shadps4') || sourceLower.includes('xenia')) {
+              } else if (sourceLower.includes('shadps4') || sourceLower.includes('kytyps5') || sourceLower.includes('xenia')) {
                 addPcgw('PCGamingWiki');
               } else if (sourceLower.includes('uplay') || sourceLower === 'lumaplay' || sourceLower.includes('ubisoft')) {
                 linkMenu.append(
@@ -6862,6 +6865,7 @@ var app = {
             .filter((a) => a && a.rarityPct != null && Number.isFinite(Number(a.rarityPct)))
             .map((a) => ({ name: a.name, percent: Number(a.rarityPct) }));
           applyRarity(entries);
+          hideUnknownRarity();
         } else if (rarityContext.kind === 'steam-bridge') {
           getGlobalStat(rarityContext.cacheId, 'steam-bridge', game.name, game.achievement.list, rarityContext);
         } else if (rarityContext.kind === 'emulator') {

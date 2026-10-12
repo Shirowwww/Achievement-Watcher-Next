@@ -42,6 +42,7 @@ asarUnpack:
   - assets/uplay-steam.json
   - parser/uplaySteamTable.js
   - parser/xlln.js
+  - parser/kytyps5.js
   - parser/xllnSpa.js
   - parser/markerpatch.js
   - parser/madnesspatch.js

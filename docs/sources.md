@@ -110,18 +110,24 @@ piece - see [Game Health](game-health.md) and [Goldberg / GBE setup](emulator-se
 |---|---|---|
 | **RPCS3** | PlayStation 3 | `TROPUSR.DAT` beside the trophy list |
 | **ShadPS4** | PlayStation 4 | `TROP*.XML`, which holds the list and the earned state together |
+| **KytyPS5** | PlayStation 5 | `_Trophies\<title>\trophies_*.json` beside the emulator; the list comes from the game's `sce_sys\trophy2` package |
 | **Xenia** | Xbox 360 | `.gpd`, which likewise holds both |
 
 Each one is watched live, so an unlock in the emulator raises a notification like any other.
 
-All three let you move their data off the default path, and AW Next reads the same settings the
-emulator reads rather than assuming the default:
+RPCS3, ShadPS4 and Xenia let you move their data off the default path, and AW Next reads the same
+settings the emulator reads rather than assuming the default:
 
 - **RPCS3** - the trophy folder follows `vfs.yml` (including a `$(EmulatorDir)`-relative remap), a
   `portable` folder beside the executable, and `RPCS3_CONFIG_DIR`.
 - **ShadPS4** - recognised whether you point at the emulator, its `user` folder or `game_data`
   itself, and `config.toml` is read from either of the two places shadPS4 has kept it.
 - **Xenia** - follows the `storage_root` and `content_root` in its config.
+- **KytyPS5** - recognised whether you point at the emulator, its `_Trophies` folder or one game's
+  folder inside it. The games are looked up in the game folders of the KytyPS5 launcher
+  (`Kyty.ini`) and beside the emulator. The trophy list lives in the game itself, so a game only
+  ever kept in an archive is not listed; one deleted after AW Next has seen it stays listed, as not
+  installed, from the copy of its list and art kept then.
 
 So a relocated RPCS3 virtual disk or a ShadPS4 data folder can be added under **Settings → Folders**
 directly, with no emulator executable anywhere near it.

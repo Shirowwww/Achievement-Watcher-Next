@@ -49,6 +49,13 @@ test('files that also hold the achievement list are edited in place, never delet
   assert.equal(targets.resetActionFor('4D5307E6.gpd'), targets.ACTION.CLEAR_XENIA_GPD);
 });
 
+// KytyPS5's list is inside the game's trophy package, so its unlock files hold state only.
+test('KytyPS5 unlock files are state only, and its leftovers are not', () => {
+  assert.equal(targets.resetActionFor('trophies_1000_0.json'), targets.ACTION.DELETE);
+  assert.equal(targets.resetActionFor('trophies_1000_0.json.tmp'), null);
+  assert.equal(targets.resetActionFor('trophy00.ucp'), null);
+});
+
 test('schema files are never a target, whatever folder they sit in', () => {
   for (const name of ['TROPCONF.SFM', 'steam_appid.txt', 'appid.txt', 'trophy.trp', 'configs.main.ini', 'ICON0.PNG']) {
     assert.equal(targets.resetActionFor(name), null, `${name} must survive a reset`);

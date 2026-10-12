@@ -108,7 +108,7 @@ build tells you when a new release is out; extracting it over the old folder kee
 | **Epic Games** | Local installations, and after an optional account connection, the games the account owns with their official achievement state |
 | **Ubisoft Connect** | Native local data, legacy Uplay formats and compatible Uplay R1 and R2 setups |
 | **EA Desktop** | Achievement events from the local EA Desktop log, for games outside EA's managed folders |
-| **Console emulators** | RPCS3, ShadPS4 and Xenia, each watched live |
+| **Console emulators** | RPCS3, ShadPS4, KytyPS5 and Xenia, each watched live |
 | **Xbox PC** | Local Game Pass / Microsoft Store installs, plus the games the account owns and their Xbox Network state |
 | **Xbox 360 recompilations** | Native PC recompilations such as ReXGlue ports, from the game folder or Documents, watched live |
 | **RetroAchievements** | After an optional account connection (username and Web API key), the emulator games you played with their unlocks and rarity; new unlocks are announced live, whatever the emulator |

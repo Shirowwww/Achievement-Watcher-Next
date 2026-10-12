@@ -71,6 +71,8 @@ function resetActionFor(fileName, source = '') {
     return null;
   }
   if (SAVE_FILES.has(name)) return ACTION.DELETE;
+  // KytyPS5 keeps one unlock list per user and trophy set, apart from the list in the game's package.
+  if (/^trophies_\d+_\d+\.json$/.test(name)) return ACTION.DELETE;
   // ShadPS4 ships one file per language (TROP.XML, TROP_01.XML, …); all of them carry the state.
   if (/^trop(_\d+)?\.xml$/.test(name)) return ACTION.CLEAR_SHADPS4_XML;
   if (name.endsWith('.gpd')) return ACTION.CLEAR_XENIA_GPD;

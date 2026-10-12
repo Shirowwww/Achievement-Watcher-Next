@@ -187,6 +187,20 @@ test('a shadPS4 data folder with no binary in it is accepted too', async () => {
   assert.equal(diagnosis.evidence.emulator, 'shadps4');
 });
 
+test('a KytyPS5 folder is accepted from the emulator, its _Trophies or one title inside it', async () => {
+  const root = tmpdir('aw-kytyps5-accept-');
+  const title = path.join(root, '_Trophies', 'PPSA01325');
+  fs.mkdirSync(title, { recursive: true });
+  fs.writeFileSync(path.join(title, 'trophies_1000_0.json'), '{"unlockedTrophies":[]}');
+
+  for (const level of [root, path.join(root, '_Trophies'), title]) {
+    const diagnosis = await userDir.diagnose(level);
+    assert.equal(diagnosis.accepted, true, level);
+    assert.equal(diagnosis.evidence.emulator, 'kytyps5');
+    assert.deepEqual(diagnosis.evidence.roots, [root]);
+  }
+});
+
 test('an unrelated folder is still refused, with its reason', async () => {
   const empty = tmpdir('aw-emulator-unrelated-');
   const diagnosis = await userDir.diagnose(empty);

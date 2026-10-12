@@ -79,6 +79,7 @@ the exact files before anything is touched. A file whose backup fails is skipped
 | Steam emulators (Goldberg / GBE and compatible layouts, including Goldberg SocialClub and Uplay R2) | Removes the achievement save. The emulator writes a fresh one at the next unlock. |
 | RPCS3 | Removes `TROPUSR.DAT`. The trophy list (`TROPCONF.SFM`) is left alone. |
 | ShadPS4 | Relocks the trophies inside `TROP*.XML`, which also holds the trophy list - so the file is edited, never removed. |
+| KytyPS5 | Removes the game's `trophies_*.json` unlock files. The trophy list stays in the game's own package. |
 | Xenia | Clears the earned flag inside the `.gpd`, which also holds the achievement list - same reason. |
 | Steam, GOG Galaxy, Ubisoft Connect, EA, Epic, Xbox | **Not possible.** These keep unlocks on your account and re-synchronise them; only the account itself can clear them. AW Next says so instead of appearing to work. |
 

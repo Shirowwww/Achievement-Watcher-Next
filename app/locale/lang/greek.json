@@ -1030,6 +1030,9 @@
       "shadps4": {
         "description": "Εξομοιωτής PlayStation 4"
       },
+      "kytyps5": {
+        "description": "Εξομοιωτής PlayStation 5"
+      },
       "xenia": {
         "description": "Εξομοιωτής Xbox 360"
       },

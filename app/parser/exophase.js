@@ -31,6 +31,7 @@ const EXOPHASE_PLATFORM_MAP = {
   xenia: 'xbox-360',
   rpcs3: 'ps3',
   shadps4: 'ps4',
+  kytyps5: 'ps5',
 };
 
 /*
@@ -568,13 +569,16 @@ function getSchemaLocalizedTextForRarity(value) {
 
 function buildExophaseRaritySlugCandidates(title, platform) {
   const clean = String(title || '')
-    .replace(/\((?:Xenia|RPCS3|PS4|shadps4)\)\s*$/i, '')
+    .replace(/\((?:Xenia|RPCS3|PS4|PS5|shadps4|kytyps5)\)\s*$/i, '')
     .replace(/[™®©]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
   const variants = buildExophaseSlugVariants(clean);
   if (platform === 'shadps4') {
     return Array.from(new Set([...variants, ...variants.map((slug) => `${slug}-ps4`)]));
+  }
+  if (platform === 'kytyps5') {
+    return Array.from(new Set([...variants, ...variants.map((slug) => `${slug}-ps5`)]));
   }
   if (platform !== 'rpcs3') return variants;
   return Array.from(

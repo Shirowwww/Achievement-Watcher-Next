@@ -170,7 +170,7 @@ async function detectEaAppMarkers(dirpath) {
   }
 }
 
-const EMULATOR_BINARIES = ['rpcs3.exe', 'shadPS4.exe', 'shadps4.exe', 'xenia.exe', 'xenia_canary.exe'];
+const EMULATOR_BINARIES = ['rpcs3.exe', 'shadPS4.exe', 'shadps4.exe', 'kyty_emulator.exe', 'xenia.exe', 'xenia_canary.exe'];
 
 // Steam emulators that keep a game's unlocks INSIDE the game folder rather than under %APPDATA%.
 // Unlike their %APPDATA% cousins, the Watchdog never sees these unless the game folder is watched.
@@ -209,7 +209,7 @@ function emulatorRootsFromRegistry(registry = require('../util/reg.js')) {
     ['HKLM', 'Software/WOW6432Node/Microsoft/Windows/CurrentVersion/Uninstall'],
     ['HKCU', 'Software/Microsoft/Windows/CurrentVersion/Uninstall'],
   ];
-  const EMULATOR_NAME = /^(rpcs3|shadps4|xenia)\b/i;
+  const EMULATOR_NAME = /^(?:(?:rpcs3|shadps4|xenia)\b|kyty)/i;
   for (const [hive, root] of UNINSTALL_ROOTS) {
     let keys = [];
     try {
@@ -488,6 +488,13 @@ module.exports.diagnose = async (dirpath) => {
       }
     });
     if (shadRoots.length > 0) return { accepted: true, code: 'emulator-data', evidence: { ...evidence, emulator: 'shadps4', roots: shadRoots } };
+  } catch {
+    /* same */
+  }
+  try {
+    // KytyPS5's _Trophies folder, or one game's folder inside it.
+    const kytyRoot = require('./kytyps5.js').emulatorRoot(dirpath);
+    if (kytyRoot) return { accepted: true, code: 'emulator-data', evidence: { ...evidence, emulator: 'kytyps5', roots: [kytyRoot] } };
   } catch {
     /* same */
   }

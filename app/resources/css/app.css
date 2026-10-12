@@ -1753,7 +1753,7 @@ body.is-resizing #game-list {
   position: relative;
 }
 
-#achievement .wrapper > .header[data-system='playstation'] .title .icon {
+#achievement .wrapper > .header[data-system='playstation'] .title .icon:not(.has-game-icon) {
   background: url(../img/playstation.png) no-repeat, var(--surface) !important;
   background-size: contain !important;
 }

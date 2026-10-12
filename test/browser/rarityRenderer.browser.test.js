@@ -187,6 +187,17 @@ test('rarity renderer indexes rendered rows without selector injection or duplic
     assert.deepEqual(trophy.gold, { classes: 'achievement rare rarity-gold trophy-grade', grade: 'Or' });
     assert.deepEqual(trophy.silver, { classes: 'achievement rarity-silver trophy-grade', grade: 'Argent' });
     assert.deepEqual(trophy.bronze, { classes: 'achievement rarity-bronze trophy-grade', grade: 'Bronze' });
+
+    // Once the lookup is over, a row nobody has a rate for hides its "--" instead of showing it.
+    const shown = await page.evaluate(() => {
+      window.hideUnknownRarity();
+      return $('#achievement li .stats .community')
+        .map(function () {
+          return $(this).css('display') !== 'none';
+        })
+        .get();
+    });
+    assert.deepEqual(shown, [true, true, true, true, false]);
   } finally {
     if (browser) await browser.close().catch(() => {});
     killBrowserUsing(userDataDir);

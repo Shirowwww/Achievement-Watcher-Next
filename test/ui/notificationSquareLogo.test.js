@@ -56,6 +56,43 @@ test('the fallback walks every candidate instead of giving up on the first', () 
   assert.match(fn, /return firstPaintable;/);
 });
 
+// A PS5 game ships its own 512x512 icon0.png; a name lookup that finds some other square must not beat it.
+test("a square icon the game ships wins before any lookup, and nothing else does", () => {
+  const resolver = sliceFunction(init, 'async function resolveSquareGameLogo(appid, gameName, candidates,');
+  assert.ok(resolver.indexOf('ownSquareIcon(candidates)') < resolver.indexOf('fetchSteamGridDbIcon('), 'checked before the community lookup');
+
+  const os = require('node:os');
+  const { pathToFileURL } = require('node:url');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-own-square-'));
+  // Just enough of a PNG for imageSize: the signature and an IHDR carrying the size.
+  const png = (width, height) => {
+    const header = Buffer.alloc(24);
+    Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex').copy(header);
+    header.writeUInt32BE(width, 16);
+    header.writeUInt32BE(height, 20);
+    return header;
+  };
+  const write = (name, width, height) => {
+    const file = path.join(dir, name);
+    fs.writeFileSync(file, png(width, height));
+    return file;
+  };
+  const square = write('icon0.png', 512, 512);
+  const small = write('small.png', 64, 64);
+  const wide = write('pic0.png', 1920, 1080);
+
+  const source = `${sliceFunction(init, 'function paintableIconPath(candidate) {')}\n}\n${sliceFunction(init, 'function ownSquareIcon(candidates) {')}\n}\nreturn ownSquareIcon;`;
+  const appRequire = (request) => require(request.startsWith('../') ? path.join(appDir, 'electron', request) : request);
+  const ownSquareIcon = new Function('require', 'fs', 'PREFERRED_EXECUTABLE_ICON_SIDE', source)(appRequire, fs, 256);
+  try {
+    assert.equal(ownSquareIcon([wide, pathToFileURL(square).href]), square, 'a file URL to a big square is taken');
+    assert.equal(ownSquareIcon([small, wide]), '', 'a small square or a wide picture is not');
+    assert.equal(ownSquareIcon(['https://example.invalid/icon.png', 'abc123hash']), '', 'store art never is');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('a thumbnail is a local file that still exists, never a URL or a deleted cover', () => {
   const fn = sliceFunction(init, 'function paintableIconPath(candidate) {');
   assert.match(fn, /if \(!value \|\| \/\^https\?:\\\/\\\/\/i\.test\(value\)\) return '';/);
@@ -114,6 +151,10 @@ test('the achievement page header asks for the same logo instead of taking the c
   */
   assert.equal((header.match(/invoke\('fetch-icon'/g) || []).length, 1);
   assert.match(header, /const override = gameIconOverrideFor\(game\.appid\)/);
+  // The PlayStation logo used to be forced over every console game's own icon by an !important rule.
+  assert.match(header, /toggleClass\('has-game-icon', !!value\)/);
+  const css = fs.readFileSync(path.join(appDir, 'resources', 'css', 'app.css'), 'utf8');
+  assert.match(css, /\[data-system='playstation'\] \.title \.icon:not\(\.has-game-icon\) \{/);
 });
 
 test('every notification preview reuses the resolver rather than resolving artwork its own way', () => {

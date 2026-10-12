@@ -1030,6 +1030,9 @@
       "shadps4": {
         "description": "Емулятор PlayStation 4"
       },
+      "kytyps5": {
+        "description": "Емулятор PlayStation 5"
+      },
       "xenia": {
         "description": "Емулятор Xbox 360"
       },

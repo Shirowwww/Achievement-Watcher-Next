@@ -356,6 +356,10 @@ module.exports.load = () => {
       options.achievement_source.shadps4 = true;
     }
 
+    if (typeof options.achievement_source.kytyps5 !== 'boolean') {
+      options.achievement_source.kytyps5 = true;
+    }
+
     if (typeof options.achievement_source.xenia !== 'boolean') {
       options.achievement_source.xenia = true;
     }
@@ -662,6 +666,7 @@ module.exports.load = () => {
         greenLuma: true,
         rpcs3: true,
         shadps4: true,
+        kytyps5: true,
         xenia: true,
         xlln: true,
         retroAchievements: true,

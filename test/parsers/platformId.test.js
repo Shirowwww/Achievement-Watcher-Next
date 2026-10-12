@@ -10,6 +10,8 @@ const { sanitizeAppIdForPlatform, officialAppId, rawAppId, normalizeType } = req
   assert.equal(sanitizeAppIdForPlatform('1843', 'ubisoftOfficial'), '1843');
   assert.equal(sanitizeAppIdForPlatform('9773aa1aa54f4f7b80e44bef04986cea', 'epicOfficial'), '9773aa1aa54f4f7b80e44bef04986cea');
   assert.equal(sanitizeAppIdForPlatform('CUSA03173', 'shadps4'), 'CUSA03173');
+  assert.equal(sanitizeAppIdForPlatform('PPSA01325', 'kytyps5'), 'PPSA01325');
+  assert.equal(sanitizeAppIdForPlatform('../PPSA01325', 'kytyps5'), '', 'a title id never carries a path');
   assert.equal(sanitizeAppIdForPlatform('NPWR12345_00', 'rpcs3'), 'NPWR12345_00');
   assert.equal(sanitizeAppIdForPlatform('0x4D5307E6', 'xenia'), '4D5307E6'); // 0x stripped
   // rejects malformed ids

@@ -1030,6 +1030,9 @@
       "shadps4": {
         "description": "PlayStation 4 模拟器"
       },
+      "kytyps5": {
+        "description": "PlayStation 5 模拟器"
+      },
       "xenia": {
         "description": "Xbox 360 模拟器"
       },

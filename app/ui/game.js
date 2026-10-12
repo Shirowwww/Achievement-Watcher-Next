@@ -115,13 +115,28 @@ function applyRarity(entries) {
   scheduleRareGlowRefresh(0);
 }
 
+// Bumped on every game shown, so a late answer for the previous game cannot touch this one.
+let rarityRequest = 0;
+
+// Once the lookup is over, a row nobody has a rate for says nothing rather than "--".
+function hideUnknownRarity() {
+  $('#achievement .achievement-list ul > li .stats .community').each((_, row) => {
+    if (!$(row).find('span.data').attr('data-percent')) $(row).hide();
+  });
+}
+
 function getGlobalStat(appid, source, gameName, achievements, context) {
+  const request = ++rarityRequest;
+  const settle = () => {
+    if (request === rarityRequest) hideUnknownRarity();
+  };
   let rarity;
   try {
     const path = require('path');
     const remote = require('@electron/remote');
     rarity = require(path.join(remote.app.getAppPath(), 'util/rarity.js'));
   } catch (err) {
+    settle();
     return; // rarity is a non-essential enrichment - never let it break the game view
   }
 
@@ -141,11 +156,13 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
       : rarity.getRarityEntries(appid, source, { gameName, gameNames: context && context.gameNames, achievements });
   pending
     .then((entries) => {
+      if (request !== rarityRequest) return;
       applyRarity(entries);
       // The profile's trophy counts rank unlocks by these same rates.
       if (typeof window.forgetTrophyRates === 'function') window.forgetTrophyRates(appid);
     })
-    .catch(() => {});
+    .catch(() => {})
+    .finally(settle);
 }
 
 (function ($, window, document) {
