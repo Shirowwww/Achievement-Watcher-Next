@@ -586,6 +586,9 @@ function buildExophaseRaritySlugCandidates(title, platform) {
   );
 }
 
+// A description shorter than this ("Win a race") is too generic to identify an achievement alone.
+const MIN_DESCRIPTION_MATCH_WORDS = 4;
+
 // Match fetched Exophase awards (titled items with rarityPct) against the game's achievement list
 // and return [{ name, percent }] keyed by the schema's own achievement ids.
 function matchExophaseRarityToAchievements(achievements, items) {
@@ -593,6 +596,8 @@ function matchExophaseRarityToAchievements(achievements, items) {
   const keyDupes = new Set();
   const titleMap = new Map();
   const titleDupes = new Set();
+  const descriptionMap = new Map();
+  const descriptionDupes = new Set();
   const register = (map, dupes, key, item) => {
     if (!key) return;
     if (map.has(key) && map.get(key) !== item) dupes.add(key);
@@ -604,11 +609,19 @@ function matchExophaseRarityToAchievements(achievements, items) {
     for (const langKey of Object.keys(titles)) {
       register(keyMap, keyDupes, buildExophaseMatchKey(titles[langKey], descriptions[langKey] || ''), item);
       register(titleMap, titleDupes, normalizeExophaseMatchText(titles[langKey]), item);
+      register(descriptionMap, descriptionDupes, normalizeExophaseMatchText(descriptions[langKey]), item);
     }
   }
 
+  const list = Array.isArray(achievements) ? achievements : [];
+  const descriptionCount = new Map();
+  for (const ach of list) {
+    const key = normalizeExophaseMatchText(getSchemaLocalizedTextForRarity(ach && ach.description));
+    if (key) descriptionCount.set(key, (descriptionCount.get(key) || 0) + 1);
+  }
+
   const out = [];
-  for (const ach of Array.isArray(achievements) ? achievements : []) {
+  for (const ach of list) {
     if (!ach || ach.name == null) continue;
     const title = getSchemaLocalizedTextForRarity(ach.displayName);
     const description = getSchemaLocalizedTextForRarity(ach.description);
@@ -618,6 +631,18 @@ function matchExophaseRarityToAchievements(achievements, items) {
     if (!match) {
       const titleKey = normalizeExophaseMatchText(title);
       if (titleKey && !titleDupes.has(titleKey)) match = titleMap.get(titleKey) || null;
+    }
+    /*
+      Last, the description alone, when it is unique on both sides and says enough to be one: the
+      game and Exophase can spell the same title apart ("1 down" / "One Down", "Recognize" /
+      "Recognise") while describing it word for word the same.
+    */
+    if (!match) {
+      const descriptionKey = normalizeExophaseMatchText(description);
+      const specific = descriptionKey.split(' ').length >= MIN_DESCRIPTION_MATCH_WORDS;
+      if (specific && descriptionCount.get(descriptionKey) === 1 && !descriptionDupes.has(descriptionKey)) {
+        match = descriptionMap.get(descriptionKey) || null;
+      }
     }
     const percent = normalizeExophaseRarityPct(match?.rarityPct);
     if (!match || percent === null) continue;

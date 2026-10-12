@@ -50,6 +50,28 @@ test('matchExophaseRarityToAchievements maps awards back to schema ids', () => {
   ]);
 });
 
+// Astro's Playroom on Exophase spells two titles apart from the game: "1 down" / "One Down" and
+// "Recognize" / "Recognise". Their descriptions are word for word the same, and say enough.
+test('a title spelled differently still matches on a specific, unique description', () => {
+  const items = [
+    { titles: { english: 'One Down, Lots More to Go!' }, descriptions: { english: 'Got your first puzzle piece.' }, rarityPct: 99.13 },
+    { titles: { english: 'I Recognise You…' }, descriptions: { english: 'Punched and looked into the lens of PS VR in PlayStation Labo.' }, rarityPct: 43.38 },
+    { titles: { english: 'Race One' }, descriptions: { english: 'Win a race.' }, rarityPct: 50 },
+    { titles: { english: 'Twin A' }, descriptions: { english: 'Collect every coin in the level.' }, rarityPct: 10 },
+    { titles: { english: 'Twin B' }, descriptions: { english: 'Collect every coin in the level.' }, rarityPct: 20 },
+  ];
+  const achievements = [
+    { name: '11', displayName: '1 down, lots more to go!', description: 'Got your first puzzle piece.' },
+    { name: '25', displayName: 'I Recognize You…', description: 'Punched and looked into the lens of PS VR in PlayStation Labo.' },
+    { name: '30', displayName: 'First Race', description: 'Win a race.' },
+    { name: '31', displayName: 'Coins', description: 'Collect every coin in the level.' },
+  ];
+  assert.deepEqual(exophase.matchExophaseRarityToAchievements(achievements, items), [
+    { name: '11', percent: 99.13 },
+    { name: '25', percent: 43.38 },
+  ], 'a three-word description, or one Exophase lists twice, names nothing');
+});
+
 test('rarity percent normalizer tolerates text and commas', () => {
   assert.equal(exophase.normalizeExophaseRarityPct('12,5%'), 12.5);
   assert.equal(exophase.normalizeExophaseRarityPct(' 4.2% of players '), 4.2);
