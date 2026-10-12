@@ -105,6 +105,10 @@ ordinary controls, and a preset can be shared as a single `.awpreset` file.
   the completion popup a sound of their own, for both the overlay and Windows notifications. Both
   start on "Same as unlocks"; "None" makes that kind of popup silent. A sound chosen for one game
   in its own panel still wins.
+- **Progress sound** (Advanced mode) does the same for progress popups: "None" mutes them while
+  unlocks keep their sound. It wins over a game's own sound, since it is about the kind of popup,
+  except for a game set to no sound at all. To stop one game's progress popups entirely, right-click
+  it and mute its progress instead.
 - Overlay volume ranges from 0% to 200%. Values above 100% apply an overlay-side boost; Windows
   notification playback is limited by the system audio path.
 - Duration can follow the preset automatically or use a fixed cap.

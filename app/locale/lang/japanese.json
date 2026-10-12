@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "レアな解除（プレイヤーの15%以下）のサウンド。「解除と同じ」を選ぶと上のサウンドが使われます。",
         "overlaySoundPlatinum": "100%達成のサウンド",
         "overlaySoundPlatinumDesc": "ゲームが100%に達したときに表示されるポップアップのサウンド。「解除と同じ」を選ぶと上のサウンドが使われます。",
+        "overlaySoundProgress": "進捗のサウンド",
+        "overlaySoundProgressDesc": "進捗ポップアップのサウンド。「解除と同じ」を選ぶと上のサウンドが使われ、「なし」を選ぶと解除のサウンドはそのままで進捗だけ無音になります。",
         "overlayVolume": "音量",
         "overlayVolumeDesc": "通知音の音量 - ゲーム内オーバーレイのポップアップは最大200%まで増幅でき、カスタムトースト音は100%が上限です。",
         "overlayDuration": "表示時間",

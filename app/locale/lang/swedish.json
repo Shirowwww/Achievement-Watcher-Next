@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "Ljud för sällsynta upplåsningar (15 % av spelarna eller färre). “Samma som upplåsningar” behåller ljudet ovan.",
         "overlaySoundPlatinum": "Ljud för 100 % slutförande",
         "overlaySoundPlatinumDesc": "Ljud för popup-fönstret som visas när ett spel når 100 %. “Samma som upplåsningar” behåller ljudet ovan.",
+        "overlaySoundProgress": "Ljud för framsteg",
+        "overlaySoundProgressDesc": "Ljud för popuperna för framsteg. “Samma som upplåsningar” behåller ljudet ovan, “Inget” tystar dem medan upplåsningar behåller sitt ljud.",
         "overlayVolume": "Volym",
         "overlayVolumeDesc": "Ljudstyrka för aviseringsljud - popupar i overlayen kan höjas upp till 200 %, egna ljud för Windows-aviseringar stannar på 100 %",
         "overlayDuration": "Varaktighet",

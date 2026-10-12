@@ -44,6 +44,14 @@ for (const [label, sounds] of [
     assert.equal(sounds.NO_SOUND, '__none__');
     assert.equal(sounds.tierSound({ notificationSoundRare: '__none__' }, { rarityPercent: 1 }), '__none__');
   });
+
+  test(`${label}: progress popups take the progress sound, never the rare one`, () => {
+    const withProgress = { ...overlay, notificationSoundProgress: 'Tick.wav' };
+    assert.equal(sounds.tierSound(withProgress, { notificationType: 'progress', rarityPercent: 3 }), 'Tick.wav');
+    assert.equal(sounds.tierSound({ notificationSoundProgress: '__none__' }, { notificationType: 'progress' }), '__none__');
+    assert.equal(sounds.tierSound(withProgress, { notificationType: 'playtime' }), '');
+    assert.equal(sounds.tierSound(withProgress, {}), '');
+  });
 }
 
 function quietLoad() {
@@ -64,9 +72,11 @@ test('the rare and 100% sounds default to the unlock sound and survive a save', 
   const config = quietLoad();
   assert.equal(config.overlay.notificationSoundRare, '');
   assert.equal(config.overlay.notificationSoundPlatinum, '');
+  assert.equal(config.overlay.notificationSoundProgress, '');
 
   config.overlay.notificationSoundRare = 'Rare.wav';
   config.overlay.notificationSoundPlatinum = '__none__';
+  config.overlay.notificationSoundProgress = '__none__';
   await settings.save(config);
   const saved = ini.parse(fs.readFileSync(path.join(userData, 'cfg', 'options.ini'), 'utf8'));
   assert.equal(saved.overlay.notificationSoundRare, 'Rare.wav');
@@ -74,12 +84,13 @@ test('the rare and 100% sounds default to the unlock sound and survive a save', 
   const reloaded = quietLoad();
   assert.equal(reloaded.overlay.notificationSoundRare, 'Rare.wav');
   assert.equal(reloaded.overlay.notificationSoundPlatinum, '__none__');
+  assert.equal(reloaded.overlay.notificationSoundProgress, '__none__');
 });
 
-test('the two rows sit in the overlay list, advanced only, and both delivery paths use the rule', () => {
+test('the tier sound rows sit in the overlay list, advanced only, and both delivery paths use the rule', () => {
   const html = read('app', 'view', 'app.html');
   const overlayList = html.match(/<ul id="options-notify-overlay">([\s\S]*?)<\/ul>/)[1];
-  for (const id of ['option_overlaySoundRare', 'option_overlaySoundPlatinum']) {
+  for (const id of ['option_overlaySoundRare', 'option_overlaySoundPlatinum', 'option_overlaySoundProgress']) {
     const row = overlayList.match(new RegExp(`<li[^>]*>(?:(?!<li)[\\s\\S])*?id="${id}"`));
     assert.ok(row, `${id} lives in the overlay list`);
     assert.match(row[0], /data-advanced="1"/, `${id} is an Advanced row`);

@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "Âm thanh cho các lần mở khóa hiếm (15% người chơi hoặc ít hơn). “Giống mở khóa” giữ nguyên âm thanh ở trên.",
         "overlaySoundPlatinum": "Âm thanh hoàn thành 100%",
         "overlaySoundPlatinumDesc": "Âm thanh cho cửa sổ bật lên hiện ra khi một game đạt 100%. “Giống mở khóa” giữ nguyên âm thanh ở trên.",
+        "overlaySoundProgress": "Âm thanh tiến độ",
+        "overlaySoundProgressDesc": "Âm thanh cho các khung thông báo tiến độ. “Giống mở khóa” giữ nguyên âm thanh ở trên, “Không” tắt tiếng chúng trong khi mở khóa vẫn giữ âm thanh.",
         "overlayVolume": "Âm lượng",
         "overlayVolumeDesc": "Độ lớn của âm thanh thông báo - khung lớp phủ trong trò chơi có thể tăng tới 200%, còn âm thanh thông báo Windows tùy chỉnh tối đa 100%",
         "overlayDuration": "Thời lượng",

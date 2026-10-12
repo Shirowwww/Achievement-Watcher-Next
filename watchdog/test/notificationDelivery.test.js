@@ -247,6 +247,31 @@ test('a silent notification stays silent whatever the game panel chose', async (
   assert.equal(calls.toasts[0][1].toast.soundFile, '');
 });
 
+// The progress sound belongs to the kind of popup, so it wins over a game's own unlock sound.
+const TIER_SOUNDS = { ...ECHO_SOUNDS, tierSound: require(path.join(__dirname, '..', 'util', 'notificationSound.js')).tierSound };
+const progressEvent = () => unlock({ progress: { current: 3, max: 10 } });
+
+test('a progress notification set to no sound is silent, even for a game with its own sound', async () => {
+  const { notify, calls } = loadToaster({ sounds: TIER_SOUNDS, gameSound: 'Xbox Classic.wav' });
+  await notify(progressEvent(), options('toast', { overlay: { notificationSound: 'Global.wav', notificationSoundProgress: '__none__' } }));
+  assert.equal(calls.toasts[0][1].toast.soundFile, '');
+});
+
+test('a progress notification plays the progress sound, and an unlock keeps the unlock sound', async () => {
+  const overlay = { notificationSound: 'Global.wav', notificationSoundProgress: 'Tick.wav' };
+  const { notify, calls } = loadToaster({ sounds: TIER_SOUNDS });
+  await notify(progressEvent(), options('toast', { overlay }));
+  await notify(unlock(), options('toast', { overlay }));
+  assert.equal(calls.toasts[0][1].toast.soundFile, 'resolved:Tick.wav');
+  assert.equal(calls.toasts[1][1].toast.soundFile, 'resolved:Global.wav');
+});
+
+test('a progress notification left on "same as unlocks" keeps the game sound', async () => {
+  const { notify, calls } = loadToaster({ sounds: TIER_SOUNDS, gameSound: 'Xbox Classic.wav' });
+  await notify(progressEvent(), options('toast', { overlay: { notificationSound: 'Global.wav' } }));
+  assert.equal(calls.toasts[0][1].toast.soundFile, 'resolved:Xbox Classic.wav');
+});
+
 test('a game that only ever worked on toasts is not asked to try the overlay blind', async () => {
   transportMemory.remember('480', { transport: 'toast', reason: policy.REASON.FULLSCREEN_HIDDEN, outcome: 'delivered' });
   // Windows could not answer this time: the memory is all there is to go on.

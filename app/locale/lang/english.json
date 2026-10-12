@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "Sound for rare unlocks (15% of players or fewer). “Same as unlocks” keeps the sound above.",
         "overlaySoundPlatinum": "100% completion sound",
         "overlaySoundPlatinumDesc": "Sound for the popup shown when a game reaches 100%. “Same as unlocks” keeps the sound above.",
+        "overlaySoundProgress": "Progress sound",
+        "overlaySoundProgressDesc": "Sound for progress popups. “Same as unlocks” keeps the sound above, “None” mutes them while unlocks keep their sound.",
         "overlayVolume": "Volume",
         "overlayVolumeDesc": "Loudness of notification sounds - in-game overlay popups can be boosted up to 200%, custom toast sounds cap at 100%",
         "overlayDuration": "Duration",

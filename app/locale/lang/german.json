@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "Ton für seltene Freischaltungen (15 % der Spieler oder weniger). „Wie Freischaltungen“ behält den Ton oben bei.",
         "overlaySoundPlatinum": "Ton für 100 % Abschluss",
         "overlaySoundPlatinumDesc": "Ton für das Popup, das erscheint, wenn ein Spiel 100 % erreicht. „Wie Freischaltungen“ behält den Ton oben bei.",
+        "overlaySoundProgress": "Ton für Fortschritt",
+        "overlaySoundProgressDesc": "Ton für die Fortschritts-Popups. „Wie Freischaltungen“ behält den Ton oben bei, „Keiner“ schaltet sie stumm, während Freischaltungen ihren Ton behalten.",
         "overlayVolume": "Lautstärke",
         "overlayVolumeDesc": "Lautstärke der Benachrichtigungstöne - In-Game-Overlay-Pop-ups können bis 200 % verstärkt werden, benutzerdefinierte Toast-Töne sind auf 100 % begrenzt.",
         "overlayDuration": "Dauer",

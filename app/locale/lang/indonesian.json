@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "Suara untuk pembukaan langka (15% pemain atau kurang). “Sama seperti pembukaan” mempertahankan suara di atas.",
         "overlaySoundPlatinum": "Suara penyelesaian 100%",
         "overlaySoundPlatinumDesc": "Suara untuk popup yang muncul saat sebuah game mencapai 100%. “Sama seperti pembukaan” mempertahankan suara di atas.",
+        "overlaySoundProgress": "Suara progres",
+        "overlaySoundProgressDesc": "Suara untuk pop-up progres. “Sama seperti pembukaan” mempertahankan suara di atas, “Tidak ada” membisukannya sementara pembukaan tetap bersuara.",
         "overlayVolume": "Volume",
         "overlayVolumeDesc": "Kekerasan suara notifikasi - pop-up overlay dalam game dapat dikuatkan hingga 200%, suara notifikasi Windows kustom dibatasi 100%",
         "overlayDuration": "Durasi",

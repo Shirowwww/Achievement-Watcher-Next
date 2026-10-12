@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "稀有解鎖（15%或更少玩家取得）的音效。選擇「與解鎖相同」將沿用上方的音效。",
         "overlaySoundPlatinum": "100%完成音效",
         "overlaySoundPlatinumDesc": "遊戲達到100%時彈出視窗的音效。選擇「與解鎖相同」將沿用上方的音效。",
+        "overlaySoundProgress": "進度音效",
+        "overlaySoundProgressDesc": "進度彈出通知的音效。選擇「與解鎖相同」將沿用上方的音效，選擇「無」則只讓進度靜音，解鎖音效不變。",
         "overlayVolume": "音量",
         "overlayVolumeDesc": "通知音效的音量 - 遊戲內嵌介面的彈出通知最高可放大到 200%，自訂的 Windows 通知音效上限為 100%",
         "overlayDuration": "顯示時間",

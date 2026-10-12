@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "Suono per gli sblocchi rari (15% dei giocatori o meno). “Come gli sblocchi” mantiene il suono qui sopra.",
         "overlaySoundPlatinum": "Suono di completamento al 100%",
         "overlaySoundPlatinumDesc": "Suono del popup mostrato quando un gioco raggiunge il 100%. “Come gli sblocchi” mantiene il suono qui sopra.",
+        "overlaySoundProgress": "Suono dell’avanzamento",
+        "overlaySoundProgressDesc": "Suono dei popup di avanzamento. “Come gli sblocchi” mantiene il suono qui sopra, “Nessuno” li silenzia mentre gli sblocchi mantengono il loro suono.",
         "overlayVolume": "Volume",
         "overlayVolumeDesc": "Volume dei suoni di notifica - i popup overlay di gioco possono essere amplificati fino al 200%, mentre i suoni toast personalizzati sono limitati al 100%.",
         "overlayDuration": "Durata",

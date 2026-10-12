@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "Nadir kilit açmalar için ses (oyuncuların %15'i veya daha azı). “Kilit açmalarla aynı” yukarıdaki sesi korur.",
         "overlaySoundPlatinum": "%100 tamamlama sesi",
         "overlaySoundPlatinumDesc": "Bir oyun %100'e ulaştığında gösterilen açılır pencerenin sesi. “Kilit açmalarla aynı” yukarıdaki sesi korur.",
+        "overlaySoundProgress": "İlerleme sesi",
+        "overlaySoundProgressDesc": "İlerleme açılır pencerelerinin sesi. “Kilit açmalarla aynı” yukarıdaki sesi korur, “Yok” kilit açmaların sesine dokunmadan onları sessize alır.",
         "overlayVolume": "Ses düzeyi",
         "overlayVolumeDesc": "Bildirim seslerinin düzeyi - overlay açılır pencereleri %200’e kadar yükseltilebilir, özel toast sesleri %100 ile sınırlıdır.",
         "overlayDuration": "Süre",

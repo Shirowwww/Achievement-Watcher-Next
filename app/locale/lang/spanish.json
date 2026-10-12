@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "Sonido para desbloqueos raros (15% de los jugadores o menos). «Igual que los desbloqueos» conserva el sonido de arriba.",
         "overlaySoundPlatinum": "Sonido de completado al 100%",
         "overlaySoundPlatinumDesc": "Sonido de la ventana emergente que aparece cuando un juego llega al 100%. «Igual que los desbloqueos» conserva el sonido de arriba.",
+        "overlaySoundProgress": "Sonido del progreso",
+        "overlaySoundProgressDesc": "Sonido de las ventanas emergentes de progreso. «Igual que los desbloqueos» conserva el sonido de arriba, «Ninguno» las silencia sin silenciar los desbloqueos.",
         "overlayVolume": "Volumen",
         "overlayVolumeDesc": "Volumen de los sonidos de notificación - los avisos del overlay en el juego pueden amplificarse hasta 200%; los sonidos toast personalizados se limitan al 100%.",
         "overlayDuration": "Duración",

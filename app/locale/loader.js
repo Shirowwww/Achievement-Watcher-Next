@@ -599,9 +599,14 @@ function translateUI(lang, locale, template) {
   $('#lbl-overlaySoundRare').closest('li').find('.help').text(clear(template.settings.notification.option.overlaySoundRareDesc));
   $('#lbl-overlaySoundPlatinum').text(clear(template.settings.notification.option.overlaySoundPlatinum));
   $('#lbl-overlaySoundPlatinum').closest('li').find('.help').text(clear(template.settings.notification.option.overlaySoundPlatinumDesc));
+  $('#lbl-overlaySoundProgress').text(clear(template.settings.notification.option.overlaySoundProgress));
+  $('#lbl-overlaySoundProgress').closest('li').find('.help').text(clear(template.settings.notification.option.overlaySoundProgressDesc));
   // "Same as unlocks" is the first entry of a list rebuilt asynchronously, hence the data attribute.
-  $('#option_overlaySoundRare, #option_overlaySoundPlatinum').attr('data-lang-same', clear(template.settings.notification.option.progressSameAsUnlocks));
-  $("#option_overlaySoundRare option[value=''], #option_overlaySoundPlatinum option[value='']").text(
+  $('#option_overlaySoundRare, #option_overlaySoundPlatinum, #option_overlaySoundProgress').attr(
+    'data-lang-same',
+    clear(template.settings.notification.option.progressSameAsUnlocks)
+  );
+  $("#option_overlaySoundRare option[value=''], #option_overlaySoundPlatinum option[value=''], #option_overlaySoundProgress option[value='']").text(
     clear(template.settings.notification.option.progressSameAsUnlocks)
   );
   $('#lbl-overlayVolume').text(clear(template.settings.notification.option.overlayVolume));

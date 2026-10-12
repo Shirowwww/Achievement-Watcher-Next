@@ -86,15 +86,16 @@ function pickRandomSound() {
   return list[Math.floor(Math.random() * list.length)].file;
 }
 
-// Mirrors tierSound() in app/util/notificationSounds.js: the rare or 100% sound, '' for "same as
-// unlocks", NO_SOUND for silent.
+// Mirrors tierSound() in app/util/notificationSounds.js: the rare, 100% or progress sound, '' for
+// "same as unlocks", NO_SOUND for silent.
 const NO_SOUND = '__none__';
 
 function tierSound(overlay, { notificationType = '', rarityPercent = null } = {}) {
   const ov = overlay || {};
   const type = String(notificationType || '').toLowerCase();
   if (type === 'platinum') return String(ov.notificationSoundPlatinum || '');
-  if (type === 'progress' || type === 'playtime') return '';
+  if (type === 'progress') return String(ov.notificationSoundProgress || '');
+  if (type === 'playtime') return '';
   const rare = rarityPercent != null && rarityPercent !== '' && Number.isFinite(Number(rarityPercent));
   return rare ? String(ov.notificationSoundRare || '') : '';
 }

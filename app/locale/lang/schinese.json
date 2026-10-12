@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "稀有解锁（15%或更少玩家获得）的声音。选择“与解锁相同”将沿用上方的声音。",
         "overlaySoundPlatinum": "100%完成声音",
         "overlaySoundPlatinumDesc": "游戏达到100%时弹出窗口的声音。选择“与解锁相同”将沿用上方的声音。",
+        "overlaySoundProgress": "进度声音",
+        "overlaySoundProgressDesc": "进度弹窗的声音。选择“与解锁相同”将沿用上方的声音，选择“无”则只让进度静音，解锁声音不变。",
         "overlayVolume": "音量",
         "overlayVolumeDesc": "通知声音音量 - 叠加弹窗最高可增强到 200%，自定义 Windows 通知声音上限为 100%。",
         "overlayDuration": "持续时间",

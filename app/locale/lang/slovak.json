@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "Zvuk pre vzácne odomknutia (15 % hráčov alebo menej). „Rovnaké ako odomknutia“ ponechá zvuk vyššie.",
         "overlaySoundPlatinum": "Zvuk 100 % dokončenia",
         "overlaySoundPlatinumDesc": "Zvuk vyskakovacieho okna zobrazeného, keď hra dosiahne 100 %. „Rovnaké ako odomknutia“ ponechá zvuk vyššie.",
+        "overlaySoundProgress": "Zvuk postupu",
+        "overlaySoundProgressDesc": "Zvuk vyskakovacích okien postupu. „Rovnaké ako odomknutia“ ponechá zvuk vyššie, „Žiadny“ ich stlmí, zatiaľ čo odomknutia si zvuk ponechajú.",
         "overlayVolume": "Hlasitosť",
         "overlayVolumeDesc": "Hlasitosť zvukov oznámení - okná overlay možno zosilniť až na 200 %, vlastné zvuky toastov sú obmedzené na 100 %.",
         "overlayDuration": "Trvanie",

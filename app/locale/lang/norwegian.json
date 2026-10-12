@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "Lyd for sjeldne opplåsinger (15 % av spillerne eller færre). «Samme som opplåsinger» beholder lyden ovenfor.",
         "overlaySoundPlatinum": "Lyd for 100 % fullføring",
         "overlaySoundPlatinumDesc": "Lyd for popup-vinduet som vises når et spill når 100 %. «Samme som opplåsinger» beholder lyden ovenfor.",
+        "overlaySoundProgress": "Lyd for fremgang",
+        "overlaySoundProgressDesc": "Lyd for popup-vinduene for fremgang. «Samme som opplåsinger» beholder lyden ovenfor, «Ingen» gjør dem lydløse mens opplåsinger beholder lyden sin.",
         "overlayVolume": "Volum",
         "overlayVolumeDesc": "Lydstyrken på varsellyder - popup-vinduer i spilloverlayet kan skrus opp til 200 %, egne toast-lyder stopper på 100 %",
         "overlayDuration": "Varighet",

@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "Hang a ritka feloldásokhoz (a játékosok 15%-a vagy kevesebb). Az „Ugyanaz, mint a feloldások” beállítás megtartja a fenti hangot.",
         "overlaySoundPlatinum": "100%-os teljesítés hangja",
         "overlaySoundPlatinumDesc": "Hang az előugró ablakhoz, amely akkor jelenik meg, amikor egy játék eléri a 100%-ot. Az „Ugyanaz, mint a feloldások” beállítás megtartja a fenti hangot.",
+        "overlaySoundProgress": "Haladás hangja",
+        "overlaySoundProgressDesc": "Hang a haladási felugró ablakokhoz. Az „Ugyanaz, mint a feloldások” beállítás megtartja a fenti hangot, a „Nincs” elnémítja őket, a feloldások hangja megmarad.",
         "overlayVolume": "Hangerő",
         "overlayVolumeDesc": "Az értesítési hangok hangereje - az overlay felugró ablakai 200%-ig erősíthetők, az egyéni toast hangok legfeljebb 100%-osak.",
         "overlayDuration": "Időtartam",

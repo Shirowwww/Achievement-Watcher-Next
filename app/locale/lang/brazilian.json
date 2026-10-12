@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "Som para desbloqueios raros (15% dos jogadores ou menos). “Igual aos desbloqueios” mantém o som acima.",
         "overlaySoundPlatinum": "Som de 100% de conclusão",
         "overlaySoundPlatinumDesc": "Som do pop-up exibido quando um jogo chega a 100%. “Igual aos desbloqueios” mantém o som acima.",
+        "overlaySoundProgress": "Som do progresso",
+        "overlaySoundProgressDesc": "Som dos popups de progresso. “Igual aos desbloqueios” mantém o som acima, “Nenhum” os silencia sem silenciar os desbloqueios.",
         "overlayVolume": "Volume",
         "overlayVolumeDesc": "Volume dos sons de notificação - os pop-ups do overlay no jogo podem ser amplificados até 200%; os sons personalizados do toast são limitados a 100%.",
         "overlayDuration": "Duração",

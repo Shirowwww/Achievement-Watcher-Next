@@ -20,6 +20,7 @@ const OVERLAY_ONLY = [
   'option_overlaySound',
   'option_overlaySoundRare',
   'option_overlaySoundPlatinum',
+  'option_overlaySoundProgress',
   'option_overlayVolume',
 ];
 
@@ -41,7 +42,7 @@ const RULES = [
   // Merging is what the timestamp rule resolves.
   { controls: ['option_timeMergeRecentFirst'], live: (v) => on(v.option_mergeDuplicate) },
   // The milestone step throttles progress notifications, which must be on to be throttled.
-  { controls: ['option_progressStep'], live: (v) => v.option_notifyOnProgress !== 'false' },
+  { controls: ['option_progressStep', 'option_overlaySoundProgress'], live: (v) => v.option_notifyOnProgress !== 'false' },
   // The transport mode decides which kind of notification exists at all.
   { controls: ['option_groupToast', 'option_urgent'], live: (v) => v.option_notifMode !== 'overlay' },
   { controls: OVERLAY_ONLY, live: (v) => v.option_notifMode !== 'toast' },

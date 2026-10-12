@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "Ääni harvinaisille avauksille (15 % pelaajista tai vähemmän). “Sama kuin avauksilla” säilyttää yllä olevan äänen.",
         "overlaySoundPlatinum": "100 % suorituksen ääni",
         "overlaySoundPlatinumDesc": "Ääni ponnahdusikkunalle, joka näytetään, kun peli saavuttaa 100 %. “Sama kuin avauksilla” säilyttää yllä olevan äänen.",
+        "overlaySoundProgress": "Edistymisen ääni",
+        "overlaySoundProgressDesc": "Ääni edistymisen ponnahdusilmoituksille. “Sama kuin avauksilla” säilyttää yllä olevan äänen, “Ei mitään” mykistää ne, mutta avaukset pitävät äänensä.",
         "overlayVolume": "Äänenvoimakkuus",
         "overlayVolumeDesc": "Ilmoitusäänten voimakkuus - pelinsisäisiä ponnahdusilmoituksia voi vahvistaa 200 %:iin asti, omat Windows-ilmoitusäänet enintään 100 %:iin",
         "overlayDuration": "Kesto",

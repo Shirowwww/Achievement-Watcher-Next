@@ -591,6 +591,8 @@
         "overlaySoundRareDesc": "Geluid voor zeldzame ontgrendelingen (15% van de spelers of minder). “Zelfde als ontgrendelingen” behoudt het geluid hierboven.",
         "overlaySoundPlatinum": "Geluid voor 100% voltooiing",
         "overlaySoundPlatinumDesc": "Geluid voor de pop-up die verschijnt wanneer een game 100% bereikt. “Zelfde als ontgrendelingen” behoudt het geluid hierboven.",
+        "overlaySoundProgress": "Geluid voor voortgang",
+        "overlaySoundProgressDesc": "Geluid voor de voortgangspop-ups. “Zelfde als ontgrendelingen” behoudt het geluid hierboven, “Geen” maakt ze stil terwijl ontgrendelingen hun geluid houden.",
         "overlayVolume": "Volume",
         "overlayVolumeDesc": "Luidheid van de meldingsgeluiden - pop-ups van de in-game overlay kunnen tot 200% versterkt worden, eigen geluiden bij Windows-meldingen gaan tot 100%",
         "overlayDuration": "Duur",

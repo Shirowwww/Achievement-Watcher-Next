@@ -15,6 +15,10 @@ renamed in 3.9.0 and the history is kept under one file.
   **Rare achievement sound** and **100% completion sound** under **Sound**, for the in-game popup and
   Windows notifications alike. Both start on "Same as unlocks"; "None" silences that kind of popup.
   A sound chosen for one game in its own panel still wins.
+- **Progress popups can be silent while unlocks keep their sound.** **Progress sound** sits beside
+  them (Advanced mode). Set it to "None" to mute the progress popups and Windows notifications
+  without touching the unlock sound, or pick a quieter file for them. It applies even to a game with
+  a sound of its own, unless that game is set to no sound at all.
 - **Game health guides a Nemirtingas Epic setup.** A game whose folder carries the Nemirtingas
   Epic emulator gets an **Epic emulator** row. It warns when `SavePath` is not `"appdata"`, the only
   place AW Next reads its saves; while nothing has been saved, it offers **Add the Epic launch

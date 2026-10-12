@@ -55,15 +55,16 @@ function pickRandomSound(dirs) {
   return list[Math.floor(Math.random() * list.length)].file;
 }
 
-// The tier-specific sound picked for a rare unlock or a 100% completion (#109). '' means "same as
-// unlocks", NO_SOUND means silent. Progress and playtime popups never take a tier sound.
+// The sound picked for a rare unlock, a 100% completion (#109) or a progress popup. '' means "same
+// as unlocks", NO_SOUND means silent. Playtime popups never take one.
 const NO_SOUND = '__none__';
 
 function tierSound(overlay, { notificationType = '', rarityPercent = null } = {}) {
   const ov = overlay || {};
   const type = String(notificationType || '').toLowerCase();
   if (type === 'platinum') return String(ov.notificationSoundPlatinum || '');
-  if (type === 'progress' || type === 'playtime') return '';
+  if (type === 'progress') return String(ov.notificationSoundProgress || '');
+  if (type === 'playtime') return '';
   const rare = rarityPercent != null && rarityPercent !== '' && Number.isFinite(Number(rarityPercent));
   return rare ? String(ov.notificationSoundRare || '') : '';
 }

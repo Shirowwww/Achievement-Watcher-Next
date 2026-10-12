@@ -115,6 +115,8 @@ const RANDOM_SOUND_VALUE = '__random__';
 // The global dropdown uses '' for silence, but a per-game blank means "inherit". This distinct
 // value lets one game explicitly mute its popup while every other game keeps the global sound.
 const NO_SOUND_VALUE = '__none__';
+// The rows that override the unlock sound for one kind of popup.
+const TIER_SOUND_SELECTS = '#option_overlaySoundRare, #option_overlaySoundPlatinum, #option_overlaySoundProgress';
 
 // Frames are created on first use, not shipped in the page: an empty iframe is still a live
 // document, and the six of these cost 4.6 MB of renderer memory for panels most users never open.
@@ -845,6 +847,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           const shown = sounds && sounds.includes(picked) ? picked : renamedSound(picked) || picked;
           $('#option_overlaySoundRare').val('').attr('data-value', cfgOverlay.notificationSoundRare || '');
           $('#option_overlaySoundPlatinum').val('').attr('data-value', cfgOverlay.notificationSoundPlatinum || '');
+          $('#option_overlaySoundProgress').val('').attr('data-value', cfgOverlay.notificationSoundProgress || '');
           fillSoundDropdown(sounds, cfgOverlay.randomSound === true ? RANDOM_SOUND_VALUE : shown);
           refreshUserSounds();
         })
@@ -3952,7 +3955,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const mode = $('#option_notifMode').val() || 'auto';
       const visible = mode !== 'toast';
       // Sound controls also apply to Windows toasts.
-      const KEEP_VISIBLE_OVERLAY_IDS = new Set(['lbl-overlaySound', 'lbl-overlaySoundRare', 'lbl-overlaySoundPlatinum', 'lbl-overlayVolume']);
+      const KEEP_VISIBLE_OVERLAY_IDS = new Set([
+        'lbl-overlaySound',
+        'lbl-overlaySoundRare',
+        'lbl-overlaySoundPlatinum',
+        'lbl-overlaySoundProgress',
+        'lbl-overlayVolume',
+      ]);
       $('#options-notify-overlay > li:not(:first-child)').each(function () {
         const labelId = $(this).find('[id^="lbl-overlay"]').first().attr('id') || '';
         animateOverlaySettingCollapse(this, visible || KEEP_VISIBLE_OVERLAY_IDS.has(labelId));
@@ -4137,12 +4146,16 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const notificationType = kind === 'toast' || kind === 'rare' ? 'achievement' : kind;
       const rarePct = kind === 'rare' ? randomRareRarity() : null;
       // The rare and 100% tests play the sound those popups would, unless the game picked its own.
-      const tierChoice = Object.prototype.hasOwnProperty.call(overrides, 'sound')
+      // The progress sound wins over a game's own sound, as it does live, but not over a muted game.
+      const gameKeepsSound = Object.prototype.hasOwnProperty.call(overrides, 'sound')
+        && (notificationType !== 'progress' || overrides.sound === NO_SOUND_VALUE);
+      const tierChoice = gameKeepsSound
         ? ''
         : tierSound(
             {
               notificationSoundRare: settingsReady ? $('#option_overlaySoundRare').val() : cfgOverlay.notificationSoundRare,
               notificationSoundPlatinum: settingsReady ? $('#option_overlaySoundPlatinum').val() : cfgOverlay.notificationSoundPlatinum,
+              notificationSoundProgress: settingsReady ? $('#option_overlaySoundProgress').val() : cfgOverlay.notificationSoundProgress,
             },
             { notificationType, rarityPercent: rarePct }
           );
@@ -4397,9 +4410,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       updateDeleteSoundButton();
       fillTierSoundDropdowns(sounds);
     }
-    // The rare and 100% rows offer the same files, plus "Same as unlocks" ('') and "None".
+    // The rare, 100% and progress rows offer the same files, plus "Same as unlocks" ('') and "None".
     function fillTierSoundDropdowns(sounds) {
-      $('#option_overlaySoundRare, #option_overlaySoundPlatinum').each(function () {
+      $(TIER_SOUND_SELECTS).each(function () {
         const sel = $(this);
         const wanted = String(sel.val() || sel.attr('data-value') || '');
         sel.empty();
@@ -4411,7 +4424,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         sel.removeAttr('data-value');
       });
     }
-    $('#option_overlaySoundRare, #option_overlaySoundPlatinum').on('change', function () {
+    $(TIER_SOUND_SELECTS).on('change', function () {
       const v = $(this).val();
       if (settingsReady && v && v !== NO_SOUND_VALUE) previewSoundAtVolume(v);
     });
@@ -6270,6 +6283,7 @@ function readNotificationSettings() {
   for (const [id, key] of [
     ['#option_overlaySoundRare', 'notificationSoundRare'],
     ['#option_overlaySoundPlatinum', 'notificationSoundPlatinum'],
+    ['#option_overlaySoundProgress', 'notificationSoundProgress'],
   ]) {
     if ($(id).find('option').length > 0) app.config.overlay[key] = String($(id).val() || '');
   }

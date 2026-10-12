@@ -76,22 +76,24 @@ function setOverlayOptions(overlay) {
 /*
   Same order as the overlay popup in the app (enqueueNotificationFromArgs): a silent event never
   rings, then the sound picked in the game's own panel, then a rare/100% sound, then the global one.
-  Playtime cards are the silent ones.
+  The progress sound is the exception: it is about the kind of popup, so it wins over a game's own
+  unlock sound. Playtime cards are the silent ones.
 */
 function chooseToastSound(message, overlay) {
   if (message.silent) return '';
   const globalSound = () => notificationSound.resolveSoundFile(overlay.notificationSound);
   const ownSound = gameSound.soundFor(message.appid);
   if (ownSound === gameSound.SOUND_NONE) return '';
-  if (ownSound === gameSound.SOUND_RANDOM) return notificationSound.pickRandomSound() || globalSound();
-  if (ownSound) return notificationSound.resolveSoundFile(ownSound) || globalSound();
 
   const tierSound = notificationSound.tierSound(overlay, {
     notificationType: message.progress ? 'progress' : message.notificationType,
     rarityPercent: message.rarityPercent,
   });
-  if (tierSound === notificationSound.NO_SOUND) return '';
-  if (tierSound) return notificationSound.resolveSoundFile(tierSound) || globalSound();
+  const tierWins = !ownSound || Boolean(message.progress);
+  if (tierWins && tierSound === notificationSound.NO_SOUND) return '';
+  if (tierWins && tierSound) return notificationSound.resolveSoundFile(tierSound) || globalSound();
+  if (ownSound === gameSound.SOUND_RANDOM) return notificationSound.pickRandomSound() || globalSound();
+  if (ownSound) return notificationSound.resolveSoundFile(ownSound) || globalSound();
   if (overlay.randomSound === true) return notificationSound.pickRandomSound() || globalSound();
   return globalSound();
 }
