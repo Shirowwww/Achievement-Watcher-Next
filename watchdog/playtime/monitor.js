@@ -214,11 +214,33 @@ function getTrackableGameMatches(binaryIndex, process, isIgnored = isIgnoredAppi
   return getBinaryMatches(binaryIndex, process).filter((game) => !isIgnored(game.appid) && !String(game.name || '').toLowerCase().includes('demo'));
 }
 
-function shouldMuteProcessPath(filepath, dirs, indexedMatches) {
+const STEAM_LIBRARY_GAME = /[\\/]steamapps[\\/]common[\\/]/i;
+const STEAM_INSTALL_ROOT = /^(.*[\\/]steamapps[\\/]common[\\/][^\\/]+)/i;
+
+// The process belongs to the install the recorded exe belongs to: same folder or below it, or the
+// same Steam game folder (a launcher at the root starting Binaries\Win64\Game.exe, or the reverse).
+function sameInstall(knownExe, filepath) {
+  if (isUnderDir(path.dirname(knownExe), filepath)) return true;
+  const root = STEAM_INSTALL_ROOT.exec(String(knownExe));
+  return Boolean(root) && isUnderDir(root[1], filepath);
+}
+
+function shouldMuteProcessPath(filepath, dirs, indexedMatches, exePathFor) {
   if (!isMutedByPath(filepath, dirs)) return false;
-  // Profile folders remain muted for unknown processes, but an explicitly indexed manual game is
-  // authoritative. This covers portable games and emulators stored on Desktop or in AppData.
-  return !(indexedMatches || []).some((game) => String(game && game.source || '').toLowerCase() === 'manual');
+  const matches = (indexedMatches || []).filter(Boolean);
+  if (matches.length === 0) return true;
+  // The muted roots hold system and launcher noise, but they are also where Steam's default library
+  // and most launchers install games (#110). A process an indexed game claims is muted only when
+  // nothing ties it to that game: a manual entry, a Steam library folder or the game's own folder.
+  if (matches.some((game) => String(game.source || '').toLowerCase() === 'manual')) return false;
+  // A recorded exe that no longer exists (moved or reinstalled game) says nothing about this one.
+  const knownPaths = matches
+    .map((game) => game.exePath || (typeof exePathFor === 'function' ? exePathFor(game.appid) : ''))
+    .filter((known) => known && fs.existsSync(known));
+  if (knownPaths.some((known) => sameInstall(known, filepath))) return false;
+  // Every claimant lives somewhere else: this is another program sharing the name, not the game.
+  if (knownPaths.length === matches.length) return true;
+  return !STEAM_LIBRARY_GAME.test(String(filepath));
 }
 
 // A bundled JRE never carries the game's own binary name (java.exe/javaw.exe are excluded from
@@ -395,7 +417,10 @@ async function init() {
     let game = games.length === 0 ? findGameForInterpreterChild(process, filepath) : null;
 
     if (!game) {
-      if (filepath && shouldMuteProcessPath(filepath, filter.mute.dir, games)) return;
+      if (filepath && shouldMuteProcessPath(filepath, filter.mute.dir, games, configuredExecutable)) {
+        if (games.length > 0) debug.log(`"${process}" matches ${games[0].name}(${games[0].appid}) but runs from a muted folder ("${filepath}"); ignoring`);
+        return;
+      }
 
       if (games.length === 1) {
         // A single hit from the bundled legacy catalogue (steam_cache/schema/gameIndex.json) is a

@@ -31,3 +31,74 @@ test('an explicitly indexed manual game overrides the broad user-profile path mu
   assert.equal(shouldMuteProcessPath(desktopGame, mutedRoots, [{ appid: 'manual-1', source: 'Manual' }]), false);
   assert.equal(shouldMuteProcessPath(desktopGame, mutedRoots, [{ appid: '123', source: 'Steam' }]), true);
 });
+
+/*
+  #110. Program Files is a muted root, and it is where Steam's default library and most launchers
+  install games. Both directions matter: a game there must be followed (no false negative), and a
+  program that merely shares a game's exe name must not be counted as that game (no false positive).
+  Recorded exe paths only count when the file exists, so the installs here are real temp files.
+*/
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-mute-'));
+test.after(() => fs.rmSync(root, { recursive: true, force: true }));
+const programFiles = path.join(root, 'Program Files (x86)');
+const mutedRoots = [programFiles];
+
+function exeAt(...parts) {
+  const file = path.join(...parts);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, '');
+  return file;
+}
+
+const steamCommon = path.join(programFiles, 'Steam', 'steamapps', 'common');
+
+test('#110: a Steam game in the default library is followed, even with no exe recorded', () => {
+  const game = exeAt(steamCommon, 'Gambonanza', 'Gambonanza.exe');
+  assert.equal(shouldMuteProcessPath(game, mutedRoots, [{ appid: '123', source: 'Steam' }]), false);
+});
+
+test('#110: a launcher game in Program Files is followed through its recorded exe or exeList entry', () => {
+  const hades = exeAt(programFiles, 'Epic Games', 'Hades', 'Hades.exe');
+  assert.equal(shouldMuteProcessPath(hades, mutedRoots, [{ appid: 'hades', source: 'epic-official', exePath: hades }]), false);
+  const exePathFor = (appid) => (appid === 'hades' ? hades : '');
+  assert.equal(shouldMuteProcessPath(hades, mutedRoots, [{ appid: 'hades', source: 'epic-official' }], exePathFor), false);
+  // A shipping binary below the recorded launcher, the common Unreal layout.
+  const shipping = exeAt(programFiles, 'Epic Games', 'Hades', 'x64', 'Hades.exe');
+  assert.equal(shouldMuteProcessPath(shipping, mutedRoots, [{ appid: 'hades', source: 'epic-official', exePath: hades }]), false);
+});
+
+test('#110: inside one Steam game folder, a launcher and its shipping exe both count as the game', () => {
+  const launcher = exeAt(steamCommon, 'Hollow', 'Hollow.exe');
+  const shipping = exeAt(steamCommon, 'Hollow', 'Binaries', 'Win64', 'Hollow-Win64-Shipping.exe');
+  assert.equal(shouldMuteProcessPath(launcher, mutedRoots, [{ appid: '1', source: 'Steam', exePath: shipping }]), false);
+});
+
+test('#110: a moved game whose recorded exe is gone is still followed from a Steam library', () => {
+  const moved = exeAt(steamCommon, 'Moved Game', 'Moved.exe');
+  const stale = path.join(root, 'D-drive', 'SteamLibrary', 'steamapps', 'common', 'Moved Game', 'Moved.exe');
+  assert.equal(shouldMuteProcessPath(moved, mutedRoots, [{ appid: '7', source: 'Steam', exePath: stale }]), false);
+});
+
+test('#110: a program that only shares a game name stays ignored', () => {
+  // Unknown process.
+  const tool = exeAt(programFiles, 'Vendor', 'Tool', 'Game.exe');
+  assert.equal(shouldMuteProcessPath(tool, mutedRoots, []), true);
+  // The game it shares a name with is installed elsewhere, and that install exists.
+  const real = exeAt(root, 'Games', 'Game', 'Game.exe');
+  assert.equal(shouldMuteProcessPath(tool, mutedRoots, [{ appid: '9', source: 'epic-official', exePath: real }]), true);
+  // Same in a Steam library: another Steam game's folder is not this game's install.
+  const other = exeAt(steamCommon, 'Other Game', 'Launcher.exe');
+  const owner = exeAt(steamCommon, 'Owner Game', 'Launcher.exe');
+  assert.equal(shouldMuteProcessPath(other, mutedRoots, [{ appid: '5', source: 'Steam', exePath: owner }]), true);
+  // Nothing recorded for a non-Steam location: still muted.
+  assert.equal(shouldMuteProcessPath(tool, mutedRoots, [{ appid: '9', source: 'epic-official' }], () => ''), true);
+});
+
+test('#110: outside the muted roots nothing changes', () => {
+  const free = exeAt(root, 'Jeux', 'Free', 'Free.exe');
+  assert.equal(shouldMuteProcessPath(free, mutedRoots, []), false);
+});
