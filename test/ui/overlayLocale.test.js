@@ -55,7 +55,7 @@ async function run() {
   assert.equal(french.strings.icon, 'Icône');
   assert.equal(french.strings.achievement, 'Succès');
   assert.equal(french.strings.status, 'Statut');
-  assert.equal(french.strings.selectConfig, 'Sélectionnez une configuration !');
+  assert.equal(french.strings.selectConfig, 'Sélectionne une configuration !');
   assert.equal(french.strings.locked, 'Verrouillé');
   assert.equal(french.strings.unlocked, 'Débloqué');
   assert.equal(french.strings.progress, 'Progression');

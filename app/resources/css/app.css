@@ -1877,29 +1877,29 @@ body.is-resizing #game-list {
   padding-left: 10px;
 }
 
-/* Reset this game's achievements. Carries the same accent weight as the "All Games" button so it
-   reads as a real action rather than another read-only chip, but stays in the header's normal flow:
-   the back button is absolutely positioned and its width follows its label in every language, so
-   anchoring a second button beside it would collide in some of them. */
+/* Reset this game's achievements. An outlined button in the danger colour: it still reads as a real
+   action rather than another read-only chip, but no longer as the page's main one, since it wipes the
+   game's progress (behind a confirmation and a restorable backup). It stays in the header's normal
+   flow: the back button is absolutely positioned and its width follows its label in every language,
+   so anchoring a second button beside it would collide in some of them. */
 #achievement .wrapper > .header .resetAchievements {
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
-  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
+  background: transparent;
+  color: var(--danger);
   padding: 10px 18px;
   display: inline-block;
   height: 19px;
   vertical-align: top;
   margin-left: 10px;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, calc(0.22 * var(--shadow-scale)));
   transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
 }
 
 #achievement .wrapper > .header .resetAchievements:hover {
   color: var(--text);
-  border-color: transparent;
-  background: linear-gradient(-60deg, color-mix(in srgb, var(--accent) 70%, black 12%) 5%, var(--accent) 95%);
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 22%, transparent);
 }
 
 #achievement .wrapper > .header .resetAchievements:active {
@@ -6271,7 +6271,7 @@ body.is-resizing #game-list {
 }
 #settings .emulator-test-copy small {
   color: var(--text-muted);
-  font-size: 10.5px;
+  font-size: 11.5px;
 }
 #settings .emulator-test-arrow {
   color: var(--text-muted);
@@ -7877,6 +7877,96 @@ body {
   font-weight: 700;
 }
 
+/* On/off rows (ui/settingsSwitch.js): the select and its arrows stay for the handlers, out of sight. */
+#settings .arrow-list li .right.is-switch {
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+#settings .arrow-list li .right.is-switch > .previous,
+#settings .arrow-list li .right.is-switch > .next,
+#settings .arrow-list li .right.is-switch > select {
+  display: none;
+}
+
+#settings .setting-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  padding: 0 6px 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#settings .setting-switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#settings .setting-switch:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+#settings .setting-switch-state {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#settings .setting-switch-track {
+  position: relative;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--border);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+#settings .setting-switch-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+#settings .is-on .setting-switch {
+  color: var(--text);
+}
+
+#settings .is-on .setting-switch-track {
+  background: var(--accent);
+  box-shadow: none;
+}
+
+#settings .is-on .setting-switch-thumb {
+  background: #fff;
+  transform: translateX(16px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #settings .setting-switch-track,
+  #settings .setting-switch-thumb {
+    transition: none;
+  }
+}
+
 #settings .arrow-list li .right.action-right {
   display: flex;
   justify-content: flex-end;
@@ -8557,6 +8647,13 @@ body {
 #settings .box .footer .buttons div#btn-settings-save:hover,
 #game-config .box .footer .buttons div#btn-game-config-save:hover {
   filter: brightness(1.08);
+}
+/* Save only carries the accent while there is something to save: on the autosaved Notification tab,
+   or before any change, it sits back beside Close instead of calling for a click that does nothing. */
+#settings .box .footer .settings-save-state:not([data-state='dirty']) + .buttons div#btn-settings-save {
+  color: var(--text);
+  border-color: var(--set-control-border);
+  background: var(--set-surface);
 }
 
 /* Settings visual system: one model for every tab. */
@@ -11035,16 +11132,23 @@ body {
     grid-template-columns: 66px minmax(0, 1fr);
   }
 
+  /* Stacked under the description, the date and the rate share one line: on two they made every
+     row about 35px taller and left three or four achievements on screen. */
   .achievement .stats {
     grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 18px;
     width: 100%;
     max-width: none;
-    margin-top: 8px;
+    margin-top: 6px;
   }
 
   .achievement .stats .time,
   .achievement .stats .community {
     width: auto;
+    margin: 0;
+    padding: 2px 0;
   }
 
   .achievement .progressBar {

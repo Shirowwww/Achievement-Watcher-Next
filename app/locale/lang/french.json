@@ -48,7 +48,7 @@
   "achievementSearchPlaceholder": "Rechercher un succès…",
   "hiddenRemain": "succès cachés restants",
   "revealedOnceUnlocked": "Les détails de chaque succès seront révélés une fois débloqués",
-  "hiddenDescriptionPlaceholder": "Masqué - cliquez pour révéler",
+  "hiddenDescriptionPlaceholder": "Masqué - clique pour révéler",
   "noneUnlocked": "Pas de succès débloqués",
   "latestAchievementEarned": "Dernier succès obtenu",
   "neverPlayed": "Jamais lancé ou suivi",
@@ -218,11 +218,11 @@
         "title": "Manette",
         "enabled": {
           "name": "Contrôler l’overlay en jeu à la manette",
-          "description": "Contrôlez l’overlay en jeu à la manette. Les raccourcis et les noms de boutons Xbox/PlayStation/Switch se configurent ci-dessous."
+          "description": "Contrôle l’overlay en jeu à la manette. Les raccourcis et les noms de boutons Xbox/PlayStation/Switch se configurent ci-dessous."
         },
         "backend": {
           "name": "Backend de la manette",
-          "description": "Auto choisit le meilleur backend d’entrée disponible. Choisissez XInput pour une compatibilité maximale, ou GameInput sur les versions récentes de Windows.",
+          "description": "Auto choisit le meilleur backend d’entrée disponible. Choisis XInput pour une compatibilité maximale, ou GameInput sur les versions récentes de Windows.",
           "auto": "Auto",
           "xinput": "XInput",
           "gameinput": "GameInput"
@@ -242,7 +242,7 @@
           "ui": "Contrôle de l’interface",
           "uiDescription": "Active/désactive la navigation dans l’overlay : anneau de focus, recherche et options.",
           "move": "Déplacer et défiler",
-          "moveDescription": "Maintenez ces boutons pour déplacer l’overlay avec le stick gauche et défiler avec le stick droit."
+          "moveDescription": "Maintiens ces boutons pour déplacer l’overlay avec le stick gauche et défiler avec le stick droit."
         },
         "priority": {
           "name": "Donner le focus à l’overlay à l’ouverture",
@@ -259,7 +259,7 @@
       },
       "showTrophies": {
         "name": "Trophées sur le profil",
-        "description": "Affiche les trophées platine, or, argent et bronze sous votre nom. Le platine est un jeu à 100 % ; les autres classent vos succès selon le nombre de joueurs qui les ont débloqués."
+        "description": "Affiche les trophées platine, or, argent et bronze sous ton nom. Le platine est un jeu à 100 % ; les autres classent tes succès selon le nombre de joueurs qui les ont débloqués."
       },
       "rarityDisplay": {
         "name": "Affichage de la rareté",
@@ -330,9 +330,9 @@
       "loginPass": "Mot de passe Steam",
       "loginTest": "Tester la connexion",
       "loginTestHint": "Steam / Steam Guard",
-      "loginTestRunning": "Connexion à Steam… Saisissez le code Steam Guard s’il est demandé.",
+      "loginTestRunning": "Connexion à Steam… Saisis le code Steam Guard s’il est demandé.",
       "loginTestSuccess": "Connexion Steam réussie. Le refresh token generate_emu_config a été sauvegardé.",
-      "loginTestMissing": "Renseignez d’abord l’identifiant et le mot de passe Steam.",
+      "loginTestMissing": "Renseigne d’abord l’identifiant et le mot de passe Steam.",
       "loginTestFailed": "Échec de la connexion Steam",
       "autoApply": {
         "name": "Corriger automatiquement les nouveaux jeux détectés",
@@ -344,7 +344,7 @@
       },
       "manageDlc": {
         "name": "Gérer la propriété des DLC",
-        "description": "Écrit configs.app.ini pour que l'émulateur déclare tous les DLC comme possédés. Sans rapport avec les succès : laissez désactivé pour garder un jeu d'origine ou gérer les DLC vous-même. Désactivé par défaut.",
+        "description": "Écrit configs.app.ini pour que l'émulateur déclare tous les DLC comme possédés. Sans rapport avec les succès : laisse désactivé pour garder un jeu d'origine ou gérer les DLC toi-même. Désactivé par défaut.",
         "value": {
           "false": "Désactivé",
           "true": "Activé"
@@ -352,7 +352,7 @@
       },
       "stampIdentity": {
         "name": "Écrire le nom de compte et la langue",
-        "description": "Inscrit votre nom de compte et votre langue dans le configs.user.ini de chaque jeu. Laissez désactivé si vous comptez sur la configuration centrale de l'émulateur pour un nom et un identifiant prévisibles. Désactivé par défaut.",
+        "description": "Inscrit ton nom de compte et ta langue dans le configs.user.ini de chaque jeu. Laisse désactivé si tu comptes sur la configuration centrale de l'émulateur pour un nom et un identifiant prévisibles. Désactivé par défaut.",
         "value": {
           "false": "Désactivé",
           "true": "Activé"
@@ -425,7 +425,7 @@
       "loginPlaceholder": "Nom du compte Steam",
       "gbe": {
         "label": "DLL d’émulateur",
-        "help": "Importez votre propre steam_api / steam_api64.dll pour qu’elle soit installée à la place de la version GBE Fork téléchargée, à chaque réparation et à chaque réparation automatique. L’architecture que vous n’importez pas continue de venir de la version officielle.",
+        "help": "Importe ta propre steam_api / steam_api64.dll pour qu’elle soit installée à la place de la version GBE Fork téléchargée, à chaque réparation et à chaque réparation automatique. L’architecture que tu n’importes pas continue de venir de la version officielle.",
         "import": "Importer ou remplacer la DLL",
         "restore": "Utiliser la version officielle",
         "dllFilter": "DLL steam_api",
@@ -490,7 +490,7 @@
       "duration": "Durée de l’animation",
       "hotkey": {
         "name": "Raccourci de l’overlay en jeu",
-        "description": "Appuyez sur ce raccourci pendant qu’un jeu est en cours pour afficher l’overlay en jeu des succès. Cliquez sur le crayon pour le modifier, ou sur l’œil pour prévisualiser l’overlay sans lancer de jeu.",
+        "description": "Appuie sur ce raccourci pendant qu’un jeu est en cours pour afficher l’overlay en jeu des succès. Clique sur le crayon pour le modifier, ou sur l’œil pour prévisualiser l’overlay sans lancer de jeu.",
         "preview": "Prévisualiser l’overlay"
       }
     },
@@ -603,7 +603,7 @@
           "deleteLabel": "Supprimer",
           "deleted": "Supprimé :",
           "editNew": "Nouveau preset…",
-          "errName": "Saisissez d’abord un nom",
+          "errName": "Saisis d’abord un nom",
           "exportLabel": "Exporter",
           "exported": "Exporté :",
           "failed": "Échec",
@@ -727,7 +727,7 @@
             "applied": "Basé sur",
             "duplicate": "Dupliquer",
             "duplicated": "Copie prête à créer :",
-            "intro": "Choisissez un point de départ, puis personnalisez-le. Rien n’est enregistré tant que le preset n’est pas créé.",
+            "intro": "Choisis un point de départ, puis personnalise-le. Rien n’est enregistré tant que le preset n’est pas créé.",
             "random": "Surprends-moi",
             "randomized": "Un design que tu n’avais pas essayé",
             "title": "Partir de"
@@ -876,11 +876,11 @@
         },
         "useWinRT": {
           "name": "WinRT API",
-          "description": "Utilisez WinRT si disponible pour des notifications Windows plus rapides au lieu de PowerShell"
+          "description": "Utilise WinRT si disponible pour des notifications Windows plus rapides au lieu de PowerShell"
         },
         "useBalloon": {
           "name": "Info-bulle",
-          "description": "Utilisez une info-bulle quand une notification Windows échoue"
+          "description": "Utilise une info-bulle quand une notification Windows échoue"
         },
         "useWS": {
           "description": "Diffusion des succès à tous les clients connectés"
@@ -942,8 +942,8 @@
       "default": "Dossiers vérifiés automatiquement",
       "custom": "Tes dossiers",
       "addInfo": [
-        "Choisissez le dossier où un jeu ou un émulateur garde ses fichiers de succès.",
-        "Pour ALI213, Hoodlum, TENOKE, UniverseLAN et RPCS3, sélectionnez le dossier qui contient",
+        "Choisis le dossier où un jeu ou un émulateur garde ses fichiers de succès.",
+        "Pour ALI213, Hoodlum, TENOKE, UniverseLAN et RPCS3, sélectionne le dossier qui contient",
         "le fichier ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini, UniverseLAN.ini ou RPCS3.exe."
       ],
       "add": "Ajouter un dossier",
@@ -951,7 +951,7 @@
       "smartFindHelp": "trouve saves/configs + bibliothèques",
       "library": "Dossiers de bibliothèque",
       "libraryInfo": [
-        "Sélectionnez un dossier qui contient plusieurs dossiers de jeux installés (ex: D:\\Games, E:\\SteamLibrary).",
+        "Sélectionne un dossier qui contient plusieurs dossiers de jeux installés (ex: D:\\Games, E:\\SteamLibrary).",
         "Tous les jeux qu’il contient seront scannés pour les succès Goldberg/GBE, même s’ils n’ont jamais été lancés."
       ],
       "addLibrary": "Ajouter un dossier de bibliothèque",
@@ -962,7 +962,7 @@
       "title": "Sources de jeu",
       "officialPlatforms": {
         "title": "Plateformes officielles",
-        "description": "Activez ci-dessous les sources marquées d’un bouclier. Seules les bibliothèques détectées sur ce PC peuvent être affichées."
+        "description": "Active ci-dessous les sources marquées d’un bouclier. Seules les bibliothèques détectées sur ce PC peuvent être affichées."
       },
       "legitSteam": {
         "name": "Afficher les jeux Steam",
@@ -1089,14 +1089,14 @@
       ],
       "gameHealthTitle": "État des jeux",
       "gameHealth": [
-        "Ouvrez le bouton outils d’un jeu (en haut à droite de sa vignette) pour voir s’il est Prêt, À vérifier ou Non suivi.",
+        "Ouvre le bouton outils d’un jeu (en haut à droite de sa vignette) pour voir s’il est Prêt, À vérifier ou Non suivi.",
         "La phrase sous l’état explique la cause en clair ; les vérifications en dessous montrent quelle partie est en cause.",
         "Les boutons de réparation n’apparaissent que si AW Next peut réellement corriger le jeu - chacun annonce ce qu’il modifie et où les fichiers précédents sont conservés.",
         "Détails techniques contient les chemins, comptes et codes d’émulateur exacts ; à copier dans un rapport de bug."
       ],
       "troubleshootTitle": "Dépannage",
       "troubleshoot": [
-        "Si un jeu manque : ajoutez les dossiers, relancez un scan, puis vérifiez l’interrupteur de source et la liste noire.",
+        "Si un jeu manque : ajoute les dossiers, relance un scan, puis vérifie l’interrupteur de source et la liste noire.",
         "Si les notifications n’apparaissent pas : vérifie Ne pas déranger / Assistant de concentration dans Windows et lance l’app avec les mêmes droits que tes jeux.",
         "Avancé > Diagnostics ouvre les logs et les dossiers de données ; joins-les quand tu signales un problème.",
         "Les journaux sont conservés d’un lancement à l’autre. Chaque exécution commence par un marqueur de session et un bloc [diag] (versions, chemins, écrans) à joindre au ticket."
@@ -1123,17 +1123,17 @@
       ],
       "controllerTitle": "Manette",
       "controller": [
-        "Activez d’abord Paramètres > Manette, puis Select + Start + LB ouvre l’overlay en jeu.",
+        "Active d’abord Paramètres > Manette, puis Select + Start + LB ouvre l’overlay en jeu.",
         "LB + X active/désactive la navigation dans l’overlay.",
         "Mode navigation : croix/stick gauche déplacent le focus, A valide, B annule, X recherche, Y ouvre les options.",
-        "Maintenez LB + RB pour déplacer l’overlay avec le stick gauche et défiler avec le stick droit.",
+        "Maintiens LB + RB pour déplacer l’overlay avec le stick gauche et défiler avec le stick droit.",
         "Compatible Xbox, PlayStation (DualShock 4 / DualSense) et Switch Pro."
       ],
       "overlayTitle": "Overlay en jeu",
       "overlay": [
-        "Ouvrez-le avec le raccourci overlay (Ctrl+Shift+K par défaut) ou Select + Start + LB à la manette.",
-        "Triez par une seule colonne à la fois : Rareté, Date ou Statut (croissant / décroissant / aucun).",
-        "Appuyez sur / pour chercher, Échap pour effacer ou fermer le panneau d’options.",
+        "Ouvre-le avec le raccourci overlay (Ctrl+Shift+K par défaut) ou Select + Start + LB à la manette.",
+        "Trie par une seule colonne à la fois : Rareté, Date ou Statut (croissant / décroissant / aucun).",
+        "Appuie sur / pour chercher, Échap pour effacer ou fermer le panneau d’options.",
         "Le panneau engrenage change l’accent, la densité, le zoom, l’opacité et les éléments affichés ; « Utiliser le thème de l’app » suit le thème actif.",
         "Chaque succès avec un taux connu affiche sa rareté : gris pour les communs, or/argent/bronze pour les rares."
       ],
@@ -1155,7 +1155,7 @@
       "themes": [
         "Le thème personnalisé part de Steam Blue ; chaque couche (fond, en-tête, panneaux, cartes, réglages, texte, bordures, accent) est modifiable.",
         "Les images de couche passent sous un voile coloré avec un léger flou dépoli ; les effets sont par couche.",
-        "Déposez un thème CSS dans <userData>\\themes et il apparaît dans la liste des thèmes.",
+        "Dépose un thème CSS dans <userData>\\themes et il apparaît dans la liste des thèmes.",
         "Le créateur de preset affiche un aperçu réel avant l’enregistrement, puis permet de modifier ou supprimer tes presets.",
         "Exporte le thème que tu utilises dans un seul fichier .awtheme, ou importe celui qu'on t'a envoyé : il est prévisualisé avant l'installation puis se comporte comme un thème intégré."
       ],
@@ -1357,7 +1357,7 @@
     "status": "Statut",
     "rarityColumn": "Rareté",
     "dateColumn": "Date",
-    "selectConfig": "Sélectionnez une configuration !",
+    "selectConfig": "Sélectionne une configuration !",
     "locked": "Verrouillé",
     "unlocked": "Débloqué",
     "progress": "Progression",
@@ -1442,16 +1442,16 @@
     "import-san-asset-rejected": "Refusé car le fichier n’est pas pris en charge : {names}",
     "import-san-base-layout": "Le thème était bâti sur la carte « {name} » de SAN. AW Next dessine la sienne : la disposition n’est donc pas celle que tu avais, les couleurs, le mouvement et les effets si.",
     "import-san-carried": "{count} réglages repris.",
-    "import-san-installed": "C’est désormais un preset ordinaire : ouvrez-le sous « Modifier un preset » pour tout ajuster.",
+    "import-san-installed": "C’est désormais un preset ordinaire : ouvre-le sous « Modifier un preset » pour tout ajuster.",
     "import-san-invalid": "Ce fichier n’est pas un thème Steam Achievement Notifier.",
     "import-san-report-title": "Thème importé",
     "import-san-skipped": "Non repris :",
-    "import-san-states-merged": "SAN garde un thème distinct pour les succès rares et le 100 %. AW Next peint ces deux états avec ce seul preset : vérifiez ses couleurs Rare et complétion.",
+    "import-san-states-merged": "SAN garde un thème distinct pour les succès rares et le 100 %. AW Next peint ces deux états avec ce seul preset : vérifie ses couleurs Rare et complétion.",
     "import-san-title": "Importer un thème Steam Achievement Notifier",
     "import-san-unknown": "Non reconnu par cette version : {keys}",
     "import-san-unsupported": "Non dessiné par une popup AW Next : {keys}",
     "launch-args-label": "Arguments de lancement :",
-    "game-config-placeholder": "…Cliquez sur MODIFIER pour choisir l’exécutable…",
+    "game-config-placeholder": "…Clique sur MODIFIER pour choisir l’exécutable…",
     "game-config-unlink": "Dissocier l’exécutable",
     "checking-for-updates": "Vérification…",
     "link-not-opened": "Ce lien n’a pas été ouvert car ce n’est pas une adresse web.",
@@ -1857,7 +1857,7 @@
     "update-ready-detail": "Veux-tu l’installer maintenant ?",
     "downloading-update": "téléchargement de la mise à jour {percent} %",
     "yes": "Oui",
-    "select-a-game-library-folder-to-scan": "Sélectionnez un dossier de bibliothèque de jeux à analyser",
+    "select-a-game-library-folder-to-scan": "Sélectionne un dossier de bibliothèque de jeux à analyser",
     "scan": "Analyser",
     "scanning": "Analyse…",
     "scan-no-gbe-installs": "Aucune installation Goldberg / GBE Fork trouvée dans ce dossier.",
@@ -1866,8 +1866,8 @@
     "ok": "OK",
     "goldberg-gbe-fork-scan": "Analyse Goldberg / GBE Fork",
     "scan-found-message": "{found} installation(s) trouvée(s) - {missing} non configurée(s)",
-    "emu-login-missing": "Renseignez d’abord l’identifiant et le mot de passe Steam.",
-    "emu-login-running": "Connexion à Steam… Saisissez le code Steam Guard s’il est demandé.",
+    "emu-login-missing": "Renseigne d’abord l’identifiant et le mot de passe Steam.",
+    "emu-login-running": "Connexion à Steam… Saisis le code Steam Guard s’il est demandé.",
     "emu-login-success": "Connexion Steam réussie. Le refresh token generate_emu_config a été sauvegardé.",
     "emu-login-failed": "Échec de la connexion Steam",
     "epic-connected-as": "Connecté{suffix}",
@@ -2015,7 +2015,7 @@
     "diagnosis-no-problems": "Aucun problème détecté.",
     "diagnosis-auto-repair-wrote": "La réparation automatique a écrit {count} succès dans {path}",
     "diagnosis-icons-summary": "icônes : {downloaded} téléchargées, {failed} en échec, {skipped} ignorées",
-    "diagnosis-icons-unavailable": "Steam n'a pas encore d'illustrations de succès pour ce jeu : aucune icône n'a pu être téléchargée. La liste des succès est complète ; relancez la réparation une fois les illustrations publiées.",
+    "diagnosis-icons-unavailable": "Steam n'a pas encore d'illustrations de succès pour ce jeu : aucune icône n'a pu être téléchargée. La liste des succès est complète ; relance la réparation une fois les illustrations publiées.",
     "diagnosis-steam-appid-created": "steam_appid.txt créé",
     "diagnosis-configs-main-updated": "configs.main.ini mis à jour (new_app_ticket + gc_token)",
     "diagnosis-configs-app-updated": "configs.app.ini mis à jour ({count} entrées DLC, unlock_all={unlockAll})",
@@ -2044,7 +2044,7 @@
     "update-retry-failed-message": "La mise à jour a encore échoué après avoir vidé les fichiers en cache dans {folder}.",
     "update-retry-failed-detail": "Il s’agit probablement d’un problème réseau ou lié à la publication, que vider le cache ne peut pas résoudre. Tu peux télécharger et installer la mise à jour manuellement depuis la page de version.",
     "open-release-page": "Ouvrir la page de version",
-    "portable-update-detail": "Cette copie portable ne se met pas à jour toute seule. Téléchargez la nouvelle archive depuis la page de version et extrayez-la par-dessus ce dossier : vos données, dans son dossier data, sont conservées.",
+    "portable-update-detail": "Cette copie portable ne se met pas à jour toute seule. Télécharge la nouvelle archive depuis la page de version et extrais-la par-dessus ce dossier : tes données, dans son dossier data, sont conservées.",
     "clear-cache": "Vider les caches",
     "clear-update-cache-label": "Vider les caches",
     "clear-update-cache-confirm": "Supprimer tous les caches retéléchargeables (fichiers de mise à jour, cache des schémas et icônes Steam/Ubisoft, outils de correction d’émulateur téléchargés) ? Tes réglages, sauvegardes, backups et fichiers placés manuellement ne sont jamais touchés - tout ce qui est vidé ici est simplement retéléchargé automatiquement en cas de besoin.",
@@ -2181,7 +2181,7 @@
     "aw-config-delete-folder": "dossier créé par AW Next, supprimé",
     "aw-config-keys-only": "lignes AW Next uniquement",
     "aw-config-remove-title": "Retirer la configuration émulateur écrite par AW Next ?",
-    "aw-config-remove-message": "Seuls la section DLC, les options et les clés d'identité écrites par AW Next sont retirées. Ce que vous ou le repack avez défini est conservé, et un fichier n'est supprimé que s'il ne reste rien d'autre dedans.",
+    "aw-config-remove-message": "Seuls la section DLC, les options et les clés d'identité écrites par AW Next sont retirées. Ce que toi ou le repack avez défini est conservé, et un fichier n'est supprimé que s'il ne reste rien d'autre dedans.",
     "aw-config-remove-button": "Retirer",
     "aw-config-removed-title": "Configuration retirée",
     "aw-config-removed-message": "{count} fichier(s) nettoyé(s).",
@@ -2376,7 +2376,7 @@
     "trophy-bronze": "Bronze",
     "trophy-common": "Commun",
     "profile-trophies-platinum-desc": "jeux à 100 %",
-    "profile-trophies-share": "{percent} de vos succès",
+    "profile-trophies-share": "{percent} de tes succès",
     "profile-trophies-unranked": "{count} sans taux connu",
     "profile-trophies-at-most": "{percent} ou moins",
     "profile-trophies-under": "moins de {percent}",

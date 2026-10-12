@@ -30,6 +30,14 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Improved
 
+- **On/off settings are switches.** Every Settings row that is simply enabled or disabled now shows a
+  switch instead of arrows to step through, so what is off stands out at a glance. Rows that choose
+  between two named options keep their arrows.
+- **A calmer game page and Settings footer.** In a narrow window an achievement's date and rate share
+  one line, so more achievements fit on screen. **Reset achievements** is an outlined red button
+  instead of the page's main one, and **Save** only stands out once something is left to save.
+- **French reads in one voice.** The few strings that said "vous" now say "tu" like the rest of
+  the app.
 - **Text cut with "…" scrolls under the pointer.** A long game title on a tile or a long value in
   a Settings control slides to its end and back while you hover it, so it can be read in full.
 - **No more "--" for an unknown unlock rate.** When no source knows how many players earned an

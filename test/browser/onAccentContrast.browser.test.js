@@ -33,6 +33,8 @@ test('the label on an accent-filled control reads in every built-in theme', asyn
             else document.documentElement.setAttribute('data-theme', themeName);
             const element = document.querySelector(target);
             if (target.endsWith('button')) element.classList.add('is-on');
+            // Save is only accent-filled while the tab has unsaved changes.
+            if (target === '#btn-settings-save') document.querySelector('#settings-save-state').setAttribute('data-state', 'dirty');
             const toRgb = (css) => {
               const canvas = document.createElement('canvas');
               canvas.width = canvas.height = 1;

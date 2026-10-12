@@ -13,7 +13,8 @@ const css = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'resources',
   trophy grade in front) wrapped onto two lines next to an empty row.
 */
 test('the stacked achievement row lets its stats lines use the full width', () => {
-  const stacked = css.match(/ {2}\.achievement \.stats \{\s*grid-column: 2;[\s\S]*?\n {2}\}\n([\s\S]*?)\n\}\n/);
+  const stacked = css.match(/ {2}\.achievement \.stats \{\s*grid-column: 2;([\s\S]*?)\n {2}\}\n([\s\S]*?)\n\}\n/);
   assert.ok(stacked, 'the stacked layout exists');
-  assert.match(stacked[1], /\.achievement \.stats \.time,\s*\.achievement \.stats \.community \{\s*width: auto;/);
+  assert.match(stacked[2], /\.achievement \.stats \.time,\s*\.achievement \.stats \.community \{\s*width: auto;/);
+  assert.match(stacked[1], /display: flex;[\s\S]*flex-wrap: wrap;/, 'the date and the rate share one line when they fit');
 });
