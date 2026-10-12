@@ -30,10 +30,11 @@ with the choice of an all-users install and of the folder.
   with NSIS's raw "Error opening file for writing". It now stays on the page with a translated
   explanation. An elevated all-users install passes the same test. electron-builder has no hook on
   that page, which is what the `customDirectoryPageLeave` hook in the patch adds.
-- **Running app.** electron-builder's own check closes every `Achievement Watcher.exe` process,
-  which includes the Watchdog (it runs as `Achievement Watcher.exe watchdog.js` under
-  `ELECTRON_RUN_AS_NODE`). The installer used to start PowerShell as well, to look for a `node.exe`
-  Watchdog that no longer exists; that cost one to two seconds before the first window.
+- **Running app.** The installer closes every process started from the installation folder, which
+  includes the Watchdog (it runs as `Achievement Watcher.exe watchdog.js` under
+  `ELECTRON_RUN_AS_NODE`) and the native helpers. `customCheckAppRunning` asks Windows directly;
+  electron-builder's own check starts PowerShell three times for the same answer, and sandboxes
+  such as Hybrid Analysis score an installer starting PowerShell as malicious.
 - **Progress.** The details pane is shown and filled (the patch undoes upstream's
   `SetDetailsPrint none`), since it is what an update run displays.
 - **User data** is never moved by the installer: `%APPDATA%\Achievement Watcher Next` is only

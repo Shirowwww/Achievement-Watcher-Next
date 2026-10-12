@@ -37,6 +37,10 @@ for (const signal of ['SIGTERM', 'SIGINT']) {
   } catch {}
 }
 
+require('./util/exitWithParent.js').exitWithParent(process, {
+  onExit: () => overlayControllerService?.shutdown('app-gone'),
+});
+
 const debug = require('./util/log.js');
 // Use a separate mutex from the legacy watchdog.
 const instance = new (require('single-instance'))('Achievement Watchdog 3.0');

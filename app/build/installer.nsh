@@ -516,13 +516,143 @@ Var unDeleteAppData
 !macro customInit
   !insertmacro AW_PICK_LANGUAGE
   ; No step here closes the Watchdog any more. It runs as "Achievement Watcher.exe watchdog.js"
-  ; (ELECTRON_RUN_AS_NODE, since 3.4), so electron-builder's own CHECK_APP_RUNNING, which closes
-  ; every process of that image name, already stops it with the app. The PowerShell step that used
+  ; (ELECTRON_RUN_AS_NODE, since 3.4), so the app-running check (customCheckAppRunning below), which
+  ; closes every process of that image name, already stops it with the app. The PowerShell step that used
   ; to be here looked for node.exe/nw.exe, found nothing, and cost a second or two before the window.
 !macroend
 
 !macro customUnInit
   !insertmacro AW_PICK_LANGUAGE
+!macroend
+
+; ---------------------------------------------------------------------------
+; Is AW Next running? electron-builder's own check starts PowerShell three times (is it there, is it
+; allowed, then a CIM process query), and sandboxes score an installer spawning PowerShell as
+; malicious. The same question is asked of Windows directly here: every process whose executable
+; lies in $INSTDIR, as its CIM query did, so the Watchdog and the native helpers go with the app
+; while a portable copy elsewhere or another account's install is left alone. Same flow as its
+; _CHECK_APP_RUNNING: ask, close, force, then let the user retry.
+;
+; AW_SCAN_INSTDIR sets $R0 to 0 when such a process runs (603 otherwise) and terminates them when
+; $R3 is 1. It is one block reached by Goto with its return address in $R9, since a Function would
+; have to exist twice (installer and un.) and an unreferenced one fails the build under -WX.
+; ---------------------------------------------------------------------------
+!macro AW_SCAN_INSTDIR
+  awScan:
+    StrCpy $R0 603
+    StrLen $8 "$INSTDIR\"
+    System::Alloc 65536
+    Pop $7
+    System::Call 'kernel32::K32EnumProcesses(p r7, i 65536, *i .r6) i .r5'
+    IntOp $6 $6 / 4
+    StrCmp $5 0 0 +2
+      StrCpy $6 0
+    StrCpy $5 0
+    awScanNext:
+      IntCmp $5 $6 awScanFree 0 awScanFree
+      IntOp $4 $5 * 4
+      IntOp $4 $4 + $7
+      System::Call '*$4(i .r4)'
+      IntOp $5 $5 + 1
+      ; Query-only access opens an elevated process too, so it is still seen even if it cannot be closed.
+      System::Call 'kernel32::OpenProcess(i 0x1000, i 0, i r4) p .r3'
+      StrCmp $3 0 awScanNext
+      System::Call 'kernel32::QueryFullProcessImageNameW(p r3, i 0, w .r2, *i ${NSIS_MAX_STRLEN}) i .r1'
+      System::Call 'kernel32::CloseHandle(p r3)'
+      StrCmp $1 0 awScanNext
+      StrCpy $2 $2 $8
+      StrCmp $2 "$INSTDIR\" 0 awScanNext
+      StrCpy $R0 0
+      StrCmp $R3 1 0 awScanNext
+      System::Call 'kernel32::OpenProcess(i 0x0001, i 0, i r4) p .r3'
+      StrCmp $3 0 awScanNext
+      System::Call 'kernel32::TerminateProcess(p r3, i 1)'
+      System::Call 'kernel32::CloseHandle(p r3)'
+      Goto awScanNext
+    awScanFree:
+    System::Free $7
+    Goto $R9
+!macroend
+
+!macro customCheckAppRunning
+  Push $0
+  Push $1
+  Push $2
+  Push $3
+  Push $4
+  Push $5
+  Push $6
+  Push $7
+  Push $8
+  Push $R2
+  Push $R3
+  Push $R9
+  Goto awCheckStart
+  !insertmacro AW_SCAN_INSTDIR
+
+  awCheckStart:
+  ${if} ${isUpdated}
+    Sleep 300 ; the app is quitting on its own
+  ${endIf}
+  StrCpy $R3 0
+  GetLabelAddress $R9 awFirstScanDone
+  Goto awScan
+  awFirstScanDone:
+  ${if} $R0 == 0
+    ${if} ${isUpdated}
+      Sleep 1000
+    ${else}
+      MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION "$(appRunning)" /SD IDOK IDOK awStopApp
+      Quit
+    ${endIf}
+    awStopApp:
+    DetailPrint "$(appClosing)"
+    StrCpy $R1 0
+    awStopLoop:
+      IntOp $R1 $R1 + 1
+      ; Processes go one at a time, so the app can start a GPU or renderer process again before its
+      ; own turn comes: kill whatever is left every half second for a few seconds.
+      StrCpy $R2 0
+      awWaitExit:
+        StrCpy $R3 1
+        GetLabelAddress $R9 awKillDone
+        Goto awScan
+        awKillDone:
+        Sleep 500
+        StrCpy $R3 0
+        GetLabelAddress $R9 awRecheckDone
+        Goto awScan
+        awRecheckDone:
+        ${if} $R0 == 0
+          IntOp $R2 $R2 + 1
+          ${if} $R2 == 1
+            DetailPrint `Waiting for "${PRODUCT_NAME}" to close.`
+          ${endIf}
+          ${if} $R2 < 12
+            Goto awWaitExit
+          ${endIf}
+        ${endIf}
+      ${if} $R0 == 0
+        ${if} $R1 > 1
+          ; Most likely running elevated, out of this installer's reach.
+          MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "$(appCannotBeClosed)" /SD IDCANCEL IDRETRY awStopLoop
+          Quit
+        ${endIf}
+        Goto awStopLoop
+      ${endIf}
+  ${endIf}
+  Pop $R9
+  Pop $R3
+  Pop $R2
+  Pop $8
+  Pop $7
+  Pop $6
+  Pop $5
+  Pop $4
+  Pop $3
+  Pop $2
+  Pop $1
+  Pop $0
 !macroend
 
 !macro customInstall

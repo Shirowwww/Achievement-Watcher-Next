@@ -202,10 +202,29 @@ test('every installer language has every custom string, and is reachable from th
 });
 
 test('the installer no longer spends a PowerShell start on a Watchdog process name that no longer exists', () => {
-  // The Watchdog runs as "Achievement Watcher.exe watchdog.js" (ELECTRON_RUN_AS_NODE); the template's
-  // CHECK_APP_RUNNING closes it by that image name.
+  // The Watchdog runs as "Achievement Watcher.exe watchdog.js" (ELECTRON_RUN_AS_NODE); the
+  // app-running check closes it by that image name.
   assert.doesNotMatch(installerCode, /powershell|nsExec|node\.exe|nw\.exe/i);
   assert.match(init, /spawn\(process\.execPath, \['watchdog\.js'\]/);
+});
+
+test('the installer finds and closes a running app without starting PowerShell', () => {
+  // Defining the hook replaces electron-builder's check, which starts PowerShell three times and is
+  // what Hybrid Analysis scored as "spawns many processes".
+  const body = macroBody('customCheckAppRunning');
+  const scan = macroBody('AW_SCAN_INSTDIR');
+  assert.match(body, /!insertmacro AW_SCAN_INSTDIR/);
+  // Scoped to the install folder like the template's CIM query: the Watchdog and native helpers
+  // go with the app, a portable copy elsewhere and another account's install do not.
+  assert.match(scan, /K32EnumProcesses/);
+  assert.match(scan, /QueryFullProcessImageNameW/);
+  assert.match(scan, /StrCmp \$2 "\$INSTDIR\\" 0 awScanNext/);
+  assert.match(scan, /TerminateProcess/);
+  assert.match(scan, /System::Free \$7/);
+  // Same answers as the template: ask first unless updating, and let the user retry when it cannot close.
+  assert.match(body, /\$\(appRunning\)/);
+  assert.match(body, /\$\(appCannotBeClosed\)[^\n]*IDRETRY awStopLoop/);
+  assert.match(body, /\$\{if\} \$\{isUpdated\}/);
 });
 
 test('a real uninstall removes the traces the app wrote, an update run keeps them', () => {

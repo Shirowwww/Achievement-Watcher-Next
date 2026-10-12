@@ -23,6 +23,7 @@ const { migrateLegacyUserData, migrateAw3UserData, migrateSouvenirFolder, retarg
 const stylizedArtwork = require('../util/stylizedArtwork.js');
 const { removeLegacyScreenCapture } = require('../util/legacyScreenCapture.js');
 const { deriveWatchdogState } = require('../util/watchdogState.js');
+const { sweepStaleWatchdog } = require('../util/staleWatchdog.js');
 const links = require('../util/links.js');
 const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
 const { createRequestGate, isThrottleStatus } = require('../util/httpThrottle.js');
@@ -585,7 +586,7 @@ function setGameActivity(count) {
   scheduleUpdateCheck(updateGate.INTERVALS.afterGame);
 }
 const minimist = require('minimist');
-const { execFile, execFileSync, spawn } = require('child_process');
+const { spawn } = require('child_process');
 const { launchViaWindowsShell, isElevationDeclinedError } = require('../util/windowsShellLaunch.js');
 const { lazyRequire } = require('../util/lazyRequire.js');
 const fs = require('fs');
@@ -2393,45 +2394,13 @@ require('./accounts.js').register({
   getMainWindow: () => MainWin,
 });
 
-// Kill any Watchdog holding WS port 8082: a crash of this app can leave an orphaned Watchdog behind
-// (it outlives its parent on Windows), so sweep by the well-known port once before the first launch.
-/*
-  Asynchronous on purpose. netstat has taken well over a second on this machine, and running it
-  synchronously froze the main process at exactly the moment the renderer was loading: every
-  synchronous IPC the renderer makes on its way up (its user-data path, the app name) waits on this
-  thread, so a slow sweep showed up as a slow window with nothing in any log to say why.
-*/
+// A crash of this app can leave its Watchdog running, holding WS port 8082 and the instance lock,
+// so look for one once before the first launch. Asynchronous: the renderer's synchronous IPC waits
+// on this thread while the window loads. util/staleWatchdog.js says when netstat still runs.
 function killWatchdog() {
-  return new Promise((resolve) => {
-    execFile('netstat.exe', ['-ano', '-p', 'tcp'], { encoding: 'utf8', windowsHide: true }, (err, out) => {
-      if (err) {
-        debug.log(`[watchdog] killWatchdog failed: ${err.message}`);
-        return resolve();
-      }
-      sweepStaleWatchdogs(String(out));
-      resolve();
-    });
-  });
-}
-
-function sweepStaleWatchdogs(out) {
-  try {
-    const pids = new Set();
-    for (const line of out.split('\n')) {
-      if (line.includes(':8082') && /LISTENING/i.test(line)) {
-        const pid = line.trim().split(/\s+/).pop();
-        if (/^\d+$/.test(pid) && pid !== '0') pids.add(pid);
-      }
-    }
-    for (const pid of pids) {
-      try {
-        execFileSync('taskkill.exe', ['/F', '/PID', pid], { windowsHide: true, stdio: 'ignore' });
-        debug.log(`[watchdog] killed stale instance PID ${pid} on port 8082`);
-      } catch {}
-    }
-  } catch (err) {
-    debug.log(`[watchdog] stale sweep failed: ${err.message}`);
-  }
+  return sweepStaleWatchdog({ exeName: path.basename(process.execPath), log: (message) => debug.log(`[watchdog] ${message}`) }).catch((err) =>
+    debug.log(`[watchdog] stale sweep failed: ${err.message}`)
+  );
 }
 
 // Supervise the Watchdog monitor: we re-launch this executable in ELECTRON_RUN_AS_NODE mode with an
@@ -7176,8 +7145,8 @@ try {
       }
       bootMark('resources');
       // The window goes up before the rest of the startup work, not after it. Everything below runs
-      // on this one thread - the login-item sync touches the registry, the stale-Watchdog sweep shells
-      // out to netstat - while the window is a separate process that spends its first second parsing
+      // on this one thread - the login-item sync touches the registry, the stale-Watchdog sweep probes
+      // its pipe and port - while the window is a separate process that spends its first second parsing
       // a page and loading its own modules. Opening it first overlaps the two instead of queueing
       // them; nothing below is needed to display a library.
       if (safeMode) startupArgs.hidden = false;

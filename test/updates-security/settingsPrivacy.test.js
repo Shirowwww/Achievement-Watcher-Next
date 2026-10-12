@@ -66,6 +66,10 @@ test('only a genuinely new profile launches onboarding and defaults playtime on'
 
 test('Watchdog port cleanup uses argument-safe process launches', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'electron', 'init.js'), 'utf8');
+  const sweep = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'util', 'staleWatchdog.js'), 'utf8');
   assert.doesNotMatch(source, /\bexecSync\s*\(/);
-  assert.match(source, /execFileSync\s*\(\s*['"]taskkill\.exe['"]\s*,\s*\[['"]\/F['"],\s*['"]\/PID['"],\s*pid\]/);
+  assert.doesNotMatch(sweep, /\bexecSync\b|shell:\s*true/);
+  assert.match(sweep, /const \{ execFile \} = require\('child_process'\);/);
+  assert.match(sweep, /execFile\(file, args,/);
+  assert.match(sweep, /run\('taskkill\.exe', \['\/F', '\/PID', pid\]\)/);
 });
