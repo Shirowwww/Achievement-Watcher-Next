@@ -862,6 +862,12 @@
         "clipAudioDesc": "Alleen game laat voicechat en muziek weg. Als het geluid van de game niet apart kan worden opgenomen, wordt het geluid van de hele pc opgenomen.",
         "clipAudioGame": "Alleen game",
         "clipAudioAll": "Hele pc",
+        "clipEngine": "Opnameprogramma",
+        "clipEngineDesc": "gpu-screen-recorder neemt op met de videokaart en kost bijna niets. Het softwarematige opnameprogramma werkt op elke pc, maar codeert met de processor, slaat WebM-bestanden op en neemt het geluid van de hele pc op.",
+        "clipEngineSoftware": "Software (gebruikt de processor)",
+        "clipEngineGpuFound": "gpu-screen-recorder is geïnstalleerd.",
+        "clipEngineGpuMissing": "gpu-screen-recorder is niet geïnstalleerd: installeer het via je distributie of Flathub, of kies het softwarematige opnameprogramma.",
+        "clipEngineCost": "Laatste spel met het softwarematige opnameprogramma: {cpu}% van één processorkern.",
         "clipEstimate": "Grootte per clip",
         "clipEstimateValue": "maximaal {size} MB",
         "clipDirHelp": "Eén submap per game, bestanden met de naam \"datum - prestatie\". Standaard: Videos\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Alleen Windows. Heeft geen effect op Linux."
             },
-            "souvenirHdrDesc": "Alleen Windows: corrigeert de kleuren wanneer HDR van Windows actief is. Op Linux wordt de gewone screenshot opgeslagen."
+            "souvenirHdrDesc": "Alleen Windows: corrigeert de kleuren wanneer HDR van Windows actief is. Op Linux wordt de gewone screenshot opgeslagen.",
+            "souvenirDirHelp": "Eén submap per game, bestanden met de naam \"datum - prestatie\". Standaard: ~/Pictures/Achievement Watcher Next. Onder Wayland vraagt het bureaublad één keer per sessie om het scherm te delen.",
+            "clipDesc": "Terwijl een game draait, worden de laatste seconden in het geheugen bewaard en rond elke ontgrendeling opgeslagen, met de melding in het midden. Onder Wayland vraagt het bureaublad één keer om het scherm te delen.",
+            "clipAudioDesc": "Op Linux wordt het geluid van de hele pc opgenomen.",
+            "clipDirHelp": "Eén submap per game, bestanden met de naam \"datum - prestatie\". Standaard: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

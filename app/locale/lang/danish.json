@@ -862,6 +862,12 @@
         "clipAudioDesc": "Kun spillet udelader voicechat og musik. Når spillets lyd ikke kan optages alene, optages hele pc'ens lyd.",
         "clipAudioGame": "Kun spillet",
         "clipAudioAll": "Hele pc'en",
+        "clipEngine": "Optager",
+        "clipEngineDesc": "gpu-screen-recorder optager med grafikkortet og koster næsten ingenting. Softwareoptageren fungerer på enhver pc, men koder med processoren, gemmer WebM-filer og optager lyden fra hele pc'en.",
+        "clipEngineSoftware": "Software (bruger processoren)",
+        "clipEngineGpuFound": "gpu-screen-recorder er installeret.",
+        "clipEngineGpuMissing": "gpu-screen-recorder er ikke installeret: installer det fra din distribution eller Flathub, eller vælg softwareoptageren.",
+        "clipEngineCost": "Seneste spil med softwareoptageren: {cpu} % af én processorkerne.",
         "clipEstimate": "Størrelse pr. klip",
         "clipEstimateValue": "op til {size} MB",
         "clipDirHelp": "Én undermappe pr. spil, filer med navnet \"dato - præstation\". Standard: Videoer\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Kun Windows. Har ingen virkning i Linux."
             },
-            "souvenirHdrDesc": "Kun Windows: retter farverne, når HDR er aktivt i Windows. I Linux gemmes det almindelige skærmbillede."
+            "souvenirHdrDesc": "Kun Windows: retter farverne, når HDR er aktivt i Windows. I Linux gemmes det almindelige skærmbillede.",
+            "souvenirDirHelp": "Én undermappe pr. spil, filer med navnet \"dato - præstation\". Standard: ~/Pictures/Achievement Watcher Next. På Wayland spørger skrivebordet én gang pr. session, om skærmen må deles.",
+            "clipDesc": "Mens et spil kører, gemmes de sidste sekunder i hukommelsen og bliver sammen med notifikationen gemt omkring hver oplåsning. På Wayland spørger skrivebordet én gang, om skærmen må deles.",
+            "clipAudioDesc": "På Linux optages lyden fra hele pc'en.",
+            "clipDirHelp": "Én undermappe pr. spil, filer med navnet \"dato - præstation\". Standard: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

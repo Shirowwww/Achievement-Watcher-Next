@@ -833,6 +833,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#option_clipFps').val(String(cfgClip.clipFps)).change();
       $('#option_clipQuality').val(cfgClip.clipQuality).change();
       $('#option_clipAudio').val(cfgClip.clipAudio).change();
+      if (process.platform === 'linux') {
+        $('#option_clipEngine').val(cfgClip.clipEngine).change();
+        showClipEngineStatus();
+      } else {
+        $('#clip-engine-row').remove();
+      }
       const clipDir = cfgClip.clipDir || clipDefaultDir();
       $('#clip-dir-display').text(clipDir);
       $('#btn-clip-dir').attr('title', clipDir);
@@ -6383,6 +6389,8 @@ function readClipSettings() {
     clipFps: $('#option_clipFps').val(),
     clipQuality: $('#option_clipQuality').val(),
     clipAudio: $('#option_clipAudio').val(),
+    // Linux only; elsewhere the row is gone and the setting keeps its saved value.
+    clipEngine: $('#option_clipEngine').length ? $('#option_clipEngine').val() : app.config.souvenir && app.config.souvenir.clipEngine,
     // Set by the folder picker, not by a control.
     clipDir: (app.config.souvenir && app.config.souvenir.clipDir) || '',
   });
@@ -6400,6 +6408,17 @@ function updateClipReadouts() {
   if (native) $("#option_clipResolution option[value='native']").text(`${native} (${screen.height}p)`);
   const size = Math.max(1, Math.round(clipProfile.estimateMegabytes(clip, screen)));
   $('#clip-estimate').text(localeText('settings.notification.option.clipEstimateValue', { size }) || `${size} MB`);
+}
+
+// Linux: whether gpu-screen-recorder is installed, and what the software recorder cost last time.
+async function showClipEngineStatus() {
+  const status = await ipcRenderer.invoke('souvenir:linux-status').catch(() => null);
+  if (!status) return;
+  const parts = [localeText(status.gsr ? 'settings.notification.option.clipEngineGpuFound' : 'settings.notification.option.clipEngineGpuMissing')];
+  if (status.softwareCost && Number.isFinite(status.softwareCost.cpuPercent)) {
+    parts.push(localeText('settings.notification.option.clipEngineCost', { cpu: status.softwareCost.cpuPercent }));
+  }
+  $('#clip-engine-status').text(parts.filter(Boolean).join(' '));
 }
 
 // Debounced auto-save for the Notifications tab. No-op until the form has finished populating.

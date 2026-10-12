@@ -862,6 +862,12 @@
         "clipAudioDesc": "A Csak a játék kihagyja a hangchatet és a zenét. Ha a játék hangja nem rögzíthető külön, az egész PC hangja kerül rögzítésre.",
         "clipAudioGame": "Csak a játék",
         "clipAudioAll": "Az egész PC",
+        "clipEngine": "Rögzítő",
+        "clipEngineDesc": "A gpu-screen-recorder a videokártyával rögzít, szinte semmilyen terhelés nélkül. A szoftveres rögzítő bármilyen számítógépen működik, de a processzorral kódol, WebM-fájlokat ment, és a teljes számítógép hangját rögzíti.",
+        "clipEngineSoftware": "Szoftveres (a processzort használja)",
+        "clipEngineGpuFound": "A gpu-screen-recorder telepítve van.",
+        "clipEngineGpuMissing": "A gpu-screen-recorder nincs telepítve: telepítsd a disztribúciódból vagy a Flathubról, vagy válaszd a szoftveres rögzítőt.",
+        "clipEngineCost": "Utolsó játék a szoftveres rögzítővel: egy processzormag {cpu}%-a.",
         "clipEstimate": "Méret klipenként",
         "clipEstimateValue": "legfeljebb {size} MB",
         "clipDirHelp": "Játékonként egy almappa, a fájlok neve „dátum - teljesítmény”. Alapértelmezés: Videók\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Csak Windows. Linuxon nincs hatása."
             },
-            "souvenirHdrDesc": "Csak Windows: kijavítja a színeket, amikor a Windows HDR aktív. Linuxon a normál képernyőkép lesz mentve."
+            "souvenirHdrDesc": "Csak Windows: kijavítja a színeket, amikor a Windows HDR aktív. Linuxon a normál képernyőkép lesz mentve.",
+            "souvenirDirHelp": "Játékonként egy almappa, a fájlok neve „dátum - teljesítmény”. Alapértelmezés: ~/Pictures/Achievement Watcher Next. Waylanden az asztal munkamenetenként egyszer megkérdezi, megosztható-e a képernyő.",
+            "clipDesc": "Amíg egy játék fut, az utolsó másodpercei a memóriában maradnak, és minden feloldás körül mentésre kerülnek, az értesítéssel a közepén. Waylanden az asztal egyszer megkérdezi, megosztható-e a képernyő.",
+            "clipAudioDesc": "Linuxon a teljes számítógép hangja rögzítésre kerül.",
+            "clipDirHelp": "Játékonként egy almappa, a fájlok neve „dátum - teljesítmény”. Alapértelmezés: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

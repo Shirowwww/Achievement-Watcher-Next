@@ -862,6 +862,12 @@
         "clipAudioDesc": "仅游戏会排除语音聊天和音乐。如果无法单独录制游戏声音，则会录制整台 PC 的声音。",
         "clipAudioGame": "仅游戏",
         "clipAudioAll": "整台 PC",
+        "clipEngine": "录制器",
+        "clipEngineDesc": "gpu-screen-recorder 使用显卡录制，几乎不占用资源。软件录制器可在任何电脑上运行，但使用处理器编码，保存为 WebM 文件，并录制整台电脑的声音。",
+        "clipEngineSoftware": "软件（使用处理器）",
+        "clipEngineGpuFound": "已安装 gpu-screen-recorder。",
+        "clipEngineGpuMissing": "未安装 gpu-screen-recorder：请从你的发行版或 Flathub 安装，或选择软件录制器。",
+        "clipEngineCost": "使用软件录制器的上一局游戏：占用一个处理器核心的 {cpu}%。",
         "clipEstimate": "每个剪辑的大小",
         "clipEstimateValue": "最大 {size} MB",
         "clipDirHelp": "每个游戏一个子文件夹，文件名为“日期 - 成就”。默认：视频\\Achievement Watcher Next。",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "仅限 Windows。在 Linux 上无效。"
             },
-            "souvenirHdrDesc": "仅限 Windows：在 Windows HDR 启用时校正颜色。在 Linux 上会保存标准截图。"
+            "souvenirHdrDesc": "仅限 Windows：在 Windows HDR 启用时校正颜色。在 Linux 上会保存标准截图。",
+            "souvenirDirHelp": "每个游戏一个子文件夹，文件名为“日期 - 成就”。默认：~/Pictures/Achievement Watcher Next。在 Wayland 上，桌面会在每个会话中询问一次是否共享屏幕。",
+            "clipDesc": "游戏运行时，最近几秒会保留在内存中，并在每次解锁前后保存下来，通知位于中间。在 Wayland 上，桌面会询问一次是否共享屏幕。",
+            "clipAudioDesc": "在 Linux 上会录制整台电脑的声音。",
+            "clipDirHelp": "每个游戏一个子文件夹，文件名为“日期 - 成就”。默认：~/Videos/Achievement Watcher Next。"
           }
         },
         "help": {

@@ -862,6 +862,12 @@
         "clipAudioDesc": "Yalnızca oyun, sesli sohbeti ve müziği dışarıda bırakır. Oyunun sesi tek başına kaydedilemiyorsa tüm bilgisayarın sesi kaydedilir.",
         "clipAudioGame": "Yalnızca oyun",
         "clipAudioAll": "Tüm bilgisayar",
+        "clipEngine": "Kaydedici",
+        "clipEngineDesc": "gpu-screen-recorder ekran kartıyla neredeyse hiç yük bindirmeden kayıt yapar. Yazılım kaydedici her bilgisayarda çalışır, ancak işlemciyle kodlar, WebM dosyaları kaydeder ve tüm bilgisayarın sesini kaydeder.",
+        "clipEngineSoftware": "Yazılım (işlemciyi kullanır)",
+        "clipEngineGpuFound": "gpu-screen-recorder yüklü.",
+        "clipEngineGpuMissing": "gpu-screen-recorder yüklü değil: dağıtımınızdan veya Flathub'dan yükleyin ya da yazılım kaydediciyi seçin.",
+        "clipEngineCost": "Yazılım kaydedici ile son oyun: bir işlemci çekirdeğinin %{cpu} kadarı.",
         "clipEstimate": "Klip başına boyut",
         "clipEstimateValue": "en fazla {size} MB",
         "clipDirHelp": "Her oyun için bir alt klasör, dosyalar \"tarih - başarım\" adıyla. Varsayılan: Videolar\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Yalnızca Windows. Linux’ta etkisi yoktur."
             },
-            "souvenirHdrDesc": "Yalnızca Windows: Windows HDR etkinken renkleri düzeltir. Linux’ta standart ekran görüntüsü kaydedilir."
+            "souvenirHdrDesc": "Yalnızca Windows: Windows HDR etkinken renkleri düzeltir. Linux’ta standart ekran görüntüsü kaydedilir.",
+            "souvenirDirHelp": "Her oyun için bir alt klasör, dosyalar \"tarih - başarım\" adıyla. Varsayılan: ~/Pictures/Achievement Watcher Next. Wayland'de masaüstü, oturum başına bir kez ekranın paylaşılmasını sorar.",
+            "clipDesc": "Bir oyun çalışırken son saniyeleri bellekte tutulur ve her kilit açılışının çevresinde kaydedilir, bildirim ortada olur. Wayland'de masaüstü bir kez ekranın paylaşılmasını sorar.",
+            "clipAudioDesc": "Linux'ta tüm bilgisayarın sesi kaydedilir.",
+            "clipDirHelp": "Her oyun için bir alt klasör, dosyalar \"tarih - başarım\" adıyla. Varsayılan: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

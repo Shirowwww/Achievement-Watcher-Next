@@ -1,7 +1,9 @@
 'use strict';
 
-// Video souvenir: aw-next-clip.exe runs only while a tracked game does, and each unlock shown on
-// screen is saved as an MP4 with the unlock in the middle, in a folder of its own.
+// Video souvenir: a recorder runs only while a tracked game does, and each unlock shown on screen
+// is saved with the unlock in the middle, in a folder of its own. Windows records with
+// aw-next-clip.exe; Linux with gpu-screen-recorder, or with the app's software recorder when the
+// user picked it (the app holds the screen capture, this process only asks).
 
 const path = require('path');
 const fs = require('fs');
@@ -11,6 +13,7 @@ const { spawn } = require('child_process');
 const debug = require('../util/log.js');
 const { normalize, recorderArgs } = require('./clipProfile.js');
 const { souvenirPath } = require('./souvenir.js');
+const gsrClip = require('./gsrClip.js');
 
 const HELPER_NAME = 'aw-next-clip.exe';
 const MAX_RESTARTS = 3;
@@ -52,19 +55,35 @@ function handleLine(line, recorder) {
   } else debug.log(`[clip] ${line.startsWith('log ') ? line.slice(4) : line}`);
 }
 
+function sendToApp(message, send) {
+  const deliver = send || (typeof process.send === 'function' && process.connected ? (msg) => process.send(msg) : null);
+  if (!deliver) return false;
+  try {
+    deliver({ clipRecorder: message });
+    return true;
+  } catch (err) {
+    debug.warn(`[clip] app recorder unreachable: ${err.message || err}`);
+    return false;
+  }
+}
+
 function launch(recorder) {
-  const { run = spawn, helper = resolveHelper() } = recorder.deps;
-  if (!helper) {
+  const { run = spawn } = recorder.deps;
+  if (!recorder.command) {
     debug.warn('[clip] recorder helper was not found');
     return;
   }
-  const child = run(helper, recorder.args, { windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'] });
+  const child = run(recorder.command, recorder.args, { windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'] });
   recorder.child = child;
   try {
     // The recorder must never compete with the game for the CPU; its heavy work is on the GPU.
     os.setPriority(child.pid, os.constants.priority.PRIORITY_BELOW_NORMAL);
   } catch {}
-  readline.createInterface({ input: child.stdout }).on('line', (line) => handleLine(line, recorder));
+  if (recorder.engine === 'gpu-screen-recorder') {
+    recorder.replay = gsrClip.createRecorder({ child, afterMs: recorder.afterMs, log: debug, kill: recorder.deps.kill });
+  } else {
+    readline.createInterface({ input: child.stdout }).on('line', (line) => handleLine(line, recorder));
+  }
   child.on('error', (err) => debug.warn(`[clip] recorder failed to start: ${err.message || err}`));
   child.on('exit', (code) => {
     if (recorder.child !== child) return;
@@ -84,6 +103,24 @@ function launch(recorder) {
   debug.log(`[clip] recorder started for pid ${recorder.pid}: ${recorder.args.join(' ')}`);
 }
 
+// gpu-screen-recorder writes its file when it gets SIGINT; an unlock still waiting for its clip is
+// saved first.
+function quitGsr(recorder, child) {
+  const kill = recorder.deps.kill || ((pid, signal) => process.kill(pid, signal));
+  const started = Date.now();
+  const finish = () => {
+    if (recorder.replay && recorder.replay.busy() && Date.now() - started < QUIT_TIMEOUT_MS) {
+      const wait = setTimeout(finish, 250);
+      if (typeof wait.unref === 'function') wait.unref();
+      return;
+    }
+    try {
+      kill(child.pid, 'SIGINT');
+    } catch {}
+  };
+  finish();
+}
+
 // Pending clips are finished before the recorder leaves, so a game closed right after an unlock
 // still gets its clip.
 function stop() {
@@ -92,8 +129,16 @@ function stop() {
   if (!recorder) return;
   recorder.stopping = true;
   clearTimeout(recorder.timer);
+  if (recorder.engine === 'software') {
+    sendToApp({ action: 'stop' }, recorder.deps.send);
+    return;
+  }
   const child = recorder.child;
   if (!child) return;
+  if (recorder.engine === 'gpu-screen-recorder') {
+    quitGsr(recorder, child);
+    return;
+  }
   try {
     child.stdin.end('quit\n');
   } catch {}
@@ -106,34 +151,67 @@ function stop() {
   child.once('exit', () => clearTimeout(killer));
 }
 
+function windowsRecorder(souvenir, pid, deps) {
+  const args = recorderArgs(souvenir, pid);
+  return { engine: 'aw-next-clip', key: args.join(' '), command: deps.helper === undefined ? resolveHelper() : deps.helper, args, ext: '.mp4' };
+}
+
+// Null when the chosen engine cannot run here; the reason is logged once per settings change.
+function linuxRecorder(souvenir, deps) {
+  const clip = normalize(souvenir);
+  const afterMs = Math.round((clip.clipSeconds * 1000) / 2);
+  if (clip.clipEngine === 'software') {
+    return { engine: 'software', key: `software ${JSON.stringify(clip)}`, clip, args: [], ext: '.webm', afterMs };
+  }
+  const found = (deps.locate || gsrClip.locate)();
+  if (!found) return { engine: 'none', key: 'gpu-screen-recorder missing' };
+  const env = deps.env || process.env;
+  const wayland = env.XDG_SESSION_TYPE === 'wayland';
+  const tokenFile = path.join(deps.profileDir || os.homedir(), '.aw-next-gsr-portal-token');
+  const args = [...found.prefix, ...gsrClip.replayArgs(clip, { outDir: deps.replayDir || gsrClip.replayDir(), tokenFile, wayland })];
+  return { engine: 'gpu-screen-recorder', key: [found.command, ...args].join(' '), command: found.command, args, ext: '.mp4', afterMs };
+}
+
 // Brings the recorder in line with the settings and the game being played: started, restarted
 // with new settings, or stopped.
 function sync(souvenir, game, deps = {}) {
   const platform = deps.platform || process.platform;
-  const enabled = platform === 'win32' && normalize(souvenir || {}).clip && game != null;
+  const supported = platform === 'win32' || platform === 'linux';
+  const enabled = supported && normalize(souvenir || {}).clip && game != null;
   if (!enabled) {
     stop();
     return null;
   }
   const pid = firstPid(game);
-  const args = recorderArgs(souvenir, pid);
-  const key = args.join(' ');
-  if (state.unsupportedKey === key) return null;
-  if (state.recorder && state.recorder.key === key) return state.recorder;
+  const plan = platform === 'win32' ? windowsRecorder(souvenir, pid, deps) : linuxRecorder(souvenir || {}, deps);
+  if (state.unsupportedKey === plan.key) return null;
+  if (state.recorder && state.recorder.key === plan.key) return state.recorder;
   stop();
   state.unsupportedKey = null;
-  state.recorder = { key, args, pid, deps, restarts: 0, child: null, stopping: false, timer: null };
-  launch(state.recorder);
+  if (plan.engine === 'none') {
+    debug.warn('[clip] gpu-screen-recorder is not installed; pick the software recorder in Settings to record clips');
+    state.unsupportedKey = plan.key;
+    return null;
+  }
+  state.recorder = { ...plan, pid, deps, restarts: 0, child: null, stopping: false, timer: null };
+  if (plan.engine === 'software') {
+    sendToApp({ action: 'start', settings: plan.clip }, deps.send);
+    debug.log(`[clip] software recorder asked of the app for pid ${pid}`);
+  } else {
+    launch(state.recorder);
+  }
   return state.recorder;
 }
 
 // Called when an unlock is shown: the clip is centred on this moment.
 function trigger({ game, achievement, dir } = {}) {
   const recorder = state.recorder;
-  if (!recorder || !recorder.child) return null;
+  if (!recorder || (recorder.engine !== 'software' && !recorder.child)) return null;
   try {
     const folder = dir && String(dir).trim() ? String(dir).trim() : defaultDir();
-    const file = souvenirPath({ game, achievement, dir: folder }, '.mp4');
+    const file = souvenirPath({ game, achievement, dir: folder }, recorder.ext);
+    if (recorder.engine === 'software') return sendToApp({ action: 'trigger', file }, recorder.deps.send) ? file : null;
+    if (recorder.engine === 'gpu-screen-recorder') return recorder.replay.save(file);
     recorder.child.stdin.write(`clip 0 ${file}\n`);
     return file;
   } catch (err) {

@@ -9,6 +9,8 @@ const RESOLUTIONS = ['native', '2160', '1440', '1080', '720'];
 const FRAME_RATES = [30, 60];
 const QUALITIES = ['low', 'medium', 'high'];
 const AUDIO = ['game', 'all'];
+// Linux only: gpu-screen-recorder when it is installed, or the app's own software encoder.
+const ENGINES = ['gpu', 'software'];
 
 // Mirrors bitrate() in native/hdr-screenshot/src/bin/aw-next-clip/video.rs, which decides the real
 // rate from the size it actually records at.
@@ -31,6 +33,7 @@ function normalize(souvenir = {}) {
     clipFps: pick(souvenir.clipFps, FRAME_RATES, 30),
     clipQuality: pick(souvenir.clipQuality, QUALITIES, 'medium'),
     clipAudio: pick(souvenir.clipAudio, AUDIO, 'game'),
+    clipEngine: pick(souvenir.clipEngine, ENGINES, 'gpu'),
     // Empty means Videos\Achievement Watcher Next.
     clipDir: typeof souvenir.clipDir === 'string' ? souvenir.clipDir.trim() : '',
   };
@@ -68,4 +71,4 @@ function estimateMegabytes(souvenir = {}, screen = { width: 1920, height: 1080 }
   return ((bits + AUDIO_BITS) * clip.clipSeconds) / 8 / 1e6;
 }
 
-module.exports = { SECONDS, CODECS, RESOLUTIONS, FRAME_RATES, QUALITIES, AUDIO, normalize, recorderArgs, estimateMegabytes };
+module.exports = { SECONDS, CODECS, RESOLUTIONS, FRAME_RATES, QUALITIES, AUDIO, ENGINES, normalize, recorderArgs, estimateMegabytes };

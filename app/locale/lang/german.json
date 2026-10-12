@@ -862,6 +862,12 @@
         "clipAudioDesc": "Nur Spiel lässt Sprachchat und Musik weg. Lässt sich der Spielton nicht einzeln aufnehmen, wird der gesamte PC aufgenommen.",
         "clipAudioGame": "Nur Spiel",
         "clipAudioAll": "Gesamter PC",
+        "clipEngine": "Aufnahmeprogramm",
+        "clipEngineDesc": "gpu-screen-recorder nimmt mit der Grafikkarte auf und verursacht dabei fast keine Last. Das Software-Aufnahmeprogramm läuft auf jedem PC, kodiert aber mit dem Prozessor, speichert WebM-Dateien und nimmt den Ton des gesamten PCs auf.",
+        "clipEngineSoftware": "Software (nutzt den Prozessor)",
+        "clipEngineGpuFound": "gpu-screen-recorder ist installiert.",
+        "clipEngineGpuMissing": "gpu-screen-recorder ist nicht installiert: Installiere es über deine Distribution oder Flathub oder wähle das Software-Aufnahmeprogramm.",
+        "clipEngineCost": "Letztes Spiel mit dem Software-Aufnahmeprogramm: {cpu} % eines Prozessorkerns.",
         "clipEstimate": "Größe pro Clip",
         "clipEstimateValue": "bis zu {size} MB",
         "clipDirHelp": "Ein Unterordner pro Spiel, Dateien benannt „Datum - Erfolg“. Standard: Videos\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Nur Windows. Unter Linux ohne Wirkung."
             },
-            "souvenirHdrDesc": "Nur Windows: korrigiert die Farben, wenn Windows-HDR aktiv ist. Unter Linux wird der Standard-Screenshot gespeichert."
+            "souvenirHdrDesc": "Nur Windows: korrigiert die Farben, wenn Windows-HDR aktiv ist. Unter Linux wird der Standard-Screenshot gespeichert.",
+            "souvenirDirHelp": "Ein Unterordner pro Spiel, Dateien benannt „Datum - Erfolg“. Standard: ~/Pictures/Achievement Watcher Next. Unter Wayland fragt der Desktop einmal pro Sitzung nach der Bildschirmfreigabe.",
+            "clipDesc": "Während ein Spiel läuft, werden die letzten Sekunden im Speicher gehalten und rund um jede Freischaltung gespeichert, mit der Benachrichtigung in der Mitte. Unter Wayland fragt der Desktop einmal nach der Bildschirmfreigabe.",
+            "clipAudioDesc": "Unter Linux wird der Ton des gesamten PCs aufgenommen.",
+            "clipDirHelp": "Ein Unterordner pro Spiel, Dateien benannt „Datum - Erfolg“. Standard: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

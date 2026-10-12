@@ -862,6 +862,12 @@
         "clipAudioDesc": "Chỉ trò chơi sẽ loại bỏ trò chuyện thoại và nhạc. Khi không thể ghi riêng âm thanh của trò chơi, âm thanh của cả PC sẽ được ghi.",
         "clipAudioGame": "Chỉ trò chơi",
         "clipAudioAll": "Cả PC",
+        "clipEngine": "Trình quay",
+        "clipEngineDesc": "gpu-screen-recorder quay bằng card đồ họa với chi phí gần như bằng không. Trình quay phần mềm chạy được trên mọi máy tính nhưng mã hóa bằng bộ xử lý, lưu tệp WebM và ghi âm thanh của toàn bộ máy tính.",
+        "clipEngineSoftware": "Phần mềm (dùng bộ xử lý)",
+        "clipEngineGpuFound": "Đã cài đặt gpu-screen-recorder.",
+        "clipEngineGpuMissing": "Chưa cài đặt gpu-screen-recorder: hãy cài từ bản phân phối của bạn hoặc Flathub, hoặc chọn trình quay phần mềm.",
+        "clipEngineCost": "Trò chơi gần nhất với trình quay phần mềm: {cpu}% của một nhân bộ xử lý.",
         "clipEstimate": "Dung lượng mỗi đoạn",
         "clipEstimateValue": "tối đa {size} MB",
         "clipDirHelp": "Mỗi trò chơi một thư mục con, tệp được đặt tên \"ngày - thành tựu\". Mặc định: Videos\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Chỉ trên Windows. Không có tác dụng trên Linux."
             },
-            "souvenirHdrDesc": "Chỉ trên Windows: chỉnh lại màu khi HDR của Windows đang bật. Trên Linux, ảnh chụp thông thường sẽ được lưu."
+            "souvenirHdrDesc": "Chỉ trên Windows: chỉnh lại màu khi HDR của Windows đang bật. Trên Linux, ảnh chụp thông thường sẽ được lưu.",
+            "souvenirDirHelp": "Mỗi trò chơi một thư mục con, tệp được đặt tên \"ngày - thành tựu\". Mặc định: ~/Pictures/Achievement Watcher Next. Trên Wayland, môi trường máy tính hỏi một lần mỗi phiên để chia sẻ màn hình.",
+            "clipDesc": "Khi trò chơi đang chạy, vài giây cuối của nó được giữ trong bộ nhớ và lưu quanh mỗi lần mở khóa, với thông báo ở giữa. Trên Wayland, môi trường máy tính hỏi một lần để chia sẻ màn hình.",
+            "clipAudioDesc": "Trên Linux, âm thanh của toàn bộ máy tính được ghi lại.",
+            "clipDirHelp": "Mỗi trò chơi một thư mục con, tệp được đặt tên \"ngày - thành tựu\". Mặc định: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

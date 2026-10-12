@@ -862,6 +862,12 @@
         "clipAudioDesc": "Tylko gra pomija czat głosowy i muzykę. Gdy dźwięku gry nie można nagrać osobno, nagrywany jest dźwięk całego komputera.",
         "clipAudioGame": "Tylko gra",
         "clipAudioAll": "Cały komputer",
+        "clipEngine": "Rejestrator",
+        "clipEngineDesc": "gpu-screen-recorder nagrywa za pomocą karty graficznej, obciążając system niemal wcale. Rejestrator programowy działa na każdym komputerze, ale koduje procesorem, zapisuje pliki WebM i nagrywa dźwięk z całego komputera.",
+        "clipEngineSoftware": "Programowy (używa procesora)",
+        "clipEngineGpuFound": "gpu-screen-recorder jest zainstalowany.",
+        "clipEngineGpuMissing": "gpu-screen-recorder nie jest zainstalowany: zainstaluj go z dystrybucji lub z Flathub albo wybierz rejestrator programowy.",
+        "clipEngineCost": "Ostatnia gra z rejestratorem programowym: {cpu}% jednego rdzenia procesora.",
         "clipEstimate": "Rozmiar klipu",
         "clipEstimateValue": "do {size} MB",
         "clipDirHelp": "Jeden podfolder na grę, pliki nazwane „data - osiągnięcie”. Domyślnie: Wideo\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Tylko Windows. Nie ma wpływu w systemie Linux."
             },
-            "souvenirHdrDesc": "Tylko Windows: koryguje kolory, gdy funkcja HDR systemu Windows jest aktywna. W systemie Linux zapisywany jest standardowy zrzut ekranu."
+            "souvenirHdrDesc": "Tylko Windows: koryguje kolory, gdy funkcja HDR systemu Windows jest aktywna. W systemie Linux zapisywany jest standardowy zrzut ekranu.",
+            "souvenirDirHelp": "Jeden podfolder na grę, pliki nazwane „data - osiągnięcie”. Domyślnie: ~/Pictures/Achievement Watcher Next. W Wayland pulpit raz na sesję pyta o zgodę na udostępnienie ekranu.",
+            "clipDesc": "Gdy gra jest uruchomiona, jej ostatnie sekundy są trzymane w pamięci i zapisywane wokół każdego odblokowania, z powiadomieniem pośrodku. W Wayland pulpit raz pyta o zgodę na udostępnienie ekranu.",
+            "clipAudioDesc": "W systemie Linux nagrywany jest dźwięk z całego komputera.",
+            "clipDirHelp": "Jeden podfolder na grę, pliki nazwane „data - osiągnięcie”. Domyślnie: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

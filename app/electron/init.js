@@ -2632,10 +2632,26 @@ function handleMonitorMessage(msg) {
     else if (msg && msg.achievementUnlocked) forwardUnlockToLibrary(msg.achievementUnlocked);
     else if (msg && msg.achievementProgress) forwardProgressToLibrary(msg.achievementProgress);
     else if (msg && msg.desktopNotification) desktopNotifier().show(msg.desktopNotification);
+    else if (msg && (msg.souvenirCapture || msg.clipRecorder) && process.platform === 'linux') linuxSouvenirs().handle(msg);
   } catch (err) {
     debug.log(`[monitor] message handling failed: ${err.message || err}`);
   }
 }
+
+let cachedLinuxSouvenirs = null;
+function linuxSouvenirs() {
+  if (!cachedLinuxSouvenirs) {
+    cachedLinuxSouvenirs = require('./souvenirLinux.js').createSouvenirService({
+      electron: require('electron'),
+      userData: app.getPath('userData'),
+      log: (message) => debug.log(message),
+    });
+  }
+  return cachedLinuxSouvenirs;
+}
+
+// Settings > Souvenirs on Linux: is gpu-screen-recorder there, and what did software clips cost.
+ipcMain.handle('souvenir:linux-status', () => (process.platform === 'linux' ? linuxSouvenirs().status() : null));
 
 let cachedDesktopNotifier = null;
 function desktopNotifier() {

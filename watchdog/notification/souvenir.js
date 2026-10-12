@@ -117,8 +117,24 @@ function removeCaptureOutput(file) {
   }
 }
 
-async function captureImage(file, hdrMode, { platform = process.platform, capture = captureNative } = {}) {
-  if (platform !== 'win32') throw new Error('screenshots are taken on Windows only');
+// On Linux the app takes the shot: Electron reaches the X server or, on Wayland, the ScreenCast
+// portal, which this Node process cannot. It writes the PNG and logs the outcome itself.
+function askApp(file, send) {
+  const deliver = send || (typeof process.send === 'function' && process.connected ? (msg) => process.send(msg) : null);
+  if (!deliver) {
+    const error = new Error('the app is not running to take the screenshot');
+    error.code = 'capture-unavailable';
+    throw error;
+  }
+  deliver({ souvenirCapture: { file } });
+}
+
+async function captureImage(file, hdrMode, { platform = process.platform, capture = captureNative, send } = {}) {
+  if (platform === 'linux') {
+    askApp(file, send);
+    return 'sdr';
+  }
+  if (platform !== 'win32') throw new Error('screenshots are taken on Windows and Linux only');
   try {
     await capture(file, hdrMode);
   } catch (error) {
@@ -142,7 +158,7 @@ module.exports.capture = async function ({ game, achievement, dir, hdr = 'auto' 
   try {
     const file = souvenirPath({ game, achievement, dir });
     const mode = await captureImage(file, hdr);
-    debug.log(`[souvenir] saved ${file} (${mode})`);
+    debug.log(process.platform === 'linux' ? `[souvenir] asked the app for ${file}` : `[souvenir] saved ${file} (${mode})`);
     return file;
   } catch (err) {
     debug.error('[souvenir] capture failed: ' + (err.message || err));

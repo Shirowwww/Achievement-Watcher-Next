@@ -707,6 +707,9 @@ function translateUI(lang, locale, template) {
     row('#lbl-clipAudio', 'clipAudio', 'clipAudioDesc');
     $("#option_clipAudio option[value='game']").text(clear(opt.clipAudioGame));
     $("#option_clipAudio option[value='all']").text(clear(opt.clipAudioAll));
+    $('#lbl-clipEngine').text(clear(opt.clipEngine));
+    $('#clip-engine-desc').text(clear(opt.clipEngineDesc));
+    $("#option_clipEngine option[value='software']").text(clear(opt.clipEngineSoftware));
     row('#lbl-clipEstimate', 'clipEstimate');
     // Same label and button as the screenshot folder row; .text() keeps the <...> of the help.
     $('#lbl-clipDir').text(clear(opt.souvenirDir));

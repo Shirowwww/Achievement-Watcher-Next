@@ -862,6 +862,12 @@
         "clipAudioDesc": "Solo gioco esclude la chat vocale e la musica. Quando l’audio del gioco non può essere registrato da solo, viene registrato quello dell’intero PC.",
         "clipAudioGame": "Solo gioco",
         "clipAudioAll": "Intero PC",
+        "clipEngine": "Registratore",
+        "clipEngineDesc": "gpu-screen-recorder registra con la scheda grafica a costo quasi nullo. Il registratore software funziona su qualsiasi PC, ma codifica con il processore, salva file WebM e registra l'audio dell'intero PC.",
+        "clipEngineSoftware": "Software (usa il processore)",
+        "clipEngineGpuFound": "gpu-screen-recorder è installato.",
+        "clipEngineGpuMissing": "gpu-screen-recorder non è installato: installalo dalla tua distribuzione o da Flathub, oppure scegli il registratore software.",
+        "clipEngineCost": "Ultima partita con il registratore software: {cpu}% di un core del processore.",
         "clipEstimate": "Dimensione per clip",
         "clipEstimateValue": "fino a {size} MB",
         "clipDirHelp": "Una sottocartella per gioco, file chiamati \"data - obiettivo\". Predefinito: Video\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Solo Windows. Non ha effetto su Linux."
             },
-            "souvenirHdrDesc": "Solo Windows: corregge i colori quando l’HDR di Windows è attivo. Su Linux viene salvato lo screenshot standard."
+            "souvenirHdrDesc": "Solo Windows: corregge i colori quando l’HDR di Windows è attivo. Su Linux viene salvato lo screenshot standard.",
+            "souvenirDirHelp": "Una sottocartella per gioco, file chiamati \"data - obiettivo\". Predefinito: ~/Pictures/Achievement Watcher Next. Su Wayland il desktop chiede una volta per sessione di condividere lo schermo.",
+            "clipDesc": "Mentre un gioco è in esecuzione, i suoi ultimi secondi vengono tenuti in memoria e salvati attorno a ogni sblocco, con la notifica al centro. Su Wayland il desktop chiede una volta di condividere lo schermo.",
+            "clipAudioDesc": "Su Linux viene registrato l'audio dell'intero PC.",
+            "clipDirHelp": "Una sottocartella per gioco, file chiamati \"data - obiettivo\". Predefinito: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {

@@ -862,6 +862,12 @@
         "clipAudioDesc": "Hanya game tidak menyertakan obrolan suara dan musik. Bila suara game tidak bisa direkam terpisah, suara seluruh PC yang direkam.",
         "clipAudioGame": "Hanya game",
         "clipAudioAll": "Seluruh PC",
+        "clipEngine": "Perekam",
+        "clipEngineDesc": "gpu-screen-recorder merekam dengan kartu grafis hampir tanpa beban. Perekam perangkat lunak berjalan di PC mana pun, tetapi melakukan encoding dengan prosesor, menyimpan file WebM, dan merekam suara seluruh PC.",
+        "clipEngineSoftware": "Perangkat lunak (memakai prosesor)",
+        "clipEngineGpuFound": "gpu-screen-recorder sudah terpasang.",
+        "clipEngineGpuMissing": "gpu-screen-recorder belum terpasang: pasang dari distribusi Anda atau Flathub, atau pilih perekam perangkat lunak.",
+        "clipEngineCost": "Game terakhir dengan perekam perangkat lunak: {cpu}% dari satu inti prosesor.",
         "clipEstimate": "Ukuran per klip",
         "clipEstimateValue": "hingga {size} MB",
         "clipDirHelp": "Satu subfolder per game, file diberi nama \"tanggal - pencapaian\". Default: Videos\\Achievement Watcher Next.",
@@ -2542,7 +2548,11 @@
             "useBalloon": {
               "description": "Hanya Windows. Tidak berpengaruh di Linux."
             },
-            "souvenirHdrDesc": "Hanya Windows: mengoreksi warna saat HDR Windows aktif. Di Linux, tangkapan layar standar yang disimpan."
+            "souvenirHdrDesc": "Hanya Windows: mengoreksi warna saat HDR Windows aktif. Di Linux, tangkapan layar standar yang disimpan.",
+            "souvenirDirHelp": "Satu subfolder per game, file diberi nama \"tanggal - pencapaian\". Default: ~/Pictures/Achievement Watcher Next. Di Wayland, desktop meminta izin berbagi layar satu kali per sesi.",
+            "clipDesc": "Selama game berjalan, beberapa detik terakhirnya disimpan di memori dan disimpan di sekitar setiap pembukaan, dengan notifikasi di tengah. Di Wayland, desktop meminta izin berbagi layar satu kali.",
+            "clipAudioDesc": "Di Linux, suara seluruh PC direkam.",
+            "clipDirHelp": "Satu subfolder per game, file diberi nama \"tanggal - pencapaian\". Default: ~/Videos/Achievement Watcher Next."
           }
         },
         "help": {
