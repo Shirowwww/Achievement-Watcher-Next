@@ -7425,6 +7425,22 @@ body {
   border-radius: 11px;
 }
 
+/* The unlock date and the global rate describe an achievement, they are not its content: a step
+   smaller and muted, so the eye lands on the name first. Before, they were as large and as bright as
+   the description. Rare tiers keep their own colour on the rate. */
+.achievement .stats {
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+/* Narrow page: the icon spans the name and the metadata line. Alone in the first row it made that row
+   at least as tall as itself and opened a gap between the description and the date. */
+@media (max-width: 1050px) {
+  .achievement .box {
+    grid-row: 1 / span 2;
+  }
+}
+
 /* Settings shell and all tabs */
 #settings .overlay,
 #game-config .overlay {
@@ -7871,8 +7887,11 @@ body {
   background: var(--accent-soft);
 }
 
+/* The real bold face, not Open Sans 400 thickened by the browser: synthetic bold smears small text
+   and reads as a blurry, low-DPI label next to the crisp row titles. */
 #settings .arrow-list li .right select {
   color: var(--text);
+  font-family: 'Open-Sans-Bold', 'Open-Sans', sans-serif;
   font-size: 13px;
   font-weight: 700;
 }
@@ -7903,6 +7922,7 @@ body {
   background: transparent;
   color: var(--text-muted);
   font: inherit;
+  font-family: 'Open-Sans-Bold', 'Open-Sans', sans-serif;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -7965,6 +7985,50 @@ body {
   #settings .setting-switch-thumb {
     transition: none;
   }
+}
+
+/* The overlay shortcut sits in the same box as the selects, so it reads like one: the keys centred in
+   the same bold face, the edit and preview buttons as compact icons on the right. Centring the whole
+   group left the keys flush against the box edge once the label filled it. */
+#settings .arrow-list .hotkey-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+}
+
+#settings #hotkey {
+  padding-left: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: center;
+  color: var(--text);
+  font-family: 'Open-Sans-Bold', 'Open-Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+#settings #btn-hotkey-edit,
+#settings #btn-hotkey-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin: 0;
+  border-radius: 7px;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#settings #btn-hotkey-edit:hover,
+#settings #btn-hotkey-preview:hover {
+  color: var(--text);
+  background: var(--accent-soft);
 }
 
 #settings .arrow-list li .right.action-right {
@@ -9238,6 +9302,7 @@ body {
   width: 166px;
   height: 28px;
   color: var(--text);
+  font-family: 'Open-Sans-Bold', 'Open-Sans', sans-serif;
   font-size: 12.5px;
   font-weight: 700;
 }

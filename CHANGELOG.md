@@ -37,9 +37,13 @@ renamed in 3.9.0 and the history is kept under one file.
 - **On/off settings are switches.** Every Settings row that is simply enabled or disabled now shows a
   switch instead of arrows to step through, so what is off stands out at a glance. Rows that choose
   between two named options keep their arrows.
-- **A calmer game page and Settings footer.** In a narrow window an achievement's date and rate share
-  one line, so more achievements fit on screen. **Reset achievements** is an outlined red button
+- **A calmer game page and Settings footer.** An achievement's date and rate are smaller and muted
+  under its name, and in a narrow window they share one line beside the icon, so about seven
+  achievements fit on screen instead of five. **Reset achievements** is an outlined red button
   instead of the page's main one, and **Save** only stands out once something is left to save.
+- **Sharper Settings controls.** Values such as "Enabled" use the font's real bold face instead of a
+  thickened regular one that looked blurry, and the overlay shortcut sits centred in its box like
+  the other controls, its edit and preview buttons tucked to the right.
 - **French reads in one voice.** The few strings that said "vous" now say "tu" like the rest of
   the app.
 - **Text cut with "…" scrolls under the pointer.** A long game title on a tile or a long value in
