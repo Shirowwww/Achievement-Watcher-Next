@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('fs');
+const { execFile } = require('child_process');
 const { fileURLToPath } = require('url');
 
 /*
@@ -8,6 +9,10 @@ const { fileURLToPath } = require('url');
   have shown and the main process hands it to Electron's Notification, which goes through the
   freedesktop notification service on Linux. A click opens the game like a toast activation does.
 */
+
+const SERVICE = 'org.freedesktop.Notifications';
+// A desktop whose notification daemon starts after AW is asked again, at most this often.
+const SERVICE_RECHECK_MS = 60 * 1000;
 
 // Electron wants a local picture; anything else (a URL the Watchdog could not cache) shows no icon.
 function localIcon(icon) {
@@ -24,15 +29,63 @@ function localIcon(icon) {
   return fs.existsSync(file) ? file : undefined;
 }
 
-function createDesktopNotifier({ Notification, onClick = () => {}, log = () => {} }) {
+function busCall(method, args, run) {
+  const command = ['call', '--session', '--dest', 'org.freedesktop.DBus', '--object-path', '/org/freedesktop/DBus', '--method', `org.freedesktop.DBus.${method}`, ...args];
+  return new Promise((resolve, reject) => {
+    run('gdbus', command, { timeout: 5000 }, (err, stdout) => (err ? reject(err) : resolve(String(stdout))));
+  });
+}
+
+/*
+  libnotify waits out its whole D-Bus timeout (about 25 s) when no notification service answers,
+  and it does so on the main process, which then stops handling the Watchdog. So the session bus is
+  asked first, from a child process: a running daemon, or one that D-Bus actually starts on demand
+  (a service file whose daemon cannot start is the common broken case). Without gdbus to ask, the
+  answer is "yes", as it was before this check.
+*/
+async function busHasNotificationService(run = execFile) {
+  try {
+    if ((await busCall('NameHasOwner', [SERVICE], run)).includes('true')) return true;
+    await busCall('StartServiceByName', [SERVICE, '0'], run);
+    return true;
+  } catch (err) {
+    return err.code === 'ENOENT';
+  }
+}
+
+function createDesktopNotifier({ Notification, onClick = () => {}, log = () => {}, platform = process.platform, hasService = busHasNotificationService, now = Date.now }) {
   // Kept referenced until closed: a garbage-collected Notification loses its click handler.
   const live = new Set();
+  let known = platform !== 'linux';
+  let checkedAt = null;
+  let pending = null;
+
+  function serviceUp() {
+    if (known) return Promise.resolve(true);
+    if (pending) return pending;
+    if (checkedAt !== null && now() - checkedAt < SERVICE_RECHECK_MS) return Promise.resolve(false);
+    pending = hasService().then((up) => {
+      known = up;
+      checkedAt = now();
+      pending = null;
+      if (!up) log(`[notify] no ${SERVICE} service on the session bus - system notifications are skipped, the overlay still shows`);
+      return up;
+    });
+    return pending;
+  }
+
+  async function usable() {
+    if (!Notification || !Notification.isSupported()) {
+      log('[notify] desktop notifications are not supported here');
+      return false;
+    }
+    return serviceUp();
+  }
+
   return {
-    show(payload) {
-      if (!payload || !Notification || !Notification.isSupported()) {
-        log('[notify] desktop notifications are not supported here');
-        return false;
-      }
+    // A toast handed over by the Watchdog: clicking it opens its game.
+    async show(payload) {
+      if (!payload || !(await usable())) return false;
       const notification = new Notification({
         title: String(payload.title || ''),
         body: String(payload.body || ''),
@@ -50,7 +103,13 @@ function createDesktopNotifier({ Notification, onClick = () => {}, log = () => {
       notification.show();
       return true;
     },
+    // The app's own one-off messages, with nothing to open.
+    async notify(options) {
+      if (!(await usable())) return false;
+      new Notification(options).show();
+      return true;
+    },
   };
 }
 
-module.exports = { createDesktopNotifier, localIcon };
+module.exports = { createDesktopNotifier, busHasNotificationService, localIcon };
