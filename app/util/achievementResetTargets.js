@@ -75,6 +75,8 @@ function resetActionFor(fileName, source = '') {
   if (/^trophies_\d+_\d+\.json$/.test(name)) return ACTION.DELETE;
   // ShadPS4 ships one file per language (TROP.XML, TROP_01.XML, …); all of them carry the state.
   if (/^trop(_\d+)?\.xml$/.test(name)) return ACTION.CLEAR_SHADPS4_XML;
+  // Since 0.19 the state is a per-user copy of TROPCONF.XML named after the trophy set.
+  if (/^npwr\d{5}_\d{2}\.xml$/.test(name)) return ACTION.CLEAR_SHADPS4_XML;
   if (name.endsWith('.gpd')) return ACTION.CLEAR_XENIA_GPD;
   return null;
 }

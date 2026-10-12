@@ -103,6 +103,14 @@ test('relocking a ShadPS4 trophy file keeps every trophy and its wording', () =>
   assert.equal((text.match(/<trophy /g) || []).length, 3);
 });
 
+test('the shadPS4 0.19 per-user copy is relocked in place, self-closing trophies included', () => {
+  assert.equal(targets.resetActionFor('NPWR12345_00.xml'), targets.ACTION.CLEAR_SHADPS4_XML);
+  const source = '<trophyconf><npcommid>NPWR12345_00</npcommid><trophy id="000" ttype="B" unlockstate="true" timestamp="1760000000" /></trophyconf>';
+  const { text, cleared } = shadps4.clearTrophyXml(source);
+  assert.equal(cleared, 1);
+  assert.equal(text, '<trophyconf><npcommid>NPWR12345_00</npcommid><trophy id="000" ttype="B" unlockstate="false" timestamp="" /></trophyconf>');
+});
+
 test('an already locked ShadPS4 file is left exactly as it was', () => {
   const source = '<trophyconf><trophy id="0" unlockstate="false"><name>x</name></trophy></trophyconf>';
   const { text, cleared } = shadps4.clearTrophyXml(source);

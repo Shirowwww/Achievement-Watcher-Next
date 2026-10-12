@@ -2886,7 +2886,7 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
   } else if (dataType === 'rpcs3') {
     return await rpcs3.getAchievements(appid.data.path, game.achievement.total);
   } else if (dataType === 'shadps4') {
-    return await shadps4.getAchievements(appid.data.path);
+    return await shadps4.getAchievements(appid.data.path, appid.data.statePath);
   } else if (dataType === 'kytyps5') {
     return kytyps5.getAchievements(appid.data);
   } else if (dataType === 'xlln') {
@@ -3304,9 +3304,11 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     // to whichever record happened to win the merge.
     const perSource = [];
     for (const record of Array.isArray(appid._sources) && appid._sources.length > 0 ? appid._sources : [appid]) {
-      const p = resolveAchievementDataPath(record?.data);
-      if (p && !perSource.some((s) => s.path.toLowerCase() === p.toLowerCase())) {
-        perSource.push({ source: record?.source || appid.source || '', path: p });
+      // shadPS4 0.19 keeps the unlocks apart from the trophy folder, in one file per user.
+      for (const p of [resolveAchievementDataPath(record?.data), resolveAchievementDataPath({ path: record?.data?.statePath })]) {
+        if (p && !perSource.some((s) => s.path.toLowerCase() === p.toLowerCase())) {
+          perSource.push({ source: record?.source || appid.source || '', path: p });
+        }
       }
     }
     if (perSource.length > 0) game.dataPaths = perSource;

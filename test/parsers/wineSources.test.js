@@ -65,6 +65,30 @@ test('Goldberg SocialClub, Nemirtingas and shadPS4 roots exist on the prefix hos
     );
   }));
 
+test('shadPS4 0.19 trophies and their per-user unlocks are found in the prefix', LINUX_ONLY, () =>
+  withWinePrefix(async ({ appData, write }) => {
+    const shadps4 = require(app('parser/shadps4.js'));
+    const shadps4Watch = require('../../watchdog/console/shadps4Watch.js');
+    const root = path.join(appData, 'shadPS4');
+    write(path.join(root, 'trophy', 'NPWR12345_00', 'Xml', 'TROP.XML'), '<trophyconf><trophy id="000" ttype="P"><name>P</name></trophy></trophyconf>');
+    const state = write(path.join(root, 'home', '1000', 'trophy', 'NPWR12345_00.xml'), '<trophyconf><trophy id="000" ttype="P" /></trophyconf>');
+
+    assert.deepEqual(
+      shadps4Watch._internal.discover().map((target) => [target.appid, target.statePath]),
+      [['NPWR12345_00', state]]
+    );
+    const [entry] = await shadps4.scan(root);
+    assert.equal(entry.data.statePath, state);
+  }));
+
+test('Xenia without portable.txt is found under the Documents of the prefix', LINUX_ONLY, () =>
+  withWinePrefix(async ({ documents }) => {
+    const userDir = require(app('parser/userDir.js'));
+    const xenia = path.join(documents, 'Xenia');
+    fs.mkdirSync(path.join(xenia, 'content'), { recursive: true });
+    assert.ok((await userDir.findEntries()).some((entry) => entry.path === xenia));
+  }));
+
 test('XLLN reads the per-user folder of the prefix the game sits in', LINUX_ONLY, () =>
   withWinePrefix(({ localAppData, driveC }) => {
     const xlln = require(app('parser/xlln.js'));

@@ -8,7 +8,7 @@ const { lazyRequire } = require('../util/lazyRequire.js');
 const glob = lazyRequire('fast-glob');
 const fs = require('fs');
 const saveRoots = require(path.join(appPath, 'parser/saveRoots.js'));
-const { appHosts, documentsFor } = require(path.join(appPath, 'util/appHosts.js'));
+const { appHosts, documentsFolders, documentsFor } = require(path.join(appPath, 'util/appHosts.js'));
 const { hostPath, hostFor } = require(path.join(appPath, 'util/winHosts.js'));
 const { xdgAppDirs } = require(path.join(appPath, 'util/xdgAppDirs.js'));
 
@@ -403,6 +403,8 @@ module.exports.findEntries = async () => {
     hostPath(host, 'APPDATA', 'xenia'),
   ]);
   consoleDirs.push(...xdgAppDirs('rpcs3'), ...xdgAppDirs('shadps4'), ...xdgAppDirs('xenia'));
+  // Xenia without portable.txt keeps its profiles and content under Documents\Xenia.
+  consoleDirs.push(...documentsFolders().map((docs) => path.join(docs, 'Xenia')));
   for (const dir of [...consoleDirs, process.env.RPCS3_CONFIG_DIR]) {
     try {
       if (dir && fs.statSync(dir).isDirectory()) addDetected(dir, 'Known emulator data location');
@@ -548,26 +550,36 @@ module.exports.diagnose = async (dirpath) => {
   if (config) return { accepted: true, code: 'emulator-config', evidence: { ...evidence, config } };
 
   // A console emulator's DATA folder, with no binary in it (RPCS3's relocated vfs.yml disk, shadPS4's
-  // %APPDATA% trophies). The emulator readers own the layout rules; this only asks them.
+  // %APPDATA% trophies). The emulator readers own the layout rules; this only asks them. shadPS4 is
+  // asked first: since 0.19 its home/<user>/trophy folders look like an RPCS3 dev_hdd0.
+  try {
+    // A CUSA folder inside, not merely a folder named game_data: a game_data sibling belonging to
+    // another emulator install must not make an unrelated game folder look watchable.
+    // Since 0.19 the trophies are in trophy/<NPWR…> instead.
+    const shadps4 = require('./shadps4.js')._internal;
+    const hasDir = (dir, pattern) => {
+      try {
+        return fs.readdirSync(dir, { withFileTypes: true }).some((entry) => entry.isDirectory() && pattern.test(entry.name));
+      } catch {
+        return false;
+      }
+    };
+    const shadRoots = [
+      ...shadps4.gameDataRootCandidates(dirpath).filter((candidate) => hasDir(candidate, /^CUSA\d{5}$/i)),
+      ...shadps4
+        .userRootCandidates(dirpath)
+        .map((root) => path.join(root, 'trophy'))
+        .filter((candidate) => hasDir(candidate, /^NPWR\d{5}_\d{2}$/i)),
+    ];
+    if (shadRoots.length > 0) return { accepted: true, code: 'emulator-data', evidence: { ...evidence, emulator: 'shadps4', roots: shadRoots } };
+  } catch {
+    /* layout probing must never turn into a rejection reason of its own */
+  }
   try {
     const rpcs3Roots = require('./rpcs3.js').trophyRoots(dirpath);
     if (rpcs3Roots.length > 0) {
       return { accepted: true, code: 'emulator-data', evidence: { ...evidence, emulator: 'rpcs3', roots: rpcs3Roots.map((r) => r.path) } };
     }
-  } catch {
-    /* layout probing must never turn into a rejection reason of its own */
-  }
-  try {
-    // A CUSA folder inside, not merely a folder named game_data: a game_data sibling belonging to
-    // another emulator install must not make an unrelated game folder look watchable.
-    const shadRoots = require('./shadps4.js')._internal.gameDataRootCandidates(dirpath).filter((candidate) => {
-      try {
-        return fs.readdirSync(candidate, { withFileTypes: true }).some((entry) => entry.isDirectory() && /^CUSA\d{5}$/i.test(entry.name));
-      } catch {
-        return false;
-      }
-    });
-    if (shadRoots.length > 0) return { accepted: true, code: 'emulator-data', evidence: { ...evidence, emulator: 'shadps4', roots: shadRoots } };
   } catch {
     /* same */
   }
