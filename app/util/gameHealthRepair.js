@@ -69,12 +69,14 @@ function planAchievementDataRepair({ steamSettings, gameDir, achievementCount = 
 
 /*
   Resolve where the emulator runtime dll(s) would go. Mirrors the directory choice the right-click
-  emulator fix makes, so a game repaired from here ends up with the same layout.
+  emulator fix makes, so a game repaired from here ends up with the same layout. A native Linux game
+  gets libsteam_api.so of its own architecture instead of a Windows dll.
 */
-function planRuntimeInstall({ gbeInstaller, gameDir, exePath = null, steamSettings = null, dllPaths = [], arch = 'x64' } = {}) {
+function planRuntimeInstall({ gbeInstaller, gameDir, exePath = null, steamSettings = null, dllPaths = [], arch = 'x64', native = false } = {}) {
   const dirs = gbeInstaller.runtimeDllDirs({ gameDir, dllPaths, exePath, steamSettings });
-  const file = gbeInstaller.ARCH[arch] ? gbeInstaller.ARCH[arch].file : gbeInstaller.ARCH.x64.file;
-  return { dirs, arch, file, backup: `${file}.bak` };
+  const dllFile = gbeInstaller.ARCH[arch] ? gbeInstaller.ARCH[arch].file : gbeInstaller.ARCH.x64.file;
+  const file = native ? gbeInstaller.NATIVE_LIB : dllFile;
+  return { dirs, arch, native, file, backup: `${file}.bak` };
 }
 
 /*
@@ -133,8 +135,9 @@ async function installEmulatorRuntime({ gbeInstaller, plan, cacheDir, steamSetti
   const summary = gbeInstaller.installDlls({
     dllDirs: plan.dirs,
     dlls,
-    writeIfMissing: plan.arch,
-    ensureArch: plan.arch,
+    writeIfMissing: plan.native ? null : plan.arch,
+    ensureArch: plan.native ? null : plan.arch,
+    nativeArch: plan.native ? plan.arch : null,
     log,
   });
 

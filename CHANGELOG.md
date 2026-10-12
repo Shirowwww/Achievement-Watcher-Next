@@ -69,6 +69,10 @@ renamed in 3.9.0 and the history is kept under one file.
   mid-write.
 - Live notifications for PS5 (kyty), Xbox 360 Recomp, XLLN and patched games no longer fail for a
   game installed in a folder whose name contains a percent sign.
+- ShadPS4 0.19 and later is read again: it moved the trophies to `trophy` and the unlocks to
+  `home\<user>\trophy`, so its games showed nothing and its unlocks raised no notification. A
+  game already seen with an older ShadPS4 is listed once. A reset relocks the new unlock file.
+- Xenia set up without `portable.txt` is found again: its saves are in `Documents\Xenia`.
 
 ### Performance
 

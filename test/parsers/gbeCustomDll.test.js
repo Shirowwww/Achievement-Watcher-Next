@@ -36,7 +36,7 @@ function seedRelease(cacheDir, tag = 'release-2026_01_01') {
   fs.mkdirSync(path.join(dir, 'tools'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'steam_api64.dll'), 'release-x64');
   fs.writeFileSync(path.join(dir, 'steam_api.dll'), 'release-x86');
-  fs.writeFileSync(path.join(dir, 'tools', 'generate_interfaces_x64.exe'), 'tool-x64');
+  fs.writeFileSync(path.join(dir, 'tools', gbe.INTERFACE_TOOLS.x64), 'tool-x64');
   fs.writeFileSync(path.join(cacheDir, 'latest.txt'), tag);
   fs.writeFileSync(path.join(cacheDir, '.last-check'), String(Date.now()));
   return tag;

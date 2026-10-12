@@ -14,7 +14,7 @@ const pe = require('../util/pe.js');
 const uplayR2 = require('./uplayR2.js');
 const ubisoftRegistry = require('../util/ubisoftRegistry.js');
 const { pathKey } = require('../util/winHosts.js');
-const { resolveUnpackedBinary } = require('../util/unpacked.js');
+const { resolveUnpackedBinary, sevenZipBin } = require('../util/unpacked.js');
 const { safeArchiveEntry } = require('../util/archiveEntry.js');
 const { replaceFileSync } = require('../util/replaceFile.js');
 
@@ -233,8 +233,7 @@ function quarantineError(err, folder) {
 
 async function extractPackage(archivePath, destDir, { log = noopLog } = {}) {
   const Seven = require('node-7z');
-  const sevenBin = resolveUnpackedBinary(require('7zip-bin').path7za);
-  if (!fs.existsSync(sevenBin)) throw new Error(`7za.exe not found at "${sevenBin}"`);
+  const sevenBin = sevenZipBin();
   const entries = await listArchive(archivePath, sevenBin);
   if (entries.length === 0 || entries.length > MAX_SCAN_FILES) throw new Error('Uplay R2 archive has an invalid file count');
   let totalBytes = 0;

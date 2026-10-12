@@ -58,6 +58,7 @@ const settings = require('./settings.js');
 const monitor = require('./monitor.js');
 const parseWithRetry = require('./util/parseWithRetry.js');
 const waitForFileStable = require('./util/waitForFileStable.js');
+const { catchUpFiles, unlockedSince } = require('./util/rootCatchUp.js');
 const { fileStamp, sameStamp } = require('./util/fileStamp.js');
 const uplayR2 = require('./util/uplayR2.js');
 const notificationDedup = require('./util/notificationDedup.js');
@@ -196,8 +197,9 @@ const CONSOLE_WATCHERS = [
 const OPTIONS_RELOAD_DEBOUNCE_MS = 1500;
 
 // How often a save root that did not exist at startup is re-checked, so a game that creates its
-// folder on first run is monitored without waiting for a restart.
-const NEW_ROOT_POLL_MS = 60 * 1000;
+// folder on first run is monitored without waiting for a restart. A pass over the missing roots of
+// 200 Wine prefixes costs about 20 ms.
+const NEW_ROOT_POLL_MS = 5 * 1000;
 
 const cfg_file = {
   option: path.join(userDataDir(), 'cfg', 'options.ini'),
@@ -993,6 +995,7 @@ var app = {
     }
     let pending = Array.isArray(missing) ? [...missing] : [];
     if (pending.length === 0) return;
+    const missingSince = Date.now();
 
     debug.log(`${pending.length} save root(s) do not exist yet - watching for them to appear`);
     self.newRootTimer = setInterval(() => {
@@ -1003,9 +1006,9 @@ var app = {
             stillMissing.push(folder);
             continue;
           }
-          self.watch(self.nextWatchIndex, folder.dir, folder.options);
-          self.nextWatchIndex += 1;
           debug.log(`New save root appeared, now monitored: "${folder.dir}"`);
+          self.watch(self.nextWatchIndex, folder.dir, folder.options, { catchUpSince: missingSince });
+          self.nextWatchIndex += 1;
         } catch (err) {
           debug.log(err);
           stillMissing.push(folder);
@@ -1020,30 +1023,34 @@ var app = {
     // Never a reason to keep the process alive on its own.
     if (typeof self.newRootTimer.unref === 'function') self.newRootTimer.unref();
   },
-  watch: function (i, dir, options) {
+  // `catchUpSince` (ms) marks a root that did not exist when watching started: everything in it was
+  // written since then, including the first unlock no event will report (see util/rootCatchUp.js).
+  watch: function (i, dir, options, { catchUpSince = 0 } = {}) {
     let self = this;
     debug.log(`Monitoring ach change in "${dir}" ...`);
 
-    // Snapshotted once, when this root starts being watched (at startup, or later through
-    // watchForNewRoots for a root that did not exist yet) - so a game's genuinely new appid folder
+    // Snapshotted once, when this root starts being watched - so a game's genuinely new appid folder
     // can be told apart from one that was already sitting here unwatched. Only the first case may
-    // notify every achievement at once; the second is what boot-seed below must stay silent for.
+    // notify every achievement at once; the second is what boot-seed below must stay silent for. A
+    // root that appeared after startup holds only new folders, so its snapshot stays empty.
     const preexistingChildren = new Set();
-    try {
-      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        if (entry.isDirectory()) preexistingChildren.add(path.join(dir, entry.name).toLowerCase());
+    if (!catchUpSince) {
+      try {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          if (entry.isDirectory()) preexistingChildren.add(path.join(dir, entry.name).toLowerCase());
+        }
+      } catch (err) {
+        debug.log(err);
       }
-    } catch (err) {
-      debug.log(err);
     }
 
-    self.watcher[i] = watch(dir, { recursive: options.recursive, filter: options.filter }, async function (evt, name) {
+    const onChange = async function (evt, name, catchUp = false) {
       try {
         if (evt !== 'update') return;
 
         const currentTime = Date.now();
         const fileLastModified = fs.statSync(name).mtimeMs || 0;
-        if (currentTime - fileLastModified > 1000) return;
+        if (catchUp ? fileLastModified < catchUpSince : currentTime - fileLastModified > 1000) return;
 
         let filePath = path.parse(name);
         // NTFS is case-insensitive, so the on-disk casing path.parse() reports is not the casing a
@@ -1064,8 +1071,10 @@ var app = {
 
         debug.log('achievement file change detected');
 
-        if (moment().diff(moment(self.tick)) <= self.options.notification_advanced.tick) throw 'Spamming protection is enabled > SKIPPING';
-        self.tick = moment().valueOf();
+        if (!catchUp) {
+          if (moment().diff(moment(self.tick)) <= self.options.notification_advanced.tick) throw 'Spamming protection is enabled > SKIPPING';
+          self.tick = moment().valueOf();
+        }
 
         // A file written straight into the root (a single-game root) has no appid folder to be new.
         const inRootItself = path.relative(dir, filePath.dir) === '';
@@ -1277,7 +1286,8 @@ var app = {
                     if (
                       seedPreview ||
                       options.disableCheckTimestamp ||
-                      (elapsedTime >= 0 && elapsedTime <= self.options.notification_advanced.timeTreshold)
+                      (elapsedTime >= 0 && elapsedTime <= self.options.notification_advanced.timeTreshold) ||
+                      (catchUp && unlockedSince(achievements[i].UnlockTime, catchUpSince))
                     ) {
                       debug.log('Unlocked:' + ach.displayName);
 
@@ -1514,8 +1524,18 @@ var app = {
       } catch (err) {
         debug.warn(err);
       }
-    });
+    };
+
+    self.watcher[i] = watch(dir, { recursive: options.recursive, filter: options.filter }, (evt, name) => onChange(evt, name));
     self.watcher[i].on('error', (err) => debug.error(`[watch:${dir}] ${err}`));
+
+    if (catchUpSince) {
+      const written = catchUpFiles(dir, options, catchUpSince);
+      if (written.length > 0) debug.log(`Reading ${written.length} save file(s) written before "${dir}" was watched`);
+      (async () => {
+        for (const file of written) await onChange('update', file, true);
+      })();
+    }
   },
   load: async function (appID) {
     let self = this;

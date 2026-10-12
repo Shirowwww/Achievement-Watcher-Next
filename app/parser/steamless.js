@@ -1,14 +1,15 @@
 'use strict';
 
 // Steam DRM (SteamStub) removal via atom0s/Steamless. Downloads/caches the CLI once, runs it on a
-// game exe, and swaps in the unpacked exe (original kept as .bak). Clean exe is a no-op. Windows-only.
+// game exe, and swaps in the unpacked exe (original kept as .bak). Clean exe is a no-op. Off Windows
+// the .NET CLI runs under the system's Mono.
 
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { execFile } = require('child_process');
 const { lazyRequire } = require('../util/lazyRequire.js');
-const { resolveUnpackedBinary } = require('../util/unpacked.js');
+const { sevenZipBin } = require('../util/unpacked.js');
 const { firstUnsafeEntry } = require('../util/archiveEntry.js');
 const request = lazyRequire('request-zero');
 
@@ -56,8 +57,7 @@ async function downloadAndCache(cacheDir, tag, assetUrl) {
     if (!dl || !dl.path) throw new Error('download produced no file');
 
     const Seven = require('node-7z');
-    const sevenBin = resolveUnpackedBinary(require('7zip-bin').path7za);
-    if (!fs.existsSync(sevenBin)) throw new Error(`7za.exe not found at "${sevenBin}"`);
+    const sevenBin = sevenZipBin();
     const destDir = path.join(cacheDir, tag);
 
     // Steamless.CLI.exe is run out of this folder afterwards, so no entry may land outside it.
@@ -96,7 +96,6 @@ async function downloadAndCache(cacheDir, tag, assetUrl) {
 // Ensure the Steamless CLI is available locally; returns { tag, cli, dir }. Network is hit at most
 // once a week; otherwise the cached copy is reused.
 async function ensureSteamless({ cacheDir, force = false, log = noopLog } = {}) {
-  if (process.platform !== 'win32') throw new Error('Steamless is Windows-only');
   if (!cacheDir) throw new Error('ensureSteamless: cacheDir is required');
   fs.mkdirSync(cacheDir, { recursive: true });
 
@@ -145,9 +144,21 @@ async function ensureSteamless({ cacheDir, force = false, log = noopLog } = {}) 
   return downloadAndCache(cacheDir, tag, asset.browser_download_url);
 }
 
-function runCli(cli, args, cwd, timeout = 120000) {
-  return new Promise((resolve) => {
-    execFile(cli, args, { cwd, timeout, windowsHide: true }, (error, stdout, stderr) => {
+// Mono finds Steamless.API and the unpackers in Plugins/ only through MONO_PATH.
+function cliCommand(steamless, args, platform = process.platform) {
+  if (platform === 'win32') return { file: steamless.cli, args, env: process.env };
+  return { file: 'mono', args: [steamless.cli, ...args], env: { ...process.env, MONO_PATH: path.join(steamless.dir, 'Plugins') } };
+}
+
+function runCli(steamless, args, timeout = 120000) {
+  const command = cliCommand(steamless, args);
+  return new Promise((resolve, reject) => {
+    execFile(command.file, command.args, { cwd: steamless.dir, env: command.env, timeout, windowsHide: true }, (error, stdout, stderr) => {
+      if (error && error.code === 'ENOENT' && command.file === 'mono') {
+        const missing = new Error('Steamless needs Mono on Linux: install the Mono package of your distribution (mono-complete on Debian and Ubuntu), then try again.');
+        missing.code = 'MONO_MISSING';
+        return reject(missing);
+      }
       resolve({ error, stdout: String(stdout || ''), stderr: String(stderr || '') });
     });
   });
@@ -171,7 +182,7 @@ async function stripDrm({ steamless, exePath, experimental = false, log = noopLo
   const args = ['--quiet', '--keepbind'];
   if (experimental) args.push('--realign');
   args.push(exePath);
-  const res = await runCli(steamless.cli, args, steamless.dir);
+  const res = await runCli(steamless, args);
 
   if (!fs.existsSync(unpacked) || fs.statSync(unpacked).size === 0) {
     log.log(`[steamless] no SteamStub in ${path.basename(exePath)} (left untouched)`);
@@ -190,4 +201,4 @@ async function stripDrm({ steamless, exePath, experimental = false, log = noopLo
   return { stripped: true, exe: exePath, backup, reason: 'unpacked', output: res.stdout };
 }
 
-module.exports = { ensureSteamless, stripDrm };
+module.exports = { ensureSteamless, stripDrm, cliCommand };

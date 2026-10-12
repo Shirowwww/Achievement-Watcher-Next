@@ -12,7 +12,7 @@ const gen = require(path.join(__dirname, '..', '..', 'app', 'parser', 'genEmuCon
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-genemu-2fa-'));
   let result = null;
   try {
-    // A Node shim, not a .cmd one: generate() runs only a generate_emu_config.exe that lives inside
+    // A Node shim, not a .cmd one: generate() runs only a generator named like the real one that lives inside
     // the tool folder, and a renamed cmd.exe reads its own file name and stops parsing /c.
     const shim = path.join(temp, 'shim.js');
     fs.writeFileSync(
@@ -34,7 +34,7 @@ const gen = require(path.join(__dirname, '..', '..', 'app', 'parser', 'genEmuCon
         "});",
       ].join('\n')
     );
-    const runner = path.join(temp, 'generate_emu_config.exe');
+    const runner = path.join(temp, gen._internal.TOOL_NAME);
     // Same file under the required name rather than a copy of the whole runtime; links are
     // per-volume, so the copy stays as the fallback.
     try {

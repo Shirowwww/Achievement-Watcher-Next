@@ -91,7 +91,8 @@ function parseAppidFromConfig(file) {
   return null;
 }
 
-const EMU_DLL_NAMES = ['steam_api.dll', 'steam_api64.dll'];
+// A native Linux game's emulator is libsteam_api.so, and steam_settings sits beside it the same way.
+const EMU_DLL_NAMES = process.platform === 'win32' ? ['steam_api.dll', 'steam_api64.dll'] : ['steam_api.dll', 'steam_api64.dll', 'libsteam_api.so'];
 
 function sameDir(a, b) {
   if (!a || !b) return false;

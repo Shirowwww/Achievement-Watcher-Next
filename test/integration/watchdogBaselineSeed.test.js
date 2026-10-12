@@ -13,7 +13,7 @@ const path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname, '..', '..', 'watchdog', 'watchdog.js'), 'utf8');
 
 test('each watched root snapshots its existing subfolders before the watcher starts', () => {
-  const watchFn = source.slice(source.indexOf('watch: function (i, dir, options) {'));
+  const watchFn = source.slice(source.indexOf('watch: function (i, dir, options'));
   const body = watchFn.slice(0, watchFn.indexOf('self.watcher[i] = watch('));
   assert.ok(body.includes('preexistingChildren'), 'a snapshot must be taken before the watcher can fire any event');
   assert.ok(body.includes('fs.readdirSync(dir'), 'the snapshot must read the root as it is right now, not a cached listing');

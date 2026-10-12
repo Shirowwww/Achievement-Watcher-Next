@@ -45,10 +45,20 @@ const ttype = (t) => {
   anything else (`log`, `savedata`, `shader`, a game folder that merely sits beside an emulator)
   means it is not, and walking up from there would answer with somebody else's trophies.
 */
-const SHADPS4_TREE_SEGMENT = /^(game_data|user|TrophyFiles|CUSA\d{5}|trophy\d+|Xml|Icons)$/i;
+const SHADPS4_TREE_SEGMENT = /^(game_data|user|TrophyFiles|CUSA\d{5}|trophy\d*|Xml|Icons|home|NPWR\d{5}_\d{2})$/i;
+
+const uniquePaths = (paths) => {
+  const seen = new Set();
+  return paths.filter((candidate) => {
+    const key = candidate.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
 
 /*
-  Folders that could hold a shadPS4 game_data tree, for one watched folder, most specific first.
+  Folders that could be shadPS4's user folder, for one watched folder, most specific first.
 
   shadPS4 has moved its user data around (beside the binary, then under `user/`, then under
   %APPDATA%\shadPS4), and people add whichever level they happened to be looking at - the emulator
@@ -57,7 +67,7 @@ const SHADPS4_TREE_SEGMENT = /^(game_data|user|TrophyFiles|CUSA\d{5}|trophy\d+|X
   folder and nothing appeared", while the segment allowlist above keeps the climb from turning any
   folder near an emulator into a trophy source. Path-only, so the ordering is testable without a disk.
 */
-function gameDataRootCandidates(dir) {
+function userRootCandidates(dir) {
   const base = path.resolve(String(dir || ''));
   const levels = [base];
   let current = base;
@@ -69,22 +79,14 @@ function gameDataRootCandidates(dir) {
     levels.push(parent);
     current = parent;
   }
+  return uniquePaths(levels.flatMap((level) => [level, path.join(level, 'user')]));
+}
 
-  const candidates = [];
-  const seen = new Set();
-  const push = (candidate) => {
-    const key = candidate.toLowerCase();
-    if (seen.has(key)) return;
-    seen.add(key);
-    candidates.push(candidate);
-  };
+function gameDataRootCandidates(dir) {
+  const base = path.resolve(String(dir || ''));
   // The folder itself, when the user added `.../user/game_data` directly.
-  if (path.basename(base).toLowerCase() === 'game_data') push(base);
-  for (const level of levels) {
-    push(path.join(level, 'game_data'));
-    push(path.join(level, 'user', 'game_data'));
-  }
-  return candidates;
+  const self = path.basename(base).toLowerCase() === 'game_data' ? [base] : [];
+  return uniquePaths([...self, ...userRootCandidates(dir).map((root) => path.join(root, 'game_data'))]);
 }
 
 async function gameDataRoots(dir) {
@@ -96,31 +98,13 @@ async function gameDataRoots(dir) {
 }
 
 /*
-  config.toml sits beside the binary in a portable install and under `user/` in an %APPDATA% one.
-  Climbed the same way as the trophy tree, and for the same reason: from inside the tree the config
-  is a couple of levels up, but a folder that is not part of the tree must not borrow the config of
-  whatever happens to be above it.
+  The config (config.json since 0.19, config.toml before) sits beside the binary in a portable
+  install and under `user/` in an %APPDATA% one. Climbed the same way as the trophy tree, and for
+  the same reason: from inside the tree the config is a couple of levels up, but a folder that is
+  not part of the tree must not borrow the config of whatever happens to be above it.
 */
 function configFileCandidates(dir) {
-  const base = path.resolve(String(dir || ''));
-  const files = [];
-  const seen = new Set();
-  const push = (file) => {
-    const key = file.toLowerCase();
-    if (seen.has(key)) return;
-    seen.add(key);
-    files.push(file);
-  };
-  let level = base;
-  for (let depth = 0; depth < 5; depth++) {
-    push(path.join(level, 'config.toml'));
-    push(path.join(level, 'user', 'config.toml'));
-    if (!SHADPS4_TREE_SEGMENT.test(path.basename(level))) break;
-    const parent = path.dirname(level);
-    if (!parent || parent === level) break;
-    level = parent;
-  }
-  return files;
+  return userRootCandidates(dir).flatMap((root) => [path.join(root, 'config.json'), path.join(root, 'config.toml')]);
 }
 
 function configArray(config, key) {
@@ -134,24 +118,40 @@ function configArray(config, key) {
   }
 }
 
-// Trophy data survives a game uninstall, so it is not proof that the PS4 game itself is still
-// present. Resolve shadPS4's enabled install directories and require a real game layout
-// (sce_sys/param.sfo + eboot.bin). The CUSA id is embedded as plain ASCII in PARAM.SFO.
-async function installedGames(dir) {
-  const games = new Map();
-  let config;
+// The install folders and the home folder override, from whichever config the first level has.
+async function readConfig(dir) {
   for (const file of configFileCandidates(dir)) {
+    let text;
     try {
-      config = await ffs.readFile(file, 'utf-8');
-      break;
+      text = await ffs.readFile(file, 'utf-8');
     } catch {
-      /* try the next level */
+      continue;
+    }
+    if (path.extname(file) === '.toml') {
+      return { installDirs: configArray(text, 'installDirs'), enabled: configArray(text, 'installDirsEnabled'), homeDir: '' };
+    }
+    try {
+      const general = JSON.parse(text).General || {};
+      const dirs = Array.isArray(general.install_dirs) ? general.install_dirs : [];
+      return {
+        installDirs: dirs.map((entry) => entry && entry.path),
+        enabled: dirs.map((entry) => entry && entry.enabled),
+        homeDir: typeof general.home_dir === 'string' ? general.home_dir : '',
+      };
+    } catch {
+      /* a half-written config.json: try the next level */
     }
   }
-  if (config === undefined) return games;
+  return { installDirs: [], enabled: [], homeDir: '' };
+}
 
-  const installDirs = configArray(config, 'installDirs');
-  const enabled = configArray(config, 'installDirsEnabled');
+// Trophy data survives a game uninstall, so it is not proof that the PS4 game itself is still
+// present. Resolve shadPS4's enabled install directories and require a real game layout
+// (sce_sys/param.sfo + eboot.bin). The CUSA id is embedded as plain ASCII in PARAM.SFO, the NP
+// trophy ids the 0.19 layout is keyed on in npbind.dat.
+async function installedGames(dir, config) {
+  const games = new Map();
+  const { installDirs, enabled } = config || (await readConfig(dir));
   for (let i = 0; i < installDirs.length; i++) {
     if (enabled[i] === false || typeof installDirs[i] !== 'string' || !installDirs[i].trim()) continue;
     const installDir = path.resolve(installDirs[i]);
@@ -175,9 +175,50 @@ async function installedGames(dir) {
         const match = raw.toString('latin1').match(/CUSA\d{5}/i);
         if (match) games.set(match[0].toUpperCase(), gameDir);
       } catch {}
+      try {
+        const npbind = await ffs.readFile(path.join(path.dirname(sfo), 'npbind.dat'));
+        for (const id of npbind.toString('latin1').match(/NPWR\d{5}_\d{2}/gi) || []) games.set(id.toUpperCase(), gameDir);
+      } catch {}
     }
   }
   return games;
+}
+
+/*
+  shadPS4 0.19 and later: the schema in <user>/trophy/<NPWR…>/Xml and the unlocks in a copy of
+  TROPCONF.XML at <home>/<user id>/trophy/<NPWR…>.xml, <home> being <user>/home unless the config
+  moves it. With several users, the most recently written copy wins.
+*/
+async function npTrophySets(dir, homeOverride) {
+  const sets = [];
+  for (const userRoot of userRootCandidates(dir)) {
+    const trophyRoot = path.join(userRoot, 'trophy');
+    let ids;
+    try {
+      ids = await glob('NPWR*', { cwd: trophyRoot, onlyDirectories: true });
+    } catch {
+      continue;
+    }
+    const home = homeOverride && (await ffs.exists(homeOverride)) ? homeOverride : path.join(userRoot, 'home');
+    for (const id of ids) {
+      const trophyDir = path.join(trophyRoot, id);
+      if ((await listXml(path.join(trophyDir, 'Xml'))).length === 0) continue;
+      const copies = await glob(`*/trophy/${id}.xml`, { cwd: home, onlyFiles: true, absolute: true, stats: true });
+      const newest = copies.sort((a, b) => b.stats.mtimeMs - a.stats.mtimeMs)[0];
+      sets.push({ id, trophyDir, statePath: newest ? path.normalize(newest.path) : undefined });
+    }
+  }
+  return sets;
+}
+
+// The NP id a pre-0.19 trophy set belongs to, so a game seen in both layouts is listed once.
+async function npCommIdOf(trophyDir) {
+  try {
+    const conf = await ffs.readFile(path.join(trophyDir, 'Xml', 'TROPCONF.XML'), 'utf-8');
+    return (conf.match(/<npcommid>\s*([^<\s]+)\s*<\/npcommid>/i) || [])[1];
+  } catch {
+    return undefined;
+  }
 }
 
 module.exports.scan = async (dir) => {
@@ -185,7 +226,19 @@ module.exports.scan = async (dir) => {
   const seen = new Set();
 
   try {
-    const installed = await installedGames(dir);
+    const config = await readConfig(dir);
+    const installed = await installedGames(dir, config);
+    for (const set of await npTrophySets(dir, config.homeDir)) {
+      if (seen.has(set.id)) continue;
+      seen.add(set.id);
+      const gameDir = installed.get(set.id.toUpperCase());
+      data.push({
+        appid: set.id,
+        source: 'ShadPS4 Emulator',
+        data: { type: 'shadps4', path: set.trophyDir, statePath: set.statePath, gameDir, trustedInstalled: !!gameDir },
+      });
+    }
+
     for (const gameData of await gameDataRoots(dir)) {
       let cusaDirs;
       try {
@@ -203,6 +256,8 @@ module.exports.scan = async (dir) => {
             const trophyDir = path.join(trophyFiles, set);
             const xmls = await glob('TROP*.{XML,xml}', { cwd: path.join(trophyDir, 'Xml'), onlyFiles: true });
             if (xmls.length === 0) continue;
+            // Left behind by a shadPS4 that has since moved the game to the 0.19 layout.
+            if (seen.has(await npCommIdOf(trophyDir))) break;
             const gameDir = installed.get(cusa.toUpperCase());
             data.push({
               appid: cusa,
@@ -220,7 +275,7 @@ module.exports.scan = async (dir) => {
   return data;
 };
 
-module.exports._internal = { configArray, configFileCandidates, gameDataRootCandidates, installedGames };
+module.exports._internal = { configArray, configFileCandidates, gameDataRootCandidates, userRootCandidates, installedGames, readConfig };
 
 async function listXml(xmlDir) {
   const files = await glob('TROP*.{XML,xml}', { cwd: xmlDir, onlyFiles: true });
@@ -256,7 +311,8 @@ module.exports.getGameData = async (dir, lang) => {
 
   const schema = await readXml(path.join(xmlDir, baseFile));
   const trophies = asArray(schema.trophy);
-  const cusa = path.basename(path.dirname(path.dirname(dir))); // .../game_data/<CUSA>/TrophyFiles/<set>
+  // .../game_data/<CUSA>/TrophyFiles/<set> before 0.19, .../trophy/<NPWR> since.
+  const gameId = path.basename(path.dirname(dir)).toLowerCase() === 'trophyfiles' ? path.basename(path.dirname(path.dirname(dir))) : path.basename(dir);
 
   const list = trophies.map((trophy) => {
     const attr = trophy['$'] || {};
@@ -279,8 +335,8 @@ module.exports.getGameData = async (dir, lang) => {
   const header = list.length > 0 ? list[0].icon : undefined;
 
   return {
-    name: schema['title-name'] || cusa,
-    appid: cusa,
+    name: schema['title-name'] || gameId,
+    appid: gameId,
     system: 'playstation',
     img: { header },
     achievement: {
@@ -311,17 +367,18 @@ function clearTrophyXml(text) {
 
 module.exports.clearTrophyXml = clearTrophyXml;
 
-module.exports.getAchievements = async (dir) => {
-  // Unlock state lives in the same TROP*.XML files (attributes unlockstate / unlocked / timestamp).
-  // Union across all language files so we don't miss a flag written to only one of them.
+module.exports.getAchievements = async (dir, statePath) => {
+  // Before 0.19 the unlock state lives in the TROP*.XML files themselves (attributes unlockstate /
+  // unlocked / timestamp): union across all language files so a flag written to only one counts.
+  // Since 0.19 it lives only in the per-user copy, which may not exist until the game first boots.
   const xmlDir = path.join(dir, 'Xml');
-  const files = await listXml(xmlDir);
+  const files = statePath ? [statePath] : (await listXml(xmlDir)).map((file) => path.join(xmlDir, file));
   const byId = new Map();
 
   for (const file of files) {
     let schema;
     try {
-      schema = await readXml(path.join(xmlDir, file));
+      schema = await readXml(file);
     } catch {
       continue;
     }

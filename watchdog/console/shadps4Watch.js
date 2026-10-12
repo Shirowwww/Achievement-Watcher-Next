@@ -54,11 +54,12 @@ function toUnixSeconds(raw) {
 function parseXml(xml) {
   const title = decodeXml((xml.match(/<title-name>([\s\S]*?)<\/title-name>/i) || [])[1] || '').trim();
   const trophies = [];
-  const re = /<trophy\b([^>]*)>([\s\S]*?)<\/trophy>/gi;
+  // shadPS4 0.19 saves its per-user copy with pugixml, which writes a trophy without children as <trophy ... />.
+  const re = /<trophy\b([^>]*?)\s*(?:\/>|>([\s\S]*?)<\/trophy>)/gi;
   let m;
   while ((m = re.exec(xml))) {
     const attrs = m[1];
-    const body = m[2];
+    const body = m[2] || '';
     const attr = (n) => {
       const a = attrs.match(new RegExp(`${n}\\s*=\\s*"([^"]*)"`, 'i'));
       return a ? a[1] : '';
@@ -97,12 +98,14 @@ function read(target, lang) {
 
   const base = parseXml(fs.readFileSync(path.join(target.xmlDir, baseFile), 'utf8'));
 
-  // Union unlock state across every language file (state can be written to just one of them).
+  // Before 0.19, union unlock state across every language file (state can be written to just one of
+  // them). Since 0.19 it lives only in the per-user copy of TROPCONF.XML.
+  const stateFiles = target.statePath ? [target.statePath] : files.map((file) => path.join(target.xmlDir, file));
   const stateById = new Map();
-  for (const file of files) {
+  for (const file of stateFiles) {
     let parsed;
     try {
-      parsed = parseXml(fs.readFileSync(path.join(target.xmlDir, file), 'utf8'));
+      parsed = parseXml(fs.readFileSync(file, 'utf8'));
     } catch {
       continue;
     }
@@ -122,13 +125,46 @@ function read(target, lang) {
   return { name: base.title || target.appid, list };
 }
 
-// Discover ShadPS4 trophy sets under %APPDATA%/shadPS4 (game_data and user/game_data) of every host:
+function subdirs(dir) {
+  try {
+    return fs.readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
+  } catch {
+    return [];
+  }
+}
+
+// One copy per shadPS4 user; the one written last is the one being played.
+function newestStateFile(home, id) {
+  let newest = null;
+  for (const user of subdirs(home)) {
+    const file = path.join(home, user, 'trophy', `${id}.xml`);
+    try {
+      const mtime = fs.statSync(file).mtimeMs;
+      if (!newest || mtime > newest.mtime) newest = { file, mtime };
+    } catch {}
+  }
+  return newest && newest.file;
+}
+
+// Discover ShadPS4 trophy sets under %APPDATA%/shadPS4 (trophy, game_data and their user/ forms) of every host:
 // the Windows build in a Wine prefix, or the Linux build's own data folder, native or Flatpak.
 function discover() {
   const targets = [];
   const seen = new Set();
   const dataDirs = [...new Set([...hostPaths('APPDATA', 'shadPS4'), ...xdgAppDirs('shadps4')])];
-  const roots = [...dataDirs.map((dir) => path.join(dir, 'game_data')), ...dataDirs.map((dir) => path.join(dir, 'user', 'game_data'))];
+  const userRoots = [...dataDirs, ...dataDirs.map((dir) => path.join(dir, 'user'))];
+  const roots = userRoots.map((dir) => path.join(dir, 'game_data'));
+
+  // 0.19 and later: schema in trophy/<NPWR…>, unlocks in home/<user id>/trophy/<NPWR…>.xml.
+  for (const userRoot of userRoots) {
+    for (const id of subdirs(path.join(userRoot, 'trophy')).filter((name) => /^NPWR/i.test(name))) {
+      const trophyDir = path.join(userRoot, 'trophy', id);
+      const statePath = newestStateFile(path.join(userRoot, 'home'), id);
+      if (seen.has(id) || !statePath || listXml(path.join(trophyDir, 'Xml')).length === 0) continue;
+      targets.push({ appid: id, xmlDir: path.join(trophyDir, 'Xml'), iconsDir: path.join(trophyDir, 'Icons'), statePath });
+      seen.add(id);
+    }
+  }
 
   for (const gameData of roots) {
     let cusas;
@@ -249,15 +285,17 @@ module.exports.start = async (ctx) => {
       const data = read(target, ctx.options.achievement.lang);
       if (data) cacheSave(target.appid, data.list.filter((t) => t.achieved).map((t) => t.id));
     }
+    const watched = target.statePath ? path.dirname(target.statePath) : target.xmlDir;
+    const filter = target.statePath ? (name) => path.basename(name) === path.basename(target.statePath) : /trop(_\d{2})?\.xml$/i;
     try {
-      const w = watch(target.xmlDir, { recursive: false, filter: /trop(_\d{2})?\.xml$/i }, (evt, name) => {
+      const w = watch(watched, { recursive: false, filter }, (evt, name) => {
         if (evt !== 'update') return;
         changes.run(target.appid, () => handleChange(target, name, ctx));
       });
-      watchers.push(guardWatcher(w, `'${target.xmlDir}'`, debug));
+      watchers.push(guardWatcher(w, `'${watched}'`, debug));
       debug.log(`[shadps4] watching trophies for ${target.appid}`);
     } catch (err) {
-      debug.warn(`[shadps4] failed to watch ${target.xmlDir}: ${err}`);
+      debug.warn(`[shadps4] failed to watch ${watched}: ${err}`);
     }
   }
 };

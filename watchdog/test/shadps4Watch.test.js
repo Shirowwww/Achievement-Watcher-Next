@@ -63,4 +63,16 @@ test('read reflects unlockstate + timestamp from the XML', () => {
   assert.strictEqual(platinum.achieved, false);
 });
 
+test('read takes the unlocks of a 0.19 set from its per-user copy only', () => {
+  const target = makeTarget();
+  const state = path.join(path.dirname(target.xmlDir), 'NPWR00001_00.xml');
+  fs.writeFileSync(state, '<trophyconf><trophy id="0" ttype="P" unlockstate="true" timestamp="1760000000" /><trophy id="1" ttype="G" /></trophyconf>');
+  const data = shadps4Watch._internal.read({ ...target, statePath: state }, 'english');
+  const byId = Object.fromEntries(data.list.map((t) => [t.id, t]));
+  assert.strictEqual(byId[0].achieved, true);
+  assert.strictEqual(byId[0].time, 1760000000);
+  assert.strictEqual(byId[0].displayName, 'Platinum', 'the wording still comes from TROP.XML');
+  assert.strictEqual(byId[1].achieved, false, 'the schema file no longer holds the state');
+});
+
 console.log(`\n${passed} passed`);

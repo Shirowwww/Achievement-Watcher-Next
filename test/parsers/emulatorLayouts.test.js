@@ -183,6 +183,115 @@ test('a relocated RPCS3 virtual disk is accepted as a watchable folder', async (
   assert.equal(diagnosis.evidence.emulator, 'rpcs3');
 });
 
+// shadPS4 0.19: schema in trophy/<NPWR>, unlocks in a per-user TROPCONF copy saved by pugixml.
+function writeNpTrophySet(userRoot, id, { unlocked = [], userId = '1000', home = path.join(userRoot, 'home') } = {}) {
+  const trophyDir = path.join(userRoot, 'trophy', id);
+  fs.mkdirSync(path.join(trophyDir, 'Xml'), { recursive: true });
+  fs.writeFileSync(
+    path.join(trophyDir, 'Xml', 'TROP.XML'),
+    `<trophyconf><title-name>Demo</title-name><trophy id="000" hidden="no" ttype="P"><name>Platinum</name><detail>All</detail></trophy><trophy id="001" hidden="no" ttype="B"><name>First</name><detail>One</detail></trophy></trophyconf>`
+  );
+  fs.writeFileSync(path.join(trophyDir, 'Xml', 'TROPCONF.XML'), `<trophyconf><npcommid>${id}</npcommid><trophy id="000" hidden="no" ttype="P" pid="-1" /><trophy id="001" hidden="no" ttype="B" pid="000" /></trophyconf>`);
+  const state = path.join(home, userId, 'trophy', `${id}.xml`);
+  fs.mkdirSync(path.dirname(state), { recursive: true });
+  const trophies = ['000', '001'].map((tid) =>
+    unlocked.includes(tid) ? `<trophy id="${tid}" ttype="B" unlockstate="true" timestamp="1760000000" />` : `<trophy id="${tid}" ttype="B" />`
+  );
+  fs.writeFileSync(state, `<?xml version="1.0"?>\n<trophyconf><npcommid>${id}</npcommid>${trophies.join('')}</trophyconf>`);
+  return { trophyDir, state };
+}
+
+test('shadPS4 0.19 trophies are read from trophy/ and the unlocks from the user home', async () => {
+  const userRoot = tmpdir('aw-shadps4-019-');
+  const { trophyDir, state } = writeNpTrophySet(userRoot, 'NPWR12345_00', { unlocked: ['001'] });
+
+  const found = await shadps4.scan(userRoot);
+  assert.equal(found.length, 1);
+  assert.equal(found[0].appid, 'NPWR12345_00');
+  assert.equal(found[0].data.path, trophyDir);
+  assert.equal(found[0].data.statePath, state);
+
+  const game = await shadps4.getGameData(found[0].data.path, 'english');
+  assert.equal(game.appid, 'NPWR12345_00');
+  assert.equal(game.achievement.total, 2);
+  const unlocks = await shadps4.getAchievements(found[0].data.path, found[0].data.statePath);
+  assert.deepEqual(
+    unlocks.map((t) => [t.id, t.achieved, t.earned_time]),
+    [
+      [0, false, 0],
+      [1, true, 1760000000],
+    ]
+  );
+});
+
+test('a game moved to the 0.19 layout is listed once, from the new layout', async () => {
+  const userRoot = tmpdir('aw-shadps4-both-');
+  writeNpTrophySet(userRoot, 'NPWR12345_00');
+  const old = path.join(userRoot, 'game_data', 'CUSA12345', 'TrophyFiles', 'trophy00', 'Xml');
+  fs.mkdirSync(old, { recursive: true });
+  fs.writeFileSync(path.join(old, 'TROP.XML'), '<trophyconf></trophyconf>');
+  fs.writeFileSync(path.join(old, 'TROPCONF.XML'), '<trophyconf><npcommid>NPWR12345_00</npcommid></trophyconf>');
+
+  assert.deepEqual(
+    (await shadps4.scan(userRoot)).map((entry) => entry.appid),
+    ['NPWR12345_00']
+  );
+});
+
+test('shadPS4 0.19 config.json gives the install folders and the moved home folder', async () => {
+  const userRoot = tmpdir('aw-shadps4-json-');
+  const games = tmpdir('aw-shadps4-games-');
+  const home = tmpdir('aw-shadps4-home-');
+  const sceSys = path.join(games, 'CUSA12345', 'sce_sys');
+  fs.mkdirSync(sceSys, { recursive: true });
+  fs.writeFileSync(path.join(games, 'CUSA12345', 'eboot.bin'), 'x');
+  fs.writeFileSync(path.join(sceSys, 'param.sfo'), 'PSF\0CUSA12345\0');
+  fs.writeFileSync(path.join(sceSys, 'npbind.dat'), 'NPBD\0NPWR12345_00\0');
+  fs.writeFileSync(
+    path.join(userRoot, 'config.json'),
+    JSON.stringify({ General: { install_dirs: [{ path: games, enabled: true }], home_dir: home } })
+  );
+  const { state } = writeNpTrophySet(userRoot, 'NPWR12345_00', { home });
+
+  const [entry] = await shadps4.scan(userRoot);
+  assert.equal(entry.data.trustedInstalled, true);
+  assert.equal(entry.data.gameDir, path.join(games, 'CUSA12345'));
+  assert.equal(entry.data.statePath, state);
+});
+
+test('the newest per-user copy wins when several shadPS4 users played the game', async () => {
+  const userRoot = tmpdir('aw-shadps4-users-');
+  writeNpTrophySet(userRoot, 'NPWR12345_00', { userId: '1000' });
+  const { state } = writeNpTrophySet(userRoot, 'NPWR12345_00', { userId: '1001', unlocked: ['000'] });
+  fs.utimesSync(path.join(userRoot, 'home', '1000', 'trophy', 'NPWR12345_00.xml'), new Date(2020, 0, 1), new Date(2020, 0, 1));
+
+  const [entry] = await shadps4.scan(userRoot);
+  assert.equal(entry.data.statePath, state);
+});
+
+test('a shadPS4 0.19 data folder is accepted from its root or its trophy folder', async () => {
+  const userRoot = tmpdir('aw-shadps4-accept-');
+  writeNpTrophySet(userRoot, 'NPWR12345_00');
+  for (const dir of [userRoot, path.join(userRoot, 'trophy')]) {
+    const diagnosis = await userDir.diagnose(dir);
+    assert.equal(diagnosis.accepted, true, dir);
+    assert.equal(diagnosis.evidence.emulator, 'shadps4');
+  }
+});
+
+test('Xenia without portable.txt is found under Documents\\Xenia', { skip: process.platform !== 'win32' && 'Windows-only' }, async (t) => {
+  const profile = tmpdir('aw-xenia-docs-');
+  const xeniaDir = path.join(profile, 'Documents', 'Xenia');
+  fs.mkdirSync(path.join(xeniaDir, 'content'), { recursive: true });
+  const saved = process.env.USERPROFILE;
+  process.env.USERPROFILE = profile;
+  t.after(() => {
+    process.env.USERPROFILE = saved;
+  });
+
+  assert.ok((await userDir.findEntries()).some((entry) => entry.path === xeniaDir));
+});
+
 test('a shadPS4 data folder with no binary in it is accepted too', async () => {
   const appdata = tmpdir('aw-shadps4-appdata-');
   fs.mkdirSync(path.join(appdata, 'user', 'game_data', 'CUSA00001'), { recursive: true });

@@ -48,6 +48,7 @@ const { xdgAppDirs } = require('../util/xdgAppDirs.js');
 const uplayAutoMap = require(path.join(appPath, 'uplayAutoMap.js'));
 const gbeInstaller = require(path.join(appPath, 'gbeInstaller.js'));
 const pe = require(path.join(appPath, '..', 'util', 'pe.js'));
+const { elfArch } = require(path.join(appPath, '..', 'util', 'elf.js'));
 const crackLoaderDetect = require(path.join(appPath, '..', 'util', 'crackLoaderDetect.js'));
 const unrealLayout = require(path.join(appPath, '..', 'util', 'unrealLayout.js'));
 const emulatorFixEligibility = require(path.join(appPath, '..', 'util', 'emulatorFixEligibility.js'));
@@ -1366,7 +1367,9 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
   // right-click action. Forcing here could leave the final worker stuck at 98% on a large .7z.
   const dlls = await gbeInstaller.ensureEmulatorDlls({ cacheDir, force: false, log: debug });
   const steamSettingsDirs = [];
-  const wantedArch = (detectedExe && detectedExe.full ? pe.exeArch(detectedExe.full) : 'x64') || 'x64';
+  // A native Linux game takes libsteam_api.so of its own architecture, never a Windows dll.
+  const nativeArch = detectedExe && detectedExe.full ? elfArch(detectedExe.full) : null;
+  const wantedArch = nativeArch ? null : (detectedExe && detectedExe.full ? pe.exeArch(detectedExe.full) : 'x64') || 'x64';
   const runtimeDllDirs = gbeInstaller.runtimeDllDirs({
     gameDir,
     dllPaths: detectedEmu.dll,
@@ -1386,8 +1389,8 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
   */
   const interfaceDlls = [];
   for (const dir of runtimeDllDirs) {
-    for (const key of Object.keys(gbeInstaller.ARCH)) {
-      const file = path.join(dir, gbeInstaller.ARCH[key].file);
+    for (const name of [...Object.values(gbeInstaller.ARCH).map((arch) => arch.file), gbeInstaller.NATIVE_LIB]) {
+      const file = path.join(dir, name);
       if (fs.existsSync(file)) interfaceDlls.push(file);
     }
   }
@@ -1416,7 +1419,7 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
     debug.log(`[${appid}] automatic emulator fix cancelled - game executable disappeared from ${gameDir}`);
     return { skipped: true, reason: 'game-executable-gone', tag: '', steamSettingsDirs: [], emulator: detectedEmu };
   }
-  gbeInstaller.installDlls({ dllDirs, dlls, writeIfMissing: wantedArch, log: debug });
+  gbeInstaller.installDlls({ dllDirs, dlls, writeIfMissing: wantedArch, nativeArch, log: debug });
   if (wantedArch && wantedFile && detectedEmu.dll.length > 0 && !hasWantedDll) {
     const exeDir = detectedExe && detectedExe.full ? path.dirname(detectedExe.full) : fallbackDllDir;
     if (requireGameExecutable && !gameExePresent()) {
@@ -2886,7 +2889,7 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
   } else if (dataType === 'rpcs3') {
     return await rpcs3.getAchievements(appid.data.path, game.achievement.total);
   } else if (dataType === 'shadps4') {
-    return await shadps4.getAchievements(appid.data.path);
+    return await shadps4.getAchievements(appid.data.path, appid.data.statePath);
   } else if (dataType === 'kytyps5') {
     return kytyps5.getAchievements(appid.data);
   } else if (dataType === 'xlln') {
@@ -3304,9 +3307,11 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     // to whichever record happened to win the merge.
     const perSource = [];
     for (const record of Array.isArray(appid._sources) && appid._sources.length > 0 ? appid._sources : [appid]) {
-      const p = resolveAchievementDataPath(record?.data);
-      if (p && !perSource.some((s) => s.path.toLowerCase() === p.toLowerCase())) {
-        perSource.push({ source: record?.source || appid.source || '', path: p });
+      // shadPS4 0.19 keeps the unlocks apart from the trophy folder, in one file per user.
+      for (const p of [resolveAchievementDataPath(record?.data), resolveAchievementDataPath({ path: record?.data?.statePath })]) {
+        if (p && !perSource.some((s) => s.path.toLowerCase() === p.toLowerCase())) {
+          perSource.push({ source: record?.source || appid.source || '', path: p });
+        }
       }
     }
     if (perSource.length > 0) game.dataPaths = perSource;
