@@ -50,6 +50,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **A console game's own background on its achievement page.** Artwork a console emulator source
+  keeps on disk, such as a PS5 game's key art, never reached the page background, which stayed
+  plain dark.
 - **Screenshot and clip souvenirs for every source.** Unlocks seen by the RPCS3, ShadPS4, Xenia,
   recompiled Xbox 360, GOG, Ubisoft, RetroAchievements and mod watchers showed their popup but took
   no souvenir.

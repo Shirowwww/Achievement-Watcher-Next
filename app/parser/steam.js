@@ -2236,6 +2236,16 @@ const fetchIcon = (module.exports.fetchIcon = async (url, appID) => {
   // Local file paths (e.g. Uplay schemas' absolute Windows paths): new URL('C:/...') parses without
   // throwing (protocol: 'c:'), so the network branch below would stall forever on a bogus HTTP HEAD.
   if (!url.startsWith('http') && fs.existsSync(url)) return url;
+  // A file URL (the console emulators hand their artwork over as one) is a local file too. Sent on
+  // to the network branch, it never resolved, and the game page painted no background at all.
+  if (/^file:/i.test(url)) {
+    try {
+      const local = require('url').fileURLToPath(url);
+      return fs.existsSync(local) ? local : null;
+    } catch {
+      return null;
+    }
+  }
   const inFlightKey = `${appID}:${url}`;
   if (iconFetchInFlight.has(inFlightKey)) return iconFetchInFlight.get(inFlightKey);
   const pending = (async () => {
