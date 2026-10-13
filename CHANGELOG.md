@@ -11,6 +11,16 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Added
 
+- **Emulator identity for GBE Fork.** **Settings → Steam / GBE Fork** (Advanced mode) has an
+  **Emulator identity** card: account name, Steam ID and save folder, so no other tool is needed to
+  set them. The fix and Repair write the name and the Steam ID into each game's `configs.user.ini`
+  while **Write account name and language** is on; a Steam ID with a typo is flagged as you type and
+  never written. A chosen save folder is used by every game fixed or repaired from then on, and AW
+  Next watches it for live notifications.
+- **A compact profile banner.** The arrow beside the stats button, or **Settings → Theme →
+  Profile**, folds your avatar, name and stats into one row: half the height in a narrow window and
+  one slim row in a wide one, leaving the room to the library when AW Next is your game launcher.
+
 - **A sound for rare unlocks and one for 100%.** **Settings → Notifications** (Advanced mode) has
   **Rare achievement sound** and **100% completion sound** under **Sound**, for the in-game popup and
   Windows notifications alike. Both start on "Same as unlocks"; "None" silences that kind of popup.
@@ -34,6 +44,10 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Improved
 
+- **No bar under games without achievements.** A game Steam lists with no achievements, such as
+  Final Fantasy XIV, no longer carries a "No achievements" bar: its artwork takes that space, so the
+  tile still matches its neighbours. **Bar of games without achievements** in **Settings → Theme →
+  Library tiles** brings it back.
 - **On/off settings are switches.** Every Settings row that is simply enabled or disabled now shows a
   switch instead of arrows to step through, so what is off stands out at a glance. Rows that choose
   between two named options keep their arrows.
@@ -67,6 +81,22 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **VOICES38 releases that bring their own GBE Fork are no longer "another crack".** Pragmata's
+  release keeps Valve's `steam_api64.dll` and loads a renamed GBE build through a small loader of
+  its own. Game health read only Valve's file, marked the game as not tracked, and offered to install
+  the emulator over it, which makes the game crash on launch. It now recognises that runtime, and
+  only the achievement data is offered for repair, which is all such a release needs.
+- **RUNE releases that run from a Steam folder are recognised.** Newer RUNE builds (Dragon's Dogma 2)
+  keep Valve's dll and run from `Steam\steamclient64.dll` with their `steam_emu.ini` beside it. Game
+  health showed them red as an unfinished GBE setup, and a library scan wrote a GBE configuration
+  into their folder that nothing ever reads. They are now shown as served by RUNE and left alone.
+- **A game's very first unlock is notified.** When an emulator created the game's save folder and
+  wrote the unlock in the same instant, which is what GBE Fork does on a game's first save, AW Next
+  never saw it and that first achievement stayed silent. The live watcher no longer depends on how
+  busy AW Next was while starting, and catches it.
+- **A scan backs up a game's configuration before rewriting it.** With automatic repair on, a scan
+  could change `configs.user.ini` and add `configs.main.ini` before the backup was taken, so a
+  restore brought back the rewritten files instead of the release's own.
 - **A console game's own background on its achievement page.** Artwork a console emulator source
   keeps on disk, such as a PS5 game's key art, never reached the page background, which stayed
   plain dark.
