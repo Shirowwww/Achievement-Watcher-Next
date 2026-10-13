@@ -68,7 +68,7 @@ const files = {
 // missed builds using the other spelling, so unlocks never fired until the next refresh.
 const ALI213_ACHIEVEMENT_FILES = [files.achievement[4], files.achievement[6]];
 
-module.exports.getFolders = async (userDir_file) => {
+module.exports.getFolders = async (userDir_file, options = {}) => {
   let configuredDirs = [];
   try {
     const parsed = JSON.parse(await fs.readFile(userDir_file, 'utf8'));
@@ -194,6 +194,13 @@ module.exports.getFolders = async (userDir_file) => {
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0]] },
     },
   ];
+
+  // The GBE save folder chosen in Settings (issue #123) has the GSE Saves shape: one folder per appid.
+  const customSaves = String((options && options.emulator && options.emulator.savePath) || '').trim();
+  if (customSaves && path.isAbsolute(customSaves)) {
+    const gse = steamEmu.find((entry) => entry.dir === path.join(process.env['APPDATA'], 'GSE Saves'));
+    steamEmu.push({ dir: customSaves, options: { ...gse.options } });
+  }
 
   try {
     const regedit = await loadRegedit();

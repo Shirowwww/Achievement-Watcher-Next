@@ -883,7 +883,7 @@ var app = {
       const missingRoots = [];
       const steamClientRoot = steamClientStats.steamClientRoot(self.options);
       if (steamClientRoot) debug.log(`[steam] Steam client notifications on, following "${steamClientRoot.dir}"`);
-      for (let folder of [...(await monitor.getFolders(cfg_file.userDir)), ...(steamClientRoot ? [steamClientRoot] : [])]) {
+      for (let folder of [...(await monitor.getFolders(cfg_file.userDir, self.options)), ...(steamClientRoot ? [steamClientRoot] : [])]) {
         try {
           if (fs.existsSync(folder.dir)) {
             self.watch(i, folder.dir, folder.options);

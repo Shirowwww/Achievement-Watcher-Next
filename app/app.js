@@ -4195,8 +4195,7 @@ var app = {
               // separate decisions with their own settings, and a setting that says "leave my DLC
               // alone" has to hold here too, or it just moves the surprise to another button.
               writeDlc: app.config?.emulator?.manageDlc === true,
-              accountName: app.config?.emulator?.stampIdentity === true ? app.config?.general?.username : undefined,
-              language: app.config?.emulator?.stampIdentity === true ? schemaLanguage.get(appid) || app.config?.achievement?.lang : undefined,
+              ...goldberg.userIdentity(app.config, schemaLanguage.get(appid) || app.config?.achievement?.lang),
             });
           };
           const diagnoseGoldbergSetup = async ({ game, gameDir, autoRepair = false, showDialog = true }) => {
@@ -8117,8 +8116,7 @@ var app = {
                 // Same two opt-ins as the single-game repair - all the more so here, where one click
                 // rewrites dozens of folders at once.
                 writeDlc: app.config.emulator && app.config.emulator.manageDlc === true,
-                accountName: app.config.emulator && app.config.emulator.stampIdentity === true ? app.config.general && app.config.general.username : undefined,
-                language: app.config.emulator && app.config.emulator.stampIdentity === true ? schemaLanguage.get(game.appid) || (app.config.achievement && app.config.achievement.lang) : undefined,
+                ...goldberg.userIdentity(app.config, schemaLanguage.get(game.appid) || (app.config.achievement && app.config.achievement.lang)),
               });
               // The bulk pass has no per-game dialog to report into, so the log is the only record.
               // Worth keeping: it is the one path that can repair dozens of games in a row.

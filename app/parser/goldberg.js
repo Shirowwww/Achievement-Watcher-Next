@@ -13,6 +13,7 @@ const unrealLayout = require(path.join(__dirname, '..', 'util', 'unrealLayout.js
 const runtimeSaveSeed = require(path.join(__dirname, '..', 'util', 'runtimeSaveSeed.js'));
 const { parseIni, stringifyIni, getIniSection, upsertIniSection, upsertIniKeys, sanitizeIniValue } = require(path.join(__dirname, '..', 'util', 'emuIni.js'));
 const awManagedConfig = require(path.join(__dirname, '..', 'util', 'awManagedConfig.js'));
+const { isSteamId64 } = require(path.join(__dirname, '..', 'util', 'steamId64.js'));
 
 const APPID_CONFIG_FILES = new Set([
   'steam_appid.txt',
@@ -237,6 +238,19 @@ const CLASSIC_CONFIG_FILES = ['force_account_name.txt', 'user_steam_id.txt', 'ac
 
 function backupTimestamp(date = new Date()) {
   return date.toISOString().replace(/[:.]/g, '-');
+}
+
+function backupDirFor(steamSettings) {
+  return path.join(steamSettings, '.aw-backups', backupTimestamp());
+}
+
+// Copy a file into backupDir before it is overwritten, once; the folder is created only when needed.
+function keepOriginal(file, backupDir) {
+  if (!backupDir || !fs.existsSync(file)) return;
+  const target = path.join(backupDir, path.basename(file));
+  if (fs.existsSync(target)) return;
+  fs.mkdirSync(backupDir, { recursive: true });
+  fs.copyFileSync(file, target);
 }
 
 // Point steam_appid.txt at a different appid, keeping the previous file. repair() only writes this
@@ -1193,7 +1207,7 @@ function dlcConfigMode(text) {
 // queries plus the id=name list for enumeration APIs. Existing entries are preserved and unioned,
 // and a hand-curated explicit list (unlock_all=0 with ids) keeps unlock_all=0 unless the caller
 // forces it with `forceUnlockAll`.
-function writeDlcConfig({ steamSettings, dlcs = [], unlockAll = true, forceUnlockAll = false } = {}) {
+function writeDlcConfig({ steamSettings, dlcs = [], unlockAll = true, forceUnlockAll = false, backupDir = null } = {}) {
   if (!steamSettings) throw new Error('writeDlcConfig: steamSettings path is required');
   const file = path.join(steamSettings, 'configs.app.ini');
   const previous = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
@@ -1224,14 +1238,16 @@ function writeDlcConfig({ steamSettings, dlcs = [], unlockAll = true, forceUnloc
   upsertIniSection(doc, 'app::dlcs', body);
 
   fs.mkdirSync(steamSettings, { recursive: true });
-  fs.writeFileSync(file, stringifyIni(doc));
+  const next = stringifyIni(doc);
+  if (next !== previous) keepOriginal(file, backupDir);
+  fs.writeFileSync(file, next);
   return { file, count: map.size, unlockAll: !!unlockAll };
 }
 
 // Write/merge configs.main.ini with the modern GBE switches newer Steamworks/PSPC titles need
 // (newer auth ticket + Game Coordinator token). achievements_bypass is left at the user's value:
 // forcing SetAchievement() true is a workaround, not a default.
-function writeMainConfig({ steamSettings } = {}) {
+function writeMainConfig({ steamSettings, backupDir = null } = {}) {
   if (!steamSettings) throw new Error('writeMainConfig: steamSettings path is required');
   const file = path.join(steamSettings, 'configs.main.ini');
   const previous = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
@@ -1253,6 +1269,7 @@ function writeMainConfig({ steamSettings } = {}) {
   fs.mkdirSync(steamSettings, { recursive: true });
   const next = stringifyIni(doc);
   const changed = previous !== next;
+  if (changed) keepOriginal(file, backupDir);
   if (changed) fs.writeFileSync(file, next);
   return { file, changed, newAppTicket: true, gcToken: true };
 }
@@ -1296,13 +1313,34 @@ function neutralizePlaceholderSavePath(doc) {
 // and every other key. `fillDefaults` (an explicit repair) falls back to the emulator's own defaults,
 // clearing the NO_USER_CONFIG/BAD_USER_CONFIG Game Health checks even with nothing to stamp.
 const DEFAULT_EMU_ACCOUNT_NAME = 'Player';
+
+/*
+  What a fix or repair stamps into configs.user.ini, from Settings (issue #123): the identity only
+  behind "Write account name and language", the save folder whenever one is chosen. An explicit
+  repair has always stamped the name and language; it still does, but not the Steam ID.
+*/
+function userIdentity(options = {}, language, { explicit = false } = {}) {
+  const emulator = (options && options.emulator) || {};
+  const general = (options && options.general) || {};
+  const stamp = emulator.stampIdentity === true;
+  const name = String(emulator.accountName || '').trim() || general.username || undefined;
+  const savePath = String(emulator.savePath || '').trim();
+  return {
+    accountName: stamp || explicit ? name : undefined,
+    language: stamp || explicit ? language : undefined,
+    accountSteamId: stamp && isSteamId64(emulator.accountSteamId) ? String(emulator.accountSteamId).trim() : undefined,
+    localSavePath: savePath && path.isAbsolute(savePath) ? savePath : undefined,
+  };
+}
 const DEFAULT_EMU_LANGUAGE = 'english';
 
-function writeUserConfig({ steamSettings, accountName, language, fillDefaults = false } = {}) {
+function writeUserConfig({ steamSettings, accountName, language, accountSteamId, localSavePath, fillDefaults = false, backupDir = null } = {}) {
   if (!steamSettings) throw new Error('writeUserConfig: steamSettings path is required');
   const updates = {};
   if (accountName && String(accountName).trim()) updates.account_name = sanitizeIniValue(accountName);
   if (language && String(language).trim()) updates.language = sanitizeIniValue(language);
+  if (isSteamId64(accountSteamId)) updates.account_steamid = String(accountSteamId).trim();
+  const savesUpdates = localSavePath && path.isAbsolute(String(localSavePath)) ? { local_save_path: sanitizeIniValue(localSavePath) } : {};
   const file = path.join(steamSettings, 'configs.user.ini');
   const fileExists = fs.existsSync(file);
   const previous = fileExists ? fs.readFileSync(file, 'utf8') : '';
@@ -1314,7 +1352,7 @@ function writeUserConfig({ steamSettings, accountName, language, fillDefaults = 
     if (!updates.language && !hasKey('language')) updates.language = DEFAULT_EMU_LANGUAGE;
   }
   // Nothing to stamp and no existing file to repair the save path in.
-  if (Object.keys(updates).length === 0 && !fileExists) {
+  if (Object.keys(updates).length === 0 && Object.keys(savesUpdates).length === 0 && !fileExists) {
     return { file: null, accountName: null, language: null, changed: false, savePathFixed: false };
   }
 
@@ -1327,12 +1365,21 @@ function writeUserConfig({ steamSettings, accountName, language, fillDefaults = 
     }
     section.body = upsertIniKeys(section.body, updates);
   }
+  if (Object.keys(savesUpdates).length > 0) {
+    let saves = getIniSection(doc, 'user::saves');
+    if (!saves) {
+      saves = { key: 'user::saves', header: '[user::saves]', body: [] };
+      doc.sections.push(saves);
+    }
+    saves.body = upsertIniKeys(saves.body, savesUpdates);
+  }
   // Repair a repack's template placeholder local_save_path so saves land in the monitored GSE Saves.
   const savePathFixed = neutralizePlaceholderSavePath(doc);
 
   fs.mkdirSync(steamSettings, { recursive: true });
   const next = stringifyIni(doc);
   const changed = previous !== next;
+  if (changed) keepOriginal(file, backupDir);
   if (changed) fs.writeFileSync(file, next);
   if (updates.language) ensureSupportedLanguage(steamSettings, updates.language);
   return { file, accountName: updates.account_name || null, language: updates.language || null, changed, savePathFixed };
@@ -1408,6 +1455,9 @@ async function repair({
   unlockAllDlc = true,
   accountName,
   language,
+  // From Settings through userIdentity() (issue #123); either one alone rewrites configs.user.ini.
+  accountSteamId,
+  localSavePath,
   // An explicit repair completes configs.user.ini even with nothing to stamp into it - see
   // writeUserConfig's fillDefaults. Off by default so the silent auto-repair keeps its old reach.
   fillUserDefaults = false,
@@ -1455,7 +1505,9 @@ async function repair({
   if (writeAppId && appid != null) filesToReplace.push(path.join(steamSettings, 'steam_appid.txt'));
   if (writeDlc) filesToReplace.push(path.join(steamSettings, 'configs.app.ini'));
   if (writeMain) filesToReplace.push(path.join(steamSettings, 'configs.main.ini'));
-  if (fillUserDefaults || (accountName && String(accountName).trim()) || (language && String(language).trim())) {
+  const stampsUser =
+    fillUserDefaults || (accountName && String(accountName).trim()) || (language && String(language).trim()) || isSteamId64(accountSteamId) || !!localSavePath;
+  if (stampsUser) {
     filesToReplace.push(path.join(steamSettings, 'configs.user.ini'));
   }
   report('backup');
@@ -1601,9 +1653,9 @@ async function repair({
   }
 
   // Stamp the app's identity (account name + language) into configs.user.ini, preserving account_steamid.
-  if (fillUserDefaults || (accountName && String(accountName).trim()) || (language && String(language).trim())) {
+  if (stampsUser) {
     try {
-      summary.user = writeUserConfig({ steamSettings, accountName, language, fillDefaults: fillUserDefaults });
+      summary.user = writeUserConfig({ steamSettings, accountName, language, accountSteamId, localSavePath, fillDefaults: fillUserDefaults });
     } catch {
       summary.user = null;
     }
@@ -1834,6 +1886,9 @@ module.exports = {
   detectEmulator,
   buildAchievementsJson,
   backupSetup,
+  backupDirFor,
+  isSteamId64,
+  userIdentity,
   restoreSetup,
   repair,
   writeDlcConfig,

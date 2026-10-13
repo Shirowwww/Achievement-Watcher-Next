@@ -52,7 +52,8 @@ test('the repair() call from a scan honours both opt-ins', () => {
   const call = SRC.slice(SRC.indexOf('const summary = await goldberg.repair({'));
   const firstCall = call.slice(0, call.indexOf('});'));
   assert.match(firstCall, /writeDlc: option\.emulator\.manageDlc === true/, 'a schema repair must not enable every DLC');
-  assert.match(firstCall, /stampIdentity === true \? option\.general && option\.general\.username : undefined/, 'a schema repair must not stamp an identity');
+  // userIdentity() holds the stampIdentity gate; gbeIdentity.test.js pins what it lets through.
+  assert.match(firstCall, /\.\.\.goldberg\.userIdentity\(option, /, 'a schema repair must not stamp an identity');
 });
 
 test('the manual repair paths honour the opt-ins too', () => {
@@ -63,7 +64,7 @@ test('the manual repair paths honour the opt-ins too', () => {
   assert.equal(calls.length, 2, 'app.js should still have exactly the single-game repair and the bulk one');
   for (const call of calls) {
     assert.match(call, /writeDlc: app\.config/, 'a repair must not enable every DLC unless asked');
-    assert.match(call, /stampIdentity === true \?/, 'a repair must not stamp an identity unless asked');
+    assert.match(call, /\.\.\.goldberg\.userIdentity\(app\.config, /, 'a repair must not stamp an identity unless asked');
   }
 });
 

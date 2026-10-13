@@ -92,6 +92,8 @@ async function repairAchievementData({
   fetchStats = null,
   accountName = '',
   language = '',
+  accountSteamId = undefined,
+  localSavePath = undefined,
   // Complete configs.user.ini even when the app has no name or language to stamp into it - the two
   // user-config warnings are listed as repairable, so the repair has to be able to clear them.
   fillUserDefaults = false,
@@ -111,6 +113,8 @@ async function repairAchievementData({
     fetchStats,
     accountName,
     language,
+    accountSteamId,
+    localSavePath,
     fillUserDefaults,
     onProgress,
   });

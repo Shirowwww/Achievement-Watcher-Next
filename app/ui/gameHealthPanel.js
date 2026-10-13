@@ -1414,8 +1414,7 @@ async function runGameHealthAction(appid, action, button) {
         },
         fetchDlc: (id) => steamParser.getDLCList(id),
         fetchStats: (id) => require(path.join(appPath, 'parser/statProgress.js')).fetchCommunityStats(id, { cacheDir: getUserDataPath() }),
-        accountName: app.config?.general?.username,
-        language: app.config?.achievement?.lang,
+        ...goldberg.userIdentity(app.config, app.config?.achievement?.lang, { explicit: true }),
         // An explicit repair must be able to clear NO_USER_CONFIG / BAD_USER_CONFIG. Without this
         // the file was only written when the app had a username or language to stamp into it, so on
         // a default install the repair skipped it entirely and both warnings survived every run.

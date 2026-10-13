@@ -3254,6 +3254,8 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       debug.log(`[${appid.appid}] runtime GSE config generation stopped: automatic repair was switched off or not announced yet`);
     } else if (runtimeConfigAllowed) {
       const steamSettings = appid.data.steamSettings;
+      // Originals a write below would change, kept before the repair further down backs up its own.
+      const backupDir = goldberg.backupDirFor(steamSettings);
       try {
         if (option.emulator.manageDlc === true) {
           const appConfigFile = path.join(steamSettings, 'configs.app.ini');
@@ -3266,7 +3268,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
             let dlcs = [];
             try { dlcs = await steam.getDLCList(appid.appid); } catch {}
             if (realGameExePresent()) {
-              const dlc = goldberg.writeDlcConfig({ steamSettings, dlcs, unlockAll: true });
+              const dlc = goldberg.writeDlcConfig({ steamSettings, dlcs, unlockAll: true, backupDir });
               debug.log(`[${appid.appid}] created configs.app.ini (unlock_all=1, ${dlc.count} DLC(s))`);
             }
           }
@@ -3274,15 +3276,13 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         // configs.main.ini is not a DLC or identity decision: its keys are what makes a modern
         // Steamworks title report achievement progress at all, so it follows automatic repair itself.
         if (realGameExePresent()) {
-          const main = goldberg.writeMainConfig({ steamSettings });
+          const main = goldberg.writeMainConfig({ steamSettings, backupDir });
           if (main && main.changed) debug.log(`[${appid.appid}] updated configs.main.ini (new_app_ticket=1, gc_token=1)`);
         }
-        if (option.emulator.stampIdentity === true && realGameExePresent()) {
-          const user = goldberg.writeUserConfig({
-            steamSettings,
-            accountName: option.general && option.general.username,
-            language: schemaLanguage.get(appid.appid) || (option.achievement && option.achievement.lang),
-          });
+        // The identity follows its own switch; a save folder chosen in Settings applies on its own.
+        const identity = goldberg.userIdentity(option, schemaLanguage.get(appid.appid) || (option.achievement && option.achievement.lang));
+        if ((option.emulator.stampIdentity === true || identity.localSavePath) && realGameExePresent()) {
+          const user = goldberg.writeUserConfig({ steamSettings, ...identity, backupDir });
           if (user && user.changed) debug.log(`[${appid.appid}] updated configs.user.ini (${user.accountName || 'default'}, ${user.language || 'default'})`);
         }
       } catch (err) {
@@ -3601,8 +3601,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
                   // Same two opt-ins as the runtime configs above: repairing a schema must not
                   // quietly enable every DLC or stamp a Windows username into the emulator identity.
                   writeDlc: option.emulator.manageDlc === true,
-                  accountName: option.emulator.stampIdentity === true ? option.general && option.general.username : undefined,
-                  language: option.emulator.stampIdentity === true ? schemaLanguage.get(bgAppid) || (option.achievement && option.achievement.lang) : undefined,
+                  ...goldberg.userIdentity(option, schemaLanguage.get(bgAppid) || (option.achievement && option.achievement.lang)),
                 });
                 debug.log(
                   `[${bgAppid}] wrote missing achievements.json schema (${summary.achievementsJson.length} entries) to ${steamSettingsDir}` +

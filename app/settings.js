@@ -11,6 +11,7 @@ const controllerLabels = require(path.join(appPath, 'util/controllerLabels.js'))
 const themeLayers = require(path.join(appPath, 'util/themeLayers.js'));
 const libraryLayout = require(path.join(appPath, 'util/libraryLayout.js'));
 const libraryChrome = require(path.join(appPath, 'util/libraryChrome.js'));
+const { isSteamId64 } = require(path.join(appPath, 'util/steamId64.js'));
 const notificationPlacement = require(path.join(appPath, 'util/notificationPlacement.js'));
 const rarityTiers = require(path.join(appPath, 'util/rarityTiers.js'));
 
@@ -453,6 +454,13 @@ module.exports.load = () => {
     // configs that turned the setting on before the notice existed get it once, from the scan.
     if (typeof options.emulator.autoApplyNotice !== 'boolean') options.emulator.autoApplyNotice = false;
     if (options.emulator.steamSettingsMode !== 'simple' && options.emulator.steamSettingsMode !== 'advanced') options.emulator.steamSettingsMode = 'simple';
+    // GBE identity (issue #123): a Steam ID that is not a real one and a relative folder would be
+    // written into every game a fix touches, so they read as empty instead.
+    for (const key of ['accountName', 'accountSteamId', 'savePath']) {
+      options.emulator[key] = typeof options.emulator[key] === 'string' ? options.emulator[key].trim() : '';
+    }
+    if (!isSteamId64(options.emulator.accountSteamId)) options.emulator.accountSteamId = '';
+    if (!path.isAbsolute(options.emulator.savePath)) options.emulator.savePath = '';
     if (typeof options.emulator.createLaunchBat !== 'boolean') options.emulator.createLaunchBat = true;
     if (typeof options.emulator.apiCheckBypass !== 'boolean') options.emulator.apiCheckBypass = false;
     if (typeof options.emulator.checkUpdates !== 'boolean') options.emulator.checkUpdates = true;
@@ -698,6 +706,9 @@ module.exports.load = () => {
         checkUpdates: true, // force a same-day GBE Fork release re-check before applying
         login: 'anonymous', // 'anonymous' | 'steam' (generate_emu_config richer data)
         loginAccountName: '', // optional Steam login username
+        accountName: '', // GBE identity (issue #123): empty = the AW profile name
+        accountSteamId: '', // empty = keep each game's own account_steamid
+        savePath: '', // absolute GBE save folder; empty = %APPDATA%\GSE Saves
         loginPassword: '', // optional Steam login password - AES-encrypted on disk
         steamId: '', // optional account_steamid override for configs.user.ini ('' = let GBE pick)
         uplayUsername: '', // optional Uplay R2 Username override ('' = use the general username)
