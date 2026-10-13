@@ -15,6 +15,7 @@ test('the entry hands the link to AW and declares the scheme', () => {
   assert.match(text, /^Exec="\/opt\/AW Next\.AppImage" %u$/m);
   assert.match(text, /^MimeType=x-scheme-handler\/achievement-watcher;$/m);
   assert.match(text, /^Icon=achievement-watcher-next$/m);
+  assert.match(text, /^StartupWMClass=achievement-watcher$/m);
 });
 
 test('installing writes the entry and the icon once, then routes the scheme with xdg-mime', async () => {

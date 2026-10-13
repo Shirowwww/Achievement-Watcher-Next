@@ -22,4 +22,17 @@ function hasStatusNotifierHost({ run = execFile } = {}) {
   });
 }
 
-module.exports = { WATCHER, hasStatusNotifierHost };
+/*
+  At login AW can start before the desktop's tray host (GNOME loads its AppIndicator extension after
+  the autostart entries), and an item created then is never shown: it registers with nobody. Resolves
+  true once a host appears, false after `timeoutMs`.
+*/
+async function waitForStatusNotifierHost({ timeoutMs = 120000, intervalMs = 2000, check = hasStatusNotifierHost, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
+  for (let waited = 0; waited < timeoutMs; waited += intervalMs) {
+    if (await check()) return true;
+    await sleep(intervalMs);
+  }
+  return check();
+}
+
+module.exports = { WATCHER, hasStatusNotifierHost, waitForStatusNotifierHost };
