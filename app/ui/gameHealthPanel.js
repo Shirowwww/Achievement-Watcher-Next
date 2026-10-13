@@ -258,7 +258,14 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
   if (!isConsole && !isUbisoft && !foreignLoader && gameDirExists) {
     try {
       const emu = goldberg.detectEmulator(gameDir);
-      const hasSetupOnDisk = emu.type !== 'none' || !!emu.steamSettings || emu.dll.length > 0;
+      /*
+        A game owned on Steam ships Valve's own steam_api dll, which detectEmulator counts like any
+        other: on an official library that alone proved nothing, and Worms W.M.D was reported as
+        missing its emulator. There, only a steam_settings folder or an emulator dll is a setup.
+      */
+      const hasSetupOnDisk = isOfficialPlatformSource(source)
+        ? !!emu.steamSettings || emu.dll.some((dll) => crackLoaderDetect.isEmulatorDll(dll))
+        : emu.type !== 'none' || !!emu.steamSettings || emu.dll.length > 0;
       if (hasSetupOnDisk || (readsGoldbergSave && !usesUplayLayer)) {
         emulated = true;
         const report = goldberg.diagnose({ gameDir, appid: writableAppid, schema: game });
@@ -338,6 +345,7 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
     // their own watchers, not by the process monitor, so a missing gameIndex entry means nothing
     // for them and must not be reported as a fault.
     // A recompiled Xbox 360 game is a native PC program, and its play time comes from the process.
+    officialPlatform: isOfficialPlatformSource(source),
     processTracking: (!isConsole || source === 'Xbox 360 Recomp') && !isOfficialPlatformSource(source),
     tracking: { indexed: !!indexEntry, binary: (indexEntry && indexEntry.binary) || '' },
     notifications: {
@@ -507,6 +515,7 @@ function gameHealthSimpleCheckValue(entry) {
   const ok = entry.level === gameHealth.LEVEL.OK;
   switch (entry.id) {
     case 'install':
+      if (p.notInstalled) return t('steam-install-title', 'Game not installed', 'Jeu non installé');
       return ok
         ? t('gh-simple-install-ok', 'Game files found', 'Fichiers du jeu trouvés')
         : t('gh-simple-install-missing', 'Game files not found', 'Fichiers du jeu introuvables');
@@ -676,6 +685,7 @@ function gameHealthCheckValue(entry, simple) {
   switch (entry.id) {
     case 'install':
       if (p.path) return entry.level === gameHealth.LEVEL.OK ? p.path : `${p.path} - ${missing}`;
+      if (p.notInstalled) return t('steam-install-title', 'Game not installed', 'Jeu non installé');
       return missing;
     case 'executable':
       if (p.path) return entry.level === gameHealth.LEVEL.OK ? p.path : `${p.path} - ${missing}`;

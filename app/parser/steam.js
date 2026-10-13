@@ -2202,12 +2202,23 @@ async function resolveWorkingIconUrl(appID, url, { probe = probeUrl } = {}) {
       const hashed = await findWorkingAssetPath(appID, relative, probe);
       if (hashed) return hashed;
     }
-    const working = await findWorkingLink(appID, basenameOf(url), probe);
+    const working = (await findWorkingLink(appID, basenameOf(url), probe)) || (await findStorePageBackground(appID, basenameOf(url), probe));
     return working || url;
   }
   if (await probe(url)) return url;
-  const working = await findWorkingLink(appID, basenameOf(url), probe);
+  const working = (await findWorkingLink(appID, basenameOf(url), probe)) || (await findStorePageBackground(appID, basenameOf(url), probe));
   return working || url;
+}
+
+/*
+  An appid onboarded since Steam's hashed-asset migration has no flat page_bg_generated file on any
+  CDN, so the walk above found nothing and a quarter of a real library opened on a blank page. The
+  store's own background endpoint answers for every appid from the id alone.
+*/
+async function findStorePageBackground(appid, basename, probe) {
+  if (!/^page_bg_generated/i.test(basename) || !/^[0-9]+$/.test(String(appid))) return null;
+  const url = `https://store.akamai.steamstatic.com/images/storepagebackground/app/${appid}`;
+  return (await probe(url)) ? url : null;
 }
 module.exports.resolveWorkingIconUrl = resolveWorkingIconUrl;
 

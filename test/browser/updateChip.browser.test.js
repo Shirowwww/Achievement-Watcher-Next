@@ -55,10 +55,10 @@ function page(width) {
 }
 
 const VIEWS = {
-  downloading: { icon: 'fa-circle-down', label: 'downloading update 42%' },
-  ready: { icon: 'fa-circle-check', label: 'Update Ready' },
-  installing: { icon: 'fa-gear', label: 'Installing update…' },
-  error: { icon: 'fa-triangle-exclamation', label: 'Check failed', title: 'net::ERR_CONNECTION_RESET' },
+  downloading: { icon: 'fa-arrow-alt-circle-down', label: 'downloading update 42%' },
+  ready: { icon: 'fa-check-circle', label: 'Update Ready' },
+  installing: { icon: 'fa-cog', label: 'Installing update…' },
+  error: { icon: 'fa-exclamation-triangle', label: 'Check failed', title: 'net::ERR_CONNECTION_RESET' },
 };
 
 async function measure(browserPage, state, view) {
@@ -135,7 +135,7 @@ test('the update chip renders, fits and cancels only when there is something to 
     const ready = await measure(browserPage, { phase: 'ready', version: '3.10.1', percent: 100, cancellable: false }, VIEWS.ready);
     assert.equal(ready.trackVisible, false, 'a finished download has no progress left to show');
     assert.equal(ready.cancelVisible, false, 'a finished download cannot be cancelled');
-    assert.equal(ready.iconClass, 'fas fa-circle-check');
+    assert.equal(ready.iconClass, 'fas fa-check-circle');
 
     const installing = await measure(
       browserPage,

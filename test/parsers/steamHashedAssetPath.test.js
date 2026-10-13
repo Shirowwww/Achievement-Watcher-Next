@@ -45,6 +45,20 @@ test('a bare legacy token still reaches the flat CDN paths', async () => {
   assert.equal(url, legacy);
 });
 
+// PRAGMATA (3357650) has no flat page_bg_generated file anywhere: only the store endpoint answers.
+test('a page background with no flat CDN file falls back to the store background endpoint', async () => {
+  const store = 'https://store.akamai.steamstatic.com/images/storepagebackground/app/3357650';
+  const probe = async (candidate) => candidate === store;
+  assert.equal(await steam.resolveWorkingIconUrl(3357650, 'page_bg_generated_v6b', { probe }), store);
+  assert.equal(await steam.resolveWorkingIconUrl(3357651, 'https://cdn.akamai.steamstatic.com/steam/apps/3357651/page_bg_generated_v6b.jpg', { probe: async () => false }), 'https://cdn.akamai.steamstatic.com/steam/apps/3357651/page_bg_generated_v6b.jpg');
+});
+
+test('the store background fallback is reserved for page backgrounds', async () => {
+  const seen = [];
+  await steam.resolveWorkingIconUrl(3357652, 'library_600x900.jpg', { probe: async (candidate) => (seen.push(candidate), false) });
+  assert.ok(!seen.some((url) => url.includes('storepagebackground')));
+});
+
 /*
   Xbox serves every achievement icon of a game from one `/image` path, with the identity of the
   picture in the query string. Cached by basename alone, a whole game collapsed onto a single file
