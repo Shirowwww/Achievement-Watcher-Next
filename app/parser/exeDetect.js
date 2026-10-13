@@ -33,6 +33,7 @@ const EXE_EXCLUDE = [
   /media.?player\.exe$/i, // steamvr_media_player.exe & co - helper players, never the game
   /saveconverter/i, // Jackbox per-pack save tool
   /utility/i, // e.g. JackboxUtility.exe - companion tools, not the game
+  /companion/i, // e.g. ACBFRCompanion.exe next to ACBlackFlag.exe
   /decompressor/i,
   /\bcli\b/i, // command-line tools (wabbajack-cli, lootcli, …)
 ];

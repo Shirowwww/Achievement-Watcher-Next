@@ -448,7 +448,15 @@ function renderProfileTrophies(installedOnly) {
     const value = formatCount(stats[tier]);
     if (node && node.textContent !== value) node.textContent = value;
   }
-  const label = t(
+  // Trophy mode grades every unlock, so it has no common tier to show or announce.
+  const trophyMode = rarityGrading().mode === rarityTiers.MODE_TROPHY;
+  button.find('.trophy-common').toggle(!trophyMode);
+  const labels = trophyLabels();
+  const label = trophyMode
+    ? TROPHY_TIERS.filter((tier) => tier !== 'common')
+        .map((tier) => `${labels[tier]} ${formatCount(stats[tier])}`)
+        .join(', ')
+    : t(
     'profile-trophies-summary',
     '{platinum} platinum, {gold} gold, {silver} silver, {bronze} bronze, {common} common. See the details',
     '{platinum} platine, {gold} or, {silver} argent, {bronze} bronze, {common} commun. Voir le détail',
@@ -3220,10 +3228,13 @@ async function resolveGameDirFromExe(exePath) {
 */
 async function pickGameExecutable(appid) {
   const cfg = (await exeList.get(appid)) || { appid: String(appid), exe: '', args: '' };
+  // Start where the game lives when the recorded exe is gone (moved or renamed folder).
+  const known = gameList.find((g) => g.appid == appid);
+  const startDir = known && known.gameDir && fs.existsSync(known.gameDir) ? known.gameDir : undefined;
   const dialog = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
     title: t('choose-the-game-executable', 'Choose the game executable', "Choisir l'exécutable du jeu"),
     buttonLabel: t('select', 'Select', 'Sélectionner'),
-    defaultPath: cfg.exe,
+    defaultPath: cfg.exe && fs.existsSync(cfg.exe) ? cfg.exe : startDir,
     filters: [{ name: 'Executables', extensions: ['exe', 'bat'] }],
     properties: ['openFile', 'showHiddenFiles', 'dontAddToRecent'],
   });

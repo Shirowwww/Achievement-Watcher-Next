@@ -8,14 +8,22 @@ const test = require('node:test');
 
 const exeDetect = require('../../app/parser/exeDetect.js');
 
+const created = [];
+test.after(() => {
+  for (const dir of created) fs.rmSync(dir, { recursive: true, force: true });
+});
+
 function tmpGame(name) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), `aw-conf-${name}-`));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), `aw-conf-${name}-`));
+  created.push(dir);
+  return dir;
 }
 
 // Unlike tmpGame(), the returned directory's own basename is exactly `name` - no tmp-prefix/suffix
 // noise - so folder-name-similarity assertions see the same basename a real install folder would have.
 function tmpGameNamed(name) {
   const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-conf-'));
+  created.push(parent);
   const dir = path.join(parent, name);
   fs.mkdirSync(dir);
   return dir;

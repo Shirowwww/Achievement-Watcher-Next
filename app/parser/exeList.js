@@ -189,6 +189,19 @@ module.exports.reconcile = async (games) => {
     // 3) Fill empty entries: launcher-provided exe first (Epic/GOG/EA/Xbox manifests are the exact
     // command the launcher runs - zero guesswork), then conservative on-disk detection for every
     // game whose install folder we know. Ambiguous folders stay empty for a manual pick.
+    // A recorded exe that vanished while the game was found elsewhere means the folder was moved or
+    // renamed: drop it so the fill below redetects. A missing exe with no live gameDir is kept, the
+    // drive may just be unplugged.
+    for (const e of list) {
+      if (!e.exe || fs.existsSync(e.exe)) continue;
+      const g = byAppid.get(String(e.appid));
+      if (!g || !g.gameDir || !fs.existsSync(g.gameDir)) continue;
+      const dirKey = path.resolve(g.gameDir).toLowerCase();
+      if (path.resolve(e.exe).toLowerCase().startsWith(dirKey + path.sep)) continue;
+      e.exe = '';
+      changed++;
+    }
+
     const taken = new Set(list.filter((e) => e.exe).map((e) => e.exe.toLowerCase()));
     const takenGameDirs = new Set();
     for (const e of list) {
