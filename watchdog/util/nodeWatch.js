@@ -19,4 +19,15 @@ if (process.platform === 'win32') {
   }
 }
 
+/*
+  node-watch decides once whether fs.watch recurses natively, by timing a probe watch for 200 ms. A
+  Watchdog busy starting up misses that window and falls back to one watcher per folder for good,
+  and that fallback never sees a save written in the same burst as its new appid folder: a game's
+  first unlock went unnotified. Windows always recurses natively, so the answer is given up front.
+*/
+if (process.platform === 'win32') {
+  const probe = require.resolve('node-watch/lib/has-native-recursive');
+  require.cache[probe] = { id: probe, filename: probe, loaded: true, exports: (fn) => (typeof fn === 'function' ? fn(true) : false) };
+}
+
 module.exports = require('node-watch');
