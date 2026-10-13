@@ -26,4 +26,11 @@ function deriveAppIdFromDir(dirPath) {
   return match ? match[0] : null;
 }
 
-module.exports = { immediateChildDirOf, deriveAppIdFromDir };
+// Two trailing folders that are both whole numbers (<outer>/<inner>), or null. Each must be a whole
+// segment: RAZOR1911's ".1911/<appid>" ends in digits too, and is a single appid level.
+function nestedAppIds(dirPath) {
+  const match = String(dirPath || '').match(/(?:^|[\\/])([0-9]+)[\\/]+([0-9]+)$/);
+  return match ? { outer: match[1], inner: match[2] } : null;
+}
+
+module.exports = { immediateChildDirOf, deriveAppIdFromDir, nestedAppIds };

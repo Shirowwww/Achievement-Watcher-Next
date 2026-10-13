@@ -3,7 +3,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const { crc32 } = require('crc');
-const { buildSchemaIndex, findSchemaAchievement, buildPreviousAchievementIndex } = require('../util/achievementIndex.js');
+const { buildSchemaIndex, findSchemaAchievement, buildPreviousAchievementIndex, seedPreviewNames } = require('../util/achievementIndex.js');
 
 test('schema index keeps the first case-insensitive name match, like Array.find', () => {
   const first = { name: 'Achievement_One' };
@@ -36,4 +36,17 @@ test('previous-state index preserves first duplicate and counts unlocked entries
 
   assert.strictEqual(index.byName.get('A'), first);
   assert.equal(index.unlockedCount, 2);
+});
+
+// SmartSteamEmu's stats.bin names nothing: its records are keyed by crc32, and their parsed name is
+// the record index. The latest unlocks of a first observation must be named as the schema names them.
+test('seed preview names the latest unlocks by their schema name, CRC records included', () => {
+  const index = buildSchemaIndex([{ name: 'Alpha' }, { name: 'Beta' }, { name: 'Gamma' }], { includeCrc: true });
+  const unlocked = [
+    { name: '0', crc: crc32('Alpha').toString(16).padStart(8, '0'), UnlockTime: 10 },
+    { name: '1', crc: crc32('Beta').toString(16).padStart(8, '0'), UnlockTime: 30 },
+    { name: 'gamma', UnlockTime: 20 },
+  ];
+
+  assert.deepEqual([...seedPreviewNames(unlocked, index, 2)], ['BETA', 'GAMMA']);
 });

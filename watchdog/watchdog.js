@@ -102,7 +102,7 @@ const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
 const winHosts = require(sharedAppModulePath('util/winHosts.js'));
 const { configuredExecutable } = require('./util/exeList.js');
-const { immediateChildDirOf, deriveAppIdFromDir } = require('./util/appidFolder.js');
+const { immediateChildDirOf, deriveAppIdFromDir, nestedAppIds } = require('./util/appidFolder.js');
 const steamClientStats = require('./util/steamClientStats.js');
 
 /*
@@ -154,7 +154,7 @@ const { resolvePlaytimeArtwork } = require('./util/playtimeArtwork.js');
 const { findIndexedSocialClubGame } = require('./util/socialClub.js');
 const notifyStrings = require('./util/notifyStrings.js');
 const { spawnDetached } = require('./util/spawnDetached.js');
-const { buildSchemaIndex, findSchemaAchievement, buildPreviousAchievementIndex } = require('./util/achievementIndex.js');
+const { buildSchemaIndex, findSchemaAchievement, buildPreviousAchievementIndex, seedPreviewNames } = require('./util/achievementIndex.js');
 const { createIndexedGameLookup } = require('./util/indexedGameLookup.js');
 const { runXboxPoll, matchesActiveXboxPoll } = require('./util/xboxPolling.js');
 
@@ -355,6 +355,7 @@ function sendHeartbeat() {
 const INSTALL_COMPRESSION_DELAY_MS = 30 * 1000;
 
 function scheduleInstallCompression() {
+  if (process.platform !== 'win32') return; // WOF is an NTFS feature
   const timer = setTimeout(() => {
     require('./util/installCompression.js')
       .compressInstallation({ installDir: path.dirname(process.execPath) })
@@ -1118,8 +1119,8 @@ var app = {
           // is the Ubisoft product id, not a second Steam appid; the leading one is already the real
           // Steam appid, kept as a fallback when the id has not been mapped yet.
           if (!options.appid && !options.socialClub) {
-            const nested = filePath.dir.match(/([0-9]+)[\\/]+([0-9]+)$/);
-            if (nested) appID = uplayR2.steamAppIdForUplayId(nested[2]) || nested[1];
+            const nested = nestedAppIds(filePath.dir);
+            if (nested) appID = uplayR2.steamAppIdForUplayId(nested.inner) || nested.outer;
           }
         }
 
@@ -1232,15 +1233,10 @@ var app = {
             const liveFirstRun = isNewAppidFolder && preUnlocked.length <= NEW_FOLDER_NOTIFY_MAX;
             const seedOnly = (!Array.isArray(cache) || cache.length === 0) && preUnlocked.length > 1 && !liveFirstRun;
             const seedNotifyLimit = 3;
-            const seedNotifyNames = new Set(
-              seedOnly
-                ? preUnlocked
-                    .slice()
-                    .sort((a, b) => Number(b.UnlockTime || 0) - Number(a.UnlockTime || 0))
-                    .slice(0, seedNotifyLimit)
-                    .map((a) => String(a.name || '').toUpperCase())
-                : []
-            );
+            const schemaIndex = buildSchemaIndex(game.achievement.list, {
+              includeCrc: achievements.some((achievement) => achievement && achievement.crc),
+            });
+            const seedNotifyNames = seedOnly ? seedPreviewNames(preUnlocked, schemaIndex, seedNotifyLimit) : new Set();
             if (seedOnly)
               debug.log(
                 `Boot-seed: first observation of ${appID} (${preUnlocked.length} pre-unlocked) > notifying latest ${seedNotifyNames.size}, then seeding baseline`
@@ -1249,9 +1245,6 @@ var app = {
             // Platinum detection: snapshot the prior unlock count so this fires only when the current
             // scan flips the game to fully unlocked and a real unlock notification also fired.
             const platinumTotal = Array.isArray(game.achievement.list) ? game.achievement.list.length : 0;
-            const schemaIndex = buildSchemaIndex(game.achievement.list, {
-              includeCrc: achievements.some((achievement) => achievement && achievement.crc),
-            });
             const previousIndex = buildPreviousAchievementIndex(cache);
             const platinumPrevUnlocked = previousIndex.unlockedCount;
             let platinumNewUnlock = false;

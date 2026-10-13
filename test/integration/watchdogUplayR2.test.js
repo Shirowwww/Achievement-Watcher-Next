@@ -211,9 +211,9 @@ test('the watchdog watches both Uplay save roots', async () => {
 // read as if they were a second Steam appid, and the unlock would look for a schema that never loads.
 test('a nested GSE Saves\\<steamAppid>\\<uplayId> save is resolved through the Uplay id, not read as a Steam appid', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', '..', 'watchdog', 'watchdog.js'), 'utf8');
-  assert.ok(source.includes('const nested = filePath.dir.match('), 'the appID branch must recognise the two-numeric-segment nested layout');
+  assert.ok(source.includes('const nested = nestedAppIds(filePath.dir);'), 'the appID branch must recognise the two-numeric-segment nested layout');
   assert.ok(
-    source.includes('if (nested) appID = uplayR2.steamAppIdForUplayId(nested[2]) || nested[1];'),
+    source.includes('if (nested) appID = uplayR2.steamAppIdForUplayId(nested.inner) || nested.outer;'),
     'the trailing digits are the Ubisoft id to map; the leading, already-known Steam appid is the fallback'
   );
 });

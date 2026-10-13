@@ -50,6 +50,23 @@ test('the GOG UniverseLAN save root is watched for Achievements.ini, one appid f
   assert.ok(names.has('achievements.ini'), 'Achievements.ini must be watched');
 });
 
+test('the CreamAPI root is watched for the CreamAPI.Achievements.cfg the emulator writes, and it parses', async (t) => {
+  if (process.platform !== 'win32' || !process.env.APPDATA) return t.skip('Windows-only watch roots');
+  const folders = await monitor.getFolders([]);
+  const entry = folders.find((e) => path.resolve(String(e.dir || '')).toLowerCase() === path.resolve(process.env.APPDATA, 'CreamAPI').toLowerCase());
+  assert.ok(entry, '%APPDATA%\\CreamAPI must be watched');
+  const names = new Set((entry.options.file || []).map((name) => String(name).toLowerCase()));
+  assert.ok(names.has('creamapi.achievements.cfg'), 'stats\\CreamAPI.Achievements.cfg must be watched');
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-creamapi-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const file = path.join(dir, 'CreamAPI.Achievements.cfg');
+  fs.writeFileSync(file, '[ACH_ONE]\r\nachieved=true\r\nunlocktime=1712253\r\n');
+  const [one] = await monitor.parse(file);
+  assert.equal(one.name, 'ACH_ONE');
+  assert.equal(one.Achieved, true);
+});
+
 test('a configured folder that repeats a built-in root is watched once, on the built-in options', async (t) => {
   if (process.platform !== 'win32' || !process.env.APPDATA) return t.skip('Windows-only watch roots');
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-monitor-dup-'));
