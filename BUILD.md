@@ -1,13 +1,13 @@
 # Build AW Next
 
-This guide covers local development and Windows packaging. Use [docs/RELEASE_WORKFLOW.md](docs/RELEASE_WORKFLOW.md) for versioning, publishing, CI and auto-update validation.
+This guide covers local development, Windows packaging and the Linux AppImage. Use [docs/RELEASE_WORKFLOW.md](docs/RELEASE_WORKFLOW.md) for versioning, publishing, CI and auto-update validation.
 
 <p align="center"><a href="README.md">← Project home</a> · <a href="docs/README.md">Documentation</a> · <a href="CONTRIBUTING.md">Contributing</a></p>
 
 ## Requirements
 
-- Windows 10 or Windows 11. Every release is built and validated on Windows.
-- Linux (optional): the Linux port can be developed and tested there, see
+- Windows 10 or Windows 11 for the Windows build.
+- A 64-bit Linux system for Linux work and the AppImage, see
   [Develop and test on Linux](#develop-and-test-on-linux).
 - Node.js `22.22.2+` or `24.15+`, matching the `engines` field in both package manifests.
 - npm, included with Node.js.
@@ -178,10 +178,9 @@ if (Compare-Object $a $b) { 'line endings were rewritten - fix before committing
 
 ## Develop and test on Linux
 
-The Linux port is not released yet. Windows stays the platform every release is built and
-validated on, and a Linux change must leave the Windows path exactly as it was. On Linux the app is
-a native Electron app: it never starts Wine itself, and sees Windows games running under Wine or
-Proton through their files inside each prefix and through `/proc`.
+Windows remains the reference platform: a Linux change must leave the Windows path exactly as it
+was. On Linux the app is a native Electron app: it never starts Wine itself, and sees Windows games
+running under Wine or Proton through their files inside each prefix and through `/proc`.
 
 Install, test and run from a POSIX shell:
 
@@ -206,6 +205,23 @@ chmod +x app/node_modules/7zip-bin/linux/x64/7za
   `import -window root`.
 - A source that reads files under a Windows profile is checked against a real Wine prefix: a test
   game linked to a Steam emulator and run under Wine writes its saves where a player's game would.
+- Under a Wayland session the app restarts itself once through XWayland (`--ozone-platform=x11`,
+  `app/util/linuxSession.js`), so that its popups and overlay can stay above Wine games, which are
+  X11 windows. A second start with `--toggle-overlay` toggles the overlay of the running copy; it
+  is what a desktop keyboard shortcut should run, since the global shortcut does not fire while a
+  native Wayland window has the focus.
+
+### Build the AppImage
+
+```bash
+(cd app && npm run build:linux)
+```
+
+It runs on Linux only and writes `app/dist/Achievement.Watcher.<version>.AppImage` and
+`app/dist/latest-linux.yml`, then checks that both match (see the
+[release workflow](docs/RELEASE_WORKFLOW.md#linux-appimage)). The manual **Linux build** workflow in
+GitHub Actions does the same on a clean runner. Running an AppImage needs FUSE 2 (`libfuse2`,
+`libfuse2t64` on Ubuntu 24.04).
 
 ## Build an unpacked app
 
