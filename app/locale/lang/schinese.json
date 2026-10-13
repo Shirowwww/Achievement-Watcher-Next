@@ -372,6 +372,14 @@
           "true": "已启用"
         }
       },
+      "autoApplyMode": {
+        "name": "自动修复的作用",
+        "description": "“修复”会针对 Game Health 标记的所有问题重写模拟器读取的文件，并且仅在没有受支持的模拟器时才安装模拟器。“始终应用”则会重新安装整套 GBE Fork 设置。两种方式都不会让游戏脱离已经正常运行的破解。",
+        "value": {
+          "repair": "修复损坏的部分",
+          "runtime": "始终应用模拟器"
+        }
+      },
       "manageDlc": {
         "name": "管理 DLC 所有权",
         "description": "写入 configs.app.ini，使模拟器将所有 DLC 报告为已拥有。与成就无关：如果想保持游戏原样或自行管理 DLC，请保持关闭。默认关闭。",

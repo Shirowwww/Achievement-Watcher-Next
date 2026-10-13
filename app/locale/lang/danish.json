@@ -372,6 +372,14 @@
           "true": "Aktiveret"
         }
       },
+      "autoApplyMode": {
+        "name": "Hvad den automatiske rettelse gør",
+        "description": "Reparation omskriver de filer, emulatoren læser, for alt det, Game Health markerer, og installerer kun emulatoren, hvis der ikke findes en understøttet. Anvend altid geninstallerer hele GBE Fork-opsætningen. Ingen af dem tager et spil væk fra en crack, der allerede virker.",
+        "value": {
+          "repair": "Reparer det, der er i stykker",
+          "runtime": "Anvend altid emulatoren"
+        }
+      },
       "manageDlc": {
         "name": "Administrer DLC-ejerskab",
         "description": "Skriver configs.app.ini, så emulatoren rapporterer alt DLC som ejet. Har intet med præstationer at gøre: lad den stå fra for at holde spillet uændret eller for selv at administrere DLC. Slået fra som standard.",

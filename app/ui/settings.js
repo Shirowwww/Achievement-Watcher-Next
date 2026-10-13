@@ -474,6 +474,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const steamless = $('#option_steamlessAutoUnpack').val() === 'true';
 
       $('#option_login').closest('li').toggleClass('is-inactive', !advanced).attr('aria-disabled', String(!advanced));
+      // What the automatic fix does only matters while it runs at all.
+      const autoFix = $('#option_autoApplyNewGames').val() === 'true';
+      $('#option_autoApplyMode').closest('li').toggleClass('is-inactive', !autoFix).attr('aria-disabled', String(!autoFix));
       $('#option_steamlessExperimental').closest('li').toggleClass('is-inactive', !steamless).attr('aria-disabled', String(!steamless));
       $('#emulator-login').toggleClass('is-visible', steamLogin).attr('aria-hidden', String(!steamLogin));
 

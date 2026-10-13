@@ -92,3 +92,19 @@ test('the settings rows exist and are bound by id', () => {
   assert.match(loader, /bindEmuRow\('option_manageDlc'/);
   assert.match(loader, /bindEmuRow\('option_stampIdentity'/);
 });
+
+// The automatic repair grew a second decision: what it does to a flagged game. Neither a stored
+// value nobody recognises nor a default-selected markup option may be the one that swaps dlls.
+test('what the automatic fix does defaults to the targeted repair, everywhere it is stored', () => {
+  const settings = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'settings.js'), 'utf8');
+  assert.match(settings, /autoApplyMode: 'repair'/, 'the shipped configuration must repair rather than reinstall');
+  assert.match(settings, /autoApplyMode === 'runtime' \? 'runtime' : 'repair'/, 'an unknown stored mode must fall back to repair');
+
+  const html = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'view', 'app.html'), 'utf8');
+  const select = html.slice(html.indexOf('id="option_autoApplyMode"'));
+  const options = select.slice(0, select.indexOf('</select>'));
+  assert.match(options, /<option value="repair" selected>/, 'the markup must default to the repair mode');
+
+  const loader = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'locale', 'loader.js'), 'utf8');
+  assert.match(loader, /bindEmuRow\('option_autoApplyMode'/, 'the row must be bound by id, not by position');
+});

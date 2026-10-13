@@ -372,6 +372,14 @@
           "true": "Bật"
         }
       },
+      "autoApplyMode": {
+        "name": "Tính năng sửa tự động làm gì",
+        "description": "Sửa chữa ghi lại các tệp mà trình giả lập đọc cho mọi thứ Game Health đánh dấu, và chỉ cài trình giả lập khi chưa có bản nào được hỗ trợ. Luôn áp dụng sẽ cài lại toàn bộ thiết lập GBE Fork. Cả hai đều không lấy trò chơi ra khỏi bản crack đã hoạt động.",
+        "value": {
+          "repair": "Sửa phần bị hỏng",
+          "runtime": "Luôn áp dụng trình giả lập"
+        }
+      },
       "manageDlc": {
         "name": "Quản lý quyền sở hữu DLC",
         "description": "Ghi vào configs.app.ini để trình giả lập báo cáo mọi DLC là đã sở hữu. Không liên quan đến thành tựu: để tắt nếu muốn giữ trò chơi nguyên bản hoặc tự quản lý DLC. Mặc định là tắt.",

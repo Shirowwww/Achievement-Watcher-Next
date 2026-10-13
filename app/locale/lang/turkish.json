@@ -372,6 +372,14 @@
           "true": "Etkin"
         }
       },
+      "autoApplyMode": {
+        "name": "Otomatik düzeltme ne yapar",
+        "description": "Onar, Game Health'in işaretlediği her şey için emülatörün okuduğu dosyaları yeniden yazar ve emülatörü yalnızca desteklenen bir emülatör yoksa kurar. Her zaman uygula ise bunun yerine tüm GBE Fork kurulumunu yeniden yükler. İkisi de bir oyunu zaten çalışan bir crack'ten ayırmaz.",
+        "value": {
+          "repair": "Bozuk olanı onar",
+          "runtime": "Emülatörü her zaman uygula"
+        }
+      },
       "manageDlc": {
         "name": "DLC sahipliğini yönet",
         "description": "Emülatörün her DLC'yi sahiplenilmiş olarak bildirmesi için configs.app.ini dosyasını yazar. Başarımlarla ilgisi yoktur: bir oyunu orijinal haliyle tutmak veya DLC'leri kendin yönetmek istiyorsan kapalı bırak. Varsayılan olarak devre dışı.",

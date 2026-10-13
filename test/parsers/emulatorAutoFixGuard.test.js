@@ -24,6 +24,25 @@ test('automatic repair paths stay gated on a real game executable', () => {
   assert.match(src, /requireGameExecutable: true/, 'background auto-fix must pass the executable requirement');
 });
 
+// The automatic pass writes into a game folder with no dialog in front of it, so these two are the
+// invariants that keep it from being the dangerous path: a restore point exists before the first
+// byte, and what gets written is decided by the diagnosis rather than assumed.
+test('the automatic pass takes a restore point before it writes, on either branch', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'achievements.js'), 'utf8');
+  assert.match(src, /gbeBackup\.createBackup\(/, 'the automatic pass must take a backup of its own');
+  const calls = src.match(/backupBeforeWrite\(\);/g) || [];
+  assert.equal(calls.length, 2, 'both the data repair and the full setup must back up first');
+});
+
+test('what the automatic pass writes comes from the health diagnosis', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'achievements.js'), 'utf8');
+  assert.match(src, /autoFixPlan\.plan\(/, 'the scan must consult the plan rather than its own two flags');
+  assert.match(src, /repairableCodes: autoFixPlan\.repairableCodesFor\(option\)/, 'the repairable set must follow the settings');
+  // configs.user.ini is only completed when a user-config finding is what is being repaired, so a
+  // scan never stamps an identity into a game nobody asked it to touch.
+  assert.match(src, /fillUserDefaults: codes\.some\(/, 'fillUserDefaults must stay conditional on the findings');
+});
+
 test('automatic emulator fix skips a folder that has no game executable', async () => {
   const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-guard-user-'));
   const gameDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-guard-game-'));

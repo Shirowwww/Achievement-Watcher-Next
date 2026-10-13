@@ -372,6 +372,14 @@
           "true": "Ativado"
         }
       },
+      "autoApplyMode": {
+        "name": "O que faz a correção automática",
+        "description": "Reparar reescreve os ficheiros que o emulador lê para tudo o que o Game Health assinala e só instala o emulador quando não existe nenhum compatível. Aplicar sempre reinstala toda a configuração do GBE Fork. Nenhuma das opções tira um jogo de um crack que já funciona.",
+        "value": {
+          "repair": "Reparar o que está avariado",
+          "runtime": "Aplicar sempre o emulador"
+        }
+      },
       "manageDlc": {
         "name": "Gerir a propriedade das DLC",
         "description": "Escreve o configs.app.ini para que o emulador reporte todas as DLC como possuídas. Sem relação com as proezas: deixe desativado para manter um jogo original ou para gerir as DLC por conta própria. Desativado por predefinição.",

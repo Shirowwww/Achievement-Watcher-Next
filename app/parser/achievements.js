@@ -49,6 +49,9 @@ const pe = require(path.join(appPath, '..', 'util', 'pe.js'));
 const crackLoaderDetect = require(path.join(appPath, '..', 'util', 'crackLoaderDetect.js'));
 const unrealLayout = require(path.join(appPath, '..', 'util', 'unrealLayout.js'));
 const emulatorFixEligibility = require(path.join(appPath, '..', 'util', 'emulatorFixEligibility.js'));
+const gameHealthRepair = require(path.join(appPath, '..', 'util', 'gameHealthRepair.js'));
+const autoFixPlan = require(path.join(appPath, '..', 'util', 'autoFixPlan.js'));
+const gbeBackup = require(path.join(appPath, '..', 'util', 'gbeBackup.js'));
 const { computeFolderContentVersion } = require(path.join(appPath, '..', 'util', 'contentVersion.js'));
 const steamless = require(path.join(appPath, 'steamless.js'));
 const apiCheckBypass = require(path.join(appPath, 'apiCheckBypass.js'));
@@ -855,6 +858,15 @@ function warnEmptyAchievementFileOnce(appid, filePath) {
 let _emuSetupAttempts = new Map();
 const EMU_SETUP_RETRY_MS = 6 * 60 * 60 * 1000;
 
+/*
+  The health diagnosis behind the automatic fix, keyed by game and kept only until the folder
+  changes: diagnose() walks a game folder, and a library of clean games would otherwise pay for that
+  walk on every scan. Codes only, not whole reports, and bounded - an unbounded per-game cache in
+  this file is how the renderer grew to 700MB once already.
+*/
+let _emuDiagnoseCache = new Map();
+const EMU_DIAGNOSE_CACHE_MAX = 400;
+
 // Cache emulator detection for the current scan; the filesystem is stable during it.
 let _emuCache = new Map();
 let _seededGameDirs = new Set();
@@ -1190,6 +1202,109 @@ async function announceAutomaticEmulatorFix() {
 }
 
 module.exports.onAutomaticEmulatorFixStarting = onAutomaticEmulatorFixStarting;
+
+// Written only when the repair is allowed to complete the file (goldberg.repair's fillUserDefaults).
+const USER_CONFIG_REPAIR_CODES = new Set(['NO_USER_CONFIG', 'BAD_USER_CONFIG', 'PLACEHOLDER_SAVE_PATH']);
+/*
+  Findings that actually stopped unlocks from being recorded. Clearing one of these earns the
+  "emulator fix applied - achievements enabled" toast; completing a config file or fetching icons
+  that were missing is housekeeping, and saying a game is now ready for it would be a lie.
+*/
+const BLOCKING_REPAIR_CODES = new Set([
+  'NO_ACHIEVEMENTS_JSON',
+  'BAD_ACHIEVEMENTS_JSON',
+  'ACHIEVEMENTS_JSON_NOT_ARRAY',
+  'MISSING_ACHIEVEMENTS',
+  'NO_STEAM_SETTINGS',
+  'SETTINGS_NOT_BESIDE_DLL',
+  'UNREAL_ENGINE_DLL_UNCONFIGURED',
+  'NO_APPID_TXT',
+  'STEAM_SHORTCUT_NO_APPID',
+]);
+
+/*
+  The part of goldberg.diagnose()'s report the automatic fix needs, cached until the folder changes.
+  diagnose() walks a game folder, so a library of healthy games would otherwise pay for that walk on
+  every scan; the fingerprint is the same one the fix cool-down uses.
+*/
+function diagnoseForAutomaticFix({ appid, gameDir, steamSettings, schema }) {
+  const key = `${appid}:${steamSettings || gameDir}`;
+  let version = null;
+  try {
+    version = computeFolderContentVersion(steamSettings, { prefix: 'emudiag' });
+  } catch (err) {
+    debug.log(`[${appid}] steam_settings diagnosis fingerprint failed => ${err}`);
+  }
+  const cached = version ? _emuDiagnoseCache.get(key) : null;
+  if (cached && cached.version === version) return cached.digest;
+
+  const report = goldberg.diagnose({ gameDir, appid, schema });
+  const digest = {
+    codes: (report.issues || []).map((issue) => String((issue && issue.code) || '')).filter(Boolean),
+    steamSettings: report.steamSettings || steamSettings || '',
+    dllDirs: report.dllDirs || [],
+    launchDirs: report.launchDirs || [],
+  };
+  if (version) {
+    // A plain cap, not an LRU: this only exists to spare repeated walks within a session.
+    if (_emuDiagnoseCache.size >= EMU_DIAGNOSE_CACHE_MAX) _emuDiagnoseCache.clear();
+    _emuDiagnoseCache.set(key, { version, digest });
+  }
+  return digest;
+}
+
+/*
+  Repair the findings Game Health would offer its "Rewrite the achievement data" button for, without
+  touching the emulator dll: the schema, the icons, steam_appid.txt and the config files, written
+  into the folder the emulator actually reads (which is not always the folder the settings are in -
+  see gameHealthRepair.settingsTarget). The same call the panel's button makes, minus its dialogs.
+*/
+async function repairHealthFindings({ appid, gameDir, diagnosis, schema, option, exePath, codes = [] }) {
+  const plan = gameHealthRepair.planAchievementDataRepair({
+    steamSettings: diagnosis.steamSettings,
+    gameDir,
+    achievementCount: (schema && schema.achievement && schema.achievement.total) || 0,
+    downloadIcons: !!(option.achievement && option.achievement.goldbergDownloadIcons),
+    dllDirs: diagnosis.dllDirs,
+    exePath: exePath || '',
+  });
+  const request = require('request-zero');
+  const downloadIcon =
+    option.achievement && option.achievement.goldbergDownloadIcons
+      ? async (url, dir) => {
+          const resolved = (await steam.resolveWorkingIconUrl(appid, url)) || url;
+          const r = await request.download(resolved, dir);
+          return r && r.path;
+        }
+      : undefined;
+  const summary = await gameHealthRepair.repairAchievementData({
+    goldberg,
+    plan,
+    appid,
+    schema,
+    downloadIcon,
+    launchDirs: diagnosis.launchDirs,
+    fetchDlc: (id) => steam.getDLCList(id),
+    fetchStats: (id) => fetchCommunityStats(id, { cacheDir: _userDataPath || userDataDir() }),
+    // The same two opt-ins the silent schema repair has always had: an automatic repair must not
+    // quietly enable every DLC, and configs.user.ini is only completed when one of the user-config
+    // findings is what it is being repaired for.
+    writeDlc: option.emulator.manageDlc === true,
+    fillUserDefaults: codes.some((code) => USER_CONFIG_REPAIR_CODES.has(code)),
+    ...goldberg.userIdentity(option, schemaLanguage.get(appid) || (option.achievement && option.achievement.lang)),
+  });
+  // The folder this repair just completed must not sit behind a remembered "not here".
+  steam.forgetLocalSchemaLocations();
+  try {
+    const runtime = goldberg.seedRuntimeSave({ appid, schema, steamSettings: summary.steamSettings, types: ['gbe'] });
+    if (runtime.created.length > 0) {
+      debug.log(`[${appid}] seeded GBE runtime achievements (${runtime.entries} locked entries) at ${runtime.created.map((r) => r.file).join(', ')}`);
+    }
+  } catch (err) {
+    debug.log(`[${appid}] could not seed GBE runtime achievements after the health repair => ${err}`);
+  }
+  return summary;
+}
 
 module.exports.autoApplyEmulatorFix = autoApplyEmulatorFix;
 async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, option, detectedEmu = null, detectedExe = null, skipAdvanced = false, schema = null, requireGameExecutable = false, onlyIfUnconfigured = false } = {}) {
@@ -3502,11 +3617,51 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       }
     }
 
+    /*
+      What the automatic fix should do to this game, from the same diagnosis Game Health shows.
+      needsSchema and needsRuntimeFix are the two signals discovery already carries; the diagnosis
+      adds every other repairable finding - a config file that was never written, icons that were
+      never fetched, a steam_settings folder the game does not read - which until now waited for
+      someone to open the panel and press Repair.
+    */
+    let autoFix = { act: !!(appid.data && (appid.data.needsSchema || needsRuntimeFix)), fullSetup: true, repairData: false, codes: [], reason: 'discovery-signals' };
+    let autoFixDiagnosis = null;
     if (
       appid.data &&
       appid.data.steamSettings &&
       hasSteamAchievementSchema &&
-      (appid.data.needsSchema || needsRuntimeFix)
+      resolvedGameDir &&
+      option.emulator &&
+      option.emulator.autoApplyNewGames !== false &&
+      /^[0-9]+$/.test(String(appid.appid))
+    ) {
+      try {
+        autoFixDiagnosis = diagnoseForAutomaticFix({
+          appid: appid.appid,
+          gameDir: resolvedGameDir,
+          steamSettings: appid.data.steamSettings,
+          schema: game,
+        });
+        autoFix = autoFixPlan.plan({
+          report: { issues: autoFixDiagnosis.codes.map((code) => ({ code })) },
+          repairableCodes: autoFixPlan.repairableCodesFor(option),
+          needsSchema: !!appid.data.needsSchema,
+          needsRuntimeFix,
+          mode: option.emulator.autoApplyMode,
+        });
+        if (!autoFix.act && autoFix.reason !== 'nothing-flagged') {
+          debug.log(`[${appid.appid}] automatic fix stands down - ${autoFix.reason}${autoFix.codes.length > 0 ? ` (${autoFix.codes.join(', ')})` : ''}`);
+        }
+      } catch (err) {
+        debug.log(`[${appid.appid}] health diagnosis for the automatic fix failed => ${err}`);
+      }
+    }
+
+    if (
+      appid.data &&
+      appid.data.steamSettings &&
+      hasSteamAchievementSchema &&
+      autoFix.act
     ) {
       // Run slow emulator repair in the background, but never on a game a loader like OnlineFix
       // already hooks in place - swapping the DLL breaks its emulation. The manual "Apply emulator
@@ -3551,6 +3706,8 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         const bgGameName = game.name;
         const bgEmu = resolvedEmu;
         const bgExe = resolvedExe;
+        const bgPlan = autoFix;
+        const bgDiagnosis = autoFixDiagnosis;
         // Snapshot the schema (shallow-copied list entries) so goldberg.repair reads a stable copy and
         // never races the foreground unlock-state merge that mutates the original list elements below.
         const bgSchema = {
@@ -3563,12 +3720,63 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         (async () => {
           let fixedSteamSettingsDirs = [];
           let fixApplied = false;
+          let healthRepaired = false;
+          /*
+            A restore point before anything is written. The manual fix and "Fix all games" have
+            always taken one; this pass took none, so an automatic write left only the replaced
+            dll's own .bak behind and nothing that could be put back as a whole.
+          */
+          const backupBeforeWrite = () => {
+            if (!_userDataPath) return;
+            try {
+              gbeBackup.createBackup({
+                goldberg,
+                userDataPath: _userDataPath,
+                appid: bgAppid,
+                gameDir: bgGameDir,
+                steamSettings: bgSteamSettings,
+                log: debug,
+              });
+            } catch (err) {
+              debug.log(`[${bgAppid}] pre-fix backup failed, continuing => ${err}`);
+            }
+          };
           // Same gate as the Uplay path: nothing is downloaded or written before the notice, and
           // "turn it off" stops this game rather than only the next one.
           if (canAutoApply && !(await announceAutomaticEmulatorFix())) {
             debug.log(`[${bgAppid}] automatic emulator fix stopped: automatic repair was switched off or not announced yet`);
+          } else if (canAutoApply && bgPlan.repairData && bgDiagnosis) {
+            /*
+              Repair the data in place: the findings Game Health lists are about files, not about the
+              emulator dll, and reinstalling a runtime that already works is both slower and more
+              intrusive than writing the files it reads.
+            */
+            try {
+              backupBeforeWrite();
+              const summary = await repairHealthFindings({
+                appid: bgAppid,
+                gameDir: bgGameDir,
+                diagnosis: bgDiagnosis,
+                schema: bgSchema,
+                option,
+                exePath: bgExe && bgExe.full,
+                codes: bgPlan.codes,
+              });
+              healthRepaired = true;
+              // Only a repair that unblocked recording says the game is ready; see BLOCKING_REPAIR_CODES.
+              fixApplied = bgNeedsSchema || bgPlan.codes.some((code) => BLOCKING_REPAIR_CODES.has(code));
+              fixedSteamSettingsDirs = [summary.steamSettings];
+              debug.log(
+                `[${bgAppid}] automatic health repair complete in ${summary.steamSettings} (${summary.achievementsJson.length} achievements` +
+                  `${bgPlan.codes.length > 0 ? `, for ${bgPlan.codes.join(', ')}` : ''})`
+              );
+            } catch (err) {
+              debug.log(`[${bgAppid}] automatic health repair failed => ${err}`);
+              reportEmulatorPackageBlocked(err);
+            }
           } else if (canAutoApply) {
             try {
+              backupBeforeWrite();
               const setup = await autoApplyEmulatorFix({
                 gameDir: bgGameDir,
                 gameName: bgGameName,
@@ -3604,7 +3812,10 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           */
           const schemaRepairDirs = new Set();
           const gameExeStillPresent = () => !!(bgExe && bgExe.full && fs.existsSync(bgExe.full));
-          if (canAutoApply && (await announceAutomaticEmulatorFix())) {
+          if (healthRepaired) {
+            // The health repair above wrote the schema into the folder the emulator reads; rewriting
+            // it here would only undo its choice of folder.
+          } else if (canAutoApply && (await announceAutomaticEmulatorFix())) {
             if (!bgWorkingCrackLoader && bgNeedsSchema && gameExeStillPresent() && goldberg.readLocalSchema(bgSteamSettings).length === 0) schemaRepairDirs.add(bgSteamSettings);
             for (const dir of fixedSteamSettingsDirs) {
               if (dir && gameExeStillPresent() && goldberg.readLocalSchema(dir).length === 0) schemaRepairDirs.add(dir);

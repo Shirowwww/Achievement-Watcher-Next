@@ -372,6 +372,14 @@
           "true": "Aktif"
         }
       },
+      "autoApplyMode": {
+        "name": "Apa yang dilakukan perbaikan otomatis",
+        "description": "Perbaiki menulis ulang berkas yang dibaca emulator untuk semua yang ditandai Game Health, dan hanya memasang emulator jika tidak ada yang didukung. Selalu terapkan memasang ulang seluruh pengaturan GBE Fork. Keduanya tidak mencabut game dari crack yang sudah berfungsi.",
+        "value": {
+          "repair": "Perbaiki yang rusak",
+          "runtime": "Selalu terapkan emulator"
+        }
+      },
       "manageDlc": {
         "name": "Kelola kepemilikan DLC",
         "description": "Menulis configs.app.ini agar emulator melaporkan semua DLC sebagai dimiliki. Tidak berkaitan dengan pencapaian: biarkan nonaktif untuk menjaga game tetap orisinal atau untuk mengelola DLC sendiri. Nonaktif secara bawaan.",

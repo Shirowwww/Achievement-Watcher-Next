@@ -264,6 +264,19 @@
                 </li>
 
                 <li class="hasHelper">
+                  <div class="left"><i class="fas fa-wrench"></i> <span>What the automatic fix does</span></div>
+                  <div class="right">
+                    <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                    <select autocomplete="off" id="option_autoApplyMode">
+                      <option value="repair" selected>Repair what is broken</option>
+                      <option value="runtime">Always apply the emulator</option>
+                    </select>
+                    <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                  </div>
+                  <div class="help">Repair rewrites the files the emulator reads for everything Game Health flags, and installs the emulator only when no supported one is there. Always apply re-installs the whole GBE Fork setup instead. Neither takes a game away from a crack that already works.</div>
+                </li>
+
+                <li class="hasHelper">
                   <div class="left"><i class="fas fa-puzzle-piece"></i> <span>Manage DLC ownership</span></div>
                   <div class="right">
                     <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>

@@ -372,6 +372,14 @@
           "true": "Aktivert"
         }
       },
+      "autoApplyMode": {
+        "name": "Hva den automatiske rettingen gjør",
+        "description": "Reparer skriver om filene emulatoren leser for alt Game Health markerer, og installerer bare emulatoren hvis det ikke finnes en støttet. Bruk alltid installerer hele GBE Fork-oppsettet på nytt. Ingen av dem tar et spill bort fra en crack som allerede fungerer.",
+        "value": {
+          "repair": "Reparer det som er ødelagt",
+          "runtime": "Bruk alltid emulatoren"
+        }
+      },
       "manageDlc": {
         "name": "Administrer DLC-eierskap",
         "description": "Skriver configs.app.ini slik at emulatoren rapporterer alt DLC som eid. Har ikke noe med prestasjoner å gjøre: la den stå av for å holde et spill uendret, eller for å administrere DLC selv. Slått av som standard.",
