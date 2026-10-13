@@ -19,6 +19,7 @@ const notifyStrings = require('../util/notifyStrings.js');
 const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const { xdgAppDirs } = require(sharedAppModulePath('util/xdgAppDirs.js'));
+const layout = require(sharedAppModulePath('parser/rpcs3Layout.js'));
 
 const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 
@@ -153,9 +154,9 @@ function read(trophyDir) {
 }
 
 // Discover trophy sets under the user's saved folders (cfg/userdir.db - the same list the app
-// scans). An RPCS3 root is any folder holding rpcs3.exe with dev_hdd0/home/<user>/trophy/<game>, or
-// the configuration folder of the Linux build (~/.config/rpcs3, or its Flatpak copy), which holds
-// dev_hdd0 the same way.
+// scans) and the configuration folder of the Linux build (~/.config/rpcs3, or its Flatpak copy).
+// The app's own layout reader finds dev_hdd0 in each, so an install, a configuration folder or a
+// relocated virtual disk is watched whether or not rpcs3.exe sits beside it.
 function discover(configFile = userDirFile, nativeRoots = xdgAppDirs('rpcs3')) {
   const targets = [];
   const seen = new Set();
@@ -173,24 +174,17 @@ function discover(configFile = userDirFile, nativeRoots = xdgAppDirs('rpcs3')) {
     /* no saved folders yet: the Linux build's own folder is still watched */
   }
 
-  const roots = [...userDirs.filter((dir) => fs.existsSync(path.join(dir, 'rpcs3.exe'))), ...nativeRoots];
-  for (const dir of roots) {
-    let users;
-    try {
-      users = fs.readdirSync(path.join(dir, 'dev_hdd0', 'home'), { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
-    } catch {
-      continue;
-    }
-    for (const user of users) {
+  for (const dir of [...userDirs, ...nativeRoots]) {
+    for (const root of layout.trophyRoots(dir)) {
       let games;
       try {
-        games = fs.readdirSync(path.join(dir, 'dev_hdd0', 'home', user, 'trophy'), { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
+        games = fs.readdirSync(root.path, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
       } catch {
         continue;
       }
       for (const game of games) {
         if (seen.has(game.toLowerCase())) continue;
-        const trophyDir = path.join(dir, 'dev_hdd0', 'home', user, 'trophy', game);
+        const trophyDir = path.join(root.path, game);
         if (!fs.existsSync(path.join(trophyDir, USER_FILE)) || !fs.existsSync(path.join(trophyDir, SCHEMA_FILE))) continue;
         targets.push({ appid: game, trophyDir });
         seen.add(game.toLowerCase());

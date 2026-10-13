@@ -95,9 +95,10 @@ function linuxHost({ env, home }) {
   };
 }
 
-// C:\users\x -> <prefix>/drive_c/users/x, following the prefix's own drive letters.
+// C:\users\x -> <prefix>/drive_c/users/x, following the prefix's own drive letters. Proton starts
+// some helpers under an extended-length path (\\?\X:\...), which names the same file.
 function winToUnix(prefix, winPath) {
-  const match = /^([a-zA-Z]):[\\/]?(.*)$/.exec(String(winPath || ''));
+  const match = /^(?:\\\\\?\\)?([a-zA-Z]):[\\/]?(.*)$/.exec(String(winPath || ''));
   if (!match) return null;
   const letter = match[1].toLowerCase();
   let base;

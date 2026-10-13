@@ -24,13 +24,16 @@ ra.setUserDataPath(userDataDir());
 ra.setCipher(aes);
 
 // Windows emulators and frontends that report to RetroAchievements (its emulator support list),
-// with the nightly and fork names that keep the same stem.
+// with the nightly and fork names that keep the same stem. Native Linux builds (retroarch,
+// dolphin-emu, pcsx2-qt, PPSSPPSDL...) have no extension and are matched as if they had one.
 const EMULATOR_PROCESS =
   /^(?:retroarch|ralibretro|emuhawk|rapplewin|flycast|winarcadia|amiarcadia|ranes|ravba(?:-m)?|ravisualboyadvance(?:-m)?|rasnes9x|rap64|raproject64|raquasi88|rameka|ragens|raoricutron|project64|skyemu|linkboy|rmg|gopher64|dolphin|melonds|mesen|stella|gearboy|gearsystem|gearcoleco|(?:duckstation|pcsx2|ppsspp|xbsx2|dolphin-?\w+|flycast|melonds|retroarch)[\w.-]*)\.exe$/i;
 // Every RA-integrated emulator (the RA* builds, RALibretro, WinArcadia and the forks) ships the
 // RetroAchievements toolkit beside its executable, whatever the executable is called.
 const INTEGRATION_DLLS = ['RA_Integration.dll', 'RA_Integration-x64.dll'];
-const NOT_EMULATOR_PROCESS = /^dolphin-?(?:tool|memoryengine)\.exe$/i;
+const NOT_EMULATOR_PROCESS = /^dolphin-?(?:tool|memory-?engine)\.exe$/i;
+// KDE's file manager; the native Dolphin emulator is dolphin-emu.
+const KDE_FILE_MANAGER = 'dolphin';
 // Half the poll interval, so a poll is due on every second tick; a process snapshot costs ~6 ms.
 const CHECK_INTERVAL_MS = 4 * 1000;
 // The API blocks for ten minutes above roughly 13 calls a minute; 7.5 a minute keeps a margin for
@@ -65,11 +68,17 @@ function hasIntegrationDll(entry) {
   return integrationByPid.get(pid);
 }
 
+function isEmulatorName(name) {
+  if (name === KDE_FILE_MANAGER) return false;
+  const image = /\.exe/i.test(name) ? name : `${name}.exe`;
+  return EMULATOR_PROCESS.test(image) && !NOT_EMULATOR_PROCESS.test(image);
+}
+
 function findEmulator(processes, probe = hasIntegrationDll) {
   const list = (processes || []).filter((entry) => entry && entry.process);
   const live = new Set(list.map((entry) => Number(entry.pid)));
   for (const pid of integrationByPid.keys()) if (!live.has(pid)) integrationByPid.delete(pid);
-  const named = list.find((entry) => EMULATOR_PROCESS.test(entry.process) && !NOT_EMULATOR_PROCESS.test(entry.process));
+  const named = list.find((entry) => isEmulatorName(entry.process));
   if (named) return named.process;
   const integrated = list.find((entry) => probe(entry));
   return integrated ? integrated.process : '';

@@ -363,11 +363,15 @@ module.exports = async (message, option = {}) => {
         const xinput = process.platform === 'win32' ? await loadXinput() : require('../util/evdevRumble.js');
         if (xinput) {
           if (!deliverToast) message.delay = 0;
-          const regedit = await loadRegedit();
+          // How long Windows keeps a toast on screen; other systems have no such setting, and
+          // loading the registry there throws before the rumble is ever scheduled.
           let duration = 5;
-          try {
-            duration = +regedit.regQueryIntegerValue('HKCU', 'Control Panel/Accessibility', 'MessageDuration') || 5;
-          } catch {}
+          if (process.platform === 'win32') {
+            const regedit = await loadRegedit();
+            try {
+              duration = +regedit.regQueryIntegerValue('HKCU', 'Control Panel/Accessibility', 'MessageDuration') || 5;
+            } catch {}
+          }
           setTimeout(function () {
             debug.log('XInput Rumble');
             xinput.rumble({ forceStateWhileRumble: true }).catch((err) => {
