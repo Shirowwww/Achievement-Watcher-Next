@@ -732,6 +732,12 @@ module.exports = { SpawnOverlayNotification };
 // `overlayOpened` can't drift from what's on screen; self-caused transitions are dropped below.
 process.on('message', (msg) => {
   if (!msg || typeof msg !== 'object') return;
+  // On Linux the app hands over its installation key once the keyring has answered, which can be
+  // after this process started; util/aes.js reads it from the environment on every use.
+  if (typeof msg.appSecret === 'string') {
+    process.env.AW_SECRET = msg.appSecret;
+    return;
+  }
   if (msg.appPid !== undefined) {
     // createMainWindow() runs after launchWatchdog(), so AW_APP_PIDS alone misses the renderer's
     // PID on a fresh launch; the main process sends it once the window actually exists.

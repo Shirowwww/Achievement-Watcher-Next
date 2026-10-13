@@ -149,6 +149,8 @@ test('Windows paths map into the prefix: C: to drive_c, Z: to the filesystem roo
   try {
     assert.equal(winToUnix(prefix, 'C:\\users\\steamuser\\Documents'), path.join(prefix, 'drive_c', 'users', 'steamuser', 'Documents'));
     assert.equal(winToUnix(prefix, 'Z:\\home\\player\\Game\\game.exe'), '/home/player/Game/game.exe');
+    // Proton starts xalia.exe under an extended-length path with a "wine/.." step in it.
+    assert.equal(winToUnix(prefix, '\\\\?\\Z:\\opt\\proton\\files\\share\\wine/../xalia/xalia.exe'), '/opt/proton/files/share/xalia/xalia.exe');
     assert.equal(winToUnix(prefix, 'Q:\\nowhere'), null);
     assert.equal(winToUnix(prefix, 'relative\\path'), null);
   } finally {

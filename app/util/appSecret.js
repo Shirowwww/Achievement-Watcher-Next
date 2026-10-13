@@ -3,7 +3,7 @@
 /*
   The key everything locally encrypted is encrypted with: 256 random bits, generated once per
   installation and stored through Electron's safeStorage, which ties it to the account that created
-  it: Windows DPAPI, or on Linux the desktop keyring (GNOME Keyring, KWallet).
+  it: Windows DPAPI, or on Linux the desktop's secret service (GNOME Keyring, KWallet, the portal).
 
   What it replaces: a passphrase compiled into a public repository (util/aes.js). Anything
   "encrypted" with a key anybody can read is obfuscated, not encrypted - the emulator Steam
@@ -31,6 +31,22 @@ function isSecret(value) {
   return /^[0-9a-f]{64}$/i.test(String(value || '').trim());
 }
 
+/*
+  Linux never uses safeStorage's synchronous calls: they go through libsecret on the main thread and
+  block the whole app while the desktop shows a keyring prompt (a fresh GNOME autologin asks for a new
+  keyring password), whereas the asynchronous ones can answer without any prompt (the Secret portal).
+  The app resolves the key with ensureSecretAsync() and hands it here; until then the key is ''.
+*/
+let asyncOnly = false;
+let providedSecret = '';
+function useAsyncKeyring(secret = '') {
+  asyncOnly = true;
+  providedSecret = isSecret(secret) ? String(secret).trim().toLowerCase() : '';
+}
+function isAsyncKeyring() {
+  return asyncOnly;
+}
+
 // safeStorage as this module needs it, or null. Encryption can be unavailable even when the object
 // exists (no keyring, called before the app is ready), and asking is itself allowed to throw.
 function usableSafeStorage(safeStorage) {
@@ -44,46 +60,25 @@ function usableSafeStorage(safeStorage) {
 // The stored key, or '' when there is none to read (missing, unreadable, or written by another
 // Windows account - DPAPI refuses those, which is the whole point).
 function loadSecret(userDataPath, safeStorage) {
+  if (asyncOnly) return providedSecret;
   const store = usableSafeStorage(safeStorage);
   if (!store || !userDataPath) return '';
   try {
-    const stored = fs.readFileSync(secretFile(userDataPath));
-    const decrypted = store.decryptString(stored);
-    if (!isSecret(decrypted)) return '';
-    const secret = decrypted.trim().toLowerCase();
-    moveToKeyring(userDataPath, store, stored, secret);
-    return secret;
+    const decrypted = store.decryptString(fs.readFileSync(secretFile(userDataPath)));
+    return isSecret(decrypted) ? decrypted.trim().toLowerCase() : '';
   } catch {
     return '';
   }
 }
 
-function writeKeyFile(userDataPath, store, secret) {
+// Temp file then rename: half a key file is a key nobody can read, and it would take the emulator
+// password and the Xbox session with it.
+function writeKeyFile(userDataPath, sealed) {
   const file = secretFile(userDataPath);
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  // Temp file then rename: half a key file is a key nobody can read, and it would take the
-  // emulator password and the Xbox session with it.
   const temporary = `${file}.${process.pid}.tmp`;
-  fs.writeFileSync(temporary, store.encryptString(secret));
+  fs.writeFileSync(temporary, sealed);
   fs.renameSync(temporary, file);
-}
-
-/*
-  Linux only. With no keyring running, Chromium seals data under a fixed password ("v10" prefix),
-  which it can still open once a keyring is there. A key first stored that way is sealed again
-  under the keyring (gnome-libsecret, kwallet) the first time one answers, so it does not stay
-  merely obfuscated for the life of the installation.
-*/
-function moveToKeyring(userDataPath, store, stored, secret, platform = process.platform) {
-  // Windows output starts with "v10" too, for an unrelated reason: never touch it there.
-  if (platform !== 'linux' || typeof store.getSelectedStorageBackend !== 'function') return;
-  try {
-    const backend = store.getSelectedStorageBackend();
-    if (backend === 'basic_text' || backend === 'unknown' || stored.subarray(0, 3).toString('latin1') !== 'v10') return;
-    writeKeyFile(userDataPath, store, secret);
-  } catch {
-    /* the obfuscated copy keeps working; this is retried next launch */
-  }
 }
 
 /*
@@ -92,6 +87,7 @@ function moveToKeyring(userDataPath, store, stored, secret, platform = process.p
   that only lives in memory would make every file it wrote unreadable on the next launch.
 */
 function ensureSecret(userDataPath, safeStorage) {
+  if (asyncOnly) return providedSecret;
   const store = usableSafeStorage(safeStorage);
   if (!store || !userDataPath) return '';
   const existing = loadSecret(userDataPath, store);
@@ -105,11 +101,49 @@ function ensureSecret(userDataPath, safeStorage) {
   if (fs.existsSync(secretFile(userDataPath))) return '';
   const secret = crypto.randomBytes(32).toString('hex');
   try {
-    writeKeyFile(userDataPath, store, secret);
+    writeKeyFile(userDataPath, store.encryptString(secret));
   } catch {
     return ''; // could not persist it: staying on the legacy format beats writing what we cannot re-read
   }
   return secret;
 }
 
-module.exports = { SECRET_FILE, ensureSecret, isSecret, loadSecret, moveToKeyring, secretFile };
+// ensureSecret() over the asynchronous safeStorage calls, with the same rules. A key sealed under a
+// weaker provider than the one now available (shouldReEncrypt) is sealed again under the new one.
+async function ensureSecretAsync(userDataPath, safeStorage) {
+  try {
+    if (!userDataPath || !safeStorage || !(await safeStorage.isAsyncEncryptionAvailable())) return '';
+    const file = secretFile(userDataPath);
+    if (fs.existsSync(file)) {
+      const { result, shouldReEncrypt } = await safeStorage.decryptStringAsync(fs.readFileSync(file));
+      if (!isSecret(result)) return '';
+      const secret = result.trim().toLowerCase();
+      if (shouldReEncrypt) writeKeyFile(userDataPath, await safeStorage.encryptStringAsync(secret));
+      return secret;
+    }
+    const secret = crypto.randomBytes(32).toString('hex');
+    writeKeyFile(userDataPath, await safeStorage.encryptStringAsync(secret));
+    return secret;
+  } catch {
+    return '';
+  }
+}
+
+/*
+  Linux: Chromium seals with a fixed, public password ("v10") when no secret service would answer
+  without a prompt, so such a key is only obfuscated; a keyring or the portal give "v11" and above.
+  It is sealed again under the real one as soon as that answers (shouldReEncrypt above).
+*/
+function isObfuscatedOnly(userDataPath) {
+  try {
+    const fd = fs.openSync(secretFile(userDataPath), 'r');
+    const prefix = Buffer.alloc(3);
+    fs.readSync(fd, prefix, 0, 3, 0);
+    fs.closeSync(fd);
+    return prefix.toString('latin1') === 'v10';
+  } catch {
+    return true;
+  }
+}
+
+module.exports = { SECRET_FILE, ensureSecret, ensureSecretAsync, isObfuscatedOnly, isAsyncKeyring, isSecret, loadSecret, secretFile, useAsyncKeyring };

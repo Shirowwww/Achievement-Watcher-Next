@@ -47,6 +47,8 @@ function installationKey() {
     if (electron && electron.safeStorage && electron.app) {
       const appSecret = require('./appSecret.js');
       resolvedKey = keyFromSecret(appSecret.ensureSecret(electron.app.getPath('userData'), electron.safeStorage));
+      // Linux hands the key over once the keyring has answered: ask again rather than settle on none.
+      if (!resolvedKey && appSecret.isAsyncKeyring()) resolvedKey = undefined;
     } else if (electron && electron.ipcRenderer) {
       resolvedKey = keyFromSecret(electron.ipcRenderer.sendSync('get-app-secret'));
     }

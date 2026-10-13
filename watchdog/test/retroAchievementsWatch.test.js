@@ -73,6 +73,14 @@ test('every emulator on the RetroAchievements support list is known by name', ()
   assert.equal(findEmulator([{ process: 'DolphinMemoryEngine.exe' }], () => false), '');
 });
 
+test('a native Linux emulator is known by its binary name, KDE Dolphin and the Dolphin tools are not', () => {
+  const names = ['retroarch', 'dolphin-emu', 'dolphin-emu-nogui', 'pcsx2-qt', 'duckstation-qt', 'PPSSPPSDL', 'PPSSPPQt', 'melonDS', 'flycast', 'SkyEmu'];
+  for (const name of names) assert.equal(findEmulator([{ process: 'bash' }, { process: name }], () => false), name, name);
+  for (const name of ['dolphin', 'dolphin-tool', 'dolphin-memory-engine', 'retroarch.exe.bak', 'xenia', 'bash']) {
+    assert.equal(findEmulator([{ process: name }], () => false), '', name);
+  }
+});
+
 test('an emulator with an unknown name is found by the RA toolkit dll beside it', () => {
   const processes = [{ process: 'explorer.exe', pid: 10 }, { process: 'MyFork.exe', pid: 20 }];
   assert.equal(findEmulator(processes, (entry) => entry.pid === 20), 'MyFork.exe');

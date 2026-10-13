@@ -102,6 +102,27 @@ test('discover finds trophy sets under a saved RPCS3 folder', () => {
   }
 });
 
+test('discover finds a saved native RPCS3 folder with no rpcs3.exe, its dev_hdd0 moved by vfs.yml', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-rpcs3native-'));
+  try {
+    const configDir = path.join(tmp, 'rpcs3-config');
+    const disk = path.join(tmp, 'ps3-disk');
+    const trophyDir = path.join(disk, 'home', '00000001', 'trophy', 'NPWR67890_00');
+    fs.mkdirSync(path.join(configDir, 'config'), { recursive: true });
+    fs.writeFileSync(path.join(configDir, 'config', 'vfs.yml'), `$(EmulatorDir): ""\n/dev_hdd0/: ${disk}/\n`, 'utf8');
+    fs.mkdirSync(trophyDir, { recursive: true });
+    fs.writeFileSync(path.join(trophyDir, 'TROPCONF.SFM'), SCHEMA, 'utf8');
+    fs.writeFileSync(path.join(trophyDir, 'TROPUSR.DAT'), buildUserData([{ id: 0, time: 0, achieved: false }]));
+
+    const config = path.join(tmp, 'userdir.db');
+    fs.writeFileSync(config, JSON.stringify([{ path: configDir, enabled: true }]));
+
+    assert.deepEqual(rpcs3Watch._internal.discover(config, []), [{ appid: 'NPWR67890_00', trophyDir }]);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
 test('discover finds trophy sets in the Linux build configuration folder, with no saved folder', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-rpcs3xdg-'));
   try {

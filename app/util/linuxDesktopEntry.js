@@ -39,6 +39,9 @@ function applicationEntry({ command, protocol }) {
     `Icon=${ICON_NAME}`,
     'Terminal=false',
     'Categories=Game;Utility;',
+    // The window class Electron derives from package.json's name: it ties AW's windows to this entry,
+    // so the dock and the task switcher show its icon instead of a generic one.
+    'StartupWMClass=achievement-watcher',
     `MimeType=x-scheme-handler/${protocol};`,
     'X-GNOME-UsesNotifications=true',
     '',
