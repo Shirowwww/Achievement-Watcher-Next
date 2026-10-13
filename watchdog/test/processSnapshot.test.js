@@ -6,7 +6,7 @@ const path = require('path');
 const snapshot = require('../util/processSnapshot.js');
 const tasklist = require('../util/tasklist.js');
 
-// The ToolHelp snapshot replaces spawning `tasklist.exe` on the playtime monitor's 3s poll: these
+// The native process list replaces spawning `tasklist.exe` on the playtime monitor's 3s poll: these
 // assert the shape the monitor relies on, not a specific machine's process table contents.
 
 test('the native snapshot is available and lists the current process', () => {
@@ -36,6 +36,70 @@ test('a process path resolves for the current process and never throws for a dea
   assert.equal(snapshot.getProcessPath(0x7ffffff0), '');
   assert.equal(snapshot.getProcessPath(-1), '');
   assert.equal(snapshot.getProcessPath(undefined), '');
+});
+
+test('the system query lists the same processes as the ToolHelp snapshot', () => {
+  const key = (entry) => `${entry.pid}:${entry.process}`;
+  // Processes come and go between two reads, so compare against a read taken on either side.
+  const before = new Set(snapshot.listToolHelpSync().map(key));
+  const listed = snapshot.listSync().map(key);
+  const after = new Set(snapshot.listToolHelpSync().map(key));
+  for (const row of listed) assert.ok(before.has(row) || after.has(row), `unexpected row ${row}`);
+  const seen = new Set(listed);
+  for (const row of before) if (after.has(row)) assert.ok(seen.has(row), `missing row ${row}`);
+});
+
+test('a process started or ended between two polls is seen by the next one', async () => {
+  const { spawn } = require('child_process');
+  snapshot.listSync();
+  const child = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 5000)'], { stdio: 'ignore' });
+  try {
+    await new Promise((resolve) => child.once('spawn', resolve));
+    assert.ok(snapshot.listSync().some((entry) => entry.pid === child.pid), 'the new process must be listed');
+  } finally {
+    child.kill();
+  }
+  await new Promise((resolve) => child.once('exit', resolve));
+  // The pid is freed once the last handle closes, which follows the exit closely but not at once.
+  let gone = false;
+  for (let i = 0; i < 50 && !gone; i++) {
+    gone = !snapshot.listSync().some((entry) => entry.pid === child.pid);
+    if (!gone) await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  assert.ok(gone, 'the exited process must leave the list');
+});
+
+test('without the one-call list the snapshot still answers through ToolHelp', () => {
+  // A child process: koffi registers struct names for the whole process, so the module cannot be
+  // loaded a second time here.
+  const { execFileSync } = require('child_process');
+  const script = `
+    const koffi = require('koffi');
+    const load = koffi.load;
+    koffi.load = (name, ...rest) => {
+      if (String(name).toLowerCase() === 'ntdll.dll') throw new Error('simulated: ntdll unavailable');
+      return load.call(koffi, name, ...rest);
+    };
+    const snapshot = require('./util/processSnapshot.js');
+    process.stdout.write(JSON.stringify({ available: snapshot.isAvailable(), listed: snapshot.listSync().some((e) => e.pid === process.pid) }));
+  `;
+  const out = JSON.parse(execFileSync(process.execPath, ['-e', script], { cwd: path.join(__dirname, '..'), encoding: 'utf8' }));
+  assert.deepEqual(out, { available: true, listed: true });
+});
+
+test('the last list is reused only while the pids, their order and the newest process all match', () => {
+  const previous = { pids: [0, 4, 120, 4410], newestCreated: 1000n, at: 0 };
+  const reuse = (pids, newestCreated, now = 1000) => snapshot.canReuseList(previous, Uint32Array.from(pids), newestCreated, now);
+
+  assert.equal(reuse([0, 4, 120, 4410], 1000n), true);
+  assert.equal(reuse([0, 4, 120], 1000n), false, 'a process ended');
+  assert.equal(reuse([0, 4, 120, 4410, 5000], 1000n), false, 'a process started');
+  assert.equal(reuse([0, 4, 4410, 120], 1000n), false, 'an ended pid was handed to a new process');
+  // The newest process ended and a new one took its pid: same list, different creation time.
+  assert.equal(reuse([0, 4, 120, 4410], 2000n), false);
+  assert.equal(reuse([0, 4, 120, 4410], null), false, 'the newest process could not be queried');
+  assert.equal(reuse([0, 4, 120, 4410], 1000n, 10 * 60 * 1000), false, 'a list too old is read again');
+  assert.equal(snapshot.canReuseList(null, Uint32Array.from([0, 4]), 1000n, 0), false);
 });
 
 test('tasklist.list keeps the {process, pid} contract the monitor indexes on', async () => {

@@ -58,6 +58,7 @@ const settings = require('./settings.js');
 const monitor = require('./monitor.js');
 const parseWithRetry = require('./util/parseWithRetry.js');
 const waitForFileStable = require('./util/waitForFileStable.js');
+const { fileStamp, sameStamp } = require('./util/fileStamp.js');
 const uplayR2 = require('./util/uplayR2.js');
 const notificationDedup = require('./util/notificationDedup.js');
 const progressMute = require('./util/progressMute.js');
@@ -840,6 +841,8 @@ var app = {
         });
 
       debug.log('Loading Options ...');
+      // Stamped before the read, so a save landing during it still differs and reloads.
+      self.optionsStamp = fileStamp(cfg_file.option);
       self.options = await settings.load(cfg_file.option);
       // Windows toasts resolve their sound from the same overlay settings as the in-game
       // overlay (Sound / Random Sound / Volume); refresh on every settings reload too.
@@ -872,7 +875,7 @@ var app = {
 
       try {
         self.watcher[0] = watch(cfg_file.option, function (evt, name) {
-          if (evt === 'update') self.scheduleOptionsReload();
+          if (evt === 'update' && !sameStamp(self.optionsStamp, fileStamp(cfg_file.option))) self.scheduleOptionsReload();
         });
         self.watcher[0].on('error', (err) => debug.error(`[watch:options] ${err}`));
       } catch (err) {

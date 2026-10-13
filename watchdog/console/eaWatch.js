@@ -217,7 +217,9 @@ function parseLog(logsRoot = EA_LOGS_ROOT) {
     snapshots.set(cacheKey(entry), state);
   }
 
-  const parsed = { entries, snapshots };
+  // Cached for as long as the Watchdog runs: the copy gives each value its own string, where a regex
+  // match would keep the whole log text (tens of MB) alive.
+  const parsed = structuredClone({ entries, snapshots });
   cached = { key, parsed };
   return parsed;
 }

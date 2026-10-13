@@ -79,6 +79,12 @@ renamed in 3.9.0 and the history is kept under one file.
   achievements come from, then either an info badge for an official game (Steam, GOG, Epic, Ubisoft
   Connect, EA, Xbox, RetroAchievements) or the Game health dot for an installed game a crack or an
   emulator serves. Installed console emulator games get a dot too.
+- **Much less memory with EA Desktop installed.** AW Next kept a full copy of EA Desktop's log in
+  memory for as long as it ran, once in the app and once in the background monitor: about 47 MB
+  each for a 23 MB log. It now keeps only what it read from it.
+- **A lighter check for running games.** The playtime monitor first asks Windows whether any
+  program started or stopped since its last look, and reads the process list in one call when one
+  did: about 0.2 ms instead of 10 ms every 3 seconds on a quiet PC, half the time on a busy one.
 
 ### Fixed
 
@@ -132,6 +138,10 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Fewer antivirus false alarms.** The installer no longer starts PowerShell to check whether AW
   Next is running, and AW Next no longer lists the PC's network connections each time it starts:
   the background monitor now closes with the app instead of being left running after a crash.
+- **The background monitor no longer restarts itself every hour.** Windows records when the
+  settings file was last read about an hour after the read, and the monitor took that for a
+  settings change: it closed and reopened every watcher, leaving unlocks unwatched for a couple of
+  seconds each time. Only a real settings change restarts it now.
 
 ## 3.11.2 - 2026-10-09
 

@@ -372,7 +372,9 @@ function readEaDesktopVerboseLog(logFilePath) {
     completionEventsBySet.set(achievement.achievementSet, events);
   }
 
-  const parsed = { filePath, filePaths, logsRoot: String(bundle?.logsRoot || '').trim(), achievementSets, completionEventsBySet, gameInfoByContentId };
+  // Cached for the life of the process: the copy gives each value its own string, where a regex
+  // match would keep the whole log text (tens of MB) alive.
+  const parsed = structuredClone({ filePath, filePaths, logsRoot: String(bundle?.logsRoot || '').trim(), achievementSets, completionEventsBySet, gameInfoByContentId });
   cachedVerboseLog = { cacheKey, parsed };
   return parsed;
 }

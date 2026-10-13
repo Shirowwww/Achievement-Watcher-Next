@@ -33,10 +33,20 @@ test('the options watcher debounces instead of restarting per write', () => {
   assert.match(source, /const OPTIONS_RELOAD_DEBOUNCE_MS = \d+/, 'the coalescing window must be named');
   assert.match(
     source,
-    /if \(evt === 'update'\) self\.scheduleOptionsReload\(\);/,
+    /if \(evt === 'update'[^\n]*\) self\.scheduleOptionsReload\(\);/,
     'the watcher callback must only schedule, never restart inline'
   );
   assert.match(source, /clearTimeout\(this\.optionsReloadTimer\)/, 'a pending reload must be pushed back by a later write');
+});
+
+test('only a write restarts the watchdog, not its own read coming back as an access-time event', () => {
+  // NTFS reports the access time an hour after each read, which restarted every watcher hourly.
+  assert.match(
+    source,
+    /self\.optionsStamp = fileStamp\(cfg_file\.option\);\s*self\.options = await settings\.load\(cfg_file\.option\)/,
+    'the stamp must be taken before the read, so a save landing during it still reloads'
+  );
+  assert.match(source, /evt === 'update' && !sameStamp\(self\.optionsStamp, fileStamp\(cfg_file\.option\)\)/);
 });
 
 test('a burst of option writes collapses into one reload', (t) => {

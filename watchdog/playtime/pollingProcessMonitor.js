@@ -23,9 +23,9 @@ function indexProcesses(entries, shouldObserve = () => true) {
 }
 
 // The native WQL observer can terminate the whole Node process on some Windows builds. Polling the
-// process list keeps process tracking available with no native callback lifetime; the snapshot
-// itself is a ToolHelp call (see util/processSnapshot.js), so the poll is cheap enough to run for
-// the whole life of the tray daemon.
+// process list keeps process tracking available with no native callback lifetime; the list comes
+// from util/processSnapshot.js, which re-reads names only when the process table moved, so the poll
+// is cheap enough to run for the whole life of the tray daemon.
 //
 // `resolvePath` is optional and is called only for processes that appeared since the previous poll,
 // never for the whole snapshot: the image path costs one OpenProcess per row and only a creation

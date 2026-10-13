@@ -1,7 +1,7 @@
 'use strict';
 
 // Process listing for the playtime monitor and the "is the game running?" notification guard. The
-// native ToolHelp snapshot (util/processSnapshot.js) is the fast path: ~6 ms against ~440 ms for a
+// native list (util/processSnapshot.js) is the fast path: well under 6 ms against ~440 ms for a
 // `tasklist.exe` round trip. `win-tasklist` is the fallback for machines where koffi can't load
 // kernel32 - reached only after the native path throws once.
 
