@@ -34,7 +34,10 @@ Update the same version in all of these places:
 - `RELEASE_NOTES.md`: title, highlights and installer filename
 
 The README release badge is dynamic and does not require a manual version edit.
-Do not hand-edit generated `app/dist/latest.yml`; the build creates it.
+Do not hand-edit generated `app/dist/latest.yml` or `latest-linux.yml`; the builds create them.
+
+A release is one version for both systems: the Windows installer and the Linux AppImage are built
+from the same commit and published together.
 
 Regenerate the styled site changelog and release discovery files after dating the changelog entry:
 
@@ -166,12 +169,37 @@ Remove-Item Env:ELECTRON_RUN_AS_NODE
 The build runs `npm prune --omit=dev` in `watchdog/`. Restore its development
 dependencies afterward with `npm install` from `watchdog/`.
 
+### Linux AppImage
+
+The AppImage is built on Linux, from the same commit as the installer. Either run the manual
+**Linux build** workflow (`.github/workflows/build-linux.yml`) on that commit and download its
+`linux-appimage` artifact, or build on a Linux machine:
+
+```bash
+(cd watchdog && npm ci --ignore-scripts)
+(cd app && npm ci --ignore-scripts && npx patch-package && npm run build:linux)
+```
+
+Expected files:
+
+- `app/dist/Achievement.Watcher.<version>.AppImage`
+- `app/dist/latest-linux.yml`
+
+`build/build-linux.js` fails the build unless the AppImage is executable, its embedded
+`app-update.yml` points at `Shirowwww/Achievement-Watcher-Next`, and `latest-linux.yml` carries this
+version and the AppImage's SHA-512. Then start the AppImage once on Linux and check the affected
+feature path. It needs FUSE 2 (`libfuse2`, `libfuse2t64` on Ubuntu 24.04).
+
+The AppImage is not code-signed: an update is trusted through HTTPS and the SHA-512 in
+`latest-linux.yml`.
+
 ## Push, CI and GitHub release
 
 1. Ensure commits are atomic and the worktree contains no accidental files.
-2. Push `main` to `origin` and wait for `.github/workflows/test.yml` to pass.
-3. Create the GitHub release only after CI succeeds, uploading the three updater
-   assets and the portable archive:
+2. Push `main` to `origin` and wait for `.github/workflows/test.yml` to pass, the Linux job
+   included.
+3. Create the GitHub release only after CI succeeds, uploading the Windows updater assets, the
+   portable archive, and the AppImage with `latest-linux.yml`:
 
 ```powershell
 $version = (Get-Content app/package.json | ConvertFrom-Json).version
@@ -181,14 +209,18 @@ gh release create "v$version" `
   "app/dist/Achievement.Watcher.Setup.$version.exe.blockmap" `
   "app/dist/Achievement.Watcher.Portable.$version.zip" `
   "app/dist/latest.yml" `
+  "app/dist/Achievement.Watcher.$version.AppImage" `
+  "app/dist/latest-linux.yml" `
   --repo Shirowwww/Achievement-Watcher-Next `
   --target $target `
   --title "Achievement Watcher Next $version" `
   --notes-file RELEASE_NOTES.md
 ```
 
-4. Verify the release page exposes the installer, portable ZIP, blockmap and `latest.yml`, and that
-   the public manifest is downloadable.
+4. Verify the release page exposes the installer, portable ZIP, blockmap, `latest.yml`, the
+   AppImage and `latest-linux.yml`, and that both public manifests are downloadable. Once an
+   AppImage has been published, **every later release must carry `latest-linux.yml`**: without it,
+   each installed AppImage reports an error on every update check.
 5. Refresh the version the website prints under its download buttons, and commit it:
 
 ```powershell
@@ -214,6 +246,8 @@ breaks upgrades rather than merely renaming something, and `test/core/branding.t
 | `app.setName()` | `Achievement Watcher` | Names the main log file |
 | Installer artifact | `Achievement.Watcher.Setup.<version>.exe` | Referenced by `latest.yml`; published releases are immutable |
 | `updaterCacheDirName` | `achievement-watcher-updater` | Existing partially downloaded updates live there |
+| Linux `executableName` | `achievement-watcher` | The Watchdog starts the app by that name on Linux |
+| AppImage artifact | `Achievement.Watcher.<version>.AppImage` | Referenced by `latest-linux.yml` and named by the site |
 | Legacy data folders | `Achievement Watcher 3.0`, `Achievement Watcher` | Import sources for the one-way migration; never renamed or deleted |
 
 ### The repository rename
@@ -244,6 +278,11 @@ published higher version.
    accepted` must appear before the install: an unsigned or unpinned installer
    is refused (see [INSTALLER_AND_UPDATES.md](INSTALLER_AND_UPDATES.md)).
 5. Accept restart, then confirm the running app reports the new version.
+
+On Linux the same proof starts from the previous AppImage, run as a file the user owns. After
+"Update now", electron-updater replaces it with `Achievement.Watcher.<version>.AppImage` and
+restarts it; the log then reports the new version, and the autostart entry, when enabled, points at
+the new file. There is no signer line on Linux: the SHA-512 in `latest-linux.yml` is the check.
 
 Do not claim auto-update success from source mode, an unpacked build, or a
 same-version asset replacement.

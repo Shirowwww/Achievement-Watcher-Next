@@ -19,26 +19,56 @@ Electron's bundled Node runtime runs both processes. The installed app does not 
 
 ## Windows and Linux
 
-Windows is the platform every release is built and validated on, and Linux code never changes what
-Windows does: it sits behind `process.platform` or behind the host layer below. On Linux AW Next is
-a native app. It never starts Wine; Windows games running under Wine or Proton are found through
-their files inside each prefix and through `/proc`.
+AW Next ships for Windows (installer and portable ZIP) and for Linux (an x64 AppImage). Linux code
+never changes what Windows does: it sits behind `process.platform` or behind the host layer below.
+On Linux AW Next is a native app. It never starts Wine; Windows games running under Wine or Proton
+are found through their files inside each prefix and through `/proc`.
+
+### Hosts
+
+A host is a place where Windows-style user folders live. On Windows there is one, this machine, read
+exactly as before. On Linux there is a native host on the XDG folders, where Linux builds of the
+emulators write, plus one host per Wine, Proton, Lutris, Heroic and Bottles prefix and user
+(`app/util/winHosts.js`, prefixes found by `winePrefixes.js`). Every source reads through them, so
+the same parser serves both systems:
+
+| Need | Call |
+|---|---|
+| The hosts, from the app (Windows registry wired in) | `appHosts()` in `app/util/appHosts.js` |
+| One root per host | `hostPath(host, 'APPDATA', ...)`, or `hostPaths('APPDATA', ...)` for all of them |
+| A launcher installed once, in whichever host holds it | `firstExisting(hostPaths(...))` |
+| The hosts a game folder belongs to (its prefix, else all) | `hostsFor(gameDir)` |
+| The host to write a game's files into | `hostFor(gameDir, found)` |
+| Documents | `documentsFolders()`, or `documentsFor(gameDir)` for one game |
+| Registry | `host.regValue(hive, key, name)`, `host.regSubkeys`, `host.regValueNames` (a prefix's `user.reg` and `system.reg`, `app/util/wineRegistry.js`) |
+| A Windows path read from the registry or a config file | `host.localPath(winPath)` |
+| A path a Windows program will read (the Uplay R2 redirection) | `host.windowsPath(localPath)` |
+
+Off Windows, `app/util/reg.js` reads nothing, refuses writes and never spawns `reg.exe`. Path
+comparisons go through `winHosts.pathKey()`, because Windows filesystems ignore case and Linux ones
+do not: a folder name must be spelled the same way in the app and in the Watchdog.
+
+### What differs per system
 
 | Concern | Windows | Linux |
 |---|---|---|
-| Profile folders (`APPDATA`, `LOCALAPPDATA`, Documents...) | this machine, from the environment and the registry | one host per Wine/Proton/Lutris/Heroic/Bottles prefix and user, plus a native host on the XDG folders (`app/util/winHosts.js`, `winePrefixes.js`) |
-| Registry reads | `registry-js` / `regodit` | the prefix's `user.reg`, read as text (`app/util/wineRegistry.js`) |
 | Running processes | Win32 process APIs through koffi, `win-tasklist` as a fallback (`watchdog/util/processSnapshot.js`) | `/proc`, a Wine game named by the `.exe` in its command line (`watchdog/util/procSnapshot.js`) |
+| Steam client | registry and install folder | `registry.vdf`, app manifests and `steam.pid` of the native, Flatpak or Snap client (`app/util/steamLinux.js`) |
+| Other launchers | their registry and config files | the same files inside each prefix, plus Heroic, legendary, Lutris and Bottles (`app/util/linuxLaunchers.js`) |
+| Starting a game | the executable or its store URL | the launcher that owns it (`steam://`, `lutris:`, `heroic://`) through `xdg-open`, never Wine (`app/util/linuxGameLaunch.js`) |
 | Playtime store | `HKCU\Software\Achievement Watcher Next\Playtime` | `cfg/playtime.json` (`app/util/playtimeFile.js`) |
-| Toast | WinRT through powertoast | the Watchdog asks the app, which shows an Electron `Notification` through the freedesktop service (`app/electron/desktopNotification.js`) |
+| Toast | WinRT through powertoast | the Watchdog asks the app, which shows an Electron `Notification` through the freedesktop service (`app/electron/desktopNotification.js`); skipped when no notification daemon answers |
+| Popups and overlay over games | always-on-top windows | the app runs through XWayland under Wayland (`app/util/linuxSession.js`); popups never take focus, the overlay opens with focus; `--toggle-overlay` toggles it from a desktop shortcut |
 | Notification sound | a PowerShell `MediaPlayer` | `pw-play`, then `paplay` |
+| Screenshots and clips | the Windows capture helper | Electron or the Screenshot portal; clips from `gpu-screen-recorder` or an opt-in software recorder (`app/electron/souvenirLinux.js`, `clipRecorder.js`) |
+| Controller rumble | XInput | kernel force feedback on `/dev/input/event*` (`watchdog/util/evdevRumble.js`) |
 | Watchdog presence pipe | named pipe | Unix socket in `XDG_RUNTIME_DIR` (`app/util/watchdogPipe.js`) |
 | Start with the session | `Run` registry value | XDG autostart entry (`app/util/linuxAutostart.js`) |
+| `achievement-watcher://` links | registered at startup (`setAsDefaultProtocolClient`) | a desktop entry AW writes itself (`app/util/linuxDesktopEntry.js`) |
+| Tray | notification area | StatusNotifierItem; without a host the window minimizes instead (`app/util/linuxTrayHost.js`) |
+| Stored secrets key | DPAPI through `safeStorage` | the desktop keyring through `safeStorage`, with a one-time warning when none answers |
+| Updates | NSIS installer, Authenticode-pinned (`latest.yml`) | the AppImage replaced in place, checked by SHA-512 (`latest-linux.yml`) |
 | User data | `%APPDATA%\Achievement Watcher Next` | `~/.config/Achievement Watcher Next` |
-
-Path comparisons go through `winHosts.pathKey()` because Windows filesystems ignore case and Linux
-ones do not. A source that reads a Windows profile takes one root per host rather than reading the
-environment, so the same parser serves both systems.
 
 ## Main directories
 
@@ -105,6 +135,38 @@ When adding a source:
 - cache network results with a bounded lifetime;
 - make missing optional files a normal empty state;
 - keep watcher and parser rules aligned so the library and live notifications observe the same files.
+
+### Wiring a save-file emulator
+
+An emulator that writes one save folder per Steam appid under a user profile (the Goldberg family)
+is read twice: by the app for the library, and by the Watchdog for live notifications. Each side
+has its own list, so a new one touches both:
+
+1. **The reader.** Put the format in a small module of its own in `app/parser/` that requires
+   nothing from the rest of the app, so the Watchdog can load it too. List it in `asarUnpack` in
+   `app/electron-builder.yml`; `test/core/sharedAppModules.test.js` fails otherwise.
+2. **Library roots.** Add the folder to `addHostRoots` in `app/parser/saveRoots.js`, as
+   `envPath('APPDATA', '<Folder>')`: it is then probed on every host, this machine on Windows and
+   every Wine prefix on Linux.
+3. **Library label and file.** `steam.scan()` in `app/parser/steam.js` names the source from the
+   folder path; a folder it does not recognise shows as `Steam-emulator`.
+   `getAchievementsFromFile()` in the same file lists the save file names it reads and turns each
+   format into the shared `{ Achieved, UnlockTime }` entries.
+4. **Watchdog roots.** Add an entry to `builtinRoots(host)` in `watchdog/monitor.js`:
+   `{ dir: at('APPDATA', '<Folder>'), options: { recursive, filter, file } }`. `filter` is a
+   regular expression the changed path must match (usually the numeric appid folder), and `file`
+   lists the file names that count; the appid then comes from the folder name. `statsSibling` reads
+   `achievements.ini` when only `stats.ini` changed, and `disableCheckIfProcessIsRunning` notifies
+   even when the game's process is not seen.
+5. **Watchdog reader.** `parse()` in `watchdog/monitor.js` picks the reader by file name; add the
+   new name there too.
+6. **Tests.** One test of the reader that runs on both systems, a Watchdog test that the root is
+   built for every host, and a Linux test that finds a save inside a fake Wine prefix
+   (`withWinePrefix`, see [test/README.md](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/test/README.md#windows-and-linux)).
+
+A source with its own identity (a store, a console emulator) is a parser of its own registered in
+`app/parser/achievements.js` and a watcher of its own in `watchdog/console/` or `watchdog.js`;
+the existing ones (`xlln.js`, `rpcs3.js`, `shadps4.js` and their watchers) are the models.
 
 Current integrations include Steam (legit client and emulator saves), Goldberg/GBE-compatible saves, Goldberg SocialClub, Uplay R2, GOG, Epic, Ubisoft, EA Desktop, Xbox PC, RetroAchievements, GreenLuma, LumaPlay, SmartSteamEmu, RPCS3, ShadPS4, Xenia, Xbox 360 recompilations, XLiveLessNess (Games for Windows LIVE) and FINAL FANTASY VII (2013). Some platforms have both a legacy mapped-save parser and a newer official/local parser.
 
@@ -180,7 +242,12 @@ English is the reference locale. `app/locale/uiLanguages.js` only exposes langua
 
 `app/electron-builder.yml` packages the desktop app and copies the Watchdog beside it. Notification presets, sounds and shared Steam-schema mapper modules are unpacked from ASAR because overlay windows and the external Watchdog load them from disk.
 
-`npm run build` prunes Watchdog development dependencies before packaging. Restore them after a build before returning to development. See [BUILD.md](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/BUILD.md) and the [release workflow](RELEASE_WORKFLOW.md).
+A module the Watchdog loads from the app (the host layer, the Linux Steam reader, the presence pipe
+name, the playtime store) must be listed in `asarUnpack` too. On Linux, `app/build/afterPack.js`
+removes the Windows helpers and other platforms' binaries from the AppImage and keeps `7za`
+executable.
+
+`npm run build` and `npm run build:linux` prune Watchdog development dependencies before packaging. Restore them after a build before returning to development. See [BUILD.md](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/BUILD.md) and the [release workflow](RELEASE_WORKFLOW.md).
 
 ## Change checklist
 

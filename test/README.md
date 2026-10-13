@@ -41,3 +41,22 @@ value under test is a Windows path, and pass `platform`, `env` and `home` to hel
 (`app/util/winHosts.js` does) instead of depending on the machine running the test. Setting up a
 Linux machine for the suite is covered in
 [BUILD.md](../BUILD.md#develop-and-test-on-linux).
+
+To test a source inside a Wine prefix, `withWinePrefix` from `helpers/winePrefix.js` builds a fake
+prefix with its registry hives and makes it the current home; the same helper exports `LINUX_ONLY`,
+the skip option such tests take. `parsers/wineSources.test.js` shows the pattern. A Watchdog test
+that should run on both systems builds its expected paths with `winHosts.hostPaths()` rather than
+from `process.env`, so it holds whatever hosts the machine has.
+
+Watchdog tests run from `watchdog/`, where their native modules resolve:
+
+```powershell
+Push-Location watchdog
+node --test "test/monitorRoots.test.js"
+Pop-Location
+```
+
+Two checks guard things that break silently at runtime: `core/viewCsp.test.js` fails when an inline
+script of a view is not listed by hash in that view's Content-Security-Policy (Chromium would refuse
+it and leave the window blank), and `core/linuxPackage.test.js` covers the Linux packaging and the
+updater split between the two systems.

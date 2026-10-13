@@ -9,14 +9,14 @@ Bug fixes, documentation improvements, translations and focused new features are
 - Read the [documentation](docs/README.md) and [troubleshooting guide](docs/troubleshooting.md).
 - Search existing issues for the same symptom.
 - Reproduce the problem on the latest release when possible.
-- Gather the app version, Windows version, source involved and relevant logs.
+- Gather the app version, your system (Windows version, or Linux distribution and desktop, with Wine or Proton for a Windows game), source involved and relevant logs.
 - Report a suspected vulnerability through the private process in [SECURITY.md](SECURITY.md), never in a public issue.
 
 Use the repository templates for bug reports, feature requests and support questions. Keep reports focused on AW Next itself; the issue tracker cannot provide games, account access or piracy support.
 
 ## Development setup
 
-AW Next is developed and packaged on Windows. Follow [BUILD.md](BUILD.md) to install both npm workspaces, run the app and build the installer. A Linux port is in progress; working on it from Linux is covered in [Develop and test on Linux](BUILD.md#develop-and-test-on-linux).
+Follow [BUILD.md](BUILD.md) to install both npm workspaces, run the app and build the installer on Windows. Working from Linux and building the AppImage are covered in [Develop and test on Linux](BUILD.md#develop-and-test-on-linux).
 
 Create a focused branch and inspect the worktree before making changes:
 
@@ -30,6 +30,8 @@ git switch -c fix/short-description
 - Keep each change focused on one behavior or documentation concern.
 - Preserve existing user data and settings compatibility unless a migration is included.
 - Add or update tests for parser, discovery, notification and configuration behavior.
+- A new achievement source is read by the app and by the Watchdog, each with its own list: follow
+  [Wiring a save-file emulator](docs/architecture.md#wiring-a-save-file-emulator).
 - Put user-visible changes under `Unreleased` in [CHANGELOG.md](CHANGELOG.md).
 - Keep public claims grounded in behavior that exists in the current code.
 - Never commit credentials, tokens, personal paths, game files, build output or local logs.
@@ -39,24 +41,28 @@ git switch -c fix/short-description
 
 ## Windows and Linux
 
-Windows comes first: a change must not alter what the Windows build does. The Linux port lives
-beside it, so think of both systems whenever a change touches one of these:
+AW Next ships for Windows and Linux. Windows comes first: a change must not alter what the Windows
+build does. Think of both systems whenever a change touches one of these; the full table is in
+[docs/architecture.md](docs/architecture.md#windows-and-linux).
 
 - **Folders under a user profile.** Do not read `process.env.APPDATA`, `LOCALAPPDATA`,
-  `USERPROFILE` or `PUBLIC` directly. Ask `app/util/winHosts.js` for the hosts and take one root per
+  `USERPROFILE` or `PUBLIC` directly. Take the hosts (`appHosts()` in the app) and one root per
   host: on Windows that is this machine, read exactly as before; on Linux it is the native XDG
   folders plus every Wine, Proton, Lutris, Heroic and Bottles prefix.
+- **Registry.** Read it through a host (`host.regValue` and its siblings), never through
+  `app/util/reg.js` directly for a path: on Linux a game's registry is its prefix's `user.reg` and
+  `system.reg`. Turn a Windows path into a local one with `host.localPath()`, and back with
+  `host.windowsPath()` when a Windows program will read it.
 - **Paths.** Split on `[\\/]`, not on `\\`. Compare paths with `winHosts.pathKey()`: Windows
-  filesystems ignore case, Linux ones do not.
-- **Registry.** On Linux a Windows game's registry is the prefix's `user.reg`, read as text through
-  the host (`app/util/wineRegistry.js`). Never call `reg.exe` or `regodit` off Windows.
+  filesystems ignore case, Linux ones do not, so a folder name is spelled the same way in the app
+  and in the Watchdog.
 - **Processes.** Linux processes come from `/proc` (`watchdog/util/procSnapshot.js`); a Windows
   game under Wine is named by its `.exe`, taken from its command line.
-- **Notifications, sound, autostart, tray.** Each has its own Linux path (desktop notification
-  service, `pw-play` or `paplay`, an XDG autostart entry, a PNG tray icon). A new notification or
-  setting is checked on both.
+- **Desktop integration.** Notifications, sound, autostart, tray, game launch, screenshots and
+  updates each have their own Linux path. A new notification or setting is checked on both.
 - **New code that only one system can run** stays behind `process.platform` or the host layer, and
-  its tests are skipped on the other system rather than deleted.
+  its tests are skipped on the other system rather than deleted. A Linux test of a source builds a
+  fake prefix with `withWinePrefix` from `test/helpers/winePrefix.js`.
 
 ## Translations and user-visible text
 
