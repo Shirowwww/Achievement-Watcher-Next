@@ -188,6 +188,14 @@ function safeNemirtingasDiagnose(gameDir, launchArgs) {
   }
 }
 
+// normalizePathKey comes from app.js, through the page's shared scope.
+function isPathInsideDir(value, root) {
+  if (!value || !root) return false;
+  const childKey = normalizePathKey(value);
+  const rootKey = normalizePathKey(root);
+  return childKey === rootKey || childKey.startsWith(rootKey + path.sep);
+}
+
 async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
   const game = gameList.find((g) => g.appid == appid) || {};
   let cfg = { exe: '', args: '' };

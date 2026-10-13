@@ -372,6 +372,14 @@
           "true": "Aktiverad"
         }
       },
+      "autoApplyMode": {
+        "name": "Vad den automatiska åtgärden gör",
+        "description": "Reparera skriver om filerna som emulatorn läser för allt som Game Health flaggar, och installerar bara emulatorn om det inte finns någon som stöds. Tillämpa alltid installerar i stället om hela GBE Fork-konfigurationen. Inget av alternativen tar ett spel från en crack som redan fungerar.",
+        "value": {
+          "repair": "Reparera det som är trasigt",
+          "runtime": "Tillämpa alltid emulatorn"
+        }
+      },
       "manageDlc": {
         "name": "Hantera DLC-ägande",
         "description": "Skriver configs.app.ini så att emulatorn rapporterar allt DLC som ägt. Har inget med prestationer att göra: lämna avstängt för att hålla ett spel i originalskick eller för att hantera DLC själv. Inaktiverat som standard.",

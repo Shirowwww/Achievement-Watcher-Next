@@ -456,6 +456,9 @@ module.exports.load = () => {
     // configs that turned the setting on before the notice existed get it once, from the scan.
     if (typeof options.emulator.autoApplyNotice !== 'boolean') options.emulator.autoApplyNotice = false;
     if (options.emulator.steamSettingsMode !== 'simple' && options.emulator.steamSettingsMode !== 'advanced') options.emulator.steamSettingsMode = 'simple';
+    // Anything but the explicit 'runtime' choice means the targeted repair: a stored value nobody
+    // recognises must never be the one that swaps dlls.
+    options.emulator.autoApplyMode = options.emulator.autoApplyMode === 'runtime' ? 'runtime' : 'repair';
     // GBE identity (issue #123): a Steam ID that is not a real one and a relative folder would be
     // written into every game a fix touches, so they read as empty instead.
     for (const key of ['accountName', 'accountSteamId', 'savePath']) {
@@ -704,6 +707,10 @@ module.exports.load = () => {
         steamlessExperimental: false, // pass --realign for heavily-protected exes
         autoApplyCrackFix: false, // opt-in: try a confident CrakFiles community-crack match (confident name only, backed-up, idempotent) - off by default since it downloads/overwrites game files
         autoApplyNotice: false, // whether the antivirus notice for automatic repair has been given
+        // What the automatic repair does to a game Game Health flags: 'repair' rewrites the files
+        // the emulator reads and installs a runtime only when none is there, 'runtime' re-applies
+        // the whole GBE Fork setup every time. See util/autoFixPlan.js.
+        autoApplyMode: 'repair',
         steamSettingsMode: 'simple', // 'simple' (AW fetch: DLC + achievements) | 'advanced' (generate_emu_config: + depots/languages)
         createLaunchBat: true, // legacy, unused (ColdClient removed) - kept so saved configs round-trip
         apiCheckBypass: false, // opt-in: drop SteamAutoCrack's Steam API ownership-check bypass proxy (winmm.dll) for games that re-check the original DLL/exe after the swap

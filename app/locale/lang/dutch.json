@@ -372,6 +372,14 @@
           "true": "Ingeschakeld"
         }
       },
+      "autoApplyMode": {
+        "name": "Wat de automatische reparatie doet",
+        "description": "Repareren herschrijft de bestanden die de emulator leest voor alles wat Game Health markeert, en installeert de emulator alleen als er geen ondersteunde aanwezig is. Altijd toepassen installeert de volledige GBE Fork-configuratie opnieuw. Geen van beide haalt een game weg bij een crack die al werkt.",
+        "value": {
+          "repair": "Repareer wat kapot is",
+          "runtime": "Emulator altijd toepassen"
+        }
+      },
       "manageDlc": {
         "name": "DLC-eigendom beheren",
         "description": "Schrijft configs.app.ini zodat de emulator alle DLC als eigendom rapporteert. Los van prestaties: laat dit uit om een game in originele staat te houden of om DLC zelf te beheren. Standaard uitgeschakeld.",

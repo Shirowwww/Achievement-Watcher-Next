@@ -372,6 +372,14 @@
           "true": "Włączone"
         }
       },
+      "autoApplyMode": {
+        "name": "Co robi automatyczna naprawa",
+        "description": "Naprawa zapisuje ponownie pliki odczytywane przez emulator dla wszystkiego, co oznaczy Game Health, i instaluje emulator tylko wtedy, gdy nie ma obsługiwanego. Zawsze zastosuj ponownie instaluje całą konfigurację GBE Fork. Żadna z opcji nie odbiera gry crackowi, który już działa.",
+        "value": {
+          "repair": "Napraw to, co jest zepsute",
+          "runtime": "Zawsze stosuj emulator"
+        }
+      },
       "manageDlc": {
         "name": "Zarządzaj własnością DLC",
         "description": "Zapisuje configs.app.ini, aby emulator zgłaszał każde DLC jako posiadane. Nie ma to związku z osiągnięciami: pozostaw wyłączone, aby zachować grę w oryginalnym stanie lub zarządzać DLC samodzielnie. Domyślnie wyłączone.",

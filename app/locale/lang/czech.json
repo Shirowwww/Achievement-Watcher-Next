@@ -372,6 +372,14 @@
           "true": "Zapnuto"
         }
       },
+      "autoApplyMode": {
+        "name": "Co dělá automatická oprava",
+        "description": "Oprava přepíše soubory, které emulátor čte, pro vše, co Game Health označí, a emulátor nainstaluje jen tehdy, když není přítomen žádný podporovaný. Vždy použít znovu nainstaluje celé nastavení GBE Fork. Žádná z možností hru neodebere z cracku, který už funguje.",
+        "value": {
+          "repair": "Opravit, co je rozbité",
+          "runtime": "Vždy použít emulátor"
+        }
+      },
       "manageDlc": {
         "name": "Spravovat vlastnictví DLC",
         "description": "Zapíše configs.app.ini, aby emulátor hlásil všechna DLC jako vlastněná. Nesouvisí s úspěchy: ponechte vypnuté, chcete-li mít hru v původním stavu, nebo si DLC spravujte sami. Ve výchozím nastavení vypnuto.",

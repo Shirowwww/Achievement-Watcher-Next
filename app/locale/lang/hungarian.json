@@ -372,6 +372,14 @@
           "true": "Bekapcsolva"
         }
       },
+      "autoApplyMode": {
+        "name": "Mit csinál az automatikus javítás",
+        "description": "A javítás újraírja azokat a fájlokat, amelyeket az emulátor olvas, mindenhez, amit a Game Health jelez, és csak akkor telepíti az emulátort, ha nincs támogatott. A mindig alkalmaz újratelepíti a teljes GBE Fork beállítást. Egyik sem vesz el egy játékot egy már működő crack-től.",
+        "value": {
+          "repair": "Ami elromlott, javítsa",
+          "runtime": "Az emulátor mindig alkalmazása"
+        }
+      },
       "manageDlc": {
         "name": "DLC-tulajdonlás kezelése",
         "description": "Megírja a configs.app.ini fájlt, hogy az emulátor minden DLC-t birtokoltként jelentsen. Nincs köze a teljesítményekhez: hagyd kikapcsolva, ha eredeti állapotban akarod tartani a játékot, vagy magad kezeled a DLC-ket. Alapértelmezetten kikapcsolva.",

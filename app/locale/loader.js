@@ -435,6 +435,7 @@ function translateUI(lang, locale, template) {
     bindEmuRow('option_uplayLogging', emu.uplay && emu.uplay.logging);
     $("#option_uplayLogging option[value='true']").text(clear(template.settings.common.enable));
     $("#option_uplayLogging option[value='false']").text(clear(template.settings.common.disable));
+    bindEmuRow('option_autoApplyMode', emu.autoApplyMode);
     bindEmuRow('option_manageDlc', emu.manageDlc);
     bindEmuRow('option_stampIdentity', emu.stampIdentity);
     bindEmuRow('option_steamSettingsMode', emu.steamSettings);

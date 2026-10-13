@@ -372,6 +372,14 @@
           "true": "Käytössä"
         }
       },
+      "autoApplyMode": {
+        "name": "Mitä automaattinen korjaus tekee",
+        "description": "Korjaus kirjoittaa uudelleen tiedostot, joita emulaattori lukee, kaikelle mitä Game Health merkitsee, ja asentaa emulaattorin vain, jos tuettua ei ole. Käytä aina asentaa koko GBE Fork -kokoonpanon uudelleen. Kumpikaan ei ota peliä pois jo toimivalta crackilta.",
+        "value": {
+          "repair": "Korjaa rikkinäinen",
+          "runtime": "Käytä emulaattoria aina"
+        }
+      },
       "manageDlc": {
         "name": "Hallitse DLC:iden omistusta",
         "description": "Kirjoittaa configs.app.ini-tiedoston niin, että emulaattori ilmoittaa kaikki DLC:t omistetuiksi. Ei liity saavutuksiin: jätä pois käytöstä, jos haluat pitää pelin alkuperäisenä tai hallita DLC:itä itse. Oletuksena pois käytöstä.",

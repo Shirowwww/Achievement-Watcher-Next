@@ -88,6 +88,7 @@ const userDir = require(path.join(appPath, 'parser/userDir.js'));
 const libraryDirs = require(path.join(appPath, 'parser/libraryDirs.js'));
 const goldberg = require(path.join(appPath, 'parser/goldberg.js'));
 const awManagedConfig = require(path.join(appPath, 'util/awManagedConfig.js'));
+const gbeBackup = require(path.join(appPath, 'util/gbeBackup.js'));
 // Read here and used from ui/gameHealthPanel.js, which shares this renderer's global scope: the
 // linter cannot see that, so removing this line as unused breaks the Game Health panel instead.
 const crackLoaderDetect = require(path.join(appPath, 'util/crackLoaderDetect.js'));
@@ -2643,13 +2644,6 @@ function normalizePathKey(value) {
   return path.resolve(String(value || '')).toLowerCase();
 }
 
-function isPathInsideDir(value, root) {
-  if (!value || !root) return false;
-  const childKey = normalizePathKey(value);
-  const rootKey = normalizePathKey(root);
-  return childKey === rootKey || childKey.startsWith(rootKey + path.sep);
-}
-
 function readJsonFile(file, fallback) {
   try {
     return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -2658,23 +2652,12 @@ function readJsonFile(file, fallback) {
   }
 }
 
-function gbeBackupIndexFile() {
-  return path.join(getUserDataPath(), 'cfg/gbe-backups.db');
-}
-
 function automaticGbeBackupRoot() {
-  return path.join(getUserDataPath(), 'backups', 'gbe');
+  return gbeBackup.backupRoot(getUserDataPath());
 }
 
 function readGbeBackupIndex() {
-  const data = readJsonFile(gbeBackupIndexFile(), []);
-  return Array.isArray(data) ? data : [];
-}
-
-function writeGbeBackupIndex(entries) {
-  const file = gbeBackupIndexFile();
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, JSON.stringify(entries, null, 2), 'utf8');
+  return gbeBackup.readIndex(getUserDataPath());
 }
 
 function backupManifestFor(backupDir) {
@@ -2684,19 +2667,7 @@ function backupManifestFor(backupDir) {
 }
 
 function rememberGbeBackup({ appid, gameDir, backupDir, manifest }) {
-  try {
-    const resolvedBackup = path.resolve(backupDir);
-    const entries = readGbeBackupIndex().filter((entry) => entry && normalizePathKey(entry.backupDir) !== normalizePathKey(resolvedBackup));
-    entries.push({
-      appid: String(appid || ''),
-      gameDir: path.resolve(gameDir),
-      backupDir: resolvedBackup,
-      createdAt: (manifest && manifest.createdAt) || new Date().toISOString(),
-    });
-    writeGbeBackupIndex(entries.slice(-80));
-  } catch (err) {
-    debug.log(`[gbe-backup] could not remember backup => ${formatErr(err)}`);
-  }
+  gbeBackup.rememberBackup({ userDataPath: getUserDataPath(), appid, gameDir, backupDir, manifest, log: debug });
 }
 
 /*
@@ -2725,29 +2696,7 @@ function gbeSteamSettingsDirsFor(game) {
 }
 
 function createAutomaticGbeBackup({ appid, gameDir, steamSettings } = {}) {
-  try {
-    const localSteamSettings = isPathInsideDir(steamSettings, gameDir) ? steamSettings : null;
-    const result = goldberg.backupSetup({
-      gameDir,
-      steamSettings: localSteamSettings,
-      destinationRoot: automaticGbeBackupRoot(),
-    });
-    rememberGbeBackup({
-      appid,
-      gameDir,
-      backupDir: result.backupDir,
-      manifest: result.manifest,
-    });
-    debug.log(`[${appid || '?'}] GBE/Goldberg pre-fix backup created => ${result.backupDir}`);
-    return { ...result, skipped: false };
-  } catch (err) {
-    const message = formatErr(err);
-    if (/no steam_settings or Steam API DLL was found/i.test(message)) {
-      debug.log(`[${appid || '?'}] GBE/Goldberg pre-fix backup skipped (${message})`);
-      return { skipped: true, reason: message };
-    }
-    throw new Error(`backup before emulator fix failed: ${message}`, { cause: err });
-  }
+  return gbeBackup.createBackup({ goldberg, userDataPath: getUserDataPath(), appid, gameDir, steamSettings, log: debug });
 }
 
 function backupCandidateFromDir(backupDir, { appid, gameDir, source = 'scan', indexedAppid = null } = {}) {
