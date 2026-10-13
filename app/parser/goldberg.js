@@ -122,7 +122,8 @@ function hasEmuDllBeside(dir) {
 function runtimeDllsIn(dir) {
   const names = (dirCache.readdirNames(dir) || []).filter((entry) => EMU_DLL_NAMES.includes(String(entry).toLowerCase()));
   const dlls = names.map((name) => path.join(dir, name));
-  return { dlls, emulated: dlls.some((dll) => crackLoaderDetect.isEmulatorDll(dll)) };
+  const proxied = dlls.length > 0 ? crackLoaderDetect.proxyLoadedRuntime(dir) : null;
+  return { dlls, emulated: dlls.some((dll) => crackLoaderDetect.isEmulatorDll(dll)) || !!proxied, proxied };
 }
 
 // Locate the steam_settings folder for a game. GBE Fork keeps it next to the emu .dll, which may be
@@ -820,6 +821,7 @@ function diagnose({ gameDir, appid, schema, savesRoots, shortcutExes = steamShor
     engineDllDirs: [], // packaged-Unreal Steamworks folders: the dll the engine loads, whatever else is on disk
     settingsBesideDll: null, // null when no dll was found, otherwise whether steam_settings is beside one
     foreignRuntimeDirs: [], // folders whose steam_api dll is somebody else's runtime, so the settings there are inert
+    proxiedRuntimes: [], // { runtime, loadedBy }: a renamed GBE build the release loads beside Valve's dll
     save: null, // runtime unlock-state summary (from inspectSaveState)
     localSaveDir: null, // set when configs.user.ini / local_save.txt redirects the save folder
     ok: false,
@@ -936,6 +938,7 @@ function diagnose({ gameDir, appid, schema, savesRoots, shortcutExes = steamShor
   const servedRuntimes = servedDirs.map((dir) => ({ dir, ...runtimeDllsIn(dir) })).filter((entry) => entry.dlls.length > 0);
   const inertDirs = servedRuntimes.filter((entry) => !entry.emulated).map((entry) => entry.dir);
   report.foreignRuntimeDirs = inertDirs;
+  report.proxiedRuntimes = servedRuntimes.filter((entry) => entry.proxied).map((entry) => entry.proxied);
   // Only when NO served folder has a real runtime: one good dll is enough for the setup to work.
   if (inertDirs.length > 0 && inertDirs.length === servedRuntimes.length) {
     add(
@@ -1053,7 +1056,16 @@ function diagnose({ gameDir, appid, schema, savesRoots, shortcutExes = steamShor
   */
   if (!fs.existsSync(path.join(steamSettings, 'steam_interfaces.txt'))) {
     const original = originalSteamApiDll([...dllDirs, ...report.engineDllDirs, settingsParent]);
-    if (original) {
+    const proxied = report.proxiedRuntimes[0];
+    if (proxied) {
+      // Reinstalling the runtime would replace the Valve dll this release depends on.
+      add(
+        'info',
+        'NO_STEAM_INTERFACES_PROXIED',
+        `steam_interfaces.txt is missing from ${steamSettings}. This release loads its own emulator (${path.basename(proxied.runtime)} through ${path.basename(proxied.loadedBy)}), which answers with its built-in interface versions.`,
+        { steamSettings, runtime: proxied.runtime }
+      );
+    } else if (original) {
       add(
         'info',
         'NO_STEAM_INTERFACES',

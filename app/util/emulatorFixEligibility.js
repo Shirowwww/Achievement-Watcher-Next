@@ -57,6 +57,9 @@ function findExistingFix(gameDir, { maxDepth = 4, maxDirectories = 600 } = {}) {
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
       if (entry.name.toLowerCase() === 'steam_settings') {
+        // The release loads its own renamed GBE build: replacing Valve's dll here breaks the game.
+        const proxied = crackLoaderDetect.proxyLoadedRuntime(dir);
+        if (proxied) return { kind: 'proxied-runtime', name: path.basename(proxied.runtime), path: dir };
         return { kind: 'steam-settings', name: 'GBE / Goldberg', path: path.join(dir, entry.name) };
       }
       if (depth < maxDepth) queue.push({ dir: path.join(dir, entry.name), depth: depth + 1 });

@@ -4945,7 +4945,9 @@ var app = {
             // Ubisoft installs use Uplay R1/R2, not the Steam GBE fix. A game with an existing setup
             // gets a RE-APPLY option even though the bulk scan stays conservative and refuses it, so a repack update or wrong appid stays fixable.
             const gbeExistingFix = initialGbeEligibility.reason === 'existing-fix' ? initialGbeEligibility.existingFix : null;
-            if (!isLegitSteamOwned && !isNativeLauncher && !isUbisoftSource && (initialGbeEligibility.eligible || gbeExistingFix)) {
+            // A release that loads its own renamed GBE build only needs its data repaired (Game health).
+            const releaseRuntime = gbeExistingFix && gbeExistingFix.kind === 'proxied-runtime';
+            if (!isLegitSteamOwned && !isNativeLauncher && !isUbisoftSource && !releaseRuntime && (initialGbeEligibility.eligible || gbeExistingFix)) {
               emulatorMenu.append(new MenuItem({ type: 'separator' }));
               // Held so the antivirus dialog can re-run this entry itself; a package blocked by
               // security software is the one failure the user can act on and retry.

@@ -1595,7 +1595,8 @@ async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
         if (redirected) {
           savePath = redirected;
           debug.log(`[goldberg-scan] ${appid} reads its saves from the configured local_save_path: ${redirected}`);
-        } else if (g.emulator === 'none' && g.gameDir) {
+        } else if ((g.emulator === 'none' || g.loader) && g.gameDir) {
+          // g.loader: a loader-served folder that keeps Valve's steam_api dll (RUNE's steamclient builds).
           // The scan also reaches non-Goldberg installs: a CODEX/RUNE release (steam_emu.ini) never
           // writes to %APPDATA%\\GSE Saves, but keeps the same Steam\\<SOURCE>\\<appid> tree, just
           // under the game folder when portable.

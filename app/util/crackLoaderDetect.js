@@ -66,6 +66,39 @@ const KNOWN_CRACK_LOADERS = [
 
 const STEAM_API_DLLS = ['steam_api.dll', 'steam_api64.dll'];
 
+/*
+  A release can keep Valve's steam_api dll and load a renamed GBE build through a proxy dll of its
+  own (VOICES38: dstorage.dll loads steam_api64.v38). The renamed file counts only when it is an
+  emulator AND a small dll beside it names it, so neither an orphan copy nor RUNE's .rne original does.
+*/
+const RENAMED_RUNTIME = /^steam_api(64)?\.(?!dll$)[a-z0-9]{1,8}$/i;
+const PROXY_MAX_BYTES = 1024 * 1024;
+
+function proxyLoadedRuntime(dir) {
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true }).filter((entry) => entry.isFile());
+  } catch {
+    return null;
+  }
+  const runtimes = entries.filter((entry) => RENAMED_RUNTIME.test(entry.name) && isEmulatorDll(path.join(dir, entry.name)));
+  if (runtimes.length === 0) return null;
+  for (const entry of entries) {
+    if (!/\.dll$/i.test(entry.name) || STEAM_API_DLLS.includes(entry.name.toLowerCase())) continue;
+    const file = path.join(dir, entry.name);
+    let bytes;
+    try {
+      if (fs.statSync(file).size > PROXY_MAX_BYTES) continue;
+      bytes = fs.readFileSync(file);
+    } catch {
+      continue;
+    }
+    const named = runtimes.find((runtime) => bytes.includes(Buffer.from(runtime.name, 'ascii')));
+    if (named) return { runtime: path.join(dir, named.name), loadedBy: file };
+  }
+  return null;
+}
+
 function loaderForEntries(entries, dir) {
   const present = new Set(entries.map((e) => e.toLowerCase()));
   // A replaceable loader IS its steam_api dll. Once GBE sits in that dll's place, the loader's ini is
@@ -122,8 +155,25 @@ function disableLoaderMarkers(dirs) {
   matters because a scene crack (RUNE, CODEX) puts its steam_emu.ini beside the dll it replaced,
   six levels down, where the game root sees nothing - AW then read the install as an unclaimed
   folder and offered it a GBE setup the crack's own dll never opens (reported for Little Nightmares
-  Enhanced Edition).
+  Enhanced Edition). The third is RUNE's steamclient layout, below.
 */
+const STEAMCLIENT_DLLS = ['steamclient64.dll', 'steamclient.dll'];
+
+// RUNE's steamclient builds keep Valve's steam_api and run from Steam\steamclient64.dll with their
+// ini beside it, so the loader lives there and there is no steam_api runtime to replace.
+function steamclientLoader(gameDir) {
+  const dir = path.join(gameDir, 'Steam');
+  let entries;
+  try {
+    entries = fs.readdirSync(dir);
+  } catch {
+    return null;
+  }
+  if (!entries.some((entry) => STEAMCLIENT_DLLS.includes(entry.toLowerCase()))) return null;
+  const loader = loaderForEntries(entries, dir);
+  return loader ? { ...loader, replaceable: false } : null;
+}
+
 function detectWorkingCrackLoader(gameDir) {
   if (!gameDir) return null;
   let entries;
@@ -134,6 +184,8 @@ function detectWorkingCrackLoader(gameDir) {
   }
   const atRoot = loaderForEntries(entries, gameDir);
   if (atRoot) return atRoot;
+  const steamclient = steamclientLoader(gameDir);
+  if (steamclient) return steamclient;
   for (const dllDir of unrealLayout.steamworksDllDirs(gameDir)) {
     let engineEntries;
     try {
@@ -151,4 +203,4 @@ function hasWorkingCrackLoader(gameDir) {
   return !!detectWorkingCrackLoader(gameDir);
 }
 
-module.exports = { detectWorkingCrackLoader, hasWorkingCrackLoader, disableLoaderMarkers, isEmulatorDll, EMULATOR_DLL_MARKER };
+module.exports = { detectWorkingCrackLoader, hasWorkingCrackLoader, disableLoaderMarkers, isEmulatorDll, proxyLoadedRuntime, EMULATOR_DLL_MARKER };
