@@ -10,7 +10,7 @@ const template = `
     <link rel="stylesheet" href="../resources/css/titlebar.css" type="text/css" />
 
     <div class="sf-indicator">
-    <ul id="watchdog-status" class="sf-indicator"><span class="status-dot status-orange status-pulse"></span><span class="status-text"></span> <span id="start-watchdog"></span><span id="update-status" hidden><i class="fas fa-circle-down" aria-hidden="true"></i><span class="update-text"></span><span class="update-track"><span class="update-fill"></span></span><span id="update-cancel" role="button" tabindex="0"><i class="fas fa-xmark" aria-hidden="true"></i></span></span></ul>
+    <ul id="watchdog-status" class="sf-indicator"><span class="status-dot status-orange status-pulse"></span><span class="status-text"></span> <span id="start-watchdog"></span><span id="update-status" hidden><i class="fas fa-arrow-alt-circle-down" aria-hidden="true"></i><span class="update-text"></span><span class="update-track"><span class="update-fill"></span></span><span id="update-cancel" role="button" tabindex="0"><i class="fas fa-times" aria-hidden="true"></i></span></span></ul>
     </div>
     <ul id="window-controls">
       <li id="btn-close" role="button" tabindex="0"><i class="fas fa-times"></i></li>

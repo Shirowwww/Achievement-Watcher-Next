@@ -45,7 +45,17 @@ test('every phase the renderer can show has a label and a distinct icon', () => 
   const icons = [...body.matchAll(/icon: '(fa-[a-z-]+)'/g)].map((match) => match[1]);
   assert.ok(icons.length >= 6, 'each phase carries its own icon');
   // Error must not look like progress.
-  assert.ok(icons.includes('fa-triangle-exclamation'));
+  assert.ok(icons.includes('fa-exclamation-triangle'));
+});
+
+// The app bundles Font Awesome 5: a version 6 name (fa-gear, fa-xmark) has no glyph and drew an
+// empty gap in front of every label.
+test('every icon the chip can show exists in the bundled Font Awesome', () => {
+  const fontAwesome = fs.readFileSync(path.join(appDir, 'resources/css/fontawesome.css'), 'utf8');
+  const fn = appJs.slice(appJs.indexOf('function updateChipPresentation('));
+  const used = [...fn.slice(0, fn.indexOf('\n}\n')).matchAll(/icon: '(fa-[a-z-]+)'/g), ...titleBarJs.matchAll(/class="fas (fa-[a-z-]+)"/g)].map((match) => match[1]);
+  assert.ok(used.length >= 7);
+  for (const icon of new Set(used)) assert.ok(fontAwesome.includes(`.${icon}:before`), `${icon} has no glyph in fontawesome.css`);
 });
 
 test('the progress bar is only drawn for the phase that has a percentage', () => {

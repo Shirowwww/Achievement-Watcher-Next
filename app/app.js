@@ -3000,19 +3000,19 @@ function updateChipPresentation(state) {
   const percent = Math.round(Math.max(0, Number(state.percent) || 0));
   switch (state.phase) {
     case 'checking':
-      return { icon: 'fa-arrows-rotate', label: t('checking-for-updates', 'Checking…', 'Vérification…') };
+      return { icon: 'fa-sync-alt', label: t('checking-for-updates', 'Checking…', 'Vérification…') };
     case 'available':
-      return { icon: 'fa-circle-down', label: t('update-available-short', 'Update available', 'Mise à jour disponible') };
+      return { icon: 'fa-arrow-alt-circle-down', label: t('update-available-short', 'Update available', 'Mise à jour disponible') };
     case 'downloading':
       return {
-        icon: 'fa-circle-down',
+        icon: 'fa-arrow-alt-circle-down',
         label: t('downloading-update', 'downloading update {percent}%', 'téléchargement de la mise à jour {percent} %', { percent }),
       };
     case 'ready':
-      return { icon: 'fa-circle-check', label: t('update-ready', 'Update Ready', 'Mise à jour prête') };
+      return { icon: 'fa-check-circle', label: t('update-ready', 'Update Ready', 'Mise à jour prête') };
     case 'held':
       return {
-        icon: 'fa-circle-check',
+        icon: 'fa-check-circle',
         label: t('update-ready', 'Update Ready', 'Mise à jour prête'),
         title: t(
           'update-ready-after-game',
@@ -3023,7 +3023,7 @@ function updateChipPresentation(state) {
       };
     case 'installing':
       return {
-        icon: 'fa-gear',
+        icon: 'fa-cog',
         label: t('update-installing-short', 'Installing update…', 'Installation de la mise à jour…'),
         title: t(
           'update-installing-detail',
@@ -3034,7 +3034,7 @@ function updateChipPresentation(state) {
       };
     case 'error':
       return {
-        icon: 'fa-triangle-exclamation',
+        icon: 'fa-exclamation-triangle',
         label: t('update-check-failed', 'Check failed', 'Échec de la vérification'),
         title: state.error || '',
       };
@@ -4524,7 +4524,8 @@ var app = {
                 click: () => pickLanguage(null),
               })
             );
-            languageMenu.append(new MenuItem({ type: 'separator' }));
+            // No separator here: it would split the radio group in two, and Electron checks the first
+            // item of a group with nothing checked, so the first language always looked selected.
             for (const language of steamLanguageList) {
               languageMenu.append(
                 new MenuItem({

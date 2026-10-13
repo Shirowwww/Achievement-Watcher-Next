@@ -378,6 +378,25 @@ test('a game known only through its emulator save is tracked, not written off', 
   assert.ok(report.actions.includes(ACTION.CHOOSE_EXE));
 });
 
+test('an uninstalled game on an official library is still tracked from the account', () => {
+  const report = deriveHealth(
+    healthyGame({ source: 'Steam (Shirow)', officialPlatform: true, processTracking: false, gameDir: '', gameDirExists: false, installed: false, exe: '', exeExists: false, emulated: false, goldberg: null, saveSources: [] })
+  );
+  assert.equal(report.state, STATE.READY);
+  assert.notEqual(report.reason, 'install-unknown');
+  assert.equal(checkFor(report, 'install').level, LEVEL.INFO);
+  assert.ok(report.actions.includes(ACTION.CHOOSE_EXE), 'locating it still enables play time');
+});
+
+test('a RetroAchievements ROM folder is an install with no executable to report', () => {
+  const report = deriveHealth(
+    healthyGame({ source: 'RetroAchievements', officialPlatform: true, processTracking: false, gameDir: 'C:\\Roms', gameDirExists: true, exe: '', exeExists: false, emulated: false, goldberg: null, saveSources: [] })
+  );
+  assert.equal(checkFor(report, 'install').level, LEVEL.OK);
+  assert.equal(checkFor(report, 'executable'), undefined);
+  assert.equal(report.state, STATE.READY);
+});
+
 test('with no save and no install there is genuinely nothing to follow', () => {
   const report = deriveHealth(
     healthyGame({ gameDir: '', gameDirExists: false, installed: false, exe: '', exeExists: false, emulated: false, goldberg: null, saveSources: [], achievements: { total: 42, unlocked: 0 } })

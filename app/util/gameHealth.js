@@ -171,6 +171,9 @@ function installCheck(signals) {
     // The folder was resolved once and is gone now: moved, uninstalled or an unmounted drive.
     return check('install', LEVEL.FAIL, { params: { path: gameDir }, blocking: !readable, actions: [ACTION.CHOOSE_EXE] });
   }
+  // An official library reads unlocks from the account, so an uninstalled game there loses
+  // nothing but play time: a fact to show, not a fault to fix.
+  if (signals.officialPlatform) return check('install', LEVEL.INFO, { params: { notInstalled: true }, actions: [ACTION.CHOOSE_EXE] });
   if (installed || readable) return check('install', LEVEL.WARN, { actions: [ACTION.CHOOSE_EXE] });
   return check('install', LEVEL.FAIL, { blocking: true, actions: [ACTION.CHOOSE_EXE] });
 }
@@ -179,8 +182,9 @@ function executableCheck(signals) {
   const { exe, exeExists, gameDir } = signals;
   if (exe && exeExists) return check('executable', LEVEL.OK, { params: { path: exe } });
   if (exe && !exeExists) return check('executable', LEVEL.FAIL, { params: { path: exe }, actions: [ACTION.CHOOSE_EXE] });
-  // No executable is only worth reporting once AW Next knows where to look for one.
-  if (!gameDir) return null;
+  // No executable is only worth reporting once AW Next knows where to look for one. An official
+  // library launches its own games, and a RetroAchievements one is a ROM with no executable at all.
+  if (!gameDir || signals.officialPlatform) return null;
   return check('executable', LEVEL.WARN, { actions: [ACTION.CHOOSE_EXE] });
 }
 
