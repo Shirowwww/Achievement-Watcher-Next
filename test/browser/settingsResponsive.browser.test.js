@@ -62,7 +62,7 @@ function layoutHarness(locale) {
     .join('');
   const nav = [
     settings.sideMenu.general,
-    settings.general.theme.name,
+    settings.general.theme.tab,
     settings.general.controller.title,
     settings.sideMenu.notification,
     settings.sideMenu.presets,

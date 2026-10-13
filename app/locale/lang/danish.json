@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Tema",
+        "tab": "Udseende",
         "description": "Farvetema for hele appen og overlayet i spillet (vises med det samme, gemmes med OK).",
         "customTitle": "Brugerdefineret tema",
         "customDesc": "Alle temaer kan redigeres her: vælg en farve og eventuelt et billede til hver blok. Billedet ligger over farven (som bliver et let slør for læsbarheden). Gem beholder det, du lavede, som dit eget tema under navnet ved siden af; et ledigt navn giver dig et tema mere og lader det første være.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "Præstationsdataene er på plads, men den Steam-fil, dette spil indlæser, kommer fra et andet crack og læser dem aldrig, så der bliver aldrig registreret noget der. AW Next kan installere den understøttede emulator oven på den - den nuværende fil beholdes.",
     "gh-why-uplay-broken": "Ubisoft-emulatorens opsætning til dette spil er ufuldstændig, så oplåsninger bliver ikke registreret. Brug knappen til Uplay R1/R2-reparation nedenfor.",
     "gh-why-achievement-data-incomplete": "Den præstationsliste, AW Next har til dette spil, passer ikke til det, spillet leder efter, så nogle oplåsninger ville blive overset. Listen kan skrives om ud fra de officielle data.",
+    "gh-why-achievement-icons-missing": "Præstationslisten er komplet, så alle oplåsninger bliver set. Der mangler kun nogle ikoner, og at skrive præstationsdataene om henter dem.",
     "gh-why-no-progress-yet": "Spillet er fundet, og der er præstationsdata, men der er endnu ikke fundet fremskridt på nogen præstation. Problemet ligger sandsynligvis i spillets eller emulatorens opsætning frem for i notifikationerne.",
     "gh-why-install-unknown": "AW Next læser dette spils præstationer fra dets gemte filer, men ved ikke, hvor selve spillet er installeret. Find det, så spilletid kan registreres og reparationer udføres.",
     "gh-why-notification-failed": "Dette spil spores korrekt, og dets oplåsninger bliver set, men den seneste notifikation kunne ikke sendes. Send en testnotifikation for at tjekke visningen.",

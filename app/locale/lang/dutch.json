@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Thema",
+        "tab": "Weergave",
         "description": "Kleurenthema van de hele app en van de in-game overlay (meteen zichtbaar, opgeslagen met OK).",
         "customTitle": "Aangepast thema",
         "customDesc": "Elk thema is hier te bewerken: kies een kleur en eventueel een afbeelding voor elk blok. Een afbeelding ligt over de kleur (die een lichte sluier wordt voor de leesbaarheid). Opslaan bewaart wat je maakte als eigen thema, onder de naam ernaast; een nog vrije naam geeft je een tweede thema en laat het eerste met rust.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "De prestatiegegevens staan klaar, maar het Steam-bestand dat deze game laadt komt van een andere crack en leest ze nooit, dus er wordt daar nooit iets vastgelegd. AW Next kan de ondersteunde emulator eroverheen installeren - het huidige bestand blijft bewaard.",
     "gh-why-uplay-broken": "De Ubisoft-emulatorconfiguratie van deze game is niet compleet, waardoor ontgrendelingen niet worden vastgelegd. Gebruik de Uplay R1/R2-reparatieknop hieronder.",
     "gh-why-achievement-data-incomplete": "De prestatielijst die AW Next voor deze game heeft, komt niet overeen met wat de game zal zoeken, waardoor sommige ontgrendelingen gemist worden. Die lijst kan opnieuw worden geschreven vanuit de officiële gegevens.",
+    "gh-why-achievement-icons-missing": "De prestatielijst is compleet, dus elke ontgrendeling wordt gezien. Alleen enkele pictogrammen ontbreken, en de prestatiegegevens opnieuw schrijven downloadt ze.",
     "gh-why-no-progress-yet": "De game is gevonden en er zijn prestatiegegevens beschikbaar, maar er is nog geen enkele prestatievoortgang aangetroffen. Het probleem zit waarschijnlijk in de game of de emulatorconfiguratie en niet in de meldingen.",
     "gh-why-install-unknown": "AW Next leest de prestaties van deze game uit zijn savebestanden, maar weet niet waar de game zelf geïnstalleerd staat. Zoek hem op om speeltijd bijhouden en reparaties mogelijk te maken.",
     "gh-why-notification-failed": "Deze game wordt correct gevolgd en zijn ontgrendelingen worden gezien, maar de laatste melding kon niet worden verstuurd. Stuur een testmelding om de weergave te controleren.",

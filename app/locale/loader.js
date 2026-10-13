@@ -46,6 +46,7 @@ module.exports.load = async (lang = 'english') => {
       () => window.refreshSettingsLocaleText(),
       () => window.refreshAccessibleNames(),
       () => window.refreshLibraryLabels(),
+      () => window.refreshProfileBandLabels(),
     ];
     for (const render of repaint) {
       try {
@@ -951,7 +952,8 @@ function translateUI(lang, locale, template) {
   $("#settingNav li[data-view='notification'] span").text(clear(template.settings.sideMenu.notification));
   $("#settingNav li[data-view='folder'] span").text(clear(template.settings.sideMenu.folder));
   $("#settingNav li[data-view='source'] span").text(clear(template.settings.sideMenu.source));
-  if (template.settings.general.theme) $("#settingNav li[data-view='appearance'] span").text(clear(template.settings.general.theme.name));
+  // The tab holds the theme, the profile band and the library tiles, so it is named Appearance.
+  if (template.settings.general.theme) $("#settingNav li[data-view='appearance'] span").text(clear(template.settings.general.theme.tab));
   $("#settingNav li[data-view='advanced'] span").text(clear(template.settings.sideMenu.advanced));
   // Simple / Advanced switch at the foot of the nav - bound by id, the nav has no positional i18n.
   if (template.settings.interfaceMode) {

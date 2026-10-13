@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Tema",
+        "tab": "Apariencia",
         "description": "Tema de color de la ventana de la aplicación (vista previa inmediata, se guarda con Aceptar).",
         "customTitle": "Tema personalizado",
         "customDesc": "Todos los temas se editan aquí: elige un color y, si quieres, una imagen para cada bloque. La imagen se ve sobre el color (que pasa a ser un velo ligero para la legibilidad). Guardar conserva lo que hiciste como tema tuyo, con el nombre de al lado; un nombre libre te da un segundo tema y deja el primero intacto.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "Los datos de logros están en su sitio, pero el archivo de Steam que carga este juego viene de otro crack y nunca los lee, así que ahí nunca se registrará nada. AW Next puede instalar el emulador compatible encima - el archivo actual se conserva.",
     "gh-why-uplay-broken": "La configuración del emulador de Ubisoft de este juego está incompleta, así que los desbloqueos no se registran. Usa el botón de reparación Uplay R1/R2 de abajo.",
     "gh-why-achievement-data-incomplete": "La lista de logros que AW Next tiene para este juego no coincide con la que el juego buscará, así que se perderían algunos desbloqueos. Puede reescribirse a partir de los datos oficiales.",
+    "gh-why-achievement-icons-missing": "La lista de logros está completa, así que se verá cada desbloqueo. Solo faltan algunos iconos, y reescribir los datos de logros los descarga.",
     "gh-why-no-progress-yet": "El juego está detectado y los datos de logros están disponibles, pero aún no se ha encontrado ningún progreso. Lo más probable es que el problema sea la configuración del juego o del emulador, no las notificaciones.",
     "gh-why-install-unknown": "AW Next lee los logros de este juego desde sus archivos de guardado, pero no sabe dónde está instalado el juego. Localízalo para habilitar el tiempo de juego y las reparaciones.",
     "gh-why-notification-failed": "Este juego se sigue correctamente y sus desbloqueos se detectan, pero no se pudo enviar la última notificación. Envía una notificación de prueba para comprobar la visualización.",

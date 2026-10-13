@@ -58,7 +58,9 @@ longer considered installed. Full checklist:
 
 ### A game shows "No achievements"
 That game has no achievement set at all. It stays launchable and keeps tracking playtime, and it is
-left out of completion statistics rather than dragging the average down as a 0%.
+left out of completion statistics rather than dragging the average down as a 0%. Its tile has no
+progress bar, the artwork takes that space; **Settings → Appearance → Library tiles → Bar of games
+without achievements** shows the "No achievements" bar again.
 
 ### A game shows 0% even though I have unlocked achievements
 There is a schema but no runtime unlock file. Open the game's

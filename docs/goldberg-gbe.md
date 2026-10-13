@@ -184,9 +184,16 @@ The account name and language follow AW Next settings only when **Write account 
 is turned on under **Settings → Steam / GBE Fork → Emulator setup** (off by default, independent of DLC ownership and
 of automatic repair). With it off, a repair started by hand from Game health fills in the emulator's
 own defaults (`Player` / `english`) instead, so the file is complete either way; a value already in
-the file is never replaced. An existing `account_steamid` is preserved because changing it can
-redirect the emulator to a different save identity. Placeholder local-save paths are removed or
-corrected so the Watchdog can observe the resulting files.
+the file is never replaced. The name comes from the **Emulator identity** card, or from the AW Next
+profile name when that field is empty. An existing `account_steamid` is preserved because changing
+it can redirect the emulator to a different save identity; it is replaced only by a valid Steam ID
+typed in that card, with the switch on. A save folder chosen there is written as
+`[user::saves] local_save_path` whatever the switch, and the Watchdog watches it. Placeholder
+local-save paths are removed or corrected so the Watchdog can observe the resulting files.
+
+A scan that changes `configs.user.ini`, `configs.app.ini` or `configs.main.ini` keeps the release's originals in
+`steam_settings\.aw-backups\<timestamp>` first, so a restore brings those back rather than AW Next's
+own writes.
 
 Right-click a game and choose **Remove AW Next's emulator configuration** to undo these writes
 (`app/util/awManagedConfig.js`): it takes out only the DLC section, switches and identity keys AW

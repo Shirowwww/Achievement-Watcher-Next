@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Chủ đề",
+        "tab": "Giao diện",
         "description": "Chủ đề màu của toàn bộ ứng dụng và lớp phủ trong trò chơi (xem trước ngay, lưu khi nhấn OK).",
         "customTitle": "Chủ đề tùy chỉnh",
         "customDesc": "Mọi chủ đề đều chỉnh được ở đây: chọn màu và, nếu muốn, một hình ảnh cho từng khối. Hình ảnh hiện trên màu (màu trở thành lớp màn mỏng cho dễ đọc). Lưu sẽ giữ thành quả của bạn thành chủ đề riêng, theo tên bên cạnh; một tên chưa dùng sẽ cho bạn chủ đề thứ hai và giữ nguyên chủ đề đầu.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "Dữ liệu thành tựu đã sẵn sàng, nhưng tệp Steam mà trò chơi này tải lại đến từ một bản crack khác và không bao giờ đọc dữ liệu đó, nên sẽ chẳng có gì được ghi lại ở đó. AW Next có thể cài trình giả lập được hỗ trợ đè lên - tệp hiện tại vẫn được giữ lại.",
     "gh-why-uplay-broken": "Thiết lập giả lập Ubisoft cho trò chơi này chưa hoàn chỉnh, nên các lần mở khóa không được ghi lại. Hãy dùng nút sửa Uplay R1/R2 bên dưới.",
     "gh-why-achievement-data-incomplete": "Danh sách thành tựu mà AW Next có cho trò chơi này không khớp với thứ trò chơi sẽ tìm, nên một số lần mở khóa sẽ bị bỏ sót. Danh sách này có thể được ghi lại từ dữ liệu chính thức.",
+    "gh-why-achievement-icons-missing": "Danh sách thành tựu đã đầy đủ, nên mọi lần mở khóa đều được ghi nhận. Chỉ thiếu một số biểu tượng, và ghi lại dữ liệu thành tựu sẽ tải chúng về.",
     "gh-why-no-progress-yet": "Trò chơi đã được phát hiện và dữ liệu thành tựu có sẵn, nhưng chưa tìm thấy tiến độ thành tựu nào. Nguyên nhân nhiều khả năng nằm ở cấu hình của trò chơi hoặc trình giả lập chứ không phải ở thông báo.",
     "gh-why-install-unknown": "AW Next đang đọc thành tựu của trò chơi này từ các tệp lưu, nhưng không biết bản thân trò chơi được cài ở đâu. Hãy chỉ vị trí của nó để bật theo dõi thời gian chơi và các thao tác sửa.",
     "gh-why-notification-failed": "Trò chơi này được theo dõi đúng và các lần mở khóa vẫn được ghi nhận, nhưng thông báo gần nhất không gửi được. Hãy gửi một thông báo thử để kiểm tra đường hiển thị.",

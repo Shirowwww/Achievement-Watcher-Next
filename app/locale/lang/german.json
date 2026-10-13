@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Design",
+        "tab": "Darstellung",
         "description": "Farbschema des App-Fensters (sofortige Vorschau, Speicherung mit OK).",
         "customTitle": "Eigenes Design",
         "customDesc": "Jedes Design lässt sich hier bearbeiten: Wähle für jeden Block eine Farbe und optional ein Bild. Ein Bild liegt über der Farbe (die zu einem leichten Schleier für die Lesbarkeit wird). Speichern behält deine Gestaltung als eigenes Design unter dem Namen daneben; ein noch freier Name gibt dir ein zweites Design und lässt das erste unberührt.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "Die Erfolgsdaten liegen vor, aber die Steam-Datei, die dieses Spiel lädt, stammt von einem anderen Crack und liest sie nie, sodass dort nie etwas aufgezeichnet wird. AW Next kann den unterstützten Emulator darüber installieren - die aktuelle Datei bleibt erhalten.",
     "gh-why-uplay-broken": "Die Ubisoft-Emulator-Einrichtung dieses Spiels ist unvollständig, Freischaltungen werden daher nicht aufgezeichnet. Verwende die Uplay-R1/R2-Reparaturschaltfläche unten.",
     "gh-why-achievement-data-incomplete": "Die Erfolgsliste, die AW Next für dieses Spiel hat, passt nicht zu dem, wonach das Spiel sucht - einige Freischaltungen gingen verloren. Sie kann aus den offiziellen Daten neu geschrieben werden.",
+    "gh-why-achievement-icons-missing": "Die Erfolgsliste ist vollständig, jede Freischaltung wird also erkannt. Es fehlen nur einige Symbole, und das Neuschreiben der Erfolgsdaten lädt sie herunter.",
     "gh-why-no-progress-yet": "Das Spiel wird erkannt und Erfolgsdaten liegen vor, aber es wurde noch kein Erfolgsfortschritt gefunden. Die Ursache liegt wahrscheinlich bei der Spiel- oder Emulator-Konfiguration, nicht bei den Benachrichtigungen.",
     "gh-why-install-unknown": "AW Next liest die Erfolge dieses Spiels aus seinen Speicherdateien, weiß aber nicht, wo das Spiel installiert ist. Finde es, um Spielzeit und Reparaturen zu ermöglichen.",
     "gh-why-notification-failed": "Dieses Spiel wird korrekt verfolgt und seine Freischaltungen werden erkannt, aber die letzte Benachrichtigung konnte nicht gesendet werden. Sende eine Testbenachrichtigung, um die Anzeige zu prüfen.",

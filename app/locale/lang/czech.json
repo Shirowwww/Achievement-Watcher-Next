@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Motiv",
+        "tab": "Vzhled",
         "description": "Barevný motiv okna aplikace (okamžitý náhled, uložení tlačítkem OK).",
         "customTitle": "Vlastní motiv",
         "customDesc": "Každý motiv lze upravit tady: vyberte barvu a případně obrázek pro každý blok. Obrázek leží nad barvou (ta se stane lehkým závojem kvůli čitelnosti). Uložit ponechá vaši práci jako vlastní motiv pod jménem vedle; dosud nepoužité jméno vám dá druhý motiv a první nechá být.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "Data úspěchů jsou na místě, ale soubor Steamu, který tato hra načítá, pochází z jiného cracku a nikdy je nečte, takže se tam nikdy nic nezaznamená. AW Next může přes něj nainstalovat podporovaný emulátor - současný soubor zůstane zachován.",
     "gh-why-uplay-broken": "Nastavení emulátoru Ubisoft pro tuto hru není úplné, odemykání se proto nezaznamenává. Použij tlačítko opravy Uplay R1/R2 níže.",
     "gh-why-achievement-data-incomplete": "Seznam úspěchů, který má AW Next pro tuto hru, neodpovídá tomu, co bude hra hledat, takže by některá odemčení unikla. Lze jej přepsat z oficiálních dat.",
+    "gh-why-achievement-icons-missing": "Seznam úspěchů je úplný, takže každé odemčení bude zachyceno. Chybí jen některé ikony a přepsání dat úspěchů je stáhne.",
     "gh-why-no-progress-yet": "Hra je rozpoznána a data úspěchů jsou k dispozici, ale zatím nebyl nalezen žádný postup. Příčinou bude spíše nastavení hry nebo emulátoru než oznámení.",
     "gh-why-install-unknown": "AW Next čte úspěchy této hry z jejích uložených pozic, ale neví, kde je hra nainstalována. Najdi ji, aby fungovala doba hraní a opravy.",
     "gh-why-notification-failed": "Tato hra je sledována správně a její odemčení se zaznamenávají, ale poslední oznámení se nepodařilo odeslat. Odešlete testovací oznámení a ověřte zobrazení.",

@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Tema",
+        "tab": "Aparência",
         "description": "Tema de cores da janela da aplicação (pré-visualização imediata, guardado com OK).",
         "customTitle": "Tema personalizado",
         "customDesc": "Todos os temas podem ser editados aqui: escolhe uma cor e, se quiseres, uma imagem para cada bloco. A imagem surge por cima da cor (que passa a ser um véu leve para a legibilidade). Guardar mantém o que fizeste como tema teu, com o nome ao lado; um nome ainda livre cria um segundo tema e deixa o primeiro intacto.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "Os dados de proezas estão no lugar, mas o ficheiro Steam que este jogo carrega vem de outro crack e nunca os lê, por isso nada será registado ali. O AW Next pode instalar o emulador suportado por cima - o ficheiro atual é mantido.",
     "gh-why-uplay-broken": "A configuração do emulador Ubisoft deste jogo está incompleta, por isso os desbloqueios não são registados. Usa o botão de reparação Uplay R1/R2 abaixo.",
     "gh-why-achievement-data-incomplete": "A lista de proezas que o AW Next tem para este jogo não corresponde à que o jogo vai procurar, por isso alguns desbloqueios perder-se-iam. Pode ser reescrita a partir dos dados oficiais.",
+    "gh-why-achievement-icons-missing": "A lista de proezas está completa, por isso todos os desbloqueios serão vistos. Faltam apenas alguns ícones, e reescrever os dados de proezas transfere-os.",
     "gh-why-no-progress-yet": "O jogo foi detetado e os dados de proezas estão disponíveis, mas ainda não foi encontrado qualquer progresso. O problema é provavelmente a configuração do jogo ou do emulador, e não as notificações.",
     "gh-why-install-unknown": "O AW Next lê as proezas deste jogo nos ficheiros de gravação, mas não sabe onde o jogo está instalado. Localiza-o para ativar o tempo de jogo e as reparações.",
     "gh-why-notification-failed": "Este jogo é seguido corretamente e os seus desbloqueios são detetados, mas não foi possível enviar a última notificação. Envia uma notificação de teste para verificar a exibição.",

@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Tema",
+        "tab": "Aparência",
         "description": "Tema de cores da janela do aplicativo (prévia imediata, salvo com OK).",
         "customTitle": "Tema personalizado",
         "customDesc": "Todos os temas podem ser editados aqui: escolha uma cor e, se quiser, uma imagem para cada bloco. A imagem aparece sobre a cor (que vira um véu leve para a legibilidade). Salvar guarda o que você fez como tema seu, com o nome ao lado; um nome ainda livre cria um segundo tema e deixa o primeiro intacto.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "Os dados de conquistas estão no lugar, mas o arquivo Steam que este jogo carrega vem de outro crack e nunca os lê, então nada será registrado ali. O AW Next pode instalar o emulador compatível por cima - o arquivo atual é mantido.",
     "gh-why-uplay-broken": "A configuração do emulador Ubisoft deste jogo está incompleta, então os desbloqueios não são registrados. Use o botão de reparo Uplay R1/R2 abaixo.",
     "gh-why-achievement-data-incomplete": "A lista de conquistas que o AW Next tem para este jogo não corresponde à que o jogo vai procurar, então alguns desbloqueios se perderiam. Ela pode ser reescrita a partir dos dados oficiais.",
+    "gh-why-achievement-icons-missing": "A lista de conquistas está completa, então todo desbloqueio será visto. Faltam só alguns ícones, e reescrever os dados de conquistas os baixa.",
     "gh-why-no-progress-yet": "O jogo foi detectado e os dados de conquistas estão disponíveis, mas nenhum progresso foi encontrado ainda. O problema provavelmente é a configuração do jogo ou do emulador, e não as notificações.",
     "gh-why-install-unknown": "O AW Next lê as conquistas deste jogo nos arquivos de salvamento, mas não sabe onde o jogo está instalado. Localize-o para habilitar o tempo de jogo e os reparos.",
     "gh-why-notification-failed": "Este jogo é monitorado corretamente e seus desbloqueios são detectados, mas não foi possível enviar a última notificação. Envie uma notificação de teste para verificar a exibição.",

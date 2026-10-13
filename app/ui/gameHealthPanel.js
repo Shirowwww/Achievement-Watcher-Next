@@ -418,6 +418,8 @@ function gameHealthExplanation(report) {
       return t('gh-why-uplay-broken', 'The Ubisoft emulator setup for this game is incomplete, so unlocks are not being recorded. Use the Uplay R1/R2 repair button below.', "La configuration de l'émulateur Ubisoft de ce jeu est incomplète : les déblocages ne sont pas enregistrés. Utilise le bouton de réparation Uplay R1/R2 ci-dessous.", p);
     case 'achievement-data-incomplete':
       return t('gh-why-achievement-data-incomplete', "The achievement list AW Next has for this game doesn't match what the game will look for, so some unlocks would be missed. This can be rewritten from the official data.", "La liste de succès dont dispose AW Next ne correspond pas à ce que le jeu va chercher : certains déblocages seraient manqués. Elle peut être réécrite à partir des données officielles.", p);
+    case 'achievement-icons-missing':
+      return t('gh-why-achievement-icons-missing', 'The achievement list is complete, so every unlock will be seen. Only some of its icons are not downloaded yet, and repairing the achievement data fetches them.', "La liste de succès est complète : chaque déblocage sera vu. Il ne manque que des icônes, et réparer les données de succès les télécharge.");
     case 'no-progress-yet':
       return t('gh-why-no-progress-yet', 'The game is detected and achievement data is available, but no achievement progress has been found yet. The likely issue is the game or emulator configuration rather than notifications.', "Le jeu est détecté et les données de succès sont disponibles, mais aucune progression n'a encore été trouvée. Le problème vient probablement de la configuration du jeu ou de l'émulateur, pas des notifications.");
     case 'install-unknown':

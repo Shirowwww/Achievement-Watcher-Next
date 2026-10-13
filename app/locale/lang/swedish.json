@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Tema",
+        "tab": "Utseende",
         "description": "Färgtema för hela appen och overlayen i spelet (förhandsvisas direkt, sparas med OK).",
         "customTitle": "Eget tema",
         "customDesc": "Alla teman går att redigera här: välj en färg och eventuellt en bild för varje block. Bilden ligger över färgen (som blir en lätt slöja för läsbarheten). Spara behåller det du gjort som ett eget tema under namnet bredvid; ett ledigt namn ger dig ytterligare ett tema och lämnar det första ifred.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "Prestationsdatan finns på plats, men Steam-filen som det här spelet läser in kommer från ett annat crack och läser aldrig den, så inget kommer någonsin att registreras där. AW Next kan installera emulatorn som stöds ovanpå den - den nuvarande filen behålls.",
     "gh-why-uplay-broken": "Ubisoft-emulatorns uppsättning för det här spelet är ofullständig, så upplåsningar registreras inte. Använd reparationsknappen för Uplay R1/R2 nedan.",
     "gh-why-achievement-data-incomplete": "Prestationslistan som AW Next har för det här spelet stämmer inte med den spelet letar efter, så vissa upplåsningar skulle missas. Den kan skrivas om utifrån officiella data.",
+    "gh-why-achievement-icons-missing": "Prestationslistan är komplett, så varje upplåsning syns. Bara några ikoner saknas, och att skriva om prestationsdatan laddar ner dem.",
     "gh-why-no-progress-yet": "Spelet är hittat och prestationsdata finns, men inga framsteg mot prestationer har hittats än. Det beror troligen på spelets eller emulatorns konfiguration snarare än på aviseringarna.",
     "gh-why-install-unknown": "AW Next läser spelets prestationer från dess sparfiler, men vet inte var själva spelet är installerat. Hitta det för att aktivera spårning av speltid och reparationer.",
     "gh-why-notification-failed": "Spelet spåras korrekt och dess upplåsningar syns, men den senaste aviseringen kunde inte skickas. Skicka en testavisering för att kontrollera visningsvägen.",

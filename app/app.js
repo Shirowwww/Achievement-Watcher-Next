@@ -1117,11 +1117,9 @@ window.applyLibraryChrome = applyLibraryChrome;
 // and Settings > Appearance both land here, so the two always agree.
 function applyProfileCompact(compact) {
   $('#home').toggleClass('profile-compact', compact);
-  const label = compact
-    ? t('profile-banner-expand', 'Show the full profile', 'Afficher le profil complet')
-    : t('profile-banner-compact', 'Compact profile', 'Profil compact');
+  refreshProfileBandLabels();
   $('#profile-compact-toggle')
-    .attr({ title: label, 'aria-label': label, 'aria-pressed': String(compact) })
+    .attr('aria-pressed', String(compact))
     .find('i')
     .toggleClass('fa-chevron-up', !compact)
     .toggleClass('fa-chevron-down', compact);
@@ -1129,6 +1127,19 @@ function applyProfileCompact(compact) {
 }
 
 window.applyProfileCompact = applyProfileCompact;
+
+// Names the band's two buttons; the locale loader runs it again after a language change. The fold
+// button says what a click does, so its name follows the band's current state.
+function refreshProfileBandLabels() {
+  const statsLabel = t('profile-stats-open', 'See the detailed breakdown', 'Voir le détail');
+  $('#profile-stats-open').attr({ title: statsLabel, 'aria-label': statsLabel });
+  const foldLabel = $('#home').hasClass('profile-compact')
+    ? t('profile-banner-expand', 'Show the full profile', 'Afficher le profil complet')
+    : t('profile-banner-compact', 'Compact profile', 'Profil compact');
+  $('#profile-compact-toggle').attr({ title: foldLabel, 'aria-label': foldLabel });
+}
+
+window.refreshProfileBandLabels = refreshProfileBandLabels;
 
 /*
   Switch the library view on the tiles that are already there. Portrait and landscape use different
@@ -7637,12 +7648,9 @@ var app = {
         debug.log(`game-config i18n failed: ${err}`);
       }
 
-      // Profile stats panel: only the trigger is labelled here. Everything inside the panel is
-      // labelled on open, because the locale tree localeText() reads is not loaded at this point and
-      // those keys would silently render blank.
-      const profileStatsOpenLabel = t('profile-stats-open', 'See the detailed breakdown', 'Voir le détail');
-      $('#profile-stats-open').attr({ title: profileStatsOpenLabel, 'aria-label': profileStatsOpenLabel });
-
+      // Profile stats panel: only the trigger is labelled here, by applyProfileCompact below. Everything
+      // inside the panel is labelled on open, because the locale tree localeText() reads is not loaded
+      // at this point and those keys would silently render blank.
       $('#profile-stats-open').on('click', () => openProfileStats());
 
       applyProfileCompact(app.config.achievement.profileCompact === true);

@@ -684,6 +684,31 @@ test('artwork Steam has not published is a statement, not a repair the user can 
   assert.ok((repairable.actions || []).includes(ACTION.REPAIR_DATA));
 });
 
+test('a complete list missing only its icons is not explained as unlocks being missed', () => {
+  const report = deriveHealth(
+    healthyGame({
+      goldberg: {
+        ...healthyGame().goldberg,
+        achievements: { expected: 63, found: 63, missing: [], missingIcons: ['images/a.jpg', 'images/b.jpg'] },
+      },
+    })
+  );
+
+  assert.equal(report.reason, 'achievement-icons-missing');
+  assert.equal(report.params.missingIcons, 2);
+
+  // Achievements absent from the list still get the sentence about unlocks going unseen.
+  const incomplete = deriveHealth(
+    healthyGame({
+      goldberg: {
+        ...healthyGame().goldberg,
+        achievements: { expected: 63, found: 61, missing: ['A', 'B'], missingIcons: ['images/a.jpg'] },
+      },
+    })
+  );
+  assert.equal(incomplete.reason, 'achievement-data-incomplete');
+});
+
 /*
   The tile dot. Its whole job is to be right BEFORE anyone opens the panel, so the two questions it
   answers - does this game get a dot at all, and what colour - are settled from scan data alone.

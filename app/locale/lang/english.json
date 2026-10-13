@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Theme",
+        "tab": "Appearance",
         "description": "Color theme of the whole app and the in-game overlay (previews immediately, saved with OK).",
         "customTitle": "Custom theme",
         "customDesc": "Every theme can be edited here: pick a colour and, optionally, an image for each block. An image shows over the colour (which becomes a light veil for readability). Save keeps what you made as a theme of your own, under the name beside it; a name nothing uses yet gives you a second theme and leaves the first alone.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "The achievement data is in place, but the Steam file this game loads comes from another crack and never reads it, so nothing will ever be recorded there. AW Next can install the supported emulator over it - the current file is kept.",
     "gh-why-uplay-broken": "The Ubisoft emulator setup for this game is incomplete, so unlocks are not being recorded. Use the Uplay R1/R2 repair button below.",
     "gh-why-achievement-data-incomplete": "The achievement list AW Next has for this game doesn’t match what the game will look for, so some unlocks would be missed. This can be rewritten from the official data.",
+    "gh-why-achievement-icons-missing": "The achievement list is complete, so every unlock will be seen. Only some icons are missing, and rewriting the achievement data downloads them.",
     "gh-why-no-progress-yet": "The game is detected and achievement data is available, but no achievement progress has been found yet. The likely issue is the game or emulator configuration rather than notifications.",
     "gh-why-install-unknown": "AW Next is reading this game’s achievements from its save files, but doesn’t know where the game itself is installed. Locate it to enable playtime tracking and repairs.",
     "gh-why-notification-failed": "This game is tracked correctly and its unlocks are being seen, but the last notification could not be sent. Send a test notification to check the display path.",

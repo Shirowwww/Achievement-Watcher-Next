@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Tema",
+        "tab": "Aspetto",
         "description": "Tema cromatico della finestra dell’app (anteprima immediata, salvataggio con OK).",
         "customTitle": "Tema personalizzato",
         "customDesc": "Ogni tema si modifica qui: scegli un colore e, volendo, un’immagine per ogni blocco. L’immagine sta sopra il colore (che diventa un velo leggero per la leggibilità). Salva conserva quello che hai fatto come tema tuo, con il nome accanto; un nome ancora libero ti dà un secondo tema e lascia il primo intatto.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "I dati degli obiettivi ci sono, ma il file Steam caricato da questo gioco proviene da un altro crack e non li legge mai, quindi lì non verrà mai registrato nulla. AW Next può installare l’emulatore supportato sopra di esso - il file attuale viene mantenuto.",
     "gh-why-uplay-broken": "La configurazione dell’emulatore Ubisoft di questo gioco è incompleta, quindi gli sblocchi non vengono registrati. Usa il pulsante di riparazione Uplay R1/R2 qui sotto.",
     "gh-why-achievement-data-incomplete": "La lista di obiettivi che AW Next ha per questo gioco non corrisponde a quella che il gioco cercherà, quindi alcuni sblocchi andrebbero persi. Può essere riscritta dai dati ufficiali.",
+    "gh-why-achievement-icons-missing": "L'elenco degli obiettivi è completo, quindi ogni sblocco verrà rilevato. Mancano solo alcune icone, e riscrivere i dati degli obiettivi le scarica.",
     "gh-why-no-progress-yet": "Il gioco è rilevato e i dati degli obiettivi sono disponibili, ma non è ancora stato trovato alcun progresso. La causa probabile è la configurazione del gioco o dell’emulatore, non le notifiche.",
     "gh-why-install-unknown": "AW Next legge gli obiettivi di questo gioco dai suoi file di salvataggio, ma non sa dove il gioco sia installato. Individualo per abilitare tempo di gioco e riparazioni.",
     "gh-why-notification-failed": "Questo gioco è tracciato correttamente e i suoi sblocchi vengono rilevati, ma l’ultima notifica non è stata inviata. Invia una notifica di prova per verificare la visualizzazione.",

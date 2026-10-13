@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Tema",
+        "tab": "Utseende",
         "description": "Fargetema for hele appen og for overlayet i spill (forhåndsvises med én gang, lagres med OK).",
         "customTitle": "Egendefinert tema",
         "customDesc": "Alle temaer kan redigeres her: velg en farge og eventuelt et bilde for hver blokk. Bildet ligger over fargen (som blir et lett slør for lesbarheten). Lagre beholder det du laget som ditt eget tema under navnet ved siden av; et ledig navn gir deg et tema til og lar det første være.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "Prestasjonsdataene er på plass, men Steam-filen dette spillet laster inn, kommer fra en annen crack og leser dem aldri, så det blir aldri registrert noe der. AW Next kan installere den støttede emulatoren oppå den - den nåværende filen beholdes.",
     "gh-why-uplay-broken": "Ubisoft-emulatoroppsettet for dette spillet er ufullstendig, så opplåsinger blir ikke registrert. Bruk knappen for Uplay R1/R2-reparasjon nedenfor.",
     "gh-why-achievement-data-incomplete": "Prestasjonslisten AW Next har for dette spillet, stemmer ikke med det spillet kommer til å lete etter, så noen opplåsinger ville gått tapt. Den kan skrives på nytt ut fra de offisielle dataene.",
+    "gh-why-achievement-icons-missing": "Prestasjonslisten er komplett, så alle opplåsinger blir sett. Det mangler bare noen ikoner, og å skrive prestasjonsdataene på nytt laster dem ned.",
     "gh-why-no-progress-yet": "Spillet er funnet og prestasjonsdataene er tilgjengelige, men det er ikke funnet noen fremgang ennå. Årsaken ligger sannsynligvis i oppsettet av spillet eller emulatoren, ikke i varslene.",
     "gh-why-install-unknown": "AW Next leser prestasjonene til dette spillet fra lagringsfilene, men vet ikke hvor selve spillet er installert. Finn det for å få sporing av spilletid og reparasjoner.",
     "gh-why-notification-failed": "Dette spillet spores riktig og opplåsingene registreres, men det siste varselet kunne ikke sendes. Send et testvarsel for å sjekke visningsveien.",

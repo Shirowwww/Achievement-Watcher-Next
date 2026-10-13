@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Teema",
+        "tab": "Ulkoasu",
         "description": "Koko sovelluksen ja pelinsisäisen peittokuvan väriteema (esikatselu heti, tallennetaan OK-painikkeella).",
         "customTitle": "Mukautettu teema",
         "customDesc": "Kaikkia teemoja voi muokata täällä: valitse kullekin lohkolle väri ja halutessasi kuva. Kuva näkyy värin päällä (väristä tulee kevyt huntu luettavuuden vuoksi). Tallenna säilyttää tekemäsi omana teemana viereisellä nimellä; vapaa nimi antaa toisen teeman ja jättää ensimmäisen rauhaan.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "Saavutustiedot ovat paikallaan, mutta tämän pelin lataama Steam-tiedosto tulee toisesta crackista eikä koskaan lue niitä, joten mitään ei koskaan tallennu sinne. AW Next voi asentaa tuetun emulaattorin sen päälle - nykyinen tiedosto säilyy.",
     "gh-why-uplay-broken": "Tämän pelin Ubisoft-emulaattorin asennus on kesken, joten avauksia ei tallenneta. Käytä alla olevaa Uplay R1/R2 -korjauspainiketta.",
     "gh-why-achievement-data-incomplete": "AW Nextin saavutusluettelo ei vastaa sitä, mitä peli etsii, joten osa avauksista jäisi huomaamatta. Luettelo voidaan kirjoittaa uudelleen virallisista tiedoista.",
+    "gh-why-achievement-icons-missing": "Saavutuslista on täydellinen, joten jokainen avaus huomataan. Vain osa kuvakkeista puuttuu, ja saavutustietojen uudelleenkirjoitus lataa ne.",
     "gh-why-no-progress-yet": "Peli on tunnistettu ja saavutustiedot ovat saatavilla, mutta saavutusten edistymistä ei ole vielä löytynyt. Vika on todennäköisemmin pelin tai emulaattorin asetuksissa kuin ilmoituksissa.",
     "gh-why-install-unknown": "AW Next lukee tämän pelin saavutukset sen tallennustiedostoista, mutta ei tiedä minne itse peli on asennettu. Paikanna se, niin peliajan seuranta ja korjaukset toimivat.",
     "gh-why-notification-failed": "Tätä peliä seurataan oikein ja sen avaukset havaitaan, mutta viimeisintä ilmoitusta ei voitu lähettää. Lähetä testi-ilmoitus, niin näet toimiiko näyttäminen.",

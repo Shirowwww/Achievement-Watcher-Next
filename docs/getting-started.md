@@ -65,7 +65,7 @@ from the **Interface** control at the top of **Settings**.
 <sub>The Interface control sits beside the panel title; the search field filters every tab at once</sub>
 </div>
 
-- **Simple** shows the everyday tabs: General, Theme, Controller, Notification, Notification presets, Sources,
+- **Simple** shows the everyday tabs: General, Appearance, Controller, Notification, Notification presets, Sources,
   Folders and Help.
 - **Advanced** adds the **Steam / GBE Fork**, **Ubisoft / Uplay R1/R2** and **Advanced** tabs, plus
   the deeper options inside the tabs Simple already shows.
@@ -95,10 +95,11 @@ context menu.
 <sub>The Details view: latest achievement, last session and playtime for every game at a glance</sub>
 </div>
 
-**Settings → Theme → Library tiles** adds a **Tile size** slider for the artwork and a **Space
+**Settings → Appearance → Library tiles** adds a **Tile size** slider for the artwork and a **Space
 between tiles** slider for the grid gap (down to 0 for no gaps at all), plus a show/hide switch for
 the game name, progress bar, platform icon, health dot, achievements button and settings button -
-one set of switches, applied to every view.
+one set of switches, applied to every view. A game Steam lists with no achievements gets no bar at
+all and its artwork takes the space; **Bar of games without achievements** brings the bar back.
 
 The search field at the top of **Settings** filters every tab at once, and the side menu shows how
 many options each tab matches - for when you remember what an option does but not where it lives. It
@@ -137,6 +138,9 @@ library on one screen. It shows overall completion, how many achievements are un
 the average per game, average and tracked playtime, and the trophy counts, with one row per
 platform at the bottom. **Show installed games only** limits the totals to what is on this PC.
 
+The arrow beside that button folds the profile header into one row of avatar, name and stats, which
+leaves the room to the library; **Settings → Appearance → Profile** holds the same choice.
+
 <div align="center">
 <picture><source srcset="assets/shot/stats-overview-800.webp 800w, assets/shot/stats-overview.webp 1250w" sizes="(max-width: 700px) 100vw, 800px"><img src="screenshot/stats-overview.png" width="800" height="520" alt="The Library stats panel: overall completion, unlocked and locked counts, average per game and playtime" loading="lazy" decoding="async"></picture><br>
 <sub>The overview: completion, counts, average per game and playtime</sub>
@@ -154,7 +158,7 @@ its rarity, with the thresholds listed under the bar (they follow the rarity set
 
 ## Themes
 
-**Settings → Theme** paints the whole app and the in-game overlay. Thirteen palettes are built in,
+**Settings → Appearance** paints the whole app and the in-game overlay. Thirteen palettes are built in,
 and **every one of them can be edited**: pick a theme and the editor below opens on its own colours.
 There is one row per layer - window background, top bar, library panel, cards and rows, the settings
 window, text, muted text, borders and the accent. Each layer takes a colour with an opacity,

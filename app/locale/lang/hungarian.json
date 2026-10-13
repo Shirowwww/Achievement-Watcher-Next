@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Téma",
+        "tab": "Megjelenés",
         "description": "Az alkalmazásablak színtémája (azonnali előnézet, mentés az OK gombbal).",
         "customTitle": "Egyedi téma",
         "customDesc": "Minden téma szerkeszthető itt: válassz színt és tetszés szerint képet minden blokkhoz. A kép a szín fölött látszik (a szín könnyű fátyollá válik az olvashatóság kedvéért). A mentés saját témaként őrzi meg, a mellette lévő néven; egy még szabad név második témát ad, az elsőt pedig békén hagyja.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "A teljesítményadatok megvannak, de a Steam-fájl, amelyet ez a játék betölt, egy másik crackből származik, és sosem olvassa be őket, így ott soha nem rögzül semmi. Az AW Next rátelepítheti a támogatott emulátort - a jelenlegi fájl megmarad.",
     "gh-why-uplay-broken": "A játék Ubisoft-emulátor beállítása hiányos, ezért a feloldások nem rögzülnek. Használd az alábbi Uplay R1/R2 javítás gombot.",
     "gh-why-achievement-data-incomplete": "Az AW Next teljesítménylistája nem egyezik azzal, amit a játék keresni fog, így néhány feloldás kimaradna. A hivatalos adatokból újraírható.",
+    "gh-why-achievement-icons-missing": "A teljesítménylista teljes, így minden feloldás látszani fog. Csak néhány ikon hiányzik, és a teljesítményadatok újraírása letölti őket.",
     "gh-why-no-progress-yet": "A játék felismerve és a teljesítményadatok elérhetők, de még nem található haladás. A gond valószínűleg a játék vagy az emulátor beállítása, nem az értesítések.",
     "gh-why-install-unknown": "Az AW Next a játék teljesítményeit a mentésfájljaiból olvassa, de nem tudja, hol van telepítve. Keresd meg, hogy a játékidő és a javítások működjenek.",
     "gh-why-notification-failed": "Ez a játék helyesen követett, és a feloldásai látszanak, de a legutóbbi értesítést nem sikerült elküldeni. Küldj tesztértesítést a megjelenítés ellenőrzéséhez.",

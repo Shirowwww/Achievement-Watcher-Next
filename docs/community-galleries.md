@@ -8,14 +8,14 @@ Two galleries, one service, one set of rules.
 | [Theme gallery](gallery/themes/) | `.awtheme` | the rest of the app: window, title bar, library, achievement lists, settings surface and overlay |
 
 Downloading from either is one step: take the file, then **Settings -> Notification presets -> Import** or
-**Settings -> Theme -> Import**. This page is the other side of it - how to add one, what is checked,
+**Settings -> Appearance -> Import**. This page is the other side of it - how to add one, what is checked,
 and what a card is allowed to say.
 
 ## Sending one
 
 The flow is the same for both, and nothing leaves your browser until you press **Publish**.
 
-1. **Export it.** Settings, Notification presets, Export for a preset; Settings, Theme, Export for a theme. The
+1. **Export it.** Settings, Notification presets, Export for a preset; Settings, Appearance, Export for a theme. The
    file already carries the name, the description, the version, the tags and the AW Next version it
    needs, because the app wrote them there.
 2. **Choose the file** in the *Send yours* panel on the gallery page, or drop it on the panel, which

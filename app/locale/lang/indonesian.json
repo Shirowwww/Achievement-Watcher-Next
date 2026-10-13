@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Tema",
+        "tab": "Tampilan",
         "description": "Tema warna untuk seluruh aplikasi dan overlay dalam game (pratinjau langsung, disimpan dengan OK).",
         "customTitle": "Tema kustom",
         "customDesc": "Semua tema bisa diubah di sini: pilih warna dan, kalau mau, gambar untuk tiap blok. Gambar tampil di atas warna (warnanya menjadi selubung tipis agar tetap terbaca). Simpan menyimpan hasilmu sebagai tema sendiri dengan nama di sebelahnya; nama yang belum dipakai memberimu tema kedua dan membiarkan yang pertama apa adanya.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "Data pencapaiannya sudah ada, tetapi file Steam yang dimuat game ini berasal dari crack lain dan tidak pernah membacanya, jadi tidak akan ada yang tercatat di sana. AW Next dapat memasang emulator yang didukung di atasnya - file saat ini tetap disimpan.",
     "gh-why-uplay-broken": "Penyiapan emulator Ubisoft untuk game ini belum lengkap, jadi pencapaian yang terbuka tidak tercatat. Pakai tombol perbaikan Uplay R1/R2 di bawah.",
     "gh-why-achievement-data-incomplete": "Daftar pencapaian yang dimiliki AW Next untuk game ini tidak cocok dengan yang akan dicari oleh game, sehingga sebagian pencapaian bisa terlewat. Daftar ini dapat ditulis ulang dari data resmi.",
+    "gh-why-achievement-icons-missing": "Daftar pencapaian sudah lengkap, jadi setiap buka kunci akan terlihat. Hanya beberapa ikon yang belum ada, dan menulis ulang data pencapaian akan mengunduhnya.",
     "gh-why-no-progress-yet": "Game terdeteksi dan data pencapaian tersedia, tetapi belum ada progres pencapaian yang ditemukan. Masalahnya kemungkinan pada konfigurasi game atau emulator, bukan pada notifikasi.",
     "gh-why-install-unknown": "AW Next membaca pencapaian game ini dari file save-nya, tetapi tidak tahu di mana game itu sendiri terpasang. Temukan lokasinya agar pelacakan waktu bermain dan perbaikan dapat berjalan.",
     "gh-why-notification-failed": "Game ini terlacak dengan benar dan pencapaian yang terbuka terbaca, tetapi notifikasi terakhir tidak dapat dikirim. Kirim notifikasi uji untuk memeriksa jalur tampilannya.",

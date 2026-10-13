@@ -594,6 +594,8 @@ function explain(state, checks, signals) {
   // The signature case: everything needed is present, nothing has been recorded yet. Say where the
   // fault is likely to be, because "no notifications appeared" is the usual misread.
   if (progress && progress.level === LEVEL.WARN) return { reason: 'no-progress-yet', params: progress.params };
+  // Only icons missing: every unlock is still seen, so the "unlocks would be missed" sentence is wrong.
+  if (data && data.level === LEVEL.WARN && data.params && data.params.missingIcons) return { reason: 'achievement-icons-missing', params: data.params };
   if (data && data.level === LEVEL.WARN) return { reason: 'achievement-data-incomplete', params: data.params };
   if (emulator && (emulator.level === LEVEL.WARN || emulator.level === LEVEL.FAIL)) return { reason: 'emulator-partial', params: emulator.params };
   // Reading unlocks out of a save folder without knowing where the game lives is a real state, and

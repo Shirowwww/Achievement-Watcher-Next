@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Motyw",
+        "tab": "Wygląd",
         "description": "Motyw kolorystyczny okna aplikacji (natychmiastowy podgląd, zapis przyciskiem OK).",
         "customTitle": "Własny motyw",
         "customDesc": "Każdy motyw można tu edytować: wybierz kolor i opcjonalnie obraz dla każdego bloku. Obraz leży na kolorze (który staje się lekką zasłoną dla czytelności). Zapisz zachowa twoją pracę jako własny motyw pod nazwą obok; jeszcze nieużywana nazwa daje drugi motyw i zostawia pierwszy w spokoju.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "Dane osiągnięć są na miejscu, ale plik Steam wczytywany przez tę grę pochodzi z innego cracka i nigdy ich nie odczytuje, więc nic nigdy tam nie zostanie zapisane. AW Next może zainstalować na nim obsługiwany emulator - obecny plik zostaje zachowany.",
     "gh-why-uplay-broken": "Konfiguracja emulatora Ubisoft dla tej gry jest niekompletna, więc odblokowania nie są zapisywane. Użyj przycisku naprawy Uplay R1/R2 poniżej.",
     "gh-why-achievement-data-incomplete": "Lista osiągnięć, którą AW Next ma dla tej gry, nie zgadza się z tym, czego gra będzie szukać, więc część odblokowań zostałaby pominięta. Można ją zapisać ponownie z oficjalnych danych.",
+    "gh-why-achievement-icons-missing": "Lista osiągnięć jest kompletna, więc każde odblokowanie zostanie wykryte. Brakuje tylko niektórych ikon, a ponowny zapis danych osiągnięć je pobierze.",
     "gh-why-no-progress-yet": "Gra jest wykryta, a dane osiągnięć są dostępne, ale nie znaleziono jeszcze żadnego postępu. Przyczyną jest raczej konfiguracja gry lub emulatora niż powiadomienia.",
     "gh-why-install-unknown": "AW Next odczytuje osiągnięcia tej gry z jej plików zapisu, ale nie wie, gdzie gra jest zainstalowana. Wskaż ją, aby włączyć czas gry i naprawy.",
     "gh-why-notification-failed": "Ta gra jest poprawnie śledzona, a jej odblokowania są widoczne, ale nie udało się wysłać ostatniego powiadomienia. Wyślij powiadomienie testowe, aby sprawdzić wyświetlanie.",

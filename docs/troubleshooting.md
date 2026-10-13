@@ -91,7 +91,8 @@ Steam-emulator saves can end up split across `%APPDATA%\GSE Saves` and
 holds the unlocks rather than whichever one happens to exist first, so this is not something you need
 to fix by hand.
 
-A game with no achievement set at all displays **No achievements** rather than 0%, and is left out of
+A game with no achievement set at all has no progress bar rather than 0% (or **No achievements**, if
+you turned that bar back on in **Settings → Appearance → Library tiles**), and is left out of
 completion statistics.
 
 **It works from AW Next's Play button but not from a Steam shortcut.** A cracked game added to Steam

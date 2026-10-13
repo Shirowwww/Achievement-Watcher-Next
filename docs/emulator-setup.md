@@ -85,7 +85,15 @@ automatic repair:
 | **Write account name and language** | Stamps your account name and language into `configs.user.ini`. |
 
 Neither one affects achievements. Leave them off to keep a game stock, or if you manage DLC or
-identity by hand. Right-click a game and choose **Remove AW Next's emulator configuration** to undo
+identity by hand.
+
+The **Emulator identity** card below them says what gets written, so no other tool is needed for it:
+
+| Field | What it does |
+|---|---|
+| **Account name** | Written while **Write account name and language** is on. Empty uses your AW Next profile name. |
+| **Steam ID** | Written while that switch is on; empty keeps each game's own. The dice button makes a random valid one, and a typo is flagged as you type and never written. |
+| **Save folder** | Applies as soon as you choose one: every game fixed or repaired from then on saves there (`local_save_path`), and AW Next watches it for live notifications. Empty keeps `%APPDATA%\GSE Saves`. | Right-click a game and choose **Remove AW Next's emulator configuration** to undo
 what either one wrote: it removes only the DLC section, switches and identity keys AW Next itself
 added, keeps every value you or the repack set, and deletes a file only when nothing else is left in
 it. It shows exactly what it will remove before doing anything.

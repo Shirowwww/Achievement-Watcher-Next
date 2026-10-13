@@ -17,10 +17,9 @@ renamed in 3.9.0 and the history is kept under one file.
   while **Write account name and language** is on; a Steam ID with a typo is flagged as you type and
   never written. A chosen save folder is used by every game fixed or repaired from then on, and AW
   Next watches it for live notifications.
-- **A compact profile banner.** The arrow beside the stats button, or **Settings → Theme →
+- **A compact profile banner.** The arrow beside the stats button, or **Settings → Appearance →
   Profile**, folds your avatar, name and stats into one row: half the height in a narrow window and
   one slim row in a wide one, leaving the room to the library when AW Next is your game launcher.
-
 - **A sound for rare unlocks and one for 100%.** **Settings → Notifications** (Advanced mode) has
   **Rare achievement sound** and **100% completion sound** under **Sound**, for the in-game popup and
   Windows notifications alike. Both start on "Same as unlocks"; "None" silences that kind of popup.
@@ -46,8 +45,10 @@ renamed in 3.9.0 and the history is kept under one file.
 
 - **No bar under games without achievements.** A game Steam lists with no achievements, such as
   Final Fantasy XIV, no longer carries a "No achievements" bar: its artwork takes that space, so the
-  tile still matches its neighbours. **Bar of games without achievements** in **Settings → Theme →
-  Library tiles** brings it back.
+  tile still matches its neighbours. **Bar of games without achievements** in **Settings → Appearance
+  → Library tiles** brings it back.
+- **The Theme tab is now Appearance.** It holds the theme, the profile banner and the library tiles,
+  so its name says so.
 - **On/off settings are switches.** Every Settings row that is simply enabled or disabled now shows a
   switch instead of arrows to step through, so what is off stands out at a glance. Rows that choose
   between two named options keep their arrows.
@@ -97,6 +98,10 @@ renamed in 3.9.0 and the history is kept under one file.
 - **A scan backs up a game's configuration before rewriting it.** With automatic repair on, a scan
   could change `configs.user.ini` and add `configs.main.ini` before the backup was taken, so a
   restore brought back the rewritten files instead of the release's own.
+- **Game health no longer says unlocks would be missed when only icons are.** A complete achievement
+  list missing some icons now reads as such, with **Rewrite the achievement data** to download them.
+- **The profile buttons follow a language change.** The stats and fold buttons kept their tooltips
+  in the previous language until AW Next restarted.
 - **A console game's own background on its achievement page.** Artwork a console emulator source
   keeps on disk, such as a PS5 game's key art, never reached the page background, which stayed
   plain dark.

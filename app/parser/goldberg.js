@@ -1309,11 +1309,6 @@ function neutralizePlaceholderSavePath(doc) {
   return fixed;
 }
 
-// Write/merge configs.user.ini with the app's account_name and language, preserving account_steamid
-// and every other key. `fillDefaults` (an explicit repair) falls back to the emulator's own defaults,
-// clearing the NO_USER_CONFIG/BAD_USER_CONFIG Game Health checks even with nothing to stamp.
-const DEFAULT_EMU_ACCOUNT_NAME = 'Player';
-
 /*
   What a fix or repair stamps into configs.user.ini, from Settings (issue #123): the identity only
   behind "Write account name and language", the save folder whenever one is chosen. An explicit
@@ -1332,6 +1327,12 @@ function userIdentity(options = {}, language, { explicit = false } = {}) {
     localSavePath: savePath && path.isAbsolute(savePath) ? savePath : undefined,
   };
 }
+
+// Write/merge configs.user.ini with the app's account_name and language, keeping account_steamid
+// unless Settings names one, and every other key. `fillDefaults` (an explicit repair) falls back to
+// the emulator's own defaults, clearing the NO_USER_CONFIG/BAD_USER_CONFIG Game Health checks even
+// with nothing to stamp.
+const DEFAULT_EMU_ACCOUNT_NAME = 'Player';
 const DEFAULT_EMU_LANGUAGE = 'english';
 
 function writeUserConfig({ steamSettings, accountName, language, accountSteamId, localSavePath, fillDefaults = false, backupDir = null } = {}) {

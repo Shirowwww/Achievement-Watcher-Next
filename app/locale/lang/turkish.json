@@ -212,6 +212,7 @@
       },
       "theme": {
         "name": "Tema",
+        "tab": "Görünüm",
         "description": "Uygulama penceresinin renk teması (anında önizlenir, Tamam ile kaydedilir).",
         "customTitle": "Özel tema",
         "customDesc": "Her tema burada düzenlenebilir: her blok için bir renk ve istersen bir görsel seç. Görsel rengin üstünde görünür (renk okunabilirlik için hafif bir örtüye dönüşür). Kaydet, yaptığını yanındaki adla kendi teman olarak saklar; henüz kullanılmayan bir ad sana ikinci bir tema verir ve ilkine dokunmaz.",
@@ -2157,6 +2158,7 @@
     "gh-why-emulator-runtime-foreign": "Başarım verileri yerinde, ancak bu oyunun yüklediği Steam dosyası başka bir crack'ten geliyor ve onları hiç okumuyor, bu yüzden orada hiçbir şey kaydedilmeyecek. AW Next, üzerine desteklenen emülatörü kurabilir - mevcut dosya korunur.",
     "gh-why-uplay-broken": "Bu oyunun Ubisoft emülatör kurulumu eksik, bu yüzden açılışlar kaydedilmiyor. Aşağıdaki Uplay R1/R2 onarım düğmesini kullan.",
     "gh-why-achievement-data-incomplete": "AW Next’in bu oyun için sahip olduğu başarım listesi, oyunun arayacağı listeyle eşleşmiyor; bu yüzden bazı açılışlar kaçırılır. Liste resmî verilerden yeniden yazılabilir.",
+    "gh-why-achievement-icons-missing": "Başarım listesi eksiksiz, bu yüzden her kilit açma görülecek. Yalnızca bazı simgeler eksik ve başarım verilerini yeniden yazmak onları indirir.",
     "gh-why-no-progress-yet": "Oyun algılandı ve başarım verileri mevcut, ancak henüz hiçbir ilerleme bulunamadı. Sorun büyük olasılıkla bildirimler değil, oyun ya da emülatör yapılandırmasıdır.",
     "gh-why-install-unknown": "AW Next bu oyunun başarımlarını kayıt dosyalarından okuyor, ancak oyunun nereye kurulu olduğunu bilmiyor. Oynama süresi ve onarımlar için oyunun yerini göster.",
     "gh-why-notification-failed": "Bu oyun doğru şekilde izleniyor ve açılışları görülüyor, ancak son bildirim gönderilemedi. Görüntülemeyi denetlemek için bir test bildirimi gönderin.",
