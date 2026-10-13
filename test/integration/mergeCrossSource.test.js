@@ -396,3 +396,91 @@ test('a cache import backed by a save folder still keeps the tile, as before', (
     assert.deepEqual(merged.map((g) => g.appid), ['638970']);
   }
 });
+
+/*
+  Issue #111. A scan reuses the discovery list of the previous one, and the merge used to write into
+  those records: the Steam entry kept the Xbox listing's name ("Yakuza 3 Remastered for Windows 10"),
+  so the next scan matched Yakuza 0 against that borrowed name and the game vanished into it.
+*/
+function yakuzaList() {
+  return [
+    { appid: '1088710', source: 'Steam', data: { type: 'steamAPI' } },
+    { appid: '2092055351', name: 'Yakuza 3 Remastered for Windows 10', source: 'Xbox PC', data: { type: 'xboxPc', title: 'Yakuza 3 Remastered for Windows 10' } },
+    { appid: '1917938753', name: 'Yakuza 0 for Windows 10', source: 'Xbox PC', data: { type: 'xboxPc', title: 'Yakuza 0 for Windows 10' } },
+  ];
+}
+
+test('the cross-source merge leaves the records it was given untouched', () => {
+  const list = yakuzaList();
+  list[0].name = 'Yakuza 3 Remastered';
+  const before = JSON.parse(JSON.stringify(list));
+  achievements._internal.mergeCrossSourceDuplicates(list);
+  assert.deepEqual(list, before);
+});
+
+test('a reused discovery list merges the same way on every scan', () => {
+  const list = yakuzaList();
+  list[0].name = 'Yakuza 3 Remastered';
+  for (let scan = 1; scan <= 3; scan++) {
+    const merged = achievements._internal.mergeCrossSourceDuplicates(list);
+    assert.deepEqual(merged.map((g) => g.appid), ['1088710', '1917938753'], `scan ${scan}`);
+    assert.equal(merged[0].name, 'Yakuza 3 Remastered');
+  }
+});
+
+test('an account listing folds only into the same title, not into a remaster of it', () => {
+  const steam = { appid: '911400', name: "Assassin's Creed III Remastered", source: 'Steam', data: { type: 'steamAPI' } };
+  const xbox = { appid: '1234567', name: "Assassin's Creed III", source: 'Xbox PC', data: { type: 'xboxPc', title: "Assassin's Creed III" } };
+  for (const list of [[steam, xbox], [xbox, steam]]) {
+    const merged = achievements._internal.mergeCrossSourceDuplicates(list);
+    assert.deepEqual(merged.map((g) => g.appid).sort(), ['1234567', '911400']);
+  }
+});
+
+test('a cached discovery list is handed out as a copy', () => {
+  const cached = yakuzaList();
+  cached[0]._sources = [{ appid: '1088710', data: { type: 'steamAPI' } }];
+  const copy = achievements._internal.copyDiscoveryList(cached);
+  copy[0].name = 'changed';
+  copy[0].data.title = 'changed';
+  copy[0]._sources.push({ appid: 'x' });
+  assert.equal(cached[0].name, undefined);
+  assert.equal(cached[0].data.title, undefined);
+  assert.equal(cached[0]._sources.length, 1);
+});
+
+// A listing often names the edition it sold and Steam the bare game. The two are still one game,
+// however much longer one name is than the other.
+test('an account listing named after its edition folds into the bare Steam title', () => {
+  const pairs = [
+    ['870780', 'Control', 'Control Ultimate Edition'],
+    ['377160', 'Fallout 4', 'Fallout 4: Game of the Year Edition'],
+    ['1172620', 'Sea of Thieves 2024 Edition', 'Sea of Thieves'],
+  ];
+  for (const [appid, steamName, title] of pairs) {
+    const steam = { appid, name: steamName, source: 'Steam', data: { type: 'steamAPI' } };
+    const xbox = { appid: '99' + appid, name: title, source: 'Xbox PC', data: { type: 'xboxPc', title } };
+    for (const list of [[steam, xbox], [xbox, steam]]) {
+      const merged = achievements._internal.mergeCrossSourceDuplicates(list);
+      assert.deepEqual(merged.map((g) => g.appid), [appid], title);
+    }
+  }
+});
+
+test('a bracketed year tells a remake from its original, and two equal candidates take neither', () => {
+  const remake = { appid: '1693980', name: 'Dead Space', source: 'Steam', data: { type: 'steamAPI' } };
+  const original = { appid: '17470', name: 'Dead Space (2008)', source: 'Steam', data: { type: 'steamAPI' } };
+  const xbox = { appid: '2041234', name: 'Dead Space', source: 'Xbox PC', data: { type: 'xboxPc', title: 'Dead Space' } };
+  for (const list of [[original, xbox, remake], [remake, xbox, original]]) {
+    const merged = achievements._internal.mergeCrossSourceDuplicates(list);
+    assert.deepEqual(merged.map((g) => g.appid).sort(), ['1693980', '17470']);
+    assert.ok(merged.find((g) => g.appid === '1693980')._sources.some((s) => s.appid === '2041234'), 'the listing joins the remake');
+  }
+
+  const twins = [
+    { appid: '1', name: 'Hades', source: 'Steam', data: { type: 'steamAPI' } },
+    { appid: '2', name: 'HADES', source: 'Steam', data: { type: 'file', path: 'C:/saves/2' } },
+    { appid: '3', name: 'Hades', source: 'Xbox PC', data: { type: 'xboxPc', title: 'Hades' } },
+  ];
+  assert.equal(achievements._internal.mergeCrossSourceDuplicates(twins).length, 3, 'two equal candidates are ambiguous');
+});

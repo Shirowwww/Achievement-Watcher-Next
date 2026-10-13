@@ -71,3 +71,29 @@ assert.strictEqual(fuzzy.bestConfidentAppid('EnhancedEdition', editions), null, 
 assert.strictEqual(fuzzy.bestConfidentAppid('Enhanced Edition', editions), null);
 assert.strictEqual(fuzzy.bestConfidentAppid('DirectorsCut', editions), null);
 assert.strictEqual(fuzzy.bestConfidentAppid('Little_Nightmares_II_Enhanced', editions), 1413420);
+
+/*
+  Issue #111: an Xbox library names its games "<title> for Windows 10". The "0" of Yakuza 0 was found
+  inside the "10" of another game's name, so Yakuza 0 was folded into Yakuza 3 Remastered and vanished.
+  A series number has to match as a whole number, and the platform tag says nothing about the game.
+*/
+const yakuza = [
+  { appid: 1088710, name: 'Yakuza 3 Remastered for Windows 10' },
+  { appid: 927380, name: 'Yakuza Kiwami 2' },
+];
+assert.strictEqual(fuzzy.bestConfidentAppid('Yakuza 0 for Windows 10', yakuza), null, 'a digit inside another number is not a series number');
+assert.strictEqual(fuzzy.bestConfidentAppid('Yakuza 0', [{ appid: 1088710, name: 'Yakuza 3 Remastered' }]), null);
+assert.strictEqual(fuzzy.bestConfidentAppid('Yakuza Kiwami 2 for Windows 10', yakuza), 927380, 'the platform tag does not stop a real match');
+assert.strictEqual(fuzzy.bestConfidentAppid('Yakuza Kiwami for Windows 10', yakuza), null, 'Kiwami is not Kiwami 2');
+assert.strictEqual(fuzzy.bestConfidentAppid('Yakuza 3 Remastered for Windows 10', [{ appid: 1088710, name: 'Yakuza 3 Remastered' }]), 1088710);
+assert.strictEqual(fuzzy.bestConfidentAppid('Frostpunk 2', [{ appid: 323190, name: 'Frostpunk' }]), null);
+
+// A number inside an edition name is packaging, not a series number; a year in brackets is how a
+// store tells a remake from the original, so it is one.
+assert.ok(fuzzy.sameTitle('Sea of Thieves', 'Sea of Thieves 2024 Edition'));
+assert.ok(fuzzy.sameTitle('Microsoft Flight Simulator', 'Microsoft Flight Simulator 40th Anniversary Edition'));
+assert.ok(fuzzy.sameTitle('Yakuza 0 for Windows 10', 'Yakuza 0'));
+assert.ok(!fuzzy.sameTitle('Dead Space', 'Dead Space (2008)'));
+assert.ok(!fuzzy.sameTitle('Age of Empires II: Definitive Edition', 'Age of Empires II (2013)'));
+assert.ok(!fuzzy.sameTitle('Microsoft Flight Simulator 2024', 'Microsoft Flight Simulator 40th Anniversary Edition'));
+assert.ok(!fuzzy.sameTitle('FIFA 23', 'FIFA 22'));
