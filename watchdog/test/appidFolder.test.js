@@ -3,7 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { immediateChildDirOf, deriveAppIdFromDir } = require('../util/appidFolder.js');
+const { immediateChildDirOf, deriveAppIdFromDir, nestedAppIds } = require('../util/appidFolder.js');
 
 test('immediateChildDirOf resolves a nested file to the root-level folder that holds it', () => {
   const root = path.join('C:', 'Users', 'X', 'AppData', 'Roaming', 'GSE Saves');
@@ -37,4 +37,12 @@ test('deriveAppIdFromDir matches a bare trailing appid folder with no known leaf
 test('deriveAppIdFromDir returns null rather than throwing when no digits are found', () => {
   assert.equal(deriveAppIdFromDir(path.join('C:', 'GSE Saves', 'not-a-number')), null);
   assert.equal(deriveAppIdFromDir(''), null);
+});
+
+// A repaired Uplay R2 setup nests <steamAppid>/<uplayId>; RAZOR1911 keeps .1911/<appid>, whose
+// folder name merely ends in digits and must not be read as a Steam appid above the real one.
+test('nestedAppIds reads two whole numeric folders, not a dotted folder that ends in digits', () => {
+  assert.deepEqual(nestedAppIds(path.join('C:', 'GSE Saves', '242550', '410')), { outer: '242550', inner: '410' });
+  assert.equal(nestedAppIds(path.join('C:', 'AppData', '.1911', '400')), null);
+  assert.equal(nestedAppIds(path.join('C:', 'GSE Saves', '730')), null);
 });

@@ -150,7 +150,8 @@ function builtinRoots(host) {
     },
     {
       dir: at('APPDATA', 'CreamAPI'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0]] },
+      // CreamAPI writes <appid>\stats\CreamAPI.Achievements.cfg; achievements.ini is kept for older builds.
+      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0], 'CreamAPI.Achievements.cfg'] },
     },
     {
       dir: at('PUBLIC', 'Documents/EMPRESS'),

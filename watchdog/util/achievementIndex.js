@@ -49,8 +49,21 @@ function buildPreviousAchievementIndex(entries) {
   return { byName, unlockedCount };
 }
 
+// The schema names (upper-cased) of the `limit` most recent unlocks. A crc-keyed record (SmartSteamEmu)
+// is named by its index until the schema resolves it, so it is resolved here first.
+function seedPreviewNames(unlocked, schemaIndex, limit) {
+  return new Set(
+    unlocked
+      .slice()
+      .sort((a, b) => Number(b.UnlockTime || 0) - Number(a.UnlockTime || 0))
+      .slice(0, limit)
+      .map((a) => normalizeName((findSchemaAchievement(schemaIndex, a) || a).name))
+  );
+}
+
 module.exports = {
   buildSchemaIndex,
   findSchemaAchievement,
   buildPreviousAchievementIndex,
+  seedPreviewNames,
 };
