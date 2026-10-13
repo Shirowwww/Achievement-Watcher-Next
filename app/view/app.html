@@ -61,6 +61,10 @@
                 <button type="button" id="profile-stats-open" class="profile-stats-open" aria-haspopup="dialog">
                   <i class="fas fa-chart-pie" aria-hidden="true"></i>
                 </button>
+                <!-- Folds the band into one row (issue #123); app.js names it and remembers the choice. -->
+                <button type="button" id="profile-compact-toggle" class="profile-stats-open profile-compact-toggle" aria-pressed="false">
+                  <i class="fas fa-chevron-up" aria-hidden="true"></i>
+                </button>
               </div>
               <!-- Trophy showcase (Settings > General). One button: the counts open the Trophies part of
                    the stats panel. -->
@@ -313,6 +317,51 @@
                 </ul>
               </div>
 
+              <!-- GBE Fork identity (issue #123): what a fix or a repair writes into each game's
+                   configs.user.ini. Always shown, so it borrows the login card's look with is-visible.
+                   Bound by id in app/locale/loader.js. -->
+              <div id="emulator-identity" class="emulator-login emulator-identity is-visible">
+                <div class="emulator-login-heading">
+                  <div class="title"><i class="fas fa-id-badge"></i> <span id="emulator-identity-title">Emulator identity</span></div>
+                </div>
+                <p id="emulator-identity-desc">Written into each game's configs.user.ini by the fix and by Repair. Leave a field empty to keep what the game already has.</p>
+                <div class="emulator-login-fields">
+                  <div>
+                    <label for="emulator-identity-name"><i class="fas fa-user"></i> <span id="emulator-identity-name-label">Account name</span></label>
+                    <input type="text" id="emulator-identity-name" autocomplete="off" spellcheck="false" maxlength="64" />
+                  </div>
+                  <div>
+                    <label for="emulator-identity-steamid"><i class="fas fa-fingerprint"></i> <span id="emulator-identity-steamid-label">Steam ID</span></label>
+                    <div class="emulator-identity-steamid-row">
+                      <input
+                        type="text"
+                        id="emulator-identity-steamid"
+                        autocomplete="off"
+                        spellcheck="false"
+                        inputmode="numeric"
+                        maxlength="17"
+                        placeholder="7656119XXXXXXXXXX"
+                        aria-describedby="emulator-identity-steamid-status"
+                      />
+                      <!-- Icon only: named by its tooltip, set from the locale. -->
+                      <button type="button" id="emulator-identity-steamid-random" class="inline-action-btn secondary" title="Random Steam ID" aria-label="Random Steam ID">
+                        <i class="fas fa-dice" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                    <span id="emulator-identity-steamid-status" class="emulator-identity-status" aria-live="polite"></span>
+                  </div>
+                </div>
+                <p id="emulator-identity-switch" class="emulator-identity-switch">Name and Steam ID are written only while "Write account name and language" is enabled above.</p>
+                <div class="emulator-identity-saves">
+                  <label for="emulator-identity-saves"><i class="fas fa-folder-open"></i> <span id="emulator-identity-saves-label">Save folder</span></label>
+                  <div class="emulator-identity-saves-row">
+                    <input type="text" id="emulator-identity-saves" readonly placeholder="%APPDATA%\GSE Saves" />
+                    <button type="button" id="emulator-identity-saves-pick" class="inline-action-btn"><i class="fas fa-folder-open"></i> <span>Choose…</span></button>
+                    <button type="button" id="emulator-identity-saves-reset" class="inline-action-btn secondary"><i class="fas fa-undo"></i> <span>Default</span></button>
+                  </div>
+                  <p id="emulator-identity-saves-help">Games fixed or repaired from now on keep their saves here, one folder per game, and AW Next watches it for live notifications.</p>
+                </div>
+              </div>
               <div id="emulator-login" class="emulator-login">
                 <div class="emulator-login-heading">
                   <div class="title"><i class="fas fa-key"></i> <span id="emulator-login-title">Steam login</span></div>
@@ -3197,6 +3246,25 @@
                 </ul>
               </div>
 
+              <!-- Profile band (issue #123), shown in Simple mode too; bound by id in app/locale/loader.js. -->
+              <div id="profile-band" class="arrow-list">
+                <div class="title"><i class="fas fa-user-circle"></i> <span id="profile-band-title">Profile</span></div>
+                <ul>
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-compress-alt"></i> <span id="profile-compact-label">Profile banner</span></div>
+                    <div class="right">
+                      <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                      <select autocomplete="off" id="option_profileCompact">
+                        <option value="false" selected>Full</option>
+                        <option value="true">Compact</option>
+                      </select>
+                      <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                    </div>
+                    <div class="help" id="profile-compact-help">Compact puts your avatar, name and stats on one row, so more of the library fits. The arrow in the banner switches it too.</div>
+                  </li>
+                </ul>
+              </div>
+
               <!-- Library tiles (issue #56): how big the artwork is, how tight the grid is, and which
                    pieces of chrome a tile draws. Its own card in Appearance rather than rows appended
                    to the General list, so no nth-child locale binding moves; every label here is
@@ -3243,6 +3311,18 @@
                       <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
                     </div>
                     <div class="help" id="library-progress-help">Show the completion bar on each tile.</div>
+                  </li>
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-ban"></i> <span id="library-emptyprogress-label">Bar of games without achievements</span></div>
+                    <div class="right">
+                      <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                      <select autocomplete="off" id="option_libraryShowEmptyProgress">
+                        <option value="true">Show</option>
+                        <option value="false" selected>Hide</option>
+                      </select>
+                      <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                    </div>
+                    <div class="help" id="library-emptyprogress-help">For a game Steam lists with no achievements: show "No achievements" in its bar, or leave the bar out.</div>
                   </li>
                   <li class="hasHelper">
                     <div class="left"><i class="fas fa-tags"></i> <span id="library-source-label">Platform icon</span></div>

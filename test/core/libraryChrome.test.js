@@ -11,11 +11,24 @@ const assert = require('node:assert/strict');
 
 const libraryChrome = require('../../app/util/libraryChrome.js');
 
+// Toggles shipped hidden (issue #123's "No achievements" bar); every other one ships shown.
+const HIDDEN_BY_DEFAULT = libraryChrome.TOGGLES.filter((toggle) => toggle.shownByDefault === false).map((toggle) => toggle.hiddenClass);
+
 test('an absent setting means the layout that shipped', () => {
   const chrome = libraryChrome.resolve({});
   assert.equal(chrome.tileScale, 1);
   assert.equal(chrome.density, 1);
-  assert.deepEqual(chrome.hiddenClasses, [], 'nothing is hidden until it is turned off');
+  assert.deepEqual(chrome.hiddenClasses, HIDDEN_BY_DEFAULT, 'only the toggles shipped hidden start hidden');
+});
+
+test('the bar of a game with no achievements ships hidden and shows only on an explicit yes', () => {
+  assert.deepEqual(HIDDEN_BY_DEFAULT, ['hide-tile-empty-progress']);
+  for (const value of [undefined, false, 'false', 0]) {
+    assert.ok(libraryChrome.resolve({ libraryShowEmptyProgress: value }).hiddenClasses.includes('hide-tile-empty-progress'));
+  }
+  for (const value of [true, 'true']) {
+    assert.ok(!libraryChrome.resolve({ libraryShowEmptyProgress: value }).hiddenClasses.includes('hide-tile-empty-progress'));
+  }
 });
 
 test('a config from an older version needs no migration', () => {
@@ -23,7 +36,7 @@ test('a config from an older version needs no migration', () => {
     const chrome = libraryChrome.resolve(value);
     assert.equal(chrome.tileScale, 1);
     assert.equal(chrome.density, 1);
-    assert.deepEqual(chrome.hiddenClasses, []);
+    assert.deepEqual(chrome.hiddenClasses, HIDDEN_BY_DEFAULT);
   }
 });
 
@@ -56,19 +69,22 @@ test('a gap of zero is a real choice, not a missing value', () => {
   assert.equal(libraryChrome.resolve({ libraryDensity: 0 }).density, 0);
 });
 
-test('each toggle hides its own element and nothing else', () => {
+test('each toggle changes its own element and nothing else', () => {
+  const base = libraryChrome.resolve({}).hiddenClasses;
   for (const toggle of libraryChrome.TOGGLES) {
-    const chrome = libraryChrome.resolve({ [toggle.key]: false });
-    assert.deepEqual(chrome.hiddenClasses, [toggle.hiddenClass], `${toggle.key} must act alone`);
+    // Flip it away from its shipped default: exactly its own class must change state.
+    const flipped = libraryChrome.resolve({ [toggle.key]: toggle.shownByDefault === false }).hiddenClasses;
+    const changed = [...base.filter((name) => !flipped.includes(name)), ...flipped.filter((name) => !base.includes(name))];
+    assert.deepEqual(changed, [toggle.hiddenClass], `${toggle.key} must act alone`);
   }
 });
 
-test('only an explicit false hides anything', () => {
+test('only an explicit false hides a toggle shipped shown', () => {
   // A truthy-but-not-true value (an old string "true" from options.ini) must not read as "hide".
   for (const value of [true, 'true', 1, undefined]) {
-    assert.deepEqual(libraryChrome.resolve({ libraryShowTitle: value }).hiddenClasses, []);
+    assert.ok(!libraryChrome.resolve({ libraryShowTitle: value }).hiddenClasses.includes('hide-tile-title'));
   }
-  assert.deepEqual(libraryChrome.resolve({ libraryShowTitle: false }).hiddenClasses, ['hide-tile-title']);
+  assert.ok(libraryChrome.resolve({ libraryShowTitle: false }).hiddenClasses.includes('hide-tile-title'));
 });
 
 test('the renderer is told every class it owns, so it can clear the ones it no longer needs', () => {
@@ -120,8 +136,9 @@ test('the settings file is normalized on load, not only when the sliders move', 
   assert.match(settings, /libraryChrome\.normalizeDensity\(options\.achievement\.libraryDensity\)/);
   assert.match(settings, /for \(const toggle of libraryChrome\.TOGGLES\)/, 'the toggles must be normalized from one list');
   for (const toggle of libraryChrome.TOGGLES) {
-    assert.match(settings, new RegExp(`${toggle.key}: true`), `${toggle.key} has no shipped default`);
+    assert.match(settings, new RegExp(`${toggle.key}: ${toggle.shownByDefault !== false}`), `${toggle.key} has no shipped default`);
   }
+  assert.match(settings, /options\.achievement\[toggle\.key\] = toggle\.shownByDefault !== false/, 'normalized to each toggle default');
   assert.match(settings, /libraryTileScale: 1,/);
   assert.match(settings, /libraryDensity: 1,/);
 });

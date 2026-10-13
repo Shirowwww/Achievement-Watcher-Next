@@ -313,6 +313,10 @@
           "name": "Progress bar",
           "description": "Show the completion bar on each tile."
         },
+        "showEmptyProgress": {
+          "name": "Bar of games without achievements",
+          "description": "For a game Steam lists with no achievements: show \"No achievements\" in its bar, or leave the bar out."
+        },
         "showSource": {
           "name": "Platform icon",
           "description": "Show the small Steam, GOG, Epic or emulator badge on each tile."
@@ -331,7 +335,16 @@
         }
       },
       "appSectionTitle": "Application",
-      "trophySectionTitle": "Trophies and rarity"
+      "trophySectionTitle": "Trophies and rarity",
+      "profileBand": {
+        "title": "Profile",
+        "compact": {
+          "name": "Profile banner",
+          "description": "Compact puts your avatar, name and stats on one row, so more of the library fits. The arrow in the banner switches it too.",
+          "full": "Full",
+          "compact": "Compact"
+        }
+      }
     },
     "emulator": {
       "nav": "Emulator repair",
@@ -439,6 +452,18 @@
         }
       },
       "loginPlaceholder": "Steam account name",
+      "identity": {
+        "title": "Emulator identity",
+        "desc": "Written into each game's configs.user.ini by the fix and by Repair. Leave a field empty to keep what the game already has.",
+        "name": "Account name",
+        "steamId": "Steam ID",
+        "random": "Random Steam ID",
+        "switchNote": "Name and Steam ID are written only while \"Write account name and language\" is enabled above.",
+        "saves": "Save folder",
+        "choose": "Choose…",
+        "reset": "Default",
+        "savesHelp": "Games fixed or repaired from now on keep their saves here, one folder per game, and AW Next watches it for live notifications."
+      },
       "gbe": {
         "label": "Emulator DLL",
         "help": "Import your own steam_api / steam_api64.dll to have it installed instead of the downloaded GBE Fork build, on every fix and every automatic fix. The architecture you do not import still comes from the official build.",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Games another member of your Steam Family owns and shares with you. They carry the Steam Family badge.",
     "profile-stats-title": "Library stats",
     "profile-stats-open": "See the detailed breakdown",
+    "profile-banner-compact": "Compact profile",
+    "profile-banner-expand": "Show the full profile",
+    "emu-steamid-valid": "Valid Steam ID",
+    "emu-steamid-invalid": "Not a Steam ID: 17 digits starting with 7656119",
     "profile-stats-overall": "Overall completion",
     "profile-stats-in-progress": "In progress",
     "profile-stats-not-started": "Not started",

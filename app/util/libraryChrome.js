@@ -23,6 +23,8 @@ const DENSITY = Object.freeze({ min: 0, max: 1.5, default: 1, step: 0.05 });
 const TOGGLES = Object.freeze([
   Object.freeze({ key: 'libraryShowTitle', hiddenClass: 'hide-tile-title' }),
   Object.freeze({ key: 'libraryShowProgress', hiddenClass: 'hide-tile-progress' }),
+  // The "No achievements" bar of a game Steam confirmed has none: left out unless asked for (#123).
+  Object.freeze({ key: 'libraryShowEmptyProgress', hiddenClass: 'hide-tile-empty-progress', shownByDefault: false }),
   Object.freeze({ key: 'libraryShowSource', hiddenClass: 'hide-tile-source' }),
   Object.freeze({ key: 'libraryShowHealth', hiddenClass: 'hide-tile-health' }),
   Object.freeze({ key: 'libraryShowAchievementButton', hiddenClass: 'hide-tile-achievement-button' }),
@@ -64,9 +66,17 @@ function normalizeDensity(value) {
   list of classes to put on #game-list. Missing keys mean "shipped default" (true / 1), so an
   options.ini written by an older version needs no migration.
 */
+// Only an explicit false hides a toggle that is shown by default, and only an explicit true shows
+// one that is not, so an older options.ini without the key keeps each toggle's shipped default.
+function isShown(settings, toggle) {
+  const value = settings[toggle.key];
+  if (toggle.shownByDefault === false) return value === true || value === 'true';
+  return value !== false;
+}
+
 function resolve(achievement) {
   const settings = achievement && typeof achievement === 'object' ? achievement : {};
-  const hiddenClasses = TOGGLES.filter((toggle) => settings[toggle.key] === false).map((toggle) => toggle.hiddenClass);
+  const hiddenClasses = TOGGLES.filter((toggle) => !isShown(settings, toggle)).map((toggle) => toggle.hiddenClass);
   return {
     tileScale: normalizeTileScale(settings.libraryTileScale),
     density: normalizeDensity(settings.libraryDensity),

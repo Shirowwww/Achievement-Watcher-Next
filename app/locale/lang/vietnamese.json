@@ -313,6 +313,10 @@
           "name": "Thanh tiến trình",
           "description": "Hiện thanh hoàn thành trên mỗi thẻ."
         },
+        "showEmptyProgress": {
+          "name": "Thanh của game không có thành tựu",
+          "description": "Với game mà Steam liệt kê không có thành tựu: hiển thị “Không có thành tựu” trên thanh, hoặc bỏ thanh đi."
+        },
         "showSource": {
           "name": "Biểu tượng nền tảng",
           "description": "Hiện huy hiệu nhỏ của Steam, GOG, Epic hoặc trình giả lập trên mỗi thẻ."
@@ -331,7 +335,16 @@
         }
       },
       "appSectionTitle": "Ứng dụng",
-      "trophySectionTitle": "Cúp và độ hiếm"
+      "trophySectionTitle": "Cúp và độ hiếm",
+      "profileBand": {
+        "title": "Hồ sơ",
+        "compact": {
+          "name": "Biểu ngữ hồ sơ",
+          "description": "Chế độ gọn đặt ảnh đại diện, tên và thống kê của bạn trên một hàng, để thư viện hiển thị được nhiều hơn. Mũi tên trên biểu ngữ cũng chuyển đổi cài đặt này.",
+          "full": "Đầy đủ",
+          "compact": "Gọn"
+        }
+      }
     },
     "emulator": {
       "nav": "Sửa lỗi giả lập",
@@ -439,6 +452,18 @@
         }
       },
       "loginPlaceholder": "Tên tài khoản Steam",
+      "identity": {
+        "title": "Danh tính giả lập",
+        "desc": "Được fix và tính năng sửa lỗi ghi vào configs.user.ini của từng game. Để trống một ô để giữ nguyên những gì game đã có.",
+        "name": "Tên tài khoản",
+        "steamId": "Steam ID",
+        "random": "Steam ID ngẫu nhiên",
+        "switchNote": "Tên và Steam ID chỉ được ghi khi “Ghi tên tài khoản và ngôn ngữ” được bật ở trên.",
+        "saves": "Thư mục lưu game",
+        "choose": "Chọn…",
+        "reset": "Mặc định",
+        "savesHelp": "Các game được fix hoặc sửa lỗi từ bây giờ sẽ giữ bản lưu tại đây, mỗi game một thư mục, và AW Next theo dõi thư mục này để gửi thông báo trực tiếp."
+      },
       "gbe": {
         "label": "DLL của trình giả lập",
         "help": "Nhập tệp steam_api / steam_api64.dll của riêng bạn để nó được cài đặt thay cho bản GBE Fork đã tải về, trong mọi lần sửa và mọi lần sửa tự động. Kiến trúc bạn không nhập vẫn lấy từ bản chính thức.",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Những trò chơi mà thành viên khác trong Steam Family của bạn sở hữu và chia sẻ với bạn. Chúng có huy hiệu Steam Family.",
     "profile-stats-title": "Thống kê thư viện",
     "profile-stats-open": "Xem chi tiết đầy đủ",
+    "profile-banner-compact": "Hồ sơ gọn",
+    "profile-banner-expand": "Hiện hồ sơ đầy đủ",
+    "emu-steamid-valid": "Steam ID hợp lệ",
+    "emu-steamid-invalid": "Không phải Steam ID: 17 chữ số bắt đầu bằng 7656119",
     "profile-stats-overall": "Tỷ lệ hoàn thành chung",
     "profile-stats-in-progress": "Đang chơi",
     "profile-stats-not-started": "Chưa bắt đầu",

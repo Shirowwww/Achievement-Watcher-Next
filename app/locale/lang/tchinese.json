@@ -313,6 +313,10 @@
           "name": "進度列",
           "description": "在每張卡片上顯示完成度進度列。"
         },
+        "showEmptyProgress": {
+          "name": "無成就遊戲的進度列",
+          "description": "對於 Steam 列出但沒有成就的遊戲：在其進度列中顯示「沒有成就」，或不顯示進度列。"
+        },
         "showSource": {
           "name": "平台圖示",
           "description": "在每張卡片上顯示小型的Steam、GOG、Epic或模擬器徽章。"
@@ -331,7 +335,16 @@
         }
       },
       "appSectionTitle": "應用程式",
-      "trophySectionTitle": "獎盃與稀有度"
+      "trophySectionTitle": "獎盃與稀有度",
+      "profileBand": {
+        "title": "個人檔案",
+        "compact": {
+          "name": "個人檔案橫幅",
+          "description": "精簡模式會把頭像、名稱和統計資料放在同一行，讓資料庫顯示更多遊戲。橫幅上的箭頭也可以切換此設定。",
+          "full": "完整",
+          "compact": "精簡"
+        }
+      }
     },
     "emulator": {
       "nav": "模擬器修復",
@@ -439,6 +452,18 @@
         }
       },
       "loginPlaceholder": "Steam 帳號名稱",
+      "identity": {
+        "title": "模擬器身分",
+        "desc": "由修復補丁與修復功能寫入每個遊戲的 configs.user.ini。留空則保留遊戲已有的內容。",
+        "name": "帳號名稱",
+        "steamId": "Steam ID",
+        "random": "隨機 Steam ID",
+        "switchNote": "僅當上方的「寫入帳號名稱與語言」已啟用時，才會寫入名稱和 Steam ID。",
+        "saves": "存檔資料夾",
+        "choose": "選擇…",
+        "reset": "預設",
+        "savesHelp": "從現在起被修復的遊戲會把存檔保存在這裡，每個遊戲一個資料夾，AW Next 會監看該資料夾以發送即時通知。"
+      },
       "gbe": {
         "label": "模擬器 DLL",
         "help": "匯入你自己的 steam_api / steam_api64.dll，每次修復與自動修復時都會安裝它，而不是下載的 GBE Fork 版本。未匯入的架構仍會來自官方版本。",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Steam 家庭中其他成員擁有並與你共享的遊戲，會帶有 Steam 家庭徽章。",
     "profile-stats-title": "收藏庫統計",
     "profile-stats-open": "查看詳細分析",
+    "profile-banner-compact": "精簡個人檔案",
+    "profile-banner-expand": "顯示完整個人檔案",
+    "emu-steamid-valid": "有效的 Steam ID",
+    "emu-steamid-invalid": "不是 Steam ID：以 7656119 開頭的 17 位數字",
     "profile-stats-overall": "整體完成度",
     "profile-stats-in-progress": "進行中",
     "profile-stats-not-started": "尚未開始",

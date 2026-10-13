@@ -313,6 +313,10 @@
           "name": "進捗バー",
           "description": "各タイルに達成率バーを表示します。"
         },
+        "showEmptyProgress": {
+          "name": "実績のないゲームのバー",
+          "description": "Steam が実績なしとして一覧に出すゲームについて、バーに「実績なし」と表示するか、バーを表示しないかを選びます。"
+        },
         "showSource": {
           "name": "プラットフォームアイコン",
           "description": "各タイルにSteam、GOG、Epicまたはエミュレーターの小さなバッジを表示します。"
@@ -331,7 +335,16 @@
         }
       },
       "appSectionTitle": "アプリケーション",
-      "trophySectionTitle": "トロフィーとレア度"
+      "trophySectionTitle": "トロフィーとレア度",
+      "profileBand": {
+        "title": "プロフィール",
+        "compact": {
+          "name": "プロフィールバナー",
+          "description": "コンパクトにすると、アバター、名前、統計が1行にまとまり、ライブラリをより多く表示できます。バナーの矢印でもこの設定を切り替えられます。",
+          "full": "フル",
+          "compact": "コンパクト"
+        }
+      }
     },
     "emulator": {
       "nav": "エミュレーター修復",
@@ -439,6 +452,18 @@
         }
       },
       "loginPlaceholder": "Steam アカウント名",
+      "identity": {
+        "title": "エミュレーターの ID",
+        "desc": "フィックスと修復によって、各ゲームの configs.user.ini に書き込まれます。ゲームの既存の値を残すには、欄を空のままにしてください。",
+        "name": "アカウント名",
+        "steamId": "Steam ID",
+        "random": "ランダムな Steam ID",
+        "switchNote": "名前と Steam ID は、上の「アカウント名と言語の書き込み」が有効な場合にのみ書き込まれます。",
+        "saves": "セーブフォルダー",
+        "choose": "選択…",
+        "reset": "既定",
+        "savesHelp": "今後修正または修復されたゲームは、ここにセーブを保存します（ゲームごとに1フォルダー）。AW Next はライブ通知のためにこのフォルダーを監視します。"
+      },
       "gbe": {
         "label": "エミュレーターの DLL",
         "help": "自分の steam_api / steam_api64.dll をインポートすると、毎回の修復と自動修復で、ダウンロードした GBE Fork 版の代わりにそれがインストールされます。インポートしなかったアーキテクチャは引き続き公式版から取得されます。",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Steam ファミリーの他のメンバーが所有し、あなたと共有しているゲームです。Steam ファミリーのバッジが付きます。",
     "profile-stats-title": "ライブラリの統計",
     "profile-stats-open": "詳細な内訳を見る",
+    "profile-banner-compact": "コンパクトなプロフィール",
+    "profile-banner-expand": "完全なプロフィールを表示",
+    "emu-steamid-valid": "有効な Steam ID",
+    "emu-steamid-invalid": "Steam ID ではありません: 7656119 で始まる17桁の数字",
     "profile-stats-overall": "総合達成率",
     "profile-stats-in-progress": "進行中",
     "profile-stats-not-started": "未開始",

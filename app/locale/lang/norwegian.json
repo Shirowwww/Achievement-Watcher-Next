@@ -313,6 +313,10 @@
           "name": "Fremdriftslinje",
           "description": "Viser fullføringslinjen på hver rute."
         },
+        "showEmptyProgress": {
+          "name": "Linje for spill uten prestasjoner",
+          "description": "For et spill som Steam lister uten prestasjoner: vis «Ingen prestasjoner» i linjen, eller utelat linjen."
+        },
         "showSource": {
           "name": "Plattformikon",
           "description": "Viser det lille Steam-, GOG-, Epic- eller emulatormerket på hver rute."
@@ -331,7 +335,16 @@
         }
       },
       "appSectionTitle": "Applikasjon",
-      "trophySectionTitle": "Trofeer og sjeldenhet"
+      "trophySectionTitle": "Trofeer og sjeldenhet",
+      "profileBand": {
+        "title": "Profil",
+        "compact": {
+          "name": "Profilbanner",
+          "description": "Kompakt setter avataren, navnet og statistikken din på én linje, slik at mer av biblioteket får plass. Pilen i banneret bytter også denne innstillingen.",
+          "full": "Full",
+          "compact": "Kompakt"
+        }
+      }
     },
     "emulator": {
       "nav": "Emulatorreparasjon",
@@ -439,6 +452,18 @@
         }
       },
       "loginPlaceholder": "Steam-kontonavn",
+      "identity": {
+        "title": "Emulatoridentitet",
+        "desc": "Skrives til configs.user.ini i hvert spill av fixen og av reparasjonen. La et felt stå tomt for å beholde det spillet allerede har.",
+        "name": "Kontonavn",
+        "steamId": "Steam ID",
+        "random": "Tilfeldig Steam ID",
+        "switchNote": "Navn og Steam ID skrives bare når «Skriv kontonavn og språk» er slått på ovenfor.",
+        "saves": "Lagringsmappe",
+        "choose": "Velg…",
+        "reset": "Standard",
+        "savesHelp": "Spill som fikses eller repareres fra nå av, beholder lagringene sine her, én mappe per spill, og AW Next overvåker den for direktevarsler."
+      },
       "gbe": {
         "label": "Emulator-DLL",
         "help": "Importer din egen steam_api / steam_api64.dll slik at den installeres i stedet for den nedlastede GBE Fork-versjonen ved hver reparasjon og hver automatiske reparasjon. Arkitekturen du ikke importerer kommer fortsatt fra den offisielle versjonen.",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Spill som et annet medlem av Steam Family din eier og deler med deg. De har Steam Family-merket.",
     "profile-stats-title": "Biblioteksstatistikk",
     "profile-stats-open": "Se den detaljerte oversikten",
+    "profile-banner-compact": "Kompakt profil",
+    "profile-banner-expand": "Vis hele profilen",
+    "emu-steamid-valid": "Gyldig Steam ID",
+    "emu-steamid-invalid": "Ikke en Steam ID: 17 sifre som starter med 7656119",
     "profile-stats-overall": "Samlet fullføring",
     "profile-stats-in-progress": "Pågår",
     "profile-stats-not-started": "Ikke startet",

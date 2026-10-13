@@ -313,6 +313,10 @@
           "name": "Edistymispalkki",
           "description": "Näyttää valmistumispalkin jokaisessa ruudussa."
         },
+        "showEmptyProgress": {
+          "name": "Saavutuksettomien pelien palkki",
+          "description": "Pelille, jonka Steam listaa ilman saavutuksia: näytä ”Ei saavutuksia” palkissa tai jätä palkki pois."
+        },
         "showSource": {
           "name": "Alustan kuvake",
           "description": "Näyttää pienen Steam-, GOG-, Epic- tai emulaattorimerkin jokaisessa ruudussa."
@@ -331,7 +335,16 @@
         }
       },
       "appSectionTitle": "Sovellus",
-      "trophySectionTitle": "Pokaalit ja harvinaisuus"
+      "trophySectionTitle": "Pokaalit ja harvinaisuus",
+      "profileBand": {
+        "title": "Profiili",
+        "compact": {
+          "name": "Profiilibanneri",
+          "description": "Kompakti sijoittaa avatarisi, nimesi ja tilastosi yhdelle riville, jotta kirjastoa mahtuu näkyviin enemmän. Bannerin nuoli vaihtaa myös tätä asetusta.",
+          "full": "Täysi",
+          "compact": "Kompakti"
+        }
+      }
     },
     "emulator": {
       "nav": "Emulaattorin korjaus",
@@ -439,6 +452,18 @@
         }
       },
       "loginPlaceholder": "Steam-tilin nimi",
+      "identity": {
+        "title": "Emulaattorin identiteetti",
+        "desc": "Korjaus ja korjaustoiminto kirjoittavat tämän jokaisen pelin configs.user.ini-tiedostoon. Jätä kenttä tyhjäksi, jos haluat säilyttää pelin nykyisen arvon.",
+        "name": "Tilin nimi",
+        "steamId": "Steam ID",
+        "random": "Satunnainen Steam ID",
+        "switchNote": "Nimi ja Steam ID kirjoitetaan vain, kun ”Kirjoita tilin nimi ja kieli” on otettu käyttöön yllä.",
+        "saves": "Tallennuskansio",
+        "choose": "Valitse…",
+        "reset": "Oletus",
+        "savesHelp": "Tästä lähtien korjatut tai korjaustoiminnolla käsitellyt pelit säilyttävät tallennuksensa täällä, yksi kansio per peli, ja AW Next seuraa kansiota reaaliaikaisia ilmoituksia varten."
+      },
       "gbe": {
         "label": "Emulaattorin DLL",
         "help": "Tuo oma steam_api / steam_api64.dll, niin se asennetaan ladatun GBE Fork -version sijaan jokaisessa korjauksessa ja jokaisessa automaattisessa korjauksessa. Arkkitehtuuri, jota et tuo, tulee edelleen virallisesta versiosta.",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Pelit, joita toinen Steam Familysi jäsen omistaa ja jakaa kanssasi. Niissä on Steam Family -merkki.",
     "profile-stats-title": "Kirjaston tilastot",
     "profile-stats-open": "Näytä tarkka erittely",
+    "profile-banner-compact": "Kompakti profiili",
+    "profile-banner-expand": "Näytä koko profiili",
+    "emu-steamid-valid": "Kelvollinen Steam ID",
+    "emu-steamid-invalid": "Ei ole Steam ID: 17 numeroa, jotka alkavat luvuilla 7656119",
     "profile-stats-overall": "Kokonaissuoritus",
     "profile-stats-in-progress": "Kesken",
     "profile-stats-not-started": "Aloittamatta",

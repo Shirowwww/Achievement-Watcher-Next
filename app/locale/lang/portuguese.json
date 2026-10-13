@@ -313,6 +313,10 @@
           "name": "Barra de progresso",
           "description": "Mostra a barra de conclusão em cada cartão."
         },
+        "showEmptyProgress": {
+          "name": "Barra dos jogos sem proezas",
+          "description": "Para um jogo que a Steam lista sem proezas: mostrar «Sem proezas» na barra ou deixar a barra de fora."
+        },
         "showSource": {
           "name": "Ícone da plataforma",
           "description": "Mostra o pequeno emblema do Steam, GOG, Epic ou emulador em cada cartão."
@@ -331,7 +335,16 @@
         }
       },
       "appSectionTitle": "Aplicação",
-      "trophySectionTitle": "Troféus e raridade"
+      "trophySectionTitle": "Troféus e raridade",
+      "profileBand": {
+        "title": "Perfil",
+        "compact": {
+          "name": "Faixa do perfil",
+          "description": "O modo compacto coloca o teu avatar, o nome e as estatísticas numa só linha, para caber mais da biblioteca. A seta da faixa também alterna esta opção.",
+          "full": "Completa",
+          "compact": "Compacta"
+        }
+      }
     },
     "emulator": {
       "nav": "Reparação de emuladores",
@@ -439,6 +452,18 @@
         }
       },
       "loginPlaceholder": "Nome da conta Steam",
+      "identity": {
+        "title": "Identidade do emulador",
+        "desc": "Escrita no configs.user.ini de cada jogo pelo fix e pela reparação. Deixa um campo vazio para manter o que o jogo já tem.",
+        "name": "Nome da conta",
+        "steamId": "Steam ID",
+        "random": "Steam ID aleatório",
+        "switchNote": "O nome e o Steam ID só são escritos quando «Escrever nome de conta e idioma» está ativado acima.",
+        "saves": "Pasta de gravações",
+        "choose": "Escolher…",
+        "reset": "Predefinição",
+        "savesHelp": "Os jogos corrigidos ou reparados a partir de agora guardam aqui as suas gravações, uma pasta por jogo, e o AW Next vigia-a para as notificações em direto."
+      },
       "gbe": {
         "label": "DLL do emulador",
         "help": "Importe a sua própria steam_api / steam_api64.dll para que seja instalada em vez da versão do GBE Fork transferida, em cada reparação e em cada reparação automática. A arquitetura que não importar continua a vir da versão oficial.",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Jogos que outro membro da sua Família Steam possui e partilha consigo. Têm o emblema da Família Steam.",
     "profile-stats-title": "Estatísticas da biblioteca",
     "profile-stats-open": "Ver o detalhe completo",
+    "profile-banner-compact": "Perfil compacto",
+    "profile-banner-expand": "Mostrar o perfil completo",
+    "emu-steamid-valid": "Steam ID válido",
+    "emu-steamid-invalid": "Não é um Steam ID: 17 dígitos a começar por 7656119",
     "profile-stats-overall": "Conclusão geral",
     "profile-stats-in-progress": "Em curso",
     "profile-stats-not-started": "Não iniciados",

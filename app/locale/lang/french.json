@@ -297,6 +297,10 @@
           "name": "Barre de progression",
           "description": "Affiche la barre d’achèvement sur chaque tuile."
         },
+        "showEmptyProgress": {
+          "name": "Barre des jeux sans succès",
+          "description": "Pour un jeu que Steam liste sans succès : afficher « Pas de succès » dans sa barre, ou ne pas afficher de barre."
+        },
         "showSource": {
           "name": "Icône de plateforme",
           "description": "Affiche le petit badge Steam, GOG, Epic ou émulateur sur chaque tuile."
@@ -315,7 +319,16 @@
         }
       },
       "appSectionTitle": "Application",
-      "trophySectionTitle": "Trophées et rareté"
+      "trophySectionTitle": "Trophées et rareté",
+      "profileBand": {
+        "title": "Profil",
+        "compact": {
+          "name": "Bannière du profil",
+          "description": "Le mode compact place ton avatar, ton nom et tes statistiques sur une seule ligne, pour voir plus de jeux. La flèche de la bannière bascule aussi ce réglage.",
+          "full": "Complet",
+          "compact": "Compact"
+        }
+      }
     },
     "emulator": {
       "nav": "Réparation émulateurs",
@@ -423,6 +436,18 @@
         }
       },
       "loginPlaceholder": "Nom du compte Steam",
+      "identity": {
+        "title": "Identité de l'émulateur",
+        "desc": "Écrite dans le configs.user.ini de chaque jeu par le fix et par la réparation. Laisse un champ vide pour garder ce que le jeu a déjà.",
+        "name": "Nom du compte",
+        "steamId": "Steam ID",
+        "random": "Steam ID aléatoire",
+        "switchNote": "Le nom et le Steam ID ne sont écrits que si « Écrire le nom de compte et la langue » est activé plus haut.",
+        "saves": "Dossier de sauvegarde",
+        "choose": "Choisir…",
+        "reset": "Par défaut",
+        "savesHelp": "Les jeux corrigés ou réparés à partir de maintenant y gardent leurs sauvegardes, un dossier par jeu, et AW Next le surveille pour les notifications en direct."
+      },
       "gbe": {
         "label": "DLL d’émulateur",
         "help": "Importe ta propre steam_api / steam_api64.dll pour qu’elle soit installée à la place de la version GBE Fork téléchargée, à chaque réparation et à chaque réparation automatique. L’architecture que tu n’importes pas continue de venir de la version officielle.",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Les jeux qu’un autre membre de ta famille Steam possède et partage avec toi. Ils portent le badge famille Steam.",
     "profile-stats-title": "Statistiques de la bibliothèque",
     "profile-stats-open": "Voir le détail",
+    "profile-banner-compact": "Profil compact",
+    "profile-banner-expand": "Afficher le profil complet",
+    "emu-steamid-valid": "Steam ID valide",
+    "emu-steamid-invalid": "Pas un Steam ID : 17 chiffres commençant par 7656119",
     "profile-stats-overall": "Complétion globale",
     "profile-stats-in-progress": "En cours",
     "profile-stats-not-started": "Non commencés",

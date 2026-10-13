@@ -313,6 +313,10 @@
           "name": "Fremskridtslinje",
           "description": "Viser fuldførelseslinjen på hvert felt."
         },
+        "showEmptyProgress": {
+          "name": "Bjælke for spil uden præstationer",
+          "description": "For et spil, som Steam lister uden præstationer: vis „Ingen præstationer“ i bjælken, eller lad bjælken udgå."
+        },
         "showSource": {
           "name": "Platformikon",
           "description": "Viser det lille Steam-, GOG-, Epic- eller emulatormærke på hvert felt."
@@ -331,7 +335,16 @@
         }
       },
       "appSectionTitle": "Applikation",
-      "trophySectionTitle": "Trofæer og sjældenhed"
+      "trophySectionTitle": "Trofæer og sjældenhed",
+      "profileBand": {
+        "title": "Profil",
+        "compact": {
+          "name": "Profilbanner",
+          "description": "Kompakt placerer din avatar, dit navn og dine statistikker på én linje, så mere af biblioteket kan vises. Pilen i banneret skifter også denne indstilling.",
+          "full": "Fuld",
+          "compact": "Kompakt"
+        }
+      }
     },
     "emulator": {
       "nav": "Emulatorreparation",
@@ -439,6 +452,18 @@
         }
       },
       "loginPlaceholder": "Steam-kontonavn",
+      "identity": {
+        "title": "Emulatoridentitet",
+        "desc": "Skrives i hvert spils configs.user.ini af fixet og af reparationen. Lad et felt stå tomt for at beholde det, spillet allerede har.",
+        "name": "Kontonavn",
+        "steamId": "Steam ID",
+        "random": "Tilfældigt Steam ID",
+        "switchNote": "Navn og Steam ID skrives kun, når „Skriv kontonavn og sprog“ er slået til ovenfor.",
+        "saves": "Gemmemappe",
+        "choose": "Vælg…",
+        "reset": "Standard",
+        "savesHelp": "Spil, der rettes eller repareres fra nu af, beholder deres gemte spil her, én mappe pr. spil, og AW Next overvåger den til live-notifikationer."
+      },
       "gbe": {
         "label": "Emulator-DLL",
         "help": "Importer din egen steam_api / steam_api64.dll, så den installeres i stedet for den downloadede GBE Fork-version ved hver reparation og hver automatisk reparation. Den arkitektur, du ikke importerer, kommer fortsat fra den officielle version.",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Spil som et andet medlem af din Steam Family ejer og deler med dig. De har Steam Family-mærkatet.",
     "profile-stats-title": "Biblioteksstatistik",
     "profile-stats-open": "Se den detaljerede oversigt",
+    "profile-banner-compact": "Kompakt profil",
+    "profile-banner-expand": "Vis den fulde profil",
+    "emu-steamid-valid": "Gyldigt Steam ID",
+    "emu-steamid-invalid": "Ikke et Steam ID: 17 cifre, der starter med 7656119",
     "profile-stats-overall": "Samlet gennemførelse",
     "profile-stats-in-progress": "I gang",
     "profile-stats-not-started": "Ikke startet",

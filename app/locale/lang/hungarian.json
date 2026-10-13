@@ -313,6 +313,10 @@
           "name": "Folyamatjelző sáv",
           "description": "Megjeleníti a teljesítési sávot minden csempén."
         },
+        "showEmptyProgress": {
+          "name": "Teljesítmény nélküli játékok sávja",
+          "description": "Olyan játéknál, amelyet a Steam teljesítmények nélkül listáz: a sávban a „Nincsenek teljesítmények” felirat jelenjen meg, vagy a sáv maradjon el."
+        },
         "showSource": {
           "name": "Platformikon",
           "description": "Megjeleníti a kis Steam-, GOG-, Epic- vagy emulátorjelvényt minden csempén."
@@ -331,7 +335,16 @@
         }
       },
       "appSectionTitle": "Alkalmazás",
-      "trophySectionTitle": "Trófeák és ritkaság"
+      "trophySectionTitle": "Trófeák és ritkaság",
+      "profileBand": {
+        "title": "Profil",
+        "compact": {
+          "name": "Profilszalag",
+          "description": "A kompakt mód az avatarodat, a nevedet és a statisztikáidat egy sorba teszi, így több játék fér el a könyvtárból. A szalag nyila is átkapcsolja ezt a beállítást.",
+          "full": "Teljes",
+          "compact": "Kompakt"
+        }
+      }
     },
     "emulator": {
       "nav": "Emulátorjavítás",
@@ -439,6 +452,18 @@
         }
       },
       "loginPlaceholder": "Steam fióknév",
+      "identity": {
+        "title": "Emulátor-azonosító",
+        "desc": "A javítás és a helyreállítás írja minden játék configs.user.ini fájljába. Hagyj üresen egy mezőt, ha meg akarod tartani, amit a játék már tartalmaz.",
+        "name": "Fióknév",
+        "steamId": "Steam ID",
+        "random": "Véletlenszerű Steam ID",
+        "switchNote": "A név és a Steam ID csak akkor íródik, ha fent be van kapcsolva a „Fióknév és nyelv írása”.",
+        "saves": "Mentési mappa",
+        "choose": "Kiválasztás…",
+        "reset": "Alapértelmezett",
+        "savesHelp": "A mostantól javított vagy helyreállított játékok itt tartják a mentéseiket, játékonként egy mappában, és az AW Next figyeli az élő értesítésekhez."
+      },
       "gbe": {
         "label": "Emulátor DLL",
         "help": "Importáld a saját steam_api / steam_api64.dll fájlodat, hogy minden javításnál és minden automatikus javításnál az kerüljön telepítésre a letöltött GBE Fork verzió helyett. Az az architektúra, amelyet nem importálsz, továbbra is a hivatalos verzióból származik.",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Olyan játékok, amelyeket a Steam Familyd egy másik tagja birtokol, és megoszt veled. Ezeken rajta van a Steam Family jelvény.",
     "profile-stats-title": "Könyvtár statisztikái",
     "profile-stats-open": "Részletes kimutatás megtekintése",
+    "profile-banner-compact": "Kompakt profil",
+    "profile-banner-expand": "A teljes profil megjelenítése",
+    "emu-steamid-valid": "Érvényes Steam ID",
+    "emu-steamid-invalid": "Nem Steam ID: 17 számjegy, 7656119-cel kezdődik",
     "profile-stats-overall": "Összesített teljesítés",
     "profile-stats-in-progress": "Folyamatban",
     "profile-stats-not-started": "Nem kezdett",

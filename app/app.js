@@ -1105,6 +1105,23 @@ function applyLibraryChrome(achievement) {
 // Settings previews these while its dialog is open, and restores them on Cancel.
 window.applyLibraryChrome = applyLibraryChrome;
 
+// Compact profile band (issue #123): one row instead of the full banner. The fold button in the band
+// and Settings > Appearance both land here, so the two always agree.
+function applyProfileCompact(compact) {
+  $('#home').toggleClass('profile-compact', compact);
+  const label = compact
+    ? t('profile-banner-expand', 'Show the full profile', 'Afficher le profil complet')
+    : t('profile-banner-compact', 'Compact profile', 'Profil compact');
+  $('#profile-compact-toggle')
+    .attr({ title: label, 'aria-label': label, 'aria-pressed': String(compact) })
+    .find('i')
+    .toggleClass('fa-chevron-up', !compact)
+    .toggleClass('fa-chevron-down', compact);
+  $('#option_profileCompact').val(String(compact));
+}
+
+window.applyProfileCompact = applyProfileCompact;
+
 /*
   Switch the library view on the tiles that are already there. Portrait and landscape use different
   artwork, so an orientation change re-requests the covers - but nothing has to be scanned again,
@@ -3511,7 +3528,9 @@ var app = {
                         }
                       </div>
                     </div>
-                    <div class="progressBar${!hasAchievements ? ' unavailable' : ''}" data-percent="${progress}"><span class="meter" style="width:${progress}%"></span><span class="progress-value library-scroll-text" title="${escapeHtml(
+                    <div class="progressBar${!hasAchievements ? ' unavailable' : ''}${game.achievement.none ? ' is-none' : ''}" data-percent="${progress}"${
+                      game.achievement.none ? ' aria-hidden="true"' : ''
+                    }><span class="meter" style="width:${progress}%"></span><span class="progress-value library-scroll-text" title="${escapeHtml(
                       progressLabel
                     )}"><span class="library-scroll-content">${escapeHtml(
                       progressLabel
@@ -7614,6 +7633,13 @@ var app = {
       $('#profile-stats-open').attr({ title: profileStatsOpenLabel, 'aria-label': profileStatsOpenLabel });
 
       $('#profile-stats-open').on('click', () => openProfileStats());
+
+      applyProfileCompact(app.config.achievement.profileCompact === true);
+      $('#profile-compact-toggle').on('click', () => {
+        app.config.achievement.profileCompact = !$('#home').hasClass('profile-compact');
+        applyProfileCompact(app.config.achievement.profileCompact);
+        settings.save(app.config).catch((err) => debug.log(`profile banner save failed: ${err}`));
+      });
       $('#profile-trophies').on('click', () => openProfileStats({ section: 'profile-stats-trophies' }));
       $('#profile-stats-scope').on('click', () => window.toggleInstalledOnly?.());
       $('#profile-stats-all-open').on('click', showAllAchievements);

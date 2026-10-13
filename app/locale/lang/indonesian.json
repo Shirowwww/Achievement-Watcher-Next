@@ -313,6 +313,10 @@
           "name": "Bilah kemajuan",
           "description": "Menampilkan bilah penyelesaian pada setiap kartu."
         },
+        "showEmptyProgress": {
+          "name": "Bilah game tanpa pencapaian",
+          "description": "Untuk game yang dicantumkan Steam tanpa pencapaian: tampilkan “Tidak ada pencapaian” di bilahnya, atau hilangkan bilahnya."
+        },
         "showSource": {
           "name": "Ikon platform",
           "description": "Menampilkan lencana kecil Steam, GOG, Epic, atau emulator pada setiap kartu."
@@ -331,7 +335,16 @@
         }
       },
       "appSectionTitle": "Aplikasi",
-      "trophySectionTitle": "Trofi dan kelangkaan"
+      "trophySectionTitle": "Trofi dan kelangkaan",
+      "profileBand": {
+        "title": "Profil",
+        "compact": {
+          "name": "Spanduk profil",
+          "description": "Ringkas menempatkan avatar, nama, dan statistikmu dalam satu baris, sehingga lebih banyak pustaka yang muat. Panah di spanduk juga mengganti pengaturan ini.",
+          "full": "Penuh",
+          "compact": "Ringkas"
+        }
+      }
     },
     "emulator": {
       "nav": "Perbaikan emulator",
@@ -439,6 +452,18 @@
         }
       },
       "loginPlaceholder": "Nama akun Steam",
+      "identity": {
+        "title": "Identitas emulator",
+        "desc": "Ditulis ke configs.user.ini setiap game oleh fix dan oleh perbaikan. Kosongkan kolom untuk mempertahankan isi yang sudah ada di game.",
+        "name": "Nama akun",
+        "steamId": "Steam ID",
+        "random": "Steam ID acak",
+        "switchNote": "Nama dan Steam ID hanya ditulis saat “Tulis nama akun dan bahasa” diaktifkan di atas.",
+        "saves": "Folder simpanan",
+        "choose": "Pilih…",
+        "reset": "Bawaan",
+        "savesHelp": "Game yang diperbaiki mulai sekarang menyimpan data simpanannya di sini, satu folder per game, dan AW Next memantaunya untuk notifikasi langsung."
+      },
       "gbe": {
         "label": "DLL emulator",
         "help": "Impor steam_api / steam_api64.dll milikmu sendiri agar dipasang menggantikan versi GBE Fork yang diunduh, pada setiap perbaikan dan setiap perbaikan otomatis. Arsitektur yang tidak kamu impor tetap berasal dari versi resmi.",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Gim yang dimiliki dan dibagikan dengan Anda oleh anggota Steam Family Anda yang lain. Gim ini memiliki lencana Steam Family.",
     "profile-stats-title": "Statistik perpustakaan",
     "profile-stats-open": "Lihat rincian lengkap",
+    "profile-banner-compact": "Profil ringkas",
+    "profile-banner-expand": "Tampilkan profil lengkap",
+    "emu-steamid-valid": "Steam ID valid",
+    "emu-steamid-invalid": "Bukan Steam ID: 17 digit yang diawali 7656119",
     "profile-stats-overall": "Penyelesaian keseluruhan",
     "profile-stats-in-progress": "Sedang berjalan",
     "profile-stats-not-started": "Belum dimulai",

@@ -313,6 +313,10 @@
           "name": "进度条",
           "description": "在每个磁贴上显示完成度进度条。"
         },
+        "showEmptyProgress": {
+          "name": "无成就游戏的进度条",
+          "description": "对于 Steam 列出但没有成就的游戏：在其进度条中显示“无成就”，或不显示进度条。"
+        },
         "showSource": {
           "name": "平台图标",
           "description": "在每个磁贴上显示小的Steam、GOG、Epic或模拟器徽标。"
@@ -331,7 +335,16 @@
         }
       },
       "appSectionTitle": "应用程序",
-      "trophySectionTitle": "奖杯与稀有度"
+      "trophySectionTitle": "奖杯与稀有度",
+      "profileBand": {
+        "title": "个人资料",
+        "compact": {
+          "name": "个人资料横幅",
+          "description": "紧凑模式会把头像、名称和统计数据放在同一行，让资料库显示更多游戏。横幅上的箭头也可以切换此设置。",
+          "full": "完整",
+          "compact": "紧凑"
+        }
+      }
     },
     "emulator": {
       "nav": "模拟器修复",
@@ -439,6 +452,18 @@
         }
       },
       "loginPlaceholder": "Steam 账号名称",
+      "identity": {
+        "title": "模拟器身份",
+        "desc": "由修复补丁和修复功能写入每个游戏的 configs.user.ini。留空则保留游戏已有的内容。",
+        "name": "账号名称",
+        "steamId": "Steam ID",
+        "random": "随机 Steam ID",
+        "switchNote": "仅当上方的“写入账号名称和语言”已启用时，才会写入名称和 Steam ID。",
+        "saves": "存档文件夹",
+        "choose": "选择…",
+        "reset": "默认",
+        "savesHelp": "从现在起被修复的游戏会把存档保存在这里，每个游戏一个文件夹，AW Next 会监视该文件夹以发送实时通知。"
+      },
       "gbe": {
         "label": "模拟器 DLL",
         "help": "导入你自己的 steam_api / steam_api64.dll，每次修复和自动修复时都会安装它，而不是下载的 GBE Fork 版本。未导入的架构仍然来自官方版本。",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Steam 家庭中其他成员拥有并与你共享的游戏，带有 Steam 家庭徽章。",
     "profile-stats-title": "库统计",
     "profile-stats-open": "查看详细数据",
+    "profile-banner-compact": "紧凑个人资料",
+    "profile-banner-expand": "显示完整个人资料",
+    "emu-steamid-valid": "有效的 Steam ID",
+    "emu-steamid-invalid": "不是 Steam ID：以 7656119 开头的 17 位数字",
     "profile-stats-overall": "总体完成率",
     "profile-stats-in-progress": "进行中",
     "profile-stats-not-started": "未开始",

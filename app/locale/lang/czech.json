@@ -313,6 +313,10 @@
           "name": "Ukazatel postupu",
           "description": "Zobrazí ukazatel dokončení na každé dlaždici."
         },
+        "showEmptyProgress": {
+          "name": "Ukazatel her bez úspěchů",
+          "description": "U hry, kterou Steam uvádí bez úspěchů: zobrazit v ukazateli „Žádné úspěchy“, nebo ukazatel vynechat."
+        },
         "showSource": {
           "name": "Ikona platformy",
           "description": "Zobrazí malý odznak Steam, GOG, Epic nebo emulátoru na každé dlaždici."
@@ -331,7 +335,16 @@
         }
       },
       "appSectionTitle": "Aplikace",
-      "trophySectionTitle": "Trofeje a vzácnost"
+      "trophySectionTitle": "Trofeje a vzácnost",
+      "profileBand": {
+        "title": "Profil",
+        "compact": {
+          "name": "Banner profilu",
+          "description": "Kompaktní režim umístí tvůj avatar, jméno a statistiky na jeden řádek, takže se vejde víc knihovny. Šipka v banneru toto nastavení také přepíná.",
+          "full": "Plný",
+          "compact": "Kompaktní"
+        }
+      }
     },
     "emulator": {
       "nav": "Oprava emulátorů",
@@ -439,6 +452,18 @@
         }
       },
       "loginPlaceholder": "Název účtu Steam",
+      "identity": {
+        "title": "Identita emulátoru",
+        "desc": "Zapisuje se do configs.user.ini každé hry při opravě fixem i při opravě. Nech pole prázdné, aby zůstalo to, co hra už má.",
+        "name": "Název účtu",
+        "steamId": "Steam ID",
+        "random": "Náhodné Steam ID",
+        "switchNote": "Jméno a Steam ID se zapisují, jen když je nahoře zapnuto „Zapisovat jméno účtu a jazyk“.",
+        "saves": "Složka s uloženými hrami",
+        "choose": "Vybrat…",
+        "reset": "Výchozí",
+        "savesHelp": "Hry opravené od teď si tu ponechají své uložené pozice, jedna složka na hru, a AW Next ji sleduje kvůli živým oznámením."
+      },
       "gbe": {
         "label": "Knihovna DLL emulátoru",
         "help": "Naimportujte vlastní steam_api / steam_api64.dll, aby se při každé opravě i automatické opravě instalovala místo stažené verze GBE Fork. Architektura, kterou nenaimportujete, i nadále pochází z oficiální verze.",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Hry, které vlastní jiný člen vaší Steam Family a sdílí je s vámi. Mají odznak Steam Family.",
     "profile-stats-title": "Statistiky knihovny",
     "profile-stats-open": "Zobrazit podrobný přehled",
+    "profile-banner-compact": "Kompaktní profil",
+    "profile-banner-expand": "Zobrazit celý profil",
+    "emu-steamid-valid": "Platné Steam ID",
+    "emu-steamid-invalid": "Není to Steam ID: 17 číslic začínajících 7656119",
     "profile-stats-overall": "Celkové dokončení",
     "profile-stats-in-progress": "Rozehrané",
     "profile-stats-not-started": "Nezahájené",

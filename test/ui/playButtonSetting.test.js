@@ -85,9 +85,9 @@ test('saving applies the choice to the tiles already on screen, without a rescan
 });
 
 test('disabled hides the shared card control without removing launch functionality', () => {
-  assert.deepEqual(libraryChrome.resolve({ showPlayButton: false }).hiddenClasses, ['hide-play-button']);
-  assert.deepEqual(libraryChrome.resolve({ showPlayButton: true }).hiddenClasses, []);
-  assert.deepEqual(libraryChrome.resolve({}).hiddenClasses, []);
+  assert.ok(libraryChrome.resolve({ showPlayButton: false }).hiddenClasses.includes('hide-play-button'));
+  assert.ok(!libraryChrome.resolve({ showPlayButton: true }).hiddenClasses.includes('hide-play-button'));
+  assert.ok(!libraryChrome.resolve({}).hiddenClasses.includes('hide-play-button'));
 
   assert.equal((appSource.match(/class="game-box"/g) || []).length, 1);
   assert.equal((appSource.match(/class="play-button"/g) || []).length, 1);

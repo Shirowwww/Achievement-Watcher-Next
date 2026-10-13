@@ -279,12 +279,14 @@ module.exports.load = () => {
     options.achievement.libraryTileScale = libraryChrome.normalizeTileScale(options.achievement.libraryTileScale);
     options.achievement.libraryDensity = libraryChrome.normalizeDensity(options.achievement.libraryDensity);
     for (const toggle of libraryChrome.TOGGLES) {
-      if (typeof options.achievement[toggle.key] !== 'boolean') options.achievement[toggle.key] = true;
+      if (typeof options.achievement[toggle.key] !== 'boolean') options.achievement[toggle.key] = toggle.shownByDefault !== false;
     }
 
     if (typeof options.achievement.showHidden !== 'boolean') {
       options.achievement.showHidden = false;
     }
+
+    if (typeof options.achievement.profileCompact !== 'boolean') options.achievement.profileCompact = false;
 
     if (typeof options.achievement.mergeDuplicate !== 'boolean') {
       options.achievement.mergeDuplicate = true;
@@ -649,6 +651,8 @@ module.exports.load = () => {
         libraryDensity: 1,
         libraryShowTitle: true,
         libraryShowProgress: true,
+        libraryShowEmptyProgress: false,
+        profileCompact: false, // issue #123: the profile band folded into one row
         libraryShowSource: true,
         libraryShowHealth: true,
         libraryShowAchievementButton: true,

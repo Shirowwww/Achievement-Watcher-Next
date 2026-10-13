@@ -24,7 +24,7 @@ const libraryChrome = require(path.join(appDir, 'util', 'libraryChrome.js'));
 const css = fs.readFileSync(path.join(appDir, 'resources', 'css', 'app.css'), 'utf8').replace(/<\/style/gi, '<\\/style');
 
 // Six cards, so every view has at least two on a row at every scale.
-const card = (name, percent) => `
+const card = (name, percent, barClass = '') => `
   <li><div class="game-box" data-installed="1">
     <div class="header"><button type="button" class="play-button"></button></div>
     <button type="button" class="achievement-button"></button>
@@ -37,7 +37,7 @@ const card = (name, percent) => `
           <img class="source-icon" alt="Steam">
         </div>
       </div>
-      <div class="progressBar" data-percent="${percent}"><span class="meter" style="width:${percent}%"></span><span class="progress-value">${percent} %</span></div>
+      <div class="progressBar${barClass}" data-percent="${percent}"><span class="meter" style="width:${percent}%"></span><span class="progress-value">${percent} %</span></div>
       <div class="library-details">
         <span class="library-achievement-summary"><i></i><span>1 / 2</span></span>
         <span class="library-recent-unlock"><i></i><span class="library-recent-name">Something</span></span>
@@ -61,6 +61,7 @@ const harness = `<!doctype html><html><head><meta charset="utf-8"><style>${css}<
   <div id="game-list"><ul>
     ${card('Sovereign Tower', 55)}${card('Assassin&#39;s Creed Black Flag Resynced', 14)}${card('Undertale', 0)}
     ${card('The Jackbox Party Pack 7', 0)}${card('Garry&#39;s Mod', 28)}${card('Big Walk', 17)}
+    ${card('Final Fantasy XIV', 0, ' unavailable is-none')}
   </ul></div>
 </body></html>`;
 
@@ -95,7 +96,10 @@ function measure(page, { mode, scale, density, off }) {
       const header = document.querySelector('.header').getBoundingClientRect();
       const shown = (selector) => {
         const node = document.querySelector(selector);
-        return node ? getComputedStyle(node).display !== 'none' && node.getBoundingClientRect().height > 0 : false;
+        if (!node) return false;
+        const style = getComputedStyle(node);
+        // The empty bar is hidden by visibility, so its tile keeps the row height.
+        return style.display !== 'none' && style.visibility !== 'hidden' && node.getBoundingClientRect().height > 0;
       };
       const column = parseFloat(getComputedStyle(document.querySelector('#game-list ul')).gridTemplateColumns.split(' ')[0]);
       return {
@@ -115,6 +119,7 @@ function measure(page, { mode, scale, density, off }) {
       [
         ['libraryShowTitle', '.title'],
         ['libraryShowProgress', '.progressBar'],
+        ['libraryShowEmptyProgress', '.progressBar.is-none'],
         ['libraryShowSource', '.source-icon'],
         ['libraryShowHealth', '.health-badge'],
         ['libraryShowAchievementButton', '.achievement-button'],
@@ -175,7 +180,10 @@ test('every view survives every combination of tile size, density and hidden chr
 
             // And the setting itself must hold, in this view, at this size.
             for (const toggle of libraryChrome.TOGGLES) {
-              const wantHidden = set.off.includes(toggle.key) && !(toggle.key === 'libraryShowTitle' && KEEPS_TITLE.has(mode));
+              // Hiding every bar hides the empty one too.
+              const wantHidden =
+                (set.off.includes(toggle.key) && !(toggle.key === 'libraryShowTitle' && KEEPS_TITLE.has(mode))) ||
+                (toggle.key === 'libraryShowEmptyProgress' && set.off.includes('libraryShowProgress'));
               assert.equal(state.visible[toggle.key], !wantHidden, `${where}: ${toggle.key} visibility is wrong`);
             }
           }

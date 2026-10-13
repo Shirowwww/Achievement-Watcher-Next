@@ -22,6 +22,7 @@ const { t } = require(path.join(appPath, 'locale/t.js'));
 // scripts sharing one global scope, and app.js already declares `libraryChrome` (see
 // test/integration/rendererScope.test.js).
 const settingsLibraryChrome = require(path.join(appPath, 'util/libraryChrome.js'));
+const settingsSteamId64 = require(path.join(appPath, 'util/steamId64.js'));
 const libraryRefresh = require(path.join(appPath, 'util/libraryRefresh.js'));
 const { renamedSound, tierSound } = require(path.join(appPath, 'util/notificationSounds.js'));
 const interfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
@@ -479,6 +480,30 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#options-emulator2 select').each(function () {
         $(this).closest('li').toggleClass('is-on', $(this).val() === 'true').toggleClass('is-off', $(this).val() === 'false');
       });
+
+      // Name and Steam ID are only written behind "Write account name and language" (issue #123).
+      const stamp = $('#option_stampIdentity').val() === 'true';
+      $('#emulator-identity-name, #emulator-identity-steamid, #emulator-identity-steamid-random').prop('disabled', !stamp);
+      $('#emulator-identity-switch').toggle(!stamp);
+    }
+
+    // A typo in a Steam ID would land in every game a fix touches, so the field says so while typing.
+    function showSteamIdStatus() {
+      const input = $('#emulator-identity-steamid');
+      const value = String(input.val() || '').trim();
+      const valid = settingsSteamId64.isSteamId64(value);
+      const wrong = !!value && !valid;
+      input.toggleClass('is-error', wrong).attr('aria-invalid', String(wrong));
+      $('#emulator-identity-steamid-status')
+        .toggleClass('is-ok', valid)
+        .toggleClass('is-error', wrong)
+        .text(
+          !value
+            ? ''
+            : valid
+              ? t('emu-steamid-valid', 'Valid Steam ID', 'Steam ID valide')
+              : t('emu-steamid-invalid', 'Not a Steam ID: 17 digits starting with 7656119', 'Pas un Steam ID : 17 chiffres commençant par 7656119')
+        );
     }
 
     // The trophy thresholds only mean something in trophy mode.
@@ -751,6 +776,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       if (app.config.emulator) {
         $('#emulator-login-user').val(app.config.emulator.loginAccountName || '');
         $('#emulator-login-pass').val(app.config.emulator.loginPassword || '');
+        $('#emulator-identity-name')
+          .val(app.config.emulator.accountName || '')
+          .attr('placeholder', (app.config.general && app.config.general.username) || 'Player');
+        $('#emulator-identity-steamid').val(app.config.emulator.accountSteamId || '');
+        $('#emulator-identity-saves').val(app.config.emulator.savePath || '');
+        showSteamIdStatus();
       }
       updateEmulatorUi();
       updateRarityUi();
@@ -1377,6 +1408,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       if (typeof window.applyLibraryView === 'function') window.applyLibraryView(app.config.achievement.libraryLayout, previousLayout);
       Object.assign(app.config.achievement, readLibraryChromeUi());
       if (typeof window.applyLibraryChrome === 'function') window.applyLibraryChrome(app.config.achievement);
+      // Profile card (Appearance): outside the General containers, so it is read here.
+      app.config.achievement.profileCompact = $('#option_profileCompact').val() === 'true';
+      if (typeof window.applyProfileCompact === 'function') window.applyProfileCompact(app.config.achievement.profileCompact);
       // Shows or hides the trophy row right away (Settings > General).
       if (typeof window.refreshProfileStats === 'function') window.refreshProfileStats();
       if (!app.config.general) app.config.general = {};
@@ -1442,6 +1476,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       if (app.config.emulator) {
         app.config.emulator.loginAccountName = $('#emulator-login-user').val().trim();
         app.config.emulator.loginPassword = $('#emulator-login-pass').val();
+        app.config.emulator.accountName = String($('#emulator-identity-name').val() || '').trim();
+        const steamId = String($('#emulator-identity-steamid').val() || '').trim();
+        // An invalid id never replaces the last good one; the field already says why.
+        if (!steamId || settingsSteamId64.isSteamId64(steamId)) app.config.emulator.accountSteamId = steamId;
+        // Only an absolute folder can be written as local_save_path; anything else means the default.
+        const savePath = String($('#emulator-identity-saves').val() || '').trim();
+        app.config.emulator.savePath = path.isAbsolute(savePath) ? savePath : '';
       }
 
       $('#options-notify-common .right')
@@ -2225,6 +2266,15 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // Bind on the controls themselves as well as using a bubbling event above. This keeps the
     // dependency UI reliable for keyboard changes, programmatic population and the arrow buttons.
     $('#options-emulator select, #options-emulator2 select').on('change', updateEmulatorUi);
+    $('#emulator-identity-steamid').on('input', showSteamIdStatus);
+    $('#emulator-identity-steamid-random').on('click', () => {
+      $('#emulator-identity-steamid').val(settingsSteamId64.randomSteamId64()).trigger('input').trigger('change');
+    });
+    $('#emulator-identity-saves-pick').on('click', async () => {
+      const picked = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), { properties: ['openDirectory', 'createDirectory', 'showHiddenFiles'] });
+      if (!picked.canceled && picked.filePaths && picked.filePaths[0]) $('#emulator-identity-saves').val(picked.filePaths[0]).trigger('change');
+    });
+    $('#emulator-identity-saves-reset').on('click', () => $('#emulator-identity-saves').val('').trigger('change'));
     $('#option_rarityMode').on('change', updateRarityUi);
     $('#option_autoApplyNewGames, #option_autoApplyNewGamesUplay').on('change', async function (event) {
       const value = $(this).val();

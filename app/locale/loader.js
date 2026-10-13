@@ -331,6 +331,7 @@ function translateUI(lang, locale, template) {
     const rows = [
       ['#library-title-label', '#library-title-help', '#option_libraryShowTitle', lib.showTitle],
       ['#library-progress-label', '#library-progress-help', '#option_libraryShowProgress', lib.showProgress],
+      ['#library-emptyprogress-label', '#library-emptyprogress-help', '#option_libraryShowEmptyProgress', lib.showEmptyProgress],
       ['#library-source-label', '#library-source-help', '#option_libraryShowSource', lib.showSource],
       ['#library-health-label', '#library-health-help', '#option_libraryShowHealth', lib.showHealth],
       ['#library-achbutton-label', '#library-achbutton-help', '#option_libraryShowAchievementButton', lib.showAchievementButton],
@@ -348,6 +349,15 @@ function translateUI(lang, locale, template) {
       $(`${select} option[value='true']`).text(clear(template.settings.common.show));
       $(`${select} option[value='false']`).text(clear(template.settings.common.hide));
     }
+  }
+  // Profile card (Appearance) - bound by stable id, so it shifts no nth-child binding.
+  const band = template.settings.general.profileBand;
+  if (band && band.compact) {
+    $('#profile-band-title').text(clear(band.title));
+    $('#profile-compact-label').text(clear(band.compact.name));
+    $('#profile-compact-help').text(clear(band.compact.description));
+    $("#option_profileCompact option[value='false']").text(clear(band.compact.full));
+    $("#option_profileCompact option[value='true']").text(clear(band.compact.compact));
   }
   $('#general-options-title').text(clear(template.settings.general.sectionTitle));
   $('#general-app-title').text(clear(template.settings.general.appSectionTitle));
@@ -368,6 +378,20 @@ function translateUI(lang, locale, template) {
     if (emu.loginTest) $('#emulator-login-test-label').text(clear(emu.loginTest));
     if (emu.loginTestHint) $('#emulator-login-test-hint').text(clear(emu.loginTestHint));
     if (emu.loginPlaceholder) $('#emulator-login-user').attr('placeholder', clear(emu.loginPlaceholder));
+    // Emulator identity card (issue #123).
+    const identity = emu.identity;
+    if (identity) {
+      $('#emulator-identity-title').text(clear(identity.title));
+      $('#emulator-identity-desc').text(clear(identity.desc));
+      $('#emulator-identity-name-label').text(clear(identity.name));
+      $('#emulator-identity-steamid-label').text(clear(identity.steamId));
+      if (identity.random) $('#emulator-identity-steamid-random').attr({ title: clear(identity.random), 'aria-label': clear(identity.random) });
+      $('#emulator-identity-switch').text(clear(identity.switchNote));
+      $('#emulator-identity-saves-label').text(clear(identity.saves));
+      $('#emulator-identity-saves-pick span').text(clear(identity.choose));
+      $('#emulator-identity-saves-reset span').text(clear(identity.reset));
+      $('#emulator-identity-saves-help').text(clear(identity.savesHelp));
+    }
     if (emu.uplay) {
       const uplay = emu.uplay;
       if (uplay.title) $('#uplay-r2-nav-label, #uplay-r2-options-title').text(clear(uplay.title));

@@ -313,6 +313,10 @@
           "name": "İlerleme çubuğu",
           "description": "Her kutucukta tamamlanma çubuğunu gösterir."
         },
+        "showEmptyProgress": {
+          "name": "Başarımı olmayan oyunların çubuğu",
+          "description": "Steam'in başarımsız listelediği bir oyun için: çubukta “Başarım yok” göster ya da çubuğu gösterme."
+        },
         "showSource": {
           "name": "Platform simgesi",
           "description": "Her kutucukta küçük Steam, GOG, Epic veya emülatör rozetini gösterir."
@@ -331,7 +335,16 @@
         }
       },
       "appSectionTitle": "Uygulama",
-      "trophySectionTitle": "Kupalar ve nadirlik"
+      "trophySectionTitle": "Kupalar ve nadirlik",
+      "profileBand": {
+        "title": "Profil",
+        "compact": {
+          "name": "Profil başlığı",
+          "description": "Kompakt, avatarını, adını ve istatistiklerini tek satıra koyar; böylece kitaplıktan daha fazlası sığar. Başlıktaki ok da bu ayarı değiştirir.",
+          "full": "Tam",
+          "compact": "Kompakt"
+        }
+      }
     },
     "emulator": {
       "nav": "Emülatör onarımı",
@@ -439,6 +452,18 @@
         }
       },
       "loginPlaceholder": "Steam hesap adı",
+      "identity": {
+        "title": "Emülatör kimliği",
+        "desc": "Düzeltme ve onarım tarafından her oyunun configs.user.ini dosyasına yazılır. Oyunun mevcut değerini korumak için alanı boş bırak.",
+        "name": "Hesap adı",
+        "steamId": "Steam ID",
+        "random": "Rastgele Steam ID",
+        "switchNote": "Ad ve Steam ID yalnızca yukarıda “Hesap adını ve dili yaz” etkinken yazılır.",
+        "saves": "Kayıt klasörü",
+        "choose": "Seç…",
+        "reset": "Varsayılan",
+        "savesHelp": "Bundan sonra düzeltilen veya onarılan oyunlar kayıtlarını burada tutar, oyun başına bir klasör; AW Next de canlı bildirimler için bu klasörü izler."
+      },
       "gbe": {
         "label": "Emülatör DLL’i",
         "help": "Kendi steam_api / steam_api64.dll dosyanızı içe aktarın; her onarımda ve her otomatik onarımda indirilen GBE Fork sürümü yerine o kurulur. İçe aktarmadığınız mimari resmi sürümden gelmeye devam eder.",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Steam Ailendeki başka bir üyenin sahip olduğu ve seninle paylaştığı oyunlar. Bunlarda Steam Ailesi rozeti bulunur.",
     "profile-stats-title": "Kütüphane istatistikleri",
     "profile-stats-open": "Ayrıntılı dökümü görüntüle",
+    "profile-banner-compact": "Kompakt profil",
+    "profile-banner-expand": "Tam profili göster",
+    "emu-steamid-valid": "Geçerli Steam ID",
+    "emu-steamid-invalid": "Steam ID değil: 7656119 ile başlayan 17 rakam",
     "profile-stats-overall": "Genel tamamlama",
     "profile-stats-in-progress": "Devam ediyor",
     "profile-stats-not-started": "Başlanmadı",

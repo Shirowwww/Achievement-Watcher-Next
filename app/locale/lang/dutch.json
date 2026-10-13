@@ -313,6 +313,10 @@
           "name": "Voortgangsbalk",
           "description": "Toont de voltooiingsbalk op elke tegel."
         },
+        "showEmptyProgress": {
+          "name": "Balk van games zonder prestaties",
+          "description": "Voor een game die Steam zonder prestaties toont: geef „Geen prestaties“ weer in de balk, of laat de balk weg."
+        },
         "showSource": {
           "name": "Platformpictogram",
           "description": "Toont het kleine Steam-, GOG-, Epic- of emulatorbadge op elke tegel."
@@ -331,7 +335,16 @@
         }
       },
       "appSectionTitle": "Applicatie",
-      "trophySectionTitle": "Trofeeën en zeldzaamheid"
+      "trophySectionTitle": "Trofeeën en zeldzaamheid",
+      "profileBand": {
+        "title": "Profiel",
+        "compact": {
+          "name": "Profielbanner",
+          "description": "Compact zet je avatar, naam en statistieken op één regel, zodat er meer van de bibliotheek past. De pijl in de banner schakelt deze instelling ook om.",
+          "full": "Volledig",
+          "compact": "Compact"
+        }
+      }
     },
     "emulator": {
       "nav": "Emulatorreparatie",
@@ -439,6 +452,18 @@
         }
       },
       "loginPlaceholder": "Steam-accountnaam",
+      "identity": {
+        "title": "Emulatoridentiteit",
+        "desc": "Wordt door de fix en door de reparatie in de configs.user.ini van elke game geschreven. Laat een veld leeg om te behouden wat de game al heeft.",
+        "name": "Accountnaam",
+        "steamId": "Steam ID",
+        "random": "Willekeurige Steam ID",
+        "switchNote": "Naam en Steam ID worden alleen geschreven als „Accountnaam en taal schrijven“ hierboven is ingeschakeld.",
+        "saves": "Opslagmap",
+        "choose": "Kiezen…",
+        "reset": "Standaard",
+        "savesHelp": "Games die vanaf nu worden gerepareerd of gefixt, bewaren hier hun savegames, één map per game, en AW Next houdt de map in de gaten voor live meldingen."
+      },
       "gbe": {
         "label": "Emulator-DLL",
         "help": "Importeer je eigen steam_api / steam_api64.dll zodat die bij elke reparatie en elke automatische reparatie wordt geïnstalleerd in plaats van de gedownloade GBE Fork-versie. De architectuur die je niet importeert komt nog steeds uit de officiële versie.",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Games die een ander lid van je Steam Family bezit en met je deelt. Ze hebben de Steam Family-badge.",
     "profile-stats-title": "Bibliotheekstatistieken",
     "profile-stats-open": "Bekijk het gedetailleerde overzicht",
+    "profile-banner-compact": "Compact profiel",
+    "profile-banner-expand": "Volledig profiel tonen",
+    "emu-steamid-valid": "Geldige Steam ID",
+    "emu-steamid-invalid": "Geen Steam ID: 17 cijfers die beginnen met 7656119",
     "profile-stats-overall": "Totale voltooiing",
     "profile-stats-in-progress": "Bezig",
     "profile-stats-not-started": "Niet begonnen",

@@ -313,6 +313,10 @@
           "name": "Barra de progreso",
           "description": "Muestra la barra de finalización en cada recuadro."
         },
+        "showEmptyProgress": {
+          "name": "Barra de los juegos sin logros",
+          "description": "Para un juego que Steam lista sin logros: mostrar «Sin logros» en su barra o dejar la barra afuera."
+        },
         "showSource": {
           "name": "Ícono de la plataforma",
           "description": "Muestra la pequeña insignia de Steam, GOG, Epic o emulador en cada recuadro."
@@ -331,7 +335,16 @@
         }
       },
       "appSectionTitle": "Aplicación",
-      "trophySectionTitle": "Trofeos y rareza"
+      "trophySectionTitle": "Trofeos y rareza",
+      "profileBand": {
+        "title": "Perfil",
+        "compact": {
+          "name": "Banner del perfil",
+          "description": "El modo compacto pone tu avatar, tu nombre y tus estadísticas en una sola fila, para que quepa más de la biblioteca. La flecha del banner también cambia esta opción.",
+          "full": "Completo",
+          "compact": "Compacto"
+        }
+      }
     },
     "emulator": {
       "nav": "Reparación de emuladores",
@@ -439,6 +452,18 @@
         }
       },
       "loginPlaceholder": "Nombre de la cuenta de Steam",
+      "identity": {
+        "title": "Identidad del emulador",
+        "desc": "Se escribe en el configs.user.ini de cada juego con el fix y con la reparación. Deja un campo vacío para conservar lo que el juego ya tiene.",
+        "name": "Nombre de la cuenta",
+        "steamId": "Steam ID",
+        "random": "Steam ID aleatorio",
+        "switchNote": "El nombre y el Steam ID solo se escriben mientras «Escribir nombre de cuenta e idioma» esté activado arriba.",
+        "saves": "Carpeta de partidas guardadas",
+        "choose": "Elegir…",
+        "reset": "Predeterminada",
+        "savesHelp": "Los juegos corregidos o reparados a partir de ahora guardan aquí sus partidas, una carpeta por juego, y AW Next la vigila para las notificaciones en vivo."
+      },
       "gbe": {
         "label": "DLL del emulador",
         "help": "Importá tu propia steam_api / steam_api64.dll para que se instale en lugar de la versión de GBE Fork descargada, en cada reparación y en cada reparación automática. La arquitectura que no importes sigue viniendo de la versión oficial.",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Juegos que otro miembro de tu Familia de Steam posee y comparte contigo. Llevan la insignia de Familia de Steam.",
     "profile-stats-title": "Estadísticas de la biblioteca",
     "profile-stats-open": "Ver el desglose detallado",
+    "profile-banner-compact": "Perfil compacto",
+    "profile-banner-expand": "Mostrar el perfil completo",
+    "emu-steamid-valid": "Steam ID válido",
+    "emu-steamid-invalid": "No es un Steam ID: 17 dígitos que empiezan con 7656119",
     "profile-stats-overall": "Finalización general",
     "profile-stats-in-progress": "En curso",
     "profile-stats-not-started": "Sin comenzar",

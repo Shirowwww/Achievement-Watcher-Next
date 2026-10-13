@@ -313,6 +313,10 @@
           "name": "Fortschrittsbalken",
           "description": "Zeigt den Fertigstellungsbalken auf jeder Kachel."
         },
+        "showEmptyProgress": {
+          "name": "Balken für Spiele ohne Erfolge",
+          "description": "Für ein Spiel, das Steam ohne Erfolge auflistet: „Keine Erfolge“ im Balken anzeigen oder den Balken weglassen."
+        },
         "showSource": {
           "name": "Plattformsymbol",
           "description": "Zeigt das kleine Steam-, GOG-, Epic- oder Emulator-Abzeichen auf jeder Kachel."
@@ -331,7 +335,16 @@
         }
       },
       "appSectionTitle": "Anwendung",
-      "trophySectionTitle": "Trophäen und Seltenheit"
+      "trophySectionTitle": "Trophäen und Seltenheit",
+      "profileBand": {
+        "title": "Profil",
+        "compact": {
+          "name": "Profilbanner",
+          "description": "Kompakt zeigt Avatar, Namen und Statistiken in einer Zeile, damit mehr von der Bibliothek Platz hat. Der Pfeil im Banner schaltet diese Einstellung ebenfalls um.",
+          "full": "Vollständig",
+          "compact": "Kompakt"
+        }
+      }
     },
     "emulator": {
       "nav": "Emulator-Reparatur",
@@ -439,6 +452,18 @@
         }
       },
       "loginPlaceholder": "Steam-Kontoname",
+      "identity": {
+        "title": "Emulator-Identität",
+        "desc": "Wird vom Fix und von der Reparatur in die configs.user.ini jedes Spiels geschrieben. Lass ein Feld leer, um den vorhandenen Wert des Spiels zu behalten.",
+        "name": "Kontoname",
+        "steamId": "Steam ID",
+        "random": "Zufällige Steam ID",
+        "switchNote": "Name und Steam ID werden nur geschrieben, solange „Kontoname und Sprache schreiben“ oben aktiviert ist.",
+        "saves": "Speicherordner",
+        "choose": "Auswählen…",
+        "reset": "Standard",
+        "savesHelp": "Spiele, die ab jetzt korrigiert oder repariert werden, behalten ihre Spielstände hier, ein Ordner pro Spiel, und AW Next überwacht ihn für Live-Benachrichtigungen."
+      },
       "gbe": {
         "label": "Emulator-DLL",
         "help": "Importieren Sie Ihre eigene steam_api / steam_api64.dll, damit sie bei jeder Reparatur und jeder automatischen Reparatur anstelle der heruntergeladenen GBE-Fork-Version installiert wird. Die Architektur, die Sie nicht importieren, stammt weiterhin aus der offiziellen Version.",
@@ -2359,6 +2384,10 @@
     "steam-import-family-help": "Spiele, die ein anderes Mitglied deiner Steam Family besitzt und mit dir teilt. Sie tragen das Steam-Family-Badge.",
     "profile-stats-title": "Bibliotheksstatistik",
     "profile-stats-open": "Detaillierte Übersicht anzeigen",
+    "profile-banner-compact": "Kompaktes Profil",
+    "profile-banner-expand": "Vollständiges Profil anzeigen",
+    "emu-steamid-valid": "Gültige Steam ID",
+    "emu-steamid-invalid": "Keine Steam ID: 17 Ziffern, die mit 7656119 beginnen",
     "profile-stats-overall": "Gesamtabschluss",
     "profile-stats-in-progress": "In Bearbeitung",
     "profile-stats-not-started": "Nicht begonnen",
