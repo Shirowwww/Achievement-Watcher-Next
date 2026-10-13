@@ -3,6 +3,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { spawn } = require('child_process');
 
 /*
   How a game is started on Linux. AW never runs Wine itself: a Windows game goes back to the
@@ -184,4 +185,33 @@ function planLaunch({ exe, game } = {}, { env = process.env, home = os.homedir()
   return { kind: isWindowsProgram(exe) ? 'open' : 'spawn' };
 }
 
-module.exports = { planLaunch, isWindowsProgram };
+/*
+  Hands a launcher URI to the desktop through xdg-open. Electron's shell.openExternal goes through the
+  OpenURI portal first and reports success even where no portal answers, so a click could do nothing
+  and say nothing; xdg-open's exit code says whether a handler took the link. Outside a full desktop
+  xdg-open runs the launcher in the foreground, so a launch still running after `settleMs` counts as
+  taken rather than being waited for.
+*/
+function openUri(url, { start = spawn, settleMs = 5000 } = {}) {
+  return new Promise((resolve, reject) => {
+    const child = start('xdg-open', [url], { detached: true, stdio: ['ignore', 'ignore', 'pipe'] });
+    let stderr = '';
+    child.stderr.on('data', (chunk) => (stderr += chunk));
+    const settled = setTimeout(() => {
+      child.unref();
+      resolve();
+    }, settleMs);
+    child.on('error', (err) => {
+      clearTimeout(settled);
+      reject(err);
+    });
+    child.on('exit', (code) => {
+      clearTimeout(settled);
+      if (code === 0) return resolve();
+      const detail = stderr.trim();
+      reject(new Error(code === 3 || code === 4 ? `no application handles ${url.split(':')[0]}: links${detail ? ` (${detail})` : ''}` : detail || `xdg-open exited with ${code}`));
+    });
+  });
+}
+
+module.exports = { planLaunch, isWindowsProgram, openUri };

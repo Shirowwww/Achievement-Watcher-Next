@@ -678,6 +678,8 @@ function syncOverlayController() {
       canEnterOverlayControlMode: () => overlayOpened === true,
       isOverlayPresented: () => overlayOpened === true,
       onAction: handleControllerAction,
+      // Chromium only reads Linux pads through joydev, which the overlay cannot count on.
+      onPadState: process.platform === 'linux' ? (state) => forwardOverlayControl('pad-state', state) : null,
     });
   }
   try {

@@ -22,13 +22,17 @@ const INPUT_EVENT_SIZE = 24;
 const DEFAULT_MS = 600;
 const MAX_MAGNITUDE = 0xffff;
 
-// The `capabilities/ff` bitmap: hex words, most significant first, each the width of a long.
-function hasRumbleBit(bitmap) {
-  const words = String(bitmap || '').trim().split(/\s+/).filter(Boolean).reverse();
+// A sysfs `capabilities/*` bitmap: hex words, most significant first, each the width of a long.
+function hasCapabilityBit(bitmap, bit) {
+  const words = String(bitmap || '').trim().split(/\s+/).filter(Boolean).toReversed();
   const bitsPerWord = 64;
-  const word = words[Math.floor(FF_RUMBLE / bitsPerWord)];
+  const word = words[Math.floor(bit / bitsPerWord)];
   if (!word) return false;
-  return ((BigInt(`0x${word}`) >> BigInt(FF_RUMBLE % bitsPerWord)) & 1n) === 1n;
+  return ((BigInt(`0x${word}`) >> BigInt(bit % bitsPerWord)) & 1n) === 1n;
+}
+
+function hasRumbleBit(bitmap) {
+  return hasCapabilityBit(bitmap, FF_RUMBLE);
 }
 
 // /dev/input/by-id/*-event-joystick resolves to /dev/input/eventN; sysfs says if it can rumble.
@@ -115,4 +119,4 @@ async function rumble({ durationMs = DEFAULT_MS, pads = rumblePads(), play = rum
   return pads.length - failures.length;
 }
 
-module.exports = { rumble, rumblePads, hasRumbleBit, rumbleEffect, playEvent, EVIOCSFF };
+module.exports = { rumble, rumblePads, hasRumbleBit, hasCapabilityBit, loadIoctl, rumbleEffect, playEvent, EVIOCSFF };

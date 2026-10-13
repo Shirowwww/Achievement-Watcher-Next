@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld('api', {
   onOverlayTheme: (callback) => ipcRenderer.on('overlay-theme', (event, data) => callback(data)),
   onControllerConfig: (callback) => ipcRenderer.on('overlay-controller-config', (event, data) => callback(data)),
   onControllerMode: (callback) => ipcRenderer.on('overlay-controller-mode', (event, data) => callback(data)),
+  onPadState: (callback) => ipcRenderer.on('overlay-pad-state', (event, data) => callback(data)),
   onOverlayVisibility: (callback) => ipcRenderer.on('overlay-visibility', (event, data) => callback(data)),
   onRefreshAchievementsTable: (callback) => ipcRenderer.on('refresh-achievements-table', (event, data) => callback(data)),
 });
