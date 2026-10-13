@@ -89,6 +89,7 @@ function createOverlayControllerService(options = {}) {
       canEnterOverlayControlMode,
       isOverlayPresented,
       onAction,
+      onPadState: options.onPadState,
       debugLoggingEnabled,
       getPreferredBackend: () => preferredBackend,
       getOverlayToggleBinding: () => getOverlayToggleBinding(),

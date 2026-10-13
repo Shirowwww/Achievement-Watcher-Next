@@ -3,12 +3,13 @@
 // On Linux a game goes back to the launcher that owns it; AW never runs Wine itself.
 
 const assert = require('node:assert/strict');
+const { EventEmitter } = require('node:events');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
-const { planLaunch, isWindowsProgram } = require('../../app/util/linuxGameLaunch.js');
+const { planLaunch, isWindowsProgram, openUri } = require('../../app/util/linuxGameLaunch.js');
 
 function write(file, text) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -85,4 +86,27 @@ test('what no launcher claims is spawned when native and opened by the desktop w
   });
   assert.equal(isWindowsProgram('/x/setup.msi'), true);
   assert.equal(isWindowsProgram('/x/start.sh'), false);
+});
+
+// An xdg-open stand-in that exits with `code` on the next tick, or never when `code` is null.
+function fakeXdgOpen(code, calls = []) {
+  return (command, args) => {
+    calls.push([command, ...args]);
+    const child = new EventEmitter();
+    child.stderr = new EventEmitter();
+    child.unref = () => {};
+    if (code !== null) setImmediate(() => child.emit('exit', code));
+    return child;
+  };
+}
+
+test('a launcher link goes through xdg-open, and a missing handler is reported, not swallowed', async () => {
+  const calls = [];
+  await openUri('lutris:rungame/portal', { start: fakeXdgOpen(0, calls) });
+  assert.deepEqual(calls, [['xdg-open', 'lutris:rungame/portal']]);
+  await assert.rejects(openUri('heroic://launch/legendary/Quail', { start: fakeXdgOpen(4) }), /no application handles heroic: links/);
+});
+
+test('a launcher xdg-open keeps in the foreground counts as started instead of being waited for', async () => {
+  await openUri('steam://rungameid/400', { start: fakeXdgOpen(null), settleMs: 20 });
 });

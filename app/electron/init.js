@@ -5036,6 +5036,9 @@ function handleOverlayControl(action, payload = {}) {
         overlayWindow.webContents.send('overlay-controller-mode', { mode: 'ui' });
       }
       return;
+    case 'pad-state':
+      if (overlayVisible) overlayWindow.webContents.send('overlay-pad-state', payload);
+      return;
     default:
       return;
   }
@@ -5187,9 +5190,7 @@ function showOverlayAfterLoad(info) {
   try {
     overlayWindow.webContents.send('overlay-visibility', true);
   } catch {}
-  // KWin keeps a focused full-screen window above every "always on top" one, so on Linux the
-  // overlay only shows over a game once it has the focus.
-  if (process.platform === 'linux' || (configJS && configJS.controller && configJS.controller.focusOverlay) === true) {
+  if ((configJS && configJS.controller && configJS.controller.focusOverlay) === true) {
     overlayWindow.show();
     overlayWindow.focus();
   } else {
@@ -5236,6 +5237,16 @@ async function createOverlayWindow(info) {
     if (info.game) info.game.rarityGrading = currentRarityGrading();
     attachOverlayLocalIcons(info.game);
 
+    // On X11 a window created unfocusable is override-redirect: the window manager cannot put a
+    // focused full-screen game above it, so it shows over the game without taking the focus. The
+    // window manager cannot focus it either, so "focus overlay" keeps a managed window. The kind is
+    // fixed when the window is made: a changed option needs a new window.
+    const managedOverlay = process.platform !== 'linux' || configJS?.controller?.focusOverlay === true;
+    if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.managed !== managedOverlay) {
+      overlayWindow.destroy();
+      overlayWindow = null;
+    }
+
     // Fast path: the window already exists (hidden) from a previous open. Swap the data and show.
     if (overlayWindow && !overlayWindow.isDestroyed()) {
       overlayVisible = true;
@@ -5268,7 +5279,7 @@ async function createOverlayWindow(info) {
       resizable: true,
       minWidth: 260,
       minHeight: 200,
-      focusable: true,
+      focusable: managedOverlay,
       hasShadow: false,
       fullscreenable: false,
       webPreferences: {
@@ -5301,12 +5312,14 @@ async function createOverlayWindow(info) {
     }
 
     overlayWindow.webContents.userAgent = manifest.config['user-agent'];
+    overlayWindow.managed = managedOverlay;
 
     overlayWindow.setAlwaysOnTop(true, 'screen-saver');
     overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
     overlayWindow.setFullScreenable(false);
     overlayWindow.setFocusable(true);
-    overlayWindow.blur();
+    // On X11, blurring a window lowers it to the bottom of the stack, under the game.
+    if (process.platform !== 'linux') overlayWindow.blur();
 
     // Restore the user's last overlay position/size (from drag, nudge or snap), if any.
     const savedInGame = readOverlayBounds().inGame;
@@ -5332,7 +5345,9 @@ async function createOverlayWindow(info) {
     overlayWindow.on('moved', persistInGameBounds);
     overlayWindow.on('resize', persistInGameBounds);
 
+    const createdWindow = overlayWindow;
     overlayWindow.on('closed', () => {
+      if (overlayWindow !== createdWindow) return; // replaced by a window of the other kind
       overlayWindow = null;
       overlayVisible = false;
       if (overlayWarmupTimer) {

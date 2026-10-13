@@ -959,9 +959,24 @@
       pollFrame = requestAnimationFrame(poll);
     }
 
+    // On Linux the Watchdog reads the pad and sends its state; it stands in for navigator.getGamepads().
+    let nativePad = null;
+    window.api.onPadState((state) => {
+      if (!state || !Array.isArray(state.pressed)) {
+        nativePad = null;
+        return;
+      }
+      const buttons = Array.from({ length: 16 }, () => ({ pressed: false }));
+      for (const name of state.pressed) {
+        if (BUTTON_INDEX[name] !== undefined) buttons[BUTTON_INDEX[name]] = { pressed: true };
+      }
+      nativePad = { buttons, axes: state.axes };
+    });
+
     function setOverlayActive(next) {
       overlayActive = next === true;
       if (!overlayActive) {
+        nativePad = null;
         if (pollFrame !== null) cancelAnimationFrame(pollFrame);
         pollFrame = null;
         held.clear();
@@ -974,7 +989,7 @@
     function poll() {
       pollFrame = null;
       if (!overlayActive) return;
-      const gamepad = Array.from(navigator.getGamepads ? navigator.getGamepads() : []).find(Boolean);
+      const gamepad = nativePad || Array.from(navigator.getGamepads ? navigator.getGamepads() : []).find(Boolean);
       if (gamepad) {
         const stickX = gamepad.axes[0] || 0;
         const stickY = gamepad.axes[1] || 0;

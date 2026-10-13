@@ -1,6 +1,7 @@
 // Poll controller backends and translate input into overlay-control actions.
 
 const { createRawHidControllerHub } = require("./raw-hid-controller-hub");
+const { createEvdevPollingBackend } = require("./evdev-controller-backend");
 
 const GAMEINPUT_DLL_CANDIDATES = ["GameInputRedist.dll", "GameInput.dll"];
 const GAMEINPUT_KIND_CONTROLLER = 0x0000000e;
@@ -2516,6 +2517,22 @@ function createGameInputPollingBackendForBindings(logger, bindings = [], options
   throw new Error("No supported GameInput backend entry point is available.");
 }
 
+function createEvdevBackend(logger, leftStickDeadzone, rightStickDeadzone) {
+  const backend = createEvdevPollingBackend(logger, {
+    buttonMasks: CONTROLLER_BUTTON_MASKS,
+    guideMask: GAMEINPUT_SYSTEM_BUTTONS.GUIDE,
+  });
+  return {
+    ...backend,
+    poll: () =>
+      backend
+        .poll()
+        .map((state) =>
+          applyStickDeadzones(normalizeGamepadState(state), leftStickDeadzone, rightStickDeadzone),
+        ),
+  };
+}
+
 function normalizeBackendPreference(value) {
   const raw = String(value || "auto")
     .trim()
@@ -2536,6 +2553,11 @@ function resolvePreferredBackend(logger, preferredBackend = "auto", options = {}
       : null;
   const leftStickDeadzone = Number(options.leftStickDeadzone);
   const rightStickDeadzone = Number(options.rightStickDeadzone);
+
+  // XInput and GameInput do not exist there; the kernel's event devices are the one source.
+  if (process.platform === "linux") {
+    return createEvdevBackend(logger, leftStickDeadzone, rightStickDeadzone);
+  }
 
   const tryGameInput = () => {
     try {
@@ -2779,10 +2801,13 @@ function createControllerInputManager(options = {}) {
     typeof options.isOverlayPresented === "function"
       ? options.isOverlayPresented
       : () => false;
+  const onPadState =
+    typeof options.onPadState === "function" ? options.onPadState : null;
 
   let enabled = false;
   let timer = null;
   let lastTickAt = 0;
+  let lastPadStateKey = "null";
   let lastToggleAt = 0;
   let noControllerSince = 0;
   let lastBackendRefreshAt = 0;
@@ -3451,6 +3476,32 @@ function createControllerInputManager(options = {}) {
     });
   }
 
+  // The open overlay's own navigation in the Gamepad API's shape (axes grow downwards), sent only
+  // when it changes, for a renderer that cannot read the pad itself.
+  function reportPadState() {
+    if (!onPadState) return;
+    const current = isOverlayPresented()
+      ? slots.find((slot) => slot.connected)?.current
+      : null;
+    const state = current
+      ? {
+          pressed: Object.keys(CONTROLLER_BUTTON_MASKS).filter((name) =>
+            hasButtons(current.buttons, CONTROLLER_BUTTON_MASKS[name]),
+          ),
+          axes: [
+            current.leftStickX,
+            -current.leftStickY,
+            current.rightStickX,
+            -current.rightStickY,
+          ].map((value) => Math.round(value * 10) / 10 || 0),
+        }
+      : null;
+    const key = JSON.stringify(state);
+    if (key === lastPadStateKey) return;
+    lastPadStateKey = key;
+    onPadState(state);
+  }
+
   function storePreviousButtons() {
     for (const slot of slots) {
       slot.previousButtons = slot.current?.buttons || 0;
@@ -3545,6 +3596,7 @@ function createControllerInputManager(options = {}) {
     }
 
     applyPolledStates(nextStates);
+    reportPadState();
     const anyConnected = slots.some((slot) => !!slot.connected);
     if (!anyConnected) {
       if (!noControllerSince) {

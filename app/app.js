@@ -193,7 +193,7 @@ async function openSteamTarget(build, appid) {
 async function openLinuxLaunchUri(plan) {
   debug.log(`[launch] ${plan.launcher}: ${plan.url}`);
   try {
-    await remote.shell.openExternal(plan.url);
+    await linuxGameLaunch.openUri(plan.url);
   } catch (err) {
     debug.warn(`[launch] ${plan.url} => ${formatErr(err)}`);
     remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
