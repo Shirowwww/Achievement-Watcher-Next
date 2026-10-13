@@ -37,8 +37,15 @@ function cleanGameName(raw) {
   s = s.replace(/\bmulti\d*\b/g, ' ');
   s = s.replace(/[._-]+/g, ' '); // flatten separators so "update.5" / "update_5" become "update 5"
   s = s.replace(/\b(build|update|hotfix|patch)\s*\d+\b/g, ' ');
+  s = stripPlatformTag(s);
   const tokens = s.split(/\s+/).filter((t) => t && !JUNK_TOKENS.has(t));
   return { clean: tokens.join(' ').trim(), tokens };
+}
+
+// An Xbox library calls its games "<title> for Windows 10"; the platform says nothing about the game,
+// so it is dropped from both sides of a comparison. Expects lower case.
+function stripPlatformTag(s) {
+  return s.replace(/\b(for )?windows (10|11)\b/g, ' ');
 }
 
 function normAlnum(s) {
@@ -75,14 +82,17 @@ const lenRatio = (a, b) => (a && b ? Math.min(a, b) / Math.max(a, b) : 0);
 
 // Score a candidate store name against a cleaned query, high → low: exact (auto-commit safe), token
 // containment, fuzzy bigram (typos). Returns { score, tier } or { score: 0, tier: null }.
-function scoreName(queryClean, queryTokens, queryNorm, longTok, name) {
+function scoreName(queryClean, queryTokens, queryNorm, longTok, rawName) {
+  const name = stripPlatformTag(String(rawName).toLowerCase());
   const nNorm = normAlnum(name);
   if (!queryNorm || !nNorm) return { score: 0, tier: null };
   if (queryNorm === nNorm) return { score: 1, tier: 'exact' };
 
   const nameTokens = String(name).toLowerCase().replace(/[._-]+/g, ' ').split(/\s+/).filter(Boolean);
   const nameJoined = ' ' + nameTokens.join(' ') + ' ';
-  const allQueryInName = queryTokens.length > 0 && queryTokens.every((t) => nameJoined.includes(` ${t} `) || nNorm.includes(normAlnum(t)));
+  // A number only counts as a whole word: the "0" of Yakuza 0 is not inside the "10" of another name.
+  const allQueryInName =
+    queryTokens.length > 0 && queryTokens.every((t) => nameJoined.includes(` ${t} `) || (!/^\d+$/.test(t) && nNorm.includes(normAlnum(t))));
   const allNameInQuery = nameTokens.length > 0 && nameTokens.every((t) => queryTokens.includes(t));
   if (allQueryInName || allNameInQuery) {
     return { score: 0.82 + 0.17 * lenRatio(queryNorm.length, nNorm.length), tier: 'token' };
@@ -123,7 +133,9 @@ function rankAppidCandidates(query, apps, { limit = 5, minScore = 0.5 } = {}) {
 function bestConfidentAppid(query, apps) {
   if (!namesAGame(query)) return null;
   const ranked = rankAppidCandidates(query, apps, { limit: 10, minScore: 0.6 });
-  const hit = ranked.find((r) => r.tier === 'exact') || ranked.find((r) => r.tier === 'token' && r.score >= 0.9);
+  // A token match leaves words out on one side, and a series number is never one of them: Yakuza
+  // Kiwami is not Yakuza Kiwami 2, nor is Frostpunk 2 Frostpunk.
+  const hit = ranked.find((r) => r.tier === 'exact') || ranked.find((r) => r.tier === 'token' && r.score >= 0.9 && sameNumbers(query, r.name));
   return hit ? hit.appid : null;
 }
 
@@ -171,10 +183,42 @@ function titleNumbers(tokens) {
   return out;
 }
 
+function sameNumbers(query, name) {
+  const q = titleNumbers(significantTokens(query));
+  const n = titleNumbers(significantTokens(name));
+  return q.size === n.size && [...q].every((value) => n.has(value));
+}
+
+// A store dates an edition ("Sea of Thieves 2024 Edition", "... 40th Anniversary Edition"); that number
+// is packaging. A year in brackets is the opposite: it is how a store tells the original of a game
+// from its remake ("Dead Space (2008)"), and cleanGameName drops brackets, so it is read first.
+const EDITION_NUMBER = /\b\d{4} edition\b|\b\d+(st|nd|rd|th) anniversary\b/gi;
+const BRACKETED_YEAR = /[([]\s*((?:19|20)\d{2})\s*[)\]]/g;
+
 function significantTokens(raw) {
-  return cleanGameName(raw)
+  const text = String(raw || '');
+  const years = [...text.matchAll(BRACKETED_YEAR)].map((m) => m[1]);
+  const tokens = cleanGameName(text.replace(EDITION_NUMBER, ' '))
     .tokens.map((t) => t.replace(/[^a-z0-9]/g, ''))
     .filter((t) => t && !TITLE_FILLER.has(t));
+  return tokens.concat(years);
+}
+
+// What sameTitle compares, worked out once so a name can be held against many others.
+function titleKey(raw) {
+  const tokens = significantTokens(raw);
+  return {
+    numbers: titleNumbers(tokens),
+    words: tokens.filter((t) => !/^\d+$/.test(t) && ROMAN_NUMERALS[t] == null),
+    empty: tokens.length === 0,
+  };
+}
+
+function sameTitleKeys(q, n) {
+  if (q.empty || n.empty) return false;
+  if (q.numbers.size !== n.numbers.size) return false;
+  for (const value of q.numbers) if (!n.numbers.has(value)) return false;
+  return q.words.every((t) => tokenCovered(t, n.words)) && n.words.every((t) => tokenCovered(t, q.words));
 }
 
 // Is `token` the same word as one of `others`, allowing the kind of slip a catalogue really contains
@@ -212,19 +256,61 @@ function tokenCovered(token, others) {
   achievements into it.
 */
 function sameTitle(query, name) {
-  const q = significantTokens(query);
-  const n = significantTokens(name);
-  if (q.length === 0 || n.length === 0) return false;
-
-  const qNumbers = titleNumbers(q);
-  const nNumbers = titleNumbers(n);
-  if (qNumbers.size !== nNumbers.size) return false;
-  for (const value of qNumbers) if (!nNumbers.has(value)) return false;
-
-  const words = (tokens) => tokens.filter((t) => !/^\d+$/.test(t) && ROMAN_NUMERALS[t] == null);
-  const qWords = words(q);
-  const nWords = words(n);
-  return qWords.every((t) => tokenCovered(t, nWords)) && nWords.every((t) => tokenCovered(t, qWords));
+  return sameTitleKeys(titleKey(query), titleKey(name));
 }
 
-module.exports = { cleanGameName, normAlnum, diceCoefficient, rankAppidCandidates, bestConfidentAppid, sameTitle, TITLE_FILLER };
+/*
+  Two titles sameTitleKeys accepts always share their numbers and the first letters of their words
+  (a covered word is the same word, a near-length prefix of it, or a slip of it), so this bucket is
+  the only place a match can be. It keeps a whole account library against a whole Steam library
+  from comparing every pair.
+*/
+function titleBucket(key) {
+  const numbers = [...key.numbers].sort((a, b) => a - b).join(',');
+  const initials = [...new Set(key.words.map((w) => w[0]))].sort().join('');
+  return `${numbers}|${initials}`;
+}
+
+// Index `apps` ({ appid, name }) once for repeated sameTitleAppid lookups.
+function titleIndex(apps) {
+  const buckets = new Map();
+  for (const app of apps || []) {
+    if (!app || !app.name) continue;
+    const key = titleKey(app.name);
+    if (key.empty) continue;
+    const bucket = titleBucket(key);
+    if (!buckets.has(bucket)) buckets.set(bucket, []);
+    buckets.get(bucket).push({ ...app, key });
+  }
+  return { buckets };
+}
+
+/*
+  The one app in `apps` ({ appid, name }, or a titleIndex of them) that is the same game as `query`, or null - also null when
+  two apps qualify equally, since picking either would be a guess. Unlike bestConfidentAppid this is
+  not a search: a listing named after its edition ("Control Ultimate Edition") is the bare store
+  title however much longer its name is, and a relative ("Far Cry Primal") never is.
+*/
+function sameTitleAppid(query, appsOrIndex) {
+  const key = titleKey(query);
+  if (key.empty) return null;
+  const index = appsOrIndex && appsOrIndex.buckets instanceof Map ? appsOrIndex : titleIndex(appsOrIndex);
+  const matches = (index.buckets.get(titleBucket(key)) || []).filter((app) => sameTitleKeys(key, app.key));
+  if (matches.length === 1) return matches[0].appid;
+  // Several candidates: only one spelled exactly like the query can settle it.
+  const queryNorm = normAlnum(stripPlatformTag(String(query).toLowerCase()));
+  const exact = matches.filter((app) => normAlnum(stripPlatformTag(String(app.name).toLowerCase())) === queryNorm);
+  return exact.length === 1 ? exact[0].appid : null;
+}
+
+module.exports = {
+  cleanGameName,
+  normAlnum,
+  diceCoefficient,
+  rankAppidCandidates,
+  bestConfidentAppid,
+  sameTitle,
+  sameTitleAppid,
+  titleIndex,
+  TITLE_FILLER,
+};

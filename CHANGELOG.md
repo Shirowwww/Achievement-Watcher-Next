@@ -21,6 +21,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Game health** no longer reports an official Steam game as missing its emulator, nor an
   uninstalled official game as needing attention.
 - Recent Steam games get their achievement page background again.
+- An imported Xbox game is no longer folded into a different Steam game whose name only shares a
+  digit with it: Yakuza 0 for Windows 10 vanished into Yakuza 3 Remastered after a refresh. A
+  listing named after its edition (Control Ultimate Edition) now joins the Steam game it is.
 
 ## 3.11.3 - 2026-10-13
 

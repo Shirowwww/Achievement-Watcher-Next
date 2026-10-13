@@ -285,6 +285,23 @@ function cloneDiscoveryRecord(record) {
   return copy;
 }
 
+/*
+  A discovery list another scan can be handed again. The merge and the per-game load write into the
+  records they are given, so a scan served from the cached list must work on copies: otherwise the
+  previous scan's merge decides the next one's (#111).
+*/
+function copyDiscoveryRecord(record) {
+  if (!record || typeof record !== 'object') return record;
+  const copy = { ...record };
+  if (record.data && typeof record.data === 'object') copy.data = { ...record.data };
+  if (Array.isArray(record._sources)) copy._sources = record._sources.map(copyDiscoveryRecord);
+  return copy;
+}
+
+function copyDiscoveryList(list) {
+  return Array.isArray(list) ? list.map(copyDiscoveryRecord) : list;
+}
+
 function sourceKey(record) {
   const data = (record && record.data) || {};
   return [
@@ -431,7 +448,19 @@ function recordPrecedence(record) {
   return data.type === 'steamAPI' ? 2 : 1;
 }
 
-function mergeCrossSourceDuplicates(appidList) {
+/*
+  The Steam target that is the same game as `title`, or null. Folding one game into another hides it
+  for good, so a search hit is not enough here: the two titles must name the same game word for word
+  and number for number (fuzzyAppid.sameTitleAppid). "Control Ultimate Edition" joins Control, while
+  "Assassin's Creed III" stays apart from its Remastered release and Yakuza 0 from Yakuza 3 Remastered.
+*/
+function sameGameTarget(title, steamTargets) {
+  return require('../util/fuzzyAppid.js').sameTitleAppid(title, steamTargets);
+}
+
+function mergeCrossSourceDuplicates(input) {
+  // The caller's records may be a cached discovery list the next scan is handed again.
+  const appidList = copyDiscoveryList(input || []);
   const byAppid = new Map((appidList || []).map((g) => [String(g.appid), g]));
   const drop = new Set();
   // Looks in every cached language, not just english - the app writes only the user's own, so an
@@ -440,13 +469,14 @@ function mergeCrossSourceDuplicates(appidList) {
   // Use named numeric appids as Steam targets; fill missing names from local caches. An account
   // library's own ids are numeric too (an Xbox titleId is all digits), and an entry that matched
   // itself by name would make the merge below depend on the order the list arrived in.
-  const steamTargets = (appidList || [])
+  const namedTargets = (appidList || [])
     .filter((g) => /^\d+$/.test(String(g.appid)) && !(g.data && ACCOUNT_LIBRARY_TYPES.has(g.data.type)))
     .map((g) => ({
       appid: g.appid,
       name: g.name || cachedSteamName(String(g.appid)) || gameNameCache.lookupSteamDbName(String(g.appid)) || '',
     }))
     .filter((t) => t.name);
+  const steamTargets = require('../util/fuzzyAppid.js').titleIndex(namedTargets);
   const merged = [];
   for (const g of appidList || []) {
     if (drop.has(String(g.appid))) continue;
@@ -474,7 +504,7 @@ function mergeCrossSourceDuplicates(appidList) {
     */
     if (g && g.data && ACCOUNT_LIBRARY_TYPES.has(g.data.type) && g.data.title) {
       try {
-        const hit = require('../util/fuzzyAppid.js').bestConfidentAppid(String(g.data.title), steamTargets);
+        const hit = sameGameTarget(String(g.data.title), steamTargets);
         const target = hit && byAppid.get(String(hit));
         if (target && target !== g) {
           if (recordPrecedence(target) >= recordPrecedence(g)) {
@@ -496,7 +526,7 @@ function mergeCrossSourceDuplicates(appidList) {
     // UniverseLAN-repaired install - both key off the same GOG product id, so this is order-independent).
     if (g && g.data && (g.data.type === 'gogOfficial' || g.data.type === 'gogUniverseLan') && g.data.title) {
       try {
-        const hit = require('../util/fuzzyAppid.js').bestConfidentAppid(String(g.data.title), steamTargets);
+        const hit = sameGameTarget(String(g.data.title), steamTargets);
         const target = hit && byAppid.get(String(hit));
         if (target && target !== g && target.data && target.data.type === 'file' && !target.data.gameDir && !target.data.exe) {
           drop.add(String(target.appid));
@@ -704,7 +734,7 @@ async function discoverWithCache(option, steamAccFilter) {
     // refresh (which drops the fingerprint) left every following scan unable to prove anything.
     _discoverFingerprint = _discoverCache.fingerprint ? _discoverCache.fingerprint.map(([dir, mtimeMs]) => [dir, mtimeMs]) : null;
     debug.log(`[discover] reusing cached scan (${((Date.now() - _discoverCache.time) / 1000).toFixed(1)}s old)`);
-    return _discoverCache.appidList;
+    return copyDiscoveryList(_discoverCache.appidList);
   }
   _activeScanScope = activeScope;
   _folderIndex = null;
@@ -721,7 +751,7 @@ async function discoverWithCache(option, steamAccFilter) {
     _discoverCache = {
       key: cacheKey,
       time: Date.now(),
-      appidList,
+      appidList: copyDiscoveryList(appidList),
       folderIndex: _folderIndex,
       claimedDirs: _claimedDirs,
       fingerprint: _discoverFingerprint,
@@ -4372,6 +4402,7 @@ module.exports._internal = {
   getDiscoverySources,
   consolidateDiscoveryList,
   mergeCrossSourceDuplicates,
+  copyDiscoveryList,
   isOfficialLauncherInstall: (dir) => launcherDetect.isOfficialLauncherInstall(dir),
   dropSteamOwnedRecords,
   adoptManualSaveSources,

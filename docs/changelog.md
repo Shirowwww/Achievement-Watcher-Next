@@ -14,6 +14,24 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
+## Unreleased
+
+### Added
+
+- **RetroAchievements games found on disk.** A game whose ROM RetroArch knows, from its history or
+  a scanned playlist, now counts as installed and opens on the ROM's folder.
+
+### Fixed
+
+- The update chip in the title bar shows its icon again.
+- The per-game **Achievement language** menu no longer shows a second language as selected.
+- **Game health** no longer reports an official Steam game as missing its emulator, nor an
+  uninstalled official game as needing attention.
+- Recent Steam games get their achievement page background again.
+- An imported Xbox game is no longer folded into a different Steam game whose name only shares a
+  digit with it: Yakuza 0 for Windows 10 vanished into Yakuza 3 Remastered after a refresh. A
+  listing named after its edition (Control Ultimate Edition) now joins the Steam game it is.
+
 ## 3.11.3 - 2026-10-13
 
 ### Added
