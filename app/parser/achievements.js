@@ -2374,9 +2374,17 @@ async function discoverInScope(source, steamAccFilter, scope) {
       // Created up front, since a folder missing at scan time is not in the fingerprint at all.
       fs.mkdirSync(retroAchievements.cacheRoot(), { recursive: true });
       dirCache.readdir(retroAchievements.cacheRoot());
-      for (const appid of retroAchievements.listCachedTitles()) {
+      // The ROM each game was played from, when RetroArch's playlists know it: the folder becomes the
+      // game's install folder, so it reads as installed and "Open the game folder" works.
+      const titles = retroAchievements.listCachedTitles();
+      const retroArch = require(path.join(appPath, 'retroArchLibrary.js'));
+      const romEntries = titles.length ? retroArch.readEntries() : [];
+      for (const appid of titles) {
         const title = retroAchievements.cachedTitleName(appid);
-        data.push({ appid, name: title, source: retroAchievements.SOURCE, data: { type: retroAchievements.DATA_TYPE, title } });
+        const schema = retroAchievements.readSchema(retroAchievements.normalizeGameId(appid));
+        const rom = romEntries.length ? retroArch.findRom(romEntries, { title, console: schema && schema.console }) : null;
+        const install = rom ? { romPath: rom.romPath, installed: true } : {};
+        data.push({ appid, name: title, source: retroAchievements.SOURCE, data: { type: retroAchievements.DATA_TYPE, title, ...install } });
       }
     } catch (err) {
       debug.log(err);
@@ -3112,6 +3120,15 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     // some other game.
     if (!resolvedGameDir && game.name && dataType !== 'retroAchievements') resolvedGameDir = await resolveGameDirByName(game.name);
     if (resolvedGameDir) game.gameDir = resolvedGameDir;
+    /*
+      The ROM's folder is shown as the install folder but kept out of resolvedGameDir: everything
+      below it looks for a PC executable to launch and to follow for play time, and a ROM folder is
+      often Downloads, where any installer would be claimed as this game.
+    */
+    if (dataType === 'retroAchievements' && appid.data.romPath) {
+      game.gameDir = path.dirname(appid.data.romPath);
+      game.romPath = appid.data.romPath;
+    }
     promoteUplayRecord(appid, game, resolvedGameDir);
     if (appid.data && appid.data.steamSettings) game.steamSettings = appid.data.steamSettings;
     // The folder this entry's achievement data was parsed from, for the right-click "Open

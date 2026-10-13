@@ -190,6 +190,13 @@ For a bug report, include the app version, Windows version, affected source and 
 from `%APPDATA%\Achievement Watcher Next\logs`. The issue tracker cannot provide games, credentials
 or piracy support.
 
+## Support the project
+
+AW Next is free and stays free. If you would like to support it further, you can buy me a coffee on
+Ko-fi:
+
+[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/shirowww)
+
 ## Credits and license
 
 Created by [Xan105](https://github.com/xan105/Achievement-Watcher), continued by
