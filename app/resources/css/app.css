@@ -63,6 +63,13 @@
   --shadow-card: 0 14px 34px rgba(0, 0, 0, 0.28);
   --shadow-dialog: 0 34px 90px rgba(0, 0, 0, 0.58);
 
+  /* The profile avatar lives in a shadow root (components/userAvatar/template.js), which only these
+     inherited custom properties can reach. Its rim and backdrop were fixed values, so a transparent
+     avatar came with a bright white circle and a Steam-blue disc on the darkest themes (issue #123);
+     both now follow the palette, keeping a rim on light surfaces too. */
+  --avatar-ring: color-mix(in srgb, var(--text) 24%, transparent);
+  --avatar-bg: var(--surface);
+
   /* Settings-modal-only surface tokens. Default to the same value as the card surface (so built-in
      themes look exactly as before), but the custom theme engine (themeLayers.js) repoints these at
      the dedicated "settings" layer instead of "card" - so a custom Cards/tiles color never bleeds
@@ -525,14 +532,14 @@ body.is-resizing #game-list {
 
 #user-info .avatar {
   background: url(../img/avatar.png);
-  background-color: var(--surface);
+  background-color: var(--avatar-bg);
   background-repeat: no-repeat !important;
   background-size: cover !important;
   background-position: center !important;
   width: 96px;
   height: 96px;
   border-radius: 50%;
-  border: solid rgba(255, 255, 255, 0.88) 2px;
+  border: solid var(--avatar-ring) 2px;
   margin: 10px;
   box-shadow: 0 10px 26px rgba(0, 0, 0, calc(0.38 * var(--shadow-scale)));
   transition: box-shadow 0.18s ease, transform 0.18s ease;
@@ -4584,9 +4591,9 @@ body.is-resizing #game-list {
   width: 82px;
   height: 82px;
   flex: 0 0 auto;
-  border: 2px solid rgba(255, 255, 255, 0.72);
+  border: 2px solid var(--avatar-ring);
   border-radius: 50%;
-  background: url(../img/avatar.png) center / cover no-repeat var(--surface);
+  background: url(../img/avatar.png) center / cover no-repeat var(--avatar-bg);
 }
 
 .avatar-actions {
