@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "Spielordner löschen (Papierkorb)…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "Fügt dem Rechtsklick-Menü der Spiele Deinstallationsoptionen hinzu (Steam-Deinstallation, Spiel-Deinstallationsprogramm oder Ordner in den Papierkorb verschieben)."
+          },
+          "controller": {
+            "priority": {
+              "description": "Gibt dem Overlay beim Öffnen den Tastaturfokus, damit Spiele pausieren, die das bei Fokusverlust tun. AW Next nimmt dem Spiel den Controller nicht weg - das Spiel sieht die Tasten möglicherweise weiterhin."
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "Führt Steamless an der Spiel-EXE vor dem Patchen aus, um Valves SteamStub-DRM zu entfernen (Original bleibt als .steamstub.bak). Wirkungslos, wenn kein Stub vorhanden ist. Benötigt Mono (mono-complete unter Debian und Ubuntu)."
+          },
+          "apiCheckBypass": {
+            "description": "Standardmäßig aus. Legt den Bypass-Proxy von SteamAutoCrack (winmm.dll) + eine Umleitungs-Konfiguration ab, damit Spiele, die nach dem Austausch die originale steam_api/EXE erneut prüfen, trotzdem starten und freischalten. Lädt den Proxy aus seinem offiziellen Release herunter. Wine und Proton laden den Proxy nur, wenn die Startoptionen des Spiels WINEDLLOVERRIDES=\"winmm=n,b\" setzen."
           }
         },
         "notification": {
           "title": {
             "toast": "Desktop-Benachrichtigung"
-          },
-          "info": {
-            "toast": "Einige Optionen in diesem Bereich funktionieren nur unter Windows"
           },
           "test": {
             "toast": "Desktop-Benachrichtigung"
@@ -2528,13 +2541,6 @@
               "name": "Ton der Desktop-Benachrichtigung",
               "description": "Legt den Ton fest, der beim Anzeigen einer Desktop-Benachrichtigung abgespielt wird"
             },
-            "toastSouvenir": {
-              "name": "Souvenir in der Desktop-Benachrichtigung",
-              "description": "Nur Windows: zeigt den Souvenir-Screenshot innerhalb der Benachrichtigung an."
-            },
-            "groupToast": {
-              "description": "Nur Windows: gruppiert Benachrichtigungen desselben Spiels im Info-Center."
-            },
             "urgent": {
               "description": "Ermöglicht, dass Erfolgsfreischaltungen angezeigt werden, während „Nicht stören“ aktiv ist. Sie werden als kritische Benachrichtigungen gesendet, die die meisten Desktops durchlassen."
             },
@@ -2542,20 +2548,13 @@
               "name": "Desktop-Benachrichtigung",
               "description": "Von deinem Desktop angezeigte Systembenachrichtigung"
             },
-            "useWinRT": {
-              "description": "Nur Windows. Unter Linux ohne Wirkung."
-            },
-            "useBalloon": {
-              "description": "Nur Windows. Unter Linux ohne Wirkung."
-            },
-            "souvenirHdrDesc": "Nur Windows: korrigiert die Farben, wenn Windows-HDR aktiv ist. Unter Linux wird der Standard-Screenshot gespeichert.",
             "souvenirDirHelp": "Ein Unterordner pro Spiel, Dateien benannt „Datum - Erfolg“. Standard: ~/Pictures/Achievement Watcher Next. Unter Wayland fragt der Desktop einmal pro Sitzung nach der Bildschirmfreigabe.",
             "clipDesc": "Während ein Spiel läuft, werden die letzten Sekunden im Speicher gehalten und rund um jede Freischaltung gespeichert, mit der Benachrichtigung in der Mitte. Unter Wayland fragt der Desktop einmal nach der Bildschirmfreigabe.",
-            "clipAudioDesc": "Unter Linux wird der Ton des gesamten PCs aufgenommen.",
             "clipDirHelp": "Ein Unterordner pro Spiel, Dateien benannt „Datum - Erfolg“. Standard: ~/Videos/Achievement Watcher Next."
           }
         },
         "folder": {
+          "default": "Automatisch geprüfte Ordner, in jedem Wine- oder Proton-Präfix und in deinem Home-Ordner",
           "addInfo": {
             "2": "Datei ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini oder UniverseLAN.ini befindet. Für RPCS3 wähle den Konfigurationsordner (~/.config/rpcs3) oder den Ordner dev_hdd0."
           },
@@ -2578,7 +2577,14 @@
             "2": "Eigene Steam-Spiele gelten nur dann als installiert, wenn die eigenen Dateien von Steam dies bestätigen."
           },
           "steam": {
-            "0": "GBE-/Goldberg-Spielstände befinden sich normalerweise unter AppData/Roaming/GSE Saves im Wine- oder Proton-Präfix des Spiels oder unter ~/.local/share/GSE Saves bei einem nativen Linux-Spiel."
+            "0": "GBE-/Goldberg-Spielstände befinden sich normalerweise unter AppData/Roaming/GSE Saves im Wine- oder Proton-Präfix des Spiels oder unter ~/.local/share/GSE Saves bei einem nativen Linux-Spiel.",
+            "1": "CODEX-/RUNE-Spielstände liegen häufig unter Public/Documents/Steam/CODEX oder Public/Documents/Steam/RUNE im Wine- oder Proton-Präfix des Spiels."
+          },
+          "emulators": {
+            "0": "RPCS3-Trophäen werden aus dev_hdd0/home/.../trophy im RPCS3-Ordner (~/.config/rpcs3) gelesen."
+          },
+          "themes": {
+            "2": "Lege ein CSS-Design in ~/.config/Achievement Watcher Next/themes ab, damit es in der Design-Auswahl erscheint."
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "Der Ordner konnte nicht in den Papierkorb verschoben werden.",
         "delete-permanently-detail": "Endgültiges Löschen umgeht den Papierkorb: Die Dateien lassen sich nicht wiederherstellen.",
         "delete-recycle-bin-refused": "Das System hat abgelehnt, diesen Ordner in den Papierkorb zu verschieben. Das passiert, wenn eine Datei noch geöffnet ist, wenn das Laufwerk keinen Papierkorb hat (Wechsel- oder Netzlaufwerk) oder wenn du nicht in den Ordner schreiben darfst.",
+        "delete-blocked-by-permissions": "Diese Datei ist für dein Konto nicht beschreibbar: {file}\nNur der Besitzer oder root kann den Ordner löschen.",
         "gh-simple-notifications-fallback": "Funktioniert - Rückfall auf Desktop-Benachrichtigung aktiv"
       }
     }

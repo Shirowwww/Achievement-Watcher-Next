@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "Gamemap verwijderen (Prullenbak)…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "Voegt opties om te verwijderen toe aan het rechtsklikmenu van gametegels (verwijderen via Steam, het verwijderprogramma van de game, of de map naar de Prullenbak verplaatsen)."
+          },
+          "controller": {
+            "priority": {
+              "description": "Geef de overlay toetsenbordfocus zodra hij opent, zodat games die pauzeren bij verlies van focus dat ook doen. AW Next neemt de controller niet af van de game, dus de game ziet de knoppen mogelijk nog steeds."
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "Voert Steamless uit op de exe van de game voordat er gepatcht wordt, om de SteamStub-DRM van Valve te verwijderen (het origineel blijft bewaard als .steamstub.bak). Doet niets als er geen stub aanwezig is. Vereist Mono (mono-complete op Debian en Ubuntu)."
+          },
+          "apiCheckBypass": {
+            "description": "Standaard uit. Plaatst de bypassproxy van SteamAutoCrack (winmm.dll) plus een omleidingsconfiguratie, zodat games die na de wissel opnieuw de originele steam_api of exe controleren toch starten en prestaties ontgrendelen. De proxy wordt bij de officiële release opgehaald. Wine en Proton laden de proxy alleen als de startopties van de game WINEDLLOVERRIDES=\"winmm=n,b\" instellen."
           }
         },
         "notification": {
           "title": {
             "toast": "Bureaubladmelding"
-          },
-          "info": {
-            "toast": "Sommige opties in dit onderdeel werken alleen in Windows"
           },
           "test": {
             "toast": "Bureaubladmelding"
@@ -2528,13 +2541,6 @@
               "name": "Geluid van de bureaubladmelding",
               "description": "Bepaalt welk geluid klinkt wanneer er een bureaubladmelding verschijnt"
             },
-            "toastSouvenir": {
-              "name": "Souvenir in de bureaubladmelding",
-              "description": "Alleen Windows: toont de souvenirscreenshot in de melding."
-            },
-            "groupToast": {
-              "description": "Alleen Windows: groepeert meldingen van dezelfde game in het Actiecentrum."
-            },
             "urgent": {
               "description": "Laat ontgrendelde prestaties ook verschijnen terwijl Niet storen actief is. Ze worden verstuurd als kritieke meldingen, die de meeste bureaubladen doorlaten."
             },
@@ -2542,20 +2548,13 @@
               "name": "Bureaubladmelding",
               "description": "Systeemmelding die je bureaublad toont"
             },
-            "useWinRT": {
-              "description": "Alleen Windows. Heeft geen effect op Linux."
-            },
-            "useBalloon": {
-              "description": "Alleen Windows. Heeft geen effect op Linux."
-            },
-            "souvenirHdrDesc": "Alleen Windows: corrigeert de kleuren wanneer HDR van Windows actief is. Op Linux wordt de gewone screenshot opgeslagen.",
             "souvenirDirHelp": "Eén submap per game, bestanden met de naam \"datum - prestatie\". Standaard: ~/Pictures/Achievement Watcher Next. Onder Wayland vraagt het bureaublad één keer per sessie om het scherm te delen.",
             "clipDesc": "Terwijl een game draait, worden de laatste seconden in het geheugen bewaard en rond elke ontgrendeling opgeslagen, met de melding in het midden. Onder Wayland vraagt het bureaublad één keer om het scherm te delen.",
-            "clipAudioDesc": "Op Linux wordt het geluid van de hele pc opgenomen.",
             "clipDirHelp": "Eén submap per game, bestanden met de naam \"datum - prestatie\". Standaard: ~/Videos/Achievement Watcher Next."
           }
         },
         "folder": {
+          "default": "Mappen die automatisch worden gecontroleerd, in elk Wine- of Proton-prefix en in je thuismap",
           "addInfo": {
             "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini of UniverseLAN.ini staat. Selecteer voor RPCS3 de configuratiemap (~/.config/rpcs3) of de map dev_hdd0."
           },
@@ -2578,7 +2577,14 @@
             "2": "Steam-games in je bezit tellen pas als geïnstalleerd wanneer de eigen bestanden van Steam dat bevestigen."
           },
           "steam": {
-            "0": "Saves van GBE / Goldberg staan meestal in AppData/Roaming/GSE Saves binnen het Wine- of Proton-prefix van de game, of in ~/.local/share/GSE Saves voor een native Linux-game."
+            "0": "Saves van GBE / Goldberg staan meestal in AppData/Roaming/GSE Saves binnen het Wine- of Proton-prefix van de game, of in ~/.local/share/GSE Saves voor een native Linux-game.",
+            "1": "Saves van CODEX / RUNE staan vaak in Public/Documents/Steam/CODEX of Public/Documents/Steam/RUNE binnen het Wine- of Proton-prefix van de game."
+          },
+          "emulators": {
+            "0": "Trofeeën van RPCS3 worden gelezen uit dev_hdd0/home/.../trophy in de map van RPCS3 (~/.config/rpcs3)."
+          },
+          "themes": {
+            "2": "Zet een CSS-thema in ~/.config/Achievement Watcher Next/themes en het verschijnt in de keuzelijst met thema's."
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "Kon de map niet naar de Prullenbak verplaatsen.",
         "delete-permanently-detail": "Definitief verwijderen slaat de Prullenbak over: de bestanden kunnen niet worden hersteld.",
         "delete-recycle-bin-refused": "Het systeem weigerde deze map naar de Prullenbak te verplaatsen. Dat gebeurt wanneer een bestand nog geopend is, wanneer het station geen Prullenbak heeft (verwisselbaar station of netwerkstation) of wanneer je niet naar de map kunt schrijven.",
+        "delete-blocked-by-permissions": "Dit bestand is niet beschrijfbaar met jouw account: {file}\nAlleen de eigenaar of root kan de map verwijderen.",
         "gh-simple-notifications-fallback": "Werkt - terugval op bureaubladmelding actief"
       }
     }

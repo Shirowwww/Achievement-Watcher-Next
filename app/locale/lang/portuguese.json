@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "Eliminar a pasta do jogo (Reciclagem)…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "Adiciona opções de desinstalação ao menu do botão direito dos jogos (desinstalação Steam, desinstalador do jogo ou mover a pasta para a Reciclagem)."
+          },
+          "controller": {
+            "priority": {
+              "description": "Dá o foco do teclado ao overlay ao abrir, para que os jogos que pausam ao perder o foco o façam. O AW Next não retira o comando ao jogo: o jogo pode continuar a ver os botões."
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "Executa o Steamless no exe do jogo antes de aplicar o patch para remover o DRM SteamStub da Valve (original mantido como .steamstub.bak). Sem efeito se não houver stub. Requer o Mono (mono-complete no Debian e no Ubuntu)."
+          },
+          "apiCheckBypass": {
+            "description": "Desativado por predefinição. Coloca o proxy de contorno do SteamAutoCrack (winmm.dll) + uma configuração de redirecionamento, para que os jogos que voltam a verificar a steam_api/exe original após a troca arranquem e desbloqueiem mesmo assim. Transfere o proxy a partir do seu lançamento oficial. O Wine e o Proton só carregam o proxy quando as opções de arranque do jogo definem WINEDLLOVERRIDES=\"winmm=n,b\"."
           }
         },
         "notification": {
           "title": {
             "toast": "Notificação do ambiente de trabalho"
-          },
-          "info": {
-            "toast": "Algumas opções desta secção só funcionam no Windows"
           },
           "test": {
             "toast": "Notificação do ambiente de trabalho"
@@ -2528,13 +2541,6 @@
               "name": "Som da notificação do ambiente de trabalho",
               "description": "Especifica o som a reproduzir quando uma notificação do ambiente de trabalho é exibida"
             },
-            "toastSouvenir": {
-              "name": "Recordação na notificação do ambiente de trabalho",
-              "description": "Apenas no Windows: mostra a captura de recordação dentro da notificação."
-            },
-            "groupToast": {
-              "description": "Apenas no Windows: agrupa as notificações do mesmo jogo no Centro de Atividades."
-            },
             "urgent": {
               "description": "Permitir que desbloqueios de proezas apareçam enquanto o Não incomodar está ativo. São enviados como notificações críticas, que a maioria dos ambientes de trabalho deixa passar."
             },
@@ -2542,20 +2548,13 @@
               "name": "Notificação do ambiente de trabalho",
               "description": "Notificação de sistema mostrada pelo teu ambiente de trabalho"
             },
-            "useWinRT": {
-              "description": "Apenas no Windows. Não tem efeito no Linux."
-            },
-            "useBalloon": {
-              "description": "Apenas no Windows. Não tem efeito no Linux."
-            },
-            "souvenirHdrDesc": "Apenas no Windows: corrige as cores quando o HDR do Windows está ativo. No Linux, é guardada a captura padrão.",
             "souvenirDirHelp": "Uma subpasta por jogo, ficheiros com o nome \"data - proeza\". Predefinição: ~/Pictures/Achievement Watcher Next. No Wayland, o ambiente de trabalho pergunta uma vez por sessão se pretende partilhar o ecrã.",
             "clipDesc": "Enquanto um jogo está em execução, os seus últimos segundos ficam na memória e são guardados em redor de cada desbloqueio, com a notificação no meio. No Wayland, o ambiente de trabalho pergunta uma vez se pretende partilhar o ecrã.",
-            "clipAudioDesc": "No Linux, é gravado o som de todo o PC.",
             "clipDirHelp": "Uma subpasta por jogo, ficheiros com o nome \"data - proeza\". Predefinição: ~/Videos/Achievement Watcher Next."
           }
         },
         "folder": {
+          "default": "Pastas verificadas automaticamente, em todos os prefixos Wine ou Proton e na tua pasta pessoal",
           "addInfo": {
             "2": "ficheiro ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini ou UniverseLAN.ini. Para o RPCS3, selecione a pasta de configuração (~/.config/rpcs3) ou a pasta dev_hdd0."
           },
@@ -2578,7 +2577,14 @@
             "2": "Os jogos Steam adquiridos só contam como instalados quando os próprios ficheiros do Steam o confirmam."
           },
           "steam": {
-            "0": "As gravações GBE/Goldberg encontram-se normalmente em AppData/Roaming/GSE Saves dentro do prefixo Wine ou Proton do jogo, ou em ~/.local/share/GSE Saves para um jogo nativo de Linux."
+            "0": "As gravações GBE/Goldberg encontram-se normalmente em AppData/Roaming/GSE Saves dentro do prefixo Wine ou Proton do jogo, ou em ~/.local/share/GSE Saves para um jogo nativo de Linux.",
+            "1": "As gravações CODEX/RUNE encontram-se frequentemente em Public/Documents/Steam/CODEX ou Public/Documents/Steam/RUNE, dentro do prefixo Wine ou Proton do jogo."
+          },
+          "emulators": {
+            "0": "Os troféus do RPCS3 são lidos em dev_hdd0/home/.../trophy, na pasta do RPCS3 (~/.config/rpcs3)."
+          },
+          "themes": {
+            "2": "Coloque um tema CSS em ~/.config/Achievement Watcher Next/themes para que apareça na lista de temas."
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "Não foi possível mover a pasta para a Reciclagem.",
         "delete-permanently-detail": "Uma eliminação definitiva ignora a Reciclagem: os ficheiros não poderão ser restaurados.",
         "delete-recycle-bin-refused": "O sistema recusou mover esta pasta para a Reciclagem. Isso acontece quando um ficheiro ainda está aberto, quando a unidade não tem Reciclagem (unidade amovível ou de rede) ou quando não tens permissão para escrever na pasta.",
+        "delete-blocked-by-permissions": "A tua conta não pode escrever neste ficheiro: {file}\nSó o proprietário ou o root pode eliminar a pasta.",
         "gh-simple-notifications-fallback": "A funcionar - alternativa de notificação do ambiente de trabalho ativa"
       }
     }

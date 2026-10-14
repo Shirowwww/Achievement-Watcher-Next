@@ -291,8 +291,16 @@
 
   // Nothing follows the trigger while the panel is open, so an open list closes with whatever moved
   // it: a scroll, a resize, the window losing focus, or the modal it belongs to being dismissed.
+  // The panel's own scroll (the wheel, or opening on a value further down) is not a move.
   const closeOnMove = () => close();
-  window.addEventListener('scroll', closeOnMove, true);
+  window.addEventListener(
+    'scroll',
+    (event) => {
+      if (current && event.target instanceof Node && current.panel.contains(event.target)) return;
+      close();
+    },
+    true
+  );
   window.addEventListener('resize', closeOnMove);
   window.addEventListener('blur', closeOnMove);
   document.addEventListener('visibilitychange', closeOnMove);

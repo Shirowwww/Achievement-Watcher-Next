@@ -100,9 +100,16 @@ function countModeHiddenMatches($, query, scope = '#settings') {
   return count;
 }
 
+// What app.css hides on this system (the other system's settings), so it is never a hit.
+function offPlatformSelector($) {
+  const platform = $('html').attr('data-platform');
+  return [platform !== 'win32' && '[data-windows-only]', platform !== 'linux' && '[data-linux-only]'].filter(Boolean).join(', ');
+}
+
 function filterSections($, query, scope = '#settings') {
   const terms = parseTerms(query);
   const perView = {};
+  const offPlatform = offPlatformSelector($);
   let total = 0;
 
   $(`${scope} .box section.content[data-view]`).each(function () {
@@ -111,7 +118,13 @@ function filterSections($, query, scope = '#settings') {
     // count them, and must never clear their class - the search owns `search-hidden` and nothing
     // else. A hidden tab reports zero hits so its nav counter stays empty.
     const modeHidden = section.hasClass(MODE_HIDDEN_CLASS);
-    const rows = modeHidden ? $() : rowsIn($, section).not(`.${MODE_HIDDEN_CLASS}`);
+    const rows = modeHidden
+      ? $()
+      : rowsIn($, section)
+          .not(`.${MODE_HIDDEN_CLASS}`)
+          .filter(function () {
+            return $(this).closest(offPlatform).length === 0;
+          });
     let hits = 0;
 
     rows.each(function () {
@@ -140,4 +153,4 @@ function filterSections($, query, scope = '#settings') {
   return { total, perView };
 }
 
-module.exports = { ROW_SELECTOR, BLOCK_SELECTOR, MODE_HIDDEN_CLASS, normalize, parseTerms, matches, buildHaystack, haystackFor, rowsIn, countModeHiddenMatches, filterSections };
+module.exports = { ROW_SELECTOR, BLOCK_SELECTOR, MODE_HIDDEN_CLASS, normalize, parseTerms, matches, buildHaystack, haystackFor, rowsIn, countModeHiddenMatches, offPlatformSelector, filterSections };

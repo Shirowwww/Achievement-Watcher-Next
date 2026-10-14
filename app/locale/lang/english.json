@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "Delete game folder (Trash)…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "Adds Uninstall options to the right-click menu on game tiles (Steam uninstall, game uninstaller, or move folder to Trash)."
+          },
+          "controller": {
+            "priority": {
+              "description": "Give the overlay keyboard focus when it opens, so games that pause on focus loss do. AW Next does not take the controller away from the game, so the game may still see the buttons."
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "Runs Steamless on the game exe before patching to strip Valve’s SteamStub DRM (original kept as .steamstub.bak). No-op when there’s no stub. Needs Mono (mono-complete on Debian and Ubuntu)."
+          },
+          "apiCheckBypass": {
+            "description": "Off by default. Drops SteamAutoCrack’s bypass proxy (winmm.dll) + a redirect config so games that re-check the original steam_api/exe after the swap still launch and unlock. Downloads the proxy from its official release. Wine and Proton load the proxy only when the game’s launch options set WINEDLLOVERRIDES=\"winmm=n,b\"."
           }
         },
         "notification": {
           "title": {
             "toast": "Desktop notification"
-          },
-          "info": {
-            "toast": "Some options in this section only work on Windows"
           },
           "test": {
             "toast": "Desktop notification"
@@ -2528,13 +2541,6 @@
               "name": "Desktop notification sound",
               "description": "Specifies the sound to play when a desktop notification is displayed"
             },
-            "toastSouvenir": {
-              "name": "Desktop notification souvenir",
-              "description": "Windows only: shows the souvenir screenshot inside the notification."
-            },
-            "groupToast": {
-              "description": "Windows only: groups notifications from the same game in Action Center."
-            },
             "urgent": {
               "description": "Let achievement unlocks show while Do Not Disturb is active. They are sent as critical notifications, which most desktops let through."
             },
@@ -2542,20 +2548,13 @@
               "name": "Desktop notification",
               "description": "System notification shown by your desktop"
             },
-            "useWinRT": {
-              "description": "Windows only. Has no effect on Linux."
-            },
-            "useBalloon": {
-              "description": "Windows only. Has no effect on Linux."
-            },
-            "souvenirHdrDesc": "Windows only: corrects colours when Windows HDR is active. On Linux the standard capture is saved.",
             "souvenirDirHelp": "One subfolder per game, files named \"date - achievement\". Default: ~/Pictures/Achievement Watcher Next. On Wayland the desktop asks once per session to share the screen.",
             "clipDesc": "While a game runs, its last seconds are kept and saved around each unlock, with the notification in the middle. On Wayland the desktop asks once to share the screen.",
-            "clipAudioDesc": "On Linux the whole PC's sound is recorded.",
             "clipDirHelp": "One subfolder per game, files named \"date - achievement\". Default: ~/Videos/Achievement Watcher Next."
           }
         },
         "folder": {
+          "default": "Folders checked automatically, in every Wine or Proton prefix and in your home folder",
           "addInfo": {
             "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini or UniverseLAN.ini file is located. For RPCS3, select its configuration folder (~/.config/rpcs3) or its dev_hdd0 folder."
           },
@@ -2578,7 +2577,14 @@
             "2": "Owned Steam games count as installed only when Steam’s own files confirm it."
           },
           "steam": {
-            "0": "GBE / Goldberg saves are usually under AppData/Roaming/GSE Saves inside the game’s Wine or Proton prefix, or under ~/.local/share/GSE Saves for a native Linux game."
+            "0": "GBE / Goldberg saves are usually under AppData/Roaming/GSE Saves inside the game’s Wine or Proton prefix, or under ~/.local/share/GSE Saves for a native Linux game.",
+            "1": "CODEX / RUNE saves often live under Public/Documents/Steam/CODEX or Public/Documents/Steam/RUNE inside the game’s Wine or Proton prefix."
+          },
+          "emulators": {
+            "0": "RPCS3 trophies are read from dev_hdd0/home/.../trophy in RPCS3’s folder (~/.config/rpcs3)."
+          },
+          "themes": {
+            "2": "Drop a CSS theme into ~/.config/Achievement Watcher Next/themes and it appears in the theme dropdown."
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "Could not move the folder to the Trash.",
         "delete-permanently-detail": "A permanent delete skips the Trash: the files cannot be restored.",
         "delete-recycle-bin-refused": "The system refused to move this folder to the Trash. That happens when a file is still open, when the drive has no Trash (a removable or network drive), or when you cannot write to the folder.",
+        "delete-blocked-by-permissions": "This file is not writable by your account: {file}\nOnly its owner or root can delete the folder.",
         "gh-simple-notifications-fallback": "Working - desktop notification fallback active"
       }
     }

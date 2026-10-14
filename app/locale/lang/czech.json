@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "Smazat složku hry (Koš)…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "Přidá možnosti odinstalace do kontextové nabídky her (odinstalace přes Steam, odinstalátor hry nebo přesun složky do Koše)."
+          },
+          "controller": {
+            "priority": {
+              "description": "Předá overlayi při otevření fokus klávesnice, aby hry pauzující při ztrátě fokusu zapauzovaly. AW Next hře ovladač neodebírá - hra může tlačítka stále vidět."
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "Spustí Steamless na exe hry před záplatou, aby odebral DRM SteamStub od Valve (originál zachován jako .steamstub.bak). Bez účinku, pokud žádný stub není. Vyžaduje Mono (mono-complete na Debianu a Ubuntu)."
+          },
+          "apiCheckBypass": {
+            "description": "Ve výchozím nastavení vypnuto. Umístí obcházecí proxy SteamAutoCrack (winmm.dll) + konfiguraci přesměrování, aby se hry, které po výměně znovu kontrolují původní steam_api/exe, přesto spustily a odemkly. Stáhne proxy z jeho oficiálního vydání. Wine a Proton načtou proxy jen tehdy, když volby spuštění hry nastavují WINEDLLOVERRIDES=\"winmm=n,b\"."
           }
         },
         "notification": {
           "title": {
             "toast": "Oznámení na ploše"
-          },
-          "info": {
-            "toast": "Některé volby v této sekci fungují jen ve Windows"
           },
           "test": {
             "toast": "Oznámení na ploše"
@@ -2528,13 +2541,6 @@
               "name": "Zvuk oznámení na ploše",
               "description": "Určuje zvuk přehraný při zobrazení oznámení na ploše"
             },
-            "toastSouvenir": {
-              "name": "Vzpomínka v oznámení na ploše",
-              "description": "Pouze Windows: zobrazí vzpomínkový snímek uvnitř oznámení."
-            },
-            "groupToast": {
-              "description": "Pouze Windows: seskupí oznámení ze stejné hry v Centru akcí."
-            },
             "urgent": {
               "description": "Umožnit zobrazení odemknutí úspěchů, když je aktivní režim Nerušit. Odesílají se jako kritická oznámení, která většina desktopů propustí."
             },
@@ -2542,20 +2548,13 @@
               "name": "Oznámení na ploše",
               "description": "Systémové oznámení zobrazené vaší plochou"
             },
-            "useWinRT": {
-              "description": "Pouze Windows. V Linuxu nemá žádný účinek."
-            },
-            "useBalloon": {
-              "description": "Pouze Windows. V Linuxu nemá žádný účinek."
-            },
-            "souvenirHdrDesc": "Pouze Windows: opraví barvy, když je aktivní HDR ve Windows. V Linuxu se uloží standardní snímek.",
             "souvenirDirHelp": "Jedna podsložka pro každou hru, soubory pojmenované „datum - úspěch“. Výchozí: ~/Pictures/Achievement Watcher Next. Ve Waylandu se plocha jednou za relaci zeptá na sdílení obrazovky.",
             "clipDesc": "Když hra běží, její poslední sekundy se uchovávají v paměti a při každém odemčení se uloží, přičemž oznámení je uprostřed. Ve Waylandu se plocha jednou zeptá na sdílení obrazovky.",
-            "clipAudioDesc": "V Linuxu se nahrává zvuk celého počítače.",
             "clipDirHelp": "Jedna podsložka pro každou hru, soubory pojmenované „datum - úspěch“. Výchozí: ~/Videos/Achievement Watcher Next."
           }
         },
         "folder": {
+          "default": "Automaticky kontrolované složky, v každém prefixu Wine nebo Proton a v domovské složce",
           "addInfo": {
             "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini nebo UniverseLAN.ini. Pro RPCS3 vyberte jeho konfigurační složku (~/.config/rpcs3) nebo složku dev_hdd0."
           },
@@ -2578,7 +2577,14 @@
             "2": "Vlastněné hry na Steamu se považují za nainstalované jen tehdy, když to potvrdí vlastní soubory Steamu."
           },
           "steam": {
-            "0": "Uložené pozice GBE/Goldberg bývají v AppData/Roaming/GSE Saves uvnitř prefixu Wine nebo Proton dané hry, případně v ~/.local/share/GSE Saves u nativní hry pro Linux."
+            "0": "Uložené pozice GBE/Goldberg bývají v AppData/Roaming/GSE Saves uvnitř prefixu Wine nebo Proton dané hry, případně v ~/.local/share/GSE Saves u nativní hry pro Linux.",
+            "1": "Uložené pozice CODEX/RUNE se často nacházejí v Public/Documents/Steam/CODEX nebo Public/Documents/Steam/RUNE uvnitř prefixu Wine nebo Proton hry."
+          },
+          "emulators": {
+            "0": "Trofeje RPCS3 se načítají z dev_hdd0/home/.../trophy ve složce RPCS3 (~/.config/rpcs3)."
+          },
+          "themes": {
+            "2": "Vložte motiv CSS do ~/.config/Achievement Watcher Next/themes a objeví se v nabídce motivů."
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "Složku se nepodařilo přesunout do Koše.",
         "delete-permanently-detail": "Trvalé smazání obchází Koš: soubory nepůjde obnovit.",
         "delete-recycle-bin-refused": "Systém odmítl přesunout tuto složku do Koše. To se stává, když je soubor stále otevřený, když disk nemá Koš (vyměnitelný nebo síťový disk) nebo když do složky nemůžeš zapisovat.",
+        "delete-blocked-by-permissions": "Tvůj účet nemůže zapisovat do tohoto souboru: {file}\nSložku může smazat jen její vlastník nebo root.",
         "gh-simple-notifications-fallback": "Funguje - aktivní záloha přes oznámení na ploše"
       }
     }

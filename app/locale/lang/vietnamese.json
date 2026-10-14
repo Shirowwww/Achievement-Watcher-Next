@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "Xóa thư mục trò chơi (Thùng rác)…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "Thêm các tùy chọn Gỡ cài đặt vào menu chuột phải trên thẻ trò chơi (gỡ qua Steam, trình gỡ cài đặt của trò chơi, hoặc chuyển thư mục vào Thùng rác)."
+          },
+          "controller": {
+            "priority": {
+              "description": "Trao tiêu điểm bàn phím cho lớp phủ khi nó mở ra, để những trò chơi tự tạm dừng khi mất tiêu điểm sẽ dừng lại. AW Next không lấy tay cầm khỏi trò chơi, nên trò chơi vẫn có thể nhận được các nút bấm."
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "Chạy Steamless trên tệp exe của trò chơi trước khi vá để bóc lớp DRM SteamStub của Valve (bản gốc được giữ lại dưới dạng .steamstub.bak). Không làm gì nếu không có stub. Cần có Mono (mono-complete trên Debian và Ubuntu)."
+          },
+          "apiCheckBypass": {
+            "description": "Mặc định tắt. Đặt proxy bỏ qua của SteamAutoCrack (winmm.dll) cùng một tệp cấu hình chuyển hướng, để những trò chơi kiểm tra lại steam_api/exe gốc sau khi thay thế vẫn khởi chạy và mở khóa được. Proxy được tải từ bản phát hành chính thức của nó. Wine và Proton chỉ tải proxy khi tùy chọn khởi chạy của trò chơi đặt WINEDLLOVERRIDES=\"winmm=n,b\"."
           }
         },
         "notification": {
           "title": {
             "toast": "Thông báo màn hình nền"
-          },
-          "info": {
-            "toast": "Một số tùy chọn trong phần này chỉ hoạt động trên Windows"
           },
           "test": {
             "toast": "Thông báo màn hình nền"
@@ -2528,13 +2541,6 @@
               "name": "Âm thanh thông báo màn hình nền",
               "description": "Chọn âm thanh phát khi một thông báo màn hình nền hiện ra"
             },
-            "toastSouvenir": {
-              "name": "Ảnh kỷ niệm trong thông báo màn hình nền",
-              "description": "Chỉ trên Windows: hiển thị ảnh kỷ niệm ngay trong thông báo."
-            },
-            "groupToast": {
-              "description": "Chỉ trên Windows: gộp trực quan các thông báo của cùng một trò chơi trong Trung tâm hành động."
-            },
             "urgent": {
               "description": "Cho phép thông báo mở khóa thành tựu hiện ra ngay cả khi chế độ Không làm phiền đang bật. Chúng được gửi dưới dạng thông báo quan trọng, loại mà hầu hết màn hình nền đều cho qua."
             },
@@ -2542,20 +2548,13 @@
               "name": "Thông báo màn hình nền",
               "description": "Thông báo hệ thống do màn hình nền của bạn hiển thị"
             },
-            "useWinRT": {
-              "description": "Chỉ trên Windows. Không có tác dụng trên Linux."
-            },
-            "useBalloon": {
-              "description": "Chỉ trên Windows. Không có tác dụng trên Linux."
-            },
-            "souvenirHdrDesc": "Chỉ trên Windows: chỉnh lại màu khi HDR của Windows đang bật. Trên Linux, ảnh chụp thông thường sẽ được lưu.",
             "souvenirDirHelp": "Mỗi trò chơi một thư mục con, tệp được đặt tên \"ngày - thành tựu\". Mặc định: ~/Pictures/Achievement Watcher Next. Trên Wayland, môi trường máy tính hỏi một lần mỗi phiên để chia sẻ màn hình.",
             "clipDesc": "Khi trò chơi đang chạy, vài giây cuối của nó được giữ trong bộ nhớ và lưu quanh mỗi lần mở khóa, với thông báo ở giữa. Trên Wayland, môi trường máy tính hỏi một lần để chia sẻ màn hình.",
-            "clipAudioDesc": "Trên Linux, âm thanh của toàn bộ máy tính được ghi lại.",
             "clipDirHelp": "Mỗi trò chơi một thư mục con, tệp được đặt tên \"ngày - thành tựu\". Mặc định: ~/Videos/Achievement Watcher Next."
           }
         },
         "folder": {
+          "default": "Thư mục được kiểm tra tự động, trong mỗi prefix Wine hoặc Proton và trong thư mục home",
           "addInfo": {
             "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini hoặc UniverseLAN.ini. Với RPCS3, hãy chọn thư mục cấu hình của nó (~/.config/rpcs3) hoặc thư mục dev_hdd0."
           },
@@ -2578,7 +2577,14 @@
             "2": "Trò chơi Steam đang sở hữu chỉ được tính là đã cài đặt khi chính các tệp của Steam xác nhận điều đó."
           },
           "steam": {
-            "0": "Bản lưu của GBE / Goldberg thường nằm trong AppData/Roaming/GSE Saves bên trong prefix Wine hoặc Proton của trò chơi, hoặc trong ~/.local/share/GSE Saves với trò chơi Linux gốc."
+            "0": "Bản lưu của GBE / Goldberg thường nằm trong AppData/Roaming/GSE Saves bên trong prefix Wine hoặc Proton của trò chơi, hoặc trong ~/.local/share/GSE Saves với trò chơi Linux gốc.",
+            "1": "Bản lưu của CODEX / RUNE thường nằm trong Public/Documents/Steam/CODEX hoặc Public/Documents/Steam/RUNE, bên trong prefix Wine hoặc Proton của trò chơi."
+          },
+          "emulators": {
+            "0": "Cúp của RPCS3 được đọc từ dev_hdd0/home/.../trophy trong thư mục của RPCS3 (~/.config/rpcs3)."
+          },
+          "themes": {
+            "2": "Thả một chủ đề CSS vào ~/.config/Achievement Watcher Next/themes và nó sẽ xuất hiện trong danh sách chủ đề."
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "Không thể chuyển thư mục vào Thùng rác.",
         "delete-permanently-detail": "Xóa vĩnh viễn sẽ bỏ qua Thùng rác: các tệp sẽ không thể khôi phục.",
         "delete-recycle-bin-refused": "Hệ thống đã từ chối chuyển thư mục này vào Thùng rác. Điều đó xảy ra khi một tệp vẫn đang mở, khi ổ đĩa không có Thùng rác (ổ rời hoặc ổ mạng), hoặc khi bạn không thể ghi vào thư mục.",
+        "delete-blocked-by-permissions": "Tài khoản của bạn không ghi được vào tệp này: {file}\nChỉ chủ sở hữu hoặc root mới xóa được thư mục.",
         "gh-simple-notifications-fallback": "Đang hoạt động - dùng phương án dự phòng thông báo màn hình nền"
       }
     }

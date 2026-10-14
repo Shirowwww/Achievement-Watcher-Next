@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "Játékmappa törlése (Kuka)…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "Eltávolítási lehetőségeket ad a játékok jobb gombos menüjéhez (Steam-eltávolítás, játék eltávolítója, vagy mappa áthelyezése a Kukába)."
+          },
+          "controller": {
+            "priority": {
+              "description": "Megnyitáskor billentyűzetfókuszt ad az overlaynek, hogy a fókuszvesztésre megálló játékok megálljanak. Az AW Next nem veszi el a kontrollert a játéktól - a játék így is láthatja a gombokat."
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "Lefuttatja a Steamlesst a játék exe-jén a javítás előtt, hogy eltávolítsa a Valve SteamStub DRM-jét (az eredeti .steamstub.bak néven megmarad). Nincs hatása, ha nincs stub. Működéséhez Mono szükséges (mono-complete Debianon és Ubuntun)."
+          },
+          "apiCheckBypass": {
+            "description": "Alapértelmezetten kikapcsolva. Lerakja a SteamAutoCrack megkerülő proxyját (winmm.dll) + egy átirányítási konfigurációt, hogy a csere után az eredeti steam_api/exe-t újraellenőrző játékok mégis elinduljanak és feloldjanak. A proxyt a hivatalos kiadásából tölti le. A Wine és a Proton csak akkor tölti be a proxyt, ha a játék indítási beállításai megadják a WINEDLLOVERRIDES=\"winmm=n,b\" értéket."
           }
         },
         "notification": {
           "title": {
             "toast": "Asztali értesítés"
-          },
-          "info": {
-            "toast": "Az ebben a szakaszban lévő egyes beállítások csak Windows alatt működnek"
           },
           "test": {
             "toast": "Asztali értesítés"
@@ -2528,13 +2541,6 @@
               "name": "Asztali értesítés hangja",
               "description": "Megadja az asztali értesítés megjelenésekor lejátszandó hangot"
             },
-            "toastSouvenir": {
-              "name": "Emlék az asztali értesítésben",
-              "description": "Csak Windows: az emlék képernyőképet az értesítésben jeleníti meg."
-            },
-            "groupToast": {
-              "description": "Csak Windows: az azonos játék értesítéseit csoportosítja a Műveletközpontban."
-            },
             "urgent": {
               "description": "Lehetővé teszi a teljesítmények feloldásának megjelenését a Ne zavarjanak mód alatt. Kritikus értesítésként kerülnek elküldésre, amelyeket a legtöbb asztali környezet átenged."
             },
@@ -2542,20 +2548,13 @@
               "name": "Asztali értesítés",
               "description": "Az asztali környezeted által megjelenített rendszerértesítés"
             },
-            "useWinRT": {
-              "description": "Csak Windows. Linuxon nincs hatása."
-            },
-            "useBalloon": {
-              "description": "Csak Windows. Linuxon nincs hatása."
-            },
-            "souvenirHdrDesc": "Csak Windows: kijavítja a színeket, amikor a Windows HDR aktív. Linuxon a normál képernyőkép lesz mentve.",
             "souvenirDirHelp": "Játékonként egy almappa, a fájlok neve „dátum - teljesítmény”. Alapértelmezés: ~/Pictures/Achievement Watcher Next. Waylanden az asztal munkamenetenként egyszer megkérdezi, megosztható-e a képernyő.",
             "clipDesc": "Amíg egy játék fut, az utolsó másodpercei a memóriában maradnak, és minden feloldás körül mentésre kerülnek, az értesítéssel a közepén. Waylanden az asztal egyszer megkérdezi, megosztható-e a képernyő.",
-            "clipAudioDesc": "Linuxon a teljes számítógép hangja rögzítésre kerül.",
             "clipDirHelp": "Játékonként egy almappa, a fájlok neve „dátum - teljesítmény”. Alapértelmezés: ~/Videos/Achievement Watcher Next."
           }
         },
         "folder": {
+          "default": "Automatikusan ellenőrzött mappák, minden Wine- vagy Proton-prefixumban és a saját mappádban",
           "addInfo": {
             "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini vagy UniverseLAN.ini fájl található. RPCS3 esetén válaszd a konfigurációs mappáját (~/.config/rpcs3) vagy a dev_hdd0 mappát."
           },
@@ -2578,7 +2577,14 @@
             "2": "A birtokolt Steam-játékok csak akkor számítanak telepítettnek, ha ezt maguk a Steam-fájlok megerősítik."
           },
           "steam": {
-            "0": "A GBE/Goldberg mentések általában az AppData/Roaming/GSE Saves alatt találhatók a játék Wine- vagy Proton-prefixumán belül, natív Linux-játéknál pedig a ~/.local/share/GSE Saves alatt."
+            "0": "A GBE/Goldberg mentések általában az AppData/Roaming/GSE Saves alatt találhatók a játék Wine- vagy Proton-prefixumán belül, natív Linux-játéknál pedig a ~/.local/share/GSE Saves alatt.",
+            "1": "A CODEX/RUNE mentések gyakran a Public/Documents/Steam/CODEX vagy a Public/Documents/Steam/RUNE alatt találhatók, a játék Wine- vagy Proton-prefixumán belül."
+          },
+          "emulators": {
+            "0": "Az RPCS3 trófeái az RPCS3 mappájában (~/.config/rpcs3) található dev_hdd0/home/.../trophy helyről olvashatók."
+          },
+          "themes": {
+            "2": "Helyezzen egy CSS-témát a ~/.config/Achievement Watcher Next/themes mappába, és az megjelenik a témalistában."
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "A mappa áthelyezése a Kukába nem sikerült.",
         "delete-permanently-detail": "A végleges törlés kihagyja a Kukát: a fájlok nem állíthatók vissza.",
         "delete-recycle-bin-refused": "A rendszer nem volt hajlandó a Kukába helyezni ezt a mappát. Ez akkor fordul elő, ha egy fájl még nyitva van, ha a meghajtónak nincs Kukája (cserélhető vagy hálózati meghajtó), vagy ha nem írhatsz a mappába.",
+        "delete-blocked-by-permissions": "A fiókod nem írhatja ezt a fájlt: {file}\nA mappát csak a tulajdonosa vagy a root törölheti.",
         "gh-simple-notifications-fallback": "Működik - asztali értesítési tartalék aktív"
       }
     }

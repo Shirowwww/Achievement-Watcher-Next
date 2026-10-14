@@ -105,7 +105,7 @@ function buildHarness() {
   const end = html.indexOf('</section>', html.indexOf('<div class="footer">', start)) + '</section>'.length;
   assert.ok(start > 0 && end > start, 'could not isolate the settings section from app.html');
 
-  return `<!doctype html><html><head><meta charset="utf-8"></head><body>
+  return `<!doctype html><html data-platform="win32"><head><meta charset="utf-8"></head><body>
     ${html.slice(start, end)}
     <script>${fs.readFileSync(path.join(appDir, 'ui', 'lib', 'jquery-3.7.1.min.js'), 'utf8')}</script>
     <script>
@@ -140,12 +140,16 @@ test('the settings filter behaves correctly in a real DOM', { concurrency: 1, ti
     const page = await browser.newPage();
     await page.goto('file://' + harness.replace(/\\/g, '/'));
 
-    // Rows as the filter defines them: outermost matches per tab (see settingsSearch.ROW_SELECTOR).
+    // Rows as the filter defines them: outermost matches per tab (see settingsSearch.ROW_SELECTOR),
+    // less the other system's settings, which this one never shows.
     await page.evaluate(() => {
       window.allRows = () =>
         $('#settings .box section.content[data-view]')
           .toArray()
-          .reduce((set, section) => set.add(window.searchRules.rowsIn($, $(section))), $());
+          .reduce((set, section) => set.add(window.searchRules.rowsIn($, $(section))), $())
+          .filter(function () {
+            return $(this).closest(window.searchRules.offPlatformSelector($)).length === 0;
+          });
     });
     const rowCount = () => page.evaluate(() => window.allRows().length);
     const visibleRows = () => page.evaluate(() => window.allRows().not('.search-hidden').length);
@@ -197,6 +201,16 @@ test('the settings filter behaves correctly in a real DOM', { concurrency: 1, ti
       'no element may be left hidden after the search is cleared'
     );
     assert.strictEqual(await signature(), before);
+
+    // A setting of the other system is never a hit: Windows groups toasts, Linux has none to group.
+    const groupHits = (platform) =>
+      page.evaluate((p) => {
+        $('html').attr('data-platform', p);
+        return window.searchRules.filterSections($, 'groupToast').total;
+      }, platform);
+    assert.strictEqual(await groupHits('win32'), 1);
+    assert.strictEqual(await groupHits('linux'), 0);
+    await page.evaluate(() => $('html').attr('data-platform', 'win32'));
   } finally {
     await browser.close().catch(() => {});
     // close() returns before the OS has torn the processes down; anything still holding the profile

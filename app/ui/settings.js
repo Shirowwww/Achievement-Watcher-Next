@@ -32,6 +32,7 @@ const { legacyPresetAlias } = require(path.join(appPath, 'util/notificationPrese
 const notificationPlacement = require(path.join(appPath, 'util/notificationPlacement.js'));
 const { describeFolderDiagnosis } = require(path.join(appPath, 'util/folderDiagnosis.js'));
 const clipProfile = require(path.join(appPath, 'util/clipProfile.js'));
+const { prefixFolder } = require(path.join(appPath, 'util/prefixFolder.js'));
 // Where OBS points a Browser source. The Watchdog serves the selected preset at /obs on its own
 // websocket listener, whose port is fixed in watchdog/websocket.js - the two are kept in step by
 // test/core/obsSourceUrl.test.js rather than by a second setting nobody would ever change.
@@ -3513,6 +3514,16 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     }
 
+    // On Linux these folders are read inside every Wine and Proton prefix: show them as paths there.
+    if (process.platform === 'linux') {
+      $('#defaultdir .path').each(function () {
+        const folder = prefixFolder($(this).children('.constant').text());
+        if (!folder) return;
+        $(this).children('.constant').text(folder);
+        this.lastChild.textContent = this.lastChild.textContent.replace(/\\/g, '/');
+      });
+    }
+
     $('#addCustomDir').click(async function () {
       let self = $(this);
       self.css('pointer-events', 'none');
@@ -6401,12 +6412,16 @@ function readClipSettings() {
 function updateClipReadouts() {
   const clip = readClipSettings();
   $('#options-notify-clip').toggleClass('clip-off', !clip.clip);
+  // Each Linux recorder ignores one control (see app.css); gpu-screen-recorder records the whole screen.
+  const linuxEngine = process.platform === 'linux' ? clip.clipEngine : null;
+  $('#options-notify-clip').attr('data-clip-engine', linuxEngine);
+  const recorded = linuxEngine === 'gpu' ? { ...clip, clipResolution: 'native' } : clip;
   $('#clipSeconds-value').text(localeText('settings.notification.option.clipSecondsValue', { seconds: clip.clipSeconds }) || `${clip.clipSeconds} s`);
   const ratio = window.devicePixelRatio || 1;
   const screen = { width: Math.round(window.screen.width * ratio), height: Math.round(window.screen.height * ratio) };
   const native = localeText('settings.notification.option.clipResolutionNative');
   if (native) $("#option_clipResolution option[value='native']").text(`${native} (${screen.height}p)`);
-  const size = Math.max(1, Math.round(clipProfile.estimateMegabytes(clip, screen)));
+  const size = Math.max(1, Math.round(clipProfile.estimateMegabytes(recorded, screen)));
   $('#clip-estimate').text(localeText('settings.notification.option.clipEstimateValue', { size }) || `${size} MB`);
 }
 

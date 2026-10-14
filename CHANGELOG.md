@@ -17,7 +17,9 @@ renamed in 3.9.0 and the history is kept under one file.
   as the Uplay R2 save redirect are written there. Unlocks appear in the in-game overlay or as
   desktop notifications, with their sound, playtime is tracked, and the app can start with your
   desktop session. On Linux the interface speaks of desktop notifications, the Trash and Linux
-  folders instead of their Windows counterparts.
+  folders instead of their Windows counterparts, the Folders tab lists the folders it checks as
+  they appear inside a prefix, and settings that only act on Windows (grouping in Action Center,
+  HDR screenshots, sending Escape to the game, the clip sound source) are not shown.
 - **Souvenirs on Linux.** Screenshots and clips of each unlock work on Linux too, on X11 and on
   Wayland, where the desktop asks once to share the screen. Clips are recorded by
   gpu-screen-recorder with the graphics card when it is installed, or, if you choose it in

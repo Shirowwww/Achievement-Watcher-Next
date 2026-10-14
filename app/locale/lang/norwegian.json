@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "Slett spillmappen (papirkurven)…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "Legger avinstalleringsvalg i høyreklikkmenyen på spillrutene (avinstaller via Steam, spillets eget avinstallasjonsprogram, eller flytt mappen til papirkurven)."
+          },
+          "controller": {
+            "priority": {
+              "description": "Gir overlayet tastaturfokus når det åpnes, slik at spill som pauser når de mister fokus, faktisk pauser. AW Next tar ikke kontrolleren fra spillet, så spillet kan fortsatt se knappetrykkene."
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "Kjører Steamless på spillets exe-fil før lappingen for å fjerne Valves SteamStub-DRM (originalen beholdes som .steamstub.bak). Gjør ingenting når det ikke finnes noen stub. Krever Mono (mono-complete på Debian og Ubuntu)."
+          },
+          "apiCheckBypass": {
+            "description": "Av som standard. Legger inn omgåelsesproxyen fra SteamAutoCrack (winmm.dll) pluss et omdirigeringsoppsett, slik at spill som sjekker den originale steam_api/exe-filen på nytt etter byttet, fortsatt starter og låser opp. Proxyen lastes ned fra den offisielle utgivelsen. Wine og Proton laster bare proxyen når spillets startvalg setter WINEDLLOVERRIDES=\"winmm=n,b\"."
           }
         },
         "notification": {
           "title": {
             "toast": "Skrivebordsvarsel"
-          },
-          "info": {
-            "toast": "Enkelte innstillinger i denne delen fungerer bare i Windows"
           },
           "test": {
             "toast": "Skrivebordsvarsel"
@@ -2528,13 +2541,6 @@
               "name": "Lyd for skrivebordsvarsel",
               "description": "Angir lyden som spilles når et skrivebordsvarsel vises"
             },
-            "toastSouvenir": {
-              "name": "Suvenir i skrivebordsvarsel",
-              "description": "Kun Windows: viser suvenirbildet inne i varselet."
-            },
-            "groupToast": {
-              "description": "Kun Windows: grupperer varsler fra samme spill i Handlingssenteret."
-            },
             "urgent": {
               "description": "La opplåste prestasjoner vises selv når Ikke forstyrr er på. De sendes som kritiske varsler, som de fleste skrivebord slipper gjennom."
             },
@@ -2542,20 +2548,13 @@
               "name": "Skrivebordsvarsel",
               "description": "Systemvarsel som vises av skrivebordet ditt"
             },
-            "useWinRT": {
-              "description": "Kun Windows. Har ingen effekt i Linux."
-            },
-            "useBalloon": {
-              "description": "Kun Windows. Har ingen effekt i Linux."
-            },
-            "souvenirHdrDesc": "Kun Windows: retter fargene når HDR er aktivt i Windows. I Linux lagres det vanlige skjermbildet.",
             "souvenirDirHelp": "Én undermappe per spill, filer med navn «dato - prestasjon». Standard: ~/Pictures/Achievement Watcher Next. På Wayland spør skrivebordet én gang per økt om å dele skjermen.",
             "clipDesc": "Mens et spill kjører, lagres de siste sekundene i minnet og lagres rundt hver opplåsing, med varselet i midten. På Wayland spør skrivebordet én gang om å dele skjermen.",
-            "clipAudioDesc": "På Linux tas lyden fra hele PC-en opp.",
             "clipDirHelp": "Én undermappe per spill, filer med navn «dato - prestasjon». Standard: ~/Videos/Achievement Watcher Next."
           }
         },
         "folder": {
+          "default": "Mapper som sjekkes automatisk, i hvert Wine- eller Proton-prefiks og i hjemmemappen din",
           "addInfo": {
             "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini eller UniverseLAN.ini ligger. For RPCS3 velger du konfigurasjonsmappen (~/.config/rpcs3) eller mappen dev_hdd0."
           },
@@ -2578,7 +2577,14 @@
             "2": "Eide Steam-spill regnes som installerte bare når Steams egne filer bekrefter det."
           },
           "steam": {
-            "0": "Lagringsfiler fra GBE / Goldberg ligger som regel under AppData/Roaming/GSE Saves i spillets Wine- eller Proton-prefiks, eller under ~/.local/share/GSE Saves for et native Linux-spill."
+            "0": "Lagringsfiler fra GBE / Goldberg ligger som regel under AppData/Roaming/GSE Saves i spillets Wine- eller Proton-prefiks, eller under ~/.local/share/GSE Saves for et native Linux-spill.",
+            "1": "Lagringsfiler fra CODEX / RUNE ligger ofte under Public/Documents/Steam/CODEX eller Public/Documents/Steam/RUNE i spillets Wine- eller Proton-prefiks."
+          },
+          "emulators": {
+            "0": "Troféer fra RPCS3 leses fra dev_hdd0/home/.../trophy i RPCS3-mappen (~/.config/rpcs3)."
+          },
+          "themes": {
+            "2": "Slipp et CSS-tema i ~/.config/Achievement Watcher Next/themes, så dukker det opp i temalisten."
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "Kunne ikke flytte mappen til papirkurven.",
         "delete-permanently-detail": "Permanent sletting hopper over papirkurven: filene kan ikke gjenopprettes.",
         "delete-recycle-bin-refused": "Systemet nektet å flytte denne mappen til papirkurven. Det skjer når en fil fortsatt er åpen, når stasjonen ikke har papirkurv (flyttbar stasjon eller nettverksstasjon), eller når du ikke kan skrive til mappen.",
+        "delete-blocked-by-permissions": "Kontoen din kan ikke skrive til denne filen: {file}\nBare eieren eller root kan slette mappen.",
         "gh-simple-notifications-fallback": "Virker - reserve med skrivebordsvarsel er aktiv"
       }
     }
