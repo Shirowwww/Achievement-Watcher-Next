@@ -8,7 +8,6 @@ const fsp = fs.promises;
 const path = require('path');
 const { userDataDir } = require('../util/userDataPath.js');
 
-const binary = ['xenia.exe', 'xenia_canary.exe'];
 
 const cacheRoot = path.join(userDataDir(), 'icon_cache', 'xenia');
 

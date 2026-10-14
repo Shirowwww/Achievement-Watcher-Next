@@ -1,16 +1,11 @@
 'use strict';
 
 /*
-  The restore point taken before AW Next writes into a game folder, and the index the Settings
-  restore list reads.
+  The restore point taken before AW Next writes into a game folder, manual fix or automatic scan
+  alike, and the index the Settings restore list reads.
 
-  The renderer took one before every manual fix and before "Fix all games", but the automatic pass
-  during a scan took none: the replaced dll kept its one-time .bak and nothing else was recoverable.
-  Both paths share this module now, so an automatic fix is as undoable as a manual one.
-
-  goldberg.backupSetup() does the copying; everything here is the bookkeeping around it. The
-  dependencies are arguments rather than requires so the automatic path (which runs outside the
-  renderer, with its own user-data path and logger) and the tests can use it unchanged.
+  goldberg.backupSetup() does the copying; this is the bookkeeping around it. Dependencies are
+  arguments so the scan path (own user-data path and logger) and the tests can use it unchanged.
 */
 
 const fs = require('fs');

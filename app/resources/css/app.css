@@ -1831,19 +1831,19 @@ body.is-resizing #game-list {
 }
 .trophy li.platinum i,
 .achievement .title i.fa-trophy[data-type='P'] {
-  color: #aebad0;
+  color: var(--trophy-platinum);
 }
 .trophy li.gold i,
 .achievement .title i.fa-trophy[data-type='G'] {
-  color: #ffd700;
+  color: var(--trophy-gold);
 }
 .trophy li.silver i,
 .achievement .title i.fa-trophy[data-type='S'] {
-  color: #acacac;
+  color: var(--trophy-silver);
 }
 .trophy li.bronze i,
 .achievement .title i.fa-trophy[data-type='B'] {
-  color: #b8592b;
+  color: var(--trophy-bronze);
 }
 .achievement .title i.fa-trophy {
   font-size: 12px;
@@ -3832,9 +3832,7 @@ body.is-resizing #game-list {
 .onboarding-steps button:focus-visible,
 .onboarding-folder-actions .inline-action-btn:focus-visible,
 .onboarding-actions button:focus-visible,
-.onboarding-api-toggle:focus-visible,
-.onboarding-test-button:focus-visible,
-.onboarding-link-row a:focus-visible {
+.onboarding-test-button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -3922,7 +3920,6 @@ body.is-resizing #game-list {
 }
 
 .onboarding-cards span,
-.onboarding-link-row span,
 .avatar-actions small {
   color: var(--text-muted);
   font-family: 'Open-Sans';
@@ -4396,20 +4393,6 @@ body.is-resizing #game-list {
   color: color-mix(in srgb, var(--danger) 72%, white);
 }
 
-.onboarding-summary {
-  margin-top: 14px;
-  padding: 10px 12px;
-  border: 1px solid var(--set-hairline-soft);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--surface-sunken) 44%, transparent);
-}
-
-.onboarding-summary p {
-  margin: 0 0 4px;
-  font-family: 'Open-Sans-Bold';
-  font-size: 12px;
-}
-
 .onboarding-source-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4494,28 +4477,6 @@ body.is-resizing #game-list {
   font-family: 'Open-Sans';
 }
 
-.onboarding-api-input {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
-}
-
-.onboarding-api-input input {
-  width: 100%;
-  min-width: 0;
-}
-
-.onboarding-api-input.is-valid input {
-  border-color: color-mix(in srgb, var(--success) 70%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--success) 35%, transparent);
-}
-
-.onboarding-api-input.is-invalid input {
-  border-color: color-mix(in srgb, var(--danger) 70%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 35%, transparent);
-}
-
-.onboarding-api-toggle,
 .onboarding-test-button {
   border: 1px solid color-mix(in srgb, var(--border) 22%, transparent);
   border-radius: 9px;
@@ -4523,17 +4484,6 @@ body.is-resizing #game-list {
   background: color-mix(in srgb, var(--surface-sunken) 66%, transparent);
   font-family: 'Open-Sans-Bold';
   cursor: pointer;
-}
-
-.onboarding-api-toggle {
-  width: 40px;
-  flex: 0 0 40px;
-}
-
-.onboarding-api-toggle[aria-pressed='true'] {
-  color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 56%, transparent);
-  background: color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 /* The test button sits beside the select, so this cell is as tall as its neighbours. The label
@@ -4574,8 +4524,7 @@ body.is-resizing #game-list {
   font-size: 11px;
 }
 
-.onboarding-test-button:hover,
-.onboarding-api-toggle:hover {
+.onboarding-test-button:hover {
   border-color: color-mix(in srgb, var(--accent) 55%, transparent);
   background: color-mix(in srgb, var(--surface) 64%, transparent);
 }
@@ -4605,22 +4554,6 @@ body.is-resizing #game-list {
 
 .avatar-actions small {
   flex-basis: 100%;
-}
-
-.onboarding-link-row {
-  display: grid;
-  gap: 8px;
-  margin-top: 14px;
-}
-
-.onboarding-link-row a {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  width: fit-content;
-  color: var(--accent);
-  font-family: 'Open-Sans-Bold';
-  text-decoration: none;
 }
 
 .onboarding-warning {
@@ -7885,8 +7818,7 @@ body {
 /* Overlay-only notification settings collapse smoothly when the transport is set to
    Windows toast: settings.js drives max-height from each row's real height to 0 (and
    back), so the animation matches whatever the localized labels/help make the row. */
-#settings #options-notify-overlay > li,
-#settings .arrow-list.overlay-only-card {
+#settings #options-notify-overlay > li {
   overflow: hidden;
   transition:
     max-height 0.3s ease,
@@ -7898,8 +7830,7 @@ body {
     background 0.16s ease;
 }
 
-#settings #options-notify-overlay > li.overlay-setting-collapsed,
-#settings .arrow-list.overlay-only-card.overlay-setting-collapsed {
+#settings #options-notify-overlay > li.overlay-setting-collapsed {
   max-height: 0 !important;
   min-height: 0 !important;
   opacity: 0;
@@ -10128,27 +10059,6 @@ body {
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
 
-/* Said out loud rather than hiding the tab: presets only paint the in-game overlay, and the current
-   transport is Windows notifications. */
-#settings .pd-notice {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  margin-top: 10px;
-  padding: 9px 12px;
-  box-sizing: border-box;
-  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  color: var(--text-muted);
-  font-size: 0.85em;
-}
-
-#settings .pd-notice[hidden] {
-  display: none;
-}
-
 #settings #options-notify-designer > li > .left {
   display: flex;
   align-items: center;
@@ -10592,63 +10502,6 @@ body {
   flex-direction: column;
   gap: 8px;
   min-width: 0;
-}
-
-/* What a package carries beside the design: asked once, on the way out. */
-#settings .pd-meta {
-  margin-top: 14px;
-  padding: 16px 18px;
-  border: 1px solid var(--set-hairline-soft);
-  border-radius: 10px;
-  background: var(--set-surface-sunken);
-}
-
-#settings .pd-meta[hidden] {
-  display: none;
-}
-
-#settings .pd-meta h4 {
-  margin: 0 0 4px;
-  font-family: 'Open-Sans';
-  font-size: 13px;
-}
-
-#settings .pd-meta-note {
-  margin: 0 0 12px;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-#settings .pd-meta-fields {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px 14px;
-}
-
-#settings .pd-meta-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-#settings .pd-meta-fields input {
-  width: 100%;
-  padding: 7px 10px;
-  border: 1px solid var(--set-hairline-soft);
-  border-radius: 8px;
-  background: var(--set-surface);
-  color: var(--text);
-  font-family: 'Open-Sans';
-  font-size: 12px;
-}
-
-#settings .pd-meta-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 14px;
 }
 
 /* Navigating the control panel */
@@ -11626,7 +11479,6 @@ body {
    their size, and a long image name is truncated with an ellipsis based on the space
    left by the (localized) label - so the row never wraps or overflows. */
 #theme-customizer .theme-layer-color,
-#theme-customizer .theme-layer-custom-toggle,
 #theme-customizer .theme-layer-image,
 #theme-customizer .theme-layer-clear-image,
 #theme-customizer .theme-layer-fit,

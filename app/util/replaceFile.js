@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
@@ -161,4 +162,17 @@ function replaceFileSync(temporary, destination) {
   throw failure;
 }
 
-module.exports = { replaceFileSync, clearReadOnly, unlinkForce, sweepSidecars };
+// A whole-file write a concurrent reader sees either before or after, never torn.
+function writeFileAtomicSync(file, data) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const temporary = `${file}.${process.pid}-${crypto.randomBytes(4).toString('hex')}.tmp`;
+  try {
+    fs.writeFileSync(temporary, data);
+    replaceFileSync(temporary, file);
+  } catch (err) {
+    unlinkForce(temporary);
+    throw err;
+  }
+}
+
+module.exports = { replaceFileSync, writeFileAtomicSync, clearReadOnly, unlinkForce, sweepSidecars };

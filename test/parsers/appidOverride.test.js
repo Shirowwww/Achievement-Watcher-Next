@@ -78,6 +78,14 @@ const gameDirB = path.join(temp, 'games', 'Some Other Game');
       assert.strictEqual(appidOverride.get(gameDirB), null);
     });
 
+    await test('a store that cannot be read is never replaced by set()', async () => {
+      fs.rmSync(storeFile, { force: true });
+      fs.mkdirSync(storeFile);
+      assert.throws(() => appidOverride.set(gameDirA, '220'));
+      assert.ok(fs.statSync(storeFile).isDirectory());
+      fs.rmSync(storeFile, { recursive: true });
+    });
+
     console.log(`PASS: appidOverride (${passed} checks)`);
   } finally {
     fs.rmSync(temp, { recursive: true, force: true });

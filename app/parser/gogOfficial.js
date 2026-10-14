@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const { lazyRequire } = require('../util/lazyRequire.js');
+const { parseUnlockTimeSeconds } = require('../util/unlockTime.js');
 const request = lazyRequire('request-zero');
 const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
 
@@ -206,13 +207,6 @@ function readGogGalaxyProducts(options = {}) {
   } finally {
     safeClose(db);
   }
-}
-
-function parseUnlockTimeSeconds(value) {
-  const raw = String(value || '').trim();
-  if (!raw) return 0;
-  const epochMs = Date.parse(raw);
-  return Number.isFinite(epochMs) && epochMs > 0 ? Math.floor(epochMs / 1000) : 0;
 }
 
 function readGogGameplayDb(gameplayDbPath) {

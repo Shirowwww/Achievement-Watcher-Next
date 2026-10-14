@@ -67,7 +67,7 @@ module.exports.isExclusive = (appid) => {
   return false;
 };
 
-module.exports.scan = async (dir) => {
+module.exports.scan = async () => {
   const cacheFile = path.join(cacheRoot, 'steam_cache', 'epic.db');
   const data = [];
   const cache = readEpicMappingCache(cacheFile);

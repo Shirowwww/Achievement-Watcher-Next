@@ -27,6 +27,18 @@ renamed in 3.9.0 and the history is kept under one file.
   window anyway. A failed update says in plain words what happened instead of the updater's
   technical message.
 
+### Improved
+
+- **Keyboard and screen reader access.** The Settings action buttons, Save and Cancel included, the
+  game configuration's Save and Cancel, the shortcut editor, the cover and icon pickers and the
+  profile picture can be reached with Tab and pressed with Enter or Space. Dialogs take the focus
+  and give it back when they close, the notification designer's toggles announce their state, and
+  the window tells assistive technology which language it is in.
+- **In-game overlay settings from the keyboard.** The zoom and opacity menus show a focus ring, the
+  switches can be toggled with Tab and Space, and animations follow the system's reduced-motion
+  setting.
+- The trophy grade colours on a game page match the profile's and stay readable in the light theme.
+
 ### Fixed
 
 - The update chip in the title bar shows its icon again.
@@ -37,6 +49,14 @@ renamed in 3.9.0 and the history is kept under one file.
 - An imported Xbox game is no longer folded into a different Steam game whose name only shares a
   digit with it: Yakuza 0 for Windows 10 vanished into Yakuza 3 Remastered after a refresh. A
   listing named after its edition (Control Ultimate Edition) now joins the Steam game it is.
+- The in-game overlay shows the placeholder icon again for an achievement whose icon is missing, and
+  "/" can be typed in its search field.
+- Setting a per-game AppID or emulator source, or editing a collection, no longer wipes the others
+  when the file is briefly locked by an antivirus or a backup tool at that moment.
+- A watched Xbox PC game no longer announces old unlocks again after its saved state was cut short
+  mid-write.
+- Live notifications for PS5 (kyty), Xbox 360 Recomp, XLLN and patched games no longer fail for a
+  game installed in a folder whose name contains a percent sign.
 
 ### Performance
 
@@ -55,6 +75,9 @@ renamed in 3.9.0 and the history is kept under one file.
   detail, and the web cache is capped at 64 MB. What older versions left behind is tidied a minute
   after AW Next starts.
 
+### Website & Docs
+
+- Buttons and filter chips on the site use the site's typeface instead of Arial.
 
 ## 3.11.3 - 2026-10-13
 

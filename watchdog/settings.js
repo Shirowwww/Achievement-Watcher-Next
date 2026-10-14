@@ -1,6 +1,5 @@
 'use strict';
 
-const path = require('path');
 const ini = require('./util/ini');
 const osLocale = require('./util/osLocale');
 const fs = require('./util/fsAsync');

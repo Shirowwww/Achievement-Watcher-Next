@@ -615,7 +615,9 @@ module.exports.load = () => {
     // still one a person can.
     try {
       if (filename && fs.existsSync(filename)) fs.copyFileSync(filename, `${filename}.bak`);
-    } catch {}
+    } catch (backupErr) {
+      console.log(`could not keep ${filename}.bak before resetting settings: ${backupErr}`);
+    }
     options = {
       general: {
         username: os.userInfo().username || 'User',

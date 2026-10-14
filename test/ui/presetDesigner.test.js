@@ -21,7 +21,6 @@ const document = parse(fs.readFileSync(path.join(appRoot, 'view', 'app.html'), '
 const designer = document.querySelector('#options-notify-designer');
 const settings = fs.readFileSync(path.join(appRoot, 'ui', 'settings.js'), 'utf8');
 const localeDir = path.join(appRoot, 'locale', 'lang');
-const english = JSON.parse(fs.readFileSync(path.join(localeDir, 'english.json'), 'utf8'));
 
 const valueAt = (object, dotted) => dotted.split('.').reduce((node, key) => (node == null ? node : node[key]), object);
 

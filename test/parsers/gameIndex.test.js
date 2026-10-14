@@ -12,7 +12,7 @@ const userData = path.join(tmp, 'userData');
 fs.mkdirSync(path.join(userData, 'cfg'), { recursive: true });
 
 const originalLoad = Module._load;
-Module._load = function patchedLoad(request, parent, isMain) {
+Module._load = function patchedLoad(request, _parent, _isMain) {
   if (request === '@electron/remote') {
     return { app: { getPath: () => userData } };
   }
@@ -90,7 +90,7 @@ test('an offline restart reads the persisted identity without metadata caches', 
 
   const modulePath = require.resolve('../../app/parser/gameIndex.js');
   delete require.cache[modulePath];
-  Module._load = function patchedLoad(request, parent, isMain) {
+  Module._load = function patchedLoad(request, _parent, _isMain) {
     if (request === '@electron/remote') return { app: { getPath: () => userData } };
     return originalLoad.apply(this, arguments);
   };

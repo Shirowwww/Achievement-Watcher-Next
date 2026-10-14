@@ -1388,7 +1388,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       app.config.overlay.hotkey = $('#hotkey').text();
       $(settingsContainers.rightsOf(settingsContainers.GENERAL))
         .children('select')
-        .each(function (index) {
+        .each(function () {
           try {
             // These General-tab selects persist under `general`, not `achievement` - handled explicitly below.
             if (
@@ -1439,7 +1439,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
       $(settingsContainers.rightsOf(settingsContainers.SOURCE))
         .children('select')
-        .each(function (index) {
+        .each(function () {
           try {
             if ($(this)[0].id !== '' && $(this).val() !== '') {
               app.config.achievement_source[$(this)[0].id.replace('option_', '')] =
@@ -1492,7 +1492,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
       $('#options-notify-common .right')
         .children('select')
-        .each(function (index) {
+        .each(function () {
           try {
             // groupToast and urgent sit in the common group visually but persist under
             // notification_toast.
@@ -1516,7 +1516,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
       $('#options-notify-transport .right')
         .children('select')
-        .each(function (index) {
+        .each(function () {
           try {
             if ($(this)[0].id !== '' && $(this).val() !== '') {
               app.config.notification_transport[$(this)[0].id.replace('option_', '')] =
@@ -3000,6 +3000,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // and cancelling removes the unpacked copy it was drawn from.
     let pendingThemeFile = '';
     let themePreviewResize = null;
+    let themePreviewOpener = null;
 
     // Lays the sample out at the gallery's render size, then scales to fit, so the preview matches
     // what the published card shows instead of re-flowing at its own width.
@@ -3019,6 +3020,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     function closeThemePreview({ discard = true } = {}) {
       pendingThemeFile = '';
       $('#theme-preview').hide().attr('aria-hidden', 'true');
+      if (themePreviewOpener && themePreviewOpener.isConnected) themePreviewOpener.focus({ preventScroll: true });
+      themePreviewOpener = null;
       // Removed rather than blanked: this modal is opened once per import, and a blank frame still
       // holds a document for the rest of the session.
       const frame = document.getElementById('theme-preview-frame');
@@ -3108,7 +3111,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           },
         });
       }
+      themePreviewOpener = document.activeElement;
       $('#theme-preview').show().attr('aria-hidden', 'false');
+      document.getElementById('theme-preview-cancel').focus({ preventScroll: true });
       // Shown first, then measured: the wrapper has no width while the modal is display:none.
       fitThemePreview();
       const wrap = document.querySelector('#theme-preview .theme-preview-frame');
@@ -5255,6 +5260,21 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       advanced.prop('hidden', !advanced.prop('hidden'));
       $(this).toggleClass('is-on', !advanced.prop('hidden'));
     });
+    // The toggles show their state by class only; mirror it for assistive technology after every
+    // click, once the handlers above and the per-button ones below have run.
+    function syncDesignerToggleAria() {
+      $('#pd-view button, #pd-state button, #pd-backdrop button, #pd-anchors button').each(function () {
+        this.setAttribute('aria-pressed', String(this.classList.contains('is-on')));
+      });
+      $('#options-notify-designer .pd-more').each(function () {
+        this.setAttribute('aria-expanded', String(this.classList.contains('is-on')));
+      });
+      $('#options-notify-designer .pd-group-head').each(function () {
+        this.setAttribute('aria-expanded', String($(this).closest('.pd-group').hasClass('is-open')));
+      });
+    }
+    $('#options-notify-designer').on('click', 'button', syncDesignerToggleAria);
+    syncDesignerToggleAria();
 
     $('#pd-view button').on('click', function () {
       previewView = String($(this).attr('data-view') || 'card');
@@ -5386,7 +5406,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const position = String($('#option_overlayPosition').val() || 'center-bottom');
       $('#pd-anchors button').each(function () {
         const pos = String($(this).attr('data-pos'));
-        $(this).toggleClass('is-on', pos === position);
+        $(this).toggleClass('is-on', pos === position).attr('aria-pressed', String(pos === position));
         // The grid is nine unlabelled cells, so each one borrows the wording the position setting
         // already has in this language rather than adding nine strings to translate.
         $(this).attr('title', $(`#option_overlayPosition option[value='${pos}']`).text());
@@ -6447,7 +6467,7 @@ function populateUserDirList(option) {
   }
 
   let elem = options.reverse ? $('#settings #dirlist > li').last() : $('#settings #dirlist > li').first();
-  applyFolderRowMetadata(elem, options, false);
+  applyFolderRowMetadata(elem, options);
 
   $(document).trigger('folder-rescan-locations-changed');
 
@@ -6548,7 +6568,7 @@ function populateLibraryDirList(option) {
   }
 
   let elem = options.reverse ? $('#settings #libdirlist > li').last() : $('#settings #libdirlist > li').first();
-  applyFolderRowMetadata(elem, options, true);
+  applyFolderRowMetadata(elem, options);
 
   $(document).trigger('folder-rescan-locations-changed');
 
@@ -6592,7 +6612,7 @@ function populateLibraryDirList(option) {
   });
 }
 
-function applyFolderRowMetadata(elem, options, library) {
+function applyFolderRowMetadata(elem, options) {
   elem
     .attr('data-origin', options.origin)
     .attr('data-detector', options.detector || '')

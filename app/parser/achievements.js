@@ -464,7 +464,7 @@ function sameGameTarget(title, steamTargets) {
 function mergeCrossSourceDuplicates(input) {
   // The caller's records may be a cached discovery list the next scan is handed again.
   const appidList = copyDiscoveryList(input || []);
-  const byAppid = new Map((appidList || []).map((g) => [String(g.appid), g]));
+  const byAppid = new Map(appidList.map((g) => [String(g.appid), g]));
   const drop = new Set();
   // Looks in every cached language, not just english - the app writes only the user's own, so an
   // english-only lookup found nothing on a non-English profile and the dedupe below never ran.
@@ -472,7 +472,7 @@ function mergeCrossSourceDuplicates(input) {
   // Use named numeric appids as Steam targets; fill missing names from local caches. An account
   // library's own ids are numeric too (an Xbox titleId is all digits), and an entry that matched
   // itself by name would make the merge below depend on the order the list arrived in.
-  const namedTargets = (appidList || [])
+  const namedTargets = appidList
     .filter((g) => /^\d+$/.test(String(g.appid)) && !(g.data && ACCOUNT_LIBRARY_TYPES.has(g.data.type)))
     .map((g) => ({
       appid: g.appid,
@@ -481,7 +481,7 @@ function mergeCrossSourceDuplicates(input) {
     .filter((t) => t.name);
   const steamTargets = require('../util/fuzzyAppid.js').titleIndex(namedTargets);
   const merged = [];
-  for (const g of appidList || []) {
+  for (const g of appidList) {
     if (drop.has(String(g.appid))) continue;
     const isUbisoft = g && g.data && (g.data.type === 'ubisoftOfficial' || g.data.type === 'uplay') && g.data.uplayId;
     if (isUbisoft) {
@@ -858,12 +858,8 @@ function warnEmptyAchievementFileOnce(appid, filePath) {
 let _emuSetupAttempts = new Map();
 const EMU_SETUP_RETRY_MS = 6 * 60 * 60 * 1000;
 
-/*
-  The health diagnosis behind the automatic fix, keyed by game and kept only until the folder
-  changes: diagnose() walks a game folder, and a library of clean games would otherwise pay for that
-  walk on every scan. Codes only, not whole reports, and bounded - an unbounded per-game cache in
-  this file is how the renderer grew to 700MB once already.
-*/
+// diagnoseForAutomaticFix's cache: codes only, not whole reports, and bounded - an unbounded
+// per-game cache in this file is how the renderer grew to 700MB once already.
 let _emuDiagnoseCache = new Map();
 const EMU_DIAGNOSE_CACHE_MAX = 400;
 
@@ -3617,13 +3613,8 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       }
     }
 
-    /*
-      What the automatic fix should do to this game, from the same diagnosis Game Health shows.
-      needsSchema and needsRuntimeFix are the two signals discovery already carries; the diagnosis
-      adds every other repairable finding - a config file that was never written, icons that were
-      never fetched, a steam_settings folder the game does not read - which until now waited for
-      someone to open the panel and press Repair.
-    */
+    // What the automatic fix should do to this game: the two signals discovery carries, plus every
+    // repairable finding of the diagnosis Game Health shows.
     let autoFix = { act: !!(appid.data && (appid.data.needsSchema || needsRuntimeFix)), fullSetup: true, repairData: false, codes: [], reason: 'discovery-signals' };
     let autoFixDiagnosis = null;
     if (
@@ -3721,11 +3712,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           let fixedSteamSettingsDirs = [];
           let fixApplied = false;
           let healthRepaired = false;
-          /*
-            A restore point before anything is written. The manual fix and "Fix all games" have
-            always taken one; this pass took none, so an automatic write left only the replaced
-            dll's own .bak behind and nothing that could be put back as a whole.
-          */
+          // A restore point before anything is written, as the manual fix takes one.
           const backupBeforeWrite = () => {
             if (!_userDataPath) return;
             try {

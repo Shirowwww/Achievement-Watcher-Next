@@ -143,6 +143,15 @@ test('a read-only collections file is still replaced', (t) => {
   assert.equal(store.create({ name: 'Second' }).state.collections.length, 2);
 });
 
+test('a collections file that cannot be read is never replaced by a change', (t) => {
+  const dir = tempDir(t);
+  const store = createCollectionStore(dir);
+  fs.mkdirSync(store.stateFile, { recursive: true });
+  assert.deepEqual(store.read(), collections.emptyState());
+  assert.throws(() => store.create({ name: 'Lost' }));
+  assert.equal(fs.statSync(store.stateFile).isDirectory(), true);
+});
+
 test('image type comes from magic bytes only', () => {
   assert.equal(detectImageType(PNG), 'png');
   assert.equal(detectImageType(Buffer.from([0xff, 0xd8, 0xff, 0xe0, ...Array.from({ length: 20 }, () => 0)])), 'jpg');

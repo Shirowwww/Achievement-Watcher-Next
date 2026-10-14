@@ -378,7 +378,7 @@ module.exports = async (message, option = {}) => {
       }
     }
   } catch (err) {
-    debug.log(err);
+    debug.error(err);
   }
 };
 

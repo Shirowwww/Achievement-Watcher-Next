@@ -630,7 +630,7 @@ function readSanTheme(file) {
   if (!stat.isFile()) return fail('unreadable-theme');
   if (stat.size > SAN_LIMITS.packageBytes) return fail('theme-too-large');
 
-  return path.basename(file).toLowerCase() === SAN_MANIFEST ? readThemeFolder(file) : readThemeZip(file, stat);
+  return path.basename(file).toLowerCase() === SAN_MANIFEST ? readThemeFolder(file) : readThemeZip(file);
 }
 
 function parseManifest(raw) {
@@ -647,7 +647,7 @@ function parseManifest(raw) {
   return { ok: true, theme: parsed };
 }
 
-function readThemeZip(file, stat) {
+function readThemeZip(file) {
   let entries;
   try {
     entries = new AdmZip(file).getEntries();

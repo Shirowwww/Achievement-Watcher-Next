@@ -86,7 +86,7 @@ function cachedTool(cacheDir, tag) {
   return exe ? { tag, exe, dir: path.dirname(exe) } : null;
 }
 
-async function downloadAndCache(cacheDir, tag, assetUrl, log) {
+async function downloadAndCache(cacheDir, tag, assetUrl) {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-emucfg-dl-'));
   try {
     const dl = await request.download(assetUrl, tmpDir);
@@ -201,7 +201,7 @@ async function ensureGenerateEmuConfig({ cacheDir, force = false, preferredTag =
     throw new Error(`No suitable archive in the latest gbe_fork_tools release. Check ${RELEASES_PAGE}`);
   }
   log.log(`[emucfg] downloading generate_emu_config ${tag} (${asset.name})${preferredTag === tag ? ' matched to emulator build' : ''}`);
-  return downloadAndCache(cacheDir, tag, asset.browser_download_url, log);
+  return downloadAndCache(cacheDir, tag, asset.browser_download_url);
 }
 
 // Older builds wrote to <cwd>/output/<name-appid>; current GSE tools write beside the executable

@@ -322,7 +322,6 @@ function discover(configFile = userDirFile) {
 }
 
 const baseline = createBaselineCache({ prefix: 'xenia', tag: 'xenia', debug });
-const cacheFile = baseline.file;
 const cacheLoad = (key) => baseline.load(key);
 const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
 

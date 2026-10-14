@@ -15,7 +15,6 @@ const { app, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { lazyRequire } = require('../util/lazyRequire.js');
-const manifest = require('../package.json');
 const notificationSounds = require('../util/notificationSounds.js');
 const userThemes = require('../util/userThemes.js');
 const themeLayers = require('../util/themeLayers.js');

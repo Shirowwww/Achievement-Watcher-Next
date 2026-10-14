@@ -8,7 +8,6 @@ const GAMEINPUT_KIND_CONTROLLER_BUTTON = 0x00000004;
 const GAMEINPUT_KIND_GAMEPAD = 0x00040000;
 const GAMEINPUT_POLL_KIND =
   GAMEINPUT_KIND_GAMEPAD | GAMEINPUT_KIND_CONTROLLER;
-const GAMEINPUT_DEFAULT_FOCUS_POLICY = 0x00000000;
 const GAMEINPUT_FOCUS_ENABLE_BACKGROUND_INPUT = 0x00000040;
 const GAMEINPUT_E_DEVICE_DISCONNECTED = 0x838a0001;
 const GAMEINPUT_E_DEVICE_NOT_FOUND = 0x838a0002;
@@ -329,7 +328,7 @@ function resolveXInputApi() {
     sThumbRX: "int16_t",
     sThumbRY: "int16_t",
   });
-  const XINPUT_STATE = koffi.struct("CONTROLLER_XINPUT_STATE", {
+  koffi.struct("CONTROLLER_XINPUT_STATE", {
     dwPacketNumber: "uint32_t",
     Gamepad: XINPUT_GAMEPAD,
   });
@@ -1091,7 +1090,9 @@ function createGameInputSystemGuideMonitor(logger, options = {}) {
               pressed: currentPressed,
               packetNumber: ts >>> 0,
             });
-          } catch {}
+          } catch (err) {
+            logger.warn("controller:gameinput:guide-callback-failed", { error: err?.message || String(err) });
+          }
         }
       },
       koffi.pointer(GameInputSystemButtonCallback),
@@ -1483,7 +1484,7 @@ function createLegacyGameInputPollingBackend(logger, api = null) {
     );
 
     const rawState = {};
-    const ok = GetGamepadState(reading, rawState);
+    GetGamepadState(reading, rawState);
 
     const timestamp = GetTimestamp(reading);
     const deviceOut = [null];
@@ -1654,7 +1655,9 @@ function createModernGameInputPollingBackend(logger, api = null, options = {}) {
               pressed: currentPressed,
               packetNumber: ts >>> 0,
             });
-          } catch {}
+          } catch (err) {
+            logger.warn("controller:gameinput:guide-callback-failed", { error: err?.message || String(err) });
+          }
         }
       },
       koffi.pointer(GameInputSystemButtonCallback),
@@ -3251,7 +3254,7 @@ function createControllerInputManager(options = {}) {
     }
   }
 
-  function updateControlMode(now) {
+  function updateControlMode() {
     if (controlMode.active) {
       const slot = slots[controlMode.userIndex];
       if (!slot || !slot.connected || !slot.current) {
@@ -3566,7 +3569,7 @@ function createControllerInputManager(options = {}) {
     }
     processToggleActions(now);
     processModeToggleActions(now);
-    updateControlMode(now);
+    updateControlMode();
     processControlModeActions(now, deltaMs);
     storePreviousButtons();
     scheduleNextPoll();

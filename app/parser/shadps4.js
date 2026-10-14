@@ -13,7 +13,6 @@ const { lazyRequire } = require('../util/lazyRequire.js');
 const glob = lazyRequire('fast-glob');
 const ffs = require('../util/fsAsync');
 
-const binary = ['shadPS4.exe', 'shadps4.exe'];
 
 // Best-effort language → TROP_NN.XML suffix (ShadPS4/Sony index). english has no suffix (TROP.XML).
 const LANG_FILE = {

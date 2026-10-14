@@ -197,7 +197,6 @@ function discover(configFile = userDirFile) {
 }
 
 const baseline = createBaselineCache({ prefix: 'rpcs3', tag: 'rpcs3', debug });
-const cacheFile = baseline.file;
 const cacheLoad = (key) => baseline.load(key);
 const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
 

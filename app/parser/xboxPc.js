@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFile } = require('child_process');
 const { parseUnlockTimeSeconds } = require('../util/unlockTime.js');
+const { writeFileAtomicSync } = require('../util/replaceFile.js');
 
 const XBOX_PC_PLATFORM = 'xbox-pc';
 const XBOX_PC_SOURCE = 'Xbox PC';
@@ -661,9 +662,9 @@ async function fetchXboxLocalizedTitleAchievements(xuid, titleId, lang, options 
   return { achievements: rows, languages: [locale] };
 }
 
+// Atomic: the Watchdog reads the state snapshot while this writes it.
 function writeJson(file, value) {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, JSON.stringify(value, null, 2), 'utf8');
+  writeFileAtomicSync(file, JSON.stringify(value, null, 2));
 }
 
 function readJson(file) {
@@ -860,7 +861,7 @@ function unlocksForSchema(appid, schemaList) {
   return require('../util/crossSchemaUnlocks.js').remapUnlocksOntoSchema(unlocks, schema.achievement.list, schemaList);
 }
 
-async function getGameData(appid, lang) {
+async function getGameData(appid) {
   const titleId = normalizeTitleId(appid);
   if (!titleId) return null;
   const schema = readJson(schemaCacheFile(titleId));

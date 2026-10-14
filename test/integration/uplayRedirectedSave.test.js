@@ -42,7 +42,7 @@ const { promoteUplayRecord } = achievements._internal;
 
 // A repaired install: the loader, its config with achievements on and the save redirected, and the
 // schema the loader reads. This is exactly what uplayR2.repair() leaves behind.
-function repairedInstall(name, { steamAppid, uplayId, log = '' } = {}) {
+function repairedInstall(name, { steamAppid, log = '' } = {}) {
   const dir = path.join(tmp, name);
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'uplay_r1_loader64.dll'), 'MZ');

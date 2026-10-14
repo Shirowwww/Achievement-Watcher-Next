@@ -757,8 +757,6 @@ const ipc = require(path.join(__dirname, 'ipc.js'));
 const notificationSounds = require(path.join(__dirname, '../util/notificationSounds.js'));
 const userThemes = require(path.join(__dirname, '../util/userThemes.js'));
 const themeLayers = require(path.join(__dirname, '../util/themeLayers.js'));
-const themeImages = require(path.join(__dirname, '../util/themeImages.js'));
-const themeBlur = require(path.join(__dirname, '../util/themeBlur.js'));
 const themePackage = lazyRequire(path.join(__dirname, '../util/themePackage.js'));
 const overlayLocale = require(path.join(__dirname, '../util/overlayLocale.js'));
 const rarityTiers = require(path.join(__dirname, '../util/rarityTiers.js'));
@@ -1988,7 +1986,7 @@ async function getCachedData(info) {
   }
 }
 
-ipcMain.on('close-puppeteer', async (event, arg) => {
+ipcMain.on('close-puppeteer', async (event) => {
   await closePuppeteer();
   event.returnValue = true;
 });
@@ -4248,7 +4246,6 @@ async function searchForGameName(info = { appid: '' }) {
     return;
   }
 
-  let locale = 'en-US';
   let startIndex = 0;
   let matchResult;
   await startPuppeteer(true, false);
@@ -4618,7 +4615,7 @@ function createMainWindow() {
         const contextMenuFn = mod.default || mod;
         if (typeof contextMenuFn === 'function') {
           contextMenuFn({
-            append: (defaultActions, params, browserWindow) => [
+            append: (defaultActions, params) => [
               { role: 'reload', visible: Boolean(params) },
             ],
           });
@@ -5156,7 +5153,7 @@ async function createOverlayWindow(info) {
       if (!fallback) return;
       info.appid = fallback;
     }
-    const { width, height } = require('electron').screen.getPrimaryDisplay().workAreaSize;
+    const { width } = require('electron').screen.getPrimaryDisplay().workAreaSize;
 
     // Avoid re-reading options.ini + re-initializing the achievements parser on every toggle.
     // Settings saves already call startEngines(), so a loaded configJS is fresh enough here.
@@ -5221,7 +5218,7 @@ async function createOverlayWindow(info) {
         const contextMenuFn = mod.default || mod;
         if (typeof contextMenuFn === 'function') {
           contextMenuFn({
-            append: (defaultActions, params, browserWindow) => [
+            append: (defaultActions, params) => [
               { role: 'reload', visible: Boolean(params) },
             ],
           });
@@ -5428,10 +5425,6 @@ function findNotificationPresetFolder(name) {
 function resolveNotificationPreset(names) {
   const name = resolveAvailablePresetName(names, (candidate) => Boolean(findNotificationPresetFolder(candidate)));
   return { name, folder: findNotificationPresetFolder(name) };
-}
-
-function resolvePresetFolder(presetName) {
-  return resolveNotificationPreset([String(presetName || DEFAULT_PRESET), DEFAULT_PRESET]).folder;
 }
 
 // Read the preset's window size from its <meta width="" height=""> tag (reference convention).
@@ -6478,12 +6471,8 @@ ipcMain.handle('list-presets', async () => {
 // util/customPreset.js (pure string work, unit-tested); this file owns file placement and naming.
 const customPreset = require(path.join(__dirname, '../util/customPreset.js'));
 const { customPresetNumbers, buildCustomPresetHtml, buildCustomPresetCss, sanitizePresetName } = customPreset;
-// The two package readers and the SAN importer each pull the zip and semver libraries, and every one
-// of them is reached from a file dialog the user has to open first. Loaded when one of those runs.
-const presetPackage = lazyRequire(path.join(__dirname, '../util/presetPackage.js'));
 const presetSchema = require(path.join(__dirname, '../util/presetSchema.js'));
 const presetAssets = presetSchema;
-const sanImport = lazyRequire(path.join(__dirname, '../util/sanImport.js'));
 
 /*
   Where a preset the builder generates is written: <userData>, never the app folder. Once packaged,
@@ -7394,7 +7383,7 @@ try {
       // to the OS browser. (Replaces the dead 'new-window' listener - removed in Electron 22.)
       contents.setWindowOpenHandler(() => ({ action: 'deny' }));
     })
-    .on('second-instance', async (event, argv, cwd) => {
+    .on('second-instance', async (event, argv) => {
       // A second launch (user re-running the exe, e.g. from the Start menu while it sits hidden in
       // the tray) should surface the UI window.
       debug.log(`[second-instance] argv=${JSON.stringify(argv || [])}`);

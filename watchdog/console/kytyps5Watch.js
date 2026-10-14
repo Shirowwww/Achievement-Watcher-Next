@@ -10,6 +10,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { iconPathOf } = require('../util/iconPath.js');
 const watch = require('../util/nodeWatch.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
@@ -83,12 +84,6 @@ function discover(configFile = userDirFile) {
 const baseline = createBaselineCache({ prefix: 'kytyps5', tag: 'kytyps5', debug });
 const cacheLoad = (key) => baseline.load(key);
 const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
-
-function iconPathOf(entry) {
-  const icon = String(entry && entry.icon ? entry.icon : '');
-  if (!icon.startsWith('file:///')) return '';
-  return path.normalize(decodeURI(icon.slice('file:///'.length)));
-}
 
 function toastOptions(ctx) {
   return {

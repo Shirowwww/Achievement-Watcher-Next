@@ -1,22 +1,13 @@
 'use strict';
 
 /*
-  One dropdown for every <select> in the window.
+  One themed dropdown for every <select> in the window, replacing Chromium's unthemed native popup.
 
-  Two things were wrong with the old behaviour. A row with left/right arrows could only be stepped
-  through one value at a time, with no way to see the list or jump to an entry - fine for two
-  values, useless for the theme or preset lists. And the rows that could be opened handed the job to
-  Chromium's native popup, a grey system list that ignores the theme entirely: it reads as a piece
-  of a different application sitting on top of the app.
+  The native <select> stays in place and keeps being the value, so ids, nth-child locale bindings
+  and change handlers are untouched: only the popup is replaced. Picking an entry writes the value
+  back and dispatches the same bubbling 'change' the native control would have.
 
-  The native <select> stays exactly where it is and keeps being the value: every id, every nth-child
-  locale binding, every read-back loop and every change handler still sees the element they always
-  saw. Only its popup is replaced. Opening one is intercepted (mouse and keyboard), a panel is drawn
-  from the element's own options, and picking an entry writes the value back and dispatches the same
-  bubbling 'change' the native control would have.
-
-  The panel is appended to <body> and positioned fixed, because every ancestor that could clip it
-  (the settings modal, a scrolling section, a card with overflow) would otherwise cut it off.
+  The panel is fixed on <body> because the settings modal and scrolling sections would clip it.
 */
 
 (() => {
@@ -60,13 +51,7 @@
     current = null;
     panel.remove();
     select.removeAttribute('aria-expanded');
-    if (refocus) {
-      try {
-        select.focus({ preventScroll: true });
-      } catch {
-        select.focus();
-      }
-    }
+    if (refocus) select.focus({ preventScroll: true });
   }
 
   function commit(index) {
@@ -74,14 +59,12 @@
     const { select, items } = current;
     const item = items[index];
     if (!item || item.disabled) return;
-    const changed = select.selectedIndex !== item.index;
     select.selectedIndex = item.index;
     close({ refocus: true });
     // Always dispatched, even when the value did not move: the arrow controls have always done the
     // same, and several rows use change as "the user confirmed this row".
     select.dispatchEvent(new Event('input', { bubbles: true }));
     select.dispatchEvent(new Event('change', { bubbles: true }));
-    return changed;
   }
 
   function highlight(index, { scroll = true } = {}) {
@@ -115,8 +98,8 @@
   function edge(forward) {
     if (!current) return;
     const { items } = current;
-    const order = forward ? items : [...items].reverse();
-    const found = order.find((item) => !item.disabled);
+    const usable = (item) => !item.disabled;
+    const found = forward ? items.find(usable) : items.findLast(usable);
     if (found) highlight(found.index);
   }
 
@@ -139,11 +122,8 @@
 
   function place(panel, select) {
     const rect = select.getBoundingClientRect();
-    /*
-      Sized by its own content, never by the trigger: the rows are 162px wide in the settings panel,
-      and a list forced to that width cut every label down to "Repair what is brok...". The trigger
-      width is only a floor, so a wide row still gets a list that lines up under it.
-    */
+    // Sized by its content, with the trigger width only as a floor: settings rows are too narrow
+    // to hold the longer labels.
     panel.style.minWidth = `${Math.round(Math.min(rect.width, window.innerWidth - VIEWPORT_MARGIN * 2))}px`;
     panel.style.maxWidth = `${Math.round(Math.min(460, window.innerWidth - VIEWPORT_MARGIN * 2))}px`;
     const width = panel.getBoundingClientRect().width;
