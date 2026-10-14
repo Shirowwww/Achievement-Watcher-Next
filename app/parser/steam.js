@@ -44,9 +44,6 @@ const { userDataDir } = require(path.join(appPath, 'util/userDataPath.js'));
 const { mergeTranslatedAchievements } = require('./achievementTranslations.js');
 const steamSchemaFetch = require(path.join(appPath, 'util/steamSchemaFetch.js'));
 
-let listReady = true;
-// Set when the app-list download fails, so it is attempted once per session and not once per appid.
-let appListRefreshFailed = false;
 let steamUsersList;
 let appidListMap = new Map();
 /*
@@ -61,10 +58,6 @@ const iconFetchInFlight = new Map();
 const workingLinkCache = new Map();
 const appSearchCache = new Map();
 const TENOKE_SCHEMA_FILE = 'tenoke.ini';
-// GetAppList is a bulk convenience lookup, not a reason to hold every game in the scan for the
-// generic 30-second game timeout. If it is unavailable, each appid still has independent name and
-// schema fallbacks below; fail this optional list quickly and only once per session.
-const STEAM_APP_LIST_TIMEOUT_MS = 8000;
 module.exports.setUserDataPath = (p) => {
   cacheRoot = p;
 };
@@ -1526,54 +1519,19 @@ module.exports.getDLCList = async (appID) => {
 };
 
 // Load the app-list map, nothing else. Kept apart from findInAppList so a caller that only wants
-// the map warmed never pays for that function's per-appid fallbacks.
+// the map warmed never pays for that function's per-appid fallbacks. Valve retired
+// ISteamApps/GetAppList, so the only source left is a copy downloaded before then, whatever its age;
+// searchAppsByName() is the keyless way to resolve anything newer.
 async function ensureAppListLoaded() {
-  const cache = path.join(cacheRoot, 'steam_cache/schema');
-  const filepath = path.join(cache, 'appList.json');
-
-  while (!listReady) await new Promise((r) => setTimeout(r, 50));
-  if (appidListMap.size === 0) {
-    listReady = false;
-    try {
-      let list;
-      // Use a cached copy if it exists and is < 3 days old. Anything thrown here escapes
-      // ensureAppListLoaded() and leaves listReady false, freezing every later lookup.
-      if (fs.existsSync(filepath) && Date.now() - fs.statSync(filepath).mtimeMs < 60 * 60 * 1000 * 24 * 3) {
-        try {
-          list = JSON.parse(fs.readFileSync(filepath, 'utf-8'));
-        } catch {
-          list = undefined; // corrupt/partial cache -> fall through and re-download
-        }
-      }
-      if ((!Array.isArray(list) || list.length === 0) && !appListRefreshFailed) {
-        try {
-          const url = 'https://api.steampowered.com/ISteamApps/GetAppList/v2/?format=json';
-          const data = await request.getJson(url, { timeout: STEAM_APP_LIST_TIMEOUT_MS });
-          list = data.applist.apps;
-          fs.mkdirSync(path.dirname(filepath), { recursive: true });
-          fs.writeFileSync(filepath, JSON.stringify(list, null, 2));
-        } catch (err) {
-          // Steam retired ISteamApps/GetAppList entirely; the keyless replacement is the app search
-          // in searchAppsByName(). A failed refresh falls back to any existing cache (even stale) and
-          // sets appListRefreshFailed so only one dead round trip happens per session.
-          appListRefreshFailed = true;
-          debug.log(`GetAppList refresh failed (${err.code || err}); falling back to cached appList if present`);
-          if (fs.existsSync(filepath)) {
-            try {
-              list = JSON.parse(fs.readFileSync(filepath, 'utf-8'));
-            } catch {
-              list = undefined;
-            }
-          }
-        }
-      }
-      if (Array.isArray(list) && list.length > 0) {
-        appidListMap = new Map(list.map((a) => [a.appid, a]));
-      }
-    } finally {
-      listReady = true; // always release the lock, even on a network/parse failure
-    }
+  if (appidListMap.size > 0) return;
+  const filepath = path.join(cacheRoot, 'steam_cache/schema', 'appList.json');
+  let list;
+  try {
+    list = JSON.parse(fs.readFileSync(filepath, 'utf-8'));
+  } catch {
+    return; // no copy, or a corrupt one: every caller has its own fallback
   }
+  if (Array.isArray(list) && list.length > 0) appidListMap = new Map(list.map((a) => [a.appid, a]));
 }
 
 async function findInAppList(appID) {

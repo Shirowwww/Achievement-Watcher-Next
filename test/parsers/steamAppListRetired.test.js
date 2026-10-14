@@ -73,10 +73,9 @@ function withLocalCatalogue(names) {
 /*
   Steam retired ISteamApps/GetAppList - it answers 404 and no longer appears in GetSupportedAPIList.
   With no cached copy on disk the map stays empty, which used to send every appid back to the same
-  dead endpoint: one wasted round trip per game on every scan, and why the first scan after clearing
-  the cache dragged.
+  dead endpoint: one wasted round trip per game on every scan. The endpoint is no longer called.
 */
-test('a retired app-list endpoint is called once per session, not once per appid', async () => {
+test('the retired app-list endpoint is never called', async () => {
   const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-applist-'));
   fs.mkdirSync(path.join(userData, 'logs'), { recursive: true });
   steam.initDebug({ isDev: false, userDataPath: userData });
@@ -99,7 +98,7 @@ test('a retired app-list endpoint is called once per session, not once per appid
     const names = [];
     for (const appid of [4000, 391540, 1426210]) names.push(await steam.getAppNameByAppid(appid));
 
-    assert.equal(attempts, 1, 'the dead endpoint must be tried once, not once per appid');
+    assert.equal(attempts, 0, 'the dead endpoint must not be called at all');
     assert.equal(steamDataCalls - before, 3, 'every appid still resolves through the store-data fallback');
     assert.deepEqual(names, ['A Game', 'A Game', 'A Game']);
   } finally {
@@ -128,5 +127,35 @@ test('a name the local Steam catalogue knows costs no request', async () => {
     assert.equal(steamDataCalls - before, 1);
   } finally {
     restoreCatalogue();
+  }
+});
+
+// A copy downloaded before the endpoint was retired never refreshes again, so its age is no reason
+// to ignore it: it still names every game it lists, offline and without a request.
+test('a cached app list names a game whatever its age, with no request', async () => {
+  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-applist-cached-'));
+  const file = path.join(userData, 'steam_cache', 'schema', 'appList.json');
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify([{ appid: 999990, name: 'Cached Title' }]));
+  const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  fs.utimesSync(file, monthAgo, monthAgo);
+  steam.setUserDataPath(userData);
+
+  const originalGetJson = request.getJson;
+  let attempts = 0;
+  request.getJson = async (url) => {
+    attempts++;
+    return originalGetJson(url);
+  };
+  const restoreCatalogue = withLocalCatalogue({});
+  const before = steamDataCalls;
+  try {
+    assert.equal(await steam.getAppNameByAppid(999990), 'Cached Title');
+    assert.equal(attempts, 0, 'no network request for a name the cached list holds');
+    assert.equal(steamDataCalls - before, 0);
+  } finally {
+    restoreCatalogue();
+    request.getJson = originalGetJson;
+    fs.rmSync(userData, { recursive: true, force: true });
   }
 });

@@ -174,6 +174,49 @@ test("the running client's pid comes from steam.pid, beside registry.vdf", (t) =
   assert.equal(steamLinux.steamClientPid({ env: {}, home }), 78878);
 });
 
+test('a Snap client keeps registry.vdf and steam.pid in the snap home, not in ~/.steam', (t) => {
+  const home = fakeHome(t);
+  const snap = path.join(home, 'snap', 'steam', 'common');
+  installClient(path.join(snap, '.local', 'share', 'Steam'));
+  writeRegistry(snap);
+  fs.writeFileSync(path.join(snap, '.steam', 'steam.pid'), '125488');
+
+  const root = steamLinux.steamClientRoot({ env: {}, home });
+  assert.equal(root, fs.realpathSync(path.join(snap, '.local', 'share', 'Steam')));
+  assert.equal(steamLinux.registryFile(root, { home }), path.join(snap, '.steam', 'registry.vdf'));
+  assert.equal(steamLinux.steamRegistry({ env: {}, home }).string('', 'language'), 'french');
+  assert.equal(steamLinux.steamClientPid({ env: {}, home }), 125488);
+});
+
+// /proc as the host sees it: one folder per pid, argv NUL-separated in cmdline.
+function fakeProc(home, processes) {
+  const proc = path.join(home, 'proc');
+  for (const [pid, argv] of Object.entries(processes)) {
+    fs.mkdirSync(path.join(proc, pid), { recursive: true });
+    fs.writeFileSync(path.join(proc, pid, 'cmdline'), argv.join('\0') + '\0');
+  }
+  fs.mkdirSync(path.join(proc, 'self'), { recursive: true });
+  return proc;
+}
+
+test("a Flatpak client's pid is the host's, not the one its sandbox writes to steam.pid", (t) => {
+  const home = fakeHome(t);
+  const flatpak = path.join(home, '.var', 'app', 'com.valvesoftware.Steam');
+  installClient(path.join(flatpak, 'data', 'Steam'));
+  writeRegistry(flatpak);
+  // Seen on a Flathub client: steam.pid held 1233, the pid inside its own namespace.
+  fs.writeFileSync(path.join(flatpak, '.steam', 'steam.pid'), '1233');
+  const root = steamLinux.steamClientRoot({ env: {}, home });
+  const procDir = fakeProc(home, {
+    1233: ['/usr/lib/systemd/systemd-journald'],
+    119361: ['bash', path.join(root, 'steam.sh'), '-no-cef-sandbox'],
+    119363: [path.join(root, 'ubuntu12_32', 'steam'), '-srt-logger-opened', '-no-cef-sandbox'],
+  });
+
+  assert.equal(steamLinux.steamClientPid({ env: {}, home, procDir }), 119363);
+  assert.equal(steamLinux.steamClientPid({ env: {}, home, procDir: fakeProc(path.join(home, 'idle'), { 1233: ['/usr/bin/true'] }) }), 0);
+});
+
 test('steamLibrary answers through the Linux client on Linux', linuxOnly, (t) => {
   const home = fakeHome(t);
   const client = path.join(home, '.local', 'share', 'Steam');
