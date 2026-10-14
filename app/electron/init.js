@@ -792,6 +792,7 @@ function currentRarityGrading() {
 const { resolveOverlayRequest } = require(path.join(__dirname, '../util/overlayRequest.js'));
 const { normalizeWindowArgs } = require(path.join(__dirname, '../util/windowArgs.js'));
 const notificationBounds = require(path.join(__dirname, '../util/notificationBounds.js'));
+const { insertSegoeFallback } = require(path.join(__dirname, '../util/segoeFallback.js'));
 
 // Resolve main-process strings from the selected locale, with English/French fallback.
 let mainLocaleCache = null;
@@ -5364,6 +5365,7 @@ async function createOverlayWindow(info) {
     // would drift from the app's own view/overlay.html + util/overlayUi.js.
     overlayVisible = true;
     overlayWindow.loadFile(path.join(__dirname, '../view/overlay.html'));
+    overlayWindow.webContents.on('dom-ready', () => insertSegoeFallback(overlayWindow.webContents, { log: debug.log }));
     overlayWindow.webContents.on('did-finish-load', () => {
       showOverlayAfterLoad(info);
     });
@@ -5814,6 +5816,9 @@ function createNotificationWindow(data = {}) {
   } else {
     notif.setIgnoreMouseEvents(true, { forward: true });
   }
+  notif.webContents.once('dom-ready', () => {
+    if (!notif.isDestroyed()) insertSegoeFallback(notif.webContents, { log: debug.log });
+  });
   if (layer) {
     // Inserted once the bundled page's DOM exists and well before the payload arrives (that waits
     // for did-finish-load, i.e. for the page's pictures and fonts too).
@@ -6989,7 +6994,7 @@ function checkResources() {
     }
   }
 
-  const resourcesPath = path.join(manifest.config.debug ? path.join(__dirname, '..') : path.join(process.resourcesPath, 'userdata'));
+  const resourcesPath = path.join(manifest.config.debug ? path.join(__dirname, '..') : path.join(process.resourcesPath, 'userData'));
 
   // Media/ is deliberately not copied any more: it held byte-identical duplicates of app/sounds/,
   // and no code path ever read <userData>/Media - notification sounds resolve against the bundled

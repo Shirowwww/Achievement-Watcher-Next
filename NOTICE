@@ -58,3 +58,11 @@ Third-party material: libmspack
 app/util/lzx.js is a JavaScript LZX decoder that follows the structure of the
 lzxd decoder in libmspack, (C) 2003-2013 Stuart Caie, https://www.cabextract.org.uk/libmspack/,
 distributed under the GNU Lesser General Public License version 2.1.
+
+Third-party material: Selawik font
+----------------------------------
+
+app/resources/font/Selawik holds Selawik 1.01, Copyright 2015 Microsoft
+Corporation, https://github.com/microsoft/Selawik, licensed under the SIL Open
+Font License 1.1 (its LICENSE file sits beside the fonts). Off Windows it stands
+in for Segoe UI in the overlay and the notification presets.
