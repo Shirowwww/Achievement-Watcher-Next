@@ -57,6 +57,8 @@ renamed in 3.9.0 and the history is kept under one file.
   first unlocks reach the library without adding that folder by hand.
 - The emulator fix no longer leaves an empty `Goldberg SteamEmu Saves\<appid>` folder behind, and
   with a save folder chosen on the Emulator identity card it prepares that one instead of GSE Saves.
+- TENOKE, Catherine and UniverseLAN games now show their source in the library, and a
+  UniverseLAN game is listed from its save under Local AppData without adding its game folder.
 - The update chip in the title bar shows its icon again.
 - The per-game **Achievement language** menu no longer shows a second language as selected.
 - **Game health** no longer reports an official Steam game as missing its emulator, nor an

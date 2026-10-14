@@ -62,22 +62,38 @@ module.exports.getCachedData = async (cfg) => {
   return result;
 };
 
-module.exports.scan = async () => {
+async function globDirs(roots, suffix) {
+  const patterns = roots.map((root) => `${glob.convertPathToPattern(root)}/${suffix}`);
+  return patterns.length > 0 ? glob(patterns, { onlyDirectories: true, absolute: true }) : [];
+}
+
+/*
+  Saves keyed by GOG product id, under the save root of every host (see util/winHosts.js):
+  NemirtingasGalaxyEmu\<user>\<id>\ and UniverseLAN\<id>\UniverseLANData\. A UniverseLAN install AW
+  repaired itself is listed by gogUniverseLan.js, so its id is passed in `skipUniverseLanIds`.
+*/
+async function gogIdSaves(skipUniverseLanIds) {
+  const nemirtingas = (await globDirs(hostPaths('APPDATA', 'NemirtingasGalaxyEmu'), '*/*/')).map((dir) => ({ gogId: path.basename(dir), source: 'gog', path: dir }));
+  const universeLan = (await globDirs(hostPaths('LOCALAPPDATA', 'UniverseLAN'), '*/UniverseLANData/'))
+    .map((dir) => ({ gogId: path.basename(path.dirname(dir)), source: 'UniverseLAN', path: dir }))
+    .filter((save) => /^\d+$/.test(save.gogId) && !skipUniverseLanIds.includes(save.gogId));
+  return [...nemirtingas, ...universeLan];
+}
+
+module.exports.scan = async ({ skipUniverseLanIds = [] } = {}) => {
   const cacheFile = path.join(cacheRoot, 'steam_cache', 'gog.db');
   const data = [];
   const cache = readGogMappingCache(cacheFile);
   let updateCache = false;
   const cachedByGogId = mappingByGogId(cache);
 
-  // <user>/<appid>/ under the emulator's save root of every host (see util/winHosts.js).
-  const patterns = hostPaths('APPDATA', 'NemirtingasGalaxyEmu').map((root) => `${glob.convertPathToPattern(root)}/*/*/`);
-  for (const dir of patterns.length > 0 ? await glob(patterns, { onlyDirectories: true, absolute: true }) : []) {
+  for (const save of await gogIdSaves(skipUniverseLanIds.map(String))) {
     let game = {
-      appid: path.parse(dir).name,
-      source: 'gog',
+      appid: save.gogId,
+      source: save.source,
       data: {
         type: 'file',
-        path: dir,
+        path: save.path,
       },
     };
     let steamid;
