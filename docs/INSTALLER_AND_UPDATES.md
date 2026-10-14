@@ -8,42 +8,85 @@ covers building, [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md) covers publishing.
 |---|---|
 | `app/electron-builder.yml` | NSIS options, the 27 installer languages, the GitHub release feed |
 | `app/build/installer.nsh` | Everything custom in the installer and uninstaller |
-| `app/patches/app-builder-lib+26.15.3.patch` | Three changes to electron-builder's NSIS templates |
+| `native/setup-ui/` | The installer and uninstaller window, an NSIS plug-in in Rust; its text is `strings.json` |
+| `app/build/x86-unicode/AwSetupUi.dll` | That plug-in, built by `node native/setup-ui/build.js` |
+| `app/patches/app-builder-lib+26.15.3.patch` | The changes to electron-builder's NSIS templates the two rely on |
 | `app/electron/init.js` (`getUpdater`, `scheduleUpdateCheck`, `registerUpdaterEvents`) | The in-app updater |
+| `app/electron/updateWindow.js`, `app/view/update.html` | The update window |
 | `app/util/updateSignature.js` | Which certificates may sign an update |
 | `app/util/updateCacheHousekeeping.js` | Removes an installer that is already installed from the update cache |
 | `app/build/build.js` | Signs the release and refuses one clients would reject, including any packaged `.exe` that is unsigned, signed by an unpinned certificate, or a native helper that differs from `watchdog/native/` (`app/build/packagedExecutables.js`) |
 
+## The setup window
+
+The installer and the uninstaller keep electron-builder's NSIS script: its sections, registry keys,
+shortcuts, multi-user logic and the command line electron-updater relies on (`--updated`, `/S`,
+`--force-run`) are unchanged. What the user sees is drawn by `AwSetupUi.dll`, a Direct2D window in
+the app's colours and fonts, with the brand mark, rounded corners, the system shadow, keyboard
+navigation and progress on the taskbar button.
+
+- **One window, three steps.** `customPages` in `installer.nsh` replaces electron-builder's page
+  list: the choices (a custom page), NSIS's own progress page, where the sections run, and the end.
+  NSIS's dialog stays alive behind the window, fully transparent and click-through, so every page,
+  section and message box of the template keeps working.
+- **The template's message boxes come to the front.** They belong to that invisible dialog, so
+  electron-builder's "cannot be closed, retry?" (a file of the installation is in use) or NSIS's own
+  file errors opened behind the window and the installer looked frozen. `src/modal.rs` watches for
+  them, raises each one above the window, centred on it, and disables the window until it is
+  answered.
+- **No empty first frame.** The first frame takes a few hundred milliseconds (fonts, layouts, the
+  mark); the window stays cloaked until it is drawn instead of showing a bare panel meanwhile.
+- **Its own thread.** NSIS sends its main thread a message for every instruction a section runs,
+  to move its progress bar. A window drawing on that thread made each instruction wait for a frame
+  (a scan of the running processes took 30 seconds), so the window runs on a thread of its own.
+- **Measured progress.** The bar follows the run's steps, each owning a slice in proportion to how
+  long it takes. The archive extraction reports its real progress (`Nsis7z::ExtractWithCallback`),
+  so does the uninstaller's file removal; a step that cannot report creeps toward the end of its
+  slice without reaching it.
+- **Fallback.** If the window cannot be created, the script continues with NSIS's stock progress
+  page and default choices. Setting `AW_SETUP_CLASSIC` in the environment forces that.
+
 ## Installer
 
-An assisted NSIS installer, per user by default (`%LOCALAPPDATA%\Programs\Achievement Watcher`),
-with the choice of an all-users install and of the folder.
+Per user by default (`%LOCALAPPDATA%\Programs\Achievement Watcher`), with the choice of an
+all-users install and of the folder under Options.
 
-- **Language.** The installer and the uninstaller follow the Windows display language. They match
-  on the primary language (`LANGID & 0x3FF`), so regional variants (fr-CA, de-CH, es-MX, zh-HK...)
-  get their language instead of English. There is one installer language per bundled app locale
-  (Latin American Spanish shares Spanish): 27. Adding one means adding it to `installerLanguages`,
-  to `AW_PICK_LANGUAGE` and to every `LangString` block in `installer.nsh`;
-  `test/updates-security/updateInstall.test.js` fails until all three agree.
-- **Folder check.** Leaving the directory page tests that the folder can be written to. A per-user
-  install aimed at `C:\Program Files` used to be accepted, then fail halfway through the extraction
-  with NSIS's raw "Error opening file for writing". It now stays on the page with a translated
-  explanation. An elevated all-users install passes the same test. electron-builder has no hook on
-  that page, which is what the `customDirectoryPageLeave` hook in the patch adds.
-- **Running app.** The installer closes every process started from the installation folder, which
-  includes the Watchdog (it runs as `Achievement Watcher.exe watchdog.js` under
-  `ELECTRON_RUN_AS_NODE`) and the native helpers. `customCheckAppRunning` asks Windows directly;
-  electron-builder's own check starts PowerShell three times for the same answer, and sandboxes
-  such as Hybrid Analysis score an installer starting PowerShell as malicious.
-- **Progress.** The details pane is shown and filled (the patch undoes upstream's
-  `SetDetailsPrint none`), since it is what an update run displays.
+- **Language.** Once the app has run, the language picked in its Settings (`[achievement] lang` in
+  `cfg\options.ini`) wins, so an update card, a reinstall and the uninstaller speak the app's
+  language (`AW_PICK_APP_LANGUAGE`). Otherwise the window and NSIS follow the Windows display
+  language, matched on the primary language (`LANGID & 0x3FF`), so regional variants (fr-CA,
+  de-CH, es-MX, zh-HK...) get their language instead of English. There is one installer language
+  per bundled app locale (Latin American Spanish shares Spanish): 27. Adding one means adding it to
+  `installerLanguages`, to both pickers in `installer.nsh`, to `strings.json` and to the picker in
+  `native/setup-ui/src/strings.rs`; `test/updates-security/updateInstall.test.js` and
+  `setupUiStrings.test.js` fail until they agree. The window speaks to the user the way the app does
+  (informally where the app is).
+- **Folder.** A picked folder always gets the installation folder's name appended (`D:\Games`
+  becomes `D:\Games\Achievement Watcher`), in the window and again in the script: the uninstaller
+  removes the whole installation folder. The window takes that name from the per-user default the
+  script hands it, so a renamed build (the probe below) appends its own. The window checks free space and, for a per-user install, that the
+  folder can be written, and keeps the user on the options with the reason otherwise.
+- **All users.** Choosing it relaunches the installer elevated through electron-builder's UAC
+  plug-in; the elevated instance reads the choices back from the first one and installs at once. A
+  declined elevation returns to the options, with the choices kept.
+- **Running app.** The window says when AW Next is running (it looks again every second and a half).
+  The install then closes every process started from the installation folder, which includes the
+  Watchdog (it runs as `Achievement Watcher.exe watchdog.js` under `ELECTRON_RUN_AS_NODE`) and the
+  native helpers. `AwSetupUi::AppRunning` and `::CloseApp` ask Windows directly; electron-builder's
+  own check starts PowerShell three times for the same answer, and sandboxes such as Hybrid Analysis
+  score an installer starting PowerShell as malicious.
+- **Speed.** electron-builder extracts the archive into the installer's temp folder and copies the
+  430 MB into place. For a per-user install both folders live in the same profile, so each entry is
+  moved instead (`customMoveExtractedFiles`), which costs nothing; the copy only handles what could
+  not be moved. An all-users install keeps the copy: a moved file keeps the permissions of the
+  user's temp folder, and other accounts could not read it.
 - **User data** is never moved by the installer: `%APPDATA%\Achievement Watcher Next` is only
   created, and the app imports an older `Achievement Watcher 3.0` profile on first launch.
 
 ## Uninstaller
 
-A first page shows what will happen, with one option, off by default: also delete settings, cache
-and saved data. The page shows how much space that frees.
+The window asks once, with one option, off by default: also delete settings, cache, backups and
+playtime. It measures how much space that frees, and warns that it cannot be undone when ticked.
 
 A real uninstall always removes what the app wrote outside its folder:
 
@@ -62,6 +105,18 @@ to the unrelated 1.6.8 app, which may still be installed. Upstream electron-buil
 folder on `--delete-app-data`, because it is named after the install folder; the patch removes that
 line.
 
+**The installation folder goes in one step.** electron-builder renamed each of the ~2100 files
+into its temp folder one NSIS instruction at a time (so an update could put them back if one was
+busy), then deleted them again on exit: four seconds of every update. `customRemoveFiles` renames
+the folder itself, which fails at once while any file inside is in use, then
+`AwSetupUi::RemoveTree` deletes the renamed tree on several threads. For an update a refused rename
+aborts before anything is touched, as before.
+
+An all-users uninstall started without elevation runs twice: the first copy relaunches itself
+elevated through UAC and waits. electron-builder's `un.onInit` makes the installation folder the
+working directory, so the waiting copy held it open and `C:\Program Files\<app>` survived the
+uninstall, empty. The patch moves the waiting copy to `$TEMP` before it elevates (`multiUser.nsh`).
+
 **An update runs the old version's uninstaller.** electron-builder always passes `--updated` to it,
 and every removal above is skipped when `${isUpdated}` is set. Without that, each update would
 switch off "Start with Windows" and empty the update cache.
@@ -73,7 +128,22 @@ it also pointed at the all-users `%APPDATA%`. Both are fixed and covered by test
 ## Updates
 
 The app checks the GitHub release feed eight seconds after start, then every hour, never during a
-game. It asks before downloading and installs only after "Download && Install".
+game. A new version opens the update window (`app/electron/updateWindow.js`): the versions, the
+download size and the release notes, with Update now, Later and Skip this version. The notes come
+from the release body, which the installer's signature does not cover, so they are reduced to plain
+headings, items and paragraphs (`app/util/releaseNotes.js`) and set as text, never as markup.
+
+After Update now the same window follows the download (size, speed, Cancel) and can be sent to the
+background; the title-bar chip brings it back, and so does Settings > Check for updates while an
+offer or a download is under way. When the download lands the app says it is installing and quits,
+and the installer shows a compact card (versions, progress) until AW Next starts again. An update
+held back by a running game can be installed from the window anyway.
+
+The window, the title-bar chip and the Settings line read the same state and say the same thing:
+"Checking the download" (nothing left to cancel) once every byte is in, and a failed download or
+install is reported as such, not as a failed check. A refused signature and a broken download each
+get a plain sentence of what happened and what to do; the updater's own English message stays in
+the log, with only its error code (`ERR_UPDATER_INVALID_SIGNATURE`...) under the title.
 
 ### Download size
 
@@ -152,13 +222,19 @@ when there is no certificate at all.
 ### Portable ZIP
 
 The portable build has no `app-update.yml`, so its update checks used to fail with an error balloon.
-It now reads the same release feed and, when a new version is out, offers the release page:
-extracting the new archive over the folder keeps the `data` folder. It never downloads or runs the
-installer.
+It now reads the same release feed and, when a new version is out, offers the release page in the
+update window: extracting the new archive over the folder keeps the `data` folder. It never
+downloads or runs the installer.
 
 ## Testing without touching the real install
 
-Build a renamed copy so it cannot collide with the installed app. From `app/`:
+The window alone, without building an installer: `cd native/setup-ui`, then
+`cargo run --release --example preview -- install 1036` (also `upgrade`, `update`, `uninstall`,
+`error`; the number is a Windows language id). It drives the DLL the way NSIS does, with a
+simulated install.
+
+A whole installer: build a renamed copy so it cannot collide with the installed app. From `app/`,
+after `node ../native/setup-ui/build.js`:
 
 ```powershell
 node node_modules/electron-builder/cli.js --config electron-builder.yml --publish never --win nsis `
@@ -169,10 +245,26 @@ node node_modules/electron-builder/cli.js --config electron-builder.yml --publis
   -c.directories.output=dist-probe -c.extraMetadata.name=aw-update-probe
 ```
 
-then restore `app/package.json`, which electron-builder rewrites. Install it, run
-`<setup>.exe --updated --force-run` to exercise the update path, and uninstall it.
+then restore `app/package.json`, which electron-builder rewrites. Adding
+`--prepackaged <copy of dist\win-unpacked with the exe renamed to AW Update Probe.exe>` builds only
+the installer, in seconds. Install it, run `<setup>.exe --updated --force-run` to exercise the
+update path (`-c.extraMetadata.version=` gives a second build to update to), and uninstall it.
+With `AW_SETUP_TRACE` set to a file path, each step of a run is written there with its time.
 
 The probe still shares two things with the real install, because they are fixed names rather than
 derived from the app id: the `%APPDATA%\Achievement Watcher Next` folder (never tick the delete-data
 option when uninstalling the probe) and the `achievement-watcher` protocol key (removed by the
-probe's uninstall, registered again by the next launch of the real app).
+probe's uninstall, registered again by the next launch of the real app). A launched probe also
+rewrites the "Start with Windows" value to its own path. To test deleting data or the language
+setting, build the probe from a copy of `build/installer.nsh` with `Achievement Watcher Next` and
+`Achievement Watcher 3.0` replaced by throwaway names.
+
+The update path end to end: point the probe at a local feed (a copy of `electron-builder.yml` whose
+`publish` is `provider: generic` with `url: http://127.0.0.1:<port>/`), sign it with the release
+certificate (`CSC_LINK`, `CSC_KEY_PASSWORD`), serve the next version's `latest.yml`, installer and
+blockmap over HTTP with byte ranges, and start the installed probe with
+`--user-data-dir=<throwaway folder>` so it does not hand over to the running app. An unsigned build
+on the same feed exercises the refusal.
+
+A sandboxed or elevated shell may not see the registry the installer writes:
+start installers through `explorer.exe` and read their keys from a process started the same way.
