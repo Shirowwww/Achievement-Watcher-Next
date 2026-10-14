@@ -2109,7 +2109,7 @@ const SOURCE_BADGE = {
 // Listed explicitly so the coverage test can't be satisfied by unclassified labels falling through.
 // oxlint-disable-next-line no-unused-vars -- a contract table, not dead code: libraryDetectionFixes.test.js reads it out of this file to prove every parser `source:` label is classified somewhere.
 const STEAM_BADGE_SOURCES =
-  /^(?:achievement watcher : watchdog|ali213|codex|creamapi|empress|gbe fork|ff7 \(2013\)|goldberg(?: steamemu| \(empress\))?|greenluma|hoodlum|madnesspatch|manual|markerpatch|onlinefix|razor1911|reloaded - 3dm|rld!|rune|skidrow|smartsteamemu|steam|steam-emulator|tenoke|unconfigured|universelan)$/;
+  /^(?:achievement watcher : watchdog|ali213|catherine|codex|creamapi|empress|gbe fork|ff7 \(2013\)|goldberg(?: steamemu| \(empress\))?|greenluma|hoodlum|madnesspatch|manual|markerpatch|onlinefix|razor1911|reloaded - 3dm|rld!|rune|skidrow|smartsteamemu|steam|steam-emulator|tenoke|unconfigured|universelan)$/;
 
 // The "legitimately owned" badge: same dot as Steam Family, but for an official store install
 // rather than an emulator save. Nemirtingas ('gog','epic') and crack labels must never match here.

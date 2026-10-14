@@ -2397,9 +2397,19 @@ async function discoverInScope(source, steamAccFilter, scope) {
 
   mark('lumaPlay');
 
+  // Read once: gog.scan skips these ids, and they are added after gogOfficial's records below.
+  let universeLanRepaired = [];
+  if (!scope && source.gogOfficial) {
+    try {
+      universeLanRepaired = gogUniverseLan.scan({ userDataPath: _userDataPath || userDataDir() });
+    } catch (err) {
+      debug.error(err);
+    }
+  }
+
   if (!scope && source.gog) {
     try {
-      data = data.concat(await gog.scan());
+      data = data.concat(await gog.scan({ skipUniverseLanIds: universeLanRepaired.map((record) => record.data.gogAppId) }));
     } catch (err) {
       debug.error(err);
     }
@@ -2420,13 +2430,7 @@ async function discoverInScope(source, steamAccFilter, scope) {
   // scan so, when both exist for the same GOG product id, gogOfficial's richer record is always the
   // consolidateDiscoveryList merge target - order-independent with respect to how long either scan
   // takes, since this is a fixed await sequence, not a race.
-  if (!scope && source.gogOfficial) {
-    try {
-      data = data.concat(gogUniverseLan.scan({ userDataPath: _userDataPath || userDataDir() }));
-    } catch (err) {
-      debug.error(err);
-    }
-  }
+  data = data.concat(universeLanRepaired);
 
   mark('gogOfficial');
 

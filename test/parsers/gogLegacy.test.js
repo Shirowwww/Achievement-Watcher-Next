@@ -12,10 +12,12 @@ const request = require('../../app/node_modules/request-zero');
 test('legacy GOG discovery tolerates a missing or corrupt cache and a non-Steam release', async () => {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gog-legacy-'));
   const previousAppData = process.env.APPDATA;
+  const previousLocalAppData = process.env.LOCALAPPDATA;
   const realGetJson = request.getJson;
 
   try {
     process.env.APPDATA = temp;
+    process.env.LOCALAPPDATA = temp;
     gog.setUserDataPath(temp);
 
     // The first-run cache is optional; callers must simply get no cached schema back.
@@ -42,6 +44,35 @@ test('legacy GOG discovery tolerates a missing or corrupt cache and a non-Steam 
   } finally {
     request.getJson = realGetJson;
     process.env.APPDATA = previousAppData;
+    if (previousLocalAppData === undefined) delete process.env.LOCALAPPDATA;
+    else process.env.LOCALAPPDATA = previousLocalAppData;
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
+});
+
+test('UniverseLAN saves under LOCALAPPDATA are listed by their Steam appid, except installs AW repaired', async () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gog-universelan-'));
+  const previous = { APPDATA: process.env.APPDATA, LOCALAPPDATA: process.env.LOCALAPPDATA };
+  const realGetJson = request.getJson;
+
+  try {
+    process.env.APPDATA = path.join(temp, 'Roaming');
+    process.env.LOCALAPPDATA = path.join(temp, 'Local');
+    gog.setUserDataPath(temp);
+    for (const id of ['1207658924', '1423049311']) fs.mkdirSync(path.join(temp, 'Local', 'UniverseLAN', id, 'UniverseLANData'), { recursive: true });
+    request.getJson = async (url) => ({ game: { releases: [{ platform_id: 'steam', external_id: String(url).endsWith('/1207658924') ? '70' : '1091500' }] } });
+
+    const games = await gog.scan({ skipUniverseLanIds: ['1423049311'] });
+    assert.deepEqual(
+      games.map((game) => [game.appid, game.source, path.normalize(game.data.path)]),
+      [['70', 'UniverseLAN', path.normalize(path.join(temp, 'Local', 'UniverseLAN', '1207658924', 'UniverseLANData'))]]
+    );
+  } finally {
+    request.getJson = realGetJson;
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
     fs.rmSync(temp, { recursive: true, force: true });
   }
 });

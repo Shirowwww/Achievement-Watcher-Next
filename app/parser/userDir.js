@@ -853,6 +853,7 @@ module.exports.scan = async (dir) => {
         if (dirpath) {
           result.push({
             appid: info.Settings.AppId,
+            source: 'Catherine',
             data: {
               type: 'file',
               path: path.join(dirpath, `SteamProfile/${info.Settings.SteamID}`),
@@ -872,12 +873,13 @@ module.exports.scan = async (dir) => {
         }
         result.push({
           appid: info.TENOKE.id.split('#')[0].trim(),
+          source: 'TENOKE',
           data: { type: 'file', path: steamDataDir },
         });
       }
     } else if (file === 'UniverseLAN.ini') {
       if (info.GameSettings && info.GameSettings.AppID)
-        result.push({ appid: info.GameSettings.AppID, data: { type: 'file', path: path.join(dir, 'UniverseLANData') } });
+        result.push({ appid: info.GameSettings.AppID, source: 'UniverseLAN', data: { type: 'file', path: path.join(dir, 'UniverseLANData') } });
     } else if (file === 'steam_emu.ini' || file === 'cpy.ini') {
       // CODEX / RUNE / CPY. Section and key casing vary between builds, so the appid is read
       // case-insensitively from whatever section carries it.
