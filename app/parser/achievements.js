@@ -1428,11 +1428,11 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
   steamSettingsDirs.push(...dllDirs.map((dir) => path.join(dir, 'steam_settings')));
   if (steamSettings) steamSettingsDirs.push(steamSettings);
 
-  // Create both Goldberg save roots; discovery deduplicates them by appid.
+  // Create the save folder the installed build writes to, so the game is listed before its first launch.
   try {
-    for (const saveFolder of goldbergSaveFolders(appid)) fs.mkdirSync(saveFolder, { recursive: true });
+    fs.mkdirSync(emulatorFixSaveFolder(appid, cfg), { recursive: true });
   } catch (e) {
-    debug.log(`[${appid}] could not pre-create Goldberg/GBE save folder => ${e}`);
+    debug.log(`[${appid}] could not pre-create the GBE save folder => ${e}`);
   }
 
   // Optionally apply SteamAutoCrack's ownership-check bypass.
@@ -1604,9 +1604,15 @@ function goldbergSaveFolder(emulator, appid) {
   return path.join(appdata, dirName, String(appid));
 }
 
-function goldbergSaveFolders(appid) {
-  return [goldbergSaveFolder('gbe', appid), goldbergSaveFolder('goldberg', appid)].filter(Boolean);
+// The fix always installs GBE Fork, which writes under the save folder set on the Emulator identity
+// card when there is one (local_save_path), under %APPDATA%\GSE Saves otherwise. Classic Goldberg's
+// folder is still read, but nothing AW installs ever writes there.
+function emulatorFixSaveFolder(appid, emulatorCfg) {
+  const custom = String((emulatorCfg && emulatorCfg.savePath) || '').trim();
+  if (custom && path.isAbsolute(custom)) return path.join(custom, String(appid));
+  return goldbergSaveFolder('gbe', appid);
 }
+module.exports.emulatorFixSaveFolder = emulatorFixSaveFolder;
 
 function isKnownNonGameToolInstall(gameDir) {
   if (!gameDir) return false;
@@ -1746,10 +1752,14 @@ async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
             savePath = scene.path;
             saveSource = scene.source;
             debug.log(`[goldberg-scan] ${appid} is a scene-emulator install; saves read from ${scene.path}`);
-          } else if (crackLoaderDetect.detectWorkingCrackLoader(g.gameDir)) {
+          } else {
             // Not launched yet, so there is no save to name the group from. It is still not a GBE
-            // install, and labelling it one is what every later diagnosis keys off.
-            saveSource = 'Steam-emulator';
+            // install, and labelling it one is what every later diagnosis keys off. A scene loader
+            // also names the folder it will write to.
+            const loader = crackLoaderDetect.detectWorkingCrackLoader(g.gameDir);
+            const pending = loader && userDir.sceneSaveFallback(loader.dir, appid);
+            if (pending) savePath = pending.path;
+            if (loader) saveSource = pending ? pending.source : 'Steam-emulator';
           }
         }
       } catch (err) {

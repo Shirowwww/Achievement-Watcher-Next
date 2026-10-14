@@ -201,17 +201,97 @@ test('a portable RUNE release is accepted as an achievement folder and read from
   never installed; a 0% card says "found, nothing read yet" - and steam.getAchievementsFromFile()
   already treats a missing file as exactly that.
 */
-test('a scene release with no save written yet still produces a discovery record', async () => {
+// Points %PUBLIC% at an empty temp folder, so a real save on the machine running the test never
+// stands in for the fallback being measured.
+function withFakePublic(fn) {
+  const fakePublic = tempGame('public');
+  const saved = process.env.PUBLIC;
+  process.env.PUBLIC = fakePublic;
+  return Promise.resolve()
+    .then(() => fn(fakePublic))
+    .finally(() => {
+      if (saved === undefined) delete process.env.PUBLIC;
+      else process.env.PUBLIC = saved;
+      fs.rmSync(fakePublic, { recursive: true, force: true });
+    });
+}
+
+/*
+  Issue #123: an installed RUNE release (Dragon's Dogma 2) writes to %PUBLIC%\Documents\Steam\RUNE
+  <appid>. Before its first save AW pointed the card at a portable tree inside the game folder that
+  this release never creates, so the first unlocks did not reach the library.
+*/
+test('a scene release with no save written yet points at the Public Documents folder it will write to', async () => {
   const gameDir = tempGame('rune-nosave');
   try {
-    // An appid no machine running this test can own a real save for, so the fallback is what is
-    // being measured rather than whatever happens to sit in %PUBLIC%\Documents\Steam here.
-    fs.writeFileSync(path.join(gameDir, 'steam_emu.ini'), '[SETTINGS]\r\nappid = 999999901\r\n');
-    const found = await userDir.scan(gameDir);
-    assert.equal(found.length, 1);
-    assert.equal(found[0].appid, '999999901');
-    assert.equal(found[0].data.type, 'file');
-    assert.equal(found[0].data.path, path.join(gameDir, 'Steam', 'RUNE', '999999901'));
+    await withFakePublic(async (fakePublic) => {
+      fs.writeFileSync(path.join(gameDir, 'steam_emu.ini'), '[SETTINGS]\r\nappid = 999999901\r\n');
+      const found = await userDir.scan(gameDir);
+      assert.equal(found.length, 1);
+      assert.equal(found[0].appid, '999999901');
+      assert.equal(found[0].source, 'Rune');
+      assert.equal(found[0].data.type, 'file');
+      assert.equal(found[0].data.path, path.join(fakePublic, 'Documents', 'Steam', 'RUNE', '999999901'));
+    });
+  } finally {
+    fs.rmSync(gameDir, { recursive: true, force: true });
+  }
+});
+
+test('the save folder named in the steam_emu.ini header is used before the first save', async () => {
+  const gameDir = tempGame('rune-header');
+  try {
+    await withFakePublic(async () => {
+      process.env.AW_TEST_SCENE_DRIVE = path.join(gameDir, 'drive');
+      fs.writeFileSync(
+        path.join(gameDir, 'steam_emu.ini'),
+        '###\r\n### Game data is stored at %AW_TEST_SCENE_DRIVE%\\Users\\Public\\Documents\\Steam\\CODEX\\999999902\r\n###\r\n[Settings]\r\nAppId=999999902\r\n'
+      );
+      const found = await userDir.scan(gameDir);
+      assert.equal(found[0].source, 'Codex');
+      assert.equal(found[0].data.path, path.join(gameDir, 'drive', 'Users', 'Public', 'Documents', 'Steam', 'CODEX', '999999902'));
+    });
+  } finally {
+    delete process.env.AW_TEST_SCENE_DRIVE;
+    fs.rmSync(gameDir, { recursive: true, force: true });
+  }
+});
+
+test('a header naming an unknown variable or a placeholder appid is handled without guessing', async () => {
+  const gameDir = tempGame('rune-header-odd');
+  try {
+    await withFakePublic(async (fakePublic) => {
+      const ini = path.join(gameDir, 'steam_emu.ini');
+      fs.writeFileSync(ini, '### Game data is stored at %AW_NO_SUCH_VARIABLE%\\Steam\\RUNE\\999999903\r\n[Settings]\r\nAppId=999999903\r\n');
+      assert.equal(userDir.sceneSaveFallback(gameDir, '999999903').path, path.join(fakePublic, 'Documents', 'Steam', 'RUNE', '999999903'));
+
+      const root = path.join(gameDir, 'saves', 'Steam', 'RUNE');
+      fs.writeFileSync(ini, `### Game data is stored at ${root}\\<appid>\r\n[Settings]\r\nAppId=999999903\r\n`);
+      assert.equal(userDir.sceneSaveFallback(gameDir, '999999903').path, path.join(root, '999999903'));
+    });
+  } finally {
+    fs.rmSync(gameDir, { recursive: true, force: true });
+  }
+});
+
+test('a portable tree already beside the config still wins over the Public Documents folder', async () => {
+  const gameDir = tempGame('rune-portable-empty');
+  try {
+    await withFakePublic(async () => {
+      fs.writeFileSync(path.join(gameDir, 'steam_emu.ini'), '### Game data is stored at C:\\Users\\Public\\Documents\\Steam\\RUNE\\999999904\r\n[Settings]\r\nAppId=999999904\r\n');
+      fs.mkdirSync(path.join(gameDir, 'Steam', 'RUNE'), { recursive: true });
+      const found = await userDir.scan(gameDir);
+      assert.equal(found[0].data.path, path.join(gameDir, 'Steam', 'RUNE', '999999904'));
+    });
+  } finally {
+    fs.rmSync(gameDir, { recursive: true, force: true });
+  }
+});
+
+test('a folder with no scene config gets no scene fallback', () => {
+  const gameDir = tempGame('no-scene');
+  try {
+    assert.equal(userDir.sceneSaveFallback(gameDir, '480'), null);
   } finally {
     fs.rmSync(gameDir, { recursive: true, force: true });
   }

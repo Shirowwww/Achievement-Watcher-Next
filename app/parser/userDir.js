@@ -96,6 +96,65 @@ function findSceneSaveDir(dir, appid) {
   return null;
 }
 
+// The save trees a portable release creates beside its emulator config, as opposed to the loose
+// "Saves"-like names findSceneSaveDir also accepts once a readable file sits in them.
+const PORTABLE_SCENE_TREES = [path.join('Steam', 'RUNE'), path.join('Steam', 'CODEX'), path.join('Steam', 'CPY'), 'RUNE', 'CODEX'];
+
+// Named after the source root itself (Steam\RUNE, Steam\CODEX), never a parent that merely contains the word.
+function sceneSourceOf(root) {
+  const name = path.basename(root);
+  return /^rune$/i.test(name) ? 'Rune' : /^(codex|cpy)$/i.test(name) ? 'Codex' : 'Steam-emulator';
+}
+
+function isDirectory(dir) {
+  try {
+    return fs.statSync(dir).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+// CODEX and RUNE head steam_emu.ini with "### Game data is stored at %SystemDrive%\Users\Public\
+// Documents\Steam\RUNE\<appid>". Returns that folder with its variables expanded, or null.
+function readSceneSaveNote(configFile, appid) {
+  let text;
+  try {
+    text = fs.readFileSync(configFile, 'utf8');
+  } catch {
+    return null;
+  }
+  const match = text.match(/game data is stored at[ \t]+(\S.*?)[ \t]*$/im);
+  if (!match) return null;
+  const noted = match[1].replace(/[\\/]+$/, '');
+  // The line ends in the appid itself or in a placeholder such as <appid>; either way the folder
+  // above it is the source root the game's own folder goes under.
+  const root = /^\d+$|[<{%]/.test(path.basename(noted)) ? path.dirname(noted) : noted;
+  let unresolved = false;
+  const expanded = root.replace(/%([^%]+)%/g, (whole, name) => {
+    const value = process.env[name];
+    if (!value) unresolved = true;
+    return value || whole;
+  });
+  if (unresolved || !path.isAbsolute(expanded)) return null;
+  return path.join(expanded, String(appid));
+}
+
+// Where a CODEX/RUNE release will write before it has written anything, for `dir`, the folder
+// holding steam_emu.ini or cpy.ini. A portable tree already beside the config wins, then the folder
+// the config's header names, then the default %PUBLIC%\Documents\Steam\RUNE. Returns
+// { path, source }, or null when `dir` holds no scene config or nothing can be named.
+function sceneSaveFallback(dir, appid) {
+  if (!dir || !appid) return null;
+  const config = ['steam_emu.ini', 'cpy.ini'].map((name) => path.join(dir, name)).find((file) => fs.existsSync(file));
+  if (!config) return null;
+  const portable = PORTABLE_SCENE_TREES.map((relative) => path.join(dir, relative)).find(isDirectory);
+  if (portable) return { path: path.join(portable, String(appid)), source: sceneSourceOf(portable) };
+  const noted = readSceneSaveNote(config, appid);
+  if (noted) return { path: noted, source: sceneSourceOf(path.dirname(noted)) };
+  const publicRoot = saveRoots.publicSceneSaveRoot();
+  return publicRoot ? { path: path.join(publicRoot, String(appid)), source: 'Rune' } : null;
+}
+
 // A portable release whose emulator config is missing, renamed or never shipped still keeps the save
 // tree next to the game; this walks the known portable layouts and takes the appid from whichever
 // folder actually holds a readable unlock file.
@@ -801,16 +860,12 @@ module.exports.scan = async (dir) => {
         if (appid) break;
       }
       if (appid) {
-        const found = findSceneSaveDir(dir, appid);
-        // A game with no save folder yet is still added, pointing at the layout this release would
+        // A game with no save folder yet is still added, pointing at the folder this release will
         // write to: a missing file reads as a plain 0% game, so it appears and starts being watched
         // rather than looking like it was never installed.
-        const fallback = path.join(dir, 'Steam', 'RUNE', appid);
-        result.push({
-          appid,
-          source: found ? found.source : 'Steam-emulator',
-          data: { type: 'file', path: found ? found.path : fallback, gameDir: dir },
-        });
+        const found = findSceneSaveDir(dir, appid) || sceneSaveFallback(dir, appid);
+        const savePath = found ? found.path : path.join(dir, 'Steam', 'RUNE', appid);
+        result.push({ appid, source: found ? found.source : 'Steam-emulator', data: { type: 'file', path: savePath, gameDir: dir } });
       }
     }
 
@@ -826,6 +881,7 @@ module.exports.scan = async (dir) => {
 // Exposed so the library scan can point a scene-emulator game at the folder its release actually
 // writes to, instead of the %APPDATA% root that only the Goldberg family uses.
 module.exports.findSceneSaveDir = findSceneSaveDir;
+module.exports.sceneSaveFallback = sceneSaveFallback;
 // Exposed for the same reason, for a release that carries no emulator config to anchor on.
 module.exports.collectPortableSceneSaves = collectPortableSceneSaves;
 module.exports.collectPortableSceneSavesBelow = collectPortableSceneSavesBelow;
