@@ -15,9 +15,14 @@
 
 const fs = require('fs');
 const path = require('path');
+const { dedupeTree } = require('./dedupeStore.js');
 
 // Oldest entries fall off: this is a restore list, not an archive index.
 const MAX_INDEX_ENTRIES = 80;
+// A batch fix takes one restore point per game; a single pass after the last one covers them all.
+const DEDUPE_DELAY_MS = 15000;
+
+let dedupeTimer = null;
 
 function normalizePathKey(value) {
   return path.resolve(String(value || '')).toLowerCase();
@@ -71,6 +76,22 @@ function rememberBackup({ userDataPath, appid, gameDir, backupDir, manifest, log
   }
 }
 
+// Each restore point copies the emulator DLLs again; once written they share one copy on disk.
+function scheduleDedupe(userDataPath, log) {
+  clearTimeout(dedupeTimer);
+  dedupeTimer = setTimeout(() => {
+    dedupeTimer = null;
+    dedupeTree(backupRoot(userDataPath), { log })
+      .then(({ linked, savedBytes }) => {
+        if (log && linked > 0) log.log(`[gbe-backup] ${linked} identical file(s) now share one copy, ${Math.round(savedBytes / 1048576)} MB freed`);
+      })
+      .catch((err) => {
+        if (log) log.log(`[gbe-backup] dedupe failed => ${(err && err.message) || err}`);
+      });
+  }, DEDUPE_DELAY_MS);
+  if (typeof dedupeTimer.unref === 'function') dedupeTimer.unref();
+}
+
 /*
   Copy a game's current emulator setup aside and record it for the restore list. A folder with
   nothing to save is reported as skipped rather than as a failure; any other error is the caller's
@@ -86,6 +107,7 @@ function createBackup({ goldberg, userDataPath, appid, gameDir, steamSettings, l
       destinationRoot: backupRoot(userDataPath),
     });
     rememberBackup({ userDataPath, appid, gameDir, backupDir: result.backupDir, manifest: result.manifest, log });
+    scheduleDedupe(userDataPath, log);
     if (log) log.log(`[${appid || '?'}] GBE/Goldberg pre-fix backup created => ${result.backupDir}`);
     return { ...result, skipped: false };
   } catch (err) {

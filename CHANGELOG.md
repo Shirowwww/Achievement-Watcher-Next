@@ -48,6 +48,13 @@ renamed in 3.9.0 and the history is kept under one file.
   compression Windows applies to its system files: about 210 MB on disk instead of 420 MB, read back
   transparently, and that is the size the installer and Installed apps now show. The portable copy
   gets the same on its first start. The package also leaves out about 20 MB of files nothing loads.
+- **A leaner data folder.** Identical files in the GBE restore points and the custom-theme pictures
+  now share one copy on disk (on one profile, 514 MB of restore points held 49 MB of distinct
+  content), the copy of the emulator that generate_emu_config leaves beside its settings is
+  dropped, large store banners are kept as JPEG rather than PNG wherever that loses no visible
+  detail, and the web cache is capped at 64 MB. What older versions left behind is tidied a minute
+  after AW Next starts.
+
 
 ## 3.11.3 - 2026-10-13
 

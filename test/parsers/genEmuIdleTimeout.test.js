@@ -51,6 +51,17 @@ const shimPath = (dir, name, body) => {
     const elapsed = Date.now() - startedAt;
     assert.ok(elapsed < 10000, `the idle budget must end the run early, took ${elapsed}ms`);
 
+    // A failed run hands no workDir to its caller, so it must not leave one in %TEMP%.
+    const ownTemp = fs.mkdtempSync(path.join(temp, 'tmp-'));
+    const savedTemp = { TEMP: process.env.TEMP, TMP: process.env.TMP };
+    process.env.TEMP = process.env.TMP = ownTemp;
+    try {
+      await assert.rejects(gen.generate({ tool: { exe: cmd, args: [silent], dir: temp, tag: 'test' }, appid: '480', idleTimeout: 1000, timeout: 60000 }));
+    } finally {
+      Object.assign(process.env, savedTemp);
+    }
+    assert.deepEqual(fs.readdirSync(ownTemp), [], 'the failed run cleaned up its work folder');
+
     // Chatty: keeps printing across the idle budget, so only the hard budget may stop it. It never
     // writes a steam_settings folder, so the expected rejection is the "produced no" one. Its budget
     // leaves room for a slow start under a loaded suite: the idle clock runs from the spawn.
