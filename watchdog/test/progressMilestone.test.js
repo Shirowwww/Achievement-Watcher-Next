@@ -6,7 +6,25 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const settings = require('../settings.js');
-const { PROGRESS_STEPS, normalizeProgressStep, reachesProgressMilestone } = require('../util/progressMilestone.js');
+const { PROGRESS_STEPS, normalizeProgressStep, reachesProgressMilestone, onePopupPerStat } = require('../util/progressMilestone.js');
+
+// Eggplant: one playtime stat went 0 -> 2 minutes and drove 26 "Play for N minutes" achievements,
+// which used to queue 26 progress popups, one every few seconds for three minutes.
+test('one stat moving many achievements shows a single popup, the one closest to completion', () => {
+  const minutes = [5, 10, 20, 30, 60, 120].map((max) => ({ name: `PLAY_${max}`, previous: 0, current: 2, max }));
+  assert.deepEqual(onePopupPerStat(minutes).map((u) => u.name), ['PLAY_5']);
+});
+
+test('separate stats keep their own popup, and a lone update is untouched', () => {
+  const updates = [
+    { name: 'KILLS_100', previous: 10, current: 11, max: 100 },
+    { name: 'KILLS_500', previous: 10, current: 11, max: 500 },
+    { name: 'DISTANCE', previous: 3, current: 4.5, max: 42 },
+  ];
+  assert.deepEqual(onePopupPerStat(updates).map((u) => u.name), ['KILLS_100', 'DISTANCE']);
+  assert.deepEqual(onePopupPerStat([updates[2]]), [updates[2]]);
+  assert.deepEqual(onePopupPerStat([]), []);
+});
 
 test('step 0 keeps every progress update, as before', () => {
   assert.equal(reachesProgressMilestone(1, 2, 50, 0), true);

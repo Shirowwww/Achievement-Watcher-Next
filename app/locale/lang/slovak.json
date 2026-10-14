@@ -2555,6 +2555,14 @@
             "clipDirHelp": "Jeden podpriečinok pre každú hru, súbory pomenované „dátum - úspech“. Predvolené: ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini alebo UniverseLAN.ini. Pre RPCS3 vyberte jeho konfiguračný priečinok (~/.config/rpcs3) alebo priečinok dev_hdd0."
+          },
+          "libraryInfo": {
+            "0": "Vyberte priečinok obsahujúci veľa inštalačných priečinkov hier (napr. ~/Games alebo drive_c/Games vnútri prefixu Wine)."
+          }
+        },
         "help": {
           "quick": {
             "2": "Všetko (nastavenia, vyrovnávacie pamäte, záznamy a vlastné motívy) je uložené v ~/.config/Achievement Watcher Next."

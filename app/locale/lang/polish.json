@@ -2555,6 +2555,14 @@
             "clipDirHelp": "Jeden podfolder na grę, pliki nazwane „data - osiągnięcie”. Domyślnie: ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini lub UniverseLAN.ini. W przypadku RPCS3 wybierz jego folder konfiguracji (~/.config/rpcs3) lub folder dev_hdd0."
+          },
+          "libraryInfo": {
+            "0": "Wybierz folder zawierający wiele folderów instalacyjnych gier (np. ~/Games lub drive_c/Games w prefiksie Wine)."
+          }
+        },
         "help": {
           "quick": {
             "2": "Wszystko (ustawienia, pamięci podręczne, dzienniki i motywy użytkownika) znajduje się w ~/.config/Achievement Watcher Next."

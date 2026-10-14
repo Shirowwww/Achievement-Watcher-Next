@@ -2555,6 +2555,14 @@
             "clipDirHelp": "Ein Unterordner pro Spiel, Dateien benannt „Datum - Erfolg“. Standard: ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "Datei ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini oder UniverseLAN.ini befindet. Für RPCS3 wähle den Konfigurationsordner (~/.config/rpcs3) oder den Ordner dev_hdd0."
+          },
+          "libraryInfo": {
+            "0": "Wähle einen Ordner, der viele Spielinstallationsordner enthält (z. B. ~/Games oder drive_c/Games in einem Wine-Präfix)."
+          }
+        },
         "help": {
           "quick": {
             "2": "Alles (Einstellungen, Caches, Protokolle und benutzerdefinierte Designs) befindet sich in ~/.config/Achievement Watcher Next."

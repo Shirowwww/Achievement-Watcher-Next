@@ -2555,6 +2555,14 @@
             "clipDirHelp": "Одна підпапка на гру, файли називаються «дата - досягнення». За замовчуванням: ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini або UniverseLAN.ini. Для RPCS3 виберіть його папку конфігурації (~/.config/rpcs3) або папку dev_hdd0."
+          },
+          "libraryInfo": {
+            "0": "Виберіть папку, що містить багато папок встановлення ігор (напр. ~/Games або drive_c/Games усередині префікса Wine)."
+          }
+        },
         "help": {
           "quick": {
             "2": "Усі дані (налаштування, кеші, журнали та власні теми) зберігаються в ~/.config/Achievement Watcher Next."

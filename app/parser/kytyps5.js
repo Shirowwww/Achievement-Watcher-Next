@@ -24,6 +24,7 @@ const UNLOCKS_FILE = /^trophies_(\d+)_(\d+)\.json$/i;
 const PACKAGE_FILE = /^trophy(\d+)\.ucp$/i;
 // Kyty refuses any other character in a title id, so anything else is not one of its folders.
 const TITLE_ID = /^[A-Za-z0-9_-]{1,32}$/;
+const WINDOWS_ABSOLUTE = /^[a-zA-Z]:[\\/]/;
 
 const UCP_MAGIC = 0xb228c60a;
 const UCP_HEADER_SIZE = 0x40;
@@ -199,7 +200,9 @@ function configuredGameDirs(root) {
     } catch {
       continue;
     }
-    return gameDirsFromSettings(text).map((dir) => path.resolve(root, dir));
+    // A launcher run by Wine writes C:/... paths, which only its prefix can turn into local ones.
+    const host = hostsFor(root)[0];
+    return gameDirsFromSettings(text).map((dir) => path.resolve(root, (WINDOWS_ABSOLUTE.test(dir) && host && host.localPath(dir)) || dir));
   }
   return [];
 }

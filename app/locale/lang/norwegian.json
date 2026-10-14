@@ -2555,6 +2555,14 @@
             "clipDirHelp": "Én undermappe per spill, filer med navn «dato - prestasjon». Standard: ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini eller UniverseLAN.ini ligger. For RPCS3 velger du konfigurasjonsmappen (~/.config/rpcs3) eller mappen dev_hdd0."
+          },
+          "libraryInfo": {
+            "0": "Velg en mappe som inneholder mange spillmapper (for eksempel ~/Games eller drive_c/Games i et Wine-prefiks)."
+          }
+        },
         "help": {
           "quick": {
             "2": "Alt (innstillinger, buffere, logger, egne temaer) ligger i ~/.config/Achievement Watcher Next."

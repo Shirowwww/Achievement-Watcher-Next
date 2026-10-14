@@ -2555,6 +2555,14 @@
             "clipDirHelp": "One subfolder per game, files named \"date - achievement\". Default: ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini or UniverseLAN.ini file is located. For RPCS3, select its configuration folder (~/.config/rpcs3) or its dev_hdd0 folder."
+          },
+          "libraryInfo": {
+            "0": "Select a folder that holds many game install folders (e.g. ~/Games, or drive_c/Games inside a Wine prefix)."
+          }
+        },
         "help": {
           "quick": {
             "2": "Everything (settings, caches, logs, custom themes) lives in ~/.config/Achievement Watcher Next."

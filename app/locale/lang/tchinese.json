@@ -2555,6 +2555,14 @@
             "clipDirHelp": "每個遊戲一個子資料夾，檔名為「日期 - 成就」。預設：~/Videos/Achievement Watcher Next。"
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini 或 UniverseLAN.ini 檔案的資料夾。若為 RPCS3，請選擇其設定資料夾（~/.config/rpcs3）或 dev_hdd0 資料夾。"
+          },
+          "libraryInfo": {
+            "0": "請選擇一個包含多個遊戲安裝資料夾的資料夾（例如 ~/Games，或 Wine 前綴內的 drive_c/Games）。"
+          }
+        },
         "help": {
           "quick": {
             "2": "所有資料（設定、快取、記錄檔、自訂佈景主題）都放在 ~/.config/Achievement Watcher Next。"

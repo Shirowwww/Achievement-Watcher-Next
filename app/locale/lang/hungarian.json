@@ -2555,6 +2555,14 @@
             "clipDirHelp": "Játékonként egy almappa, a fájlok neve „dátum - teljesítmény”. Alapértelmezés: ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini vagy UniverseLAN.ini fájl található. RPCS3 esetén válaszd a konfigurációs mappáját (~/.config/rpcs3) vagy a dev_hdd0 mappát."
+          },
+          "libraryInfo": {
+            "0": "Válassz egy mappát, amely sok játéktelepítési mappát tartalmaz (pl. ~/Games, vagy drive_c/Games egy Wine-prefixumon belül)."
+          }
+        },
         "help": {
           "quick": {
             "2": "Minden (beállítások, gyorsítótárak, naplók és egyéni témák) a ~/.config/Achievement Watcher Next mappában található."

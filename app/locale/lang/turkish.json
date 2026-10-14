@@ -2555,6 +2555,14 @@
             "clipDirHelp": "Her oyun için bir alt klasör, dosyalar \"tarih - başarım\" adıyla. Varsayılan: ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini veya UniverseLAN.ini. RPCS3 için yapılandırma klasörünü (~/.config/rpcs3) veya dev_hdd0 klasörünü seç."
+          },
+          "libraryInfo": {
+            "0": "Birçok oyun kurulum klasörü içeren bir klasör seç (örn. ~/Games veya bir Wine önekinin içindeki drive_c/Games)."
+          }
+        },
         "help": {
           "quick": {
             "2": "Her şey (ayarlar, önbellekler, günlükler ve özel temalar) ~/.config/Achievement Watcher Next konumunda bulunur."

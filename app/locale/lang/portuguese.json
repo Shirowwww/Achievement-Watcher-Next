@@ -2555,6 +2555,14 @@
             "clipDirHelp": "Uma subpasta por jogo, ficheiros com o nome \"data - proeza\". Predefinição: ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ficheiro ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini ou UniverseLAN.ini. Para o RPCS3, selecione a pasta de configuração (~/.config/rpcs3) ou a pasta dev_hdd0."
+          },
+          "libraryInfo": {
+            "0": "Selecione uma pasta que contenha muitas pastas de instalação de jogos (ex.: ~/Games ou drive_c/Games dentro de um prefixo Wine)."
+          }
+        },
         "help": {
           "quick": {
             "2": "Tudo (definições, caches, registos e temas personalizados) fica em ~/.config/Achievement Watcher Next."
