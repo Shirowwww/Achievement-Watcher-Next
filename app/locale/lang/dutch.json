@@ -2555,6 +2555,14 @@
             "clipDirHelp": "Eén submap per game, bestanden met de naam \"datum - prestatie\". Standaard: ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini of UniverseLAN.ini staat. Selecteer voor RPCS3 de configuratiemap (~/.config/rpcs3) of de map dev_hdd0."
+          },
+          "libraryInfo": {
+            "0": "Selecteer een map met veel installatiemappen van games (bijv. ~/Games of drive_c/Games in een Wine-prefix)."
+          }
+        },
         "help": {
           "quick": {
             "2": "Alles (instellingen, caches, logboeken, eigen thema's) staat in ~/.config/Achievement Watcher Next."

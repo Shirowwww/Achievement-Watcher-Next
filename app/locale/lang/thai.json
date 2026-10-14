@@ -2555,6 +2555,14 @@
             "clipDirHelp": "หนึ่งโฟลเดอร์ย่อยต่อเกม ไฟล์ตั้งชื่อว่า \"วันที่ - ความสำเร็จ\" ค่าเริ่มต้น: ~/Videos/Achievement Watcher Next"
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini หรือ UniverseLAN.ini อยู่ สำหรับ RPCS3 ให้เลือกโฟลเดอร์การตั้งค่า (~/.config/rpcs3) หรือโฟลเดอร์ dev_hdd0"
+          },
+          "libraryInfo": {
+            "0": "เลือกโฟลเดอร์ที่มีโฟลเดอร์ติดตั้งเกมจำนวนมาก (เช่น ~/Games หรือ drive_c/Games ภายในพรีฟิกซ์ Wine)"
+          }
+        },
         "help": {
           "quick": {
             "2": "ข้อมูลทั้งหมด (การตั้งค่า แคช บันทึก และธีมกำหนดเอง) อยู่ใน ~/.config/Achievement Watcher Next"

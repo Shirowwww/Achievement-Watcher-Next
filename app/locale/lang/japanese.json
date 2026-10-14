@@ -2555,6 +2555,14 @@
             "clipDirHelp": "ゲームごとにサブフォルダーを作成し、ファイル名は「日付 - 実績」になります。既定: ~/Videos/Achievement Watcher Next。"
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini、UniverseLAN.ini のいずれか。RPCS3 の場合は、設定フォルダー（~/.config/rpcs3）または dev_hdd0 フォルダーを選択してください。"
+          },
+          "libraryInfo": {
+            "0": "多数のゲームインストールフォルダーを含むフォルダーを選択してください（例：~/Games、または Wine プレフィックス内の drive_c/Games）。"
+          }
+        },
         "help": {
           "quick": {
             "2": "設定、キャッシュ、ログ、カスタムテーマはすべて ~/.config/Achievement Watcher Next に保存されます。"

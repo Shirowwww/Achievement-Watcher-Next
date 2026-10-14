@@ -2555,6 +2555,14 @@
             "clipDirHelp": "게임마다 하위 폴더가 만들어지고 파일 이름은 \"날짜 - 도전 과제\"입니다. 기본값: ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini 또는 UniverseLAN.ini 파일이 있는 폴더입니다. RPCS3는 설정 폴더(~/.config/rpcs3) 또는 dev_hdd0 폴더를 선택하세요."
+          },
+          "libraryInfo": {
+            "0": "게임 설치 폴더가 여러 개 들어 있는 폴더를 선택하세요(예: ~/Games 또는 Wine 프리픽스 안의 drive_c/Games)."
+          }
+        },
         "help": {
           "quick": {
             "2": "설정, 캐시, 로그, 사용자 지정 테마 등 모든 데이터는 ~/.config/Achievement Watcher Next에 들어 있습니다."

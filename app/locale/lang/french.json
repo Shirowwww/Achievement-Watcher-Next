@@ -2555,6 +2555,14 @@
             "clipDirHelp": "Un sous-dossier par jeu, fichiers nommés « date - succès ». Par défaut : ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "le fichier ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini ou UniverseLAN.ini. Pour RPCS3, sélectionne son dossier de configuration (~/.config/rpcs3) ou son dossier dev_hdd0."
+          },
+          "libraryInfo": {
+            "0": "Sélectionne un dossier qui contient plusieurs dossiers de jeux installés (ex: ~/Games, ou drive_c/Games dans un préfixe Wine)."
+          }
+        },
         "help": {
           "quick": {
             "2": "Tes réglages, caches, journaux et thèmes personnalisés se trouvent dans ~/.config/Achievement Watcher Next."

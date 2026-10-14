@@ -63,7 +63,7 @@ const { fileStamp, sameStamp } = require('./util/fileStamp.js');
 const uplayR2 = require('./util/uplayR2.js');
 const notificationDedup = require('./util/notificationDedup.js');
 const progressMute = require('./util/progressMute.js');
-const { reachesProgressMilestone } = require('./util/progressMilestone.js');
+const { reachesProgressMilestone, onePopupPerStat } = require('./util/progressMilestone.js');
 const rarity = require('./util/rarity.js');
 const steam = require('./steam.js');
 const track = require('./track.js');
@@ -1251,6 +1251,8 @@ var app = {
             let platinumIcon = null;
 
             let j = 0;
+            // Shown once the scan is done: a shared stat moves several achievements at once.
+            const progressPopups = [];
             for (let i in achievements) {
               if (Object.prototype.hasOwnProperty.call(achievements, i)) {
                 try {
@@ -1412,44 +1414,50 @@ var app = {
                         self.options.notification.progressStep
                       )
                     )
-                      await notify(
-                        {
-                          appid: game.appid,
-                          gameDisplayName: game.name,
-                          achievementName: ach.name,
-                          achievementDisplayName: ach.displayName,
-                          achievementDescription: ach.description,
-                          icon: notificationAchievementIcon(game, ach, false),
-                          gameIcon: notificationGameIcon(game),
-                          image: steamHeaderImage(game.steamappid || game.appid),
-                          progress: {
-                            // Float stat counters (e.g. distance) can carry long tails
-                            // (3.3333333…); cap at 2 decimals for every transport at the source.
-                            current: Math.round(Number(achievements[i].CurProgress) * 100) / 100,
-                            max: Math.round(Number(achievements[i].MaxProgress) * 100) / 100,
-                          },
-                        },
-                        {
-                          notify: self.options.notification.notify,
-                          lang: self.options.achievement.lang,
-                          transport: {
-                            mode: app.options.notification_transport.mode,
-                            websocket: app.options.notification_transport.websocket,
-                          },
-                          toast: {
-                            appid: self.toastID,
-                            winrt: self.options.notification_transport.winRT,
-                            balloonFallback: self.options.notification_transport.balloon,
-                            customAudio: '0',
-                            volume: notificationVolumePercent(self.options),
-                            imageIntegration: '0',
-                            group: self.options.notification_toast.groupToast,
-                            attribution: game.name,
-                          },
-                          prefetch: self.options.notification_advanced.iconPrefetch,
-                          rumble: false,
-                        }
-                      );
+                      progressPopups.push({
+                        previous: Number(previous.CurProgress),
+                        current: Number(achievements[i].CurProgress),
+                        max: Number(achievements[i].MaxProgress),
+                        show: () =>
+                          notify(
+                            {
+                              appid: game.appid,
+                              gameDisplayName: game.name,
+                              achievementName: ach.name,
+                              achievementDisplayName: ach.displayName,
+                              achievementDescription: ach.description,
+                              icon: notificationAchievementIcon(game, ach, false),
+                              gameIcon: notificationGameIcon(game),
+                              image: steamHeaderImage(game.steamappid || game.appid),
+                              progress: {
+                                // Float stat counters (e.g. distance) can carry long tails
+                                // (3.3333333…); cap at 2 decimals for every transport at the source.
+                                current: Math.round(Number(achievements[i].CurProgress) * 100) / 100,
+                                max: Math.round(Number(achievements[i].MaxProgress) * 100) / 100,
+                              },
+                            },
+                            {
+                              notify: self.options.notification.notify,
+                              lang: self.options.achievement.lang,
+                              transport: {
+                                mode: app.options.notification_transport.mode,
+                                websocket: app.options.notification_transport.websocket,
+                              },
+                              toast: {
+                                appid: self.toastID,
+                                winrt: self.options.notification_transport.winRT,
+                                balloonFallback: self.options.notification_transport.balloon,
+                                customAudio: '0',
+                                volume: notificationVolumePercent(self.options),
+                                imageIntegration: '0',
+                                group: self.options.notification_toast.groupToast,
+                                attribution: game.name,
+                              },
+                              prefetch: self.options.notification_advanced.iconPrefetch,
+                              rumble: false,
+                            }
+                          ),
+                      });
                   }
                 } catch (err) {
                   if (err === 'ACH_NOT_FOUND_IN_SCHEMA') {
@@ -1464,6 +1472,7 @@ var app = {
                 }
               }
             }
+            for (const popup of onePopupPerStat(progressPopups)) await popup.show();
             try {
               await track.save(appID, achievements);
             } catch (err) {

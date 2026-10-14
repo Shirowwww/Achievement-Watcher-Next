@@ -2555,6 +2555,14 @@
             "clipDirHelp": "Mỗi trò chơi một thư mục con, tệp được đặt tên \"ngày - thành tựu\". Mặc định: ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini hoặc UniverseLAN.ini. Với RPCS3, hãy chọn thư mục cấu hình của nó (~/.config/rpcs3) hoặc thư mục dev_hdd0."
+          },
+          "libraryInfo": {
+            "0": "Chọn một thư mục chứa nhiều thư mục cài đặt trò chơi (ví dụ ~/Games, hoặc drive_c/Games bên trong một prefix Wine)."
+          }
+        },
         "help": {
           "quick": {
             "2": "Mọi thứ (cài đặt, bộ nhớ đệm, nhật ký, chủ đề tùy chỉnh) nằm trong ~/.config/Achievement Watcher Next."

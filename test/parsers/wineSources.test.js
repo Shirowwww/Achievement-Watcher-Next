@@ -211,6 +211,20 @@ test('the Uplay R2 redirect is written as the prefix spells it and read back as 
     assert.equal(dirs[0], path.join(appData, 'GSE Saves', '242550'));
   }));
 
+test('KytyPS5 in a prefix finds its games through the Windows paths its Kyty.ini lists', LINUX_ONLY, () =>
+  withWinePrefix(({ driveC }) => {
+    const kyty = require('../helpers/kytyps5.js');
+    const kytyps5 = require(app('parser/kytyps5.js'));
+    kytyps5.setIconRoot(path.join(driveC, '..', 'icon_cache'));
+    // The launcher sits apart from the game folder it was given, so only Kyty.ini leads to it.
+    const games = path.join(driveC, 'PS5');
+    kyty.makeGame(games, { folder: 'Astro' });
+    const emulator = kyty.makeEmulator(path.join(driveC, 'Emulators'), { gameDirs: ['C:/PS5'] });
+
+    const [found] = kytyps5.discover(emulator);
+    assert.equal(found && found.gameDir, path.join(games, 'Astro'));
+  }));
+
 test('the EA Desktop logs are taken from the prefix that has them', LINUX_ONLY, () =>
   withWinePrefix(({ localAppData }) => {
     const logs = path.join(localAppData, 'Electronic Arts', 'EA Desktop', 'Logs');

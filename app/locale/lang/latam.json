@@ -2555,6 +2555,14 @@
             "clipDirHelp": "Una subcarpeta por juego, archivos con el nombre \"fecha - logro\". Predeterminado: ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "archivo ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini o UniverseLAN.ini. Para RPCS3, selecciona su carpeta de configuración (~/.config/rpcs3) o la carpeta dev_hdd0."
+          },
+          "libraryInfo": {
+            "0": "Selecciona una carpeta que contenga muchas carpetas de instalación de juegos (p. ej. ~/Games o drive_c/Games dentro de un prefijo de Wine)."
+          }
+        },
         "help": {
           "quick": {
             "2": "Todo (ajustes, cachés, registros y temas personalizados) se guarda en ~/.config/Achievement Watcher Next."

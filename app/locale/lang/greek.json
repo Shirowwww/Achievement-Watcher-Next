@@ -2555,6 +2555,14 @@
             "clipDirHelp": "Ένας υποφάκελος ανά παιχνίδι, με αρχεία ονομασμένα «ημερομηνία - επίτευγμα». Προεπιλογή: ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini ή UniverseLAN.ini. Για το RPCS3, επιλέξτε τον φάκελο ρυθμίσεών του (~/.config/rpcs3) ή τον φάκελο dev_hdd0."
+          },
+          "libraryInfo": {
+            "0": "Επιλέξτε έναν φάκελο που περιέχει πολλούς φακέλους εγκατάστασης παιχνιδιών (π.χ. ~/Games ή drive_c/Games μέσα σε ένα πρόθεμα Wine)."
+          }
+        },
         "help": {
           "quick": {
             "2": "Τα πάντα (ρυθμίσεις, προσωρινές μνήμες, αρχεία καταγραφής, προσαρμοσμένα θέματα) βρίσκονται στο ~/.config/Achievement Watcher Next."

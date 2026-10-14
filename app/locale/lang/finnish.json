@@ -2555,6 +2555,14 @@
             "clipDirHelp": "Yksi alikansio peliä kohden, tiedostojen nimet muodossa \"pvm - saavutus\". Oletus: ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini tai UniverseLAN.ini. RPCS3:n kohdalla valitse sen asetuskansio (~/.config/rpcs3) tai dev_hdd0-kansio."
+          },
+          "libraryInfo": {
+            "0": "Valitse kansio, jonka sisällä on useita pelien asennuskansioita (esim. ~/Games tai drive_c/Games Wine-prefiksin sisällä)."
+          }
+        },
         "help": {
           "quick": {
             "2": "Kaikki (asetukset, välimuistit, lokit ja omat teemat) sijaitsee kansiossa ~/.config/Achievement Watcher Next."

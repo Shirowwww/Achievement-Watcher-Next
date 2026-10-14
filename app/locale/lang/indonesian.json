@@ -2555,6 +2555,14 @@
             "clipDirHelp": "Satu subfolder per game, file diberi nama \"tanggal - pencapaian\". Default: ~/Videos/Achievement Watcher Next."
           }
         },
+        "folder": {
+          "addInfo": {
+            "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini atau UniverseLAN.ini berada. Untuk RPCS3, pilih folder konfigurasinya (~/.config/rpcs3) atau folder dev_hdd0."
+          },
+          "libraryInfo": {
+            "0": "Pilih folder yang memuat banyak folder pemasangan game (misalnya ~/Games, atau drive_c/Games di dalam prefix Wine)."
+          }
+        },
         "help": {
           "quick": {
             "2": "Semuanya (pengaturan, cache, log, tema kustom) berada di ~/.config/Achievement Watcher Next."
