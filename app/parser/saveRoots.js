@@ -49,11 +49,16 @@ function documentsPath() {
   }
 }
 
+// Where an installed (non-portable) RUNE release writes, whether or not anything is there yet.
+function publicSceneSaveRoot() {
+  return envPath('PUBLIC', 'Documents', 'Steam', 'RUNE');
+}
+
 function defaultSteamEmuSaveRoots({ existingOnly = false, expandProgramDataSteam = false } = {}) {
   const roots = [];
   [
     envPath('PUBLIC', 'Documents', 'OnlineFix'),
-    envPath('PUBLIC', 'Documents', 'Steam', 'RUNE'),
+    publicSceneSaveRoot(),
     envPath('PUBLIC', 'Documents', 'Steam', 'CODEX'),
     envPath('PUBLIC', 'Documents', 'Steam', 'RLD!'),
     envPath('PUBLIC', 'Documents', 'EMPRESS'),
@@ -358,6 +363,7 @@ async function discoverEmulatorRoots() {
 }
 
 module.exports = {
+  publicSceneSaveRoot,
   defaultSteamEmuSaveRoots,
   defaultSteamScanRoots,
   discoverEmulatorRoots,

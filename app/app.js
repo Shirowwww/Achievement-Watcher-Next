@@ -5232,15 +5232,11 @@ var app = {
                           writeIfMissing: missingArch || 'x64',
                           log: debug,
                         });
-                        // Pre-create both GBE Fork and classic Goldberg runtime folders. PSPC/repack
-                        // guides mention both, and discovery dedupes them by appid once real state exists.
+                        // Pre-create the save folder the installed build writes to, so the game is listed before its first launch.
                         try {
-                          if (process.env.APPDATA) {
-                            fs.mkdirSync(path.join(process.env.APPDATA, 'GSE Saves', String(writableAppid)), { recursive: true });
-                            fs.mkdirSync(path.join(process.env.APPDATA, 'Goldberg SteamEmu Saves', String(writableAppid)), { recursive: true });
-                          }
+                          fs.mkdirSync(achievements.emulatorFixSaveFolder(writableAppid, emuCfg), { recursive: true });
                         } catch (e) {
-                          debug.log(`[${writableAppid}] could not pre-create Goldberg/GBE save folder => ${e}`);
+                          debug.log(`[${writableAppid}] could not pre-create the GBE save folder => ${e}`);
                         }
                         // Optional, opt-in: SteamAutoCrack's proxy-DLL bypass redirects steam_api64.dll
                         // to the pre-swap original on the exe's FIRST access, so a SteamStub integrity re-check sees the untouched DLL and passes.

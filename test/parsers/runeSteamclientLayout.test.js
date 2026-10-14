@@ -12,6 +12,7 @@ const crackLoaderDetect = require(path.join(__dirname, '..', '..', 'app', 'util'
 const emulatorFixEligibility = require(path.join(__dirname, '..', '..', 'app', 'util', 'emulatorFixEligibility.js'));
 const gameHealth = require(path.join(__dirname, '..', '..', 'app', 'util', 'gameHealth.js'));
 const goldberg = require(path.join(__dirname, '..', '..', 'app', 'parser', 'goldberg.js'));
+const userDir = require(path.join(__dirname, '..', '..', 'app', 'parser', 'userDir.js'));
 
 let passed = 0;
 const failures = [];
@@ -69,6 +70,19 @@ function runeRelease({ withSteamclient = true } = {}) {
   ok(/RUNE/.test(goldberg.detectEmulator(dir).loader || ''), 'the scan carries the loader name for Valve\'s dll + RUNE');
   const source = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'achievements.js'), 'utf8');
   ok(source.includes("(g.emulator === 'none' || g.loader) && g.gameDir"), 'the goldberg scan looks up scene saves for a loader-served folder');
+
+  // Issue #123: before the first save, the card points at where this build writes, not at GSE Saves.
+  const savedPublic = process.env.PUBLIC;
+  const fakePublic = tmp('aw-rune-public-');
+  process.env.PUBLIC = fakePublic;
+  try {
+    const pending = userDir.sceneSaveFallback(hit.dir, '2054970');
+    eq(pending && pending.path, path.join(fakePublic, 'Documents', 'Steam', 'RUNE', '2054970'), 'an unlaunched RUNE steamclient game points at Public Documents');
+    eq(pending && pending.source, 'Rune', 'and is labelled RUNE');
+  } finally {
+    if (savedPublic === undefined) delete process.env.PUBLIC;
+    else process.env.PUBLIC = savedPublic;
+  }
 }
 
 {
