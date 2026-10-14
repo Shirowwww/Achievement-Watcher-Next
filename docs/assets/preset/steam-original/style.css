@@ -1,0 +1,264 @@
+/*
+  Steam Original.
+
+  A copy of the toast the current Steam client draws, not a take on it: the slate gradient, the
+  oversized Steam mark sunk into its right side, the square achievement icon, a white title over a
+  grey line, and the "(19/50)" count with its thin blue bar. Steam paints no game name and no
+  colour for rarity, so the meta row stays hidden and a rare unlock only gets the gold rim the
+  client puts around a rare icon.
+
+  Rendered by the shared preset engine (index.html); this file owns every pixel.
+*/
+
+:root {
+  --ach-in: 320ms;
+  --ach-out: 300ms;
+  --ease-in: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out: cubic-bezier(0.4, 0, 1, 1);
+
+  --bg-start: #23262f;
+  --bg-mid: #1b2029;
+  --bg-end: #10161d;
+  --text: #ffffff;
+  --muted: #8b929a;
+  --track: #3d4450;
+  --accent: #1a9fff;
+  --rim: transparent;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.ach {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 340px;
+  padding: 12px 14px 12px 12px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-mid) 45%, var(--bg-end) 100%);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+  color: var(--text);
+  font-family: 'Motiva Sans', Arial, Helvetica, sans-serif;
+  opacity: 0;
+  will-change: transform, opacity;
+  transform: translate(-50%, -50%) scale(var(--scale, 1));
+}
+
+/* The Steam mark, much larger than the card and mostly cropped, barely lighter than the slate. */
+.ach::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  top: -46px;
+  right: -58px;
+  width: 190px;
+  height: 190px;
+  background: #ffffff;
+  opacity: 0.035;
+  -webkit-mask: url('logo.svg') center / contain no-repeat;
+  mask: url('logo.svg') center / contain no-repeat;
+  pointer-events: none;
+}
+
+.ach > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* --- icon ------------------------------------------------------------------------------------ */
+
+.ach .icon {
+  flex: 0 0 auto;
+}
+
+.ach .icon img {
+  display: block;
+  box-sizing: border-box;
+  width: 64px;
+  height: 64px;
+  border-radius: 0;
+  object-fit: cover;
+  background: #000000;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 0 2px var(--rim);
+}
+
+/* --- text ------------------------------------------------------------------------------------ */
+
+.ach .text_wrap {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ach .text_wrap:has(.marquee) {
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 20px), transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 20px), transparent 100%);
+}
+
+/* Steam names neither the game nor the unlock rate in the toast. */
+.ach .meta,
+.ach .meta[hidden] {
+  display: none;
+}
+
+.ach .title {
+  max-width: 100%;
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 19px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ach .detail {
+  max-width: 100%;
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ach .title.marquee,
+.ach .detail.marquee {
+  display: inline-block;
+  overflow: visible;
+  text-overflow: clip;
+  will-change: transform;
+}
+
+/* --- progress -------------------------------------------------------------------------------- */
+
+/* A progress toast in Steam is the name, the count and the bar; the description is not shown. */
+.ach .text_wrap:has(.progress_line:not([hidden])) .detail {
+  display: none;
+}
+
+.progress_line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  margin-top: 3px;
+}
+
+.progress_line[hidden] {
+  display: none;
+}
+
+.progress_label {
+  order: -1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 0 100%;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress_label::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+  background: var(--muted);
+  -webkit-mask: url('medal.svg') center / contain no-repeat;
+  mask: url('medal.svg') center / contain no-repeat;
+}
+
+.progress_track {
+  display: block;
+  flex: 1 0 100%;
+  height: 6px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--track);
+}
+
+.progress_meter {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 0.35s ease;
+}
+
+/* --- states ---------------------------------------------------------------------------------- */
+
+/* Steam's only rarity cue: a gold rim around the icon. Silver and bronze keep the plain icon. */
+.ach.state-rare.tier-gold {
+  --rim: #d8b35b;
+}
+
+.ach.state-platinum {
+  --rim: var(--accent);
+}
+
+/* --- motion ---------------------------------------------------------------------------------- */
+
+/* Rises out of the bottom edge and fades, like the client's toast. */
+@keyframes aw_in {
+  from {
+    transform: translate(-50%, calc(-50% + 24px)) scale(var(--scale, 1));
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+}
+
+@keyframes aw_hold {
+  from,
+  to {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+}
+
+@keyframes aw_out {
+  from {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    opacity: 0;
+  }
+}
+
+.ach.active {
+  animation:
+    aw_in var(--ach-in) var(--ease-in) forwards,
+    aw_hold var(--ach-hold, 5000ms) forwards,
+    aw_out var(--ach-out) var(--ease-out) forwards;
+  animation-delay: 0s, var(--ach-in), calc(var(--ach-in) + var(--ach-hold, 5000ms));
+}
