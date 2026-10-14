@@ -11,11 +11,13 @@ const { spawn } = require('child_process');
 const SCRIPT = [
   'for fd in /proc/$$/fd/*; do n=${fd##*/}; [ "$n" -gt 2 ] && eval "exec $n>&-"; done 2>/dev/null',
   'while kill -0 "$1" 2>/dev/null; do sleep 0.2; done',
-  'exec "$0"',
+  'shift',
+  'exec "$0" "$@"',
 ].join('\n');
 
-function launchAfterExit(appImage, { pid = process.pid, spawnFn = spawn } = {}) {
-  const child = spawnFn('/bin/bash', ['-c', SCRIPT, appImage, String(pid)], { detached: true, stdio: 'ignore' });
+// `args` are the command-line switches the new version starts with, such as --password-store.
+function launchAfterExit(appImage, { pid = process.pid, args = [], spawnFn = spawn } = {}) {
+  const child = spawnFn('/bin/bash', ['-c', SCRIPT, appImage, String(pid), ...args], { detached: true, stdio: 'ignore' });
   child.unref();
   return child;
 }

@@ -28,15 +28,16 @@ test('the new AppImage starts only after the old process exits, with no inherite
   const report = path.join(dir, 'report');
   const fakeApp = path.join(dir, 'AW.AppImage');
   // `exec >` rather than `{ ...; } >`, which would park the old stdout on a spare descriptor.
-  fs.writeFileSync(fakeApp, `#!/bin/bash\nexec > "${report}.tmp"\ndate +%s%3N\nls /proc/$$/fd\nmv "${report}.tmp" "${report}"\n`, { mode: 0o755 });
+  fs.writeFileSync(fakeApp, `#!/bin/bash\nprintf '%s\\n' "$@" > "${report}.args"\nexec > "${report}.tmp"\ndate +%s%3N\nls /proc/$$/fd\nmv "${report}.tmp" "${report}"\n`, { mode: 0o755 });
 
   const old = spawn('sleep', ['1']);
   const exitedAt = new Promise((resolve) => old.on('exit', () => resolve(Date.now())));
   // fd 3 stands for the AppImage runtime's pipe, open and inheritable in the process that relaunches.
   const spawnWithPipe = (cmd, args, options) => spawn(cmd, args, { ...options, stdio: ['ignore', 'ignore', 'ignore', 'pipe'] });
 
-  launchAfterExit(fakeApp, { pid: old.pid, spawnFn: spawnWithPipe });
+  launchAfterExit(fakeApp, { pid: old.pid, args: ['--password-store=basic', 'two words'], spawnFn: spawnWithPipe });
   const [startedMs, ...fds] = (await waitForFile(report)).trim().split('\n');
+  assert.deepEqual(fs.readFileSync(`${report}.args`, 'utf8').trim().split('\n'), ['--password-store=basic', 'two words']);
 
   // The old process is reaped a moment after it dies, hence the small allowance.
   assert.ok(Number(startedMs) >= (await exitedAt) - 100, 'the app started before the old process exited');
@@ -51,9 +52,9 @@ test('the relaunch goes through bash with the AppImage and the pid to wait for',
     calls.push({ cmd, args, options });
     return { unref() {} };
   };
-  launchAfterExit('/home/p/AW 3.12.0.AppImage', { pid: 4242, spawnFn: fakeSpawn });
+  launchAfterExit('/home/p/AW 3.12.0.AppImage', { pid: 4242, args: ['--password-store=basic'], spawnFn: fakeSpawn });
   assert.equal(calls.length, 1);
   assert.equal(calls[0].cmd, '/bin/bash');
-  assert.deepEqual(calls[0].args.slice(2), ['/home/p/AW 3.12.0.AppImage', '4242']);
+  assert.deepEqual(calls[0].args.slice(2), ['/home/p/AW 3.12.0.AppImage', '4242', '--password-store=basic']);
   assert.equal(calls[0].options.detached, true);
 });

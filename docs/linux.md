@@ -32,9 +32,9 @@ downloading, checks the file against the SHA-512 digest published with the relea
 (`latest-linux.yml`), replaces the old AppImage with the new one and restarts. If a game is running,
 the update waits until it closes. Your data stays where it was.
 
-The new file carries the new version in its name, and the **Launch at startup** entry follows it. A
-launcher or keyboard shortcut you made yourself still points at the old name: edit it after an
-update.
+The new file carries the new version in its name. The **Launch at startup** entry and the
+`~/.local/bin/achievement-watcher` command follow it; a launcher you made yourself that names the
+AppImage file still points at the old name, so point it at that command instead.
 
 ## Supported desktops
 
@@ -56,14 +56,16 @@ cannot see a key pressed while a **native Wayland window** has the focus, such a
 running in Wayland mode or Proton with its Wayland driver: there is no in-game hotkey for those
 games.
 
-A shortcut from your desktop's own keyboard settings does not depend on that. Have it run the
-AppImage with `--toggle-overlay`, for example:
+A shortcut from your desktop's own keyboard settings does not depend on that. Have it run this
+command, with `you` replaced by your user name (GNOME does not expand `~`, so write the full path):
 
 ```bash
-/home/you/Applications/Achievement.Watcher.3.12.0.AppImage --toggle-overlay
+/home/you/.local/bin/achievement-watcher --toggle-overlay
 ```
 
-It opens or closes the overlay of the copy already running, and starts nothing else.
+It opens or closes the overlay of the copy already running, and starts nothing else. The command
+exists from the first start of the AppImage, and AW Next refreshes it at every start, so it follows
+updates.
 
 - **GNOME:** **Settings → Keyboard → View and Customize Shortcuts → Custom Shortcuts → Add
   Shortcut**. Give it a name, paste the command, then press the keys you want.
@@ -72,8 +74,7 @@ It opens or closes the overlay of the copy already running, and starts nothing e
 - **KDE Plasma 5:** **System Settings → Shortcuts → Custom Shortcuts → Edit → New → Global
   Shortcut → Command/URL**, set the keys on **Trigger** and the command on **Action**.
 
-The command names the AppImage file, so update it after AW Next updates itself. Whether the overlay
-shows above a native Wayland game in full screen has not been tested yet.
+Whether the overlay shows above a native Wayland game in full screen has not been tested yet.
 
 A controller works too: AW Next reads gamepads directly, so the controller shortcuts of the
 [Controller guide](controller.md) open and drive the overlay without taking anything from the game.

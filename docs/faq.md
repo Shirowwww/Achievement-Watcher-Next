@@ -123,8 +123,9 @@ list you open with `Ctrl+Shift+K` while a game runs - see the [Overlay guide](ov
 ### On Linux, Ctrl+Shift+K does nothing in my game
 Under Wayland, AW Next cannot see keys pressed while a native Wayland window has the focus, such as
 a Linux game in Wayland mode or Proton with its Wayland driver. Bind a key in your desktop's keyboard
-settings to the AppImage followed by `--toggle-overlay` instead - see
-[Overlay shortcut](linux.md#overlay-shortcut).
+settings to `/home/you/.local/bin/achievement-watcher --toggle-overlay` instead, with your user name
+in place of `you`. AW Next keeps that command pointing at the current AppImage, so the shortcut
+survives updates - see [Overlay shortcut](linux.md#overlay-shortcut).
 
 ## Safety and data
 

@@ -42,4 +42,11 @@ function summarizeUpdaterError(err, maxLength = 300) {
   return summary;
 }
 
-module.exports = { isChecksumMismatchError, summarizeUpdaterError };
+// A release without latest-linux.yml has no AppImage to offer: for a Linux build that is "no update",
+// as Windows reads a release with nothing newer, not a failed check. Windows always gets its latest.yml,
+// so a missing one there stays an error.
+function isMissingLinuxFeed(err, platform = process.platform) {
+  return platform === 'linux' && !!err && err.code === 'ERR_UPDATER_CHANNEL_FILE_NOT_FOUND';
+}
+
+module.exports = { isChecksumMismatchError, isMissingLinuxFeed, summarizeUpdaterError };

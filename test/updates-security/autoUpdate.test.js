@@ -109,7 +109,7 @@ test('the update cache drops an installer it has already installed, once per run
   assert.match(init, /require\(path\.join\(__dirname, '\.\.\/util\/updateCacheHousekeeping\.js'\)\)/);
   assert.match(init, /pruneInstalledPendingUpdate\(helper\.cacheDirForPendingUpdate, app\.getVersion\(\)\)/);
   // Chained in front of the scheduled check, so electron-updater is only loaded where it already was.
-  assert.match(init, /pruneInstalledPendingUpdateOnce\(\)\s*\.then\(\(\) => getUpdater\(\)\.checkForUpdates\(\)\)/);
+  assert.match(init, /pruneInstalledPendingUpdateOnce\(\)\s*\.then\(\(\) => checkForUpdates\(\)\)/);
 });
 
 test('the portable build checks the release feed and offers the release page, never the installer', () => {
