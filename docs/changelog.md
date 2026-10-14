@@ -20,6 +20,19 @@ renamed in 3.9.0 and the history is kept under one file.
 
 - **RetroAchievements games found on disk.** A game whose ROM RetroArch knows, from its history or
   a scanned playlist, now counts as installed and opens on the ROM's folder.
+- **A new installer and uninstaller.** One window in AW Next's own look replaces the Windows
+  wizard: Install, or Options for the folder, an all-users install and the desktop shortcut. It
+  speaks the language you picked in AW Next (your Windows language on a first install), says when
+  AW Next is running, shows the real progress of the files and ends on a first achievement. A
+  question such as "a file is in use, retry?" now opens in front of it instead of behind. The
+  uninstaller asks once whether to delete your data, shows how much that frees and warns that it
+  cannot be undone.
+- **A real update window.** A new version now comes with its release notes and download size, and
+  the same window follows the download (with Cancel) or keeps it going in the background; the
+  title-bar chip and Settings > Check for updates bring it back. The installer then shows a small
+  card until AW Next restarts, and an update held back by a running game can be installed from the
+  window anyway. A failed update says in plain words what happened instead of the updater's
+  technical message.
 
 ### Fixed
 
@@ -31,6 +44,17 @@ renamed in 3.9.0 and the history is kept under one file.
 - An imported Xbox game is no longer folded into a different Steam game whose name only shares a
   digit with it: Yakuza 0 for Windows 10 vanished into Yakuza 3 Remastered after a refresh. A
   listing named after its edition (Control Ultimate Edition) now joins the Steam game it is.
+
+### Performance
+
+- **Faster installs and updates.** Setup moves the 430 MB of files into place instead of copying
+  them a second time, finds a running AW Next without a slow scan, and the uninstaller removes the
+  installation folder in one step on several threads instead of file by file, which every later
+  update benefits from.
+- **About half the disk space for the installation.** Setup compresses the installed files with the
+  compression Windows applies to its system files: about 210 MB on disk instead of 420 MB, read back
+  transparently, and that is the size the installer and Installed apps now show. The portable copy
+  gets the same on its first start. The package also leaves out about 20 MB of files nothing loads.
 
 ## 3.11.3 - 2026-10-13
 

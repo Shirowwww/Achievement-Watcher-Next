@@ -139,3 +139,14 @@ test('the chip never renders a raw string the locale layer has not seen', () => 
   assert.ok(labels.length > 0);
   for (const label of labels) assert.match(label, /^t\(/, `label ${label} bypasses the locale layer`);
 });
+
+test('the chip, Settings and the update window agree once the download is in or has failed', () => {
+  const chip = appJs.slice(appJs.indexOf('function updateChipPresentation('));
+  const settings = settingsJs.slice(settingsJs.indexOf('function settingsUpdateStatusView('));
+  for (const body of [chip.slice(0, chip.indexOf('\n}\n')), settings.slice(0, settings.indexOf('\n    }\n'))]) {
+    // Not "100 %" with a cancel button while the signature is being checked.
+    assert.match(body, /percent >= 100\) return \{[^}]*t\('update-verifying-title'/);
+    // A failed download is not a failed check.
+    assert.match(body, /if \(state\.version\) (?:\{\s*)?return \{[^}]*t\('update-failed-title'/);
+  }
+});

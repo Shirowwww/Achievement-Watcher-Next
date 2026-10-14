@@ -128,7 +128,8 @@ test('the portable build checks the release feed and offers the release page, ne
   assert.ok(portableBranch > 0 && portableBranch < handler.indexOf('startUpdateDownload('), 'the portable branch returns before any download');
   const offer = init.slice(init.indexOf('async function offerPortableUpdate('));
   const body = offer.slice(0, offer.indexOf('\n  }\n'));
-  assert.doesNotMatch(body, /downloadUpdate|quitAndInstall/);
-  assert.match(body, /links\.releaseTag\(version\)/);
+  assert.doesNotMatch(body, /downloadUpdate|quitAndInstall|startUpdateDownload/);
+  assert.match(body, /openReleasePage\(version\)/);
+  assert.match(init, /function openReleasePage\(version\) \{\s+const page = version \? links\.releaseTag\(version\)/, 'the release page is the tag of the offered version');
   assert.match(body, /postponeUpdate\(version\)/, 'opening the page must not let the hourly check ask again at once');
 });

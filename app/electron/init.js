@@ -150,6 +150,9 @@ const { isChecksumMismatchError, summarizeUpdaterError } = require(path.join(__d
 const { verifyPendingInstaller } = require(path.join(__dirname, '../util/pendingInstallerGuard.js'));
 const { clearUpdaterCacheDir: clearCacheDirForHelper } = require(path.join(__dirname, '../util/updateCacheClear.js'));
 const { pruneInstalledPendingUpdate } = require(path.join(__dirname, '../util/updateCacheHousekeeping.js'));
+const { releaseNoteBlocks } = require(path.join(__dirname, '../util/releaseNotes.js'));
+const { buildUpdateWindowView } = require(path.join(__dirname, '../util/updateWindowView.js'));
+const { createUpdateWindow } = require(path.join(__dirname, 'updateWindow.js'));
 const { clearSafeCaches } = require(path.join(__dirname, '../util/clearableCaches.js'));
 
 async function applyGeneralPatch(patch) {
@@ -218,6 +221,9 @@ function applyUpdateProgressToWindow(win) {
 }
 
 function trayTooltipFor(state) {
+  if (state.phase === 'downloading' && state.percent >= 100) {
+    return `Achievement Watcher Next - ${t('update-verifying-title', 'Checking the download', 'Vérification du téléchargement')}`;
+  }
   if (state.phase === 'downloading') {
     return `Achievement Watcher Next - ${t('downloading-update', 'downloading update {percent}%', 'téléchargement de la mise à jour {percent} %', { percent: Math.round(state.percent) })}`;
   }
@@ -231,6 +237,7 @@ function trayTooltipFor(state) {
    left alone. A window not yet created is not a missed update, it asks via get-update-status on load. */
 function publishUpdateStatus() {
   publishedUpdateStatus = currentUpdateStatus;
+  refreshUpdateWindow();
   applyUpdateProgressToWindow(MainWin);
   if (tray) {
     try {
@@ -248,6 +255,157 @@ function publishUpdateStatus() {
 function setUpdateStatus(event) {
   currentUpdateStatus = updateStatus.reduce(currentUpdateStatus, event);
   if (updateStatus.shouldPublish(publishedUpdateStatus, currentUpdateStatus)) publishUpdateStatus();
+}
+
+/*
+  The update window (electron/updateWindow.js) replaces the native message box: the offer with its
+  release notes, then the download it starts, then the hand-over to the installer. It follows the
+  shared status above; this half resolves its strings, where the locale linter sees the keys, and
+  turns its clicks back into updater actions.
+*/
+let updateWindow = null;
+let updateOffer = null; // { version, currentVersion, size, notes } while an offer is on the table
+let pendingUpdateAnswer = null;
+
+function updateWindowStrings() {
+  return {
+    available: t('update-available', 'Update Available', 'Mise à jour disponible'),
+    updateNow: t('update-now', 'Update now', 'Mettre à jour'),
+    later: t('later', 'Later', 'Plus tard'),
+    skip: t('skip-this-version', 'Skip this version', 'Ignorer cette version'),
+    whatsNew: t('whats-new', "What's new", 'Nouveautés'),
+    notesUnavailable: t('release-notes-unavailable', 'The release notes could not be loaded.', "Les notes de version n'ont pas pu être chargées."),
+    fullNotes: t('see-full-release-notes', 'Full release notes on GitHub', 'Notes complètes sur GitHub'),
+    downloadingTitle: t('update-downloading-title', 'Downloading version {version}', 'Téléchargement de la version {version}'),
+    downloadDetail: t('update-download-detail', '{done} of {total} · {speed}/s', '{done} sur {total} · {speed}/s'),
+    background: t('update-keep-in-background', 'Continue in the background', 'Continuer en arrière-plan'),
+    verifyingTitle: t('update-verifying-title', 'Checking the download', 'Vérification du téléchargement'),
+    cancel: t('cancel', 'Cancel', 'Annuler'),
+    installingTitle: t('update-installing-title', 'Installing version {version}', 'Installation de la version {version}'),
+    installingDetail: t(
+      'update-installing-detail',
+      'Installing version {version}. AW Next closes and reopens on its own - this takes a few seconds.',
+      'Installation de la version {version}. AW Next se ferme et se rouvre tout seul, cela prend quelques secondes.'
+    ),
+    ready: t('update-ready', 'Update Ready', 'Mise à jour prête'),
+    readyAfterGame: t(
+      'update-ready-after-game',
+      'Version {version} is ready and will be installed once the running game is closed.',
+      'La version {version} est prête et sera installée une fois le jeu en cours fermé.'
+    ),
+    installNow: t('install-now', 'Install now', 'Installer maintenant'),
+    failedTitle: t('update-failed-title', 'The update did not complete', "La mise à jour n'a pas abouti"),
+    failedDetail: t('update-check-failed-detail', 'Update check failed: {message}', 'Échec de la vérification des mises à jour : {message}'),
+    failedSignature: t(
+      'update-signature-refused-detail',
+      "The downloaded installer is not signed by AW Next's publisher, so it was discarded and nothing was changed. Download this version from its release page instead.",
+      "L'installeur téléchargé n'est pas signé par l'éditeur d'AW Next : il a été écarté et rien n'a été modifié. Télécharge plutôt cette version depuis sa page."
+    ),
+    failedDownload: t(
+      'update-download-failed-detail',
+      'The download did not finish. AW Next will offer this update again at its next check, or you can download it from the release page.',
+      "Le téléchargement n'a pas abouti. AW Next te reproposera cette mise à jour à sa prochaine vérification, ou tu peux la télécharger depuis la page de version."
+    ),
+    openReleasePage: t('open-release-page', 'Open Release Page', 'Ouvrir la page de version'),
+    portableDetail: t(
+      'portable-update-detail',
+      'This portable copy does not update itself. Download the new archive from the release page and extract it over this folder: your data in its data folder is kept.',
+      'Cette copie portable ne se met pas à jour toute seule. Téléchargez la nouvelle archive depuis la page de version et extrayez-la par-dessus ce dossier : vos données, dans son dossier data, sont conservées.'
+    ),
+    close: t('close', 'Close', 'Fermer'),
+  };
+}
+
+function currentUpdateWindowView() {
+  const lang = (configJS && configJS.achievement && configJS.achievement.lang) || 'english';
+  return buildUpdateWindowView({ status: currentUpdateStatus, offer: updateOffer, strings: updateWindowStrings(), portable: isPortableBuild, lang });
+}
+
+function updateWindowInstance() {
+  if (!updateWindow) updateWindow = createUpdateWindow({ onAction: onUpdateWindowAction, icon: path.join(__dirname, '../resources/icon/icon.ico') });
+  return updateWindow;
+}
+
+function openUpdateWindow() {
+  const view = currentUpdateWindowView();
+  if (view) updateWindowInstance().show(view);
+}
+
+function refreshUpdateWindow() {
+  if (updateWindow && updateWindow.isOpen()) updateWindow.update(currentUpdateWindowView());
+}
+
+function closeUpdateOffer() {
+  updateOffer = null;
+  if (updateWindow) updateWindow.close();
+}
+
+// True when there was a question waiting for this answer.
+function settleUpdatePrompt(answer) {
+  const resolve = pendingUpdateAnswer;
+  pendingUpdateAnswer = null;
+  if (resolve) resolve(answer);
+  return Boolean(resolve);
+}
+
+/** Resolves with 'install' | 'release' | 'later' | 'skip'; closing the window counts as "later". */
+function askAboutUpdate(offer) {
+  settleUpdatePrompt('later');
+  updateOffer = offer;
+  return new Promise((resolve) => {
+    pendingUpdateAnswer = resolve;
+    openUpdateWindow();
+  });
+}
+
+function openReleasePage(version) {
+  const page = version ? links.releaseTag(version) : links.releases;
+  shell.openExternal(page).catch((err) => debug.log(`[updater] could not open ${page}: ${err.message || err}`));
+}
+
+function onUpdateWindowAction(id) {
+  switch (id) {
+    case 'install':
+    case 'skip':
+    case 'later':
+    case 'closed':
+      settleUpdatePrompt(id === 'closed' ? 'later' : id);
+      break;
+    case 'release':
+      if (!settleUpdatePrompt('release')) openReleasePage(currentUpdateStatus.version || (updateOffer && updateOffer.version));
+      break;
+    case 'dismiss':
+    case 'background':
+    case 'close':
+      if (!settleUpdatePrompt('later')) updateWindowInstance().close();
+      break;
+    case 'cancel':
+      cancelUpdateDownload();
+      break;
+    case 'install-now':
+      installHeldUpdateNow();
+      break;
+    case 'notes':
+      openReleasePage(updateOffer && updateOffer.version);
+      break;
+    default:
+      debug.log(`[updater] unknown update window action ${id}`);
+  }
+}
+
+// "Install now" on an update held back by a running game: the click is the consent the hold was
+// waiting for, so the install proceeds even with the game still open.
+function installHeldUpdateNow() {
+  const info = pendingInstallPrompt;
+  if (!info || typeof promptDownloadedUpdate !== 'function') return;
+  pendingInstallPrompt = null;
+  updateAcceptedByUser = true;
+  promptDownloadedUpdate(info);
+}
+
+// The size of the installer the update downloads (the largest file of the release feed).
+function updateDownloadSize(info) {
+  return ((info && info.files) || []).reduce((largest, file) => Math.max(largest, Number(file && file.size) || 0), 0);
 }
 
 function clearUpdateDownloadProgress() {
@@ -2305,11 +2463,19 @@ ipcMain.handle('get-achievements', async (event, appid) => {
 // Manual update checks reuse the automatic prompt and notification flow.
 ipcMain.handle('check-for-updates', async () => {
   if (!app.isPackaged) return { ok: false, error: 'dev-build' };
-  if (updatePromptOpen) return { ok: false, error: 'prompt-open' };
+  // The offer is already waiting for an answer: bring it back rather than report a failed check.
+  if (updatePromptOpen) {
+    openUpdateWindow();
+    return { ok: true, status: updateOffer ? 'available' : 'unknown' };
+  }
   // A download is already running from an earlier "Download && Install": calling checkForUpdates()
   // again while electron-updater is mid-download re-fires update-available and stacks a second
-  // downloadUpdate() on top of it, which is what corrupted the in-progress download.
-  if (updateDownloading) return { ok: false, error: 'download-in-progress' };
+  // downloadUpdate() on top of it, which is what corrupted the in-progress download. The window
+  // that follows it comes back instead.
+  if (updateDownloading) {
+    openUpdateWindow();
+    return { ok: false, error: 'download-in-progress' };
+  }
   manualUpdateCheckPending = true;
   manualUpdateResult = null;
   updaterErrorNotified = false; // let a still-failing check re-notify even if it already did once
@@ -2331,6 +2497,11 @@ ipcMain.handle('check-for-updates', async () => {
 /* Current updater state for a window that just loaded: the broadcast alone is not enough, a download
    can finish while the app sat in the tray with nobody listening yet. */
 ipcMain.handle('get-update-status', () => currentUpdateStatus);
+// The title-bar chip brings the update window back after "Continue in the background".
+ipcMain.handle('open-update-window', () => {
+  openUpdateWindow();
+  return Boolean(updateWindow && updateWindow.isOpen());
+});
 
 // Stop a download in flight. Answers whether there was one, so the UI can drop a Cancel button that
 // raced the download finishing instead of leaving it there doing nothing.
@@ -6888,49 +7059,32 @@ try {
           scheduleUpdateCheck(updateGate.INTERVALS.inGame);
           return;
         }
+        // The release notes travel with the offer, so reading them no longer means leaving the
+        // question for a browser and coming back to it.
+        const offer = { version: info.version, currentVersion: app.getVersion(), size: updateDownloadSize(info), notes: releaseNoteBlocks(info.releaseNotes) };
         if (isPortableBuild) {
-          await offerPortableUpdate(info.version);
+          await offerPortableUpdate(offer);
           return;
         }
-        // "View changelog" is not an answer: showMessageBox closes on any click, so reading the notes
-        // reopens the same dialog instead of deciding for the user.
-        let response;
-        do {
-          ({ response } = await dialog.showMessageBox({
-            type: 'info',
-            title: t('update-available', 'Update Available', 'Mise à jour disponible'),
-            message: t('update-available-message', 'A new version ({version}) is available.', 'Une nouvelle version ({version}) est disponible.', { version: info.version }),
-            detail: t('download-and-install-it-now', 'Download and install it now?', 'La télécharger et l’installer maintenant ?'),
-            buttons: [
-              t('download-install', 'Download && Install', 'Télécharger && installer'),
-              t('view-changelog', 'View changelog', 'Voir les nouveautés'),
-              t('later', 'Later', 'Plus tard'),
-              t('skip-this-version', 'Skip this version', 'Ignorer cette version'),
-            ],
-            defaultId: 0,
-            cancelId: 2,
-          }));
-          if (response === 1) {
-            const page = links.releaseTag(info.version);
-            debug.log(`[updater] opening the release notes of ${info.version}: ${page}`);
-            shell.openExternal(page).catch((err) => debug.log(`[updater] could not open ${page}: ${err.message || err}`));
-          }
-        } while (response === 1);
-        if (response === 0) {
+        const answer = await askAboutUpdate(offer);
+        if (answer === 'install') {
           debug.log(`[updater] user accepted download of ${info.version}${manual ? ' (manual check)' : ''}`);
           updateDownloading = true;
-          // The click is the explicit consent, regardless of whether the dialog came from the hourly
+          // The click is the explicit consent, regardless of whether the offer came from the hourly
           // check or Settings > Check for updates. A manual check alone must not silently install.
           updateAcceptedByUser = true;
+          // The window stays open and follows the download it started.
           startUpdateDownload(info.version);
-        } else if (response === 3) {
+        } else if (answer === 'skip') {
           configJS.general.skippedVersion = info.version;
           await settingsJS.save(configJS, { keepMainOwnedKeys: false });
           debug.log(`[updater] version ${info.version} skipped by user`);
+          closeUpdateOffer();
           setUpdateStatus({ type: 'reset' });
         } else {
-          // "Later" (and the dialog's cancel path, which maps to it).
+          // "Later", and closing the window.
           await postponeUpdate(info.version);
+          closeUpdateOffer();
           setUpdateStatus({ type: 'reset' });
         }
       } finally {
@@ -7046,36 +7200,21 @@ try {
     offer is the release page. Opening it counts as "Later", or the hourly check would ask again
     while the new archive is still downloading in the browser.
   */
-  async function offerPortableUpdate(version) {
-    const { response } = await dialog.showMessageBox({
-      type: 'info',
-      title: t('update-available', 'Update Available', 'Mise à jour disponible'),
-      message: t('update-available-message', 'A new version ({version}) is available.', 'Une nouvelle version ({version}) est disponible.', { version }),
-      detail: t(
-        'portable-update-detail',
-        'This portable copy does not update itself. Download the new archive from the release page and extract it over this folder: your data in its data folder is kept.',
-        'Cette copie portable ne se met pas à jour toute seule. Téléchargez la nouvelle archive depuis la page de version et extrayez-la par-dessus ce dossier : vos données, dans son dossier data, sont conservées.'
-      ),
-      buttons: [
-        t('open-release-page', 'Open Release Page', 'Ouvrir la page de version'),
-        t('later', 'Later', 'Plus tard'),
-        t('skip-this-version', 'Skip this version', 'Ignorer cette version'),
-      ],
-      defaultId: 0,
-      cancelId: 1,
-    });
-    if (response === 2) {
+  async function offerPortableUpdate(offer) {
+    const { version } = offer;
+    const answer = await askAboutUpdate(offer);
+    if (answer === 'skip') {
       configJS.general.skippedVersion = version;
       await settingsJS.save(configJS, { keepMainOwnedKeys: false });
       debug.log(`[updater] version ${version} skipped by user (portable)`);
     } else {
-      if (response === 0) {
-        const page = links.releaseTag(version);
-        debug.log(`[updater] portable build: opening the release page of ${version}: ${page}`);
-        shell.openExternal(page).catch((err) => debug.log(`[updater] could not open ${page}: ${err.message || err}`));
+      if (answer === 'release') {
+        debug.log(`[updater] portable build: opening the release page of ${version}`);
+        openReleasePage(version);
       }
       await postponeUpdate(version);
     }
+    closeUpdateOffer();
     setUpdateStatus({ type: 'reset' });
   }
 

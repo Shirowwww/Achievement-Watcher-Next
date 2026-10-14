@@ -234,13 +234,11 @@ The main packaging files are:
 |---|---|
 | `app/electron-builder.yml` | Shared product metadata, files, NSIS target and update provider |
 | `app/electron-builder-portable.yml` | ZIP target and portable artifact name |
-| `app/build/installer.nsh` | Installer and uninstaller customizations: languages, folder check, uninstall cleanup, update run ([details](docs/INSTALLER_AND_UPDATES.md)) |
+| `app/build/installer.nsh` | Installer and uninstaller customizations: pages, languages, uninstall cleanup, update run ([details](docs/INSTALLER_AND_UPDATES.md)) |
+| `app/build/x86-unicode/AwSetupUi.dll` | The installer and uninstaller window (NSIS plug-in). Source in `native/setup-ui`; rebuild with `node native/setup-ui/build.js` (needs Rust with the `i686-pc-windows-msvc` target) |
 | `app/patches/app-builder-lib+26.15.3.patch` | The NSIS template changes `installer.nsh` relies on |
 | `app/build/afterPack.js` | Ensures the packaged Watchdog dependency tree is copied correctly |
 | `app/build/icon.ico` | Application and installer icon |
-| `app/build/installerSidebar.bmp` | NSIS installer welcome/finish sidebar (164 × 314) |
-| `app/build/installerHeader.bmp` | NSIS installer header image (150 × 57) |
-| `app/build/generate-installer-images.ps1` | Regenerates both installer BMPs in the Steam Blue palette |
 
 The Watchdog runs under Electron's bundled Node runtime through `ELECTRON_RUN_AS_NODE`. No separate portable Node or NW.js runtime is packaged.
 
