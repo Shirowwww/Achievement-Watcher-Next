@@ -5,6 +5,7 @@ const path = require('path');
 const dirCache = require(path.join(__dirname, '..', 'util', 'dirCache.js'));
 const exeCandidateCache = require(path.join(__dirname, '..', 'util', 'exeCandidateCache.js'));
 const unrealLayout = require(path.join(__dirname, '..', 'util', 'unrealLayout.js'));
+const { isElf } = require(path.join(__dirname, '..', 'util', 'elf.js'));
 const saveRoots = require(path.join(__dirname, 'saveRoots.js'));
 
 // Hard-exclude: never a game executable (installers, redists, crash handlers, …).
@@ -81,7 +82,6 @@ const KNOWN_NON_GAME_EXE = new Set([
 // A native Linux game is an ELF binary with no extension, or an architecture one (Unity's .x86_64).
 const NATIVE_BINARY_SUFFIX = /\.(?:x86_64|x86|aarch64|arm64)$/i;
 const EXECUTABLE_SUFFIX = /\.(?:exe|x86_64|x86|aarch64|arm64)$/i;
-const ELF_MAGIC = Buffer.from([0x7f, 0x45, 0x4c, 0x46]);
 
 function exeBaseName(name) {
   return String(name || '').replace(EXECUTABLE_SUFFIX, '');
@@ -100,18 +100,12 @@ function isNativeExecutable(dir, name) {
   if (process.platform === 'win32' || name === 'chrome-sandbox') return false;
   if (path.extname(name) && !NATIVE_BINARY_SUFFIX.test(name)) return false;
   const full = path.join(dir, name);
-  let fd;
   try {
     if ((fs.statSync(full).mode & 0o111) === 0) return false;
-    fd = fs.openSync(full, 'r');
-    const head = Buffer.alloc(ELF_MAGIC.length);
-    fs.readSync(fd, head, 0, head.length, 0);
-    return head.equals(ELF_MAGIC);
   } catch {
     return false;
-  } finally {
-    if (fd !== undefined) fs.closeSync(fd);
   }
+  return isElf(full);
 }
 
 function isExecutableFile(dir, entry) {
@@ -497,6 +491,7 @@ module.exports = {
   SOFT_PENALTY,
   ENGINE_DATA_DIRS,
   isKnownNonGameExe,
+  exeBaseName,
   KNOWN_NON_GAME_EXE,
   CONFIDENCE,
 };

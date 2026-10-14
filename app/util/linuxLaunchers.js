@@ -148,6 +148,10 @@ function lutrisRows(file) {
   }
 }
 
+function expandHome(ctx, value) {
+  return typeof value === 'string' ? value.replace(/^~(?=\/)/, ctx.home) : '';
+}
+
 // The `game:` section of a Lutris game config, wherever this Lutris keeps its configs.
 function lutrisGameConfig(ctx, configpath) {
   if (!configpath) return {};
@@ -163,7 +167,8 @@ function lutrisGames(options) {
   for (const db of [path.join(ctx.data, 'lutris', 'pga.db'), path.join(flatpakDir(ctx, 'lutris', 'data'), 'lutris', 'pga.db')]) {
     for (const row of lutrisRows(db)) {
       const game = lutrisGameConfig(ctx, row.configpath);
-      const executable = typeof game.exe === 'string' && path.isAbsolute(game.exe) ? game.exe : '';
+      const exe = expandHome(ctx, game.exe);
+      const executable = path.isAbsolute(exe) ? exe : '';
       const installPath = row.directory || (executable ? path.dirname(executable) : '');
       if (!installPath) continue;
       out.push({
@@ -175,6 +180,7 @@ function lutrisGames(options) {
         executable,
         runner: row.runner || '',
         serviceId: row.service_id || '',
+        prefix: expandHome(ctx, game.prefix),
       });
     }
   }
@@ -199,6 +205,42 @@ function bottlesPrograms(options) {
         executable,
         bottle: config.Name || path.basename(dir),
       });
+    }
+  }
+  return out;
+}
+
+// Programs added to Heroic by hand: no store, only the executable the user picked.
+function heroicSideloads(options) {
+  const ctx = xdg(options);
+  const out = [];
+  for (const dir of heroicDirs(ctx)) {
+    const games = readJson(path.join(dir, 'sideload_apps', 'library.json'))?.games;
+    for (const game of Array.isArray(games) ? games : []) {
+      const executable = game?.install?.executable;
+      if (!game?.app_name || !executable) continue;
+      out.push({ launcher: 'heroic', store: 'sideload', id: game.app_name, title: game.title || '', installPath: path.dirname(executable), executable });
+    }
+  }
+  return out;
+}
+
+// The Wine prefix of each Heroic game, from its settings in GamesConfig/<appName>.json.
+function heroicPrefixes(options) {
+  const ctx = xdg(options);
+  const out = [];
+  for (const dir of heroicDirs(ctx)) {
+    const configDir = path.join(dir, 'GamesConfig');
+    let names = [];
+    try {
+      names = fs.readdirSync(configDir).filter((name) => /\.json$/i.test(name));
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      for (const [id, settings] of Object.entries(readJson(path.join(configDir, name)) || {})) {
+        if (settings && typeof settings.winePrefix === 'string') out.push({ id, winePrefix: settings.winePrefix });
+      }
     }
   }
   return out;
@@ -242,4 +284,4 @@ function storeInstallDirs(options) {
   return storeDirsCache.dirs;
 }
 
-module.exports = { epicInstalls, gogInstalls, amazonInstalls, lutrisGames, bottlesPrograms, listInstalls, storeInstallDirs };
+module.exports = { epicInstalls, gogInstalls, amazonInstalls, lutrisGames, bottlesPrograms, heroicSideloads, heroicPrefixes, listInstalls, storeInstallDirs };

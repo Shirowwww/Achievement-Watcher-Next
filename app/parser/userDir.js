@@ -9,7 +9,7 @@ const glob = lazyRequire('fast-glob');
 const fs = require('fs');
 const saveRoots = require(path.join(appPath, 'parser/saveRoots.js'));
 const { appHosts, documentsFolders, documentsFor } = require(path.join(appPath, 'util/appHosts.js'));
-const { hostPath, hostFor } = require(path.join(appPath, 'util/winHosts.js'));
+const { hostPath, hostFor, pathKey } = require(path.join(appPath, 'util/winHosts.js'));
 const { xdgAppDirs } = require(path.join(appPath, 'util/xdgAppDirs.js'));
 
 let file;
@@ -383,8 +383,8 @@ module.exports.findEntries = async () => {
   const result = [];
   const addDetected = (dir, detector) => {
     if (!dir) return;
-    const key = path.normalize(String(dir)).toLowerCase();
-    if (result.some((item) => path.normalize(item.path).toLowerCase() === key)) return;
+    const key = pathKey(dir);
+    if (result.some((item) => pathKey(item.path) === key)) return;
     result.push({ path: dir, notify: true, origin: 'auto', enabled: true, detector });
   };
   for (const dir of saveRoots.defaultSteamEmuSaveRoots({ existingOnly: true, expandProgramDataSteam: true })) {

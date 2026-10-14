@@ -5045,7 +5045,7 @@ var app = {
                             exe0 = exeDetect.detect(gameDir, game?.name || '', { dllPaths: emu0.dll });
                             if (exe0 && exe0.full) arch = pe.exeArch(exe0.full);
                           } catch {}
-                          const gameNameCandidates = [game?.name, path.basename(gameDir || ''), path.basename((exe0 && (exe0.full || exe0.name)) || '').replace(/\.exe$/i, '')].filter(Boolean);
+                          const gameNameCandidates = [game?.name, path.basename(gameDir || ''), exeDetect.exeBaseName(path.basename((exe0 && (exe0.full || exe0.name)) || ''))].filter(Boolean);
                           setGameBoxBusy(self, t('checking-community-crack', 'Checking community crack…', 'Recherche d’un crack communautaire…'));
                           const cf = await crackFix.applyBestFix({
                             cacheDir: path.join(getUserDataPath(), 'cache/crackfiles'),

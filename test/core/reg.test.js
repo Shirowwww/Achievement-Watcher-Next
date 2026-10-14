@@ -71,7 +71,7 @@ function removeProbeKey() {
 }
 
 test('the fallback reads values, subkeys and existence from a real key', (t) => {
-  if (process.platform !== 'win32') return t.skip('Windows only');
+  if (process.platform !== 'win32') return t.skip('Windows-only');
   seedProbeKey();
   t.after(removeProbeKey);
 
@@ -83,7 +83,7 @@ test('the fallback reads values, subkeys and existence from a real key', (t) => 
 });
 
 test('non-ASCII values survive the fallback, because reg.exe prints in the OEM codepage', (t) => {
-  if (process.platform !== 'win32') return t.skip('Windows only');
+  if (process.platform !== 'win32') return t.skip('Windows-only');
   seedProbeKey();
   t.after(removeProbeKey);
 
@@ -94,7 +94,7 @@ test('non-ASCII values survive the fallback, because reg.exe prints in the OEM c
 });
 
 test('a missing key is reported as missing, not as an error', (t) => {
-  if (process.platform !== 'win32') return t.skip('Windows only');
+  if (process.platform !== 'win32') return t.skip('Windows-only');
   const absent = 'Software\\AchievementWatcherRegTest\\NoSuchKey';
   assert.equal(fallback.regKeyExists('HKCU', absent), false);
   assert.deepEqual(fallback.listRegistryAllSubkeys('HKCU', absent), []);
@@ -102,7 +102,7 @@ test('a missing key is reported as missing, not as an error', (t) => {
 });
 
 test('the fallback writes values that read back', (t) => {
-  if (process.platform !== 'win32') return t.skip('Windows only');
+  if (process.platform !== 'win32') return t.skip('Windows-only');
   t.after(removeProbeKey);
 
   fallback.writeRegistryString('HKCU', PROBE_KEY, 'Written', 'hello world');
@@ -113,7 +113,7 @@ test('the fallback writes values that read back', (t) => {
 });
 
 test('both backends give the same answer, so a missing binary only costs speed', (t) => {
-  if (process.platform !== 'win32') return t.skip('Windows only');
+  if (process.platform !== 'win32') return t.skip('Windows-only');
   if (!nativeAvailable) return t.skip('registry-js binary not built in this checkout');
   seedProbeKey();
   t.after(removeProbeKey);
