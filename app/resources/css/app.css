@@ -13219,3 +13219,149 @@ body {
 #profile-stats .header {
   flex-wrap: wrap;
 }
+
+/* ---------------------------------------------------------------------------------------------
+   Dropdown panel (ui/selectMenu.js)
+
+   Drawn for every <select> in the window, in place of Chromium's own popup: that one is a grey
+   system list with its own fonts and metrics, and it looked like another application's menu
+   hanging off the panel. This is the settings chrome's own palette, so it follows every theme
+   including a custom one. Fixed positioning and a z-index above the prompt overlay, because the
+   panel has to escape the settings modal and every scrolling card inside it.
+   --------------------------------------------------------------------------------------------- */
+.select-menu {
+  position: fixed;
+  z-index: 100000;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+  padding: 6px;
+  border: 1px solid var(--set-hairline, var(--border));
+  border-radius: var(--radius-md);
+  /* Fully opaque on purpose: the settings modal's own surface tokens are mixed down to 93% alpha,
+     which is fine for a sheet that covers the window and wrong for a menu floating over a row -
+     the values underneath showed straight through the list. */
+  background: var(--set-surface-elevated, var(--surface-elevated));
+  /* Not --shadow-dialog: that one is tuned for a full-window sheet and sits under a small menu as a
+     grey smudge on the light theme. Same alphas as the cards, dialled down with --shadow-scale. */
+  box-shadow: 0 16px 36px rgba(0, 0, 0, calc(0.34 * var(--shadow-scale))), 0 2px 8px rgba(0, 0, 0, calc(0.18 * var(--shadow-scale)));
+  /* The trigger keeps the focus, so the panel itself must never look focusable. */
+  outline: none;
+  opacity: 0;
+  transform: translateY(-4px) scale(0.985);
+  transform-origin: top center;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.select-menu.is-above {
+  transform: translateY(4px) scale(0.985);
+  transform-origin: bottom center;
+}
+
+.select-menu.is-open {
+  opacity: 1;
+  transform: none;
+}
+
+.select-menu-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.25;
+  cursor: pointer;
+  /* A value is one row: a long theme name is cut with an ellipsis rather than reflowing the list. */
+  white-space: nowrap;
+}
+
+.select-menu-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The tick holds its place on every row, so picking a value does not shift the labels. */
+.select-menu-tick {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--accent);
+  visibility: hidden;
+}
+
+.select-menu-option.is-selected {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--set-title, var(--text));
+  font-weight: 600;
+}
+
+.select-menu-option.is-selected .select-menu-tick {
+  visibility: visible;
+}
+
+/* Hover and keyboard land on the same highlight: the list is driven by either, and two different
+   "current row" styles in one list is one too many. */
+.select-menu-option.is-active:not(.is-disabled) {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.select-menu-option.is-selected.is-active {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.select-menu-option.is-disabled {
+  color: var(--text-muted);
+  cursor: default;
+  opacity: 0.6;
+}
+
+.select-menu-group {
+  padding: 8px 10px 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.select-menu::-webkit-scrollbar {
+  width: 11px;
+}
+.select-menu::-webkit-scrollbar-track {
+  background: transparent;
+  margin-block: 6px;
+}
+.select-menu::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 10px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+.select-menu::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+  background-clip: padding-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .select-menu {
+    transition: none;
+  }
+}
+
+/* Every select is now a trigger: the arrow rows had pointer events switched off, which is why only
+   the few rows marked .dropdown could be opened at all. The arrows still step the value. */
+.arrow-list li .right select {
+  pointer-events: initial;
+}
+
+/* Chromium keeps drawing a focus ring on the trigger after a pick; the row already shows the
+   value, and the ring on a transparent, borderless select reads as a rendering fault. */
+.arrow-list li .right select:focus-visible,
+#settings select:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
