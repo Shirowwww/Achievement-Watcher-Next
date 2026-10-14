@@ -23,7 +23,7 @@ const exeIcon = require(path.join(__dirname, '..', '..', 'app', 'util', 'exeIcon
 const SYSTEM32 = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32');
 const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
 
-test('a real executable yields a decodable image, not a placeholder', { skip: process.platform !== 'win32' && 'Windows only' }, () => {
+test('a real executable yields a decodable image, not a placeholder', { skip: process.platform !== 'win32' && 'Windows-only' }, () => {
   const icon = exeIcon.extractIcon(path.join(SYSTEM32, 'notepad.exe'));
   assert.ok(icon, 'notepad.exe carries an icon');
   assert.ok(['png', 'ico'].includes(icon.format));
@@ -33,7 +33,7 @@ test('a real executable yields a decodable image, not a placeholder', { skip: pr
   else assert.equal(icon.data.readUInt16LE(2), 1, 'a dib entry is wrapped in an icon-type .ico');
 });
 
-test('the largest entry of the group is the one returned', { skip: process.platform !== 'win32' && 'Windows only' }, () => {
+test('the largest entry of the group is the one returned', { skip: process.platform !== 'win32' && 'Windows-only' }, () => {
   const icon = exeIcon.extractIcon(path.join(SYSTEM32, 'notepad.exe'));
   // Modern system binaries ship a 256x256 entry; picking the smallest would give a blurry tile.
   assert.ok(icon.width >= 32, `expected a large entry, got ${icon.width}x${icon.height}`);

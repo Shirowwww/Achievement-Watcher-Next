@@ -8,6 +8,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { DatabaseSync } = require('node:sqlite');
 
 const { planLaunch, isWindowsProgram, openUri } = require('../../app/util/linuxGameLaunch.js');
 
@@ -52,6 +53,12 @@ test('a Lutris game is started by its slug, matched on its executable or its pre
       path.join(home, '.config', 'lutris', 'games', 'portal-1760430000.yml'),
       `game:\n  exe: ${exe}\n  prefix: ${prefix}\nsystem: {}\nwine:\n  version: system\n`
     );
+    const db = path.join(home, '.local', 'share', 'lutris', 'pga.db');
+    fs.mkdirSync(path.dirname(db), { recursive: true });
+    const pga = new DatabaseSync(db);
+    pga.exec('CREATE TABLE games (id INTEGER PRIMARY KEY, name TEXT, slug TEXT, runner TEXT, directory TEXT, installed INTEGER, configpath TEXT, service TEXT, service_id TEXT)');
+    pga.prepare('INSERT INTO games (name, slug, runner, directory, installed, configpath) VALUES (?, ?, ?, ?, ?, ?)').run('Portal', 'portal', 'wine', prefix, 1, 'portal-1760430000');
+    pga.close();
     assert.deepEqual(planLaunch({ exe }, ctx), { kind: 'uri', launcher: 'lutris', url: 'lutris:rungame/portal' });
     assert.equal(planLaunch({ exe: other }, ctx).url, 'lutris:rungame/portal');
   });
@@ -62,7 +69,7 @@ test('a Heroic game is started through its store runner, or by name when only it
     const heroic = path.join(home, '.config', 'heroic');
     const install = path.join(home, 'Games', 'Heroic', 'Quail Game');
     const exe = write(path.join(install, 'Binaries', 'Quail.exe'), '');
-    write(path.join(heroic, 'legendaryConfig', 'legendary', 'installed.json'), JSON.stringify({ Quail: { install_path: install } }));
+    write(path.join(heroic, 'legendaryConfig', 'legendary', 'installed.json'), JSON.stringify({ Quail: { app_name: 'Quail', install_path: install } }));
     assert.deepEqual(planLaunch({ exe }, ctx), { kind: 'uri', launcher: 'heroic', url: 'heroic://launch/legendary/Quail' });
 
     const gogInstall = path.join(home, 'Games', 'Heroic', 'GogGame');

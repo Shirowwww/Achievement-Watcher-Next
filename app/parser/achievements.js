@@ -1084,7 +1084,7 @@ function crackFixNameCandidates({ gameDir, gameName, detectedExe } = {}) {
   };
   add(gameName);
   add(path.basename(gameDir || ''));
-  add(path.basename((detectedExe && (detectedExe.full || detectedExe.name)) || '').replace(/\.exe$/i, ''));
+  add(exeDetect.exeBaseName(path.basename((detectedExe && (detectedExe.full || detectedExe.name)) || '')));
   return names;
 }
 
@@ -1584,7 +1584,7 @@ function desktopRoots() {
 // Prefer product metadata, then the folder name, then the executable name.
 function unconfiguredDisplayName(folderName, exeName, productName) {
   if (productName) return productName;
-  return /^[0-9]+$/.test(folderName) || folderName.length < 3 ? exeName.replace(/\.exe$/i, '') : folderName;
+  return /^[0-9]+$/.test(folderName) || folderName.length < 3 ? exeDetect.exeBaseName(exeName) : folderName;
 }
 
 // Is this folder a collection root rather than a game folder - does it merely CONTAIN other games'
@@ -2010,7 +2010,7 @@ function unconfiguredNameCandidates(u) {
   if (u && u.data) {
     add(u.data.productName);
     add(path.basename(u.data.gameDir || ''));
-    add(path.basename(u.data.exe || '').replace(/\.exe$/i, ''));
+    add(exeDetect.exeBaseName(path.basename(u.data.exe || '')));
   }
   return values.filter((name) => !/^[0-9]+$/.test(name) && name.length >= 3);
 }
