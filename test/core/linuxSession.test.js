@@ -34,3 +34,39 @@ test('a platform chosen on the command line is kept, which also stops a restart 
 test('a shortcut press forwarded to the running copy is not restarted first', () => {
   assert.equal(run({ argv: ['/opt/aw/aw', '--toggle-overlay'] }), null);
 });
+
+// Started by its systemd unit in Steam's Game Mode, AW takes the display the Steam client runs on.
+const { adoptSteamDisplay } = require('../../app/util/linuxSession.js');
+
+const steamEnviron = ['HOME=/home/deck', 'DISPLAY=:0', 'XAUTHORITY=/run/user/1000/xauth_x', 'SteamAppId=769'].join('\0');
+const adopt = (env, overrides) =>
+  adoptSteamDisplay({ platform: 'linux', env, steamPid: () => 4242, environOf: () => steamEnviron, exists: () => true, ...overrides });
+
+test("without a display AW takes the Steam client's X display and its authority file", () => {
+  const env = {};
+  assert.equal(adopt(env), true);
+  assert.deepEqual(env, { DISPLAY: ':0', XAUTHORITY: '/run/user/1000/xauth_x' });
+});
+
+test('an authority file that only exists in a Flatpak sandbox is left out', () => {
+  const env = {};
+  adopt(env, { exists: () => false });
+  assert.deepEqual(env, { DISPLAY: ':0' });
+});
+
+test('a session that has a display keeps it, and Windows is left alone', () => {
+  const x11 = { DISPLAY: ':1' };
+  assert.equal(adopt(x11), true);
+  assert.deepEqual(x11, { DISPLAY: ':1' });
+  const wayland = { WAYLAND_DISPLAY: 'wayland-0' };
+  assert.equal(adopt(wayland), true);
+  assert.deepEqual(wayland, { WAYLAND_DISPLAY: 'wayland-0' });
+  const windows = {};
+  assert.equal(adopt(windows, { platform: 'win32' }), true);
+  assert.deepEqual(windows, {});
+});
+
+test('without Steam running, or a Steam without a display, there is nothing to run on', () => {
+  assert.equal(adopt({}, { steamPid: () => 0 }), false);
+  assert.equal(adopt({}, { environOf: () => 'HOME=/home/deck' }), false);
+});

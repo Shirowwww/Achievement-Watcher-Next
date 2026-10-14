@@ -37,8 +37,13 @@ function resolveOverlayHost() {
 
 // Only Automatic pays for the live signals: the forced modes do not act on them.
 async function collectSignals(mode, appid) {
-  const signals = { overlayHost: resolveOverlayHost(), overlayHidden: null, remembered: null };
-  if (mode !== 'auto' || signals.overlayHost !== 'ipc') return signals;
+  const signals = {
+    overlayHost: resolveOverlayHost(),
+    overlayHidden: null,
+    remembered: null,
+    toastHidden: process.env.AW_GAMESCOPE === '1',
+  };
+  if (signals.toastHidden || mode !== 'auto' || signals.overlayHost !== 'ipc') return signals;
   signals.overlayHidden = await isOverlayLikelyHidden().catch(() => null);
   signals.remembered = transportMemory.forGame(appid);
   return signals;

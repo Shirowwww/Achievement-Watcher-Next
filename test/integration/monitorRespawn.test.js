@@ -15,7 +15,7 @@ test('launchWatchdog clears the respawn handle instead of only cancelling the ti
   // without nulling the handle left the scheduler permanently "busy": a manual restart landing on a
   // pending respawn disabled supervised respawn for the rest of the session, so the next monitor
   // crash silently ended notifications and playtime tracking.
-  const body = /function launchWatchdog\(\) \{([\s\S]*?)\n  const baseDir/.exec(source);
+  const body = /function launchWatchdog\(\) \{([\s\S]*?)\n  const wdDir/.exec(source);
   assert.ok(body, 'launchWatchdog() preamble not found');
   assert.match(body[1], /clearTimeout\(monitorRespawnTimer\)/);
   assert.match(body[1], /monitorRespawnTimer\s*=\s*null/, 'the handle must be reset, not just cleared');

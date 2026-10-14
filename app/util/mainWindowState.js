@@ -44,6 +44,21 @@ function normalizeMainWindowState(raw, { minWidth = 0, minHeight = 0 } = {}) {
   return state;
 }
 
+// The default size is wider than a Steam Deck's 1280x800 screen: on a smaller display the first
+// window is shrunk to the work area and centred in it, so its caption buttons show.
+function firstStartBounds(defaults, workArea, { minWidth, minHeight }) {
+  const width = positiveInteger(defaults.width);
+  const height = positiveInteger(defaults.height);
+  if (!width || !height || (width <= workArea.width && height <= workArea.height)) return null;
+  const bounds = {
+    width: Math.max(minWidth, Math.min(width, workArea.width)),
+    height: Math.max(minHeight, Math.min(height, workArea.height)),
+  };
+  const x = Math.round((workArea.x || 0) + (workArea.width - bounds.width) / 2);
+  const y = Math.round((workArea.y || 0) + (workArea.height - bounds.height) / 2);
+  return { x, y, ...bounds };
+}
+
 // Saved geometry outlives the display it was recorded on: a laptop gets undocked, a monitor moves to
 // the other side, a 4K panel is replaced by a 1080p one. Shrink to what the display can show, then
 // clamp the position so the frameless caption controls stay clickable.
@@ -52,9 +67,9 @@ function resolveMainWindowState(defaults, raw, { workArea = null } = {}) {
   const minWidth = positiveInteger(base.minWidth);
   const minHeight = positiveInteger(base.minHeight);
   const state = normalizeMainWindowState(raw, { minWidth, minHeight });
-  if (!state.bounds) return { bounds: null, maximized: state.maximized };
-
   const fits = workArea && Number.isFinite(workArea.width) && Number.isFinite(workArea.height);
+  if (!state.bounds) return { bounds: fits ? firstStartBounds(base, workArea, { minWidth, minHeight }) : null, maximized: state.maximized };
+
   const bounds = { ...state.bounds };
   if (fits) {
     bounds.width = Math.max(minWidth, Math.min(bounds.width, workArea.width));

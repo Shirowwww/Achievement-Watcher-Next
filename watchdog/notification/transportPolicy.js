@@ -23,6 +23,7 @@ const REASON = {
   OVERLAY_FAILING: 'overlay-failing',
   FULLSCREEN_HIDDEN: 'fullscreen-hidden',
   REMEMBERED_TOAST: 'remembered-toast',
+  GAME_MODE: 'game-mode',
 };
 
 let overlayFailedAt = 0;
@@ -53,6 +54,9 @@ function planDelivery({ mode, websocket = false, signals = {}, now = Date.now() 
   const chosen = normalizeMode(mode);
   const broadcast = websocket === true || chosen !== 'toast';
   const plan = { overlay: false, toast: false, websocket: broadcast, fallbackToToast: false, reason: REASON.OVERLAY };
+
+  // Steam's Game Mode displays no system notification at all: the overlay is the only popup there is.
+  if (signals.toastHidden === true && signals.overlayHost === 'ipc') return { ...plan, overlay: true, reason: REASON.GAME_MODE };
 
   if (chosen === 'toast') return { ...plan, toast: true, reason: REASON.FORCED_TOAST };
 
