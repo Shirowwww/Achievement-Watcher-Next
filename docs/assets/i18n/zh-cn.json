@@ -169,7 +169,7 @@
   "install.data": "设置和数据保存在 <code>%APPDATA%\\Achievement Watcher Next</code>。更新会保留它们，只下载变化的部分，并且只安装由本项目签名的版本。首次启动会导入旧的 Achievement Watcher 文件夹，且不会修改它。",
   "install.download": "下载",
   "install.guide": "首次运行指南",
-  "install.linux": "在 Linux 上，从同一页面下载 <code>Achievement.Watcher.&lt;version&gt;.AppImage</code>，赋予可执行权限后运行。它会监视你通过 Wine、Proton、Lutris、Heroic 或 Bottles 运行的游戏，数据保存在 <code>~/.config/Achievement Watcher Next</code>。",
+  "install.linux": "在 Linux 上，从同一页面下载 <code>Achievement.Watcher.&lt;version&gt;.AppImage</code>，赋予可执行权限后运行；需要 FUSE 2（<code>libfuse2</code>）。它会自动更新，监视你通过 Steam、Proton、Wine、Lutris、Heroic 或 Bottles 运行的游戏，数据保存在 <code>~/.config/Achievement Watcher Next</code>。桌面环境、覆盖层快捷键和 Steam Deck 的说明见 <a href=\"linux.html\">Linux 指南</a>。",
   "install.step1Body": "到 releases 页面下载 <code>Achievement.Watcher.Setup.&lt;version&gt;.exe</code>，不想用安装程序的话也可以下载 <code>Achievement.Watcher.Portable.&lt;version&gt;.zip</code>：解压到任意位置，数据就留在它旁边。其他任何地方都不发布它们。",
   "install.step1Title": "安装",
   "install.step2Body": "设置，然后是文件夹。补上它没能猜到的游戏或存档目录。",

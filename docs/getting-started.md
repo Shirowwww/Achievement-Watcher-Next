@@ -1,6 +1,6 @@
 # Getting started
 
-AW Next is a Windows desktop application. Packaged releases include their own runtime, so Node.js is required only when building from source.
+AW Next is a desktop application for Windows and Linux. Packaged releases include their own runtime, so Node.js is required only when building from source. On Linux, install the AppImage as [Linux and the Steam Deck](linux.md) describes, then come back for the first launch: everything below applies, with `~/.config/Achievement Watcher Next` in place of `%APPDATA%\Achievement Watcher Next`.
 
 ## Install
 
@@ -300,6 +300,9 @@ Installing a newer build over an older one replaces program files but preserves 
 ```
 
 This directory contains settings, watched folders, caches, playtime, logs, notification assets and local account data.
+
+The Linux AppImage updates from the same releases, replacing its own file - see
+[Linux updates](linux.md#updates).
 
 On the first launch after upgrading, AW Next imports your existing data into it:
 

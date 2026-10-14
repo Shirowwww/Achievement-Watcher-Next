@@ -169,7 +169,7 @@
   "install.data": "Настройки и данные хранятся в <code>%APPDATA%\\Achievement Watcher Next</code>. Обновление их сохраняет, скачивает только изменения и устанавливает только выпуск, подписанный проектом. Первый запуск импортирует старую папку Achievement Watcher, не изменяя её.",
   "install.download": "Скачать",
   "install.guide": "Первый запуск",
-  "install.linux": "В Linux скачайте <code>Achievement.Watcher.&lt;version&gt;.AppImage</code> с той же страницы, сделайте файл исполняемым и запустите его. Он следит за играми, запущенными через Wine, Proton, Lutris, Heroic или Bottles, и хранит данные в <code>~/.config/Achievement Watcher Next</code>.",
+  "install.linux": "В Linux скачайте <code>Achievement.Watcher.&lt;version&gt;.AppImage</code> с той же страницы, сделайте файл исполняемым и запустите его; нужен FUSE 2 (<code>libfuse2</code>). Он обновляется сам, следит за играми, запущенными через Steam, Proton, Wine, Lutris, Heroic или Bottles, и хранит данные в <code>~/.config/Achievement Watcher Next</code>. В <a href=\"linux.html\">руководстве по Linux</a> описаны окружения рабочего стола, сочетание клавиш для оверлея и Steam Deck.",
   "install.step1Body": "<code>Achievement.Watcher.Setup.&lt;version&gt;.exe</code> со страницы релизов или <code>Achievement.Watcher.Portable.&lt;version&gt;.zip</code>, если вы предпочитаете обойтись без установщика: распакуйте его куда угодно, и данные останутся рядом. Больше их нигде не публикуют.",
   "install.step1Title": "Установите",
   "install.step2Body": "«Настройки», затем «Папки». Добавьте папки игр и сохранений, которые не нашлись сами.",

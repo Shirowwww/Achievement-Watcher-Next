@@ -169,7 +169,7 @@
   "install.data": "Einstellungen und Daten liegen in <code>%APPDATA%\\Achievement Watcher Next</code>. Ein Update behält sie, lädt nur herunter, was sich geändert hat, und installiert nur eine vom Projekt signierte Version. Der erste Start importiert einen älteren Achievement-Watcher-Ordner, ohne ihn zu verändern.",
   "install.download": "Herunterladen",
   "install.guide": "Anleitung zum ersten Start",
-  "install.linux": "Unter Linux nimmst du <code>Achievement.Watcher.&lt;version&gt;.AppImage</code> von derselben Seite, machst die Datei ausführbar und startest sie. Sie überwacht die Spiele, die du über Wine, Proton, Lutris, Heroic oder Bottles startest, und legt ihre Daten in <code>~/.config/Achievement Watcher Next</code> ab.",
+  "install.linux": "Unter Linux nimmst du <code>Achievement.Watcher.&lt;version&gt;.AppImage</code> von derselben Seite, machst die Datei ausführbar und startest sie; sie braucht FUSE 2 (<code>libfuse2</code>). Sie aktualisiert sich selbst, überwacht die Spiele, die du über Steam, Proton, Wine, Lutris, Heroic oder Bottles startest, und legt ihre Daten in <code>~/.config/Achievement Watcher Next</code> ab. Die <a href=\"linux.html\">Linux-Anleitung</a> erklärt Desktops, das Overlay-Tastenkürzel und das Steam Deck.",
   "install.step1Body": "<code>Achievement.Watcher.Setup.&lt;version&gt;.exe</code> von der Releases-Seite, oder <code>Achievement.Watcher.Portable.&lt;version&gt;.zip</code>, wenn du lieber ohne Installer arbeitest: irgendwo entpacken, die Daten bleiben daneben. Anderswo werden sie nicht veröffentlicht.",
   "install.step1Title": "Installieren",
   "install.step2Body": "Einstellungen, dann Ordner. Ergänze Spiel- oder Speicherordner, die nicht gefunden wurden.",

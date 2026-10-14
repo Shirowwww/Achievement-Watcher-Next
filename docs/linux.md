@@ -1,0 +1,158 @@
+# Linux and the Steam Deck
+
+AW Next runs on Linux (x64) as a native app, never through Wine. It follows the games you run
+through Steam and Proton, Wine, Lutris, Heroic or Bottles, native Linux games and the supported
+emulators, with the same library, popups, overlay and playtime as on Windows.
+
+## Install
+
+1. Open the [latest release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest)
+   and download `Achievement.Watcher.<version>.AppImage`.
+2. Put it in a folder of your own, such as `~/Applications`, and make it executable: in the file
+   manager, **Properties → Allow executing file as program**, or in a terminal:
+
+   ```bash
+   chmod +x Achievement.Watcher.*.AppImage
+   ```
+
+3. Start it, then follow the first-run guide as on Windows - see [Getting started](getting-started.md).
+
+An AppImage needs FUSE 2, which some distributions, Ubuntu 24.04 among them, no longer install by
+default. If the file does not start, install it: `libfuse2t64` on Ubuntu 24.04 and later, `libfuse2` on older Ubuntu and Debian,
+`fuse-libs` on Fedora, `fuse2` on Arch.
+
+On its first start AW Next adds itself to the application menu. **Settings → General → Launch at
+startup** starts it, hidden in the tray, each time you log in. Settings, caches, playtime and
+logs live in `~/.config/Achievement Watcher Next`.
+
+## Updates
+
+The AppImage updates itself from the same GitHub releases as the Windows app. It asks before
+downloading, checks the file against the SHA-512 digest published with the release
+(`latest-linux.yml`), replaces the old AppImage with the new one and restarts. If a game is running,
+the update waits until it closes. Your data stays where it was.
+
+The new file carries the new version in its name, and the **Launch at startup** entry follows it. A
+launcher or keyboard shortcut you made yourself still points at the old name: edit it after an
+update.
+
+## Supported desktops
+
+AW Next is tested on GNOME and KDE Plasma, under Wayland and under X11 (Ubuntu 24.04 with GNOME 46
+and Plasma 5.27). Other desktops may work but have not been tried.
+
+- **Wayland.** AW Next restarts itself once through XWayland when it starts, so that its popups and
+  overlay can stay above games, which run as X11 windows under Wine and Proton.
+- **Tray.** KDE shows the tray icon as is. GNOME needs the AppIndicator extension, which Ubuntu
+  ships turned on; without it, closing the window minimizes AW Next instead of hiding it.
+- **Notifications** are the desktop's own. Do Not Disturb hides them, unless **Settings →
+  Notification → Priority notifications** is on: unlocks then still show, on GNOME and KDE alike.
+- Options that exist only on Windows are marked as such in Settings.
+
+## Overlay shortcut
+
+`Ctrl+Shift+K` opens the overlay while a Wine or Proton game has the focus. Under Wayland, AW Next
+cannot see a key pressed while a **native Wayland window** has the focus, such as a Linux game
+running in Wayland mode or Proton with its Wayland driver: there is no in-game hotkey for those
+games.
+
+A shortcut from your desktop's own keyboard settings does not depend on that. Have it run the
+AppImage with `--toggle-overlay`, for example:
+
+```bash
+/home/you/Applications/Achievement.Watcher.3.12.0.AppImage --toggle-overlay
+```
+
+It opens or closes the overlay of the copy already running, and starts nothing else.
+
+- **GNOME:** **Settings → Keyboard → View and Customize Shortcuts → Custom Shortcuts → Add
+  Shortcut**. Give it a name, paste the command, then press the keys you want.
+- **KDE Plasma 6:** **System Settings → Keyboard → Shortcuts → Add New → Command or Script**,
+  paste the command, then set the shortcut.
+- **KDE Plasma 5:** **System Settings → Shortcuts → Custom Shortcuts → Edit → New → Global
+  Shortcut → Command/URL**, set the keys on **Trigger** and the command on **Action**.
+
+The command names the AppImage file, so update it after AW Next updates itself. Whether the overlay
+shows above a native Wayland game in full screen has not been tested yet.
+
+A controller works too: AW Next reads gamepads directly, so the controller shortcuts of the
+[Controller guide](controller.md) open and drive the overlay without taking anything from the game.
+
+## Keyring prompt
+
+The few secrets AW Next keeps (Steam, Epic and Xbox sign-in tokens, the RetroAchievements key, an
+emulator Steam password) are encrypted with a key that your desktop's keyring holds: GNOME Keyring
+or KDE Wallet.
+
+With **automatic login**, the keyring is not unlocked when your session starts. The first time AW
+Next needs it, the desktop asks you to unlock it, or to create one if there is none yet; KDE opens
+the KDE Wallet assistant. Answer it and AW Next goes on. If you cancel, AW Next keeps working, says
+once that your connections are not protected, and the desktop asks again on the next start. The
+prompt never blocks the app: tracking and notifications run while it is open.
+
+## Steam and Proton
+
+AW Next finds the Steam client whether it is installed from your distribution's package
+(`steam-installer`, `steam`), from Flathub or as a Snap, along with its library folders on other
+disks and the Proton prefix of each game. With two Steam clients installed, it follows the one
+started last.
+
+Unlocks of games Steam itself runs are read from Steam's own files, like on Windows. As on Windows,
+AW Next only pops them up once **Settings → Notification → Steam client games** is on, since Steam
+shows its own popup for them.
+
+## Wine, Lutris, Heroic and Bottles
+
+Every source is read inside the game's prefix, the Windows registry of that prefix included: a game
+with a Steam emulator (Goldberg, GBE Fork and the others in [Compatible sources](sources.md)), a
+Ubisoft or GOG save, and so on. **Smart Find** searches your home folder, your other disks and every
+prefix it knows.
+
+- **Lutris** and **Bottles**: the games and programs they installed are listed with their prefix.
+- **Heroic**: Epic games installed through Heroic are recognised as Epic games.
+- **Plain Wine**: the default `~/.wine` prefix and any prefix folder you add.
+- **Native Linux games** with Goldberg or GBE Fork (`libsteam_api.so`) are read from their Linux
+  save folders.
+
+**Play** starts a game through the launcher it belongs to (Steam, Lutris, Heroic), and playtime is
+counted from the game's process. The emulator repairs of [Game Health](game-health.md) work from
+the AppImage and write inside the game's prefix, with a backup as always.
+
+## Emulators
+
+RPCS3, shadPS4, RetroArch and Xenia are found in their Linux folders; RPCS3 and shadPS4 also when
+they come from Flathub.
+RetroAchievements unlocks are announced whatever the emulator, once the source is connected.
+
+## Steam Deck
+
+Support for the Steam Deck is new and **has not been checked on a real Deck yet**. What it is meant
+to do:
+
+- In **Desktop Mode**, AW Next is the same AppImage as on any Linux desktop. The first window fits
+  the Deck's 1280x800 screen, and games installed on the microSD card are found.
+- With **Launch at startup** on, AW Next also runs in **Game Mode**: it starts as a
+  background service once Steam is up.
+- Game Mode shows no desktop notifications, so every unlock goes to AW Next's own popup, drawn over
+  the game from the top-left corner of the screen. With SteamOS's performance overlay shown, the
+  popup may be hidden.
+
+This works in a Game Mode session reproduced on a PC; on a real Deck, the popup above the game has
+not been confirmed. If you try it, an [issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues)
+saying what you saw helps.
+
+## Reporting a problem
+
+Include your distribution, desktop (GNOME or KDE, Wayland or X11), how the game runs (Steam with
+Proton, Lutris, Heroic, Bottles, Wine) and the files in `~/.config/Achievement Watcher Next/logs`.
+
+---
+
+**Next:** [Troubleshooting](troubleshooting.md) - discovery, progress, notification and playtime
+problems.
+
+<div align="center">
+
+[← Documentation](README.md) · [Getting started](getting-started.md) · [Project home](https://github.com/Shirowwww/Achievement-Watcher-Next)
+
+</div>

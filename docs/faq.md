@@ -16,12 +16,16 @@ Windows 10 and Windows 11, and Linux (x64). Packaged releases include their own 
 needed only to build from source.
 
 ### Does it run on Linux or the Steam Deck?
-Yes on Linux: download the AppImage from the releases page, make it executable and start it. AW Next
-runs as a native Linux app, never through Wine. It finds the games you run with Wine, Proton,
-Lutris, Heroic or Bottles in their prefixes, reads their processes for playtime and shows unlocks
-in the in-game overlay or as desktop notifications. Settings and data live in
-`~/.config/Achievement Watcher Next`. The Steam Deck is not supported yet: nothing has been tested
-on it, in Game Mode or in Desktop Mode.
+Yes on Linux: download `Achievement.Watcher.<version>.AppImage` from the releases page, make it
+executable and start it (it needs FUSE 2, `libfuse2`). It updates itself from the same releases as
+the Windows app. AW Next runs as a native Linux app, never through Wine, on GNOME and KDE Plasma,
+Wayland or X11. It finds the games you run with Steam and Proton, Wine, Lutris, Heroic or Bottles in
+their prefixes, reads their processes for playtime and shows unlocks in the in-game overlay or as
+desktop notifications. Settings and data live in `~/.config/Achievement Watcher Next`.
+
+On the Steam Deck, support is new and has not been checked on a real Deck yet. In Desktop Mode it is
+the same AppImage; with **Launch at startup** on it also runs in Game Mode, where unlocks are meant
+to appear over the game, from the top-left corner. See [Linux and the Steam Deck](linux.md).
 
 ### Does it support RetroAchievements?
 Yes. Turn on the **RetroAchievements** source, connect your account with its username and Web API
@@ -116,6 +120,12 @@ unlock and is gone before OBS lists it - so AW Next serves the same popup as a p
 No. The popup is a one-shot notification styled by a preset. The **overlay** is the full achievement
 list you open with `Ctrl+Shift+K` while a game runs - see the [Overlay guide](overlay.md).
 
+### On Linux, Ctrl+Shift+K does nothing in my game
+Under Wayland, AW Next cannot see keys pressed while a native Wayland window has the focus, such as
+a Linux game in Wayland mode or Proton with its Wayland driver. Bind a key in your desktop's keyboard
+settings to the AppImage followed by `--toggle-overlay` instead - see
+[Overlay shortcut](linux.md#overlay-shortcut).
+
 ## Safety and data
 
 ### Does AW Next modify my games, or send anything off my PC?
@@ -148,8 +158,15 @@ An installer can be checked against VirusTotal by its own SHA-256 without trusti
 The current release is [3.11.3](https://www.virustotal.com/gui/file/ebce5963d9deac68192a952a66a8b6bdb460232eacb48abf865ef5ed986c622a).
 See [Troubleshooting → Checking a release yourself](troubleshooting.md#checking-a-release-yourself).
 
+### On Linux, why does a keyring prompt appear?
+AW Next keeps its sign-in tokens encrypted with a key held by your desktop's keyring (GNOME Keyring
+or KDE Wallet). With automatic login the keyring stays locked after you sign in, so the desktop asks
+you to unlock it, or to create one, when AW Next starts. Cancelling is safe: the app keeps working,
+the prompt comes back on the next start. See [Keyring prompt](linux.md#keyring-prompt).
+
 ### Where is my data, does updating lose it, and how big are updates?
-Everything lives in `%APPDATA%\Achievement Watcher Next`, and installing a newer build over an older
+Everything lives in `%APPDATA%\Achievement Watcher Next` (`~/.config/Achievement Watcher Next` on
+Linux), and installing a newer build over an older
 one preserves it. The first launch after upgrading imports an older Achievement Watcher folder
 without ever modifying or deleting it. Updates themselves now download only what changed since your
 installed version instead of the full installer, and fall back to a full download on their own if
@@ -184,7 +201,7 @@ bypass online ownership checks.
 
 ### I found a bug / I have an idea
 [Open an issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues) with the app version,
-your Windows version, the source involved and the relevant logs. For a suspected vulnerability, use
+your Windows version (or Linux distribution and desktop), the source involved and the relevant logs. For a suspected vulnerability, use
 the private process in the [security policy](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/SECURITY.md) instead.
 
 ---

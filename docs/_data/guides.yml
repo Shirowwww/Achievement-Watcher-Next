@@ -16,6 +16,7 @@
 - title: When you need it
   items:
     - { file: faq, label: FAQ }
+    - { file: linux, label: Linux and Steam Deck }
     - { file: advanced, label: Advanced tools }
     - { file: emulator-setup, label: Goldberg and GBE setup }
     - { file: uplay-r2, label: Uplay setup }

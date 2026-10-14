@@ -39,6 +39,7 @@ Read in order, or jump to what you need - every page ends with a link to the nex
 | Guide | What it covers |
 |---|---|
 | [FAQ](faq.md) | Short answers to the questions that come up most |
+| [Linux and the Steam Deck](linux.md) | The AppImage and its updates, desktops, the overlay shortcut, Steam, Proton and launchers |
 | [Advanced tools](advanced.md) | Maintenance, cache clearing, resets, manual games, diagnostics |
 | [Goldberg / GBE setup](emulator-setup.md) | Diagnose or repair an emulated Steam game |
 | [Uplay setup, R1 and R2](uplay-r2.md) | The Ubisoft equivalent, for compatible titles |
@@ -71,7 +72,8 @@ Lower-level documentation for contributors and for anyone building AW Next from 
 
 Everything AW Next writes is under one folder, **`%APPDATA%\Achievement Watcher Next`**, and the
 paths below are relative to it unless they say otherwise. An upgrade keeps all of it; the first
-launch imports an older Achievement Watcher folder without modifying it.
+launch imports an older Achievement Watcher folder without modifying it. On Linux the folder is
+`~/.config/Achievement Watcher Next`, with the same layout.
 
 | What | Where |
 |---|---|
