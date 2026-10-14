@@ -20,7 +20,7 @@ const FACES = [
 // 514 per 2048 units) keep a "normal" line as tall as on Windows.
 const SEGOE_LINE = 'ascent-override: 107.91%; descent-override: 25.1%; line-gap-override: 0%;';
 
-const FONT_DIR =path.join(__dirname, '../resources/font/Selawik');
+const FONT_DIR = path.join(__dirname, '../resources/font/Selawik');
 
 function segoeFallbackCss() {
   return FACES.map(

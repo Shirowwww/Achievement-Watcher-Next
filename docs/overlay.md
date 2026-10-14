@@ -4,8 +4,8 @@ The in-game overlay (`Ctrl+Shift+K` by default while a supported game runs) show
 achievement list of the running game without leaving it: names, descriptions,
 lock state, unlock dates and progress. The window is draggable by its header
 and stays on top of the game. On Linux, a game running natively under Wayland does not pass the
-hotkey on: bind `--toggle-overlay` to a key instead, as [Overlay shortcut](linux.md#overlay-shortcut)
-shows.
+hotkey on: bind `~/.local/bin/achievement-watcher --toggle-overlay` to a key instead, as
+[Overlay shortcut](linux.md#overlay-shortcut) shows.
 
 <div align="center">
 <picture><source srcset="assets/shot/overlay.webp 569w" sizes="(max-width: 700px) 100vw, 360px"><img src="screenshot/overlay.png" width="360" height="633" alt="In-game overlay achievement list"></picture><br>

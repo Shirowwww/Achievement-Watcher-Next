@@ -2,7 +2,7 @@
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { isChecksumMismatchError, summarizeUpdaterError } = require('../../app/util/updateChecksum.js');
+const { isChecksumMismatchError, isMissingLinuxFeed, summarizeUpdaterError } = require('../../app/util/updateChecksum.js');
 
 test('isChecksumMismatchError recognizes electron-updater checksum failures', () => {
   assert.equal(isChecksumMismatchError({ code: 'ERR_CHECKSUM_MISMATCH', message: 'anything' }), true);
@@ -67,4 +67,12 @@ test('summarizeUpdaterError copes with empty and non-Error inputs', () => {
   assert.equal(summarizeUpdaterError(null), 'unknown error');
   assert.equal(summarizeUpdaterError({ code: 'ERR_X', message: '' }), 'ERR_X');
   assert.equal(summarizeUpdaterError('plain string failure'), 'plain string failure');
+});
+
+test('a release without latest-linux.yml means no Linux update, and only on Linux', () => {
+  const missing = { code: 'ERR_UPDATER_CHANNEL_FILE_NOT_FOUND', message: 'Cannot find latest-linux.yml in the latest release artifacts' };
+  assert.equal(isMissingLinuxFeed(missing, 'linux'), true);
+  assert.equal(isMissingLinuxFeed({ ...missing, message: 'Cannot find latest.yml' }, 'win32'), false);
+  assert.equal(isMissingLinuxFeed({ code: 'ERR_UPDATER_INVALID_UPDATE_INFO', message: 'x' }, 'linux'), false);
+  assert.equal(isMissingLinuxFeed(null, 'linux'), false);
 });

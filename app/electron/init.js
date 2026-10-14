@@ -166,7 +166,7 @@ let pendingInstallPrompt = null;
 
 const updateGate = require(path.join(__dirname, '../util/updateGate.js'));
 const { resolveSteamMetadata } = require(path.join(__dirname, '../util/steamMetadata.js'));
-const { isChecksumMismatchError, summarizeUpdaterError } = require(path.join(__dirname, '../util/updateChecksum.js'));
+const { isChecksumMismatchError, isMissingLinuxFeed, summarizeUpdaterError } = require(path.join(__dirname, '../util/updateChecksum.js'));
 const { verifyPendingInstaller } = require(path.join(__dirname, '../util/pendingInstallerGuard.js'));
 const { launchAfterExit } = require(path.join(__dirname, '../util/appImageRelaunch.js'));
 const { clearUpdaterCacheDir: clearCacheDirForHelper } = require(path.join(__dirname, '../util/updateCacheClear.js'));
@@ -607,6 +607,15 @@ async function pruneInstalledPendingUpdateOnce() {
   }
 }
 
+// The 'error' listener already reported a missing Linux feed as "up to date"; its rejection is no failure.
+function checkForUpdates() {
+  return getUpdater()
+    .checkForUpdates()
+    .catch((err) => {
+      if (!isMissingLinuxFeed(err)) throw err;
+    });
+}
+
 function scheduleUpdateCheck(delayMs) {
   clearTimeout(updateCheckTimer);
   updateCheckTimer = setTimeout(() => {
@@ -624,7 +633,7 @@ function scheduleUpdateCheck(delayMs) {
       return;
     }
     pruneInstalledPendingUpdateOnce()
-      .then(() => getUpdater().checkForUpdates())
+      .then(() => checkForUpdates())
       .then(() => {
         updaterErrorNotified = false; // a healthy check clears the "already told the user" flag
         scheduleUpdateCheck(updateGate.nextCheckDelayMs({ gameRunning: isGameRunning() }));
@@ -2509,7 +2518,7 @@ ipcMain.handle('check-for-updates', async () => {
   // A manual check overrides a previous "later" choice.
   await clearUpdatePostpone();
   try {
-    await getUpdater().checkForUpdates();
+    await checkForUpdates();
     // Give update events a short window to report the result.
     for (let i = 0; i < 20 && manualUpdateResult === null; i++) {
       await new Promise((resolve) => setTimeout(resolve, 150));
@@ -7079,6 +7088,13 @@ function installLinuxDesktopEntry() {
     })
     .then((r) => debug.log(`[desktop-entry] ${r.file}${r.changed ? ' written' : ' up to date'}, ${TOAST_PROTOCOL}:// handler ${r.handler ? 'set' : `not set (${r.detail})`}`))
     .catch((err) => debug.log(`[desktop-entry] failed: ${err.message || err}`));
+  try {
+    const link = require('../util/linuxCommandLink.js').refresh();
+    if (link.foreign) debug.log(`[desktop-entry] ${link.file} is not a link, left alone`);
+    else if (link.changed) debug.log(`[desktop-entry] ${link.file} now points to ${process.env.APPIMAGE}`);
+  } catch (err) {
+    debug.log(`[desktop-entry] command link failed: ${err.message || err}`);
+  }
 }
 
 /*
@@ -7327,6 +7343,11 @@ try {
     });
     autoUpdater.on('error', (err) => {
       const message = summarizeUpdaterError(err);
+      if (isMissingLinuxFeed(err)) {
+        debug.log(`[updater] the latest release has no Linux build (${message})`);
+        autoUpdater.emit('update-not-available', { version: app.getVersion() });
+        return;
+      }
       // The recovery below re-runs downloadUpdate(), which only means anything while a download is
       // actually in flight. Outside one there is no update info to download and the retry can only
       // fail with "Please check update first", so a stray checksum error stays an ordinary error.
@@ -7436,7 +7457,9 @@ try {
       next = file;
     });
     // Emitted by electron-updater only once the file is in place, right before it quits the app.
-    require('electron').autoUpdater.once('before-quit-for-update', () => launchAfterExit(next));
+    // Switches such as --password-store carry over; like the Windows installer, the new version opens its window.
+    const args = process.argv.slice(1).filter((arg) => arg !== '--hidden');
+    require('electron').autoUpdater.once('before-quit-for-update', () => launchAfterExit(next, { args }));
     updater.quitAndInstall(true, false);
   }
 
