@@ -62,7 +62,17 @@ export default class titleBar extends HTMLElement {
       // Keyboard reachable: the chip is the only place a download in flight can be stopped from.
       if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
       event.preventDefault();
+      event.stopPropagation();
       this.cancel_update();
+    };
+    // The rest of the chip brings back the update window (release notes, progress, "install now").
+    this.updateChip = this.shadowRoot.querySelector('#update-status');
+    this.updateChip.setAttribute('role', 'button');
+    this.updateChip.tabIndex = 0;
+    this.onOpenUpdate = (event) => {
+      if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      ipcRenderer.invoke('open-update-window').catch(() => {});
     };
   }
 
@@ -78,6 +88,8 @@ export default class titleBar extends HTMLElement {
     for (const button of this.pressables()) button.addEventListener('keydown', this.onPressKey);
     this.updateCancelBtn.addEventListener('click', this.onCancelUpdate);
     this.updateCancelBtn.addEventListener('keydown', this.onCancelUpdate);
+    this.updateChip.addEventListener('click', this.onOpenUpdate);
+    this.updateChip.addEventListener('keydown', this.onOpenUpdate);
 
     const defaults = [ipcRenderer.invoke('win-isMinimizable'), ipcRenderer.invoke('win-isMaximizable')];
     Promise.allSettled(defaults).then(([isMinimizable, isMaximizable]) => {
@@ -98,6 +110,8 @@ export default class titleBar extends HTMLElement {
     for (const button of this.pressables()) button.removeEventListener('keydown', this.onPressKey);
     this.updateCancelBtn.removeEventListener('click', this.onCancelUpdate);
     this.updateCancelBtn.removeEventListener('keydown', this.onCancelUpdate);
+    this.updateChip.removeEventListener('click', this.onOpenUpdate);
+    this.updateChip.removeEventListener('keydown', this.onOpenUpdate);
   }
 
   /* Update */

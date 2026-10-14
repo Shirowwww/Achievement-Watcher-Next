@@ -40,6 +40,7 @@ test('the happy path walks check to install', () => {
   state = updateStatus.reduce(state, { type: 'progress', percent: 42.4, bytesPerSecond: 2048, transferred: 424, total: 1000 });
   assert.equal(state.percent, 42.4);
   assert.equal(state.version, '3.10.1', 'progress must not lose the version');
+  assert.equal(updateStatus.reduce(state, { type: 'progress', percent: 100 }).cancellable, false, 'the signature check that follows the last byte cannot be cancelled');
 
   state = updateStatus.reduce(state, { type: 'downloaded', version: '3.10.1' });
   assert.equal(state.phase, 'ready');

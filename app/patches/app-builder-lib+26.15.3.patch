@@ -1,19 +1,67 @@
 diff --git a/node_modules/app-builder-lib/templates/nsis/assistedInstaller.nsh b/node_modules/app-builder-lib/templates/nsis/assistedInstaller.nsh
-index b7f4752..c55feaf 100644
+index b7f4752..5cd20ba 100644
 --- a/node_modules/app-builder-lib/templates/nsis/assistedInstaller.nsh
 +++ b/node_modules/app-builder-lib/templates/nsis/assistedInstaller.nsh
-@@ -23,6 +23,11 @@
-     !include StrContains.nsh
+@@ -4,7 +4,11 @@
+   !include multiUserUi.nsh
+ !endif
  
-     !insertmacro skipPageIfUpdated
-+    # Achievement Watcher: upstream has no hook on the directory page. build/installer.nsh uses this
-+    # one to refuse a folder the installer cannot write to while the user is still on the page.
-+    !ifmacrodef customDirectoryPageLeave
-+      !insertmacro customDirectoryPageLeave
-+    !endif
-     !insertmacro MUI_PAGE_DIRECTORY
+-!ifndef BUILD_UNINSTALLER
++!ifmacrodef customPages
++  # Achievement Watcher: build/installer.nsh draws its own installer and uninstaller window and
++  # replaces the whole page list below (one list for each, chosen by BUILD_UNINSTALLER).
++  !insertmacro customPages
++!else ifndef BUILD_UNINSTALLER
  
-     # pageDirectory leave doesn't work (it seems because $INSTDIR is set after custom leave function)
+   !ifmacrodef customWelcomePage
+     !insertmacro customWelcomePage
+diff --git a/node_modules/app-builder-lib/templates/nsis/include/extractAppPackage.nsh b/node_modules/app-builder-lib/templates/nsis/include/extractAppPackage.nsh
+index f5470bf..5f78d31 100644
+--- a/node_modules/app-builder-lib/templates/nsis/include/extractAppPackage.nsh
++++ b/node_modules/app-builder-lib/templates/nsis/include/extractAppPackage.nsh
+@@ -5,6 +5,11 @@
+ 
+   Var /GLOBAL packageArch
+ 
++  # Achievement Watcher: progress hook (build/installer.nsh), before the package is unpacked.
++  !ifmacrodef customProgressPhase
++    !insertmacro customProgressPhase "extracting"
++  !endif
++
+   !insertmacro identify_package
+   !insertmacro compute_files_for_current_arch
+ 
+@@ -94,10 +99,21 @@
+   CreateDirectory "$PLUGINSDIR\7z-out"
+   ClearErrors
+   SetOutPath "$PLUGINSDIR\7z-out"
+-  Nsis7z::Extract "${FILE}"
++  # Achievement Watcher: build/installer.nsh extracts with a progress callback.
++  !ifmacrodef customExtract7z
++    !insertmacro customExtract7z "${FILE}"
++  !else
++    Nsis7z::Extract "${FILE}"
++  !endif
+   Pop $R0
+   SetOutPath $R0
+ 
++  # Achievement Watcher: moves what it can into place before the copy below, which then only
++  # copies what is left (build/installer.nsh).
++  !ifmacrodef customMoveExtractedFiles
++    !insertmacro customMoveExtractedFiles
++  !endif
++
+   # Retry counter
+   StrCpy $R1 0
+ 
+@@ -135,4 +151,7 @@
+     Goto LoopExtract7za
+ 
+   DoneExtract7za:
++  !ifmacrodef customProgressPhase
++    !insertmacro customProgressPhase "finishing"
++  !endif
+ !macroend
 diff --git a/node_modules/app-builder-lib/templates/nsis/installSection.nsh b/node_modules/app-builder-lib/templates/nsis/installSection.nsh
 index 053772f..db30611 100644
 --- a/node_modules/app-builder-lib/templates/nsis/installSection.nsh
@@ -31,6 +79,21 @@ index 053772f..db30611 100644
  ${endif}
  
  StrCpy $appExe "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
+diff --git a/node_modules/app-builder-lib/templates/nsis/multiUser.nsh b/node_modules/app-builder-lib/templates/nsis/multiUser.nsh
+index a810c82..bb67721 100644
+--- a/node_modules/app-builder-lib/templates/nsis/multiUser.nsh
++++ b/node_modules/app-builder-lib/templates/nsis/multiUser.nsh
+@@ -66,6 +66,10 @@ Var installMode
+     !ifdef BUILD_UNINSTALLER
+       ${IfNot} ${UAC_IsAdmin}
+         ShowWindow $HWNDPARENT ${SW_HIDE}
++        # Achievement Watcher: un.onInit made $INSTDIR this process's working directory, and this
++        # process waits while the elevated copy deletes that folder: wait elsewhere, or the folder
++        # survives the uninstall, empty.
++        SetOutPath $TEMP
+         !insertmacro UAC_RunElevated
+         Quit
+       ${endif}
 diff --git a/node_modules/app-builder-lib/templates/nsis/uninstaller.nsh b/node_modules/app-builder-lib/templates/nsis/uninstaller.nsh
 index c3f4f11..762ba2c 100644
 --- a/node_modules/app-builder-lib/templates/nsis/uninstaller.nsh

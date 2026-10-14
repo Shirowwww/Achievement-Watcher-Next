@@ -129,7 +129,9 @@ test('nothing is recorded when a prompt is only held back for a game', () => {
   const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
   const start = init.indexOf("autoUpdater.on('update-available'");
   const body = init.slice(start, init.indexOf("autoUpdater.on('update-not-available'"));
-  const heldBack = body.slice(body.indexOf('isGameRunning()'), body.indexOf('dialog.showMessageBox'));
+  const prompt = body.indexOf('askAboutUpdate(offer)');
+  assert.ok(prompt > 0, 'the offer goes through the update window');
+  const heldBack = body.slice(body.indexOf('isGameRunning()'), prompt);
   assert.ok(!/postponeUpdate|skippedVersion/.test(heldBack), 'holding a prompt back must not answer for the user');
   // A manual check is a deliberate request and must still be answered.
   assert.match(body, /if \(!manual && isGameRunning\(\)\)/);

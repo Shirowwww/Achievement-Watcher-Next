@@ -1,0 +1,6 @@
+[build]
+target = "i686-pc-windows-msvc"
+
+# The plug-in runs on machines without the Visual C++ runtime, so the CRT is linked in.
+[target.i686-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

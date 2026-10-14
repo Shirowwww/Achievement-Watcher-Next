@@ -70,17 +70,17 @@ test('identifiers an existing install depends on are unchanged', () => {
 
 test('the uninstaller speaks the new name in every language but keeps the data path', () => {
   const nsh = read('app', 'build', 'installer.nsh');
-  // Only the LangString definitions carry text; the dialog also references $(AW_UNINSTALL_INTRO).
-  const intro = nsh.split('\n').filter((l) => l.includes('LangString AW_UNINSTALL_INTRO'));
-  const deleteData = nsh.split('\n').filter((l) => l.includes('LangString AW_UNINSTALL_DELETE_DATA'));
-  assert.equal(intro.length, 27, 'the uninstaller intro must stay translated into all 27 installer languages');
-  for (const line of intro) {
-    assert.doesNotMatch(line, /Achievement Watcher/, `uninstaller intro still shows the old name: ${line.trim().slice(0, 80)}`);
-    assert.match(line, /AW Next/, `uninstaller intro must name the product: ${line.trim().slice(0, 80)}`);
+  // The uninstaller's text lives with the setup window (native/setup-ui/strings.json).
+  const strings = JSON.parse(read('native', 'setup-ui', 'strings.json'));
+  const languages = strings._languages;
+  assert.equal(languages.length, 27, 'one setup language per installer language');
+  for (const language of languages) {
+    const title = strings.uninstall_title[language];
+    assert.doesNotMatch(title, /Achievement Watcher/, `uninstaller title still shows the old name (${language}): ${title}`);
+    assert.match(title, /AW Next/, `uninstaller title must name the product (${language}): ${title}`);
+    assert.match(strings.removed_kept[language], /\{path\}/, `the "data kept" line must name the folder (${language})`);
   }
-  for (const line of deleteData) {
-    assert.match(line, /Achievement Watcher Next/, 'the delete-data checkbox must quote the real %APPDATA% folder');
-  }
+  assert.match(nsh, /AwSetupUi::Set "datashown" "%APPDATA%\\Achievement Watcher Next"/, 'the window must quote the real %APPDATA% folder');
   // Opting into "delete my data" has to clear the folder the previous name owned as well, or the
   // import source is left behind holding hundreds of megabytes of caches and backups.
   assert.match(nsh, /RMDir \/r "\$APPDATA\\Achievement Watcher Next"/, 'uninstall removes the current data folder');
@@ -212,9 +212,9 @@ test('the main window resolves its icon absolutely and prefers the multi-size .i
     assert.ok(fs.existsSync(path.join(repoRoot, ...rel)), `${rel.join('/')} must exist`);
   }
 
-  // The installer header paints the mark white over a dark gradient, so it must be fed the bare
-  // logo - handing it the outlined app icon floods the whole silhouette into one white blob.
-  const ps1 = read('app', 'build', 'generate-installer-images.ps1');
-  assert.match(ps1, /LogoPath = \(Join-Path \$PSScriptRoot 'brandMark\.png'\)/, 'the header must use the un-outlined mark');
+  // The setup window tints the mark through its alpha channel, so it must be fed the bare logo -
+  // handing it the outlined app icon floods the whole silhouette into one solid blob.
+  const gfx = read('native', 'setup-ui', 'src', 'gfx.rs');
+  assert.match(gfx, /include_bytes!\("\.\.\/\.\.\/\.\.\/app\/build\/brandMark\.png"\)/, 'the setup window must use the un-outlined mark');
   assert.ok(fs.existsSync(path.join(repoRoot, 'app', 'build', 'brandMark.png')), 'brandMark.png must ship with the build resources');
 });

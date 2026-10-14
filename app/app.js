@@ -2953,6 +2953,8 @@ function updateChipPresentation(state) {
     case 'available':
       return { icon: 'fa-arrow-alt-circle-down', label: t('update-available-short', 'Update available', 'Mise à jour disponible') };
     case 'downloading':
+      // The update window says the same once every byte is in: the signature check is running.
+      if (percent >= 100) return { icon: 'fa-shield-alt', label: t('update-verifying-title', 'Checking the download', 'Vérification du téléchargement') };
       return {
         icon: 'fa-arrow-alt-circle-down',
         label: t('downloading-update', 'downloading update {percent}%', 'téléchargement de la mise à jour {percent} %', { percent }),
@@ -2982,6 +2984,10 @@ function updateChipPresentation(state) {
         ),
       };
     case 'error':
+      // A known version means the check had found an update: the download or the install failed.
+      if (state.version) {
+        return { icon: 'fa-exclamation-triangle', label: t('update-failed-title', 'The update did not complete', "La mise à jour n'a pas abouti"), title: state.error || '' };
+      }
       return {
         icon: 'fa-exclamation-triangle',
         label: t('update-check-failed', 'Check failed', 'Échec de la vérification'),

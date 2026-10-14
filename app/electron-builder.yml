@@ -116,10 +116,10 @@ nsis:
     - nb_NO
     - sv_SE
     - vi_VN
-  installerSidebar: build/installerSidebar.bmp
-  installerHeader: build/installerHeader.bmp
+  # The installer and uninstaller window is drawn by build/x86-unicode/AwSetupUi.dll (source in
+  # native/setup-ui), so there is no wizard artwork; NSIS's own pages only show if that window
+  # cannot be created.
   installerIcon: build/icon.ico
-  uninstallerSidebar: build/installerSidebar.bmp
   uninstallerIcon: build/icon.ico
   createDesktopShortcut: true
   createStartMenuShortcut: true

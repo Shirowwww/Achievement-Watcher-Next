@@ -63,6 +63,8 @@ function reduce(state, event) {
       return {
         ...current,
         percent: clampPercent(event.percent),
+        // Every byte is in and the signature check runs: there is nothing left to cancel.
+        cancellable: clampPercent(event.percent) < 100,
         bytesPerSecond: nonNegative(event.bytesPerSecond),
         transferred: nonNegative(event.transferred),
         total: nonNegative(event.total),

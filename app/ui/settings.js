@@ -1105,6 +1105,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       if (!state) return null;
       switch (state.phase) {
         case 'downloading':
+          if (state.percent >= 100) return { cls: 'update-info', text: t('update-verifying-title', 'Checking the download', 'Vérification du téléchargement') };
           return {
             cls: 'update-info',
             text: t('downloading-update', 'downloading update {percent}%', 'téléchargement de la mise à jour {percent} %', { percent: Math.round(state.percent) }),
@@ -1115,6 +1116,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         case 'held':
           return { cls: 'update-ok', text: t('update-ready', 'Update Ready', 'Mise à jour prête') };
         case 'error':
+          if (state.version) return { cls: 'update-error', text: t('update-failed-title', 'The update did not complete', "La mise à jour n'a pas abouti") };
           return { cls: 'update-error', text: t('update-check-failed', 'Check failed', 'Échec de la vérification') };
         default:
           return null; // idle, checking and available say nothing worth a permanent line here

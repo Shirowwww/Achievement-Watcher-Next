@@ -1,0 +1,381 @@
+/*
+  The update window. Same tokens as the app (app.css :root) and the same look as the installer
+  window it hands over to, so the update reads as one flow from offer to restart.
+*/
+
+@font-face {
+  font-family: 'Open Sans';
+  font-weight: 400;
+  src: url('../font/Open_Sans/opensans-regular-webfont.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Open Sans';
+  font-weight: 700;
+  src: url('../font/Open_Sans/opensans-bold-webfont.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Raleway';
+  font-weight: 700;
+  src: url('../font/Raleway/Raleway-Bold.ttf') format('truetype');
+}
+
+:root {
+  --bg-base: #142236;
+  --bg-glow: #26384c;
+  --panel: #192a40;
+  --surface: #263b55;
+  --surface-elevated: #2d4561;
+  --sunken: #101d2d;
+  --text: #e7edf6;
+  --text-muted: #94a5ba;
+  --accent: #6c91ff;
+  --accent-text: #8daaff;
+  --on-accent: #0b1424;
+  --focus: #b9cbff;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --duration-fast: 120ms;
+  --duration-normal: 220ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: radial-gradient(ellipse 70% 45% at 50% 0%, var(--bg-glow) 0%, transparent 100%), var(--bg-base);
+  color: var(--text);
+  font: 13px/1.5 'Open Sans', 'Segoe UI', sans-serif;
+  user-select: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ---- caption ------------------------------------------------------------------------------- */
+
+.caption {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding-left: 14px;
+  flex: none;
+  -webkit-app-region: drag;
+}
+
+.caption-mark {
+  width: 15px;
+  height: 15px;
+  background: var(--text);
+  opacity: 0.85;
+  -webkit-mask: url('../img/brand-mark.png') center / contain no-repeat;
+}
+
+.caption-title {
+  margin-left: 9px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.caption-close {
+  margin-left: auto;
+  width: 46px;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: default;
+  -webkit-app-region: no-drag;
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+
+.caption-close:hover {
+  background: #c42b1c;
+  color: #fff;
+}
+
+/* ---- body ---------------------------------------------------------------------------------- */
+
+main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 6px 28px 0;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mark {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  background: #f4f7fc;
+  -webkit-mask: url('../img/brand-mark.png') center / contain no-repeat;
+  filter: drop-shadow(0 0 14px rgba(108, 145, 255, 0.45));
+}
+
+h1 {
+  margin: 0;
+  font: 700 20px/1.2 'Raleway', 'Segoe UI', sans-serif;
+}
+
+#meta {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+#meta:empty {
+  display: none;
+}
+
+#message {
+  margin: 16px 0 0;
+  color: var(--text-muted);
+}
+
+/* ---- progress ------------------------------------------------------------------------------ */
+
+#progress {
+  margin-top: 20px;
+}
+
+.track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--sunken);
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+#progress.indeterminate .fill {
+  width: 30%;
+  transform: none;
+  animation: slide 1.4s var(--ease-out) infinite;
+}
+
+@keyframes slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+
+.progress-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+#progress-percent {
+  color: var(--text);
+}
+
+/* ---- release notes ------------------------------------------------------------------------- */
+
+#notes {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  margin: 20px 0 0;
+  padding: 14px 16px 10px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--panel) 90%, transparent);
+}
+
+#notes[hidden] {
+  display: none;
+}
+
+h2 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+#notes-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+  user-select: text;
+}
+
+#notes-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+#notes-body::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: var(--surface);
+}
+
+#notes-body h3 {
+  margin: 10px 0 4px;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+#notes-body h3:first-child {
+  margin-top: 0;
+}
+
+#notes-body p {
+  margin: 0 0 6px;
+  color: var(--text-muted);
+}
+
+#notes-body ul {
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+}
+
+#notes-body li {
+  position: relative;
+  padding-left: 14px;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+
+#notes-body li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0.62em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+#notes-body .empty {
+  color: var(--text-muted);
+}
+
+.notes-link {
+  align-self: flex-start;
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* ---- actions ------------------------------------------------------------------------------- */
+
+footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  min-height: 68px;
+  margin-top: 20px;
+  padding: 0 20px;
+  background: rgba(16, 29, 45, 0.55);
+}
+
+footer:empty {
+  min-height: 20px;
+  background: none;
+}
+
+.action {
+  height: 38px;
+  min-width: 96px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  cursor: pointer;
+  transition: background var(--duration-fast);
+}
+
+.action:hover {
+  background: var(--surface-elevated);
+}
+
+.action.primary {
+  min-width: 132px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgba(108, 145, 255, 0.22);
+}
+
+.action.primary:hover {
+  background: color-mix(in srgb, var(--accent) 90%, white);
+}
+
+.action.link {
+  min-width: 0;
+  margin-right: auto;
+  padding: 0 8px;
+  background: none;
+  color: var(--text-muted);
+}
+
+.action.link:hover {
+  color: var(--text);
+}
+
+.action:first-child:not(.link) {
+  margin-left: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fill,
+  .action,
+  .caption-close {
+    transition: none;
+  }
+
+  #progress.indeterminate .fill {
+    width: 100%;
+    animation: none;
+    opacity: 0.6;
+  }
+}

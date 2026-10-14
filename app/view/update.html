@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <!-- Every text arrives from the main process and is set with textContent; nothing loads remotely. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'" />
+    <link rel="stylesheet" href="../resources/css/fontawesome.css" />
+    <link rel="stylesheet" href="../resources/css/update.css" />
+    <title>AW Next</title>
+  </head>
+  <body>
+    <header class="caption">
+      <span class="caption-mark" aria-hidden="true"></span>
+      <span class="caption-title">AW Next</span>
+      <button type="button" id="close" class="caption-close"><i class="fas fa-times" aria-hidden="true"></i></button>
+    </header>
+    <main>
+      <div class="head">
+        <span class="mark" aria-hidden="true"></span>
+        <div class="head-text">
+          <h1 id="title"></h1>
+          <p id="meta"></p>
+        </div>
+      </div>
+      <p id="message" hidden></p>
+      <div id="progress" hidden>
+        <div class="track"><div class="fill"></div></div>
+        <div class="progress-row"><span id="progress-detail"></span><span id="progress-percent"></span></div>
+      </div>
+      <section id="notes" hidden>
+        <h2 id="notes-title"></h2>
+        <div id="notes-body"></div>
+        <button type="button" id="notes-link" class="notes-link"></button>
+      </section>
+    </main>
+    <footer id="actions"></footer>
+    <script src="update.js"></script>
+  </body>
+</html>

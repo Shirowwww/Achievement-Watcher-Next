@@ -1,0 +1,56 @@
+[package]
+name = "aw-setup-ui"
+version = "1.0.0"
+edition = "2024"
+license = "LGPL-3.0-only"
+publish = false
+
+# An NSIS plug-in: a DLL the installer and the uninstaller load from their plug-ins folder. NSIS as
+# shipped by electron-builder is 32-bit, so .cargo/config.toml builds for i686.
+[lib]
+name = "AwSetupUi"
+crate-type = ["cdylib"]
+
+[dependencies]
+windows-core = "0.62.2"
+windows-numerics = "0.3.1"
+windows = { version = "0.62.2", features = [
+  "Win32_Foundation",
+  "Win32_Globalization",
+  "Win32_Graphics_Direct2D",
+  "Win32_Graphics_Direct2D_Common",
+  "Win32_Graphics_DirectWrite",
+  "Win32_Graphics_Dwm",
+  "Win32_Graphics_Dxgi_Common",
+  "Win32_Graphics_Gdi",
+  "Win32_Graphics_Imaging",
+  "Win32_Security",
+  "Win32_Storage_FileSystem",
+  "Win32_System_Com",
+  "Win32_System_DataExchange",
+  "Win32_System_LibraryLoader",
+  "Win32_System_Memory",
+  "Win32_System_Ole",
+  "Win32_System_ProcessStatus",
+  "Win32_System_SystemInformation",
+  "Win32_System_Threading",
+  "Win32_UI_Accessibility",
+  "Win32_UI_Controls",
+  "Win32_UI_HiDpi",
+  "Win32_UI_Input_KeyboardAndMouse",
+  "Win32_UI_Shell",
+  "Win32_UI_Shell_Common",
+  "Win32_UI_WindowsAndMessaging",
+] }
+
+[build-dependencies]
+serde_json = "1"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = "symbols"
+# Every export catches panics at the boundary (src/nsis.rs), so unwinding stays on: an abort would
+# take the whole installer down with it.
+panic = "unwind"

@@ -79,28 +79,39 @@ test('the taskbar shows a real bar while downloading and an indeterminate one wh
   assert.match(body, /return -1;/);
 });
 
+// The Function named `name` inside the installer script, up to its FunctionEnd.
+function functionBody(name) {
+  const start = installerNsh.indexOf(`Function ${name}\n`);
+  assert.ok(start >= 0, `Function ${name} must exist`);
+  const rest = installerNsh.slice(start);
+  return rest.slice(0, rest.indexOf('FunctionEnd'));
+}
+
 test('the installer skips exactly the pages that would block an unattended update', () => {
-  // The license and directory pages are skipped by electron-builder's own template for an --updated
-  // run. These two are the ones it leaves behind, and both would wait forever for a click.
-  assert.match(installerNsh, /!macro customInstallMode/);
-  assert.match(installerNsh, /!macro customFinishPage/);
+  // electron-builder's page list is replaced by three steps drawn by the setup window: the choices,
+  // NSIS's own progress page (where the sections run) and the end.
+  const pages = macroBody('customPages');
+  assert.match(pages, /Page custom AwChoicesCreate\s+!define MUI_PAGE_CUSTOMFUNCTION_SHOW AwProgressShow\s+!insertmacro MUI_PAGE_INSTFILES\s+Page custom AwDoneCreate/);
 
-  const installMode = installerNsh.slice(installerNsh.indexOf('!macro customInstallMode'));
-  const installModeBody = installMode.slice(0, installMode.indexOf('!macroend'));
-  assert.match(installModeBody, /\$\{if\} \$\{isUpdated\}/, 'a first-time install must still ask');
-  // Reuse the mode the machine already has: forcing one would install a second copy beside it.
-  assert.match(installModeBody, /\$hasPerMachineInstallation == "1"/);
-  assert.match(installModeBody, /StrCpy \$isForceMachineInstall "1"/);
-  assert.match(installModeBody, /StrCpy \$isForceCurrentInstall "1"/);
+  // An --updated run answers nothing: it skips the choices and keeps the mode the machine already
+  // has, since installing in the other mode would leave a second copy beside the one in use.
+  const choices = functionBody('AwChoicesCreate');
+  assert.match(choices, /\$\{If\} \$\{isUpdated\}\s+Call AwUpdateMode\s+Abort/, 'the choices page must skip itself on an update');
+  const updateMode = functionBody('AwUpdateMode');
+  assert.match(updateMode, /\$hasPerMachineInstallation == "1"[\s\S]*setInstallModePerAllUsers[\s\S]*setInstallModePerUser/);
+  assert.match(updateMode, /UAC_RunElevated/, 'an all-users install is updated elevated');
 
-  const finish = installerNsh.slice(installerNsh.indexOf('!macro customFinishPage'));
-  const finishBody = finish.slice(0, finish.indexOf('!macroend'));
-  assert.match(finishBody, /\$\{if\} \$\{isUpdated\}[\s\S]*Call AwStartApp[\s\S]*quitSuccess/, 'an updated run must start the app and close itself');
-  assert.match(finishBody, /MUI_PAGE_CUSTOMFUNCTION_PRE AwFinishPagePre/);
-  assert.match(finishBody, /!insertmacro MUI_PAGE_FINISH/, 'a first-time install keeps the normal finish page');
+  // Without MUI's finish page nothing sets AutoCloseWindow, and the progress page would wait for a
+  // click on its invisible Next button.
+  assert.match(functionBody('AwProgressShow'), /SetAutoClose true/);
+
+  // The end starts the app and closes; "launch" is also the answer when the window is missing.
+  const done = functionBody('AwDoneCreate');
+  assert.match(done, /StrCpy \$0 "launch"[\s\S]*AwSetupUi::Show "done"[\s\S]*Call AwStartApp[\s\S]*quitSuccess/);
   // StartApp declares $startAppArgs and installSection.nsh already inserts it; a second insertion
   // would fail to compile, which is why the body is spelled out instead.
-  assert.doesNotMatch(finishBody, /^\s*!insertmacro StartApp\s*$/m);
+  assert.doesNotMatch(installerNsh, /^\s*!insertmacro StartApp\s*$/m);
+  assert.match(functionBody('AwStartApp'), /\$\{If\} \$\{isUpdated\}\s+StrCpy \$1 "--updated"[\s\S]*ExecShellAsUser/);
 });
 
 test('the progress details pane stays visible, since it is what the update run shows', () => {
@@ -184,14 +195,12 @@ test('every installer language has every custom string, and is reachable from th
   const locales = fs.readdirSync(path.join(appRoot, 'locale', 'lang')).filter((name) => name.endsWith('.json'));
   assert.equal(languages.length, locales.length - 1, 'installerLanguages must follow app/locale/lang (latam excepted)');
 
-  const definitions = [...installerNsh.matchAll(/^\s*LangString (\w+) \$\{LANG_(\w+)\} "(.*)"$/gm)];
-  const keys = [...new Set(definitions.map((m) => m[1]))];
-  assert.ok(keys.length >= 8, `expected the custom LangStrings, found ${keys.join(', ')}`);
-  for (const key of keys) {
-    const defined = definitions.filter((m) => m[1] === key);
-    assert.deepEqual(defined.map((m) => m[2]).sort(), [...languages].sort(), `${key} must be defined once for every installer language`);
-    for (const [, , lang, text] of defined) assert.ok(text.trim(), `${key} is empty for ${lang}`);
-  }
+  // The window's own text (native/setup-ui/strings.json) covers the same languages; its completeness
+  // is checked key by key in setupUiStrings.test.js.
+  const setupLanguages = JSON.parse(fs.readFileSync(path.join(appRoot, '..', 'native', 'setup-ui', 'strings.json'), 'utf8'))._languages;
+  const expected = builder.nsis.installerLanguages.map((code) => (/^(pt_BR|zh_CN|zh_TW)$/.test(code) ? code.replace('_', '-') : code.split('_')[0]));
+  assert.deepEqual([...setupLanguages].sort(), [...expected].sort(), 'the setup window speaks every installer language');
+  assert.doesNotMatch(installerNsh, /^\s*LangString /m, 'no NSIS-only strings are left to translate');
 
   // Every language the installer ships must be one the picker can select.
   const picker = macroBody('AW_PICK_LANGUAGE');
@@ -199,6 +208,28 @@ test('every installer language has every custom string, and is reachable from th
   // By primary language, so fr-CA, de-AT, es-MX and the like do not fall back to English.
   assert.ok(picker.includes('IntOp $1 $0 & 0x3FF'));
   assert.ok(macroBody('customUnInit').includes('!insertmacro AW_PICK_LANGUAGE'), 'the uninstaller follows the same language');
+});
+
+test('Settings > Check for updates brings back an offer or a download already under way', () => {
+  const start = init.indexOf("ipcMain.handle('check-for-updates'");
+  const handler = init.slice(start, init.indexOf('\n});', start));
+  // Answered as a failed check before, while the update window sat waiting behind the app.
+  assert.match(handler, /if \(updatePromptOpen\) \{\s*openUpdateWindow\(\);\s*return \{ ok: true/);
+  assert.match(handler, /if \(updateDownloading\) \{\s*openUpdateWindow\(\);/);
+});
+
+test("once the app has run, the installer, the update card and the uninstaller speak the app's language", () => {
+  const appPicker = macroBody('AW_PICK_APP_LANGUAGE');
+  assert.ok(macroBody('AW_PICK_LANGUAGE').includes('!insertmacro AW_PICK_APP_LANGUAGE'), 'the app setting is applied after the Windows language');
+  assert.match(appPicker, /ReadINIStr \$2 "\$2\\Achievement Watcher Next\\cfg\\options\.ini" "achievement" "lang"/);
+  // The same ids the app writes as [achievement] lang: the file names of its locales.
+  const installerLanguages = new Set(Object.values(NSIS_LANG));
+  for (const file of fs.readdirSync(path.join(appRoot, 'locale', 'lang')).filter((name) => name.endsWith('.json'))) {
+    const id = file.replace(/\.json$/, '');
+    const branch = new RegExp(`\\$\\{Case\\} "${id}"[\\s\\S]*?StrCpy \\$LANGUAGE \\$\\{LANG_(\\w+)\\}`).exec(appPicker);
+    assert.ok(branch, `the app language "${id}" never reaches the installer`);
+    assert.ok(installerLanguages.has(branch[1]), `"${id}" selects LANG_${branch[1]}, which the installer does not ship`);
+  }
 });
 
 test('the installer no longer spends a PowerShell start on a Watchdog process name that no longer exists', () => {
@@ -212,18 +243,19 @@ test('the installer finds and closes a running app without starting PowerShell',
   // Defining the hook replaces electron-builder's check, which starts PowerShell three times and is
   // what Hybrid Analysis scored as "spawns many processes".
   const body = macroBody('customCheckAppRunning');
-  const scan = macroBody('AW_SCAN_INSTDIR');
-  assert.match(body, /!insertmacro AW_SCAN_INSTDIR/);
+  assert.match(body, /AwSetupUi::AppRunning "\$INSTDIR"/);
+  assert.match(body, /AwSetupUi::CloseApp "\$INSTDIR"/);
   // Scoped to the install folder like the template's CIM query: the Watchdog and native helpers
   // go with the app, a portable copy elsewhere and another account's install do not.
-  assert.match(scan, /K32EnumProcesses/);
-  assert.match(scan, /QueryFullProcessImageNameW/);
-  assert.match(scan, /StrCmp \$2 "\$INSTDIR\\" 0 awScanNext/);
-  assert.match(scan, /TerminateProcess/);
-  assert.match(scan, /System::Free \$7/);
-  // Same answers as the template: ask first unless updating, and let the user retry when it cannot close.
-  assert.match(body, /\$\(appRunning\)/);
-  assert.match(body, /\$\(appCannotBeClosed\)[^\n]*IDRETRY awStopLoop/);
+  const system = fs.readFileSync(path.join(appRoot, '..', 'native', 'setup-ui', 'src', 'system.rs'), 'utf8');
+  assert.match(system, /K32EnumProcesses/);
+  assert.match(system, /QueryFullProcessImageNameW/);
+  assert.match(system, /path\.to_lowercase\(\)\.starts_with\(&prefix\)/);
+  assert.match(system, /TerminateProcess/);
+  // Same answers as the template: ask first unless updating (or unless the window already said
+  // it), and let the user retry when it cannot close.
+  assert.match(body, /\$\{elseIf\} \$AwUi != "ok"\s+MessageBox[^\n]*\$\(appRunning\)/);
+  assert.match(body, /\$\(appCannotBeClosed\)[^\n]*IDRETRY awStopApp/);
   assert.match(body, /\$\{if\} \$\{isUpdated\}/);
 });
 
@@ -261,15 +293,51 @@ test('the "delete my data" checkbox is honoured, not overwritten before it is re
   assert.ok(!body.includes('"$APPDATA\\Achievement Watcher"'), 'the 1.6.8 folder belongs to another application');
 });
 
-test('the patched template hooks the directory page and spares the legacy 1.6.8 folder', () => {
+test('the patched template takes the page list and the progress hooks, and spares the legacy 1.6.8 folder', () => {
   const patch = fs.readFileSync(path.join(appRoot, 'patches', 'app-builder-lib+26.15.3.patch'), 'utf8');
-  assert.match(patch, /^\+\s+!ifmacrodef customDirectoryPageLeave$/m);
+  for (const hook of ['customPages', 'customProgressPhase', 'customExtract7z', 'customMoveExtractedFiles']) {
+    assert.match(patch, new RegExp(`^\\+\\s*!ifmacrodef ${hook}$`, 'm'), `the template must offer the ${hook} hook`);
+  }
   assert.ok(
     patch.split('\n').some((line) => line.startsWith('-') && line.includes('RMDir /r "$APPDATA\\${APP_FILENAME}"')),
     'upstream removes APP_FILENAME ("Achievement Watcher") on --delete-app-data'
   );
-  const directory = macroBody('customDirectoryPageLeave');
-  assert.ok(directory.includes('!define MUI_PAGE_CUSTOMFUNCTION_LEAVE AwDirectoryLeave'));
-  // Aborting the leave callback keeps the user on the page.
-  assert.match(directory, /MessageBox[\s\S]*Abort/);
+  // A picked folder never becomes the installation folder itself: the uninstaller removes it whole.
+  assert.match(functionBody('AwKeepAppFolder'), /\$\{If\} \$0 != "\$\{APP_FILENAME\}"\s+StrCpy \$AwChosenDir "\$AwChosenDir\\\$\{APP_FILENAME\}"/);
+});
+
+test('an all-users uninstall waits for its elevated copy outside the folder it removes', () => {
+  // un.onInit makes $INSTDIR the working directory; the unelevated uninstaller kept it while the
+  // elevated one deleted the files, and C:\Program Files\<app> was left behind, empty.
+  const patch = fs.readFileSync(path.join(appRoot, 'patches', 'app-builder-lib+26.15.3.patch'), 'utf8');
+  const multiUser = patch.slice(patch.indexOf('templates/nsis/multiUser.nsh'));
+  assert.match(multiUser, /^\+\s*SetOutPath \$TEMP\n\s+!insertmacro UAC_RunElevated$/m);
+});
+
+test('extracted files are moved into place only where a move keeps the right permissions', () => {
+  // A moved file keeps the ACL of the user's temp folder; under Program Files other accounts could
+  // not read it, so an all-users install keeps electron-builder's copy.
+  const move = macroBody('customMoveExtractedFiles');
+  assert.match(move, /\$\{If\} \$installMode != "all"[\s\S]*Rename "\$PLUGINSDIR\\7z-out\\\$R7" "\$OUTDIR\\\$R7"/);
+  assert.match(move, /\$\{AndIfNot\} \$\{FileExists\} "\$OUTDIR\\\$R7"/, 'an entry already in place is left to the copy and its retries');
+});
+
+test('an update never leaves half an installation behind', () => {
+  // The old version's folder is renamed away in one step, which fails at once while a file inside is
+  // in use; only then is anything deleted.
+  const remove = macroBody('customRemoveFiles');
+  assert.match(remove, /SetOutPath \$TEMP/);
+  assert.match(remove, /\$\{if\} \$\{isUpdated\}\s+AwSetupUi::RemoveTree "\$INSTDIR" "atomic"[\s\S]*Abort/);
+  const system = fs.readFileSync(path.join(appRoot, '..', 'native', 'setup-ui', 'src', 'system.rs'), 'utf8');
+  assert.match(system, /Err\(error\) if atomic => return Err/);
+});
+
+test('the setup window plug-in ships as the 32-bit DLL NSIS loads', () => {
+  const dll = fs.readFileSync(path.join(appRoot, 'build', 'x86-unicode', 'AwSetupUi.dll'));
+  const header = dll.readUInt32LE(0x3c);
+  assert.equal(dll.toString('latin1', header, header + 4), 'PE\0\0');
+  assert.equal(dll.readUInt16LE(header + 4), 0x14c, 'electron-builder bundles 32-bit NSIS');
+  for (const name of ['Init', 'Set', 'Show', 'Get', 'Phase', 'Progress', 'AppRunning', 'CloseApp', 'RemoveTree']) {
+    assert.ok(dll.includes(Buffer.from(`${name}\0`, 'latin1')), `AwSetupUi.dll must export ${name}`);
+  }
 });
