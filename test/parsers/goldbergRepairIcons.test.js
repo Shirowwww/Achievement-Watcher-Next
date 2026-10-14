@@ -42,7 +42,7 @@ test('an icon already on disk is never re-downloaded', async () => {
         icongray: rebuilt('3751950', 'ACH_WIN_gray.jpg'),
       },
     ]),
-    downloadIcon: async (url, dir) => {
+    downloadIcon: async (url) => {
       attempted.push(url);
       throw new Error('Not Found'); // what the rebuilt url really answers
     },

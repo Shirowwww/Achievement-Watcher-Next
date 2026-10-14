@@ -337,7 +337,6 @@ function discover() {
 }
 
 const baseline = createBaselineCache({ prefix: 'ubisoft', tag: 'ubisoft', debug });
-const cacheFile = baseline.file;
 const cacheLoad = (key) => baseline.load(key);
 const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
 

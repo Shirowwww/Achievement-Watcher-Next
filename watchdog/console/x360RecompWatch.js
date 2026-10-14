@@ -8,6 +8,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { iconPathOf } = require('../util/iconPath.js');
 const watch = require('../util/nodeWatch.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
@@ -90,12 +91,6 @@ function isDuplicateUnlock(appid, achievementId) {
   const last = recentUnlocks.get(key);
   recentUnlocks.set(key, now);
   return last != null && now - last < 15000;
-}
-
-function iconPathOf(entry) {
-  const icon = String(entry && entry.icon ? entry.icon : '');
-  if (!icon.startsWith('file:///')) return '';
-  return path.normalize(decodeURI(icon.slice('file:///'.length)));
 }
 
 async function handleChange(record, changedFile, ctx) {

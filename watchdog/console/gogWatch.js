@@ -14,7 +14,6 @@ const { guardWatcher } = require('../util/watchGuard.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
 const notifyStrings = require('../util/notifyStrings.js');
 
-const { userDataDir } = require('../util/userData.js');
 const STORAGE_DB = path.join(process.env['ProgramData'] || 'C:\\ProgramData', 'GOG.com', 'Galaxy', 'storage', 'galaxy-2.0.db');
 const APPLICATIONS_ROOT = path.join(process.env['LOCALAPPDATA'] || '', 'GOG.com', 'Galaxy', 'Applications');
 
@@ -150,7 +149,6 @@ function discover() {
 }
 
 const baseline = createBaselineCache({ prefix: 'gog', tag: 'gog', debug });
-const cacheFile = baseline.file;
 const cacheLoad = (key) => baseline.load(key);
 const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
 
@@ -272,7 +270,7 @@ module.exports.start = async (ctx) => {
     }
     try {
       // WAL mode: an unlock may only touch gameplay.db-wal, so watch every gameplay.db* sibling.
-      const w = watch(target.gameplayDir, { recursive: false, filter: /gameplay\.db/i }, (evt, name) => {
+      const w = watch(target.gameplayDir, { recursive: false, filter: /gameplay\.db/i }, (evt) => {
         if (evt !== 'update') return;
         changes.run(target.appid, () => handleChange(target, ctx));
       });

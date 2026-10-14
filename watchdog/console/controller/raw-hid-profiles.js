@@ -531,7 +531,6 @@ const SWITCH_BUTTON_USAGE_MAP = {
 
 function getRawHidDeviceProfile(device = {}) {
   const vid = Number(device?.vid) >>> 0;
-  const pid = Number(device?.pid) >>> 0;
   const product = `${device?.product || ""}`.toLowerCase();
   const manufacturer = `${device?.manufacturer || ""}`.toLowerCase();
   const path = `${device?.path || ""}`.toLowerCase();

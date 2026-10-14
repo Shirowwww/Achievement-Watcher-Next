@@ -43,7 +43,7 @@ const idleRediscoveryIntervalMs = Math.max(
 );
 const debugLoggingEnabled = workerData?.debugLoggingEnabled === true;
 
-const GUID = koffi.struct("CONTROLLER_RAW_HID_GUID", {
+koffi.struct("CONTROLLER_RAW_HID_GUID", {
   Data1: "uint32_t",
   Data2: "uint16_t",
   Data3: "uint16_t",
@@ -57,7 +57,7 @@ const HIDD_ATTRIBUTES = koffi.struct("CONTROLLER_RAW_HID_HIDD_ATTRIBUTES", {
   VersionNumber: "uint16_t",
 });
 
-const OVERLAPPED = koffi.struct("CONTROLLER_RAW_HID_OVERLAPPED", {
+koffi.struct("CONTROLLER_RAW_HID_OVERLAPPED", {
   Internal: "uintptr_t",
   InternalHigh: "uintptr_t",
   Offset: "uint32_t",
@@ -65,7 +65,7 @@ const OVERLAPPED = koffi.struct("CONTROLLER_RAW_HID_OVERLAPPED", {
   hEvent: "void *",
 });
 
-const HIDP_CAPS = koffi.struct("CONTROLLER_RAW_HIDP_CAPS", {
+koffi.struct("CONTROLLER_RAW_HIDP_CAPS", {
   Usage: "uint16_t",
   UsagePage: "uint16_t",
   InputReportByteLength: "uint16_t",

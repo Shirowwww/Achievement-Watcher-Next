@@ -36,7 +36,7 @@ legitSteam=2
 `;
 
 test('a save from Settings keeps what the main process wrote on its own', async () => {
-  const file = withConfig(BASE);
+  withConfig(BASE);
   const stale = settings.load();
 
   // What the main process wrote after the renderer had already loaded its copy.

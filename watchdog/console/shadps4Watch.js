@@ -17,7 +17,6 @@ const { notificationVolumePercent } = require('../util/notificationVolume.js');
 const notifyStrings = require('../util/notifyStrings.js');
 
 const APPDATA = process.env['APPDATA'] || '';
-const { userDataDir } = require('../util/userData.js');
 
 // Best-effort language → TROP_NN.XML suffix (Sony index). english/default is the suffix-less TROP.XML.
 const LANG_FILE = { japanese: '00', english: '01', french: '02', spanish: '03', german: '04', italian: '05', russian: '08', koreana: '09', schinese: '11', polish: '16', brazilian: '17', turkish: '19' };
@@ -156,7 +155,6 @@ function discover() {
 }
 
 const baseline = createBaselineCache({ prefix: '', tag: 'shadps4', debug });
-const cacheFile = baseline.file;
 const cacheLoad = (key) => baseline.load(key);
 const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
 

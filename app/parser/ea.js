@@ -7,19 +7,13 @@
 const fs = require('fs');
 const path = require('path');
 
-let cacheRoot;
 let debug = { log() {}, warn() {}, error() {} };
 
 module.exports.initDebug = ({ isDev, userDataPath }) => {
-  module.exports.setUserDataPath(userDataPath);
   debug = new (require('../util/logger'))({
     console: isDev || false,
     file: path.join(userDataPath, 'logs/parser.log'),
   });
-};
-
-module.exports.setUserDataPath = (p) => {
-  cacheRoot = p;
 };
 
 const DEFAULT_EA_LOGS_ROOT = process.env.LOCALAPPDATA
@@ -498,7 +492,7 @@ module.exports.scan = async () => {
 };
 
 // Build the achievement schema for one EA game. `info` is the scan entry ({ appid, name, data }).
-module.exports.getGameData = async (info, lang = 'english') => {
+module.exports.getGameData = async (info) => {
   const appid = String(info?.appid || '');
   const resolved = resolveSetForAppid(appid, info?.data || {});
   if (!resolved) return null;

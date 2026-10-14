@@ -22,7 +22,7 @@ const steamID = require(steamIdPath);
 // whatever accounts are really configured there, on a CI runner it answers with none at all, so
 // "No Steam User ID found" that the fixture below (account '274782616') never gets a chance to match.
 const originalLoad = Module._load;
-Module._load = function patchedLoad(request, parent, isMain) {
+Module._load = function patchedLoad(request, _parent, _isMain) {
   if (request === 'electron') return { ipcRenderer: { sendSync: () => false, invoke: async () => null } };
   if (request === '../util/reg') {
     return {

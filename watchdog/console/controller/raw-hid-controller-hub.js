@@ -110,7 +110,9 @@ function createRawHidControllerHub(options = {}) {
           pressed: message.pressed === true,
           packetNumber: Number(message.packetNumber || 0) >>> 0,
         });
-      } catch {}
+      } catch (err) {
+        logger.warn("controller:raw-hid:guide-callback-failed", { error: err?.message || String(err) });
+      }
       return;
     }
     if (message.type === "warn") {

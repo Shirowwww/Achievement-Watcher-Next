@@ -75,5 +75,5 @@ test('a progress counter takes the same three hops, ahead of the popup-only gate
   assert.notEqual(start, -1);
   const handler = renderer.slice(start, renderer.indexOf('\n});', start));
   assert.match(handler, /target\.achievement\.CurProgress = Number\(ach_data\.CurProgress\)/);
-  assert.match(handler, /setTimeout\(\(\) => updateGamePage\(target\.game\.appid, ach_data\), LIVE_PROGRESS_REDRAW_MS\)/);
+  assert.match(handler, /setTimeout\(\(\) => updateGamePage\(target\.game\.appid\), LIVE_PROGRESS_REDRAW_MS\)/);
 });

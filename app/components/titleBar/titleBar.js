@@ -120,7 +120,7 @@ export default class titleBar extends HTMLElement {
     return ['maximizable', 'minimizable', 'insettings'];
   }
 
-  attributeChangedCallback(name, oldValue, newValue) {
+  attributeChangedCallback() {
     this.update();
   }
 

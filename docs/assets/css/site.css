@@ -288,6 +288,14 @@ iframe {
   max-width: 100%;
 }
 
+/* Form controls do not inherit the page font: without this every chip and button drew in Arial. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
 hr {
   height: 1px;
   margin: 0;

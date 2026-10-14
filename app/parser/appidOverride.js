@@ -21,9 +21,18 @@ function key(gameDir) {
   return path.resolve(String(gameDir || '')).toLowerCase();
 }
 
-function read() {
+// `strict` is for a read followed by a write: a store that exists but cannot be read (locked,
+// EPERM) must not be replaced by a map holding a single entry.
+function read({ strict = false } = {}) {
+  let text;
   try {
-    const obj = JSON.parse(fs.readFileSync(file(), 'utf8'));
+    text = fs.readFileSync(file(), 'utf8');
+  } catch (err) {
+    if (strict && err.code !== 'ENOENT') throw err;
+    return {};
+  }
+  try {
+    const obj = JSON.parse(text);
     return obj && typeof obj === 'object' && !Array.isArray(obj) ? obj : {};
   } catch {
     return {};
@@ -31,12 +40,8 @@ function read() {
 }
 
 function write(map) {
-  try {
-    fs.mkdirSync(path.dirname(file()), { recursive: true });
-    fs.writeFileSync(file(), JSON.stringify(map), 'utf8');
-  } catch {
-    /* best-effort: a failed write just leaves the previous state */
-  }
+  fs.mkdirSync(path.dirname(file()), { recursive: true });
+  fs.writeFileSync(file(), JSON.stringify(map), 'utf8');
 }
 
 // Returns the overridden appid (string) for this game folder, or null when there is none.
@@ -47,7 +52,7 @@ module.exports.get = (gameDir) => {
 
 // appid: a numeric Steam appid forces that value; anything else (e.g. null for "Automatic") clears it.
 module.exports.set = (gameDir, appid) => {
-  const map = read();
+  const map = read({ strict: true });
   const mapKey = key(gameDir);
   if (/^[0-9]+$/.test(String(appid))) map[mapKey] = String(appid);
   else delete map[mapKey];

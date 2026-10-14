@@ -344,7 +344,7 @@ async function getAchievements(appid) {
   return mergeAchievementMaps(maps);
 }
 
-async function getGameData(appid, lang, option = {}) {
+async function getGameData(appid, lang) {
   const gameName =
     (appid && appid.data && appid.data.gameName) ||
     (appid && appid.name) ||

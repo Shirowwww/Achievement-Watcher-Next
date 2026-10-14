@@ -49,7 +49,7 @@ function cachedCli(cacheDir, tag) {
   return cli ? { tag, cli, dir: path.dirname(cli) } : null;
 }
 
-async function downloadAndCache(cacheDir, tag, assetUrl, log) {
+async function downloadAndCache(cacheDir, tag, assetUrl) {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-steamless-'));
   try {
     const dl = await request.download(assetUrl, tmpDir);
@@ -142,7 +142,7 @@ async function ensureSteamless({ cacheDir, force = false, log = noopLog } = {}) 
     throw new Error(`No .zip asset in the latest Steamless release. Check ${RELEASES_PAGE}`);
   }
   log.log(`[steamless] downloading Steamless ${tag} (${asset.name})`);
-  return downloadAndCache(cacheDir, tag, asset.browser_download_url, log);
+  return downloadAndCache(cacheDir, tag, asset.browser_download_url);
 }
 
 function runCli(cli, args, cwd, timeout = 120000) {

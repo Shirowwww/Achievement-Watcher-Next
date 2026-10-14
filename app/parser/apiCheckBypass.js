@@ -177,7 +177,7 @@ function findExeBackup(exePath) {
 
 // Apply the bypass to a game folder: drop the arch-matching proxy DLL under the hijack name and write
 // SteamAPICheckBypass.json beside the exe. No-op when a hijack DLL already exists.
-function applyBypass({ gameDir, exePath, dlls, dllVariant = 'winmm', mode = 'nth_time_only', nthTimes = [1], log = noopLog } = {}) {
+function applyBypass({ exePath, dlls, dllVariant = 'winmm', mode = 'nth_time_only', nthTimes = [1], log = noopLog } = {}) {
   if (!dlls || !dlls.x64 || !dlls.x86) throw new Error('applyBypass: bypass DLLs unavailable');
   if (!exePath || !fs.existsSync(exePath)) throw new Error(`applyBypass: game exe not found: ${exePath}`);
   const exeDir = path.dirname(exePath);

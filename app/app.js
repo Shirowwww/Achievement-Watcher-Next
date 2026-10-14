@@ -885,7 +885,10 @@ function applyProfileStatsLabels() {
   $('#profile-stats-empty').text(t('profile-stats-empty', 'No game with achievements yet.', 'Aucun jeu avec des succès pour le moment.'));
 }
 
+let profileStatsOpener = null;
+
 function openProfileStats({ section = null } = {}) {
+  if ($('#profile-stats').attr('aria-hidden') !== 'false') profileStatsOpener = document.activeElement;
   try {
     applyProfileStatsLabels();
     renderProfileStatsPanel();
@@ -913,6 +916,8 @@ window.refreshProfileStatsPanel = () => {
 function closeProfileStats() {
   hideAllAchievements();
   $('#profile-stats').attr('aria-hidden', 'true').hide();
+  if (profileStatsOpener && profileStatsOpener.isConnected) profileStatsOpener.focus({ preventScroll: true });
+  profileStatsOpener = null;
 }
 
 function gameTouchesScanScope(game, scope) {
@@ -2848,13 +2853,19 @@ ipcRenderer.on('reset-watchdog-status', () => {
 // Accessible names must be derived, not authored: Settings rows label controls with a neighbouring
 // <span> instead of <label> (i18n is positional, markup can't change). Re-run on every language change.
 window.refreshAccessibleNames = () => {
+  document.documentElement.lang = intlFormat.toBcp47(uiLang()) || 'en';
   const searchLabel = t('search-games', 'Search games…', 'Rechercher un jeu…');
   // The field collapses to its magnifier, so the name has to be reachable on hover too.
   $('#search-bar input[type=search]').attr({ 'aria-label': searchLabel, title: searchLabel });
+  const avatarLabel = window.appLocale && window.appLocale.onboarding && window.appLocale.onboarding.avatarPick;
+  if (avatarLabel) $('user-avatar').attr('aria-label', avatarLabel);
   $('#settings .arrow-list li').each(function () {
     const label = $(this).children('.left').text().trim();
     if (!label) return;
-    $(this).find('.right').find('select, input').each(function () {
+    const iconOnly = $(this)
+      .find('.right [role="button"]:not([title])')
+      .filter((_, el) => !el.textContent.trim());
+    $(this).find('.right').find('select, input').add(iconOnly).each(function () {
       // Only ever rewrite names this function owns, so an authored aria-label survives.
       if (this.getAttribute('aria-label') && !this.dataset.derivedLabel) return;
       this.setAttribute('aria-label', label);
@@ -3073,7 +3084,7 @@ ipcRenderer.on('achievement-progress', (event, { appid, steamappid, ach_data } =
   target.achievement.CurProgress = Number(ach_data.CurProgress) || 0;
   if (Number(ach_data.MaxProgress) > 0) target.achievement.MaxProgress = Number(ach_data.MaxProgress);
   clearTimeout(liveProgressRedraw);
-  liveProgressRedraw = setTimeout(() => updateGamePage(target.game.appid, ach_data), LIVE_PROGRESS_REDRAW_MS);
+  liveProgressRedraw = setTimeout(() => updateGamePage(target.game.appid), LIVE_PROGRESS_REDRAW_MS);
 });
 
 ipcRenderer.on('achievement-unlock', (event, { appid, steamappid, ach_data } = {}) => {
@@ -3088,7 +3099,7 @@ ipcRenderer.on('achievement-unlock', (event, { appid, steamappid, ach_data } = {
     updateGameBox(game.appid, game.achievement.total > 0 ? Math.floor((game.achievement.unlocked / game.achievement.total) * 100) : 0);
     refreshProfileStats();
   }
-  updateGamePage(game.appid, ach_data);
+  updateGamePage(game.appid);
 });
 
 // The achievement row to scroll to and flash on the next render of its game view, from a toast's
@@ -3132,7 +3143,7 @@ ipcRenderer.on('open-game', (event, { appid, achievement } = {}) => {
   openGameFromLibrary(appid, achievement);
 });
 
-function updateGamePage(appid, ach_data) {
+function updateGamePage(appid) {
   // Refresh details only when this game is already open.
   if (!$('#achievement').is(':visible')) return;
   if (String($('#achievement .wrapper > .header').attr('data-appid')) !== String(appid)) return;
@@ -7650,6 +7661,7 @@ var app = {
       const closeManualGame = () => {
         $('#manual-game').attr('aria-hidden', 'true').hide();
         manualExe = '';
+        $('#add-game-manually').trigger('focus');
       };
       const addManualGameLabel = t('add-game-manually', 'Add game manually', 'Ajouter un jeu manuellement');
       const manualGameNameLabel = t('manual-game-name', 'Game name', 'Nom du jeu');

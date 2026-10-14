@@ -93,9 +93,11 @@ function openCoverPicker(game, appid, coverCacheAppid) {
   box.append(head, status, grid, actions);
   overlay.append(box);
 
+  const opener = document.activeElement;
   const done = () => {
     overlay.remove();
     document.removeEventListener('keydown', onKey);
+    if (opener && opener.isConnected) opener.focus({ preventScroll: true });
   };
   closeBtn.onclick = done;
   cancelBtn.onclick = done;
@@ -111,6 +113,7 @@ function openCoverPicker(game, appid, coverCacheAppid) {
 
   // Show the gallery even when loading its options fails.
   document.body.append(overlay);
+  cancelBtn.focus();
 
   const seenUrls = new Set();
   let providerTileCount = 0;
@@ -121,6 +124,8 @@ function openCoverPicker(game, appid, coverCacheAppid) {
     seenUrls.add(key);
     const tile = document.createElement('div');
     tile.className = 'aw-cover-picker-tile';
+    tile.setAttribute('role', 'button');
+    tile.tabIndex = 0;
     if (!portraitView) tile.classList.add('aw-landscape');
     const preview = path.isAbsolute(String(previewUrl || '')) ? pathToFileURL(previewUrl).href : previewUrl;
     tile.style.backgroundImage = cssUrl(preview);
@@ -334,9 +339,11 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
   box.append(head, status, grid, actions);
   overlay.append(box);
 
+  const opener = document.activeElement;
   const done = () => {
     overlay.remove();
     document.removeEventListener('keydown', onKey);
+    if (opener && opener.isConnected) opener.focus({ preventScroll: true });
   };
   const onKey = (e) => {
     if (e.key === 'Escape') done();
@@ -348,6 +355,7 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
   };
   document.addEventListener('keydown', onKey);
   document.body.append(overlay);
+  cancelBtn.focus();
 
   browseBtn.onclick = () => {
     if (chooseLocalGameIcon(game, appid)) done();
@@ -360,6 +368,8 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
     seenUrls.add(key);
     const tile = document.createElement('div');
     tile.className = 'aw-cover-picker-tile aw-square';
+    tile.setAttribute('role', 'button');
+    tile.tabIndex = 0;
     tile.style.backgroundImage = cssUrl(imageDisplayUrl(previewUrl));
     tile.title = key;
     const tag = document.createElement('span');

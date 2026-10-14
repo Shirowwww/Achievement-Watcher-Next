@@ -11,6 +11,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { iconPathOf } = require('../util/iconPath.js');
 const watch = require('../util/nodeWatch.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
@@ -86,7 +87,6 @@ function watchRootFor(game) {
 }
 
 const baseline = createBaselineCache({ prefix: 'xlln', tag: 'xlln', debug });
-const cacheFile = baseline.file;
 const cacheLoad = (key) => baseline.load(key);
 const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
 
@@ -100,12 +100,6 @@ function isDuplicateUnlock(titleId, achievementId) {
   const last = recentUnlocks.get(key);
   recentUnlocks.set(key, now);
   return last != null && now - last < 15000;
-}
-
-function iconPathOf(entry) {
-  const icon = String(entry && entry.icon ? entry.icon : '');
-  if (!icon.startsWith('file:///')) return '';
-  return path.normalize(decodeURI(icon.slice('file:///'.length)));
 }
 
 async function handleChange(game, stateFile, ctx) {

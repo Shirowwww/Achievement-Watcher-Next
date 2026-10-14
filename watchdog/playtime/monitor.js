@@ -22,7 +22,6 @@ const debug = new (require('../util/logger'))({
   file: path.join(userDataDir(), 'logs/playtime.log'),
 });
 
-const appdataPath = process.env['APPDATA'];
 // filter.json is optional; missing it means no extra process filters.
 let blacklist;
 try {
@@ -524,7 +523,7 @@ async function init() {
     }
   });
 
-  processMonitor.on('deletion', ([process, pid]) => {
+  processMonitor.on('deletion', ([, pid]) => {
     // PID is authoritative; process names may differ at exit.
     const game = nowPlaying.find((g) => g.pids.has(pid));
 
@@ -572,9 +571,6 @@ async function addToGameIndex(game) {
 }
 
 async function getGameIndex() {
-  // @xan105/is is ESM-only; load it lazily via dynamic import from this CommonJS module.
-  const { shouldArrayOfObjWithProperties } = (await import('@xan105/is')).assert;
-
   const filePath = {
     cache: path.join(userDataDir(), 'steam_cache/schema', 'gameIndex.json'),
     user: path.join(userDataDir(), 'cfg', 'gameIndex.json'),

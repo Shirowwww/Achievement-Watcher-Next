@@ -3,35 +3,17 @@
 /*
   What the automatic fix should do to one game, decided from the same diagnosis Game Health shows.
 
-  Before this, a scan acted on two signals only: a missing schema and a missing or stale runtime
-  dll. Everything else Game Health flags and offers a button for - steam_settings written next to a
-  dll the game never loads, a missing configs.user.ini, no steam_appid.txt, icons that were never
-  fetched, a blank name or description - sat there with a dot on the tile until someone opened the
-  panel and clicked Repair. The scan reads the diagnosis now and repairs what it says is repairable.
+  Two repairs exist and are not interchangeable. The data repair (goldberg.repair) rewrites the
+  schema, icons, steam_appid.txt and configs where the emulator reads them, and never touches a
+  dll. The runtime install (the GBE Fork setup) replaces the steam_api dll. MODE 'repair' installs
+  the runtime only when no supported one is there; 'runtime' re-applies the whole setup whenever
+  anything is flagged.
 
-  Two shapes of repair exist, and they are not interchangeable:
+  Neither mode takes a game away from a runtime that already works: a renamed GBE build
+  (Pragmata's steam_api64.v38) or a scene crack (RUNE) reports RUNTIME_DLL_NOT_EMULATOR, and
+  swapping that dll is what crashes the game. Game Health offers it as a button, never automatically.
 
-    - the data repair (goldberg.repair): rewrites the schema, the icons, steam_appid.txt and the
-      config files, into the folder the emulator actually reads. It never touches a dll.
-    - the runtime install (the GBE Fork setup): replaces the steam_api dll. The only answer when no
-      supported runtime is there, and the heavier and more intrusive of the two.
-
-  MODE picks which one a flagged game gets:
-
-    - 'repair' repairs the data, and installs the runtime only when there is no supported runtime to
-      read it. A game whose runtime is merely an older build keeps the one it runs with.
-    - 'runtime' re-applies the whole GBE Fork setup whenever anything is flagged, which is what
-      every version up to now did for a newly detected game.
-
-  What neither mode does is take a game away from a runtime that is already working. A release that
-  loads its own renamed GBE build (Pragmata's steam_api64.v38) or a scene crack that keeps unlocks
-  in its own tree (RUNE) reports RUNTIME_DLL_NOT_EMULATOR, and swapping that dll is what crashes the
-  game. Game Health offers it as a button because it is a decision; it is never taken automatically.
-  The same holds for the eligibility guard the caller applies: a folder another fix already serves is
-  not a target, in either mode.
-
-  Pure: no fs, no network, no Electron. The caller passes the diagnosis and the runtime state in and
-  gets back what to run.
+  Pure: no fs, no network, no Electron.
 */
 
 const gameHealth = require('./gameHealth.js');
@@ -80,15 +62,11 @@ function result(fields) {
 }
 
 /*
-  plan({ report, repairableCodes, needsSchema, needsRuntimeFix, mode }) -> what to run.
+  plan({ report, repairableCodes, needsSchema, needsRuntimeFix, mode })
+    -> { act, fullSetup, repairData, codes, reason }
 
-  `repairableCodes` is gameHealth.REPAIRABLE_GOLDBERG_CODES, passed in rather than imported so this
-  module keeps one job and the app keeps one source of truth for what a repair can fix.
-
-  The result is deliberately explicit:
-    { act, fullSetup, repairData, codes, reason }
-  `act` is false when there is nothing to do, so the caller can skip the whole background task - and
-  with it the backup, the cool-down entry and the toast - rather than start one that writes nothing.
+  `repairableCodes` comes from repairableCodesFor(option). `act` is false when there is nothing to
+  do, so the caller skips the backup, the cool-down entry and the toast.
   `codes` carries the repairable codes behind the decision, for the log line.
 */
 function plan({ report = null, repairableCodes = new Set(), needsSchema = false, needsRuntimeFix = false, mode = DEFAULT_MODE } = {}) {

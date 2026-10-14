@@ -88,7 +88,7 @@ function scoreName(queryClean, queryTokens, queryNorm, longTok, rawName) {
   if (!queryNorm || !nNorm) return { score: 0, tier: null };
   if (queryNorm === nNorm) return { score: 1, tier: 'exact' };
 
-  const nameTokens = String(name).toLowerCase().replace(/[._-]+/g, ' ').split(/\s+/).filter(Boolean);
+  const nameTokens = name.replace(/[._-]+/g, ' ').split(/\s+/).filter(Boolean);
   const nameJoined = ' ' + nameTokens.join(' ') + ' ';
   // A number only counts as a whole word: the "0" of Yakuza 0 is not inside the "10" of another name.
   const allQueryInName =
@@ -183,10 +183,12 @@ function titleNumbers(tokens) {
   return out;
 }
 
-function sameNumbers(query, name) {
-  const q = titleNumbers(significantTokens(query));
-  const n = titleNumbers(significantTokens(name));
+function sameNumberSet(q, n) {
   return q.size === n.size && [...q].every((value) => n.has(value));
+}
+
+function sameNumbers(query, name) {
+  return sameNumberSet(titleNumbers(significantTokens(query)), titleNumbers(significantTokens(name)));
 }
 
 // A store dates an edition ("Sea of Thieves 2024 Edition", "... 40th Anniversary Edition"); that number
@@ -215,9 +217,7 @@ function titleKey(raw) {
 }
 
 function sameTitleKeys(q, n) {
-  if (q.empty || n.empty) return false;
-  if (q.numbers.size !== n.numbers.size) return false;
-  for (const value of q.numbers) if (!n.numbers.has(value)) return false;
+  if (q.empty || n.empty || !sameNumberSet(q.numbers, n.numbers)) return false;
   return q.words.every((t) => tokenCovered(t, n.words)) && n.words.every((t) => tokenCovered(t, q.words));
 }
 
@@ -286,9 +286,9 @@ function titleIndex(apps) {
 }
 
 /*
-  The one app in `apps` ({ appid, name }, or a titleIndex of them) that is the same game as `query`, or null - also null when
-  two apps qualify equally, since picking either would be a guess. Unlike bestConfidentAppid this is
-  not a search: a listing named after its edition ("Control Ultimate Edition") is the bare store
+  The one app in `apps` ({ appid, name }, or a titleIndex of them) that is the same game as
+  `query`, or null - also null when two apps qualify equally, since picking either would be a
+  guess. Unlike bestConfidentAppid this is not a search: a listing named after its edition ("Control Ultimate Edition") is the bare store
   title however much longer its name is, and a relative ("Far Cry Primal") never is.
 */
 function sameTitleAppid(query, appsOrIndex) {

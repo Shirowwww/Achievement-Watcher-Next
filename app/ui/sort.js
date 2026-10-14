@@ -305,7 +305,7 @@ window.toggleInstalledOnly = toggleInstalledOnly;
 window.applyStaleFilter = applyStaleFilter;
 window.hideStaleEnabled = hideStaleEnabled;
 
-(function ($, window, document) {
+(function ($) {
   $(function () {
     applyInstalledFilter();
     applyStaleFilter();
@@ -383,4 +383,4 @@ window.hideStaleEnabled = hideStaleEnabled;
       self.css('pointer-events', 'initial');
     });
   });
-})(window.jQuery, window, document);
+})(window.jQuery);

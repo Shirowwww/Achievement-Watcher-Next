@@ -15,7 +15,6 @@ const { notificationVolumePercent } = require('../util/notificationVolume.js');
 const notifyStrings = require('../util/notifyStrings.js');
 
 const LOCALAPPDATA = process.env['LOCALAPPDATA'] || '';
-const { userDataDir } = require('../util/userData.js');
 const EA_LOGS_ROOT = LOCALAPPDATA ? path.join(LOCALAPPDATA, 'Electronic Arts', 'EA Desktop', 'Logs') : '';
 const EA_VERBOSE_LOG_NAME = 'EADesktopVerbose.log';
 const EA_VERBOSE_BAK_NAME = 'EADesktopVerbose.bak';
@@ -230,7 +229,6 @@ function cacheKey(entry) {
 
 const baseline = createBaselineCache({ prefix: 'ea', tag: 'ea', debug });
 // EA keys a baseline on the game AND its achievement set, so the key is built before it goes in.
-const cacheFile = (entry) => baseline.file(cacheKey(entry));
 const cacheLoad = (entry) => baseline.load(cacheKey(entry));
 const cacheSave = (entry, unlocked) => baseline.save(cacheKey(entry), unlocked);
 

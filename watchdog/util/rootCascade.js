@@ -290,7 +290,7 @@ async function discoverPs4TrophyDirsUnder(root, options = {}) {
   return found;
 }
 
-async function discoverModernPs4TrophySetsUnder(root, options = {}) {
+async function discoverModernPs4TrophySetsUnder(root) {
   const out = [];
   const trophyRoot = path.join(root, 'trophy');
   let entries;
@@ -658,7 +658,7 @@ async function scanRootOnce(rootPath, opts = {}) {
 
   // 3. shadPS4 modern trophy sets (the console watcher already handles these;
   // this pass only classifies the root so the UI can flag it).
-  const modernPs4Sets = await discoverModernPs4TrophySetsUnder(scanBase, walkOptions);
+  const modernPs4Sets = await discoverModernPs4TrophySetsUnder(scanBase);
   if (modernPs4Sets.length) {
     return {
       platform: 'shadps4',

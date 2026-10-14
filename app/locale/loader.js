@@ -21,7 +21,7 @@ module.exports.load = async (lang = 'english') => {
     if (lang != 'english') {
       let requested = JSON.parse(await ffs.readFile(path.join(langDir, `${lang}.json`), 'utf8'));
       template = merge(english, requested, {
-        arrayMerge: (dest, src, options) => src,
+        arrayMerge: (dest, src) => src,
         isEmpty: (a) => a === null || a === '',
       });
     } else {

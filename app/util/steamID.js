@@ -1,6 +1,5 @@
 'use strict';
 
-const util = require('util');
 const SteamID = require('steamid');
 const { lazyRequire } = require('./lazyRequire.js');
 const request = lazyRequire('request-zero');

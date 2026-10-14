@@ -896,7 +896,7 @@ var app = {
       applyToastIdentity(self).catch((err) => debug.error(`[Toast] identity resolution failed: ${err}`));
 
       try {
-        self.watcher[0] = watch(cfg_file.option, function (evt, name) {
+        self.watcher[0] = watch(cfg_file.option, function (evt) {
           if (evt === 'update' && !sameStamp(self.optionsStamp, fileStamp(cfg_file.option))) self.scheduleOptionsReload();
         });
         self.watcher[0].on('error', (err) => debug.error(`[watch:options] ${err}`));
@@ -917,7 +917,7 @@ var app = {
             missingRoots.push(folder);
           }
         } catch (err) {
-          debug.log(err);
+          debug.error(`[watch] could not watch ${folder.dir}: ${err.message || err}`);
         }
       }
       // A save root is created by the game itself, on its first run. Watching only what exists at

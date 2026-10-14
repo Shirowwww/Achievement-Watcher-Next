@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <!-- Same default-deny policy as view/app.html. The overlay draws its icons from local files the
-         host resolves over IPC and talks to nothing, so connect-src is 'none'; 'unsafe-inline' is
-         needed for the single inline script below and the img onerror fallback it writes. -->
+         host resolves over IPC and talks to nothing, so connect-src is 'none'. No inline script or
+         inline event handler can run here. -->
     <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: file:; font-src 'self'; media-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'"
@@ -685,6 +685,11 @@
         outline: none;
       }
 
+      .settings-select:focus-visible {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.35);
+      }
+
       .settings-toggle {
         display: flex;
         align-items: center;
@@ -719,8 +724,17 @@
         transition: transform 140ms ease, background 140ms ease;
       }
 
+      /* Hidden from sight but not from Tab: the label stays the click target. */
       .settings-toggle input {
-        display: none;
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .settings-toggle input:focus-visible + .switch {
+        box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.6);
       }
 
       .settings-toggle input:checked + .switch {
@@ -847,6 +861,16 @@
       html[data-controller-active='true'] .overlay-row.controller-focus {
         background: var(--bg-hover);
       }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+        }
+      }
     </style>
   </head>
   <body>
@@ -946,7 +970,7 @@
         </div>
 
         <div class="settings-section">
-          <label id="settings-zoom-label">Zoom</label>
+          <label id="settings-zoom-label" for="zoom-select">Zoom</label>
           <select class="settings-select" id="zoom-select">
             <option value="0.8">80%</option>
             <option value="0.9">90%</option>
@@ -957,7 +981,7 @@
         </div>
 
         <div class="settings-section">
-          <label id="settings-opacity-label">Opacity</label>
+          <label id="settings-opacity-label" for="opacity-select">Opacity</label>
           <select class="settings-select" id="opacity-select">
             <option value="0.4">40%</option>
             <option value="0.55">55%</option>

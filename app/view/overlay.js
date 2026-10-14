@@ -7,7 +7,6 @@
   let overlayLang = 'english';
   let currentGame = null;
   let trophyLabels = {};
-  let isLoading = false;
   let sortState = { status: null, rarity: null, time: null };
   let filter = 'all';
   let query = '';
@@ -251,6 +250,7 @@
     document.documentElement.lang = ui.toBcp47(overlayLang) || 'en';
     $('overlay-title').textContent = overlayStrings.title;
     $('overlay-search').placeholder = overlayStrings.search;
+    $('overlay-search').setAttribute('aria-label', overlayStrings.search);
     $('overlay-empty-text').textContent = overlayStrings.selectConfig;
     $('settings-title').textContent = overlayStrings.settingsTitle;
     $('settings-theme-label').textContent = overlayStrings.settingsTheme;
@@ -367,7 +367,7 @@
     renderRows();
   }
 
-  async function loadTableData(game) {
+  function loadTableData(game) {
     currentGame = game;
     renderRows();
   }
@@ -436,9 +436,7 @@
         : `<span class="status-pill locked">${ui.escapeHtml(overlayStrings.locked)}</span>`;
 
       row.innerHTML =
-        // The placeholder is bundled, not fetched: this overlay is on screen over a running
-        // game, and the case it exists for is precisely the one where no image downloaded.
-        `<div class="overlay-icon"><img alt="${ui.escapeHtml(overlayStrings.icon)}" onerror="this.onerror=null; this.src='../resources/img/achievement.svg';" /></div>` +
+        `<div class="overlay-icon"><img alt="" /></div>` +
         `<div class="overlay-info"><div class="overlay-name" title="${displayName}">${displayName}</div>` +
         `<div class="overlay-desc${masked ? ' masked-desc' : ''}" title="${description}">${description}</div>${progressHtml}${rarityHtml}</div>` +
         `<div class="overlay-status">${statusHtml}</div>`;
@@ -455,13 +453,20 @@
       // icons with no network at all, exactly as the achievement page does.
       const iconGray = achievement.icongrayLocal || achievement.icon_gray || achievement.icongray;
       const icon = achievement.iconLocal || achievement.icon || iconGray;
+      // The placeholder is bundled, not fetched: this overlay is on screen over a running game, and
+      // the case it exists for is precisely the one where no image downloaded.
       const img = row.querySelector('img');
+      const placeholder = () => {
+        img.src = '../resources/img/achievement.svg';
+      };
+      img.addEventListener('error', placeholder, { once: true });
       window.api
         .fetchIcon(achieved ? icon : iconGray, currentGame.appid)
         .then((path) => {
           if (path) img.src = path;
+          else placeholder();
         })
-        .catch(() => {});
+        .catch(placeholder);
     });
   }
 
@@ -503,7 +508,7 @@
       } else closeOverlay();
       return;
     }
-    if (e.key === '/' && !$('overlay-settings').classList.contains('open')) {
+    if (e.key === '/' && document.activeElement !== $('overlay-search') && !$('overlay-settings').classList.contains('open')) {
       e.preventDefault();
       $('overlay-search').focus();
     }
@@ -651,7 +656,6 @@
   });
 
   window.api.onOverlay((game) => {
-    isLoading = false;
     query = '';
     revealedDescriptions = new Set();
     filter = 'all';
@@ -762,15 +766,17 @@
       return best;
     }
 
+    function scrollBehavior() {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    }
+
     function setSelected(el) {
       if (!el || !isVisible(el)) return;
       if (selected) selected.classList.remove('controller-focus');
       selected = el;
       selected.classList.add('controller-focus');
-      try {
-        selected.focus({ preventScroll: true });
-      } catch {}
-      selected.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+      selected.focus({ preventScroll: true });
+      selected.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: scrollBehavior() });
     }
 
     function ensureSelected() {
@@ -791,7 +797,8 @@
         return true;
       }
       if (selected.matches('input[type="range"]')) {
-        direction < 0 ? selected.stepDown() : selected.stepUp();
+        if (direction < 0) selected.stepDown();
+        else selected.stepUp();
         selected.dispatchEvent(new Event('input', { bubbles: true }));
         return true;
       }
@@ -805,7 +812,7 @@
       if (next) setSelected(next);
       else {
         const body = $('overlayBody');
-        if (body) body.scrollBy({ top: vertical * Math.round(window.innerHeight * 0.55), behavior: 'smooth' });
+        if (body) body.scrollBy({ top: vertical * Math.round(window.innerHeight * 0.55), behavior: scrollBehavior() });
       }
     }
 
@@ -1037,9 +1044,6 @@
     window.addEventListener('gamepaddisconnected', leaveControllerMode);
     window.addEventListener('pointerdown', leaveControllerMode, { passive: true });
     window.addEventListener('keydown', leaveControllerMode, { passive: true });
-    if (controllerModes.ui && Array.from(navigator.getGamepads ? navigator.getGamepads() : []).some(Boolean)) {
-      showFocus();
-    }
     updateModeBadge();
     schedulePoll();
   })();

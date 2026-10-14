@@ -71,6 +71,14 @@ const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-emulatorsourceoverride-')
       assert.strictEqual(emulatorSourceOverride.get(242050), null);
     });
 
+    await test('a store that cannot be read is never replaced by set()', async () => {
+      fs.rmSync(storeFile, { force: true });
+      fs.mkdirSync(storeFile);
+      assert.throws(() => emulatorSourceOverride.set(242050, 'ubisoft'));
+      assert.ok(fs.statSync(storeFile).isDirectory());
+      fs.rmSync(storeFile, { recursive: true });
+    });
+
     console.log(`PASS: emulatorSourceOverride (${passed} checks)`);
   } finally {
     fs.rmSync(temp, { recursive: true, force: true });

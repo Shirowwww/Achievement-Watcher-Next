@@ -17,6 +17,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { iconPathOf } = require('../util/iconPath.js');
 const watch = require('../util/nodeWatch.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
@@ -77,12 +78,6 @@ function discoverGame(configFile = userDirFile, knownRoots = () => markerpatch.k
     if (found) return found;
   }
   return null;
-}
-
-function iconPathOf(entry) {
-  const icon = String(entry && entry.icon ? entry.icon : '');
-  if (!icon.startsWith('file:///')) return '';
-  return path.normalize(decodeURI(icon.slice('file:///'.length)));
 }
 
 async function handleChange(ctx) {

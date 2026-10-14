@@ -1450,7 +1450,7 @@ async function getSchemaAchievements(cfg) {
 }
 
 // Fetch and cache DLC names for GBE repair; a store failure is non-fatal.
-const getDLCList = (module.exports.getDLCList = async (appID) => {
+module.exports.getDLCList = async (appID) => {
   const id = parseInt(appID, 10);
   if (!Number.isInteger(id) || id <= 0) return [];
 
@@ -1511,7 +1511,7 @@ const getDLCList = (module.exports.getDLCList = async (appID) => {
     if (storeCircuit.recordFailure(err) && debug) debug.log('[steam] the store is unreachable; not asked again this cooldown');
     return [];
   }
-});
+};
 
 // Load the app-list map, nothing else. Kept apart from findInAppList so a caller that only wants
 // the map warmed never pays for that function's per-appid fallbacks.
@@ -1595,14 +1595,14 @@ async function localSteamCatalogueName(appID) {
 
 // Resolve an AppID back to its canonical store name (app-list cache first, then the store data
 // IPC). Returns '' when neither path is reachable; callers keep their own fallback name.
-const getAppNameByAppid = (module.exports.getAppNameByAppid = async (appid) => {
+module.exports.getAppNameByAppid = async (appid) => {
   try {
     const name = await findInAppList(Number(appid));
     return name && String(name).trim() ? String(name).trim() : '';
   } catch {
     return '';
   }
-});
+};
 
 // Since GetAppList was retired, this search is the only way a title resolves to an AppID; its memo
 // is written to disk so a launch doesn't re-search every unconfigured install over the network.
@@ -2202,10 +2202,9 @@ async function resolveWorkingIconUrl(appID, url, { probe = probeUrl } = {}) {
       const hashed = await findWorkingAssetPath(appID, relative, probe);
       if (hashed) return hashed;
     }
-    const working = (await findWorkingLink(appID, basenameOf(url), probe)) || (await findStorePageBackground(appID, basenameOf(url), probe));
-    return working || url;
+  } else if (await probe(url)) {
+    return url;
   }
-  if (await probe(url)) return url;
   const working = (await findWorkingLink(appID, basenameOf(url), probe)) || (await findStorePageBackground(appID, basenameOf(url), probe));
   return working || url;
 }
@@ -2239,7 +2238,7 @@ function iconCacheFilename(rawUrl) {
 }
 module.exports.iconCacheFilename = iconCacheFilename;
 
-const fetchIcon = (module.exports.fetchIcon = async (url, appID) => {
+module.exports.fetchIcon = async (url, appID) => {
   // Some games have no icon/background/portrait URL (null in the schema). Bail out instead of letting
   // `url.startsWith`/`path.parse(null)` throw - that surfaced as a noisy "Error occurred in handler
   // for 'fetch-icon': Cannot read property 'startsWith' of null" on every scan with such a game.
@@ -2310,7 +2309,7 @@ const fetchIcon = (module.exports.fetchIcon = async (url, appID) => {
   } finally {
     iconFetchInFlight.delete(inFlightKey);
   }
-});
+};
 
 // Exposed for unit tests: the widened legit-Steam discovery is easier to describe directly than
 // through a scanLegit run that depends on the machine's registry and Steam install.

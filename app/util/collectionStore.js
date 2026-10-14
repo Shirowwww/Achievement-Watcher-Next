@@ -10,7 +10,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const collections = require('./collections.js');
-const { replaceFileSync, unlinkForce } = require('./replaceFile.js');
+const { writeFileAtomicSync, unlinkForce } = require('./replaceFile.js');
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MIN_IMAGE_BYTES = 12;
@@ -26,28 +26,19 @@ function detectImageType(buffer) {
   return null;
 }
 
-function writeAtomic(file, text) {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  const temporary = `${file}.${process.pid}-${crypto.randomBytes(4).toString('hex')}.tmp`;
-  try {
-    fs.writeFileSync(temporary, text);
-    replaceFileSync(temporary, file);
-  } catch (err) {
-    unlinkForce(temporary);
-    throw err;
-  }
-}
-
 function createCollectionStore(userDataPath) {
   const cfgDir = path.join(userDataPath, 'cfg');
   const stateFile = path.join(cfgDir, 'collections.json');
   const imageDir = path.join(cfgDir, 'collection-images');
 
-  function read() {
+  // `strict` is for a change: a file that exists but cannot be read (locked, EPERM) must not be
+  // replaced by an empty state.
+  function read({ strict = false } = {}) {
     let text;
     try {
       text = fs.readFileSync(stateFile, 'utf8');
-    } catch {
+    } catch (err) {
+      if (strict && err.code !== 'ENOENT') throw err;
       return collections.emptyState();
     }
     try {
@@ -65,13 +56,13 @@ function createCollectionStore(userDataPath) {
 
   function write(state) {
     const clean = collections.normalizeState(state);
-    writeAtomic(stateFile, JSON.stringify(clean, null, 2) + '\n');
+    writeFileAtomicSync(stateFile, JSON.stringify(clean, null, 2) + '\n');
     return clean;
   }
 
   // Reads again before every change, so a file restored from a backup is never overwritten by a stale copy.
   function mutate(change) {
-    return write(change(read()));
+    return write(change(read({ strict: true })));
   }
 
   function imagePath(file) {
@@ -93,7 +84,7 @@ function createCollectionStore(userDataPath) {
     const hash = crypto.createHash('sha1').update(data).digest('hex').slice(0, 12);
     const name = `${collectionId}-${hash}.${type}`;
     if (!collections.IMAGE_FILE_PATTERN.test(name)) throw new Error('collection id not accepted');
-    writeAtomic(path.join(imageDir, name), data);
+    writeFileAtomicSync(path.join(imageDir, name), data);
     return name;
   }
 

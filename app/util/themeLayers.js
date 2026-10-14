@@ -10,7 +10,6 @@ const { cssUrl } = require('./cssUrl.js');
 const LAYER_IDS = ['bg', 'header', 'panel', 'card', 'settings', 'text', 'muted', 'border', 'accent'];
 const IMAGE_LAYER_IDS = ['bg', 'header', 'panel', 'card', 'settings'];
 const FITS = ['cover', 'contain', 'repeat', 'fill'];
-const EFFECT_TYPES = ['veil', 'blur'];
 
 // Built-in colors mirror app.css; the overlay uses this table directly.
 const BUILTIN_COLORS = {

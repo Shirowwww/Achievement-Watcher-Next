@@ -14,7 +14,6 @@ const os = require('os');
 // Inno Setup uninstallers are named unins000.exe, unins001.exe, … and ship a
 // matching uninsNNN.dat next to them.
 const INNO_UNINSTALLER_RE = /^unins\d{3}\.exe$/i;
-const INNO_DATA_RE = /^unins\d{3}\.dat$/i;
 
 // NSIS uninstallers: Uninstall.exe / uninstaller.exe.
 const NSIS_UNINSTALLER_RE = /^uninstall(?:er)?\.exe$/i;

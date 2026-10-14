@@ -9,7 +9,6 @@ const { parseUnlockTimeSeconds } = require('./util/unlockTime.js');
 
 const CLIENT_ID = String(process.env.XBOX_PC_CLIENT_ID || '').trim() || '388ea51c-0b25-4029-aae2-17df49d23905';
 const OAUTH_SCOPE = 'Xboxlive.signin Xboxlive.offline_access';
-const REDIRECT_URI = 'http://localhost:8080/auth/callback';
 const RELYING_PARTY = 'http://xboxlive.com';
 const ACHIEVEMENTS_URL = 'https://achievements.xboxlive.com';
 const CONTRACT_VERSION = '4';
@@ -248,7 +247,10 @@ function writeState(titleId, snapshot) {
   try {
     fs.mkdirSync(titleCacheDir(titleId), { recursive: true });
     writeAtomic(stateFile(titleId), JSON.stringify(snapshot, null, 2));
-  } catch {}
+  } catch (err) {
+    // A snapshot that is not written makes the next start announce these unlocks again.
+    console.warn(`[xbox-pc] could not store the unlock snapshot of ${titleId} (${err.message || err})`);
+  }
 }
 
 function readSchema(titleId) {
