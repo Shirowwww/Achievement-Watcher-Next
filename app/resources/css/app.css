@@ -13099,6 +13099,8 @@ body {
      which is fine for a sheet that covers the window and wrong for a menu floating over a row -
      the values underneath showed straight through the list. */
   background: var(--set-surface-elevated, var(--surface-elevated));
+  /* The panel hangs off <body>, which sets no font: the rows would take the engine default serif. */
+  font-family: 'Open-Sans', sans-serif;
   /* Not --shadow-dialog: that one is tuned for a full-window sheet and sits under a small menu as a
      grey smudge on the light theme. Same alphas as the cards, dialled down with --shadow-scale. */
   box-shadow: 0 16px 36px rgba(0, 0, 0, calc(0.34 * var(--shadow-scale))), 0 2px 8px rgba(0, 0, 0, calc(0.18 * var(--shadow-scale)));

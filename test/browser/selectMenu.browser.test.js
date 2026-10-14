@@ -282,6 +282,43 @@ test('the dropdown panel behaves correctly in a real DOM', { concurrency: 1, tim
     assert.equal(longList.scrolls, true, 'a long list scrolls inside the panel');
     assert.equal(longList.inViewport, true, 'a long list stays inside the window');
 
+    /*
+      A long list whose value sits at the bottom, like the locale picker on most languages: opening
+      it scrolls the panel to that row, and so does the wheel. The panel's own scroll events reach
+      the window's capture listener a frame later, so they are only seen after waiting.
+    */
+    await page.evaluate((id) => {
+      const select = document.getElementById(id);
+      select.selectedIndex = select.options.length - 1;
+      select.scrollIntoView({ block: 'center' });
+    }, stagedLongList);
+    await clickRow(page, `#${stagedLongList}`);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const openedAtEnd = await page.evaluate(() => {
+      const panel = document.querySelector('.select-menu');
+      return panel && { scrollTop: panel.scrollTop, font: getComputedStyle(panel.querySelector('.select-menu-label')).fontFamily };
+    });
+    assert.ok(openedAtEnd, 'a long list opened on its last value must stay open');
+    assert.ok(openedAtEnd.scrollTop > 0, 'the panel opens scrolled to the current value');
+    // The panel hangs off <body>, which sets no font: without its own it took the engine default,
+    // a serif (Times New Roman, Liberation Serif on Linux), unlike every row around it.
+    assert.match(openedAtEnd.font, /Open-Sans/, 'the panel must use the interface font, not the engine default');
+
+    const panelBox = await page.evaluate(() => {
+      const box = document.querySelector('.select-menu').getBoundingClientRect();
+      return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+    });
+    await page.mouse.move(panelBox.x, panelBox.y);
+    await page.mouse.wheel({ deltaY: -240 });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const afterWheel = await page.evaluate(() => {
+      const panel = document.querySelector('.select-menu');
+      return panel && { scrollTop: panel.scrollTop };
+    });
+    assert.ok(afterWheel, 'the wheel scrolls the list instead of closing it');
+    assert.ok(afterWheel.scrollTop < openedAtEnd.scrollTop, 'the wheel moves the list');
+    await page.keyboard.press('Escape');
+
     assert.deepEqual(pageErrors, [], 'the module must not throw while driving it');
   } finally {
     await page.close().catch(() => {});
