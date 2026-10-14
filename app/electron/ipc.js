@@ -50,8 +50,7 @@ function getStartupLoginItemQueryOptions() {
 
 function setStartWithWindows(enabled) {
   if (process.platform === 'linux') {
-    const autostart = require('../util/linuxAutostart.js');
-    return autostart.setEnabled(enabled, { command: autostart.launchCommand({ args: getStartupLoginItemOptions(true).args }) });
+    return require('../util/linuxAutostart.js').setEnabled(enabled, { args: getStartupLoginItemOptions(true).args });
   }
   app.setLoginItemSettings(getStartupLoginItemOptions(enabled));
   return true;

@@ -15,11 +15,20 @@ function bootTimeline() {
 }
 bootMark('electron');
 
-// First thing on Linux: a Wayland session hands this start over to a copy running through XWayland.
-if (require('../util/linuxSession.js').restartThroughXWayland()) process.exit(0);
+// First thing on Linux: a start without a display (systemd, Game Mode) borrows Steam's, and a Wayland
+// session hands this start over to a copy running through XWayland.
+const linuxSession = require('../util/linuxSession.js');
+const startedWithoutDisplay = process.platform === 'linux' && !process.env.DISPLAY && !process.env.WAYLAND_DISPLAY;
+if (!linuxSession.adoptSteamDisplay()) {
+  console.error('[display] no display to run on and no Steam client to take one from');
+  process.exit(1);
+}
+if (linuxSession.restartThroughXWayland()) process.exit(0);
 
 const path = require('path');
 const { app } = require('electron');
+// The GPU process does not see a DISPLAY set this late; without the switch it cannot present a frame.
+if (startedWithoutDisplay) app.commandLine.appendSwitch('display', process.env.DISPLAY);
 const { APP_DATA_DIR_NAME } = require('../util/userDataPath.js');
 const { portableUserDataDir } = require('../util/portableMode.js');
 const { migrateLegacyUserData, migrateAw3UserData, migrateSouvenirFolder, retargetBackupIndex } = require('../util/migrateUserData.js');
@@ -783,6 +792,7 @@ function currentRarityGrading() {
 const { resolveOverlayRequest } = require(path.join(__dirname, '../util/overlayRequest.js'));
 const { normalizeWindowArgs } = require(path.join(__dirname, '../util/windowArgs.js'));
 const notificationBounds = require(path.join(__dirname, '../util/notificationBounds.js'));
+const { insertSegoeFallback } = require(path.join(__dirname, '../util/segoeFallback.js'));
 
 // Resolve main-process strings from the selected locale, with English/French fallback.
 let mainLocaleCache = null;
@@ -2842,6 +2852,21 @@ function notifyWatchdogOfAppPid() {
   } catch {}
 }
 
+function watchdogDir() {
+  return path.join(manifest.config.debug ? path.join(__dirname, '../../') : path.dirname(process.execPath), 'watchdog');
+}
+
+let gamescopeHost = null;
+function gamescope() {
+  if (!gamescopeHost) {
+    gamescopeHost = require('../util/gamescope.js').createGamescope({
+      koffiPath: path.join(watchdogDir(), 'node_modules', 'koffi'),
+      log: (line) => debug.log(line),
+    });
+  }
+  return gamescopeHost;
+}
+
 function launchWatchdog() {
   // Must clearTimeout AND null the handle: scheduleMonitorRespawn() treats a non-null
   // monitorRespawnTimer as already pending and bails, so a stale handle would silently disable respawn.
@@ -2851,8 +2876,7 @@ function launchWatchdog() {
     return { ok: true }; // already running - idempotent
   }
 
-  const baseDir = manifest.config.debug ? path.join(__dirname, '../../') : path.dirname(process.execPath);
-  const wdDir = path.join(baseDir, 'watchdog');
+  const wdDir = watchdogDir();
 
   // Validate the launch chain up front. Missing pieces (notably watchdog/node_modules) would
   // otherwise fail in ways that are hard to diagnose from a detached child.
@@ -2892,6 +2916,8 @@ function launchWatchdog() {
     AW_APP_PIDS: [String(process.pid), getRendererPid()]
       .filter(Boolean)
       .join(','),
+    // Steam's Game Mode shows no system notification, so the Watchdog sends every one to the overlay.
+    AW_GAMESCOPE: gamescope().isActive() ? '1' : '',
   };
 
   try {
@@ -5314,6 +5340,7 @@ async function createOverlayWindow(info) {
 
     overlayWindow.webContents.userAgent = manifest.config['user-agent'];
     overlayWindow.managed = managedOverlay;
+    gamescope().showAboveGame(overlayWindow);
 
     overlayWindow.setAlwaysOnTop(true, 'screen-saver');
     overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
@@ -5338,6 +5365,7 @@ async function createOverlayWindow(info) {
     // would drift from the app's own view/overlay.html + util/overlayUi.js.
     overlayVisible = true;
     overlayWindow.loadFile(path.join(__dirname, '../view/overlay.html'));
+    overlayWindow.webContents.on('dom-ready', () => insertSegoeFallback(overlayWindow.webContents, { log: debug.log }));
     overlayWindow.webContents.on('did-finish-load', () => {
       showOverlayAfterLoad(info);
     });
@@ -5757,6 +5785,7 @@ function createNotificationWindow(data = {}) {
 
   notif.setAlwaysOnTop(true, 'screen-saver');
   notif.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  gamescope().showAboveGame(notif);
   const lockedCustomBounds = position === 'custom' && !reposition ? { x, y, width: w, height: h } : null;
   if (lockedCustomBounds) {
     // A real custom-position notification is click-through and must never be nudged by a preset,
@@ -5787,6 +5816,9 @@ function createNotificationWindow(data = {}) {
   } else {
     notif.setIgnoreMouseEvents(true, { forward: true });
   }
+  notif.webContents.once('dom-ready', () => {
+    if (!notif.isDestroyed()) insertSegoeFallback(notif.webContents, { log: debug.log });
+  });
   if (layer) {
     // Inserted once the bundled page's DOM exists and well before the payload arrives (that waits
     // for did-finish-load, i.e. for the page's pictures and fonts too).
@@ -6962,7 +6994,7 @@ function checkResources() {
     }
   }
 
-  const resourcesPath = path.join(manifest.config.debug ? path.join(__dirname, '..') : path.join(process.resourcesPath, 'userdata'));
+  const resourcesPath = path.join(manifest.config.debug ? path.join(__dirname, '..') : path.join(process.resourcesPath, 'userData'));
 
   // Media/ is deliberately not copied any more: it held byte-identical duplicates of app/sounds/,
   // and no code path ever read <userData>/Media - notification sounds resolve against the bundled

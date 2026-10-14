@@ -115,3 +115,18 @@ test('the websocket broadcast follows its own setting', () => {
   assert.equal(plan('toast', healthy(), { websocket: false }).websocket, false);
   assert.equal(plan('auto', healthy(), { websocket: false }).websocket, true);
 });
+
+// Steam's Game Mode (gamescope) shows no system notification: a toast there is no notification.
+test('in Game Mode every mode is delivered by the overlay alone', () => {
+  for (const mode of ['auto', 'overlay', 'toast', 'both']) {
+    const result = plan(mode, healthy({ toastHidden: true, overlayHidden: true, remembered: 'toast' }));
+    assert.equal(result.overlay, true, mode);
+    assert.equal(result.toast, false, mode);
+    assert.equal(result.fallbackToToast, false, mode);
+    assert.equal(result.reason, policy.REASON.GAME_MODE, mode);
+  }
+});
+
+test('in Game Mode without the resident app the forced modes still decide', () => {
+  assert.equal(plan('toast', healthy({ overlayHost: 'spawn', toastHidden: true })).toast, true);
+});

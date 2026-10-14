@@ -58,13 +58,13 @@ do not: a folder name must be spelled the same way in the app and in the Watchdo
 | Starting a game | the executable or its store URL | the launcher that owns it (`steam://`, `lutris:`, `heroic://`) through `xdg-open`, never Wine (`app/util/linuxGameLaunch.js`) |
 | Playtime store | `HKCU\Software\Achievement Watcher Next\Playtime` | `cfg/playtime.json` (`app/util/playtimeFile.js`) |
 | Toast | WinRT through powertoast | the Watchdog asks the app, which shows an Electron `Notification` through the freedesktop service (`app/electron/desktopNotification.js`); skipped when no notification daemon answers |
-| Popups and overlay over games | always-on-top windows | the app runs through XWayland under Wayland (`app/util/linuxSession.js`); popups and the overlay never take focus (unless "focus overlay" is set); `--toggle-overlay` toggles it from a desktop shortcut |
+| Popups and overlay over games | always-on-top windows | the app runs through XWayland under Wayland (`app/util/linuxSession.js`); popups and the overlay never take focus (unless "focus overlay" is set); `--toggle-overlay` toggles it from a desktop shortcut. In Steam's Game Mode (gamescope) they carry `GAMESCOPE_EXTERNAL_OVERLAY`, drawn from the screen's top-left corner, and every notification goes to them since no system notification shows there (`app/util/gamescope.js`) |
 | Notification sound | a PowerShell `MediaPlayer` | `pw-play`, then `paplay` |
 | Screenshots and clips | the Windows capture helper | Electron or the Screenshot portal; clips from `gpu-screen-recorder` or an opt-in software recorder (`app/electron/souvenirLinux.js`, `clipRecorder.js`) |
 | Controller rumble | XInput | kernel force feedback on `/dev/input/event*` (`watchdog/util/evdevRumble.js`) |
 | Controller in the overlay | XInput or GameInput through koffi; the overlay reads the pad with the Gamepad API | the pad's event device through koffi (`watchdog/console/controller/evdev-controller-backend.js`); the Watchdog sends the pad's state to the overlay, which is override-redirect so the game keeps the focus |
 | Watchdog presence pipe | named pipe | Unix socket in `XDG_RUNTIME_DIR` (`app/util/watchdogPipe.js`) |
-| Start with the session | `Run` registry value | XDG autostart entry (`app/util/linuxAutostart.js`) |
+| Start with the session | `Run` registry value | XDG autostart entry (`app/util/linuxAutostart.js`); where a gamescope session is installed (Steam Deck, SteamOS), a systemd user unit instead, and AW started without a display takes the Steam client's (`app/util/linuxSession.js`) |
 | `achievement-watcher://` links | registered at startup (`setAsDefaultProtocolClient`) | a desktop entry AW writes itself (`app/util/linuxDesktopEntry.js`) |
 | Tray | notification area | StatusNotifierItem; without a host the window minimizes instead (`app/util/linuxTrayHost.js`) |
 | Stored secrets key | DPAPI through `safeStorage` | the desktop keyring through `safeStorage`, with a one-time warning when none answers |

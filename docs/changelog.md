@@ -105,6 +105,9 @@ renamed in 3.9.0 and the history is kept under one file.
 ### Website & Docs
 
 - Buttons and filter chips on the site use the site's typeface instead of Arial.
+- A **Linux and the Steam Deck** guide: installing the AppImage and its updates, GNOME and KDE under
+  Wayland or X11, binding the overlay to a key, the keyring prompt, Steam, Proton, Lutris, Heroic,
+  Bottles and emulators, and what is and is not yet confirmed on the Steam Deck.
 
 ## 3.11.3 - 2026-10-13
 

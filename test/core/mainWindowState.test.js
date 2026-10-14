@@ -67,6 +67,18 @@ test('a truncated, empty or hand-broken file falls back to the manifest defaults
   }
 });
 
+// A Steam Deck's desktop: 1280x800 with Plasma's 44 px panel at the bottom.
+test('the first window fits a screen smaller than the default size, centred in it', () => {
+  const deck = { x: 0, y: 0, width: 1280, height: 756 };
+  assert.deepEqual(resolveMainWindowState(manifestWindow, null, { workArea: deck }), {
+    bounds: { x: 0, y: 0, width: 1280, height: 756 },
+    maximized: false,
+  });
+  const laptop = { x: 0, y: 0, width: 1366, height: 728 };
+  assert.deepEqual(resolveMainWindowState(manifestWindow, {}, { workArea: laptop }).bounds, { x: 33, y: 0, width: 1300, height: 728 });
+  assert.equal(resolveMainWindowState(manifestWindow, null, { workArea: { x: 0, y: 0, width: 800, height: 500 } }).bounds.width, 900);
+});
+
 test('what is written back is the same shape that is read, so a rejected value cannot round-trip', () => {
   assert.deepEqual(buildMainWindowState({ bounds: { x: 5.6, y: 9.2, width: 1300.4, height: 800.5 }, maximized: true }), {
     bounds: { x: 6, y: 9, width: 1300, height: 801 },

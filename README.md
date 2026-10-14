@@ -95,6 +95,14 @@ upgrade imports an older Achievement Watcher folder without modifying it.
 The installed app updates itself and downloads only what changed since your version. The portable
 build tells you when a new release is out; extracting it over the old folder keeps your `data`.
 
+**On Linux**, download `Achievement.Watcher.<version>.AppImage` from the same release, make it
+executable and start it (FUSE 2 is needed: `libfuse2`, or `libfuse2t64` on Ubuntu 24.04). It
+updates itself too, keeps its data in `~/.config/Achievement Watcher Next`, and runs on GNOME and KDE
+Plasma, under Wayland or X11.
+
+→ [Linux and the Steam Deck](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html) for
+Steam, Proton, Lutris, Heroic and Bottles, the overlay shortcut and the Steam Deck.
+
 → [Getting started](https://shirowwww.github.io/Achievement-Watcher-Next/getting-started.html) for the full first-run, discovery and update guide.
 
 ---
@@ -144,6 +152,7 @@ Start at the **[documentation site](https://shirowwww.github.io/Achievement-Watc
 - **Fix a problem:**
   [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html) ·
   [FAQ](https://shirowwww.github.io/Achievement-Watcher-Next/faq.html) ·
+  [Linux and Steam Deck](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html) ·
   [Issue tracker](https://github.com/Shirowwww/Achievement-Watcher-Next/issues)
 - **Contribute:** [Contributing](CONTRIBUTING.md) · [Build guide](BUILD.md) ·
   [Architecture](https://shirowwww.github.io/Achievement-Watcher-Next/architecture.html) ·
@@ -152,8 +161,9 @@ Start at the **[documentation site](https://shirowwww.github.io/Achievement-Watc
 ## Build from source
 
 Requires Windows and Node.js `22.22.2+` or `24.15+`. The app and the background Watchdog are separate
-npm projects; `npm run build` writes the installer, portable ZIP and updater files to `app\dist`. See
-[BUILD.md](BUILD.md) for setup, packaging details and known constraints.
+npm projects; `npm run build` writes the installer, portable ZIP and updater files to `app\dist`. The
+Linux AppImage is built on Linux with `npm run build:linux`. See [BUILD.md](BUILD.md) for setup,
+packaging details and known constraints.
 
 ## Security and support
 
@@ -187,8 +197,9 @@ off by default and warns you first. Allow the file your antivirus named, or excl
 
 → [Troubleshooting → Antivirus](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html#antivirus-or-smartscreen-warning)
 
-For a bug report, include the app version, Windows version, affected source and the relevant files
-from `%APPDATA%\Achievement Watcher Next\logs`. The issue tracker cannot provide games, credentials
+For a bug report, include the app version, Windows version (or Linux distribution and desktop),
+affected source and the relevant files from `%APPDATA%\Achievement Watcher Next\logs`
+(`~/.config/Achievement Watcher Next/logs` on Linux). The issue tracker cannot provide games, credentials
 or piracy support.
 
 ## Support the project

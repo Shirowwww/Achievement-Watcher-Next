@@ -105,6 +105,11 @@ defaults:
       title: FAQ
       description: Short answers about accounts, sources, notifications, safety, backups and supported platforms for Achievement Watcher Next.
   - scope:
+      path: linux.md
+    values:
+      title: Linux and the Steam Deck
+      description: Install the AppImage and keep it updated, bind the overlay to a key on GNOME or KDE, and run games through Steam, Proton, Lutris, Heroic or Bottles.
+  - scope:
       path: advanced.md
     values:
       title: Advanced tools

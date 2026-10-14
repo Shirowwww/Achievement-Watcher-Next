@@ -169,7 +169,7 @@
   "install.data": "Ustawienia i dane są w <code>%APPDATA%\\Achievement Watcher Next</code>. Aktualizacja je zachowuje, pobiera tylko to, co się zmieniło, i instaluje tylko wydanie podpisane przez projekt. Pierwsze uruchomienie importuje starszy folder Achievement Watcher bez jego zmieniania.",
   "install.download": "Pobierz",
   "install.guide": "Przewodnik pierwszego uruchomienia",
-  "install.linux": "Na Linuksie pobierz <code>Achievement.Watcher.&lt;version&gt;.AppImage</code> z tej samej strony, nadaj mu prawo wykonywania i uruchom. Śledzi gry uruchamiane przez Wine, Proton, Lutris, Heroic lub Bottles, a dane trzyma w <code>~/.config/Achievement Watcher Next</code>.",
+  "install.linux": "Na Linuksie pobierz <code>Achievement.Watcher.&lt;version&gt;.AppImage</code> z tej samej strony, nadaj mu prawo wykonywania i uruchom; potrzebuje FUSE 2 (<code>libfuse2</code>). Aktualizuje się sam, śledzi gry uruchamiane przez Steam, Proton, Wine, Lutris, Heroic lub Bottles, a dane trzyma w <code>~/.config/Achievement Watcher Next</code>. <a href=\"linux.html\">Przewodnik po Linuksie</a> opisuje środowiska graficzne, skrót nakładki i Steam Deck.",
   "install.step1Body": "<code>Achievement.Watcher.Setup.&lt;version&gt;.exe</code> ze strony wydań albo <code>Achievement.Watcher.Portable.&lt;version&gt;.zip</code>, jeśli wolisz obejść się bez instalatora: rozpakuj go gdziekolwiek, a dane zostaną obok. Nigdzie indziej nie są publikowane.",
   "install.step1Title": "Zainstaluj",
   "install.step2Body": "Ustawienia, potem Katalogi. Dodaj każdy katalog gry lub zapisów, którego nie udało się odgadnąć.",

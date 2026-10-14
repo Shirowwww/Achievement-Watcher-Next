@@ -43,4 +43,42 @@ function restartThroughXWayland(options) {
   return true;
 }
 
-module.exports = { xwaylandRelaunch, restartThroughXWayland, X11_SWITCH };
+function readEnviron(pid) {
+  try {
+    return require('fs').readFileSync(`/proc/${pid}/environ`, 'utf8');
+  } catch {
+    return '';
+  }
+}
+
+function environValue(environ, name) {
+  const entry = environ.split('\0').find((line) => line.startsWith(`${name}=`));
+  return entry ? entry.slice(name.length + 1) : '';
+}
+
+/*
+  Started by its systemd unit in Steam's Game Mode, AW has no display: gamescope-session does not hand
+  its own to the user manager. It takes the X display the running Steam client was given, which is
+  gamescope's. Chromium connects only once this file has run, so setting DISPLAY here is enough.
+  Returns false when AW has no display to run on, which the unit restarts until Steam is up.
+*/
+function adoptSteamDisplay({
+  platform = process.platform,
+  env = process.env,
+  steamPid = () => require('./steamLinux.js').steamClientPid(),
+  environOf = readEnviron,
+  exists = (file) => require('fs').existsSync(file),
+} = {}) {
+  if (platform !== 'linux' || env.DISPLAY || env.WAYLAND_DISPLAY) return true;
+  const pid = steamPid();
+  const environ = pid ? environOf(pid) : '';
+  const display = environValue(environ, 'DISPLAY');
+  if (!display) return false;
+  env.DISPLAY = display;
+  const xauthority = environValue(environ, 'XAUTHORITY');
+  // A Flatpak client's XAUTHORITY is a path inside its sandbox.
+  if (xauthority && exists(xauthority)) env.XAUTHORITY = xauthority;
+  return true;
+}
+
+module.exports = { xwaylandRelaunch, restartThroughXWayland, adoptSteamDisplay, X11_SWITCH };

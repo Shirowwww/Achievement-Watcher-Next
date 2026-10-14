@@ -169,7 +169,7 @@
   "install.data": "設定とデータは <code>%APPDATA%\\Achievement Watcher Next</code> に保存されます。アップデートはそれを保持し、変更分だけをダウンロードし、プロジェクトが署名したリリースだけをインストールします。初回起動時には、以前の Achievement Watcher のフォルダーを変更せずに取り込みます。",
   "install.download": "ダウンロード",
   "install.guide": "初回起動ガイド",
-  "install.linux": "Linux では、同じページから <code>Achievement.Watcher.&lt;version&gt;.AppImage</code> を入手し、実行権限を付けて起動します。Wine、Proton、Lutris、Heroic、Bottles で動かすゲームを監視し、データは <code>~/.config/Achievement Watcher Next</code> に保存されます。",
+  "install.linux": "Linux では、同じページから <code>Achievement.Watcher.&lt;version&gt;.AppImage</code> を入手し、実行権限を付けて起動します。FUSE 2（<code>libfuse2</code>）が必要です。自動で更新され、Steam、Proton、Wine、Lutris、Heroic、Bottles で動かすゲームを監視し、データは <code>~/.config/Achievement Watcher Next</code> に保存されます。デスクトップ環境、オーバーレイのショートカット、Steam Deck については <a href=\"linux.html\">Linux ガイド</a>をご覧ください。",
   "install.step1Body": "リリースページの <code>Achievement.Watcher.Setup.&lt;version&gt;.exe</code>、またはインストーラーなしがよければ <code>Achievement.Watcher.Portable.&lt;version&gt;.zip</code> を使ってください。好きな場所に展開すれば、データはその隣に置かれます。ほかに配布している場所はありません。",
   "install.step1Title": "インストールする",
   "install.step2Body": "設定を開き、フォルダーへ。推測できなかったゲームやセーブのフォルダーを追加します。",

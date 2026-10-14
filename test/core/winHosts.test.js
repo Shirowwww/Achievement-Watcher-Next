@@ -95,6 +95,29 @@ test('prefixes are found from Wine, Proton, Lutris, Heroic and Bottles, once eac
   }
 });
 
+// A Steam Deck: ~/.steam/steam links to the client, and a second library sits on the microSD card.
+test('a Steam Deck finds Proton prefixes on the internal disk and the microSD card, once each', LINUX_ONLY, () => {
+  const home = tmp('aw-deck-');
+  try {
+    const steam = path.join(home, '.local', 'share', 'Steam');
+    const sdCard = path.join(home, 'run', 'media', 'deck', 'SD');
+    fs.mkdirSync(path.join(steam, 'steamapps'), { recursive: true });
+    fs.mkdirSync(path.join(home, '.steam'), { recursive: true });
+    fs.symlinkSync(steam, path.join(home, '.steam', 'steam'));
+    fs.writeFileSync(
+      path.join(steam, 'steamapps', 'libraryfolders.vdf'),
+      `"libraryfolders"\n{\n\t"0"\n\t{\n\t\t"path"\t\t"${steam}"\n\t}\n\t"1"\n\t{\n\t\t"path"\t\t"${sdCard}"\n\t}\n}\n`
+    );
+    makePrefix(path.join(steam, 'steamapps', 'compatdata', '400', 'pfx'));
+    makePrefix(path.join(sdCard, 'steamapps', 'compatdata', '480', 'pfx'));
+
+    const found = discoverPrefixes({ env: {}, home });
+    assert.deepEqual(found.map((p) => [p.kind, p.appid]).sort(), [['proton', '400'], ['proton', '480']]);
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
 test('a Linux host list is the XDG folder plus one host per prefix user, with Documents from user.reg', LINUX_ONLY, () => {
   const home = tmp('aw-home-');
   try {
