@@ -181,7 +181,8 @@ test('library artwork recovers both orientations in view and falls back through 
   assert.match(mainSource, /STEAM_CLIENT_LOGIN_TIMEOUT_MS/);
   assert.match(mainSource, /network unavailable - skipping repeated Steam lookups/);
   assert.match(mainSource, /resetSteamTransportCircuit\(\)/);
-  assert.match(fs.readFileSync(path.join(appDir, 'parser', 'steam.js'), 'utf8'), /STEAM_APP_LIST_TIMEOUT_MS = 8000/);
+  // The retired app-list endpoint is never called, so it cannot hold a scan up.
+  assert.doesNotMatch(fs.readFileSync(path.join(appDir, 'parser', 'steam.js'), 'utf8'), /api\.steampowered\.com\/ISteamApps\/GetAppList/);
   assert.match(settingsSource, /app\.onStart\(\{ forceAchievementRecheck: true, preserveExistingOnFailure: true \}\)/);
 });
 

@@ -14,6 +14,7 @@ const path = require('path');
 const { steamRoots } = require(path.join(__dirname, 'winePrefixes.js'));
 
 const FLATPAK_HOME = ['.var', 'app', 'com.valvesoftware.Steam'];
+const SNAP_HOME = ['snap', 'steam', 'common'];
 
 // Text KeyValues: quoted or bare tokens, braces, `//` comments. A repeated key keeps its last value.
 function parseTextVdf(text) {
@@ -76,10 +77,12 @@ function context({ env = process.env, home = os.homedir() } = {}) {
   return { env, home };
 }
 
+// The Flatpak and the Snap each run Steam with their own home, where it keeps .steam/.
 function registryFile(root, { home }) {
-  const flatpak = path.join(home, ...FLATPAK_HOME);
-  const base = root && root.startsWith(flatpak + path.sep) ? flatpak : home;
-  return path.join(base, '.steam', 'registry.vdf');
+  const sandboxHome = [FLATPAK_HOME, SNAP_HOME]
+    .map((segments) => path.join(home, ...segments))
+    .find((dir) => root && root.startsWith(dir + path.sep));
+  return path.join(sandboxHome || home, '.steam', 'registry.vdf');
 }
 
 const registryCache = new Map();
@@ -151,11 +154,33 @@ function steamRegistry(options) {
   };
 }
 
+// The Flatpak client writes steam.pid from its own pid namespace, a number that means nothing (or
+// another process) on the host, so it is found by its binary in /proc instead.
+function sandboxedClientPid(root, procDir) {
+  const binary = path.join(root, 'ubuntu12_32', 'steam');
+  let entries = [];
+  try {
+    entries = fs.readdirSync(procDir).filter((name) => /^\d+$/.test(name));
+  } catch {
+    return 0;
+  }
+  for (const pid of entries) {
+    try {
+      if (fs.readFileSync(path.join(procDir, pid, 'cmdline'), 'utf8').split('\0')[0] === binary) return Number(pid);
+    } catch {
+      // The process ended while the list was read.
+    }
+  }
+  return 0;
+}
+
 // The running client's pid, 0 when there is none. registry.vdf has no ActiveProcess on Linux and its
 // HKLM SteamPID can name a process Steam already restarted from; steam.pid sits next to it.
-function steamClientPid(options) {
+function steamClientPid(options = {}) {
   const ctx = context(options);
-  const file = path.join(path.dirname(registryFile(steamClientRoot(ctx), ctx)), 'steam.pid');
+  const root = steamClientRoot(ctx);
+  if (root.startsWith(path.join(ctx.home, ...FLATPAK_HOME) + path.sep)) return sandboxedClientPid(root, options.procDir || '/proc');
+  const file = path.join(path.dirname(registryFile(root, ctx)), 'steam.pid');
   try {
     return Number(fs.readFileSync(file, 'utf8').trim()) || 0;
   } catch {
