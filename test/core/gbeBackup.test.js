@@ -127,6 +127,33 @@ test('the index keeps one entry per backup folder and stays bounded', () => {
   }
 });
 
+test('restore points of an unchanged game end up sharing their files once the batch is over', async (t) => {
+  const goldberg = require('../../app/parser/goldberg.js');
+  const userData = tmpdir('aw-backup-user-');
+  const gameDir = tmpdir('aw-backup-game-');
+  t.after(() => {
+    fs.rmSync(userData, { recursive: true, force: true });
+    fs.rmSync(gameDir, { recursive: true, force: true });
+  });
+  fs.mkdirSync(path.join(gameDir, 'steam_settings'));
+  fs.writeFileSync(path.join(gameDir, 'steam_settings', 'achievements.json'), JSON.stringify(Array(400).fill({ name: 'ACH' })));
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+
+  const first = gbeBackup.createBackup({ goldberg, userDataPath: userData, appid: '480', gameDir });
+  const second = gbeBackup.createBackup({ goldberg, userDataPath: userData, appid: '480', gameDir });
+  const copies = [first, second].map((backup) => path.join(backup.backupDir, 'steam_settings', 'achievements.json'));
+  const ino = (file) => fs.statSync(file, { bigint: true }).ino;
+  assert.notEqual(ino(copies[0]), ino(copies[1]), 'nothing is linked while the batch may still be running');
+
+  t.mock.timers.tick(15000);
+  // The pass hashes files on the thread pool, which a busy suite can hold for a while.
+  const deadline = Date.now() + 10000;
+  while (ino(copies[0]) !== ino(copies[1]) && Date.now() < deadline) await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(ino(copies[0]), ino(copies[1]));
+  assert.equal(fs.readFileSync(copies[1], 'utf8'), fs.readFileSync(path.join(gameDir, 'steam_settings', 'achievements.json'), 'utf8'));
+});
+
 test('a missing or unreadable index reads as empty rather than throwing', () => {
   const userData = tmpdir('aw-backup-user-');
   try {

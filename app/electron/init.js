@@ -65,6 +65,7 @@ retargetBackupIndex(app.getPath('userData'));
 stylizedArtwork.purgeTintedXboxCovers(app.getPath('userData'));
 // Drops the screen grabber 3.11.0 and earlier compiled into %TEMP%, which antivirus engines flag.
 const legacyScreenCapture = removeLegacyScreenCapture();
+const HTTP_DISK_CACHE_BYTES = 64 * 1024 * 1024;
 // Keep GPU acceleration enabled, but avoid Chromium background services AW does not use in tray mode.
 for (const sw of ['disable-extensions', 'disable-component-extensions-with-background-pages', 'disable-default-apps', 'disable-background-networking', 'disable-accelerated-video-decode']) {
   app.commandLine.appendSwitch(sw);
@@ -72,6 +73,10 @@ for (const sw of ['disable-extensions', 'disable-component-extensions-with-backg
 // Bound heap growth while the app sits in the tray: the renderer's measured heap stays near 20 MB,
 // so a 192 MB ceiling makes V8 collect earlier instead of letting every process grow toward 256 MB.
 app.commandLine.appendSwitch('js-flags', '--max-old-space-size=192');
+// Chromium sizes its HTTP cache from free disk space and had reached 181 MB, almost all of it pictures
+// AW Next already keeps in its own stores (steam_cache, covers). Applies to every session, partitions
+// included.
+app.commandLine.appendSwitch('disk-cache-size', String(HTTP_DISK_CACHE_BYTES));
 const { BrowserWindow, dialog, session, shell, ipcMain, globalShortcut, Tray, Menu, nativeImage, Notification } = require('electron');
 const os = require('os');
   const { verifyUpdateCodeSignature } = require('../util/updateSignature.js');
@@ -1135,6 +1140,9 @@ function clientLogOn() {
 
 const manifest = require('../package.json');
 const userData = app.getPath('userData');
+// Restore-point and theme-picture dedupe, generator output trim, banner re-encoding: after the icon
+// cache prune, well clear of startup.
+const STORE_HOUSEKEEPING_DELAY_MS = 60 * 1000;
 let currentlyscraping = { steamcommunity: false, steamhunters: false };
 let settingsJS = null;
 let configJS = null;
@@ -7370,6 +7378,11 @@ try {
           debug.log('[iconCache] prune skipped: ' + (err.message || err));
         }
       }, 15000);
+      setTimeout(() => {
+        require(path.join(__dirname, '../util/storeHousekeeping.js'))
+          .tidyUserDataStores(userData, { log: debug, nativeImage })
+          .catch((err) => debug.log('[housekeeping] skipped: ' + (err.message || err)));
+      }, STORE_HOUSEKEEPING_DELAY_MS);
     })
     .on('window-all-closed', function () {
       // Resident tray daemon: do NOT quit when the window closes - the tray + background monitor stay

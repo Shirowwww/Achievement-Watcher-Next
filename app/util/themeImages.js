@@ -70,4 +70,4 @@ function findByContent(dir, source) {
   return null;
 }
 
-module.exports = { sameContent, isDerivedUpToDate, findByContent };
+module.exports = { sameContent, isDerivedUpToDate, findByContent, DERIVED_NAME };

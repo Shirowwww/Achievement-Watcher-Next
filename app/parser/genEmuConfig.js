@@ -221,6 +221,55 @@ function collectGeneratedSteamSettings(baseDir) {
   return hits;
 }
 
+/*
+  Beside steam_settings the tool leaves its own copy of the emulator: both DLLs, their .7z archives,
+  steam_misc and helper exes, about 55 MB per game. Only steam_settings is ever read back (merged into
+  the game, and by the progress-counter fallbacks), so the rest goes once a run is over.
+*/
+const KEPT_OUTPUT = 'steam_settings';
+// An output folder changed this recently may belong to a run still writing it.
+const OUTPUT_SETTLE_MS = 60 * 60 * 1000;
+
+function pruneOutputDir(outputDir) {
+  let removed = 0;
+  for (const entry of fs.readdirSync(outputDir)) {
+    if (entry === KEPT_OUTPUT) continue;
+    fs.rmSync(path.join(outputDir, entry), { recursive: true, force: true });
+    removed++;
+  }
+  return removed;
+}
+
+function subDirs(dir) {
+  try {
+    return fs
+      .readdirSync(dir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => path.join(dir, entry.name));
+  } catch {
+    return [];
+  }
+}
+
+// The same cleanup for outputs an earlier version left behind: <cacheDir>/<tag>/<tool>/_OUTPUT/<appid>.
+function pruneGeneratedOutputs(cacheDir, now = Date.now()) {
+  let pruned = 0;
+  for (const tag of subDirs(cacheDir)) {
+    for (const tool of subDirs(tag)) {
+      for (const output of subDirs(path.join(tool, '_OUTPUT'))) {
+        try {
+          if (!fs.existsSync(path.join(output, KEPT_OUTPUT))) continue;
+          if (now - fs.statSync(output).mtimeMs < OUTPUT_SETTLE_MS) continue;
+          if (pruneOutputDir(output) > 0) pruned++;
+        } catch {
+          /* a folder that cannot be cleaned now is cleaned on a later start */
+        }
+      }
+    }
+  }
+  return pruned;
+}
+
 function findGeneratedSteamSettings(...baseDirs) {
   for (const baseDir of baseDirs.filter(Boolean)) {
     const hit = collectGeneratedSteamSettings(baseDir)[0];
@@ -380,7 +429,16 @@ async function generate({ tool, appid, login = null, onPrompt, timeout = 900000,
     });
   });
 
-  const output = await run(toolArgsFor(id, login));
+  let output;
+  try {
+    output = await run(toolArgsFor(id, login));
+  } catch (err) {
+    // The caller only gets a workDir to clean up from a run that succeeded: a failed or timed-out
+    // one left an empty folder in %TEMP% each time (81 of them over four days on one machine). The
+    // killed tool still holds it as its working folder for a moment, hence the retries.
+    await fs.promises.rm(workDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }).catch(() => {});
+    throw err;
+  }
 
   const steamSettings = findGeneratedSteamSettingsForAppid(id, toolDir, workDir);
   if (!steamSettings) {
@@ -390,6 +448,11 @@ async function generate({ tool, appid, login = null, onPrompt, timeout = 900000,
       /* ignore */
     }
     throw new Error('generate_emu_config produced no steam_settings (login/2FA failed or appid invalid)');
+  }
+  try {
+    pruneOutputDir(path.dirname(steamSettings));
+  } catch (err) {
+    log.log(`[emucfg] could not trim the output of ${id} => ${err.message || err}`);
   }
   return { steamSettings, workDir, output };
 }
@@ -467,5 +530,5 @@ function mergeIntoGame(srcSteamSettings, destSteamSettings, { overwrite = false 
   return added;
 }
 
-module.exports = { ensureGenerateEmuConfig, generate, mergeIntoGame, findGeneratedSteamSettings };
+module.exports = { ensureGenerateEmuConfig, generate, mergeIntoGame, findGeneratedSteamSettings, pruneGeneratedOutputs };
 module.exports._internal = { resolveToolExe, isInsideDir, findExe };
