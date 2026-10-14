@@ -14,9 +14,9 @@ test('a Wayland session restarts with the same arguments plus the X11 switch', (
   assert.deepEqual(run(), { execPath: '/opt/aw/aw', args: ['--hidden', X11_SWITCH] });
 });
 
-test('an AppImage restarts through its own file, not the mount it runs from', () => {
+test('an AppImage restarts the binary of its current mount, not the file that would mount it again', () => {
   const result = run({ env: { ...wayland, APPIMAGE: '/home/p/AW.AppImage' }, execPath: '/tmp/.mount_aw/aw' });
-  assert.equal(result.execPath, '/home/p/AW.AppImage');
+  assert.equal(result.execPath, '/tmp/.mount_aw/aw');
 });
 
 test('nothing restarts on Windows, on an X11 session or without XWayland', () => {

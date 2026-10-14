@@ -18,8 +18,12 @@ function hasPlatformChoice(args) {
   return args.some((arg) => arg.startsWith('--ozone-platform'));
 }
 
-// Returns the command to restart through XWayland, or null when this process should carry on.
-// An AppImage is restarted through its own file: the mount the binary runs from goes away with it.
+/*
+  Returns the command to restart through XWayland, or null when this process should carry on.
+  Inside an AppImage this is the mounted binary too: the copy inherits the pipe the AppImage runtime
+  watches, so the same mount stays up for it, where starting the .AppImage file again would mount a
+  second copy and leave the first one behind.
+*/
 function xwaylandRelaunch({ platform = process.platform, env = process.env, argv = process.argv, execPath = process.execPath } = {}) {
   // Electron goes native Wayland on exactly this variable; any other session is already X11.
   if (platform !== 'linux' || env.XDG_SESSION_TYPE !== 'wayland') return null;
@@ -28,7 +32,7 @@ function xwaylandRelaunch({ platform = process.platform, env = process.env, argv
   const args = argv.slice(1);
   // A shortcut's `--toggle-overlay` only hands its press to the running copy: no window, no restart.
   if (hasPlatformChoice(args) || args.includes('--toggle-overlay')) return null;
-  return { execPath: env.APPIMAGE || execPath, args: [...args, X11_SWITCH] };
+  return { execPath, args: [...args, X11_SWITCH] };
 }
 
 // Starts the XWayland copy and reports whether this process should exit now, before it does any work.

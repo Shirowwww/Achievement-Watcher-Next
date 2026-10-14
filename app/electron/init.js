@@ -159,6 +159,7 @@ const updateGate = require(path.join(__dirname, '../util/updateGate.js'));
 const { resolveSteamMetadata } = require(path.join(__dirname, '../util/steamMetadata.js'));
 const { isChecksumMismatchError, summarizeUpdaterError } = require(path.join(__dirname, '../util/updateChecksum.js'));
 const { verifyPendingInstaller } = require(path.join(__dirname, '../util/pendingInstallerGuard.js'));
+const { launchAfterExit } = require(path.join(__dirname, '../util/appImageRelaunch.js'));
 const { clearUpdaterCacheDir: clearCacheDirForHelper } = require(path.join(__dirname, '../util/updateCacheClear.js'));
 const { pruneInstalledPendingUpdate } = require(path.join(__dirname, '../util/updateCacheHousekeeping.js'));
 const { releaseNoteBlocks } = require(path.join(__dirname, '../util/releaseNotes.js'));
@@ -7392,6 +7393,22 @@ try {
   };
 
   /*
+    electron-updater swaps the AppImage file, then would start the new one as a child of this process,
+    which keeps the old version mounted as long as the new one runs. It only swaps the file here, and
+    the new version starts once this process has exited.
+  */
+  function installAppImageUpdate() {
+    const updater = getUpdater();
+    let next = process.env.APPIMAGE;
+    updater.once('appimage-filename-updated', (file) => {
+      next = file;
+    });
+    // Emitted by electron-updater only once the file is in place, right before it quits the app.
+    require('electron').autoUpdater.once('before-quit-for-update', () => launchAfterExit(next));
+    updater.quitAndInstall(true, false);
+  }
+
+  /*
     Hand over to the installer without the app simply vanishing.
 
     quitAndInstall() closes every window and spawns the NSIS installer. Run silently (/S) that
@@ -7443,7 +7460,8 @@ try {
       }
     }
     try {
-      getUpdater().quitAndInstall(silent, true);
+      if (process.platform === 'linux') installAppImageUpdate();
+      else getUpdater().quitAndInstall(silent, true);
     } catch (err) {
       // The installer could not be started at all: say so rather than sitting on "installing".
       notifyUpdateError(`could not start the installer: ${err.message || err}`);
