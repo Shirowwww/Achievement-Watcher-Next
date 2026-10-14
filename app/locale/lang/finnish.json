@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "Poista pelikansio (roskakoriin)…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "Lisää peliruutujen hiiren kakkospainikkeen valikkoon asennuksenpoiston vaihtoehdot (Steam-poisto, pelin asennuksenpoisto-ohjelma tai kansion siirto roskakoriin)."
+          },
+          "controller": {
+            "priority": {
+              "description": "Antaa peittokuvalle näppäimistökohdistuksen sen avautuessa, jolloin kohdistuksen menettämisestä taukoavat pelit menevät tauolle. AW Next ei ota ohjainta pois peliltä, joten peli voi silti nähdä painallukset."
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "Suorittaa Steamlessin pelin exe-tiedostolle ennen paikkausta ja poistaa Valven SteamStub-DRM-suojauksen (alkuperäinen säilytetään nimellä .steamstub.bak). Ei tee mitään, jos suojausta ei ole. Vaatii Mono-ympäristön (mono-complete Debianissa ja Ubuntussa)."
+          },
+          "apiCheckBypass": {
+            "description": "Oletuksena pois päältä. Asentaa SteamAutoCrackin ohitusvälityksen (winmm.dll) ja uudelleenohjausasetukset, jotta vaihdon jälkeen alkuperäistä steam_apia tai exe-tiedostoa uudelleen tarkistavat pelit käynnistyvät ja avaavat saavutuksia. Välitys ladataan sen virallisesta julkaisusta. Wine ja Proton lataavat välityksen vain, jos pelin käynnistysasetuksissa on WINEDLLOVERRIDES=\"winmm=n,b\"."
           }
         },
         "notification": {
           "title": {
             "toast": "Työpöytäilmoitus"
-          },
-          "info": {
-            "toast": "Osa tämän osion asetuksista toimii vain Windowsissa"
           },
           "test": {
             "toast": "Työpöytäilmoitus"
@@ -2528,13 +2541,6 @@
               "name": "Työpöytäilmoituksen ääni",
               "description": "Määrittää äänen, joka soitetaan työpöytäilmoituksen näkyessä"
             },
-            "toastSouvenir": {
-              "name": "Muistokuva työpöytäilmoituksessa",
-              "description": "Vain Windows: näyttää muistokuvakaappauksen ilmoituksen sisällä."
-            },
-            "groupToast": {
-              "description": "Vain Windows: ryhmittelee saman pelin ilmoitukset toimintokeskuksessa."
-            },
             "urgent": {
               "description": "Salli saavutusten avausilmoitukset myös silloin, kun Älä häiritse on käytössä. Ne lähetetään kriittisinä ilmoituksina, jotka useimmat työpöydät päästävät läpi."
             },
@@ -2542,20 +2548,13 @@
               "name": "Työpöytäilmoitus",
               "description": "Työpöytäsi näyttämä järjestelmäilmoitus"
             },
-            "useWinRT": {
-              "description": "Vain Windows. Ei vaikutusta Linuxissa."
-            },
-            "useBalloon": {
-              "description": "Vain Windows. Ei vaikutusta Linuxissa."
-            },
-            "souvenirHdrDesc": "Vain Windows: korjaa värit, kun Windowsin HDR on käytössä. Linuxissa tallennetaan tavallinen kuvakaappaus.",
             "souvenirDirHelp": "Yksi alikansio peliä kohden, tiedostojen nimet muodossa \"pvm - saavutus\". Oletus: ~/Pictures/Achievement Watcher Next. Waylandissa työpöytä kysyy kerran istuntoa kohden, saako näytön jakaa.",
             "clipDesc": "Pelin ollessa käynnissä sen viimeiset sekunnit pidetään muistissa ja tallennetaan jokaisen avaamisen ympäriltä, ilmoitus keskellä. Waylandissa työpöytä kysyy kerran, saako näytön jakaa.",
-            "clipAudioDesc": "Linuxissa tallennetaan koko tietokoneen ääni.",
             "clipDirHelp": "Yksi alikansio peliä kohden, tiedostojen nimet muodossa \"pvm - saavutus\". Oletus: ~/Videos/Achievement Watcher Next."
           }
         },
         "folder": {
+          "default": "Automaattisesti tarkistettavat kansiot, jokaisessa Wine- tai Proton-prefiksissä ja kotikansiossasi",
           "addInfo": {
             "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini tai UniverseLAN.ini. RPCS3:n kohdalla valitse sen asetuskansio (~/.config/rpcs3) tai dev_hdd0-kansio."
           },
@@ -2578,7 +2577,14 @@
             "2": "Omistetut Steam-pelit lasketaan asennetuiksi vain, kun Steamin omat tiedostot vahvistavat sen."
           },
           "steam": {
-            "0": "GBE- ja Goldberg-tallennukset ovat yleensä kansiossa AppData/Roaming/GSE Saves pelin Wine- tai Proton-prefiksin sisällä tai kansiossa ~/.local/share/GSE Saves natiivissa Linux-pelissä."
+            "0": "GBE- ja Goldberg-tallennukset ovat yleensä kansiossa AppData/Roaming/GSE Saves pelin Wine- tai Proton-prefiksin sisällä tai kansiossa ~/.local/share/GSE Saves natiivissa Linux-pelissä.",
+            "1": "CODEX- ja RUNE-tallennukset ovat usein kansiossa Public/Documents/Steam/CODEX tai Public/Documents/Steam/RUNE pelin Wine- tai Proton-prefiksin sisällä."
+          },
+          "emulators": {
+            "0": "RPCS3-pokaalit luetaan RPCS3:n kansion (~/.config/rpcs3) polusta dev_hdd0/home/.../trophy."
+          },
+          "themes": {
+            "2": "Pudota CSS-teema kansioon ~/.config/Achievement Watcher Next/themes, niin se ilmestyy teemavalikkoon."
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "Kansiota ei voitu siirtää roskakoriin.",
         "delete-permanently-detail": "Pysyvä poisto ohittaa roskakorin: tiedostoja ei voi palauttaa.",
         "delete-recycle-bin-refused": "Järjestelmä kieltäytyi siirtämästä tätä kansiota roskakoriin. Näin käy, kun tiedosto on yhä auki, kun asemassa ei ole roskakoria (siirrettävä asema tai verkkoasema) tai kun kansioon ei voi kirjoittaa.",
+        "delete-blocked-by-permissions": "Tilisi ei voi kirjoittaa tähän tiedostoon: {file}\nVain omistaja tai root voi poistaa kansion.",
         "gh-simple-notifications-fallback": "Toimii - työpöytäilmoituksen varatapa käytössä"
       }
     }

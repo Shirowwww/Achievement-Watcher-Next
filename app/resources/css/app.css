@@ -3496,6 +3496,11 @@ body.is-resizing #game-list {
 #options-notify-clip.clip-off > li:not(:first-child) {
   display: none;
 }
+/* Linux: gpu-screen-recorder takes the format, the software recorder the resolution (VP8 only). */
+#options-notify-clip[data-clip-engine='gpu'] > li[data-clip-engine-only='software'],
+#options-notify-clip[data-clip-engine='software'] > li[data-clip-engine-only='gpu'] {
+  display: none;
+}
 /* A read-only value across the whole control column, such as the clip size estimate. */
 .arrow-list li .right .clip-estimate {
   grid-column: 1 / -1;
@@ -13218,7 +13223,8 @@ body {
   border-radius: var(--radius-sm);
 }
 
-/* Settings that rest on Windows itself (Xbox PC, Steamless) are not offered on other systems. */
-html:not([data-platform='win32']) [data-windows-only] {
+/* What only does something on one system is not offered on the other. */
+html:not([data-platform='win32']) [data-windows-only],
+html:not([data-platform='linux']) [data-linux-only] {
   display: none !important;
 }

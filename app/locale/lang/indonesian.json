@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "Hapus folder game (Tempat Sampah)…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "Menambahkan opsi Copot pemasangan ke menu klik kanan pada kartu game (copot lewat Steam, uninstaller game, atau pindahkan folder ke Tempat Sampah)."
+          },
+          "controller": {
+            "priority": {
+              "description": "Beri overlay fokus papan ketik saat terbuka, sehingga game yang berhenti sejenak ketika kehilangan fokus akan melakukannya. AW Next tidak mengambil kontroler dari game, jadi game mungkin tetap menerima tekanan tombol."
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "Menjalankan Steamless pada exe game sebelum penambalan untuk melepas DRM SteamStub milik Valve (aslinya disimpan sebagai .steamstub.bak). Tidak berefek bila tidak ada stub. Memerlukan Mono (mono-complete di Debian dan Ubuntu)."
+          },
+          "apiCheckBypass": {
+            "description": "Nonaktif secara bawaan. Menaruh proksi pengelak milik SteamAutoCrack (winmm.dll) + konfigurasi pengalihan agar game yang memeriksa ulang steam_api/exe asli setelah penggantian tetap bisa berjalan dan membuka pencapaian. Proksi diunduh dari rilis resminya. Wine dan Proton hanya memuat proksi jika opsi peluncuran game menetapkan WINEDLLOVERRIDES=\"winmm=n,b\"."
           }
         },
         "notification": {
           "title": {
             "toast": "Notifikasi desktop"
-          },
-          "info": {
-            "toast": "Sebagian opsi di bagian ini hanya berfungsi di Windows"
           },
           "test": {
             "toast": "Notifikasi desktop"
@@ -2528,13 +2541,6 @@
               "name": "Suara notifikasi desktop",
               "description": "Menentukan suara yang diputar saat notifikasi desktop ditampilkan"
             },
-            "toastSouvenir": {
-              "name": "Suvenir pada notifikasi desktop",
-              "description": "Hanya Windows: menampilkan tangkapan layar suvenir di dalam notifikasi."
-            },
-            "groupToast": {
-              "description": "Hanya Windows: mengelompokkan notifikasi dari game yang sama di Pusat Tindakan."
-            },
             "urgent": {
               "description": "Izinkan pencapaian yang terbuka tetap tampil saat Jangan Ganggu aktif. Notifikasinya dikirim sebagai notifikasi kritis, yang diloloskan oleh sebagian besar desktop."
             },
@@ -2542,20 +2548,13 @@
               "name": "Notifikasi desktop",
               "description": "Notifikasi sistem yang ditampilkan oleh desktop Anda"
             },
-            "useWinRT": {
-              "description": "Hanya Windows. Tidak berpengaruh di Linux."
-            },
-            "useBalloon": {
-              "description": "Hanya Windows. Tidak berpengaruh di Linux."
-            },
-            "souvenirHdrDesc": "Hanya Windows: mengoreksi warna saat HDR Windows aktif. Di Linux, tangkapan layar standar yang disimpan.",
             "souvenirDirHelp": "Satu subfolder per game, file diberi nama \"tanggal - pencapaian\". Default: ~/Pictures/Achievement Watcher Next. Di Wayland, desktop meminta izin berbagi layar satu kali per sesi.",
             "clipDesc": "Selama game berjalan, beberapa detik terakhirnya disimpan di memori dan disimpan di sekitar setiap pembukaan, dengan notifikasi di tengah. Di Wayland, desktop meminta izin berbagi layar satu kali.",
-            "clipAudioDesc": "Di Linux, suara seluruh PC direkam.",
             "clipDirHelp": "Satu subfolder per game, file diberi nama \"tanggal - pencapaian\". Default: ~/Videos/Achievement Watcher Next."
           }
         },
         "folder": {
+          "default": "Folder yang diperiksa otomatis, di setiap prefiks Wine atau Proton dan di folder home-mu",
           "addInfo": {
             "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini atau UniverseLAN.ini berada. Untuk RPCS3, pilih folder konfigurasinya (~/.config/rpcs3) atau folder dev_hdd0."
           },
@@ -2578,7 +2577,14 @@
             "2": "Game Steam yang dimiliki dihitung terpasang hanya bila file milik Steam sendiri membenarkannya."
           },
           "steam": {
-            "0": "Save GBE / Goldberg biasanya ada di AppData/Roaming/GSE Saves di dalam prefix Wine atau Proton game, atau di ~/.local/share/GSE Saves untuk game Linux native."
+            "0": "Save GBE / Goldberg biasanya ada di AppData/Roaming/GSE Saves di dalam prefix Wine atau Proton game, atau di ~/.local/share/GSE Saves untuk game Linux native.",
+            "1": "Save CODEX / RUNE sering berada di Public/Documents/Steam/CODEX atau Public/Documents/Steam/RUNE di dalam prefiks Wine atau Proton game."
+          },
+          "emulators": {
+            "0": "Trofi RPCS3 dibaca dari dev_hdd0/home/.../trophy di folder RPCS3 (~/.config/rpcs3)."
+          },
+          "themes": {
+            "2": "Letakkan tema CSS ke ~/.config/Achievement Watcher Next/themes dan tema itu akan muncul di daftar pilihan tema."
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "Tidak dapat memindahkan folder ke Tempat Sampah.",
         "delete-permanently-detail": "Penghapusan permanen melewati Tempat Sampah: file tidak dapat dipulihkan.",
         "delete-recycle-bin-refused": "Sistem menolak memindahkan folder ini ke Tempat Sampah. Ini terjadi saat sebuah file masih terbuka, saat drive tidak memiliki Tempat Sampah (drive lepasan atau jaringan), atau saat Anda tidak dapat menulis ke folder.",
+        "delete-blocked-by-permissions": "File ini tidak dapat ditulis oleh akunmu: {file}\nHanya pemiliknya atau root yang dapat menghapus folder.",
         "gh-simple-notifications-fallback": "Berfungsi - cadangan notifikasi desktop aktif"
       }
     }

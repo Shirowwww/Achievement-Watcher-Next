@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "刪除遊戲資料夾（垃圾桶）…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "在遊戲卡片的右鍵選單中加入解除安裝選項（透過 Steam 解除安裝、執行遊戲解除安裝程式，或將資料夾移到垃圾桶）。"
+          },
+          "controller": {
+            "priority": {
+              "description": "內嵌介面開啟時取得鍵盤焦點，讓失去焦點就暫停的遊戲能正常暫停。AW Next 不會從遊戲手中奪走控制器，因此遊戲仍可能收到按鍵訊號。"
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "在修補前先對遊戲執行檔執行 Steamless，移除 Valve 的 SteamStub DRM（原始檔會保留為 .steamstub.bak）。若沒有 stub 則不會有任何動作。需要 Mono（Debian 與 Ubuntu 上為 mono-complete）。"
+          },
+          "apiCheckBypass": {
+            "description": "預設為關閉。會放入 SteamAutoCrack 的略過代理（winmm.dll）與轉向設定，讓那些在置換後仍會重新檢查原始 steam_api/執行檔的遊戲仍可啟動並解鎖成就。代理檔案會從官方發行頁下載。只有當遊戲的啟動選項設定了 WINEDLLOVERRIDES=\"winmm=n,b\" 時，Wine 和 Proton 才會載入該代理。"
           }
         },
         "notification": {
           "title": {
             "toast": "桌面通知"
-          },
-          "info": {
-            "toast": "此區的部分選項僅在 Windows 上有效"
           },
           "test": {
             "toast": "桌面通知"
@@ -2528,13 +2541,6 @@
               "name": "桌面通知音效",
               "description": "指定顯示桌面通知時要播放的音效"
             },
-            "toastSouvenir": {
-              "name": "桌面通知紀念截圖",
-              "description": "僅限 Windows：在通知中顯示紀念截圖。"
-            },
-            "groupToast": {
-              "description": "僅限 Windows：在重要訊息中心把同一款遊戲的通知分組顯示。"
-            },
             "urgent": {
               "description": "讓成就解鎖在請勿打擾開啟時仍可顯示。這些通知會以緊急通知送出，大多數桌面都會放行。"
             },
@@ -2542,20 +2548,13 @@
               "name": "桌面通知",
               "description": "由你的桌面顯示的系統通知"
             },
-            "useWinRT": {
-              "description": "僅限 Windows。在 Linux 上無效。"
-            },
-            "useBalloon": {
-              "description": "僅限 Windows。在 Linux 上無效。"
-            },
-            "souvenirHdrDesc": "僅限 Windows：在 Windows HDR 啟用時校正色彩。在 Linux 上會儲存一般的截圖。",
             "souvenirDirHelp": "每個遊戲一個子資料夾，檔名為「日期 - 成就」。預設：~/Pictures/Achievement Watcher Next。在 Wayland 上，桌面會在每個工作階段詢問一次是否分享螢幕。",
             "clipDesc": "遊戲執行時，最近幾秒會保留在記憶體中，並在每次解鎖前後儲存下來，通知位於中間。在 Wayland 上，桌面會詢問一次是否分享螢幕。",
-            "clipAudioDesc": "在 Linux 上會錄製整台電腦的聲音。",
             "clipDirHelp": "每個遊戲一個子資料夾，檔名為「日期 - 成就」。預設：~/Videos/Achievement Watcher Next。"
           }
         },
         "folder": {
+          "default": "自動檢查的資料夾（每個 Wine 或 Proton 前綴內，以及主目錄）",
           "addInfo": {
             "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini 或 UniverseLAN.ini 檔案的資料夾。若為 RPCS3，請選擇其設定資料夾（~/.config/rpcs3）或 dev_hdd0 資料夾。"
           },
@@ -2578,7 +2577,14 @@
             "2": "已擁有的 Steam 遊戲，只有在 Steam 自己的檔案確認後才會算是已安裝。"
           },
           "steam": {
-            "0": "GBE / Goldberg 的存檔通常位於遊戲的 Wine 或 Proton 前綴內的 AppData/Roaming/GSE Saves，原生 Linux 遊戲則位於 ~/.local/share/GSE Saves。"
+            "0": "GBE / Goldberg 的存檔通常位於遊戲的 Wine 或 Proton 前綴內的 AppData/Roaming/GSE Saves，原生 Linux 遊戲則位於 ~/.local/share/GSE Saves。",
+            "1": "CODEX / RUNE 的存檔常位於遊戲的 Wine 或 Proton 前綴內的 Public/Documents/Steam/CODEX 或 Public/Documents/Steam/RUNE。"
+          },
+          "emulators": {
+            "0": "RPCS3 的獎盃會從 RPCS3 資料夾（~/.config/rpcs3）中的 dev_hdd0/home/.../trophy 讀取。"
+          },
+          "themes": {
+            "2": "把 CSS 主題放進 ~/.config/Achievement Watcher Next/themes，它就會出現在佈景主題下拉選單中。"
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "無法把資料夾移到垃圾桶。",
         "delete-permanently-detail": "永久刪除會略過垃圾桶：檔案將無法還原。",
         "delete-recycle-bin-refused": "系統拒絕把這個資料夾移到垃圾桶。當檔案仍被占用、磁碟沒有垃圾桶（卸除式或網路磁碟），或你沒有該資料夾的寫入權限時就會發生。",
+        "delete-blocked-by-permissions": "目前的帳戶無法寫入這個檔案：{file}\n只有擁有者或 root 可以刪除該資料夾。",
         "gh-simple-notifications-fallback": "運作中 - 已改用桌面通知備援"
       }
     }

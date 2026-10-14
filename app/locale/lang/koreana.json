@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "게임 폴더 삭제(휴지통)…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "게임 타일의 오른쪽 클릭 메뉴에 제거 항목을 추가합니다(Steam 제거, 게임 제거 프로그램, 폴더를 휴지통으로 이동)."
+          },
+          "controller": {
+            "priority": {
+              "description": "오버레이가 열릴 때 키보드 포커스를 넘겨, 포커스를 잃으면 일시 정지하는 게임이 실제로 멈추도록 합니다. AW Next는 게임에서 컨트롤러를 빼앗지 않으므로 게임이 버튼 입력을 계속 받을 수도 있습니다."
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "패치하기 전에 게임 실행 파일에 Steamless를 실행해 Valve의 SteamStub DRM을 제거합니다(원본은 .steamstub.bak으로 보관). 스텁이 없으면 아무 일도 하지 않습니다. Mono가 필요합니다(Debian과 Ubuntu에서는 mono-complete)."
+          },
+          "apiCheckBypass": {
+            "description": "기본값은 꺼짐입니다. 교체 후에도 원본 steam_api나 실행 파일을 다시 검사하는 게임이 실행되고 도전 과제를 달성할 수 있도록 SteamAutoCrack의 우회 프록시(winmm.dll)와 리디렉션 설정을 넣습니다. 프록시는 공식 릴리스에서 내려받습니다. Wine과 Proton은 게임 실행 옵션에 WINEDLLOVERRIDES=\"winmm=n,b\"가 설정된 경우에만 프록시를 불러옵니다."
           }
         },
         "notification": {
           "title": {
             "toast": "데스크톱 알림"
-          },
-          "info": {
-            "toast": "이 섹션의 일부 옵션은 Windows에서만 작동합니다"
           },
           "test": {
             "toast": "데스크톱 알림"
@@ -2528,13 +2541,6 @@
               "name": "데스크톱 알림 소리",
               "description": "데스크톱 알림이 표시될 때 재생할 소리를 지정합니다"
             },
-            "toastSouvenir": {
-              "name": "데스크톱 알림 기념 스크린샷",
-              "description": "Windows 전용: 알림 안에 기념 스크린샷을 표시합니다."
-            },
-            "groupToast": {
-              "description": "Windows 전용: 같은 게임에서 온 알림을 알림 센터에서 시각적으로 묶습니다."
-            },
             "urgent": {
               "description": "방해 금지가 켜져 있어도 도전 과제 달성 알림이 표시되도록 합니다. 중요 알림으로 전송되며, 대부분의 데스크톱은 이를 허용합니다."
             },
@@ -2542,20 +2548,13 @@
               "name": "데스크톱 알림",
               "description": "데스크톱에서 표시하는 시스템 알림"
             },
-            "useWinRT": {
-              "description": "Windows 전용. Linux에서는 효과가 없습니다."
-            },
-            "useBalloon": {
-              "description": "Windows 전용. Linux에서는 효과가 없습니다."
-            },
-            "souvenirHdrDesc": "Windows 전용: Windows HDR이 켜져 있을 때 색을 보정합니다. Linux에서는 일반 스크린샷을 저장합니다.",
             "souvenirDirHelp": "게임마다 하위 폴더가 만들어지고 파일 이름은 \"날짜 - 도전 과제\"입니다. 기본값: ~/Pictures/Achievement Watcher Next. Wayland에서는 세션마다 한 번 데스크톱이 화면 공유 여부를 묻습니다.",
             "clipDesc": "게임이 실행되는 동안 마지막 몇 초를 메모리에 보관했다가 도전 과제를 달성할 때마다 그 전후를 저장하며, 알림이 가운데에 들어갑니다. Wayland에서는 데스크톱이 화면 공유 여부를 한 번 묻습니다.",
-            "clipAudioDesc": "Linux에서는 PC 전체의 소리가 녹음됩니다.",
             "clipDirHelp": "게임마다 하위 폴더가 만들어지고 파일 이름은 \"날짜 - 도전 과제\"입니다. 기본값: ~/Videos/Achievement Watcher Next."
           }
         },
         "folder": {
+          "default": "자동으로 확인하는 폴더(모든 Wine 또는 Proton 프리픽스와 홈 폴더 안)",
           "addInfo": {
             "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini 또는 UniverseLAN.ini 파일이 있는 폴더입니다. RPCS3는 설정 폴더(~/.config/rpcs3) 또는 dev_hdd0 폴더를 선택하세요."
           },
@@ -2578,7 +2577,14 @@
             "2": "보유 중인 Steam 게임은 Steam 자체 파일에서 확인될 때만 설치된 것으로 간주합니다."
           },
           "steam": {
-            "0": "GBE / Goldberg 저장 파일은 보통 게임의 Wine 또는 Proton 프리픽스 안의 AppData/Roaming/GSE Saves에 있으며, 네이티브 Linux 게임은 ~/.local/share/GSE Saves에 있습니다."
+            "0": "GBE / Goldberg 저장 파일은 보통 게임의 Wine 또는 Proton 프리픽스 안의 AppData/Roaming/GSE Saves에 있으며, 네이티브 Linux 게임은 ~/.local/share/GSE Saves에 있습니다.",
+            "1": "CODEX / RUNE 저장 파일은 대개 게임의 Wine 또는 Proton 프리픽스 안에 있는 Public/Documents/Steam/CODEX 또는 Public/Documents/Steam/RUNE에 있습니다."
+          },
+          "emulators": {
+            "0": "RPCS3 트로피는 RPCS3 폴더(~/.config/rpcs3) 안의 dev_hdd0/home/.../trophy에서 읽습니다."
+          },
+          "themes": {
+            "2": "~/.config/Achievement Watcher Next/themes에 CSS 테마를 넣으면 테마 목록에 나타납니다."
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "폴더를 휴지통으로 옮기지 못했습니다.",
         "delete-permanently-detail": "영구 삭제는 휴지통을 거치지 않습니다. 파일을 복원할 수 없습니다.",
         "delete-recycle-bin-refused": "시스템이 이 폴더를 휴지통으로 옮기지 못했습니다. 파일이 아직 열려 있거나, 드라이브에 휴지통이 없거나(이동식 또는 네트워크 드라이브), 폴더에 쓸 수 없을 때 발생합니다.",
+        "delete-blocked-by-permissions": "이 파일은 현재 계정으로 쓸 수 없습니다: {file}\n소유자 또는 root만 폴더를 삭제할 수 있습니다.",
         "gh-simple-notifications-fallback": "정상 - 데스크톱 알림 대체 방식 사용 중"
       }
     }

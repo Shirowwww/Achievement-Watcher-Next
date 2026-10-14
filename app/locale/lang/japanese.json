@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "ゲームフォルダーを削除（ごみ箱）…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "ゲームタイルの右クリックメニューにアンインストール項目を追加します（Steam アンインストール、ゲームのアンインストーラー、フォルダーをごみ箱へ移動）。"
+          },
+          "controller": {
+            "priority": {
+              "description": "オーバーレイを開いたときにキーボードフォーカスを与え、フォーカスを失うと一時停止するゲームを一時停止させます。AW Next はゲームからコントローラーを取り上げないため、ゲーム側にも入力が届く場合があります。"
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "パッチ前にゲームの exe で Steamless を実行し、Valve の SteamStub DRM を除去します（オリジナルは .steamstub.bak として保持）。スタブがない場合は何もしません。Mono が必要です（Debian と Ubuntu では mono-complete）。"
+          },
+          "apiCheckBypass": {
+            "description": "既定で無効。SteamAutoCrack の回避プロキシ（winmm.dll）+ リダイレクト設定を配置し、差し替え後に元の steam_api/exe を再チェックするゲームでも起動・解除できるようにします。プロキシは公式リリースからダウンロードします。Wine と Proton は、ゲームの起動オプションで WINEDLLOVERRIDES=\"winmm=n,b\" を設定した場合にのみプロキシを読み込みます。"
           }
         },
         "notification": {
           "title": {
             "toast": "デスクトップ通知"
-          },
-          "info": {
-            "toast": "このセクションの一部の項目は Windows でのみ動作します"
           },
           "test": {
             "toast": "デスクトップ通知"
@@ -2528,13 +2541,6 @@
               "name": "デスクトップ通知のサウンド",
               "description": "デスクトップ通知表示時に再生する音を指定します"
             },
-            "toastSouvenir": {
-              "name": "デスクトップ通知内の記念",
-              "description": "Windows のみ：記念スクリーンショットを通知内に表示します。"
-            },
-            "groupToast": {
-              "description": "Windows のみ：同じゲームの通知をアクションセンターでグループ化します。"
-            },
             "urgent": {
               "description": "「応答不可」が有効な間も実績解除を表示します。重要な通知として送信されるため、ほとんどのデスクトップで表示されます。"
             },
@@ -2542,20 +2548,13 @@
               "name": "デスクトップ通知",
               "description": "お使いのデスクトップが表示するシステム通知"
             },
-            "useWinRT": {
-              "description": "Windows のみ。Linux では効果がありません。"
-            },
-            "useBalloon": {
-              "description": "Windows のみ。Linux では効果がありません。"
-            },
-            "souvenirHdrDesc": "Windows のみ：Windows HDR が有効なときに色を補正します。Linux では標準のスクリーンショットを保存します。",
             "souvenirDirHelp": "ゲームごとにサブフォルダーを作成し、ファイル名は「日付 - 実績」になります。既定: ~/Pictures/Achievement Watcher Next。Wayland ではセッションごとに 1 回、デスクトップから画面共有の確認が表示されます。",
             "clipDesc": "ゲームの実行中は直前の数秒をメモリに保持し、実績を解除するたびにその前後を保存します。通知はクリップの中央に入ります。Wayland ではデスクトップから画面共有の確認が 1 回表示されます。",
-            "clipAudioDesc": "Linux では PC 全体の音声が録音されます。",
             "clipDirHelp": "ゲームごとにサブフォルダーを作成し、ファイル名は「日付 - 実績」になります。既定: ~/Videos/Achievement Watcher Next。"
           }
         },
         "folder": {
+          "default": "自動で確認されるフォルダー（すべての Wine / Proton プレフィックスとホームフォルダー内）",
           "addInfo": {
             "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini、UniverseLAN.ini のいずれか。RPCS3 の場合は、設定フォルダー（~/.config/rpcs3）または dev_hdd0 フォルダーを選択してください。"
           },
@@ -2578,7 +2577,14 @@
             "2": "所有中の Steam ゲームは、Steam 自身のファイルで確認できた場合にのみインストール済みとして扱われます。"
           },
           "steam": {
-            "0": "GBE / Goldberg のセーブデータは通常、ゲームの Wine または Proton プレフィックス内の AppData/Roaming/GSE Saves、ネイティブの Linux ゲームでは ~/.local/share/GSE Saves にあります。"
+            "0": "GBE / Goldberg のセーブデータは通常、ゲームの Wine または Proton プレフィックス内の AppData/Roaming/GSE Saves、ネイティブの Linux ゲームでは ~/.local/share/GSE Saves にあります。",
+            "1": "CODEX / RUNE のセーブデータは、多くの場合ゲームの Wine または Proton プレフィックス内の Public/Documents/Steam/CODEX または Public/Documents/Steam/RUNE にあります。"
+          },
+          "emulators": {
+            "0": "RPCS3 のトロフィーは、RPCS3 のフォルダー（~/.config/rpcs3）内の dev_hdd0/home/.../trophy から読み取られます。"
+          },
+          "themes": {
+            "2": "CSS テーマを ~/.config/Achievement Watcher Next/themes に入れると、テーマのドロップダウンに表示されます。"
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "フォルダをごみ箱に移動できませんでした。",
         "delete-permanently-detail": "完全な削除はごみ箱を経由しません。ファイルは復元できません。",
         "delete-recycle-bin-refused": "システムがこのフォルダをごみ箱へ移動できませんでした。ファイルがまだ開いている場合、ドライブにごみ箱がない場合 (リムーバブル ドライブやネットワーク ドライブ)、またはフォルダに書き込めない場合に起こります。",
+        "delete-blocked-by-permissions": "このファイルはお使いのアカウントでは書き込めません: {file}\nフォルダを削除できるのは所有者または root のみです。",
         "gh-simple-notifications-fallback": "動作中 - デスクトップ通知へのフォールバックが有効"
       }
     }

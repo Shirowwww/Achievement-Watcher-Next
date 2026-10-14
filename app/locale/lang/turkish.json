@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "Oyun klasörünü sil (Çöp Kutusu)…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "Oyun kutucuklarının sağ tık menüsüne kaldırma seçenekleri ekler (Steam kaldırma, oyun kaldırıcısı veya klasörü Çöp Kutusu’na taşıma)."
+          },
+          "controller": {
+            "priority": {
+              "description": "Açıldığında yer paylaşımına klavye odağını verir; böylece odak kaybında duraklayan oyunlar duraklar. AW Next kumandayı oyundan almaz - oyun tuşları yine görebilir."
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "Yamadan önce oyunun exe dosyasında Steamless çalıştırarak Valve’ın SteamStub DRM’sini çıkarır (orijinal .steamstub.bak olarak saklanır). Stub yoksa etkisizdir. Mono gerekir (Debian ve Ubuntu’da mono-complete)."
+          },
+          "apiCheckBypass": {
+            "description": "Varsayılan olarak kapalı. SteamAutoCrack’in atlatma proxy’sini (winmm.dll) + bir yönlendirme yapılandırması bırakır; böylece değiştirmeden sonra orijinal steam_api/exe’yi yeniden denetleyen oyunlar yine de başlar ve açılır. Proxy’yi resmi sürümünden indirir. Wine ve Proton, proxy’yi yalnızca oyunun başlatma seçenekleri WINEDLLOVERRIDES=\"winmm=n,b\" ayarladığında yükler."
           }
         },
         "notification": {
           "title": {
             "toast": "Masaüstü bildirimi"
-          },
-          "info": {
-            "toast": "Bu bölümdeki bazı seçenekler yalnızca Windows’ta çalışır"
           },
           "test": {
             "toast": "Masaüstü bildirimi"
@@ -2528,13 +2541,6 @@
               "name": "Masaüstü bildirimi sesi",
               "description": "Bir masaüstü bildirimi görüntülendiğinde çalınacak sesi belirtir"
             },
-            "toastSouvenir": {
-              "name": "Masaüstü bildiriminde anı",
-              "description": "Yalnızca Windows: anı ekran görüntüsünü bildirimin içinde gösterir."
-            },
-            "groupToast": {
-              "description": "Yalnızca Windows: aynı oyunun bildirimlerini İşlem Merkezi içinde gruplar."
-            },
             "urgent": {
               "description": "Rahatsız Etmeyin etkinken başarı kilit açmalarının gösterilmesini sağlar. Bunlar kritik bildirim olarak gönderilir ve çoğu masaüstü bunları geçirir."
             },
@@ -2542,20 +2548,13 @@
               "name": "Masaüstü bildirimi",
               "description": "Masaüstünüzün gösterdiği sistem bildirimi"
             },
-            "useWinRT": {
-              "description": "Yalnızca Windows. Linux’ta etkisi yoktur."
-            },
-            "useBalloon": {
-              "description": "Yalnızca Windows. Linux’ta etkisi yoktur."
-            },
-            "souvenirHdrDesc": "Yalnızca Windows: Windows HDR etkinken renkleri düzeltir. Linux’ta standart ekran görüntüsü kaydedilir.",
             "souvenirDirHelp": "Her oyun için bir alt klasör, dosyalar \"tarih - başarım\" adıyla. Varsayılan: ~/Pictures/Achievement Watcher Next. Wayland'de masaüstü, oturum başına bir kez ekranın paylaşılmasını sorar.",
             "clipDesc": "Bir oyun çalışırken son saniyeleri bellekte tutulur ve her kilit açılışının çevresinde kaydedilir, bildirim ortada olur. Wayland'de masaüstü bir kez ekranın paylaşılmasını sorar.",
-            "clipAudioDesc": "Linux'ta tüm bilgisayarın sesi kaydedilir.",
             "clipDirHelp": "Her oyun için bir alt klasör, dosyalar \"tarih - başarım\" adıyla. Varsayılan: ~/Videos/Achievement Watcher Next."
           }
         },
         "folder": {
+          "default": "Otomatik denetlenen klasörler, her Wine veya Proton önekinde ve ana klasörde",
           "addInfo": {
             "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini veya UniverseLAN.ini. RPCS3 için yapılandırma klasörünü (~/.config/rpcs3) veya dev_hdd0 klasörünü seç."
           },
@@ -2578,7 +2577,14 @@
             "2": "Sahip olunan Steam oyunları yalnızca Steam’in kendi dosyaları doğruladığında kurulu sayılır."
           },
           "steam": {
-            "0": "GBE / Goldberg kayıtları genellikle oyunun Wine veya Proton önekindeki AppData/Roaming/GSE Saves altındadır; yerel bir Linux oyunu için ~/.local/share/GSE Saves altındadır."
+            "0": "GBE / Goldberg kayıtları genellikle oyunun Wine veya Proton önekindeki AppData/Roaming/GSE Saves altındadır; yerel bir Linux oyunu için ~/.local/share/GSE Saves altındadır.",
+            "1": "CODEX / RUNE kayıtları çoğunlukla oyunun Wine veya Proton önekinin içinde Public/Documents/Steam/CODEX veya Public/Documents/Steam/RUNE altındadır."
+          },
+          "emulators": {
+            "0": "RPCS3 kupaları, RPCS3 klasöründeki (~/.config/rpcs3) dev_hdd0/home/.../trophy konumundan okunur."
+          },
+          "themes": {
+            "2": "Bir CSS temasını ~/.config/Achievement Watcher Next/themes içine bıraktığınızda tema açılır listesinde görünür."
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "Klasör Çöp Kutusu’na taşınamadı.",
         "delete-permanently-detail": "Kalıcı silme Çöp Kutusu’nu atlar: dosyalar geri getirilemez.",
         "delete-recycle-bin-refused": "Sistem bu klasörü Çöp Kutusu’na taşımayı reddetti. Bir dosya hâlâ açıksa, sürücünün Çöp Kutusu yoksa (çıkarılabilir veya ağ sürücüsü) ya da klasöre yazamıyorsanız olur.",
+        "delete-blocked-by-permissions": "Bu dosya hesabınla yazılabilir değil: {file}\nKlasörü yalnızca sahibi veya root silebilir.",
         "gh-simple-notifications-fallback": "Çalışıyor - masaüstü bildirimi yedeği etkin"
       }
     }

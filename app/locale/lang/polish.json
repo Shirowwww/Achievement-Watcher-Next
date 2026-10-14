@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "Usuń folder gry (Kosz)…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "Dodaje opcje odinstalowania do menu kontekstowego gier (odinstalowanie przez Steam, deinstalator gry lub przeniesienie folderu do Kosza)."
+          },
+          "controller": {
+            "priority": {
+              "description": "Nadaje nakładce fokus klawiatury przy otwarciu, aby gry pauzujące po utracie fokusu zrobiły to. AW Next nie odbiera pada grze - gra nadal może widzieć przyciski."
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "Uruchamia Steamless na pliku exe gry przed łataniem, aby usunąć DRM SteamStub firmy Valve (oryginał zachowany jako .steamstub.bak). Bez efektu, gdy nie ma stuba. Wymaga Mono (mono-complete w Debianie i Ubuntu)."
+          },
+          "apiCheckBypass": {
+            "description": "Domyślnie wyłączone. Umieszcza proxy obejścia SteamAutoCrack (winmm.dll) + konfigurację przekierowania, aby gry ponownie sprawdzające oryginalny steam_api/exe po podmianie nadal się uruchamiały i odblokowywały. Pobiera proxy z jego oficjalnego wydania. Wine i Proton ładują proxy tylko wtedy, gdy opcje uruchamiania gry ustawiają WINEDLLOVERRIDES=\"winmm=n,b\"."
           }
         },
         "notification": {
           "title": {
             "toast": "Powiadomienie pulpitu"
-          },
-          "info": {
-            "toast": "Niektóre opcje w tej sekcji działają tylko w systemie Windows"
           },
           "test": {
             "toast": "Powiadomienie pulpitu"
@@ -2528,13 +2541,6 @@
               "name": "Dźwięk powiadomienia pulpitu",
               "description": "Określa dźwięk odtwarzany podczas wyświetlania powiadomienia pulpitu"
             },
-            "toastSouvenir": {
-              "name": "Pamiątka w powiadomieniu pulpitu",
-              "description": "Tylko Windows: pokazuje zrzut pamiątkowy wewnątrz powiadomienia."
-            },
-            "groupToast": {
-              "description": "Tylko Windows: grupuje powiadomienia tej samej gry w Centrum akcji."
-            },
             "urgent": {
               "description": "Umożliwia wyświetlanie odblokowanych osiągnięć, gdy aktywny jest tryb Nie przeszkadzać. Są wysyłane jako powiadomienia krytyczne, które większość pulpitów przepuszcza."
             },
@@ -2542,20 +2548,13 @@
               "name": "Powiadomienie pulpitu",
               "description": "Powiadomienie systemowe wyświetlane przez Twój pulpit"
             },
-            "useWinRT": {
-              "description": "Tylko Windows. Nie ma wpływu w systemie Linux."
-            },
-            "useBalloon": {
-              "description": "Tylko Windows. Nie ma wpływu w systemie Linux."
-            },
-            "souvenirHdrDesc": "Tylko Windows: koryguje kolory, gdy funkcja HDR systemu Windows jest aktywna. W systemie Linux zapisywany jest standardowy zrzut ekranu.",
             "souvenirDirHelp": "Jeden podfolder na grę, pliki nazwane „data - osiągnięcie”. Domyślnie: ~/Pictures/Achievement Watcher Next. W Wayland pulpit raz na sesję pyta o zgodę na udostępnienie ekranu.",
             "clipDesc": "Gdy gra jest uruchomiona, jej ostatnie sekundy są trzymane w pamięci i zapisywane wokół każdego odblokowania, z powiadomieniem pośrodku. W Wayland pulpit raz pyta o zgodę na udostępnienie ekranu.",
-            "clipAudioDesc": "W systemie Linux nagrywany jest dźwięk z całego komputera.",
             "clipDirHelp": "Jeden podfolder na grę, pliki nazwane „data - osiągnięcie”. Domyślnie: ~/Videos/Achievement Watcher Next."
           }
         },
         "folder": {
+          "default": "Foldery sprawdzane automatycznie, w każdym prefiksie Wine lub Proton oraz w folderze domowym",
           "addInfo": {
             "2": "ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini lub UniverseLAN.ini. W przypadku RPCS3 wybierz jego folder konfiguracji (~/.config/rpcs3) lub folder dev_hdd0."
           },
@@ -2578,7 +2577,14 @@
             "2": "Posiadane gry Steam są uznawane za zainstalowane tylko wtedy, gdy potwierdzają to własne pliki Steam."
           },
           "steam": {
-            "0": "Zapisy GBE/Goldberg zwykle znajdują się w AppData/Roaming/GSE Saves wewnątrz prefiksu Wine lub Proton gry albo w ~/.local/share/GSE Saves dla natywnej gry na Linuksa."
+            "0": "Zapisy GBE/Goldberg zwykle znajdują się w AppData/Roaming/GSE Saves wewnątrz prefiksu Wine lub Proton gry albo w ~/.local/share/GSE Saves dla natywnej gry na Linuksa.",
+            "1": "Zapisy CODEX/RUNE często znajdują się w Public/Documents/Steam/CODEX lub Public/Documents/Steam/RUNE w prefiksie Wine lub Proton gry."
+          },
+          "emulators": {
+            "0": "Trofea RPCS3 są odczytywane z dev_hdd0/home/.../trophy w folderze RPCS3 (~/.config/rpcs3)."
+          },
+          "themes": {
+            "2": "Umieść motyw CSS w ~/.config/Achievement Watcher Next/themes, a pojawi się na liście motywów."
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "Nie udało się przenieść folderu do Kosza.",
         "delete-permanently-detail": "Trwałe usunięcie pomija Kosz: plików nie będzie można przywrócić.",
         "delete-recycle-bin-refused": "System odmówił przeniesienia tego folderu do Kosza. Dzieje się tak, gdy plik jest wciąż otwarty, gdy dysk nie ma Kosza (dysk wymienny lub sieciowy) albo gdy nie możesz zapisywać w tym folderze.",
+        "delete-blocked-by-permissions": "Twoje konto nie może zapisywać w tym pliku: {file}\nTylko właściciel lub root może usunąć folder.",
         "gh-simple-notifications-fallback": "Działa - aktywne zapasowe powiadomienie pulpitu"
       }
     }

@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "Supprimer le dossier du jeu (Corbeille)…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "Ajoute des options de désinstallation au menu clic droit des jeux (désinstallation Steam, désinstalleur du jeu, ou déplacement du dossier vers la Corbeille)."
+          },
+          "controller": {
+            "priority": {
+              "description": "Donne le focus clavier à l’overlay à son ouverture, pour que les jeux qui se mettent en pause à la perte de focus le fassent. AW Next ne retire pas la manette au jeu : il peut encore voir les boutons."
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "Lance Steamless sur l’exe avant le patch pour retirer le DRM SteamStub de Valve (original conservé en .steamstub.bak). Sans effet si pas de stub. Nécessite Mono (mono-complete sur Debian et Ubuntu)."
+          },
+          "apiCheckBypass": {
+            "description": "Désactivé par défaut. Dépose le proxy de contournement de SteamAutoCrack (winmm.dll) + une config de redirection, pour que les jeux qui re-vérifient le steam_api/exe original après le swap se lancent et débloquent quand même. Télécharge le proxy depuis sa release officielle. Wine et Proton ne chargent ce proxy que si les options de lancement du jeu définissent WINEDLLOVERRIDES=\"winmm=n,b\"."
           }
         },
         "notification": {
           "title": {
             "toast": "Notification de bureau"
-          },
-          "info": {
-            "toast": "Certaines options de cette section ne fonctionnent que sous Windows"
           },
           "test": {
             "toast": "Notification de bureau"
@@ -2528,13 +2541,6 @@
               "name": "Son de la notification de bureau",
               "description": "Spécifie le son à jouer lorsqu’une notification de bureau est affichée"
             },
-            "toastSouvenir": {
-              "name": "Souvenir dans la notification de bureau",
-              "description": "Windows uniquement : affiche la capture d’écran souvenir dans la notification."
-            },
-            "groupToast": {
-              "description": "Windows uniquement : regroupe les notifications du même jeu dans le Centre de notifications."
-            },
             "urgent": {
               "description": "Permet aux déblocages de succès de s’afficher lorsque Ne pas déranger est actif. Ils sont envoyés comme notifications critiques, que la plupart des bureaux laissent passer."
             },
@@ -2542,20 +2548,13 @@
               "name": "Notification de bureau",
               "description": "Notification système affichée par ton bureau"
             },
-            "useWinRT": {
-              "description": "Windows uniquement. Sans effet sous Linux."
-            },
-            "useBalloon": {
-              "description": "Windows uniquement. Sans effet sous Linux."
-            },
-            "souvenirHdrDesc": "Windows uniquement : corrige les couleurs lorsque le HDR de Windows est actif. Sous Linux, la capture standard est enregistrée.",
             "souvenirDirHelp": "Un sous-dossier par jeu, fichiers nommés « date - succès ». Par défaut : ~/Pictures/Achievement Watcher Next. Sous Wayland, le bureau demande une fois par session de partager l'écran.",
             "clipDesc": "Pendant une partie, ses dernières secondes sont gardées en mémoire puis enregistrées autour de chaque succès, la notification au milieu. Sous Wayland, le bureau demande une fois de partager l'écran.",
-            "clipAudioDesc": "Sous Linux, le son de tout le PC est enregistré.",
             "clipDirHelp": "Un sous-dossier par jeu, fichiers nommés « date - succès ». Par défaut : ~/Videos/Achievement Watcher Next."
           }
         },
         "folder": {
+          "default": "Dossiers vérifiés automatiquement, dans chaque préfixe Wine ou Proton et dans ton dossier personnel",
           "addInfo": {
             "2": "le fichier ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini ou UniverseLAN.ini. Pour RPCS3, sélectionne son dossier de configuration (~/.config/rpcs3) ou son dossier dev_hdd0."
           },
@@ -2578,7 +2577,14 @@
             "2": "Les jeux Steam possédés ne comptent comme installés que si les fichiers de Steam le confirment."
           },
           "steam": {
-            "0": "Les sauvegardes GBE / Goldberg se trouvent en général dans AppData/Roaming/GSE Saves, dans le préfixe Wine ou Proton du jeu, ou dans ~/.local/share/GSE Saves pour un jeu Linux natif."
+            "0": "Les sauvegardes GBE / Goldberg se trouvent en général dans AppData/Roaming/GSE Saves, dans le préfixe Wine ou Proton du jeu, ou dans ~/.local/share/GSE Saves pour un jeu Linux natif.",
+            "1": "Les sauvegardes style CODEX / RUNE vivent souvent dans Public/Documents/Steam/CODEX ou Public/Documents/Steam/RUNE, dans le préfixe Wine ou Proton du jeu."
+          },
+          "emulators": {
+            "0": "Les trophées RPCS3 sont lus depuis dev_hdd0/home/.../trophy dans le dossier de RPCS3 (~/.config/rpcs3)."
+          },
+          "themes": {
+            "2": "Dépose un thème CSS dans ~/.config/Achievement Watcher Next/themes et il apparaît dans la liste des thèmes."
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "Impossible de déplacer le dossier vers la Corbeille.",
         "delete-permanently-detail": "Une suppression définitive ignore la Corbeille : les fichiers ne pourront pas être restaurés.",
         "delete-recycle-bin-refused": "Le système a refusé de mettre ce dossier à la Corbeille. Cela arrive quand un fichier est encore ouvert, quand le disque n’a pas de Corbeille (disque amovible ou réseau), ou quand tu n’as pas le droit d’écrire dans le dossier.",
+        "delete-blocked-by-permissions": "Ce fichier n’est pas modifiable par ton compte : {file}\nSeuls son propriétaire ou root peuvent supprimer le dossier.",
         "gh-simple-notifications-fallback": "Fonctionnel - repli sur la notification de bureau actif"
       }
     }

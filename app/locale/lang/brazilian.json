@@ -2490,6 +2490,9 @@
   },
   "platform": {
     "linux": {
+      "contextMenu": {
+        "deleteFolder": "Excluir pasta do jogo (Lixeira)…"
+      },
       "settings": {
         "general": {
           "startup": {
@@ -2497,14 +2500,24 @@
           },
           "uninstallMenu": {
             "description": "Adiciona opções de desinstalação ao menu de botão direito dos jogos (desinstalação Steam, desinstalador do jogo ou mover a pasta para a Lixeira)."
+          },
+          "controller": {
+            "priority": {
+              "description": "Dá o foco do teclado ao overlay ao abrir, para que os jogos que pausam ao perder o foco o façam. O AW Next não tira o controle do jogo: ele ainda pode ver os botões."
+            }
+          }
+        },
+        "emulator": {
+          "steamless": {
+            "description": "Executa o Steamless no exe do jogo antes de aplicar o patch para remover o DRM SteamStub da Valve (original mantido como .steamstub.bak). Sem efeito se não houver stub. Requer Mono (mono-complete no Debian e no Ubuntu)."
+          },
+          "apiCheckBypass": {
+            "description": "Desativado por padrão. Coloca o proxy de contorno do SteamAutoCrack (winmm.dll) + uma configuração de redirecionamento, para que os jogos que reverificam a steam_api/exe original após a troca iniciem e desbloqueiem mesmo assim. Baixa o proxy a partir do seu lançamento oficial. Wine e Proton só carregam o proxy se as opções de inicialização do jogo definirem WINEDLLOVERRIDES=\"winmm=n,b\"."
           }
         },
         "notification": {
           "title": {
             "toast": "Notificação da área de trabalho"
-          },
-          "info": {
-            "toast": "Algumas opções desta seção só funcionam no Windows"
           },
           "test": {
             "toast": "Notificação da área de trabalho"
@@ -2528,13 +2541,6 @@
               "name": "Som da notificação da área de trabalho",
               "description": "Especifica o som a reproduzir quando uma notificação da área de trabalho é exibida"
             },
-            "toastSouvenir": {
-              "name": "Recordação na notificação da área de trabalho",
-              "description": "Somente no Windows: mostra a captura de recordação dentro da notificação."
-            },
-            "groupToast": {
-              "description": "Somente no Windows: agrupa as notificações do mesmo jogo na Central de Ações."
-            },
             "urgent": {
               "description": "Permitir que desbloqueios de conquistas apareçam enquanto o Não perturbe estiver ativo. Eles são enviados como notificações críticas, que a maioria das áreas de trabalho deixa passar."
             },
@@ -2542,20 +2548,13 @@
               "name": "Notificação da área de trabalho",
               "description": "Notificação de sistema exibida pela sua área de trabalho"
             },
-            "useWinRT": {
-              "description": "Somente no Windows. Não tem efeito no Linux."
-            },
-            "useBalloon": {
-              "description": "Somente no Windows. Não tem efeito no Linux."
-            },
-            "souvenirHdrDesc": "Somente no Windows: corrige as cores quando o HDR do Windows está ativo. No Linux, a captura padrão é salva.",
             "souvenirDirHelp": "Uma subpasta por jogo, arquivos com o nome \"data - conquista\". Padrão: ~/Pictures/Achievement Watcher Next. No Wayland, a área de trabalho pergunta uma vez por sessão se deseja compartilhar a tela.",
             "clipDesc": "Enquanto um jogo está em execução, seus últimos segundos ficam na memória e são salvos em torno de cada desbloqueio, com a notificação no meio. No Wayland, a área de trabalho pergunta uma vez se deseja compartilhar a tela.",
-            "clipAudioDesc": "No Linux, o som de todo o PC é gravado.",
             "clipDirHelp": "Uma subpasta por jogo, arquivos com o nome \"data - conquista\". Padrão: ~/Videos/Achievement Watcher Next."
           }
         },
         "folder": {
+          "default": "Pastas verificadas automaticamente, em todos os prefixos Wine ou Proton e na sua pasta pessoal",
           "addInfo": {
             "2": "arquivo ALI213.ini, valve.ini, hlm.ini, ds.ini, steam_api.ini, SteamConfig.ini, tenoke.ini ou UniverseLAN.ini. Para o RPCS3, selecione a pasta de configuração (~/.config/rpcs3) ou a pasta dev_hdd0."
           },
@@ -2578,7 +2577,14 @@
             "2": "Os jogos adquiridos na Steam só contam como instalados quando os próprios arquivos da Steam confirmam."
           },
           "steam": {
-            "0": "Os salvamentos GBE/Goldberg geralmente ficam em AppData/Roaming/GSE Saves dentro do prefixo Wine ou Proton do jogo, ou em ~/.local/share/GSE Saves para um jogo nativo do Linux."
+            "0": "Os salvamentos GBE/Goldberg geralmente ficam em AppData/Roaming/GSE Saves dentro do prefixo Wine ou Proton do jogo, ou em ~/.local/share/GSE Saves para um jogo nativo do Linux.",
+            "1": "Os salvamentos CODEX/RUNE costumam ficar em Public/Documents/Steam/CODEX ou Public/Documents/Steam/RUNE, dentro do prefixo Wine ou Proton do jogo."
+          },
+          "emulators": {
+            "0": "Os troféus do RPCS3 são lidos em dev_hdd0/home/.../trophy, na pasta do RPCS3 (~/.config/rpcs3)."
+          },
+          "themes": {
+            "2": "Coloque um tema CSS em ~/.config/Achievement Watcher Next/themes para ele aparecer no menu de temas."
           }
         }
       },
@@ -2594,6 +2600,7 @@
         "could-not-move-the-folder-to-the-recycle-bin": "Não foi possível mover a pasta para a Lixeira.",
         "delete-permanently-detail": "A exclusão permanente ignora a Lixeira: os arquivos não poderão ser restaurados.",
         "delete-recycle-bin-refused": "O sistema recusou mover esta pasta para a Lixeira. Isso acontece quando um arquivo ainda está aberto, quando a unidade não tem Lixeira (unidade removível ou de rede) ou quando você não tem permissão de gravação na pasta.",
+        "delete-blocked-by-permissions": "Sua conta não pode gravar neste arquivo: {file}\nSomente o proprietário ou o root pode excluir a pasta.",
         "gh-simple-notifications-fallback": "Funcionando - alternativa de notificação da área de trabalho ativa"
       }
     }
