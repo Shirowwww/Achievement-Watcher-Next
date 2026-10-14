@@ -39,6 +39,32 @@ function rm(target) {
 
 const MB = (n) => `${(n / (1024 * 1024)).toFixed(1)} MB`;
 
+// TypeScript sources and declarations, C/C++ sources and headers, package READMEs and changelogs.
+// LICENSE files are kept whatever their extension.
+const BUILD_ONLY_FILE = /(\.[mc]?ts|\.(c|cc|cpp|h|hpp))$|^(readme|changelog|history)\.md$/i;
+
+function sweepFiles(dir, pattern) {
+  const result = { count: 0, bytes: 0 };
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return result;
+  }
+  for (const e of entries) {
+    const full = path.join(dir, e.name);
+    if (e.isDirectory()) {
+      const inner = sweepFiles(full, pattern);
+      result.count += inner.count;
+      result.bytes += inner.bytes;
+    } else if (pattern.test(e.name)) {
+      result.bytes += rm(full);
+      result.count++;
+    }
+  }
+  return result;
+}
+
 exports.default = async function afterPack(context) {
   const { appOutDir, packager, electronPlatformName } = context;
 
@@ -104,8 +130,11 @@ exports.default = async function afterPack(context) {
       // only "[controller] XInput backend missing" in the log gives it away. Prune vendor/ (a
       // node-api-headers tree referenced solely by the cnoke build config) and doc/, never src/.
       ...['vendor', 'doc'].map((d) => [`watchdog koffi/${d}`, path.join(dest, 'koffi', d)]),
-      // Moment's pre-minified bundle is never required by the watchdog.
-      ['watchdog moment/min', path.join(dest, 'moment', 'min')],
+      // `require('moment')` resolves moment.js and its locales require '../moment': the minified
+      // bundles and the ES-module builds are never read.
+      ...['min', 'src', 'dist'].map((d) => [`watchdog moment/${d}`, path.join(dest, 'moment', d)]),
+      // Header-only C++ helper for compiling addons; nothing requires it at runtime.
+      ['watchdog nan', path.join(dest, 'nan')],
       // 7zip-bin ships every platform and architecture; node-7z resolves one by process.arch.
       ...['mac', 'linux'].map((p) => [`7zip-bin/${p}`, path.join(unpacked, '7zip-bin', p)]),
       ...['ia32', 'arm64'].map((a) => [`7zip-bin/win/${a}`, path.join(unpacked, '7zip-bin', 'win', a)]),
@@ -117,6 +146,12 @@ exports.default = async function afterPack(context) {
       const delta = saved - before;
       console.log(delta > 0 ? `[afterPack] Pruned ${label} (${MB(delta)})` : `[afterPack] ${label}: already absent`);
     }
+
+    // The same file classes app.asar leaves out (electron-builder.yml `files`), for the Watchdog tree
+    // copied above, plus the C/C++ sources its native modules were compiled from.
+    const swept = sweepFiles(dest, BUILD_ONLY_FILE);
+    saved += swept.bytes;
+    console.log(`[afterPack] Pruned ${swept.count} watchdog source/declaration/readme file(s) (${MB(swept.bytes)})`);
 
     // Guard the assumptions the rules above are built on. Each of these failures is silent at
     // runtime - the monitor still starts, one capability just stops working - so the build has to
@@ -141,7 +176,26 @@ exports.default = async function afterPack(context) {
       throw new Error(`[afterPack] pruning removed or missed required runtime file(s):\n  ${missing.join('\n  ')}`);
     }
     console.log(`[afterPack] Verified ${mustKeep.length} required runtime file(s) survived pruning`);
+
+    // The size the installer announces is what the installation takes once setup has compressed
+    // it, so it is measured by compressing this output the same way (the Watchdog's module, which
+    // sends the same request as the plug-in). NSIS reads it from the environment: AW_INSTALLED_KB.
+    const { compressInstallation, sizeOnDisk } = require(path.join(packager.projectDir, '..', 'watchdog', 'util', 'installCompression.js'));
+    await compressInstallation({ installDir: appOutDir });
+    const installed = filesUnder(appOutDir).reduce((sum, file) => sum + (sizeOnDisk(file) ?? fs.statSync(file).size), 0);
+    process.env.AW_INSTALLED_KB = String(Math.ceil(installed / 1024));
+    console.log(`[afterPack] Installed size once compressed: ${MB(installed)} (${MB(dirSize(appOutDir))} uncompressed)`);
   }
 
   console.log(`[afterPack] Total reclaimed: ${MB(saved)}`);
 };
+
+function filesUnder(dir) {
+  const files = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...filesUnder(full));
+    else files.push(full);
+  }
+  return files;
+}

@@ -16,6 +16,11 @@ ManifestDPIAware true
 !define MUI_CUSTOMFUNCTION_GUIINIT AwGuiInit
 !define MUI_CUSTOMFUNCTION_UNGUIINIT un.AwGuiInit
 
+; What the installation takes on disk once compressed (customInstall), measured on this build's own
+; output by build/afterPack.js and handed over through the environment. A build without it shows the
+; uncompressed size instead: the plug-in reads anything that is not a number as unknown.
+!define AW_INSTALLED_KB "$%AW_INSTALLED_KB%"
+
 Var AwUi              ; "ok" while the setup window is up; anything else means NSIS's own pages
 Var unDeleteAppData   ; uninstaller: also delete the user data
 !ifndef BUILD_UNINSTALLER
@@ -305,6 +310,7 @@ Var unDeleteAppData   ; uninstaller: also delete the user data
     AwSetupUi::Set "desktop" "$AwDesktop"
     SectionGetSize 0 $1
     AwSetupUi::Set "requiredkb" "$1"
+    AwSetupUi::Set "installedkb" "${AW_INSTALLED_KB}"
     ${If} ${isUpdated}
       AwSetupUi::Init "update"
     ${Else}
@@ -649,6 +655,17 @@ Var unDeleteAppData   ; uninstaller: also delete the user data
   ${If} $installMode == "all"
     SetShellVarContext all
   ${EndIf}
+
+  ; Windows' own compression on the files just placed (native/setup-ui/src/compress.rs): about half
+  ; the disk space, read back transparently, done by the plug-in so setup starts no process. Here,
+  ; before the app starts, on updates too. The size Windows lists under Installed apps was measured
+  ; on the uncompressed files, so it is written again.
+  Push $0
+  AwSetupUi::Compress "$INSTDIR"
+  Pop $0
+  IntFmt $0 "0x%08X" $0
+  WriteRegDWORD SHELL_CONTEXT "${UNINSTALL_REGISTRY_KEY}" "EstimatedSize" "$0"
+  Pop $0
 !macroend
 
 ; Removing the installation folder. electron-builder renames each of the ~2100 files into the

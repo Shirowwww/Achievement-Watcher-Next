@@ -93,6 +93,8 @@ pub struct Config {
     pub desktop: bool,
     pub all_users: bool,
     pub required_bytes: u64,
+    /// What the installation takes on disk once compressed, measured on the build; 0 when unknown.
+    pub installed_bytes: u64,
     pub data_folders: Vec<String>,
     pub data_shown: String,
     pub error: String,

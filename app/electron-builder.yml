@@ -173,6 +173,24 @@ files:
   - '!node_modules/bare-url/**'
   - '!node_modules/bare-path/**'
   - '!node_modules/bare-stream/**'
+  # Never loaded at runtime, ~15 MB of app.asar measured on 3.11.3:
+  #   TypeScript sources and declarations (zod's src/ only answers a custom "@zod/source" condition);
+  #   protobuf sources (steam-user and steam-session load their generated JS);
+  #   builds Node never resolves: puppeteer-core es5-iife, moment min/src/dist (main is moment.js, its
+  #   locales require '../moment'), node-unrar-js esm (the "module" field), node-html-parser umd;
+  #   xml2js.bc.js, a js_of_ocaml artifact published inside xml2js 0.6.2 that lib/xml2js.js never
+  #   requires (the registry tarball itself is 3.4 MB, so it is not a local oddity);
+  #   node-addon-api, read only by sharp's build-from-source script.
+  # Package READMEs and changelogs go too; LICENSE files stay, whatever their extension.
+  - '!**/*.{ts,mts,cts}'
+  - '!**/*.proto'
+  - '!**/{README,Readme,readme,CHANGELOG,Changelog,changelog,HISTORY,History,history}.md'
+  - '!node_modules/puppeteer-core/lib/es5-iife/**'
+  - '!node_modules/moment/{min,src,dist}/**'
+  - '!node_modules/node-unrar-js/esm/**'
+  - '!node_modules/node-html-parser/dist/index.umd.js'
+  - '!node_modules/xml2js/lib/xml2js.bc.js'
+  - '!node_modules/node-addon-api/**'
   # Installer artwork and the packaging scripts are build-time only; app.asar does not need them.
   - '!build/**'
 

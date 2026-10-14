@@ -14,6 +14,8 @@
 //!   AwSetupUi::AppRunning <dir> / CloseApp <dir>   processes started from the installation
 //!                                  folder (no window needed, so silent runs use them too)
 //!   AwSetupUi::RemoveTree <dir> atomic|best       the uninstaller's fast, measured deletion
+//!   AwSetupUi::Compress <dir>      Windows' own compression on the installed files; pushes the
+//!                                  kilobytes they then take on disk
 //!
 //! Every call made from the install section's thread only records state and posts a message; the
 //! window itself lives on the installer's main thread.
@@ -24,6 +26,7 @@
 mod anim;
 mod bridge;
 mod clock;
+mod compress;
 mod fonts;
 mod gfx;
 mod icons;
@@ -80,6 +83,7 @@ fn set(call: &Call, _extra: *mut ExtraParameters) {
         "desktop" => config.desktop = flag(&value),
         "allusers" => config.all_users = flag(&value),
         "requiredkb" => config.required_bytes = value.trim().parse::<u64>().unwrap_or(0) * 1024,
+        "installedkb" => config.installed_bytes = value.trim().parse::<u64>().unwrap_or(0) * 1024,
         "datafolder" => config.data_folders.push(value),
         "datashown" => config.data_shown = value,
         "error" => config.error = value,
@@ -246,6 +250,13 @@ fn remove_tree(call: &Call, _extra: *mut ExtraParameters) {
     }
 }
 
+/// Compresses the installation folder and pushes the kilobytes it then takes on disk: the size
+/// Windows lists under Installed apps, which the template measured before.
+fn compress(call: &Call, _extra: *mut ExtraParameters) {
+    let dir = call.pop();
+    call.push(&(compress::compress_tree(&dir) / 1024).to_string());
+}
+
 /// Ends every process started from the given folder and pushes how many are still alive.
 fn close_app(call: &Call, _extra: *mut ExtraParameters) {
     let dir = call.pop();
@@ -263,3 +274,4 @@ nsis_export!(Close, close);
 nsis_export!(AppRunning, app_running);
 nsis_export!(CloseApp, close_app);
 nsis_export!(RemoveTree, remove_tree);
+nsis_export!(Compress, compress);

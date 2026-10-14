@@ -332,12 +332,26 @@ test('an update never leaves half an installation behind', () => {
   assert.match(system, /Err\(error\) if atomic => return Err/);
 });
 
+test('setup compresses what it installs, through the plug-in, and lists the size that takes', () => {
+  // Before the app starts and on updated runs alike: customInstall runs in both, ahead of AwStartApp.
+  const install = macroBody('customInstall');
+  assert.match(install, /AwSetupUi::Compress "\$INSTDIR"\s+Pop \$0\s+IntFmt \$0 "0x%08X" \$0\s+WriteRegDWORD SHELL_CONTEXT "\$\{UNINSTALL_REGISTRY_KEY\}" "EstimatedSize" "\$0"/);
+  // The request goes straight to the file system: no compact.exe (see the PowerShell test above).
+  const compress = fs.readFileSync(path.join(appRoot, '..', 'native', 'setup-ui', 'src', 'compress.rs'), 'utf8');
+  assert.match(compress, /DeviceIoControl\(\s*handle,\s*FSCTL_SET_EXTERNAL_BACKING/);
+  assert.doesNotMatch(compress, /Command::new|CreateProcess|ShellExecute/);
+  // The welcome screen announces the compressed size measured on the build.
+  assert.match(installerNsh, /!define AW_INSTALLED_KB "\$%AW_INSTALLED_KB%"/);
+  assert.match(installerNsh, /AwSetupUi::Set "installedkb" "\$\{AW_INSTALLED_KB\}"/);
+  assert.match(fs.readFileSync(path.join(appRoot, 'build', 'afterPack.js'), 'utf8'), /process\.env\.AW_INSTALLED_KB = /);
+});
+
 test('the setup window plug-in ships as the 32-bit DLL NSIS loads', () => {
   const dll = fs.readFileSync(path.join(appRoot, 'build', 'x86-unicode', 'AwSetupUi.dll'));
   const header = dll.readUInt32LE(0x3c);
   assert.equal(dll.toString('latin1', header, header + 4), 'PE\0\0');
   assert.equal(dll.readUInt16LE(header + 4), 0x14c, 'electron-builder bundles 32-bit NSIS');
-  for (const name of ['Init', 'Set', 'Show', 'Get', 'Phase', 'Progress', 'AppRunning', 'CloseApp', 'RemoveTree']) {
+  for (const name of ['Init', 'Set', 'Show', 'Get', 'Phase', 'Progress', 'AppRunning', 'CloseApp', 'RemoveTree', 'Compress']) {
     assert.ok(dll.includes(Buffer.from(`${name}\0`, 'latin1')), `AwSetupUi.dll must export ${name}`);
   }
 });

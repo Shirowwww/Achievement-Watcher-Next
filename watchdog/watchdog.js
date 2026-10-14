@@ -346,6 +346,28 @@ function sendHeartbeat() {
   }
 }
 
+// After the startup scan's first burst (see util/installCompression.js). Setup has compressed an
+// installed copy already; a portable one is done on its first start. The work runs off the event
+// loop, so the heartbeat above keeps beating through it.
+const INSTALL_COMPRESSION_DELAY_MS = 30 * 1000;
+
+function scheduleInstallCompression() {
+  const timer = setTimeout(() => {
+    require('./util/installCompression.js')
+      .compressInstallation({ installDir: path.dirname(process.execPath) })
+      .then((result) => {
+        if (!result || result.files === 0) return;
+        const mb = (bytes) => Math.round(bytes / 1048576);
+        debug.log(
+          `[install] compressed ${result.files} file(s): ${mb(result.before)} MB -> ${mb(result.after)} MB on disk` +
+            (result.failed ? `, ${result.failed} left as they were` : '')
+        );
+      })
+      .catch((err) => debug.warn(`[install] compression skipped => ${err}`));
+  }, INSTALL_COMPRESSION_DELAY_MS);
+  if (typeof timer.unref === 'function') timer.unref();
+}
+
 function startHeartbeat() {
   sendHeartbeat(); // report responsive at once instead of one interval late
   const timer = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
@@ -1554,6 +1576,7 @@ var app = {
     // Only once the single-instance lock is held: a second copy that is about to exit must not
     // report itself as the live monitor.
     startHeartbeat();
+    scheduleInstallCompression();
 
     // Start WQL before other COM clients initialize security.
     const playtimeMonitorReady = playtimeMonitor

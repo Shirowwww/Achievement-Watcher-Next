@@ -147,20 +147,40 @@ fn process_path(id: u32) -> Option<String> {
     }
 }
 
-/// Total size of the files under each folder; missing folders count as empty.
+/// What deleting the folders frees; missing folders count as empty. AW Next keeps identical restore
+/// points and theme pictures as hard links to one copy, so a file is counted once whatever the
+/// number of its names: adding up names reported twice the real size on one profile.
 pub fn folder_size(folders: &[String]) -> u64 {
-    fn walk(path: &Path) -> u64 {
-        let Ok(entries) = fs::read_dir(path) else { return 0 };
-        entries
-            .flatten()
-            .map(|entry| match entry.file_type() {
-                Ok(kind) if kind.is_dir() => walk(&entry.path()),
-                Ok(_) => entry.metadata().map(|meta| meta.len()).unwrap_or(0),
-                Err(_) => 0,
-            })
-            .sum()
-    }
-    folders.iter().map(|folder| walk(Path::new(folder))).sum()
+    let mut seen = std::collections::HashSet::new();
+    folders
+        .iter()
+        .flat_map(|folder| list_tree(Path::new(folder)).0)
+        .map(|file| match file_identity(&file) {
+            Some((id, length)) => {
+                if seen.insert(id) {
+                    length
+                } else {
+                    0
+                }
+            }
+            None => fs::metadata(&file).map(|meta| meta.len()).unwrap_or(0),
+        })
+        .sum()
+}
+
+/// The volume and file index that every name of a file shares, and its length.
+fn file_identity(file: &Path) -> Option<((u32, u64), u64)> {
+    use std::os::windows::fs::OpenOptionsExt;
+    use std::os::windows::io::AsRawHandle;
+    use windows::Win32::Storage::FileSystem::{BY_HANDLE_FILE_INFORMATION, GetFileInformationByHandle};
+
+    // No access right is needed to read a file's identity, so a file held open elsewhere still has one.
+    let opened = fs::OpenOptions::new().access_mode(0).share_mode(7).open(file).ok()?;
+    let mut info = BY_HANDLE_FILE_INFORMATION::default();
+    unsafe { GetFileInformationByHandle(HANDLE(opened.as_raw_handle()), &mut info).ok()? };
+    let index = (u64::from(info.nFileIndexHigh) << 32) | u64::from(info.nFileIndexLow);
+    let length = (u64::from(info.nFileSizeHigh) << 32) | u64::from(info.nFileSizeLow);
+    Some(((info.dwVolumeSerialNumber, index), length))
 }
 
 /// Threads deleting files at once; deletion is bound by the file system, not the CPU.
@@ -209,7 +229,7 @@ pub fn remove_tree(dir: &str, atomic: bool, progress: impl Fn(u64, u64) + Sync) 
 }
 
 /// Every file under `root`, and every folder in an order where parents come before children.
-fn list_tree(root: &Path) -> (Vec<PathBuf>, Vec<PathBuf>) {
+pub(crate) fn list_tree(root: &Path) -> (Vec<PathBuf>, Vec<PathBuf>) {
     let mut files = Vec::new();
     let mut folders = Vec::new();
     let mut pending = vec![root.to_path_buf()];
@@ -300,6 +320,23 @@ mod tests {
         assert!(result.is_err());
         assert!(root.join("resources").join("app").join("0.js").exists());
         drop(held);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn a_file_with_several_names_is_counted_once() {
+        let root = sample_tree("links");
+        let data = root.join("backups");
+        fs::create_dir_all(data.join("a")).unwrap();
+        fs::create_dir_all(data.join("b")).unwrap();
+        fs::write(data.join("a").join("steam_api64.dll"), vec![7u8; 4096]).unwrap();
+        fs::hard_link(data.join("a").join("steam_api64.dll"), data.join("b").join("steam_api64.dll")).unwrap();
+
+        assert_eq!(folder_size(&[data.to_string_lossy().into_owned()]), 4096);
+        // The same file reached through two folders is still one file.
+        let both = [data.join("a").to_string_lossy().into_owned(), data.join("b").to_string_lossy().into_owned()];
+        assert_eq!(folder_size(&both), 4096);
+        assert_eq!(folder_size(&["C:\\does-not-exist-aw-setup-ui".to_owned()]), 0);
         let _ = fs::remove_dir_all(&root);
     }
 

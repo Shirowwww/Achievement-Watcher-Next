@@ -44,6 +44,10 @@ renamed in 3.9.0 and the history is kept under one file.
   them a second time, finds a running AW Next without a slow scan, and the uninstaller removes the
   installation folder in one step on several threads instead of file by file, which every later
   update benefits from.
+- **About half the disk space for the installation.** Setup compresses the installed files with the
+  compression Windows applies to its system files: about 210 MB on disk instead of 420 MB, read back
+  transparently, and that is the size the installer and Installed apps now show. The portable copy
+  gets the same on its first start. The package also leaves out about 20 MB of files nothing loads.
 
 ## 3.11.3 - 2026-10-13
 

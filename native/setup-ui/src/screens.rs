@@ -221,7 +221,10 @@ fn legal(g: &mut Gfx, ui: &mut Ui) {
 }
 
 fn meta(g: &Gfx, ui: &Ui, rect: Rect) {
-    let size = strings::size(ui.config.required_bytes);
+    // The size the installation ends up taking. The free-space check keeps the uncompressed one:
+    // the files are written whole before they are compressed.
+    let installed = if ui.config.installed_bytes > 0 { ui.config.installed_bytes } else { ui.config.required_bytes };
+    let size = strings::size(installed);
     let line = fill(Text::VersionSize, &[("version", &ui.config.version), ("size", &size)]);
     let style = Style::text(11.5);
     g.text(&line, &style, Rect::new(rect.x, rect.y + 2.0, rect.w, 17.0), theme::MUTED);

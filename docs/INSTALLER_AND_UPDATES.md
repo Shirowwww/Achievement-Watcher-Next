@@ -80,6 +80,15 @@ all-users install and of the folder under Options.
   moved instead (`customMoveExtractedFiles`), which costs nothing; the copy only handles what could
   not be moved. An all-users install keeps the copy: a moved file keeps the permissions of the
   user's temp folder, and other accounts could not read it.
+- **Disk space.** Once the files are in place, `AwSetupUi::Compress` applies Windows' own
+  executable compression (WOF XPRESS16K, what CompactOS uses for the system files) on several
+  threads: about 210 MB on disk instead of 410 MB, read back transparently, in under a second. It
+  asks the file system directly (`FSCTL_SET_EXTERNAL_BACKING`) rather than running `compact.exe`,
+  for the same sandbox reason as above. It runs in `customInstall`, so on updates too and before the
+  app starts, then writes the compressed size as `EstimatedSize`, the figure Windows lists under
+  Installed apps. The welcome screen announces that size, measured on each build by
+  `build/afterPack.js` (`AW_INSTALLED_KB`); the free-space check keeps the uncompressed one, since
+  the files are written whole first. A volume without WOF (FAT32, exFAT) keeps the files as they are.
 - **User data** is never moved by the installer: `%APPDATA%\Achievement Watcher Next` is only
   created, and the app imports an older `Achievement Watcher 3.0` profile on first launch.
 
@@ -225,6 +234,10 @@ The portable build has no `app-update.yml`, so its update checks used to fail wi
 It now reads the same release feed and, when a new version is out, offers the release page in the
 update window: extracting the new archive over the folder keeps the `data` folder. It never
 downloads or runs the installer.
+
+With no installer to compress it, the extracted folder is compressed by the Watchdog half a minute
+after the first start (`watchdog/util/installCompression.js`, the same request as the plug-in), and
+again after the files are replaced by a newer archive. The `data` folder is left alone.
 
 ## Testing without touching the real install
 
