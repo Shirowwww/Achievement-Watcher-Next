@@ -20,6 +20,16 @@ const { rendererSource } = require('../helpers/rendererSource.js');
 // app.js and the ui/*.js scripts share one global scope, so the renderer's source is all of them.
 const appSource = rendererSource();
 
+test('the path helpers the panel calls by name exist in the shared page scope', () => {
+  // Moving isPathInsideDir into a module left the panel calling a name nothing defined: every
+  // report of a game with a known executable failed with a ReferenceError.
+  const panel = fs.readFileSync(path.join(appDir, 'ui', 'gameHealthPanel.js'), 'utf8');
+  for (const helper of ['isPathInsideDir', 'normalizePathKey']) {
+    if (!new RegExp(`\\b${helper}\\(`).test(panel)) continue;
+    assert.match(appSource, new RegExp(`^function ${helper}\\(`, 'm'), `${helper} is called by the panel but defined nowhere it can reach`);
+  }
+});
+
 test('Game Health lives inside the per-game tools panel, not in a new destination', () => {
   const panel = document.querySelector('#game-config');
   assert.ok(panel, '#game-config must exist');
