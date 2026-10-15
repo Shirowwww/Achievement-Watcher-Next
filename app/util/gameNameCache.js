@@ -9,34 +9,6 @@ const { userDataDir } = require('./userDataPath.js');
 
 const CACHE_BASE = userDataDir();
 
-// filePath -> { mtimeMs, size, value, index }
-const jsonArrayCache = new Map();
-
-// Read a JSON array file through the mtime+size revalidated cache. Returns [] for a missing,
-// unreadable or non-array file. The returned array must be treated as immutable by callers.
-function loadJsonArrayCached(filePath) {
-  if (!filePath || !fs.existsSync(filePath)) return [];
-  try {
-    const stat = fs.statSync(filePath);
-    const cacheKey = path.resolve(filePath);
-    const cached = jsonArrayCache.get(cacheKey);
-    if (cached && cached.mtimeMs === Number(stat.mtimeMs || 0) && cached.size === Number(stat.size || 0)) {
-      return cached.value;
-    }
-    const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    const value = Array.isArray(parsed) ? parsed : [];
-    jsonArrayCache.set(cacheKey, {
-      mtimeMs: Number(stat.mtimeMs || 0),
-      size: Number(stat.size || 0),
-      value,
-      index: null, // built lazily on first lookup, invalidated with the entry
-    });
-    return value;
-  } catch {
-    return [];
-  }
-}
-
 function resolveSteamDbRuntimePath(opts = {}) {
   const explicit = String(opts.runtimePath || '').trim();
   if (explicit) return path.resolve(explicit);
@@ -57,22 +29,37 @@ function pickSourcePath(opts) {
   return '';
 }
 
-// appid -> name Map derived from a loaded dump; cached on the same entry as the rows so it lives
-// and dies with the mtime+size revalidation (upstream scans linearly; our appList has ~250k rows).
+// filePath -> { mtimeMs, size, index }. Only the appid -> name Map is kept: the ~250k parsed rows are
+// dropped after indexing, so a lookup does not hold them on the heap for the whole session.
+const nameIndexCache = new Map();
+
 function getNameIndex(filePath) {
-  const rows = loadJsonArrayCached(filePath);
-  if (rows.length === 0) return null;
-  const entry = jsonArrayCache.get(path.resolve(filePath));
-  if (!entry) return null;
-  if (!entry.index) {
-    entry.index = new Map();
-    for (const row of rows) {
-      const id = String(row?.appid ?? '').trim();
-      const name = String(row?.name ?? '').trim();
-      if (id && name && !entry.index.has(id)) entry.index.set(id, name);
-    }
+  let stat;
+  try {
+    stat = fs.statSync(filePath);
+  } catch {
+    return null;
   }
-  return entry.index;
+  const cacheKey = path.resolve(filePath);
+  const mtimeMs = Number(stat.mtimeMs || 0);
+  const size = Number(stat.size || 0);
+  const cached = nameIndexCache.get(cacheKey);
+  if (cached && cached.mtimeMs === mtimeMs && cached.size === size) return cached.index;
+  let parsed;
+  try {
+    parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(parsed) || parsed.length === 0) return null;
+  const index = new Map();
+  for (const row of parsed) {
+    const id = String(row?.appid ?? '').trim();
+    const name = String(row?.name ?? '').trim();
+    if (id && name && !index.has(id)) index.set(id, name);
+  }
+  nameIndexCache.set(cacheKey, { mtimeMs, size, index });
+  return index;
 }
 
 // Instant, offline appid → name lookup. Returns the name or null (never throws).
@@ -117,7 +104,6 @@ function lookupSchemaCacheName(userDataPath, appid) {
 }
 
 module.exports = {
-  loadJsonArrayCached,
   lookupSteamDbName,
   lookupSchemaCacheName,
 };

@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const { loadJsonArrayCached, lookupSteamDbName } = require('../../app/util/gameNameCache.js');
+const { lookupSteamDbName } = require('../../app/util/gameNameCache.js');
 
 (() => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-name-cache-'));
@@ -28,10 +28,10 @@ const { loadJsonArrayCached, lookupSteamDbName } = require('../../app/util/gameN
     assert.equal(lookupSteamDbName(10, { runtimePath: path.join(tmp, 'nope.json'), fallbackPath: path.join(tmp, 'nope2.json') }), null);
     const corrupt = path.join(tmp, 'corrupt.json');
     fs.writeFileSync(corrupt, '{not json');
-    assert.deepEqual(loadJsonArrayCached(corrupt), []);
+    assert.equal(lookupSteamDbName(10, { runtimePath: corrupt }), null);
     const nonArray = path.join(tmp, 'obj.json');
     fs.writeFileSync(nonArray, '{"appid":10}');
-    assert.deepEqual(loadJsonArrayCached(nonArray), []);
+    assert.equal(lookupSteamDbName(10, { runtimePath: nonArray }), null);
 
     // runtime steamdb.json takes precedence over the appList fallback
     const override = path.join(tmp, 'steamdb.json');
@@ -41,8 +41,7 @@ const { loadJsonArrayCached, lookupSteamDbName } = require('../../app/util/gameN
     assert.equal(lookupSteamDbName(10, { runtimePath: path.join(tmp, 'ghost.json'), fallbackPath: dump }), 'Counter-Strike');
 
     // the mtime+size cache revalidates when the file changes
-    const first = loadJsonArrayCached(dump);
-    assert.equal(loadJsonArrayCached(dump), first, 'unchanged file must return the cached array');
+    assert.equal(lookupSteamDbName(10, { runtimePath: dump }), 'Counter-Strike');
     const future = new Date(Date.now() + 5000);
     fs.writeFileSync(dump, JSON.stringify([{ appid: 10, name: 'CS 2' }]));
     fs.utimesSync(dump, future, future); // force a distinct mtime even on coarse filesystems
