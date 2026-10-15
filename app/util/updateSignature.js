@@ -1,19 +1,7 @@
 'use strict';
 
-const { execFile } = require('child_process');
-const path = require('path');
+const authenticode = require('./authenticode.js');
 const links = require('./links.js');
-
-// Electron inherits the developer's PowerShell 7 module path on some systems. A child Windows
-// PowerShell 5 process then tries to load incompatible module metadata and cannot find
-// Get-AuthenticodeSignature. Point it at its own built-in module directory instead.
-const WINDOWS_POWERSHELL_MODULES = path.join(
-  process.env.SystemRoot || process.env.WINDIR || 'C:\\Windows',
-  'System32',
-  'WindowsPowerShell',
-  'v1.0',
-  'Modules'
-);
 
 function publisherMatches(subject, publisherNames) {
   const names = Array.isArray(publisherNames) ? publisherNames : [publisherNames];
@@ -108,63 +96,6 @@ function evaluateUpdateSignature(publisherNames, signature, { pinned = PINNED_TH
   return null;
 }
 
-/*
-  Windows PowerShell 5.1 script. Besides Authenticode's view, it verifies every signature layer
-  (the SHA-1 primary and the nested SHA-256 one) with SignedCms and recomputes the PE image hash
-  that layer signed, so neither the local trust store nor Authenticode's status codes decide.
-*/
-const VERIFY_SCRIPT = String.raw`
-$ErrorActionPreference = 'Stop'
-$out = @{}
-try {
-  $p = $env:AW_UPDATE_FILE
-  $s = Get-AuthenticodeSignature -LiteralPath $p
-  $out.Status = [string]$s.Status
-  if ($s.SignerCertificate) { $out.SignerCertificate = @{ Subject = $s.SignerCertificate.Subject; Thumbprint = $s.SignerCertificate.Thumbprint } }
-  Add-Type -AssemblyName System.Security
-  $b = [IO.File]::ReadAllBytes($p)
-  $opt = [BitConverter]::ToInt32($b, 60) + 24
-  $dd = if ([BitConverter]::ToUInt16($b, $opt) -eq 0x20b) { $opt + 112 } else { $opt + 96 }
-  $sec = [BitConverter]::ToInt32($b, $dd + 32)
-  $len = [BitConverter]::ToInt32($b, $sec)
-  if ($sec -le $dd -or $len -le 8 -or ($sec + $len) -gt $b.Length -or ($b.Length - $sec - $len) -ge 8) { throw 'certificate table is missing or not at the end of the file' }
-  $blob = New-Object byte[] ($len - 8)
-  [Array]::Copy($b, $sec + 8, $blob, 0, $len - 8)
-  $cms = New-Object System.Security.Cryptography.Pkcs.SignedCms
-  $cms.Decode($blob)
-  $layers = @($cms)
-  foreach ($a in $cms.SignerInfos[0].UnsignedAttributes) {
-    if ($a.Oid.Value -eq '1.3.6.1.4.1.311.2.4.1') {
-      foreach ($v in $a.Values) { $n = New-Object System.Security.Cryptography.Pkcs.SignedCms; $n.Decode($v.RawData); $layers += $n }
-    }
-  }
-  $algs = @{ '1.3.14.3.2.26' = 'SHA1'; '2.16.840.1.101.3.4.2.1' = 'SHA256'; '2.16.840.1.101.3.4.2.2' = 'SHA384'; '2.16.840.1.101.3.4.2.3' = 'SHA512' }
-  $thumbs = @()
-  foreach ($c in $layers) {
-    if ($c.SignerInfos.Count -ne 1) { throw 'unexpected signer count' }
-    $si = $c.SignerInfos[0]
-    $si.CheckSignature($true)
-    $name = $algs[$si.DigestAlgorithm.Value]
-    if (-not $name) { throw ('unsupported digest ' + $si.DigestAlgorithm.Value) }
-    $h = [Security.Cryptography.HashAlgorithm]::Create($name)
-    $size = $h.HashSize / 8
-    $content = $c.ContentInfo.Content
-    if ($content.Length -lt $size + 2 -or $content[$content.Length - $size - 2] -ne 4 -or $content[$content.Length - $size - 1] -ne $size) { throw 'unexpected signed content' }
-    $cs = $opt + 64
-    [void]$h.TransformBlock($b, 0, $cs, $null, 0)
-    [void]$h.TransformBlock($b, $cs + 4, $dd + 32 - $cs - 4, $null, 0)
-    [void]$h.TransformBlock($b, $dd + 40, $sec - $dd - 40, $null, 0)
-    [void]$h.TransformFinalBlock($b, 0, 0)
-    for ($i = 0; $i -lt $size; $i++) { if ($h.Hash[$i] -ne $content[$content.Length - $size + $i]) { throw 'file does not match its signature' } }
-    $thumbs += $si.Certificate.Thumbprint
-  }
-  $out.Cms = @{ Ok = $true; Thumbprints = $thumbs }
-} catch {
-  $out.Cms = @{ Ok = $false; Error = $_.Exception.Message }
-}
-$out | ConvertTo-Json -Compress -Depth 4
-`;
-
 // Every refusal ends with the way out: a check that cannot vouch for the file never lets it install.
 function manualDownloadHint() {
   return `Download the release manually from ${links.releases}`;
@@ -174,52 +105,20 @@ function refuseWithHint(reason) {
   return `${reason}. ${manualDownloadHint()}`;
 }
 
-// `raw` skips the manual-download hint for callers that are not an installed client (the build).
-function verifyUpdateCodeSignature(publisherNames, tempUpdateFile, log = () => {}, { raw = false } = {}) {
+// `raw` skips the manual-download hint for callers that are not an installed client (the build). A
+// file that cannot be read or is not an executable is a refusal: 'could not check' never installs.
+async function verifyUpdateCodeSignature(publisherNames, tempUpdateFile, log = () => {}, { raw = false } = {}) {
   const refuse = raw ? (reason) => reason : refuseWithHint;
-  return new Promise((resolve) => {
-    // The path goes through the environment, so nothing is quoted; the script holds no double quote
-    // either. Plain text, not -EncodedCommand: antivirus engines read a base64 command as hiding one.
-    execFile(
-      'powershell.exe',
-      ['-NoProfile', '-NonInteractive', '-InputFormat', 'None', '-Command', VERIFY_SCRIPT],
-      {
-        timeout: 60 * 1000,
-        windowsHide: true,
-        maxBuffer: 1024 * 1024,
-        env: { ...process.env, PSModulePath: WINDOWS_POWERSHELL_MODULES, AW_UPDATE_FILE: String(tempUpdateFile || '') },
-      },
-      (error, stdout, stderr) => {
-        /*
-          stderr alone is not a failure: PowerShell writes progress and module-load noise there
-          while still producing the JSON on stdout. A real execFile error, empty output or output
-          that does not parse is a refusal: an antivirus or a policy that blocks PowerShell must
-          not turn "could not check" into "accepted".
-        */
-        if (error) {
-          log(`[updater] signature check could not run: ${error}`);
-          resolve(refuse('the installer signature could not be checked (PowerShell did not run)'));
-          return;
-        }
-        if (stderr) log(`[updater] signature check stderr (ignored): ${String(stderr).trim().slice(0, 200)}`);
-        let parsed;
-        try {
-          parsed = JSON.parse(stdout);
-        } catch (err) {
-          if (!String(stdout || '').trim()) {
-            log('[updater] signature check produced no output');
-            resolve(refuse('the installer signature could not be checked (no answer from PowerShell)'));
-            return;
-          }
-          resolve(refuse(`signature check failed to parse: ${err.message}`));
-          return;
-        }
-        const result = evaluateUpdateSignature(publisherNames, parsed);
-        if (result === null) log('[updater] update signer accepted');
-        resolve(result === null ? null : refuse(result));
-      }
-    );
-  });
+  let signature;
+  try {
+    signature = await authenticode.readSignature(String(tempUpdateFile || ''));
+  } catch (err) {
+    log(`[updater] signature check could not run: ${err.message || err}`);
+    return refuse(`the installer signature could not be checked (${err.message || err})`);
+  }
+  const result = evaluateUpdateSignature(publisherNames, signature);
+  if (result === null) log('[updater] update signer accepted');
+  return result === null ? null : refuse(result);
 }
 
 module.exports = {

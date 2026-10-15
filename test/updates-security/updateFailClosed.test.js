@@ -1,7 +1,6 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const childProcess = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -11,44 +10,22 @@ const appRoot = path.join(__dirname, '..', '..', 'app');
 const links = require(path.join(appRoot, 'util', 'links.js'));
 const { verifyPendingInstaller, sha512OfFile } = require(path.join(appRoot, 'util', 'pendingInstallerGuard.js'));
 
-// updateSignature.js binds execFile when it loads, so it is loaded again against a stub.
-function loadWithExecFile(fake) {
-  const modulePath = path.join(appRoot, 'util', 'updateSignature.js');
-  const original = childProcess.execFile;
-  childProcess.execFile = fake;
-  delete require.cache[modulePath];
+test('an unsigned installer is refused with the manual-download hint', async () => {
+  const { verifyUpdateCodeSignature } = require(path.join(appRoot, 'util', 'updateSignature.js'));
+  const signed = fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'authenticode', 'dual-signed.bin'));
+  const securityEntry = signed.readUInt32LE(60) + 24 + 112 + 32;
+  const unsigned = Buffer.from(signed.subarray(0, signed.readUInt32LE(securityEntry)));
+  unsigned.fill(0, securityEntry, securityEntry + 8);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-unsigned-'));
   try {
-    return require(modulePath);
+    const file = path.join(dir, 'setup.exe');
+    fs.writeFileSync(file, unsigned);
+    const result = await verifyUpdateCodeSignature(['Shirow'], file);
+    assert.match(result, /^installer is not signed\./);
+    assert.ok(result.includes(links.releases), result);
   } finally {
-    childProcess.execFile = original;
-    delete require.cache[modulePath];
+    fs.rmSync(dir, { recursive: true, force: true });
   }
-}
-
-test('a PowerShell that cannot run is a refusal that points to the manual download', async () => {
-  const { verifyUpdateCodeSignature } = loadWithExecFile((_cmd, _args, _opts, done) => done(new Error('spawn powershell.exe ENOENT'), '', ''));
-  const result = await verifyUpdateCodeSignature(['Shirow'], 'C:\\x\\setup.exe');
-  assert.match(result, /could not be checked/);
-  assert.ok(result.includes(links.releases), result);
-});
-
-test('a PowerShell that prints nothing is a refusal', async () => {
-  const { verifyUpdateCodeSignature } = loadWithExecFile((_cmd, _args, _opts, done) => done(null, '  \n', ''));
-  const result = await verifyUpdateCodeSignature(['Shirow'], 'C:\\x\\setup.exe');
-  assert.match(result, /no answer from PowerShell/);
-  assert.ok(result.includes(links.releases), result);
-});
-
-test('output that is not JSON is a refusal', async () => {
-  const { verifyUpdateCodeSignature } = loadWithExecFile((_cmd, _args, _opts, done) => done(null, 'garbage', ''));
-  assert.match(await verifyUpdateCodeSignature(['Shirow'], 'C:\\x\\setup.exe'), /failed to parse/);
-});
-
-test('an unsigned verdict from PowerShell is refused with the manual-download hint', async () => {
-  const { verifyUpdateCodeSignature } = loadWithExecFile((_cmd, _args, _opts, done) => done(null, JSON.stringify({ Status: 'NotSigned' }), ''));
-  const result = await verifyUpdateCodeSignature(['Shirow'], 'C:\\x\\setup.exe');
-  assert.match(result, /^installer is not signed\./);
-  assert.ok(result.includes(links.releases), result);
 });
 
 test('the pending-installer guard passes a file that verifies and keeps its digest', async () => {
