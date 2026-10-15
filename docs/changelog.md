@@ -124,6 +124,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Website & Docs
 
+- **A new home page.** It opens on an illustrated game scene, at night in the dark theme and by day
+  in the light one, where each preset's popup plays live. Library, Game Health, clips and stats
+  lead the features, and the download offers the visitor's system first with a switch to the
+  other. The preset and theme galleries and the guides share its look.
+- The comparison guide now sets AW Next beside the other achievement trackers.
 - Buttons and filter chips on the site use the site's typeface instead of Arial.
 - A **Linux and the Steam Deck** guide: installing the AppImage and its updates, GNOME and KDE under
   Wayland or X11, binding the overlay to a key, the keyring prompt, Steam, Proton, Lutris, Heroic,

@@ -11,6 +11,7 @@ AW Next on Linux and the Steam Deck as a beta, a new installer and update window
 - **A Steam Original preset**, a copy of the popup the current Steam client draws. The earlier Steam preset is now called Steam Modern.
 - **Finished games stay in the library.** "Show installed games only" is off until you turn it on, so an uninstalled game is still listed from its emulator saves. RetroAchievements games whose ROM RetroArch knows now count as installed.
 - **About half the disk space.** The installed files take about 210 MB instead of 420 MB, installs and updates are faster, and the data folder is leaner.
+- **A new website.** The [home page](https://shirowwww.github.io/Achievement-Watcher-Next/) opens on a game scene where each preset's popup plays live, by night or by day with the theme, and offers your system's download first. The preset and theme galleries share its look, and a new guide compares AW Next with the other achievement trackers.
 - **Fixes:** RUNE and CODEX releases that have not saved yet, TENOKE, Catherine and UniverseLAN sources, ShadPS4 0.19 and later, KytyPS5 `.zar` archives, Xenia without `portable.txt`, Xbox games merged into the wrong Steam game, keyboard access across Settings and the overlay, and more.
 
 See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3120---2026-10-15) for the complete list.
