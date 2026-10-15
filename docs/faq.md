@@ -16,7 +16,7 @@ Windows 10 and Windows 11, and Linux (x64). Packaged releases include their own 
 needed only to build from source.
 
 ### Does it run on Linux or the Steam Deck?
-Yes on Linux: download `Achievement.Watcher.<version>.AppImage` from the same release, make it executable and start it (it needs FUSE 2, `libfuse2`). It updates itself from the same releases
+Yes on Linux, as a beta: download `Achievement.Watcher.<version>.AppImage` from the same release, make it executable and start it (it needs FUSE 2, `libfuse2`). It updates itself from the same releases
 as the Windows app. AW Next runs as a native Linux app, never through Wine, on GNOME and KDE Plasma,
 Wayland or X11. It finds the games you run with Steam and Proton, Wine, Lutris, Heroic or Bottles in
 their prefixes, reads their processes for playtime and shows unlocks in the in-game overlay or as

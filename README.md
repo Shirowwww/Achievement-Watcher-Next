@@ -10,7 +10,7 @@ into one library, with live desktop notifications and an in-game overlay.
 [![Latest release](https://img.shields.io/github/v/release/Shirowwww/Achievement-Watcher-Next?display_name=tag&sort=semver&style=flat-square)](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/Shirowwww/Achievement-Watcher-Next/total?style=flat-square)](https://github.com/Shirowwww/Achievement-Watcher-Next/releases)
 ![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&style=flat-square)
-![Linux](https://img.shields.io/badge/Linux-AppImage-FCC624?logo=linux&logoColor=black&style=flat-square)
+![Linux](https://img.shields.io/badge/Linux-AppImage%20beta-FCC624?logo=linux&logoColor=black&style=flat-square)
 [![License](https://img.shields.io/badge/license-LGPL--3.0-green?style=flat-square)](LICENSE)
 
 **[Visit the website](https://shirowwww.github.io/Achievement-Watcher-Next/)** ·
@@ -39,7 +39,7 @@ into one library, with live desktop notifications and an in-game overlay.
   with search, filters, rarity tiers, progress achievements, covers and your own collections. A trophy
   showcase on the profile splits every unlock by rarity, platinum included, and trophy mode grades
   every achievement gold, silver or bronze.
-- **Windows and Linux.** The Linux build is native and never runs through Wine. It follows the games
+- **Windows and Linux (beta).** The Linux build is native and never runs through Wine. It follows the games
   you run through Steam and Proton, Wine, Lutris, Heroic and Bottles, and native Linux games, with the
   same overlay, popups and playtime. Steam Deck support is new - see the
   [Linux guide](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html).
@@ -86,7 +86,7 @@ into one library, with live desktop notifications and an in-game overlay.
 
 ## Install
 
-| | Windows 10 and 11 | Linux (x64) |
+| | Windows 10 and 11 | Linux (x64, beta) |
 |---|---|---|
 | **Download** | `Achievement.Watcher.Setup.<version>.exe` (installer) or `Achievement.Watcher.Portable.<version>.zip` from the [latest release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest) | `Achievement.Watcher.<version>.AppImage` from the same release |
 | **Start** | Run the installer, or extract the ZIP and open the app | `chmod +x` the file, then run it. It needs FUSE 2: `libfuse2t64` on Ubuntu 24.04 |

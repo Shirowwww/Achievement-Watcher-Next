@@ -4,6 +4,12 @@ AW Next runs on Linux (x64) as a native app, never through Wine. It follows the 
 through Steam and Proton, Wine, Lutris, Heroic or Bottles, native Linux games and the supported
 emulators, with the same library, popups, overlay and playtime as on Windows.
 
+The Linux build is a **beta**. It was tested on GNOME and KDE Plasma desktops, in Wine and Proton
+prefixes and with test games, but not yet on many real machines: a real Steam Deck, real gamepads,
+every launcher and every scene release. If something does not work, an
+[issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues) with your distribution,
+desktop and logs helps the most.
+
 ## Install
 
 1. Open the [latest release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest)

@@ -25,13 +25,13 @@ What should have happened?
 ## Environment
 
 - AW Next version:
-- Windows version:
-- Source or emulator:
-- Installation type: installer / unpacked build / development
+- Windows version, or Linux distribution and desktop (GNOME, KDE Plasma, Steam Deck Game Mode...):
+- Source or emulator, and on Linux how the game runs (Proton, Wine, Lutris, Heroic, Bottles, native):
+- Installation type: installer / portable / AppImage / development
 
 ## Logs and screenshots
 
-Attach screenshots or a zip of the relevant files from `%APPDATA%\Achievement Watcher Next\logs`. Logs can also be opened from **Settings → Advanced → Diagnostics**.
+Attach screenshots or a zip of the relevant files from `%APPDATA%\Achievement Watcher Next\logs` (`~/.config/Achievement Watcher Next/logs` on Linux). Logs can also be opened from **Settings → Advanced → Diagnostics**.
 
 ## Additional context
 
