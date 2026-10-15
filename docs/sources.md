@@ -120,14 +120,15 @@ settings the emulator reads rather than assuming the default:
 
 - **RPCS3** - the trophy folder follows `vfs.yml` (including a `$(EmulatorDir)`-relative remap), a
   `portable` folder beside the executable, and `RPCS3_CONFIG_DIR`.
-- **ShadPS4** - recognised whether you point at the emulator, its `user` folder or `game_data`
-  itself, and `config.toml` is read from either of the two places shadPS4 has kept it.
+- **ShadPS4** - recognised whether you point at the emulator, its `user` folder, `game_data`
+  itself, or since 0.19 its `trophy` folder or `home\<user>\trophy`, and its config is read from
+  either of the two places shadPS4 has kept it.
 - **Xenia** - follows the `storage_root` and `content_root` in its config.
 - **KytyPS5** - recognised whether you point at the emulator, its `_Trophies` folder or one game's
   folder inside it. The games are looked up in the game folders of the KytyPS5 launcher
-  (`Kyty.ini`) and beside the emulator. The trophy list lives in the game itself, so a game only
-  ever kept in an archive is not listed; one deleted after AW Next has seen it stays listed, as not
-  installed, from the copy of its list and art kept then.
+  (`Kyty.ini`) and beside the emulator, unpacked or as a `.zar` archive the launcher runs as it is.
+  The trophy list lives in the game itself; a game deleted after AW Next has seen it stays listed,
+  as not installed, from the copy of its list and art kept then.
 
 So a relocated RPCS3 virtual disk or a ShadPS4 data folder can be added under **Settings → Folders**
 directly, with no emulator executable anywhere near it.

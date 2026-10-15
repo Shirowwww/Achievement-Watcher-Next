@@ -53,6 +53,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Improved
 
+- **Finished games stay in the library.** "Show installed games only" is now off until you turn it
+  on, so a game you uninstalled is still listed from the emulator's saves (GSE Saves, RUNE, CODEX
+  and the like) with its achievements. Adding the game folders was never needed for that.
 - **Keyboard and screen reader access.** The Settings action buttons, Save and Cancel included, the
   game configuration's Save and Cancel, the shortcut editor, the cover and icon pickers and the
   profile picture can be reached with Tab and pressed with Enter or Space. Dialogs take the focus
@@ -91,6 +94,10 @@ renamed in 3.9.0 and the history is kept under one file.
 - ShadPS4 0.19 and later is read again: it moved the trophies to `trophy` and the unlocks to
   `home\<user>\trophy`, so its games showed nothing and its unlocks raised no notification. A
   game already seen with an older ShadPS4 is listed once. A reset relocks the new unlock file.
+  Adding `home\1000\trophy` or `home\1000` as a folder is accepted too, instead of being refused
+  as holding nothing achievement related.
+- KytyPS5 games kept as `.zar` archives are listed with their trophies: the trophy list and the
+  game art are read straight from the archive, which no longer needs to be unpacked.
 - Xenia set up without `portable.txt` is found again: its saves are in `Documents\Xenia`.
 
 ### Performance

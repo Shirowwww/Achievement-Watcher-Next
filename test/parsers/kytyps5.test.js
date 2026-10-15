@@ -137,6 +137,40 @@ test('a game deleted after it was seen stays listed, as not installed', async ()
   assert.equal(kyty.getAchievements(game.data).length, 1, 'and its unlocks still read');
 });
 
+// The fixture was written by Exzap's zarchive.exe from makeGame(..., { titleId: 'PPSA00407' }).
+test('a game kept as a .zar dump is read out of the archive, and stays listed once deleted', async () => {
+  const titleId = 'PPSA00407';
+  const root = path.join(temp, 'archived');
+  const archive = path.join(root, 'games', `${titleId}.zar`);
+  fs.mkdirSync(path.dirname(archive), { recursive: true });
+  fs.copyFileSync(path.join(__dirname, '..', 'fixtures', 'kytyps5-game.zar'), archive);
+  const emulator = makeEmulator(root, { gameDirs: [path.join(root, 'games')], titleId });
+
+  const [game] = kyty.scan(emulator);
+  assert.equal(game.appid, titleId);
+  assert.equal(game.data.trustedInstalled, true, 'the archive is the installed game');
+  assert.equal(game.data.gameDir, archive);
+  const schema = await kyty.getGameData(game.data, 'english');
+  assert.equal(schema.name, "ASTRO's PLAYROOM");
+  assert.equal(schema.achievement.total, 3);
+  assert.match(schema.img.icon, /icon0\.png$/);
+  assert.equal(kyty.getAchievements(game.data).length, 1);
+
+  fs.rmSync(archive);
+  const [gone] = kyty.scan(emulator);
+  assert.equal(gone.data.trustedInstalled, false);
+  assert.equal(gone.data.gameDir, '');
+  assert.equal((await kyty.getGameData(gone.data, 'english')).achievement.total, 3);
+});
+
+test('a .zar that is not a game dump is not a game', () => {
+  const root = path.join(temp, 'not-a-dump');
+  const games = path.join(root, 'games');
+  fs.mkdirSync(games, { recursive: true });
+  fs.writeFileSync(path.join(games, 'PPSA00408.zar'), 'not an archive');
+  assert.deepEqual(kyty.scan(makeEmulator(root, { gameDirs: [games], titleId: 'PPSA00408' })), []);
+});
+
 test('the trophy list comes from the package, in the chosen language, with English kept for rarity', async () => {
   const root = path.join(temp, 'schema');
   makeGame(path.join(root, 'Games'));

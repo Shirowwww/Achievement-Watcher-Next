@@ -43,6 +43,7 @@ asarUnpack:
   - parser/uplaySteamTable.js
   - parser/xlln.js
   - parser/kytyps5.js
+  - util/zarchive.js
   - parser/xllnSpa.js
   - parser/markerpatch.js
   - parser/madnesspatch.js

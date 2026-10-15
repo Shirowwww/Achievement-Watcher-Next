@@ -46,6 +46,8 @@ const ttype = (t) => {
   means it is not, and walking up from there would answer with somebody else's trophies.
 */
 const SHADPS4_TREE_SEGMENT = /^(game_data|user|TrophyFiles|CUSA\d{5}|trophy\d*|Xml|Icons|home|NPWR\d{5}_\d{2})$/i;
+// The user id folder of home/<id>/trophy is a bare number, so it counts only under home.
+const isInsideTree = (dir) => SHADPS4_TREE_SEGMENT.test(path.basename(dir)) || (/^\d+$/.test(path.basename(dir)) && /^home$/i.test(path.basename(path.dirname(dir))));
 
 const uniquePaths = (paths) => {
   const seen = new Set();
@@ -73,7 +75,7 @@ function userRootCandidates(dir) {
   let current = base;
   // Four is the depth of the deepest layout (game_data/CUSA/TrophyFiles/trophyNN plus Xml|Icons).
   for (let depth = 0; depth < 5; depth++) {
-    if (!SHADPS4_TREE_SEGMENT.test(path.basename(current))) break;
+    if (!isInsideTree(current)) break;
     const parent = path.dirname(current);
     if (!parent || parent === current) break;
     levels.push(parent);

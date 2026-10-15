@@ -14,6 +14,7 @@
 const fs = require('fs');
 const path = require('path');
 const { hostPath, hostsFor } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
+const { withArchive } = require(path.join(__dirname, '..', 'util', 'zarchive.js'));
 
 const SOURCE = 'KytyPS5 Emulator';
 const EMULATOR_BINARY = 'kyty_emulator.exe';
@@ -22,6 +23,8 @@ const SETTINGS_FILE = 'Kyty.ini';
 const PACKAGE_DIR = path.join('sce_sys', 'trophy2');
 const UNLOCKS_FILE = /^trophies_(\d+)_(\d+)\.json$/i;
 const PACKAGE_FILE = /^trophy(\d+)\.ucp$/i;
+// A ZArchive game dump, which the launcher runs without extracting it.
+const ARCHIVE_FILE = /\.zar$/i;
 // Kyty refuses any other character in a title id, so anything else is not one of its folders.
 const TITLE_ID = /^[A-Za-z0-9_-]{1,32}$/;
 const WINDOWS_ABSOLUTE = /^[a-zA-Z]:[\\/]/;
@@ -211,7 +214,37 @@ function readParam(gameDir) {
   return readJsonFile(path.join(gameDir, 'sce_sys', 'param.json'), MAX_JSON_BYTES);
 }
 
-// The launcher's own walk: a folder holding eboot.bin is a game and is not searched further.
+function parseJson(buffer) {
+  try {
+    return buffer ? JSON.parse(buffer.toString('utf8')) : null;
+  } catch {
+    return null;
+  }
+}
+
+function titleIdOf(param) {
+  return param && typeof param.titleId === 'string' ? param.titleId.trim().toUpperCase() : '';
+}
+
+// An archive is opened again only once it changes: every scan walks the game folders.
+const archiveParams = new Map();
+
+// The param.json of a .zar game dump whose root holds eboot.bin, or null.
+function archiveParam(file) {
+  let stat;
+  try {
+    stat = fs.statSync(file);
+  } catch {
+    return null;
+  }
+  const key = `${file}|${stat.size}|${stat.mtimeMs}`;
+  if (!archiveParams.has(key)) {
+    archiveParams.set(key, withArchive(file, (archive) => (archive.isFile('eboot.bin') ? parseJson(archive.read(path.join('sce_sys', 'param.json'), MAX_JSON_BYTES)) : null)));
+  }
+  return archiveParams.get(key);
+}
+
+// The launcher's own walk: a folder holding eboot.bin, or a .zar holding one, is a game and is not searched further.
 function findGames(gameDirs, maxDepth = MAX_GAME_DEPTH) {
   const games = new Map();
   const pending = gameDirs.map((dir) => ({ dir, depth: 0 }));
@@ -222,13 +255,18 @@ function findGames(gameDirs, maxDepth = MAX_GAME_DEPTH) {
     visited++;
     if (isFile(path.join(dir, 'eboot.bin'))) {
       const param = readParam(dir);
-      const titleId = param && typeof param.titleId === 'string' ? param.titleId.trim().toUpperCase() : '';
+      const titleId = titleIdOf(param);
       if (titleId && !games.has(titleId)) games.set(titleId, { gameDir: dir, param });
       continue;
     }
     if (depth >= maxDepth) continue;
     for (const entry of readDirectory(dir)) {
       if (entry.isDirectory() && !entry.name.startsWith('$')) pending.push({ dir: path.join(dir, entry.name), depth: depth + 1 });
+      if (!entry.isFile() || !ARCHIVE_FILE.test(entry.name)) continue;
+      const file = path.join(dir, entry.name);
+      const param = archiveParam(file);
+      const titleId = titleIdOf(param);
+      if (titleId && !games.has(titleId)) games.set(titleId, { gameDir: file, param, archive: true });
     }
   }
   return games;
@@ -243,9 +281,10 @@ function trophyPackages(gameDir) {
 }
 
 // The files of a game the trophy list and its art are read from, relative to the game folder.
+const ART_FILES = ['param.json', 'icon0.png', 'pic0.png'].map((name) => path.join('sce_sys', name));
+
 function listFiles(gameDir) {
-  const files = ['param.json', 'icon0.png', 'pic0.png'].map((name) => path.join('sce_sys', name));
-  return files.concat(trophyPackages(gameDir).map((entry) => path.relative(gameDir, entry.file)));
+  return ART_FILES.concat(trophyPackages(gameDir).map((entry) => path.relative(gameDir, entry.file)));
 }
 
 // Where a copy of those files is kept, in the game's own layout, for when the game is gone.
@@ -281,6 +320,45 @@ function saveList(titleId, gameDir) {
   }
 }
 
+const savedArchives = new Set();
+
+/*
+  The same copy for a .zar game dump, which is the only way to read its list: the files come out of
+  the archive. Once per archive version and process. True when the archive held a trophy package.
+*/
+function saveArchiveList(titleId, file) {
+  let stat;
+  try {
+    stat = fs.statSync(file);
+  } catch {
+    return false;
+  }
+  const key = `${titleId}|${file}|${stat.size}|${stat.mtimeMs}`;
+  if (savedArchives.has(key)) return true;
+  const target = savedListDir(titleId);
+  const saved = withArchive(file, (archive) => {
+    const packages = archive
+      .entries(PACKAGE_DIR)
+      .filter((entry) => entry.isFile && PACKAGE_FILE.test(entry.name))
+      .map((entry) => path.join(PACKAGE_DIR, entry.name));
+    if (packages.length === 0) return false;
+    for (const relative of ART_FILES.concat(packages)) {
+      const data = archive.read(relative, MAX_PACKAGE_BYTES);
+      if (!data) continue;
+      const to = path.join(target, relative);
+      try {
+        fs.mkdirSync(path.dirname(to), { recursive: true });
+        fs.writeFileSync(to, data);
+      } catch {
+        /* a locked copy costs only that file */
+      }
+    }
+    return true;
+  }) === true;
+  if (saved) savedArchives.add(key);
+  return saved;
+}
+
 /*
   Every title of one emulator folder whose trophy list can be read: from its game when the game is
   found, otherwise from the copy kept the last time it was. A title never seen with its game is left
@@ -301,11 +379,13 @@ function discover(dir) {
     const game = games.get(title.titleId);
     // The same shape as a library record's data, so either can be handed to the readers below.
     const record = { titleId: title.titleId, root, path: title.dir };
-    if (game && trophyPackages(game.gameDir).length > 0) {
+    // An archived game is read from the copy taken out of it.
+    const archived = !!(game && game.archive) && saveArchiveList(title.titleId, game.gameDir);
+    if (game && !game.archive && trophyPackages(game.gameDir).length > 0) {
       saveList(title.titleId, game.gameDir);
       found.push({ ...record, gameDir: game.gameDir, listDir: game.gameDir, installed: true });
     } else if (trophyPackages(savedListDir(title.titleId)).length > 0) {
-      found.push({ ...record, gameDir: '', listDir: savedListDir(title.titleId), installed: false });
+      found.push({ ...record, gameDir: archived ? game.gameDir : '', listDir: savedListDir(title.titleId), installed: archived });
     } else {
       debug.log(`[kytyps5] ${title.titleId}: no game with a trophy package in the launcher's game folders`);
     }

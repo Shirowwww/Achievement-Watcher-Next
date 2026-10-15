@@ -224,6 +224,23 @@ test('shadPS4 0.19 trophies are read from trophy/ and the unlocks from the user 
   );
 });
 
+test('shadPS4 0.19 trophies are found from the user home folder people add', async () => {
+  const userRoot = tmpdir('aw-shadps4-home-pick-');
+  writeNpTrophySet(userRoot, 'NPWR12345_00', { unlocked: ['001'] });
+
+  for (const added of [path.join(userRoot, 'home', '1000', 'trophy'), path.join(userRoot, 'home', '1000')]) {
+    assert.deepEqual((await shadps4.scan(added)).map((entry) => entry.appid), ['NPWR12345_00'], added);
+    const verdict = await userDir.diagnose(added);
+    assert.equal(verdict.accepted, true, added);
+    assert.equal(verdict.code, 'emulator-data', added);
+  }
+});
+
+test('a numbered folder outside the shadPS4 home does not climb', () => {
+  const games = path.resolve('D:', 'Games', '1000');
+  assert.deepEqual(shadps4._internal.userRootCandidates(games), [games, path.join(games, 'user')]);
+});
+
 test('a game moved to the 0.19 layout is listed once, from the new layout', async () => {
   const userRoot = tmpdir('aw-shadps4-both-');
   writeNpTrophySet(userRoot, 'NPWR12345_00');
