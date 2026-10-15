@@ -46,6 +46,7 @@ const linuxGameLaunch = require(path.join(appPath, 'util/linuxGameLaunch.js'));
 const { openExternalSafe } = require(path.join(appPath, 'util/externalLink.js'));
 const steamClientLinks = require(path.join(appPath, 'util/steamClientLinks.js'));
 const gameHealthInterfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
+// oxlint-disable-next-line no-unused-vars -- read by ui/gameHealthPanel.js through the renderer's shared global scope.
 const notificationPreset = require(path.join(appPath, 'util/notificationPreset.js'));
 const gameNotificationPreset = require(path.join(appPath, 'util/gamePreset.js'));
 
@@ -91,12 +92,11 @@ const goldberg = require(path.join(appPath, 'parser/goldberg.js'));
 const winHosts = require(path.join(appPath, 'util/winHosts.js'));
 const awManagedConfig = require(path.join(appPath, 'util/awManagedConfig.js'));
 const gbeBackup = require(path.join(appPath, 'util/gbeBackup.js'));
-// Read here and used from ui/gameHealthPanel.js, which shares this renderer's global scope: the
-// linter cannot see that, so removing this line as unused breaks the Game Health panel instead.
+// oxlint-disable-next-line no-unused-vars -- read by ui/gameHealthPanel.js through the renderer's shared global scope; removing it breaks the Game Health panel.
 const crackLoaderDetect = require(path.join(appPath, 'util/crackLoaderDetect.js'));
 const gbeInstaller = require(path.join(appPath, 'parser/gbeInstaller.js'));
 const uplayR2 = require(path.join(appPath, 'parser/uplayR2.js'));
-// Same as crackLoaderDetect above: the consumer is ui/uplayRepair.js, through the global scope.
+// oxlint-disable-next-line no-unused-vars -- read by ui/uplayRepair.js through the renderer's shared global scope.
 const ubisoftOfficial = require(path.join(appPath, 'parser/ubisoftOfficial.js'));
 const uplayR2Installer = require(path.join(appPath, 'parser/uplayR2Installer.js'));
 const gogUniverseLan = require(path.join(appPath, 'parser/gogUniverseLan.js'));
