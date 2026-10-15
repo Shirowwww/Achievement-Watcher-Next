@@ -5135,21 +5135,6 @@ var app = {
                         if (!/^[0-9]+$/.test(String(writableAppid || ''))) {
                           return '\n' + t('diagnosis-advanced-data-skipped', 'Advanced data: skipped (no numeric AppID)', 'Données avancées : ignorées (AppID numérique absent)');
                         }
-                        let login = null;
-                        if (emuCfg.login === 'steam') {
-                          // Prefer the credentials saved in Settings → Emulator; only prompt for what's missing.
-                          let user = emuCfg.loginAccountName;
-                          let pass = emuCfg.loginPassword;
-                          if (!user)
-                            user = await promptText(
-                              t('steam-username-throwaway-account-only', 'Steam username:', 'Identifiant Steam :'),
-                              ''
-                            );
-                          if (!user) return '\n' + t('diagnosis-advanced-data-login-cancelled', 'Advanced data: login cancelled', 'Données avancées : connexion annulée');
-                          if (!pass) pass = await promptText(t('steam-password', 'Steam password:', 'Mot de passe Steam :'), '', 'password');
-                          if (!pass) return '\n' + t('diagnosis-advanced-data-login-cancelled', 'Advanced data: login cancelled', 'Données avancées : connexion annulée');
-                          login = { username: user, password: pass };
-                        }
                         try {
                           setGameBoxBusy(self, t('advanced-data-generate-emu-config', 'Advanced data (generate_emu_config)…', 'Données avancées (generate_emu_config)…'));
                           const genEmu = require(path.join(appPath, 'parser/genEmuConfig.js'));
@@ -5158,6 +5143,23 @@ var app = {
                             preferredTag: dlls && dlls.tag ? dlls.tag : null,
                             log: debug,
                           });
+                          let login = null;
+                          if (emuCfg.login === 'steam') {
+                            // Credentials saved in Settings → Emulator first. Without them, a sign-in the
+                            // tool already saved is enough: only ask when there is neither (#125).
+                            let user = emuCfg.loginAccountName || '';
+                            let pass = emuCfg.loginPassword || '';
+                            if (!genEmu.hasSavedSignIn(tool)) {
+                              if (!user)
+                                user = await promptText(
+                                  t('steam-username-throwaway-account-only', 'Steam username:', 'Identifiant Steam :'),
+                                  ''
+                                );
+                              if (user && !pass) pass = await promptText(t('steam-password', 'Steam password:', 'Mot de passe Steam :'), '', 'password');
+                              if (!user || !pass) return '\n' + t('diagnosis-advanced-data-login-cancelled', 'Advanced data: login cancelled', 'Données avancées : connexion annulée');
+                            }
+                            login = { username: user, password: pass };
+                          }
                           const onPrompt = (q) => promptText(`generate_emu_config - ${q}`);
                           const res = await genEmu.generate({ tool, appid: writableAppid, login, onPrompt, log: debug });
                           let added = 0;
@@ -7572,9 +7574,11 @@ var app = {
       }
     });
 
+    // The copied report goes into issues: masked like the log export (#127), shown in full here.
     $('#game-health').on('click', '.gh-copy', function () {
       const icon = $(this).find('i');
-      copyText($('#game-health .gh-technical-dump').text()).then((written) => {
+      const { redactText, localUsernames } = require(path.join(appPath, 'util/redact.js'));
+      copyText(redactText($('#game-health .gh-technical-dump').text(), { usernames: localUsernames() })).then((written) => {
         icon.attr('class', written ? 'fas fa-check' : 'fas fa-times');
         setTimeout(() => icon.attr('class', 'fas fa-copy'), 1200);
       });

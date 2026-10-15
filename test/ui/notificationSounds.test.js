@@ -100,6 +100,13 @@ test('the bundled sound list carries only sounds that ship on purpose', () => {
   assert.ok(!files.includes('Indiana.wav'), 'Indiana.wav was removed from the bundled sounds');
 });
 
+// A case-only rename never reaches git from a Windows disk, and Linux resolves names exactly: a
+// settings file naming the new spelling then plays nothing there.
+test('every renamed bundled sound ships under its new name, case included', () => {
+  const files = fs.readdirSync(path.join(__dirname, '..', '..', 'app', 'sounds'));
+  for (const name of Object.values(sounds.RENAMED_SOUNDS)) assert.ok(files.includes(name), `${name} is not in app/sounds under that exact name`);
+});
+
 /*
   A bundled sound comes back with the app, so only an imported one can really be deleted: the button
   has to follow the selection rather than sit there permanently offering something it cannot do.

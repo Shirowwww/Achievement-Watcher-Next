@@ -2496,6 +2496,7 @@ ipcMain.handle('export-logs', async () => {
       logsDir,
       destination: res.filePath,
       Zip: AdmZip,
+      usernames: require(path.join(__dirname, '..', 'util', 'redact.js')).localUsernames(),
       meta: {
         appVersion: app.getVersion(),
         versions: process.versions,

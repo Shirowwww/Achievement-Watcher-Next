@@ -342,17 +342,23 @@ module.exports = async (message, option = {}) => {
         }
 
         // Windows quietly files a toast in the notification centre while a game or Do Not Disturb is
-        // on screen. Say so, since from the user's side that is indistinguishable from a lost one.
-        arePopupsSuppressed()
-          .then((suppressed) => {
-            if (suppressed) {
-              debug.warn(
-                'Windows is suppressing notification popups (full screen / presentation / quiet hours) - this toast went straight to the notification centre. ' +
-                  'Turn off the automatic "do not disturb" rules in Windows notification settings, or use the in-game overlay transport.'
-              );
-            }
-          })
-          .catch((err) => debug.warn(`Could not read the user notification state: ${err.message || err}`));
+        // on screen. From the user's side that is a lost notification (#126), so it is recorded as
+        // one, unless the overlay showed it too or it was a priority toast Do Not Disturb lets through.
+        const suppressed =
+          outcome === 'delivered' &&
+          !plan.overlay &&
+          !toast.isUrgent(message) &&
+          (await arePopupsSuppressed().catch((err) => {
+            debug.warn(`Could not read the user notification state: ${err.message || err}`);
+            return false;
+          }));
+        if (suppressed) {
+          outcome = 'suppressed';
+          debug.warn(
+            'Windows is suppressing notification popups (full screen / presentation / quiet hours) - this toast went straight to the notification centre. ' +
+              'Turn on Priority notifications, switch to Automatic or the in-game overlay, or turn off the automatic "do not disturb" rules in Windows.'
+          );
+        }
       }
 
       // What actually delivered, for this game. Playtime fires as the game closes, when nothing is

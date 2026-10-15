@@ -13,6 +13,11 @@ function setUrgentUnlocks(enabled) {
   urgentUnlocks = enabled === true;
 }
 
+// Urgent applies only to unlocks and is opt-in.
+function isUrgent(message) {
+  return urgentUnlocks && message.notificationType !== 'playtime' && message.notificationType !== 'progress';
+}
+
 function normalizeProgress(progress) {
   if (!progress) return null;
   const max = Number(progress.max);
@@ -80,10 +85,7 @@ function buildToastNotification(message, options) {
 
   notification.uniqueID = message.achievementName ? `${message.appid}:${message.achievementName}` : `${message.appid}`;
 
-  // Urgent applies only to unlocks and is opt-in.
-  if (urgentUnlocks && message.notificationType !== 'playtime' && message.notificationType !== 'progress') {
-    notification.scenario = 'urgent';
-  }
+  if (isUrgent(message)) notification.scenario = 'urgent';
 
   // Protocol activation lets the main process open the selected game.
   const activation = buildActivation(message);
@@ -139,3 +141,4 @@ module.exports = async (message, options) => {
 module.exports.buildToastNotification = buildToastNotification;
 module.exports.buildActivation = buildActivation;
 module.exports.setUrgentUnlocks = setUrgentUnlocks;
+module.exports.isUrgent = isUrgent;

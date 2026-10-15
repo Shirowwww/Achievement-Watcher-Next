@@ -517,9 +517,9 @@ function notificationCheck(signals) {
   if (notifications.progressMuted) {
     return check('notifications', LEVEL.INFO, { params, actions: [ACTION.UNMUTE_PROGRESS, ACTION.TEST_NOTIFICATION] });
   }
-  // The transport itself reported the send failing - the one notification state that is a fault
-  // rather than a routing detail.
-  if (effective && effective.outcome === 'failed') {
+  // The send failed, or Windows kept the toast in the notification centre while the game was on
+  // screen (#126): either way the player saw nothing, which is a fault rather than a routing detail.
+  if (effective && (effective.outcome === 'failed' || effective.outcome === 'suppressed')) {
     return check('notifications', LEVEL.WARN, { params, actions: [ACTION.TEST_NOTIFICATION] });
   }
   return check('notifications', LEVEL.OK, { params, actions: [ACTION.TEST_NOTIFICATION] });
@@ -607,7 +607,9 @@ function explain(state, checks, signals) {
   if (install && install.level === LEVEL.WARN) return { reason: 'install-unknown', params: install.params };
   if (tracking && tracking.level === LEVEL.WARN) return { reason: 'not-watched', params: tracking.params };
   // Everything is set up and unlocks are being seen - the last one just could not be announced.
-  if (notifications && notifications.level === LEVEL.WARN) return { reason: 'notification-failed', params: notifications.params };
+  if (notifications && notifications.level === LEVEL.WARN) {
+    return { reason: notifications.params.outcome === 'suppressed' ? 'notification-suppressed' : 'notification-failed', params: notifications.params };
+  }
   if (notifications && notifications.level === LEVEL.INFO) return { reason: 'progress-muted', params: notifications.params };
   if (progress && progress.level === LEVEL.INFO) return { reason: 'nothing-unlocked-yet', params: progress.params };
   if (state === STATE.READY) return { reason: 'ready', params: {} };

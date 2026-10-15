@@ -460,6 +460,25 @@ test('a transport that reported the send failing is the one notification state w
   assert.ok(report.actions.includes(ACTION.TEST_NOTIFICATION));
 });
 
+// #126: Windows filed the toast in Notification Center during a fullscreen game, so nothing showed.
+test('a toast Windows kept off screen is flagged with its own reason', () => {
+  const report = deriveHealth(
+    healthyGame({
+      notifications: {
+        transport: 'toast',
+        progressMuted: false,
+        effective: { transport: 'toast', reason: 'forced-toast', outcome: 'suppressed' },
+      },
+    })
+  );
+  const check = checkFor(report, 'notifications');
+  assert.equal(check.level, LEVEL.WARN);
+  assert.equal(check.params.outcome, 'suppressed');
+  assert.equal(check.params.fallbackActive, false);
+  assert.equal(report.state, STATE.ATTENTION);
+  assert.equal(report.reason, 'notification-suppressed');
+});
+
 // An unconfirmed delivery is not a failure: the Watchdog could not observe the outcome, which is
 // reported as such rather than being escalated into a fault the user cannot act on.
 test('an unconfirmed delivery leaves the game Ready', () => {

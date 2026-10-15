@@ -39,15 +39,18 @@ const ECHO_SOUNDS = {
   NO_SOUND: '__none__',
 };
 
-function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = false, sounds = null, gameSound = '' } = {}) {
+function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = false, sounds = null, gameSound = '', suppressed = false, urgent = false } = {}) {
   const calls = { overlays: [], toasts: [], balloons: [], broadcasts: [] };
 
   const stubs = {
     path,
     fs,
-    './transport/toast.js': async (message, toastOptions) => {
-      calls.toasts.push([message, toastOptions]);
-    },
+    './transport/toast.js': Object.assign(
+      async (message, toastOptions) => {
+        calls.toasts.push([message, toastOptions]);
+      },
+      { isUrgent: () => urgent }
+    ),
     '../util/powerballoon': async (notification) => {
       calls.balloons.push(notification);
     },
@@ -57,7 +60,7 @@ function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = f
     '../util/gameSound.js': { SOUND_NONE: '__none__', SOUND_RANDOM: '__random__', soundFor: () => gameSound },
     '../websocket.js': { broadcast: (payload) => calls.broadcasts.push(payload), isDeckyListening: () => false },
     '../queryUserNotificationState.js': {
-      arePopupsSuppressed: async () => false,
+      arePopupsSuppressed: async () => suppressed,
       isOverlayLikelyHidden: async () => fullscreen,
     },
     './transportPolicy.js': policy,
@@ -205,6 +208,28 @@ test('what delivered the notification is recorded for the game, with why', async
   assert.equal(entry.transport, 'toast');
   assert.equal(entry.outcome, 'fallback');
   assert.equal(entry.reason, policy.REASON.OVERLAY);
+});
+
+// #126: a toast Windows files straight into the notification centre is a notification nobody saw.
+test('a toast Windows kept off screen is recorded as suppressed, not delivered', async () => {
+  const { notify, calls } = loadToaster({ suppressed: true });
+  await notify(unlock(), options('toast'));
+  assert.equal(calls.toasts.length, 1);
+  assert.equal(transportMemory.entryForGame('480').outcome, 'suppressed');
+});
+
+test('a priority toast, a visible screen or an overlay beside the toast keeps the delivered outcome', async () => {
+  for (const [suppressed, urgent, mode] of [
+    [true, true, 'toast'],
+    [false, false, 'toast'],
+    [true, false, 'both'],
+  ]) {
+    transportMemory._reset();
+    fs.rmSync(transportMemory.file(), { force: true });
+    const { notify } = loadToaster({ suppressed, urgent });
+    await notify(unlock(), options(mode));
+    assert.equal(transportMemory.entryForGame('480').outcome, 'delivered', `suppressed=${suppressed} urgent=${urgent} mode=${mode}`);
+  }
 });
 
 // Playtime fires as the game closes, when nothing is covering the screen any more. Recording it

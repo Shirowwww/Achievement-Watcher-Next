@@ -456,6 +456,12 @@ function gameHealthExplanation(report) {
         : t('gh-why-crack-records-nothing-fixed', 'This game has run for over an hour with {servedBy} and not one achievement has been recorded. Some cracks never report achievements at all, and this one cannot be replaced from here. Check that the game is started from its own folder, not from a copy elsewhere.', "Ce jeu a tourné plus d'une heure avec {servedBy} sans enregistrer un seul succès. Certains cracks ne signalent jamais les succès, et celui-ci ne peut pas être remplacé d'ici. Vérifie que le jeu est lancé depuis son propre dossier, pas depuis une copie ailleurs.", p);
     case 'notification-failed':
       return t('gh-why-notification-failed', 'This game is tracked correctly and its unlocks are being seen, but the last notification could not be sent. Send a test notification to check the display path.', "Ce jeu est correctement suivi et ses déblocages sont bien vus, mais la dernière notification n'a pas pu être envoyée. Envoie une notification de test pour vérifier l'affichage.");
+    case 'notification-suppressed':
+      return t(
+        'gh-why-notification-suppressed',
+        'This game is tracked correctly and its unlocks are being seen, but Windows kept the last notification in Notification Center because the game was full screen or Do Not Disturb was on. Turn on Priority notifications in Settings > Notification, or choose Automatic or In-game overlay there.',
+        'Ce jeu est correctement suivi et ses déblocages sont bien vus, mais Windows a gardé la dernière notification dans le centre de notifications parce que le jeu était en plein écran ou que Ne pas déranger était actif. Active les notifications prioritaires dans Paramètres > Notification, ou choisis-y Automatique ou Overlay en jeu.'
+      );
     case 'progress-muted':
       return t('gh-why-progress-muted', 'This game is set up correctly. Progress notifications are muted for it, so only full unlocks will be announced.', "Ce jeu est correctement configuré. Les notifications de progression sont coupées pour lui : seuls les déblocages complets seront annoncés.");
     case 'nothing-unlocked-yet':
@@ -570,6 +576,12 @@ function gameHealthSimpleCheckValue(entry) {
     default: {
       if (entry.level === gameHealth.LEVEL.INFO)
         return t('gh-simple-notifications-muted', 'Progress notifications are muted', 'Notifications de progression coupées');
+      if (entry.level === gameHealth.LEVEL.WARN && p.outcome === 'suppressed')
+        return t(
+          'gh-simple-notifications-suppressed',
+          'Windows hid the last notification during the game - turn on Priority notifications or use the overlay',
+          'Windows a masqué la dernière notification pendant le jeu : active les notifications prioritaires ou utilise l’overlay'
+        );
       if (entry.level === gameHealth.LEVEL.WARN)
         return t('gh-simple-notifications-failed', 'The last notification could not be sent', "La dernière notification n'a pas pu être envoyée");
       // Working, but not the way the setting alone suggests, so say which: "no overlay appeared"
@@ -640,6 +652,9 @@ function gameHealthTransportLabel(transport) {
 function gameHealthNotificationReason(params) {
   if (params.outcome === 'unknown') return t('gh-notif-unconfirmed', 'delivery not confirmed', 'diffusion non confirmée');
   if (params.outcome === 'failed') return t('gh-notif-reason-failed', 'sending failed', "l'envoi a échoué");
+  if (params.outcome === 'suppressed') {
+    return t('gh-notif-reason-suppressed', 'kept in Notification Center by Windows (full screen or Do Not Disturb)', 'gardée dans le centre de notifications par Windows (plein écran ou Ne pas déranger)');
+  }
   switch (params.effectiveReason) {
     case 'fullscreen-hidden':
       return t('gh-notif-reason-fullscreen', 'game in exclusive fullscreen', 'jeu en plein écran exclusif');
@@ -1202,15 +1217,8 @@ async function runGameHealthAction(appid, action, button) {
       setGameHealthProgress({ phase: 'fetch' });
       const tool = await genEmu.ensureGenerateEmuConfig({ cacheDir: path.join(getUserDataPath(), 'cache/gse_emu_config'), log: debug });
       setGameHealthProgress(null);
-      // A refresh token from an earlier sign-in is enough on its own (-tok with no credentials).
-      let hasToken = false;
-      try {
-        hasToken = fs.statSync(path.join(tool.dir || path.dirname(tool.exe), 'refresh_tokens.json')).size > 2;
-      } catch {
-        hasToken = false;
-      }
       let login = {};
-      if (!hasToken) {
+      if (!genEmu.hasSavedSignIn(tool)) {
         const emuCfg = (app.config && app.config.emulator) || {};
         const user =
           emuCfg.loginAccountName ||

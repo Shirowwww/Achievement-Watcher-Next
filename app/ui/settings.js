@@ -1013,14 +1013,16 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         if (summary && summary.ok) {
           // Sticky: the destination path is the whole point of the message, and it is longer than
           // anyone can read inside the usual 4.5s fade.
-          setTransientStatus(
-            result,
-            t('export-logs-done', '{count} log file(s) written to {path}', '{count} fichier(s) de journal écrits dans {path}', {
-              count: summary.count,
-              path: summary.path,
-            }),
-            { sticky: true }
+          const written = t('export-logs-done', '{count} log file(s) written to {path}', '{count} fichier(s) de journal écrits dans {path}', {
+            count: summary.count,
+            path: summary.path,
+          });
+          const masked = t(
+            'export-logs-masked',
+            'Your user name, keys and tokens were masked. Read the files before posting them publicly.',
+            'Ton nom d’utilisateur, tes clés et tes jetons ont été masqués. Relis les fichiers avant de les publier.'
           );
+          setTransientStatus(result, `${written}. ${masked}`, { sticky: true });
         } else if (summary && summary.canceled) {
           setTransientStatus(result, '');
         } else {
@@ -4123,14 +4125,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           ws.onmessage = (evt) => {
             try {
               let res = JSON.parse(evt.data);
-                if (res.cmd === cmd) {
-                  if (res.success === true) {
-                  finish();
-                } else if (res.success === false && res.error) {
-                  throw res.error;
-                } else {
-                  throw 'Unexpected response';
-                }
+              // This socket also receives the notification feed, test sample included, often before
+              // the reply (#126): only the answer to this command settles the test.
+              if (!res || res.cmd !== cmd) return;
+              if (res.success === true) {
+                finish();
+              } else if (res.success === false && res.error) {
+                throw res.error;
               } else {
                 throw 'Unexpected response';
               }

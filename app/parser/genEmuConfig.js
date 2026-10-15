@@ -1,9 +1,9 @@
 'use strict';
 
 // GBE Fork "generate_emu_config" integration, the Advanced steam_settings path. Shells out to the
-// cached alex47exe/gse_fork_tools generator; anonymous by default, an optional Steam login (env vars,
-// never persisted) pulls private data. 2FA prompts forward to onPrompt. Linux runs the same release's
-// own Linux build.
+// cached alex47exe/gse_fork_tools generator; anonymous by default, an optional Steam login (env vars;
+// the password is never persisted, the tool keeps a refresh token) pulls private data. 2FA prompts
+// forward to onPrompt. Linux runs the same release's own Linux build.
 
 const fs = require('fs');
 const os = require('os');
@@ -24,6 +24,7 @@ const noopLog = { log() {}, error() {} };
 
 const IS_WINDOWS = process.platform === 'win32';
 const TOOL_NAME = IS_WINDOWS ? 'generate_emu_config.exe' : 'generate_emu_config';
+const REFRESH_TOKENS = 'refresh_tokens.json';
 
 
 function readText(file) {
@@ -134,8 +135,55 @@ async function downloadAndCache(cacheDir, tag, assetUrl) {
   }
 }
 
+/*
+  The tool keeps a Steam sign-in as refresh_tokens.json beside itself, and every release is cached in
+  its own folder: a newer release, or the one matched to a game's emulator, started with none and
+  asked for the account again (#125). The newest saved sign-in is copied to the tool about to run.
+*/
+function adoptSavedSignIn(cacheDir, tool, log) {
+  if (hasSavedSignIn(tool)) return;
+  const saved = fs
+    .readdirSync(cacheDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => cachedTool(cacheDir, entry.name))
+    .filter((other) => other && other.dir !== tool.dir)
+    .map((other) => path.join(other.dir, REFRESH_TOKENS))
+    .map((file) => {
+      try {
+        const stat = fs.statSync(file);
+        return stat.size > 2 ? { file, mtime: stat.mtimeMs } : null;
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean)
+    .sort((left, right) => right.mtime - left.mtime)[0];
+  if (!saved) return;
+  try {
+    fs.copyFileSync(saved.file, path.join(tool.dir, REFRESH_TOKENS));
+    log.log(`[emucfg] reused the Steam sign-in saved in ${path.relative(cacheDir, saved.file)}`);
+  } catch (err) {
+    log.log(`[emucfg] could not reuse the saved Steam sign-in => ${err.message || err}`);
+  }
+}
+
+// A refresh token from an earlier sign-in is enough on its own (-tok with no credentials).
+function hasSavedSignIn(tool) {
+  try {
+    return fs.statSync(path.join(tool.dir, REFRESH_TOKENS)).size > 2;
+  } catch {
+    return false;
+  }
+}
+
 // Ensure the generate_emu_config tool is available; returns { tag, exe, dir }. Network at most weekly.
-async function ensureGenerateEmuConfig({ cacheDir, force = false, preferredTag = null, log = noopLog } = {}) {
+async function ensureGenerateEmuConfig(options = {}) {
+  const tool = await resolveTool(options);
+  adoptSavedSignIn(options.cacheDir, tool, options.log || noopLog);
+  return tool;
+}
+
+async function resolveTool({ cacheDir, force = false, preferredTag = null, log = noopLog } = {}) {
   if (!cacheDir) throw new Error('ensureGenerateEmuConfig: cacheDir is required');
   fs.mkdirSync(cacheDir, { recursive: true });
 
@@ -543,5 +591,5 @@ function mergeIntoGame(srcSteamSettings, destSteamSettings, { overwrite = false 
   return added;
 }
 
-module.exports = { ensureGenerateEmuConfig, generate, mergeIntoGame, findGeneratedSteamSettings, pruneGeneratedOutputs };
+module.exports = { ensureGenerateEmuConfig, hasSavedSignIn, generate, mergeIntoGame, findGeneratedSteamSettings, pruneGeneratedOutputs };
 module.exports._internal = { resolveToolExe, isInsideDir, findExe, TOOL_NAME };

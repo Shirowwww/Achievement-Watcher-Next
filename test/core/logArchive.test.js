@@ -106,6 +106,62 @@ test('the suggested file name sorts chronologically and names the build', () => 
   assert.match(suggestedArchiveName(), /^AW-logs-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}\.zip$/);
 });
 
+// #127: the archive is made to be attached to a public issue.
+test('the account name and credentials are masked in the archive, not on disk', () => {
+  const logsDir = tempDir('logs-private');
+  const out = path.join(tempDir('out-private'), 'logs.zip');
+  const jwt = `eyJhbGciOiJFZERTQSJ9.${'eyJzdWIiOiI3NjU2MTE5'}.c2lnbmF0dXJlLXZhbHVl`;
+  const original = [
+    '[t INFO] Monitoring ach change in "C:\\Users\\Jane Doe\\AppData\\Roaming\\GSE Saves" ...',
+    '[t INFO] saved E:\\Profiles\\Jane Doe\\Pictures\\shot.png',
+    '[t INFO] wine prefix /home/jane/.wine/drive_c/users/Public/Documents',
+    `[t WARN] GET https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?access_token=${jwt}&steamid=1 failed`,
+    '[t WARN] GET https://retroachievements.org/API/API_GetUserProfile.php?u=jane&y=Ab3dEf6hIj9kLm2nOp5q failed',
+    '[t INFO] { steam: { apiKey: \'0123456789ABCDEF0123456789ABCDEF\', webapi_token: \'opaque-token-value\' } }',
+    '[t INFO] {"refresh_token":"opaque-refresh-value","loginPassword":"hunter22"}',
+    '[t INFO] headers Authorization: Bearer 1a2b3c4d5e6f7a8b9c0d',
+    '[t INFO] key ABCDEF0123456789ABCDEF0123456789 in a sentence',
+  ].join('\n');
+  try {
+    fs.writeFileSync(path.join(logsDir, 'parser.log'), original);
+    exportLogs({ logsDir, destination: out, Zip: AdmZip, usernames: ['Jane Doe', 'jane'] });
+
+    const exported = new AdmZip(out).readAsText('parser.log');
+    for (const secret of ['Jane Doe', '/home/jane', jwt, 'Ab3dEf6hIj9kLm2nOp5q', '0123456789ABCDEF', 'opaque-token-value', 'opaque-refresh-value', 'hunter22', '1a2b3c4d5e6f', 'ABCDEF0123456789']) {
+      assert.ok(!exported.includes(secret), `${secret} reached the archive:\n${exported}`);
+    }
+    assert.match(exported, /C:\\Users\\\[username\]\\AppData\\Roaming\\GSE Saves/);
+    assert.match(exported, /E:\\Profiles\\\[username\]\\Pictures/);
+    assert.match(exported, /drive_c\/users\/Public\/Documents/, 'a shared folder is not an account');
+    assert.match(exported, /GetOwnedGames\/v1\/\?access_token=\[redacted\]&steamid=1 failed/);
+    assert.equal(fs.readFileSync(path.join(logsDir, 'parser.log'), 'utf8'), original, 'the log on disk is untouched');
+    assert.match(new AdmZip(out).readAsText('about.txt'), /masked: the user name in paths, keys and tokens/);
+  } finally {
+    fs.rmSync(logsDir, { recursive: true, force: true });
+    fs.rmSync(path.dirname(out), { recursive: true, force: true });
+  }
+});
+
+test('a log that cannot be masked is left out rather than exported as it is', () => {
+  const logsDir = tempDir('logs-unmaskable');
+  const out = path.join(tempDir('out-unmaskable'), 'logs.zip');
+  try {
+    fs.writeFileSync(path.join(logsDir, 'parser.log'), 'C:\\Users\\Jane\\x\n');
+    const summary = exportLogs({
+      logsDir,
+      destination: out,
+      Zip: AdmZip,
+      fs: { ...fs, readFileSync: () => ({ toString: () => { throw new Error('undecodable'); } }) },
+    });
+    assert.deepEqual(summary.files, []);
+    assert.equal(summary.skipped[0].name, 'parser.log');
+    assert.deepEqual(new AdmZip(out).getEntries().map((entry) => entry.entryName), ['about.txt']);
+  } finally {
+    fs.rmSync(logsDir, { recursive: true, force: true });
+    fs.rmSync(path.dirname(out), { recursive: true, force: true });
+  }
+});
+
 test('only diagnostic files are eligible', () => {
   assert.equal(isLogFile('parser.log'), true);
   assert.equal(isLogFile('parser.log.1'), true);
