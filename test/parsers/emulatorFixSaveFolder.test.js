@@ -42,8 +42,12 @@ test('with no save folder chosen, the fix prepares GSE Saves only', () => {
 });
 
 test('with a save folder chosen on the identity card, the fix prepares that one', () => {
-  const chosen = path.join(tmp, 'My Saves');
+  const chosen = path.join(path.parse(tmp).root, 'My Saves');
   assert.equal(achievements.emulatorFixSaveFolder('480', { savePath: chosen }), path.join(chosen, '480'));
+});
+
+test('a save folder under the temp directory is ignored, so a fix never prepares it', () => {
+  assert.equal(achievements.emulatorFixSaveFolder('480', { savePath: path.join(tmp, 'My Saves') }), gseSaves('480'));
 });
 
 test('a relative save folder is ignored, as the settings loader already does', () => {

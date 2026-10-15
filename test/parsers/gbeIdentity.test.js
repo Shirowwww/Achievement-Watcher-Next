@@ -72,7 +72,8 @@ test('the save folder written is the one the reader follows', () => {
 
 test('Settings decide what a fix stamps', () => {
   const options = (emulator) => ({ general: { username: 'Shirow' }, emulator });
-  const saveDir = path.join(tmp, 'Saves');
+  // Outside the temp directory: a temp folder is refused on purpose (see the test below).
+  const saveDir = path.join(path.parse(tmp).root, 'AW Saves');
   const off = goldberg.userIdentity(options({ stampIdentity: false, accountName: 'Pierre', accountSteamId: '76561197960287930', savePath: saveDir }), 'french');
   assert.deepEqual(off, { accountName: undefined, language: undefined, accountSteamId: undefined, localSavePath: saveDir }, 'identity waits for its switch, the folder does not');
 
@@ -87,6 +88,20 @@ test('Settings decide what a fix stamps', () => {
   assert.equal(explicit.accountSteamId, undefined, 'but the Steam ID still follows the switch');
 
   assert.equal(goldberg.userIdentity(options({ savePath: 'relative\\saves' })).localSavePath, undefined, 'a relative folder is refused');
+});
+
+test('a Settings save folder under the temp directory is never stamped into a game', () => {
+  const options = (savePath) => ({ general: { username: 'Shirow' }, emulator: { stampIdentity: true, savePath } });
+  const scratch = path.join(os.tmpdir(), 'claude', 'session', 'scratchpad', 'e2e-saves');
+  assert.equal(goldberg.userIdentity(options(scratch), 'french').localSavePath, undefined);
+  assert.equal(goldberg.userIdentity(options(os.tmpdir()), 'french').localSavePath, undefined, 'the temp folder itself');
+  if (process.platform === 'win32') {
+    assert.equal(goldberg.settingsSavePath({ savePath: scratch.toUpperCase() }), '', 'case does not matter on NTFS');
+  }
+  const sibling = `${os.tmpdir()}-saves`;
+  assert.equal(goldberg.settingsSavePath({ savePath: sibling }), sibling, 'a folder merely named like it is kept');
+  const chosen = path.join(path.parse(os.tmpdir()).root, 'AW Saves');
+  assert.equal(goldberg.settingsSavePath({ savePath: chosen }), chosen);
 });
 
 test('a repair carries the Steam ID and the save folder through, backing the file up first', async () => {

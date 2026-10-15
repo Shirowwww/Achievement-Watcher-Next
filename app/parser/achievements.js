@@ -1623,8 +1623,8 @@ function goldbergSaveFolder(emulator, appid, gameDir) {
 // card when there is one (local_save_path), under %APPDATA%\GSE Saves otherwise. Classic Goldberg's
 // folder is still read, but nothing AW installs ever writes there.
 function emulatorFixSaveFolder(appid, emulatorCfg, gameDir) {
-  const custom = String((emulatorCfg && emulatorCfg.savePath) || '').trim();
-  if (custom && path.isAbsolute(custom)) return path.join(custom, String(appid));
+  const custom = goldberg.settingsSavePath(emulatorCfg);
+  if (custom) return path.join(custom, String(appid));
   return goldbergSaveFolder('gbe', appid, gameDir);
 }
 module.exports.emulatorFixSaveFolder = emulatorFixSaveFolder;

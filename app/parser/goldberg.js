@@ -4,6 +4,7 @@
 // Most helpers are side-effect-light so they can run without the Electron UI.
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const exeDetect = require(path.join(__dirname, 'exeDetect.js'));
 const dirCache = require(path.join(__dirname, '..', 'util', 'dirCache.js'));
@@ -1336,6 +1337,17 @@ function neutralizePlaceholderSavePath(doc) {
   return fixed;
 }
 
+// The Settings save folder is stamped into every GBE game on each scan. A folder under the temp
+// directory (a test run's scratch folder, say) would send real saves somewhere that gets wiped, so
+// it is refused like a relative one.
+function settingsSavePath(emulatorCfg) {
+  const savePath = String((emulatorCfg && emulatorCfg.savePath) || '').trim();
+  if (!savePath || !path.isAbsolute(savePath)) return '';
+  const tempKey = winHosts.pathKey(os.tmpdir());
+  const key = winHosts.pathKey(savePath);
+  return key === tempKey || key.startsWith(tempKey + path.sep) ? '' : savePath;
+}
+
 /*
   What a fix or repair stamps into configs.user.ini, from Settings (issue #123): the identity only
   behind "Write account name and language", the save folder whenever one is chosen. An explicit
@@ -1346,12 +1358,12 @@ function userIdentity(options = {}, language, { explicit = false } = {}) {
   const general = (options && options.general) || {};
   const stamp = emulator.stampIdentity === true;
   const name = String(emulator.accountName || '').trim() || general.username || undefined;
-  const savePath = String(emulator.savePath || '').trim();
+  const savePath = settingsSavePath(emulator);
   return {
     accountName: stamp || explicit ? name : undefined,
     language: stamp || explicit ? language : undefined,
     accountSteamId: stamp && isSteamId64(emulator.accountSteamId) ? String(emulator.accountSteamId).trim() : undefined,
-    localSavePath: savePath && path.isAbsolute(savePath) ? savePath : undefined,
+    localSavePath: savePath || undefined,
   };
 }
 
@@ -1917,6 +1929,7 @@ module.exports = {
   backupDirFor,
   isSteamId64,
   userIdentity,
+  settingsSavePath,
   restoreSetup,
   repair,
   writeDlcConfig,
