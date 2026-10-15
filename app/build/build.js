@@ -136,7 +136,20 @@ async function verifyOrExit(check) {
     }
 }
 
+/*
+  npm 11 skips install scripts, so `npm ci` leaves registry-js without its compiled addon and the
+  build still succeeds. util/reg.js then spawns reg.exe for every read, which turned a 7 s library
+  scan into 40-60 s in 3.12.0.
+*/
+function verifyNativeAddons() {
+    const addon = path.join(__dirname, "..", "node_modules", "registry-js", "build", "Release", "registry.node");
+    if (!fs.existsSync(addon)) {
+        throw new Error("registry-js is not compiled (build/Release/registry.node is missing). Run: npm rebuild registry-js --foreground-scripts");
+    }
+}
+
 async function main() {
+    await verifyOrExit(verifyNativeAddons);
     runBuilder("electron-builder.yml", installerEnv);
     /*
       dist/win-unpacked belongs to the installer only until the portable pass overwrites it with its own
