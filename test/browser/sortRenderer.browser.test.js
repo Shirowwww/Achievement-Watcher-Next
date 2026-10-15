@@ -75,15 +75,8 @@ function buildHarness() {
     <div id="unlock" class="achievement-list"><div class="header"><span class="sort-ach"><div class="percentage sort" role="button"></div><div class="time sort" role="button"></div></span></div><ul><li><div class="achievement" data-index="0"><div class="stats"><span class="time" data-time="1"></span></div></div></li></ul></div>
     <script>${jquery}</script>
     <script>
-      localStorage.showInstalledOnly = 'false';
       window.profileStatsRefreshes = [];
       window.refreshProfileStats = (options) => window.profileStatsRefreshes.push(options);
-      window.require = (request) => {
-        if (request === 'fs') return { existsSync: () => false };
-        if (request === 'path') return { join: (...parts) => parts.join('/') };
-        if (request === 'electron') return { ipcRenderer: { sendSync: () => '/tmp' } };
-        throw new Error('unexpected require: ' + request);
-      };
       ${sortScript}
       window.sortFixture = [
         { id: 'a', appid: 10, installed: 1, title: 'Beta', lastplayed: 10, time: 5, percent: 20 },

@@ -240,24 +240,9 @@ window.restoreAchievementSorts = function () {
   });
 };
 
-// Persist the installed-only filter and keep it CSS-driven for streamed tiles.
-let _migratedFromLegacyCache = null;
-function wasMigratedFromLegacy() {
-  if (_migratedFromLegacyCache !== null) return _migratedFromLegacyCache;
-  try {
-    const fs = require('fs');
-    const path = require('path');
-    const { ipcRenderer } = require('electron');
-    const userDataPath = ipcRenderer.sendSync('get-user-data-path-sync');
-    _migratedFromLegacyCache = fs.existsSync(path.join(userDataPath, 'cfg', 'migrated-from-legacy.json'));
-  } catch {
-    _migratedFromLegacyCache = false;
-  }
-  return _migratedFromLegacyCache;
-}
-
+// Persist the installed-only filter and keep it CSS-driven for streamed tiles. Off until chosen:
+// finished games whose folder is gone still have their achievements in the emulator's saves.
 function installedOnlyEnabled() {
-  if (typeof localStorage.showInstalledOnly === 'undefined') return !wasMigratedFromLegacy();
   return localStorage.showInstalledOnly === 'true';
 }
 
