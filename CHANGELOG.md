@@ -7,11 +7,11 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
-## Unreleased
+## 3.12.0 - 2026-10-15
 
 ### Added
 
-- **AW Next on Linux.** A native Linux build watches the games you run through Wine, Proton,
+- **AW Next on Linux (beta).** A native Linux build watches the games you run through Wine, Proton,
   Lutris, Heroic or Bottles, plus native games, from their save folders and processes. Every
   achievement source is read inside the game's prefix, its registry included, and repairs such
   as the Uplay R2 save redirect are written there. Unlocks appear in the in-game overlay or as
@@ -19,7 +19,12 @@ renamed in 3.9.0 and the history is kept under one file.
   desktop session. On Linux the interface speaks of desktop notifications, the Trash and Linux
   folders instead of their Windows counterparts, the Folders tab lists the folders it checks as
   they appear inside a prefix, and settings that only act on Windows (grouping in Action Center,
-  HDR screenshots, sending Escape to the game, the clip sound source) are not shown.
+  HDR screenshots, sending Escape to the game, the clip sound source) are not shown. Steam from
+  Flathub or as a Snap is followed too, gamepads drive the in-game overlay, and the overlay
+  shortcut command keeps working across AppImage updates.
+- **Steam Deck (beta, not yet checked on a real Deck).** With Launch at startup on, AW Next also
+  runs in Game Mode and draws each unlock over the game. The Decky plugin in `decky/` sends unlocks
+  to Steam's own notifications instead, which Game Mode always shows.
 - **Souvenirs on Linux.** Screenshots and clips of each unlock work on Linux too, on X11 and on
   Wayland, where the desktop asks once to share the screen. Clips are recorded by
   gpu-screen-recorder with the graphics card when it is installed, or, if you choose it in
