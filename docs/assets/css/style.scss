@@ -19,14 +19,17 @@
 
 @mixin aw-dark-palette {
   --aw-accent: #6c91ff;
-  --aw-accent-ink: #0b1220;
-  --aw-accent-soft: #1b2942;
-  --aw-bg: #0c1322;
-  --aw-surface: #16223a;
-  --aw-text: #e7edf6;
-  --aw-muted: #9bacc2;
-  --aw-border: #26344f;
+  --aw-accent-ink: #07101f;
+  --aw-accent-soft: #1b2b55;
+  --aw-bg: #0a101d;
+  --aw-surface: #111a2c;
+  --aw-surface-2: #18233a;
+  --aw-text: #e9eff8;
+  --aw-muted: #a6b4c8;
+  --aw-border: #212e4a;
   --aw-shadow: rgba(0, 0, 0, 0.45);
+  --aw-scene: #{'url("../img/northbound.svg")'};
+  --aw-scene-top: #090f26;
 
   /* Rouge ships one palette, tuned for a light background. */
   --aw-tok-comment: #8b949e;
@@ -38,15 +41,20 @@
 }
 
 :root {
-  --aw-accent: #3d63d8;
+  --aw-accent: #2f5bd0;
   --aw-accent-ink: #ffffff;
-  --aw-accent-soft: #eaefff;
-  --aw-bg: #ffffff;
-  --aw-surface: #f6f8fb;
-  --aw-text: #1c2433;
-  --aw-muted: #5b6b82;
-  --aw-border: #dde3ec;
-  --aw-shadow: rgba(20, 34, 54, 0.09);
+  --aw-accent-soft: #d3defa;
+  --aw-bg: #eef2f8;
+  --aw-surface: #e1e7f1;
+  --aw-surface-2: #d5deeb;
+  --aw-text: #0e1726;
+  --aw-muted: #45546a;
+  --aw-border: #d0d9e7;
+  --aw-shadow: rgba(20, 34, 54, 0.1);
+  --aw-scene: #{'url("../img/northbound-day.svg")'};
+  --aw-scene-top: #86b6ee;
+  --aw-radius: 12px;
+  --aw-radius-lg: 22px;
 
   --aw-tok-comment: #6a737d;
   --aw-tok-keyword: #c3283a;
@@ -71,6 +79,76 @@
 body {
   background: var(--aw-bg);
   color: var(--aw-text);
+}
+
+/*
+  The home page's type and scene (assets/css/home.css): Archivo at two widths, and the Northbound
+  landscape behind each guide's title, at night in the dark theme and in the morning in the light one.
+*/
+@font-face {
+  font-family: "Archivo";
+  src: url("../font/archivo-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Archivo";
+  src: url("../font/archivo-latin-ext.woff2") format("woff2");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF,
+    U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+body,
+.markdown-body {
+  font-family: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.markdown-body :is(h1, h2, h3, h4),
+.aw-site-brand,
+.aw-guides-all,
+.aw-toc-title,
+.aw-guides-title {
+  font-stretch: 112%;
+}
+
+.markdown-body :is(code, pre, kbd),
+.aw-search-key {
+  font-family: "Cascadia Mono", Consolas, ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* The title of a guide stands on the landscape, the way the home page opens on it. */
+.markdown-body h1 {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin: 0 0 0.7em;
+  padding: clamp(84px, 10vw, 132px) clamp(20px, 3vw, 36px) clamp(20px, 2.6vw, 30px);
+  border: 0;
+  border-radius: var(--aw-radius-lg);
+  background: var(--aw-scene-top) var(--aw-scene) 70% 60% / cover no-repeat;
+  color: #ffffff;
+  font-size: clamp(2rem, calc(1.35rem + 2.4vw), 3.25rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+}
+
+/* A shade over the foreground keeps the title legible on both the night and the morning sky. */
+.markdown-body h1::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(transparent 35%, rgba(6, 10, 24, 0.42));
 }
 
 .markdown-body {
@@ -103,29 +181,20 @@ body {
   text-decoration-color: currentColor;
 }
 
-/* The page title block each guide opens with. */
-.markdown-body h1 {
-  font-size: 2.1em;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  border-bottom: 0;
-  padding-bottom: 0;
-  margin-bottom: 0.4em;
-}
-
 .markdown-body h2 {
-  font-size: 1.4em;
-  font-weight: 650;
-  letter-spacing: -0.01em;
-  margin-top: 2.2em;
-  padding-bottom: 0.3em;
-  border-bottom: 1px solid var(--aw-border);
+  font-size: 1.55em;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-top: 2.4em;
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 
 .markdown-body h3 {
-  font-size: 1.12em;
-  font-weight: 650;
-  margin-top: 1.8em;
+  font-size: 1.15em;
+  font-weight: 750;
+  margin-top: 1.9em;
 }
 
 .markdown-body hr {
@@ -140,9 +209,9 @@ body {
 .markdown-body img {
   max-width: 100%;
   height: auto;
-  border-radius: 10px;
-  border: 1px solid var(--aw-border);
-  box-shadow: 0 6px 22px var(--aw-shadow);
+  border-radius: var(--aw-radius);
+  border: 0;
+  box-shadow: 0 18px 40px -18px var(--aw-shadow);
   background: transparent;
 }
 
@@ -161,7 +230,7 @@ body {
   border-collapse: separate;
   border-spacing: 0;
   border: 1px solid var(--aw-border);
-  border-radius: 10px;
+  border-radius: var(--aw-radius);
   overflow: hidden;
   margin: 1.4em 0;
 }
@@ -204,8 +273,8 @@ body {
   color: var(--aw-text);
   background: var(--aw-accent-soft);
   border-left: 3px solid var(--aw-accent);
-  border-radius: 0 8px 8px 0;
-  padding: 12px 16px;
+  border-radius: 4px var(--aw-radius) var(--aw-radius) 4px;
+  padding: 14px 18px;
 }
 
 .markdown-body blockquote > :last-child {
@@ -253,11 +322,14 @@ body {
 }
 
 .markdown-body code {
-  background: var(--aw-surface);
-  border: 1px solid var(--aw-border);
-  border-radius: 5px;
-  padding: 0.15em 0.4em;
-  font-size: 88%;
+  background: var(--aw-surface-2);
+  border: 0;
+  border-radius: 6px;
+  padding: 0.12em 0.4em;
+  font-size: 0.86em;
+  overflow-wrap: break-word;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 /*
@@ -274,9 +346,9 @@ body {
 
 .markdown-body pre,
 .markdown-body div.highlight {
-  border: 1px solid var(--aw-border);
-  border-radius: 10px;
-  padding: 14px 16px;
+  border: 0;
+  border-radius: var(--aw-radius);
+  padding: 16px 18px;
 }
 
 /* The inner pre would otherwise draw a second frame inside the wrapper's. */
@@ -411,9 +483,11 @@ body.aw-guide {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: color-mix(in srgb, var(--aw-bg) 88%, transparent);
-  backdrop-filter: saturate(1.4) blur(12px);
-  border-bottom: 1px solid var(--aw-border);
+  background: color-mix(in srgb, var(--aw-bg) 72%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 0;
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--aw-text) 8%, transparent);
 }
 
 .aw-site-bar-inner {
@@ -421,7 +495,7 @@ body.aw-guide {
   align-items: center;
   gap: 10px;
   max-width: 1320px;
-  min-height: 60px;
+  min-height: 64px;
   margin: 0 auto;
   padding: 8px 24px;
 }
@@ -431,8 +505,8 @@ body.aw-guide {
   align-items: center;
   gap: 10px;
   color: var(--aw-text);
-  font-weight: 700;
-  font-size: 1rem;
+  font-weight: 800;
+  font-size: 1.05rem;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -464,7 +538,7 @@ body.aw-guide {
 
 .aw-site-links a {
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   color: var(--aw-muted);
   font-size: 0.92rem;
   font-weight: 600;
@@ -488,8 +562,8 @@ body.aw-guide {
 }
 
 .aw-site-cta {
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 10px 18px;
+  border-radius: var(--aw-radius);
   background: var(--aw-accent);
   color: var(--aw-accent-ink);
   font-size: 0.92rem;
@@ -513,8 +587,8 @@ body.aw-guide {
   width: 40px;
   height: 40px;
   padding: 0;
-  border: 1px solid var(--aw-border);
-  border-radius: 50%;
+  border: 0;
+  border-radius: var(--aw-radius);
   background: var(--aw-surface);
   color: var(--aw-muted);
   cursor: pointer;
@@ -568,9 +642,9 @@ body.aw-guide {
 /* The guide list. */
 .aw-guides {
   position: sticky;
-  top: 60px;
+  top: 64px;
   align-self: start;
-  max-height: calc(100vh - 60px);
+  max-height: calc(100vh - 64px);
   overflow-y: auto;
   padding: 28px 0 32px;
   font-size: 0.92rem;
@@ -604,8 +678,8 @@ body.aw-guide {
   width: 100%;
   min-height: 38px;
   padding: 8px 34px 8px 12px;
-  border: 1px solid var(--aw-border);
-  border-radius: 10px;
+  border: 1px solid transparent;
+  border-radius: var(--aw-radius);
   background: var(--aw-surface);
   color: var(--aw-text);
   font: inherit;
@@ -742,7 +816,7 @@ body.aw-guide {
   display: block;
   min-height: 32px;
   padding: 6px 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   color: var(--aw-muted);
   line-height: 1.35;
   text-decoration: none;
@@ -765,9 +839,9 @@ body.aw-guide {
 .aw-toc {
   display: none;
   position: sticky;
-  top: 60px;
+  top: 64px;
   align-self: start;
-  max-height: calc(100vh - 60px);
+  max-height: calc(100vh - 64px);
   overflow-y: auto;
   padding: 36px 0 32px;
   font-size: 0.85rem;
@@ -818,8 +892,8 @@ body.aw-guide {
 
 .aw-toc-inline {
   margin: 1.6em 0;
-  border: 1px solid var(--aw-border);
-  border-radius: 10px;
+  border: 0;
+  border-radius: var(--aw-radius);
   background: var(--aw-surface);
   font-size: 0.92rem;
 }
@@ -967,12 +1041,12 @@ body.aw-guide {
 
   .js .aw-guides {
     position: fixed;
-    top: 60px;
+    top: 64px;
     left: 0;
     z-index: 35;
     box-sizing: border-box;
     width: min(330px, 88vw);
-    height: calc(100vh - 60px);
+    height: calc(100vh - 64px);
     max-height: none;
     padding: 16px 14px 40px;
     border-right: 1px solid var(--aw-border);
@@ -993,7 +1067,7 @@ body.aw-guide {
   .js body.aw-menu-open::after {
     content: "";
     position: fixed;
-    inset: 60px 0 0;
+    inset: 64px 0 0;
     z-index: 30;
     background: rgba(5, 10, 20, 0.5);
   }

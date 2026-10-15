@@ -83,17 +83,32 @@
       onScroll();
     }
 
-    if (!toggle || !nav) return;
+    if (!head || !toggle || !nav) return;
 
-    // The width the stylesheet moves the links into the menu at; the two have to agree.
-    var mobile = window.matchMedia('(max-width: 1160px)');
+    /*
+      The links move into the menu below this width, and also wherever they do not fit beside the
+      name and the buttons: a longer language, a zoomed or scaled screen. The stylesheet draws the
+      menu for .is-compact.
+    */
+    var COMPACT_BELOW_PX = 1160;
+    var row = head.firstElementChild;
+    function compact() {
+      return head.classList.contains('is-compact');
+    }
+    function fit() {
+      head.classList.remove('is-compact');
+      nav.hidden = false;
+      var tight = window.innerWidth <= COMPACT_BELOW_PX || row.scrollWidth > row.clientWidth + 1;
+      head.classList.toggle('is-compact', tight);
+      sync();
+    }
     var BARS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>';
     var CLOSE =
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 5 5 6.4l5.6 5.6L5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4 17.6 5 12 10.6z"/></svg>';
 
     function sync() {
       var open = toggle.getAttribute('aria-expanded') === 'true';
-      if (mobile.matches) {
+      if (compact()) {
         nav.hidden = !open;
       } else {
         nav.hidden = false;
@@ -110,7 +125,7 @@
     });
 
     nav.addEventListener('click', function (event) {
-      if (event.target.tagName === 'A' && mobile.matches) {
+      if (event.target.tagName === 'A' && compact()) {
         toggle.setAttribute('aria-expanded', 'false');
         sync();
       }
@@ -124,8 +139,15 @@
       }
     });
 
-    if (mobile.addEventListener) mobile.addEventListener('change', sync);
-    sync();
+    var pending = 0;
+    function refit() {
+      window.cancelAnimationFrame(pending);
+      pending = window.requestAnimationFrame(fit);
+    }
+    window.addEventListener('resize', refit);
+    document.addEventListener('aw-i18n-applied', refit);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit);
+    fit();
   }
 
   // --- reveal on scroll -----------------------------------------------------------------------
@@ -134,12 +156,18 @@
     var targets = document.querySelectorAll('.section-head, .feature, .card, .source, .preset-card');
     if (!('IntersectionObserver' in window) || !targets.length) return;
 
+    // In as it comes up from the bottom, out again when it goes back down below the fold.
+    var seen = new Set();
     var observer = new IntersectionObserver(
       function (entries) {
         entries.forEach(function (entry) {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add('is-in');
-          observer.unobserve(entry.target);
+          seen.add(entry.target);
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-in');
+            return;
+          }
+          var fold = entry.rootBounds ? entry.rootBounds.bottom : window.innerHeight;
+          if (entry.boundingClientRect.top >= fold) entry.target.classList.remove('is-in');
         });
       },
       { rootMargin: '0px 0px -8% 0px', threshold: 0.05 }
@@ -150,12 +178,12 @@
       observer.observe(node);
     });
 
-    // A safety net for anything that never gets an intersection callback: a print, a full page
-    // capture, a crawler that runs script without scrolling. The text is in the markup either way,
-    // but it should not stay invisible.
+    // A safety net for whatever never gets an intersection callback at all: a crawler that runs
+    // script without laying the page out. The text is in the markup either way, but it should not
+    // stay invisible.
     window.setTimeout(function () {
       targets.forEach(function (node) {
-        node.classList.add('is-in');
+        if (!seen.has(node)) node.classList.add('is-in');
       });
     }, 4000);
   }
@@ -275,8 +303,9 @@
         },
         { threshold: 0.3 }
       );
+      // The hero's frame is played by its scene, at the moment the scene earns it.
       frames.forEach(function (frame) {
-        watcher.observe(frame);
+        if (!frame.closest('[data-game]')) watcher.observe(frame);
       });
     }
 
@@ -318,6 +347,11 @@
         var slug = chip.getAttribute('data-preset');
         if (!PRESET_SLUG.test(slug)) return;
         describe(slug);
+        // A ring that already holds every preset turns to it instead of loading it again.
+        if (document.querySelector('[data-carousel]')) {
+          document.dispatchEvent(new CustomEvent('aw-preset-select', { detail: { slug: slug } }));
+          return;
+        }
         stageFrame.src = base('assets/preset/' + slug + '/index.html');
         // The new document plays its normal state on load; put it back into the chosen one.
         stageFrame.addEventListener(
@@ -365,7 +399,7 @@
 
     document.querySelectorAll('[data-replay]').forEach(function (button) {
       button.addEventListener('click', function () {
-        // The hero cycle owns its own Replay (see cycleHero).
+        // The hero scene owns its own Replay (assets/js/home.js).
         if (button.hasAttribute('data-cycle')) return;
         var scope = button.closest('.section, .hero') || document;
         scope.querySelectorAll('[data-preset-frame]').forEach(function (frame) {
@@ -373,84 +407,6 @@
         });
       });
     });
-
-    cycleHero();
-  }
-
-  /*
-    The hero popup is the first thing a visitor sees, so it keeps going instead of playing once: a
-    few of the bundled presets in turn, each with a different kind of unlock, held long enough to
-    read. It pauses off screen and in a hidden tab, and a visitor who asked for reduced motion keeps
-    the one still card.
-  */
-  var HERO_STEPS = [
-    { preset: 'aw-next', state: 'normal' },
-    { preset: 'steam', state: 'rare' },
-    { preset: 'playstation', state: 'progress' },
-    { preset: 'xbox', state: 'normal' },
-    { preset: 'glass', state: 'rare' },
-    { preset: 'epic-games', state: 'progress' },
-  ];
-  var HERO_HOLD_MS = 7000;
-  var HERO_FADE_MS = 280;
-
-  function cycleHero() {
-    var frame = document.querySelector('.hero [data-preset-frame]');
-    if (!frame) return;
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    var step = 0;
-    var timer = 0;
-    var visible = true;
-
-    // A new preset is a new page, blank while it loads, so the frame fades out first and back in
-    // once the next card is asked for.
-    function show(index) {
-      var next = HERO_STEPS[index];
-      var address = 'assets/preset/' + next.preset + '/index.html';
-      frame.classList.add('is-switching');
-      window.setTimeout(function () {
-        // The preset page plays the state once it has loaded; asking before that would be dropped.
-        frame.addEventListener(
-          'load',
-          function () {
-            if (frame.contentWindow) frame.contentWindow.postMessage({ type: 'aw-preset-play', state: next.state }, '*');
-            frame.classList.remove('is-switching');
-          },
-          { once: true }
-        );
-        frame.setAttribute('src', address);
-      }, HERO_FADE_MS);
-    }
-
-    function tick() {
-      step = (step + 1) % HERO_STEPS.length;
-      show(step);
-    }
-
-    function restart() {
-      window.clearInterval(timer);
-      timer = visible && !document.hidden ? window.setInterval(tick, HERO_HOLD_MS) : 0;
-    }
-
-    document.addEventListener('visibilitychange', restart);
-    // In the hero, Replay moves on to the next preset rather than repeating the one on screen.
-    var replay = document.querySelector('.hero [data-replay]');
-    if (replay) {
-      replay.setAttribute('data-cycle', '');
-      replay.addEventListener('click', function () {
-        tick();
-        restart();
-      });
-    }
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver(function (entries) {
-        visible = entries[entries.length - 1].isIntersecting;
-        restart();
-      }).observe(frame);
-    } else {
-      restart();
-    }
   }
 
   // --- theme sampler --------------------------------------------------------------------------
@@ -551,7 +507,10 @@
       if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(release.version || '')) return;
       if (!/^[A-Za-z0-9._-]+\.exe$/.test(release.installer || '')) return;
       var address = DOWNLOADS + 'v' + release.version + '/' + release.installer;
-      Array.prototype.forEach.call(document.querySelectorAll('[data-installer]'), function (link) {
+      // On Linux only the Windows card keeps the installer; the other buttons lead to the AppImage's page.
+      var onLinux = document.documentElement.getAttribute('data-os') === 'linux';
+      var links = document.querySelectorAll(onLinux ? '.platform-windows [data-installer]' : '[data-installer]');
+      Array.prototype.forEach.call(links, function (link) {
         link.setAttribute('href', address);
       });
     }

@@ -1,0 +1,2882 @@
+/*
+  The home page.
+
+  One family, Archivo, used at two widths: expanded for titles and figures, the way a console menu
+  sets them, normal for reading. Surfaces are told apart by a step in tone rather than by lines or
+  shadows; the app's own screenshots carry their own borders and are marked data-ui.
+*/
+
+/* --- fonts ------------------------------------------------------------------------------------ */
+
+@font-face {
+  font-family: 'Archivo';
+  src: url('../font/archivo-latin.woff2') format('woff2');
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Archivo';
+  src: url('../font/archivo-latin-ext.woff2') format('woff2');
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF,
+    U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* --- tokens ----------------------------------------------------------------------------------- */
+
+:root {
+  --bg: #eef2f8;
+  --surface: #e1e7f1;
+  --surface-2: #d5deeb;
+  --surface-3: #c8d3e4;
+  --ink: #0e1726;
+  --muted: #45546a;
+  --accent: #2f5bd0;
+  --accent-ink: #ffffff;
+  --accent-field: #d3defa;
+  --gold: #8a5c0a;
+  --gold-fill: #d9a441;
+  --gold-field: #f1e2bf;
+  --stage: #1a2438;
+  color-scheme: light;
+
+  /* The game scene, in daylight: assets/img/northbound-day.svg and the hero's inline copy of it. */
+  --scene: url('../img/northbound-day.svg');
+  --scene-top: #86b6ee;
+  --scene-ink: #0d1830;
+  --scene-sub: #1f2c45;
+  --scene-muted: #3a4a64;
+  --scene-accent: #8a3f0c;
+  --scene-on-accent: #ffffff;
+  --scene-veil: var(--bg);
+  --scene-haze: linear-gradient(90deg, color-mix(in srgb, var(--bg) 88%, transparent) 0%, color-mix(in srgb, var(--bg) 72%, transparent) 36%, transparent 64%);
+  --hero-card: transparent;
+  --hero-card-pad: calc(var(--margin) - var(--gap));
+  --hero-screen-top: var(--radius-lg);
+  --hud-glass: rgba(255, 255, 255, 0.58);
+  --hud-ink: #0d1830;
+  --ghost: rgba(255, 255, 255, 0.58);
+  --ghost-hover: rgba(255, 255, 255, 0.78);
+  --nb-sky-0: #86b6ee;
+  --nb-sky-1: #a9cbf2;
+  --nb-sky-2: #cfe2f6;
+  --nb-sky-3: #f8e3cc;
+  --nb-sky-4: #ffe6c7;
+  --nb-glow-0: #fffaf0;
+  --nb-glow-1: #ffe9c8;
+  --nb-far: #a7bad6;
+  --nb-main-0: #7186ad;
+  --nb-main-1: #4a5d82;
+  --nb-snow: #ffffff;
+  --nb-ridge: #ffffff;
+  --nb-left: #5f7499;
+  --nb-near: #4a5e84;
+  --nb-fore: #34456a;
+  --nb-stars: 0;
+
+  --font: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --step-small: 0.9375rem;
+  --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --step-lead: clamp(1.25rem, 1.12rem + 0.55vw, 1.5rem);
+  --step-head: clamp(2rem, 1.35rem + 2.5vw, 3.5rem);
+  --step-display: clamp(2.6rem, 1.2rem + 4.6vw, 5.5rem);
+
+  --radius: 12px;
+  --radius-lg: 22px;
+  --glass: rgba(14, 20, 44, 0.42);
+  --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --glass-lift: 0 10px 30px rgba(3, 6, 18, 0.28);
+  --margin: clamp(16px, 4vw, 56px);
+  --gap: 12px;
+  --section: clamp(96px, 7vw + 48px, 200px);
+  --head-h: 64px;
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --fast: 160ms;
+  --slow: 900ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0a101d;
+    --surface: #111a2c;
+    --surface-2: #18233a;
+    --surface-3: #212e4a;
+    --ink: #e9eff8;
+    --muted: #a6b4c8;
+    --accent: #6c91ff;
+    --accent-ink: #07101f;
+    --accent-field: #1b2b55;
+    --gold: #e8b563;
+    --gold-fill: #e8b563;
+    --gold-field: #3a2d14;
+    --stage: #070c17;
+    color-scheme: dark;
+
+    --scene: url('../img/northbound.svg');
+    --scene-top: #090f26;
+    --scene-ink: #eef2fb;
+    --scene-sub: #d7deee;
+    --scene-muted: #b9c3da;
+    --scene-accent: #ffd59a;
+    --scene-on-accent: #090f26;
+    --scene-veil: #04060f;
+    --scene-haze: none;
+    --hero-card: #090f26;
+    --hero-card-pad: max(20px, calc(var(--margin) - var(--gap)));
+    --hero-screen-top: 0px;
+    --hud-glass: var(--glass);
+    --hud-ink: #eef2fb;
+    --ghost: rgba(255, 255, 255, 0.1);
+    --ghost-hover: rgba(255, 255, 255, 0.18);
+    --nb-sky-0: #090f26;
+    --nb-sky-1: #232560;
+    --nb-sky-2: #6b3f78;
+    --nb-sky-3: #d9836a;
+    --nb-sky-4: #ffc98c;
+    --nb-glow-0: #ffe2b0;
+    --nb-glow-1: #ffb27a;
+    --nb-far: #4a3d7c;
+    --nb-main-0: #2a2550;
+    --nb-main-1: #14132f;
+    --nb-snow: #e9e4ff;
+    --nb-ridge: #ffcf9a;
+    --nb-left: #17173a;
+    --nb-near: #0d0f27;
+    --nb-fore: #060817;
+    --nb-stars: 1;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #0a101d;
+  --surface: #111a2c;
+  --surface-2: #18233a;
+  --surface-3: #212e4a;
+  --ink: #e9eff8;
+  --muted: #a6b4c8;
+  --accent: #6c91ff;
+  --accent-ink: #07101f;
+  --accent-field: #1b2b55;
+  --gold: #e8b563;
+  --gold-fill: #e8b563;
+  --gold-field: #3a2d14;
+  --stage: #070c17;
+  color-scheme: dark;
+
+  --scene: url('../img/northbound.svg');
+  --scene-top: #090f26;
+  --scene-ink: #eef2fb;
+  --scene-sub: #d7deee;
+  --scene-muted: #b9c3da;
+  --scene-accent: #ffd59a;
+  --scene-on-accent: #090f26;
+  --scene-veil: #04060f;
+  --scene-haze: none;
+  --hero-card: #090f26;
+  --hero-card-pad: max(20px, calc(var(--margin) - var(--gap)));
+  --hero-screen-top: 0px;
+  --hud-glass: var(--glass);
+  --hud-ink: #eef2fb;
+  --ghost: rgba(255, 255, 255, 0.1);
+  --ghost-hover: rgba(255, 255, 255, 0.18);
+  --nb-sky-0: #090f26;
+  --nb-sky-1: #232560;
+  --nb-sky-2: #6b3f78;
+  --nb-sky-3: #d9836a;
+  --nb-sky-4: #ffc98c;
+  --nb-glow-0: #ffe2b0;
+  --nb-glow-1: #ffb27a;
+  --nb-far: #4a3d7c;
+  --nb-main-0: #2a2550;
+  --nb-main-1: #14132f;
+  --nb-snow: #e9e4ff;
+  --nb-ridge: #ffcf9a;
+  --nb-left: #17173a;
+  --nb-near: #0d0f27;
+  --nb-fore: #060817;
+  --nb-stars: 1;
+}
+
+/* --- base ------------------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--head-h) + 16px);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--step-body);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 800;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.2em;
+}
+
+p a,
+.install-notes a {
+  color: var(--accent);
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A file name reads as one quiet pill; a long one breaks at its dots and slashes, and each line keeps its ends. */
+code {
+  padding: 0.1em 0.3em;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  font-family: 'Cascadia Mono', Consolas, ui-monospace, monospace;
+  font-size: 0.84em;
+  overflow-wrap: break-word;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 2.4em;
+  padding: 0.3em 0.6em;
+  border-radius: var(--radius);
+  background: var(--surface-3);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--step-small);
+  font-weight: 700;
+  text-align: center;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  transition: top var(--fast) ease;
+}
+
+.skip-link:focus {
+  top: 16px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* A reader who will be shown a translation sees it, not the English first (assets/js/i18n.js). */
+.i18n-wait main,
+.i18n-wait .site-foot {
+  visibility: hidden;
+}
+
+.section-title {
+  font-size: var(--step-head);
+  font-stretch: 112%;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+
+.lead {
+  font-size: var(--step-lead);
+  line-height: 1.45;
+  max-width: 40ch;
+}
+
+/* --- controls --------------------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: var(--step-small);
+  font-weight: 700;
+  font-stretch: 112%;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform var(--fast) var(--ease), background-color var(--fast) ease;
+}
+
+.btn:hover {
+  background: color-mix(in srgb, var(--accent) 86%, var(--ink));
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  transition: transform var(--fast) var(--ease);
+}
+
+.btn:hover svg {
+  transform: translateY(2px);
+}
+
+.btn-lg {
+  min-height: 56px;
+  padding: 0 28px;
+  font-size: var(--step-body);
+}
+
+.btn-small {
+  min-height: 40px;
+  padding: 0 16px;
+}
+
+.btn-ghost {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.btn-ghost:hover {
+  background: var(--surface-3);
+}
+
+.btn-quiet {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--step-small);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--fast) ease, color var(--fast) ease;
+}
+
+.btn-quiet:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.chip {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--step-small);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--fast) ease, color var(--fast) ease, transform var(--fast) var(--ease);
+}
+
+.chip:hover {
+  background: var(--surface-3);
+}
+
+.chip:active {
+  transform: scale(0.96);
+}
+
+.chip[aria-pressed='true'],
+.chip[aria-selected='true'] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.chip-gold[aria-pressed='true'] {
+  background: var(--gold-fill);
+  color: #1a1206;
+}
+
+.more-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.more-link::after {
+  content: '\2192';
+  transition: transform var(--fast) var(--ease);
+}
+
+.more-link:hover::after {
+  transform: translateX(5px);
+}
+
+.more-link:hover {
+  text-decoration: underline;
+}
+
+/* --- header ----------------------------------------------------------------------------------- */
+
+.site-head {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg);
+  transition: background-color 0.25s ease;
+}
+
+/* Stuck to the top, the bar turns to glass so the page shows through as it passes under. */
+.site-head[data-stuck='true'] {
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--ink) 8%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%); /* taste-skill-ignore: glass header over moving content */
+}
+
+.head-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: var(--head-h);
+  padding: 0 var(--margin);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  font-weight: 800;
+  font-stretch: 118%;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  background-color: var(--accent);
+  -webkit-mask: url('../img/brand-mark.png') center / contain no-repeat;
+  mask: url('../img/brand-mark.png') center / contain no-repeat;
+  transition: transform 0.4s var(--ease);
+}
+
+.brand:hover .brand-mark {
+  transform: rotate(-12deg) scale(1.08);
+}
+
+.site-nav {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.site-nav a {
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: var(--step-small);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--fast) ease, background-color var(--fast) ease;
+}
+
+.site-nav a:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.site-nav .nav-download {
+  display: none;
+}
+
+/* Neither side gives way, so a bar too narrow overflows measurably and the links fold away. */
+.brand,
+.head-actions {
+  flex: none;
+}
+
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color var(--fast) ease;
+}
+
+.icon-btn:hover {
+  background: var(--surface-3);
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.nav-toggle {
+  display: none;
+}
+
+.select-shell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink);
+}
+
+.select-shell::after,
+.lang-picker::before {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  background-color: currentColor;
+}
+
+.select-shell::after {
+  right: 12px;
+  width: 11px;
+  height: 11px;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.lang-picker::before {
+  left: 12px;
+  width: 15px;
+  height: 15px;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M3 12h18M12 3c2.6 2.8 2.6 15.2 0 18M12 3c-2.6 2.8-2.6 15.2 0 18'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M3 12h18M12 3c2.6 2.8 2.6 15.2 0 18M12 3c-2.6 2.8-2.6 15.2 0 18'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.site-select {
+  width: 100%;
+  height: 40px;
+  padding: 0 32px 0 36px;
+  -webkit-appearance: none;
+  appearance: none;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--step-small);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.site-select:hover {
+  background: var(--surface-3);
+}
+
+/* Room kept for the language picker the script builds, so the buttons beside it do not move. */
+.lang-slot {
+  display: none;
+  min-width: 9.5rem;
+  height: 40px;
+}
+
+.js .lang-slot {
+  display: block;
+}
+
+.lang-slot .select-shell {
+  width: 100%;
+}
+
+/* --- hero ------------------------------------------------------------------------------------- */
+
+/*
+  A game's screen, edge to edge inside the page margin. It is a game whatever the site's theme, so
+  its colours are the scene's own and not the page tokens.
+*/
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  padding: 0 var(--gap);
+}
+
+/* The copy sits on the scene's night sky, top left, where the game leaves room. */
+.hero-copy,
+.game {
+  grid-area: 1 / 1;
+}
+
+.game {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.game-screen {
+  position: relative;
+  display: grid;
+  flex: 1;
+  min-height: max(560px, calc(100svh - var(--head-h) - 76px));
+  border-radius: var(--radius-lg);
+  background: var(--scene-top);
+  color: var(--scene-ink);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+}
+
+.scene g,
+.scene path {
+  transform-box: view-box;
+}
+
+/* The inline scene takes its colours from the theme, and changes them the way a sky would. */
+#hero-sky stop:nth-child(1) {
+  stop-color: var(--nb-sky-0);
+}
+
+#hero-sky stop:nth-child(2) {
+  stop-color: var(--nb-sky-1);
+}
+
+#hero-sky stop:nth-child(3) {
+  stop-color: var(--nb-sky-2);
+}
+
+#hero-sky stop:nth-child(4) {
+  stop-color: var(--nb-sky-3);
+}
+
+#hero-sky stop:nth-child(5) {
+  stop-color: var(--nb-sky-4);
+}
+
+#hero-glow stop:nth-child(1) {
+  stop-color: var(--nb-glow-0);
+}
+
+#hero-glow stop:nth-child(n + 2) {
+  stop-color: var(--nb-glow-1);
+}
+
+#hero-main stop:nth-child(1) {
+  stop-color: var(--nb-main-0);
+}
+
+#hero-main stop:nth-child(2) {
+  stop-color: var(--nb-main-1);
+}
+
+.scene .nb-stars {
+  opacity: var(--nb-stars);
+}
+
+.scene .nb-far {
+  fill: var(--nb-far);
+}
+
+.scene .nb-main > path:nth-of-type(2) {
+  fill: var(--nb-snow);
+}
+
+.scene .nb-main > path:nth-of-type(3),
+.scene .nb-trail {
+  stroke: var(--nb-ridge);
+}
+
+.scene .nb-left {
+  fill: var(--nb-left);
+}
+
+.scene .nb-near {
+  fill: var(--nb-near);
+}
+
+.scene .nb-fore {
+  fill: var(--nb-fore);
+}
+
+.scene stop,
+.scene path {
+  transition:
+    stop-color 0.6s ease,
+    fill 0.6s ease,
+    stroke 0.6s ease;
+}
+
+/* In daylight the copy's side of the scene is misted with the page's own colour, so the text reads. */
+.game-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--scene-haze);
+  pointer-events: none;
+}
+
+.hero-copy {
+  position: relative;
+  z-index: 1;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  width: min(100%, 720px);
+  color: var(--scene-ink);
+  padding: clamp(32px, 5vw, 72px) max(20px, calc(var(--margin) - var(--gap))) 0;
+  container-type: inline-size;
+}
+
+/* Sized from the column's width, so each of the two lines stays on one line in every language. */
+.hero h1 {
+  font-size: min(10.4cqi, 6.25rem);
+  font-stretch: 100%;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+}
+
+.hero h1 .line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.06em;
+}
+
+.hero h1 .line > span {
+  display: block;
+}
+
+.hero h1 .line + .line {
+  color: var(--scene-accent);
+}
+
+.hero-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 22px;
+}
+
+.hero-sub {
+  max-width: 46ch;
+  font-size: clamp(1.0625rem, 0.98rem + 0.4vw, 1.25rem);
+  line-height: 1.45;
+  color: var(--scene-sub);
+}
+
+.hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hero .btn-ghost {
+  background: var(--ghost);
+  box-shadow: var(--glass-edge); /* taste-skill-ignore: liquid glass over the game */
+  color: var(--scene-ink);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  backdrop-filter: blur(16px) saturate(170%); /* taste-skill-ignore: liquid glass over the game */
+}
+
+.hero .btn-ghost:hover {
+  background: var(--ghost-hover);
+}
+
+.hero-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  max-width: 60ch;
+  font-size: var(--step-small);
+}
+
+.hero-facts li {
+  color: var(--scene-muted);
+}
+
+.hero-facts li + li::before {
+  content: '·';
+  margin-right: 8px;
+}
+
+.hero-facts a {
+  color: var(--scene-accent);
+  font-weight: 600;
+}
+
+/* The game's HUD: what the player is doing, top right, where a game puts its objective. */
+.hud {
+  position: absolute;
+  top: clamp(16px, 2.4vw, 32px);
+  right: max(16px, calc(var(--margin) - var(--gap)));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-stretch: 112%;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hud p {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--hud-glass);
+  color: var(--hud-ink);
+  box-shadow: var(--glass-edge), var(--glass-lift); /* taste-skill-ignore: liquid glass over the game */
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  backdrop-filter: blur(18px) saturate(170%); /* taste-skill-ignore: liquid glass over the game */
+}
+
+.hud-box {
+  position: relative;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid color-mix(in srgb, var(--hud-ink) 75%, transparent);
+  border-radius: 3px;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.hud-box::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: -1px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--scene-on-accent);
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform 0.3s var(--ease);
+}
+
+.game.is-goal .hud-box {
+  border-color: var(--scene-accent);
+  background: var(--scene-accent);
+}
+
+.game.is-goal .hud-box::after {
+  transform: rotate(45deg) scale(1);
+}
+
+.game.is-goal .hud-goal span {
+  color: var(--scene-accent);
+}
+
+.hud-alt b {
+  font-size: 1.125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-alt small {
+  font-size: 0.875rem;
+  text-transform: none;
+}
+
+/*
+  Where the app puts the popup by default: centred, at the bottom of the screen. The frame keeps
+  the size its preset declares and is scaled as a whole to this box.
+*/
+.game-popup {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(20px, 6%, 64px);
+  width: min(500px, 46%);
+  display: flex;
+  justify-content: center;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.55)); /* taste-skill-ignore: a floating notification */
+}
+
+.game-popup .popup-frame {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.game-popup .popup-frame.is-switching {
+  opacity: 0;
+}
+
+/*
+  A preset declares its own pixel size and the frame keeps it, scaled as a whole when the column is
+  narrower; the margins take back exactly what the scale removed so the layout does not overflow.
+*/
+.popup-frame {
+  display: block;
+  position: relative;
+  z-index: 1;
+  max-width: none;
+  border: 0;
+  background: transparent;
+  color-scheme: normal;
+  transform: scale(var(--popup-scale, 1));
+  transform-origin: center center;
+  margin-inline: calc((var(--popup-scale, 1) - 1) * var(--popup-w, 474px) / 2);
+  margin-block: calc((var(--popup-scale, 1) - 1) * var(--popup-h, 136px) / 2);
+}
+
+/* The three beats of the demo, lit in turn while the scene plays them. */
+.game-steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding: 16px calc(var(--margin) - var(--gap)) 0;
+}
+
+.game-steps ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+}
+
+.game-steps li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.game-steps li b {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  font-size: 0.875rem;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.4s var(--ease);
+}
+
+.game-steps li.is-on {
+  color: var(--ink);
+}
+
+.game-steps li.is-on b {
+  background: var(--accent);
+  color: var(--accent-ink);
+  transform: scale(1.12);
+}
+
+.game-preset {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: var(--step-small);
+}
+
+.game-preset b {
+  color: var(--ink);
+}
+
+/* The scene's own life: the climb, the flag, the sun. Driven by classes from assets/js/home.js. */
+.nb-flag {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.js .game .nb-flag {
+  transform: scaleY(0);
+}
+
+.js .game.is-goal .nb-flag {
+  transform: none;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* assets/js/home.js shortens --climb when the visitor asks for the next preset, so it lands at once. */
+.js .game.is-climbing .nb-climber {
+  animation: climb var(--climb, 1.7s) cubic-bezier(0.45, 0, 0.3, 1) both;
+}
+
+@keyframes climb {
+  0% {
+    transform: translate(880px, 548px);
+  }
+  22% {
+    transform: translate(960px, 470px);
+  }
+  40% {
+    transform: translate(930px, 430px);
+  }
+  62% {
+    transform: translate(1004px, 360px);
+  }
+  82% {
+    transform: translate(1032px, 300px);
+  }
+  100% {
+    transform: translate(1060px, 254px);
+  }
+}
+
+.js .nb-sun {
+  animation: dawn 3.2s var(--ease) both;
+}
+
+@keyframes dawn {
+  from {
+    transform: translateY(90px);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* As the page scrolls away, the far layers fall behind the near ones. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .nb-stars,
+    .nb-far,
+    .nb-main {
+      animation: depth linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 100vh;
+    }
+
+    .nb-stars {
+      --depth: 160px;
+    }
+
+    .nb-far {
+      --depth: 90px;
+    }
+
+    .nb-main {
+      --depth: 45px;
+    }
+  }
+}
+
+@keyframes depth {
+  to {
+    transform: translateY(var(--depth, 0));
+  }
+}
+
+/* --- figures ---------------------------------------------------------------------------------- */
+
+.strip {
+  padding: clamp(56px, 6vw, 96px) var(--margin) 0;
+}
+
+.strip-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--gap);
+}
+
+.strip-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.strip-list b {
+  font-size: var(--step-display);
+  font-stretch: 125%;
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.strip-list span {
+  color: var(--muted);
+  font-size: var(--step-small);
+  font-weight: 600;
+}
+
+/* --- sections --------------------------------------------------------------------------------- */
+
+.section {
+  padding: var(--section) var(--margin) 0;
+}
+
+.section-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px 48px;
+  align-items: end;
+  margin-bottom: 48px;
+}
+
+/* --- features: each one beside its screen ----------------------------------------------------- */
+
+.features > .section-title {
+  margin-bottom: 8px;
+}
+
+.feature-row {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(32px, 5vw, 96px);
+  align-items: center;
+  padding: clamp(28px, 3.5vw, 56px) 0;
+}
+
+.feature-flip {
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+}
+
+.feature-flip .feature-text {
+  order: 2;
+}
+
+.feature-text {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 44ch;
+}
+
+.feature-text h3 {
+  font-size: clamp(1.75rem, 1.2rem + 1.6vw, 2.75rem);
+  font-stretch: 112%;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+}
+
+/* The whole screenshot on a plate of its own: never cropped, never zoomed. */
+.feature-shot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 2.6vw, 40px);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.feature-shot > img {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+/* What happens in a game is shown over the scene the page opens on. */
+.feature-game {
+  aspect-ratio: 16 / 10;
+  padding: 0;
+  background: var(--scene-top);
+}
+
+.feature-scene {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: var(--scene-top) var(--scene) center / cover no-repeat;
+}
+
+.feature-popup {
+  position: absolute;
+  left: 50%;
+  bottom: 7%;
+  translate: -50% 0;
+}
+
+/* The AW Next popup drawn in markup, so it stays sharp at any size. Sized in em from one font size. */
+.mini-pop {
+  display: flex;
+  align-items: center;
+  gap: 0.9em;
+  width: min(74%, 27em);
+  padding: 0.75em 1.2em 0.75em 0.75em;
+  border-radius: 0.9em;
+  background: linear-gradient(100deg, rgba(22, 30, 56, 0.94), rgba(11, 16, 32, 0.9)); /* taste-skill-ignore: the popup's own glass */
+  box-shadow:
+    inset 0.2em 0 0 #6c91ff,
+    inset 0 0 0 1px rgba(255, 255, 255, 0.09),
+    0 1.2em 2.6em -0.8em rgba(0, 0, 0, 0.65);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px); /* taste-skill-ignore: the popup's own glass */
+  color: #eef2fb;
+  font-size: clamp(11px, 1.05vw, 15px);
+  line-height: 1.25;
+  text-align: left;
+}
+
+.mini-pop-icon {
+  flex: none;
+  width: 3.4em;
+  aspect-ratio: 1;
+  border-radius: 0.7em;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M7 3h10v2h3v3a4 4 0 0 1-4 4h-.3A5 5 0 0 1 13 14.9V17h3v4H8v-4h3v-2.1A5 5 0 0 1 8.3 12H8a4 4 0 0 1-4-4V5h3zm0 4H6v1a2 2 0 0 0 1 1.7zm10 0v2.7A2 2 0 0 0 18 8V7z'/%3E%3C/svg%3E") center / 58% no-repeat,
+    linear-gradient(135deg, #6c91ff, #2f4d9c);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.mini-pop-text {
+  display: grid;
+  gap: 0.15em;
+  min-width: 0;
+}
+
+.mini-pop small {
+  color: rgba(238, 242, 251, 0.62);
+  font-size: 0.68em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mini-pop b {
+  font-size: 1.06em;
+  font-weight: 700;
+}
+
+.mini-pop-text > span {
+  overflow: hidden;
+  color: rgba(238, 242, 251, 0.74);
+  font-size: 0.84em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Trophy mode: the profile's count for each grade over the game, and the gold popup it leads to. */
+.trophy-case {
+  --trophy: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 3h10v2h3v3a4 4 0 0 1-4 4h-.3A5 5 0 0 1 13 14.9V17h3v4H8v-4h3v-2.1A5 5 0 0 1 8.3 12H8a4 4 0 0 1-4-4V5h3zm0 4H6v1a2 2 0 0 0 1 1.7zm10 0v2.7A2 2 0 0 0 18 8V7z'/%3E%3C/svg%3E");
+
+  position: absolute;
+  top: 7%;
+  left: 50%;
+  display: flex;
+  gap: clamp(12px, 2vw, 24px);
+  margin: 0;
+  padding: 10px clamp(16px, 2.2vw, 24px);
+  border-radius: 999px;
+  background: var(--glass);
+  box-shadow: var(--glass-edge), var(--glass-lift); /* taste-skill-ignore: liquid glass over the game */
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  backdrop-filter: blur(18px) saturate(170%); /* taste-skill-ignore: liquid glass over the game */
+  color: #eef2fb;
+  list-style: none;
+  translate: -50% 0;
+}
+
+.trophy-case li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: clamp(0.9375rem, 0.85rem + 0.4vw, 1.125rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.trophy-case i {
+  width: 1.2em;
+  height: 1.2em;
+  background: currentColor;
+  -webkit-mask: var(--trophy) center / contain no-repeat;
+  mask: var(--trophy) center / contain no-repeat;
+}
+
+/* The grade colours of the app's profile header. */
+.tier-platinum i {
+  color: #8fd8ff;
+}
+
+.tier-gold i {
+  color: #ffcc4a;
+}
+
+.tier-silver i {
+  color: #d5dbe5;
+}
+
+.tier-bronze i {
+  color: #dc8c5a;
+}
+
+/*
+  A saved clip played back. The playhead runs the length of the clip, the diamond is the unlock at
+  its middle, and the popup is on screen from the unlock on, as it is in the file.
+*/
+.feature-clip {
+  --clip-loop: 7s;
+}
+
+.feature-clip .feature-popup {
+  bottom: auto;
+  top: 50%;
+  translate: -50% -50%;
+}
+
+.clip-ui {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 0 10px;
+  padding: clamp(14px, 3.4%, 26px);
+  background: linear-gradient(transparent 62%, rgba(4, 6, 15, 0.6)); /* taste-skill-ignore: the player's scrim under its controls */
+  color: #eef2fb;
+  font-size: 0.8125rem;
+  pointer-events: none;
+}
+
+.clip-file,
+.clip-spec {
+  align-self: start;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--glass);
+  box-shadow: var(--glass-edge); /* taste-skill-ignore: liquid glass over the game */
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  backdrop-filter: blur(16px) saturate(170%); /* taste-skill-ignore: liquid glass over the game */
+  white-space: nowrap;
+}
+
+.clip-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+}
+
+.clip-file span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clip-file i {
+  flex: none;
+  width: 8px;
+  height: 10px;
+  background: currentColor;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+.clip-spec {
+  color: #c9d1e6;
+  font-variant-numeric: tabular-nums;
+}
+
+.clip-bar {
+  position: relative;
+  grid-column: 1 / -1;
+  grid-row: 3;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.clip-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #ffd59a;
+  transform: scaleX(0.5);
+  transform-origin: 0 50%;
+}
+
+.clip-mark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: #ffd59a;
+  box-shadow: 0 0 0 3px rgba(4, 6, 15, 0.55);
+  translate: -50% -50%;
+  rotate: 45deg;
+}
+
+/* As wide as the bar and moved along it, so its right edge is the playhead. */
+.clip-head {
+  position: absolute;
+  inset: 0;
+  transform: translateX(-50%);
+}
+
+.clip-head::after {
+  content: '';
+  position: absolute;
+  right: -7px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  translate: 0 -50%;
+}
+
+.clip-times {
+  display: flex;
+  grid-column: 1 / -1;
+  grid-row: 4;
+  justify-content: space-between;
+  margin-top: 8px;
+  color: #c9d1e6;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.js .feature-clip.is-in .clip-bar::before {
+  animation: clip-fill var(--clip-loop) linear 1.2s infinite both;
+}
+
+.js .feature-clip.is-in .clip-head {
+  animation: clip-run var(--clip-loop) linear 1.2s infinite both;
+}
+
+.js .feature-clip.is-in .feature-popup {
+  animation: clip-popup var(--clip-loop) linear 1.2s infinite both;
+}
+
+/* The picture drifts a little while it plays, so it reads as video rather than a still. */
+.js .feature-clip.is-in .feature-scene {
+  animation: clip-drift var(--clip-loop) linear 1.2s infinite both;
+}
+
+/* Off screen the clip stops playing (home.js sets is-idle), and picks up where it was. */
+.feature-clip.is-idle *,
+.feature-clip.is-idle .clip-ui::before {
+  animation-play-state: paused;
+}
+
+@keyframes clip-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes clip-run {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes clip-popup {
+  0%,
+  47% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  52%,
+  86% {
+    opacity: 1;
+    transform: none;
+  }
+  92%,
+  100% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes clip-drift {
+  from {
+    scale: 1;
+  }
+  to {
+    scale: 1.06;
+  }
+}
+
+/* The screenshot taken a moment after the unlock: a flash, then the file it left behind. */
+.clip-shot {
+  display: flex;
+  grid-column: 2;
+  grid-row: 2;
+  align-self: end;
+  justify-self: end;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 6px 10px 6px 6px;
+  border-radius: 12px;
+  background: var(--glass);
+  box-shadow: var(--glass-edge), var(--glass-lift); /* taste-skill-ignore: liquid glass over the game */
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  backdrop-filter: blur(16px) saturate(170%); /* taste-skill-ignore: liquid glass over the game */
+  font-weight: 700;
+}
+
+.clip-thumb {
+  width: 56px;
+  aspect-ratio: 16 / 9;
+  border-radius: 6px;
+  background: var(--scene-top) var(--scene) 66% 40% / cover no-repeat;
+}
+
+.clip-shot small {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #ffd59a;
+  color: #1b1405;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.clip-ui::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+}
+
+.js .feature-clip.is-in .clip-ui::before {
+  animation: clip-flash var(--clip-loop) linear 1.2s infinite both;
+}
+
+.js .feature-clip.is-in .clip-shot {
+  animation: clip-shot var(--clip-loop) linear 1.2s infinite both;
+}
+
+@keyframes clip-flash {
+  0%,
+  55% {
+    opacity: 0;
+  }
+  56% {
+    opacity: 0.5;
+  }
+  60%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes clip-shot {
+  0%,
+  57% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  61%,
+  88% {
+    opacity: 1;
+    transform: none;
+  }
+  93%,
+  100% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Tiles drawn on the scene: trophy mode's counts over its gold popup, the overlay over the game. */
+.tile-scene {
+  position: relative;
+  padding: 0;
+}
+
+.tile-scene .trophy-case {
+  top: 12px;
+  gap: 12px;
+  padding: 6px 12px;
+}
+
+.tile-scene .trophy-case li {
+  gap: 5px;
+  font-size: 0.8125rem;
+}
+
+.tile-shot .tile-popup {
+  position: absolute;
+  left: 50%;
+  bottom: 9%;
+  width: 88%;
+  height: auto;
+  translate: -50% 0;
+  clip-path: inset(12.5% 1.6% 12% 1.6% round 14px);
+  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.5)); /* taste-skill-ignore: a floating notification */
+}
+
+.tile-shot .tile-panel {
+  position: absolute;
+  top: 7%;
+  right: 8%;
+  width: auto;
+  height: 86%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.5)); /* taste-skill-ignore: an overlay over a game */
+}
+
+/* --- sources ---------------------------------------------------------------------------------- */
+
+.sources {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.source {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 10px;
+  min-height: 260px;
+  padding: 28px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: transform 0.3s var(--ease), background-color 0.3s ease;
+}
+
+
+.source:hover .source-mark {
+  background-color: var(--accent);
+}
+
+.source-mark {
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 24px;
+  background-color: var(--ink);
+  -webkit-mask: var(--mark) left center / contain no-repeat;
+  mask: var(--mark) left center / contain no-repeat;
+  transition: background-color 0.3s ease;
+}
+
+[data-mark='steam'] {
+  --mark: url('../img/source/steam.svg');
+}
+
+[data-mark='saves'] {
+  --mark: url('../img/source/saves.svg');
+}
+
+[data-mark='gog'] {
+  --mark: url('../img/source/gog.svg');
+}
+
+/* Epic's mark is a two-tone lockup knocked out to one tone; assets/img/source/README.md says how. */
+[data-mark='epic'] {
+  --mark: url('../img/source/epic.png');
+}
+
+[data-mark='ubisoft'] {
+  --mark: url('../img/source/ubisoft.svg');
+}
+
+[data-mark='ea'] {
+  --mark: url('../img/source/ea.svg');
+}
+
+[data-mark='emulators'] {
+  --mark: url('../img/source/emulators.svg');
+}
+
+[data-mark='xbox'] {
+  --mark: url('../img/source/xbox.svg');
+}
+
+[data-mark='retro'] {
+  --mark: url('../img/source/retro.svg');
+}
+
+.source b {
+  font-size: var(--step-lead);
+  font-stretch: 112%;
+  line-height: 1.15;
+}
+
+.source span {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.sources-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 32px;
+  margin-top: 8px;
+  padding: 24px 28px;
+  border-radius: var(--radius);
+  background: var(--gold-field);
+}
+
+.note {
+  max-width: 62ch;
+}
+
+/* --- presets ---------------------------------------------------------------------------------- */
+
+.presets-section {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 48px clamp(32px, 4vw, 72px);
+}
+
+.presets-index {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.preset-names {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 16px;
+}
+
+.preset-name {
+  position: relative;
+  padding: 2px 0 2px 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: clamp(1.625rem, 1.1rem + 1.6vw, 2.625rem);
+  font-weight: 800;
+  font-stretch: 112%;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--fast) ease, transform 0.3s var(--ease);
+}
+
+.preset-name::before {
+  content: '';
+  position: absolute;
+  left: -28px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  transform: translateY(-50%) scale(0);
+  transition: transform 0.3s var(--ease);
+}
+
+.preset-name:hover {
+  color: var(--ink);
+  transform: translateX(10px);
+}
+
+.preset-name[aria-selected='true'] {
+  color: var(--ink);
+  transform: translateX(28px);
+}
+
+.preset-name[aria-selected='true']::before {
+  transform: translateY(-50%) scale(1);
+}
+
+.presets-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/*
+  The stage is sized from the popup standing in it (assets/js/site.js sets --popup-height), so a
+  short preset does not float in a field of backdrop and a tall one is not cropped.
+*/
+.preset-stage {
+  --stage-pad: clamp(40px, 6vw, 96px);
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: max(440px, calc(var(--popup-height, 140px) + 2 * var(--stage-pad)));
+  padding: var(--stage-pad) 16px;
+  border-radius: var(--radius-lg);
+  background-color: var(--stage);
+  overflow: hidden;
+  transition: background-color 0.4s ease;
+}
+
+/* The game from the top of the page behind the popup, as it would be in play. */
+.preset-stage[data-backdrop='art'] {
+  background: var(--scene-top) var(--scene) 66% 100% / cover no-repeat;
+}
+
+.preset-stage[data-backdrop='light'] {
+  background: #dfe6f2;
+}
+
+.preset-stage[data-backdrop='dark'] {
+  background: #04070d;
+}
+
+.stage-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+}
+
+/* Replay ends the row it lands on, and reads as a button rather than a stray word. */
+.stage-controls .btn-quiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.stage-controls .btn-quiet::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.control-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.control-label {
+  margin-right: 4px;
+  color: var(--muted);
+  font-size: var(--step-small);
+  font-weight: 700;
+}
+
+.stage-note {
+  max-width: 60ch;
+  min-height: 3.2em;
+  margin-bottom: 24px;
+  color: var(--muted);
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+
+.pair > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  padding: clamp(24px, 3vw, 44px);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.pair h3 {
+  font-size: var(--step-lead);
+  font-stretch: 112%;
+  line-height: 1.15;
+}
+
+.pair p {
+  max-width: 52ch;
+}
+
+/* --- themes ----------------------------------------------------------------------------------- */
+
+/*
+  The built-in themes, on a schematic of the home screen. Every colour inside the window is a
+  custom property assets/js/site.js sets from the chip that was pressed.
+*/
+.theme-stage {
+  --th-bg: #142236;
+  --th-header: #26384c;
+  --th-panel: #192a40;
+  --th-card: #263b55;
+  --th-text: #e7edf6;
+  --th-muted: #94a5ba;
+  --th-border: #3e5065;
+  --th-accent: #6c91ff;
+
+  padding: clamp(28px, 5vw, 80px) clamp(16px, 4vw, 64px) clamp(20px, 3vw, 40px);
+  border-radius: var(--radius-lg);
+  background: var(--stage);
+}
+
+.theme-window {
+  max-width: 760px;
+  margin: 0 auto;
+  border: 1px solid var(--th-border);
+  border-radius: 12px;
+  background: var(--th-bg);
+  box-shadow: 0 40px 80px -40px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.theme-window,
+.theme-window * {
+  transition:
+    background-color 0.35s ease,
+    border-color 0.35s ease;
+}
+
+/* Only the regions a theme paints: a title bar, the profile, the game tiles and their progress. */
+.tw-head {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--th-header);
+}
+
+.tw-head i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--th-muted);
+  opacity: 0.6;
+}
+
+.tw-body {
+  display: grid;
+  gap: 18px;
+  padding: clamp(16px, 3vw, 24px);
+}
+
+.tw-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tw-avatar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--th-accent);
+}
+
+.tw-lines {
+  display: grid;
+  flex: 1;
+  gap: 8px;
+}
+
+.tw-lines b,
+.tw-lines i {
+  height: 10px;
+  border-radius: 5px;
+}
+
+.tw-lines b {
+  width: 34%;
+  background: var(--th-text);
+}
+
+.tw-lines i {
+  width: 56%;
+  background: var(--th-muted);
+  opacity: 0.6;
+}
+
+.tw-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--th-panel);
+}
+
+.tw-card {
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--th-border);
+  border-radius: 8px;
+  background: var(--th-card);
+}
+
+.tw-card::before {
+  content: '';
+  aspect-ratio: 16 / 9;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--th-accent) 22%, var(--th-panel));
+}
+
+.tw-card::after {
+  content: '';
+  height: 5px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--th-accent) var(--fill, 40%), color-mix(in srgb, var(--th-text) 14%, transparent) 0);
+}
+
+.theme-swatches {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin: 20px 0 0;
+}
+
+.theme-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+}
+
+.theme-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 16px 0;
+  scroll-padding-inline: var(--margin);
+}
+
+/* --- more in the box -------------------------------------------------------------------------- */
+
+.tiles {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 56px clamp(24px, 4vw, 64px);
+}
+
+/* The margin gives back the padding, so the light under the pointer has room and round corners. */
+.tile {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
+  gap: 22px;
+  align-items: start;
+  margin: -14px;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+}
+
+/* A panel is shown whole on its plate, like the screenshots above: cropping it hid what it shows. */
+.tile-shot {
+  position: relative;
+  height: 200px;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.tile-shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.6s var(--ease);
+}
+
+.tile:hover .tile-shot img {
+  transform: scale(1.05);
+}
+
+.tile-text {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tile h3 {
+  font-size: var(--step-lead);
+  font-stretch: 112%;
+  line-height: 1.15;
+}
+
+.tile h3 a {
+  text-decoration: none;
+}
+
+/* The heading's link covers the whole tile, so the picture is part of one link, not a second one. */
+.tile h3 a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.tile:hover h3 a {
+  color: var(--accent);
+}
+
+.tile p {
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+/* --- install and docs ------------------------------------------------------------------------- */
+
+.install-section {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 48px clamp(32px, 5vw, 96px);
+  align-items: start;
+}
+
+.install {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.steps {
+  display: grid;
+  gap: 6px;
+}
+
+.steps li {
+  display: grid;
+  gap: 6px;
+  padding: 22px 26px;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.steps li:nth-child(2) {
+  background: var(--surface-2);
+}
+
+.steps li:nth-child(3) {
+  background: var(--accent-field);
+}
+
+.steps b {
+  font-size: var(--step-lead);
+  font-stretch: 112%;
+  line-height: 1.2;
+}
+
+/*
+  Windows and Linux as two cards of the same weight, each with its file, its data folder and its own
+  button facing its name. Stacked rather than side by side, so a file name stays on one line.
+*/
+.platforms {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.platform {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'name button'
+    'body body'
+    'data data';
+  align-items: center;
+  gap: 12px 24px;
+  padding: 20px 22px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
+}
+
+.platform > p:nth-child(2) {
+  grid-area: body;
+}
+
+.platform-name {
+  grid-area: name;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: var(--step-lead);
+  font-weight: 800;
+  font-stretch: 112%;
+  line-height: 1.1;
+}
+
+.platform-name small {
+  color: var(--muted);
+  font-size: var(--step-small);
+  font-weight: 600;
+  font-stretch: 100%;
+}
+
+.platform-data {
+  grid-area: data;
+  color: var(--muted);
+  font-size: var(--step-small);
+}
+
+.platform .btn {
+  grid-area: button;
+}
+
+/* The visitor's own system comes first with the filled button; the other stays one step down. */
+html[data-os='linux'] .platform-linux {
+  order: -1;
+}
+
+html:not([data-os='linux']) .platform-linux .btn,
+html[data-os='linux'] .platform-windows .btn {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+html[data-os='linux'] .for-windows,
+html:not([data-os='linux']) .for-linux {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .platform {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'name' 'body' 'data' 'button';
+  }
+
+  .platform .btn {
+    justify-self: stretch;
+  }
+}
+
+.install-notes {
+  display: grid;
+  gap: 14px;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.docs {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: calc(var(--head-h) + 32px);
+}
+
+.doc-list {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.doc-list a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color var(--fast) ease, padding var(--fast) var(--ease);
+}
+
+.doc-list a::after {
+  content: '\2192';
+  color: var(--accent);
+  transition: transform var(--fast) var(--ease);
+}
+
+.doc-list a:hover {
+  background: var(--surface-2);
+}
+
+.doc-list a:hover::after {
+  transform: translateX(6px);
+}
+
+/* --- footer ----------------------------------------------------------------------------------- */
+
+.site-foot {
+  margin-top: var(--section);
+}
+
+.foot-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 92svh;
+}
+
+.foot-shot {
+  position: relative;
+  overflow: hidden;
+  background: var(--stage);
+}
+
+.foot-shot .feature-scene {
+  background-position: 66% 100%;
+}
+
+.foot-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  padding: 56px var(--margin) 32px clamp(32px, 6vw, 96px);
+  background: var(--surface);
+}
+
+.foot-big {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.foot-big a {
+  font-size: var(--step-head);
+  font-weight: 800;
+  font-stretch: 112%;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  text-decoration: none;
+  transition: transform 0.3s var(--ease), color var(--fast) ease;
+}
+
+.foot-big:hover a {
+  color: var(--muted);
+}
+
+.foot-big a:hover {
+  color: var(--ink);
+  transform: translateX(12px);
+}
+
+.foot-blocks {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 32px;
+  font-size: var(--step-small);
+}
+
+.foot-blocks ul {
+  display: grid;
+  gap: 6px;
+}
+
+.foot-blocks a:hover {
+  color: var(--accent);
+}
+
+.foot-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin-top: auto;
+  color: var(--muted);
+  font-size: var(--step-small);
+}
+
+/* --- motion ----------------------------------------------------------------------------------- */
+
+/* The headline comes up out of its own line, one line after the other, as the page opens. */
+.hero h1 .line > span {
+  animation: line-up 1s var(--ease) both;
+}
+
+.hero h1 .line + .line > span {
+  animation-delay: 110ms;
+}
+
+@keyframes line-up {
+  from {
+    transform: translateY(105%);
+  }
+}
+
+.hero-side {
+  animation: settle 0.9s var(--ease) 260ms both;
+}
+
+@keyframes settle {
+  from {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(20px);
+  }
+}
+
+/*
+  Set by assets/js/home.js; without script nothing is ever hidden. Every entrance below also runs
+  backwards when its block drops back below the fold: the rules on the hidden state carry the way
+  out (quicker, last in first out), the rules on .is-in the way in.
+*/
+.js [data-reveal] > *,
+.js .reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.4s var(--ease);
+  transition-delay: calc((var(--n, 1) - 1 - var(--i, 0)) * 40ms);
+}
+
+.js [data-reveal].is-in > *,
+.js .reveal.is-in {
+  opacity: 1;
+  transform: none;
+  transition-duration: 0.6s, 0.7s;
+  transition-delay: calc(var(--i, 0) * 70ms + 120ms);
+}
+
+/* A screenshot opens like a shutter, bottom to top, and settles from slightly closer. */
+.js [data-shutter] {
+  clip-path: inset(100% 0 0 0 round var(--radius));
+  transition: clip-path 0.6s var(--ease) 0.15s;
+}
+
+.js [data-shutter] > img,
+.js [data-shutter] > .feature-scene {
+  transform: scale(1.08);
+  transition: transform 0.6s var(--ease);
+}
+
+.js [data-shutter].is-in {
+  clip-path: inset(0 round var(--radius));
+  transition: clip-path 1s var(--ease);
+}
+
+.js [data-shutter].is-in > img,
+.js [data-shutter].is-in > .feature-scene {
+  transform: none;
+  transition-duration: 1.4s;
+}
+
+/* Inside a game shot the popup and the notification arrive after the scene, and leave first. */
+.js [data-shutter] .shot-layer {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.3s var(--ease);
+}
+
+.js [data-shutter].is-in .shot-layer {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.5s ease 0.9s,
+    transform 0.6s var(--ease) 0.9s;
+}
+
+.js [data-shutter] .feature-popup {
+  transform: translateY(40px);
+  opacity: 0;
+  transition:
+    transform 0.3s var(--ease),
+    opacity 0.25s ease;
+}
+
+.js [data-shutter].is-in .feature-popup {
+  transform: none;
+  opacity: 1;
+  transition:
+    transform 0.8s var(--ease) 0.6s,
+    opacity 0.5s ease 0.6s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+
+  .js [data-reveal] > *,
+  .js .reveal,
+  .js [data-shutter] > img,
+  .js [data-shutter] .shot-layer {
+    opacity: 1;
+    transform: none;
+  }
+
+  .js [data-shutter] {
+    clip-path: none;
+  }
+
+  .js .game .nb-flag {
+    transform: none;
+  }
+}
+
+/* --- responsive ------------------------------------------------------------------------------- */
+
+/* The width assets/js/site.js moves the links into the menu at; the two have to agree. */
+/* assets/js/site.js sets is-compact when the links do not fit on the bar: they move into a menu. */
+.is-compact .nav-toggle {
+  display: inline-flex;
+  order: 3;
+}
+
+.is-compact .site-nav {
+  position: absolute;
+  top: var(--head-h);
+  left: 0;
+  right: 0;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px var(--margin) 16px;
+  background: var(--surface);
+}
+
+.is-compact .site-nav[hidden] {
+  display: none;
+}
+
+.is-compact .site-nav a {
+  padding: 12px;
+  font-size: var(--step-body);
+}
+
+.is-compact .head-actions {
+  margin-left: auto;
+}
+
+@media (max-width: 960px) {
+  /* On a narrow screen the copy sits above the scene, on the same night sky. */
+  .hero-copy {
+    width: 100%;
+    padding-bottom: 32px;
+    padding-inline: var(--hero-card-pad);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    background: var(--hero-card);
+  }
+
+  .game-screen::before {
+    display: none;
+  }
+
+  .game {
+    grid-area: 2 / 1;
+  }
+
+  .game-screen {
+    min-height: 0;
+    aspect-ratio: 4 / 5;
+    border-radius: var(--hero-screen-top) var(--hero-screen-top) var(--radius-lg) var(--radius-lg);
+  }
+
+  .game-popup {
+    width: 92%;
+    bottom: 5%;
+  }
+
+  .hud {
+    font-size: 0.75rem;
+  }
+
+  .strip-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 32px;
+  }
+
+  .section-head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .feature-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  .feature-flip .feature-text {
+    order: 0;
+  }
+
+  .sources {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .presets-section,
+  .install-section,
+  .pair,
+  .tiles,
+  .foot-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .preset-names {
+    flex-direction: row;
+    gap: 8px;
+    margin: 0 calc(-1 * var(--margin));
+    padding: 4px var(--margin) 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .preset-name {
+    flex: none;
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    font-size: var(--step-lead);
+    scroll-snap-align: start;
+  }
+
+  .preset-name::before {
+    display: none;
+  }
+
+  .preset-name:hover,
+  .preset-name[aria-selected='true'] {
+    transform: none;
+  }
+
+  .preset-name[aria-selected='true'] {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  .docs {
+    position: static;
+  }
+
+  .foot-shot {
+    min-height: 50svh;
+    margin: 0 var(--margin);
+    border-radius: var(--radius-lg);
+  }
+
+  .preset-names {
+    scroll-padding-inline: var(--margin);
+  }
+
+  /* Two columns of nine: the last card takes the whole row instead of sitting alone. */
+  .source:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .game {
+    margin-top: -1px;
+  }
+}
+
+@media (max-width: 1160px) {
+  .tile {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tile-shot {
+    height: auto;
+    aspect-ratio: 16 / 10;
+  }
+}
+
+/* Where the hero is not tall enough for the copy and the popup, it grows to hold both. */
+@media (min-width: 961px) and (max-width: 1279px), (min-width: 961px) and (max-height: 759px) {
+  .hero-copy {
+    padding-bottom: 240px;
+  }
+}
+
+@media (max-width: 900px) {
+  .head-actions .btn {
+    display: none;
+  }
+
+  .site-nav .nav-download {
+    display: block;
+    color: var(--accent);
+  }
+}
+
+@media (max-width: 640px) {
+  /* The label goes above its buttons, which share one row instead of leaving one alone on a second. */
+  .stage-controls {
+    display: grid;
+    gap: 14px;
+  }
+
+  .control-label {
+    flex-basis: 100%;
+    margin: 0;
+  }
+
+  .control-group .chip {
+    flex: 1 1 auto;
+    padding-inline: 10px;
+  }
+
+  .theme-names {
+    flex-wrap: nowrap;
+    margin-inline: calc(-1 * var(--margin));
+    padding: 4px var(--margin) 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  /* The cut-off chip fades out at the edge, which says the row scrolls on. */
+  .preset-names,
+  .theme-names {
+    -webkit-mask-image: linear-gradient(90deg, #000 82%, transparent);
+    mask-image: linear-gradient(90deg, #000 82%, transparent); /* taste-skill-ignore: a scrolling row's edge */
+  }
+
+  .theme-names > * {
+    flex: none;
+    scroll-snap-align: start;
+  }
+
+  .hud p {
+    padding: 7px 12px;
+  }
+
+  .site-nav .nav-download {
+    display: block;
+    color: var(--accent);
+  }
+
+  .lang-slot {
+    min-width: 7.6rem;
+  }
+
+  .brand-word {
+    display: none;
+  }
+
+  .hero-copy {
+    padding-block: 32px;
+  }
+
+  .hero h1 {
+    font-size: 11.6cqi;
+  }
+
+  .game-steps ol {
+    flex-direction: column;
+  }
+
+  .feature-game {
+    aspect-ratio: 4 / 5;
+  }
+
+  .hero-cta .btn {
+    flex: 1 1 100%;
+  }
+
+  .strip-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sources {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .source {
+    min-height: 0;
+  }
+
+  .tile {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .foot-blocks {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

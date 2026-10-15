@@ -34,8 +34,9 @@
         '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
         '<stop offset="0" stop-color="#6c91ff"/><stop offset="1" stop-color="#2f4d9c"/>' +
         '</linearGradient></defs>' +
-        '<rect width="64" height="64" rx="10" fill="url(#g)"/>' +
-        '<path fill="#fff" d="M20 14h24v5c0 1.6 1.3 2 2.6 1.6l3.4-1v6.6c0 4.4-3.6 8-8 8h-.6A12 12 0 0 1 34 40v5h5.5c1.4 0 2.5 1.1 2.5 2.5V50H22v-2.5c0-1.4 1.1-2.5 2.5-2.5H30v-5a12 12 0 0 1-7.4-5.8H22c-4.4 0-8-3.6-8-8v-6.6l3.4 1C18.7 21 20 20.6 20 19v-5Zm-2 9.4v3.2c0 2 1.4 3.7 3.3 4a19 19 0 0 1-.3-3.4v-2.5l-3-1.3Zm28 0-3 1.3v2.5c0 1.2-.1 2.3-.3 3.4a4.1 4.1 0 0 0 3.3-4v-3.2Z"/>' +
+        // Square and edge to edge: each preset rounds or rings the icon its own way.
+        '<rect width="64" height="64" fill="url(#g)"/>' +
+        '<path fill="#fff" transform="translate(32 32) scale(1.15) translate(-32 -32)" d="M20 14h24v5c0 1.6 1.3 2 2.6 1.6l3.4-1v6.6c0 4.4-3.6 8-8 8h-.6A12 12 0 0 1 34 40v5h5.5c1.4 0 2.5 1.1 2.5 2.5V50H22v-2.5c0-1.4 1.1-2.5 2.5-2.5H30v-5a12 12 0 0 1-7.4-5.8H22c-4.4 0-8-3.6-8-8v-6.6l3.4 1C18.7 21 20 20.6 20 19v-5Zm-2 9.4v3.2c0 2 1.4 3.7 3.3 4a19 19 0 0 1-.3-3.4v-2.5l-3-1.3Zm28 0-3 1.3v2.5c0 1.2-.1 2.3-.3 3.4a4.1 4.1 0 0 0 3.3-4v-3.2Z"/>' +
         '</svg>'
     );
 
@@ -124,7 +125,9 @@
     onNotification: function (callback) {
       listener = callback;
       // The preset registers on DOMContentLoaded. The page may already have asked for a state by
-      // the time this fires; only play on our own when it has not.
+      // the time this fires; only play on our own when it has not. A page opened with ?hold waits
+      // to be asked: the home page plays the card at the moment its scene earns it.
+      if (/[?&]hold\b/.test(window.location.search)) return;
       window.setTimeout(function () {
         if (!played) play('normal');
       }, FIRST_PLAY_DELAY_MS);

@@ -535,6 +535,7 @@ kbd {
 
 .site-nav a {
   padding: 9px 12px;
+  white-space: nowrap;
   border-radius: 10px;
   color: var(--muted);
   font-size: 0.95rem;
@@ -556,6 +557,7 @@ kbd {
   gap that happens to be wider.
 */
 .head-actions {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -2636,56 +2638,57 @@ a.card:hover,
   edge and, below 1180, pushing the download button past the side of the page. A menu is better than
   a bar with no air in it. assets/js/site.js watches the same width.
 */
+/* assets/js/site.js sets is-compact when the links do not fit on the bar: they move into a menu. */
+.is-compact .nav-toggle {
+  display: inline-flex;
+}
+
+.is-compact .site-nav {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  /* The bar's breathing space beside the name: here the nav is the full width of the page. */
+  margin-left: 0;
+  padding: 10px 16px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+}
+
+.is-compact .site-nav[hidden] {
+  display: none;
+}
+
+.is-compact .site-nav a {
+  padding: 12px 14px;
+  font-size: 1rem;
+}
+
+.is-compact .head-actions .btn {
+  display: none;
+}
+
+/* It stands in for the header button, so it is drawn like it rather than like a menu row. */
+.is-compact .site-nav .nav-download {
+  display: block;
+  margin-top: 8px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-ink);
+  text-align: center;
+}
+
+.is-compact .site-nav .nav-download:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
+  filter: brightness(1.08);
+}
+
 @media (max-width: 1160px) {
-  .nav-toggle {
-    display: inline-flex;
-  }
-
-  .site-nav {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 100%;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 2px;
-    /* The bar's breathing space beside the name: here the nav is the full width of the page. */
-    margin-left: 0;
-    padding: 10px 16px 16px;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-    box-shadow: var(--shadow-md);
-  }
-
-  .site-nav[hidden] {
-    display: none;
-  }
-
-  .site-nav a {
-    padding: 12px 14px;
-    font-size: 1rem;
-  }
-
-  .head-actions .btn {
-    display: none;
-  }
-
-  /* It stands in for the header button, so it is drawn like it rather than like a menu row. */
-  .site-nav .nav-download {
-    display: block;
-    margin-top: 8px;
-    border-radius: var(--radius-sm);
-    background: var(--accent);
-    color: var(--accent-ink);
-    text-align: center;
-  }
-
-  .site-nav .nav-download:hover {
-    background: var(--accent);
-    color: var(--accent-ink);
-    filter: brightness(1.08);
-  }
-
   /* The about column is prose; only the link lists are worth putting side by side. */
   .foot-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

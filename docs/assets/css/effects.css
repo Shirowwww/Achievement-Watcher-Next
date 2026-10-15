@@ -1,0 +1,451 @@
+/*
+  The motion layer of the home page, driven by assets/js/effects.js: smooth scrolling, the hero
+  receding under the figures, the marquee, the preset ring, the words that come into focus and
+  the light and depth that answer the pointer. Without script, or with reduced motion asked for,
+  every element here sits in its final, readable state.
+*/
+
+/* --- smooth scrolling (Lenis) ----------------------------------------------------------------- */
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+html.lenis {
+  scroll-behavior: auto;
+}
+
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+/* A frame under the wheel would swallow it; nothing in these frames is clickable anyway. */
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* --- words that come into focus --------------------------------------------------------------- */
+
+/* Going back below the fold the words blur out again, last word first and quicker. */
+.js [data-split] .w {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(12px);
+  transform: translateY(0.3em);
+  transition:
+    opacity 0.35s ease,
+    filter 0.4s ease,
+    transform 0.45s var(--ease);
+  transition-delay: calc((var(--wn, 1) - 1 - var(--w, 0)) * 25ms);
+}
+
+.js [data-split].is-in .w {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+  transition-duration: 0.7s, 0.9s, 0.9s;
+  transition-timing-function: var(--ease);
+  transition-delay: calc(var(--w, 0) * 55ms);
+}
+
+/* A heading inside a block that rises arrives by its words, not twice. */
+.js [data-reveal] > [data-split] {
+  opacity: 1;
+  transform: none;
+}
+
+/* --- the hero recedes as the figures slide over it -------------------------------------------- */
+
+/*
+  --recede runs from 0 to 1 while the sheet below covers the hero. The game screen steps back and
+  dims, so the page reads as a layer laid over the game rather than a page that scrolls past it.
+*/
+/*
+  Only where the whole hero fits on screen: pinned, it would otherwise hide its own lower half
+  under the sheet before anyone saw it.
+*/
+@media (min-width: 1280px) and (min-height: 760px) {
+  .hero {
+    position: sticky;
+    top: var(--head-h);
+    z-index: 0;
+    transform: scale(calc(1 - var(--recede, 0) * 0.06));
+    transform-origin: 50% 0;
+  }
+
+  .hero .game-screen {
+    border-radius: calc(var(--radius-lg) + var(--recede, 0) * 14px);
+  }
+
+  .hero-copy {
+    opacity: calc(1 - var(--recede, 0) * 0.6);
+  }
+
+  .hero .game-screen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background: var(--scene-veil);
+    opacity: calc(var(--recede, 0) * 0.55);
+    pointer-events: none;
+  }
+
+  .hero-pin .strip {
+    position: relative;
+    z-index: 1;
+    margin-top: 48px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    background: var(--bg);
+  }
+}
+
+/* --- marquee ---------------------------------------------------------------------------------- */
+
+.marquee {
+  overflow: hidden;
+  margin: 0 calc(-1 * var(--margin)) clamp(48px, 5vw, 80px);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); /* taste-skill-ignore: fading edges of a moving band */
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); /* taste-skill-ignore: fading edges of a moving band */
+}
+
+.marquee-track {
+  display: flex;
+  gap: clamp(40px, 5vw, 80px);
+  width: max-content;
+  padding: 8px 0;
+}
+
+.marquee-track li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: none;
+  color: var(--muted);
+  font-size: var(--step-lead);
+  font-weight: 700;
+  font-stretch: 112%;
+  white-space: nowrap;
+  transition: color var(--fast) ease;
+}
+
+.marquee-mark {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  background-color: currentColor;
+  -webkit-mask: var(--mark) center / contain no-repeat;
+  mask: var(--mark) center / contain no-repeat;
+}
+
+.marquee-track li:hover {
+  color: var(--ink);
+}
+
+.js .marquee.is-running .marquee-track {
+  animation: marquee 48s linear infinite;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* The track holds the list twice, so moving it by half its width lands on the same picture. */
+@keyframes marquee {
+  to {
+    transform: translateX(calc(-50% - clamp(40px, 5vw, 80px) / 2));
+  }
+}
+
+/* --- the preset ring -------------------------------------------------------------------------- */
+
+/* The far slides turn out past the stage; the stage keeps them inside its own corners. */
+.preset-stage {
+  position: relative;
+  contain: paint;
+}
+
+.carousel {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: calc(var(--popup-height, 140px) + 40px);
+  place-items: center;
+  perspective: 1400px;
+  touch-action: pan-y;
+}
+
+.slide {
+  grid-area: 1 / 1;
+  display: flex;
+  justify-content: center;
+  width: min(440px, 54%);
+  cursor: pointer;
+  transform: translateX(calc(var(--d, 0) * 74%)) translateZ(calc(var(--a, 0) * -340px)) rotateY(calc(var(--d, 0) * -38deg));
+  opacity: calc(1 - var(--a, 0) * 0.36);
+  filter: brightness(calc(1 - var(--a, 0) * 0.18));
+  transition:
+    transform 0.8s var(--ease),
+    opacity 0.5s ease,
+    filter 0.5s ease;
+}
+
+.slide.is-active {
+  z-index: 2;
+  cursor: default;
+}
+
+/*
+  WebKit paints a frame inside a 3D transform as a stretched, empty card, and a phone has no room
+  for the neighbours anyway: there the ring lies flat (effects.js sets is-flat) and slides sideways.
+*/
+.carousel.is-flat {
+  perspective: none;
+}
+
+.carousel.is-flat .slide {
+  transform: translateX(calc(var(--d, 0) * 78%)) scale(calc(1 - var(--a, 0) * 0.16));
+  filter: none;
+}
+
+/* Hidden rather than only transparent, so the frames out of sight stop being painted. */
+.slide.is-far {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.8s var(--ease),
+    opacity 0.5s ease,
+    filter 0.5s ease,
+    visibility 0s linear 0.5s;
+}
+
+.carousel .popup-frame {
+  pointer-events: none;
+}
+
+/* Without script the ring is a plain row that scrolls sideways. */
+html:not(.js) .carousel {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  perspective: none;
+}
+
+html:not(.js) .slide {
+  flex: none;
+  transform: none;
+  opacity: 1;
+  filter: none;
+}
+
+.carousel-turn {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--glass);
+  box-shadow: var(--glass-edge), var(--glass-lift); /* taste-skill-ignore: liquid glass over the stage */
+  color: #eef2fb;
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  backdrop-filter: blur(16px) saturate(170%); /* taste-skill-ignore: liquid glass over the stage */
+  cursor: pointer;
+  translate: 0 -50%;
+  transition:
+    background-color var(--fast) ease,
+    scale var(--fast) var(--ease);
+}
+
+.carousel-turn:hover {
+  background: rgba(14, 20, 44, 0.62);
+}
+
+.carousel-turn:active {
+  scale: 0.92;
+}
+
+.carousel-turn svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.carousel-prev {
+  left: 16px;
+}
+
+.carousel-next {
+  right: 16px;
+}
+
+html:not(.js) .carousel-turn {
+  display: none;
+}
+
+/* --- depth and light under the pointer -------------------------------------------------------- */
+
+/*
+  A screenshot leans towards the pointer like a print held in the hand, and a band of light crosses
+  it once as it opens, then follows the pointer while it is held.
+*/
+.feature-shot {
+  transform: perspective(1400px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+}
+
+.js .feature-shot[data-shutter] {
+  transition:
+    clip-path 0.6s var(--ease) 0.15s,
+    transform 0.7s var(--ease);
+}
+
+.js .feature-shot[data-shutter].is-in {
+  transition:
+    clip-path 1s var(--ease),
+    transform 0.7s var(--ease);
+}
+
+.js .feature-shot[data-shutter].is-tilting {
+  transition:
+    clip-path 1s var(--ease),
+    transform 0.12s linear;
+}
+
+.feature-shot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.14) 48%, rgba(255, 255, 255, 0.04) 53%, transparent 62%); /* taste-skill-ignore: a reflection on glass */
+  background-size: 300% 100%;
+  background-position: var(--sx, 100%) 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.feature-shot.is-tilting::after {
+  opacity: 1;
+}
+
+.js .feature-shot.is-in::after {
+  animation: sheen 1.5s var(--ease) 0.7s;
+}
+
+@keyframes sheen {
+  from {
+    opacity: 1;
+    background-position: 100% 0;
+  }
+  to {
+    opacity: 1;
+    background-position: 0% 0;
+  }
+}
+
+/* A soft light follows the pointer across a card and lights its edge. */
+[data-glow] {
+  isolation: isolate;
+}
+
+[data-glow]::before,
+[data-glow]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+[data-glow]::before {
+  z-index: -1;
+  background: radial-gradient(360px circle at var(--gx, 50%) var(--gy, 50%), color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%); /* taste-skill-ignore: light that follows the pointer */
+}
+
+[data-glow]::after {
+  padding: 1px;
+  background: radial-gradient(240px circle at var(--gx, 50%) var(--gy, 50%), color-mix(in srgb, var(--accent) 70%, transparent), transparent 70%); /* taste-skill-ignore: the edge that light catches */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-glow]:hover::before,
+  [data-glow]:hover::after {
+    opacity: 1;
+  }
+}
+
+/* --- buttons drawn towards the pointer -------------------------------------------------------- */
+
+[data-magnet] {
+  translate: var(--pull-x, 0px) var(--pull-y, 0px);
+  transition:
+    translate 0.6s var(--ease),
+    transform var(--fast) var(--ease),
+    background-color var(--fast) ease;
+}
+
+[data-magnet] > * {
+  translate: calc(var(--pull-x, 0px) * 0.35) calc(var(--pull-y, 0px) * 0.35);
+  transition: translate 0.6s var(--ease);
+}
+
+[data-magnet].is-pulled,
+[data-magnet].is-pulled > * {
+  transition-duration: 0.15s, var(--fast), var(--fast);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js [data-split] .w {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+
+  .hero {
+    transform: none;
+  }
+
+  .slide {
+    transform: translateX(calc(var(--d, 0) * 62%)) scale(calc(1 - var(--a, 0) * 0.12));
+  }
+}
+
+/* On a phone one popup at a time, and the arrows sit under it instead of over its edges. */
+@media (max-width: 960px) {
+  .slide {
+    width: 84%;
+  }
+
+  .carousel.is-flat .slide {
+    transform: translateX(calc(var(--d, 0) * 112%)) scale(calc(1 - var(--a, 0) * 0.08));
+    opacity: calc(1 - var(--a, 0));
+  }
+
+  .carousel-turn {
+    top: auto;
+    bottom: 16px;
+    translate: none;
+  }
+
+  .carousel-prev {
+    left: calc(50% - 56px);
+  }
+
+  .carousel-next {
+    right: calc(50% - 56px);
+  }
+}
