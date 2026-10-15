@@ -2056,6 +2056,7 @@
     "update-signature-refused-detail": "İndirilen yükleyici AW Next yayıncısı tarafından imzalanmadığı için atıldı ve hiçbir şey değiştirilmedi. Bunun yerine bu sürümü sürüm sayfasından indirin.",
     "update-download-failed-detail": "İndirme tamamlanmadı. AW Next bu güncellemeyi bir sonraki denetimde yeniden sunacak, ya da sürüm sayfasından indirebilirsiniz.",
     "update-ready-after-game": "{version} sürümü hazır ve çalışan oyun kapatıldığında yüklenecek.",
+    "update-available-notification": "{version} sürümü kullanıma hazır. Nelerin yeni olduğunu görmek ve güncellemek için tıklayın.",
     "update-installing-short": "Güncelleme yükleniyor…",
     "update-installing-detail": "{version} sürümü yükleniyor. AW Next kendiliğinden kapanıp yeniden açılır, bu birkaç saniye sürer.",
     "diagnosis-emulator": "Öykünücü: {emulator}",

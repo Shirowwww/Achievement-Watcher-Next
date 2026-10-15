@@ -2056,6 +2056,7 @@
     "update-signature-refused-detail": "Det nedlastede installasjonsprogrammet er ikke signert av utgiveren av AW Next, så det ble forkastet og ingenting ble endret. Last i stedet ned denne versjonen fra utgivelsessiden.",
     "update-download-failed-detail": "Nedlastingen ble ikke fullført. AW Next tilbyr denne oppdateringen igjen ved neste sjekk, eller du kan laste den ned fra utgivelsessiden.",
     "update-ready-after-game": "Versjon {version} er klar og blir installert når spillet som kjører, avsluttes.",
+    "update-available-notification": "Versjon {version} er tilgjengelig. Klikk for å se hva som er nytt og oppdatere.",
     "update-installing-short": "Installerer oppdatering…",
     "update-installing-detail": "Installerer versjon {version}. AW Next lukker og åpner seg selv igjen, dette tar noen sekunder.",
     "diagnosis-emulator": "Emulator: {emulator}",

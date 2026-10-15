@@ -2056,6 +2056,7 @@
     "update-signature-refused-detail": "L'installeur téléchargé n'est pas signé par l'éditeur d'AW Next : il a été écarté et rien n'a été modifié. Télécharge plutôt cette version depuis sa page.",
     "update-download-failed-detail": "Le téléchargement n'a pas abouti. AW Next te reproposera cette mise à jour à sa prochaine vérification, ou tu peux la télécharger depuis la page de version.",
     "update-ready-after-game": "La version {version} est prête et sera installée une fois le jeu en cours fermé.",
+    "update-available-notification": "La version {version} est disponible. Clique pour voir les nouveautés et mettre à jour.",
     "update-installing-short": "Installation de la mise à jour…",
     "update-installing-detail": "Installation de la version {version}. AW Next se ferme et se rouvre tout seul, cela prend quelques secondes.",
     "diagnosis-emulator": "Émulateur : {emulator}",

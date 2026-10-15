@@ -2056,6 +2056,7 @@
     "update-signature-refused-detail": "Penginstal yang diunduh tidak ditandatangani oleh penerbit AW Next, sehingga dibuang dan tidak ada yang diubah. Unduh versi ini dari halaman rilisnya sebagai gantinya.",
     "update-download-failed-detail": "Pengunduhan tidak selesai. AW Next akan menawarkan pembaruan ini lagi pada pemeriksaan berikutnya, atau Anda dapat mengunduhnya dari halaman rilis.",
     "update-ready-after-game": "Versi {version} sudah siap dan akan dipasang setelah game yang berjalan ditutup.",
+    "update-available-notification": "Versi {version} tersedia. Klik untuk melihat yang baru dan memperbarui.",
     "update-installing-short": "Memasang pembaruan…",
     "update-installing-detail": "Memasang versi {version}. AW Next akan menutup dan membuka kembali dengan sendirinya, ini memakan waktu beberapa detik.",
     "diagnosis-emulator": "Emulator: {emulator}",

@@ -2056,6 +2056,7 @@
     "update-signature-refused-detail": "O instalador transferido não está assinado pelo editor do AW Next, por isso foi descartado e nada foi alterado. Transfira antes esta versão a partir da página de lançamentos.",
     "update-download-failed-detail": "A transferência não foi concluída. O AW Next voltará a propor esta atualização na próxima verificação, ou pode transferi-la a partir da página de lançamentos.",
     "update-ready-after-game": "A versão {version} está pronta e será instalada assim que o jogo em execução for fechado.",
+    "update-available-notification": "A versão {version} está disponível. Clique para ver as novidades e atualizar.",
     "update-installing-short": "A instalar a atualização…",
     "update-installing-detail": "A instalar a versão {version}. O AW Next fecha e reabre sozinho, demora alguns segundos.",
     "diagnosis-emulator": "Emulador: {emulator}",

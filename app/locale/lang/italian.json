@@ -2056,6 +2056,7 @@
     "update-signature-refused-detail": "Il programma di installazione scaricato non è firmato dall'editore di AW Next, quindi è stato scartato e non è stato modificato nulla. Scarica invece questa versione dalla sua pagina di rilascio.",
     "update-download-failed-detail": "Il download non è stato completato. AW Next ti riproporrà questo aggiornamento al prossimo controllo, oppure puoi scaricarlo dalla pagina delle release.",
     "update-ready-after-game": "La versione {version} è pronta e verrà installata alla chiusura del gioco in esecuzione.",
+    "update-available-notification": "La versione {version} è disponibile. Fai clic per vedere le novità e aggiornare.",
     "update-installing-short": "Installazione dell’aggiornamento…",
     "update-installing-detail": "Installazione della versione {version}. AW Next si chiude e si riapre da solo, richiede qualche secondo.",
     "diagnosis-emulator": "Emulatore: {emulator}",

@@ -2056,6 +2056,7 @@
     "update-signature-refused-detail": "Det downloadede installationsprogram er ikke signeret af udgiveren af AW Next, så det blev kasseret, og intet er ændret. Hent i stedet denne version fra dens udgivelsesside.",
     "update-download-failed-detail": "Overførslen blev ikke færdig. AW Next tilbyder denne opdatering igen ved næste kontrol, eller du kan hente den fra udgivelsessiden.",
     "update-ready-after-game": "Version {version} er klar og bliver installeret, når det kørende spil lukkes.",
+    "update-available-notification": "Version {version} er tilgængelig. Klik for at se nyhederne og opdatere.",
     "update-installing-short": "Installerer opdatering…",
     "update-installing-detail": "Installerer version {version}. AW Next lukker og åbner igen af sig selv, det tager et par sekunder.",
     "diagnosis-emulator": "Emulator: {emulator}",

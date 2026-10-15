@@ -137,8 +137,11 @@ it also pointed at the all-users `%APPDATA%`. Both are fixed and covered by test
 ## Updates
 
 The app checks the GitHub release feed eight seconds after start, then every hour, never during a
-game. A new version opens the update window (`app/electron/updateWindow.js`): the versions, the
-download size and the release notes, with Update now, Later and Skip this version. The notes come
+game. A new version found by that check is announced by a desktop notification (a Windows toast, or
+the desktop's notification on Linux) and the title-bar chip, so nothing takes the focus from a game
+or another app; clicking either opens the update window (`app/electron/updateWindow.js`).
+**Settings → Check for updates** opens it at once. The window shows the versions, the download size
+and the release notes, with Update now, Later and Skip this version. The notes come
 from the release body, which the installer's signature does not cover, so they are reduced to plain
 headings, items and paragraphs (`app/util/releaseNotes.js`) and set as text, never as markup.
 

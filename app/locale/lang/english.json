@@ -2056,6 +2056,7 @@
     "update-signature-refused-detail": "The downloaded installer is not signed by AW Next's publisher, so it was discarded and nothing was changed. Download this version from its release page instead.",
     "update-download-failed-detail": "The download did not finish. AW Next will offer this update again at its next check, or you can download it from the release page.",
     "update-ready-after-game": "Version {version} is ready and will be installed once the running game is closed.",
+    "update-available-notification": "Version {version} is available. Click to see what's new and update.",
     "update-installing-short": "Installing update…",
     "update-installing-detail": "Installing version {version}. AW Next closes and reopens on its own - this takes a few seconds.",
     "diagnosis-emulator": "Emulator: {emulator}",

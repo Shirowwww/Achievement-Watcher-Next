@@ -2056,6 +2056,7 @@
     "update-signature-refused-detail": "下載的安裝程式不是由 AW Next 的發行者簽署的，因此已被捨棄，沒有任何變更。請改從發行頁面下載此版本。",
     "update-download-failed-detail": "下載未完成。AW Next 會在下次檢查時再次提供此更新，你也可以從發行頁面下載。",
     "update-ready-after-game": "{version} 版本已就緒，會在目前執行的遊戲關閉後安裝。",
+    "update-available-notification": "{version} 版本現已可用。點擊以查看更新內容並進行更新。",
     "update-installing-short": "正在安裝更新…",
     "update-installing-detail": "正在安裝版本 {version}。AW Next 會自動關閉並重新開啟，這需要幾秒鐘。",
     "diagnosis-emulator": "模擬器：{emulator}",

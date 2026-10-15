@@ -127,6 +127,18 @@ test('without a notification service nothing is shown, and the bus is asked agai
   assert.equal(FakeNotification.created.length, 2);
 });
 
+// An update offer is announced this way rather than by a window that takes the focus from a game.
+test("the app's own message runs its click action", async () => {
+  FakeNotification.created = [];
+  let clicked = 0;
+  const notifier = createDesktopNotifier({ Notification: FakeNotification, platform: 'win32' });
+  assert.equal(await notifier.notify({ title: 'Update' }, () => (clicked += 1)), true);
+  const [shown] = FakeNotification.created;
+  assert.equal(shown.shown, true);
+  shown.emit('click');
+  assert.equal(clicked, 1);
+});
+
 test('Windows never asks the bus', async () => {
   const notifier = createDesktopNotifier({ Notification: FakeNotification, platform: 'win32', hasService: async () => assert.fail('asked') });
   assert.equal(await notifier.notify({ title: 'K' }), true);

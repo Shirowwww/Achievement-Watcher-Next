@@ -2056,6 +2056,7 @@
     "update-signature-refused-detail": "Stiahnutý inštalátor nie je podpísaný vydavateľom AW Next, preto bol zahodený a nič sa nezmenilo. Stiahnite si túto verziu radšej zo stránky vydania.",
     "update-download-failed-detail": "Sťahovanie sa nedokončilo. AW Next ponúkne túto aktualizáciu znova pri ďalšej kontrole, alebo si ju môžete stiahnuť zo stránky vydania.",
     "update-ready-after-game": "Verzia {version} je pripravená a nainštaluje sa po zatvorení spustenej hry.",
+    "update-available-notification": "Je dostupná verzia {version}. Kliknutím zobrazíte novinky a aktualizujete.",
     "update-installing-short": "Inštaluje sa aktualizácia…",
     "update-installing-detail": "Inštaluje sa verzia {version}. AW Next sa sám zavrie a znova otvorí, potrvá to pár sekúnd.",
     "diagnosis-emulator": "Emulátor: {emulator}",

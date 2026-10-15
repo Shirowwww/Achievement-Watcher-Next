@@ -82,31 +82,36 @@ function createDesktopNotifier({ Notification, onClick = () => {}, log = () => {
     return serviceUp();
   }
 
+  function display(options, click) {
+    const notification = new Notification(options);
+    live.add(notification);
+    const release = () => live.delete(notification);
+    notification.on('close', release);
+    notification.on('click', () => {
+      release();
+      click();
+    });
+    notification.show();
+  }
+
   return {
     // A toast handed over by the Watchdog: clicking it opens its game.
     async show(payload) {
       if (!payload || !(await usable())) return false;
-      const notification = new Notification({
+      const options = {
         title: String(payload.title || ''),
         body: String(payload.body || ''),
         icon: localIcon(payload.icon),
         silent: payload.silent === true,
         urgency: payload.urgent ? 'critical' : 'normal',
-      });
-      live.add(notification);
-      const release = () => live.delete(notification);
-      notification.on('close', release);
-      notification.on('click', () => {
-        release();
-        onClick({ appid: String(payload.appid || ''), achievement: String(payload.achievement || '') });
-      });
-      notification.show();
+      };
+      display(options, () => onClick({ appid: String(payload.appid || ''), achievement: String(payload.achievement || '') }));
       return true;
     },
-    // The app's own one-off messages, with nothing to open.
-    async notify(options) {
+    // The app's own one-off messages; a click runs `click`.
+    async notify(options, click = () => {}) {
       if (!(await usable())) return false;
-      new Notification(options).show();
+      display(options, click);
       return true;
     },
   };

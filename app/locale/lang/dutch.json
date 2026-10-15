@@ -2056,6 +2056,7 @@
     "update-signature-refused-detail": "Het gedownloade installatieprogramma is niet ondertekend door de uitgever van AW Next, dus het is verwijderd en er is niets gewijzigd. Download deze versie in plaats daarvan via de releasepagina.",
     "update-download-failed-detail": "De download is niet voltooid. AW Next biedt deze update bij de volgende controle opnieuw aan, of je kunt hem downloaden via de releasepagina.",
     "update-ready-after-game": "Versie {version} staat klaar en wordt geïnstalleerd zodra de draaiende game wordt afgesloten.",
+    "update-available-notification": "Versie {version} is beschikbaar. Klik om te zien wat er nieuw is en bij te werken.",
     "update-installing-short": "Update installeren…",
     "update-installing-detail": "Versie {version} wordt geïnstalleerd. AW Next sluit en opent zichzelf opnieuw, dit duurt een paar seconden.",
     "diagnosis-emulator": "Emulator: {emulator}",

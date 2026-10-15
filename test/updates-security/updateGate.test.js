@@ -129,12 +129,22 @@ test('nothing is recorded when a prompt is only held back for a game', () => {
   const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
   const start = init.indexOf("autoUpdater.on('update-available'");
   const body = init.slice(start, init.indexOf("autoUpdater.on('update-not-available'"));
-  const prompt = body.indexOf('askAboutUpdate(offer)');
+  const prompt = body.indexOf('askAboutUpdate(offer, { manual })');
   assert.ok(prompt > 0, 'the offer goes through the update window');
   const heldBack = body.slice(body.indexOf('isGameRunning()'), prompt);
   assert.ok(!/postponeUpdate|skippedVersion/.test(heldBack), 'holding a prompt back must not answer for the user');
   // A manual check is a deliberate request and must still be answered.
   assert.match(body, /if \(!manual && isGameRunning\(\)\)/);
+});
+
+// A window opening on its own took the focus from the game or app in front.
+test('only a manual check opens the update window; the hourly one announces it', () => {
+  const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
+  const ask = init.slice(init.indexOf('function askAboutUpdate('), init.indexOf('function announceUpdateOffer('));
+  assert.match(ask, /if \(manual\) openUpdateWindow\(\);\s+else announceUpdateOffer\(offer\.version\);/);
+  const announce = init.slice(init.indexOf('function announceUpdateOffer('), init.indexOf('function openReleasePage('));
+  assert.match(announce, /desktopNotifier\(\)\s+\.notify\(notice, openUpdateWindow\)/, 'a click on the notification opens the window');
+  assert.match(init, /offerPortableUpdate\(offer, manual\)/, 'the portable offer follows the same rule');
 });
 
 test('the monitor is the only source of game activity, and losing it never wedges the updater', () => {

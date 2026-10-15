@@ -2056,6 +2056,7 @@
     "update-signature-refused-detail": "A letöltött telepítőt nem az AW Next kiadója írta alá, ezért elvetettük, és semmi sem változott. Töltsd le inkább ezt a verziót a kiadási oldalról.",
     "update-download-failed-detail": "A letöltés nem fejeződött be. Az AW Next a következő ellenőrzéskor újra felajánlja ezt a frissítést, vagy letöltheted a kiadási oldalról.",
     "update-ready-after-game": "A(z) {version} verzió készen áll, és a futó játék bezárása után lesz telepítve.",
+    "update-available-notification": "A(z) {version} verzió elérhető. Kattints az újdonságok megtekintéséhez és a frissítéshez.",
     "update-installing-short": "Frissítés telepítése…",
     "update-installing-detail": "A(z) {version} verzió telepítése folyik. Az AW Next magától bezárul és újra megnyílik, ez néhány másodpercet vesz igénybe.",
     "diagnosis-emulator": "Emulátor: {emulator}",

@@ -14,6 +14,15 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
+## Unreleased
+
+### Improved
+
+- **An update no longer opens a window on its own.** The hourly check announces a new version with
+  a Windows notification (a desktop notification on Linux) and the title-bar chip; clicking either
+  opens the update window. Nothing takes the focus from a game or another app any more.
+  **Settings → Check for updates** still opens the window at once.
+
 ## 3.12.0 - 2026-10-15
 
 ### Added

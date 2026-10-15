@@ -2056,6 +2056,7 @@
     "update-signature-refused-detail": "Ladattua asennusohjelmaa ei ole allekirjoittanut AW Nextin julkaisija, joten se hylättiin eikä mitään muutettu. Lataa tämä versio sen sijaan julkaisusivulta.",
     "update-download-failed-detail": "Lataus ei valmistunut. AW Next tarjoaa tätä päivitystä uudelleen seuraavassa tarkistuksessa, tai voit ladata sen julkaisusivulta.",
     "update-ready-after-game": "Versio {version} on valmiina ja asennetaan, kun käynnissä oleva peli suljetaan.",
+    "update-available-notification": "Versio {version} on saatavilla. Napsauta nähdäksesi uutuudet ja päivittääksesi.",
     "update-installing-short": "Asennetaan päivitystä…",
     "update-installing-detail": "Asennetaan versiota {version}. AW Next sulkeutuu ja avautuu uudelleen itsestään, tämä kestää muutaman sekunnin.",
     "diagnosis-emulator": "Emulaattori: {emulator}",

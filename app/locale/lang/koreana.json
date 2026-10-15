@@ -2056,6 +2056,7 @@
     "update-signature-refused-detail": "내려받은 설치 프로그램이 AW Next 게시자의 서명이 아니어서 폐기되었고 아무것도 변경되지 않았습니다. 대신 릴리스 페이지에서 이 버전을 내려받으세요.",
     "update-download-failed-detail": "다운로드가 완료되지 않았습니다. AW Next가 다음 확인 때 이 업데이트를 다시 안내하며, 릴리스 페이지에서 직접 내려받을 수도 있습니다.",
     "update-ready-after-game": "{version} 버전이 준비되었으며 실행 중인 게임을 닫으면 설치됩니다.",
+    "update-available-notification": "{version} 버전을 사용할 수 있습니다. 클릭하여 새로운 내용을 확인하고 업데이트하세요.",
     "update-installing-short": "업데이트 설치 중…",
     "update-installing-detail": "버전 {version}을(를) 설치하는 중입니다. AW Next가 스스로 종료되었다가 다시 열립니다. 몇 초 정도 걸립니다.",
     "diagnosis-emulator": "에뮬레이터: {emulator}",

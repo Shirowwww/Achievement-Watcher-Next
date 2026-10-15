@@ -372,14 +372,40 @@ function settleUpdatePrompt(answer) {
   return Boolean(resolve);
 }
 
-/** Resolves with 'install' | 'release' | 'later' | 'skip'; closing the window counts as "later". */
-function askAboutUpdate(offer) {
+/*
+  Resolves with 'install' | 'release' | 'later' | 'skip'; closing the window counts as "later".
+  A manual check opens the window at once. The hourly check only announces the offer with a desktop
+  notification, whose click (or the title-bar chip) opens it: a window appearing on its own took the
+  focus from whatever the user was doing, a game included.
+*/
+function askAboutUpdate(offer, { manual = false } = {}) {
   settleUpdatePrompt('later');
   updateOffer = offer;
   return new Promise((resolve) => {
     pendingUpdateAnswer = resolve;
-    openUpdateWindow();
+    if (manual) openUpdateWindow();
+    else announceUpdateOffer(offer.version);
   });
+}
+
+function announceUpdateOffer(version) {
+  const icon = path.join(__dirname, '../resources/icon', process.platform === 'win32' ? 'icon.ico' : 'icon.png');
+  const notice = {
+    title: t('update-available', 'Update Available', 'Mise à jour disponible'),
+    body: t(
+      'update-available-notification',
+      "Version {version} is available. Click to see what's new and update.",
+      'La version {version} est disponible. Clique pour voir les nouveautés et mettre à jour.',
+      { version }
+    ),
+    icon,
+  };
+  desktopNotifier()
+    .notify(notice, openUpdateWindow)
+    .then((shown) => {
+      if (!shown) debug.log(`[updater] no desktop notification for ${version}: the title-bar chip still offers it`);
+    })
+    .catch((err) => debug.log(`[updater] update notification failed: ${err.message || err}`));
 }
 
 function openReleasePage(version) {
@@ -7268,10 +7294,10 @@ try {
         // question for a browser and coming back to it.
         const offer = { version: info.version, currentVersion: app.getVersion(), size: updateDownloadSize(info), notes: releaseNoteBlocks(info.releaseNotes) };
         if (isPortableBuild) {
-          await offerPortableUpdate(offer);
+          await offerPortableUpdate(offer, manual);
           return;
         }
-        const answer = await askAboutUpdate(offer);
+        const answer = await askAboutUpdate(offer, { manual });
         if (answer === 'install') {
           debug.log(`[updater] user accepted download of ${info.version}${manual ? ' (manual check)' : ''}`);
           updateDownloading = true;
@@ -7410,9 +7436,9 @@ try {
     offer is the release page. Opening it counts as "Later", or the hourly check would ask again
     while the new archive is still downloading in the browser.
   */
-  async function offerPortableUpdate(offer) {
+  async function offerPortableUpdate(offer, manual) {
     const { version } = offer;
-    const answer = await askAboutUpdate(offer);
+    const answer = await askAboutUpdate(offer, { manual });
     if (answer === 'skip') {
       configJS.general.skippedVersion = version;
       await settingsJS.save(configJS, { keepMainOwnedKeys: false });
