@@ -20,7 +20,7 @@
     - { file: advanced, label: Advanced tools }
     - { file: emulator-setup, label: Goldberg and GBE setup }
     - { file: uplay-r2, label: Uplay setup }
-    - { file: comparison, label: Compared to 2.x }
+    - { file: comparison, label: Compared to other trackers }
     - { file: community-galleries, label: Community galleries }
     - { file: changelog, label: Changelog }
 
