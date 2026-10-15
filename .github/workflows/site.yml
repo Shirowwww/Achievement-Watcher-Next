@@ -6,7 +6,7 @@ name: Site
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - 'docs/**'
       - 'CHANGELOG.md'
