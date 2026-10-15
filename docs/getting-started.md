@@ -4,13 +4,13 @@ AW Next is a desktop application for Windows and Linux. Packaged releases includ
 
 ## Install
 
-1. Open the [latest release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest).
-2. Download `Achievement.Watcher.Setup.<version>.exe`.
-3. Run the installer and choose an installation folder.
-4. Open AW Next from the Start menu or desktop shortcut.
+| | Windows 10 and 11 | Linux (x64) |
+|---|---|---|
+| **Get it** | From the [latest release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest): `Achievement.Watcher.Setup.<version>.exe`, or `Achievement.Watcher.Portable.<version>.zip` to keep its data beside the app | From the same release: `Achievement.Watcher.<version>.AppImage` |
+| **Start it** | Run the installer and choose a folder, then open AW Next from the Start menu | Make the file executable (`chmod +x`) and run it. It needs FUSE 2: `libfuse2t64` on Ubuntu 24.04 |
+| **Data** | `%APPDATA%\Achievement Watcher Next` (the portable build keeps a `data` folder beside the executable) | `~/.config/Achievement Watcher Next` |
 
-Prefer no installer? Download `Achievement.Watcher.Portable.<version>.zip` instead and extract it
-anywhere; its data stays in a `data` folder beside the executable.
+The Linux steps and the desktop details are in [Linux and the Steam Deck](linux.md).
 
 > [!WARNING]
 > The installer is signed with the project's own self-signed certificate (`CN=Shirow`), so Windows
@@ -42,7 +42,7 @@ The first-run guide asks for the main choices needed to populate the library:
   sources**, folded away because the defaults read whatever is installed.
 - **Look and alerts** picks the theme and how unlocks are announced, with a **Test notification**
   button. **Automatic** is the default and needs no decision: it uses the in-game overlay when it can
-  be shown and a Windows notification when it cannot.
+  be shown and a Windows notification (the desktop's own notification on Linux) when it cannot.
 - **Ready** recaps your choices, each with a **Change** button, and points at collections, trophy
   mode, video clips and the in-game overlay.
 
@@ -250,7 +250,7 @@ Open **Settings → Notification** and choose a delivery mode:
   when it cannot - for example while a game holds exclusive fullscreen, where an overlay popup would
   not be visible. The same unlock is never announced twice.
 - **In-game overlay** always displays a styled popup over the running game.
-- **Windows notification** always uses native Windows notifications.
+- **Windows notification** always uses native Windows notifications (the desktop's own notifications on Linux).
 - **Both** enables both transports.
 
 The [notifications guide](notifications.md#how-automatic-decides) explains what Automatic looks at,

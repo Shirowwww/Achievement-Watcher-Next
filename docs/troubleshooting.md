@@ -12,6 +12,13 @@ Troubleshooting), and its *Your current setup* line shows your theme, notificati
 overlay hotkey and how many sources are enabled. If a problem remains, include the app version, Windows version, source
 involved, exact reproduction steps and relevant logs in the bug report.
 
+## On Linux
+
+The Linux app has problems this page does not cover. The AppImage does not start without FUSE 2
+(`libfuse2t64` on Ubuntu 24.04). The keyring asks for its password only with automatic login. The
+overlay shortcut under Wayland is one you bind in your desktop's keyboard settings. Each has its fix in
+[Linux and the Steam Deck](linux.md#install). The rest of this page describes Windows; on Linux the logs
+are in `~/.config/Achievement Watcher Next/logs`.
 ## Open logs and local data
 
 <div align="center">

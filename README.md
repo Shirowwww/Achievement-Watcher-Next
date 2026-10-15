@@ -39,8 +39,13 @@ into one library, with live desktop notifications and an in-game overlay.
   with search, filters, rarity tiers, progress achievements, covers and your own collections. A trophy
   showcase on the profile splits every unlock by rarity, platinum included, and trophy mode grades
   every achievement gold, silver or bronze.
+- **Windows and Linux.** The Linux build is native and never runs through Wine. It follows the games
+  you run through Steam and Proton, Wine, Lutris, Heroic and Bottles, and native Linux games, with the
+  same overlay, popups and playtime. Steam Deck support is new - see the
+  [Linux guide](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html).
 - **Automatic notification delivery.** With **Automatic** selected, each unlock arrives through the
-  in-game popup when it can be seen, and as a Windows notification when it cannot - never both.
+  in-game popup when it can be seen, and as a Windows notification (a desktop notification on Linux)
+  when it cannot - never both.
 - **Preset Designer and sharing.** Nine bundled presets, a no-code designer that previews the real
   popup, one-file `.awpreset` sharing, a converter for your own Steam Achievement Notifier `.san`
   themes and a [community gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/).
@@ -63,7 +68,7 @@ into one library, with live desktop notifications and an in-game overlay.
 - **Local-first.** No Steam Web API key, no required account, its own data directory, and caches that
   keep the library working offline, with one-file profile backup for a reinstall or a new PC. The few secrets it does keep - an emulator Steam password, the
   Steam, Epic and Xbox sign-in tokens, the RetroAchievements Web API key - are encrypted with a key generated for your install and held by
-  Windows, readable by your Windows account alone.
+  Windows (or your desktop keyring on Linux), readable by your account alone.
 
 <div align="center">
 <table>
@@ -79,31 +84,30 @@ into one library, with live desktop notifications and an in-game overlay.
 
 ---
 
-## Quick start
+## Install
 
-1. Download `Achievement.Watcher.Setup.<version>.exe` from the
-   [latest release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest), or extract
-   `Achievement.Watcher.Portable.<version>.zip` to keep the app and its `data` profile together.
-2. Install or open AW Next, then follow the first-run guide.
-3. Run **Settings → Folders → Smart Find**, and add any custom game or save location.
-4. Leave the app in the system tray for live notifications and playtime tracking.
+| | Windows 10 and 11 | Linux (x64) |
+|---|---|---|
+| **Download** | `Achievement.Watcher.Setup.<version>.exe` (installer) or `Achievement.Watcher.Portable.<version>.zip` from the [latest release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest) | `Achievement.Watcher.<version>.AppImage` from the same release |
+| **Start** | Run the installer, or extract the ZIP and open the app | `chmod +x` the file, then run it. It needs FUSE 2: `libfuse2t64` on Ubuntu 24.04 |
+| **Data** | `%APPDATA%\Achievement Watcher Next` | `~/.config/Achievement Watcher Next` |
+| **Updates** | Built in, and downloads only what changed | Built in, from the same releases |
+| **Guide** | [Getting started](https://shirowwww.github.io/Achievement-Watcher-Next/getting-started.html) | [Linux and the Steam Deck](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html) |
 
-Settings, watched folders, caches, playtime, logs and user presets live in
-`%APPDATA%\Achievement Watcher Next`. Upgrading preserves them, and the first launch after an
-upgrade imports an older Achievement Watcher folder without modifying it.
+Then, on either system:
 
-The installed app updates itself and downloads only what changed since your version. The portable
-build tells you when a new release is out; extracting it over the old folder keeps your `data`.
+1. Start AW Next and follow the first-run guide.
+2. Run **Settings → Folders → Smart Find**, and add any custom game or save location.
+3. Leave AW Next in the tray for live notifications and playtime tracking.
 
-**On Linux**, download `Achievement.Watcher.<version>.AppImage` from the same release, make it
-executable and start it (FUSE 2 is needed: `libfuse2`, or `libfuse2t64` on Ubuntu 24.04). It
-updates itself too, keeps its data in `~/.config/Achievement Watcher Next`, and runs on GNOME and KDE
-Plasma, under Wayland or X11.
+Settings, watched folders, caches, playtime, logs and user presets live in the data folder shown
+above. Upgrading keeps them, and the first launch after an upgrade imports an older Achievement
+Watcher folder without modifying it. The portable build tells you when a new release is out;
+extracting it over the old folder keeps your `data`.
 
-→ [Linux and the Steam Deck](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html) for
-Steam, Proton, Lutris, Heroic and Bottles, the overlay shortcut and the Steam Deck.
-
-→ [Getting started](https://shirowwww.github.io/Achievement-Watcher-Next/getting-started.html) for the full first-run, discovery and update guide.
+The Linux guide covers Steam, Proton, Lutris, Heroic and Bottles, the overlay shortcut and the Steam
+Deck. The [getting started guide](https://shirowwww.github.io/Achievement-Watcher-Next/getting-started.html)
+covers the full first run, discovery and updates.
 
 ---
 
@@ -184,7 +188,7 @@ update signed by that exact certificate, pinned by thumbprint, so a look-alike `
 installer is refused. The project contains no game files and does not bypass online ownership
 checks.
 
-### Your antivirus may flag the emulator files
+### On Windows, your antivirus may flag the emulator files
 
 It is a false positive. The Steam emulator (GBE Fork) and the Ubisoft loaders stand in for a game's
 Steam or Ubisoft library, which is exactly the behaviour detection engines look for: they are judged

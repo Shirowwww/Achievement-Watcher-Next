@@ -78,6 +78,7 @@ Whether the overlay shows above a native Wayland game in full screen has not bee
 
 A controller works too: AW Next reads gamepads directly, so the controller shortcuts of the
 [Controller guide](controller.md) open and drive the overlay without taking anything from the game.
+While Steam Input runs, AW Next reads only Steam's virtual pads, so one press is not counted twice.
 
 ## Keyring prompt
 
@@ -134,13 +135,20 @@ to do:
   the Deck's 1280x800 screen, and games installed on the microSD card are found.
 - With **Launch at startup** on, AW Next also runs in **Game Mode**: it starts as a
   background service once Steam is up.
-- Game Mode shows no desktop notifications, so every unlock goes to AW Next's own popup, drawn over
-  the game from the top-left corner of the screen. With SteamOS's performance overlay shown, the
-  popup may be hidden.
+- Game Mode shows no desktop notifications, so AW Next draws each unlock as its own popup over the
+  game, from the top-left corner of the screen. With SteamOS's performance overlay shown, that popup
+  may be hidden.
+- The **Decky plugin** in the repository's `decky/` folder sends each unlock to Steam's own
+  notifications instead, which Game Mode always draws, and while it listens AW Next keeps its own popup
+  off, so the player sees one notification. Without the plugin the popup stays the fallback. For now it
+  is installed by hand: build it
+  (`npm install`, then `npm run build`) and copy it to `~/homebrew/plugins/achievement-watcher/`, as
+  its [README](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/decky/README.md) explains.
+  It needs AW Next running with its websocket feed on, which is the default.
 
-This works in a Game Mode session reproduced on a PC; on a real Deck, the popup above the game has
-not been confirmed. If you try it, an [issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues)
-saying what you saw helps.
+The popup was checked in a Game Mode session reproduced on a PC; the Decky plugin has unit tests only.
+Neither has been confirmed on a real Deck yet. If you try either, an
+[issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues) saying what you saw helps.
 
 ## Reporting a problem
 

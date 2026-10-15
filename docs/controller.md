@@ -134,3 +134,9 @@ or is not being tracked.
 [← Documentation](README.md) · [Overlay guide](overlay.md) · [Project home](https://github.com/Shirowwww/Achievement-Watcher-Next)
 
 </div>
+
+## On Linux
+
+On Linux AW Next reads gamepads from the kernel's input devices, and the shortcuts above work the same
+way. While Steam Input runs, it reads only Steam's virtual pads, so one press is not counted twice. The
+Steam Deck and the Decky plugin are covered in [Linux and the Steam Deck](linux.md#steam-deck).

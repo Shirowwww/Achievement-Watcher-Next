@@ -3,6 +3,9 @@
 AW Next announces an unlock with a native Windows notification (toast), an in-game overlay popup, or
 both. Choose how under **Settings → Notification**.
 
+On Linux, the notification is the desktop's own (GNOME or KDE), and the overlay works the same way.
+Do Not Disturb and the Priority notifications switch are covered in [Supported desktops](linux.md#supported-desktops).
+
 <div align="center">
 <picture><source srcset="assets/shot/notifications-panel-800.webp 800w, assets/shot/notifications-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/notifications-panel.png" width="720" height="529" alt="Settings - Notification"></picture><br>
 <sub>One delivery mode, one preset - Automatic handles the rest</sub>

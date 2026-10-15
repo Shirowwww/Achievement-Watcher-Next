@@ -1,6 +1,8 @@
 # HDR screenshot helper
 
-This transient Windows helper takes every achievement screenshot. It captures the primary display
+This transient Windows helper takes every achievement screenshot on Windows; it is shipped only as
+a Windows executable, and Linux takes its screenshots another way (see [docs/linux.md](../../docs/linux.md)).
+It captures the primary display
 with Windows Graphics Capture and writes an ordinary PNG: in `R16G16B16A16_FLOAT`, tone-mapped to
 SDR sRGB, when HDR is active, and as the plain `R8G8B8A8` frame otherwise. It replaced
 `screenshot-desktop`, whose Windows path compiled a C# screen grabber with `csc.exe` into `%TEMP%`

@@ -17,7 +17,7 @@
     <title>Achievement Watcher Next - every achievement, one experience</title>
     <meta
       name="description"
-      content="Windows app that tracks achievements, rarity and playtime across Steam, GOG, Epic, Ubisoft, EA, Xbox PC, RetroAchievements, local saves and emulators, with an in-game overlay or Windows notifications. Free and open source."
+      content="Windows and Linux app that tracks achievements, rarity and playtime across Steam, GOG, Epic, Ubisoft, EA, Xbox PC, RetroAchievements, local saves, emulators and Wine or Proton games, with an in-game overlay or desktop notifications. Free and open source."
     />
     <link rel="canonical" href="https://shirowwww.github.io/Achievement-Watcher-Next/" />
     <link rel="alternate" type="application/rss+xml" title="Achievement Watcher Next releases" href="releases.xml" />
@@ -915,9 +915,7 @@
                 <li>
                   <b data-i18n="install.step1Title">Install it</b>
                   <span class="muted" data-i18n="install.step1Body">
-                    <code>Achievement.Watcher.Setup.&lt;version&gt;.exe</code> from the releases page, or
-                    <code>Achievement.Watcher.Portable.&lt;version&gt;.zip</code> if you would rather have no installer:
-                    extract it anywhere and its data stays beside it. Nowhere else publishes them.
+                    Windows: <code>Achievement.Watcher.Setup.&lt;version&gt;.exe</code>, or <code>Achievement.Watcher.Portable.&lt;version&gt;.zip</code> if you would rather have no installer: extract it anywhere and its data stays beside it. Linux: <code>Achievement.Watcher.&lt;version&gt;.AppImage</code>, which needs FUSE 2. Both come from the releases page, and nowhere else.
                   </span>
                 </li>
                 <li>
@@ -939,11 +937,7 @@
                 Achievement Watcher folder without modifying it.
               </p>
               <p class="small muted" style="margin-top: 12px" data-i18n="install.linux">
-                On Linux, take <code>Achievement.Watcher.&lt;version&gt;.AppImage</code> from the same page, make it
-                executable and start it; it needs FUSE 2 (<code>libfuse2</code>). It updates itself, watches the games you
-                run through Steam, Proton, Wine, Lutris, Heroic or Bottles and keeps its data in
-                <code>~/.config/Achievement Watcher Next</code>. The <a href="linux.html">Linux guide</a> covers desktops,
-                the overlay shortcut and the Steam Deck.
+                On Linux, the AppImage updates itself, keeps its data in <code>~/.config/Achievement Watcher Next</code> and watches the games you run through Steam, Proton, Wine, Lutris, Heroic or Bottles. The <a href="linux.html">Linux guide</a> covers desktops, the overlay shortcut and the Steam Deck.
               </p>
               <div class="hero-cta">
                 <a class="btn" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-installer data-i18n="install.download">
