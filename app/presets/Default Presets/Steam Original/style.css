@@ -57,7 +57,7 @@ body {
   transform: translate(-50%, -50%) scale(var(--scale, 1));
 }
 
-/* The Steam mark, much larger than the card and mostly cropped, barely lighter than the slate. */
+/* The Steam mark, much larger than the card and mostly cropped, a faint shade over the slate. */
 .ach::before {
   content: '';
   position: absolute;
@@ -67,7 +67,7 @@ body {
   width: 190px;
   height: 190px;
   background: #ffffff;
-  opacity: 0.035;
+  opacity: 0.07;
   -webkit-mask: url('logo.svg') center / contain no-repeat;
   mask: url('logo.svg') center / contain no-repeat;
   pointer-events: none;

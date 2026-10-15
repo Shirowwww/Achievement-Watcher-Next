@@ -1,9 +1,7 @@
 /*
-  The home page's own sections, on top of assets/css/site.css (fonts, palette, header, footer).
-
-  One family, Archivo, used at two widths: expanded for titles and figures, the way a console menu
-  sets them, normal for reading. Surfaces are told apart by a step in tone rather than by lines or
-  shadows; the app's own screenshots carry their own borders and are marked data-ui.
+  The home page's sections, on top of site.css. Archivo is expanded for titles and figures, normal
+  for reading. Surfaces differ by a step in tone, not lines or shadows; the app's screenshots carry
+  their own borders and are marked data-ui.
 */
 
 /* --- hero ------------------------------------------------------------------------------------- */
@@ -1052,7 +1050,7 @@
 
 .source {
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto 1fr;
   gap: 10px;
   min-height: 260px;
   padding: 28px;
@@ -1952,6 +1950,7 @@ html:not([data-os='linux']) .for-linux {
 
   .preset-name {
     flex: none;
+    min-height: var(--control);
     padding: 8px 14px;
     border-radius: var(--radius);
     background: var(--surface);
@@ -2034,6 +2033,11 @@ html:not([data-os='linux']) .for-linux {
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
+  }
+
+  .preset-names::-webkit-scrollbar,
+  .theme-names::-webkit-scrollbar {
+    display: none;
   }
 
   /* The cut-off chip fades out at the edge, which says the row scrolls on. */

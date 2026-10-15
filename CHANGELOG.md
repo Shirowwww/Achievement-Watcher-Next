@@ -26,7 +26,8 @@ renamed in 3.9.0 and the history is kept under one file.
   Settings, by AW Next's own software recorder, which saves WebM files and shows what it cost.
 - **A Steam Original preset.** A copy of the popup the current Steam client draws: its slate
   gradient and faint Steam mark, the square icon, and for progress the "19/50" count over a thin
-  blue bar. A rare unlock only gets the gold rim Steam puts around the icon.
+  blue bar. A rare unlock only gets the gold rim Steam puts around the icon. The earlier Steam
+  preset is now called Steam Modern, and a saved choice of Steam follows it.
 - **RetroAchievements games found on disk.** A game whose ROM RetroArch knows, from its history or
   a scanned playlist, now counts as installed and opens on the ROM's folder.
 - **A new installer and uninstaller.** One window in AW Next's own look replaces the Windows

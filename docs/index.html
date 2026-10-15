@@ -187,7 +187,7 @@
             <ul class="hero-facts">
               <li data-release-line data-i18n="hero.noteVersion">Latest release on GitHub</li>
               <li data-i18n="hero.eyebrow">Windows 10 and 11, Linux</li>
-              <li data-i18n="hero.noteLicense">LGPL-3.0, no account, no API key</li>
+              <li data-i18n="hero.noteLicense">LGPL-3.0, no account or API key required</li>
               <li><a href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-i18n="hero.allDownloads">Portable ZIP, Linux AppImage and all downloads</a></li>
             </ul>
           </div>
@@ -306,7 +306,7 @@
           <li><b data-count="languages">28</b><span data-i18n="strip.languages">interface languages</span></li>
           <li><b data-count="presets">10</b><span data-i18n="strip.presets">bundled presets</span></li>
           <li><b data-count="themes">13</b><span data-i18n="strip.themes">built-in themes</span></li>
-          <li><b>0</b><span data-i18n="strip.keys">API keys to enter</span></li>
+          <li><b>0</b><span data-i18n="strip.keys">API keys required</span></li>
         </ul>
       </section>
       </div>
@@ -501,7 +501,8 @@
           </p>
           <div class="preset-names" role="tablist" data-preset-tabs data-i18n-attr="aria-label:presets.pickerLabel" aria-label="Choose a preset">
             <button class="preset-name" type="button" role="tab" aria-selected="true" tabindex="0" aria-controls="preset-panel" data-preset="aw-next">AW Next</button>
-            <button class="preset-name" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="preset-panel" data-preset="steam">Steam</button>
+            <button class="preset-name" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="preset-panel" data-preset="steam-modern">Steam Modern</button>
+            <button class="preset-name" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="preset-panel" data-preset="steam-original">Steam Original</button>
             <button class="preset-name" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="preset-panel" data-preset="epic-games">Epic Games</button>
             <button class="preset-name" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="preset-panel" data-preset="playstation">PlayStation</button>
             <button class="preset-name" type="button" role="tab" aria-selected="false" tabindex="-1" aria-controls="preset-panel" data-preset="xbox">Xbox</button>
@@ -522,8 +523,11 @@
               <div class="slide is-active" data-slide="aw-next">
                 <iframe class="popup-frame" data-preset-frame data-stage-frame src="assets/preset/aw-next/index.html" width="474" height="136" sandbox="allow-scripts" scrolling="no" title="Live preset preview" data-i18n-attr="title:presets.frameTitle"></iframe>
               </div>
-              <div class="slide" data-slide="steam">
-                <iframe class="popup-frame" data-preset-frame src="assets/preset/steam/index.html" width="474" height="136" sandbox="allow-scripts" scrolling="no" loading="lazy" tabindex="-1" title="Steam preset preview"></iframe>
+              <div class="slide" data-slide="steam-modern">
+                <iframe class="popup-frame" data-preset-frame src="assets/preset/steam-modern/index.html" width="474" height="136" sandbox="allow-scripts" scrolling="no" loading="lazy" tabindex="-1" title="Steam Modern preset preview"></iframe>
+              </div>
+              <div class="slide" data-slide="steam-original">
+                <iframe class="popup-frame" data-preset-frame src="assets/preset/steam-original/index.html" width="474" height="136" sandbox="allow-scripts" scrolling="no" loading="lazy" tabindex="-1" title="Steam Original preset preview"></iframe>
               </div>
               <div class="slide" data-slide="epic-games">
                 <iframe class="popup-frame" data-preset-frame src="assets/preset/epic-games/index.html" width="474" height="136" sandbox="allow-scripts" scrolling="no" loading="lazy" tabindex="-1" title="Epic Games preset preview"></iframe>
@@ -584,8 +588,12 @@
             The default. The app's own palette, an accent rail down the left edge, a ringed icon and the game's name
             above the achievement.
           </li>
-          <li data-preset="steam" data-i18n="presets.noteSteam">
+          <li data-preset="steam-modern" data-i18n="presets.noteSteam">
             Dark navy plate, the Steam mark behind the text, square corners, sliding up out of the bottom edge.
+          </li>
+          <li data-preset="steam-original" data-i18n="presets.noteSteamOriginal">
+            The popup the Steam client draws today: a slate gradient, a faint oversized Steam mark, a square icon. A rare
+            unlock only gets a gold rim.
           </li>
           <li data-preset="epic-games" data-i18n="presets.noteEpic">
             Flat and neutral, the widest gutters in the set, one rule down the left edge.

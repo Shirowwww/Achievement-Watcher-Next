@@ -1,10 +1,7 @@
 /*
-  What every page of the site shares, the guides aside: Archivo, the palette in both themes, the
-  base, the controls, the header with the menu its links fold into, and the footer with the game
-  scene. assets/css/home.css and assets/css/gallery.css add each page's own sections on top.
-
-  Three theme states, as in the guides' skin (assets/css/style.scss): no attribute follows the
-  system, data-theme="dark"/"light" is a choice the reader made, stored under the `aw-theme` key.
+  What every page shares, the guides aside: fonts, palette, base, controls, header, menu and footer;
+  home.css and gallery.css add each page's sections. As in the guides' skin, no data-theme follows
+  the system and data-theme="dark"/"light" is the reader's choice, stored under `aw-theme`.
 */
 
 /* --- fonts ------------------------------------------------------------------------------------ */
@@ -99,6 +96,7 @@
   --gap: 12px;
   --section: clamp(96px, 7vw + 48px, 200px);
   --head-h: 64px;
+  --control: 40px;
 
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --fast: 160ms;
@@ -323,6 +321,36 @@ kbd {
   color: var(--accent-ink);
 }
 
+@media (pointer: coarse) {
+  :root {
+    --control: 44px;
+  }
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-3) var(--bg);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 10px;
+  background: var(--surface-3) padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted) padding-box;
+}
+
 .skip-link {
   position: absolute;
   left: 16px;
@@ -421,7 +449,7 @@ kbd {
 }
 
 .btn-small {
-  min-height: 40px;
+  min-height: var(--control);
   padding: 0 16px;
 }
 
@@ -435,7 +463,7 @@ kbd {
 }
 
 .btn-quiet {
-  min-height: 40px;
+  min-height: var(--control);
   padding: 0 14px;
   border: 0;
   border-radius: var(--radius);
@@ -454,7 +482,7 @@ kbd {
 }
 
 .chip {
-  min-height: 40px;
+  min-height: var(--control);
   padding: 0 14px;
   border: 0;
   border-radius: var(--radius);
@@ -609,8 +637,8 @@ kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: var(--control);
+  height: var(--control);
   padding: 0;
   border: 0;
   border-radius: var(--radius);
@@ -667,7 +695,7 @@ kbd {
 
 .site-select {
   width: 100%;
-  height: 40px;
+  height: var(--control);
   padding: 0 32px 0 14px;
   -webkit-appearance: none;
   appearance: none;
@@ -695,7 +723,7 @@ kbd {
 .lang-slot {
   display: none;
   min-width: 7rem;
-  height: 40px;
+  height: var(--control);
 }
 
 .js .lang-slot {

@@ -31,7 +31,9 @@ const LEGACY_PRESET_ALIASES = {
   'Xbox 360': 'Xbox',
   'Xbox One': 'Xbox',
   Orbit: 'Xbox',
-  Deck: 'Steam',
+  Deck: 'Steam Modern',
+  // Renamed when Steam Original joined it, so the two Steam looks read apart.
+  Steam: 'Steam Modern',
   // Artwork behind the text.
   'Game Cover': 'Cover',
   Sunset: 'Cover',

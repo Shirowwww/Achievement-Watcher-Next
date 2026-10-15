@@ -15,7 +15,7 @@
   */
   var TURNS = [
     { preset: 'aw-next', name: 'AW Next', state: 'normal', goal: 'Reach the summit before dawn' },
-    { preset: 'steam', name: 'Steam', state: 'rare', goal: 'Finish the heist without an alarm' },
+    { preset: 'steam-modern', name: 'Steam Modern', state: 'rare', goal: 'Finish the heist without an alarm' },
     { preset: 'playstation', name: 'PlayStation', state: 'progress', goal: 'Relics recovered 34 / 50' },
     { preset: 'xbox', name: 'Xbox', state: 'normal', goal: 'Reach the summit before dawn' },
     { preset: 'glass', name: 'Glass', state: 'rare', goal: 'Finish the heist without an alarm' },

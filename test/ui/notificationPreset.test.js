@@ -113,7 +113,7 @@ test('platform presets keep the platform name', () => {
   const fs = require('fs');
   const path = require('path');
   const bundled = new Set(fs.readdirSync(path.join(__dirname, '..', '..', 'app', 'presets', 'Default Presets')));
-  for (const name of ['Steam', 'Epic Games', 'PlayStation', 'Xbox']) {
+  for (const name of ['Steam Modern', 'Steam Original', 'Epic Games', 'PlayStation', 'Xbox']) {
     assert.ok(bundled.has(name), `the "${name}" preset must ship under that name`);
   }
 });
@@ -123,6 +123,7 @@ test('legacyPresetAlias only answers for names that were removed', () => {
   assert.equal(legacyPresetAlias('Xbox 360'), 'Xbox');
   assert.equal(legacyPresetAlias('PS5 enhanced'), 'PlayStation');
   assert.equal(legacyPresetAlias('mudoss'), 'Outline');
+  assert.equal(legacyPresetAlias('Steam'), 'Steam Modern');
   assert.equal(legacyPresetAlias(DEFAULT_PRESET), '');
   assert.equal(legacyPresetAlias('something a user made'), '');
   assert.equal(legacyPresetAlias(''), '');

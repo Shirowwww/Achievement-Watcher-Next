@@ -16,7 +16,8 @@ and colour, and each was designed to be recognisable at a glance while a game is
 | Preset | What it is |
 | --- | --- |
 | **AW Next** | The signature, and the default. The app's own palette, an accent rail down the left edge, a ringed icon and the game's name above the achievement. |
-| **Steam** | The dark navy plate with the Steam mark behind the text, square corners, sliding up out of the bottom edge. |
+| **Steam Modern** | The dark navy plate with the Steam mark behind the text, square corners, sliding up out of the bottom edge. |
+| **Steam Original** | A copy of the popup the Steam client draws today: slate gradient, a faint oversized Steam mark, a square icon, and only a gold rim for a rare unlock. |
 | **Epic Games** | Flat, neutral and square-shouldered, with the widest gutters in the set and a single rule down the left edge. |
 | **PlayStation** | The console's own type and long grey-to-black panel, with the PlayStation mark pulsing inside a ring on the right. |
 | **Xbox** | A dark pill with a green arc that sweeps once around the circular icon and settles into a steady ring. |
@@ -49,8 +50,8 @@ palettes and the state system are AW Next's own.
 
 > [!NOTE]
 > Presets shipped under earlier names still resolve: `Shirow`/`Default`/`Midnight`/`xqjan` to
-> **AW Next**, `PS4`/`PS5 enhanced` to **PlayStation**, `Xbox 360`/`Xbox One` to **Xbox**,
-> `Game Cover`/`Sunset` to **Cover**, `Clean`/`Modern`/`Smooth Pop` to **Glass**,
+> **AW Next**, `Steam` to **Steam Modern**, `PS4`/`PS5 enhanced` to **PlayStation**,
+> `Xbox 360`/`Xbox One` to **Xbox**, `Game Cover`/`Sunset` to **Cover**, `Clean`/`Modern`/`Smooth Pop` to **Glass**,
 > `Neon Future`/`LAZ0RBOX` to **Arcade**, and the community `ArmsofGod`, `Epic Preset`,
 > `TigerDX Award` and `mudoss` to **Pantheon**, **Onyx**, **Hexagon** and **Outline**. A preset of
 > your own carrying one of those names is always used ahead of the replacement.

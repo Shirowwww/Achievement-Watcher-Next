@@ -1,9 +1,6 @@
 /*
-  The two community galleries, presets (gallery/index.html) and themes (gallery/themes/index.html).
-
-  assets/css/site.css comes first and gives them everything the home page has: Archivo, the palette,
-  the controls, the header with its menu and the footer. This file adds the galleries' own pieces
-  and the few tokens only they use; both theme states follow site.css.
+  The preset and theme galleries, on top of site.css (fonts, palette, controls, header, footer):
+  their own pieces and the few tokens only they use.
 */
 
 /* --- tokens ----------------------------------------------------------------------------------- */
@@ -51,47 +48,13 @@
 
 /* --- base ------------------------------------------------------------------------------------- */
 
-/*
-  `hidden` is an attribute, and the browser implements it as `display: none` at the lowest possible
-  weight - so any class here that sets `display` beats it, and an element the script has hidden stays
-  on screen. Three did: the gallery grid, its status box and the submission panel, which meant the
-  "Loading" placeholder sat under the cards and the upload panel showed even when no server had
-  answered. This is the one place it is worth being blunt about.
-*/
+/* The browser's `[hidden]` rule loses to any class that sets `display`, so script-hidden grids and
+   panels stayed on screen. */
 [hidden] {
   display: none !important;
 }
 
-/* Thin scrollbars in the site's colours instead of the browser's grey slabs. */
-html {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-strong) var(--bg);
-}
-
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  border: 3px solid transparent;
-  border-radius: 10px;
-  background: var(--border-strong) padding-box;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--muted) padding-box;
-}
-
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: var(--font);
   font-size: 17px;
   line-height: 1.65;
   overflow-x: clip;
@@ -102,7 +65,6 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font);
   font-stretch: 112%;
   font-weight: 700;
   line-height: 1.15;
@@ -192,6 +154,11 @@ kbd {
 
 .section {
   padding-block: clamp(64px, 8vw, 116px);
+}
+
+/* The footer brings its own space above it. */
+main > .section:last-child {
+  padding-bottom: 0;
 }
 
 /* The header is sticky, so an in-page link would otherwise land with its heading underneath it. */
@@ -340,10 +307,7 @@ kbd {
   gap: 20px;
 }
 
-/*
-  The cards' place while the listing loads. Without them the page is a short "Loading" box, and when
-  the cards arrive everything below drops by their height - the footer was visible and then was not.
-*/
+/* The cards' place while the listing loads, so nothing below drops when they arrive. */
 .skeleton-card {
   display: block;
   min-height: 380px;
@@ -726,13 +690,7 @@ kbd {
   font-weight: 700;
 }
 
-/*
-  The file, held rather than sent.
-
-  Choosing a file used to be the submission, so the boxes above it were filled in by whoever thought
-  to fill them in first. It is now picked here, named on this line, and one press of Publish sends
-  it - which is what makes the form worth having at all.
-*/
+/* The file is picked and named here, and only Publish sends it with the fields above. */
 .submit-file {
   display: flex;
   flex-wrap: wrap;
@@ -753,13 +711,8 @@ kbd {
   font-weight: 600;
 }
 
-/*
-  Tags, one at a time.
-
-  A chip is a button rather than a list item with a cross beside it: removing one is the only thing
-  it does, so making the whole chip the target is both the larger hit area and one tab stop instead
-  of two.
-*/
+/* A tag chip is one button: removing it is all it does, so the whole chip is the target and
+   one tab stop. */
 .field-tags {
   max-width: 640px;
 }

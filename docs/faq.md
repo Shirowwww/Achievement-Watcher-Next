@@ -33,8 +33,8 @@ RetroAchievements-enabled emulator runs. See [RetroAchievements](sources.md#retr
 
 ### Do I have to connect any account?
 No. Steam, Epic and Xbox PC can each be connected *optionally*, to read what the local files do not
-carry; every token is encrypted before it is stored on this PC. Everything else works without an
-account.
+carry, and RetroAchievements asks for your username and Web API key only if you use it; every token
+and key is encrypted before it is stored on this PC. Everything else works without an account.
 
 ### Does it work offline?
 Yes, for local sources and anything already cached. Achievement names, descriptions and artwork are
