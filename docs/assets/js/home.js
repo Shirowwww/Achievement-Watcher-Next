@@ -237,6 +237,16 @@
     });
   }
 
+  // The install step shows the visitor's own system; this brings up the other one, and back.
+  function setupPlatformSwitch() {
+    var toggle = document.querySelector('[data-platform-switch]');
+    if (!toggle) return;
+    toggle.addEventListener('click', function () {
+      toggle.parentElement.classList.toggle('is-other');
+    });
+  }
+
   setupGame();
   setupReveal();
+  setupPlatformSwitch();
 })();

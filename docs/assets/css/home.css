@@ -494,7 +494,14 @@ kbd {
   top: 0;
   z-index: 50;
   background: var(--bg);
-  transition: background-color 0.25s ease;
+  box-shadow: inset 0 -1px 0 transparent;
+  -webkit-backdrop-filter: blur(0);
+  backdrop-filter: blur(0);
+  transition:
+    background-color 0.35s ease,
+    box-shadow 0.35s ease,
+    -webkit-backdrop-filter 0.35s ease,
+    backdrop-filter 0.35s ease;
 }
 
 /* Stuck to the top, the bar turns to glass so the page shows through as it passes under. */
@@ -1161,10 +1168,12 @@ kbd {
   padding: clamp(56px, 6vw, 96px) var(--margin) 0;
 }
 
+/* Centred as one group, each figure as wide as its own words. */
 .strip-list {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--gap);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 32px clamp(40px, 6vw, 96px);
 }
 
 .strip-list li {
@@ -2009,7 +2018,7 @@ kbd {
 }
 
 .theme-window {
-  max-width: 760px;
+  max-width: 980px;
   margin: 0 auto;
   border: 1px solid var(--th-border);
   border-radius: 12px;
@@ -2133,6 +2142,7 @@ kbd {
 .theme-names {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
   margin: 16px 0;
   scroll-padding-inline: var(--margin);
@@ -2309,15 +2319,44 @@ kbd {
   grid-area: button;
 }
 
-/* The visitor's own system comes first with the filled button; the other stays one step down. */
-html[data-os='linux'] .platform-linux {
-  order: -1;
+/*
+  Only the visitor's own system is shown; the switch under it brings up the other one (is-other,
+  set by assets/js/home.js). Without script both cards stay and the switch is hidden.
+*/
+html.js:not([data-os='linux']) .platforms:not(.is-other) .platform-linux,
+html.js:not([data-os='linux']) .platforms.is-other .platform-windows,
+html.js[data-os='linux'] .platforms:not(.is-other) .platform-windows,
+html.js[data-os='linux'] .platforms.is-other .platform-linux {
+  display: none;
 }
 
-html:not([data-os='linux']) .platform-linux .btn,
-html[data-os='linux'] .platform-windows .btn {
-  background: var(--surface-2);
+html:not(.js) .platform-switch,
+html:not([data-os='linux']) .platforms:not(.is-other) .to-windows,
+html:not([data-os='linux']) .platforms.is-other .to-linux,
+html[data-os='linux'] .platforms:not(.is-other) .to-linux,
+html[data-os='linux'] .platforms.is-other .to-windows {
+  display: none;
+}
+
+.platform-switch {
+  justify-self: start;
+  padding: 6px 2px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--step-small);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--fast) ease;
+}
+
+.platform-switch:hover {
   color: var(--ink);
+}
+
+.platform-switch span::after {
+  content: ' →';
 }
 
 html[data-os='linux'] .for-windows,
@@ -2605,31 +2644,69 @@ html:not([data-os='linux']) .for-linux {
 
 /* --- responsive ------------------------------------------------------------------------------- */
 
-/* The width assets/js/site.js moves the links into the menu at; the two have to agree. */
 /* assets/js/site.js sets is-compact when the links do not fit on the bar: they move into a menu. */
 .is-compact .nav-toggle {
   display: inline-flex;
   order: 3;
 }
 
+/*
+  The menu is a panel that drops in under the bar, its links following one after the other.
+  Closed, it stays laid out but hidden, so opening and closing can both be animated.
+*/
 .is-compact .site-nav {
   position: absolute;
-  top: var(--head-h);
-  left: 0;
-  right: 0;
-  flex-direction: column;
-  gap: 2px;
-  padding: 8px var(--margin) 16px;
+  top: calc(var(--head-h) + 6px);
+  left: var(--margin);
+  right: var(--margin);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 4px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
   background: var(--surface);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
+    0 28px 60px -24px rgba(0, 0, 0, 0.55);
+  transform-origin: 50% 0;
+  transition:
+    opacity 0.28s var(--ease),
+    transform 0.32s var(--ease),
+    visibility 0s;
 }
 
 .is-compact .site-nav[hidden] {
-  display: none;
+  display: grid;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-10px) scale(0.98);
+  transition:
+    opacity 0.18s ease,
+    transform 0.2s ease,
+    visibility 0s linear 0.2s;
 }
 
 .is-compact .site-nav a {
-  padding: 12px;
+  padding: 14px 16px;
+  color: var(--ink);
   font-size: var(--step-body);
+  transition:
+    opacity 0.3s ease calc(var(--i, 0) * 35ms + 60ms),
+    transform 0.4s var(--ease) calc(var(--i, 0) * 35ms + 60ms),
+    background-color var(--fast) ease;
+}
+
+.is-compact .site-nav[hidden] a {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition-delay: 0s;
+}
+
+.site-head.is-fitting .site-nav,
+.site-head.is-fitting .site-nav[hidden],
+.site-head.is-fitting .site-nav a,
+.site-head.is-fitting .site-nav[hidden] a {
+  transition: none;
 }
 
 .is-compact .head-actions {
@@ -2667,11 +2744,6 @@ html:not([data-os='linux']) .for-linux {
 
   .hud {
     font-size: 0.75rem;
-  }
-
-  .strip-list {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    row-gap: 32px;
   }
 
   .section-head {
@@ -2779,9 +2851,20 @@ html:not([data-os='linux']) .for-linux {
     display: none;
   }
 
+  /* It stands in for the header button, so it is drawn like it, across the whole menu. */
   .site-nav .nav-download {
     display: block;
-    color: var(--accent);
+    grid-column: 1 / -1;
+    margin-top: 4px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .is-compact .site-nav .nav-download:hover {
+    background: var(--accent);
+    filter: brightness(1.08);
   }
 }
 
@@ -2804,6 +2887,7 @@ html:not([data-os='linux']) .for-linux {
 
   .theme-names {
     flex-wrap: nowrap;
+    justify-content: flex-start;
     margin-inline: calc(-1 * var(--margin));
     padding: 4px var(--margin) 12px;
     overflow-x: auto;
@@ -2825,11 +2909,6 @@ html:not([data-os='linux']) .for-linux {
 
   .hud p {
     padding: 7px 12px;
-  }
-
-  .site-nav .nav-download {
-    display: block;
-    color: var(--accent);
   }
 
   .lang-slot {
@@ -2861,6 +2940,7 @@ html:not([data-os='linux']) .for-linux {
   }
 
   .strip-list {
+    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

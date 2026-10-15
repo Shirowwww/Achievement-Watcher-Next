@@ -18,6 +18,7 @@
       name="description"
       content="Achievement Watcher Next, the successor of Achievement Watcher: a free Windows and Linux app that tracks achievements, rarity and playtime for Steam, GOG, Epic, Ubisoft, EA, Xbox PC and RetroAchievements, and for cracked and emulated games (Goldberg, GBE Fork, CODEX, RUNE, CPY, Uplay R1 and R2), with an achievement popup over the game. Open source."
     />
+    <meta name="google-site-verification" content="R2gEUCdKG7hQa-91M4ssHsQWLzD9uacTC4ZgXxqBss0" />
     <link rel="canonical" href="https://shirowwww.github.io/Achievement-Watcher-Next/" />
     <link rel="alternate" type="application/rss+xml" title="Achievement Watcher Next releases" href="releases.xml" />
     <meta http-equiv="content-language" content="en" />
@@ -295,7 +296,7 @@
             <li><i class="marquee-mark" data-mark="xbox"></i>Xbox PC</li>
             <li><i class="marquee-mark" data-mark="retro"></i>RetroAchievements</li>
             <li><i class="marquee-mark" data-mark="emulators"></i><span data-i18n="sources.emulatorsTitle">Emulators</span></li>
-            <li><i class="marquee-mark" data-mark="saves"></i><span data-i18n="sources.savesTitle">Steam compatible saves</span></li>
+            <li><i class="marquee-mark" data-mark="saves"></i><span data-i18n="sources.savesTitle">Cracked games (Steam emulators)</span></li>
           </ul>
         </div>
         <ul class="strip-list" data-reveal>
@@ -339,12 +340,12 @@
 
         <article class="feature-row feature-flip">
           <div class="feature-text" data-reveal>
-            <h3 data-i18n="features.healthTitle" data-split>Cracked games too</h3>
+            <h3 data-i18n="features.healthTitle" data-split>Game Health, built for cracked games</h3>
             <p data-i18n="features.healthBody">
-              A cracked or emulated game keeps its achievements in its own files: a Steam emulator's save (Goldberg, GBE
-              Fork, CODEX, RUNE, CPY…), an emulator's folder, a Uplay R1 or R2 config. AW Next reads them there, offline and
-              with no account. Game Health then checks each game: Ready, Needs attention or Not tracking, the reason in
-              plain words, and the one repair that fits, confirmed first and backed up.
+              Made above all for cracked and emulated games: their achievements live in their own files, a Steam emulator's
+              save (Goldberg, GBE Fork, CODEX, RUNE, CPY…), an emulator's folder, a Uplay R1 or R2 config, and AW Next reads
+              them there, offline. When one does not show up, Game Health checks the game, says Ready, Needs attention or
+              Not tracking with the reason in plain words, and offers the one repair that fits, confirmed first and backed up.
             </p>
           </div>
           <div class="feature-shot" data-ui data-shutter>
@@ -436,8 +437,8 @@
           </div>
           <div class="source">
             <span class="source-mark" data-mark="saves" aria-hidden="true"></span>
-            <b data-i18n="sources.savesTitle">Steam compatible saves</b>
-            <span data-i18n="sources.saves">Goldberg, GBE Fork, GreenLuma, SmartSteamEmu, CreamAPI, Nemirtingas</span>
+            <b data-i18n="sources.savesTitle">Cracked games (Steam emulators)</b>
+            <span data-i18n="sources.saves">Games cracked with Goldberg, GBE Fork, CODEX, RUNE, CPY, GreenLuma, SmartSteamEmu, CreamAPI or Nemirtingas, read from their own saves</span>
           </div>
           <div class="source">
             <span class="source-mark" data-mark="gog" aria-hidden="true"></span>
@@ -958,6 +959,10 @@
                     Download for Linux
                   </a>
                 </div>
+                <button class="platform-switch" type="button" data-platform-switch>
+                  <span class="to-linux" data-i18n="install.showLinux">On Linux? Get the AppImage</span>
+                  <span class="to-windows" data-i18n="install.showWindows">On Windows? Get the installer</span>
+                </button>
               </div>
             </li>
             <li>
@@ -1053,9 +1058,9 @@
     </footer>
 
     <script src="assets/js/i18n.js" defer></script>
+    <script src="assets/js/vendor/lenis.min.js" defer></script>
     <script src="assets/js/site.js" defer></script>
     <script src="assets/js/home.js" defer></script>
-    <script src="assets/js/vendor/lenis.min.js" defer></script>
     <script src="assets/js/effects.js" defer></script>
   </body>
 </html>

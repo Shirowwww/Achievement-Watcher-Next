@@ -1,7 +1,7 @@
 /*
-  The home page's feel under the hand: smooth scrolling, the hero receding under the figures, the
-  marquee, the preset ring, the words that come into focus and the light and depth that answer the
-  pointer. assets/css/effects.css holds the looks; without this file every part sits still and whole.
+  The home page's feel under the hand: the hero receding under the figures, the marquee, the preset
+  ring, the words that come into focus and the light and depth that answer the pointer.
+  assets/css/effects.css holds the looks; without this file every part sits still and whole.
 */
 (function () {
   'use strict';
@@ -10,11 +10,6 @@
   var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   var observes = 'IntersectionObserver' in window;
 
-  // A button leans a few pixels towards a pointer over it or just beside it, never into its neighbour.
-  var MAGNET_REACH_PX = 16;
-  var MAGNET_PULL_X = 0.08;
-  var MAGNET_PULL_Y = 0.18;
-  var MAGNET_MAX_PX = 6;
   var TILT_X_DEG = 6;
   var TILT_Y_DEG = 8;
   var SWIPE_PX = 40;
@@ -26,11 +21,6 @@
   function headHeight() {
     var head = document.querySelector('.site-head');
     return head ? head.offsetHeight : 0;
-  }
-
-  function setupScroll() {
-    if (reduced || typeof window.Lenis !== 'function') return;
-    new window.Lenis({ autoRaf: true, lerp: 0.1, anchors: { offset: -headHeight() } });
   }
 
   // --recede goes from 0 to 1 while the figures slide up over the pinned hero.
@@ -170,12 +160,13 @@
       if (Math.abs(moved) > SWIPE_PX) press(active + (moved < 0 ? 1 : -1));
     });
 
-    var narrow = window.matchMedia('(max-width: 960px)');
+    // The ring needs room for its neighbours beside the popup; a smaller stage shows one at a time.
+    var RING_MIN_PX = 900;
     var webkit = Boolean(window.CSS && window.CSS.supports('font', '-apple-system-body'));
     function flatten() {
-      ring.classList.toggle('is-flat', webkit || narrow.matches);
+      ring.classList.toggle('is-flat', webkit || ring.clientWidth < RING_MIN_PX);
     }
-    if (narrow.addEventListener) narrow.addEventListener('change', flatten);
+    window.addEventListener('resize', flatten);
     flatten();
     place();
   }
@@ -226,56 +217,10 @@
     );
   }
 
-  // The large buttons lean towards a pointer that comes near, and settle back when it leaves.
-  function setupMagnets() {
-    if (reduced || !finePointer) return;
-    var magnets = [];
-    each('.btn-lg', function (button) {
-      button.setAttribute('data-magnet', '');
-      magnets.push(button);
-    });
-    if (!magnets.length) return;
-
-    var pointer = null;
-    var queued = false;
-    var pulled = new WeakMap();
-    function clamp(value) {
-      return Math.max(-MAGNET_MAX_PX, Math.min(MAGNET_MAX_PX, value));
-    }
-    // Measured where the button sits at rest, so its own pull does not feed back into the next one.
-    function update() {
-      queued = false;
-      magnets.forEach(function (button) {
-        var box = button.getBoundingClientRect();
-        var shift = pulled.get(button) || { x: 0, y: 0 };
-        var dx = pointer.x - (box.left - shift.x + box.width / 2);
-        var dy = pointer.y - (box.top - shift.y + box.height / 2);
-        var near = Math.abs(dx) < box.width / 2 + MAGNET_REACH_PX && Math.abs(dy) < box.height / 2 + MAGNET_REACH_PX;
-        var next = near ? { x: clamp(dx * MAGNET_PULL_X), y: clamp(dy * MAGNET_PULL_Y) } : { x: 0, y: 0 };
-        pulled.set(button, next);
-        button.classList.toggle('is-pulled', near);
-        button.style.setProperty('--pull-x', next.x.toFixed(1) + 'px');
-        button.style.setProperty('--pull-y', next.y.toFixed(1) + 'px');
-      });
-    }
-    document.addEventListener(
-      'pointermove',
-      function (event) {
-        pointer = { x: event.clientX, y: event.clientY };
-        if (queued) return;
-        queued = true;
-        window.requestAnimationFrame(update);
-      },
-      { passive: true }
-    );
-  }
-
-  setupScroll();
   setupWords();
   setupRecede();
   setupMarquee();
   setupCarousel();
   setupTilt();
   setupGlow();
-  setupMagnets();
 })();

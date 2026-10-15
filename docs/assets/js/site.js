@@ -68,6 +68,16 @@
     render();
   }
 
+  // --- smooth scrolling -----------------------------------------------------------------------
+
+  // Lenis (assets/js/vendor) eases the wheel; a link to a section stops below the fixed header.
+  function setupScroll() {
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || typeof window.Lenis !== 'function') return;
+    var head = document.querySelector('.site-head');
+    new window.Lenis({ autoRaf: true, lerp: 0.1, anchors: { offset: head ? -head.offsetHeight : 0 } });
+  }
+
   // --- header ---------------------------------------------------------------------------------
 
   function setupHeader() {
@@ -95,13 +105,22 @@
     function compact() {
       return head.classList.contains('is-compact');
     }
+    // Measured with the menu's animations off, so a resize never plays a menu closing.
     function fit() {
+      head.classList.add('is-fitting');
       head.classList.remove('is-compact');
       nav.hidden = false;
       var tight = window.innerWidth <= COMPACT_BELOW_PX || row.scrollWidth > row.clientWidth + 1;
       head.classList.toggle('is-compact', tight);
       sync();
+      window.requestAnimationFrame(function () {
+        head.classList.remove('is-fitting');
+      });
     }
+    // Each link's place, for the stagger as the menu opens.
+    Array.prototype.forEach.call(nav.children, function (link, index) {
+      link.style.setProperty('--i', String(index));
+    });
     var BARS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>';
     var CLOSE =
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 5 5 6.4l5.6 5.6L5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4 17.6 5 12 10.6z"/></svg>';
@@ -129,6 +148,15 @@
         toggle.setAttribute('aria-expanded', 'false');
         sync();
       }
+    });
+
+    // The path, not contains(): the toggle swaps its icon on click, so the clicked node is gone by now.
+    document.addEventListener('click', function (event) {
+      if (toggle.getAttribute('aria-expanded') !== 'true') return;
+      var path = event.composedPath();
+      if (path.indexOf(nav) !== -1 || path.indexOf(toggle) !== -1) return;
+      toggle.setAttribute('aria-expanded', 'false');
+      sync();
     });
 
     document.addEventListener('keydown', function (event) {
@@ -565,6 +593,7 @@
   }
 
   setupTheme();
+  setupScroll();
   setupHeader();
   setupReveal();
   setupPresets();

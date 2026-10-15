@@ -1,11 +1,12 @@
 /*
-  The motion layer of the home page, driven by assets/js/effects.js: smooth scrolling, the hero
-  receding under the figures, the marquee, the preset ring, the words that come into focus and
-  the light and depth that answer the pointer. Without script, or with reduced motion asked for,
+  The motion layer of the home page, mostly driven by assets/js/effects.js: smooth scrolling, the
+  hero receding under the figures, the marquee, the preset ring, the words that come into focus,
+  the light crossing the large buttons and the light and depth that answer the pointer. Without
+  script, or with reduced motion asked for,
   every element here sits in its final, readable state.
 */
 
-/* --- smooth scrolling (Lenis) ----------------------------------------------------------------- */
+/* --- smooth scrolling (Lenis, started by site.js) --------------------------------------------- */
 
 html.lenis,
 html.lenis body {
@@ -204,8 +205,11 @@ html.lenis {
   perspective: none;
 }
 
+/* Flat, one popup at a time: the neighbours wait off to the side, unseen. */
 .carousel.is-flat .slide {
-  transform: translateX(calc(var(--d, 0) * 78%)) scale(calc(1 - var(--a, 0) * 0.16));
+  width: min(520px, 84%);
+  transform: translateX(calc(var(--d, 0) * 112%)) scale(calc(1 - var(--a, 0) * 0.08));
+  opacity: calc(1 - var(--a, 0));
   filter: none;
 }
 
@@ -388,24 +392,30 @@ html:not(.js) .carousel-turn {
   }
 }
 
-/* --- buttons drawn towards the pointer -------------------------------------------------------- */
+/* --- a light that crosses the large buttons --------------------------------------------------- */
 
-[data-magnet] {
-  translate: var(--pull-x, 0px) var(--pull-y, 0px);
-  transition:
-    translate 0.6s var(--ease),
-    transform var(--fast) var(--ease),
-    background-color var(--fast) ease;
+/* Behind the label, above the fill; it snaps back unseen once it has left by the far edge. */
+.btn-lg {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
-[data-magnet] > * {
-  translate: calc(var(--pull-x, 0px) * 0.35) calc(var(--pull-y, 0px) * 0.35);
-  transition: translate 0.6s var(--ease);
+.btn-lg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 25%, rgba(255, 255, 255, 0.32) 50%, transparent 75%); /* taste-skill-ignore: a reflection crossing the button */
+  transform: translateX(-110%);
+  pointer-events: none;
 }
 
-[data-magnet].is-pulled,
-[data-magnet].is-pulled > * {
-  transition-duration: 0.15s, var(--fast), var(--fast);
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .btn-lg:hover::after {
+    transform: translateX(110%);
+    transition: transform 0.8s var(--ease);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -428,11 +438,6 @@ html:not(.js) .carousel-turn {
 @media (max-width: 960px) {
   .slide {
     width: 84%;
-  }
-
-  .carousel.is-flat .slide {
-    transform: translateX(calc(var(--d, 0) * 112%)) scale(calc(1 - var(--a, 0) * 0.08));
-    opacity: calc(1 - var(--a, 0));
   }
 
   .carousel-turn {
