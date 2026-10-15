@@ -1,30 +1,9 @@
 /*
-  The motion layer of the home page, mostly driven by assets/js/effects.js: smooth scrolling, the
-  hero receding under the figures, the marquee, the preset ring, the words that come into focus,
-  the light crossing the large buttons and the light and depth that answer the pointer. Without
-  script, or with reduced motion asked for,
-  every element here sits in its final, readable state.
+  The motion layer of the home page, driven by assets/js/effects.js: the hero receding under the
+  figures, the marquee, the preset ring, the words that come into focus, the light crossing the
+  large buttons and the light and depth that answer the pointer. Without script, or with reduced
+  motion asked for, every element here sits in its final, readable state.
 */
-
-/* --- smooth scrolling (Lenis, started by site.js) --------------------------------------------- */
-
-html.lenis,
-html.lenis body {
-  height: auto;
-}
-
-html.lenis {
-  scroll-behavior: auto;
-}
-
-.lenis.lenis-stopped {
-  overflow: clip;
-}
-
-/* A frame under the wheel would swallow it; nothing in these frames is clickable anyway. */
-.lenis.lenis-smooth iframe {
-  pointer-events: none;
-}
 
 /* --- words that come into focus --------------------------------------------------------------- */
 

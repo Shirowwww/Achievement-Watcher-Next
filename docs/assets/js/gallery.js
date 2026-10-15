@@ -302,7 +302,7 @@
       size.appendChild(taken);
     }
     meta.appendChild(size);
-    var needs = entry.minAppVersion ? t('gallery.needs', 'Needs AW Next') + ' ' + entry.minAppVersion : formatDate(entry.added);
+    var needs = entry.minAppVersion ? t('gallery.needsVersion', 'Needs AW Next {version} or later').replace('{version}', entry.minAppVersion) : formatDate(entry.added);
     meta.appendChild(element('div', null, needs));
     meta.title = t('gallery.checksum', 'SHA-256') + ': ' + entry.file.sha256;
     footer.appendChild(meta);

@@ -1,1 +1,1 @@
-Raleway and Open Sans are licensed under the Apache License 2.0 (LICENSE.txt), the same files the app bundles in app/resources/font.
+Archivo is licensed under the SIL Open Font License 1.1 (OFL-Archivo.txt).

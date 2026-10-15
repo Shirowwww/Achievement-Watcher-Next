@@ -34,9 +34,9 @@
     <link rel="icon" type="image/png" href="../assets/favicon.png" sizes="256x256" />
     <link rel="apple-touch-icon" href="../assets/favicon.png" />
 
-    <link rel="preload" as="font" type="font/woff2" href="../assets/font/raleway-bold.woff2" crossorigin />
-    <link rel="preload" as="font" type="font/woff2" href="../assets/font/opensans-regular.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="../assets/font/archivo-latin.woff2" crossorigin />
     <link rel="stylesheet" href="../assets/css/site.css" />
+    <link rel="stylesheet" href="../assets/css/gallery.css" />
 
     <!--
       Applied before the first paint, so a reader who chose dark never sees a white flash, and a reader
@@ -75,10 +75,10 @@
     <a class="skip-link" href="#main" data-i18n="nav.skip">Skip to content</a>
 
     <header class="site-head">
-      <div class="wrap">
+      <div class="head-row">
         <a class="brand" href="../" aria-label="Achievement Watcher Next">
           <span class="brand-mark" aria-hidden="true"></span>
-          <span class="brand-word">Achievement Watcher <em>Next</em></span>
+          <span class="brand-word">Achievement Watcher Next</span>
         </a>
 
         <button
@@ -95,18 +95,18 @@
         <nav class="site-nav" id="site-nav" data-i18n-attr="aria-label:nav.primary" aria-label="Primary">
           <a href="../#features" data-i18n="nav.features">Features</a>
           <a href="../#sources" data-i18n="nav.sources">Sources</a>
-          <a href="./" aria-current="page" data-i18n="nav.presets">Presets</a>
-          <a href="themes/" data-i18n="nav.themes">Themes</a>
+          <a href="../gallery/" aria-current="page" data-i18n="nav.presets">Presets</a>
+          <a href="../gallery/themes/" data-i18n="nav.themes">Themes</a>
           <a href="../README.html" data-i18n="nav.docs">Docs</a>
           <a href="https://github.com/Shirowwww/Achievement-Watcher-Next" data-i18n="nav.github">GitHub</a>
           <!-- The header button is hidden on a narrow screen, so the menu carries it instead. -->
-          <a class="nav-download" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-i18n="nav.download">Download</a>
+          <a class="nav-download" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-installer data-i18n="nav.download">Download</a>
         </nav>
 
         <div class="head-actions">
           <span class="lang-slot" data-lang-picker></span>
           <button class="icon-btn" type="button" data-theme-toggle aria-label="Switch theme"></button>
-          <a class="btn" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-i18n="nav.download">
+          <a class="btn btn-small" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-installer data-i18n="nav.download">
             Download
           </a>
         </div>
@@ -402,65 +402,52 @@
     </main>
 
     <footer class="site-foot">
-      <div class="wrap">
-        <div class="foot-grid">
-          <div class="foot-about">
-            <a class="brand" href="../" style="margin-bottom: 12px">
-              <span class="brand-mark" aria-hidden="true"></span>
-              <span class="brand-word">Achievement Watcher <em>Next</em></span>
-            </a>
-            <p data-i18n="foot.about">
-              Maintained by Shirowwww and contributors. It continues Xan105's Achievement Watcher and darktakayanagi's
-              2.x branch. Bug reports and ideas are welcome, and so are translations.
-            </p>
-          </div>
 
-          <div>
-            <h2 data-i18n="foot.product">Product</h2>
-            <ul>
-              <li><a href="../#features" data-i18n="foot.features">Features</a></li>
-              <li><a href="../#sources" data-i18n="foot.sources">Sources</a></li>
-              <li><a href="./" data-i18n="foot.gallery">Preset gallery</a></li>
-              <li><a href="themes/" data-i18n="foot.themes">Theme gallery</a></li>
-              <li><a href="../comparison.html" data-i18n="foot.comparison">Compared to 2.x</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h2 data-i18n="foot.docs">Documentation</h2>
-            <ul>
-              <li><a href="../README.html" data-i18n="foot.allDocs">All guides</a></li>
-              <li><a href="../presets.html" data-i18n="foot.presets">Presets</a></li>
-              <li><a href="../community-galleries.html" data-i18n="foot.galleries">The community galleries</a></li>
-              <li><a href="../troubleshooting.html" data-i18n="foot.trouble">Troubleshooting</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h2 data-i18n="foot.project">Project</h2>
-            <ul>
-              <li><a href="https://github.com/Shirowwww/Achievement-Watcher-Next" data-i18n="foot.repo">Repository</a></li>
-              <li>
-                <a href="https://github.com/Shirowwww/Achievement-Watcher-Next/issues/new/choose" data-i18n="foot.issues">Report a problem</a>
-              </li>
-              <li>
-                <a href="../changelog.html" data-i18n="foot.changelog">Changelog</a>
-              </li>
-              <li>
-                <a href="https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/SECURITY.md" data-i18n="foot.security">Security policy</a>
-              </li>
-            </ul>
-          </div>
+      <div class="foot-split">
+        <div class="foot-shot" data-ui aria-hidden="true">
+          <span class="feature-scene"></span>
         </div>
 
-        <div class="foot-bottom">
-          <span data-i18n="foot.license">LGPL-3.0. Windows and Linux.</span>
-          <span data-i18n="gallery.footNote">Each preset belongs to whoever made it.</span>
+        <div class="foot-menu">
+          <a class="brand" href="../">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span class="brand-word">Achievement Watcher Next</span>
+          </a>
+
+          <nav class="foot-big" aria-label="Product">
+            <a href="../#features" data-i18n="foot.features">Features</a>
+            <a href="../#sources" data-i18n="foot.sources">Sources</a>
+            <a href="../gallery/" data-i18n="foot.gallery">Preset gallery</a>
+            <a href="../gallery/themes/" data-i18n="foot.themes">Theme gallery</a>
+            <a href="../README.html" data-i18n="foot.allDocs">All guides</a>
+          </nav>
+
+          <div class="foot-blocks">
+            <p data-i18n="foot.about">
+              Maintained by Shirowwww and contributors. It continues Xan105's Achievement Watcher and darktakayanagi's 2.x
+              branch. Bug reports and ideas are welcome, and so are translations.
+            </p>
+            <ul>
+              <li><a href="https://github.com/Shirowwww/Achievement-Watcher-Next" data-i18n="foot.repo">Repository</a></li>
+              <li><a href="https://github.com/Shirowwww/Achievement-Watcher-Next/issues/new/choose" data-i18n="foot.issues">Report a problem</a></li>
+              <li><a href="../changelog.html" data-i18n="foot.changelog">Changelog</a></li>
+              <li><a href="../comparison.html" data-i18n="foot.comparison">Compared to 2.x</a></li>
+              <li><a href="https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/SECURITY.md" data-i18n="foot.security">Security policy</a></li>
+              <li><a href="https://cs.rin.ru/forum/viewtopic.php?f=20&amp;t=161187" rel="noopener" data-i18n="foot.forum">Forum thread</a></li>
+            </ul>
+          </div>
+
+          <p class="foot-legal">
+            <span data-i18n="foot.license">LGPL-3.0. Windows and Linux.</span>
+            <span data-i18n="foot.affiliation">Not affiliated with Valve, Sony, Microsoft, GOG, Epic Games, Electronic Arts or Ubisoft.</span>
+            <span data-i18n="gallery.footNote">Each preset belongs to whoever made it.</span>
+          </p>
         </div>
       </div>
     </footer>
 
     <script src="../assets/js/i18n.js" defer></script>
+    <script src="../assets/js/vendor/lenis.min.js" defer></script>
     <script src="../assets/js/site.js" defer></script>
     <script src="../assets/js/gallery.js" defer></script>
   </body>

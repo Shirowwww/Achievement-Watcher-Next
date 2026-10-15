@@ -2,7 +2,7 @@
 
 The nine marks on the **Sources** section of the home page. They are drawn as CSS masks in the
 accent colour, never as the logos in their own colours - see `.source-mark` in
-`assets/css/site.css` for why - so **only the alpha channel of each file is ever used**. A file here
+`assets/css/home.css` for why - so **only the alpha channel of each file is ever used**. A file here
 may be any colour; what matters is its shape.
 
 ## Where they come from

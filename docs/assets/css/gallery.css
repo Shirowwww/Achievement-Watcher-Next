@@ -1,0 +1,997 @@
+/*
+  The two community galleries, presets (gallery/index.html) and themes (gallery/themes/index.html).
+
+  assets/css/site.css comes first and gives them everything the home page has: Archivo, the palette,
+  the controls, the header with its menu and the footer. This file adds the galleries' own pieces
+  and the few tokens only they use; both theme states follow site.css.
+*/
+
+/* --- tokens ----------------------------------------------------------------------------------- */
+
+:root {
+  --bg-deep: #e1e7f1;
+  --panel: #f7f9fc;
+  --panel-2: #e1e7f1;
+  --border: #d5deeb;
+  --border-strong: #c8d3e4;
+  --accent-soft: rgba(47, 91, 208, 0.12);
+  --good: #14804a;
+  --shadow-sm: 0 1px 2px rgba(16, 30, 54, 0.06), 0 4px 12px rgba(16, 30, 54, 0.06);
+  --shadow-md: 0 10px 30px rgba(16, 30, 54, 0.1);
+  --radius-sm: 8px;
+  --backdrop: linear-gradient(135deg, #223055, #3d3363 55%, #6d3b58);
+}
+
+/* System preference, unless the reader explicitly asked for light. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg-deep: #070c17;
+    --panel: #111a2c;
+    --panel-2: #18233a;
+    --border: #212e4a;
+    --border-strong: #2c3b5c;
+    --accent-soft: rgba(108, 145, 255, 0.16);
+    --good: #5fd49a;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 14px 34px rgba(0, 0, 0, 0.42);
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg-deep: #070c17;
+  --panel: #111a2c;
+  --panel-2: #18233a;
+  --border: #212e4a;
+  --border-strong: #2c3b5c;
+  --accent-soft: rgba(108, 145, 255, 0.16);
+  --good: #5fd49a;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 14px 34px rgba(0, 0, 0, 0.42);
+}
+
+/* --- base ------------------------------------------------------------------------------------- */
+
+/*
+  `hidden` is an attribute, and the browser implements it as `display: none` at the lowest possible
+  weight - so any class here that sets `display` beats it, and an element the script has hidden stays
+  on screen. Three did: the gallery grid, its status box and the submission panel, which meant the
+  "Loading" placeholder sat under the cards and the upload panel showed even when no server had
+  answered. This is the one place it is worth being blunt about.
+*/
+[hidden] {
+  display: none !important;
+}
+
+/* Thin scrollbars in the site's colours instead of the browser's grey slabs. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) var(--bg);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 10px;
+  background: var(--border-strong) padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted) padding-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.65;
+  overflow-x: clip;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font);
+  font-stretch: 112%;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.5em;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(2.4rem, 1.4rem + 3.4vw, 4rem);
+}
+
+h2 {
+  font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
+}
+
+h3 {
+  font-size: 1.2rem;
+}
+
+p {
+  margin: 0 0 1em;
+}
+
+/* Links in the page itself; the header and footer draw their own. */
+main a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+main a:hover {
+  text-decoration: underline;
+}
+
+/* A link in running text needs more than its colour to be found. */
+p a:not([class]) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+img,
+svg,
+iframe {
+  max-width: 100%;
+}
+
+/* Form controls do not inherit the page font: without this every chip and button drew in Arial. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+hr {
+  height: 1px;
+  margin: 0;
+  border: 0;
+  background: var(--border);
+}
+
+code,
+kbd {
+  font-family: Consolas, 'Cascadia Mono', ui-monospace, monospace;
+  font-size: 0.88em;
+}
+
+kbd {
+  padding: 0.15em 0.45em;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--ink);
+}
+
+.wrap {
+  width: min(1180px, 100% - 48px);
+  margin-inline: auto;
+}
+
+.narrow {
+  width: min(760px, 100%);
+}
+
+.section {
+  padding-block: clamp(64px, 8vw, 116px);
+}
+
+/* The header is sticky, so an in-page link would otherwise land with its heading underneath it. */
+.section[id],
+#main {
+  scroll-margin-top: 84px;
+}
+
+.section-alt {
+  background: var(--bg-deep);
+  border-block: 1px solid var(--border);
+}
+
+.lead {
+  font-size: 1.12rem;
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+.section-head {
+  margin-bottom: clamp(32px, 4vw, 56px);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: 0.92rem;
+}
+
+/* --- layout ----------------------------------------------------------------------------------- */
+
+.hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+/* A wide window gets a wider page, so the product beside the words is not a small picture. */
+@media (min-width: 1500px) {
+  .wrap {
+    width: min(1320px, 100% - 96px);
+  }
+}
+
+/* --- points and columns ------------------------------------------------------------------------ */
+
+.feature-points {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.feature-points li {
+  position: relative;
+  padding-left: 26px;
+  font-size: 0.97rem;
+}
+
+.feature-points li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+/* Two columns of ordinary prose, stacking on a narrow screen. */
+.split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: clamp(28px, 5vw, 64px);
+  align-items: start;
+}
+
+.split h3 {
+  margin-bottom: 10px;
+}
+
+.split p {
+  color: var(--muted);
+  max-width: 52ch;
+}
+
+/* --- chips ------------------------------------------------------------------------------------ */
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* --- gallery ---------------------------------------------------------------------------------- */
+
+.gallery-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.field {
+  position: relative;
+  flex: 1 1 320px;
+  max-width: 400px;
+}
+
+.field input {
+  width: 100%;
+  padding: 12px 14px 12px 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.98rem;
+}
+
+.field input::placeholder {
+  color: var(--muted);
+}
+
+.field svg {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  width: 17px;
+  height: 17px;
+  transform: translateY(-50%);
+  fill: var(--muted);
+  pointer-events: none;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 20px;
+}
+
+/*
+  The cards' place while the listing loads. Without them the page is a short "Loading" box, and when
+  the cards arrive everything below drops by their height - the footer was visible and then was not.
+*/
+.skeleton-card {
+  display: block;
+  min-height: 380px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(110deg, var(--panel) 30%, var(--panel-2) 50%, var(--panel) 70%) 0 0 / 220% 100%;
+  animation: skeleton-sweep 1.6s ease-in-out infinite;
+}
+
+@keyframes skeleton-sweep {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+/* While it loads, the line of text is for a screen reader: the placeholder cards are the picture. */
+.empty[data-loading] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-card {
+    animation: none;
+  }
+}
+
+.preset-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.preset-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.preset-card figure {
+  position: relative;
+  margin: 0;
+  /* Close to the shape a rendered preview has, so the popup fills the card rather than floating
+     in a band of backdrop. */
+  aspect-ratio: 5 / 2;
+  background: var(--backdrop);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.preset-card figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 6px;
+  transition: transform 0.18s ease;
+}
+
+/*
+  The preview is drawn at the size the popup or the window really has and the card shows it much
+  smaller, so the frame opens it. It is a link to the picture, which is what a middle click follows.
+*/
+.preset-card figure .preview-zoom {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: zoom-in;
+}
+
+.preset-card figure .preview-zoom:hover img {
+  transform: scale(1.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preset-card figure .preview-zoom:hover img {
+    transform: none;
+  }
+}
+
+/* The picture at its own size, over everything else. Escape and the backdrop come with dialog. */
+.lightbox {
+  max-width: min(96vw, 1280px);
+  max-height: 92vh;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.lightbox::backdrop {
+  background: rgba(8, 12, 22, 0.72);
+}
+
+.lightbox img {
+  display: block;
+  max-width: min(94vw, 1272px);
+  max-height: 78vh;
+  margin: 0 auto;
+  background: var(--backdrop);
+}
+
+.lightbox-caption {
+  margin: 0;
+  padding: 12px 16px 4px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/*
+  What the picture is. A card is small enough that a reader takes it as decoration; opened, it is
+  the size of a screenshot and reads as one, so this is where it has to be said that it was
+  generated - and, for a theme, what it is showing at once.
+*/
+.lightbox-note {
+  margin: 0 auto;
+  padding: 0 20px 16px;
+  max-width: 104ch;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightbox-close:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.preset-card .body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 8px;
+  padding: 18px 20px 20px;
+}
+
+.preset-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.preset-card .by {
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.preset-card .desc {
+  margin: 0;
+  font-size: 0.94rem;
+  color: var(--muted);
+  flex: 1;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag {
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-2);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  text-transform: lowercase;
+}
+
+/* A theme card says what the picture cannot: the palette that will be installed, and whether the
+   file carries images or is colours only. Both are read out of the package. */
+.theme-facts {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.swatches {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-2);
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  /* A colour out of a listing may be anything, including nothing: the ring keeps an unpainted
+     chip visible instead of leaving a hole in the strip. */
+  box-shadow: inset 0 0 0 1px rgba(127, 127, 127, 0.35);
+}
+
+.preset-card footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.preset-card footer .btn {
+  padding: 10px 16px;
+  font-size: 0.94rem;
+}
+
+.file-meta {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 40px 28px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  color: var(--muted);
+}
+
+/* An outline of a popup: the shape the page would be full of if there were anything to show. */
+.empty::before {
+  content: '';
+  width: 46px;
+  height: 22px;
+  margin-bottom: 10px;
+  border: 2px dashed var(--border-strong);
+  border-radius: 6px;
+}
+
+.empty h3 {
+  margin: 0;
+  color: var(--ink);
+}
+
+.empty p {
+  max-width: 46ch;
+}
+
+/* Only drawn when a gallery server answered: with none, a submission is a pull request. */
+.submit-panel {
+  display: grid;
+  gap: 18px;
+  margin-top: 26px;
+  padding: 22px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+}
+
+.submit-panel h3 {
+  margin: 0 0 6px;
+}
+
+.submit-panel p {
+  margin: 0;
+  max-width: 68ch;
+}
+
+.submit-panel .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+}
+
+/*
+  The file button hides its real input inside the label, so the label needs the focus ring it would
+  have had. Only that one: the three text fields are focused directly and already take the global
+  ring on the input itself, and a ring here drew a second box around the first.
+*/
+.submit-panel label.btn:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.submit-panel .good {
+  color: var(--good);
+}
+
+.submit-panel .bad {
+  color: #b3261e;
+}
+
+:root[data-theme='dark'] .submit-panel .bad {
+  color: #ff8f8f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .submit-panel .bad {
+    color: #ff8f8f;
+  }
+}
+
+/* The three optional fields beside the file button. */
+.submit-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px 16px;
+}
+
+.field-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.field-block input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+}
+
+.field-block input::placeholder {
+  color: var(--muted);
+  opacity: 0.75;
+}
+
+/*
+  The one field that has to be filled in. The `required` attribute is what says so to a screen
+  reader and to the browser; this is the mark everybody else reads, so it is decoration and is not
+  translated.
+*/
+.field-block.is-required > span::after {
+  content: ' *';
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/*
+  The file, held rather than sent.
+
+  Choosing a file used to be the submission, so the boxes above it were filled in by whoever thought
+  to fill them in first. It is now picked here, named on this line, and one press of Publish sends
+  it - which is what makes the form worth having at all.
+*/
+.submit-file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 14px;
+}
+
+.submit-file [data-upload-chosen] {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The panel says which of the two states it is in, so the file line reads as a fact once there is
+   one and as an instruction while there is not. */
+.submit-panel[data-has-file='true'] .submit-file [data-upload-chosen] {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/*
+  Tags, one at a time.
+
+  A chip is a button rather than a list item with a cross beside it: removing one is the only thing
+  it does, so making the whole chip the target is both the larger hit area and one tab stop instead
+  of two.
+*/
+.field-tags {
+  max-width: 640px;
+}
+
+.tag-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  cursor: text;
+}
+
+.tag-input:focus-within {
+  border-color: var(--accent);
+}
+
+.tag-chips {
+  display: contents;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.tag-chip:hover,
+.tag-chip:focus-visible {
+  border-color: var(--accent);
+}
+
+.tag-chip-x {
+  font-size: 1rem;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+/* The box grows into whatever the chips leave, and never shrinks below a word. */
+.tag-input input {
+  flex: 1 1 8ch;
+  min-width: 8ch;
+  padding: 4px 4px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+}
+
+.tag-input input:focus {
+  outline: none;
+}
+
+.tag-input input:disabled::placeholder {
+  opacity: 0;
+}
+
+/* Publish is inert until there is something to publish, and says so rather than failing on click. */
+.submit-panel .btn[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* The download count on a card: a figure, so it should not wrap away from its arrow. */
+.file-meta .downloads {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  cursor: help;
+}
+
+/* Dropping the file on the panel is the shortest way to send one, so the panel says it is a target. */
+.submit-panel[data-drop='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/*
+  A submission takes a few seconds: the server draws the popup before it answers. The panel says so
+  rather than looking unresponsive, and refuses a second file until the first has landed.
+*/
+.submit-panel[data-busy='true'] {
+  pointer-events: none;
+}
+
+.submit-panel[data-busy='true'] .btn {
+  opacity: 0.55;
+}
+
+.submit-panel[data-busy='true'] [data-gallery-upload-status]::after {
+  content: '';
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  margin-left: 8px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -1px;
+  animation: aw-spin 0.9s linear infinite;
+}
+
+@keyframes aw-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- notes and callouts ----------------------------------------------------------------------- */
+
+.note {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
+}
+
+.note svg {
+  width: 20px;
+  height: 20px;
+  margin-top: 3px;
+  fill: var(--accent);
+}
+
+.note p:last-child {
+  margin-bottom: 0;
+}
+
+.steps {
+  counter-reset: step;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 16px;
+}
+
+.steps li {
+  position: relative;
+  padding-left: 46px;
+}
+
+.steps li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -1px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+  font-family: var(--font);
+  font-stretch: 112%;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--accent);
+}
+
+.steps b {
+  display: block;
+}
+
+/* --- responsive ------------------------------------------------------------------------------- */
+
+@media (max-width: 940px) {
+  .wrap {
+    width: min(1180px, 100% - 32px);
+  }
+}
+
+@media (max-width: 560px) {
+  body {
+    font-size: 16px;
+  }
+
+  .section {
+    padding-block: 56px;
+  }
+
+  .preset-card footer {
+    flex-wrap: wrap;
+  }
+
+  .file-meta {
+    margin-left: 0;
+    text-align: left;
+  }
+}
+
+/* --- motion ----------------------------------------------------------------------------------- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

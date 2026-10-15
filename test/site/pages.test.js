@@ -149,11 +149,11 @@ test('every translated attribute names an attribute the element has', () => {
   a `display: grid` class, so all three were visible while the DOM said they were hidden.
 */
 test('an element the script hides is really hidden', () => {
-  const css = fs.readFileSync(path.join(DOCS, 'assets', 'css', 'site.css'), 'utf8');
+  const css = fs.readFileSync(path.join(DOCS, 'assets', 'css', 'gallery.css'), 'utf8');
   const flat = css.replace(/\s+/g, ' ');
   assert.ok(
     flat.includes('[hidden] { display: none !important; }'),
-    'nothing in site.css forces the hidden attribute to win over a display rule'
+    'nothing in gallery.css forces the hidden attribute to win over a display rule'
   );
 
   // The blocks that rely on it, so a page that stops shipping one is noticed rather than silently
@@ -406,7 +406,7 @@ test('release notes are available as a valid RSS feed from every page', () => {
 */
 test('every source tile has a mark, and every mark is a file', () => {
   const document = documentOf(PAGES[0]);
-  const css = fs.readFileSync(path.join(DOCS, 'assets', 'css', 'site.css'), 'utf8');
+  const css = fs.readFileSync(path.join(DOCS, 'assets', 'css', 'home.css'), 'utf8');
   const tiles = document.querySelectorAll('.source-mark');
 
   assert.equal(tiles.length, document.querySelectorAll('.source').length, 'a source tile has no mark');
