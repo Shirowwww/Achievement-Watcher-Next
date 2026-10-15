@@ -127,6 +127,16 @@ test('in Game Mode every mode is delivered by the overlay alone', () => {
   }
 });
 
+test('in Game Mode with the Decky plugin listening, Steam shows the toast and the popup stays off', () => {
+  for (const mode of ['auto', 'overlay', 'toast', 'both']) {
+    const result = plan(mode, healthy({ toastHidden: true, deckyListening: true }), { websocket: false });
+    assert.equal(result.overlay, false, mode);
+    assert.equal(result.toast, false, mode);
+    assert.equal(result.websocket, true, mode);
+    assert.equal(result.reason, policy.REASON.STEAM_TOAST, mode);
+  }
+});
+
 test('in Game Mode without the resident app the forced modes still decide', () => {
   assert.equal(plan('toast', healthy({ overlayHost: 'spawn', toastHidden: true })).toast, true);
 });

@@ -115,6 +115,7 @@ module.exports = (option = {}) => {
   WebSocket.on('connection', (client, req) => {
     client.id = req.headers['sec-websocket-key'];
     client.ip = req.connection.remoteAddress;
+    client.decky = isDeckyRequest(req.url);
     debug.log(`[${client.id}](${client.ip}) client connected`);
 
     //heartbeat
@@ -152,7 +153,18 @@ module.exports = (option = {}) => {
   return emitter;
 };
 
+// The Decky plugin (decky/) connects as ?client=decky and shows each notification as a Steam toast.
+function isDeckyRequest(url) {
+  return new URL(url || '/', 'http://localhost').searchParams.get('client') === 'decky';
+}
+
+function isDeckyListening(clients = WebSocket ? WebSocket.clients : []) {
+  return Array.from(clients).some((client) => client.decky && client.readyState === ws.OPEN);
+}
+
 module.exports.resolveOptions = resolveOptions;
+module.exports.isDeckyRequest = isDeckyRequest;
+module.exports.isDeckyListening = isDeckyListening;
 module.exports.LOOPBACK = LOOPBACK;
 
 module.exports.broadcast = (message) => {

@@ -23,11 +23,17 @@ function fakeSysfs(pads) {
   const sys = path.join(root, 'sys');
   const dev = path.join(root, 'dev');
   fs.mkdirSync(dev);
-  for (const [name, key, abs] of pads) {
+  for (const [name, key, abs, id] of pads) {
     const caps = path.join(sys, name, 'device', 'capabilities');
     fs.mkdirSync(caps, { recursive: true });
     fs.writeFileSync(path.join(caps, 'key'), `${key}\n`);
     fs.writeFileSync(path.join(caps, 'abs'), `${abs}\n`);
+    if (id) {
+      const ids = path.join(sys, name, 'device', 'id');
+      fs.mkdirSync(ids);
+      fs.writeFileSync(path.join(ids, 'vendor'), `${id.vendor}\n`);
+      fs.writeFileSync(path.join(ids, 'product'), `${id.product}\n`);
+    }
     fs.writeFileSync(path.join(dev, name), '');
   }
   return { root, sys, dev };
@@ -95,6 +101,22 @@ test('only event devices with a gamepad south button are pads, in device order',
     assert.deepEqual(evdev.listPads(path.join(root, 'missing')), []);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('with Steam Input running only its virtual pads are read, so a press is not seen twice', () => {
+  const xbox = { vendor: '045e', product: '028e' };
+  const { root, sys } = fakeSysfs([
+    ['event5', PAD_KEYS, '3', xbox],
+    ['event20', PAD_KEYS, '3', { vendor: '28de', product: '11ff' }],
+  ]);
+  const plain = fakeSysfs([['event5', PAD_KEYS, '3', xbox]]);
+  try {
+    assert.deepEqual(evdev.listPads(sys).map((pad) => pad.name), ['event20']);
+    assert.deepEqual(evdev.listPads(plain.sys).map((pad) => pad.name), ['event5']);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+    fs.rmSync(plain.root, { recursive: true, force: true });
   }
 });
 

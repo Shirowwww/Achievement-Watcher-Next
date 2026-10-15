@@ -1,0 +1,11 @@
+{
+  "name": "Achievement Watcher",
+  "author": "Shirowwww",
+  "flags": [],
+  "api_version": 1,
+  "publish": {
+    "tags": ["achievements", "notifications"],
+    "description": "Shows Achievement Watcher notifications as Steam notifications in Game Mode.",
+    "image": "https://raw.githubusercontent.com/Shirowwww/Achievement-Watcher-Next/dev/app/resources/icon/icon.png"
+  }
+}

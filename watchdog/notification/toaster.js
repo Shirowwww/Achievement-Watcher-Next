@@ -8,7 +8,7 @@ const fetch = require('./prefetch.js');
 const { makeSquareIcon } = require('../util/squareIcon.js');
 const notificationSound = require('../util/notificationSound.js');
 const gameSound = require('../util/gameSound.js');
-const { broadcast } = require('../websocket.js');
+const { broadcast, isDeckyListening } = require('../websocket.js');
 const { arePopupsSuppressed, isOverlayLikelyHidden } = require('../queryUserNotificationState.js');
 const transportPolicy = require('./transportPolicy.js');
 const transportMemory = require('../util/transportMemory.js');
@@ -42,6 +42,7 @@ async function collectSignals(mode, appid) {
     overlayHidden: null,
     remembered: null,
     toastHidden: process.env.AW_GAMESCOPE === '1',
+    deckyListening: isDeckyListening(),
   };
   if (signals.toastHidden || mode !== 'auto' || signals.overlayHost !== 'ipc') return signals;
   signals.overlayHidden = await isOverlayLikelyHidden().catch(() => null);

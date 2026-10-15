@@ -59,3 +59,4 @@ scratch/
 
 # Misc
 *.tgz
+decky/node_modules/

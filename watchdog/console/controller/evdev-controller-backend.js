@@ -15,6 +15,7 @@ const SYS_INPUT = '/sys/class/input';
 const DEV_INPUT = '/dev/input';
 const RESCAN_MS = 2000;
 const MAX_PADS = 4;
+const STEAM_VIRTUAL_PAD = { vendor: '28de', product: '11ff' };
 
 const BTN_SOUTH = 0x130;
 const BTN_MODE = 0x13c;
@@ -88,7 +89,20 @@ function stateFromReadings(keys, axes, { buttonMasks, guideMask, deviceKey }) {
   };
 }
 
-// Event devices that have a gamepad's south button, lowest number first.
+function isSteamVirtualPad(sysInput, name) {
+  const read = (field) => fs.readFileSync(path.join(sysInput, name, 'device', 'id', field), 'utf8').trim();
+  try {
+    return read('vendor') === STEAM_VIRTUAL_PAD.vendor && read('product') === STEAM_VIRTUAL_PAD.product;
+  } catch {
+    return false;
+  }
+}
+
+/*
+  Event devices that have a gamepad's south button, lowest number first. While Steam Input runs it
+  mirrors each pad it manages as a virtual one, and on the Deck the real pad goes quiet: reading
+  only the virtual pads then sees each press once, wherever it comes from.
+*/
 function listPads(sysInput = SYS_INPUT) {
   let names = [];
   try {
@@ -107,7 +121,8 @@ function listPads(sysInput = SYS_INPUT) {
       continue;
     }
   }
-  return pads.sort((a, b) => Number(a.name.slice(5)) - Number(b.name.slice(5))).slice(0, MAX_PADS);
+  const virtual = pads.filter((pad) => isSteamVirtualPad(sysInput, pad.name));
+  return (virtual.length ? virtual : pads).sort((a, b) => Number(a.name.slice(5)) - Number(b.name.slice(5))).slice(0, MAX_PADS);
 }
 
 function createEvdevPollingBackend(logger, options = {}) {
