@@ -102,6 +102,10 @@ Pop-Location
 `tools/audit.js` is `npm audit --omit=dev --audit-level=high` with a short list of advisories
 accepted by id, each with its reason; an accepted one blocks again once its package has a fix.
 
+If `npm ci` skipped install scripts, `npm run build` stops on a missing `registry-js` addon
+(3.12.0 shipped without it and scanned libraries through `reg.exe`). Run
+`npm rebuild registry-js --foreground-scripts` in `app/` and build again.
+
 The app suite includes locale completeness. If a native optional dependency is
 unavailable on the current machine, record the exact limitation; do not silently
 skip a failed check.

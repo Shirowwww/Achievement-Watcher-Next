@@ -35,6 +35,12 @@ Pop-Location
 
 Use `npm install` instead of `npm ci` only when intentionally updating a dependency or lockfile.
 
+On Windows, if npm skips install scripts, `registry-js` is left without its compiled addon and every
+registry read falls back to spawning `reg.exe`, which makes library scans several times slower.
+`npm run build` refuses to package in that state; compile it from `app/` with
+`npm rebuild registry-js --foreground-scripts`. Electron is left without its binary the same way:
+`node node_modules/electron/install.js` fetches it.
+
 ## Run in development
 
 ```powershell
