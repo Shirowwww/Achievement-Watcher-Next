@@ -238,6 +238,10 @@ Var unDeleteAppData   ; uninstaller: also delete the user data
 
 !macro customInit
   !insertmacro AW_PICK_LANGUAGE
+  ; electron-builder's .onInit has just made $INSTDIR setup's working directory, and the previous
+  ; version's uninstaller renames that folder away in one step (customRemoveFiles), which Windows
+  ; refuses while a process sits in it. installSection sets $INSTDIR again before extracting.
+  SetOutPath $TEMP
 !macroend
 
 !macro customUnInit

@@ -4,6 +4,7 @@ A quick follow-up to 3.12.0 with performance and security fixes: library scans a
 
 ## Highlights
 
+- **Updating from 3.12.0 works again.** The update stopped on an "AW Next cannot be closed" box and left the old version in place. If you saw it, let AW Next check again or install this version over it.
 - **Library scans are fast again on Windows.** 3.12.0 shipped without its compiled registry reader, so a full scan took 40 to 60 seconds. The reader is back.
 - **Bitdefender no longer blocks updates or quarantines the app (#128).** The update's signature check now runs inside the app instead of a PowerShell script. It still verifies both signature layers and the pinned certificate.
 - **Windows notifications appear at once and start no other program.** They no longer go through PowerShell, which took seconds and is what antivirus engines flag.

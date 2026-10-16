@@ -332,6 +332,13 @@ test('an update never leaves half an installation behind', () => {
   assert.match(system, /Err\(error\) if atomic => return Err/);
 });
 
+test('setup leaves the installation folder before the old version renames it away', () => {
+  // electron-builder's .onInit makes $INSTDIR setup's working directory, and Windows refuses to rename
+  // a folder a process sits in: from 3.12.0 every update failed with "cannot be closed". customInit
+  // runs after that SetOutPath, in the elevated copy too, and installSection sets $INSTDIR again.
+  assert.match(macroBody('customInit'), /SetOutPath \$TEMP/);
+});
+
 test('setup compresses what it installs, through the plug-in, and lists the size that takes', () => {
   // Before the app starts and on updated runs alike: customInstall runs in both, ahead of AwStartApp.
   const install = macroBody('customInstall');

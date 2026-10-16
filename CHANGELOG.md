@@ -30,6 +30,10 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Updating from 3.12.0 failed with "AW Next cannot be closed".** The installer sat in the
+  installation folder while the previous version tried to move that folder away, so the update
+  stopped on a retry box and AW Next stayed on the old version, closed. Setup now leaves the folder
+  first, and an installed 3.12.0 updates normally.
 - **Bitdefender blocked updates and quarantined the app (#128).** The update's signature check ran
   a PowerShell script, which Bitdefender's Advanced Threat Defense treats as suspicious behaviour:
   it stopped the update with "no answer from PowerShell", then quarantined AW Next, its shortcuts
