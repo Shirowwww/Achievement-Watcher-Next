@@ -39,7 +39,7 @@ const ECHO_SOUNDS = {
   NO_SOUND: '__none__',
 };
 
-function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = false, sounds = null, gameSound = '', suppressed = false, urgent = false } = {}) {
+function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = false, sounds = null, gameSound = '', suppressed = false, urgent = false, showToast = null } = {}) {
   const calls = { overlays: [], toasts: [], balloons: [], broadcasts: [] };
 
   const stubs = {
@@ -48,6 +48,7 @@ function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = f
     './transport/toast.js': Object.assign(
       async (message, toastOptions) => {
         calls.toasts.push([message, toastOptions]);
+        if (showToast) await showToast(message, toastOptions);
       },
       { isUrgent: () => urgent }
     ),
@@ -304,4 +305,65 @@ test('a game that only ever worked on toasts is not asked to try the overlay bli
   await notify(unlock(), options('auto'));
   assert.equal(calls.overlays.length, 0);
   assert.equal(calls.toasts.length, 1);
+});
+
+/*
+  A Windows toast is posted by the app (util/powertoast.js sends the XML over IPC, the app answers
+  whether Windows took it). Driven here through the real toast transport with a fake app on the
+  channel, so a refusal reaches the same outcomes the PowerShell path produced.
+*/
+const realToast = require(path.join(__dirname, '..', 'notification', 'transport', 'toast.js'));
+const powertoast = require(path.join(__dirname, '..', 'util', 'powertoast.js'));
+
+async function asWindowsChild(answer, run) {
+  const saved = { send: process.send, connected: process.connected, aumid: process.env.AW_AUMID };
+  const platform = Object.getOwnPropertyDescriptor(process, 'platform');
+  const requests = [];
+  Object.defineProperty(process, 'platform', { value: 'win32', configurable: true });
+  process.env.AW_AUMID = 'AW';
+  process.connected = true;
+  process.send = (msg) => {
+    requests.push(msg);
+    if (msg.windowsToast) setImmediate(() => powertoast.reportAppToast({ id: msg.windowsToast.id, ...answer }));
+    return true;
+  };
+  try {
+    await run();
+  } finally {
+    Object.defineProperty(process, 'platform', platform);
+    process.send = saved.send;
+    process.connected = saved.connected;
+    if (saved.aumid === undefined) delete process.env.AW_AUMID;
+    else process.env.AW_AUMID = saved.aumid;
+  }
+  return requests;
+}
+
+test('a Windows toast goes to the app as XML and is recorded delivered once Windows shows it', async () => {
+  const { notify, calls } = loadToaster({ showToast: realToast });
+  const requests = await asWindowsChild({ ok: true }, () => notify(unlock(), options('toast')));
+  assert.equal(calls.toasts.length, 1);
+  assert.equal(requests.length, 1);
+  assert.match(requests[0].windowsToast.xml, /<text><!\[CDATA\[First blood\nWin a game\]\]><\/text>/);
+  assert.equal(transportMemory.entryForGame('480').outcome, 'delivered');
+});
+
+test('a toast Windows refused is recorded failed, and the balloon rescues it when enabled', async () => {
+  const refused = loadToaster({ showToast: realToast });
+  await asWindowsChild({ ok: false, reason: 'disabled' }, () => refused.notify(unlock(), options('toast')));
+  assert.equal(transportMemory.entryForGame('480').outcome, 'failed');
+  assert.equal(refused.calls.balloons.length, 0);
+
+  const rescued = loadToaster({ showToast: realToast });
+  const withBalloon = options('toast');
+  withBalloon.toast = { ...withBalloon.toast, balloonFallback: true };
+  await asWindowsChild({ ok: false, reason: 'disabled' }, () => rescued.notify(unlock(), withBalloon));
+  assert.equal(rescued.calls.balloons.length, 1);
+  assert.equal(transportMemory.entryForGame('480').outcome, 'fallback');
+});
+
+test('a toast the app showed while Windows holds popups back is still recorded suppressed', async () => {
+  const { notify } = loadToaster({ showToast: realToast, suppressed: true });
+  await asWindowsChild({ ok: true }, () => notify(unlock(), options('toast')));
+  assert.equal(transportMemory.entryForGame('480').outcome, 'suppressed');
 });

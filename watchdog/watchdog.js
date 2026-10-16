@@ -89,7 +89,7 @@ const gogWatch = require('./console/gogWatch.js');
 const ubisoftWatch = require('./console/ubisoftWatch.js');
 const runeUplayWatch = require('./console/runeUplayWatch.js');
 const retroAchievementsWatch = require('./console/retroAchievementsWatch.js');
-const { isWinRTAvailable } = require('./util/powertoast');
+const { isWinRTAvailable, canAppShowToast } = require('./util/powertoast');
 const { isFullscreenAppRunning } = require('./queryUserNotificationState.js');
 const { createOverlayControllerService } = require('./console/controller/overlay-controller-service.js');
 const humanizeDuration = require('humanize-duration');
@@ -753,6 +753,11 @@ process.on('message', (msg) => {
     require('./notification/overlayAck.js').report(String(msg.notificationResult.id), msg.notificationResult);
     return;
   }
+  // Whether Windows took a toast the app posted for this process (util/powertoast.js).
+  if (msg.windowsToastResult && msg.windowsToastResult.id) {
+    require('./util/powertoast.js').reportAppToast(msg.windowsToastResult);
+    return;
+  }
   // The app reset a game's achievements. Its baseline file is already gone; this drops the copy this
   // process holds in memory, so the re-earned unlocks are seen as new and notify again.
   if (msg.forgetAchievementBaseline && msg.forgetAchievementBaseline.appid) {
@@ -804,6 +809,24 @@ async function applyToastIdentity(self) {
   if (toastIdentity.requiresLocalImages(self.toastID) && !self.options.notification_advanced.iconPrefetch) {
     self.options.notification_advanced.iconPrefetch = true;
     debug.warn('[Toast] desktop app id: forcing iconPrefetch so toasts keep their achievement icon');
+  }
+
+  if (process.platform !== 'win32') return;
+  const send = process.send && process.send.bind(process);
+  if (canAppShowToast({ aumid: self.toastID }, { send, connected: process.connected, appAumid: process.env.AW_AUMID })) {
+    debug.log('[Toast] will be posted by the app');
+  } else if ((await isWinRTAvailable()) === true && self.options.notification_transport.winRT === true) {
+    debug.log('[Toast] will use WinRT');
+  } else {
+    debug.warn('[Toast] will use PowerShell (another app id than the app, or no app to post it)');
+    // powertoast then shells out to PowerShell - if PowerShell is missing, toasts silently fail
+    // with nothing shown. Look for it rather than start one at every launch.
+    if (!fs.existsSync(resolvePowerShell()))
+      debug.error(
+        '[Toast] PowerShell is not reachable - PowerShell fallback toasts will NOT appear. ' +
+          'Fix: enable WinRT in Settings, or repair Windows PowerShell at ' +
+          'C:\\Windows\\System32\\WindowsPowerShell\\v1.0. (issue #46)'
+      );
   }
 }
 
@@ -893,21 +916,7 @@ var app = {
       RegisterOverlayHotkey((self.options.overlay && self.options.overlay.hotkey) || 'Ctrl+Shift+K');
       syncOverlayController();
 
-      if (process.platform !== 'win32') {
-        debug.log('[Toast] will use the desktop notification service (through the app)');
-      } else if ((await isWinRTAvailable()) === true && self.options.notification_transport.winRT === true) {
-        debug.log('[Toast] will use WinRT');
-      } else {
-        debug.warn('[Toast] will use PowerShell (WinRT unavailable or disabled)');
-        // When WinRT isn't used, powertoast shells out to PowerShell - if PowerShell is missing,
-        // toasts silently fail with nothing shown. Look for it rather than start one at every launch.
-        if (!fs.existsSync(resolvePowerShell()))
-          debug.error(
-            '[Toast] PowerShell is not reachable - PowerShell fallback toasts will NOT appear. ' +
-              'Fix: enable WinRT in Settings, or repair Windows PowerShell at ' +
-              'C:\\Windows\\System32\\WindowsPowerShell\\v1.0. (issue #46)'
-          );
-      }
+      if (process.platform !== 'win32') debug.log('[Toast] will use the desktop notification service (through the app)');
 
       applyToastIdentity(self).catch((err) => debug.error(`[Toast] identity resolution failed: ${err}`));
 

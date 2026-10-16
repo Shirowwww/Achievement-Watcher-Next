@@ -341,7 +341,7 @@ Windows call through PowerShell before each notification, and passed the update 
 as an encoded command. None of that happens any more: screenshots go through the native helper that
 ships with the app, and the notification check calls Windows directly. The update signature check
 no longer starts PowerShell either: Bitdefender's Advanced Threat Defense blocked it and quarantined
-the app with it.
+the app with it. Windows notifications are posted by the app itself and start no other program.
 
 If your antivirus still reacts, note the exact detection name it shows and report it, with the file
 it names, as a false positive. For Kaspersky that is

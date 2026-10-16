@@ -23,6 +23,10 @@ renamed in 3.9.0 and the history is kept under one file.
   keeps a notification in Notification Center because the game is full screen or Do Not Disturb is
   on, the game's Game Health panel says so and points to Priority notifications or the overlay,
   instead of reporting it as delivered.
+- **Windows notifications appear at once and start no other program.** Each one used to run a
+  PowerShell script, which took seconds before the toast appeared and is the kind of behaviour
+  antivirus engines flag (#126, #128). The app now posts them itself. A custom app id set in
+  `options.ini` (`[notification_advanced] appID`) still uses the old way.
 
 ### Fixed
 

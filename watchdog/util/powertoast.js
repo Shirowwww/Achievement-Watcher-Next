@@ -32,17 +32,72 @@ function desktopNotificationPayload(options) {
   };
 }
 
-async function toast(options, { send = process.send && process.send.bind(process), platform = process.platform } = {}) {
+// How long the app gets to say whether Windows took the toast; past it the toast counts as failed.
+const APP_TOAST_TIMEOUT_MS = 10000;
+
+let appToastSequence = 0;
+const appToastWaits = new Map();
+
+/*
+  powertoast shows a toast through PowerShell, since its WinRT addons are not shipped: seconds per
+  toast, and an unsigned process starting PowerShell is what antivirus engines block (#128). The app
+  posts toasts under its own AppUserModelID, so for that id the Watchdog builds the same XML and the
+  main process shows it with Electron's Notification. Any other id (a user override, the Xbox
+  fallback) cannot be posted from the app and keeps the PowerShell path.
+*/
+function canAppShowToast(options, { send, connected, appAumid }) {
+  return typeof send === 'function' && connected === true && Boolean(appAumid) && options.aumid === appAumid;
+}
+
+function showThroughApp(xml, send, timeoutMs) {
+  appToastSequence += 1;
+  const id = `${process.pid}-${appToastSequence}`;
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      appToastWaits.delete(id);
+      reject(new Error('the app did not report whether Windows showed the toast'));
+    }, timeoutMs);
+    appToastWaits.set(id, (result) => {
+      clearTimeout(timer);
+      appToastWaits.delete(id);
+      if (result.ok === true) resolve();
+      else reject(new Error(`Windows did not show the toast: ${result.reason || 'no reason given'}`));
+    });
+    try {
+      send({ windowsToast: { id, xml } });
+    } catch (err) {
+      reportAppToast({ id, ok: false, reason: err.message || String(err) });
+    }
+  });
+}
+
+// The app's answer to a `windowsToast` request; an id nobody waits for any more is dropped.
+function reportAppToast(result) {
+  const settle = result && appToastWaits.get(String(result.id));
+  if (settle) settle(result);
+}
+
+async function toast(
+  options,
+  {
+    send = process.send && process.send.bind(process),
+    platform = process.platform,
+    connected = process.connected,
+    appAumid = process.env.AW_AUMID,
+    timeoutMs = APP_TOAST_TIMEOUT_MS,
+  } = {}
+) {
   if (platform !== 'win32') {
     if (typeof send !== 'function') throw new Error('no app to show the desktop notification');
     send({ desktopNotification: desktopNotificationPayload(normalizeToastOptions(options)) });
     return;
   }
-  const { Toast } = await load();
   // powertoast reads `disableWinRT` from the show() options, not from the constructor options.
   // Splitting it here is what actually makes the "use PowerShell" fallback controllable; callers
   // that set `disableWinRT` on the payload were silently ignored before.
   const { disableWinRT, ...toastOptions } = normalizeToastOptions(options);
+  const { Toast, toXmlString } = await load();
+  if (canAppShowToast(toastOptions, { send, connected, appAumid })) return showThroughApp(toXmlString(toastOptions), send, timeoutMs);
   return new Toast(toastOptions).show({ disableWinRT: !!disableWinRT });
 }
 
@@ -51,3 +106,5 @@ toast.isWinRTAvailable = async () => process.platform === 'win32' && Boolean((aw
 module.exports = toast;
 module.exports.normalizeToastOptions = normalizeToastOptions;
 module.exports.desktopNotificationPayload = desktopNotificationPayload;
+module.exports.canAppShowToast = canAppShowToast;
+module.exports.reportAppToast = reportAppToast;

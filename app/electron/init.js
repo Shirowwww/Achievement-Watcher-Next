@@ -2679,6 +2679,7 @@ function handleMonitorMessage(msg) {
     else if (msg && msg.achievementUnlocked) forwardUnlockToLibrary(msg.achievementUnlocked);
     else if (msg && msg.achievementProgress) forwardProgressToLibrary(msg.achievementProgress);
     else if (msg && msg.desktopNotification) desktopNotifier().show(msg.desktopNotification);
+    else if (msg && msg.windowsToast) showMonitorToast(msg.windowsToast);
     else if (msg && (msg.souvenirCapture || msg.clipRecorder) && process.platform === 'linux') linuxSouvenirs().handle(msg);
   } catch (err) {
     debug.log(`[monitor] message handling failed: ${err.message || err}`);
@@ -2713,6 +2714,23 @@ function desktopNotifier() {
     });
   }
   return cachedDesktopNotifier;
+}
+
+// The Watchdog's Windows toasts are posted from here, under the app's AppUserModelID, so that no
+// toast starts PowerShell (watchdog/util/powertoast.js); the Watchdog waits for this answer.
+async function showMonitorToast(request) {
+  const id = String((request && request.id) || '');
+  if (!id) return;
+  const result = await desktopNotifier()
+    .showToastXml(request.xml)
+    .catch((err) => ({ ok: false, reason: err.message || String(err) }));
+  if (!result.ok) debug.log(`[notify] Windows did not show the toast: ${result.reason}`);
+  if (!monitorProc || monitorProc.exitCode !== null || monitorProc.killed || !monitorProc.connected) return;
+  try {
+    monitorProc.send({ windowsToastResult: { id, ok: result.ok === true, reason: result.reason || '' } });
+  } catch (err) {
+    debug.log(`[monitor] toast outcome report failed: ${err.message || err}`);
+  }
 }
 
 // The library only re-reads saves on a scan, so without this an unlock reached the tile only after

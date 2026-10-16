@@ -13,6 +13,8 @@ const { fileURLToPath } = require('url');
 const SERVICE = 'org.freedesktop.Notifications';
 // A desktop whose notification daemon starts after AW is asked again, at most this often.
 const SERVICE_RECHECK_MS = 60 * 1000;
+// A Windows toast is held at most this long, so one that never reports a close is still let go.
+const TOAST_KEEP_MS = 10 * 60 * 1000;
 
 // Electron wants a local picture; anything else (a URL the Watchdog could not cache) shows no icon.
 function localIcon(icon) {
@@ -107,6 +109,30 @@ function createDesktopNotifier({ Notification, onClick = () => {}, log = () => {
       };
       display(options, () => onClick({ appid: String(payload.appid || ''), achievement: String(payload.achievement || '') }));
       return true;
+    },
+    /*
+      A Windows toast the Watchdog built (util/powertoast.js), posted under the app's own
+      AppUserModelID. The XML carries everything: artwork, progress, scenario, and the protocol
+      launch that opens the game, which Windows runs itself. Resolves whether Windows took it.
+    */
+    async showToastXml(toastXml) {
+      if (!(await usable())) return { ok: false, reason: 'notifications are not supported here' };
+      return new Promise((resolve) => {
+        const notification = new Notification({ toastXml: String(toastXml || '') });
+        live.add(notification);
+        const release = () => live.delete(notification);
+        // A toast Windows files straight into the notification centre may never report a close.
+        const expiry = setTimeout(release, TOAST_KEEP_MS);
+        if (typeof expiry.unref === 'function') expiry.unref();
+        notification.on('close', release);
+        notification.on('click', release);
+        notification.on('show', () => resolve({ ok: true }));
+        notification.on('failed', (_event, error) => {
+          release();
+          resolve({ ok: false, reason: String(error || 'failed') });
+        });
+        notification.show();
+      });
     },
     // The app's own one-off messages; a click runs `click`.
     async notify(options, click = () => {}) {
