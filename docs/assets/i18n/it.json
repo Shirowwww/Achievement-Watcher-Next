@@ -169,7 +169,7 @@
   "install.step3Body": "Quello è il sorvegliante. Le notifiche in tempo reale e il tempo di gioco dipendono dal fatto che resti in esecuzione.",
   "install.step3Title": "Lascialo nell'area di notifica",
   "install.title": "Metterlo in funzione",
-  "install.virustotal": "Il programma di installazione attuale su <a href=\"https://www.virustotal.com/gui/file/edcb4e3acc8475f53085eddd17094495836114b2890392da7d5521cdb7121586\" rel=\"noopener\">VirusTotal</a>. Le poche rilevazioni euristiche sono il falso positivo degli emulatori; verifica tu stesso qualsiasi versione confrontando il suo SHA-256.",
+  "install.virustotal": "Il programma di installazione attuale su <a href=\"https://www.virustotal.com/gui/file/7103f3ac4ae64148ccb69fd76a914c82df3dceb22ba7cd4141cb8a22dcde48b3\" rel=\"noopener\">VirusTotal</a>. Le poche rilevazioni euristiche sono il falso positivo degli emulatori; verifica tu stesso qualsiasi versione confrontando il suo SHA-256.",
   "install.windowsData": "Impostazioni e dati: <code>%APPDATA%\\Achievement Watcher Next</code>",
   "more.backupBody": "Impostazioni, scelte della libreria, preset, temi e tempo di gioco in un solo file, per una reinstallazione o un nuovo PC.",
   "more.backupTitle": "Backup del profilo",

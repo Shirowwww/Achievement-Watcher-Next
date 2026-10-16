@@ -169,7 +169,7 @@
   "install.step3Body": "To jest nadzorca. Powiadomienia na żywo i czas gry zależą od tego, czy działa.",
   "install.step3Title": "Zostaw go w zasobniku",
   "install.title": "Uruchomienie",
-  "install.virustotal": "Bieżący instalator w <a href=\"https://www.virustotal.com/gui/file/edcb4e3acc8475f53085eddd17094495836114b2890392da7d5521cdb7121586\" rel=\"noopener\">VirusTotal</a>. Nieliczne wykrycia heurystyczne to fałszywy alarm związany z emulatorami; każde wydanie możesz sprawdzić samodzielnie, porównując jego SHA-256.",
+  "install.virustotal": "Bieżący instalator w <a href=\"https://www.virustotal.com/gui/file/7103f3ac4ae64148ccb69fd76a914c82df3dceb22ba7cd4141cb8a22dcde48b3\" rel=\"noopener\">VirusTotal</a>. Nieliczne wykrycia heurystyczne to fałszywy alarm związany z emulatorami; każde wydanie możesz sprawdzić samodzielnie, porównując jego SHA-256.",
   "install.windowsData": "Ustawienia i dane: <code>%APPDATA%\\Achievement Watcher Next</code>",
   "more.backupBody": "Ustawienia, wybory w bibliotece, presety, motywy i czas gry w jednym pliku, na potrzeby ponownej instalacji lub nowego komputera.",
   "more.backupTitle": "Kopia profilu",
