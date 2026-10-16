@@ -2411,7 +2411,7 @@
     "steam-hide-stale": "Steam kütüphanende artık bulunmayan oyunları gizle",
     "steam-hide-stale-help": "Bağlı bir Steam hesabı gerektirir. Bu bilgisayarda yüklü oyunlar ve Steam Ailesi üzerinden paylaşılan oyunlar asla gizlenmez.",
     "steam-import-owned": "Sahip olduğun oyunları ekle",
-    "steam-import-owned-help": "Bu bilgisayara hiç yüklenmemiş oyunlar da dahil olmak üzere tüm Steam kütüphaneni listeler. Büyük bir kütüphane ilk taramayı çok daha uzun sürdürür.",
+    "steam-import-owned-help": "Bu bilgisayara hiç yüklenmemiş oyunlar da dahil olmak üzere tüm Steam kütüphaneni listeler. Büyük bir kütüphane ilk taramayı çok daha uzun sürdürür. Bu bilgisayarda hiç oynanmamış oyunların ilerlemesi Steam profilinden okunur, bu yüzden profilin oyun ayrıntıları herkese açık olmalıdır.",
     "steam-import-family": "Steam Ailesi üzerinden seninle paylaşılan oyunları ekle",
     "steam-import-family-help": "Steam Ailendeki başka bir üyenin sahip olduğu ve seninle paylaştığı oyunlar. Bunlarda Steam Ailesi rozeti bulunur.",
     "profile-stats-title": "Kütüphane istatistikleri",

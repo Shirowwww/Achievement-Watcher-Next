@@ -2411,7 +2411,7 @@
     "steam-hide-stale": "隐藏已不在你的 Steam 库中的游戏",
     "steam-hide-stale-help": "需要已连接的 Steam 账户。安装在这台电脑上的游戏以及通过 Steam 家庭共享的游戏永远不会被隐藏。",
     "steam-import-owned": "添加你拥有的游戏",
-    "steam-import-owned-help": "列出你完整的 Steam 库，包括从未安装在这台电脑上的游戏。库越大，首次扫描耗时越长。",
+    "steam-import-owned-help": "列出你完整的 Steam 库，包括从未安装在这台电脑上的游戏。库越大，首次扫描耗时越长。从未在这台电脑上玩过的游戏，其进度从你的 Steam 个人资料读取，因此游戏详情必须设为公开。",
     "steam-import-family": "添加通过 Steam 家庭与你共享的游戏",
     "steam-import-family-help": "Steam 家庭中其他成员拥有并与你共享的游戏，带有 Steam 家庭徽章。",
     "profile-stats-title": "库统计",

@@ -64,6 +64,28 @@ test('reconcileAchievementList never overwrites an already-filled field or remov
   assert.equal(list[1].name, 'ACH_2');
 });
 
+// A schema cached before Steam's achievement sets (October 2026) learns them on its next re-check.
+test("reconcileAchievementList takes Steam's set and archive flags, and only from a source that has them", () => {
+  const list = [
+    { name: 'TF_REPLAY_YOUTUBE_VIEWS_TIER1', displayName: 'Home Movie', description: 'x', hidden: 0 },
+    { name: 'BACK', displayName: 'Back', description: 'x', hidden: 0, archived: true, category: 'Old label' },
+    { name: 'KEEP', displayName: 'Keep', description: 'x', hidden: 0, archived: true },
+  ];
+  const fresh = [
+    { name: 'TF_REPLAY_YOUTUBE_VIEWS_TIER1', archived: true, category: 'Replay' },
+    { name: 'BACK', archived: false, category: 'Scout' },
+    // SteamHunters entries carry no archive flag: they say nothing about it.
+    { name: 'KEEP' },
+  ];
+  const { changed } = steam.reconcileAchievementList(list, fresh);
+  assert.equal(changed, true);
+  assert.equal(list[0].archived, true);
+  assert.equal(list[0].category, 'Replay');
+  assert.equal(list[1].archived, false, 'an achievement Steam brought back counts again');
+  assert.equal(list[1].category, 'Scout');
+  assert.equal(list[2].archived, true);
+});
+
 test('reconcileAchievementList treats an empty fresh list as "unreachable this cycle", not "no achievements"', () => {
   const list = [{ name: 'ACH_1', displayName: 'One', description: '', hidden: 0 }];
   const { changed, addedCount } = steam.reconcileAchievementList(list, []);

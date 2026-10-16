@@ -2411,7 +2411,7 @@
     "steam-hide-stale": "隱藏已不在你的 Steam 收藏庫中的遊戲",
     "steam-hide-stale-help": "需要已連接的 Steam 帳戶。安裝在這台電腦上的遊戲以及透過 Steam 家庭共享的遊戲永遠不會被隱藏。",
     "steam-import-owned": "新增你擁有的遊戲",
-    "steam-import-owned-help": "列出你完整的 Steam 收藏庫，包括從未安裝在這台電腦上的遊戲。收藏庫越大，首次掃描耗時越長。",
+    "steam-import-owned-help": "列出你完整的 Steam 收藏庫，包括從未安裝在這台電腦上的遊戲。收藏庫越大，首次掃描耗時越長。從未在這台電腦上玩過的遊戲，其進度會從你的 Steam 個人檔案讀取，因此遊戲詳細資料必須設為公開。",
     "steam-import-family": "新增透過 Steam 家庭與你共享的遊戲",
     "steam-import-family-help": "Steam 家庭中其他成員擁有並與你共享的遊戲，會帶有 Steam 家庭徽章。",
     "profile-stats-title": "收藏庫統計",

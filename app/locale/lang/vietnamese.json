@@ -2411,7 +2411,7 @@
     "steam-hide-stale": "Ẩn các trò chơi không còn trong thư viện Steam của bạn",
     "steam-hide-stale-help": "Yêu cầu tài khoản Steam đã kết nối. Các trò chơi được cài đặt trên PC này và trò chơi chia sẻ qua Steam Family không bao giờ bị ẩn.",
     "steam-import-owned": "Thêm những trò chơi bạn sở hữu",
-    "steam-import-owned-help": "Liệt kê toàn bộ thư viện Steam của bạn, kể cả những trò chơi chưa từng được cài trên PC này. Thư viện lớn sẽ khiến lần quét đầu tiên lâu hơn nhiều.",
+    "steam-import-owned-help": "Liệt kê toàn bộ thư viện Steam của bạn, kể cả những trò chơi chưa từng được cài trên PC này. Thư viện lớn sẽ khiến lần quét đầu tiên lâu hơn nhiều. Tiến độ của các trò chơi chưa từng chơi trên máy này được đọc từ hồ sơ Steam của bạn, vì vậy chi tiết trò chơi phải để công khai.",
     "steam-import-family": "Thêm những trò chơi được chia sẻ với bạn qua Steam Family",
     "steam-import-family-help": "Những trò chơi mà thành viên khác trong Steam Family của bạn sở hữu và chia sẻ với bạn. Chúng có huy hiệu Steam Family.",
     "profile-stats-title": "Thống kê thư viện",

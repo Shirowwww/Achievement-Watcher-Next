@@ -2411,7 +2411,7 @@
     "steam-hide-stale": "Ukryj gry, których nie ma już w twojej bibliotece Steam",
     "steam-hide-stale-help": "Wymaga połączonego konta Steam. Gry zainstalowane na tym komputerze i udostępnione przez Rodzinę Steam nigdy nie są ukrywane.",
     "steam-import-owned": "Dodaj gry, które posiadasz",
-    "steam-import-owned-help": "Wyświetla całą twoją bibliotekę Steam, w tym gry, które nigdy nie były zainstalowane na tym komputerze. Duża biblioteka znacznie wydłuża pierwsze skanowanie.",
+    "steam-import-owned-help": "Wyświetla całą twoją bibliotekę Steam, w tym gry, które nigdy nie były zainstalowane na tym komputerze. Duża biblioteka znacznie wydłuża pierwsze skanowanie. Postęp w grach, w które nigdy nie grano na tym komputerze, jest odczytywany z twojego profilu Steam, więc szczegóły gier muszą być w nim publiczne.",
     "steam-import-family": "Dodaj gry udostępnione tobie przez Rodzinę Steam",
     "steam-import-family-help": "Gry, które posiada i udostępnia tobie inny członek twojej Rodziny Steam. Mają odznakę Rodziny Steam.",
     "profile-stats-title": "Statystyki biblioteki",

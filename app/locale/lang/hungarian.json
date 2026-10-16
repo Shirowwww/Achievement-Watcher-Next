@@ -2411,7 +2411,7 @@
     "steam-hide-stale": "A Steam-könyvtáradban már nem szereplő játékok elrejtése",
     "steam-hide-stale-help": "Csatlakoztatott Steam-fiókot igényel. Az ezen a gépen telepített és a Steam Family révén megosztott játékok soha nem lesznek elrejtve.",
     "steam-import-owned": "A birtokolt játékok hozzáadása",
-    "steam-import-owned-help": "Megjeleníti a teljes Steam könyvtáradat, beleértve azokat a játékokat is, amelyeket sosem telepítettél erre a gépre. Egy nagy könyvtár jelentősen meghosszabbítja az első vizsgálatot.",
+    "steam-import-owned-help": "Megjeleníti a teljes Steam könyvtáradat, beleértve azokat a játékokat is, amelyeket sosem telepítettél erre a gépre. Egy nagy könyvtár jelentősen meghosszabbítja az első vizsgálatot. Az ezen a gépen soha nem játszott játékok előrehaladását a Steam-profilodból olvassuk ki, ezért a játékrészleteknek nyilvánosnak kell lenniük.",
     "steam-import-family": "A Steam Family révén veled megosztott játékok hozzáadása",
     "steam-import-family-help": "Olyan játékok, amelyeket a Steam Familyd egy másik tagja birtokol, és megoszt veled. Ezeken rajta van a Steam Family jelvény.",
     "profile-stats-title": "Könyvtár statisztikái",

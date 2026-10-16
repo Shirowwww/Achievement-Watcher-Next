@@ -180,8 +180,12 @@ Use `cheevos_visibility_mastery` the same way for the mastery pop-up.
 
 No Steam Web API key and no connected Steam account are used. Each game's achievement list is
 fetched with a keyless chain: the official `GetGameAchievements` endpoint first (which carries hidden
-descriptions, icons and global rarity), then SteamHunters enriched with the SteamCommunity page, then
-SteamCommunity alone, and a browser scrape only as a last resort.
+descriptions, icons, global rarity and Steam's achievement sets), then the SteamCommunity
+achievements page (the same schema, in your language), then SteamHunters, and a browser scrape only
+as a last resort.
+
+An achievement the developer archived on Steam counts only if you earned it, as on Steam: it is
+left out of the list, the percentage and the platinum notification otherwise.
 
 Results are cached per language in `%APPDATA%\Achievement Watcher Next\steam_cache\schema`, so local
 sources and previously seen games keep working offline.

@@ -130,7 +130,7 @@ async function fetchSteamHuntersJson(appID) {
 
 async function getSteamCommunityRows(appID, lang) {
   try {
-    const url = `https://steamcommunity.com/stats/${appID}/achievements?l=${encodeURIComponent(lang)}`;
+    const url = steamSchemaFetch.steamCommunityAchievementsUrl(appID, lang);
     const res = await fetch(url, {
       headers: {
         'User-Agent': STEAM_FETCH_UA,
@@ -183,24 +183,26 @@ async function getAchievementsKeyless(appID, lang) {
     if (official.length) rememberApiNameIndex(appID, official);
     return official;
   }
+  // The community page carries the same schema from another host, localized, with real apiNames.
+  const rows = await getSteamCommunityRows(appID, lang);
+  if (steamSchemaFetch.rowsCarryApiNames(rows)) {
+    const achievements = steamSchemaFetch.mapSteamCommunityRows(rows);
+    rememberApiNameIndex(appID, achievements);
+    return achievements;
+  }
   const sh = await fetchSteamHuntersJson(appID);
   if (sh !== null) {
     if (sh.length === 0) return [];
-    // SteamHunters titles are English-only: icons/hidden come from the English page (title match),
-    // then the localized page is overlaid by icon hash for non-English languages.
-    const achievements = steamSchemaFetch.mapSteamHuntersJson(sh);
-    const englishRows = await getSteamCommunityRows(appID, 'english');
+    // SteamHunters titles are English-only: icons/hidden come from the English rows (title match),
+    // then the localized rows are overlaid by icon hash for non-English languages.
+    const englishRows = lang === 'english' ? rows : await getSteamCommunityRows(appID, 'english');
     const merged = englishRows
       ? steamSchemaFetch.mergeSteamHuntersWithCommunity(sh, englishRows)
-      : achievements;
-    if (lang !== 'english') {
-      const localizedRows = await getSteamCommunityRows(appID, lang);
-      if (localizedRows) mergeTranslatedAchievements(merged, localizedRows);
-    }
+      : steamSchemaFetch.mapSteamHuntersJson(sh);
+    if (lang !== 'english' && rows) mergeTranslatedAchievements(merged, rows);
     rememberApiNameIndex(appID, merged);
     return merged;
   }
-  const rows = await getSteamCommunityRows(appID, lang);
   if (rows) {
     const degraded = steamSchemaFetch.mapSteamCommunityRows(rows);
     const apiNames = loadApiNameIndex(appID);

@@ -2411,7 +2411,7 @@
     "steam-hide-stale": "Steam ライブラリにもうないゲームを隠す",
     "steam-hide-stale-help": "Steam アカウントの接続が必要です。この PC にインストール済みのゲームと Steam ファミリーで共有されているゲームは決して隠されません。",
     "steam-import-owned": "所有しているゲームを追加",
-    "steam-import-owned-help": "この PC に一度もインストールされていないゲームを含め、Steam ライブラリ全体を表示します。ライブラリが大きいと初回スキャンが大幅に長くなります。",
+    "steam-import-owned-help": "この PC に一度もインストールされていないゲームを含め、Steam ライブラリ全体を表示します。ライブラリが大きいと初回スキャンが大幅に長くなります。この PC でプレイしたことのないゲームの進行状況は Steam プロフィールから読み取るため、ゲームの詳細を公開にする必要があります。",
     "steam-import-family": "Steam ファミリーで共有されているゲームを追加",
     "steam-import-family-help": "Steam ファミリーの他のメンバーが所有し、あなたと共有しているゲームです。Steam ファミリーのバッジが付きます。",
     "profile-stats-title": "ライブラリの統計",

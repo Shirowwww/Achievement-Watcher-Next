@@ -37,16 +37,14 @@ function findSchemaAchievement(index, parsedAchievement) {
 
 function buildPreviousAchievementIndex(entries) {
   const byName = new Map();
-  let unlockedCount = 0;
 
   for (const achievement of Array.isArray(entries) ? entries : []) {
     if (!achievement) continue;
-    if (achievement.Achieved == 1) unlockedCount += 1;
     // Array.find returned the first duplicate, so keep the first map entry as well.
     if (!byName.has(achievement.name)) byName.set(achievement.name, achievement);
   }
 
-  return { byName, unlockedCount };
+  return { byName };
 }
 
 // The schema names (upper-cased) of the `limit` most recent unlocks. A crc-keyed record (SmartSteamEmu)
@@ -61,9 +59,26 @@ function seedPreviewNames(unlocked, schemaIndex, limit) {
   );
 }
 
+// What 100% means: Steam no longer counts an archived achievement for players who never earned it.
+function requiredCount(schemaEntries) {
+  return (Array.isArray(schemaEntries) ? schemaEntries : []).filter((achievement) => achievement && !achievement.archived).length;
+}
+
+function requiredUnlockedCount(entries, schemaIndex) {
+  let count = 0;
+  for (const entry of Array.isArray(entries) ? entries : []) {
+    if (!entry || entry.Achieved != 1) continue;
+    const schema = findSchemaAchievement(schemaIndex, entry);
+    if (!schema || !schema.archived) count += 1;
+  }
+  return count;
+}
+
 module.exports = {
   buildSchemaIndex,
   findSchemaAchievement,
   buildPreviousAchievementIndex,
   seedPreviewNames,
+  requiredCount,
+  requiredUnlockedCount,
 };

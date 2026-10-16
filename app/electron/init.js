@@ -959,11 +959,6 @@ function fetch(...args) {
   return globalThis.fetch(...args);
 }
 
-function createXmlParser() {
-  const { XMLParser } = require('fast-xml-parser');
-  return new XMLParser({ ignoreAttributes: false, allowBooleanAttributes: true, cdataPropName: '__cdata' });
-}
-
 function fetchSteamIcon(url, appid) {
   return require(path.join(__dirname, '../parser/steam.js')).fetchIcon(url, appid);
 }
@@ -1303,6 +1298,7 @@ async function fetchSteamCommunityAchievements(url) {
     }
     if (!res.ok) return [];
     return steamSchemaFetch.parseSteamCommunityRows(await res.text()).map((row) => ({
+      ...row,
       img: row.img || null,
       icon: row.icon || '',
       title: row.title || null,
@@ -1486,9 +1482,9 @@ function saveSteamGroupsCache(appid, groups) {
   }
 }
 
-// Fast keyless chain: the official endpoint first (works without a key and is the only source with
-// hidden descriptions + icons + rarity), then SteamHunters JSON enriched with SteamCommunity
-// icons/hidden, then SteamCommunity alone, then nothing (the caller may fall back to the browser).
+// Fast keyless chain: the official endpoint first, then the SteamCommunity page (same schema, other
+// host), then SteamHunters JSON enriched with whatever that page gave, then nothing (the caller may
+// fall back to the browser).
 async function getAchievementsKeyless(appid, lang) {
   // A host that refused is a host that never answered about this appid. Tracked across the whole
   // chain so an all-refusals run ends as "unknown" rather than as "this game has no achievements",
@@ -1503,41 +1499,38 @@ async function getAchievementsKeyless(appid, lang) {
 
   if (steamTransportUnavailable()) return { achievements: [], source: 'none', networkError: true };
 
+  // The community page carries the same schema from another host, localized, with real apiNames.
+  const language = (lang && (lang.api || lang)) || 'english';
+  const rows = await fetchSteamCommunityAchievements(steamSchemaFetch.steamCommunityAchievementsUrl(appid, language));
+  if (rows.throttled === true) refused = true;
+  if (steamSchemaFetch.rowsCarryApiNames(rows)) {
+    const achievements = steamSchemaFetch.mapSteamCommunityRows(rows);
+    rememberApiNameIndex(appid, achievements);
+    return { achievements, source: 'steamcommunity' };
+  }
+
+  if (steamTransportUnavailable()) return { achievements: [], source: 'none', networkError: true };
+
   const sh = await fetchSteamHuntersJson(appid);
   if (sh.throttled === true) refused = true;
   if (sh.ok) {
     if (sh.list.length === 0) return { achievements: [], source: 'steamhunters' };
-    const language = (lang && (lang.api || lang)) || 'english';
     // SteamHunters titles are English-only, so icons/hidden come from the English SteamCommunity
-    // page (title match); the localized page is then overlaid by icon hash (language-independent).
-    const achievements = steamSchemaFetch.mapSteamHuntersJson(sh.list);
-    const englishRows = await fetchSteamCommunityAchievements(
-      `https://steamcommunity.com/stats/${appid}/achievements?l=english`
-    );
+    // rows (title match); localized rows are then overlaid by icon hash (language-independent).
+    const englishRows =
+      language === 'english' ? rows : await fetchSteamCommunityAchievements(steamSchemaFetch.steamCommunityAchievementsUrl(appid, 'english'));
     const merged = englishRows.length
       ? steamSchemaFetch.mergeSteamHuntersWithCommunity(sh.list, englishRows)
-      : achievements;
-    if (language !== 'english') {
-      const localizedRows = await fetchSteamCommunityAchievements(
-        `https://steamcommunity.com/stats/${appid}/achievements?l=${language}`
-      );
-      if (localizedRows.length) {
-        const { mergeTranslatedAchievements } = require('../parser/achievementTranslations.js');
-        mergeTranslatedAchievements(merged, localizedRows);
-      }
+      : steamSchemaFetch.mapSteamHuntersJson(sh.list);
+    if (language !== 'english' && rows.length) {
+      const { mergeTranslatedAchievements } = require('../parser/achievementTranslations.js');
+      mergeTranslatedAchievements(merged, rows);
     }
     // SteamHunters always carries real apiNames, with or without a successful icon merge.
     rememberApiNameIndex(appid, merged);
     return { achievements: merged, source: 'steamhunters' };
   }
 
-  if (steamTransportUnavailable()) return { achievements: [], source: 'none', networkError: true };
-
-  const language = (lang && (lang.api || lang)) || 'english';
-  const rows = await fetchSteamCommunityAchievements(
-    `https://steamcommunity.com/stats/${appid}/achievements?l=${language}`
-  );
-  if (rows.throttled === true) refused = true;
   if (rows.length) {
     const degraded = steamSchemaFetch.mapSteamCommunityRows(rows);
     const apiNames = loadApiNameIndex(appid);
@@ -1581,7 +1574,6 @@ async function resolveSteamData(request) {
   const appid = request.appid;
   const type = request.type;
   let user = request.user;
-  let userid;
   const lang = request.lang || 'english';
   if (!configJS) {
     try {
@@ -1597,74 +1589,18 @@ async function resolveSteamData(request) {
       return { appid, networkError: true };
     }
     if (type === 'user') {
-      const url = `https://steamcommunity.com/profiles/${user}/stats/${appid}/?xml=1`;
-      const res = await fetch(url);
-      const xml = await res.text();
-      const parser = createXmlParser();
-      const data = parser.parse(xml);
-      const achievements = data?.playerstats?.achievements?.achievement || [];
-      const list = Array.isArray(achievements) ? achievements : [achievements];
-
-      return list.map((a) => {
-        const name = a.apiname?.__cdata || a.apiname || '';
-        const unlock = parseInt(a.unlockTimestamp ?? 0, 10);
-        return {
-          apiname: name,
-          achieved: unlock > 0 ? 1 : 0,
-          unlocktime: unlock || 0,
-        };
-      });
+      // null, never [], when Steam could not say: the caller caches the answer as the truth.
+      try {
+        return await require('../parser/steamAccount.js').fetchPlayerAchievements({ steamid: user, appid, log: (message) => debug.log(message) });
+      } catch (err) {
+        debug.log(`[${appid}] user stats unavailable: ${err.message || err}`);
+        return null;
+      }
     }
     if (type === 'steamcommunity') {
-      let info = { appid };
-      const url = `https://steamcommunity.com/stats/${appid}/achievements?l=${lang.api}`; //this doesnt give hidden descriptions
-      info.achievements = await fetchSteamCommunityAchievements(url);
-      if (info.achievements.length > 0 && info.achievements.every((a) => a.description)) {
-        return info;
-      }
-
-      let validXml = false;
-      let xml;
-
-      // Prefer SteamHunters owners over a blind SteamID loop.
-
-      await scrapeWithPuppeteer(info, { userlist: true, steamhunters: true, appid });
-      // Keep partial achievements when the owner list fails.
-
-      // Use the first public owner profile with complete localized descriptions.
-      const tryOwnerProfiles = async (ids) => {
-        for (let id of ids) {
-          userid = id;
-          const url = `https://steamcommunity.com/profiles/${userid}/stats/${appid}/?xml=1`; // this for all data
-          const res = await fetch(url);
-          xml = await res.text();
-          validXml = !(xml.startsWith('<!DOCTYPE html') || xml.includes('<html'));
-          if (!validXml) continue;
-
-          const parser = createXmlParser();
-          const data = parser.parse(xml);
-          const achievements = data?.playerstats?.achievements?.achievement || [];
-          const list = achievements.map((a) => {
-            const unlocked = a['@_closed'] === '1';
-            const name = a.name.__cdata;
-            const description = a.description.__cdata;
-            return { name, description, unlocked };
-          });
-          const allgood = list.length > 0 && list.every((a) => a.description);
-          if (!allgood) continue;
-          const url2 = `https://steamcommunity.com/profiles/${userid}/stats/${appid}?l=${lang.api}`; // this for name and description, match them via icon hash
-          info.achievements = await fetchSteamCommunityAchievements(url2);
-          return true;
-        }
-        return false;
-      };
-
-      if (await tryOwnerProfiles((info.users || []).map((user) => user.steamId))) return info;
-
-      // Fall back to the cached top-owner SteamID pool.
-      const owners = await fetchTopOwners();
-      if (owners.length && (await tryOwnerProfiles(owners))) return info;
-      return info;
+      // Translations for an English-only schema. The page holds every description, hidden ones too.
+      const language = (lang && (lang.api || lang)) || 'english';
+      return { appid, achievements: await fetchSteamCommunityAchievements(steamSchemaFetch.steamCommunityAchievementsUrl(appid, language)) };
     }
 
     if (type === 'data' || type === 'steamhunters') {
@@ -3290,37 +3226,6 @@ async function scrapeWithPuppeteer(info = { appid: 269770 }, alternate) {
     try {
       if (alternate) {
         if (alternate.steamhunters) {
-          if (alternate.userlist) {
-            const url = `https://steamhunters.com/apps/${info.appid}/users?sort=completionstate`;
-            const page = puppeteerWindow.pagesh;
-            try {
-              await page.goto(url);
-              await page.waitForFunction(() => {
-                return Array.from(document.querySelectorAll('script')).some((s) => s.textContent.includes('var sh'));
-              });
-              await page.evaluate(() => {
-                const scripts = Array.from(document.querySelectorAll('script'));
-                const target = scripts.find((s) => s.textContent.includes('var sh'));
-                // oxlint-disable-next-line no-eval -- runs in the scraped page, not in Node: the payload is the page own inline script.
-                eval(target.textContent);
-              });
-              const users = (await page.evaluate(() => sh.model.listData.pagedList.items)) || [];
-
-              const results = [];
-              users.forEach((item) => {
-                results.push({
-                  id: item.steamId,
-                  isPublic: item.privacyState === 0,
-                });
-              });
-              info.users = users;
-              recordSteamTransportSuccess();
-            } catch (e) {
-              recordSteamTransportFailure(e);
-              debug.log(e);
-            }
-            return;
-          }
           let start = Date.now();
           const url = `https://steamhunters.com/apps/${info.appid}/achievements?group=&sort=name`;
           const page = puppeteerWindow.pagesh;

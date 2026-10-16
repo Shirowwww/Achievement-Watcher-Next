@@ -42,6 +42,7 @@ test('mapOfficialAchievements maps the full AW shape with rarity', () => {
     icon: 'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/440/abc.jpg',
     icongray: 'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/440/abc_gray.jpg',
     rarityPercent: 40.5,
+    archived: false,
   });
   assert.equal(entries[1].hidden, 0);
   assert.equal(entries[1].rarityPercent, 2.25);
@@ -59,8 +60,167 @@ test('mapOfficialAchievements treats a missing array as zero achievements and gu
       icon: '',
       icongray: '',
       rarityPercent: null,
+      archived: false,
     },
   ]);
+});
+
+// Shapes from GetGameAchievements for TF2 and PowerWash Simulator (October 2026).
+test('mapOfficialAchievements names each set and flags archived achievements and sets', () => {
+  const entries = ssf.mapOfficialAchievements(
+    {
+      groups: [
+        { groupid: 0, localized_name: '', dlcappid: 0, archived: false },
+        { groupid: 1, localized_name: 'PowerWash Simulator - SpongeBob SquarePants Special Pack', dlcappid: 2236950, archived: false },
+        { groupid: 11, localized_name: 'Replay', dlcappid: 0, archived: false },
+        { groupid: 12, localized_name: 'Gone', dlcappid: 0, archived: true },
+      ],
+      achievements: [
+        { internal_name: 'BASE', groupid: 0, archived: false },
+        { internal_name: 'DLC', groupid: 1, archived: false },
+        { internal_name: 'TF_REPLAY_YOUTUBE_VIEWS_TIER1', groupid: 11, archived: true },
+        { internal_name: 'IN_ARCHIVED_SET', groupid: 12, archived: false },
+        { internal_name: 'NO_GROUP_FIELD' },
+      ],
+    },
+    1290000
+  );
+  const by = Object.fromEntries(entries.map((entry) => [entry.name, entry]));
+  assert.equal(by.BASE.category, undefined, 'the base game is not a set');
+  assert.equal(by.BASE.archived, false);
+  assert.equal(by.DLC.category, 'PowerWash Simulator - SpongeBob SquarePants Special Pack');
+  assert.equal(by.TF_REPLAY_YOUTUBE_VIEWS_TIER1.archived, true);
+  assert.equal(by.TF_REPLAY_YOUTUBE_VIEWS_TIER1.category, 'Replay');
+  assert.equal(by.IN_ARCHIVED_SET.archived, true, 'an archived set archives what it holds');
+  assert.equal(by.NO_GROUP_FIELD.category, undefined);
+});
+
+test('GetUserAchievements rows are mapped back to apiNames, progress included', () => {
+  const index = ssf.officialKeyIndex({
+    achievements: [
+      { internal_name: 'ZERO', internal_key: 0 },
+      { internal_name: 'COUNTER', internal_key: 68098, max_progress_int: 25000 },
+      { internal_name: 'LOCKED', internal_key: 7 },
+      { internal_key: 8 },
+    ],
+  });
+  assert.equal(index.size, 3, 'an entry without a name is useless for mapping');
+  const rows = ssf.mapUserAchievements(
+    {
+      groups: [{ groupid: 0 }],
+      achievements: [
+        { internal_key: 0, unlocked: true, unlock_time: 1273518993 },
+        { internal_key: 68098, progress_int: 14731 },
+      ],
+    },
+    index
+  );
+  assert.deepEqual(rows, [
+    { apiname: 'ZERO', achieved: 1, unlocktime: 1273518993 },
+    { apiname: 'COUNTER', achieved: 0, unlocktime: 0, progress: 14731, max_progress: 25000 },
+    { apiname: 'LOCKED', achieved: 0, unlocktime: 0 },
+  ]);
+  // Hidden game details: Steam answers an empty response, which is not "nothing unlocked".
+  assert.equal(ssf.mapUserAchievements({}, index), null);
+  assert.equal(ssf.mapUserAchievements(null, index), null);
+});
+
+test('steamCommunityAchievementsUrl asks the current page directly, with its language', () => {
+  assert.equal(ssf.steamCommunityAchievementsUrl(220, 'french'), 'https://steamcommunity.com/achievements/220?l=french');
+  assert.equal(ssf.steamCommunityAchievementsUrl('440'), 'https://steamcommunity.com/achievements/440?l=english');
+  assert.equal(
+    ssf.steamCommunityAchievementsUrl(440, 'english', '76561198001678750'),
+    'https://steamcommunity.com/profiles/76561198001678750/achievements/440?l=english'
+  );
+});
+
+// The page as Steam serves it since October 2026: the data sits in a react-query cache, as a JSON
+// string inside the JSON of <script id="valve-ssr-data">. Values from Half-Life 2 in French.
+function communityPage(queries) {
+  const queryData = JSON.stringify({ mutations: [], queries });
+  const ssr = JSON.stringify({ route: {}, renderContext: { queryData } });
+  return `<!DOCTYPE html><html><head><script type="application/json" id="valve-ssr-data" nonce="n">${ssr}</script></head><body></body></html>`;
+}
+
+const HL2_SCHEMA = {
+  appid: 220,
+  language: 'french',
+  groups: [
+    {
+      id: 0,
+      name: '',
+      archived: false,
+      achievements: [
+        {
+          internal_key: 0,
+          api_name: 'HL2_HIT_CANCOP_WITHCAN',
+          name: 'Rebelle',
+          description: 'Lancez la canette sur le policier.',
+          hidden: true,
+          archived: false,
+          icon_achieved: 'https://shared.fastly.steamstatic.com/community_assets/images/apps/220/hl2_hit_cancop_withcan.jpg',
+          icon_unachieved: 'https://shared.fastly.steamstatic.com/community_assets/images/apps/220/hl2_hit_cancop_withcan_bw.jpg',
+          groupid: 0,
+        },
+      ],
+    },
+    {
+      id: 3,
+      name: 'Episode One',
+      archived: true,
+      achievements: [{ internal_key: 256, api_name: 'EP1_X', name: 'Old one', description: '', hidden: false, archived: false, icon_achieved: '', icon_unachieved: '', groupid: 3 }],
+    },
+  ],
+};
+
+test('parseSteamCommunityRows reads the React page: apiNames, hidden text, sets, archive and rarity', () => {
+  const html = communityPage([
+    { queryKey: ['StoreItem', 'app_220'], state: { status: 'success', data: {} } },
+    { queryKey: ['achievements', 220, 'schema'], state: { status: 'success', data: HL2_SCHEMA } },
+    { queryKey: ['achievements', 220, 'globalpercentages'], state: { status: 'success', data: { percentages: { 0: 33.4 } } } },
+  ]);
+  const rows = ssf.parseSteamCommunityRows(html);
+  assert.equal(rows.length, 2);
+  assert.deepEqual(rows[0], {
+    img: 'hl2_hit_cancop_withcan',
+    icon: 'https://shared.fastly.steamstatic.com/community_assets/images/apps/220/hl2_hit_cancop_withcan.jpg',
+    icongray: 'https://shared.fastly.steamstatic.com/community_assets/images/apps/220/hl2_hit_cancop_withcan_bw.jpg',
+    title: 'Rebelle',
+    description: 'Lancez la canette sur le policier.',
+    apiName: 'HL2_HIT_CANCOP_WITHCAN',
+    hidden: true,
+    archived: false,
+    rarityPercent: 33.4,
+  });
+  assert.equal(rows[1].category, 'Episode One');
+  assert.equal(rows[1].archived, true);
+  assert.equal(rows[1].rarityPercent, null);
+  assert.ok(ssf.rowsCarryApiNames(rows));
+
+  const entries = ssf.mapSteamCommunityRows(rows);
+  assert.equal(entries[0].name, 'HL2_HIT_CANCOP_WITHCAN', 'a real apiName, not the title');
+  assert.equal(entries[0].hidden, 1, 'hidden comes from the flag, its text is still there');
+  assert.equal(entries[0].description, 'Lancez la canette sur le policier.');
+  assert.equal(entries[1].archived, true);
+  assert.equal(entries[1].category, 'Episode One');
+});
+
+test('a page without a schema query, or with a broken payload, falls back to the old reader', () => {
+  assert.deepEqual(ssf.parseSteamCommunityRows(communityPage([{ queryKey: ['achievements', 220, 'schema'], state: { status: 'error', data: null } }])), []);
+  const broken = '<script type="application/json" id="valve-ssr-data">{"renderContext":{"queryData":"{not json"}}</script>';
+  assert.deepEqual(ssf.parseSteamCommunityRows(broken), []);
+  assert.equal(ssf.rowsCarryApiNames([]), false);
+  assert.equal(ssf.rowsCarryApiNames([{ title: 'Old page row' }]), false);
+});
+
+test('mergeSteamHuntersWithCommunity matches page rows by apiName and takes their hidden flag', () => {
+  const merged = ssf.mergeSteamHuntersWithCommunity(
+    [{ apiName: 'HL2_HIT_CANCOP_WITHCAN', name: 'Defiant', description: 'Hit the trashcan cop with the can.' }],
+    [{ apiName: 'HL2_HIT_CANCOP_WITHCAN', title: 'Rebelle', description: 'Lancez la canette.', hidden: true, icon: 'https://cdn.example/i.jpg' }]
+  );
+  assert.equal(merged[0].hidden, 1);
+  assert.equal(merged[0].icon, 'https://cdn.example/i.jpg');
+  assert.equal(merged[0].description, 'Hit the trashcan cop with the can.');
 });
 
 test('mapSteamHuntersJson maps apiName/description/rarity and no icons', () => {

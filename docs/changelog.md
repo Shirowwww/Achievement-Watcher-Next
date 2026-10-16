@@ -16,6 +16,27 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Improved
+
+- **Steam achievement sets.** Achievements now carry the set Steam puts them in (a DLC, a season,
+  a TF2 class), straight from Steam instead of SteamHunters. An achievement the developer archived
+  no longer counts towards 100% unless you earned it, as on Steam: Team Fortress 2's four Replay
+  achievements no longer keep its 100% and its platinum notification out of reach. Games already in
+  the library pick this up at their next automatic data check.
+
+### Fixed
+
+- **Steam schemas when the main Steam endpoint is unavailable.** Steam replaced its community
+  achievements page in October 2026, and the fallback that read it found nothing for any game. AW
+  reads the new page, which gives the full schema in your language, hidden descriptions included,
+  in one request, and no longer opens a hidden browser to look for them on other players' profiles.
+- **Progress of games never played on this PC, with a connected Steam account.** It comes from
+  Steam's own achievements service instead of the old XML profile page, which showed every
+  achievement as locked when the profile hides its game details, and failed outright for games
+  like Team Fortress 2 or Half-Life 2. A profile that hides its game details is now reported in the
+  log rather than read as "nothing unlocked", and the Steam account settings say the details must
+  be public.
+
 ### Compatibility
 
 - **Game Health names the games no offline emulator can record.** Halo: Campaign Evolved has its

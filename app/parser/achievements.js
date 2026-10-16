@@ -211,6 +211,14 @@ function normalizeSaveEntry(entry, source) {
   return parsed;
 }
 
+// Steam shows an archived achievement only to players who earned it; it no longer counts for others.
+function withoutUnearnedArchived(achievement) {
+  const list = achievement.list.filter((ach) => !ach.archived || ach.Achieved == 1);
+  if (list.length === achievement.list.length) return achievement;
+  const total = Math.max(0, (Number(achievement.total) || 0) - (achievement.list.length - list.length));
+  return { ...achievement, list, total };
+}
+
 function normalizeGameName(name, appid) {
   if (typeof name === 'string') return name;
   if (name && typeof name === 'object') {
@@ -4230,6 +4238,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       // and that branch never writes a zero, so a counter still at 0 stayed undefined instead.
       if (appliedFromThisSource) isDuplicate = true;
     }
+    game.achievement = withoutUnearnedArchived(game.achievement);
     game.achievement.unlocked = game.achievement.list.filter((ach) => ach.Achieved == 1).length;
     // Reconcile the denominator with the real achievement list. A schema/list desync could leave
     // `total` at 0 (or below the number actually displayed), producing the "39 / 0" the UI shows for a
@@ -4620,6 +4629,7 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
 // Exposed for unit tests.
 module.exports._internal = {
   normalizeSaveEntry,
+  withoutUnearnedArchived,
   removeInertGoldbergSettings,
   declaredEmulatorAppid,
   promoteUplayRecord,

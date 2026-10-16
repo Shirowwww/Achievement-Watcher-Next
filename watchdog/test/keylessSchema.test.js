@@ -149,13 +149,11 @@ test('watchdog distinguishes a verified empty schema from a total network outage
   }
 });
 
-test('watchdog falls back to SteamCommunity when both apiName sources are unavailable', async () => {
+test('watchdog falls back to the legacy SteamCommunity rows when no source has apiNames', async () => {
   const realFetch = global.fetch;
-  let calls = 0;
   try {
-    global.fetch = async () => {
-      calls += 1;
-      if (calls <= 2) throw new Error('api unavailable');
+    global.fetch = async (url) => {
+      if (!String(url).includes('steamcommunity.com')) throw new Error('api unavailable');
       return {
         ok: true,
         text: async () => `

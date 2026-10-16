@@ -109,11 +109,11 @@ lookups it needs, and every answer is cached locally so the library keeps workin
 
 | It asks for | From | Carrying |
 |---|---|---|
-| Achievement lists, icons and global rarity | Steam's public endpoints, SteamHunters, the SteamCommunity page, Exophase | a game's AppID, and the interface language |
+| Achievement lists, icons and global rarity | Steam's public endpoints, the SteamCommunity page, SteamHunters, Exophase | a game's AppID, and the interface language |
 | Cover art and game logos | the Steam CDN, SteamDB, SteamGridDB | a game's AppID or title |
 | Update checks and downloads | the GitHub release feed | nothing but the request |
 | Repair tools, when you run a repair | the GBE Fork, Steamless, API-bypass and CrakFiles projects | nothing but the request |
-| Your own library and unlocks, **only if you connect an account** | Steam, Epic or Xbox Network | that account's own session token |
+| Your own library and unlocks, **only if you connect an account** | Steam, Epic or Xbox Network | that account's own session token; for Steam unlocks, its public Steam ID |
 | Your RetroAchievements library and unlocks, **only if you fill in the account card** | retroachievements.org | your username and Web API key, stored encrypted on this PC |
 | Community presets and themes, **only if you open or publish to the gallery** | the gallery service, `aw-gallery.shirow.dedyn.io` | the listing request; a file only when you press Publish |
 

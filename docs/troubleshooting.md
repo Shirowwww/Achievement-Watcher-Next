@@ -147,7 +147,8 @@ its artwork, which is derived from the AppID alone, resolved. The entry is kept 
 and the next scan replaces the number with the real title once the lookup succeeds.
 
 DLC and update achievements show their owning group under the title (e.g. a "Hearts of Stone"
-tag) when SteamHunters knows the groups; games without groups are left untagged.
+tag), from Steam's own achievement sets, or from SteamHunters for a game that has none; games
+without groups are left untagged.
 
 Hidden achievement descriptions may stay hidden when every available source intentionally omits them.
 

@@ -7,7 +7,8 @@
 
   The account is the authority on its own unlocks. Issue #98: the Web API endpoint first used here
   refuses the session token (400, "key is missing") for every game, and that refusal was cached as
-  "no stats" across whole libraries. The community XML page answers for a public profile.
+  "no stats" across whole libraries. The keyless GetUserAchievements answers for a public profile;
+  the community XML page it replaced answered "all locked" when the game details are hidden.
 */
 
 const assert = require('node:assert/strict');
@@ -30,32 +31,41 @@ const APPID = '1091500';
 const ACCOUNT = { token: 'token', steamid: '76561197971376739' };
 const USER = { user: '11111111', id: ACCOUNT.steamid, name: 'me' };
 
-function reply(body, ok = true, status = 200) {
-  return async () => ({ ok, status, text: async () => body });
-}
+const json = (body, ok = true, status = 200) => ({ ok, status, json: async () => body });
 
-// The shape steamcommunity.com/profiles/<id>/stats/<appid>/achievements/?xml=1 returns, apinames
-// lowercased as it sends them.
-const PLAYER_STATS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<playerstats>
-  <privacyState>public</privacyState>
-  <visibilityState>3</visibilityState>
-  <game><gameFriendlyName>Hades</gameFriendlyName><gameName>Hades</gameName></game>
-  <achievements>
-    <achievement closed="1">
-      <iconClosed><![CDATA[https://cdn/first.jpg]]></iconClosed>
-      <name><![CDATA[First]]></name>
-      <apiname><![CDATA[first]]></apiname>
-      <description><![CDATA[Do it once]]></description>
-      <unlockTimestamp>1712253396</unlockTimestamp>
-    </achievement>
-    <achievement closed="0">
-      <name><![CDATA[Second]]></name>
-      <apiname><![CDATA[second]]></apiname>
-      <description><![CDATA[Do it twice]]></description>
-    </achievement>
-  </achievements>
-</playerstats>`;
+// Trimmed real answers (2026-10). The schema names achievements by internal key, key 0 included.
+const SCHEMA = {
+  response: {
+    schema_hash: 860090977,
+    achievements: [
+      { internal_name: 'FIRST', internal_key: 0 },
+      { internal_name: 'SECOND', internal_key: 1, max_progress_int: 10 },
+      { internal_name: 'THIRD', internal_key: 2 },
+    ],
+  },
+};
+const PLAYER_STATS = {
+  response: {
+    schema_hash: 860090977,
+    groups: [{ groupid: 0, is_achievable: true, completed_achievements: 1, is_completed: false }],
+    achievements: [
+      { internal_key: 0, unlocked: true, unlock_time: 1712253396 },
+      { internal_key: 1, progress_int: 4 },
+    ],
+  },
+};
+// What Steam sends for hidden game details, and for a game without stats.
+const EMPTY = { response: {} };
+
+// Answers the player call with `player` and the schema call with `schema`, recording every URL.
+function steamApi({ player = PLAYER_STATS, schema = SCHEMA, asked = [] } = {}) {
+  return async (url) => {
+    asked.push(url);
+    if (url.includes('/GetUserAchievements/')) return typeof player === 'function' ? player() : json(player);
+    if (url.includes('/GetGameAchievements/')) return json(schema);
+    throw new Error(`unexpected request ${url}`);
+  };
+}
 
 let profileNumber = 0;
 // Each test its own profile: a private answer is remembered per profile for six hours.
@@ -84,57 +94,53 @@ async function readWithNoLocalStats({ account = ACCOUNT, fetchPlayerAchievements
   }
 }
 
-test('the community page gives the unlocks of the connected account', async () => {
-  const unlocks = await steamAccount.fetchPlayerAchievements({ ...freshAccount(), appid: APPID, fetchImpl: reply(PLAYER_STATS) });
+test('GetUserAchievements gives the unlocks of the connected account, mapped by internal key', async () => {
+  const unlocks = await steamAccount.fetchPlayerAchievements({ ...freshAccount(), appid: '101', fetchImpl: steamApi() });
   assert.deepEqual(unlocks, [
-    { apiname: 'first', achieved: 1, unlocktime: 1712253396 },
-    { apiname: 'second', achieved: 0, unlocktime: 0 },
+    { apiname: 'FIRST', achieved: 1, unlocktime: 1712253396 },
+    { apiname: 'SECOND', achieved: 0, unlocktime: 0, progress: 4, max_progress: 10 },
+    { apiname: 'THIRD', achieved: 0, unlocktime: 0 },
   ]);
 });
 
 test('the request names the profile and the game, and never sends the session token', async () => {
-  let asked = '';
+  const asked = [];
   const account = freshAccount();
-  await steamAccount.fetchPlayerAchievements({
-    ...account,
-    appid: APPID,
-    fetchImpl: async (url) => {
-      asked = url;
-      return { ok: true, status: 200, text: async () => PLAYER_STATS };
-    },
-  });
-  assert.match(asked, new RegExp(`^https://steamcommunity\\.com/profiles/${account.steamid}/stats/${APPID}/achievements/\\?xml=1`));
-  assert.ok(!asked.includes(ACCOUNT.token), 'a token in a URL ends up in logs and proxies');
+  await steamAccount.fetchPlayerAchievements({ ...account, appid: '102', fetchImpl: steamApi({ asked }) });
+  assert.match(asked[0], new RegExp(`^https://api\\.steampowered\\.com/IPlayerService/GetUserAchievements/v1/\\?appid=102&steamid=${account.steamid}$`));
+  assert.ok(asked.every((url) => !url.includes(ACCOUNT.token)), 'a token in a URL ends up in logs and proxies');
+});
+
+test('the schema is asked once per game while its hash holds', async () => {
+  const asked = [];
+  const fetchImpl = steamApi({ asked });
+  await steamAccount.fetchPlayerAchievements({ ...freshAccount(), appid: '103', fetchImpl });
+  await steamAccount.fetchPlayerAchievements({ ...freshAccount(), appid: '103', fetchImpl });
+  assert.equal(asked.filter((url) => url.includes('/GetGameAchievements/')).length, 1);
 });
 
 test('a game with no stats reads as an empty list, which is safe to cache', async () => {
-  const xml = '<?xml version="1.0"?><response><error><![CDATA[Requested app has no stats]]></error></response>';
-  assert.deepEqual(await steamAccount.fetchPlayerAchievements({ ...freshAccount(), appid: APPID, fetchImpl: reply(xml) }), []);
+  const fetchImpl = steamApi({ player: EMPTY, schema: EMPTY });
+  assert.deepEqual(await steamAccount.fetchPlayerAchievements({ ...freshAccount(), appid: '104', fetchImpl }), []);
 });
 
 // The #98 failure: a refusal read as "no stats" and cached over every game of the library.
-test('a refusal, an error page or a private profile throws instead of reporting nothing unlocked', async () => {
-  await assert.rejects(steamAccount.fetchPlayerAchievements({ ...freshAccount(), appid: APPID, fetchImpl: reply('<h1>Bad Request</h1>', false, 400) }), /http-400/);
-  await assert.rejects(steamAccount.fetchPlayerAchievements({ ...freshAccount(), appid: APPID, fetchImpl: reply('<html>Sign in</html>') }), /unreadable/);
-  await assert.rejects(
-    steamAccount.fetchPlayerAchievements({ ...freshAccount(), appid: APPID, fetchImpl: reply('<response><error><![CDATA[This profile is private.]]></error></response>') }),
-    /private/
-  );
-  await assert.rejects(
-    steamAccount.fetchPlayerAchievements({ ...freshAccount(), appid: APPID, fetchImpl: async () => { throw new Error('fetch failed'); } }),
-    /fetch failed/
-  );
+test('a refusal, hidden game details or a dead host throws instead of reporting nothing unlocked', async () => {
+  const refused = steamApi({ player: () => json({}, false, 400) });
+  await assert.rejects(steamAccount.fetchPlayerAchievements({ ...freshAccount(), appid: '105', fetchImpl: refused }), /http-400/);
+  await assert.rejects(steamAccount.fetchPlayerAchievements({ ...freshAccount(), appid: '105', fetchImpl: steamApi({ player: EMPTY }) }), /private/);
+  const dead = async () => {
+    throw new Error('fetch failed');
+  };
+  await assert.rejects(steamAccount.fetchPlayerAchievements({ ...freshAccount(), appid: '105', fetchImpl: dead }), /fetch failed/);
 });
 
 test('a private profile is asked once, not once per game', async () => {
   const account = freshAccount();
-  let requests = 0;
-  const fetchImpl = async () => {
-    requests += 1;
-    return { ok: true, status: 200, text: async () => '<response><error><![CDATA[This profile is private.]]></error></response>' };
-  };
+  const asked = [];
+  const fetchImpl = steamApi({ player: EMPTY, asked });
   for (const appid of ['10', '20', '30']) await assert.rejects(steamAccount.fetchPlayerAchievements({ ...account, appid, fetchImpl }), /private/);
-  assert.equal(requests, 1);
+  assert.equal(asked.filter((url) => url.includes('/GetUserAchievements/')).length, 1);
 });
 
 test('an empty list cached before the fix is asked again, a newer one is trusted', async () => {

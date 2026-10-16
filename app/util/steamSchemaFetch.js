@@ -18,24 +18,136 @@ function toRarityPercent(value) {
   return Number.isFinite(n) ? n : null;
 }
 
+// Steam's achievement sets (October 2026): set 0 is the base game and has no name. An archived
+// achievement, or one in an archived set, only counts for players who already earned it.
+function setLabel(id, name) {
+  return id == null || Number(id) === 0 ? '' : String(name || '').trim();
+}
+
 // IPlayerService/GetGameAchievements response -> AW schema entries. Real descriptions for hidden
 // achievements are included by Steam itself, unlike legacy GetSchemaForGame.
 function mapOfficialAchievements(response, appid) {
   const list = response && Array.isArray(response.achievements) ? response.achievements : [];
-  return list.map((a) => ({
-    name: a.internal_name,
-    defaultvalue: 0,
-    displayName: a.localized_name,
-    hidden: a.hidden ? 1 : 0,
-    description: a.localized_desc || '',
-    icon: a.icon
-      ? `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${appid}/${a.icon}`
-      : '',
-    icongray: a.icon_gray
-      ? `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${appid}/${a.icon_gray}`
-      : '',
-    rarityPercent: toRarityPercent(a.player_percent_unlocked),
-  }));
+  const groups = new Map((response && Array.isArray(response.groups) ? response.groups : []).map((g) => [Number(g && g.groupid), g]));
+  return list.map((a) => {
+    const group = groups.get(Number(a.groupid));
+    const category = group ? setLabel(group.groupid, group.localized_name) : '';
+    return {
+      name: a.internal_name,
+      defaultvalue: 0,
+      displayName: a.localized_name,
+      hidden: a.hidden ? 1 : 0,
+      description: a.localized_desc || '',
+      icon: a.icon
+        ? `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${appid}/${a.icon}`
+        : '',
+      icongray: a.icon_gray
+        ? `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${appid}/${a.icon_gray}`
+        : '',
+      rarityPercent: toRarityPercent(a.player_percent_unlocked),
+      archived: !!(a.archived || (group && group.archived)),
+      ...(category ? { category } : {}),
+    };
+  });
+}
+
+// internal_key -> { name, maxProgress } from the same response, for IPlayerService/GetUserAchievements,
+// which names achievements only by that key. Key 0 is a real key.
+function officialKeyIndex(response) {
+  const index = new Map();
+  for (const a of response && Array.isArray(response.achievements) ? response.achievements : []) {
+    if (!a || a.internal_key == null || !a.internal_name) continue;
+    const maxProgress = Number(a.max_progress_int ?? a.max_progress_float);
+    index.set(Number(a.internal_key), { name: a.internal_name, maxProgress: maxProgress > 0 ? maxProgress : 0 });
+  }
+  return index;
+}
+
+/*
+  IPlayerService/GetUserAchievements (keyless) -> AW unlock rows. Steam lists only achievements with
+  an unlock or some progress; every other schema entry is a locked row. `null` means Steam refused to
+  show the profile's game details (it answers an empty response with x-eresult 15), never "nothing".
+*/
+function mapUserAchievements(response, keyIndex) {
+  if (!response || !Array.isArray(response.groups)) return null;
+  const byKey = new Map();
+  for (const a of Array.isArray(response.achievements) ? response.achievements : []) {
+    if (a && a.internal_key != null) byKey.set(Number(a.internal_key), a);
+  }
+  const rows = [];
+  for (const [key, schema] of keyIndex) {
+    const state = byKey.get(key);
+    const achieved = !!(state && state.unlocked);
+    const row = { apiname: schema.name, achieved: achieved ? 1 : 0, unlocktime: achieved ? Number(state.unlock_time) || 0 : 0 };
+    const progress = state ? Number(state.progress_int ?? state.progress_float) : NaN;
+    if (!achieved && Number.isFinite(progress) && schema.maxProgress > 0) {
+      row.progress = progress;
+      row.max_progress = schema.maxProgress;
+    }
+    rows.push(row);
+  }
+  return rows;
+}
+
+// The steamcommunity achievements page is a React app since October 2026. The old
+// /stats/<appid>/achievements address redirects to it and drops `?l=`, so it is asked for directly.
+function steamCommunityAchievementsUrl(appid, lang, steamid) {
+  const game = encodeURIComponent(String(appid));
+  const base = steamid
+    ? `https://steamcommunity.com/profiles/${encodeURIComponent(String(steamid))}/achievements/${game}`
+    : `https://steamcommunity.com/achievements/${game}`;
+  return `${base}?l=${encodeURIComponent(lang || 'english')}`;
+}
+
+// That page ships its data as a react-query cache in <script id="valve-ssr-data">, under
+// renderContext.queryData (itself a JSON string). Returns { schema, globalpercentages, ... } or null.
+function readCommunityPageQueries(html) {
+  if (typeof html !== 'string') return null;
+  const match = /<script\b[^>]*\bid="valve-ssr-data"[^>]*>([\s\S]*?)<\/script>/.exec(html);
+  if (!match) return null;
+  try {
+    const queryData = JSON.parse(match[1])?.renderContext?.queryData;
+    const dehydrated = typeof queryData === 'string' ? JSON.parse(queryData) : queryData;
+    const byKind = {};
+    for (const query of Array.isArray(dehydrated && dehydrated.queries) ? dehydrated.queries : []) {
+      const key = Array.isArray(query && query.queryKey) ? query.queryKey : [];
+      if (key[0] === 'achievements' && query.state && query.state.status === 'success') byKind[key[2]] = query.state.data;
+    }
+    return byKind;
+  } catch {
+    return null;
+  }
+}
+
+// The page's own schema -> rows in the shape below, plus what the old HTML never had: the real
+// apiName, the hidden flag, sets, archived entries and rarity. null when the page carries no schema.
+function communityPageRows(html) {
+  const queries = readCommunityPageQueries(html);
+  const schema = queries && queries.schema;
+  if (!schema || !Array.isArray(schema.groups)) return null;
+  const percentages = (queries.globalpercentages && queries.globalpercentages.percentages) || {};
+  const rows = [];
+  for (const group of schema.groups) {
+    const category = setLabel(group && group.id, group && group.name);
+    for (const a of Array.isArray(group && group.achievements) ? group.achievements : []) {
+      const title = String((a && a.name) || '').trim();
+      if (!title) continue;
+      const icon = String(a.icon_achieved || '');
+      rows.push({
+        img: iconKey(icon),
+        icon,
+        icongray: String(a.icon_unachieved || ''),
+        title,
+        description: String(a.description || '').trim(),
+        apiName: String(a.api_name || ''),
+        hidden: !!a.hidden,
+        archived: !!(a.archived || group.archived),
+        rarityPercent: toRarityPercent(percentages[a.internal_key]),
+        ...(category ? { category } : {}),
+      });
+    }
+  }
+  return rows;
 }
 
 // SteamHunters public JSON API (https://steamhunters.com/api/apps/<id>/achievements) -> entries.
@@ -72,10 +184,12 @@ function stripHtml(value) {
   return text.replace(/&nbsp;/g, ' ').trim();
 }
 
-// SteamCommunity achievements page -> [{ img, icon, title, description }].
-// `img` keeps the historical hash-only value (used by mergeTranslatedAchievements), `icon` is the
-// full URL used when rebuilding a schema from the SteamHunters/SteamCommunity fallback.
+// SteamCommunity achievements page -> [{ img, icon, title, description }], with the extra fields of
+// communityPageRows() when the page is the current one. `img` keeps the historical hash-only value
+// (used by mergeTranslatedAchievements), `icon` is the full URL used when rebuilding a schema.
 function parseSteamCommunityRows(html) {
+  const fromPage = communityPageRows(html);
+  if (fromPage) return fromPage;
   const rows = [];
   if (!html || typeof html !== 'string' || !html.includes('achieveRow')) return rows;
 
@@ -126,19 +240,40 @@ function parseSteamCommunityRows(html) {
   return rows;
 }
 
-// SteamCommunity rows -> AW entries (degraded fallback: no apiName, hidden detected via blank
-// description). Only used when both the official endpoint and SteamHunters are unreachable.
+// SteamCommunity rows -> AW entries. Rows from the current page carry the real apiName and flags;
+// rows from the old HTML page are the degraded fallback (title as name, blank description = hidden).
 function mapSteamCommunityRows(rows) {
   if (!Array.isArray(rows)) return [];
-  return rows.map((r) => ({
-    name: r.title || '',
-    defaultvalue: 0,
-    displayName: r.title || '',
-    hidden: r.title && !r.description ? 1 : 0,
-    description: r.description || '',
-    icon: r.icon || '',
-    icongray: '',
-  }));
+  return rows.map((r) => {
+    if (!r.apiName) {
+      return {
+        name: r.title || '',
+        defaultvalue: 0,
+        displayName: r.title || '',
+        hidden: r.title && !r.description ? 1 : 0,
+        description: r.description || '',
+        icon: r.icon || '',
+        icongray: '',
+      };
+    }
+    return {
+      name: r.apiName,
+      defaultvalue: 0,
+      displayName: r.title || '',
+      hidden: r.hidden ? 1 : 0,
+      description: r.description || '',
+      icon: r.icon || '',
+      icongray: r.icongray || '',
+      rarityPercent: r.rarityPercent ?? null,
+      archived: !!r.archived,
+      ...(r.category ? { category: r.category } : {}),
+    };
+  });
+}
+
+// True when rows came from the current page: a complete schema in itself, localized, apiNames included.
+function rowsCarryApiNames(rows) {
+  return Array.isArray(rows) && rows.length > 0 && rows.every((r) => r && r.apiName);
 }
 
 // Merges SteamHunters JSON (apiName + English descriptions) with SteamCommunity rows (icons +
@@ -150,18 +285,22 @@ function mergeSteamHuntersWithCommunity(shList, rows) {
   if (!Array.isArray(rows) || rows.length === 0) return mapped;
 
   const byTitle = new Map();
+  const byApiName = new Map();
   for (const row of rows) {
     if (row && row.title) byTitle.set(row.title.toLowerCase(), row);
+    if (row && row.apiName) byApiName.set(row.apiName.toLowerCase(), row);
   }
 
   return mapped.map((achievement, index) => {
-    const matched = byTitle.get(String(achievement.displayName || '').toLowerCase());
+    const matched =
+      byApiName.get(String(achievement.name || '').toLowerCase()) || byTitle.get(String(achievement.displayName || '').toLowerCase());
     const row = matched || rows[index];
     if (!row) return achievement;
+    const pageHidden = matched && row.apiName ? (row.hidden ? 1 : 0) : null;
     return {
       ...achievement,
       // Hidden is only trustworthy when the row really is the same achievement.
-      hidden: matched && row.title && !row.description ? 1 : achievement.hidden,
+      hidden: pageHidden ?? (matched && row.title && !row.description ? 1 : achievement.hidden),
       description: achievement.description || (matched ? row.description : '') || '',
       icon: achievement.icon || row.icon || '',
       icongray: achievement.icongray || '',
@@ -249,10 +388,14 @@ function applySteamHuntersGroups(achievements, groups) {
 
 module.exports = {
   mapOfficialAchievements,
+  officialKeyIndex,
+  mapUserAchievements,
+  steamCommunityAchievementsUrl,
   mapSteamHuntersJson,
   stripHtml,
   parseSteamCommunityRows,
   mapSteamCommunityRows,
+  rowsCarryApiNames,
   mergeSteamHuntersWithCommunity,
   parseSteamHuntersGroups,
   applySteamHuntersGroups,

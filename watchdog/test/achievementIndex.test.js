@@ -3,7 +3,14 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const { crc32 } = require('crc');
-const { buildSchemaIndex, findSchemaAchievement, buildPreviousAchievementIndex, seedPreviewNames } = require('../util/achievementIndex.js');
+const {
+  buildSchemaIndex,
+  findSchemaAchievement,
+  buildPreviousAchievementIndex,
+  seedPreviewNames,
+  requiredCount,
+  requiredUnlockedCount,
+} = require('../util/achievementIndex.js');
 
 test('schema index keeps the first case-insensitive name match, like Array.find', () => {
   const first = { name: 'Achievement_One' };
@@ -28,14 +35,25 @@ test('schema index skips the unused CRC table on normal save formats', () => {
   assert.equal(index.crcEntries.length, 0);
 });
 
-test('previous-state index preserves first duplicate and counts unlocked entries', () => {
+test('previous-state index preserves the first duplicate', () => {
   const first = { name: 'A', Achieved: 0 };
   const later = { name: 'A', Achieved: 1 };
-  const unlocked = { name: 'B', Achieved: 1 };
-  const index = buildPreviousAchievementIndex([first, later, unlocked]);
+  const index = buildPreviousAchievementIndex([first, later, { name: 'B', Achieved: 1 }]);
 
   assert.strictEqual(index.byName.get('A'), first);
-  assert.equal(index.unlockedCount, 2);
+});
+
+// TF2 archived four Replay achievements in October 2026: 100% must not wait for them.
+test('100% leaves out archived achievements unless they were earned', () => {
+  const schema = [{ name: 'A' }, { name: 'B' }, { name: 'OLD', archived: true }];
+  const index = buildSchemaIndex(schema);
+
+  assert.equal(requiredCount(schema), 2);
+  assert.equal(requiredUnlockedCount([{ name: 'a', Achieved: 1 }, { name: 'B', Achieved: 1 }], index), 2);
+  assert.equal(requiredUnlockedCount([{ name: 'A', Achieved: 1 }, { name: 'OLD', Achieved: 1 }], index), 1);
+  // A save entry the schema does not know still counts, as it always did.
+  assert.equal(requiredUnlockedCount([{ name: 'UNKNOWN', Achieved: 1 }, { name: 'B', Achieved: 0 }], index), 1);
+  assert.equal(requiredCount(null), 0);
 });
 
 // SmartSteamEmu's stats.bin names nothing: its records are keyed by crc32, and their parsed name is

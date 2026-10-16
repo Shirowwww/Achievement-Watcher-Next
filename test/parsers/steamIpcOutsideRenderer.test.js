@@ -33,7 +33,7 @@ test('a null answer is handled everywhere a channel is asked something', () => {
   assert.match(code, /groupsResult = \(await ipcInvoke\([^)]*'steamgroups'[^)]*\)\) \|\| \{ ok: false, groups: \[\] \}/);
   // And the one whose answer is CACHED: writing a null there would record "nothing unlocked" for a
   // question that was never asked, which no later scan would go back and correct.
-  assert.match(code, /if \(!result\) throw 'Steam user stats could not be fetched'/);
+  assert.match(code, /if \(!Array\.isArray\(result\)\) throw 'Steam user stats could not be fetched'/);
 });
 
 test('the schema-only fetch falls back to the direct endpoint rather than to nothing', () => {

@@ -2411,7 +2411,7 @@
     "steam-hide-stale": "Skjul spill som ikke lenger er i Steam-biblioteket ditt",
     "steam-hide-stale-help": "Krever en tilkoblet Steam-konto. Spill installert på denne PC-en og spill delt via Steam Family skjules aldri.",
     "steam-import-owned": "Legg til spillene du eier",
-    "steam-import-owned-help": "Viser hele Steam-biblioteket ditt, inkludert spill som aldri har vært installert på denne PC-en. Et stort bibliotek gjør det første søket mye lengre.",
+    "steam-import-owned-help": "Viser hele Steam-biblioteket ditt, inkludert spill som aldri har vært installert på denne PC-en. Et stort bibliotek gjør det første søket mye lengre. Fremgangen i spill som aldri er spilt på denne PC-en, leses fra Steam-profilen din, så spilldetaljene må være offentlige.",
     "steam-import-family": "Legg til spillene som er delt med deg via Steam Family",
     "steam-import-family-help": "Spill som et annet medlem av Steam Family din eier og deler med deg. De har Steam Family-merket.",
     "profile-stats-title": "Biblioteksstatistikk",

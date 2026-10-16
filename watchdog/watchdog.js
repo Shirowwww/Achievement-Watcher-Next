@@ -154,7 +154,14 @@ const { resolvePlaytimeArtwork } = require('./util/playtimeArtwork.js');
 const { findIndexedSocialClubGame } = require('./util/socialClub.js');
 const notifyStrings = require('./util/notifyStrings.js');
 const { spawnDetached } = require('./util/spawnDetached.js');
-const { buildSchemaIndex, findSchemaAchievement, buildPreviousAchievementIndex, seedPreviewNames } = require('./util/achievementIndex.js');
+const {
+  buildSchemaIndex,
+  findSchemaAchievement,
+  buildPreviousAchievementIndex,
+  seedPreviewNames,
+  requiredCount,
+  requiredUnlockedCount,
+} = require('./util/achievementIndex.js');
 const { createIndexedGameLookup } = require('./util/indexedGameLookup.js');
 const { runXboxPoll, matchesActiveXboxPoll } = require('./util/xboxPolling.js');
 
@@ -1253,9 +1260,9 @@ var app = {
 
             // Platinum detection: snapshot the prior unlock count so this fires only when the current
             // scan flips the game to fully unlocked and a real unlock notification also fired.
-            const platinumTotal = Array.isArray(game.achievement.list) ? game.achievement.list.length : 0;
+            const platinumTotal = requiredCount(game.achievement.list);
             const previousIndex = buildPreviousAchievementIndex(cache);
-            const platinumPrevUnlocked = previousIndex.unlockedCount;
+            const platinumPrevUnlocked = requiredUnlockedCount(cache, schemaIndex);
             let platinumNewUnlock = false;
             let platinumIcon = null;
 
@@ -1489,7 +1496,7 @@ var app = {
             }
 
             // Fire a dedicated Platinum toast when this scan flips the game to 100%.
-            const platinumNowUnlocked = achievements.filter((a) => a.Achieved == 1).length;
+            const platinumNowUnlocked = requiredUnlockedCount(achievements, schemaIndex);
             if (
               platinumNewUnlock &&
               platinumTotal > 0 &&

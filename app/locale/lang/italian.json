@@ -2411,7 +2411,7 @@
     "steam-hide-stale": "Nascondi i giochi che non sono più nella tua libreria Steam",
     "steam-hide-stale-help": "Richiede un account Steam collegato. I giochi installati su questo PC e quelli condivisi tramite Steam Family non vengono mai nascosti.",
     "steam-import-owned": "Aggiungi i giochi che possiedi",
-    "steam-import-owned-help": "Elenca l'intera libreria Steam, inclusi i giochi mai installati su questo PC. Una libreria grande allunga molto la prima scansione.",
+    "steam-import-owned-help": "Elenca l'intera libreria Steam, inclusi i giochi mai installati su questo PC. Una libreria grande allunga molto la prima scansione. I progressi dei giochi mai giocati su questo PC vengono letti dal tuo profilo Steam, quindi i dettagli dei giochi devono essere pubblici.",
     "steam-import-family": "Aggiungi i giochi condivisi con te tramite Steam Family",
     "steam-import-family-help": "Giochi posseduti da un altro membro della tua Steam Family e condivisi con te. Portano il badge Steam Family.",
     "profile-stats-title": "Statistiche della libreria",

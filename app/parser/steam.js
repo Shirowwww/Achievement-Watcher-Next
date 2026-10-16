@@ -518,9 +518,9 @@ module.exports.forgetUnresolved = (appID) => {
   }
 };
 
-// Merges a fresh fetch into the cached list (matched by apiName): patches blank fields and appends
-// achievements missing from `list`. Mutates in place; never removes an entry, so a short/failed
-// fetch can't delete unlocked history.
+// Merges a fresh fetch into the cached list (matched by apiName): patches blank fields, takes Steam's
+// sets and archive flags, and appends achievements missing from `list`. Mutates in place; never
+// removes an entry, so a short/failed fetch can't delete unlocked history.
 module.exports.reconcileAchievementList = (list, fresh) => {
   if (!Array.isArray(list) || !Array.isArray(fresh) || fresh.length === 0) return { changed: false, addedCount: 0 };
   let changed = false;
@@ -538,6 +538,15 @@ module.exports.reconcileAchievementList = (list, fresh) => {
     }
     if (ach.hidden == null && f.hidden != null) {
       ach.hidden = f.hidden;
+      changed = true;
+    }
+    // Steam's own sets and archive flags (only Steam's schema sources carry `archived`) win.
+    if (typeof f.archived === 'boolean' && !!ach.archived !== f.archived) {
+      ach.archived = f.archived;
+      changed = true;
+    }
+    if (f.category && ach.category !== f.category) {
+      ach.category = f.category;
       changed = true;
     }
   }
@@ -1257,10 +1266,10 @@ const getSteamUsersList = (module.exports.getSteamUsersList = async () => {
 
 async function getSteamUserStatsFromSRV(user, appID) {
   const result = await ipcInvoke('get-steam-data', { appid: appID, user, type: 'user' });
-  // ipcInvoke answers null outside a renderer and on a rejected handler. The caller caches whatever
-  // comes back, so a null must not get through: it would record "this user unlocked nothing" for a
-  // question that was never actually asked.
-  if (!result) throw 'Steam user stats could not be fetched';
+  // ipcInvoke answers null outside a renderer and on a rejected handler, and the handler answers an
+  // object on a transport failure. The caller caches whatever comes back, so only a list gets
+  // through: anything else would record "this user unlocked nothing" for a question never answered.
+  if (!Array.isArray(result)) throw 'Steam user stats could not be fetched';
   return result;
 }
 
@@ -1381,9 +1390,10 @@ async function getSteamDataFromSRV(appID, lang) {
   mergeTranslatedAchievements(achievements, translatedAchievements);
 
   // SteamHunters groups tag DLC/update achievements by apiName. Only worth asking for a real game
-  // with achievements. Best-effort: untagged entries are left untouched, a failure never fails the load.
+  // with achievements whose Steam schema has no sets of its own. Best-effort: untagged entries are
+  // left untouched, a failure never fails the load.
   let groupsResult = { ok: false, groups: [] };
-  if (achievements.length > 0) {
+  if (achievements.length > 0 && !achievements.some((achievement) => achievement && achievement.category)) {
     groupsResult = (await ipcInvoke('get-steam-data', { appid: appID, type: 'steamgroups' })) || { ok: false, groups: [] };
   }
   if (Array.isArray(groupsResult.groups) && groupsResult.groups.length) {

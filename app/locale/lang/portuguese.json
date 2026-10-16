@@ -2411,7 +2411,7 @@
     "steam-hide-stale": "Ocultar os jogos que já não estão na sua biblioteca Steam",
     "steam-hide-stale-help": "Requer uma conta Steam ligada. Os jogos instalados neste PC e os partilhados pela Família Steam nunca são ocultados.",
     "steam-import-owned": "Adicionar os jogos que possui",
-    "steam-import-owned-help": "Apresenta toda a sua biblioteca Steam, incluindo jogos que nunca foram instalados neste PC. Uma biblioteca grande torna a primeira análise muito mais demorada.",
+    "steam-import-owned-help": "Apresenta toda a sua biblioteca Steam, incluindo jogos que nunca foram instalados neste PC. Uma biblioteca grande torna a primeira análise muito mais demorada. O progresso dos jogos nunca jogados neste PC é lido a partir do seu perfil Steam, pelo que os detalhes de jogos têm de ser públicos.",
     "steam-import-family": "Adicionar os jogos partilhados consigo através da Família Steam",
     "steam-import-family-help": "Jogos que outro membro da sua Família Steam possui e partilha consigo. Têm o emblema da Família Steam.",
     "profile-stats-title": "Estatísticas da biblioteca",
