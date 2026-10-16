@@ -7,7 +7,7 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
-## Unreleased
+## 3.12.1 - 2026-10-16
 
 ### Improved
 
@@ -42,6 +42,16 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Fetch progress counters asked for the Steam account again (#125).** The sign-in saved by
   generate_emu_config stayed with the version of the tool that made it, so a newer version, or the
   one matched to a game's emulator, asked again. It is now reused by every version.
+- **A save folder under the temp directory was written into every game.** The save folder chosen
+  in Settings is stamped into each Goldberg/GBE game's `configs.user.ini` on every scan, so one
+  under the Windows temp folder sent real saves somewhere that gets wiped. It is now refused, like
+  a relative path.
+
+### Performance
+
+- **Library scans are fast again on Windows.** 3.12.0 shipped without the compiled registry
+  reader, so every registry read started `reg.exe` and a full library scan took 40 to 60 seconds.
+  The reader is back, and the build now refuses to package without it.
 
 ### Website & Docs
 
