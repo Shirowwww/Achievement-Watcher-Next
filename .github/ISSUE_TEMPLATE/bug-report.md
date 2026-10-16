@@ -31,7 +31,7 @@ What should have happened?
 
 ## Logs and screenshots
 
-Attach screenshots or a zip of the relevant files from `%APPDATA%\Achievement Watcher Next\logs` (`~/.config/Achievement Watcher Next/logs` on Linux). Logs can also be opened from **Settings → Advanced → Diagnostics**.
+Attach screenshots and the archive made by **Settings → Advanced → Diagnostics → Export logs (.zip)**, which masks your user name and keys. The logs themselves are in `%APPDATA%\Achievement Watcher Next\logs` (`~/.config/Achievement Watcher Next/logs` on Linux).
 
 ## Additional context
 

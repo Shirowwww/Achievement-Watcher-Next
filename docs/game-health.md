@@ -84,6 +84,7 @@ a confirmation.
 | *No achievement progress has been found yet* | Normal for a game you have not played since setting it up. Launch it and unlock something. |
 | *AW Next isn't watching this game while it runs* | **Watch this game** adds it to the tracker. |
 | *The last notification could not be sent* | Send a test notification, then see [Notifications](notifications.md#if-a-test-or-unlock-does-not-appear). |
+| *Windows hid the last notification during the game* | The Windows notification went straight to Notification Center because the game was full screen or Do Not Disturb was on. Turn on [Priority notifications](notifications.md#priority-windows-notifications), or switch the mode to Automatic or In-game overlay. |
 | *Working - Windows fallback active* | Not a fault. Automatic delivery chose a Windows notification for this game; see [how Automatic decides](notifications.md#how-automatic-decides). |
 | *The game has never asked for an achievement* | It reads its empty Ubisoft session as signed out. **Enable achievements offline** unblocks it; nothing is sent anywhere. Launch the game once afterwards - the row then reads *Offline achievements on, launch the game once* until you have. |
 | *Offline achievements on, launch the game once* | The setting is written and nothing has been judged yet. The button beside it now reads **Turn offline achievements off**, and takes it back out. |

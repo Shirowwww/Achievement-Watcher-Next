@@ -15,6 +15,29 @@ renamed in 3.9.0 and the history is kept under one file.
   a Windows notification (a desktop notification on Linux) and the title-bar chip; clicking either
   opens the update window. Nothing takes the focus from a game or another app any more.
   **Settings → Check for updates** still opens the window at once.
+- **Exported logs are safe to attach to a public issue (#127).** **Export logs (.zip)** masks your
+  Windows user name in every path and any key, token or password before writing the archive, in
+  rotated logs too. The logs on your disk are left as they are, and the message after the export
+  reminds you to read the files before posting them.
+- **A Windows notification hidden by a full-screen game is now reported (#126).** When Windows
+  keeps a notification in Notification Center because the game is full screen or Do Not Disturb is
+  on, the game's Game Health panel says so and points to Priority notifications or the overlay,
+  instead of reporting it as delivered.
+
+### Fixed
+
+- **Bitdefender blocked updates and quarantined the app (#128).** The update's signature check ran
+  a PowerShell script, which Bitdefender's Advanced Threat Defense treats as suspicious behaviour:
+  it stopped the update with "no answer from PowerShell", then quarantined AW Next, its shortcuts
+  and the downloaded installer. The check now runs inside the app and starts no other program. It
+  still verifies both signature layers and the pinned certificate, and is faster too.
+- **The notification test reported "Unexpected response" while the test still arrived (#126).**
+  With the Websocket broadcast on, the test's own sample reached the Settings window before the
+  answer it was waiting for. Both test buttons, in Settings and in a game's panel, now wait for
+  the answer.
+- **Fetch progress counters asked for the Steam account again (#125).** The sign-in saved by
+  generate_emu_config stayed with the version of the tool that made it, so a newer version, or the
+  one matched to a game's emulator, asked again. It is now reused by every version.
 
 ## 3.12.0 - 2026-10-15
 

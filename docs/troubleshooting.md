@@ -43,6 +43,12 @@ files by hand: the processes writing those logs never stop appending, so a manua
 half-written line. The export works with the app running and adds an `about.txt` with the app,
 Electron, Node and Chrome versions the logs came from.
 
+The archive is meant to be attached to a public issue, so the copies it holds are masked: your
+Windows user name in every path becomes `[username]`, and keys, tokens and passwords become
+`[redacted]`, `[token]` or `[apikey]`. The logs on your disk are left as they are. A file that cannot
+be masked is left out of the archive. The masking works on known shapes, so still read the files
+before posting them; a game folder named after you, for instance, stays as it is.
+
 Logs are appended, never truncated, so a crash survives the next launch. Each run starts with a marker, which is how you tell one launch from the next:
 
 ```text
@@ -333,7 +339,9 @@ it contains. Up to 3.11.0, AW Next did three things such an engine reads as hidi
 compiled a small screen-capture program into `%TEMP%` for achievement screenshots, compiled a
 Windows call through PowerShell before each notification, and passed the update check to PowerShell
 as an encoded command. None of that happens any more: screenshots go through the native helper that
-ships with the app, and the notification check calls Windows directly.
+ships with the app, and the notification check calls Windows directly. The update signature check
+no longer starts PowerShell either: Bitdefender's Advanced Threat Defense blocked it and quarantined
+the app with it.
 
 If your antivirus still reacts, note the exact detection name it shows and report it, with the file
 it names, as a false positive. For Kaspersky that is

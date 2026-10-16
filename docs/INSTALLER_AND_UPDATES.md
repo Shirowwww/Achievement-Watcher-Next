@@ -181,24 +181,26 @@ back while a game runs) is left alone.
 ### Signature
 
 Before installing, the app checks the installer's Authenticode signature
-(`app/util/updateSignature.js`). It refuses:
+(`app/util/updateSignature.js`, `app/util/authenticode.js`). The check runs inside the app and
+starts no other program: behaviour engines such as Bitdefender's blocked the PowerShell process it
+used before. It refuses:
 
 - an unsigned installer;
 - an installer signed by anyone but `CN=Shirow`;
 - a `CN=Shirow` installer whose certificate thumbprint is not pinned;
 - a file modified after it was signed;
 - a signature that does not verify against the pinned key. The certificate block of any release is
-  public, so the app checks each signature layer itself (SignedCms) and recomputes the PE hash it
-  covers, instead of trusting Authenticode's status, which still names the signer for a forged block.
+  public, so the app verifies each signature layer against its certificate and recomputes the PE
+  hash it covers, rather than trusting a block that only names the signer.
 
 The SHA-512 in `latest.yml` is not a substitute: it comes from the same release as the installer,
 so whoever can replace one can replace the other. A common name is no proof either, since anyone
 can issue themselves a `CN=Shirow` certificate. The thumbprint is what ties an update to the
 project's own key.
 
-If PowerShell cannot run or prints nothing (an antivirus or a policy can cause this), the update is
-refused and the message points to the GitHub releases page for a manual download. A check that cannot
-answer never counts as a pass.
+If the installer cannot be read or is not a Windows executable, the update is refused and the message
+points to the GitHub releases page for a manual download. A check that cannot answer never counts as
+a pass.
 
 The check runs again when the update finishes downloading and just before the installer starts, on the
 same file with its SHA-512 compared between the two. electron-updater reuses an installer cached by a

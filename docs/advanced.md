@@ -35,7 +35,8 @@ details stay automatic.
 The Diagnostics card prints the app, Electron, Node and Chrome versions, and opens the logs folder,
 the data folder or an update check. **Export logs (.zip)** bundles every log file into one archive
 without closing the app first - the processes writing those files never stop, so copying them by
-hand is unreliable in exactly the situation the logs are wanted for. Those versions and the log
+hand is unreliable in exactly the situation the logs are wanted for. Your user name and any key or
+token are masked in the archive, not in the logs themselves. Those versions and the log
 files are what a bug report needs - see
 [Troubleshooting](troubleshooting.md#open-logs-and-local-data) for what to collect and how to strip
 private data from it first.
