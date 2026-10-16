@@ -450,6 +450,13 @@ function gameHealthExplanation(report) {
       );
     case 'appid-mismatch':
       return t('gh-why-appid-mismatch', 'The emulator in this game’s folder announces game ID {appidOnDisk}, but AW Next matched this game to {appidExpected}. Achievements unlocked under the wrong ID are recorded against another game. Correct the file if {appidExpected} is the right game - the current value is kept.', 'L’émulateur du dossier de ce jeu annonce l’identifiant {appidOnDisk}, alors qu’AW Next a associé ce jeu à {appidExpected}. Les succès débloqués sous le mauvais identifiant sont enregistrés sur un autre jeu. Corrige le fichier si {appidExpected} est le bon jeu - la valeur actuelle est conservée.', p);
+    case 'server-awarded':
+      return t(
+        'gh-why-server-awarded',
+        "This game has its achievements awarded by its publisher's servers, never by Steam. With {servedBy} it runs offline: no achievement will ever be recorded, on this PC or on an account. This is not an AW Next or setup problem. For an online method, look it up on cs.rin.ru or online-fix.me.",
+        "Ce jeu fait attribuer ses succès par les serveurs de son éditeur, jamais par Steam. Avec {servedBy}, il tourne hors-ligne : aucun succès ne sera jamais enregistré, sur ce PC comme sur un compte. Ce n'est pas un problème d'AW Next ni de configuration. Pour une méthode en ligne, renseigne-toi sur cs.rin.ru ou online-fix.me.",
+        p
+      );
     case 'crack-records-nothing':
       return p.canSwitch
         ? t('gh-why-crack-records-nothing', 'This game has run for over an hour with {servedBy} and not one achievement has been recorded. Some cracks never report achievements at all. AW Next can install the supported emulator over it - the current file is kept.', "Ce jeu a tourné plus d'une heure avec {servedBy} sans enregistrer un seul succès. Certains cracks ne signalent jamais les succès. AW Next peut installer l'émulateur pris en charge par-dessus, le fichier actuel étant conservé.", p)
@@ -545,6 +552,7 @@ function gameHealthSimpleCheckValue(entry) {
         : t('gh-simple-data-partial', 'Achievement data is incomplete', 'Données de succès incomplètes');
     case 'emulator':
     case 'uplay':
+      if (p.serverAwarded) return t('gh-value-server-awarded', 'achievements awarded online only', 'succès attribués en ligne uniquement');
       if (p.oldSave || p.stalled) return t('gh-simple-emulator-partial', 'Achievement support needs attention', 'Prise en charge des succès à vérifier');
       if (p.servedBy) return t('gh-simple-emulator-ok', 'Achievement support is set up', 'Prise en charge des succès configurée');
       // Offline achievements were just switched on and the game has not run since: say so, or the
@@ -727,6 +735,7 @@ function gameHealthCheckValue(entry, simple) {
       // "nothing recorded yet" is what tells the two cases apart before the button below is read.
       if (p.servedBy) {
         const servedBy = t('gh-value-served-by', 'served by {emulator}', 'pris en charge par {emulator}', { emulator: p.servedBy });
+        if (p.serverAwarded) return `${servedBy} · ${t('gh-value-server-awarded', 'achievements awarded online only', 'succès attribués en ligne uniquement')}`;
         if (p.oldSave) return `${servedBy} · ${t('gh-value-old-goldberg-save', 'the only save found is an old Goldberg one it never writes', 'la seule sauvegarde trouvée est une ancienne sauvegarde Goldberg qu’il n’écrit jamais')}`;
         return p.idle ? `${servedBy} · ${t('gh-value-none-yet', 'nothing recorded yet', 'rien d’enregistré pour l’instant')}` : servedBy;
       }

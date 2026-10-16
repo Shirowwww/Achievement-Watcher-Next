@@ -14,6 +14,16 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
+## Unreleased
+
+### Compatibility
+
+- **Game Health names the games no offline emulator can record.** Halo: Campaign Evolved has its
+  achievements awarded by Microsoft's servers and never by Steam, so under a scene crack nothing
+  is ever recorded, on the PC or on an account. Its Game Health panel now says so from the first
+  launch instead of suggesting another emulator, and points to cs.rin.ru or online-fix.me for an
+  online method. Only games verified this way are listed.
+
 ## 3.12.1 - 2026-10-16
 
 ### Improved

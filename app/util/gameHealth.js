@@ -276,10 +276,31 @@ function readsOnlyForeignGoldbergSaves(signals) {
   return saves.every((entry) => entry && GOLDBERG_SAVE_PATH.test(String(entry.path || '')));
 }
 
+/*
+  Games whose unlocks are granted by the publisher's servers and never through the Steam API, so no
+  offline emulator can record one. Verified appids only: a forced unlock through the crack has to
+  work while a real one in game reaches nothing. Halo: Campaign Evolved goes through PlayFab and Xbox
+  Live (verified 2026-10-16 under RUNE).
+*/
+const SERVER_AWARDED_APPIDS = new Set(['2806050']);
+// Signs into a real account, so the unlocks do reach the publisher.
+const ONLINE_LOADERS = new Set(['OnlineFix']);
+
+function serverAwardedOffline(signals) {
+  if (!SERVER_AWARDED_APPIDS.has(String(signals.appid))) return null;
+  const loader = signals.crackLoader && signals.crackLoader.name;
+  if (loader && !ONLINE_LOADERS.has(loader)) return loader;
+  return !loader && signals.emulated ? 'Goldberg' : null;
+}
+
 function emulatorCheck(signals) {
   // An emulator setup over a game with no achievements has nothing to read and nothing to repair.
   // Diagnosing it anyway turned an inert folder into a list of faults on a game that is fine.
   if (hasNoAchievements(signals)) return null;
+  const offlineServedBy = serverAwardedOffline(signals);
+  if (offlineServedBy) {
+    return check('emulator', LEVEL.FAIL, { blocking: true, params: { servedBy: offlineServedBy, serverAwarded: true } });
+  }
   const goldberg = signals.goldberg;
   /*
     A folder a crack loader already serves (RUNE, CODEX, OnlineFix, ...) is deliberately never
@@ -577,6 +598,8 @@ function explain(state, checks, signals) {
   // Outranks every setup sentence below: there is no achievement to track, so nothing downstream
   // can be a fault. Only the install rows above still matter, since a missing folder is one.
   if (hasNoAchievements(signals)) return { reason: 'no-achievements', params: {} };
+  // Nothing below can change it: the game never hands its unlocks to the emulator at all.
+  if (emulator && emulator.params && emulator.params.serverAwarded) return { reason: 'server-awarded', params: emulator.params };
   if (data && data.level === LEVEL.FAIL && data.blocking) return { reason: 'no-achievement-data', params: data.params };
   // Only a blocking emulator failure means "there is no emulator here"; a report that merely
   // carries schema or config errors is explained by the check that owns those instead.
