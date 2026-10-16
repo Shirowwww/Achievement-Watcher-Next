@@ -21,12 +21,9 @@ into one library, with live desktop notifications and an in-game overlay.
 [Themes](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/themes/) ·
 [cs.rin Forum thread](https://cs.rin.ru/forum/viewtopic.php?f=20&t=161187)
 
-<table>
-<tr>
-<td align="center"><img src="docs/screenshot/home.png" width="440" alt="Unified game library"><br><sub>One library for every supported source</sub></td>
-<td align="center"><img src="docs/screenshot/achievements.png" width="440" alt="Achievement progress and rarity"><br><sub>Progress, rarity and unlock history</sub></td>
-</tr>
-</table>
+<img src="docs/screenshot/aw-next-banner.gif" width="100%" alt="Achievement Watcher Next in 36 seconds: the unlock popup in ten presets, the in-game list, video clips, nine sources in one library, thirteen themes, Game Health, trophy grades, and much more">
+
+**[Watch it with sound](https://shirowwww.github.io/Achievement-Watcher-Next/#tour)**
 
 </div>
 
@@ -46,7 +43,7 @@ into one library, with live desktop notifications and an in-game overlay.
 - **Automatic notification delivery.** With **Automatic** selected, each unlock arrives through the
   in-game popup when it can be seen, and as a Windows notification (a desktop notification on Linux)
   when it cannot - never both.
-- **Preset Designer and sharing.** Nine bundled presets, a no-code designer that previews the real
+- **Preset Designer and sharing.** Ten bundled presets, a no-code designer that previews the real
   popup, one-file `.awpreset` sharing, a converter for your own Steam Achievement Notifier `.san`
   themes and a [community gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/).
 - **In-game overlay.** The running game's full achievement list on `Ctrl+Shift+K`, with search,

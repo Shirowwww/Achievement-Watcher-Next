@@ -287,5 +287,8 @@
   "themes.uploadTooBig": "Ten motyw przekracza 8 MB, czyli więcej, niż galeria udostępnia.",
   "themes.uploadWrongFile": "To nie jest plik .awtheme. Wyeksportuj go w Ustawieniach, Motyw.",
   "themes.withImages": "z obrazami",
-  "themes.zoomNote": "Obraz wygenerowany, nie zrzut ekranu: przykładowe okno w tym motywie, pokazujące naraz pasek tytułu, bibliotekę, osiągnięcia i ustawienia. Tło jest stałe, żeby półprzezroczysty motyw pozostał czytelny."
+  "themes.zoomNote": "Obraz wygenerowany, nie zrzut ekranu: przykładowe okno w tym motywie, pokazujące naraz pasek tytułu, bibliotekę, osiągnięcia i ustawienia. Tło jest stałe, żeby półprzezroczysty motyw pozostał czytelny.",
+  "tour.close": "Zamknij",
+  "tour.label": "Achievement Watcher Next, prezentacja",
+  "tour.watch": "Obejrzyj prezentację"
 }

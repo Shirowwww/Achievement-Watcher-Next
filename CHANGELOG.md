@@ -43,6 +43,12 @@ renamed in 3.9.0 and the history is kept under one file.
   generate_emu_config stayed with the version of the tool that made it, so a newer version, or the
   one matched to a game's emulator, asked again. It is now reused by every version.
 
+### Website & Docs
+
+- **A 36-second tour of the app.** The README opens on an animated banner of the main features,
+  and the website's hero has a **Watch the tour** thumbnail that plays it with sound, in every
+  language of the site. The README also counts the ten bundled presets correctly.
+
 ## 3.12.0 - 2026-10-15
 
 ### Added

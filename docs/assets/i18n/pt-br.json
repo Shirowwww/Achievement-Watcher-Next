@@ -287,5 +287,8 @@
   "themes.uploadTooBig": "Esse tema passa de 8 MB, mais do que a galeria serve.",
   "themes.uploadWrongFile": "Isso não é um arquivo .awtheme. Exporte um em Configurações, Tema.",
   "themes.withImages": "com imagens",
-  "themes.zoomNote": "Uma imagem gerada, não uma captura: uma janela de amostra com este tema, mostrando de uma vez a barra de título, a biblioteca, as conquistas e as configurações. O fundo é fixo, para um tema translúcido continuar legível."
+  "themes.zoomNote": "Uma imagem gerada, não uma captura: uma janela de amostra com este tema, mostrando de uma vez a barra de título, a biblioteca, as conquistas e as configurações. O fundo é fixo, para um tema translúcido continuar legível.",
+  "tour.close": "Fechar",
+  "tour.label": "Achievement Watcher Next, o tour",
+  "tour.watch": "Assistir ao tour"
 }

@@ -76,6 +76,7 @@
     <link rel="preload" as="font" type="font/woff2" href="assets/font/archivo-latin.woff2" crossorigin />
     <link rel="stylesheet" href="assets/css/site.css" />
     <link rel="stylesheet" href="assets/css/home.css" />
+    <link rel="stylesheet" href="assets/css/tour.css" />
     <link rel="stylesheet" href="assets/css/effects.css" />
 
     <!--
@@ -190,6 +191,14 @@
               <li data-i18n="hero.noteLicense">LGPL-3.0, no account or API key required</li>
               <li><a href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest" data-i18n="hero.allDownloads">Portable ZIP, Linux AppImage and all downloads</a></li>
             </ul>
+            <button class="tour-thumb" type="button" data-tour>
+              <img src="assets/shot/tour-thumb.webp" alt="" width="720" height="309" loading="lazy" />
+              <span class="tour-thumb-label">
+                <span class="tour-disc"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.6v12.8a1 1 0 0 0 1.5.86l10.4-6.4a1 1 0 0 0 0-1.72L9.5 4.74A1 1 0 0 0 8 5.6z" /></svg></span>
+                <span data-i18n="tour.watch">Watch the tour</span>
+                <span class="tour-time">0:34</span>
+              </span>
+            </button>
           </div>
         </div>
 
@@ -1072,5 +1081,14 @@
     <script src="assets/js/site.js" defer></script>
     <script src="assets/js/home.js" defer></script>
     <script src="assets/js/effects.js" defer></script>
+    <dialog class="tour" id="tour" aria-label="Achievement Watcher Next, the tour" data-i18n-attr="aria-label:tour.label">
+      <video controls playsinline preload="none" poster="assets/shot/tour-thumb.webp" width="2520" height="1080">
+        <source src="assets/video/aw-next-tour.mp4" type="video/mp4" />
+      </video>
+      <button class="tour-close" type="button" data-tour-close aria-label="Close" data-i18n-attr="aria-label:tour.close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.7 5.3 12 10.6l5.3-5.3a1 1 0 1 1 1.4 1.4L13.4 12l5.3 5.3a1 1 0 0 1-1.4 1.4L12 13.4l-5.3 5.3a1 1 0 0 1-1.4-1.4l5.3-5.3-5.3-5.3a1 1 0 0 1 1.4-1.4z" /></svg>
+      </button>
+    </dialog>
+    <script src="assets/js/tour.js" defer></script>
   </body>
 </html>

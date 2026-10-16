@@ -287,5 +287,8 @@
   "themes.uploadTooBig": "Quel tema supera gli 8 MB, oltre quanto la galleria distribuisce.",
   "themes.uploadWrongFile": "Quello non è un file .awtheme. Esportane uno da Impostazioni, Tema.",
   "themes.withImages": "con immagini",
-  "themes.zoomNote": "Un’immagine generata, non una schermata: una finestra campione con questo tema, che mostra insieme barra del titolo, libreria, obiettivi e impostazioni. Lo sfondo è fisso, così un tema traslucido resta leggibile."
+  "themes.zoomNote": "Un’immagine generata, non una schermata: una finestra campione con questo tema, che mostra insieme barra del titolo, libreria, obiettivi e impostazioni. Lo sfondo è fisso, così un tema traslucido resta leggibile.",
+  "tour.close": "Chiudi",
+  "tour.label": "Achievement Watcher Next, il tour",
+  "tour.watch": "Guarda il tour"
 }

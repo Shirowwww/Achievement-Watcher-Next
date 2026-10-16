@@ -287,5 +287,8 @@
   "themes.uploadTooBig": "Ese tema supera los 8 MB, más de lo que la galería sirve.",
   "themes.uploadWrongFile": "Eso no es un archivo .awtheme. Exporta uno desde Ajustes, Tema.",
   "themes.withImages": "con imágenes",
-  "themes.zoomNote": "Una imagen generada, no una captura: una ventana de muestra con este tema, que enseña a la vez la barra de título, la biblioteca, los logros y los ajustes. El fondo es fijo, para que un tema translúcido siga leyéndose."
+  "themes.zoomNote": "Una imagen generada, no una captura: una ventana de muestra con este tema, que enseña a la vez la barra de título, la biblioteca, los logros y los ajustes. El fondo es fijo, para que un tema translúcido siga leyéndose.",
+  "tour.close": "Cerrar",
+  "tour.label": "Achievement Watcher Next, el recorrido",
+  "tour.watch": "Ver el recorrido"
 }

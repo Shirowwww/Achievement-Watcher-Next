@@ -287,5 +287,8 @@
   "themes.uploadTooBig": "这个主题超过 8 MB，超出了画廊的分发上限。",
   "themes.uploadWrongFile": "这不是 .awtheme 文件。请在设置、主题中导出一个。",
   "themes.withImages": "含图片",
-  "themes.zoomNote": "这是生成的图像，不是截图：用该主题绘制的示例窗口，一次展示标题栏、游戏库、成就和设置。背景固定，半透明主题依然清晰。"
+  "themes.zoomNote": "这是生成的图像，不是截图：用该主题绘制的示例窗口，一次展示标题栏、游戏库、成就和设置。背景固定，半透明主题依然清晰。",
+  "tour.close": "关闭",
+  "tour.label": "Achievement Watcher Next 导览",
+  "tour.watch": "观看导览"
 }

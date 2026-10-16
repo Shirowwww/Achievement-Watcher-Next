@@ -1,0 +1,163 @@
+/* The tour: a small thumbnail at the foot of the hero column opens the video with sound. */
+.tour-thumb {
+  position: relative;
+  display: block;
+  width: min(300px, 100%);
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--hero-card);
+  box-shadow: var(--glass-edge);
+  cursor: pointer;
+}
+
+.tour-thumb img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 21 / 9;
+  object-fit: cover;
+  opacity: 0.9;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+.tour-thumb:hover img {
+  opacity: 1;
+  transform: scale(1.03);
+}
+
+.tour-thumb-label {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 22px 10px 8px;
+  background: linear-gradient(transparent, rgb(4 7 14 / 0.85));
+  color: #eef2fb;
+  font-size: 0.875rem;
+  font-weight: 650;
+  text-align: left;
+}
+
+.tour-disc {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--scene-accent);
+  color: var(--scene-on-accent);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tour-disc svg {
+  width: 12px;
+  height: 12px;
+  margin-left: 2px;
+  fill: currentColor;
+}
+
+.tour-thumb:hover .tour-disc {
+  transform: scale(1.08);
+}
+
+.tour-time {
+  color: #b9c3da;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Where the picture would run into the steps bar (long languages, short screens): a plain link. */
+.tour-thumb.is-compact {
+  width: auto;
+  border-radius: 999px;
+  background: none;
+  box-shadow: none;
+}
+
+.tour-thumb.is-compact img {
+  display: none;
+}
+
+.tour-thumb.is-compact .tour-thumb-label {
+  position: static;
+  padding: 2px 8px 2px 0;
+  background: none;
+  color: var(--scene-ink);
+}
+
+.tour-thumb.is-compact .tour-time {
+  color: var(--scene-muted);
+}
+
+.tour-thumb:focus-visible {
+  outline: 2px solid var(--scene-accent);
+  outline-offset: 3px;
+}
+
+/* The dialog */
+.tour {
+  position: fixed;
+  width: min(92vw, 1440px);
+  max-height: 92vh;
+  padding: 0;
+  border: 1px solid var(--surface-3);
+  border-radius: 18px;
+  background: #000;
+  overflow: hidden;
+}
+
+.tour::backdrop {
+  background: rgb(4 7 14 / 0.8);
+  backdrop-filter: blur(6px);
+}
+
+.tour video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 21 / 9;
+  background: #000;
+}
+
+.tour-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(10 16 29 / 0.7);
+  color: #eef2fb;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.tour-close svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.tour-close:hover {
+  background: rgb(10 16 29 / 0.9);
+}
+
+.tour[open] {
+  animation: tour-in 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes tour-in {
+  from { opacity: 0; transform: scale(0.97); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour[open] { animation: none; }
+  .tour-disc, .tour-thumb img { transition: none; }
+}
