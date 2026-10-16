@@ -155,7 +155,7 @@ the installer against the SHA-512 value in the matching `latest.yml` if you want
 
 An installer can be checked against VirusTotal by its own SHA-256 without trusting anyone: run
 `Get-FileHash <installer> -Algorithm SHA256` and open `https://www.virustotal.com/gui/file/<hash>`.
-The current release is [3.12.1](https://www.virustotal.com/gui/file/7103f3ac4ae64148ccb69fd76a914c82df3dceb22ba7cd4141cb8a22dcde48b3).
+The current release is [3.12.1](https://www.virustotal.com/gui/file/72315a76f29f976c534b5807dd2df14ebb3925da4c0716b26d4b6e47c240f463).
 See [Troubleshooting → Checking a release yourself](troubleshooting.md#checking-a-release-yourself).
 
 ### On Linux, why does a keyring prompt appear?
