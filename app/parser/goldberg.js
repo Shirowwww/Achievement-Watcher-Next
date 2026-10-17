@@ -906,9 +906,12 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
   // folder was reported as "Goldberg not set up", with a repair that writes files nothing loads.
   // Unless a GBE dll was just installed over it: that one does read steam_settings.
   const servingLoader = emu.dll.some((dll) => crackLoaderDetect.isEmulatorDll(dll)) ? null : crackLoaderDetect.detectWorkingCrackLoader(gameDir);
+  // ColdClient is GBE underneath: it does read the steam_settings beside its loader, and only that one.
+  const readsOwnSettings = servingLoader && servingLoader.name === 'ColdClient';
   const servedByLoader = () => {
     report.loader = servingLoader.name;
-    add('info', 'SERVED_BY_LOADER', `This game is served by ${servingLoader.name}, which keeps its own achievement saves and does not use steam_settings. Nothing to repair here.`);
+    const how = readsOwnSettings ? 'reads the steam_settings beside its loader' : 'keeps its own achievement saves and does not use steam_settings';
+    add('info', 'SERVED_BY_LOADER', `This game is served by ${servingLoader.name}, which ${how}. Nothing to repair here.`);
     report.ok = true;
     return report;
   };
@@ -922,6 +925,7 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
   // runtime that IS the dll stays on the path below: installing GBE over it is a real fix there.
   if (servingLoader && !servingLoader.replaceable) {
     servedByLoader();
+    if (readsOwnSettings && sameDir(path.dirname(steamSettings), servingLoader.dir)) return report;
     const awCreated = awManagedConfig.isCreatedByAw(steamSettings);
     add(
       'info',

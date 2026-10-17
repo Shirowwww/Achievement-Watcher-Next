@@ -46,7 +46,7 @@ function findExistingFix(gameDir, { maxDepth = 4, maxDirectories = 600 } = {}) {
   while (queue.length && visited < maxDirectories) {
     const { dir, depth } = queue.shift();
     visited++;
-    const loader = crackLoaderDetect.detectWorkingCrackLoader(dir);
+    const loader = crackLoaderDetect.detectWorkingCrackLoader(dir, { subfolders: false });
     if (loader) return { kind: 'loader', name: loader.name, path: dir };
     let entries;
     try {

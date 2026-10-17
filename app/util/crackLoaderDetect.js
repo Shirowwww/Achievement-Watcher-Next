@@ -155,7 +155,7 @@ function disableLoaderMarkers(dirs) {
   matters because a scene crack (RUNE, CODEX) puts its steam_emu.ini beside the dll it replaced,
   six levels down, where the game root sees nothing - AW then read the install as an unclaimed
   folder and offered it a GBE setup the crack's own dll never opens (reported for Little Nightmares
-  Enhanced Edition). The third is RUNE's steamclient layout, below.
+  Enhanced Edition). RUNE's steamclient layout and a ColdClient folder of its own follow below.
 */
 const STEAMCLIENT_DLLS = ['steamclient64.dll', 'steamclient.dll'];
 
@@ -174,19 +174,58 @@ function steamclientLoader(gameDir) {
   return loader ? { ...loader, replaceable: false } : null;
 }
 
-function detectWorkingCrackLoader(gameDir) {
-  if (!gameDir) return null;
-  let entries;
+/*
+  ColdClient runs from wherever its loader sits, often a folder of its own (Achievement Enabler's
+  _ColdClient). One level down, names only, its own ini beside the steamclient dll it injects. A GBE
+  dll where the game loads it wins: the swap leaves an old ColdClient folder it never loads. A
+  subfolder with a steam_api dll of its own is another game (a pack of a collection), not a loader.
+*/
+const COLDCLIENT_INI = 'coldclientloader.ini';
+
+// Listed first: on Linux the dll's case is whatever the release shipped.
+function hasEmulatorDll(dir) {
+  let names;
   try {
-    entries = fs.readdirSync(gameDir);
+    names = fs.readdirSync(dir);
+  } catch {
+    return false;
+  }
+  return names.some((name) => STEAM_API_DLLS.includes(name.toLowerCase()) && isEmulatorDll(path.join(dir, name)));
+}
+
+function coldClientSubfolder(gameDir, dirents, engineDirs) {
+  if ([gameDir, ...engineDirs].some(hasEmulatorDll)) return null;
+  for (const entry of dirents) {
+    // A junction or symlink to a folder counts: readdir follows it, and fails on one to a file.
+    if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
+    const dir = path.join(gameDir, entry.name);
+    let names;
+    try {
+      names = fs.readdirSync(dir).map((name) => name.toLowerCase());
+    } catch {
+      continue;
+    }
+    if (!names.some((name) => STEAMCLIENT_DLLS.includes(name)) || names.some((name) => STEAM_API_DLLS.includes(name))) continue;
+    if (names.includes(COLDCLIENT_INI)) return { name: 'ColdClient', replaceable: false, dir, markers: [COLDCLIENT_INI] };
+  }
+  return null;
+}
+
+// `subfolders: false` for a caller that walks the tree itself and visits each subfolder anyway.
+function detectWorkingCrackLoader(gameDir, { subfolders = true } = {}) {
+  if (!gameDir) return null;
+  let dirents;
+  try {
+    dirents = fs.readdirSync(gameDir, { withFileTypes: true });
   } catch {
     return null;
   }
-  const atRoot = loaderForEntries(entries, gameDir);
+  const atRoot = loaderForEntries(dirents.map((entry) => entry.name), gameDir);
   if (atRoot) return atRoot;
   const steamclient = steamclientLoader(gameDir);
   if (steamclient) return steamclient;
-  for (const dllDir of unrealLayout.steamworksDllDirs(gameDir)) {
+  const engineDirs = unrealLayout.steamworksDllDirs(gameDir);
+  for (const dllDir of engineDirs) {
     let engineEntries;
     try {
       engineEntries = fs.readdirSync(dllDir);
@@ -196,7 +235,7 @@ function detectWorkingCrackLoader(gameDir) {
     const loader = loaderForEntries(engineEntries, dllDir);
     if (loader) return loader;
   }
-  return null;
+  return subfolders ? coldClientSubfolder(gameDir, dirents, engineDirs) : null;
 }
 
 function hasWorkingCrackLoader(gameDir) {

@@ -29,6 +29,10 @@ renamed in 3.9.0 and the history is kept under one file.
   like Team Fortress 2 or Half-Life 2. A profile that hides its game details is now reported in the
   log rather than read as "nothing unlocked", and the Steam account settings say the details must
   be public.
+- **ColdClient kept in a folder of its own.** A game launched through ColdClient from a subfolder
+  (Achievement Enabler's `_ColdClient`, or any folder holding `ColdClientLoader.ini` beside
+  `steamclient.dll`) is recognised again: Game Health no longer reports it as an emulator that is
+  not set up, and the automatic fix no longer writes a GBE setup beside Valve's untouched dll.
 
 ### Compatibility
 
