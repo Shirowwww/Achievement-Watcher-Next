@@ -193,6 +193,10 @@
         "name": "0%-os játékok elrejtése",
         "description": "Elrejti azokat a játékokat, amelyekben még egyetlen teljesítményt sem oldottál fel."
       },
+      "localizedTitles": {
+        "name": "Játékcímek az én nyelvemen",
+        "description": "Minden játékot azon a címen jelenít meg, amelyet a Steam az eredményeid nyelvén ad neki, ha van ilyen. Az angol cím marad a tartalék, és a saját magad által megadott név mindig elsőbbséget élvez."
+      },
       "startup": {
         "name": "Indítás a rendszerrel",
         "description": "Az AW Nextet automatikusan elindítja a Windowsszal, elrejtve a tálcán."
@@ -1580,6 +1584,10 @@
     "appid-override": "AppID kézi megadása…",
     "appid-override-prompt": "A(z) \"{name}\" ({folder}) Steam appid-ja. Felülírja az AW Next név alapú tippjét - hasznos, ha másik játéknak ugyanaz a neve, mint a mappának.",
     "appid-override-clear": "Kézi AppID törlése",
+    "rename-game": "Átnevezés…",
+    "rename-game-prompt": "A játékhoz megjelenítendő név. Hagyd üresen, ha vissza szeretnél térni az eredeti névhez ({name}).",
+    "rename-game-reset": "Az eredeti név visszaállítása",
+    "rename-game-failed": "Az új nevet nem sikerült elmenteni.",
     "launch-game": "Játék indítása",
     "configure-executable": "Futtatható fájl konfigurálása…",
     "icon-cache-build-failed": "Az ikon-gyorsítótár létrehozása nem sikerült",

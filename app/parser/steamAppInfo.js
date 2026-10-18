@@ -110,7 +110,10 @@ function summarize(appid, kv) {
   const name = typeof common.name === 'string' ? common.name.trim() : '';
   const type = String(common.type || '').toLowerCase();
   const parent = Number((kv.appinfo && kv.appinfo.common && kv.appinfo.common.parent) || common.parent || 0) || 0;
-  return { appid: String(appid), name, type, parent };
+  const summary = { appid: String(appid), name, type, parent };
+  // Steam's own translations of the title, keyed by Steam language; absent for most apps.
+  if (common.name_localized && typeof common.name_localized === 'object') summary.nameLocalized = { ...common.name_localized };
+  return summary;
 }
 
 function parseAppInfo(buf) {
@@ -191,6 +194,12 @@ module.exports.lookup = (steamPath, appid) => {
 module.exports.typeOf = (steamPath, appid) => {
   const entry = module.exports.lookup(steamPath, appid);
   return entry ? entry.type : '';
+};
+
+// { <steam language>: title } from the local catalogue, or null when Steam keeps no translation.
+module.exports.localizedNamesOf = (steamPath, appid) => {
+  const entry = module.exports.lookup(steamPath, appid);
+  return entry && entry.nameLocalized ? { ...entry.nameLocalized } : null;
 };
 
 module.exports.nameOf = (steamPath, appid) => {

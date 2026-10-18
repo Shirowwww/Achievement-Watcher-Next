@@ -193,6 +193,10 @@
         "name": "0% 게임 숨기기",
         "description": "아직 도전 과제를 하나도 달성하지 못한 게임을 숨깁니다."
       },
+      "localizedTitles": {
+        "name": "내 언어로 게임 제목 표시",
+        "description": "Steam에 업적 언어의 제목이 있으면 그 제목으로 각 게임을 표시합니다. 영어 제목은 대체용으로 남고, 직접 지정한 이름이 항상 우선합니다."
+      },
       "startup": {
         "name": "시작할 때 실행",
         "description": "Windows와 함께 AW Next를 자동으로 실행하고 트레이에 숨깁니다."
@@ -1580,6 +1584,10 @@
     "appid-override": "AppID 수동 설정…",
     "appid-override-prompt": "\"{name}\" ({folder})에 사용할 Steam appid입니다. 이름 기반의 AW Next 추측을 덮어씁니다. 다른 게임이 이 폴더와 같은 이름일 때 유용합니다.",
     "appid-override-clear": "수동 AppID 지우기",
+    "rename-game": "이름 바꾸기…",
+    "rename-game-prompt": "이 게임에 표시할 이름입니다. 비워 두면 원래 이름({name})으로 돌아갑니다.",
+    "rename-game-reset": "원래 이름으로 복원",
+    "rename-game-failed": "새 이름을 저장할 수 없습니다.",
     "launch-game": "게임 실행",
     "configure-executable": "실행 파일 설정…",
     "icon-cache-build-failed": "아이콘 캐시를 만들지 못했습니다",

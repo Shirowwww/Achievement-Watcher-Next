@@ -119,6 +119,8 @@ const emulatorSourceOverride = require(path.join(appPath, 'parser/emulatorSource
 emulatorSourceOverride.setUserDataPath(getUserDataPath());
 const appidOverride = require(path.join(appPath, 'parser/appidOverride.js'));
 appidOverride.setUserDataPath(getUserDataPath());
+const gameTitle = require(path.join(appPath, 'util/gameTitle.js'));
+gameTitle.setUserDataPath(getUserDataPath());
 const schemaLanguage = require(path.join(appPath, 'parser/schemaLanguage.js'));
 const steamLanguageList = require(path.join(appPath, 'locale/steam.json'));
 schemaLanguage.setUserDataPath(getUserDataPath());
@@ -554,7 +556,7 @@ function renderProfileStatsTrophies(installedOnly) {
     stats.platinumGames.length > 0
       ? stats.platinumGames
           .map(({ game, completedAt }) =>
-            trophyRow('platinum', game.name || String(game.appid), intlFormat.formatDate(completedAt, uiLang()), { appid: game.appid })
+            trophyRow('platinum', gameTitleOf(game), intlFormat.formatDate(completedAt, uiLang()), { appid: game.appid })
           )
           .join('')
       : `<li class="is-empty">${escapeHtml(t('profile-trophies-no-platinum', 'No platinum yet.', 'Aucun platine pour le moment.'))}</li>`
@@ -569,7 +571,7 @@ function renderProfileStatsTrophies(installedOnly) {
             trophyRow(
               tier,
               achievement.displayName || achievement.name || '',
-              `${game.name || String(game.appid)} · ${t('profile-trophies-players', '{percent} of players', '{percent} des joueurs', {
+              `${gameTitleOf(game)} · ${t('profile-trophies-players', '{percent} of players', '{percent} des joueurs', {
                 percent: formatPercentValue(percent, 1),
               })}`,
               { appid: game.appid, achievement: achievement.name }
@@ -678,8 +680,8 @@ function allAchievementRow({ game, achievement, percent, tier, unlockedAt }, ind
   )}" data-achievement="${escapeHtml(String(achievement.name))}"><span class="row-icon"><i class="fas fa-trophy" aria-hidden="true"></i></span><div class="all-main"><b class="library-scroll-text" title="${escapeHtml(
     name
   )}"><span class="library-scroll-content">${escapeHtml(name)}</span></b><small>${escapeHtml(achievement.description || '')}</small></div><div class="all-side"><span class="all-game library-scroll-text" title="${escapeHtml(
-    game.name || ''
-  )}"><span class="library-scroll-content">${escapeHtml(game.name || String(game.appid))}</span></span><span class="all-rate">${escapeHtml(rate)}</span>${
+    gameTitleOf(game)
+  )}"><span class="library-scroll-content">${escapeHtml(gameTitleOf(game))}</span></span><span class="all-rate">${escapeHtml(rate)}</span>${
     date ? `<small>${escapeHtml(date)}</small>` : ''
   }</div></li>`;
 }
@@ -1185,6 +1187,89 @@ function applyLibraryView(nextValue, previousValue = app.config.achievement.libr
 }
 
 window.applyLibraryView = applyLibraryView;
+
+// The title a game is shown under (util/gameTitle.js). game.name stays the name every lookup and
+// title match uses; only what is painted changes.
+function gameDisplayTitle(game) {
+  const achievement = (app.config && app.config.achievement) || {};
+  return gameTitle.displayTitle(game, { localized: achievement.localizedGameTitles === true, lang: achievement.lang });
+}
+
+function gameTitleOf(game) {
+  return (game && (game.displayName || game.name)) || String((game && game.appid) || '');
+}
+
+// Repaints one tile, and the game screen when it is that game's, after a rename or a translation.
+function paintGameTitle(game) {
+  const title = gameTitleOf(game);
+  const box = $(gameElements.get(String(game.appid)) || []);
+  if (box.length > 0) {
+    box
+      .find('.info .title')
+      .attr('title', title)
+      .attr('data-original-title', title !== game.name ? game.name || '' : null)
+      .find('.library-scroll-content')
+      .text(title);
+    box.find('.play-button, .achievement-button, .config-button').each(function () {
+      const suffix = String($(this).attr('aria-label') || '').split(' - ').pop();
+      if (suffix) $(this).attr('aria-label', `${title} - ${suffix}`);
+    });
+  }
+  if (String($('#achievement .wrapper > .header').attr('data-appid')) === String(game.appid)) {
+    $('#achievement .wrapper > .header .title > span').first().text(title);
+  }
+}
+
+function retitleLibrary() {
+  let changed = false;
+  for (const game of gameList) {
+    const title = gameDisplayTitle(game);
+    if (title === game.displayName) continue;
+    game.displayName = title;
+    paintGameTitle(game);
+    changed = true;
+  }
+  if (changed) sort($('#game-list ul'), sortOptions());
+}
+
+// Asks Steam once a month per game for its translated titles, then repaints what changed.
+async function refreshLocalizedTitles(games) {
+  const achievement = (app.config && app.config.achievement) || {};
+  if (achievement.localizedGameTitles !== true || !achievement.lang || achievement.lang === 'english') return;
+  const stale = gameTitle.staleLocalizedAppids(games);
+  if (stale.length > 0) {
+    const resolved = await ipcRenderer.invoke('resolve-localized-titles', stale).catch((err) => {
+      debug.log(`[titles] translated title lookup failed: ${err.message || err}`);
+      return 0;
+    });
+    if (!resolved) return;
+  }
+  retitleLibrary();
+}
+
+// An empty name clears the rename. No rescan: the title is painted, never part of a lookup.
+function renameGame(game, name) {
+  try {
+    gameTitle.setCustomTitle(game, name);
+  } catch (err) {
+    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'error',
+      title: t('unexpected-error', 'Unexpected Error', 'Erreur inattendue'),
+      message: t('rename-game-failed', 'Could not save the new name.', 'Impossible d’enregistrer le nouveau nom.'),
+      detail: `${err}`,
+    });
+    return;
+  }
+  game.displayName = gameDisplayTitle(game);
+  paintGameTitle(game);
+  sort($('#game-list ul'), sortOptions());
+}
+
+// Settings calls this after a save: the option and the language apply without a rescan.
+window.refreshGameTitles = () => {
+  retitleLibrary();
+  refreshLocalizedTitles(gameList).catch((err) => debug.log(`[titles] ${err.message || err}`));
+};
 
 // The interface language, for the Intl helpers. Read on each call: it changes without a reload.
 function uiLang() {
@@ -1782,7 +1867,8 @@ async function applyCoverWithFallback(game, headerEl, imgName, orientation = 'la
 }
 
 // Styled in-app text prompt (Electron disables window.prompt). Resolves to the trimmed value or null.
-function promptText(message, defaultValue = '', type = 'text') {
+// allowEmpty: an empty Confirm resolves '' instead of null, for a field where empty means "clear".
+function promptText(message, defaultValue = '', type = 'text', { allowEmpty = false, maxLength = 0 } = {}) {
   return new Promise((resolve) => {
     const isSteamGuard = /(steam.*(?:2fa|guard)|(?:2fa|guard).*code|two.?factor)/i.test(message);
     const overlay = document.createElement('div');
@@ -1811,6 +1897,7 @@ function promptText(message, defaultValue = '', type = 'text') {
     input.type = type;
     input.value = defaultValue;
     input.className = `aw-prompt-input${isSteamGuard ? ' code' : ''}`;
+    if (maxLength > 0) input.maxLength = maxLength;
     if (isSteamGuard) {
       input.maxLength = 10;
       input.autocomplete = 'one-time-code';
@@ -1839,7 +1926,7 @@ function promptText(message, defaultValue = '', type = 'text') {
       resolve(val);
     };
     cancel.onclick = () => done(null);
-    ok.onclick = () => done(input.value.trim() || null);
+    ok.onclick = () => done(input.value.trim() || (allowEmpty ? '' : null));
     overlay.onmousedown = (ev) => {
       if (ev.target === overlay) done(null);
     };
@@ -3441,6 +3528,8 @@ var app = {
               manualUnlock.applyToGame(game, manualUnlockMap, game.appid, game.source);
             }
             const stopBuild = perfTrace.start('tile:build');
+            game.displayName = gameDisplayTitle(game);
+            const tileTitle = gameTitleOf(game);
             const hasAchievements = Number(game.achievement.total) > 0;
             let progress = hasAchievements ? Math.round((100 * game.achievement.unlocked) / game.achievement.total) : 0;
             const progressLabel = !hasAchievements
@@ -3506,24 +3595,24 @@ var app = {
                   <div class="header" id="game-header-${game.appid}">
                   ${
                     isLaunchable(game)
-                      ? `<button type="button" class="play-button" aria-label="${escapeHtml(`${game.name} - ${tileLabels.play}`)}"><i class="fas fa-play" aria-hidden="true"></i></button>`
+                      ? `<button type="button" class="play-button" aria-label="${escapeHtml(`${tileTitle} - ${tileLabels.play}`)}"><i class="fas fa-play" aria-hidden="true"></i></button>`
                       : ''
                   }
                   </div>
 
-                  <button type="button" class="achievement-button" title="${escapeHtml(tileLabels.achievements)}" aria-label="${escapeHtml(`${game.name} - ${tileLabels.achievements}`)}">
+                  <button type="button" class="achievement-button" title="${escapeHtml(tileLabels.achievements)}" aria-label="${escapeHtml(`${tileTitle} - ${tileLabels.achievements}`)}">
                     <i class="fas fa-trophy" aria-hidden="true"></i>
                   </button>
 
-                  <button type="button" class="config-button" title="${escapeHtml(tileLabels.health)}" aria-label="${escapeHtml(`${game.name} - ${tileLabels.health}`)}">
+                  <button type="button" class="config-button" title="${escapeHtml(tileLabels.health)}" aria-label="${escapeHtml(`${tileTitle} - ${tileLabels.health}`)}">
                     <i class="fas fa-tools" aria-hidden="true"></i>
                   </button>
 
                   <div class="info">
                     <div class="info-head">
-                      <div class="title library-scroll-text" title="${escapeHtml(game.name)}"><span class="library-scroll-content">${escapeHtml(
-                        game.name
-                      )}</span></div>
+                      <div class="title library-scroll-text" title="${escapeHtml(tileTitle)}"${
+                        tileTitle !== game.name && game.name ? ` data-original-title="${escapeHtml(game.name)}"` : ''
+                      }><span class="library-scroll-content">${escapeHtml(tileTitle)}</span></div>
                       <div class="game-meta">
                         ${statusBadgeHtml(game)}
                         ${
@@ -3755,6 +3844,7 @@ var app = {
         clearSkeletonTiles();
         sort($('#game-list ul'), sortOptions());
         refreshHealthDots();
+        refreshLocalizedTitles(list).catch((err) => debug.log(`[titles] ${err.message || err}`));
 
         // Clear duplicate executable assignments before playtime tracking.
         try {
@@ -4365,11 +4455,45 @@ var app = {
             })
           );
 
+          const simpleMenu = interfaceIsSimple();
+          // The name shown for the game, for every source and in both interface modes.
+          if (ctxGame) {
+            const customTitle = gameTitle.customTitle(ctxGame);
+            identityItems.push(
+              new MenuItem({
+                icon: menuIcon('file-text.png'),
+                label: t('rename-game', 'Rename…', 'Renommer…'),
+                async click() {
+                  const typed = await promptText(
+                    t(
+                      'rename-game-prompt',
+                      'Name to show for this game. Leave it empty to go back to the original name ({name}).',
+                      'Nom à afficher pour ce jeu. Laisse le champ vide pour revenir au nom d’origine ({name}).',
+                      { name: ctxGame.name || String(ctxGame.appid) }
+                    ),
+                    gameTitleOf(ctxGame),
+                    'text',
+                    { allowEmpty: true, maxLength: gameTitle.MAX_TITLE_LENGTH }
+                  );
+                  if (typed !== null) renameGame(ctxGame, typed);
+                },
+              })
+            );
+            if (customTitle) {
+              identityItems.push(
+                new MenuItem({
+                  label: t('rename-game-reset', 'Restore the original name', 'Rétablir le nom d’origine'),
+                  click() {
+                    renameGame(ctxGame, '');
+                  },
+                })
+              );
+            }
+          }
           // Manual override for which emulator family this game's tools target, for a Ubisoft title
           // that trips the on-disk heuristic the wrong way. Hidden for legit Steam/GOG/Epic and console records, where neither fix applies.
           // Simple leaves both overrides out, like the emulator submenu they steer, but keeps one that
           // is already set so it can still be seen and undone.
-          const simpleMenu = interfaceIsSimple();
           if (!isConsoleSystem && !isLegitSteamOwned && !isNativeLauncher && (!simpleMenu || emulatorSourceForced !== null)) {
             const emulatorSourceMenu = new Menu();
             const emulatorSourceOptions = [
@@ -6623,7 +6747,7 @@ var app = {
       bindGameHeaderIconMenu(game);
 
       // First span only: the badges after it are spans of their own, and would each be given the name.
-      $('#achievement .wrapper > .header .title > span').first().text(game.name);
+      $('#achievement .wrapper > .header .title > span').first().text(gameDisplayTitle(game));
       // Never let the denominator fall below what's actually displayed: a desynced schema could leave
       // total at 0 for a completed game, rendering "39 / 0" and a NaN%/Infinity% percentage.
       const unlockedCount = Math.max(0, Math.floor(finiteNumber(game.achievement.unlocked, 0)));
@@ -7104,7 +7228,7 @@ var app = {
 
     const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'warning',
-      title: t('forget-game-confirm-title', 'Forget {game}?', 'Oublier {game} ?', { game: game.name || appid }),
+      title: t('forget-game-confirm-title', 'Forget {game}?', 'Oublier {game} ?', { game: gameTitleOf(game) || appid }),
       message: t(
         'forget-game-confirm-message',
         'AW Next resets everything it keeps about this game. The next scan finds it again as a new game.',
@@ -7142,6 +7266,7 @@ var app = {
       if (game.gameDir && appidOverride.get(game.gameDir)) appidOverride.set(game.gameDir, null);
       if (progressMute.isMuted(game.appid)) progressMute.toggle(game.appid);
       schemaLanguage.set(game.appid, null);
+      if (gameTitle.customTitle(game)) gameTitle.setCustomTitle(game, '');
       await exeList.remove(String(game.appid));
       gameIndex.remove(String(game.appid));
     });

@@ -1425,6 +1425,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       // Profile card (Appearance): outside the General containers, so it is read here.
       app.config.achievement.profileCompact = $('#option_profileCompact').val() === 'true';
       if (typeof window.applyProfileCompact === 'function') window.applyProfileCompact(app.config.achievement.profileCompact);
+      // Translated titles are painted, not scanned: switching them on or off needs no rescan.
+      if (typeof window.refreshGameTitles === 'function') window.refreshGameTitles();
       // Shows or hides the trophy row right away (Settings > General).
       if (typeof window.refreshProfileStats === 'function') window.refreshProfileStats();
       if (!app.config.general) app.config.general = {};

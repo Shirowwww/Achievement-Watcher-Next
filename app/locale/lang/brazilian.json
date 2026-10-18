@@ -193,6 +193,10 @@
         "name": "Ocultar jogos com 0%",
         "description": "Oculta os jogos nos quais você ainda não desbloqueou nenhuma conquista."
       },
+      "localizedTitles": {
+        "name": "Títulos dos jogos no meu idioma",
+        "description": "Mostra cada jogo com o título que a Steam dá a ele no idioma das suas conquistas, quando a Steam tem um. O título em inglês continua como alternativa, e um nome que você mesmo definir sempre tem prioridade."
+      },
       "startup": {
         "name": "Iniciar com o sistema",
         "description": "Inicia o AW Next automaticamente com o Windows, oculto na bandeja."
@@ -1580,6 +1584,10 @@
     "appid-override": "Definir o AppID manualmente…",
     "appid-override-prompt": "AppID da Steam a usar para \"{name}\" ({folder}). Isso substitui a suposição do AW Next baseada no nome - útil quando outro jogo tem o mesmo nome desta pasta.",
     "appid-override-clear": "Limpar o AppID manual",
+    "rename-game": "Renomear…",
+    "rename-game-prompt": "Nome a exibir para este jogo. Deixe vazio para voltar ao nome original ({name}).",
+    "rename-game-reset": "Restaurar o nome original",
+    "rename-game-failed": "Não foi possível salvar o novo nome.",
     "launch-game": "Iniciar jogo",
     "configure-executable": "Configurar executável…",
     "icon-cache-build-failed": "Não foi possível criar o cache de ícones",

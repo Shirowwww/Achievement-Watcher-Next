@@ -299,6 +299,10 @@ module.exports.load = () => {
     if (typeof options.achievement.hideZero !== 'boolean') {
       options.achievement.hideZero = false;
     }
+    // Steam's own title in the achievement language instead of the English one. On by default.
+    if (typeof options.achievement.localizedGameTitles !== 'boolean') {
+      options.achievement.localizedGameTitles = true;
+    }
     // Trophy showcase under the profile name (Settings > General). On by default.
     if (typeof options.achievement.showTrophies !== 'boolean') {
       options.achievement.showTrophies = true;
@@ -667,6 +671,7 @@ module.exports.load = () => {
         mergeDuplicate: true,
         timeMergeRecentFirst: false,
         hideZero: false,
+        localizedGameTitles: true,
         showTrophies: true,
         rarityMode: 'rare',
         trophyGoldBelow: 20,

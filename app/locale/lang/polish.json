@@ -193,6 +193,10 @@
         "name": "Ukryj gry z 0%",
         "description": "Ukrywa gry, w których nie odblokowano jeszcze żadnego osiągnięcia."
       },
+      "localizedTitles": {
+        "name": "Tytuły gier w moim języku",
+        "description": "Wyświetla każdą grę pod tytułem, który Steam podaje w języku twoich osiągnięć, jeśli Steam go ma. Tytuł angielski pozostaje rozwiązaniem zapasowym, a nazwa ustawiona przez ciebie zawsze ma pierwszeństwo."
+      },
       "startup": {
         "name": "Uruchamiaj przy starcie",
         "description": "Uruchamia AW Next automatycznie z systemem Windows, ukryty w zasobniku."
@@ -1580,6 +1584,10 @@
     "appid-override": "Ustaw AppID ręcznie…",
     "appid-override-prompt": "Appid Steam dla „{name}” ({folder}). Zastępuje domysł AW Next oparty na nazwie - przydatne, gdy inna gra ma taką samą nazwę jak folder.",
     "appid-override-clear": "Wyczyść ręczne AppID",
+    "rename-game": "Zmień nazwę…",
+    "rename-game-prompt": "Nazwa wyświetlana dla tej gry. Zostaw puste, aby wrócić do oryginalnej nazwy ({name}).",
+    "rename-game-reset": "Przywróć oryginalną nazwę",
+    "rename-game-failed": "Nie udało się zapisać nowej nazwy.",
     "launch-game": "Uruchom grę",
     "configure-executable": "Konfiguruj plik wykonywalny…",
     "icon-cache-build-failed": "Nie udało się utworzyć pamięci podręcznej ikon",

@@ -193,6 +193,10 @@
         "name": "Skrýt hry s 0 %",
         "description": "Skryje hry, ve kterých jste zatím neodemkli žádný úspěch."
       },
+      "localizedTitles": {
+        "name": "Názvy her v mém jazyce",
+        "description": "Zobrazí každou hru pod názvem, který jí Steam přiřazuje v jazyce tvých úspěchů, pokud ho Steam má. Anglický název zůstává záložním a název, který si nastavíš sám, má vždy přednost."
+      },
       "startup": {
         "name": "Spustit při startu",
         "description": "Spustí AW Next automaticky s Windows, skrytý v oznamovací oblasti."
@@ -1580,6 +1584,10 @@
     "appid-override": "Nastavit AppID ručně…",
     "appid-override-prompt": "AppID služby Steam pro „{name}“ ({folder}). Přepíše odhad AW Next podle názvu - užitečné, když stejný název nese jiná hra.",
     "appid-override-clear": "Zrušit ruční AppID",
+    "rename-game": "Přejmenovat…",
+    "rename-game-prompt": "Název, který se má u této hry zobrazit. Nechej prázdné pro návrat k původnímu názvu ({name}).",
+    "rename-game-reset": "Obnovit původní název",
+    "rename-game-failed": "Nový název se nepodařilo uložit.",
     "launch-game": "Spustit hru",
     "configure-executable": "Konfigurovat spustitelný soubor…",
     "icon-cache-build-failed": "Mezipaměť ikon se nepodařilo vytvořit",

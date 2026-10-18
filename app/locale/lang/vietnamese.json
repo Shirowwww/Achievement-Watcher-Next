@@ -193,6 +193,10 @@
         "name": "Ẩn trò chơi 0%",
         "description": "Ẩn những trò chơi mà bạn chưa mở khóa được thành tựu nào."
       },
+      "localizedTitles": {
+        "name": "Tên game theo ngôn ngữ của tôi",
+        "description": "Hiển thị mỗi game với tên mà Steam đặt theo ngôn ngữ thành tích của bạn, khi Steam có. Tên tiếng Anh vẫn là phương án dự phòng, và tên do bạn tự đặt luôn được ưu tiên."
+      },
       "startup": {
         "name": "Khởi chạy cùng máy",
         "description": "Tự khởi động AW Next cùng Windows, ẩn dưới khay hệ thống."
@@ -1580,6 +1584,10 @@
     "appid-override": "Đặt AppID thủ công…",
     "appid-override-prompt": "Steam appid dùng cho \"{name}\" ({folder}). Giá trị này thay cho phỏng đoán theo tên của AW Next - hữu ích khi một game khác trùng tên với thư mục này.",
     "appid-override-clear": "Xóa AppID thủ công",
+    "rename-game": "Đổi tên…",
+    "rename-game-prompt": "Tên hiển thị cho game này. Để trống để quay về tên gốc ({name}).",
+    "rename-game-reset": "Khôi phục tên gốc",
+    "rename-game-failed": "Không thể lưu tên mới.",
     "launch-game": "Khởi chạy trò chơi",
     "configure-executable": "Cấu hình tệp thực thi…",
     "icon-cache-build-failed": "Không dựng được bộ nhớ đệm biểu tượng",

@@ -193,6 +193,10 @@
         "name": "%0 oyunları gizle",
         "description": "Henüz hiçbir başarım açmadığın oyunları gizler."
       },
+      "localizedTitles": {
+        "name": "Oyun adları kendi dilimde",
+        "description": "Steam'in başarımlarının dilinde verdiği bir ad varsa, her oyunu o adla gösterir. İngilizce ad yedek olarak kalır ve kendi belirlediğin ad her zaman önceliklidir."
+      },
       "startup": {
         "name": "Başlangıçta çalıştır",
         "description": "AW Next’i Windows ile otomatik olarak, tepside gizli başlatır."
@@ -1580,6 +1584,10 @@
     "appid-override": "AppID’yi elle ayarla…",
     "appid-override-prompt": "\"{name}\" ({folder}) için kullanılacak Steam appid. AW Next’in ada dayalı tahminini geçersiz kılar - başka bir oyun bu klasörle aynı ada sahipse işe yarar.",
     "appid-override-clear": "Elle girilen AppID’yi temizle",
+    "rename-game": "Yeniden adlandır…",
+    "rename-game-prompt": "Bu oyun için gösterilecek ad. Özgün ada ({name}) dönmek için boş bırak.",
+    "rename-game-reset": "Özgün adı geri yükle",
+    "rename-game-failed": "Yeni ad kaydedilemedi.",
     "launch-game": "Oyunu başlat",
     "configure-executable": "Çalıştırılabilir dosyayı yapılandır…",
     "icon-cache-build-failed": "Simge önbelleği oluşturulamadı",

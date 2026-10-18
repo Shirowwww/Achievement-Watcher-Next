@@ -115,7 +115,8 @@ test('the first source list still carries the nine rows the loader binds by nth-
 test('the General head list keeps the seven rows the loader binds by nth-child', () => {
   const head = root.querySelector('#options-ui');
   const rows = head.querySelectorAll('li');
-  assert.equal(rows.length, 7);
-  const first = rows.map((li) => (li.querySelector('select') || li.querySelector('#hotkey') || {}).getAttribute?.('id'));
-  assert.deepEqual(first, ['option_lang', 'option_libraryLayout', 'option_showHidden', 'option_mergeDuplicate', 'option_timeMergeRecentFirst', 'option_hideZero', 'hotkey']);
+  const ids = rows.map((li) => (li.querySelector('select') || li.querySelector('#hotkey') || {}).getAttribute?.('id'));
+  assert.deepEqual(ids.slice(0, 7), ['option_lang', 'option_libraryLayout', 'option_showHidden', 'option_mergeDuplicate', 'option_timeMergeRecentFirst', 'option_hideZero', 'hotkey']);
+  // Rows after them are bound by the id of their control, so they must have one.
+  assert.deepEqual(ids.slice(7), ['option_localizedGameTitles']);
 });

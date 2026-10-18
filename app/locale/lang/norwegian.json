@@ -193,6 +193,10 @@
         "name": "Skjul spill med 0 %",
         "description": "Skjul spill der du ennå ikke har låst opp noen prestasjon."
       },
+      "localizedTitles": {
+        "name": "Spilltitler på mitt språk",
+        "description": "Viser hvert spill under tittelen Steam gir det på språket for prestasjonene dine, når Steam har en. Den engelske tittelen er fortsatt reserven, og et navn du setter selv går alltid foran."
+      },
       "startup": {
         "name": "Start ved oppstart",
         "description": "Starter AW Next automatisk med Windows, skjult i systemkurven."
@@ -1580,6 +1584,10 @@
     "appid-override": "Angi AppID manuelt…",
     "appid-override-prompt": "Steam-appid som skal brukes for \"{name}\" ({folder}). Dette erstatter AW Nexts gjetning basert på navn - nyttig når et annet spill har samme navn som mappen.",
     "appid-override-clear": "Fjern den manuelle AppID-en",
+    "rename-game": "Gi nytt navn…",
+    "rename-game-prompt": "Navn som skal vises for dette spillet. La feltet stå tomt for å gå tilbake til det opprinnelige navnet ({name}).",
+    "rename-game-reset": "Gjenopprett det opprinnelige navnet",
+    "rename-game-failed": "Kunne ikke lagre det nye navnet.",
     "launch-game": "Start spillet",
     "configure-executable": "Sett opp programfilen…",
     "icon-cache-build-failed": "Klarte ikke å bygge ikonbufferen",

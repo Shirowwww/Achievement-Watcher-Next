@@ -193,6 +193,10 @@
         "name": "隱藏 0% 的遊戲",
         "description": "隱藏尚未解鎖任何成就的遊戲。"
       },
+      "localizedTitles": {
+        "name": "以我的語言顯示遊戲名稱",
+        "description": "當 Steam 提供了與你的成就語言一致的標題時，用該標題顯示每個遊戲。英文標題仍作為備用，你自己設定的名稱一律優先。"
+      },
       "startup": {
         "name": "開機時啟動",
         "description": "隨 Windows 自動啟動 AW Next，並隱藏在系統匣中。"
@@ -1580,6 +1584,10 @@
     "appid-override": "手動設定 AppID…",
     "appid-override-prompt": "用於「{name}」({folder})的 Steam appid。它會覆蓋 AW Next 依名稱所做的猜測,適用於另一款遊戲與此資料夾同名的情況。",
     "appid-override-clear": "清除手動 AppID",
+    "rename-game": "重新命名…",
+    "rename-game-prompt": "此遊戲要顯示的名稱。留空則還原為原名稱（{name}）。",
+    "rename-game-reset": "還原原名稱",
+    "rename-game-failed": "無法儲存新名稱。",
     "launch-game": "啟動遊戲",
     "configure-executable": "設定執行檔…",
     "icon-cache-build-failed": "無法建立圖示快取",

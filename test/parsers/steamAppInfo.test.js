@@ -29,12 +29,17 @@ function buildAppInfo(apps, { magic = 0x07564429 } = {}) {
     return buf;
   };
 
-  const bodies = apps.map(({ appid, name, type, extra = {} }) => {
+  const bodies = apps.map(({ appid, name, type, extra = {}, localized = null }) => {
     const fields = [Buffer.from([0x01]), key('name'), cstr(name), Buffer.from([0x01]), key('type'), cstr(type)];
     for (const [k, v] of Object.entries(extra)) {
       const value = Buffer.alloc(4);
       value.writeInt32LE(v);
       fields.push(Buffer.from([0x02]), key(k), value);
+    }
+    if (localized) {
+      fields.push(Buffer.from([0x00]), key('name_localized'));
+      for (const [lang, title] of Object.entries(localized)) fields.push(Buffer.from([0x01]), key(lang), cstr(title));
+      fields.push(Buffer.from([0x08]));
     }
     const common = Buffer.concat([Buffer.from([0x00]), key('common'), ...fields, Buffer.from([0x08])]);
     const kv = Buffer.concat([Buffer.from([0x00]), key('appinfo'), common, Buffer.from([0x08]), Buffer.from([0x08])]);
@@ -89,6 +94,18 @@ test('only the types a player would call a game are library types', () => {
   for (const junk of ['250820', '228980', '22465', '431960', '241100', '2494960']) {
     assert.ok(!appInfo.LIBRARY_TYPES.has(parsed.get(junk).type), `${junk} (${parsed.get(junk).type}) must not reach the library`);
   }
+});
+
+test("Steam's translated titles are kept, and an app without any has none", () => {
+  const parsed = appInfo.parseAppInfo(
+    buildAppInfo([
+      { appid: 1687950, name: 'Persona 5 Royal', type: 'game', localized: { japanese: 'ペルソナ５ ザ・ロイヤル', koreana: '페르소나 5 더 로열' } },
+      ...CATALOGUE.slice(0, 1),
+    ])
+  );
+  assert.deepEqual(parsed.get('1687950').nameLocalized, { japanese: 'ペルソナ５ ザ・ロイヤル', koreana: '페르소나 5 더 로열' });
+  assert.equal(parsed.get('1687950').name, 'Persona 5 Royal', 'the English name stays the name');
+  assert.equal(parsed.get('1671210').nameLocalized, undefined);
 });
 
 test('the pre-v29 layout, whose keys are inline strings, is read too', () => {

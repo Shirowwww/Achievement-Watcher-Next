@@ -193,6 +193,10 @@
         "name": "0% のゲームを非表示",
         "description": "まだ実績を 1 つも解除していないゲームを非表示にします。"
       },
+      "localizedTitles": {
+        "name": "ゲーム名を自分の言語で表示",
+        "description": "Steam に実績の言語でのタイトルがある場合は、そのタイトルで各ゲームを表示します。英語のタイトルは代わりとして残り、自分で設定した名前が常に優先されます。"
+      },
       "startup": {
         "name": "起動時に開始",
         "description": "AW Next を Windows と一緒に自動起動し、トレイに隠します。"
@@ -1580,6 +1584,10 @@
     "appid-override": "AppID を手動で設定…",
     "appid-override-prompt": "\"{name}\" ({folder}) に使う Steam の appid。名前に基づく AW Next の推測を上書きします。別のゲームがこのフォルダーと同じ名前のときに便利です。",
     "appid-override-clear": "手動の AppID を解除",
+    "rename-game": "名前を変更…",
+    "rename-game-prompt": "このゲームに表示する名前。空にすると元の名前 ({name}) に戻ります。",
+    "rename-game-reset": "元の名前に戻す",
+    "rename-game-failed": "新しい名前を保存できませんでした。",
     "launch-game": "ゲームを起動",
     "configure-executable": "実行ファイルを設定…",
     "icon-cache-build-failed": "アイコンキャッシュを作成できませんでした",

@@ -217,6 +217,13 @@ function translateUI(lang, locale, template) {
   selector.find('li:nth-child(7) .left span').text(clear(template.settings.overlay.hotkey.name));
   selector.find('li:nth-child(7) .help').text(clear(template.settings.overlay.hotkey.description));
   selector.find('#btn-hotkey-preview').attr('title', clear(template.settings.overlay.hotkey.preview));
+  if (template.settings.general.localizedTitles) {
+    const localizedTitles = $('#option_localizedGameTitles').closest('li');
+    localizedTitles.find('.left span').text(clear(template.settings.general.localizedTitles.name));
+    localizedTitles.find('.help').text(clear(template.settings.general.localizedTitles.description));
+    localizedTitles.find("select option[value='true']").text(clear(template.settings.common.enable));
+    localizedTitles.find("select option[value='false']").text(clear(template.settings.common.disable));
+  }
   if (template.settings.general.startup) {
     const startup = $('#option_startWithWindows').closest('li');
     startup.find('.left span').text(clear(template.settings.general.startup.name));

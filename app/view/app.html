@@ -3085,11 +3085,28 @@
                     </div>
                     <div class="help"><span></span></div>
                   </li>
+
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-heading"></i> <span></span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_localizedGameTitles">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help"></div>
+                  </li>
                 </ul>
               </div>
 
-              <!-- #options-ui keeps the seven rows the loader binds by nth-child; these two sections are
-                   bound by id. The save handler reads all three containers. -->
+              <!-- #options-ui keeps the seven rows the loader binds by nth-child, then rows bound by id;
+                   these two sections are bound by id. The save handler reads all three containers. -->
               <div id="options-ui-app" class="arrow-list">
                 <div class="title"><span id="general-app-title"></span></div>
                 <ul>

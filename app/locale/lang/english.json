@@ -193,6 +193,10 @@
         "name": "Hide games at 0%",
         "description": "Hide games for which you haven’t unlocked any achievement yet."
       },
+      "localizedTitles": {
+        "name": "Game titles in my language",
+        "description": "Show each game under the title Steam gives it in your achievement language, when Steam has one. The English title stays the fallback, and a name you set yourself always wins."
+      },
       "startup": {
         "name": "Launch at startup",
         "description": "Starts AW Next automatically with Windows, hidden in the tray."
@@ -1580,6 +1584,10 @@
     "appid-override": "Set AppID manually…",
     "appid-override-prompt": "Steam appid to use for \"{name}\" ({folder}). This overrides AW Next's own name-based guess - useful when another game shares this folder's name.",
     "appid-override-clear": "Clear the manual AppID override",
+    "rename-game": "Rename…",
+    "rename-game-prompt": "Name to show for this game. Leave it empty to go back to the original name ({name}).",
+    "rename-game-reset": "Restore the original name",
+    "rename-game-failed": "Could not save the new name.",
     "launch-game": "Launch game",
     "configure-executable": "Configure executable…",
     "icon-cache-build-failed": "Failed to build icon cache",

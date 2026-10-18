@@ -177,6 +177,10 @@
         "name": "Masquer les jeux à 0%",
         "description": "Masque les jeux dont aucun succès n’a encore été débloqué."
       },
+      "localizedTitles": {
+        "name": "Titres des jeux dans ma langue",
+        "description": "Affiche chaque jeu sous le titre que Steam lui donne dans la langue de tes succès, quand Steam en a un. Le titre anglais reste le repli, et un nom que tu choisis toi-même passe toujours en premier."
+      },
       "startup": {
         "name": "Lancer au démarrage",
         "description": "Lance AW Next automatiquement avec Windows, caché dans la zone de notification."
@@ -1580,6 +1584,10 @@
     "appid-override": "Définir l’AppID manuellement…",
     "appid-override-prompt": "AppID Steam à utiliser pour « {name} » ({folder}). Il remplace la déduction d’AW Next par le nom - utile quand un autre jeu porte le même nom que ce dossier.",
     "appid-override-clear": "Effacer l’AppID manuel",
+    "rename-game": "Renommer…",
+    "rename-game-prompt": "Nom à afficher pour ce jeu. Laisse le champ vide pour revenir au nom d’origine ({name}).",
+    "rename-game-reset": "Rétablir le nom d’origine",
+    "rename-game-failed": "Impossible d’enregistrer le nouveau nom.",
     "launch-game": "Lancer le jeu",
     "configure-executable": "Configurer l’exécutable…",
     "icon-cache-build-failed": "Échec de la construction du cache d’icônes",

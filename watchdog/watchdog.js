@@ -913,6 +913,11 @@ var app = {
       // Windows toasts resolve their sound from the same overlay settings as the in-game
       // overlay (Sound / Random Sound / Volume); refresh on every settings reload too.
       notify.setOverlayOptions(self.options.overlay || {});
+      notify.setTitleOptions({
+        // On by default: only an explicit false in options.ini turns translated titles off.
+        localized: self.options.achievement?.localizedGameTitles !== false,
+        lang: self.options.achievement?.lang,
+      });
     // Whether an unlock may be marked urgent, i.e. allowed on screen while Do Not Disturb is on.
     // Refreshed on every settings reload, like the sound options above.
       require('./notification/transport/toast.js').setUrgentUnlocks(self.options.notification_toast?.urgent === true);

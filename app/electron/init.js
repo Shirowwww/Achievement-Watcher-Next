@@ -1085,12 +1085,13 @@ const STEAM_PRODUCT_INFO_TIMEOUT_MS = 12000;
 const STEAM_PRODUCT_INFO_COOLDOWN_MS = 5 * 60 * 1000;
 const productInfoCircuit = createNetworkCircuit({ failureLimit: 2, cooldownMs: STEAM_PRODUCT_INFO_COOLDOWN_MS });
 
+// One appid, or an array of them answered in a single request.
 async function fetchSteamProductInfo(appid) {
   if (productInfoCircuit.unavailable()) return null;
   let timer;
   try {
     const answer = await Promise.race([
-      client.getProductInfo([appid], [], false),
+      client.getProductInfo(Array.isArray(appid) ? appid : [appid], [], false),
       new Promise((resolve, reject) => {
         timer = setTimeout(() => reject(new Error(`product info timed out after ${STEAM_PRODUCT_INFO_TIMEOUT_MS / 1000}s`)), STEAM_PRODUCT_INFO_TIMEOUT_MS);
       }),
@@ -2013,6 +2014,59 @@ ipcMain.on('config-saved', async () => {
 ipcMain.handle('get-steam-data', async (event, arg) => {
   const appid = +arg.appid;
   return await getSteamData({ appid, type: arg.type, user: arg.user, lang: arg.lang });
+});
+
+/*
+  Steam's translated titles, for the "game titles in my language" option. The local catalogue
+  answers for every app this Steam client has seen; the rest comes from product info in batches.
+  Both carry every language at once, so changing language never needs another lookup.
+*/
+const LOCALIZED_TITLE_BATCH = 100;
+async function resolveLocalizedTitles(appids) {
+  const ids = [...new Set((Array.isArray(appids) ? appids : []).map(String).filter((id) => /^\d+$/.test(id)))];
+  if (ids.length === 0) return 0;
+  const steamPath = await require(path.join(__dirname, '../parser/steam.js'))
+    .getSteamPath()
+    .catch(() => '');
+  const appInfo = require(path.join(__dirname, '../parser/steamAppInfo.js'));
+  const names = {};
+  const remote = [];
+  for (const id of ids) {
+    if (steamPath && appInfo.lookup(steamPath, id)) names[id] = appInfo.localizedNamesOf(steamPath, id) || {};
+    else remote.push(id);
+  }
+  if (remote.length > 0 && !steamTransportUnavailable()) {
+    try {
+      await clientLogOn();
+    } catch (err) {
+      debug.log(`[titles] Steam anonymous login unavailable (${err.message || err}); translated titles wait for the next scan`);
+    }
+    for (let i = 0; i < remote.length; i += LOCALIZED_TITLE_BATCH) {
+      const chunk = remote.slice(i, i + LOCALIZED_TITLE_BATCH);
+      const answer = await fetchSteamProductInfo(chunk.map(Number));
+      // No answer is not "no translation": leave those ids unrecorded so the next scan asks again.
+      if (!answer) break;
+      const apps = answer.apps || {};
+      for (const id of chunk) names[id] = apps[id]?.appinfo?.common?.name_localized || {};
+    }
+  }
+  const resolved = Object.keys(names).length;
+  if (resolved > 0) {
+    const gameTitle = require(path.join(__dirname, '../util/gameTitle.js'));
+    gameTitle.setUserDataPath(app.getPath('userData'));
+    gameTitle.storeLocalizedTitles(names);
+  }
+  debug.log(`[titles] translated titles checked for ${resolved} of ${ids.length} game(s)`);
+  return resolved;
+}
+
+ipcMain.handle('resolve-localized-titles', async (event, appids) => {
+  try {
+    return await resolveLocalizedTitles(appids);
+  } catch (err) {
+    debug.log(`[titles] translated title lookup failed: ${err.message || err}`);
+    return 0;
+  }
 });
 
 // Async Epic lookups keep slow store and artwork requests off the renderer thread.

@@ -193,6 +193,10 @@
         "name": "Games met 0% verbergen",
         "description": "Verberg games waarin je nog geen enkele prestatie hebt ontgrendeld."
       },
+      "localizedTitles": {
+        "name": "Speltitels in mijn taal",
+        "description": "Toont elk spel onder de titel die Steam eraan geeft in de taal van je prestaties, als Steam er een heeft. De Engelse titel blijft de terugval, en een naam die je zelf instelt gaat altijd voor."
+      },
       "startup": {
         "name": "Starten met Windows",
         "description": "Start AW Next automatisch met Windows, verborgen in het systeemvak."
@@ -1580,6 +1584,10 @@
     "appid-override": "AppID handmatig instellen…",
     "appid-override-prompt": "Steam-appid voor \"{name}\" ({folder}). Dit vervangt de op naam gebaseerde gok van AW Next - handig als een ander spel dezelfde naam als deze map heeft.",
     "appid-override-clear": "Handmatige AppID wissen",
+    "rename-game": "Hernoemen…",
+    "rename-game-prompt": "Naam die voor dit spel wordt getoond. Laat leeg om terug te gaan naar de oorspronkelijke naam ({name}).",
+    "rename-game-reset": "De oorspronkelijke naam herstellen",
+    "rename-game-failed": "De nieuwe naam kon niet worden opgeslagen.",
     "launch-game": "Game starten",
     "configure-executable": "Uitvoerbaar bestand instellen…",
     "icon-cache-build-failed": "Opbouwen van de pictogramcache mislukt",

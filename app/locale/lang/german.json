@@ -193,6 +193,10 @@
         "name": "Spiele mit 0 % ausblenden",
         "description": "Spiele ausblenden, bei denen du noch keinen Erfolg freigeschaltet hast."
       },
+      "localizedTitles": {
+        "name": "Spieletitel in meiner Sprache",
+        "description": "Zeigt jedes Spiel unter dem Titel an, den Steam in der Sprache deiner Erfolge dafür hat, sofern Steam einen kennt. Der englische Titel bleibt der Ersatz, und ein selbst vergebener Name hat immer Vorrang."
+      },
       "startup": {
         "name": "Beim Start ausführen",
         "description": "Startet AW Next automatisch mit Windows, versteckt im Infobereich."
@@ -1580,6 +1584,10 @@
     "appid-override": "AppID manuell festlegen…",
     "appid-override-prompt": "Steam-AppID für „{name}“ ({folder}). Ersetzt die namensbasierte Vermutung von AW Next - nützlich, wenn ein anderes Spiel denselben Namen wie der Ordner trägt.",
     "appid-override-clear": "Manuelle AppID entfernen",
+    "rename-game": "Umbenennen…",
+    "rename-game-prompt": "Name, der für dieses Spiel angezeigt werden soll. Leer lassen, um zum ursprünglichen Namen ({name}) zurückzukehren.",
+    "rename-game-reset": "Ursprünglichen Namen wiederherstellen",
+    "rename-game-failed": "Der neue Name konnte nicht gespeichert werden.",
     "launch-game": "Spiel starten",
     "configure-executable": "Ausführbare Datei konfigurieren…",
     "icon-cache-build-failed": "Icon-Cache konnte nicht erstellt werden",

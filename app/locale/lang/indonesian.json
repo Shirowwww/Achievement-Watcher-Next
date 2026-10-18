@@ -193,6 +193,10 @@
         "name": "Sembunyikan Game 0%",
         "description": "Sembunyikan game yang belum satu pun pencapaiannya Anda buka."
       },
+      "localizedTitles": {
+        "name": "Judul game dalam bahasa saya",
+        "description": "Menampilkan setiap game dengan judul yang diberikan Steam dalam bahasa pencapaian Anda, jika Steam memilikinya. Judul bahasa Inggris tetap menjadi cadangan, dan nama yang Anda atur sendiri selalu diutamakan."
+      },
       "startup": {
         "name": "Jalankan saat startup",
         "description": "Menjalankan AW Next secara otomatis bersama Windows, tersembunyi di baki sistem."
@@ -1580,6 +1584,10 @@
     "appid-override": "Atur AppID secara manual…",
     "appid-override-prompt": "Steam appid untuk \"{name}\" ({folder}). Ini menggantikan tebakan AW Next berdasarkan nama - berguna saat game lain memiliki nama yang sama dengan folder ini.",
     "appid-override-clear": "Hapus AppID manual",
+    "rename-game": "Ganti nama…",
+    "rename-game-prompt": "Nama yang ditampilkan untuk game ini. Kosongkan untuk kembali ke nama asli ({name}).",
+    "rename-game-reset": "Pulihkan nama asli",
+    "rename-game-failed": "Tidak dapat menyimpan nama baru.",
     "launch-game": "Jalankan game",
     "configure-executable": "Atur file eksekusi…",
     "icon-cache-build-failed": "Gagal membangun cache ikon",

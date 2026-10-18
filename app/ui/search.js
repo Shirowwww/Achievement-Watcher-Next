@@ -15,12 +15,15 @@
       // "installed only" filter (ul.installed-only li:has([data-installed='0'])).
       li.each((index, elem) => {
         const _this = $(elem);
-        const gameName = _this.find('.game-box .info .title').text().toUpperCase();
+        const title = _this.find('.game-box .info .title');
+        const gameName = title.text().toUpperCase();
+        // A renamed or translated game is still found by the name it had before.
+        const originalName = String(title.attr('data-original-title') || '').toUpperCase();
         const gameID = String(_this.find('.game-box').data('appid') ?? '');
 
         // Numbers also match in the title (e.g. "2" finds "Resident Evil 2"); an exact appid
         // still resolves a single game.
-        const match = filter === '' || gameName.includes(filter) || gameID === filter;
+        const match = filter === '' || gameName.includes(filter) || (originalName !== '' && originalName.includes(filter)) || gameID === filter;
         _this.toggleClass('search-hidden', !match);
       });
     });

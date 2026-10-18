@@ -193,6 +193,10 @@
         "name": "Piilota 0 %:n pelit",
         "description": "Piilota pelit, joista et ole vielä avannut yhtään saavutusta."
       },
+      "localizedTitles": {
+        "name": "Pelien nimet omalla kielelläni",
+        "description": "Näyttää jokaisen pelin sillä nimellä, jonka Steam antaa sille saavutustesi kielellä, jos Steamillä on sellainen. Englanninkielinen nimi säilyy varavaihtoehtona, ja itse antamasi nimi on aina etusijalla."
+      },
       "startup": {
         "name": "Käynnistä Windowsin mukana",
         "description": "Käynnistää AW Nextin automaattisesti Windowsin mukana piilotettuna ilmaisinalueelle."
@@ -1580,6 +1584,10 @@
     "appid-override": "Aseta AppID käsin…",
     "appid-override-prompt": "Käytettävä Steam-appid pelille \"{name}\" ({folder}). Korvaa AW Nextin nimeen perustuvan arvauksen - hyödyllinen, kun toisella pelillä on sama nimi kuin kansiolla.",
     "appid-override-clear": "Tyhjennä käsin asetettu AppID",
+    "rename-game": "Nimeä uudelleen…",
+    "rename-game-prompt": "Tälle pelille näytettävä nimi. Jätä tyhjäksi palataksesi alkuperäiseen nimeen ({name}).",
+    "rename-game-reset": "Palauta alkuperäinen nimi",
+    "rename-game-failed": "Uuden nimen tallentaminen epäonnistui.",
     "launch-game": "Käynnistä peli",
     "configure-executable": "Määritä ohjelmatiedosto…",
     "icon-cache-build-failed": "Kuvakevälimuistin luonti epäonnistui",

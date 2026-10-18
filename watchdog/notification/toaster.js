@@ -79,6 +79,48 @@ function setOverlayOptions(overlay) {
   defaultOverlay = overlay || null;
 }
 
+// The game is announced under the title the library shows (a rename, a translated title). Loaded
+// on first use, and never at the cost of the notification itself.
+let gameTitle;
+function titleStore() {
+  if (gameTitle === undefined) {
+    try {
+      const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+      gameTitle = require(sharedAppModulePath('util/gameTitle.js'));
+      gameTitle.setUserDataPath(require('../util/userData.js').userDataDir());
+    } catch (err) {
+      debug.warn(`[titles] game titles unavailable: ${err.message || err}`);
+      gameTitle = null;
+    }
+  }
+  return gameTitle;
+}
+
+function setTitleOptions(options) {
+  const store = titleStore();
+  if (store) store.configure(options);
+}
+
+// Rewrites the game name in the message, and at the head of the toast attribution built from it.
+function applyGameTitle(message, option) {
+  const store = titleStore();
+  if (!store || !message.appid) return;
+  const original = String(message.gameDisplayName || '');
+  let title;
+  try {
+    title = store.displayTitle({ appid: message.appid, source: message.source, name: original });
+  } catch (err) {
+    debug.warn(`[titles] ${message.appid}: ${err.message || err}`);
+    return;
+  }
+  if (!title || title === (original || String(message.appid))) return;
+  message.gameDisplayName = title;
+  const attribution = option.toast && option.toast.attribution;
+  if (original && typeof attribution === 'string' && attribution.startsWith(original)) {
+    option.toast.attribution = title + attribution.slice(original.length);
+  }
+}
+
 /*
   Same order as the overlay popup in the app (enqueueNotificationFromArgs): a silent event never
   rings, then the sound picked in the game's own panel, then a rare/100% sound, then the global one.
@@ -106,6 +148,7 @@ function chooseToastSound(message, overlay) {
 
 module.exports = async (message, option = {}) => {
   try {
+    applyGameTitle(message, option);
     // Playtime uses the game title, not an achievement label.
     if (message.notificationType === 'playtime' && message.gameDisplayName) {
       message.achievementDisplayName = message.gameDisplayName;
@@ -399,3 +442,4 @@ module.exports = async (message, option = {}) => {
 };
 
 module.exports.setOverlayOptions = setOverlayOptions;
+module.exports.setTitleOptions = setTitleOptions;
