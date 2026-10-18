@@ -104,6 +104,22 @@ its per-game settings, and the emulator configuration AW Next wrote into its fol
 confirmation lists each part before anything is touched. The next scan finds the game again as a new
 one. **Remove from list** only hides a game; Forget starts it over.
 
+## Renaming a game
+
+**Game settings → Rename…**, in the right-click menu, sets the name a game is shown under: on its
+tile, on its screen, in search and sorting, in notifications and in the folders screenshots and
+clips are saved to. Search still finds the game by its original name. Leave the field empty, or
+pick **Restore the original name**, to go back. The name is kept per game in `cfg/gameTitles.json`,
+so it survives rescans and is part of a profile backup. Cover lookups and game matching never use
+it.
+
+**Settings → General → Game titles in my language**, on by default, shows Steam games under the
+title Steam gives them in your achievement language (the game's own language when it has one), when
+Steam has one. Covers follow the same language on their own: Steam's localized artwork is picked
+when a game's data is fetched in that language.
+Steam's local catalogue answers for games your Steam client knows; the rest are asked once, in
+batches, and checked again after a month. A name you set yourself always wins over it.
+
 ## A different achievement language for one game
 
 **Game settings → Achievement language**, in the right-click menu, shows one game's achievements,

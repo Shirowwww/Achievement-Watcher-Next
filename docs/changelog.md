@@ -16,6 +16,18 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Added
+
+- **Rename a game.** Right-click a game, then Game settings > Rename. The name you choose shows on
+  the tile, the game screen, in search and sorting, in notifications and in screenshot and clip
+  folder names. It survives rescans and profile restores; leave the field empty, or pick Restore the
+  original name, to undo it. Cover lookups and game matching keep using the original name.
+- **Game titles in your language** (Settings > General, on by default). Steam games show under the
+  title Steam gives them in your achievement language, when Steam has one, such as ペルソナ５ ザ・ロイヤル
+  for Persona 5 Royal in Japanese. Games without a translated title keep their English one, and a
+  name you set yourself always wins. A game from another store shows Steam's title only when AW
+  knows its Steam release.
+
 ### Improved
 
 - **Steam achievement sets.** Achievements now carry the set Steam puts them in (a DLC, a season,
