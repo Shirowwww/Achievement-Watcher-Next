@@ -115,6 +115,15 @@ Everything runs on parts of Windows, with no third-party media library:
   on the capturing adapter), fed with GPU textures. Constant bitrate, one keyframe a second, no
   B-frames. The bitrate comes from the quality level and the real output size (`bitrate()` in
   `video.rs`; `app/util/clipProfile.js` uses the same numbers for the size estimate).
+  An encoder that refuses the rate is retried at 120, 60 and 30 FPS (`fallback fps` line). With no
+  hardware H.264 encoder, or when every hardware attempt failed for a reason that is not a lost
+  device, Windows' software H.264 encoder is used instead (`fallback encoder` line): pictures are read
+  back from the GPU as NV12 bytes, the rate is capped at 30 FPS and the picture at 1080p, late ticks
+  are skipped, and B-frames are switched off because the ring and the muxer sort by time only.
+- **Frame rate**: `--fps <n>` (1 to 480) or `--fps unlocked`, which reads the refresh rate of the
+  monitor showing the game (`EnumDisplaySettingsW`) and rebuilds the capture within three seconds of
+  a change. The rate the encoder really runs at is in the `ready` line and sets the last frame's
+  length in the MP4.
 - **Sound**: WASAPI process loopback on the game's process tree, or the default output device, at
   48 kHz, encoded by Windows' AAC encoder and timed on the same performance counter as the video.
 - **Saving**: packets live in a ring in memory (`ring.rs`). A clip is cut from the keyframe before
@@ -128,10 +137,21 @@ The Watchdog talks to it over stdin and stdout, one line per message:
 |---|---|
 | in | `clip <age-ms> <path>`: an unlock shown `<age-ms>` ago, its clip to be written to `<path>` |
 | in | `quit`, or stdin closing: finish the pending clips, then exit |
-| out | `ready ...`, `saved <path>`, `merged <path>`, `error <code> <detail>`, `log <text>`, `stats ...` |
+| out | `ready ...`, `saved <path>`, `saved-partial <frames>/<total> <path>`, `merged <path>`, `fallback fps ...`, `fallback encoder ...`, `error <code> <detail>`, `log <text>`, `stats ...` |
+
+`stats` is also the heartbeat: it is printed every five seconds while the capture loop turns and
+not at all when it hangs, which is what the Watchdog waits for (15 s, 30 s for the first one) before
+killing and restarting the recorder. Exit codes 2 (bad arguments), 3 (no Media Foundation) and 4 (no
+encoder at all, after `error no-encoder`) are not restarted.
+
+A clip is written under `<path>.part` and renamed. If writing fails midway, the file is closed so
+that what was written plays, checked by reading its first picture, and kept under the final name
+with a `saved-partial` line when it holds at least a second of video; otherwise it is deleted.
+A finished file that cannot be renamed is left as `<path>.part`, since it is the only copy.
 
 `--selftest <out.mp4> [seconds]` records the desktop for that long and writes it, without the
-Watchdog. `--hdr force` runs the tone-mapping pass even on an SDR desktop.
+Watchdog. `--hdr force` runs the tone-mapping pass even on an SDR desktop. `--encoder software`
+skips the GPU encoders, to try the software one on a machine that has a GPU.
 
 NVIDIA's H.264 encoder still runs a work item after it has been shut down, and releasing it straight
 away crashed in that callback about once in thirty runs. A retired encoder is therefore kept for a

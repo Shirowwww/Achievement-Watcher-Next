@@ -857,6 +857,7 @@
         "clipResolutionNative": "屏幕",
         "clipFps": "帧率",
         "clipFpsDesc": "60 FPS 更流畅，占用空间约多出一半。",
+        "clipFpsUnlocked": "不限制（屏幕刷新率）",
         "clipQuality": "画质",
         "clipQualityDesc": "画质越高，文件越大。",
         "clipQualityLow": "低",

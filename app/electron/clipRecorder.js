@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { createWebmRing } = require('../util/webmRing.js');
+const { fixedFps } = require('../util/clipProfile.js');
 
 /*
   The software clip recorder for Linux, chosen in Settings when gpu-screen-recorder is not wanted or
@@ -21,7 +22,7 @@ const BITS_PER_PIXEL = { low: 0.08, medium: 0.13, high: 0.22 };
 
 function videoBitrate(clip, height) {
   const width = (height * 16) / 9;
-  const bits = width * height * clip.clipFps * BITS_PER_PIXEL[clip.clipQuality];
+  const bits = width * height * fixedFps(clip) * BITS_PER_PIXEL[clip.clipQuality];
   return Math.round(Math.min(40e6, Math.max(1e6, bits)));
 }
 
@@ -29,7 +30,7 @@ function videoBitrate(clip, height) {
 function recordingPlan(clip, screenHeight) {
   const height = clip.clipResolution === 'native' ? screenHeight : Math.min(Number(clip.clipResolution), screenHeight);
   return {
-    video: { frameRate: clip.clipFps, height },
+    video: { frameRate: fixedFps(clip), height },
     mimeType: 'video/webm;codecs=vp8,opus',
     videoBitsPerSecond: videoBitrate(clip, height),
     keyframeMs: KEYFRAME_MS,

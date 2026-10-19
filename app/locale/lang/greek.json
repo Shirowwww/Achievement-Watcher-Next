@@ -857,6 +857,7 @@
         "clipResolutionNative": "Οθόνη",
         "clipFps": "Ρυθμός καρέ",
         "clipFpsDesc": "Τα 60 FPS είναι πιο ομαλά και πιάνουν περίπου μισό χώρο παραπάνω.",
+        "clipFpsUnlocked": "Απεριόριστο (ρυθμός οθόνης)",
         "clipQuality": "Ποιότητα",
         "clipQualityDesc": "Μεγαλύτερη ποιότητα δίνει μεγαλύτερα αρχεία.",
         "clipQualityLow": "Χαμηλή",

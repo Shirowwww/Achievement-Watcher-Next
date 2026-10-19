@@ -65,6 +65,24 @@ test('the size estimate follows the resolution, frame rate, codec and length', (
   );
 });
 
+test('the screen rate is a third choice next to 30 and 60', () => {
+  assert.deepEqual(profile.FRAME_RATES, [30, 60, 'unlocked']);
+  assert.equal(profile.normalize({ clipFps: 'unlocked' }).clipFps, 'unlocked');
+  assert.equal(profile.normalize({ clipFps: 'fast' }).clipFps, 30);
+  assert.equal(profile.recorderArgs({ clipFps: 'unlocked' }).at(profile.recorderArgs({}).indexOf('--fps') + 1), 'unlocked');
+  assert.equal(profile.fixedFps(profile.normalize({ clipFps: 'unlocked' })), 60, 'Linux recorders take a number');
+  assert.equal(profile.fixedFps(profile.normalize({ clipFps: 30 })), 30);
+  const sixty = profile.estimateMegabytes({ clipSeconds: 30, clipFps: 60 });
+  const unlocked = profile.estimateMegabytes({ clipSeconds: 30, clipFps: 'unlocked' });
+  assert.ok(unlocked > sixty * 1.2 && unlocked < sixty * 1.4, `unlocked is estimated at twice the 30 FPS rate, got ${unlocked} against ${sixty}`);
+});
+
+test('the estimate steps the bitrate up with the frame rate the way the recorder does', () => {
+  assert.match(recorderSource, /bits \*= if fps > 60 \{\s*2\.0\s*\} else if fps > 30 \{\s*1\.5\s*\} else \{\s*1\.0\s*\};/);
+  const source = fs.readFileSync(appCopy, 'utf8');
+  assert.match(source, /if \(clip\.clipFps === 'unlocked'\) bits \*= 2;\s*else if \(clip\.clipFps > 30\) bits \*= 1\.5;/);
+});
+
 test('the estimate uses the bitrates the recorder encodes with', () => {
   for (const [quality, bits] of [
     ['low', '0.08'],

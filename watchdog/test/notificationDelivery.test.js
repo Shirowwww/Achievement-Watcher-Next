@@ -40,7 +40,7 @@ const ECHO_SOUNDS = {
 };
 
 function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = false, sounds = null, gameSound = '', suppressed = false, urgent = false, showToast = null } = {}) {
-  const calls = { overlays: [], toasts: [], balloons: [], broadcasts: [] };
+  const calls = { overlays: [], toasts: [], balloons: [], broadcasts: [], shots: [] };
 
   const stubs = {
     path,
@@ -79,6 +79,12 @@ function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = f
       },
     },
     '../util/notifyStrings.js': { forLang: () => ({ achievementUnlocked: 'Achievement unlocked !' }) },
+    './souvenir.js': {
+      capture: async (request) => {
+        calls.shots.push({ ...request, at: Date.now() });
+      },
+    },
+    './clip.js': { trigger: () => {} },
   };
 
   const module = { exports: {} };
@@ -366,4 +372,73 @@ test('a toast the app showed while Windows holds popups back is still recorded s
   const { notify } = loadToaster({ showToast: realToast, suppressed: true });
   await asWindowsChild({ ok: true }, () => notify(unlock(), options('toast')));
   assert.equal(transportMemory.entryForGame('480').outcome, 'suppressed');
+});
+
+/*
+  Screenshot souvenirs. A popup can take seconds to show its text (an entry animation, or a queue
+  of popups shown one at a time), so the shot waits for the app to say the text is on screen.
+*/
+const SHOT = { souvenir: { screenshot: true, dir: 'shots', hdr: 'off' } };
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const requestId = (args) => (args.find((arg) => String(arg).startsWith('--notifyId=')) || '').split('=')[1];
+
+test('a souvenir waits until the popup reports its text on screen', async () => {
+  const { notify, calls } = loadToaster();
+  await notify(unlock(), options('overlay', SHOT));
+  assert.ok(calls.overlays[0].includes('--paintReport=1'), 'the popup must be asked to report when it is painted');
+
+  await sleep(1000);
+  assert.equal(calls.shots.length, 0, 'an accepted popup that has not painted yet is not photographed');
+
+  overlayAck.report(requestId(calls.overlays[0]), { stage: 'painted', ok: true, reason: 'preset:settled' });
+  await sleep(10);
+  assert.equal(calls.shots.length, 1);
+  assert.equal(calls.shots[0].achievement, 'First blood');
+});
+
+// Both plans its toast and authorizes no fallback, so the id here exists for the souvenir alone.
+test('with no popup coming, the souvenir gives the toast its head start, and adds no toast', async () => {
+  const { notify, calls } = loadToaster({ reply: REPLY.REJECT });
+  const started = Date.now();
+  await notify(unlock(), options('both', SHOT));
+  await sleep(1000);
+  assert.ok(calls.overlays[0].includes('--paintReport=1'));
+  assert.equal(calls.shots.length, 1);
+  assert.ok(calls.shots[0].at - started >= 700, 'the toast shown instead needs a moment to slide in');
+  assert.equal(calls.toasts.length, 1, 'an id asked for the souvenir must never authorize a second toast');
+});
+
+test('a souvenir beside a Windows notification alone keeps its short fixed delay', async () => {
+  const { notify, calls } = loadToaster();
+  const started = Date.now();
+  await notify(unlock(), options('toast', SHOT));
+  await sleep(1000);
+  assert.equal(calls.shots.length, 1);
+  assert.ok(calls.shots[0].at - started >= 700, 'the toast needs a moment to slide in');
+  assert.equal(calls.overlays.length, 0);
+});
+
+test('progress and playtime notifications never ask for a paint report or a screenshot', async () => {
+  const { notify, calls } = loadToaster();
+  await notify(unlock({ notificationType: 'playtime', silent: true }), options('overlay', SHOT));
+  await sleep(1000);
+  assert.equal(calls.overlays[0].includes('--paintReport=1'), false);
+  assert.equal(calls.shots.length, 0);
+});
+
+test('a popup that never reports painting is photographed after the paint timeout', async () => {
+  const id = overlayAck.track(overlayAck.nextId());
+  const started = Date.now();
+  assert.equal(await overlayAck.whenPainted(id, 60), 'timeout');
+  assert.ok(Date.now() - started >= 55);
+});
+
+test('a paint report for another popup does not release this one', async () => {
+  const mine = overlayAck.track(overlayAck.nextId());
+  const other = overlayAck.track(overlayAck.nextId());
+  const waiting = overlayAck.whenPainted(mine, 200);
+  overlayAck.report(other, { stage: 'painted', ok: true, reason: 'content:settled' });
+  overlayAck.report(mine, { stage: 'rendered', ok: true, reason: 'shown' });
+  setTimeout(() => overlayAck.report(mine, { stage: 'painted', ok: true, reason: 'no-signal:limit' }), 20);
+  assert.equal(await waiting, 'no-signal:limit');
 });

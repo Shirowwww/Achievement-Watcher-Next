@@ -16,10 +16,23 @@ const { souvenirPath } = require('./souvenir.js');
 const gsrClip = require('./gsrClip.js');
 
 const HELPER_NAME = 'aw-next-clip.exe';
-const MAX_RESTARTS = 3;
+const MAX_RESTARTS = 5;
+// Each restart waits twice as long as the one before, up to a minute.
 const RESTART_DELAY_MS = 5000;
+const RESTART_DELAY_MAX_MS = 60000;
 // Long enough for the after-unlock half of the longest clip to be recorded and written.
 const QUIT_TIMEOUT_MS = 30000;
+// The recorder prints a stats line every few seconds while its capture loop turns. The first one
+// may come late: a fresh executable is scanned by the antivirus before it runs.
+const STALL_MS = 15000;
+const STARTUP_GRACE_MS = 30000;
+const WATCH_INTERVAL_MS = 5000;
+// A recorder that stayed up this long gets its restarts back.
+const STABLE_MS = 120000;
+const STATS_LOG_MS = 60000;
+// Exit codes of aw-next-clip.exe that a restart cannot fix: bad arguments, no Media Foundation,
+// no usable encoder.
+const UNSUPPORTED_EXITS = [2, 3, 4];
 
 const state = {
   recorder: null,
@@ -43,10 +56,29 @@ function firstPid(game) {
   return Number(pid) || 0;
 }
 
+function clockOf(recorder) {
+  return (recorder.deps && recorder.deps.now) || Date.now;
+}
+
+// Only the capture loop prints `ready` and `stats` (a log line can come from any thread), so only
+// they prove it is turning.
 function handleLine(line, recorder) {
   const [kind] = line.split(' ', 1);
-  if (kind === 'saved') debug.log(`[clip] saved ${line.slice(6)}`);
+  const now = clockOf(recorder)();
+  if (kind === 'stats' || kind === 'ready') {
+    recorder.lastSign = now;
+    recorder.signs += 1;
+  }
+  if (kind === 'stats') {
+    recorder.lastStats = line;
+    if (now - recorder.statsLoggedAt >= STATS_LOG_MS) {
+      recorder.statsLoggedAt = now;
+      debug.log(`[clip] ${line}`);
+    }
+  } else if (kind === 'saved') debug.log(`[clip] saved ${line.slice(6)}`);
+  else if (kind === 'saved-partial') debug.warn(`[clip] clip cut short, kept what plays: ${line.slice(14)}`);
   else if (kind === 'merged') debug.log(`[clip] unlock joined the clip ${line.slice(7)}`);
+  else if (kind === 'fallback') debug.warn(`[clip] ${line}`);
   else if (kind === 'error') {
     debug.warn(`[clip] ${line.slice(6)}`);
     if (line.startsWith('error no-encoder') || line.startsWith('error no-media-foundation')) {
@@ -84,23 +116,69 @@ function launch(recorder) {
   } else {
     readline.createInterface({ input: child.stdout }).on('line', (line) => handleLine(line, recorder));
   }
+  // A command written to a recorder that just died fails with EPIPE; its exit handler deals with it.
+  if (child.stdin && typeof child.stdin.on === 'function') child.stdin.on('error', () => {});
   child.on('error', (err) => debug.warn(`[clip] recorder failed to start: ${err.message || err}`));
-  child.on('exit', (code) => {
-    if (recorder.child !== child) return;
-    recorder.child = null;
-    if (recorder.stopping || state.unsupportedKey === recorder.key) return;
-    if (recorder.restarts >= MAX_RESTARTS) {
-      debug.warn(`[clip] recorder exited (${code}) and was not restarted again for this game`);
-      return;
-    }
-    recorder.restarts += 1;
-    debug.warn(`[clip] recorder exited (${code}), restarting`);
-    recorder.timer = setTimeout(() => {
-      if (state.recorder === recorder && !recorder.stopping) launch(recorder);
-    }, RESTART_DELAY_MS);
-    if (typeof recorder.timer.unref === 'function') recorder.timer.unref();
-  });
+  child.on('exit', (code) => onExit(recorder, child, code));
+  if (recorder.engine === 'aw-next-clip') superviseRecorder(recorder, child);
   debug.log(`[clip] recorder started for pid ${recorder.pid}: ${recorder.args.join(' ')}`);
+}
+
+function restartDelay(restarts) {
+  return Math.min(RESTART_DELAY_MS * 2 ** restarts, RESTART_DELAY_MAX_MS);
+}
+
+// A recorder that stops printing is stuck (a driver call that never returns, a device that went
+// away): it is killed, and the exit handler restarts it like any other death.
+function superviseRecorder(recorder, child) {
+  const now = clockOf(recorder);
+  recorder.launchedAt = now();
+  recorder.lastSign = recorder.launchedAt;
+  recorder.signs = 0;
+  clearInterval(recorder.watcher);
+  recorder.watcher = setInterval(() => {
+    if (recorder.child !== child || recorder.stopping) return;
+    const silent = now() - recorder.lastSign;
+    if (silent > (recorder.signs === 0 ? STARTUP_GRACE_MS : STALL_MS)) {
+      debug.warn(`[clip] recorder silent for ${Math.round(silent / 1000)} s, killing it`);
+      recorder.hung = true;
+      try {
+        child.kill();
+      } catch {
+        /* already exited */
+      }
+    } else if (recorder.restarts > 0 && now() - recorder.launchedAt >= STABLE_MS) {
+      recorder.restarts = 0;
+    }
+  }, WATCH_INTERVAL_MS);
+  if (typeof recorder.watcher.unref === 'function') recorder.watcher.unref();
+}
+
+function onExit(recorder, child, code) {
+  if (recorder.child !== child) return;
+  recorder.child = null;
+  clearInterval(recorder.watcher);
+  const hung = recorder.hung;
+  recorder.hung = false;
+  if (recorder.lastStats) debug.log(`[clip] last report: ${recorder.lastStats}`);
+  if (recorder.stopping || state.unsupportedKey === recorder.key) return;
+  if (!hung && UNSUPPORTED_EXITS.includes(code) && recorder.engine === 'aw-next-clip') {
+    debug.warn(`[clip] recorder cannot run here (exit ${code}); not restarted until the settings change`);
+    state.unsupportedKey = recorder.key;
+    return;
+  }
+  const what = hung ? 'was stuck' : `exited (${code})`;
+  if (recorder.restarts >= MAX_RESTARTS) {
+    debug.warn(`[clip] recorder ${what} and was not restarted again for this game`);
+    return;
+  }
+  const delay = restartDelay(recorder.restarts);
+  recorder.restarts += 1;
+  debug.warn(`[clip] recorder ${what}, restarting in ${delay / 1000} s`);
+  recorder.timer = setTimeout(() => {
+    if (state.recorder === recorder && !recorder.stopping) launch(recorder);
+  }, delay);
+  if (typeof recorder.timer.unref === 'function') recorder.timer.unref();
 }
 
 // gpu-screen-recorder writes its file when it gets SIGINT; an unlock still waiting for its clip is
@@ -129,6 +207,8 @@ function stop() {
   if (!recorder) return;
   recorder.stopping = true;
   clearTimeout(recorder.timer);
+  // Finishing the pending clips can take a while without a report; only the quit timeout applies.
+  clearInterval(recorder.watcher);
   if (recorder.engine === 'software') {
     sendToApp({ action: 'stop' }, recorder.deps.send);
     return;
@@ -193,7 +273,7 @@ function sync(souvenir, game, deps = {}) {
     state.unsupportedKey = plan.key;
     return null;
   }
-  state.recorder = { ...plan, pid, deps, restarts: 0, child: null, stopping: false, timer: null };
+  state.recorder = { ...plan, pid, deps, restarts: 0, child: null, stopping: false, timer: null, watcher: null, hung: false, signs: 0, lastSign: 0, lastStats: '', statsLoggedAt: -Infinity };
   if (plan.engine === 'software') {
     sendToApp({ action: 'start', settings: plan.clip }, deps.send);
     debug.log(`[clip] software recorder asked of the app for pid ${pid}`);
@@ -220,4 +300,4 @@ function trigger({ game, achievement, dir } = {}) {
   }
 }
 
-module.exports = { sync, stop, trigger, defaultDir, _state: state };
+module.exports = { sync, stop, trigger, defaultDir, restartDelay, _state: state };

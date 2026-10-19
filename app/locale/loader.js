@@ -707,6 +707,7 @@ function translateUI(lang, locale, template) {
     row('#lbl-clipResolution', 'clipResolution', 'clipResolutionDesc');
     $("#option_clipResolution option[value='native']").text(clear(opt.clipResolutionNative));
     row('#lbl-clipFps', 'clipFps', 'clipFpsDesc');
+    $("#option_clipFps option[value='unlocked']").text(clear(opt.clipFpsUnlocked));
     row('#lbl-clipQuality', 'clipQuality', 'clipQualityDesc');
     $("#option_clipQuality option[value='low']").text(clear(opt.clipQualityLow));
     $("#option_clipQuality option[value='medium']").text(clear(opt.clipQualityMedium));

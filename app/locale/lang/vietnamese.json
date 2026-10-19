@@ -857,6 +857,7 @@
         "clipResolutionNative": "Màn hình",
         "clipFps": "Tốc độ khung hình",
         "clipFpsDesc": "60 FPS mượt hơn và chiếm thêm khoảng một nửa dung lượng.",
+        "clipFpsUnlocked": "Không giới hạn (theo tốc độ màn hình)",
         "clipQuality": "Chất lượng",
         "clipQualityDesc": "Chất lượng cao hơn cho tệp lớn hơn.",
         "clipQualityLow": "Thấp",

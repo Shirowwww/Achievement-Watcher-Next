@@ -857,6 +857,7 @@
         "clipResolutionNative": "Screen",
         "clipFps": "Frame rate",
         "clipFpsDesc": "60 FPS is smoother and takes about half as much space again.",
+        "clipFpsUnlocked": "Unlocked (screen rate)",
         "clipQuality": "Quality",
         "clipQualityDesc": "Higher quality makes larger files.",
         "clipQualityLow": "Low",

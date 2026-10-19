@@ -857,6 +857,7 @@
         "clipResolutionNative": "Scherm",
         "clipFps": "Framerate",
         "clipFpsDesc": "60 FPS is vloeiender en neemt ongeveer de helft meer ruimte in.",
+        "clipFpsUnlocked": "Onbeperkt (schermfrequentie)",
         "clipQuality": "Kwaliteit",
         "clipQualityDesc": "Hogere kwaliteit geeft grotere bestanden.",
         "clipQualityLow": "Laag",

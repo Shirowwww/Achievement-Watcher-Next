@@ -14,6 +14,9 @@ const transportPolicy = require('./transportPolicy.js');
 const transportMemory = require('../util/transportMemory.js');
 const overlayAck = require('./overlayAck.js');
 
+// Long enough for a Windows toast to slide in before the screenshot is taken.
+const SOUVENIR_TOAST_DELAY_MS = 800;
+
 const debug = require('../util/log.js');
 
 // A render outcome reported after the fact is what keeps Automatic honest: the popup either loaded
@@ -224,6 +227,10 @@ module.exports = async (message, option = {}) => {
 
       // Spawn the styled overlay; the main process handles it when already running.
       let overlayAckId = null;
+      // Souvenir screenshot: achievement unlocks only, never progress or playtime.
+      const wantsShot = !!(options.souvenir && options.souvenir.screenshot && !message.silent && !message.progress);
+      let trackedId = null;
+      let paintReady = null;
       if (plan.overlay) {
         debug.log(`Overlay notification (spawn) - ${plan.reason}`);
         try {
@@ -254,36 +261,44 @@ module.exports = async (message, option = {}) => {
           if (/^(?:platinum|gold|silver|bronze)$/.test(String(message.trophyGrade || ''))) overlayArgs.push(`--trophyGrade=${message.trophyGrade}`);
           // Some notifications (e.g. playtime) must never play the overlay sound.
           if (message.silent) overlayArgs.push('--silent=1');
-          // Ask for an acknowledgement only when one can come back (the app renders it over IPC) and
-          // only when this notification is allowed a fallback - an untracked id would otherwise sit
-          // in the registry until its TTL for no purpose.
-          if (signals.overlayHost === 'ipc' && plan.fallbackToToast) {
-            overlayAckId = overlayAck.nextId();
-            overlayAck.track(overlayAckId, { appid: message.appid });
-            overlayArgs.push(`--notifyId=${overlayAckId}`);
+          // Ask for reports only when they can come back (the app renders it over IPC), and only when
+          // something uses them: a toast fallback, or a souvenir timed on the popup. The fallback
+          // below acts on overlayAckId alone, so a souvenir id never authorizes a second notification.
+          if (signals.overlayHost === 'ipc' && (plan.fallbackToToast || wantsShot)) {
+            trackedId = overlayAck.nextId();
+            overlayAck.track(trackedId, { appid: message.appid });
+            overlayArgs.push(`--notifyId=${trackedId}`);
+            if (plan.fallbackToToast) overlayAckId = trackedId;
+            if (wantsShot) {
+              overlayArgs.push('--paintReport=1');
+              paintReady = overlayAck.whenPainted(trackedId);
+            }
           }
           watchdog.SpawnOverlayNotification(overlayArgs);
         } catch (err) {
           debug.error(err);
           // The request never left this process, so the overlay definitely showed nothing.
-          if (overlayAckId) overlayAck.report(overlayAckId, { stage: 'accepted', ok: false, reason: 'spawn-failed' });
+          if (trackedId) overlayAck.report(trackedId, { stage: 'accepted', ok: false, reason: 'spawn-failed' });
         }
       }
 
-      // Souvenir screenshot - achievement unlocks only (never progress/playtime). Non-blocking; a short
-      // delay lets the on-screen toast or overlay popup appear so it's included in the shot. Saved under
+      // Non-blocking. A popup is photographed once its text is on screen; a toast, alone or shown
+      // because no popup will appear, gets the fixed head start it always had. Saved under
       // <dir>/<game>/<date> - <achievement>.png.
-      if (options.souvenir && options.souvenir.screenshot && !message.silent && !message.progress) {
-        setTimeout(() => {
-          require('./souvenir.js')
-            .capture({
+      if (wantsShot) {
+        const toastHeadStart = (reason) => new Promise((resolve) => setTimeout(() => resolve(reason), SOUVENIR_TOAST_DELAY_MS));
+        const ready = paintReady ? paintReady.then((reason) => (reason === 'no-popup' ? toastHeadStart(reason) : reason)) : toastHeadStart('');
+        ready
+          .then((reason) => {
+            if (reason) debug.log(`[souvenir] popup ready (${reason}), taking the screenshot`);
+            return require('./souvenir.js').capture({
               game: message.gameDisplayName,
               achievement: message.achievementDisplayName,
               dir: options.souvenir.dir,
               hdr: options.souvenir.hdr,
-            })
-            .catch(() => {});
-        }, 800);
+            });
+          })
+          .catch(() => {});
       }
 
       // Video souvenir: the clip is centred on this moment, so the toast or overlay popup that is

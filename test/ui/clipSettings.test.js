@@ -29,7 +29,7 @@ test('the clip card offers the choices of a replay buffer', () => {
   assert.equal(seconds.getAttribute('max'), '30');
   assert.deepEqual(values(list, 'option_clipCodec'), ['h264', 'hevc', 'av1']);
   assert.deepEqual(values(list, 'option_clipResolution'), ['native', '2160', '1440', '1080', '720']);
-  assert.deepEqual(values(list, 'option_clipFps'), ['30', '60']);
+  assert.deepEqual(values(list, 'option_clipFps'), ['30', '60', 'unlocked']);
   assert.deepEqual(values(list, 'option_clipQuality'), ['low', 'medium', 'high']);
   assert.deepEqual(values(list, 'option_clipAudio'), ['game', 'all']);
   assert.ok(list.querySelector('#clip-estimate'), 'the size estimate must be shown');

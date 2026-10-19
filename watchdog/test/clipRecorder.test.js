@@ -181,18 +181,139 @@ test('an unlock asks for an MP4 in the clip folder', (t) => {
   assert.equal(spawner.children[0].input, `clip 0 ${file}\n`);
 });
 
-test('a recorder that dies is restarted a few times, then left alone', (t) => {
-  t.mock.timers.enable({ apis: ['setTimeout'] });
+// A clock the tests move together with the mocked timers.
+function clockedDeps(t, spawner) {
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+  const clock = { t: 1000 };
+  const advance = (ms) => {
+    for (let left = ms; left > 0; left -= 1000) {
+      clock.t += Math.min(1000, left);
+      t.mock.timers.tick(Math.min(1000, left));
+    }
+  };
+  return { deps: { ...deps(spawner), now: () => clock.t }, advance };
+}
+
+async function say(child, line) {
+  child.stdout.write(`${line}\n`);
+  await new Promise((resolve) => setImmediate(resolve));
+}
+
+test('a recorder that dies is restarted with a growing delay, a few times, then left alone', (t) => {
   const spawner = fakeSpawner();
-  clip.sync(enabled, game, deps(spawner));
-  for (let i = 0; i < 3; i++) {
-    spawner.children.at(-1).emit('exit', 1);
-    t.mock.timers.tick(5000);
-  }
-  assert.equal(spawner.children.length, 4);
+  const { deps: d, advance } = clockedDeps(t, spawner);
+  clip.sync(enabled, game, d);
+  assert.deepEqual([0, 1, 2, 3, 4, 5].map(clip.restartDelay), [5000, 10000, 20000, 40000, 60000, 60000]);
+
   spawner.children.at(-1).emit('exit', 1);
-  t.mock.timers.tick(5000);
-  assert.equal(spawner.children.length, 4, 'three restarts at most for one game');
+  advance(4000);
+  assert.equal(spawner.children.length, 1, 'the first restart waits 5 s');
+  advance(1000);
+  assert.equal(spawner.children.length, 2);
+
+  spawner.children.at(-1).emit('exit', 1);
+  advance(5000);
+  assert.equal(spawner.children.length, 2, 'the second waits twice as long');
+  advance(5000);
+  assert.equal(spawner.children.length, 3);
+
+  for (let i = 2; i < 5; i++) {
+    spawner.children.at(-1).emit('exit', 1);
+    advance(clip.restartDelay(i));
+  }
+  assert.equal(spawner.children.length, 6, 'five restarts at most for one game');
+  spawner.children.at(-1).emit('exit', 1);
+  advance(120000);
+  assert.equal(spawner.children.length, 6);
+});
+
+test('a recorder that keeps reporting is left alone, one that goes silent is killed and restarted', async (t) => {
+  const spawner = fakeSpawner();
+  const { deps: d, advance } = clockedDeps(t, spawner);
+  clip.sync(enabled, game, d);
+  const first = spawner.children[0];
+  let killed = 0;
+  const kill = first.kill;
+  first.kill = () => {
+    killed += 1;
+    kill();
+  };
+
+  await say(first, 'ready encoder="x" codec=h264 fps=60');
+  for (let i = 0; i < 8; i++) {
+    advance(5000);
+    await say(first, 'stats seconds=5 encoded=300 dropped=0 cpu=1.00% peak-memory=120MB');
+  }
+  assert.equal(killed, 0, 'forty seconds of regular reports');
+
+  advance(15000);
+  assert.equal(killed, 0, 'silent for 15 s is still allowed');
+  advance(5000);
+  assert.equal(killed, 1, 'silent for 20 s is stuck');
+  assert.equal(spawner.children.length, 1);
+  advance(5000);
+  assert.equal(spawner.children.length, 2, 'and the restart follows the usual delay');
+});
+
+test('a recorder gets longer to say its first word, and a log line is not a sign of life', async (t) => {
+  const spawner = fakeSpawner();
+  const { deps: d, advance } = clockedDeps(t, spawner);
+  clip.sync(enabled, game, d);
+  const child = spawner.children[0];
+  let killed = 0;
+  child.kill = () => {
+    killed += 1;
+    child.emit('exit', null);
+  };
+  advance(25000);
+  await say(child, 'log capture unavailable (1): no output');
+  advance(5000);
+  assert.equal(killed, 0, 'a cold start may take 30 s');
+  advance(5000);
+  assert.equal(killed, 1, 'a log line did not count as a report');
+});
+
+test('a recorder that stayed up for a while gets its restarts back', async (t) => {
+  const spawner = fakeSpawner();
+  const { deps: d, advance } = clockedDeps(t, spawner);
+  clip.sync(enabled, game, d);
+  for (let i = 0; i < 4; i++) {
+    spawner.children.at(-1).emit('exit', 1);
+    advance(clip.restartDelay(i));
+  }
+  assert.equal(spawner.children.length, 5);
+  const steady = spawner.children.at(-1);
+  for (let i = 0; i < 26; i++) {
+    await say(steady, 'stats seconds=5 encoded=300 dropped=0 cpu=1.00% peak-memory=120MB');
+    advance(5000);
+  }
+  steady.emit('exit', 1);
+  advance(5000);
+  assert.equal(spawner.children.length, 6, 'the next death waits the first delay again');
+});
+
+test('a recorder that exits with the code of an unsupported machine is not restarted', (t) => {
+  const spawner = fakeSpawner();
+  const { deps: d, advance } = clockedDeps(t, spawner);
+  clip.sync(enabled, game, d);
+  spawner.children[0].emit('exit', 4);
+  advance(120000);
+  assert.equal(spawner.children.length, 1);
+  assert.equal(clip.sync(enabled, game, d), null, 'and stays off until the settings change');
+  assert.equal(spawner.children.length, 1);
+
+  clip.sync({ ...enabled, clipFps: 30 }, game, d);
+  assert.equal(spawner.children.length, 2);
+  spawner.children[1].emit('exit', 137);
+  advance(5000);
+  assert.equal(spawner.children.length, 3, 'any other code is retried');
+});
+
+test('the screen rate is passed to the recorder as a word', () => {
+  const spawner = fakeSpawner();
+  clip.sync({ ...enabled, clipFps: 'unlocked' }, game, deps(spawner));
+  const args = spawner.children[0].args;
+  assert.equal(args[args.indexOf('--fps') + 1], 'unlocked');
 });
 
 test('a GPU without a hardware encoder is not retried until the settings change', async () => {

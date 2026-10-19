@@ -857,6 +857,7 @@
         "clipResolutionNative": "Skärm",
         "clipFps": "Bildfrekvens",
         "clipFpsDesc": "60 FPS är mjukare och tar ungefär hälften så mycket plats till.",
+        "clipFpsUnlocked": "Obegränsad (skärmens frekvens)",
         "clipQuality": "Kvalitet",
         "clipQualityDesc": "Högre kvalitet ger större filer.",
         "clipQualityLow": "Låg",

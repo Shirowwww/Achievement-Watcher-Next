@@ -857,6 +857,7 @@
         "clipResolutionNative": "화면",
         "clipFps": "프레임 속도",
         "clipFpsDesc": "60 FPS는 더 부드럽고 용량을 약 1.5배 차지합니다.",
+        "clipFpsUnlocked": "제한 없음 (화면 주사율)",
         "clipQuality": "품질",
         "clipQualityDesc": "품질이 높을수록 파일이 커집니다.",
         "clipQualityLow": "낮음",

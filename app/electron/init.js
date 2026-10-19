@@ -6096,6 +6096,7 @@ function enqueueResolvedNotification(data) {
     // Suppressed because the identical popup is already on screen: the user is being told, so this
     // must not read as a delivery failure and pull a Windows notification in beside it.
     reportNotificationOutcome(data.notifyId, 'rendered', true, 'duplicate');
+    if (data.paintReport) reportNotificationOutcome(data.notifyId, 'painted', true, 'duplicate');
     return;
   }
   // A Settings test replaces whatever is on screen right away instead of queuing
@@ -6138,6 +6139,14 @@ function processNotificationQueue() {
     win.webContents.once('did-fail-load', (event, code, description) =>
       reportNotificationOutcome(data.notifyId, 'rendered', false, `load-failed:${description || code}`)
     );
+    // A screenshot souvenir waits for this, so the shot holds the popup's text rather than its entry.
+    if (data.paintReport) {
+      require('./notificationPaint.js').watchPaint({
+        win,
+        ipcMain,
+        report: (reason) => reportNotificationOutcome(data.notifyId, 'painted', true, reason),
+      });
+    }
   }
   win.on('closed', () => {
     if (notifActiveWindow === win) notifActiveWindow = null;
@@ -6578,6 +6587,7 @@ async function enqueueNotificationFromArgs(args) {
   enqueueNotification({
     appid: args.appid == null ? '' : String(args.appid),
     notifyId,
+    paintReport: String(args.paintReport) === '1',
     preset,
     position: placement.position,
     scale: placement.scale,

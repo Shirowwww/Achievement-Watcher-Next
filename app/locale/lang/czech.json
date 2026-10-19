@@ -857,6 +857,7 @@
         "clipResolutionNative": "Obrazovka",
         "clipFps": "Snímková frekvence",
         "clipFpsDesc": "60 FPS je plynulejší a zabere asi o polovinu více místa.",
+        "clipFpsUnlocked": "Neomezeno (frekvence obrazovky)",
         "clipQuality": "Kvalita",
         "clipQualityDesc": "Vyšší kvalita znamená větší soubory.",
         "clipQualityLow": "Nízká",

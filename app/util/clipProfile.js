@@ -6,7 +6,8 @@
 const SECONDS = { min: 10, max: 30, fallback: 20 };
 const CODECS = ['h264', 'hevc', 'av1'];
 const RESOLUTIONS = ['native', '2160', '1440', '1080', '720'];
-const FRAME_RATES = [30, 60];
+// 'unlocked' follows the refresh rate of the screen being recorded (120, 144, 240 Hz...).
+const FRAME_RATES = [30, 60, 'unlocked'];
 const QUALITIES = ['low', 'medium', 'high'];
 const AUDIO = ['game', 'all'];
 // Linux only: gpu-screen-recorder when it is installed, or the app's own software encoder.
@@ -16,6 +17,8 @@ const ENGINES = ['gpu', 'software'];
 // rate from the size it actually records at.
 const BITS_PER_PIXEL = { low: 0.08, medium: 0.13, high: 0.22 };
 const AUDIO_BITS = 160000;
+// Linux recorders take a number; the screen rate is not followed there.
+const LINUX_UNLOCKED_FPS = 60;
 
 function pick(value, allowed, fallback) {
   const match = allowed.find((option) => String(option) === String(value));
@@ -37,6 +40,11 @@ function normalize(souvenir = {}) {
     // Empty means Videos\Achievement Watcher Next.
     clipDir: typeof souvenir.clipDir === 'string' ? souvenir.clipDir.trim() : '',
   };
+}
+
+// The frame rate as a number, for the recorders that cannot follow the screen.
+function fixedFps(clip) {
+  return clip.clipFps === 'unlocked' ? LINUX_UNLOCKED_FPS : clip.clipFps;
 }
 
 // The unlock sits in the middle of the clip: half before it, half after.
@@ -65,10 +73,12 @@ function estimateMegabytes(souvenir = {}, screen = { width: 1920, height: 1080 }
   const height = clip.clipResolution === 'native' ? screenHeight : Math.min(Number(clip.clipResolution), screenHeight);
   const width = (screenWidth * height) / screenHeight;
   let bits = width * height * 30 * BITS_PER_PIXEL[clip.clipQuality];
-  if (clip.clipFps > 30) bits *= 1.5;
+  // Same steps as bitrate() in video.rs; an unlocked rate is assumed to be a high-refresh screen.
+  if (clip.clipFps === 'unlocked') bits *= 2;
+  else if (clip.clipFps > 30) bits *= 1.5;
   if (clip.clipCodec !== 'h264') bits *= 0.7;
   bits = Math.min(150e6, Math.max(1e6, bits));
   return ((bits + AUDIO_BITS) * clip.clipSeconds) / 8 / 1e6;
 }
 
-module.exports = { SECONDS, CODECS, RESOLUTIONS, FRAME_RATES, QUALITIES, AUDIO, ENGINES, normalize, recorderArgs, estimateMegabytes };
+module.exports = { SECONDS, CODECS, RESOLUTIONS, FRAME_RATES, QUALITIES, AUDIO, ENGINES, normalize, recorderArgs, estimateMegabytes, fixedFps };

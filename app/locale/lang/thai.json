@@ -857,6 +857,7 @@
         "clipResolutionNative": "หน้าจอ",
         "clipFps": "อัตราเฟรม",
         "clipFpsDesc": "60 FPS ลื่นกว่าและใช้พื้นที่เพิ่มขึ้นประมาณครึ่งหนึ่ง",
+        "clipFpsUnlocked": "ไม่จำกัด (ตามอัตราหน้าจอ)",
         "clipQuality": "คุณภาพ",
         "clipQualityDesc": "คุณภาพสูงขึ้นทำให้ไฟล์ใหญ่ขึ้น",
         "clipQualityLow": "ต่ำ",

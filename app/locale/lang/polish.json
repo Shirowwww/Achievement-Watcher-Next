@@ -857,6 +857,7 @@
         "clipResolutionNative": "Ekran",
         "clipFps": "Liczba klatek",
         "clipFpsDesc": "60 FPS jest płynniejsze i zajmuje o połowę więcej miejsca.",
+        "clipFpsUnlocked": "Bez limitu (częstotliwość ekranu)",
         "clipQuality": "Jakość",
         "clipQualityDesc": "Wyższa jakość daje większe pliki.",
         "clipQualityLow": "Niska",

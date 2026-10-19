@@ -6,7 +6,7 @@ mod ring;
 mod video;
 
 use std::io::{BufRead, Write};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::{Duration, Instant};
 
@@ -24,6 +24,12 @@ use ring::{Ring, SECOND, Schedule};
 const SETTLE: i64 = SECOND * 7 / 10;
 const LONGEST_CLIP: i64 = 60 * SECOND;
 const RING_CAP_BYTES: usize = 512 * 1024 * 1024;
+// The Watchdog restarts a recorder that stays silent, so a living capture reports this often.
+const HEARTBEAT: Duration = Duration::from_secs(5);
+// Highest rate asked for or followed from the display; a 480 Hz panel is the practical ceiling.
+pub const MAX_FPS: u32 = 480;
+// Exit code for a machine that cannot record at all, which the Watchdog does not restart.
+pub const EXIT_UNSUPPORTED: i32 = 4;
 
 // Force exists for testing the tone-mapping pass on an SDR desktop.
 #[derive(Clone, Copy, PartialEq)]
@@ -44,12 +50,16 @@ pub struct Config {
     pub pid: u32,
     pub codec: String,
     pub height: u32,
+    // With `unlocked` this is only a start value, replaced by the display's rate once it is read.
     pub fps: u32,
+    pub unlocked: bool,
     pub quality: String,
     pub before: i64,
     pub after: i64,
     pub audio: AudioSource,
     pub hdr: HdrMode,
+    // Skips the GPU encoders; exists for testing the software one on a machine that has a GPU.
+    pub software: bool,
     pub selftest: Option<(String, u64)>,
 }
 
@@ -60,6 +70,12 @@ pub struct Shared {
     pub stop: AtomicBool,
     pub encoded: AtomicU64,
     pub dropped: AtomicU64,
+    // Rate the running encoder was opened at, which can be lower than the one asked for.
+    pub fps: AtomicU32,
+    // Turns of the capture loop: it stops moving when the video thread hangs.
+    pub beat: AtomicU64,
+    // Neither a hardware nor the software encoder could be opened.
+    pub unsupported: AtomicBool,
 }
 
 pub fn emit(line: &str) {
@@ -91,20 +107,21 @@ pub fn type_blob(media_type: &IMFMediaType) -> windows::core::Result<Vec<u8>> {
     }
 }
 
-fn parse_args() -> Result<Config, String> {
+fn parse_args(args: &[String]) -> Result<Config, String> {
     let mut config = Config {
         pid: 0,
         codec: "h264".into(),
         height: 1080,
         fps: 30,
+        unlocked: false,
         quality: "medium".into(),
         before: 10 * SECOND,
         after: 10 * SECOND,
         audio: AudioSource::Game,
         hdr: HdrMode::Auto,
+        software: false,
         selftest: None,
     };
-    let args: Vec<String> = std::env::args().skip(1).collect();
     let mut i = 0;
     while i < args.len() {
         let value = args.get(i + 1).cloned().unwrap_or_default();
@@ -113,7 +130,11 @@ fn parse_args() -> Result<Config, String> {
             "--pid" => config.pid = number()? as u32,
             "--codec" => config.codec = value.clone(),
             "--height" => config.height = number()? as u32,
-            "--fps" => config.fps = (number()? as u32).clamp(1, 120),
+            "--fps" if value == "unlocked" => {
+                config.unlocked = true;
+                config.fps = 60;
+            }
+            "--fps" => config.fps = (number()? as u32).clamp(1, MAX_FPS),
             "--quality" => config.quality = value.clone(),
             "--before" => config.before = number()? as i64 * SECOND / 1000,
             "--after" => config.after = number()? as i64 * SECOND / 1000,
@@ -131,6 +152,7 @@ fn parse_args() -> Result<Config, String> {
                     _ => HdrMode::Auto,
                 }
             }
+            "--encoder" => config.software = value == "software",
             "--selftest" => {
                 let seconds = args.get(i + 2).and_then(|s| s.parse().ok()).unwrap_or(10);
                 config.selftest = Some((value.clone(), seconds));
@@ -165,13 +187,18 @@ fn read_commands(sender: mpsc::Sender<Command>) {
     let _ = sender.send(Command::Quit);
 }
 
-fn save(job: &ring::Job, shared: &Shared, frame: i64) {
+fn save(job: &ring::Job, shared: &Shared) {
+    let frame = SECOND / i64::from(shared.fps.load(Ordering::Relaxed).max(1));
     let clip = shared.ring.lock().unwrap().select(job.start, job.end);
     let video_type = shared.video_type.lock().unwrap().clone();
     let audio_type = shared.audio_type.lock().unwrap().clone();
     match (clip, video_type) {
         (Some(clip), Some(video_type)) if !clip.video.is_empty() => match mux::write(&job.path, &clip, &video_type, audio_type.as_deref(), frame) {
-            Ok(()) => emit(&format!("saved {}", job.path)),
+            Ok(mux::Outcome::Complete) => emit(&format!("saved {}", job.path)),
+            Ok(mux::Outcome::Partial { frames, of, cause }) => {
+                log(&format!("clip writing stopped early: {cause}"));
+                emit(&format!("saved-partial {frames}/{of} {}", job.path));
+            }
             Err(detail) => emit(&format!("error write-failed {detail}")),
         },
         _ => emit("error nothing-recorded the capture had no frames for this unlock"),
@@ -202,8 +229,25 @@ fn stats(shared: &Shared, started: Instant) {
     ));
 }
 
+// A line every few seconds while the capture loop turns; none while it is stuck, which is what the
+// Watchdog waits for before killing and restarting the recorder.
+fn heartbeat(shared: &Shared, started: Instant) {
+    let mut seen = u64::MAX;
+    let mut last = Instant::now();
+    while !shared.stop.load(Ordering::Relaxed) {
+        std::thread::sleep(Duration::from_millis(100));
+        let beat = shared.beat.load(Ordering::Relaxed);
+        if last.elapsed() >= HEARTBEAT && beat != seen {
+            seen = beat;
+            last = Instant::now();
+            stats(shared, started);
+        }
+    }
+}
+
 fn main() {
-    let config = match parse_args() {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let config = match parse_args(&args) {
         Ok(config) => Arc::new(config),
         Err(detail) => {
             emit(&format!("error bad-arguments {detail}"));
@@ -227,6 +271,9 @@ fn main() {
         stop: AtomicBool::new(false),
         encoded: AtomicU64::new(0),
         dropped: AtomicU64::new(0),
+        fps: AtomicU32::new(config.fps),
+        beat: AtomicU64::new(0),
+        unsupported: AtomicBool::new(false),
     });
 
     let mut workers = Vec::new();
@@ -239,12 +286,15 @@ fn main() {
             job(&config, &shared);
         }));
     }
+    {
+        let shared = Arc::clone(&shared);
+        workers.push(std::thread::spawn(move || heartbeat(&shared, started)));
+    }
     let (sender, commands) = mpsc::channel();
     if config.selftest.is_none() {
         std::thread::spawn(move || read_commands(sender));
     }
 
-    let frame = SECOND / config.fps as i64;
     let mut schedule = Schedule::new(LONGEST_CLIP);
     let mut quitting: Option<Instant> = None;
     loop {
@@ -266,7 +316,7 @@ fn main() {
             }
         }
         while let Some(job) = schedule.take_due(now() - SETTLE) {
-            save(&job, &shared, frame);
+            save(&job, &shared);
         }
         let capture_gone = shared.stop.load(Ordering::Relaxed);
         if let Some(since) = quitting {
@@ -285,5 +335,44 @@ fn main() {
     stats(&shared, started);
     unsafe {
         let _ = MFShutdown();
+    }
+    if shared.unsupported.load(Ordering::Relaxed) {
+        std::process::exit(EXIT_UNSUPPORTED);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse(args: &[&str]) -> Result<Config, String> {
+        parse_args(&args.iter().map(|a| a.to_string()).collect::<Vec<_>>())
+    }
+
+    #[test]
+    fn a_number_is_a_fixed_rate_up_to_the_ceiling() {
+        let config = parse(&["--fps", "60"]).unwrap();
+        assert_eq!((config.fps, config.unlocked), (60, false));
+        assert_eq!(parse(&["--fps", "9000"]).unwrap().fps, MAX_FPS);
+        assert_eq!(parse(&["--fps", "0"]).unwrap().fps, 1);
+    }
+
+    #[test]
+    fn unlocked_follows_the_display_instead_of_a_number() {
+        let config = parse(&["--fps", "unlocked", "--quality", "high"]).unwrap();
+        assert!(config.unlocked);
+        assert_eq!(config.quality, "high", "the argument after it is still read");
+    }
+
+    #[test]
+    fn the_software_encoder_is_only_used_when_asked_for() {
+        assert!(!parse(&[]).unwrap().software);
+        assert!(!parse(&["--encoder", "auto"]).unwrap().software);
+        assert!(parse(&["--encoder", "software"]).unwrap().software);
+    }
+
+    #[test]
+    fn a_word_that_is_not_a_rate_is_refused() {
+        assert!(parse(&["--fps", "fast"]).is_err());
     }
 }

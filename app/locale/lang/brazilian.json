@@ -857,6 +857,7 @@
         "clipResolutionNative": "Tela",
         "clipFps": "Taxa de quadros",
         "clipFpsDesc": "60 FPS é mais fluido e ocupa cerca de metade a mais de espaço.",
+        "clipFpsUnlocked": "Sem limite (taxa da tela)",
         "clipQuality": "Qualidade",
         "clipQualityDesc": "Qualidade maior gera arquivos maiores.",
         "clipQualityLow": "Baixa",

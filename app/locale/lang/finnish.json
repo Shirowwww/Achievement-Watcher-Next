@@ -857,6 +857,7 @@
         "clipResolutionNative": "Näyttö",
         "clipFps": "Kuvataajuus",
         "clipFpsDesc": "60 FPS on sujuvampi ja vie noin puolet enemmän tilaa.",
+        "clipFpsUnlocked": "Rajoittamaton (näytön taajuus)",
         "clipQuality": "Laatu",
         "clipQualityDesc": "Parempi laatu tuottaa suurempia tiedostoja.",
         "clipQualityLow": "Matala",

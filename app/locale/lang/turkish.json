@@ -857,6 +857,7 @@
         "clipResolutionNative": "Ekran",
         "clipFps": "Kare hızı",
         "clipFpsDesc": "60 FPS daha akıcıdır ve yaklaşık yarı kadar daha fazla yer kaplar.",
+        "clipFpsUnlocked": "Sınırsız (ekran hızı)",
         "clipQuality": "Kalite",
         "clipQualityDesc": "Yüksek kalite daha büyük dosyalar üretir.",
         "clipQualityLow": "Düşük",

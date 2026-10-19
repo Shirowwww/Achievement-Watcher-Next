@@ -296,7 +296,7 @@ clip instead of writing near-identical copies.
 | Clip length | 10 to 30 seconds, half before the unlock and half after | 20 s |
 | Format | H.264, HEVC or AV1, saved as MP4 | H.264 |
 | Resolution | Screen, 2160p, 1440p, 1080p or 720p, never above the screen | 1080p |
-| Frame rate | 30 or 60 FPS | 30 FPS |
+| Frame rate | 30 FPS, 60 FPS or Unlocked, which follows your screen (120, 144, 240 Hz) | 30 FPS |
 | Quality | Low, Medium or High | Medium |
 | Sound | Game only, or the whole PC | Game only |
 
@@ -314,8 +314,15 @@ at a constant bitrate and a quiet scene comes out smaller.
   Nothing is written to disk until an achievement unlocks.
 - **Format.** H.264 plays everywhere, Discord and phones included. HEVC and AV1 make smaller files.
   AV1 needs a GeForce RTX 40, Radeon RX 7000, Intel Arc or newer graphics card; on a card without
-  the chosen format the clip is recorded in H.264. A card without any hardware video encoder cannot
-  record clips, and the log says so.
+  the chosen format the clip is recorded in H.264. A card without any hardware H.264 encoder uses
+  Windows' software encoder instead: on the processor, at 1080p and 30 FPS at most.
+- **Frame rate.** **Unlocked** records at the refresh rate of the monitor showing the game and
+  follows it when it changes. When the encoder refuses a rate, the recorder steps down to 60, then 30
+  FPS rather than stopping, and the log says so. The size estimate assumes twice the 30 FPS
+  bitrate for Unlocked, so it is a ceiling on a 60 Hz screen.
+- **If the recorder stops answering.** AW Next restarts it after a wait that doubles each time, and
+  gives up on a game after five failed restarts. A clip whose writing fails halfway is kept when
+  what was written plays; otherwise nothing is left under the clip's name.
 - **HDR.** With Windows HDR on, the clip is tone-mapped with the same curve as HDR screenshots, so it
   looks right on any screen. **HDR screenshots** set to **Off** applies to clips too.
 - **Sound.** **Game only** records the game and leaves voice chat and music out. When the game's

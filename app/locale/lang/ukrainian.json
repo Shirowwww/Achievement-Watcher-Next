@@ -857,6 +857,7 @@
         "clipResolutionNative": "Екран",
         "clipFps": "Частота кадрів",
         "clipFpsDesc": "60 FPS плавніше і займає приблизно в півтора раза більше місця.",
+        "clipFpsUnlocked": "Без обмеження (частота екрана)",
         "clipQuality": "Якість",
         "clipQualityDesc": "Чим вища якість, тим більші файли.",
         "clipQualityLow": "Низька",

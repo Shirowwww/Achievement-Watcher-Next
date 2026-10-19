@@ -37,13 +37,8 @@ const RENDERERS = [
   app('components', 'titleBar', 'titleBar.js'),
 ].filter((file) => fs.existsSync(file));
 
-/*
-  Presets call window.api.notificationRenderReady(), which sends this, and nothing listens - the
-  main process stopped needing the signal and the bridge stayed. Sending into the void is harmless
-  (Electron drops it), and the bridge cannot be removed without breaking presets already on disk
-  that call it, so it is recorded here rather than fixed.
-*/
-const UNANSWERED = new Set(['notification-render-ready']);
+// Channels a renderer may send on with nobody listening. None today: keep it that way.
+const UNANSWERED = new Set();
 
 function read(file) {
   return fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
@@ -80,11 +75,8 @@ test('every channel a renderer speaks on is answered by the main process', () =>
   assert.deepEqual(unanswered, [], 'these channels have no handler in app/electron/');
 });
 
-test('the recorded exception is still exactly one dead channel, and still dead', () => {
-  const handled = handledChannels();
-  for (const channel of UNANSWERED) {
-    assert.ok(!handled.has(channel), `${channel} is handled now, so it should not be listed as unanswered`);
-  }
-  // The bridge is what presets already installed call, so it has to stay reachable.
+// Every preset calls window.api.notificationRenderReady(), and screenshot souvenirs are timed on it.
+test('the popup render-ready call is answered and its preset bridge stays', () => {
+  assert.ok(handledChannels().has('notification-render-ready'));
   assert.match(read(app('notificationPreload.js')), /notificationRenderReady:/);
 });

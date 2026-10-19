@@ -7,7 +7,8 @@
   let overlayLang = 'english';
   let currentGame = null;
   let trophyLabels = {};
-  let sortState = { status: null, rarity: null, time: null };
+  const unsorted = () => ({ status: null, achievement: null, rarity: null, time: null });
+  let sortState = unsorted();
   let filter = 'all';
   let query = '';
   // Names of hidden achievements the player has clicked open; cleared whenever the overlay reopens.
@@ -278,7 +279,7 @@
     $('settings-close').setAttribute('aria-label', overlayStrings.close);
     $('overlay-close').title = overlayStrings.closeOverlay;
     $('overlay-close').setAttribute('aria-label', overlayStrings.closeOverlay);
-    $('overlay-th-achievement').textContent = overlayStrings.achievement;
+    $('overlay-th-achievement').firstElementChild.textContent = overlayStrings.achievement;
     $('overlay-th-rarity').firstElementChild.textContent = overlayStrings.rarityColumn;
     $('overlay-th-date').firstElementChild.textContent = overlayStrings.dateColumn;
     $('overlay-th-status').firstElementChild.textContent = overlayStrings.status;
@@ -337,6 +338,7 @@
 
   function updateSortIndicators() {
     const columns = [
+      ['achievement', 'overlay-th-achievement', 'achievement-arrow'],
       ['rarity', 'overlay-th-rarity', 'rarity-arrow'],
       ['time', 'overlay-th-date', 'date-arrow'],
       ['status', 'overlay-th-status', 'status-arrow'],
@@ -362,7 +364,7 @@
   // third click on the active column clears the sort (asc → desc → none).
   function setSort(column) {
     const next = cycleSort(sortState[column]);
-    sortState = { status: null, rarity: null, time: null };
+    sortState = unsorted();
     if (next !== null) sortState[column] = next;
     renderRows();
   }
@@ -547,6 +549,7 @@
   }
   syncPressed();
 
+  $('overlay-th-achievement').addEventListener('click', () => setSort('achievement'));
   $('overlay-th-rarity').addEventListener('click', () => setSort('rarity'));
   $('overlay-th-date').addEventListener('click', () => setSort('time'));
   $('overlay-th-status').addEventListener('click', () => setSort('status'));
@@ -659,7 +662,7 @@
     query = '';
     revealedDescriptions = new Set();
     filter = 'all';
-    sortState = { status: null, rarity: null, time: null };
+    sortState = unsorted();
     $('overlay-search').value = '';
     $('overlay-search-box').classList.remove('has-text');
     document.querySelectorAll('.filter-pill').forEach((pill) => {

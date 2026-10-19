@@ -281,18 +281,6 @@
         -webkit-app-region: no-drag;
       }
 
-      .col-label {
-        display: inline-flex;
-        align-items: center;
-        padding: 3px 8px;
-        margin: -3px 0;
-        color: var(--muted);
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.6px;
-      }
-
       .sort-btn {
         display: inline-flex;
         align-items: center;
@@ -309,6 +297,11 @@
         letter-spacing: 0.6px;
         cursor: pointer;
         transition: color 120ms ease, background 120ms ease, border-color 120ms ease;
+      }
+
+      /* The name column stretches; its button keeps to the width of its label. */
+      #overlay-th-achievement {
+        justify-self: start;
       }
 
       .sort-btn:hover {
@@ -910,7 +903,9 @@
 
         <div class="overlay-cols">
           <span></span>
-          <span class="col-label" id="overlay-th-achievement">Achievement</span>
+          <button type="button" class="sort-btn" id="overlay-th-achievement">
+            <span>Achievement</span><span class="arrow hidden" id="achievement-arrow">▲</span>
+          </button>
           <button type="button" class="sort-btn" id="overlay-th-rarity">
             <span>Rarity</span><span class="arrow hidden" id="rarity-arrow">▲</span>
           </button>

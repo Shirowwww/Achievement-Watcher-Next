@@ -9,6 +9,7 @@ const fs = require('fs');
 const os = require('os');
 const readline = require('readline');
 const { execFileSync } = require('child_process');
+const { fixedFps } = require('./clipProfile.js');
 
 const BINARY = 'gpu-screen-recorder';
 const FLATPAK_ID = 'com.dec05eba.gpu_screen_recorder';
@@ -50,7 +51,7 @@ function replayArgs(clip, { outDir, tokenFile, wayland }) {
     '-w', wayland ? 'portal' : 'screen',
     '-c', 'mp4',
     '-k', clip.clipCodec,
-    '-f', String(clip.clipFps),
+    '-f', String(fixedFps(clip)),
     '-q', QUALITY[clip.clipQuality],
     '-r', String(clip.clipSeconds),
     '-a', 'default_output',

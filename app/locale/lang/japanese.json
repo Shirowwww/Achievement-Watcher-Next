@@ -857,6 +857,7 @@
         "clipResolutionNative": "画面",
         "clipFps": "フレームレート",
         "clipFpsDesc": "60 FPS はより滑らかで、容量は約 1.5 倍になります。",
+        "clipFpsUnlocked": "制限なし (画面のレート)",
         "clipQuality": "画質",
         "clipQualityDesc": "画質を上げるとファイルが大きくなります。",
         "clipQualityLow": "低",

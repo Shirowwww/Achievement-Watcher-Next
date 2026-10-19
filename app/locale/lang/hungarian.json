@@ -857,6 +857,7 @@
         "clipResolutionNative": "Képernyő",
         "clipFps": "Képkockasebesség",
         "clipFpsDesc": "A 60 FPS simább, és nagyjából másfélszer annyi helyet foglal.",
+        "clipFpsUnlocked": "Korlátlan (képernyő frissítése)",
         "clipQuality": "Minőség",
         "clipQualityDesc": "A jobb minőség nagyobb fájlokat eredményez.",
         "clipQualityLow": "Alacsony",

@@ -12,6 +12,8 @@ const RESULT = { ACCEPTED: 'accepted', REJECTED: 'rejected', UNKNOWN: 'unknown' 
 // stops the map growing over a long session.
 const ENTRY_TTL_MS = 60000;
 const DEFAULT_TIMEOUT_MS = 3000;
+// Popups are shown one at a time, so a queued one can paint several seconds after its request.
+const PAINT_TIMEOUT_MS = 20000;
 
 let sequence = 0;
 const pending = new Map();
@@ -83,6 +85,27 @@ function onResult(listener) {
   return () => listeners.delete(listener);
 }
 
+// Resolves once the app says the popup's text is on screen ('painted'), at once when it says no
+// popup will appear, or after timeoutMs, since a souvenir taken late beats one never taken.
+// Subscribe before sending the request: a spawn failure is reported synchronously.
+function whenPainted(id, timeoutMs = PAINT_TIMEOUT_MS) {
+  return new Promise((resolve) => {
+    let unsubscribe = () => {};
+    const timer = setTimeout(() => {
+      unsubscribe();
+      resolve('timeout');
+    }, timeoutMs);
+    unsubscribe = onResult((result) => {
+      if (result.id !== id) return;
+      const noPopup = !result.ok && (result.stage === 'accepted' || result.stage === 'rendered');
+      if (result.stage !== 'painted' && !noPopup) return;
+      clearTimeout(timer);
+      unsubscribe();
+      resolve(noPopup ? 'no-popup' : result.reason || 'painted');
+    });
+  });
+}
+
 function _reset() {
   for (const entry of pending.values()) clearTimeout(entry.expiry);
   pending.clear();
@@ -90,4 +113,4 @@ function _reset() {
   sequence = 0;
 }
 
-module.exports = { nextId, track, wait, report, onResult, RESULT, DEFAULT_TIMEOUT_MS, ENTRY_TTL_MS, _reset };
+module.exports = { nextId, track, wait, report, onResult, whenPainted, RESULT, DEFAULT_TIMEOUT_MS, ENTRY_TTL_MS, PAINT_TIMEOUT_MS, _reset };

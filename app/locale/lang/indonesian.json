@@ -857,6 +857,7 @@
         "clipResolutionNative": "Layar",
         "clipFps": "Kecepatan bingkai",
         "clipFpsDesc": "60 FPS lebih mulus dan memakan ruang sekitar setengah lebih banyak.",
+        "clipFpsUnlocked": "Tanpa batas (kecepatan layar)",
         "clipQuality": "Kualitas",
         "clipQualityDesc": "Kualitas lebih tinggi menghasilkan file lebih besar.",
         "clipQualityLow": "Rendah",
