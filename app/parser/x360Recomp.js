@@ -22,6 +22,7 @@ const xex = require(path.join(__dirname, 'xex.js'));
 const spaReader = require(path.join(__dirname, 'xllnSpa.js'));
 const ports = require(path.join(__dirname, 'x360Ports.js'));
 const launcher = require(path.join(__dirname, 'x360Launcher.js'));
+const reblueBonus = require(path.join(__dirname, 'reblueBonus.js'));
 
 const SOURCE = 'Xbox 360 Recomp';
 const TYPE = 'x360recomp';
@@ -817,7 +818,8 @@ async function marketplaceArt(titleId, fetchImpl) {
       if (fs.existsSync(target) || (await downloadImage(marketplaceArtUrl(titleId, file), target, fetchImpl))) img[slot] = fileUrl(target);
     })
   );
-  return img;
+  // The marketplace background is raw key art, not a pre-darkened page: the game screen veils it.
+  return img.background ? { ...img, overlay: true } : img;
 }
 
 const titleCacheFile = (titleId) => path.join(dataRoot(), 'steam_cache', TYPE, `title-${titleId}.json`);
@@ -1028,6 +1030,12 @@ async function titleGameData(info, lang, fetchImpl) {
 // own list, the download time for a dbox.tools copy.
 async function finish(info, titleId, schemaName, extraTitles, list, fetchImpl, checkedAt) {
   const name = gameName(schemaName, info.folder) || prettyFolderName(info.folder) || titleId;
+  const bonus = await reblueBonus.bonusAchievements({ ...info, titleId }, path.join(iconDirFor(titleId), 'reblue'), {
+    fetchImpl,
+    log: (message) => debug.log(`[x360recomp] ${message}`),
+  });
+  const known = new Set(list.map((entry) => entry.name));
+  const all = [...list, ...bonus.filter((entry) => !known.has(entry.name))];
   return {
     name,
     appid: appidOf(info),
@@ -1036,7 +1044,7 @@ async function finish(info, titleId, schemaName, extraTitles, list, fetchImpl, c
     img: await marketplaceArt(titleId, fetchImpl),
     // Exophase names some pages after the dashboard's short title ("midnight-club-la").
     rarityTitles: [...new Set([name, ...extraTitles].filter((title) => title && !CJK_RE.test(title)))],
-    achievement: { total: list.length, list },
+    achievement: { total: all.length, list: all },
     descBackfilledAt: checkedAt,
   };
 }

@@ -60,6 +60,7 @@ asarUnpack:
   - parser/xexWorker.js
   - parser/x360Ports.js
   - parser/x360Launcher.js
+  - parser/reblueBonus.js
   - util/lzx.js
   - util/xboxLiveIcons.js
   - parser/retroAchievements.js

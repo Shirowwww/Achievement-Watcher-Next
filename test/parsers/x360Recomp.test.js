@@ -320,6 +320,7 @@ test('a JSON list is tied to its Xbox 360 title only when every id and gamerscor
   assert.equal(data.achievement.list[0].displayName, 'Titre 1', 'texts come in the player language from the identified title');
   assert.ok(data.achievement.list.every((a) => a.icon.startsWith('file:///')));
   assert.ok(data.img.portrait, 'marketplace art of the identified title');
+  assert.equal(data.img.overlay, true, 'the marketplace background is raw art, darkened on the game screen');
   assert.deepEqual(data.rarityTitles, ['Retail Name', 'Hollow Build']);
 
   // The answer is kept: no second search.

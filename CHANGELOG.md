@@ -53,6 +53,8 @@ renamed in 3.9.0 and the history is kept under one file.
   its list. Sonic Unleashed's own save is read, every re:Blue profile counts, and a launcher script
   that moves the save folder is followed. Reading a game executable is checked block by block and
   runs apart from the app, so a damaged file can no longer slow it down.
+- **re:Blue's own achievements.** The eight achievements re:Blue adds to Blue Dragon are listed
+  with the game's, with their pictures, and pop a notification when earned.
 - **KytyPS5 counts the user you play as.** The trophies shown and announced are those of the user
   the launcher runs the game as (its per-game setting, else the global one), not every user
   merged. A game the launcher knows is listed before its first trophy.
@@ -107,6 +109,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Half-written clips left behind.** The recorder is no longer stopped in the middle of writing a
   clip. When it dies there anyway (the PC shut down, AW was killed), the unreadable `.part` file is
   deleted, right away or the next time a game is recorded.
+- **Recompiled Xbox 360 game screens too bright.** The marketplace background behind the
+  achievements of a game such as Blue Dragon is darkened like every other game's, so the text over
+  it stays readable.
 - **PS4 and PS5 rarity.** A PS4 game no longer takes its Exophase rarity from the PS5 list of the
   same game (Hades), and a lookup that cannot find the list gives up after 90 seconds.
 - **Broken icons stuck in the cache.** A web page answered in place of an icon (a captive portal,
