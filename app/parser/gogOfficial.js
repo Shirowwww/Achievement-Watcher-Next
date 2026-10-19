@@ -33,6 +33,8 @@ module.exports.setUserDataPath = (p) => {
 
 const GAMEPLAY_DB_NAME = 'gameplay.db';
 const IMAGES_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+// Raised when the pictures picked change, so a cache from the older choice is not kept for its week.
+const IMAGES_CACHE_LAYOUT = 2;
 
 // node:sqlite ships with the runtime but only from Node 22.5; keep the require guarded so merely
 // loading this parser can never crash an unexpected runtime - sources just come back empty.
@@ -316,13 +318,15 @@ async function resolveGogImages(productId) {
   const cacheFile = path.join(cacheRoot || '', 'steam_cache', 'gogOfficial', `${productId}.json`);
   try {
     if (fs.existsSync(cacheFile) && Date.now() - fs.statSync(cacheFile).mtimeMs < IMAGES_CACHE_TTL_MS) {
-      return JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+      const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+      if (cached.layout === IMAGES_CACHE_LAYOUT) return cached;
     }
   } catch {
     /* stale/corrupt cache -> refetch */
   }
 
   const img = { header: null, background: null, portrait: null, icon: null };
+  let bareLogo = null;
   const unreachable = imagesCircuit.unavailable();
   if (!unreachable) {
     try {
@@ -330,7 +334,7 @@ async function resolveGogImages(productId) {
       const links = v2?._links || {};
       img.portrait = absoluteUrl(links.boxArtImage?.href);
       img.background = absoluteUrl(links.backgroundImage?.href);
-      img.header = absoluteUrl(links.logo?.href);
+      bareLogo = absoluteUrl(links.logo?.href);
       imagesCircuit.recordSuccess();
     } catch (err) {
       debug.log(`[${productId}] GOG v2 games lookup failed => ${err.code || err}`);
@@ -341,7 +345,8 @@ async function resolveGogImages(productId) {
     try {
       const v1 = await request.getJson(`https://api.gog.com/products/${productId}?expand=images`, { timeout: 15000 });
       const images = v1?.images || {};
-      img.header = img.header || absoluteUrl(images.logo2x || images.logo);
+      // The store tile, key art with the title; v2's logo is the title alone on transparency.
+      img.header = absoluteUrl(images.logo2x || images.logo);
       img.background = img.background || absoluteUrl(images.background);
       img.icon = absoluteUrl(images.sidebarIcon2x || images.sidebarIcon);
       imagesCircuit.recordSuccess();
@@ -351,10 +356,11 @@ async function resolveGogImages(productId) {
     }
   }
 
+  img.header = img.header || bareLogo;
   if (Object.values(img).some(Boolean)) {
     try {
       fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
-      fs.writeFileSync(cacheFile, JSON.stringify(img, null, 2));
+      fs.writeFileSync(cacheFile, JSON.stringify({ ...img, layout: IMAGES_CACHE_LAYOUT }, null, 2));
     } catch {
       /* cache write failure is non-fatal */
     }

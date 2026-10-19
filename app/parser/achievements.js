@@ -85,6 +85,7 @@ function steamStatsDir() {
 const scanScope = require(path.join(appPath, 'scanScope.js'));
 const manualGames = require(path.join(appPath, 'manualGames.js'));
 const sgdbAssetCache = require('../util/sgdbAssetCache.js');
+const { fillArt } = require('../util/artFallback.js');
 const gameNameCache = require(path.join(appPath, '..', 'util', 'gameNameCache.js'));
 const perfTrace = require(path.join(appPath, '..', 'util', 'perfTrace.js'));
 const dirCache = require(path.join(appPath, '..', 'util', 'dirCache.js'));
@@ -3348,18 +3349,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           (cached === undefined
             ? await ipcInvoke('get-images-for-game', { name: game.name, platform, gameId: appid.appid })
             : cached) || {};
-        game.img.header = game.img.header || fallback.landscape || '';
-        game.img.portrait = game.img.portrait || fallback.portrait || '';
-        // A community hero is raw key art, not one of Steam's pre-darkened page backgrounds, so the
-        // game screen has to veil it to keep the text on top readable.
-        if (!game.img.background && fallback.background) {
-          game.img.background = fallback.background;
-          game.img.overlay = true;
-        }
-        game.img.logo = game.img.logo || fallback.logo || '';
-        game.img.icon = game.img.icon || fallback.icon || fallback.logo || '';
-        // A recompiled game SteamGridDB does not know still has its marketplace background.
-        if (!game.img.header && appid.data.type === 'x360recomp') game.img.header = game.img.background || '';
+        game.img = fillArt(game.img, fallback, appid.data.type);
       } catch (err) {
         debug.log(`[${appid.appid}] artwork fallback failed: ${err.message || err}`);
       }

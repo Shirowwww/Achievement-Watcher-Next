@@ -56,14 +56,14 @@
                   <li><i class="fas fa-gamepad"></i> <span class="data">0</span> <span></span></li>
                   <li id="profile-completion-average"><i class="fas fa-cookie-bite"></i> <span class="data">0</span>% <span></span> <i class="far fa-question-circle profile-stat-hint" aria-hidden="true"></i></li>
                 </ul>
+                <!-- Folds the band into one row (issue #123); app.js names it and remembers the choice. -->
+                <button type="button" id="profile-compact-toggle" class="profile-stats-open profile-compact-toggle" aria-pressed="false">
+                  <i class="fas fa-chevron-up" aria-hidden="true"></i>
+                </button>
                 <!-- Icon only, named by its tooltip: a worded pill here would be a different
                      length in each of the 28 locales and squeeze the profile band. -->
                 <button type="button" id="profile-stats-open" class="profile-stats-open" aria-haspopup="dialog">
                   <i class="fas fa-chart-pie" aria-hidden="true"></i>
-                </button>
-                <!-- Folds the band into one row (issue #123); app.js names it and remembers the choice. -->
-                <button type="button" id="profile-compact-toggle" class="profile-stats-open profile-compact-toggle" aria-pressed="false">
-                  <i class="fas fa-chevron-up" aria-hidden="true"></i>
                 </button>
               </div>
               <!-- Trophy showcase (Settings > General). One button: the counts open the Trophies part of

@@ -695,6 +695,8 @@ function gameArt(gameDir) {
   const icon = fileUrl(path.join(gameDir, 'sce_sys', 'icon0.png'));
   return {
     header: background || icon,
+    // The square icon only stands in until SteamGridDB's landscape art replaces it.
+    headerStandIn: !background,
     background,
     // Raw key art, not a pre-darkened Steam page background.
     overlay: !!background,

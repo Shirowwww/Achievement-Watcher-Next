@@ -38,7 +38,14 @@ async function measure(width, compact) {
   const result = await page.evaluate((isCompact) => {
     document.querySelector('#home').classList.toggle('profile-compact', isCompact);
     document.querySelector('#user-info .name').textContent = 'Shirow';
+    // The French labels, among the longer ones, as the locale loader fills them.
+    const pills = [['449', 'Succès'], ['67', 'Jeux'], ['21', 'Moyenne des succès']];
+    document.querySelectorAll('#user-info .stats li').forEach((li, index) => {
+      li.querySelector('.data').textContent = pills[index][0];
+      li.querySelector('.data + span').textContent = pills[index][1];
+    });
     const rect = (selector) => document.querySelector(selector).getBoundingClientRect();
+    const middle = (selector) => Math.round(rect(selector).top + rect(selector).height / 2);
     const name = document.querySelector('#user-info .name');
     return {
       header: rect('#home-header').height,
@@ -46,6 +53,8 @@ async function measure(width, compact) {
       nameClipped: name.scrollWidth > name.clientWidth + 1,
       statsButton: rect('#profile-stats-open').width,
       toggle: rect('#profile-compact-toggle').width,
+      rowMiddles: ['#user-info .stats li', '#profile-compact-toggle', '#profile-stats-open'].map(middle),
+      toggleBeforeButton: rect('#profile-compact-toggle').right <= rect('#profile-stats-open').left,
     };
   }, compact);
   await page.close();
@@ -70,4 +79,14 @@ test('a narrow window keeps the two rows but halves the band', async (t) => {
   const compact = await measure(904, true);
   assert.ok(compact.header <= full.header * 0.6, `compact ${compact.header} against full ${full.header}`);
   assert.equal(compact.nameClipped, false, 'the user name is not cut');
+});
+
+test('the fold control stays on the stats row, left of the stats button, while the band has room', async (t) => {
+  if (!shared || !shared.browser) return t.skip(skipReason(shared ? shared.failures : []));
+  for (const width of [800, 1440]) {
+    const full = await measure(width, false);
+    const spread = Math.max(...full.rowMiddles) - Math.min(...full.rowMiddles);
+    assert.ok(spread <= 2, `${width}px: pills, fold control and stats button share a row (${full.rowMiddles.join(', ')})`);
+    assert.equal(full.toggleBeforeButton, true, `${width}px: the fold control comes first`);
+  }
 });

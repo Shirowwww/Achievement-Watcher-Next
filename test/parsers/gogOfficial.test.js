@@ -111,7 +111,8 @@ function buildGameplayDb(file, { retrieved = '1', mode = 'all_visible' } = {}) {
     // pre-seed the image cache so getGameData stays offline in tests
     const imgCache = path.join(tmp, 'Achievement Watcher Next', 'steam_cache', 'gogOfficial');
     fs.mkdirSync(imgCache, { recursive: true });
-    fs.writeFileSync(path.join(imgCache, '1423049311.json'), JSON.stringify({ header: 'h', background: 'b', portrait: 'p', icon: 'i' }));
+    const imgCacheFile = path.join(imgCache, '1423049311.json');
+    fs.writeFileSync(imgCacheFile, JSON.stringify({ header: 'h', background: 'b', portrait: 'p', icon: 'i', layout: 2 }));
 
     const game = await gogOfficial.getGameData(appidEntry);
     assert.equal(game.name, 'Cyberpunk 2077');
@@ -145,6 +146,23 @@ function buildGameplayDb(file, { retrieved = '1', mode = 'all_visible' } = {}) {
     // a db that never fetched achievements is not ready and never listed by scan-like flows
     buildGameplayDb(gameplayDb, { retrieved: '0' });
     assert.equal(isGameplayReady(readGogGameplayDb(gameplayDb)), false);
+
+    // A card shows the store tile (key art with the title), not v2's bare logo on transparency, and a
+    // cache written by the older choice is asked again rather than kept for its week.
+    const request = require(path.join(__dirname, '..', '..', 'app', 'node_modules', 'request-zero'));
+    const realGetJson = request.getJson;
+    request.getJson = async (url) =>
+      url.includes('/v2/games/')
+        ? { _links: { logo: { href: 'https://gog/logo.png' }, boxArtImage: { href: 'https://gog/box.jpg' }, backgroundImage: { href: 'https://gog/bg.jpg' } } }
+        : { images: { logo2x: '//gog/tile_2x.jpg', background: '//gog/bg1.jpg', sidebarIcon2x: '//gog/icon.png' } };
+    fs.writeFileSync(imgCacheFile, JSON.stringify({ header: 'https://gog/logo.png', background: 'b', portrait: 'p', icon: 'i' }));
+    buildGameplayDb(gameplayDb);
+    try {
+      const fresh = await gogOfficial.getGameData(appidEntry);
+      assert.deepEqual(fresh.img, { header: 'https://gog/tile_2x.jpg', background: 'https://gog/bg.jpg', portrait: 'https://gog/box.jpg', icon: 'https://gog/icon.png' });
+    } finally {
+      request.getJson = realGetJson;
+    }
 
     // watchdog reader shares the same layout
     buildGameplayDb(gameplayDb);

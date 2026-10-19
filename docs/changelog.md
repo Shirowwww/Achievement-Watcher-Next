@@ -119,6 +119,12 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Recompiled Xbox 360 game screens too bright.** The marketplace background behind the
   achievements of a game such as Blue Dragon is darkened like every other game's, so the text over
   it stays readable.
+- **Covers of GOG, shadPS4 and Xenia games.** A GOG game shows its store artwork instead of its
+  bare logo on an empty card. A game whose source has no artwork (shadPS4, Xenia, a PS4 or PS5
+  dump without key art) shows SteamGridDB's instead of a trophy or achievement icon.
+- **The profile band on a narrower window.** The button that folds the profile stays beside the
+  stats button instead of dropping to a line of its own, and the profile uses the width it has
+  rather than squeezing into a strip.
 - **PS4 and PS5 rarity.** A PS4 game no longer takes its Exophase rarity from the PS5 list of the
   same game (Hades), and a lookup that cannot find the list gives up after 90 seconds.
 - **Broken icons stuck in the cache.** A web page answered in place of an icon (a captive portal,

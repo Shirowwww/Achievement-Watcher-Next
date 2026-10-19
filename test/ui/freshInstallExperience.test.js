@@ -59,8 +59,8 @@ test('automatic scanning is reviewable and never injects Desktop or whole-drive 
 test('artwork fallbacks fill missing assets without replacing existing ones', () => {
   const parser = fs.readFileSync(path.join(root, 'app', 'parser', 'achievements.js'), 'utf8');
   const main = fs.readFileSync(path.join(root, 'app', 'electron', 'init.js'), 'utf8');
-  assert.match(parser, /game\.img\.header = game\.img\.header \|\| fallback\.landscape/);
-  assert.match(parser, /game\.img\.logo = game\.img\.logo \|\| fallback\.logo/);
+  // What is filled and what is kept is tested in test/parsers/artFallback.test.js; here, that a scan uses it.
+  assert.match(parser, /game\.img = fillArt\(game\.img, fallback, appid\.data\.type\)/);
   // Where an artwork answer is kept, and for how long, is one module both processes read.
   const cache = fs.readFileSync(path.join(root, 'app', 'util', 'sgdbAssetCache.js'), 'utf8');
   assert.match(cache, /steamgriddb_assets/);

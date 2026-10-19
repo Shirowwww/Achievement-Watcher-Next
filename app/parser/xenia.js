@@ -406,7 +406,8 @@ module.exports.getGameData = async (gpdPath, { fetchImpl } = {}) => {
     name: parsed.title || titleId,
     appid: titleId,
     system: 'xbox',
-    img: { header: list.find((x) => x.icon)?.icon },
+    // An achievement picture only stands in for the header until SteamGridDB's art replaces it.
+    img: { header: list.find((x) => x.icon)?.icon, headerStandIn: true },
     achievement: {
       total: list.length,
       list,

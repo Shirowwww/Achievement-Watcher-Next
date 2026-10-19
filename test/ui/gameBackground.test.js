@@ -62,10 +62,10 @@ test('every source that hands over raw artwork marks it for the veil', () => {
   assert.match(parser('uplay.js'), /background: null,\n\s+icon: null,\n\s+overlay: true,/);
   assert.match(parser('ubisoftOfficial.js'), /let img = \{ header: null, background: null, portrait: null, icon: null, overlay: true \};/);
 
-  // Ubisoft's catalogue boxart, and a SteamGridDB hero wherever the scan borrows one: each site
-  // sets the flag beside the background it just wrote.
-  const achievements = parser('achievements.js');
-  const borrowed = [...achievements.matchAll(/^\s*if \([^\n]*\.background\) \{\n(\s*(?:game\.)?img\.background = [^\n]+\n\s*(?:game\.)?img\.overlay = true;)/gm)];
+  // Ubisoft's catalogue boxart, and a SteamGridDB hero wherever the scan borrows one (the scan's
+  // own fill lives in util/artFallback.js): each site sets the flag beside the background it wrote.
+  const achievements = parser('achievements.js') + fs.readFileSync(path.join(appDir, 'util', 'artFallback.js'), 'utf8');
+  const borrowed = [...achievements.matchAll(/^\s*if \([^\n]*\.background\) \{\n(\s*(?:game\.)?(?:img|art)\.background = [^\n]+\n\s*(?:game\.)?(?:img|art)\.overlay = true;)/gm)];
   assert.equal(borrowed.length, 3, 'each borrowed background must set the flag beside it');
 
   // Steam's own page background is pre-darkened and must stay unveiled.

@@ -562,7 +562,6 @@ body.is-resizing #game-list {
   margin: auto 0;
   width: auto;
   min-width: 0;
-  max-width: calc(100vw - 430px);
 }
 
 #user-info .info .name {

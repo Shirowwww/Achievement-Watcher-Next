@@ -332,15 +332,15 @@ module.exports.getGameData = async (dir, lang) => {
     };
   });
 
-  // Game header: ShadPS4 has no cover art on disk, so use the platinum/first trophy icon as a
-  // non-broken placeholder. The advanced cover-management UI lets the user override it.
+  // Game header: ShadPS4 has no cover art on disk, so the platinum/first trophy icon stands in until
+  // SteamGridDB's art replaces it. The advanced cover-management UI lets the user override it.
   const header = list.length > 0 ? list[0].icon : undefined;
 
   return {
     name: schema['title-name'] || gameId,
     appid: gameId,
     system: 'playstation',
-    img: { header },
+    img: { header, headerStandIn: true },
     achievement: {
       total: list.length,
       list,

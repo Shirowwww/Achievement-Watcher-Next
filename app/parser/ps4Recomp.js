@@ -481,7 +481,8 @@ function gameArt(info, container, iconDir) {
   const art = (name) => (isRegularFile(path.join(String(info.dumpDir || ''), 'sce_sys', name)) ? toFileUrl(path.join(info.dumpDir, 'sce_sys', name)) : '');
   const background = art('pic1.png') || art('pic0.png');
   const icon = art('icon0.png') || writeIcon(path.join(iconDir, 'icon0.png'), container.icon0);
-  return { header: background || icon, background, overlay: !!background, icon };
+  // The square icon only stands in for a header until SteamGridDB's landscape art replaces it.
+  return { header: background || icon, headerStandIn: !background, background, overlay: !!background, icon };
 }
 
 function textsById(document) {
