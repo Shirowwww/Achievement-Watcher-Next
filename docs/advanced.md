@@ -120,6 +120,14 @@ when a game's data is fetched in that language.
 Steam's local catalogue answers for games your Steam client knows; the rest are asked once, in
 batches, and checked again after a month. A name you set yourself always wins over it.
 
+## Editing a game's playtime
+
+**Achievements & playtime → Edit playtime…**, in the right-click menu, replaces a game's total
+playtime, for instance one carried over from another tracker or one that missed sessions. Type it
+in hours (`12.5`) or in hours and minutes (`12h30` or `12:30`); the date of the last session is
+kept. AW Next adds the next sessions to the new total. A game you own on Steam never goes below the
+playtime Steam reports for it: the next scan raises a lower total back to Steam's.
+
 ## A different achievement language for one game
 
 **Game settings → Achievement language**, in the right-click menu, shows one game's achievements,

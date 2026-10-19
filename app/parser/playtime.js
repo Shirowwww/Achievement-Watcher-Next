@@ -65,6 +65,13 @@ module.exports.reset = async (appID) => {
   await writeCounters(appID, 0, 0);
 };
 
+// A total typed by the user; the last session date is kept.
+module.exports.setTotal = async (appID, seconds) => {
+  const { last } = readCounters(appID);
+  const total = Math.min(Math.max(0, Math.floor(Number(seconds) || 0)), 0xffffffff); // a DWORD
+  await writeCounters(appID, total, +last || 0);
+};
+
 // Neither Steam nor the local counter is authoritative (Steam sees other machines, AW sees
 // non-Steam play), so each field keeps its larger value; null means nothing to write.
 function mergeSteamPlaytime(local, steam) {

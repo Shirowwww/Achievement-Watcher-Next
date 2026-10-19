@@ -108,6 +108,7 @@ manualGames.setUserDataPath(getUserDataPath());
 const exeDetect = require(path.join(appPath, 'parser/exeDetect.js'));
 const gameIndex = require(path.join(appPath, 'parser/gameIndex.js'));
 const PlaytimeTracking = require(path.join(appPath, 'parser/playtime.js'));
+const playtimeInput = require(path.join(appPath, 'util/playtimeInput.js'));
 const progressMute = require(path.join(appPath, 'parser/progressMute.js'));
 progressMute.setUserDataPath(getUserDataPath());
 const notificationHealth = require(path.join(appPath, 'parser/notificationHealth.js'));
@@ -1359,6 +1360,60 @@ function formatPlaytime(seconds, { units } = {}) {
 
 function libraryPlaytime(seconds) {
   return formatPlaytime(seconds);
+}
+
+// Repaints a tile's playtime row after its total was edited or reset.
+function paintTilePlaytime(appid) {
+  const box = $(gameElements.get(String(appid)) || []);
+  if (box.length === 0) return;
+  const text = libraryPlaytime(PlaytimeTracking.readSync(appid).playtime);
+  const shown = text || '—';
+  const row = box.find('.library-playtime').toggleClass('is-empty', !text);
+  row.find('.library-scroll-text').attr('title', shown);
+  row.find('.library-scroll-content').text(shown);
+}
+
+// "Edit playtime…": the prompt opens on the current total; an invalid entry is refused, not saved.
+async function editPlaytime(appid, name) {
+  const current = PlaytimeTracking.readSync(appid).playtime;
+  const typed = await promptText(
+    t(
+      'edit-playtime-prompt',
+      'Total playtime for "{name}", in hours (12.5) or hours and minutes (12h30).',
+      'Temps de jeu total pour « {name} », en heures (12,5) ou en heures et minutes (12h30).',
+      { name }
+    ),
+    playtimeInput.formatPlaytimeInput(current)
+  );
+  if (typed === null) return;
+  const seconds = playtimeInput.parsePlaytime(typed);
+  const failure = (message, detail) =>
+    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'error',
+      title: t('unexpected-error', 'Unexpected Error', 'Erreur inattendue'),
+      message,
+      detail,
+    });
+  if (seconds === null) {
+    failure(t('edit-playtime-invalid', 'This is not a playtime AW Next can read.', 'Ce temps de jeu n’est pas lisible par AW Next.'), typed);
+    return;
+  }
+  try {
+    await PlaytimeTracking.setTotal(appid, seconds);
+  } catch (err) {
+    failure(t('edit-playtime-failed', 'Could not save the playtime.', 'Impossible d’enregistrer le temps de jeu.'), `${err}`);
+    return;
+  }
+  paintTilePlaytime(appid);
+}
+
+function editPlaytimeMenuItem(appid, game) {
+  return new remote.MenuItem({
+    label: t('edit-playtime', 'Edit playtime…', 'Modifier le temps de jeu…'),
+    click() {
+      editPlaytime(appid, game ? gameTitleOf(game) : String(appid)).catch((err) => debug.error(err));
+    },
+  });
 }
 
 // The Uplay R1/R2 repair lives in ui/uplayRepair.js.
@@ -4668,11 +4723,13 @@ var app = {
           if (isManualGame || isUbisoftSource) {
             // Non-Ubisoft games get their own reset-playtime entry in the emulator section below.
             playtimeItems.push(
+              editPlaytimeMenuItem(appid, ctxGame),
               new MenuItem({
                 label: $('#game-list').attr('data-ctx-resetplaytime') || '',
                 async click() {
                   self.css('pointer-events', 'none');
                   await PlaytimeTracking.reset(appid).catch((err) => debug.error(err));
+                  paintTilePlaytime(appid);
                   self.css('pointer-events', 'initial');
                 },
               })
@@ -4767,6 +4824,7 @@ var app = {
             if (!isUbisoftSource) {
             if (!isManualGame) {
               playtimeItems.push(
+                editPlaytimeMenuItem(appid, ctxGame),
                 new MenuItem({
                   label: $('#game-list').attr('data-ctx-resetplaytime') || '',
                   async click() {
@@ -4774,6 +4832,7 @@ var app = {
                     await PlaytimeTracking.reset(appid).catch((err) => {
                       debug.error(err);
                     });
+                    paintTilePlaytime(appid);
                     self.css('pointer-events', 'initial');
                   },
                 })
